@@ -1,74 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.171]:50515 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751753Ab3AJUVn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Jan 2013 15:21:43 -0500
-Date: Thu, 10 Jan 2013 21:21:27 +0100
-From: Thierry Reding <thierry.reding@avionic-design.de>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-tegra@vger.kernel.org,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Murray <andrew.murray@arm.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 11/14] ARM: tegra: tamonten: Add PCIe support
-Message-ID: <20130110202127.GB26139@avionic-0098.adnet.avionic-design.de>
-References: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de>
- <1357764194-12677-12-git-send-email-thierry.reding@avionic-design.de>
- <201301092123.37491.arnd@arndb.de>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="RASg3xLB4tUQ4RcS"
-In-Reply-To: <201301092123.37491.arnd@arndb.de>
+Received: from mail.free-electrons.com ([94.23.35.102]:59361 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754331Ab3A1WSf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Jan 2013 17:18:35 -0500
+Date: Mon, 28 Jan 2013 23:18:29 +0100
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: Stephen Warren <swarren@wwwdotorg.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>
+Subject: Re: [PATCH v2 07/27] PCI: Add software-emulated host bridge
+Message-ID: <20130128231829.6b205c3c@skate>
+In-Reply-To: <20130128220904.GA21446@obsidianresearch.com>
+References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	<1359399397-29729-8-git-send-email-thomas.petazzoni@free-electrons.com>
+	<201301282018.17714.arnd@arndb.de>
+	<5106F5CB.8050304@wwwdotorg.org>
+	<20130128220904.GA21446@obsidianresearch.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Dear Jason Gunthorpe,
 
---RASg3xLB4tUQ4RcS
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+On Mon, 28 Jan 2013 15:09:04 -0700, Jason Gunthorpe wrote:
 
-On Wed, Jan 09, 2013 at 09:23:37PM +0000, Arnd Bergmann wrote:
-> On Wednesday 09 January 2013, Thierry Reding wrote:
-> > Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
-> > ---
-> >  arch/arm/boot/dts/tegra20-tamonten.dtsi | 2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
->=20
-> It's not clear how this one-line patch adds PCIe support to the
-> platform. Are you missing the actual change here?
+> If Linux will discover properly (I strongly suspect it does) without
+> the host bridge, then I would say to ditch this...
+> 
+> The PCI-E standard requires a host bridge device, but if Linux doesn't
+> require it then there is no reason to emulate one.
+> 
+> That would simplify the question of PCI IDs - for Marvell's case and
+> the sw root port bridge we can just copy the IDs from the bogus config
+> space of the HW.
 
-This is really just required to associate a name with the regulator, but
-I think I can achieve the same by adding an alias to the TEC DTSI.
+Not sure what you mean in this last paragraph. In this second version,
+I really rely on the emulated PCI-to-PCI bridges for the resource
+allocation. I give the Linux PCI core a global range of addresses for
+memory regions and a global range of addresses for I/O regions, and
+then I let Linux do the allocation of ranges on a per bridge basis,
+depending on the devices detected downstream. And at the end, I use
+those allocated ranges to set up the address decoding windows.
 
-Thierry
+This all comes from your suggestions during the review of the first
+revision of this patch set.
 
---RASg3xLB4tUQ4RcS
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQIcBAEBAgAGBQJQ7yLHAAoJEN0jrNd/PrOhrnoP/juo2Zm53MQ6LlVa70kC7rW1
-LCGYxaQr1AJyxEqlBxHAS4w3M9+HJ9MF2MDUuT3pOm+umRLFcNR0cctObjCTUyfV
-6YeT1Om0H1mmHPpgHBi6sM11q8dumsDqePqDNIFiILEK70EzKnUQtOrJ2O8sEnx3
-j2twKGBTa2kQL+iyaoVC/2uszEwjH9WE89CVbEMnOS8wFnyyN4lrvB4KSLnkU/77
-qzZ6nejKbyF2jMpR0CNK1BFzgBWQGv6pLAnXK4gvKWhfwaYm6+u5CLl/lOsSTCtL
-cS49wDotsB92YgQae0i7Gj3ex4+zepIAtPDUT15klhN9g6Dx67IGQLEwsdzHN44i
-RXzhqHCDfo6HfM9zTf2LkWWJvpNSYMOvjSDQqQeubeDHJVhbQGp6DTypfUKpeOBh
-e5iw6DFDX3Vll7g+pXGIaWnXK/nK4uUVphGBK3YdmiNjPFinnWOeNqrwV5W52LsC
-xOo/diDOBVMOBaWPh3AyF1Sd5rAKysxmLpgv9jKCbY2Q++q/9Awac4rgVa2ObTOa
-jcn1W6HRDCgFYnwoe8akuOo5NZEOvef2JkOhXW0YvI8hPLKteHAxLzLlYREPWwyF
-o+w0vDVlRX0emP4vzsS+j0TuWusv4MU9TkUe5Z+8KN+drqcMfeI1ZEgQlg17GjMf
-dD4HO1wyDemBUgul7AZH
-=1MWh
------END PGP SIGNATURE-----
-
---RASg3xLB4tUQ4RcS--
+Thomas
+-- 
+Thomas Petazzoni, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
