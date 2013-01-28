@@ -1,60 +1,47 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:35104 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754162Ab3A2P3A (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Jan 2013 10:29:00 -0500
-Date: Tue, 29 Jan 2013 16:28:53 +0100
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Russell King - ARM Linux <linux@arm.linux.org.uk>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Subject: Re: [PATCH v2 05/27] arm: pci: add a align_resource hook
-Message-ID: <20130129162853.58dc14d7@skate>
-In-Reply-To: <20130129152518.GZ23505@n2100.arm.linux.org.uk>
-References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
-	<1359399397-29729-6-git-send-email-thomas.petazzoni@free-electrons.com>
-	<20130129161211.7bb8cada@skate>
-	<20130129151501.GY23505@n2100.arm.linux.org.uk>
-	<20130129162337.0121cbab@skate>
-	<20130129152518.GZ23505@n2100.arm.linux.org.uk>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <51066B46.10409@fold.natur.cuni.cz>
+Date: Mon, 28 Jan 2013 13:12:54 +0100
+From: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
+MIME-Version: 1.0
+To: Chris Clayton <chris2553@googlemail.com>
+CC: Yijing Wang <wangyijing@huawei.com>,
+	Yijing Wang <wangyijing0307@gmail.com>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org
+Subject: Re: 3.8.0-rc4+ - Oops on removing WinTV-HVR-1400 expresscard TV Tuner
+References: <51016937.1020202@googlemail.com> <510189B1.606@fold.natur.cuni.cz> <5104427D.2050002@googlemail.com> <510494D6.1010000@gmail.com> <51050D43.2050703@googlemail.com> <51051B1B.3080105@gmail.com> <51052DB2.4090702@googlemail.com> <51053917.6060400@fold.natur.cuni.cz> <5105491E.9050907@googlemail.com> <510558CE.9000600@fold.natur.cuni.cz> <5105AFDB.9000200@googlemail.com> <5105E51D.2020606@huawei.com> <51064F1A.1020909@googlemail.com> <51065FA6.4070208@googlemail.com>
+In-Reply-To: <51065FA6.4070208@googlemail.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Russell,
-
-On Tue, 29 Jan 2013 15:25:18 +0000, Russell King - ARM Linux wrote:
-
-> Yep, otherwise we'll have yet more code to review rather than one
-> algorithm with a set of numbers...
+Chris Clayton wrote:
 > 
-> I work on the principle that if something can be expressed numerically,
-> that's always better than expressing it with code.
+> [snip]
+> 
+>> [chris:~]$ cat /proc/cmdline
+>> root=/dev/sda5 pciehp_ports=native ro resume=/dev/sda6
+>                      ^^
+>                   **typo**
+> I've run the test again with pcie_ports=native and the directories now get populated. Even better though, is that when I plug in the card, hotplug **works** and the card's drivers are loaded.
 
-Having a hook allows for more flexibility (for example having special
-alignment requirements depending on the device or something like that),
-but I don't need this flexibility for the specific case I'm interested
-in. So as you suggest, let's not over-engineer this, and use numerical
-values. I'll rework my patch according to this suggestion.
+BTW, I have with acpiphp on 3.7.4:
 
-Thanks,
+ls -la /sys/bus/pci_express/devices
+total 0
+drwxr-xr-x 2 root root 0 Jan 28 13:07 .
+drwxr-xr-x 4 root root 0 Jan 28 13:07 ..
+$ ls -la /sys/bus/pci/devices/slots
+ls: cannot access /sys/bus/pci/devices/slots: No such file or directory
+$
 
-Thomas
--- 
-Thomas Petazzoni, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
+And for me hotplug also works (as far as I can tell). ;-)
+
+> 
+> Excellent! Thank you so much for your help (and patience) Martin and Yijing.
+> 
+> Now to solving why running scandvb doesn't find any TV channels.
+
+Would be fine if you could re-do the PresDet checks and confirm whether it is also broken
+for you under pciehp.
+
+Martin
