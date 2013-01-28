@@ -1,15 +1,12 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:40193 "EHLO quartz.orcorp.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751166Ab3A1TvJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 28 Jan 2013 14:51:09 -0500
-Date: Mon, 28 Jan 2013 12:51:11 -0700
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
+Received: from mail.free-electrons.com ([94.23.35.102]:58248 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752523Ab3A1S47 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Jan 2013 13:56:59 -0500
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Cc: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
 	Gregory Clement <gregory.clement@free-electrons.com>,
 	Arnd Bergmann <arnd@arndb.de>,
 	Maen Suleiman <maen@marvell.com>,
@@ -20,41 +17,43 @@ Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
 	Shadi Ammouri <shadi@marvell.com>,
 	Tawfik Bayouk <tawfik@marvell.com>,
 	Stephen Warren <swarren@wwwdotorg.org>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>
-Subject: Re: [PATCH v2 18/27] arm: plat-orion: add more flexible PCI
- configuration space read/write functions
-Message-ID: <20130128195111.GC17722@obsidianresearch.com>
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	Mike Turquette <mturquette@linaro.org>
+Subject: [PATCH v2 11/27] clk: mvebu: create parent-child relation for PCIe clocks on Armada 370
+Date: Mon, 28 Jan 2013 19:56:20 +0100
+Message-Id: <1359399397-29729-12-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
 References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
- <1359399397-29729-19-git-send-email-thomas.petazzoni@free-electrons.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1359399397-29729-19-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jan 28, 2013 at 07:56:27PM +0100, Thomas Petazzoni wrote:
+The Armada 370 has two gatable clocks for each PCIe interface, and we
+want both of them to be enabled. We therefore make one of the two
+clocks a child of the other, as we did for the sataX and sataXlnk
+clocks on Armada XP.
 
-> However, with the usage of the emulated PCI host bridge and emulated
-> PCI-to-PCI bridges, this is not the case: bus number 0 is the emulated
-> bus on which the emulated PCI-to-PCI bridges sit, so from the Linux
-> point of view, the real busses start at bus 1, but from a hardware
-> point of view, they start at bus 0.
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Mike Turquette <mturquette@linaro.org>
+---
+ drivers/clk/mvebu/clk-gating-ctrl.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Hum.. This is a bit funny sounding, can you confirm..
+diff --git a/drivers/clk/mvebu/clk-gating-ctrl.c b/drivers/clk/mvebu/clk-gating-ctrl.c
+index 8fa5408..fd52b5f 100644
+--- a/drivers/clk/mvebu/clk-gating-ctrl.c
++++ b/drivers/clk/mvebu/clk-gating-ctrl.c
+@@ -119,8 +119,8 @@ static const struct mvebu_soc_descr __initconst armada_370_gating_descr[] = {
+ 	{ "pex1_en", NULL,  2 },
+ 	{ "ge1", NULL, 3 },
+ 	{ "ge0", NULL, 4 },
+-	{ "pex0", NULL, 5 },
+-	{ "pex1", NULL, 9 },
++	{ "pex0", "pex0_en", 5 },
++	{ "pex1", "pex1_en", 9 },
+ 	{ "sata0", NULL, 15 },
+ 	{ "sdio", NULL, 17 },
+ 	{ "tdm", NULL, 25 },
+-- 
+1.7.9.5
 
-The bus number programmed into all the end points must match the Linux
-number. Ie the PCI-E Link Description register of end point devices
-must report the same bus number as Linux. PCI-E devices learn their
-bus number by capturing the bus number from type 0 configuration
-transactions.
-
-For the most part config transactions issued to the PCI-E controllers
-should be type 0 transactions with a bus number that matches what
-Linux is setting.
-
-The only time I think you'd ever see bus number 0 is when accessing
-the config space of the Marvell PCI-E controller end port. But, I also
-think you can avoid doing these transactions by just accessing the MMIO
-versions of those registers..
-
-Jason
