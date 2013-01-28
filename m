@@ -1,52 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:36139 "EHLO hydra.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752424Ab3AaNLx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 31 Jan 2013 08:11:53 -0500
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Paul Bolle <pebolle@tiscali.nl>
-Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Oliver Neukum <oneukum@suse.de>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: pciehp: errors on resume
-Date: Thu, 31 Jan 2013 14:18:06 +0100
-Message-ID: <679823626.6Dz1DicNqX@vostro.rjw.lan>
-In-Reply-To: <1359629934.1345.109.camel@x61.thuisdomein>
-References: <1359377173.1345.25.camel@x61.thuisdomein> <510A1376.4020601@cn.fujitsu.com> <1359629934.1345.109.camel@x61.thuisdomein>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mail.free-electrons.com ([94.23.35.102]:58400 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753243Ab3A1S5W (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Jan 2013 13:57:22 -0500
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Cc: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>
+Subject: [PATCH v2 25/27] arm: mvebu: PCIe Device Tree informations for Armada 370 Mirabox
+Date: Mon, 28 Jan 2013 19:56:34 +0100
+Message-Id: <1359399397-29729-26-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, January 31, 2013 11:58:54 AM Paul Bolle wrote:
-> On Thu, 2013-01-31 at 14:47 +0800, Gu Zheng wrote:
-> > On 01/30/2013 04:31 PM, Paul Bolle wrote:
-> > > 2) Regarding the errors I see at resume: it seems that if a device
-> > > already exists when board_added() is called, this almost certainly means
-> > > we're resuming with the same device we suspended with. So there's no
-> > > reason to send errors to the log.
-> > 
-> > No, It's hard to detect whether the existed device is the one you want to resume.
-> > Maybe the existed device was added during suspend, and the one you really want to
-> > resume was removed. 
-> 
-> Because the domain, bus, slot, and function being equal doesn't mean
-> it's the same device? (I had to look up those names in man 8 lspci, I'm
-> unfamiliar with all this.)
+The Globalscale Mirabox platform uses one PCIe interface for an
+available mini-PCIe slot, and the other PCIe interface for an internal
+USB 3.0 controller. We add the necessary Device Tree informations to
+enable those two interfaces.
 
-No, that's not sufficient in general.
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+---
+ arch/arm/boot/dts/armada-370-mirabox.dts |   14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
-> Could an additional test on vendor ID and device ID help. Ie, if
-> board_added() and friends notice a device already exists and the
-> previous an current device have identical IDs, would we then know all
-> that's needed to not bother to scare people with errors?
-
-Yes, that's roughly the way to go in my opinion.
-
-Thanks,
-Rafael
-
-
+diff --git a/arch/arm/boot/dts/armada-370-mirabox.dts b/arch/arm/boot/dts/armada-370-mirabox.dts
+index 3b40713..591068a 100644
+--- a/arch/arm/boot/dts/armada-370-mirabox.dts
++++ b/arch/arm/boot/dts/armada-370-mirabox.dts
+@@ -52,5 +52,19 @@
+ 			phy = <&phy1>;
+ 			phy-mode = "rgmii-id";
+ 		};
++
++		pcie-controller {
++			status = "okay";
++
++			/* Internal mini-PCIe connector */
++			pcie@0,0 {
++				status = "okay";
++			};
++
++			/* Connected on the PCB to a USB 3.0 XHCI controller */
++			pcie@1,0 {
++				status = "okay";
++			};
++		};
+ 	};
+ };
 -- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+1.7.9.5
+
