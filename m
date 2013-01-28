@@ -1,110 +1,64 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Jiang Liu <liuj97@gmail.com>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: Re: [PATCH v8 21/22] PCI: add match_driver in struct pci_dev
-Date: Sun, 13 Jan 2013 21:01:43 +0100
-Message-ID: <3209648.ahKUqpvYlm@vostro.rjw.lan>
-In-Reply-To: <50F2D55C.4040807@gmail.com>
-References: <1357944049-29620-1-git-send-email-yinghai@kernel.org> <29539918.9ng60fkCeb@vostro.rjw.lan> <50F2D55C.4040807@gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from quartz.orcorp.ca ([184.70.90.242]:49713 "EHLO quartz.orcorp.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750906Ab3A1Ty6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 28 Jan 2013 14:54:58 -0500
+Date: Mon, 28 Jan 2013 12:55:01 -0700
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>
+Subject: Re: [PATCH v2 08/27] pci: implement an emulated PCI-to-PCI bridge
+Message-ID: <20130128195501.GD17722@obsidianresearch.com>
+References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
+ <1359399397-29729-9-git-send-email-thomas.petazzoni@free-electrons.com>
+ <20130128193516.GB17722@obsidianresearch.com>
+ <20130128203947.07332698@skate>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130128203947.07332698@skate>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sunday, January 13, 2013 11:40:12 PM Jiang Liu wrote:
-> On 01/13/2013 07:49 AM, Rafael J. Wysocki wrote:
-> > On Friday, January 11, 2013 02:40:48 PM Yinghai Lu wrote:
-> >> with that we could move out attaching driver for pci device,
-> >> out of device_add for pci hot add path.
-> >>
-> >> pci_bus_attach_device() will attach driver to pci device.
-> > 
-> > Clever, but I wonder why exactly we need to do that?
-> Hi Rafael,
-> 	To make following sequence possible,
-> 1) Create PCI device objects for hot-added PCI host bridge
-> 2) Create IOMMU devices for DMAR units belong to the hot-added PCI host bridge
-> 3) Bind and start all PCI devices connected to the PCI host bridge.
+On Mon, Jan 28, 2013 at 08:39:47PM +0100, Thomas Petazzoni wrote:
 
-OK, but why exactly isn't it possible without that change?
-
-Rafael
-
-
-> >> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> >> ---
-> >>  drivers/pci/bus.c        |   10 ++++++++++
-> >>  drivers/pci/pci-driver.c |    6 +++++-
-> >>  include/linux/pci.h      |    1 +
-> >>  3 files changed, 16 insertions(+), 1 deletion(-)
-> >>
-> >> diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-> >> index 5f9c728..1f5916a 100644
-> >> --- a/drivers/pci/bus.c
-> >> +++ b/drivers/pci/bus.c
-> >> @@ -160,6 +160,15 @@ pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
-> >>  
-> >>  void __weak pcibios_resource_survey_bus(struct pci_bus *bus) { }
-> >>  
-> >> +static void pci_bus_attach_device(struct pci_dev *dev)
-> >> +{
-> >> +	int ret;
-> >> +
-> >> +	dev->match_driver = true;
-> >> +	ret = device_attach(&dev->dev);
-> >> +	WARN_ON(ret < 0);
-> >> +}
-> >> +
-> >>  /**
-> >>   * pci_bus_add_device - add a single device
-> >>   * @dev: device to add
-> >> @@ -181,6 +190,7 @@ int pci_bus_add_device(struct pci_dev *dev)
-> >>  	if (retval)
-> >>  		return retval;
-> >>  
-> >> +	pci_bus_attach_device(dev);
-> >>  	dev->is_added = 1;
-> >>  	pci_proc_attach_device(dev);
-> >>  	pci_create_sysfs_dev_files(dev);
-> >> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-> >> index f79cbcd..acdcc3c 100644
-> >> --- a/drivers/pci/pci-driver.c
-> >> +++ b/drivers/pci/pci-driver.c
-> >> @@ -1186,9 +1186,13 @@ pci_dev_driver(const struct pci_dev *dev)
-> >>  static int pci_bus_match(struct device *dev, struct device_driver *drv)
-> >>  {
-> >>  	struct pci_dev *pci_dev = to_pci_dev(dev);
-> >> -	struct pci_driver *pci_drv = to_pci_driver(drv);
-> >> +	struct pci_driver *pci_drv;
-> >>  	const struct pci_device_id *found_id;
-> >>  
-> >> +	if (!pci_dev->match_driver)
-> >> +		return 0;
-> >> +
-> >> +	pci_drv = to_pci_driver(drv);
-> >>  	found_id = pci_match_device(pci_drv, pci_dev);
-> >>  	if (found_id)
-> >>  		return 1;
-> >> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> >> index 907b455..d73af08 100644
-> >> --- a/include/linux/pci.h
-> >> +++ b/include/linux/pci.h
-> >> @@ -286,6 +286,7 @@ struct pci_dev {
-> >>  	unsigned int	irq;
-> >>  	struct resource resource[DEVICE_COUNT_RESOURCE]; /* I/O and memory regions + expansion ROMs */
-> >>  
-> >> +	bool match_driver;
-> >>  	/* These fields are used by common fixups */
-> >>  	unsigned int	transparent:1;	/* Transparent PCI bridge */
-> >>  	unsigned int	multifunction:1;/* Part of multi-function device */
-> >>
+> > In the Marvell case, this capability can be constructed by pulling
+> > data from the the Express End Point capability of the PCI-E port:
 > 
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+> I am not sure what you mean by "pulling". Do you mean that I should get
+> informations from the real PCIe interface, from within the emulated
+> PCI-to-PCI bridge implementation? This would unfortunately not be
+> really nice, because until now, the PCI-to-PCI bridge emulation is
+> clearly separated from the Marvell PCIe driver itself. Of course, it
+> could register a hook or something like that, so that the emulated
+> PCI-to-PCI bridge could potentially call back into the Marvell PCIe
+> driver.
+
+Yes, a callback would be needed to the main driver and IIRC the driver
+can read/write the end port link info config regsiters via MMIO. They
+probably need a bit of massaging to be in root port format, but
+otherwise it should be straightforward..
+
+> I'll have to dig a little bit more about this capability to see how it
+> works exactly.
+
+All ports have registers to report and control the link, but the root
+port and end port versions are a bit different, so the goal is to read
+the end port formatted registers and map them into the root port
+format so that userspace can properly see the link state and
+configuration.
+
+Jason
