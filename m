@@ -1,251 +1,256 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <1359562210-26536-2-git-send-email-jiang.liu@huawei.com>
-References: <1359562210-26536-1-git-send-email-jiang.liu@huawei.com>
-	<1359562210-26536-2-git-send-email-jiang.liu@huawei.com>
-Date: Wed, 30 Jan 2013 09:27:39 -0800
-Message-ID: <CAE9FiQU2LvEjTpbjs+LUb=vU7XDC_76OEo5irR_Bn_DjvfgQ0w@mail.gmail.com>
-Subject: Re: [PATCH 2/2] acpiphp: remove dead code for PCI host bridge hotplug
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jiang Liu <liuj97@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.free-electrons.com ([94.23.35.102]:58202 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752998Ab3A1S4x (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Jan 2013 13:56:53 -0500
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Cc: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>
+Subject: [PATCH v2 07/27] PCI: Add software-emulated host bridge
+Date: Mon, 28 Jan 2013 19:56:16 +0100
+Message-Id: <1359399397-29729-8-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 30, 2013 at 8:10 AM, Jiang Liu <liuj97@gmail.com> wrote:
-> From: Jiang Liu <jiang.liu@huawei.com>
->
-> Commit 668192b678201d2fff27c "PCI: acpiphp: Move host bridge hotplug
-> to pci_root.c" has moved PCI host bridge hotplug logic from acpiphp
-> to pci_root, but there is still PCI host bridge hotplug related
-> dead code left in acpiphp. So remove those dead code.
->
-> Now companion ACPI devices are always created before corresponding
-> PCI devices. And the ACPI event handle_hotplug_event_bridge() will be
-> installed only if it has associated PCI device. So remove dead code to
-> handle bridge hot-adding in function handle_hotplug_event_bridge().
->
-> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-> ---
->  drivers/pci/hotplug/acpiphp.h      |   13 +---
->  drivers/pci/hotplug/acpiphp_glue.c |  124 ++++--------------------------------
->  2 files changed, 14 insertions(+), 123 deletions(-)
->
-> diff --git a/drivers/pci/hotplug/acpiphp.h b/drivers/pci/hotplug/acpiphp.h
-> index b3ead7a..b70ac00 100644
-> --- a/drivers/pci/hotplug/acpiphp.h
-> +++ b/drivers/pci/hotplug/acpiphp.h
-> @@ -79,7 +79,6 @@ struct acpiphp_bridge {
->         /* Ejectable PCI-to-PCI bridge (PCI bridge and PCI function) */
->         struct acpiphp_func *func;
->
-> -       int type;
->         int nr_slots;
->
->         u32 flags;
-> @@ -146,10 +145,6 @@ struct acpiphp_attention_info
->  /* PCI bus bridge HID */
->  #define ACPI_PCI_HOST_HID              "PNP0A03"
->
-> -/* PCI BRIDGE type */
-> -#define BRIDGE_TYPE_HOST               0
-> -#define BRIDGE_TYPE_P2P                        1
-> -
->  /* ACPI _STA method value (ignore bit 4; battery present) */
->  #define ACPI_STA_PRESENT               (0x00000001)
->  #define ACPI_STA_ENABLED               (0x00000002)
-> @@ -158,13 +153,7 @@ struct acpiphp_attention_info
->  #define ACPI_STA_ALL                   (0x0000000f)
->
->  /* bridge flags */
-> -#define BRIDGE_HAS_STA         (0x00000001)
-> -#define BRIDGE_HAS_EJ0         (0x00000002)
-> -#define BRIDGE_HAS_HPP         (0x00000004)
-> -#define BRIDGE_HAS_PS0         (0x00000010)
-> -#define BRIDGE_HAS_PS1         (0x00000020)
-> -#define BRIDGE_HAS_PS2         (0x00000040)
-> -#define BRIDGE_HAS_PS3         (0x00000080)
-> +#define BRIDGE_HAS_EJ0         (0x00000001)
->
->  /* slot flags */
->
-> diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-> index acb7af2..4681d2c 100644
-> --- a/drivers/pci/hotplug/acpiphp_glue.c
-> +++ b/drivers/pci/hotplug/acpiphp_glue.c
-> @@ -325,8 +325,8 @@ static void init_bridge_misc(struct acpiphp_bridge *bridge)
->                 return;
->         }
->
-> -       /* install notify handler */
-> -       if (bridge->type != BRIDGE_TYPE_HOST) {
-> +       /* install notify handler for P2P bridges */
-> +       if (!pci_is_root_bus(bridge->pci_bus)) {
->                 if ((bridge->flags & BRIDGE_HAS_EJ0) && bridge->func) {
->                         status = acpi_remove_notify_handler(bridge->func->handle,
->                                                 ACPI_SYSTEM_NOTIFY,
-> @@ -369,27 +369,12 @@ static struct acpiphp_func *acpiphp_bridge_handle_to_function(acpi_handle handle
->  static inline void config_p2p_bridge_flags(struct acpiphp_bridge *bridge)
->  {
->         acpi_handle dummy_handle;
-> +       struct acpiphp_func *func;
->
->         if (ACPI_SUCCESS(acpi_get_handle(bridge->handle,
-> -                                       "_STA", &dummy_handle)))
-> -               bridge->flags |= BRIDGE_HAS_STA;
-> -
-> -       if (ACPI_SUCCESS(acpi_get_handle(bridge->handle,
-> -                                       "_EJ0", &dummy_handle)))
-> +                                       "_EJ0", &dummy_handle))) {
->                 bridge->flags |= BRIDGE_HAS_EJ0;
->
-> -       if (ACPI_SUCCESS(acpi_get_handle(bridge->handle,
-> -                                       "_PS0", &dummy_handle)))
-> -               bridge->flags |= BRIDGE_HAS_PS0;
-> -
-> -       if (ACPI_SUCCESS(acpi_get_handle(bridge->handle,
-> -                                       "_PS3", &dummy_handle)))
-> -               bridge->flags |= BRIDGE_HAS_PS3;
-> -
-> -       /* is this ejectable p2p bridge? */
-> -       if (bridge->flags & BRIDGE_HAS_EJ0) {
-> -               struct acpiphp_func *func;
-> -
->                 dbg("found ejectable p2p bridge\n");
->
->                 /* make link between PCI bridge and PCI function */
-> @@ -412,7 +397,6 @@ static void add_host_bridge(struct acpi_pci_root *root)
->         if (bridge == NULL)
->                 return;
->
-> -       bridge->type = BRIDGE_TYPE_HOST;
->         bridge->handle = handle;
->
->         bridge->pci_bus = root->bus;
-> @@ -432,7 +416,6 @@ static void add_p2p_bridge(acpi_handle *handle)
->                 return;
->         }
->
-> -       bridge->type = BRIDGE_TYPE_P2P;
->         bridge->handle = handle;
->         config_p2p_bridge_flags(bridge);
->
-> @@ -543,7 +526,7 @@ static void cleanup_bridge(struct acpiphp_bridge *bridge)
->         acpi_status status;
->         acpi_handle handle = bridge->handle;
->
-> -       if (bridge->type != BRIDGE_TYPE_HOST) {
-> +       if (!pci_is_root_bus(bridge->pci_bus)) {
->                 status = acpi_remove_notify_handler(handle,
->                                             ACPI_SYSTEM_NOTIFY,
->                                             handle_hotplug_event_bridge);
-> @@ -551,8 +534,7 @@ static void cleanup_bridge(struct acpiphp_bridge *bridge)
->                         err("failed to remove notify handler\n");
->         }
->
-> -       if ((bridge->type != BRIDGE_TYPE_HOST) &&
-> -           ((bridge->flags & BRIDGE_HAS_EJ0) && bridge->func)) {
-> +       if ((bridge->flags & BRIDGE_HAS_EJ0) && bridge->func) {
->                 status = acpi_install_notify_handler(bridge->func->handle,
->                                                 ACPI_SYSTEM_NOTIFY,
->                                                 handle_hotplug_event_func,
-> @@ -1122,64 +1104,11 @@ static void acpiphp_sanitize_bus(struct pci_bus *bus)
->         }
->  }
->
-> -/* Program resources in newly inserted bridge */
-> -static int acpiphp_configure_p2p_bridge(acpi_handle handle)
-> -{
-> -       struct pci_dev *pdev = acpi_get_pci_dev(handle);
-> -       struct pci_bus *bus = pdev->subordinate;
-> -
-> -       pci_dev_put(pdev);
-> -
-> -       pci_bus_size_bridges(bus);
-> -       pci_bus_assign_resources(bus);
-> -       acpiphp_sanitize_bus(bus);
-> -       acpiphp_set_hpp_values(bus);
-> -       pci_enable_bridges(bus);
-> -       return 0;
-> -}
-> -
-> -static void handle_p2p_bridge_insertion(acpi_handle handle, u32 type)
-> -{
-> -       struct acpi_device *device;
-> -
-> -       if ((type != ACPI_NOTIFY_BUS_CHECK) &&
-> -                       (type != ACPI_NOTIFY_DEVICE_CHECK)) {
-> -               err("unexpected notification type %d\n", type);
-> -               return;
-> -       }
-> -
-> -       if (acpi_bus_scan(handle)) {
-> -               err("cannot add bridge to acpi list\n");
-> -               return;
-> -       }
-> -       if (acpi_bus_get_device(handle, &device)) {
-> -               err("ACPI device object missing\n");
-> -               return;
-> -       }
-> -       if (!acpiphp_configure_p2p_bridge(handle))
-> -               add_p2p_bridge(handle);
-> -       else
-> -               err("cannot configure and start bridge\n");
-> -
-> -}
-> -
->  /*
->   * ACPI event handlers
->   */
->
->  static acpi_status
-> -count_sub_bridges(acpi_handle handle, u32 lvl, void *context, void **rv)
-> -{
-> -       int *count = (int *)context;
-> -       struct acpiphp_bridge *bridge;
-> -
-> -       bridge = acpiphp_handle_to_bridge(handle);
-> -       if (bridge)
-> -               (*count)++;
-> -       return AE_OK ;
-> -}
-> -
-> -static acpi_status
->  check_sub_bridges(acpi_handle handle, u32 lvl, void *context, void **rv)
->  {
->         struct acpiphp_bridge *bridge;
-> @@ -1203,8 +1132,6 @@ static void _handle_hotplug_event_bridge(struct work_struct *work)
->         char objname[64];
->         struct acpi_buffer buffer = { .length = sizeof(objname),
->                                       .pointer = objname };
-> -       struct acpi_device *device;
-> -       int num_sub_bridges = 0;
->         struct acpi_hp_work *hp_work;
->         acpi_handle handle;
->         u32 type;
-> @@ -1212,23 +1139,7 @@ static void _handle_hotplug_event_bridge(struct work_struct *work)
->         hp_work = container_of(work, struct acpi_hp_work, work);
->         handle = hp_work->handle;
->         type = hp_work->type;
-> -
-> -       if (acpi_bus_get_device(handle, &device)) {
-> -               /* This bridge must have just been physically inserted */
-> -               handle_p2p_bridge_insertion(handle, type);
-> -               goto out;
-> -       }
+From: Thierry Reding <thierry.reding@avionic-design.de>
 
-According to my understanding, for acpiphp we still need to support:
+[Thomas Petazzoni:
+ - Simplify capabilities handling.
+ - Move to a separate file.
+ - Fix mask used when writing a 4 bytes value.]
 
-one slot is on root bus 0, and will take p2p bridge directly.
+Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+---
+ drivers/pci/Kconfig          |    3 +
+ drivers/pci/Makefile         |    3 +
+ drivers/pci/sw-host-bridge.c |  144 ++++++++++++++++++++++++++++++++++++++++++
+ include/linux/pci.h          |   23 +++++++
+ 4 files changed, 173 insertions(+)
+ create mode 100644 drivers/pci/sw-host-bridge.c
 
-I thought that I pointed this out when Yijing Wang or someone else
-pose similar patch.
+diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+index 6d51aa6..f7548e2 100644
+--- a/drivers/pci/Kconfig
++++ b/drivers/pci/Kconfig
+@@ -119,3 +119,6 @@ config PCI_IOAPIC
+ config PCI_LABEL
+ 	def_bool y if (DMI || ACPI)
+ 	select NLS
++
++config PCI_SW_HOST_BRIDGE
++	bool
+diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
+index 0c3efcf..44ce914 100644
+--- a/drivers/pci/Makefile
++++ b/drivers/pci/Makefile
+@@ -15,6 +15,9 @@ obj-$(CONFIG_PCIEPORTBUS) += pcie/
+ 
+ obj-$(CONFIG_PCI_IOAPIC) += ioapic.o
+ 
++# Emulated PCI elements
++obj-$(CONFIG_PCI_SW_HOST_BRIDGE) += sw-host-bridge.o
++
+ # Build the PCI Hotplug drivers if we were asked to
+ obj-$(CONFIG_HOTPLUG_PCI) += hotplug/
+ ifdef CONFIG_HOTPLUG_PCI
+diff --git a/drivers/pci/sw-host-bridge.c b/drivers/pci/sw-host-bridge.c
+new file mode 100644
+index 0000000..b5a2aed
+--- /dev/null
++++ b/drivers/pci/sw-host-bridge.c
+@@ -0,0 +1,144 @@
++/*
++ * Implementation of a simple emulated PCI host bridge.
++ *
++ * Thierry Reding <thierry.reding@avionic-design.de>
++ * Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
++ *
++ * This file is licensed under the terms of the GNU General Public
++ * License version 2.  This program is licensed "as is" without any
++ * warranty of any kind, whether express or implied.
++ */
++
++#include <linux/kernel.h>
++#include <linux/init.h>
++#include <linux/pci.h>
++#include <linux/module.h>
++
++int pci_sw_host_bridge_init(struct pci_sw_host_bridge *bridge)
++{
++	unsigned int i;
++
++	if (!bridge)
++		return -EINVAL;
++
++	bridge->vendor = 0x0000;
++	bridge->device = 0x0000;
++
++	bridge->command = 0x0000;
++	bridge->status = PCI_STATUS_CAP_LIST;
++
++	bridge->class = PCI_CLASS_BRIDGE_HOST;
++	bridge->interface = 0x00;
++	bridge->revision = 0x00;
++
++	bridge->bist = 0x00;
++	bridge->header_type = PCI_HEADER_TYPE_NORMAL;
++	bridge->latency_timer = 0x00;
++	bridge->cache_line_size = 0x10;
++
++	for (i = 0; i < 6; i++)
++		bridge->bar[i] = 0x00000000;
++
++	bridge->subsystem_vendor = 0x0000;
++	bridge->subsystem_device = 0x0000;
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(pci_sw_host_bridge_init);
++
++int pci_sw_host_bridge_read(struct pci_sw_host_bridge *bridge,
++			    unsigned int where, int size, u32 *value)
++{
++	switch (where & ~3) {
++	case PCI_VENDOR_ID:
++		*value = bridge->device << 16 | bridge->vendor;
++		break;
++
++	case PCI_COMMAND:
++		*value = bridge->status << 16 | bridge->command;
++		break;
++
++	case PCI_STATUS:
++		*value = 0;
++		break;
++
++	case PCI_CLASS_REVISION:
++		*value = bridge->class << 16 | bridge->interface << 8 |
++			 bridge->revision;
++		break;
++
++	case PCI_CACHE_LINE_SIZE:
++		*value = bridge->bist << 24 | bridge->header_type << 16 |
++			 bridge->latency_timer << 8 | bridge->cache_line_size;
++		break;
++
++	case PCI_BASE_ADDRESS_0 ... PCI_BASE_ADDRESS_5:
++		*value = bridge->bar[((where & ~3) - PCI_BASE_ADDRESS_0) / 4];
++		break;
++
++	case PCI_CARDBUS_CIS:
++		*value = 0;
++		break;
++
++	case PCI_SUBSYSTEM_VENDOR_ID:
++		*value = bridge->subsystem_device << 16 |
++			 bridge->subsystem_vendor;
++		break;
++
++	case PCI_ROM_ADDRESS:
++		*value = 0;
++		break;
++
++	case PCI_INTERRUPT_LINE:
++		break;
++
++	default:
++		*value = 0xffffffff;
++		return PCIBIOS_BAD_REGISTER_NUMBER;
++	}
++
++	if (size == 2)
++		*value = (*value >> (8 * (where & 3))) & 0xffff;
++	else if (size == 1)
++		*value = (*value >> (8 * (where & 3))) & 0xff;
++
++	return PCIBIOS_SUCCESSFUL;
++}
++EXPORT_SYMBOL_GPL(pci_sw_host_bridge_read);
++
++int pci_sw_host_bridge_write(struct pci_sw_host_bridge *bridge,
++			     unsigned int where, int size, u32 value)
++{
++	u32 mask, reg;
++	int err;
++
++	if (size == 4)
++		mask = 0x0;
++	else if (size == 2)
++		mask = ~(0xffff << ((where & 3) * 8));
++	else if (size == 1)
++		mask = ~(0xff << ((where & 3) * 8));
++	else
++		return PCIBIOS_BAD_REGISTER_NUMBER;
++
++	err = pci_sw_host_bridge_read(bridge, where & ~3, 4, &reg);
++	if (err)
++		return err;
++
++	value = (reg & mask) | value << ((where & 3) * 8);
++
++	switch (where & ~3) {
++	case PCI_COMMAND:
++		bridge->command = value & 0xffff;
++		bridge->status = value >> 16;
++		break;
++
++	case PCI_BASE_ADDRESS_0 ... PCI_BASE_ADDRESS_5:
++		bridge->bar[((where & ~3) - PCI_BASE_ADDRESS_0) / 4] = value;
++		break;
++	}
++
++	return PCIBIOS_SUCCESSFUL;
++}
++EXPORT_SYMBOL_GPL(pci_sw_host_bridge_write);
++
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 15472d6..c93e258 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1841,4 +1841,27 @@ static inline struct eeh_dev *pci_dev_to_eeh_dev(struct pci_dev *pdev)
+  */
+ struct pci_dev *pci_find_upstream_pcie_bridge(struct pci_dev *pdev);
+ 
++struct pci_sw_host_bridge {
++	u16 vendor;
++	u16 device;
++	u16 command;
++	u16 status;
++	u16 class;
++	u8 interface;
++	u8 revision;
++	u8 bist;
++	u8 header_type;
++	u8 latency_timer;
++	u8 cache_line_size;
++	u32 bar[6];
++	u16 subsystem_vendor;
++	u16 subsystem_device;
++};
++
++extern int pci_sw_host_bridge_init(struct pci_sw_host_bridge *bridge);
++extern int pci_sw_host_bridge_read(struct pci_sw_host_bridge *bridge,
++				   unsigned int where, int size, u32 *value);
++extern int pci_sw_host_bridge_write(struct pci_sw_host_bridge *bridge,
++				    unsigned int where, int size, u32 value);
++
+ #endif /* LINUX_PCI_H */
+-- 
+1.7.9.5
 
-Thanks
-
-Yinghai
