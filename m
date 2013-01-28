@@ -1,78 +1,172 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.186]:60524 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752648Ab3A3J4m (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Jan 2013 04:56:42 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Subject: Re: [PATCH v2 05/27] arm: pci: add a align_resource hook
-Date: Wed, 30 Jan 2013 09:55:49 +0000
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	"Russell King - ARM Linux" <linux@arm.linux.org.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	"Eran Ben-Avi" <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Tawfik Bayouk <tawfik@marvell.com>
-References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com> <201301292254.01069.arnd@arndb.de> <20130130042103.GB5734@obsidianresearch.com>
-In-Reply-To: <20130130042103.GB5734@obsidianresearch.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201301300955.49473.arnd@arndb.de>
+Received: from mx1.redhat.com ([209.132.183.28]:26330 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757441Ab3A1Rus (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 28 Jan 2013 12:50:48 -0500
+Message-ID: <1359395436.11144.240.camel@bling.home>
+Subject: Re: [PATCH v2 1/3] VFIO: Wrappers for getting/putting reference to
+ vfio_device
+From: Alex Williamson <alex.williamson@redhat.com>
+To: "Pandarathil, Vijaymohan R" <vijaymohan.pandarathil@hp.com>
+Cc: Gleb Natapov <gleb@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Blue Swirl <blauwirbel@gmail.com>,
+	"Ortiz, Lance E" <lance.oritz@hp.com>,
+	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	"qemu-devel@nongnu.org" <qemu-devel@nongnu.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Date: Mon, 28 Jan 2013 10:50:36 -0700
+In-Reply-To: <F9E001219150CB45BEDC82A650F360C9014A7BD5@G9W0717.americas.hpqcorp.net>
+References: <F9E001219150CB45BEDC82A650F360C9014A7BD5@G9W0717.americas.hpqcorp.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday 30 January 2013, Jason Gunthorpe wrote:
-> On Tue, Jan 29, 2013 at 10:54:00PM +0000, Arnd Bergmann wrote:
-
-> > The part that I did not like about having emulated PCI-to-PCI bridges
-> > is that it seems to just work around a (percieved or real) limitation
-> > in the Linux kernel by adding a piece of infrastructure, rather than
-> > lifting that limitation by making the kernel deal with what the
-> > hardware provides. That reminded me of the original mach-vt8500
+On Mon, 2013-01-28 at 09:54 +0000, Pandarathil, Vijaymohan R wrote:
+> 	- Added vfio_device_get_from_vdev(), vfio_device_put_vdev()
+>           as wrappers to get/put reference to vfio_device from struct device.
 > 
-> Well.. in this case there is a standard - PCI-E for what HW vendors
-> are supposed to do. The kernel core code follows it and works with
-> compliant hardware.
+> 	- Added vfio_device_data() as a wrapper to get device_data from
+>           vfio_device.
 > 
-> Marvell HW is not compliant.
+> Signed-off-by: Vijay Mohan Pandarathil <vijaymohan.pandarathil@hp.com>
+> ---
+>  drivers/vfio/vfio.c  | 47 +++++++++++++++++++++++++++++++++++++++++------
+>  include/linux/vfio.h |  3 +++
+>  2 files changed, 44 insertions(+), 6 deletions(-)
 > 
-> So..
-> 
-> Should the kernel core PCI code support this particular non-compliance?
-> Should the driver work around the non-compliance and present a
-> compliant interface to the kernel and userspace?
-> 
-> My take is the kernel core PCI code is fine, and I hope
-> this will be an isolated issue with one family of Marvell IP. So
-> working around the HW problem in the driver seems best.
+> diff --git a/drivers/vfio/vfio.c b/drivers/vfio/vfio.c
+> index 12c264d..c2ff1b2 100644
+> --- a/drivers/vfio/vfio.c
+> +++ b/drivers/vfio/vfio.c
+> @@ -642,8 +642,13 @@ int vfio_add_group_dev(struct device *dev,
+>  }
+>  EXPORT_SYMBOL_GPL(vfio_add_group_dev);
+>  
+> -/* Test whether a struct device is present in our tracking */
+> -static bool vfio_dev_present(struct device *dev)
+> +/**
+> + * This does a get on the corresponding iommu_group,
+> + * vfio_group and the vfio_device. Callers of this
+> + * function will hae to call vfio_put_vdev() to
 
-I don't remember the kernel ever caring about whether hardware complies
-to a standard or not. The kernel's job is to make hardware work, based
-on the actual implementation of that hardware. In a lot of cases that
-means taking the standard document as a reference, and adding quirks
-for the devices that are different.
+s/hae/have/
 
-In the end, it comes down to the impact on the code complexity, and
-the run-time overhead for whatever hardware is most common when adding
-those quirks.
+Note that your commit log and the patch don't agree on names.
+vfio_device_get_from_dev vs vfio_device_get_from_vdev.  vfio_put_vdev vs
+vfio_device_put_vdev.  Personally I think they should be:
 
-Can you (or someone else) describe what kind of changes to the core
-code we would actually need to make it work without emulting the
-bridge?
+vfio_device_get_from_dev
+vfio_device_put
 
-> If we learn of many more instances like this then, yah, update the
-> core code and rip out this driver work around...
+> + * remove the reference to all objects.
 
-But the code was specifically written to be reusable, which is normally
-a good thing.
+Why do we need to hold references to all the objects?  Holding a
+reference to a vfio_device should implicitly hold the vfio_group, which
+implicitly holds the iommu_group.  We have to get each to get to the
+vfio_device, but once we hold of that reference I believe we can let the
+others go.  Is this not the case?
 
-	Arnd
+> + */
+> +void *vfio_device_get_from_dev(struct device *dev)
+
+Return should be struct vfio_device*.  It doesn't have to be void to be
+opaque.
+
+>  {
+>  	struct iommu_group *iommu_group;
+>  	struct vfio_group *group;
+> @@ -651,25 +656,55 @@ static bool vfio_dev_present(struct device *dev)
+>  
+>  	iommu_group = iommu_group_get(dev);
+>  	if (!iommu_group)
+> -		return false;
+> +		return NULL;
+>  
+>  	group = vfio_group_get_from_iommu(iommu_group);
+>  	if (!group) {
+>  		iommu_group_put(iommu_group);
+> -		return false;
+> +		return NULL;
+>  	}
+>  
+>  	device = vfio_group_get_device(group, dev);
+>  	if (!device) {
+>  		vfio_group_put(group);
+>  		iommu_group_put(iommu_group);
+> -		return false;
+> +		return NULL;
+>  	}
+> +	return device;
+> +}
+> +EXPORT_SYMBOL_GPL(vfio_device_get_from_dev);
+> +
+> +void *vfio_device_data(void *data)
+> +{
+
+Why wouldn't this take struct vfio_device*?  We're ignoring free type
+checking errors even though the user should be treating the device as
+opaque.
+
+> +	struct vfio_device *device = data;
+> +	return device->device_data;
+> +}
+> +EXPORT_SYMBOL_GPL(vfio_device_data);
+> +
+> +void vfio_device_put_vdev(void *data)
+> +{
+
+This also should take a struct vfio_device* and be called
+vfio_device_put().  If we fix the above extra reference holding then
+it's just the existingvfio_device_put, which just needs to be exported.
+
+> +	struct vfio_device *device = data;
+> +	struct vfio_group *group = device->group;
+> +	struct iommu_group *iommu_group = group->iommu_group;
+>  
+>  	vfio_device_put(device);
+>  	vfio_group_put(group);
+>  	iommu_group_put(iommu_group);
+> -	return true;
+> +	return;
+
+Unnecessary explicit return.  Thanks,
+
+Alex
+
+> +}
+> +EXPORT_SYMBOL_GPL(vfio_device_put_vdev);
+> +
+> +/* Test whether a struct device is present in our tracking */
+> +static bool vfio_dev_present(struct device *dev)
+> +{
+> +	struct vfio_device *device;
+> +
+> +	device = vfio_device_get_from_dev(dev);
+> +	if (device) {
+> +		vfio_device_put_vdev(device);
+> +		return true;
+> +	} else
+> +		return false;
+>  }
+>  
+>  /*
+> diff --git a/include/linux/vfio.h b/include/linux/vfio.h
+> index ab9e862..e550c09 100644
+> --- a/include/linux/vfio.h
+> +++ b/include/linux/vfio.h
+> @@ -45,6 +45,9 @@ extern int vfio_add_group_dev(struct device *dev,
+>  			      void *device_data);
+>  
+>  extern void *vfio_del_group_dev(struct device *dev);
+> +extern void *vfio_device_get_from_dev(struct device *dev);
+> +extern void vfio_device_put_vdev(void *device);
+> +extern void *vfio_device_data(void *device);
+>  
+>  /**
+>   * struct vfio_iommu_driver_ops - VFIO IOMMU driver callbacks
+
+
+
