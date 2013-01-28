@@ -1,60 +1,108 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:39965 "EHLO quartz.orcorp.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754532Ab3A1WXs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 28 Jan 2013 17:23:48 -0500
-Date: Mon, 28 Jan 2013 15:23:48 -0700
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Stephen Warren <swarren@wwwdotorg.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>
-Subject: Re: [PATCH v2 07/27] PCI: Add software-emulated host bridge
-Message-ID: <20130128222348.GA21628@obsidianresearch.com>
-References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
- <1359399397-29729-8-git-send-email-thomas.petazzoni@free-electrons.com>
- <201301282018.17714.arnd@arndb.de>
- <5106F5CB.8050304@wwwdotorg.org>
- <20130128220904.GA21446@obsidianresearch.com>
- <20130128231829.6b205c3c@skate>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:25177 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754945Ab3A1LRo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Jan 2013 06:17:44 -0500
+Message-ID: <510659CD.4090400@huawei.com>
+Date: Mon, 28 Jan 2013 18:58:21 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130128231829.6b205c3c@skate>
+To: Chris Clayton <chris2553@googlemail.com>
+CC: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>,
+	Yijing Wang <wangyijing0307@gmail.com>,
+	<linux-media@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>
+Subject: Re: 3.8.0-rc4+ - Oops on removing WinTV-HVR-1400 expresscard TV Tuner
+References: <51016937.1020202@googlemail.com> <510189B1.606@fold.natur.cuni.cz> <5104427D.2050002@googlemail.com> <510494D6.1010000@gmail.com> <51050D43.2050703@googlemail.com> <51051B1B.3080105@gmail.com> <51052DB2.4090702@googlemail.com> <51053917.6060400@fold.natur.cuni.cz> <5105491E.9050907@googlemail.com> <510558CE.9000600@fold.natur.cuni.cz> <5105AFDB.9000200@googlemail.com> <5105E51D.2020606@huawei.com> <51064F1A.1020909@googlemail.com>
+In-Reply-To: <51064F1A.1020909@googlemail.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jan 28, 2013 at 11:18:29PM +0100, Thomas Petazzoni wrote:
-
-> > That would simplify the question of PCI IDs - for Marvell's case and
-> > the sw root port bridge we can just copy the IDs from the bogus config
-> > space of the HW.
+>> Then use #modprobe pciehp pciehp_force=1 pciehp_debug=1 to load pciehp modules.
+>> After above actions, enter /sys/bus/pci_express/devices/ directory and /sys/bus/pci/slots/
+>> Some slots and pcie port devices should be there now.
+>>
+> Sorry, I've tried your suggestion, but the two directories are still empty.
 > 
-> Not sure what you mean in this last paragraph. In this second version,
-> I really rely on the emulated PCI-to-PCI bridges for the resource
+> I verified the test environment as follows:
+> 
+> [chris:~]$ uname -a
+> Linux laptop 3.7.4 #15 SMP PREEMPT Mon Jan 28 09:43:57 GMT 2013 i686 GNU/Linux
+> [chris:~]$ grep acpiphp /boot/System.map-3.7.4
+> [chris:~]$ modinfo acpiphp
+> modinfo: ERROR: Module acpiphp not found.
+> [chris:~]$ modinfo pciehp
+> filename:       /lib/modules/3.7.4/kernel/drivers/pci/hotplug/pciehp.ko
+> license:        GPL
+> description:    PCI Express Hot Plug Controller Driver
+> author:         Dan Zink <dan.zink@compaq.com>, Greg Kroah-Hartman <greg@kroah.com>, Dely Sy <dely.l.sy@intel.com>
+> depends:
+> intree:         Y
+> vermagic:       3.7.4 SMP preempt mod_unload CORE2
+> parm:           pciehp_detect_mode:Slot detection mode: pcie, acpi, auto
+>   pcie          - Use PCIe based slot detection
+>   acpi          - Use ACPI for slot detection
+>   auto(default) - Auto select mode. Use acpi option if duplicate
+>                   slot ids are found. Otherwise, use pcie option
+>  (charp)
+> parm:           pciehp_debug:Debugging mode enabled or not (bool)
+> parm:           pciehp_poll_mode:Using polling mechanism for hot-plug events or not (bool)
+> parm:           pciehp_poll_time:Polling mechanism frequency, in seconds (int)
+> parm:           pciehp_force:Force pciehp, even if OSHP is missing (bool)
+> [chris:~]$ cat /proc/cmdline
+> root=/dev/sda5 pciehp_ports=native ro resume=/dev/sda6
+> [chris:~]$ sudo modprobe pciehp pciehp_force=1 pciehp_debug=1
+> [chris:~]$ lsmod
+> Module                  Size  Used by
+> pciehp                 19907  0
+> [...]
+> 
+> You will notice that the kernel I have used is 3.7.4. I hope that's a suitable kernel for your tests. I've moved away from the 3.8 development kernel onto one that's stable and on which Martin has identified a solution. I see Greg KH released 3.7.5 yesterday and it includes a pciehp change. I'll upgrade to that, run the tests again and report back.
+> 
+> One question - should I include the (acpi) pci_slot driver in the kernel build or does pciehp populate the directories without pci_slot?
 
-I'm refering to your earlier question about what PCI IDs to use for
-the SW emulated devices. If there is no need for the host bridge then
-you only need 1 PCI ID (for the root port bridge) and you can probably
-fairly safely re-use the one in the Marvell config space of the HW.
+Hi Chris,
+   pci_slot driver is not necessary, I think empty directory under /sys/bus/pci_express/devices is the main problem,
+Because no pcie port devices found in the system, so pciehp driver can not bind any devices when loading it.
+Then no slot will created under /sys/bus/pci/devices/slots.
 
-> allocation. I give the Linux PCI core a global range of addresses for
-> memory regions and a global range of addresses for I/O regions, and
-> then I let Linux do the allocation of ranges on a per bridge basis,
-> depending on the devices detected downstream. And at the end, I use
-> those allocated ranges to set up the address decoding windows.
+> 
+> Thanks again.
+> 
+>> /sys/bus/pci_express/devices:
+>> total 0
+>>
+>> /sys/bus/pci_express/drivers:
+>> total 0
+>> drwxr-xr-x 2 root root 0 Jan 27 13:17 pciehp/
+>>
+>>
+>> On 2013/1/28 6:53, Chris Clayton wrote:
+>>> Thanks again, Martin.
+>>>
+>>> Firstly, maybe we should remove the linux-media list from the copy list. I imagine this hotplug stuff is just noise to them.
+>>>
+>>> [snip]
+>>>> Do you have any other express card around to try if it works at all? Try that always after a cold boot.
+>>>>
+>>> Not at the moment, but I ordered at USB3 expresscard yesterday, so I will have one soon.
+>>>
+>>>> Posting a diff result of the below procedure might help:
+>>>>
+>>>> # lspci -vvvxxx > lspci.before_insertion.txt
+>>>>
+>>>> [plug your card into the slot]
+>>>>
+>>>> # lspci -vvvxxx > lspci.after_insertion.txt
+>>>>
+>>>> [ unplug your card]
+>>>>
+>>>> # lspci -vvvxxx > lspci.after_1st_removal.txt
 
-Yes, that all seems OK to me.
 
-Jason
+
+-- 
+Thanks!
+Yijing
+
