@@ -1,163 +1,60 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Jiang Liu <liuj97@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>
-Subject: Re: [RFC PATCH v5 3/8] PCI: add a blocking notifier chain for PCI bus addition/removal
-Date: Mon, 21 Jan 2013 00:54:54 +0100
-Message-ID: <3583141.yG8QGivRYt@vostro.rjw.lan>
-In-Reply-To: <1358525267-14268-4-git-send-email-jiang.liu@huawei.com>
-References: <1358525267-14268-1-git-send-email-jiang.liu@huawei.com> <1358525267-14268-4-git-send-email-jiang.liu@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from quartz.orcorp.ca ([184.70.90.242]:39965 "EHLO quartz.orcorp.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754532Ab3A1WXs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 28 Jan 2013 17:23:48 -0500
+Date: Mon, 28 Jan 2013 15:23:48 -0700
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Stephen Warren <swarren@wwwdotorg.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>
+Subject: Re: [PATCH v2 07/27] PCI: Add software-emulated host bridge
+Message-ID: <20130128222348.GA21628@obsidianresearch.com>
+References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
+ <1359399397-29729-8-git-send-email-thomas.petazzoni@free-electrons.com>
+ <201301282018.17714.arnd@arndb.de>
+ <5106F5CB.8050304@wwwdotorg.org>
+ <20130128220904.GA21446@obsidianresearch.com>
+ <20130128231829.6b205c3c@skate>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130128231829.6b205c3c@skate>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Saturday, January 19, 2013 12:07:41 AM Jiang Liu wrote:
-> When adding/removing a PCI bus, some other components want to be
-> notified so they could update their states. For example, the pci_slot
-> driver needs to create/destroy PCI slots attaching to the PCI bus.
-> So introduce a dedicate blocking notifier chain for PCI bus
-> addition/removal events. It could be extended to support PCI device
-> addition/removal events in the future when needed.
+On Mon, Jan 28, 2013 at 11:18:29PM +0100, Thomas Petazzoni wrote:
+
+> > That would simplify the question of PCI IDs - for Marvell's case and
+> > the sw root port bridge we can just copy the IDs from the bogus config
+> > space of the HW.
 > 
-> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-> ---
->  drivers/pci/bus.c    |   24 ++++++++++++++++++++++++
->  drivers/pci/pci.h    |    1 +
->  drivers/pci/probe.c  |    2 ++
->  drivers/pci/remove.c |    1 +
->  include/linux/pci.h  |   12 ++++++++++++
->  5 files changed, 40 insertions(+)
-> 
-> diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-> index 4c843cd..8bbd3f2 100644
-> --- a/drivers/pci/bus.c
-> +++ b/drivers/pci/bus.c
-> @@ -13,11 +13,33 @@
->  #include <linux/errno.h>
->  #include <linux/ioport.h>
->  #include <linux/proc_fs.h>
-> +#include <linux/notifier.h>
->  #include <linux/init.h>
->  #include <linux/slab.h>
->  
->  #include "pci.h"
->  
-> +static BLOCKING_NOTIFIER_HEAD(pci_bus_notifier_chain);
-> +
-> +int pci_bus_register_notifier(struct notifier_block *nb)
-> +{
-> +	return blocking_notifier_chain_register(&pci_bus_notifier_chain, nb);
-> +}
-> +
-> +int pci_bus_unregister_notifier(struct notifier_block *nb)
-> +{
-> +	return blocking_notifier_chain_unregister(&pci_bus_notifier_chain, nb);
-> +}
-> +
-> +void pci_bus_call_notifier(struct pci_bus *bus, unsigned long code)
-> +{
-> +	int ret;
-> +
-> +	ret = blocking_notifier_call_chain(&pci_bus_notifier_chain,
-> +					   code, bus);
-> +	WARN_ON(ret != NOTIFY_DONE && ret != NOTIFY_OK);
+> Not sure what you mean in this last paragraph. In this second version,
+> I really rely on the emulated PCI-to-PCI bridges for the resource
 
-I'm not sure if this is a good idea.  WARN_ON() is quite a heavy tool.
+I'm refering to your earlier question about what PCI IDs to use for
+the SW emulated devices. If there is no need for the host bridge then
+you only need 1 PCI ID (for the root port bridge) and you can probably
+fairly safely re-use the one in the Marvell config space of the HW.
 
-> +}
-> +
->  void pci_add_resource_offset(struct list_head *resources, struct resource *res,
->  			     resource_size_t offset)
->  {
-> @@ -197,6 +219,8 @@ int pci_bus_add_child(struct pci_bus *bus)
->  	if (retval)
->  		return retval;
->  
-> +	pci_bus_call_notifier(bus, PCI_NOTIFY_POST_BUS_ADD);
-> +
->  	bus->is_added = 1;
->  
->  	/* Create legacy_io and legacy_mem files for this bus */
-> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-> index 7414094..988e4b4 100644
-> --- a/drivers/pci/pci.h
-> +++ b/drivers/pci/pci.h
-> @@ -208,6 +208,7 @@ extern int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
->  extern int pci_resource_bar(struct pci_dev *dev, int resno,
->  			    enum pci_bar_type *type);
->  extern int pci_bus_add_child(struct pci_bus *bus);
-> +extern void pci_bus_call_notifier(struct pci_bus *bus, unsigned long code);
->  extern void pci_enable_ari(struct pci_dev *dev);
->  /**
->   * pci_ari_enabled - query ARI forwarding status
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index adb77c6..7db6528 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1679,6 +1679,8 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
->  	if (error)
->  		goto class_dev_reg_err;
->  
-> +	pci_bus_call_notifier(b, PCI_NOTIFY_POST_BUS_ADD);
-> +
->  	/* Create legacy_io and legacy_mem files for this bus */
->  	pci_create_legacy_files(b);
->  
-> diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-> index 0d03026..2d8fbc8 100644
-> --- a/drivers/pci/remove.c
-> +++ b/drivers/pci/remove.c
-> @@ -50,6 +50,7 @@ void pci_remove_bus(struct pci_bus *bus)
->  	up_write(&pci_bus_sem);
->  	if (bus->is_added) {
->  		pci_remove_legacy_files(bus);
-> +		pci_bus_call_notifier(bus, PCI_NOTIFY_PRE_BUS_DEL);
->  		device_del(&bus->dev);
->  	}
->  	put_device(&bus->dev);
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index ee21795..12e5447 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1033,6 +1033,18 @@ const struct pci_device_id *pci_match_id(const struct pci_device_id *ids,
->  int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
->  		    int pass);
->  
-> +/*
-> + * All notifiers below get called with the target struct pci_bus *bus as
-> + * an argument.
-> + * Note: all PCI bus notifier must return success. Currently there's no
-> + * error handling if any notifier returns error code.
-> + */
-> +#define	PCI_NOTIFY_POST_BUS_ADD		0x00000001 /* PCI bus has been added */
-> +#define	PCI_NOTIFY_PRE_BUS_DEL		0x00000002 /* PCI bus will be deleted */
+> allocation. I give the Linux PCI core a global range of addresses for
+> memory regions and a global range of addresses for I/O regions, and
+> then I let Linux do the allocation of ranges on a per bridge basis,
+> depending on the devices detected downstream. And at the end, I use
+> those allocated ranges to set up the address decoding windows.
 
-I would call them PCI_EVENT_BUS_ADDED and PCI_EVENT_BUS_REMOVE, respectively.
+Yes, that all seems OK to me.
 
-> +
-> +int pci_bus_register_notifier(struct notifier_block *nb);
-> +int pci_bus_unregister_notifier(struct notifier_block *nb);
-> +
->  void pci_walk_bus(struct pci_bus *top, int (*cb)(struct pci_dev *, void *),
->  		  void *userdata);
->  int pci_cfg_space_size_ext(struct pci_dev *dev);
-
-Apart from the nitpicks above, looks good.
-
-Thanks,
-Rafael
-
-
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+Jason
