@@ -1,54 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f180.google.com ([209.85.223.180]:35336 "EHLO
-	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750885Ab3AUFWF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 21 Jan 2013 00:22:05 -0500
+Received: from caramon.arm.linux.org.uk ([78.32.30.218]:57843 "EHLO
+	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756899Ab3A2PZZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Jan 2013 10:25:25 -0500
+Date: Tue, 29 Jan 2013 15:25:18 +0000
+From: Russell King - ARM Linux <linux@arm.linux.org.uk>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Subject: Re: [PATCH v2 05/27] arm: pci: add a align_resource hook
+Message-ID: <20130129152518.GZ23505@n2100.arm.linux.org.uk>
+References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com> <1359399397-29729-6-git-send-email-thomas.petazzoni@free-electrons.com> <20130129161211.7bb8cada@skate> <20130129151501.GY23505@n2100.arm.linux.org.uk> <20130129162337.0121cbab@skate>
 MIME-Version: 1.0
-In-Reply-To: <2129071.O9G31gJZfd@vostro.rjw.lan>
-References: <1358495602-22867-1-git-send-email-yinghai@kernel.org>
-	<1358495602-22867-11-git-send-email-yinghai@kernel.org>
-	<2129071.O9G31gJZfd@vostro.rjw.lan>
-Date: Sun, 20 Jan 2013 21:22:04 -0800
-Message-ID: <CAE9FiQWaiPDpmdxm34YPoxcGVMUV+rgFqFZVBZsQy7JOaA4yXQ@mail.gmail.com>
-Subject: Re: [PATCH v9 10/11] PCI: Add match_driver in struct pci_dev
-From: Yinghai Lu <yinghai@kernel.org>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130129162337.0121cbab@skate>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Jan 20, 2013 at 3:15 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> On Thursday, January 17, 2013 11:53:21 PM Yinghai Lu wrote:
->> with that we could move out attaching driver for pci device,
->> out of device_add for pci hot add path.
->>
->> pci_bus_attach_device() will attach driver to pci device.
->
-> Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->
-> for the code, but you still aren't saying in the changelog why the change
-> is needed.
+On Tue, Jan 29, 2013 at 04:23:37PM +0100, Thomas Petazzoni wrote:
+> Russell,
+> 
+> Thanks for your quick feedback!
+> 
+> On Tue, 29 Jan 2013 15:15:01 +0000, Russell King - ARM Linux wrote:
+> 
+> > Given the description, I'd feel much happier with this if we specified
+> > the alignment numerically rather than allowing "some random code" to do
+> > something with the passed values.
+> 
+> So, you'd prefer to have two new members added in the hw_pci structure
+> to give the alignment requirements for I/O regions and memory regions?
 
-Thanks.
+Yep, otherwise we'll have yet more code to review rather than one
+algorithm with a set of numbers...
 
-Please check if the changelog is good to you.
-
----
-Subject: [PATCH] PCI: Skip attaching driver in device_add()
-
-We want to add pci device to device tree as early as possible but
-delay attach driver in next following path.
-
-To make that patch smaller, in this patch:
-
-We add match_driver field in pci_dev and default vaule is false, it will
-make pci_bus_match fail, so device_add  will skip attaching driver,
-then pci_bus_attach_device() will set match_driver to true so
-pci_bus_match will return true and device_attach will attach driver
-to pci device.
-
----
+I work on the principle that if something can be expressed numerically,
+that's always better than expressing it with code.
