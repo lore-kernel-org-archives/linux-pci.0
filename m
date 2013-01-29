@@ -1,129 +1,69 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v10 09/11] PCI, acpiphp: Don't bailout even no slots found yet.
-Date: Mon, 21 Jan 2013 13:20:50 -0800
-Message-Id: <1358803252-20639-10-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1358803252-20639-1-git-send-email-yinghai@kernel.org>
-References: <1358803252-20639-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from quartz.orcorp.ca ([184.70.90.242]:41619 "EHLO quartz.orcorp.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753806Ab3A2TSx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 29 Jan 2013 14:18:53 -0500
+Date: Tue, 29 Jan 2013 12:18:53 -0700
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>
+Subject: Re: [PATCH v2 19/27] pci: PCIe driver for Marvell Armada 370/XP
+ systems
+Message-ID: <20130129191853.GB29274@obsidianresearch.com>
+References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
+ <1359399397-29729-20-git-send-email-thomas.petazzoni@free-electrons.com>
+ <CAErSpo5H08j=dZx9zapDaf1c9x6VUfuJ5oB=J0M1UFF55pg=mw@mail.gmail.com>
+ <20130129055508.GA3339@obsidianresearch.com>
+ <CAErSpo7gCFfLB6+ebvANQjkr7Bii8Jqt3y5YqExD-DcnBG7hgA@mail.gmail.com>
+ <20130129184157.GA29274@obsidianresearch.com>
+ <CAErSpo5K8yKqjzQ6s+imb3d5wLSkhvWp-d=pPv9CZk+o67kyaQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo5K8yKqjzQ6s+imb3d5wLSkhvWp-d=pPv9CZk+o67kyaQ@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Could have root bus hot added later and there may be slots that need acpiphp.
+On Tue, Jan 29, 2013 at 12:07:00PM -0700, Bjorn Helgaas wrote:
+> > So when I say set aside, I mean for instance, the PCI-E entry in DT
+> > has 128M of physical address space marked for PCI MMIO use. The kernel
+> > does PCI resource allocation and the HW decoders in each link will be
+> > set to claim some portion of the 128M - based on the MMIO windows
+> > programmed on the PCI-PCI root port bridges. The reamining part of the
+> > 128M is dead address space, not claimed by any hardware block at all.
+> 
+> Thanks, this really helps get to the issue that the PCI core will care
+> about.  The root ports look like normal bridges, so the core assumes
+> it can manage their windows as needed, as long as the windows stay
+> inside the host bridge apertures that are logically upstream from the
+> root ports.
 
-The result returned by acpiphp_get_num_slots() is meaningless, because
-the bridge the slots are under may be added after this function has been
-called, so drop acpiphp_get_num_slots() and the code using it.
+Yes, that is basically correct. This is what the PCI-E specification
+says the root complex/root port should look like and this is what some
+SOC hardware implements fully in hardware. The small wrinkle with
+Marvell is that the PCI-PCI bridge config space is created by the
+driver since the HW does not expose a standard config space.
 
--v2: add changelog about why we could get rid of acpiphp_get_name_slots()
-     from Rafael.
+> In your example, it sounds like the 128M should be treated as the host
+> bridge aperture.  Is there any reason not to do that?  It sounds like
+> there's no place you can actually program that 128M region into the
+> hardware, and you would just program pieces of that region as root
+> port windows.  But that should be OK from the core's perspective.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/pci/hotplug/acpiphp.h      |    1 -
- drivers/pci/hotplug/acpiphp_core.c |   23 ++---------------------
- drivers/pci/hotplug/acpiphp_glue.c |   22 ----------------------
- 3 files changed, 2 insertions(+), 44 deletions(-)
+AFAIK this is already what Thomas's driver is doing..
 
-diff --git a/drivers/pci/hotplug/acpiphp.h b/drivers/pci/hotplug/acpiphp.h
-index a1afb5b..b3ead7a 100644
---- a/drivers/pci/hotplug/acpiphp.h
-+++ b/drivers/pci/hotplug/acpiphp.h
-@@ -193,7 +193,6 @@ extern void acpiphp_unregister_hotplug_slot(struct acpiphp_slot *slot);
- /* acpiphp_glue.c */
- extern int acpiphp_glue_init (void);
- extern void acpiphp_glue_exit (void);
--extern int acpiphp_get_num_slots (void);
- typedef int (*acpiphp_callback)(struct acpiphp_slot *slot, void *data);
- 
- extern int acpiphp_enable_slot (struct acpiphp_slot *slot);
-diff --git a/drivers/pci/hotplug/acpiphp_core.c b/drivers/pci/hotplug/acpiphp_core.c
-index 96316b7..c2fd309 100644
---- a/drivers/pci/hotplug/acpiphp_core.c
-+++ b/drivers/pci/hotplug/acpiphp_core.c
-@@ -50,7 +50,6 @@
- bool acpiphp_debug;
- 
- /* local variables */
--static int num_slots;
- static struct acpiphp_attention_info *attention_info;
- 
- #define DRIVER_VERSION	"0.5"
-@@ -272,25 +271,6 @@ static int get_adapter_status(struct hotplug_slot *hotplug_slot, u8 *value)
- 	return 0;
- }
- 
--static int __init init_acpi(void)
--{
--	int retval;
--
--	/* initialize internal data structure etc. */
--	retval = acpiphp_glue_init();
--
--	/* read initial number of slots */
--	if (!retval) {
--		num_slots = acpiphp_get_num_slots();
--		if (num_slots == 0) {
--			acpiphp_glue_exit();
--			retval = -ENODEV;
--		}
--	}
--
--	return retval;
--}
--
- /**
-  * release_slot - free up the memory used by a slot
-  * @hotplug_slot: slot to free
-@@ -379,7 +359,8 @@ static int __init acpiphp_init(void)
- 		return 0;
- 
- 	/* read all the ACPI info from the system */
--	return init_acpi();
-+	/* initialize internal data structure etc. */
-+	return acpiphp_glue_init();
- }
- 
- 
-diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-index c4a6301..bd784ff 100644
---- a/drivers/pci/hotplug/acpiphp_glue.c
-+++ b/drivers/pci/hotplug/acpiphp_glue.c
-@@ -1416,28 +1416,6 @@ void  acpiphp_glue_exit(void)
- 	acpi_pci_unregister_driver(&acpi_pci_hp_driver);
- }
- 
--
--/**
-- * acpiphp_get_num_slots - count number of slots in a system
-- */
--int __init acpiphp_get_num_slots(void)
--{
--	struct acpiphp_bridge *bridge;
--	int num_slots = 0;
--
--	list_for_each_entry(bridge, &bridge_list, list) {
--		dbg("Bus %04x:%02x has %d slot%s\n",
--				pci_domain_nr(bridge->pci_bus),
--				bridge->pci_bus->number, bridge->nr_slots,
--				bridge->nr_slots == 1 ? "" : "s");
--		num_slots += bridge->nr_slots;
--	}
--
--	dbg("Total %d slots\n", num_slots);
--	return num_slots;
--}
--
--
- /**
-  * acpiphp_enable_slot - power on slot
-  * @slot: ACPI PHP slot
--- 
-1.7.10.4
-
+Regards,
+Jason
