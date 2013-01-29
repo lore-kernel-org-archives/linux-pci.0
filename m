@@ -1,89 +1,101 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:35655 "EHLO mx2.suse.de"
+Received: from quartz.orcorp.ca ([184.70.90.242]:36746 "EHLO quartz.orcorp.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756633Ab3AHQr1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 8 Jan 2013 11:47:27 -0500
-From: Thomas Renninger <trenn@suse.de>
-To: Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH] Only reset e820 once, even with multiple memmap=exactmap params
-Date: Tue, 8 Jan 2013 17:47:17 +0100
-Cc: MUNEDA Takahiro <muneda.takahiro@jp.fujitsu.com>,
-	Takao Indoh <indou.takao@jp.fujitsu.com>,
-	linux-pci@vger.kernel.org, x86@kernel.org,
-	linux-kernel@vger.kernel.org, andi@firstfloor.org,
-	tokunaga.keiich@jp.fujitsu.com, kexec@lists.infradead.org,
-	hbabu@us.ibm.com, mingo@redhat.com, ddutile@redhat.com,
-	vgoyal@redhat.com, ishii.hironobu@jp.fujitsu.com, hpa@zytor.com,
-	bhelgaas@google.com, tglx@linutronix.de, khalid@gonehiking.org
-References: <20121127004144.3604.61708.sendpatchset@tindoh.g01.fujitsu.local> <3649945.08HKjS0y0c@hammer82.arch.suse.de> <CAE9FiQUueTB6gc5uMUApqeS7FtzMESLLFEt3ZuOMJgXsnjFQ0A@mail.gmail.com>
-In-Reply-To: <CAE9FiQUueTB6gc5uMUApqeS7FtzMESLLFEt3ZuOMJgXsnjFQ0A@mail.gmail.com>
+	id S1753849Ab3A2GQJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 29 Jan 2013 01:16:09 -0500
+Date: Mon, 28 Jan 2013 23:16:02 -0700
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Stephen Warren <swarren@wwwdotorg.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>
+Subject: Re: [PATCH v2 07/27] PCI: Add software-emulated host bridge
+Message-ID: <20130129061602.GB3339@obsidianresearch.com>
+References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
+ <1359399397-29729-8-git-send-email-thomas.petazzoni@free-electrons.com>
+ <201301282018.17714.arnd@arndb.de>
+ <5106F5CB.8050304@wwwdotorg.org>
+ <20130128220904.GA21446@obsidianresearch.com>
+ <CAErSpo7-qXZTri-T+v4O3rKk9AXjHE4ckkWZ1UT63SC1fG02-A@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201301081747.17853.trenn@suse.de>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo7-qXZTri-T+v4O3rKk9AXjHE4ckkWZ1UT63SC1fG02-A@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, January 08, 2013 04:04:56 AM Yinghai Lu wrote:
-> On Mon, Jan 7, 2013 at 4:42 PM, Thomas Renninger <trenn@suse.de> wrote:
-> > memmap=256M$3584M
+On Mon, Jan 28, 2013 at 07:40:16PM -0700, Bjorn Helgaas wrote:
+> On Mon, Jan 28, 2013 at 3:09 PM, Jason Gunthorpe
+> <jgunthorpe@obsidianresearch.com> wrote:
+> > On Mon, Jan 28, 2013 at 03:03:55PM -0700, Stephen Warren wrote:
+> >> On 01/28/2013 01:18 PM, Arnd Bergmann wrote:
+> >> > On Monday 28 January 2013, Thomas Petazzoni wrote:
+> >> >> From: Thierry Reding <thierry.reding@avionic-design.de>
+> >> >>
+> >> >> [Thomas Petazzoni:
+> >> >>  - Simplify capabilities handling.
+> >> >>  - Move to a separate file.
+> >> >>  - Fix mask used when writing a 4 bytes value.]
+> >> >>
+> >> >> Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
+> >> >> Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+> >> >
+> >> > Not even a description why this is needed?
+> >> >
+> >> > This patch (together with patch 8) seems like the most controversial
+> >> > one of the series, so you should better provide a really good reason
+> >> > why we would emulate something in software rather than using whatever
+> >> > hardware is there.
+> >>
+> >> At least on Tegra, there is no HW that exposes PCI configuration
+> >> registers for the host bridge itself. Only the root ports have exposed
+> >> PCI configuration registers. There was some debate re: whether a host
+> >> bridge device needed to exist or not. This patch makes such a device
+> >> exist if it's required.
 > 
-> may need to change to:
-> 
-> memmap=256M\$\$3584M
-The problem is (beside the special char $) that
-memmap=exactmap boot param resets all e820 maps every time the
-parameter is processed.
-And:
-/sbin/kexec -p xy --append="..." --initrd yx
-seem to magically add (append):
-memmap=exactmap memmap=640K@0K memmap=392556K@115328K elfcorehdr=507884K memmap=252K#3099760K
+> Host bridges are not actually PCI devices on any architecture.  The
+> upstream side of a host bridge is by definition not on a PCI bus.  On
+> some architectures, it *looks* like the host bridge is a PCI device
+> because it responds to PCI config accesses and you can get to
 
-therefore all memmap= I try to pass are voided out by:
-memmap=exactmap
-which is always added by kexec after my params.
+Sure, you can't discover domains through any standard means, but once
+you have found a domain (notably a way to issue config transactions)
+then the PCI-E standard actually does place requirements on what
+config transactions should return:
+ - 0:00.0 is a host bridge config space.
+ - 0:XX.X will be one of:
+   - A root complex internal function, with some restrictions this
+     is basically a PCI end device
+   - A PCI-PCI bridge with various mandatory capability headers.
+     One of these must show up for every physical PCI-E link
+     on the root complex.
+This collection of stuff on bus 0 is called the 'root complex'. This
+is new in PCI-E, PCI-X and PCI didn't have such requirements.
 
-I could come around with attached patch and passing:
-/sbin/kexec -p xy --append='... memmap=exactmap memmap=256M$3584M' --initrd yx
+SOC vendors are taking various liberties with their PCI-E implementations.
+ - nvidia followed the standard but did not include the host bridge
+   at 0:00.0
+ - Marvell ignored everything about the root complex config space
+   behavior :)
 
-Now mmconfig is working in kdump kernel.
-This would mean mmconfig is broken by design in kexec?
+There are two patch sets in this subject, one for nvidia tegra and one
+for Marvell, both presenting to Linux a view of the HW that matches
+what the PCI-E spec describes - specifically that there is one domain,
+and each PCI-E link/controller shows up as a PCI-PCI bridge on bus 0.
 
-Only way to fix this I can think of is to export
-mmconfig area through /sys  (../kernel/debug/mmconfig?, possibly
-already in X$Y format?) in the productive kernel and make kexec add it
-like the other memmap= params automatically.
+In this model, there is no 'host bridge aperture' hardware, each PCI-E
+link has a dedicated aperture and control of that aperture is through
+the PCI-PCI bridge window registers, again as PCI-E specifies.
 
-I'll attach the output in a separate mail.
-
-   Thomas
-
----
-
-x86 e820: Do not reset e820 map twice, even if memmap=exactmap is passed as boot param several times
-
-This is needed to be able to explicitly pass (debug) e820
-modifications through kexec via memmap=.
-Otherwise those get voided by kexec appending memmap=exactmap always
-after the user defined boot parameters.
-
-Signed-off-by: Thomas Renninger <trenn@suse.de>
-
- linux-2.6_t/arch/x86/kernel/e820.c |    4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
-
-Index: git/linux-2.6_t/arch/x86/kernel/e820.c
-===================================================================
---- git.orig/linux-2.6_t/arch/x86/kernel/e820.c
-+++ git/linux-2.6_t/arch/x86/kernel/e820.c
-@@ -845,7 +845,9 @@ static int __init parse_memmap_opt(char
- 
- 	if (!strncmp(p, "exactmap", 8)) {
- #ifdef CONFIG_CRASH_DUMP
--		/*
-+		/* memmap=exactmap passed twice, do not reset tables again */
-+		if (saved_max_pfn)
-+			return 0;		/*
- 		 * If we are doing a crash dump, we still need to know
- 		 * the real mem size before original memory map is
- 		 * reset.
+Jason
