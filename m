@@ -1,103 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f42.google.com ([209.85.214.42]:63075 "EHLO
-	mail-bk0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754032Ab3AJXej (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Jan 2013 18:34:39 -0500
+Received: from hydra.sisk.pl ([212.160.235.94]:58465 "EHLO hydra.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755847Ab3A2LtG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 29 Jan 2013 06:49:06 -0500
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Konstantin Khlebnikov <khlebnikov@openvz.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
+	e1000-devel@lists.sourceforge.net, linux-pci@vger.kernel.org,
+	Dave Airlie <airlied@redhat.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Subject: Re: [PATCH 3/5] PCI: revert preparing for wakeup in runtime-suspend finalization
+Date: Tue, 29 Jan 2013 12:55:15 +0100
+Message-ID: <7488961.Q6GFlfgakd@vostro.rjw.lan>
+In-Reply-To: <51077499.90602@openvz.org>
+References: <20130118113019.6698.25941.stgit@zurg> <1821500.CRlxLgYU5r@vostro.rjw.lan> <51077499.90602@openvz.org>
 MIME-Version: 1.0
-In-Reply-To: <1586060.uJlkOEQfVW@hammer82.arch.suse.de>
-References: <20121127004144.3604.61708.sendpatchset@tindoh.g01.fujitsu.local>
-	<201301081747.17853.trenn@suse.de>
-	<CAE9FiQW=gT86Eo0gwPHi5iFi4sg=1SHkBohBAo2KXdoB_Ouqvw@mail.gmail.com>
-	<1586060.uJlkOEQfVW@hammer82.arch.suse.de>
-Date: Thu, 10 Jan 2013 15:34:37 -0800
-Message-ID: <CAE9FiQVLVxj07TM1N6F2kmZdBYMUiS6Xz2bD-JZPtvps3a5-xw@mail.gmail.com>
-Subject: Re: [PATCH] Only reset e820 once, even with multiple memmap=exactmap params
-From: Yinghai Lu <yinghai@kernel.org>
-To: Thomas Renninger <trenn@suse.de>
-Cc: MUNEDA Takahiro <muneda.takahiro@jp.fujitsu.com>,
-	Takao Indoh <indou.takao@jp.fujitsu.com>,
-	linux-pci@vger.kernel.org, x86@kernel.org,
-	linux-kernel@vger.kernel.org, andi@firstfloor.org,
-	tokunaga.keiich@jp.fujitsu.com, kexec@lists.infradead.org,
-	hbabu@us.ibm.com, mingo@redhat.com, ddutile@redhat.com,
-	vgoyal@redhat.com, ishii.hironobu@jp.fujitsu.com, hpa@zytor.com,
-	bhelgaas@google.com, tglx@linutronix.de, khalid@gonehiking.org,
-	horms@verge.net.au
-Content-Type: multipart/mixed; boundary=00151748e0f045c07b04d2f79f44
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---00151748e0f045c07b04d2f79f44
-Content-Type: text/plain; charset=ISO-8859-1
+On Tuesday, January 29, 2013 11:04:57 AM Konstantin Khlebnikov wrote:
+> Rafael J. Wysocki wrote:
+> > On Monday, January 28, 2013 04:17:42 PM Bjorn Helgaas wrote:
+> >> [+cc Rafael]
+> >>
+> >> On Fri, Jan 18, 2013 at 4:42 AM, Konstantin Khlebnikov
+> >> <khlebnikov@openvz.org>  wrote:
+> >>> This patch effectively reverts commit 42eca2302146fed51335b95128e949ee6f54478f
+> >>> ("PCI: Don't touch card regs after runtime suspend D3")
+> >>>
+> >>> | This patch checks whether the pci state is saved and doesn't attempt to hit
+> >>> | any registers after that point if it is.
+> >>>
+> >>> This seems completely wrong. Yes, PCI configuration space has been saved by
+> >>> driver, but this doesn't means that all job is done and device has been
+> >>> suspended and ready for waking up in the future.
+> >>>
+> >>> For example driver e1000e for ethernet in my thinkpad x220 saves pci-state
+> >>> but device cannot wakeup after that, because it needs some ACPI callbacks
+> >>> which usually called from pci_finish_runtime_suspend().
+> >>>
+> >>> | Optimus (dual-gpu) laptops seem to have their own form of D3cold, but
+> >>> | unfortunately enter it on normal D3 transitions via the ACPI callback.
+> >>>
+> >>> Hardware which disappears from the bus unexpectedly is exception, so let's
+> >>> handle it as an exception. Its driver should set device state to D3cold and
+> >>> the rest code will handle it properly.
+> >>
+> >> Functions in D3cold don't have power, so it's completely expected that
+> >> they would disappear from the bus and not respond to config accesses.
+> >> Maybe Dave was referring to D3hot, where functions *should* respond to
+> >> config accesses.  I dunno.
+> >>
+> >> Just to be clear, it sounds like 42eca230 caused a regression on your
+> >> e1000e device?  If so, I guess we should revert it unless you and Dave
+> >> can figure out a better patch that fixes both your e1000e device and
+> >> the Optimus issue.
+> >
+> > Yes, if there's a regression, let's revert it, but I'd like the regression
+> > to be described clearly.
+> 
+> Yep, this is regression.
+> 
+> commit 42eca2302146fed51335b95128e949ee6f54478f ("PCI: Don't touch
+> card regs after runtime suspend D3") changes state convention during
+> runtime-suspend transaction too much. If PCI configuration space
+> has been saved by driver that does not means that all job is done
+> and device has been suspended and ready for waking up in the future.
+> 
+> e1000e saves pci-config space itself, but it requires operations which
+> pci_finish_runtime_suspend() does: preparing for wake (calling particular
+> platform pm-callbacks) and switching to proper sleep state.
 
-On Wed, Jan 9, 2013 at 7:21 PM, Thomas Renninger <trenn@suse.de> wrote:
-> I still do not understand why:
->
-> Kexec (kexec/firmware_memmap.c) is setting up the e820 map from:
-> /sys/firmware/memmap/*
-> and pass it via bootloader structures.
-> And this e820 table gets immediately voided by memmap=exactmap
-> and a new one passed via boot parameters is set up.
-> If I read this correctly, this is what happens?
+Well, I'd argue this is a bug in e1000e.  Why does it need to save the PCI
+config space even though pci_pm_runtime_suspend() will do that anyway?
 
-yes, kdump scripts append those memmap.
+Rafael
 
->
-> Can kexec simply pass the memory to use via memmap=X@Y
-> Then take the original e820 table, but not the usable entries (those
-> are coming from above memmap=X@Y).
-> That would mean that the kexec kernel takes all the
-> original ACPI, ACPI NVS, reserved, unusable (everthing but usable) entries
-> from the original e820 table and identifies the usable memory from
-> memmap boot param?
 
-kdump scripts already do that for acpi regions, need to update it
-to append that for mmconf.
-
->
-> This would be much smarter than trying to pass the mmconf reserved
-> area and I could imagine other issues will show up if the reserved areas
-> do not match the original ones in the kexec kernel.
->
-> If this really can be done and memmap=exactmap was only used by kexec,
-> it's logic could be redefined from "drop all e820 entries" to
-> "drop all usable e820 entries" and no further adjustings in kexec/kernel are
-> needed to get mmconf working (and other issues may be avoided before
-> they happen). Beside that ACPI reserved aread is not needed anymore to get
-> passed via memmap=X#Y by kexec.
-
-yes, we have other user for debug  like simulating user memmap for some bugs.
-
-current problem for exactmap is that we don't scan that at first.
-
-attached patch could help that.
-
-Thanks
-
-Yinghai
-
---00151748e0f045c07b04d2f79f44
-Content-Type: application/octet-stream; name="parse_exactmap_one_time.patch"
-Content-Disposition: attachment; filename="parse_exactmap_one_time.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_hbsjamlz0
-
-LS0tCiBhcmNoL3g4Ni9rZXJuZWwvZTgyMC5jIHwgICAxMiArKysrKysrKysrKysKIDEgZmlsZSBj
-aGFuZ2VkLCAxMiBpbnNlcnRpb25zKCspCgpJbmRleDogbGludXgtMi42L2FyY2gveDg2L2tlcm5l
-bC9lODIwLmMKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PQotLS0gbGludXgtMi42Lm9yaWcvYXJjaC94ODYva2VybmVsL2U4
-MjAuYworKysgbGludXgtMi42L2FyY2gveDg2L2tlcm5lbC9lODIwLmMKQEAgLTgzNSw2ICs4MzUs
-OCBAQCBzdGF0aWMgaW50IF9faW5pdCBwYXJzZV9tZW1vcHQoY2hhciAqcCkKIH0KIGVhcmx5X3Bh
-cmFtKCJtZW0iLCBwYXJzZV9tZW1vcHQpOwogCitzdGF0aWMgYm9vbCBfX2luaXRkYXRhIGV4YWN0
-bWFwX3BhcnNlZDsKKwogc3RhdGljIGludCBfX2luaXQgcGFyc2VfbWVtbWFwX29uZShjaGFyICpw
-KQogewogCWNoYXIgKm9sZHA7CkBAIC04NDQsNiArODQ2LDEwIEBAIHN0YXRpYyBpbnQgX19pbml0
-IHBhcnNlX21lbW1hcF9vbmUoY2hhcgogCQlyZXR1cm4gLUVJTlZBTDsKIAogCWlmICghc3RybmNt
-cChwLCAiZXhhY3RtYXAiLCA4KSkgeworCQlpZiAoZXhhY3RtYXBfcGFyc2VkKQorCQkJcmV0dXJu
-IDA7CisKKwkJZXhhY3RtYXBfcGFyc2VkID0gdHJ1ZTsKICNpZmRlZiBDT05GSUdfQ1JBU0hfRFVN
-UAogCQkvKgogCQkgKiBJZiB3ZSBhcmUgZG9pbmcgYSBjcmFzaCBkdW1wLCB3ZSBzdGlsbCBuZWVk
-IHRvIGtub3cKQEAgLTg3OSw2ICs4ODUsMTIgQEAgc3RhdGljIGludCBfX2luaXQgcGFyc2VfbWVt
-bWFwX29uZShjaGFyCiB9CiBzdGF0aWMgaW50IF9faW5pdCBwYXJzZV9tZW1tYXBfb3B0KGNoYXIg
-KnN0cikKIHsKKwljaGFyICpwID0gYm9vdF9jb21tYW5kX2xpbmU7CisKKwlwID0gc3Ryc3RyKHAs
-ICJleGFjdG1hcCIpOworCWlmIChwKQorCQlwYXJzZV9tZW1tYXBfb25lKCJleGFjdG1hcCIpOwor
-CiAJd2hpbGUgKHN0cikgewogCQljaGFyICprID0gc3RyY2hyKHN0ciwgJywnKTsKIAo=
---00151748e0f045c07b04d2f79f44--
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
