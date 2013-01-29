@@ -1,52 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:60570 "EHLO hydra.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754963Ab3AEAJQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 4 Jan 2013 19:09:16 -0500
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Tony Luck <tony.luck@intel.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, Jiang Liu <liuj97@gmail.com>,
-	Myron Stowe <myron.stowe@redhat.com>
-Subject: Re: [Alternative 2][PATCH] ACPI / PCI: Set root bridge ACPI handle in advance
-Date: Sat, 05 Jan 2013 01:14:52 +0100
-Message-ID: <2913597.xNs4ttWDNI@vostro.rjw.lan>
-In-Reply-To: <CAE9FiQVSaC=D-KzSPJaP0=HGRnNgxBYv+S6=PqF_3Li+ihTnEQ@mail.gmail.com>
-References: <1558789.gX8cmBgyDV@vostro.rjw.lan> <1832392.tD5dEjQMy4@vostro.rjw.lan> <CAE9FiQVSaC=D-KzSPJaP0=HGRnNgxBYv+S6=PqF_3Li+ihTnEQ@mail.gmail.com>
+Received: from moutng.kundenserver.de ([212.227.126.187]:62137 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751326Ab3A2UQV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Jan 2013 15:16:21 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Subject: Re: [PATCH v2 05/27] arm: pci: add a align_resource hook
+Date: Tue, 29 Jan 2013 20:15:21 +0000
+Cc: "Russell King - ARM Linux" <linux@arm.linux.org.uk>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	"Eran Ben-Avi" <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com> <201301291645.08040.arnd@arndb.de> <20130129180936.3737e550@skate>
+In-Reply-To: <20130129180936.3737e550@skate>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201301292015.21478.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, January 04, 2013 04:03:01 PM Yinghai Lu wrote:
-> On Fri, Jan 4, 2013 at 3:38 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> >> --- a/arch/x86/include/asm/pci.h
-> >> +++ b/arch/x86/include/asm/pci.h
-> >> @@ -14,6 +14,7 @@
-> >>  struct pci_sysdata {
-> >>       int             domain;         /* PCI domain */
-> >>       int             node;           /* NUMA node */
-> >> +     void            *acpi_handle;
-> >>  #ifdef CONFIG_X86_64
-> >>       void            *iommu;         /* IOMMU private data */
-> >>  #endif
-> >>
+On Tuesday 29 January 2013, Thomas Petazzoni wrote:
+> Yes, it is about the emulated PCI-to-PCI bridges. Each
+> emulated PCI-to-PCI bridge corresponds to one hardware PCIe interface,
+> and I need the I/O base address assigned to each PCIe interface to be
+> aligned on a 64 KB boundary. I am not sure to understand why you think
+> this is a problem.
 > 
-> acpi_handle is not good name and it is confusing.
+> Also, what do you mean exactly by making them appear as individual
+> domains?
 
-Well, what would be a better name in your opinion?
+I mean you could make each root port look like a separate host
+bridge that is not related to the others, and not have any
+emulated PCI-to-PCI bridges at all.
 
-I was going to put that into a #ifdef CONFIG_ACPI / #endif, so what about
-calling it acpi_data?
+> Remember that the very reason to use emulated PCI-to-PCI bridges is
+> that we want to assign a global range of addresses of I/O regions and a
+> global range of addresses of memory regions, and let the Linux PCI core
+> allocate from those two ranges to the different devices connected
+> downstream of the PCI-to-PCI bridges. This gives us for free the rather
+> complex allocation of addresses we need to set up our address decoding
+> windows.
+> 
+> If we have have separate domains for each of our hardware PCIe
+> interface, can we still benefit from this allocation of resources from
+> a globally defined range of I/O addresses and memory addresses?
 
-Rafael
+My interpretation of what you told me in the previous mail is that
+each root port has 
 
+* A separate configuration space
+* A separate 64KB I/O window that is not shared with the other ports,
+  or potentially multiple 64KB windows, which we would not want to use
+* A configurable range of the memory space that does not overlap
+  with the other ports
 
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+Is the above a correct description?
+
+If so, I think it would be most sensible to not try to put all ports
+into the same domain, but give each port the full view of its own
+256 buses, and 64KB I/O space. The memory space can still be directly
+mapped, if you only set up the physical address window for that after
+the bus scan is complete.
+
+	Arnd
