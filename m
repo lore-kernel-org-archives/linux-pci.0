@@ -1,67 +1,101 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:17092 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753029Ab3A1DWP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 27 Jan 2013 22:22:15 -0500
-Message-ID: <5105EEA6.3020703@huawei.com>
-Date: Mon, 28 Jan 2013 11:21:10 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from mail-lb0-f180.google.com ([209.85.217.180]:42240 "EHLO
+	mail-lb0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753907Ab3A2GcS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Jan 2013 01:32:18 -0500
+Message-ID: <51076CEE.8050706@openvz.org>
+Date: Tue, 29 Jan 2013 10:32:14 +0400
+From: Konstantin Khlebnikov <khlebnikov@openvz.org>
 MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	<linux-pci@vger.kernel.org>, David Airlie <airlied@linux.ie>,
-	<dri-devel@lists.freedesktop.org>
-Subject: Re: [PATCH v3 11/22] PCI, drm: Kill pci_root_buses in alpha hose
- setting
-References: <CAE9FiQXHG01NjnYNDbC-KEpbcvY-q4pBe97CxTOGS7W4vZQBYQ@mail.gmail.com> <1359314629-18651-1-git-send-email-yinghai@kernel.org> <1359314629-18651-12-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1359314629-18651-12-git-send-email-yinghai@kernel.org>
-Content-Type: text/plain; charset="ISO-8859-1"
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+CC: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
+	e1000-devel@lists.sourceforge.net, linux-pci@vger.kernel.org,
+	Bruce Allan <bruce.w.allan@intel.com>,
+	Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Subject: Re: [PATCH 1/5] e1000e: fix resuming from runtime-suspend
+References: <20130118113019.6698.25941.stgit@zurg> <20130118114214.6698.24975.stgit@zurg> <CAErSpo4G=hQ79KJg_6QgoO9nmG-B5xA_ooph7G6Uu-9wGkrnTQ@mail.gmail.com> <12263202.uQHxo0zU24@vostro.rjw.lan>
+In-Reply-To: <12263202.uQHxo0zU24@vostro.rjw.lan>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2013/1/28 3:23, Yinghai Lu wrote:
-> Replace that with hotplug-safe version.
-> 
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> Cc: David Airlie <airlied@linux.ie>
-> Cc: dri-devel@lists.freedesktop.org
-> ---
->  drivers/gpu/drm/drm_fops.c |   10 +++++++---
->  1 file changed, 7 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/gpu/drm/drm_fops.c b/drivers/gpu/drm/drm_fops.c
-> index 133b413..b92a9cc 100644
-> --- a/drivers/gpu/drm/drm_fops.c
-> +++ b/drivers/gpu/drm/drm_fops.c
-> @@ -356,9 +356,13 @@ static int drm_open_helper(struct inode *inode, struct file *filp,
->  			pci_dev_put(pci_dev);
->  		}
->  		if (!dev->hose) {
-> -			struct pci_bus *b = pci_bus_b(pci_root_buses.next);
-> -			if (b)
-> -				dev->hose = b->sysdata;
-> +			struct pci_host_bridge *host_bridge;
-> +
-> +			host_bridge = pci_next_host_bridge(NULL);
+Rafael J. Wysocki wrote:
+> On Monday, January 28, 2013 04:05:33 PM Bjorn Helgaas wrote:
+>> [+cc Rafael, author of patch you cited]
+>>
+>> On Fri, Jan 18, 2013 at 4:42 AM, Konstantin Khlebnikov
+>> <khlebnikov@openvz.org>  wrote:
+>>> Bug was introduced in commit 23606cf5d1192c2b17912cb2ef6e62f9b11de133
+>>> ("e1000e / PCI / PM: Add basic runtime PM support (rev. 4)") in v2.6.35
+>>>
+>>> Signed-off-by: Konstantin Khlebnikov<khlebnikov@openvz.org>
+>>> Cc: e1000-devel@lists.sourceforge.net
+>>> Cc: Jeff Kirsher<jeffrey.t.kirsher@intel.com>
+>>> Cc: Bruce Allan<bruce.w.allan@intel.com>
+>>> ---
+>>>   drivers/net/ethernet/intel/e1000e/netdev.c |   13 ++++++++-----
+>>>   1 file changed, 8 insertions(+), 5 deletions(-)
+>>>
+>>> diff --git a/drivers/net/ethernet/intel/e1000e/netdev.c b/drivers/net/ethernet/intel/e1000e/netdev.c
+>>> index fbf75fd..2853c11 100644
+>>> --- a/drivers/net/ethernet/intel/e1000e/netdev.c
+>>> +++ b/drivers/net/ethernet/intel/e1000e/netdev.c
+>>> @@ -5691,14 +5691,17 @@ static int e1000_runtime_suspend(struct device *dev)
+>>>          struct pci_dev *pdev = to_pci_dev(dev);
+>>>          struct net_device *netdev = pci_get_drvdata(pdev);
+>>>          struct e1000_adapter *adapter = netdev_priv(netdev);
+>>> +       int retval;
+>>> +       bool wake;
+>>>
+>>> -       if (e1000e_pm_ready(adapter)) {
+>>> -               bool wake;
+>>> +       if (!e1000e_pm_ready(adapter))
+>>> +               return 0;
+>>>
+>>> -               __e1000_shutdown(pdev,&wake, true);
+>>> -       }
+>>> +       retval = __e1000_shutdown(pdev,&wake, true);
+>>> +       if (!retval)
+>>> +               e1000_power_off(pdev, true, wake);
+>>>
+>>> -       return 0;
+>>> +       return retval;
+>>>   }
+>>>
+>>>   static int e1000_idle(struct device *dev)
+>>>
+>
+> I'd like the changelog to say what the bug is and how it is being fixed in
+> general terms.
 
-pci_get_next_host_bridge() ?
+Ok, my bad.
 
-> +			if (host_bridge) {
-> +				dev->hose = host_bridge->bus->sysdata;
-> +				put_device(&host_bridge->dev);
-> +			}
->  		}
->  	}
->  #endif
-> 
+Problem: ethernet device does not work (no carrier signal).
+Right after boot it goes to runtime-suspend and never wake up.
 
+Original code (before your commit) calls pci_prepare_to_sleep() and it
+calls pci_enable_wake() and switches device to one of D3 state.
 
--- 
-Thanks!
-Yijing
+It seems redundant, because pci_pm_runtime_suspend() do the same thing
+after calling ->runtime_suspend callback. Or rather it did it before commit
+42eca2302146fed51335b95128e949ee6f54478f ("PCI: Don't touch card regs after
+runtime suspend D3") and third patch aimed fix this damage.
+
+More over seems like calling pci_enable_wake() from e1000e isn't enough for my case,
+because my enthernet cannot wakeup from runtime-suspend without third patch.
+Seems like it's because pci_enable_wake() and pci_finish_runtime_suspend()
+calls different pratform-pm callbacks -- platform_pci_run_wake() /
+platform_pci_sleep_wake().
+
+All this looks messy and I don't know how it should work.
+
+If you prefer to minimize changes -- I can test how it would work without
+first (this) patch. Probably fine.
+
+>
+> Thanks,
+> Rafael
+>
+>
 
