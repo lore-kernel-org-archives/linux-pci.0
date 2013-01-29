@@ -1,96 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:4736 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752369Ab3AODOz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 14 Jan 2013 22:14:55 -0500
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Yu Zhao <yu.zhao@intel.com>
-CC: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Scott Murray <scott@spiteful.org>,
-	Yinghai Lu <yinghai@kernel.org>, <linux-pci@vger.kernel.org>,
-	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH -v3 6/7] PCI,sgihp: use bus->devices list intead of traditional traversal
-Date: Tue, 15 Jan 2013 11:12:21 +0800
-Message-ID: <1358219542-16880-7-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1358219542-16880-1-git-send-email-wangyijing@huawei.com>
-References: <1358219542-16880-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail.free-electrons.com ([94.23.35.102]:34723 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755998Ab3A2O3o (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Jan 2013 09:29:44 -0500
+Date: Tue, 29 Jan 2013 15:29:37 +0100
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Thierry Reding <thierry.reding@avionic-design.de>
+Cc: Andrew Murray <andrew.murray@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>
+Subject: Re: [PATCH v2 19/27] pci: PCIe driver for Marvell Armada 370/XP
+ systems
+Message-ID: <20130129152937.53ec9a9b@skate>
+In-Reply-To: <20130129142015.GA23640@avionic-0098.mockup.avionic-design.de>
+References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	<1359399397-29729-20-git-send-email-thomas.petazzoni@free-electrons.com>
+	<20130129132204.GA23886@arm.com>
+	<20130129144522.44ed7373@skate>
+	<20130129140522.GA24310@arm.com>
+	<20130129142015.GA23640@avionic-0098.mockup.avionic-design.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+Dear Thierry Reding,
 
-Use bus->devices list to traverse the pci function devices when
-configure or unconfigure the slot like other pci hotplug drivers.
+On Tue, 29 Jan 2013 15:20:15 +0100, Thierry Reding wrote:
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/pci/hotplug/sgi_hotplug.c |   40 +++++++++++++++---------------------
- 1 files changed, 17 insertions(+), 23 deletions(-)
+> If at all possible I think the right thing to do is reuse the generic
+> pcibios_get_phb_of_node() implementation. On Tegra this turned out to
+> require a minimal change to the DT bindings of the root port nodes to
+> make sure they provide the correct address in the reg property.
 
-diff --git a/drivers/pci/hotplug/sgi_hotplug.c b/drivers/pci/hotplug/sgi_hotplug.c
-index f64ca92..45966b8 100644
---- a/drivers/pci/hotplug/sgi_hotplug.c
-+++ b/drivers/pci/hotplug/sgi_hotplug.c
-@@ -334,7 +334,7 @@ static int enable_slot(struct hotplug_slot *bss_hotplug_slot)
- 	struct slot *slot = bss_hotplug_slot->private;
- 	struct pci_bus *new_bus = NULL;
- 	struct pci_dev *dev;
--	int func, num_funcs;
-+	int num_funcs;
- 	int new_ppb = 0;
- 	int rc;
- 	char *ssdt = NULL;
-@@ -381,29 +381,23 @@ static int enable_slot(struct hotplug_slot *bss_hotplug_slot)
- 	 * to the Linux PCI interface and tell the drivers
- 	 * about them.
- 	 */
--	for (func = 0; func < num_funcs;  func++) {
--		dev = pci_get_slot(slot->pci_bus,
--				   PCI_DEVFN(slot->device_num + 1,
--					     PCI_FUNC(func)));
--		if (dev) {
--			/* Need to do slot fixup on PPB before fixup of children
--			 * (PPB's pcidev_info needs to be in pcidev_info list
--			 * before child's SN_PCIDEV_INFO() call to setup
--			 * pdi_host_pcidev_info).
--			 */
--			pcibios_fixup_device_resources(dev);
--			if (SN_ACPI_BASE_SUPPORT())
--				sn_acpi_slot_fixup(dev);
--			else
--				sn_io_slot_fixup(dev);
--			if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
--				pci_hp_add_bridge(dev);
--				if (dev->subordinate) {
--					new_bus = dev->subordinate;
--					new_ppb = 1;
--				}
-+	list_for_each_entry(dev, &slot->pci_bus->devices, bus_list) {
-+		/* Need to do slot fixup on PPB before fixup of children
-+		 * (PPB's pcidev_info needs to be in pcidev_info list
-+		 * before child's SN_PCIDEV_INFO() call to setup
-+		 * pdi_host_pcidev_info).
-+	 */
-+		pcibios_fixup_device_resources(dev);
-+		if (SN_ACPI_BASE_SUPPORT())
-+			sn_acpi_slot_fixup(dev);
-+		else
-+			sn_io_slot_fixup(dev);
-+		if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
-+			pci_hp_add_bridge(dev);
-+			if (dev->subordinate) {
-+				new_bus = dev->subordinate;
-+				new_ppb = 1;
- 			}
--			pci_dev_put(dev);
- 		}
- 	}
- 
+Could you detail the change that was needed? The DT bindings I use for
+the Marvell PCIe driver are very, very similar to the ones you use for
+Tegra, since I basically inspired my entire DT binding on your work.
+And still, I think of_irq_map_pci() wasn't working for me.
+
+Best regards,
+
+Thomas
 -- 
-1.7.1
-
-
+Thomas Petazzoni, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
