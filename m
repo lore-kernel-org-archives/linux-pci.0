@@ -1,78 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.10]:61485 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753281Ab3ACOjl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 Jan 2013 09:39:41 -0500
-Date: Thu, 3 Jan 2013 15:39:31 +0100
-From: Thierry Reding <thierry.reding@avionic-design.de>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Lior Amsalem <alior@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Yehuda Yitschak <yehuday@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Rob Herring <robherring2@gmail.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: [RFC v1] PCIe support for the Armada 370 and Armada XP SoCs
-Message-ID: <20130103143931.GA28451@avionic-0098.adnet.avionic-design.de>
-References: <1354917879-32073-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from mail-we0-f181.google.com ([74.125.82.181]:53668 "EHLO
+	mail-we0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752773Ab3A2Crj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Jan 2013 21:47:39 -0500
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="OXfL5xGRrasGEqWY"
-In-Reply-To: <1354917879-32073-1-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <CAErSpo6WpF22FFwAvo=GUnPugT4WSeR88=mKN4ZpXDbJRWVdkg@mail.gmail.com>
+References: <20130118113019.6698.25941.stgit@zurg> <20130118114225.6698.42016.stgit@zurg>
+ <CAErSpo4Z-qz18T0WQ3M8MHTGz_S1SAtK9KeTMBDvM2X4Ohs-tA@mail.gmail.com> <CAErSpo6WpF22FFwAvo=GUnPugT4WSeR88=mKN4ZpXDbJRWVdkg@mail.gmail.com>
+From: Khalid Aziz <hikerockies@gmail.com>
+Date: Mon, 28 Jan 2013 19:47:17 -0700
+Message-ID: <CABeg+=KNNtQdoDV8FarfaYwbaC+tt+nFXkss0KFsHfa3KR0BDw@mail.gmail.com>
+Subject: Re: [PATCH 4/5] PCI: don't touch enable_cnt in pci_device_shutdown()
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Konstantin Khlebnikov <khlebnikov@openvz.org>,
+	linux-kernel@vger.kernel.org, e1000-devel@lists.sourceforge.net,
+	linux-pci@vger.kernel.org, khalid@gonehiking.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+[Sorry about the resend. gmail sent my original reply in html by
+default which didn't go through to all mailing lists]
 
---OXfL5xGRrasGEqWY
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+On Mon, Jan 28, 2013 at 4:44 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>
+> [+cc Khalid new email addr]
+>
+> On Mon, Jan 28, 2013 at 4:40 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> > On Fri, Jan 18, 2013 at 4:42 AM, Konstantin Khlebnikov
+> > <khlebnikov@openvz.org> wrote:
+> >> comment in commit b566a22c23327f18ce941ffad0ca907e50a53d41
+> >> ("PCI: disable Bus Master on PCI device shutdown") says:
+> >>
+> >> | Disable Bus Master bit on the device in pci_device_shutdown() to ensure PCI
+> >> | devices do not continue to DMA data after shutdown.  This can cause memory
+> >> | corruption in case of a kexec where the current kernel shuts down and
+> >> | transfers control to a new kernel while a PCI device continues to DMA to
+> >> | memory that does not belong to it any more in the new kernel.
+> >>
+> >> Seems like pci_clear_master() must be used here instead of pci_disable_device(),
+> >> because it disables Bus Muster unconditionally and doesn't changes enable_cnt.
+> >>
+> >> Signed-off-by: Konstantin Khlebnikov <khlebnikov@openvz.org>
+> >> Cc: linux-pci@vger.kernel.org
+> >> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> >> Cc: Khalid Aziz <khalid.aziz@hp.com>
+> >> ---
+> >>  drivers/pci/pci-driver.c |    2 +-
+> >>  1 file changed, 1 insertion(+), 1 deletion(-)
+> >>
+> >> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+> >> index 030dbf0..853d605 100644
+> >> --- a/drivers/pci/pci-driver.c
+> >> +++ b/drivers/pci/pci-driver.c
+> >> @@ -392,7 +392,7 @@ static void pci_device_shutdown(struct device *dev)
+> >>          * Turn off Bus Master bit on the device to tell it to not
+> >>          * continue to do DMA
+> >>          */
+> >> -       pci_disable_device(pci_dev);
+> >> +       pci_clear_master(pci_dev);
+> >
+> > We currently only call pci_enable_device() and pci_disable_device()
+> > from drivers, and I think that's a nice division that's worth keeping.
+> >  It keeps the core's mitts off device operation and helps preserve the
+> > enable_cnt integrity.  So I like this change from that perspective.
+> >
+> > Any objections to this, Khalid?
 
-Hi everyone,
+Just turning the Bus Master bit off on a device does worry me. For
+well behaved PCI devices this should not be an issue at all, but it
+has been brought up before that there are misbehaved PCI devices that
+do not respond well when Bus Master bit is cleared on them while they
+are active. Turning interrupts off as well on them seems to help with
+being able to re-initialize them in the new kernel.  As a result, I
+wanted to make sure we at least call  pcibios_disable_irq() to turn
+off their interrupt and hence I chose to call pci_disable_device()
+instead of pci_clear_master(). I understand the concern around messing
+up enable_cnt. Would it be better to replace pci_disable_device() with
+these two instead:
 
-Thomas' RFC series incited me to put in some more work on the Tegra PCIe
-controller driver. This in turn brought up an old issue: should we move
-PCIe controller drivers to some central location rather than keeping
-them in machine-specific directories? Last time I brought this up there
-was no consensus but I really think there's some value in keeping these
-drivers in a common location, especially now that a few people are
-starting to work on similar problems. It may also provide some more
-momentum to get the various DT implementations factored out of various
-architectures.
+pci_clear_master(pci_dev);
+pcibios_disable_device(pci_dev);
 
-Stephen proposed drivers/pci/host on IRC and I second that.
-
-Bjorn, is this something you would be on board with?
-
-Thierry
-
---OXfL5xGRrasGEqWY
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQIcBAEBAgAGBQJQ5ZgjAAoJEN0jrNd/PrOhPUsP/2Fix9RrCnrxH9HGA/k+gDMQ
-FGtLM2I2/HhsKf8wz5cG3FAURCj5570PJgKRUFKBZfuFf7RVlyewiDllSIQY4KYN
-wIIUCnUCGnrb5H9uwVH4CDhdGl6lgd+GVi6UauZ8jt5q92yTwatjAlr89gzMNykl
-q2OG9/65i/D6tFYCX2vCr+YowpHvT5ZfgQMfEFIxqYZmUEICF20wM6E8R5pnDf3Y
-n5dyuH3ectQi9dSAD5cLB1nCXkgi57oi0pwE3iXygUFJGuv8+8MOyjBXVIxFsFkH
-mVbl4PWI6Xn0Shn5PcC7KlwXfcFHFH9rwEmVvs8bAH4a1vnHpzsq1y3xf6Dvejjh
-g5Ten5zBDysoAoTP9Fx/vqjp9Hx4SfT0fyMYp5XB3ckRh+LskwPtMv6Ha2PH3GJs
-skV3UMk4ISoxRQ8+NLqOEvXuE0JBC4jwSy4/s8CPK3c1NUf6hNP6z/4hnvr9uCOk
-hEmByI1Lux7OsC+rDcI8y0cv2+Yj3DKQLJw+3bfgwCY709rnUtnG7biiUqqv6FVs
-F/8Xoga3NAQJZezHlL64BuTj+oFGoUrj4zgtm5sTxaYGD6MpxAeATQXy6ADnZ6OZ
-DRVeVA9cTLMycbDtA7MaPRDBTgX6v0f71uggJC/CQZ5V91daAw5h53cmirrCEseW
-RR5213kj6OQAPJDARSly
-=XwN8
------END PGP SIGNATURE-----
-
---OXfL5xGRrasGEqWY--
+--
+Khalid
