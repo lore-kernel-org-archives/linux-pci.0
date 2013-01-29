@@ -1,71 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:36253 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750949Ab3A2Rn1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Jan 2013 12:43:27 -0500
-Date: Tue, 29 Jan 2013 18:43:20 +0100
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Maen Suleiman <maen@marvell.com>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	linux-pci@vger.kernel.org,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH v2 07/27] PCI: Add software-emulated host bridge
-Message-ID: <20130129184320.59f534c4@skate>
-In-Reply-To: <20130129174205.GD25646@obsidianresearch.com>
-References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
-	<1359399397-29729-8-git-send-email-thomas.petazzoni@free-electrons.com>
-	<201301282018.17714.arnd@arndb.de>
-	<5106F5CB.8050304@wwwdotorg.org>
-	<20130128220904.GA21446@obsidianresearch.com>
-	<20130128231829.6b205c3c@skate>
-	<20130128222348.GA21628@obsidianresearch.com>
-	<20130128233048.2ab6a6d2@skate>
-	<20130128225105.GA21935@obsidianresearch.com>
-	<20130129110119.07cb9ef3@skate>
-	<20130129174205.GD25646@obsidianresearch.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from szxga02-in.huawei.com ([119.145.14.65]:1311 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751728Ab3A2CHn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Jan 2013 21:07:43 -0500
+Message-ID: <51072EDA.2000704@huawei.com>
+Date: Tue, 29 Jan 2013 10:07:22 +0800
+From: Jiang Liu <jiang.liu@huawei.com>
+MIME-Version: 1.0
+To: Yinghai Lu <yinghai@kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, Jiang Liu <liuj97@gmail.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>
+Subject: Re: [RFC PATCH v5 4/8] ACPI, PCI: avoid building pci_slot as module
+References: <1358525267-14268-1-git-send-email-jiang.liu@huawei.com> <1358525267-14268-5-git-send-email-jiang.liu@huawei.com> <3500982.MUDp6kKU3R@vostro.rjw.lan> <CAErSpo4fbNzFaBxH+eKD+BKVgghyCJEYLDMzc6_gdxABAPe3QQ@mail.gmail.com> <CAE9FiQVM4+Wirpb3_D0Zxi4r1p9SAMi4ZrNYr=-eas-C6pKJYA@mail.gmail.com> <CAErSpo7WbbzZ8cKfLvuE331ofWir2vswUnYaxVLBBYGFowedXQ@mail.gmail.com> <CAE9FiQXkrYubkgbbOXmrEXvGZBZXMZ6sh8kGTpF1_=tD3OMPJw@mail.gmail.com> <CAErSpo7vHXdh=ogvfZnxx9gqgiifWGa=XzS+ZKjXFFOPue4TTw@mail.gmail.com> <CAE9FiQU84OSQrQJEGAQTDzVv8kGCi+fmgM8+ycoMXMUfHsNe-g@mail.gmail.com>
+In-Reply-To: <CAE9FiQU84OSQrQJEGAQTDzVv8kGCi+fmgM8+ycoMXMUfHsNe-g@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Jason Gunthorpe,
-
-On Tue, 29 Jan 2013 10:42:05 -0700, Jason Gunthorpe wrote:
-
-> So if this is what you have now...
+On 2013-1-29 6:58, Yinghai Lu wrote:
+> On Mon, Jan 28, 2013 at 2:14 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>
+>> CONFIG_ACPI_PCI_SLOT=y in RHEL6, so evidently they have this problem.
 > 
-> -[0000:00]-+-00.0 <- Host bridge
->            +-10.0 <- Bridge
->            +-11.0 <- Bridge
->            +-12.0 <- Bridge
+> oh, I only checked opensuse that has that set to m.
 > 
-> Then removing the config space at 00.0 (ie the host bridge) will give
-> you:
+>>
+>> Asking users to edit module.conf by hand is not a solution, just like
+>> asking users to boot with a command line option is not a solution.
+>> That sort of stuff is fine for a hobbyist OS intended only for techie
+>> geeks.  It's not fine for Linux.
 > 
-> -[0000:00]-+-10.0 <- Bridge
->            +-11.0 <- Bridge
->            +-12.0 <- Bridge
+> not sure. add something in command line or conf files.
+> but recompile kernel is another story.
 > 
-> The 'host bridge' isn't a bridge in the PCI-PCI sense, it is just a
-> normal device at bus 0, device 0, function 0.
+>>
+>> If you would give a concrete example of the ACPI namespace info and
+>> device config, hotplug sequence, etc., required to show the problem,
+>> we could have a useful discussion about ways to fix it.  But if all
+>> you have is FUD about "this might break and users won't have the
+>> ability to edit modules.conf," that doesn't help me see why this patch
+>> is a bad idea.
+> 
+> Never mind, We should save your bandwidth to more patches.
+Hi Yinghai,
+	Could we use quirk to auto-disable PCIe native hotplug for
+problematic platforms?
+Regards!
+Gerry
 
-Ok, thanks I'll try this!
+> 
+> Yinghai
+> 
+> .
+> 
 
-Thomas
--- 
-Thomas Petazzoni, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
+
