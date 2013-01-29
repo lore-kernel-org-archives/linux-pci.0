@@ -1,75 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from caramon.arm.linux.org.uk ([78.32.30.218]:60256 "EHLO
-	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753872Ab3AaPht (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 31 Jan 2013 10:37:49 -0500
-Date: Thu, 31 Jan 2013 15:36:25 +0000
-From: Russell King - ARM Linux <linux@arm.linux.org.uk>
+Received: from moutng.kundenserver.de ([212.227.17.8]:59421 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751380Ab3A2JUO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Jan 2013 04:20:14 -0500
+Date: Tue, 29 Jan 2013 10:20:06 +0100
+From: Thierry Reding <thierry.reding@avionic-design.de>
 To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+Cc: Stephen Warren <swarren@wwwdotorg.org>,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
 	Jason Cooper <jason@lakedaemon.net>,
 	Arnd Bergmann <arnd@arndb.de>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	linux-pci@vger.kernel.org,
-	Thierry Reding <thierry.reding@avionic-design.de>,
+	Maen Suleiman <maen@marvell.com>, linux-pci@vger.kernel.org,
 	Eran Ben-Avi <benavi@marvell.com>,
 	Nadav Haklai <nadavh@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
 	Gregory Clement <gregory.clement@free-electrons.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
 	linux-arm-kernel@lists.infradead.org,
 	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
 Subject: Re: [PATCH v2 19/27] pci: PCIe driver for Marvell Armada 370/XP
-	systems
-Message-ID: <20130131153625.GB23505@n2100.arm.linux.org.uk>
-References: <20130130120344.GA29490@avionic-0098.mockup.avionic-design.de> <20130130150856.GJ23505@n2100.arm.linux.org.uk> <20130130151934.GK23505@n2100.arm.linux.org.uk> <20130130163659.75360dba@skate> <20130130154602.GL23505@n2100.arm.linux.org.uk> <20130131153041.35fa3b60@skate> <20130131145002.GZ23505@n2100.arm.linux.org.uk> <20130131155737.4ab97a0b@skate> <20130131150801.GA23505@n2100.arm.linux.org.uk> <20130131162237.79de29c4@skate>
+ systems
+Message-ID: <20130129092006.GA16377@avionic-0098.mockup.avionic-design.de>
+References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
+ <1359399397-29729-20-git-send-email-thomas.petazzoni@free-electrons.com>
+ <5106F9F9.3010905@wwwdotorg.org>
+ <20130129094143.1aad9377@skate>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130131162237.79de29c4@skate>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="0OAP2g/MAC+5xKAE"
+In-Reply-To: <20130129094143.1aad9377@skate>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jan 31, 2013 at 04:22:37PM +0100, Thomas Petazzoni wrote:
-> Dear Russell King - ARM Linux,
-> 
-> On Thu, 31 Jan 2013 15:08:01 +0000, Russell King - ARM Linux wrote:
-> > If that's what your bridge requires, then we need to detect it via
-> > its vendor and device IDs and only apply this fixup to those bridges
-> > which require a 64K alignment.
-> > 
-> > So, the IDs are vendor:device = 0x11ab:0x1092 ?  And let me get this
-> > straight, it _is_ a specific requirement for this particular bridge
-> > P2P bridge?
-> 
-> The vendor/device ID will change. This P2P bridge is emulated. However,
-> I'm not sure why you need to know the vendor:device ID to make the
-> fixup specific.
-> 
-> The fixup is already specific to those bridges, since I am just setting
-> pci_sys_data->win_align_io to 64K for the particular buses that are
-> downstream the problematic bridges. So it doesn't affect any other bus
-> on the system, and therefore I don't think this fixup needs to be made
-> specific to a given vendor:device, no?
 
-The pci_sys_data is not specific to one bus.  It's specific from the
-root bus downwards, and is shared by all child busses.
+--0OAP2g/MAC+5xKAE
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-The problem is if you have some card or a conventional P2P bridge which
-has 4K windows.  If you merely set the alignment to 64K for all bridges,
-then all bridges get this treatment whether or not they need it.  That's
-what I'm trying to avoid.
+On Tue, Jan 29, 2013 at 09:41:43AM +0100, Thomas Petazzoni wrote:
+> On Mon, 28 Jan 2013 15:21:45 -0700, Stephen Warren wrote:
+[...]
+> > > +static int mvebu_pcie_init(void)
+> > > +{
+> > > +	return platform_driver_probe(&mvebu_pcie_driver,
+> > > +				     mvebu_pcie_probe);
+> > > +}
+> > > +
+> > > +subsys_initcall(mvebu_pcie_init);
+> >=20
+> > Why isn't that just platform_driver_register()?
+>=20
+> I didn't test recently, but with my first version of the patch set,
+> having an initialization as late as module_init() was too late. Some
+> PCI fixup code was being executed *before* we get the opportunity of
+> initializing the PCI driver, and it was crashing the kernel. I can
+> provide more details if you want.
 
-Take, for instance, a cardbus bridge (remember, there are PCI cards which
-can be plugged in to give you a cardbus slot.)  I have a device here which
-can be plugged into a cardbus slot which has not just one P2P bridge but
-two, and a bunch of downsteam devices, including VGA, ethernet, USB, PS/2
-etc.  (Okay, Linux doesn't support this hardware because of crappy X86
-stuff, despite the fact Windows cope with it just fine.)
+Does this patch perhaps fix this crash?
 
-There have been cards in the past which have had P2P bridges on them as
-well.
+	http://patchwork.ozlabs.org/patch/210870/
 
-So, simply believing that the only P2P bridges in the system will be
-those on the physical board is a mistake.
+Thierry
+
+--0OAP2g/MAC+5xKAE
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQIcBAEBAgAGBQJRB5RGAAoJEN0jrNd/PrOhZ1wP/iAzonUlnV0f0QurbERD+i+s
+iPJxxp2Bd+3ICYuj6Orpi2UL9zYsobLs1hPiVxvl42nqgzoPyw/ay4MWgiGtup+H
+O32gASOv0AZDya6XnYC/4Ab31MQLW25oc6Zy1XHbikl9hpRdYB70j8Qzow2VMl1l
+zMm44tZ20ujPpPPt7u+AyaGj6+wVbI9pfd+h7CUAYLH57Cw77pB1W3NbNi9jNSvM
+njRxy2kMTKejZfVXCx5pSADBkYtpl7ICqQlXkl/ieEA/cP4tpP0szUWkUy+xVY9t
+ggcwedlBQN1N18IqW1dbLQkEPjlx6ppS74NtCVC4vSwm+UsVXdRqAmD3mmU6ZgMG
+1S0LyQlXxBJOCMi99v1IT0zEO0HyXgXKjPFIFKQ7akY1haNy7oWIjxs3XbxjGGAD
+dxeuddp2jKh5532cf4XJwCHq4GIcgMxxVdH2vhQpX4J81RLkEalCrl4FYotimaRB
+uEWClmC8nLRWDMQsna1+qx27BCbv+LqOP2GEfHcuBq1gSVuM0iYu25YBXAQ9MXCs
+EYGvty1/r35vbNx/FP1sUWcsvJkFv0SFg8EOdhOhPtQOGNyZh9WzzzXoB3Mv2FBZ
+kTIceMWHDYXdm+/BUnOECRn5X7vYw46/ZE+UfU50PgRyAqowUgRt+Et4w6d6n851
+VSdImx2fJ6UEGr1MvEck
+=B8ux
+-----END PGP SIGNATURE-----
+
+--0OAP2g/MAC+5xKAE--
