@@ -1,122 +1,105 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:45374 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756767Ab3A2PIR convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Jan 2013 10:08:17 -0500
-Date: Tue, 29 Jan 2013 15:08:03 +0000
-From: Andrew Murray <andrew.murray@arm.com>
-To: Thierry Reding <thierry.reding@avionic-design.de>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>
-Subject: Re: [PATCH v2 19/27] pci: PCIe driver for Marvell Armada 370/XP
- systems
-Message-ID: <20130129150803.GA29817@arm.com>
-References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
- <1359399397-29729-20-git-send-email-thomas.petazzoni@free-electrons.com>
- <20130129132204.GA23886@arm.com>
- <20130129144522.44ed7373@skate>
- <20130129140522.GA24310@arm.com>
- <20130129142015.GA23640@avionic-0098.mockup.avionic-design.de>
- <20130129152937.53ec9a9b@skate>
- <20130129150201.GA24101@avionic-0098.mockup.avionic-design.de>
+Received: from mail-lb0-f182.google.com ([209.85.217.182]:58720 "EHLO
+	mail-lb0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751736Ab3A2GpW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Jan 2013 01:45:22 -0500
+Message-ID: <51076FFE.3080006@openvz.org>
+Date: Tue, 29 Jan 2013 10:45:18 +0400
+From: Konstantin Khlebnikov <khlebnikov@openvz.org>
 MIME-Version: 1.0
-In-Reply-To: <20130129150201.GA24101@avionic-0098.mockup.avionic-design.de>
-Content-Type: text/plain; charset=WINDOWS-1252
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: linux-kernel@vger.kernel.org, e1000-devel@lists.sourceforge.net,
+	linux-pci@vger.kernel.org, Bruce Allan <bruce.w.allan@intel.com>,
+	Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: [PATCH 2/5] e1000e: fix pci device enable counter balance
+References: <20130118113019.6698.25941.stgit@zurg> <20130118114218.6698.42484.stgit@zurg> <CAErSpo5Cfi0KbOqDr4TfnzjWFy7V-oi0bOY-vf8Y16_RPtEGdQ@mail.gmail.com> <CAErSpo7g7H8QM4Rgc05ORM1xHPxVf74KX2G61mvMtMF+N=qh5Q@mail.gmail.com>
+In-Reply-To: <CAErSpo7g7H8QM4Rgc05ORM1xHPxVf74KX2G61mvMtMF+N=qh5Q@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 29, 2013 at 03:02:01PM +0000, Thierry Reding wrote:
-> On Tue, Jan 29, 2013 at 03:29:37PM +0100, Thomas Petazzoni wrote:
-> > Dear Thierry Reding,
-> > 
-> > On Tue, 29 Jan 2013 15:20:15 +0100, Thierry Reding wrote:
-> > 
-> > > If at all possible I think the right thing to do is reuse the generic
-> > > pcibios_get_phb_of_node() implementation. On Tegra this turned out to
-> > > require a minimal change to the DT bindings of the root port nodes to
-> > > make sure they provide the correct address in the reg property.
-> > 
-> > Could you detail the change that was needed? The DT bindings I use for
-> > the Marvell PCIe driver are very, very similar to the ones you use for
-> > Tegra, since I basically inspired my entire DT binding on your work.
-> > And still, I think of_irq_map_pci() wasn't working for me.
-> 
-> Now that I think about it, there were a few more changes needed.
-> For one, the reg property of the root port nodes need to be in the
-> format specified by the PCI DT binding. That is, 3 cells for the
-> address and 2 cells for the size.
-> 
-> So I end up with something like this:
-> 
-> 	pcie-controller {
-> 		...
-> 
-> 		ranges = <0x00000800 0 0x80000000 0x80000000 0 0x00001000 /* port 0 registers */
-> 			  0x00001000 0 0x80001000 0x80001000 0 0x00001000 /* port 1 registers */
-> 			  ...>;
-> 
-> 		pci@1,0 {
-> 			reg = <0x000800 0 0x80000000 0 0x1000>;
-> 			...
-> 		};
-> 
-> 		pci@2,0 {
-> 			reg = <0x001000 0 0x80001000 0 0x1000>;
-> 			...
-> 		};
-> 	};
-> 
-> So what happens here is that for each root port (pci@1,0 and pci@2,0),
-> the reg property is translated into the parent address space via the
-> pcie-controller's ranges property. pci@1,0 gets the memory region
-> 0x80000000-0x80000fff and pci@2,0 gets 0x80001000-0x80001fff. (These are
-> actually windows through which the configuration space of the root ports
-> is accessed.)
-> 
-> At the same time this reg property maps both devices into the PCI
-> address space at addresses 0:01.0 and 0:02.0 respectively.
-> 
-> The second change is that you can't rely on ARM's default implementation
-> of the bus scan operation, which calls pci_scan_root_bus(), passing in a
-> NULL as the struct device which acts as the bus' parent. So on Tegra I
-> added a custom implementation which calls pci_create_root_bus(), passing
-> in the struct device of the PCI host bridge, whose .of_node field will
-> be set to the pcie-controller node above. Incidentally this also fixed
-> another issue where the PCI core and ARM's pci_common_init() both
-> eventually end up calling pci_bus_add_devices(). I don't remember the
-> exact symptoms but I think this was causing resource conflicts during
-> the second enumeration or so.
-> 
-> Because a proper struct device with the correct .of_node field is passed
-> into pci_create_root_bus(), the generic pcibios_get_phb_of_node() will
-> know how to find it by looking at bus->bridge->parent->of_node. After
-> that the generic matching code will search the bridge (pcie-controller)
-> node's children and relate them to the struct pci_dev by devfn. This is
-> done in pci_set_of_node() defined in drivers/pci/of.c, which calls
-> of_pci_find_child_device() from drivers/of/of_pci.c.
-> 
-> This is quite convoluted, but I hope it helps.
+Bjorn Helgaas wrote:
+> [+cc Rafael @sisk.pl]
+>
+> On Mon, Jan 28, 2013 at 4:09 PM, Bjorn Helgaas<bhelgaas@google.com>  wrote:
+>> [+cc Rafael]
+>>
+>> On Fri, Jan 18, 2013 at 4:42 AM, Konstantin Khlebnikov
+>> <khlebnikov@openvz.org>  wrote:
+>>> __e1000_shutdown() calls pci_disable_device() at the end, thus __e1000_resume()
+>>> should call pci_enable_device_mem() to keep enable counter in balance.
+>>>
+>>> Bug was introduced in commit 23606cf5d1192c2b17912cb2ef6e62f9b11de133
+>>> ("e1000e / PCI / PM: Add basic runtime PM support (rev. 4)") in v2.6.35
+>>>
+>>> Signed-off-by: Konstantin Khlebnikov<khlebnikov@openvz.org>
+>>> Cc: e1000-devel@lists.sourceforge.net
+>>> Cc: Jeff Kirsher<jeffrey.t.kirsher@intel.com>
+>>> Cc: Bruce Allan<bruce.w.allan@intel.com>
+>>> ---
+>>>   drivers/net/ethernet/intel/e1000e/netdev.c |    7 +++++++
+>>>   1 file changed, 7 insertions(+)
+>>>
+>>> diff --git a/drivers/net/ethernet/intel/e1000e/netdev.c b/drivers/net/ethernet/intel/e1000e/netdev.c
+>>> index 2853c11..6bce796 100644
+>>> --- a/drivers/net/ethernet/intel/e1000e/netdev.c
+>>> +++ b/drivers/net/ethernet/intel/e1000e/netdev.c
+>>> @@ -5598,6 +5598,13 @@ static int __e1000_resume(struct pci_dev *pdev)
+>>>          pci_restore_state(pdev);
+>>>          pci_save_state(pdev);
+>>>
+>>> +       err = pci_enable_device_mem(pdev);
+>>> +       if (err) {
+>>> +               dev_err(&pdev->dev,
+>>> +                       "Cannot re-enable PCI device after suspend.\n");
+>>> +               return err;
+>>> +       }
+>>
+>> Reviewed-by: Bjorn Helgaas<bhelgaas@google.com>
+>>
+>> Seems right to me, and the other users I looked at (igb, azx,
+>> virtio_pci) call pci_disable_device() in .suspend() and call
+>> pci_enable_device() in .resume() as you propose to do here.
+>>
+>> I assume the e1000 folks will handle this patch (and the previous one).
+>>
+>>> +
+>>>          e1000e_set_interrupt_capability(adapter);
+>>>          if (netif_running(netdev)) {
+>>>                  err = e1000_request_irq(adapter);
+>>>
+>
+> I'm still missing something.  In your original report
+> (https://lkml.org/lkml/2013/1/1/25), you noticed that "enable_cnt ==
+> 0" immediately after boot, after e1000e had claimed the device:
 
-Thanks this is very helpful. I will see if this lets me avoid implementing
-pcibios_get_phb_of_node.
+Yep, it rise counter from 0 to 1, and runtime-suspend immediately
+decrease it back to 0.
 
-Thanks,
+>
+>> Right after boot it looks like this:
+>>
+>> root@zurg:/sys/bus/pci/devices# lspci
+>> ...
+>> 00:19.0 Ethernet controller: Intel Corporation 82579LM Gigabit Network Connection (rev 04)
+>> ...
+>> root@zurg:/sys/bus/pci/devices# cat 0000\:00\:19.0/enable
+>> 0
+>> here must be '1', not '0'
+>
+> But these patches only change the e1000e suspend/resume path.  How
+> could they change the enable_cnt before you've even done a suspend?
 
-Andrew Murray
+suspend/resume and runtime_suspend/runtime_resume callbacks calls the one
+set of functions: __e1000_shutdown() / __e1000_resume()
+
+Any suspend-resume cycle breaks enable_ent balance.
+Thus right after boot and first runtime-suspend device cannot wake up
+due to first sort of bugs and after first s2ram suspend-resume cycle
+driver breaks it's enable_cnt and device no longer can sleep due to
+second sort of bugs.
+
+>
+> Bjorn
 
