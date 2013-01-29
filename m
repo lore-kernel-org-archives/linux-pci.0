@@ -1,201 +1,150 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:57375 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932720Ab3AJDXc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Jan 2013 22:23:32 -0500
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yinghai Lu <yinghai@kernel.org>, <linux-pci@vger.kernel.org>,
-	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH 1/2] PCI, pciehp: make every slot have its own workqueue to avoid deadlock
-Date: Thu, 10 Jan 2013 11:22:58 +0800
-Message-ID: <1357788179-9764-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail.free-electrons.com ([94.23.35.102]:32879 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754647Ab3A2Il7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Jan 2013 03:41:59 -0500
+Date: Tue, 29 Jan 2013 09:41:43 +0100
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Stephen Warren <swarren@wwwdotorg.org>
+Cc: Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Maen Suleiman <maen@marvell.com>, linux-pci@vger.kernel.org,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Subject: Re: [PATCH v2 19/27] pci: PCIe driver for Marvell Armada 370/XP
+ systems
+Message-ID: <20130129094143.1aad9377@skate>
+In-Reply-To: <5106F9F9.3010905@wwwdotorg.org>
+References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	<1359399397-29729-20-git-send-email-thomas.petazzoni@free-electrons.com>
+	<5106F9F9.3010905@wwwdotorg.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently, pciehp use global pciehp_wq to handle hotplug event from hardware.
-Hot remove path will be blocked if a hotplug slot connected a IO-BOX(composed of PCIe
-Switch and some slots which support hotplug). Because The hot removed work was queued
-into pciehp_wq. But in the hot-remove path, pciehp driver would flush pciehp_wq when
-the pcie port(support pciehp) was removed. In this case the hot-remove path blocked.
-This patch remove the global pciehp_wq and create a new workqueue for every slot to
-avoid above problem.
-call path:
-1. Hot-removal request comes to slot A(eg. 0000:40:07.0 as bellow)
-2. Pciehp driver queue hot-remove work into global workqueue "pciehp_wq"
-3. Hot-remove work call pci_stop_and_remove_bus_device() to remove child devices.
-4. Unregister and remove Pcie port device slot B(eg. 0000:47:15.0).
-5. To remove pcie port device, flush_workqueue(pciehp_wq) will be called.
-6. Deaklock <== hot-removal work is in progress.
+Dear Stephen Warren,
 
--+-[0000:40]-+-00.0-[0000:41]--
- |           +-01.0-[0000:42]--+-00.0  Intel Corporation 82576 Gigabit Network Connection
- |           |                 \-00.1  Intel Corporation 82576 Gigabit Network Connection
- |           +-03.0-[0000:43]----00.0  LSI Logic / Symbios Logic SAS1064ET PCI-Express Fusion-MPT SAS
- |           +-04.0-[0000:44]--
- |           +-05.0-[0000:45]--
- |           +-07.0-[0000:46-4f]----00.0-[0000:47-4f]--+-04.0-[0000:48-49]----00.0-[0000:49]--
- |           |(slot A)                                 +-08.0-[0000:4a]--
- |           |                                         +-09.0-[0000:4b]--
- |           |                                         +-10.0-[0000:4c]--
- |           |                                         +-11.0-[0000:4d]--
- |           |                                         +-14.0-[0000:4e]--
- |           |                                         \-15.0-[0000:4f]--+-00.0  Intel Corporation 82576 Gigabit Network Connection
- |           |                                         (slot B)          \-00.1  Intel Corporation 82576 Gigabit Network Connection
+On Mon, 28 Jan 2013 15:21:45 -0700, Stephen Warren wrote:
 
-Reviewed-by: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/pci/hotplug/pciehp.h      |    2 +-
- drivers/pci/hotplug/pciehp_core.c |   11 ++---------
- drivers/pci/hotplug/pciehp_ctrl.c |    8 ++++----
- drivers/pci/hotplug/pciehp_hpc.c  |   11 ++++++++++-
- 4 files changed, 17 insertions(+), 15 deletions(-)
+> > +Mandatory properties:
+> > +- compatible: must be "marvell,armada-370-xp-pcie"
+> > +- status: either "disabled" or "okay"
+> 
+> status is a standard DT property; I certainly wouldn't expect its
+> presence to be mandatory (there's a defined default), nor would I expect
+> each device's binding to redefine this property.
 
-diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
-index 26ffd3e..2c113de 100644
---- a/drivers/pci/hotplug/pciehp.h
-+++ b/drivers/pci/hotplug/pciehp.h
-@@ -44,7 +44,6 @@ extern bool pciehp_poll_mode;
- extern int pciehp_poll_time;
- extern bool pciehp_debug;
- extern bool pciehp_force;
--extern struct workqueue_struct *pciehp_wq;
- 
- #define dbg(format, arg...)						\
- do {									\
-@@ -78,6 +77,7 @@ struct slot {
- 	struct hotplug_slot *hotplug_slot;
- 	struct delayed_work work;	/* work for button event */
- 	struct mutex lock;
-+	struct workqueue_struct *wq;
- };
- 
- struct event_info {
-diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
-index 916bf4f..939bd1d 100644
---- a/drivers/pci/hotplug/pciehp_core.c
-+++ b/drivers/pci/hotplug/pciehp_core.c
-@@ -42,7 +42,6 @@ bool pciehp_debug;
- bool pciehp_poll_mode;
- int pciehp_poll_time;
- bool pciehp_force;
--struct workqueue_struct *pciehp_wq;
- 
- #define DRIVER_VERSION	"0.4"
- #define DRIVER_AUTHOR	"Dan Zink <dan.zink@compaq.com>, Greg Kroah-Hartman <greg@kroah.com>, Dely Sy <dely.l.sy@intel.com>"
-@@ -340,18 +339,13 @@ static int __init pcied_init(void)
- {
- 	int retval = 0;
- 
--	pciehp_wq = alloc_workqueue("pciehp", 0, 0);
--	if (!pciehp_wq)
--		return -ENOMEM;
--
- 	pciehp_firmware_init();
- 	retval = pcie_port_service_register(&hpdriver_portdrv);
-  	dbg("pcie_port_service_register = %d\n", retval);
-   	info(DRIVER_DESC " version: " DRIVER_VERSION "\n");
-- 	if (retval) {
--		destroy_workqueue(pciehp_wq);
-+	if (retval)
- 		dbg("Failure to register service\n");
--	}
-+
- 	return retval;
- }
- 
-@@ -359,7 +353,6 @@ static void __exit pcied_cleanup(void)
- {
- 	dbg("unload_pciehpd()\n");
- 	pcie_port_service_unregister(&hpdriver_portdrv);
--	destroy_workqueue(pciehp_wq);
- 	info(DRIVER_DESC " version: " DRIVER_VERSION " unloaded\n");
- }
- 
-diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
-index 27f4429..38f0186 100644
---- a/drivers/pci/hotplug/pciehp_ctrl.c
-+++ b/drivers/pci/hotplug/pciehp_ctrl.c
-@@ -49,7 +49,7 @@ static int queue_interrupt_event(struct slot *p_slot, u32 event_type)
- 	info->p_slot = p_slot;
- 	INIT_WORK(&info->work, interrupt_event_handler);
- 
--	queue_work(pciehp_wq, &info->work);
-+	queue_work(p_slot->wq, &info->work);
- 
- 	return 0;
- }
-@@ -344,7 +344,7 @@ void pciehp_queue_pushbutton_work(struct work_struct *work)
- 		kfree(info);
- 		goto out;
- 	}
--	queue_work(pciehp_wq, &info->work);
-+	queue_work(p_slot->wq, &info->work);
-  out:
- 	mutex_unlock(&p_slot->lock);
- }
-@@ -377,7 +377,7 @@ static void handle_button_press_event(struct slot *p_slot)
- 		if (ATTN_LED(ctrl))
- 			pciehp_set_attention_status(p_slot, 0);
- 
--		queue_delayed_work(pciehp_wq, &p_slot->work, 5*HZ);
-+		queue_delayed_work(p_slot->wq, &p_slot->work, 5*HZ);
- 		break;
- 	case BLINKINGOFF_STATE:
- 	case BLINKINGON_STATE:
-@@ -439,7 +439,7 @@ static void handle_surprise_event(struct slot *p_slot)
- 	else
- 		p_slot->state = POWERON_STATE;
- 
--	queue_work(pciehp_wq, &info->work);
-+	queue_work(p_slot->wq, &info->work);
- }
- 
- static void interrupt_event_handler(struct work_struct *work)
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index 13b2eaf..5127f3f 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -773,23 +773,32 @@ static void pcie_shutdown_notification(struct controller *ctrl)
- static int pcie_init_slot(struct controller *ctrl)
- {
- 	struct slot *slot;
-+	char name[32];
- 
- 	slot = kzalloc(sizeof(*slot), GFP_KERNEL);
- 	if (!slot)
- 		return -ENOMEM;
- 
-+	snprintf(name, sizeof(name), "pciehp-%u", PSN(ctrl));
-+	slot->wq = alloc_workqueue(name, 0, 0);
-+	if (!slot->wq)
-+		goto abort;
-+
- 	slot->ctrl = ctrl;
- 	mutex_init(&slot->lock);
- 	INIT_DELAYED_WORK(&slot->work, pciehp_queue_pushbutton_work);
- 	ctrl->slot = slot;
- 	return 0;
-+abort:
-+	kfree(slot);
-+	return -ENOMEM;
- }
- 
- static void pcie_cleanup_slot(struct controller *ctrl)
- {
- 	struct slot *slot = ctrl->slot;
- 	cancel_delayed_work(&slot->work);
--	flush_workqueue(pciehp_wq);
-+	destroy_workqueue(slot->wq);
- 	kfree(slot);
- }
- 
+Ok.
+
+> > +- marvell,pcie-port: the physical PCIe port number
+> 
+> Should the standardized cell-index property be used here instead? Or,
+> perhaps that property is deprecated/discouraged...
+
+The problem is that I need two identifiers, the pcie-port and
+pcie-lane, and it would be strange to have one referenced as
+cell-index, and the other one as marvell,pcie-lane, no? Unless of
+course we can put two numbers in the cell-index property, but a quick
+grep in Documentation/devicetree/bindings/ seems to indicate that all
+users of cell-index use it with a single identifier.
+
+Just tell me what to do here, I don't have a strong opinion on this.
+
+> > diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
+> 
+> > +obj-$(CONFIG_PCI_MVEBU) += pci-mvebu.o
+> > +ccflags-$(CONFIG_PCI_MVEBU) += \
+> > +	-I$(srctree)/arch/arm/plat-orion/include \
+> > +	-I$(srctree)/arch/arm/mach-mvebu/include
+> 
+> That seems a little dangerous w.r.t. multi-platform zImage. Can the
+> required headers be moved out to somewhere more public to avoid this?
+
+Why is this dangerous for multi-platform zImage? For this specific
+driver only, some SoC-specific headers are used. I don't think it
+prevents another PCI driver (such as the Tegra one) from being built
+into the same kernel image, no?
+
+Also, this is kind of a temporary solution, because I can't fix all the
+problems in just the PCI patch series without making it horribly large.
+The reason why we need those include paths at the moment are:
+
+ * For plat-orion/include, because of pcie.h that provides functions
+   common to all Marvell SoCs regarding PCI. Ultimately, all the
+   Marvell SoCs that use this common code should be migrated over to
+   the DT-capable PCI driver that is submitted through this patch
+   series. This will take a bit of time, and is too complex to do in
+   one shot, together with the introduction of the driver itself. So
+   ultimately, all the code in plat-orion/pcie.c will migrate into
+   drivers/pci/host/pci-mvebu.c, and this
+   plat-orion/include/plat/pcie.h file should disappear, removing the
+   need for this special header path.
+
+ * For mach-mvebu/include, because of the addr-map.h header that
+   provides functions related to address decoding windows. This is also
+   likely to evolve quite significantly when we'll make the PCI driver
+   being used by the other Marvell SoC families (Kirkwood, Dove,
+   Orion5x), and when this work is done, we can think of having a
+   public header in include/linux that exposes the address decoding
+   APIs, once it has stabilized a bit across the different Marvell SoC
+   families.
+
+So, the bottom line is: yes I know those include paths are not nice,
+but I don't think they prevent multiplatform builds, and they are a
+temporary solution until we convert more Marvell SoC families to this
+new PCI driver.
+
+> > +/*
+> > + * Those are the product IDs used for the emulated PCI Host bridge and
+> > + * emulated PCI-to-PCI bridges. They are temporary until we get
+> > + * official IDs assigned.
+> > + */
+> > +#define MARVELL_EMULATED_HOST_BRIDGE_ID    4141
+> > +#define MARVELL_EMULATED_PCI_PCI_BRIDGE_ID 4242
+> 
+> I assume that means we can't merge this driver yet. The cover letter
+> mentioned a desire to merge this for 3.9; there's not much time to get
+> official IDs assigned, then.
+
+I am working on getting real IDs assigned. For now, I'd like to work on
+getting all other issues fixed, and have this only problem remaining.
+
+> 
+> > +static int mvebu_pcie_init(void)
+> > +{
+> > +	return platform_driver_probe(&mvebu_pcie_driver,
+> > +				     mvebu_pcie_probe);
+> > +}
+> > +
+> > +subsys_initcall(mvebu_pcie_init);
+> 
+> Why isn't that just platform_driver_register()?
+
+I didn't test recently, but with my first version of the patch set,
+having an initialization as late as module_init() was too late. Some
+PCI fixup code was being executed *before* we get the opportunity of
+initializing the PCI driver, and it was crashing the kernel. I can
+provide more details if you want.
+
+> > +MODULE_LICENSE("GPL");
+> 
+> "GPL v2".
+
+Sure.
+
+Thomas
 -- 
-1.7.1
-
-
+Thomas Petazzoni, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
