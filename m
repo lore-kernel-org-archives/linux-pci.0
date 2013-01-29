@@ -1,125 +1,84 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hydra.sisk.pl ([212.160.235.94]:59427 "EHLO hydra.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750871Ab3A2VfC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 29 Jan 2013 16:35:02 -0500
 From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: Re: [PATCH v8 14/22] ACPI: update ej_event interface to take acpi_device
-Date: Sun, 13 Jan 2013 00:40:37 +0100
-Message-ID: <1908840.G1WFmde11m@vostro.rjw.lan>
-In-Reply-To: <1357944049-29620-15-git-send-email-yinghai@kernel.org>
-References: <1357944049-29620-1-git-send-email-yinghai@kernel.org> <1357944049-29620-15-git-send-email-yinghai@kernel.org>
+To: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
+Cc: Paul Bolle <pebolle@tiscali.nl>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Oliver Neukum <oneukum@suse.de>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: pciehp: errors on resume
+Date: Tue, 29 Jan 2013 22:41:11 +0100
+Message-ID: <3112957.IGAg1VkqM8@vostro.rjw.lan>
+In-Reply-To: <5107E088.6030608@fold.natur.cuni.cz>
+References: <1359377173.1345.25.camel@x61.thuisdomein> <1359462737.1345.58.camel@x61.thuisdomein> <5107E088.6030608@fold.natur.cuni.cz>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, January 11, 2013 02:40:41 PM Yinghai Lu wrote:
-> Should use acpi_device pointer directly instead of use handle and
-> get the device pointer again later.
+On Tuesday, January 29, 2013 03:45:28 PM Martin Mokrejs wrote:
+> Hi,
+> 
+> Paul Bolle wrote:
+> > On Tue, 2013-01-29 at 12:35 +0100, Rafael J. Wysocki wrote:
+> >> On Tuesday, January 29, 2013 11:35:32 AM Paul Bolle wrote:
+> >>> Thanks. So should the fix here be to actually suspend and remove this
+> >>> device? (Note that pciehp_suspend() is now basically a NOP.)
+> >>
+> >> I think it wouldn't be useful to remove devices on all suspends, but then there
+> >> are a few different situations that resume has to consider and handle correctly:
+> >>
+> >> 1) Device has been removed while suspended.
+> >> 2) Device was present before suspend and is still there.
+> >> 3) Device has been added while suspended.
+> > 
+> > Obviously, I care about situation 2) here. (It would be quite a feat to
+> > remove or add a wireless card while the laptop is suspended.)
+> 
+>   I don't use suspend on my laptop to avoid possible problems with crashes
+> and data loss (so I rather quit my apps and shutdown). Therefore I have no
+> experience with that ... but it is my impression that the obvious use is to
+> close the lid, unplug an external mouse/keyboard and go elsewhere, maybe
+> re-plug the mouse/keyboard into different slots (hey, I can't remember
+> whether I had mouse in this or the other socket) and open the lid. Even
+> being unintentionally nasty to the OS and re-plugging the devices after
+> I opened the laptop lid! I understand one is in all these scenarios just
+> doing the bad thing and just asking for a trouble ... but that's why I
+> don't use that feature. My memory is leaky and my behavior is error-prone
+> so I am sure once I would screw the order. Maybe OS could force disconnect of all
+> external devices which are reasonably safe (mouse and keyboard while not
+> say external USB drive)?
+> 
+>   Nevertheless, is it possible to have an external drive connection preserved
+> through suspend so that it survives under same device id? I don't know if this
+> a possible at all ... If not, then OS could could unplug even external drives.
 
-Looks good.
+This is possible for PCI devices.  The IDs won't change if the device is
+plugged in all the time.
 
-I can take this one right now if you want.
+Moreover, in some cases there's no way to tell the difference between "internal"
+and "external".  The OS just has to handle all of the possible situations
+during resume correctly.  If it doesn't, then there is a bug that needs to be
+fixed.
+
+And avoiding a given feature just because you're scared of it doesn't lead to
+any progress.  If you instead use it and report problems with it, then chances
+are those problems will be addressed over time.
+
+I use suspend all the time and it works for me.  I don't have any PCIe hotplug
+devices, though, so any information on whether or not it works for people is
+quite valuable to me.
+
+I'll have a look at the pciehp driver's resume, but that's going to take some
+time.
 
 Thanks,
 Rafael
 
 
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> ---
->  drivers/acpi/acpi_memhotplug.c  |    2 +-
->  drivers/acpi/processor_driver.c |    2 +-
->  drivers/acpi/scan.c             |   14 ++++----------
->  include/acpi/acpi_bus.h         |    2 +-
->  4 files changed, 7 insertions(+), 13 deletions(-)
-> 
-> diff --git a/drivers/acpi/acpi_memhotplug.c b/drivers/acpi/acpi_memhotplug.c
-> index 327ab44..eaddb7a 100644
-> --- a/drivers/acpi/acpi_memhotplug.c
-> +++ b/drivers/acpi/acpi_memhotplug.c
-> @@ -361,7 +361,7 @@ static void acpi_memory_device_notify(acpi_handle handle, u32 event, void *data)
->  			break;
->  		}
->  
-> -		ej_event->handle = handle;
-> +		ej_event->device = device;
->  		ej_event->event = ACPI_NOTIFY_EJECT_REQUEST;
->  		acpi_os_hotplug_execute(acpi_bus_hot_remove_device,
->  					(void *)ej_event);
-> diff --git a/drivers/acpi/processor_driver.c b/drivers/acpi/processor_driver.c
-> index 0777663..a24ee43 100644
-> --- a/drivers/acpi/processor_driver.c
-> +++ b/drivers/acpi/processor_driver.c
-> @@ -733,7 +733,7 @@ static void acpi_processor_hotplug_notify(acpi_handle handle,
->  			break;
->  		}
->  
-> -		ej_event->handle = handle;
-> +		ej_event->device = device;
->  		ej_event->event = ACPI_NOTIFY_EJECT_REQUEST;
->  		acpi_os_hotplug_execute(acpi_bus_hot_remove_device,
->  					(void *)ej_event);
-> diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
-> index 8883539..f4c6305 100644
-> --- a/drivers/acpi/scan.c
-> +++ b/drivers/acpi/scan.c
-> @@ -116,20 +116,14 @@ static DEVICE_ATTR(modalias, 0444, acpi_device_modalias_show, NULL);
->  void acpi_bus_hot_remove_device(void *context)
->  {
->  	struct acpi_eject_event *ej_event = (struct acpi_eject_event *) context;
-> -	struct acpi_device *device;
-> -	acpi_handle handle = ej_event->handle;
-> +	struct acpi_device *device = ej_event->device;
-> +	acpi_handle handle = device->handle;
->  	acpi_handle temp;
->  	struct acpi_object_list arg_list;
->  	union acpi_object arg;
->  	acpi_status status = AE_OK;
->  	u32 ost_code = ACPI_OST_SC_NON_SPECIFIC_FAILURE; /* default */
->  
-> -	if (acpi_bus_get_device(handle, &device))
-> -		goto err_out;
-> -
-> -	if (!device)
-> -		goto err_out;
-> -
->  	ACPI_DEBUG_PRINT((ACPI_DB_INFO,
->  		"Hot-removing device %s...\n", dev_name(&device->dev)));
->  
-> @@ -215,7 +209,7 @@ acpi_eject_store(struct device *d, struct device_attribute *attr,
->  		goto err;
->  	}
->  
-> -	ej_event->handle = acpi_device->handle;
-> +	ej_event->device = acpi_device;
->  	if (acpi_device->flags.eject_pending) {
->  		/* event originated from ACPI eject notification */
->  		ej_event->event = ACPI_NOTIFY_EJECT_REQUEST;
-> @@ -223,7 +217,7 @@ acpi_eject_store(struct device *d, struct device_attribute *attr,
->  	} else {
->  		/* event originated from user */
->  		ej_event->event = ACPI_OST_EC_OSPM_EJECT;
-> -		(void) acpi_evaluate_hotplug_ost(ej_event->handle,
-> +		(void) acpi_evaluate_hotplug_ost(acpi_device->handle,
->  			ej_event->event, ACPI_OST_SC_EJECT_IN_PROGRESS, NULL);
->  	}
->  
-> diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
-> index 2246ba9..181ff2d 100644
-> --- a/include/acpi/acpi_bus.h
-> +++ b/include/acpi/acpi_bus.h
-> @@ -309,7 +309,7 @@ struct acpi_bus_event {
->  };
->  
->  struct acpi_eject_event {
-> -	acpi_handle	handle;
-> +	struct acpi_device	*device;
->  	u32		event;
->  };
->  
-> 
 -- 
 I speak only for myself.
 Rafael J. Wysocki, Intel Open Source Technology Center.
