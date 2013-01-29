@@ -1,77 +1,74 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	Tang Chen <tangchen@cn.fujitsu.com>
-Subject: Re: [PATCH v9 08/11] PCI, ACPI: debug print for installation of acpi root bridge's notifier
-Date: Mon, 21 Jan 2013 13:43:53 +0100
-Message-ID: <2845150.CbZVjsYMRJ@vostro.rjw.lan>
-In-Reply-To: <CAE9FiQXW7xkSEtxr7Wa4DQpEhdAsas7g=0bYkC+vUKp_7=Qj_A@mail.gmail.com>
-References: <1358495602-22867-1-git-send-email-yinghai@kernel.org> <2506887.8XgRPLTxfQ@vostro.rjw.lan> <CAE9FiQXW7xkSEtxr7Wa4DQpEhdAsas7g=0bYkC+vUKp_7=Qj_A@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.free-electrons.com ([94.23.35.102]:33363 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753343Ab3A2KB0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Jan 2013 05:01:26 -0500
+Date: Tue, 29 Jan 2013 11:01:19 +0100
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Maen Suleiman <maen@marvell.com>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	linux-pci@vger.kernel.org,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH v2 07/27] PCI: Add software-emulated host bridge
+Message-ID: <20130129110119.07cb9ef3@skate>
+In-Reply-To: <20130128225105.GA21935@obsidianresearch.com>
+References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	<1359399397-29729-8-git-send-email-thomas.petazzoni@free-electrons.com>
+	<201301282018.17714.arnd@arndb.de>
+	<5106F5CB.8050304@wwwdotorg.org>
+	<20130128220904.GA21446@obsidianresearch.com>
+	<20130128231829.6b205c3c@skate>
+	<20130128222348.GA21628@obsidianresearch.com>
+	<20130128233048.2ab6a6d2@skate>
+	<20130128225105.GA21935@obsidianresearch.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sunday, January 20, 2013 06:37:59 PM Yinghai Lu wrote:
-> On Sun, Jan 20, 2013 at 3:00 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> > On Thursday, January 17, 2013 11:53:19 PM Yinghai Lu wrote:
-> >> From: Tang Chen <tangchen@cn.fujitsu.com>
-> >>
-> >> acpi_install_notify_handler() could fail. So check the exit status
-> >> and give a better debug info.
-> >>
-> >> Signed-off-by: Tang Chen <tangchen@cn.fujitsu.com>
-> >> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> >> ---
-> >>  drivers/acpi/pci_root.c |   12 +++++++++---
-> >>  1 file changed, 9 insertions(+), 3 deletions(-)
-> >>
-> >> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-> >> index 3ce5d80..f3ceb61 100644
-> >> --- a/drivers/acpi/pci_root.c
-> >> +++ b/drivers/acpi/pci_root.c
-> >> @@ -762,6 +762,7 @@ static void handle_hotplug_event_root(acpi_handle handle, u32 type,
-> >>  static acpi_status __init
-> >>  find_root_bridges(acpi_handle handle, u32 lvl, void *context, void **rv)
-> >>  {
-> >> +     acpi_status status;
-> >>       char objname[64];
-> >>       struct acpi_buffer buffer = { .length = sizeof(objname),
-> >>                                     .pointer = objname };
-> >> @@ -774,9 +775,14 @@ find_root_bridges(acpi_handle handle, u32 lvl, void *context, void **rv)
-> >>
-> >>       acpi_get_name(handle, ACPI_FULL_PATHNAME, &buffer);
-> >>
-> >> -     acpi_install_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
-> >> -                             handle_hotplug_event_root, NULL);
-> >> -     printk(KERN_DEBUG "acpi root: %s notify handler installed\n", objname);
-> >> +     status = acpi_install_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
-> >> +                                     handle_hotplug_event_root, NULL);
-> >> +     if (ACPI_FAILURE(status))
-> >> +             printk(KERN_DEBUG "acpi root: %s notify handler is not installed, exit status: %u\n",
-> >
-> > Can you break that line, please?  And use pr_debug()?
-> 
-> Long line should be ok, and checkpatch.pl is not complaining about that.
-> 
-> Also keep the complete print out in one line, could make git grep find
-> that code exactly.
-> 
-> Actually I really hate pr_debug(), that will make the generated code
-> different with DEBUG
-> defined or not. And need to end user to recompile kernel to get debug
-> output if needed.
+Dear Jason Gunthorpe,
 
-OK, whatever.
+On Mon, 28 Jan 2013 15:51:05 -0700, Jason Gunthorpe wrote:
+
+> > > I'm refering to your earlier question about what PCI IDs to use for
+> > > the SW emulated devices. If there is no need for the host bridge then
+> > > you only need 1 PCI ID (for the root port bridge) and you can probably
+> > > fairly safely re-use the one in the Marvell config space of the HW.
+> > 
+> > Ah, ok, I see. But isn't a host bridge needed to bind all the
+> > PCI-to-PCI bridges under a single bus, in order to get the global
+> > resource assignment I was referring to?
+> 
+> The PCI-E spec requires it, but AFAIK it doesn't actually *do*
+> anything on Linux, and Linux doesn't require it.
+> 
+> I thought Thierry did this experiment and decided it wasn't necessary:
+
+Could you detail what would be visible PCI bus topology if I remove the
+emulated PCI host bridge? (And keeping one PCI-to-PCI bridge per PCIe
+interface) ?
+
+I'm just trying to understand what it would look like, in terms of
+"lspci -t" output, because for now, it's not clear to me how everything
+would fit together with the emulated host bridge.
 
 Thanks,
-Rafael
 
-
+Thomas
 -- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+Thomas Petazzoni, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
