@@ -1,86 +1,91 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:47844 "EHLO hydra.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752342Ab3ATXh2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 20 Jan 2013 18:37:28 -0500
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Jiang Liu <liuj97@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>
-Subject: Re: [RFC PATCH v5 8/8] PCI/PCIe: only claim PME from firmware when CONFIG_PCIE_PME is enabled
-Date: Mon, 21 Jan 2013 00:43:27 +0100
-Message-ID: <2580359.lck5YacT35@vostro.rjw.lan>
-In-Reply-To: <1358525267-14268-9-git-send-email-jiang.liu@huawei.com>
-References: <1358525267-14268-1-git-send-email-jiang.liu@huawei.com> <1358525267-14268-9-git-send-email-jiang.liu@huawei.com>
+Received: from service87.mimecast.com ([91.220.42.44]:36670 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751681Ab3A2Nbp convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Jan 2013 08:31:45 -0500
+Date: Tue, 29 Jan 2013 13:31:40 +0000
+From: Andrew Murray <andrew.murray@arm.com>
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: Thierry Reding <thierry.reding@avionic-design.de>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	"rob.herring@calxeda.com" <rob.herring@calxeda.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	"devicetree-discuss@lists.ozlabs.org"
+	<devicetree-discuss@lists.ozlabs.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH 10/14] PCI: tegra: Move PCIe driver to drivers/pci/host
+Message-ID: <20130129133140.GA24193@arm.com>
+References: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de>
+ <20130115154038.GA11241@arm.com>
+ <20130115211441.GA13139@avionic-0098.adnet.avionic-design.de>
+ <201301161400.26587.arnd@arndb.de>
+ <20130116161716.GA10630@arm.com>
+ <20130116183101.GA28660@avionic-0098.adnet.avionic-design.de>
+ <20130117154236.GA25943@arm.com>
+ <20130117160501.GC2186@avionic-0098.adnet.avionic-design.de>
+ <20130117162218.GA29016@arm.com>
+ <20130122192901.GE30647@obsidianresearch.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <20130122192901.GE30647@obsidianresearch.com>
+Content-Type: text/plain; charset=WINDOWS-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Saturday, January 19, 2013 12:07:46 AM Jiang Liu wrote:
-> If CONFIG_PCIE_PME is not defined, system should avoid claiming PME from
-> firmware so firmware could still manage PME events for those devices.
-> Also don't create PCIe port device for PME service if CONFIG_PCIE_PME
-> is not defined.
-
-No, this isn't correct.
-
-We know from experience that it is in fact necessary to request control of
-either all PCIe native features or none of them.  Anything else leads to
-very "interesting" failure modes on some systems.
-
-I think we should just remove CONFIG_PCIE_PME instead.
-
-Thanks,
-Rafael
-
-
-> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-> ---
->  drivers/acpi/pci_root.c         |    5 +++--
->  drivers/pci/pcie/portdrv_core.c |    4 +++-
->  2 files changed, 6 insertions(+), 3 deletions(-)
+On Tue, Jan 22, 2013 at 07:29:01PM +0000, Jason Gunthorpe wrote:
+> On Thu, Jan 17, 2013 at 04:22:18PM +0000, Andrew Murray wrote:
 > 
-> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-> index c37eedb..7f7e464 100644
-> --- a/drivers/acpi/pci_root.c
-> +++ b/drivers/acpi/pci_root.c
-> @@ -550,8 +550,9 @@ static int __devinit acpi_pci_root_add(struct acpi_device *device)
->  
->  	if (!pcie_ports_disabled
->  	    && (flags & ACPI_PCIE_REQ_SUPPORT) == ACPI_PCIE_REQ_SUPPORT) {
-> -		flags = OSC_PCI_EXPRESS_CAP_STRUCTURE_CONTROL
-> -			| OSC_PCI_EXPRESS_PME_CONTROL;
-> +		flags = OSC_PCI_EXPRESS_CAP_STRUCTURE_CONTROL;
-> +		if (IS_ENABLED(CONFIG_PCIE_PME))
-> +			flags |= OSC_PCI_EXPRESS_PME_CONTROL;
->  		if (!pcie_native_hotplug_disabled)
->  			flags |= OSC_PCI_EXPRESS_NATIVE_HP_CONTROL;
->  
-> diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-> index e7e1679..7e6546f 100644
-> --- a/drivers/pci/pcie/portdrv_core.c
-> +++ b/drivers/pci/pcie/portdrv_core.c
-> @@ -263,7 +263,9 @@ static int get_port_device_capability(struct pci_dev *dev)
->  
->  	err = pcie_port_platform_notify(dev, &cap_mask);
->  	if (!pcie_ports_auto) {
-> -		cap_mask = PCIE_PORT_SERVICE_PME | PCIE_PORT_SERVICE_VC;
-> +		cap_mask = PCIE_PORT_SERVICE_VC;
-> +		if (IS_ENABLED(CONFIG_PCIE_PME))
-> +			cap_mask |= PCIE_PORT_SERVICE_PME;
->  		if (!pcie_native_hotplug_disabled)
->  			cap_mask |= PCIE_PORT_SERVICE_HP;
->  		if (pci_aer_available())
+> > > In either of those cases, does it make sense to use the MSI support
+> > > outside the scope of the PCI infrastructure? That is, would devices
+> > > other than PCI devices be able to generate an MSI?
+> > 
+> > I've come around to your way of thinking. Your approach sounds good for
+> > registration of MSI ops - let the RC host driver do it (it probably has its
+> > own), or use a helper for following a phandle to get ops that are not part
+> > of the driver. MSIs won't be used outside of PCI devices.
 > 
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+> Here is a bit of additional info on some MSI stuff..
+> 
+> This can be pretty complex. For instance on hyper transport systems
+> the PCI to HT bridge has an MSI controller that maps between PCI and
+> HT MSI formats, that mapping is configurable, so technically each
+> brige could be considered a MSI controller. Typically the mapping
+> controllers are all setup the same so there is not much problem with
+> this. However *native* HT devices can (which are super rare) can use a
+> different MSI format than PCI devices. From a linux perspective HT is
+> just a variant of PCI.
+>  
+> On x86 the MSI is delivered to the CPU APIC complex which converts it
+> into a vectored interrupt - part of the value of MSI is that the MSI
+> data can vector the interrupt to a specific CPU, or group of CPUs or
+> whatever.
+> 
+> Presumably SMP ARMs will evolve similar MSI based interrupt vectoring
+> capabilities, and presumably on-chip, non-PCI peripherals will evolve
+> options to use MSI as well (ie multi-queue ethernet). So it might be
+> worth giving some thought to how things could migrate in that
+> direction someday.
+> 
+> I have a bit hacky MSI driver for Kirkwood, this work you have to
+> generalize the interface could let me actually upstream it :) The MSI
+> is built using the Host2CPU doorbell registers, so it is entirely
+> unrelated to the PCI-E RC driver.
+> 
+> However, my use of the MSI driver on kirkwood is to assign MSIs to a
+> PCI-E device via non-standard registers, more like an on chip
+> peripheral. This is because the Host2CPU doorbell doesn't fit 100%
+> perfectly with the standard PCI MSI stuff, and the hardware has funny
+> needs.. So an 'allocate a MSI interrupt' API would be snazzy too :)
+
+Thanks for this. I believe Thierry may be working on improving the MSI
+API - so perhaps we can see where that takes us.
+
+Andrew Murray
+
