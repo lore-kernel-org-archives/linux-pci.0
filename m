@@ -1,40 +1,46 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v9 03/11] PCI: Set dev_node early for pci_dev
-Date: Thu, 17 Jan 2013 23:53:14 -0800
-Message-Id: <1358495602-22867-4-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1358495602-22867-1-git-send-email-yinghai@kernel.org>
-References: <1358495602-22867-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hydra.sisk.pl ([212.160.235.94]:58427 "EHLO hydra.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751580Ab3A2L3Y (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 29 Jan 2013 06:29:24 -0500
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Paul Bolle <pebolle@tiscali.nl>
+Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Oliver Neukum <oneukum@suse.de>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: pciehp: errors on resume
+Date: Tue, 29 Jan 2013 12:35:32 +0100
+Message-ID: <3774810.Obias7PJ4I@vostro.rjw.lan>
+In-Reply-To: <1359455732.1345.46.camel@x61.thuisdomein>
+References: <1359377173.1345.25.camel@x61.thuisdomein> <51072F83.7040102@cn.fujitsu.com> <1359455732.1345.46.camel@x61.thuisdomein>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Otherwise irq_desc for pci bridge with hot-added ioapic can not be on
-local node.
+On Tuesday, January 29, 2013 11:35:32 AM Paul Bolle wrote:
+> Gu,
+> 
+> On Tue, 2013-01-29 at 10:10 +0800, Gu Zheng wrote:
+> > I think cause of the issue you mentioned is the device already exists when we resume.
+> > Because we do not really suspend/remove the device when suspend, the device still exists, so 
+> > we try to add the device when resume will failed. The suspend routine does not match the resume,
+> > it seems a bug here.
+> 
+> Thanks. So should the fix here be to actually suspend and remove this
+> device? (Note that pciehp_suspend() is now basically a NOP.)
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/pci/probe.c |    1 +
- 1 file changed, 1 insertion(+)
+I think it wouldn't be useful to remove devices on all suspends, but then there
+are a few different situations that resume has to consider and handle correctly:
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index bbe4be7..dcef3b9 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1300,6 +1300,7 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
- 	dev->dev.release = pci_release_dev;
- 	pci_dev_get(dev);
- 
-+	set_dev_node(&dev->dev, pcibus_to_node(bus));
- 	dev->dev.dma_mask = &dev->dma_mask;
- 	dev->dev.dma_parms = &dev->dma_parms;
- 	dev->dev.coherent_dma_mask = 0xffffffffull;
+1) Device has been removed while suspended.
+2) Device was present before suspend and is still there.
+3) Device has been added while suspended.
+
+Thanks,
+Rafael
+
+
 -- 
-1.7.10.4
-
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
