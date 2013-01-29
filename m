@@ -1,90 +1,80 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v8 19/22] PCI, pci_root_hp: Use acpi_hp_work
-Date: Fri, 11 Jan 2013 14:40:46 -0800
-Message-Id: <1357944049-29620-20-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1357944049-29620-1-git-send-email-yinghai@kernel.org>
-References: <1357944049-29620-1-git-send-email-yinghai@kernel.org>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-la0-f44.google.com ([209.85.215.44]:58300 "EHLO
+	mail-la0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750741Ab3A2HFA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Jan 2013 02:05:00 -0500
+Message-ID: <51077499.90602@openvz.org>
+Date: Tue, 29 Jan 2013 11:04:57 +0400
+From: Konstantin Khlebnikov <khlebnikov@openvz.org>
+MIME-Version: 1.0
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+CC: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
+	e1000-devel@lists.sourceforge.net, linux-pci@vger.kernel.org,
+	Dave Airlie <airlied@redhat.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Subject: Re: [PATCH 3/5] PCI: revert preparing for wakeup in runtime-suspend
+ finalization
+References: <20130118113019.6698.25941.stgit@zurg> <20130118114222.6698.7103.stgit@zurg> <CAErSpo4sEv-Qw1iztGn-SsPKZ=Y+st-tPAFOvsp17MUo6X=xrA@mail.gmail.com> <1821500.CRlxLgYU5r@vostro.rjw.lan>
+In-Reply-To: <1821500.CRlxLgYU5r@vostro.rjw.lan>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Remove local copy: acpi_root_hp_work
+Rafael J. Wysocki wrote:
+> On Monday, January 28, 2013 04:17:42 PM Bjorn Helgaas wrote:
+>> [+cc Rafael]
+>>
+>> On Fri, Jan 18, 2013 at 4:42 AM, Konstantin Khlebnikov
+>> <khlebnikov@openvz.org>  wrote:
+>>> This patch effectively reverts commit 42eca2302146fed51335b95128e949ee6f54478f
+>>> ("PCI: Don't touch card regs after runtime suspend D3")
+>>>
+>>> | This patch checks whether the pci state is saved and doesn't attempt to hit
+>>> | any registers after that point if it is.
+>>>
+>>> This seems completely wrong. Yes, PCI configuration space has been saved by
+>>> driver, but this doesn't means that all job is done and device has been
+>>> suspended and ready for waking up in the future.
+>>>
+>>> For example driver e1000e for ethernet in my thinkpad x220 saves pci-state
+>>> but device cannot wakeup after that, because it needs some ACPI callbacks
+>>> which usually called from pci_finish_runtime_suspend().
+>>>
+>>> | Optimus (dual-gpu) laptops seem to have their own form of D3cold, but
+>>> | unfortunately enter it on normal D3 transitions via the ACPI callback.
+>>>
+>>> Hardware which disappears from the bus unexpectedly is exception, so let's
+>>> handle it as an exception. Its driver should set device state to D3cold and
+>>> the rest code will handle it properly.
+>>
+>> Functions in D3cold don't have power, so it's completely expected that
+>> they would disappear from the bus and not respond to config accesses.
+>> Maybe Dave was referring to D3hot, where functions *should* respond to
+>> config accesses.  I dunno.
+>>
+>> Just to be clear, it sounds like 42eca230 caused a regression on your
+>> e1000e device?  If so, I guess we should revert it unless you and Dave
+>> can figure out a better patch that fixes both your e1000e device and
+>> the Optimus issue.
+>
+> Yes, if there's a regression, let's revert it, but I'd like the regression
+> to be described clearly.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Len Brown <lenb@kernel.org>
-Cc: linux-acpi@vger.kernel.org
----
- drivers/acpi/pci_root.c |   34 +++-------------------------------
- 1 file changed, 3 insertions(+), 31 deletions(-)
+Yep, this is regression.
 
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index 8a0e2e2..e3774b2 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -685,34 +685,6 @@ int __init acpi_pci_root_init(void)
- 
- #define ACPI_STA_FUNCTIONING	(0x00000008)
- 
--struct acpi_root_hp_work {
--	struct work_struct work;
--	acpi_handle handle;
--	u32 type;
--	void *context;
--};
--
--static void alloc_acpi_root_hp_work(acpi_handle handle, u32 type,
--					void *context,
--					void (*func)(struct work_struct *work))
--{
--	struct acpi_root_hp_work *hp_work;
--	int ret;
--
--	hp_work = kmalloc(sizeof(*hp_work), GFP_KERNEL);
--	if (!hp_work)
--		return;
--
--	hp_work->handle = handle;
--	hp_work->type = type;
--	hp_work->context = context;
--
--	INIT_WORK(&hp_work->work, func);
--	ret = queue_work(kacpi_hotplug_wq, &hp_work->work);
--	if (!ret)
--		kfree(hp_work);
--}
--
- static void handle_root_bridge_insertion(acpi_handle handle)
- {
- 	struct acpi_device *device, *pdevice;
-@@ -770,11 +742,11 @@ static void _handle_hotplug_event_root(struct work_struct *work)
- 	char objname[64];
- 	struct acpi_buffer buffer = { .length = sizeof(objname),
- 				      .pointer = objname };
--	struct acpi_root_hp_work *hp_work;
-+	struct acpi_hp_work *hp_work;
- 	acpi_handle handle;
- 	u32 type;
- 
--	hp_work = container_of(work, struct acpi_root_hp_work, work);
-+	hp_work = container_of(work, struct acpi_hp_work, work);
- 	handle = hp_work->handle;
- 	type = hp_work->type;
- 
-@@ -819,7 +791,7 @@ static void _handle_hotplug_event_root(struct work_struct *work)
- static void handle_hotplug_event_root(acpi_handle handle, u32 type,
- 					void *context)
- {
--	alloc_acpi_root_hp_work(handle, type, context,
-+	alloc_acpi_hp_work(handle, type, context,
- 				_handle_hotplug_event_root);
- }
- 
--- 
-1.7.10.4
+commit 42eca2302146fed51335b95128e949ee6f54478f ("PCI: Don't touch
+card regs after runtime suspend D3") changes state convention during
+runtime-suspend transaction too much. If PCI configuration space
+has been saved by driver that does not means that all job is done
+and device has been suspended and ready for waking up in the future.
+
+e1000e saves pci-config space itself, but it requires operations which
+pci_finish_runtime_suspend() does: preparing for wake (calling particular
+platform pm-callbacks) and switching to proper sleep state.
+
+>
+> Thanks,
+> Rafael
+>
+>
 
