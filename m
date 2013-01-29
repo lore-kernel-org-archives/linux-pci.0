@@ -1,78 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:39187 "EHLO hydra.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754448Ab3ALXcK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 12 Jan 2013 18:32:10 -0500
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	Tang Chen <tangchen@cn.fujitsu.com>
-Subject: Re: [PATCH v8 12/22] PCI, ACPI: debug print for installation of acpi root bridge's notifier
-Date: Sun, 13 Jan 2013 00:37:57 +0100
-Message-ID: <2183351.x1cn8B59bl@vostro.rjw.lan>
-In-Reply-To: <1357944049-29620-13-git-send-email-yinghai@kernel.org>
-References: <1357944049-29620-1-git-send-email-yinghai@kernel.org> <1357944049-29620-13-git-send-email-yinghai@kernel.org>
+Received: from mail-vb0-f41.google.com ([209.85.212.41]:40380 "EHLO
+	mail-vb0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752953Ab3A2OSV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Jan 2013 09:18:21 -0500
+Received: by mail-vb0-f41.google.com with SMTP id l22so289705vbn.28
+        for <linux-pci@vger.kernel.org>; Tue, 29 Jan 2013 06:18:20 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <51076787.1020201@huawei.com>
+References: <1359106615-17544-1-git-send-email-wangyijing@huawei.com>
+	<CAPoiz9zw-pVNGZC7Ox+Kf+=RNHJRCY5hoLejbrmWmjvHtUEihg@mail.gmail.com>
+	<51076787.1020201@huawei.com>
+Date: Tue, 29 Jan 2013 07:18:20 -0700
+Message-ID: <CAPoiz9zyms8y_bU56=i2UDRrEOgWEH2kzd275HOrz=FhuFQTJA@mail.gmail.com>
+Subject: Re: [PATCH v3] PCI: Document PCIE BUS MPS parameters
+From: Jon Mason <jdmason@kudzu.us>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Rob Landley <rob@landley.net>, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, Andrew Murray <andrew.murray@arm.com>,
+	Joe Lawrence <Joe.Lawrence@stratus.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Hanjun Guo <guohanjun@huawei.com>, jiang.liu@huawei.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, January 11, 2013 02:40:39 PM Yinghai Lu wrote:
-> From: Tang Chen <tangchen@cn.fujitsu.com>
-> 
-> acpi_install_notify_handler() could fail. So check the exit status
-> and give a better debug info.
-> 
-> Signed-off-by: Tang Chen <tangchen@cn.fujitsu.com>
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> ---
->  drivers/acpi/pci_root.c |   12 +++++++++---
->  1 file changed, 9 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-> index d30fb94..862abcc 100644
-> --- a/drivers/acpi/pci_root.c
-> +++ b/drivers/acpi/pci_root.c
-> @@ -943,6 +943,7 @@ static bool acpi_is_root_bridge_object(acpi_handle handle)
->  static acpi_status __init
->  find_root_bridges(acpi_handle handle, u32 lvl, void *context, void **rv)
->  {
-> +	acpi_status status;
->  	char objname[64];
->  	struct acpi_buffer buffer = { .length = sizeof(objname),
->  				      .pointer = objname };
-> @@ -955,9 +956,14 @@ find_root_bridges(acpi_handle handle, u32 lvl, void *context, void **rv)
->  
->  	acpi_get_name(handle, ACPI_FULL_PATHNAME, &buffer);
->  
-> -	acpi_install_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
-> -				handle_hotplug_event_root, NULL);
-> -	printk(KERN_DEBUG "acpi root: %s notify handler installed\n", objname);
-> +	status = acpi_install_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
-> +					handle_hotplug_event_root, NULL);
-> +	if (ACPI_FAILURE(status))
-> +		printk(KERN_DEBUG "acpi root: %s notify handler is not installed, exit status: %u\n",
-> +				  objname, (unsigned int)status);
+On Mon, Jan 28, 2013 at 11:09 PM, Yijing Wang <wangyijing@huawei.com> wrote:
+> On 2013/1/29 13:00, Jon Mason wrote:
+>> On Fri, Jan 25, 2013 at 2:36 AM, Yijing Wang <wangyijing@huawei.com> wrote:
+>>> v0->v1: Update MPS parameters as non-arch and add MRRS
+>>>                 description into pcie_bus_perf parameter suggested
+>>>                 by Andrew Murray.
+>>> v1->v2: Update some semantic problems and add MPS and MRRS
+>>>                 explanation suggested by Joe Lawrence and Randy Dunlap.
+>>> v2->v3: Update some semantic problems and the description
+>>>                 of pcie_bus_safe and pcie_bus_peer2peer suggested
+>>>                 by Bjorn Helgaas.
+>>>
+>>> Document PCIE BUS MPS parameters pcie_bus_tune_off, pcie_bus_safe,
+>>> pcie_bus_peer2peer, pcie_bus_perf into Documentation/kernel-parameters.txt.
+>>> These parameters were introduced by Jon Mason <mason@myri.com> at
+>>> commit 5f39e6705 and commit b03e7495a8.
+>>>
+>>> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+>>> ---
+>>>  Documentation/kernel-parameters.txt |   13 +++++++++++++
+>>>  1 files changed, 13 insertions(+), 0 deletions(-)
+>>>
+>>> diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
+>>> index 363e348..2997df2 100644
+>>> --- a/Documentation/kernel-parameters.txt
+>>> +++ b/Documentation/kernel-parameters.txt
+>>> @@ -2227,6 +2227,19 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
+>>>                                 This sorting is done to get a device
+>>>                                 order compatible with older (<= 2.4) kernels.
+>>>                 nobfsort        Don't sort PCI devices into breadth-first order.
+>>> +               pcie_bus_tune_off       Disable PCIe MPS (Max Payload Size)
+>>> +                               tuning and use the BIOS-configured MPS defaults.
+>>> +               pcie_bus_safe   Use the smallest supported MPS of any device
+>>> +                               below a root complex.
+>>
+>> This isn't correct.  It should be something like "The largest MPS
+>> common to all devices below the root complex".
+>
+> Hi Jon,
+>    Thanks for your review and comment!
+> What about "Set every device's MPS to the largest MPSS (Max Payload Size Support)
+> common to all devices below the root complex" ?
 
-If we print a message on failure, I don't think we need one on success.
+Sounds great!  Thanks so much for documenting this.
 
-Besides, please use pr_debug().
-
-> +	else
-> +		printk(KERN_DEBUG "acpi root: %s notify handler is installed\n",
-> +				 objname);
->  
->  	add_acpi_root_bridge(handle);
-
-And I wonder what sens does this make to call add_acpi_root_bridge() here if we
-haven't installed the notify handler for handle?
-
-Rafael
-
-
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+>
+>>
+>>> +               pcie_bus_perf   Configure device MPS to the largest
+>>> +                               allowable MPS based on its parent bus. Also set
+>>> +                               MRRS (Max Read Request Size) to the largest supported
+>>> +                               value (no larger than the MPS that the device or bus
+>>> +                               can support) for best performance.
+>>> +               pcie_bus_peer2peer      Set every device's MPS to 128B, which
+>>> +                               every device is guaranteed to support. This
+>>> +                               configuration allows peer-to-peer DMA between any pair
+>>> +                               of devices possibly at the cost of reduced performance.
+>>>                 cbiosize=nn[KMG]        The fixed amount of bus space which is
+>>>                                 reserved for the CardBus bridge's IO window.
+>>>                                 The default value is 256 bytes.
+>>> --
+>>> 1.7.1
+>>>
+>>>
+>>
+>> .
+>>
+>
+>
+> --
+> Thanks!
+> Yijing
+>
