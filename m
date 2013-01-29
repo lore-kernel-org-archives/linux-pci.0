@@ -1,101 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vb0-f50.google.com ([209.85.212.50]:55896 "EHLO
-	mail-vb0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754655Ab3ADTbe (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Jan 2013 14:31:34 -0500
-Received: by mail-vb0-f50.google.com with SMTP id ft2so5195718vbb.37
-        for <linux-pci@vger.kernel.org>; Fri, 04 Jan 2013 11:31:33 -0800 (PST)
+Received: from hydra.sisk.pl ([212.160.235.94]:58094 "EHLO hydra.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750948Ab3A2BFP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 28 Jan 2013 20:05:15 -0500
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Konstantin Khlebnikov <khlebnikov@openvz.org>
+Cc: linux-kernel@vger.kernel.org, e1000-devel@lists.sourceforge.net,
+	linux-pci@vger.kernel.org, Bruce Allan <bruce.w.allan@intel.com>,
+	Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Subject: Re: [PATCH 1/5] e1000e: fix resuming from runtime-suspend
+Date: Tue, 29 Jan 2013 02:11:23 +0100
+Message-ID: <12263202.uQHxo0zU24@vostro.rjw.lan>
+In-Reply-To: <CAErSpo4G=hQ79KJg_6QgoO9nmG-B5xA_ooph7G6Uu-9wGkrnTQ@mail.gmail.com>
+References: <20130118113019.6698.25941.stgit@zurg> <20130118114214.6698.24975.stgit@zurg> <CAErSpo4G=hQ79KJg_6QgoO9nmG-B5xA_ooph7G6Uu-9wGkrnTQ@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo6rs2+Sp3WrqsH7DXb+uZ=c7z8YnT1-GpCd96kKNW1_-w@mail.gmail.com>
-References: <F5D084D6342F9B479C34599BB0A03E4D020128@AVMB1.qlogic.org>
- <D63B9804CB63AD4FAAD966037695664603A72C@avmb2.qlogic.org> <CAErSpo6rs2+Sp3WrqsH7DXb+uZ=c7z8YnT1-GpCd96kKNW1_-w@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 4 Jan 2013 12:31:11 -0700
-Message-ID: <CAErSpo6-BFtr=HH_5zLUrVK6goiVsNTq5pwmn+_wj4_z9kY-3A@mail.gmail.com>
-Subject: Re: [PATCH 04/12] [SCSI] qla2xxx: Use standard PCIe Capability Link
- register field names
-To: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: Giridhar Malavali <giridhar.malavali@qlogic.com>,
-	Saurav Kashyap <saurav.kashyap@qlogic.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Dept-Eng Linux Driver <Linux-Driver@qlogic.com>,
-	Andrew Vasquez <andrew.vasquez@qlogic.com>,
-	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I haven't heard anything, so I'm going to push this through the PCI
-tree.  Let me know if anybody objects or would like to handle it
-differently.
+On Monday, January 28, 2013 04:05:33 PM Bjorn Helgaas wrote:
+> [+cc Rafael, author of patch you cited]
+> 
+> On Fri, Jan 18, 2013 at 4:42 AM, Konstantin Khlebnikov
+> <khlebnikov@openvz.org> wrote:
+> > Bug was introduced in commit 23606cf5d1192c2b17912cb2ef6e62f9b11de133
+> > ("e1000e / PCI / PM: Add basic runtime PM support (rev. 4)") in v2.6.35
+> >
+> > Signed-off-by: Konstantin Khlebnikov <khlebnikov@openvz.org>
+> > Cc: e1000-devel@lists.sourceforge.net
+> > Cc: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+> > Cc: Bruce Allan <bruce.w.allan@intel.com>
+> > ---
+> >  drivers/net/ethernet/intel/e1000e/netdev.c |   13 ++++++++-----
+> >  1 file changed, 8 insertions(+), 5 deletions(-)
+> >
+> > diff --git a/drivers/net/ethernet/intel/e1000e/netdev.c b/drivers/net/ethernet/intel/e1000e/netdev.c
+> > index fbf75fd..2853c11 100644
+> > --- a/drivers/net/ethernet/intel/e1000e/netdev.c
+> > +++ b/drivers/net/ethernet/intel/e1000e/netdev.c
+> > @@ -5691,14 +5691,17 @@ static int e1000_runtime_suspend(struct device *dev)
+> >         struct pci_dev *pdev = to_pci_dev(dev);
+> >         struct net_device *netdev = pci_get_drvdata(pdev);
+> >         struct e1000_adapter *adapter = netdev_priv(netdev);
+> > +       int retval;
+> > +       bool wake;
+> >
+> > -       if (e1000e_pm_ready(adapter)) {
+> > -               bool wake;
+> > +       if (!e1000e_pm_ready(adapter))
+> > +               return 0;
+> >
+> > -               __e1000_shutdown(pdev, &wake, true);
+> > -       }
+> > +       retval = __e1000_shutdown(pdev, &wake, true);
+> > +       if (!retval)
+> > +               e1000_power_off(pdev, true, wake);
+> >
+> > -       return 0;
+> > +       return retval;
+> >  }
+> >
+> >  static int e1000_idle(struct device *dev)
+> >
 
-On Mon, Dec 17, 2012 at 12:21 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> Ping.  I didn't push this through my tree because I didn't want to
-> create conflicts with other changes to this file.  But I think this
-> can be merged any time.
->
-> On Fri, Dec 7, 2012 at 3:29 PM, Giridhar Malavali
-> <giridhar.malavali@qlogic.com> wrote:
->> Acked-by: Giridhar Malavali
->>
->> On 12/7/12 12:17 AM, "Saurav Kashyap" <saurav.kashyap@qlogic.com> wrote:
->>
->>>Acked-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
->>>
->>>Thanks,
->>>~Saurav
->>>
->>>
->>>
->>>>Use the standard #defines for PCIe Link Capability register fields
->>>>rather than bare numbers.  This also uses the new PCI Express Capability
->>>>accessor rather than reading the capability directly.
->>>>
->>>>Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->>>>CC: Andrew Vasquez <andrew.vasquez@qlogic.com>
->>>>CC: linux-driver@qlogic.com
->>>>CC: "James E.J. Bottomley" <JBottomley@parallels.com>
->>>>CC: linux-scsi@vger.kernel.org
->>>>---
->>>> drivers/scsi/qla2xxx/qla_os.c |   14 +++++---------
->>>> 1 files changed, 5 insertions(+), 9 deletions(-)
->>>>
->>>>diff --git a/drivers/scsi/qla2xxx/qla_os.c
->>>>b/drivers/scsi/qla2xxx/qla_os.c
->>>>index d501bf5..b5d070f 100644
->>>>--- a/drivers/scsi/qla2xxx/qla_os.c
->>>>+++ b/drivers/scsi/qla2xxx/qla_os.c
->>>>@@ -480,18 +480,14 @@ qla24xx_pci_info_str(struct scsi_qla_host *vha,
->>>>char *str)
->>>>      static char *pci_bus_modes[] = { "33", "66", "100", "133", };
->>>>      struct qla_hw_data *ha = vha->hw;
->>>>      uint32_t pci_bus;
->>>>-     int pcie_reg;
->>>>
->>>>-     pcie_reg = pci_pcie_cap(ha->pdev);
->>>>-     if (pcie_reg) {
->>>>+     if (pci_is_pcie(ha->pdev)) {
->>>>              char lwstr[6];
->>>>-             uint16_t pcie_lstat, lspeed, lwidth;
->>>>+             uint32_t lstat, lspeed, lwidth;
->>>>
->>>>-             pcie_reg += PCI_EXP_LNKCAP;
->>>>-             pci_read_config_word(ha->pdev, pcie_reg, &pcie_lstat);
->>>>-             lspeed = pcie_lstat & (BIT_0 | BIT_1 | BIT_2 | BIT_3);
->>>>-             lwidth = (pcie_lstat &
->>>>-                 (BIT_4 | BIT_5 | BIT_6 | BIT_7 | BIT_8 | BIT_9)) >> 4;
->>>>+             pcie_capability_read_dword(ha->pdev, PCI_EXP_LNKCAP, &lstat);
->>>>+             lspeed = lstat & PCI_EXP_LNKCAP_SLS;
->>>>+             lwidth = (lstat & PCI_EXP_LNKCAP_MLW) >> 4;
->>>>
->>>>              strcpy(str, "PCIe (");
->>>>              if (lspeed == 1)
->>>>
->>>>--
->>>>To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
->>>>the body of a message to majordomo@vger.kernel.org
->>>>More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>>>
->>>
->>
->>
+I'd like the changelog to say what the bug is and how it is being fixed in
+general terms.
+
+Thanks,
+Rafael
+
+
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
