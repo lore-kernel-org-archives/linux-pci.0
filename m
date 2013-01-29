@@ -1,121 +1,58 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:58940 "EHLO hydra.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753197Ab3ACVRa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 3 Jan 2013 16:17:30 -0500
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Huang Ying <ying.huang@intel.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Tony Luck <tony.luck@intel.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, Yinghai Lu <yinghai@kernel.org>,
-	Jiang Liu <liuj97@gmail.com>,
-	Myron Stowe <myron.stowe@redhat.com>
-Subject: Re: [Alternative 2][PATCH] ACPI / PCI: Set root bridge ACPI handle in advance
-Date: Thu, 03 Jan 2013 22:23:05 +0100
-Message-ID: <1635295.TkbrarASZn@vostro.rjw.lan>
-In-Reply-To: <2695660.jbNleTYArh@vostro.rjw.lan>
-References: <1558789.gX8cmBgyDV@vostro.rjw.lan> <1626213.gpPY5etSgn@vostro.rjw.lan> <2695660.jbNleTYArh@vostro.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-pm@vger.kernel.org, linux-acpi@vger.kernel.org,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Huang Ying <ying.huang@intel.com>
+Subject: [PATCH 4/4] PCI/PM: Enable D3cold support for system suspend
+Date: Tue, 29 Jan 2013 12:34:18 +0800
+Message-Id: <1359434058-15918-5-git-send-email-ying.huang@intel.com>
+In-Reply-To: <1359434058-15918-1-git-send-email-ying.huang@intel.com>
+References: <1359434058-15918-1-git-send-email-ying.huang@intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, January 03, 2013 01:11:30 PM Rafael J. Wysocki wrote:
-> On Thursday, January 03, 2013 01:40:52 AM Rafael J. Wysocki wrote:
-> > On Wednesday, January 02, 2013 04:07:32 PM Bjorn Helgaas wrote:
-> > > On Thu, Dec 27, 2012 at 10:32:13PM +0100, Rafael J. Wysocki wrote:
-> > > > To that end, split pci_create_root_bus() into two functions,
-> > > > pci_alloc_root() and pci_add_root(), that will allocate memory for
-> > > > the new PCI bus and bridge representations and register them with
-> > > > the driver core, respectively, and that may be called directly by
-> > > > the architectures that need to set the root bridge's ACPI handle
-> > > > before registering it.
-> > > 
-> > > I'm trying to *reduce* the interfaces for creating and scanning PCI
-> > > host bridges, and this is a step in the opposite direction.
-> > 
-> > Yes it is.
-> > 
-> > The alternative is to make the root bridge initialization code more complex.
-> 
-> Well, maybe not so much.
-> 
-> What about adding an extra arg to pci_create_root_bus(), ie. the patch below
-> (changelog skipped for now)?
-> 
-> I admit that having two void * args there is a little awkward, but at least
-> it's totally generic.
-> 
-> > > > Next, Make both x86 and ia64 (the only architectures using ACPI at
-> > > > the moment) call pci_alloc_root(), set the root bridge's ACPI handle
-> > > > and then call pci_add_root() in their pci_acpi_scan_root() routines
-> > > > instead of calling pci_create_root_bus().  For the other code paths
-> > > > adding PCI root bridges define a new pci_create_root_bus() as a
-> > > > simple combination of pci_alloc_root() and pci_add_root().
-> > > 
-> > > pci_create_root_bus() takes a "struct device *parent" argument.  That
-> > > seems like a logical place to tell the PCI core about the host bridge
-> > > device, but x86 and ia64 currently pass NULL there.
-> > 
-> > And there's a reason for that.  Namely, on these architectures PCI host
-> > bridges have no physical parents (well, at least in current practice).
-> > 
-> > > The patch below shows what I'm thinking.  It does have the side-effect
-> > > of changing the sysfs topology from this:
-> > > 
-> > >     /sys/devices/pci0000:00
-> > >     /sys/devices/pci0000:00/0000:00:00.0
-> > > 
-> > > to this:
-> > > 
-> > >     /sys/devices/LNXSYSTM:00/device:00/PNP0A08:00/pci0000:00
-> > >     /sys/devices/LNXSYSTM:00/device:00/PNP0A08:00/pci0000:00/0000:00:00.0
-> > > 
-> > > because it puts the PCI root bus (pci0000:00) under the PNP0A08 device
-> > > rather than at the top level.
-> > 
-> > Which is wrong.
-> > 
-> > PNP0A08 is not a parent of the host bridge, but its ACPI "companion" (ie. ACPI
-> > namespace node representing the host bridge itself).
-> > 
-> > > That seems like an improvement to me, but it *is* different.
-> > 
-> > Well, then we should make every ACPI device node corresponding to a PCI device
-> > be a parent of that device's struct pci_dev and so on for other bus types.  It
-> > doesn't sound like an attractive idea. :-)  Moreover, it is impossible, because
-> > those things generally already have parents (struct pci_dev objects have them
-> > at least).
-> > 
-> > That said the idea to pass something meaningful in the parent argument
-> > of pci_create_root_bus() can be implemented if we create a "physical" device
-> > object corresponding to "device:00" (which is an ACPI namespace node) in your
-> > example.
-> > 
-> > From what I can tell, "device:00" always corresponds to the ACPI _SB scope
-> > (which is mandatory), so in principle we can create an abstract "physical"
-> > device object for it and call it something like "system_root".  Then, if we
-> > use it as the parent of pci0000:00 (the host bridge), then we'll have
-> > 
-> >      /sys/devices/system_root/pci0000:00
-> >      /sys/devices/system_root/pci0000:00/0000:00:00.0
-> 
-> Having considered that a little more I don't really think it's a good idea.
-> It still would be going a little backwards, because we'd need to use the parent
-> to get an ACPI handle known already beforehand.
+Device may need to be put in D3cold on some platforms, especially
+because we treat ACPI_STATE_D3 as ACPI_STATE_D3_COLD now.
 
-One more thing.
+Signed-off-by: Huang Ying <ying.huang@intel.com>
+---
+ drivers/pci/pci-driver.c |    5 +++++
+ drivers/pci/pci.c        |    4 ----
+ 2 files changed, 5 insertions(+), 4 deletions(-)
 
-The sysfs locations of PCI devices shouldn't change if acpi=off is passed to
-the kernel, so the above is not a good idea at all, I'm afraid.
-
-Thanks,
-Rafael
-
-
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -579,6 +579,7 @@ static bool pci_has_legacy_pm_support(st
+ static int pci_pm_prepare(struct device *dev)
+ {
+ 	struct device_driver *drv = dev->driver;
++	struct pci_dev *pci_dev = to_pci_dev(dev);
+ 	int error = 0;
+ 
+ 	/*
+@@ -592,6 +593,10 @@ static int pci_pm_prepare(struct device
+ 	 */
+ 	pm_runtime_resume(dev);
+ 
++	if (!pci_dev->d3cold_allowed)
++		pci_dev->no_d3cold = true;
++	else
++		pci_dev->no_d3cold = false;
+ 	if (drv && drv->pm && drv->pm->prepare)
+ 		error = drv->pm->prepare(dev);
+ 
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -1798,10 +1798,6 @@ int pci_prepare_to_sleep(struct pci_dev
+ 	if (target_state == PCI_POWER_ERROR)
+ 		return -EIO;
+ 
+-	/* D3cold during system suspend/hibernate is not supported */
+-	if (target_state > PCI_D3hot)
+-		target_state = PCI_D3hot;
+-
+ 	pci_enable_wake(dev, target_state, device_may_wakeup(&dev->dev));
+ 
+ 	error = pci_set_power_state(dev, target_state);
