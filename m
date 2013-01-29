@@ -1,105 +1,109 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f182.google.com ([209.85.217.182]:58720 "EHLO
-	mail-lb0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751736Ab3A2GpW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Jan 2013 01:45:22 -0500
-Message-ID: <51076FFE.3080006@openvz.org>
-Date: Tue, 29 Jan 2013 10:45:18 +0400
-From: Konstantin Khlebnikov <khlebnikov@openvz.org>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: linux-kernel@vger.kernel.org, e1000-devel@lists.sourceforge.net,
-	linux-pci@vger.kernel.org, Bruce Allan <bruce.w.allan@intel.com>,
+Received: from hydra.sisk.pl ([212.160.235.94]:58484 "EHLO hydra.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754982Ab3A2LyM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 29 Jan 2013 06:54:12 -0500
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Konstantin Khlebnikov <khlebnikov@openvz.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
+	e1000-devel@lists.sourceforge.net, linux-pci@vger.kernel.org,
+	Bruce Allan <bruce.w.allan@intel.com>,
 	Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: [PATCH 2/5] e1000e: fix pci device enable counter balance
-References: <20130118113019.6698.25941.stgit@zurg> <20130118114218.6698.42484.stgit@zurg> <CAErSpo5Cfi0KbOqDr4TfnzjWFy7V-oi0bOY-vf8Y16_RPtEGdQ@mail.gmail.com> <CAErSpo7g7H8QM4Rgc05ORM1xHPxVf74KX2G61mvMtMF+N=qh5Q@mail.gmail.com>
-In-Reply-To: <CAErSpo7g7H8QM4Rgc05ORM1xHPxVf74KX2G61mvMtMF+N=qh5Q@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Subject: Re: [PATCH 1/5] e1000e: fix resuming from runtime-suspend
+Date: Tue, 29 Jan 2013 13:00:21 +0100
+Message-ID: <9460098.jyMkT8TSO0@vostro.rjw.lan>
+In-Reply-To: <51076CEE.8050706@openvz.org>
+References: <20130118113019.6698.25941.stgit@zurg> <12263202.uQHxo0zU24@vostro.rjw.lan> <51076CEE.8050706@openvz.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Bjorn Helgaas wrote:
-> [+cc Rafael @sisk.pl]
->
-> On Mon, Jan 28, 2013 at 4:09 PM, Bjorn Helgaas<bhelgaas@google.com>  wrote:
->> [+cc Rafael]
->>
->> On Fri, Jan 18, 2013 at 4:42 AM, Konstantin Khlebnikov
->> <khlebnikov@openvz.org>  wrote:
->>> __e1000_shutdown() calls pci_disable_device() at the end, thus __e1000_resume()
->>> should call pci_enable_device_mem() to keep enable counter in balance.
->>>
->>> Bug was introduced in commit 23606cf5d1192c2b17912cb2ef6e62f9b11de133
->>> ("e1000e / PCI / PM: Add basic runtime PM support (rev. 4)") in v2.6.35
->>>
->>> Signed-off-by: Konstantin Khlebnikov<khlebnikov@openvz.org>
->>> Cc: e1000-devel@lists.sourceforge.net
->>> Cc: Jeff Kirsher<jeffrey.t.kirsher@intel.com>
->>> Cc: Bruce Allan<bruce.w.allan@intel.com>
->>> ---
->>>   drivers/net/ethernet/intel/e1000e/netdev.c |    7 +++++++
->>>   1 file changed, 7 insertions(+)
->>>
->>> diff --git a/drivers/net/ethernet/intel/e1000e/netdev.c b/drivers/net/ethernet/intel/e1000e/netdev.c
->>> index 2853c11..6bce796 100644
->>> --- a/drivers/net/ethernet/intel/e1000e/netdev.c
->>> +++ b/drivers/net/ethernet/intel/e1000e/netdev.c
->>> @@ -5598,6 +5598,13 @@ static int __e1000_resume(struct pci_dev *pdev)
->>>          pci_restore_state(pdev);
->>>          pci_save_state(pdev);
->>>
->>> +       err = pci_enable_device_mem(pdev);
->>> +       if (err) {
->>> +               dev_err(&pdev->dev,
->>> +                       "Cannot re-enable PCI device after suspend.\n");
->>> +               return err;
->>> +       }
->>
->> Reviewed-by: Bjorn Helgaas<bhelgaas@google.com>
->>
->> Seems right to me, and the other users I looked at (igb, azx,
->> virtio_pci) call pci_disable_device() in .suspend() and call
->> pci_enable_device() in .resume() as you propose to do here.
->>
->> I assume the e1000 folks will handle this patch (and the previous one).
->>
->>> +
->>>          e1000e_set_interrupt_capability(adapter);
->>>          if (netif_running(netdev)) {
->>>                  err = e1000_request_irq(adapter);
->>>
->
-> I'm still missing something.  In your original report
-> (https://lkml.org/lkml/2013/1/1/25), you noticed that "enable_cnt ==
-> 0" immediately after boot, after e1000e had claimed the device:
+On Tuesday, January 29, 2013 10:32:14 AM Konstantin Khlebnikov wrote:
+> Rafael J. Wysocki wrote:
+> > On Monday, January 28, 2013 04:05:33 PM Bjorn Helgaas wrote:
+> >> [+cc Rafael, author of patch you cited]
+> >>
+> >> On Fri, Jan 18, 2013 at 4:42 AM, Konstantin Khlebnikov
+> >> <khlebnikov@openvz.org>  wrote:
+> >>> Bug was introduced in commit 23606cf5d1192c2b17912cb2ef6e62f9b11de133
+> >>> ("e1000e / PCI / PM: Add basic runtime PM support (rev. 4)") in v2.6.35
+> >>>
+> >>> Signed-off-by: Konstantin Khlebnikov<khlebnikov@openvz.org>
+> >>> Cc: e1000-devel@lists.sourceforge.net
+> >>> Cc: Jeff Kirsher<jeffrey.t.kirsher@intel.com>
+> >>> Cc: Bruce Allan<bruce.w.allan@intel.com>
+> >>> ---
+> >>>   drivers/net/ethernet/intel/e1000e/netdev.c |   13 ++++++++-----
+> >>>   1 file changed, 8 insertions(+), 5 deletions(-)
+> >>>
+> >>> diff --git a/drivers/net/ethernet/intel/e1000e/netdev.c b/drivers/net/ethernet/intel/e1000e/netdev.c
+> >>> index fbf75fd..2853c11 100644
+> >>> --- a/drivers/net/ethernet/intel/e1000e/netdev.c
+> >>> +++ b/drivers/net/ethernet/intel/e1000e/netdev.c
+> >>> @@ -5691,14 +5691,17 @@ static int e1000_runtime_suspend(struct device *dev)
+> >>>          struct pci_dev *pdev = to_pci_dev(dev);
+> >>>          struct net_device *netdev = pci_get_drvdata(pdev);
+> >>>          struct e1000_adapter *adapter = netdev_priv(netdev);
+> >>> +       int retval;
+> >>> +       bool wake;
+> >>>
+> >>> -       if (e1000e_pm_ready(adapter)) {
+> >>> -               bool wake;
+> >>> +       if (!e1000e_pm_ready(adapter))
+> >>> +               return 0;
+> >>>
+> >>> -               __e1000_shutdown(pdev,&wake, true);
+> >>> -       }
+> >>> +       retval = __e1000_shutdown(pdev,&wake, true);
+> >>> +       if (!retval)
+> >>> +               e1000_power_off(pdev, true, wake);
+> >>>
+> >>> -       return 0;
+> >>> +       return retval;
+> >>>   }
+> >>>
+> >>>   static int e1000_idle(struct device *dev)
+> >>>
+> >
+> > I'd like the changelog to say what the bug is and how it is being fixed in
+> > general terms.
+> 
+> Ok, my bad.
+> 
+> Problem: ethernet device does not work (no carrier signal).
+> Right after boot it goes to runtime-suspend and never wake up.
+> 
+> Original code (before your commit) calls pci_prepare_to_sleep() and it
+> calls pci_enable_wake() and switches device to one of D3 state.
+> 
+> It seems redundant, because pci_pm_runtime_suspend() do the same thing
+> after calling ->runtime_suspend callback. Or rather it did it before commit
+> 42eca2302146fed51335b95128e949ee6f54478f ("PCI: Don't touch card regs after
+> runtime suspend D3") and third patch aimed fix this damage.
+> 
+> More over seems like calling pci_enable_wake() from e1000e isn't enough for my case,
+> because my enthernet cannot wakeup from runtime-suspend without third patch.
+> Seems like it's because pci_enable_wake() and pci_finish_runtime_suspend()
+> calls different pratform-pm callbacks -- platform_pci_run_wake() /
+> platform_pci_sleep_wake().
+> 
+> All this looks messy and I don't know how it should work.
+> 
+> If you prefer to minimize changes -- I can test how it would work without
+> first (this) patch. Probably fine.
 
-Yep, it rise counter from 0 to 1, and runtime-suspend immediately
-decrease it back to 0.
+OK, I need to have a look at that driver, then.  Please give me some time,
+though, I'm working on something different at the moment.
 
->
->> Right after boot it looks like this:
->>
->> root@zurg:/sys/bus/pci/devices# lspci
->> ...
->> 00:19.0 Ethernet controller: Intel Corporation 82579LM Gigabit Network Connection (rev 04)
->> ...
->> root@zurg:/sys/bus/pci/devices# cat 0000\:00\:19.0/enable
->> 0
->> here must be '1', not '0'
->
-> But these patches only change the e1000e suspend/resume path.  How
-> could they change the enable_cnt before you've even done a suspend?
+And by the way, by sending patches you declare that you know what you're doing.
+If you really don't, it's better to just describe the problem. :-)
 
-suspend/resume and runtime_suspend/runtime_resume callbacks calls the one
-set of functions: __e1000_shutdown() / __e1000_resume()
+Thanks,
+Rafael
 
-Any suspend-resume cycle breaks enable_ent balance.
-Thus right after boot and first runtime-suspend device cannot wake up
-due to first sort of bugs and after first s2ram suspend-resume cycle
-driver breaks it's enable_cnt and device no longer can sleep due to
-second sort of bugs.
 
->
-> Bjorn
-
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
