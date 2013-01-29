@@ -1,112 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-da0-f45.google.com ([209.85.210.45]:64759 "EHLO
-	mail-da0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755061Ab3AMPkY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 13 Jan 2013 10:40:24 -0500
-Message-ID: <50F2D55C.4040807@gmail.com>
-Date: Sun, 13 Jan 2013 23:40:12 +0800
-From: Jiang Liu <liuj97@gmail.com>
-MIME-Version: 1.0
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-CC: Yinghai Lu <yinghai@kernel.org>,
+Received: from quartz.orcorp.ca ([184.70.90.242]:54381 "EHLO quartz.orcorp.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750871Ab3A2RkK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 29 Jan 2013 12:40:10 -0500
+Date: Tue, 29 Jan 2013 10:40:08 -0700
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Maen Suleiman <maen@marvell.com>, linux-pci@vger.kernel.org,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: Re: [PATCH v8 21/22] PCI: add match_driver in struct pci_dev
-References: <1357944049-29620-1-git-send-email-yinghai@kernel.org> <1357944049-29620-22-git-send-email-yinghai@kernel.org> <29539918.9ng60fkCeb@vostro.rjw.lan>
-In-Reply-To: <29539918.9ng60fkCeb@vostro.rjw.lan>
-Content-Type: text/plain; charset=UTF-8
+	Tawfik Bayouk <tawfik@marvell.com>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH v2 18/27] arm: plat-orion: add more flexible PCI
+ configuration space read/write functions
+Message-ID: <20130129174008.GC25646@obsidianresearch.com>
+References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
+ <1359399397-29729-19-git-send-email-thomas.petazzoni@free-electrons.com>
+ <20130128195111.GC17722@obsidianresearch.com>
+ <20130129094003.0ca7be89@skate>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130129094003.0ca7be89@skate>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 01/13/2013 07:49 AM, Rafael J. Wysocki wrote:
-> On Friday, January 11, 2013 02:40:48 PM Yinghai Lu wrote:
->> with that we could move out attaching driver for pci device,
->> out of device_add for pci hot add path.
->>
->> pci_bus_attach_device() will attach driver to pci device.
+On Tue, Jan 29, 2013 at 09:40:03AM +0100, Thomas Petazzoni wrote:
+> Dear Jason Gunthorpe,
 > 
-> Clever, but I wonder why exactly we need to do that?
-Hi Rafael,
-	To make following sequence possible,
-1) Create PCI device objects for hot-added PCI host bridge
-2) Create IOMMU devices for DMAR units belong to the hot-added PCI host bridge
-3) Bind and start all PCI devices connected to the PCI host bridge.
+> On Mon, 28 Jan 2013 12:51:11 -0700, Jason Gunthorpe wrote:
+> > On Mon, Jan 28, 2013 at 07:56:27PM +0100, Thomas Petazzoni wrote:
+> > 
+> > > However, with the usage of the emulated PCI host bridge and emulated
+> > > PCI-to-PCI bridges, this is not the case: bus number 0 is the emulated
+> > > bus on which the emulated PCI-to-PCI bridges sit, so from the Linux
+> > > point of view, the real busses start at bus 1, but from a hardware
+> > > point of view, they start at bus 0.
+> > 
+> > Hum.. This is a bit funny sounding, can you confirm..
+> 
+> Might be yes, but IIRC, when I try to enumerate the devices in the PCIe
+> interface 0 (from a hardware point of view), passing a bus number of 1
+> in the PCI configuration space access registers, then it simply doesn't
+> work.
 
-Regards!
-Gerry
+Hurm. The trick is you need the chip to issue a type 0 request. The
+Marvell docs say this happens automatically basd on the 'internal bus
+number'
 
-> 
-> Rafael
-> 
-> 
->> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
->> ---
->>  drivers/pci/bus.c        |   10 ++++++++++
->>  drivers/pci/pci-driver.c |    6 +++++-
->>  include/linux/pci.h      |    1 +
->>  3 files changed, 16 insertions(+), 1 deletion(-)
->>
->> diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
->> index 5f9c728..1f5916a 100644
->> --- a/drivers/pci/bus.c
->> +++ b/drivers/pci/bus.c
->> @@ -160,6 +160,15 @@ pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
->>  
->>  void __weak pcibios_resource_survey_bus(struct pci_bus *bus) { }
->>  
->> +static void pci_bus_attach_device(struct pci_dev *dev)
->> +{
->> +	int ret;
->> +
->> +	dev->match_driver = true;
->> +	ret = device_attach(&dev->dev);
->> +	WARN_ON(ret < 0);
->> +}
->> +
->>  /**
->>   * pci_bus_add_device - add a single device
->>   * @dev: device to add
->> @@ -181,6 +190,7 @@ int pci_bus_add_device(struct pci_dev *dev)
->>  	if (retval)
->>  		return retval;
->>  
->> +	pci_bus_attach_device(dev);
->>  	dev->is_added = 1;
->>  	pci_proc_attach_device(dev);
->>  	pci_create_sysfs_dev_files(dev);
->> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
->> index f79cbcd..acdcc3c 100644
->> --- a/drivers/pci/pci-driver.c
->> +++ b/drivers/pci/pci-driver.c
->> @@ -1186,9 +1186,13 @@ pci_dev_driver(const struct pci_dev *dev)
->>  static int pci_bus_match(struct device *dev, struct device_driver *drv)
->>  {
->>  	struct pci_dev *pci_dev = to_pci_dev(dev);
->> -	struct pci_driver *pci_drv = to_pci_driver(drv);
->> +	struct pci_driver *pci_drv;
->>  	const struct pci_device_id *found_id;
->>  
->> +	if (!pci_dev->match_driver)
->> +		return 0;
->> +
->> +	pci_drv = to_pci_driver(drv);
->>  	found_id = pci_match_device(pci_drv, pci_dev);
->>  	if (found_id)
->>  		return 1;
->> diff --git a/include/linux/pci.h b/include/linux/pci.h
->> index 907b455..d73af08 100644
->> --- a/include/linux/pci.h
->> +++ b/include/linux/pci.h
->> @@ -286,6 +286,7 @@ struct pci_dev {
->>  	unsigned int	irq;
->>  	struct resource resource[DEVICE_COUNT_RESOURCE]; /* I/O and memory regions + expansion ROMs */
->>  
->> +	bool match_driver;
->>  	/* These fields are used by common fixups */
->>  	unsigned int	transparent:1;	/* Transparent PCI bridge */
->>  	unsigned int	multifunction:1;/* Part of multi-function device */
->>
+The only other reference to bus number is in the PCI Express Status
+Register (41A04), so that probably needs to be set to the subordinate
+bus number of the bridge.
 
+> > The bus number programmed into all the end points must match the Linux
+> > number. Ie the PCI-E Link Description register of end point devices
+> 
+> What is this PCI-E Link Description register ? Where is it located ?
+
+Hum, looks like this is only for root complex links not end devices -
+PCI-X had a register for this but it seems to have been removed in
+PCI-E.
+
+Jason
