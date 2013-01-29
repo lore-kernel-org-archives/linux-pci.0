@@ -1,136 +1,110 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:38460 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754910Ab3AYJOY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 25 Jan 2013 04:14:24 -0500
-Message-ID: <51024CD4.10807@huawei.com>
-Date: Fri, 25 Jan 2013 17:13:56 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from hydra.sisk.pl ([212.160.235.94]:58058 "EHLO hydra.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752302Ab3A2A2Z (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 28 Jan 2013 19:28:25 -0500
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jiang Liu <liuj97@gmail.com>, Jiang Liu <jiang.liu@huawei.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>
+Subject: Re: [RFC PATCH v5 0/8] introduce PCI bus notifier chain to get rid of the ACPI PCI subdriver interfaces
+Date: Tue, 29 Jan 2013 01:34:29 +0100
+Message-ID: <1598719.tGLtx5aHMZ@vostro.rjw.lan>
+In-Reply-To: <CAErSpo6M-c3diVEUpUESgL=2PenxHYkW1eb=OGBdxxWwkge-Bw@mail.gmail.com>
+References: <1358525267-14268-1-git-send-email-jiang.liu@huawei.com> <CAErSpo6M-c3diVEUpUESgL=2PenxHYkW1eb=OGBdxxWwkge-Bw@mail.gmail.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>, Jon Mason <jdmason@kudzu.us>
-CC: Rob Landley <rob@landley.net>, <linux-doc@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	Andrew Murray <andrew.murray@arm.com>,
-	Joe Lawrence <Joe.Lawrence@stratus.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>
-Subject: Re: [PATCH v2] PCI: Document PCIE BUS MPS parameters
-References: <1358996288-31200-1-git-send-email-wangyijing@huawei.com> <CAErSpo6suRwkRoShnNUKxxHt4D4gFnMVqesoZO3t-aC8tvOwnA@mail.gmail.com>
-In-Reply-To: <CAErSpo6suRwkRoShnNUKxxHt4D4gFnMVqesoZO3t-aC8tvOwnA@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
-   Thanks for your review and comments! Please refer to inlined comment bellow.
+On Monday, January 28, 2013 01:56:33 PM Bjorn Helgaas wrote:
+> On Fri, Jan 18, 2013 at 9:07 AM, Jiang Liu <liuj97@gmail.com> wrote:
+> > This is an RFC patchset to address review comments in thread at:
+> > https://patchwork.kernel.org/patch/1946851/. The patch just pasts
+> > compilation. If no objection to the new implementation, I will
+> > go on to modify acpiphp driver and conduct tests.
+> >
+> > The main changes from V4 to V5 includes:
+> > 1) introduce a dedicated notifier chain for PCI buses
+> > 2) change pci_slot as built-in driver
+> > 3) unify the way to create/destroy PCI slots
+> > 4) introduce a kernel option to disable PCIe native hotplug
+> >
+> > TODO:
+> > 1) change acpiphp as built-in and unify the way to create/destroy ACPI
+> >    based hotplug slots.
+> > 2) change other ACPI PCI subdriver in Yinghai's root bridge hotplug series
+> >    to use the PCI bus notifier chain.
+> > 3) Remove the ACPI PCI subdriver interface eventaully.
+> >
+> > Jiang Liu (8):
+> >   PCI: make PCI device create/destroy logic symmetric
+> >   PCI: split registration of PCI bus devices into two stages
+> >   PCI: add a blocking notifier chain for PCI bus addition/removal
+> >   ACPI, PCI: avoid building pci_slot as module
+> >   PCI, ACPI: hook PCI bus notifications to create/destroy PCI slots
+> >   pci_slot: replace printk(KERN_xxx) with pr_xxx()
+> >   PCI/PCIe: add "pci=nopciehp" to disable PCIe native hotplug
+> >   PCI/PCIe: only claim PME from firmware when CONFIG_PCIE_PME is
+> >     enabled
+> >
+> >  Documentation/kernel-parameters.txt |    2 +
+> >  drivers/acpi/Kconfig                |    5 +-
+> >  drivers/acpi/internal.h             |    5 +
+> >  drivers/acpi/pci_root.c             |    8 +-
+> >  drivers/acpi/pci_slot.c             |  217 ++++++++++-------------------------
+> >  drivers/acpi/scan.c                 |    1 +
+> >  drivers/pci/bus.c                   |   26 ++++-
+> >  drivers/pci/pci.c                   |    2 +
+> >  drivers/pci/pci.h                   |    1 +
+> >  drivers/pci/pcie/portdrv_core.c     |    7 +-
+> >  drivers/pci/pcie/portdrv_pci.c      |    3 +
+> >  drivers/pci/probe.c                 |    7 +-
+> >  drivers/pci/remove.c                |   15 +--
+> >  include/linux/pci.h                 |   21 ++++
+> >  14 files changed, 142 insertions(+), 178 deletions(-)
+> 
+> I think the problem we're trying to solve is that we don't initialize
+> hot-added devices, correctly, e.g., we don't set up AER, we don't
+> update acpi/pci_slot stuff, we probably don't set up PME etc.  We also
+> have similar issues like IOMMU init on powerpc.
+> 
+> Notifier chains seem like an unnecessarily complicated way to deal
+> with this.  They're great for communicating between modules that stay
+> at arm's length from each other.  But that's not the case here --
+> everything is PCI and is quite closely coupled.  I think AER, PME,
+> slot, etc., should  be initialized directly in pci_device_add() or
+> somewhere nearby.
 
-On 2013/1/25 12:57, Bjorn Helgaas wrote:
-> [+cc Jon, can you make sure this documentation is accurate?]
-> 
->>
->> diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
->> index 363e348..0bb279f 100644
->> --- a/Documentation/kernel-parameters.txt
->> +++ b/Documentation/kernel-parameters.txt
->> @@ -2227,6 +2227,22 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
->>                                 This sorting is done to get a device
->>                                 order compatible with older (<= 2.4) kernels.
->>                 nobfsort        Don't sort PCI devices into breadth-first order.
->> +               pcie_bus_tune_off       Disable PCIe MPS (Max Payload Size)
->> +                               turning and using the BIOS-configured MPS defaults.
-> 
-> s/turning/tuning/
-> s/using/use/
+I agree.
 
-Will update it.
+> This might sound a bit radical because it implies some fairly
+> far-reaching changes.  It means this code can't be a module (the only
+> one that can be built as a module today is pciehp, and I think
+> everybody agrees that we should make it static as soon as we can
+> figure out the acpiphp/pciehp issue).  I think it also means the
+> pcieportdrv concept is of dubious value, since all the services should
+> be known at build-time and we probably don't need a registration
+> interface for them.
 
-> 
->> +               pcie_bus_safe   Use the smallest common denominator MPS
->> +                               of the entire tree below a root complex for every
->> +                               device on that fabric. Can avoid inconsistent MPS
->> +                               problem caused by hotplug.
-> 
-> I'm not sure about this.  "smallest common denominator" is colloquial
-> and not exact.  I think you probably mean "the smallest supported MPS
-> of any device below a root complex."
+It is of dubious value regardless.  It just adds complexity for no gain.
+Moreover, these things are in fact not mutually independent.
 
-Yes, will update it.
+I've had a lot of headaches trying to work around that when I was working
+on PME support and later on _OSC for root bridges.  Let's just take that
+stuff away once and for good. :-)
 
-> 
-> I'm also not sure how this will avoid MPS problems caused by hotplug.
-> I think you have to assume that a hot-added device may support only a
-> 128B MPS, which means the only way to guarantee that you can use that
-> device is to set MPS=128 for any device that will send packets to the
-> hot-added device.  Or we could reconfigure things at the time of the
-> hot-add, but I don't think we do that today (except for the hot-added
-> device itself).
-
-Actually, I'm working a new patch to fix this problem. I will send out the patch as soon.
-Because system default use pcie_bus_tune_off, after do pci hotplug,
-we never configure newly added pcie device mps. The default mps (128B) of
-added pcie device maybe smaller than upstream port mps (maybe 256B default),
-so this device can not work normally.
-We can separate it in two:
-1、Hotplug slot directly connected to root port:
-  In this case, we can reconfigure root port and newly added pcie device mps.
-  We can configure their mps to largest allowable vaule or conservatively just modify
-  added device mps, make it equal to mps value in root port (consider peer to peer DMA).
-
-2、Hotplug slot not connected to root port:
-  In this case, we can try to configure newly added device mps equal to upsteam port.
-  If newly added device mpss smaller than mps in upstream port. We need to print warning
-  info, let user know what to do next step.
-
-> 
->> +               pcie_bus_perf   Configure pcie device MPS to the largest
-> 
-> Capitalize "PCIe" consistently.  Better yet, drop it completely since
-> it's obvious that we're only talking about PCIe here.
-
-Ok, drop it.
-
-> 
->> +                               allowable MPS based on its parent bus. Also set
->> +                               MRRS (Max Read Request Size) to the largest supported
->> +                               value (no larger than the MPS that the device or bus
->> +                               can support) for Max performance.
-> 
-> s/Max/best/
-
-Will update it.
-
-> 
->> +               pcie_bus_peer2peer      Make the system-wide MPS the smallest
->> +                               possible value (128B). This configuration could prevent
->> +                               peer to peer DMA transmission from working by having
->> +                               the MPS on one root port different than the MPS on
->> +                               another.
-> 
-> I think the idea is that pcie_bus_peer2peer would *allow* peer-to-peer
-> DMA to work, which is the opposite of what you wrote.  Maybe something
-> like this would be better:
-> 
->   Set every device's MPS to 128B, which every device is guaranteed to support.
->   This configuration allows peer-to-peer DMA between any pair of devices,
->   possibly at the cost of reduced performance.
-This description is good.
-
-Very sorry, that's my fault. I will update it.
-
-> 
->>                 cbiosize=nn[KMG]        The fixed amount of bus space which is
->>                                 reserved for the CardBus bridge's IO window.
->>                                 The default value is 256 bytes.
->> --
->> 1.7.1
->>
->>
-> 
-> .
-> 
+Thanks,
+Rafael
 
 
 -- 
-Thanks!
-Yijing
-
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
