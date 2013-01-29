@@ -1,58 +1,80 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <CAE9FiQWzc+tYTnJx96po+dY-3k-Bbv_Sg943jvGJcbGPDLfMmA@mail.gmail.com>
-References: <1558789.gX8cmBgyDV@vostro.rjw.lan> <1832392.tD5dEjQMy4@vostro.rjw.lan>
- <CAE9FiQVSaC=D-KzSPJaP0=HGRnNgxBYv+S6=PqF_3Li+ihTnEQ@mail.gmail.com>
- <2913597.xNs4ttWDNI@vostro.rjw.lan> <CAE9FiQWzc+tYTnJx96po+dY-3k-Bbv_Sg943jvGJcbGPDLfMmA@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 4 Jan 2013 17:36:55 -0700
-Message-ID: <CAErSpo6y6TmoGA6FXSoV2TZ5ihvC6d-j_EWqvzL1m84dhBYoJQ@mail.gmail.com>
-Subject: Re: [Alternative 2][PATCH] ACPI / PCI: Set root bridge ACPI handle in advance
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Tony Luck <tony.luck@intel.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, Jiang Liu <liuj97@gmail.com>,
-	Myron Stowe <myron.stowe@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Huang Ying <ying.huang@intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-pm@vger.kernel.org, linux-acpi@vger.kernel.org,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Huang Ying <ying.huang@intel.com>
+Subject: [PATCH 2/4] PCI: Rename pci_dev->runtime_d3cold to pci_dev->set_d3cold
+Date: Tue, 29 Jan 2013 12:34:16 +0800
+Message-Id: <1359434058-15918-3-git-send-email-ying.huang@intel.com>
+In-Reply-To: <1359434058-15918-1-git-send-email-ying.huang@intel.com>
+References: <1359434058-15918-1-git-send-email-ying.huang@intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 4, 2013 at 5:19 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Fri, Jan 4, 2013 at 4:14 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
->> On Friday, January 04, 2013 04:03:01 PM Yinghai Lu wrote:
->>> On Fri, Jan 4, 2013 at 3:38 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
->>> >> --- a/arch/x86/include/asm/pci.h
->>> >> +++ b/arch/x86/include/asm/pci.h
->>> >> @@ -14,6 +14,7 @@
->>> >>  struct pci_sysdata {
->>> >>       int             domain;         /* PCI domain */
->>> >>       int             node;           /* NUMA node */
->>> >> +     void            *acpi_handle;
->>> >>  #ifdef CONFIG_X86_64
->>> >>       void            *iommu;         /* IOMMU private data */
->>> >>  #endif
->>> >>
->>>
->>> acpi_handle is not good name and it is confusing.
->>
->> Well, what would be a better name in your opinion?
->>
->> I was going to put that into a #ifdef CONFIG_ACPI / #endif, so what about
->> calling it acpi_data?
->
-> yes, with #ifdef, you can use acpi_handle type directly.
->
-> it is acpi handle for pci_root.
->
-> so would call int pci_root_acpi_handle ?
+Will use this flag for system suspend in addition to runtime suspend.
 
-I just copied the name from the corresponding ia64 code.  I don't care
-if you want to change it, but I think there is *some* value in keeping
-the x86 and ia64 code as similar as possible because it would be nice
-to converge it some day.
+Signed-off-by: Huang Ying <ying.huang@intel.com>
+---
+ drivers/pci/pci-driver.c |    2 +-
+ drivers/pci/pci.c        |    6 +++---
+ include/linux/pci.h      |    7 +++----
+ 3 files changed, 7 insertions(+), 8 deletions(-)
 
-Bjorn
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -1036,7 +1036,7 @@ static int pci_pm_runtime_resume(struct
+ 
+ 	rc = pm->runtime_resume(dev);
+ 
+-	pci_dev->runtime_d3cold = false;
++	pci_dev->set_d3cold = false;
+ 
+ 	return rc;
+ }
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -681,7 +681,7 @@ static void __pci_start_power_transition
+ 		 * devices powered on/off by corresponding bridge,
+ 		 * because have already delayed for the bridge.
+ 		 */
+-		if (dev->runtime_d3cold) {
++		if (dev->set_d3cold) {
+ 			msleep(dev->d3cold_delay);
+ 			/*
+ 			 * When powering on a bridge from D3cold, the
+@@ -1833,7 +1833,7 @@ int pci_finish_runtime_suspend(struct pc
+ 	if (target_state == PCI_POWER_ERROR)
+ 		return -EIO;
+ 
+-	dev->runtime_d3cold = target_state == PCI_D3cold;
++	dev->set_d3cold = target_state == PCI_D3cold;
+ 
+ 	__pci_enable_wake(dev, target_state, true, pci_dev_run_wake(dev));
+ 
+@@ -1841,7 +1841,7 @@ int pci_finish_runtime_suspend(struct pc
+ 
+ 	if (error) {
+ 		__pci_enable_wake(dev, target_state, true, false);
+-		dev->runtime_d3cold = false;
++		dev->set_d3cold = false;
+ 	}
+ 
+ 	return error;
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -263,10 +263,9 @@ struct pci_dev {
+ 	unsigned int	mmio_always_on:1;	/* disallow turning off io/mem
+ 						   decoding during bar sizing */
+ 	unsigned int	wakeup_prepared:1;
+-	unsigned int	runtime_d3cold:1;	/* whether go through runtime
+-						   D3cold, not set for devices
+-						   powered on/off by the
+-						   corresponding bridge */
++	unsigned int	set_d3cold:1;	/* whether go through runtime D3cold,
++					   not set for devices powered on/off
++					   by the corresponding bridge */
+ 	unsigned int	d3_delay;	/* D3->D0 transition time in ms */
+ 	unsigned int	d3cold_delay;	/* D3cold->D0 transition time in ms */
+ 
