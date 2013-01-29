@@ -1,163 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g5t0006.atlanta.hp.com ([15.192.0.43]:43265 "EHLO
-	g5t0006.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757691Ab3APW4q (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Jan 2013 17:56:46 -0500
-From: Lance Ortiz <lance.ortiz@hp.com>
-Subject: [PATCH v10 3/3] aerdrv: Cleanup log output for AER
-To: bhelgaas@google.com, lance_ortiz@hotmail.com, jiang.liu@huawei.com,
-	tony.luck@intel.com, bp@alien8.de, rostedt@goodmis.org,
-	mchehab@redhat.com, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Wed, 16 Jan 2013 16:51:16 -0700
-Message-ID: <20130116235116.16015.62519.stgit@grignak.americas.hpqcorp.net>
-In-Reply-To: <20130116235102.16015.77379.stgit@grignak.americas.hpqcorp.net>
-References: <20130116235102.16015.77379.stgit@grignak.americas.hpqcorp.net>
+Received: from mail-ve0-f171.google.com ([209.85.128.171]:65493 "EHLO
+	mail-ve0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753994Ab3A2THW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Jan 2013 14:07:22 -0500
+Received: by mail-ve0-f171.google.com with SMTP id b10so556643vea.16
+        for <linux-pci@vger.kernel.org>; Tue, 29 Jan 2013 11:07:21 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <20130129184157.GA29274@obsidianresearch.com>
+References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
+ <1359399397-29729-20-git-send-email-thomas.petazzoni@free-electrons.com>
+ <CAErSpo5H08j=dZx9zapDaf1c9x6VUfuJ5oB=J0M1UFF55pg=mw@mail.gmail.com>
+ <20130129055508.GA3339@obsidianresearch.com> <CAErSpo7gCFfLB6+ebvANQjkr7Bii8Jqt3y5YqExD-DcnBG7hgA@mail.gmail.com>
+ <20130129184157.GA29274@obsidianresearch.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 29 Jan 2013 12:07:00 -0700
+Message-ID: <CAErSpo5K8yKqjzQ6s+imb3d5wLSkhvWp-d=pPv9CZk+o67kyaQ@mail.gmail.com>
+Subject: Re: [PATCH v2 19/27] pci: PCIe driver for Marvell Armada 370/XP systems
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-These changes make cper_print_aer more consistent with aer_print_error
-and clean things up by eliminating the use of the prefix variable and
-replacing it with dev_printk.
+On Tue, Jan 29, 2013 at 11:41 AM, Jason Gunthorpe
+<jgunthorpe@obsidianresearch.com> wrote:
+> On Tue, Jan 29, 2013 at 10:47:09AM -0700, Bjorn Helgaas wrote:
+>
+>> As I understand it, the DT is a description of the hardware, so in
+>> that sense, the DT can't set aside physical address space.  It can
+>> describe what the hardware does with the address space, and I assume
+>> that's what you mean.  Maybe the hardware isn't configurable, e.g., it
+>> is hard-wired to route certain address ranges to PCIe?
+>
+> The DT is largely a description of the hardware, but when it comes to
+> addresses, particularly HW programmable addresess, there is an general
+> expectation that the driver/bootloader will program HW address
+> decoders to either match the addresses given in the DT, or to new
+> values guided by the DT addresses.
+>
+> In a real sense that means the DT also describes the physical address
+> map the kernel should use.
+>
+> In the PCI-E case the DT PCI-E HW description includes physical
+> address ranges to use for the MMIO/IO/PREFETCH PCI-E interface windows
+> and the driver is expected to program the internal HW address decoders
+> based on those address ranges.
+>
+> The catch is that the hardware decoders are on a link-by-link basis,
+> not on a root-complex basis, so the programming can only take place
+> once the Linux kernel has done PCI resource assignment.
+>
+> So when I say set aside, I mean for instance, the PCI-E entry in DT
+> has 128M of physical address space marked for PCI MMIO use. The kernel
+> does PCI resource allocation and the HW decoders in each link will be
+> set to claim some portion of the 128M - based on the MMIO windows
+> programmed on the PCI-PCI root port bridges. The reamining part of the
+> 128M is dead address space, not claimed by any hardware block at all.
 
-v3-v4 remove agent id stuff and kept print the same to avoid
-compatibility issues
-v7-v8 Updated to use dev_printk instated of prefix. Changed
-log levels to KERN_ERR as per Mauro's suggestion.
-v8-v9 Changed dev_printk to dev_err since all log levels are KERN_ERR.
+Thanks, this really helps get to the issue that the PCI core will care
+about.  The root ports look like normal bridges, so the core assumes
+it can manage their windows as needed, as long as the windows stay
+inside the host bridge apertures that are logically upstream from the
+root ports.
 
-Signed-off-by: Lance Ortiz <lance.ortiz@hp.com>
-Acked-by: Tony Luck <tony.luck@intel.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
----
-
- drivers/pci/pcie/aer/aerdrv_errprint.c |   54 +++++++++++++++-----------------
- 1 files changed, 26 insertions(+), 28 deletions(-)
-
-diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c b/drivers/pci/pcie/aer/aerdrv_errprint.c
-index d3e5fc5..5ab1425 100644
---- a/drivers/pci/pcie/aer/aerdrv_errprint.c
-+++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
-@@ -124,12 +124,11 @@ static const char *aer_agent_string[] = {
- 	"Transmitter ID"
- };
- 
--static void __aer_print_error(const char *prefix,
-+static void __aer_print_error(struct pci_dev *dev,
- 			      struct aer_err_info *info)
- {
- 	int i, status;
- 	const char *errmsg = NULL;
--
- 	status = (info->status & ~info->mask);
- 
- 	for (i = 0; i < 32; i++) {
-@@ -144,26 +143,22 @@ static void __aer_print_error(const char *prefix,
- 				aer_uncorrectable_error_string[i] : NULL;
- 
- 		if (errmsg)
--			printk("%s""   [%2d] %-22s%s\n", prefix, i, errmsg,
-+			dev_err(&dev->dev, "   [%2d] %-22s%s\n", i, errmsg,
- 				info->first_error == i ? " (First)" : "");
- 		else
--			printk("%s""   [%2d] Unknown Error Bit%s\n", prefix, i,
--				info->first_error == i ? " (First)" : "");
-+			dev_err(&dev->dev, "   [%2d] Unknown Error Bit%s\n",
-+				i, info->first_error == i ? " (First)" : "");
- 	}
- }
- 
- void aer_print_error(struct pci_dev *dev, struct aer_err_info *info)
- {
- 	int id = ((dev->bus->number << 8) | dev->devfn);
--	char prefix[44];
--
--	snprintf(prefix, sizeof(prefix), "%s%s %s: ",
--		 (info->severity == AER_CORRECTABLE) ? KERN_WARNING : KERN_ERR,
--		 dev_driver_string(&dev->dev), dev_name(&dev->dev));
- 
- 	if (info->status == 0) {
--		printk("%s""PCIe Bus Error: severity=%s, type=Unaccessible, "
--			"id=%04x(Unregistered Agent ID)\n", prefix,
-+		dev_err(&dev->dev,
-+			"PCIe Bus Error: severity=%s, type=Unaccessible, "
-+			"id=%04x(Unregistered Agent ID)\n",
- 			aer_error_severity_string[info->severity], id);
- 	} else {
- 		int layer, agent;
-@@ -171,22 +166,24 @@ void aer_print_error(struct pci_dev *dev, struct aer_err_info *info)
- 		layer = AER_GET_LAYER_ERROR(info->severity, info->status);
- 		agent = AER_GET_AGENT(info->severity, info->status);
- 
--		printk("%s""PCIe Bus Error: severity=%s, type=%s, id=%04x(%s)\n",
--			prefix, aer_error_severity_string[info->severity],
-+		dev_err(&dev->dev,
-+			"PCIe Bus Error: severity=%s, type=%s, id=%04x(%s)\n",
-+			aer_error_severity_string[info->severity],
- 			aer_error_layer[layer], id, aer_agent_string[agent]);
- 
--		printk("%s""  device [%04x:%04x] error status/mask=%08x/%08x\n",
--			prefix, dev->vendor, dev->device,
-+		dev_err(&dev->dev,
-+			"  device [%04x:%04x] error status/mask=%08x/%08x\n",
-+			dev->vendor, dev->device,
- 			info->status, info->mask);
- 
--		__aer_print_error(prefix, info);
-+		__aer_print_error(dev, info);
- 
- 		if (info->tlp_header_valid) {
- 			unsigned char *tlp = (unsigned char *) &info->tlp;
--			printk("%s""  TLP Header:"
-+			dev_err(&dev->dev, "  TLP Header:"
- 				" %02x%02x%02x%02x %02x%02x%02x%02x"
- 				" %02x%02x%02x%02x %02x%02x%02x%02x\n",
--				prefix, *(tlp + 3), *(tlp + 2), *(tlp + 1), *tlp,
-+				*(tlp + 3), *(tlp + 2), *(tlp + 1), *tlp,
- 				*(tlp + 7), *(tlp + 6), *(tlp + 5), *(tlp + 4),
- 				*(tlp + 11), *(tlp + 10), *(tlp + 9),
- 				*(tlp + 8), *(tlp + 15), *(tlp + 14),
-@@ -195,8 +192,9 @@ void aer_print_error(struct pci_dev *dev, struct aer_err_info *info)
- 	}
- 
- 	if (info->id && info->error_dev_num > 1 && info->id == id)
--		printk("%s""  Error of this Agent(%04x) is reported first\n",
--			prefix, id);
-+		dev_err(&dev->dev,
-+			   "  Error of this Agent(%04x) is reported first\n",
-+			id);
- 	trace_aer_event(dev_name(&dev->dev), (info->status & ~info->mask),
- 			info->severity);
- }
-@@ -244,21 +242,21 @@ void cper_print_aer(const char *prefix, struct pci_dev *dev, int cper_severity,
- 	}
- 	layer = AER_GET_LAYER_ERROR(aer_severity, status);
- 	agent = AER_GET_AGENT(aer_severity, status);
--	printk("%s""aer_status: 0x%08x, aer_mask: 0x%08x\n",
--	       prefix, status, mask);
-+	dev_err(&dev->dev, "aer_status: 0x%08x, aer_mask: 0x%08x\n",
-+	       status, mask);
- 	cper_print_bits(prefix, status, status_strs, status_strs_size);
--	printk("%s""aer_layer=%s, aer_agent=%s\n", prefix,
-+	dev_err(&dev->dev, "aer_layer=%s, aer_agent=%s\n",
- 	       aer_error_layer[layer], aer_agent_string[agent]);
- 	if (aer_severity != AER_CORRECTABLE)
--		printk("%s""aer_uncor_severity: 0x%08x\n",
--		       prefix, aer->uncor_severity);
-+		dev_err(&dev->dev, "aer_uncor_severity: 0x%08x\n",
-+		       aer->uncor_severity);
- 	if (tlp_header_valid) {
- 		const unsigned char *tlp;
- 		tlp = (const unsigned char *)&aer->header_log;
--		printk("%s""aer_tlp_header:"
-+		dev_err(&dev->dev, "aer_tlp_header:"
- 			" %02x%02x%02x%02x %02x%02x%02x%02x"
- 			" %02x%02x%02x%02x %02x%02x%02x%02x\n",
--			prefix, *(tlp + 3), *(tlp + 2), *(tlp + 1), *tlp,
-+			*(tlp + 3), *(tlp + 2), *(tlp + 1), *tlp,
- 			*(tlp + 7), *(tlp + 6), *(tlp + 5), *(tlp + 4),
- 			*(tlp + 11), *(tlp + 10), *(tlp + 9),
- 			*(tlp + 8), *(tlp + 15), *(tlp + 14),
-
+In your example, it sounds like the 128M should be treated as the host
+bridge aperture.  Is there any reason not to do that?  It sounds like
+there's no place you can actually program that 128M region into the
+hardware, and you would just program pieces of that region as root
+port windows.  But that should be OK from the core's perspective.
