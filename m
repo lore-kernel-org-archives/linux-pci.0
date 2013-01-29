@@ -1,100 +1,70 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v8 15/22] ACPI, PCI: Simplify handle_root_bridge_removal()
-Date: Fri, 11 Jan 2013 14:40:42 -0800
-Message-Id: <1357944049-29620-16-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1357944049-29620-1-git-send-email-yinghai@kernel.org>
-References: <1357944049-29620-1-git-send-email-yinghai@kernel.org>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from moutng.kundenserver.de ([212.227.17.9]:57263 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751326Ab3A2WyL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Jan 2013 17:54:11 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Subject: Re: [PATCH v2 05/27] arm: pci: add a align_resource hook
+Date: Tue, 29 Jan 2013 22:54:00 +0000
+Cc: "Russell King - ARM Linux" <linux@arm.linux.org.uk>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	"Eran Ben-Avi" <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com> <201301292015.21478.arnd@arndb.de> <20130129213308.7e845064@skate>
+In-Reply-To: <20130129213308.7e845064@skate>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201301292254.01069.arnd@arndb.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Tang Chen found handle_root_bridge_removal is very similiar to
-acpi_bus_hot_remove_device().
-Only difference is that it call trim two times.
+On Tuesday 29 January 2013, Thomas Petazzoni wrote:
+> Does this still allows me to give the Linux PCI one global range of
+> addresses for I/O space, and one global range of addresses for memory
+> space, and the the Linux PCI core assign ranges, within those global
+> ranges, to each host bridge?
+> 
+> This is absolutely essential for me, as I then read those allocated
+> ranges to configure the address decoding windows.
+> 
+> Basically, I have currently two suggestions:
+> 
+>  * From Jason Gunthorpe, to not use any host bridge, and instead use
+>    only PCI-to-PCI bridges, one per PCIe interface.
+> 
+>  * From you, to not use any PCI-to-PCI bridge, and use only host
+>    bridges, one per PCIe interface.
+> 
+> Would it be possible to get some consensus on this? In the review of
+> RFCv1, I was already told to use one global host bridge, and then one
+> PCI-to-PCI bridge per PCIe interface, and now we're talking about doing
+> something different. I'd like to avoid having to try gazillions of
+> different possible implementations :-)
 
-Change to handle_root_bridge_removal to call trim one time and then
-use acpi_bus_hot_remove_device.
+I'm actually fine with either of the two suggestions you mentioned above,
+whichever is easier to implement and/or more closely matches what the
+hardware actually implements is better IMHO.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/acpi/pci_root.c |   49 ++++++++---------------------------------------
- 1 file changed, 8 insertions(+), 41 deletions(-)
+The part that I did not like about having emulated PCI-to-PCI bridges
+is that it seems to just work around a (percieved or real) limitation
+in the Linux kernel by adding a piece of infrastructure, rather than
+lifting that limitation by making the kernel deal with what the
+hardware provides. That reminded me of the original mach-vt8500
+PCI implementation that faked a complete PCI host bridge and a
+bunch of PCI devices on it, in order to use the via-velocity
+ethernet controller, instead of adding a simple 'platform_driver'
+struct to that driver.
 
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index 697ec65..8a0e2e2 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -745,56 +745,23 @@ static void handle_root_bridge_insertion(acpi_handle handle)
- 		printk(KERN_ERR "cannot add bridge to acpi list\n");
- }
- 
--static int acpi_root_evaluate_object(acpi_handle handle, char *cmd, int val)
--{
--	acpi_status status;
--	struct acpi_object_list arg_list;
--	union acpi_object arg;
--
--	arg_list.count = 1;
--	arg_list.pointer = &arg;
--	arg.type = ACPI_TYPE_INTEGER;
--	arg.integer.value = val;
--
--	status = acpi_evaluate_object(handle, cmd, &arg_list, NULL);
--	if (ACPI_FAILURE(status)) {
--		pr_warn("%s: %s to %d failed\n",
--				 __func__, cmd, val);
--		return -1;
--	}
--
--	return 0;
--}
--
- static void handle_root_bridge_removal(struct acpi_device *device)
- {
- 	int ret_val;
--	u32 flags = 0;
--	acpi_handle dummy_handle;
--	acpi_handle handle = device->handle;
-+	struct acpi_eject_event *ej_event;
-+
-+	ej_event = kmalloc(sizeof(*ej_event), GFP_KERNEL);
-+	if (!ej_event)
-+		return;
- 
--	if (ACPI_SUCCESS(acpi_get_handle(handle, "_EJ0", &dummy_handle)))
--		flags |= ROOT_BRIDGE_HAS_EJ0;
--	if (ACPI_SUCCESS(acpi_get_handle(handle, "_PS3", &dummy_handle)))
--		flags |= ROOT_BRIDGE_HAS_PS3;
-+	ej_event->device = device;
-+	ej_event->event = ACPI_NOTIFY_EJECT_REQUEST;
- 
- 	/* remove pci devices at first */
- 	ret_val = acpi_bus_trim(device, 0);
- 	printk(KERN_DEBUG "acpi_bus_trim stop return %x\n", ret_val);
- 
--	/* remove acpi devices */
--	ret_val = acpi_bus_trim(device, 1);
--	printk(KERN_DEBUG "acpi_bus_trim remove return %x\n", ret_val);
--
--	if (flags & ROOT_BRIDGE_HAS_PS3) {
--		acpi_status status;
--
--		status = acpi_evaluate_object(handle, "_PS3", NULL, NULL);
--		if (ACPI_FAILURE(status))
--			pr_warn("%s: _PS3 failed\n", __func__);
--	}
--	if (flags & ROOT_BRIDGE_HAS_EJ0)
--		acpi_root_evaluate_object(handle, "_EJ0", 1);
-+	acpi_bus_hot_remove_device(ej_event);
- }
- 
- static void _handle_hotplug_event_root(struct work_struct *work)
--- 
-1.7.10.4
-
+	Arnd
