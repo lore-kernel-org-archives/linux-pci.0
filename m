@@ -1,45 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cavan.codon.org.uk ([93.93.128.6]:43694 "EHLO
-	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754100Ab3A2EhC (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Jan 2013 23:37:02 -0500
-Date: Tue, 29 Jan 2013 04:36:53 +0000
-From: Matthew Garrett <mjg59@srcf.ucam.org>
-To: Jiang Liu <jiang.liu@huawei.com>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, Jiang Liu <liuj97@gmail.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>
-Subject: Re: [RFC PATCH v5 4/8] ACPI, PCI: avoid building pci_slot as module
-Message-ID: <20130129043653.GB14395@srcf.ucam.org>
-References: <1358525267-14268-1-git-send-email-jiang.liu@huawei.com>
- <1358525267-14268-5-git-send-email-jiang.liu@huawei.com>
- <3500982.MUDp6kKU3R@vostro.rjw.lan>
- <CAErSpo4fbNzFaBxH+eKD+BKVgghyCJEYLDMzc6_gdxABAPe3QQ@mail.gmail.com>
- <CAE9FiQVM4+Wirpb3_D0Zxi4r1p9SAMi4ZrNYr=-eas-C6pKJYA@mail.gmail.com>
- <CAErSpo7WbbzZ8cKfLvuE331ofWir2vswUnYaxVLBBYGFowedXQ@mail.gmail.com>
- <CAE9FiQXkrYubkgbbOXmrEXvGZBZXMZ6sh8kGTpF1_=tD3OMPJw@mail.gmail.com>
- <CAErSpo7vHXdh=ogvfZnxx9gqgiifWGa=XzS+ZKjXFFOPue4TTw@mail.gmail.com>
- <CAE9FiQU84OSQrQJEGAQTDzVv8kGCi+fmgM8+ycoMXMUfHsNe-g@mail.gmail.com>
- <51072EDA.2000704@huawei.com>
+Received: from hydra.sisk.pl ([212.160.235.94]:58103 "EHLO hydra.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751342Ab3A2BJU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 28 Jan 2013 20:09:20 -0500
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Konstantin Khlebnikov <khlebnikov@openvz.org>,
+	linux-kernel@vger.kernel.org, e1000-devel@lists.sourceforge.net,
+	linux-pci@vger.kernel.org, Dave Airlie <airlied@redhat.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Subject: Re: [PATCH 3/5] PCI: revert preparing for wakeup in runtime-suspend finalization
+Date: Tue, 29 Jan 2013 02:15:30 +0100
+Message-ID: <1821500.CRlxLgYU5r@vostro.rjw.lan>
+In-Reply-To: <CAErSpo4sEv-Qw1iztGn-SsPKZ=Y+st-tPAFOvsp17MUo6X=xrA@mail.gmail.com>
+References: <20130118113019.6698.25941.stgit@zurg> <20130118114222.6698.7103.stgit@zurg> <CAErSpo4sEv-Qw1iztGn-SsPKZ=Y+st-tPAFOvsp17MUo6X=xrA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <51072EDA.2000704@huawei.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 29, 2013 at 10:07:22AM +0800, Jiang Liu wrote:
+On Monday, January 28, 2013 04:17:42 PM Bjorn Helgaas wrote:
+> [+cc Rafael]
+> 
+> On Fri, Jan 18, 2013 at 4:42 AM, Konstantin Khlebnikov
+> <khlebnikov@openvz.org> wrote:
+> > This patch effectively reverts commit 42eca2302146fed51335b95128e949ee6f54478f
+> > ("PCI: Don't touch card regs after runtime suspend D3")
+> >
+> > | This patch checks whether the pci state is saved and doesn't attempt to hit
+> > | any registers after that point if it is.
+> >
+> > This seems completely wrong. Yes, PCI configuration space has been saved by
+> > driver, but this doesn't means that all job is done and device has been
+> > suspended and ready for waking up in the future.
+> >
+> > For example driver e1000e for ethernet in my thinkpad x220 saves pci-state
+> > but device cannot wakeup after that, because it needs some ACPI callbacks
+> > which usually called from pci_finish_runtime_suspend().
+> >
+> > | Optimus (dual-gpu) laptops seem to have their own form of D3cold, but
+> > | unfortunately enter it on normal D3 transitions via the ACPI callback.
+> >
+> > Hardware which disappears from the bus unexpectedly is exception, so let's
+> > handle it as an exception. Its driver should set device state to D3cold and
+> > the rest code will handle it properly.
+> 
+> Functions in D3cold don't have power, so it's completely expected that
+> they would disappear from the bus and not respond to config accesses.
+> Maybe Dave was referring to D3hot, where functions *should* respond to
+> config accesses.  I dunno.
+> 
+> Just to be clear, it sounds like 42eca230 caused a regression on your
+> e1000e device?  If so, I guess we should revert it unless you and Dave
+> can figure out a better patch that fixes both your e1000e device and
+> the Optimus issue.
 
-> 	Could we use quirk to auto-disable PCIe native hotplug for
-> problematic platforms?
+Yes, if there's a regression, let's revert it, but I'd like the regression
+to be described clearly.
 
-Do these problematic platforms successfully boot Windows 7?
+Thanks,
+Rafael
+
 
 -- 
-Matthew Garrett | mjg59@srcf.ucam.org
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
