@@ -1,46 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ye0-f201.google.com ([209.85.213.201]:45180 "EHLO
-	mail-ye0-f201.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758023Ab3AIRxM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Jan 2013 12:53:12 -0500
-Received: by mail-ye0-f201.google.com with SMTP id r11so263972yen.0
-        for <linux-pci@vger.kernel.org>; Wed, 09 Jan 2013 09:53:11 -0800 (PST)
-Subject: [PATCH 4/5] PCI: Use "unsigned long" for __pci_enable_device_flags to
-	match ioport.h
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: David Howells <dhowells@redhat.com>,
-	Koichi Yasutake <yasutake.koichi@jp.panasonic.com>,
-	x86@kernel.org
-Date: Wed, 09 Jan 2013 10:53:11 -0700
-Message-ID: <20130109175310.13904.36783.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20130109175151.13904.84252.stgit@bhelgaas.mtv.corp.google.com>
-References: <20130109175151.13904.84252.stgit@bhelgaas.mtv.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mail.free-electrons.com ([94.23.35.102]:33384 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751413Ab3A2KEQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Jan 2013 05:04:16 -0500
+Date: Tue, 29 Jan 2013 11:04:11 +0100
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Thierry Reding <thierry.reding@avionic-design.de>
+Cc: Stephen Warren <swarren@wwwdotorg.org>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Maen Suleiman <maen@marvell.com>, linux-pci@vger.kernel.org,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Subject: Re: [PATCH v2 02/27] of/pci: Add of_pci_get_devfn() function
+Message-ID: <20130129110411.6b5f4210@skate>
+In-Reply-To: <20130128221604.GA24858@avionic-0098.mockup.avionic-design.de>
+References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	<1359399397-29729-3-git-send-email-thomas.petazzoni@free-electrons.com>
+	<5106F4EA.20904@wwwdotorg.org>
+	<20130128221604.GA24858@avionic-0098.mockup.avionic-design.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-__pci_enable_device_flags() takes values like IORESOURCE_IO and
-IORESOURCE_MEM, which are values for struct resource.flags, which is
-"unsigned long", not "resource_size_t".
+Thierry, Stephen,
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/pci.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+On Mon, 28 Jan 2013 23:16:04 +0100, Thierry Reding wrote:
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 5cb5820..d574fbd 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -1157,7 +1157,7 @@ int pci_reenable_device(struct pci_dev *dev)
- }
- 
- static int __pci_enable_device_flags(struct pci_dev *dev,
--				     resource_size_t flags)
-+				     unsigned long flags)
- {
- 	int err;
- 	int i, bars = 0;
+> That's already fixed up in my series. I was going to wait until I was
+> done with the MSI rework but maybe posting an intermediate version is in
+> order to share the latest state.
 
+Thanks! Those first four patches are definitely shared between our
+series.
+
+Thomas
+-- 
+Thomas Petazzoni, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
