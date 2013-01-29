@@ -1,212 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cn.fujitsu.com ([222.73.24.84]:8529 "EHLO song.cn.fujitsu.com"
-	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1750829Ab3ARFe0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 18 Jan 2013 00:34:26 -0500
-Message-ID: <50F8DEE9.9060905@cn.fujitsu.com>
-Date: Fri, 18 Jan 2013 13:34:33 +0800
-From: Gu Zheng <guz.fnst@cn.fujitsu.com>
-MIME-Version: 1.0
-To: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-CC: guz.fnst@cn.fujitsu.com, tangchen@cn.fujitsu.com,
-	laijs@cn.fujitsu.com, wency@cn.fujitsu.com,
-	izumi.taku@jp.fujitsu.com, Lin Feng <linfeng@cn.fujitsu.com>,
-	Jiang Liu <liuj97@gmail.com>, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH RESEND] pci-sysfs: replace mutex_lock with mutex_trylock to
- avoid potential deadlock situation
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail.free-electrons.com ([94.23.35.102]:36072 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753021Ab3A2RJn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Jan 2013 12:09:43 -0500
+Date: Tue, 29 Jan 2013 18:09:36 +0100
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: "Russell King - ARM Linux" <linux@arm.linux.org.uk>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	"Eran Ben-Avi" <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Subject: Re: [PATCH v2 05/27] arm: pci: add a align_resource hook
+Message-ID: <20130129180936.3737e550@skate>
+In-Reply-To: <201301291645.08040.arnd@arndb.de>
+References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	<20130129155820.GB23505@n2100.arm.linux.org.uk>
+	<20130129172055.0ca5f341@skate>
+	<201301291645.08040.arnd@arndb.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There is a potential deadlock situation when we manipulate the pci-sysfs user
-interfaces from different bus hierarchy simultaneously, described as following:
+Dear Arnd Bergmann,
 
-path1: sysfs remove device:             | path2: sysfs rescan device: 
-sysfs_schedule_callback_work()          | sysfs_write_file() 
-  remove_callback()                     |   flush_write_buffer()
-*1* mutex_lock(&pci_remove_rescan_mutex)|*2*  sysfs_get_active(attr_sd) 
-      ...                               |     dev_attr_store() 
-        device_remove_file()            |       dev_rescan_store()
-          ...                           |*4*      mutex_lock(&pci_remove_rescan_mutex)
-*3*       sysfs_deactivate(sd)          |     ...
-            wait_for_completion()       |*5*  sysfs_put_active(attr_sd)
-*6* mutex_unlock(&pci_remove_rescan_mutex)
+On Tue, 29 Jan 2013 16:45:07 +0000, Arnd Bergmann wrote:
+> On Tuesday 29 January 2013, Thomas Petazzoni wrote:
+> > And the Linux PCI resource allocation code complies with this, so
+> > that if I have two PCI-to-PCI bridges (each having downstream a
+> > device with an I/O BAR), then the first PCI-to-PCI bridge gets its
+> > I/O base address register set to ADDR + 0x0, and the second bridge
+> > gets its I/O base address set to ADDR + 0x1000. And this doesn't
+> > play well with the requirements of Marvell address decoding windows
+> > for PCIe I/O regions, which must be 64 KB aligned.
+> 
+> But we normally only assign a 64 KB I/O window to each PCI host
+> bridge. Requiring PCI bridges to be space 64 KB apart would mean that
+> we cannot actually support bridges at all.
+> 
+> Is this just about your "virtual" bridges? If each one has its
+> own 64 KB I/O range and its own configuration space, that sounds
+> a lot like you should make them appear as individual domains instead.
 
-If path1 firstly holds the pci_remove_rescan_mutex at *1*, then another path 
-called path2 actived and runs to *2* before path1 runs to *3*, we now runs
-to a deadlock situation:
-Path1 holds the mutex waiting path2 to decrease sysfs_dirent's s_active
-counter at *5*, but path2 is blocked at *4* when trying to get the 
-pci_remove_rescan_mutex. The mutex won't be put by path1 until it reach
-*6*, but it's now blocked at *3*.
+Yes, it is about the emulated PCI-to-PCI bridges. Each
+emulated PCI-to-PCI bridge corresponds to one hardware PCIe interface,
+and I need the I/O base address assigned to each PCIe interface to be
+aligned on a 64 KB boundary. I am not sure to understand why you think
+this is a problem.
 
-The circumvent approach is if we find someone else is manipulating the pci-tree we
-simply abort current operation to avoid deadlock.
+Also, what do you mean exactly by making them appear as individual
+domains?
 
-*dmesg ifno*:
-(snip)
-1000e 0000:1c:00.0: eth9: Intel(R) PRO/1000 Network Connection
-sd 13:2:0:0: [sdb] Attached SCSI disk
-e1000e 0000:1c:00.0: eth9: MAC: 0, PHY: 4, PBA No: D50228-005
-e1000e 0000:1c:00.1: Disabling ASPM  L1
-e1000e 0000:1c:00.1: Interrupt Throttling Rate (ints/sec) set to dynamic conservative mode
-e1000e 0000:1c:00.1: irq 143 for MSI/MSI-X
-e1000e 0000:1c:00.1: eth10: (PCI Express:2.5GT/s:Width x4) 00:15:17:cd:96:bf
-e1000e 0000:1c:00.1: eth10: Intel(R) PRO/1000 Network Connection
-e1000e 0000:1c:00.1: eth10: MAC: 0, PHY: 4, PBA No: D50228-005
-INFO: task bash:62982 blocked for more than 120 seconds.
-"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-bash            D 0000000000000000     0 62982  62978 0x00000080
- ffff88038b277db8 0000000000000082 ffff88038b277fd8 0000000000013940
- ffff88038b276010 0000000000013940 0000000000013940 0000000000013940
- ffff88038b277fd8 0000000000013940 ffff880377449e30 ffff8806e822c670
-Call Trace:
- [<ffffffff8151ba79>] schedule+0x29/0x70
- [<ffffffff8151bd6e>] schedule_preempt_disabled+0xe/0x10
- [<ffffffff8151a4e3>] __mutex_lock_slowpath+0xd3/0x150
- [<ffffffff8151a3eb>] mutex_lock+0x2b/0x50
- [<ffffffff812821dc>] dev_rescan_store+0x5c/0x80
- [<ffffffff81341800>] dev_attr_store+0x20/0x30
- [<ffffffff811e3eef>] sysfs_write_file+0xef/0x170
- [<ffffffff81173d08>] vfs_write+0xc8/0x190
- [<ffffffff81173ed1>] sys_write+0x51/0x90
- [<ffffffff81524b29>] system_call_fastpath+0x16/0x1b
-INFO: task bash:64141 blocked for more than 120 seconds.
-"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-bash            D ffffffff81610460     0 64141  64136 0x00000080
- ffff8803540e9db8 0000000000000086 ffff8803540e9fd8 0000000000013940
- ffff8803540e8010 0000000000013940 0000000000013940 0000000000013940
- ffff8803540e9fd8 0000000000013940 ffff8807db338a10 ffff8806f09abc60
-Call Trace:
- [<ffffffff8151ba79>] schedule+0x29/0x70
- [<ffffffff8151bd6e>] schedule_preempt_disabled+0xe/0x10
- [<ffffffff8151a4e3>] __mutex_lock_slowpath+0xd3/0x150
- [<ffffffff8151a3eb>] mutex_lock+0x2b/0x50
- [<ffffffff812821dc>] dev_rescan_store+0x5c/0x80
- [<ffffffff81341800>] dev_attr_store+0x20/0x30
- [<ffffffff811e3eef>] sysfs_write_file+0xef/0x170
- [<ffffffff81173d08>] vfs_write+0xc8/0x190
- [<ffffffff81173ed1>] sys_write+0x51/0x90
- [<ffffffff81524b29>] system_call_fastpath+0x16/0x1b
-INFO: task kworker/u:3:64451 blocked for more than 120 seconds.
-"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-kworker/u:3     D ffffffff81610460     0 64451      2 0x00000080
- ffff8807d51b7a30 0000000000000046 ffff8807d51b7fd8 0000000000013940
- ffff8807d51b6010 0000000000013940 0000000000013940 0000000000013940
- ffff8807d51b7fd8 0000000000013940 ffff8807db339420 ffff88037744b250
-Call Trace:
- [<ffffffff8151ba79>] schedule+0x29/0x70
- [<ffffffff81519ded>] schedule_timeout+0x19d/0x220
- [<ffffffff81165f92>] ? __slab_free+0x1f2/0x2f0
- [<ffffffff8151b8fe>] wait_for_common+0x11e/0x190
- [<ffffffff8108a6e0>] ? try_to_wake_up+0x2c0/0x2c0
- [<ffffffff8151ba4d>] wait_for_completion+0x1d/0x20
- [<ffffffff811e53e8>] sysfs_addrm_finish+0xb8/0xd0
- [<ffffffff811e4320>] ? sysfs_schedule_callback+0x1e0/0x1e0
- [<ffffffff811e33f0>] sysfs_hash_and_remove+0x60/0xb0
- [<ffffffff811e43c9>] sysfs_remove_file+0x39/0x50
- [<ffffffff81342cb7>] device_remove_file+0x17/0x20
- [<ffffffff8134505c>] bus_remove_device+0xdc/0x180
- [<ffffffff81342eb0>] device_del+0x120/0x1d0
- [<ffffffff81342f82>] device_unregister+0x22/0x60
- [<ffffffff8127ade4>] pci_stop_bus_device+0x94/0xa0
- [<ffffffff8127ad90>] pci_stop_bus_device+0x40/0xa0
- [<ffffffff8127ad90>] pci_stop_bus_device+0x40/0xa0
- [<ffffffff8127ad90>] pci_stop_bus_device+0x40/0xa0
- [<ffffffff8127af66>] pci_stop_and_remove_bus_device+0x16/0x30
- [<ffffffff81282359>] remove_callback+0x29/0x40
- [<ffffffff811e4344>] sysfs_schedule_callback_work+0x24/0x70
- [<ffffffff81070009>] process_one_work+0x179/0x4b0
- [<ffffffff8107210e>] worker_thread+0x12e/0x330
- [<ffffffff81071fe0>] ? manage_workers+0x110/0x110
- [<ffffffff8107705e>] kthread+0x9e/0xb0
- [<ffffffff81525bc4>] kernel_thread_helper+0x4/0x10
- [<ffffffff81076fc0>] ? kthread_freezable_should_stop+0x70/0x70
- [<ffffffff81525bc0>] ? gs_change+0x13/0x13
+Remember that the very reason to use emulated PCI-to-PCI bridges is
+that we want to assign a global range of addresses of I/O regions and a
+global range of addresses of memory regions, and let the Linux PCI core
+allocate from those two ranges to the different devices connected
+downstream of the PCI-to-PCI bridges. This gives us for free the rather
+complex allocation of addresses we need to set up our address decoding
+windows.
 
-Reported-by: Taku Izumi <izumi.taku@jp.fujitsu.com> 
-Signed-off-by: Lin Feng <linfeng@cn.fujitsu.com>
-Signed-off-by: Gu Zheng <guz.fnst@cn.fujitsu.com>
----
- drivers/pci/pci-sysfs.c |   42 ++++++++++++++++++++++++++----------------
- 1 files changed, 26 insertions(+), 16 deletions(-)
+If we have have separate domains for each of our hardware PCIe
+interface, can we still benefit from this allocation of resources from
+a globally defined range of I/O addresses and memory addresses?
 
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 05b78b1..d2efbb0 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -295,10 +295,13 @@ static ssize_t bus_rescan_store(struct bus_type *bus, const char *buf,
- 		return -EINVAL;
- 
- 	if (val) {
--		mutex_lock(&pci_remove_rescan_mutex);
--		while ((b = pci_find_next_bus(b)) != NULL)
--			pci_rescan_bus(b);
--		mutex_unlock(&pci_remove_rescan_mutex);
-+		if (mutex_trylock(&pci_remove_rescan_mutex)) {
-+			while ((b = pci_find_next_bus(b)) != NULL)
-+				pci_rescan_bus(b);
-+			mutex_unlock(&pci_remove_rescan_mutex);
-+		} else {
-+			return 0;
-+		}
- 	}
- 	return count;
- }
-@@ -319,9 +322,12 @@ dev_rescan_store(struct device *dev, struct device_attribute *attr,
- 		return -EINVAL;
- 
- 	if (val) {
--		mutex_lock(&pci_remove_rescan_mutex);
--		pci_rescan_bus(pdev->bus);
--		mutex_unlock(&pci_remove_rescan_mutex);
-+		if (mutex_trylock(&pci_remove_rescan_mutex)) {
-+			pci_rescan_bus(pdev->bus);
-+			mutex_unlock(&pci_remove_rescan_mutex);
-+		} else {
-+			return 0;
-+		}
- 	}
- 	return count;
- }
-@@ -330,9 +336,10 @@ static void remove_callback(struct device *dev)
- {
- 	struct pci_dev *pdev = to_pci_dev(dev);
- 
--	mutex_lock(&pci_remove_rescan_mutex);
--	pci_stop_and_remove_bus_device(pdev);
--	mutex_unlock(&pci_remove_rescan_mutex);
-+	if (mutex_trylock(&pci_remove_rescan_mutex)) {
-+		pci_stop_and_remove_bus_device(pdev);
-+		mutex_unlock(&pci_remove_rescan_mutex);
-+	}
- }
- 
- static ssize_t
-@@ -366,12 +373,15 @@ dev_bus_rescan_store(struct device *dev, struct device_attribute *attr,
- 		return -EINVAL;
- 
- 	if (val) {
--		mutex_lock(&pci_remove_rescan_mutex);
--		if (!pci_is_root_bus(bus) && list_empty(&bus->devices))
--			pci_rescan_bus_bridge_resize(bus->self);
--		else
--			pci_rescan_bus(bus);
--		mutex_unlock(&pci_remove_rescan_mutex);
-+		if (mutex_trylock(&pci_remove_rescan_mutex)) {
-+			if (!pci_is_root_bus(bus) && list_empty(&bus->devices))
-+				pci_rescan_bus_bridge_resize(bus->self);
-+			else
-+				pci_rescan_bus(bus);
-+			mutex_unlock(&pci_remove_rescan_mutex);
-+		} else {
-+			return 0;
-+		}
- 	}
- 	return count;
- }
+Thanks,
+
+Thomas
 -- 
-1.7.1
-
-
+Thomas Petazzoni, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
