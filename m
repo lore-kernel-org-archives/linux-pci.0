@@ -1,89 +1,47 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [PATCH v10 05/11] PCI: make PCI device create/destroy logic symmetric
-Date: Mon, 21 Jan 2013 13:20:46 -0800
-Message-Id: <1358803252-20639-6-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1358803252-20639-1-git-send-email-yinghai@kernel.org>
-References: <1358803252-20639-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from cpsmtpb-ews07.kpnxchange.com ([213.75.39.10]:62442 "EHLO
+	cpsmtpb-ews07.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755091Ab3A2McT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Jan 2013 07:32:19 -0500
+Message-ID: <1359462737.1345.58.camel@x61.thuisdomein>
+Subject: Re: pciehp: errors on resume
+From: Paul Bolle <pebolle@tiscali.nl>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Oliver Neukum <oneukum@suse.de>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Date: Tue, 29 Jan 2013 13:32:17 +0100
+In-Reply-To: <3774810.Obias7PJ4I@vostro.rjw.lan>
+References: <1359377173.1345.25.camel@x61.thuisdomein>
+	 <51072F83.7040102@cn.fujitsu.com>
+	 <1359455732.1345.46.camel@x61.thuisdomein>
+	 <3774810.Obias7PJ4I@vostro.rjw.lan>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <jiang.liu@huawei.com>
+On Tue, 2013-01-29 at 12:35 +0100, Rafael J. Wysocki wrote:
+> On Tuesday, January 29, 2013 11:35:32 AM Paul Bolle wrote:
+> > Thanks. So should the fix here be to actually suspend and remove this
+> > device? (Note that pciehp_suspend() is now basically a NOP.)
+> 
+> I think it wouldn't be useful to remove devices on all suspends, but then there
+> are a few different situations that resume has to consider and handle correctly:
+> 
+> 1) Device has been removed while suspended.
+> 2) Device was present before suspend and is still there.
+> 3) Device has been added while suspended.
 
-According to device model documentation, the way to create/destroy PCI
-devices should be symmetric.
+Obviously, I care about situation 2) here. (It would be quite a feat to
+remove or add a wireless card while the laptop is suspended.)
 
-/**
- * device_del - delete device from system.
- * @dev: device.
- *
- * This is the first part of the device unregistration
- * sequence. This removes the device from the lists we control
- * from here, has it removed from the other driver model
- * subsystems it was added to in device_add(), and removes it
- * from the kobject hierarchy.
- *
- * NOTE: this should be called manually _iff_ device_add() was
- * also called manually.
- */
+Anyhow, is there any reason to not treat the fact that a device turns
+out to be already there when board_added() is called as an occurrence of
+situation 2)? In other words: is the only reason that a device already
+exists when board_added() is called that it was there while suspending
+and is still there while resuming?
 
-The rule is to either use
-1) device_register()/device_unregister()
-or
-2) device_initialize()/device_add()/device_del()/put_device().
 
-So change PCI core logic to follow the rule and get rid of the redundant
-pci_dev_get()/pci_dev_put() pair.
-
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-Signed-by: Yinghai Lu <yinghai@kernel.org>
-Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/pci/probe.c  |    1 -
- drivers/pci/remove.c |    4 ++--
- 2 files changed, 2 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index dcef3b9..9588207 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1298,7 +1298,6 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
- {
- 	device_initialize(&dev->dev);
- 	dev->dev.release = pci_release_dev;
--	pci_dev_get(dev);
- 
- 	set_dev_node(&dev->dev, pcibus_to_node(bus));
- 	dev->dev.dma_mask = &dev->dma_mask;
-diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-index 7c0fd92..fc38c48 100644
---- a/drivers/pci/remove.c
-+++ b/drivers/pci/remove.c
-@@ -22,7 +22,7 @@ static void pci_stop_dev(struct pci_dev *dev)
- 	if (dev->is_added) {
- 		pci_proc_detach_device(dev);
- 		pci_remove_sysfs_dev_files(dev);
--		device_unregister(&dev->dev);
-+		device_del(&dev->dev);
- 		dev->is_added = 0;
- 	}
- 
-@@ -37,7 +37,7 @@ static void pci_destroy_dev(struct pci_dev *dev)
- 	up_write(&pci_bus_sem);
- 
- 	pci_free_resources(dev);
--	pci_dev_put(dev);
-+	put_device(&dev->dev);
- }
- 
- void pci_remove_bus(struct pci_bus *bus)
--- 
-1.7.10.4
+Paul Bolle
 
