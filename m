@@ -1,90 +1,115 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <CAE9FiQUn=bcgOLFzBwsBT1-O1poRNy9qYTb0w9EAya3_inKqAw@mail.gmail.com>
-References: <20121030040237.GA10472@google.com> <1352003971-22278-1-git-send-email-yinghai@kernel.org>
- <CAE9FiQUn=bcgOLFzBwsBT1-O1poRNy9qYTb0w9EAya3_inKqAw@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 7 Jan 2013 16:49:41 -0700
-Message-ID: <CAErSpo5Z57asEXbfesOjXMEPj4WM3YMbzQH3s-v_NBrnPNmuVQ@mail.gmail.com>
-Subject: Re: [PATCH 0/8] PCI, ACPI, x86: Reserve fw allocated resource for
- hot-add root bus
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	David Howells <dhowells@redhat.com>,
-	Michal Simek <monstr@monstr.eu>,
-	Koichi Yasutake <yasutake.koichi@jp.panasonic.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Paul Mackerras <paulus@samba.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.free-electrons.com ([94.23.35.102]:34932 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756767Ab3A2PKt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Jan 2013 10:10:49 -0500
+Date: Tue, 29 Jan 2013 16:10:40 +0100
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Thierry Reding <thierry.reding@avionic-design.de>
+Cc: Andrew Murray <andrew.murray@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>
+Subject: Re: [PATCH v2 19/27] pci: PCIe driver for Marvell Armada 370/XP
+ systems
+Message-ID: <20130129161040.5cd5a814@skate>
+In-Reply-To: <20130129150201.GA24101@avionic-0098.mockup.avionic-design.de>
+References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	<1359399397-29729-20-git-send-email-thomas.petazzoni@free-electrons.com>
+	<20130129132204.GA23886@arm.com>
+	<20130129144522.44ed7373@skate>
+	<20130129140522.GA24310@arm.com>
+	<20130129142015.GA23640@avionic-0098.mockup.avionic-design.de>
+	<20130129152937.53ec9a9b@skate>
+	<20130129150201.GA24101@avionic-0098.mockup.avionic-design.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc David, Michal, Koichi, Ben, Paul]
+Dear Thierry Reding,
 
-On Fri, Dec 7, 2012 at 12:15 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Sat, Nov 3, 2012 at 9:39 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->> For root bus hot add, fw could assign some resource for the devices for
->> that root bus before notifying os via acpi, we should check and use those
->> resources at first just like we do for booting path.
->>
->> At first, we need to refactor x86 pci pcibios_allocate related functions
->> for booting path to take bus as parameter.
->>
->> After that, we could use the survey function for hot add root bus.
->>
->> based on pci/yinghai-for-pci-root-bus-hotplug
->>
->> could get from
->>         git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-survey-resources
->>
->> Yinghai Lu (8):
->>   PCI, x86: Separate out pcibios_allocate_bridge_resources()
->>   PCI, x86: Separate out pcibios_allocate_dev_resources()
->>   PCI, x86: Let pcibios_allocate_bus_resources() take bus instead
->>   PCI, x86: Separate out rom resource claim
->>   PCI, x86: Add pcibios_fw_addr_done
->>   PCI, x86: Remove __init for hw/fw allocated functions
->>   PCI, x86: Claim FW allocated resources in hot add path.
->>   PCI, ACPI: reserve fw allocated resource for hot added root bus
->>
->>  arch/x86/pci/i386.c     |  185 +++++++++++++++++++++++++++++++----------------
->>  drivers/acpi/pci_root.c |    4 +-
->>  drivers/pci/bus.c       |    2 +
->>  include/linux/pci.h     |    1 +
->>  4 files changed, 127 insertions(+), 65 deletions(-)
->>
->
-> Bjorn,
->
-> Can you queue those 8 patches for v3.9 in pci tree?
->
-> So I  could resend out other pci root hotplug patches.
+On Tue, 29 Jan 2013 16:02:01 +0100, Thierry Reding wrote:
 
-I'm really sorry that it's taken me so long to get to these.
+> Now that I think about it, there were a few more changes needed.
+> For one, the reg property of the root port nodes need to be in the
+> format specified by the PCI DT binding. That is, 3 cells for the
+> address and 2 cells for the size.
+> 
+> So I end up with something like this:
+> 
+> 	pcie-controller {
+> 		...
+> 
+> 		ranges = <0x00000800 0 0x80000000 0x80000000 0 0x00001000 /* port 0 registers */
+> 			  0x00001000 0 0x80001000 0x80001000 0 0x00001000 /* port 1 registers */
+> 			  ...>;
+> 
+> 		pci@1,0 {
+> 			reg = <0x000800 0 0x80000000 0 0x1000>;
+> 			...
+> 		};
+> 
+> 		pci@2,0 {
+> 			reg = <0x001000 0 0x80001000 0 0x1000>;
+> 			...
+> 		};
+> 	};
+> 
+> So what happens here is that for each root port (pci@1,0 and pci@2,0),
+> the reg property is translated into the parent address space via the
+> pcie-controller's ranges property. pci@1,0 gets the memory region
+> 0x80000000-0x80000fff and pci@2,0 gets 0x80001000-0x80001fff. (These are
+> actually windows through which the configuration space of the root ports
+> is accessed.)
+> 
+> At the same time this reg property maps both devices into the PCI
+> address space at addresses 0:01.0 and 0:02.0 respectively.
 
-I applied these to my pci/yinghai-survey-resources branch.  I
-re-ordered the last two and reworked some of the changelogs.
+This part I think I've done exactly the same thing in the Marvell PCIe
+DT binding.
 
-In general these look good.  My main concern is that they only touch
-x86, without touching the similar code in frv, microblaze, mn10300,
-and powerpc.
+> The second change is that you can't rely on ARM's default implementation
+> of the bus scan operation, which calls pci_scan_root_bus(), passing in a
+> NULL as the struct device which acts as the bus' parent. So on Tegra I
+> added a custom implementation which calls pci_create_root_bus(), passing
+> in the struct device of the PCI host bridge, whose .of_node field will
+> be set to the pcie-controller node above. Incidentally this also fixed
+> another issue where the PCI core and ARM's pci_common_init() both
+> eventually end up calling pci_bus_add_devices(). I don't remember the
+> exact symptoms but I think this was causing resource conflicts during
+> the second enumeration or so.
+> 
+> Because a proper struct device with the correct .of_node field is passed
+> into pci_create_root_bus(), the generic pcibios_get_phb_of_node() will
+> know how to find it by looking at bus->bridge->parent->of_node. After
+> that the generic matching code will search the bridge (pcie-controller)
+> node's children and relate them to the struct pci_dev by devfn. This is
+> done in pci_set_of_node() defined in drivers/pci/of.c, which calls
+> of_pci_find_child_device() from drivers/of/of_pci.c.
 
-This code (pcibios_resource_survey(), pcibios_assign_resources(),
-pcibios_allocate_resources(), pcibios_allocate_bus_resources()) was
-obviously copied from x86 originally, and I'd like to preserve the
-similarity between them.  It would be even better to refactor it so
-it's actually *shared*, but I don't think that's a requirement right
-now.
+This is quite certainly the part that I was missing. I'll try this and
+let you know.
 
-If we allow it to diverge now, it will make it harder to refactor and
-harder to notice when bug fixes should be applied to all of them.  For
-example, looking at pcibios_allocate_resources(), commit 575939cf5
-added some SR-IOV support to x86.  Should similar code be added for
-frv, microblaze, mn10300, and powerpc?
+Thanks a lot for the lengthy, but very useful explanation!
 
-Anybody else have thoughts on this?
-
-Bjorn
+Thomas
+-- 
+Thomas Petazzoni, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
