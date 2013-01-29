@@ -1,59 +1,34 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <1357231792.25181.62.camel@joe-AO722>
-Subject: [PATCH V2] checkpatch: prefer dev_<level>( to
- dev_printk(KERN_<LEVEL>
-From: Joe Perches <joe@perches.com>
-To: Andy Whitcroft <apw@canonical.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	Lance Ortiz <lance.ortiz@hp.com>, bhelgaas@google.com,
-	lance_ortiz@hotmail.com, jiang.liu@huawei.com, tony.luck@intel.com,
-	bp@alien8.de, rostedt@goodmis.org, mchehab@redhat.com,
-	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Date: Thu, 03 Jan 2013 08:49:52 -0800
-In-Reply-To: <1357230494.25181.55.camel@joe-AO722>
-References: <20130102232730.5706.82243.stgit@grignak.americas.hpqcorp.net>
-	 <20130102232743.5706.63153.stgit@grignak.americas.hpqcorp.net>
-	 <1357171594.25181.19.camel@joe-AO722> <20130103100808.GG2649@dm>
-	 <1357230494.25181.55.camel@joe-AO722>
-Content-Type: text/plain; charset="ISO-8859-1"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from cpsmtpb-ews04.kpnxchange.com ([213.75.39.7]:51619 "EHLO
+	cpsmtpb-ews04.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750972Ab3A2Kff (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Jan 2013 05:35:35 -0500
+Message-ID: <1359455732.1345.46.camel@x61.thuisdomein>
+Subject: Re: pciehp: errors on resume
+From: Paul Bolle <pebolle@tiscali.nl>
+To: Gu Zheng <guz.fnst@cn.fujitsu.com>
+Cc: Oliver Neukum <oneukum@suse.de>, "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Date: Tue, 29 Jan 2013 11:35:32 +0100
+In-Reply-To: <51072F83.7040102@cn.fujitsu.com>
+References: <1359377173.1345.25.camel@x61.thuisdomein>
+	 <51072F83.7040102@cn.fujitsu.com>
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add YA check to printk style.
+Gu,
 
-dev_<level> uses are functions and generate smaller
-object code than dev_printk(KERN_<LEVEL>.
+On Tue, 2013-01-29 at 10:10 +0800, Gu Zheng wrote:
+> I think cause of the issue you mentioned is the device already exists when we resume.
+> Because we do not really suspend/remove the device when suspend, the device still exists, so 
+> we try to add the device when resume will failed. The suspend routine does not match the resume,
+> it seems a bug here.
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
-V2: Remove unnecessary copy/paste logic from pr_<level>
-    conversion above it.
-
- scripts/checkpatch.pl | 9 +++++++++
- 1 file changed, 9 insertions(+)
-
-diff --git a/scripts/checkpatch.pl b/scripts/checkpatch.pl
-index 9de3a69..9a1ae72 100755
---- a/scripts/checkpatch.pl
-+++ b/scripts/checkpatch.pl
-@@ -2425,6 +2425,15 @@ sub process {
- 			     "Prefer pr_warn(... to pr_warning(...\n" . $herecurr);
- 		}
- 
-+		if ($line =~ /\bdev_printk\s*\(\s*KERN_([A-Z]+)/) {
-+			my $orig = $1;
-+			my $level = lc($orig);
-+			$level = "warn" if ($level eq "warning");
-+			$level = "dbg" if ($level eq "debug");
-+			WARN("PREFER_DEV_LEVEL",
-+			     "Prefer dev_$level(... to dev_printk(KERN_$orig, ...\n" . $herecurr);
-+		}
-+
- # function brace can't be on same line, except for #defines of do while,
- # or if closed on same line
- 		if (($line=~/$Type\s*$Ident\(.*\).*\s{/) and
+Thanks. So should the fix here be to actually suspend and remove this
+device? (Note that pciehp_suspend() is now basically a NOP.)
 
 
+Paul Bolle
 
