@@ -1,67 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:58103 "EHLO hydra.sisk.pl"
+Received: from quartz.orcorp.ca ([184.70.90.242]:46944 "EHLO quartz.orcorp.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751342Ab3A2BJU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 28 Jan 2013 20:09:20 -0500
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Konstantin Khlebnikov <khlebnikov@openvz.org>,
-	linux-kernel@vger.kernel.org, e1000-devel@lists.sourceforge.net,
-	linux-pci@vger.kernel.org, Dave Airlie <airlied@redhat.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Subject: Re: [PATCH 3/5] PCI: revert preparing for wakeup in runtime-suspend finalization
-Date: Tue, 29 Jan 2013 02:15:30 +0100
-Message-ID: <1821500.CRlxLgYU5r@vostro.rjw.lan>
-In-Reply-To: <CAErSpo4sEv-Qw1iztGn-SsPKZ=Y+st-tPAFOvsp17MUo6X=xrA@mail.gmail.com>
-References: <20130118113019.6698.25941.stgit@zurg> <20130118114222.6698.7103.stgit@zurg> <CAErSpo4sEv-Qw1iztGn-SsPKZ=Y+st-tPAFOvsp17MUo6X=xrA@mail.gmail.com>
+	id S1752779Ab3A3E5B (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 29 Jan 2013 23:57:01 -0500
+Date: Tue, 29 Jan 2013 21:56:55 -0700
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Tawfik Bayouk <tawfik@marvell.com>
+Subject: Re: [PATCH v2 05/27] arm: pci: add a align_resource hook
+Message-ID: <20130130045655.GE5734@obsidianresearch.com>
+References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
+ <20130129155820.GB23505@n2100.arm.linux.org.uk>
+ <20130129172055.0ca5f341@skate>
+ <201301291645.08040.arnd@arndb.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201301291645.08040.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, January 28, 2013 04:17:42 PM Bjorn Helgaas wrote:
-> [+cc Rafael]
+On Tue, Jan 29, 2013 at 04:45:07PM +0000, Arnd Bergmann wrote:
+> On Tuesday 29 January 2013, Thomas Petazzoni wrote:
+> > And the Linux PCI resource allocation code complies with this, so that
+> > if I have two PCI-to-PCI bridges (each having downstream a device with
+> > an I/O BAR), then the first PCI-to-PCI bridge gets its I/O base address
+> > register set to ADDR + 0x0, and the second bridge gets its I/O base
+> > address set to ADDR + 0x1000. And this doesn't play well with the
+> > requirements of Marvell address decoding windows for PCIe I/O regions,
+> > which must be 64 KB aligned.
 > 
-> On Fri, Jan 18, 2013 at 4:42 AM, Konstantin Khlebnikov
-> <khlebnikov@openvz.org> wrote:
-> > This patch effectively reverts commit 42eca2302146fed51335b95128e949ee6f54478f
-> > ("PCI: Don't touch card regs after runtime suspend D3")
-> >
-> > | This patch checks whether the pci state is saved and doesn't attempt to hit
-> > | any registers after that point if it is.
-> >
-> > This seems completely wrong. Yes, PCI configuration space has been saved by
-> > driver, but this doesn't means that all job is done and device has been
-> > suspended and ready for waking up in the future.
-> >
-> > For example driver e1000e for ethernet in my thinkpad x220 saves pci-state
-> > but device cannot wakeup after that, because it needs some ACPI callbacks
-> > which usually called from pci_finish_runtime_suspend().
-> >
-> > | Optimus (dual-gpu) laptops seem to have their own form of D3cold, but
-> > | unfortunately enter it on normal D3 transitions via the ACPI callback.
-> >
-> > Hardware which disappears from the bus unexpectedly is exception, so let's
-> > handle it as an exception. Its driver should set device state to D3cold and
-> > the rest code will handle it properly.
-> 
-> Functions in D3cold don't have power, so it's completely expected that
-> they would disappear from the bus and not respond to config accesses.
-> Maybe Dave was referring to D3hot, where functions *should* respond to
-> config accesses.  I dunno.
-> 
-> Just to be clear, it sounds like 42eca230 caused a regression on your
-> e1000e device?  If so, I guess we should revert it unless you and Dave
-> can figure out a better patch that fixes both your e1000e device and
-> the Optimus issue.
+> But we normally only assign a 64 KB I/O window to each PCI host bridge.
+> Requiring PCI bridges to be space 64 KB apart would mean that we cannot
+> actually support bridges at all.
 
-Yes, if there's a regression, let's revert it, but I'd like the regression
-to be described clearly.
+The PCI resource code uses full 32 bit integers when it handles IO
+addresses, so this actually does sort of work out.
 
-Thanks,
-Rafael
+However, Thomas how did you recover the high bits of the
+IO window address from the bridge configuration? Are you reading the
+struct resource directly? That probably causes problems with
+hotplug/etc...
 
+If you look back in your old emails I outlined a solution to this
+using the MMU.
 
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+Jason
