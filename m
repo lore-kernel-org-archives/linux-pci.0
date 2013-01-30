@@ -1,151 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.8]:54034 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758251Ab3APKS4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Jan 2013 05:18:56 -0500
-Date: Wed, 16 Jan 2013 11:18:22 +0100
-From: Thierry Reding <thierry.reding@avionic-design.de>
+Received: from mail.free-electrons.com ([94.23.35.102]:39005 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753537Ab3A3ITH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Jan 2013 03:19:07 -0500
+Date: Wed, 30 Jan 2013 09:19:02 +0100
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
 To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
 Cc: Arnd Bergmann <arnd@arndb.de>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Jason Cooper <jason@lakedaemon.net>,
 	Stephen Warren <swarren@wwwdotorg.org>,
-	linux-tegra@vger.kernel.org,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Murray <andrew.murray@arm.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 05/14] lib: Add I/O map cache implementation
-Message-ID: <20130116101822.GA17706@avionic-0098.adnet.avionic-design.de>
-References: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de>
- <20130109231758.GA27065@obsidianresearch.com>
- <20130110071937.GG15212@avionic-0098.adnet.avionic-design.de>
- <201301100917.19577.arnd@arndb.de>
- <20130110102544.GA5546@avionic-0098.adnet.avionic-design.de>
- <20130110182007.GA28004@obsidianresearch.com>
- <20130110185505.GA22944@avionic-0098.adnet.avionic-design.de>
- <20130110190327.GA23110@avionic-0098.adnet.avionic-design.de>
- <20130110192417.GA18478@obsidianresearch.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="82I3+IH0IqGh5yIs"
-In-Reply-To: <20130110192417.GA18478@obsidianresearch.com>
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Tawfik Bayouk <tawfik@marvell.com>
+Subject: Re: [PATCH v2 05/27] arm: pci: add a align_resource hook
+Message-ID: <20130130091902.4607b34d@skate>
+In-Reply-To: <20130130045655.GE5734@obsidianresearch.com>
+References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	<20130129155820.GB23505@n2100.arm.linux.org.uk>
+	<20130129172055.0ca5f341@skate>
+	<201301291645.08040.arnd@arndb.de>
+	<20130130045655.GE5734@obsidianresearch.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Dear Jason Gunthorpe,
 
---82I3+IH0IqGh5yIs
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+On Tue, 29 Jan 2013 21:56:55 -0700, Jason Gunthorpe wrote:
 
-On Thu, Jan 10, 2013 at 12:24:17PM -0700, Jason Gunthorpe wrote:
-> On Thu, Jan 10, 2013 at 08:03:27PM +0100, Thierry Reding wrote:
->=20
-> > > > You'd piece a mapping together, each bus requires 16 64k mappings, a
-> > > > simple 2d array of busnr*16 of pointers would do the trick. A more
-> > > > clever solution would be to allocate contiguous virtual memory and
-> > > > split that up..
-> =20
-> > > Oh, I see. I'm not very familiar with the internals of remapping, so
-> > > I'll need to do some more reading. Thanks for the hints.
-> >=20
-> > I forgot to ask. What's the advantage of having a contiguous virtual
-> > memory area and splitting it up versus remapping each chunk separately?
->=20
-> Not alot, really, but it saves you from the pointer array and
-> associated overhead. IIRC it is fairly easy to do in the kernel.
->=20
-> Arnd's version is good too, but you would be restricted to aligned
-> powers of two for the bus number range in the DT, which is probably
-> not that big a deal either?
+> However, Thomas how did you recover the high bits of the
+> IO window address from the bridge configuration? Are you reading the
+> struct resource directly? That probably causes problems with
+> hotplug/etc...
 
-I've been trying to make this work, but this implementation always
-triggers a BUG_ON() in lib/ioremap.c, line 27:
+The PCI-to-PCI bridge configuration space has a register with the high
+bits of the I/O window address. If you look at the PCI-to-PCI emulation
+code, I set the bit that says "I'm a bridge capable of 32 bits
+addressing of I/O addresses", and then when setting up the windows, I
+reconstruct the full 32 bits address by reading the two I/O address
+registers.
 
-	27 		BUG_ON(!pte_none(*pte));
+See 3.2.5.6 in the PCI-to-PCI bridge specification:
 
-which seems to indicate that the page is already mapped, right?
+  If the low four bits of the I/O Base and I/O Limit registers are 01h,
+  then the bridge supports 32-bit I/O address decoding, and the I/O
+  Base Upper 16 Bits and the I/O Limit Upper 16 Bits hold the upper 16
+  bits, corresponding to AD[31::16], of the 32-bit I/O Base and I/O
+  Limit addresses respectively. In this case, system configuration
+  software is permitted to locate the I/O address range supported by
+  the anywhere in the 4-GB I/O Space. Note that the 4-KB alignment and
+  granularity restrictions still apply when the bridge supports 32 -bit
+  I/O addressing.
 
-Below is the relevant code:
+(And my code does ensure that the low four bits of the I/O Base and I/O
+Limit registers are 01h)
 
-struct tegra_pcie_bus {
-	struct vm_struct *area;
-	struct list_head list;
-	unsigned int nr;
-};
+Best regards,
 
-static struct tegra_pcie_bus *tegra_pcie_bus_alloc(struct tegra_pcie *pcie,
-						   unsigned int busnr)
-{
-	unsigned long flags =3D VM_READ | VM_WRITE | VM_IO | VM_PFNMAP |
-			      VM_DONTEXPAND | VM_DONTDUMP;
-	phys_addr_t cs =3D pcie->cs->start;
-	struct tegra_pcie_bus *bus;
-	struct vm_struct *vm;
-	unsigned int i;
-	int err;
-
-	bus =3D devm_kzalloc(pcie->dev, sizeof(*bus), GFP_KERNEL);
-	if (!bus)
-		return ERR_PTR(-ENOMEM);
-
-	INIT_LIST_HEAD(&bus->list);
-	bus->nr =3D busnr;
-
-	bus->area =3D get_vm_area(SZ_1M, VM_IOREMAP);
-	if (!bus->area) {
-		err =3D -ENOMEM;
-		goto free;
-	}
-
-	for (i =3D 0; i < 16; i++) {
-		unsigned long virt =3D (unsigned long)bus->area->addr +
-				     i * SZ_64K;
-		phys_addr_t phys =3D cs + busnr * SZ_64K + i * SZ_1M;
-
-		err =3D ioremap_page_range(virt, virt + SZ_64K - 1, phys,
-					 vm_get_page_prot(flags));
-		if (err < 0) {
-			dev_err(pcie->dev, "ioremap_page_range() failed: %d\n",
-				err);
-			goto unmap;
-		}
-	}
-
-	return bus;
-
-unmap:
-	vunmap(bus->area->addr);
-	free_vm_area(bus->area);
-free:
-	devm_kfree(pcie->dev, bus);
-	return ERR_PTR(err);
-}
-
-Anybody see what's wrong with that?
-
---82I3+IH0IqGh5yIs
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQIcBAEBAgAGBQJQ9n5tAAoJEN0jrNd/PrOhUlQP/RUVN/UfOSvzFvZTgmNnopVr
-uBS3wbP1GjJT+aMYih9UQyZMuyKfuiZrivc3pdcADdzxyrnNJ4nrHX/Ovsvbu274
-na483q/qLqwUCuU7oDg+0ntFC7XxPJadt2/vITq/MzhMRMy9V3cNBQAk+ga4NK/U
-WbZ4iX2sMsnJ6wQfFuLavOnXHivdGfgLZ2DaofoTb++TjlzO1bm5zh2rJ9Tc8VyM
-Umo93ebyGERRv/IsNGEfb3ZZ7QhyLcHsBDoow1XFfvja4poCumKNMHFz8bbiLK5w
-MOvEBoy/q+vwo7ZL3i3/YCxKxUoLQ/+dq6SbmXjDjVTjjiLWXH3t0lhkODoHsrWH
-YsiqBIK4bnDS6qNUGWYM8HlTzOHmhhIobkeT+Do/gA0P1gvsoKsh+YpfBiqVof27
-M9YDteY1M4pypSw6GctkDPwPTkSM1qCUpFXidvpya7jyrlMpncEG/NiYgEcGsNJP
-eyYJ+ky0CznzcuNukcGMa+NOt5eCZzBJnBmNoOU41M1kljZ06/AJKKOI8jsddf3q
-nZVDhxnavMXi7uagRpiQjc48oLdEVV2SdBtpVdLIQiHplme8EJj2sQ5c7/XY8WTd
-yVDcA3WWkdezFGWxya6C5sbsd2PI/G7qvg19h8GLQgC+CGS1ctRdYr/soLYBrMMT
-xIWtdPiPzIl1NqC6TT/S
-=z/1p
------END PGP SIGNATURE-----
-
---82I3+IH0IqGh5yIs--
+Thomas
+-- 
+Thomas Petazzoni, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
