@@ -1,67 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:5888 "EHLO mx1.redhat.com"
+Received: from quartz.orcorp.ca ([184.70.90.242]:47042 "EHLO quartz.orcorp.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756328Ab3AHRFn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 8 Jan 2013 12:05:43 -0500
-Message-ID: <50EC51E3.6070306@redhat.com>
-Date: Tue, 08 Jan 2013 12:05:39 -0500
-From: Don Dutile <ddutile@redhat.com>
+	id S1753400Ab3A3VG2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 30 Jan 2013 16:06:28 -0500
+Date: Wed, 30 Jan 2013 14:06:23 -0700
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Tawfik Bayouk <tawfik@marvell.com>
+Subject: Re: [PATCH v2 05/27] arm: pci: add a align_resource hook
+Message-ID: <20130130210623.GA5241@obsidianresearch.com>
+References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
+ <201301292254.01069.arnd@arndb.de>
+ <20130130042103.GB5734@obsidianresearch.com>
+ <201301300955.49473.arnd@arndb.de>
+ <20130130124721.0ad0294e@skate>
+ <CAErSpo4GKimzwTBB8aN4aj7ms=8pfkoV1=j8mstPDCxc-+gPxQ@mail.gmail.com>
 MIME-Version: 1.0
-To: tadeusz.struk@intel.com
-CC: bhelgaas@google.com, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI: Make pci_find_upstream_pcie_bridge() handle non
- PCIE VFs well
-References: <50ec2e19.EUrQfXEnsRJiPCTv%tadeusz.struk@intel.com>
-In-Reply-To: <50ec2e19.EUrQfXEnsRJiPCTv%tadeusz.struk@intel.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo4GKimzwTBB8aN4aj7ms=8pfkoV1=j8mstPDCxc-+gPxQ@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 01/08/2013 09:32 AM, tadeusz.struk@intel.com wrote:
-> pci_find_upstream_pcie_bridge() doesn't handle well non PCIE VFs
-> that are part of a PCIE PF device.
->
-> Signed-off-by: Tadeusz Struk<tadeusz.struk@intel.com>
-> ---
->   drivers/pci/search.c |    6 ++++++
->   1 files changed, 6 insertions(+), 0 deletions(-)
->
-> diff --git a/drivers/pci/search.c b/drivers/pci/search.c
-> index bf969ba..8ecdab2 100644
-> --- a/drivers/pci/search.c
-> +++ b/drivers/pci/search.c
-> @@ -23,6 +23,8 @@ EXPORT_SYMBOL_GPL(pci_bus_sem);
->    * if the device isn't connected to a PCIe bridge (that is its parent is a
->    * legacy PCI bridge and the bridge is directly connected to bus 0), return its
->    * parent
-> + * if the device is a VF that doesn't have PCIe cap,
-> + * but the PF is a PCIE, return NULL
->    */
->   struct pci_dev *
->   pci_find_upstream_pcie_bridge(struct pci_dev *pdev)
-> @@ -31,6 +33,10 @@ pci_find_upstream_pcie_bridge(struct pci_dev *pdev)
->
->   	if (pci_is_pcie(pdev))
->   		return NULL;
-> +
-> +	if (pdev->is_virtfn&&  pci_is_pcie(pdev->physfn))
-> +		return NULL;
-> +
->   	while (1) {
->   		if (pci_is_root_bus(pdev->bus))
->   			break;
+On Wed, Jan 30, 2013 at 01:48:33PM -0700, Bjorn Helgaas wrote:
 
-The verbage/description is confusing, and
-the comment doesn't match the code:
-(a) no such thing as a non-PCIe VF -- all VFs
-     are PCIe-based.
-(b) code says to return null if VF doesn't have PCIe cap,
-     but the code checks if pdev is VF and if PF is PCIe,
-     which it must be! ...
+> This is a tangent since you're removing the emulated host bridge
+> anyway, but it's been mentioned a couple of times, and I'd like to
+> understand this.  Jason mentioned earlier in the [07/27] emulated host
+> bridge thread that the PCIe spec requires a host bridge at 00:00.0.
+> I've never seen that mentioned in the spec; can somebody point me to
+> the actual requirement that host bridges appear in config space?
 
-nack until a better &/or matching explanation of what
-the real problem is, and what the solution is trying to do.
+Hum, a more careful search/reading brings up this:
 
-- Don
+7.2.2.1. Host Bridge Requirements
 
+ [...] The use of Host Bridge PCI class code is reserved for backwards
+ compatibility; host Bridge configuration space is opaque to standard
+ PCI Express software and may be implemented in an implementation
+ specific manner that is compatible with PCI Host Bridge Type 0
+ configuration space. A PCI Express Host Bridge is not required to
+ signal errors through a Root Complex Event Collector. This support is
+ optional for PCI Express Host Bridges.
+
+So, if it is present it is required to be compatible with the 'PCI
+Host Bridge' stuff, but it is not mandatory.
+
+My bad, I believe I got also confused with the spec language regarding
+a 'host bridge' vs a 'host bridge configuration space'
+
+Regards,
+Jason
