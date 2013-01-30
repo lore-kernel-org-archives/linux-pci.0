@@ -1,76 +1,109 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:57475 "EHLO quartz.orcorp.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752990Ab3A3EYt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 29 Jan 2013 23:24:49 -0500
-Date: Tue, 29 Jan 2013 21:24:46 -0700
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+Received: from mail.free-electrons.com ([94.23.35.102]:41201 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755752Ab3A3Qip (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Jan 2013 11:38:45 -0500
+Date: Wed, 30 Jan 2013 17:38:38 +0100
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	"Russell King - ARM Linux" <linux@arm.linux.org.uk>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
 	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
 	Stephen Warren <swarren@wwwdotorg.org>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>
-Subject: Re: [PATCH v2 19/27] pci: PCIe driver for Marvell Armada 370/XP
- systems
-Message-ID: <20130130042446.GC5734@obsidianresearch.com>
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	"Eran Ben-Avi" <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Tawfik Bayouk <tawfik@marvell.com>
+Subject: Re: [PATCH v2 05/27] arm: pci: add a align_resource hook
+Message-ID: <20130130173838.76114b4c@skate>
+In-Reply-To: <201301301617.38883.arnd@arndb.de>
 References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
- <1359399397-29729-20-git-send-email-thomas.petazzoni@free-electrons.com>
- <CAErSpo5H08j=dZx9zapDaf1c9x6VUfuJ5oB=J0M1UFF55pg=mw@mail.gmail.com>
- <20130129055508.GA3339@obsidianresearch.com>
- <CAErSpo7gCFfLB6+ebvANQjkr7Bii8Jqt3y5YqExD-DcnBG7hgA@mail.gmail.com>
- <20130129184157.GA29274@obsidianresearch.com>
- <CAErSpo5K8yKqjzQ6s+imb3d5wLSkhvWp-d=pPv9CZk+o67kyaQ@mail.gmail.com>
- <20130129191853.GB29274@obsidianresearch.com>
- <CAErSpo4Zvy7=ROajygecfsEFVJxy-yNbSntdQdDFcQBPz=Qgfg@mail.gmail.com>
- <CAErSpo41TbWTZ_6m0_uv-EaKnnqMR9jpqsarOJLGYZ31mrdkiw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo41TbWTZ_6m0_uv-EaKnnqMR9jpqsarOJLGYZ31mrdkiw@mail.gmail.com>
+	<201301300955.49473.arnd@arndb.de>
+	<20130130124721.0ad0294e@skate>
+	<201301301617.38883.arnd@arndb.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 29, 2013 at 03:27:43PM -0700, Bjorn Helgaas wrote:
+Dear Arnd Bergmann,
 
-> I'm not sure the existing emulation in these patches is sufficient.
-> For example, pci_sw_pci_bridge_write() updates bridge->membase when we
-> write to the window register, but I don't see anything that updates
-> the actual hardware decoder.  That might be done in
-> mvebu_pcie_window_config_port() via armada_370_xp_alloc_pcie_window(),
-> but that looks like it's only done once.  If the PCI core updates a
-> root port window later, I don't see where the hardware decoder will be
-> updated.
+On Wed, 30 Jan 2013 16:17:38 +0000, Arnd Bergmann wrote:
+
+> > However, one major drawback of my RFCv1 version is that since I didn't
+> > know how much I/O space and memory space was needed for each PCIe
+> > device, I had to oversize the address decoding windows. And also, I had
+> > to have a special allocator (certainly simple, but still) to find an
+> > available physical address to set up each address decoding window.
 > 
-> Maybe you're counting on the window assignments to be static?  The PCI
-> core doesn't guarantee anything like that, though in the absence of
-> hotplug I don't know any reason why it would change things.
- 
-Agree..
+> Well, for the I/O space, there is no oversizing because either way you
+> end up with exactly 64KB per root port, right?
 
-Thomas, I think you need to directly update the Marvell hardware
-registers when config writes are made to the SW bridge. If this means
-it is too hard/complex to keep the code general then I'd say make it
-part of the Marvell host driver.
+Correct I/O space is not an issue, of course. Only the memory windows
+are an issue (in terms of quantity of address space used).
 
-> I also forgot about the bus number munging in mvebu_pcie_rd_conf().
-> The PCI core can update the bridge secondary/subordinate registers.
-> It looks like you don't support writing to them, and the read path
-> (pci_sw_pci_bridge_read()) looks like it doesn't do any translation
-> between the hardware and Linux bus numbers.  I don't understand the
-> system well enough to know if this is an issue.
+That said, the PCI-to-PCI bridge solution doesn't solve the fact that
+I/O addresses get assigned even though the driver will most likely use
+them. This means that one I/O window is consumed for each PCIe
+interface, even though it is not being used in practice. And see I have
+10 PCIe interfaces in this SoC, and only 20 windows available globally
+(not only for PCIe, but also for NAND, NOR, etc.). But for now, I'd
+like to leave this potential problem on the side, and get something
+working. If it seems useful to remove this problem later, we'll work on
+it.
 
-I was chatting with Thomas on this subject, it looks like there is a
-HW register that needs to be set to the subordinate bus number of the
-bridge, that will solve this weirdness.
+> > Emulating a PCI-to-PCI bridge very nicely allows to re-use the PCI core
+> > resource allocation code. I think it's really the main reason for
+> > emulated those PCI-to-PCI bridges, rather than willing to comply to
+> > some standards.
+> > 
+> > So what I'm going to do now is rework my patch series by removing the
+> > emulated host bridge (which is normally mandatory by PCIe standard, but
+> > Linux doesn't need it, so we don't care), but I'll keep the emulated
+> > PCI-to-PCI bridges in order to benefit for the PCI core resource
+> > allocation mechanisms.
+> > 
+> > Is this ok for you?
+> 
+> Using the Linux allocator for memory resources does sound useful,
+> so if that requires using the emulated PCI-to-PCI bridges, I guess
+> it's the best compromise.
 
-Jason
+Yes, that was Jason's original idea when he suggested to use PCI-to-PCI
+bridges. And when I did the implementation, it really worked nicely.
+And this PCI-to-PCI bridge emulation stuff is really not a big deal,
+look at drivers/pci/sw-pci-pci-bridge.c: 185 lines in total, including
+10 lines of comment header at the top.
+
+> I'm sorry about this situation. Unfortunatly the way that such decisions
+> are made is not always straightforward, and what seems like a good idea
+> at one point turns out to be a mistake or more complex than anticipated
+> later. With the description of the first patch set, I did not think
+> it would be necessary to fake a bridge device and their config space.
+
+Sure, I understand this. I guess you also understand my slight
+frustration when I propose A, I'm told to do B, I propose B, and I'm
+then suggested to do A again :-) But I agree, it's part of the
+technical discussion, and we can't get it right on the first shot.
+
+> What I had guessed you could do was to call pci_scan_root_bus on
+> each of the ports, and then set up the memory space window for
+> the bus including all of its child devices.
+
+But where would I read how much space is needed for the I/O and memory
+regions of each bus?
+
+Thanks,
+
+Thomas
+-- 
+Thomas Petazzoni, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
