@@ -1,65 +1,78 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Tony Luck <tony.luck@intel.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, Jiang Liu <liuj97@gmail.com>,
-	Myron Stowe <myron.stowe@redhat.com>
-Subject: Re: [Alternative][PATCH] ACPI / PCI: Set root bridge ACPI handle in advance, v2
-Date: Fri, 11 Jan 2013 13:27:51 +0100
-Message-ID: <2117635.fU9qB3jgKg@vostro.rjw.lan>
-In-Reply-To: <3595317.Eh4AyqPa3o@vostro.rjw.lan>
-References: <1558789.gX8cmBgyDV@vostro.rjw.lan> <CAE9FiQXmOyWYhkc2fbjBvUqBFh7Ktf5E9X6Z8x0HguUdm8+mRw@mail.gmail.com> <3595317.Eh4AyqPa3o@vostro.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from moutng.kundenserver.de ([212.227.126.186]:60524 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752648Ab3A3J4m (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Jan 2013 04:56:42 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Subject: Re: [PATCH v2 05/27] arm: pci: add a align_resource hook
+Date: Wed, 30 Jan 2013 09:55:49 +0000
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	"Russell King - ARM Linux" <linux@arm.linux.org.uk>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	"Eran Ben-Avi" <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Tawfik Bayouk <tawfik@marvell.com>
+References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com> <201301292254.01069.arnd@arndb.de> <20130130042103.GB5734@obsidianresearch.com>
+In-Reply-To: <20130130042103.GB5734@obsidianresearch.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201301300955.49473.arnd@arndb.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, January 11, 2013 12:40:30 AM Rafael J. Wysocki wrote:
-> On Thursday, January 10, 2013 02:54:00 PM Yinghai Lu wrote:
-> > On Wed, Jan 9, 2013 at 3:06 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> > 
-> >  > arch/ia64/pci/pci.c        |    8 ++++++++
-> >  > arch/x86/include/asm/pci.h |    3 +++
-> >  >  arch/x86/pci/acpi.c        |    9 +++++++++
-> >  > drivers/acpi/pci_root.c    |   18 ------------------
-> >  > drivers/pci/pci-acpi.c     |   19 -------------------
-> >  >  drivers/pci/probe.c        |   16 ++++++++++++++++
-> >  >  include/acpi/acpi_bus.h    |    1 -
-> >  >  include/linux/pci.h        |    2 ++
-> >  >  8 files changed, 38 insertions(+), 38 deletions
-> > ...
-> > > I'll wait for comments from the others, if any, and put it into my acpi-scan
-> > > branch after a couple of days.  It doesn't need to be there technically, but
-> > > it's kind of related.
-> > 
-> > looks like you put it into acpi-scan-next instead.
-> > 
-> > and it does touch pci code.
-> > 
-> > can you put it in to acpi-scan ? so Bjorn could pull it again to pci/next.
+On Wednesday 30 January 2013, Jason Gunthorpe wrote:
+> On Tue, Jan 29, 2013 at 10:54:00PM +0000, Arnd Bergmann wrote:
+
+> > The part that I did not like about having emulated PCI-to-PCI bridges
+> > is that it seems to just work around a (percieved or real) limitation
+> > in the Linux kernel by adding a piece of infrastructure, rather than
+> > lifting that limitation by making the kernel deal with what the
+> > hardware provides. That reminded me of the original mach-vt8500
 > 
-> I will tomorrow.
+> Well.. in this case there is a standard - PCI-E for what HW vendors
+> are supposed to do. The kernel core code follows it and works with
+> compliant hardware.
+> 
+> Marvell HW is not compliant.
+> 
+> So..
+> 
+> Should the kernel core PCI code support this particular non-compliance?
+> Should the driver work around the non-compliance and present a
+> compliant interface to the kernel and userspace?
+> 
+> My take is the kernel core PCI code is fine, and I hope
+> this will be an isolated issue with one family of Marvell IP. So
+> working around the HW problem in the driver seems best.
 
-There is a problem with this, because the acpi-scan branch is based on v3.8-rc2
-that doesn't the contain __devinit removal in arch/ia64/pci/pci.c which conflicts
-with the version of the $subject patch I have in linux-next.  If I put this
-patch into acpi-scan and Bjorn pulls from it, he will need to resolve that
-conflict going forward and I will have to resolve it too, so we'll end up with
-two merge commits resolving the same conflict.
+I don't remember the kernel ever caring about whether hardware complies
+to a standard or not. The kernel's job is to make hardware work, based
+on the actual implementation of that hardware. In a lot of cases that
+means taking the standard document as a reference, and adding quirks
+for the devices that are different.
 
-For this reason, I think it would be better if Bjorn took the $subject patch
-directly to his tree, so I've dropped it from my linux-next branch.
+In the end, it comes down to the impact on the code complexity, and
+the run-time overhead for whatever hardware is most common when adding
+those quirks.
 
-Bjorn, can you please apply https://patchwork.kernel.org/patch/1956491/ directly?
+Can you (or someone else) describe what kind of changes to the core
+code we would actually need to make it work without emulting the
+bridge?
 
-Rafael
+> If we learn of many more instances like this then, yah, update the
+> core code and rip out this driver work around...
 
+But the code was specifically written to be reusable, which is normally
+a good thing.
 
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+	Arnd
