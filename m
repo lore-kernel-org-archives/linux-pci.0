@@ -1,259 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:33936 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751196Ab3ARHxz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Jan 2013 02:53:55 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v9 11/11] PCI: Put pci dev to device tree as early as possible
-Date: Thu, 17 Jan 2013 23:53:22 -0800
-Message-Id: <1358495602-22867-12-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1358495602-22867-1-git-send-email-yinghai@kernel.org>
-References: <1358495602-22867-1-git-send-email-yinghai@kernel.org>
+Received: from quartz.orcorp.ca ([184.70.90.242]:50409 "EHLO quartz.orcorp.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753281Ab3A3EVI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 29 Jan 2013 23:21:08 -0500
+Date: Tue, 29 Jan 2013 21:21:03 -0700
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Tawfik Bayouk <tawfik@marvell.com>
+Subject: Re: [PATCH v2 05/27] arm: pci: add a align_resource hook
+Message-ID: <20130130042103.GB5734@obsidianresearch.com>
+References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
+ <201301292015.21478.arnd@arndb.de>
+ <20130129213308.7e845064@skate>
+ <201301292254.01069.arnd@arndb.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201301292254.01069.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We want to put created pci device in the device tree as soon as possible.
-- just after we find it and create pci_dev struct for it.
-so for_pci_dev iteration will not miss them.
+On Tue, Jan 29, 2013 at 10:54:00PM +0000, Arnd Bergmann wrote:
 
-But at that time, we can not load driver for them yet. Need to be after
-pci_assign_unsigned_resources() etc to make sure all pci devices get
-resource allocated at first.
+> I'm actually fine with either of the two suggestions you mentioned above,
+> whichever is easier to implement and/or more closely matches what the
+> hardware actually implements is better IMHO.
+> 
+> The part that I did not like about having emulated PCI-to-PCI bridges
+> is that it seems to just work around a (percieved or real) limitation
+> in the Linux kernel by adding a piece of infrastructure, rather than
+> lifting that limitation by making the kernel deal with what the
+> hardware provides. That reminded me of the original mach-vt8500
 
-Move out device registering out of pci_bus_add_devices, and
-new pci_bus_add_devices() will do the device_attach work to load pci drivers
+Well.. in this case there is a standard - PCI-E for what HW vendors
+are supposed to do. The kernel core code follows it and works with
+compliant hardware.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/bus.c   |   47 +++--------------------------------------------
- drivers/pci/iov.c   |    7 -------
- drivers/pci/probe.c |   34 +++++++++++++++++++++++++++-------
- 3 files changed, 30 insertions(+), 58 deletions(-)
+Marvell HW is not compliant.
 
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index 18c1c6d..0a55845 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -178,22 +178,9 @@ static void pci_bus_attach_device(struct pci_dev *dev)
-  */
- int pci_bus_add_device(struct pci_dev *dev)
- {
--	int retval;
--
--	pci_fixup_device(pci_fixup_final, dev);
--
--	retval = pcibios_add_device(dev);
--	if (retval)
--		return retval;
--
--	retval = device_add(&dev->dev);
--	if (retval)
--		return retval;
--
- 	pci_bus_attach_device(dev);
- 	dev->is_added = 1;
--	pci_proc_attach_device(dev);
--	pci_create_sysfs_dev_files(dev);
-+
- 	return 0;
- }
- 
-@@ -205,21 +192,9 @@ int pci_bus_add_device(struct pci_dev *dev)
-  */
- int pci_bus_add_child(struct pci_bus *bus)
- {
--	int retval;
--
--	if (bus->bridge)
--		bus->dev.parent = bus->bridge;
--
--	retval = device_register(&bus->dev);
--	if (retval)
--		return retval;
--
- 	bus->is_added = 1;
- 
--	/* Create legacy_io and legacy_mem files for this bus */
--	pci_create_legacy_files(bus);
--
--	return retval;
-+	return 0;
- }
- 
- /**
-@@ -245,36 +220,20 @@ void pci_bus_add_devices(const struct pci_bus *bus)
- 		if (dev->is_added)
- 			continue;
- 		retval = pci_bus_add_device(dev);
--		if (retval)
--			dev_err(&dev->dev, "Error adding device, continuing\n");
- 	}
- 
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
- 		BUG_ON(!dev->is_added);
- 
- 		child = dev->subordinate;
--		/*
--		 * If there is an unattached subordinate bus, attach
--		 * it and then scan for unattached PCI devices.
--		 */
-+
- 		if (!child)
- 			continue;
--		if (list_empty(&child->node)) {
--			down_write(&pci_bus_sem);
--			list_add_tail(&child->node, &dev->bus->children);
--			up_write(&pci_bus_sem);
--		}
- 		pci_bus_add_devices(child);
- 
--		/*
--		 * register the bus with sysfs as the parent is now
--		 * properly registered.
--		 */
- 		if (child->is_added)
- 			continue;
- 		retval = pci_bus_add_child(child);
--		if (retval)
--			dev_err(&dev->dev, "Error adding bus, continuing\n");
- 	}
- }
- 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index bafd2bb..dbad72e 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -48,12 +48,7 @@ static struct pci_bus *virtfn_add_bus(struct pci_bus *bus, int busnr)
- 		return NULL;
- 
- 	pci_bus_insert_busn_res(child, busnr, busnr);
--	child->dev.parent = bus->bridge;
- 	rc = pci_bus_add_child(child);
--	if (rc) {
--		pci_remove_bus(child);
--		return NULL;
--	}
- 
- 	return child;
- }
-@@ -123,8 +118,6 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
- 	virtfn->is_virtfn = 1;
- 
- 	rc = pci_bus_add_device(virtfn);
--	if (rc)
--		goto failed1;
- 	sprintf(buf, "virtfn%u", id);
- 	rc = sysfs_create_link(&dev->dev.kobj, &virtfn->dev.kobj, buf);
- 	if (rc)
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 9588207..6392dac 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -623,6 +623,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
- {
- 	struct pci_bus *child;
- 	int i;
-+	int ret;
- 
- 	/*
- 	 * Allocate a new bus, and inherit stuff from the parent..
-@@ -637,8 +638,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
- 	child->bus_flags = parent->bus_flags;
- 
- 	/* initialize some portions of the bus device, but don't register it
--	 * now as the parent is not properly set up yet.  This device will get
--	 * registered later in pci_bus_add_devices()
-+	 * now as the parent is not properly set up yet.
- 	 */
- 	child->dev.class = &pcibus_class;
- 	dev_set_name(&child->dev, "%04x:%02x", pci_domain_nr(child), busnr);
-@@ -651,11 +651,14 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
- 	child->primary = parent->busn_res.start;
- 	child->busn_res.end = 0xff;
- 
--	if (!bridge)
--		return child;
-+	if (!bridge) {
-+		child->dev.parent = parent->bridge;
-+		goto add_dev;
-+	}
- 
- 	child->self = bridge;
- 	child->bridge = get_device(&bridge->dev);
-+	child->dev.parent = child->bridge;
- 	pci_set_bus_of_node(child);
- 	pci_set_bus_speed(child);
- 
-@@ -666,6 +669,13 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
- 	}
- 	bridge->subordinate = child;
- 
-+add_dev:
-+	ret = device_register(&child->dev);
-+	WARN_ON(ret < 0);
-+
-+	/* Create legacy_io and legacy_mem files for this bus */
-+	pci_create_legacy_files(child);
-+
- 	return child;
- }
- 
-@@ -1296,6 +1306,8 @@ static void pci_init_capabilities(struct pci_dev *dev)
- 
- void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
- {
-+	int ret;
-+
- 	device_initialize(&dev->dev);
- 	dev->dev.release = pci_release_dev;
- 
-@@ -1326,6 +1338,16 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
- 	down_write(&pci_bus_sem);
- 	list_add_tail(&dev->bus_list, &bus->devices);
- 	up_write(&pci_bus_sem);
-+
-+	pci_fixup_device(pci_fixup_final, dev);
-+	ret = pcibios_add_device(dev);
-+	WARN_ON(ret < 0);
-+	/* notifier could use pci capabilities */
-+	ret = device_add(&dev->dev);
-+	WARN_ON(ret < 0);
-+
-+	pci_proc_attach_device(dev);
-+	pci_create_sysfs_dev_files(dev);
- }
- 
- struct pci_dev *__ref pci_scan_single_device(struct pci_bus *bus, int devfn)
-@@ -1656,13 +1678,13 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 	char bus_addr[64];
- 	char *fmt;
- 
--
- 	b = pci_alloc_bus();
- 	if (!b)
- 		return NULL;
- 
- 	b->sysdata = sysdata;
- 	b->ops = ops;
-+	b->number = b->busn_res.start = bus;
- 	b2 = pci_find_bus(pci_domain_nr(b), bus);
- 	if (b2) {
- 		/* If we already got to this bus through a different bridge, ignore it */
-@@ -1701,8 +1723,6 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 	/* Create legacy_io and legacy_mem files for this bus */
- 	pci_create_legacy_files(b);
- 
--	b->number = b->busn_res.start = bus;
--
- 	if (parent)
- 		dev_info(parent, "PCI host bridge to bus %s\n", dev_name(&b->dev));
- 	else
--- 
-1.7.10.4
+So..
 
+Should the kernel core PCI code support this particular non-compliance?
+Should the driver work around the non-compliance and present a
+compliant interface to the kernel and userspace?
+
+My take is the kernel core PCI code is fine, and I hope
+this will be an isolated issue with one family of Marvell IP. So
+working around the HW problem in the driver seems best.
+
+If we learn of many more instances like this then, yah, update the
+core code and rip out this driver work around...
+
+Jason
