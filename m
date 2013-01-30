@@ -1,95 +1,57 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Thierry Reding <thierry.reding@avionic-design.de>
-To: linux-tegra@vger.kernel.org
-Cc: Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Murray <andrew.murray@arm.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
-Subject: [PATCH 02/14] of/pci: Add of_pci_get_devfn() function
-Date: Wed,  9 Jan 2013 21:43:02 +0100
-Message-Id: <1357764194-12677-3-git-send-email-thierry.reding@avionic-design.de>
-In-Reply-To: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de>
-References: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from cn.fujitsu.com ([222.73.24.84]:35686 "EHLO song.cn.fujitsu.com"
+	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S1753194Ab3A3DsB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 29 Jan 2013 22:48:01 -0500
+Message-ID: <510897EA.4080605@cn.fujitsu.com>
+Date: Wed, 30 Jan 2013 11:47:54 +0800
+From: Gu Zheng <guz.fnst@cn.fujitsu.com>
+MIME-Version: 1.0
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+CC: Paul Bolle <pebolle@tiscali.nl>, Oliver Neukum <oneukum@suse.de>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: pciehp: errors on resume
+References: <1359377173.1345.25.camel@x61.thuisdomein> <51072F83.7040102@cn.fujitsu.com> <1359455732.1345.46.camel@x61.thuisdomein> <3774810.Obias7PJ4I@vostro.rjw.lan>
+In-Reply-To: <3774810.Obias7PJ4I@vostro.rjw.lan>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This function can be used to parse the device and function number from a
-standard 5-cell PCI resource. PCI_SLOT() and PCI_FUNC() can be used on
-the returned value obtain the device and function numbers respectively.
+On 01/29/2013 07:35 PM, Rafael J. Wysocki wrote:
 
-Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
----
- drivers/of/of_pci.c    | 32 ++++++++++++++++++++++++++++----
- include/linux/of_pci.h |  1 +
- 2 files changed, 29 insertions(+), 4 deletions(-)
+> On Tuesday, January 29, 2013 11:35:32 AM Paul Bolle wrote:
+>> Gu,
+>>
+>> On Tue, 2013-01-29 at 10:10 +0800, Gu Zheng wrote:
+>>> I think cause of the issue you mentioned is the device already exists when we resume.
+>>> Because we do not really suspend/remove the device when suspend, the device still exists, so 
+>>> we try to add the device when resume will failed. The suspend routine does not match the resume,
+>>> it seems a bug here.
+>>
+>> Thanks. So should the fix here be to actually suspend and remove this
+>> device? (Note that pciehp_suspend() is now basically a NOP.)
+> 
+> I think it wouldn't be useful to remove devices on all suspends, but then there
+> are a few different situations that resume has to consider and handle correctly:
+> 
+> 1) Device has been removed while suspended.
+> 2) Device was present before suspend and is still there.
+> 3) Device has been added while suspended.
+> 
 
-diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
-index 13e37e2..0dd52df 100644
---- a/drivers/of/of_pci.c
-+++ b/drivers/of/of_pci.c
-@@ -7,12 +7,13 @@
- static inline int __of_pci_pci_compare(struct device_node *node,
- 				       unsigned int devfn)
- {
--	unsigned int size;
--	const __be32 *reg = of_get_property(node, "reg", &size);
-+	int err;
- 
--	if (!reg || size < 5 * sizeof(__be32))
-+	err = of_pci_get_devfn(node);
-+	if (err < 0)
- 		return 0;
--	return ((be32_to_cpup(&reg[0]) >> 8) & 0xff) == devfn;
-+
-+	return devfn == err;
- }
- 
- struct device_node *of_pci_find_child_device(struct device_node *parent,
-@@ -40,3 +41,26 @@ struct device_node *of_pci_find_child_device(struct device_node *parent,
- 	return NULL;
- }
- EXPORT_SYMBOL_GPL(of_pci_find_child_device);
-+
-+/**
-+ * of_pci_get_devfn() - Get device and function numbers for a device node
-+ * @np: device node
-+ *
-+ * Parses a standard 5-cell PCI resource and returns an 8-bit value that can
-+ * be passed to the PCI_SLOT() and PCI_FUNC() macros to extract the device
-+ * and function numbers respectively. On error a negative error code is
-+ * returned.
-+ */
-+int of_pci_get_devfn(struct device_node *np)
-+{
-+	unsigned int size;
-+	const __be32 *reg;
-+
-+	reg = of_get_property(np, "reg", &size);
-+
-+	if (!reg || size < 5 * sizeof(__be32))
-+		return -EINVAL;
-+
-+	return (be32_to_cpup(reg) >> 8) & 0xff;
-+}
-+EXPORT_SYMBOL_GPL(of_pci_get_devfn);
-diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
-index bb115de..91ec484 100644
---- a/include/linux/of_pci.h
-+++ b/include/linux/of_pci.h
-@@ -10,5 +10,6 @@ int of_irq_map_pci(const struct pci_dev *pdev, struct of_irq *out_irq);
- struct device_node;
- struct device_node *of_pci_find_child_device(struct device_node *parent,
- 					     unsigned int devfn);
-+int of_pci_get_devfn(struct device_node *np);
- 
- #endif
--- 
-1.8.1
+Hi Rafael,
+	Though removing devices on all suspends does not seem useful, I do not think
+let the pciehp_suspend() be a NOP and the resume handle all the conditions is a good way.
+Do the current pciehp driver's suspend and resume routines follow the pcie specification?
+And, what's the difficulty to detect and handle the different situations that you mentioned
+above?
+
+Thanks,
+Gu
+
+> Thanks,
+> Rafael
+> 
+> 
+
 
