@@ -1,88 +1,63 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [PATCH v8 05/22] PCI: make PCI device create/destroy logic symmetric
-Date: Fri, 11 Jan 2013 14:40:32 -0800
-Message-Id: <1357944049-29620-6-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1357944049-29620-1-git-send-email-yinghai@kernel.org>
-References: <1357944049-29620-1-git-send-email-yinghai@kernel.org>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from quartz.orcorp.ca ([184.70.90.242]:56534 "EHLO quartz.orcorp.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755034Ab3A3XKd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 30 Jan 2013 18:10:33 -0500
+Date: Wed, 30 Jan 2013 16:10:35 -0700
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>
+Subject: Re: [PATCH v2 19/27] pci: PCIe driver for Marvell Armada 370/XP
+ systems
+Message-ID: <20130130231035.GB7395@obsidianresearch.com>
+References: <20130129055508.GA3339@obsidianresearch.com>
+ <CAErSpo7gCFfLB6+ebvANQjkr7Bii8Jqt3y5YqExD-DcnBG7hgA@mail.gmail.com>
+ <20130129184157.GA29274@obsidianresearch.com>
+ <CAErSpo5K8yKqjzQ6s+imb3d5wLSkhvWp-d=pPv9CZk+o67kyaQ@mail.gmail.com>
+ <20130129191853.GB29274@obsidianresearch.com>
+ <CAErSpo4Zvy7=ROajygecfsEFVJxy-yNbSntdQdDFcQBPz=Qgfg@mail.gmail.com>
+ <CAErSpo41TbWTZ_6m0_uv-EaKnnqMR9jpqsarOJLGYZ31mrdkiw@mail.gmail.com>
+ <20130130103501.1873d39c@skate>
+ <CAErSpo5NTyrHv8AQkw3hYpJRiZsk1HKHP3jP_MMpEVVhCgjKYg@mail.gmail.com>
+ <20130130232836.1b1fd89b@skate>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130130232836.1b1fd89b@skate>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <jiang.liu@huawei.com>
+On Wed, Jan 30, 2013 at 11:28:36PM +0100, Thomas Petazzoni wrote:
 
-According to device model documentation, the way to create/destroy PCI
-devices should be symmetric.
+> > It looks like your current system doesn't support trees below the
+> > bridges, but hopefully we can make it so the generic enumeration
+> > algorithms still work.
+> 
+> In practice, in our situation, there isn't a tree below the bridge.
+> There is one single device. I'd prefer to not implement features that I
+> cannot effectively test, and let the implementation of those additional
+> features to whoever will need them, and therefore be able to test
+> them.
 
-/**
- * device_del - delete device from system.
- * @dev: device.
- *
- * This is the first part of the device unregistration
- * sequence. This removes the device from the lists we control
- * from here, has it removed from the other driver model
- * subsystems it was added to in device_add(), and removes it
- * from the kobject hierarchy.
- *
- * NOTE: this should be called manually _iff_ device_add() was
- * also called manually.
- */
+Agreed it is hard to test, but be aware that any system that has PCI-E
+slots can host an add-in card that has a bridge on it. These are midly
+common in some areas like high port count ethernet cards.
 
-The rule is to either use
-1) device_register()/device_unregister()
-or
-2) device_initialize()/device_add()/device_del()/put_device().
+If you aren't going to attempt the implementation then a really big
+FIXME that the config access routing is not correct and needs to be
+based on the bus range assigned to the bridge would be friendly :)
 
-So change PCI core logic to follow the rule and get rid of the redundant
-pci_dev_get()/pci_dev_put() pair.
-
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-Signed-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/probe.c  |    1 -
- drivers/pci/remove.c |    4 ++--
- 2 files changed, 2 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index b97dea5..48b35e1 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1298,7 +1298,6 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
- {
- 	device_initialize(&dev->dev);
- 	dev->dev.release = pci_release_dev;
--	pci_dev_get(dev);
- 
- 	set_dev_node(&dev->dev, pcibus_to_node(bus));
- 	dev->dev.dma_mask = &dev->dma_mask;
-diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-index 7c0fd92..fc38c48 100644
---- a/drivers/pci/remove.c
-+++ b/drivers/pci/remove.c
-@@ -22,7 +22,7 @@ static void pci_stop_dev(struct pci_dev *dev)
- 	if (dev->is_added) {
- 		pci_proc_detach_device(dev);
- 		pci_remove_sysfs_dev_files(dev);
--		device_unregister(&dev->dev);
-+		device_del(&dev->dev);
- 		dev->is_added = 0;
- 	}
- 
-@@ -37,7 +37,7 @@ static void pci_destroy_dev(struct pci_dev *dev)
- 	up_write(&pci_bus_sem);
- 
- 	pci_free_resources(dev);
--	pci_dev_put(dev);
-+	put_device(&dev->dev);
- }
- 
- void pci_remove_bus(struct pci_bus *bus)
--- 
-1.7.10.4
-
+Jason
