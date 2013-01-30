@@ -1,78 +1,109 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 11 Jan 2013 04:40:15 +0100
-From: Thierry Reding <thierry.reding@avionic-design.de>
-To: Stephen Warren <swarren@wwwdotorg.org>
-Cc: linux-tegra@vger.kernel.org,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Murray <andrew.murray@arm.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from caramon.arm.linux.org.uk ([78.32.30.218]:59119 "EHLO
+	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753444Ab3A3PqS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Jan 2013 10:46:18 -0500
+Date: Wed, 30 Jan 2013 15:46:02 +0000
+From: Russell King - ARM Linux <linux@arm.linux.org.uk>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Thierry Reding <thierry.reding@avionic-design.de>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Jason Cooper <jason@lakedaemon.net>,
 	Arnd Bergmann <arnd@arndb.de>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 10/14] PCI: tegra: Move PCIe driver to drivers/pci/host
-Message-ID: <20130111034015.GA28094@avionic-0098.adnet.avionic-design.de>
-References: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de>
- <1357764194-12677-11-git-send-email-thierry.reding@avionic-design.de>
- <50EF54B6.6010100@wwwdotorg.org>
+	Maen Suleiman <maen@marvell.com>, linux-pci@vger.kernel.org,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Subject: Re: [PATCH v2 19/27] pci: PCIe driver for Marvell Armada 370/XP
+	systems
+Message-ID: <20130130154602.GL23505@n2100.arm.linux.org.uk>
+References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com> <1359399397-29729-20-git-send-email-thomas.petazzoni@free-electrons.com> <20130130113245.GH23505@n2100.arm.linux.org.uk> <20130130120344.GA29490@avionic-0098.mockup.avionic-design.de> <20130130150856.GJ23505@n2100.arm.linux.org.uk> <20130130151934.GK23505@n2100.arm.linux.org.uk> <20130130163659.75360dba@skate>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="MGYHOYXEY6WxJCY8"
-In-Reply-To: <50EF54B6.6010100@wwwdotorg.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130130163659.75360dba@skate>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Wed, Jan 30, 2013 at 04:36:59PM +0100, Thomas Petazzoni wrote:
+> Dear Russell King - ARM Linux,
+> 
+> On Wed, 30 Jan 2013 15:19:34 +0000, Russell King - ARM Linux wrote:
+> > diff --git a/arch/arm/include/asm/mach/pci.h b/arch/arm/include/asm/mach/pci.h
+> > index db9fedb..bba0cf3 100644
+> > --- a/arch/arm/include/asm/mach/pci.h
+> > +++ b/arch/arm/include/asm/mach/pci.h
+> > @@ -29,6 +29,7 @@ struct hw_pci {
+> >  	void		(*postinit)(void);
+> >  	u8		(*swizzle)(struct pci_dev *dev, u8 *pin);
+> >  	int		(*map_irq)(const struct pci_dev *dev, u8 slot, u8 pin);
+> > +	resource_size_t	(*window_align)(struct pci_bus *, unsigned long);
+> >  };
+> 
+> Didn't you say just yesterday that you would prefer a numerical value
+> rather than a hook that could do random things? :-)
 
---MGYHOYXEY6WxJCY8
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Hrh, right. :)
 
-On Thu, Jan 10, 2013 at 04:54:30PM -0700, Stephen Warren wrote:
-> On 01/09/2013 01:43 PM, Thierry Reding wrote:
-> > Move the PCIe driver from arch/arm/mach-tegra into the drivers/pci/host
-> > directory. The motivation is to collect various host controller drivers
-> > in the same location in order to facilitate refactoring.
-> >=20
-> > The Tegra PCIe driver has been largely rewritten, both in order to turn
-> > it into a proper platform driver and to add MSI (based on code by
-> > Krishna Kishore <kthota@nvidia.com>) as well as device tree support.
->=20
-> This driver doesn't compile unless CONFIG_PCI_MSI is also enabled.
-> Should it select that, or contain a few ifdefs?
->=20
-> drivers/pci/host/pci-tegra.c:900: undefined reference to `write_msi_msg'
+And it also helps if I modify the right struct too!  Try this instead.
+Overwrite sys->win_align_mem / sys->win_align_io in the setup function
+as required.
 
-Right, it'll need #ifdefs around the arch_{setup,teardown}_msi_irq(). Or
-select PCI_MSI unconditionally. Once this is merged I was going to post
-a patch that enables PCI_MSI in tegra_defconfig anyway. But it might be
-better to keep it optional anyway since the remainder of the code copes
-with it properly.
+ arch/arm/include/asm/mach/pci.h |    2 ++
+ arch/arm/kernel/bios32.c        |   17 +++++++++++++++++
+ 2 files changed, 19 insertions(+), 0 deletions(-)
 
-Thierry
-
---MGYHOYXEY6WxJCY8
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQIcBAEBAgAGBQJQ74mfAAoJEN0jrNd/PrOhjbsP/2W/s/cNZbYyUEqt7o5TBlFQ
-fthSHLtiGCfJ3L+20feBFQ0gS6sQqC4uqvBPJG28g0hwXnAuJrIpzvu0JXfTH+cZ
-USPeEIV/pJBhZV15b3v53wFbNvGAAr/44nm1XEyjtmNd/HEXH4hlupBWs+xzUA+z
-cJJPtu8HaMvS67D93cj5IEDHaC6YMs12xK52/IQThOxqV50sa6bsnwqB4X99W0bj
-TdJZBnUcVpOzHc2HXcuyqzMjwlH0k8RVJLq5sBz9+mjUwkLjrHy5a8DBQ0pnOQEF
-y7BmSEpwpqMl5aHN/7zr9WM5WWlmLNN0puTc0s81Xb8bEm6HfXjbLY1YEYQbOmTb
-+maRcSNKKwmp7EPun7iTHxLOFCIKqSRUe4erV8SsG1IfRPFoc3LCmznNC6He+YaQ
-bu3H3+IcgId75p6fQ883TEWHlrYbzkaAgeudmVZguDTE8UbDw23C7YDeOP0UQMT1
-PAJNLCv5vDdcG++TqBa2T5gLQ1L6mrDu1HzYq+YyLnvOu+af+6NN/UakdDg7qHy8
-yXIhG0COBPc35fM0e/3UTp2fenEpGI9nNGk01tiRXCw0uURES/F7sw0MspQ0IgxF
-Y8z8cw8cQwIVSx11+qJOIhIRFNR/IsGOViMUZsyx2g1JPvzwXP2OgcCNv6gu0bgN
-j8Lgr4VVNq943c+Y6ds4
-=nSC6
------END PGP SIGNATURE-----
-
---MGYHOYXEY6WxJCY8--
+diff --git a/arch/arm/include/asm/mach/pci.h b/arch/arm/include/asm/mach/pci.h
+index db9fedb..a2301ae 100644
+--- a/arch/arm/include/asm/mach/pci.h
++++ b/arch/arm/include/asm/mach/pci.h
+@@ -42,6 +42,8 @@ struct pci_sys_data {
+ 	int		busnr;		/* primary bus number			*/
+ 	u64		mem_offset;	/* bus->cpu memory mapping offset	*/
+ 	unsigned long	io_offset;	/* bus->cpu IO mapping offset		*/
++	resource_size_t	win_align_mem;
++	resource_size_t	win_align_io;
+ 	struct pci_bus	*bus;		/* PCI bus				*/
+ 	struct list_head resources;	/* root bus resources (apertures)       */
+ 	struct resource io_res;
+diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
+index 379cf32..ba81630 100644
+--- a/arch/arm/kernel/bios32.c
++++ b/arch/arm/kernel/bios32.c
+@@ -463,6 +463,8 @@ static void __init pcibios_init_hw(struct hw_pci *hw, struct list_head *head)
+ 		sys->swizzle = hw->swizzle;
+ 		sys->map_irq = hw->map_irq;
+ 		INIT_LIST_HEAD(&sys->resources);
++		sys->win_align_mem = 1;
++		sys->win_align_io = 1;
+ 
+ 		ret = hw->setup(nr, sys);
+ 
+@@ -581,6 +583,21 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+ 	return start;
+ }
+ 
++resource_size_t pcibios_window_alignment(struct pci_bus *bus,
++					 unsigned long type)
++{
++	struct pci_sys_data *sys = bus->sysdata;
++
++	/* Ignore downstream buses */
++	if (!bus->parent) {
++		if (type & IORESOURCE_MEM)
++			return sys->win_align_mem;
++		if (type & IORESOURCE_IO)
++			return sys->win_align_io;
++	}
++	return 1;
++}
++
+ /**
+  * pcibios_enable_device - Enable I/O and memory.
+  * @dev: PCI device to be enabled
