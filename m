@@ -1,9 +1,9 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:49118 "EHLO quartz.orcorp.ca"
+Received: from quartz.orcorp.ca ([184.70.90.242]:57475 "EHLO quartz.orcorp.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753330Ab3A2FzQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 29 Jan 2013 00:55:16 -0500
-Date: Mon, 28 Jan 2013 22:55:08 -0700
+	id S1752990Ab3A3EYt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 29 Jan 2013 23:24:49 -0500
+Date: Tue, 29 Jan 2013 21:24:46 -0700
 From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
 Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
@@ -23,98 +23,54 @@ Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
 	Russell King - ARM Linux <linux@arm.linux.org.uk>
 Subject: Re: [PATCH v2 19/27] pci: PCIe driver for Marvell Armada 370/XP
  systems
-Message-ID: <20130129055508.GA3339@obsidianresearch.com>
+Message-ID: <20130130042446.GC5734@obsidianresearch.com>
 References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
  <1359399397-29729-20-git-send-email-thomas.petazzoni@free-electrons.com>
  <CAErSpo5H08j=dZx9zapDaf1c9x6VUfuJ5oB=J0M1UFF55pg=mw@mail.gmail.com>
+ <20130129055508.GA3339@obsidianresearch.com>
+ <CAErSpo7gCFfLB6+ebvANQjkr7Bii8Jqt3y5YqExD-DcnBG7hgA@mail.gmail.com>
+ <20130129184157.GA29274@obsidianresearch.com>
+ <CAErSpo5K8yKqjzQ6s+imb3d5wLSkhvWp-d=pPv9CZk+o67kyaQ@mail.gmail.com>
+ <20130129191853.GB29274@obsidianresearch.com>
+ <CAErSpo4Zvy7=ROajygecfsEFVJxy-yNbSntdQdDFcQBPz=Qgfg@mail.gmail.com>
+ <CAErSpo41TbWTZ_6m0_uv-EaKnnqMR9jpqsarOJLGYZ31mrdkiw@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo5H08j=dZx9zapDaf1c9x6VUfuJ5oB=J0M1UFF55pg=mw@mail.gmail.com>
+In-Reply-To: <CAErSpo41TbWTZ_6m0_uv-EaKnnqMR9jpqsarOJLGYZ31mrdkiw@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jan 28, 2013 at 08:29:24PM -0700, Bjorn Helgaas wrote:
-> On Mon, Jan 28, 2013 at 11:56 AM, Thomas Petazzoni
-> <thomas.petazzoni@free-electrons.com> wrote:
-> > This driver implements the support for the PCIe interfaces on the
-> > Marvell Armada 370/XP ARM SoCs. In the future, it might be extended to
-> > cover earlier families of Marvell SoCs, such as Dove, Orion and
-> > Kirkwood.
-> >
-> > The driver implements the hw_pci operations needed by the core ARM PCI
-> > code to setup PCI devices and get their corresponding IRQs, and the
-> > pci_ops operations that are used by the PCI core to read/write the
-> > configuration space of PCI devices.
-> >
-> > Since the PCIe interfaces of Marvell SoCs are completely separate and
-> > not linked together in a bus, this driver sets up an emulated PCI host
-> > bridge, with one PCI-to-PCI bridge as child for each hardware PCIe
-> > interface.
+On Tue, Jan 29, 2013 at 03:27:43PM -0700, Bjorn Helgaas wrote:
+
+> I'm not sure the existing emulation in these patches is sufficient.
+> For example, pci_sw_pci_bridge_write() updates bridge->membase when we
+> write to the window register, but I don't see anything that updates
+> the actual hardware decoder.  That might be done in
+> mvebu_pcie_window_config_port() via armada_370_xp_alloc_pcie_window(),
+> but that looks like it's only done once.  If the PCI core updates a
+> root port window later, I don't see where the hardware decoder will be
+> updated.
 > 
-> There's no Linux requirement that multiple PCIe interfaces appear to
-> be in the same hierarchy.  You can just use pci_scan_root_bus()
-> separately on each interface.  Each interface can be in its own domain
-> if necessary.
+> Maybe you're counting on the window assignments to be static?  The PCI
+> core doesn't guarantee anything like that, though in the absence of
+> hotplug I don't know any reason why it would change things.
+ 
+Agree..
 
-What you suggest is basically what the Marvell driver did originally,
-the probelm is that Linux requires a pre-assigned aperture for each
-PCI domain/root bus, and these new chips have so many PCI-E ports that
-they can exhaust the physical address space, and also a limited
-internal HW resource for setting address routing.
+Thomas, I think you need to directly update the Marvell hardware
+registers when config writes are made to the SW bridge. If this means
+it is too hard/complex to keep the code general then I'd say make it
+part of the Marvell host driver.
 
-Thus they require resource allocation that is sensitive to the devices
-present downstream.
+> I also forgot about the bus number munging in mvebu_pcie_rd_conf().
+> The PCI core can update the bridge secondary/subordinate registers.
+> It looks like you don't support writing to them, and the read path
+> (pci_sw_pci_bridge_read()) looks like it doesn't do any translation
+> between the hardware and Linux bus numbers.  I don't understand the
+> system well enough to know if this is an issue.
 
-By far the simplest solution is to merge all the physical links into a
-single domain and rely on existing PCI resource allocation code to
-drive allocation of scarce physical address space and demand allocate
-the HW routing resource (specifically there are enough resources to
-accomidate MMIO only devices on every bus, but not enough to
-accomidate MMIO and IO on every bus).
-
-> > +/*
-> > + * For a given PCIe interface (represented by a mvebu_pcie_port
-> > + * structure), we read the PCI configuration space of the
-> > + * corresponding PCI-to-PCI bridge in order to find out which range of
-> > + * I/O addresses and memory addresses have been assigned to this PCIe
-> > + * interface. Using these informations, we set up the appropriate
-> > + * address decoding windows so that the physical address are actually
-> > + * resolved to the right PCIe interface.
-> > + */
-> 
-> Are you inferring the host bridge apertures by using the resources
-> assigned to devices under the bridge, i.e., taking the union of all
-
-The flow is different, a portion of physical address space is set
-aside for use by PCI-E (via DT) and that portion is specified in the
-struct resource's ultimately attached to the PCI domain for the bus
-scan. You could call that the 'host bridge aperture' though it doesn't
-reflect any HW configuration at all. The values come from the device
-tree.
-
-During the bus scan the Linux core code splits up that contiguous
-space and assigns to the PCI-PCI bridges and devices under that domain.
-
-Each physical PCI-E link on the chip is seen by Linux through the SW
-emulated PCI-PCI bridge attached to bus 0. When Linux configures the
-bridge windows it triggers this code here to copy that window
-information from the PCI config space into non-standard internal HW
-registers.
-
-The purpose of the SW PCI-PCI bridge and this code here is to give
-the Linux PCI core control over the window (MMIO,IO,busnr) assigned
-to the PCI-E link.
-
-This arrangement with PCI-PCI bridges controlling address routing is
-part of the PCI-E standard, in this instance Marvell did not implement
-the required config space in HW so the driver is working around that
-deficiency.
-
-Other drivers, like tegra have a similar design, but their hardware
-does implement PCI-PCI bridge configuration space and does drive
-address decoding through the HW PCI-PCI window registers.
-
-Having PCI-E links be bridges, not domains/root_bus's is in-line with
-the standard and works better with the Linux PCI resource allocator.
+I was chatting with Thomas on this subject, it looks like there is a
+HW register that needs to be set to the subordinate bus number of the
+bridge, that will solve this weirdness.
 
 Jason
