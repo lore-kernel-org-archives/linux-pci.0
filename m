@@ -1,48 +1,85 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:33163 "EHLO
+Received: from mail.free-electrons.com ([94.23.35.102]:39955 "EHLO
 	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755365Ab3A2JVT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Jan 2013 04:21:19 -0500
-Date: Tue, 29 Jan 2013 10:21:15 +0100
+	with ESMTP id S1754213Ab3A3Lrg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Jan 2013 06:47:36 -0500
+Date: Wed, 30 Jan 2013 12:47:21 +0100
 From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Thierry Reding <thierry.reding@avionic-design.de>
-Cc: Stephen Warren <swarren@wwwdotorg.org>,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Maen Suleiman <maen@marvell.com>, linux-pci@vger.kernel.org,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	"Russell King - ARM Linux" <linux@arm.linux.org.uk>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
 	linux-arm-kernel@lists.infradead.org,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Subject: Re: [PATCH v2 19/27] pci: PCIe driver for Marvell Armada 370/XP
- systems
-Message-ID: <20130129102115.30e85255@skate>
-In-Reply-To: <20130129092006.GA16377@avionic-0098.mockup.avionic-design.de>
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	"Eran Ben-Avi" <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Tawfik Bayouk <tawfik@marvell.com>
+Subject: Re: [PATCH v2 05/27] arm: pci: add a align_resource hook
+Message-ID: <20130130124721.0ad0294e@skate>
+In-Reply-To: <201301300955.49473.arnd@arndb.de>
 References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
-	<1359399397-29729-20-git-send-email-thomas.petazzoni@free-electrons.com>
-	<5106F9F9.3010905@wwwdotorg.org>
-	<20130129094143.1aad9377@skate>
-	<20130129092006.GA16377@avionic-0098.mockup.avionic-design.de>
+	<201301292254.01069.arnd@arndb.de>
+	<20130130042103.GB5734@obsidianresearch.com>
+	<201301300955.49473.arnd@arndb.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Thierry Reding,
+Dear Arnd Bergmann,
 
-On Tue, 29 Jan 2013 10:20:06 +0100, Thierry Reding wrote:
+On Wed, 30 Jan 2013 09:55:49 +0000, Arnd Bergmann wrote:
 
-> Does this patch perhaps fix this crash?
+> I don't remember the kernel ever caring about whether hardware complies
+> to a standard or not. The kernel's job is to make hardware work, based
+> on the actual implementation of that hardware. In a lot of cases that
+> means taking the standard document as a reference, and adding quirks
+> for the devices that are different.
 > 
-> 	http://patchwork.ozlabs.org/patch/210870/
+> In the end, it comes down to the impact on the code complexity, and
+> the run-time overhead for whatever hardware is most common when adding
+> those quirks.
 
-I'll test it, thanks for the notice!
+This is not only about standards, it is also about re-using the PCI
+resource allocation code.
+
+In my RFCv1, sent December, 7th, I wasn't using any emulated PCI-to-PCI
+bridge. So it *can* perfectly work without it.
+
+However, one major drawback of my RFCv1 version is that since I didn't
+know how much I/O space and memory space was needed for each PCIe
+device, I had to oversize the address decoding windows. And also, I had
+to have a special allocator (certainly simple, but still) to find an
+available physical address to set up each address decoding window.
+
+Emulating a PCI-to-PCI bridge very nicely allows to re-use the PCI core
+resource allocation code. I think it's really the main reason for
+emulated those PCI-to-PCI bridges, rather than willing to comply to
+some standards.
+
+So what I'm going to do now is rework my patch series by removing the
+emulated host bridge (which is normally mandatory by PCIe standard, but
+Linux doesn't need it, so we don't care), but I'll keep the emulated
+PCI-to-PCI bridges in order to benefit for the PCI core resource
+allocation mechanisms.
+
+Is this ok for you?
+
+I'd like to settle on the strategy to follow, because we're really
+going a funny road here: on December 7th, I submit a series that
+doesn't use any PCI-to-PCI bridge, and I'm told that I should emulate
+some. I spent a long time working on an implementation that uses
+emumlated PCI-to-PCI bridges, which I submitted on Monday, now to be
+told that I should work really hard not to use PCI-to-PCI bridges. I
+hope you can feel my little embarrassment here...
+
+Thanks,
 
 Thomas
 -- 
