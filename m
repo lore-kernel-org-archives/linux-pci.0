@@ -1,65 +1,41 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vb0-f52.google.com ([209.85.212.52]:64960 "EHLO
-	mail-vb0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751927Ab3A1Xke (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Jan 2013 18:40:34 -0500
-Received: by mail-vb0-f52.google.com with SMTP id fa15so2276380vbb.11
-        for <linux-pci@vger.kernel.org>; Mon, 28 Jan 2013 15:40:34 -0800 (PST)
+Received: from szxga01-in.huawei.com ([119.145.14.64]:48023 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753137Ab3A3ELE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Jan 2013 23:11:04 -0500
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>
+CC: <linux-pci@vger.kernel.org>, Hanjun Guo <guohanjun@huawei.com>,
+	<jiang.liu@huawei.com>, Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH] PCI: fix build warning in iov.c
+Date: Wed, 30 Jan 2013 12:10:38 +0800
+Message-ID: <1359519038-25424-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <20130118114225.6698.42016.stgit@zurg>
-References: <20130118113019.6698.25941.stgit@zurg> <20130118114225.6698.42016.stgit@zurg>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 28 Jan 2013 16:40:13 -0700
-Message-ID: <CAErSpo4Z-qz18T0WQ3M8MHTGz_S1SAtK9KeTMBDvM2X4Ohs-tA@mail.gmail.com>
-Subject: Re: [PATCH 4/5] PCI: don't touch enable_cnt in pci_device_shutdown()
-To: Konstantin Khlebnikov <khlebnikov@openvz.org>
-Cc: linux-kernel@vger.kernel.org, e1000-devel@lists.sourceforge.net,
-	linux-pci@vger.kernel.org, Khalid Aziz <khalid.aziz@hp.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 18, 2013 at 4:42 AM, Konstantin Khlebnikov
-<khlebnikov@openvz.org> wrote:
-> comment in commit b566a22c23327f18ce941ffad0ca907e50a53d41
-> ("PCI: disable Bus Master on PCI device shutdown") says:
->
-> | Disable Bus Master bit on the device in pci_device_shutdown() to ensure PCI
-> | devices do not continue to DMA data after shutdown.  This can cause memory
-> | corruption in case of a kexec where the current kernel shuts down and
-> | transfers control to a new kernel while a PCI device continues to DMA to
-> | memory that does not belong to it any more in the new kernel.
->
-> Seems like pci_clear_master() must be used here instead of pci_disable_device(),
-> because it disables Bus Muster unconditionally and doesn't changes enable_cnt.
->
-> Signed-off-by: Konstantin Khlebnikov <khlebnikov@openvz.org>
-> Cc: linux-pci@vger.kernel.org
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Khalid Aziz <khalid.aziz@hp.com>
-> ---
->  drivers/pci/pci-driver.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-> index 030dbf0..853d605 100644
-> --- a/drivers/pci/pci-driver.c
-> +++ b/drivers/pci/pci-driver.c
-> @@ -392,7 +392,7 @@ static void pci_device_shutdown(struct device *dev)
->          * Turn off Bus Master bit on the device to tell it to not
->          * continue to do DMA
->          */
-> -       pci_disable_device(pci_dev);
-> +       pci_clear_master(pci_dev);
+Delete unused variable rc to fix build warning in driver/pci/iov.c
 
-We currently only call pci_enable_device() and pci_disable_device()
-from drivers, and I think that's a nice division that's worth keeping.
- It keeps the core's mitts off device operation and helps preserve the
-enable_cnt integrity.  So I like this change from that perspective.
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/pci/iov.c |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
 
-Any objections to this, Khalid?
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index f8720af..4ea7139 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -33,7 +33,6 @@ static inline u8 virtfn_devfn(struct pci_dev *dev, int id)
+ 
+ static struct pci_bus *virtfn_add_bus(struct pci_bus *bus, int busnr)
+ {
+-	int rc;
+ 	struct pci_bus *child;
+ 
+ 	if (bus->number == busnr)
+-- 
+1.7.1
 
->  }
->
->  #ifdef CONFIG_PM
->
+
