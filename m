@@ -1,48 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f54.google.com ([209.85.214.54]:42681 "EHLO
-	mail-bk0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757069Ab3ANTEh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 14 Jan 2013 14:04:37 -0500
+Received: from quartz.orcorp.ca ([184.70.90.242]:56974 "EHLO quartz.orcorp.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752281Ab3A3EtT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 29 Jan 2013 23:49:19 -0500
+Date: Tue, 29 Jan 2013 21:49:12 -0700
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Tawfik Bayouk <tawfik@marvell.com>
+Subject: Re: [PATCH v2 05/27] arm: pci: add a align_resource hook
+Message-ID: <20130130044912.GD5734@obsidianresearch.com>
+References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
+ <201301291645.08040.arnd@arndb.de>
+ <20130129180936.3737e550@skate>
+ <201301292015.21478.arnd@arndb.de>
+ <20130129213308.7e845064@skate>
+ <20130129225932.01efb45b@skate>
 MIME-Version: 1.0
-In-Reply-To: <201301141605.43428.trenn@suse.de>
-References: <20121127004144.3604.61708.sendpatchset@tindoh.g01.fujitsu.local>
-	<2741365.qqWvlU8HGl@hammer82.arch.suse.de>
-	<CAE9FiQV+W21WcZuuWJYJKXhN4sf0mi=iAFgjX644c3EytPXptw@mail.gmail.com>
-	<201301141605.43428.trenn@suse.de>
-Date: Mon, 14 Jan 2013 11:04:36 -0800
-Message-ID: <CAE9FiQVQvj1TPokoCgx_jbp0VACC8cgtFibH4KoqOssEc6JSPw@mail.gmail.com>
-Subject: Re: [PATCH] x86 e820: only void usable memory areas in
- memmap=exactmap case
-From: Yinghai Lu <yinghai@kernel.org>
-To: Thomas Renninger <trenn@suse.de>
-Cc: "H. Peter Anvin" <hpa@zytor.com>,
-	MUNEDA Takahiro <muneda.takahiro@jp.fujitsu.com>,
-	Takao Indoh <indou.takao@jp.fujitsu.com>,
-	linux-pci@vger.kernel.org, x86@kernel.org,
-	linux-kernel@vger.kernel.org, andi@firstfloor.org,
-	tokunaga.keiich@jp.fujitsu.com, kexec@lists.infradead.org,
-	hbabu@us.ibm.com, mingo@redhat.com, ddutile@redhat.com,
-	vgoyal@redhat.com, ishii.hironobu@jp.fujitsu.com,
-	bhelgaas@google.com, tglx@linutronix.de, khalid@gonehiking.org,
-	horms@verge.net.au
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130129225932.01efb45b@skate>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jan 14, 2013 at 7:05 AM, Thomas Renninger <trenn@suse.de> wrote:
-> What is this for?:
-> @@ -871,6 +879,11 @@ static int __init parse_memmap_one(char
->         userdef = 1;
->         if (*p == '@') {
->                 start_at = memparse(p+1, &p);
-> +               if (exactusablemap_parsed) {
-> +                       /* remove all range with other types */
-> +                       e820_remove_range(start_at, mem_size,
-> +                                                E820_RAM, 0);
-> +               }
->                 e820_add_region(start_at, mem_size, E820_RAM);
->         } else if (*p == '#') {
->                 start_at = memparse(p+1, &p);
+On Tue, Jan 29, 2013 at 10:59:32PM +0100, Thomas Petazzoni wrote:
+> Arnd,
+> 
+> On Tue, 29 Jan 2013 21:33:08 +0100, Thomas Petazzoni wrote:
+> 
+> > Basically, I have currently two suggestions:
+> > 
+> >  * From Jason Gunthorpe, to not use any host bridge, and instead use
+> >    only PCI-to-PCI bridges, one per PCIe interface.
+> > 
+> >  * From you, to not use any PCI-to-PCI bridge, and use only host
+> >    bridges, one per PCIe interface.
 
-remove all old renges before add E820_RAM, otherwise new add E820
-ranges could be ignored.
+Arnd is suggesting to use multiple *linux* host bridges (ie host
+drivers), there is never any need for a 'host bridge config space' as
+in patch #7, in either case.
+
+> However, one of the reason to use a PCI-to-PCI bridge was to ensure
+> that the PCIe devices were all listed in slot 0. According to the
+> Marvell engineers who work on the PCIe stuff, some new PCIe devices
+> have this requirement. I don't have a lot of details about this, but I
+> was told that most of the new Intel NICs require this, for example the
+> Intel X520 fiber NIC. Maybe PCIe experts (Jason?) could provide more
+> details about this, and confirm/infirm this statement.
+
+I'm not sure what this is referring to.. I don't recall any specific
+requirements in PCI-E for the device number, I think the spec requires
+it to be learned based on the config TLPs received.
+
+There might be a device number sensitivity in INTx translation, but
+that is defined by the spec.
+
+That said, if your root complex is PCI-E compliant then all downstream
+end ports attached to a root port should have a device number of 0.
+
+> The usage of PCI-to-PCI bridge allows to have each PCIe device on its
+> own bus, at slot 0, which also solves this problem.
+
+Hrm....
+
+Looking at the docs, you will also need to change the internal device
+number (probably reg 41a04 again) to something other than 0, otherwise
+the Marvell itself will claim device number 0 and the downstream end
+port will be device number 1. You should see this happen today??
+
+You should set the Marvell internal device number to something like
+all ones and then deny any Linux config register access to the all
+ones device number on the subordinate bus to hide the Marvell end port
+config space registers from Linux.
+
+As for as this process goes, it doesn't matter which approach you
+take. If you use multiple PCI domains then you'd still be able to
+arrange things via the above so that the downstream device could
+always claim device number 0.
+
+Jason
