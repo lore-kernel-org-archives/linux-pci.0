@@ -1,57 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:31167 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755388Ab3A0TYX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 27 Jan 2013 14:24:23 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Toshi Kani <toshi.kani@hp.com>
-Cc: "Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	David Airlie <airlied@linux.ie>,
-	dri-devel@lists.freedesktop.org
-Subject: [PATCH v3 11/22] PCI, drm: Kill pci_root_buses in alpha hose setting
-Date: Sun, 27 Jan 2013 11:23:38 -0800
-Message-Id: <1359314629-18651-12-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1359314629-18651-1-git-send-email-yinghai@kernel.org>
-References: <CAE9FiQXHG01NjnYNDbC-KEpbcvY-q4pBe97CxTOGS7W4vZQBYQ@mail.gmail.com>
- <1359314629-18651-1-git-send-email-yinghai@kernel.org>
+Received: from cpsmtpb-ews04.kpnxchange.com ([213.75.39.7]:59208 "EHLO
+	cpsmtpb-ews04.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753309Ab3AaSfQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 31 Jan 2013 13:35:16 -0500
+Message-ID: <1359657310.6022.4.camel@x61.thuisdomein>
+Subject: [PATCH v2] PCI: pciehp: drop ENTRY messages
+From: Paul Bolle <pebolle@tiscali.nl>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Date: Thu, 31 Jan 2013 19:35:10 +0100
+In-Reply-To: <1450113.teKM2dvJbO@vostro.rjw.lan>
+References: <1359367251.883.13.camel@x61.thuisdomein>
+	 <CAErSpo7grYijCUZGWGM4jao+MUqXYQ66q1az6bbKPMX4_Jwcyg@mail.gmail.com>
+	 <1450113.teKM2dvJbO@vostro.rjw.lan>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Replace that with hotplug-safe version.
+In each suspend and resume cycle my laptop prints these messages at
+KERN_INFO level:
+    pciehp 0000:00:1c.1:pcie04: pciehp_suspend ENTRY
+    pciehp 0000:00:1c.0:pcie04: pciehp_suspend ENTRY
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: David Airlie <airlied@linux.ie>
-Cc: dri-devel@lists.freedesktop.org
+and
+    pciehp 0000:00:1c.0:pcie04: pciehp_resume ENTRY
+    pciehp 0000:00:1c.1:pcie04: pciehp_resume ENTRY
+
+Drop these messages, that were probably used to debug the suspend and
+resume code, but now serve no purpose.
+
+Signed-off-by: Paul Bolle <pebolle@tiscali.nl>
 ---
- drivers/gpu/drm/drm_fops.c |   10 +++++++---
- 1 file changed, 7 insertions(+), 3 deletions(-)
+0) v1 was called "PCI: pciehp: hide ENTRY messages behind ctrl_dbg()".
+But Bjorn and Rafael prefer to drop these messages completely.
 
-diff --git a/drivers/gpu/drm/drm_fops.c b/drivers/gpu/drm/drm_fops.c
-index 133b413..b92a9cc 100644
---- a/drivers/gpu/drm/drm_fops.c
-+++ b/drivers/gpu/drm/drm_fops.c
-@@ -356,9 +356,13 @@ static int drm_open_helper(struct inode *inode, struct file *filp,
- 			pci_dev_put(pci_dev);
- 		}
- 		if (!dev->hose) {
--			struct pci_bus *b = pci_bus_b(pci_root_buses.next);
--			if (b)
--				dev->hose = b->sysdata;
-+			struct pci_host_bridge *host_bridge;
-+
-+			host_bridge = pci_next_host_bridge(NULL);
-+			if (host_bridge) {
-+				dev->hose = host_bridge->bus->sysdata;
-+				put_device(&host_bridge->dev);
-+			}
- 		}
- 	}
- #endif
+1) Not even compile tested!
+
+ drivers/pci/hotplug/pciehp_core.c | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
+index 939bd1d..7d72c5e 100644
+--- a/drivers/pci/hotplug/pciehp_core.c
++++ b/drivers/pci/hotplug/pciehp_core.c
+@@ -293,7 +293,6 @@ static void pciehp_remove(struct pcie_device *dev)
+ #ifdef CONFIG_PM
+ static int pciehp_suspend (struct pcie_device *dev)
+ {
+-	dev_info(&dev->device, "%s ENTRY\n", __func__);
+ 	return 0;
+ }
+ 
+@@ -303,7 +302,6 @@ static int pciehp_resume (struct pcie_device *dev)
+ 	struct slot *slot;
+ 	u8 status;
+ 
+-	dev_info(&dev->device, "%s ENTRY\n", __func__);
+ 	ctrl = get_service_data(dev);
+ 
+ 	/* reinitialize the chipset's event detection logic */
 -- 
-1.7.10.4
+1.7.11.7
 
