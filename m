@@ -1,139 +1,206 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g4t0014.houston.hp.com ([15.201.24.17]:20421 "EHLO
-	g4t0014.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754960Ab3AKIyD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Jan 2013 03:54:03 -0500
-From: "Pandarathil, Vijaymohan R" <vijaymohan.pandarathil@hp.com>
-To: Alex Williamson <alex.williamson@redhat.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Gleb Natapov <gleb@redhat.com>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	"qemu-devel@nongnu.org" <qemu-devel@nongnu.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH 2/2] QEMU-AER: Qemu changes to support AER for VFIO-PCI
- devices
-Date: Fri, 11 Jan 2013 08:53:02 +0000
-Message-ID: <F9E001219150CB45BEDC82A650F360C901497698@G9W0717.americas.hpqcorp.net>
-References: <F9E001219150CB45BEDC82A650F360C901496034@G9W0717.americas.hpqcorp.net>
- <1357754873.3224.777.camel@bling.home>
-In-Reply-To: <1357754873.3224.777.camel@bling.home>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-we0-f176.google.com ([74.125.82.176]:49049 "EHLO
+	mail-we0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751582Ab3AaMJz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 31 Jan 2013 07:09:55 -0500
+Message-ID: <510A5F0E.6010100@googlemail.com>
+Date: Thu, 31 Jan 2013 12:09:50 +0000
+From: Chris Clayton <chris2553@googlemail.com>
 MIME-Version: 1.0
+To: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
+CC: Yijing Wang <wangyijing@huawei.com>,
+	Yijing Wang <wangyijing0307@gmail.com>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org
+Subject: Re: 3.8.0-rc4+ - Oops on removing WinTV-HVR-1400 expresscard TV Tuner
+References: <51016937.1020202@googlemail.com> <510189B1.606@fold.natur.cuni.cz> <5104427D.2050002@googlemail.com> <510494D6.1010000@gmail.com> <51050D43.2050703@googlemail.com> <51051B1B.3080105@gmail.com> <51052DB2.4090702@googlemail.com> <51053917.6060400@fold.natur.cuni.cz> <5105491E.9050907@googlemail.com> <510558CE.9000600@fold.natur.cuni.cz> <5105AFDB.9000200@googlemail.com> <5105E51D.2020606@huawei.com> <51064F1A.1020909@googlemail.com> <51065FA6.4070208@googlemail.com> <51066B46.10409@fold.natur.cuni.cz> <5106CD6C.4070009@googlemail.com> <5106E770.9070602@fold.natur.cuni.cz>
+In-Reply-To: <5106E770.9070602@fold.natur.cuni.cz>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogQWxleCBXaWxsaWFtc29u
-IFttYWlsdG86YWxleC53aWxsaWFtc29uQHJlZGhhdC5jb21dDQo+IFNlbnQ6IFdlZG5lc2RheSwg
-SmFudWFyeSAwOSwgMjAxMyAxMDowOCBBTQ0KPiBUbzogUGFuZGFyYXRoaWwsIFZpamF5bW9oYW4g
-Ug0KPiBDYzogQmpvcm4gSGVsZ2FhczsgR2xlYiBOYXRhcG92OyBrdm1Admdlci5rZXJuZWwub3Jn
-OyBxZW11LQ0KPiBkZXZlbEBub25nbnUub3JnOyBsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnOyBs
-aW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnDQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggMi8yXSBR
-RU1VLUFFUjogUWVtdSBjaGFuZ2VzIHRvIHN1cHBvcnQgQUVSIGZvciBWRklPLVBDSQ0KPiBkZXZp
-Y2VzDQo+IA0KPiBPbiBXZWQsIDIwMTMtMDEtMDkgYXQgMDY6MjYgKzAwMDAsIFBhbmRhcmF0aGls
-LCBWaWpheW1vaGFuIFIgd3JvdGU6DQo+ID4gCS0gQ3JlYXRlIGV2ZW50ZmQgcGVyIHZmaW8gZGV2
-aWNlIGFzc2lnbmVkIHRvIGEgZ3Vlc3QgYW5kIHJlZ2lzdGVyIGFuDQo+ID4gICAgICAgICAgIGV2
-ZW50IGhhbmRsZXINCj4gPg0KPiA+IAktIFRoaXMgZmQgaXMgcGFzc2VkIHRvIHRoZSB2ZmlvX3Bj
-aSBkcml2ZXIgdGhyb3VnaCBhIG5ldyBpb2N0bA0KPiA+DQo+ID4gCS0gV2hlbiB0aGUgZGV2aWNl
-IGVuY291bnRlcnMgYW4gZXJyb3IsIHRoZSBldmVudGZkIGlzIHNpZ25hbGVkDQo+ID4gICAgICAg
-ICAgIGFuZCB0aGUgcWVtdSBldmVudGZkIGhhbmRsZXIgZ2V0cyBpbnZva2VkLg0KPiA+DQo+ID4g
-CS0gSW4gdGhlIGhhbmRsZXIgZGVjaWRlIHdoYXQgYWN0aW9uIHRvIHRha2UuIEN1cnJlbnQgYWN0
-aW9uIHRha2VuDQo+ID4gICAgICAgICAgIGlzIHRvIHRlcm1pbmF0ZSB0aGUgZ3Vlc3QuDQo+ID4N
-Cj4gPiBTaWduZWQtb2ZmLWJ5OiBWaWpheSBNb2hhbiBQYW5kYXJhdGhpbCA8dmlqYXltb2hhbi5w
-YW5kYXJhdGhpbEBocC5jb20+DQo+ID4gLS0tDQo+ID4gIGh3L3ZmaW9fcGNpLmMgICAgICAgICAg
-ICAgIHwgNTYNCj4gKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysr
-Kw0KPiA+ICBsaW51eC1oZWFkZXJzL2xpbnV4L3ZmaW8uaCB8ICA5ICsrKysrKysrDQo+ID4gIDIg
-ZmlsZXMgY2hhbmdlZCwgNjUgaW5zZXJ0aW9ucygrKQ0KPiA+DQo+ID4gZGlmZiAtLWdpdCBhL2h3
-L3ZmaW9fcGNpLmMgYi9ody92ZmlvX3BjaS5jDQo+ID4gaW5kZXggMjhjODMwMy4uOWMzYzI4YiAx
-MDA2NDQNCj4gPiAtLS0gYS9ody92ZmlvX3BjaS5jDQo+ID4gKysrIGIvaHcvdmZpb19wY2kuYw0K
-PiA+IEBAIC0zOCw2ICszOCw3IEBADQo+ID4gICNpbmNsdWRlICJxZW11L2Vycm9yLXJlcG9ydC5o
-Ig0KPiA+ICAjaW5jbHVkZSAicWVtdS9xdWV1ZS5oIg0KPiA+ICAjaW5jbHVkZSAicWVtdS9yYW5n
-ZS5oIg0KPiA+ICsjaW5jbHVkZSAic3lzZW11L3N5c2VtdS5oIg0KPiA+DQo+ID4gIC8qICNkZWZp
-bmUgREVCVUdfVkZJTyAqLw0KPiA+ICAjaWZkZWYgREVCVUdfVkZJTw0KPiA+IEBAIC0xMzAsNiAr
-MTMxLDggQEAgdHlwZWRlZiBzdHJ1Y3QgVkZJT0RldmljZSB7DQo+ID4gICAgICBRTElTVF9FTlRS
-WShWRklPRGV2aWNlKSBuZXh0Ow0KPiA+ICAgICAgc3RydWN0IFZGSU9Hcm91cCAqZ3JvdXA7DQo+
-ID4gICAgICBib29sIHJlc2V0X3dvcmtzOw0KPiA+ICsgICAgRXZlbnROb3RpZmllciBlcnJmZDsN
-Cj4gDQo+IE1pc2xlYWRpbmcgbmFtZSwgaXQncyBhbiBFdmVudE5vdGlmaWVyIG5vdCBhbiBmZC4N
-Cg0KV2lsbCBtYWtlIHRoZSBjaGFuZ2UuDQoNCj4gDQo+ID4gKyAgICBfX3UzMiBkZXZfaW5mb19m
-bGFnczsNCj4gPiAgfSBWRklPRGV2aWNlOw0KPiA+DQo+ID4gIHR5cGVkZWYgc3RydWN0IFZGSU9H
-cm91cCB7DQo+ID4gQEAgLTE4MDUsNiArMTgwOCw4IEBAIHN0YXRpYyBpbnQgdmZpb19nZXRfZGV2
-aWNlKFZGSU9Hcm91cCAqZ3JvdXAsIGNvbnN0DQo+IGNoYXIgKm5hbWUsIFZGSU9EZXZpY2UgKnZk
-ZXYpDQo+ID4gICAgICBEUFJJTlRGKCJEZXZpY2UgJXMgZmxhZ3M6ICV1LCByZWdpb25zOiAldSwg
-aXJnczogJXVcbiIsIG5hbWUsDQo+ID4gICAgICAgICAgICAgIGRldl9pbmZvLmZsYWdzLCBkZXZf
-aW5mby5udW1fcmVnaW9ucywgZGV2X2luZm8ubnVtX2lycXMpOw0KPiA+DQo+ID4gKyAgICB2ZGV2
-LT5kZXZfaW5mb19mbGFncyA9IGRldl9pbmZvLmZsYWdzOw0KPiA+ICsNCj4gDQo+IFdlIHRlc3Qg
-dGhlIFZGSU9fREVWSUNFX0ZMQUdTX1JFU0VUIGVsc2V3aGVyZSBieSBjYWNoaW5nIHRoZSBiaXQg
-aW50byBhDQo+IHZhcmlhYmxlLCB3aHkgbm90IGRvIHRoYXQgaGVyZSB0b28/DQoNCkkgd2FzIHdv
-bmRlcmluZyBpZiB0aGVyZSB3YXMgYW55IHNwZWNpZmljIHJlYXNvbiB0byBjYWNoZSB0aGUgYml0
-IGludG8gYSBzZXBhcmF0ZSB2YXJpYWJsZS4gV291bGRuJ3QgYSBmbGFncyBmaWVsZCB3aGljaCBj
-YW4gY29udGFpbiB0aGUgc3BlY2lmaWMgYml0IGJlIG1vcmUgYXB0ID8NCg0KPiANCj4gPiAgICAg
-IGlmICghKGRldl9pbmZvLmZsYWdzICYgVkZJT19ERVZJQ0VfRkxBR1NfUENJKSkgew0KPiA+ICAg
-ICAgICAgIGVycm9yX3JlcG9ydCgidmZpbzogVW0sIHRoaXMgaXNuJ3QgYSBQQ0kgZGV2aWNlXG4i
-KTsNCj4gPiAgICAgICAgICBnb3RvIGVycm9yOw0KPiA+IEBAIC0xOTAwLDYgKzE5MDUsNTUgQEAg
-c3RhdGljIHZvaWQgdmZpb19wdXRfZGV2aWNlKFZGSU9EZXZpY2UgKnZkZXYpDQo+ID4gICAgICB9
-DQo+ID4gIH0NCj4gPg0KPiA+ICtzdGF0aWMgdm9pZCB2ZmlvX2VycmZkX2hhbmRsZXIodm9pZCAq
-b3BhcXVlKQ0KPiA+ICt7DQo+ID4gKyAgICBWRklPRGV2aWNlICp2ZGV2ID0gb3BhcXVlOw0KPiA+
-ICsNCj4gPiArICAgIGlmICghZXZlbnRfbm90aWZpZXJfdGVzdF9hbmRfY2xlYXIoJnZkZXYtPmVy
-cmZkKSkgew0KPiA+ICsgICAgICAgIHJldHVybjsNCj4gPiArICAgIH0NCj4gPiArDQo+ID4gKyAg
-ICAvKg0KPiA+ICsgICAgICogVEJELiBSZXRyaWV2ZSB0aGUgZXJyb3IgZGV0YWlscyBhbmQgZGVj
-aWRlIHdoYXQgYWN0aW9uDQo+ID4gKyAgICAgKiBuZWVkcyB0byBiZSB0YWtlbi4gT25lIG9mIHRo
-ZSBhY3Rpb25zIGNvdWxkIGJlIHRvIHBhc3MNCj4gPiArICAgICAqIHRoZSBlcnJvciB0byB0aGUg
-Z3Vlc3QgYW5kIGhhdmUgdGhlIGd1ZXN0IGRyaXZlciByZWNvdmVyDQo+ID4gKyAgICAgKiB0aGUg
-ZXJyb3IuIFRoaXMgcmVxdWlyZXMgdGhhdCBQQ0llIGNhcGFiaWxpdGllcyBiZQ0KPiA+ICsgICAg
-ICogZXhwb3NlZCB0byB0aGUgZ3Vlc3QuIEF0IHByZXNlbnQsIHdlIGp1c3QgdGVybWluYXRlIHRo
-ZQ0KPiA+ICsgICAgICogZ3Vlc3QgdG8gY29udGFpbiB0aGUgZXJyb3IuDQo+ID4gKyAgICAgKi8N
-Cj4gPiArICAgIGVycm9yX3JlcG9ydCgiJXMoJTA0eDolMDJ4OiUwMnguJXgpICINCj4gPiArICAg
-ICAgICAiVW5yZWNvdmVyYWJsZSBlcnJvciBkZXRlY3RlZC4uLiBUZXJtaW5hdGluZyBndWVzdFxu
-IiwNCj4gPiArICAgICAgICBfX2Z1bmNfXywgdmRldi0+aG9zdC5kb21haW4sIHZkZXYtPmhvc3Qu
-YnVzLCB2ZGV2LT5ob3N0LnNsb3QsDQo+ID4gKyAgICAgICAgdmRldi0+aG9zdC5mdW5jdGlvbik7
-DQo+ID4gKw0KPiA+ICsgICAgcWVtdV9zeXN0ZW1fc2h1dGRvd25fcmVxdWVzdCgpOw0KPiANCj4g
-SSB3b3VsZCBoYXZlIGZpZ3VyZWQgaHdfZXJyb3INCg0KSHdfZXJyb3IoKSBpcyBwcm9iYWJseSBt
-b3JlIGFwcHJvcHJpYXRlLiBXaWxsIG1ha2UgdGhlIGNoYW5nZS4NCg0KPiANCj4gPiArICAgIHJl
-dHVybjsNCj4gPiArfQ0KPiA+ICsNCj4gPiArc3RhdGljIHZvaWQgdmZpb19yZWdpc3Rlcl9lcnJm
-ZChWRklPRGV2aWNlICp2ZGV2KQ0KPiA+ICt7DQo+ID4gKyAgICBpbnQzMl90IHBmZDsNCj4gDQo+
-ICJwZmQiIGlzIHVzZWQgZWxzZXdoZXJlIGluIHZmaW8gYXMgIlBvaW50ZXIgdG8gRkQiLCB0aGlz
-IGlzIGp1c3QgYSBmZC4NCg0KV2lsbCBjaGFuZ2UuDQoNCj4gDQo+ID4gKyAgICBpbnQgcmV0Ow0K
-PiA+ICsNCj4gPiArICAgIGlmICghKHZkZXYtPmRldl9pbmZvX2ZsYWdzICYgVkZJT19ERVZJQ0Vf
-RkxBR1NfQUVSX05PVElGWSkpIHsNCj4gPiArICAgICAgICBlcnJvcl9yZXBvcnQoInZmaW86IFdh
-cm5pbmc6IEVycm9yIG5vdGlmaWNhdGlvbiBub3Qgc3VwcG9ydGVkDQo+IGZvciB0aGUgZGV2aWNl
-XG4iKTsNCj4gDQo+IFRoaXMgc2hvdWxkIHByb2JhYmx5IGp1c3QgYmUgYSBkZWJ1ZyBwcmludC4N
-Cg0KT2theS4NCg0KPiANCj4gPiArICAgICAgICByZXR1cm47DQo+ID4gKyAgICB9DQo+ID4gKyAg
-ICBpZiAoZXZlbnRfbm90aWZpZXJfaW5pdCgmdmRldi0+ZXJyZmQsIDApKSB7DQo+ID4gKyAgICAg
-ICAgZXJyb3JfcmVwb3J0KCJ2ZmlvOiBXYXJuaW5nOiBVbmFibGUgdG8gaW5pdCBldmVudCBub3Rp
-ZmllciBmb3INCj4gZXJyb3IgZGV0ZWN0aW9uXG4iKTsNCj4gPiArICAgICAgICByZXR1cm47DQo+
-ID4gKyAgICB9DQo+ID4gKyAgICBwZmQgPSBldmVudF9ub3RpZmllcl9nZXRfZmQoJnZkZXYtPmVy
-cmZkKTsNCj4gPiArICAgIHFlbXVfc2V0X2ZkX2hhbmRsZXIocGZkLCB2ZmlvX2VycmZkX2hhbmRs
-ZXIsIE5VTEwsIHZkZXYpOw0KPiA+ICsNCj4gPiArICAgIHJldCA9IGlvY3RsKHZkZXYtPmZkLCBW
-RklPX0RFVklDRV9TRVRfRVJSRkQsIHBmZCk7DQo+ID4gKyAgICBpZiAocmV0KSB7DQo+ID4gKyAg
-ICAgICAgZXJyb3JfcmVwb3J0KCJ2ZmlvOiBXYXJuaW5nOiBGYWlsZWQgdG8gc2V0dXAgZXJyb3Ig
-ZmQ6ICVkXG4iLA0KPiByZXQpOw0KPiA+ICsgICAgICAgIHFlbXVfc2V0X2ZkX2hhbmRsZXIocGZk
-LCBOVUxMLCBOVUxMLCB2ZGV2KTsNCj4gPiArICAgICAgICBldmVudF9ub3RpZmllcl9jbGVhbnVw
-KCZ2ZGV2LT5lcnJmZCk7DQo+ID4gKyAgICB9DQo+ID4gKyAgICByZXR1cm47DQo+ID4gK30NCj4g
-PiAgc3RhdGljIGludCB2ZmlvX2luaXRmbihQQ0lEZXZpY2UgKnBkZXYpDQo+ID4gIHsNCj4gPiAg
-ICAgIFZGSU9EZXZpY2UgKnB2ZGV2LCAqdmRldiA9IERPX1VQQ0FTVChWRklPRGV2aWNlLCBwZGV2
-LCBwZGV2KTsNCj4gPiBAQCAtMjAxMCw2ICsyMDY0LDggQEAgc3RhdGljIGludCB2ZmlvX2luaXRm
-bihQQ0lEZXZpY2UgKnBkZXYpDQo+ID4gICAgICAgICAgfQ0KPiA+ICAgICAgfQ0KPiA+DQo+ID4g
-KyAgICB2ZmlvX3JlZ2lzdGVyX2VycmZkKHZkZXYpOw0KPiA+ICsNCj4gDQo+IE5vIGNsZWFudXAg
-aW4gZXhpdGZuPyEgIFRoYW5rcywNCg0KTWlzc2VkIHRoYXQuIFdpbGwgZml4Lg0KDQpWaWpheQ0K
-DQo+IA0KPiBBbGV4DQo+IA0KPiA+ICAgICAgcmV0dXJuIDA7DQo+ID4NCj4gPiAgb3V0X3RlYXJk
-b3duOg0KPiA+IGRpZmYgLS1naXQgYS9saW51eC1oZWFkZXJzL2xpbnV4L3ZmaW8uaCBiL2xpbnV4
-LWhlYWRlcnMvbGludXgvdmZpby5oDQo+ID4gaW5kZXggNDc1OGQxYi4uMGNhNGVlYiAxMDA2NDQN
-Cj4gPiAtLS0gYS9saW51eC1oZWFkZXJzL2xpbnV4L3ZmaW8uaA0KPiA+ICsrKyBiL2xpbnV4LWhl
-YWRlcnMvbGludXgvdmZpby5oDQo+ID4gQEAgLTE0Nyw2ICsxNDcsNyBAQCBzdHJ1Y3QgdmZpb19k
-ZXZpY2VfaW5mbyB7DQo+ID4gIAlfX3UzMglmbGFnczsNCj4gPiAgI2RlZmluZSBWRklPX0RFVklD
-RV9GTEFHU19SRVNFVAkoMSA8PCAwKQkvKiBEZXZpY2Ugc3VwcG9ydHMgcmVzZXQgKi8NCj4gPiAg
-I2RlZmluZSBWRklPX0RFVklDRV9GTEFHU19QQ0kJKDEgPDwgMSkJLyogdmZpby1wY2kgZGV2aWNl
-ICovDQo+ID4gKyNkZWZpbmUgVkZJT19ERVZJQ0VfRkxBR1NfQUVSX05PVElGWSAoMSA8PCAyKSAg
-IC8qIFN1cHBvcnRzIGFlcg0KPiBub3RpZmljYXRpb24gKi8NCj4gPiAgCV9fdTMyCW51bV9yZWdp
-b25zOwkvKiBNYXggcmVnaW9uIGluZGV4ICsgMSAqLw0KPiA+ICAJX191MzIJbnVtX2lycXM7CS8q
-IE1heCBJUlEgaW5kZXggKyAxICovDQo+ID4gIH07DQo+ID4gQEAgLTI4OCw2ICsyODksMTQgQEAg
-c3RydWN0IHZmaW9faXJxX3NldCB7DQo+ID4gICAqLw0KPiA+ICAjZGVmaW5lIFZGSU9fREVWSUNF
-X1JFU0VUCQlfSU8oVkZJT19UWVBFLCBWRklPX0JBU0UgKyAxMSkNCj4gPg0KPiA+ICsvKioNCj4g
-PiArICogVkZJT19ERVZJQ0VfU0VUX0VSUkZEIC0gX0lPKFZGSU9fVFlQRSwgVkZJT19CQVNFICsg
-MTIpDQo+ID4gKyAqDQo+ID4gKyAqIFBhc3MgdGhlIGV2ZW50ZmQgdG8gdGhlIHZmaW8tcGNpIGRy
-aXZlciBmb3Igc2lnbmFsbGluZyBhbnkgZGV2aWNlDQo+ID4gKyAqIGVycm9yIG5vdGlmaWNhdGlv
-bnMNCj4gPiArICovDQo+ID4gKyNkZWZpbmUgVkZJT19ERVZJQ0VfU0VUX0VSUkZEICAgICAgICAg
-ICBfSU8oVkZJT19UWVBFLCBWRklPX0JBU0UgKyAxMikNCj4gPiArDQo+ID4gIC8qDQo+ID4gICAq
-IFRoZSBWRklPLVBDSSBidXMgZHJpdmVyIG1ha2VzIHVzZSBvZiB0aGUgZm9sbG93aW5nIGZpeGVk
-IHJlZ2lvbiBhbmQNCj4gPiAgICogSVJRIGluZGV4IG1hcHBpbmcuICBVbmltcGxlbWVudGVkIHJl
-Z2lvbnMgcmV0dXJuIGEgc2l6ZSBvZiB6ZXJvLg0KPiANCj4gDQoNCg==
+Hi Martin,
+
+On 01/28/13 21:02, Martin Mokrejs wrote:
+> Hi Chris,
+>
+> Chris Clayton wrote:
+>> Hi Martin,
+>>
+>> On 01/28/13 12:12, Martin Mokrejs wrote:
+>>> Chris Clayton wrote:
+>>>>
+>>>> [snip]
+>>>>
+>>>>> [chris:~]$ cat /proc/cmdline
+>>>>> root=/dev/sda5 pciehp_ports=native ro resume=/dev/sda6
+>>>>                        ^^
+>>>>                     **typo**
+>>>> I've run the test again with pcie_ports=native and the directories now get populated. Even better though, is that when I plug in the card, hotplug **works** and the card's drivers are loaded.
+>>>
+>>> BTW, I have with acpiphp on 3.7.4:
+>>>
+>>> ls -la /sys/bus/pci_express/devices
+>>> total 0
+>>> drwxr-xr-x 2 root root 0 Jan 28 13:07 .
+>>> drwxr-xr-x 4 root root 0 Jan 28 13:07 ..
+>>> $ ls -la /sys/bus/pci/devices/slots
+>>                         ^^^^^^^^
+>>                          **typo**
+>> It should be /sys/bus/pci/slots.
+>>
+>>> ls: cannot access /sys/bus/pci/devices/slots: No such file or directory
+>>> $
+>>>
+>> With acpiphp, I get /sys/bus/pci_express/devices populated but /sys/bus/pci/slots is empty.
+>
+> OK, I haven't realized the typo, but I have here with acpiphp:
+>
+> # ls -laR /sys/bus/pci/slots
+> /sys/bus/pci/slots:
+> total 0
+> drwxr-xr-x 3 root root 0 Jan 27 17:14 .
+> drwxr-xr-x 5 root root 0 Jan 25 15:56 ..
+> drwxr-xr-x 2 root root 0 Jan 27 17:14 1
+>
+> /sys/bus/pci/slots/1:
+> total 0
+> drwxr-xr-x 2 root root    0 Jan 27 17:14 .
+> drwxr-xr-x 3 root root    0 Jan 27 17:14 ..
+> -r--r--r-- 1 root root 4096 Jan 28 21:31 adapter
+> -r--r--r-- 1 root root 4096 Jan 27 17:14 address
+> -rw-r--r-- 1 root root 4096 Jan 28 21:31 attention
+> -r--r--r-- 1 root root 4096 Jan 28 21:31 cur_bus_speed
+> -r--r--r-- 1 root root 4096 Jan 28 21:31 latch
+> -r--r--r-- 1 root root 4096 Jan 28 21:31 max_bus_speed
+> lrwxrwxrwx 1 root root    0 Jan 28 21:31 module -> ../../../../module/acpiphp
+> -rw-r--r-- 1 root root 4096 Jan 28 21:31 power
+> #
+>
+>>
+>>> And for me hotplug also works (as far as I can tell). ;-)
+>>>
+>>>>
+>>>> Excellent! Thank you so much for your help (and patience) Martin and Yijing.
+>>>>
+>>>> Now to solving why running scandvb doesn't find any TV channels.
+>>>
+>>> Would be fine if you could re-do the PresDet checks and confirm whether it is also broken
+>>> for you under pciehp.
+>>
+>> I've struggled with this a little. For some reason, the expresscard
+>> doesn't always stay properly inserted in the slot when I insert it.
+>> Now that hotplug is working, the modules are being loaded and when
+>> the card pops out again, I get an oops because, of course, the driver
+>> is running and the card disappears. Perhaps the driver can be made a
+>> bit more robust to sudden disappearance of the card. I'll report the
+>
+> Yes, I had or maybe still have same issues here. I used to get an Oops
+> for sata_sil24 card weird behavior for USB3.0 NEC-based card. It was
+> fine always for a VIA-based firewire card and serial PL2303-based one.
+> I found out it is better if a usb device is connected to the USB card
+> because if that slips out then the libata layer quickly realizes that.
+> If there was no device connected, the usb waits too long before it removes
+> the usb hub from the system. And if you plugin the card meanwhile
+> back into the slot, weird thing happen.
+>
+My usb3 expresscard device has arrived and I get an oops with that too, 
+if I remove it without unloading the driver first. I guess it shouldn't 
+be a surprise that the driver isn't expecting the device to disappear.
+
+As I mentioned, I have some trouble with the WinTV-HVR-1400 card, which 
+sometimes pops out again, if I push it into the slot too hard (but I'm 
+geeting better at that with practice). So what I've done (with the usb3 
+card too) to avoid the oopsen is blacklist the driver in 
+/etc/modprobe.d/blacklist.conf and then load them when I'm sure the card 
+is properly inserted. Not exactly hotplug, but at least I don't have to 
+reboot because of an oops- and it's not something I'm doing several 
+times an hour.
+
+Chris
+>
+>> oops later. Anyway, to run these tests I built a kernel without the
+>> dvb card's drivers, effectively simulating the situation I had before
+>> Yijing got hotplug working for me. The card popping out may also have
+>> affected these diffs a bit because, for example, the first one has
+>> the CorrErr flag changed, possibly because I had to have two or more
+>> goes at getting the card to lock in the slot. Yesterday that diff
+>> showed no changes. Anyway, here are the diffs:
+>>
+>> diff lspci.after_insertion.txt lspci.after_1st_re-insertion.txt
+>> 262c262
+>> <               DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr+ TransPend-
+>> ---
+>>>                DevSta: CorrErr+ UncorrErr- FatalErr- UnsuppReq- AuxPwr+ TransPend-
+>> 295c295
+>> < 40: 10 80 42 01 00 80 00 00 00 00 10 00 12 3c 12 04
+>> ---
+>>> 40: 10 80 42 01 00 80 00 00 00 00 11 00 12 3c 12 04
+>>
+>> ============================================================
+>> diff lspci.after_1st_removal.txt lspci.after_2nd_removal.txt
+>>
+>> <no difference>
+>
+> BTW, with the NEC-based card only after every second removal of the card I got
+> into PresDet- state. So, on every other diff attempt you won't see a difference!
+> But we are talking about acpiphp here (unlike pciehp) and with that I also
+> have no problems.
+>
+>>
+>> =============================================================
+>> diff lspci.before_insertion.txt lspci.after_1st_removal.txt
+>> 112c112
+>> < 60: 20 20 ff 07 00 00 00 00 01 00 00 00 00 00 08 c0
+>> ---
+>>> 60: 20 20 ff 07 00 00 00 00 01 00 00 00 00 00 00 c0
+>> 262,263c262,263
+>> <               DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr+ TransPend-
+>> <               LnkCap: Port #4, Speed 5GT/s, Width x1, ASPM L0s L1, Latency L0 <1us, L1 <16us
+>> ---
+>>>                DevSta: CorrErr+ UncorrErr- FatalErr- UnsuppReq- AuxPwr+ TransPend-
+>>>                LnkCap: Port #4, Speed 5GT/s, Width x1, ASPM L0s L1, Latency L0 <512ns, L1 <16us
+>> 265c265
+>> <               LnkCtl: ASPM L0s L1 Enabled; RCB 64 bytes Disabled- Retrain- CommClk-
+>> ---
+>>>                LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk+
+>> 267c267
+>> <               LnkSta: Speed 2.5GT/s, Width x0, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
+>> ---
+>>>                LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt+ ABWMgmt-
+>> 273c273
+>> <                       Changed: MRL- PresDet- LinkState-
+>> ---
+>>>                        Changed: MRL- PresDet- LinkState+
+>> 295,296c295,296
+>> < 40: 10 80 42 01 00 80 00 00 00 00 10 00 12 4c 12 04
+>> < 50: 03 00 01 10 60 b2 1c 00 28 00 00 00 00 00 00 00
+>> ---
+>>> 40: 10 80 42 01 00 80 00 00 00 00 11 00 12 3c 12 04
+>>> 50: 40 00 11 50 60 b2 1c 00 28 00 00 01 00 00 00 00
+>
+>
+> I think this is what I also reported earlier that on the "Changed:" line the LinkState is not updated
+> always, contrary to the PresDet. That is present since kernel 3.4 times at least.
+>
+>
+>>
+>> ===========================================================
+>> diff lspci.after_1st_removal.txt lspci.after_2nd_removal.txt
+>>
+>> <no difference>
+>
+> Yeah, try pciehp and see that the PresDet+ won't be flipped to PresDet-.
+> ;-) You will have to plugin the card once more in and then pull out
+> to get to PresDet- state.
+>
+>
+> I deleted the rest, I think acpiphp just works for you, if statically compiled into the
+> kernel. ;-) Trying to proof that there are untested combinations and orders of module loadings
+> leading sometime to a broken setup does not seem at the very moment to be useful. Seems pci devs
+> know about that and rather decided to disable building of modules altogether.
+>
+> The pciehp behavior is still another story and I would be really curious if it works for you.
+> For me, the PresDet did not work, I think ever, on this SandyBridge hardware.
+>
+> Martin
+>
