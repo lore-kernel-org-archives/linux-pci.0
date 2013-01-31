@@ -1,92 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vb0-f43.google.com ([209.85.212.43]:44778 "EHLO
-	mail-vb0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751031Ab3A2AcF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Jan 2013 19:32:05 -0500
-Received: by mail-vb0-f43.google.com with SMTP id fr13so2235577vbb.16
-        for <linux-pci@vger.kernel.org>; Mon, 28 Jan 2013 16:32:04 -0800 (PST)
+Received: from caramon.arm.linux.org.uk ([78.32.30.218]:60256 "EHLO
+	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753872Ab3AaPht (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 31 Jan 2013 10:37:49 -0500
+Date: Thu, 31 Jan 2013 15:36:25 +0000
+From: Russell King - ARM Linux <linux@arm.linux.org.uk>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	linux-pci@vger.kernel.org,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Subject: Re: [PATCH v2 19/27] pci: PCIe driver for Marvell Armada 370/XP
+	systems
+Message-ID: <20130131153625.GB23505@n2100.arm.linux.org.uk>
+References: <20130130120344.GA29490@avionic-0098.mockup.avionic-design.de> <20130130150856.GJ23505@n2100.arm.linux.org.uk> <20130130151934.GK23505@n2100.arm.linux.org.uk> <20130130163659.75360dba@skate> <20130130154602.GL23505@n2100.arm.linux.org.uk> <20130131153041.35fa3b60@skate> <20130131145002.GZ23505@n2100.arm.linux.org.uk> <20130131155737.4ab97a0b@skate> <20130131150801.GA23505@n2100.arm.linux.org.uk> <20130131162237.79de29c4@skate>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo5Cfi0KbOqDr4TfnzjWFy7V-oi0bOY-vf8Y16_RPtEGdQ@mail.gmail.com>
-References: <20130118113019.6698.25941.stgit@zurg> <20130118114218.6698.42484.stgit@zurg>
- <CAErSpo5Cfi0KbOqDr4TfnzjWFy7V-oi0bOY-vf8Y16_RPtEGdQ@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 28 Jan 2013 17:31:44 -0700
-Message-ID: <CAErSpo7g7H8QM4Rgc05ORM1xHPxVf74KX2G61mvMtMF+N=qh5Q@mail.gmail.com>
-Subject: Re: [PATCH 2/5] e1000e: fix pci device enable counter balance
-To: Konstantin Khlebnikov <khlebnikov@openvz.org>
-Cc: linux-kernel@vger.kernel.org, e1000-devel@lists.sourceforge.net,
-	linux-pci@vger.kernel.org, Bruce Allan <bruce.w.allan@intel.com>,
-	Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130131162237.79de29c4@skate>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Rafael @sisk.pl]
+On Thu, Jan 31, 2013 at 04:22:37PM +0100, Thomas Petazzoni wrote:
+> Dear Russell King - ARM Linux,
+> 
+> On Thu, 31 Jan 2013 15:08:01 +0000, Russell King - ARM Linux wrote:
+> > If that's what your bridge requires, then we need to detect it via
+> > its vendor and device IDs and only apply this fixup to those bridges
+> > which require a 64K alignment.
+> > 
+> > So, the IDs are vendor:device = 0x11ab:0x1092 ?  And let me get this
+> > straight, it _is_ a specific requirement for this particular bridge
+> > P2P bridge?
+> 
+> The vendor/device ID will change. This P2P bridge is emulated. However,
+> I'm not sure why you need to know the vendor:device ID to make the
+> fixup specific.
+> 
+> The fixup is already specific to those bridges, since I am just setting
+> pci_sys_data->win_align_io to 64K for the particular buses that are
+> downstream the problematic bridges. So it doesn't affect any other bus
+> on the system, and therefore I don't think this fixup needs to be made
+> specific to a given vendor:device, no?
 
-On Mon, Jan 28, 2013 at 4:09 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> [+cc Rafael]
->
-> On Fri, Jan 18, 2013 at 4:42 AM, Konstantin Khlebnikov
-> <khlebnikov@openvz.org> wrote:
->> __e1000_shutdown() calls pci_disable_device() at the end, thus __e1000_resume()
->> should call pci_enable_device_mem() to keep enable counter in balance.
->>
->> Bug was introduced in commit 23606cf5d1192c2b17912cb2ef6e62f9b11de133
->> ("e1000e / PCI / PM: Add basic runtime PM support (rev. 4)") in v2.6.35
->>
->> Signed-off-by: Konstantin Khlebnikov <khlebnikov@openvz.org>
->> Cc: e1000-devel@lists.sourceforge.net
->> Cc: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
->> Cc: Bruce Allan <bruce.w.allan@intel.com>
->> ---
->>  drivers/net/ethernet/intel/e1000e/netdev.c |    7 +++++++
->>  1 file changed, 7 insertions(+)
->>
->> diff --git a/drivers/net/ethernet/intel/e1000e/netdev.c b/drivers/net/ethernet/intel/e1000e/netdev.c
->> index 2853c11..6bce796 100644
->> --- a/drivers/net/ethernet/intel/e1000e/netdev.c
->> +++ b/drivers/net/ethernet/intel/e1000e/netdev.c
->> @@ -5598,6 +5598,13 @@ static int __e1000_resume(struct pci_dev *pdev)
->>         pci_restore_state(pdev);
->>         pci_save_state(pdev);
->>
->> +       err = pci_enable_device_mem(pdev);
->> +       if (err) {
->> +               dev_err(&pdev->dev,
->> +                       "Cannot re-enable PCI device after suspend.\n");
->> +               return err;
->> +       }
->
-> Reviewed-by: Bjorn Helgaas <bhelgaas@google.com>
->
-> Seems right to me, and the other users I looked at (igb, azx,
-> virtio_pci) call pci_disable_device() in .suspend() and call
-> pci_enable_device() in .resume() as you propose to do here.
->
-> I assume the e1000 folks will handle this patch (and the previous one).
->
->> +
->>         e1000e_set_interrupt_capability(adapter);
->>         if (netif_running(netdev)) {
->>                 err = e1000_request_irq(adapter);
->>
+The pci_sys_data is not specific to one bus.  It's specific from the
+root bus downwards, and is shared by all child busses.
 
-I'm still missing something.  In your original report
-(https://lkml.org/lkml/2013/1/1/25), you noticed that "enable_cnt ==
-0" immediately after boot, after e1000e had claimed the device:
+The problem is if you have some card or a conventional P2P bridge which
+has 4K windows.  If you merely set the alignment to 64K for all bridges,
+then all bridges get this treatment whether or not they need it.  That's
+what I'm trying to avoid.
 
-> Right after boot it looks like this:
->
-> root@zurg:/sys/bus/pci/devices# lspci
-> ...
-> 00:19.0 Ethernet controller: Intel Corporation 82579LM Gigabit Network Connection (rev 04)
-> ...
-> root@zurg:/sys/bus/pci/devices# cat 0000\:00\:19.0/enable
-> 0
-> here must be '1', not '0'
+Take, for instance, a cardbus bridge (remember, there are PCI cards which
+can be plugged in to give you a cardbus slot.)  I have a device here which
+can be plugged into a cardbus slot which has not just one P2P bridge but
+two, and a bunch of downsteam devices, including VGA, ethernet, USB, PS/2
+etc.  (Okay, Linux doesn't support this hardware because of crappy X86
+stuff, despite the fact Windows cope with it just fine.)
 
-But these patches only change the e1000e suspend/resume path.  How
-could they change the enable_cnt before you've even done a suspend?
+There have been cards in the past which have had P2P bridges on them as
+well.
 
-Bjorn
+So, simply believing that the only P2P bridges in the system will be
+those on the physical board is a mistake.
