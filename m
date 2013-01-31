@@ -1,51 +1,98 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 16 Jan 2013 16:17:16 +0000
-From: Andrew Murray <andrew.murray@arm.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Thierry Reding <thierry.reding@avionic-design.de>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	"rob.herring@calxeda.com" <rob.herring@calxeda.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	"devicetree-discuss@lists.ozlabs.org"
-	<devicetree-discuss@lists.ozlabs.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 10/14] PCI: tegra: Move PCIe driver to drivers/pci/host
-Message-ID: <20130116161716.GA10630@arm.com>
-References: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de>
- <20130115154038.GA11241@arm.com>
- <20130115211441.GA13139@avionic-0098.adnet.avionic-design.de>
- <201301161400.26587.arnd@arndb.de>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ve0-f172.google.com ([209.85.128.172]:57437 "EHLO
+	mail-ve0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751375Ab3AaQa2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 31 Jan 2013 11:30:28 -0500
+Received: by mail-ve0-f172.google.com with SMTP id cz11so635310veb.17
+        for <linux-pci@vger.kernel.org>; Thu, 31 Jan 2013 08:30:27 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <201301161400.26587.arnd@arndb.de>
-Content-Type: text/plain; charset=WINDOWS-1252
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20130131170401.4b3bfbbf@skate>
+References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
+ <1359399397-29729-20-git-send-email-thomas.petazzoni@free-electrons.com>
+ <CAErSpo5H08j=dZx9zapDaf1c9x6VUfuJ5oB=J0M1UFF55pg=mw@mail.gmail.com>
+ <20130129055508.GA3339@obsidianresearch.com> <CAErSpo7gCFfLB6+ebvANQjkr7Bii8Jqt3y5YqExD-DcnBG7hgA@mail.gmail.com>
+ <20130129184157.GA29274@obsidianresearch.com> <CAErSpo5K8yKqjzQ6s+imb3d5wLSkhvWp-d=pPv9CZk+o67kyaQ@mail.gmail.com>
+ <20130129191853.GB29274@obsidianresearch.com> <CAErSpo4Zvy7=ROajygecfsEFVJxy-yNbSntdQdDFcQBPz=Qgfg@mail.gmail.com>
+ <CAErSpo41TbWTZ_6m0_uv-EaKnnqMR9jpqsarOJLGYZ31mrdkiw@mail.gmail.com>
+ <20130130103501.1873d39c@skate> <CAErSpo5NTyrHv8AQkw3hYpJRiZsk1HKHP3jP_MMpEVVhCgjKYg@mail.gmail.com>
+ <20130131170401.4b3bfbbf@skate>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 31 Jan 2013 09:30:07 -0700
+Message-ID: <CAErSpo7fPzrF_OZSL7Ss0LT70Qz+veXLW-ihA7fAXCwsn142cQ@mail.gmail.com>
+Subject: Re: [PATCH v2 19/27] pci: PCIe driver for Marvell Armada 370/XP systems
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 16, 2013 at 02:00:26PM +0000, Arnd Bergmann wrote:
-> On Tuesday 15 January 2013, Thierry Reding wrote:
-> > Is there actually hardware that supports this? I assumed that the MSI
-> > controller would have to be tightly coupled to the PCI host bridge in
-> > order to raise an interrupt when an MSI is received via PCI.
-> 
-> No, as long as it's guaranteed that the MSI notification won't arrive
-> at the CPU before any inbound DMA data before it, the MSI controller
-> can be anywhere. Typically, the MSI controller is actually closer to
-> the CPU core than to the PCI bridge. On X86, I believe the MSI address
-> is on normally on the the "local APIC" on each CPU.
+On Thu, Jan 31, 2013 at 9:04 AM, Thomas Petazzoni
+<thomas.petazzoni@free-electrons.com> wrote:
+> Dear Bjorn Helgaas,
+>
+> On Wed, 30 Jan 2013 11:52:15 -0700, Bjorn Helgaas wrote:
+>
+>> The secondary/subordinate registers effectively define a bus number
+>> aperture that tells the bridge which transactions to claim and forward
+>> downstream.  When enumerating devices, we may update the subordinate
+>> bus number to widen the aperture so we can enumerate an arbitrary tree
+>> behind the bridge.  When we're finished, we'll probably narrow it by
+>> updating the subordinate again, so the unused bus number space can be
+>> used for other bridges.  I don't know the exact details of the
+>> algorithm, and they're likely to change anyway, but pci_scan_bridge()
+>> is where most of it happens.
+>>
+>> It looks like your current system doesn't support trees below the
+>> bridges, but hopefully we can make it so the generic enumeration
+>> algorithms still work.
+>
+> The PCI-to-PCI bridge specification says that the Primary Bus Number
+> Register, Secondary Bus Number Register and Subordinate Bus Number
+> Register of the PCI configuration space of a PCI-to-PCI bridge should
+> all be set to 0 after reset.
+>
+> Until now, I was forcing a specific value of the Secondary Bus Number
+> and Subordinate Bus Number (1 for my first bridge, 2 for my second
+> bridge, etc.).
+>
+> Following you're recommendation, I've changed this, and left those
+> values initialized to 0 by default, in order to let Linux set correct
+> values. Yes, Linux does assign appropriate values in the Secondary Bus
+> Number Register. But before that Linux also complains loudly that the
+> bridge configuration is invalid:
+>
+> pci 0000:00:01.0: bridge configuration invalid ([bus 00-00]), reconfiguring
+> pci 0000:00:02.0: bridge configuration invalid ([bus 00-00]), reconfiguring
+> pci 0000:00:03.0: bridge configuration invalid ([bus 00-00]), reconfiguring
+> pci 0000:00:04.0: bridge configuration invalid ([bus 00-00]), reconfiguring
+> pci 0000:00:05.0: bridge configuration invalid ([bus 00-00]), reconfiguring
+> pci 0000:00:06.0: bridge configuration invalid ([bus 00-00]), reconfiguring
 
-MSIs are indistinguishable from other memory-write transactions originating
-from the RC other than the address they target. Anything that can capture
-that write in the address space (even a page fault) could be an MSI controller
-and call interrupt handlers. And so the RC / MSI controllers don't need to
-be aware of each other.
+Linux makes the unwarranted assumption that the PCI hierarchy has
+already been configured by firmware.  If the only problem is the
+messages above, I think we could just rework the message so it doesn't
+look like an error.  I would guess that we probably also see the same
+distressing message when we hot-add a card with a bridge on it,
+because firmware won't have initialized the bridge.
 
-Andrew Murray
+My rule of thumb is that I like to note something in dmesg about the
+initial configuration of bus/mem/io apertures and BARs, as well as
+indications when we update them.  That way, the dmesg log should
+contain enough information to debug most enumeration and configuration
+defects.  pci_scan_bridge() is somewhat lacking in this regard.
 
+Bjorn
