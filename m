@@ -1,132 +1,107 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vc0-f182.google.com ([209.85.220.182]:51194 "EHLO
-	mail-vc0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754612Ab3ADUBY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Jan 2013 15:01:24 -0500
-Received: by mail-vc0-f182.google.com with SMTP id fy27so16905387vcb.41
-        for <linux-pci@vger.kernel.org>; Fri, 04 Jan 2013 12:01:23 -0800 (PST)
+Received: from mail-ve0-f170.google.com ([209.85.128.170]:50864 "EHLO
+	mail-ve0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751515Ab3AaAYg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Jan 2013 19:24:36 -0500
+Received: by mail-ve0-f170.google.com with SMTP id 14so955358vea.15
+        for <linux-pci@vger.kernel.org>; Wed, 30 Jan 2013 16:24:35 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <50E5A6A1.5040508@gmail.com>
-References: <CAMVG2ssiRgcTD1bej2tkUUfsWmpL5eNtPcNif9va2-Gzb2u8nQ@mail.gmail.com>
- <50E5A6A1.5040508@gmail.com>
+In-Reply-To: <20130118113742.GA9006@arm.com>
+References: <20130118113742.GA9006@arm.com>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 4 Jan 2013 13:01:03 -0700
-Message-ID: <CAErSpo6KJvEkiqkU--sF_vySk2YUgL_9t1OEYAAGBp9Ebom26w@mail.gmail.com>
-Subject: Re: 3.8-rc2: pciehp waitqueue hang...
-To: Jiang Liu <liuj97@gmail.com>
-Cc: Daniel J Blueman <daniel@quora.org>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Linux Kernel <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>
+Date: Wed, 30 Jan 2013 17:24:14 -0700
+Message-ID: <CAErSpo7Oyx41Qy80YcZNpSe7CatzLZ4Lai0--YRGJ0NZ1zQTRA@mail.gmail.com>
+Subject: Re: [PATCH RFC 1/2] Implementation of pci_fixup_irqs for descendants
+ of a specified bus
+To: Andrew Murray <Andrew.Murray@arm.com>
+Cc: Thierry Reding <thierry.reding@avionic-design.de>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	"rob.herring@calxeda.com" <rob.herring@calxeda.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	"devicetree-discuss@lists.ozlabs.org"
+	<devicetree-discuss@lists.ozlabs.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jan 3, 2013 at 8:41 AM, Jiang Liu <liuj97@gmail.com> wrote:
-> Hi Daniel,
->         It seems like an issue caused by recursive PCIe HPC.
-> Could you please help to try the patch from:
-> http://www.spinics.net/lists/linux-pci/msg18625.html
+On Fri, Jan 18, 2013 at 4:37 AM, Andrew Murray <Andrew.Murray@arm.com> wrote:
+> Continuing from discussion with Thierry (lkml.org/lkml/2013/1/18/107) perhaps
+> this will be useful to fold into your patchset.
+> ---
+> This patch provides pci_bus_fixup_irqs which performs the same
+> function as pci_fixup_irqs but only to descendants of the specified
+> bus.
 
-Hi Gerry,
+I think pci_fixup_irqs() is a broken design to begin with because it
+is only called once at boot-time and it iterates over all the devices
+we've found so far.  Any hot-added devices never get the fixups.
 
-I'm working on merging this patch.  Seems like something that might be
-appropriate for stable as well.
+Adding pci_bus_fixup_irqs() addresses part of that, by adding a way to
+fixup a subset of devices, e.g., maybe it could be done for hot-added
+things.
 
-Did you look for similar problems in other hotplug drivers?
+But I think it would be better to do a more extensive refactoring and
+do the IRQ fixups directly somewhere in the pci_device_add() path.
+That way we can do it a device at a time, for every device (present at
+boot and hot-added later), and before any drivers claim the device.
 
-> Thanks!
-> Gerry
-> On 01/03/2013 11:11 PM, Daniel J Blueman wrote:
->> When the Apple thunderbolt ethernet adapter comes loose on my Macbook
->> Pro Retina (Intel DSL3510), we see pci_slot_name return
->> non-deterministic data (ie varying each boot), and we see pciehp_wp
->> remain armed with events causing the kthread to get stuck:
->>
->> tg3 0000:0a:00.0 eth0: Link is up at 1000 Mbps, full duplex
->> tg3 0000:0a:00.0 eth0: Flow control is on for TX and on for RX
->> <thunderbold adapter comes loose>
->> pciehp 0000:06:03.0:pcie24: Card not present on Slot(3)
->> tg3 0000:0a:00.0: tg3_abort_hw timed out, TX_MODE_ENABLE will not
->> clear MAC_TX_MODE=ffffffff
->> tg3 0000:0a:00.0 eth0: No firmware running
->> tg3 0000:0a:00.0 eth0: Link is down
->> pcieport 0000:00:01.1: System wakeup enabled by ACPI
->> pciehp 0000:09:00.0:pcie24: unloading service driver pciehp
->> pciehp 0000:09:00.0:pcie24: Latch open on
->> Slot(\xfffffff89\xffffffbbe\x02\xffffff88\xffffffff\xffffffff\xffffffe09\xffffffbbe\x02\xffffff88\xffffffff\xfffffffffbcon)
->> pciehp 0000:09:00.0:pcie24: Button pressed on
->> Slot(\xfffffff89\xffffffbbe\x02\xffffff88\xffffffff\xffffffff\xffffffe09\xffffffbbe\x02\xffffff88\xffffffff\xfffffffffbcon)
->> pciehp 0000:09:00.0:pcie24: Card present on
->> Slot(\xfffffff89\xffffffbbe\x02\xffffff88\xffffffff\xffffffff\xffffffe09\xffffffbbe\x02\xffffff88\xffffffff\xfffffffffbcon)
->> pciehp 0000:09:00.0:pcie24: Power fault on slot
->> \xfffffff89\xffffffbbe\x02\xffffff88\xffffffff\xffffffff\xffffffe09\xffffffbbe\x02\xffffff88\xffffffff\xfffffffffbcon
->> pciehp 0000:09:00.0:pcie24: Power fault bit 0 set
->> pciehp 0000:09:00.0:pcie24: PCI slot
->> #\xfffffff89\xffffffbbe\x02\xffffff88\xffffffff\xffffffff\xffffffe09\xffffffbbe\x02\xffffff88\xffffffff\xfffffffffbcon
->> - powering on due to button press.
->> pciehp 0000:09:00.0:pcie24: Link Training Error occurs
->> pciehp 0000:09:00.0:pcie24: Failed to check link status
->> INFO: task kworker/0:1:52 blocked for more than 120 seconds.
->> "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
->> kworker/0:1   D ffff880265893090   0  52   2 0x00000000
->>  ffff8802655456f8 0000000000000046 ffffffff81a21a60 ffff880265545fd8
->>  0000000000004000 ffff880265545fd8 ffff880265892bb0 ffff880265adc8d0
->>  000000000000059e 0000000000000082 ffff880265545668 ffffffff810415aa
->> Call Trace:
->>  [<ffffffff810415aa>] ? console_unlock+0x1fa/0x4a0
->>  [<ffffffff8108d16d>] ? trace_hardirqs_off+0xd/0x10
->>  [<ffffffff81041b19>] ? vprintk_emit+0x1c9/0x510
->>  [<ffffffff81558db4>] schedule+0x24/0x70
->>  [<ffffffff8155653c>] schedule_timeout+0x19c/0x1e0
->>  [<ffffffff81558c43>] wait_for_common+0xe3/0x180
->>  [<ffffffff8105adc1>] ? flush_workqueue+0x111/0x4d0
->>  [<ffffffff81071140>] ? try_to_wake_up+0x2d0/0x2d0
->>  [<ffffffff81558d88>] wait_for_completion+0x18/0x20
->>  [<ffffffff8105ae86>] flush_workqueue+0x1d6/0x4d0
->>  [<ffffffff8105acb0>] ? flush_workqueue_prep_cwqs+0x200/0x200
->>  [<ffffffff8125e909>] pciehp_release_ctrl+0x39/0x90
->>  [<ffffffff8125b945>] pciehp_remove+0x25/0x30
->>  [<ffffffff81255bf2>] pcie_port_remove_service+0x52/0x70
->>  [<ffffffff81306a27>] __device_release_driver+0x77/0xe0
->>  [<ffffffff81306ab9>] device_release_driver+0x29/0x40
->>  [<ffffffff813064b1>] bus_remove_device+0xf1/0x140
->>  [<ffffffff81303fe7>] device_del+0x127/0x1c0
->>  [<ffffffff81255d70>] ? resume_iter+0x40/0x40
->>  [<ffffffff81304091>] device_unregister+0x11/0x20
->>  [<ffffffff81255da5>] remove_iter+0x35/0x40
->>  [<ffffffff81302eb6>] device_for_each_child+0x36/0x70
->>  [<ffffffff81256341>] pcie_port_device_remove+0x21/0x40
->>  [<ffffffff81256588>] pcie_portdrv_remove+0x28/0x50
->>  [<ffffffff8124a821>] pci_device_remove+0x41/0xc0
->>  [<ffffffff81306a27>] __device_release_driver+0x77/0xe0
->>  [<ffffffff81306ab9>] device_release_driver+0x29/0x40
->>  [<ffffffff813064b1>] bus_remove_device+0xf1/0x140
->>  [<ffffffff81303fe7>] device_del+0x127/0x1c0
->>  [<ffffffff81304091>] device_unregister+0x11/0x20
->>  [<ffffffff8124566c>] pci_stop_bus_device+0x8c/0xa0
->>  [<ffffffff81245615>] pci_stop_bus_device+0x35/0xa0
->>  [<ffffffff81245811>] pci_stop_and_remove_bus_device+0x11/0x20
->>  [<ffffffff8125cc91>] pciehp_unconfigure_device+0x91/0x190
->>  [<ffffffff8125c76d>] ? pciehp_power_thread+0x2d/0x110
->>  [<ffffffff8125c591>] pciehp_disable_slot+0x71/0x220
->>  [<ffffffff8125c826>] pciehp_power_thread+0xe6/0x110
->>  [<ffffffff8105d203>] process_one_work+0x193/0x550
->>  [<ffffffff8105d1a1>] ? process_one_work+0x131/0x550
->>  [<ffffffff8125c740>] ? pciehp_disable_slot+0x220/0x220
->>  [<ffffffff8105d96d>] worker_thread+0x15d/0x400
->>  [<ffffffff8109213d>] ? trace_hardirqs_on+0xd/0x10
->>  [<ffffffff8105d810>] ? rescuer_thread+0x210/0x210
->>  [<ffffffff81062bd6>] kthread+0xd6/0xe0
->>  [<ffffffff8155a18b>] ? _raw_spin_unlock_irq+0x2b/0x50
->>  [<ffffffff81062b00>] ? __init_kthread_worker+0x70/0x70
->>  [<ffffffff8155ae6c>] ret_from_fork+0x7c/0xb0
->>  [<ffffffff81062b00>] ? __init_kthread_worker+0x70/0x70
->>
+> This can reduce unnecessary fixing up of device irqs when new buses
+> are added.
 >
+> Signed-off-by: Andrew Murray <Andrew.Murray@arm.com>
+> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+> ---
+>  drivers/pci/setup-irq.c |   15 +++++++++++++++
+>  include/linux/pci.h     |    3 +++
+>  2 files changed, 18 insertions(+), 0 deletions(-)
+>
+> diff --git a/drivers/pci/setup-irq.c b/drivers/pci/setup-irq.c
+> index eb219a1..ea91874 100644
+> --- a/drivers/pci/setup-irq.c
+> +++ b/drivers/pci/setup-irq.c
+> @@ -62,3 +62,18 @@ pci_fixup_irqs(u8 (*swizzle)(struct pci_dev *, u8 *),
+>         for_each_pci_dev(dev)
+>                 pdev_fixup_irq(dev, swizzle, map_irq);
+>  }
+> +
+> +void __init
+> +pci_bus_fixup_irqs(struct pci_bus *bus,
+> +               u8 (*swizzle)(struct pci_dev *, u8 *),
+> +               int (*map_irq)(const struct pci_dev *, u8, u8))
+> +{
+> +       struct pci_dev *dev;
+> +
+> +       list_for_each_entry(dev, &bus->devices, bus_list) {
+> +               pdev_fixup_irq(dev, swizzle, map_irq);
+> +
+> +               if (dev->subordinate)
+> +                       pci_bus_fixup_irqs(dev->subordinate, swizzle, map_irq);
+> +       }
+> +}
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 5faa831..1b3c2eb 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -953,6 +953,9 @@ void pdev_enable_device(struct pci_dev *);
+>  int pci_enable_resources(struct pci_dev *, int mask);
+>  void pci_fixup_irqs(u8 (*)(struct pci_dev *, u8 *),
+>                     int (*)(const struct pci_dev *, u8, u8));
+> +void pci_bus_fixup_irqs(struct pci_bus *bus,
+> +               u8 (*swizzle)(struct pci_dev *, u8 *),
+> +               int (*map_irq)(const struct pci_dev *, u8, u8));
+>  #define HAVE_PCI_REQ_REGIONS   2
+>  int __must_check pci_request_regions(struct pci_dev *, const char *);
+>  int __must_check pci_request_regions_exclusive(struct pci_dev *, const char *);
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 1.7.0.4
+>
+>
