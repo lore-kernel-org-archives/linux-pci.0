@@ -1,56 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.186]:64130 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752022Ab3AKPgg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Jan 2013 10:36:36 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Thierry Reding <thierry.reding@avionic-design.de>
-Subject: Re: [PATCH 10/14] PCI: tegra: Move PCIe driver to drivers/pci/host
-Date: Fri, 11 Jan 2013 15:36:14 +0000
-Cc: Stephen Warren <swarren@wwwdotorg.org>,
-	linux-tegra@vger.kernel.org,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Murray <andrew.murray@arm.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
-References: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de> <50EF54B6.6010100@wwwdotorg.org> <20130111034015.GA28094@avionic-0098.adnet.avionic-design.de>
-In-Reply-To: <20130111034015.GA28094@avionic-0098.adnet.avionic-design.de>
+Received: from hydra.sisk.pl ([212.160.235.94]:37024 "EHLO hydra.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751264Ab3AaUwv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 31 Jan 2013 15:52:51 -0500
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Andrew Murray <andrew.murray@arm.com>
+Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
+	thierry.reding@avionic-design.de,
+	thomas.petazzoni@free-electrons.com, jbarnes@virtuousgeek.org
+Subject: Re: PME and dependency on ACPI
+Date: Thu, 31 Jan 2013 21:59:02 +0100
+Message-ID: <1640358.IasfHydsYU@vostro.rjw.lan>
+In-Reply-To: <20130131142303.GA29628@arm.com>
+References: <20130131142303.GA29628@arm.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Message-Id: <201301111536.14799.arnd@arndb.de>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday 11 January 2013, Thierry Reding wrote:
-> Right, it'll need #ifdefs around the arch_{setup,teardown}_msi_irq(). Or
-> select PCI_MSI unconditionally. Once this is merged I was going to post
-> a patch that enables PCI_MSI in tegra_defconfig anyway. But it might be
-> better to keep it optional anyway since the remainder of the code copes
-> with it properly.
+On Thursday, January 31, 2013 02:23:03 PM Andrew Murray wrote:
+> I think that PME may place an unnecessary dependency on ACPI...
 > 
-Actually, we need something better than that. You cannot define
-arch_setup_msi_irq in a tegra specific pci host driver, because that
-will seriously mess up other platforms in multiplatform configurations
-by giving a link error when they also define this function, or with a
-run-time error when they don't support it.
+> in drivers/pci/pcie/Kconfig:
+> 
+> config PCIE_PME
+> 	def_bool y
+> 	depends on PCIEPORTBUS && PM_RUNTIME && ACPI
+> 
+> 
+> and drivers/pci/pcie/pme.c:
+> 
+> #include <linux/acpi.h>
+> #include <linux/pci-acpi.h>
+> 
+> On an ARM platform I can remove the #include's and remove the Kconfig
+> dependency on ACPI and PME springs into life. 
+> 
+> Is there any other reason why ACPI may be needed here?
 
-I think what we should do here is fix it the right way by adding
-a pci host specific callback rather than an architecture specific
-callback in drivers/pci/msi.c. There is already a default version
-of arch_setup_msi_irqs (with s), and we can probably do the
-same for arch_setup_msi_irq (without s) to fall back to the
-arch version for most architectures.
-Most architectures (at least powerpc, sparc, ia64 and x86) already
-multiplex the msi handlers internally, but ARM does not because
-there is only one implementation (iop33x) at the moment.
+On x86 (PC) we need ACPI to determine whether or not we're allowed to use the
+PME interrupt.  In turn, without that iterrupt PME is rather useless.
 
-We can add a generix multiplex and then move architectures over to
-use it.
+That said I don't think we need to make the PME *code* depend on ACPI, so it
+should be OK to remove the dependency from Kconfig.
 
-	Arnd
+Thanks,
+Rafael
+
+
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
