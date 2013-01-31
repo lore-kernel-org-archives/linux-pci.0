@@ -1,82 +1,119 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.8]:56143 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753419Ab3ACQBn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 Jan 2013 11:01:43 -0500
-Date: Thu, 3 Jan 2013 17:01:06 +0100
-From: Thierry Reding <thierry.reding@avionic-design.de>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+Received: from mail.free-electrons.com ([94.23.35.102]:46502 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751342Ab3AaQEI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 31 Jan 2013 11:04:08 -0500
+Date: Thu, 31 Jan 2013 17:04:01 +0100
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
 	Jason Cooper <jason@lakedaemon.net>,
 	Andrew Lunn <andrew@lunn.ch>,
 	Gregory Clement <gregory.clement@free-electrons.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Lior Amsalem <alior@marvell.com>,
+	Arnd Bergmann <arnd@arndb.de>,
 	Maen Suleiman <maen@marvell.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
 	Eran Ben-Avi <benavi@marvell.com>,
-	Yehuda Yitschak <yehuday@marvell.com>,
 	Nadav Haklai <nadavh@marvell.com>,
-	Rob Herring <robherring2@gmail.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: [RFC v1] PCIe support for the Armada 370 and Armada XP SoCs
-Message-ID: <20130103160106.GA7086@avionic-0098.adnet.avionic-design.de>
-References: <1354917879-32073-1-git-send-email-thomas.petazzoni@free-electrons.com>
- <20130103143931.GA28451@avionic-0098.adnet.avionic-design.de>
- <201301031556.31618.arnd@arndb.de>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="vkogqOf2sHV7VnPd"
-In-Reply-To: <201301031556.31618.arnd@arndb.de>
+	Shadi Ammouri <shadi@marvell.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>
+Subject: Re: [PATCH v2 19/27] pci: PCIe driver for Marvell Armada 370/XP
+ systems
+Message-ID: <20130131170401.4b3bfbbf@skate>
+In-Reply-To: <CAErSpo5NTyrHv8AQkw3hYpJRiZsk1HKHP3jP_MMpEVVhCgjKYg@mail.gmail.com>
+References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	<1359399397-29729-20-git-send-email-thomas.petazzoni@free-electrons.com>
+	<CAErSpo5H08j=dZx9zapDaf1c9x6VUfuJ5oB=J0M1UFF55pg=mw@mail.gmail.com>
+	<20130129055508.GA3339@obsidianresearch.com>
+	<CAErSpo7gCFfLB6+ebvANQjkr7Bii8Jqt3y5YqExD-DcnBG7hgA@mail.gmail.com>
+	<20130129184157.GA29274@obsidianresearch.com>
+	<CAErSpo5K8yKqjzQ6s+imb3d5wLSkhvWp-d=pPv9CZk+o67kyaQ@mail.gmail.com>
+	<20130129191853.GB29274@obsidianresearch.com>
+	<CAErSpo4Zvy7=ROajygecfsEFVJxy-yNbSntdQdDFcQBPz=Qgfg@mail.gmail.com>
+	<CAErSpo41TbWTZ_6m0_uv-EaKnnqMR9jpqsarOJLGYZ31mrdkiw@mail.gmail.com>
+	<20130130103501.1873d39c@skate>
+	<CAErSpo5NTyrHv8AQkw3hYpJRiZsk1HKHP3jP_MMpEVVhCgjKYg@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Dear Bjorn Helgaas,
 
---vkogqOf2sHV7VnPd
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+On Wed, 30 Jan 2013 11:52:15 -0700, Bjorn Helgaas wrote:
 
-On Thu, Jan 03, 2013 at 03:56:31PM +0000, Arnd Bergmann wrote:
-> On Thursday 03 January 2013, Thierry Reding wrote:
-> > Stephen proposed drivers/pci/host on IRC and I second that.
->=20
-> Agreed, I like that, too. There is a little problem with cross-platform
-> PCI hosts still because some portion of the interface is still arch
-> specific, but I don't see this as a show-stopper for moving drivers
-> there. The ARM specific drivers can still use the ARM interfaces
-> for now, until everything is made generic. If they are going to
-> be shared with other architectures, those can use the same interfaces
-> that ARM has. I think Microblaze, ARC and Metag are strong candidates
-> for doing this.
+> The secondary/subordinate registers effectively define a bus number
+> aperture that tells the bridge which transactions to claim and forward
+> downstream.  When enumerating devices, we may update the subordinate
+> bus number to widen the aperture so we can enumerate an arbitrary tree
+> behind the bridge.  When we're finished, we'll probably narrow it by
+> updating the subordinate again, so the unused bus number space can be
+> used for other bridges.  I don't know the exact details of the
+> algorithm, and they're likely to change anyway, but pci_scan_bridge()
+> is where most of it happens.
+> 
+> It looks like your current system doesn't support trees below the
+> bridges, but hopefully we can make it so the generic enumeration
+> algorithms still work.
 
-Great, sounds like a plan. I'll move Tegra PCIe into drivers/pci/host
-then.
+The PCI-to-PCI bridge specification says that the Primary Bus Number
+Register, Secondary Bus Number Register and Subordinate Bus Number
+Register of the PCI configuration space of a PCI-to-PCI bridge should
+all be set to 0 after reset.
 
-Thierry
+Until now, I was forcing a specific value of the Secondary Bus Number
+and Subordinate Bus Number (1 for my first bridge, 2 for my second
+bridge, etc.).
 
---vkogqOf2sHV7VnPd
-Content-Type: application/pgp-signature
+Following you're recommendation, I've changed this, and left those
+values initialized to 0 by default, in order to let Linux set correct
+values. Yes, Linux does assign appropriate values in the Secondary Bus
+Number Register. But before that Linux also complains loudly that the
+bridge configuration is invalid:
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
+pci 0000:00:01.0: bridge configuration invalid ([bus 00-00]), reconfiguring
+pci 0000:00:02.0: bridge configuration invalid ([bus 00-00]), reconfiguring
+pci 0000:00:03.0: bridge configuration invalid ([bus 00-00]), reconfiguring
+pci 0000:00:04.0: bridge configuration invalid ([bus 00-00]), reconfiguring
+pci 0000:00:05.0: bridge configuration invalid ([bus 00-00]), reconfiguring
+pci 0000:00:06.0: bridge configuration invalid ([bus 00-00]), reconfiguring
 
-iQIcBAEBAgAGBQJQ5atBAAoJEN0jrNd/PrOhPVYP/0V9lIMwKKPxjuTM/RwlLv8z
-OUWaoAuEbmo8v7lHfrMSUdyvkKjW+KH9nRWIdKCMYrbFwddEuJ6DBQT4sJe0oF0Q
-rBITcYlotQrLdbipkJYMAQEFEQEPQQi1nSpBepViFkv6zR/AMvgxyc5y4uT3DHyu
-3Qv65s2KcDuWYKsWfclw3+EeBUcmpr1DzJUU1AxUiNrESZdxkChTJW5QR8t08qJu
-TjWAImzn9ClbY1WUAg29lXkY3YslUEBvJJUd2VyVO7P0WvboNAwm1T9vu+lvYBea
-zvbHALpuAdL/OzgUqiUzGP/gNMTqdgGT2+ImT9W+QjPKk58yOiuXzIYFK6JXIC2q
-TKzVOU/RNQ3Oju5nuL7ukvoylfjDaIFwmzhMsfqnWNvMWx4YXa2Nok+IMkkhlh5j
-OPdyQgVWWRiv9r5ZEHdts0a5HFCqmCuz1XypZKvS11ep42QNW+e0EDs00kz6Gsja
-vBYqoW3mB4TYVuHRN4jDbCXEVzge+Jj6IDd0WqUIbtl51siJnR8iSQopO1K/keMr
-+Nhs8Oe5/NceklD4fJXrvk/37fZNsOa0zofDYD5h/+a19ClVIkUi6U9XfZ6XZwa+
-joVrVOZs00lMsDS9tzoF6eK+xT+qeTlzLP/TgyaoqOX10k+g+0tbDUU2Bir7ts9w
-UpjQgOze82749mAKFnCT
-=PB3T
------END PGP SIGNATURE-----
+Looking at the code, we have:
 
---vkogqOf2sHV7VnPd--
+        /* Check if setup is sensible at all */
+        if (!pass &&
+            (primary != bus->number || secondary <= bus->number ||
+             secondary > subordinate)) {
+                dev_info(&dev->dev, "bridge configuration invalid ([bus %02x-%02x]), reconfiguring\n",
+                         secondary, subordinate);
+                broken = 1;
+        }
+
+Due to the default values of the Primary Bus Number Register, Secondary
+Bus Number Register and Subordinate Bus Number Register, we have:
+
+ primary = 0
+ secondary = 0
+ subordinate = 0
+
+We are enumerating the root bus, so bus->number = 0. Therefore:
+
+ * The test primary != bus->number is false, so it's not the problem.
+
+ * secondary <= bus->number is true, because secondary = 0, and
+   bus->number = 0. It is the problem.
+
+ * secondary > subordinate is false.
+
+So I'm not sure what to do with this...
+
+Thoas
+-- 
+Thomas Petazzoni, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
