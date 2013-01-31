@@ -1,79 +1,104 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vc0-f171.google.com ([209.85.220.171]:34401 "EHLO
-	mail-vc0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750913Ab3A2Tin (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Jan 2013 14:38:43 -0500
-Received: by mail-vc0-f171.google.com with SMTP id p1so524696vcq.30
-        for <linux-pci@vger.kernel.org>; Tue, 29 Jan 2013 11:38:42 -0800 (PST)
+Received: from mail-vb0-f41.google.com ([209.85.212.41]:62262 "EHLO
+	mail-vb0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755349Ab3AaR0s (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 31 Jan 2013 12:26:48 -0500
+Received: by mail-vb0-f41.google.com with SMTP id l22so1933274vbn.0
+        for <linux-pci@vger.kernel.org>; Thu, 31 Jan 2013 09:26:47 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20130129191853.GB29274@obsidianresearch.com>
-References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
- <1359399397-29729-20-git-send-email-thomas.petazzoni@free-electrons.com>
- <CAErSpo5H08j=dZx9zapDaf1c9x6VUfuJ5oB=J0M1UFF55pg=mw@mail.gmail.com>
- <20130129055508.GA3339@obsidianresearch.com> <CAErSpo7gCFfLB6+ebvANQjkr7Bii8Jqt3y5YqExD-DcnBG7hgA@mail.gmail.com>
- <20130129184157.GA29274@obsidianresearch.com> <CAErSpo5K8yKqjzQ6s+imb3d5wLSkhvWp-d=pPv9CZk+o67kyaQ@mail.gmail.com>
- <20130129191853.GB29274@obsidianresearch.com>
+In-Reply-To: <1359510052-21360-1-git-send-email-wangyijing@huawei.com>
+References: <1359510052-21360-1-git-send-email-wangyijing@huawei.com>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 29 Jan 2013 12:38:20 -0700
-Message-ID: <CAErSpo4Zvy7=ROajygecfsEFVJxy-yNbSntdQdDFcQBPz=Qgfg@mail.gmail.com>
-Subject: Re: [PATCH v2 19/27] pci: PCIe driver for Marvell Armada 370/XP systems
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>
+Date: Thu, 31 Jan 2013 10:26:26 -0700
+Message-ID: <CAErSpo6pQm+ytk5BMR_1cxL0DGcaKFROYUrwYjwY4UVhdhsTeg@mail.gmail.com>
+Subject: Re: [PATCH v4] PCI: Document PCIE BUS MPS parameters
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Rob Landley <rob@landley.net>, Jon Mason <jdmason@kudzu.us>,
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, Andrew Murray <andrew.murray@arm.com>,
+	Joe Lawrence <Joe.Lawrence@stratus.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Hanjun Guo <guohanjun@huawei.com>, jiang.liu@huawei.com
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 29, 2013 at 12:18 PM, Jason Gunthorpe
-<jgunthorpe@obsidianresearch.com> wrote:
-> On Tue, Jan 29, 2013 at 12:07:00PM -0700, Bjorn Helgaas wrote:
->> > So when I say set aside, I mean for instance, the PCI-E entry in DT
->> > has 128M of physical address space marked for PCI MMIO use. The kernel
->> > does PCI resource allocation and the HW decoders in each link will be
->> > set to claim some portion of the 128M - based on the MMIO windows
->> > programmed on the PCI-PCI root port bridges. The reamining part of the
->> > 128M is dead address space, not claimed by any hardware block at all.
->>
->> Thanks, this really helps get to the issue that the PCI core will care
->> about.  The root ports look like normal bridges, so the core assumes
->> it can manage their windows as needed, as long as the windows stay
->> inside the host bridge apertures that are logically upstream from the
->> root ports.
+On Tue, Jan 29, 2013 at 6:40 PM, Yijing Wang <wangyijing@huawei.com> wrote:
+> v0->v1: Update MPS parameters as non-arch and add MRRS
+>                 description into pcie_bus_perf parameter suggested
+>                 by Andrew Murray.
+> v1->v2: Update some semantic problems and add MPS and MRRS
+>                 explanation suggested by Joe Lawrence and Randy Dunlap.
+> v2->v3: Update some semantic problems and the description
+>                 of pcie_bus_safe and pcie_bus_peer2peer suggested
+>                 by Bjorn Helgaas.
+> v3->v4: Update pcie_bus_safe description suggested by Jon Mason
 >
-> Yes, that is basically correct. This is what the PCI-E specification
-> says the root complex/root port should look like and this is what some
-> SOC hardware implements fully in hardware. The small wrinkle with
-> Marvell is that the PCI-PCI bridge config space is created by the
-> driver since the HW does not expose a standard config space.
-
-Oh, so the actual *root port* itself doesn't conform to the spec?
-Wow, that's worse than I expected.
-
-Then I guess you have emulate it and make sure its config space is
-complete enough and functional enough so that all the link management,
-power management, AER, etc., code in the core works as well as it
-would with a conforming device.
-
->> In your example, it sounds like the 128M should be treated as the host
->> bridge aperture.  Is there any reason not to do that?  It sounds like
->> there's no place you can actually program that 128M region into the
->> hardware, and you would just program pieces of that region as root
->> port windows.  But that should be OK from the core's perspective.
+> Document PCIE BUS MPS parameters pcie_bus_tune_off, pcie_bus_safe,
+> pcie_bus_peer2peer, pcie_bus_perf into Documentation/kernel-parameters.txt.
+> These parameters were introduced by Jon Mason <jdmason@kudzu.us> at
+> commit 5f39e6705 and commit b03e7495a8.
 >
-> AFAIK this is already what Thomas's driver is doing..
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> ---
+>  Documentation/kernel-parameters.txt |   14 ++++++++++++++
+>  1 files changed, 14 insertions(+), 0 deletions(-)
 >
-> Regards,
-> Jason
+> diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
+> index 363e348..6ad9b95 100644
+> --- a/Documentation/kernel-parameters.txt
+> +++ b/Documentation/kernel-parameters.txt
+> @@ -2227,6 +2227,20 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
+>                                 This sorting is done to get a device
+>                                 order compatible with older (<= 2.4) kernels.
+>                 nobfsort        Don't sort PCI devices into breadth-first order.
+> +               pcie_bus_tune_off       Disable PCIe MPS (Max Payload Size)
+> +                               tuning and use the BIOS-configured MPS defaults.
+> +               pcie_bus_safe   Set every device's MPS to the largest MPSS
+> +                               (Max Payload Size Support) common to all devices
+> +                               below the root complex.
+> +               pcie_bus_perf   Configure device MPS to the largest
+> +                               allowable MPS based on its parent bus. Also set
+> +                               MRRS (Max Read Request Size) to the largest supported
+> +                               value (no larger than the MPS that the device or bus
+> +                               can support) for best performance.
+> +               pcie_bus_peer2peer      Set every device's MPS to 128B, which
+> +                               every device is guaranteed to support. This
+> +                               configuration allows peer-to-peer DMA between any pair
+> +                               of devices possibly at the cost of reduced performance.
+>                 cbiosize=nn[KMG]        The fixed amount of bus space which is
+>                                 reserved for the CardBus bridge's IO window.
+>                                 The default value is 256 bytes.
+
+Added to pci/misc for v3.9 with the changes below.  If we need to
+change it more, let me know and I'll amend that branch.
+
+I tweaked the pcie_bus_safe text slightly.
+
+The hot-plug case was mentioned in your early patches, but not in the
+v4 patch.  I think that's an important use case and we should provide
+some guidance if we can.  I know you have some patches in the works
+related to this, but as far as I can tell, the only want to ensure
+that hot-added devices will work correctly is to use
+pcie_bus_peer2peer so every MPS is set to 128.
+
+The reason I think that is because in the pciehp_configure_device()
+path, where we configure MPS for newly-added devices, there's nothing
+that will change the MPS of any upstream bridges.  So we could have a
+root port with MPS=256 and we never change that, even if the new
+device only supports MPS=128.
+
+Hopefully we can make this smarter in the future, but the
+documentation should reflect the behavior of the current code.
+
+So let me know if any of the below is inaccurate.
+
++               pcie_bus_safe   Set every device's MPS to the largest value
++                               supported by all devices below the root complex.
+
++               pcie_bus_peer2peer      Set every device's MPS to 128B, which
++                               every device is guaranteed to support. This
++                               configuration allows peer-to-peer DMA between
++                               any pair of devices, possibly at the cost of
++                               reduced performance.  This also guarantees
++                               that hot-added devices will work.
