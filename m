@@ -1,13 +1,14 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.186]:50108 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753695Ab3AaQTH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 31 Jan 2013 11:19:07 -0500
-From: Arnd Bergmann <arnd@arndb.de>
+Received: from mail.free-electrons.com ([94.23.35.102]:46409 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751769Ab3AaPrk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 31 Jan 2013 10:47:40 -0500
+Date: Thu, 31 Jan 2013 16:47:35 +0100
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
 To: Russell King - ARM Linux <linux@arm.linux.org.uk>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+Cc: Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
 	Jason Cooper <jason@lakedaemon.net>,
+	Arnd Bergmann <arnd@arndb.de>,
 	Stephen Warren <swarren@wwwdotorg.org>,
 	linux-pci@vger.kernel.org,
 	Thierry Reding <thierry.reding@avionic-design.de>,
@@ -20,20 +21,41 @@ Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
 	linux-arm-kernel@lists.infradead.org,
 	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Subject: Re: [PATCH v2 19/27] pci: PCIe driver for Marvell Armada 370/XP systems
-Date: Thu, 31 Jan 2013 17:18:46 +0100
-Message-ID: <2776630.gp5gC9tvLk@wuerfel>
+Subject: Re: [PATCH v2 19/27] pci: PCIe driver for Marvell Armada 370/XP
+ systems
+Message-ID: <20130131164735.3e1d4a88@skate>
 In-Reply-To: <20130131153625.GB23505@n2100.arm.linux.org.uk>
-References: <20130130120344.GA29490@avionic-0098.mockup.avionic-design.de> <20130131162237.79de29c4@skate> <20130131153625.GB23505@n2100.arm.linux.org.uk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+References: <20130130120344.GA29490@avionic-0098.mockup.avionic-design.de>
+	<20130130150856.GJ23505@n2100.arm.linux.org.uk>
+	<20130130151934.GK23505@n2100.arm.linux.org.uk>
+	<20130130163659.75360dba@skate>
+	<20130130154602.GL23505@n2100.arm.linux.org.uk>
+	<20130131153041.35fa3b60@skate>
+	<20130131145002.GZ23505@n2100.arm.linux.org.uk>
+	<20130131155737.4ab97a0b@skate>
+	<20130131150801.GA23505@n2100.arm.linux.org.uk>
+	<20130131162237.79de29c4@skate>
+	<20130131153625.GB23505@n2100.arm.linux.org.uk>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday 31 January 2013 15:36:25 Russell King - ARM Linux wrote:
+Dear Russell King - ARM Linux,
+
+On Thu, 31 Jan 2013 15:36:25 +0000, Russell King - ARM Linux wrote:
+
+> > The fixup is already specific to those bridges, since I am just setting
+> > pci_sys_data->win_align_io to 64K for the particular buses that are
+> > downstream the problematic bridges. So it doesn't affect any other bus
+> > on the system, and therefore I don't think this fixup needs to be made
+> > specific to a given vendor:device, no?
+> 
 > The pci_sys_data is not specific to one bus.  It's specific from the
 > root bus downwards, and is shared by all child busses.
-> 
+
+Ah, ok, that's the part I was missing.
+
 > The problem is if you have some card or a conventional P2P bridge which
 > has 4K windows.  If you merely set the alignment to 64K for all bridges,
 > then all bridges get this treatment whether or not they need it.  That's
@@ -52,27 +74,18 @@ On Thursday 31 January 2013 15:36:25 Russell King - ARM Linux wrote:
 > So, simply believing that the only P2P bridges in the system will be
 > those on the physical board is a mistake.
 
-I was going to write something similar. Actually I think it's worse because
-the case of an extra P2P bridge is quite likely for devices that actually
-use I/O space, given that the use of I/O space is deprecated on PCIe.
+Yes, indeed, I understand this. I just thought this pci_sys_data
+structure was per-bus. Of course, if it's shared by all buses on the
+system, we need a way to apply this fixup only to the Marvell bridges.
 
-This also means that a lot of devices using I/O space are legacy crap
-and have random bugs regarding PCI standard compliance. I would not
-expect those devices in general to do the right thing when I/O ports
-beyond 65535 are used, although a lot of them would work.
+Should I just hard-code this special fixup in
+pcibios_window_alignment() with a check on VID/PID ?
 
-For all I could tell, the safest solution with the I/O space would
-be to pretend we had a shared 64K I/O space for all of the PCIe
-ports on Armada XP, and map a separate 64K window for each port
-using a different io_offset for each one.
-This way, you can have a device on the second PCIe port use e.g. I/O
-port number 0x3f8 for a legacy UART on the bus, which gets translated
-into the Linux-visible port number 0x103f8.
+Thanks,
 
-The currently used method to have io_offset=0 for all PCIe ports
-and use separate I/O port ranges of 64K for each PCIe port probably
-still works for most devices, except those where we hardcode a port
-number in the Linux device driver, or where the high address bits
-don't get decoded properly.
-
-	Arnd
+Thomas
+-- 
+Thomas Petazzoni, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
