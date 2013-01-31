@@ -1,75 +1,76 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <510494D6.1010000@gmail.com>
-Date: Sun, 27 Jan 2013 10:45:42 +0800
-From: Yijing Wang <wangyijing0307@gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-vc0-f179.google.com ([209.85.220.179]:58756 "EHLO
+	mail-vc0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755441Ab3AaRNi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 31 Jan 2013 12:13:38 -0500
+Received: by mail-vc0-f179.google.com with SMTP id gb23so1875803vcb.38
+        for <linux-pci@vger.kernel.org>; Thu, 31 Jan 2013 09:13:37 -0800 (PST)
 MIME-Version: 1.0
-To: Chris Clayton <chris2553@googlemail.com>
-CC: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>,
-	linux-media@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	linux-pci@vger.kernel.org
-Subject: Re: 3.8.0-rc4+ - Oops on removing WinTV-HVR-1400 expresscard TV Tuner
-References: <51016937.1020202@googlemail.com> <510189B1.606@fold.natur.cuni.cz> <5104427D.2050002@googlemail.com>
-In-Reply-To: <5104427D.2050002@googlemail.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <1359367251.883.13.camel@x61.thuisdomein>
+References: <1359367251.883.13.camel@x61.thuisdomein>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 31 Jan 2013 10:13:17 -0700
+Message-ID: <CAErSpo7grYijCUZGWGM4jao+MUqXYQ66q1az6bbKPMX4_Jwcyg@mail.gmail.com>
+Subject: Re: [PATCH] PCI: pciehp: hide ENTRY messages behind ctrl_dbg()
+To: Paul Bolle <pebolle@tiscali.nl>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-于 2013-01-27 4:54, Chris Clayton 写道:
-> Hi Martin,
-> 
-> On 01/24/13 19:21, Martin Mokrejs wrote:
->> Hi Chris,
->>    try to include in kernel only acpiphp and omit pciehp. Don't use modules but include
->> them statically. And try, in addition, check whether "pcie_aspm=off" in grub.conf helped.
->>
-> 
-> Thanks for the tip. I had the pciehp driver installed, but it was a module and not loaded. I didn't have acpiphp enabled at all. Building them both in statically, appears to have papered over the cracks of the oops :-)
+[+cc Rafael]
 
-Not loaded pciehp driver? Remove the device from this slot without poweroff ?
+On Mon, Jan 28, 2013 at 3:00 AM, Paul Bolle <pebolle@tiscali.nl> wrote:
+> In each suspend and resume cycle my laptop prints these messages at
+> KERN_INFO level:
+>     pciehp 0000:00:1c.1:pcie04: pciehp_suspend ENTRY
+>     pciehp 0000:00:1c.0:pcie04: pciehp_suspend ENTRY
+>
+> and
+>     pciehp 0000:00:1c.0:pcie04: pciehp_resume ENTRY
+>     pciehp 0000:00:1c.1:pcie04: pciehp_resume ENTRY
+>
+> Messages like these are probably only useful while debugging pciehp, so
+> let's hide them behind the ctrl_dbg() macro.
+>
+> Signed-off-by: Paul Bolle <pebolle@tiscali.nl>
+> ---
+> 0) Compile tested only!
+>
+> 1) Perhaps a better solution is to drop these messages entirely.
+>
+>  drivers/pci/hotplug/pciehp_core.c | 5 +++--
+>  1 file changed, 3 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
+> index 939bd1d..ed1702d 100644
+> --- a/drivers/pci/hotplug/pciehp_core.c
+> +++ b/drivers/pci/hotplug/pciehp_core.c
+> @@ -293,7 +293,8 @@ static void pciehp_remove(struct pcie_device *dev)
+>  #ifdef CONFIG_PM
+>  static int pciehp_suspend (struct pcie_device *dev)
+>  {
+> -       dev_info(&dev->device, "%s ENTRY\n", __func__);
+> +       struct controller *ctrl = get_service_data(dev);
+> +       ctrl_dbg(ctrl, "%s ENTRY\n", __func__);
+>         return 0;
 
-> 
->>    The best would if you subscribe to linux-pci, and read my recent threads
->> about similar issues I had with express cards with Dell Vostro 3550. Further, there is
->> a lot of changes to PCI hotplug done by Yingahi Liu and Rafael Wysockij, just browse the
->> archives of linux-pci and see the pacthes and the discussion.
-> 
-> Those discussions are way above my level of knowledge. I guess all this work will be merged into mainline in due course, so I'll watch for them in 3.9 or later. Unless, of course, there is a tree I could clone and help test the changes with my laptop and expresscard.
-> 
-> Hotplug isn't working at all on my Fujitsu laptop, so I can only get the card recognised by rebooting with the card inserted (or by writing 1 to/sys/bus/pci/rescan). There seem to be a few reports on this in the kernel bugzilla, so I'll look through them and see what's being done.
+I'd propose to just drop these messages completely.  Rafael, would you
+have any objection to that?
 
-Hi Chris,
-   What about use #modprobe pciehp pciehp_debug=1 pciehp_poll_mode=1 pciehp_poll_time=1 ?
-
-Can you resend the dmesg log and "lspci -vvv" info after hotplug device from your Fujitsu laptop with above module parameters?
-
-Thanks!
-Yijing.
-
-> Thanks again.
-> 
-> Chris
-> 
->> Martin
->>
->> Chris Clayton wrote:
->>> Hi,
->>>
->>> I've today taken delivery of a WinTV-HVR-1400 expresscard TV Tuner and got an Oops when I removed from the expresscard slot in my laptop. I will quite understand if the response to this report is "don't do that!", but in that case, how should one remove one of these cards?
->>>
->>> I have attached three files:
->>>
->>> 1. the dmesg output from when I rebooted the machine after the oops. I have turned debugging on in the dib700p and cx23885 modules via modules options in /etc/modprobe.d/hvr1400.conf;
->>>
->>> 2. the .config file for the kernel that oopsed.
->>>
->>> 3. the text of the oops message. I've typed this up from a photograph of the screen because the laptop was locked up and there was nothing in the log files. Apologies for any typos, but I have tried to be careful.
->>>
->>> Assuming the answer isn't don't do that, let me know if I can provide any additional diagnostics, test any patches, etc. Please, however, cc me as I'm not subscribed.
->>>
->>> Chris
-> -- 
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
+>  }
+>
+> @@ -303,8 +304,8 @@ static int pciehp_resume (struct pcie_device *dev)
+>         struct slot *slot;
+>         u8 status;
+>
+> -       dev_info(&dev->device, "%s ENTRY\n", __func__);
+>         ctrl = get_service_data(dev);
+> +       ctrl_dbg(ctrl, "%s ENTRY\n", __func__);
+>
+>         /* reinitialize the chipset's event detection logic */
+>         pcie_enable_notification(ctrl);
+> --
+> 1.7.11.7
+>
