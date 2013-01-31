@@ -1,99 +1,78 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from moutng.kundenserver.de ([212.227.126.186]:50108 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753695Ab3AaQTH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 31 Jan 2013 11:19:07 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Russell King - ARM Linux <linux@arm.linux.org.uk>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	linux-pci@vger.kernel.org,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Subject: Re: [PATCH v2 19/27] pci: PCIe driver for Marvell Armada 370/XP systems
+Date: Thu, 31 Jan 2013 17:18:46 +0100
+Message-ID: <2776630.gp5gC9tvLk@wuerfel>
+In-Reply-To: <20130131153625.GB23505@n2100.arm.linux.org.uk>
+References: <20130130120344.GA29490@avionic-0098.mockup.avionic-design.de> <20130131162237.79de29c4@skate> <20130131153625.GB23505@n2100.arm.linux.org.uk>
 MIME-Version: 1.0
-In-Reply-To: <50E5A6A1.5040508@gmail.com>
-References: <CAMVG2ssiRgcTD1bej2tkUUfsWmpL5eNtPcNif9va2-Gzb2u8nQ@mail.gmail.com>
-	<50E5A6A1.5040508@gmail.com>
-Date: Fri, 4 Jan 2013 09:08:00 +0800
-Message-ID: <CAMVG2svLEwaY3OdJ_w-YX0OZRS+Je5NZage+niebVE2rNGCMfw@mail.gmail.com>
-Subject: Re: 3.8-rc2: pciehp waitqueue hang...
-From: Daniel J Blueman <daniel@quora.org>
-To: Jiang Liu <liuj97@gmail.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Linux Kernel <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 3 January 2013 23:41, Jiang Liu <liuj97@gmail.com> wrote:
-> On 01/03/2013 11:11 PM, Daniel J Blueman wrote:
->> When the Apple thunderbolt ethernet adapter comes loose on my Macbook
->> Pro Retina (Intel DSL3510), we see pci_slot_name return
->> non-deterministic data (ie varying each boot), and we see pciehp_wp
->> remain armed with events causing the kthread to get stuck:
->>
->> tg3 0000:0a:00.0 eth0: Link is up at 1000 Mbps, full duplex
->> tg3 0000:0a:00.0 eth0: Flow control is on for TX and on for RX
->> <thunderbold adapter comes loose>
->> pciehp 0000:06:03.0:pcie24: Card not present on Slot(3)
->> tg3 0000:0a:00.0: tg3_abort_hw timed out, TX_MODE_ENABLE will not
->> clear MAC_TX_MODE=ffffffff
->> tg3 0000:0a:00.0 eth0: No firmware running
->> tg3 0000:0a:00.0 eth0: Link is down
->> pcieport 0000:00:01.1: System wakeup enabled by ACPI
->> pciehp 0000:09:00.0:pcie24: unloading service driver pciehp
->> pciehp 0000:09:00.0:pcie24: Latch open on
->> Slot(\xfffffff89\xffffffbbe\x02\xffffff88\xffffffff\xffffffff\xffffffe09\xffffffbbe\x02\xffffff88\xffffffff\xfffffffffbcon)
->> pciehp 0000:09:00.0:pcie24: Button pressed on
->> Slot(\xfffffff89\xffffffbbe\x02\xffffff88\xffffffff\xffffffff\xffffffe09\xffffffbbe\x02\xffffff88\xffffffff\xfffffffffbcon)
->> pciehp 0000:09:00.0:pcie24: Card present on
->> Slot(\xfffffff89\xffffffbbe\x02\xffffff88\xffffffff\xffffffff\xffffffe09\xffffffbbe\x02\xffffff88\xffffffff\xfffffffffbcon)
->> pciehp 0000:09:00.0:pcie24: Power fault on slot
->> \xfffffff89\xffffffbbe\x02\xffffff88\xffffffff\xffffffff\xffffffe09\xffffffbbe\x02\xffffff88\xffffffff\xfffffffffbcon
->> pciehp 0000:09:00.0:pcie24: Power fault bit 0 set
->> pciehp 0000:09:00.0:pcie24: PCI slot
->> #\xfffffff89\xffffffbbe\x02\xffffff88\xffffffff\xffffffff\xffffffe09\xffffffbbe\x02\xffffff88\xffffffff\xfffffffffbcon
->> - powering on due to button press.
->> pciehp 0000:09:00.0:pcie24: Link Training Error occurs
->> pciehp 0000:09:00.0:pcie24: Failed to check link status
->> INFO: task kworker/0:1:52 blocked for more than 120 seconds.
-[...]
+On Thursday 31 January 2013 15:36:25 Russell King - ARM Linux wrote:
+> The pci_sys_data is not specific to one bus.  It's specific from the
+> root bus downwards, and is shared by all child busses.
+> 
+> The problem is if you have some card or a conventional P2P bridge which
+> has 4K windows.  If you merely set the alignment to 64K for all bridges,
+> then all bridges get this treatment whether or not they need it.  That's
+> what I'm trying to avoid.
+> 
+> Take, for instance, a cardbus bridge (remember, there are PCI cards which
+> can be plugged in to give you a cardbus slot.)  I have a device here which
+> can be plugged into a cardbus slot which has not just one P2P bridge but
+> two, and a bunch of downsteam devices, including VGA, ethernet, USB, PS/2
+> etc.  (Okay, Linux doesn't support this hardware because of crappy X86
+> stuff, despite the fact Windows cope with it just fine.)
+> 
+> There have been cards in the past which have had P2P bridges on them as
+> well.
+> 
+> So, simply believing that the only P2P bridges in the system will be
+> those on the physical board is a mistake.
 
-> Hi Daniel,
->         It seems like an issue caused by recursive PCIe HPC.
-> Could you please help to try the patch from:
-> http://www.spinics.net/lists/linux-pci/msg18625.html
-> Thanks!
-> Gerry
+I was going to write something similar. Actually I think it's worse because
+the case of an extra P2P bridge is quite likely for devices that actually
+use I/O space, given that the use of I/O space is deprecated on PCIe.
 
-(adding Yijing)
+This also means that a lot of devices using I/O space are legacy crap
+and have random bugs regarding PCI standard compliance. I would not
+expect those devices in general to do the right thing when I/O ports
+beyond 65535 are used, although a lot of them would work.
 
-Splendid; this fixes this failure nicely [1], finally releasing the bus.
+For all I could tell, the safest solution with the I/O space would
+be to pretend we had a shared 64K I/O space for all of the PCIe
+ports on Armada XP, and map a separate 64K window for each port
+using a different io_offset for each one.
+This way, you can have a device on the second PCIe port use e.g. I/O
+port number 0x3f8 for a legacy UART on the bus, which gets translated
+into the Linux-visible port number 0x103f8.
 
-If nothing else, I feel this should be queud for 3.8-rc3.
+The currently used method to have io_offset=0 for all PCIe ports
+and use separate I/O port ranges of 64K for each PCIe port probably
+still works for most devices, except those where we hardcode a port
+number in the Linux device driver, or where the high address bits
+don't get decoded properly.
 
-Many thanks,
-  Daniel
-
---- [1]
-
-<thunderbolt ethernet adapter disengagement>
-pciehp 0000:06:03.0:pcie24: Card not present on Slot(3)
-tg3 0000:0a:00.0: tg3_abort_hw timed out, TX_MODE_ENABLE will not
-clear MAC_TX_MODE=ffffffff
-tg3 0000:0a:00.0 eth0: No firmware running
-tg3 0000:0a:00.0 eth0: Link is down
-[sched_delayed] sched: RT throttling activated
-pcieport 0000:00:01.1: System wakeup enabled by ACPI
-pciehp 0000:09:00.0:pcie24: unloading service driver pciehp
-pciehp 0000:09:00.0:pcie24: Latch open on
-Slot(\xffffffb0\x04Pd\x02\xffffff88\xffffffff\xffffffff\xffffff98\x04Pd\x02\xffffff88\xffffffff\xfffffffffbcon)
-pciehp 0000:09:00.0:pcie24: Button pressed on
-Slot(\xffffffb0\x04Pd\x02\xffffff88\xffffffff\xffffffff\xffffff98\x04Pd\x02\xffffff88\xffffffff\xfffffffffbcon)
-pciehp 0000:09:00.0:pcie24: Card present on
-Slot(\xffffffb0\x04Pd\x02\xffffff88\xffffffff\xffffffff\xffffff98\x04Pd\x02\xffffff88\xffffffff\xfffffffffbcon)
-pciehp 0000:09:00.0:pcie24: Power fault on slot
-\xffffffb0\x04Pd\x02\xffffff88\xffffffff\xffffffff\xffffff98\x04Pd\x02\xffffff88\xffffffff\xfffffffffbcon
-pciehp 0000:09:00.0:pcie24: Power fault bit 0 set
-pciehp 0000:09:00.0:pcie24: PCI slot
-#\xffffffb0\x04Pd\x02\xffffff88\xffffffff\xffffffff\xffffff98\x04Pd\x02\xffffff88\xffffffff\xfffffffffbcon
-- powering on due to button press.
-pciehp 0000:09:00.0:pcie24: Link Training Error occurs
-pciehp 0000:09:00.0:pcie24: Failed to check link status
-pci_bus 0000:0a: busn_res: [bus 0a] is released
-pci_bus 0000:09: busn_res: [bus 09-0a] is released
--- 
-Daniel J Blueman
+	Arnd
