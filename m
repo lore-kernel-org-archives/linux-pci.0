@@ -1,86 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from avon.wwwdotorg.org ([70.85.31.133]:59736 "EHLO
-	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755661Ab3AKUem (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Jan 2013 15:34:42 -0500
-Message-ID: <50F0775C.5050204@wwwdotorg.org>
-Date: Fri, 11 Jan 2013 13:34:36 -0700
-From: Stephen Warren <swarren@wwwdotorg.org>
-MIME-Version: 1.0
-To: Thierry Reding <thierry.reding@avionic-design.de>
-CC: linux-tegra@vger.kernel.org,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Murray <andrew.murray@arm.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+Received: from caramon.arm.linux.org.uk ([78.32.30.218]:60215 "EHLO
+	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751818Ab3AaPIT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 31 Jan 2013 10:08:19 -0500
+Date: Thu, 31 Jan 2013 15:08:01 +0000
+From: Russell King - ARM Linux <linux@arm.linux.org.uk>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Jason Cooper <jason@lakedaemon.net>,
 	Arnd Bergmann <arnd@arndb.de>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 10/14] PCI: tegra: Move PCIe driver to drivers/pci/host
-References: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de> <1357764194-12677-11-git-send-email-thierry.reding@avionic-design.de> <50EF616E.7040609@wwwdotorg.org> <20130111035246.GB28094@avionic-0098.adnet.avionic-design.de>
-In-Reply-To: <20130111035246.GB28094@avionic-0098.adnet.avionic-design.de>
-Content-Type: text/plain; charset=ISO-8859-1
+	Stephen Warren <swarren@wwwdotorg.org>,
+	linux-pci@vger.kernel.org,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Subject: Re: [PATCH v2 19/27] pci: PCIe driver for Marvell Armada 370/XP
+	systems
+Message-ID: <20130131150801.GA23505@n2100.arm.linux.org.uk>
+References: <1359399397-29729-20-git-send-email-thomas.petazzoni@free-electrons.com> <20130130113245.GH23505@n2100.arm.linux.org.uk> <20130130120344.GA29490@avionic-0098.mockup.avionic-design.de> <20130130150856.GJ23505@n2100.arm.linux.org.uk> <20130130151934.GK23505@n2100.arm.linux.org.uk> <20130130163659.75360dba@skate> <20130130154602.GL23505@n2100.arm.linux.org.uk> <20130131153041.35fa3b60@skate> <20130131145002.GZ23505@n2100.arm.linux.org.uk> <20130131155737.4ab97a0b@skate>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130131155737.4ab97a0b@skate>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 01/10/2013 08:52 PM, Thierry Reding wrote:
-> On Thu, Jan 10, 2013 at 05:48:46PM -0700, Stephen Warren wrote:
->> On 01/09/2013 01:43 PM, Thierry Reding wrote:
->>> Move the PCIe driver from arch/arm/mach-tegra into the
->>> drivers/pci/host directory. The motivation is to collect
->>> various host controller drivers in the same location in order
->>> to facilitate refactoring.
->>> 
->>> The Tegra PCIe driver has been largely rewritten, both in order
->>> to turn it into a proper platform driver and to add MSI (based
->>> on code by Krishna Kishore <kthota@nvidia.com>) as well as
->>> device tree support.
->> 
->>> diff --git a/arch/arm/mach-tegra/board-dt-tegra20.c
->>> b/arch/arm/mach-tegra/board-dt-tegra20.c
+On Thu, Jan 31, 2013 at 03:57:37PM +0100, Thomas Petazzoni wrote:
+> Indeed. But this function never gets called with bus->number == 0, only
+> with bus->number = 1, 2, 3, 4, 5, 6. So those are child busses, and
+> therefore they have a parent.
 
->>> +static int tegra_pcie_enable_controller(struct tegra_pcie
->>> *pcie) +{ +	unsigned int timeout; +	unsigned long value; + +	/*
->>> enable dual controller and both ports */ +	value =
->>> afi_readl(pcie, AFI_PCIE_CONFIG); +	value &=
->>> ~(AFI_PCIE_CONFIG_PCIEC0_DISABLE_DEVICE | +
->>> AFI_PCIE_CONFIG_PCIEC1_DISABLE_DEVICE | +
->>> AFI_PCIE_CONFIG_SM2TMS0_XBAR_CONFIG_MASK); +	value |=
->>> AFI_PCIE_CONFIG_SM2TMS0_XBAR_CONFIG_DUAL; +	afi_writel(pcie,
->>> value, AFI_PCIE_CONFIG);
->> 
->> Eventually, we should probably derive the port enables from the
->> state of the root port DT nodes, so that we can disable some and
->> presumably save a little power. Also, I notice that the
->> nvidia,num-lanes property isn't implemented yet. Still, we can
->> probably take care of this later.
-> 
-> Yes, the plan was to eventually derive the disable bits from the
-> port status and setup the XBAR_CONFIG field based on the
-> combination of nvidia,num-lanes properties.
-> 
-> I assume we should simply fail if the configuration specified by 
-> nvidia,num-lanes is invalid?
+Having thought about it, yes, that's what I expect, because root bus
+resources are never resized.  Root bus resources are normally setup
+before probing to indicate what size they _can_ be and define what
+space is available to the downstream devices.
 
-Makes sense to me.
+Child busses (behind a PCI-2-PCI bridge) are a different matter - these
+will be adjusted according to their on-bus devices and the windows for
+them sized and allocated appropriately _within_ the confines of the
+root bus resource.
 
->>> +static int tegra_pcie_parse_dt(struct tegra_pcie *pcie)
->> 
->>> +	pcie->vdd_supply = devm_regulator_get(pcie->dev, "vdd"); +	if
->>> (IS_ERR(pcie->vdd_supply)) +		return
->>> PTR_ERR(pcie->vdd_supply); + +	pcie->pex_clk_supply =
->>> devm_regulator_get(pcie->dev, "pex-clk"); +	if
->>> (IS_ERR(pcie->pex_clk_supply)) +		return
->>> PTR_ERR(pcie->pex_clk_supply);
->> 
->> Oh, I guess the regulator_get() calls are already strict.
-> 
-> Yeah, I think they can't return NULL, right? In that case I can
-> just drop the extra checks in tegra_pcie_power_{on,off}().
+> I am talking about the PCI-to-PCI bridges. I want the I/O windows
+> assigned to each PCI-to-PCI bridge to be 64K aligned. The PCI-to-PCI
+> bridges are devices that sit on bus 0, each giving access to the child
+> buses 1, 2, 3, 4, 5, 6.
 
-It looks like NULL can be returned if !CONFIG_REGULATOR. The comment
-in the dummy implementation implies that drivers should treat a NULL
-value as valid regulator in most cases.
+Right, so you've just confirmed that this _is_ the right hook and it
+_is_ being called at the right time.
+
+However, I had interpreted your requirement as the _host_ bridge only
+(insufficient information in your previous emails, or I missed it).
+
+If that's what your bridge requires, then we need to detect it via
+its vendor and device IDs and only apply this fixup to those bridges
+which require a 64K alignment.
+
+So, the IDs are vendor:device = 0x11ab:0x1092 ?  And let me get this
+straight, it _is_ a specific requirement for this particular bridge
+P2P bridge?
