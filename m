@@ -1,82 +1,52 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v10 01/11] PCI, acpiphp: Add is_hotplug_bridge detection
-Date: Mon, 21 Jan 2013 13:20:42 -0800
-Message-Id: <1358803252-20639-2-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1358803252-20639-1-git-send-email-yinghai@kernel.org>
-References: <1358803252-20639-1-git-send-email-yinghai@kernel.org>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hydra.sisk.pl ([212.160.235.94]:36139 "EHLO hydra.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752424Ab3AaNLx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 31 Jan 2013 08:11:53 -0500
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Paul Bolle <pebolle@tiscali.nl>
+Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Oliver Neukum <oneukum@suse.de>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: pciehp: errors on resume
+Date: Thu, 31 Jan 2013 14:18:06 +0100
+Message-ID: <679823626.6Dz1DicNqX@vostro.rjw.lan>
+In-Reply-To: <1359629934.1345.109.camel@x61.thuisdomein>
+References: <1359377173.1345.25.camel@x61.thuisdomein> <510A1376.4020601@cn.fujitsu.com> <1359629934.1345.109.camel@x61.thuisdomein>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When system support hotplug bridge with children hotplug slots, we need
-to make sure that parent bridge get preallocated resource so later when
-device is plugged into children slot, those children devices will get
-resource allocated.
+On Thursday, January 31, 2013 11:58:54 AM Paul Bolle wrote:
+> On Thu, 2013-01-31 at 14:47 +0800, Gu Zheng wrote:
+> > On 01/30/2013 04:31 PM, Paul Bolle wrote:
+> > > 2) Regarding the errors I see at resume: it seems that if a device
+> > > already exists when board_added() is called, this almost certainly means
+> > > we're resuming with the same device we suspended with. So there's no
+> > > reason to send errors to the log.
+> > 
+> > No, It's hard to detect whether the existed device is the one you want to resume.
+> > Maybe the existed device was added during suspend, and the one you really want to
+> > resume was removed. 
+> 
+> Because the domain, bus, slot, and function being equal doesn't mean
+> it's the same device? (I had to look up those names in man 8 lspci, I'm
+> unfamiliar with all this.)
 
-We do not meet this problem, because for pcie hotplug card, when acpiphp
-is used, pci_scan_bridge will set that for us when detect hotplug bit in
-slot cap.
+No, that's not sufficient in general.
 
-Reported-and-tested-by: Jason Baron <jbaron@redhat.com>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Acked-by: Jason Baron <jbaron@redhat.com>
-Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/pci/hotplug/acpiphp_glue.c |   27 ++++++++++++++++++++++++++-
- 1 file changed, 26 insertions(+), 1 deletion(-)
+> Could an additional test on vendor ID and device ID help. Ie, if
+> board_added() and friends notice a device already exists and the
+> previous an current device have identical IDs, would we then know all
+> that's needed to not bother to scare people with errors?
 
-diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-index 9e2b1f6..b94879d 100644
---- a/drivers/pci/hotplug/acpiphp_glue.c
-+++ b/drivers/pci/hotplug/acpiphp_glue.c
-@@ -797,6 +797,29 @@ static void acpiphp_set_acpi_region(struct acpiphp_slot *slot)
- 	}
- }
- 
-+static void check_hotplug_bridge(struct acpiphp_slot *slot, struct pci_dev *dev)
-+{
-+	struct acpiphp_func *func;
-+
-+	if (!dev->subordinate)
-+		return;
-+
-+	/* quirk, or pcie could set it already */
-+	if (dev->is_hotplug_bridge)
-+		return;
-+
-+	if (PCI_SLOT(dev->devfn) != slot->device)
-+		return;
-+
-+	list_for_each_entry(func, &slot->funcs, sibling) {
-+		if (PCI_FUNC(dev->devfn) == func->function) {
-+			/* check if this bridge has ejectable slots */
-+			if ((detect_ejectable_slots(func->handle) > 0))
-+				dev->is_hotplug_bridge = 1;
-+			break;
-+		}
-+	}
-+}
- /**
-  * enable_device - enable, configure a slot
-  * @slot: slot to be enabled
-@@ -831,8 +854,10 @@ static int __ref enable_device(struct acpiphp_slot *slot)
- 			if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE ||
- 			    dev->hdr_type == PCI_HEADER_TYPE_CARDBUS) {
- 				max = pci_scan_bridge(bus, dev, max, pass);
--				if (pass && dev->subordinate)
-+				if (pass && dev->subordinate) {
-+					check_hotplug_bridge(slot, dev);
- 					pci_bus_size_bridges(dev->subordinate);
-+				}
- 			}
- 		}
- 	}
+Yes, that's roughly the way to go in my opinion.
+
+Thanks,
+Rafael
+
+
 -- 
-1.7.10.4
-
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
