@@ -1,104 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:46262 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751886Ab3AaPWn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 31 Jan 2013 10:22:43 -0500
-Date: Thu, 31 Jan 2013 16:22:37 +0100
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Russell King - ARM Linux <linux@arm.linux.org.uk>
-Cc: Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	linux-pci@vger.kernel.org,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Subject: Re: [PATCH v2 19/27] pci: PCIe driver for Marvell Armada 370/XP
- systems
-Message-ID: <20130131162237.79de29c4@skate>
-In-Reply-To: <20130131150801.GA23505@n2100.arm.linux.org.uk>
-References: <1359399397-29729-20-git-send-email-thomas.petazzoni@free-electrons.com>
-	<20130130113245.GH23505@n2100.arm.linux.org.uk>
-	<20130130120344.GA29490@avionic-0098.mockup.avionic-design.de>
-	<20130130150856.GJ23505@n2100.arm.linux.org.uk>
-	<20130130151934.GK23505@n2100.arm.linux.org.uk>
-	<20130130163659.75360dba@skate>
-	<20130130154602.GL23505@n2100.arm.linux.org.uk>
-	<20130131153041.35fa3b60@skate>
-	<20130131145002.GZ23505@n2100.arm.linux.org.uk>
-	<20130131155737.4ab97a0b@skate>
-	<20130131150801.GA23505@n2100.arm.linux.org.uk>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from hydra.sisk.pl ([212.160.235.94]:36644 "EHLO hydra.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753547Ab3AaRrt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 31 Jan 2013 12:47:49 -0500
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Paul Bolle <pebolle@tiscali.nl>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: pciehp: hide ENTRY messages behind ctrl_dbg()
+Date: Thu, 31 Jan 2013 18:54:01 +0100
+Message-ID: <1450113.teKM2dvJbO@vostro.rjw.lan>
+In-Reply-To: <CAErSpo7grYijCUZGWGM4jao+MUqXYQ66q1az6bbKPMX4_Jwcyg@mail.gmail.com>
+References: <1359367251.883.13.camel@x61.thuisdomein> <CAErSpo7grYijCUZGWGM4jao+MUqXYQ66q1az6bbKPMX4_Jwcyg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Russell King - ARM Linux,
-
-On Thu, 31 Jan 2013 15:08:01 +0000, Russell King - ARM Linux wrote:
-> On Thu, Jan 31, 2013 at 03:57:37PM +0100, Thomas Petazzoni wrote:
-> > Indeed. But this function never gets called with bus->number == 0, only
-> > with bus->number = 1, 2, 3, 4, 5, 6. So those are child busses, and
-> > therefore they have a parent.
+On Thursday, January 31, 2013 10:13:17 AM Bjorn Helgaas wrote:
+> [+cc Rafael]
 > 
-> Having thought about it, yes, that's what I expect, because root bus
-> resources are never resized.  Root bus resources are normally setup
-> before probing to indicate what size they _can_ be and define what
-> space is available to the downstream devices.
+> On Mon, Jan 28, 2013 at 3:00 AM, Paul Bolle <pebolle@tiscali.nl> wrote:
+> > In each suspend and resume cycle my laptop prints these messages at
+> > KERN_INFO level:
+> >     pciehp 0000:00:1c.1:pcie04: pciehp_suspend ENTRY
+> >     pciehp 0000:00:1c.0:pcie04: pciehp_suspend ENTRY
+> >
+> > and
+> >     pciehp 0000:00:1c.0:pcie04: pciehp_resume ENTRY
+> >     pciehp 0000:00:1c.1:pcie04: pciehp_resume ENTRY
+> >
+> > Messages like these are probably only useful while debugging pciehp, so
+> > let's hide them behind the ctrl_dbg() macro.
+> >
+> > Signed-off-by: Paul Bolle <pebolle@tiscali.nl>
+> > ---
+> > 0) Compile tested only!
+> >
+> > 1) Perhaps a better solution is to drop these messages entirely.
+> >
+> >  drivers/pci/hotplug/pciehp_core.c | 5 +++--
+> >  1 file changed, 3 insertions(+), 2 deletions(-)
+> >
+> > diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
+> > index 939bd1d..ed1702d 100644
+> > --- a/drivers/pci/hotplug/pciehp_core.c
+> > +++ b/drivers/pci/hotplug/pciehp_core.c
+> > @@ -293,7 +293,8 @@ static void pciehp_remove(struct pcie_device *dev)
+> >  #ifdef CONFIG_PM
+> >  static int pciehp_suspend (struct pcie_device *dev)
+> >  {
+> > -       dev_info(&dev->device, "%s ENTRY\n", __func__);
+> > +       struct controller *ctrl = get_service_data(dev);
+> > +       ctrl_dbg(ctrl, "%s ENTRY\n", __func__);
+> >         return 0;
 > 
-> Child busses (behind a PCI-2-PCI bridge) are a different matter - these
-> will be adjusted according to their on-bus devices and the windows for
-> them sized and allocated appropriately _within_ the confines of the
-> root bus resource.
+> I'd propose to just drop these messages completely.  Rafael, would you
+> have any objection to that?
 
-Ok.
+No, I wouldn't.
 
-> > I am talking about the PCI-to-PCI bridges. I want the I/O windows
-> > assigned to each PCI-to-PCI bridge to be 64K aligned. The PCI-to-PCI
-> > bridges are devices that sit on bus 0, each giving access to the child
-> > buses 1, 2, 3, 4, 5, 6.
 > 
-> Right, so you've just confirmed that this _is_ the right hook and it
-> _is_ being called at the right time.
+> >  }
+> >
+> > @@ -303,8 +304,8 @@ static int pciehp_resume (struct pcie_device *dev)
+> >         struct slot *slot;
+> >         u8 status;
+> >
+> > -       dev_info(&dev->device, "%s ENTRY\n", __func__);
+> >         ctrl = get_service_data(dev);
+> > +       ctrl_dbg(ctrl, "%s ENTRY\n", __func__);
+> >
+> >         /* reinitialize the chipset's event detection logic */
+> >         pcie_enable_notification(ctrl);
+> > --
 
-Ok.
+Thanks,
+Rafael
 
-> However, I had interpreted your requirement as the _host_ bridge only
-> (insufficient information in your previous emails, or I missed it).
 
-Might be insufficient information, or wrong terminology on my side.
-
-> If that's what your bridge requires, then we need to detect it via
-> its vendor and device IDs and only apply this fixup to those bridges
-> which require a 64K alignment.
-> 
-> So, the IDs are vendor:device = 0x11ab:0x1092 ?  And let me get this
-> straight, it _is_ a specific requirement for this particular bridge
-> P2P bridge?
-
-The vendor/device ID will change. This P2P bridge is emulated. However,
-I'm not sure why you need to know the vendor:device ID to make the
-fixup specific.
-
-The fixup is already specific to those bridges, since I am just setting
-pci_sys_data->win_align_io to 64K for the particular buses that are
-downstream the problematic bridges. So it doesn't affect any other bus
-on the system, and therefore I don't think this fixup needs to be made
-specific to a given vendor:device, no?
-
-Best regards,
-
-Thomas
 -- 
-Thomas Petazzoni, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
