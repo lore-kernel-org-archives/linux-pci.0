@@ -1,40 +1,107 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Luck, Tony" <tony.luck@intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Lance Ortiz <lance.ortiz@hp.com>
-CC: "lance_ortiz@hotmail.com" <lance_ortiz@hotmail.com>,
-	"jiang.liu@huawei.com" <jiang.liu@huawei.com>,
-	"bp@alien8.de" <bp@alien8.de>,
-	"rostedt@goodmis.org" <rostedt@goodmis.org>,
-	"mchehab@redhat.com" <mchehab@redhat.com>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH v9 3/3] aerdrv: Cleanup log output for AER
-Date: Fri, 4 Jan 2013 22:22:09 +0000
-Message-ID: <3908561D78D1C84285E8C5FCA982C28F1C9750EE@ORSMSX108.amr.corp.intel.com>
-References: <20130103223401.10751.1838.stgit@grignak.americas.hpqcorp.net>
- <20130103223415.10751.17744.stgit@grignak.americas.hpqcorp.net>
- <CAErSpo5LV5QApKqVVV7FdpjdFFZ9=+8JJfaDtDqJ2AzFpxM+HA@mail.gmail.com>
-In-Reply-To: <CAErSpo5LV5QApKqVVV7FdpjdFFZ9=+8JJfaDtDqJ2AzFpxM+HA@mail.gmail.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hydra.sisk.pl ([212.160.235.94]:34958 "EHLO hydra.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755390Ab3AaBMU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 30 Jan 2013 20:12:20 -0500
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Konstantin Khlebnikov <khlebnikov@openvz.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
+	e1000-devel@lists.sourceforge.net, linux-pci@vger.kernel.org,
+	Bruce Allan <bruce.w.allan@intel.com>,
+	Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Subject: Re: [PATCH 1/5] e1000e: fix resuming from runtime-suspend
+Date: Thu, 31 Jan 2013 02:18:31 +0100
+Message-ID: <1546399.qHCL89Xptv@vostro.rjw.lan>
+In-Reply-To: <51076CEE.8050706@openvz.org>
+References: <20130118113019.6698.25941.stgit@zurg> <12263202.uQHxo0zU24@vostro.rjw.lan> <51076CEE.8050706@openvz.org>
 MIME-Version: 1.0
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I sent a "please pull" to Ingo/Peter/Thomas about an hour ago ... if they
-push back (or ignore) we can fold your ack and nit-picks into another
-version.
+On Tuesday, January 29, 2013 10:32:14 AM Konstantin Khlebnikov wrote:
+> Rafael J. Wysocki wrote:
+> > On Monday, January 28, 2013 04:05:33 PM Bjorn Helgaas wrote:
+> >> [+cc Rafael, author of patch you cited]
+> >>
+> >> On Fri, Jan 18, 2013 at 4:42 AM, Konstantin Khlebnikov
+> >> <khlebnikov@openvz.org>  wrote:
+> >>> Bug was introduced in commit 23606cf5d1192c2b17912cb2ef6e62f9b11de133
+> >>> ("e1000e / PCI / PM: Add basic runtime PM support (rev. 4)") in v2.6.35
+> >>>
+> >>> Signed-off-by: Konstantin Khlebnikov<khlebnikov@openvz.org>
+> >>> Cc: e1000-devel@lists.sourceforge.net
+> >>> Cc: Jeff Kirsher<jeffrey.t.kirsher@intel.com>
+> >>> Cc: Bruce Allan<bruce.w.allan@intel.com>
+> >>> ---
+> >>>   drivers/net/ethernet/intel/e1000e/netdev.c |   13 ++++++++-----
+> >>>   1 file changed, 8 insertions(+), 5 deletions(-)
+> >>>
+> >>> diff --git a/drivers/net/ethernet/intel/e1000e/netdev.c b/drivers/net/ethernet/intel/e1000e/netdev.c
+> >>> index fbf75fd..2853c11 100644
+> >>> --- a/drivers/net/ethernet/intel/e1000e/netdev.c
+> >>> +++ b/drivers/net/ethernet/intel/e1000e/netdev.c
+> >>> @@ -5691,14 +5691,17 @@ static int e1000_runtime_suspend(struct device *dev)
+> >>>          struct pci_dev *pdev = to_pci_dev(dev);
+> >>>          struct net_device *netdev = pci_get_drvdata(pdev);
+> >>>          struct e1000_adapter *adapter = netdev_priv(netdev);
+> >>> +       int retval;
+> >>> +       bool wake;
+> >>>
+> >>> -       if (e1000e_pm_ready(adapter)) {
+> >>> -               bool wake;
+> >>> +       if (!e1000e_pm_ready(adapter))
+> >>> +               return 0;
+> >>>
+> >>> -               __e1000_shutdown(pdev,&wake, true);
+> >>> -       }
+> >>> +       retval = __e1000_shutdown(pdev,&wake, true);
+> >>> +       if (!retval)
+> >>> +               e1000_power_off(pdev, true, wake);
+> >>>
+> >>> -       return 0;
+> >>> +       return retval;
+> >>>   }
+> >>>
+> >>>   static int e1000_idle(struct device *dev)
+> >>>
+> >
+> > I'd like the changelog to say what the bug is and how it is being fixed in
+> > general terms.
+> 
+> Ok, my bad.
+> 
+> Problem: ethernet device does not work (no carrier signal).
+> Right after boot it goes to runtime-suspend and never wake up.
+> 
+> Original code (before your commit) calls pci_prepare_to_sleep() and it
+> calls pci_enable_wake() and switches device to one of D3 state.
 
-> s/elimiating/eliminating/ above.
-Ugh ... nobody spotted this one ("many eyes" really does work!)
+The original code in what function?
 
-> I remove the "v1-v2" notes when I merge patches because I don't think
-> they're useful any more.  But if Tony applies these, he can use his
-> judgment.
+> It seems redundant, because pci_pm_runtime_suspend() do the same thing
+> after calling ->runtime_suspend callback. Or rather it did it before commit
+> 42eca2302146fed51335b95128e949ee6f54478f ("PCI: Don't touch card regs after
+> runtime suspend D3") and third patch aimed fix this damage.
+> 
+> More over seems like calling pci_enable_wake() from e1000e isn't enough for my case,
+> because my enthernet cannot wakeup from runtime-suspend without third patch.
 
-Yes - I do too.  In fact it is easier on the maintainer if this sort of meta-commentary
-goes *after* the "---" in the patch. Then it is available for review (where it is
-most helpful), but tools will automatically drop it when applying the patch.
+Which third patch?
 
--Tony
+> Seems like it's because pci_enable_wake() and pci_finish_runtime_suspend()
+> calls different pratform-pm callbacks -- platform_pci_run_wake() /
+> platform_pci_sleep_wake().
+
+That's correct, for historical reasons.  We'll need to merge these things, but
+for now the are separate (because of the way ACPI handles system suspend and
+runtime PM).
+
+Thanks,
+Rafael
+
+
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
