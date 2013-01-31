@@ -1,101 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:36746 "EHLO quartz.orcorp.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753849Ab3A2GQJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 29 Jan 2013 01:16:09 -0500
-Date: Mon, 28 Jan 2013 23:16:02 -0700
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Stephen Warren <swarren@wwwdotorg.org>,
-	Arnd Bergmann <arnd@arndb.de>,
+Received: from moutng.kundenserver.de ([212.227.126.171]:57568 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751339Ab3AaUr0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 31 Jan 2013 15:47:26 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Subject: Re: [PATCH v2 19/27] pci: PCIe driver for Marvell Armada 370/XP systems
+Date: Thu, 31 Jan 2013 20:46:22 +0000
+Cc: "Russell King - ARM Linux" <linux@arm.linux.org.uk>,
 	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
 	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	linux-pci@vger.kernel.org,
 	Thierry Reding <thierry.reding@avionic-design.de>,
-	Eran Ben-Avi <benavi@marvell.com>,
+	"Eran Ben-Avi" <benavi@marvell.com>,
 	Nadav Haklai <nadavh@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
 	Shadi Ammouri <shadi@marvell.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
 	Tawfik Bayouk <tawfik@marvell.com>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>
-Subject: Re: [PATCH v2 07/27] PCI: Add software-emulated host bridge
-Message-ID: <20130129061602.GB3339@obsidianresearch.com>
-References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
- <1359399397-29729-8-git-send-email-thomas.petazzoni@free-electrons.com>
- <201301282018.17714.arnd@arndb.de>
- <5106F5CB.8050304@wwwdotorg.org>
- <20130128220904.GA21446@obsidianresearch.com>
- <CAErSpo7-qXZTri-T+v4O3rKk9AXjHE4ckkWZ1UT63SC1fG02-A@mail.gmail.com>
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-arm-kernel@lists.infradead.org
+References: <20130130120344.GA29490@avionic-0098.mockup.avionic-design.de> <2776630.gp5gC9tvLk@wuerfel> <20130131180249.GA30869@obsidianresearch.com>
+In-Reply-To: <20130131180249.GA30869@obsidianresearch.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo7-qXZTri-T+v4O3rKk9AXjHE4ckkWZ1UT63SC1fG02-A@mail.gmail.com>
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201301312046.22560.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jan 28, 2013 at 07:40:16PM -0700, Bjorn Helgaas wrote:
-> On Mon, Jan 28, 2013 at 3:09 PM, Jason Gunthorpe
-> <jgunthorpe@obsidianresearch.com> wrote:
-> > On Mon, Jan 28, 2013 at 03:03:55PM -0700, Stephen Warren wrote:
-> >> On 01/28/2013 01:18 PM, Arnd Bergmann wrote:
-> >> > On Monday 28 January 2013, Thomas Petazzoni wrote:
-> >> >> From: Thierry Reding <thierry.reding@avionic-design.de>
-> >> >>
-> >> >> [Thomas Petazzoni:
-> >> >>  - Simplify capabilities handling.
-> >> >>  - Move to a separate file.
-> >> >>  - Fix mask used when writing a 4 bytes value.]
-> >> >>
-> >> >> Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
-> >> >> Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-> >> >
-> >> > Not even a description why this is needed?
-> >> >
-> >> > This patch (together with patch 8) seems like the most controversial
-> >> > one of the series, so you should better provide a really good reason
-> >> > why we would emulate something in software rather than using whatever
-> >> > hardware is there.
-> >>
-> >> At least on Tegra, there is no HW that exposes PCI configuration
-> >> registers for the host bridge itself. Only the root ports have exposed
-> >> PCI configuration registers. There was some debate re: whether a host
-> >> bridge device needed to exist or not. This patch makes such a device
-> >> exist if it's required.
+On Thursday 31 January 2013, Jason Gunthorpe wrote:
+> Thinking about this some more, which of these methods to choose is
+> going to be dictated by what the Marvell HW does.
 > 
-> Host bridges are not actually PCI devices on any architecture.  The
-> upstream side of a host bridge is by definition not on a PCI bus.  On
-> some architectures, it *looks* like the host bridge is a PCI device
-> because it responds to PCI config accesses and you can get to
+> Since the IO space in the TLP is a full 32 bits, it matters what 32
+> bit value the HW PCI core places in the IO Rd/Wr transaction. This
+> value must match the value given to the Linux PCI core for resource
+> allocation, because it must be correctly programmed by Linux into the
+> downstream BARs/bridge windows.
+> 
+> So there are probably two choices for what the HW does, given a MBUS
+> window of 0xDEAD0000 -> 0xDEADFFFF set for IO, a read from physical
+> address 0xDEAD0000 produces a IO Rd TLP with either '0x00000000' or
+> '0xDEAD0000' in the address field.
+> 
+> If it is 0xDEAD0000, then Thomas has to keep what he has now, you
+> can't mess with this address. Verify that the full 32 bit address
+> exactly matching the MBUS window address is written to the PCI-PCI
+> bridge IO base/limit registers.
 
-Sure, you can't discover domains through any standard means, but once
-you have found a domain (notably a way to issue config transactions)
-then the PCI-E standard actually does place requirements on what
-config transactions should return:
- - 0:00.0 is a host bridge config space.
- - 0:XX.X will be one of:
-   - A root complex internal function, with some restrictions this
-     is basically a PCI end device
-   - A PCI-PCI bridge with various mandatory capability headers.
-     One of these must show up for every physical PCI-E link
-     on the root complex.
-This collection of stuff on bus 0 is called the 'root complex'. This
-is new in PCI-E, PCI-X and PCI didn't have such requirements.
+If you do this, you break all sorts of expectations in the kernel and
+I guess you'd have to set the io_offset value of that bus to 0x21530000
+in order to make Linux I/O port 0 go to the first byte of the window
+and come out as 0xDEAD0000 on the bus, but you still won't be able to
+use legacy devices with hardcoded I/O port numbers.
 
-SOC vendors are taking various liberties with their PCI-E implementations.
- - nvidia followed the standard but did not include the host bridge
-   at 0:00.0
- - Marvell ignored everything about the root complex config space
-   behavior :)
+> If it is 0x00000000 then the mmap scheme I outlined before must be
+> used, and verify that only 0->0xFFFF is written to the PCI-PCI bridge
+> IO base/limit registers..
 
-There are two patch sets in this subject, one for nvidia tegra and one
-for Marvell, both presenting to Linux a view of the HW that matches
-what the PCI-E spec describes - specifically that there is one domain,
-and each PCI-E link/controller shows up as a PCI-PCI bridge on bus 0.
+For the primary bus, yes, but there are still two options for the
+second one: you can either start at 0 again or you can continue
+at 0x10000 as we do for mv78xx0 and kirkwood for instance. Both
+approaches probably have their merit.
 
-In this model, there is no 'host bridge aperture' hardware, each PCI-E
-link has a dedicated aperture and control of that aperture is through
-the PCI-PCI bridge window registers, again as PCI-E specifies.
-
-Jason
+	Arnd
