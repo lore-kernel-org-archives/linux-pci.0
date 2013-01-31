@@ -1,46 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:37576 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755727Ab3A0Fhc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 27 Jan 2013 00:37:32 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>
-Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org
-Subject: [PATCH v2 04/22] PCI, ACPI: Update comments for find_bridge in acpi_bus_type
-Date: Sat, 26 Jan 2013 21:36:25 -0800
-Message-Id: <1359265003-16166-5-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1359265003-16166-1-git-send-email-yinghai@kernel.org>
-References: <CAE9FiQUhrVPNKcdWbiqHLa5PzH7Dg-uduVc9BP-OjM-eCqSXdw@mail.gmail.com>
- <1359265003-16166-1-git-send-email-yinghai@kernel.org>
+Received: from caramon.arm.linux.org.uk ([78.32.30.218]:60393 "EHLO
+	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752990Ab3AaQnM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 31 Jan 2013 11:43:12 -0500
+Date: Thu, 31 Jan 2013 16:42:58 +0000
+From: Russell King - ARM Linux <linux@arm.linux.org.uk>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Stephen Warren <swarren@wwwdotorg.org>
+Subject: Re: [PATCH v2 19/27] pci: PCIe driver for Marvell Armada 370/XP
+	systems
+Message-ID: <20130131164258.GD23505@n2100.arm.linux.org.uk>
+References: <CAErSpo7gCFfLB6+ebvANQjkr7Bii8Jqt3y5YqExD-DcnBG7hgA@mail.gmail.com> <20130129184157.GA29274@obsidianresearch.com> <CAErSpo5K8yKqjzQ6s+imb3d5wLSkhvWp-d=pPv9CZk+o67kyaQ@mail.gmail.com> <20130129191853.GB29274@obsidianresearch.com> <CAErSpo4Zvy7=ROajygecfsEFVJxy-yNbSntdQdDFcQBPz=Qgfg@mail.gmail.com> <CAErSpo41TbWTZ_6m0_uv-EaKnnqMR9jpqsarOJLGYZ31mrdkiw@mail.gmail.com> <20130130103501.1873d39c@skate> <CAErSpo5NTyrHv8AQkw3hYpJRiZsk1HKHP3jP_MMpEVVhCgjKYg@mail.gmail.com> <20130131170401.4b3bfbbf@skate> <CAErSpo7fPzrF_OZSL7Ss0LT70Qz+veXLW-ihA7fAXCwsn142cQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo7fPzrF_OZSL7Ss0LT70Qz+veXLW-ihA7fAXCwsn142cQ@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-only device that does not have bus_type, will go to that path...
+On Thu, Jan 31, 2013 at 09:30:07AM -0700, Bjorn Helgaas wrote:
+> Linux makes the unwarranted assumption that the PCI hierarchy has
+> already been configured by firmware.  If the only problem is the
+> messages above, I think we could just rework the message so it doesn't
+> look like an error.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Len Brown <lenb@kernel.org>
-Cc: linux-acpi@vger.kernel.org
----
- include/acpi/acpi_bus.h |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+That's not a safe assumption, especially on platforms where there's no
+BIOS (like ARM platforms).  Thankfully, for the platforms I care about,
+the boot loaders I wrote for them _do_ do a full bus setup, so I don't
+see a problem. :)
 
-diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
-index 5ce8d5e8..c499d94 100644
---- a/include/acpi/acpi_bus.h
-+++ b/include/acpi/acpi_bus.h
-@@ -385,7 +385,7 @@ struct acpi_bus_type {
- 	struct bus_type *bus;
- 	/* For general devices under the bus */
- 	int (*find_device) (struct device *, acpi_handle *);
--	/* For bridges, such as PCI root bridge, IDE controller */
-+	/* For bridges that does not have bus_type, such as usb_port */
- 	int (*find_bridge) (struct device *, acpi_handle *);
- 	void (*setup)(struct device *);
- 	void (*cleanup)(struct device *);
--- 
-1.7.10.4
-
+However, I have historially had the kernel over many years (probably
+around 14 or 15 now) reassign all resources so that things are how the
+kernel wants them, and not how my half-hearted attempt at setting them
+up did (which only does a limited job enough to get the system to a
+state where we can load the kernel.)
