@@ -1,91 +1,78 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-da0-f45.google.com ([209.85.210.45]:46271 "EHLO
-	mail-da0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756742Ab3AHQwl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Jan 2013 11:52:41 -0500
-From: Jiang Liu <liuj97@gmail.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Yijing Wang <wangyijing@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH v3 1/6] PCI: make PCI device create/destroy logic symmetric
-Date: Wed,  9 Jan 2013 00:52:20 +0800
-Message-Id: <1357663945-16054-2-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1357663945-16054-1-git-send-email-jiang.liu@huawei.com>
-References: <1357663945-16054-1-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <CAErSpo4G9FQxh1vPjDDnjYrkfV8MNFvBK-ECMeiPnCVGA5Lgjg@mail.gmail.com>
-References: <CAErSpo4G9FQxh1vPjDDnjYrkfV8MNFvBK-ECMeiPnCVGA5Lgjg@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Cc: Konstantin Khlebnikov <khlebnikov@openvz.org>,
+	linux-kernel@vger.kernel.org, e1000-devel@lists.sourceforge.net,
+	linux-pci@vger.kernel.org, Bruce Allan <bruce.w.allan@intel.com>,
+	Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Subject: Re: [PATCH 2/5] e1000e: fix pci device enable counter balance
+Date: Thu, 31 Jan 2013 02:07:16 +0100
+Message-ID: <1582328.fuzuCUZWBa@vostro.rjw.lan>
+In-Reply-To: <CAErSpo5Cfi0KbOqDr4TfnzjWFy7V-oi0bOY-vf8Y16_RPtEGdQ@mail.gmail.com>
+References: <20130118113019.6698.25941.stgit@zurg> <20130118114218.6698.42484.stgit@zurg> <CAErSpo5Cfi0KbOqDr4TfnzjWFy7V-oi0bOY-vf8Y16_RPtEGdQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-According to device model documentation, the way to create/destroy PCI
-devices should be symmetric.
+On Monday, January 28, 2013 04:09:38 PM Bjorn Helgaas wrote:
+> [+cc Rafael]
+> 
+> On Fri, Jan 18, 2013 at 4:42 AM, Konstantin Khlebnikov
+> <khlebnikov@openvz.org> wrote:
+> > __e1000_shutdown() calls pci_disable_device() at the end, thus __e1000_resume()
+> > should call pci_enable_device_mem() to keep enable counter in balance.
+> >
+> > Bug was introduced in commit 23606cf5d1192c2b17912cb2ef6e62f9b11de133
+> > ("e1000e / PCI / PM: Add basic runtime PM support (rev. 4)") in v2.6.35
+> >
+> > Signed-off-by: Konstantin Khlebnikov <khlebnikov@openvz.org>
+> > Cc: e1000-devel@lists.sourceforge.net
+> > Cc: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+> > Cc: Bruce Allan <bruce.w.allan@intel.com>
+> > ---
+> >  drivers/net/ethernet/intel/e1000e/netdev.c |    7 +++++++
+> >  1 file changed, 7 insertions(+)
+> >
+> > diff --git a/drivers/net/ethernet/intel/e1000e/netdev.c b/drivers/net/ethernet/intel/e1000e/netdev.c
+> > index 2853c11..6bce796 100644
+> > --- a/drivers/net/ethernet/intel/e1000e/netdev.c
+> > +++ b/drivers/net/ethernet/intel/e1000e/netdev.c
+> > @@ -5598,6 +5598,13 @@ static int __e1000_resume(struct pci_dev *pdev)
+> >         pci_restore_state(pdev);
+> >         pci_save_state(pdev);
+> >
+> > +       err = pci_enable_device_mem(pdev);
+> > +       if (err) {
+> > +               dev_err(&pdev->dev,
+> > +                       "Cannot re-enable PCI device after suspend.\n");
+> > +               return err;
+> > +       }
+> 
+> Reviewed-by: Bjorn Helgaas <bhelgaas@google.com>
+> 
+> Seems right to me, and the other users I looked at (igb, azx,
+> virtio_pci) call pci_disable_device() in .suspend() and call
+> pci_enable_device() in .resume() as you propose to do here.
+> 
+> I assume the e1000 folks will handle this patch (and the previous one).
+> 
 
-/**
- * device_del - delete device from system.
- * @dev: device.
- *
- * This is the first part of the device unregistration
- * sequence. This removes the device from the lists we control
- * from here, has it removed from the other driver model
- * subsystems it was added to in device_add(), and removes it
- * from the kobject hierarchy.
- *
- * NOTE: this should be called manually _iff_ device_add() was
- * also called manually.
- */
+OK, so this one looks like a genuine fix to me.
 
-The rule is to either use
-1) device_register()/device_unregister()
-or
-2) device_initialize()/device_add()/device_del()/put_device().
+Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-So change PCI core logic to follow the rule and get rid of the redundant
-pci_dev_get()/pci_dev_put() pair.
+Thanks,
+Rafael
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/probe.c  |    1 -
- drivers/pci/remove.c |    4 ++--
- 2 files changed, 2 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 6186f03..e557d6f 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1299,7 +1299,6 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
- {
- 	device_initialize(&dev->dev);
- 	dev->dev.release = pci_release_dev;
--	pci_dev_get(dev);
- 
- 	dev->dev.dma_mask = &dev->dma_mask;
- 	dev->dev.dma_parms = &dev->dma_parms;
-diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-index 7c0fd92..fc38c48 100644
---- a/drivers/pci/remove.c
-+++ b/drivers/pci/remove.c
-@@ -22,7 +22,7 @@ static void pci_stop_dev(struct pci_dev *dev)
- 	if (dev->is_added) {
- 		pci_proc_detach_device(dev);
- 		pci_remove_sysfs_dev_files(dev);
--		device_unregister(&dev->dev);
-+		device_del(&dev->dev);
- 		dev->is_added = 0;
- 	}
- 
-@@ -37,7 +37,7 @@ static void pci_destroy_dev(struct pci_dev *dev)
- 	up_write(&pci_bus_sem);
- 
- 	pci_free_resources(dev);
--	pci_dev_put(dev);
-+	put_device(&dev->dev);
- }
- 
- void pci_remove_bus(struct pci_bus *bus)
+> > +
+> >         e1000e_set_interrupt_capability(adapter);
+> >         if (netif_running(netdev)) {
+> >                 err = e1000_request_irq(adapter);
+> >
+> > --
 -- 
-1.7.9.5
-
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
