@@ -1,105 +1,107 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f171.google.com ([209.85.223.171]:34975 "EHLO
-	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752667Ab3AUGqg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 21 Jan 2013 01:46:36 -0500
-MIME-Version: 1.0
-In-Reply-To: <5397828.ilPjagaOIa@vostro.rjw.lan>
-References: <1358495602-22867-1-git-send-email-yinghai@kernel.org>
-	<1358495602-22867-12-git-send-email-yinghai@kernel.org>
-	<5397828.ilPjagaOIa@vostro.rjw.lan>
-Date: Sun, 20 Jan 2013 22:46:35 -0800
-Message-ID: <CAE9FiQWPn3YEhS40XsUckuaMJkRvd7oiiWJa+S8Lzu+ZDFjfWg@mail.gmail.com>
-Subject: Re: [PATCH v9 11/11] PCI: Put pci dev to device tree as early as possible
-From: Yinghai Lu <yinghai@kernel.org>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mx1.redhat.com ([209.132.183.28]:65436 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751523Ab3AaX3h (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 31 Jan 2013 18:29:37 -0500
+Subject: Re: [PATCH 1/2] PCI: ASPM exit link state code could skip devices
+From: Myron Stowe <mstowe@redhat.com>
+To: Joe Lawrence <Joe.Lawrence@stratus.com>
+Cc: linux-pci@vger.kernel.org, Matthew Garrett <mjg59@srcf.ucam.org>,
+	David Bulkow <david.bulkow@stratus.com>, shli@kernel.org,
+	shli@fusionio.com, kaneshige.kenji@jp.fujitsu.com,
+	linux-kernel <linux-kernel@vger.kernel.org>
+In-Reply-To: <alpine.DEB.2.02.1301181322500.31163@jlaw-desktop.mno.stratus.com>
+References: <alpine.DEB.2.02.1301181302260.31163@jlaw-desktop.mno.stratus.com>
+	 <alpine.DEB.2.02.1301181322500.31163@jlaw-desktop.mno.stratus.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 31 Jan 2013 16:29:25 -0700
+Message-ID: <1359674965.2426.13.camel@zim.stowe>
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Jan 20, 2013 at 3:23 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> On Thursday, January 17, 2013 11:53:22 PM Yinghai Lu wrote:
->> We want to put created pci device in the device tree as soon as possible.
->> - just after we find it and create pci_dev struct for it.
->> so for_pci_dev iteration will not miss them.
->>
->> But at that time, we can not load driver for them yet. Need to be after
->> pci_assign_unsigned_resources() etc to make sure all pci devices get
->> resource allocated at first.
->>
->> Move out device registering out of pci_bus_add_devices, and
->> new pci_bus_add_devices() will do the device_attach work to load pci drivers
->>
->> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
->> ---
->>  drivers/pci/bus.c   |   47 +++--------------------------------------------
->>  drivers/pci/iov.c   |    7 -------
->>  drivers/pci/probe.c |   34 +++++++++++++++++++++++++++-------
->>  3 files changed, 30 insertions(+), 58 deletions(-)
->>
->> diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
->> index 18c1c6d..0a55845 100644
->> --- a/drivers/pci/bus.c
->> +++ b/drivers/pci/bus.c
->> @@ -178,22 +178,9 @@ static void pci_bus_attach_device(struct pci_dev *dev)
->>   */
-..
->> @@ -205,21 +192,9 @@ int pci_bus_add_device(struct pci_dev *dev)
->>   */
->>  int pci_bus_add_child(struct pci_bus *bus)
->>  {
->> -     int retval;
->> -
->> -     if (bus->bridge)
->> -             bus->dev.parent = bus->bridge;
->> -
->> -     retval = device_register(&bus->dev);
->> -     if (retval)
->> -             return retval;
->> -
->>       bus->is_added = 1;
->>
->> -     /* Create legacy_io and legacy_mem files for this bus */
->> -     pci_create_legacy_files(bus);
->> -
->> -     return retval;
->> +     return 0;
->>  }
->
-> Well, what sense does this make to keep that function as is after removing
-> almost all of the code from it?
+On Fri, 2013-01-18 at 13:23 -0500, Joe Lawrence wrote:
+> From 3a51bbad5555ba6c6e144aa5176c8112eb449325 Mon Sep 17 00:00:00 2001
+> From: Joe Lawrence <joe.lawrence@stratus.com>
+> Date: Tue, 15 Jan 2013 14:51:57 -0500
+> Subject: [PATCH 1/2] PCI: ASPM exit link state code could skip devices
+> 
+> On PCI bus hotplug removal, pcie_aspm_exit_link_state could potentially skip
+> parent devices that have link_state allocated.  Instead of exiting early if
+> a given device is not PCIe, check that the device's parent is PCIe.  This
+> enables pcie_aspm_exit_link_state to properly clean up parent link_state when
+> the last function in a slot might not be PCIe.
+> 
+> Reviewed-by: David Bulkow <david.bulkow@stratus.com>
+> Signed-off-by: Joe Lawrence <joe.lawrence@stratus.com>
+> ---
+>  drivers/pci/pcie/aspm.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+> index b52630b..6122447 100644
+> --- a/drivers/pci/pcie/aspm.c
+> +++ b/drivers/pci/pcie/aspm.c
+> @@ -634,7 +634,7 @@ void pcie_aspm_exit_link_state(struct pci_dev *pdev)
+>  	struct pci_dev *parent = pdev->bus->self;
+>  	struct pcie_link_state *link, *root, *parent_link;
+>  
+> -	if (!pci_is_pcie(pdev) || !parent || !parent->link_state)
+> +	if (!parent || !pci_is_pcie(parent) || !parent->link_state)
+>  		return;
+>  	if ((pci_pcie_type(parent) != PCI_EXP_TYPE_ROOT_PORT) &&
+>  	    (pci_pcie_type(parent) != PCI_EXP_TYPE_DOWNSTREAM))
 
-ok, will remove that function.
+Joe:
 
-...
->>       list_for_each_entry(dev, &bus->devices, bus_list) {
->>               BUG_ON(!dev->is_added);
->>
->>               child = dev->subordinate;
->> -             /*
->> -              * If there is an unattached subordinate bus, attach
->> -              * it and then scan for unattached PCI devices.
->> -              */
->> +
->>               if (!child)
->>                       continue;
->> -             if (list_empty(&child->node)) {
->> -                     down_write(&pci_bus_sem);
->> -                     list_add_tail(&child->node, &dev->bus->children);
->> -                     up_write(&pci_bus_sem);
->> -             }
->
-> This doesn't seem to have a replacement.  Why isn't it necessary any more?
->
+Bjorn and I looked at this again today and think the checks that occur
+early in 'pcie_aspm_exit_link_state()' could be simplified (as shown
+below) to avoid issues such as you are encountering.
 
-add that in changelog, so related changlog will be:
+I think part of the confusion concerning the asymmetry between
+'pcie_aspm_init_link_state()' and 'pcie_aspm_exit_link_state()' is that
+the former is passed in a pointer to a bridge device whereas the latter
+is passed in a pointer to a end-point device.  Frankly, I find the
+entire driver to be confusing and very hard to understand.
 
+Could you please test with the following patch and let us know the
+results?
+
+
+PCI: ASPM exit link state code is skipping devices
+
+From: Myron Stowe <myron.stowe@redhat.com>
+
+On PCI bus hotplug removal, 'pcie_aspm_exit_link_state' can potentially
+skip parent devices that have link_state allocated.  Instead of exiting
+early if a given device in not PCIe, check whether or not the device's
+parent has link_state allocated.  This enables 'pcie_aspm_exit_link_state'
+to properly clean up parent link_state when the last function in a slot
+might not be PCIe.
+
+Reported-by: Joe Lawrence <joe.lawrence@stratus.com>
+Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
 ---
-Also remove unattached child bus handling in pci_bus_add_devices().
-Because that is not needed, child bus via pci_add_new_bus() is already
-in parent bus children list.
----
+
+ drivers/pci/pcie/aspm.c |    5 +----
+ 1 files changed, 1 insertions(+), 4 deletions(-)
+
+
+diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+index 8474b6a..aa52727 100644
+--- a/drivers/pci/pcie/aspm.c
++++ b/drivers/pci/pcie/aspm.c
+@@ -634,10 +634,7 @@ void pcie_aspm_exit_link_state(struct pci_dev *pdev)
+ 	struct pci_dev *parent = pdev->bus->self;
+ 	struct pcie_link_state *link, *root, *parent_link;
+ 
+-	if (!pci_is_pcie(pdev) || !parent || !parent->link_state)
+-		return;
+-	if ((pci_pcie_type(parent) != PCI_EXP_TYPE_ROOT_PORT) &&
+-	    (pci_pcie_type(parent) != PCI_EXP_TYPE_DOWNSTREAM))
++	if (!parent || !parent->link_state)
+ 		return;
+ 
+ 	down_read(&pci_bus_sem);
+
+
