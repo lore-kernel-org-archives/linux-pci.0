@@ -1,135 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f182.google.com ([209.85.214.182]:42931 "EHLO
-	mail-ob0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755340Ab3ARXPW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Jan 2013 18:15:22 -0500
-Received: by mail-ob0-f182.google.com with SMTP id 16so4238405obc.27
-        for <linux-pci@vger.kernel.org>; Fri, 18 Jan 2013 15:15:22 -0800 (PST)
+Received: from fold.natur.cuni.cz ([195.113.57.32]:39461 "HELO
+	fold.natur.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753841Ab3AaNGC (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 31 Jan 2013 08:06:02 -0500
+Message-ID: <510A6C36.1010906@fold.natur.cuni.cz>
+Date: Thu, 31 Jan 2013 14:05:58 +0100
+From: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
 MIME-Version: 1.0
-In-Reply-To: <alpine.DEB.2.02.1301181449440.31163@jlaw-desktop.mno.stratus.com>
-References: <alpine.DEB.2.02.1301181302260.31163@jlaw-desktop.mno.stratus.com>
-	<CAL-B5D0+6uO7WDYR7inmZKdU0h8-bpkOs_CzbF0bD2b9i6=1ZA@mail.gmail.com>
-	<alpine.DEB.2.02.1301181449440.31163@jlaw-desktop.mno.stratus.com>
-Date: Fri, 18 Jan 2013 16:15:21 -0700
-Message-ID: <CAL-B5D2-=x+Y-f9x+QyX+3j3F=CbfY6mRGE6mnmvuhM-zMKGnw@mail.gmail.com>
-Subject: Re: PCIe ASPM crash on device removal
-From: Myron Stowe <myron.stowe@gmail.com>
-To: Joe Lawrence <Joe.Lawrence@stratus.com>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	Myron Stowe <mstowe@redhat.com>,
-	David Bulkow <david.bulkow@stratus.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Chris Clayton <chris2553@googlemail.com>
+CC: Yijing Wang <wangyijing@huawei.com>,
+	Yijing Wang <wangyijing0307@gmail.com>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org
+Subject: Re: 3.8.0-rc4+ - Oops on removing WinTV-HVR-1400 expresscard TV Tuner
+References: <51016937.1020202@googlemail.com> <510189B1.606@fold.natur.cuni.cz> <5104427D.2050002@googlemail.com> <510494D6.1010000@gmail.com> <51050D43.2050703@googlemail.com> <51051B1B.3080105@gmail.com> <51052DB2.4090702@googlemail.com> <51053917.6060400@fold.natur.cuni.cz> <5105491E.9050907@googlemail.com> <510558CE.9000600@fold.natur.cuni.cz> <5105AFDB.9000200@googlemail.com> <5105E51D.2020606@huawei.com> <51064F1A.1020909@googlemail.com> <51065FA6.4070208@googlemail.com> <51066B46.10409@fold.natur.cuni.cz> <5106CD6C.4070009@googlemail.com> <5106E770.9070602@fold.natur.cuni.cz> <510A5F0E.6010100@googlemail.com>
+In-Reply-To: <510A5F0E.6010100@googlemail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 18, 2013 at 12:53 PM, Joe Lawrence <Joe.Lawrence@stratus.com> wrote:
-> On Fri, 18 Jan 2013, Myron Stowe wrote:
->
->> On Fri, Jan 18, 2013 at 11:22 AM, Joe Lawrence <Joe.Lawrence@stratus.com>wrote:
+Hi Chris,
+
+Chris Clayton wrote:
+> Hi Martin,
+> 
+> On 01/28/13 21:02, Martin Mokrejs wrote:
+>> Hi Chris,
 >>
->> > The Stratus PCI topology includes a branch that looks like:
->> >
->> > ... -00.0-[03-3c]----00.0-[04-2d]--+- ...
->> >                                    |
->> >                                    \-01.0-[2c-2d]--+-00.0
->> >                                                    +-00.1
->> >                                                    \-1f.0
->> >
->> > This is an interesting topology.  The switch contains an Express capable
->> downstream port - 04:01.0 - leading to PCI (non-Express) devices (2c:00.0,
->> 2c:00.1, and 2c:1f.0).  Would Express links even be used in this topology?
->> I'm guessing not, which brings up the question: why would ASPM be inserting
->> link state structures into its link_list for such a topology?  Seems like
->> the proper thing to do is change the code in the beginning of
->> pcie_aspm_init_link_state, or pcie_aspm_sanity_check() with some
->> re-factoring, to short-circuit out and do nothing (even when ASPM is
->> enabled in the kernel).
+>> Chris Clayton wrote:
+>>> Hi Martin,
+>>>
+>>> On 01/28/13 12:12, Martin Mokrejs wrote:
+>>>> Chris Clayton wrote:
+
+>>>
+>>> I've struggled with this a little. For some reason, the expresscard
+>>> doesn't always stay properly inserted in the slot when I insert it.
+>>> Now that hotplug is working, the modules are being loaded and when
+>>> the card pops out again, I get an oops because, of course, the driver
+>>> is running and the card disappears. Perhaps the driver can be made a
+>>> bit more robust to sudden disappearance of the card. I'll report the
 >>
->> Could you supply an "lspci -xxx -vvs 04:01.0?  It would be interesting to
->> see what the "express capabilities" LnkCap indicates with respect to its
->> ASPM bits (11:10 Active State Power Management (ASPM) Support bits).
+>> Yes, I had or maybe still have same issues here. I used to get an Oops
+>> for sata_sil24 card weird behavior for USB3.0 NEC-based card. It was
+>> fine always for a VIA-based firewire card and serial PL2303-based one.
+>> I found out it is better if a usb device is connected to the USB card
+>> because if that slips out then the libata layer quickly realizes that.
+>> If there was no device connected, the usb waits too long before it removes
+>> the usb hub from the system. And if you plugin the card meanwhile
+>> back into the slot, weird thing happen.
 >>
->> Myron
->
-> Hi Myron,
->
-> See lspci output below (hopefully won't be word wrap mangled)
->
-> -- Joe
->
->
-> 04:01.0 PCI bridge: Device 1bcf:0009 (rev 01) (prog-if 00 [Normal decode])
->         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
->         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
->         Latency: 0, Cache Line Size: 64 bytes
->         Bus: primary=04, secondary=2c, subordinate=2d, sec-latency=0
->         I/O behind bridge: 00005000-00005fff
->         Memory behind bridge: 90000000-92ffffff
->         Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- <SERR- <PERR-
->         BridgeCtl: Parity- SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
->                 PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
->         Capabilities: [b0] Express (v2) Downstream Port (Slot-), MSI 00
->                 DevCap: MaxPayload 256 bytes, PhantFunc 0, Latency L0s <64ns, L1 <1us
->                         ExtTag- RBE- FLReset-
->                 DevCtl: Report errors: Correctable+ Non-Fatal+ Fatal+ Unsupported+
->                         RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+
->                         MaxPayload 256 bytes, MaxReadReq 512 bytes
->                 DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr- TransPend-
->                 LnkCap: Port #1, Speed 5GT/s, Width x4, ASPM L1, Latency L0 unlimited, L1 <1us
->                         ClockPM- Surprise- LLActRep- BwNot-
->                 LnkCtl: ASPM Disabled; Disabled- Retrain- CommClk-
->                         ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
->                 LnkSta: Speed 2.5GT/s, Width x4, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
->                 DevCap2: Completion Timeout: Not Supported, TimeoutDis-, LTR-, OBFF Not Supported ARIFwd-
->                 DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-, LTR-, OBFF Disabled ARIFwd-
->                 LnkCtl2: Target Link Speed: Unknown, EnterCompliance+ SpeedDis-, Selectable De-emphasis: -6dB
->                          Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS+
->                          Compliance De-emphasis: -6dB
->                 LnkSta2: Current De-emphasis Level: -3.5dB, EqualizationComplete-, EqualizationPhase1-
->                          EqualizationPhase2-, EqualizationPhase3-, LinkEqualizationRequest-
->         Capabilities: [ec] Power Management version 2
->                 Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
->                 Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
->         Capabilities: [100 v1] Advanced Error Reporting
->                 UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
->                 UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
->                 UESvrt: DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
->                 CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
->                 CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
->                 AERCap: First Error Pointer: 00, GenCap- CGenEn- ChkCap- ChkEn-
->         Kernel driver in use: pcieport
-> 00: cf 1b 09 00 07 00 10 00 01 00 04 06 10 00 01 00
-> 10: 00 00 00 00 00 00 00 00 04 2c 2d 00 51 51 00 00
-> 20: 00 90 f0 92 f1 ff 01 00 00 00 00 00 00 00 00 00
-> 30: 00 00 00 00 b0 00 00 00 00 00 00 00 0b 01 00 00
-> 40: 00 01 00 00 10 00 00 00 0a 00 00 00 00 00 00 00
-> 50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-> 60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-> 70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-> 80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-> 90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-> a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-> b0: 10 ec 62 00 01 00 00 00 3f 28 00 00 42 78 00 01
-> c0: 00 00 41 10 00 00 00 00 00 00 00 00 00 00 00 00
-> d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-> e0: 1f 08 01 00 00 00 00 00 00 00 00 00 01 00 02 c8
-> f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
->
+> My usb3 expresscard device has arrived and I get an oops with that
+> too, if I remove it without unloading the driver first. I guess it
+> shouldn't be a surprise that the driver isn't expecting the device to
+> disappear.
 
-Joe:
+I avoided the oopses when a USB device to connected to the express card.
+Nevertheless, you should report it to linux-usb and linux-pci mailing lists,
+along with the oops stacktrace (under a new thread). Maybe you suffer from
+another Oops.
 
-Thanks for the data.  So the downstream port of interest has ASPM link
-capability but it's currently not enabled - see LnkCap and LnkCtl
-above.
+> 
+> As I mentioned, I have some trouble with the WinTV-HVR-1400 card,
+> which sometimes pops out again, if I push it into the slot too hard
+> (but I'm geeting better at that with practice). So what I've done
+> (with the usb3 card too) to avoid the oopsen is blacklist the driver
+> in /etc/modprobe.d/blacklist.conf and then load them when I'm sure
+> the card is properly inserted. Not exactly hotplug, but at least I
+> don't have to reboot because of an oops- and it's not something I'm
+> doing several times an hour.
 
-I'm still do not understand if PCI Express links would even be
-involved in a topology where all the devices connected below the
-downstream port are PCI and not PCI Express.  Seems as if the ASPM
-code is going to a lot of work to put link state structures in place
-for all these devices that would not be capable of supporting ASPM.
+Yeah, i also my way around - not fiddle much with the cards and if they
+slip out during insertion, don't re-plug them too quickly (at least with
+the USB3 card and SATA card I had problems).
 
-I'm still trying to come up to speed understanding ASPM so hopefully
-someone knowledgeable can help clue me in.
+BTW, if you remove a card, you are supposed to push the card into the slot
+so it gets ejected. Do not just pull it out (what I did in the beginnings).
+I was told that is not the right way (probably affects the PresDet status).
 
-Myron
+Martin
