@@ -1,202 +1,191 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Vijay Mohan Pandarathil <vijaymohan.pandarathil@hp.com>
-To: alex.williamson@redhat.com, gleb@redhat.com, bhelgaas@google.com,
-	blauwirbel@gmail.com, lance.oritz@hp.com, kvm@vger.kernel.org,
-	qemu-devel@nongnu.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: Vijay Mohan Pandarathil <vijaymohan.pandarathil@hp.com>
-Subject: [PATCH v4 2/3] VFIO-AER: Vfio-pci driver changes for supporting AER
-Date: Thu, 14 Feb 2013 04:41:54 -0600
-Message-Id: <1360838515-17558-3-git-send-email-vijaymohan.pandarathil@hp.com>
-In-Reply-To: <1360838515-17558-1-git-send-email-vijaymohan.pandarathil@hp.com>
-References: <1360838515-17558-1-git-send-email-vijaymohan.pandarathil@hp.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <510BE9AB.9010702@gmail.com>
+Date: Sat, 02 Feb 2013 00:13:31 +0800
+From: Jiang Liu <liuj97@gmail.com>
+MIME-Version: 1.0
+To: Jiang Liu <jiang.liu@huawei.com>
+CC: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>
+Subject: Re: [RFC PATCH v5 0/8] introduce PCI bus notifier chain to get rid
+ of the ACPI PCI subdriver interfaces
+References: <1358525267-14268-1-git-send-email-jiang.liu@huawei.com> <CAErSpo6M-c3diVEUpUESgL=2PenxHYkW1eb=OGBdxxWwkge-Bw@mail.gmail.com> <1598719.tGLtx5aHMZ@vostro.rjw.lan> <51072E1D.8020901@huawei.com>
+In-Reply-To: <51072E1D.8020901@huawei.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-	- New VFIO_SET_IRQ ioctl option to pass the eventfd that is signaled when
-          an error occurs in the vfio_pci_device
+On 01/29/2013 10:04 AM, Jiang Liu wrote:
+> On 2013-1-29 8:34, Rafael J. Wysocki wrote:
+>> On Monday, January 28, 2013 01:56:33 PM Bjorn Helgaas wrote:
+>>> On Fri, Jan 18, 2013 at 9:07 AM, Jiang Liu <liuj97@gmail.com> wrote:
+>>>> This is an RFC patchset to address review comments in thread at:
+>>>> https://patchwork.kernel.org/patch/1946851/. The patch just pasts
+>>>> compilation. If no objection to the new implementation, I will
+>>>> go on to modify acpiphp driver and conduct tests.
+>>>>
+>>>> The main changes from V4 to V5 includes:
+>>>> 1) introduce a dedicated notifier chain for PCI buses
+>>>> 2) change pci_slot as built-in driver
+>>>> 3) unify the way to create/destroy PCI slots
+>>>> 4) introduce a kernel option to disable PCIe native hotplug
+>>>>
+>>>> TODO:
+>>>> 1) change acpiphp as built-in and unify the way to create/destroy ACPI
+>>>>    based hotplug slots.
+>>>> 2) change other ACPI PCI subdriver in Yinghai's root bridge hotplug series
+>>>>    to use the PCI bus notifier chain.
+>>>> 3) Remove the ACPI PCI subdriver interface eventaully.
+>>>>
+>>>> Jiang Liu (8):
+>>>>   PCI: make PCI device create/destroy logic symmetric
+>>>>   PCI: split registration of PCI bus devices into two stages
+>>>>   PCI: add a blocking notifier chain for PCI bus addition/removal
+>>>>   ACPI, PCI: avoid building pci_slot as module
+>>>>   PCI, ACPI: hook PCI bus notifications to create/destroy PCI slots
+>>>>   pci_slot: replace printk(KERN_xxx) with pr_xxx()
+>>>>   PCI/PCIe: add "pci=nopciehp" to disable PCIe native hotplug
+>>>>   PCI/PCIe: only claim PME from firmware when CONFIG_PCIE_PME is
+>>>>     enabled
+>>>>
+>>>>  Documentation/kernel-parameters.txt |    2 +
+>>>>  drivers/acpi/Kconfig                |    5 +-
+>>>>  drivers/acpi/internal.h             |    5 +
+>>>>  drivers/acpi/pci_root.c             |    8 +-
+>>>>  drivers/acpi/pci_slot.c             |  217 ++++++++++-------------------------
+>>>>  drivers/acpi/scan.c                 |    1 +
+>>>>  drivers/pci/bus.c                   |   26 ++++-
+>>>>  drivers/pci/pci.c                   |    2 +
+>>>>  drivers/pci/pci.h                   |    1 +
+>>>>  drivers/pci/pcie/portdrv_core.c     |    7 +-
+>>>>  drivers/pci/pcie/portdrv_pci.c      |    3 +
+>>>>  drivers/pci/probe.c                 |    7 +-
+>>>>  drivers/pci/remove.c                |   15 +--
+>>>>  include/linux/pci.h                 |   21 ++++
+>>>>  14 files changed, 142 insertions(+), 178 deletions(-)
+>>>
+>>> I think the problem we're trying to solve is that we don't initialize
+>>> hot-added devices, correctly, e.g., we don't set up AER, we don't
+>>> update acpi/pci_slot stuff, we probably don't set up PME etc.  We also
+>>> have similar issues like IOMMU init on powerpc.
+>>>
+>>> Notifier chains seem like an unnecessarily complicated way to deal
+>>> with this.  They're great for communicating between modules that stay
+>>> at arm's length from each other.  But that's not the case here --
+>>> everything is PCI and is quite closely coupled.  I think AER, PME,
+>>> slot, etc., should  be initialized directly in pci_device_add() or
+>>> somewhere nearby.
+>>
+>> I agree.
+>>
+>>> This might sound a bit radical because it implies some fairly
+>>> far-reaching changes.  It means this code can't be a module (the only
+>>> one that can be built as a module today is pciehp, and I think
+>>> everybody agrees that we should make it static as soon as we can
+>>> figure out the acpiphp/pciehp issue).  I think it also means the
+>>> pcieportdrv concept is of dubious value, since all the services should
+>>> be known at build-time and we probably don't need a registration
+>>> interface for them.
+>>
+>> It is of dubious value regardless.  It just adds complexity for no gain.
+>> Moreover, these things are in fact not mutually independent.
+>>
+>> I've had a lot of headaches trying to work around that when I was working
+>> on PME support and later on _OSC for root bridges.  Let's just take that
+>> stuff away once and for good. :-)
+> Hi Bjorn and Rafael,
+> 	Thanks for advice. We will go this direction to change those modules
+> as built-in.
+> Regards!
+> Gerry
+> 
+Hi Bjorn,
+	I have done some investigation about how to implement this without
+using notifier chain. Due to commit "PCI: Put pci_dev in device tree as early
+as possible", a PCI device will be registered to the driver core before creating
+the subordinate PCI bus. So we can't reply on the ACPI PCI device glue code
+to create/destroy PCI slots or acpiphp hotplug slots. So my current plan is
+to introduce two weak functions as below, is it acceptable?
 
-	- Register pci_error_handler for the vfio_pci driver
+Regards!
+Gerry
 
-	- When the device encounters an error, the error handler registered by
-          the vfio_pci driver gets invoked by the AER infrastructure
-
-	- In the error handler, signal the eventfd registered for the device.
-
-	- This results in the qemu eventfd handler getting invoked and
-          appropriate action taken for the guest.
-
-Signed-off-by: Vijay Mohan Pandarathil <vijaymohan.pandarathil@hp.com>
----
- drivers/vfio/pci/vfio_pci.c         | 44 +++++++++++++++++++++++++++++++++-
- drivers/vfio/pci/vfio_pci_intrs.c   | 47 +++++++++++++++++++++++++++++++++++++
- drivers/vfio/pci/vfio_pci_private.h |  1 +
- include/uapi/linux/vfio.h           |  1 +
- 4 files changed, 92 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
-index b28e66c..d70bd58 100644
---- a/drivers/vfio/pci/vfio_pci.c
-+++ b/drivers/vfio/pci/vfio_pci.c
-@@ -196,7 +196,9 @@ static int vfio_pci_get_irq_count(struct vfio_pci_device *vdev, int irq_type)
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index b494066..a5c22e7 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -673,6 +673,8 @@ add_dev:
+        ret = device_register(&child->dev);
+        WARN_ON(ret < 0);
  
- 			return (flags & PCI_MSIX_FLAGS_QSIZE) + 1;
- 		}
--	}
-+	} else if (irq_type == VFIO_PCI_ERR_IRQ_INDEX)
-+		if (pci_is_pcie(vdev->pdev))
-+			return 1;
- 
- 	return 0;
- }
-@@ -302,6 +304,17 @@ static long vfio_pci_ioctl(void *device_data,
- 		if (info.argsz < minsz || info.index >= VFIO_PCI_NUM_IRQS)
- 			return -EINVAL;
- 
-+		switch (info.index) {
-+		case VFIO_PCI_INTX_IRQ_INDEX ... VFIO_PCI_MSIX_IRQ_INDEX:
-+			break;
-+		case VFIO_PCI_ERR_IRQ_INDEX:
-+			if (pci_is_pcie(vdev->pdev))
-+				break;
-+		/* pass thru to return error */
-+		default:
-+			return -EINVAL;
-+		}
++       pcibios_add_bus(child);
 +
- 		info.flags = VFIO_IRQ_INFO_EVENTFD;
+        /* Create legacy_io and legacy_mem files for this bus */
+        pci_create_legacy_files(child);
  
- 		info.count = vfio_pci_get_irq_count(vdev, info.index);
-@@ -538,11 +551,40 @@ static void vfio_pci_remove(struct pci_dev *pdev)
- 	kfree(vdev);
+@@ -1661,6 +1663,14 @@ int __weak pcibios_root_bridge_prepare(struct pci_host_bridge *
+        return 0;
  }
  
-+static pci_ers_result_t vfio_pci_aer_err_detected(struct pci_dev *pdev,
-+						  pci_channel_state_t state)
++void __weak pcibios_add_bus(struct pci_bus *bus)
 +{
-+	struct vfio_pci_device *vpdev;
-+	struct vfio_device *vdev;
-+
-+	vdev = vfio_device_get_from_dev(&pdev->dev);
-+	if (vdev == NULL)
-+		return PCI_ERS_RESULT_DISCONNECT;
-+
-+	vpdev = vfio_device_data(vdev);
-+	if (vpdev == NULL) {
-+		vfio_device_put(vdev);
-+		return PCI_ERS_RESULT_DISCONNECT;
-+	}
-+
-+	if (vpdev->err_trigger)
-+		eventfd_signal(vpdev->err_trigger, 1);
-+
-+	vfio_device_put(vdev);
-+
-+	return PCI_ERS_RESULT_CAN_RECOVER;
 +}
 +
-+static struct pci_error_handlers vfio_err_handlers = {
-+	.error_detected = vfio_pci_aer_err_detected,
-+};
-+
- static struct pci_driver vfio_pci_driver = {
- 	.name		= "vfio-pci",
- 	.id_table	= NULL, /* only dynamic ids */
- 	.probe		= vfio_pci_probe,
- 	.remove		= vfio_pci_remove,
-+	.err_handler	= &vfio_err_handlers,
- };
- 
- static void __exit vfio_pci_cleanup(void)
-diff --git a/drivers/vfio/pci/vfio_pci_intrs.c b/drivers/vfio/pci/vfio_pci_intrs.c
-index 3639371..8036f3a 100644
---- a/drivers/vfio/pci/vfio_pci_intrs.c
-+++ b/drivers/vfio/pci/vfio_pci_intrs.c
-@@ -745,6 +745,46 @@ static int vfio_pci_set_msi_trigger(struct vfio_pci_device *vdev,
- 	return 0;
- }
- 
-+static int vfio_pci_set_err_trigger(struct vfio_pci_device *vdev,
-+				    unsigned index, unsigned start,
-+				    unsigned count, uint32_t flags, void *data)
++void __weak pcibios_remove_bus(struct pci_bus *bus)
 +{
-+	int32_t fd = *(int32_t *)data;
-+
-+	if ((index != VFIO_PCI_ERR_IRQ_INDEX) ||
-+	    !(flags & VFIO_IRQ_SET_DATA_TYPE_MASK))
-+		return -EINVAL;
-+
-+	/* DATA_NONE/DATA_BOOL enables loopback testing */
-+
-+	if (flags & VFIO_IRQ_SET_DATA_NONE) {
-+		if (vdev->err_trigger)
-+			eventfd_signal(vdev->err_trigger, 1);
-+		return 0;
-+	} else if (flags & VFIO_IRQ_SET_DATA_BOOL) {
-+		uint8_t trigger = *(uint8_t *)data;
-+		if (trigger && vdev->err_trigger)
-+			eventfd_signal(vdev->err_trigger, 1);
-+		return 0;
-+	}
-+
-+	/* Handle SET_DATA_EVENTFD */
-+
-+	if (fd == -1) {
-+		if (vdev->err_trigger)
-+			eventfd_ctx_put(vdev->err_trigger);
-+		vdev->err_trigger = NULL;
-+		return 0;
-+	} else if (fd >= 0) {
-+		struct eventfd_ctx *efdctx;
-+		efdctx = eventfd_ctx_fdget(fd);
-+		if (IS_ERR(efdctx))
-+			return PTR_ERR(efdctx);
-+		vdev->err_trigger = efdctx;
-+		return 0;
-+	} else
-+		return -EINVAL;
 +}
- int vfio_pci_set_irqs_ioctl(struct vfio_pci_device *vdev, uint32_t flags,
- 			    unsigned index, unsigned start, unsigned count,
- 			    void *data)
-@@ -779,6 +819,13 @@ int vfio_pci_set_irqs_ioctl(struct vfio_pci_device *vdev, uint32_t flags,
- 			break;
- 		}
- 		break;
-+	case VFIO_PCI_ERR_IRQ_INDEX:
-+		switch (flags & VFIO_IRQ_SET_ACTION_TYPE_MASK) {
-+		case VFIO_IRQ_SET_ACTION_TRIGGER:
-+			if (pci_is_pcie(vdev->pdev))
-+				func = vfio_pci_set_err_trigger;
-+			break;
-+		}
- 	}
++
+ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+                struct pci_ops *ops, void *sysdata, struct list_head *resources)
+ {
+@@ -1715,6 +1725,8 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int b
+        if (error)
+                goto class_dev_reg_err;
  
- 	if (!func)
-diff --git a/drivers/vfio/pci/vfio_pci_private.h b/drivers/vfio/pci/vfio_pci_private.h
-index 611827c..daee62f 100644
---- a/drivers/vfio/pci/vfio_pci_private.h
-+++ b/drivers/vfio/pci/vfio_pci_private.h
-@@ -55,6 +55,7 @@ struct vfio_pci_device {
- 	bool			bardirty;
- 	struct pci_saved_state	*pci_saved_state;
- 	atomic_t		refcnt;
-+	struct eventfd_ctx	*err_trigger;
- };
++       pcibios_remove_bus(b);
++
+        /* Create legacy_io and legacy_mem files for this bus */
+        pci_create_legacy_files(b);
  
- #define is_intx(vdev) (vdev->irq_type == VFIO_PCI_INTX_IRQ_INDEX)
-diff --git a/include/uapi/linux/vfio.h b/include/uapi/linux/vfio.h
-index 4758d1b..7d50af4 100644
---- a/include/uapi/linux/vfio.h
-+++ b/include/uapi/linux/vfio.h
-@@ -310,6 +310,7 @@ enum {
- 	VFIO_PCI_INTX_IRQ_INDEX,
- 	VFIO_PCI_MSI_IRQ_INDEX,
- 	VFIO_PCI_MSIX_IRQ_INDEX,
-+	VFIO_PCI_ERR_IRQ_INDEX,
- 	VFIO_PCI_NUM_IRQS
- };
+diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+index fc38c48..3dbdf82 100644
+--- a/drivers/pci/remove.c
++++ b/drivers/pci/remove.c
+@@ -52,6 +52,7 @@ void pci_remove_bus(struct pci_bus *bus)
+                return;
  
--- 
-1.7.11.3
+        pci_remove_legacy_files(bus);
++       pcibios_remove_bus(child);
+        device_unregister(&bus->dev);
+ }
+ EXPORT_SYMBOL(pci_remove_bus);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 056d3d6..fd8ba0c 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -380,6 +380,8 @@ void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
+                     void *release_data);
+ 
+ int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge);
++void pcibios_add_bus(struct pci_bus *bus);
++void pcibios_remove_bus(struct pci_bus *bus);
+ 
+ /*
+  * The first PCI_BRIDGE_RESOURCE_NUM PCI bus resources (those that correspond
+
+
+>>
+>> Thanks,
+>> Rafael
+>>
+>>
+> 
+> 
 
