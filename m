@@ -1,120 +1,157 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Jiang Liu <liuj97@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>
-Subject: Re: [RFC PATCH v5 4/8] ACPI, PCI: avoid building pci_slot as module
-Date: Mon, 21 Jan 2013 01:01:58 +0100
-Message-ID: <3500982.MUDp6kKU3R@vostro.rjw.lan>
-In-Reply-To: <1358525267-14268-5-git-send-email-jiang.liu@huawei.com>
-References: <1358525267-14268-1-git-send-email-jiang.liu@huawei.com> <1358525267-14268-5-git-send-email-jiang.liu@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from quartz.orcorp.ca ([184.70.90.242]:46351 "EHLO quartz.orcorp.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752237Ab3BABlh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 31 Jan 2013 20:41:37 -0500
+Date: Thu, 31 Jan 2013 18:41:38 -0700
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Stephen Warren <swarren@wwwdotorg.org>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>
+Subject: Re: [PATCH v2 19/27] pci: PCIe driver for Marvell Armada 370/XP
+ systems
+Message-ID: <20130201014138.GA16234@obsidianresearch.com>
+References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
+ <1359399397-29729-20-git-send-email-thomas.petazzoni@free-electrons.com>
+ <510B0D9C.1000101@wwwdotorg.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <510B0D9C.1000101@wwwdotorg.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Saturday, January 19, 2013 12:07:42 AM Jiang Liu wrote:
-> As discussed in thread at https://patchwork.kernel.org/patch/1946851/,
-> there's no value in supporting CONFIG_ACPI_PCI_SLOT=m any more.
-> So change Kconfig and code to only support building pci_slot as
-> built-in driver.
+On Thu, Jan 31, 2013 at 05:34:36PM -0700, Stephen Warren wrote:
+> On 01/28/2013 11:56 AM, Thomas Petazzoni wrote:
+> > This driver implements the support for the PCIe interfaces on the
+> > Marvell Armada 370/XP ARM SoCs. In the future, it might be extended to
+> > cover earlier families of Marvell SoCs, such as Dove, Orion and
+> > Kirkwood.
 > 
-> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+> Bjorn and I happen to live very close, so we got together today and
+> talked about PCIe on ARM.
+> 
+> One of the questions he asked is: why does the window management on the
+> Marvell SoCs need to be dynamic?
 
-Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> (Sorry if this was covered earlier; I vaguely recall some discussion on
+> the topic, but couldn't find it quickly)
 
-> ---
->  drivers/acpi/Kconfig    |    5 +----
->  drivers/acpi/internal.h |    5 +++++
->  drivers/acpi/pci_slot.c |   13 +------------
->  drivers/acpi/scan.c     |    1 +
->  4 files changed, 8 insertions(+), 16 deletions(-)
+Well I've answered it several times, so has Thomas.. Lets try again,
+please save for future reference :)
+
+Lets seperate two things.
+
+The CPU physical address ranges reserved for PCI bus access are not
+dynamic. This is set in DT, or whatever, statically. Just like every
+other PCI case on ARM. Just like Tegra. That is not the issue.
+
+What is required is that the division of this space amongst the 10
+physical PCI-E links must be dynamic. Just like x86. Just like the new
+tegra driver. [1]
+
+Is that clear?
+
+> As background, PCIe enumeration in Linux usually works like:
 > 
-> diff --git a/drivers/acpi/Kconfig b/drivers/acpi/Kconfig
-> index 0300bf6..7efd0d0 100644
-> --- a/drivers/acpi/Kconfig
-> +++ b/drivers/acpi/Kconfig
-> @@ -299,7 +299,7 @@ config ACPI_DEBUG_FUNC_TRACE
->  	  is about half of the penalty and is rarely useful.
->  
->  config ACPI_PCI_SLOT
-> -	tristate "PCI slot detection driver"
-> +	bool "PCI slot detection driver"
->  	depends on SYSFS
->  	default n
->  	help
-> @@ -308,9 +308,6 @@ config ACPI_PCI_SLOT
->  	  i.e., segment/bus/device/function tuples, with physical slots in
->  	  the system.  If you are unsure, say N.
->  
-> -	  To compile this driver as a module, choose M here:
-> -	  the module will be called pci_slot.
-> -
->  config X86_PM_TIMER
->  	bool "Power Management Timer Support" if EXPERT
->  	depends on X86
-> diff --git a/drivers/acpi/internal.h b/drivers/acpi/internal.h
-> index e050254..7374cfc 100644
-> --- a/drivers/acpi/internal.h
-> +++ b/drivers/acpi/internal.h
-> @@ -67,6 +67,11 @@ struct acpi_ec {
->  
->  extern struct acpi_ec *first_ec;
->  
-> +#ifdef	CONFIG_ACPI_PCI_SLOT
-> +void acpi_pci_slot_init(void);
-> +#else
-> +static inline void acpi_pci_slot_init(void) { }
-> +#endif
->  int acpi_pci_root_init(void);
->  int acpi_ec_init(void);
->  int acpi_ec_ecdt_probe(void);
-> diff --git a/drivers/acpi/pci_slot.c b/drivers/acpi/pci_slot.c
-> index d22585f..a7d7e77 100644
-> --- a/drivers/acpi/pci_slot.c
-> +++ b/drivers/acpi/pci_slot.c
-> @@ -330,19 +330,8 @@ static struct dmi_system_id acpi_pci_slot_dmi_table[] __initdata = {
->  	{}
->  };
->  
-> -static int __init
-> -acpi_pci_slot_init(void)
-> +void __init acpi_pci_slot_init(void)
->  {
->  	dmi_check_system(acpi_pci_slot_dmi_table);
->  	acpi_pci_register_driver(&acpi_pci_slot_driver);
-> -	return 0;
->  }
-> -
-> -static void __exit
-> -acpi_pci_slot_exit(void)
-> -{
-> -	acpi_pci_unregister_driver(&acpi_pci_slot_driver);
-> -}
-> -
-> -module_init(acpi_pci_slot_init);
-> -module_exit(acpi_pci_slot_exit);
-> diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
-> index f8a0d0f..cb964ac 100644
-> --- a/drivers/acpi/scan.c
-> +++ b/drivers/acpi/scan.c
-> @@ -1732,6 +1732,7 @@ int __init acpi_scan_init(void)
->  
->  	acpi_power_init();
->  	acpi_pci_root_init();
-> +	acpi_pci_slot_init();
->  
->  	/*
->  	 * Enumerate devices in the ACPI namespace.
+> 1) You start off with some CPU physical address regions that generate
+> transactions on the PCIe bus.
 > 
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+> 2) You enumerate all the PCIe devices, and assign an address to each BAR
+> found, carved out of the PCIe address range corresponding to the regions
+> you knew from (1).
+
+Step 2 also includes 'assign address windows to all the physical PCI-E
+links'. This is very important because it is what this entire
+discussion is about.
+
+Look at how tegra or x86 works, the CPU physical addresses for PCI-E
+do nothing until the PCI-to-PCI bridge window registers in each link's
+configuration space are setup. Until that is done the SOC doesn't know
+which link to send the transaction to.
+
+Marvell is the same, until the link's window registers are setup the
+CPU addresses don't go anywhere.
+
+Notice this has absolutely no effect on the host bridge aperture.
+This is a link-by-link configuration of what addresses *go down that
+link*.
+
+The big difference is the link window registers for Marvell do not
+conform to the PCI configuration space specification. They are Marvell
+specific.
+
+This is what the glue code in the host driver does, it converts the
+Marvell specificness into something the kernel can undertstand and
+control. There are countless ways to do this, but please accept it
+is necessary that it be done...
+
+> Now, I recall that a related issue was that you are tight on CPU
+> physical address space, and the second algorithm above would allow the
+> size of the PCIe controller's window configuration to be as small as
+> possible, and hence there would be more CPU physical address space
+> available to fit in other peripherals.
+
+Physical address space is certainly a concern, but availability of
+decoder windows is the major one. Each link requires one decoder
+window for MMIO and one for IO, and possibly one for prefetch. The
+chip doesn't have 30 decoder windows. So the allocation of decoders to
+links must be dynamic, based on the requirements of the downstream
+endports on the link.
+
+> However, why does this need to be dynamic? On a particular board, you
+> know all the other (non-PCIe) peripherals that you need to fit into the
+> CPU physical address space, so you know how much is left over for PCIe,
+> so why not always make the PCIe window fill up all the available
+> space,
+
+Because there is no such thing as an all-links PCIe window on this
+hardware.
+
+Each link has a seperate window.
+
+If you get rid of all the dynamic allocation then every link must
+statically reserve some portion of physical address space and some
+number of decoder windows.
+
+That more or less means you need to know what is going to be on the
+other side of every link when you write the DT.
+
+> With a static window configuration in DT, you'd end up with a system
+> that worked much like any x86 system or Tegra, with some static memory
+> range available to PCIe. It's just that in your case, the region
+> location/size could change from boot to boot based on DT, whereas it's
+> hard-coded in HW for Tegra and I assume x86 too.
+
+How is this better? Now you have a system where you have to customize
+the DT before you connect a PCI-E device. What if someone uses this
+chip in a configuration with physical slots? How does that work? What
+about hotplug? What about a unified kernel? That is *not* like x86 or
+tegra.
+
+IMHO Thomas's direction in his proposed driver ends up working very
+close to the new tegra driver, and has the sort of dynamic allocation
+and discovery people expect from PCI-E.
+
+Jason
+
+1 - The new tegra driver switches from calling ARM's pci_common_init
+    once for every physical link, to once for the SOC. It does this by
+    fixing the routing of config transactions so that the kernel sees
+    the per-link PCI-PCI root port bridge config space provided by the
+    hardware at the correct place. By doing this it changes from
+    statically allocating a physical memory region for each link to
+    statically allocating a region for all the links, and dynamically
+    dividing that region amongst the links.
