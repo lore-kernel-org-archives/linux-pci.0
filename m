@@ -1,122 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:26754 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760441Ab3BHTaT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 Feb 2013 14:30:19 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-Subject: [PATCH v2 19/26] x86, irq: More strict checking about registering ioapic
-Date: Fri,  8 Feb 2013 11:28:16 -0800
-Message-Id: <1360351703-20571-20-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1360351703-20571-1-git-send-email-yinghai@kernel.org>
-References: <1360351703-20571-1-git-send-email-yinghai@kernel.org>
+Received: from mail-vc0-f178.google.com ([209.85.220.178]:45546 "EHLO
+	mail-vc0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757994Ab3BAXEE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 Feb 2013 18:04:04 -0500
+Received: by mail-vc0-f178.google.com with SMTP id m8so2761309vcd.23
+        for <linux-pci@vger.kernel.org>; Fri, 01 Feb 2013 15:04:03 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1359519038-25424-1-git-send-email-wangyijing@huawei.com>
+References: <1359519038-25424-1-git-send-email-wangyijing@huawei.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 1 Feb 2013 16:03:43 -0700
+Message-ID: <CAErSpo7USGyv-cKRrUEOBFWggp5AdRw5w4a+ZZaXuOgKqqCq-Q@mail.gmail.com>
+Subject: Re: [PATCH] PCI: fix build warning in iov.c
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org,
+	Hanjun Guo <guohanjun@huawei.com>, jiang.liu@huawei.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-1. check overlaping gsi range
-for hotplug ioapic case, BIOS may have some entries in MADT
-and also have setting in pci root bus with _GSB of DSDT.
+On Tue, Jan 29, 2013 at 9:10 PM, Yijing Wang <wangyijing@huawei.com> wrote:
+> Delete unused variable rc to fix build warning in driver/pci/iov.c
+>
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 
-2. make bad_ioapics check idx instead of nr_ioapics.
-for hotadd ioapic could find spare slot in the middle later.
+Applied to my pci/yinghai-root-bus-hotplug branch for v3.9.  Thanks!
 
-3. check if entries is in right range.
+Bjorn
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
----
- arch/x86/kernel/apic/io_apic.c |   29 ++++++++++++++++++++++-------
- 1 file changed, 22 insertions(+), 7 deletions(-)
-
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 9514728..8e92ba0 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -3821,7 +3821,7 @@ void __init ioapic_insert_resources(void)
- 	}
- }
- 
--int mp_find_ioapic(u32 gsi)
-+static int __mp_find_ioapic(u32 gsi, bool quiet)
- {
- 	int i = 0;
- 
-@@ -3836,10 +3836,16 @@ int mp_find_ioapic(u32 gsi)
- 			return i;
- 	}
- 
--	printk(KERN_ERR "ERROR: Unable to locate IOAPIC for GSI %d\n", gsi);
-+	if (!quiet)
-+		pr_err("ERROR: Unable to locate IOAPIC for GSI %d\n", gsi);
- 	return -1;
- }
- 
-+int mp_find_ioapic(u32 gsi)
-+{
-+	return __mp_find_ioapic(gsi, false);
-+}
-+
- int mp_find_ioapic_pin(int ioapic, u32 gsi)
- {
- 	struct mp_ioapic_gsi *gsi_cfg;
-@@ -3854,11 +3860,11 @@ int mp_find_ioapic_pin(int ioapic, u32 gsi)
- 	return gsi - gsi_cfg->gsi_base;
- }
- 
--static __init int bad_ioapic(unsigned long address)
-+static __init int bad_ioapic(int idx, unsigned long address)
- {
--	if (nr_ioapics >= MAX_IO_APICS) {
-+	if (idx >= MAX_IO_APICS) {
- 		pr_warn("WARNING: Max # of I/O APICs (%d) exceeded (found %d), skipping\n",
--			MAX_IO_APICS, nr_ioapics);
-+			MAX_IO_APICS, idx);
- 		return 1;
- 	}
- 	if (!address) {
-@@ -3889,14 +3895,17 @@ static __init int bad_ioapic_register(int idx)
- 
- void __init mp_register_ioapic(int id, u32 address, u32 gsi_base)
- {
--	int idx = 0;
-+	int idx;
- 	int entries;
- 	struct mp_ioapic_gsi *gsi_cfg;
- 
--	if (bad_ioapic(address))
-+	idx = __mp_find_ioapic(gsi_base, true);
-+	if (idx >= 0)
- 		return;
- 
- 	idx = nr_ioapics;
-+	if (bad_ioapic(idx, address))
-+		return;
- 
- 	ioapics[idx].mp_config.type = MP_IOAPIC;
- 	ioapics[idx].mp_config.flags = MPC_APIC_USABLE;
-@@ -3917,6 +3926,12 @@ void __init mp_register_ioapic(int id, u32 address, u32 gsi_base)
- 	 * and to prevent reprogramming of IOAPIC pins (PCI GSIs).
- 	 */
- 	entries = io_apic_get_redir_entries(idx);
-+
-+	if (!entries || entries > MP_MAX_IOAPIC_PIN) {
-+		clear_fixmap(FIX_IO_APIC_BASE_0 + idx);
-+		return;
-+	}
-+
- 	gsi_cfg = mp_ioapic_gsi_routing(idx);
- 	gsi_cfg->gsi_base = gsi_base;
- 	gsi_cfg->gsi_end = gsi_base + entries - 1;
--- 
-1.7.10.4
-
+> ---
+>  drivers/pci/iov.c |    1 -
+>  1 files changed, 0 insertions(+), 1 deletions(-)
+>
+> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+> index f8720af..4ea7139 100644
+> --- a/drivers/pci/iov.c
+> +++ b/drivers/pci/iov.c
+> @@ -33,7 +33,6 @@ static inline u8 virtfn_devfn(struct pci_dev *dev, int id)
+>
+>  static struct pci_bus *virtfn_add_bus(struct pci_bus *bus, int busnr)
+>  {
+> -       int rc;
+>         struct pci_bus *child;
+>
+>         if (bus->number == busnr)
+> --
+> 1.7.1
+>
+>
