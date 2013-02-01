@@ -1,242 +1,107 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ia0-f202.google.com ([209.85.210.202]:43727 "EHLO
-	mail-ia0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932781Ab3BKWlp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Feb 2013 17:41:45 -0500
-Received: by mail-ia0-f202.google.com with SMTP id p22so1247105iad.1
-        for <linux-pci@vger.kernel.org>; Mon, 11 Feb 2013 14:41:44 -0800 (PST)
-Date: Mon, 11 Feb 2013 15:41:42 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Peter Hurley <peter@hurleysoftware.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Lan Tianyu <tianyu.lan@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Jiri Kosina <jkosina@suse.cz>, linux-usb@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-next@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [Bisected] [-next-20130204] usb/hcd: irq 18: nobody cared
-Message-ID: <20130211224142.GA9782@google.com>
-References: <Pine.LNX.4.44L0.1302051520220.2245-100000@iolanthe.rowland.org>
- <1360466060.3703.15.camel@thor.lan>
- <1360506199.3461.5.camel@thor.lan>
- <CAE9FiQX0Jzqi=Dy=r3MoU9vK7HgAf+919LvbgLygW7VH3O4=bg@mail.gmail.com>
- <CAE9FiQX5wQ8zFzPfgmvm0BESyLVxzDRQ33XPgj+QjBZ0kxuHXg@mail.gmail.com>
- <1360587768.3454.2.camel@thor.lan>
- <CAE9FiQWUZ3BgLOtcGePppLzWBv-uR8L+7abditH2MNA7zZW-WA@mail.gmail.com>
- <CAE9FiQXcgxY_vW6gjqU7Jtxc71J=sKt_2SPsN8x1O9EfDRN_0g@mail.gmail.com>
- <CAE9FiQXnb-op9vsQJroMisDQt_-X2UpBB1R_WJ1Lifnk5pPpGg@mail.gmail.com>
+Received: from moutng.kundenserver.de ([212.227.126.186]:55372 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755331Ab3BALad (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 Feb 2013 06:30:33 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Subject: Re: [PATCH v2 19/27] pci: PCIe driver for Marvell Armada 370/XP systems
+Date: Fri, 1 Feb 2013 11:30:18 +0000
+Cc: "Russell King - ARM Linux" <linux@arm.linux.org.uk>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	linux-pci@vger.kernel.org,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	"Eran Ben-Avi" <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-arm-kernel@lists.infradead.org
+References: <20130130120344.GA29490@avionic-0098.mockup.avionic-design.de> <201301312046.22560.arnd@arndb.de> <20130131224459.GA11846@obsidianresearch.com>
+In-Reply-To: <20130131224459.GA11846@obsidianresearch.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAE9FiQXnb-op9vsQJroMisDQt_-X2UpBB1R_WJ1Lifnk5pPpGg@mail.gmail.com>
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201302011130.18442.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc linux-acpi, linux-pci]
+On Thursday 31 January 2013, Jason Gunthorpe wrote:
+> On Thu, Jan 31, 2013 at 08:46:22PM +0000, Arnd Bergmann wrote:
+> 
+> > > If it is 0xDEAD0000, then Thomas has to keep what he has now, you
+> > > can't mess with this address. Verify that the full 32 bit address
+> > > exactly matching the MBUS window address is written to the PCI-PCI
+> > > bridge IO base/limit registers.
+> > 
+> > If you do this, you break all sorts of expectations in the kernel and
+> > I guess you'd have to set the io_offset value of that bus to 0x21530000
+> > in order to make Linux I/O port 0 go to the first byte of the window
+> > and come out as 0xDEAD0000 on the bus, but you still won't be able to
+> > use legacy devices with hardcoded I/O port numbers.
+> 
+> I'm not sure exactly how the PCI core handles this, but it does look
+> like pci_add_resource_offset via io_offset is the answer. I'm not sure
+> what goes in the struct resource passed to the PCI core - the *bus* IO
+> address range or the *kernel* IO address range..
 
-On Mon, Feb 11, 2013 at 01:06:27PM -0800, Yinghai Lu wrote:
-> On Mon, Feb 11, 2013 at 11:57 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> >>
-> >> Bjorn, Rafael,
-> >>
-> >> acpi_pci_irq_add_prt need to be called after pci bridge get scanned,
-> >> so we can not call it from pci_acpi_setup, after we move dev_register
-> >> for pci_dev early.
-> >>
-> >> The attached debug patch move down that calling into
-> >> pci_bus_add_devices and that will make prt works again.
-> >>
-> >> Can acpi provide another hook after bridge get scanned?
-> 
-> Rafael, Bjorn,
-> 
-> Can you check attached patch?
+IO Resources are always expressed in the kernel's view, so they are in
+the range from 0 to IO_SPACE_LIMIT. The idea is that you can have multiple
+buses that each have their own address space start at 0, but can put
+them into the kernel address space at a different address.
 
-[Yinghai's patch included below for ease of review]
+Each device on any bus can still use I/O addresses starting at zero,
+and you could have e.g. a VGA card on two buses each respond to I/O cycles
+on port 0x3c0, but the PCI core will translate the resources to appear
+in the kernel space at 0x103c0 for the second one.
 
-> Subject: [PATCH] ACPI, PCI: add acpi_platform_notify_scan()
+> > > If it is 0x00000000 then the mmap scheme I outlined before must be
+> > > used, and verify that only 0->0xFFFF is written to the PCI-PCI bridge
+> > > IO base/limit registers..
+> > 
+> > For the primary bus, yes, but there are still two options for the
+> > second one: you can either start at 0 again or you can continue
 > 
-> Peter Hurley found irq nobody cared, and dmesg has
+> No, for *all* links. You use a mmap scheme with 4k granularity, I
+> explained in a past email, but to quickly review..
 > 
-> [    8.983246] pci 0000:00:1e.0: can't derive routing for PCI INT A
-> [    8.983600] snd_ctxfi 0000:09:02.0: PCI INT A: no GSI - using ISA IRQ 5
-> 
-> bisect to
-> | commit 4f535093cf8f6da8cfda7c36c2c1ecd2e9586ee4
-> |     PCI: Put pci_dev in device tree as early as possible
-> 
-> It turns out we need to call acpi_pci_irq_add_prt() after the pci bridges
-> are scanned.
-> 
-> Add acpi_platform_notify_scan() to call acpi_pci_irq_add_prt later.
-> 
-> Reported-and-tested-by: Peter Hurley <peter@hurleysoftware.com>
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> 
-> ---
->  drivers/acpi/glue.c     |   12 ++++++++++++
->  drivers/base/core.c     |    1 +
->  drivers/pci/bus.c       |    4 ++++
->  drivers/pci/pci-acpi.c  |   27 +++++++++++++++++----------
->  include/acpi/acpi_bus.h |    1 +
->  include/linux/device.h  |    3 +--
->  6 files changed, 36 insertions(+), 12 deletions(-)
-> 
-> Index: linux-2.6/drivers/acpi/glue.c
-> ===================================================================
-> --- linux-2.6.orig/drivers/acpi/glue.c
-> +++ linux-2.6/drivers/acpi/glue.c
-> @@ -312,6 +312,17 @@ static int acpi_platform_notify(struct d
->  	return ret;
->  }
->  
-> +static int acpi_platform_notify_scan(struct device *dev)
-> +{
-> +	struct acpi_bus_type *type;
-> +
-> +	type = acpi_get_bus_type(dev->bus);
-> +	if (type && type->setup_scan)
-> +		type->setup_scan(dev);
-> +
-> +	return 0;
-> +}
-> +
->  static int acpi_platform_notify_remove(struct device *dev)
->  {
->  	struct acpi_bus_type *type;
-> @@ -331,6 +342,7 @@ int __init init_acpi_device_notify(void)
->  		return 0;
->  	}
->  	platform_notify = acpi_platform_notify;
-> +	platform_notify_scan = acpi_platform_notify_scan;
->  	platform_notify_remove = acpi_platform_notify_remove;
->  	return 0;
->  }
-> Index: linux-2.6/drivers/base/core.c
-> ===================================================================
-> --- linux-2.6.orig/drivers/base/core.c
-> +++ linux-2.6/drivers/base/core.c
-> @@ -44,6 +44,7 @@ early_param("sysfs.deprecated", sysfs_de
->  #endif
->  
->  int (*platform_notify)(struct device *dev) = NULL;
-> +int (*platform_notify_scan)(struct device *dev) = NULL;
+> - Each link gets 64k of reserved physical address space for IO,
+>   this is just set aside, no MBUS windows are permantently assigned.
+> - Linux is told to use a 64k IO range with bus IO address 0->0xFFFF
+> - When the IO base/limit register in the link PCI-PCI bridge is programmed
+>   the driver gets a 4k aligned region somewhere from 0->0xFFFF and then:
+>     - Allocates a 64k MBUS window that translates physical address
+>       0xZZZZxxxx to IO bus address 0x0000xxxx (goes in the TLP) for
+>       that link
+>     - Uses pci_ioremap_io to map the fraction of the link's 64k MBUS window
+>       allocated to that bridge to the correct offset in the 
+>       PCI_IO_VIRT_BASE region
 
-I don't like the idea of adding another global function pointer just
-for this.  That seems like overkill for a small, local, problem.
+We'd have to change pci_ioremap_io to allow mapping less than 64k, but
+yes, that would work, too. I don't see an advantage to it though,
+other than having io_offset always be zero.
 
->  int (*platform_notify_remove)(struct device *dev) = NULL;
->  static struct kobject *dev_kobj;
->  struct kobject *sysfs_dev_char_kobj;
-> Index: linux-2.6/drivers/pci/bus.c
-> ===================================================================
-> --- linux-2.6.orig/drivers/pci/bus.c
-> +++ linux-2.6/drivers/pci/bus.c
-> @@ -170,6 +170,10 @@ int pci_bus_add_device(struct pci_dev *d
->  {
->  	int retval;
->  
-> +	/* need to be called after bridge is scanned */
-> +	if (platform_notify_scan)
-> +		platform_notify_scan(&dev->dev);
-> +
->  	/*
->  	 * Can not put in pci_device_add yet because resources
->  	 * are not assigned yet for some devices.
-> Index: linux-2.6/drivers/pci/pci-acpi.c
-> ===================================================================
-> --- linux-2.6.orig/drivers/pci/pci-acpi.c
-> +++ linux-2.6/drivers/pci/pci-acpi.c
-> @@ -307,6 +307,22 @@ static void pci_acpi_setup(struct device
->  	struct pci_dev *pci_dev = to_pci_dev(dev);
->  	acpi_handle handle = ACPI_HANDLE(dev);
->  	struct acpi_device *adev;
-> +
-> +	if (acpi_bus_get_device(handle, &adev) || !adev->wakeup.flags.valid)
-> +		return;
-> +
-> +	device_set_wakeup_capable(dev, true);
-> +	acpi_pci_sleep_wake(pci_dev, false);
-> +
-> +	pci_acpi_add_pm_notifier(adev, pci_dev);
-> +	if (adev->wakeup.flags.run_wake)
-> +		device_set_run_wake(dev, true);
-> +}
-> +
-> +static void pci_acpi_setup_scan(struct device *dev)
-> +{
-> +	struct pci_dev *pci_dev = to_pci_dev(dev);
-> +	acpi_handle handle = ACPI_HANDLE(dev);
->  	acpi_status status;
->  	acpi_handle dummy;
->  
-> @@ -326,16 +342,6 @@ static void pci_acpi_setup(struct device
->  			pci_dev->subordinate->number : pci_dev->bus->number;
->  		acpi_pci_irq_add_prt(handle, pci_domain_nr(pci_dev->bus), bus);
+> > at 0x10000 as we do for mv78xx0 and kirkwood for instance. Both
+> > approaches probably have their merit.
+> 
+> Kirkwood uses the MBUS remapping registers to set the TLP address of
+> link 0 to start at 0 and of link 1 to start at 0x10000 - so it is
+> consistent with what you describe..
 
-The _PRT describes motherboard interrupt wiring, which has nothing to
-do with PCI bus numbers.  Our current drivers/acpi/pci_irq.c caches
-the PCI bus number along with the _PRT, and I think that's a mistake.
+Right, so it also uses io_offset = 0 all the time, which means the
+bus I/O port numbers are identical to the Linux I/O port numbers,
+but they go beyond 64K on the bus on the second and later links.
 
-The bus number binding means acpi_pci_irq_add_prt() has to happen
-after enumerating everything below a bridge, and it will prevent us
-from doing any bus number reassignment for hotplug.
+> However, this is a suboptimal way to run the HW. It would be much
+> better to place each link in a seperate PCI domain and have each link
+> start its bus IO address at 0, and assign the kernel IO address in
+> sequential 64k blocks as today.
 
-I think we should remove the bus numbers from the cached _PRT (or
-maybe even remove the _PRT caching completely).  When we enable a PCI
-device's IRQ, we should search up the PCI device tree looking for a
-_PRT associated with each node, and applying normal PCI bridge
-swizzling when we don't find a _PRT.  I think this can be done without
-using PCI bus numbers at all.
+I agree.
 
->  	}
-> -
-> -	if (acpi_bus_get_device(handle, &adev) || !adev->wakeup.flags.valid)
-> -		return;
-> -
-> -	device_set_wakeup_capable(dev, true);
-> -	acpi_pci_sleep_wake(pci_dev, false);
-> -
-> -	pci_acpi_add_pm_notifier(adev, pci_dev);
-> -	if (adev->wakeup.flags.run_wake)
-> -		device_set_run_wake(dev, true);
->  }
->  
->  static void pci_acpi_cleanup(struct device *dev)
-> @@ -359,6 +365,7 @@ static struct acpi_bus_type acpi_pci_bus
->  	.bus = &pci_bus_type,
->  	.find_device = acpi_pci_find_device,
->  	.setup = pci_acpi_setup,
-> +	.setup_scan = pci_acpi_setup_scan,
->  	.cleanup = pci_acpi_cleanup,
->  };
->  
-> Index: linux-2.6/include/acpi/acpi_bus.h
-> ===================================================================
-> --- linux-2.6.orig/include/acpi/acpi_bus.h
-> +++ linux-2.6/include/acpi/acpi_bus.h
-> @@ -440,6 +440,7 @@ struct acpi_bus_type {
->  	/* For bridges, such as PCI root bridge, IDE controller */
->  	int (*find_bridge) (struct device *, acpi_handle *);
->  	void (*setup)(struct device *);
-> +	void (*setup_scan)(struct device *);
->  	void (*cleanup)(struct device *);
->  };
->  int register_acpi_bus_type(struct acpi_bus_type *);
-> Index: linux-2.6/include/linux/device.h
-> ===================================================================
-> --- linux-2.6.orig/include/linux/device.h
-> +++ linux-2.6/include/linux/device.h
-> @@ -897,10 +897,9 @@ extern void device_destroy(struct class
->   */
->  /* Notify platform of device discovery */
->  extern int (*platform_notify)(struct device *dev);
-> -
-> +extern int (*platform_notify_scan)(struct device *dev);
->  extern int (*platform_notify_remove)(struct device *dev);
->  
-> -
->  /*
->   * get_device - atomically increment the reference count for the device.
->   *
+	Arnd
