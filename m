@@ -1,71 +1,67 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:35445 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934651Ab3BTH6I (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 20 Feb 2013 02:58:08 -0500
-Message-ID: <5124820D.2080900@suse.de>
-Date: Wed, 20 Feb 2013 08:58:05 +0100
-From: Hannes Reinecke <hare@suse.de>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
-	Frederik Himpe <fhimpe@vub.ac.be>,
-	Oliver Neukum <oneukum@suse.de>,
-	David Haerdeman <david@hardeman.nu>, linux-usb@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH] pci: do not try to assign irq 255
-References: <1361182193-31894-1-git-send-email-hare@suse.de> <CAE9FiQWP1F5mLUoHoTHXy-wQoGxVK66QuuHYydaq3YfysS5Etg@mail.gmail.com>
-In-Reply-To: <CAE9FiQWP1F5mLUoHoTHXy-wQoGxVK66QuuHYydaq3YfysS5Etg@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1359657310.6022.4.camel@x61.thuisdomein>
+References: <1359367251.883.13.camel@x61.thuisdomein> <CAErSpo7grYijCUZGWGM4jao+MUqXYQ66q1az6bbKPMX4_Jwcyg@mail.gmail.com>
+ <1450113.teKM2dvJbO@vostro.rjw.lan> <1359657310.6022.4.camel@x61.thuisdomein>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 1 Feb 2013 15:57:34 -0700
+Message-ID: <CAErSpo7TD8Vw-6V_-pZzarRd=APzEV-xfXQBYTNPceyxyojfsQ@mail.gmail.com>
+Subject: Re: [PATCH v2] PCI: pciehp: drop ENTRY messages
+To: Paul Bolle <pebolle@tiscali.nl>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 02/19/2013 08:40 PM, Yinghai Lu wrote:
-> On Mon, Feb 18, 2013 at 2:09 AM, Hannes Reinecke <hare@suse.de> wrote:
->> The PCI config space reseves a byte for the interrupt line,
->> so irq 255 actually refers to 'not set'.
->> However, the 'irq' field for struct pci_dev is an integer,
->> so the original meaning is lost, causing the system to
->> assign an interrupt '255', which fails.
->>
->> So we should _not_ assign an interrupt value here, and
->> allow upper layers to fixup things.
->>
->> This patch make PCI devices with MSI interrupts only
->> (like the xhci device on certain HP laptops) work properly.
+On Thu, Jan 31, 2013 at 11:35 AM, Paul Bolle <pebolle@tiscali.nl> wrote:
+> In each suspend and resume cycle my laptop prints these messages at
+> KERN_INFO level:
+>     pciehp 0000:00:1c.1:pcie04: pciehp_suspend ENTRY
+>     pciehp 0000:00:1c.0:pcie04: pciehp_suspend ENTRY
 >
-> looks like the bios does not provide _PRT for device in ACPI.
+> and
+>     pciehp 0000:00:1c.0:pcie04: pciehp_resume ENTRY
+>     pciehp 0000:00:1c.1:pcie04: pciehp_resume ENTRY
 >
-Correct.
-
-> also according to PCI spec, BIOS *must* set interrupt line.
+> Drop these messages, that were probably used to debug the suspend and
+> resume code, but now serve no purpose.
 >
-Apparently this device is meant to use MSI _only_ so the BIOS 
-developer didn't feel the need to assign an INTx here.
+> Signed-off-by: Paul Bolle <pebolle@tiscali.nl>
 
-According to PCI-3.0, section 6.8 (Message Signalled Interrupts):
- > It is recommended that devices implement interrupt pins to
- > provide compatibility in systems that do not support MSI
- > (devices default to interrupt pins). However, it is expected
- > that the need for interrupt pins will diminish over time.
- > Devices that do not support interrupt pins due to pin
- > constraints (rely on polling for device service) may implement
- > messages to increase performance without adding additional pins. 
- > Therefore, system configuration software must not assume that a
- > message capable device has an interrupt pin.
+I applied this to pci/misc for v3.9.  Thanks!
 
-Which sounds to me as if the implementation is valid...
-And in either case, I've added the relevant details plus patch
-to bnc#52591.
-Including ACPI dump, so you can check for yourself.
+Bjorn
 
-And correct me if I'm wrong, of course :-)
-
-Cheers,
-
-Hannes
--- 
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: J. Hawn, J. Guild, F. Imendörffer, HRB 16746 (AG Nürnberg)
+> ---
+> 0) v1 was called "PCI: pciehp: hide ENTRY messages behind ctrl_dbg()".
+> But Bjorn and Rafael prefer to drop these messages completely.
+>
+> 1) Not even compile tested!
+>
+>  drivers/pci/hotplug/pciehp_core.c | 2 --
+>  1 file changed, 2 deletions(-)
+>
+> diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
+> index 939bd1d..7d72c5e 100644
+> --- a/drivers/pci/hotplug/pciehp_core.c
+> +++ b/drivers/pci/hotplug/pciehp_core.c
+> @@ -293,7 +293,6 @@ static void pciehp_remove(struct pcie_device *dev)
+>  #ifdef CONFIG_PM
+>  static int pciehp_suspend (struct pcie_device *dev)
+>  {
+> -       dev_info(&dev->device, "%s ENTRY\n", __func__);
+>         return 0;
+>  }
+>
+> @@ -303,7 +302,6 @@ static int pciehp_resume (struct pcie_device *dev)
+>         struct slot *slot;
+>         u8 status;
+>
+> -       dev_info(&dev->device, "%s ENTRY\n", __func__);
+>         ctrl = get_service_data(dev);
+>
+>         /* reinitialize the chipset's event detection logic */
+> --
+> 1.7.11.7
+>
