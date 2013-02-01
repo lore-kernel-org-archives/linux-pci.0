@@ -1,61 +1,98 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:44639 "EHLO hydra.sisk.pl"
+Received: from quartz.orcorp.ca ([184.70.90.242]:57321 "EHLO quartz.orcorp.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759707Ab3BZDzz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 25 Feb 2013 22:55:55 -0500
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: ALLurGroceries <allurgroceries@gmail.com>,
-	Huang Ying <ying.huang@intel.com>,
-	Zheng Yan <zheng.z.yan@intel.com>, linux-pci@vger.kernel.org
-Subject: Re: [Bug 53811] [REGRESSION]: acpiphp broken on Lenovo X220 from 3.6 onwards
-Date: Tue, 26 Feb 2013 05:02:39 +0100
-Message-ID: <5101020.3N450MHRvH@vostro.rjw.lan>
-In-Reply-To: <CAErSpo6_tO8r2xq-7uo8H18L61Kunb0HgTOvZv0u-sCQKwipxA@mail.gmail.com>
-References: <CAErSpo5PFn9gDgKWHoGpiSEE9862WbTDm7VVtxMxX05zK7b6kw@mail.gmail.com> <1360874504.16827.5.camel@x220> <CAErSpo6_tO8r2xq-7uo8H18L61Kunb0HgTOvZv0u-sCQKwipxA@mail.gmail.com>
+	id S1754566Ab3BATjj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 1 Feb 2013 14:39:39 -0500
+Date: Fri, 1 Feb 2013 12:39:35 -0700
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Stephen Warren <swarren@wwwdotorg.org>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>
+Subject: Re: [PATCH v2 19/27] pci: PCIe driver for Marvell Armada 370/XP
+ systems
+Message-ID: <20130201193935.GA19335@obsidianresearch.com>
+References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
+ <1359399397-29729-20-git-send-email-thomas.petazzoni@free-electrons.com>
+ <510B0D9C.1000101@wwwdotorg.org>
+ <20130201014138.GA16234@obsidianresearch.com>
+ <510B268E.2040104@wwwdotorg.org>
+ <20130201094613.38fa2ad0@skate>
+ <510C0200.5040505@wwwdotorg.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <510C0200.5040505@wwwdotorg.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, February 25, 2013 08:52:42 PM Bjorn Helgaas wrote:
-> [+to Huang]
+On Fri, Feb 01, 2013 at 10:57:20AM -0700, Stephen Warren wrote:
+
+> > We have 20 windows on Armada XP if I remember correctly, and they are
+> > not only used for PCIe, but also to map the BootROM (needed to boot
+> > secondary CPUs), to map SPI flashes or NOR flashes, for example. So
+> > they are really shared between many uses. In terms of PCIe, there are
+> > only two types of windows: I/O and Memory, there is no notion of
+> > Prefetchable Memory window as far as I could see.
 > 
-> On Thu, Feb 14, 2013 at 1:41 PM, ALLurGroceries
-> <allurgroceries@gmail.com> wrote:
-> > On Thu, 2013-02-14 at 10:40 -0700, Bjorn Helgaas wrote:
-> >> [+cc Zheng, Rafael, linux-pci]
-> >>
-> >> On Wed, Feb 13, 2013 at 11:55 PM,  <bugzilla-daemon@bugzilla.kernel.org> wrote:
-> >> > https://bugzilla.kernel.org/show_bug.cgi?id=53811
-> >> >
-> >> >            Summary: acpiphp broken on Lenovo X220 from 3.6 onwards
-> >>
-> >> Thanks for the report.  Can you please attach complete dmesg logs from
-> >> kernels with your patch (showing a working hotplug) and without your
-> >> patch (showing the failing hotplug)?
-> >
-> > OK, they're attached. The hotplug is at the very end of both. Without
-> > the patch, when I try to power the card on with
-> > echo 1 > /sys/bus/pci/slots/1/power
-> >
-> > I get:
-> > acpiphp_glue: acpiphp_enable_slot: Slot status is not ACPI_STA_ALL
+> In Tegra, we end up having separate MMIO vs. Prefetchable MMIO
+> chunks of our overall PCIe aperture. However, the HW setup appears
+> the same for both of those. I'm not sure if it's a bug in the
+> driver, or if it's just to separate the two address spaces so that
+> the page tables can be configured for those two regions with large
+> rather than small granularity. I need to go investigate that.
+
+The only purpose of prefetchable space is for legacy PCI. When a P2P
+bridge targets legacy PCI it has different behavior for its
+prefetchable memory window compared to the non-prefetchable memory
+window.
+
+IIRC (though it has been a long time since I looked really close at
+this) PCI-X and PCI-E did away with this special bridge behaviour but
+kept the prefetchable memory space for compatibility.
+
+These days it is typically used to mark cachable memory on an end
+device.
+
+>From a SOC perspective, there is no need to treat MMIO and prefetch
+areas any differently. ARM's per-page cachability flags can be used to
+deal with the differing caching requirements.
+
+However, the bus tree downstream of each root port will require the
+prefetch window to be contiguous. On Marvell, today, this means you
+need to burn two mbus windows to get this. If the Linux pci core could
+allocate the prefetch space for each root port bridge contiguously
+with the mmio space for the same root port then this could be reduced
+to one window covering both spaces for the port.
+
+> So there are 10 PCIe interfaces (root ports). That's on the SoC itself
+> right. Are all 10 (or a large number of them) actually used at once on
+> any given board design? I suppose this must be the case, or Marvell
+> wouldn't have wasted the silicon space on 10 root ports... Still, that's
+> a rather large number of ports!
+
+Agreed.. I have no idea what the target is for this..
+ 
+> I think the only difference on the Marvell HW is:
 > 
-> Does anybody care about this runtime PM support for PCIe ports?
+> * The overall total size of the physical address space is dynamic rather
+> than fixed, because it's programmed through windows rather than
+> hard-coded into HW.
 
-Yes.
+Is it hard coded on tegra? I thought there was a register set that was
+used to set the overall PCI-E MMIO window location and size. I know
+even on x86 the PCI window is set via register, though that typically
+isn't disclosed except to bios writers.. 
 
-> If nobody wants to fix this regression, I'm going to revert 71a83bd727
-> "PCI/PM: add runtime PM support to PCIe port" and anything that
-> depends on it.
-
-I'll have a look at this tomorrow.
-
-Thanks,
-Rafael
-
-
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+Jason
