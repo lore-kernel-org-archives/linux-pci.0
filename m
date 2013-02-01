@@ -1,136 +1,49 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <1360071455.11144.552.camel@bling.home>
-Subject: Re: [PATCH v3 3/3] QEMU-AER: Qemu changes to support AER for
- VFIO-PCI devices
-From: Alex Williamson <alex.williamson@redhat.com>
-To: "Pandarathil, Vijaymohan R" <vijaymohan.pandarathil@hp.com>
-Cc: Gleb Natapov <gleb@redhat.com>, Blue Swirl <blauwirbel@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Ortiz, Lance E" <lance.oritz@hp.com>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	"qemu-devel@nongnu.org" <qemu-devel@nongnu.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Date: Tue, 05 Feb 2013 06:37:35 -0700
-In-Reply-To: <F9E001219150CB45BEDC82A650F360C9014B445B@G9W0717.americas.hpqcorp.net>
-References: <F9E001219150CB45BEDC82A650F360C9014AAF07@G9W0717.americas.hpqcorp.net>
-	 <CAAu8pHvk_2Mf2F-YTDC-wdyD1Jic-DHUanSQfOa3g0VchTcNig@mail.gmail.com>
-	 <20130205080436.GV23213@redhat.com>
-	 <F9E001219150CB45BEDC82A650F360C9014B42EE@G9W0717.americas.hpqcorp.net>
-	 <20130205092110.GB23213@redhat.com>
-	 <F9E001219150CB45BEDC82A650F360C9014B43DC@G9W0717.americas.hpqcorp.net>
-	 <20130205113645.GE23213@redhat.com>
-	 <F9E001219150CB45BEDC82A650F360C9014B445B@G9W0717.americas.hpqcorp.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from quartz.orcorp.ca ([184.70.90.242]:37906 "EHLO quartz.orcorp.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756276Ab3BAT6E (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 1 Feb 2013 14:58:04 -0500
+Date: Fri, 1 Feb 2013 12:58:04 -0700
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Tawfik Bayouk <tawfik@marvell.com>
+Subject: Re: [PATCH v2 19/27] pci: PCIe driver for Marvell Armada 370/XP
+ systems
+Message-ID: <20130201195804.GD19335@obsidianresearch.com>
+References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
+ <201302011607.49205.arnd@arndb.de>
+ <20130201162638.GT23505@n2100.arm.linux.org.uk>
+ <201302011745.29223.arnd@arndb.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201302011745.29223.arnd@arndb.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2013-02-05 at 12:05 +0000, Pandarathil, Vijaymohan R wrote:
-> 
-> > -----Original Message-----
-> > From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-
-> > owner@vger.kernel.org] On Behalf Of Gleb Natapov
-> > Sent: Tuesday, February 05, 2013 3:37 AM
-> > To: Pandarathil, Vijaymohan R
-> > Cc: Blue Swirl; Alex Williamson; Bjorn Helgaas; Ortiz, Lance E;
-> > kvm@vger.kernel.org; qemu-devel@nongnu.org; linux-pci@vger.kernel.org;
-> > linux-kernel@vger.kernel.org
-> > Subject: Re: [PATCH v3 3/3] QEMU-AER: Qemu changes to support AER for VFIO-
-> > PCI devices
-> > 
-> > On Tue, Feb 05, 2013 at 10:59:41AM +0000, Pandarathil, Vijaymohan R wrote:
-> > >
-> > >
-> > > > -----Original Message-----
-> > > > From: Gleb Natapov [mailto:gleb@redhat.com]
-> > > > Sent: Tuesday, February 05, 2013 1:21 AM
-> > > > To: Pandarathil, Vijaymohan R
-> > > > Cc: Blue Swirl; Alex Williamson; Bjorn Helgaas; Ortiz, Lance E;
-> > > > kvm@vger.kernel.org; qemu-devel@nongnu.org; linux-pci@vger.kernel.org;
-> > > > linux-kernel@vger.kernel.org
-> > > > Subject: Re: [PATCH v3 3/3] QEMU-AER: Qemu changes to support AER for
-> > VFIO-
-> > > > PCI devices
-> > > >
-> > > > On Tue, Feb 05, 2013 at 09:05:19AM +0000, Pandarathil, Vijaymohan R
-> > wrote:
-> > > > >
-> > > > >
-> > > > > > -----Original Message-----
-> > > > > > From: Gleb Natapov [mailto:gleb@redhat.com]
-> > > > > > Sent: Tuesday, February 05, 2013 12:05 AM
-> > > > > > To: Blue Swirl
-> > > > > > Cc: Pandarathil, Vijaymohan R; Alex Williamson; Bjorn Helgaas;
-> > Ortiz,
-> > > > Lance
-> > > > > > E; kvm@vger.kernel.org; qemu-devel@nongnu.org; linux-
-> > > > pci@vger.kernel.org;
-> > > > > > linux-kernel@vger.kernel.org
-> > > > > > Subject: Re: [PATCH v3 3/3] QEMU-AER: Qemu changes to support AER
-> > for
-> > > > VFIO-
-> > > > > > PCI devices
-> > > > > >
-> > > > > > On Sun, Feb 03, 2013 at 04:36:11PM +0000, Blue Swirl wrote:
-> > > > > > > On Sun, Feb 3, 2013 at 2:10 PM, Pandarathil, Vijaymohan R
-> > > > > > > <vijaymohan.pandarathil@hp.com> wrote:
-> > > > > > > >         - Create eventfd per vfio device assigned to a guest
-> > and
-> > > > > > register an
-> > > > > > > >           event handler
-> > > > > > > >
-> > > > > > > >         - This fd is passed to the vfio_pci driver through the
-> > > > SET_IRQ
-> > > > > > ioctl
-> > > > > > > >
-> > > > > > > >         - When the device encounters an error, the eventfd is
-> > > > signalled
-> > > > > > > >           and the qemu eventfd handler gets invoked.
-> > > > > > > >
-> > > > > > > >         - In the handler decide what action to take. Current
-> > action
-> > > > > > taken
-> > > > > > > >           is to terminate the guest.
-> > > > > > >
-> > > > > > > Usually this is not OK, but I guess this is not guest
-> > triggerable.
-> > > > > > >
-> > > > > > Still not OK. Why not stop a guest with appropriate stop reason?
-> > > > >
-> > > > > The thinking was that since this is a hardware error, we would want
-> > to
-> > > > stop the guest at the earliest. The hw_error() routine which aborts the
-> > > > qemu process was suggested by Alex and that seemed appropriate. Earlier
-> > I
-> > > > was using qemu_system_shutdown_request().  Any suggestions ?
-> > > > >
-> > > > I am thinking vm_stop(). Stopping SMP guest (and UP too in fact)
-> > > > involves sending IPIs to other cpus running guest's vcpus. Both exit()
-> > > > and vm_stop() will do it, but former is implicitly in the kernel and
-> > > > later is explicitly in QEMU.
-> > >
-> > > I had used vm_stop(RUN_STATE_SHUTDOWN) earlier in my code. But while
-> > testing, guest ended up in a hang rather than exiting. There seems to some
-> > cleanup work which is being done as part of vm_stop. In our case, we wanted
-> > the guest to exit immediately. So use of hw_error() seemed appropriate.
-> > >
-> > What makes you think it hang? It stopped, precisely what it should do if
-> > you call vm_stop(). Now it is possible for vm user to investigate what
-> > happened and even salvage some data from guest memory.
-> 
-> That was ignorance on my part on the expected behavior of vm_stop(). 
-> So what you are suggesting is to stop the guest displaying an appropriate 
-> error/next-steps message and have the users do any data-collection/investigation 
-> and then manually kill the guest, if they so desire. Right ?
-> 
-> Sounds reasonable. As long as the guest is not touching the device, it should be okay.
-> Alex, Any comments ?
+On Fri, Feb 01, 2013 at 05:45:29PM +0000, Arnd Bergmann wrote:
 
-What's the libvirt behavior when a guest goes to vm_stop?  My only
-concern would be whether the user is going to be confused by a state
-where the vm is still up, but not running.  I imagine they'll have to
-manually stop it and restart it to continue.  Thanks,
+> Yes, that was my point. I think in this case, the bug is in the new
+> of_pci_process_ranges functions, which returns a 'struct resource'
+> translated into IORESOURCE_MEM space, but with the type set
+> to IORESOURCE_IO. This resource then gets passed to 
+> pci_add_resource_offset().
 
-Alex
+A standard way to express the required address translation from CPU
+physical address to IO bus address might help other people avoid this
+trap??
 
+Jason
