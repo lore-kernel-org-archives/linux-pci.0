@@ -1,65 +1,53 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Sarah Sharp <sarah.a.sharp@linux.intel.com>
-Cc: linux-pci@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Huang Ying <ying.huang@intel.com>
-Subject: Re: PCI D3 wakeup failure on Lynx Point xHCI
-Date: Thu, 21 Feb 2013 23:54:55 +0100
-Message-ID: <2088156.nL7UmaIX3H@vostro.rjw.lan>
-In-Reply-To: <20130221214145.GA25639@xanatos>
-References: <20130221214145.GA25639@xanatos>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from avon.wwwdotorg.org ([70.85.31.133]:34770 "EHLO
+	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757125Ab3BAUak (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 Feb 2013 15:30:40 -0500
+Message-ID: <510C25EB.9020804@wwwdotorg.org>
+Date: Fri, 01 Feb 2013 13:30:35 -0700
+From: Stephen Warren <swarren@wwwdotorg.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+CC: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>
+Subject: Re: [PATCH v2 19/27] pci: PCIe driver for Marvell Armada 370/XP systems
+References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com> <1359399397-29729-20-git-send-email-thomas.petazzoni@free-electrons.com> <510B0D9C.1000101@wwwdotorg.org> <20130201014138.GA16234@obsidianresearch.com> <510B268E.2040104@wwwdotorg.org> <20130201094613.38fa2ad0@skate> <510C0200.5040505@wwwdotorg.org> <20130201193935.GA19335@obsidianresearch.com>
+In-Reply-To: <20130201193935.GA19335@obsidianresearch.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, February 21, 2013 01:41:45 PM Sarah Sharp wrote:
-> Hi Rafael,
-
-Hi,
- 
-> I'm running into some issues with PCI D3
-
-Do you mean D3hot?
-
-> wakeup on the latest version of the Lynx Point chipset.  I can give you the
-> stepping and BIOS version privately if you need it.
+On 02/01/2013 12:39 PM, Jason Gunthorpe wrote:
+> On Fri, Feb 01, 2013 at 10:57:20AM -0700, Stephen Warren wrote:
+...
+>> I think the only difference on the Marvell HW is:
+>>
+>> * The overall total size of the physical address space is dynamic rather
+>> than fixed, because it's programmed through windows rather than
+>> hard-coded into HW.
 > 
-> Basically, I think PMEs are being lost somewhere in the ACPI or PCI
-> stack.  I'm not sure how to further debug this issue, so I'm hoping you have
-> some pointers.
-> 
-> This is reproduced on the 3.7.1, 3.7.7, and 3.8.0 kernels.
-> 
-> First, I go into powertop and basically change all the 'Bad' entries to
-> 'Good', which turns on runtime PM for all PCI devices, bridges, and
-> rootports.  I have no USB devices plugged into the xHCI host, and I wait
-> until the host is suspended, and the PCI device is in D3.
-> 
-> Then I run:
-> 
-> watch -n 1 'sudo lspci -vvv -s 00:14.0'
-> 
-> When I plug in a USB 2.0 device to a USB 2.0 port, the hotplug event is
-> lost.  I can see from the lspci output that the Status line under the PM
-> capabilities changes when I plug in the device.  The PME- changes to
-> PME+, which I assume means a PME happened.  But the USB core's PCI
-> resume functions are never called.
-> 
-> Wakeup from D3 works fine on the previous generation chipset (Panther
-> Point) on my Lenovo x230 laptop, so this makes me suspicious that it's a
-> hardware or BIOS issue.  I'll try updating my BIOS and seeing if that
-> helps.
+> Is it hard coded on tegra? I thought there was a register set that was
+> used to set the overall PCI-E MMIO window location and size. I know
+> even on x86 the PCI window is set via register, though that typically
+> isn't disclosed except to bios writers.. 
 
-In addition to that you can see if the number of ACPI interrupts (in
-/proc/interrupts) grows when you plug the USB device in and if so,
-whether or not any of the numbers in /sys/firmware/acpi/interrupts/gpe*
-grows at the same time.
-
-Thanks,
-Rafael
-
-
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+There is a fixed (in HW) 1 GiB physical address window dedicated to
+PCIe. That window is divided between host controller registers, PCIe
+root port registers (since our root ports don't respond to configuration
+transactions), and regular PCIe accesses; config/MMIO/IO. There are
+registers in the host controller that configure the division of this
+space into config/MMIO/IO, so that can be dynamic. The DT bindings for
+the driver Thierry proposed hard-code those divisions in DT.
