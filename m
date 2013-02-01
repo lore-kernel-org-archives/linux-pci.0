@@ -1,50 +1,44 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g4t0017.houston.hp.com ([15.201.24.20]:48046 "EHLO
-	g4t0017.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759990Ab3BKXA1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Feb 2013 18:00:27 -0500
-Message-ID: <1360623614.2950.60.camel@lorien2>
-Subject: [PATCH 0/4] pci: Add PCI_BUS() and PCI_DEVID() interfaces to return
- bus number and device id
-From: Shuah Khan <shuah.khan@hp.com>
-Reply-To: shuah.khan@hp.com
-To: Joerg Roedel <joro@8bytes.org>, bhelgaas@google.com
-Cc: jiang.liu@huawei.com, shemminger@vyatta.com,
-	paulmck@linux.vnet.ibm.com, linasvepstas@gmail.com,
-	dhowells@redhat.com, davej@redhat.com, tglx@linutronix.de,
-	mtk.manpages@gmail.com, iommu@lists.linux-foundation.org,
-	linux-pci@vger.kernel.org, wangyijing@huawei.com,
-	LKML <linux-kernel@vger.kernel.org>, shuahkhan@gmail.com
-Date: Mon, 11 Feb 2013 16:00:14 -0700
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from moutng.kundenserver.de ([212.227.17.9]:58676 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753432Ab3BAQIC (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 Feb 2013 11:08:02 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Subject: Re: [PATCH v2 19/27] pci: PCIe driver for Marvell Armada 370/XP systems
+Date: Fri, 1 Feb 2013 16:07:49 +0000
+Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	"Eran Ben-Avi" <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	"Russell King - ARM Linux" <linux@arm.linux.org.uk>
+References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com> <20130201035115.GA23649@obsidianresearch.com> <20130201100329.4d57fa55@skate>
+In-Reply-To: <20130201100329.4d57fa55@skate>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201302011607.49205.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci defines PCI_DEVFN(), PCI_SLOT(), and PCI_FUNC() interfaces, however,
-it doesn't have interfaces to return PCI bus and PCI device id. Drivers
-(AMD IOMMU, and AER) have module specific definitions for PCI_BUS() and
-AMD_IOMMU driver also has a module specific interface to calculate PCI
-device id from bus number and devfn.
+On Friday 01 February 2013, Thomas Petazzoni wrote:
+> So there is really a range of I/O addresses associated to it, even
+> though the device will apparently not use it. Would it be possible to
+> detect that the I/O range is not used by the device, and therefore
+> avoid the allocation of an address decoding window for this I/O range?
 
-This patch set adds PCI_BUS(), and PCI_DEVID() to pci.h, changes are to
-use PCI_BUS() from pci. Changes AMD_IOMMU driver to use PCI_BUS() and
-PCI_DEVID() from pci.
+I suspect it just gets disabled because the port number 0xc0010000 is
+larger than IO_PORT_LIMIT and we cannot access that offset inside
+of the virtual memory window we use for PIO.
 
-Files changed:
-
- include/uapi/linux/pci.h |    4 ++++
- 1 file changed, 4 insertions(+)
-
- drivers/pci/pcie/aer/aerdrv_core.c |    2 --
- 1 file changed, 2 deletions(-)
-
- drivers/iommu/amd_iommu_types.h |    4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
-
- drivers/iommu/amd_iommu.c       |    2 +-
- drivers/iommu/amd_iommu_init.c  |    6 +++---
- drivers/iommu/amd_iommu_types.h |    7 -------
- 3 files changed, 4 insertions(+), 11 deletions(-)
-
-
+	Arnd
