@@ -1,57 +1,123 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.9]:61798 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933589Ab3BLSBy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Feb 2013 13:01:54 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: Re: [PATCH 05/32] lib: devres: don't enclose pcim_*() functions in CONFIG_HAS_IOPORT
-Date: Tue, 12 Feb 2013 18:00:48 +0000
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	"Russell King - ARM Linux" <linux@arm.linux.org.uk>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	"Eran Ben-Avi" <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Yinghai Lu <yinghai@kernel.org>, linux-kernel@vger.kernel.org
-References: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com> <1360686546-24277-6-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1360686546-24277-6-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from mailhub.stratus.com ([134.111.1.18]:39831 "EHLO
+	mailhub5.stratus.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757075Ab3BAT7k (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 Feb 2013 14:59:40 -0500
+Date: Fri, 1 Feb 2013 14:55:42 -0500 (EST)
+From: Joe Lawrence <Joe.Lawrence@stratus.com>
+To: Myron Stowe <mstowe@redhat.com>
+cc: Joe Lawrence <Joe.Lawrence@stratus.com>, linux-pci@vger.kernel.org,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	David Bulkow <david.bulkow@stratus.com>, shli@kernel.org,
+	shli@fusionio.com, kaneshige.kenji@jp.fujitsu.com,
+	linux-kernel <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 1/2] PCI: ASPM exit link state code could skip devices
+In-Reply-To: <1359674965.2426.13.camel@zim.stowe>
+Message-ID: <alpine.DEB.2.02.1302011442200.11804@jlaw-desktop.mno.stratus.com>
+References: <alpine.DEB.2.02.1301181302260.31163@jlaw-desktop.mno.stratus.com>  <alpine.DEB.2.02.1301181322500.31163@jlaw-desktop.mno.stratus.com> <1359674965.2426.13.camel@zim.stowe>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Message-Id: <201302121800.48723.arnd@arndb.de>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday 12 February 2013, Thomas Petazzoni wrote:
-> The pcim_*() functions are used by the libata-sff subsystem, and this
-> subsystem is used for many SATA drivers on ARM platforms that do not
-> necessarily have I/O ports.
+On Thu, 31 Jan 2013, Myron Stowe wrote:
+
+> On Fri, 2013-01-18 at 13:23 -0500, Joe Lawrence wrote:
+> > From 3a51bbad5555ba6c6e144aa5176c8112eb449325 Mon Sep 17 00:00:00 2001
+> > From: Joe Lawrence <joe.lawrence@stratus.com>
+> > Date: Tue, 15 Jan 2013 14:51:57 -0500
+> > Subject: [PATCH 1/2] PCI: ASPM exit link state code could skip devices
+> > 
+> > On PCI bus hotplug removal, pcie_aspm_exit_link_state could potentially skip
+> > parent devices that have link_state allocated.  Instead of exiting early if
+> > a given device is not PCIe, check that the device's parent is PCIe.  This
+> > enables pcie_aspm_exit_link_state to properly clean up parent link_state when
+> > the last function in a slot might not be PCIe.
+> > 
+> > Reviewed-by: David Bulkow <david.bulkow@stratus.com>
+> > Signed-off-by: Joe Lawrence <joe.lawrence@stratus.com>
+> > ---
+> >  drivers/pci/pcie/aspm.c | 2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > 
+> > diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+> > index b52630b..6122447 100644
+> > --- a/drivers/pci/pcie/aspm.c
+> > +++ b/drivers/pci/pcie/aspm.c
+> > @@ -634,7 +634,7 @@ void pcie_aspm_exit_link_state(struct pci_dev *pdev)
+> >  	struct pci_dev *parent = pdev->bus->self;
+> >  	struct pcie_link_state *link, *root, *parent_link;
+> >  
+> > -	if (!pci_is_pcie(pdev) || !parent || !parent->link_state)
+> > +	if (!parent || !pci_is_pcie(parent) || !parent->link_state)
+> >  		return;
+> >  	if ((pci_pcie_type(parent) != PCI_EXP_TYPE_ROOT_PORT) &&
+> >  	    (pci_pcie_type(parent) != PCI_EXP_TYPE_DOWNSTREAM))
 > 
-> Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-> Cc: Paul Gortmaker <paul.gortmaker@windriver.com>
-> Cc: Jesse Barnes <jbarnes@virtuousgeek.org>
-> Cc: Yinghai Lu <yinghai@kernel.org>
-> Cc: linux-kernel@vger.kernel.org
+> Joe:
+> 
+> Bjorn and I looked at this again today and think the checks that occur
+> early in 'pcie_aspm_exit_link_state()' could be simplified (as shown
+> below) to avoid issues such as you are encountering.
+> 
+> I think part of the confusion concerning the asymmetry between
+> 'pcie_aspm_init_link_state()' and 'pcie_aspm_exit_link_state()' is that
+> the former is passed in a pointer to a bridge device whereas the latter
+> is passed in a pointer to a end-point device.  Frankly, I find the
+> entire driver to be confusing and very hard to understand.
+> 
+> Could you please test with the following patch and let us know the
+> results?
+> 
+> 
+> PCI: ASPM exit link state code is skipping devices
+> 
+> From: Myron Stowe <myron.stowe@redhat.com>
+> 
+> On PCI bus hotplug removal, 'pcie_aspm_exit_link_state' can potentially
+> skip parent devices that have link_state allocated.  Instead of exiting
+> early if a given device in not PCIe, check whether or not the device's
+> parent has link_state allocated.  This enables 'pcie_aspm_exit_link_state'
+> to properly clean up parent link_state when the last function in a slot
+> might not be PCIe.
+> 
+> Reported-by: Joe Lawrence <joe.lawrence@stratus.com>
+> Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+> ---
+> 
+>  drivers/pci/pcie/aspm.c |    5 +----
+>  1 files changed, 1 insertions(+), 4 deletions(-)
+> 
+> 
+> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+> index 8474b6a..aa52727 100644
+> --- a/drivers/pci/pcie/aspm.c
+> +++ b/drivers/pci/pcie/aspm.c
+> @@ -634,10 +634,7 @@ void pcie_aspm_exit_link_state(struct pci_dev *pdev)
+>  	struct pci_dev *parent = pdev->bus->self;
+>  	struct pcie_link_state *link, *root, *parent_link;
+>  
+> -	if (!pci_is_pcie(pdev) || !parent || !parent->link_state)
+> -		return;
+> -	if ((pci_pcie_type(parent) != PCI_EXP_TYPE_ROOT_PORT) &&
+> -	    (pci_pcie_type(parent) != PCI_EXP_TYPE_DOWNSTREAM))
+> +	if (!parent || !parent->link_state)
+>  		return;
+>  
+>  	down_read(&pci_bus_sem);
+> 
+> 
+> 
 
-Sorry, but this patch is still incorrect. Any driver that requires a linear
-mapping of I/O ports to __iomem pointers must depend CONFIG_HAS_IOPORT
-with the current definition of that symbol (as mentioned before, we
-should really rename that to CONFIG_HAS_IOPORT_MAP). Having these
-functions not defined is a compile time check that is necessary to
-ensure that all drivers have the correct annotation.
+Hi Myron,
 
-If a platform has no support for I/O ports at all, it should
-probably not set CONFIG_NO_IOPORT at this point.
+The patch tests eliminates the reported crash when hotplugging our 
+problem PCI bus.
 
-	Arnd
+The additional checks removed from pcie_aspm_exit_link_state (ie, the 
+simplification) do appear to be unnecessary as pcie_aspm_init_link_state 
+is already preventing such devices from allocating link state.  
+
+Thanks,
+
+-- Joe
