@@ -1,85 +1,98 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.187]:55007 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752899Ab3AKEIq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Jan 2013 23:08:46 -0500
-Date: Fri, 11 Jan 2013 05:08:23 +0100
-From: Thierry Reding <thierry.reding@avionic-design.de>
-To: Stephen Warren <swarren@wwwdotorg.org>
-Cc: linux-tegra@vger.kernel.org,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Murray <andrew.murray@arm.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 09/14] ARM: tegra: Move pmc.h to include/mach
-Message-ID: <20130111040823.GE28094@avionic-0098.adnet.avionic-design.de>
-References: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de>
- <1357764194-12677-10-git-send-email-thierry.reding@avionic-design.de>
- <50EF598B.2030307@wwwdotorg.org>
+Received: from avon.wwwdotorg.org ([70.85.31.133]:55535 "EHLO
+	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753272Ab3BAAel (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 31 Jan 2013 19:34:41 -0500
+Message-ID: <510B0D9C.1000101@wwwdotorg.org>
+Date: Thu, 31 Jan 2013 17:34:36 -0700
+From: Stephen Warren <swarren@wwwdotorg.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="o0ZfoUVt4BxPQnbU"
-In-Reply-To: <50EF598B.2030307@wwwdotorg.org>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>
+Subject: Re: [PATCH v2 19/27] pci: PCIe driver for Marvell Armada 370/XP systems
+References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com> <1359399397-29729-20-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1359399397-29729-20-git-send-email-thomas.petazzoni@free-electrons.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On 01/28/2013 11:56 AM, Thomas Petazzoni wrote:
+> This driver implements the support for the PCIe interfaces on the
+> Marvell Armada 370/XP ARM SoCs. In the future, it might be extended to
+> cover earlier families of Marvell SoCs, such as Dove, Orion and
+> Kirkwood.
 
---o0ZfoUVt4BxPQnbU
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Bjorn and I happen to live very close, so we got together today and
+talked about PCIe on ARM.
 
-On Thu, Jan 10, 2013 at 05:15:07PM -0700, Stephen Warren wrote:
-> On 01/09/2013 01:43 PM, Thierry Reding wrote:
-> > In preparation for moving the PCIe driver into the drivers/pci/host
-> > directory, this header, which contains prototypes that are required by
-> > the PCIe driver, needs to be moved to a globally visible location.
-> >=20
-> > Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
-> > ---
-> > Note that eventually the code in pmc.c and powergate.c should probably
-> > be split out into a separate driver. The PMC registers are also directly
-> > accessed from tegra20_clocks.c and tegra30_clocks.c, so that it might be
-> > required to provide that functionality through the new driver as well.
-> > ---
-> >  arch/arm/mach-tegra/common.c           |  2 +-
-> >  arch/arm/mach-tegra/include/mach/pmc.h | 24 ++++++++++++++++++++++++
-> >  arch/arm/mach-tegra/pmc.h              | 24 ------------------------
->=20
-> On IRC, we'd talked about putting the public functionality in
-> include/linux/tegra-pmc.h so that we wouldn't add to include/mach, which
-> would make it harder to make Tegra support ARM multi-platform. Perhaps
-> that IRC discussion happened after you posted this series?
+One of the questions he asked is: why does the window management on the
+Marvell SoCs need to be dynamic?
 
-I'm not sure, it's equally possible that I just forgot. Will fix it up.
+(Sorry if this was covered earlier; I vaguely recall some discussion on
+the topic, but couldn't find it quickly)
 
-Thierry
+As background, PCIe enumeration in Linux usually works like:
 
---o0ZfoUVt4BxPQnbU
-Content-Type: application/pgp-signature
+1) You start off with some CPU physical address regions that generate
+transactions on the PCIe bus.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
+2) You enumerate all the PCIe devices, and assign an address to each BAR
+found, carved out of the PCIe address range corresponding to the regions
+you knew from (1).
 
-iQIcBAEBAgAGBQJQ75A3AAoJEN0jrNd/PrOhUdAP/jx4poxyVjj6V33Sz/v8nlnQ
-1U4BlJxgUTOrRfu1h5bgGRRRyRszW8Umdlb8YYJzSwgivam1DMuVyylxuSbseP+T
-rokEN5r7XKpzZ4M26HGeOWZN9xi8eQyGyESUN2lPrXjtCYmVleGrOWoWMNtmGiZg
-DaA67Jn0a4bqa6IpKOgxvG5Hu7HqgaJXLW87Ht/kCvWIJPM+vkDSM76fygQYwXj1
-0h7/zX0yOJlW/yENJA/1CZzaE5CR8xmzcyB2EtmelTLhLpTi0L9rnPvbua1dKyO4
-15sQ/6VeHScjKNYh7jNQtTIdouwwLFRUbvdM9dXaxfeKuuW2fSBvci54WbApeXGI
-vmGR1iXaF1ObcxDFjBcKkS/UWyU8fU/Tx/CuXRen690wTAZt4irsb0NR8kH432BA
-QbfrBYV1b8ytLrnTvqaNMHJHCy3A1FiSJ28ywUyC8daWtWQBTbFa9M3Dh0KaOuNq
-1HdIzn7C1YzUgSUJsO5uaWNt3XOMGfJvds1RCFpqAhXvQLklfZA/Nv/Gx4uET62N
-BxMUjsqE0oiQzZ+xGnHFH6JbT9M99n7EGAZJ2BG40iUX9TWSoOEqum3zABHCPZ41
-ZbsJ5FN+MMd7scYeV5fQY0Fl+JCEbzzS4XNH7RUrl0/ulTWQgEGZ7SXdZaf3ZnDf
-aXb7TNK63K0pUTsgpniV
-=ykwn
------END PGP SIGNATURE-----
+However, it sounds like the Marvell code wants to:
 
---o0ZfoUVt4BxPQnbU--
+1) Start off with no real knowledge of the CPU physical address that
+will generate transactions on the PCIe bus, since you want to assign
+that later.
+
+2) You enumerate all the PCIe devices, and assign an address. But, what
+address range do you use?
+
+3) Then you program the SoC's windows to set up the CPU->PCIe address
+translations.
+
+Am I recalling what you're trying to do correctly, or am I completely
+confused?
+
+Now, I recall that a related issue was that you are tight on CPU
+physical address space, and the second algorithm above would allow the
+size of the PCIe controller's window configuration to be as small as
+possible, and hence there would be more CPU physical address space
+available to fit in other peripherals.
+
+However, why does this need to be dynamic? On a particular board, you
+know all the other (non-PCIe) peripherals that you need to fit into the
+CPU physical address space, so you know how much is left over for PCIe,
+so why not always make the PCIe window fill up all the available space,
+and use the first algorithm I described above? And also, I think you
+always know the exact set of PCIe devices that are attached to the
+boards, so you know the exact BAR size requirements there (or are there
+user-accessible PCIe devices; I don't think so from your recent comments
+about PCIe<->PCIe bridges not needing to be supported since the user
+couldn't plug one in?)
+
+Note that with DT, you can easily specify the window location/size in
+the board .dts file rather than the SoC .dtsi file, so it can easily be
+customized based on how much physical address space is taken up by RAM,
+directly mapped NOR flash, etc.
+
+With a static window configuration in DT, you'd end up with a system
+that worked much like any x86 system or Tegra, with some static memory
+range available to PCIe. It's just that in your case, the region
+location/size could change from boot to boot based on DT, whereas it's
+hard-coded in HW for Tegra and I assume x86 too.
