@@ -1,44 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.9]:59444 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932087Ab3BMKYR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Feb 2013 05:24:17 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: Re: [PATCH 24/32] pci: PCIe driver for Marvell Armada 370/XP systems
-Date: Wed, 13 Feb 2013 10:23:23 +0000
-Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	"Russell King - ARM Linux" <linux@arm.linux.org.uk>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	"Eran Ben-Avi" <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Tawfik Bayouk <tawfik@marvell.com>
-References: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com> <201302130918.56909.arnd@arndb.de> <20130213103121.5f6338ef@skate>
-In-Reply-To: <20130213103121.5f6338ef@skate>
+Received: from mail-ve0-f177.google.com ([209.85.128.177]:44150 "EHLO
+	mail-ve0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757969Ab3BAXSC (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 Feb 2013 18:18:02 -0500
+Received: by mail-ve0-f177.google.com with SMTP id m1so3398674ves.36
+        for <linux-pci@vger.kernel.org>; Fri, 01 Feb 2013 15:18:01 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201302131023.24012.arnd@arndb.de>
+In-Reply-To: <CAErSpo5CcEudpbozcu49EOQ4eL2bE40YVNDji7RbSA7Z28y1cw@mail.gmail.com>
+References: <1359562210-26536-1-git-send-email-jiang.liu@huawei.com> <CAErSpo5CcEudpbozcu49EOQ4eL2bE40YVNDji7RbSA7Z28y1cw@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 1 Feb 2013 16:17:40 -0700
+Message-ID: <CAErSpo7HUxDAaF0qbXDCT7yU8Yv4RuxQmpPXC55uzU0KavQP3Q@mail.gmail.com>
+Subject: Re: [PATCH 1/2] acpiphp: create companion ACPI devices before
+ creating PCI devices
+To: Jiang Liu <liuj97@gmail.com>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday 13 February 2013, Thomas Petazzoni wrote:
-> > I guess as long as we agree on where we are headed with the
-> > address translation, it's ok to just move the code now and
-> > change the code later. I would like to be strict about the
-> > include path stuff though.
-> 
-> Ok, so I could move the existing address decoding code into say
-> drivers/bus/orion-mbus.c. Would that be ok for you?
+On Fri, Feb 1, 2013 at 4:06 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Wed, Jan 30, 2013 at 9:10 AM, Jiang Liu <liuj97@gmail.com> wrote:
+>> From: Jiang Liu <jiang.liu@huawei.com>
+>>
+>> With commit 4f535093cf8f6da8c "PCI: Put pci_dev in device tree as
+>> early as possible", companion ACPI devices should be created before
+>> creating correspoding PCI devices, otherwise it will break the ACPI
+>> PCI binding logic.
+>>
+>> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
 
-Sure, sounds good to me.
+Applied to pci/yinghai-root-bus for v3.9.  Thanks!
 
-	Arnd
+>> ---
+>> Hi Bjorn,
+>>         This patch set applies to your pci/yinghai-root-bus branch.
+>> There are still other potential bugs in the acpiphp driver under
+>> investigation. So I will send out these two first to catch up with
+>> the 3.9 merging window.
+>>         Thanks!
+>>         Gerry
+>
+> I assume this fixes some sort of user-visible issue with acpiphp.
+> What failure does the user see?
+>
+>> ---
+>>  drivers/pci/hotplug/acpiphp_glue.c |    6 +++---
+>>  1 file changed, 3 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+>> index bd784ff..acb7af2 100644
+>> --- a/drivers/pci/hotplug/acpiphp_glue.c
+>> +++ b/drivers/pci/hotplug/acpiphp_glue.c
+>> @@ -839,6 +839,9 @@ static int __ref enable_device(struct acpiphp_slot *slot)
+>>         if (slot->flags & SLOT_ENABLED)
+>>                 goto err_exit;
+>>
+>> +       list_for_each_entry(func, &slot->funcs, sibling)
+>> +               acpiphp_bus_add(func);
+>> +
+>>         num = pci_scan_slot(bus, PCI_DEVFN(slot->device, 0));
+>>         if (num == 0) {
+>>                 /* Maybe only part of funcs are added. */
+>> @@ -862,9 +865,6 @@ static int __ref enable_device(struct acpiphp_slot *slot)
+>>                 }
+>>         }
+>>
+>> -       list_for_each_entry(func, &slot->funcs, sibling)
+>> -               acpiphp_bus_add(func);
+>> -
+>>         pci_bus_assign_resources(bus);
+>>         acpiphp_sanitize_bus(bus);
+>>         acpiphp_set_hpp_values(bus);
+>> --
+>> 1.7.9.5
+>>
