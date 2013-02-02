@@ -1,91 +1,151 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:40383 "EHLO quartz.orcorp.ca"
+Received: from hydra.sisk.pl ([212.160.235.94]:49103 "EHLO hydra.sisk.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965242Ab3BMSEm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 13 Feb 2013 13:04:42 -0500
-Date: Wed, 13 Feb 2013 11:04:39 -0700
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	linux-pci@vger.kernel.org,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH 24/32] pci: PCIe driver for Marvell Armada 370/XP systems
-Message-ID: <20130213180439.GB1601@obsidianresearch.com>
-References: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com>
- <1360686546-24277-25-git-send-email-thomas.petazzoni@free-electrons.com>
- <20130212223511.GB31555@obsidianresearch.com>
- <20130213095701.0d9f9f20@skate>
+	id S1750941Ab3BBUwa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 2 Feb 2013 15:52:30 -0500
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Konstantin Khlebnikov <khlebnikov@openvz.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
+	e1000-devel@lists.sourceforge.net, linux-pci@vger.kernel.org,
+	Dave Airlie <airlied@redhat.com>
+Subject: Re: [PATCH 3/5] PCI: revert preparing for wakeup in runtime-suspend finalization
+Date: Sat, 02 Feb 2013 21:58:45 +0100
+Message-ID: <4112994.zQU2CRiGj6@vostro.rjw.lan>
+In-Reply-To: <510D0293.8030509@openvz.org>
+References: <20130118113019.6698.25941.stgit@zurg> <2547462.dZlJyWsOdA@vostro.rjw.lan> <510D0293.8030509@openvz.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130213095701.0d9f9f20@skate>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 13, 2013 at 09:57:01AM +0100, Thomas Petazzoni wrote:
-
-> > > +	pcie@0,0 {
-> > > +		device_type = "pciex";
-> > > +		reg = <0x0800 0 0xd0040000 0 0x2000>;
-> > 
-> > It would be great to get this sorted as per my prior comments.. Maybe
-> > like this is easy?
-> > 
-> > pcie-controller {
-> >  compatible = "marvell,armada-370-xp-pcie";
-> > 
-> >  // Index by marvell,pcie-port ?
-> >  regs = <0xd0040000 0x00002000
-> >          0xd0080000 0x00002000>;
-> > 
-> >  ranges = <0x81000000 0 0  0xc0000000  0 0x00010000   /* downstream I/O */
-> >            0x82000000 0 0  0xc1000000  0 0x08000000>; /* non-prefetchable memory */
-> > 
-> >  pcie@0,0 {
-> >       device_type = "pci";
-> >       reg = <0x0800 0 0 0>; // 00:01.0  (????)
-> >       marvell,pcie-port = <0>;
-> >  };
-> > }
-> > 
-> > It is abusive to map the device internal per-port registers through
-> > '0x00000800 0 0xd0040000' and 'reg' - that is not really the intent of
-> > the OF spec.
+On Saturday, February 02, 2013 04:12:03 PM Konstantin Khlebnikov wrote:
+> Rafael J. Wysocki wrote:
+> > On Tuesday, January 29, 2013 12:55:15 PM Rafael J. Wysocki wrote:
+> >> On Tuesday, January 29, 2013 11:04:57 AM Konstantin Khlebnikov wrote:
+> >>> Rafael J. Wysocki wrote:
+> >>>> On Monday, January 28, 2013 04:17:42 PM Bjorn Helgaas wrote:
+> >>>>> [+cc Rafael]
+> >>>>>
+> >>>>> On Fri, Jan 18, 2013 at 4:42 AM, Konstantin Khlebnikov
+> >>>>> <khlebnikov@openvz.org>   wrote:
+> >>>>>> This patch effectively reverts commit 42eca2302146fed51335b95128e949ee6f54478f
+> >>>>>> ("PCI: Don't touch card regs after runtime suspend D3")
+> >>>>>>
+> >>>>>> | This patch checks whether the pci state is saved and doesn't attempt to hit
+> >>>>>> | any registers after that point if it is.
+> >>>>>>
+> >>>>>> This seems completely wrong. Yes, PCI configuration space has been saved by
+> >>>>>> driver, but this doesn't means that all job is done and device has been
+> >>>>>> suspended and ready for waking up in the future.
+> >>>>>>
+> >>>>>> For example driver e1000e for ethernet in my thinkpad x220 saves pci-state
+> >>>>>> but device cannot wakeup after that, because it needs some ACPI callbacks
+> >>>>>> which usually called from pci_finish_runtime_suspend().
+> >>>>>>
+> >>>>>> | Optimus (dual-gpu) laptops seem to have their own form of D3cold, but
+> >>>>>> | unfortunately enter it on normal D3 transitions via the ACPI callback.
+> >>>>>>
+> >>>>>> Hardware which disappears from the bus unexpectedly is exception, so let's
+> >>>>>> handle it as an exception. Its driver should set device state to D3cold and
+> >>>>>> the rest code will handle it properly.
+> >>>>>
+> >>>>> Functions in D3cold don't have power, so it's completely expected that
+> >>>>> they would disappear from the bus and not respond to config accesses.
+> >>>>> Maybe Dave was referring to D3hot, where functions *should* respond to
+> >>>>> config accesses.  I dunno.
+> >>>>>
+> >>>>> Just to be clear, it sounds like 42eca230 caused a regression on your
+> >>>>> e1000e device?  If so, I guess we should revert it unless you and Dave
+> >>>>> can figure out a better patch that fixes both your e1000e device and
+> >>>>> the Optimus issue.
+> >>>>
+> >>>> Yes, if there's a regression, let's revert it, but I'd like the regression
+> >>>> to be described clearly.
+> >>>
+> >>> Yep, this is regression.
+> >>>
+> >>> commit 42eca2302146fed51335b95128e949ee6f54478f ("PCI: Don't touch
+> >>> card regs after runtime suspend D3") changes state convention during
+> >>> runtime-suspend transaction too much. If PCI configuration space
+> >>> has been saved by driver that does not means that all job is done
+> >>> and device has been suspended and ready for waking up in the future.
+> >>>
+> >>> e1000e saves pci-config space itself, but it requires operations which
+> >>> pci_finish_runtime_suspend() does: preparing for wake (calling particular
+> >>> platform pm-callbacks) and switching to proper sleep state.
+> >>
+> >> Well, I'd argue this is a bug in e1000e.  Why does it need to save the PCI
+> >> config space even though pci_pm_runtime_suspend() will do that anyway?
+> >
+> > I honestly don't think we should revert 42eca2302146 because of this.
+> >
+> > Yes, there is a requirement that drivers not save the PCI config space by
+> > themselves unless they want to do the whole power management by themselves too
+> > and e1000e is not following that.  So either we need to drop the
+> > pci_save_state() from __e1000_shutdown() which I would prefer (I'm not really
+> > sure why it is there), or e1000_runtime_suspend() needs to call
+> > pci_finish_runtime_suspend() by itself.
 > 
-> I am not sure to understand how this would work. Given a pcie@X,Y node,
-> how would I find the address of the internal registers (i.e the ones at
-> 0xd0040000, 0xd0080000) ?
+> Yet another problem: some drivers calls pci_save_state() from ->probe() callback
+> to use this saved state in pci_error_handlers->slot_reset().
+> As result pdev->state_saved is true mostly all time.
+> At least e1000e and drivers/pci/pcie/portdrv_pci.c are doing this.
+> 
+> I think it will be safer to revert 42eca2302146 in v3.8
 
-> You seem to propose a global regs = <...> property under
-> pcie-controller, but indexing using marvell,pcie-port cannot work. PCIe
-> interfaces are identified by two values (port,lane), so we have 0.0,
-> 0.1, 0.2, 0.3, 1.0, 1.1, 1.2, 1.3, 2.0 and 3.0 on MV78460. I really
-> would like to avoid having bizarre computations to find which entry in
-> this big regs = <...> array correspond to a given PCIe interface.
+Well, I wonder if we can just do something like the appended patch instead and
+address the e1000e runtime suspend by calling pci_finish_runtime_suspend()
+directly from e1000_runtime_suspend().
 
-Well, using the 'global' regs is an easy way to avoid the complexity with
-address translation and 'assigned-addresses'. So some way to translate
-between link # and regs index is necessary. How about using the PCI
-device number? Device number 1 is regs entry 0, 2 is regs entry 1, etc.
+While we can revert commit 42eca2302146, that hardly would be progress,
+because then the issue it was supposed to address would still need to be
+addressed somehow.
 
-The code flow would be then to iterate over DT children, extract the
-bus/dev/function from 'reg', ensure bus ==0, and index the global regs
-by device-1.
+Thanks,
+Rafael
 
-The other option is to try to make assigned-addresses work, Thierry
-had some comments on that, it is a bit convoluted too, IMHO.
 
-Also note setting the device_type = "pci";
+---
+ drivers/pci/pci-driver.c |    4 ++++
+ 1 file changed, 4 insertions(+)
 
-Jason
+Index: linux-pm/drivers/pci/pci-driver.c
+===================================================================
+--- linux-pm.orig/drivers/pci/pci-driver.c
++++ linux-pm/drivers/pci/pci-driver.c
+@@ -628,6 +628,7 @@ static int pci_pm_suspend(struct device
+ 		goto Fixup;
+ 	}
+ 
++	pci_dev->state_saved = false;
+ 	if (pm->suspend) {
+ 		pci_power_t prev = pci_dev->current_state;
+ 		int error;
+@@ -774,6 +775,7 @@ static int pci_pm_freeze(struct device *
+ 		return 0;
+ 	}
+ 
++	pci_dev->state_saved = false;
+ 	if (pm->freeze) {
+ 		int error;
+ 
+@@ -862,6 +864,7 @@ static int pci_pm_poweroff(struct device
+ 		goto Fixup;
+ 	}
+ 
++	pci_dev->state_saved = false;
+ 	if (pm->poweroff) {
+ 		int error;
+ 
+@@ -987,6 +990,7 @@ static int pci_pm_runtime_suspend(struct
+ 	if (!pm || !pm->runtime_suspend)
+ 		return -ENOSYS;
+ 
++	pci_dev->state_saved = false;
+ 	pci_dev->no_d3cold = false;
+ 	error = pm->runtime_suspend(dev);
+ 	suspend_report_result(pm->runtime_suspend, error);
+
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
