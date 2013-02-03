@@ -1,101 +1,157 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f180.google.com ([209.85.223.180]:63823 "EHLO
-	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751263Ab3BMCgS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Feb 2013 21:36:18 -0500
+Received: from hydra.sisk.pl ([212.160.235.94]:60115 "EHLO hydra.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753815Ab3BCXZa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 3 Feb 2013 18:25:30 -0500
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: David Airlie <airlied@redhat.com>,
+	Konstantin Khlebnikov <khlebnikov@openvz.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
+	e1000-devel@lists.sourceforge.net, linux-pci@vger.kernel.org,
+	Borislav Petkov <bp@suse.de>
+Subject: Re: [PATCH 3/5] PCI: revert preparing for wakeup in runtime-suspend finalization
+Date: Mon, 04 Feb 2013 00:31:45 +0100
+Message-ID: <2897697.mWlee59MAU@vostro.rjw.lan>
+In-Reply-To: <1354083114.9797983.1359933595870.JavaMail.root@redhat.com>
+References: <1354083114.9797983.1359933595870.JavaMail.root@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <5119DCCD.70709@zytor.com>
-References: <1360351703-20571-1-git-send-email-yinghai@kernel.org>
-	<20130211093417.GC23932@gmail.com>
-	<5119DCCD.70709@zytor.com>
-Date: Tue, 12 Feb 2013 18:36:17 -0800
-Message-ID: <CAE9FiQWcD8U9YaKQojbRW07rqUjqRQcJw6t9y0Si81tgk-V98Q@mail.gmail.com>
-Subject: Re: [PATCH v2 00/26] x86, irq: support ioapic device hotplug
-From: Yinghai Lu <yinghai@kernel.org>
-To: "H. Peter Anvin" <hpa@zytor.com>
-Cc: Ingo Molnar <mingo@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@elte.hu>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Feb 11, 2013 at 10:10 PM, H. Peter Anvin <hpa@zytor.com> wrote:
-> On 02/11/2013 01:34 AM, Ingo Molnar wrote:
->>
->> * Yinghai Lu <yinghai@kernel.org> wrote:
->>
->>> Hi,
->>>
->>> Current x86 code does not support iapic hotplug yet.
->>
->> Please give a better high-level description: outline how an
->> IO-APIC will be hotplugged physically and what changes the
->> user will experience.
+On Sunday, February 03, 2013 06:19:55 PM David Airlie wrote:
+> 
+> ----- Original Message -----
+> > From: "Konstantin Khlebnikov" <khlebnikov@openvz.org>
+> > To: "Rafael J. Wysocki" <rjw@sisk.pl>
+> > Cc: "Bjorn Helgaas" <bhelgaas@google.com>, linux-kernel@vger.kernel.org, e1000-devel@lists.sourceforge.net,
+> > linux-pci@vger.kernel.org, "Dave Airlie" <airlied@redhat.com>, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+> > Sent: Saturday, 2 February, 2013 10:12:03 PM
+> > Subject: Re: [PATCH 3/5] PCI: revert preparing for wakeup in runtime-suspend finalization
+> > 
+> > Rafael J. Wysocki wrote:
+> > > On Tuesday, January 29, 2013 12:55:15 PM Rafael J. Wysocki wrote:
+> > >> On Tuesday, January 29, 2013 11:04:57 AM Konstantin Khlebnikov
+> > >> wrote:
+> > >>> Rafael J. Wysocki wrote:
+> > >>>> On Monday, January 28, 2013 04:17:42 PM Bjorn Helgaas wrote:
+> > >>>>> [+cc Rafael]
+> > >>>>>
+> > >>>>> On Fri, Jan 18, 2013 at 4:42 AM, Konstantin Khlebnikov
+> > >>>>> <khlebnikov@openvz.org>   wrote:
+> > >>>>>> This patch effectively reverts commit
+> > >>>>>> 42eca2302146fed51335b95128e949ee6f54478f
+> > >>>>>> ("PCI: Don't touch card regs after runtime suspend D3")
+> > >>>>>>
+> > >>>>>> | This patch checks whether the pci state is saved and doesn't
+> > >>>>>> | attempt to hit
+> > >>>>>> | any registers after that point if it is.
+> > >>>>>>
+> > >>>>>> This seems completely wrong. Yes, PCI configuration space has
+> > >>>>>> been saved by
+> > >>>>>> driver, but this doesn't means that all job is done and device
+> > >>>>>> has been
+> > >>>>>> suspended and ready for waking up in the future.
+> > >>>>>>
+> > >>>>>> For example driver e1000e for ethernet in my thinkpad x220
+> > >>>>>> saves pci-state
+> > >>>>>> but device cannot wakeup after that, because it needs some
+> > >>>>>> ACPI callbacks
+> > >>>>>> which usually called from pci_finish_runtime_suspend().
+> > >>>>>>
+> > >>>>>> | Optimus (dual-gpu) laptops seem to have their own form of
+> > >>>>>> | D3cold, but
+> > >>>>>> | unfortunately enter it on normal D3 transitions via the ACPI
+> > >>>>>> | callback.
+> > >>>>>>
+> > >>>>>> Hardware which disappears from the bus unexpectedly is
+> > >>>>>> exception, so let's
+> > >>>>>> handle it as an exception. Its driver should set device state
+> > >>>>>> to D3cold and
+> > >>>>>> the rest code will handle it properly.
+> > >>>>>
+> > >>>>> Functions in D3cold don't have power, so it's completely
+> > >>>>> expected that
+> > >>>>> they would disappear from the bus and not respond to config
+> > >>>>> accesses.
+> > >>>>> Maybe Dave was referring to D3hot, where functions *should*
+> > >>>>> respond to
+> > >>>>> config accesses.  I dunno.
+> > >>>>>
+> > >>>>> Just to be clear, it sounds like 42eca230 caused a regression
+> > >>>>> on your
+> > >>>>> e1000e device?  If so, I guess we should revert it unless you
+> > >>>>> and Dave
+> > >>>>> can figure out a better patch that fixes both your e1000e
+> > >>>>> device and
+> > >>>>> the Optimus issue.
+> > >>>>
+> > >>>> Yes, if there's a regression, let's revert it, but I'd like the
+> > >>>> regression
+> > >>>> to be described clearly.
+> > >>>
+> > >>> Yep, this is regression.
+> > >>>
+> > >>> commit 42eca2302146fed51335b95128e949ee6f54478f ("PCI: Don't
+> > >>> touch
+> > >>> card regs after runtime suspend D3") changes state convention
+> > >>> during
+> > >>> runtime-suspend transaction too much. If PCI configuration space
+> > >>> has been saved by driver that does not means that all job is done
+> > >>> and device has been suspended and ready for waking up in the
+> > >>> future.
+> > >>>
+> > >>> e1000e saves pci-config space itself, but it requires operations
+> > >>> which
+> > >>> pci_finish_runtime_suspend() does: preparing for wake (calling
+> > >>> particular
+> > >>> platform pm-callbacks) and switching to proper sleep state.
+> > >>
+> > >> Well, I'd argue this is a bug in e1000e.  Why does it need to save
+> > >> the PCI
+> > >> config space even though pci_pm_runtime_suspend() will do that
+> > >> anyway?
+> > >
+> > > I honestly don't think we should revert 42eca2302146 because of
+> > > this.
+> > >
+> > > Yes, there is a requirement that drivers not save the PCI config
+> > > space by
+> > > themselves unless they want to do the whole power management by
+> > > themselves too
+> > > and e1000e is not following that.  So either we need to drop the
+> > > pci_save_state() from __e1000_shutdown() which I would prefer (I'm
+> > > not really
+> > > sure why it is there), or e1000_runtime_suspend() needs to call
+> > > pci_finish_runtime_suspend() by itself.
+> > 
+> > Yet another problem: some drivers calls pci_save_state() from
+> > ->probe() callback
+> > to use this saved state in pci_error_handlers->slot_reset().
+> > As result pdev->state_saved is true mostly all time.
+> > At least e1000e and drivers/pci/pcie/portdrv_pci.c are doing this.
+> > 
+> > I think it will be safer to revert 42eca2302146 in v3.8
+> > 
+> 
+> btw I've no problem reverting this for 3.8, though I'd like to get a fix in for 3.9 then,
+> the code relying on this change is still not completed, so a revert shouldn't break anything.
+> 
+> but definitely if a card goes into D3cold, we need to not poke any registers on it after it
+> returns.
 
-Intel cpu (from IVB) include cpu, mem controller, and IIO.
-When hotadd cpu physically, it will involve cpu hotplug, mem hotplug,
-and pci root hotplug.
+Sure.
 
-IIO includes pci host bridge, ioapic controller and iommu.
-pci devices will need to use ioapic and iommu.
-So to make pci hotplug working, we need to add ioapic hotplug support.
+As I said, I don't think it is necessary to revert 42eca2302146 and I've got a
+confirmation from Boris that the approach proposed so far works, so now it only
+is a matter of cutting final patches and testing them.
 
->>
->> That needs at least 2 paragraphs, not one cursory sentence. Then
->> should come technical descriptions - but even those need
->> improvements, please first explain the current status quo, then
->> explain how that is inadequate for IO-APIC hot-plugging, *then*
->> only explain what you are doing in the patch ...
+I'm not quite sure what Konstantin's plans in that respect are, though.
+Konstantin, care to tell us?
 
-Now ioapics are with ACPI MADT table. During booting, kernel will parse
-MADT and put info into ioapic arrays.
-Also Bjorn added one pci device based driver, but it is not wired in yet,
-as it need to call acpi_register_ioapic, and that is TBD.
+Rafael
 
-This patchset will
-1. extend genirq to support reserve/realloc method.
-   because we want to irqs for one ioapic controller to be linear mapping
-   to the gsi range.
-2. change ioapic array operation code so we could insert new ioapic and
-   remove one leave the blank slot.
-3. record irq_base in gsi_config in ioapic struct, and use it to convert gsi
-    to irq for pci device using that ioapic controller
-4. make static ioapic path (from MADT) use same code as hotadd path,
-   with reserve/realloc.
-5. change ioapic add/removing to acpi way, as that is only need when
-   pci root bus hotplug. Also it will make it support the case that ioapic
-   controller is hiding in pci controller space or ioapic address is not
-   managed by pci reallocation system.
 
->>
->
-> A few more notes:
->
-> Please explain what you mean with pre-reserve IRQ blocks, and in
-> particular, how do you know what to reserve and for what?
-
-For each ioapic controller, and we should get gsi range already.
-So we could keep irq to gsi mapping linear for each ioapic controller.
-
->
-> Second, some of the things in this patchset seems to overlap with what
-> we would need to support MSI (as opposed to MSI-X), and you have several
-> patches related to MSI vs MSI-X.  Are you also supporting multivector
-> MSI (I believe the answer is no) or could some of this work make
-> multivector MSI practical (possible)?
-
-Patches that is related to MSI/MSI-X, is just print out clean up.
-Now we don't tell if it is MSI or MSI-X in /proc/interrupts or dmesg.
-
-Patches from multivector MSI support from Alex are already put in
-x86/apic branch by Ingo.
-
-And my v2 patches are on top of x86/apic and pci/next.
-
-Thanks
-
-Yinghai
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
