@@ -1,76 +1,158 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.10]:62369 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754626Ab3BEUmH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Feb 2013 15:42:07 -0500
-Date: Tue, 5 Feb 2013 21:41:48 +0100
-From: Thierry Reding <thierry.reding@avionic-design.de>
-To: Russell King <linux@arm.linux.org.uk>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	linux-tegra@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
-	linux-kernel@vger.kernel.org,
-	Rob Herring <rob.herring@calxeda.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Murray <andrew.murray@arm.com>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH 06/14] ARM: pci: Keep pci_common_init() around after init
-Message-ID: <20130205204147.GA29726@avionic-0098.mockup.avionic-design.de>
-References: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de>
- <1357764194-12677-7-git-send-email-thierry.reding@avionic-design.de>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Myron Stowe <mstowe@redhat.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Jiang Liu <liuj97@gmail.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Toshi Kani <toshi.kani@hp.com>
+Subject: Re: [RFC PATCH v5 4/8] ACPI, PCI: avoid building pci_slot as module
+Date: Mon, 04 Feb 2013 00:38 +0100
+Message-ID: <2520964.6C1RTjdEJr@vostro.rjw.lan>
+In-Reply-To: <1359931635.2426.98.camel@zim.stowe>
+References: <1358525267-14268-1-git-send-email-jiang.liu@huawei.com> <CAErSpo4fbNzFaBxH+eKD+BKVgghyCJEYLDMzc6_gdxABAPe3QQ@mail.gmail.com> <1359931635.2426.98.camel@zim.stowe>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="YZ5djTAD1cGYuMQK"
-In-Reply-To: <1357764194-12677-7-git-send-email-thierry.reding@avionic-design.de>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Sunday, February 03, 2013 03:47:15 PM Myron Stowe wrote:
+> On Mon, 2013-01-28 at 14:09 -0700, Bjorn Helgaas wrote:
+> > On Sun, Jan 20, 2013 at 5:01 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> > > On Saturday, January 19, 2013 12:07:42 AM Jiang Liu wrote:
+> > >> As discussed in thread at https://patchwork.kernel.org/patch/1946851/,
+> > >> there's no value in supporting CONFIG_ACPI_PCI_SLOT=m any more.
+> > >> So change Kconfig and code to only support building pci_slot as
+> > >> built-in driver.
+> > >>
+> > >> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+> > >
+> > > Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > 
+> > Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+> > 
+> > I think we should eventually get rid of acpi_pci_register_driver() and
+> > do this initialization directly from acpi_pci_root_add().  But
+> > removing the module option here is a good first step.
+> 
+> Bjorn, Rafael:
+> 
+> If either of you are interested in that still let me know and I can
+> re-work any or all of the "PCI/ACPI: Remove "pci_root" sub-driver
+> support" series - https://lkml.org/lkml/2012/12/7/11
 
---YZ5djTAD1cGYuMQK
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+I am.  However, I think it's better to wait with the rework until our trees
+are merged into the mainline, so that you can base the patchset on a common
+tree.
 
-On Wed, Jan 09, 2013 at 09:43:06PM +0100, Thierry Reding wrote:
-> When using deferred driver probing, PCI host controller drivers may
-> actually require this function after the init stage.
->=20
-> Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
-> ---
->  arch/arm/kernel/bios32.c | 6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
+> Note [PATCH 13/15] was effectively the same as below and continued on
+> with initializing directly from acpi_pci_root_add() in [PATCH 14/15].
+> There may have been worthwhile fixes in some of the earlier content such
+> as [PATCH 11/15] worth re-considering also.
 
-Russell,
+Well, as I said.  All of the patches in the series making sense after v3.9-rc1
+will be interesting to me certainly.
 
-Can this patch and patch 7 (ARM: pci: Allow passing per-controller
-private data) of this series be applied for 3.9? Thomas uses them in his
-Marvell PCIe series as well and it would allow to reduce the complexity
-of the dependencies.
+Thanks,
+Rafael
 
-Thierry
 
---YZ5djTAD1cGYuMQK
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQIcBAEBAgAGBQJREW6LAAoJEN0jrNd/PrOhf/cP/AkweukDR4WeNx0QMOdyK/iW
-f1Dguos5LKUkopCySMS2Qk6+DVo4hQo27XXyt3cwCouv1+AuGmbOwPUmwbb87NMu
-r5pxzJymWRHz2qay7rxzPE2/ATiX2gC2TTt3ocfkRI8S/8T2X+XKgVyxpORBcXPg
-MnVc1/09CENjShYTVxDYYXrMaJx0wvlrSsXZ7c6SQNQmjFj9DLo86nak22ujJz3K
-HvucbWD+P47P/NVr9acNaDBBsHSBsS1mdMVfzzvijFXUcoFQroy+5lvfTxDBHlBq
-dT4Sck0Xnr19azQ8GVG3snzLQg0lYmEcjjEHzxaC04G0I1hLZejm7VwMblUBSrxe
-8up2hoZBCyXY6Aio7j/jsOV5wtHxk8warI+vAdpNAfboyXYFZ4Hilw9QQfZSCvrL
-p7XNAuH39rEcZML6SBLO2j2xrvIU8lkxH2qNL4KnQ5AAnwOJ9vvXv23z7HN41l0k
-FOR2JN8Fc49tSqfdH78srNbv4KXaIwGc/ZmcsV5hgn89nkhMvdX9dxeDLjneAIKS
-F4Mnu7iYE5QlMIOb4Ex3cmACkEn2k9w1B3UWNJgaMznpNlgm6Z9szBJazcujfYDD
-fDPLgsV7tfIcHxdikFH6GTV4dOMXt+z5K4Yt7R8r1iRiJpdbWTfiMr2brFGCqYWv
-iLSbdQcQUFeIbqRMON0J
-=+bQg
------END PGP SIGNATURE-----
-
---YZ5djTAD1cGYuMQK--
+> > Rafael, do you want to apply this (and [6/8]) via your tree?  If not,
+> > I can take it.
+> > 
+> > >> ---
+> > >>  drivers/acpi/Kconfig    |    5 +----
+> > >>  drivers/acpi/internal.h |    5 +++++
+> > >>  drivers/acpi/pci_slot.c |   13 +------------
+> > >>  drivers/acpi/scan.c     |    1 +
+> > >>  4 files changed, 8 insertions(+), 16 deletions(-)
+> > >>
+> > >> diff --git a/drivers/acpi/Kconfig b/drivers/acpi/Kconfig
+> > >> index 0300bf6..7efd0d0 100644
+> > >> --- a/drivers/acpi/Kconfig
+> > >> +++ b/drivers/acpi/Kconfig
+> > >> @@ -299,7 +299,7 @@ config ACPI_DEBUG_FUNC_TRACE
+> > >>         is about half of the penalty and is rarely useful.
+> > >>
+> > >>  config ACPI_PCI_SLOT
+> > >> -     tristate "PCI slot detection driver"
+> > >> +     bool "PCI slot detection driver"
+> > >>       depends on SYSFS
+> > >>       default n
+> > >>       help
+> > >> @@ -308,9 +308,6 @@ config ACPI_PCI_SLOT
+> > >>         i.e., segment/bus/device/function tuples, with physical slots in
+> > >>         the system.  If you are unsure, say N.
+> > >>
+> > >> -       To compile this driver as a module, choose M here:
+> > >> -       the module will be called pci_slot.
+> > >> -
+> > >>  config X86_PM_TIMER
+> > >>       bool "Power Management Timer Support" if EXPERT
+> > >>       depends on X86
+> > >> diff --git a/drivers/acpi/internal.h b/drivers/acpi/internal.h
+> > >> index e050254..7374cfc 100644
+> > >> --- a/drivers/acpi/internal.h
+> > >> +++ b/drivers/acpi/internal.h
+> > >> @@ -67,6 +67,11 @@ struct acpi_ec {
+> > >>
+> > >>  extern struct acpi_ec *first_ec;
+> > >>
+> > >> +#ifdef       CONFIG_ACPI_PCI_SLOT
+> > >> +void acpi_pci_slot_init(void);
+> > >> +#else
+> > >> +static inline void acpi_pci_slot_init(void) { }
+> > >> +#endif
+> > >>  int acpi_pci_root_init(void);
+> > >>  int acpi_ec_init(void);
+> > >>  int acpi_ec_ecdt_probe(void);
+> > >> diff --git a/drivers/acpi/pci_slot.c b/drivers/acpi/pci_slot.c
+> > >> index d22585f..a7d7e77 100644
+> > >> --- a/drivers/acpi/pci_slot.c
+> > >> +++ b/drivers/acpi/pci_slot.c
+> > >> @@ -330,19 +330,8 @@ static struct dmi_system_id acpi_pci_slot_dmi_table[] __initdata = {
+> > >>       {}
+> > >>  };
+> > >>
+> > >> -static int __init
+> > >> -acpi_pci_slot_init(void)
+> > >> +void __init acpi_pci_slot_init(void)
+> > >>  {
+> > >>       dmi_check_system(acpi_pci_slot_dmi_table);
+> > >>       acpi_pci_register_driver(&acpi_pci_slot_driver);
+> > >> -     return 0;
+> > >>  }
+> > >> -
+> > >> -static void __exit
+> > >> -acpi_pci_slot_exit(void)
+> > >> -{
+> > >> -     acpi_pci_unregister_driver(&acpi_pci_slot_driver);
+> > >> -}
+> > >> -
+> > >> -module_init(acpi_pci_slot_init);
+> > >> -module_exit(acpi_pci_slot_exit);
+> > >> diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
+> > >> index f8a0d0f..cb964ac 100644
+> > >> --- a/drivers/acpi/scan.c
+> > >> +++ b/drivers/acpi/scan.c
+> > >> @@ -1732,6 +1732,7 @@ int __init acpi_scan_init(void)
+> > >>
+> > >>       acpi_power_init();
+> > >>       acpi_pci_root_init();
+> > >> +     acpi_pci_slot_init();
+> > >>
+> > >>       /*
+> > >>        * Enumerate devices in the ACPI namespace.
+> > >>
+> > > --
+> > > I speak only for myself.
+> > > Rafael J. Wysocki, Intel Open Source Technology Center.
+> 
+> 
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
