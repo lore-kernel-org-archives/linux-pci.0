@@ -1,107 +1,192 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.186]:55372 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755331Ab3BALad (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 Feb 2013 06:30:33 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Subject: Re: [PATCH v2 19/27] pci: PCIe driver for Marvell Armada 370/XP systems
-Date: Fri, 1 Feb 2013 11:30:18 +0000
-Cc: "Russell King - ARM Linux" <linux@arm.linux.org.uk>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	linux-pci@vger.kernel.org,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	"Eran Ben-Avi" <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
+Received: from g2t1383g.austin.hp.com ([15.217.136.92]:55721 "EHLO
+	g2t1383g.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753109Ab3BCOVB convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 3 Feb 2013 09:21:01 -0500
+From: "Pandarathil, Vijaymohan R" <vijaymohan.pandarathil@hp.com>
+To: Alex Williamson <alex.williamson@redhat.com>,
+	Gleb Natapov <gleb@redhat.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-arm-kernel@lists.infradead.org
-References: <20130130120344.GA29490@avionic-0098.mockup.avionic-design.de> <201301312046.22560.arnd@arndb.de> <20130131224459.GA11846@obsidianresearch.com>
-In-Reply-To: <20130131224459.GA11846@obsidianresearch.com>
+	Blue Swirl <blauwirbel@gmail.com>,
+	"Ortiz, Lance E" <lance.oritz@hp.com>
+CC: "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	"qemu-devel@nongnu.org" <qemu-devel@nongnu.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: [PATCH v3 2/3] VFIO-AER: Vfio-pci driver changes for supporting AER
+Date: Sun, 3 Feb 2013 14:10:23 +0000
+Message-ID: <F9E001219150CB45BEDC82A650F360C9014AAF02@G9W0717.americas.hpqcorp.net>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201302011130.18442.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday 31 January 2013, Jason Gunthorpe wrote:
-> On Thu, Jan 31, 2013 at 08:46:22PM +0000, Arnd Bergmann wrote:
-> 
-> > > If it is 0xDEAD0000, then Thomas has to keep what he has now, you
-> > > can't mess with this address. Verify that the full 32 bit address
-> > > exactly matching the MBUS window address is written to the PCI-PCI
-> > > bridge IO base/limit registers.
-> > 
-> > If you do this, you break all sorts of expectations in the kernel and
-> > I guess you'd have to set the io_offset value of that bus to 0x21530000
-> > in order to make Linux I/O port 0 go to the first byte of the window
-> > and come out as 0xDEAD0000 on the bus, but you still won't be able to
-> > use legacy devices with hardcoded I/O port numbers.
-> 
-> I'm not sure exactly how the PCI core handles this, but it does look
-> like pci_add_resource_offset via io_offset is the answer. I'm not sure
-> what goes in the struct resource passed to the PCI core - the *bus* IO
-> address range or the *kernel* IO address range..
+	- New VFIO_SET_IRQ ioctl option to pass the eventfd that is signaled when
+          an error occurs in the vfio_pci_device
 
-IO Resources are always expressed in the kernel's view, so they are in
-the range from 0 to IO_SPACE_LIMIT. The idea is that you can have multiple
-buses that each have their own address space start at 0, but can put
-them into the kernel address space at a different address.
+	- Register pci_error_handler for the vfio_pci driver
 
-Each device on any bus can still use I/O addresses starting at zero,
-and you could have e.g. a VGA card on two buses each respond to I/O cycles
-on port 0x3c0, but the PCI core will translate the resources to appear
-in the kernel space at 0x103c0 for the second one.
+	- When the device encounters an error, the error handler registered by
+          the vfio_pci driver gets invoked by the AER infrastructure
 
-> > > If it is 0x00000000 then the mmap scheme I outlined before must be
-> > > used, and verify that only 0->0xFFFF is written to the PCI-PCI bridge
-> > > IO base/limit registers..
-> > 
-> > For the primary bus, yes, but there are still two options for the
-> > second one: you can either start at 0 again or you can continue
-> 
-> No, for *all* links. You use a mmap scheme with 4k granularity, I
-> explained in a past email, but to quickly review..
-> 
-> - Each link gets 64k of reserved physical address space for IO,
->   this is just set aside, no MBUS windows are permantently assigned.
-> - Linux is told to use a 64k IO range with bus IO address 0->0xFFFF
-> - When the IO base/limit register in the link PCI-PCI bridge is programmed
->   the driver gets a 4k aligned region somewhere from 0->0xFFFF and then:
->     - Allocates a 64k MBUS window that translates physical address
->       0xZZZZxxxx to IO bus address 0x0000xxxx (goes in the TLP) for
->       that link
->     - Uses pci_ioremap_io to map the fraction of the link's 64k MBUS window
->       allocated to that bridge to the correct offset in the 
->       PCI_IO_VIRT_BASE region
+	- In the error handler, signal the eventfd registered for the device.
 
-We'd have to change pci_ioremap_io to allow mapping less than 64k, but
-yes, that would work, too. I don't see an advantage to it though,
-other than having io_offset always be zero.
+	- This results in the qemu eventfd handler getting invoked and
+          appropriate action taken for the guest.
 
-> > at 0x10000 as we do for mv78xx0 and kirkwood for instance. Both
-> > approaches probably have their merit.
-> 
-> Kirkwood uses the MBUS remapping registers to set the TLP address of
-> link 0 to start at 0 and of link 1 to start at 0x10000 - so it is
-> consistent with what you describe..
+Signed-off-by: Vijay Mohan Pandarathil <vijaymohan.pandarathil@hp.com>
+---
+ drivers/vfio/pci/vfio_pci.c         | 43 ++++++++++++++++++++++++++++++++++++-
+ drivers/vfio/pci/vfio_pci_intrs.c   | 30 ++++++++++++++++++++++++++
+ drivers/vfio/pci/vfio_pci_private.h |  1 +
+ include/uapi/linux/vfio.h           |  1 +
+ 4 files changed, 74 insertions(+), 1 deletion(-)
 
-Right, so it also uses io_offset = 0 all the time, which means the
-bus I/O port numbers are identical to the Linux I/O port numbers,
-but they go beyond 64K on the bus on the second and later links.
+diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
+index b28e66c..818b1ed 100644
+--- a/drivers/vfio/pci/vfio_pci.c
++++ b/drivers/vfio/pci/vfio_pci.c
+@@ -196,7 +196,9 @@ static int vfio_pci_get_irq_count(struct vfio_pci_device *vdev, int irq_type)
+ 
+ 			return (flags & PCI_MSIX_FLAGS_QSIZE) + 1;
+ 		}
+-	}
++	} else if (irq_type == VFIO_PCI_ERR_IRQ_INDEX)
++		if (pci_is_pcie(vdev->pdev))
++			return 1;
+ 
+ 	return 0;
+ }
+@@ -302,6 +304,16 @@ static long vfio_pci_ioctl(void *device_data,
+ 		if (info.argsz < minsz || info.index >= VFIO_PCI_NUM_IRQS)
+ 			return -EINVAL;
+ 
++		switch (info.index) {
++		case VFIO_PCI_INTX_IRQ_INDEX ... VFIO_PCI_MSIX_IRQ_INDEX:
++			break;
++		case VFIO_PCI_ERR_IRQ_INDEX:
++			if (pci_is_pcie(vdev->pdev))
++				break;
++		default:
++			return -EINVAL;
++		}
++
+ 		info.flags = VFIO_IRQ_INFO_EVENTFD;
+ 
+ 		info.count = vfio_pci_get_irq_count(vdev, info.index);
+@@ -538,11 +550,40 @@ static void vfio_pci_remove(struct pci_dev *pdev)
+ 	kfree(vdev);
+ }
+ 
++static pci_ers_result_t vfio_pci_aer_err_detected(struct pci_dev *pdev,
++						  pci_channel_state_t state)
++{
++	struct vfio_pci_device *vpdev;
++	void *vdev;
++
++	vdev = vfio_device_get_from_dev(&pdev->dev);
++	if (vdev == NULL)
++		return PCI_ERS_RESULT_DISCONNECT;
++
++	vpdev = vfio_device_data(vdev);
++	if (vpdev == NULL) {
++		vfio_device_put(vdev);
++		return PCI_ERS_RESULT_DISCONNECT;
++	}
++
++	if (vpdev->err_trigger)
++		eventfd_signal(vpdev->err_trigger, 1);
++
++	vfio_device_put(vdev);
++
++	return PCI_ERS_RESULT_CAN_RECOVER;
++}
++
++static struct pci_error_handlers vfio_err_handlers = {
++	.error_detected = vfio_pci_aer_err_detected,
++};
++
+ static struct pci_driver vfio_pci_driver = {
+ 	.name		= "vfio-pci",
+ 	.id_table	= NULL, /* only dynamic ids */
+ 	.probe		= vfio_pci_probe,
+ 	.remove		= vfio_pci_remove,
++	.err_handler	= &vfio_err_handlers,
+ };
+ 
+ static void __exit vfio_pci_cleanup(void)
+diff --git a/drivers/vfio/pci/vfio_pci_intrs.c b/drivers/vfio/pci/vfio_pci_intrs.c
+index 3639371..83035b1 100644
+--- a/drivers/vfio/pci/vfio_pci_intrs.c
++++ b/drivers/vfio/pci/vfio_pci_intrs.c
+@@ -745,6 +745,29 @@ static int vfio_pci_set_msi_trigger(struct vfio_pci_device *vdev,
+ 	return 0;
+ }
+ 
++static int vfio_pci_set_err_trigger(struct vfio_pci_device *vdev,
++				    unsigned index, unsigned start,
++				    unsigned count, uint32_t flags, void *data)
++{
++	int32_t fd = *(int32_t *)data;
++
++	if ((index != VFIO_PCI_ERR_IRQ_INDEX) ||
++	    !(flags & VFIO_IRQ_SET_DATA_EVENTFD))
++		return -EINVAL;
++
++	if (fd == -1) {
++		if (vdev->err_trigger)
++			eventfd_ctx_put(vdev->err_trigger);
++		vdev->err_trigger = NULL;
++		return 0;
++	} else if (fd >= 0) {
++		vdev->err_trigger = eventfd_ctx_fdget(fd);
++		if (IS_ERR(vdev->err_trigger))
++			return PTR_ERR(vdev->err_trigger);
++		return 0;
++	} else
++		return -EINVAL;
++}
+ int vfio_pci_set_irqs_ioctl(struct vfio_pci_device *vdev, uint32_t flags,
+ 			    unsigned index, unsigned start, unsigned count,
+ 			    void *data)
+@@ -779,6 +802,13 @@ int vfio_pci_set_irqs_ioctl(struct vfio_pci_device *vdev, uint32_t flags,
+ 			break;
+ 		}
+ 		break;
++	case VFIO_PCI_ERR_IRQ_INDEX:
++		switch (flags & VFIO_IRQ_SET_ACTION_TYPE_MASK) {
++		case VFIO_IRQ_SET_ACTION_TRIGGER:
++			if (pci_is_pcie(vdev->pdev))
++				func = vfio_pci_set_err_trigger;
++			break;
++		}
+ 	}
+ 
+ 	if (!func)
+diff --git a/drivers/vfio/pci/vfio_pci_private.h b/drivers/vfio/pci/vfio_pci_private.h
+index 611827c..daee62f 100644
+--- a/drivers/vfio/pci/vfio_pci_private.h
++++ b/drivers/vfio/pci/vfio_pci_private.h
+@@ -55,6 +55,7 @@ struct vfio_pci_device {
+ 	bool			bardirty;
+ 	struct pci_saved_state	*pci_saved_state;
+ 	atomic_t		refcnt;
++	struct eventfd_ctx	*err_trigger;
+ };
+ 
+ #define is_intx(vdev) (vdev->irq_type == VFIO_PCI_INTX_IRQ_INDEX)
+diff --git a/include/uapi/linux/vfio.h b/include/uapi/linux/vfio.h
+index 4758d1b..7d50af4 100644
+--- a/include/uapi/linux/vfio.h
++++ b/include/uapi/linux/vfio.h
+@@ -310,6 +310,7 @@ enum {
+ 	VFIO_PCI_INTX_IRQ_INDEX,
+ 	VFIO_PCI_MSI_IRQ_INDEX,
+ 	VFIO_PCI_MSIX_IRQ_INDEX,
++	VFIO_PCI_ERR_IRQ_INDEX,
+ 	VFIO_PCI_NUM_IRQS
+ };
+ 
+-- 
+1.7.11.3
 
-> However, this is a suboptimal way to run the HW. It would be much
-> better to place each link in a seperate PCI domain and have each link
-> start its bus IO address at 0, and assign the kernel IO address in
-> sequential 64k blocks as today.
-
-I agree.
-
-	Arnd
