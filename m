@@ -1,142 +1,87 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:37995 "EHLO hydra.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751803Ab3BMUqH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 13 Feb 2013 15:46:07 -0500
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Toshi Kani <toshi.kani@hp.com>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jiang Liu <liuj97@gmail.com>, Yinghai Lu <yinghai@kernel.org>,
-	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
-	Myron Stowe <mstowe@redhat.com>, linux-pci@vger.kernel.org
-Subject: Re: [Update][PATCH] ACPI / hotplug: Fix concurrency issues and memory leaks
-Date: Wed, 13 Feb 2013 21:52:33 +0100
-Message-ID: <4594350.VXNmDOeCvt@vostro.rjw.lan>
-In-Reply-To: <1360777438.3869.100.camel@misato.fc.hp.com>
-References: <1837481.7dT8hTZ4MT@vostro.rjw.lan> <1459286.L93riBCyLC@vostro.rjw.lan> <1360777438.3869.100.camel@misato.fc.hp.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <511020D7.5060001@openvz.org>
+Date: Tue, 05 Feb 2013 00:57:59 +0400
+From: Konstantin Khlebnikov <khlebnikov@openvz.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+CC: e1000-devel@lists.sourceforge.net, linux-pci@vger.kernel.org,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH v2 6/7] PCI/PM: warn about incomplete actions in ->runtime_suspend()
+ callback
+References: <20130204115246.5569.85829.stgit@zurg> <20130204115612.5569.49895.stgit@zurg> <2146717.YNnkIQ37Mr@vostro.rjw.lan>
+In-Reply-To: <2146717.YNnkIQ37Mr@vostro.rjw.lan>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, February 13, 2013 10:43:58 AM Toshi Kani wrote:
-> On Wed, 2013-02-13 at 14:16 +0100, Rafael J. Wysocki wrote:
-> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > 
-> > This changeset is aimed at fixing a few different but related
-> > problems in the ACPI hotplug infrastructure.
-> > 
-> > First of all, since notify handlers may be run in parallel with
-> > acpi_bus_scan(), acpi_bus_trim() and acpi_bus_hot_remove_device()
-> > and some of them are installed for ACPI handles that have no struct
-> > acpi_device objects attached (i.e. before those objects are created),
-> > those notify handlers have to take acpi_scan_lock to prevent races
-> > from taking place (e.g. a struct acpi_device is found to be present
-> > for the given ACPI handle, but right after that it is removed by
-> > acpi_bus_trim() running in parallel to the given notify handler).
-> > Moreover, since some of them call acpi_bus_scan() and
-> > acpi_bus_trim(), this leads to the conclusion that acpi_scan_lock
-> > should be acquired by the callers of these two funtions rather by
-> > these functions themselves.
-> > 
-> > For these reasons, make all notify handlers that can handle device
-> > addition and eject events take acpi_scan_lock and remove the
-> > acpi_scan_lock locking from acpi_bus_scan() and acpi_bus_trim().
-> > Accordingly, update all of their users to make sure that they
-> > are always called under acpi_scan_lock.
-> > 
-> > Furthermore, since eject operations are carried out asynchronously
-> > with respect to the notify events that trigger them, with the help
-> > of acpi_bus_hot_remove_device(), even if notify handlers take the
-> > ACPI scan lock, it still is possible that, for example,
-> > acpi_bus_trim() will run between acpi_bus_hot_remove_device() and
-> > the notify handler that scheduled its execution and that
-> > acpi_bus_trim() will remove the device node passed to
-> > acpi_bus_hot_remove_device() for ejection.  In that case, the struct
-> > acpi_device object obtained by acpi_bus_hot_remove_device() will be
-> > invalid and not-so-funny things will ensue.  To protect agaist that,
-> > make the users of acpi_bus_hot_remove_device() run get_device() on
-> > ACPI device node objects that are about to be passed to it and make
-> > acpi_bus_hot_remove_device() run put_device() on them and check if
-> > their ACPI handles are not NULL (make acpi_device_unregister() clear
-> > the device nodes' ACPI handles for that check to work).
-> > 
-> > Finally, observe that acpi_os_hotplug_execute() actually can fail,
-> > in which case its caller ought to free memory allocated for the
-> > context object to prevent leaks from happening.  It also needs to
-> > run put_device() on the device node that it ran get_device() on
-> > previously in that case.  Modify the code accordingly.
-> 
-> I am concerned with this approach.  ACPICA calls notify handlers through
-> kacpi_notify_wq, which has the max active set to 1.  We then use
-> kacpi_hotplug_wq (which also has the max active set to 1) so that a
-> hotplug procedure does not block the notify handlers since they can be
-> used for non-hotplug events as well.
+Rafael J. Wysocki wrote:
+> On Monday, February 04, 2013 03:56:12 PM Konstantin Khlebnikov wrote:
+>> Documentation/power/pci.txt says:
+>> | It is expected that the device driver's pm->runtime_suspend() callback will
+>> | not attempt to prepare the device for signaling wakeup or to put it into a
+>> | low-power state.  The driver ought to leave these tasks to the PCI subsystem
+>> | that has all of the information necessary to perform them.
+>>
+>> After commit 42eca2302146fed51335b95128e949ee6f54478f
+>> ("PCI: Don't touch card regs after runtime suspend D3")
+>> | If the driver takes care of state saving, don't touch any registers on it.
+>> pci_pm_runtime_suspend() thinks if state has been saved by ->runtime_suspend()
+>> that means device alredy prepared for wakeup and probably no longer accessible.
+>>
+>> Thus driver must either do all actions or leave all these tasks to PCI subsystem.
+>
+> I don't like this one, because it will generate noise for drivers that
+> legitimately use pci_save_state() in their runtime suspend callbacks
+> and know what they are doing.
 
-In fact we use kacpi_hotplug_wq for a different reason.  Please read the
-comment in __acpi_os_execute() for more details.
+Ok, you're right. Both these warnings can be false-positive.
+For example some of wifi cards easily might be weird enough for this.
 
-> Acquiring the scan lock in a notify handler means that a hotplug procedure
-> can block any notify events.
+>
+> Thanks,
+> Rafael
+>
+>
+>> Signed-off-by: Konstantin Khlebnikov<khlebnikov@openvz.org>
+>> Cc: Rafael J. Wysocki<rafael.j.wysocki@intel.com>
+>> Cc: Bjorn Helgaas<bhelgaas@google.com>
+>> Cc: linux-pci@vger.kernel.org
+>> ---
+>>   drivers/pci/pci-driver.c |   15 +++++++++++----
+>>   1 file changed, 11 insertions(+), 4 deletions(-)
+>>
+>> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+>> index f9aa311..2b0ff9a 100644
+>> --- a/drivers/pci/pci-driver.c
+>> +++ b/drivers/pci/pci-driver.c
+>> @@ -1009,12 +1009,19 @@ static int pci_pm_runtime_suspend(struct device *dev)
+>>   		return 0;
+>>   	}
+>>
+>> -	if (!pci_dev->state_saved) {
+>> -		pci_save_state(pci_dev);
+>> -		pci_finish_runtime_suspend(pci_dev);
+>> +	if (pci_dev->state_saved) {
+>> +		WARN_ONCE(pci_dev->current_state == prev,
+>> +			"PCI PM: Power state of device not changed by %pF\n",
+>> +			pm->runtime_suspend);
+>> +		WARN_ONCE(pci_dev_run_wake(pci_dev)&&
+>> +				!pci_dev->wakeup_prepared,
+>> +			"PCI PM: Waking of device not configured by %pF\n",
+>> +			pm->runtime_suspend);
+>> +		return 0;
+>>   	}
+>>
+>> -	return 0;
+>> +	pci_save_state(pci_dev);
+>> +	return pci_finish_runtime_suspend(pci_dev);
+>>   }
+>>
+>>   static int pci_pm_runtime_resume(struct device *dev)
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Yes, it can.
-
-> So, I'd prefer the following approach.
-> 
->  - Change all hot-plug procedures (i.e. both add and delete) to proceed
-> under kacpi_hotplug_wq by calling acpi_os_hotplug_execute(). This
-> serializes all hotplug procedures, and prevents blocking other notify
-> events.
-
-Yes, we can do that.  I was thinking about doing that change, but not in v3.9.
-There are simply too many notify handlers already there to do that so late in
-the cycle.  And doing that for acpiphp, for example, won't be straightforward
-at all.
-
-Please think about the $subject patch as a temporary measure until we can do
-something better (which we need to do anyway to reduce code duplication among
-other things).
-
-> (Ideally, we should also run all online/offline procedures
-> under a same work-queue, just like my RFC patchset did, but this is a
-> different topic for now.)
-
-No, I don't think it is appropriate to run online/offline from _any_
-workqueue.  In my opinion they should be run from user space.
-
->  - Revert 5993c4670 unless this change is absolutely necessary.  From
-> the change log, it is not clear to me why this change was needed.  It
-> changed acpi_bus_hot_remove_device() to take an acpi_device, instead of
-> an acpi_handle, which introduced a race condition with acpi_device.
-> acpi_bus_hot_remove_device() should take an acpi_handle, and then obtain
-> its acpi_device from the acpi_handle since this function is serialized.
-
-I thought about that, but actually there's no guarantee that the handle
-will be valid after _EJ0 as far as I can say.  So the race condition is
-going to be there anyway and using struct acpi_device just makes it easier
-to avoid it.
-
->  - Remove sanity checks with an acpi_device in the notify handlers,
-> which have a race condition with acpi_device.  These type-specific
-> checks will need to be removed when we have a common notify handler
-> anyway.  The notify handler can continue to check the status of ACPI
-> device object with an acpi_handle.  Type-specific sanity checks /
-> validations can be performed within a hotplug procedure, instead.
-
-Well, the sanest approach here would be to queue up a work item on
-kacpi_hotplug_wq if the event is of a "hotplug" type and let that work
-item do all checks, run acpi_bus_scan() etc.  But not in v3.9.
-
-For v3.9, the most straightforward and least intrusive change we can do
-is the $subject patch as far as I can say.  If you can suggest something
-less intrusive and more straightforward, please do.
-
-Thanks,
-Rafael
-
-
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
