@@ -1,61 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:45840 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933362Ab3BLQ3b (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Feb 2013 11:29:31 -0500
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Cc: Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Tawfik Bayouk <tawfik@marvell.com>
-Subject: [PATCH 12/32] plat-orion: introduce ORION_ADDR_MAP_NO_REMAP
-Date: Tue, 12 Feb 2013 17:28:46 +0100
-Message-Id: <1360686546-24277-13-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from mx1.redhat.com ([209.132.183.28]:52904 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754176Ab3BDU2M (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 4 Feb 2013 15:28:12 -0500
+Message-ID: <1360009684.11144.539.camel@bling.home>
+Subject: Re: PCI warning on boot 3.8.0-rc1
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Stephen Hemminger <stephen@networkplumber.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	David Woodhouse <dwmw2@infradead.org>,
+	iommu@lists.linux-foundation.org
+Date: Mon, 04 Feb 2013 13:28:04 -0700
+In-Reply-To: <20130204103645.38ae2d5e@nehalam.linuxnetplumber.net>
+References: <20130116143853.339dd89b@nehalam.linuxnetplumber.net>
+	 <CAErSpo5eOE_=Ob2jN7ACy0eJBOa8k36XqCbHnGTCs-wfiy8tiw@mail.gmail.com>
+	 <20130204103645.38ae2d5e@nehalam.linuxnetplumber.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently, the addr_map_info structure uses an "int remap" to allow
-SoC-specific code to specify whether a given address decoding window
-should be remapped, and if so, the remapping address. To do so, it
-tests if the int is less than zero (no remap) or greater than
-zero. Unfortunately, this prevents any remapping address that is
-higher than 2 GB.
+On Mon, 2013-02-04 at 10:36 -0800, Stephen Hemminger wrote:
+> > I think drivers/pci/search.c is identical between 3.7 and 3.8-rc1.  Is
+> > this the first time you've turned on the IOMMU on that box?
+> 
+> It exists in 3.7 and earlier kernels, just haven't turned on same config.
+> 
+> > It's the same warning as in this bugzilla:
+> > https://bugzilla.kernel.org/show_bug.cgi?id=44881, and there's a patch
+> > there at https://bugzilla.kernel.org/show_bug.cgi?id=44881#c11, but
+> > it's just a quirk that turns off VT-d if we find certain broken
+> > bridges.  It doesn't look like you have any of those (although I don't
+> > know what you have at 05:00.0).
+> > 
+> > Bjorn
+> 
+> This is a standard ASUS motherboard, and don't want to disable VT-d.
 
-As a first step to fix this, we introduce ORION_ADDR_MAP_NO_REMAP
-define, that will be the "remap" value that SoC-specific code should
-pass to not have a remapping.
+Stephen,
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
----
- arch/arm/plat-orion/include/plat/addr-map.h |    2 ++
- 1 file changed, 2 insertions(+)
+Can you give the lspci -vvv of device 5:00.0 to see if it's one we've
+seen before?  Does the patch below help?
 
-diff --git a/arch/arm/plat-orion/include/plat/addr-map.h b/arch/arm/plat-orion/include/plat/addr-map.h
-index b76c065..0861b8c 100644
---- a/arch/arm/plat-orion/include/plat/addr-map.h
-+++ b/arch/arm/plat-orion/include/plat/addr-map.h
-@@ -41,6 +41,8 @@ struct orion_addr_map_info {
- 	const int remap;
- };
- 
-+#define ORION_ADDR_MAP_NO_REMAP (-1)
-+
- void __init orion_config_wins(struct orion_addr_map_cfg *cfg,
- 			      const struct orion_addr_map_info *info);
- 
--- 
-1.7.9.5
+Bjorn, I think we need to quirk it somehow.  So far they've all been
+PCI-to-PCI bridges attached to root ports where we expect it's actually
+a PCIe-to-PCI bridge.  Seems like maybe we could have the same attached
+to a downstream port.  The patch below avoids the WARN and gives us a
+device, but of course pci_is_pcie reports wrong for this device and may
+cause some trickle down breakage.  A more complete option might be to
+add a is_pcie flag to the device that can be set independent of
+pcie_cap.  We'd need to check all the callers for assumptions, but then
+we could put the quirk in one place and hopefully fix everything.
+Thoughts?  Thanks,
+
+Alex
+
+
+diff --git a/drivers/pci/search.c b/drivers/pci/search.c
+index bf969ba..65ae270 100644
+--- a/drivers/pci/search.c
++++ b/drivers/pci/search.c
+@@ -42,6 +42,15 @@ pci_find_upstream_pcie_bridge(struct pci_dev *pdev)
+ 		}
+ 		/* PCI device should connect to a PCIe bridge */
+ 		if (pci_pcie_type(pdev) != PCI_EXP_TYPE_PCI_BRIDGE) {
++			/*
++			 * Not all PCIe-to-PCI bridges expose a PCIe
++			 * capability.  If we make it to a PCIe root port
++			 * and the previous device was a PCI-to-PCI bridge,
++			 * assume it was really a PCIe-to-PCI bridge.
++			 */
++			if (pci_pcie_type(pdev) == PCI_EXP_TYPE_ROOT_PORT &&
++			    tmp && tmp->hdr_type == PCI_HEADER_TYPE_BRIDGE)
++				return tmp;
+ 			/* Busted hardware? */
+ 			WARN_ON_ONCE(1);
+ 			return NULL;
+
 
