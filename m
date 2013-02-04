@@ -1,53 +1,112 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from qmta12.emeryville.ca.mail.comcast.net ([76.96.27.227]:41910
-	"EHLO qmta12.emeryville.ca.mail.comcast.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755083Ab3BDW2H (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 4 Feb 2013 17:28:07 -0500
-Message-ID: <1360016458.4485.11.camel@rhapsody>
-Subject: Re: [PATCH v2 2/7] PCI: don't touch enable_cnt in
- pci_device_shutdown()
-From: Khalid Aziz <khalid@gonehiking.org>
-To: Konstantin Khlebnikov <khlebnikov@openvz.org>
-Cc: e1000-devel@lists.sourceforge.net, linux-pci@vger.kernel.org,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Andi Kleen <ak@linux.intel.com>,
-	Alan Cox <alan@lxorguk.ukuu.org.uk>,
-	Matthew Garrett <mjg@redhat.com>, khalid.aziz@oracle.com
-Date: Mon, 04 Feb 2013 15:20:58 -0700
-In-Reply-To: <20130204115557.5569.9748.stgit@zurg>
-References: <20130204115246.5569.85829.stgit@zurg>
-	 <20130204115557.5569.9748.stgit@zurg>
+Received: from mx1.redhat.com ([209.132.183.28]:23246 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754583Ab3BDUgK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 4 Feb 2013 15:36:10 -0500
+Message-ID: <1360010164.11144.542.camel@bling.home>
+Subject: Re: PCI warning on boot 3.8.0-rc1
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Stephen Hemminger <stephen@networkplumber.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	David Woodhouse <dwmw2@infradead.org>,
+	iommu@lists.linux-foundation.org
+Date: Mon, 04 Feb 2013 13:36:04 -0700
+In-Reply-To: <20130204123041.31e402df@nehalam.linuxnetplumber.net>
+References: <20130116143853.339dd89b@nehalam.linuxnetplumber.net>
+	 <CAErSpo5eOE_=Ob2jN7ACy0eJBOa8k36XqCbHnGTCs-wfiy8tiw@mail.gmail.com>
+	 <20130204103645.38ae2d5e@nehalam.linuxnetplumber.net>
+	 <1360009684.11144.539.camel@bling.home>
+	 <20130204123041.31e402df@nehalam.linuxnetplumber.net>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 2013-02-04 at 15:55 +0400, Konstantin Khlebnikov wrote:
-> Matthew Garrett and Alan Cox said (see LKML link below) that clearing bus-master
-> for all PCI devices may lead to unpredictable consequences, some devices ignores
-> this bit and continues DMA, some of them hang after that or crash whole system.
-> Probably we should leave here only warning and disable bus-mastering for each
-> driver individually in ->shutdown() callback.
+On Mon, 2013-02-04 at 12:30 -0800, Stephen Hemminger wrote:
+> On Mon, 04 Feb 2013 13:28:04 -0700
+> Alex Williamson <alex.williamson@redhat.com> wrote:
+> 
+> > On Mon, 2013-02-04 at 10:36 -0800, Stephen Hemminger wrote:
+> > > > I think drivers/pci/search.c is identical between 3.7 and 3.8-rc1.  Is
+> > > > this the first time you've turned on the IOMMU on that box?
+> > > 
+> > > It exists in 3.7 and earlier kernels, just haven't turned on same config.
+> > > 
+> > > > It's the same warning as in this bugzilla:
+> > > > https://bugzilla.kernel.org/show_bug.cgi?id=44881, and there's a patch
+> > > > there at https://bugzilla.kernel.org/show_bug.cgi?id=44881#c11, but
+> > > > it's just a quirk that turns off VT-d if we find certain broken
+> > > > bridges.  It doesn't look like you have any of those (although I don't
+> > > > know what you have at 05:00.0).
+> > > > 
+> > > > Bjorn
+> > > 
+> > > This is a standard ASUS motherboard, and don't want to disable VT-d.
+> > 
+> > Stephen,
+> > 
+> > Can you give the lspci -vvv of device 5:00.0 to see if it's one we've
+> > seen before?  Does the patch below help?
+> 
+> 
+> $ sudo lspci -vvv -s 5:00.0
+> 05:00.0 PCI bridge: ASMedia Technology Inc. ASM1083/1085 PCIe to PCI Bridge (rev 03) (prog-if 01 [Subtractive decode])
 
-Agreed that the right place for shutting down a PCI device properly and
-clearing its Bus Master bit, is the driver shutdown routine, if only all
-drivers supplied a shutdown routine. As it is today, there are too many
-drivers that do not provide a shutdown routine, ata_piix, Marvell SATA
-driver, ATI AGP driver just to name a few among a large number of them.
-Yet kexec is expected to work inspite of these drivers especially since
-kdump depends on it. So until all PCI drivers supply a shutdown routine,
-this is just a band-aid to disable interrupt and Bus Master bit in
-pci_device_shutdown(). Most drivers do seem to supply a suspend and
-resume function and it was discussed many years ago if it is feasible to
-use the suspend() routine for drivers to shut devices down cleanly.
-Maybe it is time to revisit that discussion.
+Someone has even decided to name this one a PCIe-to-PCI bridge despite
+it lacking a PCIe capability.  Thanks,
 
->Cc: Khalid Aziz <khalid.aziz@hp.com>
+Alex
 
-Please update this to khalid@gonehiking.org
+> 	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+> 	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+> 	Latency: 0, Cache Line Size: 64 bytes
+> 	Bus: primary=05, secondary=06, subordinate=06, sec-latency=32
+> 	I/O behind bridge: 0000f000-00000fff
+> 	Memory behind bridge: fff00000-000fffff
+> 	Prefetchable memory behind bridge: 00000000fff00000-00000000000fffff
+> 	Secondary status: 66MHz+ FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort+ <SERR- <PERR-
+> 	BridgeCtl: Parity- SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
+> 		PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
+> 	Capabilities: [c0] Subsystem: ASUSTeK Computer Inc. Device 8489
+> 
+> 
+> > Bjorn, I think we need to quirk it somehow.  So far they've all been
+> > PCI-to-PCI bridges attached to root ports where we expect it's actually
+> > a PCIe-to-PCI bridge.  Seems like maybe we could have the same attached
+> > to a downstream port.  The patch below avoids the WARN and gives us a
+> > device, but of course pci_is_pcie reports wrong for this device and may
+> > cause some trickle down breakage.  A more complete option might be to
+> > add a is_pcie flag to the device that can be set independent of
+> > pcie_cap.  We'd need to check all the callers for assumptions, but then
+> > we could put the quirk in one place and hopefully fix everything.
+> > Thoughts?  Thanks,
+> > 
+> > Alex
+> > 
+> > 
+> > diff --git a/drivers/pci/search.c b/drivers/pci/search.c
+> > index bf969ba..65ae270 100644
+> > --- a/drivers/pci/search.c
+> > +++ b/drivers/pci/search.c
+> > @@ -42,6 +42,15 @@ pci_find_upstream_pcie_bridge(struct pci_dev *pdev)
+> >  		}
+> >  		/* PCI device should connect to a PCIe bridge */
+> >  		if (pci_pcie_type(pdev) != PCI_EXP_TYPE_PCI_BRIDGE) {
+> > +			/*
+> > +			 * Not all PCIe-to-PCI bridges expose a PCIe
+> > +			 * capability.  If we make it to a PCIe root port
+> > +			 * and the previous device was a PCI-to-PCI bridge,
+> > +			 * assume it was really a PCIe-to-PCI bridge.
+> > +			 */
+> > +			if (pci_pcie_type(pdev) == PCI_EXP_TYPE_ROOT_PORT &&
+> > +			    tmp && tmp->hdr_type == PCI_HEADER_TYPE_BRIDGE)
+> > +				return tmp;
+> >  			/* Busted hardware? */
+> >  			WARN_ON_ONCE(1);
+> >  			return NULL;
+> > 
+> > 
+> 
 
---
-Khalid
 
 
