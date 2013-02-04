@@ -1,60 +1,47 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Moore, Robert" <robert.moore@intel.com>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-CC: Toshi Kani <toshi.kani@hp.com>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jiang Liu <liuj97@gmail.com>, Yinghai Lu <yinghai@kernel.org>,
-	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
-	Myron Stowe <mstowe@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: RE: [Update][PATCH] ACPI / hotplug: Fix concurrency issues and
- memory leaks
-Date: Thu, 14 Feb 2013 20:45:14 +0000
-Message-ID: <94F2FBAB4432B54E8AACC7DFDE6C92E368CB5D05@ORSMSX101.amr.corp.intel.com>
-References: <1837481.7dT8hTZ4MT@vostro.rjw.lan>
- <5284026.QPQbFciqVT@vostro.rjw.lan>
- <94F2FBAB4432B54E8AACC7DFDE6C92E368CB39A9@ORSMSX101.amr.corp.intel.com>
- <7010893.9OBeMt5Fzh@vostro.rjw.lan>
-In-Reply-To: <7010893.9OBeMt5Fzh@vostro.rjw.lan>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [PATCH v2 1/7] e1000e: fix pci-device enable-counter balance
+To: e1000-devel@lists.sourceforge.net, linux-pci@vger.kernel.org,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	linux-kernel@vger.kernel.org
+From: Konstantin Khlebnikov <khlebnikov@openvz.org>
+Cc: Bruce Allan <bruce.w.allan@intel.com>,
+	Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+Date: Mon, 04 Feb 2013 15:55:54 +0400
+Message-ID: <20130204115554.5569.95207.stgit@zurg>
+In-Reply-To: <20130204115246.5569.85829.stgit@zurg>
+References: <20130204115246.5569.85829.stgit@zurg>
 MIME-Version: 1.0
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogUmFmYWVsIEouIFd5c29j
-a2kgW21haWx0bzpyandAc2lzay5wbF0NCj4gU2VudDogVGh1cnNkYXksIEZlYnJ1YXJ5IDE0LCAy
-MDEzIDQ6MDQgQU0NCj4gVG86IE1vb3JlLCBSb2JlcnQNCj4gQ2M6IFRvc2hpIEthbmk7IEFDUEkg
-RGV2ZWwgTWFsaW5nIExpc3Q7IExLTUw7IEJqb3JuIEhlbGdhYXM7IEppYW5nIExpdTsNCj4gWWlu
-Z2hhaSBMdTsgWWFzdWFraSBJc2hpbWF0c3U7IE15cm9uIFN0b3dlOyBsaW51eC1wY2lAdmdlci5r
-ZXJuZWwub3JnDQo+IFN1YmplY3Q6IFJlOiBbVXBkYXRlXVtQQVRDSF0gQUNQSSAvIGhvdHBsdWc6
-IEZpeCBjb25jdXJyZW5jeSBpc3N1ZXMgYW5kDQo+IG1lbW9yeSBsZWFrcw0KPiANCj4gT24gVGh1
-cnNkYXksIEZlYnJ1YXJ5IDE0LCAyMDEzIDAyOjMxOjIyIEFNIE1vb3JlLCBSb2JlcnQgd3JvdGU6
-DQo+ID4gPiA+ID4gSSB0aG91Z2h0IGFib3V0IHRoYXQsIGJ1dCBhY3R1YWxseSB0aGVyZSdzIG5v
-IGd1YXJhbnRlZSB0aGF0IHRoZQ0KPiA+ID4gPiA+IGhhbmRsZSB3aWxsIGJlIHZhbGlkIGFmdGVy
-IF9FSjAgYXMgZmFyIGFzIEkgY2FuIHNheS4gIFNvIHRoZQ0KPiA+ID4gPiA+IHJhY2UgY29uZGl0
-aW9uIGlzIGdvaW5nIHRvIGJlIHRoZXJlIGFueXdheSBhbmQgdXNpbmcgc3RydWN0DQo+ID4gPiA+
-ID4gYWNwaV9kZXZpY2UganVzdCBtYWtlcyBpdCBlYXNpZXIgdG8gYXZvaWQgaXQuDQo+ID4gPiA+
-DQo+ID4gPiA+IEluIHRoZW9yeSwgeWVzLCBhIHN0YWxlIGhhbmRsZSBjb3VsZCBiZSBhIHByb2Js
-ZW0sIGlmIF9FSjANCj4gPiA+ID4gcGVyZm9ybXMgdW5sb2FkIHRhYmxlIGFuZCBpZiBBQ1BJQ0Eg
-ZnJlZXMgdXAgaXRzIGludGVybmFsIGRhdGENCj4gPiA+ID4gc3RydWN0dXJlIHBvaW50ZWQgYnkg
-dGhlIGhhbmRsZSBhcyBhIHJlc3VsdC4gIEJ1dCB3ZSBzaG91bGQgbm90DQo+ID4gPiA+IHNlZSBz
-dWNoIGlzc3VlIG5vdyBzaW5jZSB3ZSBkbyBub3Qgc3VwcG9ydCBkeW5hbWljIEFDUEkgbmFtZXNw
-YWNlDQo+IHlldC4NCj4gPiA+DQo+ID4gPiBJJ20gd2FpdGluZyBmb3IgaW5mb3JtYXRpb24gZnJv
-bSBCb2IgYWJvdXQgdGhhdC4gIElmIHdlIGNhbiBhc3N1bWUNCj4gPiA+IEFDUEkgaGFuZGxlcyB0
-byBiZSBhbHdheXMgdmFsaWQsIHRoYXQgd2lsbCBzaW1wbGlmeSB0aGluZ3MgcXVpdGUgYQ0KPiBi
-aXQuDQo+ID4NCj4gPiBJZiBhIHRhYmxlIGlzIHVubG9hZGVkLCBhbGwgdGhlIG5hbWVzcGFjZSBu
-b2RlcyBmb3IgdGhhdCB0YWJsZSBhcmUNCj4gPiByZW1vdmVkIGZyb20gdGhlIG5hbWVzcGFjZSwg
-YW5kIHRodXMgYW55IEFDUElfSEFORExFIHBvaW50ZXJzIGdvIHN0YWxlDQo+IGFuZCBpbnZhbGlk
-Lg0KPiANCj4gT0ssIHRoYW5rcyENCj4gDQo+IFRvIG1lIHRoaXMgbWVhbnMgdGhhdCB3ZSBjYW5u
-b3QgYXNzdW1lIGEgaGFuZGxlIHRvIHN0YXkgdmFsaWQgYmV0d2VlbiBhDQo+IG5vdGlmeSBoYW5k
-bGVyIGFuZCBhY3BpX2J1c19ob3RfcmVtb3ZlX2RldmljZSgpIHJ1biBmcm9tIGEgd29ya3F1ZXVl
-Lg0KPiANCj4gSXMgdGhlcmUgYSBtZWNoYW5pc20gaW4gQUNQSUNBIHRvIGVuc3VyZSB0aGF0IGEg
-aGFuZGxlIHdvbid0IGJlY29tZSBzdGFsZQ0KPiB3aGlsZSBhIG5vdGlmeSBoYW5kbGVyIGlzIHJ1
-bm5pbmcgZm9yIGl0IG9yIGlzIHRoZSBPUyByZXNwb25zaWJsZSBmb3INCj4gZW5zdXJpbmcgdGhh
-dA0KPiBfRUowIHdvbid0IGJlIHJ1biBpbiBwYXJhbGxlbCB3aXRoIG5vdGlmeSBoYW5kbGVycyBm
-b3IgZGV2aWNlIG9iamVjdHMNCj4gYmVpbmcgZWplY3RlZD8NCj4gDQoNCkl0IGlzIHVwIHRvIHRo
-ZSBob3N0Lg0KQm9iDQoNCg0KPiBSYWZhZWwNCj4gDQo+IA0KPiAtLQ0KPiBJIHNwZWFrIG9ubHkg
-Zm9yIG15c2VsZi4NCj4gUmFmYWVsIEouIFd5c29ja2ksIEludGVsIE9wZW4gU291cmNlIFRlY2hu
-b2xvZ3kgQ2VudGVyLg0K
+This patch removes redundant and unbalanced pci_disable_device() from
+__e1000_shutdown(). pci_clear_master() is enough, device can go into
+suspended state with elevated enable_cnt.
+
+Bug was introduced in commit 23606cf5d1192c2b17912cb2ef6e62f9b11de133
+("e1000e / PCI / PM: Add basic runtime PM support (rev. 4)") in v2.6.35
+
+Signed-off-by: Konstantin Khlebnikov <khlebnikov@openvz.org>
+Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Cc: e1000-devel@lists.sourceforge.net
+Cc: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+Cc: Bruce Allan <bruce.w.allan@intel.com>
+---
+ drivers/net/ethernet/intel/e1000e/netdev.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/ethernet/intel/e1000e/netdev.c b/drivers/net/ethernet/intel/e1000e/netdev.c
+index fbf75fd..49e944f 100644
+--- a/drivers/net/ethernet/intel/e1000e/netdev.c
++++ b/drivers/net/ethernet/intel/e1000e/netdev.c
+@@ -5503,7 +5503,7 @@ static int __e1000_shutdown(struct pci_dev *pdev, bool *enable_wake,
+ 	 */
+ 	e1000e_release_hw_control(adapter);
+ 
+-	pci_disable_device(pdev);
++	pci_clear_master(pdev);
+ 
+ 	return 0;
+ }
+
