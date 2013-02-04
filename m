@@ -1,69 +1,38 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <5112F4EE.5090601@huawei.com>
-Date: Thu, 7 Feb 2013 08:27:26 +0800
-From: Jiang Liu <jiang.liu@huawei.com>
-MIME-Version: 1.0
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-da0-f45.google.com ([209.85.210.45]:48504 "EHLO
+	mail-da0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753230Ab3BDSg7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 4 Feb 2013 13:36:59 -0500
+Received: by mail-da0-f45.google.com with SMTP id w4so2780476dam.18
+        for <linux-pci@vger.kernel.org>; Mon, 04 Feb 2013 10:36:58 -0800 (PST)
+Date: Mon, 4 Feb 2013 10:36:45 -0800
+From: Stephen Hemminger <stephen@networkplumber.org>
 To: Bjorn Helgaas <bhelgaas@google.com>
-CC: "Rafael J. Wysocki" <rjw@sisk.pl>, Yinghai Lu <yinghai@kernel.org>,
-	Myron Stowe <myron.stowe@gmail.com>,
-	Mauro Carvalho Chehab <mchehab@redhat.com>,
-	Tony Luck <tony.luck@intel.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	<linux-pci@vger.kernel.org>, Russell King <linux@arm.linux.org.uk>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v3 00/22] PCI: Iterate pci host bridge instead of pci
- root bus
-References: <CAE9FiQXHG01NjnYNDbC-KEpbcvY-q4pBe97CxTOGS7W4vZQBYQ@mail.gmail.com> <52330506.F9m0tMYuG1@vostro.rjw.lan> <CAE9FiQXTRaP08ZeHWTJHt50DZO800BMigmo=q65-RLzZWkTvoQ@mail.gmail.com> <3459136.QID0qrXQHt@vostro.rjw.lan> <CAErSpo4vd+GhTVpoLb=sFTqBZMG=xva1QUUhyJrO4o0ytPXmqg@mail.gmail.com>
-In-Reply-To: <CAErSpo4vd+GhTVpoLb=sFTqBZMG=xva1QUUhyJrO4o0ytPXmqg@mail.gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Sender: linux-kernel-owner@vger.kernel.org
+Cc: linux-pci@vger.kernel.org, David Woodhouse <dwmw2@infradead.org>,
+	iommu@lists.linux-foundation.org, alex.williamson@redhat.com
+Subject: Re: PCI warning on boot 3.8.0-rc1
+Message-ID: <20130204103645.38ae2d5e@nehalam.linuxnetplumber.net>
+In-Reply-To: <CAErSpo5eOE_=Ob2jN7ACy0eJBOa8k36XqCbHnGTCs-wfiy8tiw@mail.gmail.com>
+References: <20130116143853.339dd89b@nehalam.linuxnetplumber.net>
+ <CAErSpo5eOE_=Ob2jN7ACy0eJBOa8k36XqCbHnGTCs-wfiy8tiw@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2013-2-7 7:02, Bjorn Helgaas wrote:
-> On Wed, Feb 6, 2013 at 3:05 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
->> On Wednesday, February 06, 2013 01:53:50 PM Yinghai Lu wrote:
->>> On Wed, Feb 6, 2013 at 1:43 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
->>>> On Wednesday, February 06, 2013 01:28:27 PM Yinghai Lu wrote:
->>>>> so you still did not answer you want 1 or 2 yet:
->>>>>
->>>>> for sgi_hotplug,
->>>>>
->>>>> 1. still keep the module support, and register acpi_pci_driver later.
->>>>> 2. built-in support only, and need to register acpi_pci_driver early.
->>>>
->>>> Please work with the assumption that acpi_pci_driver is not going to be there
->>>> any more.
->>>>
->>>
->>> I think I could change ioapic and iommu hotplug to weak add/remove because they
->>> should be built-in by nature.
->>>
->>> but how about others like sgi_hotplug etc?
-> 
-> I think that could be handled with pcibios_root_bridge_prepare() or
-> something similar -- something that happens in the "add host bridge"
-> path.  I'm not saying we necessarily have all the right hooks in place
-> yet.  It's just that I'd rather figure out what the right hooks *are*
-> and add them if necessary, than just convert pci_root_buses to
-> for_each_pci_host_bridge().
-> 
->> I'd really prefer to wait for the patchset removing acpi_pci_driver (from
->> Myron) before proceeding with more changes in that area.
->>
->> Myron, do you have a prototype based on the current linux-next?
-> 
-> I think it's really the acpiphp/pciehp issue that's holding up the
-> removal of acpi_pci_driver.  I'm not sure if anybody's working on
-> that.
-Hi Bjorn,
-	I'm working on this topic, but a little busy with other stuff
-in last few days. I guess I could should out a version in coming days.
-	Thanks!
 
-> 
-> .
-> 
+> I think drivers/pci/search.c is identical between 3.7 and 3.8-rc1.  Is
+> this the first time you've turned on the IOMMU on that box?
 
+It exists in 3.7 and earlier kernels, just haven't turned on same config.
 
+> It's the same warning as in this bugzilla:
+> https://bugzilla.kernel.org/show_bug.cgi?id=44881, and there's a patch
+> there at https://bugzilla.kernel.org/show_bug.cgi?id=44881#c11, but
+> it's just a quirk that turns off VT-d if we find certain broken
+> bridges.  It doesn't look like you have any of those (although I don't
+> know what you have at 05:00.0).
+> 
+> Bjorn
+
+This is a standard ASUS motherboard, and don't want to disable VT-d.
