@@ -1,87 +1,83 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:16989 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751139Ab3BOTW5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 15 Feb 2013 14:22:57 -0500
-Subject: [PATCH v2] pci: Disable slot presence detection around bus reset
-To: bhelgaas@google.com, linux-pci@vger.kernel.org
-From: Alex Williamson <alex.williamson@redhat.com>
-Cc: linux-kernel@vger.kernel.org
-Date: Fri, 15 Feb 2013 12:22:56 -0700
-Message-ID: <20130215191944.27692.8935.stgit@bling.home>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [PATCH v2 7/7] e1000e: fix accessing to suspended device
+To: e1000-devel@lists.sourceforge.net, linux-pci@vger.kernel.org,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	linux-kernel@vger.kernel.org
+From: Konstantin Khlebnikov <khlebnikov@openvz.org>
+Cc: Bruce Allan <bruce.w.allan@intel.com>,
+	Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+Date: Mon, 04 Feb 2013 15:56:15 +0400
+Message-ID: <20130204115615.5569.77011.stgit@zurg>
+In-Reply-To: <20130204115246.5569.85829.stgit@zurg>
+References: <20130204115246.5569.85829.stgit@zurg>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-A bus reset can trigger a presence detection change and result in a
-suprise hotplug.  This is generally not what we want to happen when
-trying to reset a device.  Disable the presence detection control on
-on bridges around bus reset.
+This patch fixes some annoying messages like 'Error reading PHY register' and
+'Hardware Erorr' and saves several seconds on reboot.
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+Signed-off-by: Konstantin Khlebnikov <khlebnikov@openvz.org>
+Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Cc: e1000-devel@lists.sourceforge.net
+Cc: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+Cc: Bruce Allan <bruce.w.allan@intel.com>
 ---
-v2: Still hasn't resolved any controversy of this patch, but writing the
-    presence detect changed bit to the slot status to clear it resolves
-    the stray remove/add I was still seeing occasionally on v1.
+ drivers/net/ethernet/intel/e1000e/ethtool.c |   13 +++++++++++++
+ drivers/net/ethernet/intel/e1000e/netdev.c  |    2 ++
+ 2 files changed, 15 insertions(+)
 
- drivers/pci/pci.c |   32 +++++++++++++++++++++++++++-----
- 1 file changed, 27 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 5cb5820..efccc97 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3229,8 +3229,8 @@ static int pci_pm_reset(struct pci_dev *dev, int probe)
+diff --git a/drivers/net/ethernet/intel/e1000e/ethtool.c b/drivers/net/ethernet/intel/e1000e/ethtool.c
+index f95bc6e..90afe58 100644
+--- a/drivers/net/ethernet/intel/e1000e/ethtool.c
++++ b/drivers/net/ethernet/intel/e1000e/ethtool.c
+@@ -35,6 +35,7 @@
+ #include <linux/slab.h>
+ #include <linux/delay.h>
+ #include <linux/vmalloc.h>
++#include <linux/pm_runtime.h>
  
- static int pci_parent_bus_reset(struct pci_dev *dev, int probe)
- {
--	u16 ctrl;
--	struct pci_dev *pdev;
-+	u16 ctrl, flags, sltctl = 0;
-+	struct pci_dev *pdev, *bridge;
+ #include "e1000.h"
  
- 	if (pci_is_root_bus(dev->bus) || dev->subordinate || !dev->bus->self)
- 		return -ENOTTY;
-@@ -3242,15 +3242,37 @@ static int pci_parent_bus_reset(struct pci_dev *dev, int probe)
- 	if (probe)
- 		return 0;
- 
--	pci_read_config_word(dev->bus->self, PCI_BRIDGE_CONTROL, &ctrl);
-+	bridge = dev->bus->self;
-+
-+	/*
-+	 * If the parent device supports a slot with presence detection
-+	 * change enabled, holding the bus in reset can trigger that and
-+	 * cause an unwanted surprise removal.  Disable presence detection
-+	 * around the bus reset.
-+	 */
-+	pcie_capability_read_word(bridge, PCI_EXP_FLAGS, &flags);
-+	if (flags & PCI_EXP_FLAGS_SLOT) {
-+		pcie_capability_read_word(bridge, PCI_EXP_SLTCTL, &sltctl);
-+		if (sltctl & PCI_EXP_SLTCTL_PDCE)
-+			pcie_capability_write_word(bridge, PCI_EXP_SLTCTL,
-+						sltctl & ~PCI_EXP_SLTCTL_PDCE);
-+	}
-+
-+	pci_read_config_word(bridge, PCI_BRIDGE_CONTROL, &ctrl);
- 	ctrl |= PCI_BRIDGE_CTL_BUS_RESET;
--	pci_write_config_word(dev->bus->self, PCI_BRIDGE_CONTROL, ctrl);
-+	pci_write_config_word(bridge, PCI_BRIDGE_CONTROL, ctrl);
- 	msleep(100);
- 
- 	ctrl &= ~PCI_BRIDGE_CTL_BUS_RESET;
--	pci_write_config_word(dev->bus->self, PCI_BRIDGE_CONTROL, ctrl);
-+	pci_write_config_word(bridge, PCI_BRIDGE_CONTROL, ctrl);
- 	msleep(100);
- 
-+	if (sltctl & PCI_EXP_SLTCTL_PDCE) {
-+		pcie_capability_write_word(bridge,
-+					   PCI_EXP_SLTSTA, PCI_EXP_SLTSTA_PDC);
-+		pcie_capability_write_word(bridge, PCI_EXP_SLTCTL, sltctl);
-+	}
-+
- 	return 0;
+@@ -2051,7 +2052,19 @@ static int e1000_get_rxnfc(struct net_device *netdev,
+ 	}
  }
  
++static int e1000e_ethtool_begin(struct net_device *netdev)
++{
++	return pm_runtime_get_sync(netdev->dev.parent);
++}
++
++static void e1000e_ethtool_complete(struct net_device *netdev)
++{
++	pm_runtime_put_sync(netdev->dev.parent);
++}
++
+ static const struct ethtool_ops e1000_ethtool_ops = {
++	.begin			= e1000e_ethtool_begin,
++	.complete		= e1000e_ethtool_complete,
+ 	.get_settings		= e1000_get_settings,
+ 	.set_settings		= e1000_set_settings,
+ 	.get_drvinfo		= e1000_get_drvinfo,
+diff --git a/drivers/net/ethernet/intel/e1000e/netdev.c b/drivers/net/ethernet/intel/e1000e/netdev.c
+index 708d609..e501298 100644
+--- a/drivers/net/ethernet/intel/e1000e/netdev.c
++++ b/drivers/net/ethernet/intel/e1000e/netdev.c
+@@ -4267,6 +4267,7 @@ static void e1000_phy_read_status(struct e1000_adapter *adapter)
+ 	    (adapter->hw.phy.media_type == e1000_media_type_copper)) {
+ 		int ret_val;
+ 
++		pm_runtime_get_sync(&adapter->pdev->dev);
+ 		ret_val  = e1e_rphy(hw, PHY_CONTROL, &phy->bmcr);
+ 		ret_val |= e1e_rphy(hw, PHY_STATUS, &phy->bmsr);
+ 		ret_val |= e1e_rphy(hw, PHY_AUTONEG_ADV, &phy->advertise);
+@@ -4277,6 +4278,7 @@ static void e1000_phy_read_status(struct e1000_adapter *adapter)
+ 		ret_val |= e1e_rphy(hw, PHY_EXT_STATUS, &phy->estatus);
+ 		if (ret_val)
+ 			e_warn("Error reading PHY register\n");
++		pm_runtime_put_sync(&adapter->pdev->dev);
+ 	} else {
+ 		/* Do not read PHY registers if link is not up
+ 		 * Set values to typical power-on defaults
 
