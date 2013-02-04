@@ -1,51 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.active-venture.com ([67.228.131.205]:56302 "EHLO
-	mail.active-venture.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751497Ab3B1FK0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 28 Feb 2013 00:10:26 -0500
-Date: Wed, 27 Feb 2013 21:10:29 -0800
-From: Guenter Roeck <linux@roeck-us.net>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org
-Subject: Re: ACPI based PCI/PCIe bridge hotplug
-Message-ID: <20130228050857.GA31066@roeck-us.net>
-References: <20130228044205.GA30949@roeck-us.net>
- <CAE9FiQX3Q+2ycXpR=Bn=tqW94F6e8cDZjiiE8vxO7wmJn_kUCg@mail.gmail.com>
+Received: from mail-lb0-f178.google.com ([209.85.217.178]:63861 "EHLO
+	mail-lb0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754378Ab3BDLzz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 4 Feb 2013 06:55:55 -0500
+Subject: [PATCH v2 0/7] pci/e1000e: return runtime-pm back to work
+To: e1000-devel@lists.sourceforge.net, linux-pci@vger.kernel.org,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	linux-kernel@vger.kernel.org
+From: Konstantin Khlebnikov <khlebnikov@openvz.org>
+Date: Mon, 04 Feb 2013 15:55:47 +0400
+Message-ID: <20130204115246.5569.85829.stgit@zurg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAE9FiQX3Q+2ycXpR=Bn=tqW94F6e8cDZjiiE8vxO7wmJn_kUCg@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 27, 2013 at 08:53:37PM -0800, Yinghai Lu wrote:
-> On Wed, Feb 27, 2013 at 8:42 PM, Guenter Roeck <linux@roeck-us.net> wrote:
-> > Hi all,
-> >
-> > we had a discussion about ACPI hotplug today at work. Someone claimed that ACPI
-> > would not support PCI/PCIe bridge hotplug.
-> >
-> > I don't know much about ACPI, but that seemed like a surprising limitation
-> > to me. After a little research, I found that the ACPI hotplug code seems to
-> > support it, and Microsoft was talking about adding it to Vista back in 2003.
-> >
-> > So ... just for my education, I have a couple of questions: Does ACPI support
-> > PCI/PCIe bridge hotplug or not ? And if it does, are there any limitations ?
-> 
-> Yes, Linux kernel support that via acpiphp.
-> 
-> but that will more rely on bios do the right job in ACPI DSDT.
-> 
-> Also need to make sure BIOS have leave enough bus number range and
-> io/mmio range.
-> 
-> Kernel also have pciehp for pcie hotplug.
-> 
-Exactly what I thought.
+This patchset contains some fixes for e1000e diver (broken since v2.6.35)
+and some related fixes and useful debug for PCI code.
 
-Thanks a lot for the clarification.
+All together this fixes my regression report for v3.8-rc1:
+https://lkml.org/lkml/2013/1/1/25
 
-Guenter
+patchset was seriously reworked since v1:
+http://lkml.org/lkml/2013/1/18/147
 
-[ Bjorn, sorry I dropped you from the Cc:, but my e-mail provider and Google
-  still don't like each other ]
+---
+
+Konstantin Khlebnikov (6):
+      e1000e: fix pci-device enable-counter balance
+      PCI: don't touch enable_cnt in pci_device_shutdown()
+      PCI: catch enable-counter underflows
+      e1000e: fix runtime power management transitions
+      PCI/PM: warn about incomplete actions in ->runtime_suspend() callback
+      e1000e: fix accessing to suspended device
+
+Rafael J. Wysocki (1):
+      PCI/PM: clear state_saved during suspend
+
+
+ drivers/net/ethernet/intel/e1000e/ethtool.c |   13 ++++
+ drivers/net/ethernet/intel/e1000e/netdev.c  |   82 +++++++--------------------
+ drivers/pci/pci-driver.c                    |   21 +++++--
+ drivers/pci/pci.c                           |    3 +
+ 4 files changed, 53 insertions(+), 66 deletions(-)
+
+-- 
+Signature
