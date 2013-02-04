@@ -1,72 +1,150 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <512B3B93.2050504@suse.cz>
-Date: Mon, 25 Feb 2013 11:23:15 +0100
-From: Jiri Slaby <jslaby@suse.cz>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Konstantin Khlebnikov <khlebnikov@openvz.org>,
-	"Wysocki, Rafael J" <rafael.j.wysocki@intel.com>,
-	linux-pci@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
-Subject: Re: WARNING: at drivers/pci/pci.c:1397 pci_disable_device
-References: <5123C5A5.4000106@suse.cz> <CAErSpo4MBSAt=oD=TajZXHXCwm12rrJswiVCyW2+On9NfmrkPg@mail.gmail.com> <512A85F4.1040906@suse.cz>
-In-Reply-To: <512A85F4.1040906@suse.cz>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:61073 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753176Ab3BDQ6P (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 4 Feb 2013 11:58:15 -0500
+Message-ID: <1359997090.11144.448.camel@bling.home>
+Subject: Re: [PATCH v3 1/3] VFIO: Wrapper for getting reference to
+ vfio_device from device
+From: Alex Williamson <alex.williamson@redhat.com>
+To: "Pandarathil, Vijaymohan R" <vijaymohan.pandarathil@hp.com>
+Cc: Gleb Natapov <gleb@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Blue Swirl <blauwirbel@gmail.com>,
+	"Ortiz, Lance E" <lance.oritz@hp.com>,
+	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	"qemu-devel@nongnu.org" <qemu-devel@nongnu.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Date: Mon, 04 Feb 2013 09:58:10 -0700
+In-Reply-To: <F9E001219150CB45BEDC82A650F360C9014AAEFD@G9W0717.americas.hpqcorp.net>
+References: <F9E001219150CB45BEDC82A650F360C9014AAEFD@G9W0717.americas.hpqcorp.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 02/24/2013 10:28 PM, Jiri Slaby wrote:
-> On 02/19/2013 07:53 PM, Bjorn Helgaas wrote:
->> On Tue, Feb 19, 2013 at 11:34 AM, Jiri Slaby <jslaby@suse.cz> wrote:
->>> Hi,
->>>
->>> so I hit that one:
->>> +       dev_WARN_ONCE(&dev->dev, atomic_read(&dev->enable_cnt) <= 0,
->>> +                     "disabling already-disabled device");
->>>
->>> during suspend (to ram):
->>> WARNING: at drivers/pci/pci.c:1397 pci_disable_device+0x90/0xa0()
->>> Hardware name: To Be Filled By O.E.M.
->>> Device e1000e
->>> disabling already-disabled device
->>> Modules linked in: dvb_usb_dib0700 dib0090 dib7000p dib7000m dib0070
->>> dib8000 dib3000mc dibx000_common microcode
->>> Pid: 31027, comm: kworker/u:35 Not tainted 3.8.0-rc7-next-20130218_64+ #1768
->>> Call Trace:
->>>  [<ffffffff81313b00>] ? do_pci_disable_device+0x30/0x60
->>>  [<ffffffff8107f2ff>] warn_slowpath_common+0x7f/0xc0
->>>  [<ffffffff8107f3f6>] warn_slowpath_fmt+0x46/0x50
->>>  [<ffffffff81313bc0>] pci_disable_device+0x90/0xa0
->>>  [<ffffffff814c8152>] __e1000_shutdown+0x262/0x8b0
->>>  [<ffffffff814c8813>] e1000_suspend+0x23/0x50
->>>  [<ffffffff816be581>] ? wait_for_completion+0x31/0x100
->>>  [<ffffffff81316337>] pci_pm_suspend+0x77/0x140
->>>  [<ffffffff8144aa6a>] ? __pm_runtime_barrier+0x1a/0x130
->>>  [<ffffffff813162c0>] ? pci_pm_poweroff+0xf0/0xf0
->>>  [<ffffffff81447838>] dpm_run_callback+0x58/0x90
->>>  [<ffffffff8144795b>] __device_suspend+0xeb/0x280
->>>  [<ffffffff814482af>] async_suspend+0x1f/0xa0
->>>  [<ffffffff810a9c9b>] async_run_entry_fn+0x3b/0x140
->>>  [<ffffffff8109b9a4>] process_one_work+0x174/0x410
->>>  [<ffffffff8109d426>] worker_thread+0x116/0x400
->>>  [<ffffffff8109d310>] ? busy_worker_rebind_fn+0xc0/0xc0
->>>  [<ffffffff810a3340>] kthread+0xc0/0xd0
->>>  [<ffffffff810a3280>] ? kthread_create_on_node+0x130/0x130
->>>  [<ffffffff816c089c>] ret_from_fork+0x7c/0xb0
->>>  [<ffffffff810a3280>] ? kthread_create_on_node+0x130/0x130
->>> ---[ end trace 6c5060f8b8fb9175 ]---
->>> e1000e 0000:00:19.0: System wakeup enabled by ACPI
->>
->> I think Konstantin posted an e1000e patch that would fix this, but
->> it's going via the e1000e folks.  Hopefully both my tree and the
->> e1000e patch will be merged soon.
+On Sun, 2013-02-03 at 14:10 +0000, Pandarathil, Vijaymohan R wrote:
+> 	- Added vfio_device_get_from_dev() as wrapper to get
+>           reference to vfio_device from struct device.
 > 
-> I'm using -next anyway, so is there any chance it is fixed there some
-> time soon?
+> 	- Added vfio_device_data() as a wrapper to get device_data from
+>           vfio_device.
+> 
+> Signed-off-by: Vijay Mohan Pandarathil <vijaymohan.pandarathil@hp.com>
+> ---
+>  drivers/vfio/vfio.c  | 41 ++++++++++++++++++++++++++++++++---------
+>  include/linux/vfio.h |  3 +++
+>  2 files changed, 35 insertions(+), 9 deletions(-)
+> 
+> diff --git a/drivers/vfio/vfio.c b/drivers/vfio/vfio.c
+> index 12c264d..f0a78a2 100644
+> --- a/drivers/vfio/vfio.c
+> +++ b/drivers/vfio/vfio.c
+> @@ -407,12 +407,13 @@ static void vfio_device_release(struct kref *kref)
+>  }
+>  
+>  /* Device reference always implies a group reference */
+> -static void vfio_device_put(struct vfio_device *device)
+> +void vfio_device_put(struct vfio_device *device)
+>  {
+>  	struct vfio_group *group = device->group;
+>  	kref_put_mutex(&device->kref, vfio_device_release, &group->device_lock);
+>  	vfio_group_put(group);
+>  }
+> +EXPORT_SYMBOL_GPL(vfio_device_put);
+>  
+>  static void vfio_device_get(struct vfio_device *device)
+>  {
+> @@ -642,8 +643,12 @@ int vfio_add_group_dev(struct device *dev,
+>  }
+>  EXPORT_SYMBOL_GPL(vfio_add_group_dev);
+>  
+> -/* Test whether a struct device is present in our tracking */
+> -static bool vfio_dev_present(struct device *dev)
+> +/**
+> + * This does a get on the vfio_device from device.
+> + * Callers of this function will have to call vfio_put_device() to
+> + * remove the reference.
+> + */
+> +struct vfio_device *vfio_device_get_from_dev(struct device *dev)
+>  {
+>  	struct iommu_group *iommu_group;
+>  	struct vfio_group *group;
+> @@ -651,25 +656,43 @@ static bool vfio_dev_present(struct device *dev)
+>  
+>  	iommu_group = iommu_group_get(dev);
+>  	if (!iommu_group)
+> -		return false;
+> +		return NULL;
+>  
+>  	group = vfio_group_get_from_iommu(iommu_group);
+>  	if (!group) {
+>  		iommu_group_put(iommu_group);
+> -		return false;
+> +		return NULL;
+>  	}
+>  
+>  	device = vfio_group_get_device(group, dev);
+>  	if (!device) {
+>  		vfio_group_put(group);
+>  		iommu_group_put(iommu_group);
+> -		return false;
+> +		return NULL;
 
-Nevermind, I've just applied "e1000e: fix pci-device enable-counter
-balance" which should fix that, I suppose.
+nit, this test isn't necesary, skipping the whole if block and falling
+through to the return below is functionally the same.
 
-> thanks,
--- 
-js
-suse labs
+>  	}
+> -
+> -	vfio_device_put(device);
+>  	vfio_group_put(group);
+>  	iommu_group_put(iommu_group);
+> -	return true;
+> +	return device;
+> +}
+> +EXPORT_SYMBOL_GPL(vfio_device_get_from_dev);
+> +
+
+Let's add a comment here that the caller must hold a reference to the
+vfio_device.  Thanks,
+
+Alex
+
+> +void *vfio_device_data(struct vfio_device *device)
+> +{
+> +	return device->device_data;
+> +}
+> +EXPORT_SYMBOL_GPL(vfio_device_data);
+> +
+> +/* Test whether a struct device is present in our tracking */
+> +static bool vfio_dev_present(struct device *dev)
+> +{
+> +	struct vfio_device *device;
+> +
+> +	device = vfio_device_get_from_dev(dev);
+> +	if (device) {
+> +		vfio_device_put(device);
+> +		return true;
+> +	} else
+> +		return false;
+>  }
+>  
+>  /*
+> diff --git a/include/linux/vfio.h b/include/linux/vfio.h
+> index ab9e862..ac8d488 100644
+> --- a/include/linux/vfio.h
+> +++ b/include/linux/vfio.h
+> @@ -45,6 +45,9 @@ extern int vfio_add_group_dev(struct device *dev,
+>  			      void *device_data);
+>  
+>  extern void *vfio_del_group_dev(struct device *dev);
+> +extern struct vfio_device *vfio_device_get_from_dev(struct device *dev);
+> +extern void vfio_device_put(struct vfio_device *device);
+> +extern void *vfio_device_data(struct vfio_device *device);
+>  
+>  /**
+>   * struct vfio_iommu_driver_ops - VFIO IOMMU driver callbacks
+
+
+
