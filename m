@@ -1,248 +1,179 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:25032 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:2740 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758544Ab3BNTIn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 14 Feb 2013 14:08:43 -0500
-Message-ID: <1360868919.25865.26.camel@ul30vt.home>
-Subject: Re: [PATCH v4 3/3] QEMU-AER: Qemu changes to support AER for
- VFIO-PCI devices
+	id S1755809Ab3BDWld (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 4 Feb 2013 17:41:33 -0500
+Message-ID: <1360017684.11144.547.camel@bling.home>
+Subject: Re: PCI warning on boot 3.8.0-rc1
 From: Alex Williamson <alex.williamson@redhat.com>
-To: Vijay Mohan Pandarathil <vijaymohan.pandarathil@hp.com>
-Cc: gleb@redhat.com, bhelgaas@google.com, blauwirbel@gmail.com,
-	lance.oritz@hp.com, kvm@vger.kernel.org, qemu-devel@nongnu.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Thu, 14 Feb 2013 12:08:39 -0700
-In-Reply-To: <1360838515-17558-4-git-send-email-vijaymohan.pandarathil@hp.com>
-References: <1360838515-17558-1-git-send-email-vijaymohan.pandarathil@hp.com>
-	 <1360838515-17558-4-git-send-email-vijaymohan.pandarathil@hp.com>
+To: Stephen Hemminger <stephen@networkplumber.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	David Woodhouse <dwmw2@infradead.org>,
+	iommu@lists.linux-foundation.org
+Date: Mon, 04 Feb 2013 15:41:24 -0700
+In-Reply-To: <1360009684.11144.539.camel@bling.home>
+References: <20130116143853.339dd89b@nehalam.linuxnetplumber.net>
+	 <CAErSpo5eOE_=Ob2jN7ACy0eJBOa8k36XqCbHnGTCs-wfiy8tiw@mail.gmail.com>
+	 <20130204103645.38ae2d5e@nehalam.linuxnetplumber.net>
+	 <1360009684.11144.539.camel@bling.home>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2013-02-14 at 04:41 -0600, Vijay Mohan Pandarathil wrote:
-> 	- Create eventfd per vfio device assigned to a guest and register an
->           event handler
+On Mon, 2013-02-04 at 13:28 -0700, Alex Williamson wrote:
+> On Mon, 2013-02-04 at 10:36 -0800, Stephen Hemminger wrote:
+> > > I think drivers/pci/search.c is identical between 3.7 and 3.8-rc1.  Is
+> > > this the first time you've turned on the IOMMU on that box?
+> > 
+> > It exists in 3.7 and earlier kernels, just haven't turned on same config.
+> > 
+> > > It's the same warning as in this bugzilla:
+> > > https://bugzilla.kernel.org/show_bug.cgi?id=44881, and there's a patch
+> > > there at https://bugzilla.kernel.org/show_bug.cgi?id=44881#c11, but
+> > > it's just a quirk that turns off VT-d if we find certain broken
+> > > bridges.  It doesn't look like you have any of those (although I don't
+> > > know what you have at 05:00.0).
+> > > 
+> > > Bjorn
+> > 
+> > This is a standard ASUS motherboard, and don't want to disable VT-d.
 > 
-> 	- This fd is passed to the vfio_pci driver through the SET_IRQ ioctl
+> Stephen,
 > 
-> 	- When the device encounters an error, the eventfd is signalled
->           and the qemu eventfd handler gets invoked.
+> Can you give the lspci -vvv of device 5:00.0 to see if it's one we've
+> seen before?  Does the patch below help?
 > 
-> 	- In the handler decide what action to take. Current action taken
->           is to stop the guest.
-> 
-> Signed-off-by: Vijay Mohan Pandarathil <vijaymohan.pandarathil@hp.com>
-> ---
->  hw/vfio_pci.c              | 112 +++++++++++++++++++++++++++++++++++++++++++++
->  linux-headers/linux/vfio.h |   1 +
->  2 files changed, 113 insertions(+)
-> 
-> diff --git a/hw/vfio_pci.c b/hw/vfio_pci.c
-> index c51ae67..05da53b 100644
-> --- a/hw/vfio_pci.c
-> +++ b/hw/vfio_pci.c
-> @@ -38,6 +38,7 @@
->  #include "qemu/error-report.h"
->  #include "qemu/queue.h"
->  #include "qemu/range.h"
-> +#include "sysemu/sysemu.h"
->  
->  /* #define DEBUG_VFIO */
->  #ifdef DEBUG_VFIO
-> @@ -129,7 +130,9 @@ typedef struct VFIODevice {
->      PCIHostDeviceAddress host;
->      QLIST_ENTRY(VFIODevice) next;
->      struct VFIOGroup *group;
-> +    EventNotifier err_notifier;
->      bool reset_works;
-> +    bool pci_aer;
->  } VFIODevice;
->  
->  typedef struct VFIOGroup {
-> @@ -1802,6 +1805,7 @@ static int vfio_get_device(VFIOGroup *group, const char *name, VFIODevice *vdev)
->  {
->      struct vfio_device_info dev_info = { .argsz = sizeof(dev_info) };
->      struct vfio_region_info reg_info = { .argsz = sizeof(reg_info) };
-> +    struct vfio_irq_info irq_info = { .argsz = sizeof(irq_info) };
->      int ret, i;
->  
->      ret = ioctl(group->fd, VFIO_GROUP_GET_DEVICE_FD, name);
-> @@ -1901,6 +1905,15 @@ static int vfio_get_device(VFIOGroup *group, const char *name, VFIODevice *vdev)
->      vdev->config_size = reg_info.size;
->      vdev->config_offset = reg_info.offset;
->  
-> +    irq_info.index = VFIO_PCI_ERR_IRQ_INDEX;
-> +
-> +    ret = ioctl(vdev->fd, VFIO_DEVICE_GET_IRQ_INFO, &irq_info);
-> +    if (ret) {
-> +        error_report("vfio: Error getting IRQ info: %m\n");
+> Bjorn, I think we need to quirk it somehow.  So far they've all been
+> PCI-to-PCI bridges attached to root ports where we expect it's actually
+> a PCIe-to-PCI bridge.  Seems like maybe we could have the same attached
+> to a downstream port.  The patch below avoids the WARN and gives us a
+> device, but of course pci_is_pcie reports wrong for this device and may
+> cause some trickle down breakage.  A more complete option might be to
+> add a is_pcie flag to the device that can be set independent of
+> pcie_cap.  We'd need to check all the callers for assumptions, but then
+> we could put the quirk in one place and hopefully fix everything.
+> Thoughts?  Thanks,
 
-What if we're assigning a Legacy PCI device or running on an old kernel,
-neither of these warrant an error_report.
-
-> +        goto error;
-> +    }
-> +    if (irq_info.count == 1)
-> +        vdev->pci_aer = true;
-
-This is where I'd actually expect some kind of warning, you're getting
-something back that you don't expect (if != 1).
-
->  error:
->      if (ret) {
->          QLIST_REMOVE(vdev, next);
-> @@ -1922,6 +1935,102 @@ static void vfio_put_device(VFIODevice *vdev)
->      }
->  }
->  
-> +static void vfio_err_notifier_handler(void *opaque)
-> +{
-> +    VFIODevice *vdev = opaque;
-> +
-> +    if (!event_notifier_test_and_clear(&vdev->err_notifier)) {
-> +        return;
-> +    }
-> +
-> +    /*
-> +     * TBD. Retrieve the error details and decide what action
-> +     * needs to be taken. One of the actions could be to pass
-> +     * the error to the guest and have the guest driver recover
-> +     * from the error. This requires that PCIe capabilities be
-> +     * exposed to the guest. For now, we just terminate the
-> +     * guest to contain the error.
-> +     */
-> +
-> +    error_report("%s (%04x:%02x:%02x.%x)"
-> +        "Unrecoverable error detected...\n"
-> +        "Please inestigate/collect any data required and then kill the quest",
-
-s/inestigate/investigate/
-
-This seems like a lot to ask of a user.
-
-> +        __func__, vdev->host.domain, vdev->host.bus,
-> +        vdev->host.slot, vdev->host.function);
-> +
-> +    vm_stop(RUN_STATE_IO_ERROR);
-
-Gleb, were you looking for a new stop condition or is this one ok to
-re-use?
-
-> +}
-> +
-> +static void vfio_register_err_notifier(VFIODevice *vdev)
-> +{
-> +    int ret;
-> +    int argsz;
-> +    struct vfio_irq_set *irq_set;
-> +    int32_t *pfd;
-> +
-> +    if (!vdev->pci_aer) {
-> +        return;
-> +    }
-> +
-> +    if (event_notifier_init(&vdev->err_notifier, 0)) {
-> +        error_report("vfio: Warning: Unable to init event notifier for error detection\n");
-> +        return;
-> +    }
-> +
-> +    argsz = sizeof(*irq_set) + sizeof(*pfd);
-> +
-> +    irq_set = g_malloc0(argsz);
-> +    irq_set->argsz = argsz;
-> +    irq_set->flags = VFIO_IRQ_SET_DATA_EVENTFD |
-> +                     VFIO_IRQ_SET_ACTION_TRIGGER;
-> +    irq_set->index = VFIO_PCI_ERR_IRQ_INDEX;
-> +    irq_set->start = 0;
-> +    irq_set->count = 1;
-> +    pfd = (int32_t *)&irq_set->data;
-> +
-> +    *pfd = event_notifier_get_fd(&vdev->err_notifier);
-> +    qemu_set_fd_handler(*pfd, vfio_err_notifier_handler, NULL, vdev);
-> +
-> +    ret = ioctl(vdev->fd, VFIO_DEVICE_SET_IRQS, irq_set);
-> +    if (ret) {
-> +        error_report("vfio: Failed to set up error notification\n");
-> +        qemu_set_fd_handler(*pfd, NULL, NULL, vdev);
-> +        event_notifier_cleanup(&vdev->err_notifier);
-> +    }
-> +    g_free(irq_set);
-> +}
-
-Why does the register return void?  If it's supported and fails, isn't
-that a condition where we'd want to fail the initfn?  Also, if the above
-fails, there's nothing that prevents the below unreqister... isn't that
-a bug?
-
-> +static void vfio_unregister_err_notifier(VFIODevice *vdev)
-> +{
-> +    int argsz;
-> +    struct vfio_irq_set *irq_set;
-> +    int32_t *pfd;
-> +    int ret;
-> +
-> +    if (!vdev->pci_aer) {
-> +        return;
-> +    }
-> +
-> +    argsz = sizeof(*irq_set) + sizeof(*pfd);
-> +
-> +    irq_set = g_malloc0(argsz);
-> +    irq_set->argsz = argsz;
-> +    irq_set->flags = VFIO_IRQ_SET_DATA_EVENTFD |
-> +                     VFIO_IRQ_SET_ACTION_TRIGGER;
-> +    irq_set->index = VFIO_PCI_ERR_IRQ_INDEX;
-> +    irq_set->start = 0;
-> +    irq_set->count = 1;
-> +    pfd = (int32_t *)&irq_set->data;
-> +    *pfd = -1;
-> +
-> +    ret = ioctl(vdev->fd, VFIO_DEVICE_SET_IRQS, irq_set);
-> +    if (ret) {
-> +        error_report("vfio: Failed to de-assign error fd: %d\n", ret);
-> +    }
-> +    g_free(irq_set);
-> +    qemu_set_fd_handler(event_notifier_get_fd(&vdev->err_notifier),
-> +                        NULL, NULL, vdev);
-> +    event_notifier_cleanup(&vdev->err_notifier);
-> +}
->  static int vfio_initfn(PCIDevice *pdev)
->  {
->      VFIODevice *pvdev, *vdev = DO_UPCAST(VFIODevice, pdev, pdev);
-> @@ -2032,6 +2141,8 @@ static int vfio_initfn(PCIDevice *pdev)
->          }
->      }
->  
-> +    vfio_register_err_notifier(vdev);
-> +
->      return 0;
->  
->  out_teardown:
-> @@ -2049,6 +2160,7 @@ static void vfio_exitfn(PCIDevice *pdev)
->      VFIODevice *vdev = DO_UPCAST(VFIODevice, pdev, pdev);
->      VFIOGroup *group = vdev->group;
->  
-> +    vfio_unregister_err_notifier(vdev);
->      pci_device_set_intx_routing_notifier(&vdev->pdev, NULL);
->      vfio_disable_interrupts(vdev);
->      if (vdev->intx.mmap_timer) {
-> diff --git a/linux-headers/linux/vfio.h b/linux-headers/linux/vfio.h
-> index f787b72..6b20849 100644
-> --- a/linux-headers/linux/vfio.h
-> +++ b/linux-headers/linux/vfio.h
-> @@ -310,6 +310,7 @@ enum {
->  	VFIO_PCI_INTX_IRQ_INDEX,
->  	VFIO_PCI_MSI_IRQ_INDEX,
->  	VFIO_PCI_MSIX_IRQ_INDEX,
-> +	VFIO_PCI_ERR_IRQ_INDEX,
->  	VFIO_PCI_NUM_IRQS
->  };
->  
-
-Linux headers get updated via the scripts/update-linux-headers.sh
-script.  This will need to be done in a separate patch after the kernel
-changes are upstream.  Thanks,
+This latter approach seems like it might be easier than I expected since
+all the users are so well filtered through the access functions.  A
+quick look through who uses pci_is_pcie seems like this might be
+complete, but more eyes are required.  I'll upload this to the bz for
+those reporters to test as well.  Thoughts?  Thanks,
 
 Alex
+
+commit 60d668a3cdeeb0e29570cf0043736436c146bde8
+Author: Alex Williamson <alex.williamson@redhat.com>
+Date:   Mon Feb 4 15:34:34 2013 -0700
+
+    pci: Handle unadvertised PCIe bridges
+    
+    There seem to be several PCIe-to-PCI bridges out in the wild that
+    blatantly ignore the PCIe specification and do not expose a PCIe
+    capability.  We can attempt to deduce their existence by looking
+    for PCI bridges directly connected to root ports or downstream
+    ports.  What this means is that pci_is_pcie() does not imply PCIe
+    capability and we un-deprecate is_pcie to denote the difference.
+    All the accesses seem to go through pcie_capability_reg_implemented,
+    so we can significantly limit the footprint of this change by
+    checking things there.
+    
+    Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+
+diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+index 3af0478..3df24e7 100644
+--- a/drivers/pci/access.c
++++ b/drivers/pci/access.c
+@@ -511,7 +511,7 @@ static inline bool pcie_cap_has_rtctl(const struct pci_dev *dev)
+ 
+ static bool pcie_capability_reg_implemented(struct pci_dev *dev, int pos)
+ {
+-	if (!pci_is_pcie(dev))
++	if (!pci_is_pcie(dev) || !pci_pcie_cap(dev))
+ 		return false;
+ 
+ 	switch (pos) {
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 6186f03..0a87b6b 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -926,20 +926,46 @@ static void pci_read_irq(struct pci_dev *dev)
+ 	dev->irq = irq;
+ }
+ 
++static bool is_unadvertised_pcie_bridge(struct pci_dev *pdev)
++{
++	struct pci_dev *parent;
++
++	if (pdev->hdr_type != PCI_HEADER_TYPE_BRIDGE ||
++	    pci_find_capability(pdev, PCI_CAP_ID_EXP) ||
++            pci_is_root_bus(pdev->bus))
++		return false;
++
++	parent = pdev->bus->self;
++
++	if (pci_is_pcie(parent) &&
++	    (pci_pcie_type(parent) == PCI_EXP_TYPE_ROOT_PORT ||
++	     pci_pcie_type(parent) == PCI_EXP_TYPE_DOWNSTREAM)) {
++		pr_warn("WARNING: Your hardware is broken, device %s appears to be a\n Legacy PCI device attached directly to a PCIe device which is not a\n PCIe-to-PCI bridge.  Per section 7.8 of the PCI Express 3.0 spec, the\n PCI express capability structure is required for PCI express device\nfunctions.\n",
++		        pci_name(pdev));
++		return true;
++	}
++
++	return false;
++}
++
+ void set_pcie_port_type(struct pci_dev *pdev)
+ {
+ 	int pos;
+-	u16 reg16;
++	u16 flags, caps = 0;
+ 
+ 	pos = pci_find_capability(pdev, PCI_CAP_ID_EXP);
+-	if (!pos)
++	if (pos) {
++		pci_read_config_word(pdev, pos + PCI_EXP_FLAGS, &flags);
++		pci_read_config_word(pdev, pos + PCI_EXP_DEVCAP, &caps);
++	} else if (is_unadvertised_pcie_bridge(pdev))
++		flags = PCI_EXP_TYPE_PCI_BRIDGE << 4;
++	else
+ 		return;
++
+ 	pdev->is_pcie = 1;
+ 	pdev->pcie_cap = pos;
+-	pci_read_config_word(pdev, pos + PCI_EXP_FLAGS, &reg16);
+-	pdev->pcie_flags_reg = reg16;
+-	pci_read_config_word(pdev, pos + PCI_EXP_DEVCAP, &reg16);
+-	pdev->pcie_mpss = reg16 & PCI_EXP_DEVCAP_PAYLOAD;
++	pdev->pcie_flags_reg = flags;
++	pdev->pcie_mpss = caps & PCI_EXP_DEVCAP_PAYLOAD;
+ }
+ 
+ void set_pcie_hotplug_bridge(struct pci_dev *pdev)
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 15472d6..c9ef42c 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -300,8 +300,8 @@ struct pci_dev {
+ 	unsigned int	msix_enabled:1;
+ 	unsigned int	ari_enabled:1;	/* ARI forwarding */
+ 	unsigned int	is_managed:1;
+-	unsigned int	is_pcie:1;	/* Obsolete. Will be removed.
+-					   Use pci_is_pcie() instead */
++	unsigned int	is_pcie:1;	/* Don't access directly,
++					   use pci_is_pcie() instead */
+ 	unsigned int    needs_freset:1; /* Dev requires fundamental reset */
+ 	unsigned int	state_saved:1;
+ 	unsigned int	is_physfn:1;
+@@ -1689,7 +1689,7 @@ static inline int pci_pcie_cap(struct pci_dev *dev)
+  */
+ static inline bool pci_is_pcie(struct pci_dev *dev)
+ {
+-	return !!pci_pcie_cap(dev);
++	return dev->is_pcie;
+ }
+ 
+ /**
+
 
