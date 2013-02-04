@@ -1,81 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ve0-f177.google.com ([209.85.128.177]:44150 "EHLO
-	mail-ve0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757969Ab3BAXSC (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 Feb 2013 18:18:02 -0500
-Received: by mail-ve0-f177.google.com with SMTP id m1so3398674ves.36
-        for <linux-pci@vger.kernel.org>; Fri, 01 Feb 2013 15:18:01 -0800 (PST)
+Received: from hydra.sisk.pl ([212.160.235.94]:39239 "EHLO hydra.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754442Ab3BDUPq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 4 Feb 2013 15:15:46 -0500
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Konstantin Khlebnikov <khlebnikov@openvz.org>
+Cc: e1000-devel@lists.sourceforge.net, linux-pci@vger.kernel.org,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH v2 6/7] PCI/PM: warn about incomplete actions in ->runtime_suspend() callback
+Date: Mon, 04 Feb 2013 21:22:03 +0100
+Message-ID: <2146717.YNnkIQ37Mr@vostro.rjw.lan>
+In-Reply-To: <20130204115612.5569.49895.stgit@zurg>
+References: <20130204115246.5569.85829.stgit@zurg> <20130204115612.5569.49895.stgit@zurg>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo5CcEudpbozcu49EOQ4eL2bE40YVNDji7RbSA7Z28y1cw@mail.gmail.com>
-References: <1359562210-26536-1-git-send-email-jiang.liu@huawei.com> <CAErSpo5CcEudpbozcu49EOQ4eL2bE40YVNDji7RbSA7Z28y1cw@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 1 Feb 2013 16:17:40 -0700
-Message-ID: <CAErSpo7HUxDAaF0qbXDCT7yU8Yv4RuxQmpPXC55uzU0KavQP3Q@mail.gmail.com>
-Subject: Re: [PATCH 1/2] acpiphp: create companion ACPI devices before
- creating PCI devices
-To: Jiang Liu <liuj97@gmail.com>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Feb 1, 2013 at 4:06 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Wed, Jan 30, 2013 at 9:10 AM, Jiang Liu <liuj97@gmail.com> wrote:
->> From: Jiang Liu <jiang.liu@huawei.com>
->>
->> With commit 4f535093cf8f6da8c "PCI: Put pci_dev in device tree as
->> early as possible", companion ACPI devices should be created before
->> creating correspoding PCI devices, otherwise it will break the ACPI
->> PCI binding logic.
->>
->> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+On Monday, February 04, 2013 03:56:12 PM Konstantin Khlebnikov wrote:
+> Documentation/power/pci.txt says:
+> | It is expected that the device driver's pm->runtime_suspend() callback will
+> | not attempt to prepare the device for signaling wakeup or to put it into a
+> | low-power state.  The driver ought to leave these tasks to the PCI subsystem
+> | that has all of the information necessary to perform them.
+> 
+> After commit 42eca2302146fed51335b95128e949ee6f54478f
+> ("PCI: Don't touch card regs after runtime suspend D3")
+> | If the driver takes care of state saving, don't touch any registers on it.
+> pci_pm_runtime_suspend() thinks if state has been saved by ->runtime_suspend()
+> that means device alredy prepared for wakeup and probably no longer accessible.
+> 
+> Thus driver must either do all actions or leave all these tasks to PCI subsystem.
 
-Applied to pci/yinghai-root-bus for v3.9.  Thanks!
+I don't like this one, because it will generate noise for drivers that
+legitimately use pci_save_state() in their runtime suspend callbacks
+and know what they are doing.
 
->> ---
->> Hi Bjorn,
->>         This patch set applies to your pci/yinghai-root-bus branch.
->> There are still other potential bugs in the acpiphp driver under
->> investigation. So I will send out these two first to catch up with
->> the 3.9 merging window.
->>         Thanks!
->>         Gerry
->
-> I assume this fixes some sort of user-visible issue with acpiphp.
-> What failure does the user see?
->
->> ---
->>  drivers/pci/hotplug/acpiphp_glue.c |    6 +++---
->>  1 file changed, 3 insertions(+), 3 deletions(-)
->>
->> diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
->> index bd784ff..acb7af2 100644
->> --- a/drivers/pci/hotplug/acpiphp_glue.c
->> +++ b/drivers/pci/hotplug/acpiphp_glue.c
->> @@ -839,6 +839,9 @@ static int __ref enable_device(struct acpiphp_slot *slot)
->>         if (slot->flags & SLOT_ENABLED)
->>                 goto err_exit;
->>
->> +       list_for_each_entry(func, &slot->funcs, sibling)
->> +               acpiphp_bus_add(func);
->> +
->>         num = pci_scan_slot(bus, PCI_DEVFN(slot->device, 0));
->>         if (num == 0) {
->>                 /* Maybe only part of funcs are added. */
->> @@ -862,9 +865,6 @@ static int __ref enable_device(struct acpiphp_slot *slot)
->>                 }
->>         }
->>
->> -       list_for_each_entry(func, &slot->funcs, sibling)
->> -               acpiphp_bus_add(func);
->> -
->>         pci_bus_assign_resources(bus);
->>         acpiphp_sanitize_bus(bus);
->>         acpiphp_set_hpp_values(bus);
->> --
->> 1.7.9.5
->>
+Thanks,
+Rafael
+
+
+> Signed-off-by: Konstantin Khlebnikov <khlebnikov@openvz.org>
+> Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: linux-pci@vger.kernel.org
+> ---
+>  drivers/pci/pci-driver.c |   15 +++++++++++----
+>  1 file changed, 11 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+> index f9aa311..2b0ff9a 100644
+> --- a/drivers/pci/pci-driver.c
+> +++ b/drivers/pci/pci-driver.c
+> @@ -1009,12 +1009,19 @@ static int pci_pm_runtime_suspend(struct device *dev)
+>  		return 0;
+>  	}
+>  
+> -	if (!pci_dev->state_saved) {
+> -		pci_save_state(pci_dev);
+> -		pci_finish_runtime_suspend(pci_dev);
+> +	if (pci_dev->state_saved) {
+> +		WARN_ONCE(pci_dev->current_state == prev,
+> +			"PCI PM: Power state of device not changed by %pF\n",
+> +			pm->runtime_suspend);
+> +		WARN_ONCE(pci_dev_run_wake(pci_dev) &&
+> +				!pci_dev->wakeup_prepared,
+> +			"PCI PM: Waking of device not configured by %pF\n",
+> +			pm->runtime_suspend);
+> +		return 0;
+>  	}
+>  
+> -	return 0;
+> +	pci_save_state(pci_dev);
+> +	return pci_finish_runtime_suspend(pci_dev);
+>  }
+>  
+>  static int pci_pm_runtime_resume(struct device *dev)
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
