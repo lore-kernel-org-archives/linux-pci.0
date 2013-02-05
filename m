@@ -1,202 +1,111 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:46397 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751253Ab3CAHlP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 1 Mar 2013 02:41:15 -0500
-Message-ID: <51305B99.6080806@suse.de>
-Date: Fri, 01 Mar 2013 08:41:13 +0100
-From: Hannes Reinecke <hare@suse.de>
+Received: from mail-vb0-f46.google.com ([209.85.212.46]:50314 "EHLO
+	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755188Ab3BETXL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Feb 2013 14:23:11 -0500
+Received: by mail-vb0-f46.google.com with SMTP id b13so302213vby.33
+        for <linux-pci@vger.kernel.org>; Tue, 05 Feb 2013 11:23:11 -0800 (PST)
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Yinghai Lu <yinghai@kernel.org>, linux-kernel@vger.kernel.org,
-	Frederik Himpe <fhimpe@vub.ac.be>,
-	Oliver Neukum <oneukum@suse.de>,
-	David Haerdeman <david@hardeman.nu>, linux-usb@vger.kernel.org,
-	linux-pci@vger.kernel.org, Andy Grover <agrover@redhat.com>
-Subject: Re: [PATCH] pci: do not try to assign irq 255
-References: <1361182193-31894-1-git-send-email-hare@suse.de> <CAE9FiQWP1F5mLUoHoTHXy-wQoGxVK66QuuHYydaq3YfysS5Etg@mail.gmail.com> <5124820D.2080900@suse.de> <CAE9FiQXHteymDNzu0GqWtVSVhu3g2hCT+K9e5tB1mR-OBX1ffA@mail.gmail.com> <5125C45A.5020208@suse.de> <CAErSpo5j3Qge5Q2S+hyMGOcmoN77V0T=1+6OJdNJfJdnvT8wgg@mail.gmail.com>
-In-Reply-To: <CAErSpo5j3Qge5Q2S+hyMGOcmoN77V0T=1+6OJdNJfJdnvT8wgg@mail.gmail.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+In-Reply-To: <1360078091.4485.32.camel@rhapsody>
+References: <20130204115246.5569.85829.stgit@zurg> <20130204115557.5569.9748.stgit@zurg>
+ <1360016458.4485.11.camel@rhapsody> <CAErSpo7k96noiCtGYUFyuUQhE2GQA8ro5-9WC-JU_1HOWKUGvg@mail.gmail.com>
+ <1360078091.4485.32.camel@rhapsody>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 5 Feb 2013 12:22:49 -0700
+Message-ID: <CAErSpo7sYCmfd0X7PBfYS_ZK5sijxS3mpmhkrQ6UqO_xDry69Q@mail.gmail.com>
+Subject: Re: [PATCH v2 2/7] PCI: don't touch enable_cnt in pci_device_shutdown()
+To: Khalid Aziz <khalid@gonehiking.org>
+Cc: Konstantin Khlebnikov <khlebnikov@openvz.org>,
+	e1000-devel@lists.sourceforge.net, linux-pci@vger.kernel.org,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	linux-kernel@vger.kernel.org, Andi Kleen <ak@linux.intel.com>,
+	Alan Cox <alan@lxorguk.ukuu.org.uk>,
+	Matthew Garrett <mjg@redhat.com>, khalid.aziz@oracle.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 02/27/2013 10:13 PM, Bjorn Helgaas wrote:
-> [+cc Andy]
->
-> On Wed, Feb 20, 2013 at 11:53 PM, Hannes Reinecke <hare@suse.de> wrote:
->> On 02/20/2013 05:57 PM, Yinghai Lu wrote:
->>>
->>> On Tue, Feb 19, 2013 at 11:58 PM, Hannes Reinecke <hare@suse.de> wrote:
->>>>>
->>>>>
->>>> Apparently this device is meant to use MSI _only_ so the BIOS developer
->>>> didn't feel the need to assign an INTx here.
->>>>
->>>> According to PCI-3.0, section 6.8 (Message Signalled Interrupts):
->>>>>
->>>>> It is recommended that devices implement interrupt pins to
->>>>> provide compatibility in systems that do not support MSI
->>>>> (devices default to interrupt pins). However, it is expected
->>>>> that the need for interrupt pins will diminish over time.
->>>>> Devices that do not support interrupt pins due to pin
->>>>> constraints (rely on polling for device service) may implement
->>>>> messages to increase performance without adding additional pins. >
->>>>> Therefore, system configuration software must not assume that a
->>>>> message capable device has an interrupt pin.
->>>>
->>>>
->>>> Which sounds to me as if the implementation is valid...
->>>
->>>
->>> it seems you mess pin with interrupt line.
->>>
->>> current code:
->>>           unsigned char irq;
->>>
->>>           pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &irq);
->>>           dev->pin = irq;
->>>           if (irq)
->>>                   pci_read_config_byte(dev, PCI_INTERRUPT_LINE, &irq);
->>>           dev->irq = irq;
->>>
->>> so if the device does not have interrupt pin implemented, pin should be
->>> zero.
->>> and  pin and irq in dev should
->>> be all 0.
->>>
->> But the device _has_ an interrupt pin implemented.
->> The whole point here is that the interrupt line is _NOT_ zero.
+On Tue, Feb 5, 2013 at 8:28 AM, Khalid Aziz <khalid@gonehiking.org> wrote:
+> On Mon, 2013-02-04 at 16:13 -0700, Bjorn Helgaas wrote:
+>> On Mon, Feb 4, 2013 at 3:20 PM, Khalid Aziz <khalid@gonehiking.org> wrote:
+>> > On Mon, 2013-02-04 at 15:55 +0400, Konstantin Khlebnikov wrote:
+>> >> Matthew Garrett and Alan Cox said (see LKML link below) that clearing bus-master
+>> >> for all PCI devices may lead to unpredictable consequences, some devices ignores
+>> >> this bit and continues DMA, some of them hang after that or crash whole system.
+>> >> Probably we should leave here only warning and disable bus-mastering for each
+>> >> driver individually in ->shutdown() callback.
+>> >
+>> > Agreed that the right place for shutting down a PCI device properly and
+>> > clearing its Bus Master bit, is the driver shutdown routine, if only all
+>> > drivers supplied a shutdown routine. As it is today, there are too many
+>> > drivers that do not provide a shutdown routine, ata_piix, Marvell SATA
+>> > driver, ATI AGP driver just to name a few among a large number of them.
+>> > Yet kexec is expected to work inspite of these drivers especially since
+>> > kdump depends on it. So until all PCI drivers supply a shutdown routine,
+>> > this is just a band-aid to disable interrupt and Bus Master bit in
+>> > pci_device_shutdown(). Most drivers do seem to supply a suspend and
+>> > resume function and it was discussed many years ago if it is feasible to
+>> > use the suspend() routine for drivers to shut devices down cleanly.
+>> > Maybe it is time to revisit that discussion.
 >>
->> 00:14.0 USB controller [0c03]: Intel Corporation 7 Series/C210 Series
->> Chipset Family USB xHCI Host Controller [8086:1e31] (rev 04) (prog-if 30
->> [XHCI])
->>          Subsystem: Hewlett-Packard Company Device [103c:179b]
->>          Control: I/O- Mem+ BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr-
->> Stepping- SERR- FastB2B- DisINTx-
->>          Status: Cap+ 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort-
->> <TAbort- <MAbort- >SERR- <PERR- INTx-
->>          Interrupt: pin A routed to IRQ 255
->>          Region 0: Memory at d4720000 (64-bit, non-prefetchable) [size=64K]
->>          Capabilities: [70] Power Management version 2
->>                  Flags: PMEClk- DSI- D1- D2- AuxCurrent=375mA
->> PME(D0-,D1-,D2-,D3hot+,D3cold+)
->>                  Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
->>          Capabilities: [80] MSI: Enable- Count=1/8 Maskable- 64bit+
->>                  Address: 0000000000000000  Data: 0000
+>> This patch as posted doesn't do anything with IRQs.  It only clears
+>> PCI_COMMAND_MASTER.
 >>
->> So at one point we have to decide that ->irq is not valid, despite it being
->> not set to zero.
->> An alternative fix would be this:
+>> I'm open to considering something with IRQs, but I don't understand
+>> exactly what we should do.  In your response to the previous version
+>> (https://lkml.org/lkml/2013/1/28/720) you suggested this:
 >>
->> diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
->> index 68a921d..4a480cb 100644
->> --- a/drivers/acpi/pci_irq.c
->> +++ b/drivers/acpi/pci_irq.c
->> @@ -469,6 +469,7 @@ int acpi_pci_irq_enable(struct pci_dev *dev)
->>                  } else {
->>                          dev_warn(&dev->dev, "PCI INT %c: no GSI\n",
->>                                   pin_name(pin));
->> +                       dev->irq = 0;
->>                  }
->>                  return 0;
->>          }
+>>   pci_clear_master(pci_dev);
+>>   pcibios_disable_device(pci_dev);
 >>
->> Which probably is a better solution, as here ->irq is _definitely_
->> not valid, so we should reset it to '0' to avoid confusion on upper
->> layers.
+>> Did you figure out specifically why pcibios_disable_device() helps?
+>> Using pcibios_disable_device() doesn't seem like the ideal solution
+>> because on most architectures, it is an empty function with no obvious
+>> connection to IRQs.  On x86 with ACPI, it cleans up some ACPI PCI IRQ
+>> stuff, but as far as I can tell, it doesn't actually touch the PCI
+>> device itself or even the IOAPIC to which it's connected, so I'm not
+>> sure how this would help kexec.
 >
-> I didn't like the pci_read_irq() change because the PCI spec doesn't
-> say anything about any PCI_INTERRUPT_LINE values being invalid.
+> My reading of the code was that pcibios_disable_device() does clear the
+> interrupt on x86 and ia64. I am not deeply familiar with the ACPI code
+> and I might be interpreting it incorrectly, so please do correct me if I
+> am reading it incorrectly. Here is the code sequence I see:
 >
-> I like this solution better, but I still don't quite understand it.
-> We have the following code in acpi_pci_irq_enable().  We have
-> previously tried to look up "gsi," but the _PRT doesn't mention this
-> device, so we have "gsi == -1" at this point:
+> pcibios_disable_device() ->
+>    pcibios_disable_irq() ->
+>        acpi_pci_irq_disable() ->
+>            acpi_pci_link_free_irq() ->
+>               acpi_evaluate_object(link->device->handle, "_DIS", NULL,
+> NULL);
 >
->          /*
->           * No IRQ known to the ACPI subsystem - maybe the BIOS /
->           * driver reported one, then use it. Exit in any case.
->           */
->          if (gsi < 0) {
->                  u32 dev_gsi;
->                  /* Interrupt Line values above 0xF are forbidden */
->                  if (dev->irq > 0 && (dev->irq <= 0xF) &&
->                      (acpi_isa_irq_to_gsi(dev->irq, &dev_gsi) == 0)) {
->                          dev_warn(&dev->dev, "PCI INT %c: no GSI -
-> using ISA IRQ %d\n",
->                                   pin_name(pin), dev->irq);
->                          acpi_register_gsi(&dev->dev, dev_gsi,
->                                            ACPI_LEVEL_SENSITIVE,
->                                            ACPI_ACTIVE_LOW);
->                  } else {
->                          dev_warn(&dev->dev, "PCI INT %c: no GSI\n",
->                                   pin_name(pin));
->                  }
->
->                  return 0;
->          }
->
-> 1) I don't know where the restriction of 0x1-0xF came from.
-> Presumably this value of dev->irq came from PCI_INTERRUPT_LINE, and I
-> don't know what forbids values > 0xF.  The test was added by Andy
-> Grover in the attached commit.  This is ancient history; probably Andy
-> doesn't remember either :)
->
-This is most likely due to ISA compability. Cf ACPI 4.0,
-section 5.2.12.4 Platforms with APIC and Dual 8259 Support:
+> My understanding is the evaluation of ACPI _DIS method will disable the
+> interrupt from the device. Does that sound reasonable?
 
- > Systems that support both APIC and dual 8259 interrupt models
- > must map global system interrupts 0-15 to the 8259 IRQs 0-15,
- > except where Interrupt Source Overrides are provided (see section
- > 5.2.10.8, “Interrupt Source Overrides”). This means that I/O APIC
- > interrupt inputs 0-15 must be mapped to global system interrupts
- > 0-15 and have identical sources as the 8259 IRQs 0-15 unless
- > overrides are used. This allows a platform to support OSPM
- > implementations that use the APIC model as well as OSPM
- > implementations that use the 8259 model (OSPM will only use
- > one model; it will not mix models).
- > When OSPM supports the 8259 model, it will assume that all
- > interrupt descriptors reporting global system interrupts 0-15
- > correspond to 8259 IRQs. In the 8259 model all global system
- > interrupts greater than 15 are ignored. If OSPM implements APIC
- > support, it will enable the APIC as described by the APIC
- > specification and will use all reported global system interrupts
- > that fall within the limits of the interrupt inputs defined by
- > the I/O APIC structures. For more information on hardware
- > resource configuration see section 6, “Configuration.”
+I see the code you're looking at in acpi_pci_link_free_irq(), but we
+only evaluate _DIS if link->refcnt == 0, and I don't think refcnt is
+ever zero at that point.
 
-> 2) The proposed change (setting "dev->irq = 0" when we didn't find
-> anything in the _PRT and dev->irq > 0xF) throws away some information,
-> and I fear it could break systems.  For example, what would happen if
-> a system put an IOAPIC pin number in a device's PCI_INTERRUPT_LINE and
-> omitted the device from _PRT?  Is it possible the device would still
-> work as-is (with acpi_pci_irq_enable() doing nothing), but would break
-> if we set dev->irq = 0?
->
-How so? It would still be required to get an interrupt from 
-somewhere, and if ACPI doesn't know about it where should the
-information come from?
+refcnt starts out at zero in acpi_pci_link_add() (called when we find
+PNP0C0F devices), and it's incremented in acpi_pci_link_allocate_irq()
+(called in the pci_enable_device() path), but as far as I can tell,
+it's never decremented, so I doubt that _DIS is ever evaluated.
 
-> 3) I don't understand why the xhci init fails in the first place.  It
-> looks like the "request interrupt 255 failed" message is from
-> xhci_try_enable_msi(), but that function tries to enable MSI-X, then
-> MSI, then falls back to legacy interrupts, where we get the error.
-> But the device supports MSI, so I don't know why we even fall back to
-> trying legacy interrupts.  Hannes, do you have any insight into that?
-> Obviously I'm missing something here.
->
-Hehe. Due to overly clever design.
-xhci actually sets up interrupts _twice_, once per request_irq() in 
-the generic code and a second time during xhci_run.
-But as the first call fails it'll never ever run the second part.
+If we did evaluate _DIS, it would act on an "interrupt link" device,
+not on the PCI device itself.  I guess that could help, but only for
+devices connected to such a link device.  For others, I guess we might
+be able to accomplish something similar by updating local APIC and/or
+IOAPIC config.  I don't think we do that today, at least not in the
+pci_disable_device() path, but it might be something interesting to
+explore.  There is also the INTx Disable bit, though it's obviously
+only on new PCI devices.
 
-I'll be sending a patch.
+> ... The two ways I can think of are to stop
+> DMA by clearing Bus Master bit and turn off the interrupt, which have
+> been shown to get kexec (and thus kdump) working on machines it didn't
+> work on before.
 
-Cheers,
+I was just curious if you had actually verified that _DIS was being
+evaluated and making a difference here, or if the Bus Master bit was
+really the important part.
 
-Hannes
--- 
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: J. Hawn, J. Guild, F. Imendörffer, HRB 16746 (AG Nürnberg)
+Bjorn
