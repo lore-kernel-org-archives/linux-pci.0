@@ -1,88 +1,107 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:34184 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760407Ab3BHTa3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 Feb 2013 14:30:29 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-Subject: [PATCH v2 05/26] x86, irq: Show pci device name for msi in /proc/interrupt
-Date: Fri,  8 Feb 2013 11:28:02 -0800
-Message-Id: <1360351703-20571-6-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1360351703-20571-1-git-send-email-yinghai@kernel.org>
-References: <1360351703-20571-1-git-send-email-yinghai@kernel.org>
+Received: from qmta10.emeryville.ca.mail.comcast.net ([76.96.30.17]:57448 "EHLO
+	qmta10.emeryville.ca.mail.comcast.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755575Ab3BEPfV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Feb 2013 10:35:21 -0500
+Message-ID: <1360078091.4485.32.camel@rhapsody>
+Subject: Re: [PATCH v2 2/7] PCI: don't touch enable_cnt in
+ pci_device_shutdown()
+From: Khalid Aziz <khalid@gonehiking.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Konstantin Khlebnikov <khlebnikov@openvz.org>,
+	e1000-devel@lists.sourceforge.net, linux-pci@vger.kernel.org,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	linux-kernel@vger.kernel.org, Andi Kleen <ak@linux.intel.com>,
+	Alan Cox <alan@lxorguk.ukuu.org.uk>,
+	Matthew Garrett <mjg@redhat.com>, khalid.aziz@oracle.com
+Date: Tue, 05 Feb 2013 08:28:11 -0700
+In-Reply-To: <CAErSpo7k96noiCtGYUFyuUQhE2GQA8ro5-9WC-JU_1HOWKUGvg@mail.gmail.com>
+References: <20130204115246.5569.85829.stgit@zurg>
+	 <20130204115557.5569.9748.stgit@zurg> <1360016458.4485.11.camel@rhapsody>
+	 <CAErSpo7k96noiCtGYUFyuUQhE2GQA8ro5-9WC-JU_1HOWKUGvg@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We could find out which device is using that MSI/MSI-X.
-Use irq_print_chip() to append pci device name.
+On Mon, 2013-02-04 at 16:13 -0700, Bjorn Helgaas wrote:
+> On Mon, Feb 4, 2013 at 3:20 PM, Khalid Aziz <khalid@gonehiking.org> wrote:
+> > On Mon, 2013-02-04 at 15:55 +0400, Konstantin Khlebnikov wrote:
+> >> Matthew Garrett and Alan Cox said (see LKML link below) that clearing bus-master
+> >> for all PCI devices may lead to unpredictable consequences, some devices ignores
+> >> this bit and continues DMA, some of them hang after that or crash whole system.
+> >> Probably we should leave here only warning and disable bus-mastering for each
+> >> driver individually in ->shutdown() callback.
+> >
+> > Agreed that the right place for shutting down a PCI device properly and
+> > clearing its Bus Master bit, is the driver shutdown routine, if only all
+> > drivers supplied a shutdown routine. As it is today, there are too many
+> > drivers that do not provide a shutdown routine, ata_piix, Marvell SATA
+> > driver, ATI AGP driver just to name a few among a large number of them.
+> > Yet kexec is expected to work inspite of these drivers especially since
+> > kdump depends on it. So until all PCI drivers supply a shutdown routine,
+> > this is just a band-aid to disable interrupt and Bus Master bit in
+> > pci_device_shutdown(). Most drivers do seem to supply a suspend and
+> > resume function and it was discussed many years ago if it is feasible to
+> > use the suspend() routine for drivers to shut devices down cleanly.
+> > Maybe it is time to revisit that discussion.
+> 
+> This patch as posted doesn't do anything with IRQs.  It only clears
+> PCI_COMMAND_MASTER.
+> 
+> I'm open to considering something with IRQs, but I don't understand
+> exactly what we should do.  In your response to the previous version
+> (https://lkml.org/lkml/2013/1/28/720) you suggested this:
+> 
+>   pci_clear_master(pci_dev);
+>   pcibios_disable_device(pci_dev);
+> 
+> Did you figure out specifically why pcibios_disable_device() helps?
+> Using pcibios_disable_device() doesn't seem like the ideal solution
+> because on most architectures, it is an empty function with no obvious
+> connection to IRQs.  On x86 with ACPI, it cleans up some ACPI PCI IRQ
+> stuff, but as far as I can tell, it doesn't actually touch the PCI
+> device itself or even the IOAPIC to which it's connected, so I'm not
+> sure how this would help kexec.
+> 
+> Bjorn
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
----
- arch/x86/kernel/apic/io_apic.c |    9 ++++++---
- drivers/iommu/irq_remapping.c  |    8 ++++++++
- 2 files changed, 14 insertions(+), 3 deletions(-)
+Hi Bjorn,
 
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index f8d4d8d..8b03875 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -3089,8 +3089,11 @@ msi_set_affinity(struct irq_data *data, const struct cpumask *mask, bool force)
- 
- static void msi_irq_print_chip(struct irq_data *data, struct seq_file *p)
- {
--	seq_printf(p, " %s%s", data->chip->name,
--			data->msi_desc->msi_attrib.is_msix ? "-X" : "");
-+	struct pci_dev *dev = data->msi_desc->dev;
-+
-+	seq_printf(p, " %s%s-edge@%s", data->chip->name,
-+			data->msi_desc->msi_attrib.is_msix ? "-X" : "",
-+			dev_name(&dev->dev));
- }
- 
- /*
-@@ -3130,7 +3133,7 @@ int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
- 
- 	setup_remapped_irq(irq, irq_get_chip_data(irq), chip);
- 
--	irq_set_chip_and_handler_name(irq, chip, handle_edge_irq, "edge");
-+	irq_set_chip_and_handler(irq, chip, handle_edge_irq);
- 
- 	dev_printk(KERN_DEBUG, &dev->dev, "irq %d for MSI%s\n", irq,
- 			 msidesc->msi_attrib.is_msix ? "-X" : "");
-diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
-index e245ab0..ca595f7 100644
---- a/drivers/iommu/irq_remapping.c
-+++ b/drivers/iommu/irq_remapping.c
-@@ -365,10 +365,18 @@ static void ir_ack_apic_level(struct irq_data *data)
- 
- static void ir_print_prefix(struct irq_data *data, struct seq_file *p)
- {
-+	struct pci_dev *dev = NULL;
-+
- 	seq_printf(p, " IR-%s%s", data->chip->name,
- 			data->msi_desc ?
- 			 (data->msi_desc->msi_attrib.is_msix ? "-X" : "")
- 			 : "");
-+
-+	if (data->msi_desc)
-+		dev = data->msi_desc->dev;
-+
-+	if (dev)
-+		seq_printf(p, "-edge@%s", dev_name(&dev->dev));
- }
- 
- static void __init irq_remap_modify_chip_defaults(struct irq_chip *chip)
--- 
-1.7.10.4
+My reading of the code was that pcibios_disable_device() does clear the
+interrupt on x86 and ia64. I am not deeply familiar with the ACPI code
+and I might be interpreting it incorrectly, so please do correct me if I
+am reading it incorrectly. Here is the code sequence I see:
+
+pcibios_disable_device() ->
+   pcibios_disable_irq() ->
+       acpi_pci_irq_disable() -> 
+           acpi_pci_link_free_irq() ->
+              acpi_evaluate_object(link->device->handle, "_DIS", NULL,
+NULL);
+
+My understanding is the evaluation of ACPI _DIS method will disable the
+interrupt from the device. Does that sound reasonable?
+
+The problem this code attempts to solve is I/O devices continuing to be
+active as we start to boot a kexec'd kernel. That activity can come from
+DMA (has been seen with NICs for sure, but can happen from a SATA/IDE
+controller as well when a pending read completes). When a DMA activity
+overwrites a section of memory area in use by the new kexec'd kernel, it
+takes lot of work to narrow that memory corruption down. The right way
+to quiesce I/O devices is to call shutdown() function for every active
+driver, which pci_device_shutdown() does today. If every driver provided
+a proper shutdown() function, we would be done. Since that is not the
+case, we need to stop potentially active devices from interfering with
+kexec'd kernel. Too many drivers rely upon firmware reinitializing the
+device when system is shut down. The two ways I can think of are to stop
+DMA by clearing Bus Master bit and turn off the interrupt, which have
+been shown to get kexec (and thus kdump) working on machines it didn't
+work on before. 
+
+This is a non-trivial problem to solve and I am very open to better
+ideas.
+
+--
+Khalid
 
