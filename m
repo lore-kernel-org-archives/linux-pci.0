@@ -1,69 +1,111 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mxin.vub.ac.be ([134.184.129.112]:16164 "EHLO mxin.vub.ac.be"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933133Ab3BSWq0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 19 Feb 2013 17:46:26 -0500
-Date: Tue, 19 Feb 2013 23:36:22 +0100
-From: Frederik Himpe <fhimpe@vub.ac.be>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Hannes Reinecke <hare@suse.de>, linux-kernel@vger.kernel.org,
-	Oliver Neukum <oneukum@suse.de>,
-	David Haerdeman <david@hardeman.nu>, linux-usb@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH] pci: do not try to assign irq 255
-Message-ID: <20130219223622.GA31434@artipc10.vub.ac.be>
-References: <1361182193-31894-1-git-send-email-hare@suse.de>
- <CAErSpo5j5WXx-Y4ML22yzsVzXgXnT9JoD1EGvGRMy55GGRdn6A@mail.gmail.com>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:43841 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754584Ab3BED4Q (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 4 Feb 2013 22:56:16 -0500
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Jon Mason <jdmason@kudzu.us>
+CC: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	Yijing Wang <wangyijing0307@gmail.com>,
+	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>,
+	Joe Jin <joe.jin@oracle.com>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH] PCI: update device mps when doing pci hotplug
+Date: Tue, 5 Feb 2013 11:55:20 +0800
+Message-ID: <1360036520-31032-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo5j5WXx-Y4ML22yzsVzXgXnT9JoD1EGvGRMy55GGRdn6A@mail.gmail.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 19, 2013 at 12:47:32PM -0700, Bjorn Helgaas wrote:
-> On Mon, Feb 18, 2013 at 3:09 AM, Hannes Reinecke <hare@suse.de> wrote:
-> > The PCI config space reseves a byte for the interrupt line,
-> > so irq 255 actually refers to 'not set'.
-> > However, the 'irq' field for struct pci_dev is an integer,
-> > so the original meaning is lost, causing the system to
-> > assign an interrupt '255', which fails.
-> >
-> > So we should _not_ assign an interrupt value here, and
-> > allow upper layers to fixup things.
-> >
-> > This patch make PCI devices with MSI interrupts only
-> > (like the xhci device on certain HP laptops) work properly.
-> >
-> > Cc: Frederik Himpe <fhimpe@vub.ac.be>
-> > Cc: Oliver Neukum <oneukum@suse.de>
-> > Cc: David Haerdeman <david@hardeman.nu>
-> > Cc: linux-usb@vger.kernel.org
-> > Cc: linux-pci@vger.kernel.org
-> > Signed-off-by: Hannes Reinecke <hare@suse.de>
-> >
-> > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> > index 6186f03..a2db887f 100644
-> > --- a/drivers/pci/probe.c
-> > +++ b/drivers/pci/probe.c
-> > @@ -923,7 +923,8 @@ static void pci_read_irq(struct pci_dev *dev)
-> >         dev->pin = irq;
-> >         if (irq)
-> >                 pci_read_config_byte(dev, PCI_INTERRUPT_LINE, &irq);
-> > -       dev->irq = irq;
-> > +       if (irq < 255)
-> > +               dev->irq = irq;
-> >  }
-> >
-> >  void set_pcie_port_type(struct pci_dev *pdev)
-> 
-> Is there a bugzilla or other URL with more information (problem
-> description, hardware involved, dmesg logs, acpidump, etc)?
+Currently we dont't update device's mps vaule when doing
+pci device hot-add. The hot-added device's mps will be set
+to default value (128B). But the upstream port device's mps
+may be larger than 128B which was set by firmware during
+system bootup. In this case the new added device may not
+work normally.
 
-https://bugzilla.kernel.org/show_bug.cgi?id=52591
-https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1072918
+The reference discussion at
+http://marc.info/?l=linux-pci&m=135420434508910&w=2
+and
+http://marc.info/?l=linux-pci&m=134815603407842&w=2
 
-Basically it looks like most HP Probook/Elitebook of the Ivy Bridge
-generation are affected.
+Reported-by: Joe Jin <joe.jin@oracle.com>
+Reported-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Cc: Jon Mason <jdmason@kudzu.us>
+---
+ drivers/pci/probe.c |   49 +++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 49 insertions(+), 0 deletions(-)
 
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index bbe4be7..57d9a5b 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1556,6 +1556,52 @@ static int pcie_bus_configure_set(struct pci_dev *dev, void *data)
+ 	return 0;
+ }
+ 
++static int pcie_bus_update_set(struct pci_dev *dev, void *data)
++{
++	int mps, p_mps;
++
++	if (!pci_is_pcie(dev) || !dev->bus->self)
++		return 0;
++
++	mps = pcie_get_mps(dev);
++	p_mps = pcie_get_mps(dev->bus->self);
++
++	if (pci_pcie_type(dev->bus->self) != PCI_EXP_TYPE_ROOT_PORT) {
++		/* update mps when current device mps is not equal to upstream mps */
++		if (mps != p_mps)
++			goto update;
++	} else {
++		/* update mps when current device mps is smaller than upstream mps */
++		if (mps < p_mps)
++			goto update;
++	}
++
++	return 0;
++
++update:
++	/* If current mpss is lager than upstream, use upstream mps to update
++	 * current mps, otherwise print warning info.
++	 */
++	if ((128 << dev->pcie_mpss) >= p_mps)
++		pcie_write_mps(dev, p_mps);
++	else
++		dev_warn(&dev->dev, "MPS %d MPSS %d both smaller than upstream MPS %d\n"
++				"If necessary, use \"pci=pcie_bus_peer2peer\" boot parameter to avoid this problem\n",
++				mps, 128 << dev->pcie_mpss, p_mps);
++	return 0;
++}
++
++static void pcie_bus_update_setting(struct pci_bus *bus)
++{
++
++	/*
++	 * After hot added a pci device, the device's mps will set to default
++	 * vaule(128 bytes). But the upstream port mps may be larger than 128B.
++	 * In this case, we should update this device's mps for better performance.
++	 */
++	pci_walk_bus(bus, pcie_bus_update_set, NULL);
++}
++
+ /* pcie_bus_configure_settings requires that pci_walk_bus work in a top-down,
+  * parents then children fashion.  If this changes, then this code will not
+  * work as designed.
+@@ -1566,6 +1612,9 @@ void pcie_bus_configure_settings(struct pci_bus *bus, u8 mpss)
+ 
+ 	if (!pci_is_pcie(bus->self))
+ 		return;
++
++	/* update mps setting for newly hot added device */
++	pcie_bus_update_setting(bus);
+ 
+ 	if (pcie_bus_config == PCIE_BUS_TUNE_OFF)
+ 		return;
 -- 
-Frederik Himpe
+1.7.1
+
+
