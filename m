@@ -1,90 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:8990 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:48829 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755403Ab3BFIyL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 6 Feb 2013 03:54:11 -0500
-Date: Wed, 6 Feb 2013 06:53:40 -0200
-From: Mauro Carvalho Chehab <mchehab@redhat.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, Russell King <linux@arm.linux.org.uk>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v3 00/22] PCI: Iterate pci host bridge instead of pci
- root bus
-Message-ID: <20130206065340.416a708b@redhat.com>
-In-Reply-To: <CAE9FiQWvmK7N2z19B9ZiMyc_T6cJdpWoWr3mExpuwUA4ogBc3w@mail.gmail.com>
-References: <CAE9FiQXHG01NjnYNDbC-KEpbcvY-q4pBe97CxTOGS7W4vZQBYQ@mail.gmail.com>
-	<1359314629-18651-1-git-send-email-yinghai@kernel.org>
-	<CAErSpo6r_LNEtYB3j5ELb8NdHu0a6_YOVj8S32CmByGFUpSsbg@mail.gmail.com>
-	<CAE9FiQXg1YcPPJLCgPbKOKXHk-LRQv4bbBGH9jyuATQa2ANLkg@mail.gmail.com>
-	<CAE9FiQX2DbTO0qCzGO4iMTkU_mPM2oZL+R5UoZ5dj=as6MUAsw@mail.gmail.com>
-	<CAErSpo7-dULYwWQ=f5CBCxOULKJE9=n6Ha4jkVKd8enspuYjTA@mail.gmail.com>
-	<CAE9FiQWvmK7N2z19B9ZiMyc_T6cJdpWoWr3mExpuwUA4ogBc3w@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	id S1750844Ab3BEJVQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 5 Feb 2013 04:21:16 -0500
+Date: Tue, 5 Feb 2013 11:21:10 +0200
+From: Gleb Natapov <gleb@redhat.com>
+To: "Pandarathil, Vijaymohan R" <vijaymohan.pandarathil@hp.com>
+Cc: Blue Swirl <blauwirbel@gmail.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Ortiz, Lance E" <lance.oritz@hp.com>,
+	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	"qemu-devel@nongnu.org" <qemu-devel@nongnu.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v3 3/3] QEMU-AER: Qemu changes to support AER for
+ VFIO-PCI devices
+Message-ID: <20130205092110.GB23213@redhat.com>
+References: <F9E001219150CB45BEDC82A650F360C9014AAF07@G9W0717.americas.hpqcorp.net>
+ <CAAu8pHvk_2Mf2F-YTDC-wdyD1Jic-DHUanSQfOa3g0VchTcNig@mail.gmail.com>
+ <20130205080436.GV23213@redhat.com>
+ <F9E001219150CB45BEDC82A650F360C9014B42EE@G9W0717.americas.hpqcorp.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <F9E001219150CB45BEDC82A650F360C9014B42EE@G9W0717.americas.hpqcorp.net>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Em Tue, 5 Feb 2013 16:47:10 -0800
-Yinghai Lu <yinghai@kernel.org> escreveu:
+On Tue, Feb 05, 2013 at 09:05:19AM +0000, Pandarathil, Vijaymohan R wrote:
+> 
+> 
+> > -----Original Message-----
+> > From: Gleb Natapov [mailto:gleb@redhat.com]
+> > Sent: Tuesday, February 05, 2013 12:05 AM
+> > To: Blue Swirl
+> > Cc: Pandarathil, Vijaymohan R; Alex Williamson; Bjorn Helgaas; Ortiz, Lance
+> > E; kvm@vger.kernel.org; qemu-devel@nongnu.org; linux-pci@vger.kernel.org;
+> > linux-kernel@vger.kernel.org
+> > Subject: Re: [PATCH v3 3/3] QEMU-AER: Qemu changes to support AER for VFIO-
+> > PCI devices
+> > 
+> > On Sun, Feb 03, 2013 at 04:36:11PM +0000, Blue Swirl wrote:
+> > > On Sun, Feb 3, 2013 at 2:10 PM, Pandarathil, Vijaymohan R
+> > > <vijaymohan.pandarathil@hp.com> wrote:
+> > > >         - Create eventfd per vfio device assigned to a guest and
+> > register an
+> > > >           event handler
+> > > >
+> > > >         - This fd is passed to the vfio_pci driver through the SET_IRQ
+> > ioctl
+> > > >
+> > > >         - When the device encounters an error, the eventfd is signalled
+> > > >           and the qemu eventfd handler gets invoked.
+> > > >
+> > > >         - In the handler decide what action to take. Current action
+> > taken
+> > > >           is to terminate the guest.
+> > >
+> > > Usually this is not OK, but I guess this is not guest triggerable.
+> > >
+> > Still not OK. Why not stop a guest with appropriate stop reason?
+> 
+> The thinking was that since this is a hardware error, we would want to stop the guest at the earliest. The hw_error() routine which aborts the qemu process was suggested by Alex and that seemed appropriate. Earlier I was using qemu_system_shutdown_request().  Any suggestions ?
+> 
+I am thinking vm_stop(). Stopping SMP guest (and UP too in fact)
+involves sending IPIs to other cpus running guest's vcpus. Both exit()
+and vm_stop() will do it, but former is implicitly in the kernel and
+later is explicitly in QEMU.
 
-> On Tue, Feb 5, 2013 at 4:19 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> >
-> > Maybe.  I'd rather not introduce for_each_pci_host_bridge() at all, if
-> > we can avoid it.  Every place it's used is a place we have to audit to
-> > make sure it's safe.  I think your audit above is correct and
-> > complete, but it relies on way too much architecture knowledge.  It's
-> > better if we can deduce correctness without knowing which arches
-> > support hotplug and which CPUs support EDAC.
-> >
-> > As soon as for_each_pci_host_bridge() is in the tree, those uses can
-> > be copied to even more places.  It's a macro, so it's usable by any
-> > module, even out-of-tree ones that we'll never see and can't fix.  So
-> > we won't really have a good way to deprecate and remove it.
-> 
-> Now we only have two references in modules.
-> 
-> drivers/edac/i7core_edac.c:     for_each_pci_host_bridge(host_bridge) {
-> drivers/pci/hotplug/sgi_hotplug.c:      for_each_pci_host_bridge(host_bridge) {
-> 
-> for the sgi_hotplug.c, it should be same problem that have for acpiphp
-> and pciehp.
-> need to make it support pci host bridge hotplug anyway.
-> 
-> for edac, we need to check Mauro about their plan.
-
-The i7core_pci_lastbus() code at i7core_edac is there to make it work
-with some Nehalem/Nehalem-EP machines that hide the memory controller's
-PCI ID by using an artificially low last bus. There's no plan to
-support Nehalem-EX, as the information I got is that there's no way
-to access the memory controller registers on it without interfering with
-BIOS.
-
-It should be noticed, however, that I got a report of a Sandy Bridge
-server that is also hiding the memory controller's PCI address.
-So, maybe we'll need to add later some logic at sb_edac to unhide the
-memory controller, just like the one in i7core_edac.
-
-> 
-> After those two are addressed, we can drop that EXPORT_SYMBOL_GPL for
-> pci_get_next_host_bridge.
-> 
-> We do have pci_get_domain_bus_and_slot() as export symbol.
-> So we export pci_get_next_host_bridge should be ok now.
-> and it would be better than export root buses list.
-> 
-> Thanks
-> 
-> Yinghai
-
-
--- 
-
-Cheers,
-Mauro
+--
+			Gleb.
