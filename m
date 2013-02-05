@@ -1,70 +1,47 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>
-Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Tony Luck <tony.luck@intel.com>,
-	Fenghua Yu <fenghua.yu@intel.com>, linux-ia64@vger.kernel.org
-Subject: [PATCH v8 07/13] PCI, IA64: implement pcibios_{add|remove}_bus() hooks
-Date: Tue, 26 Feb 2013 23:25:47 +0800
-Message-Id: <1361892353-14786-8-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1361892353-14786-1-git-send-email-jiang.liu@huawei.com>
-References: <1361892353-14786-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:41495 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754240Ab3BEIEl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 5 Feb 2013 03:04:41 -0500
+Date: Tue, 5 Feb 2013 10:04:36 +0200
+From: Gleb Natapov <gleb@redhat.com>
+To: Blue Swirl <blauwirbel@gmail.com>
+Cc: "Pandarathil, Vijaymohan R" <vijaymohan.pandarathil@hp.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Ortiz, Lance E" <lance.oritz@hp.com>,
+	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	"qemu-devel@nongnu.org" <qemu-devel@nongnu.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v3 3/3] QEMU-AER: Qemu changes to support AER for
+ VFIO-PCI devices
+Message-ID: <20130205080436.GV23213@redhat.com>
+References: <F9E001219150CB45BEDC82A650F360C9014AAF07@G9W0717.americas.hpqcorp.net>
+ <CAAu8pHvk_2Mf2F-YTDC-wdyD1Jic-DHUanSQfOa3g0VchTcNig@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAAu8pHvk_2Mf2F-YTDC-wdyD1Jic-DHUanSQfOa3g0VchTcNig@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Implement pcibios_{add|remove}_bus() hooks for IA64 platforms.
+On Sun, Feb 03, 2013 at 04:36:11PM +0000, Blue Swirl wrote:
+> On Sun, Feb 3, 2013 at 2:10 PM, Pandarathil, Vijaymohan R
+> <vijaymohan.pandarathil@hp.com> wrote:
+> >         - Create eventfd per vfio device assigned to a guest and register an
+> >           event handler
+> >
+> >         - This fd is passed to the vfio_pci driver through the SET_IRQ ioctl
+> >
+> >         - When the device encounters an error, the eventfd is signalled
+> >           and the qemu eventfd handler gets invoked.
+> >
+> >         - In the handler decide what action to take. Current action taken
+> >           is to terminate the guest.
+> 
+> Usually this is not OK, but I guess this is not guest triggerable.
+> 
+Still not OK. Why not stop a guest with appropriate stop reason?
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Toshi Kani <toshi.kani@hp.com>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Fenghua Yu <fenghua.yu@intel.com>
-Cc: linux-ia64@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
----
- arch/ia64/pci/pci.c |   11 +++++++++++
- 1 file changed, 11 insertions(+)
-
-diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
-index 00e59c7..e60aeb7 100644
---- a/arch/ia64/pci/pci.c
-+++ b/arch/ia64/pci/pci.c
-@@ -15,6 +15,7 @@
- #include <linux/types.h>
- #include <linux/kernel.h>
- #include <linux/pci.h>
-+#include <linux/pci-acpi.h>
- #include <linux/init.h>
- #include <linux/ioport.h>
- #include <linux/slab.h>
-@@ -463,6 +464,16 @@ pcibios_fixup_bus (struct pci_bus *b)
- 	platform_pci_fixup_bus(b);
- }
- 
-+void pcibios_add_bus(struct pci_bus *bus)
-+{
-+	acpi_pci_add_bus(bus);
-+}
-+
-+void pcibios_remove_bus(struct pci_bus *bus)
-+{
-+	acpi_pci_remove_bus(bus);
-+}
-+
- void pcibios_set_master (struct pci_dev *dev)
- {
- 	/* No special bus mastering setup handling */
--- 
-1.7.9.5
-
+--
+			Gleb.
