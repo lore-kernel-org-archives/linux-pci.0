@@ -1,83 +1,39 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f171.google.com ([209.85.223.171]:41326 "EHLO
-	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750705Ab3BCFFy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 3 Feb 2013 00:05:54 -0500
-MIME-Version: 1.0
-In-Reply-To: <CAErSpo6r_LNEtYB3j5ELb8NdHu0a6_YOVj8S32CmByGFUpSsbg@mail.gmail.com>
-References: <CAE9FiQXHG01NjnYNDbC-KEpbcvY-q4pBe97CxTOGS7W4vZQBYQ@mail.gmail.com>
-	<1359314629-18651-1-git-send-email-yinghai@kernel.org>
-	<CAErSpo6r_LNEtYB3j5ELb8NdHu0a6_YOVj8S32CmByGFUpSsbg@mail.gmail.com>
-Date: Sat, 2 Feb 2013 21:05:53 -0800
-Message-ID: <CAE9FiQXg1YcPPJLCgPbKOKXHk-LRQv4bbBGH9jyuATQa2ANLkg@mail.gmail.com>
-Subject: Re: [PATCH v3 00/22] PCI: Iterate pci host bridge instead of pci root bus
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, Russell King <linux@arm.linux.org.uk>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail-ia0-f177.google.com ([209.85.210.177]:48927 "EHLO
+	mail-ia0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755679Ab3BEBgY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 4 Feb 2013 20:36:24 -0500
+Received: by mail-ia0-f177.google.com with SMTP id h8so8840678iaa.22
+        for <linux-pci@vger.kernel.org>; Mon, 04 Feb 2013 17:36:24 -0800 (PST)
+Date: Mon, 4 Feb 2013 17:36:10 -0800
+From: Stephen Hemminger <stephen@networkplumber.org>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	David Woodhouse <dwmw2@infradead.org>,
+	iommu@lists.linux-foundation.org
+Subject: Re: PCI warning on boot 3.8.0-rc1
+Message-ID: <20130204173610.18a31d24@nehalam.linuxnetplumber.net>
+In-Reply-To: <1360017684.11144.547.camel@bling.home>
+References: <20130116143853.339dd89b@nehalam.linuxnetplumber.net>
+	<CAErSpo5eOE_=Ob2jN7ACy0eJBOa8k36XqCbHnGTCs-wfiy8tiw@mail.gmail.com>
+	<20130204103645.38ae2d5e@nehalam.linuxnetplumber.net>
+	<1360009684.11144.539.camel@bling.home>
+	<1360017684.11144.547.camel@bling.home>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[Trim down CC list, otherwise lkml will drop it, Thanks for David
-Miller to bring attention to me ]
+On Mon, 04 Feb 2013 15:41:24 -0700
+Alex Williamson <alex.williamson@redhat.com> wrote:
 
-On Sat, Feb 2, 2013 at 1:50 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Sun, Jan 27, 2013 at 12:23 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->> Now we have pci_root_buses list, and there is lots of iteration with
->> list_of_each of it, that is not safe after we add pci root bus hotplug
->> support after booting stage.
->>
->> Add pci_get_next_host_bridge and use bus_find_device in driver core to
->> iterate host bridge and the same time get root bus.
->>
->> We replace searching root bus with searching host_bridge,
->> as host_bridge->bus is the root bus.
->> After those replacing, we even could kill pci_root_buses list.
->
-> These are the problems I think you're fixing:
->
-> 1) pci_find_next_bus() is not safe because even though it holds
-> pci_bus_sem while walking the pci_root_buses list, it doesn't hold a
-> reference on the bus it returns.  The bus could be removed while the
-> caller is using it.
->
-> 2) "list_for_each_entry(bus, &pci_root_buses, node)" is not safe
-> because hotplug might modify the pci_root_buses list.  Replacing that
-> with for_each_pci_host_bridge() solves that problem by using
-> bus_find_device(), which is built on klists, which are designed for
-> that problem.
->
-> 3) pci_find_next_bus() claims to iterate through all known PCI buses,
-> but in fact only iterates through root buses.
->
-> So far, so good.  Those are problems we need to fix.
->
-> Your solution is to introduce for_each_pci_host_bridge() as an
-> iterator through the known host bridges.  There are two scenarios
-> where we use something like this:
->
-> 1) We want to perform an operation on every known host bridge.
->
-> 2) We want to initialize something for every host bridge.
->
-> In my opinion, the only instance of scenario 1) is bus_rescan_store(),
-> where we want to rescan all PCI host bridges.
->
-> In every other case, we're doing some kind of initialization of all
-> the host bridges.  For these cases, for_each_pci_host_bridge() is the
-> wrong solution because it doesn't work for hot-added bridges.  I think
-> these cases should be changed to use pcibios_root_bridge_prepare() or
-> something something else called in the host bridge add path.
+> +
+> +	if (pci_is_pcie(parent) &&
+> +	    (pci_pcie_type(parent) == PCI_EXP_TYPE_ROOT_PORT ||
+> +	     pci_pcie_type(parent) == PCI_EXP_TYPE_DOWNSTREAM)) {
+> +		pr_warn("WARNING: Your hardware is broken, device %s appears to be a\n Legacy PCI device attached directly to a PCIe device which is not a\n PCIe-to-PCI bridge.  Per section 7.8 of the PCI Express 3.0 spec, the\n PCI express capability structure is required for PCI express device\nfunctions.\n",
+> +		        pci_name(pdev));
 
-Yes, will check if those for_pci_host_bridge could be converted to
-adding calling in pcibios_root_bridge_prepare one by one.
-
-Thanks
-
-Yinghai
+Too whiny!
+Two short lines seems to be more the enough. Users can't do anything about
+hardware not following spec. Put any outher stuff into comments.
