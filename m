@@ -1,57 +1,96 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:45917 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933365Ab3BLQ3l (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Feb 2013 11:29:41 -0500
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Cc: Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Tawfik Bayouk <tawfik@marvell.com>
-Subject: [PATCH 20/32] arm: plat-orion: remove __init from PCIe functions needed after boot time
-Date: Tue, 12 Feb 2013 17:28:54 +0100
-Message-Id: <1360686546-24277-21-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Pandarathil, Vijaymohan R" <vijaymohan.pandarathil@hp.com>
+To: Gleb Natapov <gleb@redhat.com>
+CC: Blue Swirl <blauwirbel@gmail.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Ortiz, Lance E" <lance.oritz@hp.com>,
+	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	"qemu-devel@nongnu.org" <qemu-devel@nongnu.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH v3 3/3] QEMU-AER: Qemu changes to support AER for
+ VFIO-PCI devices
+Date: Tue, 5 Feb 2013 10:59:41 +0000
+Message-ID: <F9E001219150CB45BEDC82A650F360C9014B43DC@G9W0717.americas.hpqcorp.net>
+References: <F9E001219150CB45BEDC82A650F360C9014AAF07@G9W0717.americas.hpqcorp.net>
+ <CAAu8pHvk_2Mf2F-YTDC-wdyD1Jic-DHUanSQfOa3g0VchTcNig@mail.gmail.com>
+ <20130205080436.GV23213@redhat.com>
+ <F9E001219150CB45BEDC82A650F360C9014B42EE@G9W0717.americas.hpqcorp.net>
+ <20130205092110.GB23213@redhat.com>
+In-Reply-To: <20130205092110.GB23213@redhat.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The orion_pcie_set_local_bus_nr() function will be used by the Marvell
-PCIe driver in its PCI-to-PCI bridge emulation. This means that this
-function can now get called at any point during the system execution,
-and no longer at boot time. For example, if PCIe devices
-appear/disappear during the system execution (either through hotplug,
-or manipulation of PCIe devices using /sys).
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
----
- arch/arm/plat-orion/pcie.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/arch/arm/plat-orion/pcie.c b/arch/arm/plat-orion/pcie.c
-index f20a321..da921e7 100644
---- a/arch/arm/plat-orion/pcie.c
-+++ b/arch/arm/plat-orion/pcie.c
-@@ -79,7 +79,7 @@ int orion_pcie_get_local_bus_nr(void __iomem *base)
- 	return (stat >> PCIE_STAT_BUS_OFFS) & PCIE_STAT_BUS_MASK;
- }
- 
--void __init orion_pcie_set_local_bus_nr(void __iomem *base, int nr)
-+void orion_pcie_set_local_bus_nr(void __iomem *base, int nr)
- {
- 	u32 stat;
- 
--- 
-1.7.9.5
+> -----Original Message-----
+> From: Gleb Natapov [mailto:gleb@redhat.com]
+> Sent: Tuesday, February 05, 2013 1:21 AM
+> To: Pandarathil, Vijaymohan R
+> Cc: Blue Swirl; Alex Williamson; Bjorn Helgaas; Ortiz, Lance E;
+> kvm@vger.kernel.org; qemu-devel@nongnu.org; linux-pci@vger.kernel.org;
+> linux-kernel@vger.kernel.org
+> Subject: Re: [PATCH v3 3/3] QEMU-AER: Qemu changes to support AER for VFIO-
+> PCI devices
+> 
+> On Tue, Feb 05, 2013 at 09:05:19AM +0000, Pandarathil, Vijaymohan R wrote:
+> >
+> >
+> > > -----Original Message-----
+> > > From: Gleb Natapov [mailto:gleb@redhat.com]
+> > > Sent: Tuesday, February 05, 2013 12:05 AM
+> > > To: Blue Swirl
+> > > Cc: Pandarathil, Vijaymohan R; Alex Williamson; Bjorn Helgaas; Ortiz,
+> Lance
+> > > E; kvm@vger.kernel.org; qemu-devel@nongnu.org; linux-
+> pci@vger.kernel.org;
+> > > linux-kernel@vger.kernel.org
+> > > Subject: Re: [PATCH v3 3/3] QEMU-AER: Qemu changes to support AER for
+> VFIO-
+> > > PCI devices
+> > >
+> > > On Sun, Feb 03, 2013 at 04:36:11PM +0000, Blue Swirl wrote:
+> > > > On Sun, Feb 3, 2013 at 2:10 PM, Pandarathil, Vijaymohan R
+> > > > <vijaymohan.pandarathil@hp.com> wrote:
+> > > > >         - Create eventfd per vfio device assigned to a guest and
+> > > register an
+> > > > >           event handler
+> > > > >
+> > > > >         - This fd is passed to the vfio_pci driver through the
+> SET_IRQ
+> > > ioctl
+> > > > >
+> > > > >         - When the device encounters an error, the eventfd is
+> signalled
+> > > > >           and the qemu eventfd handler gets invoked.
+> > > > >
+> > > > >         - In the handler decide what action to take. Current action
+> > > taken
+> > > > >           is to terminate the guest.
+> > > >
+> > > > Usually this is not OK, but I guess this is not guest triggerable.
+> > > >
+> > > Still not OK. Why not stop a guest with appropriate stop reason?
+> >
+> > The thinking was that since this is a hardware error, we would want to
+> stop the guest at the earliest. The hw_error() routine which aborts the
+> qemu process was suggested by Alex and that seemed appropriate. Earlier I
+> was using qemu_system_shutdown_request().  Any suggestions ?
+> >
+> I am thinking vm_stop(). Stopping SMP guest (and UP too in fact)
+> involves sending IPIs to other cpus running guest's vcpus. Both exit()
+> and vm_stop() will do it, but former is implicitly in the kernel and
+> later is explicitly in QEMU.
 
+I had used vm_stop(RUN_STATE_SHUTDOWN) earlier in my code. But while testing, guest ended up in a hang rather than exiting. There seems to some cleanup work which is being done as part of vm_stop. In our case, we wanted the guest to exit immediately. So use of hw_error() seemed appropriate.
+
+Thoughts ?
+
+Vijay
+
+> 
+> --
+> 			Gleb.
