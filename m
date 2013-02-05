@@ -1,175 +1,76 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <512D565F.1010403@huawei.com>
-Date: Wed, 27 Feb 2013 08:42:07 +0800
-From: Jiang Liu <jiang.liu@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from moutng.kundenserver.de ([212.227.17.10]:62369 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754626Ab3BEUmH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Feb 2013 15:42:07 -0500
+Date: Tue, 5 Feb 2013 21:41:48 +0100
+From: Thierry Reding <thierry.reding@avionic-design.de>
+To: Russell King <linux@arm.linux.org.uk>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	linux-tegra@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
+	linux-kernel@vger.kernel.org,
+	Rob Herring <rob.herring@calxeda.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Murray <andrew.murray@arm.com>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH 06/14] ARM: pci: Keep pci_common_init() around after init
+Message-ID: <20130205204147.GA29726@avionic-0098.mockup.avionic-design.de>
+References: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de>
+ <1357764194-12677-7-git-send-email-thierry.reding@avionic-design.de>
 MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>
-CC: Jiang Liu <liuj97@gmail.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Toshi Kani <toshi.kani@hp.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Subject: Re: [PATCH v8 13/13] PCI, ACPI: remove support of ACPI PCI subdrivers
-References: <1361892353-14786-1-git-send-email-jiang.liu@huawei.com> <1361892353-14786-14-git-send-email-jiang.liu@huawei.com> <CAE9FiQV_hv3fD166LuZYhTKGxeKKKCw-Dak+8UYou7tRa-4hYw@mail.gmail.com>
-In-Reply-To: <CAE9FiQV_hv3fD166LuZYhTKGxeKKKCw-Dak+8UYou7tRa-4hYw@mail.gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="YZ5djTAD1cGYuMQK"
+In-Reply-To: <1357764194-12677-7-git-send-email-thierry.reding@avionic-design.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2013-2-27 3:07, Yinghai Lu wrote:
-> On Tue, Feb 26, 2013 at 7:25 AM, Jiang Liu <liuj97@gmail.com> wrote:
->> From: Myron Stowe <myron.stowe@redhat.com>
->>
->> Both sub-drivers of the "PCI Root Bridge ("pci_bridge")" driver, "acpiphp"
->> and "pci_slot", have been converted to hook directly into the PCI core.
->>
->> With the conversions there are no remaining usages of the 'struct
->> acpi_pci_driver' list based infrastructure.  This patch removes it.
->>
->> Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
->> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
->> Cc: Yinghai Lu <yinghai@kernel.org>
->> Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
->> Cc: Toshi Kani <toshi.kani@hp.com>
->> Cc: linux-pci@vger.kernel.org
->> Cc: linux-kernel@vger.kernel.org
-> 
-> Nice cleanup!
-> 
-> for 1-13,
-> Reviewed-by: Yinghai Lu <yinghai@kernel.org>
-HiYinghai,
-	Thanks for review!
-	Regards!
-	Gerry
 
-> 
-> Thanks
-> 
-> Yinghai
-> 
->> ---
->>  drivers/acpi/pci_root.c |   48 +----------------------------------------------
->>  include/linux/acpi.h    |    9 ---------
->>  2 files changed, 1 insertion(+), 56 deletions(-)
->>
->> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
->> index 8b5a73b..2ef0c91 100644
->> --- a/drivers/acpi/pci_root.c
->> +++ b/drivers/acpi/pci_root.c
->> @@ -69,44 +69,12 @@ static struct acpi_driver acpi_pci_root_driver = {
->>                 },
->>  };
->>
->> -/* Lock to protect both acpi_pci_roots and acpi_pci_drivers lists */
->> +/* Lock to protect both acpi_pci_roots lists */
->>  static DEFINE_MUTEX(acpi_pci_root_lock);
->>  static LIST_HEAD(acpi_pci_roots);
->> -static LIST_HEAD(acpi_pci_drivers);
->>
->>  static DEFINE_MUTEX(osc_lock);
->>
->> -int acpi_pci_register_driver(struct acpi_pci_driver *driver)
->> -{
->> -       int n = 0;
->> -       struct acpi_pci_root *root;
->> -
->> -       mutex_lock(&acpi_pci_root_lock);
->> -       list_add_tail(&driver->node, &acpi_pci_drivers);
->> -       if (driver->add)
->> -               list_for_each_entry(root, &acpi_pci_roots, node) {
->> -                       driver->add(root);
->> -                       n++;
->> -               }
->> -       mutex_unlock(&acpi_pci_root_lock);
->> -
->> -       return n;
->> -}
->> -EXPORT_SYMBOL(acpi_pci_register_driver);
->> -
->> -void acpi_pci_unregister_driver(struct acpi_pci_driver *driver)
->> -{
->> -       struct acpi_pci_root *root;
->> -
->> -       mutex_lock(&acpi_pci_root_lock);
->> -       list_del(&driver->node);
->> -       if (driver->remove)
->> -               list_for_each_entry(root, &acpi_pci_roots, node)
->> -                       driver->remove(root);
->> -       mutex_unlock(&acpi_pci_root_lock);
->> -}
->> -EXPORT_SYMBOL(acpi_pci_unregister_driver);
->> -
->>  /**
->>   * acpi_is_root_bridge - determine whether an ACPI CA node is a PCI root bridge
->>   * @handle - the ACPI CA node in question.
->> @@ -416,7 +384,6 @@ static int acpi_pci_root_add(struct acpi_device *device)
->>         acpi_status status;
->>         int result;
->>         struct acpi_pci_root *root;
->> -       struct acpi_pci_driver *driver;
->>         u32 flags, base_flags;
->>         bool is_osc_granted = false;
->>
->> @@ -576,12 +543,6 @@ static int acpi_pci_root_add(struct acpi_device *device)
->>                 pci_assign_unassigned_bus_resources(root->bus);
->>         }
->>
->> -       mutex_lock(&acpi_pci_root_lock);
->> -       list_for_each_entry(driver, &acpi_pci_drivers, node)
->> -               if (driver->add)
->> -                       driver->add(root);
->> -       mutex_unlock(&acpi_pci_root_lock);
->> -
->>         /* need to after hot-added ioapic is registered */
->>         if (system_state != SYSTEM_BOOTING)
->>                 pci_enable_bridges(root->bus);
->> @@ -602,16 +563,9 @@ end:
->>  static int acpi_pci_root_remove(struct acpi_device *device, int type)
->>  {
->>         struct acpi_pci_root *root = acpi_driver_data(device);
->> -       struct acpi_pci_driver *driver;
->>
->>         pci_stop_root_bus(root->bus);
->>
->> -       mutex_lock(&acpi_pci_root_lock);
->> -       list_for_each_entry_reverse(driver, &acpi_pci_drivers, node)
->> -               if (driver->remove)
->> -                       driver->remove(root);
->> -       mutex_unlock(&acpi_pci_root_lock);
->> -
->>         device_set_run_wake(root->bus->bridge, false);
->>         pci_acpi_remove_bus_pm_notifier(device);
->>
->> diff --git a/include/linux/acpi.h b/include/linux/acpi.h
->> index 8c1d6f2..eeb5600 100644
->> --- a/include/linux/acpi.h
->> +++ b/include/linux/acpi.h
->> @@ -147,15 +147,6 @@ void acpi_penalize_isa_irq(int irq, int active);
->>
->>  void acpi_pci_irq_disable (struct pci_dev *dev);
->>
->> -struct acpi_pci_driver {
->> -       struct list_head node;
->> -       int (*add)(struct acpi_pci_root *root);
->> -       void (*remove)(struct acpi_pci_root *root);
->> -};
->> -
->> -int acpi_pci_register_driver(struct acpi_pci_driver *driver);
->> -void acpi_pci_unregister_driver(struct acpi_pci_driver *driver);
->> -
->>  extern int ec_read(u8 addr, u8 *val);
->>  extern int ec_write(u8 addr, u8 val);
->>  extern int ec_transaction(u8 command,
->> --
->> 1.7.9.5
->>
-> 
-> .
-> 
+--YZ5djTAD1cGYuMQK
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
+On Wed, Jan 09, 2013 at 09:43:06PM +0100, Thierry Reding wrote:
+> When using deferred driver probing, PCI host controller drivers may
+> actually require this function after the init stage.
+>=20
+> Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
+> ---
+>  arch/arm/kernel/bios32.c | 6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
 
+Russell,
+
+Can this patch and patch 7 (ARM: pci: Allow passing per-controller
+private data) of this series be applied for 3.9? Thomas uses them in his
+Marvell PCIe series as well and it would allow to reduce the complexity
+of the dependencies.
+
+Thierry
+
+--YZ5djTAD1cGYuMQK
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQIcBAEBAgAGBQJREW6LAAoJEN0jrNd/PrOhf/cP/AkweukDR4WeNx0QMOdyK/iW
+f1Dguos5LKUkopCySMS2Qk6+DVo4hQo27XXyt3cwCouv1+AuGmbOwPUmwbb87NMu
+r5pxzJymWRHz2qay7rxzPE2/ATiX2gC2TTt3ocfkRI8S/8T2X+XKgVyxpORBcXPg
+MnVc1/09CENjShYTVxDYYXrMaJx0wvlrSsXZ7c6SQNQmjFj9DLo86nak22ujJz3K
+HvucbWD+P47P/NVr9acNaDBBsHSBsS1mdMVfzzvijFXUcoFQroy+5lvfTxDBHlBq
+dT4Sck0Xnr19azQ8GVG3snzLQg0lYmEcjjEHzxaC04G0I1hLZejm7VwMblUBSrxe
+8up2hoZBCyXY6Aio7j/jsOV5wtHxk8warI+vAdpNAfboyXYFZ4Hilw9QQfZSCvrL
+p7XNAuH39rEcZML6SBLO2j2xrvIU8lkxH2qNL4KnQ5AAnwOJ9vvXv23z7HN41l0k
+FOR2JN8Fc49tSqfdH78srNbv4KXaIwGc/ZmcsV5hgn89nkhMvdX9dxeDLjneAIKS
+F4Mnu7iYE5QlMIOb4Ex3cmACkEn2k9w1B3UWNJgaMznpNlgm6Z9szBJazcujfYDD
+fDPLgsV7tfIcHxdikFH6GTV4dOMXt+z5K4Yt7R8r1iRiJpdbWTfiMr2brFGCqYWv
+iLSbdQcQUFeIbqRMON0J
+=+bQg
+-----END PGP SIGNATURE-----
+
+--YZ5djTAD1cGYuMQK--
