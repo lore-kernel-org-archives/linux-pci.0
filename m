@@ -1,284 +1,84 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
-	"H. Peter Anvin" <hpa@zytor.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from moutng.kundenserver.de ([212.227.126.186]:61840 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754839Ab3BFTfh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Feb 2013 14:35:37 -0500
+Date: Wed, 6 Feb 2013 20:35:21 +0100
+From: Thierry Reding <thierry.reding@avionic-design.de>
+To: Russell King - ARM Linux <linux@arm.linux.org.uk>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	linux-tegra@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
+	linux-kernel@vger.kernel.org,
+	Rob Herring <rob.herring@calxeda.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v2 26-3/26] PCI, x86, ACPI: Enable ioapic hotplug support with acpi host bridge.
-Date: Fri,  8 Feb 2013 16:26:45 -0800
-Message-Id: <1360369606-8416-3-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1360369606-8416-1-git-send-email-yinghai@kernel.org>
-References: <CAE9FiQVhmH_TGqEwxGPusKNn-6Q7QkS3UTitEriV3dX8sPbzFA@mail.gmail.com>
- <1360369606-8416-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+	Andrew Murray <andrew.murray@arm.com>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH 06/14] ARM: pci: Keep pci_common_init() around after init
+Message-ID: <20130206193521.GA455@avionic-0098.mockup.avionic-design.de>
+References: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de>
+ <1357764194-12677-7-git-send-email-thierry.reding@avionic-design.de>
+ <20130205204147.GA29726@avionic-0098.mockup.avionic-design.de>
+ <20130206163041.GG17833@n2100.arm.linux.org.uk>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="UugvWAfsgieZRqgk"
+In-Reply-To: <20130206163041.GG17833@n2100.arm.linux.org.uk>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We need to have ioapic setup before normal pci drivers.
-otherwise other pci driver can not setup irq.
 
-So we should not treat them as normal pci devices.
-Also we will need to support ioapic hotplug without pci device around.
+--UugvWAfsgieZRqgk
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-We need to call ioapic add/remove during host-bridge add/remove.
+On Wed, Feb 06, 2013 at 04:30:41PM +0000, Russell King - ARM Linux wrote:
+> On Tue, Feb 05, 2013 at 09:41:48PM +0100, Thierry Reding wrote:
+> > On Wed, Jan 09, 2013 at 09:43:06PM +0100, Thierry Reding wrote:
+> > > When using deferred driver probing, PCI host controller drivers may
+> > > actually require this function after the init stage.
+> > >=20
+> > > Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
+> > > ---
+> > >  arch/arm/kernel/bios32.c | 6 +++---
+> > >  1 file changed, 3 insertions(+), 3 deletions(-)
+> >=20
+> > Russell,
+> >=20
+> > Can this patch and patch 7 (ARM: pci: Allow passing per-controller
+> > private data) of this series be applied for 3.9? Thomas uses them in his
+> > Marvell PCIe series as well and it would allow to reduce the complexity
+> > of the dependencies.
+>=20
+> It'll need to go into the patch system in that case...
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Alright, I'll submit them to the patch system. Thanks.
 
----
- drivers/acpi/pci_root.c  |    4 +
- drivers/pci/ioapic.c     |  147 ++++++++++++++++++++++++++++++-----------------
- include/linux/pci-acpi.h |    9 ++
- 3 files changed, 107 insertions(+), 53 deletions(-)
+Thierry
 
-Index: linux-2.6/drivers/pci/ioapic.c
-===================================================================
---- linux-2.6.orig/drivers/pci/ioapic.c
-+++ linux-2.6/drivers/pci/ioapic.c
-@@ -22,70 +22,77 @@
- #include <linux/slab.h>
- #include <acpi/acpi_bus.h>
- 
--struct ioapic {
--	acpi_handle	handle;
-+struct acpi_pci_ioapic {
-+	acpi_handle	root_handle;
- 	u32		gsi_base;
-+	struct pci_dev *pdev;
-+	struct list_head list;
- };
- 
--static int ioapic_probe(struct pci_dev *dev, const struct pci_device_id *ent)
-+static LIST_HEAD(ioapic_list);
-+static DEFINE_MUTEX(ioapic_list_lock);
-+
-+static void handle_ioapic_add(acpi_handle handle, struct pci_dev **pdev,
-+				 u32 *pgsi_base)
- {
--	acpi_handle handle;
- 	acpi_status status;
- 	unsigned long long gsb;
--	struct ioapic *ioapic;
-+	struct pci_dev *dev;
-+	u32 gsi_base;
- 	int ret;
- 	char *type;
--	struct resource *res;
-+	struct resource r;
-+	struct resource *res = &r;
-+	char objname[64];
-+	struct acpi_buffer buffer = {sizeof(objname), objname};
- 
--	handle = DEVICE_ACPI_HANDLE(&dev->dev);
--	if (!handle)
--		return -EINVAL;
-+	*pdev = NULL;
-+	*pgsi_base = 0;
- 
- 	status = acpi_evaluate_integer(handle, "_GSB", NULL, &gsb);
--	if (ACPI_FAILURE(status))
--		return -EINVAL;
--
--	/*
--	 * The previous code in acpiphp evaluated _MAT if _GSB failed, but
--	 * ACPI spec 4.0 sec 6.2.2 requires _GSB for hot-pluggable I/O APICs.
--	 */
-+	if (ACPI_FAILURE(status) || !gsb)
-+		return;
- 
--	ioapic = kzalloc(sizeof(*ioapic), GFP_KERNEL);
--	if (!ioapic)
--		return -ENOMEM;
-+	dev = acpi_get_pci_dev(handle);
-+	if (!dev)
-+		return;
- 
--	ioapic->handle = handle;
--	ioapic->gsi_base = (u32) gsb;
-+	acpi_get_name(handle, ACPI_FULL_PATHNAME, &buffer);
- 
--	if (dev->class == PCI_CLASS_SYSTEM_PIC_IOAPIC)
--		type = "IOAPIC";
--	else
--		type = "IOxAPIC";
-+	gsi_base = gsb;
-+	type = "IOxAPIC";
- 
- 	ret = pci_enable_device(dev);
- 	if (ret < 0)
--		goto exit_free;
-+		goto exit_put;
- 
- 	pci_set_master(dev);
- 
-+	if (dev->class == PCI_CLASS_SYSTEM_PIC_IOAPIC)
-+		type = "IOAPIC";
-+
- 	if (pci_request_region(dev, 0, type))
- 		goto exit_disable;
- 
- 	res = &dev->resource[0];
--	if (acpi_register_ioapic(ioapic->handle, res->start, ioapic->gsi_base))
-+
-+	if (acpi_register_ioapic(handle, res->start, gsi_base))
- 		goto exit_release;
- 
--	pci_set_drvdata(dev, ioapic);
--	dev_info(&dev->dev, "%s at %pR, GSI %u\n", type, res, ioapic->gsi_base);
--	return 0;
-+	pr_info("%s %s %s at %pR, GSI %u\n",
-+		dev_name(&dev->dev), objname, type,
-+		res, gsi_base);
-+
-+	*pdev = dev;
-+	*pgsi_base = gsi_base;
-+	return;
- 
- exit_release:
- 	pci_release_region(dev, 0);
- exit_disable:
- 	pci_disable_device(dev);
--exit_free:
--	kfree(ioapic);
--	return -ENODEV;
-+exit_put:
-+	pci_dev_put(dev);
- }
- 
- static void pci_disable_device_mem(struct pci_dev *dev)
-@@ -99,37 +106,71 @@ static void pci_disable_device_mem(struc
- 	}
- }
- 
--static void ioapic_remove(struct pci_dev *dev)
-+static void handle_ioapic_remove(acpi_handle handle, struct pci_dev *dev,
-+				  u32 gsi_base)
- {
--	struct ioapic *ioapic = pci_get_drvdata(dev);
-+	acpi_unregister_ioapic(handle, gsi_base);
- 
--	acpi_unregister_ioapic(ioapic->handle, ioapic->gsi_base);
- 	pci_release_region(dev, 0);
- 	pci_disable_device(dev);
- 	/* need to disable it, otherwise remove/rescan will not work */
- 	pci_disable_device_mem(dev);
--	kfree(ioapic);
-+	pci_dev_put(dev);
- }
- 
-+static acpi_status register_ioapic(acpi_handle handle, u32 lvl,
-+					void *context, void **rv)
-+{
-+	acpi_handle root_handle = context;
-+	struct pci_dev *pdev;
-+	u32 gsi_base;
-+	struct acpi_pci_ioapic *ioapic;
-+
-+	handle_ioapic_add(handle, &pdev, &gsi_base);
-+	if (!gsi_base)
-+		return AE_OK;
- 
--static DEFINE_PCI_DEVICE_TABLE(ioapic_devices) = {
--	{ PCI_DEVICE_CLASS(PCI_CLASS_SYSTEM_PIC_IOAPIC, ~0) },
--	{ PCI_DEVICE_CLASS(PCI_CLASS_SYSTEM_PIC_IOXAPIC, ~0) },
--	{ }
--};
--MODULE_DEVICE_TABLE(pci, ioapic_devices);
-+	ioapic = kzalloc(sizeof(*ioapic), GFP_KERNEL);
-+	if (!ioapic) {
-+		pr_err("%s: cannot allocate memory\n", __func__);
-+		handle_ioapic_remove(root_handle, pdev, gsi_base);
-+		return AE_OK;
-+	}
-+	ioapic->root_handle = root_handle;
-+	ioapic->pdev = pdev;
-+	ioapic->gsi_base = gsi_base;
-+
-+	mutex_lock(&ioapic_list_lock);
-+	list_add(&ioapic->list, &ioapic_list);
-+	mutex_unlock(&ioapic_list_lock);
- 
--static struct pci_driver ioapic_driver = {
--	.name		= "ioapic",
--	.id_table	= ioapic_devices,
--	.probe		= ioapic_probe,
--	.remove		= ioapic_remove,
--};
-+	return AE_OK;
-+}
- 
--static int __init ioapic_init(void)
-+void acpi_pci_ioapic_add(struct acpi_pci_root *root)
- {
--	return pci_register_driver(&ioapic_driver);
-+	acpi_status status;
-+
-+	status = acpi_walk_namespace(ACPI_TYPE_DEVICE, root->device->handle,
-+				     (u32)1, register_ioapic, NULL,
-+				     root->device->handle,
-+				     NULL);
-+	if (ACPI_FAILURE(status))
-+		pr_err("%s: register_ioapic failure - %d", __func__, status);
- }
--module_init(ioapic_init);
- 
--MODULE_LICENSE("GPL");
-+void acpi_pci_ioapic_remove(struct acpi_pci_root *root)
-+{
-+	struct acpi_pci_ioapic *ioapic, *tmp;
-+
-+	mutex_lock(&ioapic_list_lock);
-+	list_for_each_entry_safe(ioapic, tmp, &ioapic_list, list) {
-+		if (root->device->handle != ioapic->root_handle)
-+			continue;
-+		list_del(&ioapic->list);
-+		handle_ioapic_remove(ioapic->root_handle, ioapic->pdev,
-+					ioapic->gsi_base);
-+		kfree(ioapic);
-+	}
-+	mutex_unlock(&ioapic_list_lock);
-+}
-Index: linux-2.6/drivers/acpi/pci_root.c
-===================================================================
---- linux-2.6.orig/drivers/acpi/pci_root.c
-+++ linux-2.6/drivers/acpi/pci_root.c
-@@ -584,6 +584,8 @@ static int acpi_pci_root_add(struct acpi
- 		pci_assign_unassigned_bus_resources(root->bus);
- 	}
- 
-+	acpi_pci_ioapic_add(root);
-+
- 	mutex_lock(&acpi_pci_root_lock);
- 	list_for_each_entry(driver, &acpi_pci_drivers, node)
- 		if (driver->add)
-@@ -623,6 +625,8 @@ static void acpi_pci_root_remove(struct
- 			driver->remove(root);
- 	mutex_unlock(&acpi_pci_root_lock);
- 
-+	acpi_pci_ioapic_remove(root);
-+
- 	device_set_run_wake(root->bus->bridge, false);
- 	pci_acpi_remove_bus_pm_notifier(device);
- 
-Index: linux-2.6/include/linux/pci-acpi.h
-===================================================================
---- linux-2.6.orig/include/linux/pci-acpi.h
-+++ linux-2.6/include/linux/pci-acpi.h
-@@ -41,8 +41,17 @@ static inline acpi_handle acpi_pci_get_b
- 
- 	return DEVICE_ACPI_HANDLE(dev);
- }
-+
-+#ifdef CONFIG_PCI_IOAPIC
-+void acpi_pci_ioapic_add(struct acpi_pci_root *root);
-+void acpi_pci_ioapic_remove(struct acpi_pci_root *root);
-+#else
-+static inline void acpi_pci_ioapic_add(struct acpi_pci_root *root) { }
-+static inline void acpi_pci_ioapic_remove(struct acpi_pci_root *root) { }
- #endif
- 
-+#endif /* CONFIG_ACPI */
-+
- #ifdef CONFIG_ACPI_APEI
- extern bool aer_acpi_firmware_first(void);
- #else
+--UugvWAfsgieZRqgk
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQIcBAEBAgAGBQJRErB5AAoJEN0jrNd/PrOhlQYP/274urM3pDA6Rp0viIJuGCB2
+rClDIKcja8RxeRkJJ47MxIVo5HaXEXreMeptf6NYr2IBEacU0hAqadkq95BzWT0d
+w/j/eDOmXgulhON+6nn7x7gCCZpZVzAnGVZFoiFdfa60gOwUZPk76wD6lBGXNtsL
+1ocaEXhE3HvgTaGwQNAQi56+JVhPywSs56OHZk0LZiF9mCzA03POHZJzHYV2yLk4
+6ZkfnDIfj6y54SNkL9vA5daCxipqPLmEERALSQTBh9nClUYwfz+Qb8LNzPJ4Jrsl
+AMMwqOP3OgSADUquKgn3a8RoSvcSLwue/EvYXvaoXlHFxgBbp1kv4/czqwQrj9/U
+37Pvi/Rm+NNfv4wocwFv4CHi1o4zBV3gT7VIDdhX2yXqw/El3pJpVMP1itjC6mwv
+CvqZCiyiHoJ2QnQ+JeOZeSJxQAcTEHJXpgu/7hYDWDk/jjN+ATPZdTpNDXUgWJYU
+IceYAvNniKWRmfjpHV/qaqyO3tbMrC6BoYOsk1PjECFOMWhevn8ISLp6AUjcQ2Fe
+QcdP1wGVi1lNSWzYArngKGQ3+3ifK42+1hw5s07UMBG2QUtHO31fBjEXcq6KdbC3
+reNP0igpRjgRRE9z5XOjCkkHdCiNoPrd7GTbyDtVqFZXF/cMcvU4g0x7J9uzoHBx
+0RMBCojsf7zv2HLDGSRi
+=WH1T
+-----END PGP SIGNATURE-----
+
+--UugvWAfsgieZRqgk--
