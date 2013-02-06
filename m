@@ -1,87 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:8699 "EHLO mga01.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:45573 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932106Ab3BNXpr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 14 Feb 2013 18:45:47 -0500
-From: "Moore, Robert" <robert.moore@intel.com>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-CC: Toshi Kani <toshi.kani@hp.com>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jiang Liu <liuj97@gmail.com>, Yinghai Lu <yinghai@kernel.org>,
-	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
-	Myron Stowe <mstowe@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: RE: [Update][PATCH] ACPI / hotplug: Fix concurrency issues and
- memory leaks
-Date: Thu, 14 Feb 2013 23:45:27 +0000
-Message-ID: <94F2FBAB4432B54E8AACC7DFDE6C92E368CB5E39@ORSMSX101.amr.corp.intel.com>
-References: <1837481.7dT8hTZ4MT@vostro.rjw.lan>
- <7010893.9OBeMt5Fzh@vostro.rjw.lan>
- <94F2FBAB4432B54E8AACC7DFDE6C92E368CB5D05@ORSMSX101.amr.corp.intel.com>
- <7482249.JD6lNDApdo@vostro.rjw.lan>
-In-Reply-To: <7482249.JD6lNDApdo@vostro.rjw.lan>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+	id S1756611Ab3BFP6t (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 6 Feb 2013 10:58:49 -0500
+Message-ID: <1360166321.11144.638.camel@bling.home>
+Subject: Re: PCI warning on boot 3.8.0-rc1
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Stephen Hemminger <stephen@networkplumber.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	David Woodhouse <dwmw2@infradead.org>,
+	iommu@lists.linux-foundation.org
+Date: Wed, 06 Feb 2013 08:58:41 -0700
+In-Reply-To: <20130206074900.02f04e3f@nehalam.linuxnetplumber.net>
+References: <20130116143853.339dd89b@nehalam.linuxnetplumber.net>
+	 <CAErSpo5eOE_=Ob2jN7ACy0eJBOa8k36XqCbHnGTCs-wfiy8tiw@mail.gmail.com>
+	 <20130204103645.38ae2d5e@nehalam.linuxnetplumber.net>
+	 <1360009684.11144.539.camel@bling.home>
+	 <1360017684.11144.547.camel@bling.home>
+	 <20130206074900.02f04e3f@nehalam.linuxnetplumber.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogUmFmYWVsIEouIFd5c29j
-a2kgW21haWx0bzpyandAc2lzay5wbF0NCj4gU2VudDogVGh1cnNkYXksIEZlYnJ1YXJ5IDE0LCAy
-MDEzIDEyOjU5IFBNDQo+IFRvOiBNb29yZSwgUm9iZXJ0DQo+IENjOiBUb3NoaSBLYW5pOyBBQ1BJ
-IERldmVsIE1hbGluZyBMaXN0OyBMS01MOyBCam9ybiBIZWxnYWFzOyBKaWFuZyBMaXU7DQo+IFlp
-bmdoYWkgTHU7IFlhc3Vha2kgSXNoaW1hdHN1OyBNeXJvbiBTdG93ZTsgbGludXgtcGNpQHZnZXIu
-a2VybmVsLm9yZw0KPiBTdWJqZWN0OiBSZTogW1VwZGF0ZV1bUEFUQ0hdIEFDUEkgLyBob3RwbHVn
-OiBGaXggY29uY3VycmVuY3kgaXNzdWVzIGFuZA0KPiBtZW1vcnkgbGVha3MNCj4gDQo+IE9uIFRo
-dXJzZGF5LCBGZWJydWFyeSAxNCwgMjAxMyAwODo0NToxNCBQTSBNb29yZSwgUm9iZXJ0IHdyb3Rl
-Og0KPiA+DQo+ID4gPiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiA+ID4gRnJvbTogUmFm
-YWVsIEouIFd5c29ja2kgW21haWx0bzpyandAc2lzay5wbF0NCj4gPiA+IFNlbnQ6IFRodXJzZGF5
-LCBGZWJydWFyeSAxNCwgMjAxMyA0OjA0IEFNDQo+ID4gPiBUbzogTW9vcmUsIFJvYmVydA0KPiA+
-ID4gQ2M6IFRvc2hpIEthbmk7IEFDUEkgRGV2ZWwgTWFsaW5nIExpc3Q7IExLTUw7IEJqb3JuIEhl
-bGdhYXM7IEppYW5nDQo+ID4gPiBMaXU7IFlpbmdoYWkgTHU7IFlhc3Vha2kgSXNoaW1hdHN1OyBN
-eXJvbiBTdG93ZTsNCj4gPiA+IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmcNCj4gPiA+IFN1Ympl
-Y3Q6IFJlOiBbVXBkYXRlXVtQQVRDSF0gQUNQSSAvIGhvdHBsdWc6IEZpeCBjb25jdXJyZW5jeSBp
-c3N1ZXMNCj4gPiA+IGFuZCBtZW1vcnkgbGVha3MNCj4gPiA+DQo+ID4gPiBPbiBUaHVyc2RheSwg
-RmVicnVhcnkgMTQsIDIwMTMgMDI6MzE6MjIgQU0gTW9vcmUsIFJvYmVydCB3cm90ZToNCj4gPiA+
-ID4gPiA+ID4gSSB0aG91Z2h0IGFib3V0IHRoYXQsIGJ1dCBhY3R1YWxseSB0aGVyZSdzIG5vIGd1
-YXJhbnRlZSB0aGF0DQo+ID4gPiA+ID4gPiA+IHRoZSBoYW5kbGUgd2lsbCBiZSB2YWxpZCBhZnRl
-ciBfRUowIGFzIGZhciBhcyBJIGNhbiBzYXkuICBTbw0KPiA+ID4gPiA+ID4gPiB0aGUgcmFjZSBj
-b25kaXRpb24gaXMgZ29pbmcgdG8gYmUgdGhlcmUgYW55d2F5IGFuZCB1c2luZw0KPiA+ID4gPiA+
-ID4gPiBzdHJ1Y3QgYWNwaV9kZXZpY2UganVzdCBtYWtlcyBpdCBlYXNpZXIgdG8gYXZvaWQgaXQu
-DQo+ID4gPiA+ID4gPg0KPiA+ID4gPiA+ID4gSW4gdGhlb3J5LCB5ZXMsIGEgc3RhbGUgaGFuZGxl
-IGNvdWxkIGJlIGEgcHJvYmxlbSwgaWYgX0VKMA0KPiA+ID4gPiA+ID4gcGVyZm9ybXMgdW5sb2Fk
-IHRhYmxlIGFuZCBpZiBBQ1BJQ0EgZnJlZXMgdXAgaXRzIGludGVybmFsIGRhdGENCj4gPiA+ID4g
-PiA+IHN0cnVjdHVyZSBwb2ludGVkIGJ5IHRoZSBoYW5kbGUgYXMgYSByZXN1bHQuICBCdXQgd2Ug
-c2hvdWxkDQo+ID4gPiA+ID4gPiBub3Qgc2VlIHN1Y2ggaXNzdWUgbm93IHNpbmNlIHdlIGRvIG5v
-dCBzdXBwb3J0IGR5bmFtaWMgQUNQSQ0KPiA+ID4gPiA+ID4gbmFtZXNwYWNlDQo+ID4gPiB5ZXQu
-DQo+ID4gPiA+ID4NCj4gPiA+ID4gPiBJJ20gd2FpdGluZyBmb3IgaW5mb3JtYXRpb24gZnJvbSBC
-b2IgYWJvdXQgdGhhdC4gIElmIHdlIGNhbg0KPiA+ID4gPiA+IGFzc3VtZSBBQ1BJIGhhbmRsZXMg
-dG8gYmUgYWx3YXlzIHZhbGlkLCB0aGF0IHdpbGwgc2ltcGxpZnkNCj4gPiA+ID4gPiB0aGluZ3Mg
-cXVpdGUgYQ0KPiA+ID4gYml0Lg0KPiA+ID4gPg0KPiA+ID4gPiBJZiBhIHRhYmxlIGlzIHVubG9h
-ZGVkLCBhbGwgdGhlIG5hbWVzcGFjZSBub2RlcyBmb3IgdGhhdCB0YWJsZSBhcmUNCj4gPiA+ID4g
-cmVtb3ZlZCBmcm9tIHRoZSBuYW1lc3BhY2UsIGFuZCB0aHVzIGFueSBBQ1BJX0hBTkRMRSBwb2lu
-dGVycyBnbw0KPiA+ID4gPiBzdGFsZQ0KPiA+ID4gYW5kIGludmFsaWQuDQo+ID4gPg0KPiA+ID4g
-T0ssIHRoYW5rcyENCj4gPiA+DQo+ID4gPiBUbyBtZSB0aGlzIG1lYW5zIHRoYXQgd2UgY2Fubm90
-IGFzc3VtZSBhIGhhbmRsZSB0byBzdGF5IHZhbGlkDQo+ID4gPiBiZXR3ZWVuIGEgbm90aWZ5IGhh
-bmRsZXIgYW5kIGFjcGlfYnVzX2hvdF9yZW1vdmVfZGV2aWNlKCkgcnVuIGZyb20gYQ0KPiB3b3Jr
-cXVldWUuDQo+ID4gPg0KPiA+ID4gSXMgdGhlcmUgYSBtZWNoYW5pc20gaW4gQUNQSUNBIHRvIGVu
-c3VyZSB0aGF0IGEgaGFuZGxlIHdvbid0IGJlY29tZQ0KPiA+ID4gc3RhbGUgd2hpbGUgYSBub3Rp
-ZnkgaGFuZGxlciBpcyBydW5uaW5nIGZvciBpdCBvciBpcyB0aGUgT1MNCj4gPiA+IHJlc3BvbnNp
-YmxlIGZvciBlbnN1cmluZyB0aGF0DQo+ID4gPiBfRUowIHdvbid0IGJlIHJ1biBpbiBwYXJhbGxl
-bCB3aXRoIG5vdGlmeSBoYW5kbGVycyBmb3IgZGV2aWNlDQo+ID4gPiBvYmplY3RzIGJlaW5nIGVq
-ZWN0ZWQ/DQo+ID4gPg0KPiA+DQo+ID4gSXQgaXMgdXAgdG8gdGhlIGhvc3QuDQo+IA0KPiBJIHdh
-cyBhZnJhaWQgdGhhdCB0aGF0IG1pZ2h0IGJlIHRoZSBjYXNlLiA6LSkNCj4gDQo+IFNvIGZhciB0
-aGUgKExpbnV4KSBob3N0IGhhcyBiZWVuIGhhcHBpbHkgaWdub3JpbmcgdGhhdCBwb3RlbnRpYWwg
-cHJvYmxlbSwNCj4gc28gSSBndWVzcyBpdCBjYW4gc3RpbGwgYmUgaWdub3JlZCBmb3IgYSB3aGls
-ZSwgYWx0aG91Z2ggd2UnbGwgbmVlZCB0bw0KPiBhZGRyZXNzIGl0IGV2ZW50dWFsbHkgYXQgb25l
-IHBvaW50Lg0KDQpJIHdvdWxkIHRoaW5rIGl0IHNob3VsZCBiZSBmYWlybHkgc2ltcGxlIHRvIHNl
-dHVwIGEgbWVjaGFuaXNtIHRvIGVpdGhlciB0ZWxsIHRoZSBkcml2ZXIgb3IgZm9yIHRoZSBkcml2
-ZXIgdG8gZmlndXJlIGl0IG91dCAtLSBzdWNoIHRoYXQgdGhlIGRyaXZlciBrbm93cyB0aGF0IGFs
-bCBoYW5kbGVzIGFzc29jaWF0ZWQgd2l0aCB0aGUgZGV2aWNlIGFyZSBub3cgaW52YWxpZC4gQW5v
-dGhlciB3YXkgdG8gbG9vayBhdCBpdCBpcyB0aGF0IHdoZW4gdGhlIGRldmljZSBpcyByZS1pbnN0
-YWxsZWQsIHRoZSBkcml2ZXIgc2hvdWxkIHJlaW5pdGlhbGl6ZSBzdWNoIHRoYXQgaXQgb2J0YWlu
-cyBuZXcgaGFuZGxlcyBmb3IgdGhlIGRldmljZXMgYW5kIHN1Ym9iamVjdHMgaW4gcXVlc3Rpb24u
-DQoNCkJvYg0KDQoNCg0KDQoNCg0KPiANCj4gVGhhbmtzLA0KPiBSYWZhZWwNCj4gDQo+IA0KPiAt
-LQ0KPiBJIHNwZWFrIG9ubHkgZm9yIG15c2VsZi4NCj4gUmFmYWVsIEouIFd5c29ja2ksIEludGVs
-IE9wZW4gU291cmNlIFRlY2hub2xvZ3kgQ2VudGVyLg0K
+On Wed, 2013-02-06 at 07:49 -0800, Stephen Hemminger wrote:
+> On Mon, 04 Feb 2013 15:41:24 -0700
+> Alex Williamson <alex.williamson@redhat.com> wrote:
+> 
+> > On Mon, 2013-02-04 at 13:28 -0700, Alex Williamson wrote:
+> > > On Mon, 2013-02-04 at 10:36 -0800, Stephen Hemminger wrote:
+> > > > > I think drivers/pci/search.c is identical between 3.7 and 3.8-rc1.  Is
+> > > > > this the first time you've turned on the IOMMU on that box?
+> > > > 
+> > > > It exists in 3.7 and earlier kernels, just haven't turned on same config.
+> > > > 
+> > > > > It's the same warning as in this bugzilla:
+> > > > > https://bugzilla.kernel.org/show_bug.cgi?id=44881, and there's a patch
+> > > > > there at https://bugzilla.kernel.org/show_bug.cgi?id=44881#c11, but
+> > > > > it's just a quirk that turns off VT-d if we find certain broken
+> > > > > bridges.  It doesn't look like you have any of those (although I don't
+> > > > > know what you have at 05:00.0).
+> > > > > 
+> > > > > Bjorn
+> > > > 
+> > > > This is a standard ASUS motherboard, and don't want to disable VT-d.
+> > > 
+> > > Stephen,
+> > > 
+> > > Can you give the lspci -vvv of device 5:00.0 to see if it's one we've
+> > > seen before?  Does the patch below help?
+> > > 
+> > > Bjorn, I think we need to quirk it somehow.  So far they've all been
+> > > PCI-to-PCI bridges attached to root ports where we expect it's actually
+> > > a PCIe-to-PCI bridge.  Seems like maybe we could have the same attached
+> > > to a downstream port.  The patch below avoids the WARN and gives us a
+> > > device, but of course pci_is_pcie reports wrong for this device and may
+> > > cause some trickle down breakage.  A more complete option might be to
+> > > add a is_pcie flag to the device that can be set independent of
+> > > pcie_cap.  We'd need to check all the callers for assumptions, but then
+> > > we could put the quirk in one place and hopefully fix everything.
+> > > Thoughts?  Thanks,
+> > 
+> > This latter approach seems like it might be easier than I expected since
+> > all the users are so well filtered through the access functions.  A
+> > quick look through who uses pci_is_pcie seems like this might be
+> > complete, but more eyes are required.  I'll upload this to the bz for
+> > those reporters to test as well.  Thoughts?  Thanks,
+> > 
+> > Alex
+> 
+> On my hardware this gives:
+
+> [    0.254621] pci_bus 0000:05: busn_res: can not insert [bus 05-ff] under [bus 00-3e] (conflicts with (null) [bus 00-3e])
+> [    0.254647] WARNING: Your hardware is broken, device (null) appears to be a
+> [    0.254647]  Legacy PCI device attached directly to a PCIe device which is not a
+> [    0.254647]  PCIe-to-PCI bridge.  Per section 7.8 of the PCI Express 3.0 spec, the
+> [    0.254647]  PCI express capability structure is required for PCI express device
+> [    0.254647] functions.
+> [    0.254653] pci 0000:05:00.0: [1b21:1080] type 01 class 0x060401
+
+I guess I must be calling pci_name() before it's set.  The warning
+message needs some work too, it's mainly meant for hardware vendors with
+the hope that they might test Linux and see it before shipping these
+broken devices.  Bjorn, does this approach seem worth pursuing?  Thanks,
+
+Alex
+
