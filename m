@@ -1,54 +1,44 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:26010 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1946826Ab3BHT2v (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 Feb 2013 14:28:51 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
-	"H. Peter Anvin" <hpa@zytor.com>,
+Received: from mail.free-electrons.com ([94.23.35.102]:50254 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756909Ab3BFIgr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Feb 2013 03:36:47 -0500
+Date: Wed, 6 Feb 2013 09:36:42 +0100
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Thierry Reding <thierry.reding@avionic-design.de>
+Cc: linux-tegra@vger.kernel.org,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Stephen Warren <swarren@wwwdotorg.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	Donald Dutile <ddutile@redhat.com>
-Subject: [PATCH v2 08/26] iommu, irq: Allocate irq_desc for dmar_msi with local node
-Date: Fri,  8 Feb 2013 11:28:05 -0800
-Message-Id: <1360351703-20571-9-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1360351703-20571-1-git-send-email-yinghai@kernel.org>
-References: <1360351703-20571-1-git-send-email-yinghai@kernel.org>
+	Andrew Murray <andrew.murray@arm.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 06/14] ARM: pci: Keep pci_common_init() around after
+ init
+Message-ID: <20130206093642.32c91724@skate>
+In-Reply-To: <1357764194-12677-7-git-send-email-thierry.reding@avionic-design.de>
+References: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de>
+	<1357764194-12677-7-git-send-email-thierry.reding@avionic-design.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-iommu irq's irq_desc should be on local node ram.
+Dear Thierry Reding,
 
-Fix the return value checking problem.
+On Wed,  9 Jan 2013 21:43:06 +0100, Thierry Reding wrote:
+> When using deferred driver probing, PCI host controller drivers may
+> actually require this function after the init stage.
+> 
+> Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
 
-create_irq() will return -1 when fail to allocate.
-create_irq_nr() will return 0 when fail to allocate.
-
-here only check !irq, so need to change it to use create_irq_nr instead.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Donald Dutile <ddutile@redhat.com>
----
- drivers/iommu/dmar.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/iommu/dmar.c b/drivers/iommu/dmar.c
-index 174bb65..316b5a2 100644
---- a/drivers/iommu/dmar.c
-+++ b/drivers/iommu/dmar.c
-@@ -1263,7 +1263,7 @@ int dmar_set_interrupt(struct intel_iommu *iommu)
- 	if (iommu->irq)
- 		return 0;
- 
--	irq = create_irq();
-+	irq = create_irq_nr(0, iommu->node);
- 	if (!irq) {
- 		pr_err("IOMMU: no free vectors\n");
- 		return -EINVAL;
+Tested-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
 -- 
-1.7.10.4
-
+Thomas Petazzoni, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
