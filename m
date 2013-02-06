@@ -1,82 +1,107 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from caramon.arm.linux.org.uk ([78.32.30.218]:41393 "EHLO
-	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933153Ab3BLTuB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Feb 2013 14:50:01 -0500
-Date: Tue, 12 Feb 2013 19:49:49 +0000
-From: Russell King - ARM Linux <linux@arm.linux.org.uk>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Tawfik Bayouk <tawfik@marvell.com>
-Subject: Re: [PATCH 06/32] arm: pci: add a align_resource hook
-Message-ID: <20130212194949.GV17833@n2100.arm.linux.org.uk>
-References: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com> <1360686546-24277-7-git-send-email-thomas.petazzoni@free-electrons.com> <201302121803.12660.arnd@arndb.de> <20130212200118.531cda2e@skate>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130212200118.531cda2e@skate>
+Received: from qmta12.emeryville.ca.mail.comcast.net ([76.96.27.227]:51521
+	"EHLO qmta12.emeryville.ca.mail.comcast.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751333Ab3BFAVR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Feb 2013 19:21:17 -0500
+Message-ID: <1360110073.4485.40.camel@rhapsody>
+Subject: Re: [PATCH v2 2/7] PCI: don't touch enable_cnt in
+ pci_device_shutdown()
+From: Khalid Aziz <khalid@gonehiking.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Konstantin Khlebnikov <khlebnikov@openvz.org>,
+	e1000-devel@lists.sourceforge.net, linux-pci@vger.kernel.org,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	linux-kernel@vger.kernel.org, Andi Kleen <ak@linux.intel.com>,
+	Alan Cox <alan@lxorguk.ukuu.org.uk>,
+	Matthew Garrett <mjg@redhat.com>, khalid.aziz@oracle.com
+Date: Tue, 05 Feb 2013 17:21:13 -0700
+In-Reply-To: <CAErSpo7sYCmfd0X7PBfYS_ZK5sijxS3mpmhkrQ6UqO_xDry69Q@mail.gmail.com>
+References: <20130204115246.5569.85829.stgit@zurg>
+	 <20130204115557.5569.9748.stgit@zurg> <1360016458.4485.11.camel@rhapsody>
+	 <CAErSpo7k96noiCtGYUFyuUQhE2GQA8ro5-9WC-JU_1HOWKUGvg@mail.gmail.com>
+	 <1360078091.4485.32.camel@rhapsody>
+	 <CAErSpo7sYCmfd0X7PBfYS_ZK5sijxS3mpmhkrQ6UqO_xDry69Q@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 12, 2013 at 08:01:18PM +0100, Thomas Petazzoni wrote:
-> Dear Arnd Bergmann,
+On Tue, 2013-02-05 at 12:22 -0700, Bjorn Helgaas wrote:
+> On Tue, Feb 5, 2013 at 8:28 AM, Khalid Aziz <khalid@gonehiking.org> wrote:
+> > On Mon, 2013-02-04 at 16:13 -0700, Bjorn Helgaas wrote:
+> >> Did you figure out specifically why pcibios_disable_device() helps?
+> >> Using pcibios_disable_device() doesn't seem like the ideal solution
+> >> because on most architectures, it is an empty function with no obvious
+> >> connection to IRQs.  On x86 with ACPI, it cleans up some ACPI PCI IRQ
+> >> stuff, but as far as I can tell, it doesn't actually touch the PCI
+> >> device itself or even the IOAPIC to which it's connected, so I'm not
+> >> sure how this would help kexec.
+> >
+> > My reading of the code was that pcibios_disable_device() does clear the
+> > interrupt on x86 and ia64. I am not deeply familiar with the ACPI code
+> > and I might be interpreting it incorrectly, so please do correct me if I
+> > am reading it incorrectly. Here is the code sequence I see:
+> >
+> > pcibios_disable_device() ->
+> >    pcibios_disable_irq() ->
+> >        acpi_pci_irq_disable() ->
+> >            acpi_pci_link_free_irq() ->
+> >               acpi_evaluate_object(link->device->handle, "_DIS", NULL,
+> > NULL);
+> >
+> > My understanding is the evaluation of ACPI _DIS method will disable the
+> > interrupt from the device. Does that sound reasonable?
 > 
-> On Tue, 12 Feb 2013 18:03:12 +0000, Arnd Bergmann wrote:
-> > On Tuesday 12 February 2013, Thomas Petazzoni wrote:
-> > > The PCI specifications says that an I/O region must be aligned on a
-> > > 4 KB boundary, and a memory region aligned on a 1 MB boundary.
-> > > 
-> > > However, the Marvell PCIe interfaces rely on address decoding
-> > > windows (which allow to associate a range of physical addresses
-> > > with a given device), and those have special requirements compared
-> > > to the standard PCI-to-PCI bridge specifications.
-> > 
-> > I'm not convince that we should add this complexity yet, until
-> > everyone agrees on the basic approach taken.
+> I see the code you're looking at in acpi_pci_link_free_irq(), but we
+> only evaluate _DIS if link->refcnt == 0, and I don't think refcnt is
+> ever zero at that point.
 > 
-> Regardless of whether we choose to have the emulated PCI-to-PCI bridges
-> or not, we still need this align_resource() hook.
+> refcnt starts out at zero in acpi_pci_link_add() (called when we find
+> PNP0C0F devices), and it's incremented in acpi_pci_link_allocate_irq()
+> (called in the pci_enable_device() path), but as far as I can tell,
+> it's never decremented, so I doubt that _DIS is ever evaluated.
+
+Ah, that is interesting. I was assuming as we disable PCI devices, the
+refcnt would have been decremented and if no one was using the IRQ, we
+would evaluate _DIS method and disable the interrupt link.
+
 > 
-> In the solution you propose, where each PCIe interface is represented
-> as a separate PCIe domain, we still need the kernel to dynamically
-> assign ranges of address to each memory BAR and I/O BAR of each PCIe
-> device. And those range of address must comply with the address
-> decoding windows requirements, otherwise, we don't be able to create
-> those address decoding windows, and the devices will be unaccessible.
+> If we did evaluate _DIS, it would act on an "interrupt link" device,
+> not on the PCI device itself.  
 
-I think what Arnd is suggesting is that you treat each of your busses
-as a separate root bus.
+Right, it should be the shutdown() routine for the device driver that
+disables interrupt on the device itself. We want to turn interrupt off
+one level higher in pci_device_shutdown().
 
-This then means that you register each bus separately via
-pci_common_init() (this can take 0..N root buses and scan them.)
+> I guess that could help, but only for
+> devices connected to such a link device.  For others, I guess we might
+> be able to accomplish something similar by updating local APIC and/or
+> IOAPIC config.  I don't think we do that today, at least not in the
+> pci_disable_device() path, but it might be something interesting to
+> explore.  There is also the INTx Disable bit, though it's obviously
+> only on new PCI devices.
 
-We can then size each bus (which means, totalling up the amount of space
-each bus requires).
+Turning interrupt of at local APIC or IOAPIC level sounds like more
+reliable thing to do.
 
-At that point, we know how much memory and IO space each bus requires,
-and platform code can then setup the appropriate bridge windows.  The
-alignment of the bases is something that platform code can deal with
-in its allocation mechanism, and the resulting allocated resources
-can then be assigned to each PCI bus.
+> 
+> > ... The two ways I can think of are to stop
+> > DMA by clearing Bus Master bit and turn off the interrupt, which have
+> > been shown to get kexec (and thus kdump) working on machines it didn't
+> > work on before.
+> 
+> I was just curious if you had actually verified that _DIS was being
+> evaluated and making a difference here, or if the Bus Master bit was
+> really the important part.
+> 
+> Bjorn
 
-Once that's done, we can then call pci_bus_assign_resources() to setup
-the resources for each bus, which will use our allocated resources.
+I have been able to reproduce the kexec problem caused by active PCI
+devices only in limited cases and in those cases it was really the Bus
+Master bit that was important. Keeping interrupts from errant devices
+from reaching the kernel until newly kexc'd kernel is initialized is
+additional safety measure.
 
-There's a downside to this though: the pci core doesn't size root buses,
-because:
-(a) it assumes that they're fixed size.
-(b) root buses don't have a P2P 'bridge' to be sized.
+--
+Khalid
 
-I'm wondering if we could come up with a way to refactor
-__pci_bus_size_bridges() so that we can get this information out of it.
-That's more a question for PCI people though.
