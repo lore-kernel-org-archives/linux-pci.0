@@ -1,148 +1,91 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:26269 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932773Ab3BODyI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 14 Feb 2013 22:54:08 -0500
-Message-ID: <1360900439.3248.310.camel@bling.home>
-Subject: Re: [PATCH] pci: Disable slot presence detection around bus reset
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+Received: from mail-vb0-f44.google.com ([209.85.212.44]:48105 "EHLO
+	mail-vb0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753302Ab3BFATr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Feb 2013 19:19:47 -0500
+Received: by mail-vb0-f44.google.com with SMTP id fr13so474729vbb.17
+        for <linux-pci@vger.kernel.org>; Tue, 05 Feb 2013 16:19:46 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAE9FiQX2DbTO0qCzGO4iMTkU_mPM2oZL+R5UoZ5dj=as6MUAsw@mail.gmail.com>
+References: <CAE9FiQXHG01NjnYNDbC-KEpbcvY-q4pBe97CxTOGS7W4vZQBYQ@mail.gmail.com>
+ <1359314629-18651-1-git-send-email-yinghai@kernel.org> <CAErSpo6r_LNEtYB3j5ELb8NdHu0a6_YOVj8S32CmByGFUpSsbg@mail.gmail.com>
+ <CAE9FiQXg1YcPPJLCgPbKOKXHk-LRQv4bbBGH9jyuATQa2ANLkg@mail.gmail.com> <CAE9FiQX2DbTO0qCzGO4iMTkU_mPM2oZL+R5UoZ5dj=as6MUAsw@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 5 Feb 2013 17:19:26 -0700
+Message-ID: <CAErSpo7-dULYwWQ=f5CBCxOULKJE9=n6Ha4jkVKd8enspuYjTA@mail.gmail.com>
+Subject: Re: [PATCH v3 00/22] PCI: Iterate pci host bridge instead of pci root bus
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Mauro Carvalho Chehab <mchehab@redhat.com>,
+	Tony Luck <tony.luck@intel.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
 	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Sheng Yang <sheng@linux.intel.com>
-Date: Thu, 14 Feb 2013 20:53:59 -0700
-In-Reply-To: <CAErSpo4uopqKwXY-6HrSZ9mk08tgY9L-iUG2ykmKcMK077tDrQ@mail.gmail.com>
-References: <20130214183640.16220.33060.stgit@bling.home>
-	 <CAErSpo4uopqKwXY-6HrSZ9mk08tgY9L-iUG2ykmKcMK077tDrQ@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, Russell King <linux@arm.linux.org.uk>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2013-02-14 at 16:47 -0700, Bjorn Helgaas wrote:
-> On Thu, Feb 14, 2013 at 11:37 AM, Alex Williamson
-> <alex.williamson@redhat.com> wrote:
-> > A bus reset can trigger a presence detection change and result in a
-> > suprise hotplug.  This is generally not what we want to happen when
-> > trying to reset a device.  Disable the presence detection control on
-> > on bridges around bus reset.
-> 
-> This is a really interesting situation, and I'm not quite ready to
-> sign up to the idea that this is really a problem and that if it is,
-> this is the way we want to fix it.
-> 
-> What would happen if we *did* handle this as a hotplug event, with a
-> removal followed by an add?
-> 
-> The scheme where pci_reset_function() does "pci_save_state(dev);
-> pci_dev_reset(dev); pci_restore_state(dev);" makes me nervous.
-> 
-> We're saving and restoring some of PCI config space around the reset,
-> but there's no guarantee that we're preserving *all* the important
-> state in config space because I think devices can have non-architected
-> device-specific things in config space that we don't know how to
-> save/restore.
-> 
-> Devices also have internal state not exposed via config space.  That
-> state is lost during the reset but can't be restored by
-> pci_restore_state().  So it seems like pci_reset_function() is
-> pretending to do something it can't really do reliably.
-> 
-> If we make it so a reset is always handled as a remove+add, then we'll
-> use a more generic path, and we'll get all the stuff you expect when
-> initializing a new device -- resource assignment, IRQ setup, quirks,
-> etc.  Quirks in particular seem like something we want, but don't
-> currently get with pci_reset_function().
-> 
-> Oh, and the "disable presence detect" approach below only works for
-> things below a PCIe bridge with native hotplug, right?  I wonder what
-> happens if we reset devices below a bridge using SHPC or acpiphp.
+On Tue, Feb 5, 2013 at 4:55 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Sat, Feb 2, 2013 at 9:05 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>
+>>> Your solution is to introduce for_each_pci_host_bridge() as an
+>>> iterator through the known host bridges.  There are two scenarios
+>>> where we use something like this:
+>>>
+>>> 1) We want to perform an operation on every known host bridge.
+>>>
+>>> 2) We want to initialize something for every host bridge.
+>>>
+>>> In my opinion, the only instance of scenario 1) is bus_rescan_store(),
+>>> where we want to rescan all PCI host bridges.
+>>>
+>>> In every other case, we're doing some kind of initialization of all
+>>> the host bridges.  For these cases, for_each_pci_host_bridge() is the
+>>> wrong solution because it doesn't work for hot-added bridges.  I think
+>>> these cases should be changed to use pcibios_root_bridge_prepare() or
+>>> something something else called in the host bridge add path.
+>>
+>> Yes, will check if those for_pci_host_bridge could be converted to
+>> adding calling in pcibios_root_bridge_prepare one by one.
+>
+> I went through those patches again, here are findings:
+> 1. run-time iteration includes at least 3 occurrence are addressed.
+> a. in pci-sysfs::bus_rescan_store
+> b. powerpc pci_64.c::sys_pciconfig_iobase system call
+> c. probe.c::pci_create_root_bus/pci_find_bus
+>
+> 2. edac: i7core_edac.c::i7core_pci_lastbus()
+> this one is not support host bridge hotplug, and in i7core_probe it will
+> bail-out if probed before overall.
+> To make edac with i7 to support host-bridge hotadd, will change the structure of
+> that i7core_probe.
+> But I'm not worried about that yet, because Nehalem-EX does not support EDAC,
+> and assume we will NOT have use case with new -EX intel cpu with
+> hotplug support to use EDAC.
+>
+> 3. pcibios_resource_survey/pcibios_assign_unassigned_resource in __init path.
+> it is with x86/frv/microblaze/mn10300.
+> for x86/acpi, we have per root bus calling in pci_root.c::acpi_pci_root_add().
+> other three does not support pci_root_bridge hotplug yet.
+>
+> 4. looks like all other changes are __init path, and those arch does not support
+> pci_root_bridge hotplug yet.
+>
+> So looks like this patch set is ok now.
 
-Triggering a remove+add is not useful for the way we use it today.  The
-users I'm aware of are KVM device assignment and VFIO, where we trigger
-it in an attempt to get the device to a known state so that we have some
-hope of repeatability.  In those scenarios the reset is initiated by the
-driver.  The interface isn't meant to guarantee the device is returned
-to an identical state as it was before reset.  If it did, why would we
-call it?  We want to get to a state as near to power on, but still with
-config programming, as we can.
+Maybe.  I'd rather not introduce for_each_pci_host_bridge() at all, if
+we can avoid it.  Every place it's used is a place we have to audit to
+make sure it's safe.  I think your audit above is correct and
+complete, but it relies on way too much architecture knowledge.  It's
+better if we can deduce correctness without knowing which arches
+support hotplug and which CPUs support EDAC.
 
-Being driver directed, having the reset initiate a remove is pretty near
-the last thing we want.  That limits the scope of calling it to only
-when the driver can readily release the device.  If we have the device
-attached to a guest or userspace driver, that's potentially a lot of
-setup and teardown and effectively extending a surprise removal all the
-way up the stack.
+As soon as for_each_pci_host_bridge() is in the tree, those uses can
+be copied to even more places.  It's a macro, so it's usable by any
+module, even out-of-tree ones that we'll never see and can't fix.  So
+we won't really have a good way to deprecate and remove it.
 
-Obviously a bus reset is a big hammer and we do exhaust all the little
-hammers of flr and pm reset before we try it, but in this case, we know
-the device that's going away and with all likelihood, it's coming right
-back at the same location.  If we take the path of forcing a remove+add,
-let's just remove it from the reset_function call path and we'll do
-without reset for those devices.  Thanks,
-
-Alex
-
-> > Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-> > ---
-> >  drivers/pci/pci.c |   29 ++++++++++++++++++++++++-----
-> >  1 file changed, 24 insertions(+), 5 deletions(-)
-> >
-> > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> > index 5cb5820..c1f7d77 100644
-> > --- a/drivers/pci/pci.c
-> > +++ b/drivers/pci/pci.c
-> > @@ -3229,8 +3229,8 @@ static int pci_pm_reset(struct pci_dev *dev, int probe)
-> >
-> >  static int pci_parent_bus_reset(struct pci_dev *dev, int probe)
-> >  {
-> > -       u16 ctrl;
-> > -       struct pci_dev *pdev;
-> > +       u16 ctrl, flags, sltctl = 0;
-> > +       struct pci_dev *pdev, *bridge;
-> >
-> >         if (pci_is_root_bus(dev->bus) || dev->subordinate || !dev->bus->self)
-> >                 return -ENOTTY;
-> > @@ -3242,15 +3242,34 @@ static int pci_parent_bus_reset(struct pci_dev *dev, int probe)
-> >         if (probe)
-> >                 return 0;
-> >
-> > -       pci_read_config_word(dev->bus->self, PCI_BRIDGE_CONTROL, &ctrl);
-> > +       bridge = dev->bus->self;
-> > +
-> > +       /*
-> > +        * If the parent device supports a slot with presence detection
-> > +        * change enabled, holding the bus in reset can trigger that and
-> > +        * cause an unwanted surprise removal.  Disable presence detection
-> > +        * around the bus reset.
-> > +        */
-> > +       pcie_capability_read_word(bridge, PCI_EXP_FLAGS, &flags);
-> > +       if (flags & PCI_EXP_FLAGS_SLOT) {
-> > +               pcie_capability_read_word(bridge, PCI_EXP_SLTCTL, &sltctl);
-> > +               if (sltctl & PCI_EXP_SLTCTL_PDCE)
-> > +                       pcie_capability_write_word(bridge, PCI_EXP_SLTCTL,
-> > +                                               sltctl & ~PCI_EXP_SLTCTL_PDCE);
-> > +       }
-> > +
-> > +       pci_read_config_word(bridge, PCI_BRIDGE_CONTROL, &ctrl);
-> >         ctrl |= PCI_BRIDGE_CTL_BUS_RESET;
-> > -       pci_write_config_word(dev->bus->self, PCI_BRIDGE_CONTROL, ctrl);
-> > +       pci_write_config_word(bridge, PCI_BRIDGE_CONTROL, ctrl);
-> >         msleep(100);
-> >
-> >         ctrl &= ~PCI_BRIDGE_CTL_BUS_RESET;
-> > -       pci_write_config_word(dev->bus->self, PCI_BRIDGE_CONTROL, ctrl);
-> > +       pci_write_config_word(bridge, PCI_BRIDGE_CONTROL, ctrl);
-> >         msleep(100);
-> >
-> > +       if (sltctl & PCI_EXP_SLTCTL_PDCE)
-> > +               pcie_capability_write_word(bridge, PCI_EXP_SLTCTL, sltctl);
-> > +
-> >         return 0;
-> >  }
-> >
-> >
-
-
-
+Bjorn
