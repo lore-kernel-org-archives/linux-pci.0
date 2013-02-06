@@ -1,54 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:45953 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933376Ab3BLQ3t (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Feb 2013 11:29:49 -0500
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Cc: Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Tawfik Bayouk <tawfik@marvell.com>
-Subject: [PATCH 25/32] arm: mvebu: PCIe support is now available on mvebu
-Date: Tue, 12 Feb 2013 17:28:59 +0100
-Message-Id: <1360686546-24277-26-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from mail-vb0-f41.google.com ([209.85.212.41]:65355 "EHLO
+	mail-vb0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757790Ab3BFRzO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Feb 2013 12:55:14 -0500
+Received: by mail-vb0-f41.google.com with SMTP id l22so1068998vbn.0
+        for <linux-pci@vger.kernel.org>; Wed, 06 Feb 2013 09:55:14 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAE9FiQWvmK7N2z19B9ZiMyc_T6cJdpWoWr3mExpuwUA4ogBc3w@mail.gmail.com>
+References: <CAE9FiQXHG01NjnYNDbC-KEpbcvY-q4pBe97CxTOGS7W4vZQBYQ@mail.gmail.com>
+ <1359314629-18651-1-git-send-email-yinghai@kernel.org> <CAErSpo6r_LNEtYB3j5ELb8NdHu0a6_YOVj8S32CmByGFUpSsbg@mail.gmail.com>
+ <CAE9FiQXg1YcPPJLCgPbKOKXHk-LRQv4bbBGH9jyuATQa2ANLkg@mail.gmail.com>
+ <CAE9FiQX2DbTO0qCzGO4iMTkU_mPM2oZL+R5UoZ5dj=as6MUAsw@mail.gmail.com>
+ <CAErSpo7-dULYwWQ=f5CBCxOULKJE9=n6Ha4jkVKd8enspuYjTA@mail.gmail.com> <CAE9FiQWvmK7N2z19B9ZiMyc_T6cJdpWoWr3mExpuwUA4ogBc3w@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 6 Feb 2013 10:54:53 -0700
+Message-ID: <CAErSpo4x-GzGxJOWgwP_DEqNhefDo0V1zTT5GBR30+Q57=E-hg@mail.gmail.com>
+Subject: Re: [PATCH v3 00/22] PCI: Iterate pci host bridge instead of pci root bus
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	Mauro Carvalho Chehab <mchehab@redhat.com>,
+	Tony Luck <tony.luck@intel.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, Russell King <linux@arm.linux.org.uk>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now that the PCIe driver for mvebu has been integrated and all its
-relevant dependencies, we can mark the ARCH_MVEBU platform has
-MIGHT_HAVE_PCI, which allows to select the PCI bus support if needed.
+On Tue, Feb 5, 2013 at 5:47 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Tue, Feb 5, 2013 at 4:19 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>
+>> Maybe.  I'd rather not introduce for_each_pci_host_bridge() at all, if
+>> we can avoid it.  Every place it's used is a place we have to audit to
+>> make sure it's safe.  I think your audit above is correct and
+>> complete, but it relies on way too much architecture knowledge.  It's
+>> better if we can deduce correctness without knowing which arches
+>> support hotplug and which CPUs support EDAC.
+>>
+>> As soon as for_each_pci_host_bridge() is in the tree, those uses can
+>> be copied to even more places.  It's a macro, so it's usable by any
+>> module, even out-of-tree ones that we'll never see and can't fix.  So
+>> we won't really have a good way to deprecate and remove it.
+>
+> Now we only have two references in modules.
+>
+> drivers/edac/i7core_edac.c:     for_each_pci_host_bridge(host_bridge) {
+> drivers/pci/hotplug/sgi_hotplug.c:      for_each_pci_host_bridge(host_bridge) {
+>
+> for the sgi_hotplug.c, it should be same problem that have for acpiphp
+> and pciehp.
+> need to make it support pci host bridge hotplug anyway.
+>
+> for edac, we need to check Mauro about their plan.
+>
+> After those two are addressed, we can drop that EXPORT_SYMBOL_GPL for
+> pci_get_next_host_bridge.
+>
+> We do have pci_get_domain_bus_and_slot() as export symbol.
+> So we export pci_get_next_host_bridge should be ok now.
+> and it would be better than export root buses list.
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
----
- arch/arm/mach-mvebu/Kconfig |    2 ++
- 1 file changed, 2 insertions(+)
+I think you're missing the point.
 
-diff --git a/arch/arm/mach-mvebu/Kconfig b/arch/arm/mach-mvebu/Kconfig
-index 440b13e..f12e475 100644
---- a/arch/arm/mach-mvebu/Kconfig
-+++ b/arch/arm/mach-mvebu/Kconfig
-@@ -13,6 +13,8 @@ config ARCH_MVEBU
- 	select MVEBU_CLK_CORE
- 	select MVEBU_CLK_CPU
- 	select MVEBU_CLK_GATING
-+	select MIGHT_HAVE_PCI
-+	select PCI_QUIRKS if PCI
- 
- if ARCH_MVEBU
- 
--- 
-1.7.9.5
+Search the tree for uses of "for_each_pci_dev()."  Almost every
+occurrence is a bug because that code doesn't work correctly for
+hot-added devices.  That code gets run for devices that are present at
+boot, but not for devices hot-added later.
 
+You're proposing to add "for_each_pci_host_bridge()."  That will have
+the exact same problem as for_each_pci_dev() already does.  Code that
+uses it will work for host bridges present at boot, but not for
+bridges hot-added later.
+
+Why would we want to add an interface when every use of that interface
+will be a design bug?  I think we should fix the existing users of
+pci_root_buses by changing their designs so they will work correctly
+with host bridge hotplug.
+
+Bjorn
