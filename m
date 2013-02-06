@@ -1,111 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vb0-f46.google.com ([209.85.212.46]:50314 "EHLO
-	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755188Ab3BETXL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Feb 2013 14:23:11 -0500
-Received: by mail-vb0-f46.google.com with SMTP id b13so302213vby.33
-        for <linux-pci@vger.kernel.org>; Tue, 05 Feb 2013 11:23:11 -0800 (PST)
+Received: from mail-ia0-f177.google.com ([209.85.210.177]:49114 "EHLO
+	mail-ia0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755962Ab3BFXbk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Feb 2013 18:31:40 -0500
 MIME-Version: 1.0
-In-Reply-To: <1360078091.4485.32.camel@rhapsody>
-References: <20130204115246.5569.85829.stgit@zurg> <20130204115557.5569.9748.stgit@zurg>
- <1360016458.4485.11.camel@rhapsody> <CAErSpo7k96noiCtGYUFyuUQhE2GQA8ro5-9WC-JU_1HOWKUGvg@mail.gmail.com>
- <1360078091.4485.32.camel@rhapsody>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 5 Feb 2013 12:22:49 -0700
-Message-ID: <CAErSpo7sYCmfd0X7PBfYS_ZK5sijxS3mpmhkrQ6UqO_xDry69Q@mail.gmail.com>
-Subject: Re: [PATCH v2 2/7] PCI: don't touch enable_cnt in pci_device_shutdown()
-To: Khalid Aziz <khalid@gonehiking.org>
-Cc: Konstantin Khlebnikov <khlebnikov@openvz.org>,
-	e1000-devel@lists.sourceforge.net, linux-pci@vger.kernel.org,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	linux-kernel@vger.kernel.org, Andi Kleen <ak@linux.intel.com>,
-	Alan Cox <alan@lxorguk.ukuu.org.uk>,
-	Matthew Garrett <mjg@redhat.com>, khalid.aziz@oracle.com
+In-Reply-To: <CAErSpo4vd+GhTVpoLb=sFTqBZMG=xva1QUUhyJrO4o0ytPXmqg@mail.gmail.com>
+References: <CAE9FiQXHG01NjnYNDbC-KEpbcvY-q4pBe97CxTOGS7W4vZQBYQ@mail.gmail.com>
+	<52330506.F9m0tMYuG1@vostro.rjw.lan>
+	<CAE9FiQXTRaP08ZeHWTJHt50DZO800BMigmo=q65-RLzZWkTvoQ@mail.gmail.com>
+	<3459136.QID0qrXQHt@vostro.rjw.lan>
+	<CAErSpo4vd+GhTVpoLb=sFTqBZMG=xva1QUUhyJrO4o0ytPXmqg@mail.gmail.com>
+Date: Wed, 6 Feb 2013 15:31:39 -0800
+Message-ID: <CAE9FiQViHem1OBWEb-6_J1kzK-zUgiA4DZVH3_vagCNK_pkn6g@mail.gmail.com>
+Subject: Re: [PATCH v3 00/22] PCI: Iterate pci host bridge instead of pci root bus
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Myron Stowe <myron.stowe@gmail.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Mauro Carvalho Chehab <mchehab@redhat.com>,
+	Tony Luck <tony.luck@intel.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, Russell King <linux@arm.linux.org.uk>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 5, 2013 at 8:28 AM, Khalid Aziz <khalid@gonehiking.org> wrote:
-> On Mon, 2013-02-04 at 16:13 -0700, Bjorn Helgaas wrote:
->> On Mon, Feb 4, 2013 at 3:20 PM, Khalid Aziz <khalid@gonehiking.org> wrote:
->> > On Mon, 2013-02-04 at 15:55 +0400, Konstantin Khlebnikov wrote:
->> >> Matthew Garrett and Alan Cox said (see LKML link below) that clearing bus-master
->> >> for all PCI devices may lead to unpredictable consequences, some devices ignores
->> >> this bit and continues DMA, some of them hang after that or crash whole system.
->> >> Probably we should leave here only warning and disable bus-mastering for each
->> >> driver individually in ->shutdown() callback.
->> >
->> > Agreed that the right place for shutting down a PCI device properly and
->> > clearing its Bus Master bit, is the driver shutdown routine, if only all
->> > drivers supplied a shutdown routine. As it is today, there are too many
->> > drivers that do not provide a shutdown routine, ata_piix, Marvell SATA
->> > driver, ATI AGP driver just to name a few among a large number of them.
->> > Yet kexec is expected to work inspite of these drivers especially since
->> > kdump depends on it. So until all PCI drivers supply a shutdown routine,
->> > this is just a band-aid to disable interrupt and Bus Master bit in
->> > pci_device_shutdown(). Most drivers do seem to supply a suspend and
->> > resume function and it was discussed many years ago if it is feasible to
->> > use the suspend() routine for drivers to shut devices down cleanly.
->> > Maybe it is time to revisit that discussion.
->>
->> This patch as posted doesn't do anything with IRQs.  It only clears
->> PCI_COMMAND_MASTER.
->>
->> I'm open to considering something with IRQs, but I don't understand
->> exactly what we should do.  In your response to the previous version
->> (https://lkml.org/lkml/2013/1/28/720) you suggested this:
->>
->>   pci_clear_master(pci_dev);
->>   pcibios_disable_device(pci_dev);
->>
->> Did you figure out specifically why pcibios_disable_device() helps?
->> Using pcibios_disable_device() doesn't seem like the ideal solution
->> because on most architectures, it is an empty function with no obvious
->> connection to IRQs.  On x86 with ACPI, it cleans up some ACPI PCI IRQ
->> stuff, but as far as I can tell, it doesn't actually touch the PCI
->> device itself or even the IOAPIC to which it's connected, so I'm not
->> sure how this would help kexec.
+On Wed, Feb 6, 2013 at 3:02 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Wed, Feb 6, 2013 at 3:05 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+>> On Wednesday, February 06, 2013 01:53:50 PM Yinghai Lu wrote:
+>>> On Wed, Feb 6, 2013 at 1:43 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+>>> > On Wednesday, February 06, 2013 01:28:27 PM Yinghai Lu wrote:
+>>> >> so you still did not answer you want 1 or 2 yet:
+>>> >>
+>>> >> for sgi_hotplug,
+>>> >>
+>>> >> 1. still keep the module support, and register acpi_pci_driver later.
+>>> >> 2. built-in support only, and need to register acpi_pci_driver early.
+>>> >
+>>> > Please work with the assumption that acpi_pci_driver is not going to be there
+>>> > any more.
+>>> >
+>>>
+>>> I think I could change ioapic and iommu hotplug to weak add/remove because they
+>>> should be built-in by nature.
+>>>
+>>> but how about others like sgi_hotplug etc?
 >
-> My reading of the code was that pcibios_disable_device() does clear the
-> interrupt on x86 and ia64. I am not deeply familiar with the ACPI code
-> and I might be interpreting it incorrectly, so please do correct me if I
-> am reading it incorrectly. Here is the code sequence I see:
+> I think that could be handled with pcibios_root_bridge_prepare() or
+> something similar -- something that happens in the "add host bridge"
+> path.  I'm not saying we necessarily have all the right hooks in place
+> yet.  It's just that I'd rather figure out what the right hooks *are*
+> and add them if necessary, than just convert pci_root_buses to
+> for_each_pci_host_bridge().
+
+so we will have all built-in for apci_pci_driver and call add/remove directly?
+
+BTW, looks like sgi_hotplug may need some time to convert ...
+Also not sure who can test it.
+
 >
-> pcibios_disable_device() ->
->    pcibios_disable_irq() ->
->        acpi_pci_irq_disable() ->
->            acpi_pci_link_free_irq() ->
->               acpi_evaluate_object(link->device->handle, "_DIS", NULL,
-> NULL);
+>> I'd really prefer to wait for the patchset removing acpi_pci_driver (from
+>> Myron) before proceeding with more changes in that area.
+>>
+>> Myron, do you have a prototype based on the current linux-next?
 >
-> My understanding is the evaluation of ACPI _DIS method will disable the
-> interrupt from the device. Does that sound reasonable?
+> I think it's really the acpiphp/pciehp issue that's holding up the
+> removal of acpi_pci_driver.  I'm not sure if anybody's working on
+> that.
 
-I see the code you're looking at in acpi_pci_link_free_irq(), but we
-only evaluate _DIS if link->refcnt == 0, and I don't think refcnt is
-ever zero at that point.
+Myron's last Dec's version would split all acpi_pci_driver's
+add/remove into acpi_pci_root_add/remove.
 
-refcnt starts out at zero in acpi_pci_link_add() (called when we find
-PNP0C0F devices), and it's incremented in acpi_pci_link_allocate_irq()
-(called in the pci_enable_device() path), but as far as I can tell,
-it's never decremented, so I doubt that _DIS is ever evaluated.
+other way is use host-bridge nodifier, looks like that is not favorable.
 
-If we did evaluate _DIS, it would act on an "interrupt link" device,
-not on the PCI device itself.  I guess that could help, but only for
-devices connected to such a link device.  For others, I guess we might
-be able to accomplish something similar by updating local APIC and/or
-IOAPIC config.  I don't think we do that today, at least not in the
-pci_disable_device() path, but it might be something interesting to
-explore.  There is also the INTx Disable bit, though it's obviously
-only on new PCI devices.
+BTW, looks like I could put add/remove calling directly in
+acpi_pci_root_add/remove
+for ioapic and iommu.
 
-> ... The two ways I can think of are to stop
-> DMA by clearing Bus Master bit and turn off the interrupt, which have
-> been shown to get kexec (and thus kdump) working on machines it didn't
-> work on before.
+Thanks
 
-I was just curious if you had actually verified that _DIS was being
-evaluated and making a difference here, or if the Bus Master bit was
-really the important part.
-
-Bjorn
+Yinghai
