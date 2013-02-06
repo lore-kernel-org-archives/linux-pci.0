@@ -1,113 +1,81 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: "Moore, Robert" <robert.moore@intel.com>
-Cc: Toshi Kani <toshi.kani@hp.com>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jiang Liu <liuj97@gmail.com>, Yinghai Lu <yinghai@kernel.org>,
-	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
-	Myron Stowe <mstowe@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [Update][PATCH] ACPI / hotplug: Fix concurrency issues and memory leaks
-Date: Fri, 15 Feb 2013 01:23:09 +0100
-Message-ID: <1463882.MtF6rq6lDy@vostro.rjw.lan>
-In-Reply-To: <94F2FBAB4432B54E8AACC7DFDE6C92E368CB5E39@ORSMSX101.amr.corp.intel.com>
-References: <1837481.7dT8hTZ4MT@vostro.rjw.lan> <7482249.JD6lNDApdo@vostro.rjw.lan> <94F2FBAB4432B54E8AACC7DFDE6C92E368CB5E39@ORSMSX101.amr.corp.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <20130206065340.416a708b@redhat.com>
+References: <CAE9FiQXHG01NjnYNDbC-KEpbcvY-q4pBe97CxTOGS7W4vZQBYQ@mail.gmail.com>
+ <1359314629-18651-1-git-send-email-yinghai@kernel.org> <CAErSpo6r_LNEtYB3j5ELb8NdHu0a6_YOVj8S32CmByGFUpSsbg@mail.gmail.com>
+ <CAE9FiQXg1YcPPJLCgPbKOKXHk-LRQv4bbBGH9jyuATQa2ANLkg@mail.gmail.com>
+ <CAE9FiQX2DbTO0qCzGO4iMTkU_mPM2oZL+R5UoZ5dj=as6MUAsw@mail.gmail.com>
+ <CAErSpo7-dULYwWQ=f5CBCxOULKJE9=n6Ha4jkVKd8enspuYjTA@mail.gmail.com>
+ <CAE9FiQWvmK7N2z19B9ZiMyc_T6cJdpWoWr3mExpuwUA4ogBc3w@mail.gmail.com> <20130206065340.416a708b@redhat.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 6 Feb 2013 10:45:16 -0700
+Message-ID: <CAErSpo4jtrp4ashHsfZP580_qdCXBEqmdd=SBfQrgQTV4uM4EA@mail.gmail.com>
+Subject: Re: [PATCH v3 00/22] PCI: Iterate pci host bridge instead of pci root bus
+To: Mauro Carvalho Chehab <mchehab@redhat.com>
+Cc: Yinghai Lu <yinghai@kernel.org>, Jiang Liu <jiang.liu@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, Russell King <linux@arm.linux.org.uk>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, February 14, 2013 11:45:27 PM Moore, Robert wrote:
-> 
-> > -----Original Message-----
-> > From: Rafael J. Wysocki [mailto:rjw@sisk.pl]
-> > Sent: Thursday, February 14, 2013 12:59 PM
-> > To: Moore, Robert
-> > Cc: Toshi Kani; ACPI Devel Maling List; LKML; Bjorn Helgaas; Jiang Liu;
-> > Yinghai Lu; Yasuaki Ishimatsu; Myron Stowe; linux-pci@vger.kernel.org
-> > Subject: Re: [Update][PATCH] ACPI / hotplug: Fix concurrency issues and
-> > memory leaks
-> > 
-> > On Thursday, February 14, 2013 08:45:14 PM Moore, Robert wrote:
-> > >
-> > > > -----Original Message-----
-> > > > From: Rafael J. Wysocki [mailto:rjw@sisk.pl]
-> > > > Sent: Thursday, February 14, 2013 4:04 AM
-> > > > To: Moore, Robert
-> > > > Cc: Toshi Kani; ACPI Devel Maling List; LKML; Bjorn Helgaas; Jiang
-> > > > Liu; Yinghai Lu; Yasuaki Ishimatsu; Myron Stowe;
-> > > > linux-pci@vger.kernel.org
-> > > > Subject: Re: [Update][PATCH] ACPI / hotplug: Fix concurrency issues
-> > > > and memory leaks
-> > > >
-> > > > On Thursday, February 14, 2013 02:31:22 AM Moore, Robert wrote:
-> > > > > > > > I thought about that, but actually there's no guarantee that
-> > > > > > > > the handle will be valid after _EJ0 as far as I can say.  So
-> > > > > > > > the race condition is going to be there anyway and using
-> > > > > > > > struct acpi_device just makes it easier to avoid it.
-> > > > > > >
-> > > > > > > In theory, yes, a stale handle could be a problem, if _EJ0
-> > > > > > > performs unload table and if ACPICA frees up its internal data
-> > > > > > > structure pointed by the handle as a result.  But we should
-> > > > > > > not see such issue now since we do not support dynamic ACPI
-> > > > > > > namespace
-> > > > yet.
-> > > > > >
-> > > > > > I'm waiting for information from Bob about that.  If we can
-> > > > > > assume ACPI handles to be always valid, that will simplify
-> > > > > > things quite a
-> > > > bit.
-> > > > >
-> > > > > If a table is unloaded, all the namespace nodes for that table are
-> > > > > removed from the namespace, and thus any ACPI_HANDLE pointers go
-> > > > > stale
-> > > > and invalid.
-> > > >
-> > > > OK, thanks!
-> > > >
-> > > > To me this means that we cannot assume a handle to stay valid
-> > > > between a notify handler and acpi_bus_hot_remove_device() run from a
-> > workqueue.
-> > > >
-> > > > Is there a mechanism in ACPICA to ensure that a handle won't become
-> > > > stale while a notify handler is running for it or is the OS
-> > > > responsible for ensuring that
-> > > > _EJ0 won't be run in parallel with notify handlers for device
-> > > > objects being ejected?
-> > > >
-> > >
-> > > It is up to the host.
-> > 
-> > I was afraid that that might be the case. :-)
-> > 
-> > So far the (Linux) host has been happily ignoring that potential problem,
-> > so I guess it can still be ignored for a while, although we'll need to
-> > address it eventually at one point.
-> 
-> I would think it should be fairly simple to setup a mechanism to either tell
-> the driver or for the driver to figure it out -- such that the driver knows
-> that all handles associated with the device are now invalid. Another way
-> to look at it is that when the device is re-installed, the driver should
-> reinitialize such that it obtains new handles for the devices and subobjects
-> in question.
+On Wed, Feb 6, 2013 at 1:53 AM, Mauro Carvalho Chehab
+<mchehab@redhat.com> wrote:
+> Em Tue, 5 Feb 2013 16:47:10 -0800
+> Yinghai Lu <yinghai@kernel.org> escreveu:
+>
+>> On Tue, Feb 5, 2013 at 4:19 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> >
+>> > Maybe.  I'd rather not introduce for_each_pci_host_bridge() at all, if
+>> > we can avoid it.  Every place it's used is a place we have to audit to
+>> > make sure it's safe.  I think your audit above is correct and
+>> > complete, but it relies on way too much architecture knowledge.  It's
+>> > better if we can deduce correctness without knowing which arches
+>> > support hotplug and which CPUs support EDAC.
+>> >
+>> > As soon as for_each_pci_host_bridge() is in the tree, those uses can
+>> > be copied to even more places.  It's a macro, so it's usable by any
+>> > module, even out-of-tree ones that we'll never see and can't fix.  So
+>> > we won't really have a good way to deprecate and remove it.
+>>
+>> Now we only have two references in modules.
+>>
+>> drivers/edac/i7core_edac.c:     for_each_pci_host_bridge(host_bridge) {
+>> drivers/pci/hotplug/sgi_hotplug.c:      for_each_pci_host_bridge(host_bridge) {
+>>
+>> for the sgi_hotplug.c, it should be same problem that have for acpiphp
+>> and pciehp.
+>> need to make it support pci host bridge hotplug anyway.
+>>
+>> for edac, we need to check Mauro about their plan.
+>
+> The i7core_pci_lastbus() code at i7core_edac is there to make it work
+> with some Nehalem/Nehalem-EP machines that hide the memory controller's
+> PCI ID by using an artificially low last bus.
 
-Unfortunately, there is quite strong assumption in our code that ACPI handles
-will not become stale before the device objects associated with them are
-removed.  For this reason, we need to know in advance which handles will
-become stale as a result of a table unload and remove their device objects
-beforehand.
+I don't really understand how this helps.  An example would probably
+make it clearer.
 
-Moreover, when there's a notify handler installed for a given ACPI handle
-and that handle becomes stale while the notify handler is running, we'll be
-in trouble.  To avoid that we need to ensure that table unloads and notifies
-will always be mutually exclusive.
+i7core_edac.c has some very creative use of PCI infrastructure.
+Normally a driver has a pci_device_id table that identifies the
+vendor/device IDs of the devices it cares about, and the driver's
+.probe() method is called for every matching device.
 
-Thanks,
-Rafael
+But i7core_edac only has two entries in its id_table.  When we find a
+device that matches one of those two entries, we call i7core_probe(),
+which then gropes around for all the *other* devices related to that
+original one.  This is a bit messy.
 
+I'd like it a lot better if the device IDs in
+pci_dev_descr_i7core_nehalem[], pci_dev_descr_lynnfield[], etc., were
+just in the pci_device_id table directly.  Then i7core_probe() would
+be called directly for every device you care about, and you could sort
+them out there.  That should work without any need for
+pci_get_device(), i7core_pci_lastbus(), etc.
 
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+Bjorn
