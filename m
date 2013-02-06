@@ -1,76 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:49476 "EHLO quartz.orcorp.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757022Ab3BMAcY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 12 Feb 2013 19:32:24 -0500
-Date: Tue, 12 Feb 2013 17:32:24 -0700
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	linux-pci@vger.kernel.org,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: Giving special alignment/size constraints to the Linux PCI core?
-Message-ID: <20130213003224.GA32535@obsidianresearch.com>
-References: <20130130120344.GA29490@avionic-0098.mockup.avionic-design.de>
- <201302121902.14276.arnd@arndb.de>
- <20130212193848.GE1471@obsidianresearch.com>
- <201302122305.28467.arnd@arndb.de>
+Received: from mail-vc0-f172.google.com ([209.85.220.172]:36184 "EHLO
+	mail-vc0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751724Ab3BFRIu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Feb 2013 12:08:50 -0500
+Received: by mail-vc0-f172.google.com with SMTP id l6so1007814vcl.17
+        for <linux-pci@vger.kernel.org>; Wed, 06 Feb 2013 09:08:49 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201302122305.28467.arnd@arndb.de>
+In-Reply-To: <CADnq5_NsB=xZA-vMr8OkHF6W0GZgWEyZzBMD5AGMOr_jKj_jCw@mail.gmail.com>
+References: <002b01ce0429$59d7acc0$0d870640$%han@samsung.com> <CADnq5_NsB=xZA-vMr8OkHF6W0GZgWEyZzBMD5AGMOr_jKj_jCw@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 6 Feb 2013 10:08:12 -0700
+Message-ID: <CAErSpo6k=AfkAbM70Xzyvq61t2HP+YqWStdSU3eK1kXbbCjV2Q@mail.gmail.com>
+Subject: Re: [PATCH] drm/pci: use PCI_EXP_LNKCAP_SLS_2_5GB/5_0GB instead of
+ hardcoded values
+To: Alex Deucher <alexdeucher@gmail.com>
+Cc: Jingoo Han <jg1.han@samsung.com>, David Airlie <airlied@linux.ie>,
+	linux-pci@vger.kernel.org, dri-devel@lists.freedesktop.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 12, 2013 at 11:05:28PM +0000, Arnd Bergmann wrote:
-> On Tuesday 12 February 2013, Jason Gunthorpe wrote:
-> > PCI-E hotplug can be supported through the generic /sys/bus/pci/rescan
-> > mechanism, which forces a rediscovery/re-evaluation of all the buses
-> > in the system. The PCI core is smart enough to know what it can/can
-> > not reassign and can move the bridge windows around (IIRC most of the
-> > issues here are resolved these days?).
-> > 
-> > For PCI-E, the root port bridge can be placed anywhere in the host
-> > aperture, so as long as the host aperture isn't filled the core can
-> > allocate a memory region for the now active port.
-> > 
-> > Thomas's driver should support this as the regions and windows are all
-> > properly dynamic.
-> 
-> Ah, so you only allow hotplugging into the root ports, but not behind
-> additional bridges that have active devices on them, right?
- 
-> I guess that is a common limitation for PCIe hotplugging.
+On Wed, Feb 6, 2013 at 7:27 AM, Alex Deucher <alexdeucher@gmail.com> wrote:
+> On Wed, Feb 6, 2013 at 12:18 AM, Jingoo Han <jg1.han@samsung.com> wrote:
+>> Use PCI_EXP_LNKCAP_SLS_2_5GB and PCI_EXP_LNKCAP_SLS_5_0GB instead
+>> of hardcoded values for readability. These bit definitions were
+>> added by commit 130f1b8 ("PCI: Add PCIe Link Capability link speed
+>> and width names")
+>>
+>> Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+>
+> Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
 
-In all the cases I've worked with, it has been a root port hot plug,
-but I could imagine something like ExpressCard requiring a second
-bridge.
+Reviewed-by: Bjorn Helgaas <bhelgaas@google.com>
 
-The standard answer is to leave appropriate gaps. My *guess* on this
-matter is that on x86 the gaps are left, as appropriate, by the boot
-firmware. Eg an ExpressCard slot will always have a window assigned to
-its bridge and Linux would typically not reassign it (or similar).
+I posted the same patch last month, along with two other patches that
+fix the reporting for pre-r3.0 devices and simplify the code a bit:
 
-PCI core support for firmware-less embedded will someday need to do
-something similar, eg via a special DT attribute on hot plug capable
-ports.
+    http://marc.info/?l=linux-pci&m=135732663513525&w=2
+    http://marc.info/?l=linux-pci&m=135732713413779&w=2
+    http://marc.info/?l=linux-pci&m=135732666213542&w=2
 
-Just to circle back on this whole thread - Thomas's solution is pretty
-good, it covers pretty much all the use cases. I think it is a good
-place to start, and as the firmware-less 'drivers/pci/host' concept
-develops the right support will eventually come, as everyone is now
-aware of the need to control the host bridge aperture from the core
-PCI code.
+I don't know the status of any of these; I'm expecting Dave to do
+whatever he thinks is best.
 
-Jason
+>
+>> ---
+>>  drivers/gpu/drm/drm_pci.c |    4 ++--
+>>  1 files changed, 2 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/gpu/drm/drm_pci.c b/drivers/gpu/drm/drm_pci.c
+>> index 754bc96..11c8add 100644
+>> --- a/drivers/gpu/drm/drm_pci.c
+>> +++ b/drivers/gpu/drm/drm_pci.c
+>> @@ -504,9 +504,9 @@ int drm_pcie_get_speed_cap_mask(struct drm_device *dev, u32 *mask)
+>>                 if (lnkcap2 & PCI_EXP_LNKCAP2_SLS_8_0GB)
+>>                         *mask |= DRM_PCIE_SPEED_80;
+>>         } else {
+>> -               if (lnkcap & 1)
+>> +               if (lnkcap & PCI_EXP_LNKCAP_SLS_2_5GB)
+>>                         *mask |= DRM_PCIE_SPEED_25;
+>> -               if (lnkcap & 2)
+>> +               if (lnkcap & PCI_EXP_LNKCAP_SLS_5_0GB)
+>>                         *mask |= DRM_PCIE_SPEED_50;
+>>         }
+>>
+>> --
+>> 1.7.2.5
+>>
+>>
+>> _______________________________________________
+>> dri-devel mailing list
+>> dri-devel@lists.freedesktop.org
+>> http://lists.freedesktop.org/mailman/listinfo/dri-devel
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
