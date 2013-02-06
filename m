@@ -1,70 +1,68 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 26 Feb 2013 14:29:05 +0100
-From: David =?iso-8859-1?Q?H=E4rdeman?= <david@hardeman.nu>
-To: Hannes Reinecke <hare@suse.de>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-kernel@vger.kernel.org, Frederik Himpe <fhimpe@vub.ac.be>,
-	Oliver Neukum <oneukum@suse.de>, linux-usb@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH] pci: do not try to assign irq 255
-Message-ID: <20130226132905.GB24959@hardeman.nu>
-References: <1361182193-31894-1-git-send-email-hare@suse.de>
- <CAE9FiQWP1F5mLUoHoTHXy-wQoGxVK66QuuHYydaq3YfysS5Etg@mail.gmail.com>
- <5124820D.2080900@suse.de>
- <CAE9FiQXHteymDNzu0GqWtVSVhu3g2hCT+K9e5tB1mR-OBX1ffA@mail.gmail.com>
- <5125C45A.5020208@suse.de>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ia0-f173.google.com ([209.85.210.173]:62537 "EHLO
+	mail-ia0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751724Ab3BFRHy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Feb 2013 12:07:54 -0500
+Received: by mail-ia0-f173.google.com with SMTP id h37so1849150iak.18
+        for <linux-pci@vger.kernel.org>; Wed, 06 Feb 2013 09:07:53 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <5125C45A.5020208@suse.de>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <9348609.HjKCmL9u9S@wuerfel>
+References: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de>
+	<1357764194-12677-7-git-send-email-thierry.reding@avionic-design.de>
+	<CACRpkdYV5w6BksUjXvXs=88BovUyXgRt-vXSD0twjRpzbZcvFQ@mail.gmail.com>
+	<9348609.HjKCmL9u9S@wuerfel>
+Date: Wed, 6 Feb 2013 18:07:53 +0100
+Message-ID: <CACRpkdYGgdMTi0ZeMeCk5UmrndD451Pyz8L_XE=y9SPXfGGdew@mail.gmail.com>
+Subject: Re: [PATCH 06/14] ARM: pci: Keep pci_common_init() around after init
+From: Linus Walleij <linus.walleij@linaro.org>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: devicetree-discuss@lists.ozlabs.org,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Rob Herring <rob.herring@calxeda.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-tegra@vger.kernel.org, Andrew Murray <andrew.murray@arm.com>,
+	linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 21, 2013 at 07:53:14AM +0100, Hannes Reinecke wrote:
->On 02/20/2013 05:57 PM, Yinghai Lu wrote:
->>it seems you mess pin with interrupt line.
+On Thu, Feb 7, 2013 at 1:54 AM, Arnd Bergmann <arnd@arndb.de> wrote:
+> On Wednesday 06 February 2013 17:38:20 Linus Walleij wrote:
+>> On Wed, Jan 9, 2013 at 9:43 PM, Thierry Reding
+>> <thierry.reding@avionic-design.de> wrote:
 >>
->>current code:
->>         unsigned char irq;
+>> > When using deferred driver probing, PCI host controller drivers may
+>> > actually require this function after the init stage.
+>> >
+>> > Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
 >>
->>         pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &irq);
->>         dev->pin = irq;
->>         if (irq)
->>                 pci_read_config_byte(dev, PCI_INTERRUPT_LINE, &irq);
->>         dev->irq = irq;
+>> There seem to be a proliferation of these patches now.
 >>
->>so if the device does not have interrupt pin implemented, pin should be zero.
->>and  pin and irq in dev should
->>be all 0.
->>
->But the device _has_ an interrupt pin implemented.
->The whole point here is that the interrupt line is _NOT_ zero.
+>> Isn't this just papering over the real problem? The discarding
+>> of __init sections need to happen *after* all deferred probes
+>> are complete, lest we have to remove *all* __init sections from
+>> *all* drivers in the kernel, don't we?
 >
-...
+> No, I think it's not quite that bad. I think the rule is still
+> just that .probe() functions and anything called from them must
+> not be __init. They used to be __devinit, which would cause
+> problems with deferred probing on !HOTPLUG systems but that's
+> gone in 3.9.
 >
->So at one point we have to decide that ->irq is not valid, despite it
->being not set to zero.
->An alternative fix would be this:
->
->diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
->index 68a921d..4a480cb 100644
->--- a/drivers/acpi/pci_irq.c
->+++ b/drivers/acpi/pci_irq.c
->@@ -469,6 +469,7 @@ int acpi_pci_irq_enable(struct pci_dev *dev)
->                } else {
->                        dev_warn(&dev->dev, "PCI INT %c: no GSI\n",
->                                 pin_name(pin));
->+                       dev->irq = 0;
->                }
->                return 0;
->        }
->
->Which probably is a better solution, as here ->irq is _definitely_
->not valid, so we should reset it to '0' to avoid confusion on upper
->layers.
->
+> Thierry's patch is just necessary because pci_common_init used
+> to be called only from actual __init functions, and not it
+> gets called from a .probe() function for the first time.
 
-Is there any agreement on how to proceed?
+Aha OK, then it feels much better now.
 
--- 
-David Härdeman
+However it leaves the question of how much __init, __initdata
+and __initconst we have littering around. Oh, well, we'll see
+I guess.
+
+Thanks,
+Linus Walleij
