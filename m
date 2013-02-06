@@ -1,109 +1,129 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:52609 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755962Ab3BFRS7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Feb 2013 12:18:59 -0500
-Date: Wed, 6 Feb 2013 18:18:52 +0100
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	linux-pci@vger.kernel.org,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH v2 19/27] pci: PCIe driver for Marvell Armada 370/XP
- systems
-Message-ID: <20130206181852.4eca53e3@skate>
-In-Reply-To: <20130206170903.GA28198@obsidianresearch.com>
-References: <20130130120344.GA29490@avionic-0098.mockup.avionic-design.de>
-	<2776630.gp5gC9tvLk@wuerfel>
-	<20130131180249.GA30869@obsidianresearch.com>
-	<201301312046.22560.arnd@arndb.de>
-	<20130131224459.GA11846@obsidianresearch.com>
-	<20130206175128.1b64196d@skate>
-	<20130206170903.GA28198@obsidianresearch.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from hydra.sisk.pl ([212.160.235.94]:54113 "EHLO hydra.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758539Ab3BFVhD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 6 Feb 2013 16:37:03 -0500
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Mauro Carvalho Chehab <mchehab@redhat.com>,
+	Tony Luck <tony.luck@intel.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, Russell King <linux@arm.linux.org.uk>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v3 00/22] PCI: Iterate pci host bridge instead of pci root bus
+Date: Wed, 06 Feb 2013 22:43:22 +0100
+Message-ID: <52330506.F9m0tMYuG1@vostro.rjw.lan>
+In-Reply-To: <CAE9FiQX=uEPjHDi-_VaW88ueH4u9C22gmDiGQewsQ=VN5T4=Gg@mail.gmail.com>
+References: <CAE9FiQXHG01NjnYNDbC-KEpbcvY-q4pBe97CxTOGS7W4vZQBYQ@mail.gmail.com> <CAErSpo5-6xs+Uz=Yzws23RmrFK=+AQZ2=UT+n0k=462EgazbUA@mail.gmail.com> <CAE9FiQX=uEPjHDi-_VaW88ueH4u9C22gmDiGQewsQ=VN5T4=Gg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Jason Gunthorpe,
-
-On Wed, 6 Feb 2013 10:09:03 -0700, Jason Gunthorpe wrote:
-
-> Link 0 translates like:
+On Wednesday, February 06, 2013 01:28:27 PM Yinghai Lu wrote:
+> On Wed, Feb 6, 2013 at 12:50 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> > On Wed, Feb 6, 2013 at 11:59 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+> >> On Wed, Feb 6, 2013 at 9:54 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> >>> I think you're missing the point.
+> >>>
+> >>> Search the tree for uses of "for_each_pci_dev()."  Almost every
+> >>> occurrence is a bug because that code doesn't work correctly for
+> >>> hot-added devices.  That code gets run for devices that are present at
+> >>> boot, but not for devices hot-added later.
+> >>>
+> >>> You're proposing to add "for_each_pci_host_bridge()."  That will have
+> >>> the exact same problem as for_each_pci_dev() already does.  Code that
+> >>> uses it will work for host bridges present at boot, but not for
+> >>> bridges hot-added later.
+> >>>
+> >>> Why would we want to add an interface when every use of that interface
+> >>> will be a design bug?  I think we should fix the existing users of
+> >>> pci_root_buses by changing their designs so they will work correctly
+> >>> with host bridge hotplug.
+> >>
+> >> I'm a little confused about what you want.
+> >>
+> >> In boot stage using for_each_pci_host_bridge or pci_root_buses is fine.
+> >
+> > No, it's not.  Boot-time should work exactly the same way as hot-add
+> > time, unless there's a reason it can't.  There might be corner cases
+> > where we can't do that yet, e.g., the pcibios_resource_survey stuff,
+> > but in general I don't think there's anything that *forces* us to
+> > iterate through host bridges at boot-time.
+> >
+> >> For those cases that it should support host-bridge by nature.
+> >> there are two solutions:
+> >> 1. use for_each_pci_host_bridge, and it is hotplug-safe.
+> >
+> > I'm trying to tell you that for_each_pci_host_bridge() is NOT
+> > hotplug-safe.  Your series makes it safer than it was, in the sense
+> > that it probably fixes stray pointer references when a host bridge
+> > hotplug happens while somebody's traversing pci_root_buses.  But the
+> > whole point of for_each_pci_host_bridge() is to run some code for
+> > every bridge we know about *right now*.  If a host bridge is added
+> > right after the for_each_pci_host_bridge() loop exits, that code
+> > doesn't get run.  In most cases, that's a bug.  The only exception I
+> > know about is the /sys/.../rescan interface.
+> >
+> >> and make sgi_hotplug to use acpi_pci_driver interface.
+> >> and acpi_pci_root_add() will call .add in the acpi_pci_driver.
+> >>
+> >> 2. make them all to be built-in, and  those acpi_pci_driver should be registered
+> >> much early before acpi_pci_root_add is called.
+> >> then we don't need to call for_each_host_bridge for it.
+> >>
+> >> So difference between them:
+> >> 1. still keep the module support, and register acpi_pci_driver later.
+> >> 2. built-in support only, and need to register acpi_pci_driver early.
+> >
+> > acpi_pci_driver is going away, so I don't want to add any more uses of
+> > it.  Obviously it's only relevant to x86 and ia64 anyway.
 > 
-> - Linux driver does inl(0x4)
-> - ARM layer converts that into a read from PCI_IO_VIRT_BASE + 0x4
-> - The CPU TLB converts that into a read from CPU physical
->   0xc0000000 + 0x4
-> - The MBUS window remap register converts that into a read from IO
->   space 0x4
-> - The address 0x4 is placed in the PCI-E IO transaction of link 0
+> when?
 > 
-> Link 1 translates like:
+> I have ioapic and iommu hotplug patch set that need to use them.
+
+I suppose it would be a bit simpler if you tried to fix things up before
+adding more stuff on top of them, which only makes it more difficult
+to clean them up when this additional stuff is applied.
+
+A patchset to remove acpi_pci_driver has been posted already and it is going
+to be submitted again after 3.9-rc1.  So this is the time frame.
+
+> > What I'd like is a change where for_each_pci_host_bridge() is used
+> > only inside the PCI core and defined somewhere like drivers/pci/pci.h
+> > so it's not even available outside.
+> >
+> > The other uses should be changed so they use
+> > pcibios_root_bridge_prepare() or something similar.  That way, it will
+> > be obvious that the code supports hot-added bridges, and when it gets
+> > copied to other places, we'll be copying a working design instead of a
+> > broken one.
+> >
+> > I don't want to have to audit these places and figure out "this is
+> > safe because this arch doesn't support host bridge hotplug" or "this
+> > is safe because this CPU doesn't support XYZ."  That's not a
+> > maintainable solution.  The safety should be apparent from the code
+> > itself, without requiring extra platform-specific knowledge.
 > 
-> - Linux driver does inl(0x1004)
-> - ARM layer converts that into a read from PCI_IO_VIRT_BASE + 0x1004
-> - The CPU TLB converts that into a read from CPU physical
->   0xc0000000 + 0x11004 (ie the mbus window for the link 1)
-> - The MBUS window remap register converts that into a read from IO
->   space 0x1004
-> - The address 0x1004 is placed in the PCI-E IO transaction of link 1
-
-This last step is exactly what I thought would not work. If the PCIe
-device has say 64 bytes of I/O space, then this 0x1004 PCI-E
-transaction will be out of bounds, no?
-
-Sorry, still learning how PCI works...
-
-> > I understand that I have two choices here:
-> > 
-> >  * First one is to make the I/O regions of all PCIe links fit below the
-> >    default IO_SPACE_LIMIT (0xffff) by doing the mapping trick you
-> >    described above.
-> > 
-> >  * Second one is to have one 64 KB block for each PCIe link, which
-> >    would require raising the IO_SPACE_LIMIT on this platform.
+> so you still did not answer you want 1 or 2 yet:
 > 
-> Yes, however, AFIAK this is the environment you should be running in:
+> for sgi_hotplug,
 > 
-> #define IO_SPACE_LIMIT  ((resource_size_t)0xfffff)
-> 
-> Which is 5 f's not 4.
+> 1. still keep the module support, and register acpi_pci_driver later.
+> 2. built-in support only, and need to register acpi_pci_driver early.
 
-Aaah, you're right. My eyes got the number of f wrong. So I have 16
-times 64 KB. So why would I bother doing the MMU trick if I can just
-nicely remap 64 KB for each PCIe link ?
-
-> > Can't this be solved using the window_alignement() hook we've been
-> > discussing separately? Just like we teach the Linux PCI core about our
-> > alignment requirements of 64K for the I/O regions, we could teach it
-> > about our alignment requirement on memory regions as well. No?
-> 
-> Hopefully :) As long as it can adjust the start and length you should
-> be fine.
-
-Why would you need to adjust the length? If Linux allocates a 2 MB
-resource on a 1 MB boundary, we simply increase the start address to
-the next 2 MB boundary, and that's it. Why would the length need to
-change?
+Please work with the assumption that acpi_pci_driver is not going to be there
+any more.
 
 Thanks,
+Rafael
 
-Thomas
+
 -- 
-Thomas Petazzoni, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
