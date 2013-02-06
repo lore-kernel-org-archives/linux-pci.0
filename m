@@ -1,72 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from avon.wwwdotorg.org ([70.85.31.133]:56319 "EHLO
-	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754548Ab3BFSWk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Feb 2013 13:22:40 -0500
-Message-ID: <51129F6B.1050709@wwwdotorg.org>
-Date: Wed, 06 Feb 2013 11:22:35 -0700
-From: Stephen Warren <swarren@wwwdotorg.org>
+Received: from mail-ie0-f176.google.com ([209.85.223.176]:53463 "EHLO
+	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754132Ab3BFQiU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Feb 2013 11:38:20 -0500
+Received: by mail-ie0-f176.google.com with SMTP id k13so2133735iea.7
+        for <linux-pci@vger.kernel.org>; Wed, 06 Feb 2013 08:38:20 -0800 (PST)
 MIME-Version: 1.0
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-CC: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
+In-Reply-To: <1357764194-12677-7-git-send-email-thierry.reding@avionic-design.de>
+References: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de>
+	<1357764194-12677-7-git-send-email-thierry.reding@avionic-design.de>
+Date: Wed, 6 Feb 2013 17:38:20 +0100
+Message-ID: <CACRpkdYV5w6BksUjXvXs=88BovUyXgRt-vXSD0twjRpzbZcvFQ@mail.gmail.com>
+Subject: Re: [PATCH 06/14] ARM: pci: Keep pci_common_init() around after init
+From: Linus Walleij <linus.walleij@linaro.org>
+To: Thierry Reding <thierry.reding@avionic-design.de>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Greg KH <gregkh@linuxfoundation.org>
+Cc: linux-tegra@vger.kernel.org,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
+	linux-kernel@vger.kernel.org,
+	Rob Herring <rob.herring@calxeda.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Murray <andrew.murray@arm.com>,
 	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH v2 19/27] pci: PCIe driver for Marvell Armada 370/XP systems
-References: <20130130120344.GA29490@avionic-0098.mockup.avionic-design.de> <2776630.gp5gC9tvLk@wuerfel> <20130131180249.GA30869@obsidianresearch.com> <201301312046.22560.arnd@arndb.de> <20130131224459.GA11846@obsidianresearch.com> <20130206175128.1b64196d@skate> <20130206170903.GA28198@obsidianresearch.com> <20130206181852.4eca53e3@skate> <20130206175019.GA24248@obsidianresearch.com>
-In-Reply-To: <20130206175019.GA24248@obsidianresearch.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 02/06/2013 10:50 AM, Jason Gunthorpe wrote:
-> On Wed, Feb 06, 2013 at 06:18:52PM +0100, Thomas Petazzoni wrote:
->> Dear Jason Gunthorpe,
->>
->> On Wed, 6 Feb 2013 10:09:03 -0700, Jason Gunthorpe wrote:
->>
->>> Link 0 translates like:
->>>
->>> - Linux driver does inl(0x4)
->>> - ARM layer converts that into a read from PCI_IO_VIRT_BASE + 0x4
->>> - The CPU TLB converts that into a read from CPU physical
->>>   0xc0000000 + 0x4
->>> - The MBUS window remap register converts that into a read from IO
->>>   space 0x4
->>> - The address 0x4 is placed in the PCI-E IO transaction of link 0
->>>
->>> Link 1 translates like:
->>>
->>> - Linux driver does inl(0x1004)
->>> - ARM layer converts that into a read from PCI_IO_VIRT_BASE + 0x1004
->>> - The CPU TLB converts that into a read from CPU physical
->>>   0xc0000000 + 0x11004 (ie the mbus window for the link 1)
->>> - The MBUS window remap register converts that into a read from IO
->>>   space 0x1004
->>> - The address 0x1004 is placed in the PCI-E IO transaction of link 1
->>
->> This last step is exactly what I thought would not work. If the PCIe
->> device has say 64 bytes of I/O space, then this 0x1004 PCI-E
->> transaction will be out of bounds, no?
-> 
-> No.. PCI end devices are required to decode all 32 bits of address,
-> less the bits requires for their allocation. So a device with 64 bytes
-> of IO will match bits 31:6 and then use bits 5:0 for the internal
-> register.
+On Wed, Jan 9, 2013 at 9:43 PM, Thierry Reding
+<thierry.reding@avionic-design.de> wrote:
 
-Didn't Arnd say (earlier this thread) that PCI devices using IO BARs
-were probably fairly legacy and hence might be buggy and might not obey
-that rule? Now, I'd guess it's safe within the first 64k of IO space
-though, so perhaps he was only talking about IO BAR bases >= 64k being
-dubious? That would imply a device might only use bits 15:6 for matching
-the BAR base and 5:0 for the internal register for a 64-byte BAR.
+> When using deferred driver probing, PCI host controller drivers may
+> actually require this function after the init stage.
+>
+> Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
+
+There seem to be a proliferation of these patches now.
+
+Isn't this just papering over the real problem? The discarding
+of __init sections need to happen *after* all deferred probes
+are complete, lest we have to remove *all* __init sections from
+*all* drivers in the kernel, don't we?
+
+Yours,
+Linus Walleij
