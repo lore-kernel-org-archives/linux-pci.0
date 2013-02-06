@@ -1,107 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from qmta12.emeryville.ca.mail.comcast.net ([76.96.27.227]:51521
-	"EHLO qmta12.emeryville.ca.mail.comcast.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751333Ab3BFAVR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Feb 2013 19:21:17 -0500
-Message-ID: <1360110073.4485.40.camel@rhapsody>
-Subject: Re: [PATCH v2 2/7] PCI: don't touch enable_cnt in
- pci_device_shutdown()
-From: Khalid Aziz <khalid@gonehiking.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Konstantin Khlebnikov <khlebnikov@openvz.org>,
-	e1000-devel@lists.sourceforge.net, linux-pci@vger.kernel.org,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	linux-kernel@vger.kernel.org, Andi Kleen <ak@linux.intel.com>,
-	Alan Cox <alan@lxorguk.ukuu.org.uk>,
-	Matthew Garrett <mjg@redhat.com>, khalid.aziz@oracle.com
-Date: Tue, 05 Feb 2013 17:21:13 -0700
-In-Reply-To: <CAErSpo7sYCmfd0X7PBfYS_ZK5sijxS3mpmhkrQ6UqO_xDry69Q@mail.gmail.com>
-References: <20130204115246.5569.85829.stgit@zurg>
-	 <20130204115557.5569.9748.stgit@zurg> <1360016458.4485.11.camel@rhapsody>
-	 <CAErSpo7k96noiCtGYUFyuUQhE2GQA8ro5-9WC-JU_1HOWKUGvg@mail.gmail.com>
-	 <1360078091.4485.32.camel@rhapsody>
-	 <CAErSpo7sYCmfd0X7PBfYS_ZK5sijxS3mpmhkrQ6UqO_xDry69Q@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from quartz.orcorp.ca ([184.70.90.242]:51765 "EHLO quartz.orcorp.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755382Ab3BFSju (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 6 Feb 2013 13:39:50 -0500
+Date: Wed, 6 Feb 2013 11:39:49 -0700
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Stephen Warren <swarren@wwwdotorg.org>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH v2 19/27] pci: PCIe driver for Marvell Armada 370/XP
+ systems
+Message-ID: <20130206183949.GA7055@obsidianresearch.com>
+References: <20130130120344.GA29490@avionic-0098.mockup.avionic-design.de>
+ <2776630.gp5gC9tvLk@wuerfel>
+ <20130131180249.GA30869@obsidianresearch.com>
+ <201301312046.22560.arnd@arndb.de>
+ <20130131224459.GA11846@obsidianresearch.com>
+ <20130206175128.1b64196d@skate>
+ <20130206170903.GA28198@obsidianresearch.com>
+ <20130206181852.4eca53e3@skate>
+ <20130206175019.GA24248@obsidianresearch.com>
+ <51129F6B.1050709@wwwdotorg.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <51129F6B.1050709@wwwdotorg.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2013-02-05 at 12:22 -0700, Bjorn Helgaas wrote:
-> On Tue, Feb 5, 2013 at 8:28 AM, Khalid Aziz <khalid@gonehiking.org> wrote:
-> > On Mon, 2013-02-04 at 16:13 -0700, Bjorn Helgaas wrote:
-> >> Did you figure out specifically why pcibios_disable_device() helps?
-> >> Using pcibios_disable_device() doesn't seem like the ideal solution
-> >> because on most architectures, it is an empty function with no obvious
-> >> connection to IRQs.  On x86 with ACPI, it cleans up some ACPI PCI IRQ
-> >> stuff, but as far as I can tell, it doesn't actually touch the PCI
-> >> device itself or even the IOAPIC to which it's connected, so I'm not
-> >> sure how this would help kexec.
-> >
-> > My reading of the code was that pcibios_disable_device() does clear the
-> > interrupt on x86 and ia64. I am not deeply familiar with the ACPI code
-> > and I might be interpreting it incorrectly, so please do correct me if I
-> > am reading it incorrectly. Here is the code sequence I see:
-> >
-> > pcibios_disable_device() ->
-> >    pcibios_disable_irq() ->
-> >        acpi_pci_irq_disable() ->
-> >            acpi_pci_link_free_irq() ->
-> >               acpi_evaluate_object(link->device->handle, "_DIS", NULL,
-> > NULL);
-> >
-> > My understanding is the evaluation of ACPI _DIS method will disable the
-> > interrupt from the device. Does that sound reasonable?
+On Wed, Feb 06, 2013 at 11:22:35AM -0700, Stephen Warren wrote:
+
+> > No.. PCI end devices are required to decode all 32 bits of address,
+> > less the bits requires for their allocation. So a device with 64 bytes
+> > of IO will match bits 31:6 and then use bits 5:0 for the internal
+> > register.
 > 
-> I see the code you're looking at in acpi_pci_link_free_irq(), but we
-> only evaluate _DIS if link->refcnt == 0, and I don't think refcnt is
-> ever zero at that point.
-> 
-> refcnt starts out at zero in acpi_pci_link_add() (called when we find
-> PNP0C0F devices), and it's incremented in acpi_pci_link_allocate_irq()
-> (called in the pci_enable_device() path), but as far as I can tell,
-> it's never decremented, so I doubt that _DIS is ever evaluated.
+> Didn't Arnd say (earlier this thread) that PCI devices using IO BARs
+> were probably fairly legacy and hence might be buggy and might not obey
+> that rule? Now, I'd guess it's safe within the first 64k of IO space
+> though, so perhaps he was only talking about IO BAR bases >= 64k being
+> dubious? That would imply a device might only use bits 15:6 for matching
+> the BAR base and 5:0 for the internal register for a 64-byte BAR.
 
-Ah, that is interesting. I was assuming as we disable PCI devices, the
-refcnt would have been decremented and if no one was using the IRQ, we
-would evaluate _DIS method and disable the interrupt link.
+Right, that is what I was referring to when I said:
 
-> 
-> If we did evaluate _DIS, it would act on an "interrupt link" device,
-> not on the PCI device itself.  
+> - Some devices are broken because x86 only uses the low 64k.
 
-Right, it should be the shutdown() routine for the device driver that
-disables interrupt on the device itself. We want to turn interrupt off
-one level higher in pci_device_shutdown().
+Fortunately on PCI-E IO TLPs will be fully routed before they are sent
+down a link, so downstream of a PCI-E link we will never see aliasing
+of the low 16 bits.
 
-> I guess that could help, but only for
-> devices connected to such a link device.  For others, I guess we might
-> be able to accomplish something similar by updating local APIC and/or
-> IOAPIC config.  I don't think we do that today, at least not in the
-> pci_disable_device() path, but it might be something interesting to
-> explore.  There is also the INTx Disable bit, though it's obviously
-> only on new PCI devices.
+This means if you do bridge to legacy PCI, and you do use devices that
+don't decode the upper 16 bits that it will still work OK, because the
+low 16 bits on the legacy PCI bus will still be unique in each device
+on that bus.
 
-Turning interrupt of at local APIC or IOAPIC level sounds like more
-reliable thing to do.
+That doesn't save you from weird legacy ISA stuff, or stuff that
+doesn't respect the BARs, or other crazyness..
 
-> 
-> > ... The two ways I can think of are to stop
-> > DMA by clearing Bus Master bit and turn off the interrupt, which have
-> > been shown to get kexec (and thus kdump) working on machines it didn't
-> > work on before.
-> 
-> I was just curious if you had actually verified that _DIS was being
-> evaluated and making a difference here, or if the Bus Master bit was
-> really the important part.
-> 
-> Bjorn
+My personal hope would be that nobody using a PCI-E ARM SOC ever has
+to deal with anything to do with IO space ;)
 
-I have been able to reproduce the kexec problem caused by active PCI
-devices only in limited cases and in those cases it was really the Bus
-Master bit that was important. Keeping interrupts from errant devices
-from reaching the kernel until newly kexc'd kernel is initialized is
-additional safety measure.
-
---
-Khalid
-
+Jason
