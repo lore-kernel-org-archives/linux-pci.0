@@ -1,37 +1,60 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from nat28.tlf.novell.com ([130.57.49.28]:33056 "EHLO
-	nat28.tlf.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751737Ab3B1JIe convert rfc822-to-8bit (ORCPT
-	<rfc822;groupwise-linux-pci@vger.kernel.org:3:1>);
-	Thu, 28 Feb 2013 04:08:34 -0500
-Message-Id: <512F2C9E02000078000C1D07@nat28.tlf.novell.com>
-Date: Thu, 28 Feb 2013 09:08:30 +0000
-From: "Jan Beulich" <JBeulich@suse.com>
-To: "Bjorn Helgaas" <bhelgaas@google.com>
-Cc: "xen-devel" <xen-devel@lists.xen.org>, <linux-pci@vger.kernel.org>
-Subject: time periods of no resource re-assignment
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <3459136.QID0qrXQHt@vostro.rjw.lan>
+References: <CAE9FiQXHG01NjnYNDbC-KEpbcvY-q4pBe97CxTOGS7W4vZQBYQ@mail.gmail.com>
+ <52330506.F9m0tMYuG1@vostro.rjw.lan> <CAE9FiQXTRaP08ZeHWTJHt50DZO800BMigmo=q65-RLzZWkTvoQ@mail.gmail.com>
+ <3459136.QID0qrXQHt@vostro.rjw.lan>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 6 Feb 2013 16:02:33 -0700
+Message-ID: <CAErSpo4vd+GhTVpoLb=sFTqBZMG=xva1QUUhyJrO4o0ytPXmqg@mail.gmail.com>
+Subject: Re: [PATCH v3 00/22] PCI: Iterate pci host bridge instead of pci root bus
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	Myron Stowe <myron.stowe@gmail.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Mauro Carvalho Chehab <mchehab@redhat.com>,
+	Tony Luck <tony.luck@intel.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, Russell King <linux@arm.linux.org.uk>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Bjorn,
+On Wed, Feb 6, 2013 at 3:05 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> On Wednesday, February 06, 2013 01:53:50 PM Yinghai Lu wrote:
+>> On Wed, Feb 6, 2013 at 1:43 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+>> > On Wednesday, February 06, 2013 01:28:27 PM Yinghai Lu wrote:
+>> >> so you still did not answer you want 1 or 2 yet:
+>> >>
+>> >> for sgi_hotplug,
+>> >>
+>> >> 1. still keep the module support, and register acpi_pci_driver later.
+>> >> 2. built-in support only, and need to register acpi_pci_driver early.
+>> >
+>> > Please work with the assumption that acpi_pci_driver is not going to be there
+>> > any more.
+>> >
+>>
+>> I think I could change ioapic and iommu hotplug to weak add/remove because they
+>> should be built-in by nature.
+>>
+>> but how about others like sgi_hotplug etc?
 
-in the context of dealing with the final part of a long known security
-issue on Xen, I'd appreciate if you could help me understand
-under what conditions (or at which times) MMIO resources for PCI
-devices can get re-assigned in Linux. Or really I'm in need to know
-under what conditions there won't be any resource re-assignment
-(i.e. we particularly need the BARs to be stable that cover the
-MSI-X table and the Pending Bit Array).
+I think that could be handled with pcibios_root_bridge_prepare() or
+something similar -- something that happens in the "add host bridge"
+path.  I'm not saying we necessarily have all the right hooks in place
+yet.  It's just that I'd rather figure out what the right hooks *are*
+and add them if necessary, than just convert pci_root_buses to
+for_each_pci_host_bridge().
 
-Right now I'm intending to send the hypervisor a respective
-notification in the context of xen-pciback's probe function, after
-having called pci_enable_device(). Can you confirm that at this
-point, and until the driver lets go of the device again, resources
-won't get re-assigned? Or if not, can you suggest a better point
-in time for sending such a notification, or additional steps we
-may need to take in order to ensure resource stability?
+> I'd really prefer to wait for the patchset removing acpi_pci_driver (from
+> Myron) before proceeding with more changes in that area.
+>
+> Myron, do you have a prototype based on the current linux-next?
 
-Thanks a lot, Jan
-
+I think it's really the acpiphp/pciehp issue that's holding up the
+removal of acpi_pci_driver.  I'm not sure if anybody's working on
+that.
