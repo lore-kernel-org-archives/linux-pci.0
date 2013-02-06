@@ -1,75 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:51765 "EHLO quartz.orcorp.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755382Ab3BFSju (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 6 Feb 2013 13:39:50 -0500
-Date: Wed, 6 Feb 2013 11:39:49 -0700
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Stephen Warren <swarren@wwwdotorg.org>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH v2 19/27] pci: PCIe driver for Marvell Armada 370/XP
- systems
-Message-ID: <20130206183949.GA7055@obsidianresearch.com>
-References: <20130130120344.GA29490@avionic-0098.mockup.avionic-design.de>
- <2776630.gp5gC9tvLk@wuerfel>
- <20130131180249.GA30869@obsidianresearch.com>
- <201301312046.22560.arnd@arndb.de>
- <20130131224459.GA11846@obsidianresearch.com>
- <20130206175128.1b64196d@skate>
- <20130206170903.GA28198@obsidianresearch.com>
- <20130206181852.4eca53e3@skate>
- <20130206175019.GA24248@obsidianresearch.com>
- <51129F6B.1050709@wwwdotorg.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <51129F6B.1050709@wwwdotorg.org>
+Received: from mailout2.samsung.com ([203.254.224.25]:57613 "EHLO
+	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757465Ab3BFX7D (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Feb 2013 18:59:03 -0500
+Received: from epcpsbgm1.samsung.com (epcpsbgm1 [203.254.230.26])
+ by mailout2.samsung.com
+ (Oracle Communications Messaging Server 7u4-24.01(7.0.4.24.0) 64bit (built Nov
+ 17 2011)) with ESMTP id <0MHT00CN4P9XRDD0@mailout2.samsung.com> for
+ linux-pci@vger.kernel.org; Thu, 07 Feb 2013 08:59:01 +0900 (KST)
+Received: from DOJG1HAN02 ([12.23.120.99])
+ by mmp2.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+ (7.0.4.24.0) 64bit (built Nov 17 2011))
+ with ESMTPA id <0MHT00JAOPADJO90@mmp2.samsung.com> for
+ linux-pci@vger.kernel.org; Thu, 07 Feb 2013 08:59:01 +0900 (KST)
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Bjorn Helgaas' <bhelgaas@google.com>,
+	'Alex Deucher' <alexdeucher@gmail.com>
+Cc: 'David Airlie' <airlied@linux.ie>, linux-pci@vger.kernel.org,
+	dri-devel@lists.freedesktop.org, 'Jingoo Han' <jg1.han@samsung.com>
+References: <002b01ce0429$59d7acc0$0d870640$%han@samsung.com>
+ <CADnq5_NsB=xZA-vMr8OkHF6W0GZgWEyZzBMD5AGMOr_jKj_jCw@mail.gmail.com>
+ <CAErSpo6k=AfkAbM70Xzyvq61t2HP+YqWStdSU3eK1kXbbCjV2Q@mail.gmail.com>
+In-reply-to: <CAErSpo6k=AfkAbM70Xzyvq61t2HP+YqWStdSU3eK1kXbbCjV2Q@mail.gmail.com>
+Subject: RE: [PATCH] drm/pci: use PCI_EXP_LNKCAP_SLS_2_5GB/5_0GB instead of
+ hardcoded values
+Date: Thu, 07 Feb 2013 08:59:01 +0900
+Message-id: <007f01ce04c5$ef8a4dd0$ce9ee970$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 06, 2013 at 11:22:35AM -0700, Stephen Warren wrote:
-
-> > No.. PCI end devices are required to decode all 32 bits of address,
-> > less the bits requires for their allocation. So a device with 64 bytes
-> > of IO will match bits 31:6 and then use bits 5:0 for the internal
-> > register.
+On Thursday, February 07, 2013 2:08 AM, Bjorn Helgaas wrote
 > 
-> Didn't Arnd say (earlier this thread) that PCI devices using IO BARs
-> were probably fairly legacy and hence might be buggy and might not obey
-> that rule? Now, I'd guess it's safe within the first 64k of IO space
-> though, so perhaps he was only talking about IO BAR bases >= 64k being
-> dubious? That would imply a device might only use bits 15:6 for matching
-> the BAR base and 5:0 for the internal register for a 64-byte BAR.
+> On Wed, Feb 6, 2013 at 7:27 AM, Alex Deucher <alexdeucher@gmail.com> wrote:
+> > On Wed, Feb 6, 2013 at 12:18 AM, Jingoo Han <jg1.han@samsung.com> wrote:
+> >> Use PCI_EXP_LNKCAP_SLS_2_5GB and PCI_EXP_LNKCAP_SLS_5_0GB instead
+> >> of hardcoded values for readability. These bit definitions were
+> >> added by commit 130f1b8 ("PCI: Add PCIe Link Capability link speed
+> >> and width names")
+> >>
+> >> Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+> >
+> > Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+> 
+> Reviewed-by: Bjorn Helgaas <bhelgaas@google.com>
+> 
+> I posted the same patch last month, along with two other patches that
+> fix the reporting for pre-r3.0 devices and simplify the code a bit:
+> 
+>     http://marc.info/?l=linux-pci&m=135732663513525&w=2
+>     http://marc.info/?l=linux-pci&m=135732713413779&w=2
+>     http://marc.info/?l=linux-pci&m=135732666213542&w=2
 
-Right, that is what I was referring to when I said:
+Oh, I missed your patch.
+I think that my patch will be abandoned.
 
-> - Some devices are broken because x86 only uses the low 64k.
+Best regards,
+Jingoo Han
 
-Fortunately on PCI-E IO TLPs will be fully routed before they are sent
-down a link, so downstream of a PCI-E link we will never see aliasing
-of the low 16 bits.
+> 
+> I don't know the status of any of these; I'm expecting Dave to do
+> whatever he thinks is best.
+> 
+> >
+> >> ---
+> >>  drivers/gpu/drm/drm_pci.c |    4 ++--
+> >>  1 files changed, 2 insertions(+), 2 deletions(-)
+> >>
+> >> diff --git a/drivers/gpu/drm/drm_pci.c b/drivers/gpu/drm/drm_pci.c
+> >> index 754bc96..11c8add 100644
+> >> --- a/drivers/gpu/drm/drm_pci.c
+> >> +++ b/drivers/gpu/drm/drm_pci.c
+> >> @@ -504,9 +504,9 @@ int drm_pcie_get_speed_cap_mask(struct drm_device *dev, u32 *mask)
+> >>                 if (lnkcap2 & PCI_EXP_LNKCAP2_SLS_8_0GB)
+> >>                         *mask |= DRM_PCIE_SPEED_80;
+> >>         } else {
+> >> -               if (lnkcap & 1)
+> >> +               if (lnkcap & PCI_EXP_LNKCAP_SLS_2_5GB)
+> >>                         *mask |= DRM_PCIE_SPEED_25;
+> >> -               if (lnkcap & 2)
+> >> +               if (lnkcap & PCI_EXP_LNKCAP_SLS_5_0GB)
+> >>                         *mask |= DRM_PCIE_SPEED_50;
+> >>         }
+> >>
+> >> --
+> >> 1.7.2.5
 
-This means if you do bridge to legacy PCI, and you do use devices that
-don't decode the upper 16 bits that it will still work OK, because the
-low 16 bits on the legacy PCI bus will still be unique in each device
-on that bus.
 
-That doesn't save you from weird legacy ISA stuff, or stuff that
-doesn't respect the BARs, or other crazyness..
-
-My personal hope would be that nobody using a PCI-E ARM SOC ever has
-to deal with anything to do with IO space ;)
-
-Jason
