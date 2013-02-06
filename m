@@ -1,149 +1,61 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [RFC PATCH v5 4/8] ACPI, PCI: avoid building pci_slot as module
-From: Myron Stowe <mstowe@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, rjw <rjw@sisk.pl>
-Cc: Jiang Liu <liuj97@gmail.com>, Jiang Liu <jiang.liu@huawei.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <CAErSpo7-dULYwWQ=f5CBCxOULKJE9=n6Ha4jkVKd8enspuYjTA@mail.gmail.com>
+References: <CAE9FiQXHG01NjnYNDbC-KEpbcvY-q4pBe97CxTOGS7W4vZQBYQ@mail.gmail.com>
+	<1359314629-18651-1-git-send-email-yinghai@kernel.org>
+	<CAErSpo6r_LNEtYB3j5ELb8NdHu0a6_YOVj8S32CmByGFUpSsbg@mail.gmail.com>
+	<CAE9FiQXg1YcPPJLCgPbKOKXHk-LRQv4bbBGH9jyuATQa2ANLkg@mail.gmail.com>
+	<CAE9FiQX2DbTO0qCzGO4iMTkU_mPM2oZL+R5UoZ5dj=as6MUAsw@mail.gmail.com>
+	<CAErSpo7-dULYwWQ=f5CBCxOULKJE9=n6Ha4jkVKd8enspuYjTA@mail.gmail.com>
+Date: Tue, 5 Feb 2013 16:47:10 -0800
+Message-ID: <CAE9FiQWvmK7N2z19B9ZiMyc_T6cJdpWoWr3mExpuwUA4ogBc3w@mail.gmail.com>
+Subject: Re: [PATCH v3 00/22] PCI: Iterate pci host bridge instead of pci root bus
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Mauro Carvalho Chehab <mchehab@redhat.com>
+Cc: Tony Luck <tony.luck@intel.com>, "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Toshi Kani <toshi.kani@hp.com>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Toshi Kani <toshi.kani@hp.com>
-In-Reply-To: <CAErSpo4fbNzFaBxH+eKD+BKVgghyCJEYLDMzc6_gdxABAPe3QQ@mail.gmail.com>
-References: <1358525267-14268-1-git-send-email-jiang.liu@huawei.com>
-	 <1358525267-14268-5-git-send-email-jiang.liu@huawei.com>
-	 <3500982.MUDp6kKU3R@vostro.rjw.lan>
-	 <CAErSpo4fbNzFaBxH+eKD+BKVgghyCJEYLDMzc6_gdxABAPe3QQ@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sun, 03 Feb 2013 15:47:15 -0700
-Message-ID: <1359931635.2426.98.camel@zim.stowe>
-Mime-Version: 1.0
-Sender: linux-acpi-owner@vger.kernel.org
+	linux-pci@vger.kernel.org, Russell King <linux@arm.linux.org.uk>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 2013-01-28 at 14:09 -0700, Bjorn Helgaas wrote:
-> On Sun, Jan 20, 2013 at 5:01 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> > On Saturday, January 19, 2013 12:07:42 AM Jiang Liu wrote:
-> >> As discussed in thread at https://patchwork.kernel.org/patch/1946851/,
-> >> there's no value in supporting CONFIG_ACPI_PCI_SLOT=m any more.
-> >> So change Kconfig and code to only support building pci_slot as
-> >> built-in driver.
-> >>
-> >> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-> >
-> > Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> 
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-> 
-> I think we should eventually get rid of acpi_pci_register_driver() and
-> do this initialization directly from acpi_pci_root_add().  But
-> removing the module option here is a good first step.
+On Tue, Feb 5, 2013 at 4:19 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>
+> Maybe.  I'd rather not introduce for_each_pci_host_bridge() at all, if
+> we can avoid it.  Every place it's used is a place we have to audit to
+> make sure it's safe.  I think your audit above is correct and
+> complete, but it relies on way too much architecture knowledge.  It's
+> better if we can deduce correctness without knowing which arches
+> support hotplug and which CPUs support EDAC.
+>
+> As soon as for_each_pci_host_bridge() is in the tree, those uses can
+> be copied to even more places.  It's a macro, so it's usable by any
+> module, even out-of-tree ones that we'll never see and can't fix.  So
+> we won't really have a good way to deprecate and remove it.
 
-Bjorn, Rafael:
+Now we only have two references in modules.
 
-If either of you are interested in that still let me know and I can
-re-work any or all of the "PCI/ACPI: Remove "pci_root" sub-driver
-support" series - https://lkml.org/lkml/2012/12/7/11
+drivers/edac/i7core_edac.c:     for_each_pci_host_bridge(host_bridge) {
+drivers/pci/hotplug/sgi_hotplug.c:      for_each_pci_host_bridge(host_bridge) {
 
-Note [PATCH 13/15] was effectively the same as below and continued on
-with initializing directly from acpi_pci_root_add() in [PATCH 14/15].
-There may have been worthwhile fixes in some of the earlier content such
-as [PATCH 11/15] worth re-considering also.
+for the sgi_hotplug.c, it should be same problem that have for acpiphp
+and pciehp.
+need to make it support pci host bridge hotplug anyway.
 
-Thanks,
- Myron
+for edac, we need to check Mauro about their plan.
 
-> 
-> Rafael, do you want to apply this (and [6/8]) via your tree?  If not,
-> I can take it.
-> 
-> >> ---
-> >>  drivers/acpi/Kconfig    |    5 +----
-> >>  drivers/acpi/internal.h |    5 +++++
-> >>  drivers/acpi/pci_slot.c |   13 +------------
-> >>  drivers/acpi/scan.c     |    1 +
-> >>  4 files changed, 8 insertions(+), 16 deletions(-)
-> >>
-> >> diff --git a/drivers/acpi/Kconfig b/drivers/acpi/Kconfig
-> >> index 0300bf6..7efd0d0 100644
-> >> --- a/drivers/acpi/Kconfig
-> >> +++ b/drivers/acpi/Kconfig
-> >> @@ -299,7 +299,7 @@ config ACPI_DEBUG_FUNC_TRACE
-> >>         is about half of the penalty and is rarely useful.
-> >>
-> >>  config ACPI_PCI_SLOT
-> >> -     tristate "PCI slot detection driver"
-> >> +     bool "PCI slot detection driver"
-> >>       depends on SYSFS
-> >>       default n
-> >>       help
-> >> @@ -308,9 +308,6 @@ config ACPI_PCI_SLOT
-> >>         i.e., segment/bus/device/function tuples, with physical slots in
-> >>         the system.  If you are unsure, say N.
-> >>
-> >> -       To compile this driver as a module, choose M here:
-> >> -       the module will be called pci_slot.
-> >> -
-> >>  config X86_PM_TIMER
-> >>       bool "Power Management Timer Support" if EXPERT
-> >>       depends on X86
-> >> diff --git a/drivers/acpi/internal.h b/drivers/acpi/internal.h
-> >> index e050254..7374cfc 100644
-> >> --- a/drivers/acpi/internal.h
-> >> +++ b/drivers/acpi/internal.h
-> >> @@ -67,6 +67,11 @@ struct acpi_ec {
-> >>
-> >>  extern struct acpi_ec *first_ec;
-> >>
-> >> +#ifdef       CONFIG_ACPI_PCI_SLOT
-> >> +void acpi_pci_slot_init(void);
-> >> +#else
-> >> +static inline void acpi_pci_slot_init(void) { }
-> >> +#endif
-> >>  int acpi_pci_root_init(void);
-> >>  int acpi_ec_init(void);
-> >>  int acpi_ec_ecdt_probe(void);
-> >> diff --git a/drivers/acpi/pci_slot.c b/drivers/acpi/pci_slot.c
-> >> index d22585f..a7d7e77 100644
-> >> --- a/drivers/acpi/pci_slot.c
-> >> +++ b/drivers/acpi/pci_slot.c
-> >> @@ -330,19 +330,8 @@ static struct dmi_system_id acpi_pci_slot_dmi_table[] __initdata = {
-> >>       {}
-> >>  };
-> >>
-> >> -static int __init
-> >> -acpi_pci_slot_init(void)
-> >> +void __init acpi_pci_slot_init(void)
-> >>  {
-> >>       dmi_check_system(acpi_pci_slot_dmi_table);
-> >>       acpi_pci_register_driver(&acpi_pci_slot_driver);
-> >> -     return 0;
-> >>  }
-> >> -
-> >> -static void __exit
-> >> -acpi_pci_slot_exit(void)
-> >> -{
-> >> -     acpi_pci_unregister_driver(&acpi_pci_slot_driver);
-> >> -}
-> >> -
-> >> -module_init(acpi_pci_slot_init);
-> >> -module_exit(acpi_pci_slot_exit);
-> >> diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
-> >> index f8a0d0f..cb964ac 100644
-> >> --- a/drivers/acpi/scan.c
-> >> +++ b/drivers/acpi/scan.c
-> >> @@ -1732,6 +1732,7 @@ int __init acpi_scan_init(void)
-> >>
-> >>       acpi_power_init();
-> >>       acpi_pci_root_init();
-> >> +     acpi_pci_slot_init();
-> >>
-> >>       /*
-> >>        * Enumerate devices in the ACPI namespace.
-> >>
-> > --
-> > I speak only for myself.
-> > Rafael J. Wysocki, Intel Open Source Technology Center.
+After those two are addressed, we can drop that EXPORT_SYMBOL_GPL for
+pci_get_next_host_bridge.
 
+We do have pci_get_domain_bus_and_slot() as export symbol.
+So we export pci_get_next_host_bridge should be ok now.
+and it would be better than export root buses list.
 
+Thanks
+
+Yinghai
