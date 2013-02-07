@@ -1,91 +1,125 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vb0-f44.google.com ([209.85.212.44]:48105 "EHLO
-	mail-vb0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753302Ab3BFATr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Feb 2013 19:19:47 -0500
-Received: by mail-vb0-f44.google.com with SMTP id fr13so474729vbb.17
-        for <linux-pci@vger.kernel.org>; Tue, 05 Feb 2013 16:19:46 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAE9FiQX2DbTO0qCzGO4iMTkU_mPM2oZL+R5UoZ5dj=as6MUAsw@mail.gmail.com>
-References: <CAE9FiQXHG01NjnYNDbC-KEpbcvY-q4pBe97CxTOGS7W4vZQBYQ@mail.gmail.com>
- <1359314629-18651-1-git-send-email-yinghai@kernel.org> <CAErSpo6r_LNEtYB3j5ELb8NdHu0a6_YOVj8S32CmByGFUpSsbg@mail.gmail.com>
- <CAE9FiQXg1YcPPJLCgPbKOKXHk-LRQv4bbBGH9jyuATQa2ANLkg@mail.gmail.com> <CAE9FiQX2DbTO0qCzGO4iMTkU_mPM2oZL+R5UoZ5dj=as6MUAsw@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 5 Feb 2013 17:19:26 -0700
-Message-ID: <CAErSpo7-dULYwWQ=f5CBCxOULKJE9=n6Ha4jkVKd8enspuYjTA@mail.gmail.com>
-Subject: Re: [PATCH v3 00/22] PCI: Iterate pci host bridge instead of pci root bus
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Mauro Carvalho Chehab <mchehab@redhat.com>,
-	Tony Luck <tony.luck@intel.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, Russell King <linux@arm.linux.org.uk>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail.free-electrons.com ([94.23.35.102]:56985 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755829Ab3BGPuO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Feb 2013 10:50:14 -0500
+Date: Thu, 7 Feb 2013 16:50:09 +0100
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	linux-pci@vger.kernel.org,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Giving special alignment/size constraints to the Linux PCI core?
+Message-ID: <20130207165009.73b1f340@skate>
+In-Reply-To: <20130206175019.GA24248@obsidianresearch.com>
+References: <20130130120344.GA29490@avionic-0098.mockup.avionic-design.de>
+	<2776630.gp5gC9tvLk@wuerfel>
+	<20130131180249.GA30869@obsidianresearch.com>
+	<201301312046.22560.arnd@arndb.de>
+	<20130131224459.GA11846@obsidianresearch.com>
+	<20130206175128.1b64196d@skate>
+	<20130206170903.GA28198@obsidianresearch.com>
+	<20130206181852.4eca53e3@skate>
+	<20130206175019.GA24248@obsidianresearch.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 5, 2013 at 4:55 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Sat, Feb 2, 2013 at 9:05 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->
->>> Your solution is to introduce for_each_pci_host_bridge() as an
->>> iterator through the known host bridges.  There are two scenarios
->>> where we use something like this:
->>>
->>> 1) We want to perform an operation on every known host bridge.
->>>
->>> 2) We want to initialize something for every host bridge.
->>>
->>> In my opinion, the only instance of scenario 1) is bus_rescan_store(),
->>> where we want to rescan all PCI host bridges.
->>>
->>> In every other case, we're doing some kind of initialization of all
->>> the host bridges.  For these cases, for_each_pci_host_bridge() is the
->>> wrong solution because it doesn't work for hot-added bridges.  I think
->>> these cases should be changed to use pcibios_root_bridge_prepare() or
->>> something something else called in the host bridge add path.
->>
->> Yes, will check if those for_pci_host_bridge could be converted to
->> adding calling in pcibios_root_bridge_prepare one by one.
->
-> I went through those patches again, here are findings:
-> 1. run-time iteration includes at least 3 occurrence are addressed.
-> a. in pci-sysfs::bus_rescan_store
-> b. powerpc pci_64.c::sys_pciconfig_iobase system call
-> c. probe.c::pci_create_root_bus/pci_find_bus
->
-> 2. edac: i7core_edac.c::i7core_pci_lastbus()
-> this one is not support host bridge hotplug, and in i7core_probe it will
-> bail-out if probed before overall.
-> To make edac with i7 to support host-bridge hotadd, will change the structure of
-> that i7core_probe.
-> But I'm not worried about that yet, because Nehalem-EX does not support EDAC,
-> and assume we will NOT have use case with new -EX intel cpu with
-> hotplug support to use EDAC.
->
-> 3. pcibios_resource_survey/pcibios_assign_unassigned_resource in __init path.
-> it is with x86/frv/microblaze/mn10300.
-> for x86/acpi, we have per root bus calling in pci_root.c::acpi_pci_root_add().
-> other three does not support pci_root_bridge hotplug yet.
->
-> 4. looks like all other changes are __init path, and those arch does not support
-> pci_root_bridge hotplug yet.
->
-> So looks like this patch set is ok now.
+Bjorn,
 
-Maybe.  I'd rather not introduce for_each_pci_host_bridge() at all, if
-we can avoid it.  Every place it's used is a place we have to audit to
-make sure it's safe.  I think your audit above is correct and
-complete, but it relies on way too much architecture knowledge.  It's
-better if we can deduce correctness without knowing which arches
-support hotplug and which CPUs support EDAC.
+I guess I need your advice on the below problem, but here is a summary.
 
-As soon as for_each_pci_host_bridge() is in the tree, those uses can
-be copied to even more places.  It's a macro, so it's usable by any
-module, even out-of-tree ones that we'll never see and can't fix.  So
-we won't really have a good way to deprecate and remove it.
+Basically, the PCI-to-PCI bridge specifications require that the memory
+address assigned to a PCI-to-PCI bridge is aligned on a 1 MB boundary.
 
-Bjorn
+Unfortunately, on Marvell hardware, we can only create address decoding
+windows that are aligned on a multiple of their size (a 1 MB window
+must be 1 MB aligned, a 2 MB window must be 2 MB aligned, etc.).
+
+How can we teach the Linux PCI core about this requirement, so that it
+does a proper assignment of addresses at the PCI-to-PCI bridge level?
+For the I/O addresses, Russell suggested the pcibios_window_alignment()
+hook, but it doesn't receive the size of the resource, so we can't
+determine what alignment is needed.
+
+As Jason points out below, we need to be able to tell the PCI core that
+a given memory area needs some alignment, but also that its size is
+larger than what the PCIe device claims, because we cannot create
+address decoding windows of an arbitrary size. For example, an address
+decoding window of 3 MB is not possible, so if a device wants 3 MB,
+then we would need to extend this memory area to 4 MB so that the next
+device doesn't get an address decoding window that overlaps with the
+previous one.
+
+I was hoping that the emulated PCI-to-PCI bridge could, by its
+behavior, teach the Linux PCI core about these special constraints.
+However, reading the PCI-to-PCI bridge specification, I don't see how
+to achieve that.
+
+Do you have some suggestions?
+
+I am unfortunately starting to believe that using the standard PCI
+resource allocator is too complicated for our hardware, and that we
+should maybe have a dedicated allocator. But I would really like to
+avoid that if possible.
+
+Thanks a lot,
+
+Thomas
+
+On Wed, 6 Feb 2013 10:50:19 -0700, Jason Gunthorpe wrote:
+
+> > > > Can't this be solved using the window_alignement() hook we've
+> > > > been discussing separately? Just like we teach the Linux PCI
+> > > > core about our alignment requirements of 64K for the I/O
+> > > > regions, we could teach it about our alignment requirement on
+> > > > memory regions as well. No?
+> > > 
+> > > Hopefully :) As long as it can adjust the start and length you
+> > > should be fine.
+> > 
+> > Why would you need to adjust the length? If Linux allocates a 2 MB
+> > resource on a 1 MB boundary, we simply increase the start address to
+> > the next 2 MB boundary, and that's it. Why would the length need to
+> > change?
+> 
+> Well, lets say 3MB is the example. A 3mb region needs to fit inside a
+> 4mb MBUS window. If you align the start to 4mb then the pci-e core
+> needs to know that it can't use the extra 1mb covered by the mbus
+> window. mbus windows must not overlap.
+> 
+> Adjusting the bridge window length to be 4mb communicates that dead
+> space to the PCI core, and presumably this shows up in lspci and
+> whatnot.
+> 
+> I suppose if you align the end to 4mb (thus creating the gap before,
+> not after) things should work out OK, but the information that the gap
+> is routed to a specific PCI link is lost..
+> 
+> Jason
+> 
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+
+
+
+-- 
+Thomas Petazzoni, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
