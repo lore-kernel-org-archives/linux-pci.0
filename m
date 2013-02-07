@@ -1,100 +1,69 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:35438 "EHLO quartz.orcorp.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756622Ab3BGRAL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 7 Feb 2013 12:00:11 -0500
-Date: Thu, 7 Feb 2013 10:00:00 -0700
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>
-Subject: Re: [PATCH v2 22/27] arm: mvebu: add PCIe Device Tree informations
- for Armada XP
-Message-ID: <20130207170000.GA10834@obsidianresearch.com>
-References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
- <201302062241.14444.arnd@arndb.de>
- <20130207010502.GA7435@obsidianresearch.com>
- <201302070824.51125.arnd@arndb.de>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <5112F4EE.5090601@huawei.com>
+Date: Thu, 7 Feb 2013 08:27:26 +0800
+From: Jiang Liu <jiang.liu@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201302070824.51125.arnd@arndb.de>
-Sender: linux-pci-owner@vger.kernel.org
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: "Rafael J. Wysocki" <rjw@sisk.pl>, Yinghai Lu <yinghai@kernel.org>,
+	Myron Stowe <myron.stowe@gmail.com>,
+	Mauro Carvalho Chehab <mchehab@redhat.com>,
+	Tony Luck <tony.luck@intel.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	<linux-pci@vger.kernel.org>, Russell King <linux@arm.linux.org.uk>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v3 00/22] PCI: Iterate pci host bridge instead of pci
+ root bus
+References: <CAE9FiQXHG01NjnYNDbC-KEpbcvY-q4pBe97CxTOGS7W4vZQBYQ@mail.gmail.com> <52330506.F9m0tMYuG1@vostro.rjw.lan> <CAE9FiQXTRaP08ZeHWTJHt50DZO800BMigmo=q65-RLzZWkTvoQ@mail.gmail.com> <3459136.QID0qrXQHt@vostro.rjw.lan> <CAErSpo4vd+GhTVpoLb=sFTqBZMG=xva1QUUhyJrO4o0ytPXmqg@mail.gmail.com>
+In-Reply-To: <CAErSpo4vd+GhTVpoLb=sFTqBZMG=xva1QUUhyJrO4o0ytPXmqg@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 07, 2013 at 08:24:50AM +0000, Arnd Bergmann wrote:
-
-> Yes, but the mbus-matrix node in the example would need a ranges property
-> to map the addresses according to how the windows are set up.
-
-I'll hang on to this for next time the moving windows config to DT
-discussion comes up..
-
-
-> > Maybe.. according to the standard the ranges in this stanza should
-> > reflect the bridge configuration, but that isn't known when the DT is
-> > written. An empty ranges means identity and that isn't really right
-> > either.
+On 2013-2-7 7:02, Bjorn Helgaas wrote:
+> On Wed, Feb 6, 2013 at 3:05 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+>> On Wednesday, February 06, 2013 01:53:50 PM Yinghai Lu wrote:
+>>> On Wed, Feb 6, 2013 at 1:43 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+>>>> On Wednesday, February 06, 2013 01:28:27 PM Yinghai Lu wrote:
+>>>>> so you still did not answer you want 1 or 2 yet:
+>>>>>
+>>>>> for sgi_hotplug,
+>>>>>
+>>>>> 1. still keep the module support, and register acpi_pci_driver later.
+>>>>> 2. built-in support only, and need to register acpi_pci_driver early.
+>>>>
+>>>> Please work with the assumption that acpi_pci_driver is not going to be there
+>>>> any more.
+>>>>
+>>>
+>>> I think I could change ioapic and iommu hotplug to weak add/remove because they
+>>> should be built-in by nature.
+>>>
+>>> but how about others like sgi_hotplug etc?
 > 
-> Ok, I thought it was an identity mapping here.
+> I think that could be handled with pcibios_root_bridge_prepare() or
+> something similar -- something that happens in the "add host bridge"
+> path.  I'm not saying we necessarily have all the right hooks in place
+> yet.  It's just that I'd rather figure out what the right hooks *are*
+> and add them if necessary, than just convert pci_root_buses to
+> for_each_pci_host_bridge().
 > 
-> > Also, what should 'reg' be so that the PCI core binds the OF nodes
-> > properly?  The standard says reg should have the configuration space
-> > address of the bridge, and I noticed Thierry was using something that
-> > almost looked like a config space address in his driver..
+>> I'd really prefer to wait for the patchset removing acpi_pci_driver (from
+>> Myron) before proceeding with more changes in that area.
+>>
+>> Myron, do you have a prototype based on the current linux-next?
 > 
-> Well, that assumes that a bridge is addressed using configuration space,
-> which IIRC is normally the case but not here.
+> I think it's really the acpiphp/pciehp issue that's holding up the
+> removal of acpi_pci_driver.  I'm not sure if anybody's working on
+> that.
+Hi Bjorn,
+	I'm working on this topic, but a little busy with other stuff
+in last few days. I guess I could should out a version in coming days.
+	Thanks!
 
-With Thomas's driver each link has a PCI-PCI bridge in config space, and
-'configuration space address' is that wonky format OF defines for
-encoding the bus/device/function number into the 3 dword address. So
-the correct thing is to put the bus/device/function of the PCI-PCI
-bridge for the link in the reg value.
-
-> I never really understood the 'assigned-addresses' property, but it looks
-> sensible.
-
-assigned-addresses does the same thing as reg in simple bus, but
-handles all the wonky PCI address translation
- 
-> >  - The CPU physical address window to use for the IO space
-> >    is set via io-cpu-window, not much choice here, the PCI
-> >    format ranges must be 0 based.
 > 
-> I don't think I understand this part. Why can't you put this into
-> ranges as before?
+> .
 > 
-> -       0x81000000 0x00000000 0x00000000  0x00000000  0x0 0xa0000
-> +	0x81000000 0x00000000 0x00000000  0xc0000000  0x0 0xa0000
 
-The OF PCI core translates 0x81000000 IO space addresess into a 'struct
-resource' tagged with IORESOURCE_IO.
 
-But 0xc0000000 is not an IORESOURCE_IO address, it is an
-IORESOURCE_MEM address..
-
-So, I think with the current OF code this has to be 0, otherwise your
-IORESOURCE_IO's end up starting at 0xc000000 - but maybe there is some
-trickyness to work with in here? (Although none of this matters when
-Linux does resource assignment, the OF translation code is never
-enganged)
-
-But I agree, 0xc0000000 seems much better...
-
-To think about it from a different angle, what would you put in the
-4th dword on x86? How do you describe the IO numberspace in DT on x86?
-
-Jason
