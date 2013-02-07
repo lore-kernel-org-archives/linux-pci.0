@@ -1,134 +1,141 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Jiang Liu <liuj97@gmail.com>, Toshi Kani <toshi.kani@hp.com>,
-	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
-	Myron Stowe <mstowe@redhat.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] ACPI / PCI: Initialize PCI root drivers after PCI bus enumeration
-Date: Wed, 13 Feb 2013 13:59:52 +0100
-Message-ID: <1678811.LFvn3m6Wlp@vostro.rjw.lan>
-In-Reply-To: <CAE9FiQXk1VhA2+qAcp8jL=TG28acePyX4SOYALiAQ0bGnLaFOA@mail.gmail.com>
-References: <1882094.fnYp8pBVVX@vostro.rjw.lan> <CAE9FiQXk1VhA2+qAcp8jL=TG28acePyX4SOYALiAQ0bGnLaFOA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.free-electrons.com ([94.23.35.102]:57242 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754325Ab3BGQTK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Feb 2013 11:19:10 -0500
+Date: Thu, 7 Feb 2013 17:19:04 +0100
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Andrew Murray <andrew.murray@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>
+Subject: Re: [PATCH v2 19/27] pci: PCIe driver for Marvell Armada 370/XP
+ systems
+Message-ID: <20130207171904.70270598@skate>
+In-Reply-To: <20130207155117.GA19666@arm.com>
+References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	<1359399397-29729-20-git-send-email-thomas.petazzoni@free-electrons.com>
+	<20130129132204.GA23886@arm.com>
+	<20130207153750.0fef1192@skate>
+	<20130207155117.GA19666@arm.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, February 12, 2013 05:54:08 PM Yinghai Lu wrote:
-> On Tue, Feb 12, 2013 at 4:16 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> >
-> > After commit 1aeae82 (ACPI / PCI: avoid building pci_slot as module)
-> > the pci_slot driver's .add() callback routine, acpi_pci_slot_add(),
-> > is executed from within acpi_pci_root_add() before the PCI devices on
-> > the bus are enumerated and that triggers the WARN_ON() in
-> > kobject_get():
-> >
-> > WARNING: at /scratch/rafael/work/test/include/linux/kref.h:42 kobject_get+0x33/0x40()
-> > Hardware name: PORTEGE R500
-> > Modules linked in:
-> > Pid: 1, comm: swapper/0 Not tainted 3.8.0-rc7+ #160
-> > Call Trace:
-> >  [<ffffffff8103d38a>] warn_slowpath_common+0x7a/0xb0
-> >  [<ffffffff8103d3d5>] warn_slowpath_null+0x15/0x20
-> >  [<ffffffff812f99b3>] kobject_get+0x33/0x40
-> >  [<ffffffff81452b82>] get_device+0x12/0x30
-> >  [<ffffffff8138df7b>] register_slot+0x243/0x295
-> >  [<ffffffff810a7b6d>] ? trace_hardirqs_on+0xd/0x10
-> >  [<ffffffff8137b7b9>] acpi_ns_walk_namespace+0x10f/0x24a
-> >  [<ffffffff8138dd38>] ? walk_p2p_bridge+0x13b/0x13b
-> >  [<ffffffff8138dd38>] ? walk_p2p_bridge+0x13b/0x13b
-> >  [<ffffffff8137bdc3>] acpi_walk_namespace+0xe9/0x132
-> >  [<ffffffff8138dd38>] ? walk_p2p_bridge+0x13b/0x13b
-> >  [<ffffffff8138dcf5>] walk_p2p_bridge+0xf8/0x13b
-> >  [<ffffffff8134d606>] ? acpi_os_signal_semaphore+0x76/0x87
-> >  [<ffffffff8138dd38>] ? walk_p2p_bridge+0x13b/0x13b
-> >  [<ffffffff8137b7b9>] acpi_ns_walk_namespace+0x10f/0x24a
-> >  [<ffffffff8138dbfd>] ? do_sta_before_sun+0x2b/0x2b
-> >  [<ffffffff8138dbfd>] ? do_sta_before_sun+0x2b/0x2b
-> >  [<ffffffff8137bdc3>] acpi_walk_namespace+0xe9/0x132
-> >  [<ffffffff81356071>] ? acpi_pci_root_add+0x3e7/0x49a
-> >  [<ffffffff8138e07f>] acpi_pci_slot_add+0xb2/0x103
-> >  [<ffffffff8138dd38>] ? walk_p2p_bridge+0x13b/0x13b
-> >  [<ffffffff81356089>] acpi_pci_root_add+0x3ff/0x49a
-> >
-> > which means that pci_bus->dev used in register_slot() has not been
-> > registered yet at that point.
-> >
-> > To fix this use the observation that before commit 1aeae82
-> > acpi_pci_slot_add() was always run after pci_bus_add_devices()
-> > and that happened to the acpiphp's .add() callback routine too.
-> > Thus it is safe to reorder acpi_pci_root_add() to make the PCI root
-> > drivers' .add() callbacks be run after pci_bus_add_devices(), so do
-> > that.
-> >
-> > This approach was previously proposed by Myron Stowe.
-> >
-> > References: https://patchwork.kernel.org/patch/1848781/
-> > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > ---
-> >
-> > The commit mentioned in the changelog above is in linux-pm.git/linux-next.
-> >
-> > Thanks,
-> > Rafael
-> >
-> > ---
-> >  drivers/acpi/pci_root.c |   13 ++++++++-----
-> >  1 file changed, 8 insertions(+), 5 deletions(-)
-> >
-> > Index: test/drivers/acpi/pci_root.c
-> > ===================================================================
-> > --- test.orig/drivers/acpi/pci_root.c
-> > +++ test/drivers/acpi/pci_root.c
-> > @@ -600,17 +600,20 @@ static int acpi_pci_root_add(struct acpi
-> >         if (system_state != SYSTEM_BOOTING)
-> >                 pci_assign_unassigned_bus_resources(root->bus);
-> >
-> > +       /* need to after hot-added ioapic is registered */
-> > +       if (system_state != SYSTEM_BOOTING)
-> > +               pci_enable_bridges(root->bus);
-> > +
-> > +       pci_bus_add_devices(root->bus);
-> > +
-> >         mutex_lock(&acpi_pci_root_lock);
-> > +
-> >         list_for_each_entry(driver, &acpi_pci_drivers, node)
-> >                 if (driver->add)
-> >                         driver->add(root);
-> > -       mutex_unlock(&acpi_pci_root_lock);
-> >
-> > -       /* need to after hot-added ioapic is registered */
-> > -       if (system_state != SYSTEM_BOOTING)
-> > -               pci_enable_bridges(root->bus);
-> > +       mutex_unlock(&acpi_pci_root_lock);
-> >
-> > -       pci_bus_add_devices(root->bus);
-> >         return 1;
-> >
-> >  out_del_root:
-> >
+Dear Andrew Murray,
+
+On Thu, 7 Feb 2013 15:51:17 +0000, Andrew Murray wrote:
+
+> > First of all, I didn't reimplement the pcibios_get_phb_of_node(), but
+> > instead, as Thierry Reding suggested, simply implemented the
+> > hw_pci.scan() function as follows:
 > 
-> No, we don't need this after
+> I've not had any time to test Thierry's solution to avoid implementing
+> pcibios_get_phb_of_node - but it did seem to work for him and seem correct
+> at the time.
+
+At least there are device tree nodes associated to PCI devices, so it
+looks good from this perspective.
+
+
+> > To me, the "struct pci_dev" representing the real PCIe devices should
+> > have a NULL "struct device_node" pointer, because those device are not
+> > represented in the DT. If this was the case, then the of_irq_map_pci()
+> > would go one level up in the PCI hierarchy, find the "struct pci_dev"
+> > that corresponds to the PCI-to-PCI bridge, which generates an laddr[]
+> > having a bus number a devfn value matching the interrupt-map property.
 > 
-> | commit 4f535093cf8f6da8cfda7c36c2c1ecd2e9586ee4
-> |     PCI: Put pci_dev in device tree as early as possible
+> Yes this is my current understanding.
+
+Ok. But that's not what happens: the "struct pci_dev" representing the
+real PCIe device *DOES* have a non-NULL struct device_node pointer. And
+this is what makes the entire thing fail.
+
+> I would suggest the issue isn't in the PCI/DT code. This is what I see
+
+I believe it is, because as I said above, the struct pci_dev associated
+to a real PCIe device should not have a struct device_node pointer,
+because this PCIe device has been dynamically enumerated and is
+therefore not part of the device tree.
+
+> with my implementation (which uses an implementation of
+> pcibios_get_phb_of_node) - I'd like to believe this is correct behaviour:
 > 
-> in pci/next.
+> - of_irq_map_pci is called for an endpoint (5:0:0), its pdev->dev.of_node
+>   is NULL. As I don't have a representation of this endpoint in my DT the
+>   of_irq_map_pci code proceeds to walk the fabric.
+
+I believe this should be the behavior. But this not what happens: the
+pdev->dev.of_node of an endpoint pci_dev is not NULL.
+
+> - Starting with the pdev for 5:0:0, of_irq_map_pci sees it has a parent
+>   (downstream switch bridge), in this case pdev(5:0:0)->bus->self->dev.of_node
+>   is NULL, due to this swizzling occurs and we walk the parent's bus (bus 2)
+> - This continues to bus 1 and then bus 0 where of_irq_map_pci realises that
+>   it has no parent (its the host bridge). Due to the implementation of
+>   pcibios_get_phb_of_node a of_node is produced, this is then used to construct
+>   a lspec (for bus number 0).
 > 
-> So we can move that Jiang's patch from your tree to Bjorn's tree?
+> The of_irq_map_pci code stops walking as soon as it finds a function in the
+> tree that has a device node. This suggests that if you represent a bridge
+> you must also include an interrupt-map. The problem here is that you have
+> represented a bridge but not included a map.
 
-OK, I'm dropping that patch from my tree, then (hopefully, no one has merged
-my acpi-cleanup branch yet).
+I understood that it walks up the PCI hierarchy, and that's fine. As
+I've shown in my previous e-mail, the only problem is that this
+pdev->dev.of_node should be NULL for the PCIe endpoint device. If it
+were NULL, then everything would work correctly, as I could confirmed
+by the hack I did in of_irq_map_pci().
 
-Bjorn, could you pick up https://patchwork.kernel.org/patch/2003771/ please?
+> I can think of three solutions:
+> 
+> 1. Something like this:
+> 
+>                  } else {
+>                          /* We found a P2P bridge, check if it has a node */
+>                          ppnode = pci_device_to_OF_node(ppdev);
+>  +                       if (ppnode doesnt have an interrupt-map)//if (pdev->bus->number != 0)
+>  +                               ppnode = NULL;
+>                  }
+> 
+> 2. Remove the bridges from the DT? Or remove the map from pcie-controller and
+>    add a map each to pcie@0,1 and pcie@1,1?
+> 
+> 3. Change the mask of your map so that it doesn't care about bus numbers. I
+>    have a map that looks like this:
+> 
+>                 interrupt-map-mask = <0 0 0 7>;
+>                 interrupt-map = <0 0 0 1 ... //anything coming in on INTA
+>                                  0 0 0 2 ... //anything coming in on INTB
+>                                  0 0 0 3 ... ...
+>                                  0 0 0 4 ... ...
 
-Rafael
+Unfortunately, I don't quite agree with any of your three solutions. I
+still do believe the root problem is that pdev->dev.of_node should be
+NULL for the PCIe endpoints, since those devices are not probed with
+the Device Tree.
 
+Best regards,
 
+Thomas
 -- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+Thomas Petazzoni, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
