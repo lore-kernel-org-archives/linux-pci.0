@@ -1,124 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.10]:56210 "EHLO
+Received: from moutng.kundenserver.de ([212.227.126.171]:65427 "EHLO
 	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932438Ab3BMJaN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Feb 2013 04:30:13 -0500
+	with ESMTP id S1750716Ab3BFRAg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Feb 2013 12:00:36 -0500
 From: Arnd Bergmann <arnd@arndb.de>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: Re: [PATCH 24/32] pci: PCIe driver for Marvell Armada 370/XP systems
-Date: Wed, 13 Feb 2013 09:29:21 +0000
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	"Russell King - ARM Linux" <linux@arm.linux.org.uk>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Stephen Warren <swarren@wwwdotorg.org>,
+To: devicetree-discuss@lists.ozlabs.org
+Cc: Linus Walleij <linus.walleij@linaro.org>,
 	Thierry Reding <thierry.reding@avionic-design.de>,
-	"Eran Ben-Avi" <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Rob Herring <rob.herring@calxeda.com>,
 	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Tawfik Bayouk <tawfik@marvell.com>
-References: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com> <201302122259.54073.arnd@arndb.de> <20130213092358.4991ba43@skate>
-In-Reply-To: <20130213092358.4991ba43@skate>
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-tegra@vger.kernel.org, Andrew Murray <andrew.murray@arm.com>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH 06/14] ARM: pci: Keep pci_common_init() around after init
+Date: Thu, 07 Feb 2013 01:54:22 +0100
+Message-ID: <9348609.HjKCmL9u9S@wuerfel>
+In-Reply-To: <CACRpkdYV5w6BksUjXvXs=88BovUyXgRt-vXSD0twjRpzbZcvFQ@mail.gmail.com>
+References: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de> <1357764194-12677-7-git-send-email-thierry.reding@avionic-design.de> <CACRpkdYV5w6BksUjXvXs=88BovUyXgRt-vXSD0twjRpzbZcvFQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201302130929.21326.arnd@arndb.de>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday 13 February 2013, Thomas Petazzoni wrote:
-> Dear Arnd Bergmann,
+On Wednesday 06 February 2013 17:38:20 Linus Walleij wrote:
+> On Wed, Jan 9, 2013 at 9:43 PM, Thierry Reding
+> <thierry.reding@avionic-design.de> wrote:
 > 
-> On Tue, 12 Feb 2013 22:59:53 +0000, Arnd Bergmann wrote:
+> > When using deferred driver probing, PCI host controller drivers may
+> > actually require this function after the init stage.
+> >
+> > Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
 > 
-> > > <plat/pcie.h> is needed for a few PCIe functions shared with earlier
-> > > families of Marvell SoC. My plan is that once this PCI driver gets
-> > > accepted, I work on migrating the earlier Marvell SoC families to using
-> > > this PCI driver, and therefore those functions would ultimately move in
-> > > the driver in drivers/pci/host/, which would remove the <plat/pcie.h>.
-> > 
-> > Hmm, although it is a bit unusual, I would actually propose duplicating
-> > that code for now, and merging a copy into the new driver right away.
-> > This gets rid of the header file dependency and lets you just delete
-> > the old file when the other platforms are converted.
+> There seem to be a proliferation of these patches now.
 > 
-> Hum, why not, but I would definitely prefer to wait for the conversion
-> of older platforms instead of duplicating this code. But if you feel
-> like it's the right solution, I'll do it.
+> Isn't this just papering over the real problem? The discarding
+> of __init sections need to happen *after* all deferred probes
+> are complete, lest we have to remove *all* __init sections from
+> *all* drivers in the kernel, don't we?
 
-It's not something we do a lot, but in this case, I think it's better
-if it lets us avoid adding the platform specific include path, which I
-really want to avoid here.
+No, I think it's not quite that bad. I think the rule is still
+just that .probe() functions and anything called from them must
+not be __init. They used to be __devinit, which would cause
+problems with deferred probing on !HOTPLUG systems but that's
+gone in 3.9.
 
-> > > The <mach/addr-map.h> is here to access the address decoding windows
-> > > allocation/free API. And for this, there is no other long term plan
-> > > than having an API provided by the platform code in arch/arm/, and used
-> > > by drivers. Some other drivers may have to use this API as well in the
-> > > future.
-> > 
-> > This is harder to do, but I'm sure we can find a solution. At least
-> > the addr-map.c code has no other dependencies than the plat/addr-map.h
-> > header, so we are fairly free to move it elsehwere.
-> 
-> The arch/arm/mach-mvebu/addr-map.c depends on
-> arch/arm/plat-orion/addr-map.c, so any change on this will affect
-> mach-kirkwood, mach-orion5x, mach-dove and mach-mv78xx0. As you can
-> see, we have to take into account the existing code, and I don't think
-> it's realistic to have a perfect solution immediately.
-
-Yes, I realize this. I was thinking we would move all at least the
-file from plat-orion, and the header file. I don't care much whether
-we also move the platform specific setup from mach-*/addr-map.c,
-it works either way.
- 
-> This address decoding code will continue to change for two reasons:
-> 
->  *) We are going to work on NOR/NAND support for mach-mvebu, and that
->     will also involve more interaction with the address decoding code.
-> 
->  *) As we are moving the earlier Marvell SoC families (mach-kirkwood,
->     mach-orion5x, mach-dove, mach-mv78xx0) to the Device Tree, this
->     address decoding code will also evolve.
-> 
-> mach-mvebu is not a standalone new platform like mach-highbank for
-> example, it relies on a lot of existing code from ealier platforms. It
-> is nice to share existing code, but it also means that cleanups and
-> refactoring take a lot more time.
-> 
-> I think we need to leave time for all these platforms to gradually
-> converge and cleanup their infrastructure. It's not going to happen
-> overnight.
-
-We don't need to do a complete overhaul of that code right now, but
-if we agree on a place where it can go, then I think we should
-move it now as just one extra patch to get rid of the header
-dependency. In the worst case, moving just the header file to
-include/linux would work, too.
-
-> > > 
-> > >  * One described in the DT, from 0xC0000000 to 0xC00FFFFF which will be
-> > >    used to create the address decoding windows for the I/O regions of
-> > >    the different PCIe interfaces. The PCI I/O virtual address 0xffe00000
-> > >    will be mapped to those physical addresses. Those address decoding
-> > >    windows are configured with the special "remap" mechanism that
-> > >    ensures that if an access is made at 0xC0000000 + offset, it will
-> > >    appear on the PCI bus as an I/O access at address "offset".
-> > 
-> > Right, I got this from reading the code. Unfortunately the of_pci_process_ranges
-> > functions from your earlier patch makes this a little confusing as it
-> > marks this resource as IORESOURCE_IO when in reality it is the IORESOURCE_MEM
-> > resource that describes where in MMIO space the I/O window is.
-> 
-> Indeed. So maybe I should mark this resource as being IORESOURCE_MEM
-> in the DT.
-
-The DT seems fine here, just the code that interprets it is a little
-unusual. Maybe you can change the calling convention of that function
-to pass the type of resource you want as an argument?
-
+Thierry's patch is just necessary because pci_common_init used
+to be called only from actual __init functions, and not it
+gets called from a .probe() function for the first time.
 
 	Arnd
