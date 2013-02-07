@@ -1,48 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cn.fujitsu.com ([222.73.24.84]:14987 "EHLO song.cn.fujitsu.com"
-	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1752337Ab3B1Ks3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 28 Feb 2013 05:48:29 -0500
-Message-ID: <512F35D3.6080009@cn.fujitsu.com>
-Date: Thu, 28 Feb 2013 18:47:47 +0800
-From: Gu Zheng <guz.fnst@cn.fujitsu.com>
+Received: from moutng.kundenserver.de ([212.227.126.171]:51752 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751089Ab3BGXpJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Feb 2013 18:45:09 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Subject: Re: [PATCH v2 22/27] arm: mvebu: add PCIe Device Tree informations for Armada XP
+Date: Thu, 7 Feb 2013 23:44:14 +0000
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	"Eran Ben-Avi" <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	"Russell King - ARM Linux" <linux@arm.linux.org.uk>
+References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com> <201302070824.51125.arnd@arndb.de> <20130207170000.GA10834@obsidianresearch.com>
+In-Reply-To: <20130207170000.GA10834@obsidianresearch.com>
 MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>
-CC: Myron Stowe <myron.stowe@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Joe Lawrence <Joe.Lawrence@stratus.com>,
-	linux-pci@vger.kernel.org, Matthew Garrett <mjg59@srcf.ucam.org>,
-	Myron Stowe <mstowe@redhat.com>,
-	David Bulkow <david.bulkow@stratus.com>
-Subject: Re: [PATCH 1/2] PCI: ASPM exit link state code could skip devices
-References: <alpine.DEB.2.02.1301181302260.31163@jlaw-desktop.mno.stratus.com> <alpine.DEB.2.02.1301181322500.31163@jlaw-desktop.mno.stratus.com> <51122BED.8090308@cn.fujitsu.com> <CAErSpo6aGiuBbgcVfcduPk++7B_zzuk2Y+fjLiJBvdOqnU+Qmw@mail.gmail.com> <5122F276.80807@cn.fujitsu.com> <CAErSpo7BeCiKHecJgX9GBR7DYf4M9mrXK+qMLMDXFykxq5C7sQ@mail.gmail.com> <512AFDB7.5030105@cn.fujitsu.com> <CAL-B5D0xN6bs3oXugS9FOS5bQiFRJQ9766u5wsXw4UQdUmwfyw@mail.gmail.com> <512DAAC9.8030400@cn.fujitsu.com> <CAE9FiQU6Sj=wkare0VCJwP1Yr09o=xVMrhsY_xJ1_41=YMkwMg@mail.gmail.com>
-In-Reply-To: <CAE9FiQU6Sj=wkare0VCJwP1Yr09o=xVMrhsY_xJ1_41=YMkwMg@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201302072344.14558.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 02/27/2013 02:47 PM, Yinghai Lu wrote:
-
-> On Tue, Feb 26, 2013 at 10:42 PM, Gu Zheng <guz.fnst@cn.fujitsu.com> wrote:
->>     I just agree with Bjorn's analysis. And I have test Yinghai's patch on kernel 3.8
->> , but it seems does not work. More infos, please refer to bugzilla:
->> https://bugzilla.kernel.org/show_bug.cgi?id=54411
+On Thursday 07 February 2013, Jason Gunthorpe wrote:
+> On Thu, Feb 07, 2013 at 08:24:50AM +0000, Arnd Bergmann wrote:
+> > >  - The CPU physical address window to use for the IO space
+> > >    is set via io-cpu-window, not much choice here, the PCI
+> > >    format ranges must be 0 based.
+> > 
+> > I don't think I understand this part. Why can't you put this into
+> > ranges as before?
+> > 
+> > -       0x81000000 0x00000000 0x00000000  0x00000000  0x0 0xa0000
+> > +	0x81000000 0x00000000 0x00000000  0xc0000000  0x0 0xa0000
 > 
-> you need to test that on linus's tree of 2013-02-26.
-> or v3.9-rc1
-
-Hi Yinghai,
-	I test your patch on linus' tree of 2-26
-commit d895cb1af15c04c522a25c79cc429076987c089b
-But it still does not work~
-
-Thanks
-Gu
-
+> The OF PCI core translates 0x81000000 IO space addresess into a 'struct
+> resource' tagged with IORESOURCE_IO.
 > 
-> Thanks
+> But 0xc0000000 is not an IORESOURCE_IO address, it is an
+> IORESOURCE_MEM address..
 > 
-> Yinghai
+> So, I think with the current OF code this has to be 0, otherwise your
+> IORESOURCE_IO's end up starting at 0xc000000 - but maybe there is some
+> trickyness to work with in here? (Although none of this matters when
+> Linux does resource assignment, the OF translation code is never
+> enganged)
+
+Yes, I think this is for historic reasons: the PCI binding far
+predates the Linux implementation, and I'm sure on MacOS, AIX
+and Solaris the PCI drivers did not actually have the same kind
+of wrappers for PIO functions that we have on Linux because of
+the x86 legacy.
+
+> But I agree, 0xc0000000 seems much better...
 > 
+> To think about it from a different angle, what would you put in the
+> 4th dword on x86? How do you describe the IO numberspace in DT on x86?
 
+I think the best option is to have no translation at all on x86,
+leaving 0x81000000 out of the ranges property. I'm not sure if
+the authors of the binding actually considered that case though.
 
+	Arnd
