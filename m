@@ -1,59 +1,105 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g1t0026.austin.hp.com ([15.216.28.33]:41934 "EHLO
-	g1t0026.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758423Ab3BKXAo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Feb 2013 18:00:44 -0500
-Message-ID: <1360623637.2950.63.camel@lorien2>
-Subject: [PATCH 1/4] pci: Add PCI_BUS() and PCI_DEVID() interfaces to return
- bus number and device id
-From: Shuah Khan <shuah.khan@hp.com>
-Reply-To: shuah.khan@hp.com
-To: bhelgaas@google.com, Joerg Roedel <joro@8bytes.org>
-Cc: paulmck@linux.vnet.ibm.com, linasvepstas@gmail.com,
-	dhowells@redhat.com, davej@redhat.com, tglx@linutronix.de,
-	mtk.manpages@gmail.com, iommu@lists.linux-foundation.org,
-	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	shemminger@vyatta.com, jiang.liu@huawei.com, wangyijing@huawei.com,
-	shuahkhan@gmail.com
-Date: Mon, 11 Feb 2013 16:00:37 -0700
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from moutng.kundenserver.de ([212.227.126.186]:61718 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759394Ab3BGXZm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Feb 2013 18:25:42 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Subject: Re: [PATCH v2 19/27] pci: PCIe driver for Marvell Armada 370/XP systems
+Date: Thu, 7 Feb 2013 23:25:23 +0000
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Andrew Murray <andrew.murray@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	"Eran Ben-Avi" <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	"Russell King - ARM Linux" <linux@arm.linux.org.uk>
+References: <1359399397-29729-20-git-send-email-thomas.petazzoni@free-electrons.com> <20130207183743.5c97d8b8@skate> <20130207182153.GB24688@obsidianresearch.com>
+In-Reply-To: <20130207182153.GB24688@obsidianresearch.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201302072325.23483.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci defines PCI_DEVFN(), PCI_SLOT(), and PCI_FUNC() interfaces, however,
-it doesn't have interfaces to return PCI bus and PCI device id. Drivers
-(AMD IOMMU, and AER) implement module specific definitions for PCI_BUS()
-and AMD_IOMMU driver also has a module specific interface to calculate PCI   
-device id from bus number and devfn.
+On Thursday 07 February 2013, Jason Gunthorpe wrote:
+> On Thu, Feb 07, 2013 at 06:37:43PM +0100, Thomas Petazzoni wrote:
 
-Add PCI_BUS and PCI_DEVID interfaces to return PCI bus number and PCI device
-id respectively to avoid the need for duplicate definitions in other modules.
-AER driver code and AMD IOMMU driver define PCI_BUS. AMD IOMMU driver defines
-an interface to calculate device id from bus number, and devfn pair.
+> Right, someday you can have all 40 interrupts :)
+> 
+> This interrupt-map stuff is ugly, I looks like it was designed as a
+> way for the firmware to communicate the per-device interrupt
+> assignment to the OS - using it to describe a HW setup is a bit more
+> tortured for sure..
 
-Signed-off-by: Shuah Khan <shuah.khan@hp.com>
----
- include/uapi/linux/pci.h |    4 ++++
- 1 file changed, 4 insertions(+)
+It is usually used for PCI (non-PCIe) systems, where you can have
+multiple slots on the same bus and each slot has its own four
+interrupt lines routed to an upstream interrupt controller, not
+necessarily the same one for each slot.
 
-diff --git a/include/uapi/linux/pci.h b/include/uapi/linux/pci.h
-index 3c292bc0..6b2c8b3 100644
---- a/include/uapi/linux/pci.h
-+++ b/include/uapi/linux/pci.h
-@@ -30,6 +30,10 @@
- #define PCI_DEVFN(slot, func)	((((slot) & 0x1f) << 3) | ((func) & 0x07))
- #define PCI_SLOT(devfn)		(((devfn) >> 3) & 0x1f)
- #define PCI_FUNC(devfn)		((devfn) & 0x07)
-+#define PCI_DEVID(bus, devfn)	((((u16)bus) << 8) | devfn)
-+
-+/* return bus from PCI devid = ((u16)bus_number) << 8) | devfn */
-+#define PCI_BUS(x) (((x) >> 8) & 0xff)
- 
- /* Ioctls for /proc/bus/pci/X/Y nodes. */
- #define PCIIOC_BASE		('P' << 24 | 'C' << 16 | 'I' << 8)
--- 
-1.7.9.5
+> Frankly, I think it should not be used in PCI-E drivers *at all*
+> beacuse there is no need for an external interrupt routing
+> description. [1]
+> 
+> PCI-E *only* has inband interrupt delivery, so the host driver has
+> 100% of the information it needs to convert a INTx signal received on
+> a link to a Linux interrupt number.
+> 
+> So in a PCI-E world translation should look like this:
+>  - Start at the source device INTx
+>  - Traverse up bridges performing INTx swizzling according to the
+>    PCI-E spec
+>  - When the host bridge is reached call into the host driver and pass
+>    - The INTx number
+>    - The bus/device/function of last bridge traversed
+>  - The host bridge driver returns a Linux interrupt number.
 
+It's the same as on PCI, except that there you stop when you reach
+the slot that is physically connected to the interrupt controller.
 
+> This *always* works for (compliant) PCI-E. An OF interrupt map is
+> never, ever, needed. Providing a common mechanism can remove this
+> complex OF stuff and ultimately help everyone :)
+> 
+> However, if interrupt-map is used, I strongly suspect it should be
+> placed on each bridge node (as Andrew mentioned), and it should be
+> very simple:
+> 
+> link@0 {
+> reg = <0x800 0 0  0 0>; // Bus 0, Dev 0x10, Fn 0
+> interrupt-mask = <0x0 0 0 7>;
+> interrupt-map = <0x0000 0 0 1 &mpic 58 // INTA
+>                  0x0000 0 0 2 &mpic 58 // INTB
+>                  0x0000 0 0 3 &mpic 58 // INTC
+>                  0x0000 0 0 4 &mpic 58>; // INTD
+> }
 
+The interrupt-map property only makes sense for the host bridge,
+not for bridges below it, which don't normally get represented
+in the device tree.
+
+> Jason
+> 1 - For PCI/PCI-X the physical INTx interrupt pins on any device,
+>     anywhere in the system could by physically tied to any interrupt
+>     ingress in the system. Even if they are behind bridges. It is a
+>     total free for all.
+
+I would not be surprised to see system that have a PCIe to
+PCI bridge and slots behind that which are directly connected
+to an upstream interrupt controller. In fact, I believe I have
+worked on a system like that (IBM QS21 and QS22), and thankfully
+the interrupt-map property did let us model this correctly.
+
+	Arnd
