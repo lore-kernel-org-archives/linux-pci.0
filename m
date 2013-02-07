@@ -1,80 +1,126 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:9933 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758463Ab3BNShP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 14 Feb 2013 13:37:15 -0500
-Subject: [PATCH] pci: Disable slot presence detection around bus reset
-To: bhelgaas@google.com, linux-pci@vger.kernel.org
-From: Alex Williamson <alex.williamson@redhat.com>
-Cc: linux-kernel@vger.kernel.org
-Date: Thu, 14 Feb 2013 11:37:13 -0700
-Message-ID: <20130214183640.16220.33060.stgit@bling.home>
+Received: from moutng.kundenserver.de ([212.227.17.9]:63508 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751925Ab3BGIES (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Feb 2013 03:04:18 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Subject: Re: [PATCH v2 22/27] arm: mvebu: add PCIe Device Tree informations for Armada XP
+Date: Thu, 7 Feb 2013 08:04:12 +0000
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	"Eran Ben-Avi" <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	"Russell King - ARM Linux" <linux@arm.linux.org.uk>
+References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com> <201302062241.14444.arnd@arndb.de> <20130207000715.0b3d662d@skate>
+In-Reply-To: <20130207000715.0b3d662d@skate>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201302070804.12256.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-A bus reset can trigger a presence detection change and result in a
-suprise hotplug.  This is generally not what we want to happen when
-trying to reset a device.  Disable the presence detection control on
-on bridges around bus reset.
+On Wednesday 06 February 2013, Thomas Petazzoni wrote:
+> Dear Arnd Bergmann,
+> 
+> On Wed, 6 Feb 2013 22:41:14 +0000, Arnd Bergmann wrote:
+> 
+> > I've been thinking some more about this, and I wonder if it would
+> > make more sense to describe the address remapping correctly as
+> > a node on top of the pcie-controller node.
+> > 
+> > This would mean that rather than putting the mapped physical address
+> > (0xc0000000, 0xc1000000, ...) in here, you would actually have 64-bit
+> > address as the destination as well, in whatever format the
+> > address map hardware uses, I assume using a numbered 32 bit
+> > address space for each object that can be remapped.
+> > 
+> > This would also let you do the PCI memory address assignment for
+> > each port separately, starting at bus address 0, followed by
+> > finding a location in the CPU address space and passing
+> > the start as the sys->mem_offset argument to
+> > pci_add_resource_offset.
+> 
+> Hum, good you give a skeleton example, because I'm not sure to
+> understand your suggestion.
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
----
- drivers/pci/pci.c |   29 ++++++++++++++++++++++++-----
- 1 file changed, 24 insertions(+), 5 deletions(-)
+I mean (roughly, since I don't know how that hardware defines it)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 5cb5820..c1f7d77 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3229,8 +3229,8 @@ static int pci_pm_reset(struct pci_dev *dev, int probe)
- 
- static int pci_parent_bus_reset(struct pci_dev *dev, int probe)
- {
--	u16 ctrl;
--	struct pci_dev *pdev;
-+	u16 ctrl, flags, sltctl = 0;
-+	struct pci_dev *pdev, *bridge;
- 
- 	if (pci_is_root_bus(dev->bus) || dev->subordinate || !dev->bus->self)
- 		return -ENOTTY;
-@@ -3242,15 +3242,34 @@ static int pci_parent_bus_reset(struct pci_dev *dev, int probe)
- 	if (probe)
- 		return 0;
- 
--	pci_read_config_word(dev->bus->self, PCI_BRIDGE_CONTROL, &ctrl);
-+	bridge = dev->bus->self;
-+
-+	/*
-+	 * If the parent device supports a slot with presence detection
-+	 * change enabled, holding the bus in reset can trigger that and
-+	 * cause an unwanted surprise removal.  Disable presence detection
-+	 * around the bus reset.
-+	 */
-+	pcie_capability_read_word(bridge, PCI_EXP_FLAGS, &flags);
-+	if (flags & PCI_EXP_FLAGS_SLOT) {
-+		pcie_capability_read_word(bridge, PCI_EXP_SLTCTL, &sltctl);
-+		if (sltctl & PCI_EXP_SLTCTL_PDCE)
-+			pcie_capability_write_word(bridge, PCI_EXP_SLTCTL,
-+						sltctl & ~PCI_EXP_SLTCTL_PDCE);
-+	}
-+
-+	pci_read_config_word(bridge, PCI_BRIDGE_CONTROL, &ctrl);
- 	ctrl |= PCI_BRIDGE_CTL_BUS_RESET;
--	pci_write_config_word(dev->bus->self, PCI_BRIDGE_CONTROL, ctrl);
-+	pci_write_config_word(bridge, PCI_BRIDGE_CONTROL, ctrl);
- 	msleep(100);
- 
- 	ctrl &= ~PCI_BRIDGE_CTL_BUS_RESET;
--	pci_write_config_word(dev->bus->self, PCI_BRIDGE_CONTROL, ctrl);
-+	pci_write_config_word(bridge, PCI_BRIDGE_CONTROL, ctrl);
- 	msleep(100);
- 
-+	if (sltctl & PCI_EXP_SLTCTL_PDCE)
-+		pcie_capability_write_word(bridge, PCI_EXP_SLTCTL, sltctl);
-+
- 	return 0;
- }
- 
+/ {
+	#address-cells = <1>;
+	#size-cells = <1>;
 
+	memory@0 {
+		/* this node can not get remapped */
+		reg = <0x0 0x40000000>;
+	};
+
+	address-map {
+		/* this device translates 64 bit MMIO bus addresses into 32 bit CPU addresses */
+		compatible = "marvell,armada-addr-decoding-controller";
+		reg = <0xd0020000 0x258>;
+		#addres-cells = <2>;
+		#address-cells = <1>;
+
+		/* each remapped window has one entry here */
+		ranges = <0xa 0 0xc0000000 0x10000>,     /* map window a to 0xc0000000 */
+		         <0xb 0 0xc1000000 0x08000000>,  /* map window b to 0xc1000000 */
+			 <...>; /* more windows */
+
+		pciex {
+			#addres-cells = <3>;
+			#size-cells = <2>;
+			ranges = <0x81000000 0 0 0xa 0 0 0x00010000,  /* I/O is window a */
+				  0x82000000 0 0 0xb 0 0 0x08000000>; /* non-prefetchable memory */
+			...
+		};
+
+
+		something-else {
+			...
+			reg = <0xc 0 0x10000>; /* window c */
+		};
+	};
+};
+
+> > 
+> > > +                       pcie@0,0 {
+> > > +                               device_type = "pciex";
+> > > +                               reg = <0x0800 0 0xd0040000 0
+> > > 0x2000>;
+> > > +                               #address-cells = <3>;
+> > > +                               #size-cells = <2>;
+> > > +                               marvell,pcie-port = <0>;
+> > > +                               marvell,pcie-lane = <0>;
+> > > +                               interrupts = <1>;
+> > > +                               clocks = <&gateclk 5>;
+> > > +                               status = "disabled";
+> > > +                       };
+> > 
+> > I think you are missing a "ranges" property here, at least an empty
+> > one, which is required by the standard but not currently enforced
+> > in the code.
+> 
+> Is it really wise to have DT properties that are not used by anything,
+> and therefore have a very high chance of either being incorrect, or
+> becoming incorrect?
+
+In this case, definitely. It's mandated by an IEEE standard and the only reason
+why we let some mistakes slip here is that some ancient PowerMac systems
+get it wrong in their firmware. There are lots of cases where the difference
+between an empty "ranges" property and an absent one is very significant
+and I would really prefer to change the kernel to be standard compliant
+here.
+
+	Arnd
