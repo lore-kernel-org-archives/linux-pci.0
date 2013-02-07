@@ -1,208 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:49827 "EHLO hydra.sisk.pl"
+Received: from quartz.orcorp.ca ([184.70.90.242]:53940 "EHLO quartz.orcorp.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751601Ab3BBWxN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 2 Feb 2013 17:53:13 -0500
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Konstantin Khlebnikov <khlebnikov@openvz.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
-	e1000-devel@lists.sourceforge.net, linux-pci@vger.kernel.org,
-	Dave Airlie <airlied@redhat.com>
-Subject: Re: [PATCH 3/5] PCI: revert preparing for wakeup in runtime-suspend finalization
-Date: Sat, 02 Feb 2013 23:59:27 +0100
-Message-ID: <5674023.p1MahTPJ11@vostro.rjw.lan>
-In-Reply-To: <4112994.zQU2CRiGj6@vostro.rjw.lan>
-References: <20130118113019.6698.25941.stgit@zurg> <510D0293.8030509@openvz.org> <4112994.zQU2CRiGj6@vostro.rjw.lan>
+	id S1758789Ab3BGSQD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 7 Feb 2013 13:16:03 -0500
+Date: Thu, 7 Feb 2013 11:15:59 -0700
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Maen Suleiman <maen@marvell.com>, linux-pci@vger.kernel.org,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH v2 19/27] pci: PCIe driver for Marvell Armada 370/XP
+ systems
+Message-ID: <20130207181559.GA31508@obsidianresearch.com>
+References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
+ <1359399397-29729-20-git-send-email-thomas.petazzoni@free-electrons.com>
+ <5106F9F9.3010905@wwwdotorg.org>
+ <20130129094143.1aad9377@skate>
+ <20130129092006.GA16377@avionic-0098.mockup.avionic-design.de>
+ <20130207112459.5f382ad4@skate>
+ <CAErSpo7UOTGH7kjYBADymDdgmHwPxbXqczeXm1BH9C+XViQDRQ@mail.gmail.com>
+ <20130207170020.289bac08@skate>
+ <CAErSpo797rhH=xt2x7eqdu7Vwf43FXoXQVcypvHM8-54LRC0wQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo797rhH=xt2x7eqdu7Vwf43FXoXQVcypvHM8-54LRC0wQ@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Saturday, February 02, 2013 09:58:45 PM Rafael J. Wysocki wrote:
-> On Saturday, February 02, 2013 04:12:03 PM Konstantin Khlebnikov wrote:
-> > Rafael J. Wysocki wrote:
-> > > On Tuesday, January 29, 2013 12:55:15 PM Rafael J. Wysocki wrote:
-> > >> On Tuesday, January 29, 2013 11:04:57 AM Konstantin Khlebnikov wrote:
-> > >>> Rafael J. Wysocki wrote:
-> > >>>> On Monday, January 28, 2013 04:17:42 PM Bjorn Helgaas wrote:
-> > >>>>> [+cc Rafael]
-> > >>>>>
-> > >>>>> On Fri, Jan 18, 2013 at 4:42 AM, Konstantin Khlebnikov
-> > >>>>> <khlebnikov@openvz.org>   wrote:
-> > >>>>>> This patch effectively reverts commit 42eca2302146fed51335b95128e949ee6f54478f
-> > >>>>>> ("PCI: Don't touch card regs after runtime suspend D3")
-> > >>>>>>
-> > >>>>>> | This patch checks whether the pci state is saved and doesn't attempt to hit
-> > >>>>>> | any registers after that point if it is.
-> > >>>>>>
-> > >>>>>> This seems completely wrong. Yes, PCI configuration space has been saved by
-> > >>>>>> driver, but this doesn't means that all job is done and device has been
-> > >>>>>> suspended and ready for waking up in the future.
-> > >>>>>>
-> > >>>>>> For example driver e1000e for ethernet in my thinkpad x220 saves pci-state
-> > >>>>>> but device cannot wakeup after that, because it needs some ACPI callbacks
-> > >>>>>> which usually called from pci_finish_runtime_suspend().
-> > >>>>>>
-> > >>>>>> | Optimus (dual-gpu) laptops seem to have their own form of D3cold, but
-> > >>>>>> | unfortunately enter it on normal D3 transitions via the ACPI callback.
-> > >>>>>>
-> > >>>>>> Hardware which disappears from the bus unexpectedly is exception, so let's
-> > >>>>>> handle it as an exception. Its driver should set device state to D3cold and
-> > >>>>>> the rest code will handle it properly.
-> > >>>>>
-> > >>>>> Functions in D3cold don't have power, so it's completely expected that
-> > >>>>> they would disappear from the bus and not respond to config accesses.
-> > >>>>> Maybe Dave was referring to D3hot, where functions *should* respond to
-> > >>>>> config accesses.  I dunno.
-> > >>>>>
-> > >>>>> Just to be clear, it sounds like 42eca230 caused a regression on your
-> > >>>>> e1000e device?  If so, I guess we should revert it unless you and Dave
-> > >>>>> can figure out a better patch that fixes both your e1000e device and
-> > >>>>> the Optimus issue.
-> > >>>>
-> > >>>> Yes, if there's a regression, let's revert it, but I'd like the regression
-> > >>>> to be described clearly.
-> > >>>
-> > >>> Yep, this is regression.
-> > >>>
-> > >>> commit 42eca2302146fed51335b95128e949ee6f54478f ("PCI: Don't touch
-> > >>> card regs after runtime suspend D3") changes state convention during
-> > >>> runtime-suspend transaction too much. If PCI configuration space
-> > >>> has been saved by driver that does not means that all job is done
-> > >>> and device has been suspended and ready for waking up in the future.
-> > >>>
-> > >>> e1000e saves pci-config space itself, but it requires operations which
-> > >>> pci_finish_runtime_suspend() does: preparing for wake (calling particular
-> > >>> platform pm-callbacks) and switching to proper sleep state.
-> > >>
-> > >> Well, I'd argue this is a bug in e1000e.  Why does it need to save the PCI
-> > >> config space even though pci_pm_runtime_suspend() will do that anyway?
-> > >
-> > > I honestly don't think we should revert 42eca2302146 because of this.
-> > >
-> > > Yes, there is a requirement that drivers not save the PCI config space by
-> > > themselves unless they want to do the whole power management by themselves too
-> > > and e1000e is not following that.  So either we need to drop the
-> > > pci_save_state() from __e1000_shutdown() which I would prefer (I'm not really
-> > > sure why it is there), or e1000_runtime_suspend() needs to call
-> > > pci_finish_runtime_suspend() by itself.
-> > 
-> > Yet another problem: some drivers calls pci_save_state() from ->probe() callback
-> > to use this saved state in pci_error_handlers->slot_reset().
-> > As result pdev->state_saved is true mostly all time.
-> > At least e1000e and drivers/pci/pcie/portdrv_pci.c are doing this.
-> > 
-> > I think it will be safer to revert 42eca2302146 in v3.8
+On Thu, Feb 07, 2013 at 11:08:45AM -0700, Bjorn Helgaas wrote:
+ 
+> I think the way you'll have to fix this in the meantime is to use
+> pci_create_root_bus() directly so you can do things in this sequence:
 > 
-> Well, I wonder if we can just do something like the appended patch instead and
-> address the e1000e runtime suspend by calling pci_finish_runtime_suspend()
-> directly from e1000_runtime_suspend().
+>   pci_create_root_bus
+>   pci_scan_child_bus
+>   pci_bus_assign_resources
+>   pci_bus_add_devices
 > 
-> While we can revert commit 42eca2302146, that hardly would be progress,
-> because then the issue it was supposed to address would still need to be
-> addressed somehow.
-> 
-> ---
->  drivers/pci/pci-driver.c |    4 ++++
->  1 file changed, 4 insertions(+)
-> 
-> Index: linux-pm/drivers/pci/pci-driver.c
-> ===================================================================
-> --- linux-pm.orig/drivers/pci/pci-driver.c
-> +++ linux-pm/drivers/pci/pci-driver.c
-> @@ -628,6 +628,7 @@ static int pci_pm_suspend(struct device
->  		goto Fixup;
->  	}
->  
-> +	pci_dev->state_saved = false;
->  	if (pm->suspend) {
->  		pci_power_t prev = pci_dev->current_state;
->  		int error;
-> @@ -774,6 +775,7 @@ static int pci_pm_freeze(struct device *
->  		return 0;
->  	}
->  
-> +	pci_dev->state_saved = false;
->  	if (pm->freeze) {
->  		int error;
->  
-> @@ -862,6 +864,7 @@ static int pci_pm_poweroff(struct device
->  		goto Fixup;
->  	}
->  
-> +	pci_dev->state_saved = false;
->  	if (pm->poweroff) {
->  		int error;
->  
-> @@ -987,6 +990,7 @@ static int pci_pm_runtime_suspend(struct
->  	if (!pm || !pm->runtime_suspend)
->  		return -ENOSYS;
->  
-> +	pci_dev->state_saved = false;
->  	pci_dev->no_d3cold = false;
->  	error = pm->runtime_suspend(dev);
->  	suspend_report_result(pm->runtime_suspend, error);
+> dino_probe() is an example of similar code that does this.
 
-For completness, on top of the above one.
+Erm, but isn't this problem going to strike any system that doesn't
+have resources assigned by the firmware?
 
----
- drivers/net/ethernet/intel/e1000e/netdev.c |    1 +
- drivers/pci/pci.c                          |    1 +
- drivers/pci/pci.h                          |    1 -
- include/linux/pci.h                        |    1 +
- 4 files changed, 3 insertions(+), 1 deletion(-)
+If so, a common 'pci_scan_bus_from_scratch' would at least highlight
+the problem and centralize the work around until it is fixed...
 
-Index: linux-pm/drivers/pci/pci.c
-===================================================================
---- linux-pm.orig/drivers/pci/pci.c
-+++ linux-pm/drivers/pci/pci.c
-@@ -1840,6 +1840,7 @@ int pci_finish_runtime_suspend(struct pc
- 
- 	return error;
- }
-+EXPORT_SYMBOL_GPL(pci_finish_runtime_suspend);
- 
- /**
-  * pci_dev_run_wake - Check if device can generate run-time wake-up events.
-Index: linux-pm/drivers/pci/pci.h
-===================================================================
---- linux-pm.orig/drivers/pci/pci.h
-+++ linux-pm/drivers/pci/pci.h
-@@ -64,7 +64,6 @@ extern int pci_set_platform_pm(struct pc
- extern void pci_update_current_state(struct pci_dev *dev, pci_power_t state);
- extern void pci_power_up(struct pci_dev *dev);
- extern void pci_disable_enabled_device(struct pci_dev *dev);
--extern int pci_finish_runtime_suspend(struct pci_dev *dev);
- extern int __pci_pme_wakeup(struct pci_dev *dev, void *ign);
- extern void pci_wakeup_bus(struct pci_bus *bus);
- extern void pci_config_pm_runtime_get(struct pci_dev *dev);
-Index: linux-pm/include/linux/pci.h
-===================================================================
---- linux-pm.orig/include/linux/pci.h
-+++ linux-pm/include/linux/pci.h
-@@ -936,6 +936,7 @@ int pci_back_from_sleep(struct pci_dev *
- bool pci_dev_run_wake(struct pci_dev *dev);
- bool pci_check_pme_status(struct pci_dev *dev);
- void pci_pme_wakeup_bus(struct pci_bus *bus);
-+int pci_finish_runtime_suspend(struct pci_dev *dev);
- 
- static inline int pci_enable_wake(struct pci_dev *dev, pci_power_t state,
- 				  bool enable)
-Index: linux-pm/drivers/net/ethernet/intel/e1000e/netdev.c
-===================================================================
---- linux-pm.orig/drivers/net/ethernet/intel/e1000e/netdev.c
-+++ linux-pm/drivers/net/ethernet/intel/e1000e/netdev.c
-@@ -5696,6 +5696,7 @@ static int e1000_runtime_suspend(struct
- 		bool wake;
- 
- 		__e1000_shutdown(pdev, &wake, true);
-+		pci_finish_runtime_suspend(pdev);
- 	}
- 
- 	return 0;
+Many embedded systems will require this..
 
-
-
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+Regards,
+Jason
