@@ -1,50 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ia0-f179.google.com ([209.85.210.179]:40261 "EHLO
-	mail-ia0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755931Ab3BFVxw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Feb 2013 16:53:52 -0500
-MIME-Version: 1.0
-In-Reply-To: <52330506.F9m0tMYuG1@vostro.rjw.lan>
-References: <CAE9FiQXHG01NjnYNDbC-KEpbcvY-q4pBe97CxTOGS7W4vZQBYQ@mail.gmail.com>
-	<CAErSpo5-6xs+Uz=Yzws23RmrFK=+AQZ2=UT+n0k=462EgazbUA@mail.gmail.com>
-	<CAE9FiQX=uEPjHDi-_VaW88ueH4u9C22gmDiGQewsQ=VN5T4=Gg@mail.gmail.com>
-	<52330506.F9m0tMYuG1@vostro.rjw.lan>
-Date: Wed, 6 Feb 2013 13:53:50 -0800
-Message-ID: <CAE9FiQXTRaP08ZeHWTJHt50DZO800BMigmo=q65-RLzZWkTvoQ@mail.gmail.com>
-Subject: Re: [PATCH v3 00/22] PCI: Iterate pci host bridge instead of pci root bus
-From: Yinghai Lu <yinghai@kernel.org>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Mauro Carvalho Chehab <mchehab@redhat.com>,
-	Tony Luck <tony.luck@intel.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, Russell King <linux@arm.linux.org.uk>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail.free-electrons.com ([94.23.35.102]:57324 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758910Ab3BGQkp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Feb 2013 11:40:45 -0500
+Date: Thu, 7 Feb 2013 17:40:40 +0100
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Andrew Murray <andrew.murray@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>
+Subject: Re: [PATCH v2 19/27] pci: PCIe driver for Marvell Armada 370/XP
+ systems
+Message-ID: <20130207174040.3a345770@skate>
+In-Reply-To: <20130207171904.70270598@skate>
+References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	<1359399397-29729-20-git-send-email-thomas.petazzoni@free-electrons.com>
+	<20130129132204.GA23886@arm.com>
+	<20130207153750.0fef1192@skate>
+	<20130207155117.GA19666@arm.com>
+	<20130207171904.70270598@skate>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 6, 2013 at 1:43 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> On Wednesday, February 06, 2013 01:28:27 PM Yinghai Lu wrote:
->> so you still did not answer you want 1 or 2 yet:
->>
->> for sgi_hotplug,
->>
->> 1. still keep the module support, and register acpi_pci_driver later.
->> 2. built-in support only, and need to register acpi_pci_driver early.
->
-> Please work with the assumption that acpi_pci_driver is not going to be there
-> any more.
->
+Dear Thomas Petazzoni,
 
-I think I could change ioapic and iommu hotplug to weak add/remove because they
-should be built-in by nature.
+On Thu, 7 Feb 2013 17:19:04 +0100, Thomas Petazzoni wrote:
 
-but how about others like sgi_hotplug etc?
+> Unfortunately, I don't quite agree with any of your three solutions. I
+> still do believe the root problem is that pdev->dev.of_node should be
+> NULL for the PCIe endpoints, since those devices are not probed with
+> the Device Tree.
 
-Thanks
+Looking more at this, the pdev->dev.of_node is in fact NULL, but the
+code uses the of_node of the parent PCI device.
 
-Yinghai
+So in fact the problem is indeed that the subnodes pcie0,0 and pcie1,0
+are seen as corresponding to the PCI-to-PCI bridges.
+
+Thanks,
+
+Thomas
+-- 
+Thomas Petazzoni, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
