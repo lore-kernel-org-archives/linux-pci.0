@@ -1,105 +1,59 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from moutng.kundenserver.de ([212.227.17.8]:60107 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759493Ab3BGX2k (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Feb 2013 18:28:40 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Andrew Murray <amurray@embedded-bits.co.uk>
+Subject: Re: [PATCH v2 19/27] pci: PCIe driver for Marvell Armada 370/XP systems
+Date: Thu, 7 Feb 2013 23:27:52 +0000
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Andrew Murray <andrew.murray@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	"Eran Ben-Avi" <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	"Russell King - ARM Linux" <linux@arm.linux.org.uk>
+References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com> <20130207183743.5c97d8b8@skate> <CAPcvp5EC=e8TbX9s88hF9uKMzTc6655k9=mgdEc0szP_phhbXQ@mail.gmail.com>
+In-Reply-To: <CAPcvp5EC=e8TbX9s88hF9uKMzTc6655k9=mgdEc0szP_phhbXQ@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQWwKkGTyf-5r2T7PkFSNoqS_7-BKphCXsFSFEFrDPQAZg@mail.gmail.com>
-References: <CAE9FiQUkmnV_On5+ZpH2pF4Li1HxLpkO8bp4TnYB46=pc9Safg@mail.gmail.com>
- <1360696283-20313-1-git-send-email-yinghai@kernel.org> <5988763.6WpnEvTV2f@vostro.rjw.lan>
- <CAE9FiQX=yLyBV3AbP43N91Tx5-ic-f5f+=_r_RBLxq1Ct32Z_Q@mail.gmail.com>
- <CAErSpo6x2WXdbO-_qeheQKwqqJ9zze8Z9pnj-wtU0yTJEh-NJg@mail.gmail.com>
- <CAE9FiQXan3J7-m2Wgd0pVybed_BgRAiqMGofh7t+vX_6e8zh7g@mail.gmail.com> <CAE9FiQWwKkGTyf-5r2T7PkFSNoqS_7-BKphCXsFSFEFrDPQAZg@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 19 Feb 2013 11:51:17 -0700
-Message-ID: <CAErSpo7aM7O16-i7ksa639NvSQZZoeL3F=W7qZAjmMKL___hHA@mail.gmail.com>
-Subject: Re: [PATCH] ACPI, PCI: Get PRT entry during acpi_pci_enable_irq()
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201302072327.52328.arnd@arndb.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Feb 15, 2013 at 6:37 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Fri, Feb 15, 2013 at 5:26 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->> On Fri, Feb 15, 2013 at 4:39 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>> On Thu, Feb 14, 2013 at 5:50 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->>>> On Tue, Feb 12, 2013 at 12:22 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
->>>>> On Tuesday, February 12, 2013 11:11:23 AM Yinghai Lu wrote:
->>>>>> Peter Hurley found "irq 18 nobody cared" with pci-next, and dmesg has
->>>>>>
->>>>>> [    8.983246] pci 0000:00:1e.0: can't derive routing for PCI INT A
->>>>>> [    8.983600] snd_ctxfi 0000:09:02.0: PCI INT A: no GSI - using ISA IRQ 5
->>>>>>
->>>>>> bisect to
->>>>>> | commit 4f535093cf8f6da8cfda7c36c2c1ecd2e9586ee4
->>>>>> |     PCI: Put pci_dev in device tree as early as possible
->>>>>>
->>>>>> It turns out we need to call acpi_pci_irq_add_prt() after the pci bridges
->>>>>> are scanned.
->>>>>>
->>>>>> Bjorn said:
->>>>>>  The bus number binding means acpi_pci_irq_add_prt() has to happen
->>>>>>  after enumerating everything below a bridge, and it will prevent us
->>>>>>  from doing any bus number reassignment for hotplug.
->>>>>>
->>>>>>  I think we should remove the bus numbers from the cached _PRT (or
->>>>>>  maybe even remove the _PRT caching completely).  When we enable a PCI
->>>>>>  device's IRQ, we should search up the PCI device tree looking for a
->>>>>>  _PRT associated with each node, and applying normal PCI bridge
->>>>>>  swizzling when we don't find a _PRT.  I think this can be done without
->>>>>>  using PCI bus numbers at all.
->>>>>>
->>>>>> So here we try to remove _PRT caching completely.
->>>>>>
->>>>>> -v2: check !handle early.
->>>>>>
->>>>>> Reported-and-tested-by: Peter Hurley <peter@hurleysoftware.com>
->>>>>> Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
->>>>>> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
->>>>>
->>>>> Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->>>>>
->>>>>> ---
->>>>>>  drivers/acpi/pci_irq.c      |   95 +++++++++++++++++---------------------------
->>>>>>  drivers/acpi/pci_root.c     |   18 --------
->>>>>>  drivers/pci/pci-acpi.c      |   24 -----------
->>>>>>  include/acpi/acpi_drivers.h |    5 --
->>>>>>  4 files changed, 38 insertions(+), 104 deletions(-)
->>>>
->>>> Bjorn,
->>>>
->>>> Can you put this one into pci/next?
->>>
->>> I'm not sure what this patch is based on or what the best way to merge
->>> it is.  It doesn't apply cleanly to my next or
->>> pci/yinghai-root-bus-hotplug branches.
->>
->> My fault, that is based on pci/next + pm/linux-next
->>
->> linux-next removed
->> acpi_power_resource_(un)register_device ...
->>
->>>
->>> I did apply it manually on top of pci/yinghai-root-bus-hotplug to try
->>> it out, but we need to tweak the messages a little bit.
->>>
->>> Previously we printed "ACPI: PCI Interrupt Routing Table [%s._PRT]"
->>> once when loading it, which was fine.  Now we print it every time we
->>> look at a _PRT, which is too much because it isn't really adding any
->>> information.
->>>
->>> We also print "ACPI Exception: AE_NOT_FOUND, Evaluating _PRT
->>> [AE_NOT_FOUND] (20121018/pci_irq-259)" if we find ACPI nodes without
->>> _PRTs, which we shouldn't do, because that's a common and normal
->>> situation.
->>
->> Sure. Can you have separated patch to do that ?
->>
->> Or want me to resend the patch.
->
-> Please check attached updated version that remove print out ...
->
-> and it could be applied cleanly on top of pci/yinghai-root-bus-hotplug
+On Thursday 07 February 2013, Andrew Murray wrote:
+> I'm not sure if the device pin part of the map is correct (I always
+> forget how this works) - but I know this would definately work:
+> 
+>                          interrupt-map-mask = <0xf800 0 0 7>
+>                          interrupt-map = <0x0800 0 0 1 &mpic 58
+>                                           0x0800 0 0 2 &mpic 58
+>                                           0x0800 0 0 3 &mpic 58
+>                                           0x0800 0 0 4 &mpic 58
+>                                           0x1000 0 0 1 &mpic 59
+>                                           0x1000 0 0 2 &mpic 59
+>                                           0x1000 0 0 3 &mpic 59
+>                                           0x1000 0 0 4 &mpic 59
+>                                           ....
 
-Thanks, I applied this to pci/yinghai-root-bus-hotplug and merged it
-into my next branch.
+If all the pins are routed to the same interrupt, you can leave
+the pin out of the map-mask and save a bunch of lines in the
+interrupt-map, at least  by the spec. I have not looked at the
+source code to see if that is how Linux implements the lookup,
+but that can be fixed if necessary.
 
-Bjorn
+	Arnd
