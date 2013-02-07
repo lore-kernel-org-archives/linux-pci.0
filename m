@@ -1,110 +1,95 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f175.google.com ([209.85.223.175]:62018 "EHLO
-	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751490Ab3BZSO3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Feb 2013 13:14:29 -0500
+Received: from service87.mimecast.com ([91.220.42.44]:36469 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759102Ab3BGR3j convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Feb 2013 12:29:39 -0500
+Date: Thu, 7 Feb 2013 17:29:34 +0000
+From: Andrew Murray <andrew.murray@arm.com>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>
+Subject: Re: [PATCH v2 19/27] pci: PCIe driver for Marvell Armada 370/XP
+ systems
+Message-ID: <20130207172934.GA2811@arm.com>
+References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
+ <1359399397-29729-20-git-send-email-thomas.petazzoni@free-electrons.com>
+ <20130129132204.GA23886@arm.com>
+ <20130207153750.0fef1192@skate>
+ <20130207155117.GA19666@arm.com>
+ <20130207171904.70270598@skate>
+ <20130207174040.3a345770@skate>
+ <20130207165347.GA31995@arm.com>
+ <20130207181418.3753b007@skate>
 MIME-Version: 1.0
-In-Reply-To: <CA+55aFy7PvVqAN6tLFFuCUALsXsKsuf-yqWso3aZGe4-MkFvuw@mail.gmail.com>
-References: <20130223212120.GA4593@google.com>
-	<CAE9FiQWDktthNN3aCq-+tqWJU+Cz+PjN57E=pHzBBErCsZ8B7Q@mail.gmail.com>
-	<CA+55aFx7jq7ruTN+pnp-4hPHnkr1G-1WAiAJSQYTPr7GOJjExw@mail.gmail.com>
-	<CAE9FiQUT+iHHZwn-2OsoJX0zXJ6rt6n0zuT+mLP=M8yFMxmMdg@mail.gmail.com>
-	<CA+55aFy7PvVqAN6tLFFuCUALsXsKsuf-yqWso3aZGe4-MkFvuw@mail.gmail.com>
-Date: Tue, 26 Feb 2013 10:14:29 -0800
-Message-ID: <CAE9FiQUkMqqSE9JJuxt7MxLheQA1j2nKC7QfOB7xLEJ9iUhs7g@mail.gmail.com>
-Subject: Re: [GIT PULL] PCI changes for v3.9
-From: Yinghai Lu <yinghai@kernel.org>
-To: Linus Torvalds <torvalds@linux-foundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: multipart/mixed; boundary=e89a8f234e59e5dfd904d6a4a0e5
+In-Reply-To: <20130207181418.3753b007@skate>
+Content-Type: text/plain; charset=WINDOWS-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---e89a8f234e59e5dfd904d6a4a0e5
-Content-Type: text/plain; charset=ISO-8859-1
+On Thu, Feb 07, 2013 at 05:14:18PM +0000, Thomas Petazzoni wrote:
+> Dear Andrew Murray,
+> 
+> On Thu, 7 Feb 2013 16:53:47 +0000, Andrew Murray wrote:
+> 
+> > > So in fact the problem is indeed that the subnodes pcie0,0 and pcie1,0
+> > > are seen as corresponding to the PCI-to-PCI bridges.
+> > 
+> > I would suggest changing the interrupt-mask to match any bus number. (Don't
+> > forget that the secondary bus number of each of your emulated bridges will
+> > vary depending on how many devices are detected underneath each root port,
+> > assuming you don't try and partition bus numbers or use domains between ports).
+> 
+> I don't think this would work. Currently, the interrupt-map associates
+> the interrupts with the PCI-to-PCI bridges, i.e devices 00:01, 00:02,
+> 00:03, 00:04, 00:05, etc.
+> 
+> The real PCIe devices themselves are at 01:00, 02:00, 03:00, 04:00,
+> 05:00. Each of them sit on a different bus, at devfn = 0.
+> 
+> So if I ignore the bus number, how could the PCI code find what is the
+> matching interrupt?
 
-On Tue, Feb 26, 2013 at 8:13 AM, Linus Torvalds
-<torvalds@linux-foundation.org> wrote:
-> On Mon, Feb 25, 2013 at 10:46 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->> On Mon, Feb 25, 2013 at 9:19 PM, Linus Torvalds
->> <torvalds@linux-foundation.org> wrote:
->>>
->>> Also, my *gut* feel is that the new _handle_hotplug_event_root()
->>> function should do that whole dance with
->>> acpi_scan_lock_acquire()/acpi_scan_lock_release(), but I didn't really
->>> know if it's required or appropriate, so I left it alone. Could you
->>> take a look?
->>
->> Yes, we need that for root bridge hot add path.
->>
->> for hot remove path, we already have lock acquire/release in
->> acpi_bus_hot_remove_device().
->>
->> Please check attached patch for hot add path.
->
-> Quite frankly, doing this in handle_root_bridge_insertion() doesn't
-> match the pattern elsewhere. Elsewhere you also protected the whole
-> acpi_get_name() lookup etc. Which is why I felt that it would make
-> more sense to add this to _handle_hotplug_event_root().
->
-> But there may be good reasons why the root bridge case is different,
-> and I don't have strong opinions, I just wanted people to look at his
-> case. I'll let you and Bjorn sort it out...
+Apologies if I've missed information about your hardware in the other
+discussion (I've tried to keep up) - does your hardware raise a single host
+interrupt for each pin regardless to which bridge they come in on - or do you
+separate A,B,C,D host interrupts for each bridge?
 
-ok,
+If you have only 4 interrupt sources for legacy interrupts then you shouldn't
+need to care which bus/device/function they were generated on (of_pci_map_irq
+takes care of this for you).
 
-Bjorn, Rafael,
+During enumeration an interrupt number should be assigned to each requesting
+device which reflects the pin (after swizzling) which will arrive at the host
+bridges. That interrupt number should be shared across all devices that
+requested the same pin (after swizzling) - i.e. shared interrupts. So all you
+need to do is map A,B,C,D interrupts with the interrupt they come into the 
+CPU.
 
-Can you please check if you are ok with attached patch ?
+Andrew Murray
+> 
+> Thanks,
+> 
+> Thomas
+> -- 
+> Thomas Petazzoni, Free Electrons
+> Kernel, drivers, real-time and embedded Linux
+> development, consulting, training and support.
+> http://free-electrons.com
+> 
 
-Thanks
-
-Yinghai
-
---e89a8f234e59e5dfd904d6a4a0e5
-Content-Type: application/octet-stream;
-	name="fix_acpi_pci_root_acquire_lock.patch"
-Content-Disposition: attachment;
-	filename="fix_acpi_pci_root_acquire_lock.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_hdndj07b0
-
-U3ViamVjdDogW1BBVENIXSBQQ0ksIEFDUEk6IGhvbGQgYWNwaV9zY2FuX2xvY2sgZHVyaW5nIHJv
-b3QgYnVzIGhvdHBsdWcKCkR1cmluZyBtZXJnaW5nIHBjaSB0cmVlIHdpdGggcG0vYWNwaSB0cmVl
-LCBMaW51cyBub3RpY2VkIHRoYXQKd2UgZG9uJ3QgaGF2ZSBzYW1lIGxvY2sgdXNpbmcgcGF0dGVu
-IGFib3V0IGFjcGkgcGNpIHJvb3QgYXMKYWNwaXBocC4KCkhlcmUgYXBwbHkgc2FtZSBsb2NrIHBh
-dHRlbiwgYW5kIHdlIG5lZWQgdG8gY2hhbmdlCmFjcGlfYnVzX2hvdF9yZW1vdmVfZGV2aWNlIGV4
-ZWN1dGluZyB2aWEgYWNwaV9vc19ob3RwbHVnX2V4ZWN1dGUoKQphcyBpdCBhbHNvIGhvbGQgdGhl
-IGxvY2sgaW4gYWNwaV9idXNfaG90X3JlbW92ZV9kZXZpY2UuCgpUaGF0IHdpbGwgbWFrZSBhY3Bp
-X2J1c19ob3RfcmVtb3ZlX2RldmljZSBjYWxsaW5nIHRoZSBzYW1lIGFzIG90aGVyCmNhbGxlcnMu
-CgpSZXBvcnRlZC1ieTogTGludXMgVG9ydmFsZHMgPHRvcnZhbGRzQGxpbnV4LWZvdW5kYXRpb24u
-b3JnPgpTaWduZWQtb2ZmLWJ5OiBZaW5naGFpIEx1IDx5aW5naGFpQGtlcm5lbC5vcmc+CgotLS0K
-IGRyaXZlcnMvYWNwaS9wY2lfcm9vdC5jIHwgICAgOSArKysrKysrLS0KIDEgZmlsZSBjaGFuZ2Vk
-LCA3IGluc2VydGlvbnMoKyksIDIgZGVsZXRpb25zKC0pCgpJbmRleDogbGludXgtMi42L2RyaXZl
-cnMvYWNwaS9wY2lfcm9vdC5jCj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0KLS0tIGxpbnV4LTIuNi5vcmlnL2RyaXZlcnMv
-YWNwaS9wY2lfcm9vdC5jCisrKyBsaW51eC0yLjYvZHJpdmVycy9hY3BpL3BjaV9yb290LmMKQEAg
-LTY1Miw2ICs2NTIsNyBAQCBzdGF0aWMgdm9pZCBoYW5kbGVfcm9vdF9icmlkZ2VfaW5zZXJ0aW9u
-CiAKIHN0YXRpYyB2b2lkIGhhbmRsZV9yb290X2JyaWRnZV9yZW1vdmFsKHN0cnVjdCBhY3BpX2Rl
-dmljZSAqZGV2aWNlKQogeworCWFjcGlfc3RhdHVzIHN0YXR1czsKIAlzdHJ1Y3QgYWNwaV9lamVj
-dF9ldmVudCAqZWpfZXZlbnQ7CiAKIAllal9ldmVudCA9IGttYWxsb2Moc2l6ZW9mKCplal9ldmVu
-dCksIEdGUF9LRVJORUwpOwpAQCAtNjY3LDcgKzY2OCw5IEBAIHN0YXRpYyB2b2lkIGhhbmRsZV9y
-b290X2JyaWRnZV9yZW1vdmFsKHMKIAllal9ldmVudC0+ZGV2aWNlID0gZGV2aWNlOwogCWVqX2V2
-ZW50LT5ldmVudCA9IEFDUElfTk9USUZZX0VKRUNUX1JFUVVFU1Q7CiAKLQlhY3BpX2J1c19ob3Rf
-cmVtb3ZlX2RldmljZShlal9ldmVudCk7CisJc3RhdHVzID0gYWNwaV9vc19ob3RwbHVnX2V4ZWN1
-dGUoYWNwaV9idXNfaG90X3JlbW92ZV9kZXZpY2UsIGVqX2V2ZW50KTsKKwlpZiAoQUNQSV9GQUlM
-VVJFKHN0YXR1cykpCisJCWtmcmVlKGVqX2V2ZW50KTsKIH0KIAogc3RhdGljIHZvaWQgX2hhbmRs
-ZV9ob3RwbHVnX2V2ZW50X3Jvb3Qoc3RydWN0IHdvcmtfc3RydWN0ICp3b3JrKQpAQCAtNjgyLDgg
-KzY4NSw5IEBAIHN0YXRpYyB2b2lkIF9oYW5kbGVfaG90cGx1Z19ldmVudF9yb290KHMKIAloYW5k
-bGUgPSBocF93b3JrLT5oYW5kbGU7CiAJdHlwZSA9IGhwX3dvcmstPnR5cGU7CiAKLQlyb290ID0g
-YWNwaV9wY2lfZmluZF9yb290KGhhbmRsZSk7CisJYWNwaV9zY2FuX2xvY2tfYWNxdWlyZSgpOwog
-CisJcm9vdCA9IGFjcGlfcGNpX2ZpbmRfcm9vdChoYW5kbGUpOwogCWFjcGlfZ2V0X25hbWUoaGFu
-ZGxlLCBBQ1BJX0ZVTExfUEFUSE5BTUUsICZidWZmZXIpOwogCiAJc3dpdGNoICh0eXBlKSB7CkBA
-IC03MTcsNiArNzIxLDcgQEAgc3RhdGljIHZvaWQgX2hhbmRsZV9ob3RwbHVnX2V2ZW50X3Jvb3Qo
-cwogCQlicmVhazsKIAl9CiAKKwlhY3BpX3NjYW5fbG9ja19yZWxlYXNlKCk7CiAJa2ZyZWUoaHBf
-d29yayk7IC8qIGFsbG9jYXRlZCBpbiBoYW5kbGVfaG90cGx1Z19ldmVudF9icmlkZ2UgKi8KIAlr
-ZnJlZShidWZmZXIucG9pbnRlcik7CiB9Cg==
---e89a8f234e59e5dfd904d6a4a0e5--
