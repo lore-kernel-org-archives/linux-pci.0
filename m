@@ -1,122 +1,93 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <1360948952.9542.43.camel@misato.fc.hp.com>
-Subject: Re: [Update][PATCH] ACPI / hotplug: Fix concurrency issues and
- memory leaks
-From: Toshi Kani <toshi.kani@hp.com>
-To: "Moore, Robert" <robert.moore@intel.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jiang Liu <liuj97@gmail.com>, Yinghai Lu <yinghai@kernel.org>,
-	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
-	Myron Stowe <mstowe@redhat.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.free-electrons.com ([94.23.35.102]:57609 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758411Ab3BGRhs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Feb 2013 12:37:48 -0500
+Date: Thu, 7 Feb 2013 18:37:43 +0100
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Andrew Murray <andrew.murray@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Zheng, Lv" <lv.zheng@intel.com>,
-	"Brown, Len" <len.brown@intel.com>
-Date: Fri, 15 Feb 2013 10:22:32 -0700
-In-Reply-To: <94F2FBAB4432B54E8AACC7DFDE6C92E368CB6125@ORSMSX101.amr.corp.intel.com>
-References: <1837481.7dT8hTZ4MT@vostro.rjw.lan>
-	 <1463882.MtF6rq6lDy@vostro.rjw.lan>
-	 <1360888082.3869.163.camel@misato.fc.hp.com>
-	 <1556413.qqfoi7QgzD@vostro.rjw.lan>
-	 <1360941494.9542.11.camel@misato.fc.hp.com>
-	 <94F2FBAB4432B54E8AACC7DFDE6C92E368CB6125@ORSMSX101.amr.corp.intel.com>
-Content-Type: text/plain; charset="UTF-8"
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>
+Subject: Re: [PATCH v2 19/27] pci: PCIe driver for Marvell Armada 370/XP
+ systems
+Message-ID: <20130207183743.5c97d8b8@skate>
+In-Reply-To: <20130207172934.GA2811@arm.com>
+References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	<1359399397-29729-20-git-send-email-thomas.petazzoni@free-electrons.com>
+	<20130129132204.GA23886@arm.com>
+	<20130207153750.0fef1192@skate>
+	<20130207155117.GA19666@arm.com>
+	<20130207171904.70270598@skate>
+	<20130207174040.3a345770@skate>
+	<20130207165347.GA31995@arm.com>
+	<20130207181418.3753b007@skate>
+	<20130207172934.GA2811@arm.com>
 Mime-Version: 1.0
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2013-02-15 at 16:33 +0000, Moore, Robert wrote:
-> > > > > > > > > Is there a mechanism in ACPICA to ensure that a handle
-> > > > > > > > > won't become stale while a notify handler is running for
-> > > > > > > > > it or is the OS responsible for ensuring that
-> > > > > > > > > _EJ0 won't be run in parallel with notify handlers for
-> > > > > > > > > device objects being ejected?
-> > > > > > > > >
-> > > > > > > >
-> > > > > > > > It is up to the host.
-> > > > > > >
-> > > > > > > I was afraid that that might be the case. :-)
-> > > > > > >
-> > > > > > > So far the (Linux) host has been happily ignoring that
-> > > > > > > potential problem, so I guess it can still be ignored for a
-> > > > > > > while, although we'll need to address it eventually at one
-> > point.
-> > > > > >
-> > > > > > I would think it should be fairly simple to setup a mechanism to
-> > > > > > either tell the driver or for the driver to figure it out --
-> > > > > > such that the driver knows that all handles associated with the
-> > > > > > device are now invalid. Another way to look at it is that when
-> > > > > > the device is re-installed, the driver should reinitialize such
-> > > > > > that it obtains new handles for the devices and subobjects in
-> > question.
-> > > > >
-> > > > > Unfortunately, there is quite strong assumption in our code that
-> > > > > ACPI handles will not become stale before the device objects
-> > > > > associated with them are removed.  For this reason, we need to
-> > > > > know in advance which handles will become stale as a result of a
-> > > > > table unload and remove their device objects beforehand.
-> > > > >
-> > > > > Moreover, when there's a notify handler installed for a given ACPI
-> > > > > handle and that handle becomes stale while the notify handler is
-> > > > > running, we'll be in trouble.  To avoid that we need to ensure
-> > > > > that table unloads and notifies will always be mutually exclusive.
-> > > >
-> > > > I wonder if we can make acpi_ns_validate_handle() to actually be
-> > > > able to verify if a given handle is valid.  This way, ACPICA can
-> > > > fail gracefully
-> > > > (AE_BAD_PARAMETER) when a stable handle is passed to the interfaces.
-> > >
-> > > That'd be good, but to implement it, I think, it would be necessary to
-> > > introduce some reference counting of namespace objects such that the
-> > > given object would only be deleted after the last reference to it had
-> > been dropped.
-> > > On table unload it would just be marked as invalid, but it would stay
-> > > in memory as long as there were any references to it.
-> > >
-> > > So, for example, a notify handler would start from something like
-> > > acpi_add_reference(handle), which would guarantee that the object
-> > > pointed to by handle would stay in memory, and it would finish by
-> > > doing
-> > > acpi_drop_reference(handle) or a work item scheduled by it would do
-> > that.
-> > >
-> > > We do that for objects based on struct device and it works well.
-> > 
-> > There is other way to implement it.  Since acpi_handle is defined as an
-> > opaque value, this could be changed to an index to an array of pointers,
-> > instead of a direct pointer.  Then we can safely invalidate an index by
-> > invalidating the pointer associated with the index.
-> 
-> 
-> 
-> We have of course thought about adding a mechanism to validate/invalidate acpica namespace handles. In fact, this is why the ACPI_HANDLE data type was introduced in the first place, so that if we ever wanted or needed to implement something like this, it would not break a lot of existing code.
-> 
-> However, we have never had a real need to implement such a mechanism, nor has the ever been a request from any of the operating systems that run ACPICA.
-> 
-> The existing model is that the host has knowledge of what objects will go away when a table is unloaded, and can simply assume that all related acpi handles will go bad after the unload (and table unload is the only case where parts of the namespace go away, as far as I remember). Upon a reload of the table, the host knows to reinitialize all handles associated with the table/device.
-> 
-> ACPCI has a table handler mechanism, where the host handler is invoked *before* an ACPI table is actually unloaded, so the host can prepare for the unload. For example, before returning from the table handler, the host may want to synchronize by waiting for any outstanding notifies to complete, then simply ignoring any further notifies from any devices associated with the table.
-> 
-> In summary, it has always been felt that the fairly large overhead of implementing a mechanism like this is not worth the cost, as well as not really needed.
-> 
-> I suggest that the implementation of eject support proceed by using the existing mechanisms such as the table handler. If additional support/interfaces are needed in ACPICA, we can discuss it. However, just about the last thing I would like to do is add a level of indirection between the ACPI_HANDLE and the ACPI_NAMESPACE_NODE -- which would require a large, global change to ACPICA that would be only applicable for a single rather rare issue, the unloading of an ACPI table. Just the fact that we are discussing this in 2013 and ACPICA has been running since 1999 should confirm the rarity of this case and/or that the existing mechanism has been sufficient for other hosts that run ACPICA.
-> 
+Dear Andrew Murray,
 
-Thanks for the info.  I understand that making such changes requires a
-lot of effort.  This is just a brainstorming, and as you said, I do not
-think there is any platform that can cause this issue on Linux today.
-We are still in the process of handling load/unload table properly in
-the kernel.  Given your input, Rafael's approach of using reference
-counting on struct device seems to be the best choice for us. 
+On Thu, 7 Feb 2013 17:29:34 +0000, Andrew Murray wrote:
 
-BTW, I did work on other OS that supports load/unload table (which might
-be the first OS that supported this feature.)  It protects from this
-race condition with serialization between the OS and FW with _OST.
-However, we cannot expect all platforms to do the same for Linux.
+> > So if I ignore the bus number, how could the PCI code find what is the
+> > matching interrupt?
+> 
+> Apologies if I've missed information about your hardware in the other
+> discussion (I've tried to keep up) - does your hardware raise a single host
+> interrupt for each pin regardless to which bridge they come in on - or do you
+> separate A,B,C,D host interrupts for each bridge?
 
-Thanks,
--Toshi
+There are separate A,B,C,D interrupts for each PCIe interface, and each
+PCIe interface is represented by an emulated PCI-to-PCI bridge. See my
+interrupt-map:
 
+			interrupt-map = <0x0800 0 0 1 &mpic 58
+				         0x1000 0 0 1 &mpic 59
+					 0x1800 0 0 1 &mpic 60
+					 0x2000 0 0 1 &mpic 61
+					 0x2800 0 0 1 &mpic 62
+				         0x3000 0 0 1 &mpic 63
+					 0x3800 0 0 1 &mpic 64
+					 0x4000 0 0 1 &mpic 65
+					 0x4800 0 0 1 &mpic 99
+					 0x5000 0 0 1 &mpic 103>;
 
+Here I have 10 PCIe interfaces, and therefore 10 interrupts.
+
+There is only one interrupt per PCIe interface, and for now, I don't
+distinguish A,B,C,D (I will do it later, it requires reading a register
+to know if the interrupt came from A, B, C or D, but that's a different
+problem).
+
+> If you have only 4 interrupt sources for legacy interrupts then you shouldn't
+> need to care which bus/device/function they were generated on (of_pci_map_irq
+> takes care of this for you).
+
+No, I have interrupts per PCIe interface, so I really need to take care
+of the relation between the PCIe device and the PCIe interface it is
+connected to.
+
+Thomas
+-- 
+Thomas Petazzoni, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
