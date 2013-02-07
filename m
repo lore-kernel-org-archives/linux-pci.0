@@ -1,124 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:13512 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756229Ab3BOQeA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 15 Feb 2013 11:34:00 -0500
-From: "Moore, Robert" <robert.moore@intel.com>
-To: Toshi Kani <toshi.kani@hp.com>, "Rafael J. Wysocki" <rjw@sisk.pl>
-CC: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jiang Liu <liuj97@gmail.com>, Yinghai Lu <yinghai@kernel.org>,
-	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
-	Myron Stowe <mstowe@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Zheng, Lv" <lv.zheng@intel.com>,
-	"Brown, Len" <len.brown@intel.com>
-Subject: RE: [Update][PATCH] ACPI / hotplug: Fix concurrency issues and
- memory leaks
-Date: Fri, 15 Feb 2013 16:33:47 +0000
-Message-ID: <94F2FBAB4432B54E8AACC7DFDE6C92E368CB6125@ORSMSX101.amr.corp.intel.com>
-References: <1837481.7dT8hTZ4MT@vostro.rjw.lan>
-	 <1463882.MtF6rq6lDy@vostro.rjw.lan>
-	 <1360888082.3869.163.camel@misato.fc.hp.com>
-	 <1556413.qqfoi7QgzD@vostro.rjw.lan>
- <1360941494.9542.11.camel@misato.fc.hp.com>
-In-Reply-To: <1360941494.9542.11.camel@misato.fc.hp.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-ob0-f169.google.com ([209.85.214.169]:37724 "EHLO
+	mail-ob0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754629Ab3BGPq0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Feb 2013 10:46:26 -0500
+Received: by mail-ob0-f169.google.com with SMTP id ta14so2877794obb.14
+        for <linux-pci@vger.kernel.org>; Thu, 07 Feb 2013 07:46:26 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <20130207112459.5f382ad4@skate>
+References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
+ <1359399397-29729-20-git-send-email-thomas.petazzoni@free-electrons.com>
+ <5106F9F9.3010905@wwwdotorg.org> <20130129094143.1aad9377@skate>
+ <20130129092006.GA16377@avionic-0098.mockup.avionic-design.de> <20130207112459.5f382ad4@skate>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 7 Feb 2013 08:46:06 -0700
+Message-ID: <CAErSpo7UOTGH7kjYBADymDdgmHwPxbXqczeXm1BH9C+XViQDRQ@mail.gmail.com>
+Subject: Re: [PATCH v2 19/27] pci: PCIe driver for Marvell Armada 370/XP systems
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Thierry Reding <thierry.reding@avionic-design.de>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Maen Suleiman <maen@marvell.com>, linux-pci@vger.kernel.org,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-DQo+ID4gPiA+ID4gPiA+ID4gSXMgdGhlcmUgYSBtZWNoYW5pc20gaW4gQUNQSUNBIHRvIGVuc3Vy
-ZSB0aGF0IGEgaGFuZGxlDQo+ID4gPiA+ID4gPiA+ID4gd29uJ3QgYmVjb21lIHN0YWxlIHdoaWxl
-IGEgbm90aWZ5IGhhbmRsZXIgaXMgcnVubmluZyBmb3INCj4gPiA+ID4gPiA+ID4gPiBpdCBvciBp
-cyB0aGUgT1MgcmVzcG9uc2libGUgZm9yIGVuc3VyaW5nIHRoYXQNCj4gPiA+ID4gPiA+ID4gPiBf
-RUowIHdvbid0IGJlIHJ1biBpbiBwYXJhbGxlbCB3aXRoIG5vdGlmeSBoYW5kbGVycyBmb3INCj4g
-PiA+ID4gPiA+ID4gPiBkZXZpY2Ugb2JqZWN0cyBiZWluZyBlamVjdGVkPw0KPiA+ID4gPiA+ID4g
-PiA+DQo+ID4gPiA+ID4gPiA+DQo+ID4gPiA+ID4gPiA+IEl0IGlzIHVwIHRvIHRoZSBob3N0Lg0K
-PiA+ID4gPiA+ID4NCj4gPiA+ID4gPiA+IEkgd2FzIGFmcmFpZCB0aGF0IHRoYXQgbWlnaHQgYmUg
-dGhlIGNhc2UuIDotKQ0KPiA+ID4gPiA+ID4NCj4gPiA+ID4gPiA+IFNvIGZhciB0aGUgKExpbnV4
-KSBob3N0IGhhcyBiZWVuIGhhcHBpbHkgaWdub3JpbmcgdGhhdA0KPiA+ID4gPiA+ID4gcG90ZW50
-aWFsIHByb2JsZW0sIHNvIEkgZ3Vlc3MgaXQgY2FuIHN0aWxsIGJlIGlnbm9yZWQgZm9yIGENCj4g
-PiA+ID4gPiA+IHdoaWxlLCBhbHRob3VnaCB3ZSdsbCBuZWVkIHRvIGFkZHJlc3MgaXQgZXZlbnR1
-YWxseSBhdCBvbmUNCj4gcG9pbnQuDQo+ID4gPiA+ID4NCj4gPiA+ID4gPiBJIHdvdWxkIHRoaW5r
-IGl0IHNob3VsZCBiZSBmYWlybHkgc2ltcGxlIHRvIHNldHVwIGEgbWVjaGFuaXNtIHRvDQo+ID4g
-PiA+ID4gZWl0aGVyIHRlbGwgdGhlIGRyaXZlciBvciBmb3IgdGhlIGRyaXZlciB0byBmaWd1cmUg
-aXQgb3V0IC0tDQo+ID4gPiA+ID4gc3VjaCB0aGF0IHRoZSBkcml2ZXIga25vd3MgdGhhdCBhbGwg
-aGFuZGxlcyBhc3NvY2lhdGVkIHdpdGggdGhlDQo+ID4gPiA+ID4gZGV2aWNlIGFyZSBub3cgaW52
-YWxpZC4gQW5vdGhlciB3YXkgdG8gbG9vayBhdCBpdCBpcyB0aGF0IHdoZW4NCj4gPiA+ID4gPiB0
-aGUgZGV2aWNlIGlzIHJlLWluc3RhbGxlZCwgdGhlIGRyaXZlciBzaG91bGQgcmVpbml0aWFsaXpl
-IHN1Y2gNCj4gPiA+ID4gPiB0aGF0IGl0IG9idGFpbnMgbmV3IGhhbmRsZXMgZm9yIHRoZSBkZXZp
-Y2VzIGFuZCBzdWJvYmplY3RzIGluDQo+IHF1ZXN0aW9uLg0KPiA+ID4gPg0KPiA+ID4gPiBVbmZv
-cnR1bmF0ZWx5LCB0aGVyZSBpcyBxdWl0ZSBzdHJvbmcgYXNzdW1wdGlvbiBpbiBvdXIgY29kZSB0
-aGF0DQo+ID4gPiA+IEFDUEkgaGFuZGxlcyB3aWxsIG5vdCBiZWNvbWUgc3RhbGUgYmVmb3JlIHRo
-ZSBkZXZpY2Ugb2JqZWN0cw0KPiA+ID4gPiBhc3NvY2lhdGVkIHdpdGggdGhlbSBhcmUgcmVtb3Zl
-ZC4gIEZvciB0aGlzIHJlYXNvbiwgd2UgbmVlZCB0bw0KPiA+ID4gPiBrbm93IGluIGFkdmFuY2Ug
-d2hpY2ggaGFuZGxlcyB3aWxsIGJlY29tZSBzdGFsZSBhcyBhIHJlc3VsdCBvZiBhDQo+ID4gPiA+
-IHRhYmxlIHVubG9hZCBhbmQgcmVtb3ZlIHRoZWlyIGRldmljZSBvYmplY3RzIGJlZm9yZWhhbmQu
-DQo+ID4gPiA+DQo+ID4gPiA+IE1vcmVvdmVyLCB3aGVuIHRoZXJlJ3MgYSBub3RpZnkgaGFuZGxl
-ciBpbnN0YWxsZWQgZm9yIGEgZ2l2ZW4gQUNQSQ0KPiA+ID4gPiBoYW5kbGUgYW5kIHRoYXQgaGFu
-ZGxlIGJlY29tZXMgc3RhbGUgd2hpbGUgdGhlIG5vdGlmeSBoYW5kbGVyIGlzDQo+ID4gPiA+IHJ1
-bm5pbmcsIHdlJ2xsIGJlIGluIHRyb3VibGUuICBUbyBhdm9pZCB0aGF0IHdlIG5lZWQgdG8gZW5z
-dXJlDQo+ID4gPiA+IHRoYXQgdGFibGUgdW5sb2FkcyBhbmQgbm90aWZpZXMgd2lsbCBhbHdheXMg
-YmUgbXV0dWFsbHkgZXhjbHVzaXZlLg0KPiA+ID4NCj4gPiA+IEkgd29uZGVyIGlmIHdlIGNhbiBt
-YWtlIGFjcGlfbnNfdmFsaWRhdGVfaGFuZGxlKCkgdG8gYWN0dWFsbHkgYmUNCj4gPiA+IGFibGUg
-dG8gdmVyaWZ5IGlmIGEgZ2l2ZW4gaGFuZGxlIGlzIHZhbGlkLiAgVGhpcyB3YXksIEFDUElDQSBj
-YW4NCj4gPiA+IGZhaWwgZ3JhY2VmdWxseQ0KPiA+ID4gKEFFX0JBRF9QQVJBTUVURVIpIHdoZW4g
-YSBzdGFibGUgaGFuZGxlIGlzIHBhc3NlZCB0byB0aGUgaW50ZXJmYWNlcy4NCj4gPg0KPiA+IFRo
-YXQnZCBiZSBnb29kLCBidXQgdG8gaW1wbGVtZW50IGl0LCBJIHRoaW5rLCBpdCB3b3VsZCBiZSBu
-ZWNlc3NhcnkgdG8NCj4gPiBpbnRyb2R1Y2Ugc29tZSByZWZlcmVuY2UgY291bnRpbmcgb2YgbmFt
-ZXNwYWNlIG9iamVjdHMgc3VjaCB0aGF0IHRoZQ0KPiA+IGdpdmVuIG9iamVjdCB3b3VsZCBvbmx5
-IGJlIGRlbGV0ZWQgYWZ0ZXIgdGhlIGxhc3QgcmVmZXJlbmNlIHRvIGl0IGhhZA0KPiBiZWVuIGRy
-b3BwZWQuDQo+ID4gT24gdGFibGUgdW5sb2FkIGl0IHdvdWxkIGp1c3QgYmUgbWFya2VkIGFzIGlu
-dmFsaWQsIGJ1dCBpdCB3b3VsZCBzdGF5DQo+ID4gaW4gbWVtb3J5IGFzIGxvbmcgYXMgdGhlcmUg
-d2VyZSBhbnkgcmVmZXJlbmNlcyB0byBpdC4NCj4gPg0KPiA+IFNvLCBmb3IgZXhhbXBsZSwgYSBu
-b3RpZnkgaGFuZGxlciB3b3VsZCBzdGFydCBmcm9tIHNvbWV0aGluZyBsaWtlDQo+ID4gYWNwaV9h
-ZGRfcmVmZXJlbmNlKGhhbmRsZSksIHdoaWNoIHdvdWxkIGd1YXJhbnRlZSB0aGF0IHRoZSBvYmpl
-Y3QNCj4gPiBwb2ludGVkIHRvIGJ5IGhhbmRsZSB3b3VsZCBzdGF5IGluIG1lbW9yeSwgYW5kIGl0
-IHdvdWxkIGZpbmlzaCBieQ0KPiA+IGRvaW5nDQo+ID4gYWNwaV9kcm9wX3JlZmVyZW5jZShoYW5k
-bGUpIG9yIGEgd29yayBpdGVtIHNjaGVkdWxlZCBieSBpdCB3b3VsZCBkbw0KPiB0aGF0Lg0KPiA+
-DQo+ID4gV2UgZG8gdGhhdCBmb3Igb2JqZWN0cyBiYXNlZCBvbiBzdHJ1Y3QgZGV2aWNlIGFuZCBp
-dCB3b3JrcyB3ZWxsLg0KPiANCj4gVGhlcmUgaXMgb3RoZXIgd2F5IHRvIGltcGxlbWVudCBpdC4g
-IFNpbmNlIGFjcGlfaGFuZGxlIGlzIGRlZmluZWQgYXMgYW4NCj4gb3BhcXVlIHZhbHVlLCB0aGlz
-IGNvdWxkIGJlIGNoYW5nZWQgdG8gYW4gaW5kZXggdG8gYW4gYXJyYXkgb2YgcG9pbnRlcnMsDQo+
-IGluc3RlYWQgb2YgYSBkaXJlY3QgcG9pbnRlci4gIFRoZW4gd2UgY2FuIHNhZmVseSBpbnZhbGlk
-YXRlIGFuIGluZGV4IGJ5DQo+IGludmFsaWRhdGluZyB0aGUgcG9pbnRlciBhc3NvY2lhdGVkIHdp
-dGggdGhlIGluZGV4Lg0KDQoNCg0KV2UgaGF2ZSBvZiBjb3Vyc2UgdGhvdWdodCBhYm91dCBhZGRp
-bmcgYSBtZWNoYW5pc20gdG8gdmFsaWRhdGUvaW52YWxpZGF0ZSBhY3BpY2EgbmFtZXNwYWNlIGhh
-bmRsZXMuIEluIGZhY3QsIHRoaXMgaXMgd2h5IHRoZSBBQ1BJX0hBTkRMRSBkYXRhIHR5cGUgd2Fz
-IGludHJvZHVjZWQgaW4gdGhlIGZpcnN0IHBsYWNlLCBzbyB0aGF0IGlmIHdlIGV2ZXIgd2FudGVk
-IG9yIG5lZWRlZCB0byBpbXBsZW1lbnQgc29tZXRoaW5nIGxpa2UgdGhpcywgaXQgd291bGQgbm90
-IGJyZWFrIGEgbG90IG9mIGV4aXN0aW5nIGNvZGUuDQoNCkhvd2V2ZXIsIHdlIGhhdmUgbmV2ZXIg
-aGFkIGEgcmVhbCBuZWVkIHRvIGltcGxlbWVudCBzdWNoIGEgbWVjaGFuaXNtLCBub3IgaGFzIHRo
-ZSBldmVyIGJlZW4gYSByZXF1ZXN0IGZyb20gYW55IG9mIHRoZSBvcGVyYXRpbmcgc3lzdGVtcyB0
-aGF0IHJ1biBBQ1BJQ0EuDQoNClRoZSBleGlzdGluZyBtb2RlbCBpcyB0aGF0IHRoZSBob3N0IGhh
-cyBrbm93bGVkZ2Ugb2Ygd2hhdCBvYmplY3RzIHdpbGwgZ28gYXdheSB3aGVuIGEgdGFibGUgaXMg
-dW5sb2FkZWQsIGFuZCBjYW4gc2ltcGx5IGFzc3VtZSB0aGF0IGFsbCByZWxhdGVkIGFjcGkgaGFu
-ZGxlcyB3aWxsIGdvIGJhZCBhZnRlciB0aGUgdW5sb2FkIChhbmQgdGFibGUgdW5sb2FkIGlzIHRo
-ZSBvbmx5IGNhc2Ugd2hlcmUgcGFydHMgb2YgdGhlIG5hbWVzcGFjZSBnbyBhd2F5LCBhcyBmYXIg
-YXMgSSByZW1lbWJlcikuIFVwb24gYSByZWxvYWQgb2YgdGhlIHRhYmxlLCB0aGUgaG9zdCBrbm93
-cyB0byByZWluaXRpYWxpemUgYWxsIGhhbmRsZXMgYXNzb2NpYXRlZCB3aXRoIHRoZSB0YWJsZS9k
-ZXZpY2UuDQoNCkFDUENJIGhhcyBhIHRhYmxlIGhhbmRsZXIgbWVjaGFuaXNtLCB3aGVyZSB0aGUg
-aG9zdCBoYW5kbGVyIGlzIGludm9rZWQgKmJlZm9yZSogYW4gQUNQSSB0YWJsZSBpcyBhY3R1YWxs
-eSB1bmxvYWRlZCwgc28gdGhlIGhvc3QgY2FuIHByZXBhcmUgZm9yIHRoZSB1bmxvYWQuIEZvciBl
-eGFtcGxlLCBiZWZvcmUgcmV0dXJuaW5nIGZyb20gdGhlIHRhYmxlIGhhbmRsZXIsIHRoZSBob3N0
-IG1heSB3YW50IHRvIHN5bmNocm9uaXplIGJ5IHdhaXRpbmcgZm9yIGFueSBvdXRzdGFuZGluZyBu
-b3RpZmllcyB0byBjb21wbGV0ZSwgdGhlbiBzaW1wbHkgaWdub3JpbmcgYW55IGZ1cnRoZXIgbm90
-aWZpZXMgZnJvbSBhbnkgZGV2aWNlcyBhc3NvY2lhdGVkIHdpdGggdGhlIHRhYmxlLg0KDQpJbiBz
-dW1tYXJ5LCBpdCBoYXMgYWx3YXlzIGJlZW4gZmVsdCB0aGF0IHRoZSBmYWlybHkgbGFyZ2Ugb3Zl
-cmhlYWQgb2YgaW1wbGVtZW50aW5nIGEgbWVjaGFuaXNtIGxpa2UgdGhpcyBpcyBub3Qgd29ydGgg
-dGhlIGNvc3QsIGFzIHdlbGwgYXMgbm90IHJlYWxseSBuZWVkZWQuDQoNCkkgc3VnZ2VzdCB0aGF0
-IHRoZSBpbXBsZW1lbnRhdGlvbiBvZiBlamVjdCBzdXBwb3J0IHByb2NlZWQgYnkgdXNpbmcgdGhl
-IGV4aXN0aW5nIG1lY2hhbmlzbXMgc3VjaCBhcyB0aGUgdGFibGUgaGFuZGxlci4gSWYgYWRkaXRp
-b25hbCBzdXBwb3J0L2ludGVyZmFjZXMgYXJlIG5lZWRlZCBpbiBBQ1BJQ0EsIHdlIGNhbiBkaXNj
-dXNzIGl0LiBIb3dldmVyLCBqdXN0IGFib3V0IHRoZSBsYXN0IHRoaW5nIEkgd291bGQgbGlrZSB0
-byBkbyBpcyBhZGQgYSBsZXZlbCBvZiBpbmRpcmVjdGlvbiBiZXR3ZWVuIHRoZSBBQ1BJX0hBTkRM
-RSBhbmQgdGhlIEFDUElfTkFNRVNQQUNFX05PREUgLS0gd2hpY2ggd291bGQgcmVxdWlyZSBhIGxh
-cmdlLCBnbG9iYWwgY2hhbmdlIHRvIEFDUElDQSB0aGF0IHdvdWxkIGJlIG9ubHkgYXBwbGljYWJs
-ZSBmb3IgYSBzaW5nbGUgcmF0aGVyIHJhcmUgaXNzdWUsIHRoZSB1bmxvYWRpbmcgb2YgYW4gQUNQ
-SSB0YWJsZS4gSnVzdCB0aGUgZmFjdCB0aGF0IHdlIGFyZSBkaXNjdXNzaW5nIHRoaXMgaW4gMjAx
-MyBhbmQgQUNQSUNBIGhhcyBiZWVuIHJ1bm5pbmcgc2luY2UgMTk5OSBzaG91bGQgY29uZmlybSB0
-aGUgcmFyaXR5IG9mIHRoaXMgY2FzZSBhbmQvb3IgdGhhdCB0aGUgZXhpc3RpbmcgbWVjaGFuaXNt
-IGhhcyBiZWVuIHN1ZmZpY2llbnQgZm9yIG90aGVyIGhvc3RzIHRoYXQgcnVuIEFDUElDQS4NCg0K
-Qm9iDQoNCg0KDQoNCg==
+On Thu, Feb 7, 2013 at 3:24 AM, Thomas Petazzoni
+<thomas.petazzoni@free-electrons.com> wrote:
+> Dear Thierry Reding,
+>
+> On Tue, 29 Jan 2013 10:20:06 +0100, Thierry Reding wrote:
+>
+>> > I didn't test recently, but with my first version of the patch set,
+>> > having an initialization as late as module_init() was too late. Some
+>> > PCI fixup code was being executed *before* we get the opportunity of
+>> > initializing the PCI driver, and it was crashing the kernel. I can
+>> > provide more details if you want.
+>>
+>> Does this patch perhaps fix this crash?
+>>
+>>       http://patchwork.ozlabs.org/patch/210870/
+>
+> I investigated a bit more, and managed to reproduce my crash even with
+> your patch applied. And indeed, my crash is really unrelated to the
+> pcibios function disappearing. Here is the kernel panic (and a short
+> analysis afterwards) :
+
+Hi Thomas,
+
+Can you post the entire dmesg log, ideally with CONFIG_PCI_DEBUG=y?
+That should have more information about the enumeration process,
+including what we think the XHCI BARs are and the apertures leading to
+them.
+
+The PCI core assumes that we know the host bridge apertures up front,
+and I'm not sure that is true on your platform, so maybe we'll need
+some changes to accommodate that.
+
+Bjorn
