@@ -1,58 +1,162 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f172.google.com ([209.85.223.172]:52552 "EHLO
-	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760106Ab3B1PLq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 28 Feb 2013 10:11:46 -0500
-Received: by mail-ie0-f172.google.com with SMTP id c10so2208145ieb.3
-        for <linux-pci@vger.kernel.org>; Thu, 28 Feb 2013 07:11:46 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <512F35D3.6080009@cn.fujitsu.com>
-References: <alpine.DEB.2.02.1301181302260.31163@jlaw-desktop.mno.stratus.com>
-	<alpine.DEB.2.02.1301181322500.31163@jlaw-desktop.mno.stratus.com>
-	<51122BED.8090308@cn.fujitsu.com>
-	<CAErSpo6aGiuBbgcVfcduPk++7B_zzuk2Y+fjLiJBvdOqnU+Qmw@mail.gmail.com>
-	<5122F276.80807@cn.fujitsu.com>
-	<CAErSpo7BeCiKHecJgX9GBR7DYf4M9mrXK+qMLMDXFykxq5C7sQ@mail.gmail.com>
-	<512AFDB7.5030105@cn.fujitsu.com>
-	<CAL-B5D0xN6bs3oXugS9FOS5bQiFRJQ9766u5wsXw4UQdUmwfyw@mail.gmail.com>
-	<512DAAC9.8030400@cn.fujitsu.com>
-	<CAE9FiQU6Sj=wkare0VCJwP1Yr09o=xVMrhsY_xJ1_41=YMkwMg@mail.gmail.com>
-	<512F35D3.6080009@cn.fujitsu.com>
-Date: Thu, 28 Feb 2013 07:11:45 -0800
-Message-ID: <CAE9FiQV2=B-qw7SSXRL7wj6F=3O7tXnX3JbLXCtrk62nV=MOfA@mail.gmail.com>
-Subject: Re: [PATCH 1/2] PCI: ASPM exit link state code could skip devices
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Yinghai Lu <yinghai@kernel.org>
-To: Gu Zheng <guz.fnst@cn.fujitsu.com>
-Cc: Myron Stowe <myron.stowe@gmail.com>,
+To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Joe Lawrence <Joe.Lawrence@stratus.com>,
-	linux-pci@vger.kernel.org, Matthew Garrett <mjg59@srcf.ucam.org>,
-	Myron Stowe <mstowe@redhat.com>,
-	David Bulkow <david.bulkow@stratus.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Subject: [PATCH v2 16/26] x86, irq: pre-reserve irq range/realloc for booting path
+Date: Fri,  8 Feb 2013 11:28:13 -0800
+Message-Id: <1360351703-20571-17-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1360351703-20571-1-git-send-email-yinghai@kernel.org>
+References: <1360351703-20571-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 28, 2013 at 2:47 AM, Gu Zheng <guz.fnst@cn.fujitsu.com> wrote:
-> On 02/27/2013 02:47 PM, Yinghai Lu wrote:
->
->> On Tue, Feb 26, 2013 at 10:42 PM, Gu Zheng <guz.fnst@cn.fujitsu.com> wrote:
->>>     I just agree with Bjorn's analysis. And I have test Yinghai's patch on kernel 3.8
->>> , but it seems does not work. More infos, please refer to bugzilla:
->>> https://bugzilla.kernel.org/show_bug.cgi?id=54411
->>
->> you need to test that on linus's tree of 2013-02-26.
->> or v3.9-rc1
->
-> Hi Yinghai,
->         I test your patch on linus' tree of 2-26
-> commit d895cb1af15c04c522a25c79cc429076987c089b
-> But it still does not work~
+We will use reserve/realloc_irq_and_cfg_at for hotplug ioapic path.
 
-Still have full of warning in dmesg?
+To make thing simple, we could make booting path use same code.
+So all gsi range will be reserved at first, and realloc will really
+allocated those irq_desc/cfg when it is used.
 
-or double remove does not work.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+---
+ arch/x86/include/asm/io_apic.h |    1 +
+ arch/x86/kernel/apic/io_apic.c |   78 ++++++++++++++++++++++++++++------------
+ 2 files changed, 57 insertions(+), 22 deletions(-)
 
-Thanks
+diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
+index eaff3ad..8181fd8 100644
+--- a/arch/x86/include/asm/io_apic.h
++++ b/arch/x86/include/asm/io_apic.h
+@@ -176,6 +176,7 @@ extern void setup_ioapic_ids_from_mpc_nocheck(void);
+ struct mp_ioapic_gsi{
+ 	u32 gsi_base;
+ 	u32 gsi_end;
++	u32 irq_base;
+ };
+ extern struct mp_ioapic_gsi  mp_gsi_routing[];
+ extern u32 gsi_top;
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 714ed20..c499c88 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -287,8 +287,47 @@ static struct irq_cfg *realloc_irq_and_cfg_at(unsigned int at, int node)
+ 	return alloc_irq_and_cfg_at(at, node);
+ }
+ 
+-/* irq_cfg is indexed by the sum of all RTEs in all I/O APICs. */
+-static struct irq_cfg irq_cfgx[NR_IRQS_LEGACY];
++static int reserve_ioapic_gsi_irq_base(int idx)
++{
++	int irq;
++	struct mp_ioapic_gsi *gsi_cfg = mp_ioapic_gsi_routing(idx);
++	int cnt = gsi_cfg->gsi_end - gsi_cfg->gsi_base + 1;
++
++	irq = __irq_reserve_irqs(-1, gsi_cfg->gsi_base, cnt);
++	if (irq >= 0) {
++		gsi_cfg->irq_base = irq;
++		apic_printk(APIC_VERBOSE, KERN_INFO
++			"IOAPIC[%d]: apic_id %d, GSI %d-%d ==> irq %d-%d reserved\n",
++			idx, mpc_ioapic_id(idx),
++			gsi_cfg->gsi_base, gsi_cfg->gsi_end,
++			irq, irq + cnt - 1);
++	} else
++		apic_printk(APIC_VERBOSE, KERN_WARNING
++			"IOAPIC[%d]: apic_id %d, GSI %d-%d ==> irq reserve failed\n",
++			idx, mpc_ioapic_id(idx),
++			gsi_cfg->gsi_base, gsi_cfg->gsi_end);
++
++	return irq;
++}
++
++static void __init reserve_ioapic_gsi_irq_extra(void)
++{
++	int irq;
++
++	/* to prevent hot add ioapic taking those slots */
++	if (gsi_top) {
++		irq = irq_reserve_irqs(gsi_top, NR_IRQS_LEGACY);
++		if (irq >= 0)
++			apic_printk(APIC_VERBOSE, KERN_INFO
++				"IOAPIC[extra]: GSI %d-%d ==> irq %d-%d reserved\n",
++				gsi_top, gsi_top + NR_IRQS_LEGACY - 1,
++				irq, irq + NR_IRQS_LEGACY - 1);
++		else
++			apic_printk(APIC_VERBOSE, KERN_WARNING
++				"IOAPIC[extra]: GSI %d-%d ==> irq reserve failed\n",
++				gsi_top, gsi_top + NR_IRQS_LEGACY - 1);
++	}
++}
+ 
+ static void alloc_ioapic_saved_registers(int idx)
+ {
+@@ -305,8 +344,9 @@ static void alloc_ioapic_saved_registers(int idx)
+ 
+ int __init arch_early_irq_init(void)
+ {
++	int node = cpu_to_node(0);
+ 	struct irq_cfg *cfg;
+-	int count, node, i;
++	int i;
+ 
+ 	if (!legacy_pic->nr_legacy_irqs)
+ 		io_apic_irqs = ~0UL;
+@@ -314,26 +354,19 @@ int __init arch_early_irq_init(void)
+ 	for (i = 0; i < nr_ioapics; i++)
+ 		alloc_ioapic_saved_registers(i);
+ 
+-	cfg = irq_cfgx;
+-	count = ARRAY_SIZE(irq_cfgx);
+-	node = cpu_to_node(0);
++	for (i = 0; i < nr_ioapics; i++)
++		reserve_ioapic_gsi_irq_base(i);
+ 
+-	/* Make sure the legacy interrupts are marked in the bitmap */
+-	irq_reserve_irqs(0, legacy_pic->nr_legacy_irqs);
++	reserve_ioapic_gsi_irq_extra();
+ 
+-	for (i = 0; i < count; i++) {
+-		INIT_LIST_HEAD(&cfg[i].irq_2_pin);
+-		irq_set_chip_data(i, &cfg[i]);
+-		zalloc_cpumask_var_node(&cfg[i].domain, GFP_KERNEL, node);
+-		zalloc_cpumask_var_node(&cfg[i].old_domain, GFP_KERNEL, node);
+-		/*
+-		 * For legacy IRQ's, start with assigning irq0 to irq15 to
+-		 * IRQ0_VECTOR to IRQ15_VECTOR for all cpu's.
+-		 */
+-		if (i < legacy_pic->nr_legacy_irqs) {
+-			cfg[i].vector = IRQ0_VECTOR + i;
+-			cpumask_setall(cfg[i].domain);
+-		}
++	/*
++	 * For legacy IRQ's, start with assigning irq0 to irq15 to
++	 * IRQ0_VECTOR to IRQ15_VECTOR for all cpu's.
++	 */
++	for (i = 0; i < legacy_pic->nr_legacy_irqs; i++) {
++		cfg = realloc_irq_and_cfg_at(i, node);
++		cfg->vector = IRQ0_VECTOR + i;
++		cpumask_setall(cfg->domain);
+ 	}
+ 
+ 	return 0;
+@@ -3470,7 +3503,8 @@ int __init arch_probe_nr_irqs(void)
+ 	if (nr < nr_irqs)
+ 		nr_irqs = nr;
+ 
+-	return NR_IRQS_LEGACY;
++	/* x86 arch code will allocate irq_desc/cfg */
++	return 0;
+ }
+ 
+ int io_apic_set_pci_routing(struct device *dev, int irq,
+-- 
+1.7.10.4
 
-Yinghai
