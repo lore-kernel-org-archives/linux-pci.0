@@ -1,44 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.9]:58676 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753432Ab3BAQIC (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 Feb 2013 11:08:02 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: Re: [PATCH v2 19/27] pci: PCIe driver for Marvell Armada 370/XP systems
-Date: Fri, 1 Feb 2013 16:07:49 +0000
-Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	"Eran Ben-Avi" <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	"Russell King - ARM Linux" <linux@arm.linux.org.uk>
-References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com> <20130201035115.GA23649@obsidianresearch.com> <20130201100329.4d57fa55@skate>
-In-Reply-To: <20130201100329.4d57fa55@skate>
+Received: from mail-ia0-f182.google.com ([209.85.210.182]:40158 "EHLO
+	mail-ia0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1947017Ab3BHU6D (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 Feb 2013 15:58:03 -0500
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201302011607.49205.arnd@arndb.de>
+In-Reply-To: <511563F6.1080009@redhat.com>
+References: <1360351703-20571-1-git-send-email-yinghai@kernel.org>
+	<1360351703-20571-9-git-send-email-yinghai@kernel.org>
+	<511563F6.1080009@redhat.com>
+Date: Fri, 8 Feb 2013 12:58:02 -0800
+Message-ID: <CAE9FiQV5VnQNprc6DjGS0+qG-dpzDYDG-q68J9VmrigEdr9XFw@mail.gmail.com>
+Subject: Re: [PATCH v2 08/26] iommu, irq: Allocate irq_desc for dmar_msi with
+ local node
+From: Yinghai Lu <yinghai@kernel.org>
+To: Don Dutile <ddutile@redhat.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Joerg Roedel <joro@8bytes.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday 01 February 2013, Thomas Petazzoni wrote:
-> So there is really a range of I/O addresses associated to it, even
-> though the device will apparently not use it. Would it be possible to
-> detect that the I/O range is not used by the device, and therefore
-> avoid the allocation of an address decoding window for this I/O range?
+On Fri, Feb 8, 2013 at 12:45 PM, Don Dutile <ddutile@redhat.com> wrote:
+> On 02/08/2013 02:28 PM, Yinghai Lu wrote:
+>>
+>> iommu irq's irq_desc should be on local node ram.
+>>
+>> Fix the return value checking problem.
+>>
+>> create_irq() will return -1 when fail to allocate.
+>> create_irq_nr() will return 0 when fail to allocate.
+>>
+>> here only check !irq, so need to change it to use create_irq_nr instead.
+>>
+>> Signed-off-by: Yinghai Lu<yinghai@kernel.org>
+>> Cc: Joerg Roedel<joro@8bytes.org>
+>> Cc: Donald Dutile<ddutile@redhat.com>
+>> ---
+>>   drivers/iommu/dmar.c |    2 +-
+>>   1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/iommu/dmar.c b/drivers/iommu/dmar.c
+>> index 174bb65..316b5a2 100644
+>> --- a/drivers/iommu/dmar.c
+>> +++ b/drivers/iommu/dmar.c
+>> @@ -1263,7 +1263,7 @@ int dmar_set_interrupt(struct intel_iommu *iommu)
+>>         if (iommu->irq)
+>>                 return 0;
+>>
+>> -       irq = create_irq();
+>> +       irq = create_irq_nr(0, iommu->node);
+>>         if (!irq) {
+>>                 pr_err("IOMMU: no free vectors\n");
+>>                 return -EINVAL;
+>
+> Good catch!
+>
+> you can add my ack to it.
+>
 
-I suspect it just gets disabled because the port number 0xc0010000 is
-larger than IO_PORT_LIMIT and we cannot access that offset inside
-of the virtual memory window we use for PIO.
-
-	Arnd
+Thanks.
