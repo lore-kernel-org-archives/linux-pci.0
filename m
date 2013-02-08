@@ -1,55 +1,57 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <1360623670.2950.67.camel@lorien2>
-Subject: [PATCH 3/4] amd_iommu: Remove local PCI_BUS() define and use
- PCI_BUS() from pci
-From: Shuah Khan <shuah.khan@hp.com>
-Reply-To: shuah.khan@hp.com
-To: bhelgaas@google.com, Joerg Roedel <joro@8bytes.org>
-Cc: tglx@linutronix.de, mtk.manpages@gmail.com,
-	iommu@lists.linux-foundation.org,
-	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	shemminger@vyatta.com, jiang.liu@huawei.com,
-	linasvepstas@gmail.com, paulmck@linux.vnet.ibm.com,
-	davej@redhat.com, dhowells@redhat.com, wangyijing@huawei.com,
-	shuahkhan@gmail.com
-Date: Mon, 11 Feb 2013 16:01:10 -0700
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:42303 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1946959Ab3BHUqH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 8 Feb 2013 15:46:07 -0500
+Message-ID: <511563F6.1080009@redhat.com>
+Date: Fri, 08 Feb 2013 15:45:42 -0500
+From: Don Dutile <ddutile@redhat.com>
+MIME-Version: 1.0
+To: Yinghai Lu <yinghai@kernel.org>
+CC: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Joerg Roedel <joro@8bytes.org>
+Subject: Re: [PATCH v2 08/26] iommu, irq: Allocate irq_desc for dmar_msi with
+ local node
+References: <1360351703-20571-1-git-send-email-yinghai@kernel.org> <1360351703-20571-9-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1360351703-20571-9-git-send-email-yinghai@kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Change to remove local PCI_BUS() define and use the new PCI_BUS interface from
-pci.
+On 02/08/2013 02:28 PM, Yinghai Lu wrote:
+> iommu irq's irq_desc should be on local node ram.
+>
+> Fix the return value checking problem.
+>
+> create_irq() will return -1 when fail to allocate.
+> create_irq_nr() will return 0 when fail to allocate.
+>
+> here only check !irq, so need to change it to use create_irq_nr instead.
+>
+> Signed-off-by: Yinghai Lu<yinghai@kernel.org>
+> Cc: Joerg Roedel<joro@8bytes.org>
+> Cc: Donald Dutile<ddutile@redhat.com>
+> ---
+>   drivers/iommu/dmar.c |    2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/iommu/dmar.c b/drivers/iommu/dmar.c
+> index 174bb65..316b5a2 100644
+> --- a/drivers/iommu/dmar.c
+> +++ b/drivers/iommu/dmar.c
+> @@ -1263,7 +1263,7 @@ int dmar_set_interrupt(struct intel_iommu *iommu)
+>   	if (iommu->irq)
+>   		return 0;
+>
+> -	irq = create_irq();
+> +	irq = create_irq_nr(0, iommu->node);
+>   	if (!irq) {
+>   		pr_err("IOMMU: no free vectors\n");
+>   		return -EINVAL;
+Good catch!
 
-Signed-off-by: Shuah Khan <shuah.khan@hp.com>
----
- drivers/iommu/amd_iommu_types.h |    4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
-
-diff --git a/drivers/iommu/amd_iommu_types.h b/drivers/iommu/amd_iommu_types.h
-index e38ab43..a07882f 100644
---- a/drivers/iommu/amd_iommu_types.h
-+++ b/drivers/iommu/amd_iommu_types.h
-@@ -24,6 +24,7 @@
- #include <linux/mutex.h>
- #include <linux/list.h>
- #include <linux/spinlock.h>
-+#include <linux/pci.h>
- 
- /*
-  * Maximum number of IOMMUs supported
-@@ -315,9 +316,6 @@
- 
- #define MAX_DOMAIN_ID 65536
- 
--/* FIXME: move this macro to <linux/pci.h> */
--#define PCI_BUS(x) (((x) >> 8) & 0xff)
--
- /* Protection domain flags */
- #define PD_DMA_OPS_MASK		(1UL << 0) /* domain used for dma_ops */
- #define PD_DEFAULT_MASK		(1UL << 1) /* domain is a default dma_ops
--- 
-1.7.9.5
-
-
+you can add my ack to it.
 
