@@ -1,54 +1,143 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:38084 "EHLO hydra.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757462Ab3BNMAe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 14 Feb 2013 07:00:34 -0500
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Andreas Mohr <andi@lisas.de>
-Cc: linux-pci@vger.kernel.org,
-	ACPI Devel Mailing List <linux-acpi@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] PCI / ACPI: Report _OSC control mask returned on failure to get control
-Date: Thu, 14 Feb 2013 13:07:02 +0100
-Message-ID: <7634687.RmnPKEe4lz@vostro.rjw.lan>
-In-Reply-To: <20130214011027.GA430@rhlx01.hs-esslingen.de>
-References: <20130214011027.GA430@rhlx01.hs-esslingen.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from aserp1040.oracle.com ([141.146.126.69]:33292 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760228Ab3BHT2v (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 Feb 2013 14:28:51 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v2 11/26] genirq: Split __irq_reserve_irqs from irq_alloc_descs
+Date: Fri,  8 Feb 2013 11:28:08 -0800
+Message-Id: <1360351703-20571-12-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1360351703-20571-1-git-send-email-yinghai@kernel.org>
+References: <1360351703-20571-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, February 14, 2013 02:10:27 AM Andreas Mohr wrote:
-> Hi,
-> 
-> to provide an example case, on Aspire One AOA110 v0.3310, 3.8-rc7 prints:
-> 
-> [    0.515599] ACPI Error: [CAPB] Namespace lookup failure,
-> AE_ALREADY_EXISTS (2
-> 0121018/dsfield-211)
-> [    0.515629] ACPI Error: Method parse/execution failed
-> [\_SB_.PCI0._OSC] (Node f5449680), AE_ALREADY_EXISTS
-> (20121018/psparse-537)
-> [    0.515672] ACPI: Marking method _OSC as Serialized because of
-> AE_ALREADY_EXISTS error
-> [    0.516081] ACPI Error: [CAPB] Namespace lookup failure,
-> AE_ALREADY_EXISTS (20121018/dsfield-211)
-> [    0.516107] ACPI Error: Method parse/execution failed
-> [\_SB_.PCI0._OSC] (Node f5449680), AE_ALREADY_EXISTS
-> (20121018/psparse-537)
-> [    0.516168] pci_root PNP0A08:00: ACPI _OSC support notification
-> failed, disabling PCIe ASPM
-> [    0.516179] pci_root PNP0A08:00: Unable to request _OSC control (_OSC
-> support mask: 0x08)
-> 
-> HTH,
+irq_alloc_descs and irq_reserve_irqs are almost the same.
+Separate code out to __irq_reserved_irqs, and other two reuse
+__irq_reserve_irqs.
 
-Unfortunately, it doesn't, because I've lost track of the whole thread in the
-meantime.  Care to give a pointer?
+And will use __irq_reserve_irqs for coming ioapic hotplug support.
 
-Rafael
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ include/linux/irq.h  |    1 +
+ kernel/irq/irqdesc.c |   54 +++++++++++++++++++++++++++++---------------------
+ 2 files changed, 32 insertions(+), 23 deletions(-)
 
-
+diff --git a/include/linux/irq.h b/include/linux/irq.h
+index bc4e066..4e0fcbb 100644
+--- a/include/linux/irq.h
++++ b/include/linux/irq.h
+@@ -600,6 +600,7 @@ int __irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
+ 
+ void irq_free_descs(unsigned int irq, unsigned int cnt);
+ int irq_reserve_irqs(unsigned int from, unsigned int cnt);
++int __irq_reserve_irqs(int irq, unsigned int from, unsigned int cnt);
+ 
+ static inline void irq_free_desc(unsigned int irq)
+ {
+diff --git a/kernel/irq/irqdesc.c b/kernel/irq/irqdesc.c
+index 192a302..3b9fb92 100644
+--- a/kernel/irq/irqdesc.c
++++ b/kernel/irq/irqdesc.c
+@@ -340,18 +340,15 @@ void irq_free_descs(unsigned int from, unsigned int cnt)
+ EXPORT_SYMBOL_GPL(irq_free_descs);
+ 
+ /**
+- * irq_alloc_descs - allocate and initialize a range of irq descriptors
+- * @irq:	Allocate for specific irq number if irq >= 0
++ * __irq_reserve_descs - reserve and initialize a range of irq descriptors
++ * @irq:	Reserve for specific irq number if irq >= 0
+  * @from:	Start the search from this irq number
+- * @cnt:	Number of consecutive irqs to allocate.
+- * @node:	Preferred node on which the irq descriptor should be allocated
+- * @owner:	Owning module (can be NULL)
++ * @cnt:	Number of consecutive irqs to reserve.
+  *
+  * Returns the first irq number or error code
+  */
+ int __ref
+-__irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
+-		  struct module *owner)
++__irq_reserve_irqs(int irq, unsigned int from, unsigned int cnt)
+ {
+ 	int start, ret;
+ 
+@@ -369,7 +366,7 @@ __irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
+ 	start = bitmap_find_next_zero_area(allocated_irqs, IRQ_BITMAP_BITS,
+ 					   from, cnt, 0);
+ 	ret = -EEXIST;
+-	if (irq >=0 && start != irq)
++	if (irq >= 0 && start != irq)
+ 		goto err;
+ 
+ 	if (start + cnt > nr_irqs) {
+@@ -380,12 +377,36 @@ __irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
+ 
+ 	bitmap_set(allocated_irqs, start, cnt);
+ 	mutex_unlock(&sparse_irq_lock);
+-	return alloc_descs(start, cnt, node, owner);
++	return start;
+ 
+ err:
+ 	mutex_unlock(&sparse_irq_lock);
+ 	return ret;
+ }
++
++/**
++ * irq_alloc_descs - allocate and initialize a range of irq descriptors
++ * @irq:	Allocate for specific irq number if irq >= 0
++ * @from:	Start the search from this irq number
++ * @cnt:	Number of consecutive irqs to allocate.
++ * @node:	Preferred node on which the irq descriptor should be allocated
++ * @owner:	Owning module (can be NULL)
++ *
++ * Returns the first irq number or error code
++ */
++int __ref
++__irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
++		  struct module *owner)
++{
++	int start;
++
++	start = __irq_reserve_irqs(irq, from, cnt);
++
++	if (start < 0)
++		return start;
++
++	return alloc_descs(start, cnt, node, owner);
++}
+ EXPORT_SYMBOL_GPL(__irq_alloc_descs);
+ 
+ /**
+@@ -397,20 +418,7 @@ EXPORT_SYMBOL_GPL(__irq_alloc_descs);
+  */
+ int irq_reserve_irqs(unsigned int from, unsigned int cnt)
+ {
+-	unsigned int start;
+-	int ret = 0;
+-
+-	if (!cnt || (from + cnt) > nr_irqs)
+-		return -EINVAL;
+-
+-	mutex_lock(&sparse_irq_lock);
+-	start = bitmap_find_next_zero_area(allocated_irqs, nr_irqs, from, cnt, 0);
+-	if (start == from)
+-		bitmap_set(allocated_irqs, start, cnt);
+-	else
+-		ret = -EEXIST;
+-	mutex_unlock(&sparse_irq_lock);
+-	return ret;
++	return __irq_reserve_irqs(from, from, cnt);
+ }
+ 
+ /**
 -- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+1.7.10.4
+
