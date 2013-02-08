@@ -1,73 +1,119 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Jiang Liu <liuj97@gmail.com>, Toshi Kani <toshi.kani@hp.com>,
-	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
-	Myron Stowe <mstowe@redhat.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] ACPI / hotplug: Fix concurrency issues and memory leaks
-Date: Wed, 13 Feb 2013 14:08:36 +0100
-Message-ID: <1851921.aO94Yr1JVP@vostro.rjw.lan>
-In-Reply-To: <CAE9FiQVR+0iXtYF4AcLZs5_SsOtUJp5dF5fpk0XZKTcVanoL6A@mail.gmail.com>
-References: <1837481.7dT8hTZ4MT@vostro.rjw.lan> <CAE9FiQVR+0iXtYF4AcLZs5_SsOtUJp5dF5fpk0XZKTcVanoL6A@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Subject: [PATCH v2 21/26] x86, irq: Add mp_unregister_ioapic to handle hot-remove ioapic
+Date: Fri,  8 Feb 2013 11:28:18 -0800
+Message-Id: <1360351703-20571-22-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1360351703-20571-1-git-send-email-yinghai@kernel.org>
+References: <1360351703-20571-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, February 12, 2013 05:55:26 PM Yinghai Lu wrote:
-> On Tue, Feb 12, 2013 at 4:19 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> >
-> > This changeset is aimed at fixing a few different but related
-> > problems in the ACPI hotplug infrastructure.
-> >
-> > First of all, since notify handlers may be run in parallel with
-> > acpi_bus_scan(), acpi_bus_trim() and acpi_bus_hot_remove_device()
-> > and some of them are installed for ACPI handles that have no struct
-> > acpi_device objects attached (i.e. before those objects are created),
-> > those notify handlers have to take acpi_scan_lock to prevent races
-> > from taking place (e.g. a struct acpi_device is found to be present
-> > for the given ACPI handle, but right after that it is removed by
-> > acpi_bus_trim() running in parallel to the given notify handler).
-> > Moreover, since some of them call acpi_bus_scan() and
-> > acpi_bus_trim(), this leads to the conclusion that acpi_scan_lock
-> > should be acquired by the callers of these two funtions rather by
-> > these functions themselves.
-> >
-> > For these reasons, make all notify handlers that can handle device
-> > addition and eject events take acpi_scan_lock and remove the
-> > acpi_scan_lock locking from acpi_bus_scan() and acpi_bus_trim().
-> > Accordingly, update all of their users to make sure that they
-> > are always called under acpi_scan_lock.
-> >
-> > Furthermore, since eject operations are carried out asynchronously
-> > with respect to the notify events that trigger them, with the help
-> > of acpi_bus_hot_remove_device(), even if notify handlers take the
-> > ACPI scan lock, it still is possible that, for example,
-> > acpi_bus_trim() will run between acpi_bus_hot_remove_device() and
-> > the notify handler that scheduled its execution and that
-> > acpi_bus_trim() will remove the device node passed to
-> > acpi_bus_hot_remove_device() for ejection.  In that case, the struct
-> > acpi_device object obtained by acpi_bus_hot_remove_device() will be
-> > invalid and not-so-funny things will ensue.  To protect agaist that,
-> > make the users of acpi_bus_hot_remove_device() run get_device() on
-> > ACPI device node objects that are about to be passed to it and make
-> > acpi_bus_hot_remove_device() run put_device() on them and check if
-> > their ACPI handles are not NULL (make acpi_device_unregister() clear
-> > the device nodes' ACPI handles for that check to work).
-> >
-> > Finally, observe that acpi_os_hotplug_execute() actually can fail,
-> > in which case its caller ought to free memory allocated for the
-> > context object to prevent leaks from happening.  It also needs to
-> > run put_device() on the device node that it ran get_device() on
-> > previously in that case.  Modify the code accordingly.
-> >
-> > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> 
-> Acked-by: Yinghai Lu <yinghai@kernel.org>
+It will free ioapic related irq_desc and also clear allocated_irqs bits.
 
-Thanks!
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+---
+ arch/x86/include/asm/mpspec.h  |    1 +
+ arch/x86/kernel/apic/io_apic.c |   42 ++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 43 insertions(+)
+
+diff --git a/arch/x86/include/asm/mpspec.h b/arch/x86/include/asm/mpspec.h
+index 11bb6ea..e70b7e5 100644
+--- a/arch/x86/include/asm/mpspec.h
++++ b/arch/x86/include/asm/mpspec.h
+@@ -97,6 +97,7 @@ static inline void early_reserve_e820_mpc_new(void) { }
+ void __cpuinit generic_processor_info(int apicid, int version);
+ #ifdef CONFIG_ACPI
+ int __mp_register_ioapic(int id, u32 address, u32 gsi_base, bool hot);
++int mp_unregister_ioapic(u32 gsi_base);
+ extern void mp_register_ioapic(int id, u32 address, u32 gsi_base);
+ extern void mp_override_legacy_irq(u8 bus_irq, u8 polarity, u8 trigger,
+ 				   u32 gsi);
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index d3b3c14..4a9ccf6 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -256,6 +256,14 @@ static void free_irq_at(unsigned int at, struct irq_cfg *cfg)
+ 	irq_free_desc(at);
+ }
+ 
++static void free_irqs(unsigned int from, int cnt)
++{
++	int i;
++
++	for (i = from; i < from + cnt; i++)
++		free_irq_at(i, irq_get_chip_data(i));
++}
++
+ static struct irq_cfg *realloc_irq_and_cfg_at(unsigned int at, int node)
+ {
+ 	struct irq_desc *desc = irq_to_desc(at);
+@@ -329,6 +337,16 @@ static void __init reserve_ioapic_gsi_irq_extra(void)
+ 	}
+ }
+ 
++static void free_ioapic_gsi_irq_base(int idx)
++{
++	struct mp_ioapic_gsi *gsi_cfg = mp_ioapic_gsi_routing(idx);
++	int irq_base = gsi_cfg->irq_base;
++	int irq_cnt = gsi_cfg->gsi_end - gsi_cfg->gsi_base + 1;
++
++	if (irq_base > 0)
++		free_irqs(irq_base, irq_cnt);
++}
++
+ static void alloc_ioapic_saved_registers(int idx)
+ {
+ 	if (ioapics[idx].saved_registers)
+@@ -342,6 +360,11 @@ static void alloc_ioapic_saved_registers(int idx)
+ 		pr_err("IOAPIC %d: suspend/resume impossible!\n", idx);
+ }
+ 
++static void free_ioapic_saved_registers(int idx)
++{
++	kfree(ioapics[idx].saved_registers);
++}
++
+ int __init arch_early_irq_init(void)
+ {
+ 	int node = cpu_to_node(0);
+@@ -3983,6 +4006,25 @@ void mp_register_ioapic(int id, u32 address, u32 gsi_base)
+ 	__mp_register_ioapic(id, address, gsi_base, false);
+ }
+ 
++int mp_unregister_ioapic(u32 gsi_base)
++{
++	int idx;
++
++	idx = mp_find_ioapic(gsi_base);
++	if (idx < 0)
++		return -EINVAL;
++
++	free_ioapic_saved_registers(idx);
++
++	free_ioapic_gsi_irq_base(idx);
++
++	clear_fixmap(FIX_IO_APIC_BASE_0 + idx);
++	memset(&ioapics[idx], 0, sizeof(struct ioapic));
++	ioapics[idx].mp_config.apicid = 0xff;
++
++	return 0;
++}
++
+ /* Enable IOAPIC early just for system timer */
+ void __init pre_init_apic_IRQ0(void)
+ {
+-- 
+1.7.10.4
 
