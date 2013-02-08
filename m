@@ -1,193 +1,122 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g2t1383g.austin.hp.com ([15.217.136.92]:55725 "EHLO
-	g2t1383g.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753102Ab3BCOVB convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 3 Feb 2013 09:21:01 -0500
-From: "Pandarathil, Vijaymohan R" <vijaymohan.pandarathil@hp.com>
-To: Alex Williamson <alex.williamson@redhat.com>,
-	Gleb Natapov <gleb@redhat.com>,
+Received: from userp1040.oracle.com ([156.151.31.81]:26754 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760441Ab3BHTaT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 Feb 2013 14:30:19 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Blue Swirl <blauwirbel@gmail.com>,
-	"Ortiz, Lance E" <lance.oritz@hp.com>
-CC: "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	"qemu-devel@nongnu.org" <qemu-devel@nongnu.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: [PATCH v3 3/3] QEMU-AER: Qemu changes to support AER for VFIO-PCI
- devices
-Date: Sun, 3 Feb 2013 14:10:29 +0000
-Message-ID: <F9E001219150CB45BEDC82A650F360C9014AAF07@G9W0717.americas.hpqcorp.net>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Subject: [PATCH v2 19/26] x86, irq: More strict checking about registering ioapic
+Date: Fri,  8 Feb 2013 11:28:16 -0800
+Message-Id: <1360351703-20571-20-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1360351703-20571-1-git-send-email-yinghai@kernel.org>
+References: <1360351703-20571-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-	- Create eventfd per vfio device assigned to a guest and register an
-          event handler
+1. check overlaping gsi range
+for hotplug ioapic case, BIOS may have some entries in MADT
+and also have setting in pci root bus with _GSB of DSDT.
 
-	- This fd is passed to the vfio_pci driver through the SET_IRQ ioctl
+2. make bad_ioapics check idx instead of nr_ioapics.
+for hotadd ioapic could find spare slot in the middle later.
 
-	- When the device encounters an error, the eventfd is signalled
-          and the qemu eventfd handler gets invoked.
+3. check if entries is in right range.
 
-	- In the handler decide what action to take. Current action taken
-          is to terminate the guest.
-
-Signed-off-by: Vijay Mohan Pandarathil <vijaymohan.pandarathil@hp.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
 ---
- hw/vfio_pci.c              | 105 +++++++++++++++++++++++++++++++++++++++++++++
- linux-headers/linux/vfio.h |   1 +
- 2 files changed, 106 insertions(+)
+ arch/x86/kernel/apic/io_apic.c |   29 ++++++++++++++++++++++-------
+ 1 file changed, 22 insertions(+), 7 deletions(-)
 
-diff --git a/hw/vfio_pci.c b/hw/vfio_pci.c
-index c51ae67..4e2f768 100644
---- a/hw/vfio_pci.c
-+++ b/hw/vfio_pci.c
-@@ -130,6 +130,8 @@ typedef struct VFIODevice {
-     QLIST_ENTRY(VFIODevice) next;
-     struct VFIOGroup *group;
-     bool reset_works;
-+    EventNotifier err_notifier;
-+    bool pci_aer;
- } VFIODevice;
- 
- typedef struct VFIOGroup {
-@@ -1922,6 +1924,106 @@ static void vfio_put_device(VFIODevice *vdev)
-     }
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 9514728..8e92ba0 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -3821,7 +3821,7 @@ void __init ioapic_insert_resources(void)
+ 	}
  }
  
-+static void vfio_err_notifier_handler(void *opaque)
-+{
-+    VFIODevice *vdev = opaque;
-+
-+    if (!event_notifier_test_and_clear(&vdev->err_notifier)) {
-+        return;
-+    }
-+
-+    /*
-+     * TBD. Retrieve the error details and decide what action
-+     * needs to be taken. One of the actions could be to pass
-+     * the error to the guest and have the guest driver recover
-+     * from the error. This requires that PCIe capabilities be
-+     * exposed to the guest. At present, we just terminate the
-+     * guest to contain the error.
-+     */
-+
-+    error_report("%s (%04x:%02x:%02x.%x)"
-+        "Unrecoverable error detected... Terminating guest\n",
-+        __func__, vdev->host.domain, vdev->host.bus,
-+        vdev->host.slot, vdev->host.function);
-+
-+    hw_error("(%04x:%02x:%02x.%x) Unrecoverable device error\n",
-+        vdev->host.domain, vdev->host.bus,
-+        vdev->host.slot, vdev->host.function);
-+
-+    return;
-+}
-+
-+static void vfio_register_err_notifier(VFIODevice *vdev)
-+{
-+    int ret;
-+    int argsz;
-+    struct vfio_irq_set *irq_set;
-+    int32_t *pfd;
-+
-+    if (event_notifier_init(&vdev->err_notifier, 0)) {
-+        error_report("vfio: Warning: Unable to init event notifier for error detection\n");
-+        return;
-+    }
-+
-+    argsz = sizeof(*irq_set) + sizeof(*pfd);
-+
-+    irq_set = g_malloc0(argsz);
-+    irq_set->argsz = argsz;
-+    irq_set->flags = VFIO_IRQ_SET_DATA_EVENTFD |
-+                     VFIO_IRQ_SET_ACTION_TRIGGER;
-+    irq_set->index = VFIO_PCI_ERR_IRQ_INDEX;
-+    irq_set->start = 0;
-+    irq_set->count = 1;
-+    pfd = (int32_t *)&irq_set->data;
-+
-+    *pfd = event_notifier_get_fd(&vdev->err_notifier);
-+    qemu_set_fd_handler(*pfd, vfio_err_notifier_handler, NULL, vdev);
-+
-+    ret = ioctl(vdev->fd, VFIO_DEVICE_SET_IRQS, irq_set);
-+    if (ret) {
-+        DPRINTF("vfio: Error notification not supported for the device\n");
-+        qemu_set_fd_handler(*pfd, NULL, NULL, vdev);
-+        event_notifier_cleanup(&vdev->err_notifier);
-+        g_free(irq_set);
-+        return;
-+    }
-+    g_free(irq_set);
-+    vdev->pci_aer = 1;
-+    return;
-+}
-+static void vfio_unregister_err_notifier(VFIODevice *vdev)
-+{
-+    int argsz;
-+    struct vfio_irq_set *irq_set;
-+    int32_t *pfd;
-+    int ret;
-+
-+    if (!vdev->pci_aer) {
-+        return;
-+    }
-+
-+    argsz = sizeof(*irq_set) + sizeof(*pfd);
-+
-+    irq_set = g_malloc0(argsz);
-+    irq_set->argsz = argsz;
-+    irq_set->flags = VFIO_IRQ_SET_DATA_EVENTFD |
-+                     VFIO_IRQ_SET_ACTION_TRIGGER;
-+    irq_set->index = VFIO_PCI_ERR_IRQ_INDEX;
-+    irq_set->start = 0;
-+    irq_set->count = 1;
-+    pfd = (int32_t *)&irq_set->data;
-+    *pfd = -1;
-+
-+    ret = ioctl(vdev->fd, VFIO_DEVICE_SET_IRQS, irq_set);
-+    if (ret) {
-+        DPRINTF("vfio: Failed to de-assign error fd: %d\n", ret);
-+    }
-+    g_free(irq_set);
-+    qemu_set_fd_handler(event_notifier_get_fd(&vdev->err_notifier),
-+                        NULL, NULL, vdev);
-+    event_notifier_cleanup(&vdev->err_notifier);
-+    return;
-+}
- static int vfio_initfn(PCIDevice *pdev)
+-int mp_find_ioapic(u32 gsi)
++static int __mp_find_ioapic(u32 gsi, bool quiet)
  {
-     VFIODevice *pvdev, *vdev = DO_UPCAST(VFIODevice, pdev, pdev);
-@@ -2032,6 +2134,8 @@ static int vfio_initfn(PCIDevice *pdev)
-         }
-     }
+ 	int i = 0;
  
-+    vfio_register_err_notifier(vdev);
+@@ -3836,10 +3836,16 @@ int mp_find_ioapic(u32 gsi)
+ 			return i;
+ 	}
+ 
+-	printk(KERN_ERR "ERROR: Unable to locate IOAPIC for GSI %d\n", gsi);
++	if (!quiet)
++		pr_err("ERROR: Unable to locate IOAPIC for GSI %d\n", gsi);
+ 	return -1;
+ }
+ 
++int mp_find_ioapic(u32 gsi)
++{
++	return __mp_find_ioapic(gsi, false);
++}
 +
-     return 0;
+ int mp_find_ioapic_pin(int ioapic, u32 gsi)
+ {
+ 	struct mp_ioapic_gsi *gsi_cfg;
+@@ -3854,11 +3860,11 @@ int mp_find_ioapic_pin(int ioapic, u32 gsi)
+ 	return gsi - gsi_cfg->gsi_base;
+ }
  
- out_teardown:
-@@ -2049,6 +2153,7 @@ static void vfio_exitfn(PCIDevice *pdev)
-     VFIODevice *vdev = DO_UPCAST(VFIODevice, pdev, pdev);
-     VFIOGroup *group = vdev->group;
+-static __init int bad_ioapic(unsigned long address)
++static __init int bad_ioapic(int idx, unsigned long address)
+ {
+-	if (nr_ioapics >= MAX_IO_APICS) {
++	if (idx >= MAX_IO_APICS) {
+ 		pr_warn("WARNING: Max # of I/O APICs (%d) exceeded (found %d), skipping\n",
+-			MAX_IO_APICS, nr_ioapics);
++			MAX_IO_APICS, idx);
+ 		return 1;
+ 	}
+ 	if (!address) {
+@@ -3889,14 +3895,17 @@ static __init int bad_ioapic_register(int idx)
  
-+    vfio_unregister_err_notifier(vdev);
-     pci_device_set_intx_routing_notifier(&vdev->pdev, NULL);
-     vfio_disable_interrupts(vdev);
-     if (vdev->intx.mmap_timer) {
-diff --git a/linux-headers/linux/vfio.h b/linux-headers/linux/vfio.h
-index f787b72..6b20849 100644
---- a/linux-headers/linux/vfio.h
-+++ b/linux-headers/linux/vfio.h
-@@ -310,6 +310,7 @@ enum {
- 	VFIO_PCI_INTX_IRQ_INDEX,
- 	VFIO_PCI_MSI_IRQ_INDEX,
- 	VFIO_PCI_MSIX_IRQ_INDEX,
-+	VFIO_PCI_ERR_IRQ_INDEX,
- 	VFIO_PCI_NUM_IRQS
- };
+ void __init mp_register_ioapic(int id, u32 address, u32 gsi_base)
+ {
+-	int idx = 0;
++	int idx;
+ 	int entries;
+ 	struct mp_ioapic_gsi *gsi_cfg;
  
+-	if (bad_ioapic(address))
++	idx = __mp_find_ioapic(gsi_base, true);
++	if (idx >= 0)
+ 		return;
+ 
+ 	idx = nr_ioapics;
++	if (bad_ioapic(idx, address))
++		return;
+ 
+ 	ioapics[idx].mp_config.type = MP_IOAPIC;
+ 	ioapics[idx].mp_config.flags = MPC_APIC_USABLE;
+@@ -3917,6 +3926,12 @@ void __init mp_register_ioapic(int id, u32 address, u32 gsi_base)
+ 	 * and to prevent reprogramming of IOAPIC pins (PCI GSIs).
+ 	 */
+ 	entries = io_apic_get_redir_entries(idx);
++
++	if (!entries || entries > MP_MAX_IOAPIC_PIN) {
++		clear_fixmap(FIX_IO_APIC_BASE_0 + idx);
++		return;
++	}
++
+ 	gsi_cfg = mp_ioapic_gsi_routing(idx);
+ 	gsi_cfg->gsi_base = gsi_base;
+ 	gsi_cfg->gsi_end = gsi_base + entries - 1;
 -- 
-1.7.11.3
+1.7.10.4
 
