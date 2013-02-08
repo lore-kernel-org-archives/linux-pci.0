@@ -1,65 +1,66 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:57324 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758910Ab3BGQkp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Feb 2013 11:40:45 -0500
-Date: Thu, 7 Feb 2013 17:40:40 +0100
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Andrew Murray <andrew.murray@arm.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>
-Subject: Re: [PATCH v2 19/27] pci: PCIe driver for Marvell Armada 370/XP
- systems
-Message-ID: <20130207174040.3a345770@skate>
-In-Reply-To: <20130207171904.70270598@skate>
-References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
-	<1359399397-29729-20-git-send-email-thomas.petazzoni@free-electrons.com>
-	<20130129132204.GA23886@arm.com>
-	<20130207153750.0fef1192@skate>
-	<20130207155117.GA19666@arm.com>
-	<20130207171904.70270598@skate>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v2 25/26] PCI: Disable mem in the ioapic removing path
+Date: Fri,  8 Feb 2013 11:28:22 -0800
+Message-Id: <1360351703-20571-26-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1360351703-20571-1-git-send-email-yinghai@kernel.org>
+References: <1360351703-20571-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Thomas Petazzoni,
+For physical hot plug should be ok, but for remove/rescan path will
+need us to disable that.
 
-On Thu, 7 Feb 2013 17:19:04 +0100, Thomas Petazzoni wrote:
+otherwise rescan mmio resource for pci ioapic device will not be
+sized and allocated, aka skiped.
+For ioapic_probe:pci_enable_device will not enable the device
+correctly, and will bail out early.
 
-> Unfortunately, I don't quite agree with any of your three solutions. I
-> still do believe the root problem is that pdev->dev.of_node should be
-> NULL for the PCIe endpoints, since those devices are not probed with
-> the Device Tree.
+So we can just disable mmio for all removing case, and that will not hurt
+real hotplug path.
 
-Looking more at this, the pdev->dev.of_node is in fact NULL, but the
-code uses the of_node of the parent PCI device.
+Signed-off-by: <yinghai@kernel.org>
+---
+ drivers/pci/ioapic.c |   13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
-So in fact the problem is indeed that the subnodes pcie0,0 and pcie1,0
-are seen as corresponding to the PCI-to-PCI bridges.
-
-Thanks,
-
-Thomas
+diff --git a/drivers/pci/ioapic.c b/drivers/pci/ioapic.c
+index 3c6bbdd..8dacfd0 100644
+--- a/drivers/pci/ioapic.c
++++ b/drivers/pci/ioapic.c
+@@ -88,6 +88,17 @@ exit_free:
+ 	return -ENODEV;
+ }
+ 
++static void pci_disable_device_mem(struct pci_dev *dev)
++{
++	u16 pci_command;
++
++	pci_read_config_word(dev, PCI_COMMAND, &pci_command);
++	if (pci_command & PCI_COMMAND_MEMORY) {
++		pci_command &= ~PCI_COMMAND_MEMORY;
++		pci_write_config_word(dev, PCI_COMMAND, pci_command);
++	}
++}
++
+ static void ioapic_remove(struct pci_dev *dev)
+ {
+ 	struct ioapic *ioapic = pci_get_drvdata(dev);
+@@ -95,6 +106,8 @@ static void ioapic_remove(struct pci_dev *dev)
+ 	acpi_unregister_ioapic(ioapic->handle, ioapic->gsi_base);
+ 	pci_release_region(dev, 0);
+ 	pci_disable_device(dev);
++	/* need to disable it, otherwise remove/rescan will not work */
++	pci_disable_device_mem(dev);
+ 	kfree(ioapic);
+ }
+ 
 -- 
-Thomas Petazzoni, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
+1.7.10.4
+
