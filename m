@@ -1,60 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f169.google.com ([209.85.223.169]:36904 "EHLO
-	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751182Ab3BTQ52 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Feb 2013 11:57:28 -0500
-MIME-Version: 1.0
-In-Reply-To: <5124820D.2080900@suse.de>
-References: <1361182193-31894-1-git-send-email-hare@suse.de>
-	<CAE9FiQWP1F5mLUoHoTHXy-wQoGxVK66QuuHYydaq3YfysS5Etg@mail.gmail.com>
-	<5124820D.2080900@suse.de>
-Date: Wed, 20 Feb 2013 08:57:27 -0800
-Message-ID: <CAE9FiQXHteymDNzu0GqWtVSVhu3g2hCT+K9e5tB1mR-OBX1ffA@mail.gmail.com>
-Subject: Re: [PATCH] pci: do not try to assign irq 255
-From: Yinghai Lu <yinghai@kernel.org>
-To: Hannes Reinecke <hare@suse.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
-	Frederik Himpe <fhimpe@vub.ac.be>,
-	Oliver Neukum <oneukum@suse.de>,
-	David Haerdeman <david@hardeman.nu>, linux-usb@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail.free-electrons.com ([94.23.35.102]:59730 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759790Ab3BHIO0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 Feb 2013 03:14:26 -0500
+Date: Fri, 8 Feb 2013 09:14:20 +0100
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	linux-pci@vger.kernel.org,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: Giving special alignment/size constraints to the Linux PCI
+ core?
+Message-ID: <20130208091420.703a39b4@skate>
+In-Reply-To: <CAErSpo7hwG89LTO+4+eqT_Gb+yUn1XKHYJ8CnnZcf_FPo-Kpyw@mail.gmail.com>
+References: <20130130120344.GA29490@avionic-0098.mockup.avionic-design.de>
+	<2776630.gp5gC9tvLk@wuerfel>
+	<20130131180249.GA30869@obsidianresearch.com>
+	<201301312046.22560.arnd@arndb.de>
+	<20130131224459.GA11846@obsidianresearch.com>
+	<20130206175128.1b64196d@skate>
+	<20130206170903.GA28198@obsidianresearch.com>
+	<20130206181852.4eca53e3@skate>
+	<20130206175019.GA24248@obsidianresearch.com>
+	<20130207165009.73b1f340@skate>
+	<CAErSpo7hwG89LTO+4+eqT_Gb+yUn1XKHYJ8CnnZcf_FPo-Kpyw@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 19, 2013 at 11:58 PM, Hannes Reinecke <hare@suse.de> wrote:
->>
-> Apparently this device is meant to use MSI _only_ so the BIOS developer
-> didn't feel the need to assign an INTx here.
->
-> According to PCI-3.0, section 6.8 (Message Signalled Interrupts):
->> It is recommended that devices implement interrupt pins to
->> provide compatibility in systems that do not support MSI
->> (devices default to interrupt pins). However, it is expected
->> that the need for interrupt pins will diminish over time.
->> Devices that do not support interrupt pins due to pin
->> constraints (rely on polling for device service) may implement
->> messages to increase performance without adding additional pins. >
->> Therefore, system configuration software must not assume that a
->> message capable device has an interrupt pin.
->
-> Which sounds to me as if the implementation is valid...
+Dear Bjorn Helgaas,
 
-it seems you mess pin with interrupt line.
+On Thu, 7 Feb 2013 21:21:57 -0700, Bjorn Helgaas wrote:
 
-current code:
-        unsigned char irq;
+> Huh.  That hardware looks less and less like a P2P bridge all the time
+> :(  You can't configure it via standard PCI config accesses, and the
+> aperture alignment and size constraints sound completely non-standard.
+>  Are the specs for this thing public?
 
-        pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &irq);
-        dev->pin = irq;
-        if (irq)
-                pci_read_config_byte(dev, PCI_INTERRUPT_LINE, &irq);
-        dev->irq = irq;
+The specs for the Armada XP are not yet public, but the one for earlier
+Marvell SoC families are, and the PCIe stuff works basically the same.
+The main difference between the Kirkwood family and Armada XP is that
+Kirkwood had only 2 PCIe interfaces, so we could perfectly fine do a
+static allocation of address decoding windows (see the four PCIe windows
+in arch/arm/mach-kirkwood/addr-map.c:addr_map_info[]), while the Armada
+XP has 10 PCIe interfaces, which makes the static allocation solution
+unreasonable.
 
-so if the device does not have interrupt pin implemented, pin should be zero.
-and  pin and irq in dev should
-be all 0.
+The list of publicly available specifications for Marvell EBU SoC is
+available at Documentation/arm/Marvell/README. For Kirkwood, I would
+recommend
+http://www.marvell.com/embedded-processors/kirkwood/assets/FS_88F6180_9x_6281_OpenSource.pdf.
+See chapter 2.3:
 
-Thanks
+  The PCI Express address decoding scheme restricts the address window
+  to a size of 2^n, and to a start address that is aligned to the window
+  size.
 
-Yinghai
+> I could imagine changing pcibios_window_alignment() to take the
+> resource, so it could deal with the alignment question (though I
+> haven't looked in detail and there might be some implementation issue
+> with that).
+> 
+> With regard to the size issue (3MB window using 4MB of address space),
+> I can't think of a reasonable way to teach the PCI core about both
+> sizes.  But is there any reason to program the bridge for a 3MB window
+> instead of a 4MB window, given that there's nothing else we can do
+> with the extra 1MB anyway?  Is a 3MB window even possible?  I would
+> think something that must be aligned on its size would be restricted
+> to power-of-2 sizes anyway, just like PCI BARs are.  Maybe you can
+> just always round up window sizes to a power of 2?
+
+The window sizes are power of two sizes. I didn't realize that it was
+also the case for PCI BARs. Then there is no problem with the size I
+guess, and only a problem of alignment. Having the possibility to
+get the resource and return a fixed up start address would solve the
+problem I'd say.
+
+Best regards,
+
+Thomas
+-- 
+Thomas Petazzoni, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
