@@ -1,87 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:39239 "EHLO hydra.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754442Ab3BDUPq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 4 Feb 2013 15:15:46 -0500
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Konstantin Khlebnikov <khlebnikov@openvz.org>
-Cc: e1000-devel@lists.sourceforge.net, linux-pci@vger.kernel.org,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH v2 6/7] PCI/PM: warn about incomplete actions in ->runtime_suspend() callback
-Date: Mon, 04 Feb 2013 21:22:03 +0100
-Message-ID: <2146717.YNnkIQ37Mr@vostro.rjw.lan>
-In-Reply-To: <20130204115612.5569.49895.stgit@zurg>
-References: <20130204115246.5569.85829.stgit@zurg> <20130204115612.5569.49895.stgit@zurg>
+Received: from mail-ia0-f176.google.com ([209.85.210.176]:54372 "EHLO
+	mail-ia0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760321Ab3BHWdR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 Feb 2013 17:33:17 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <CAErSpo4iA17jh5rw05q=uaKOyMKesrPnxYrN2EvqWT_tGmE_FQ@mail.gmail.com>
+References: <1360351703-20571-1-git-send-email-yinghai@kernel.org>
+	<1360351703-20571-26-git-send-email-yinghai@kernel.org>
+	<CAErSpo4iA17jh5rw05q=uaKOyMKesrPnxYrN2EvqWT_tGmE_FQ@mail.gmail.com>
+Date: Fri, 8 Feb 2013 14:33:17 -0800
+Message-ID: <CAE9FiQX6yLebtOVCRV7GDwxfJFPpVxBKJO_VJ_ndA-OjBD4LRg@mail.gmail.com>
+Subject: Re: [PATCH v2 25/26] PCI: Disable mem in the ioapic removing path
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, February 04, 2013 03:56:12 PM Konstantin Khlebnikov wrote:
-> Documentation/power/pci.txt says:
-> | It is expected that the device driver's pm->runtime_suspend() callback will
-> | not attempt to prepare the device for signaling wakeup or to put it into a
-> | low-power state.  The driver ought to leave these tasks to the PCI subsystem
-> | that has all of the information necessary to perform them.
-> 
-> After commit 42eca2302146fed51335b95128e949ee6f54478f
-> ("PCI: Don't touch card regs after runtime suspend D3")
-> | If the driver takes care of state saving, don't touch any registers on it.
-> pci_pm_runtime_suspend() thinks if state has been saved by ->runtime_suspend()
-> that means device alredy prepared for wakeup and probably no longer accessible.
-> 
-> Thus driver must either do all actions or leave all these tasks to PCI subsystem.
+On Fri, Feb 8, 2013 at 1:14 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Fri, Feb 8, 2013 at 12:28 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> For physical hot plug should be ok, but for remove/rescan path will
+>> need us to disable that.
+>>
+>> otherwise rescan mmio resource for pci ioapic device will not be
+>> sized and allocated, aka skiped.
+>
+> When we scan other PCI devices, we can size memory BARs even if
+> PCI_COMMAND_MEMORY is already set.  So there must be something
+> different about IOAPICs?  Or maybe it's something different about
+> rescan vs. the initial scan?
 
-I don't like this one, because it will generate noise for drivers that
-legitimately use pci_save_state() in their runtime suspend callbacks
-and know what they are doing.
+it is in drivers/pci/setup-bus.c::__dev_sort_resources()
+it will skip the reallocation for ioapic controller.
 
-Thanks,
-Rafael
+...
+        /* Don't touch ioapic devices already enabled by firmware */
+        if (class == PCI_CLASS_SYSTEM_PIC) {
+                u16 command;
+                pci_read_config_word(dev, PCI_COMMAND, &command);
+                if (command & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY))
+                        return;
+        }
 
+>
+>> For ioapic_probe:pci_enable_device will not enable the device
+>> correctly, and will bail out early.
+>
+> Exactly where and why do we bail out early?  The only early bail out I
+> see is where __pci_enable_device_flags() returns if "dev->enable_cnt >
+> 1".  Is that what you mean?
 
-> Signed-off-by: Konstantin Khlebnikov <khlebnikov@openvz.org>
-> Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: linux-pci@vger.kernel.org
-> ---
->  drivers/pci/pci-driver.c |   15 +++++++++++----
->  1 file changed, 11 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-> index f9aa311..2b0ff9a 100644
-> --- a/drivers/pci/pci-driver.c
-> +++ b/drivers/pci/pci-driver.c
-> @@ -1009,12 +1009,19 @@ static int pci_pm_runtime_suspend(struct device *dev)
->  		return 0;
->  	}
->  
-> -	if (!pci_dev->state_saved) {
-> -		pci_save_state(pci_dev);
-> -		pci_finish_runtime_suspend(pci_dev);
-> +	if (pci_dev->state_saved) {
-> +		WARN_ONCE(pci_dev->current_state == prev,
-> +			"PCI PM: Power state of device not changed by %pF\n",
-> +			pm->runtime_suspend);
-> +		WARN_ONCE(pci_dev_run_wake(pci_dev) &&
-> +				!pci_dev->wakeup_prepared,
-> +			"PCI PM: Waking of device not configured by %pF\n",
-> +			pm->runtime_suspend);
-> +		return 0;
->  	}
->  
-> -	return 0;
-> +	pci_save_state(pci_dev);
-> +	return pci_finish_runtime_suspend(pci_dev);
->  }
->  
->  static int pci_pm_runtime_resume(struct device *dev)
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+pci_enable_device==>pci_enable_device_flags
+==>do_pci_enable_device==>pcibios_enable_device==>pci_enable_resources
+...
+                if (!r->parent) {
+                        dev_err(&dev->dev, "device not available "
+                                "(can't reserve %pR)\n", r);
+                        return -EINVAL;
+                }
+...
+
+only reassign one will have get it's parent.
+
+Thanks
+
+Yinghai
