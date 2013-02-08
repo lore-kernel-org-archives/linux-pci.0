@@ -1,98 +1,395 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:57321 "EHLO quartz.orcorp.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754566Ab3BATjj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 1 Feb 2013 14:39:39 -0500
-Date: Fri, 1 Feb 2013 12:39:35 -0700
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Stephen Warren <swarren@wwwdotorg.org>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>
-Subject: Re: [PATCH v2 19/27] pci: PCIe driver for Marvell Armada 370/XP
- systems
-Message-ID: <20130201193935.GA19335@obsidianresearch.com>
-References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
- <1359399397-29729-20-git-send-email-thomas.petazzoni@free-electrons.com>
- <510B0D9C.1000101@wwwdotorg.org>
- <20130201014138.GA16234@obsidianresearch.com>
- <510B268E.2040104@wwwdotorg.org>
- <20130201094613.38fa2ad0@skate>
- <510C0200.5040505@wwwdotorg.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <510C0200.5040505@wwwdotorg.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:33366 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760394Ab3BHT3C (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 Feb 2013 14:29:02 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v2 26/26] PCI, x86, ACPI: Add ioapic hotplug support with acpi host bridge.
+Date: Fri,  8 Feb 2013 11:28:23 -0800
+Message-Id: <1360351703-20571-27-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1360351703-20571-1-git-send-email-yinghai@kernel.org>
+References: <1360351703-20571-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Feb 01, 2013 at 10:57:20AM -0700, Stephen Warren wrote:
+We need to have ioapic setup before normal pci drivers.
+otherwise other pci driver can not setup irq.
 
-> > We have 20 windows on Armada XP if I remember correctly, and they are
-> > not only used for PCIe, but also to map the BootROM (needed to boot
-> > secondary CPUs), to map SPI flashes or NOR flashes, for example. So
-> > they are really shared between many uses. In terms of PCIe, there are
-> > only two types of windows: I/O and Memory, there is no notion of
-> > Prefetchable Memory window as far as I could see.
-> 
-> In Tegra, we end up having separate MMIO vs. Prefetchable MMIO
-> chunks of our overall PCIe aperture. However, the HW setup appears
-> the same for both of those. I'm not sure if it's a bug in the
-> driver, or if it's just to separate the two address spaces so that
-> the page tables can be configured for those two regions with large
-> rather than small granularity. I need to go investigate that.
+Make ioapic built-in, so can call add/remove during host-bridge add/remove
+the same as the booting path.
 
-The only purpose of prefetchable space is for legacy PCI. When a P2P
-bridge targets legacy PCI it has different behavior for its
-prefetchable memory window compared to the non-prefetchable memory
-window.
+Also need to make it depends on X86_IO_APIC.
 
-IIRC (though it has been a long time since I looked really close at
-this) PCI-X and PCI-E did away with this special bridge behaviour but
-kept the prefetchable memory space for compatibility.
+Signed-off-by: <yinghai@kernel.org>
+---
+ arch/x86/kernel/acpi/boot.c |   10 +-
+ drivers/acpi/pci_root.c     |    4 +
+ drivers/pci/Kconfig         |    3 +-
+ drivers/pci/ioapic.c        |  216 ++++++++++++++++++++++++++++++-------------
+ include/linux/pci-acpi.h    |    8 ++
+ 5 files changed, 172 insertions(+), 69 deletions(-)
 
-These days it is typically used to mark cachable memory on an end
-device.
-
->From a SOC perspective, there is no need to treat MMIO and prefetch
-areas any differently. ARM's per-page cachability flags can be used to
-deal with the differing caching requirements.
-
-However, the bus tree downstream of each root port will require the
-prefetch window to be contiguous. On Marvell, today, this means you
-need to burn two mbus windows to get this. If the Linux pci core could
-allocate the prefetch space for each root port bridge contiguously
-with the mmio space for the same root port then this could be reduced
-to one window covering both spaces for the port.
-
-> So there are 10 PCIe interfaces (root ports). That's on the SoC itself
-> right. Are all 10 (or a large number of them) actually used at once on
-> any given board design? I suppose this must be the case, or Marvell
-> wouldn't have wasted the silicon space on 10 root ports... Still, that's
-> a rather large number of ports!
-
-Agreed.. I have no idea what the target is for this..
+diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
+index 350879f..338163b 100644
+--- a/arch/x86/kernel/acpi/boot.c
++++ b/arch/x86/kernel/acpi/boot.c
+@@ -697,16 +697,18 @@ EXPORT_SYMBOL(acpi_unmap_lsapic);
  
-> I think the only difference on the Marvell HW is:
-> 
-> * The overall total size of the physical address space is dynamic rather
-> than fixed, because it's programmed through windows rather than
-> hard-coded into HW.
+ int acpi_register_ioapic(acpi_handle handle, u64 phys_addr, u32 gsi_base)
+ {
+-	/* TBD */
+-	return -EINVAL;
++	unsigned long long id = 0;
++
++	acpi_evaluate_integer(handle, "_UID", NULL, &id);
++
++	return	__mp_register_ioapic(id, phys_addr, gsi_base, true);
+ }
+ 
+ EXPORT_SYMBOL(acpi_register_ioapic);
+ 
+ int acpi_unregister_ioapic(acpi_handle handle, u32 gsi_base)
+ {
+-	/* TBD */
+-	return -EINVAL;
++	return mp_unregister_ioapic(gsi_base);
+ }
+ 
+ EXPORT_SYMBOL(acpi_unregister_ioapic);
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index 417487a..54d61ce 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -587,6 +587,8 @@ static int acpi_pci_root_add(struct acpi_device *device)
+ 		pci_assign_unassigned_bus_resources(root->bus);
+ 	}
+ 
++	acpi_pci_ioapic_add(root);
++
+ 	mutex_lock(&acpi_pci_root_lock);
+ 	list_for_each_entry(driver, &acpi_pci_drivers, node)
+ 		if (driver->add)
+@@ -626,6 +628,8 @@ static int acpi_pci_root_remove(struct acpi_device *device, int type)
+ 			driver->remove(root);
+ 	mutex_unlock(&acpi_pci_root_lock);
+ 
++	acpi_pci_ioapic_remove(root);
++
+ 	device_set_run_wake(root->bus->bridge, false);
+ 	pci_acpi_remove_bus_pm_notifier(device);
+ 
+diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+index 6d51aa6..720989f 100644
+--- a/drivers/pci/Kconfig
++++ b/drivers/pci/Kconfig
+@@ -110,10 +110,11 @@ config PCI_PASID
+ 	  If unsure, say N.
+ 
+ config PCI_IOAPIC
+-	tristate "PCI IO-APIC hotplug support" if X86
++	bool "PCI IO-APIC hotplug support" if X86
+ 	depends on PCI
+ 	depends on ACPI
+ 	depends on HOTPLUG
++	depends on X86_IO_APIC
+ 	default !X86
+ 
+ config PCI_LABEL
+diff --git a/drivers/pci/ioapic.c b/drivers/pci/ioapic.c
+index 8dacfd0..12e56c7 100644
+--- a/drivers/pci/ioapic.c
++++ b/drivers/pci/ioapic.c
+@@ -22,70 +22,128 @@
+ #include <linux/slab.h>
+ #include <acpi/acpi_bus.h>
+ 
+-struct ioapic {
+-	acpi_handle	handle;
++struct acpi_pci_ioapic {
++	acpi_handle	root_handle;
+ 	u32		gsi_base;
++	struct pci_dev *pdev;
++	struct list_head list;
+ };
+ 
+-static int ioapic_probe(struct pci_dev *dev, const struct pci_device_id *ent)
++static LIST_HEAD(ioapic_list);
++static DEFINE_MUTEX(ioapic_list_lock);
++
++static acpi_status setup_res(struct acpi_resource *acpi_res, void *data)
++{
++	struct resource *res;
++	struct acpi_resource_address64 addr;
++	acpi_status status;
++	unsigned long flags;
++	u64 start, end;
++
++	status = acpi_resource_to_address64(acpi_res, &addr);
++	if (!ACPI_SUCCESS(status))
++		return AE_OK;
++
++	if (addr.resource_type == ACPI_MEMORY_RANGE) {
++		if (addr.info.mem.caching == ACPI_PREFETCHABLE_MEMORY)
++			return AE_OK;
++		flags = IORESOURCE_MEM;
++	} else
++		return AE_OK;
++
++	start = addr.minimum + addr.translation_offset;
++	end = addr.maximum + addr.translation_offset;
++
++	res = data;
++	res->flags = flags;
++	res->start = start;
++	res->end = end;
++
++	return AE_OK;
++}
++
++static void handle_ioapic_add(acpi_handle handle, struct pci_dev **pdev,
++				 u32 *pgsi_base)
+ {
+-	acpi_handle handle;
+ 	acpi_status status;
+ 	unsigned long long gsb;
+-	struct ioapic *ioapic;
++	struct pci_dev *dev;
++	u32 gsi_base;
+ 	int ret;
+ 	char *type;
+-	struct resource *res;
++	struct resource r;
++	struct resource *res = &r;
++	char objname[64];
++	struct acpi_buffer buffer = {sizeof(objname), objname};
+ 
+-	handle = DEVICE_ACPI_HANDLE(&dev->dev);
+-	if (!handle)
+-		return -EINVAL;
++	*pdev = NULL;
++	*pgsi_base = 0;
+ 
+ 	status = acpi_evaluate_integer(handle, "_GSB", NULL, &gsb);
+-	if (ACPI_FAILURE(status))
+-		return -EINVAL;
++	if (ACPI_FAILURE(status) || !gsb)
++		return;
++
++	dev = acpi_get_pci_dev(handle);
++	if (!dev) {
++		struct acpi_device_info *info;
++		char *hid = NULL;
++
++		status = acpi_get_object_info(handle, &info);
++		if (ACPI_FAILURE(status))
++			return;
++		if (info->valid & ACPI_VALID_HID)
++			hid = info->hardware_id.string;
++		if (!hid || strcmp(hid, "ACPI0009")) {
++			kfree(info);
++			return;
++		}
++		kfree(info);
++		memset(res, 0, sizeof(*res));
++		acpi_walk_resources(handle, METHOD_NAME__CRS, setup_res, res);
++		if (!res->flags)
++			return;
++	}
+ 
+-	/*
+-	 * The previous code in acpiphp evaluated _MAT if _GSB failed, but
+-	 * ACPI spec 4.0 sec 6.2.2 requires _GSB for hot-pluggable I/O APICs.
+-	 */
++	acpi_get_name(handle, ACPI_FULL_PATHNAME, &buffer);
+ 
+-	ioapic = kzalloc(sizeof(*ioapic), GFP_KERNEL);
+-	if (!ioapic)
+-		return -ENOMEM;
++	gsi_base = gsb;
++	type = "IOxAPIC";
++	if (dev) {
++		ret = pci_enable_device(dev);
++		if (ret < 0)
++			goto exit_put;
+ 
+-	ioapic->handle = handle;
+-	ioapic->gsi_base = (u32) gsb;
++		pci_set_master(dev);
+ 
+-	if (dev->class == PCI_CLASS_SYSTEM_PIC_IOAPIC)
+-		type = "IOAPIC";
+-	else
+-		type = "IOxAPIC";
++		if (dev->class == PCI_CLASS_SYSTEM_PIC_IOAPIC)
++			type = "IOAPIC";
+ 
+-	ret = pci_enable_device(dev);
+-	if (ret < 0)
+-		goto exit_free;
++		if (pci_request_region(dev, 0, type))
++			goto exit_disable;
+ 
+-	pci_set_master(dev);
++		res = &dev->resource[0];
++	}
+ 
+-	if (pci_request_region(dev, 0, type))
+-		goto exit_disable;
++	if (acpi_register_ioapic(handle, res->start, gsi_base)) {
++		if (dev)
++			goto exit_release;
++		return;
++	}
+ 
+-	res = &dev->resource[0];
+-	if (acpi_register_ioapic(ioapic->handle, res->start, ioapic->gsi_base))
+-		goto exit_release;
++	pr_info("%s %s %s at %pR, GSI %u\n",
++		dev ? dev_name(&dev->dev) : "", objname, type,
++		res, gsi_base);
+ 
+-	pci_set_drvdata(dev, ioapic);
+-	dev_info(&dev->dev, "%s at %pR, GSI %u\n", type, res, ioapic->gsi_base);
+-	return 0;
++	*pdev = dev;
++	*pgsi_base = gsi_base;
++	return;
+ 
+ exit_release:
+ 	pci_release_region(dev, 0);
+ exit_disable:
+ 	pci_disable_device(dev);
+-exit_free:
+-	kfree(ioapic);
+-	return -ENODEV;
++exit_put:
++	pci_dev_put(dev);
+ }
+ 
+ static void pci_disable_device_mem(struct pci_dev *dev)
+@@ -99,44 +157,74 @@ static void pci_disable_device_mem(struct pci_dev *dev)
+ 	}
+ }
+ 
+-static void ioapic_remove(struct pci_dev *dev)
++static void handle_ioapic_remove(acpi_handle handle, struct pci_dev *dev,
++				  u32 gsi_base)
+ {
+-	struct ioapic *ioapic = pci_get_drvdata(dev);
++	acpi_unregister_ioapic(handle, gsi_base);
++
++	if (!dev)
++		return;
+ 
+-	acpi_unregister_ioapic(ioapic->handle, ioapic->gsi_base);
+ 	pci_release_region(dev, 0);
+ 	pci_disable_device(dev);
+ 	/* need to disable it, otherwise remove/rescan will not work */
+ 	pci_disable_device_mem(dev);
+-	kfree(ioapic);
++	pci_dev_put(dev);
+ }
+ 
++static acpi_status register_ioapic(acpi_handle handle, u32 lvl,
++					void *context, void **rv)
++{
++	acpi_handle root_handle = context;
++	struct pci_dev *pdev;
++	u32 gsi_base;
++	struct acpi_pci_ioapic *ioapic;
+ 
+-static DEFINE_PCI_DEVICE_TABLE(ioapic_devices) = {
+-	{ PCI_DEVICE_CLASS(PCI_CLASS_SYSTEM_PIC_IOAPIC, ~0) },
+-	{ PCI_DEVICE_CLASS(PCI_CLASS_SYSTEM_PIC_IOXAPIC, ~0) },
+-	{ }
+-};
+-MODULE_DEVICE_TABLE(pci, ioapic_devices);
++	handle_ioapic_add(handle, &pdev, &gsi_base);
++	if (!gsi_base)
++		return AE_OK;
+ 
+-static struct pci_driver ioapic_driver = {
+-	.name		= "ioapic",
+-	.id_table	= ioapic_devices,
+-	.probe		= ioapic_probe,
+-	.remove		= ioapic_remove,
+-};
++	ioapic = kzalloc(sizeof(*ioapic), GFP_KERNEL);
++	if (!ioapic) {
++		pr_err("%s: cannot allocate memory\n", __func__);
++		handle_ioapic_remove(root_handle, pdev, gsi_base);
++		return AE_OK;
++	}
++	ioapic->root_handle = root_handle;
++	ioapic->pdev = pdev;
++	ioapic->gsi_base = gsi_base;
+ 
+-static int __init ioapic_init(void)
+-{
+-	return pci_register_driver(&ioapic_driver);
++	mutex_lock(&ioapic_list_lock);
++	list_add(&ioapic->list, &ioapic_list);
++	mutex_unlock(&ioapic_list_lock);
++
++	return AE_OK;
+ }
+ 
+-static void __exit ioapic_exit(void)
++void acpi_pci_ioapic_add(struct acpi_pci_root *root)
+ {
+-	pci_unregister_driver(&ioapic_driver);
+-}
++	acpi_status status;
+ 
+-module_init(ioapic_init);
+-module_exit(ioapic_exit);
++	status = acpi_walk_namespace(ACPI_TYPE_DEVICE, root->device->handle,
++				     (u32)1, register_ioapic, NULL,
++				     root->device->handle,
++				     NULL);
++	if (ACPI_FAILURE(status))
++		pr_err("%s: register_ioapic failure - %d", __func__, status);
++}
+ 
+-MODULE_LICENSE("GPL");
++void acpi_pci_ioapic_remove(struct acpi_pci_root *root)
++{
++	struct acpi_pci_ioapic *ioapic, *tmp;
++
++	mutex_lock(&ioapic_list_lock);
++	list_for_each_entry_safe(ioapic, tmp, &ioapic_list, list) {
++		if (root->device->handle != ioapic->root_handle)
++			continue;
++		list_del(&ioapic->list);
++		handle_ioapic_remove(ioapic->root_handle, ioapic->pdev,
++					ioapic->gsi_base);
++		kfree(ioapic);
++	}
++	mutex_unlock(&ioapic_list_lock);
++}
+diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
+index 9a22b5e..6f83039 100644
+--- a/include/linux/pci-acpi.h
++++ b/include/linux/pci-acpi.h
+@@ -49,4 +49,12 @@ extern bool aer_acpi_firmware_first(void);
+ static inline bool aer_acpi_firmware_first(void) { return false; }
+ #endif
+ 
++#ifdef CONFIG_PCI_IOAPIC
++void acpi_pci_ioapic_add(struct acpi_pci_root *root);
++void acpi_pci_ioapic_remove(struct acpi_pci_root *root);
++#else
++static inline void acpi_pci_ioapic_add(struct acpi_pci_root *root) { }
++static inline void acpi_pci_ioapic_remove(struct acpi_pci_root *root) { }
++#endif
++
+ #endif	/* _PCI_ACPI_H_ */
+-- 
+1.7.10.4
 
-Is it hard coded on tegra? I thought there was a register set that was
-used to set the overall PCI-E MMIO window location and size. I know
-even on x86 the PCI window is set via register, though that typically
-isn't disclosed except to bios writers.. 
-
-Jason
