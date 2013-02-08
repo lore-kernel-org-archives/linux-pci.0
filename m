@@ -1,66 +1,149 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:46017 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933377Ab3BLQ3z (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Feb 2013 11:29:55 -0500
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Cc: Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Tawfik Bayouk <tawfik@marvell.com>
-Subject: [PATCH 30/32] arm: mvebu: PCIe Device Tree informations for Armada 370 Mirabox
-Date: Tue, 12 Feb 2013 17:29:04 +0100
-Message-Id: <1360686546-24277-31-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Subject: [PATCH v2 12/26] x86, irq: Add realloc_irq_and_cfg_at()
+Date: Fri,  8 Feb 2013 11:28:09 -0800
+Message-Id: <1360351703-20571-13-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1360351703-20571-1-git-send-email-yinghai@kernel.org>
+References: <1360351703-20571-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The Globalscale Mirabox platform uses one PCIe interface for an
-available mini-PCIe slot, and the other PCIe interface for an internal
-USB 3.0 controller. We add the necessary Device Tree informations to
-enable those two interfaces.
+For ioapic hotplug support, we need to reserve irq range for hot
+added ioapic controller. After that we need to allocate those
+pre-reserved one.
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Add realloc_irq_and_cfg_at() to really allocate irq_desc and cfg
+as pre-reserved only hold bit in allocate_irqs bit maps.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
 ---
- arch/arm/boot/dts/armada-370-mirabox.dts |   14 ++++++++++++++
- 1 file changed, 14 insertions(+)
+ arch/x86/kernel/apic/io_apic.c |   32 +++++++++++++++++++++++++++++++-
+ include/linux/irq.h            |    5 +++++
+ kernel/irq/irqdesc.c           |   26 ++++++++++++++++++++++++++
+ 3 files changed, 62 insertions(+), 1 deletion(-)
 
-diff --git a/arch/arm/boot/dts/armada-370-mirabox.dts b/arch/arm/boot/dts/armada-370-mirabox.dts
-index 3b40713..591068a 100644
---- a/arch/arm/boot/dts/armada-370-mirabox.dts
-+++ b/arch/arm/boot/dts/armada-370-mirabox.dts
-@@ -52,5 +52,19 @@
- 			phy = <&phy1>;
- 			phy-mode = "rgmii-id";
- 		};
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index d2b4988..72a1351 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -301,6 +301,36 @@ static void free_irq_at(unsigned int at, struct irq_cfg *cfg)
+ 	irq_free_desc(at);
+ }
+ 
++static struct irq_cfg *realloc_irq_and_cfg_at(unsigned int at, int node)
++{
++	struct irq_desc *desc = irq_to_desc(at);
++	struct irq_cfg *cfg;
++	int res;
 +
-+		pcie-controller {
-+			status = "okay";
++	if (desc) {
++		if (irq_desc_get_irq_data(desc)->node == node)
++			return alloc_irq_and_cfg_at(at, node);
 +
-+			/* Internal mini-PCIe connector */
-+			pcie@0,0 {
-+				status = "okay";
-+			};
++		cfg = irq_desc_get_chip_data(desc);
++		if (cfg) {
++			/* shared irq */
++			if (!list_empty(&cfg->irq_2_pin))
++				return cfg;
++			free_irq_cfg(at, cfg);
++		}
++	}
 +
-+			/* Connected on the PCB to a USB 3.0 XHCI controller */
-+			pcie@1,0 {
-+				status = "okay";
-+			};
-+		};
- 	};
- };
++	res = irq_realloc_desc_at(at, node);
++	if (res >= 0) {
++		cfg = alloc_irq_cfg(at, node);
++		if (cfg) {
++			irq_set_chip_data(at, cfg);
++			return cfg;
++		}
++	}
++
++	return alloc_irq_and_cfg_at(at, node);
++}
+ 
+ struct io_apic {
+ 	unsigned int index;
+@@ -3355,7 +3385,7 @@ int arch_setup_ht_irq(unsigned int irq, struct pci_dev *dev)
+ static int
+ io_apic_setup_irq_pin(unsigned int irq, int node, struct io_apic_irq_attr *attr)
+ {
+-	struct irq_cfg *cfg = alloc_irq_and_cfg_at(irq, node);
++	struct irq_cfg *cfg = realloc_irq_and_cfg_at(irq, node);
+ 	int ret;
+ 
+ 	if (!cfg)
+diff --git a/include/linux/irq.h b/include/linux/irq.h
+index 4e0fcbb..9c6c047 100644
+--- a/include/linux/irq.h
++++ b/include/linux/irq.h
+@@ -602,6 +602,11 @@ void irq_free_descs(unsigned int irq, unsigned int cnt);
+ int irq_reserve_irqs(unsigned int from, unsigned int cnt);
+ int __irq_reserve_irqs(int irq, unsigned int from, unsigned int cnt);
+ 
++int __irq_realloc_desc(int at, int node, struct module *owner);
++/* use macros to avoid needing export.h for THIS_MODULE */
++#define irq_realloc_desc_at(at, node)	\
++	__irq_realloc_desc(at, node, THIS_MODULE)
++
+ static inline void irq_free_desc(unsigned int irq)
+ {
+ 	irq_free_descs(irq, 1);
+diff --git a/kernel/irq/irqdesc.c b/kernel/irq/irqdesc.c
+index 3b9fb92..b48f65b 100644
+--- a/kernel/irq/irqdesc.c
++++ b/kernel/irq/irqdesc.c
+@@ -99,6 +99,11 @@ EXPORT_SYMBOL_GPL(nr_irqs);
+ static DEFINE_MUTEX(sparse_irq_lock);
+ static DECLARE_BITMAP(allocated_irqs, IRQ_BITMAP_BITS);
+ 
++static bool __irq_is_reserved(int irq)
++{
++	return !!test_bit(irq, allocated_irqs);
++}
++
+ #ifdef CONFIG_SPARSE_IRQ
+ 
+ static RADIX_TREE(irq_desc_tree, GFP_KERNEL);
+@@ -410,6 +415,27 @@ __irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
+ EXPORT_SYMBOL_GPL(__irq_alloc_descs);
+ 
+ /**
++ * irq_realloc_desc - allocate irq descriptor for irq that is already reserved
++ * @irq:	Allocate for specific irq number if irq >= 0
++ * @node:	Preferred node on which the irq descriptor should be allocated
++ * @owner:	Owning module (can be NULL)
++ *
++ * Returns the irq number or error code
++ */
++int __ref
++__irq_realloc_desc(int irq, int node, struct module *owner)
++{
++	if (!__irq_is_reserved(irq))
++		return -EINVAL;
++
++	if (irq_to_desc(irq))
++		free_desc(irq);
++
++	return alloc_descs(irq, 1, node, owner);
++}
++EXPORT_SYMBOL_GPL(__irq_realloc_desc);
++
++/**
+  * irq_reserve_irqs - mark irqs allocated
+  * @from:	mark from irq number
+  * @cnt:	number of irqs to mark
 -- 
-1.7.9.5
+1.7.10.4
 
