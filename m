@@ -1,63 +1,152 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:52057 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756093Ab3BMTvo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Feb 2013 14:51:44 -0500
-Date: Wed, 13 Feb 2013 20:51:39 +0100
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	linux-pci@vger.kernel.org,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: Giving special alignment/size constraints to the Linux PCI
- core?
-Message-ID: <20130213205139.77c01873@skate>
-In-Reply-To: <20130213191204.GA15710@obsidianresearch.com>
-References: <20130130120344.GA29490@avionic-0098.mockup.avionic-design.de>
-	<201302122305.28467.arnd@arndb.de>
-	<20130213003224.GA32535@obsidianresearch.com>
-	<201302131853.14617.arnd@arndb.de>
-	<20130213191204.GA15710@obsidianresearch.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>, Pavel Machek <pavel@ucw.cz>,
+	Joerg Roedel <joro@8bytes.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Subject: [PATCH v2 17/26] x86, irq: Add ioapic_gsi_to_irq
+Date: Fri,  8 Feb 2013 11:28:14 -0800
+Message-Id: <1360351703-20571-18-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1360351703-20571-1-git-send-email-yinghai@kernel.org>
+References: <1360351703-20571-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Jason Gunthorpe,
+For hot add ioapic, irq_base is not equal to gsi_base.
 
-On Wed, 13 Feb 2013 12:12:04 -0700, Jason Gunthorpe wrote:
+So we need a way to do mapping between gsi and irq.
 
-> Thomas, what were your test results on your 10 slot system? Did all 10
-> P2P bridges appear in lspci? Was there any address space reservation
-> for hot plug?
+Also remove irq_to_gsi that is causing confusing, just use that array
+directly as only caller already check input irq before.
 
-My test system "only" has 6 PCIe slots, so I couldn't test with the
-entire 10 possible PCIe interfaces. But 6 PCIe slots is still a good
-number :-)
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Pavel Machek <pavel@ucw.cz>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+---
+ arch/x86/include/asm/io_apic.h |    1 +
+ arch/x86/kernel/acpi/boot.c    |   22 +++++-----------------
+ arch/x86/kernel/apic/io_apic.c |   29 ++++++++++++++++++++++++++++-
+ 3 files changed, 34 insertions(+), 18 deletions(-)
 
-If you look at the cover letter of the PATCHv3, you'll see the output
-of lspci -vvv. It shows that I create one PCI-to-PCI bridge for each
-PCIe interface, regardless of whether the link is here or not. And for
-those where there is nothing behind the bridge, no address space
-reservation occurs, so I am not allocating address decoding windows for
-those unused PCIe interfaces.
-
-Best regards,
-
-Thomas
+diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
+index 8181fd8..02ac411 100644
+--- a/arch/x86/include/asm/io_apic.h
++++ b/arch/x86/include/asm/io_apic.h
+@@ -180,6 +180,7 @@ struct mp_ioapic_gsi{
+ };
+ extern struct mp_ioapic_gsi  mp_gsi_routing[];
+ extern u32 gsi_top;
++int ioapic_gsi_to_irq(u32 gsi);
+ int mp_find_ioapic(u32 gsi);
+ int mp_find_ioapic_pin(int ioapic, u32 gsi);
+ void __init mp_register_ioapic(int id, u32 address, u32 gsi_base);
+diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
+index bacf4b0..350879f 100644
+--- a/arch/x86/kernel/acpi/boot.c
++++ b/arch/x86/kernel/acpi/boot.c
+@@ -112,6 +112,10 @@ static unsigned int gsi_to_irq(unsigned int gsi)
+ 		}
+ 	}
+ 
++#ifdef CONFIG_X86_IO_APIC
++	if (acpi_irq_model == ACPI_IRQ_MODEL_IOAPIC)
++		return ioapic_gsi_to_irq(gsi);
++#endif
+ 	/* Provide an identity mapping of gsi == irq
+ 	 * except on truly weird platforms that have
+ 	 * non isa irqs in the first 16 gsis.
+@@ -124,22 +128,6 @@ static unsigned int gsi_to_irq(unsigned int gsi)
+ 	return irq;
+ }
+ 
+-static u32 irq_to_gsi(int irq)
+-{
+-	unsigned int gsi;
+-
+-	if (irq < NR_IRQS_LEGACY)
+-		gsi = isa_irq_to_gsi[irq];
+-	else if (irq < gsi_top)
+-		gsi = irq;
+-	else if (irq < (gsi_top + NR_IRQS_LEGACY))
+-		gsi = irq - gsi_top;
+-	else
+-		gsi = 0xffffffff;
+-
+-	return gsi;
+-}
+-
+ /*
+  * Temporarily use the virtual area starting from FIX_IO_APIC_BASE_END,
+  * to map the target physical address. The problem is that set_fixmap()
+@@ -529,7 +517,7 @@ int acpi_isa_irq_to_gsi(unsigned isa_irq, u32 *gsi)
+ {
+ 	if (isa_irq >= 16)
+ 		return -1;
+-	*gsi = irq_to_gsi(isa_irq);
++	*gsi = isa_irq_to_gsi[isa_irq];
+ 	return 0;
+ }
+ 
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index c499c88..9514728 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -1044,13 +1044,16 @@ static int pin_2_irq(int idx, int apic, int pin)
+ 
+ 	if (test_bit(bus, mp_bus_not_pci)) {
+ 		irq = mp_irqs[idx].srcbusirq;
+-	} else {
++	} else if (gsi_cfg->gsi_base == gsi_cfg->irq_base) {
+ 		u32 gsi = gsi_cfg->gsi_base + pin;
+ 
+ 		if (gsi >= NR_IRQS_LEGACY)
+ 			irq = gsi;
+ 		else
+ 			irq = gsi_top + gsi;
++	} else {
++		/* hotadd ioapic */
++		irq = gsi_cfg->irq_base + pin;
+ 	}
+ 
+ #ifdef CONFIG_X86_32
+@@ -1476,6 +1479,30 @@ static void __init setup_IO_APIC_irqs(void)
+ 		__io_apic_setup_irqs(ioapic_idx);
+ }
+ 
++int ioapic_gsi_to_irq(u32 gsi)
++{
++	int ioapic_idx = 0, irq = gsi;
++	struct mp_ioapic_gsi *gsi_cfg;
++
++	ioapic_idx = mp_find_ioapic(gsi);
++	if (ioapic_idx < 0)
++		return -1;
++
++	gsi_cfg = mp_ioapic_gsi_routing(ioapic_idx);
++	if (gsi_cfg->gsi_base == gsi_cfg->irq_base) {
++		if (gsi < NR_IRQS_LEGACY)
++			irq = gsi_top + gsi;
++	} else {
++		int pin = mp_find_ioapic_pin(ioapic_idx, gsi);
++
++		if (pin < 0)
++			return -1;
++		/* hotadd ioapic */
++		irq = gsi_cfg->irq_base + pin;
++	}
++
++	return irq;
++}
+ /*
+  * for the gsit that is not in first ioapic
+  * but could not use acpi_register_gsi()
 -- 
-Thomas Petazzoni, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
+1.7.10.4
+
