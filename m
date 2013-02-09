@@ -1,59 +1,159 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cn.fujitsu.com ([222.73.24.84]:64333 "EHLO song.cn.fujitsu.com"
-	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1753711Ab3BVHiT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 22 Feb 2013 02:38:19 -0500
-Message-ID: <5127203F.1040007@cn.fujitsu.com>
-Date: Fri, 22 Feb 2013 15:37:35 +0800
-From: Gu Zheng <guz.fnst@cn.fujitsu.com>
-MIME-Version: 1.0
-To: Cole Mickens <cole.mickens@gmail.com>
-CC: linux-pci@vger.kernel.org, kirill.shutemov@linux.intel.com
-Subject: Re: Hot (un)plugging a Thunderbolt Ethernet adapter causes kernel
- panic
-References: <CAJ9Gbf1o0JHTWRvx=5x51q-wpZctkjFQuufR4fdNja_kV56dqw@mail.gmail.com>
-In-Reply-To: <CAJ9Gbf1o0JHTWRvx=5x51q-wpZctkjFQuufR4fdNja_kV56dqw@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from aserp1040.oracle.com ([141.146.126.69]:35691 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1947333Ab3BIA1Z (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 Feb 2013 19:27:25 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v2 26-4/26] PCI, x86, ACPI: get ioapic address from acpi device
+Date: Fri,  8 Feb 2013 16:26:46 -0800
+Message-Id: <1360369606-8416-4-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1360369606-8416-1-git-send-email-yinghai@kernel.org>
+References: <CAE9FiQVhmH_TGqEwxGPusKNn-6Q7QkS3UTitEriV3dX8sPbzFA@mail.gmail.com>
+ <1360369606-8416-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 02/22/2013 07:45 AM, Cole Mickens wrote:
+Some ioapic controller does not show up on pci config space,
+or pci device is there but no bar is used and is set by firmare in
+other place.
 
-> Hello, I was instructed to send this issue to this mailing list:
-> https://bugzilla.kernel.org/show_bug.cgi?id=54131
-> 
-> --
-> 
-> I have a Macbook Air 2012 running Ubuntu 13.04 with the 3.8.0 kernel
-> (not an RC).
-> 
-> My Thunderbolt Ethernet adapter is usable but only if it is inserted at boot.
-> 
-> If it is removed after being available, the kernel will panic. Generally it
-> takes a minute or two or I have to fire up Chrome or something to stir it.
-> 
-> I assume the crash isn't written out on a Mac EFI system but I can easily
-> reproduce it and retype whatever bits are important. I did take a
-> snapshot with my camera: http://i.imgur.com/q2iuHWZ.jpg
-> 
-> Apologies if this is the wrong format or place for this; I'm reporting my first
-> kernel bug. Cheers.
+We need to get ioapic address from ACPI0009's _CRS.
 
-Hi Cole,
-It seems not a new issue, see these: 
-https://lkml.org/lkml/2012/12/13/589
-http://help.lockergnome.com/linux/Linux-Support-Thunderbolt-Apple-Monitor--ftopict553657.html
-Maybe Thunderbolt hotplug is not well supported now.
-If this issue does disturb you, you can try Kirill's patch <https://lkml.org/lkml/2012/12/13/589>,
-maybe it can help you.:)
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 
-thanks,
-Gu
+---
+ drivers/pci/ioapic.c |   92 +++++++++++++++++++++++++++++++++++++++++----------
+ 1 file changed, 74 insertions(+), 18 deletions(-)
 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
-
+Index: linux-2.6/drivers/pci/ioapic.c
+===================================================================
+--- linux-2.6.orig/drivers/pci/ioapic.c
++++ linux-2.6/drivers/pci/ioapic.c
+@@ -32,6 +32,36 @@ struct acpi_pci_ioapic {
+ static LIST_HEAD(ioapic_list);
+ static DEFINE_MUTEX(ioapic_list_lock);
+ 
++static acpi_status setup_res(struct acpi_resource *acpi_res, void *data)
++{
++	struct resource *res;
++	struct acpi_resource_address64 addr;
++	acpi_status status;
++	unsigned long flags;
++	u64 start, end;
++
++	status = acpi_resource_to_address64(acpi_res, &addr);
++	if (!ACPI_SUCCESS(status))
++		return AE_OK;
++
++	if (addr.resource_type == ACPI_MEMORY_RANGE) {
++		if (addr.info.mem.caching == ACPI_PREFETCHABLE_MEMORY)
++			return AE_OK;
++		flags = IORESOURCE_MEM;
++	} else
++		return AE_OK;
++
++	start = addr.minimum + addr.translation_offset;
++	end = addr.maximum + addr.translation_offset;
++
++	res = data;
++	res->flags = flags;
++	res->start = start;
++	res->end = end;
++
++	return AE_OK;
++}
++
+ static void handle_ioapic_add(acpi_handle handle, struct pci_dev **pdev,
+ 				 u32 *pgsi_base)
+ {
+@@ -54,33 +84,56 @@ static void handle_ioapic_add(acpi_handl
+ 		return;
+ 
+ 	dev = acpi_get_pci_dev(handle);
+-	if (!dev)
+-		return;
++	if (!dev || !pci_resource_len(dev, 0)) {
++		struct acpi_device_info *info;
++		char *hid = NULL;
++
++		status = acpi_get_object_info(handle, &info);
++		if (ACPI_FAILURE(status))
++			goto exit_put;
++		if (info->valid & ACPI_VALID_HID)
++			hid = info->hardware_id.string;
++		if (!hid || strcmp(hid, "ACPI0009")) {
++			kfree(info);
++			goto exit_put;
++		}
++		kfree(info);
++		memset(res, 0, sizeof(*res));
++		acpi_walk_resources(handle, METHOD_NAME__CRS, setup_res, res);
++		if (!res->flags)
++			goto exit_put;
++	}
+ 
+ 	acpi_get_name(handle, ACPI_FULL_PATHNAME, &buffer);
+ 
+ 	gsi_base = gsb;
+ 	type = "IOxAPIC";
++	if (dev) {
++		ret = pci_enable_device(dev);
++		if (ret < 0)
++			goto exit_put;
++
++		pci_set_master(dev);
++
++		if (dev->class == PCI_CLASS_SYSTEM_PIC_IOAPIC)
++			type = "IOAPIC";
++
++		if (pci_resource_len(dev, 0)) {
++			if (pci_request_region(dev, 0, type))
++				goto exit_disable;
+ 
+-	ret = pci_enable_device(dev);
+-	if (ret < 0)
+-		goto exit_put;
+-
+-	pci_set_master(dev);
+-
+-	if (dev->class == PCI_CLASS_SYSTEM_PIC_IOAPIC)
+-		type = "IOAPIC";
+-
+-	if (pci_request_region(dev, 0, type))
+-		goto exit_disable;
+-
+-	res = &dev->resource[0];
++			res = &dev->resource[0];
++		}
++	}
+ 
+-	if (acpi_register_ioapic(handle, res->start, gsi_base))
+-		goto exit_release;
++	if (acpi_register_ioapic(handle, res->start, gsi_base)) {
++		if (dev)
++			goto exit_release;
++		return;
++	}
+ 
+ 	pr_info("%s %s %s at %pR, GSI %u\n",
+-		dev_name(&dev->dev), objname, type,
++		dev ? dev_name(&dev->dev) : "", objname, type,
+ 		res, gsi_base);
+ 
+ 	*pdev = dev;
+@@ -111,6 +164,9 @@ static void handle_ioapic_remove(acpi_ha
+ {
+ 	acpi_unregister_ioapic(handle, gsi_base);
+ 
++	if (!dev)
++		return;
++
+ 	pci_release_region(dev, 0);
+ 	pci_disable_device(dev);
+ 	/* need to disable it, otherwise remove/rescan will not work */
