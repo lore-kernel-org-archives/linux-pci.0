@@ -1,201 +1,284 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <1843565.7Y1sC8j6FG@vostro.rjw.lan>
-References: <CAMVG2svG21yiM1wkH4_2pen2n+cr2-Zv7TbH3Gj+8MwevZjDbw@mail.gmail.com>
-	<CAErSpo6rGYLQeP8Myu=octSPY_0R+B7ptBLhLawd_A2E3NRsAw@mail.gmail.com>
-	<6086479.ycKj2j8yeP@vostro.rjw.lan>
-	<1843565.7Y1sC8j6FG@vostro.rjw.lan>
-Date: Tue, 12 Feb 2013 10:18:57 +0800
-Message-ID: <CAMVG2suQiG7viSFE3aTas4QEbyq+LBDxT_8C-n3J9BdX21BfkQ@mail.gmail.com>
-Subject: Re: [3.8-rc7] PCI hotplug wakeup oops
-From: Daniel J Blueman <daniel@quora.org>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Linux Kernel <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>
-Content-Type: text/plain; charset=ISO-8859-1
+From: Yinghai Lu <yinghai@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v2 26-3/26] PCI, x86, ACPI: Enable ioapic hotplug support with acpi host bridge.
+Date: Fri,  8 Feb 2013 16:26:45 -0800
+Message-Id: <1360369606-8416-3-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1360369606-8416-1-git-send-email-yinghai@kernel.org>
+References: <CAE9FiQVhmH_TGqEwxGPusKNn-6Q7QkS3UTitEriV3dX8sPbzFA@mail.gmail.com>
+ <1360369606-8416-1-git-send-email-yinghai@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12 February 2013 03:49, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> On Monday, February 11, 2013 08:27:49 PM Rafael J. Wysocki wrote:
->> On Monday, February 11, 2013 12:01:37 PM Bjorn Helgaas wrote:
->> > [+cc Rafael]
->> >
->> > On Mon, Feb 11, 2013 at 10:08 AM, Daniel J Blueman <daniel@quora.org> wrote:
->> > > On 11 February 2013 21:03, Daniel J Blueman <daniel@quora.org> wrote:
->> > >> With 3.8-rc7, when unplugging the Thunderbolt ethernet adapter (bus 0a
->> > >> [1]) on a Macbook Pro 10,1, we see the PCIe port correctly released:
->> > >>
->> > >> pciehp 0000:06:03.0:pcie24: Card not present on Slot(3)
->> > >> tg3 0000:0a:00.0: tg3_abort_hw timed out, TX_MODE_ENABLE will not
->> > >> clear MAC_TX_MODE=ffffffff
->> > >> tg3 0000:0a:00.0 eth0: No firmware running
->> > >> tg3 0000:0a:00.0 eth0: Link is down
->> > >> [sched_delayed] sched: RT throttling activated
->> > >> pcieport 0000:00:01.1: System wakeup enabled by ACPI
->> > >> pciehp 0000:09:00.0:pcie24: unloading service driver pciehp
->> > >> pci_bus 0000:0a: busn_res: [bus 0a] is released
->> > >> pci_bus 0000:09: busn_res: [bus 09-0a] is released
->> > >>
->> > >> After some activity later (eg I can reproduce this by switching to a
->> > >> text console and back), often we'll see an oops:
->> > >>
->> > >> Unable to handle kernel paging request at 0000000000001070
->> > >> pci_pme_list_scan+0x3d/0xe0
->> > >> Call Trace:
->> > >> process_one_work+0x193
->> > >> ? process_one_work+0x131
->> > >> ? pci_pme_wakeup+0x60
->> > >> worker_thread+0x15d
->> > >>
->> > >> (gdb) list *(pci_pme_list_scan+0x3d)
->> > >> 0xffffffff8123f6dd is in pci_pme_list_scan (drivers/pci/pci.c:1556).
->> > >> 1551                                    /*
->> > >> 1552                                     * If bridge is in low power state, the
->> > >> 1553                                     * configuration space of subordinate devices
->> > >> 1554                                     * may be not accessible
->> > >> 1555                                     */
->> > >> 1556                                    if (bridge && bridge->current_state != PCI_D0)
->> > >> 1557                                            continue;
->> > >> 1558                                    pci_pme_wakeup(pme_dev->dev, NULL);
->> > >> 1559                            } else {
->> > >> 1560                                    list_del(&pme_dev->list);
->> > >>
->> > >> Since a panic in vsnprintf happens after the oops (hence I can't catch
->> > >> it with EFI pstore), it is almost certainly significant heap
->> > >> corruption; this would explain why pme_dev became null (the load has
->> > >> been ordered ahead).
->> > >>
->> > >> I'll see what I can find out with memory poisoning and list debugging.
->> > >
->> > > Enabling a bunch of related debugging, we see pme_dev is non-null and:
->> > >
->> > > BUG: Unable to handle NULL pointer dereference at
->> > > pci_bus_read_config_word+0x6c
->> > > PGD 26314c067 PUD 2633f9067 PMD 0
->> > > Oops: 0000 [#1] SMP
->> > > pci_check_pme_status+0x4f
->> > > pci_pme_wakeup+0x21
->> > > pci_pme_list_scan+0xd5
->> > > process_one_work+0x1ca
->> > > ? process_one_work+0x160
->> > > ? pci_pme_wakeup+0x60
->> > > worker_thread+0x14e
->> > >
->> > > Anyway, it looks like the device being unplugged wasn't removed from
->> > > pci_pme_list as pci_pme_active(dev, false) wasn't called.
->> > >
->> > > From a quick review, I wasn't able to find the right place in the
->> > > call-chain which I only see releases the child busses and PCIe port
->> > > drivers. Anyone?
->> >
->> > It looks like drivers *add* devices to pci_pme_list when they use
->> > pci_enable_wake() or pci_wake_from_d3().  But many drivers never
->> > remove their devices, and I don't see any place where the core does it
->> > either.  My guess is we need to remove it in pci_stop_dev() (we
->> > already do pcie_aspm_exit_link_state() there) or somewhere similar.
->>
->> Yes, we should call pci_pme_active(dev, false) somewhere in there I think.
->> It's fine to call that even if PME was not "active" before.
->
-> Daniel, I wonder if the patch below helps?
+We need to have ioapic setup before normal pci drivers.
+otherwise other pci driver can not setup irq.
 
-I had tried with the pci_pme_active call inside the is_added condition
-(it'll always hold here); it resolves the issue, though it introduces
-a new lockdep warning [1].
+So we should not treat them as normal pci devices.
+Also we will need to support ioapic hotplug without pci device around.
 
-All said, I don't see any other way except for a patch to abstract the
-list entry removal to avoid the unnecessary reads and writes (as it is
-called for four devices here), though I don't see how that would alter
-the locking behaviour and why we didn't see this lockdep warning
-before.
+We need to call ioapic add/remove during host-bridge add/remove.
 
-What do you think?
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 
-Dan
+---
+ drivers/acpi/pci_root.c  |    4 +
+ drivers/pci/ioapic.c     |  147 ++++++++++++++++++++++++++++++-----------------
+ include/linux/pci-acpi.h |    9 ++
+ 3 files changed, 107 insertions(+), 53 deletions(-)
 
---- [1]
-
-kworker/0:0/4 is trying to acquire lock:
- (name){++++.+}, at: [<ffffffff8105ac70>] flush_workqueue+0x0/0x4d0
-
-but task is already holding lock:
- (name){++++.+}, at: [<ffffffff8105c7e0>] process_one_work+0x160/0x4e0
-
-other info that might help us debug this:
- Possible unsafe locking scenario:
-
-    CPU0
-    ----
- lock(name);
- lock(name);
-
- *** DEADLOCK ***
-
- May be due to missing lock nesting notation
-
-4 locks held by kworker/0:0/4:
- #0: (name){++++.+}, at: [<ffffffff8105c7e0>] process_one_work+0x160/0x4e0
- #1: ((&info->work)#2){+.+.+.}, at: [<ffffffff8105c7e0>]
-process_one_work+0x160/0x4e0
- #2: (&__lockdep_no_validate__){......}, at: [<ffffffff813022a1>]
-device_release_driver+0x21/0x40
- #3: (&__lockdep_no_validate__){......}, at: [<ffffffff813022a1>]
-device_release_driver+0x21/0x40
-
-stack backtrace:
-Pid: 4, comm: kworker/0:0 Not tainted 3.8.0-rc7-ninja+ #21
-Call Trace:
- [<ffffffff81090213>] validate_chain.isra.33+0xda3/0x1240
- [<ffffffff8108ea90>] ? print_shortest_lock_dependencies+0x1c0/0x1c0
- [<ffffffff810909d5>] ? mark_lock+0x215/0x5d0
- [<ffffffff8109284f>] ? debug_check_no_locks_freed+0x8f/0x160
- [<ffffffff8109113c>] __lock_acquire+0x3ac/0xb30
- [<ffffffff810927bd>] ? trace_hardirqs_on+0xd/0x10
- [<ffffffff8108dc0c>] ? lockdep_init_map+0x9c/0x4d0
- [<ffffffff81091d8a>] lock_acquire+0x5a/0x70
- [<ffffffff8105ac70>] ? flush_workqueue_prep_cwqs+0x200/0x200
- [<ffffffff8105ad58>] flush_workqueue+0xe8/0x4d0
- [<ffffffff8105ac70>] ? flush_workqueue_prep_cwqs+0x200/0x200
- [<ffffffff8105b1c8>] drain_workqueue+0x68/0x1f0
- [<ffffffff8105b363>] destroy_workqueue+0x13/0x160
- [<ffffffff8125ad0a>] pciehp_release_ctrl+0x3a/0x90
- [<ffffffff81257ca5>] pciehp_remove+0x25/0x30
- [<ffffffff81251f72>] pcie_port_remove_service+0x52/0x70
- [<ffffffff81302217>] __device_release_driver+0x77/0xe0
- [<ffffffff813022a9>] device_release_driver+0x29/0x40
- [<ffffffff81301cb1>] bus_remove_device+0xf1/0x140
- [<ffffffff812ff847>] device_del+0x127/0x1c0
- [<ffffffff812520f0>] ? resume_iter+0x40/0x40
- [<ffffffff812ff8f1>] device_unregister+0x11/0x20
- [<ffffffff81252125>] remove_iter+0x35/0x40
- [<ffffffff812fe716>] device_for_each_child+0x36/0x70
- [<ffffffff812526c1>] pcie_port_device_remove+0x21/0x40
- [<ffffffff81252908>] pcie_portdrv_remove+0x28/0x50
- [<ffffffff81246cb1>] pci_device_remove+0x41/0xc0
- [<ffffffff81302217>] __device_release_driver+0x77/0xe0
- [<ffffffff813022a9>] device_release_driver+0x29/0x40
- [<ffffffff81301cb1>] bus_remove_device+0xf1/0x140
- [<ffffffff812ff847>] device_del+0x127/0x1c0
- [<ffffffff812ff8f1>] device_unregister+0x11/0x20
- [<ffffffff81241b74>] pci_stop_bus_device+0xb4/0xc0
- [<ffffffff81241af5>] pci_stop_bus_device+0x35/0xc0
- [<ffffffff81241cd1>] pci_stop_and_remove_bus_device+0x11/0x20
- [<ffffffff81259021>] pciehp_unconfigure_device+0x91/0x190
- [<ffffffff81258921>] pciehp_disable_slot+0x71/0x220
- [<ffffffff81258bb6>] pciehp_power_thread+0xe6/0x110
- [<ffffffff8105c84a>] process_one_work+0x1ca/0x4e0
- [<ffffffff8105c7e0>] ? process_one_work+0x160/0x4e0
- [<ffffffff81258ad0>] ? pciehp_disable_slot+0x220/0x220
- [<ffffffff8105cefe>] worker_thread+0x14e/0x3f0
- [<ffffffff810927bd>] ? trace_hardirqs_on+0xd/0x10
- [<ffffffff8105cdb0>] ? rescuer_thread+0x210/0x210
- [<ffffffff81063086>] kthread+0xd6/0xe0
- [<ffffffff8154cf2b>] ? _raw_spin_unlock_irq+0x2b/0x50
- [<ffffffff81062fb0>] ? __init_kthread_worker+0x70/0x70
- [<ffffffff8154dc2c>] ret_from_fork+0x7c/0xb0
- [<ffffffff81062fb0>] ? __init_kthread_worker+0x70/0x70
--- 
-Daniel J Blueman
+Index: linux-2.6/drivers/pci/ioapic.c
+===================================================================
+--- linux-2.6.orig/drivers/pci/ioapic.c
++++ linux-2.6/drivers/pci/ioapic.c
+@@ -22,70 +22,77 @@
+ #include <linux/slab.h>
+ #include <acpi/acpi_bus.h>
+ 
+-struct ioapic {
+-	acpi_handle	handle;
++struct acpi_pci_ioapic {
++	acpi_handle	root_handle;
+ 	u32		gsi_base;
++	struct pci_dev *pdev;
++	struct list_head list;
+ };
+ 
+-static int ioapic_probe(struct pci_dev *dev, const struct pci_device_id *ent)
++static LIST_HEAD(ioapic_list);
++static DEFINE_MUTEX(ioapic_list_lock);
++
++static void handle_ioapic_add(acpi_handle handle, struct pci_dev **pdev,
++				 u32 *pgsi_base)
+ {
+-	acpi_handle handle;
+ 	acpi_status status;
+ 	unsigned long long gsb;
+-	struct ioapic *ioapic;
++	struct pci_dev *dev;
++	u32 gsi_base;
+ 	int ret;
+ 	char *type;
+-	struct resource *res;
++	struct resource r;
++	struct resource *res = &r;
++	char objname[64];
++	struct acpi_buffer buffer = {sizeof(objname), objname};
+ 
+-	handle = DEVICE_ACPI_HANDLE(&dev->dev);
+-	if (!handle)
+-		return -EINVAL;
++	*pdev = NULL;
++	*pgsi_base = 0;
+ 
+ 	status = acpi_evaluate_integer(handle, "_GSB", NULL, &gsb);
+-	if (ACPI_FAILURE(status))
+-		return -EINVAL;
+-
+-	/*
+-	 * The previous code in acpiphp evaluated _MAT if _GSB failed, but
+-	 * ACPI spec 4.0 sec 6.2.2 requires _GSB for hot-pluggable I/O APICs.
+-	 */
++	if (ACPI_FAILURE(status) || !gsb)
++		return;
+ 
+-	ioapic = kzalloc(sizeof(*ioapic), GFP_KERNEL);
+-	if (!ioapic)
+-		return -ENOMEM;
++	dev = acpi_get_pci_dev(handle);
++	if (!dev)
++		return;
+ 
+-	ioapic->handle = handle;
+-	ioapic->gsi_base = (u32) gsb;
++	acpi_get_name(handle, ACPI_FULL_PATHNAME, &buffer);
+ 
+-	if (dev->class == PCI_CLASS_SYSTEM_PIC_IOAPIC)
+-		type = "IOAPIC";
+-	else
+-		type = "IOxAPIC";
++	gsi_base = gsb;
++	type = "IOxAPIC";
+ 
+ 	ret = pci_enable_device(dev);
+ 	if (ret < 0)
+-		goto exit_free;
++		goto exit_put;
+ 
+ 	pci_set_master(dev);
+ 
++	if (dev->class == PCI_CLASS_SYSTEM_PIC_IOAPIC)
++		type = "IOAPIC";
++
+ 	if (pci_request_region(dev, 0, type))
+ 		goto exit_disable;
+ 
+ 	res = &dev->resource[0];
+-	if (acpi_register_ioapic(ioapic->handle, res->start, ioapic->gsi_base))
++
++	if (acpi_register_ioapic(handle, res->start, gsi_base))
+ 		goto exit_release;
+ 
+-	pci_set_drvdata(dev, ioapic);
+-	dev_info(&dev->dev, "%s at %pR, GSI %u\n", type, res, ioapic->gsi_base);
+-	return 0;
++	pr_info("%s %s %s at %pR, GSI %u\n",
++		dev_name(&dev->dev), objname, type,
++		res, gsi_base);
++
++	*pdev = dev;
++	*pgsi_base = gsi_base;
++	return;
+ 
+ exit_release:
+ 	pci_release_region(dev, 0);
+ exit_disable:
+ 	pci_disable_device(dev);
+-exit_free:
+-	kfree(ioapic);
+-	return -ENODEV;
++exit_put:
++	pci_dev_put(dev);
+ }
+ 
+ static void pci_disable_device_mem(struct pci_dev *dev)
+@@ -99,37 +106,71 @@ static void pci_disable_device_mem(struc
+ 	}
+ }
+ 
+-static void ioapic_remove(struct pci_dev *dev)
++static void handle_ioapic_remove(acpi_handle handle, struct pci_dev *dev,
++				  u32 gsi_base)
+ {
+-	struct ioapic *ioapic = pci_get_drvdata(dev);
++	acpi_unregister_ioapic(handle, gsi_base);
+ 
+-	acpi_unregister_ioapic(ioapic->handle, ioapic->gsi_base);
+ 	pci_release_region(dev, 0);
+ 	pci_disable_device(dev);
+ 	/* need to disable it, otherwise remove/rescan will not work */
+ 	pci_disable_device_mem(dev);
+-	kfree(ioapic);
++	pci_dev_put(dev);
+ }
+ 
++static acpi_status register_ioapic(acpi_handle handle, u32 lvl,
++					void *context, void **rv)
++{
++	acpi_handle root_handle = context;
++	struct pci_dev *pdev;
++	u32 gsi_base;
++	struct acpi_pci_ioapic *ioapic;
++
++	handle_ioapic_add(handle, &pdev, &gsi_base);
++	if (!gsi_base)
++		return AE_OK;
+ 
+-static DEFINE_PCI_DEVICE_TABLE(ioapic_devices) = {
+-	{ PCI_DEVICE_CLASS(PCI_CLASS_SYSTEM_PIC_IOAPIC, ~0) },
+-	{ PCI_DEVICE_CLASS(PCI_CLASS_SYSTEM_PIC_IOXAPIC, ~0) },
+-	{ }
+-};
+-MODULE_DEVICE_TABLE(pci, ioapic_devices);
++	ioapic = kzalloc(sizeof(*ioapic), GFP_KERNEL);
++	if (!ioapic) {
++		pr_err("%s: cannot allocate memory\n", __func__);
++		handle_ioapic_remove(root_handle, pdev, gsi_base);
++		return AE_OK;
++	}
++	ioapic->root_handle = root_handle;
++	ioapic->pdev = pdev;
++	ioapic->gsi_base = gsi_base;
++
++	mutex_lock(&ioapic_list_lock);
++	list_add(&ioapic->list, &ioapic_list);
++	mutex_unlock(&ioapic_list_lock);
+ 
+-static struct pci_driver ioapic_driver = {
+-	.name		= "ioapic",
+-	.id_table	= ioapic_devices,
+-	.probe		= ioapic_probe,
+-	.remove		= ioapic_remove,
+-};
++	return AE_OK;
++}
+ 
+-static int __init ioapic_init(void)
++void acpi_pci_ioapic_add(struct acpi_pci_root *root)
+ {
+-	return pci_register_driver(&ioapic_driver);
++	acpi_status status;
++
++	status = acpi_walk_namespace(ACPI_TYPE_DEVICE, root->device->handle,
++				     (u32)1, register_ioapic, NULL,
++				     root->device->handle,
++				     NULL);
++	if (ACPI_FAILURE(status))
++		pr_err("%s: register_ioapic failure - %d", __func__, status);
+ }
+-module_init(ioapic_init);
+ 
+-MODULE_LICENSE("GPL");
++void acpi_pci_ioapic_remove(struct acpi_pci_root *root)
++{
++	struct acpi_pci_ioapic *ioapic, *tmp;
++
++	mutex_lock(&ioapic_list_lock);
++	list_for_each_entry_safe(ioapic, tmp, &ioapic_list, list) {
++		if (root->device->handle != ioapic->root_handle)
++			continue;
++		list_del(&ioapic->list);
++		handle_ioapic_remove(ioapic->root_handle, ioapic->pdev,
++					ioapic->gsi_base);
++		kfree(ioapic);
++	}
++	mutex_unlock(&ioapic_list_lock);
++}
+Index: linux-2.6/drivers/acpi/pci_root.c
+===================================================================
+--- linux-2.6.orig/drivers/acpi/pci_root.c
++++ linux-2.6/drivers/acpi/pci_root.c
+@@ -584,6 +584,8 @@ static int acpi_pci_root_add(struct acpi
+ 		pci_assign_unassigned_bus_resources(root->bus);
+ 	}
+ 
++	acpi_pci_ioapic_add(root);
++
+ 	mutex_lock(&acpi_pci_root_lock);
+ 	list_for_each_entry(driver, &acpi_pci_drivers, node)
+ 		if (driver->add)
+@@ -623,6 +625,8 @@ static void acpi_pci_root_remove(struct
+ 			driver->remove(root);
+ 	mutex_unlock(&acpi_pci_root_lock);
+ 
++	acpi_pci_ioapic_remove(root);
++
+ 	device_set_run_wake(root->bus->bridge, false);
+ 	pci_acpi_remove_bus_pm_notifier(device);
+ 
+Index: linux-2.6/include/linux/pci-acpi.h
+===================================================================
+--- linux-2.6.orig/include/linux/pci-acpi.h
++++ linux-2.6/include/linux/pci-acpi.h
+@@ -41,8 +41,17 @@ static inline acpi_handle acpi_pci_get_b
+ 
+ 	return DEVICE_ACPI_HANDLE(dev);
+ }
++
++#ifdef CONFIG_PCI_IOAPIC
++void acpi_pci_ioapic_add(struct acpi_pci_root *root);
++void acpi_pci_ioapic_remove(struct acpi_pci_root *root);
++#else
++static inline void acpi_pci_ioapic_add(struct acpi_pci_root *root) { }
++static inline void acpi_pci_ioapic_remove(struct acpi_pci_root *root) { }
+ #endif
+ 
++#endif /* CONFIG_ACPI */
++
+ #ifdef CONFIG_ACPI_APEI
+ extern bool aer_acpi_firmware_first(void);
+ #else
