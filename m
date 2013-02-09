@@ -1,146 +1,156 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f176.google.com ([209.85.214.176]:50140 "EHLO
-	mail-ob0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756093Ab3BMTaV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Feb 2013 14:30:21 -0500
-Received: by mail-ob0-f176.google.com with SMTP id v19so1627062obq.35
-        for <linux-pci@vger.kernel.org>; Wed, 13 Feb 2013 11:30:20 -0800 (PST)
+Received: from moutng.kundenserver.de ([212.227.126.187]:55272 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932563Ab3BIWXS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 9 Feb 2013 17:23:18 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Subject: Re: [PATCH v2 19/27] pci: PCIe driver for Marvell Armada 370/XP systems
+Date: Sat, 9 Feb 2013 22:23:11 +0000
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Andrew Murray <andrew.murray@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	"Eran Ben-Avi" <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	"Russell King - ARM Linux" <linux@arm.linux.org.uk>
+References: <1359399397-29729-20-git-send-email-thomas.petazzoni@free-electrons.com> <201302072325.23483.arnd@arndb.de> <20130208004414.GA32245@obsidianresearch.com>
+In-Reply-To: <20130208004414.GA32245@obsidianresearch.com>
 MIME-Version: 1.0
-In-Reply-To: <CAMVG2ssOMMVBcD0kLX=Wo9x2cMfdi+3FYNEP-MiDRK4fs24auw@mail.gmail.com>
-References: <CAMVG2svG21yiM1wkH4_2pen2n+cr2-Zv7TbH3Gj+8MwevZjDbw@mail.gmail.com>
- <CAErSpo6rGYLQeP8Myu=octSPY_0R+B7ptBLhLawd_A2E3NRsAw@mail.gmail.com>
- <6086479.ycKj2j8yeP@vostro.rjw.lan> <1843565.7Y1sC8j6FG@vostro.rjw.lan> <CAMVG2ssOMMVBcD0kLX=Wo9x2cMfdi+3FYNEP-MiDRK4fs24auw@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 13 Feb 2013 12:29:59 -0700
-Message-ID: <CAErSpo6ghLnuYTnMevGAH0uQg2O7X4Vr3-PhoKX5QNxJqu40NQ@mail.gmail.com>
-Subject: Re: [3.8-rc7] PCI hotplug wakeup oops
-To: Daniel J Blueman <daniel@quora.org>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Linux Kernel <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201302092223.11796.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 13, 2013 at 7:32 AM, Daniel J Blueman <daniel@quora.org> wrote:
-> On 12 February 2013 03:49, Rafael J. Wysocki <rjw@sisk.pl> wrote:
->> On Monday, February 11, 2013 08:27:49 PM Rafael J. Wysocki wrote:
->>> On Monday, February 11, 2013 12:01:37 PM Bjorn Helgaas wrote:
->>> > [+cc Rafael]
->>> >
->>> > On Mon, Feb 11, 2013 at 10:08 AM, Daniel J Blueman <daniel@quora.org> wrote:
->>> > > On 11 February 2013 21:03, Daniel J Blueman <daniel@quora.org> wrote:
->>> > >> With 3.8-rc7, when unplugging the Thunderbolt ethernet adapter (bus 0a
->>> > >> [1]) on a Macbook Pro 10,1, we see the PCIe port correctly released:
->>> > >>
->>> > >> pciehp 0000:06:03.0:pcie24: Card not present on Slot(3)
->>> > >> tg3 0000:0a:00.0: tg3_abort_hw timed out, TX_MODE_ENABLE will not
->>> > >> clear MAC_TX_MODE=ffffffff
->>> > >> tg3 0000:0a:00.0 eth0: No firmware running
->>> > >> tg3 0000:0a:00.0 eth0: Link is down
->>> > >> [sched_delayed] sched: RT throttling activated
->>> > >> pcieport 0000:00:01.1: System wakeup enabled by ACPI
->>> > >> pciehp 0000:09:00.0:pcie24: unloading service driver pciehp
->>> > >> pci_bus 0000:0a: busn_res: [bus 0a] is released
->>> > >> pci_bus 0000:09: busn_res: [bus 09-0a] is released
->>> > >>
->>> > >> After some activity later (eg I can reproduce this by switching to a
->>> > >> text console and back), often we'll see an oops:
->>> > >>
->>> > >> Unable to handle kernel paging request at 0000000000001070
->>> > >> pci_pme_list_scan+0x3d/0xe0
->>> > >> Call Trace:
->>> > >> process_one_work+0x193
->>> > >> ? process_one_work+0x131
->>> > >> ? pci_pme_wakeup+0x60
->>> > >> worker_thread+0x15d
->>> > >>
->>> > >> (gdb) list *(pci_pme_list_scan+0x3d)
->>> > >> 0xffffffff8123f6dd is in pci_pme_list_scan (drivers/pci/pci.c:1556).
->>> > >> 1551                                    /*
->>> > >> 1552                                     * If bridge is in low power state, the
->>> > >> 1553                                     * configuration space of subordinate devices
->>> > >> 1554                                     * may be not accessible
->>> > >> 1555                                     */
->>> > >> 1556                                    if (bridge && bridge->current_state != PCI_D0)
->>> > >> 1557                                            continue;
->>> > >> 1558                                    pci_pme_wakeup(pme_dev->dev, NULL);
->>> > >> 1559                            } else {
->>> > >> 1560                                    list_del(&pme_dev->list);
->>> > >>
->>> > >> Since a panic in vsnprintf happens after the oops (hence I can't catch
->>> > >> it with EFI pstore), it is almost certainly significant heap
->>> > >> corruption; this would explain why pme_dev became null (the load has
->>> > >> been ordered ahead).
->>> > >>
->>> > >> I'll see what I can find out with memory poisoning and list debugging.
->>> > >
->>> > > Enabling a bunch of related debugging, we see pme_dev is non-null and:
->>> > >
->>> > > BUG: Unable to handle NULL pointer dereference at
->>> > > pci_bus_read_config_word+0x6c
->>> > > PGD 26314c067 PUD 2633f9067 PMD 0
->>> > > Oops: 0000 [#1] SMP
->>> > > pci_check_pme_status+0x4f
->>> > > pci_pme_wakeup+0x21
->>> > > pci_pme_list_scan+0xd5
->>> > > process_one_work+0x1ca
->>> > > ? process_one_work+0x160
->>> > > ? pci_pme_wakeup+0x60
->>> > > worker_thread+0x14e
->>> > >
->>> > > Anyway, it looks like the device being unplugged wasn't removed from
->>> > > pci_pme_list as pci_pme_active(dev, false) wasn't called.
->>> > >
->>> > > From a quick review, I wasn't able to find the right place in the
->>> > > call-chain which I only see releases the child busses and PCIe port
->>> > > drivers. Anyone?
->>> >
->>> > It looks like drivers *add* devices to pci_pme_list when they use
->>> > pci_enable_wake() or pci_wake_from_d3().  But many drivers never
->>> > remove their devices, and I don't see any place where the core does it
->>> > either.  My guess is we need to remove it in pci_stop_dev() (we
->>> > already do pcie_aspm_exit_link_state() there) or somewhere similar.
->>>
->>> Yes, we should call pci_pme_active(dev, false) somewhere in there I think.
->>> It's fine to call that even if PME was not "active" before.
->>
->> Daniel, I wonder if the patch below helps?
->>
->> Rafael
->>
->>
->> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->> ---
->>  drivers/pci/remove.c |    2 ++
->>  1 file changed, 2 insertions(+)
->>
->> Index: test/drivers/pci/remove.c
->> ===================================================================
->> --- test.orig/drivers/pci/remove.c
->> +++ test/drivers/pci/remove.c
->> @@ -19,6 +19,8 @@ static void pci_free_resources(struct pc
->>
->>  static void pci_stop_dev(struct pci_dev *dev)
->>  {
->> +       pci_pme_active(dev, false);
->> +
->>         if (dev->is_added) {
->>                 pci_proc_detach_device(dev);
->>                 pci_remove_sysfs_dev_files(dev);
->
-> Indeed, the oops would prevent hitting the lockdep warning, which is a
-> secondary matter.
->
-> As it stands, this fix prevents the fatal oops, so IMHO is urgent
-> material for 3.8-final. I can't prove that is_added will always be
-> true, so let's stick with your patch.
->
-> Tested-by: Daniel J Blueman <daniel@quora.org>
+On Friday 08 February 2013, Jason Gunthorpe wrote:
+> On Thu, Feb 07, 2013 at 11:25:23PM +0000, Arnd Bergmann wrote:
+> > > link@0 {
+> > > reg = <0x800 0 0  0 0>; // Bus 0, Dev 0x10, Fn 0
+> > > interrupt-mask = <0x0 0 0 7>;
+> > > interrupt-map = <0x0000 0 0 1 &mpic 58 // INTA
+> > >                  0x0000 0 0 2 &mpic 58 // INTB
+> > >                  0x0000 0 0 3 &mpic 58 // INTC
+> > >                  0x0000 0 0 4 &mpic 58>; // INTD
+> > > }
+> > 
+> > The interrupt-map property only makes sense for the host bridge,
+> > not for bridges below it, which don't normally get represented
+> > in the device tree.
+> 
+> Linux scans up the PCI bus until it finds a PCI device with a matching
+> OF node. It then constructs an interrupt map 'laddr' (ie the
+> bus:dev.fn) for the child device of this OF node.
+> 
+> If you don't have any DT PCI nodes then this should always fold down
+> to doing a lookup with bus=0, and device representing the 'slot' in
+> legacy PCI.
+> 
+> However, as soon as you provide a node for a bridge in DT this halts
+> the 'fold down' and goes to the interrupt-map with a device on the
+> subordinate bus number of the bridge.
+> 
+> This makes *lots* of sense, if you have bridges providing bus slots
+> then you include the bridge in DT to stop the 'fold down' at that
+> known bridge, giving you a chance to see the interrupt wiring behind
+> the bridge.
 
-I wrote a changelog and applied this to my for-linus branch.  Please
-take a look and confirm that it makes sense before I ask Linus to pull
-it.
+I would argue that it matters not so much what Linux does but what
+the standard says, but it seems they both agree with you in this
+case: http://www.openfirmware.org/1275/practice/imap/imap0_9d.pdf
+defines that "At any level in the interrupt tree, a mapping may
+need to take place between the child interrupt domain and the
+parent’s. This is represented by a new property called 'interrupt-map'".
 
-http://git.kernel.org/?p=linux/kernel/git/helgaas/pci.git;a=commitdiff;h=249bfb83cf8ba658955f0245ac3981d941f746ee
+> This matches the design of PCI - if you know how interrupts are hooked
+> up then use that information, otherwise assume the INTx interrupts
+> swizzle and search upward. This is how add-in cards with PCI bridges
+> are supported.
+
+Note that the implicit swizzling was not part of the original PCI
+binding, which assumed that all devices were explicitly represented
+in the device tree, and we don't normally do that any more because
+PCI can be probed easily, and we cannot assume that all PCI BARs
+have been correctly assigned by the firmware before the OS
+is booting. Having the interrupt-map at PCI host controller
+node is convenient because it lets us define unit interrupt
+specifiers for devices that are not represented in the device
+tree themselves.
+
+I think the key question here is whether there is just one interrupt
+domain across all bridges because the hardware requires the unit
+address to be unique, or whether each PCIe port has its own
+unit address space, and thereby interrupt domain that requires
+its own interrupt-map.
+
+If there is just one domain, we have the choice whether to have
+one interrupt-map for the entire domain, or to have one
+interrupt map per PCIe port for the devices under that port.
+I would consider it more logical to have a single interrupt-map
+for the interrupt domain, because that is essentially what
+lets us describe the interrupt daomain as a whole.
+
+Of course, if each port has its own domain, we have to have
+a separate interrupt map for each one.
+
+> Thomas's problem is the presence of the static DT node for the root
+> port bridge. Since the node is static you can't know what the runtime
+> determined subordinate bus numbers will be, so there is no possible
+> way to write an interrupt-map at the host bridge.
+
+Right, that is a problem if there are additional bridges. I guess
+we could represent all devices on bus 0 easily because their
+address would be fixed,  but can't uniquely identify anything
+below them.
+
+> If you imagine the case you alluded to, a PCI-E root port, connected
+> to a PCI-E to PCI bridge, with 2 physical PCI bus slots. The
+> interrupts for the 2 slots are routed to the CPU directly:
+> 
+> link@0 {
+>  reg = </* Bus 0, Dev 0x10, Fn 0 */>; // Root Port bridge
+> 
+>   // Match on INTx (not used since the pci-bridge doesn't create inband INTx)
+>   interrupt-mask = <0x0 0 0 7>;
+>   interrupt-map = <0x0000 0 0 1 &pic 0  // Inband INTA
+>                    0x0000 0 0 2 &pic 1  // Inband INTB
+
+What are these two interrupts in the example then?
+
+>  pci_bridge@0 {
+>     reg = </* Bus 1, Dev 0x10, Fn 0 */>; // PCIe to PCI bridge
+
+The device would be "pci@10", right?
+
+>     // Match on the device/slot and INTx pin
+>     interrupt-mask = <0x7f 0 0 7>;
+>     interrupt-map = <0x00xx 0 0 1 &pic 2 // Slot 0 physical INTA
+>                      0x00xx 0 0 1 &pic 3 // Slot 1 physical INTA
+>                      ..
+>  }
+> }
+
+You are accidentally matching the on the register number, not the
+device number here, right? The interrupt-map-mask should be
+<0xf800 0 0 7> to match the device.
+
+> To me, this seems to be a much more accurate description of how the
+> hardware is constructed then trying to cram all this information into
+> the host bridge's interrupt map. It shows clearly where inband INTA
+> messages arriving at the root port are directed as well as where the
+> slot by slot out-of-band interrupt wires on the PCI bus are directed.
+
+Yes, I guess you're right.
+
+	Arnd
