@@ -1,57 +1,131 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 8bytes.org ([85.214.48.195]:45935 "EHLO mail.8bytes.org"
+Received: from hydra.sisk.pl ([212.160.235.94]:37265 "EHLO hydra.sisk.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933877Ab3BMMDU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 13 Feb 2013 07:03:20 -0500
-Received: from localhost (localhost [127.0.0.1])
-	by mail.8bytes.org (Postfix) with SMTP id E4D5C12B0EF
-	for <linux-pci@vger.kernel.org>; Wed, 13 Feb 2013 13:03:18 +0100 (CET)
-Date: Wed, 13 Feb 2013 13:03:15 +0100
-From: Joerg Roedel <joro@8bytes.org>
-To: bhelgaas@google.com
-Cc: Shuah Khan <shuah.khan@hp.com>, jiang.liu@huawei.com,
-	shemminger@vyatta.com, paulmck@linux.vnet.ibm.com,
-	linasvepstas@gmail.com, dhowells@redhat.com, davej@redhat.com,
-	tglx@linutronix.de, mtk.manpages@gmail.com,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	wangyijing@huawei.com, LKML <linux-kernel@vger.kernel.org>,
-	shuahkhan@gmail.com
-Subject: Re: [PATCH 0/4] pci: Add PCI_BUS() and PCI_DEVID() interfaces to
- return bus number and device id
-Message-ID: <20130213120315.GE25591@8bytes.org>
-References: <1360623614.2950.60.camel@lorien2>
+	id S1759797Ab3BKTnY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 11 Feb 2013 14:43:24 -0500
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Daniel J Blueman <daniel@quora.org>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: Re: [3.8-rc7] PCI hotplug wakeup oops
+Date: Mon, 11 Feb 2013 20:49:49 +0100
+Message-ID: <1843565.7Y1sC8j6FG@vostro.rjw.lan>
+In-Reply-To: <6086479.ycKj2j8yeP@vostro.rjw.lan>
+References: <CAMVG2svG21yiM1wkH4_2pen2n+cr2-Zv7TbH3Gj+8MwevZjDbw@mail.gmail.com> <CAErSpo6rGYLQeP8Myu=octSPY_0R+B7ptBLhLawd_A2E3NRsAw@mail.gmail.com> <6086479.ycKj2j8yeP@vostro.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1360623614.2950.60.camel@lorien2>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
-
-On Mon, Feb 11, 2013 at 04:00:14PM -0700, Shuah Khan wrote:
-> pci defines PCI_DEVFN(), PCI_SLOT(), and PCI_FUNC() interfaces, however,
-> it doesn't have interfaces to return PCI bus and PCI device id. Drivers
-> (AMD IOMMU, and AER) have module specific definitions for PCI_BUS() and
-> AMD_IOMMU driver also has a module specific interface to calculate PCI
-> device id from bus number and devfn.
+On Monday, February 11, 2013 08:27:49 PM Rafael J. Wysocki wrote:
+> On Monday, February 11, 2013 12:01:37 PM Bjorn Helgaas wrote:
+> > [+cc Rafael]
+> > 
+> > On Mon, Feb 11, 2013 at 10:08 AM, Daniel J Blueman <daniel@quora.org> wrote:
+> > > On 11 February 2013 21:03, Daniel J Blueman <daniel@quora.org> wrote:
+> > >> With 3.8-rc7, when unplugging the Thunderbolt ethernet adapter (bus 0a
+> > >> [1]) on a Macbook Pro 10,1, we see the PCIe port correctly released:
+> > >>
+> > >> pciehp 0000:06:03.0:pcie24: Card not present on Slot(3)
+> > >> tg3 0000:0a:00.0: tg3_abort_hw timed out, TX_MODE_ENABLE will not
+> > >> clear MAC_TX_MODE=ffffffff
+> > >> tg3 0000:0a:00.0 eth0: No firmware running
+> > >> tg3 0000:0a:00.0 eth0: Link is down
+> > >> [sched_delayed] sched: RT throttling activated
+> > >> pcieport 0000:00:01.1: System wakeup enabled by ACPI
+> > >> pciehp 0000:09:00.0:pcie24: unloading service driver pciehp
+> > >> pci_bus 0000:0a: busn_res: [bus 0a] is released
+> > >> pci_bus 0000:09: busn_res: [bus 09-0a] is released
+> > >>
+> > >> After some activity later (eg I can reproduce this by switching to a
+> > >> text console and back), often we'll see an oops:
+> > >>
+> > >> Unable to handle kernel paging request at 0000000000001070
+> > >> pci_pme_list_scan+0x3d/0xe0
+> > >> Call Trace:
+> > >> process_one_work+0x193
+> > >> ? process_one_work+0x131
+> > >> ? pci_pme_wakeup+0x60
+> > >> worker_thread+0x15d
+> > >>
+> > >> (gdb) list *(pci_pme_list_scan+0x3d)
+> > >> 0xffffffff8123f6dd is in pci_pme_list_scan (drivers/pci/pci.c:1556).
+> > >> 1551                                    /*
+> > >> 1552                                     * If bridge is in low power state, the
+> > >> 1553                                     * configuration space of subordinate devices
+> > >> 1554                                     * may be not accessible
+> > >> 1555                                     */
+> > >> 1556                                    if (bridge && bridge->current_state != PCI_D0)
+> > >> 1557                                            continue;
+> > >> 1558                                    pci_pme_wakeup(pme_dev->dev, NULL);
+> > >> 1559                            } else {
+> > >> 1560                                    list_del(&pme_dev->list);
+> > >>
+> > >> Since a panic in vsnprintf happens after the oops (hence I can't catch
+> > >> it with EFI pstore), it is almost certainly significant heap
+> > >> corruption; this would explain why pme_dev became null (the load has
+> > >> been ordered ahead).
+> > >>
+> > >> I'll see what I can find out with memory poisoning and list debugging.
+> > >
+> > > Enabling a bunch of related debugging, we see pme_dev is non-null and:
+> > >
+> > > BUG: Unable to handle NULL pointer dereference at
+> > > pci_bus_read_config_word+0x6c
+> > > PGD 26314c067 PUD 2633f9067 PMD 0
+> > > Oops: 0000 [#1] SMP
+> > > pci_check_pme_status+0x4f
+> > > pci_pme_wakeup+0x21
+> > > pci_pme_list_scan+0xd5
+> > > process_one_work+0x1ca
+> > > ? process_one_work+0x160
+> > > ? pci_pme_wakeup+0x60
+> > > worker_thread+0x14e
+> > >
+> > > Anyway, it looks like the device being unplugged wasn't removed from
+> > > pci_pme_list as pci_pme_active(dev, false) wasn't called.
+> > >
+> > > From a quick review, I wasn't able to find the right place in the
+> > > call-chain which I only see releases the child busses and PCIe port
+> > > drivers. Anyone?
+> > 
+> > It looks like drivers *add* devices to pci_pme_list when they use
+> > pci_enable_wake() or pci_wake_from_d3().  But many drivers never
+> > remove their devices, and I don't see any place where the core does it
+> > either.  My guess is we need to remove it in pci_stop_dev() (we
+> > already do pcie_aspm_exit_link_state() there) or somewhere similar.
 > 
-> This patch set adds PCI_BUS(), and PCI_DEVID() to pci.h, changes are to
-> use PCI_BUS() from pci. Changes AMD_IOMMU driver to use PCI_BUS() and
-> PCI_DEVID() from pci.
+> Yes, we should call pci_pme_active(dev, false) somewhere in there I think.
+> It's fine to call that even if PME was not "active" before.
 
-Not sure who is going to merge this, it touches PCI and IOMMU code.
-Personally I don't care :-) If you want to take it via your tree feel
-free to add my
+Daniel, I wonder if the patch below helps?
 
-Reviewed-by: Joerg Roedel <joro@8bytes.org>
-Tested-by: Joerg Roedel <joro@8bytes.org>
-Acked-by: Joerg Roedel <joro@8bytes.org>
-
-Otherwise please Ack the PCI parts and I will add it to my tree then.
+Rafael
 
 
-Thanks,
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/pci/remove.c |    2 ++
+ 1 file changed, 2 insertions(+)
 
-	Joerg
+Index: test/drivers/pci/remove.c
+===================================================================
+--- test.orig/drivers/pci/remove.c
++++ test/drivers/pci/remove.c
+@@ -19,6 +19,8 @@ static void pci_free_resources(struct pc
+ 
+ static void pci_stop_dev(struct pci_dev *dev)
+ {
++	pci_pme_active(dev, false);
++
+ 	if (dev->is_added) {
+ 		pci_proc_detach_device(dev);
+ 		pci_remove_sysfs_dev_files(dev);
 
 
+
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
