@@ -1,64 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.10]:62613 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757208Ab3BARpk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 Feb 2013 12:45:40 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: "Russell King - ARM Linux" <linux@arm.linux.org.uk>
-Subject: Re: [PATCH v2 19/27] pci: PCIe driver for Marvell Armada 370/XP systems
-Date: Fri, 1 Feb 2013 17:45:29 +0000
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	"Eran Ben-Avi" <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Tawfik Bayouk <tawfik@marvell.com>
-References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com> <201302011607.49205.arnd@arndb.de> <20130201162638.GT23505@n2100.arm.linux.org.uk>
-In-Reply-To: <20130201162638.GT23505@n2100.arm.linux.org.uk>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201302011745.29223.arnd@arndb.de>
+Received: from g1t0026.austin.hp.com ([15.216.28.33]:41934 "EHLO
+	g1t0026.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758423Ab3BKXAo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Feb 2013 18:00:44 -0500
+Message-ID: <1360623637.2950.63.camel@lorien2>
+Subject: [PATCH 1/4] pci: Add PCI_BUS() and PCI_DEVID() interfaces to return
+ bus number and device id
+From: Shuah Khan <shuah.khan@hp.com>
+Reply-To: shuah.khan@hp.com
+To: bhelgaas@google.com, Joerg Roedel <joro@8bytes.org>
+Cc: paulmck@linux.vnet.ibm.com, linasvepstas@gmail.com,
+	dhowells@redhat.com, davej@redhat.com, tglx@linutronix.de,
+	mtk.manpages@gmail.com, iommu@lists.linux-foundation.org,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	shemminger@vyatta.com, jiang.liu@huawei.com, wangyijing@huawei.com,
+	shuahkhan@gmail.com
+Date: Mon, 11 Feb 2013 16:00:37 -0700
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday 01 February 2013, Russell King - ARM Linux wrote:
-> On Fri, Feb 01, 2013 at 04:07:49PM +0000, Arnd Bergmann wrote:
-> > On Friday 01 February 2013, Thomas Petazzoni wrote:
-> > > So there is really a range of I/O addresses associated to it, even
-> > > though the device will apparently not use it. Would it be possible to
-> > > detect that the I/O range is not used by the device, and therefore
-> > > avoid the allocation of an address decoding window for this I/O range?
-> > 
-> > I suspect it just gets disabled because the port number 0xc0010000 is
-> > larger than IO_PORT_LIMIT and we cannot access that offset inside
-> > of the virtual memory window we use for PIO.
-> 
-> You're running into that trap again which you fall into on other
-> architectures.
-> 
-> If you arrange for your PCI IO space to start at 0 rather than the
-> physical address that it appears on your CPU, then you shouldn't
-> end up with it extending up to something at 0xcXXXXXXX.
-> 
-> Remember that we should be ensuring that inb(0) hits the first address
-> of the cross-subarch PCI IO area - this alway requires that any sub-arch
-> taking part in a multiplatform kernel must start its IO space addresses
-> at 0 and not the physical address on the local CPU.
+pci defines PCI_DEVFN(), PCI_SLOT(), and PCI_FUNC() interfaces, however,
+it doesn't have interfaces to return PCI bus and PCI device id. Drivers
+(AMD IOMMU, and AER) implement module specific definitions for PCI_BUS()
+and AMD_IOMMU driver also has a module specific interface to calculate PCI   
+device id from bus number and devfn.
 
-Yes, that was my point. I think in this case, the bug is in the new
-of_pci_process_ranges functions, which returns a 'struct resource'
-translated into IORESOURCE_MEM space, but with the type set
-to IORESOURCE_IO. This resource then gets passed to 
-pci_add_resource_offset().
+Add PCI_BUS and PCI_DEVID interfaces to return PCI bus number and PCI device
+id respectively to avoid the need for duplicate definitions in other modules.
+AER driver code and AMD IOMMU driver define PCI_BUS. AMD IOMMU driver defines
+an interface to calculate device id from bus number, and devfn pair.
 
-	Arnd
+Signed-off-by: Shuah Khan <shuah.khan@hp.com>
+---
+ include/uapi/linux/pci.h |    4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/include/uapi/linux/pci.h b/include/uapi/linux/pci.h
+index 3c292bc0..6b2c8b3 100644
+--- a/include/uapi/linux/pci.h
++++ b/include/uapi/linux/pci.h
+@@ -30,6 +30,10 @@
+ #define PCI_DEVFN(slot, func)	((((slot) & 0x1f) << 3) | ((func) & 0x07))
+ #define PCI_SLOT(devfn)		(((devfn) >> 3) & 0x1f)
+ #define PCI_FUNC(devfn)		((devfn) & 0x07)
++#define PCI_DEVID(bus, devfn)	((((u16)bus) << 8) | devfn)
++
++/* return bus from PCI devid = ((u16)bus_number) << 8) | devfn */
++#define PCI_BUS(x) (((x) >> 8) & 0xff)
+ 
+ /* Ioctls for /proc/bus/pci/X/Y nodes. */
+ #define PCIIOC_BASE		('P' << 24 | 'C' << 16 | 'I' << 8)
+-- 
+1.7.9.5
+
+
+
