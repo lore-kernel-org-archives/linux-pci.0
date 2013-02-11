@@ -1,47 +1,93 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:42966 "EHLO hydra.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757164Ab3BXOQh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 24 Feb 2013 09:16:37 -0500
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [GIT PULL] PCI changes for v3.9
-Date: Sun, 24 Feb 2013 15:23:18 +0100
-Message-ID: <8468951.JBoAbzYJmH@vostro.rjw.lan>
-In-Reply-To: <CAE9FiQWDktthNN3aCq-+tqWJU+Cz+PjN57E=pHzBBErCsZ8B7Q@mail.gmail.com>
-References: <20130223212120.GA4593@google.com> <CAE9FiQWDktthNN3aCq-+tqWJU+Cz+PjN57E=pHzBBErCsZ8B7Q@mail.gmail.com>
+Received: from mail-ob0-f181.google.com ([209.85.214.181]:42005 "EHLO
+	mail-ob0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757701Ab3BKRIn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Feb 2013 12:08:43 -0500
+Received: by mail-ob0-f181.google.com with SMTP id ni5so6153526obc.40
+        for <linux-pci@vger.kernel.org>; Mon, 11 Feb 2013 09:08:43 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <CAMVG2svG21yiM1wkH4_2pen2n+cr2-Zv7TbH3Gj+8MwevZjDbw@mail.gmail.com>
+References: <CAMVG2svG21yiM1wkH4_2pen2n+cr2-Zv7TbH3Gj+8MwevZjDbw@mail.gmail.com>
+Date: Tue, 12 Feb 2013 01:08:42 +0800
+Message-ID: <CAMVG2svM+j8_sfWdSY+JVRspxDucp8aKRhLR+79wcM-V_DnbCg@mail.gmail.com>
+Subject: Re: [3.8-rc7] PCI hotplug wakeup oops
+From: Daniel J Blueman <daniel@quora.org>
+To: Linux Kernel <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Cc: Yijing Wang <wangyijing@huawei.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Saturday, February 23, 2013 06:49:27 PM Yinghai Lu wrote:
-> On Sat, Feb 23, 2013 at 1:21 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> > The following changes since commit d1c3ed669a2d452cacfb48c2d171a1f364dae2ed:
-> >
-> >   Linux 3.8-rc2 (2013-01-02 18:13:21 -0800)
-> >
-> > are available in the git repository at:
-> >
-> >   git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/pci-v3.9-changes
-> >
-> > for you to fetch changes up to 018ba0a6efada61b9bc17500101d81c3d35807c2:
-> >
-> >   Merge branch 'pci/yinghai-root-bus-hotplug' into next (2013-02-19 11:42:17 -0700)
-> 
-> may render of bunch of conflicts...
-> 
-> Please check if attached diff is right, and hope it could save Linus some time.
+On 11 February 2013 21:03, Daniel J Blueman <daniel@quora.org> wrote:
+> With 3.8-rc7, when unplugging the Thunderbolt ethernet adapter (bus 0a
+> [1]) on a Macbook Pro 10,1, we see the PCIe port correctly released:
+>
+> pciehp 0000:06:03.0:pcie24: Card not present on Slot(3)
+> tg3 0000:0a:00.0: tg3_abort_hw timed out, TX_MODE_ENABLE will not
+> clear MAC_TX_MODE=ffffffff
+> tg3 0000:0a:00.0 eth0: No firmware running
+> tg3 0000:0a:00.0 eth0: Link is down
+> [sched_delayed] sched: RT throttling activated
+> pcieport 0000:00:01.1: System wakeup enabled by ACPI
+> pciehp 0000:09:00.0:pcie24: unloading service driver pciehp
+> pci_bus 0000:0a: busn_res: [bus 0a] is released
+> pci_bus 0000:09: busn_res: [bus 09-0a] is released
+>
+> After some activity later (eg I can reproduce this by switching to a
+> text console and back), often we'll see an oops:
+>
+> Unable to handle kernel paging request at 0000000000001070
+> pci_pme_list_scan+0x3d/0xe0
+> Call Trace:
+> process_one_work+0x193
+> ? process_one_work+0x131
+> ? pci_pme_wakeup+0x60
+> worker_thread+0x15d
+>
+> (gdb) list *(pci_pme_list_scan+0x3d)
+> 0xffffffff8123f6dd is in pci_pme_list_scan (drivers/pci/pci.c:1556).
+> 1551                                    /*
+> 1552                                     * If bridge is in low power state, the
+> 1553                                     * configuration space of subordinate devices
+> 1554                                     * may be not accessible
+> 1555                                     */
+> 1556                                    if (bridge && bridge->current_state != PCI_D0)
+> 1557                                            continue;
+> 1558                                    pci_pme_wakeup(pme_dev->dev, NULL);
+> 1559                            } else {
+> 1560                                    list_del(&pme_dev->list);
+>
+> Since a panic in vsnprintf happens after the oops (hence I can't catch
+> it with EFI pstore), it is almost certainly significant heap
+> corruption; this would explain why pme_dev became null (the load has
+> been ordered ahead).
+>
+> I'll see what I can find out with memory poisoning and list debugging.
 
-It looks correct to me as far as the ACPI part is concerned.
+Enabling a bunch of related debugging, we see pme_dev is non-null and:
+
+BUG: Unable to handle NULL pointer dereference at
+pci_bus_read_config_word+0x6c
+PGD 26314c067 PUD 2633f9067 PMD 0
+Oops: 0000 [#1] SMP
+pci_check_pme_status+0x4f
+pci_pme_wakeup+0x21
+pci_pme_list_scan+0xd5
+process_one_work+0x1ca
+? process_one_work+0x160
+? pci_pme_wakeup+0x60
+worker_thread+0x14e
+
+Anyway, it looks like the device being unplugged wasn't removed from
+pci_pme_list as pci_pme_active(dev, false) wasn't called.
+
+>From a quick review, I wasn't able to find the right place in the
+call-chain which I only see releases the child busses and PCIe port
+drivers. Anyone?
 
 Thanks,
-Rafael
-
-
+  Daniel
 -- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+Daniel J Blueman
