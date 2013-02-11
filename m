@@ -1,66 +1,108 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:45802 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933360Ab3BLQ31 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Feb 2013 11:29:27 -0500
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Cc: Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Mike Turquette <mturquette@linaro.org>
-Subject: [PATCH 08/32] clk: mvebu: create parent-child relation for PCIe clocks on Armada 370
-Date: Tue, 12 Feb 2013 17:28:42 +0100
-Message-Id: <1360686546-24277-9-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from hydra.sisk.pl ([212.160.235.94]:37235 "EHLO hydra.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757820Ab3BKTVY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 11 Feb 2013 14:21:24 -0500
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Daniel J Blueman <daniel@quora.org>,
+	Linux Kernel <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: Re: [3.8-rc7] PCI hotplug wakeup oops
+Date: Mon, 11 Feb 2013 20:27:49 +0100
+Message-ID: <6086479.ycKj2j8yeP@vostro.rjw.lan>
+In-Reply-To: <CAErSpo6rGYLQeP8Myu=octSPY_0R+B7ptBLhLawd_A2E3NRsAw@mail.gmail.com>
+References: <CAMVG2svG21yiM1wkH4_2pen2n+cr2-Zv7TbH3Gj+8MwevZjDbw@mail.gmail.com> <CAMVG2svM+j8_sfWdSY+JVRspxDucp8aKRhLR+79wcM-V_DnbCg@mail.gmail.com> <CAErSpo6rGYLQeP8Myu=octSPY_0R+B7ptBLhLawd_A2E3NRsAw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The Armada 370 has two gatable clocks for each PCIe interface: pexY
-and pexY_en. In order for a PCIe interface to be functional, we need
-both of them to be enabled. Since there are no conditions in which
-having one clock enabled and not the other would be useful, we simply
-make those two clocks have a child-parent relationship.
+On Monday, February 11, 2013 12:01:37 PM Bjorn Helgaas wrote:
+> [+cc Rafael]
+> 
+> On Mon, Feb 11, 2013 at 10:08 AM, Daniel J Blueman <daniel@quora.org> wrote:
+> > On 11 February 2013 21:03, Daniel J Blueman <daniel@quora.org> wrote:
+> >> With 3.8-rc7, when unplugging the Thunderbolt ethernet adapter (bus 0a
+> >> [1]) on a Macbook Pro 10,1, we see the PCIe port correctly released:
+> >>
+> >> pciehp 0000:06:03.0:pcie24: Card not present on Slot(3)
+> >> tg3 0000:0a:00.0: tg3_abort_hw timed out, TX_MODE_ENABLE will not
+> >> clear MAC_TX_MODE=ffffffff
+> >> tg3 0000:0a:00.0 eth0: No firmware running
+> >> tg3 0000:0a:00.0 eth0: Link is down
+> >> [sched_delayed] sched: RT throttling activated
+> >> pcieport 0000:00:01.1: System wakeup enabled by ACPI
+> >> pciehp 0000:09:00.0:pcie24: unloading service driver pciehp
+> >> pci_bus 0000:0a: busn_res: [bus 0a] is released
+> >> pci_bus 0000:09: busn_res: [bus 09-0a] is released
+> >>
+> >> After some activity later (eg I can reproduce this by switching to a
+> >> text console and back), often we'll see an oops:
+> >>
+> >> Unable to handle kernel paging request at 0000000000001070
+> >> pci_pme_list_scan+0x3d/0xe0
+> >> Call Trace:
+> >> process_one_work+0x193
+> >> ? process_one_work+0x131
+> >> ? pci_pme_wakeup+0x60
+> >> worker_thread+0x15d
+> >>
+> >> (gdb) list *(pci_pme_list_scan+0x3d)
+> >> 0xffffffff8123f6dd is in pci_pme_list_scan (drivers/pci/pci.c:1556).
+> >> 1551                                    /*
+> >> 1552                                     * If bridge is in low power state, the
+> >> 1553                                     * configuration space of subordinate devices
+> >> 1554                                     * may be not accessible
+> >> 1555                                     */
+> >> 1556                                    if (bridge && bridge->current_state != PCI_D0)
+> >> 1557                                            continue;
+> >> 1558                                    pci_pme_wakeup(pme_dev->dev, NULL);
+> >> 1559                            } else {
+> >> 1560                                    list_del(&pme_dev->list);
+> >>
+> >> Since a panic in vsnprintf happens after the oops (hence I can't catch
+> >> it with EFI pstore), it is almost certainly significant heap
+> >> corruption; this would explain why pme_dev became null (the load has
+> >> been ordered ahead).
+> >>
+> >> I'll see what I can find out with memory poisoning and list debugging.
+> >
+> > Enabling a bunch of related debugging, we see pme_dev is non-null and:
+> >
+> > BUG: Unable to handle NULL pointer dereference at
+> > pci_bus_read_config_word+0x6c
+> > PGD 26314c067 PUD 2633f9067 PMD 0
+> > Oops: 0000 [#1] SMP
+> > pci_check_pme_status+0x4f
+> > pci_pme_wakeup+0x21
+> > pci_pme_list_scan+0xd5
+> > process_one_work+0x1ca
+> > ? process_one_work+0x160
+> > ? pci_pme_wakeup+0x60
+> > worker_thread+0x14e
+> >
+> > Anyway, it looks like the device being unplugged wasn't removed from
+> > pci_pme_list as pci_pme_active(dev, false) wasn't called.
+> >
+> > From a quick review, I wasn't able to find the right place in the
+> > call-chain which I only see releases the child busses and PCIe port
+> > drivers. Anyone?
+> 
+> It looks like drivers *add* devices to pci_pme_list when they use
+> pci_enable_wake() or pci_wake_from_d3().  But many drivers never
+> remove their devices, and I don't see any place where the core does it
+> either.  My guess is we need to remove it in pci_stop_dev() (we
+> already do pcie_aspm_exit_link_state() there) or somewhere similar.
 
-So, the pex0 clock becomes a child of pex0_en (for the PCIe interface
-0), and pex1 becomes a child of pex1_en (for the PCIe interface
-1). This way, the DT node for the PCIe interface 0 only needs to grab
-a reference to pex0, and the DT node for the PCIe interface 1 only
-needs to grab a reference to pex1.
+Yes, we should call pci_pme_active(dev, false) somewhere in there I think.
+It's fine to call that even if PME was not "active" before.
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Mike Turquette <mturquette@linaro.org>
----
- drivers/clk/mvebu/clk-gating-ctrl.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Thanks,
+Rafael
 
-diff --git a/drivers/clk/mvebu/clk-gating-ctrl.c b/drivers/clk/mvebu/clk-gating-ctrl.c
-index 8fa5408..fd52b5f 100644
---- a/drivers/clk/mvebu/clk-gating-ctrl.c
-+++ b/drivers/clk/mvebu/clk-gating-ctrl.c
-@@ -119,8 +119,8 @@ static const struct mvebu_soc_descr __initconst armada_370_gating_descr[] = {
- 	{ "pex1_en", NULL,  2 },
- 	{ "ge1", NULL, 3 },
- 	{ "ge0", NULL, 4 },
--	{ "pex0", NULL, 5 },
--	{ "pex1", NULL, 9 },
-+	{ "pex0", "pex0_en", 5 },
-+	{ "pex1", "pex1_en", 9 },
- 	{ "sata0", NULL, 15 },
- 	{ "sdio", NULL, 17 },
- 	{ "tdm", NULL, 25 },
+
 -- 
-1.7.9.5
-
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
