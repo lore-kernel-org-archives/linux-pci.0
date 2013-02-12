@@ -1,68 +1,114 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g4t3426.houston.hp.com ([15.201.208.54]:50498 "EHLO
-	g4t3426.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750786Ab3BEJGL convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Feb 2013 04:06:11 -0500
-From: "Pandarathil, Vijaymohan R" <vijaymohan.pandarathil@hp.com>
-To: Gleb Natapov <gleb@redhat.com>, Blue Swirl <blauwirbel@gmail.com>
-CC: Alex Williamson <alex.williamson@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Ortiz, Lance E" <lance.oritz@hp.com>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	"qemu-devel@nongnu.org" <qemu-devel@nongnu.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH v3 3/3] QEMU-AER: Qemu changes to support AER for
- VFIO-PCI devices
-Date: Tue, 5 Feb 2013 09:05:19 +0000
-Message-ID: <F9E001219150CB45BEDC82A650F360C9014B42EE@G9W0717.americas.hpqcorp.net>
-References: <F9E001219150CB45BEDC82A650F360C9014AAF07@G9W0717.americas.hpqcorp.net>
- <CAAu8pHvk_2Mf2F-YTDC-wdyD1Jic-DHUanSQfOa3g0VchTcNig@mail.gmail.com>
- <20130205080436.GV23213@redhat.com>
-In-Reply-To: <20130205080436.GV23213@redhat.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from mail.free-electrons.com ([94.23.35.102]:45832 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933295Ab3BLQ3a (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Feb 2013 11:29:30 -0500
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Cc: Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Tawfik Bayouk <tawfik@marvell.com>
+Subject: [PATCH 11/32] arm: plat-orion: refactor the orion_disable_wins() function
+Date: Tue, 12 Feb 2013 17:28:45 +0100
+Message-Id: <1360686546-24277-12-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+In the address decoding code, the orion_disable_wins() function is
+used at boot time to disable all address decoding windows, before
+configuring only the ones that are needed. This allows to make sure
+that no configuration is left from the bootloader.
 
+As a preparation for the introduction of address decoding window
+allocation/deallocation function, we refactor this function into an
+orion_disable_cpu_win() which disables a single window.
 
-> -----Original Message-----
-> From: Gleb Natapov [mailto:gleb@redhat.com]
-> Sent: Tuesday, February 05, 2013 12:05 AM
-> To: Blue Swirl
-> Cc: Pandarathil, Vijaymohan R; Alex Williamson; Bjorn Helgaas; Ortiz, Lance
-> E; kvm@vger.kernel.org; qemu-devel@nongnu.org; linux-pci@vger.kernel.org;
-> linux-kernel@vger.kernel.org
-> Subject: Re: [PATCH v3 3/3] QEMU-AER: Qemu changes to support AER for VFIO-
-> PCI devices
-> 
-> On Sun, Feb 03, 2013 at 04:36:11PM +0000, Blue Swirl wrote:
-> > On Sun, Feb 3, 2013 at 2:10 PM, Pandarathil, Vijaymohan R
-> > <vijaymohan.pandarathil@hp.com> wrote:
-> > >         - Create eventfd per vfio device assigned to a guest and
-> register an
-> > >           event handler
-> > >
-> > >         - This fd is passed to the vfio_pci driver through the SET_IRQ
-> ioctl
-> > >
-> > >         - When the device encounters an error, the eventfd is signalled
-> > >           and the qemu eventfd handler gets invoked.
-> > >
-> > >         - In the handler decide what action to take. Current action
-> taken
-> > >           is to terminate the guest.
-> >
-> > Usually this is not OK, but I guess this is not guest triggerable.
-> >
-> Still not OK. Why not stop a guest with appropriate stop reason?
+The orion_config_wins() function is changed to call
+orion_disable_cpu_win() in a loop, to preserve an identical behavior.
 
-The thinking was that since this is a hardware error, we would want to stop the guest at the earliest. The hw_error() routine which aborts the qemu process was suggested by Alex and that seemed appropriate. Earlier I was using qemu_system_shutdown_request().  Any suggestions ?
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+---
+ arch/arm/plat-orion/addr-map.c |   35 +++++++++++++++++------------------
+ 1 file changed, 17 insertions(+), 18 deletions(-)
 
-Thanks
+diff --git a/arch/arm/plat-orion/addr-map.c b/arch/arm/plat-orion/addr-map.c
+index 4dec3db..dd98638 100644
+--- a/arch/arm/plat-orion/addr-map.c
++++ b/arch/arm/plat-orion/addr-map.c
+@@ -95,6 +95,19 @@ void __init orion_setup_cpu_win(const struct orion_addr_map_cfg *cfg,
+ 	}
+ }
+ 
++static void __init orion_disable_cpu_win(const struct orion_addr_map_cfg *cfg,
++					 const int win)
++{
++	void __iomem *addr = cfg->win_cfg_base(cfg, win);
++
++	writel(0, addr + WIN_BASE_OFF);
++	writel(0, addr + WIN_CTRL_OFF);
++	if (cfg->cpu_win_can_remap(cfg, win)) {
++		writel(0, addr + WIN_REMAP_LO_OFF);
++		writel(0, addr + WIN_REMAP_HI_OFF);
++	}
++}
++
+ /*
+  * Configure a number of windows.
+  */
+@@ -108,36 +121,22 @@ static void __init orion_setup_cpu_wins(const struct orion_addr_map_cfg * cfg,
+ 	}
+ }
+ 
+-static void __init orion_disable_wins(const struct orion_addr_map_cfg * cfg)
+-{
+-	void __iomem *addr;
+-	int i;
+-
+-	for (i = 0; i < cfg->num_wins; i++) {
+-		addr = cfg->win_cfg_base(cfg, i);
+-
+-		writel(0, addr + WIN_BASE_OFF);
+-		writel(0, addr + WIN_CTRL_OFF);
+-		if (cfg->cpu_win_can_remap(cfg, i)) {
+-			writel(0, addr + WIN_REMAP_LO_OFF);
+-			writel(0, addr + WIN_REMAP_HI_OFF);
+-		}
+-	}
+-}
+-
+ /*
+  * Disable, clear and configure windows.
+  */
+ void __init orion_config_wins(struct orion_addr_map_cfg * cfg,
+ 			      const struct orion_addr_map_info *info)
+ {
++	int win;
++
+ 	if (!cfg->cpu_win_can_remap)
+ 		cfg->cpu_win_can_remap = orion_cpu_win_can_remap;
+ 
+ 	if (!cfg->win_cfg_base)
+ 		cfg->win_cfg_base = orion_win_cfg_base;
+ 
+-	orion_disable_wins(cfg);
++	for (win = 0; win < cfg->num_wins; win++)
++		orion_disable_cpu_win(cfg, win);
+ 
+ 	if (info)
+ 		orion_setup_cpu_wins(cfg, info);
+-- 
+1.7.9.5
 
-Vijay
-> 
-> --
-> 			Gleb.
