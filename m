@@ -1,67 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f175.google.com ([209.85.214.175]:64112 "EHLO
-	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933595Ab3BSSxz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Feb 2013 13:53:55 -0500
-Received: by mail-ob0-f175.google.com with SMTP id uz6so6852900obc.20
-        for <linux-pci@vger.kernel.org>; Tue, 19 Feb 2013 10:53:54 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <5123C5A5.4000106@suse.cz>
-References: <5123C5A5.4000106@suse.cz>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 19 Feb 2013 11:53:34 -0700
-Message-ID: <CAErSpo4MBSAt=oD=TajZXHXCwm12rrJswiVCyW2+On9NfmrkPg@mail.gmail.com>
-Subject: Re: WARNING: at drivers/pci/pci.c:1397 pci_disable_device
-To: Jiri Slaby <jslaby@suse.cz>
-Cc: Konstantin Khlebnikov <khlebnikov@openvz.org>,
-	"Wysocki, Rafael J" <rafael.j.wysocki@intel.com>,
-	linux-pci@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail.free-electrons.com ([94.23.35.102]:45792 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933352Ab3BLQ30 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Feb 2013 11:29:26 -0500
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Cc: Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Tawfik Bayouk <tawfik@marvell.com>
+Subject: [PATCH 07/32] arm: mvebu: fix address-cells in mpic DT node
+Date: Tue, 12 Feb 2013 17:28:41 +0100
+Message-Id: <1360686546-24277-8-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 19, 2013 at 11:34 AM, Jiri Slaby <jslaby@suse.cz> wrote:
-> Hi,
->
-> so I hit that one:
-> +       dev_WARN_ONCE(&dev->dev, atomic_read(&dev->enable_cnt) <= 0,
-> +                     "disabling already-disabled device");
->
-> during suspend (to ram):
-> WARNING: at drivers/pci/pci.c:1397 pci_disable_device+0x90/0xa0()
-> Hardware name: To Be Filled By O.E.M.
-> Device e1000e
-> disabling already-disabled device
-> Modules linked in: dvb_usb_dib0700 dib0090 dib7000p dib7000m dib0070
-> dib8000 dib3000mc dibx000_common microcode
-> Pid: 31027, comm: kworker/u:35 Not tainted 3.8.0-rc7-next-20130218_64+ #1768
-> Call Trace:
->  [<ffffffff81313b00>] ? do_pci_disable_device+0x30/0x60
->  [<ffffffff8107f2ff>] warn_slowpath_common+0x7f/0xc0
->  [<ffffffff8107f3f6>] warn_slowpath_fmt+0x46/0x50
->  [<ffffffff81313bc0>] pci_disable_device+0x90/0xa0
->  [<ffffffff814c8152>] __e1000_shutdown+0x262/0x8b0
->  [<ffffffff814c8813>] e1000_suspend+0x23/0x50
->  [<ffffffff816be581>] ? wait_for_completion+0x31/0x100
->  [<ffffffff81316337>] pci_pm_suspend+0x77/0x140
->  [<ffffffff8144aa6a>] ? __pm_runtime_barrier+0x1a/0x130
->  [<ffffffff813162c0>] ? pci_pm_poweroff+0xf0/0xf0
->  [<ffffffff81447838>] dpm_run_callback+0x58/0x90
->  [<ffffffff8144795b>] __device_suspend+0xeb/0x280
->  [<ffffffff814482af>] async_suspend+0x1f/0xa0
->  [<ffffffff810a9c9b>] async_run_entry_fn+0x3b/0x140
->  [<ffffffff8109b9a4>] process_one_work+0x174/0x410
->  [<ffffffff8109d426>] worker_thread+0x116/0x400
->  [<ffffffff8109d310>] ? busy_worker_rebind_fn+0xc0/0xc0
->  [<ffffffff810a3340>] kthread+0xc0/0xd0
->  [<ffffffff810a3280>] ? kthread_create_on_node+0x130/0x130
->  [<ffffffff816c089c>] ret_from_fork+0x7c/0xb0
->  [<ffffffff810a3280>] ? kthread_create_on_node+0x130/0x130
-> ---[ end trace 6c5060f8b8fb9175 ]---
-> e1000e 0000:00:19.0: System wakeup enabled by ACPI
+There is no need to have a #address-cells property in the MPIC Device
+Tree node, and more than that, having it confuses the of_irq_map_raw()
+logic, which will be used by the Marvell PCIe driver.
 
-I think Konstantin posted an e1000e patch that would fix this, but
-it's going via the e1000e folks.  Hopefully both my tree and the
-e1000e patch will be merged soon.
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+---
+ arch/arm/boot/dts/armada-370-xp.dtsi |    1 -
+ 1 file changed, 1 deletion(-)
 
-Bjorn
+diff --git a/arch/arm/boot/dts/armada-370-xp.dtsi b/arch/arm/boot/dts/armada-370-xp.dtsi
+index 4c0abe8..1dcdae9 100644
+--- a/arch/arm/boot/dts/armada-370-xp.dtsi
++++ b/arch/arm/boot/dts/armada-370-xp.dtsi
+@@ -31,7 +31,6 @@
+ 	mpic: interrupt-controller@d0020000 {
+ 	      compatible = "marvell,mpic";
+ 	      #interrupt-cells = <1>;
+-	      #address-cells = <1>;
+ 	      #size-cells = <1>;
+ 	      interrupt-controller;
+ 	};
+-- 
+1.7.9.5
+
