@@ -1,95 +1,188 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay0057.b.hostedemail.com ([64.98.42.57]:53153 "EHLO
-	smtprelay.b.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S932631Ab3BZTOu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Feb 2013 14:14:50 -0500
-Date: Tue, 26 Feb 2013 19:14:48 +0000 (UTC)
-From: "Artem S. Tashkinov" <t.artem@lycos.com>
-To: bhelgaas@google.com
-Cc: stern@rowland.harvard.edu, torvalds@linux-foundation.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	rjw@sisk.pl
-Message-ID: <569718148.80620.1361906088301.JavaMail.mail@webmail13>
-References: <CAErSpo7qj2SNR7BfuBsfF-saZXvgcqqLtgoP5Hyb5u99qR4Ncg@mail.gmail.com>
- <Pine.LNX.4.44L0.1302191119270.2215-100000@iolanthe.rowland.org>
- <CAErSpo7NZoOQZyW76HEoOTVgdqL2CgbVScAeF6HGLAVaNCq0=w@mail.gmail.com>
- <337833384.57445.1361860509194.JavaMail.mail@webmail08><CAErSpo6CbO5KYXiErv6J_Dnm1u694C5fQPP2_cZL8VKDEnZa9A@mail.gmail.com>
-Subject: Re: Abysmal HDD/USB write speed after sleep on a UEFI system
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from mail.free-electrons.com ([94.23.35.102]:45718 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932294Ab3BLQ3T (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Feb 2013 11:29:19 -0500
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Cc: Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Andrew Murray <andrew.murray@arm.com>,
+	Andrew Murray <Andrew.Murray@arm.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>
+Subject: [PATCH 01/32] of/pci: Provide support for parsing PCI DT ranges property
+Date: Tue, 12 Feb 2013 17:28:35 +0100
+Message-Id: <1360686546-24277-2-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Feb 27, 2013 12:47:01 AM, Bjorn Helgaas wrote:
-On Mon, Feb 25, 2013 at 11:35 PM, Artem S. Tashkinov wrote:
->> Feb 26, 2013 03:57:52 AM, Bjorn Helgaas wrote:
->>>
->>>Where are we at with this, Artem?  I assume it's still a problem.
->>>
->>
->> Yes, it is, Bjorn.
->>
->> In order to eliminate this problem I switched back to MBR yesterday, because
->> so far I haven't received any instructions or guidance as to how I can debug
->> it further. I'm absolutely sure USB write speed is just another manifestation of
->> it so I decided not to debug USB specifically (it just doesn't make too much
->> sense).
->>
->> What I see is that something terribly wrong is going on but if Linus has no ideas
->> I, as an average Joe, don't have a slightest clue as to what I can do.
->>
->> The bug report with necessary, but seemingly useless information, can be
->> found here: https://bugzilla.kernel.org/show_bug.cgi?id=53551
->>
->> If anyone comes up with new ideas I can quickly try UEFI again now that I
->> have two HDDs at my disposal (the old one is formatted as GPT, the new one is
->> MBR).
->
->The ideas I saw are:
->
->1) Figure out whether it ever worked.  If an older kernel worked
->correctly and a newer one is broken, bisection is at least a
->possibility.  You mentioned that it did work before (Feb 12), but in
->the past you never suspended twice in one boot session, whereas maybe
->you did when seeing the problem?
+From: Andrew Murray <andrew.murray@arm.com>
 
-This is difficult to say since the first kernel I tried to run in EUFI mode was
-3.7.x, so I've no idea if any previous ones ever worked.
+DT bindings for PCI host bridges often use the ranges property to describe
+memory and IO ranges - this binding tends to be the same across architectures
+yet several parsing implementations exist, e.g. arch/mips/pci/pci.c,
+arch/powerpc/kernel/pci-common.c, arch/sparc/kernel/pci.c and
+arch/microblaze/pci/pci-common.c (clone of PPC). Some of these duplicate
+functionality provided by drivers/of/address.c.
 
->
->2) Try the "setpci" to set the MSI address back to the original value
->to see if it makes a difference (see my Feb 12 message).
+This patch provides a common iterator-based parser for the ranges property, it
+is hoped this will reduce DT representation differences between architectures
+and that architectures will migrate in part to this new parser.
 
-I will try it soon and report back to you.
+It is also hoped (and the motativation for the patch) that this patch will
+reduce duplication of code when writing host bridge drivers that are supported
+by multiple architectures.
 
->
->3) Collect "lspci -vvv -xxxx" output to investigate the XHCI
->Unsupported Request errors.
->
->4) Use usbmon to collect traces before and after the suspend.
+This patch provides struct resources from a device tree node, e.g.:
 
-Likewise. Still I don't quite understand why you are persistent in your
-desire to investigate USB controllers specifically - my problem affects
-all storage devices that I have.
+	u32 *last = NULL;
+	struct resource res;
+	while ((last = of_pci_process_ranges(np, res, last))) {
+		//do something with res
+	}
 
->
->I googled around a bit looking for similar reports.  I found lots of
->suspend issues, mostly with Windows, but no leads yet.  It looks like
->the board has been around for a while, so you would think we'd have
->some other reports of a problem this bad.  But maybe it really is
->related to UEFI and nobody really uses that yet?
+Platforms with quirks can then do what they like with the resource or migrate
+common quirk handling to the parser. In an ideal world drivers can just request
+the obtained resources and pass them on (e.g. pci_add_resource_offset).
 
-99% of people around me don't use UEFI, and the ones who use it do
-it because they want to run Hacintosh (it's quite complicated to run
-a EUFI OS from a non UEFI BIOS).
+Signed-off-by: Andrew Murray <Andrew.Murray@arm.com>
+Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+---
+ drivers/of/address.c       |   63 ++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/of_address.h |    9 +++++++
+ 2 files changed, 72 insertions(+)
 
-That's the main reason you don't see similar reports. EUFI so far hasn't
-proven its supremacy and efficiency over BIOS. When 3TB and larger
-HDD's become more widespread people will have to use UEFI. They will
-simply have no choice (unless of course you have two HDDs, where one
-is BIOS formatted to boot your system, and another one is GPT
-partitioned in order to support > 2,2TB space).
+diff --git a/drivers/of/address.c b/drivers/of/address.c
+index 0125524..d659527 100644
+--- a/drivers/of/address.c
++++ b/drivers/of/address.c
+@@ -13,6 +13,7 @@
+ #define OF_CHECK_COUNTS(na, ns)	(OF_CHECK_ADDR_COUNT(na) && (ns) > 0)
+ 
+ static struct of_bus *of_match_bus(struct device_node *np);
++static struct of_bus *of_find_bus(const char *name);
+ static int __of_address_to_resource(struct device_node *dev,
+ 		const __be32 *addrp, u64 size, unsigned int flags,
+ 		const char *name, struct resource *r);
+@@ -227,6 +228,57 @@ int of_pci_address_to_resource(struct device_node *dev, int bar,
+ 	return __of_address_to_resource(dev, addrp, size, flags, NULL, r);
+ }
+ EXPORT_SYMBOL_GPL(of_pci_address_to_resource);
++
++const __be32 *of_pci_process_ranges(struct device_node *node,
++				    struct resource *res, const __be32 *from)
++{
++	const __be32 *start, *end;
++	int na, ns, np, pna;
++	int rlen;
++	struct of_bus *bus;
++
++	WARN_ON(!res);
++
++	bus = of_find_bus("pci");
++	bus->count_cells(node, &na, &ns);
++	if (!OF_CHECK_COUNTS(na, ns)) {
++		pr_err("Bad cell count for %s\n", node->full_name);
++		return NULL;
++	}
++
++	pna = of_n_addr_cells(node);
++	np = pna + na + ns;
++
++	start = of_get_property(node, "ranges", &rlen);
++	if (start == NULL)
++		return NULL;
++
++	end = start + rlen / sizeof(__be32);
++
++	if (!from)
++		from = start;
++
++	while (from + np <= end) {
++		u64 cpu_addr, size;
++
++		cpu_addr = of_translate_address(node, from + na);
++		size = of_read_number(from + na + pna, ns);
++		res->flags = bus->get_flags(from);
++		from += np;
++
++		if (cpu_addr == OF_BAD_ADDR || size == 0)
++			continue;
++
++		res->name = node->full_name;
++		res->start = cpu_addr;
++		res->end = res->start + size - 1;
++		res->parent = res->child = res->sibling = NULL;
++		return from;
++	}
++
++	return NULL;
++}
++EXPORT_SYMBOL_GPL(of_pci_process_ranges);
+ #endif /* CONFIG_PCI */
+ 
+ /*
+@@ -337,6 +389,17 @@ static struct of_bus *of_match_bus(struct device_node *np)
+ 	return NULL;
+ }
+ 
++static struct of_bus *of_find_bus(const char *name)
++{
++	unsigned int i;
++
++	for (i = 0; i < ARRAY_SIZE(of_busses); i++)
++		if (strcmp(name, of_busses[i].name) == 0)
++			return &of_busses[i];
++
++	return NULL;
++}
++
+ static int of_translate_one(struct device_node *parent, struct of_bus *bus,
+ 			    struct of_bus *pbus, __be32 *addr,
+ 			    int na, int ns, int pna, const char *rprop)
+diff --git a/include/linux/of_address.h b/include/linux/of_address.h
+index 0506eb5..751e889 100644
+--- a/include/linux/of_address.h
++++ b/include/linux/of_address.h
+@@ -27,6 +27,8 @@ static inline unsigned long pci_address_to_pio(phys_addr_t addr) { return -1; }
+ #define pci_address_to_pio pci_address_to_pio
+ #endif
+ 
++const __be32 *of_pci_process_ranges(struct device_node *node,
++				    struct resource *res, const __be32 *from);
+ #else /* CONFIG_OF_ADDRESS */
+ #ifndef of_address_to_resource
+ static inline int of_address_to_resource(struct device_node *dev, int index,
+@@ -53,6 +55,13 @@ static inline const __be32 *of_get_address(struct device_node *dev, int index,
+ {
+ 	return NULL;
+ }
++
++static inline const __be32 *of_pci_process_ranges(struct device_node *node,
++						  struct resource *res,
++						  const __be32 *from)
++{
++	return NULL;
++}
+ #endif /* CONFIG_OF_ADDRESS */
+ 
+ 
+-- 
+1.7.9.5
 
-Best regards,
-
-Artem
