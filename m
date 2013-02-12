@@ -1,132 +1,52 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 5 Feb 2013 14:30:49 +0200
-From: Gleb Natapov <gleb@redhat.com>
-To: "Pandarathil, Vijaymohan R" <vijaymohan.pandarathil@hp.com>
-Cc: Blue Swirl <blauwirbel@gmail.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Ortiz, Lance E" <lance.oritz@hp.com>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	"qemu-devel@nongnu.org" <qemu-devel@nongnu.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v3 3/3] QEMU-AER: Qemu changes to support AER for
- VFIO-PCI devices
-Message-ID: <20130205123048.GH23213@redhat.com>
-References: <F9E001219150CB45BEDC82A650F360C9014AAF07@G9W0717.americas.hpqcorp.net>
- <CAAu8pHvk_2Mf2F-YTDC-wdyD1Jic-DHUanSQfOa3g0VchTcNig@mail.gmail.com>
- <20130205080436.GV23213@redhat.com>
- <F9E001219150CB45BEDC82A650F360C9014B42EE@G9W0717.americas.hpqcorp.net>
- <20130205092110.GB23213@redhat.com>
- <F9E001219150CB45BEDC82A650F360C9014B43DC@G9W0717.americas.hpqcorp.net>
- <20130205113645.GE23213@redhat.com>
- <F9E001219150CB45BEDC82A650F360C9014B445B@G9W0717.americas.hpqcorp.net>
+Message-ID: <5119DCCD.70709@zytor.com>
+Date: Mon, 11 Feb 2013 22:10:21 -0800
+From: "H. Peter Anvin" <hpa@zytor.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <F9E001219150CB45BEDC82A650F360C9014B445B@G9W0717.americas.hpqcorp.net>
+To: Ingo Molnar <mingo@kernel.org>
+CC: Yinghai Lu <yinghai@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@elte.hu>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 00/26] x86, irq: support ioapic device hotplug
+References: <1360351703-20571-1-git-send-email-yinghai@kernel.org> <20130211093417.GC23932@gmail.com>
+In-Reply-To: <20130211093417.GC23932@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 05, 2013 at 12:05:11PM +0000, Pandarathil, Vijaymohan R wrote:
+On 02/11/2013 01:34 AM, Ingo Molnar wrote:
 > 
+> * Yinghai Lu <yinghai@kernel.org> wrote:
 > 
-> > -----Original Message-----
-> > From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-
-> > owner@vger.kernel.org] On Behalf Of Gleb Natapov
-> > Sent: Tuesday, February 05, 2013 3:37 AM
-> > To: Pandarathil, Vijaymohan R
-> > Cc: Blue Swirl; Alex Williamson; Bjorn Helgaas; Ortiz, Lance E;
-> > kvm@vger.kernel.org; qemu-devel@nongnu.org; linux-pci@vger.kernel.org;
-> > linux-kernel@vger.kernel.org
-> > Subject: Re: [PATCH v3 3/3] QEMU-AER: Qemu changes to support AER for VFIO-
-> > PCI devices
-> > 
-> > On Tue, Feb 05, 2013 at 10:59:41AM +0000, Pandarathil, Vijaymohan R wrote:
-> > >
-> > >
-> > > > -----Original Message-----
-> > > > From: Gleb Natapov [mailto:gleb@redhat.com]
-> > > > Sent: Tuesday, February 05, 2013 1:21 AM
-> > > > To: Pandarathil, Vijaymohan R
-> > > > Cc: Blue Swirl; Alex Williamson; Bjorn Helgaas; Ortiz, Lance E;
-> > > > kvm@vger.kernel.org; qemu-devel@nongnu.org; linux-pci@vger.kernel.org;
-> > > > linux-kernel@vger.kernel.org
-> > > > Subject: Re: [PATCH v3 3/3] QEMU-AER: Qemu changes to support AER for
-> > VFIO-
-> > > > PCI devices
-> > > >
-> > > > On Tue, Feb 05, 2013 at 09:05:19AM +0000, Pandarathil, Vijaymohan R
-> > wrote:
-> > > > >
-> > > > >
-> > > > > > -----Original Message-----
-> > > > > > From: Gleb Natapov [mailto:gleb@redhat.com]
-> > > > > > Sent: Tuesday, February 05, 2013 12:05 AM
-> > > > > > To: Blue Swirl
-> > > > > > Cc: Pandarathil, Vijaymohan R; Alex Williamson; Bjorn Helgaas;
-> > Ortiz,
-> > > > Lance
-> > > > > > E; kvm@vger.kernel.org; qemu-devel@nongnu.org; linux-
-> > > > pci@vger.kernel.org;
-> > > > > > linux-kernel@vger.kernel.org
-> > > > > > Subject: Re: [PATCH v3 3/3] QEMU-AER: Qemu changes to support AER
-> > for
-> > > > VFIO-
-> > > > > > PCI devices
-> > > > > >
-> > > > > > On Sun, Feb 03, 2013 at 04:36:11PM +0000, Blue Swirl wrote:
-> > > > > > > On Sun, Feb 3, 2013 at 2:10 PM, Pandarathil, Vijaymohan R
-> > > > > > > <vijaymohan.pandarathil@hp.com> wrote:
-> > > > > > > >         - Create eventfd per vfio device assigned to a guest
-> > and
-> > > > > > register an
-> > > > > > > >           event handler
-> > > > > > > >
-> > > > > > > >         - This fd is passed to the vfio_pci driver through the
-> > > > SET_IRQ
-> > > > > > ioctl
-> > > > > > > >
-> > > > > > > >         - When the device encounters an error, the eventfd is
-> > > > signalled
-> > > > > > > >           and the qemu eventfd handler gets invoked.
-> > > > > > > >
-> > > > > > > >         - In the handler decide what action to take. Current
-> > action
-> > > > > > taken
-> > > > > > > >           is to terminate the guest.
-> > > > > > >
-> > > > > > > Usually this is not OK, but I guess this is not guest
-> > triggerable.
-> > > > > > >
-> > > > > > Still not OK. Why not stop a guest with appropriate stop reason?
-> > > > >
-> > > > > The thinking was that since this is a hardware error, we would want
-> > to
-> > > > stop the guest at the earliest. The hw_error() routine which aborts the
-> > > > qemu process was suggested by Alex and that seemed appropriate. Earlier
-> > I
-> > > > was using qemu_system_shutdown_request().  Any suggestions ?
-> > > > >
-> > > > I am thinking vm_stop(). Stopping SMP guest (and UP too in fact)
-> > > > involves sending IPIs to other cpus running guest's vcpus. Both exit()
-> > > > and vm_stop() will do it, but former is implicitly in the kernel and
-> > > > later is explicitly in QEMU.
-> > >
-> > > I had used vm_stop(RUN_STATE_SHUTDOWN) earlier in my code. But while
-> > testing, guest ended up in a hang rather than exiting. There seems to some
-> > cleanup work which is being done as part of vm_stop. In our case, we wanted
-> > the guest to exit immediately. So use of hw_error() seemed appropriate.
-> > >
-> > What makes you think it hang? It stopped, precisely what it should do if
-> > you call vm_stop(). Now it is possible for vm user to investigate what
-> > happened and even salvage some data from guest memory.
+>> Hi,
+>>
+>> Current x86 code does not support iapic hotplug yet.
 > 
-> That was ignorance on my part on the expected behavior of vm_stop(). 
-> So what you are suggesting is to stop the guest displaying an appropriate 
-> error/next-steps message and have the users do any data-collection/investigation 
-> and then manually kill the guest, if they so desire. Right ?
+> Please give a better high-level description: outline how an 
+> IO-APIC will be hotplugged physically and what changes the 
+> user will experience.
 > 
-Yes.
+> That needs at least 2 paragraphs, not one cursory sentence. Then 
+> should come technical descriptions - but even those need 
+> improvements, please first explain the current status quo, then 
+> explain how that is inadequate for IO-APIC hot-plugging, *then* 
+> only explain what you are doing in the patch ...
+> 
 
---
-			Gleb.
+A few more notes:
+
+Please explain what you mean with pre-reserve IRQ blocks, and in
+particular, how do you know what to reserve and for what?
+
+Second, some of the things in this patchset seems to overlap with what
+we would need to support MSI (as opposed to MSI-X), and you have several
+patches related to MSI vs MSI-X.  Are you also supporting multivector
+MSI (I believe the answer is no) or could some of this work make
+multivector MSI practical (possible)?
+
+	-hpa
+
+
