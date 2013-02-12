@@ -1,76 +1,58 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>
-Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Subject: [PATCH v8 04/13] ACPI/acpiphp: replace local macros with standard ACPI macros
-Date: Tue, 26 Feb 2013 23:25:44 +0800
-Message-Id: <1361892353-14786-5-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1361892353-14786-1-git-send-email-jiang.liu@huawei.com>
-References: <1361892353-14786-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.free-electrons.com ([94.23.35.102]:45997 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933377Ab3BLQ3x (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Feb 2013 11:29:53 -0500
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Cc: Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Tawfik Bayouk <tawfik@marvell.com>
+Subject: [PATCH 28/32] arm: mvebu: PCIe Device Tree informations for OpenBlocks AX3-4
+Date: Tue, 12 Feb 2013 17:29:02 +0100
+Message-Id: <1360686546-24277-29-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Replace local defined macros (ACPI_STA_xxx) with standard ACPI macros
-(ACPI_STA_DEVICE_xxx).
+The PlatHome OpenBlocks AX3-4 has an internal mini-PCIe slot that can
+be used to plug mini-PCIe devices. We therefore enable the PCIe
+interface that corresponds to this slot.
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Toshi Kani <toshi.kani@hp.com>
-Cc: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
 ---
- drivers/pci/hotplug/acpiphp.h      |    4 ----
- drivers/pci/hotplug/acpiphp_glue.c |    4 ++--
- 2 files changed, 2 insertions(+), 6 deletions(-)
+ arch/arm/boot/dts/armada-xp-openblocks-ax3-4.dts |    7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/drivers/pci/hotplug/acpiphp.h b/drivers/pci/hotplug/acpiphp.h
-index b70ac00..1b311f9 100644
---- a/drivers/pci/hotplug/acpiphp.h
-+++ b/drivers/pci/hotplug/acpiphp.h
-@@ -146,10 +146,6 @@ struct acpiphp_attention_info
- #define ACPI_PCI_HOST_HID		"PNP0A03"
- 
- /* ACPI _STA method value (ignore bit 4; battery present) */
--#define ACPI_STA_PRESENT		(0x00000001)
--#define ACPI_STA_ENABLED		(0x00000002)
--#define ACPI_STA_SHOW_IN_UI		(0x00000004)
--#define ACPI_STA_FUNCTIONING		(0x00000008)
- #define ACPI_STA_ALL			(0x0000000f)
- 
- /* bridge flags */
-diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-index 4101c15..89e0c36 100644
---- a/drivers/pci/hotplug/acpiphp_glue.c
-+++ b/drivers/pci/hotplug/acpiphp_glue.c
-@@ -487,7 +487,7 @@ static int add_bridge(struct acpi_pci_root *root)
- 			dbg("%s: _STA evaluation failure\n", __func__);
- 			return 0;
- 		}
--		if ((tmp & ACPI_STA_FUNCTIONING) == 0)
-+		if ((tmp & ACPI_STA_DEVICE_FUNCTIONING) == 0)
- 			/* don't register this object */
- 			return 0;
- 	}
-@@ -1387,7 +1387,7 @@ u8 acpiphp_get_latch_status(struct acpiphp_slot *slot)
- 
- 	sta = get_slot_status(slot);
- 
--	return (sta & ACPI_STA_SHOW_IN_UI) ? 0 : 1;
-+	return (sta & ACPI_STA_DEVICE_UI) ? 0 : 1;
- }
- 
- 
+diff --git a/arch/arm/boot/dts/armada-xp-openblocks-ax3-4.dts b/arch/arm/boot/dts/armada-xp-openblocks-ax3-4.dts
+index b42652f..67fcaaa 100644
+--- a/arch/arm/boot/dts/armada-xp-openblocks-ax3-4.dts
++++ b/arch/arm/boot/dts/armada-xp-openblocks-ax3-4.dts
+@@ -121,5 +121,12 @@
+ 			nr-ports = <2>;
+ 			status = "okay";
+ 		};
++		pcie-controller {
++			status = "okay";
++			/* Internal mini-PCIe connector */
++			pcie@0,0 {
++				status = "okay";
++			};
++		};
+ 	};
+ };
 -- 
 1.7.9.5
 
