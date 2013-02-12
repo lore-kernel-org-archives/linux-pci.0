@@ -1,164 +1,157 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:25287 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751755Ab3BYPds (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 25 Feb 2013 10:33:48 -0500
-Message-ID: <1361806423.2532.26.camel@bling.home>
-Subject: Re: [PATCH v5 1/3] VFIO: Wrapper for getting reference to
- vfio_device from device
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Vijay Mohan Pandarathil <vijaymohan.pandarathil@hp.com>
-Cc: gleb@redhat.com, bhelgaas@google.com, blauwirbel@gmail.com,
-	lance.oritz@hp.com, kvm@vger.kernel.org, qemu-devel@nongnu.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Mon, 25 Feb 2013 08:33:43 -0700
-In-Reply-To: <1361683516-31946-2-git-send-email-vijaymohan.pandarathil@hp.com>
-References: <1361683516-31946-1-git-send-email-vijaymohan.pandarathil@hp.com>
-	 <1361683516-31946-2-git-send-email-vijaymohan.pandarathil@hp.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail.free-electrons.com ([94.23.35.102]:45905 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933371Ab3BLQ3l (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Feb 2013 11:29:41 -0500
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Cc: Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Tawfik Bayouk <tawfik@marvell.com>
+Subject: [PATCH 19/32] arm: plat-orion: introduce orion_{alloc,free}_cpu_win() functions
+Date: Tue, 12 Feb 2013 17:28:53 +0100
+Message-Id: <1360686546-24277-20-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, 2013-02-23 at 23:25 -0600, Vijay Mohan Pandarathil wrote:
-> 	- Added vfio_device_get_from_dev() as wrapper to get
->           reference to vfio_device from struct device.
-> 
-> 	- Added vfio_device_data() as a wrapper to get device_data from
->           vfio_device.
-> 
-> Signed-off-by: Vijay Mohan Pandarathil <vijaymohan.pandarathil@hp.com>
-> ---
->  drivers/vfio/vfio.c  | 47 ++++++++++++++++++++++++++++++++++-------------
->  include/linux/vfio.h |  3 +++
->  2 files changed, 37 insertions(+), 13 deletions(-)
-> 
-> diff --git a/drivers/vfio/vfio.c b/drivers/vfio/vfio.c
-> index 12c264d..863d1d3 100644
-> --- a/drivers/vfio/vfio.c
-> +++ b/drivers/vfio/vfio.c
-> @@ -407,12 +407,13 @@ static void vfio_device_release(struct kref *kref)
->  }
->  
->  /* Device reference always implies a group reference */
-> -static void vfio_device_put(struct vfio_device *device)
-> +void vfio_device_put(struct vfio_device *device)
->  {
->  	struct vfio_group *group = device->group;
->  	kref_put_mutex(&device->kref, vfio_device_release, &group->device_lock);
->  	vfio_group_put(group);
->  }
-> +EXPORT_SYMBOL_GPL(vfio_device_put);
->  
->  static void vfio_device_get(struct vfio_device *device)
->  {
-> @@ -642,8 +643,12 @@ int vfio_add_group_dev(struct device *dev,
->  }
->  EXPORT_SYMBOL_GPL(vfio_add_group_dev);
->  
-> -/* Test whether a struct device is present in our tracking */
-> -static bool vfio_dev_present(struct device *dev)
-> +/**
-> + * This does a get on the vfio_device from device.
-> + * Callers of this function will have to call vfio_put_device() to
-> + * remove the reference.
-> + */
-> +struct vfio_device *vfio_device_get_from_dev(struct device *dev)
->  {
+In the address decoding code, we implement two new functions:
+orion_alloc_cpu_win() and orion_free_cpu_win(). The first function
+finds an unused address decoding window, and configures it according
+to the given arguments (in terms of base address, size, target,
+attributes). The second function frees an address decoding window,
+given a physical base address.
 
-I cc'd you on a patch that changes vfio_dev_present to fix a bug where
-the device to iommu group lookup has been shutdown.  Using it for this
-purpose probably has the same bug.  That code is in my next branch and
-in the most reset pull request to Linus.
+Those two new functions will be used by the PCIe code, which needs to
+dynamically register address decoding windows depending on the PCIe
+devices that are detected.
 
-I think instead the code becomes much more simple.  We're registering a
-callback for a struct device for which vfio-pci is the driver.  During
-driver release we disable that callback for the device.  Thus during the
-callback, we know the device is owned by vfio-pci, which means that the
-drvdata has what we need.  So I think vfio_device_get_from_dev() simply
-becomes:
+The orion_free_cpu_win() function is only here to handle error cases
+in the PCIe devices initialization, in the normal case, address
+decoding windows are never freed.
 
-struct vfio_device *vfio_get_device_from_dev(struct device *dev)
-{
-       struct vfio_device *device = dev_get_drvdata(dev);
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+---
+ arch/arm/plat-orion/addr-map.c              |   75 +++++++++++++++++++++++++++
+ arch/arm/plat-orion/include/plat/addr-map.h |    7 +++
+ 2 files changed, 82 insertions(+)
 
-       vfio_device_get(device);
-
-       return device;
-}
-EXPORT_SYMBOL_GPL(vfio_get_device_from_dev);
-
-Thanks,
-Alex
-
->  	struct iommu_group *iommu_group;
->  	struct vfio_group *group;
-> @@ -651,25 +656,41 @@ static bool vfio_dev_present(struct device *dev)
->  
->  	iommu_group = iommu_group_get(dev);
->  	if (!iommu_group)
-> -		return false;
-> +		return NULL;
->  
->  	group = vfio_group_get_from_iommu(iommu_group);
->  	if (!group) {
->  		iommu_group_put(iommu_group);
-> -		return false;
-> +		return NULL;
->  	}
->  
->  	device = vfio_group_get_device(group, dev);
-> -	if (!device) {
-> -		vfio_group_put(group);
-> -		iommu_group_put(iommu_group);
-> -		return false;
-> -	}
-> -
-> -	vfio_device_put(device);
->  	vfio_group_put(group);
->  	iommu_group_put(iommu_group);
-> -	return true;
-> +	return device;
-> +}
-> +EXPORT_SYMBOL_GPL(vfio_device_get_from_dev);
-> +
-> +/*
-> + * Caller must hold a reference to the vfio_device
-> + */
-> +void *vfio_device_data(struct vfio_device *device)
-> +{
-> +	return device->device_data;
-> +}
-> +EXPORT_SYMBOL_GPL(vfio_device_data);
-> +
-> +/* Test whether a struct device is present in our tracking */
-> +static bool vfio_dev_present(struct device *dev)
-> +{
-> +	struct vfio_device *device;
-> +
-> +	device = vfio_device_get_from_dev(dev);
-> +	if (device) {
-> +		vfio_device_put(device);
-> +		return true;
-> +	} else
-> +		return false;
->  }
->  
->  /*
-> diff --git a/include/linux/vfio.h b/include/linux/vfio.h
-> index ab9e862..ac8d488 100644
-> --- a/include/linux/vfio.h
-> +++ b/include/linux/vfio.h
-> @@ -45,6 +45,9 @@ extern int vfio_add_group_dev(struct device *dev,
->  			      void *device_data);
->  
->  extern void *vfio_del_group_dev(struct device *dev);
-> +extern struct vfio_device *vfio_device_get_from_dev(struct device *dev);
-> +extern void vfio_device_put(struct vfio_device *device);
-> +extern void *vfio_device_data(struct vfio_device *device);
->  
->  /**
->   * struct vfio_iommu_driver_ops - VFIO IOMMU driver callbacks
-
-
+diff --git a/arch/arm/plat-orion/addr-map.c b/arch/arm/plat-orion/addr-map.c
+index a187524..a7bdc21 100644
+--- a/arch/arm/plat-orion/addr-map.c
++++ b/arch/arm/plat-orion/addr-map.c
+@@ -108,6 +108,81 @@ static void orion_disable_cpu_win(const struct orion_addr_map_cfg *cfg,
+ 	}
+ }
+ 
++static int orion_window_is_free(const struct orion_addr_map_cfg *cfg,
++				const int win)
++{
++	void __iomem *addr = cfg->win_cfg_base(cfg, win);
++	u32 ctrl = readl(addr + WIN_CTRL_OFF);
++	return !(ctrl & WIN_CTRL_ENABLE);
++}
++
++/*
++ * Find an unused address decoding window, and enable it according to
++ * the arguments passed (base, size, target, attributes, remap).
++ */
++int orion_alloc_cpu_win(const struct orion_addr_map_cfg *cfg,
++			const u32 base, const u32 size,
++			const u8 target, const u8 attr, const u32 remap)
++{
++	int win;
++
++	/*
++	 * If we don't need to remap, try to first allocate a window
++	 * that doesn't have remapping capabilities, since those are
++	 * pretty limited in number.
++	 */
++	if (remap == ORION_ADDR_MAP_NO_REMAP) {
++		for (win = cfg->remappable_wins; win < cfg->num_wins; win++)
++			if (orion_window_is_free(cfg, win))
++				break;
++
++		if (win < cfg->num_wins) {
++			orion_setup_cpu_win(cfg, win, base, size, target, attr, remap);
++			return 0;
++		}
++	}
++
++	/*
++	 * We need a remap window, or we haven't found a non-remap
++	 * capable window.
++	 */
++	for (win = 0; win < cfg->num_wins; win++)
++		if (orion_window_is_free(cfg, win))
++			break;
++
++	if (win < cfg->num_wins) {
++		orion_setup_cpu_win(cfg, win, base, size, target, attr, remap);
++		return 0;
++	}
++
++	/* No window found */
++	return -ENOMEM;
++}
++
++/*
++ * Free an address decoding window, given its base address.
++ */
++int orion_free_cpu_win(const struct orion_addr_map_cfg *cfg,
++		       const u32 base)
++{
++	int win;
++
++	for (win = 0; win < cfg->num_wins; win++) {
++		void __iomem *addr = cfg->win_cfg_base(cfg, win);
++		u32 winbase = readl(addr + WIN_BASE_OFF);
++
++		if (orion_window_is_free(cfg, win))
++			continue;
++
++		if (winbase == (base & 0xffff0000)) {
++			orion_disable_cpu_win(cfg, win);
++			return 0;
++		}
++	}
++
++	return -EINVAL;
++}
++
+ /*
+  * Configure a number of windows.
+  */
+diff --git a/arch/arm/plat-orion/include/plat/addr-map.h b/arch/arm/plat-orion/include/plat/addr-map.h
+index a5b21a9..fc46878 100644
+--- a/arch/arm/plat-orion/include/plat/addr-map.h
++++ b/arch/arm/plat-orion/include/plat/addr-map.h
+@@ -51,6 +51,13 @@ void orion_setup_cpu_win(const struct orion_addr_map_cfg *cfg,
+ 			 const u32 size, const u8 target,
+ 			 const u8 attr, const u32 remap);
+ 
++int orion_alloc_cpu_win(const struct orion_addr_map_cfg *cfg,
++			const u32 base, const u32 size,
++			const u8 target, const u8 attr, const u32 remap);
++
++int orion_free_cpu_win(const struct orion_addr_map_cfg *cfg,
++		       const u32 base);
++
+ void __init orion_setup_cpu_mbus_target(const struct orion_addr_map_cfg *cfg,
+ 					const void __iomem *ddr_window_cpu_base);
+ #endif
+-- 
+1.7.9.5
 
