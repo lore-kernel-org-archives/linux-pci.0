@@ -1,66 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:35669 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1947333Ab3BIA1R (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 Feb 2013 19:27:17 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v2 26-1/26] PCI, x86: Make ioapic hotplug support built-in
-Date: Fri,  8 Feb 2013 16:26:43 -0800
-Message-Id: <1360369606-8416-1-git-send-email-yinghai@kernel.org>
-In-Reply-To: <CAE9FiQVhmH_TGqEwxGPusKNn-6Q7QkS3UTitEriV3dX8sPbzFA@mail.gmail.com>
-References: <CAE9FiQVhmH_TGqEwxGPusKNn-6Q7QkS3UTitEriV3dX8sPbzFA@mail.gmail.com>
+Received: from mail.free-electrons.com ([94.23.35.102]:45933 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933365Ab3BLQ3o (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Feb 2013 11:29:44 -0500
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Cc: Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Tawfik Bayouk <tawfik@marvell.com>
+Subject: [PATCH 22/32] arm: plat-orion: make common PCIe code usable on mvebu
+Date: Tue, 12 Feb 2013 17:28:56 +0100
+Message-Id: <1360686546-24277-23-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-ioapic hotplug should be built-in by nature.
+mvebu is a new-style Orion platform, so it only selects PLAT_ORION,
+but not PLAT_ORION_LEGACY. It will however need the common PCIe code
+from plat-orion, so make this code available for PLAT_ORION platforms
+as a whole, and not only PLAT_ORION_LEGACY platforms.
 
-Also need to make it depends on X86_IO_APIC.
+We also take this opportunity to build the PCIe code only when
+CONFIG_PCI is enabled.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
 ---
- drivers/pci/Kconfig  |    3 ++-
- drivers/pci/ioapic.c |    7 -------
- 2 files changed, 2 insertions(+), 8 deletions(-)
+ arch/arm/plat-orion/Makefile |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-Index: linux-2.6/drivers/pci/Kconfig
-===================================================================
---- linux-2.6.orig/drivers/pci/Kconfig
-+++ linux-2.6/drivers/pci/Kconfig
-@@ -110,10 +110,11 @@ config PCI_PASID
- 	  If unsure, say N.
+diff --git a/arch/arm/plat-orion/Makefile b/arch/arm/plat-orion/Makefile
+index a82cecb..1aca22b 100644
+--- a/arch/arm/plat-orion/Makefile
++++ b/arch/arm/plat-orion/Makefile
+@@ -4,7 +4,8 @@
+ ccflags-$(CONFIG_ARCH_MULTIPLATFORM) := -I$(srctree)/$(src)/include
  
- config PCI_IOAPIC
--	tristate "PCI IO-APIC hotplug support" if X86
-+	bool "PCI IO-APIC hotplug support" if X86
- 	depends on PCI
- 	depends on ACPI
- 	depends on HOTPLUG
-+	depends on X86_IO_APIC
- 	default !X86
+ obj-y                             += addr-map.o
++obj-$(CONFIG_PCI)                 += pcie.o
  
- config PCI_LABEL
-Index: linux-2.6/drivers/pci/ioapic.c
-===================================================================
---- linux-2.6.orig/drivers/pci/ioapic.c
-+++ linux-2.6/drivers/pci/ioapic.c
-@@ -130,13 +130,6 @@ static int __init ioapic_init(void)
- {
- 	return pci_register_driver(&ioapic_driver);
- }
--
--static void __exit ioapic_exit(void)
--{
--	pci_unregister_driver(&ioapic_driver);
--}
--
- module_init(ioapic_init);
--module_exit(ioapic_exit);
- 
- MODULE_LICENSE("GPL");
+ orion-gpio-$(CONFIG_GENERIC_GPIO) += gpio.o
+-obj-$(CONFIG_PLAT_ORION_LEGACY)   += irq.o pcie.o time.o common.o mpp.o
++obj-$(CONFIG_PLAT_ORION_LEGACY)   += irq.o time.o common.o mpp.o
+ obj-$(CONFIG_PLAT_ORION_LEGACY)   += $(orion-gpio-y)
+-- 
+1.7.9.5
+
