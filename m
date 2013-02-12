@@ -1,53 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-da0-f53.google.com ([209.85.210.53]:51422 "EHLO
-	mail-da0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933548Ab3BTSFs (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Feb 2013 13:05:48 -0500
-Received: by mail-da0-f53.google.com with SMTP id g27so540146dan.40
-        for <linux-pci@vger.kernel.org>; Wed, 20 Feb 2013 10:05:48 -0800 (PST)
-Date: Wed, 20 Feb 2013 10:05:05 -0800
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Vijay Chauhan <kernel.vijay@gmail.com>
-Cc: linux-pci@vger.kernel.org
-Subject: Re: [OT] Newbie
-Message-ID: <20130220180505.GA6679@kroah.com>
-References: <CAJ61zBBOMqNsbxgYjWsDVG_J5J=qK+jADGE6+YDoT20vbTjFRg@mail.gmail.com>
- <20130220141739.GA5705@kroah.com>
- <CAJ61zBDE7X1V1vgkzTEBFan8rEdpqB7uuzg4Rb=6K9q1=D60Eg@mail.gmail.com>
+Received: from moutng.kundenserver.de ([212.227.17.10]:61394 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752490Ab3BLXGE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Feb 2013 18:06:04 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Subject: Re: Giving special alignment/size constraints to the Linux PCI core?
+Date: Tue, 12 Feb 2013 23:05:28 +0000
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	"Russell King - ARM Linux" <linux@arm.linux.org.uk>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	linux-pci@vger.kernel.org,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	"Eran Ben-Avi" <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	linux-arm-kernel@lists.infradead.org
+References: <20130130120344.GA29490@avionic-0098.mockup.avionic-design.de> <201302121902.14276.arnd@arndb.de> <20130212193848.GE1471@obsidianresearch.com>
+In-Reply-To: <20130212193848.GE1471@obsidianresearch.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAJ61zBDE7X1V1vgkzTEBFan8rEdpqB7uuzg4Rb=6K9q1=D60Eg@mail.gmail.com>
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201302122305.28467.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 20, 2013 at 08:44:27PM +0530, Vijay Chauhan wrote:
-> Hello Greg,
+On Tuesday 12 February 2013, Jason Gunthorpe wrote:
+> PCI-E hotplug can be supported through the generic /sys/bus/pci/rescan
+> mechanism, which forces a rediscovery/re-evaluation of all the buses
+> in the system. The PCI core is smart enough to know what it can/can
+> not reassign and can move the bridge windows around (IIRC most of the
+> issues here are resolved these days?).
 > 
-> Thanks for your reply.
+> For PCI-E, the root port bridge can be placed anywhere in the host
+> aperture, so as long as the host aperture isn't filled the core can
+> allocate a memory region for the now active port.
 > 
-> On Wed, Feb 20, 2013 at 7:47 PM, Greg KH <gregkh@linuxfoundation.org> wrote:
-> > On Wed, Feb 20, 2013 at 07:32:03PM +0530, Vijay Chauhan wrote:
-> >> Hi,
-> >>
-> >> I am newbie for PCI. I wanted to learn PCI driver programming in Linux.
-> >> Please suggest me how to start. Any example (sample code) or tutorial
-> >> link or book helpful for me.
-> >
-> > Doesn't the huge number of example drivers in the kernel sources provide
-> > a wonderful place to start with?
-> >
-> > What specifically are you trying to do here that you need help with?
-> 
-> Nothing specific as such, I wanted to learn starting  from basic and
-> easy code. drivers/pci/ directory has lots of code but I dont know the
-> order. Is there any documentation? Some basic and small piece of code
-> for foundation purpose. If you can suggest me one.
+> Thomas's driver should support this as the regions and windows are all
+> properly dynamic.
 
-Don't pay attention to the drivers/pci/ directory, that is the code that
-implements the PCI core, no driver needs to mess with that.  For an
-introduction to writing a PCI driver, please see the (outdated, but
-free) Linux Device Drivers, third edition book.
+Ah, so you only allow hotplugging into the root ports, but not behind
+additional bridges that have active devices on them, right?
 
-Good luck,
+I guess that is a common limitation for PCIe hotplugging.
+ 
+> This is one reason why re-using the PCI core code is so desirable, it
+> handles all these complexities.
 
-greg k-h
+Ok, I'm starting to understand what the entire discussion is about ;)
+
+	Arnd
