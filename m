@@ -1,112 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:37555 "EHLO quartz.orcorp.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755766Ab3BFRJS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 6 Feb 2013 12:09:18 -0500
-Date: Wed, 6 Feb 2013 10:09:03 -0700
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+Received: from mail.free-electrons.com ([94.23.35.102]:47048 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933750Ab3BLTEM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Feb 2013 14:04:12 -0500
+Date: Tue, 12 Feb 2013 20:04:03 +0100
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	"Russell King - ARM Linux" <linux@arm.linux.org.uk>,
 	Jason Cooper <jason@lakedaemon.net>,
-	Arnd Bergmann <arnd@arndb.de>,
 	Stephen Warren <swarren@wwwdotorg.org>,
-	linux-pci@vger.kernel.org,
 	Thierry Reding <thierry.reding@avionic-design.de>,
-	Eran Ben-Avi <benavi@marvell.com>,
+	"Eran Ben-Avi" <benavi@marvell.com>,
 	Nadav Haklai <nadavh@marvell.com>,
 	Maen Suleiman <maen@marvell.com>,
 	Shadi Ammouri <shadi@marvell.com>,
 	Gregory Clement <gregory.clement@free-electrons.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH v2 19/27] pci: PCIe driver for Marvell Armada 370/XP
- systems
-Message-ID: <20130206170903.GA28198@obsidianresearch.com>
-References: <20130130120344.GA29490@avionic-0098.mockup.avionic-design.de>
- <2776630.gp5gC9tvLk@wuerfel>
- <20130131180249.GA30869@obsidianresearch.com>
- <201301312046.22560.arnd@arndb.de>
- <20130131224459.GA11846@obsidianresearch.com>
- <20130206175128.1b64196d@skate>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130206175128.1b64196d@skate>
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Tawfik Bayouk <tawfik@marvell.com>
+Subject: Re: [PATCH v3] PCIe support for the Armada 370 and Armada XP SoCs
+Message-ID: <20130212200403.75025c7b@skate>
+In-Reply-To: <201302121812.11566.arnd@arndb.de>
+References: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	<201302121812.11566.arnd@arndb.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 06, 2013 at 05:51:28PM +0100, Thomas Petazzoni wrote:
+Dear Arnd Bergmann,
 
-> > So you'd end up with a MMU mapping something like:
-> >   PCI_IO_VIRT_BASE    MBUS_IO_PHYS_BASE
-> >     0->4k          => 0      -> 4k             // 4k assigned to link0
-> >     4k->8k         => 64k+4k -> 64k+8k         // 4k assigned to link1
-> >     8k->24k        => 128k+8k -> 128k+24k      // 8k assigned to link2
+On Tue, 12 Feb 2013 18:12:11 +0000, Arnd Bergmann wrote:
+
+> > In order to make progress on this, and help reducing the size of the
+> > patch set, I would ask if it would be possible to merge patches 1 to
+> > 17 from the series for 3.9 (only preparation work), keeping the rest
+> > for 3.10. The patches in question are PCI-related, ARM-related, and
+> > mvebu/orion-related.
 > 
-> I am not sure to understand your example, starting at the second line.
-> Shouldn't the second line have been
-> 
->       4k->8k         => 64k -> 64k+4k
+> You can add my 'Reviewed-by' tag on all paches except 5, 6, and 24.
 
-No..
- 
-> as you suggested, then when the device driver will do an inl(0x4) on
-> this device, the device will receive the equivalent of an inl(0x1004),
-> no?
+Thanks. I would already be wonderful if I could merge many of those
+preparations patches for 3.9.
 
-Link 0 translates like:
+> I'm fine with adding the other ones to 3.9, as well as adding
+> the binding document if you split that out from patch 24. Sorry for
+> making this so hard for you.
 
-- Linux driver does inl(0x4)
-- ARM layer converts that into a read from PCI_IO_VIRT_BASE + 0x4
-- The CPU TLB converts that into a read from CPU physical
-  0xc0000000 + 0x4
-- The MBUS window remap register converts that into a read from IO
-  space 0x4
-- The address 0x4 is placed in the PCI-E IO transaction of link 0
+That's fine, the problem is difficult, so it's expected to be difficult
+to find the right solution.
 
-Link 1 translates like:
+However, I'd like to get serious alternate proposals when the current
+proposal isn't considered appropriate. A serious proposal needs to
+provide a mechanism to dynamically assign range of addresses to the
+different BARs of the different PCIe devices, and those range of
+addresses must comply with the special alignment requirements of the
+Marvell address decoding windows. So far, I haven't seen any alternate
+proposal that has those characteristics. The only alternate proposals
+were based on static assignments of addresses to each PCIe interface,
+which is unacceptable.
 
-- Linux driver does inl(0x1004)
-- ARM layer converts that into a read from PCI_IO_VIRT_BASE + 0x1004
-- The CPU TLB converts that into a read from CPU physical
-  0xc0000000 + 0x11004 (ie the mbus window for the link 1)
-- The MBUS window remap register converts that into a read from IO
-  space 0x1004
-- The address 0x1004 is placed in the PCI-E IO transaction of link 1
+Thanks!
 
-Noting that in both instances the IO address passed to inl is what
-eventually appears on the PCI-E link after all the translation is
-completed.
-
-The CPU MMU is being used used to route 4k aligned ranges to the
-correct link.
-
-> I understand that I have two choices here:
-> 
->  * First one is to make the I/O regions of all PCIe links fit below the
->    default IO_SPACE_LIMIT (0xffff) by doing the mapping trick you
->    described above.
-> 
->  * Second one is to have one 64 KB block for each PCIe link, which
->    would require raising the IO_SPACE_LIMIT on this platform.
-
-Yes, however, AFIAK this is the environment you should be running in:
-
-#define IO_SPACE_LIMIT  ((resource_size_t)0xfffff)
-
-Which is 5 f's not 4.
-
-> > Though, there is still a problem with the MMIO mbus window
-> > alignment. mbus windows are aligned to a multiple of their size, PCI
-> > MMIO bridge windows are always aligned to 1M...
-> 
-> Can't this be solved using the window_alignement() hook we've been
-> discussing separately? Just like we teach the Linux PCI core about our
-> alignment requirements of 64K for the I/O regions, we could teach it
-> about our alignment requirement on memory regions as well. No?
-
-Hopefully :) As long as it can adjust the start and length you should
-be fine.
-
-Jason
+Thomas
+-- 
+Thomas Petazzoni, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
