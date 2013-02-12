@@ -1,33 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-da0-f46.google.com ([209.85.210.46]:63499 "EHLO
-	mail-da0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934593Ab3BTORL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Feb 2013 09:17:11 -0500
-Received: by mail-da0-f46.google.com with SMTP id p5so3518330dak.19
-        for <linux-pci@vger.kernel.org>; Wed, 20 Feb 2013 06:17:10 -0800 (PST)
-Date: Wed, 20 Feb 2013 06:17:39 -0800
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Vijay Chauhan <kernel.vijay@gmail.com>
-Cc: linux-pci@vger.kernel.org
-Subject: Re: [OT] Newbie
-Message-ID: <20130220141739.GA5705@kroah.com>
-References: <CAJ61zBBOMqNsbxgYjWsDVG_J5J=qK+jADGE6+YDoT20vbTjFRg@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAJ61zBBOMqNsbxgYjWsDVG_J5J=qK+jADGE6+YDoT20vbTjFRg@mail.gmail.com>
+Received: from mail.free-electrons.com ([94.23.35.102]:46026 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933383Ab3BLQ34 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Feb 2013 11:29:56 -0500
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Cc: Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Tawfik Bayouk <tawfik@marvell.com>
+Subject: [PATCH 31/32] arm: mvebu: PCIe Device Tree informations for Armada 370 DB
+Date: Tue, 12 Feb 2013 17:29:05 +0100
+Message-Id: <1360686546-24277-32-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 20, 2013 at 07:32:03PM +0530, Vijay Chauhan wrote:
-> Hi,
-> 
-> I am newbie for PCI. I wanted to learn PCI driver programming in Linux.
-> Please suggest me how to start. Any example (sample code) or tutorial
-> link or book helpful for me.
+The Marvell evaluation board (DB) for the Armada 370 SoC has 2
+physical full-size PCIe slots, so we enable the corresponding PCIe
+interfaces in the Device Tree.
 
-Doesn't the huge number of example drivers in the kernel sources provide
-a wonderful place to start with?
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+---
+ arch/arm/boot/dts/armada-370-db.dts |   15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
 
-What specifically are you trying to do here that you need help with?
+diff --git a/arch/arm/boot/dts/armada-370-db.dts b/arch/arm/boot/dts/armada-370-db.dts
+index 9b82fac..fba3e8e 100644
+--- a/arch/arm/boot/dts/armada-370-db.dts
++++ b/arch/arm/boot/dts/armada-370-db.dts
+@@ -59,5 +59,20 @@
+ 			phy = <&phy1>;
+ 			phy-mode = "rgmii-id";
+ 		};
++
++		pcie-controller {
++			status = "okay";
++			/*
++			 * The two PCIe units are accessible through
++			 * both standard PCIe slots and mini-PCIe
++			 * slots on the board.
++			 */
++			pcie@0,0 {
++				status = "okay";
++			};
++			pcie@1,0 {
++				status = "okay";
++			};
++		};
+ 	};
+ };
+-- 
+1.7.9.5
 
-greg k-h
