@@ -1,95 +1,115 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-la0-f43.google.com ([209.85.215.43]:47513 "EHLO
-	mail-la0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756539Ab3BBMMJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 2 Feb 2013 07:12:09 -0500
-Message-ID: <510D0293.8030509@openvz.org>
-Date: Sat, 02 Feb 2013 16:12:03 +0400
-From: Konstantin Khlebnikov <khlebnikov@openvz.org>
-MIME-Version: 1.0
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-CC: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
-	e1000-devel@lists.sourceforge.net, linux-pci@vger.kernel.org,
-	Dave Airlie <airlied@redhat.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Subject: Re: [PATCH 3/5] PCI: revert preparing for wakeup in runtime-suspend
- finalization
-References: <20130118113019.6698.25941.stgit@zurg> <51077499.90602@openvz.org> <7488961.Q6GFlfgakd@vostro.rjw.lan> <2547462.dZlJyWsOdA@vostro.rjw.lan>
-In-Reply-To: <2547462.dZlJyWsOdA@vostro.rjw.lan>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from mx1.redhat.com ([209.132.183.28]:32762 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755052Ab3BLEQH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 11 Feb 2013 23:16:07 -0500
+Message-ID: <1360642556.3248.64.camel@bling.home>
+Subject: Re: PCI warning on boot 3.8.0-rc1
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Stephen Hemminger <stephen@networkplumber.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	David Woodhouse <dwmw2@infradead.org>,
+	iommu@lists.linux-foundation.org
+Date: Mon, 11 Feb 2013 21:15:56 -0700
+In-Reply-To: <1360166321.11144.638.camel@bling.home>
+References: <20130116143853.339dd89b@nehalam.linuxnetplumber.net>
+	 <CAErSpo5eOE_=Ob2jN7ACy0eJBOa8k36XqCbHnGTCs-wfiy8tiw@mail.gmail.com>
+	 <20130204103645.38ae2d5e@nehalam.linuxnetplumber.net>
+	 <1360009684.11144.539.camel@bling.home>
+	 <1360017684.11144.547.camel@bling.home>
+	 <20130206074900.02f04e3f@nehalam.linuxnetplumber.net>
+	 <1360166321.11144.638.camel@bling.home>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Rafael J. Wysocki wrote:
-> On Tuesday, January 29, 2013 12:55:15 PM Rafael J. Wysocki wrote:
->> On Tuesday, January 29, 2013 11:04:57 AM Konstantin Khlebnikov wrote:
->>> Rafael J. Wysocki wrote:
->>>> On Monday, January 28, 2013 04:17:42 PM Bjorn Helgaas wrote:
->>>>> [+cc Rafael]
->>>>>
->>>>> On Fri, Jan 18, 2013 at 4:42 AM, Konstantin Khlebnikov
->>>>> <khlebnikov@openvz.org>   wrote:
->>>>>> This patch effectively reverts commit 42eca2302146fed51335b95128e949ee6f54478f
->>>>>> ("PCI: Don't touch card regs after runtime suspend D3")
->>>>>>
->>>>>> | This patch checks whether the pci state is saved and doesn't attempt to hit
->>>>>> | any registers after that point if it is.
->>>>>>
->>>>>> This seems completely wrong. Yes, PCI configuration space has been saved by
->>>>>> driver, but this doesn't means that all job is done and device has been
->>>>>> suspended and ready for waking up in the future.
->>>>>>
->>>>>> For example driver e1000e for ethernet in my thinkpad x220 saves pci-state
->>>>>> but device cannot wakeup after that, because it needs some ACPI callbacks
->>>>>> which usually called from pci_finish_runtime_suspend().
->>>>>>
->>>>>> | Optimus (dual-gpu) laptops seem to have their own form of D3cold, but
->>>>>> | unfortunately enter it on normal D3 transitions via the ACPI callback.
->>>>>>
->>>>>> Hardware which disappears from the bus unexpectedly is exception, so let's
->>>>>> handle it as an exception. Its driver should set device state to D3cold and
->>>>>> the rest code will handle it properly.
->>>>>
->>>>> Functions in D3cold don't have power, so it's completely expected that
->>>>> they would disappear from the bus and not respond to config accesses.
->>>>> Maybe Dave was referring to D3hot, where functions *should* respond to
->>>>> config accesses.  I dunno.
->>>>>
->>>>> Just to be clear, it sounds like 42eca230 caused a regression on your
->>>>> e1000e device?  If so, I guess we should revert it unless you and Dave
->>>>> can figure out a better patch that fixes both your e1000e device and
->>>>> the Optimus issue.
->>>>
->>>> Yes, if there's a regression, let's revert it, but I'd like the regression
->>>> to be described clearly.
->>>
->>> Yep, this is regression.
->>>
->>> commit 42eca2302146fed51335b95128e949ee6f54478f ("PCI: Don't touch
->>> card regs after runtime suspend D3") changes state convention during
->>> runtime-suspend transaction too much. If PCI configuration space
->>> has been saved by driver that does not means that all job is done
->>> and device has been suspended and ready for waking up in the future.
->>>
->>> e1000e saves pci-config space itself, but it requires operations which
->>> pci_finish_runtime_suspend() does: preparing for wake (calling particular
->>> platform pm-callbacks) and switching to proper sleep state.
->>
->> Well, I'd argue this is a bug in e1000e.  Why does it need to save the PCI
->> config space even though pci_pm_runtime_suspend() will do that anyway?
->
-> I honestly don't think we should revert 42eca2302146 because of this.
->
-> Yes, there is a requirement that drivers not save the PCI config space by
-> themselves unless they want to do the whole power management by themselves too
-> and e1000e is not following that.  So either we need to drop the
-> pci_save_state() from __e1000_shutdown() which I would prefer (I'm not really
-> sure why it is there), or e1000_runtime_suspend() needs to call
-> pci_finish_runtime_suspend() by itself.
+On Wed, 2013-02-06 at 08:58 -0700, Alex Williamson wrote:
+> On Wed, 2013-02-06 at 07:49 -0800, Stephen Hemminger wrote:
+> > On Mon, 04 Feb 2013 15:41:24 -0700
+> > Alex Williamson <alex.williamson@redhat.com> wrote:
+> > 
+> > > On Mon, 2013-02-04 at 13:28 -0700, Alex Williamson wrote:
+> > > > On Mon, 2013-02-04 at 10:36 -0800, Stephen Hemminger wrote:
+> > > > > > I think drivers/pci/search.c is identical between 3.7 and 3.8-rc1.  Is
+> > > > > > this the first time you've turned on the IOMMU on that box?
+> > > > > 
+> > > > > It exists in 3.7 and earlier kernels, just haven't turned on same config.
+> > > > > 
+> > > > > > It's the same warning as in this bugzilla:
+> > > > > > https://bugzilla.kernel.org/show_bug.cgi?id=44881, and there's a patch
+> > > > > > there at https://bugzilla.kernel.org/show_bug.cgi?id=44881#c11, but
+> > > > > > it's just a quirk that turns off VT-d if we find certain broken
+> > > > > > bridges.  It doesn't look like you have any of those (although I don't
+> > > > > > know what you have at 05:00.0).
+> > > > > > 
+> > > > > > Bjorn
+> > > > > 
+> > > > > This is a standard ASUS motherboard, and don't want to disable VT-d.
+> > > > 
+> > > > Stephen,
+> > > > 
+> > > > Can you give the lspci -vvv of device 5:00.0 to see if it's one we've
+> > > > seen before?  Does the patch below help?
+> > > > 
+> > > > Bjorn, I think we need to quirk it somehow.  So far they've all been
+> > > > PCI-to-PCI bridges attached to root ports where we expect it's actually
+> > > > a PCIe-to-PCI bridge.  Seems like maybe we could have the same attached
+> > > > to a downstream port.  The patch below avoids the WARN and gives us a
+> > > > device, but of course pci_is_pcie reports wrong for this device and may
+> > > > cause some trickle down breakage.  A more complete option might be to
+> > > > add a is_pcie flag to the device that can be set independent of
+> > > > pcie_cap.  We'd need to check all the callers for assumptions, but then
+> > > > we could put the quirk in one place and hopefully fix everything.
+> > > > Thoughts?  Thanks,
+> > > 
+> > > This latter approach seems like it might be easier than I expected since
+> > > all the users are so well filtered through the access functions.  A
+> > > quick look through who uses pci_is_pcie seems like this might be
+> > > complete, but more eyes are required.  I'll upload this to the bz for
+> > > those reporters to test as well.  Thoughts?  Thanks,
+> > > 
+> > > Alex
+> > 
+> > On my hardware this gives:
+> 
+> > [    0.254621] pci_bus 0000:05: busn_res: can not insert [bus 05-ff] under [bus 00-3e] (conflicts with (null) [bus 00-3e])
+> > [    0.254647] WARNING: Your hardware is broken, device (null) appears to be a
+> > [    0.254647]  Legacy PCI device attached directly to a PCIe device which is not a
+> > [    0.254647]  PCIe-to-PCI bridge.  Per section 7.8 of the PCI Express 3.0 spec, the
+> > [    0.254647]  PCI express capability structure is required for PCI express device
+> > [    0.254647] functions.
+> > [    0.254653] pci 0000:05:00.0: [1b21:1080] type 01 class 0x060401
+> 
+> I guess I must be calling pci_name() before it's set.  The warning
+> message needs some work too, it's mainly meant for hardware vendors with
+> the hope that they might test Linux and see it before shipping these
+> broken devices.  Bjorn, does this approach seem worth pursuing?  Thanks,
 
-Yet another problem: some drivers calls pci_save_state() from ->probe() callback
-to use this saved state in pci_error_handlers->slot_reset().
-As result pdev->state_saved is true mostly all time.
-At least e1000e and drivers/pci/pcie/portdrv_pci.c are doing this.
+I don't know if it sways how we handle this devices, but a couple notes
+on the asmedia chip.  I have one in a non-VT-d capable system and an
+add-in legacy PCI NIC shows up behind it when added to the system.  The
+chip is visible on the board and is an ASM1083.  Asmedia's website of
+course claims this device is fully compliant with the PCIe-to-PCI bridge
+spec, ignoring the multiple statements the spec contains requiring such
+devices to support a PCIe capability.
 
-I think it will be safer to revert 42eca2302146 in v3.8
+Additionally, if you google for ASM1083 you'll find the next highest
+links after the product links are bug reports that not only is this
+device non-spec complaint, but it doesn't work.  There seems to be an
+issue with how INTx is de-asserted (or not) leading to interrupt storms
+and requiring the use of irqpoll.  Sure enough, the tulip card I
+installed generated some of these and is operating in polling mode.  The
+threads indicate that these issues are not isolated to Linux and Windows
+users also complain about devices not working or having poor performance
+installed behind this bridge.  All in all, it's an absurdly broken piece
+of hardware.
+
+I wonder if instead of trying to work around it, we should just
+blacklist the device and ignore that it even exists.  Stop the bus walk
+with some kind of dmesg error and provide a boot time option to scan it.
+It's not the most user friendly option, but a) most people don't seem to
+have anything behind it, b) it barely works if they do.  Thanks,
+
+Alex
+
