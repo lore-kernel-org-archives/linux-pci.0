@@ -1,53 +1,66 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jiang Liu <liuj97@gmail.com>, Jiang Liu <jiang.liu@huawei.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>
-Subject: Re: [RFC PATCH v5 4/8] ACPI, PCI: avoid building pci_slot as module
-Date: Sun, 03 Feb 2013 21:18:55 +0100
-Message-ID: <10475811.H5RONrFZPm@vostro.rjw.lan>
-In-Reply-To: <CAErSpo4fbNzFaBxH+eKD+BKVgghyCJEYLDMzc6_gdxABAPe3QQ@mail.gmail.com>
-References: <1358525267-14268-1-git-send-email-jiang.liu@huawei.com> <3500982.MUDp6kKU3R@vostro.rjw.lan> <CAErSpo4fbNzFaBxH+eKD+BKVgghyCJEYLDMzc6_gdxABAPe3QQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.free-electrons.com ([94.23.35.102]:46017 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933377Ab3BLQ3z (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Feb 2013 11:29:55 -0500
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Cc: Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Tawfik Bayouk <tawfik@marvell.com>
+Subject: [PATCH 30/32] arm: mvebu: PCIe Device Tree informations for Armada 370 Mirabox
+Date: Tue, 12 Feb 2013 17:29:04 +0100
+Message-Id: <1360686546-24277-31-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, January 28, 2013 02:09:22 PM Bjorn Helgaas wrote:
-> On Sun, Jan 20, 2013 at 5:01 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> > On Saturday, January 19, 2013 12:07:42 AM Jiang Liu wrote:
-> >> As discussed in thread at https://patchwork.kernel.org/patch/1946851/,
-> >> there's no value in supporting CONFIG_ACPI_PCI_SLOT=m any more.
-> >> So change Kconfig and code to only support building pci_slot as
-> >> built-in driver.
-> >>
-> >> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-> >
-> > Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> 
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-> 
-> I think we should eventually get rid of acpi_pci_register_driver() and
-> do this initialization directly from acpi_pci_root_add().  But
-> removing the module option here is a good first step.
-> 
-> Rafael, do you want to apply this (and [6/8]) via your tree?  If not,
-> I can take it.
+The Globalscale Mirabox platform uses one PCIe interface for an
+available mini-PCIe slot, and the other PCIe interface for an internal
+USB 3.0 controller. We add the necessary Device Tree informations to
+enable those two interfaces.
 
-Both applied to bleeding-edge.  I've added your ACK to the [6/8] too, hope
-that's OK.
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+---
+ arch/arm/boot/dts/armada-370-mirabox.dts |   14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
-Thanks,
-Rafael
-
-
+diff --git a/arch/arm/boot/dts/armada-370-mirabox.dts b/arch/arm/boot/dts/armada-370-mirabox.dts
+index 3b40713..591068a 100644
+--- a/arch/arm/boot/dts/armada-370-mirabox.dts
++++ b/arch/arm/boot/dts/armada-370-mirabox.dts
+@@ -52,5 +52,19 @@
+ 			phy = <&phy1>;
+ 			phy-mode = "rgmii-id";
+ 		};
++
++		pcie-controller {
++			status = "okay";
++
++			/* Internal mini-PCIe connector */
++			pcie@0,0 {
++				status = "okay";
++			};
++
++			/* Connected on the PCB to a USB 3.0 XHCI controller */
++			pcie@1,0 {
++				status = "okay";
++			};
++		};
+ 	};
+ };
 -- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+1.7.9.5
+
