@@ -1,80 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52904 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754176Ab3BDU2M (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 4 Feb 2013 15:28:12 -0500
-Message-ID: <1360009684.11144.539.camel@bling.home>
-Subject: Re: PCI warning on boot 3.8.0-rc1
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Stephen Hemminger <stephen@networkplumber.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	David Woodhouse <dwmw2@infradead.org>,
-	iommu@lists.linux-foundation.org
-Date: Mon, 04 Feb 2013 13:28:04 -0700
-In-Reply-To: <20130204103645.38ae2d5e@nehalam.linuxnetplumber.net>
-References: <20130116143853.339dd89b@nehalam.linuxnetplumber.net>
-	 <CAErSpo5eOE_=Ob2jN7ACy0eJBOa8k36XqCbHnGTCs-wfiy8tiw@mail.gmail.com>
-	 <20130204103645.38ae2d5e@nehalam.linuxnetplumber.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from moutng.kundenserver.de ([212.227.17.10]:56947 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758579Ab3BLQAr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Feb 2013 11:00:47 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Subject: Re: Giving special alignment/size constraints to the Linux PCI core?
+Date: Tue, 12 Feb 2013 16:00:08 +0000
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	"Russell King - ARM Linux" <linux@arm.linux.org.uk>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	linux-pci@vger.kernel.org,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	"Eran Ben-Avi" <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	linux-arm-kernel@lists.infradead.org
+References: <20130130120344.GA29490@avionic-0098.mockup.avionic-design.de> <CAErSpo7hwG89LTO+4+eqT_Gb+yUn1XKHYJ8CnnZcf_FPo-Kpyw@mail.gmail.com> <20130208091420.703a39b4@skate>
+In-Reply-To: <20130208091420.703a39b4@skate>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201302121600.08434.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 2013-02-04 at 10:36 -0800, Stephen Hemminger wrote:
-> > I think drivers/pci/search.c is identical between 3.7 and 3.8-rc1.  Is
-> > this the first time you've turned on the IOMMU on that box?
+On Friday 08 February 2013, Thomas Petazzoni wrote:
+> Dear Bjorn Helgaas,
 > 
-> It exists in 3.7 and earlier kernels, just haven't turned on same config.
+> On Thu, 7 Feb 2013 21:21:57 -0700, Bjorn Helgaas wrote:
 > 
-> > It's the same warning as in this bugzilla:
-> > https://bugzilla.kernel.org/show_bug.cgi?id=44881, and there's a patch
-> > there at https://bugzilla.kernel.org/show_bug.cgi?id=44881#c11, but
-> > it's just a quirk that turns off VT-d if we find certain broken
-> > bridges.  It doesn't look like you have any of those (although I don't
-> > know what you have at 05:00.0).
+> > Huh.  That hardware looks less and less like a P2P bridge all the time
+> > :(  You can't configure it via standard PCI config accesses, and the
+> > aperture alignment and size constraints sound completely non-standard.
+
+Right.
+
+> > I could imagine changing pcibios_window_alignment() to take the
+> > resource, so it could deal with the alignment question (though I
+> > haven't looked in detail and there might be some implementation issue
+> > with that).
 > > 
-> > Bjorn
+> > With regard to the size issue (3MB window using 4MB of address space),
+> > I can't think of a reasonable way to teach the PCI core about both
+> > sizes.  But is there any reason to program the bridge for a 3MB window
+> > instead of a 4MB window, given that there's nothing else we can do
+> > with the extra 1MB anyway?  Is a 3MB window even possible?  I would
+> > think something that must be aligned on its size would be restricted
+> > to power-of-2 sizes anyway, just like PCI BARs are.  Maybe you can
+> > just always round up window sizes to a power of 2?
 > 
-> This is a standard ASUS motherboard, and don't want to disable VT-d.
+> The window sizes are power of two sizes. I didn't realize that it was
+> also the case for PCI BARs. Then there is no problem with the size I
+> guess, and only a problem of alignment. Having the possibility to
+> get the resource and return a fixed up start address would solve the
+> problem I'd say.
 
-Stephen,
+I thought that only device BARs in PCI had natural alignment, while
+bridges don't.
 
-Can you give the lspci -vvv of device 5:00.0 to see if it's one we've
-seen before?  Does the patch below help?
+I tried understanding the actual problem we have with the current
+procedure, which on today's kirkwood is rought implemented in ARM's
+pci_common_init() as follows:
 
-Bjorn, I think we need to quirk it somehow.  So far they've all been
-PCI-to-PCI bridges attached to root ports where we expect it's actually
-a PCIe-to-PCI bridge.  Seems like maybe we could have the same attached
-to a downstream port.  The patch below avoids the WARN and gives us a
-device, but of course pci_is_pcie reports wrong for this device and may
-cause some trickle down breakage.  A more complete option might be to
-add a is_pcie flag to the device that can be set independent of
-pcie_cap.  We'd need to check all the callers for assumptions, but then
-we could put the quirk in one place and hopefully fix everything.
-Thoughts?  Thanks,
+for_each_root_bus() {
+	pci_scan_root_bus();
+}
+for_each_root_bus {
+	pci_bus_size_bridges();
+	pci_bus_assign_resources();
+	pci_enable_bridges();
+	pci_bus_add_devices();
+}
 
-Alex
+This is using hardcoded windows today, which are set up before calling
+pci_scan_root_bus(). With your change, there is only one root bus,
+and you intercept the pci_bus_assign_resources() stage in order to
+set up the hardware specific window configuration for each PCIe
+port of that root bus.
 
+My feeling is that an easier solution would be to keep separate
+root buses for each port, which then behaves completely PCIe
+compliant, but add a hook in the procedure above to set up the
+address translation windows between the pci_bus_size_bridges()
+and the pci_bus_assign_resources() calls.
 
-diff --git a/drivers/pci/search.c b/drivers/pci/search.c
-index bf969ba..65ae270 100644
---- a/drivers/pci/search.c
-+++ b/drivers/pci/search.c
-@@ -42,6 +42,15 @@ pci_find_upstream_pcie_bridge(struct pci_dev *pdev)
- 		}
- 		/* PCI device should connect to a PCIe bridge */
- 		if (pci_pcie_type(pdev) != PCI_EXP_TYPE_PCI_BRIDGE) {
-+			/*
-+			 * Not all PCIe-to-PCI bridges expose a PCIe
-+			 * capability.  If we make it to a PCIe root port
-+			 * and the previous device was a PCI-to-PCI bridge,
-+			 * assume it was really a PCIe-to-PCI bridge.
-+			 */
-+			if (pci_pcie_type(pdev) == PCI_EXP_TYPE_ROOT_PORT &&
-+			    tmp && tmp->hdr_type == PCI_HEADER_TYPE_BRIDGE)
-+				return tmp;
- 			/* Busted hardware? */
- 			WARN_ON_ONCE(1);
- 			return NULL;
-
-
+	Arnd
