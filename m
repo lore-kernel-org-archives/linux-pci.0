@@ -1,38 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-da0-f45.google.com ([209.85.210.45]:48504 "EHLO
-	mail-da0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753230Ab3BDSg7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 4 Feb 2013 13:36:59 -0500
-Received: by mail-da0-f45.google.com with SMTP id w4so2780476dam.18
-        for <linux-pci@vger.kernel.org>; Mon, 04 Feb 2013 10:36:58 -0800 (PST)
-Date: Mon, 4 Feb 2013 10:36:45 -0800
-From: Stephen Hemminger <stephen@networkplumber.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, David Woodhouse <dwmw2@infradead.org>,
-	iommu@lists.linux-foundation.org, alex.williamson@redhat.com
-Subject: Re: PCI warning on boot 3.8.0-rc1
-Message-ID: <20130204103645.38ae2d5e@nehalam.linuxnetplumber.net>
-In-Reply-To: <CAErSpo5eOE_=Ob2jN7ACy0eJBOa8k36XqCbHnGTCs-wfiy8tiw@mail.gmail.com>
-References: <20130116143853.339dd89b@nehalam.linuxnetplumber.net>
- <CAErSpo5eOE_=Ob2jN7ACy0eJBOa8k36XqCbHnGTCs-wfiy8tiw@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail.free-electrons.com ([94.23.35.102]:45953 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933376Ab3BLQ3t (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Feb 2013 11:29:49 -0500
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Cc: Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Tawfik Bayouk <tawfik@marvell.com>
+Subject: [PATCH 25/32] arm: mvebu: PCIe support is now available on mvebu
+Date: Tue, 12 Feb 2013 17:28:59 +0100
+Message-Id: <1360686546-24277-26-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Now that the PCIe driver for mvebu has been integrated and all its
+relevant dependencies, we can mark the ARCH_MVEBU platform has
+MIGHT_HAVE_PCI, which allows to select the PCI bus support if needed.
 
-> I think drivers/pci/search.c is identical between 3.7 and 3.8-rc1.  Is
-> this the first time you've turned on the IOMMU on that box?
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+---
+ arch/arm/mach-mvebu/Kconfig |    2 ++
+ 1 file changed, 2 insertions(+)
 
-It exists in 3.7 and earlier kernels, just haven't turned on same config.
+diff --git a/arch/arm/mach-mvebu/Kconfig b/arch/arm/mach-mvebu/Kconfig
+index 440b13e..f12e475 100644
+--- a/arch/arm/mach-mvebu/Kconfig
++++ b/arch/arm/mach-mvebu/Kconfig
+@@ -13,6 +13,8 @@ config ARCH_MVEBU
+ 	select MVEBU_CLK_CORE
+ 	select MVEBU_CLK_CPU
+ 	select MVEBU_CLK_GATING
++	select MIGHT_HAVE_PCI
++	select PCI_QUIRKS if PCI
+ 
+ if ARCH_MVEBU
+ 
+-- 
+1.7.9.5
 
-> It's the same warning as in this bugzilla:
-> https://bugzilla.kernel.org/show_bug.cgi?id=44881, and there's a patch
-> there at https://bugzilla.kernel.org/show_bug.cgi?id=44881#c11, but
-> it's just a quirk that turns off VT-d if we find certain broken
-> bridges.  It doesn't look like you have any of those (although I don't
-> know what you have at 05:00.0).
-> 
-> Bjorn
-
-This is a standard ASUS motherboard, and don't want to disable VT-d.
