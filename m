@@ -1,88 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f180.google.com ([209.85.223.180]:37503 "EHLO
-	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751257Ab3BEXzb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Feb 2013 18:55:31 -0500
-MIME-Version: 1.0
-In-Reply-To: <CAE9FiQXg1YcPPJLCgPbKOKXHk-LRQv4bbBGH9jyuATQa2ANLkg@mail.gmail.com>
-References: <CAE9FiQXHG01NjnYNDbC-KEpbcvY-q4pBe97CxTOGS7W4vZQBYQ@mail.gmail.com>
-	<1359314629-18651-1-git-send-email-yinghai@kernel.org>
-	<CAErSpo6r_LNEtYB3j5ELb8NdHu0a6_YOVj8S32CmByGFUpSsbg@mail.gmail.com>
-	<CAE9FiQXg1YcPPJLCgPbKOKXHk-LRQv4bbBGH9jyuATQa2ANLkg@mail.gmail.com>
-Date: Tue, 5 Feb 2013 15:55:30 -0800
-Message-ID: <CAE9FiQX2DbTO0qCzGO4iMTkU_mPM2oZL+R5UoZ5dj=as6MUAsw@mail.gmail.com>
-Subject: Re: [PATCH v3 00/22] PCI: Iterate pci host bridge instead of pci root bus
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Mauro Carvalho Chehab <mchehab@redhat.com>,
-	Tony Luck <tony.luck@intel.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, Russell King <linux@arm.linux.org.uk>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail.free-electrons.com ([94.23.35.102]:45925 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933371Ab3BLQ3p (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Feb 2013 11:29:45 -0500
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Cc: Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Tawfik Bayouk <tawfik@marvell.com>
+Subject: [PATCH 23/32] pci: infrastructure to add drivers in drivers/pci/host
+Date: Tue, 12 Feb 2013 17:28:57 +0100
+Message-Id: <1360686546-24277-24-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Feb 2, 2013 at 9:05 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+As agreed by the community, PCI host drivers will now be stored in
+drivers/pci/host. This commit adds this directory and the related
+Kconfig/Makefile changes to allow new drivers to be added in this
+directory.
 
->> Your solution is to introduce for_each_pci_host_bridge() as an
->> iterator through the known host bridges.  There are two scenarios
->> where we use something like this:
->>
->> 1) We want to perform an operation on every known host bridge.
->>
->> 2) We want to initialize something for every host bridge.
->>
->> In my opinion, the only instance of scenario 1) is bus_rescan_store(),
->> where we want to rescan all PCI host bridges.
->>
->> In every other case, we're doing some kind of initialization of all
->> the host bridges.  For these cases, for_each_pci_host_bridge() is the
->> wrong solution because it doesn't work for hot-added bridges.  I think
->> these cases should be changed to use pcibios_root_bridge_prepare() or
->> something something else called in the host bridge add path.
->
-> Yes, will check if those for_pci_host_bridge could be converted to
-> adding calling in pcibios_root_bridge_prepare one by one.
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+---
+ drivers/pci/Kconfig      |    2 ++
+ drivers/pci/Makefile     |    3 +++
+ drivers/pci/host/Kconfig |    4 ++++
+ 3 files changed, 9 insertions(+)
+ create mode 100644 drivers/pci/host/Kconfig
 
-I went through those patches again, here are findings:
-1. run-time iteration includes at least 3 occurrence are addressed.
-a. in pci-sysfs::bus_rescan_store
-b. powerpc pci_64.c::sys_pciconfig_iobase system call
-c. probe.c::pci_create_root_bus/pci_find_bus
+diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+index 6d51aa6..ac45398 100644
+--- a/drivers/pci/Kconfig
++++ b/drivers/pci/Kconfig
+@@ -119,3 +119,5 @@ config PCI_IOAPIC
+ config PCI_LABEL
+ 	def_bool y if (DMI || ACPI)
+ 	select NLS
++
++source "drivers/pci/host/Kconfig"
+diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
+index 0c3efcf..6ebf5bf 100644
+--- a/drivers/pci/Makefile
++++ b/drivers/pci/Makefile
+@@ -67,3 +67,6 @@ obj-$(CONFIG_XEN_PCIDEV_FRONTEND) += xen-pcifront.o
+ obj-$(CONFIG_OF) += of.o
+ 
+ ccflags-$(CONFIG_PCI_DEBUG) := -DDEBUG
++
++# PCI host controller drivers
++obj-y += host/
+diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+new file mode 100644
+index 0000000..cc3a1af
+--- /dev/null
++++ b/drivers/pci/host/Kconfig
+@@ -0,0 +1,4 @@
++menu "PCI host controller drivers"
++	depends on PCI
++
++endmenu
+-- 
+1.7.9.5
 
-2. edac: i7core_edac.c::i7core_pci_lastbus()
-this one is not support host bridge hotplug, and in i7core_probe it will
-bail-out if probed before overall.
-To make edac with i7 to support host-bridge hotadd, will change the structure of
-that i7core_probe.
-But I'm not worried about that yet, because Nehalem-EX does not support EDAC,
-and assume we will NOT have use case with new -EX intel cpu with
-hotplug support to use EDAC.
-
-3. pcibios_resource_survey/pcibios_assign_unassigned_resource in __init path.
-it is with x86/frv/microblaze/mn10300.
-for x86/acpi, we have per root bus calling in pci_root.c::acpi_pci_root_add().
-other three does not support pci_root_bridge hotplug yet.
-
-4. looks like all other changes are __init path, and those arch does not support
-pci_root_bridge hotplug yet.
-
-So looks like this patch set is ok now.
-
-Also i updated
-	git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
-for-pci-for-each-host-bridge
-
-with new ordering of patches.
-
-BTW, I would address unifying pcibios_reserource_survey between
-x86/frv/microblaze/mn10300 later.
-
-Thanks
-
-Yinghai
