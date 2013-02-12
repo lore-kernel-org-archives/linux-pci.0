@@ -1,89 +1,65 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <1362010050.2808.37.camel@lorien2>
-Subject: [PATCH v2 4/4] iommu/amd: Remove calc_devid() and use PCI_DEVID()
- from pci
-From: Shuah Khan <shuah.khan@hp.com>
-Reply-To: shuah.khan@hp.com
-To: Joerg Roedel <joro@8bytes.org>, bhelgaas@google.com
-Cc: jiang.liu@huawei.com, shemminger@vyatta.com,
-	paulmck@linux.vnet.ibm.com, linasvepstas@gmail.com,
-	dhowells@redhat.com, davej@redhat.com, tglx@linutronix.de,
-	mtk.manpages@gmail.com, iommu@lists.linux-foundation.org,
-	linux-pci@vger.kernel.org, wangyijing@huawei.com,
-	LKML <linux-kernel@vger.kernel.org>, shuahkhan@gmail.com
-Date: Wed, 27 Feb 2013 17:07:30 -0700
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.free-electrons.com ([94.23.35.102]:45770 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933295Ab3BLQ3X (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Feb 2013 11:29:23 -0500
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Cc: Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Yinghai Lu <yinghai@kernel.org>, linux-kernel@vger.kernel.org
+Subject: [PATCH 05/32] lib: devres: don't enclose pcim_*() functions in CONFIG_HAS_IOPORT
+Date: Tue, 12 Feb 2013 17:28:39 +0100
+Message-Id: <1360686546-24277-6-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Change to remove calc_devid() and use PCI_DEVID() from pci instead.
+The pcim_*() functions are used by the libata-sff subsystem, and this
+subsystem is used for many SATA drivers on ARM platforms that do not
+necessarily have I/O ports.
 
-Signed-off-by: Shuah Khan <shuah.khan@hp.com>
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Paul Gortmaker <paul.gortmaker@windriver.com>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: linux-kernel@vger.kernel.org
 ---
- drivers/iommu/amd_iommu.c       |    2 +-
- drivers/iommu/amd_iommu_init.c  |    6 +++---
- drivers/iommu/amd_iommu_types.h |    7 -------
- 3 files changed, 4 insertions(+), 11 deletions(-)
+ lib/devres.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
-index c1c74e0..38c1392 100644
---- a/drivers/iommu/amd_iommu.c
-+++ b/drivers/iommu/amd_iommu.c
-@@ -173,7 +173,7 @@ static inline u16 get_device_id(struct device *dev)
- {
- 	struct pci_dev *pdev = to_pci_dev(dev);
- 
--	return calc_devid(pdev->bus->number, pdev->devfn);
-+	return PCI_DEVID(pdev->bus->number, pdev->devfn);
+diff --git a/lib/devres.c b/lib/devres.c
+index 80b9c76..5639c3e 100644
+--- a/lib/devres.c
++++ b/lib/devres.c
+@@ -195,6 +195,7 @@ void devm_ioport_unmap(struct device *dev, void __iomem *addr)
+ 			       devm_ioport_map_match, (void *)addr));
  }
+ EXPORT_SYMBOL(devm_ioport_unmap);
++#endif /* CONFIG_HAS_IOPORT */
  
- static struct iommu_dev_data *get_dev_data(struct device *dev)
-diff --git a/drivers/iommu/amd_iommu_init.c b/drivers/iommu/amd_iommu_init.c
-index faf10ba..582b5df 100644
---- a/drivers/iommu/amd_iommu_init.c
-+++ b/drivers/iommu/amd_iommu_init.c
-@@ -406,7 +406,7 @@ static int __init find_last_devid_on_pci(int bus, int dev, int fn, int cap_ptr)
- 	u32 cap;
- 
- 	cap = read_pci_config(bus, dev, fn, cap_ptr+MMIO_RANGE_OFFSET);
--	update_last_devid(calc_devid(MMIO_GET_BUS(cap), MMIO_GET_LD(cap)));
-+	update_last_devid(PCI_DEVID(MMIO_GET_BUS(cap), MMIO_GET_LD(cap)));
- 
- 	return 0;
+ #ifdef CONFIG_PCI
+ /*
+@@ -400,4 +401,3 @@ void pcim_iounmap_regions(struct pci_dev *pdev, int mask)
  }
-@@ -1128,9 +1128,9 @@ static int iommu_init_pci(struct amd_iommu *iommu)
- 	pci_read_config_dword(iommu->dev, cap_ptr + MMIO_MISC_OFFSET,
- 			      &misc);
- 
--	iommu->first_device = calc_devid(MMIO_GET_BUS(range),
-+	iommu->first_device = PCI_DEVID(MMIO_GET_BUS(range),
- 					 MMIO_GET_FD(range));
--	iommu->last_device = calc_devid(MMIO_GET_BUS(range),
-+	iommu->last_device = PCI_DEVID(MMIO_GET_BUS(range),
- 					MMIO_GET_LD(range));
- 
- 	if (!(iommu->cap & (1 << IOMMU_CAP_IOTLB)))
-diff --git a/drivers/iommu/amd_iommu_types.h b/drivers/iommu/amd_iommu_types.h
-index a07882f..ec36cf6 100644
---- a/drivers/iommu/amd_iommu_types.h
-+++ b/drivers/iommu/amd_iommu_types.h
-@@ -701,13 +701,6 @@ extern int amd_iommu_max_glx_val;
-  */
- extern void iommu_flush_all_caches(struct amd_iommu *iommu);
- 
--/* takes bus and device/function and returns the device id
-- * FIXME: should that be in generic PCI code? */
--static inline u16 calc_devid(u8 bus, u8 devfn)
--{
--	return (((u16)bus) << 8) | devfn;
--}
--
- static inline int get_ioapic_devid(int id)
- {
- 	struct devid_map *entry;
+ EXPORT_SYMBOL(pcim_iounmap_regions);
+ #endif /* CONFIG_PCI */
+-#endif /* CONFIG_HAS_IOPORT */
 -- 
 1.7.9.5
-
-
 
