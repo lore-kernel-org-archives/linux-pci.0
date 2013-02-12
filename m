@@ -1,137 +1,224 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:52434 "EHLO
+Received: from mail.free-electrons.com ([94.23.35.102]:47152 "EHLO
 	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754132Ab3BFQvv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Feb 2013 11:51:51 -0500
-Date: Wed, 6 Feb 2013 17:51:28 +0100
+	with ESMTP id S933153Ab3BLTXH convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Feb 2013 14:23:07 -0500
+Date: Tue, 12 Feb 2013 20:22:52 +0100
 From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
 	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	"Russell King - ARM Linux" <linux@arm.linux.org.uk>,
 	Jason Cooper <jason@lakedaemon.net>,
 	Stephen Warren <swarren@wwwdotorg.org>,
-	linux-pci@vger.kernel.org,
 	Thierry Reding <thierry.reding@avionic-design.de>,
-	Eran Ben-Avi <benavi@marvell.com>,
+	"Eran Ben-Avi" <benavi@marvell.com>,
 	Nadav Haklai <nadavh@marvell.com>,
 	Maen Suleiman <maen@marvell.com>,
 	Shadi Ammouri <shadi@marvell.com>,
 	Gregory Clement <gregory.clement@free-electrons.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH v2 19/27] pci: PCIe driver for Marvell Armada 370/XP
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Tawfik Bayouk <tawfik@marvell.com>
+Subject: Re: [PATCH 24/32] pci: PCIe driver for Marvell Armada 370/XP
  systems
-Message-ID: <20130206175128.1b64196d@skate>
-In-Reply-To: <20130131224459.GA11846@obsidianresearch.com>
-References: <20130130120344.GA29490@avionic-0098.mockup.avionic-design.de>
-	<2776630.gp5gC9tvLk@wuerfel>
-	<20130131180249.GA30869@obsidianresearch.com>
-	<201301312046.22560.arnd@arndb.de>
-	<20130131224459.GA11846@obsidianresearch.com>
+Message-ID: <20130212202252.3a9ee3d0@skate>
+In-Reply-To: <201302121830.11375.arnd@arndb.de>
+References: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	<1360686546-24277-25-git-send-email-thomas.petazzoni@free-electrons.com>
+	<201302121830.11375.arnd@arndb.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Jason Gunthorpe,
+Dear Arnd Bergmann,
 
-On Thu, 31 Jan 2013 15:44:59 -0700, Jason Gunthorpe wrote:
-
-> > For the primary bus, yes, but there are still two options for the
-> > second one: you can either start at 0 again or you can continue
+On Tue, 12 Feb 2013 18:30:11 +0000, Arnd Bergmann wrote:
+> On Tuesday 12 February 2013, Thomas Petazzoni wrote:
+> > diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
+> > new file mode 100644
+> > index 0000000..3ad563f
+> > --- /dev/null
+> > +++ b/drivers/pci/host/Makefile
+> > @@ -0,0 +1,4 @@
+> > +obj-$(CONFIG_PCI_MVEBU) += pci-mvebu.o
+> > +CFLAGS_pci-mvebu.o += \
+> > +	-I$(srctree)/arch/arm/plat-orion/include \
+> > +	-I$(srctree)/arch/arm/mach-mvebu/include
 > 
-> No, for *all* links. You use a mmap scheme with 4k granularity, I
-> explained in a past email, but to quickly review..
+> This does not seem like a good idea to me. We should not include
+> architecture specific directories from a driver directory.
 > 
-> - Each link gets 64k of reserved physical address space for IO,
->   this is just set aside, no MBUS windows are permantently assigned.
-> - Linux is told to use a 64k IO range with bus IO address 0->0xFFFF
-> - When the IO base/limit register in the link PCI-PCI bridge is programmed
->   the driver gets a 4k aligned region somewhere from 0->0xFFFF and then:
->     - Allocates a 64k MBUS window that translates physical address
->       0xZZZZxxxx to IO bus address 0x0000xxxx (goes in the TLP) for
->       that link
->     - Uses pci_ioremap_io to map the fraction of the link's 64k MBUS window
->       allocated to that bridge to the correct offset in the 
->       PCI_IO_VIRT_BASE region
+> What are the header files you need here? 
 
-This, I think I now understand.
+>From the patch itself:
 
-> So you'd end up with a MMU mapping something like:
->   PCI_IO_VIRT_BASE    MBUS_IO_PHYS_BASE
->     0->4k          => 0      -> 4k             // 4k assigned to link0
->     4k->8k         => 64k+4k -> 64k+8k         // 4k assigned to link1
->     8k->24k        => 128k+8k -> 128k+24k      // 8k assigned to link2
++#include <plat/pcie.h>
++#include <mach/addr-map.h>
 
-I am not sure to understand your example, starting at the second line.
-Shouldn't the second line have been
+<plat/pcie.h> is needed for a few PCIe functions shared with earlier
+families of Marvell SoC. My plan is that once this PCI driver gets
+accepted, I work on migrating the earlier Marvell SoC families to using
+this PCI driver, and therefore those functions would ultimately move in
+the driver in drivers/pci/host/, which would remove the <plat/pcie.h>.
 
-      4k->8k         => 64k -> 64k+4k
+The <mach/addr-map.h> is here to access the address decoding windows
+allocation/free API. And for this, there is no other long term plan
+than having an API provided by the platform code in arch/arm/, and used
+by drivers. Some other drivers may have to use this API as well in the
+future.
 
- ?
+I think that completely preventing <mach/> and <plat/> includes from
+drivers is not possible. Some sub-architectures will also have some
+bizarre mechanism to handle (in our case the address decoding windows),
+for which there is no kernel-wide API and kernel-wide subsystem to
+handle it. In such cases, a sub-architecture specific solution is
+really the only reasonable way, and in this case, we have to include
+the sub-architecture headers.
 
-If you do:
+Note that I have been careful to use CFLAGS_pci-mvebu.o, so that those
+include paths only apply to *this* driver. I added a separate dummy
+driver in drivers/pci/host/, and verified that those include paths are
+not used when building this other driver. So those special CFLAGS are
+still compatible with the multiplatform kernel.
 
-      4k->8k         => 64k+4k -> 64k+8k
-
-as you suggested, then when the device driver will do an inl(0x4) on
-this device, the device will receive the equivalent of an inl(0x1004),
-no?
-
-I understand that I have two choices here:
-
- * First one is to make the I/O regions of all PCIe links fit below the
-   default IO_SPACE_LIMIT (0xffff) by doing the mapping trick you
-   described above.
-
- * Second one is to have one 64 KB block for each PCIe link, which
-   would require raising the IO_SPACE_LIMIT on this platform.
-
-Is this correct?
-
-If so, then what I don't understand is that Kirkwood does the second
-thing (from arch/arm/mach-kirkwood/pcie.c) :
-
-        switch (index) {
-        case 0:
-		[...]
-		/* Here the code is mapping 0 -> 64k */
-                pci_ioremap_io(SZ_64K * sys->busnr, KIRKWOOD_PCIE_IO_PHYS_BASE);
-                break;
-        case 1:
-		[...]
-		/* And here 64k -> 128k */
-                pci_ioremap_io(SZ_64K * sys->busnr,
-                               KIRKWOOD_PCIE1_IO_PHYS_BASE);
-                break;
-
-So it has PCI I/O space from 0 to 128k, but still it seems to use the
-default IO_SPACE_LIMIT of 0xffff. How can this work? Maybe nobody every
-used a device on the second PCIe link that required I/O accesses.
-
-> Where the physical mbus window for each link starts on each 64k block.
+> > +/*
+> > + * This product ID is registered by Marvell, and used when the
+> > Marvell
+> > + * SoC is not the root complex, but an endpoint on the PCIe bus.
+> > It is
+> > + * therefore safe to re-use this PCI ID for our emulated PCI-to-PCI
+> > + * bridge.
+> > + */
+> > +#define MARVELL_EMULATED_PCI_PCI_BRIDGE_ID 0x7846
 > 
-> Thomas: This solves the need to have alignment of the IO regions, and
-> gets rid of any trouble with 32 bit IO addreses, however you'll need
-> to allocate the remap capable mbus windows separately for use by IO
-> mappings..
+> Just a side note: What happens if you have two of these systems and
+> connect them over PCIe, putting one of them into host mode and the
+> other into endpoint mode?
+
+I am not a PCI expert, but I don't think it would cause issues. Maybe
+Jason Gunthorpe can comment on this, as he originally suggested to
+re-use this PCI ID.
+
+> > +static void mvebu_pcie_setup_io_window(struct mvebu_pcie_port
+> > *port,
+> > +				       int enable)
+> > +{
+> > +	unsigned long iobase, iolimit;
+> > +
+> > +	if (port->bridge.iolimit < port->bridge.iobase)
+> > +		return;
+> > +
+> > +	iolimit = 0xFFF | ((port->bridge.iolimit & 0xF0) << 8) |
+> > +		(port->bridge.iolimitupper << 16);
+> > +	iobase = ((port->bridge.iobase & 0xF0) << 8) |
+> > +		(port->bridge.iobaseupper << 16);
 > 
-> Though, there is still a problem with the MMIO mbus window
-> alignment. mbus windows are aligned to a multiple of their size, PCI
-> MMIO bridge windows are always aligned to 1M...
+> I don't understand this code with the masks and shifts. Could you
+> add a comment here for readers like me?
 
-Can't this be solved using the window_alignement() hook we've been
-discussing separately? Just like we teach the Linux PCI core about our
-alignment requirements of 64K for the I/O regions, we could teach it
-about our alignment requirement on memory regions as well. No?
+Sure, will do.
 
-> Though, it is my hope that Thomas's driver will work on Kirkwood as
-> well...
+It basically comes from the PCI-to-PCI bridge specification, which
+explains how the I/O address and I/O limit is split into two 16 bits
+registers, with those bizarre shifts and hardcoded values. I'll put a
+reference to the relevant section of the PCI-to-PCI bridge
+specification here.
 
-Yes, my plan is to have it working on Kirkwood. This WE, I was given a
-Kirkwood based machine that has a usable PCIe device.
+> > +
+> > +/*
+> > + * Initialize the configuration space of the PCI-to-PCI bridge
+> > + * associated with the given PCIe interface.
+> > + */
+> > +static void mvebu_sw_pci_bridge_init(struct mvebu_pcie_port *port)
+> > +{
+> 
+> As mentioned, I'm still skeptical of the sw_pci_bridge approach,
+> so I'm not commenting on the details of your implementations
+> (they seem fine on a first look though)
+
+Yes, I understood your were still skeptical. But as I've mentioned in
+other e-mails, I still haven't seen any other serious alternate
+proposal that takes into account the need for dynamic assignment of
+addresses.
+
+> > +	/* Get the I/O and memory ranges from DT */
+> > +	while ((range = of_pci_process_ranges(np, &res, range)) !=
+> > NULL) {
+> > +		if (resource_type(&res) == IORESOURCE_IO) {
+> > +			memcpy(&pcie->io, &res, sizeof(res));
+> > +			memcpy(&pcie->realio, &res, sizeof(res));
+> > +			pcie->io.name = "I/O";
+> > +			pcie->realio.start &= 0xFFFFF;
+> > +			pcie->realio.end   &= 0xFFFFF;
+> > +		}
+> 
+> The bit masking seems fishy here. What exactly are you doing,
+> does this just assume you have a 1MB window at most?
+
+Basically, I have two resources for the I/O:
+
+ * One described in the DT, from 0xC0000000 to 0xC00FFFFF which will be
+   used to create the address decoding windows for the I/O regions of
+   the different PCIe interfaces. The PCI I/O virtual address 0xffe00000
+   will be mapped to those physical addresses. Those address decoding
+   windows are configured with the special "remap" mechanism that
+   ensures that if an access is made at 0xC0000000 + offset, it will
+   appear on the PCI bus as an I/O access at address "offset".
+
+ * One covering the low addresses 0x0 -> 0xFFFFF (pcie->realio), which
+   is used to tell the Linux PCI subsystem from which address range it
+   should assign I/O addresses.
+
+> Maybe something like
+> 
+> 	pcie->realio.start = 0;
+> 	pcie->realio.end = pcie->io.end - pcie->io.start;
+
+Indeed, that would result in the same values. If you find it clearer,
+I'm fine with it.
+
+> I suppose you also need to fix up pcie->io to be in IORESOURCE_MEM
+> space instead of IORESOURCE_IO, or fix the of_pci_process_ranges
+> function to return it in a different way.
+
+Ok.
+
+> > +static int mvebu_pcie_init(void)
+> > +{
+> > +	return platform_driver_probe(&mvebu_pcie_driver,
+> > +				     mvebu_pcie_probe);
+> > +}
+> > +
+> > +subsys_initcall(mvebu_pcie_init);
+> 
+> You don't have to do it, but I wonder if this could be a module
+> with unload support instead.
+
+This has already been discussed in the review of PATCHv2. Please see
+http://lists.infradead.org/pipermail/linux-arm-kernel/2013-January/145580.html.
+
+Basically, doing a module_init() initialization fails, because the XHCI
+USB quirks are executed before we have the chance to create the address
+decoding windows, which crashes the kernel at boot time (and we have
+one platform where an USB 3.0 XHCI controller sits on the PCIe bus).
+Bjorn Helgaas has acknowledged the problem in
+http://lists.infradead.org/pipermail/linux-arm-kernel/2013-February/148292.html:
+
+"""
+This is not really a problem in your code; it's a generic PCI core
+problem.  pci_scan_root_bus() does everything including creating the
+root bus, scanning it, and adding the devices we find.  At the point
+where we add a device (pci_bus_add_device()), it should be ready for a
+driver to claim it -- all resource assignment should already be done.
+
+I don't think it's completely trivial to fix this in the PCI core yet
+(but we're moving in that direction) because we have some boot-time
+ordering issues, e.g., x86 scans the root buses before we know about
+the address space consumed by ACPI devices, so we can't just assign
+the resources when we scan the bus.
+"""
 
 Best regards,
 
