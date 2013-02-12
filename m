@@ -1,58 +1,85 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vb0-f52.google.com ([209.85.212.52]:53061 "EHLO
-	mail-vb0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753597Ab3BCU6z (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 3 Feb 2013 15:58:55 -0500
-Received: by mail-vb0-f52.google.com with SMTP id fa15so3522223vbb.11
-        for <linux-pci@vger.kernel.org>; Sun, 03 Feb 2013 12:58:54 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <10475811.H5RONrFZPm@vostro.rjw.lan>
-References: <1358525267-14268-1-git-send-email-jiang.liu@huawei.com>
- <3500982.MUDp6kKU3R@vostro.rjw.lan> <CAErSpo4fbNzFaBxH+eKD+BKVgghyCJEYLDMzc6_gdxABAPe3QQ@mail.gmail.com>
- <10475811.H5RONrFZPm@vostro.rjw.lan>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Sun, 3 Feb 2013 13:58:33 -0700
-Message-ID: <CAErSpo6uwYWAnxUrN99e7DjUH1BWSTUZC_dGPbDVPZLnywX-Pw@mail.gmail.com>
-Subject: Re: [RFC PATCH v5 4/8] ACPI, PCI: avoid building pci_slot as module
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Jiang Liu <liuj97@gmail.com>, Jiang Liu <jiang.liu@huawei.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail.free-electrons.com ([94.23.35.102]:46998 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933865Ab3BLS6Y (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Feb 2013 13:58:24 -0500
+Date: Tue, 12 Feb 2013 19:58:16 +0100
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	"Russell King - ARM Linux" <linux@arm.linux.org.uk>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	"Eran Ben-Avi" <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Yinghai Lu <yinghai@kernel.org>, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 05/32] lib: devres: don't enclose pcim_*() functions in
+ CONFIG_HAS_IOPORT
+Message-ID: <20130212195816.6e34b3ce@skate>
+In-Reply-To: <201302121800.48723.arnd@arndb.de>
+References: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	<1360686546-24277-6-git-send-email-thomas.petazzoni@free-electrons.com>
+	<201302121800.48723.arnd@arndb.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Feb 3, 2013 at 1:18 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> On Monday, January 28, 2013 02:09:22 PM Bjorn Helgaas wrote:
->> On Sun, Jan 20, 2013 at 5:01 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
->> > On Saturday, January 19, 2013 12:07:42 AM Jiang Liu wrote:
->> >> As discussed in thread at https://patchwork.kernel.org/patch/1946851/,
->> >> there's no value in supporting CONFIG_ACPI_PCI_SLOT=m any more.
->> >> So change Kconfig and code to only support building pci_slot as
->> >> built-in driver.
->> >>
->> >> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
->> >
->> > Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->>
->> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
->>
->> I think we should eventually get rid of acpi_pci_register_driver() and
->> do this initialization directly from acpi_pci_root_add().  But
->> removing the module option here is a good first step.
->>
->> Rafael, do you want to apply this (and [6/8]) via your tree?  If not,
->> I can take it.
->
-> Both applied to bleeding-edge.  I've added your ACK to the [6/8] too, hope
-> that's OK.
+Dear Arnd Bergmann,
 
-Yep, that's fine, thanks!
+On Tue, 12 Feb 2013 18:00:48 +0000, Arnd Bergmann wrote:
+> On Tuesday 12 February 2013, Thomas Petazzoni wrote:
+> > The pcim_*() functions are used by the libata-sff subsystem, and
+> > this subsystem is used for many SATA drivers on ARM platforms that
+> > do not necessarily have I/O ports.
+> > 
+> > Signed-off-by: Thomas Petazzoni
+> > <thomas.petazzoni@free-electrons.com> Cc: Paul Gortmaker
+> > <paul.gortmaker@windriver.com> Cc: Jesse Barnes
+> > <jbarnes@virtuousgeek.org> Cc: Yinghai Lu <yinghai@kernel.org>
+> > Cc: linux-kernel@vger.kernel.org
+> 
+> Sorry, but this patch is still incorrect.
 
-Bjorn
+I know, but the discussion was so huge on the first posting that it was
+basically impossible to draw a conclusion out of it.
+
+> Any driver that requires a
+> linear mapping of I/O ports to __iomem pointers must depend
+> CONFIG_HAS_IOPORT with the current definition of that symbol (as
+> mentioned before, we should really rename that to
+> CONFIG_HAS_IOPORT_MAP). Having these functions not defined is a
+> compile time check that is necessary to ensure that all drivers have
+> the correct annotation.
+
+I have the feeling that the problem is more complex than that. My
+understanding is that the pcim_iomap_regions() function used by
+drivers/ata/libata-sff.c can perfectly be used to map memory BARs, and
+not necessarily I/O BARs. Therefore, this driver can perfectly be used
+in an architecture where CONFIG_NO_IOPORT is selected.
+
+The thing is that pcim_iomap_regions() transparently allows to remap an
+I/O BAR is such a BAR is passed as argument, or a memory BAR if such a
+BAR is passed as argument.
+
+Therefore, I continue to believe that the pcim_*() functions are useful
+even if the platform doesn't have CONFIG_HAS_IOPORT.
+
+Best regards,
+
+Thomas
+-- 
+Thomas Petazzoni, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
