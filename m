@@ -1,47 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f47.google.com ([209.85.219.47]:52747 "EHLO
-	mail-oa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933505Ab3BTPO2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Feb 2013 10:14:28 -0500
-Received: by mail-oa0-f47.google.com with SMTP id o17so8279023oag.34
-        for <linux-pci@vger.kernel.org>; Wed, 20 Feb 2013 07:14:27 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20130220141739.GA5705@kroah.com>
-References: <CAJ61zBBOMqNsbxgYjWsDVG_J5J=qK+jADGE6+YDoT20vbTjFRg@mail.gmail.com>
-	<20130220141739.GA5705@kroah.com>
-Date: Wed, 20 Feb 2013 20:44:27 +0530
-Message-ID: <CAJ61zBDE7X1V1vgkzTEBFan8rEdpqB7uuzg4Rb=6K9q1=D60Eg@mail.gmail.com>
-Subject: Re: [OT] Newbie
-From: Vijay Chauhan <kernel.vijay@gmail.com>
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail.free-electrons.com ([94.23.35.102]:45876 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933352Ab3BLQ3h (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Feb 2013 11:29:37 -0500
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Cc: Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Tawfik Bayouk <tawfik@marvell.com>
+Subject: [PATCH 16/32] arm: mach-orion5x: use ORION_ADDR_MAP_NO_REMAP
+Date: Tue, 12 Feb 2013 17:28:50 +0100
+Message-Id: <1360686546-24277-17-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello Greg,
+Currently, the addr_map_info structure uses an "int remap" to allow
+SoC-specific code to specify whether a given address decoding window
+should be remapped, and if so, the remapping address. To do so, it
+tests if the int is less than zero (no remap) or greater than
+zero. Unfortunately, this prevents any remapping address that is
+higher than 2 GB.
 
-Thanks for your reply.
+In this commit, we convert mach-orion5x addr_map_info definition to
+use ORION_ADDR_MAP_NO_REMAP.
 
-On Wed, Feb 20, 2013 at 7:47 PM, Greg KH <gregkh@linuxfoundation.org> wrote:
-> On Wed, Feb 20, 2013 at 07:32:03PM +0530, Vijay Chauhan wrote:
->> Hi,
->>
->> I am newbie for PCI. I wanted to learn PCI driver programming in Linux.
->> Please suggest me how to start. Any example (sample code) or tutorial
->> link or book helpful for me.
->
-> Doesn't the huge number of example drivers in the kernel sources provide
-> a wonderful place to start with?
->
-> What specifically are you trying to do here that you need help with?
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+---
+ arch/arm/mach-orion5x/addr-map.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Nothing specific as such, I wanted to learn starting  from basic and
-easy code. drivers/pci/ directory has lots of code but I dont know the
-order. Is there any documentation? Some basic and small piece of code
-for foundation purpose. If you can suggest me one.
+diff --git a/arch/arm/mach-orion5x/addr-map.c b/arch/arm/mach-orion5x/addr-map.c
+index b5efc0f..4b80206 100644
+--- a/arch/arm/mach-orion5x/addr-map.c
++++ b/arch/arm/mach-orion5x/addr-map.c
+@@ -93,10 +93,10 @@ static const struct __initdata orion_addr_map_info addr_map_info[] = {
+ 	  TARGET_PCI, ATTR_PCI_IO, ORION5X_PCI_IO_BUS_BASE
+ 	},
+ 	{ 2, ORION5X_PCIE_MEM_PHYS_BASE, ORION5X_PCIE_MEM_SIZE,
+-	  TARGET_PCIE, ATTR_PCIE_MEM, -1
++	  TARGET_PCIE, ATTR_PCIE_MEM, ORION_ADDR_MAP_NO_REMAP,
+ 	},
+ 	{ 3, ORION5X_PCI_MEM_PHYS_BASE, ORION5X_PCI_MEM_SIZE,
+-	  TARGET_PCI, ATTR_PCI_MEM, -1
++	  TARGET_PCI, ATTR_PCI_MEM, ORION_ADDR_MAP_NO_REMAP,
+ 	},
+ 	/* End marker */
+ 	{ -1, 0, 0, 0, 0, 0 }
+-- 
+1.7.9.5
 
-Thank you,
-Vijay
-
-> greg k-h
