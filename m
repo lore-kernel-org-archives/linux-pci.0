@@ -1,64 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:45876 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933352Ab3BLQ3h (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Feb 2013 11:29:37 -0500
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Cc: Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+Received: from moutng.kundenserver.de ([212.227.17.9]:61798 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933589Ab3BLSBy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Feb 2013 13:01:54 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Subject: Re: [PATCH 05/32] lib: devres: don't enclose pcim_*() functions in CONFIG_HAS_IOPORT
+Date: Tue, 12 Feb 2013 18:00:48 +0000
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	"Russell King - ARM Linux" <linux@arm.linux.org.uk>,
 	Jason Cooper <jason@lakedaemon.net>,
-	Arnd Bergmann <arnd@arndb.de>,
 	Stephen Warren <swarren@wwwdotorg.org>,
 	Thierry Reding <thierry.reding@avionic-design.de>,
-	Eran Ben-Avi <benavi@marvell.com>,
+	"Eran Ben-Avi" <benavi@marvell.com>,
 	Nadav Haklai <nadavh@marvell.com>,
 	Maen Suleiman <maen@marvell.com>,
 	Shadi Ammouri <shadi@marvell.com>,
 	Gregory Clement <gregory.clement@free-electrons.com>,
 	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Tawfik Bayouk <tawfik@marvell.com>
-Subject: [PATCH 16/32] arm: mach-orion5x: use ORION_ADDR_MAP_NO_REMAP
-Date: Tue, 12 Feb 2013 17:28:50 +0100
-Message-Id: <1360686546-24277-17-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Yinghai Lu <yinghai@kernel.org>, linux-kernel@vger.kernel.org
+References: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com> <1360686546-24277-6-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1360686546-24277-6-git-send-email-thomas.petazzoni@free-electrons.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <201302121800.48723.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently, the addr_map_info structure uses an "int remap" to allow
-SoC-specific code to specify whether a given address decoding window
-should be remapped, and if so, the remapping address. To do so, it
-tests if the int is less than zero (no remap) or greater than
-zero. Unfortunately, this prevents any remapping address that is
-higher than 2 GB.
+On Tuesday 12 February 2013, Thomas Petazzoni wrote:
+> The pcim_*() functions are used by the libata-sff subsystem, and this
+> subsystem is used for many SATA drivers on ARM platforms that do not
+> necessarily have I/O ports.
+> 
+> Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+> Cc: Paul Gortmaker <paul.gortmaker@windriver.com>
+> Cc: Jesse Barnes <jbarnes@virtuousgeek.org>
+> Cc: Yinghai Lu <yinghai@kernel.org>
+> Cc: linux-kernel@vger.kernel.org
 
-In this commit, we convert mach-orion5x addr_map_info definition to
-use ORION_ADDR_MAP_NO_REMAP.
+Sorry, but this patch is still incorrect. Any driver that requires a linear
+mapping of I/O ports to __iomem pointers must depend CONFIG_HAS_IOPORT
+with the current definition of that symbol (as mentioned before, we
+should really rename that to CONFIG_HAS_IOPORT_MAP). Having these
+functions not defined is a compile time check that is necessary to
+ensure that all drivers have the correct annotation.
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
----
- arch/arm/mach-orion5x/addr-map.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+If a platform has no support for I/O ports at all, it should
+probably not set CONFIG_NO_IOPORT at this point.
 
-diff --git a/arch/arm/mach-orion5x/addr-map.c b/arch/arm/mach-orion5x/addr-map.c
-index b5efc0f..4b80206 100644
---- a/arch/arm/mach-orion5x/addr-map.c
-+++ b/arch/arm/mach-orion5x/addr-map.c
-@@ -93,10 +93,10 @@ static const struct __initdata orion_addr_map_info addr_map_info[] = {
- 	  TARGET_PCI, ATTR_PCI_IO, ORION5X_PCI_IO_BUS_BASE
- 	},
- 	{ 2, ORION5X_PCIE_MEM_PHYS_BASE, ORION5X_PCIE_MEM_SIZE,
--	  TARGET_PCIE, ATTR_PCIE_MEM, -1
-+	  TARGET_PCIE, ATTR_PCIE_MEM, ORION_ADDR_MAP_NO_REMAP,
- 	},
- 	{ 3, ORION5X_PCI_MEM_PHYS_BASE, ORION5X_PCI_MEM_SIZE,
--	  TARGET_PCI, ATTR_PCI_MEM, -1
-+	  TARGET_PCI, ATTR_PCI_MEM, ORION_ADDR_MAP_NO_REMAP,
- 	},
- 	/* End marker */
- 	{ -1, 0, 0, 0, 0, 0 }
--- 
-1.7.9.5
-
+	Arnd
