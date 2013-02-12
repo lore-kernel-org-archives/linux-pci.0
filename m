@@ -1,58 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.10]:61394 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752490Ab3BLXGE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Feb 2013 18:06:04 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Subject: Re: Giving special alignment/size constraints to the Linux PCI core?
-Date: Tue, 12 Feb 2013 23:05:28 +0000
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	"Russell King - ARM Linux" <linux@arm.linux.org.uk>,
+Received: from mail.free-electrons.com ([94.23.35.102]:45824 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933360Ab3BLQ33 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Feb 2013 11:29:29 -0500
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Cc: Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
 	Jason Cooper <jason@lakedaemon.net>,
+	Arnd Bergmann <arnd@arndb.de>,
 	Stephen Warren <swarren@wwwdotorg.org>,
-	linux-pci@vger.kernel.org,
 	Thierry Reding <thierry.reding@avionic-design.de>,
-	"Eran Ben-Avi" <benavi@marvell.com>,
+	Eran Ben-Avi <benavi@marvell.com>,
 	Nadav Haklai <nadavh@marvell.com>,
 	Maen Suleiman <maen@marvell.com>,
 	Shadi Ammouri <shadi@marvell.com>,
 	Gregory Clement <gregory.clement@free-electrons.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	linux-arm-kernel@lists.infradead.org
-References: <20130130120344.GA29490@avionic-0098.mockup.avionic-design.de> <201302121902.14276.arnd@arndb.de> <20130212193848.GE1471@obsidianresearch.com>
-In-Reply-To: <20130212193848.GE1471@obsidianresearch.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201302122305.28467.arnd@arndb.de>
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Tawfik Bayouk <tawfik@marvell.com>
+Subject: [PATCH 10/32] arm: plat-orion: introduce WIN_CTRL_ENABLE in address mapping code
+Date: Tue, 12 Feb 2013 17:28:44 +0100
+Message-Id: <1360686546-24277-11-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday 12 February 2013, Jason Gunthorpe wrote:
-> PCI-E hotplug can be supported through the generic /sys/bus/pci/rescan
-> mechanism, which forces a rediscovery/re-evaluation of all the buses
-> in the system. The PCI core is smart enough to know what it can/can
-> not reassign and can move the bridge windows around (IIRC most of the
-> issues here are resolved these days?).
-> 
-> For PCI-E, the root port bridge can be placed anywhere in the host
-> aperture, so as long as the host aperture isn't filled the core can
-> allocate a memory region for the now active port.
-> 
-> Thomas's driver should support this as the regions and windows are all
-> properly dynamic.
+Instead of hardcoding "1" as being the bit value to enable an address
+decoding window, introduce and use a WIN_CTRL_ENABLE definition.
 
-Ah, so you only allow hotplugging into the root ports, but not behind
-additional bridges that have active devices on them, right?
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+---
+ arch/arm/plat-orion/addr-map.c |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-I guess that is a common limitation for PCIe hotplugging.
+diff --git a/arch/arm/plat-orion/addr-map.c b/arch/arm/plat-orion/addr-map.c
+index febe386..4dec3db 100644
+--- a/arch/arm/plat-orion/addr-map.c
++++ b/arch/arm/plat-orion/addr-map.c
+@@ -38,6 +38,7 @@ EXPORT_SYMBOL_GPL(mv_mbus_dram_info);
+  * CPU Address Decode Windows registers
+  */
+ #define WIN_CTRL_OFF		0x0000
++#define   WIN_CTRL_ENABLE       BIT(0)
+ #define WIN_BASE_OFF		0x0004
+ #define WIN_REMAP_LO_OFF	0x0008
+ #define WIN_REMAP_HI_OFF	0x000c
+@@ -79,7 +80,8 @@ void __init orion_setup_cpu_win(const struct orion_addr_map_cfg *cfg,
+ 	}
  
-> This is one reason why re-using the PCI core code is so desirable, it
-> handles all these complexities.
+ 	base_high = base & 0xffff0000;
+-	ctrl = ((size - 1) & 0xffff0000) | (attr << 8) | (target << 4) | 1;
++	ctrl = ((size - 1) & 0xffff0000) | (attr << 8) | (target << 4) |
++		WIN_CTRL_ENABLE;
+ 
+ 	writel(base_high, addr + WIN_BASE_OFF);
+ 	writel(ctrl, addr + WIN_CTRL_OFF);
+-- 
+1.7.9.5
 
-Ok, I'm starting to understand what the entire discussion is about ;)
-
-	Arnd
