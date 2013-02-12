@@ -1,242 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:35738 "EHLO quartz.orcorp.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752386Ab3BGBFC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 6 Feb 2013 20:05:02 -0500
-Date: Wed, 6 Feb 2013 18:05:02 -0700
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
+Received: from mail.free-electrons.com ([94.23.35.102]:45859 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933295Ab3BLQ3e (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Feb 2013 11:29:34 -0500
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Cc: Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
 	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Stephen Warren <swarren@wwwdotorg.org>,
 	Thierry Reding <thierry.reding@avionic-design.de>,
 	Eran Ben-Avi <benavi@marvell.com>,
 	Nadav Haklai <nadavh@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
 	Shadi Ammouri <shadi@marvell.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>
-Subject: Re: [PATCH v2 22/27] arm: mvebu: add PCIe Device Tree informations
- for Armada XP
-Message-ID: <20130207010502.GA7435@obsidianresearch.com>
-References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
- <1359399397-29729-23-git-send-email-thomas.petazzoni@free-electrons.com>
- <201302062241.14444.arnd@arndb.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201302062241.14444.arnd@arndb.de>
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Tawfik Bayouk <tawfik@marvell.com>
+Subject: [PATCH 14/32] arm: mach-kirkwood: use ORION_ADDR_MAP_NO_REMAP
+Date: Tue, 12 Feb 2013 17:28:48 +0100
+Message-Id: <1360686546-24277-15-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 06, 2013 at 10:41:14PM +0000, Arnd Bergmann wrote:
+Currently, the addr_map_info structure uses an "int remap" to allow
+SoC-specific code to specify whether a given address decoding window
+should be remapped, and if so, the remapping address. To do so, it
+tests if the int is less than zero (no remap) or greater than
+zero. Unfortunately, this prevents any remapping address that is
+higher than 2 GB.
 
-> This would mean that rather than putting the mapped physical address
-> (0xc0000000, 0xc1000000, ...) in here, you would actually have 64-bit
-> address as the destination as well, in whatever format the
-> address map hardware uses, I assume using a numbered 32 bit
-> address space for each object that can be remapped.
+In this commit, we convert mach-kirkwood addr_map_info definition to
+use ORION_ADDR_MAP_NO_REMAP.
 
-Do you mean like:
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+---
+ arch/arm/mach-kirkwood/addr-map.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-mbus_matrix {
-   /* At this level addresses are
-       <32 bit MBUS target ID> <32 bit target address offset>
-      target_id is an internal MBUS specification
-     */
-   #address-cells = <2>;
-   #size-cells = <1>;
+diff --git a/arch/arm/mach-kirkwood/addr-map.c b/arch/arm/mach-kirkwood/addr-map.c
+index 8f0d162..dc3a6d9 100644
+--- a/arch/arm/mach-kirkwood/addr-map.c
++++ b/arch/arm/mach-kirkwood/addr-map.c
+@@ -64,13 +64,13 @@ static const struct __initdata orion_addr_map_info addr_map_info[] = {
+ 	 * Window for NAND controller.
+ 	 */
+ 	{ 4, KIRKWOOD_NAND_MEM_PHYS_BASE, KIRKWOOD_NAND_MEM_SIZE,
+-	  TARGET_DEV_BUS, ATTR_DEV_NAND, -1
++	  TARGET_DEV_BUS, ATTR_DEV_NAND, ORION_ADDR_MAP_NO_REMAP,
+ 	},
+ 	/*
+ 	 * Window for SRAM.
+ 	 */
+ 	{ 5, KIRKWOOD_SRAM_PHYS_BASE, KIRKWOOD_SRAM_SIZE,
+-	  TARGET_SRAM, ATTR_SRAM, -1
++	  TARGET_SRAM, ATTR_SRAM, ORION_ADDR_MAP_NO_REMAP,
+ 	},
+ 	/* End marker */
+ 	{ -1, 0, 0, 0, 0, 0 }
+-- 
+1.7.9.5
 
-   pex0 {
-       ranges = <
-      // CPU window bridged to PCI MMIO
-      0x82000000 0x00000000 0x00000000  0x<target_id> 0x0 0x0 0x8000000
-      // CPU IO window bridged to PCI IO
-      0x81000000 0x00000000 0x00000000  0x<target_id> 0x0  0x0 0xa0000
-      ...>;
-   }
-
-   nand {
-       reg = <0x<target_id> 0 0x200>;
-   };
-
-   internal_regs {
-       ranges = <0 0x<target_id> 0 0x10000>;
-
-       timer {
-           reg = <0x20300 0x20>;
-      };
-   };
-}
-
-?
-
-I think the big issue would go back to how to pool all the link
-decoders together in a way that fits OF and Linux's PCI core will
-understand?
-
-How does of_translate_address work in a world like this?
-
-> This would also let you do the PCI memory address assignment for
-> each port separately, starting at bus address 0, followed by
-> finding a location in the CPU address space and passing
-> the start as the sys->mem_offset argument to
-> pci_add_resource_offset.
-
-That goes back to the original problem - the goal is to have only one
-pci_sys_data, not one for every link.
-
-The host driver would have to request a large region of physical
-address space and still dole it out on a link by link basis. Not sure
-how to model that in DT??
-
-In any event, changing how all the dynamic windows are configured in
-DT is a big job (there was another thread about this) it seems
-orthogonal to the PCI host driver..
-
-> > +                       pcie@0,0 {
-> > +                               device_type = "pciex";
-> > +                               reg = <0x0800 0 0xd0040000 0 0x2000>;
-> > +                               #address-cells = <3>;
-> > +                               #size-cells = <2>;
-> > +                               marvell,pcie-port = <0>;
-> > +                               marvell,pcie-lane = <0>;
-> > +                               interrupts = <1>;
-> > +                               clocks = <&gateclk 5>;
-> > +                               status = "disabled";
-> > +                       };
-> 
-> I think you are missing a "ranges" property here, at least an empty
-> one, which is required by the standard but not currently enforced
-> in the code.
-
-Maybe.. according to the standard the ranges in this stanza should
-reflect the bridge configuration, but that isn't known when the DT is
-written. An empty ranges means identity and that isn't really right
-either.
-
-Also, what should 'reg' be so that the PCI core binds the OF nodes
-properly?  The standard says reg should have the configuration space
-address of the bridge, and I noticed Thierry was using something that
-almost looked like a config space address in his driver..
-
-But that seems overly tricky.. When using the link stanzas, shouldn't
-this scheme be more like this:
-
-// The PCI-E host bridge
-pex@0 {
-   device_type = "pciex"; // <<-- Important!!
-
-   ranges = <
-      // Driver internal control registers in MMIO space
-      0x82000000 0x10000000 0xd0040000  0xd0040000  0x0 0x8000000
-
-      // CPU 0xe0000000 -> e8000000 bridged to PCI MMIO
-      0x82000000 0x00000000 0xe0000000  0xe0000000  0x0 0x8000000
-      // CPU IO bus 0x0000000 -> 0xa0000 bridged to PCI IO
-      0x81000000 0x00000000 0x00000000  0x00000000  0x0 0xa0000
-      // CPU 0xe8000000 -> f0000000 bridged to PCI MMIO, prefetchable
-      0xC2000000 0x00000000 0xe8000000  0xe8000000  0x0 0x8000000
-      >;
-
-   //...
-
-   // PCI-PCI bridge to Physical link 0
-   pcie@0,0 {
-     device_type = "pciex";
-     // The configuration space address of the PCI-PCI bridge required by OF
-     reg = <0x80 0 0  0 0>; // Bus 0, Dev 0x10, Fn 0
-
-     /* The 'bar' on the PCI-PCI bridge, maps to internal control
-        registers, required by the driver. */
-     assigned-addresses = <0x82000000 0x10000000 0xd0040000  0 0x2000>;
-     // ..
-  }
-}
-
-Thierry, what do you think?
-
-I struggled with this particular area of the OF system recently and
-Grant Likely was very helpful - the above is based on that
-discussion..
-
-======
-
-Thomas, here is one possible alternate idea, not sure on the merit,
-just including it because it is close to what I've got in my DT right
-now..:
-
-// The entire multi-lane controller and PCI root bus
-pex@0 {
-   device_type = "pciex";
-
-   /* This section configures the Linux PCI host driver. Each line is a
-      physical PCI-Link. (Erorrs included :) */
-   compatible = "marvell,armada-370-xp-pcie";
-   regs = <0xd0040000 0x00002000   // port 0.0
-           0xd0042000 0x00002000   // port 2.0
-           0xd0044000 0x00002000   // port 0.1
-           0xd0048000 0x00002000   // port 0.2
-           0xd004C000 0x00002000>; // port 0.3
-   io-cpu-window = <0xc0000000 0xa0000>;
-   interrupts = <58 59 60 61 99>;
-   clocks = <&gateclk 5
-             &gateclk 6
-             &gateclk 7
-             &gateclk 8
-             &gateclk 26>
-   marvell,port-lane <0 0
-                      0 1
-                      0 2
-                      0 3
-                      2 0>;
-
-   /* Below here configures the aggregate PCI bus the PEX0 stanza
-      describes */
-
-   #address-cells = <3>;
-   #size-cells = <2>;
-
-   // CPU resources allocated to this PCI host bridge
-   bus-range = <0x00 0xff>;
-   ranges = <
-      // CPU 0xe0000000 -> e8000000 bridged to PCI MMIO
-      0x82000000 0x00000000 0xe0000000  0xe0000000  0x0 0x8000000
-      // CPU IO bus 0x0000000 -> 0xa0000 bridged to PCI IO
-      0x81000000 0x00000000 0x00000000  0x00000000  0x0 0xa0000
-      // CPU 0xe8000000 -> f0000000 bridged to PCI MMIO, prefetchable
-      0xC2000000 0x00000000 0xe8000000  0xe8000000  0x0 0x8000000
-      >;
-
-   /* Any PCI devices associated with this bus go here, relative to
-      the above ranges. As example: */
-   link@0 {
-   	device_type = "pciex";
-        // Root port at bus 0, device 0x10, function 0
-	reg = <0x00000080 0 0  0 0>;
-
-       ep {
-   	 device_type = "pciex";
-         // End port on bus 1, device 0, function 0
-	 reg = <0x00000100 0 0  0 0>;
-       } 
-   }
-}
-
-Thoughts:
- - 'regs' in the main stanza, keep to CPU addresses instead of
-   confusing translated fake ranges address
- - each regs line is matches to an interrupt, clock and port-lane
-   line to describe a link. The above describes 5 links.
- - The CPU physical address window to use for the IO space
-   is set via io-cpu-window, not much choice here, the PCI
-   format ranges must be 0 based.
- - It is not necessary to have per-root port stanzas at all
-   with the above.
- - There is only one PCI bus stanza, the top level.
-
-Jason
