@@ -1,86 +1,66 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <512CBD88.5020008@suse.de>
-Date: Tue, 26 Feb 2013 14:50:00 +0100
-From: Hannes Reinecke <hare@suse.de>
-MIME-Version: 1.0
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-kernel@vger.kernel.org, Frederik Himpe <fhimpe@vub.ac.be>,
-	Oliver Neukum <oneukum@suse.de>, linux-usb@vger.kernel.org,
-	linux-pci@vger.kernel.org, Len Brown <lenb@kernel.org>
-Subject: Re: [PATCH] pci: do not try to assign irq 255
-References: <1361182193-31894-1-git-send-email-hare@suse.de> <CAE9FiQWP1F5mLUoHoTHXy-wQoGxVK66QuuHYydaq3YfysS5Etg@mail.gmail.com> <5124820D.2080900@suse.de> <CAE9FiQXHteymDNzu0GqWtVSVhu3g2hCT+K9e5tB1mR-OBX1ffA@mail.gmail.com> <5125C45A.5020208@suse.de> <20130226132905.GB24959@hardeman.nu>
-In-Reply-To: <20130226132905.GB24959@hardeman.nu>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.free-electrons.com ([94.23.35.102]:45802 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933360Ab3BLQ31 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Feb 2013 11:29:27 -0500
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Cc: Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Mike Turquette <mturquette@linaro.org>
+Subject: [PATCH 08/32] clk: mvebu: create parent-child relation for PCIe clocks on Armada 370
+Date: Tue, 12 Feb 2013 17:28:42 +0100
+Message-Id: <1360686546-24277-9-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 02/26/2013 02:29 PM, David Härdeman wrote:
-> On Thu, Feb 21, 2013 at 07:53:14AM +0100, Hannes Reinecke wrote:
->> On 02/20/2013 05:57 PM, Yinghai Lu wrote:
->>> it seems you mess pin with interrupt line.
->>>
->>> current code:
->>>          unsigned char irq;
->>>
->>>          pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &irq);
->>>          dev->pin = irq;
->>>          if (irq)
->>>                  pci_read_config_byte(dev, PCI_INTERRUPT_LINE, &irq);
->>>          dev->irq = irq;
->>>
->>> so if the device does not have interrupt pin implemented, pin should be zero.
->>> and  pin and irq in dev should
->>> be all 0.
->>>
->> But the device _has_ an interrupt pin implemented.
->> The whole point here is that the interrupt line is _NOT_ zero.
->>
-> ...
->>
->> So at one point we have to decide that ->irq is not valid, despite it
->> being not set to zero.
->> An alternative fix would be this:
->>
->> diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
->> index 68a921d..4a480cb 100644
->> --- a/drivers/acpi/pci_irq.c
->> +++ b/drivers/acpi/pci_irq.c
->> @@ -469,6 +469,7 @@ int acpi_pci_irq_enable(struct pci_dev *dev)
->>                 } else {
->>                         dev_warn(&dev->dev, "PCI INT %c: no GSI\n",
->>                                  pin_name(pin));
->> +                       dev->irq = 0;
->>                 }
->>                 return 0;
->>         }
->>
->> Which probably is a better solution, as here ->irq is _definitely_
->> not valid, so we should reset it to '0' to avoid confusion on upper
->> layers.
->>
->
-> Is there any agreement on how to proceed?
->
-I would actually prefer the second solution, as the ACPI code gives
-some better guarantees here. With the original solution it _might_ 
-be that on non-ACPI systems an interrupt 255 is valid, so it might
-incur unwanted regressions.
+The Armada 370 has two gatable clocks for each PCIe interface: pexY
+and pexY_en. In order for a PCIe interface to be functional, we need
+both of them to be enabled. Since there are no conditions in which
+having one clock enabled and not the other would be useful, we simply
+make those two clocks have a child-parent relationship.
 
-However, for an ACPI system we only have the two choices, assigning
-an interrupt via ACPI tables or use a default GSI value.
-If both failed the interrupt definitely is not valid and can safely
-be reset to 0.
+So, the pex0 clock becomes a child of pex0_en (for the PCIe interface
+0), and pex1 becomes a child of pex1_en (for the PCIe interface
+1). This way, the DT node for the PCIe interface 0 only needs to grab
+a reference to pex0, and the DT node for the PCIe interface 1 only
+needs to grab a reference to pex1.
 
-But this would need a formal ACK from the ACPI gods ...
-Len? Rafael?
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Mike Turquette <mturquette@linaro.org>
+---
+ drivers/clk/mvebu/clk-gating-ctrl.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Cheers,
-
-Hannes
+diff --git a/drivers/clk/mvebu/clk-gating-ctrl.c b/drivers/clk/mvebu/clk-gating-ctrl.c
+index 8fa5408..fd52b5f 100644
+--- a/drivers/clk/mvebu/clk-gating-ctrl.c
++++ b/drivers/clk/mvebu/clk-gating-ctrl.c
+@@ -119,8 +119,8 @@ static const struct mvebu_soc_descr __initconst armada_370_gating_descr[] = {
+ 	{ "pex1_en", NULL,  2 },
+ 	{ "ge1", NULL, 3 },
+ 	{ "ge0", NULL, 4 },
+-	{ "pex0", NULL, 5 },
+-	{ "pex1", NULL, 9 },
++	{ "pex0", "pex0_en", 5 },
++	{ "pex1", "pex1_en", 9 },
+ 	{ "sata0", NULL, 15 },
+ 	{ "sdio", NULL, 17 },
+ 	{ "tdm", NULL, 25 },
 -- 
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: J. Hawn, J. Guild, F. Imendörffer, HRB 16746 (AG Nürnberg)
+1.7.9.5
+
