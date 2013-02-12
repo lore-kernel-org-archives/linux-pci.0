@@ -1,105 +1,54 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.186]:61718 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759394Ab3BGXZm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Feb 2013 18:25:42 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Subject: Re: [PATCH v2 19/27] pci: PCIe driver for Marvell Armada 370/XP systems
-Date: Thu, 7 Feb 2013 23:25:23 +0000
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Andrew Murray <andrew.murray@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	"Eran Ben-Avi" <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	"Russell King - ARM Linux" <linux@arm.linux.org.uk>
-References: <1359399397-29729-20-git-send-email-thomas.petazzoni@free-electrons.com> <20130207183743.5c97d8b8@skate> <20130207182153.GB24688@obsidianresearch.com>
-In-Reply-To: <20130207182153.GB24688@obsidianresearch.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201302072325.23483.arnd@arndb.de>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20130211224142.GA9782@google.com>
+References: <Pine.LNX.4.44L0.1302051520220.2245-100000@iolanthe.rowland.org>
+	<1360466060.3703.15.camel@thor.lan>
+	<1360506199.3461.5.camel@thor.lan>
+	<CAE9FiQX0Jzqi=Dy=r3MoU9vK7HgAf+919LvbgLygW7VH3O4=bg@mail.gmail.com>
+	<CAE9FiQX5wQ8zFzPfgmvm0BESyLVxzDRQ33XPgj+QjBZ0kxuHXg@mail.gmail.com>
+	<1360587768.3454.2.camel@thor.lan>
+	<CAE9FiQWUZ3BgLOtcGePppLzWBv-uR8L+7abditH2MNA7zZW-WA@mail.gmail.com>
+	<CAE9FiQXcgxY_vW6gjqU7Jtxc71J=sKt_2SPsN8x1O9EfDRN_0g@mail.gmail.com>
+	<CAE9FiQXnb-op9vsQJroMisDQt_-X2UpBB1R_WJ1Lifnk5pPpGg@mail.gmail.com>
+	<20130211224142.GA9782@google.com>
+Date: Mon, 11 Feb 2013 16:08:38 -0800
+Message-ID: <CAE9FiQUnrc1NxL-X9Ddj-Y6jv_+EdDLKaLzY_eo3VNsSq5XpDA@mail.gmail.com>
+Subject: Re: [Bisected] [-next-20130204] usb/hcd: irq 18: nobody cared
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Peter Hurley <peter@hurleysoftware.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Lan Tianyu <tianyu.lan@intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Jiri Kosina <jkosina@suse.cz>, linux-usb@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-next@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday 07 February 2013, Jason Gunthorpe wrote:
-> On Thu, Feb 07, 2013 at 06:37:43PM +0100, Thomas Petazzoni wrote:
+On Mon, Feb 11, 2013 at 2:41 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> [+cc linux-acpi, linux-pci]
+>
+> The _PRT describes motherboard interrupt wiring, which has nothing to
+> do with PCI bus numbers.  Our current drivers/acpi/pci_irq.c caches
+> the PCI bus number along with the _PRT, and I think that's a mistake.
+>
+> The bus number binding means acpi_pci_irq_add_prt() has to happen
+> after enumerating everything below a bridge, and it will prevent us
+> from doing any bus number reassignment for hotplug.
+>
+> I think we should remove the bus numbers from the cached _PRT (or
+> maybe even remove the _PRT caching completely).  When we enable a PCI
+> device's IRQ, we should search up the PCI device tree looking for a
+> _PRT associated with each node, and applying normal PCI bridge
+> swizzling when we don't find a _PRT.  I think this can be done without
+> using PCI bus numbers at all.
+>
 
-> Right, someday you can have all 40 interrupts :)
-> 
-> This interrupt-map stuff is ugly, I looks like it was designed as a
-> way for the firmware to communicate the per-device interrupt
-> assignment to the OS - using it to describe a HW setup is a bit more
-> tortured for sure..
+Agreed, will give it try to remove the _PRT caching completely.
 
-It is usually used for PCI (non-PCIe) systems, where you can have
-multiple slots on the same bus and each slot has its own four
-interrupt lines routed to an upstream interrupt controller, not
-necessarily the same one for each slot.
+Thanks
 
-> Frankly, I think it should not be used in PCI-E drivers *at all*
-> beacuse there is no need for an external interrupt routing
-> description. [1]
-> 
-> PCI-E *only* has inband interrupt delivery, so the host driver has
-> 100% of the information it needs to convert a INTx signal received on
-> a link to a Linux interrupt number.
-> 
-> So in a PCI-E world translation should look like this:
->  - Start at the source device INTx
->  - Traverse up bridges performing INTx swizzling according to the
->    PCI-E spec
->  - When the host bridge is reached call into the host driver and pass
->    - The INTx number
->    - The bus/device/function of last bridge traversed
->  - The host bridge driver returns a Linux interrupt number.
-
-It's the same as on PCI, except that there you stop when you reach
-the slot that is physically connected to the interrupt controller.
-
-> This *always* works for (compliant) PCI-E. An OF interrupt map is
-> never, ever, needed. Providing a common mechanism can remove this
-> complex OF stuff and ultimately help everyone :)
-> 
-> However, if interrupt-map is used, I strongly suspect it should be
-> placed on each bridge node (as Andrew mentioned), and it should be
-> very simple:
-> 
-> link@0 {
-> reg = <0x800 0 0  0 0>; // Bus 0, Dev 0x10, Fn 0
-> interrupt-mask = <0x0 0 0 7>;
-> interrupt-map = <0x0000 0 0 1 &mpic 58 // INTA
->                  0x0000 0 0 2 &mpic 58 // INTB
->                  0x0000 0 0 3 &mpic 58 // INTC
->                  0x0000 0 0 4 &mpic 58>; // INTD
-> }
-
-The interrupt-map property only makes sense for the host bridge,
-not for bridges below it, which don't normally get represented
-in the device tree.
-
-> Jason
-> 1 - For PCI/PCI-X the physical INTx interrupt pins on any device,
->     anywhere in the system could by physically tied to any interrupt
->     ingress in the system. Even if they are behind bridges. It is a
->     total free for all.
-
-I would not be surprised to see system that have a PCIe to
-PCI bridge and slots behind that which are directly connected
-to an upstream interrupt controller. In fact, I believe I have
-worked on a system like that (IBM QS21 and QS22), and thankfully
-the interrupt-map property did let us model this correctly.
-
-	Arnd
+Yinghai
