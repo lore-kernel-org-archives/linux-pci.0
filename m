@@ -1,148 +1,95 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:49570 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752639Ab3BAIqS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 Feb 2013 03:46:18 -0500
-Date: Fri, 1 Feb 2013 09:46:13 +0100
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Stephen Warren <swarren@wwwdotorg.org>
-Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
+Received: from quartz.orcorp.ca ([184.70.90.242]:60610 "EHLO quartz.orcorp.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933153Ab3BLTtx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 12 Feb 2013 14:49:53 -0500
+Date: Tue, 12 Feb 2013 12:49:57 -0700
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
 	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
 	Thierry Reding <thierry.reding@avionic-design.de>,
 	Eran Ben-Avi <benavi@marvell.com>,
 	Nadav Haklai <nadavh@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
 	Shadi Ammouri <shadi@marvell.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>
-Subject: Re: [PATCH v2 19/27] pci: PCIe driver for Marvell Armada 370/XP
- systems
-Message-ID: <20130201094613.38fa2ad0@skate>
-In-Reply-To: <510B268E.2040104@wwwdotorg.org>
-References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
-	<1359399397-29729-20-git-send-email-thomas.petazzoni@free-electrons.com>
-	<510B0D9C.1000101@wwwdotorg.org>
-	<20130201014138.GA16234@obsidianresearch.com>
-	<510B268E.2040104@wwwdotorg.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Tawfik Bayouk <tawfik@marvell.com>
+Subject: Re: [PATCH 24/32] pci: PCIe driver for Marvell Armada 370/XP systems
+Message-ID: <20130212194957.GF1471@obsidianresearch.com>
+References: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com>
+ <1360686546-24277-25-git-send-email-thomas.petazzoni@free-electrons.com>
+ <201302121830.11375.arnd@arndb.de>
+ <20130212202252.3a9ee3d0@skate>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130212202252.3a9ee3d0@skate>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Stephen Warren,
+On Tue, Feb 12, 2013 at 08:22:52PM +0100, Thomas Petazzoni wrote:
 
-Thanks for this great discussion. I see that Jason has already answered
-most of the questions on the why we need this "dynamicity" in the window
-configuration. A few comments below.
+> > > +/*
+> > > + * This product ID is registered by Marvell, and used when the
+> > > Marvell
+> > > + * SoC is not the root complex, but an endpoint on the PCIe bus.
+> > > It is
+> > > + * therefore safe to re-use this PCI ID for our emulated PCI-to-PCI
+> > > + * bridge.
+> > > + */
+> > > +#define MARVELL_EMULATED_PCI_PCI_BRIDGE_ID 0x7846
+> > 
+> > Just a side note: What happens if you have two of these systems and
+> > connect them over PCIe, putting one of them into host mode and the
+> > other into endpoint mode?
+> 
+> I am not a PCI expert, but I don't think it would cause issues. Maybe
+> Jason Gunthorpe can comment on this, as he originally suggested to
+> re-use this PCI ID.
 
-On Thu, 31 Jan 2013 19:21:02 -0700, Stephen Warren wrote:
+The answer is a bit complex..
 
-> So, the dynamic programming of the windows on Marvell HW is the exact
-> logical equivalent of programming a standard PCIe root port's BAR
-> registers. It makes perfect sense that should be dynamic. Presumably
-> this is something you can make work inside your emulated PCIe/PCIe
-> bridge module, simply by capturing writes to the BAR registers, and
-> translating them into writes to the Marvell window registers.
+- Yes the Marvell SOC, or related, can be used as an end point, and
+  you could pair two SOCs together over PCI
 
-That's what I'm doing. In the PATCHv2, my PCIe host driver was reading
-back the BARs in the PCI-to-PCI bridges configuration space, and was
-setting up the windows according to the addresses that had been
-assigned to each bridge.
+- When in end point mode the SOC *probably* should have its ID
+  reassigned. The ID is supposed to reflect the function of the
+  device, not the HW vendor. In end point mode the ARM code controls
+  how the device appears on PCIe.
 
-I am currently working in making this more dynamic: it is directly when
-the BAR is being written to in the PCI-to-PCI bridge configuration
-space that a window will be setup.
+  So, if someone made an add-in card based around one of these Marvell
+  SOCs then it still won't expose this ID to the kernel.
 
-> Now, I do have one follow-on question: You said you don't have 30
-> windows, but how many do you have free after allocating windows to any
-> other peripherals that need them, relative to (3 *
-> number-of-root-ports-in-the-SoC)? (3 being IO+Mem+PrefetchableMem.)
+- Even if the ID is reused there is a PCI-PCI bridge version and a
+  end device version, so drivers could still tell them apart by class
+  matching.
 
-We have 20 windows on Armada XP if I remember correctly, and they are
-not only used for PCIe, but also to map the BootROM (needed to boot
-secondary CPUs), to map SPI flashes or NOR flashes, for example. So
-they are really shared between many uses. In terms of PCIe, there are
-only two types of windows: I/O and Memory, there is no notion of
-Prefetchable Memory window as far as I could see.
+FWIW, I would fetch the ID from the HW, as different SOC varients may
+vary the ID, though that is minor.
 
-We have up to 10 PCIe interfaces, and only 20 windows. It means that
-you basically can't use all PCIe interfaces, there will necessarily be
-some limit, due to the limited number of windows.
+Basically, there is a theoretical problem here, but it is trivially
+solvable in two ways by whomever decides to actually do this.
 
-Also, I'd like to point out that the dynamic configuration is needed
-for two reasons:
+> > I suppose you also need to fix up pcie->io to be in IORESOURCE_MEM
+> > space instead of IORESOURCE_IO, or fix the of_pci_process_ranges
+> > function to return it in a different way.
+> 
+> Ok.
 
- * The number of windows, as we are discussing now.
+What does /proc/iomem say with your driver, are all the memory regions
+properly requested?
 
- * The amount of physical address space available. If you don't
-   dynamically configure those windows, then you have to account the
-   "worst case", i.e the PCIe devices that require very large memory
-   areas. So you end up creating static windows that reserve 32M or 64M
-   or 128M *per* PCIe link. You can see that it "consumes" pretty
-   quickly a large part of the 4G physical address space that we have.
-   Thanks to the dynamic window configuration that we do with the
-   PCI-to-PCI bridge, we can size the windows exactly the size needed
-   by the downstream device on each PCIe interface.
+FWIW, the orion mbus window driver should also get an update to
+request memory regions, and IMHO, some of that code is better placed
+there than in the PCI driver. Specifically, I think it should:
 
-> The thing here is that when the PCIe core writes to a root port BAR
-> window to configure/enable it the first time, you'll need to capture
-> that transaction and dynamically allocate a window and program it in a
-> way equivalent to what the BAR register write would have achieved on
-> standard HW. Later, the window might need resizing, or even to be
-> completely disabled, if the PCIe core were to change the standard BAR
-> register. Dynamically allocating a window when the BAR is written
-> seems a little heavy-weight.
+- Request regions for the DDR ('System RAM') and internal regs
+- Request regions for every mbus window that was programmed in,
+  orion_addr_map_cfg - ideally updated to decode the target specifier.
+- Request and unrequest regions for the PCI driver's dynamic requests.
 
-Why?
-
-> So while it's obvious that window base address and size shouldn't be
-> static, I wonder if the assignment of a specific window ID to a
-> specific root port ID shouldn be dynamic or static. For example, if
-> your HW configuration leaves you with 6 windows available, you could
-> support 2 PCIe root ports by statically assigning 3 windows to serve
-> each of those 2 root ports. Would that work, or are there systems
-> where over-commit is needed, e.g. if there's no IO space behind a
-> root port, you could get away with two windows per root port, and
-> hence be able to run 3 root ports rather than just 2? Still, if you
-> know which PCIe devices are being the root ports, you could still
-> represent the over-commit statically in DT
-
-For now, I haven't figured out how not to allocate an I/O window if the
-downstream device doesn't use I/O, but I'd like to achieve that, as it
-would save one of the two windows needed per PCIe interface... and many
-PCIe devices don't need the I/O window.
-
-> Still, I supose doing it dynamically in the driver does end up being a
-> lot less to think about for someone creating the DT for a new board.
-
-Indeed.
-
-> Having to translate standard root port BAR register writes to Marvell
-> window register allocation/writes would imply that the emulated root
-> port code has to be very closely tied into the Marvell PCIe driver,
-> and not something that could be at all generic in the most part.
-
-Right. I've already moved the PCI-to-PCI bridge code from the generic
-drivers/pci/sw-pci-pci-bridge.c location to be directly into the
-driver. It also to integrate more tightly things like window allocation.
-
-> Right. Now that I really understand what the windows are doing, I can
-> see that a static window configuration (address/size, perhaps rather
-> than windows are used) would not be appropriate.
-
-Glad to see we reached the same conclusion :-)
-
-Best regards,
-
-Thomas
--- 
-Thomas Petazzoni, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
+Jason
