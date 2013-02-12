@@ -1,54 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cpsmtpb-ews07.kpnxchange.com ([213.75.39.10]:54291 "EHLO
-	cpsmtpb-ews07.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758541Ab3BSJ2W (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Feb 2013 04:28:22 -0500
-Message-ID: <1361266095.26423.19.camel@x61.thuisdomein>
-Subject: Re: pciehp: errors on resume
-From: Paul Bolle <pebolle@tiscali.nl>
-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-Cc: Oliver Neukum <oneukum@suse.de>, "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Date: Tue, 19 Feb 2013 10:28:15 +0100
-In-Reply-To: <512336fb.42d70e0a.73ed.ffffc77eSMTPIN_ADDED_BROKEN@mx.google.com>
-References: <1359377173.1345.25.camel@x61.thuisdomein>
-	 <512336fb.42d70e0a.73ed.ffffc77eSMTPIN_ADDED_BROKEN@mx.google.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail.free-electrons.com ([94.23.35.102]:45917 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933365Ab3BLQ3l (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Feb 2013 11:29:41 -0500
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Cc: Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Tawfik Bayouk <tawfik@marvell.com>
+Subject: [PATCH 20/32] arm: plat-orion: remove __init from PCIe functions needed after boot time
+Date: Tue, 12 Feb 2013 17:28:54 +0100
+Message-Id: <1360686546-24277-21-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Richard,
+The orion_pcie_set_local_bus_nr() function will be used by the Marvell
+PCIe driver in its PCI-to-PCI bridge emulation. This means that this
+function can now get called at any point during the system execution,
+and no longer at boot time. For example, if PCIe devices
+appear/disappear during the system execution (either through hotplug,
+or manipulation of PCIe devices using /sys).
 
-On Tue, 2013-02-19 at 16:25 +0800, Wei Yang wrote:
-> Sorry for bothering, I am looking at this and try to understand the process, 
-> while get some confusion.
-> 
-> 1. The error log will be printed every time suspend/resume, no matter whether
->    the device is plug in/plug out during the suspend as discussed below?
-> 
->    If the device is always there, no one touch it, the error message still be
->    printed?
-> 
-> 2. In my mind, before the pcied_init is called, those pci_dev are
->    already enumerated, such as the wireless card in this case. 
-> 
->    During the boot stage, if the pciehp_force is set to true, the error messge
->    still be printed? Since I don't have those devices to create pcie_device, I
->    can't test this.
-> 
-> 3. Do you think it would be find to remove those devices at the suspend stage?
->    Then they will be added again at the resume stage?
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+---
+ arch/arm/plat-orion/pcie.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Bypassing your questions, I'd like to point you at
-http://article.gmane.org/gmane.linux.kernel.pci/20077 , in which Rafael
-suggested a possible solution to this situation. (There's some extra
-info in other messages in this thread.)
-
-I must confess that I'm not at all sure how to implement it and that so
-far I have, rather cowardly, not even drafted a solution along those
-lines.
-
-
-Paul Bolle
+diff --git a/arch/arm/plat-orion/pcie.c b/arch/arm/plat-orion/pcie.c
+index f20a321..da921e7 100644
+--- a/arch/arm/plat-orion/pcie.c
++++ b/arch/arm/plat-orion/pcie.c
+@@ -79,7 +79,7 @@ int orion_pcie_get_local_bus_nr(void __iomem *base)
+ 	return (stat >> PCIE_STAT_BUS_OFFS) & PCIE_STAT_BUS_MASK;
+ }
+ 
+-void __init orion_pcie_set_local_bus_nr(void __iomem *base, int nr)
++void orion_pcie_set_local_bus_nr(void __iomem *base, int nr)
+ {
+ 	u32 stat;
+ 
+-- 
+1.7.9.5
 
