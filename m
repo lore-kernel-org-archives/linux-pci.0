@@ -1,109 +1,196 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f50.google.com ([209.85.219.50]:45355 "EHLO
-	mail-oa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751539Ab3BMEcy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Feb 2013 23:32:54 -0500
-Received: by mail-oa0-f50.google.com with SMTP id l20so890405oag.37
-        for <linux-pci@vger.kernel.org>; Tue, 12 Feb 2013 20:32:53 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1661570408.42886.1360700013207.JavaMail.mail@webmail03>
-References: <587312497.6453.1360650312498.JavaMail.mail@webmail01>
- <CA+55aFyscOeZUPaYj_-QYgjADPD59+=c5aMvtpPEnd1tmpUGiA@mail.gmail.com>
- <1362466310.40337.1360693775935.JavaMail.mail@webmail03> <CA+55aFyK1zhNerWHkd=FMMeTH_sfiL4sBFq00y4n5eAJ88Z_cA@mail.gmail.com>
- <1661570408.42886.1360700013207.JavaMail.mail@webmail03>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 12 Feb 2013 21:26:44 -0700
-Message-ID: <CAErSpo7qj2SNR7BfuBsfF-saZXvgcqqLtgoP5Hyb5u99qR4Ncg@mail.gmail.com>
-Subject: Re: Abysmal HDD/USB write speed after sleep on a UEFI system
-To: "Artem S. Tashkinov" <t.artem@lycos.com>
-Cc: torvalds@linux-foundation.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Alan Stern <stern@rowland.harvard.edu>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail.free-electrons.com ([94.23.35.102]:49117 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932120Ab3BMIYE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Feb 2013 03:24:04 -0500
+Date: Wed, 13 Feb 2013 09:23:58 +0100
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	"Russell King - ARM Linux" <linux@arm.linux.org.uk>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	"Eran Ben-Avi" <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Tawfik Bayouk <tawfik@marvell.com>
+Subject: Re: [PATCH 24/32] pci: PCIe driver for Marvell Armada 370/XP
+ systems
+Message-ID: <20130213092358.4991ba43@skate>
+In-Reply-To: <201302122259.54073.arnd@arndb.de>
+References: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	<201302121830.11375.arnd@arndb.de>
+	<20130212202252.3a9ee3d0@skate>
+	<201302122259.54073.arnd@arndb.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc linux-pci, Rafael, Alan]
+Dear Arnd Bergmann,
 
-[https://bugzilla.kernel.org/show_bug.cgi?id=53551]
+On Tue, 12 Feb 2013 22:59:53 +0000, Arnd Bergmann wrote:
 
-On Tue, Feb 12, 2013 at 1:13 PM, Artem S. Tashkinov <t.artem@lycos.com> wrote:
-> Feb 13, 2013 01:32:53 AM, Linus Torvalds wrote:
-> On Tue, Feb 12, 2013 at 10:29 AM, Artem S. Tashkinov wrote:
->>> Feb 12, 2013 11:30:20 PM, Linus Torvalds wrote:
->>>>
->>>>A few things to try to pinpoint:
->>>>
->>>> (a) Is it *only* write performance that suffers, or is it other
->>>>performance too? Networking (DMA? Perhaps only writing *to* the
->>>>network?)? CPU?
->>>
->>> I  've tested hdpard -tT --direct and the output on boot and after suspend
->>> is quite similar.
->>>
->>> I  've also checked my network read/write speed, and it  's the same
->>> ~ 100MBit/sec (I have no 1Gbit computers on my network
->>> unfortunately).
->>
->>Ok. So it really sounds like just USB and HD writes. Which is quite
->>odd, since they have basically nothing in common I can think of
->>(except the obvious block layer issues).
->>
->>>> (b) the fact that it apparently happens with both SATA and USB
->>>>implies that it    's neither, and is more likely something core like
->>>>memory speed (mtrr, caching) or PCI (DMA, burst sizes, whatever).
->>>
->>> I  've no idea, please, check my bug report where I  've just added lots of
->>> information including a diff between on boot and after suspend.
->>
->>I  'm not seeing anything particularly interesting there.
->>
->>Except why/how did the MSI address/data change for the SATA
->>controller? The irq itself hasn  't changed.. There  's probably some sane
->>reason for that too (it  's an odd encoding, maybe they code for the
->>same thing), and there  's nothing like that for USB, so...
->>
->>And if it was irq problems, I  'd expect you to see it more for reads
->>than for writes anyway. Along with a few messages about missed irqs
->>and whatever.
->>
->>I'm stumped, and have no ideas. I can  't even begin to guess how this
->>would happen. One thing to try is if it happens for all USB ports (you
->>have multiple controllers) and I assume performance doesn  't come back
->>if you unplug and replug the USB disk..
->
-> I've just plugged and unplugged my USB stick into all available hubs
-> (including a USB3 one, that is xhci_hcd) and I've got the same write speed
-> on all of them - around 930KB/sec (quite a weird number - as if I'm on USB
-> 1.1) - lsusb says I'm happily running ehci_hcd/2p, 480M and xhci_hcd/2p,
-> 5000M.
->
-> The only pattern that I see here is that write speed to real devices degrades,
-> tmpfs write speed stays the same:
->
-> $ dd if=/dev/zero of=test bs=32M count=32
-> 32+0 records indegrade
-> 32+0 records out
-> 1073741824 bytes (1.1 GB) copied, 0.296323 s, 3.6 GB/s
+> > <plat/pcie.h> is needed for a few PCIe functions shared with earlier
+> > families of Marvell SoC. My plan is that once this PCI driver gets
+> > accepted, I work on migrating the earlier Marvell SoC families to using
+> > this PCI driver, and therefore those functions would ultimately move in
+> > the driver in drivers/pci/host/, which would remove the <plat/pcie.h>.
+> 
+> Hmm, although it is a bit unusual, I would actually propose duplicating
+> that code for now, and merging a copy into the new driver right away.
+> This gets rid of the header file dependency and lets you just delete
+> the old file when the other platforms are converted.
 
-I'm sort of stumped here, too.  For the SATA controller, the only
-PCI-related difference I see is the change in the MSI address, which
-should just change the target CPU, which doesn't seem like it should
-make this much difference.  But could you try this after the resume:
+Hum, why not, but I would definitely prefer to wait for the conversion
+of older platforms instead of duplicating this code. But if you feel
+like it's the right solution, I'll do it.
 
-    $ sudo setpci -s00:1f.2 0x84.L=0xfee0400c
+> > The <mach/addr-map.h> is here to access the address decoding windows
+> > allocation/free API. And for this, there is no other long term plan
+> > than having an API provided by the platform code in arch/arm/, and used
+> > by drivers. Some other drivers may have to use this API as well in the
+> > future.
+> 
+> This is harder to do, but I'm sure we can find a solution. At least
+> the addr-map.c code has no other dependencies than the plat/addr-map.h
+> header, so we are fairly free to move it elsehwere.
 
-to set the MSI address back to the original value to see if it makes a
-difference?
+The arch/arm/mach-mvebu/addr-map.c depends on
+arch/arm/plat-orion/addr-map.c, so any change on this will affect
+mach-kirkwood, mach-orion5x, mach-dove and mach-mv78xx0. As you can
+see, we have to take into account the existing code, and I don't think
+it's realistic to have a perfect solution immediately.
 
-The XHCI controllers both have Unsupported Request errors logged.  I
-assume these are related to the suspend/resume, and it seems like we
-ought to either avoid them or clean them up somehow, but I don't know
-enough about AER, and I don't know whether they would cause the
-performance issue you're seeing.
+This address decoding code will continue to change for two reasons:
 
-There should be more AER logging than is decoded by lspci, so can you
-also collect the output of "lspci -vvv -xxxx"?  That will include the
-raw logging registers that lspci doesn't decode.
+ *) We are going to work on NOR/NAND support for mach-mvebu, and that
+    will also involve more interaction with the address decoding code.
 
-Bjorn
+ *) As we are moving the earlier Marvell SoC families (mach-kirkwood,
+    mach-orion5x, mach-dove, mach-mv78xx0) to the Device Tree, this
+    address decoding code will also evolve.
+
+mach-mvebu is not a standalone new platform like mach-highbank for
+example, it relies on a lot of existing code from ealier platforms. It
+is nice to share existing code, but it also means that cleanups and
+refactoring take a lot more time.
+
+I think we need to leave time for all these platforms to gradually
+converge and cleanup their infrastructure. It's not going to happen
+overnight.
+
+> I can think of several approaches that I'd prefer over your approach,
+> although I have to admit that none of them makes me really happy:
+> 
+> a) arch/arm/common/mv-addr-map.c and arch/arm/include/asm/mach/mv-addr-map.h
+> I assume that Russell will object to this one, but I let him speak for
+> himself
+> 
+> b) drivers/bus/<something>
+> This would make a lot more sense if we followed the scheme I explained
+> in my discussion to Jason Gunthorpe, where we basically treat this
+> bus as a parent node in the device tree for anything that can get remapped.
+> Without that change, it feels a little misplaced
+> 
+> c) drivers/misc/
+> I usually object to anything put in here and would certainly prefer the
+> previous one over this.
+
+All of those approaches require a huge amount of work to convert the
+existing SoC families. Certainly, it will be done as time goes, and as
+older SoC families are converted to the DT and gradually converge
+inside mach-mvebu/, but if we have to wait for all of this to happen to
+get the PCIe support merged, it's not going to happen before several
+months (the PCIe stuff was originally posted on December, 7th,
+initially with the hope of targeting 3.9, the review and rework has
+taken a long time, so I'm now targeting 3.10 for the PCIe stuff, but
+I'd prefer not to have to postpone this to 3.11 and even 3.12 due to
+the heavy dependencies on address decoding rework).
+
+> > > I don't understand this code with the masks and shifts. Could you
+> > > add a comment here for readers like me?
+> > 
+> > Sure, will do.
+> > 
+> > It basically comes from the PCI-to-PCI bridge specification, which
+> > explains how the I/O address and I/O limit is split into two 16 bits
+> > registers, with those bizarre shifts and hardcoded values. I'll put a
+> > reference to the relevant section of the PCI-to-PCI bridge
+> > specification here.
+> 
+> Ok, I see. Thanks for the explanation.
+
+I'll add a comment anyway, because it's true that it's a bit of magic
+going on here.
+
+> > > > +	/* Get the I/O and memory ranges from DT */
+> > > > +	while ((range = of_pci_process_ranges(np, &res, range)) !=
+> > > > NULL) {
+> > > > +		if (resource_type(&res) == IORESOURCE_IO) {
+> > > > +			memcpy(&pcie->io, &res, sizeof(res));
+> > > > +			memcpy(&pcie->realio, &res, sizeof(res));
+> > > > +			pcie->io.name = "I/O";
+> > > > +			pcie->realio.start &= 0xFFFFF;
+> > > > +			pcie->realio.end   &= 0xFFFFF;
+> > > > +		}
+> > > 
+> > > The bit masking seems fishy here. What exactly are you doing,
+> > > does this just assume you have a 1MB window at most?
+> > 
+> > Basically, I have two resources for the I/O:
+> > 
+> >  * One described in the DT, from 0xC0000000 to 0xC00FFFFF which will be
+> >    used to create the address decoding windows for the I/O regions of
+> >    the different PCIe interfaces. The PCI I/O virtual address 0xffe00000
+> >    will be mapped to those physical addresses. Those address decoding
+> >    windows are configured with the special "remap" mechanism that
+> >    ensures that if an access is made at 0xC0000000 + offset, it will
+> >    appear on the PCI bus as an I/O access at address "offset".
+> 
+> Right, I got this from reading the code. Unfortunately the of_pci_process_ranges
+> functions from your earlier patch makes this a little confusing as it
+> marks this resource as IORESOURCE_IO when in reality it is the IORESOURCE_MEM
+> resource that describes where in MMIO space the I/O window is.
+
+Indeed. So maybe I should mark this resource as being IORESOURCE_MEM
+in the DT.
+
+> >  * One covering the low addresses 0x0 -> 0xFFFFF (pcie->realio), which
+> >    is used to tell the Linux PCI subsystem from which address range it
+> >    should assign I/O addresses.
+> > 
+> > > Maybe something like
+> > > 
+> > > 	pcie->realio.start = 0;
+> > > 	pcie->realio.end = pcie->io.end - pcie->io.start;
+> > 
+> > Indeed, that would result in the same values. If you find it clearer,
+> > I'm fine with it.
+> 
+> Ideally we would read that from the ranges property as well, since it
+> does not necessarily start at zero, although any other value would
+> be a bit silly.
+> 
+> I definitely prefer the version I suggested over your version. On second
+> thought I would make this
+> 
+> 	pcie->realio.start = PCIBIOS_MIN_IO;
+> 	pcie->realio.end = min(pcie->io.end - pcie->io.start, IO_SPACE_LIMIT);
+> 
+> to ensure that we are inside of the limits.
+
+Ok, thanks!
+
+Thomas
+-- 
+Thomas Petazzoni, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
