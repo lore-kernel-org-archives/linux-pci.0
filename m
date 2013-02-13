@@ -1,73 +1,134 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.171]:51752 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751089Ab3BGXpJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Feb 2013 18:45:09 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Subject: Re: [PATCH v2 22/27] arm: mvebu: add PCIe Device Tree informations for Armada XP
-Date: Thu, 7 Feb 2013 23:44:14 +0000
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	"Eran Ben-Avi" <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	"Russell King - ARM Linux" <linux@arm.linux.org.uk>
-References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com> <201302070824.51125.arnd@arndb.de> <20130207170000.GA10834@obsidianresearch.com>
-In-Reply-To: <20130207170000.GA10834@obsidianresearch.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Jiang Liu <liuj97@gmail.com>, Toshi Kani <toshi.kani@hp.com>,
+	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
+	Myron Stowe <mstowe@redhat.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] ACPI / PCI: Initialize PCI root drivers after PCI bus enumeration
+Date: Wed, 13 Feb 2013 13:59:52 +0100
+Message-ID: <1678811.LFvn3m6Wlp@vostro.rjw.lan>
+In-Reply-To: <CAE9FiQXk1VhA2+qAcp8jL=TG28acePyX4SOYALiAQ0bGnLaFOA@mail.gmail.com>
+References: <1882094.fnYp8pBVVX@vostro.rjw.lan> <CAE9FiQXk1VhA2+qAcp8jL=TG28acePyX4SOYALiAQ0bGnLaFOA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201302072344.14558.arnd@arndb.de>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday 07 February 2013, Jason Gunthorpe wrote:
-> On Thu, Feb 07, 2013 at 08:24:50AM +0000, Arnd Bergmann wrote:
-> > >  - The CPU physical address window to use for the IO space
-> > >    is set via io-cpu-window, not much choice here, the PCI
-> > >    format ranges must be 0 based.
-> > 
-> > I don't think I understand this part. Why can't you put this into
-> > ranges as before?
-> > 
-> > -       0x81000000 0x00000000 0x00000000  0x00000000  0x0 0xa0000
-> > +	0x81000000 0x00000000 0x00000000  0xc0000000  0x0 0xa0000
+On Tuesday, February 12, 2013 05:54:08 PM Yinghai Lu wrote:
+> On Tue, Feb 12, 2013 at 4:16 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> >
+> > After commit 1aeae82 (ACPI / PCI: avoid building pci_slot as module)
+> > the pci_slot driver's .add() callback routine, acpi_pci_slot_add(),
+> > is executed from within acpi_pci_root_add() before the PCI devices on
+> > the bus are enumerated and that triggers the WARN_ON() in
+> > kobject_get():
+> >
+> > WARNING: at /scratch/rafael/work/test/include/linux/kref.h:42 kobject_get+0x33/0x40()
+> > Hardware name: PORTEGE R500
+> > Modules linked in:
+> > Pid: 1, comm: swapper/0 Not tainted 3.8.0-rc7+ #160
+> > Call Trace:
+> >  [<ffffffff8103d38a>] warn_slowpath_common+0x7a/0xb0
+> >  [<ffffffff8103d3d5>] warn_slowpath_null+0x15/0x20
+> >  [<ffffffff812f99b3>] kobject_get+0x33/0x40
+> >  [<ffffffff81452b82>] get_device+0x12/0x30
+> >  [<ffffffff8138df7b>] register_slot+0x243/0x295
+> >  [<ffffffff810a7b6d>] ? trace_hardirqs_on+0xd/0x10
+> >  [<ffffffff8137b7b9>] acpi_ns_walk_namespace+0x10f/0x24a
+> >  [<ffffffff8138dd38>] ? walk_p2p_bridge+0x13b/0x13b
+> >  [<ffffffff8138dd38>] ? walk_p2p_bridge+0x13b/0x13b
+> >  [<ffffffff8137bdc3>] acpi_walk_namespace+0xe9/0x132
+> >  [<ffffffff8138dd38>] ? walk_p2p_bridge+0x13b/0x13b
+> >  [<ffffffff8138dcf5>] walk_p2p_bridge+0xf8/0x13b
+> >  [<ffffffff8134d606>] ? acpi_os_signal_semaphore+0x76/0x87
+> >  [<ffffffff8138dd38>] ? walk_p2p_bridge+0x13b/0x13b
+> >  [<ffffffff8137b7b9>] acpi_ns_walk_namespace+0x10f/0x24a
+> >  [<ffffffff8138dbfd>] ? do_sta_before_sun+0x2b/0x2b
+> >  [<ffffffff8138dbfd>] ? do_sta_before_sun+0x2b/0x2b
+> >  [<ffffffff8137bdc3>] acpi_walk_namespace+0xe9/0x132
+> >  [<ffffffff81356071>] ? acpi_pci_root_add+0x3e7/0x49a
+> >  [<ffffffff8138e07f>] acpi_pci_slot_add+0xb2/0x103
+> >  [<ffffffff8138dd38>] ? walk_p2p_bridge+0x13b/0x13b
+> >  [<ffffffff81356089>] acpi_pci_root_add+0x3ff/0x49a
+> >
+> > which means that pci_bus->dev used in register_slot() has not been
+> > registered yet at that point.
+> >
+> > To fix this use the observation that before commit 1aeae82
+> > acpi_pci_slot_add() was always run after pci_bus_add_devices()
+> > and that happened to the acpiphp's .add() callback routine too.
+> > Thus it is safe to reorder acpi_pci_root_add() to make the PCI root
+> > drivers' .add() callbacks be run after pci_bus_add_devices(), so do
+> > that.
+> >
+> > This approach was previously proposed by Myron Stowe.
+> >
+> > References: https://patchwork.kernel.org/patch/1848781/
+> > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > ---
+> >
+> > The commit mentioned in the changelog above is in linux-pm.git/linux-next.
+> >
+> > Thanks,
+> > Rafael
+> >
+> > ---
+> >  drivers/acpi/pci_root.c |   13 ++++++++-----
+> >  1 file changed, 8 insertions(+), 5 deletions(-)
+> >
+> > Index: test/drivers/acpi/pci_root.c
+> > ===================================================================
+> > --- test.orig/drivers/acpi/pci_root.c
+> > +++ test/drivers/acpi/pci_root.c
+> > @@ -600,17 +600,20 @@ static int acpi_pci_root_add(struct acpi
+> >         if (system_state != SYSTEM_BOOTING)
+> >                 pci_assign_unassigned_bus_resources(root->bus);
+> >
+> > +       /* need to after hot-added ioapic is registered */
+> > +       if (system_state != SYSTEM_BOOTING)
+> > +               pci_enable_bridges(root->bus);
+> > +
+> > +       pci_bus_add_devices(root->bus);
+> > +
+> >         mutex_lock(&acpi_pci_root_lock);
+> > +
+> >         list_for_each_entry(driver, &acpi_pci_drivers, node)
+> >                 if (driver->add)
+> >                         driver->add(root);
+> > -       mutex_unlock(&acpi_pci_root_lock);
+> >
+> > -       /* need to after hot-added ioapic is registered */
+> > -       if (system_state != SYSTEM_BOOTING)
+> > -               pci_enable_bridges(root->bus);
+> > +       mutex_unlock(&acpi_pci_root_lock);
+> >
+> > -       pci_bus_add_devices(root->bus);
+> >         return 1;
+> >
+> >  out_del_root:
+> >
 > 
-> The OF PCI core translates 0x81000000 IO space addresess into a 'struct
-> resource' tagged with IORESOURCE_IO.
+> No, we don't need this after
 > 
-> But 0xc0000000 is not an IORESOURCE_IO address, it is an
-> IORESOURCE_MEM address..
+> | commit 4f535093cf8f6da8cfda7c36c2c1ecd2e9586ee4
+> |     PCI: Put pci_dev in device tree as early as possible
 > 
-> So, I think with the current OF code this has to be 0, otherwise your
-> IORESOURCE_IO's end up starting at 0xc000000 - but maybe there is some
-> trickyness to work with in here? (Although none of this matters when
-> Linux does resource assignment, the OF translation code is never
-> enganged)
-
-Yes, I think this is for historic reasons: the PCI binding far
-predates the Linux implementation, and I'm sure on MacOS, AIX
-and Solaris the PCI drivers did not actually have the same kind
-of wrappers for PIO functions that we have on Linux because of
-the x86 legacy.
-
-> But I agree, 0xc0000000 seems much better...
+> in pci/next.
 > 
-> To think about it from a different angle, what would you put in the
-> 4th dword on x86? How do you describe the IO numberspace in DT on x86?
+> So we can move that Jiang's patch from your tree to Bjorn's tree?
 
-I think the best option is to have no translation at all on x86,
-leaving 0x81000000 out of the ranges property. I'm not sure if
-the authors of the binding actually considered that case though.
+OK, I'm dropping that patch from my tree, then (hopefully, no one has merged
+my acpi-cleanup branch yet).
 
-	Arnd
+Bjorn, could you pick up https://patchwork.kernel.org/patch/2003771/ please?
+
+Rafael
+
+
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
