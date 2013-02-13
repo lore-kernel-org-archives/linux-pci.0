@@ -1,103 +1,525 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:37235 "EHLO hydra.sisk.pl"
+Received: from hydra.sisk.pl ([212.160.235.94]:37893 "EHLO hydra.sisk.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757820Ab3BKTVY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 11 Feb 2013 14:21:24 -0500
+	id S1754788Ab3BMNFu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 13 Feb 2013 08:05:50 -0500
 From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Daniel J Blueman <daniel@quora.org>,
-	Linux Kernel <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: Re: [3.8-rc7] PCI hotplug wakeup oops
-Date: Mon, 11 Feb 2013 20:27:49 +0100
-Message-ID: <6086479.ycKj2j8yeP@vostro.rjw.lan>
-In-Reply-To: <CAErSpo6rGYLQeP8Myu=octSPY_0R+B7ptBLhLawd_A2E3NRsAw@mail.gmail.com>
-References: <CAMVG2svG21yiM1wkH4_2pen2n+cr2-Zv7TbH3Gj+8MwevZjDbw@mail.gmail.com> <CAMVG2svM+j8_sfWdSY+JVRspxDucp8aKRhLR+79wcM-V_DnbCg@mail.gmail.com> <CAErSpo6rGYLQeP8Myu=octSPY_0R+B7ptBLhLawd_A2E3NRsAw@mail.gmail.com>
+To: Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jiang Liu <liuj97@gmail.com>, Yinghai Lu <yinghai@kernel.org>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <mstowe@redhat.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] ACPI / hotplug: Fix concurrency issues and memory leaks
+Date: Wed, 13 Feb 2013 14:12:16 +0100
+Message-ID: <2014813.xm1FeuaEaN@vostro.rjw.lan>
+In-Reply-To: <511B08F9.9070901@jp.fujitsu.com>
+References: <1837481.7dT8hTZ4MT@vostro.rjw.lan> <511B0392.6000203@jp.fujitsu.com> <511B08F9.9070901@jp.fujitsu.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, February 11, 2013 12:01:37 PM Bjorn Helgaas wrote:
-> [+cc Rafael]
+On Wednesday, February 13, 2013 12:31:05 PM Yasuaki Ishimatsu wrote:
+> Hi Rafael,
 > 
-> On Mon, Feb 11, 2013 at 10:08 AM, Daniel J Blueman <daniel@quora.org> wrote:
-> > On 11 February 2013 21:03, Daniel J Blueman <daniel@quora.org> wrote:
-> >> With 3.8-rc7, when unplugging the Thunderbolt ethernet adapter (bus 0a
-> >> [1]) on a Macbook Pro 10,1, we see the PCIe port correctly released:
-> >>
-> >> pciehp 0000:06:03.0:pcie24: Card not present on Slot(3)
-> >> tg3 0000:0a:00.0: tg3_abort_hw timed out, TX_MODE_ENABLE will not
-> >> clear MAC_TX_MODE=ffffffff
-> >> tg3 0000:0a:00.0 eth0: No firmware running
-> >> tg3 0000:0a:00.0 eth0: Link is down
-> >> [sched_delayed] sched: RT throttling activated
-> >> pcieport 0000:00:01.1: System wakeup enabled by ACPI
-> >> pciehp 0000:09:00.0:pcie24: unloading service driver pciehp
-> >> pci_bus 0000:0a: busn_res: [bus 0a] is released
-> >> pci_bus 0000:09: busn_res: [bus 09-0a] is released
-> >>
-> >> After some activity later (eg I can reproduce this by switching to a
-> >> text console and back), often we'll see an oops:
-> >>
-> >> Unable to handle kernel paging request at 0000000000001070
-> >> pci_pme_list_scan+0x3d/0xe0
-> >> Call Trace:
-> >> process_one_work+0x193
-> >> ? process_one_work+0x131
-> >> ? pci_pme_wakeup+0x60
-> >> worker_thread+0x15d
-> >>
-> >> (gdb) list *(pci_pme_list_scan+0x3d)
-> >> 0xffffffff8123f6dd is in pci_pme_list_scan (drivers/pci/pci.c:1556).
-> >> 1551                                    /*
-> >> 1552                                     * If bridge is in low power state, the
-> >> 1553                                     * configuration space of subordinate devices
-> >> 1554                                     * may be not accessible
-> >> 1555                                     */
-> >> 1556                                    if (bridge && bridge->current_state != PCI_D0)
-> >> 1557                                            continue;
-> >> 1558                                    pci_pme_wakeup(pme_dev->dev, NULL);
-> >> 1559                            } else {
-> >> 1560                                    list_del(&pme_dev->list);
-> >>
-> >> Since a panic in vsnprintf happens after the oops (hence I can't catch
-> >> it with EFI pstore), it is almost certainly significant heap
-> >> corruption; this would explain why pme_dev became null (the load has
-> >> been ordered ahead).
-> >>
-> >> I'll see what I can find out with memory poisoning and list debugging.
-> >
-> > Enabling a bunch of related debugging, we see pme_dev is non-null and:
-> >
-> > BUG: Unable to handle NULL pointer dereference at
-> > pci_bus_read_config_word+0x6c
-> > PGD 26314c067 PUD 2633f9067 PMD 0
-> > Oops: 0000 [#1] SMP
-> > pci_check_pme_status+0x4f
-> > pci_pme_wakeup+0x21
-> > pci_pme_list_scan+0xd5
-> > process_one_work+0x1ca
-> > ? process_one_work+0x160
-> > ? pci_pme_wakeup+0x60
-> > worker_thread+0x14e
-> >
-> > Anyway, it looks like the device being unplugged wasn't removed from
-> > pci_pme_list as pci_pme_active(dev, false) wasn't called.
-> >
-> > From a quick review, I wasn't able to find the right place in the
-> > call-chain which I only see releases the child busses and PCIe port
-> > drivers. Anyone?
+> I have another comment at container.c.
 > 
-> It looks like drivers *add* devices to pci_pme_list when they use
-> pci_enable_wake() or pci_wake_from_d3().  But many drivers never
-> remove their devices, and I don't see any place where the core does it
-> either.  My guess is we need to remove it in pci_stop_dev() (we
-> already do pcie_aspm_exit_link_state() there) or somewhere similar.
+> 2013/02/13 12:08, Yasuaki Ishimatsu wrote:
+> > Hi Rafael,
+> >
+> > The patch seems good.
+> > There is a comment below.
+> >
+> > 2013/02/13 9:19, Rafael J. Wysocki wrote:
+> >> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> >>
+> >> This changeset is aimed at fixing a few different but related
+> >> problems in the ACPI hotplug infrastructure.
+> >>
+> >> First of all, since notify handlers may be run in parallel with
+> >> acpi_bus_scan(), acpi_bus_trim() and acpi_bus_hot_remove_device()
+> >> and some of them are installed for ACPI handles that have no struct
+> >> acpi_device objects attached (i.e. before those objects are created),
+> >> those notify handlers have to take acpi_scan_lock to prevent races
+> >> from taking place (e.g. a struct acpi_device is found to be present
+> >> for the given ACPI handle, but right after that it is removed by
+> >> acpi_bus_trim() running in parallel to the given notify handler).
+> >> Moreover, since some of them call acpi_bus_scan() and
+> >> acpi_bus_trim(), this leads to the conclusion that acpi_scan_lock
+> >> should be acquired by the callers of these two funtions rather by
+> >> these functions themselves.
+> >>
+> >> For these reasons, make all notify handlers that can handle device
+> >> addition and eject events take acpi_scan_lock and remove the
+> >> acpi_scan_lock locking from acpi_bus_scan() and acpi_bus_trim().
+> >> Accordingly, update all of their users to make sure that they
+> >> are always called under acpi_scan_lock.
+> >>
+> >> Furthermore, since eject operations are carried out asynchronously
+> >> with respect to the notify events that trigger them, with the help
+> >> of acpi_bus_hot_remove_device(), even if notify handlers take the
+> >> ACPI scan lock, it still is possible that, for example,
+> >> acpi_bus_trim() will run between acpi_bus_hot_remove_device() and
+> >> the notify handler that scheduled its execution and that
+> >> acpi_bus_trim() will remove the device node passed to
+> >> acpi_bus_hot_remove_device() for ejection.  In that case, the struct
+> >> acpi_device object obtained by acpi_bus_hot_remove_device() will be
+> >> invalid and not-so-funny things will ensue.  To protect agaist that,
+> >> make the users of acpi_bus_hot_remove_device() run get_device() on
+> >> ACPI device node objects that are about to be passed to it and make
+> >> acpi_bus_hot_remove_device() run put_device() on them and check if
+> >> their ACPI handles are not NULL (make acpi_device_unregister() clear
+> >> the device nodes' ACPI handles for that check to work).
+> >>
+> >> Finally, observe that acpi_os_hotplug_execute() actually can fail,
+> >> in which case its caller ought to free memory allocated for the
+> >> context object to prevent leaks from happening.  It also needs to
+> >> run put_device() on the device node that it ran get_device() on
+> >> previously in that case.  Modify the code accordingly.
+> >>
+> >> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> >> ---
+> >>
+> >> On top of linux-pm.git/linux-next.
+> >>
+> >> Thanks,
+> >> Rafael
+> >>
+> >> ---
+> >>   drivers/acpi/acpi_memhotplug.c     |   56 +++++++++++++++++++-----------
+> >>   drivers/acpi/container.c           |   10 +++--
+> >>   drivers/acpi/dock.c                |   19 ++++++++--
+> >>   drivers/acpi/processor_driver.c    |   24 +++++++++---
+> >>   drivers/acpi/scan.c                |   69 +++++++++++++++++++++++++------------
+> >>   drivers/pci/hotplug/acpiphp_glue.c |    6 +++
+> >>   drivers/pci/hotplug/sgi_hotplug.c  |    5 ++
+> >>   include/acpi/acpi_bus.h            |    3 +
+> >>   8 files changed, 138 insertions(+), 54 deletions(-)
+> >>
+> >> Index: test/drivers/acpi/scan.c
+> >> ===================================================================
+> >> --- test.orig/drivers/acpi/scan.c
+> >> +++ test/drivers/acpi/scan.c
+> >> @@ -42,6 +42,18 @@ struct acpi_device_bus_id{
+> >>       struct list_head node;
+> >>   };
+> >>
+> >> +void acpi_scan_lock_acquire(void)
+> >> +{
+> >> +    mutex_lock(&acpi_scan_lock);
+> >> +}
+> >> +EXPORT_SYMBOL_GPL(acpi_scan_lock_acquire);
+> >> +
+> >> +void acpi_scan_lock_release(void)
+> >> +{
+> >> +    mutex_unlock(&acpi_scan_lock);
+> >> +}
+> >> +EXPORT_SYMBOL_GPL(acpi_scan_lock_release);
+> >> +
+> >>   int acpi_scan_add_handler(struct acpi_scan_handler *handler)
+> >>   {
+> >>       if (!handler || !handler->attach)
+> >> @@ -95,8 +107,6 @@ acpi_device_modalias_show(struct device
+> >>   }
+> >>   static DEVICE_ATTR(modalias, 0444, acpi_device_modalias_show, NULL);
+> >>
+> >> -static void __acpi_bus_trim(struct acpi_device *start);
+> >> -
+> >>   /**
+> >>    * acpi_bus_hot_remove_device: hot-remove a device and its children
+> >>    * @context: struct acpi_eject_event pointer (freed in this func)
+> >> @@ -107,7 +117,7 @@ static void __acpi_bus_trim(struct acpi_
+> >>    */
+> >>   void acpi_bus_hot_remove_device(void *context)
+> >>   {
+> >> -    struct acpi_eject_event *ej_event = (struct acpi_eject_event *) context;
+> >> +    struct acpi_eject_event *ej_event = context;
+> >>       struct acpi_device *device = ej_event->device;
+> >>       acpi_handle handle = device->handle;
+> >>       acpi_handle temp;
+> >> @@ -118,11 +128,19 @@ void acpi_bus_hot_remove_device(void *co
+> >>
+> >>       mutex_lock(&acpi_scan_lock);
+> >>
+> >> +    /* If there is no handle, the device node has been unregistered. */
+> >> +    if (!device->handle) {
+> >> +        dev_dbg(&device->dev, "ACPI handle missing\n");
+> >> +        put_device(&device->dev);
+> >> +        goto out;
+> >> +    }
+> >> +
+> >>       ACPI_DEBUG_PRINT((ACPI_DB_INFO,
+> >>           "Hot-removing device %s...\n", dev_name(&device->dev)));
+> >>
+> >> -    __acpi_bus_trim(device);
+> >> -    /* Device node has been released. */
+> >> +    acpi_bus_trim(device);
+> >> +    /* Device node has been unregistered. */
+> >> +    put_device(&device->dev);
+> >>       device = NULL;
+> >>
+> >>       if (ACPI_SUCCESS(acpi_get_handle(handle, "_LCK", &temp))) {
+> >> @@ -151,6 +169,7 @@ void acpi_bus_hot_remove_device(void *co
+> >>                         ost_code, NULL);
+> >>       }
+> >>
+> >> + out:
+> >>       mutex_unlock(&acpi_scan_lock);
+> >>       kfree(context);
+> >>       return;
+> >> @@ -212,6 +231,7 @@ acpi_eject_store(struct device *d, struc
+> >>           goto err;
+> >>       }
+> >>
+> >> +    get_device(&acpi_device->dev);
+> >>       ej_event->device = acpi_device;
+> >>       if (acpi_device->flags.eject_pending) {
+> >>           /* event originated from ACPI eject notification */
+> >> @@ -224,7 +244,11 @@ acpi_eject_store(struct device *d, struc
+> >>               ej_event->event, ACPI_OST_SC_EJECT_IN_PROGRESS, NULL);
+> >>       }
+> >>
+> >> -    acpi_os_hotplug_execute(acpi_bus_hot_remove_device, (void *)ej_event);
+> >> +    status = acpi_os_hotplug_execute(acpi_bus_hot_remove_device, ej_event);
+> >> +    if (ACPI_FAILURE(status)) {
+> >> +        put_device(&acpi_device->dev);
+> >> +        kfree(ej_event);
+> >> +    }
+> >>   err:
+> >>       return ret;
+> >>   }
+> >> @@ -779,6 +803,7 @@ static void acpi_device_unregister(struc
+> >>        * no more references.
+> >>        */
+> >>       acpi_device_set_power(device, ACPI_STATE_D3_COLD);
+> >> +    device->handle = NULL;
+> >>       put_device(&device->dev);
+> >>   }
+> >>
+> >> @@ -1626,14 +1651,14 @@ static acpi_status acpi_bus_device_attac
+> >>    * there has been a real error.  There just have been no suitable ACPI objects
+> >>    * in the table trunk from which the kernel could create a device and add an
+> >>    * appropriate driver.
+> >> + *
+> >> + * Must be called under acpi_scan_lock.
+> >>    */
+> >>   int acpi_bus_scan(acpi_handle handle)
+> >>   {
+> >>       void *device = NULL;
+> >>       int error = 0;
+> >>
+> >> -    mutex_lock(&acpi_scan_lock);
+> >> -
+> >>       if (ACPI_SUCCESS(acpi_bus_check_add(handle, 0, NULL, &device)))
+> >>           acpi_walk_namespace(ACPI_TYPE_ANY, handle, ACPI_UINT32_MAX,
+> >>                       acpi_bus_check_add, NULL, NULL, &device);
+> >> @@ -1644,7 +1669,6 @@ int acpi_bus_scan(acpi_handle handle)
+> >>           acpi_walk_namespace(ACPI_TYPE_ANY, handle, ACPI_UINT32_MAX,
+> >>                       acpi_bus_device_attach, NULL, NULL, NULL);
+> >>
+> >> -    mutex_unlock(&acpi_scan_lock);
+> >>       return error;
+> >>   }
+> >>   EXPORT_SYMBOL(acpi_bus_scan);
+> >> @@ -1681,7 +1705,13 @@ static acpi_status acpi_bus_remove(acpi_
+> >>       return AE_OK;
+> >>   }
+> >>
+> >> -static void __acpi_bus_trim(struct acpi_device *start)
+> >> +/**
+> >> + * acpi_bus_trim - Remove ACPI device node and all of its descendants
+> >> + * @start: Root of the ACPI device nodes subtree to remove.
+> >> + *
+> >> + * Must be called under acpi_scan_lock.
+> >> + */
+> >> +void acpi_bus_trim(struct acpi_device *start)
+> >>   {
+> >>       /*
+> >>        * Execute acpi_bus_device_detach() as a post-order callback to detach
+> >> @@ -1698,13 +1728,6 @@ static void __acpi_bus_trim(struct acpi_
+> >>                   acpi_bus_remove, NULL, NULL);
+> >>       acpi_bus_remove(start->handle, 0, NULL, NULL);
+> >>   }
+> >> -
+> >> -void acpi_bus_trim(struct acpi_device *start)
+> >> -{
+> >> -    mutex_lock(&acpi_scan_lock);
+> >> -    __acpi_bus_trim(start);
+> >> -    mutex_unlock(&acpi_scan_lock);
+> >> -}
+> >>   EXPORT_SYMBOL_GPL(acpi_bus_trim);
+> >>
+> >>   static int acpi_bus_scan_fixed(void)
+> >> @@ -1762,23 +1785,27 @@ int __init acpi_scan_init(void)
+> >>       acpi_csrt_init();
+> >>       acpi_container_init();
+> >>
+> >> +    mutex_lock(&acpi_scan_lock);
+> >>       /*
+> >>        * Enumerate devices in the ACPI namespace.
+> >>        */
+> >>       result = acpi_bus_scan(ACPI_ROOT_OBJECT);
+> >>       if (result)
+> >> -        return result;
+> >> +        goto out;
+> >>
+> >>       result = acpi_bus_get_device(ACPI_ROOT_OBJECT, &acpi_root);
+> >>       if (result)
+> >> -        return result;
+> >> +        goto out;
+> >>
+> >>       result = acpi_bus_scan_fixed();
+> >>       if (result) {
+> >>           acpi_device_unregister(acpi_root);
+> >> -        return result;
+> >> +        goto out;
+> >>       }
+> >>
+> >>       acpi_update_all_gpes();
+> >> -    return 0;
+> >> +
+> >> + out:
+> >> +    mutex_unlock(&acpi_scan_lock);
+> >> +    return result;
+> >>   }
+> >> Index: test/include/acpi/acpi_bus.h
+> >> ===================================================================
+> >> --- test.orig/include/acpi/acpi_bus.h
+> >> +++ test/include/acpi/acpi_bus.h
+> >> @@ -395,6 +395,9 @@ int acpi_bus_receive_event(struct acpi_b
+> >>   static inline int acpi_bus_generate_proc_event(struct acpi_device *device, u8 type, int data)
+> >>       { return 0; }
+> >>   #endif
+> >> +
+> >> +void acpi_scan_lock_acquire(void);
+> >> +void acpi_scan_lock_release(void);
+> >>   int acpi_scan_add_handler(struct acpi_scan_handler *handler);
+> >>   int acpi_bus_register_driver(struct acpi_driver *driver);
+> >>   void acpi_bus_unregister_driver(struct acpi_driver *driver);
+> >> Index: test/drivers/acpi/acpi_memhotplug.c
+> >> ===================================================================
+> >> --- test.orig/drivers/acpi/acpi_memhotplug.c
+> >> +++ test/drivers/acpi/acpi_memhotplug.c
+> >> @@ -153,14 +153,16 @@ acpi_memory_get_device_resources(struct
+> >>       return 0;
+> >>   }
+> >>
+> >> -static int
+> >> -acpi_memory_get_device(acpi_handle handle,
+> >> -               struct acpi_memory_device **mem_device)
+> >> +static int acpi_memory_get_device(acpi_handle handle,
+> >> +                  struct acpi_memory_device **mem_device)
+> >>   {
+> >>       struct acpi_device *device = NULL;
+> >> -    int result;
+> >> +    int result = 0;
+> >> +
+> >> +    acpi_scan_lock_acquire();
+> >>
+> >> -    if (!acpi_bus_get_device(handle, &device) && device)
+> >> +    acpi_bus_get_device(handle, &device);
+> >> +    if (device)
+> >>           goto end;
+> >>
+> >>       /*
+> >> @@ -169,23 +171,28 @@ acpi_memory_get_device(acpi_handle handl
+> >>        */
+> >>       result = acpi_bus_scan(handle);
+> >>       if (result) {
+> >> -        acpi_handle_warn(handle, "Cannot add acpi bus\n");
+> >> -        return -EINVAL;
+> >> +        acpi_handle_warn(handle, "ACPI namespace scan failed\n");
+> >> +        result = -EINVAL;
+> >> +        goto out;
+> >>       }
+> >>       result = acpi_bus_get_device(handle, &device);
+> >>       if (result) {
+> >>           acpi_handle_warn(handle, "Missing device object\n");
+> >> -        return -EINVAL;
+> >> +        result = -EINVAL;
+> >> +        goto out;
+> >>       }
+> >>
+> >> -      end:
+> >> + end:
+> >>       *mem_device = acpi_driver_data(device);
+> >>       if (!(*mem_device)) {
+> >>           dev_err(&device->dev, "driver data not found\n");
+> >> -        return -ENODEV;
+> >> +        result = -ENODEV;
+> >> +        goto out;
+> >>       }
+> >>
+> >> -    return 0;
+> >> + out:
+> >> +    acpi_scan_lock_release();
+> >> +    return result;
+> >>   }
+> >>
+> >>   static int acpi_memory_check_device(struct acpi_memory_device *mem_device)
+> >> @@ -305,6 +312,7 @@ static void acpi_memory_device_notify(ac
+> >>       struct acpi_device *device;
+> >>       struct acpi_eject_event *ej_event = NULL;
+> >>       u32 ost_code = ACPI_OST_SC_NON_SPECIFIC_FAILURE; /* default */
+> >> +    acpi_status status;
+> >>
+> >>       switch (event) {
+> >>       case ACPI_NOTIFY_BUS_CHECK:
+> >> @@ -327,29 +335,40 @@ static void acpi_memory_device_notify(ac
+> >>           ACPI_DEBUG_PRINT((ACPI_DB_INFO,
+> >>                     "\nReceived EJECT REQUEST notification for device\n"));
+> >>
+> >> +        status = AE_ERROR;
+> >> +        acpi_scan_lock_acquire();
+> >> +
+> >>           if (acpi_bus_get_device(handle, &device)) {
+> >>               acpi_handle_err(handle, "Device doesn't exist\n");
+> >> -            break;
+> >> +            goto unlock;
+> >>           }
+> >>           mem_device = acpi_driver_data(device);
+> >>           if (!mem_device) {
+> >>               acpi_handle_err(handle, "Driver Data is NULL\n");
+> >> -            break;
+> >> +            goto unlock;
+> >>           }
+> >>
+> >>           ej_event = kmalloc(sizeof(*ej_event), GFP_KERNEL);
+> >>           if (!ej_event) {
+> >>               pr_err(PREFIX "No memory, dropping EJECT\n");
+> >> -            break;
+> >> +            goto unlock;
+> >>           }
+> >>
+> >> +        get_device(&device->dev);
+> >>           ej_event->device = device;
+> >>           ej_event->event = ACPI_NOTIFY_EJECT_REQUEST;
+> >> -        acpi_os_hotplug_execute(acpi_bus_hot_remove_device,
+> >> -                    (void *)ej_event);
+> >> +        /* The eject is carried out asynchronously. */
+> >> +        status = acpi_os_hotplug_execute(acpi_bus_hot_remove_device,
+> >> +                         ej_event);
+> >> +        if (ACPI_FAILURE(status)) {
+> >> +            put_device(&device->dev);
+> >> +            kfree(ej_event);
+> >> +        }
+> >>
+> >> -        /* eject is performed asynchronously */
+> >> -        return;
+> >> + unlock:
+> >> +        acpi_scan_lock_release();
+> >> +        if (ACPI_SUCCESS(status))
+> >> +            return;
+> >>       default:
+> >>           ACPI_DEBUG_PRINT((ACPI_DB_INFO,
+> >>                     "Unsupported event [0x%x]\n", event));
+> >> @@ -360,7 +379,6 @@ static void acpi_memory_device_notify(ac
+> >>
+> >>       /* Inform firmware that the hotplug operation has completed */
+> >>       (void) acpi_evaluate_hotplug_ost(handle, event, ost_code, NULL);
+> >> -    return;
+> >>   }
+> >>
+> >>   static void acpi_memory_device_free(struct acpi_memory_device *mem_device)
+> >> Index: test/drivers/acpi/processor_driver.c
+> >> ===================================================================
+> >> --- test.orig/drivers/acpi/processor_driver.c
+> >> +++ test/drivers/acpi/processor_driver.c
+> >> @@ -683,8 +683,11 @@ static void acpi_processor_hotplug_notif
+> >>       struct acpi_device *device = NULL;
+> >>       struct acpi_eject_event *ej_event = NULL;
+> >>       u32 ost_code = ACPI_OST_SC_NON_SPECIFIC_FAILURE; /* default */
+> >> +    acpi_status status;
+> >>       int result;
+> >>
+> >> +    acpi_scan_lock_acquire();
+> >> +
+> >>       switch (event) {
+> >>       case ACPI_NOTIFY_BUS_CHECK:
+> >>       case ACPI_NOTIFY_DEVICE_CHECK:
+> >> @@ -733,25 +736,32 @@ static void acpi_processor_hotplug_notif
+> >>               break;
+> >>           }
+> >>
+> >> +        get_device(&device->dev);
+> >>           ej_event->device = device;
+> >>           ej_event->event = ACPI_NOTIFY_EJECT_REQUEST;
+> >> -        acpi_os_hotplug_execute(acpi_bus_hot_remove_device,
+> >> -                    (void *)ej_event);
+> >> -
+> >> -        /* eject is performed asynchronously */
+> >> -        return;
+> >> +        /* The eject is carried out asynchronously. */
+> >> +        status = acpi_os_hotplug_execute(acpi_bus_hot_remove_device,
+> >> +                         ej_event);
+> >> +        if (ACPI_FAILURE(status)) {
+> >> +            put_device(&device->dev);
+> >> +            kfree(ej_event);
+> >> +            break;
+> >> +        }
+> >> +        goto out;
+> >>
+> >>       default:
+> >>           ACPI_DEBUG_PRINT((ACPI_DB_INFO,
+> >>                     "Unsupported event [0x%x]\n", event));
+> >>
+> >>           /* non-hotplug event; possibly handled by other handler */
+> >> -        return;
+> >> +        goto out;
+> >>       }
+> >>
+> >>       /* Inform firmware that the hotplug operation has completed */
+> >>       (void) acpi_evaluate_hotplug_ost(handle, event, ost_code, NULL);
+> >> -    return;
+> >> +
+> >> + out:
+> >
+> >> +    acpi_scan_lock_release();;
+> >
+> > extra ";"
+> >
+> > Thanks,
+> > Yasuaki Ishimatsu
+> >
+> >>   }
+> >>
+> >>   static acpi_status is_processor_device(acpi_handle handle)
+> >> Index: test/drivers/acpi/container.c
+> >> ===================================================================
+> >> --- test.orig/drivers/acpi/container.c
+> >> +++ test/drivers/acpi/container.c
+> >> @@ -88,6 +88,8 @@ static void container_notify_cb(acpi_han
+> >>       acpi_status status;
+> >>       u32 ost_code = ACPI_OST_SC_NON_SPECIFIC_FAILURE; /* default */
+> >>
+> >> +    acpi_scan_lock_acquire();
+> >> +
+> >>       switch (type) {
+> >>       case ACPI_NOTIFY_BUS_CHECK:
+> >>           /* Fall through */
+> 
+> 101                 present = is_device_present(handle);
+> 102                 status = acpi_bus_get_device(handle, &device);
+> 103                 if (!present) {
+> 104                         if (ACPI_SUCCESS(status)) {
+> 105                                 /* device exist and this is a remove request */
+> 106                                 device->flags.eject_pending = 1;
+> 107                                 kobject_uevent(&device->dev.kobj, KOBJ_OFLINE);
+> 
+> 108                                 return;
+> 
+> It should use "goto out" instead of return.
+> 
+> 109                         }
+> 110                         break;
+> 111                 }
 
-Yes, we should call pci_pme_active(dev, false) somewhere in there I think.
-It's fine to call that even if PME was not "active" before.
+Indeed, I have overlooked that.  Thanks for spotting it!
+
+I'll send an update with this issue fixed (and your comment from the previous
+message addressed) shortly.
 
 Thanks,
 Rafael
