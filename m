@@ -1,39 +1,42 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Thu, 14 Feb 2013 14:47:35 +0100
-From: Andreas Mohr <andi@lisas.de>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Andreas Mohr <andi@lisas.de>, linux-pci@vger.kernel.org,
-	ACPI Devel Mailing List <linux-acpi@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] PCI / ACPI: Report _OSC control mask returned on failure
- to get control
-Message-ID: <20130214134735.GA22258@rhlx01.hs-esslingen.de>
-References: <20130214011027.GA430@rhlx01.hs-esslingen.de>
- <7634687.RmnPKEe4lz@vostro.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <7634687.RmnPKEe4lz@vostro.rjw.lan>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout01.c08.mtsvc.net ([205.186.168.189]:36663 "EHLO
+	mailout01.c08.mtsvc.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751539Ab3BMEVJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Feb 2013 23:21:09 -0500
+Message-ID: <1360725515.3642.1.camel@thor.lan>
+Subject: Re: [PATCH] ACPI, PCI: Get PRT entry during acpi_pci_enable_irq()
+From: Peter Hurley <peter@hurleysoftware.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Tue, 12 Feb 2013 22:18:35 -0500
+In-Reply-To: <CAE9FiQUp4oKSpZ8Y-M-+n_y=mBs_t4cdKLhgG8xZSPgteZcgkQ@mail.gmail.com>
+References: <CAE9FiQUkmnV_On5+ZpH2pF4Li1HxLpkO8bp4TnYB46=pc9Safg@mail.gmail.com>
+	 <1360696283-20313-1-git-send-email-yinghai@kernel.org>
+	 <1360722010.3604.3.camel@thor.lan>
+	 <CAE9FiQUp4oKSpZ8Y-M-+n_y=mBs_t4cdKLhgG8xZSPgteZcgkQ@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+On Tue, 2013-02-12 at 18:42 -0800, Yinghai Lu wrote:
+> On Tue, Feb 12, 2013 at 6:20 PM, Peter Hurley <peter@hurleysoftware.com> wrote:
+> >
+> > Reported-and-tested-by: Peter Hurley <peter@hurleysoftware.com>
+> 
+> Thanks.
+> 
+> > PS - I just happened to see this version on the list. Would you please
+> > cc me on any future versions?
+> 
+> oh, my fault. I take it for granted that "git send-email" will pick
+> that email from
+> patch just like Cc.
 
-On Thu, Feb 14, 2013 at 01:07:02PM +0100, Rafael J. Wysocki wrote:
-> Unfortunately, it doesn't, because I've lost track of the whole thread in the
-> meantime.  Care to give a pointer?
+No problem. Actually, I'm sorry it took this long for me to test. I was
+stuck in an epic bisect that I eventually abandoned at the 41st test
+with it still in merge bases.
 
-In other words, you'd like to tell me rather straight that I should
-stop doing such nonsense as replying to a very old patch posting with
-some (questionably?) useful info related to that case?
-And I here I was thinking that linking things together according to
-their relations/relevancy would be a good thing :)
 
-Your oldish patch can be seen at
-https://lkml.org/lkml/2011/4/29/406
-
-(or perhaps I should at least specify the URL reference when replying
-to older activity)
-
-Sorry & Thanks,
-
-Andreas Mohr
