@@ -1,180 +1,101 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:40582 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754062Ab3B1QN3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 28 Feb 2013 11:13:29 -0500
-Message-ID: <512F8226.9070809@suse.de>
-Date: Thu, 28 Feb 2013 17:13:26 +0100
-From: Hannes Reinecke <hare@suse.de>
+Received: from mail-ie0-f180.google.com ([209.85.223.180]:63823 "EHLO
+	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751263Ab3BMCgS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Feb 2013 21:36:18 -0500
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Yinghai Lu <yinghai@kernel.org>, linux-kernel@vger.kernel.org,
-	Frederik Himpe <fhimpe@vub.ac.be>,
-	Oliver Neukum <oneukum@suse.de>,
-	David Haerdeman <david@hardeman.nu>, linux-usb@vger.kernel.org,
-	linux-pci@vger.kernel.org, Andy Grover <agrover@redhat.com>
-Subject: Re: [PATCH] pci: do not try to assign irq 255
-References: <1361182193-31894-1-git-send-email-hare@suse.de> <CAE9FiQWP1F5mLUoHoTHXy-wQoGxVK66QuuHYydaq3YfysS5Etg@mail.gmail.com> <5124820D.2080900@suse.de> <CAE9FiQXHteymDNzu0GqWtVSVhu3g2hCT+K9e5tB1mR-OBX1ffA@mail.gmail.com> <5125C45A.5020208@suse.de> <CAErSpo5j3Qge5Q2S+hyMGOcmoN77V0T=1+6OJdNJfJdnvT8wgg@mail.gmail.com>
-In-Reply-To: <CAErSpo5j3Qge5Q2S+hyMGOcmoN77V0T=1+6OJdNJfJdnvT8wgg@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <5119DCCD.70709@zytor.com>
+References: <1360351703-20571-1-git-send-email-yinghai@kernel.org>
+	<20130211093417.GC23932@gmail.com>
+	<5119DCCD.70709@zytor.com>
+Date: Tue, 12 Feb 2013 18:36:17 -0800
+Message-ID: <CAE9FiQWcD8U9YaKQojbRW07rqUjqRQcJw6t9y0Si81tgk-V98Q@mail.gmail.com>
+Subject: Re: [PATCH v2 00/26] x86, irq: support ioapic device hotplug
+From: Yinghai Lu <yinghai@kernel.org>
+To: "H. Peter Anvin" <hpa@zytor.com>
+Cc: Ingo Molnar <mingo@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@elte.hu>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 02/27/2013 10:13 PM, Bjorn Helgaas wrote:
-> [+cc Andy]
->
-> On Wed, Feb 20, 2013 at 11:53 PM, Hannes Reinecke <hare@suse.de> wrote:
->> On 02/20/2013 05:57 PM, Yinghai Lu wrote:
->>>
->>> On Tue, Feb 19, 2013 at 11:58 PM, Hannes Reinecke <hare@suse.de> wrote:
->>>>>
->>>>>
->>>> Apparently this device is meant to use MSI _only_ so the BIOS developer
->>>> didn't feel the need to assign an INTx here.
->>>>
->>>> According to PCI-3.0, section 6.8 (Message Signalled Interrupts):
->>>>>
->>>>> It is recommended that devices implement interrupt pins to
->>>>> provide compatibility in systems that do not support MSI
->>>>> (devices default to interrupt pins). However, it is expected
->>>>> that the need for interrupt pins will diminish over time.
->>>>> Devices that do not support interrupt pins due to pin
->>>>> constraints (rely on polling for device service) may implement
->>>>> messages to increase performance without adding additional pins. >
->>>>> Therefore, system configuration software must not assume that a
->>>>> message capable device has an interrupt pin.
->>>>
->>>>
->>>> Which sounds to me as if the implementation is valid...
->>>
->>>
->>> it seems you mess pin with interrupt line.
->>>
->>> current code:
->>>           unsigned char irq;
->>>
->>>           pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &irq);
->>>           dev->pin = irq;
->>>           if (irq)
->>>                   pci_read_config_byte(dev, PCI_INTERRUPT_LINE, &irq);
->>>           dev->irq = irq;
->>>
->>> so if the device does not have interrupt pin implemented, pin should be
->>> zero.
->>> and  pin and irq in dev should
->>> be all 0.
->>>
->> But the device _has_ an interrupt pin implemented.
->> The whole point here is that the interrupt line is _NOT_ zero.
+On Mon, Feb 11, 2013 at 10:10 PM, H. Peter Anvin <hpa@zytor.com> wrote:
+> On 02/11/2013 01:34 AM, Ingo Molnar wrote:
 >>
->> 00:14.0 USB controller [0c03]: Intel Corporation 7 Series/C210 Series
->> Chipset Family USB xHCI Host Controller [8086:1e31] (rev 04) (prog-if 30
->> [XHCI])
->>          Subsystem: Hewlett-Packard Company Device [103c:179b]
->>          Control: I/O- Mem+ BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr-
->> Stepping- SERR- FastB2B- DisINTx-
->>          Status: Cap+ 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort-
->> <TAbort- <MAbort- >SERR- <PERR- INTx-
->>          Interrupt: pin A routed to IRQ 255
->>          Region 0: Memory at d4720000 (64-bit, non-prefetchable) [size=64K]
->>          Capabilities: [70] Power Management version 2
->>                  Flags: PMEClk- DSI- D1- D2- AuxCurrent=375mA
->> PME(D0-,D1-,D2-,D3hot+,D3cold+)
->>                  Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
->>          Capabilities: [80] MSI: Enable- Count=1/8 Maskable- 64bit+
->>                  Address: 0000000000000000  Data: 0000
+>> * Yinghai Lu <yinghai@kernel.org> wrote:
 >>
->> So at one point we have to decide that ->irq is not valid, despite it being
->> not set to zero.
->> An alternative fix would be this:
+>>> Hi,
+>>>
+>>> Current x86 code does not support iapic hotplug yet.
 >>
->> diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
->> index 68a921d..4a480cb 100644
->> --- a/drivers/acpi/pci_irq.c
->> +++ b/drivers/acpi/pci_irq.c
->> @@ -469,6 +469,7 @@ int acpi_pci_irq_enable(struct pci_dev *dev)
->>                  } else {
->>                          dev_warn(&dev->dev, "PCI INT %c: no GSI\n",
->>                                   pin_name(pin));
->> +                       dev->irq = 0;
->>                  }
->>                  return 0;
->>          }
+>> Please give a better high-level description: outline how an
+>> IO-APIC will be hotplugged physically and what changes the
+>> user will experience.
+
+Intel cpu (from IVB) include cpu, mem controller, and IIO.
+When hotadd cpu physically, it will involve cpu hotplug, mem hotplug,
+and pci root hotplug.
+
+IIO includes pci host bridge, ioapic controller and iommu.
+pci devices will need to use ioapic and iommu.
+So to make pci hotplug working, we need to add ioapic hotplug support.
+
 >>
->> Which probably is a better solution, as here ->irq is _definitely_
->> not valid, so we should reset it to '0' to avoid confusion on upper
->> layers.
->
-> I didn't like the pci_read_irq() change because the PCI spec doesn't
-> say anything about any PCI_INTERRUPT_LINE values being invalid.
->
-> I like this solution better, but I still don't quite understand it.
-> We have the following code in acpi_pci_irq_enable().  We have
-> previously tried to look up "gsi," but the _PRT doesn't mention this
-> device, so we have "gsi == -1" at this point:
->
->          /*
->           * No IRQ known to the ACPI subsystem - maybe the BIOS /
->           * driver reported one, then use it. Exit in any case.
->           */
->          if (gsi < 0) {
->                  u32 dev_gsi;
->                  /* Interrupt Line values above 0xF are forbidden */
->                  if (dev->irq > 0 && (dev->irq <= 0xF) &&
->                      (acpi_isa_irq_to_gsi(dev->irq, &dev_gsi) == 0)) {
->                          dev_warn(&dev->dev, "PCI INT %c: no GSI -
-> using ISA IRQ %d\n",
->                                   pin_name(pin), dev->irq);
->                          acpi_register_gsi(&dev->dev, dev_gsi,
->                                            ACPI_LEVEL_SENSITIVE,
->                                            ACPI_ACTIVE_LOW);
->                  } else {
->                          dev_warn(&dev->dev, "PCI INT %c: no GSI\n",
->                                   pin_name(pin));
->                  }
->
->                  return 0;
->          }
->
-> 1) I don't know where the restriction of 0x1-0xF came from.
-> Presumably this value of dev->irq came from PCI_INTERRUPT_LINE, and I
-> don't know what forbids values > 0xF.  The test was added by Andy
-> Grover in the attached commit.  This is ancient history; probably Andy
-> doesn't remember either :)
->
-> 2) The proposed change (setting "dev->irq = 0" when we didn't find
-> anything in the _PRT and dev->irq > 0xF) throws away some information,
-> and I fear it could break systems.  For example, what would happen if
-> a system put an IOAPIC pin number in a device's PCI_INTERRUPT_LINE and
-> omitted the device from _PRT?  Is it possible the device would still
-> work as-is (with acpi_pci_irq_enable() doing nothing), but would break
-> if we set dev->irq = 0?
->
-> 3) I don't understand why the xhci init fails in the first place.  It
-> looks like the "request interrupt 255 failed" message is from
-> xhci_try_enable_msi(), but that function tries to enable MSI-X, then
-> MSI, then falls back to legacy interrupts, where we get the error.
-> But the device supports MSI, so I don't know why we even fall back to
-> trying legacy interrupts.  Hannes, do you have any insight into that?
-> Obviously I'm missing something here.
->
-Right.
+>> That needs at least 2 paragraphs, not one cursory sentence. Then
+>> should come technical descriptions - but even those need
+>> improvements, please first explain the current status quo, then
+>> explain how that is inadequate for IO-APIC hot-plugging, *then*
+>> only explain what you are doing in the patch ...
 
-It's infact a quirk with the USB HCD setup.
+Now ioapics are with ACPI MADT table. During booting, kernel will parse
+MADT and put info into ioapic arrays.
+Also Bjorn added one pci device based driver, but it is not wired in yet,
+as it need to call acpi_register_ioapic, and that is TBD.
 
-drivers/usb/core/hcd.c calls request_irq for the legacy interrupt 
-line, before drivers/usb/host/xhci.c enables MSI-X.
+This patchset will
+1. extend genirq to support reserve/realloc method.
+   because we want to irqs for one ioapic controller to be linear mapping
+   to the gsi range.
+2. change ioapic array operation code so we could insert new ioapic and
+   remove one leave the blank slot.
+3. record irq_base in gsi_config in ioapic struct, and use it to convert gsi
+    to irq for pci device using that ioapic controller
+4. make static ioapic path (from MADT) use same code as hotadd path,
+   with reserve/realloc.
+5. change ioapic add/removing to acpi way, as that is only need when
+   pci root bus hotplug. Also it will make it support the case that ioapic
+   controller is hiding in pci controller space or ioapic address is not
+   managed by pci reallocation system.
 
-So the correct thing would be to skip the request_irq() function in 
-drivers/usb/core/hcd.c.
+>>
+>
+> A few more notes:
+>
+> Please explain what you mean with pre-reserve IRQ blocks, and in
+> particular, how do you know what to reserve and for what?
 
-I'll be drafting up a patch.
+For each ioapic controller, and we should get gsi range already.
+So we could keep irq to gsi mapping linear for each ioapic controller.
 
-Cheers,
+>
+> Second, some of the things in this patchset seems to overlap with what
+> we would need to support MSI (as opposed to MSI-X), and you have several
+> patches related to MSI vs MSI-X.  Are you also supporting multivector
+> MSI (I believe the answer is no) or could some of this work make
+> multivector MSI practical (possible)?
 
-Hannes
--- 
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: J. Hawn, J. Guild, F. Imendörffer, HRB 16746 (AG Nürnberg)
+Patches that is related to MSI/MSI-X, is just print out clean up.
+Now we don't tell if it is MSI or MSI-X in /proc/interrupts or dmesg.
+
+Patches from multivector MSI support from Alex are already put in
+x86/apic branch by Ingo.
+
+And my v2 patches are on top of x86/apic and pci/next.
+
+Thanks
+
+Yinghai
