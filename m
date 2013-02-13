@@ -1,91 +1,152 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.8]:51344 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754330Ab3BFWmJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Feb 2013 17:42:09 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: Re: [PATCH v2 22/27] arm: mvebu: add PCIe Device Tree informations for Armada XP
-Date: Wed, 6 Feb 2013 22:41:14 +0000
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	"Eran Ben-Avi" <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	"Russell King - ARM Linux" <linux@arm.linux.org.uk>
-References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com> <1359399397-29729-23-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1359399397-29729-23-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from hydra.sisk.pl ([212.160.235.94]:38000 "EHLO hydra.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932243Ab3BMUsp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 13 Feb 2013 15:48:45 -0500
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Daniel J Blueman <daniel@quora.org>,
+	Linux Kernel <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: Re: [3.8-rc7] PCI hotplug wakeup oops
+Date: Wed, 13 Feb 2013 21:55:11 +0100
+Message-ID: <4579078.lGBZh2kDcj@vostro.rjw.lan>
+In-Reply-To: <CAErSpo6ghLnuYTnMevGAH0uQg2O7X4Vr3-PhoKX5QNxJqu40NQ@mail.gmail.com>
+References: <CAMVG2svG21yiM1wkH4_2pen2n+cr2-Zv7TbH3Gj+8MwevZjDbw@mail.gmail.com> <CAMVG2ssOMMVBcD0kLX=Wo9x2cMfdi+3FYNEP-MiDRK4fs24auw@mail.gmail.com> <CAErSpo6ghLnuYTnMevGAH0uQg2O7X4Vr3-PhoKX5QNxJqu40NQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Message-Id: <201302062241.14444.arnd@arndb.de>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday 28 January 2013, Thomas Petazzoni wrote:
-> +
-> +               /*
-> +                * MV78230 has 2 PCIe units Gen2.0: One unit can be
-> +                * configured as x4 or quad x1 lanes. One unit is
-> +                * x4/x1.
-> +                */
-> +               pcie-controller {
-> +                       compatible = "marvell,armada-370-xp-pcie";
-> +                       status = "disabled";
-> +
-> +                       #address-cells = <3>;
-> +                       #size-cells = <2>;
-> +
-> +
-> +                       bus-range = <0x00 0xff>;
-> +
-> +                       ranges = <0x00000800 0 0xd0040000 0xd0040000 0 0x00002000   /* port 0.0 registers */
-> +                                 0x00004800 0 0xd0042000 0xd0042000 0 0x00002000   /* port 2.0 registers */
-> +                                 0x00001000 0 0xd0044000 0xd0044000 0 0x00002000   /* port 0.1 registers */
-> +                                 0x00001800 0 0xd0048000 0xd0048000 0 0x00002000   /* port 0.2 registers */
-> +                                 0x00002000 0 0xd004C000 0xd004C000 0 0x00002000   /* port 0.3 registers */
-> +                                 0x81000000 0 0          0xc0000000 0 0x00010000   /* downstream I/O */
-> +                                 0x82000000 0 0          0xc1000000 0 0x08000000>; /* non-prefetchable memory */
-> +
+On Wednesday, February 13, 2013 12:29:59 PM Bjorn Helgaas wrote:
+> On Wed, Feb 13, 2013 at 7:32 AM, Daniel J Blueman <daniel@quora.org> wrote:
+> > On 12 February 2013 03:49, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> >> On Monday, February 11, 2013 08:27:49 PM Rafael J. Wysocki wrote:
+> >>> On Monday, February 11, 2013 12:01:37 PM Bjorn Helgaas wrote:
+> >>> > [+cc Rafael]
+> >>> >
+> >>> > On Mon, Feb 11, 2013 at 10:08 AM, Daniel J Blueman <daniel@quora.org> wrote:
+> >>> > > On 11 February 2013 21:03, Daniel J Blueman <daniel@quora.org> wrote:
+> >>> > >> With 3.8-rc7, when unplugging the Thunderbolt ethernet adapter (bus 0a
+> >>> > >> [1]) on a Macbook Pro 10,1, we see the PCIe port correctly released:
+> >>> > >>
+> >>> > >> pciehp 0000:06:03.0:pcie24: Card not present on Slot(3)
+> >>> > >> tg3 0000:0a:00.0: tg3_abort_hw timed out, TX_MODE_ENABLE will not
+> >>> > >> clear MAC_TX_MODE=ffffffff
+> >>> > >> tg3 0000:0a:00.0 eth0: No firmware running
+> >>> > >> tg3 0000:0a:00.0 eth0: Link is down
+> >>> > >> [sched_delayed] sched: RT throttling activated
+> >>> > >> pcieport 0000:00:01.1: System wakeup enabled by ACPI
+> >>> > >> pciehp 0000:09:00.0:pcie24: unloading service driver pciehp
+> >>> > >> pci_bus 0000:0a: busn_res: [bus 0a] is released
+> >>> > >> pci_bus 0000:09: busn_res: [bus 09-0a] is released
+> >>> > >>
+> >>> > >> After some activity later (eg I can reproduce this by switching to a
+> >>> > >> text console and back), often we'll see an oops:
+> >>> > >>
+> >>> > >> Unable to handle kernel paging request at 0000000000001070
+> >>> > >> pci_pme_list_scan+0x3d/0xe0
+> >>> > >> Call Trace:
+> >>> > >> process_one_work+0x193
+> >>> > >> ? process_one_work+0x131
+> >>> > >> ? pci_pme_wakeup+0x60
+> >>> > >> worker_thread+0x15d
+> >>> > >>
+> >>> > >> (gdb) list *(pci_pme_list_scan+0x3d)
+> >>> > >> 0xffffffff8123f6dd is in pci_pme_list_scan (drivers/pci/pci.c:1556).
+> >>> > >> 1551                                    /*
+> >>> > >> 1552                                     * If bridge is in low power state, the
+> >>> > >> 1553                                     * configuration space of subordinate devices
+> >>> > >> 1554                                     * may be not accessible
+> >>> > >> 1555                                     */
+> >>> > >> 1556                                    if (bridge && bridge->current_state != PCI_D0)
+> >>> > >> 1557                                            continue;
+> >>> > >> 1558                                    pci_pme_wakeup(pme_dev->dev, NULL);
+> >>> > >> 1559                            } else {
+> >>> > >> 1560                                    list_del(&pme_dev->list);
+> >>> > >>
+> >>> > >> Since a panic in vsnprintf happens after the oops (hence I can't catch
+> >>> > >> it with EFI pstore), it is almost certainly significant heap
+> >>> > >> corruption; this would explain why pme_dev became null (the load has
+> >>> > >> been ordered ahead).
+> >>> > >>
+> >>> > >> I'll see what I can find out with memory poisoning and list debugging.
+> >>> > >
+> >>> > > Enabling a bunch of related debugging, we see pme_dev is non-null and:
+> >>> > >
+> >>> > > BUG: Unable to handle NULL pointer dereference at
+> >>> > > pci_bus_read_config_word+0x6c
+> >>> > > PGD 26314c067 PUD 2633f9067 PMD 0
+> >>> > > Oops: 0000 [#1] SMP
+> >>> > > pci_check_pme_status+0x4f
+> >>> > > pci_pme_wakeup+0x21
+> >>> > > pci_pme_list_scan+0xd5
+> >>> > > process_one_work+0x1ca
+> >>> > > ? process_one_work+0x160
+> >>> > > ? pci_pme_wakeup+0x60
+> >>> > > worker_thread+0x14e
+> >>> > >
+> >>> > > Anyway, it looks like the device being unplugged wasn't removed from
+> >>> > > pci_pme_list as pci_pme_active(dev, false) wasn't called.
+> >>> > >
+> >>> > > From a quick review, I wasn't able to find the right place in the
+> >>> > > call-chain which I only see releases the child busses and PCIe port
+> >>> > > drivers. Anyone?
+> >>> >
+> >>> > It looks like drivers *add* devices to pci_pme_list when they use
+> >>> > pci_enable_wake() or pci_wake_from_d3().  But many drivers never
+> >>> > remove their devices, and I don't see any place where the core does it
+> >>> > either.  My guess is we need to remove it in pci_stop_dev() (we
+> >>> > already do pcie_aspm_exit_link_state() there) or somewhere similar.
+> >>>
+> >>> Yes, we should call pci_pme_active(dev, false) somewhere in there I think.
+> >>> It's fine to call that even if PME was not "active" before.
+> >>
+> >> Daniel, I wonder if the patch below helps?
+> >>
+> >> Rafael
+> >>
+> >>
+> >> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> >> ---
+> >>  drivers/pci/remove.c |    2 ++
+> >>  1 file changed, 2 insertions(+)
+> >>
+> >> Index: test/drivers/pci/remove.c
+> >> ===================================================================
+> >> --- test.orig/drivers/pci/remove.c
+> >> +++ test/drivers/pci/remove.c
+> >> @@ -19,6 +19,8 @@ static void pci_free_resources(struct pc
+> >>
+> >>  static void pci_stop_dev(struct pci_dev *dev)
+> >>  {
+> >> +       pci_pme_active(dev, false);
+> >> +
+> >>         if (dev->is_added) {
+> >>                 pci_proc_detach_device(dev);
+> >>                 pci_remove_sysfs_dev_files(dev);
+> >
+> > Indeed, the oops would prevent hitting the lockdep warning, which is a
+> > secondary matter.
+> >
+> > As it stands, this fix prevents the fatal oops, so IMHO is urgent
+> > material for 3.8-final. I can't prove that is_added will always be
+> > true, so let's stick with your patch.
+> >
+> > Tested-by: Daniel J Blueman <daniel@quora.org>
+> 
+> I wrote a changelog and applied this to my for-linus branch.  Please
+> take a look and confirm that it makes sense before I ask Linus to pull
+> it.
+> 
+> http://git.kernel.org/?p=linux/kernel/git/helgaas/pci.git;a=commitdiff;h=249bfb83cf8ba658955f0245ac3981d941f746ee
 
-I've been thinking some more about this, and I wonder if it would
-make more sense to describe the address remapping correctly as
-a node on top of the pcie-controller node.
+Yes, it does, thanks a lot!
 
-This would mean that rather than putting the mapped physical address
-(0xc0000000, 0xc1000000, ...) in here, you would actually have 64-bit
-address as the destination as well, in whatever format the
-address map hardware uses, I assume using a numbered 32 bit
-address space for each object that can be remapped.
+Rafael
 
-This would also let you do the PCI memory address assignment for
-each port separately, starting at bus address 0, followed by
-finding a location in the CPU address space and passing
-the start as the sys->mem_offset argument to
-pci_add_resource_offset.
 
-> +                       pcie@0,0 {
-> +                               device_type = "pciex";
-> +                               reg = <0x0800 0 0xd0040000 0 0x2000>;
-> +                               #address-cells = <3>;
-> +                               #size-cells = <2>;
-> +                               marvell,pcie-port = <0>;
-> +                               marvell,pcie-lane = <0>;
-> +                               interrupts = <1>;
-> +                               clocks = <&gateclk 5>;
-> +                               status = "disabled";
-> +                       };
-
-I think you are missing a "ranges" property here, at least an empty
-one, which is required by the standard but not currently enforced
-in the code.
-	Arnd
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
