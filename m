@@ -1,51 +1,103 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from col0-omc3-s9.col0.hotmail.com ([65.55.34.147]:3035 "EHLO
-	col0-omc3-s9.col0.hotmail.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758487Ab3BTTBO convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 20 Feb 2013 14:01:14 -0500
-Message-ID: <COL002-W10189D7B4C89FE14A17AE16D4F60@phx.gbl>
-From: Pramod KS <prsudhee@outlook.com>
-To: Greg KH <gregkh@linuxfoundation.org>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: RE: Linux reserved MSI - how many?
-Date: Wed, 20 Feb 2013 19:01:14 +0000
-In-Reply-To: <20130220141846.GB5705@kroah.com>
-References: <COL002-W3294F1D83AA5EB392D867DD4F50@phx.gbl>,<20130220141846.GB5705@kroah.com>
-Content-Type: text/plain; charset=US-ASCII
+Received: from moutng.kundenserver.de ([212.227.17.8]:59604 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934065Ab3BMVLp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Feb 2013 16:11:45 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Subject: Re: Giving special alignment/size constraints to the Linux PCI core?
+Date: Wed, 13 Feb 2013 21:10:54 +0000
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	"Russell King - ARM Linux" <linux@arm.linux.org.uk>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	linux-pci@vger.kernel.org,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	"Eran Ben-Avi" <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	linux-arm-kernel@lists.infradead.org
+References: <20130130120344.GA29490@avionic-0098.mockup.avionic-design.de> <201302131853.14617.arnd@arndb.de> <20130213191204.GA15710@obsidianresearch.com>
+In-Reply-To: <20130213191204.GA15710@obsidianresearch.com>
 MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201302132110.55087.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-----------------------------------------
-> Date: Wed, 20 Feb 2013 06:18:46 -0800
-> From: gregkh@linuxfoundation.org
-> To: prsudhee@outlook.com
-> CC: linux-pci@vger.kernel.org
-> Subject: Re: Linux reserved MSI - how many?
+On Wednesday 13 February 2013, Jason Gunthorpe wrote:
+> On Wed, Feb 13, 2013 at 06:53:14PM +0000, Arnd Bergmann wrote:
+> 
+> > > The standard answer is to leave appropriate gaps. My *guess* on this
+> > > matter is that on x86 the gaps are left, as appropriate, by the boot
+> > > firmware. Eg an ExpressCard slot will always have a window assigned to
+> > > its bridge and Linux would typically not reassign it (or similar).
+> > > 
+> > > PCI core support for firmware-less embedded will someday need to do
+> > > something similar, eg via a special DT attribute on hot plug capable
+> > > ports.
+> > 
+> > I saw that the PCI core reserves 2MB memory space and 256 bytes of
+> > I/O space per hotplug capable bridge by default, and you can
+> > override
+> 
+> Haven't looked at how it determines what is hot plug
+> capable.. Technically every PCI-E port is hot plug capable, it really
+> depends on the specific board if a port can actually be hot plugged or
+> not - so maybe that is what gets set in DT?
+
+The "is_hotplug_bridge" flag that determines this gets set for PCIe
+bridges with the PCI_EXP_SLTCAP_HPC (hot plug capable) bit set in the
+PCI_EXP_SLTCAP word.
+
+> > these at boot time if you need more. I wonder if this means that
+> > we end up using two of the precious address space windows for each
+> > unused root port to already map these at boot time, and it certainly
+> > works for most adapters, but this does not seem better than assigning
+> > static windows of the same size at boot time for each port.
+> 
+> If the PCI core programs the decoder on the bridge, then it will
+> consume a window - however if there is nothing behind the bridge then
+> leaving the brdige window disabled, but reserving the memory region is
+> a sensible thing to do.
 >
-> On Tue, Feb 19, 2013 at 09:07:09AM +0000, Pramod KS wrote:
-> > I'm tasked to find out number of MSI that kinux kernel reserve for itself.
->
-> What do you mean by "reserve for itself"? And why do you need this
-> number, what will you do with it?
+> I'm not sure what the state of the PCI core is today on this point,
+> but it could be altered..
 
-I've been told that kernel reserve 16 out of 256 MSI available for itself to get CPU attention - I'm not sure what kernel really does with these 16 MSIs'.
-I need this number because we are configuring a failrly complex PCIe system ( Gen 2) and we are hitting limit of maximum 256 possible MSIs'. We need to budget the available 256 MSI across whole system and for now we have allocated 16 MSI for linux kernel. Now, I speculate if kernel really needs these MSI and if yes, where can I see the description, if any, on how and why kernel uses these MSI'?
+The problem I see with the current implementation is that it reserves
+a fixed size window and does not reassign the window of the bridge
+itself, only the devices below it, at least if I am reading the
+code correctly. I have not tried this myself.
+ 
+> Also the host driver can check the link status before consuming a
+> window, no link = no window.
 
->
-> > I'm not sure where to find the exact numbers.
->
-> Have you run in MSI mode and looked?
+Right, that works. Even if the link is up, it might require only
+I/O or memory windows, rather than always using both. 
 
-You mean, enable MSI while building kernel and spin that kernel to see the MSI usage?
-Yes, but what do I look for?
+> > > Just to circle back on this whole thread - Thomas's solution is pretty
+> > > good, it covers pretty much all the use cases. I think it is a good
+> > > place to start, and as the firmware-less 'drivers/pci/host' concept
+> > > develops the right support will eventually come, as everyone is now
+> > > aware of the need to control the host bridge aperture from the core
+> > > PCI code.
+> > 
+> > I agree the solution is not all that bad, I just want to be convinced
+> > that it actually has advantages over the simpler approaches.
+> 
+> Unfortunatelly my Marvell systems do not have oversubscribed mbus
+> windows, so I can't really comment on this :( However I do use the
+> hotplug capability in the current driver, so at least for me, it is
+> important to not loose that when trying to solve the oversubcription.
 
+One thing worth trying is probably to hack the driver to only use
+a couple of the available windows and see what happens when you hotplug
+one card into all the slots one at a time.
 
-
->
-> greg k-h
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at http://vger.kernel.org/majordomo-info.html 		 	   		  
+	Arnd
