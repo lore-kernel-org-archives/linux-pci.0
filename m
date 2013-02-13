@@ -1,123 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.10]:59925 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933566Ab3BLSbF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Feb 2013 13:31:05 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: Re: [PATCH 24/32] pci: PCIe driver for Marvell Armada 370/XP systems
-Date: Tue, 12 Feb 2013 18:30:11 +0000
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	"Russell King - ARM Linux" <linux@arm.linux.org.uk>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	"Eran Ben-Avi" <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Tawfik Bayouk <tawfik@marvell.com>
-References: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com> <1360686546-24277-25-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1360686546-24277-25-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from mail-ie0-f178.google.com ([209.85.223.178]:52840 "EHLO
+	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750734Ab3BMBz1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Feb 2013 20:55:27 -0500
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Message-Id: <201302121830.11375.arnd@arndb.de>
+In-Reply-To: <1837481.7dT8hTZ4MT@vostro.rjw.lan>
+References: <1837481.7dT8hTZ4MT@vostro.rjw.lan>
+Date: Tue, 12 Feb 2013 17:55:26 -0800
+Message-ID: <CAE9FiQVR+0iXtYF4AcLZs5_SsOtUJp5dF5fpk0XZKTcVanoL6A@mail.gmail.com>
+Subject: Re: [PATCH] ACPI / hotplug: Fix concurrency issues and memory leaks
+From: Yinghai Lu <yinghai@kernel.org>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jiang Liu <liuj97@gmail.com>, Toshi Kani <toshi.kani@hp.com>,
+	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
+	Myron Stowe <mstowe@redhat.com>, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday 12 February 2013, Thomas Petazzoni wrote:
-> diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
-> new file mode 100644
-> index 0000000..3ad563f
-> --- /dev/null
-> +++ b/drivers/pci/host/Makefile
-> @@ -0,0 +1,4 @@
-> +obj-$(CONFIG_PCI_MVEBU) += pci-mvebu.o
-> +CFLAGS_pci-mvebu.o += \
-> +	-I$(srctree)/arch/arm/plat-orion/include \
-> +	-I$(srctree)/arch/arm/mach-mvebu/include
+On Tue, Feb 12, 2013 at 4:19 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+>
+> This changeset is aimed at fixing a few different but related
+> problems in the ACPI hotplug infrastructure.
+>
+> First of all, since notify handlers may be run in parallel with
+> acpi_bus_scan(), acpi_bus_trim() and acpi_bus_hot_remove_device()
+> and some of them are installed for ACPI handles that have no struct
+> acpi_device objects attached (i.e. before those objects are created),
+> those notify handlers have to take acpi_scan_lock to prevent races
+> from taking place (e.g. a struct acpi_device is found to be present
+> for the given ACPI handle, but right after that it is removed by
+> acpi_bus_trim() running in parallel to the given notify handler).
+> Moreover, since some of them call acpi_bus_scan() and
+> acpi_bus_trim(), this leads to the conclusion that acpi_scan_lock
+> should be acquired by the callers of these two funtions rather by
+> these functions themselves.
+>
+> For these reasons, make all notify handlers that can handle device
+> addition and eject events take acpi_scan_lock and remove the
+> acpi_scan_lock locking from acpi_bus_scan() and acpi_bus_trim().
+> Accordingly, update all of their users to make sure that they
+> are always called under acpi_scan_lock.
+>
+> Furthermore, since eject operations are carried out asynchronously
+> with respect to the notify events that trigger them, with the help
+> of acpi_bus_hot_remove_device(), even if notify handlers take the
+> ACPI scan lock, it still is possible that, for example,
+> acpi_bus_trim() will run between acpi_bus_hot_remove_device() and
+> the notify handler that scheduled its execution and that
+> acpi_bus_trim() will remove the device node passed to
+> acpi_bus_hot_remove_device() for ejection.  In that case, the struct
+> acpi_device object obtained by acpi_bus_hot_remove_device() will be
+> invalid and not-so-funny things will ensue.  To protect agaist that,
+> make the users of acpi_bus_hot_remove_device() run get_device() on
+> ACPI device node objects that are about to be passed to it and make
+> acpi_bus_hot_remove_device() run put_device() on them and check if
+> their ACPI handles are not NULL (make acpi_device_unregister() clear
+> the device nodes' ACPI handles for that check to work).
+>
+> Finally, observe that acpi_os_hotplug_execute() actually can fail,
+> in which case its caller ought to free memory allocated for the
+> context object to prevent leaks from happening.  It also needs to
+> run put_device() on the device node that it ran get_device() on
+> previously in that case.  Modify the code accordingly.
+>
+> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-This does not seem like a good idea to me. We should not include
-architecture specific directories from a driver directory.
-
-What are the header files you need here? 
-
-> +/*
-> + * This product ID is registered by Marvell, and used when the Marvell
-> + * SoC is not the root complex, but an endpoint on the PCIe bus. It is
-> + * therefore safe to re-use this PCI ID for our emulated PCI-to-PCI
-> + * bridge.
-> + */
-> +#define MARVELL_EMULATED_PCI_PCI_BRIDGE_ID 0x7846
-
-Just a side note: What happens if you have two of these systems and connect
-them over PCIe, putting one of them into host mode and the other into
-endpoint mode?
-
-> +static void mvebu_pcie_setup_io_window(struct mvebu_pcie_port *port,
-> +				       int enable)
-> +{
-> +	unsigned long iobase, iolimit;
-> +
-> +	if (port->bridge.iolimit < port->bridge.iobase)
-> +		return;
-> +
-> +	iolimit = 0xFFF | ((port->bridge.iolimit & 0xF0) << 8) |
-> +		(port->bridge.iolimitupper << 16);
-> +	iobase = ((port->bridge.iobase & 0xF0) << 8) |
-> +		(port->bridge.iobaseupper << 16);
-
-I don't understand this code with the masks and shifts. Could you
-add a comment here for readers like me?
-
-> +
-> +/*
-> + * Initialize the configuration space of the PCI-to-PCI bridge
-> + * associated with the given PCIe interface.
-> + */
-> +static void mvebu_sw_pci_bridge_init(struct mvebu_pcie_port *port)
-> +{
-
-As mentioned, I'm still skeptical of the sw_pci_bridge approach,
-so I'm not commenting on the details of your implementations
-(they seem fine on a first look though)
-
-> +	/* Get the I/O and memory ranges from DT */
-> +	while ((range = of_pci_process_ranges(np, &res, range)) != NULL) {
-> +		if (resource_type(&res) == IORESOURCE_IO) {
-> +			memcpy(&pcie->io, &res, sizeof(res));
-> +			memcpy(&pcie->realio, &res, sizeof(res));
-> +			pcie->io.name = "I/O";
-> +			pcie->realio.start &= 0xFFFFF;
-> +			pcie->realio.end   &= 0xFFFFF;
-> +		}
-
-The bit masking seems fishy here. What exactly are you doing,
-does this just assume you have a 1MB window at most?
-
-Maybe something like
-
-	pcie->realio.start = 0;
-	pcie->realio.end = pcie->io.end - pcie->io.start;
-
-I suppose you also need to fix up pcie->io to be in IORESOURCE_MEM
-space instead of IORESOURCE_IO, or fix the of_pci_process_ranges
-function to return it in a different way.
-
-> +static int mvebu_pcie_init(void)
-> +{
-> +	return platform_driver_probe(&mvebu_pcie_driver,
-> +				     mvebu_pcie_probe);
-> +}
-> +
-> +subsys_initcall(mvebu_pcie_init);
-
-You don't have to do it, but I wonder if this could be a module
-with unload support instead.
-
-	Arnd
+Acked-by: Yinghai Lu <yinghai@kernel.org>
