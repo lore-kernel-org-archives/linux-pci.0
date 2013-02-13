@@ -1,13 +1,12 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:59730 "EHLO
+Received: from mail.free-electrons.com ([94.23.35.102]:49214 "EHLO
 	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759790Ab3BHIO0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 Feb 2013 03:14:26 -0500
-Date: Fri, 8 Feb 2013 09:14:20 +0100
+	with ESMTP id S932312Ab3BMI5F (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Feb 2013 03:57:05 -0500
+Date: Wed, 13 Feb 2013 09:57:01 +0100
 From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
 	Russell King - ARM Linux <linux@arm.linux.org.uk>,
 	Jason Cooper <jason@lakedaemon.net>,
 	Arnd Bergmann <arnd@arndb.de>,
@@ -18,78 +17,73 @@ Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
 	Nadav Haklai <nadavh@marvell.com>,
 	Maen Suleiman <maen@marvell.com>,
 	Shadi Ammouri <shadi@marvell.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
 	Gregory Clement <gregory.clement@free-electrons.com>,
 	Tawfik Bayouk <tawfik@marvell.com>,
 	linux-arm-kernel@lists.infradead.org
-Subject: Re: Giving special alignment/size constraints to the Linux PCI
- core?
-Message-ID: <20130208091420.703a39b4@skate>
-In-Reply-To: <CAErSpo7hwG89LTO+4+eqT_Gb+yUn1XKHYJ8CnnZcf_FPo-Kpyw@mail.gmail.com>
-References: <20130130120344.GA29490@avionic-0098.mockup.avionic-design.de>
-	<2776630.gp5gC9tvLk@wuerfel>
-	<20130131180249.GA30869@obsidianresearch.com>
-	<201301312046.22560.arnd@arndb.de>
-	<20130131224459.GA11846@obsidianresearch.com>
-	<20130206175128.1b64196d@skate>
-	<20130206170903.GA28198@obsidianresearch.com>
-	<20130206181852.4eca53e3@skate>
-	<20130206175019.GA24248@obsidianresearch.com>
-	<20130207165009.73b1f340@skate>
-	<CAErSpo7hwG89LTO+4+eqT_Gb+yUn1XKHYJ8CnnZcf_FPo-Kpyw@mail.gmail.com>
+Subject: Re: [PATCH 24/32] pci: PCIe driver for Marvell Armada 370/XP
+ systems
+Message-ID: <20130213095701.0d9f9f20@skate>
+In-Reply-To: <20130212223511.GB31555@obsidianresearch.com>
+References: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	<1360686546-24277-25-git-send-email-thomas.petazzoni@free-electrons.com>
+	<20130212223511.GB31555@obsidianresearch.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Bjorn Helgaas,
+Dear Jason Gunthorpe,
 
-On Thu, 7 Feb 2013 21:21:57 -0700, Bjorn Helgaas wrote:
+On Tue, 12 Feb 2013 15:35:11 -0700, Jason Gunthorpe wrote:
 
-> Huh.  That hardware looks less and less like a P2P bridge all the time
-> :(  You can't configure it via standard PCI config accesses, and the
-> aperture alignment and size constraints sound completely non-standard.
->  Are the specs for this thing public?
+> This is out of date now?
 
-The specs for the Armada XP are not yet public, but the one for earlier
-Marvell SoC families are, and the PCIe stuff works basically the same.
-The main difference between the Kirkwood family and Armada XP is that
-Kirkwood had only 2 PCIe interfaces, so we could perfectly fine do a
-static allocation of address decoding windows (see the four PCIe windows
-in arch/arm/mach-kirkwood/addr-map.c:addr_map_info[]), while the Armada
-XP has 10 PCIe interfaces, which makes the static allocation solution
-unreasonable.
+Yes, will fix.
 
-The list of publicly available specifications for Marvell EBU SoC is
-available at Documentation/arm/Marvell/README. For Kirkwood, I would
-recommend
-http://www.marvell.com/embedded-processors/kirkwood/assets/FS_88F6180_9x_6281_OpenSource.pdf.
-See chapter 2.3:
-
-  The PCI Express address decoding scheme restricts the address window
-  to a size of 2^n, and to a start address that is aligned to the window
-  size.
-
-> I could imagine changing pcibios_window_alignment() to take the
-> resource, so it could deal with the alignment question (though I
-> haven't looked in detail and there might be some implementation issue
-> with that).
+> > +	pcie@0,0 {
+> > +		device_type = "pciex";
+> > +		reg = <0x0800 0 0xd0040000 0 0x2000>;
 > 
-> With regard to the size issue (3MB window using 4MB of address space),
-> I can't think of a reasonable way to teach the PCI core about both
-> sizes.  But is there any reason to program the bridge for a 3MB window
-> instead of a 4MB window, given that there's nothing else we can do
-> with the extra 1MB anyway?  Is a 3MB window even possible?  I would
-> think something that must be aligned on its size would be restricted
-> to power-of-2 sizes anyway, just like PCI BARs are.  Maybe you can
-> just always round up window sizes to a power of 2?
+> It would be great to get this sorted as per my prior comments.. Maybe
+> like this is easy?
+> 
+> pcie-controller {
+>  compatible = "marvell,armada-370-xp-pcie";
+> 
+>  // Index by marvell,pcie-port ?
+>  regs = <0xd0040000 0x00002000
+>          0xd0080000 0x00002000>;
+> 
+>  ranges = <0x81000000 0 0  0xc0000000  0 0x00010000   /* downstream I/O */
+>            0x82000000 0 0  0xc1000000  0 0x08000000>; /* non-prefetchable memory */
+> 
+>  pcie@0,0 {
+>       device_type = "pci";
+>       reg = <0x0800 0 0 0>; // 00:01.0  (????)
+>       marvell,pcie-port = <0>;
+>  };
+> }
+> 
+> It is abusive to map the device internal per-port registers through
+> '0x00000800 0 0xd0040000' and 'reg' - that is not really the intent of
+> the OF spec.
 
-The window sizes are power of two sizes. I didn't realize that it was
-also the case for PCI BARs. Then there is no problem with the size I
-guess, and only a problem of alignment. Having the possibility to
-get the resource and return a fixed up start address would solve the
-problem I'd say.
+I am not sure to understand how this would work. Given a pcie@X,Y node,
+how would I find the address of the internal registers (i.e the ones at
+0xd0040000, 0xd0080000) ?
 
-Best regards,
+You seem to propose a global regs = <...> property under
+pcie-controller, but indexing using marvell,pcie-port cannot work. PCIe
+interfaces are identified by two values (port,lane), so we have 0.0,
+0.1, 0.2, 0.3, 1.0, 1.1, 1.2, 1.3, 2.0 and 3.0 on MV78460. I really
+would like to avoid having bizarre computations to find which entry in
+this big regs = <...> array correspond to a given PCIe interface.
+
+Could you give a more detailed example, matching the PCIe DT data of
+the MV78460, which has many PCIe interfaces ?
+
+Thanks,
 
 Thomas
 -- 
