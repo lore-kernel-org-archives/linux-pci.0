@@ -1,65 +1,129 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:45770 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933295Ab3BLQ3X (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Feb 2013 11:29:23 -0500
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Cc: Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Yinghai Lu <yinghai@kernel.org>, linux-kernel@vger.kernel.org
-Subject: [PATCH 05/32] lib: devres: don't enclose pcim_*() functions in CONFIG_HAS_IOPORT
-Date: Tue, 12 Feb 2013 17:28:39 +0100
-Message-Id: <1360686546-24277-6-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from mail-ie0-f172.google.com ([209.85.223.172]:42237 "EHLO
+	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750734Ab3BMByJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Feb 2013 20:54:09 -0500
+MIME-Version: 1.0
+In-Reply-To: <1882094.fnYp8pBVVX@vostro.rjw.lan>
+References: <1882094.fnYp8pBVVX@vostro.rjw.lan>
+Date: Tue, 12 Feb 2013 17:54:08 -0800
+Message-ID: <CAE9FiQXk1VhA2+qAcp8jL=TG28acePyX4SOYALiAQ0bGnLaFOA@mail.gmail.com>
+Subject: Re: [PATCH] ACPI / PCI: Initialize PCI root drivers after PCI bus enumeration
+From: Yinghai Lu <yinghai@kernel.org>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Jiang Liu <liuj97@gmail.com>, Toshi Kani <toshi.kani@hp.com>,
+	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
+	Myron Stowe <mstowe@redhat.com>, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The pcim_*() functions are used by the libata-sff subsystem, and this
-subsystem is used for many SATA drivers on ARM platforms that do not
-necessarily have I/O ports.
+On Tue, Feb 12, 2013 at 4:16 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+>
+> After commit 1aeae82 (ACPI / PCI: avoid building pci_slot as module)
+> the pci_slot driver's .add() callback routine, acpi_pci_slot_add(),
+> is executed from within acpi_pci_root_add() before the PCI devices on
+> the bus are enumerated and that triggers the WARN_ON() in
+> kobject_get():
+>
+> WARNING: at /scratch/rafael/work/test/include/linux/kref.h:42 kobject_get+0x33/0x40()
+> Hardware name: PORTEGE R500
+> Modules linked in:
+> Pid: 1, comm: swapper/0 Not tainted 3.8.0-rc7+ #160
+> Call Trace:
+>  [<ffffffff8103d38a>] warn_slowpath_common+0x7a/0xb0
+>  [<ffffffff8103d3d5>] warn_slowpath_null+0x15/0x20
+>  [<ffffffff812f99b3>] kobject_get+0x33/0x40
+>  [<ffffffff81452b82>] get_device+0x12/0x30
+>  [<ffffffff8138df7b>] register_slot+0x243/0x295
+>  [<ffffffff810a7b6d>] ? trace_hardirqs_on+0xd/0x10
+>  [<ffffffff8137b7b9>] acpi_ns_walk_namespace+0x10f/0x24a
+>  [<ffffffff8138dd38>] ? walk_p2p_bridge+0x13b/0x13b
+>  [<ffffffff8138dd38>] ? walk_p2p_bridge+0x13b/0x13b
+>  [<ffffffff8137bdc3>] acpi_walk_namespace+0xe9/0x132
+>  [<ffffffff8138dd38>] ? walk_p2p_bridge+0x13b/0x13b
+>  [<ffffffff8138dcf5>] walk_p2p_bridge+0xf8/0x13b
+>  [<ffffffff8134d606>] ? acpi_os_signal_semaphore+0x76/0x87
+>  [<ffffffff8138dd38>] ? walk_p2p_bridge+0x13b/0x13b
+>  [<ffffffff8137b7b9>] acpi_ns_walk_namespace+0x10f/0x24a
+>  [<ffffffff8138dbfd>] ? do_sta_before_sun+0x2b/0x2b
+>  [<ffffffff8138dbfd>] ? do_sta_before_sun+0x2b/0x2b
+>  [<ffffffff8137bdc3>] acpi_walk_namespace+0xe9/0x132
+>  [<ffffffff81356071>] ? acpi_pci_root_add+0x3e7/0x49a
+>  [<ffffffff8138e07f>] acpi_pci_slot_add+0xb2/0x103
+>  [<ffffffff8138dd38>] ? walk_p2p_bridge+0x13b/0x13b
+>  [<ffffffff81356089>] acpi_pci_root_add+0x3ff/0x49a
+>
+> which means that pci_bus->dev used in register_slot() has not been
+> registered yet at that point.
+>
+> To fix this use the observation that before commit 1aeae82
+> acpi_pci_slot_add() was always run after pci_bus_add_devices()
+> and that happened to the acpiphp's .add() callback routine too.
+> Thus it is safe to reorder acpi_pci_root_add() to make the PCI root
+> drivers' .add() callbacks be run after pci_bus_add_devices(), so do
+> that.
+>
+> This approach was previously proposed by Myron Stowe.
+>
+> References: https://patchwork.kernel.org/patch/1848781/
+> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> ---
+>
+> The commit mentioned in the changelog above is in linux-pm.git/linux-next.
+>
+> Thanks,
+> Rafael
+>
+> ---
+>  drivers/acpi/pci_root.c |   13 ++++++++-----
+>  1 file changed, 8 insertions(+), 5 deletions(-)
+>
+> Index: test/drivers/acpi/pci_root.c
+> ===================================================================
+> --- test.orig/drivers/acpi/pci_root.c
+> +++ test/drivers/acpi/pci_root.c
+> @@ -600,17 +600,20 @@ static int acpi_pci_root_add(struct acpi
+>         if (system_state != SYSTEM_BOOTING)
+>                 pci_assign_unassigned_bus_resources(root->bus);
+>
+> +       /* need to after hot-added ioapic is registered */
+> +       if (system_state != SYSTEM_BOOTING)
+> +               pci_enable_bridges(root->bus);
+> +
+> +       pci_bus_add_devices(root->bus);
+> +
+>         mutex_lock(&acpi_pci_root_lock);
+> +
+>         list_for_each_entry(driver, &acpi_pci_drivers, node)
+>                 if (driver->add)
+>                         driver->add(root);
+> -       mutex_unlock(&acpi_pci_root_lock);
+>
+> -       /* need to after hot-added ioapic is registered */
+> -       if (system_state != SYSTEM_BOOTING)
+> -               pci_enable_bridges(root->bus);
+> +       mutex_unlock(&acpi_pci_root_lock);
+>
+> -       pci_bus_add_devices(root->bus);
+>         return 1;
+>
+>  out_del_root:
+>
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Paul Gortmaker <paul.gortmaker@windriver.com>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: linux-kernel@vger.kernel.org
----
- lib/devres.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+No, we don't need this after
 
-diff --git a/lib/devres.c b/lib/devres.c
-index 80b9c76..5639c3e 100644
---- a/lib/devres.c
-+++ b/lib/devres.c
-@@ -195,6 +195,7 @@ void devm_ioport_unmap(struct device *dev, void __iomem *addr)
- 			       devm_ioport_map_match, (void *)addr));
- }
- EXPORT_SYMBOL(devm_ioport_unmap);
-+#endif /* CONFIG_HAS_IOPORT */
- 
- #ifdef CONFIG_PCI
- /*
-@@ -400,4 +401,3 @@ void pcim_iounmap_regions(struct pci_dev *pdev, int mask)
- }
- EXPORT_SYMBOL(pcim_iounmap_regions);
- #endif /* CONFIG_PCI */
--#endif /* CONFIG_HAS_IOPORT */
--- 
-1.7.9.5
+| commit 4f535093cf8f6da8cfda7c36c2c1ecd2e9586ee4
+|     PCI: Put pci_dev in device tree as early as possible
 
+in pci/next.
+
+So we can move that Jiang's patch from your tree to Bjorn's tree?
+
+Thanks
+
+Yinghai
