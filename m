@@ -1,121 +1,73 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jiang Liu <liuj97@gmail.com>, Toshi Kani <toshi.kani@hp.com>,
+	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
+	Myron Stowe <mstowe@redhat.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] ACPI / hotplug: Fix concurrency issues and memory leaks
+Date: Wed, 13 Feb 2013 14:08:36 +0100
+Message-ID: <1851921.aO94Yr1JVP@vostro.rjw.lan>
+In-Reply-To: <CAE9FiQVR+0iXtYF4AcLZs5_SsOtUJp5dF5fpk0XZKTcVanoL6A@mail.gmail.com>
+References: <1837481.7dT8hTZ4MT@vostro.rjw.lan> <CAE9FiQVR+0iXtYF4AcLZs5_SsOtUJp5dF5fpk0XZKTcVanoL6A@mail.gmail.com>
 MIME-Version: 1.0
-Date: Mon, 11 Feb 2013 21:03:28 +0800
-Message-ID: <CAMVG2svG21yiM1wkH4_2pen2n+cr2-Zv7TbH3Gj+8MwevZjDbw@mail.gmail.com>
-Subject: [3.8-rc7] PCI hotplug wakeup oops
-From: Daniel J Blueman <daniel@quora.org>
-To: Linux Kernel <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-With 3.8-rc7, when unplugging the Thunderbolt ethernet adapter (bus 0a
-[1]) on a Macbook Pro 10,1, we see the PCIe port correctly released:
+On Tuesday, February 12, 2013 05:55:26 PM Yinghai Lu wrote:
+> On Tue, Feb 12, 2013 at 4:19 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> >
+> > This changeset is aimed at fixing a few different but related
+> > problems in the ACPI hotplug infrastructure.
+> >
+> > First of all, since notify handlers may be run in parallel with
+> > acpi_bus_scan(), acpi_bus_trim() and acpi_bus_hot_remove_device()
+> > and some of them are installed for ACPI handles that have no struct
+> > acpi_device objects attached (i.e. before those objects are created),
+> > those notify handlers have to take acpi_scan_lock to prevent races
+> > from taking place (e.g. a struct acpi_device is found to be present
+> > for the given ACPI handle, but right after that it is removed by
+> > acpi_bus_trim() running in parallel to the given notify handler).
+> > Moreover, since some of them call acpi_bus_scan() and
+> > acpi_bus_trim(), this leads to the conclusion that acpi_scan_lock
+> > should be acquired by the callers of these two funtions rather by
+> > these functions themselves.
+> >
+> > For these reasons, make all notify handlers that can handle device
+> > addition and eject events take acpi_scan_lock and remove the
+> > acpi_scan_lock locking from acpi_bus_scan() and acpi_bus_trim().
+> > Accordingly, update all of their users to make sure that they
+> > are always called under acpi_scan_lock.
+> >
+> > Furthermore, since eject operations are carried out asynchronously
+> > with respect to the notify events that trigger them, with the help
+> > of acpi_bus_hot_remove_device(), even if notify handlers take the
+> > ACPI scan lock, it still is possible that, for example,
+> > acpi_bus_trim() will run between acpi_bus_hot_remove_device() and
+> > the notify handler that scheduled its execution and that
+> > acpi_bus_trim() will remove the device node passed to
+> > acpi_bus_hot_remove_device() for ejection.  In that case, the struct
+> > acpi_device object obtained by acpi_bus_hot_remove_device() will be
+> > invalid and not-so-funny things will ensue.  To protect agaist that,
+> > make the users of acpi_bus_hot_remove_device() run get_device() on
+> > ACPI device node objects that are about to be passed to it and make
+> > acpi_bus_hot_remove_device() run put_device() on them and check if
+> > their ACPI handles are not NULL (make acpi_device_unregister() clear
+> > the device nodes' ACPI handles for that check to work).
+> >
+> > Finally, observe that acpi_os_hotplug_execute() actually can fail,
+> > in which case its caller ought to free memory allocated for the
+> > context object to prevent leaks from happening.  It also needs to
+> > run put_device() on the device node that it ran get_device() on
+> > previously in that case.  Modify the code accordingly.
+> >
+> > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> 
+> Acked-by: Yinghai Lu <yinghai@kernel.org>
 
-pciehp 0000:06:03.0:pcie24: Card not present on Slot(3)
-tg3 0000:0a:00.0: tg3_abort_hw timed out, TX_MODE_ENABLE will not
-clear MAC_TX_MODE=ffffffff
-tg3 0000:0a:00.0 eth0: No firmware running
-tg3 0000:0a:00.0 eth0: Link is down
-[sched_delayed] sched: RT throttling activated
-pcieport 0000:00:01.1: System wakeup enabled by ACPI
-pciehp 0000:09:00.0:pcie24: unloading service driver pciehp
-pci_bus 0000:0a: busn_res: [bus 0a] is released
-pci_bus 0000:09: busn_res: [bus 09-0a] is released
+Thanks!
 
-After some activity later (eg I can reproduce this by switching to a
-text console and back), often we'll see an oops:
-
-Unable to handle kernel paging request at 0000000000001070
-pci_pme_list_scan+0x3d/0xe0
-Call Trace:
-process_one_work+0x193
-? process_one_work+0x131
-? pci_pme_wakeup+0x60
-worker_thread+0x15d
-
-(gdb) list *(pci_pme_list_scan+0x3d)
-0xffffffff8123f6dd is in pci_pme_list_scan (drivers/pci/pci.c:1556).
-1551					/*
-1552					 * If bridge is in low power state, the
-1553					 * configuration space of subordinate devices
-1554					 * may be not accessible
-1555					 */
-1556					if (bridge && bridge->current_state != PCI_D0)
-1557						continue;
-1558					pci_pme_wakeup(pme_dev->dev, NULL);
-1559				} else {
-1560					list_del(&pme_dev->list);
-
-Since a panic in vsnprintf happens after the oops (hence I can't catch
-it with EFI pstore), it is almost certainly significant heap
-corruption; this would explain why pme_dev became null (the load has
-been ordered ahead).
-
-I'll see what I can find out with memory poisoning and list debugging.
-
-Thanks,
-  Daniel
-
---- [1]
-
-$ lspci
-00:00.0 Host bridge: Intel Corporation 3rd Gen Core processor DRAM
-Controller (rev 09)
-00:01.0 PCI bridge: Intel Corporation Xeon E3-1200 v2/3rd Gen Core
-processor PCI Express Root Port (rev 09)
-00:01.1 PCI bridge: Intel Corporation Xeon E3-1200 v2/3rd Gen Core
-processor PCI Express Root Port (rev 09)
-00:01.2 PCI bridge: Intel Corporation Xeon E3-1200 v2/3rd Gen Core
-processor PCI Express Root Port (rev 09)
-00:02.0 VGA compatible controller: Intel Corporation 3rd Gen Core
-processor Graphics Controller (rev 09)
-00:14.0 USB controller: Intel Corporation 7 Series/C210 Series Chipset
-Family USB xHCI Host Controller (rev 04)
-00:16.0 Communication controller: Intel Corporation 7 Series/C210
-Series Chipset Family MEI Controller #1 (rev 04)
-00:1a.0 USB controller: Intel Corporation 7 Series/C210 Series Chipset
-Family USB Enhanced Host Controller #2 (rev 04)
-00:1b.0 Audio device: Intel Corporation 7 Series/C210 Series Chipset
-Family High Definition Audio Controller (rev 04)
-00:1c.0 PCI bridge: Intel Corporation 7 Series/C210 Series Chipset
-Family PCI Express Root Port 1 (rev c4)
-00:1c.1 PCI bridge: Intel Corporation 7 Series/C210 Series Chipset
-Family PCI Express Root Port 2 (rev c4)
-00:1d.0 USB controller: Intel Corporation 7 Series/C210 Series Chipset
-Family USB Enhanced Host Controller #1 (rev 04)
-00:1f.0 ISA bridge: Intel Corporation HM77 Express Chipset LPC
-Controller (rev 04)
-00:1f.2 SATA controller: Intel Corporation 7 Series Chipset Family
-6-port SATA Controller [AHCI mode] (rev 04)
-00:1f.3 SMBus: Intel Corporation 7 Series/C210 Series Chipset Family
-SMBus Controller (rev 04)
-01:00.0 VGA compatible controller: NVIDIA Corporation Device 0fd5 (rev ff)
-01:00.1 Audio device: NVIDIA Corporation Device 0e1b (rev ff)
-03:00.0 Ethernet controller: Broadcom Corporation Device 16a3 (rev 10)
-03:00.1 SD Host controller: Broadcom Corporation NetXtreme BCM57765
-Memory Card Reader (rev 10)
-04:00.0 Network controller: Broadcom Corporation BCM4331 802.11a/b/g/n (rev 02)
-05:00.0 PCI bridge: Intel Corporation DSL3510 Thunderbolt Port [Cactus
-Ridge] (rev 03)
-06:00.0 PCI bridge: Intel Corporation DSL3510 Thunderbolt Port [Cactus
-Ridge] (rev 03)
-06:03.0 PCI bridge: Intel Corporation DSL3510 Thunderbolt Port [Cactus
-Ridge] (rev 03)
-06:04.0 PCI bridge: Intel Corporation DSL3510 Thunderbolt Port [Cactus
-Ridge] (rev 03)
-06:05.0 PCI bridge: Intel Corporation DSL3510 Thunderbolt Port [Cactus
-Ridge] (rev 03)
-06:06.0 PCI bridge: Intel Corporation DSL3510 Thunderbolt Port [Cactus
-Ridge] (rev 03)
-07:00.0 System peripheral: Intel Corporation DSL3510 Thunderbolt Port
-[Cactus Ridge] (rev 03)
-08:00.0 PCI bridge: Intel Corporation DSL3510 Thunderbolt Controller
-[Cactus Ridge]
-09:00.0 PCI bridge: Intel Corporation DSL3510 Thunderbolt Controller
-[Cactus Ridge]
-0a:00.0 Ethernet controller: Broadcom Corporation NetXtreme BCM57762
-Gigabit Ethernet PCIe
--- 
-Daniel J Blueman
