@@ -1,113 +1,169 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:49509 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756001Ab3BMJlG convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Feb 2013 04:41:06 -0500
-Date: Wed, 13 Feb 2013 10:40:51 +0100
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	"Russell King - ARM Linux" <linux@arm.linux.org.uk>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	"Eran Ben-Avi" <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Tawfik Bayouk <tawfik@marvell.com>
-Subject: Re: [PATCH 24/32] pci: PCIe driver for Marvell Armada 370/XP
- systems
-Message-ID: <20130213104051.07bcffe0@skate>
-In-Reply-To: <201302130929.21326.arnd@arndb.de>
-References: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com>
-	<201302122259.54073.arnd@arndb.de>
-	<20130213092358.4991ba43@skate>
-	<201302130929.21326.arnd@arndb.de>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <1360796969.3869.146.camel@misato.fc.hp.com>
+Subject: Re: [Update][PATCH] ACPI / hotplug: Fix concurrency issues and
+ memory leaks
+From: Toshi Kani <toshi.kani@hp.com>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jiang Liu <liuj97@gmail.com>, Yinghai Lu <yinghai@kernel.org>,
+	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
+	Myron Stowe <mstowe@redhat.com>, linux-pci@vger.kernel.org
+Date: Wed, 13 Feb 2013 16:09:29 -0700
+In-Reply-To: <4594350.VXNmDOeCvt@vostro.rjw.lan>
+References: <1837481.7dT8hTZ4MT@vostro.rjw.lan>
+	 <1459286.L93riBCyLC@vostro.rjw.lan>
+	 <1360777438.3869.100.camel@misato.fc.hp.com>
+	 <4594350.VXNmDOeCvt@vostro.rjw.lan>
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Arnd Bergmann,
-
-On Wed, 13 Feb 2013 09:29:21 +0000, Arnd Bergmann wrote:
-
-> > Hum, why not, but I would definitely prefer to wait for the conversion
-> > of older platforms instead of duplicating this code. But if you feel
-> > like it's the right solution, I'll do it.
+On Wed, 2013-02-13 at 21:52 +0100, Rafael J. Wysocki wrote:
+> On Wednesday, February 13, 2013 10:43:58 AM Toshi Kani wrote:
+> > On Wed, 2013-02-13 at 14:16 +0100, Rafael J. Wysocki wrote:
+> > > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > > 
+> > > This changeset is aimed at fixing a few different but related
+> > > problems in the ACPI hotplug infrastructure.
+> > > 
+> > > First of all, since notify handlers may be run in parallel with
+> > > acpi_bus_scan(), acpi_bus_trim() and acpi_bus_hot_remove_device()
+> > > and some of them are installed for ACPI handles that have no struct
+> > > acpi_device objects attached (i.e. before those objects are created),
+> > > those notify handlers have to take acpi_scan_lock to prevent races
+> > > from taking place (e.g. a struct acpi_device is found to be present
+> > > for the given ACPI handle, but right after that it is removed by
+> > > acpi_bus_trim() running in parallel to the given notify handler).
+> > > Moreover, since some of them call acpi_bus_scan() and
+> > > acpi_bus_trim(), this leads to the conclusion that acpi_scan_lock
+> > > should be acquired by the callers of these two funtions rather by
+> > > these functions themselves.
+> > > 
+> > > For these reasons, make all notify handlers that can handle device
+> > > addition and eject events take acpi_scan_lock and remove the
+> > > acpi_scan_lock locking from acpi_bus_scan() and acpi_bus_trim().
+> > > Accordingly, update all of their users to make sure that they
+> > > are always called under acpi_scan_lock.
+> > > 
+> > > Furthermore, since eject operations are carried out asynchronously
+> > > with respect to the notify events that trigger them, with the help
+> > > of acpi_bus_hot_remove_device(), even if notify handlers take the
+> > > ACPI scan lock, it still is possible that, for example,
+> > > acpi_bus_trim() will run between acpi_bus_hot_remove_device() and
+> > > the notify handler that scheduled its execution and that
+> > > acpi_bus_trim() will remove the device node passed to
+> > > acpi_bus_hot_remove_device() for ejection.  In that case, the struct
+> > > acpi_device object obtained by acpi_bus_hot_remove_device() will be
+> > > invalid and not-so-funny things will ensue.  To protect agaist that,
+> > > make the users of acpi_bus_hot_remove_device() run get_device() on
+> > > ACPI device node objects that are about to be passed to it and make
+> > > acpi_bus_hot_remove_device() run put_device() on them and check if
+> > > their ACPI handles are not NULL (make acpi_device_unregister() clear
+> > > the device nodes' ACPI handles for that check to work).
+> > > 
+> > > Finally, observe that acpi_os_hotplug_execute() actually can fail,
+> > > in which case its caller ought to free memory allocated for the
+> > > context object to prevent leaks from happening.  It also needs to
+> > > run put_device() on the device node that it ran get_device() on
+> > > previously in that case.  Modify the code accordingly.
+> > 
+> > I am concerned with this approach.  ACPICA calls notify handlers through
+> > kacpi_notify_wq, which has the max active set to 1.  We then use
+> > kacpi_hotplug_wq (which also has the max active set to 1) so that a
+> > hotplug procedure does not block the notify handlers since they can be
+> > used for non-hotplug events as well.
 > 
-> It's not something we do a lot, but in this case, I think it's better
-> if it lets us avoid adding the platform specific include path, which I
-> really want to avoid here.
+> In fact we use kacpi_hotplug_wq for a different reason.  Please read the
+> comment in __acpi_os_execute() for more details.
 
-Ok.
+Yes, I am aware of the issue as well.
 
-> > The arch/arm/mach-mvebu/addr-map.c depends on
-> > arch/arm/plat-orion/addr-map.c, so any change on this will affect
-> > mach-kirkwood, mach-orion5x, mach-dove and mach-mv78xx0. As you can
-> > see, we have to take into account the existing code, and I don't think
-> > it's realistic to have a perfect solution immediately.
+> > Acquiring the scan lock in a notify handler means that a hotplug procedure
+> > can block any notify events.
 > 
-> Yes, I realize this. I was thinking we would move all at least the
-> file from plat-orion, and the header file. I don't care much whether
-> we also move the platform specific setup from mach-*/addr-map.c,
-> it works either way.
-
-Ok.
-
-
-> We don't need to do a complete overhaul of that code right now, but
-> if we agree on a place where it can go, then I think we should
-> move it now as just one extra patch to get rid of the header
-> dependency. In the worst case, moving just the header file to
-> include/linux would work, too.
-
-I'll try to cook something for this.
-
-> > Indeed. So maybe I should mark this resource as being IORESOURCE_MEM
-> > in the DT.
+> Yes, it can.
 > 
-> The DT seems fine here, just the code that interprets it is a little
-> unusual. Maybe you can change the calling convention of that function
-> to pass the type of resource you want as an argument?
+> > So, I'd prefer the following approach.
+> > 
+> >  - Change all hot-plug procedures (i.e. both add and delete) to proceed
+> > under kacpi_hotplug_wq by calling acpi_os_hotplug_execute(). This
+> > serializes all hotplug procedures, and prevents blocking other notify
+> > events.
+> 
+> Yes, we can do that.  I was thinking about doing that change, but not in v3.9.
+> There are simply too many notify handlers already there to do that so late in
+> the cycle.  And doing that for acpiphp, for example, won't be straightforward
+> at all.
 
-Erm? The type of the resource is encoded into the DT:
+Right.  I was not suggesting this approach for v3.9.
 
-+				  0x81000000 0 0	  0xc0000000 0 0x00010000   /* downstream I/O */
-+				  0x82000000 0 0	  0xc1000000 0 0x08000000>; /* non-prefetchable memory */
+> Please think about the $subject patch as a temporary measure until we can do
+> something better (which we need to do anyway to reduce code duplication among
+> other things).
 
->From http://devicetree.org/Device_Tree_Usage#PCI_Host_Bridge:
+I am fine with the scan lock as long as it is internal.  This patch
+publishes the locking interfaces to other modules, which made me worried
+that this might become a long term solution.  If we need to fix this
+issue for v3.9, I am OK with it as you clarified this as a temporary
+solution.
 
-     phys.hi cell: npt000ss bbbbbbbb dddddfff rrrrrrrr
-    phys.mid cell: hhhhhhhh hhhhhhhh hhhhhhhh hhhhhhhh
-    phys.low cell: llllllll llllllll llllllll llllllll 
+> > (Ideally, we should also run all online/offline procedures
+> > under a same work-queue, just like my RFC patchset did, but this is a
+> > different topic for now.)
+> 
+> No, I don't think it is appropriate to run online/offline from _any_
+> workqueue.  In my opinion they should be run from user space.
 
- ss: space code
+I think there are pros and cons for this.  If we use a user thread to
+run online/offline procedure, we can return a result directly.  However,
+if an operation takes a long time, it will block the user thread until
+it is done.  In addition, we have race conditions between hotplug and
+online/offline operations.  So, we may need to come up with other type
+of locking if we do not use a workqueue to address it.  Having both the
+scan lock and other lock in the callers would not be good.
 
-    00: configuration space
-    01: I/O space
-    10: 32 bit memory space
-    11: 64 bit memory space 
+> >  - Revert 5993c4670 unless this change is absolutely necessary.  From
+> > the change log, it is not clear to me why this change was needed.  It
+> > changed acpi_bus_hot_remove_device() to take an acpi_device, instead of
+> > an acpi_handle, which introduced a race condition with acpi_device.
+> > acpi_bus_hot_remove_device() should take an acpi_handle, and then obtain
+> > its acpi_device from the acpi_handle since this function is serialized.
+> 
+> I thought about that, but actually there's no guarantee that the handle
+> will be valid after _EJ0 as far as I can say.  So the race condition is
+> going to be there anyway and using struct acpi_device just makes it easier
+> to avoid it.
 
-So the 0x81 at the beginning of the first line means I/O space, the
-0x82 at the beginning of the second line means 32 bits memory space.
-The of_pci_process_ranges() function simply decodes those informations
-and fills the struct resource it returns with the appropriate resource
-type.
+In theory, yes, a stale handle could be a problem, if _EJ0 performs
+unload table and if ACPICA frees up its internal data structure pointed
+by the handle as a result.  But we should not see such issue now since
+we do not support dynamic ACPI namespace yet.
 
-So passing the resource type as argument to of_pci_process_ranges()
-doesn't make much sense to me.
+> >  - Remove sanity checks with an acpi_device in the notify handlers,
+> > which have a race condition with acpi_device.  These type-specific
+> > checks will need to be removed when we have a common notify handler
+> > anyway.  The notify handler can continue to check the status of ACPI
+> > device object with an acpi_handle.  Type-specific sanity checks /
+> > validations can be performed within a hotplug procedure, instead.
+> 
+> Well, the sanest approach here would be to queue up a work item on
+> kacpi_hotplug_wq if the event is of a "hotplug" type and let that work
+> item do all checks, run acpi_bus_scan() etc.  But not in v3.9.
 
-Best regards,
+Agreed, and that's what I meant.
 
-Thomas
--- 
-Thomas Petazzoni, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
+> For v3.9, the most straightforward and least intrusive change we can do
+> is the $subject patch as far as I can say.  If you can suggest something
+> less intrusive and more straightforward, please do.
+
+My suggestion is to keep the scan lock internal for v3.9 and implement a
+new hotplug framework (i.e. the one with user space approach) for v3.10
+with a proper locking mechanism.  But, since you clarified this as a
+temporary solution, I am OK with it if we need to fix it now.
+
+Thanks,
+-Toshi
+
