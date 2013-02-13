@@ -1,71 +1,71 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-Subject: [PATCH v2 01/26] x86, irq: Change irq_remap_modify_chip_defaults to static
-Date: Fri,  8 Feb 2013 11:27:58 -0800
-Message-Id: <1360351703-20571-2-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1360351703-20571-1-git-send-email-yinghai@kernel.org>
-References: <1360351703-20571-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.free-electrons.com ([94.23.35.102]:49452 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752987Ab3BMJfE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Feb 2013 04:35:04 -0500
+Date: Wed, 13 Feb 2013 10:31:21 +0100
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	"Russell King - ARM Linux" <linux@arm.linux.org.uk>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	"Eran Ben-Avi" <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Tawfik Bayouk <tawfik@marvell.com>
+Subject: Re: [PATCH 24/32] pci: PCIe driver for Marvell Armada 370/XP
+ systems
+Message-ID: <20130213103121.5f6338ef@skate>
+In-Reply-To: <201302130918.56909.arnd@arndb.de>
+References: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	<201302122259.54073.arnd@arndb.de>
+	<20130213004118.GB1052@obsidianresearch.com>
+	<201302130918.56909.arnd@arndb.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Change irq_remap_modify_chip_defaults() to static, as we have no
-outside user.
+Dear Arnd Bergmann,
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
----
- arch/x86/include/asm/irq_remapping.h |    6 ------
- drivers/iommu/irq_remapping.c        |    2 +-
- 2 files changed, 1 insertion(+), 7 deletions(-)
+On Wed, 13 Feb 2013 09:18:56 +0000, Arnd Bergmann wrote:
 
-diff --git a/arch/x86/include/asm/irq_remapping.h b/arch/x86/include/asm/irq_remapping.h
-index 95fd352..06279a6 100644
---- a/arch/x86/include/asm/irq_remapping.h
-+++ b/arch/x86/include/asm/irq_remapping.h
-@@ -48,8 +48,6 @@ extern bool setup_remapped_irq(int irq,
- 			       struct irq_cfg *cfg,
- 			       struct irq_chip *chip);
- 
--void irq_remap_modify_chip_defaults(struct irq_chip *chip);
--
- #else  /* CONFIG_IRQ_REMAP */
- 
- static inline void setup_irq_remapping_ops(void) { }
-@@ -82,10 +80,6 @@ static inline void panic_if_irq_remap(const char *msg)
- {
- }
- 
--static inline void irq_remap_modify_chip_defaults(struct irq_chip *chip)
--{
--}
--
- static inline bool setup_remapped_irq(int irq,
- 				      struct irq_cfg *cfg,
- 				      struct irq_chip *chip)
-diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
-index d56f8c1..01ed477 100644
---- a/drivers/iommu/irq_remapping.c
-+++ b/drivers/iommu/irq_remapping.c
-@@ -368,7 +368,7 @@ static void ir_print_prefix(struct irq_data *data, struct seq_file *p)
- 	seq_printf(p, " IR-%s", data->chip->name);
- }
- 
--void irq_remap_modify_chip_defaults(struct irq_chip *chip)
-+static void irq_remap_modify_chip_defaults(struct irq_chip *chip)
- {
- 	chip->irq_print_chip = ir_print_prefix;
- 	chip->irq_ack = ir_ack_apic_edge;
+> > Also, FWIW, recall this related discussion and other possible DT
+> > binding:
+> > 
+> > http://www.spinics.net/lists/arm-kernel/msg219992.html
+> > 
+> > drivers/bus/orion-mbus.c feels like the right option, but when I
+> > looked at it, getting the DT binding, and full dynamicness setup
+> > seemed like it would be best done after non-DT support was purged, and
+> > that is somewhat contigent on getting the irqchip and timer stuff
+> > sorted (see my first attempt at that):
+> > 
+> > https://patchwork.kernel.org/patch/1852011/
+> > 
+> > Guess it depends where you want to draw the line on cleanups before
+> > something can be accepted..
+> 
+> I guess as long as we agree on where we are headed with the
+> address translation, it's ok to just move the code now and
+> change the code later. I would like to be strict about the
+> include path stuff though.
+
+Ok, so I could move the existing address decoding code into say
+drivers/bus/orion-mbus.c. Would that be ok for you?
+
+Thanks,
+
+Thomas
 -- 
-1.7.10.4
-
+Thomas Petazzoni, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
