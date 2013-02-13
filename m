@@ -1,107 +1,109 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from qmta10.emeryville.ca.mail.comcast.net ([76.96.30.17]:57448 "EHLO
-	qmta10.emeryville.ca.mail.comcast.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755575Ab3BEPfV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Feb 2013 10:35:21 -0500
-Message-ID: <1360078091.4485.32.camel@rhapsody>
-Subject: Re: [PATCH v2 2/7] PCI: don't touch enable_cnt in
- pci_device_shutdown()
-From: Khalid Aziz <khalid@gonehiking.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Konstantin Khlebnikov <khlebnikov@openvz.org>,
-	e1000-devel@lists.sourceforge.net, linux-pci@vger.kernel.org,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	linux-kernel@vger.kernel.org, Andi Kleen <ak@linux.intel.com>,
-	Alan Cox <alan@lxorguk.ukuu.org.uk>,
-	Matthew Garrett <mjg@redhat.com>, khalid.aziz@oracle.com
-Date: Tue, 05 Feb 2013 08:28:11 -0700
-In-Reply-To: <CAErSpo7k96noiCtGYUFyuUQhE2GQA8ro5-9WC-JU_1HOWKUGvg@mail.gmail.com>
-References: <20130204115246.5569.85829.stgit@zurg>
-	 <20130204115557.5569.9748.stgit@zurg> <1360016458.4485.11.camel@rhapsody>
-	 <CAErSpo7k96noiCtGYUFyuUQhE2GQA8ro5-9WC-JU_1HOWKUGvg@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-oa0-f50.google.com ([209.85.219.50]:45355 "EHLO
+	mail-oa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751539Ab3BMEcy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Feb 2013 23:32:54 -0500
+Received: by mail-oa0-f50.google.com with SMTP id l20so890405oag.37
+        for <linux-pci@vger.kernel.org>; Tue, 12 Feb 2013 20:32:53 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1661570408.42886.1360700013207.JavaMail.mail@webmail03>
+References: <587312497.6453.1360650312498.JavaMail.mail@webmail01>
+ <CA+55aFyscOeZUPaYj_-QYgjADPD59+=c5aMvtpPEnd1tmpUGiA@mail.gmail.com>
+ <1362466310.40337.1360693775935.JavaMail.mail@webmail03> <CA+55aFyK1zhNerWHkd=FMMeTH_sfiL4sBFq00y4n5eAJ88Z_cA@mail.gmail.com>
+ <1661570408.42886.1360700013207.JavaMail.mail@webmail03>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 12 Feb 2013 21:26:44 -0700
+Message-ID: <CAErSpo7qj2SNR7BfuBsfF-saZXvgcqqLtgoP5Hyb5u99qR4Ncg@mail.gmail.com>
+Subject: Re: Abysmal HDD/USB write speed after sleep on a UEFI system
+To: "Artem S. Tashkinov" <t.artem@lycos.com>
+Cc: torvalds@linux-foundation.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Alan Stern <stern@rowland.harvard.edu>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 2013-02-04 at 16:13 -0700, Bjorn Helgaas wrote:
-> On Mon, Feb 4, 2013 at 3:20 PM, Khalid Aziz <khalid@gonehiking.org> wrote:
-> > On Mon, 2013-02-04 at 15:55 +0400, Konstantin Khlebnikov wrote:
-> >> Matthew Garrett and Alan Cox said (see LKML link below) that clearing bus-master
-> >> for all PCI devices may lead to unpredictable consequences, some devices ignores
-> >> this bit and continues DMA, some of them hang after that or crash whole system.
-> >> Probably we should leave here only warning and disable bus-mastering for each
-> >> driver individually in ->shutdown() callback.
-> >
-> > Agreed that the right place for shutting down a PCI device properly and
-> > clearing its Bus Master bit, is the driver shutdown routine, if only all
-> > drivers supplied a shutdown routine. As it is today, there are too many
-> > drivers that do not provide a shutdown routine, ata_piix, Marvell SATA
-> > driver, ATI AGP driver just to name a few among a large number of them.
-> > Yet kexec is expected to work inspite of these drivers especially since
-> > kdump depends on it. So until all PCI drivers supply a shutdown routine,
-> > this is just a band-aid to disable interrupt and Bus Master bit in
-> > pci_device_shutdown(). Most drivers do seem to supply a suspend and
-> > resume function and it was discussed many years ago if it is feasible to
-> > use the suspend() routine for drivers to shut devices down cleanly.
-> > Maybe it is time to revisit that discussion.
-> 
-> This patch as posted doesn't do anything with IRQs.  It only clears
-> PCI_COMMAND_MASTER.
-> 
-> I'm open to considering something with IRQs, but I don't understand
-> exactly what we should do.  In your response to the previous version
-> (https://lkml.org/lkml/2013/1/28/720) you suggested this:
-> 
->   pci_clear_master(pci_dev);
->   pcibios_disable_device(pci_dev);
-> 
-> Did you figure out specifically why pcibios_disable_device() helps?
-> Using pcibios_disable_device() doesn't seem like the ideal solution
-> because on most architectures, it is an empty function with no obvious
-> connection to IRQs.  On x86 with ACPI, it cleans up some ACPI PCI IRQ
-> stuff, but as far as I can tell, it doesn't actually touch the PCI
-> device itself or even the IOAPIC to which it's connected, so I'm not
-> sure how this would help kexec.
-> 
-> Bjorn
+[+cc linux-pci, Rafael, Alan]
 
-Hi Bjorn,
+[https://bugzilla.kernel.org/show_bug.cgi?id=53551]
 
-My reading of the code was that pcibios_disable_device() does clear the
-interrupt on x86 and ia64. I am not deeply familiar with the ACPI code
-and I might be interpreting it incorrectly, so please do correct me if I
-am reading it incorrectly. Here is the code sequence I see:
+On Tue, Feb 12, 2013 at 1:13 PM, Artem S. Tashkinov <t.artem@lycos.com> wrote:
+> Feb 13, 2013 01:32:53 AM, Linus Torvalds wrote:
+> On Tue, Feb 12, 2013 at 10:29 AM, Artem S. Tashkinov wrote:
+>>> Feb 12, 2013 11:30:20 PM, Linus Torvalds wrote:
+>>>>
+>>>>A few things to try to pinpoint:
+>>>>
+>>>> (a) Is it *only* write performance that suffers, or is it other
+>>>>performance too? Networking (DMA? Perhaps only writing *to* the
+>>>>network?)? CPU?
+>>>
+>>> I  've tested hdpard -tT --direct and the output on boot and after suspend
+>>> is quite similar.
+>>>
+>>> I  've also checked my network read/write speed, and it  's the same
+>>> ~ 100MBit/sec (I have no 1Gbit computers on my network
+>>> unfortunately).
+>>
+>>Ok. So it really sounds like just USB and HD writes. Which is quite
+>>odd, since they have basically nothing in common I can think of
+>>(except the obvious block layer issues).
+>>
+>>>> (b) the fact that it apparently happens with both SATA and USB
+>>>>implies that it    's neither, and is more likely something core like
+>>>>memory speed (mtrr, caching) or PCI (DMA, burst sizes, whatever).
+>>>
+>>> I  've no idea, please, check my bug report where I  've just added lots of
+>>> information including a diff between on boot and after suspend.
+>>
+>>I  'm not seeing anything particularly interesting there.
+>>
+>>Except why/how did the MSI address/data change for the SATA
+>>controller? The irq itself hasn  't changed.. There  's probably some sane
+>>reason for that too (it  's an odd encoding, maybe they code for the
+>>same thing), and there  's nothing like that for USB, so...
+>>
+>>And if it was irq problems, I  'd expect you to see it more for reads
+>>than for writes anyway. Along with a few messages about missed irqs
+>>and whatever.
+>>
+>>I'm stumped, and have no ideas. I can  't even begin to guess how this
+>>would happen. One thing to try is if it happens for all USB ports (you
+>>have multiple controllers) and I assume performance doesn  't come back
+>>if you unplug and replug the USB disk..
+>
+> I've just plugged and unplugged my USB stick into all available hubs
+> (including a USB3 one, that is xhci_hcd) and I've got the same write speed
+> on all of them - around 930KB/sec (quite a weird number - as if I'm on USB
+> 1.1) - lsusb says I'm happily running ehci_hcd/2p, 480M and xhci_hcd/2p,
+> 5000M.
+>
+> The only pattern that I see here is that write speed to real devices degrades,
+> tmpfs write speed stays the same:
+>
+> $ dd if=/dev/zero of=test bs=32M count=32
+> 32+0 records indegrade
+> 32+0 records out
+> 1073741824 bytes (1.1 GB) copied, 0.296323 s, 3.6 GB/s
 
-pcibios_disable_device() ->
-   pcibios_disable_irq() ->
-       acpi_pci_irq_disable() -> 
-           acpi_pci_link_free_irq() ->
-              acpi_evaluate_object(link->device->handle, "_DIS", NULL,
-NULL);
+I'm sort of stumped here, too.  For the SATA controller, the only
+PCI-related difference I see is the change in the MSI address, which
+should just change the target CPU, which doesn't seem like it should
+make this much difference.  But could you try this after the resume:
 
-My understanding is the evaluation of ACPI _DIS method will disable the
-interrupt from the device. Does that sound reasonable?
+    $ sudo setpci -s00:1f.2 0x84.L=0xfee0400c
 
-The problem this code attempts to solve is I/O devices continuing to be
-active as we start to boot a kexec'd kernel. That activity can come from
-DMA (has been seen with NICs for sure, but can happen from a SATA/IDE
-controller as well when a pending read completes). When a DMA activity
-overwrites a section of memory area in use by the new kexec'd kernel, it
-takes lot of work to narrow that memory corruption down. The right way
-to quiesce I/O devices is to call shutdown() function for every active
-driver, which pci_device_shutdown() does today. If every driver provided
-a proper shutdown() function, we would be done. Since that is not the
-case, we need to stop potentially active devices from interfering with
-kexec'd kernel. Too many drivers rely upon firmware reinitializing the
-device when system is shut down. The two ways I can think of are to stop
-DMA by clearing Bus Master bit and turn off the interrupt, which have
-been shown to get kexec (and thus kdump) working on machines it didn't
-work on before. 
+to set the MSI address back to the original value to see if it makes a
+difference?
 
-This is a non-trivial problem to solve and I am very open to better
-ideas.
+The XHCI controllers both have Unsupported Request errors logged.  I
+assume these are related to the suspend/resume, and it seems like we
+ought to either avoid them or clean them up somehow, but I don't know
+enough about AER, and I don't know whether they would cause the
+performance issue you're seeing.
 
---
-Khalid
+There should be more AER logging than is decoded by lspci, so can you
+also collect the output of "lspci -vvv -xxxx"?  That will include the
+raw logging registers that lspci doesn't decode.
 
+Bjorn
