@@ -1,86 +1,142 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ia0-f177.google.com ([209.85.210.177]:49114 "EHLO
-	mail-ia0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755962Ab3BFXbk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Feb 2013 18:31:40 -0500
+Received: from mail-ob0-f173.google.com ([209.85.214.173]:41422 "EHLO
+	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755679Ab3BMOcS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Feb 2013 09:32:18 -0500
+Received: by mail-ob0-f173.google.com with SMTP id dn14so1291412obc.18
+        for <linux-pci@vger.kernel.org>; Wed, 13 Feb 2013 06:32:18 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo4vd+GhTVpoLb=sFTqBZMG=xva1QUUhyJrO4o0ytPXmqg@mail.gmail.com>
-References: <CAE9FiQXHG01NjnYNDbC-KEpbcvY-q4pBe97CxTOGS7W4vZQBYQ@mail.gmail.com>
-	<52330506.F9m0tMYuG1@vostro.rjw.lan>
-	<CAE9FiQXTRaP08ZeHWTJHt50DZO800BMigmo=q65-RLzZWkTvoQ@mail.gmail.com>
-	<3459136.QID0qrXQHt@vostro.rjw.lan>
-	<CAErSpo4vd+GhTVpoLb=sFTqBZMG=xva1QUUhyJrO4o0ytPXmqg@mail.gmail.com>
-Date: Wed, 6 Feb 2013 15:31:39 -0800
-Message-ID: <CAE9FiQViHem1OBWEb-6_J1kzK-zUgiA4DZVH3_vagCNK_pkn6g@mail.gmail.com>
-Subject: Re: [PATCH v3 00/22] PCI: Iterate pci host bridge instead of pci root bus
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Myron Stowe <myron.stowe@gmail.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Mauro Carvalho Chehab <mchehab@redhat.com>,
-	Tony Luck <tony.luck@intel.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, Russell King <linux@arm.linux.org.uk>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+In-Reply-To: <1843565.7Y1sC8j6FG@vostro.rjw.lan>
+References: <CAMVG2svG21yiM1wkH4_2pen2n+cr2-Zv7TbH3Gj+8MwevZjDbw@mail.gmail.com>
+	<CAErSpo6rGYLQeP8Myu=octSPY_0R+B7ptBLhLawd_A2E3NRsAw@mail.gmail.com>
+	<6086479.ycKj2j8yeP@vostro.rjw.lan>
+	<1843565.7Y1sC8j6FG@vostro.rjw.lan>
+Date: Wed, 13 Feb 2013 22:32:17 +0800
+Message-ID: <CAMVG2ssOMMVBcD0kLX=Wo9x2cMfdi+3FYNEP-MiDRK4fs24auw@mail.gmail.com>
+Subject: Re: [3.8-rc7] PCI hotplug wakeup oops
+From: Daniel J Blueman <daniel@quora.org>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Linux Kernel <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 6, 2013 at 3:02 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Wed, Feb 6, 2013 at 3:05 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
->> On Wednesday, February 06, 2013 01:53:50 PM Yinghai Lu wrote:
->>> On Wed, Feb 6, 2013 at 1:43 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
->>> > On Wednesday, February 06, 2013 01:28:27 PM Yinghai Lu wrote:
->>> >> so you still did not answer you want 1 or 2 yet:
->>> >>
->>> >> for sgi_hotplug,
->>> >>
->>> >> 1. still keep the module support, and register acpi_pci_driver later.
->>> >> 2. built-in support only, and need to register acpi_pci_driver early.
->>> >
->>> > Please work with the assumption that acpi_pci_driver is not going to be there
->>> > any more.
->>> >
->>>
->>> I think I could change ioapic and iommu hotplug to weak add/remove because they
->>> should be built-in by nature.
->>>
->>> but how about others like sgi_hotplug etc?
->
-> I think that could be handled with pcibios_root_bridge_prepare() or
-> something similar -- something that happens in the "add host bridge"
-> path.  I'm not saying we necessarily have all the right hooks in place
-> yet.  It's just that I'd rather figure out what the right hooks *are*
-> and add them if necessary, than just convert pci_root_buses to
-> for_each_pci_host_bridge().
-
-so we will have all built-in for apci_pci_driver and call add/remove directly?
-
-BTW, looks like sgi_hotplug may need some time to convert ...
-Also not sure who can test it.
-
->
->> I'd really prefer to wait for the patchset removing acpi_pci_driver (from
->> Myron) before proceeding with more changes in that area.
+On 12 February 2013 03:49, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> On Monday, February 11, 2013 08:27:49 PM Rafael J. Wysocki wrote:
+>> On Monday, February 11, 2013 12:01:37 PM Bjorn Helgaas wrote:
+>> > [+cc Rafael]
+>> >
+>> > On Mon, Feb 11, 2013 at 10:08 AM, Daniel J Blueman <daniel@quora.org> wrote:
+>> > > On 11 February 2013 21:03, Daniel J Blueman <daniel@quora.org> wrote:
+>> > >> With 3.8-rc7, when unplugging the Thunderbolt ethernet adapter (bus 0a
+>> > >> [1]) on a Macbook Pro 10,1, we see the PCIe port correctly released:
+>> > >>
+>> > >> pciehp 0000:06:03.0:pcie24: Card not present on Slot(3)
+>> > >> tg3 0000:0a:00.0: tg3_abort_hw timed out, TX_MODE_ENABLE will not
+>> > >> clear MAC_TX_MODE=ffffffff
+>> > >> tg3 0000:0a:00.0 eth0: No firmware running
+>> > >> tg3 0000:0a:00.0 eth0: Link is down
+>> > >> [sched_delayed] sched: RT throttling activated
+>> > >> pcieport 0000:00:01.1: System wakeup enabled by ACPI
+>> > >> pciehp 0000:09:00.0:pcie24: unloading service driver pciehp
+>> > >> pci_bus 0000:0a: busn_res: [bus 0a] is released
+>> > >> pci_bus 0000:09: busn_res: [bus 09-0a] is released
+>> > >>
+>> > >> After some activity later (eg I can reproduce this by switching to a
+>> > >> text console and back), often we'll see an oops:
+>> > >>
+>> > >> Unable to handle kernel paging request at 0000000000001070
+>> > >> pci_pme_list_scan+0x3d/0xe0
+>> > >> Call Trace:
+>> > >> process_one_work+0x193
+>> > >> ? process_one_work+0x131
+>> > >> ? pci_pme_wakeup+0x60
+>> > >> worker_thread+0x15d
+>> > >>
+>> > >> (gdb) list *(pci_pme_list_scan+0x3d)
+>> > >> 0xffffffff8123f6dd is in pci_pme_list_scan (drivers/pci/pci.c:1556).
+>> > >> 1551                                    /*
+>> > >> 1552                                     * If bridge is in low power state, the
+>> > >> 1553                                     * configuration space of subordinate devices
+>> > >> 1554                                     * may be not accessible
+>> > >> 1555                                     */
+>> > >> 1556                                    if (bridge && bridge->current_state != PCI_D0)
+>> > >> 1557                                            continue;
+>> > >> 1558                                    pci_pme_wakeup(pme_dev->dev, NULL);
+>> > >> 1559                            } else {
+>> > >> 1560                                    list_del(&pme_dev->list);
+>> > >>
+>> > >> Since a panic in vsnprintf happens after the oops (hence I can't catch
+>> > >> it with EFI pstore), it is almost certainly significant heap
+>> > >> corruption; this would explain why pme_dev became null (the load has
+>> > >> been ordered ahead).
+>> > >>
+>> > >> I'll see what I can find out with memory poisoning and list debugging.
+>> > >
+>> > > Enabling a bunch of related debugging, we see pme_dev is non-null and:
+>> > >
+>> > > BUG: Unable to handle NULL pointer dereference at
+>> > > pci_bus_read_config_word+0x6c
+>> > > PGD 26314c067 PUD 2633f9067 PMD 0
+>> > > Oops: 0000 [#1] SMP
+>> > > pci_check_pme_status+0x4f
+>> > > pci_pme_wakeup+0x21
+>> > > pci_pme_list_scan+0xd5
+>> > > process_one_work+0x1ca
+>> > > ? process_one_work+0x160
+>> > > ? pci_pme_wakeup+0x60
+>> > > worker_thread+0x14e
+>> > >
+>> > > Anyway, it looks like the device being unplugged wasn't removed from
+>> > > pci_pme_list as pci_pme_active(dev, false) wasn't called.
+>> > >
+>> > > From a quick review, I wasn't able to find the right place in the
+>> > > call-chain which I only see releases the child busses and PCIe port
+>> > > drivers. Anyone?
+>> >
+>> > It looks like drivers *add* devices to pci_pme_list when they use
+>> > pci_enable_wake() or pci_wake_from_d3().  But many drivers never
+>> > remove their devices, and I don't see any place where the core does it
+>> > either.  My guess is we need to remove it in pci_stop_dev() (we
+>> > already do pcie_aspm_exit_link_state() there) or somewhere similar.
 >>
->> Myron, do you have a prototype based on the current linux-next?
+>> Yes, we should call pci_pme_active(dev, false) somewhere in there I think.
+>> It's fine to call that even if PME was not "active" before.
 >
-> I think it's really the acpiphp/pciehp issue that's holding up the
-> removal of acpi_pci_driver.  I'm not sure if anybody's working on
-> that.
+> Daniel, I wonder if the patch below helps?
+>
+> Rafael
+>
+>
+> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> ---
+>  drivers/pci/remove.c |    2 ++
+>  1 file changed, 2 insertions(+)
+>
+> Index: test/drivers/pci/remove.c
+> ===================================================================
+> --- test.orig/drivers/pci/remove.c
+> +++ test/drivers/pci/remove.c
+> @@ -19,6 +19,8 @@ static void pci_free_resources(struct pc
+>
+>  static void pci_stop_dev(struct pci_dev *dev)
+>  {
+> +       pci_pme_active(dev, false);
+> +
+>         if (dev->is_added) {
+>                 pci_proc_detach_device(dev);
+>                 pci_remove_sysfs_dev_files(dev);
 
-Myron's last Dec's version would split all acpi_pci_driver's
-add/remove into acpi_pci_root_add/remove.
+Indeed, the oops would prevent hitting the lockdep warning, which is a
+secondary matter.
 
-other way is use host-bridge nodifier, looks like that is not favorable.
+As it stands, this fix prevents the fatal oops, so IMHO is urgent
+material for 3.8-final. I can't prove that is_added will always be
+true, so let's stick with your patch.
 
-BTW, looks like I could put add/remove calling directly in
-acpi_pci_root_add/remove
-for ioapic and iommu.
-
-Thanks
-
-Yinghai
+Tested-by: Daniel J Blueman <daniel@quora.org>
+-- 
+Daniel J Blueman
