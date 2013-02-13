@@ -1,102 +1,60 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from quartz.orcorp.ca ([184.70.90.242]:39797 "EHLO quartz.orcorp.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759512Ab3BMAlO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 12 Feb 2013 19:41:14 -0500
+Date: Tue, 12 Feb 2013 17:41:18 -0700
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Tawfik Bayouk <tawfik@marvell.com>
+Subject: Re: [PATCH 24/32] pci: PCIe driver for Marvell Armada 370/XP systems
+Message-ID: <20130213004118.GB1052@obsidianresearch.com>
+References: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com>
+ <201302121830.11375.arnd@arndb.de>
+ <20130212202252.3a9ee3d0@skate>
+ <201302122259.54073.arnd@arndb.de>
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQVYvmRr5oGLfLCPFPV_G_r-fqG9GZaK_wxNW8aO_oyuRA@mail.gmail.com>
-References: <CAE9FiQXHG01NjnYNDbC-KEpbcvY-q4pBe97CxTOGS7W4vZQBYQ@mail.gmail.com>
- <1359314629-18651-1-git-send-email-yinghai@kernel.org> <CAErSpo6r_LNEtYB3j5ELb8NdHu0a6_YOVj8S32CmByGFUpSsbg@mail.gmail.com>
- <CAE9FiQXg1YcPPJLCgPbKOKXHk-LRQv4bbBGH9jyuATQa2ANLkg@mail.gmail.com>
- <CAE9FiQX2DbTO0qCzGO4iMTkU_mPM2oZL+R5UoZ5dj=as6MUAsw@mail.gmail.com>
- <CAErSpo7-dULYwWQ=f5CBCxOULKJE9=n6Ha4jkVKd8enspuYjTA@mail.gmail.com>
- <CAE9FiQWvmK7N2z19B9ZiMyc_T6cJdpWoWr3mExpuwUA4ogBc3w@mail.gmail.com>
- <CAErSpo4x-GzGxJOWgwP_DEqNhefDo0V1zTT5GBR30+Q57=E-hg@mail.gmail.com> <CAE9FiQVYvmRr5oGLfLCPFPV_G_r-fqG9GZaK_wxNW8aO_oyuRA@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 6 Feb 2013 13:50:49 -0700
-Message-ID: <CAErSpo5-6xs+Uz=Yzws23RmrFK=+AQZ2=UT+n0k=462EgazbUA@mail.gmail.com>
-Subject: Re: [PATCH v3 00/22] PCI: Iterate pci host bridge instead of pci root bus
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	Mauro Carvalho Chehab <mchehab@redhat.com>,
-	Tony Luck <tony.luck@intel.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, Russell King <linux@arm.linux.org.uk>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201302122259.54073.arnd@arndb.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 6, 2013 at 11:59 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Wed, Feb 6, 2013 at 9:54 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> I think you're missing the point.
->>
->> Search the tree for uses of "for_each_pci_dev()."  Almost every
->> occurrence is a bug because that code doesn't work correctly for
->> hot-added devices.  That code gets run for devices that are present at
->> boot, but not for devices hot-added later.
->>
->> You're proposing to add "for_each_pci_host_bridge()."  That will have
->> the exact same problem as for_each_pci_dev() already does.  Code that
->> uses it will work for host bridges present at boot, but not for
->> bridges hot-added later.
->>
->> Why would we want to add an interface when every use of that interface
->> will be a design bug?  I think we should fix the existing users of
->> pci_root_buses by changing their designs so they will work correctly
->> with host bridge hotplug.
->
-> I'm a little confused about what you want.
->
-> In boot stage using for_each_pci_host_bridge or pci_root_buses is fine.
+On Tue, Feb 12, 2013 at 10:59:53PM +0000, Arnd Bergmann wrote:
+ 
+> b) drivers/bus/<something>
+> This would make a lot more sense if we followed the scheme I explained
+> in my discussion to Jason Gunthorpe, where we basically treat this
+> bus as a parent node in the device tree for anything that can get remapped.
+> Without that change, it feels a little misplaced
 
-No, it's not.  Boot-time should work exactly the same way as hot-add
-time, unless there's a reason it can't.  There might be corner cases
-where we can't do that yet, e.g., the pcibios_resource_survey stuff,
-but in general I don't think there's anything that *forces* us to
-iterate through host bridges at boot-time.
+Also, FWIW, recall this related discussion and other possible DT
+binding:
 
-> For those cases that it should support host-bridge by nature.
-> there are two solutions:
-> 1. use for_each_pci_host_bridge, and it is hotplug-safe.
+http://www.spinics.net/lists/arm-kernel/msg219992.html
 
-I'm trying to tell you that for_each_pci_host_bridge() is NOT
-hotplug-safe.  Your series makes it safer than it was, in the sense
-that it probably fixes stray pointer references when a host bridge
-hotplug happens while somebody's traversing pci_root_buses.  But the
-whole point of for_each_pci_host_bridge() is to run some code for
-every bridge we know about *right now*.  If a host bridge is added
-right after the for_each_pci_host_bridge() loop exits, that code
-doesn't get run.  In most cases, that's a bug.  The only exception I
-know about is the /sys/.../rescan interface.
+drivers/bus/orion-mbus.c feels like the right option, but when I
+looked at it, getting the DT binding, and full dynamicness setup
+seemed like it would be best done after non-DT support was purged, and
+that is somewhat contigent on getting the irqchip and timer stuff
+sorted (see my first attempt at that):
 
-> and make sgi_hotplug to use acpi_pci_driver interface.
-> and acpi_pci_root_add() will call .add in the acpi_pci_driver.
->
-> 2. make them all to be built-in, and  those acpi_pci_driver should be registered
-> much early before acpi_pci_root_add is called.
-> then we don't need to call for_each_host_bridge for it.
->
-> So difference between them:
-> 1. still keep the module support, and register acpi_pci_driver later.
-> 2. built-in support only, and need to register acpi_pci_driver early.
+https://patchwork.kernel.org/patch/1852011/
 
-acpi_pci_driver is going away, so I don't want to add any more uses of
-it.  Obviously it's only relevant to x86 and ia64 anyway.
+Guess it depends where you want to draw the line on cleanups before
+something can be accepted..
 
-What I'd like is a change where for_each_pci_host_bridge() is used
-only inside the PCI core and defined somewhere like drivers/pci/pci.h
-so it's not even available outside.
-
-The other uses should be changed so they use
-pcibios_root_bridge_prepare() or something similar.  That way, it will
-be obvious that the code supports hot-added bridges, and when it gets
-copied to other places, we'll be copying a working design instead of a
-broken one.
-
-I don't want to have to audit these places and figure out "this is
-safe because this arch doesn't support host bridge hotplug" or "this
-is safe because this CPU doesn't support XYZ."  That's not a
-maintainable solution.  The safety should be apparent from the code
-itself, without requiring extra platform-specific knowledge.
-
-Bjorn
+Regards,
+Jason
