@@ -1,208 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g5t0006.atlanta.hp.com ([15.192.0.43]:21686 "EHLO
-	g5t0006.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751414Ab3BXFZx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 24 Feb 2013 00:25:53 -0500
-From: Vijay Mohan Pandarathil <vijaymohan.pandarathil@hp.com>
-To: alex.williamson@redhat.com, gleb@redhat.com, bhelgaas@google.com,
-	blauwirbel@gmail.com, lance.oritz@hp.com, kvm@vger.kernel.org,
-	qemu-devel@nongnu.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: Vijay Mohan Pandarathil <vijaymohan.pandarathil@hp.com>
-Subject: [PATCH v5 2/3] VFIO-AER: Vfio-pci driver changes for supporting AER
-Date: Sat, 23 Feb 2013 23:25:15 -0600
-Message-Id: <1361683516-31946-3-git-send-email-vijaymohan.pandarathil@hp.com>
-In-Reply-To: <1361683516-31946-1-git-send-email-vijaymohan.pandarathil@hp.com>
-References: <1361683516-31946-1-git-send-email-vijaymohan.pandarathil@hp.com>
+Received: from 8bytes.org ([85.214.48.195]:45935 "EHLO mail.8bytes.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933877Ab3BMMDU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 13 Feb 2013 07:03:20 -0500
+Received: from localhost (localhost [127.0.0.1])
+	by mail.8bytes.org (Postfix) with SMTP id E4D5C12B0EF
+	for <linux-pci@vger.kernel.org>; Wed, 13 Feb 2013 13:03:18 +0100 (CET)
+Date: Wed, 13 Feb 2013 13:03:15 +0100
+From: Joerg Roedel <joro@8bytes.org>
+To: bhelgaas@google.com
+Cc: Shuah Khan <shuah.khan@hp.com>, jiang.liu@huawei.com,
+	shemminger@vyatta.com, paulmck@linux.vnet.ibm.com,
+	linasvepstas@gmail.com, dhowells@redhat.com, davej@redhat.com,
+	tglx@linutronix.de, mtk.manpages@gmail.com,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	wangyijing@huawei.com, LKML <linux-kernel@vger.kernel.org>,
+	shuahkhan@gmail.com
+Subject: Re: [PATCH 0/4] pci: Add PCI_BUS() and PCI_DEVID() interfaces to
+ return bus number and device id
+Message-ID: <20130213120315.GE25591@8bytes.org>
+References: <1360623614.2950.60.camel@lorien2>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1360623614.2950.60.camel@lorien2>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-	- New VFIO_SET_IRQ ioctl option to pass the eventfd that is signaled when
-          an error occurs in the vfio_pci_device
+Hi Bjorn,
 
-	- Register pci_error_handler for the vfio_pci driver
+On Mon, Feb 11, 2013 at 04:00:14PM -0700, Shuah Khan wrote:
+> pci defines PCI_DEVFN(), PCI_SLOT(), and PCI_FUNC() interfaces, however,
+> it doesn't have interfaces to return PCI bus and PCI device id. Drivers
+> (AMD IOMMU, and AER) have module specific definitions for PCI_BUS() and
+> AMD_IOMMU driver also has a module specific interface to calculate PCI
+> device id from bus number and devfn.
+> 
+> This patch set adds PCI_BUS(), and PCI_DEVID() to pci.h, changes are to
+> use PCI_BUS() from pci. Changes AMD_IOMMU driver to use PCI_BUS() and
+> PCI_DEVID() from pci.
 
-	- When the device encounters an error, the error handler registered by
-          the vfio_pci driver gets invoked by the AER infrastructure
+Not sure who is going to merge this, it touches PCI and IOMMU code.
+Personally I don't care :-) If you want to take it via your tree feel
+free to add my
 
-	- In the error handler, signal the eventfd registered for the device.
+Reviewed-by: Joerg Roedel <joro@8bytes.org>
+Tested-by: Joerg Roedel <joro@8bytes.org>
+Acked-by: Joerg Roedel <joro@8bytes.org>
 
-	- This results in the qemu eventfd handler getting invoked and
-          appropriate action taken for the guest.
+Otherwise please Ack the PCI parts and I will add it to my tree then.
 
-Signed-off-by: Vijay Mohan Pandarathil <vijaymohan.pandarathil@hp.com>
----
- drivers/vfio/pci/vfio_pci.c         | 44 ++++++++++++++++++++++++++++++++-
- drivers/vfio/pci/vfio_pci_intrs.c   | 49 +++++++++++++++++++++++++++++++++++++
- drivers/vfio/pci/vfio_pci_private.h |  1 +
- include/uapi/linux/vfio.h           |  1 +
- 4 files changed, 94 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
-index b28e66c..cd99321 100644
---- a/drivers/vfio/pci/vfio_pci.c
-+++ b/drivers/vfio/pci/vfio_pci.c
-@@ -196,7 +196,9 @@ static int vfio_pci_get_irq_count(struct vfio_pci_device *vdev, int irq_type)
- 
- 			return (flags & PCI_MSIX_FLAGS_QSIZE) + 1;
- 		}
--	}
-+	} else if (irq_type == VFIO_PCI_ERR_IRQ_INDEX)
-+		if (pci_is_pcie(vdev->pdev))
-+			return 1;
- 
- 	return 0;
- }
-@@ -302,6 +304,17 @@ static long vfio_pci_ioctl(void *device_data,
- 		if (info.argsz < minsz || info.index >= VFIO_PCI_NUM_IRQS)
- 			return -EINVAL;
- 
-+		switch (info.index) {
-+		case VFIO_PCI_INTX_IRQ_INDEX ... VFIO_PCI_MSIX_IRQ_INDEX:
-+			break;
-+		case VFIO_PCI_ERR_IRQ_INDEX:
-+			if (pci_is_pcie(vdev->pdev))
-+				break;
-+		/* pass thru to return error */
-+		default:
-+			return -EINVAL;
-+		}
-+
- 		info.flags = VFIO_IRQ_INFO_EVENTFD;
- 
- 		info.count = vfio_pci_get_irq_count(vdev, info.index);
-@@ -538,11 +551,40 @@ static void vfio_pci_remove(struct pci_dev *pdev)
- 	kfree(vdev);
- }
- 
-+static pci_ers_result_t vfio_pci_aer_err_detected(struct pci_dev *pdev,
-+						  pci_channel_state_t state)
-+{
-+	struct vfio_pci_device *vdev;
-+	struct vfio_device *device;
-+
-+	device = vfio_device_get_from_dev(&pdev->dev);
-+	if (device == NULL)
-+		return PCI_ERS_RESULT_DISCONNECT;
-+
-+	vdev = vfio_device_data(device);
-+	if (vdev == NULL) {
-+		vfio_device_put(device);
-+		return PCI_ERS_RESULT_DISCONNECT;
-+	}
-+
-+	if (vdev->err_trigger)
-+		eventfd_signal(vdev->err_trigger, 1);
-+
-+	vfio_device_put(device);
-+
-+	return PCI_ERS_RESULT_CAN_RECOVER;
-+}
-+
-+static struct pci_error_handlers vfio_err_handlers = {
-+	.error_detected = vfio_pci_aer_err_detected,
-+};
-+
- static struct pci_driver vfio_pci_driver = {
- 	.name		= "vfio-pci",
- 	.id_table	= NULL, /* only dynamic ids */
- 	.probe		= vfio_pci_probe,
- 	.remove		= vfio_pci_remove,
-+	.err_handler	= &vfio_err_handlers,
- };
- 
- static void __exit vfio_pci_cleanup(void)
-diff --git a/drivers/vfio/pci/vfio_pci_intrs.c b/drivers/vfio/pci/vfio_pci_intrs.c
-index 3639371..4a29830 100644
---- a/drivers/vfio/pci/vfio_pci_intrs.c
-+++ b/drivers/vfio/pci/vfio_pci_intrs.c
-@@ -745,6 +745,48 @@ static int vfio_pci_set_msi_trigger(struct vfio_pci_device *vdev,
- 	return 0;
- }
- 
-+static int vfio_pci_set_err_trigger(struct vfio_pci_device *vdev,
-+				    unsigned index, unsigned start,
-+				    unsigned count, uint32_t flags, void *data)
-+{
-+	int32_t fd = *(int32_t *)data;
-+
-+	if ((index != VFIO_PCI_ERR_IRQ_INDEX) ||
-+	    !(flags & VFIO_IRQ_SET_DATA_TYPE_MASK))
-+		return -EINVAL;
-+
-+	/* DATA_NONE/DATA_BOOL enables loopback testing */
-+
-+	if (flags & VFIO_IRQ_SET_DATA_NONE) {
-+		if (vdev->err_trigger)
-+			eventfd_signal(vdev->err_trigger, 1);
-+		return 0;
-+	} else if (flags & VFIO_IRQ_SET_DATA_BOOL) {
-+		uint8_t trigger = *(uint8_t *)data;
-+		if (trigger && vdev->err_trigger)
-+			eventfd_signal(vdev->err_trigger, 1);
-+		return 0;
-+	}
-+
-+	/* Handle SET_DATA_EVENTFD */
-+
-+	if (fd == -1) {
-+		if (vdev->err_trigger)
-+			eventfd_ctx_put(vdev->err_trigger);
-+		vdev->err_trigger = NULL;
-+		return 0;
-+	} else if (fd >= 0) {
-+		struct eventfd_ctx *efdctx;
-+		efdctx = eventfd_ctx_fdget(fd);
-+		if (IS_ERR(efdctx))
-+			return PTR_ERR(efdctx);
-+		if (vdev->err_trigger)
-+			eventfd_ctx_put(vdev->err_trigger);
-+		vdev->err_trigger = efdctx;
-+		return 0;
-+	} else
-+		return -EINVAL;
-+}
- int vfio_pci_set_irqs_ioctl(struct vfio_pci_device *vdev, uint32_t flags,
- 			    unsigned index, unsigned start, unsigned count,
- 			    void *data)
-@@ -779,6 +821,13 @@ int vfio_pci_set_irqs_ioctl(struct vfio_pci_device *vdev, uint32_t flags,
- 			break;
- 		}
- 		break;
-+	case VFIO_PCI_ERR_IRQ_INDEX:
-+		switch (flags & VFIO_IRQ_SET_ACTION_TYPE_MASK) {
-+		case VFIO_IRQ_SET_ACTION_TRIGGER:
-+			if (pci_is_pcie(vdev->pdev))
-+				func = vfio_pci_set_err_trigger;
-+			break;
-+		}
- 	}
- 
- 	if (!func)
-diff --git a/drivers/vfio/pci/vfio_pci_private.h b/drivers/vfio/pci/vfio_pci_private.h
-index 611827c..daee62f 100644
---- a/drivers/vfio/pci/vfio_pci_private.h
-+++ b/drivers/vfio/pci/vfio_pci_private.h
-@@ -55,6 +55,7 @@ struct vfio_pci_device {
- 	bool			bardirty;
- 	struct pci_saved_state	*pci_saved_state;
- 	atomic_t		refcnt;
-+	struct eventfd_ctx	*err_trigger;
- };
- 
- #define is_intx(vdev) (vdev->irq_type == VFIO_PCI_INTX_IRQ_INDEX)
-diff --git a/include/uapi/linux/vfio.h b/include/uapi/linux/vfio.h
-index 4758d1b..7d50af4 100644
---- a/include/uapi/linux/vfio.h
-+++ b/include/uapi/linux/vfio.h
-@@ -310,6 +310,7 @@ enum {
- 	VFIO_PCI_INTX_IRQ_INDEX,
- 	VFIO_PCI_MSI_IRQ_INDEX,
- 	VFIO_PCI_MSIX_IRQ_INDEX,
-+	VFIO_PCI_ERR_IRQ_INDEX,
- 	VFIO_PCI_NUM_IRQS
- };
- 
--- 
-1.7.11.3
+Thanks,
+
+	Joerg
+
 
