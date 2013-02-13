@@ -1,52 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f41.google.com ([209.85.219.41]:32955 "EHLO
-	mail-oa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932846Ab3BSXJD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Feb 2013 18:09:03 -0500
-Received: by mail-oa0-f41.google.com with SMTP id i10so7596263oag.0
-        for <linux-pci@vger.kernel.org>; Tue, 19 Feb 2013 15:09:03 -0800 (PST)
+Received: from moutng.kundenserver.de ([212.227.17.10]:52638 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750846Ab3BMJTq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Feb 2013 04:19:46 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Subject: Re: [PATCH 24/32] pci: PCIe driver for Marvell Armada 370/XP systems
+Date: Wed, 13 Feb 2013 09:18:56 +0000
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	"Russell King - ARM Linux" <linux@arm.linux.org.uk>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	"Eran Ben-Avi" <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Tawfik Bayouk <tawfik@marvell.com>
+References: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com> <201302122259.54073.arnd@arndb.de> <20130213004118.GB1052@obsidianresearch.com>
+In-Reply-To: <20130213004118.GB1052@obsidianresearch.com>
 MIME-Version: 1.0
-In-Reply-To: <5122A19B.9090308@nber.org>
-References: <5122A19B.9090308@nber.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 19 Feb 2013 16:08:43 -0700
-Message-ID: <CAErSpo6KhkE2Z1smhqv3vct+B7z=21N4DVmzVdS=E6v-N=BxJQ@mail.gmail.com>
-Subject: Re: Problem with MSI with QLogic/HP 10Gigabit Ethernet NIC and IRQs
- solved with pci=nomsi
-To: Alex Aminoff <aminoff@nber.org>
-Cc: linux-pci@vger.kernel.org, Daniel Feenberg <feenberg@nber.org>,
-	Mohan Ramanujan <mohan@nber.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201302130918.56909.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Feb 18, 2013 at 2:48 PM, Alex Aminoff <aminoff@nber.org> wrote:
->
-> As recommended in the MSI-HOWTO, we are submitting our case where we believe
-> that certain hardware does not work correctly with MSI.
+On Wednesday 13 February 2013, Jason Gunthorpe wrote:
+> , Arnd Bergmann wrote:
+>  
+> > b) drivers/bus/<something>
+> > This would make a lot more sense if we followed the scheme I explained
+> > in my discussion to Jason Gunthorpe, where we basically treat this
+> > bus as a parent node in the device tree for anything that can get remapped.
+> > Without that change, it feels a little misplaced
+> 
+> Also, FWIW, recall this related discussion and other possible DT
+> binding:
+> 
+> http://www.spinics.net/lists/arm-kernel/msg219992.html
+> 
+> drivers/bus/orion-mbus.c feels like the right option, but when I
+> looked at it, getting the DT binding, and full dynamicness setup
+> seemed like it would be best done after non-DT support was purged, and
+> that is somewhat contigent on getting the irqchip and timer stuff
+> sorted (see my first attempt at that):
+> 
+> https://patchwork.kernel.org/patch/1852011/
+> 
+> Guess it depends where you want to draw the line on cleanups before
+> something can be accepted..
 
-Thanks for your report!
+I guess as long as we agree on where we are headed with the
+address translation, it's ok to just move the code now and
+change the code later. I would like to be strict about the
+include path stuff though.
 
-> We have two machines running Scientific Linux:
->
-> Linux age9 2.6.32-279.19.1.el6.x86_64 #1 SMP Tue Dec 18 17:22:54 CST 2012
-> x86_64 x86_64 x86_64 GNU/Linux
-
-As I'm sure you know, this is a pretty old kernel, and any fixes to it
-would be made by your vendor.
-
-Is it possible for you to test a current kernel, e.g., v3.8?  The bug
-may have been fixed between 2.6.32 and 3.8.  If not, I'd definitely
-like to fix it in the upstream kernel so v3.9 would work out of the
-box.  If you could collect complete dmesg logs from v3.8 both with and
-without "pci=nomsi", that would be very helpful.
-
-> The symptom appeared to be problems with the 10G ethernet card that produced
-> error messages about do_IRQ. (It so happens that these machines boot
-> diskless so NFS problems would crash or hang the machines; therefore others
-> with the same setup but booting from local disk might not experience this to
-> the same severity).
->
-> The problems appear to be gone now that we are booting with pci=nomsi.
-
-Bjorn
+	Arnd
