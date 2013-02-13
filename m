@@ -1,71 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f42.google.com ([209.85.219.42]:42572 "EHLO
-	mail-oa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760962Ab3BLAoL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Feb 2013 19:44:11 -0500
-Received: by mail-oa0-f42.google.com with SMTP id i18so6992804oag.1
-        for <linux-pci@vger.kernel.org>; Mon, 11 Feb 2013 16:44:10 -0800 (PST)
+Received: from moutng.kundenserver.de ([212.227.17.10]:55173 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932427Ab3BMJhG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Feb 2013 04:37:06 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Subject: Re: [PATCH v3] PCIe support for the Armada 370 and Armada XP SoCs
+Date: Wed, 13 Feb 2013 09:37:02 +0000
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	"Russell King - ARM Linux" <linux@arm.linux.org.uk>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	"Eran Ben-Avi" <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Tawfik Bayouk <tawfik@marvell.com>
+References: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com> <201302121812.11566.arnd@arndb.de> <20130213095025.079fdd89@skate>
+In-Reply-To: <20130213095025.079fdd89@skate>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo6wG78ptk5kR0CuG99MN1YiC2KrEmEFfKLG_oZjiNGoBA@mail.gmail.com>
-References: <20130204115246.5569.85829.stgit@zurg> <2306912.u6v1yvkaml@vostro.rjw.lan>
- <CAErSpo6wG78ptk5kR0CuG99MN1YiC2KrEmEFfKLG_oZjiNGoBA@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 11 Feb 2013 17:43:50 -0700
-Message-ID: <CAErSpo7G-31WjR8S6iR9KRyRVxaW5NrNupxhbRAemCASY2fSRA@mail.gmail.com>
-Subject: Re: [PATCH v2 0/7] pci/e1000e: return runtime-pm back to work
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Konstantin Khlebnikov <khlebnikov@openvz.org>,
-	e1000-devel@lists.sourceforge.net, linux-pci@vger.kernel.org,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201302130937.02266.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Feb 11, 2013 at 5:34 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Mon, Feb 4, 2013 at 1:23 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
->> On Monday, February 04, 2013 03:55:47 PM Konstantin Khlebnikov wrote:
->>> This patchset contains some fixes for e1000e diver (broken since v2.6.35)
->>> and some related fixes and useful debug for PCI code.
->>>
->>> All together this fixes my regression report for v3.8-rc1:
->>> https://lkml.org/lkml/2013/1/1/25
->>>
->>> patchset was seriously reworked since v1:
->>> http://lkml.org/lkml/2013/1/18/147
->>>
->>> ---
->>>
->>> Konstantin Khlebnikov (6):
->>>       e1000e: fix pci-device enable-counter balance
->>>       PCI: don't touch enable_cnt in pci_device_shutdown()
->>>       PCI: catch enable-counter underflows
->>>       e1000e: fix runtime power management transitions
->>>       PCI/PM: warn about incomplete actions in ->runtime_suspend() callback
->>>       e1000e: fix accessing to suspended device
->>>
->>> Rafael J. Wysocki (1):
->>>       PCI/PM: clear state_saved during suspend
->>>
->>>
->>>  drivers/net/ethernet/intel/e1000e/ethtool.c |   13 ++++
->>>  drivers/net/ethernet/intel/e1000e/netdev.c  |   82 +++++++--------------------
->>>  drivers/pci/pci-driver.c                    |   21 +++++--
->>>  drivers/pci/pci.c                           |    3 +
->>>  4 files changed, 53 insertions(+), 66 deletions(-)
->>
->> Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->>
->> for all patches except for [6/7].
->
-> I added Rafael's acks and applied patches
->   [2/7] PCI: don't touch enable_cnt in pci_device_shutdown()
->   [3/7] PCI: catch enable-counter underflows
-> to my pci/konstantin-runtime-pm branch for v3.9.
+On Wednesday 13 February 2013, Thomas Petazzoni wrote:
+> On Tue, 12 Feb 2013 18:12:11 +0000, Arnd Bergmann wrote:
+> 
+> > You can add my 'Reviewed-by' tag on all paches except 5, 6, and 24.
+> > 
+> > I'm fine with adding the other ones to 3.9, as well as adding
+> > the binding document if you split that out from patch 24. Sorry for
+> > making this so hard for you.
+> 
+> Is this really true that some more code can be taken for 3.9 ? It
+> somewhat contradicts the statement that Olof has made on LAKML just a
+> few hours ago "arm-soc: No new material from 3.9, fixes only".
 
-Oops, I missed
-  [4/7] PCI/PM: Clear state_saved during suspend
+Sorry, that was bad communiation between Olof and me. Olof has
+been handling basically all of the pulls for this release
+and his decision is final. The only part of the series that
+I believe we should take is patch 7, since that is a bug fix.
 
-I applied that one, too.
-
-Bjorn
+	Arnd
