@@ -1,200 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ia0-f179.google.com ([209.85.210.179]:40599 "EHLO
-	mail-ia0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752960Ab3BCQUj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 3 Feb 2013 11:20:39 -0500
-MIME-Version: 1.0
-In-Reply-To: <F9E001219150CB45BEDC82A650F360C9014AAF02@G9W0717.americas.hpqcorp.net>
-References: <F9E001219150CB45BEDC82A650F360C9014AAF02@G9W0717.americas.hpqcorp.net>
-From: Blue Swirl <blauwirbel@gmail.com>
-Date: Sun, 3 Feb 2013 16:20:18 +0000
-Message-ID: <CAAu8pHuEDvoA1rt7mddubuOAPsp79AA7u0NDxLNyO9sfWJX0+w@mail.gmail.com>
-Subject: Re: [PATCH v3 2/3] VFIO-AER: Vfio-pci driver changes for supporting AER
-To: "Pandarathil, Vijaymohan R" <vijaymohan.pandarathil@hp.com>
-Cc: Alex Williamson <alex.williamson@redhat.com>,
-	Gleb Natapov <gleb@redhat.com>,
+Received: from mga01.intel.com ([192.55.52.88]:8699 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932106Ab3BNXpr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 14 Feb 2013 18:45:47 -0500
+From: "Moore, Robert" <robert.moore@intel.com>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+CC: Toshi Kani <toshi.kani@hp.com>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	"Ortiz, Lance E" <lance.oritz@hp.com>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	"qemu-devel@nongnu.org" <qemu-devel@nongnu.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Jiang Liu <liuj97@gmail.com>, Yinghai Lu <yinghai@kernel.org>,
+	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
+	Myron Stowe <mstowe@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: RE: [Update][PATCH] ACPI / hotplug: Fix concurrency issues and
+ memory leaks
+Date: Thu, 14 Feb 2013 23:45:27 +0000
+Message-ID: <94F2FBAB4432B54E8AACC7DFDE6C92E368CB5E39@ORSMSX101.amr.corp.intel.com>
+References: <1837481.7dT8hTZ4MT@vostro.rjw.lan>
+ <7010893.9OBeMt5Fzh@vostro.rjw.lan>
+ <94F2FBAB4432B54E8AACC7DFDE6C92E368CB5D05@ORSMSX101.amr.corp.intel.com>
+ <7482249.JD6lNDApdo@vostro.rjw.lan>
+In-Reply-To: <7482249.JD6lNDApdo@vostro.rjw.lan>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Feb 3, 2013 at 2:10 PM, Pandarathil, Vijaymohan R
-<vijaymohan.pandarathil@hp.com> wrote:
->         - New VFIO_SET_IRQ ioctl option to pass the eventfd that is signaled when
->           an error occurs in the vfio_pci_device
->
->         - Register pci_error_handler for the vfio_pci driver
->
->         - When the device encounters an error, the error handler registered by
->           the vfio_pci driver gets invoked by the AER infrastructure
->
->         - In the error handler, signal the eventfd registered for the device.
->
->         - This results in the qemu eventfd handler getting invoked and
->           appropriate action taken for the guest.
->
-> Signed-off-by: Vijay Mohan Pandarathil <vijaymohan.pandarathil@hp.com>
-> ---
->  drivers/vfio/pci/vfio_pci.c         | 43 ++++++++++++++++++++++++++++++++++++-
->  drivers/vfio/pci/vfio_pci_intrs.c   | 30 ++++++++++++++++++++++++++
->  drivers/vfio/pci/vfio_pci_private.h |  1 +
->  include/uapi/linux/vfio.h           |  1 +
->  4 files changed, 74 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
-> index b28e66c..818b1ed 100644
-> --- a/drivers/vfio/pci/vfio_pci.c
-> +++ b/drivers/vfio/pci/vfio_pci.c
-> @@ -196,7 +196,9 @@ static int vfio_pci_get_irq_count(struct vfio_pci_device *vdev, int irq_type)
->
->                         return (flags & PCI_MSIX_FLAGS_QSIZE) + 1;
->                 }
-> -       }
-> +       } else if (irq_type == VFIO_PCI_ERR_IRQ_INDEX)
-> +               if (pci_is_pcie(vdev->pdev))
-> +                       return 1;
->
->         return 0;
->  }
-> @@ -302,6 +304,16 @@ static long vfio_pci_ioctl(void *device_data,
->                 if (info.argsz < minsz || info.index >= VFIO_PCI_NUM_IRQS)
->                         return -EINVAL;
->
-> +               switch (info.index) {
-> +               case VFIO_PCI_INTX_IRQ_INDEX ... VFIO_PCI_MSIX_IRQ_INDEX:
-> +                       break;
-> +               case VFIO_PCI_ERR_IRQ_INDEX:
-> +                       if (pci_is_pcie(vdev->pdev))
-> +                               break;
-
-I don't know what is the policy in Linux kernel for this, but I'd add
-a comment about fall through here.
-
-> +               default:
-> +                       return -EINVAL;
-> +               }
-> +
->                 info.flags = VFIO_IRQ_INFO_EVENTFD;
->
->                 info.count = vfio_pci_get_irq_count(vdev, info.index);
-> @@ -538,11 +550,40 @@ static void vfio_pci_remove(struct pci_dev *pdev)
->         kfree(vdev);
->  }
->
-> +static pci_ers_result_t vfio_pci_aer_err_detected(struct pci_dev *pdev,
-> +                                                 pci_channel_state_t state)
-> +{
-> +       struct vfio_pci_device *vpdev;
-> +       void *vdev;
-> +
-> +       vdev = vfio_device_get_from_dev(&pdev->dev);
-> +       if (vdev == NULL)
-> +               return PCI_ERS_RESULT_DISCONNECT;
-> +
-> +       vpdev = vfio_device_data(vdev);
-> +       if (vpdev == NULL) {
-> +               vfio_device_put(vdev);
-> +               return PCI_ERS_RESULT_DISCONNECT;
-> +       }
-> +
-> +       if (vpdev->err_trigger)
-> +               eventfd_signal(vpdev->err_trigger, 1);
-> +
-> +       vfio_device_put(vdev);
-> +
-> +       return PCI_ERS_RESULT_CAN_RECOVER;
-> +}
-> +
-> +static struct pci_error_handlers vfio_err_handlers = {
-> +       .error_detected = vfio_pci_aer_err_detected,
-> +};
-> +
->  static struct pci_driver vfio_pci_driver = {
->         .name           = "vfio-pci",
->         .id_table       = NULL, /* only dynamic ids */
->         .probe          = vfio_pci_probe,
->         .remove         = vfio_pci_remove,
-> +       .err_handler    = &vfio_err_handlers,
->  };
->
->  static void __exit vfio_pci_cleanup(void)
-> diff --git a/drivers/vfio/pci/vfio_pci_intrs.c b/drivers/vfio/pci/vfio_pci_intrs.c
-> index 3639371..83035b1 100644
-> --- a/drivers/vfio/pci/vfio_pci_intrs.c
-> +++ b/drivers/vfio/pci/vfio_pci_intrs.c
-> @@ -745,6 +745,29 @@ static int vfio_pci_set_msi_trigger(struct vfio_pci_device *vdev,
->         return 0;
->  }
->
-> +static int vfio_pci_set_err_trigger(struct vfio_pci_device *vdev,
-> +                                   unsigned index, unsigned start,
-> +                                   unsigned count, uint32_t flags, void *data)
-> +{
-> +       int32_t fd = *(int32_t *)data;
-> +
-> +       if ((index != VFIO_PCI_ERR_IRQ_INDEX) ||
-> +           !(flags & VFIO_IRQ_SET_DATA_EVENTFD))
-> +               return -EINVAL;
-> +
-> +       if (fd == -1) {
-> +               if (vdev->err_trigger)
-> +                       eventfd_ctx_put(vdev->err_trigger);
-> +               vdev->err_trigger = NULL;
-> +               return 0;
-> +       } else if (fd >= 0) {
-> +               vdev->err_trigger = eventfd_ctx_fdget(fd);
-> +               if (IS_ERR(vdev->err_trigger))
-> +                       return PTR_ERR(vdev->err_trigger);
-> +               return 0;
-> +       } else
-> +               return -EINVAL;
-> +}
->  int vfio_pci_set_irqs_ioctl(struct vfio_pci_device *vdev, uint32_t flags,
->                             unsigned index, unsigned start, unsigned count,
->                             void *data)
-> @@ -779,6 +802,13 @@ int vfio_pci_set_irqs_ioctl(struct vfio_pci_device *vdev, uint32_t flags,
->                         break;
->                 }
->                 break;
-> +       case VFIO_PCI_ERR_IRQ_INDEX:
-> +               switch (flags & VFIO_IRQ_SET_ACTION_TYPE_MASK) {
-> +               case VFIO_IRQ_SET_ACTION_TRIGGER:
-> +                       if (pci_is_pcie(vdev->pdev))
-> +                               func = vfio_pci_set_err_trigger;
-> +                       break;
-> +               }
->         }
->
->         if (!func)
-> diff --git a/drivers/vfio/pci/vfio_pci_private.h b/drivers/vfio/pci/vfio_pci_private.h
-> index 611827c..daee62f 100644
-> --- a/drivers/vfio/pci/vfio_pci_private.h
-> +++ b/drivers/vfio/pci/vfio_pci_private.h
-> @@ -55,6 +55,7 @@ struct vfio_pci_device {
->         bool                    bardirty;
->         struct pci_saved_state  *pci_saved_state;
->         atomic_t                refcnt;
-> +       struct eventfd_ctx      *err_trigger;
->  };
->
->  #define is_intx(vdev) (vdev->irq_type == VFIO_PCI_INTX_IRQ_INDEX)
-> diff --git a/include/uapi/linux/vfio.h b/include/uapi/linux/vfio.h
-> index 4758d1b..7d50af4 100644
-> --- a/include/uapi/linux/vfio.h
-> +++ b/include/uapi/linux/vfio.h
-> @@ -310,6 +310,7 @@ enum {
->         VFIO_PCI_INTX_IRQ_INDEX,
->         VFIO_PCI_MSI_IRQ_INDEX,
->         VFIO_PCI_MSIX_IRQ_INDEX,
-> +       VFIO_PCI_ERR_IRQ_INDEX,
->         VFIO_PCI_NUM_IRQS
->  };
->
-> --
-> 1.7.11.3
->
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogUmFmYWVsIEouIFd5c29j
+a2kgW21haWx0bzpyandAc2lzay5wbF0NCj4gU2VudDogVGh1cnNkYXksIEZlYnJ1YXJ5IDE0LCAy
+MDEzIDEyOjU5IFBNDQo+IFRvOiBNb29yZSwgUm9iZXJ0DQo+IENjOiBUb3NoaSBLYW5pOyBBQ1BJ
+IERldmVsIE1hbGluZyBMaXN0OyBMS01MOyBCam9ybiBIZWxnYWFzOyBKaWFuZyBMaXU7DQo+IFlp
+bmdoYWkgTHU7IFlhc3Vha2kgSXNoaW1hdHN1OyBNeXJvbiBTdG93ZTsgbGludXgtcGNpQHZnZXIu
+a2VybmVsLm9yZw0KPiBTdWJqZWN0OiBSZTogW1VwZGF0ZV1bUEFUQ0hdIEFDUEkgLyBob3RwbHVn
+OiBGaXggY29uY3VycmVuY3kgaXNzdWVzIGFuZA0KPiBtZW1vcnkgbGVha3MNCj4gDQo+IE9uIFRo
+dXJzZGF5LCBGZWJydWFyeSAxNCwgMjAxMyAwODo0NToxNCBQTSBNb29yZSwgUm9iZXJ0IHdyb3Rl
+Og0KPiA+DQo+ID4gPiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiA+ID4gRnJvbTogUmFm
+YWVsIEouIFd5c29ja2kgW21haWx0bzpyandAc2lzay5wbF0NCj4gPiA+IFNlbnQ6IFRodXJzZGF5
+LCBGZWJydWFyeSAxNCwgMjAxMyA0OjA0IEFNDQo+ID4gPiBUbzogTW9vcmUsIFJvYmVydA0KPiA+
+ID4gQ2M6IFRvc2hpIEthbmk7IEFDUEkgRGV2ZWwgTWFsaW5nIExpc3Q7IExLTUw7IEJqb3JuIEhl
+bGdhYXM7IEppYW5nDQo+ID4gPiBMaXU7IFlpbmdoYWkgTHU7IFlhc3Vha2kgSXNoaW1hdHN1OyBN
+eXJvbiBTdG93ZTsNCj4gPiA+IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmcNCj4gPiA+IFN1Ympl
+Y3Q6IFJlOiBbVXBkYXRlXVtQQVRDSF0gQUNQSSAvIGhvdHBsdWc6IEZpeCBjb25jdXJyZW5jeSBp
+c3N1ZXMNCj4gPiA+IGFuZCBtZW1vcnkgbGVha3MNCj4gPiA+DQo+ID4gPiBPbiBUaHVyc2RheSwg
+RmVicnVhcnkgMTQsIDIwMTMgMDI6MzE6MjIgQU0gTW9vcmUsIFJvYmVydCB3cm90ZToNCj4gPiA+
+ID4gPiA+ID4gSSB0aG91Z2h0IGFib3V0IHRoYXQsIGJ1dCBhY3R1YWxseSB0aGVyZSdzIG5vIGd1
+YXJhbnRlZSB0aGF0DQo+ID4gPiA+ID4gPiA+IHRoZSBoYW5kbGUgd2lsbCBiZSB2YWxpZCBhZnRl
+ciBfRUowIGFzIGZhciBhcyBJIGNhbiBzYXkuICBTbw0KPiA+ID4gPiA+ID4gPiB0aGUgcmFjZSBj
+b25kaXRpb24gaXMgZ29pbmcgdG8gYmUgdGhlcmUgYW55d2F5IGFuZCB1c2luZw0KPiA+ID4gPiA+
+ID4gPiBzdHJ1Y3QgYWNwaV9kZXZpY2UganVzdCBtYWtlcyBpdCBlYXNpZXIgdG8gYXZvaWQgaXQu
+DQo+ID4gPiA+ID4gPg0KPiA+ID4gPiA+ID4gSW4gdGhlb3J5LCB5ZXMsIGEgc3RhbGUgaGFuZGxl
+IGNvdWxkIGJlIGEgcHJvYmxlbSwgaWYgX0VKMA0KPiA+ID4gPiA+ID4gcGVyZm9ybXMgdW5sb2Fk
+IHRhYmxlIGFuZCBpZiBBQ1BJQ0EgZnJlZXMgdXAgaXRzIGludGVybmFsIGRhdGENCj4gPiA+ID4g
+PiA+IHN0cnVjdHVyZSBwb2ludGVkIGJ5IHRoZSBoYW5kbGUgYXMgYSByZXN1bHQuICBCdXQgd2Ug
+c2hvdWxkDQo+ID4gPiA+ID4gPiBub3Qgc2VlIHN1Y2ggaXNzdWUgbm93IHNpbmNlIHdlIGRvIG5v
+dCBzdXBwb3J0IGR5bmFtaWMgQUNQSQ0KPiA+ID4gPiA+ID4gbmFtZXNwYWNlDQo+ID4gPiB5ZXQu
+DQo+ID4gPiA+ID4NCj4gPiA+ID4gPiBJJ20gd2FpdGluZyBmb3IgaW5mb3JtYXRpb24gZnJvbSBC
+b2IgYWJvdXQgdGhhdC4gIElmIHdlIGNhbg0KPiA+ID4gPiA+IGFzc3VtZSBBQ1BJIGhhbmRsZXMg
+dG8gYmUgYWx3YXlzIHZhbGlkLCB0aGF0IHdpbGwgc2ltcGxpZnkNCj4gPiA+ID4gPiB0aGluZ3Mg
+cXVpdGUgYQ0KPiA+ID4gYml0Lg0KPiA+ID4gPg0KPiA+ID4gPiBJZiBhIHRhYmxlIGlzIHVubG9h
+ZGVkLCBhbGwgdGhlIG5hbWVzcGFjZSBub2RlcyBmb3IgdGhhdCB0YWJsZSBhcmUNCj4gPiA+ID4g
+cmVtb3ZlZCBmcm9tIHRoZSBuYW1lc3BhY2UsIGFuZCB0aHVzIGFueSBBQ1BJX0hBTkRMRSBwb2lu
+dGVycyBnbw0KPiA+ID4gPiBzdGFsZQ0KPiA+ID4gYW5kIGludmFsaWQuDQo+ID4gPg0KPiA+ID4g
+T0ssIHRoYW5rcyENCj4gPiA+DQo+ID4gPiBUbyBtZSB0aGlzIG1lYW5zIHRoYXQgd2UgY2Fubm90
+IGFzc3VtZSBhIGhhbmRsZSB0byBzdGF5IHZhbGlkDQo+ID4gPiBiZXR3ZWVuIGEgbm90aWZ5IGhh
+bmRsZXIgYW5kIGFjcGlfYnVzX2hvdF9yZW1vdmVfZGV2aWNlKCkgcnVuIGZyb20gYQ0KPiB3b3Jr
+cXVldWUuDQo+ID4gPg0KPiA+ID4gSXMgdGhlcmUgYSBtZWNoYW5pc20gaW4gQUNQSUNBIHRvIGVu
+c3VyZSB0aGF0IGEgaGFuZGxlIHdvbid0IGJlY29tZQ0KPiA+ID4gc3RhbGUgd2hpbGUgYSBub3Rp
+ZnkgaGFuZGxlciBpcyBydW5uaW5nIGZvciBpdCBvciBpcyB0aGUgT1MNCj4gPiA+IHJlc3BvbnNp
+YmxlIGZvciBlbnN1cmluZyB0aGF0DQo+ID4gPiBfRUowIHdvbid0IGJlIHJ1biBpbiBwYXJhbGxl
+bCB3aXRoIG5vdGlmeSBoYW5kbGVycyBmb3IgZGV2aWNlDQo+ID4gPiBvYmplY3RzIGJlaW5nIGVq
+ZWN0ZWQ/DQo+ID4gPg0KPiA+DQo+ID4gSXQgaXMgdXAgdG8gdGhlIGhvc3QuDQo+IA0KPiBJIHdh
+cyBhZnJhaWQgdGhhdCB0aGF0IG1pZ2h0IGJlIHRoZSBjYXNlLiA6LSkNCj4gDQo+IFNvIGZhciB0
+aGUgKExpbnV4KSBob3N0IGhhcyBiZWVuIGhhcHBpbHkgaWdub3JpbmcgdGhhdCBwb3RlbnRpYWwg
+cHJvYmxlbSwNCj4gc28gSSBndWVzcyBpdCBjYW4gc3RpbGwgYmUgaWdub3JlZCBmb3IgYSB3aGls
+ZSwgYWx0aG91Z2ggd2UnbGwgbmVlZCB0bw0KPiBhZGRyZXNzIGl0IGV2ZW50dWFsbHkgYXQgb25l
+IHBvaW50Lg0KDQpJIHdvdWxkIHRoaW5rIGl0IHNob3VsZCBiZSBmYWlybHkgc2ltcGxlIHRvIHNl
+dHVwIGEgbWVjaGFuaXNtIHRvIGVpdGhlciB0ZWxsIHRoZSBkcml2ZXIgb3IgZm9yIHRoZSBkcml2
+ZXIgdG8gZmlndXJlIGl0IG91dCAtLSBzdWNoIHRoYXQgdGhlIGRyaXZlciBrbm93cyB0aGF0IGFs
+bCBoYW5kbGVzIGFzc29jaWF0ZWQgd2l0aCB0aGUgZGV2aWNlIGFyZSBub3cgaW52YWxpZC4gQW5v
+dGhlciB3YXkgdG8gbG9vayBhdCBpdCBpcyB0aGF0IHdoZW4gdGhlIGRldmljZSBpcyByZS1pbnN0
+YWxsZWQsIHRoZSBkcml2ZXIgc2hvdWxkIHJlaW5pdGlhbGl6ZSBzdWNoIHRoYXQgaXQgb2J0YWlu
+cyBuZXcgaGFuZGxlcyBmb3IgdGhlIGRldmljZXMgYW5kIHN1Ym9iamVjdHMgaW4gcXVlc3Rpb24u
+DQoNCkJvYg0KDQoNCg0KDQoNCg0KPiANCj4gVGhhbmtzLA0KPiBSYWZhZWwNCj4gDQo+IA0KPiAt
+LQ0KPiBJIHNwZWFrIG9ubHkgZm9yIG15c2VsZi4NCj4gUmFmYWVsIEouIFd5c29ja2ksIEludGVs
+IE9wZW4gU291cmNlIFRlY2hub2xvZ3kgQ2VudGVyLg0K
