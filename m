@@ -1,244 +1,60 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <1362010039.2808.36.camel@lorien2>
-Subject: [PATCH v2 3/4] iommu/amd: Remove local PCI_BUS() define and use
- PCI_BUS_NUM() from pci
-From: Shuah Khan <shuah.khan@hp.com>
-Reply-To: shuah.khan@hp.com
-To: Joerg Roedel <joro@8bytes.org>, bhelgaas@google.com
-Cc: jiang.liu@huawei.com, shemminger@vyatta.com,
-	paulmck@linux.vnet.ibm.com, linasvepstas@gmail.com,
-	dhowells@redhat.com, davej@redhat.com, tglx@linutronix.de,
-	mtk.manpages@gmail.com, iommu@lists.linux-foundation.org,
-	linux-pci@vger.kernel.org, wangyijing@huawei.com,
-	LKML <linux-kernel@vger.kernel.org>, shuahkhan@gmail.com
-Date: Wed, 27 Feb 2013 17:07:19 -0700
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Moore, Robert" <robert.moore@intel.com>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+CC: Toshi Kani <toshi.kani@hp.com>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jiang Liu <liuj97@gmail.com>, Yinghai Lu <yinghai@kernel.org>,
+	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
+	Myron Stowe <mstowe@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: RE: [Update][PATCH] ACPI / hotplug: Fix concurrency issues and
+ memory leaks
+Date: Thu, 14 Feb 2013 20:45:14 +0000
+Message-ID: <94F2FBAB4432B54E8AACC7DFDE6C92E368CB5D05@ORSMSX101.amr.corp.intel.com>
+References: <1837481.7dT8hTZ4MT@vostro.rjw.lan>
+ <5284026.QPQbFciqVT@vostro.rjw.lan>
+ <94F2FBAB4432B54E8AACC7DFDE6C92E368CB39A9@ORSMSX101.amr.corp.intel.com>
+ <7010893.9OBeMt5Fzh@vostro.rjw.lan>
+In-Reply-To: <7010893.9OBeMt5Fzh@vostro.rjw.lan>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Change to remove local PCI_BUS() define and use the new PCI_BUS_NUM()
-interface from pci.
-
-Signed-off-by: Shuah Khan <shuah.khan@hp.com>
----
- drivers/iommu/amd_iommu.c       |   12 ++++++------
- drivers/iommu/amd_iommu_init.c  |   34 +++++++++++++++++-----------------
- drivers/iommu/amd_iommu_types.h |    4 +---
- 3 files changed, 24 insertions(+), 26 deletions(-)
-
-diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
-index 98f555d..2a50fbe 100644
---- a/drivers/iommu/amd_iommu.c
-+++ b/drivers/iommu/amd_iommu.c
-@@ -649,26 +649,26 @@ retry:
- 	case EVENT_TYPE_ILL_DEV:
- 		printk("ILLEGAL_DEV_TABLE_ENTRY device=%02x:%02x.%x "
- 		       "address=0x%016llx flags=0x%04x]\n",
--		       PCI_BUS(devid), PCI_SLOT(devid), PCI_FUNC(devid),
-+		       PCI_BUS_NUM(devid), PCI_SLOT(devid), PCI_FUNC(devid),
- 		       address, flags);
- 		dump_dte_entry(devid);
- 		break;
- 	case EVENT_TYPE_IO_FAULT:
- 		printk("IO_PAGE_FAULT device=%02x:%02x.%x "
- 		       "domain=0x%04x address=0x%016llx flags=0x%04x]\n",
--		       PCI_BUS(devid), PCI_SLOT(devid), PCI_FUNC(devid),
-+		       PCI_BUS_NUM(devid), PCI_SLOT(devid), PCI_FUNC(devid),
- 		       domid, address, flags);
- 		break;
- 	case EVENT_TYPE_DEV_TAB_ERR:
- 		printk("DEV_TAB_HARDWARE_ERROR device=%02x:%02x.%x "
- 		       "address=0x%016llx flags=0x%04x]\n",
--		       PCI_BUS(devid), PCI_SLOT(devid), PCI_FUNC(devid),
-+		       PCI_BUS_NUM(devid), PCI_SLOT(devid), PCI_FUNC(devid),
- 		       address, flags);
- 		break;
- 	case EVENT_TYPE_PAGE_TAB_ERR:
- 		printk("PAGE_TAB_HARDWARE_ERROR device=%02x:%02x.%x "
- 		       "domain=0x%04x address=0x%016llx flags=0x%04x]\n",
--		       PCI_BUS(devid), PCI_SLOT(devid), PCI_FUNC(devid),
-+		       PCI_BUS_NUM(devid), PCI_SLOT(devid), PCI_FUNC(devid),
- 		       domid, address, flags);
- 		break;
- 	case EVENT_TYPE_ILL_CMD:
-@@ -682,13 +682,13 @@ retry:
- 	case EVENT_TYPE_IOTLB_INV_TO:
- 		printk("IOTLB_INV_TIMEOUT device=%02x:%02x.%x "
- 		       "address=0x%016llx]\n",
--		       PCI_BUS(devid), PCI_SLOT(devid), PCI_FUNC(devid),
-+		       PCI_BUS_NUM(devid), PCI_SLOT(devid), PCI_FUNC(devid),
- 		       address);
- 		break;
- 	case EVENT_TYPE_INV_DEV_REQ:
- 		printk("INVALID_DEVICE_REQUEST device=%02x:%02x.%x "
- 		       "address=0x%016llx flags=0x%04x]\n",
--		       PCI_BUS(devid), PCI_SLOT(devid), PCI_FUNC(devid),
-+		       PCI_BUS_NUM(devid), PCI_SLOT(devid), PCI_FUNC(devid),
- 		       address, flags);
- 		break;
- 	default:
-diff --git a/drivers/iommu/amd_iommu_init.c b/drivers/iommu/amd_iommu_init.c
-index b6ecddb..f8ed6f1 100644
---- a/drivers/iommu/amd_iommu_init.c
-+++ b/drivers/iommu/amd_iommu_init.c
-@@ -423,7 +423,7 @@ static int __init find_last_devid_from_ivhd(struct ivhd_header *h)
- 	p += sizeof(*h);
- 	end += h->length;
- 
--	find_last_devid_on_pci(PCI_BUS(h->devid),
-+	find_last_devid_on_pci(PCI_BUS_NUM(h->devid),
- 			PCI_SLOT(h->devid),
- 			PCI_FUNC(h->devid),
- 			h->cap_ptr);
-@@ -784,10 +784,10 @@ static int __init init_iommu_from_acpi(struct amd_iommu *iommu,
- 
- 			DUMP_printk("  DEV_ALL\t\t\t first devid: %02x:%02x.%x"
- 				    " last device %02x:%02x.%x flags: %02x\n",
--				    PCI_BUS(iommu->first_device),
-+				    PCI_BUS_NUM(iommu->first_device),
- 				    PCI_SLOT(iommu->first_device),
- 				    PCI_FUNC(iommu->first_device),
--				    PCI_BUS(iommu->last_device),
-+				    PCI_BUS_NUM(iommu->last_device),
- 				    PCI_SLOT(iommu->last_device),
- 				    PCI_FUNC(iommu->last_device),
- 				    e->flags);
-@@ -801,7 +801,7 @@ static int __init init_iommu_from_acpi(struct amd_iommu *iommu,
- 
- 			DUMP_printk("  DEV_SELECT\t\t\t devid: %02x:%02x.%x "
- 				    "flags: %02x\n",
--				    PCI_BUS(e->devid),
-+				    PCI_BUS_NUM(e->devid),
- 				    PCI_SLOT(e->devid),
- 				    PCI_FUNC(e->devid),
- 				    e->flags);
-@@ -813,7 +813,7 @@ static int __init init_iommu_from_acpi(struct amd_iommu *iommu,
- 
- 			DUMP_printk("  DEV_SELECT_RANGE_START\t "
- 				    "devid: %02x:%02x.%x flags: %02x\n",
--				    PCI_BUS(e->devid),
-+				    PCI_BUS_NUM(e->devid),
- 				    PCI_SLOT(e->devid),
- 				    PCI_FUNC(e->devid),
- 				    e->flags);
-@@ -827,11 +827,11 @@ static int __init init_iommu_from_acpi(struct amd_iommu *iommu,
- 
- 			DUMP_printk("  DEV_ALIAS\t\t\t devid: %02x:%02x.%x "
- 				    "flags: %02x devid_to: %02x:%02x.%x\n",
--				    PCI_BUS(e->devid),
-+				    PCI_BUS_NUM(e->devid),
- 				    PCI_SLOT(e->devid),
- 				    PCI_FUNC(e->devid),
- 				    e->flags,
--				    PCI_BUS(e->ext >> 8),
-+				    PCI_BUS_NUM(e->ext >> 8),
- 				    PCI_SLOT(e->ext >> 8),
- 				    PCI_FUNC(e->ext >> 8));
- 
-@@ -846,11 +846,11 @@ static int __init init_iommu_from_acpi(struct amd_iommu *iommu,
- 			DUMP_printk("  DEV_ALIAS_RANGE\t\t "
- 				    "devid: %02x:%02x.%x flags: %02x "
- 				    "devid_to: %02x:%02x.%x\n",
--				    PCI_BUS(e->devid),
-+				    PCI_BUS_NUM(e->devid),
- 				    PCI_SLOT(e->devid),
- 				    PCI_FUNC(e->devid),
- 				    e->flags,
--				    PCI_BUS(e->ext >> 8),
-+				    PCI_BUS_NUM(e->ext >> 8),
- 				    PCI_SLOT(e->ext >> 8),
- 				    PCI_FUNC(e->ext >> 8));
- 
-@@ -864,7 +864,7 @@ static int __init init_iommu_from_acpi(struct amd_iommu *iommu,
- 
- 			DUMP_printk("  DEV_EXT_SELECT\t\t devid: %02x:%02x.%x "
- 				    "flags: %02x ext: %08x\n",
--				    PCI_BUS(e->devid),
-+				    PCI_BUS_NUM(e->devid),
- 				    PCI_SLOT(e->devid),
- 				    PCI_FUNC(e->devid),
- 				    e->flags, e->ext);
-@@ -877,7 +877,7 @@ static int __init init_iommu_from_acpi(struct amd_iommu *iommu,
- 
- 			DUMP_printk("  DEV_EXT_SELECT_RANGE\t devid: "
- 				    "%02x:%02x.%x flags: %02x ext: %08x\n",
--				    PCI_BUS(e->devid),
-+				    PCI_BUS_NUM(e->devid),
- 				    PCI_SLOT(e->devid),
- 				    PCI_FUNC(e->devid),
- 				    e->flags, e->ext);
-@@ -890,7 +890,7 @@ static int __init init_iommu_from_acpi(struct amd_iommu *iommu,
- 		case IVHD_DEV_RANGE_END:
- 
- 			DUMP_printk("  DEV_RANGE_END\t\t devid: %02x:%02x.%x\n",
--				    PCI_BUS(e->devid),
-+				    PCI_BUS_NUM(e->devid),
- 				    PCI_SLOT(e->devid),
- 				    PCI_FUNC(e->devid));
- 
-@@ -924,7 +924,7 @@ static int __init init_iommu_from_acpi(struct amd_iommu *iommu,
- 
- 			DUMP_printk("  DEV_SPECIAL(%s[%d])\t\tdevid: %02x:%02x.%x\n",
- 				    var, (int)handle,
--				    PCI_BUS(devid),
-+				    PCI_BUS_NUM(devid),
- 				    PCI_SLOT(devid),
- 				    PCI_FUNC(devid));
- 
-@@ -1086,7 +1086,7 @@ static int __init init_iommu_all(struct acpi_table_header *table)
- 
- 			DUMP_printk("device: %02x:%02x.%01x cap: %04x "
- 				    "seg: %d flags: %01x info %04x\n",
--				    PCI_BUS(h->devid), PCI_SLOT(h->devid),
-+				    PCI_BUS_NUM(h->devid), PCI_SLOT(h->devid),
- 				    PCI_FUNC(h->devid), h->cap_ptr,
- 				    h->pci_seg, h->flags, h->info);
- 			DUMP_printk("       mmio-addr: %016llx\n",
-@@ -1116,7 +1116,7 @@ static int iommu_init_pci(struct amd_iommu *iommu)
- 	int cap_ptr = iommu->cap_ptr;
- 	u32 range, misc, low, high;
- 
--	iommu->dev = pci_get_bus_and_slot(PCI_BUS(iommu->devid),
-+	iommu->dev = pci_get_bus_and_slot(PCI_BUS_NUM(iommu->devid),
- 					  iommu->devid & 0xff);
- 	if (!iommu->dev)
- 		return -ENODEV;
-@@ -1388,8 +1388,8 @@ static int __init init_unity_map_range(struct ivmd_header *m)
- 
- 	DUMP_printk("%s devid_start: %02x:%02x.%x devid_end: %02x:%02x.%x"
- 		    " range_start: %016llx range_end: %016llx flags: %x\n", s,
--		    PCI_BUS(e->devid_start), PCI_SLOT(e->devid_start),
--		    PCI_FUNC(e->devid_start), PCI_BUS(e->devid_end),
-+		    PCI_BUS_NUM(e->devid_start), PCI_SLOT(e->devid_start),
-+		    PCI_FUNC(e->devid_start), PCI_BUS_NUM(e->devid_end),
- 		    PCI_SLOT(e->devid_end), PCI_FUNC(e->devid_end),
- 		    e->address_start, e->address_end, m->flags);
- 
-diff --git a/drivers/iommu/amd_iommu_types.h b/drivers/iommu/amd_iommu_types.h
-index e38ab43..a07882f 100644
---- a/drivers/iommu/amd_iommu_types.h
-+++ b/drivers/iommu/amd_iommu_types.h
-@@ -24,6 +24,7 @@
- #include <linux/mutex.h>
- #include <linux/list.h>
- #include <linux/spinlock.h>
-+#include <linux/pci.h>
- 
- /*
-  * Maximum number of IOMMUs supported
-@@ -315,9 +316,6 @@
- 
- #define MAX_DOMAIN_ID 65536
- 
--/* FIXME: move this macro to <linux/pci.h> */
--#define PCI_BUS(x) (((x) >> 8) & 0xff)
--
- /* Protection domain flags */
- #define PD_DMA_OPS_MASK		(1UL << 0) /* domain used for dma_ops */
- #define PD_DEFAULT_MASK		(1UL << 1) /* domain is a default dma_ops
--- 
-1.7.9.5
-
-
-
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogUmFmYWVsIEouIFd5c29j
+a2kgW21haWx0bzpyandAc2lzay5wbF0NCj4gU2VudDogVGh1cnNkYXksIEZlYnJ1YXJ5IDE0LCAy
+MDEzIDQ6MDQgQU0NCj4gVG86IE1vb3JlLCBSb2JlcnQNCj4gQ2M6IFRvc2hpIEthbmk7IEFDUEkg
+RGV2ZWwgTWFsaW5nIExpc3Q7IExLTUw7IEJqb3JuIEhlbGdhYXM7IEppYW5nIExpdTsNCj4gWWlu
+Z2hhaSBMdTsgWWFzdWFraSBJc2hpbWF0c3U7IE15cm9uIFN0b3dlOyBsaW51eC1wY2lAdmdlci5r
+ZXJuZWwub3JnDQo+IFN1YmplY3Q6IFJlOiBbVXBkYXRlXVtQQVRDSF0gQUNQSSAvIGhvdHBsdWc6
+IEZpeCBjb25jdXJyZW5jeSBpc3N1ZXMgYW5kDQo+IG1lbW9yeSBsZWFrcw0KPiANCj4gT24gVGh1
+cnNkYXksIEZlYnJ1YXJ5IDE0LCAyMDEzIDAyOjMxOjIyIEFNIE1vb3JlLCBSb2JlcnQgd3JvdGU6
+DQo+ID4gPiA+ID4gSSB0aG91Z2h0IGFib3V0IHRoYXQsIGJ1dCBhY3R1YWxseSB0aGVyZSdzIG5v
+IGd1YXJhbnRlZSB0aGF0IHRoZQ0KPiA+ID4gPiA+IGhhbmRsZSB3aWxsIGJlIHZhbGlkIGFmdGVy
+IF9FSjAgYXMgZmFyIGFzIEkgY2FuIHNheS4gIFNvIHRoZQ0KPiA+ID4gPiA+IHJhY2UgY29uZGl0
+aW9uIGlzIGdvaW5nIHRvIGJlIHRoZXJlIGFueXdheSBhbmQgdXNpbmcgc3RydWN0DQo+ID4gPiA+
+ID4gYWNwaV9kZXZpY2UganVzdCBtYWtlcyBpdCBlYXNpZXIgdG8gYXZvaWQgaXQuDQo+ID4gPiA+
+DQo+ID4gPiA+IEluIHRoZW9yeSwgeWVzLCBhIHN0YWxlIGhhbmRsZSBjb3VsZCBiZSBhIHByb2Js
+ZW0sIGlmIF9FSjANCj4gPiA+ID4gcGVyZm9ybXMgdW5sb2FkIHRhYmxlIGFuZCBpZiBBQ1BJQ0Eg
+ZnJlZXMgdXAgaXRzIGludGVybmFsIGRhdGENCj4gPiA+ID4gc3RydWN0dXJlIHBvaW50ZWQgYnkg
+dGhlIGhhbmRsZSBhcyBhIHJlc3VsdC4gIEJ1dCB3ZSBzaG91bGQgbm90DQo+ID4gPiA+IHNlZSBz
+dWNoIGlzc3VlIG5vdyBzaW5jZSB3ZSBkbyBub3Qgc3VwcG9ydCBkeW5hbWljIEFDUEkgbmFtZXNw
+YWNlDQo+IHlldC4NCj4gPiA+DQo+ID4gPiBJJ20gd2FpdGluZyBmb3IgaW5mb3JtYXRpb24gZnJv
+bSBCb2IgYWJvdXQgdGhhdC4gIElmIHdlIGNhbiBhc3N1bWUNCj4gPiA+IEFDUEkgaGFuZGxlcyB0
+byBiZSBhbHdheXMgdmFsaWQsIHRoYXQgd2lsbCBzaW1wbGlmeSB0aGluZ3MgcXVpdGUgYQ0KPiBi
+aXQuDQo+ID4NCj4gPiBJZiBhIHRhYmxlIGlzIHVubG9hZGVkLCBhbGwgdGhlIG5hbWVzcGFjZSBu
+b2RlcyBmb3IgdGhhdCB0YWJsZSBhcmUNCj4gPiByZW1vdmVkIGZyb20gdGhlIG5hbWVzcGFjZSwg
+YW5kIHRodXMgYW55IEFDUElfSEFORExFIHBvaW50ZXJzIGdvIHN0YWxlDQo+IGFuZCBpbnZhbGlk
+Lg0KPiANCj4gT0ssIHRoYW5rcyENCj4gDQo+IFRvIG1lIHRoaXMgbWVhbnMgdGhhdCB3ZSBjYW5u
+b3QgYXNzdW1lIGEgaGFuZGxlIHRvIHN0YXkgdmFsaWQgYmV0d2VlbiBhDQo+IG5vdGlmeSBoYW5k
+bGVyIGFuZCBhY3BpX2J1c19ob3RfcmVtb3ZlX2RldmljZSgpIHJ1biBmcm9tIGEgd29ya3F1ZXVl
+Lg0KPiANCj4gSXMgdGhlcmUgYSBtZWNoYW5pc20gaW4gQUNQSUNBIHRvIGVuc3VyZSB0aGF0IGEg
+aGFuZGxlIHdvbid0IGJlY29tZSBzdGFsZQ0KPiB3aGlsZSBhIG5vdGlmeSBoYW5kbGVyIGlzIHJ1
+bm5pbmcgZm9yIGl0IG9yIGlzIHRoZSBPUyByZXNwb25zaWJsZSBmb3INCj4gZW5zdXJpbmcgdGhh
+dA0KPiBfRUowIHdvbid0IGJlIHJ1biBpbiBwYXJhbGxlbCB3aXRoIG5vdGlmeSBoYW5kbGVycyBm
+b3IgZGV2aWNlIG9iamVjdHMNCj4gYmVpbmcgZWplY3RlZD8NCj4gDQoNCkl0IGlzIHVwIHRvIHRo
+ZSBob3N0Lg0KQm9iDQoNCg0KPiBSYWZhZWwNCj4gDQo+IA0KPiAtLQ0KPiBJIHNwZWFrIG9ubHkg
+Zm9yIG15c2VsZi4NCj4gUmFmYWVsIEouIFd5c29ja2ksIEludGVsIE9wZW4gU291cmNlIFRlY2hu
+b2xvZ3kgQ2VudGVyLg0K
