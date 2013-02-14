@@ -1,272 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ve0-f169.google.com ([209.85.128.169]:33028 "EHLO
-	mail-ve0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754644Ab3B0Q3h (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Feb 2013 11:29:37 -0500
-Received: by mail-ve0-f169.google.com with SMTP id 15so779247vea.28
-        for <linux-pci@vger.kernel.org>; Wed, 27 Feb 2013 08:29:36 -0800 (PST)
+Received: from hydra.sisk.pl ([212.160.235.94]:38084 "EHLO hydra.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757462Ab3BNMAe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 14 Feb 2013 07:00:34 -0500
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Andreas Mohr <andi@lisas.de>
+Cc: linux-pci@vger.kernel.org,
+	ACPI Devel Mailing List <linux-acpi@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] PCI / ACPI: Report _OSC control mask returned on failure to get control
+Date: Thu, 14 Feb 2013 13:07:02 +0100
+Message-ID: <7634687.RmnPKEe4lz@vostro.rjw.lan>
+In-Reply-To: <20130214011027.GA430@rhlx01.hs-esslingen.de>
+References: <20130214011027.GA430@rhlx01.hs-esslingen.de>
 MIME-Version: 1.0
-In-Reply-To: <D38E8E86660E514AB505863C19C9287C6A458067@ORSMSX101.amr.corp.intel.com>
-References: <CAGZFCEFFPqVZ29e7_Bm_Xehw50W-D8K2B=CaXs6VkyDKQmCTvw@mail.gmail.com>
-	<D38E8E86660E514AB505863C19C9287C6A458067@ORSMSX101.amr.corp.intel.com>
-Date: Wed, 27 Feb 2013 21:59:36 +0530
-Message-ID: <CAGZFCEGu+0Vpn6_KOoRgteBDgm-BHrKvQ3X_fUJVCt_ZD9KY9Q@mail.gmail.com>
-Subject: Re: [E1000-devel] pcie error
-From: ratheesh kannoth <ratheesh.ksz@gmail.com>
-To: "Ronciak, John" <john.ronciak@intel.com>
-Cc: "e1000-devel@lists.sourceforge.net"
-	<e1000-devel@lists.sourceforge.net>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi John,
+On Thursday, February 14, 2013 02:10:27 AM Andreas Mohr wrote:
+> Hi,
+> 
+> to provide an example case, on Aspire One AOA110 v0.3310, 3.8-rc7 prints:
+> 
+> [    0.515599] ACPI Error: [CAPB] Namespace lookup failure,
+> AE_ALREADY_EXISTS (2
+> 0121018/dsfield-211)
+> [    0.515629] ACPI Error: Method parse/execution failed
+> [\_SB_.PCI0._OSC] (Node f5449680), AE_ALREADY_EXISTS
+> (20121018/psparse-537)
+> [    0.515672] ACPI: Marking method _OSC as Serialized because of
+> AE_ALREADY_EXISTS error
+> [    0.516081] ACPI Error: [CAPB] Namespace lookup failure,
+> AE_ALREADY_EXISTS (20121018/dsfield-211)
+> [    0.516107] ACPI Error: Method parse/execution failed
+> [\_SB_.PCI0._OSC] (Node f5449680), AE_ALREADY_EXISTS
+> (20121018/psparse-537)
+> [    0.516168] pci_root PNP0A08:00: ACPI _OSC support notification
+> failed, disabling PCIe ASPM
+> [    0.516179] pci_root PNP0A08:00: Unable to request _OSC control (_OSC
+> support mask: 0x08)
+> 
+> HTH,
 
-Thanks a lot for your reply.
+Unfortunately, it doesn't, because I've lost track of the whole thread in the
+meantime.  Care to give a pointer?
 
-I have added a pci-express nic card in the pci -express system slot .
-This nic card is 8086:10e6 based. I could see the error when i send
-traffic thru this port and kernel panic. when i looked at
-/var/log/messages , i could see
-
-aer_isr_one_error->can't find device of ID0000
-aer_isr_one_error->can't find device of ID0000
-aer_isr_one_error->can't find device of ID0000
-aer_isr_one_error->can't find device of ID0000
-.....
-....
-+------ PCI-Express Device Error ------+
-Error Severity          : Uncorrected (Non-Fatal)
-PCIE Bus Error type     : Transaction Layer
-Completion Timeout      : Multiple
-Requester ID            : 0028
-VendorID=8086h, DeviceID=d13ah, Bus=00h, Device=05h, Function=00h
-igb: ge1_0 NIC Link is Up 1000 Mbps Full Duplex, Flow Control: RX/TX
-igb: ge1_1 NIC Link is Up 1000 Mbps Full Duplex, Flow Control: RX/TX
-
-
-
-
-[ kernel panic console message ]
-
-HARDWARE ERROR
-CPU 7: Machine Check Exception:                4 Bank 8: 0000000000000000
-TSC 0
-This is not a software problem!
-Run through mcelog --ascii to decode and contact your hardware vendor
-Kernel panic - not syncing: Machine check ------------[ cut here
-]------------
-WARNING: at kernel/smp.c:329 smp_call_function_many+0x40/0x1e5()
-Hardware name: 342?  Modules linked in: nf_conntrack_ipv4
-nf_defrag_ipv4 xt_state nf_conntrack xt_tcpudp iptable_filter
-ip_tables x_tables bnx2 e100 mii igb_cids ixgbe_cids e1000_cids
-cids_shared bpctl_mod cidmodcap cpp_base(P) linux_user_bde(P)
-linux_kernel_bde(P)
-Pid: 3491, comm: sensorApp Tainted: P           2.6.29.1 #14
-Call Trace:
-<#MC>  [<ffffffff8023a34f>] warn_slowpath+0xd3/0x10f
-[<ffffffff80220733>] ? default_spin_lock_flags+0x9/0xe
-[<ffffffff8023aa9a>] ? release_console_sem+0x199/0x1ce
-[<ffffffff8050dff7>] ? printk+0x67/0x70  [<ffffffff80220733>] ?
-default_spin_lock_flags+0x9/0xe  [<ffffffff8025827f>]
-smp_call_function_many+0x40/0x1e5  [<ffffffff80211507>] ?
-stop_this_cpu+0x0/0x2c  [<ffffffff8023aa9a>] ?
-release_console_sem+0x199/0x1ce  [<ffffffff80258444>]
-smp_call_function+0x20/0x24  [<ffffffff8021b37a>]
-native_smp_send_stop+0x22/0x49  [<ffffffff8050dee6>] panic+0xa8/0x152
-[<ffffffff8023a4b7>] ? oops_enter+0xe/0x10  [<ffffffff805112dc>] ?
-oops_begin+0x7e/0x8c  [<ffffffff80216da4>] ? print_mce+0xe8/0xec
-[<ffffffff80216e15>] mce_log+0x0/0x7f  [<ffffffff802171d7>]
-do_machine_check+0x302/0x3d7  [<ffffffff8051076b>]
-machine_check+0x1b/0x20  <<EOE>> <4>---[ end trace 877905393052419b
-]---
-Rebooting in 1 seconds..
+Rafael
 
 
-1. is there any way to narrow down the system error ?
-2. any clue or hint is really appreciated.
-
--Ratheesh
-
-
-On Wed, Feb 27, 2013 at 9:48 PM, Ronciak, John <john.ronciak@intel.com> wrote:
-> The "d13a" device is not a networking device.  So I'm not sure what you cut from the logs but the igb messages have nothing to do with this device.  According to the Device ID's repository the "d13a" device is a "Core Processor PCI Express Root Port 3".
->
-> So this isn't a networking device error but some sort of system error.
->
-> Cheers,
-> John
->
->
->> -----Original Message-----
->> From: ratheesh kannoth [mailto:ratheesh.ksz@gmail.com]
->> Sent: Wednesday, February 27, 2013 2:40 AM
->> To: e1000-devel@lists.sourceforge.net; linux-pci@vger.kernel.org
->> Subject: [E1000-devel] pcie error
->>
->> I am getting  an error when i send traffic thru 8086:10e6 device
->>
->> +------ PCI-Express Device Error ------+
->> Error Severity          : Uncorrected (Non-Fatal)
->> PCIE Bus Error type     : Transaction Layer
->> Completion Timeout      : Multiple
->> Requester ID            : 0028
->> VendorID=8086h, DeviceID=d13ah, Bus=00h, Device=05h, Function=00h
->> igb: ge1_0 NIC Link is Up 1000 Mbps Full Duplex, Flow Control: RX/TX
->> igb: ge1_1 NIC Link is Up 1000 Mbps Full Duplex, Flow Control: RX/TX
->>
->> I have added output of lspci -m and  lspci -vvt .
->>
->> 1. How can we confirm this is s/w or hw problem ?
->> 2. Any clue or hint on how to debug is really appreciated  ?
->>
->>
->> bash-3.2# lspci -m
->> 00:00.0 "Class 0600" "Vendor 8086" "Device d130" -r11 "Unknown vendor
->> 105b" "Device 0d61"
->> 00:03.0 "Class 0604" "Vendor 8086" "Device d138" -r11 "" ""
->> 00:05.0 "Class 0604" "Vendor 8086" "Device d13a" -r11 "" ""
->> 00:08.0 "Class 0880" "Vendor 8086" "Device d155" -r11 "Unknown vendor
->> 005b" "Device 0061"
->> 00:08.1 "Class 0880" "Vendor 8086" "Device d156" -r11 "Unknown vendor
->> 005b" "Device 0061"
->> 00:08.2 "Class 0880" "Vendor 8086" "Device d157" -r11 "Unknown vendor
->> 005b" "Device 0061"
->> 00:08.3 "Class 0880" "Vendor 8086" "Device d158" -r11 "Unknown vendor
->> 005b" "Device 0061"
->> 00:10.0 "Class 0880" "Vendor 8086" "Device d150" -r11 "Unknown vendor
->> 005b" "Device 0061"
->> 00:10.1 "Class 0880" "Vendor 8086" "Device d151" -r11 "Unknown vendor
->> 005b" "Device 0061"
->> 00:1a.0 "Class 0c03" "Vendor 8086" "Device 3b3c" -r06 -p20 "Unknown
->> vendor 105b" "Device 0d61"
->> 00:1c.0 "Class 0604" "Vendor 8086" "Device 3b42" -r06 "" ""
->> 00:1c.4 "Class 0604" "Vendor 8086" "Device 3b4a" -r06 "" ""
->> 00:1c.5 "Class 0604" "Vendor 8086" "Device 3b4c" -r06 "" ""
->> 00:1d.0 "Class 0c03" "Vendor 8086" "Device 3b34" -r06 -p20 "Unknown
->> vendor 105b" "Device 0d61"
->> 00:1e.0 "Class 0604" "Vendor 8086" "Device 244e" -ra6 -p01 "" ""
->> 00:1f.0 "Class 0601" "Vendor 8086" "Device 3b16" -r06 "Unknown vendor
->> 105b" "Device 0d61"
->> 00:1f.2 "Class 0104" "Vendor 8086" "Device 2822" -r06 "Unknown vendor
->> 105b" "Device 0d61"
->> 00:1f.3 "Class 0c05" "Vendor 8086" "Device 3b30" -r06 "Unknown vendor
->> 105b" "Device 0d61"
->> 01:00.0 "Class 0604" "Vendor 10b5" "Device 8618" -rba "" ""
->> 02:01.0 "Class 0604" "Vendor 10b5" "Device 8618" -rba "" ""
->> 02:03.0 "Class 0604" "Vendor 10b5" "Device 8618" -rba "" ""
->> 02:05.0 "Class 0604" "Vendor 10b5" "Device 8618" -rba "" ""
->> 02:07.0 "Class 0604" "Vendor 10b5" "Device 8618" -rba "" ""
->> 02:09.0 "Class 0604" "Vendor 10b5" "Device 8618" -rba "" ""
->> 02:0b.0 "Class 0604" "Vendor 10b5" "Device 8618" -rba "" ""
->> 02:0d.0 "Class 0604" "Vendor 10b5" "Device 8618" -rba "" ""
->> 02:0f.0 "Class 0604" "Vendor 10b5" "Device 8618" -rba "" ""
->> 03:00.0 "Class 0200" "Vendor 8086" "Device 10d3" "Unknown vendor 8086"
->> "Device 0000"
->> 04:00.0 "Class 0200" "Vendor 8086" "Device 10d3" "Unknown vendor 8086"
->> "Device 0000"
->> 05:00.0 "Class 0200" "Vendor 8086" "Device 10d3" "Unknown vendor 8086"
->> "Device 0000"
->> 06:00.0 "Class 0200" "Vendor 8086" "Device 10d3" "Unknown vendor 8086"
->> "Device 0000"
->> 07:00.0 "Class 0200" "Vendor 8086" "Device 10d3" "Unknown vendor 8086"
->> "Device 0000"
->> 08:00.0 "Class 0200" "Vendor 8086" "Device 10d3" "Unknown vendor 8086"
->> "Device 0000"
->> 09:00.0 "Class 0200" "Vendor 8086" "Device 10d3" "Unknown vendor 8086"
->> "Device 0000"
->> 0a:00.0 "Class 0200" "Vendor 8086" "Device 10d3" "Unknown vendor 8086"
->> "Device 0000"
->> 0b:00.0 "Class 0604" "Vendor 10b5" "Device 8624" -rbb "" ""
->> 0c:04.0 "Class 0604" "Vendor 10b5" "Device 8624" -rbb "" ""
->> 0c:05.0 "Class 0604" "Vendor 10b5" "Device 8624" -rbb "" ""
->> 0c:08.0 "Class 0604" "Vendor 10b5" "Device 8624" -rbb "" ""
->> 0c:09.0 "Class 0604" "Vendor 10b5" "Device 8624" -rbb "" ""
->> 0e:00.0 "Class 0604" "Vendor 10b5" "Device 8518" -rac "" ""
->> 0f:01.0 "Class 0604" "Vendor 10b5" "Device 8518" -rac "" ""
->> 0f:02.0 "Class 0604" "Vendor 10b5" "Device 8518" -rac "" ""
->> 10:00.0 "Class 0200" "Vendor 8086" "Device 10e6" -r01 "Unknown vendor
->> 1374" "Device 0b60"
->> 10:00.1 "Class 0200" "Vendor 8086" "Device 10e6" -r01 "Unknown vendor
->> 1374" "Device 0b60"
->> 11:00.0 "Class 0200" "Vendor 8086" "Device 10e6" -r01 "Unknown vendor
->> 1374" "Device 0b60"
->> 11:00.1 "Class 0200" "Vendor 8086" "Device 10e6" -r01 "Unknown vendor
->> 1374" "Device 0b60"
->> 12:00.0 "Class 0b40" "Vendor 1000" "Device 0a05" -r01 "Unknown vendor
->> 1000" "Device 0a09"
->> 14:00.0 "Class 1000" "Vendor 177d" "Device 0010" -r01 "Unknown vendor
->> 177d" "Device 0001"
->> 15:00.0 "Class 0200" "Vendor 8086" "Device 10d3" "Unknown vendor 8086"
->> "Device 0000"
->> 16:00.0 "Class 0604" "Vendor 1a03" "Device 1150" -r02 "" ""
->> 17:00.0 "Class 0300" "Vendor 1a03" "Device 2000" -r10 "Unknown vendor
->> 1a03" "Device 2000"
->>
->>
->> bash-3.2# lspci -tvv
->> -[0000:00]-+-00.0  Device 8086:d130
->>            +-03.0-[0000:01-0a]----00.0-[0000:02-0a]--+-01.0-[0000:03]--
->> --00.0
->>  Device 8086:10d3
->>            |
->> +-03.0-[0000:04]----00.0  Device 8086:10d3
->>            |
->> +-05.0-[0000:05]----00.0  Device 8086:10d3
->>            |
->> +-07.0-[0000:06]----00.0  Device 8086:10d3
->>            |
->> +-09.0-[0000:07]----00.0  Device 8086:10d3
->>            |
->> +-0b.0-[0000:08]----00.0  Device 8086:10d3
->>            |
->> +-0d.0-[0000:09]----00.0  Device 8086:10d3
->>            |
->> \-0f.0-[0000:0a]----00.0  Device 8086:10d3
->>            +-05.0-[0000:0b-13]----00.0-[0000:0c-13]--+-04.0-[0000:0d]--
->>            |
->> +-05.0-[0000:0e-11]----00.0-[0000:0f-11]--+-01.0-[0000:10]--+-00.0
->> Device 8086:10e6
->>            |                                         |
->>                         |                 \-00.1  Device 8086:10e6
->>            |                                         |
->>                         \-02.0-[0000:11]--+-00.0  Device 8086:10e6
->>            |                                         |
->>                                           \-00.1  Device 8086:10e6
->>            |
->> +-08.0-[0000:12]----00.0  Device 1000:0a05
->>            |                                         \-09.0-[0000:13]--
->>            +-08.0  Device 8086:d155
->>            +-08.1  Device 8086:d156
->>            +-08.2  Device 8086:d157
->>            +-08.3  Device 8086:d158
->>            +-10.0  Device 8086:d150
->>            +-10.1  Device 8086:d151
->>            +-1a.0  Device 8086:3b3c
->>            +-1c.0-[0000:14]----00.0  Device 177d:0010
->>            +-1c.4-[0000:15]----00.0  Device 8086:10d3
->>            +-1c.5-[0000:16-17]----00.0-[0000:17]----00.0  Device
->> 1a03:2000
->>            +-1d.0  Device 8086:3b34
->>            +-1e.0-[0000:18]--
->>            +-1f.0  Device 8086:3b16
->>            +-1f.2  Device 8086:2822
->>            \-1f.3  Device 8086:3b30
->>
->>
->> Thanks,
->> Ratheesh
->>
->> -----------------------------------------------------------------------
->> -------
->> Everyone hates slow websites. So do we.
->> Make your web apps faster with AppDynamics Download AppDynamics Lite
->> for free today:
->> http://p.sf.net/sfu/appdyn_d2d_feb
->> _______________________________________________
->> E1000-devel mailing list
->> E1000-devel@lists.sourceforge.net
->> https://lists.sourceforge.net/lists/listinfo/e1000-devel
->> To learn more about Intel&#174; Ethernet, visit
->> http://communities.intel.com/community/wired
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
