@@ -1,89 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:54199 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757559Ab3BFXHV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Feb 2013 18:07:21 -0500
-Date: Thu, 7 Feb 2013 00:07:15 +0100
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	"Eran Ben-Avi" <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	"Russell King - ARM Linux" <linux@arm.linux.org.uk>
-Subject: Re: [PATCH v2 22/27] arm: mvebu: add PCIe Device Tree informations
- for Armada XP
-Message-ID: <20130207000715.0b3d662d@skate>
-In-Reply-To: <201302062241.14444.arnd@arndb.de>
-References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
-	<1359399397-29729-23-git-send-email-thomas.petazzoni@free-electrons.com>
-	<201302062241.14444.arnd@arndb.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-ob0-f171.google.com ([209.85.214.171]:53067 "EHLO
+	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933798Ab3BNRkZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 14 Feb 2013 12:40:25 -0500
+Received: by mail-ob0-f171.google.com with SMTP id x4so2708640obh.30
+        for <linux-pci@vger.kernel.org>; Thu, 14 Feb 2013 09:40:25 -0800 (PST)
+MIME-Version: 1.0
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 14 Feb 2013 10:40:04 -0700
+Message-ID: <CAErSpo5PFn9gDgKWHoGpiSEE9862WbTDm7VVtxMxX05zK7b6kw@mail.gmail.com>
+Subject: Re: [Bug 53811] [REGRESSION]: acpiphp broken on Lenovo X220 from 3.6 onwards
+To: allurgroceries@gmail.com
+Cc: Zheng Yan <zheng.z.yan@intel.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Arnd Bergmann,
+[+cc Zheng, Rafael, linux-pci]
 
-On Wed, 6 Feb 2013 22:41:14 +0000, Arnd Bergmann wrote:
+On Wed, Feb 13, 2013 at 11:55 PM,  <bugzilla-daemon@bugzilla.kernel.org> wrote:
+> https://bugzilla.kernel.org/show_bug.cgi?id=53811
+>
+>            Summary: acpiphp broken on Lenovo X220 from 3.6 onwards
 
-> I've been thinking some more about this, and I wonder if it would
-> make more sense to describe the address remapping correctly as
-> a node on top of the pcie-controller node.
-> 
-> This would mean that rather than putting the mapped physical address
-> (0xc0000000, 0xc1000000, ...) in here, you would actually have 64-bit
-> address as the destination as well, in whatever format the
-> address map hardware uses, I assume using a numbered 32 bit
-> address space for each object that can be remapped.
-> 
-> This would also let you do the PCI memory address assignment for
-> each port separately, starting at bus address 0, followed by
-> finding a location in the CPU address space and passing
-> the start as the sys->mem_offset argument to
-> pci_add_resource_offset.
+> Distribution: Debian Sid AMD64
+> Hardware: Lenovo X220, i5-2520M, 8GB
+>
+> Hotplugging the expresscard no longer works after 3.5.
+>
+> Bisected to commit 71a83bd727cc31c5fe960c3758cb396267ff710e
+>
+> "PCI/PM: add runtime PM support to PCIe port"
+>
+> "Because runtime suspend is broken for some chipsets, a black list is used to
+> disable runtime PM support for these chipsets."
+>
+> I'm not sure how the blacklist is supposed to look, so I reversed the test and
+> the problem is gone. Here's a diff against 3.7.7:
+>
+> diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
+> index ebb3e5f..b427aad 100644
+> --- a/drivers/pci/pcie/portdrv_pci.c
+> +++ b/drivers/pci/pcie/portdrv_pci.c
+> @@ -225,7 +225,7 @@ static int __devinit pcie_portdrv_probe(struct pci_dev
+> *dev,
+>       * it by default.
+>       */
+>      dev->d3cold_allowed = false;
+> -    if (!pci_match_id(port_runtime_pm_black_list, dev))
+> +    if (pci_match_id(port_runtime_pm_black_list, dev))
+>          pm_runtime_put_noidle(&dev->dev);
+>
+>      return 0;
 
-Hum, good you give a skeleton example, because I'm not sure to
-understand your suggestion.
-
-
-> 
-> > +                       pcie@0,0 {
-> > +                               device_type = "pciex";
-> > +                               reg = <0x0800 0 0xd0040000 0
-> > 0x2000>;
-> > +                               #address-cells = <3>;
-> > +                               #size-cells = <2>;
-> > +                               marvell,pcie-port = <0>;
-> > +                               marvell,pcie-lane = <0>;
-> > +                               interrupts = <1>;
-> > +                               clocks = <&gateclk 5>;
-> > +                               status = "disabled";
-> > +                       };
-> 
-> I think you are missing a "ranges" property here, at least an empty
-> one, which is required by the standard but not currently enforced
-> in the code.
-
-Is it really wise to have DT properties that are not used by anything,
-and therefore have a very high chance of either being incorrect, or
-becoming incorrect?
-
-Best regards,
-
-Thomas
--- 
-Thomas Petazzoni, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
+Thanks for the report.  Can you please attach complete dmesg logs from
+kernels with your patch (showing a working hotplug) and without your
+patch (showing the failing hotplug)?
