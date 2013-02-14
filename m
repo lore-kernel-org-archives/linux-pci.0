@@ -1,159 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:35691 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1947333Ab3BIA1Z (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 Feb 2013 19:27:25 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v2 26-4/26] PCI, x86, ACPI: get ioapic address from acpi device
-Date: Fri,  8 Feb 2013 16:26:46 -0800
-Message-Id: <1360369606-8416-4-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1360369606-8416-1-git-send-email-yinghai@kernel.org>
-References: <CAE9FiQVhmH_TGqEwxGPusKNn-6Q7QkS3UTitEriV3dX8sPbzFA@mail.gmail.com>
- <1360369606-8416-1-git-send-email-yinghai@kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:9933 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758463Ab3BNShP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 14 Feb 2013 13:37:15 -0500
+Subject: [PATCH] pci: Disable slot presence detection around bus reset
+To: bhelgaas@google.com, linux-pci@vger.kernel.org
+From: Alex Williamson <alex.williamson@redhat.com>
+Cc: linux-kernel@vger.kernel.org
+Date: Thu, 14 Feb 2013 11:37:13 -0700
+Message-ID: <20130214183640.16220.33060.stgit@bling.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Some ioapic controller does not show up on pci config space,
-or pci device is there but no bar is used and is set by firmare in
-other place.
+A bus reset can trigger a presence detection change and result in a
+suprise hotplug.  This is generally not what we want to happen when
+trying to reset a device.  Disable the presence detection control on
+on bridges around bus reset.
 
-We need to get ioapic address from ACPI0009's _CRS.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
 ---
- drivers/pci/ioapic.c |   92 +++++++++++++++++++++++++++++++++++++++++----------
- 1 file changed, 74 insertions(+), 18 deletions(-)
+ drivers/pci/pci.c |   29 ++++++++++++++++++++++++-----
+ 1 file changed, 24 insertions(+), 5 deletions(-)
 
-Index: linux-2.6/drivers/pci/ioapic.c
-===================================================================
---- linux-2.6.orig/drivers/pci/ioapic.c
-+++ linux-2.6/drivers/pci/ioapic.c
-@@ -32,6 +32,36 @@ struct acpi_pci_ioapic {
- static LIST_HEAD(ioapic_list);
- static DEFINE_MUTEX(ioapic_list_lock);
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 5cb5820..c1f7d77 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3229,8 +3229,8 @@ static int pci_pm_reset(struct pci_dev *dev, int probe)
  
-+static acpi_status setup_res(struct acpi_resource *acpi_res, void *data)
-+{
-+	struct resource *res;
-+	struct acpi_resource_address64 addr;
-+	acpi_status status;
-+	unsigned long flags;
-+	u64 start, end;
-+
-+	status = acpi_resource_to_address64(acpi_res, &addr);
-+	if (!ACPI_SUCCESS(status))
-+		return AE_OK;
-+
-+	if (addr.resource_type == ACPI_MEMORY_RANGE) {
-+		if (addr.info.mem.caching == ACPI_PREFETCHABLE_MEMORY)
-+			return AE_OK;
-+		flags = IORESOURCE_MEM;
-+	} else
-+		return AE_OK;
-+
-+	start = addr.minimum + addr.translation_offset;
-+	end = addr.maximum + addr.translation_offset;
-+
-+	res = data;
-+	res->flags = flags;
-+	res->start = start;
-+	res->end = end;
-+
-+	return AE_OK;
-+}
-+
- static void handle_ioapic_add(acpi_handle handle, struct pci_dev **pdev,
- 				 u32 *pgsi_base)
+ static int pci_parent_bus_reset(struct pci_dev *dev, int probe)
  {
-@@ -54,33 +84,56 @@ static void handle_ioapic_add(acpi_handl
- 		return;
+-	u16 ctrl;
+-	struct pci_dev *pdev;
++	u16 ctrl, flags, sltctl = 0;
++	struct pci_dev *pdev, *bridge;
  
- 	dev = acpi_get_pci_dev(handle);
--	if (!dev)
--		return;
-+	if (!dev || !pci_resource_len(dev, 0)) {
-+		struct acpi_device_info *info;
-+		char *hid = NULL;
+ 	if (pci_is_root_bus(dev->bus) || dev->subordinate || !dev->bus->self)
+ 		return -ENOTTY;
+@@ -3242,15 +3242,34 @@ static int pci_parent_bus_reset(struct pci_dev *dev, int probe)
+ 	if (probe)
+ 		return 0;
+ 
+-	pci_read_config_word(dev->bus->self, PCI_BRIDGE_CONTROL, &ctrl);
++	bridge = dev->bus->self;
 +
-+		status = acpi_get_object_info(handle, &info);
-+		if (ACPI_FAILURE(status))
-+			goto exit_put;
-+		if (info->valid & ACPI_VALID_HID)
-+			hid = info->hardware_id.string;
-+		if (!hid || strcmp(hid, "ACPI0009")) {
-+			kfree(info);
-+			goto exit_put;
-+		}
-+		kfree(info);
-+		memset(res, 0, sizeof(*res));
-+		acpi_walk_resources(handle, METHOD_NAME__CRS, setup_res, res);
-+		if (!res->flags)
-+			goto exit_put;
++	/*
++	 * If the parent device supports a slot with presence detection
++	 * change enabled, holding the bus in reset can trigger that and
++	 * cause an unwanted surprise removal.  Disable presence detection
++	 * around the bus reset.
++	 */
++	pcie_capability_read_word(bridge, PCI_EXP_FLAGS, &flags);
++	if (flags & PCI_EXP_FLAGS_SLOT) {
++		pcie_capability_read_word(bridge, PCI_EXP_SLTCTL, &sltctl);
++		if (sltctl & PCI_EXP_SLTCTL_PDCE)
++			pcie_capability_write_word(bridge, PCI_EXP_SLTCTL,
++						sltctl & ~PCI_EXP_SLTCTL_PDCE);
 +	}
- 
- 	acpi_get_name(handle, ACPI_FULL_PATHNAME, &buffer);
- 
- 	gsi_base = gsb;
- 	type = "IOxAPIC";
-+	if (dev) {
-+		ret = pci_enable_device(dev);
-+		if (ret < 0)
-+			goto exit_put;
 +
-+		pci_set_master(dev);
++	pci_read_config_word(bridge, PCI_BRIDGE_CONTROL, &ctrl);
+ 	ctrl |= PCI_BRIDGE_CTL_BUS_RESET;
+-	pci_write_config_word(dev->bus->self, PCI_BRIDGE_CONTROL, ctrl);
++	pci_write_config_word(bridge, PCI_BRIDGE_CONTROL, ctrl);
+ 	msleep(100);
+ 
+ 	ctrl &= ~PCI_BRIDGE_CTL_BUS_RESET;
+-	pci_write_config_word(dev->bus->self, PCI_BRIDGE_CONTROL, ctrl);
++	pci_write_config_word(bridge, PCI_BRIDGE_CONTROL, ctrl);
+ 	msleep(100);
+ 
++	if (sltctl & PCI_EXP_SLTCTL_PDCE)
++		pcie_capability_write_word(bridge, PCI_EXP_SLTCTL, sltctl);
 +
-+		if (dev->class == PCI_CLASS_SYSTEM_PIC_IOAPIC)
-+			type = "IOAPIC";
-+
-+		if (pci_resource_len(dev, 0)) {
-+			if (pci_request_region(dev, 0, type))
-+				goto exit_disable;
+ 	return 0;
+ }
  
--	ret = pci_enable_device(dev);
--	if (ret < 0)
--		goto exit_put;
--
--	pci_set_master(dev);
--
--	if (dev->class == PCI_CLASS_SYSTEM_PIC_IOAPIC)
--		type = "IOAPIC";
--
--	if (pci_request_region(dev, 0, type))
--		goto exit_disable;
--
--	res = &dev->resource[0];
-+			res = &dev->resource[0];
-+		}
-+	}
- 
--	if (acpi_register_ioapic(handle, res->start, gsi_base))
--		goto exit_release;
-+	if (acpi_register_ioapic(handle, res->start, gsi_base)) {
-+		if (dev)
-+			goto exit_release;
-+		return;
-+	}
- 
- 	pr_info("%s %s %s at %pR, GSI %u\n",
--		dev_name(&dev->dev), objname, type,
-+		dev ? dev_name(&dev->dev) : "", objname, type,
- 		res, gsi_base);
- 
- 	*pdev = dev;
-@@ -111,6 +164,9 @@ static void handle_ioapic_remove(acpi_ha
- {
- 	acpi_unregister_ioapic(handle, gsi_base);
- 
-+	if (!dev)
-+		return;
-+
- 	pci_release_region(dev, 0);
- 	pci_disable_device(dev);
- 	/* need to disable it, otherwise remove/rescan will not work */
+
