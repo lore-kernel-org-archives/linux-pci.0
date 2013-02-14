@@ -1,72 +1,39 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f45.google.com ([209.85.219.45]:64582 "EHLO
-	mail-oa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753868Ab3BZSrC (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Feb 2013 13:47:02 -0500
-Received: by mail-oa0-f45.google.com with SMTP id o6so5942793oag.18
-        for <linux-pci@vger.kernel.org>; Tue, 26 Feb 2013 10:47:01 -0800 (PST)
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Moore, Robert" <robert.moore@intel.com>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>, Toshi Kani <toshi.kani@hp.com>
+CC: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jiang Liu <liuj97@gmail.com>, Yinghai Lu <yinghai@kernel.org>,
+	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
+	Myron Stowe <mstowe@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: RE: [Update][PATCH] ACPI / hotplug: Fix concurrency issues and
+ memory leaks
+Date: Thu, 14 Feb 2013 02:31:22 +0000
+Message-ID: <94F2FBAB4432B54E8AACC7DFDE6C92E368CB39A9@ORSMSX101.amr.corp.intel.com>
+References: <1837481.7dT8hTZ4MT@vostro.rjw.lan>
+ <4594350.VXNmDOeCvt@vostro.rjw.lan>
+ <1360796969.3869.146.camel@misato.fc.hp.com>
+ <5284026.QPQbFciqVT@vostro.rjw.lan>
+In-Reply-To: <5284026.QPQbFciqVT@vostro.rjw.lan>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <337833384.57445.1361860509194.JavaMail.mail@webmail08>
-References: <CAErSpo7qj2SNR7BfuBsfF-saZXvgcqqLtgoP5Hyb5u99qR4Ncg@mail.gmail.com>
-	<Pine.LNX.4.44L0.1302191119270.2215-100000@iolanthe.rowland.org>
-	<CAErSpo7NZoOQZyW76HEoOTVgdqL2CgbVScAeF6HGLAVaNCq0=w@mail.gmail.com>
-	<337833384.57445.1361860509194.JavaMail.mail@webmail08>
-Date: Tue, 26 Feb 2013 11:46:59 -0700
-Message-ID: <CAErSpo6CbO5KYXiErv6J_Dnm1u694C5fQPP2_cZL8VKDEnZa9A@mail.gmail.com>
-Subject: Re: Abysmal HDD/USB write speed after sleep on a UEFI system
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: "Artem S. Tashkinov" <t.artem@lycos.com>
-Cc: stern@rowland.harvard.edu, torvalds@linux-foundation.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	rjw@sisk.pl
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Feb 25, 2013 at 11:35 PM, Artem S. Tashkinov <t.artem@lycos.com> wrote:
-> Feb 26, 2013 03:57:52 AM, Bjorn Helgaas wrote:
->>
->>Where are we at with this, Artem?  I assume it's still a problem.
->>
->
-> Yes, it is, Bjorn.
->
-> In order to eliminate this problem I switched back to MBR yesterday, because
-> so far I haven't received any instructions or guidance as to how I can debug
-> it further. I'm absolutely sure USB write speed is just another manifestation of
-> it so I decided not to debug USB specifically (it just doesn't make too much
-> sense).
->
-> What I see is that something terribly wrong is going on but if Linus has no ideas
-> I, as an average Joe, don't have a slightest clue as to what I can do.
->
-> The bug report with necessary, but seemingly useless information, can be
-> found here: https://bugzilla.kernel.org/show_bug.cgi?id=53551
->
-> If anyone comes up with new ideas I can quickly try UEFI again now that I
-> have two HDDs at my disposal (the old one is formatted as GPT, the new one is
-> MBR).
-
-The ideas I saw are:
-
-1) Figure out whether it ever worked.  If an older kernel worked
-correctly and a newer one is broken, bisection is at least a
-possibility.  You mentioned that it did work before (Feb 12), but in
-the past you never suspended twice in one boot session, whereas maybe
-you did when seeing the problem?
-
-2) Try the "setpci" to set the MSI address back to the original value
-to see if it makes a difference (see my Feb 12 message).
-
-3) Collect "lspci -vvv -xxxx" output to investigate the XHCI
-Unsupported Request errors.
-
-4) Use usbmon to collect traces before and after the suspend.
-
-I googled around a bit looking for similar reports.  I found lots of
-suspend issues, mostly with Windows, but no leads yet.  It looks like
-the board has been around for a while, so you would think we'd have
-some other reports of a problem this bad.  But maybe it really is
-related to UEFI and nobody really uses that yet?
-
-Bjorn
+PiA+ID4gSSB0aG91Z2h0IGFib3V0IHRoYXQsIGJ1dCBhY3R1YWxseSB0aGVyZSdzIG5vIGd1YXJh
+bnRlZSB0aGF0IHRoZQ0KPiA+ID4gaGFuZGxlIHdpbGwgYmUgdmFsaWQgYWZ0ZXIgX0VKMCBhcyBm
+YXIgYXMgSSBjYW4gc2F5LiAgU28gdGhlIHJhY2UNCj4gPiA+IGNvbmRpdGlvbiBpcyBnb2luZyB0
+byBiZSB0aGVyZSBhbnl3YXkgYW5kIHVzaW5nIHN0cnVjdCBhY3BpX2RldmljZQ0KPiA+ID4ganVz
+dCBtYWtlcyBpdCBlYXNpZXIgdG8gYXZvaWQgaXQuDQo+ID4NCj4gPiBJbiB0aGVvcnksIHllcywg
+YSBzdGFsZSBoYW5kbGUgY291bGQgYmUgYSBwcm9ibGVtLCBpZiBfRUowIHBlcmZvcm1zDQo+ID4g
+dW5sb2FkIHRhYmxlIGFuZCBpZiBBQ1BJQ0EgZnJlZXMgdXAgaXRzIGludGVybmFsIGRhdGEgc3Ry
+dWN0dXJlDQo+ID4gcG9pbnRlZCBieSB0aGUgaGFuZGxlIGFzIGEgcmVzdWx0LiAgQnV0IHdlIHNo
+b3VsZCBub3Qgc2VlIHN1Y2ggaXNzdWUNCj4gPiBub3cgc2luY2Ugd2UgZG8gbm90IHN1cHBvcnQg
+ZHluYW1pYyBBQ1BJIG5hbWVzcGFjZSB5ZXQuDQo+IA0KPiBJJ20gd2FpdGluZyBmb3IgaW5mb3Jt
+YXRpb24gZnJvbSBCb2IgYWJvdXQgdGhhdC4gIElmIHdlIGNhbiBhc3N1bWUgQUNQSQ0KPiBoYW5k
+bGVzIHRvIGJlIGFsd2F5cyB2YWxpZCwgdGhhdCB3aWxsIHNpbXBsaWZ5IHRoaW5ncyBxdWl0ZSBh
+IGJpdC4NCg0KSWYgYSB0YWJsZSBpcyB1bmxvYWRlZCwgYWxsIHRoZSBuYW1lc3BhY2Ugbm9kZXMg
+Zm9yIHRoYXQgdGFibGUgYXJlIHJlbW92ZWQgZnJvbSB0aGUgbmFtZXNwYWNlLCBhbmQgdGh1cyBh
+bnkgQUNQSV9IQU5ETEUgcG9pbnRlcnMgZ28gc3RhbGUgYW5kIGludmFsaWQuDQoNCkJvYg0KDQo=
