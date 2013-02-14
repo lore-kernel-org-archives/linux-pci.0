@@ -1,114 +1,202 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>
-Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Tony Luck <tony.luck@intel.com>,
-	Fenghua Yu <fenghua.yu@intel.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, linux-ia64@vger.kernel.org,
-	x86@kernel.org
-Subject: [PATCH v8 06/13] PCI, ACPI: prepare stub functions to handle ACPI PCI (hotplug) slots
-Date: Tue, 26 Feb 2013 23:25:46 +0800
-Message-Id: <1361892353-14786-7-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1361892353-14786-1-git-send-email-jiang.liu@huawei.com>
-References: <1361892353-14786-1-git-send-email-jiang.liu@huawei.com>
+From: Vijay Mohan Pandarathil <vijaymohan.pandarathil@hp.com>
+To: alex.williamson@redhat.com, gleb@redhat.com, bhelgaas@google.com,
+	blauwirbel@gmail.com, lance.oritz@hp.com, kvm@vger.kernel.org,
+	qemu-devel@nongnu.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: Vijay Mohan Pandarathil <vijaymohan.pandarathil@hp.com>
+Subject: [PATCH v4 2/3] VFIO-AER: Vfio-pci driver changes for supporting AER
+Date: Thu, 14 Feb 2013 04:41:54 -0600
+Message-Id: <1360838515-17558-3-git-send-email-vijaymohan.pandarathil@hp.com>
+In-Reply-To: <1360838515-17558-1-git-send-email-vijaymohan.pandarathil@hp.com>
+References: <1360838515-17558-1-git-send-email-vijaymohan.pandarathil@hp.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Prepare two stub functions to handle ACPI PCI slots and ACPI PCI hotplug
-slots, which will be invoked by the PCI core when creating/destroying
-PCI buses.
+	- New VFIO_SET_IRQ ioctl option to pass the eventfd that is signaled when
+          an error occurs in the vfio_pci_device
 
-It will be used to get rid of ACPI PCI subdrivers for pci_slot and
-acpiphp, and eventually remove the ACPI PCI subdriver mechanism.
+	- Register pci_error_handler for the vfio_pci driver
 
-And it will also be used to handle ACPI PCI (hotplug) slots in a unified
-way, both at boot time and for PCI hotplug operations.
+	- When the device encounters an error, the error handler registered by
+          the vfio_pci driver gets invoked by the AER infrastructure
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Toshi Kani <toshi.kani@hp.com>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Fenghua Yu <fenghua.yu@intel.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>
-Cc: Ingo Molnar <mingo@redhat.com>
-Cc: "H. Peter Anvin" <hpa@zytor.com>
-Cc: Myron Stowe <myron.stowe@redhat.com>
-Cc: linux-pci@vger.kernel.org
-Cc: linux-ia64@vger.kernel.org
-Cc: x86@kernel.org
-Cc: linux-kernel@vger.kernel.org
+	- In the error handler, signal the eventfd registered for the device.
+
+	- This results in the qemu eventfd handler getting invoked and
+          appropriate action taken for the guest.
+
+Signed-off-by: Vijay Mohan Pandarathil <vijaymohan.pandarathil@hp.com>
 ---
- drivers/pci/pci-acpi.c   |   24 ++++++++++++++++++++++++
- include/linux/pci-acpi.h |    8 +++++++-
- 2 files changed, 31 insertions(+), 1 deletion(-)
+ drivers/vfio/pci/vfio_pci.c         | 44 +++++++++++++++++++++++++++++++++-
+ drivers/vfio/pci/vfio_pci_intrs.c   | 47 +++++++++++++++++++++++++++++++++++++
+ drivers/vfio/pci/vfio_pci_private.h |  1 +
+ include/uapi/linux/vfio.h           |  1 +
+ 4 files changed, 92 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
-index c685ff5..99878ac 100644
---- a/drivers/pci/pci-acpi.c
-+++ b/drivers/pci/pci-acpi.c
-@@ -287,6 +287,30 @@ static struct pci_platform_pm_ops acpi_pci_platform_pm = {
- 	.run_wake = acpi_pci_run_wake,
+diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
+index b28e66c..d70bd58 100644
+--- a/drivers/vfio/pci/vfio_pci.c
++++ b/drivers/vfio/pci/vfio_pci.c
+@@ -196,7 +196,9 @@ static int vfio_pci_get_irq_count(struct vfio_pci_device *vdev, int irq_type)
+ 
+ 			return (flags & PCI_MSIX_FLAGS_QSIZE) + 1;
+ 		}
+-	}
++	} else if (irq_type == VFIO_PCI_ERR_IRQ_INDEX)
++		if (pci_is_pcie(vdev->pdev))
++			return 1;
+ 
+ 	return 0;
+ }
+@@ -302,6 +304,17 @@ static long vfio_pci_ioctl(void *device_data,
+ 		if (info.argsz < minsz || info.index >= VFIO_PCI_NUM_IRQS)
+ 			return -EINVAL;
+ 
++		switch (info.index) {
++		case VFIO_PCI_INTX_IRQ_INDEX ... VFIO_PCI_MSIX_IRQ_INDEX:
++			break;
++		case VFIO_PCI_ERR_IRQ_INDEX:
++			if (pci_is_pcie(vdev->pdev))
++				break;
++		/* pass thru to return error */
++		default:
++			return -EINVAL;
++		}
++
+ 		info.flags = VFIO_IRQ_INFO_EVENTFD;
+ 
+ 		info.count = vfio_pci_get_irq_count(vdev, info.index);
+@@ -538,11 +551,40 @@ static void vfio_pci_remove(struct pci_dev *pdev)
+ 	kfree(vdev);
+ }
+ 
++static pci_ers_result_t vfio_pci_aer_err_detected(struct pci_dev *pdev,
++						  pci_channel_state_t state)
++{
++	struct vfio_pci_device *vpdev;
++	struct vfio_device *vdev;
++
++	vdev = vfio_device_get_from_dev(&pdev->dev);
++	if (vdev == NULL)
++		return PCI_ERS_RESULT_DISCONNECT;
++
++	vpdev = vfio_device_data(vdev);
++	if (vpdev == NULL) {
++		vfio_device_put(vdev);
++		return PCI_ERS_RESULT_DISCONNECT;
++	}
++
++	if (vpdev->err_trigger)
++		eventfd_signal(vpdev->err_trigger, 1);
++
++	vfio_device_put(vdev);
++
++	return PCI_ERS_RESULT_CAN_RECOVER;
++}
++
++static struct pci_error_handlers vfio_err_handlers = {
++	.error_detected = vfio_pci_aer_err_detected,
++};
++
+ static struct pci_driver vfio_pci_driver = {
+ 	.name		= "vfio-pci",
+ 	.id_table	= NULL, /* only dynamic ids */
+ 	.probe		= vfio_pci_probe,
+ 	.remove		= vfio_pci_remove,
++	.err_handler	= &vfio_err_handlers,
  };
  
-+void acpi_pci_add_bus(struct pci_bus *bus)
-+{
-+	acpi_handle handle = NULL;
-+
-+	if (bus->bridge)
-+		handle = ACPI_HANDLE(bus->bridge);
-+	if (acpi_pci_disabled || handle == NULL)
-+		return;
-+
-+	/* TODO: add PCI slots and acpiphp hotplug slots */
-+}
-+
-+void acpi_pci_remove_bus(struct pci_bus *bus)
-+{
-+	/*
-+	 * bus->bridge->acpi_node.handle has already been reset to NULL
-+	 * when acpi_pci_remove_bus() is called, so don't check ACPI handle.
-+	 */
-+	if (acpi_pci_disabled)
-+		return;
-+
-+	/* TODO: remove PCI slots and acpiphp hotplug slots */
-+}
-+
- /* ACPI bus type */
- static int acpi_pci_find_device(struct device *dev, acpi_handle *handle)
- {
-diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
-index 9a22b5e..2b1743c 100644
---- a/include/linux/pci-acpi.h
-+++ b/include/linux/pci-acpi.h
-@@ -41,7 +41,13 @@ static inline acpi_handle acpi_pci_get_bridge_handle(struct pci_bus *pbus)
- 
- 	return DEVICE_ACPI_HANDLE(dev);
+ static void __exit vfio_pci_cleanup(void)
+diff --git a/drivers/vfio/pci/vfio_pci_intrs.c b/drivers/vfio/pci/vfio_pci_intrs.c
+index 3639371..8036f3a 100644
+--- a/drivers/vfio/pci/vfio_pci_intrs.c
++++ b/drivers/vfio/pci/vfio_pci_intrs.c
+@@ -745,6 +745,46 @@ static int vfio_pci_set_msi_trigger(struct vfio_pci_device *vdev,
+ 	return 0;
  }
--#endif
-+
-+void acpi_pci_add_bus(struct pci_bus *bus);
-+void acpi_pci_remove_bus(struct pci_bus *bus);
-+#else	/* CONFIG_ACPI */
-+static inline void acpi_pci_add_bus(struct pci_bus *bus) { }
-+static inline void acpi_pci_remove_bus(struct pci_bus *bus) { }
-+#endif	/* CONFIG_ACPI */
  
- #ifdef CONFIG_ACPI_APEI
- extern bool aer_acpi_firmware_first(void);
++static int vfio_pci_set_err_trigger(struct vfio_pci_device *vdev,
++				    unsigned index, unsigned start,
++				    unsigned count, uint32_t flags, void *data)
++{
++	int32_t fd = *(int32_t *)data;
++
++	if ((index != VFIO_PCI_ERR_IRQ_INDEX) ||
++	    !(flags & VFIO_IRQ_SET_DATA_TYPE_MASK))
++		return -EINVAL;
++
++	/* DATA_NONE/DATA_BOOL enables loopback testing */
++
++	if (flags & VFIO_IRQ_SET_DATA_NONE) {
++		if (vdev->err_trigger)
++			eventfd_signal(vdev->err_trigger, 1);
++		return 0;
++	} else if (flags & VFIO_IRQ_SET_DATA_BOOL) {
++		uint8_t trigger = *(uint8_t *)data;
++		if (trigger && vdev->err_trigger)
++			eventfd_signal(vdev->err_trigger, 1);
++		return 0;
++	}
++
++	/* Handle SET_DATA_EVENTFD */
++
++	if (fd == -1) {
++		if (vdev->err_trigger)
++			eventfd_ctx_put(vdev->err_trigger);
++		vdev->err_trigger = NULL;
++		return 0;
++	} else if (fd >= 0) {
++		struct eventfd_ctx *efdctx;
++		efdctx = eventfd_ctx_fdget(fd);
++		if (IS_ERR(efdctx))
++			return PTR_ERR(efdctx);
++		vdev->err_trigger = efdctx;
++		return 0;
++	} else
++		return -EINVAL;
++}
+ int vfio_pci_set_irqs_ioctl(struct vfio_pci_device *vdev, uint32_t flags,
+ 			    unsigned index, unsigned start, unsigned count,
+ 			    void *data)
+@@ -779,6 +819,13 @@ int vfio_pci_set_irqs_ioctl(struct vfio_pci_device *vdev, uint32_t flags,
+ 			break;
+ 		}
+ 		break;
++	case VFIO_PCI_ERR_IRQ_INDEX:
++		switch (flags & VFIO_IRQ_SET_ACTION_TYPE_MASK) {
++		case VFIO_IRQ_SET_ACTION_TRIGGER:
++			if (pci_is_pcie(vdev->pdev))
++				func = vfio_pci_set_err_trigger;
++			break;
++		}
+ 	}
+ 
+ 	if (!func)
+diff --git a/drivers/vfio/pci/vfio_pci_private.h b/drivers/vfio/pci/vfio_pci_private.h
+index 611827c..daee62f 100644
+--- a/drivers/vfio/pci/vfio_pci_private.h
++++ b/drivers/vfio/pci/vfio_pci_private.h
+@@ -55,6 +55,7 @@ struct vfio_pci_device {
+ 	bool			bardirty;
+ 	struct pci_saved_state	*pci_saved_state;
+ 	atomic_t		refcnt;
++	struct eventfd_ctx	*err_trigger;
+ };
+ 
+ #define is_intx(vdev) (vdev->irq_type == VFIO_PCI_INTX_IRQ_INDEX)
+diff --git a/include/uapi/linux/vfio.h b/include/uapi/linux/vfio.h
+index 4758d1b..7d50af4 100644
+--- a/include/uapi/linux/vfio.h
++++ b/include/uapi/linux/vfio.h
+@@ -310,6 +310,7 @@ enum {
+ 	VFIO_PCI_INTX_IRQ_INDEX,
+ 	VFIO_PCI_MSI_IRQ_INDEX,
+ 	VFIO_PCI_MSIX_IRQ_INDEX,
++	VFIO_PCI_ERR_IRQ_INDEX,
+ 	VFIO_PCI_NUM_IRQS
+ };
+ 
 -- 
-1.7.9.5
+1.7.11.3
 
