@@ -1,59 +1,54 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <1360722010.3604.3.camel@thor.lan>
-Subject: Re: [PATCH] ACPI, PCI: Get PRT entry during acpi_pci_enable_irq()
-From: Peter Hurley <peter@hurleysoftware.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Tue, 12 Feb 2013 21:20:10 -0500
-In-Reply-To: <1360696283-20313-1-git-send-email-yinghai@kernel.org>
-References: <CAE9FiQUkmnV_On5+ZpH2pF4Li1HxLpkO8bp4TnYB46=pc9Safg@mail.gmail.com>
-	 <1360696283-20313-1-git-send-email-yinghai@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: "Moore, Robert" <robert.moore@intel.com>
+Cc: Toshi Kani <toshi.kani@hp.com>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jiang Liu <liuj97@gmail.com>, Yinghai Lu <yinghai@kernel.org>,
+	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
+	Myron Stowe <mstowe@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [Update][PATCH] ACPI / hotplug: Fix concurrency issues and memory leaks
+Date: Thu, 14 Feb 2013 13:03:57 +0100
+Message-ID: <7010893.9OBeMt5Fzh@vostro.rjw.lan>
+In-Reply-To: <94F2FBAB4432B54E8AACC7DFDE6C92E368CB39A9@ORSMSX101.amr.corp.intel.com>
+References: <1837481.7dT8hTZ4MT@vostro.rjw.lan> <5284026.QPQbFciqVT@vostro.rjw.lan> <94F2FBAB4432B54E8AACC7DFDE6C92E368CB39A9@ORSMSX101.amr.corp.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2013-02-12 at 11:11 -0800, Yinghai Lu wrote:
-> Peter Hurley found "irq 18 nobody cared" with pci-next, and dmesg has
+On Thursday, February 14, 2013 02:31:22 AM Moore, Robert wrote:
+> > > > I thought about that, but actually there's no guarantee that the
+> > > > handle will be valid after _EJ0 as far as I can say.  So the race
+> > > > condition is going to be there anyway and using struct acpi_device
+> > > > just makes it easier to avoid it.
+> > >
+> > > In theory, yes, a stale handle could be a problem, if _EJ0 performs
+> > > unload table and if ACPICA frees up its internal data structure
+> > > pointed by the handle as a result.  But we should not see such issue
+> > > now since we do not support dynamic ACPI namespace yet.
+> > 
+> > I'm waiting for information from Bob about that.  If we can assume ACPI
+> > handles to be always valid, that will simplify things quite a bit.
 > 
-> [    8.983246] pci 0000:00:1e.0: can't derive routing for PCI INT A
-> [    8.983600] snd_ctxfi 0000:09:02.0: PCI INT A: no GSI - using ISA IRQ 5
-> 
-> bisect to
-> | commit 4f535093cf8f6da8cfda7c36c2c1ecd2e9586ee4
-> |     PCI: Put pci_dev in device tree as early as possible
-> 
-> It turns out we need to call acpi_pci_irq_add_prt() after the pci bridges
-> are scanned.
-> 
-> Bjorn said:
->  The bus number binding means acpi_pci_irq_add_prt() has to happen
->  after enumerating everything below a bridge, and it will prevent us
->  from doing any bus number reassignment for hotplug.
-> 
->  I think we should remove the bus numbers from the cached _PRT (or
->  maybe even remove the _PRT caching completely).  When we enable a PCI
->  device's IRQ, we should search up the PCI device tree looking for a
->  _PRT associated with each node, and applying normal PCI bridge
->  swizzling when we don't find a _PRT.  I think this can be done without
->  using PCI bus numbers at all.
-> 
-> So here we try to remove _PRT caching completely.
-> 
-> -v2: check !handle early.
-> 
-> Reported-and-tested-by: Peter Hurley <peter@hurleysoftware.com>
+> If a table is unloaded, all the namespace nodes for that table are removed
+> from the namespace, and thus any ACPI_HANDLE pointers go stale and invalid.
 
-Actually true now :)
+OK, thanks!
 
-Reported-and-tested-by: Peter Hurley <peter@hurleysoftware.com>
+To me this means that we cannot assume a handle to stay valid between
+a notify handler and acpi_bus_hot_remove_device() run from a workqueue.
 
-Regards and thanks again,
-Peter Hurley
+Is there a mechanism in ACPICA to ensure that a handle won't become stale while
+a notify handler is running for it or is the OS responsible for ensuring that
+_EJ0 won't be run in parallel with notify handlers for device objects being
+ejected?
 
-PS - I just happened to see this version on the list. Would you please
-cc me on any future versions?
+Rafael
 
 
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
