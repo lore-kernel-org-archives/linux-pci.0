@@ -1,42 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout01.c08.mtsvc.net ([205.186.168.189]:36663 "EHLO
-	mailout01.c08.mtsvc.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751539Ab3BMEVJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Feb 2013 23:21:09 -0500
-Message-ID: <1360725515.3642.1.camel@thor.lan>
-Subject: Re: [PATCH] ACPI, PCI: Get PRT entry during acpi_pci_enable_irq()
-From: Peter Hurley <peter@hurleysoftware.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Tue, 12 Feb 2013 22:18:35 -0500
-In-Reply-To: <CAE9FiQUp4oKSpZ8Y-M-+n_y=mBs_t4cdKLhgG8xZSPgteZcgkQ@mail.gmail.com>
-References: <CAE9FiQUkmnV_On5+ZpH2pF4Li1HxLpkO8bp4TnYB46=pc9Safg@mail.gmail.com>
-	 <1360696283-20313-1-git-send-email-yinghai@kernel.org>
-	 <1360722010.3604.3.camel@thor.lan>
-	 <CAE9FiQUp4oKSpZ8Y-M-+n_y=mBs_t4cdKLhgG8xZSPgteZcgkQ@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-gg0-f202.google.com ([209.85.161.202]:45661 "EHLO
+	mail-gg0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760790Ab3BNRqX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 14 Feb 2013 12:46:23 -0500
+Received: by mail-gg0-f202.google.com with SMTP id l4so713419ggi.1
+        for <linux-pci@vger.kernel.org>; Thu, 14 Feb 2013 09:46:23 -0800 (PST)
+Date: Thu, 14 Feb 2013 10:46:22 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Daniel J Blueman <daniel@quora.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [GIT PULL] PCI update for v3.8
+Message-ID: <20130214174622.GA19787@google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2013-02-12 at 18:42 -0800, Yinghai Lu wrote:
-> On Tue, Feb 12, 2013 at 6:20 PM, Peter Hurley <peter@hurleysoftware.com> wrote:
-> >
-> > Reported-and-tested-by: Peter Hurley <peter@hurleysoftware.com>
-> 
-> Thanks.
-> 
-> > PS - I just happened to see this version on the list. Would you please
-> > cc me on any future versions?
-> 
-> oh, my fault. I take it for granted that "git send-email" will pick
-> that email from
-> patch just like Cc.
+Hi Linus,
 
-No problem. Actually, I'm sorry it took this long for me to test. I was
-stuck in an epic bisect that I eventually abandoned at the 41st test
-with it still in merge bases.
+This is another fix for v3.8.  It fixes an oops that happens when a
+Thunderbolt adapter is unplugged (remove device, poll for PME events on
+no-longer-existing device, oops).
+
+Bjorn
 
 
+The following changes since commit 444ee9bd3d0fa78317c6127c961af5accf50038b:
+
+  PCI: remove depends on CONFIG_EXPERIMENTAL (2013-01-17 16:22:05 -0700)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/3.8-pci-fixes-3
+
+for you to fetch changes up to 249bfb83cf8ba658955f0245ac3981d941f746ee:
+
+  PCI/PM: Clean up PME state when removing a device (2013-02-13 11:58:02 -0700)
+
+----------------------------------------------------------------
+PCI update for v3.8:
+
+  Hotplug
+    PCI/PM: Clean up PME state when removing a device
+
+----------------------------------------------------------------
+Rafael J. Wysocki (1):
+      PCI/PM: Clean up PME state when removing a device
+
+ drivers/pci/remove.c | 2 ++
+ 1 file changed, 2 insertions(+)
