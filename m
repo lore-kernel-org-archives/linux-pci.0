@@ -1,50 +1,45 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:47432 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756755Ab3BRKJ4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 18 Feb 2013 05:09:56 -0500
-From: Hannes Reinecke <hare@suse.de>
-To: linux-kernel@vger.kernel.org
-Cc: Hannes Reinecke <hare@suse.de>, Frederik Himpe <fhimpe@vub.ac.be>,
-	Oliver Neukum <oneukum@suse.de>,
-	David Haerdeman <david@hardeman.nu>, linux-usb@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH] pci: do not try to assign irq 255
-Date: Mon, 18 Feb 2013 11:09:53 +0100
-Message-Id: <1361182193-31894-1-git-send-email-hare@suse.de>
+Received: from rhlx01.hs-esslingen.de ([129.143.116.10]:60255 "EHLO
+	rhlx01.hs-esslingen.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753065Ab3BNBK2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Feb 2013 20:10:28 -0500
+Date: Thu, 14 Feb 2013 02:10:27 +0100
+From: Andreas Mohr <andi@lisas.de>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-pci@vger.kernel.org,
+	ACPI Devel Mailing List <linux-acpi@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] PCI / ACPI: Report _OSC control mask returned on failure
+ to get control
+Message-ID: <20130214011027.GA430@rhlx01.hs-esslingen.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201104300021.38386.rjw@sisk.pl>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The PCI config space reseves a byte for the interrupt line,
-so irq 255 actually refers to 'not set'.
-However, the 'irq' field for struct pci_dev is an integer,
-so the original meaning is lost, causing the system to
-assign an interrupt '255', which fails.
+Hi,
 
-So we should _not_ assign an interrupt value here, and
-allow upper layers to fixup things.
+to provide an example case, on Aspire One AOA110 v0.3310, 3.8-rc7 prints:
 
-This patch make PCI devices with MSI interrupts only
-(like the xhci device on certain HP laptops) work properly.
+[    0.515599] ACPI Error: [CAPB] Namespace lookup failure,
+AE_ALREADY_EXISTS (2
+0121018/dsfield-211)
+[    0.515629] ACPI Error: Method parse/execution failed
+[\_SB_.PCI0._OSC] (Node f5449680), AE_ALREADY_EXISTS
+(20121018/psparse-537)
+[    0.515672] ACPI: Marking method _OSC as Serialized because of
+AE_ALREADY_EXISTS error
+[    0.516081] ACPI Error: [CAPB] Namespace lookup failure,
+AE_ALREADY_EXISTS (20121018/dsfield-211)
+[    0.516107] ACPI Error: Method parse/execution failed
+[\_SB_.PCI0._OSC] (Node f5449680), AE_ALREADY_EXISTS
+(20121018/psparse-537)
+[    0.516168] pci_root PNP0A08:00: ACPI _OSC support notification
+failed, disabling PCIe ASPM
+[    0.516179] pci_root PNP0A08:00: Unable to request _OSC control (_OSC
+support mask: 0x08)
 
-Cc: Frederik Himpe <fhimpe@vub.ac.be>
-Cc: Oliver Neukum <oneukum@suse.de>
-Cc: David Haerdeman <david@hardeman.nu>
-Cc: linux-usb@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
-Signed-off-by: Hannes Reinecke <hare@suse.de>
+HTH,
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 6186f03..a2db887f 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -923,7 +923,8 @@ static void pci_read_irq(struct pci_dev *dev)
- 	dev->pin = irq;
- 	if (irq)
- 		pci_read_config_byte(dev, PCI_INTERRUPT_LINE, &irq);
--	dev->irq = irq;
-+	if (irq < 255)
-+		dev->irq = irq;
- }
- 
- void set_pcie_port_type(struct pci_dev *pdev)
+Andreas Mohr
