@@ -1,162 +1,122 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
-	"H. Peter Anvin" <hpa@zytor.com>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <1360948952.9542.43.camel@misato.fc.hp.com>
+Subject: Re: [Update][PATCH] ACPI / hotplug: Fix concurrency issues and
+ memory leaks
+From: Toshi Kani <toshi.kani@hp.com>
+To: "Moore, Robert" <robert.moore@intel.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-Subject: [PATCH v2 16/26] x86, irq: pre-reserve irq range/realloc for booting path
-Date: Fri,  8 Feb 2013 11:28:13 -0800
-Message-Id: <1360351703-20571-17-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1360351703-20571-1-git-send-email-yinghai@kernel.org>
-References: <1360351703-20571-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+	Jiang Liu <liuj97@gmail.com>, Yinghai Lu <yinghai@kernel.org>,
+	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
+	Myron Stowe <mstowe@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"Zheng, Lv" <lv.zheng@intel.com>,
+	"Brown, Len" <len.brown@intel.com>
+Date: Fri, 15 Feb 2013 10:22:32 -0700
+In-Reply-To: <94F2FBAB4432B54E8AACC7DFDE6C92E368CB6125@ORSMSX101.amr.corp.intel.com>
+References: <1837481.7dT8hTZ4MT@vostro.rjw.lan>
+	 <1463882.MtF6rq6lDy@vostro.rjw.lan>
+	 <1360888082.3869.163.camel@misato.fc.hp.com>
+	 <1556413.qqfoi7QgzD@vostro.rjw.lan>
+	 <1360941494.9542.11.camel@misato.fc.hp.com>
+	 <94F2FBAB4432B54E8AACC7DFDE6C92E368CB6125@ORSMSX101.amr.corp.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We will use reserve/realloc_irq_and_cfg_at for hotplug ioapic path.
+On Fri, 2013-02-15 at 16:33 +0000, Moore, Robert wrote:
+> > > > > > > > > Is there a mechanism in ACPICA to ensure that a handle
+> > > > > > > > > won't become stale while a notify handler is running for
+> > > > > > > > > it or is the OS responsible for ensuring that
+> > > > > > > > > _EJ0 won't be run in parallel with notify handlers for
+> > > > > > > > > device objects being ejected?
+> > > > > > > > >
+> > > > > > > >
+> > > > > > > > It is up to the host.
+> > > > > > >
+> > > > > > > I was afraid that that might be the case. :-)
+> > > > > > >
+> > > > > > > So far the (Linux) host has been happily ignoring that
+> > > > > > > potential problem, so I guess it can still be ignored for a
+> > > > > > > while, although we'll need to address it eventually at one
+> > point.
+> > > > > >
+> > > > > > I would think it should be fairly simple to setup a mechanism to
+> > > > > > either tell the driver or for the driver to figure it out --
+> > > > > > such that the driver knows that all handles associated with the
+> > > > > > device are now invalid. Another way to look at it is that when
+> > > > > > the device is re-installed, the driver should reinitialize such
+> > > > > > that it obtains new handles for the devices and subobjects in
+> > question.
+> > > > >
+> > > > > Unfortunately, there is quite strong assumption in our code that
+> > > > > ACPI handles will not become stale before the device objects
+> > > > > associated with them are removed.  For this reason, we need to
+> > > > > know in advance which handles will become stale as a result of a
+> > > > > table unload and remove their device objects beforehand.
+> > > > >
+> > > > > Moreover, when there's a notify handler installed for a given ACPI
+> > > > > handle and that handle becomes stale while the notify handler is
+> > > > > running, we'll be in trouble.  To avoid that we need to ensure
+> > > > > that table unloads and notifies will always be mutually exclusive.
+> > > >
+> > > > I wonder if we can make acpi_ns_validate_handle() to actually be
+> > > > able to verify if a given handle is valid.  This way, ACPICA can
+> > > > fail gracefully
+> > > > (AE_BAD_PARAMETER) when a stable handle is passed to the interfaces.
+> > >
+> > > That'd be good, but to implement it, I think, it would be necessary to
+> > > introduce some reference counting of namespace objects such that the
+> > > given object would only be deleted after the last reference to it had
+> > been dropped.
+> > > On table unload it would just be marked as invalid, but it would stay
+> > > in memory as long as there were any references to it.
+> > >
+> > > So, for example, a notify handler would start from something like
+> > > acpi_add_reference(handle), which would guarantee that the object
+> > > pointed to by handle would stay in memory, and it would finish by
+> > > doing
+> > > acpi_drop_reference(handle) or a work item scheduled by it would do
+> > that.
+> > >
+> > > We do that for objects based on struct device and it works well.
+> > 
+> > There is other way to implement it.  Since acpi_handle is defined as an
+> > opaque value, this could be changed to an index to an array of pointers,
+> > instead of a direct pointer.  Then we can safely invalidate an index by
+> > invalidating the pointer associated with the index.
+> 
+> 
+> 
+> We have of course thought about adding a mechanism to validate/invalidate acpica namespace handles. In fact, this is why the ACPI_HANDLE data type was introduced in the first place, so that if we ever wanted or needed to implement something like this, it would not break a lot of existing code.
+> 
+> However, we have never had a real need to implement such a mechanism, nor has the ever been a request from any of the operating systems that run ACPICA.
+> 
+> The existing model is that the host has knowledge of what objects will go away when a table is unloaded, and can simply assume that all related acpi handles will go bad after the unload (and table unload is the only case where parts of the namespace go away, as far as I remember). Upon a reload of the table, the host knows to reinitialize all handles associated with the table/device.
+> 
+> ACPCI has a table handler mechanism, where the host handler is invoked *before* an ACPI table is actually unloaded, so the host can prepare for the unload. For example, before returning from the table handler, the host may want to synchronize by waiting for any outstanding notifies to complete, then simply ignoring any further notifies from any devices associated with the table.
+> 
+> In summary, it has always been felt that the fairly large overhead of implementing a mechanism like this is not worth the cost, as well as not really needed.
+> 
+> I suggest that the implementation of eject support proceed by using the existing mechanisms such as the table handler. If additional support/interfaces are needed in ACPICA, we can discuss it. However, just about the last thing I would like to do is add a level of indirection between the ACPI_HANDLE and the ACPI_NAMESPACE_NODE -- which would require a large, global change to ACPICA that would be only applicable for a single rather rare issue, the unloading of an ACPI table. Just the fact that we are discussing this in 2013 and ACPICA has been running since 1999 should confirm the rarity of this case and/or that the existing mechanism has been sufficient for other hosts that run ACPICA.
+> 
 
-To make thing simple, we could make booting path use same code.
-So all gsi range will be reserved at first, and realloc will really
-allocated those irq_desc/cfg when it is used.
+Thanks for the info.  I understand that making such changes requires a
+lot of effort.  This is just a brainstorming, and as you said, I do not
+think there is any platform that can cause this issue on Linux today.
+We are still in the process of handling load/unload table properly in
+the kernel.  Given your input, Rafael's approach of using reference
+counting on struct device seems to be the best choice for us. 
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
----
- arch/x86/include/asm/io_apic.h |    1 +
- arch/x86/kernel/apic/io_apic.c |   78 ++++++++++++++++++++++++++++------------
- 2 files changed, 57 insertions(+), 22 deletions(-)
+BTW, I did work on other OS that supports load/unload table (which might
+be the first OS that supported this feature.)  It protects from this
+race condition with serialization between the OS and FW with _OST.
+However, we cannot expect all platforms to do the same for Linux.
 
-diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
-index eaff3ad..8181fd8 100644
---- a/arch/x86/include/asm/io_apic.h
-+++ b/arch/x86/include/asm/io_apic.h
-@@ -176,6 +176,7 @@ extern void setup_ioapic_ids_from_mpc_nocheck(void);
- struct mp_ioapic_gsi{
- 	u32 gsi_base;
- 	u32 gsi_end;
-+	u32 irq_base;
- };
- extern struct mp_ioapic_gsi  mp_gsi_routing[];
- extern u32 gsi_top;
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 714ed20..c499c88 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -287,8 +287,47 @@ static struct irq_cfg *realloc_irq_and_cfg_at(unsigned int at, int node)
- 	return alloc_irq_and_cfg_at(at, node);
- }
- 
--/* irq_cfg is indexed by the sum of all RTEs in all I/O APICs. */
--static struct irq_cfg irq_cfgx[NR_IRQS_LEGACY];
-+static int reserve_ioapic_gsi_irq_base(int idx)
-+{
-+	int irq;
-+	struct mp_ioapic_gsi *gsi_cfg = mp_ioapic_gsi_routing(idx);
-+	int cnt = gsi_cfg->gsi_end - gsi_cfg->gsi_base + 1;
-+
-+	irq = __irq_reserve_irqs(-1, gsi_cfg->gsi_base, cnt);
-+	if (irq >= 0) {
-+		gsi_cfg->irq_base = irq;
-+		apic_printk(APIC_VERBOSE, KERN_INFO
-+			"IOAPIC[%d]: apic_id %d, GSI %d-%d ==> irq %d-%d reserved\n",
-+			idx, mpc_ioapic_id(idx),
-+			gsi_cfg->gsi_base, gsi_cfg->gsi_end,
-+			irq, irq + cnt - 1);
-+	} else
-+		apic_printk(APIC_VERBOSE, KERN_WARNING
-+			"IOAPIC[%d]: apic_id %d, GSI %d-%d ==> irq reserve failed\n",
-+			idx, mpc_ioapic_id(idx),
-+			gsi_cfg->gsi_base, gsi_cfg->gsi_end);
-+
-+	return irq;
-+}
-+
-+static void __init reserve_ioapic_gsi_irq_extra(void)
-+{
-+	int irq;
-+
-+	/* to prevent hot add ioapic taking those slots */
-+	if (gsi_top) {
-+		irq = irq_reserve_irqs(gsi_top, NR_IRQS_LEGACY);
-+		if (irq >= 0)
-+			apic_printk(APIC_VERBOSE, KERN_INFO
-+				"IOAPIC[extra]: GSI %d-%d ==> irq %d-%d reserved\n",
-+				gsi_top, gsi_top + NR_IRQS_LEGACY - 1,
-+				irq, irq + NR_IRQS_LEGACY - 1);
-+		else
-+			apic_printk(APIC_VERBOSE, KERN_WARNING
-+				"IOAPIC[extra]: GSI %d-%d ==> irq reserve failed\n",
-+				gsi_top, gsi_top + NR_IRQS_LEGACY - 1);
-+	}
-+}
- 
- static void alloc_ioapic_saved_registers(int idx)
- {
-@@ -305,8 +344,9 @@ static void alloc_ioapic_saved_registers(int idx)
- 
- int __init arch_early_irq_init(void)
- {
-+	int node = cpu_to_node(0);
- 	struct irq_cfg *cfg;
--	int count, node, i;
-+	int i;
- 
- 	if (!legacy_pic->nr_legacy_irqs)
- 		io_apic_irqs = ~0UL;
-@@ -314,26 +354,19 @@ int __init arch_early_irq_init(void)
- 	for (i = 0; i < nr_ioapics; i++)
- 		alloc_ioapic_saved_registers(i);
- 
--	cfg = irq_cfgx;
--	count = ARRAY_SIZE(irq_cfgx);
--	node = cpu_to_node(0);
-+	for (i = 0; i < nr_ioapics; i++)
-+		reserve_ioapic_gsi_irq_base(i);
- 
--	/* Make sure the legacy interrupts are marked in the bitmap */
--	irq_reserve_irqs(0, legacy_pic->nr_legacy_irqs);
-+	reserve_ioapic_gsi_irq_extra();
- 
--	for (i = 0; i < count; i++) {
--		INIT_LIST_HEAD(&cfg[i].irq_2_pin);
--		irq_set_chip_data(i, &cfg[i]);
--		zalloc_cpumask_var_node(&cfg[i].domain, GFP_KERNEL, node);
--		zalloc_cpumask_var_node(&cfg[i].old_domain, GFP_KERNEL, node);
--		/*
--		 * For legacy IRQ's, start with assigning irq0 to irq15 to
--		 * IRQ0_VECTOR to IRQ15_VECTOR for all cpu's.
--		 */
--		if (i < legacy_pic->nr_legacy_irqs) {
--			cfg[i].vector = IRQ0_VECTOR + i;
--			cpumask_setall(cfg[i].domain);
--		}
-+	/*
-+	 * For legacy IRQ's, start with assigning irq0 to irq15 to
-+	 * IRQ0_VECTOR to IRQ15_VECTOR for all cpu's.
-+	 */
-+	for (i = 0; i < legacy_pic->nr_legacy_irqs; i++) {
-+		cfg = realloc_irq_and_cfg_at(i, node);
-+		cfg->vector = IRQ0_VECTOR + i;
-+		cpumask_setall(cfg->domain);
- 	}
- 
- 	return 0;
-@@ -3470,7 +3503,8 @@ int __init arch_probe_nr_irqs(void)
- 	if (nr < nr_irqs)
- 		nr_irqs = nr;
- 
--	return NR_IRQS_LEGACY;
-+	/* x86 arch code will allocate irq_desc/cfg */
-+	return 0;
- }
- 
- int io_apic_set_pci_routing(struct device *dev, int irq,
--- 
-1.7.10.4
+Thanks,
+-Toshi
+
 
