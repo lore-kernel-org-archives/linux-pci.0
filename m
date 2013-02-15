@@ -1,169 +1,132 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <1360796969.3869.146.camel@misato.fc.hp.com>
-Subject: Re: [Update][PATCH] ACPI / hotplug: Fix concurrency issues and
- memory leaks
-From: Toshi Kani <toshi.kani@hp.com>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Toshi Kani <toshi.kani@hp.com>
+Cc: "Moore, Robert" <robert.moore@intel.com>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
 	LKML <linux-kernel@vger.kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
 	Jiang Liu <liuj97@gmail.com>, Yinghai Lu <yinghai@kernel.org>,
 	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
-	Myron Stowe <mstowe@redhat.com>, linux-pci@vger.kernel.org
-Date: Wed, 13 Feb 2013 16:09:29 -0700
-In-Reply-To: <4594350.VXNmDOeCvt@vostro.rjw.lan>
-References: <1837481.7dT8hTZ4MT@vostro.rjw.lan>
-	 <1459286.L93riBCyLC@vostro.rjw.lan>
-	 <1360777438.3869.100.camel@misato.fc.hp.com>
-	 <4594350.VXNmDOeCvt@vostro.rjw.lan>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-acpi-owner@vger.kernel.org
+	Myron Stowe <mstowe@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [Update][PATCH] ACPI / hotplug: Fix concurrency issues and memory leaks
+Date: Fri, 15 Feb 2013 13:49:58 +0100
+Message-ID: <1556413.qqfoi7QgzD@vostro.rjw.lan>
+In-Reply-To: <1360888082.3869.163.camel@misato.fc.hp.com>
+References: <1837481.7dT8hTZ4MT@vostro.rjw.lan> <1463882.MtF6rq6lDy@vostro.rjw.lan> <1360888082.3869.163.camel@misato.fc.hp.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2013-02-13 at 21:52 +0100, Rafael J. Wysocki wrote:
-> On Wednesday, February 13, 2013 10:43:58 AM Toshi Kani wrote:
-> > On Wed, 2013-02-13 at 14:16 +0100, Rafael J. Wysocki wrote:
-> > > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Thursday, February 14, 2013 05:28:02 PM Toshi Kani wrote:
+> On Fri, 2013-02-15 at 01:23 +0100, Rafael J. Wysocki wrote:
+> > On Thursday, February 14, 2013 11:45:27 PM Moore, Robert wrote:
 > > > 
-> > > This changeset is aimed at fixing a few different but related
-> > > problems in the ACPI hotplug infrastructure.
+> > > > -----Original Message-----
+> > > > From: Rafael J. Wysocki [mailto:rjw@sisk.pl]
+> > > > Sent: Thursday, February 14, 2013 12:59 PM
+> > > > To: Moore, Robert
+> > > > Cc: Toshi Kani; ACPI Devel Maling List; LKML; Bjorn Helgaas; Jiang Liu;
+> > > > Yinghai Lu; Yasuaki Ishimatsu; Myron Stowe; linux-pci@vger.kernel.org
+> > > > Subject: Re: [Update][PATCH] ACPI / hotplug: Fix concurrency issues and
+> > > > memory leaks
+> > > > 
+> > > > On Thursday, February 14, 2013 08:45:14 PM Moore, Robert wrote:
+> > > > >
+> > > > > > -----Original Message-----
+> > > > > > From: Rafael J. Wysocki [mailto:rjw@sisk.pl]
+> > > > > > Sent: Thursday, February 14, 2013 4:04 AM
+> > > > > > To: Moore, Robert
+> > > > > > Cc: Toshi Kani; ACPI Devel Maling List; LKML; Bjorn Helgaas; Jiang
+> > > > > > Liu; Yinghai Lu; Yasuaki Ishimatsu; Myron Stowe;
+> > > > > > linux-pci@vger.kernel.org
+> > > > > > Subject: Re: [Update][PATCH] ACPI / hotplug: Fix concurrency issues
+> > > > > > and memory leaks
+> > > > > >
+> > > > > > On Thursday, February 14, 2013 02:31:22 AM Moore, Robert wrote:
+> > > > > > > > > > I thought about that, but actually there's no guarantee that
+> > > > > > > > > > the handle will be valid after _EJ0 as far as I can say.  So
+> > > > > > > > > > the race condition is going to be there anyway and using
+> > > > > > > > > > struct acpi_device just makes it easier to avoid it.
+> > > > > > > > >
+> > > > > > > > > In theory, yes, a stale handle could be a problem, if _EJ0
+> > > > > > > > > performs unload table and if ACPICA frees up its internal data
+> > > > > > > > > structure pointed by the handle as a result.  But we should
+> > > > > > > > > not see such issue now since we do not support dynamic ACPI
+> > > > > > > > > namespace
+> > > > > > yet.
+> > > > > > > >
+> > > > > > > > I'm waiting for information from Bob about that.  If we can
+> > > > > > > > assume ACPI handles to be always valid, that will simplify
+> > > > > > > > things quite a
+> > > > > > bit.
+> > > > > > >
+> > > > > > > If a table is unloaded, all the namespace nodes for that table are
+> > > > > > > removed from the namespace, and thus any ACPI_HANDLE pointers go
+> > > > > > > stale
+> > > > > > and invalid.
+> > > > > >
+> > > > > > OK, thanks!
+> > > > > >
+> > > > > > To me this means that we cannot assume a handle to stay valid
+> > > > > > between a notify handler and acpi_bus_hot_remove_device() run from a
+> > > > workqueue.
+> > > > > >
+> > > > > > Is there a mechanism in ACPICA to ensure that a handle won't become
+> > > > > > stale while a notify handler is running for it or is the OS
+> > > > > > responsible for ensuring that
+> > > > > > _EJ0 won't be run in parallel with notify handlers for device
+> > > > > > objects being ejected?
+> > > > > >
+> > > > >
+> > > > > It is up to the host.
+> > > > 
+> > > > I was afraid that that might be the case. :-)
+> > > > 
+> > > > So far the (Linux) host has been happily ignoring that potential problem,
+> > > > so I guess it can still be ignored for a while, although we'll need to
+> > > > address it eventually at one point.
 > > > 
-> > > First of all, since notify handlers may be run in parallel with
-> > > acpi_bus_scan(), acpi_bus_trim() and acpi_bus_hot_remove_device()
-> > > and some of them are installed for ACPI handles that have no struct
-> > > acpi_device objects attached (i.e. before those objects are created),
-> > > those notify handlers have to take acpi_scan_lock to prevent races
-> > > from taking place (e.g. a struct acpi_device is found to be present
-> > > for the given ACPI handle, but right after that it is removed by
-> > > acpi_bus_trim() running in parallel to the given notify handler).
-> > > Moreover, since some of them call acpi_bus_scan() and
-> > > acpi_bus_trim(), this leads to the conclusion that acpi_scan_lock
-> > > should be acquired by the callers of these two funtions rather by
-> > > these functions themselves.
-> > > 
-> > > For these reasons, make all notify handlers that can handle device
-> > > addition and eject events take acpi_scan_lock and remove the
-> > > acpi_scan_lock locking from acpi_bus_scan() and acpi_bus_trim().
-> > > Accordingly, update all of their users to make sure that they
-> > > are always called under acpi_scan_lock.
-> > > 
-> > > Furthermore, since eject operations are carried out asynchronously
-> > > with respect to the notify events that trigger them, with the help
-> > > of acpi_bus_hot_remove_device(), even if notify handlers take the
-> > > ACPI scan lock, it still is possible that, for example,
-> > > acpi_bus_trim() will run between acpi_bus_hot_remove_device() and
-> > > the notify handler that scheduled its execution and that
-> > > acpi_bus_trim() will remove the device node passed to
-> > > acpi_bus_hot_remove_device() for ejection.  In that case, the struct
-> > > acpi_device object obtained by acpi_bus_hot_remove_device() will be
-> > > invalid and not-so-funny things will ensue.  To protect agaist that,
-> > > make the users of acpi_bus_hot_remove_device() run get_device() on
-> > > ACPI device node objects that are about to be passed to it and make
-> > > acpi_bus_hot_remove_device() run put_device() on them and check if
-> > > their ACPI handles are not NULL (make acpi_device_unregister() clear
-> > > the device nodes' ACPI handles for that check to work).
-> > > 
-> > > Finally, observe that acpi_os_hotplug_execute() actually can fail,
-> > > in which case its caller ought to free memory allocated for the
-> > > context object to prevent leaks from happening.  It also needs to
-> > > run put_device() on the device node that it ran get_device() on
-> > > previously in that case.  Modify the code accordingly.
+> > > I would think it should be fairly simple to setup a mechanism to either tell
+> > > the driver or for the driver to figure it out -- such that the driver knows
+> > > that all handles associated with the device are now invalid. Another way
+> > > to look at it is that when the device is re-installed, the driver should
+> > > reinitialize such that it obtains new handles for the devices and subobjects
+> > > in question.
 > > 
-> > I am concerned with this approach.  ACPICA calls notify handlers through
-> > kacpi_notify_wq, which has the max active set to 1.  We then use
-> > kacpi_hotplug_wq (which also has the max active set to 1) so that a
-> > hotplug procedure does not block the notify handlers since they can be
-> > used for non-hotplug events as well.
-> 
-> In fact we use kacpi_hotplug_wq for a different reason.  Please read the
-> comment in __acpi_os_execute() for more details.
-
-Yes, I am aware of the issue as well.
-
-> > Acquiring the scan lock in a notify handler means that a hotplug procedure
-> > can block any notify events.
-> 
-> Yes, it can.
-> 
-> > So, I'd prefer the following approach.
+> > Unfortunately, there is quite strong assumption in our code that ACPI handles
+> > will not become stale before the device objects associated with them are
+> > removed.  For this reason, we need to know in advance which handles will
+> > become stale as a result of a table unload and remove their device objects
+> > beforehand.
 > > 
-> >  - Change all hot-plug procedures (i.e. both add and delete) to proceed
-> > under kacpi_hotplug_wq by calling acpi_os_hotplug_execute(). This
-> > serializes all hotplug procedures, and prevents blocking other notify
-> > events.
+> > Moreover, when there's a notify handler installed for a given ACPI handle
+> > and that handle becomes stale while the notify handler is running, we'll be
+> > in trouble.  To avoid that we need to ensure that table unloads and notifies
+> > will always be mutually exclusive.
 > 
-> Yes, we can do that.  I was thinking about doing that change, but not in v3.9.
-> There are simply too many notify handlers already there to do that so late in
-> the cycle.  And doing that for acpiphp, for example, won't be straightforward
-> at all.
+> I wonder if we can make acpi_ns_validate_handle() to actually be able to
+> verify if a given handle is valid.  This way, ACPICA can fail gracefully
+> (AE_BAD_PARAMETER) when a stable handle is passed to the interfaces.
 
-Right.  I was not suggesting this approach for v3.9.
+That'd be good, but to implement it, I think, it would be necessary to
+introduce some reference counting of namespace objects such that the given
+object would only be deleted after the last reference to it had been dropped.
+On table unload it would just be marked as invalid, but it would stay in
+memory as long as there were any references to it.
 
-> Please think about the $subject patch as a temporary measure until we can do
-> something better (which we need to do anyway to reduce code duplication among
-> other things).
+So, for example, a notify handler would start from something like
+acpi_add_reference(handle), which would guarantee that the object pointed to by
+handle would stay in memory, and it would finish by doing
+acpi_drop_reference(handle) or a work item scheduled by it would do that.
 
-I am fine with the scan lock as long as it is internal.  This patch
-publishes the locking interfaces to other modules, which made me worried
-that this might become a long term solution.  If we need to fix this
-issue for v3.9, I am OK with it as you clarified this as a temporary
-solution.
-
-> > (Ideally, we should also run all online/offline procedures
-> > under a same work-queue, just like my RFC patchset did, but this is a
-> > different topic for now.)
-> 
-> No, I don't think it is appropriate to run online/offline from _any_
-> workqueue.  In my opinion they should be run from user space.
-
-I think there are pros and cons for this.  If we use a user thread to
-run online/offline procedure, we can return a result directly.  However,
-if an operation takes a long time, it will block the user thread until
-it is done.  In addition, we have race conditions between hotplug and
-online/offline operations.  So, we may need to come up with other type
-of locking if we do not use a workqueue to address it.  Having both the
-scan lock and other lock in the callers would not be good.
-
-> >  - Revert 5993c4670 unless this change is absolutely necessary.  From
-> > the change log, it is not clear to me why this change was needed.  It
-> > changed acpi_bus_hot_remove_device() to take an acpi_device, instead of
-> > an acpi_handle, which introduced a race condition with acpi_device.
-> > acpi_bus_hot_remove_device() should take an acpi_handle, and then obtain
-> > its acpi_device from the acpi_handle since this function is serialized.
-> 
-> I thought about that, but actually there's no guarantee that the handle
-> will be valid after _EJ0 as far as I can say.  So the race condition is
-> going to be there anyway and using struct acpi_device just makes it easier
-> to avoid it.
-
-In theory, yes, a stale handle could be a problem, if _EJ0 performs
-unload table and if ACPICA frees up its internal data structure pointed
-by the handle as a result.  But we should not see such issue now since
-we do not support dynamic ACPI namespace yet.
-
-> >  - Remove sanity checks with an acpi_device in the notify handlers,
-> > which have a race condition with acpi_device.  These type-specific
-> > checks will need to be removed when we have a common notify handler
-> > anyway.  The notify handler can continue to check the status of ACPI
-> > device object with an acpi_handle.  Type-specific sanity checks /
-> > validations can be performed within a hotplug procedure, instead.
-> 
-> Well, the sanest approach here would be to queue up a work item on
-> kacpi_hotplug_wq if the event is of a "hotplug" type and let that work
-> item do all checks, run acpi_bus_scan() etc.  But not in v3.9.
-
-Agreed, and that's what I meant.
-
-> For v3.9, the most straightforward and least intrusive change we can do
-> is the $subject patch as far as I can say.  If you can suggest something
-> less intrusive and more straightforward, please do.
-
-My suggestion is to keep the scan lock internal for v3.9 and implement a
-new hotplug framework (i.e. the one with user space approach) for v3.10
-with a proper locking mechanism.  But, since you clarified this as a
-temporary solution, I am OK with it if we need to fix it now.
+We do that for objects based on struct device and it works well.
 
 Thanks,
--Toshi
+Rafael
 
+
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
