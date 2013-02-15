@@ -1,112 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:23246 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754583Ab3BDUgK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 4 Feb 2013 15:36:10 -0500
-Message-ID: <1360010164.11144.542.camel@bling.home>
-Subject: Re: PCI warning on boot 3.8.0-rc1
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Stephen Hemminger <stephen@networkplumber.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	David Woodhouse <dwmw2@infradead.org>,
-	iommu@lists.linux-foundation.org
-Date: Mon, 04 Feb 2013 13:36:04 -0700
-In-Reply-To: <20130204123041.31e402df@nehalam.linuxnetplumber.net>
-References: <20130116143853.339dd89b@nehalam.linuxnetplumber.net>
-	 <CAErSpo5eOE_=Ob2jN7ACy0eJBOa8k36XqCbHnGTCs-wfiy8tiw@mail.gmail.com>
-	 <20130204103645.38ae2d5e@nehalam.linuxnetplumber.net>
-	 <1360009684.11144.539.camel@bling.home>
-	 <20130204123041.31e402df@nehalam.linuxnetplumber.net>
-Content-Type: text/plain; charset="UTF-8"
+Received: from mail.free-electrons.com ([94.23.35.102]:57713 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750718Ab3BOFGi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 Feb 2013 00:06:38 -0500
+Date: Fri, 15 Feb 2013 06:06:35 +0100
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Tawfik Bayouk <tawfik@marvell.com>
+Subject: Re: [PATCH 24/32] pci: PCIe driver for Marvell Armada 370/XP
+ systems
+Message-ID: <20130215060635.43f06f71@skate>
+In-Reply-To: <CAErSpo6_6bYjo5XX5tzoBfMu5Htgpa__foNCyoCnCNEHocx67Q@mail.gmail.com>
+References: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	<1360686546-24277-25-git-send-email-thomas.petazzoni@free-electrons.com>
+	<CAErSpo6_6bYjo5XX5tzoBfMu5Htgpa__foNCyoCnCNEHocx67Q@mail.gmail.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 2013-02-04 at 12:30 -0800, Stephen Hemminger wrote:
-> On Mon, 04 Feb 2013 13:28:04 -0700
-> Alex Williamson <alex.williamson@redhat.com> wrote:
-> 
-> > On Mon, 2013-02-04 at 10:36 -0800, Stephen Hemminger wrote:
-> > > > I think drivers/pci/search.c is identical between 3.7 and 3.8-rc1.  Is
-> > > > this the first time you've turned on the IOMMU on that box?
-> > > 
-> > > It exists in 3.7 and earlier kernels, just haven't turned on same config.
-> > > 
-> > > > It's the same warning as in this bugzilla:
-> > > > https://bugzilla.kernel.org/show_bug.cgi?id=44881, and there's a patch
-> > > > there at https://bugzilla.kernel.org/show_bug.cgi?id=44881#c11, but
-> > > > it's just a quirk that turns off VT-d if we find certain broken
-> > > > bridges.  It doesn't look like you have any of those (although I don't
-> > > > know what you have at 05:00.0).
-> > > > 
-> > > > Bjorn
-> > > 
-> > > This is a standard ASUS motherboard, and don't want to disable VT-d.
-> > 
-> > Stephen,
-> > 
-> > Can you give the lspci -vvv of device 5:00.0 to see if it's one we've
-> > seen before?  Does the patch below help?
-> 
-> 
-> $ sudo lspci -vvv -s 5:00.0
-> 05:00.0 PCI bridge: ASMedia Technology Inc. ASM1083/1085 PCIe to PCI Bridge (rev 03) (prog-if 01 [Subtractive decode])
+Dear Bjorn Helgaas,
 
-Someone has even decided to name this one a PCIe-to-PCI bridge despite
-it lacking a PCIe capability.  Thanks,
+On Thu, 14 Feb 2013 17:36:39 -0700, Bjorn Helgaas wrote:
 
-Alex
+> > +config PCI_MVEBU
+> > +       bool "Marvell EBU PCIe controller"
+> > +       depends on ARCH_MVEBU
+> > +       select PCI_SW_HOST_BRIDGE
+> > +       select PCI_SW_PCI_PCI_BRIDGE
+> 
+> I think PCI_SW_HOST_BRIDGE and PCI_SW_PCI_PCI_BRIDGE are obsolete and
+> can be removed, right?
 
-> 	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
-> 	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-> 	Latency: 0, Cache Line Size: 64 bytes
-> 	Bus: primary=05, secondary=06, subordinate=06, sec-latency=32
-> 	I/O behind bridge: 0000f000-00000fff
-> 	Memory behind bridge: fff00000-000fffff
-> 	Prefetchable memory behind bridge: 00000000fff00000-00000000000fffff
-> 	Secondary status: 66MHz+ FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort+ <SERR- <PERR-
-> 	BridgeCtl: Parity- SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
-> 		PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
-> 	Capabilities: [c0] Subsystem: ASUSTeK Computer Inc. Device 8489
-> 
-> 
-> > Bjorn, I think we need to quirk it somehow.  So far they've all been
-> > PCI-to-PCI bridges attached to root ports where we expect it's actually
-> > a PCIe-to-PCI bridge.  Seems like maybe we could have the same attached
-> > to a downstream port.  The patch below avoids the WARN and gives us a
-> > device, but of course pci_is_pcie reports wrong for this device and may
-> > cause some trickle down breakage.  A more complete option might be to
-> > add a is_pcie flag to the device that can be set independent of
-> > pcie_cap.  We'd need to check all the callers for assumptions, but then
-> > we could put the quirk in one place and hopefully fix everything.
-> > Thoughts?  Thanks,
-> > 
-> > Alex
-> > 
-> > 
-> > diff --git a/drivers/pci/search.c b/drivers/pci/search.c
-> > index bf969ba..65ae270 100644
-> > --- a/drivers/pci/search.c
-> > +++ b/drivers/pci/search.c
-> > @@ -42,6 +42,15 @@ pci_find_upstream_pcie_bridge(struct pci_dev *pdev)
-> >  		}
-> >  		/* PCI device should connect to a PCIe bridge */
-> >  		if (pci_pcie_type(pdev) != PCI_EXP_TYPE_PCI_BRIDGE) {
-> > +			/*
-> > +			 * Not all PCIe-to-PCI bridges expose a PCIe
-> > +			 * capability.  If we make it to a PCIe root port
-> > +			 * and the previous device was a PCI-to-PCI bridge,
-> > +			 * assume it was really a PCIe-to-PCI bridge.
-> > +			 */
-> > +			if (pci_pcie_type(pdev) == PCI_EXP_TYPE_ROOT_PORT &&
-> > +			    tmp && tmp->hdr_type == PCI_HEADER_TYPE_BRIDGE)
-> > +				return tmp;
-> >  			/* Busted hardware? */
-> >  			WARN_ON_ONCE(1);
-> >  			return NULL;
-> > 
-> > 
-> 
+Indeed, will fix.
 
 
+> > +       case PCI_PREF_LIMIT_UPPER32:
+> > +               bridge->preflimitupper = value;
+> > +               break;
+> 
+> You're relying on a subsequent PCI_COMMAND write to set PCI_COMMAND_IO
+> and/or PCI_COMMAND_MEMORY, and you program the bridge windows at that
+> time.
 
+Correct.
+
+>  It might be a good idea if the PCI core did clear those bits
+> while updating the windows, but I'm not sure we do.  In any case,
+> delaying the update is a difference from a standard P2P bridge that
+> could cause issues later.
+
+When would you want the window assignment to occur? Directly when the
+registers containing the base/limit are being written to? There are
+multiple registers for base/limit, so I'll have to figure out a way to
+validate when the base/limit informations are valid.
+
+Thanks,
+
+Thomas
+-- 
+Thomas Petazzoni, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
