@@ -1,72 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f179.google.com ([209.85.217.179]:43452 "EHLO
-	mail-lb0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754621Ab3BDL4K (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 4 Feb 2013 06:56:10 -0500
-Subject: [PATCH v2 4/7] PCI/PM: clear state_saved during suspend
-To: e1000-devel@lists.sourceforge.net, linux-pci@vger.kernel.org,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	linux-kernel@vger.kernel.org
-From: Konstantin Khlebnikov <khlebnikov@openvz.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 04 Feb 2013 15:56:05 +0400
-Message-ID: <20130204115605.5569.84605.stgit@zurg>
-In-Reply-To: <20130204115246.5569.85829.stgit@zurg>
-References: <20130204115246.5569.85829.stgit@zurg>
+Received: from mx1.redhat.com ([209.132.183.28]:16989 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751139Ab3BOTW5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 15 Feb 2013 14:22:57 -0500
+Subject: [PATCH v2] pci: Disable slot presence detection around bus reset
+To: bhelgaas@google.com, linux-pci@vger.kernel.org
+From: Alex Williamson <alex.williamson@redhat.com>
+Cc: linux-kernel@vger.kernel.org
+Date: Fri, 15 Feb 2013 12:22:56 -0700
+Message-ID: <20130215191944.27692.8935.stgit@bling.home>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+A bus reset can trigger a presence detection change and result in a
+suprise hotplug.  This is generally not what we want to happen when
+trying to reset a device.  Disable the presence detection control on
+on bridges around bus reset.
 
-This patch clears pci_dev->state_saved at the beginnig of suspending.
-PCI config state may be saved long before that. Some divers calls
-pci_save_state() from its ->probe() callback to get snapshot of sane
-configuration space to use in the ->slot_reset() callback.
-
-Signed-off-by: Konstantin Khlebnikov <khlebnikov@openvz.org> # add comment
-Cc: linux-pci@vger.kernel.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
 ---
- drivers/pci/pci-driver.c |    4 ++++
- 1 file changed, 4 insertions(+)
+v2: Still hasn't resolved any controversy of this patch, but writing the
+    presence detect changed bit to the slot status to clear it resolves
+    the stray remove/add I was still seeing occasionally on v1.
 
-diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-index dc5bdce..f9aa311 100644
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -628,6 +628,7 @@ static int pci_pm_suspend(struct device *dev)
- 		goto Fixup;
- 	}
+ drivers/pci/pci.c |   32 +++++++++++++++++++++++++++-----
+ 1 file changed, 27 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 5cb5820..efccc97 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3229,8 +3229,8 @@ static int pci_pm_reset(struct pci_dev *dev, int probe)
  
-+	pci_dev->state_saved = false;
- 	if (pm->suspend) {
- 		pci_power_t prev = pci_dev->current_state;
- 		int error;
-@@ -774,6 +775,7 @@ static int pci_pm_freeze(struct device *dev)
+ static int pci_parent_bus_reset(struct pci_dev *dev, int probe)
+ {
+-	u16 ctrl;
+-	struct pci_dev *pdev;
++	u16 ctrl, flags, sltctl = 0;
++	struct pci_dev *pdev, *bridge;
+ 
+ 	if (pci_is_root_bus(dev->bus) || dev->subordinate || !dev->bus->self)
+ 		return -ENOTTY;
+@@ -3242,15 +3242,37 @@ static int pci_parent_bus_reset(struct pci_dev *dev, int probe)
+ 	if (probe)
  		return 0;
- 	}
  
-+	pci_dev->state_saved = false;
- 	if (pm->freeze) {
- 		int error;
+-	pci_read_config_word(dev->bus->self, PCI_BRIDGE_CONTROL, &ctrl);
++	bridge = dev->bus->self;
++
++	/*
++	 * If the parent device supports a slot with presence detection
++	 * change enabled, holding the bus in reset can trigger that and
++	 * cause an unwanted surprise removal.  Disable presence detection
++	 * around the bus reset.
++	 */
++	pcie_capability_read_word(bridge, PCI_EXP_FLAGS, &flags);
++	if (flags & PCI_EXP_FLAGS_SLOT) {
++		pcie_capability_read_word(bridge, PCI_EXP_SLTCTL, &sltctl);
++		if (sltctl & PCI_EXP_SLTCTL_PDCE)
++			pcie_capability_write_word(bridge, PCI_EXP_SLTCTL,
++						sltctl & ~PCI_EXP_SLTCTL_PDCE);
++	}
++
++	pci_read_config_word(bridge, PCI_BRIDGE_CONTROL, &ctrl);
+ 	ctrl |= PCI_BRIDGE_CTL_BUS_RESET;
+-	pci_write_config_word(dev->bus->self, PCI_BRIDGE_CONTROL, ctrl);
++	pci_write_config_word(bridge, PCI_BRIDGE_CONTROL, ctrl);
+ 	msleep(100);
  
-@@ -862,6 +864,7 @@ static int pci_pm_poweroff(struct device *dev)
- 		goto Fixup;
- 	}
+ 	ctrl &= ~PCI_BRIDGE_CTL_BUS_RESET;
+-	pci_write_config_word(dev->bus->self, PCI_BRIDGE_CONTROL, ctrl);
++	pci_write_config_word(bridge, PCI_BRIDGE_CONTROL, ctrl);
+ 	msleep(100);
  
-+	pci_dev->state_saved = false;
- 	if (pm->poweroff) {
- 		int error;
++	if (sltctl & PCI_EXP_SLTCTL_PDCE) {
++		pcie_capability_write_word(bridge,
++					   PCI_EXP_SLTSTA, PCI_EXP_SLTSTA_PDC);
++		pcie_capability_write_word(bridge, PCI_EXP_SLTCTL, sltctl);
++	}
++
+ 	return 0;
+ }
  
-@@ -987,6 +990,7 @@ static int pci_pm_runtime_suspend(struct device *dev)
- 	if (!pm || !pm->runtime_suspend)
- 		return -ENOSYS;
- 
-+	pci_dev->state_saved = false;
- 	pci_dev->no_d3cold = false;
- 	error = pm->runtime_suspend(dev);
- 	suspend_report_result(pm->runtime_suspend, error);
 
