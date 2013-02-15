@@ -1,199 +1,409 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:52002 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750711Ab3B0QS7 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Feb 2013 11:18:59 -0500
-From: "Ronciak, John" <john.ronciak@intel.com>
-To: ratheesh kannoth <ratheesh.ksz@gmail.com>,
-	"e1000-devel@lists.sourceforge.net"
-	<e1000-devel@lists.sourceforge.net>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: RE: [E1000-devel] pcie error
-Date: Wed, 27 Feb 2013 16:18:56 +0000
-Message-ID: <D38E8E86660E514AB505863C19C9287C6A458067@ORSMSX101.amr.corp.intel.com>
-References: <CAGZFCEFFPqVZ29e7_Bm_Xehw50W-D8K2B=CaXs6VkyDKQmCTvw@mail.gmail.com>
-In-Reply-To: <CAGZFCEFFPqVZ29e7_Bm_Xehw50W-D8K2B=CaXs6VkyDKQmCTvw@mail.gmail.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <5988763.6WpnEvTV2f@vostro.rjw.lan>
+References: <CAE9FiQUkmnV_On5+ZpH2pF4Li1HxLpkO8bp4TnYB46=pc9Safg@mail.gmail.com>
+	<1360696283-20313-1-git-send-email-yinghai@kernel.org>
+	<5988763.6WpnEvTV2f@vostro.rjw.lan>
+Date: Thu, 14 Feb 2013 16:50:53 -0800
+Message-ID: <CAE9FiQX=yLyBV3AbP43N91Tx5-ic-f5f+=_r_RBLxq1Ct32Z_Q@mail.gmail.com>
+Subject: Re: [PATCH] ACPI, PCI: Get PRT entry during acpi_pci_enable_irq()
+From: Yinghai Lu <yinghai@kernel.org>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The "d13a" device is not a networking device.  So I'm not sure what you cut from the logs but the igb messages have nothing to do with this device.  According to the Device ID's repository the "d13a" device is a "Core Processor PCI Express Root Port 3".
+On Tue, Feb 12, 2013 at 12:22 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> On Tuesday, February 12, 2013 11:11:23 AM Yinghai Lu wrote:
+>> Peter Hurley found "irq 18 nobody cared" with pci-next, and dmesg has
+>>
+>> [    8.983246] pci 0000:00:1e.0: can't derive routing for PCI INT A
+>> [    8.983600] snd_ctxfi 0000:09:02.0: PCI INT A: no GSI - using ISA IRQ 5
+>>
+>> bisect to
+>> | commit 4f535093cf8f6da8cfda7c36c2c1ecd2e9586ee4
+>> |     PCI: Put pci_dev in device tree as early as possible
+>>
+>> It turns out we need to call acpi_pci_irq_add_prt() after the pci bridges
+>> are scanned.
+>>
+>> Bjorn said:
+>>  The bus number binding means acpi_pci_irq_add_prt() has to happen
+>>  after enumerating everything below a bridge, and it will prevent us
+>>  from doing any bus number reassignment for hotplug.
+>>
+>>  I think we should remove the bus numbers from the cached _PRT (or
+>>  maybe even remove the _PRT caching completely).  When we enable a PCI
+>>  device's IRQ, we should search up the PCI device tree looking for a
+>>  _PRT associated with each node, and applying normal PCI bridge
+>>  swizzling when we don't find a _PRT.  I think this can be done without
+>>  using PCI bus numbers at all.
+>>
+>> So here we try to remove _PRT caching completely.
+>>
+>> -v2: check !handle early.
+>>
+>> Reported-and-tested-by: Peter Hurley <peter@hurleysoftware.com>
+>> Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
+>> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+>
+> Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+>
+>> ---
+>>  drivers/acpi/pci_irq.c      |   95 +++++++++++++++++---------------------------
+>>  drivers/acpi/pci_root.c     |   18 --------
+>>  drivers/pci/pci-acpi.c      |   24 -----------
+>>  include/acpi/acpi_drivers.h |    5 --
+>>  4 files changed, 38 insertions(+), 104 deletions(-)
 
-So this isn't a networking device error but some sort of system error.
+Bjorn,
 
-Cheers,
-John
+Can you put this one into pci/next?
 
+Thanks
 
-> -----Original Message-----
-> From: ratheesh kannoth [mailto:ratheesh.ksz@gmail.com]
-> Sent: Wednesday, February 27, 2013 2:40 AM
-> To: e1000-devel@lists.sourceforge.net; linux-pci@vger.kernel.org
-> Subject: [E1000-devel] pcie error
-> 
-> I am getting  an error when i send traffic thru 8086:10e6 device
-> 
-> +------ PCI-Express Device Error ------+
-> Error Severity          : Uncorrected (Non-Fatal)
-> PCIE Bus Error type     : Transaction Layer
-> Completion Timeout      : Multiple
-> Requester ID            : 0028
-> VendorID=8086h, DeviceID=d13ah, Bus=00h, Device=05h, Function=00h
-> igb: ge1_0 NIC Link is Up 1000 Mbps Full Duplex, Flow Control: RX/TX
-> igb: ge1_1 NIC Link is Up 1000 Mbps Full Duplex, Flow Control: RX/TX
-> 
-> I have added output of lspci -m and  lspci -vvt .
-> 
-> 1. How can we confirm this is s/w or hw problem ?
-> 2. Any clue or hint on how to debug is really appreciated  ?
-> 
-> 
-> bash-3.2# lspci -m
-> 00:00.0 "Class 0600" "Vendor 8086" "Device d130" -r11 "Unknown vendor
-> 105b" "Device 0d61"
-> 00:03.0 "Class 0604" "Vendor 8086" "Device d138" -r11 "" ""
-> 00:05.0 "Class 0604" "Vendor 8086" "Device d13a" -r11 "" ""
-> 00:08.0 "Class 0880" "Vendor 8086" "Device d155" -r11 "Unknown vendor
-> 005b" "Device 0061"
-> 00:08.1 "Class 0880" "Vendor 8086" "Device d156" -r11 "Unknown vendor
-> 005b" "Device 0061"
-> 00:08.2 "Class 0880" "Vendor 8086" "Device d157" -r11 "Unknown vendor
-> 005b" "Device 0061"
-> 00:08.3 "Class 0880" "Vendor 8086" "Device d158" -r11 "Unknown vendor
-> 005b" "Device 0061"
-> 00:10.0 "Class 0880" "Vendor 8086" "Device d150" -r11 "Unknown vendor
-> 005b" "Device 0061"
-> 00:10.1 "Class 0880" "Vendor 8086" "Device d151" -r11 "Unknown vendor
-> 005b" "Device 0061"
-> 00:1a.0 "Class 0c03" "Vendor 8086" "Device 3b3c" -r06 -p20 "Unknown
-> vendor 105b" "Device 0d61"
-> 00:1c.0 "Class 0604" "Vendor 8086" "Device 3b42" -r06 "" ""
-> 00:1c.4 "Class 0604" "Vendor 8086" "Device 3b4a" -r06 "" ""
-> 00:1c.5 "Class 0604" "Vendor 8086" "Device 3b4c" -r06 "" ""
-> 00:1d.0 "Class 0c03" "Vendor 8086" "Device 3b34" -r06 -p20 "Unknown
-> vendor 105b" "Device 0d61"
-> 00:1e.0 "Class 0604" "Vendor 8086" "Device 244e" -ra6 -p01 "" ""
-> 00:1f.0 "Class 0601" "Vendor 8086" "Device 3b16" -r06 "Unknown vendor
-> 105b" "Device 0d61"
-> 00:1f.2 "Class 0104" "Vendor 8086" "Device 2822" -r06 "Unknown vendor
-> 105b" "Device 0d61"
-> 00:1f.3 "Class 0c05" "Vendor 8086" "Device 3b30" -r06 "Unknown vendor
-> 105b" "Device 0d61"
-> 01:00.0 "Class 0604" "Vendor 10b5" "Device 8618" -rba "" ""
-> 02:01.0 "Class 0604" "Vendor 10b5" "Device 8618" -rba "" ""
-> 02:03.0 "Class 0604" "Vendor 10b5" "Device 8618" -rba "" ""
-> 02:05.0 "Class 0604" "Vendor 10b5" "Device 8618" -rba "" ""
-> 02:07.0 "Class 0604" "Vendor 10b5" "Device 8618" -rba "" ""
-> 02:09.0 "Class 0604" "Vendor 10b5" "Device 8618" -rba "" ""
-> 02:0b.0 "Class 0604" "Vendor 10b5" "Device 8618" -rba "" ""
-> 02:0d.0 "Class 0604" "Vendor 10b5" "Device 8618" -rba "" ""
-> 02:0f.0 "Class 0604" "Vendor 10b5" "Device 8618" -rba "" ""
-> 03:00.0 "Class 0200" "Vendor 8086" "Device 10d3" "Unknown vendor 8086"
-> "Device 0000"
-> 04:00.0 "Class 0200" "Vendor 8086" "Device 10d3" "Unknown vendor 8086"
-> "Device 0000"
-> 05:00.0 "Class 0200" "Vendor 8086" "Device 10d3" "Unknown vendor 8086"
-> "Device 0000"
-> 06:00.0 "Class 0200" "Vendor 8086" "Device 10d3" "Unknown vendor 8086"
-> "Device 0000"
-> 07:00.0 "Class 0200" "Vendor 8086" "Device 10d3" "Unknown vendor 8086"
-> "Device 0000"
-> 08:00.0 "Class 0200" "Vendor 8086" "Device 10d3" "Unknown vendor 8086"
-> "Device 0000"
-> 09:00.0 "Class 0200" "Vendor 8086" "Device 10d3" "Unknown vendor 8086"
-> "Device 0000"
-> 0a:00.0 "Class 0200" "Vendor 8086" "Device 10d3" "Unknown vendor 8086"
-> "Device 0000"
-> 0b:00.0 "Class 0604" "Vendor 10b5" "Device 8624" -rbb "" ""
-> 0c:04.0 "Class 0604" "Vendor 10b5" "Device 8624" -rbb "" ""
-> 0c:05.0 "Class 0604" "Vendor 10b5" "Device 8624" -rbb "" ""
-> 0c:08.0 "Class 0604" "Vendor 10b5" "Device 8624" -rbb "" ""
-> 0c:09.0 "Class 0604" "Vendor 10b5" "Device 8624" -rbb "" ""
-> 0e:00.0 "Class 0604" "Vendor 10b5" "Device 8518" -rac "" ""
-> 0f:01.0 "Class 0604" "Vendor 10b5" "Device 8518" -rac "" ""
-> 0f:02.0 "Class 0604" "Vendor 10b5" "Device 8518" -rac "" ""
-> 10:00.0 "Class 0200" "Vendor 8086" "Device 10e6" -r01 "Unknown vendor
-> 1374" "Device 0b60"
-> 10:00.1 "Class 0200" "Vendor 8086" "Device 10e6" -r01 "Unknown vendor
-> 1374" "Device 0b60"
-> 11:00.0 "Class 0200" "Vendor 8086" "Device 10e6" -r01 "Unknown vendor
-> 1374" "Device 0b60"
-> 11:00.1 "Class 0200" "Vendor 8086" "Device 10e6" -r01 "Unknown vendor
-> 1374" "Device 0b60"
-> 12:00.0 "Class 0b40" "Vendor 1000" "Device 0a05" -r01 "Unknown vendor
-> 1000" "Device 0a09"
-> 14:00.0 "Class 1000" "Vendor 177d" "Device 0010" -r01 "Unknown vendor
-> 177d" "Device 0001"
-> 15:00.0 "Class 0200" "Vendor 8086" "Device 10d3" "Unknown vendor 8086"
-> "Device 0000"
-> 16:00.0 "Class 0604" "Vendor 1a03" "Device 1150" -r02 "" ""
-> 17:00.0 "Class 0300" "Vendor 1a03" "Device 2000" -r10 "Unknown vendor
-> 1a03" "Device 2000"
-> 
-> 
-> bash-3.2# lspci -tvv
-> -[0000:00]-+-00.0  Device 8086:d130
->            +-03.0-[0000:01-0a]----00.0-[0000:02-0a]--+-01.0-[0000:03]--
-> --00.0
->  Device 8086:10d3
->            |
-> +-03.0-[0000:04]----00.0  Device 8086:10d3
->            |
-> +-05.0-[0000:05]----00.0  Device 8086:10d3
->            |
-> +-07.0-[0000:06]----00.0  Device 8086:10d3
->            |
-> +-09.0-[0000:07]----00.0  Device 8086:10d3
->            |
-> +-0b.0-[0000:08]----00.0  Device 8086:10d3
->            |
-> +-0d.0-[0000:09]----00.0  Device 8086:10d3
->            |
-> \-0f.0-[0000:0a]----00.0  Device 8086:10d3
->            +-05.0-[0000:0b-13]----00.0-[0000:0c-13]--+-04.0-[0000:0d]--
->            |
-> +-05.0-[0000:0e-11]----00.0-[0000:0f-11]--+-01.0-[0000:10]--+-00.0
-> Device 8086:10e6
->            |                                         |
->                         |                 \-00.1  Device 8086:10e6
->            |                                         |
->                         \-02.0-[0000:11]--+-00.0  Device 8086:10e6
->            |                                         |
->                                           \-00.1  Device 8086:10e6
->            |
-> +-08.0-[0000:12]----00.0  Device 1000:0a05
->            |                                         \-09.0-[0000:13]--
->            +-08.0  Device 8086:d155
->            +-08.1  Device 8086:d156
->            +-08.2  Device 8086:d157
->            +-08.3  Device 8086:d158
->            +-10.0  Device 8086:d150
->            +-10.1  Device 8086:d151
->            +-1a.0  Device 8086:3b3c
->            +-1c.0-[0000:14]----00.0  Device 177d:0010
->            +-1c.4-[0000:15]----00.0  Device 8086:10d3
->            +-1c.5-[0000:16-17]----00.0-[0000:17]----00.0  Device
-> 1a03:2000
->            +-1d.0  Device 8086:3b34
->            +-1e.0-[0000:18]--
->            +-1f.0  Device 8086:3b16
->            +-1f.2  Device 8086:2822
->            \-1f.3  Device 8086:3b30
-> 
-> 
-> Thanks,
-> Ratheesh
-> 
-> -----------------------------------------------------------------------
-> -------
-> Everyone hates slow websites. So do we.
-> Make your web apps faster with AppDynamics Download AppDynamics Lite
-> for free today:
-> http://p.sf.net/sfu/appdyn_d2d_feb
-> _______________________________________________
-> E1000-devel mailing list
-> E1000-devel@lists.sourceforge.net
-> https://lists.sourceforge.net/lists/listinfo/e1000-devel
-> To learn more about Intel&#174; Ethernet, visit
-> http://communities.intel.com/community/wired
+Yinghai
+
+>>
+>> Index: linux-2.6/drivers/acpi/pci_irq.c
+>> ===================================================================
+>> --- linux-2.6.orig/drivers/acpi/pci_irq.c
+>> +++ linux-2.6/drivers/acpi/pci_irq.c
+>> @@ -53,9 +53,6 @@ struct acpi_prt_entry {
+>>       u32                     index;          /* GSI, or link _CRS index */
+>>  };
+>>
+>> -static LIST_HEAD(acpi_prt_list);
+>> -static DEFINE_SPINLOCK(acpi_prt_lock);
+>> -
+>>  static inline char pin_name(int pin)
+>>  {
+>>       return 'A' + pin - 1;
+>> @@ -65,28 +62,6 @@ static inline char pin_name(int pin)
+>>                           PCI IRQ Routing Table (PRT) Support
+>>     -------------------------------------------------------------------------- */
+>>
+>> -static struct acpi_prt_entry *acpi_pci_irq_find_prt_entry(struct pci_dev *dev,
+>> -                                                       int pin)
+>> -{
+>> -     struct acpi_prt_entry *entry;
+>> -     int segment = pci_domain_nr(dev->bus);
+>> -     int bus = dev->bus->number;
+>> -     int device = PCI_SLOT(dev->devfn);
+>> -
+>> -     spin_lock(&acpi_prt_lock);
+>> -     list_for_each_entry(entry, &acpi_prt_list, list) {
+>> -             if ((segment == entry->id.segment)
+>> -                 && (bus == entry->id.bus)
+>> -                 && (device == entry->id.device)
+>> -                 && (pin == entry->pin)) {
+>> -                     spin_unlock(&acpi_prt_lock);
+>> -                     return entry;
+>> -             }
+>> -     }
+>> -     spin_unlock(&acpi_prt_lock);
+>> -     return NULL;
+>> -}
+>> -
+>>  /* http://bugzilla.kernel.org/show_bug.cgi?id=4773 */
+>>  static const struct dmi_system_id medion_md9580[] = {
+>>       {
+>> @@ -184,11 +159,19 @@ static void do_prt_fixups(struct acpi_pr
+>>       }
+>>  }
+>>
+>> -static int acpi_pci_irq_add_entry(acpi_handle handle, int segment, int bus,
+>> -                               struct acpi_pci_routing_table *prt)
+>> +static int acpi_pci_irq_check_entry(acpi_handle handle, struct pci_dev *dev,
+>> +                               int pin, struct acpi_pci_routing_table *prt,
+>> +                               struct acpi_prt_entry **entry_ptr)
+>>  {
+>> +     int segment = pci_domain_nr(dev->bus);
+>> +     int bus = dev->bus->number;
+>> +     int device = PCI_SLOT(dev->devfn);
+>>       struct acpi_prt_entry *entry;
+>>
+>> +     if (((prt->address >> 16) & 0xffff) != device ||
+>> +         prt->pin + 1 != pin)
+>> +             return -ENODEV;
+>> +
+>>       entry = kzalloc(sizeof(struct acpi_prt_entry), GFP_KERNEL);
+>>       if (!entry)
+>>               return -ENOMEM;
+>> @@ -237,26 +220,33 @@ static int acpi_pci_irq_add_entry(acpi_h
+>>                             entry->id.device, pin_name(entry->pin),
+>>                             prt->source, entry->index));
+>>
+>> -     spin_lock(&acpi_prt_lock);
+>> -     list_add_tail(&entry->list, &acpi_prt_list);
+>> -     spin_unlock(&acpi_prt_lock);
+>> +     *entry_ptr = entry;
+>>
+>>       return 0;
+>>  }
+>>
+>> -int acpi_pci_irq_add_prt(acpi_handle handle, int segment, int bus)
+>> +static int acpi_pci_irq_find_prt_entry(struct pci_dev *dev,
+>> +                       int pin, struct acpi_prt_entry **entry_ptr)
+>>  {
+>>       acpi_status status;
+>>       struct acpi_buffer buffer = { ACPI_ALLOCATE_BUFFER, NULL };
+>>       struct acpi_pci_routing_table *entry;
+>> +     acpi_handle handle = NULL;
+>> +
+>> +     if (dev->bus->bridge)
+>> +             handle = ACPI_HANDLE(dev->bus->bridge);
+>> +
+>> +     if (!handle)
+>> +             return -ENODEV;
+>>
+>>       /* 'handle' is the _PRT's parent (root bridge or PCI-PCI bridge) */
+>>       status = acpi_get_name(handle, ACPI_FULL_PATHNAME, &buffer);
+>>       if (ACPI_FAILURE(status))
+>>               return -ENODEV;
+>>
+>> -     printk(KERN_DEBUG "ACPI: PCI Interrupt Routing Table [%s._PRT]\n",
+>> -            (char *) buffer.pointer);
+>> +     dev_printk(KERN_DEBUG, &dev->dev,
+>> +                     "ACPI: PCI Interrupt Routing Table [%s._PRT]\n",
+>> +                    (char *) buffer.pointer);
+>>
+>>       kfree(buffer.pointer);
+>>
+>> @@ -273,7 +263,9 @@ int acpi_pci_irq_add_prt(acpi_handle han
+>>
+>>       entry = buffer.pointer;
+>>       while (entry && (entry->length > 0)) {
+>> -             acpi_pci_irq_add_entry(handle, segment, bus, entry);
+>> +             if (!acpi_pci_irq_check_entry(handle, dev, pin,
+>> +                                              entry, entry_ptr))
+>> +                     break;
+>>               entry = (struct acpi_pci_routing_table *)
+>>                   ((unsigned long)entry + entry->length);
+>>       }
+>> @@ -282,23 +274,6 @@ int acpi_pci_irq_add_prt(acpi_handle han
+>>       return 0;
+>>  }
+>>
+>> -void acpi_pci_irq_del_prt(int segment, int bus)
+>> -{
+>> -     struct acpi_prt_entry *entry, *tmp;
+>> -
+>> -     printk(KERN_DEBUG
+>> -            "ACPI: Delete PCI Interrupt Routing Table for %04x:%02x\n",
+>> -            segment, bus);
+>> -     spin_lock(&acpi_prt_lock);
+>> -     list_for_each_entry_safe(entry, tmp, &acpi_prt_list, list) {
+>> -             if (segment == entry->id.segment && bus == entry->id.bus) {
+>> -                     list_del(&entry->list);
+>> -                     kfree(entry);
+>> -             }
+>> -     }
+>> -     spin_unlock(&acpi_prt_lock);
+>> -}
+>> -
+>>  /* --------------------------------------------------------------------------
+>>                            PCI Interrupt Routing Support
+>>     -------------------------------------------------------------------------- */
+>> @@ -359,12 +334,13 @@ static int acpi_reroute_boot_interrupt(s
+>>
+>>  static struct acpi_prt_entry *acpi_pci_irq_lookup(struct pci_dev *dev, int pin)
+>>  {
+>> -     struct acpi_prt_entry *entry;
+>> +     struct acpi_prt_entry *entry = NULL;
+>>       struct pci_dev *bridge;
+>>       u8 bridge_pin, orig_pin = pin;
+>> +     int ret;
+>>
+>> -     entry = acpi_pci_irq_find_prt_entry(dev, pin);
+>> -     if (entry) {
+>> +     ret = acpi_pci_irq_find_prt_entry(dev, pin, &entry);
+>> +     if (!ret && entry) {
+>>  #ifdef CONFIG_X86_IO_APIC
+>>               acpi_reroute_boot_interrupt(dev, entry);
+>>  #endif /* CONFIG_X86_IO_APIC */
+>> @@ -373,7 +349,7 @@ static struct acpi_prt_entry *acpi_pci_i
+>>               return entry;
+>>       }
+>>
+>> -     /*
+>> +     /*
+>>        * Attempt to derive an IRQ for this device from a parent bridge's
+>>        * PCI interrupt routing entry (eg. yenta bridge and add-in card bridge).
+>>        */
+>> @@ -393,8 +369,8 @@ static struct acpi_prt_entry *acpi_pci_i
+>>                       pin = bridge_pin;
+>>               }
+>>
+>> -             entry = acpi_pci_irq_find_prt_entry(bridge, pin);
+>> -             if (entry) {
+>> +             ret = acpi_pci_irq_find_prt_entry(bridge, pin, &entry);
+>> +             if (!ret && entry) {
+>>                       ACPI_DEBUG_PRINT((ACPI_DB_INFO,
+>>                                        "Derived GSI for %s INT %c from %s\n",
+>>                                        pci_name(dev), pin_name(orig_pin),
+>> @@ -470,6 +446,7 @@ int acpi_pci_irq_enable(struct pci_dev *
+>>                       dev_warn(&dev->dev, "PCI INT %c: no GSI\n",
+>>                                pin_name(pin));
+>>               }
+>> +
+>>               return 0;
+>>       }
+>>
+>> @@ -477,6 +454,7 @@ int acpi_pci_irq_enable(struct pci_dev *
+>>       if (rc < 0) {
+>>               dev_warn(&dev->dev, "PCI INT %c: failed to register GSI\n",
+>>                        pin_name(pin));
+>> +             kfree(entry);
+>>               return rc;
+>>       }
+>>       dev->irq = rc;
+>> @@ -491,6 +469,7 @@ int acpi_pci_irq_enable(struct pci_dev *
+>>               (triggering == ACPI_LEVEL_SENSITIVE) ? "level" : "edge",
+>>               (polarity == ACPI_ACTIVE_LOW) ? "low" : "high", dev->irq);
+>>
+>> +     kfree(entry);
+>>       return 0;
+>>  }
+>>
+>> @@ -513,6 +492,8 @@ void acpi_pci_irq_disable(struct pci_dev
+>>       else
+>>               gsi = entry->index;
+>>
+>> +     kfree(entry);
+>> +
+>>       /*
+>>        * TBD: It might be worth clearing dev->irq by magic constant
+>>        * (e.g. PCI_UNDEFINED_IRQ).
+>> Index: linux-2.6/drivers/acpi/pci_root.c
+>> ===================================================================
+>> --- linux-2.6.orig/drivers/acpi/pci_root.c
+>> +++ linux-2.6/drivers/acpi/pci_root.c
+>> @@ -413,7 +413,6 @@ static int acpi_pci_root_add(struct acpi
+>>       acpi_status status;
+>>       int result;
+>>       struct acpi_pci_root *root;
+>> -     acpi_handle handle;
+>>       struct acpi_pci_driver *driver;
+>>       u32 flags, base_flags;
+>>       bool is_osc_granted = false;
+>> @@ -468,16 +467,6 @@ static int acpi_pci_root_add(struct acpi
+>>              acpi_device_name(device), acpi_device_bid(device),
+>>              root->segment, &root->secondary);
+>>
+>> -     /*
+>> -      * PCI Routing Table
+>> -      * -----------------
+>> -      * Evaluate and parse _PRT, if exists.
+>> -      */
+>> -     status = acpi_get_handle(device->handle, METHOD_NAME__PRT, &handle);
+>> -     if (ACPI_SUCCESS(status))
+>> -             result = acpi_pci_irq_add_prt(device->handle, root->segment,
+>> -                                           root->secondary.start);
+>> -
+>>       root->mcfg_addr = acpi_pci_root_get_mcfg_addr(device->handle);
+>>
+>>       /*
+>> @@ -602,7 +591,6 @@ out_del_root:
+>>       list_del(&root->node);
+>>       mutex_unlock(&acpi_pci_root_lock);
+>>
+>> -     acpi_pci_irq_del_prt(root->segment, root->secondary.start);
+>>  end:
+>>       kfree(root);
+>>       return result;
+>> @@ -610,8 +598,6 @@ end:
+>>
+>>  static void acpi_pci_root_remove(struct acpi_device *device)
+>>  {
+>> -     acpi_status status;
+>> -     acpi_handle handle;
+>>       struct acpi_pci_root *root = acpi_driver_data(device);
+>>       struct acpi_pci_driver *driver;
+>>
+>> @@ -626,10 +612,6 @@ static void acpi_pci_root_remove(struct
+>>       device_set_run_wake(root->bus->bridge, false);
+>>       pci_acpi_remove_bus_pm_notifier(device);
+>>
+>> -     status = acpi_get_handle(device->handle, METHOD_NAME__PRT, &handle);
+>> -     if (ACPI_SUCCESS(status))
+>> -             acpi_pci_irq_del_prt(root->segment, root->secondary.start);
+>> -
+>>       pci_remove_root_bus(root->bus);
+>>
+>>       mutex_lock(&acpi_pci_root_lock);
+>> Index: linux-2.6/drivers/pci/pci-acpi.c
+>> ===================================================================
+>> --- linux-2.6.orig/drivers/pci/pci-acpi.c
+>> +++ linux-2.6/drivers/pci/pci-acpi.c
+>> @@ -307,25 +307,6 @@ static void pci_acpi_setup(struct device
+>>       struct pci_dev *pci_dev = to_pci_dev(dev);
+>>       acpi_handle handle = ACPI_HANDLE(dev);
+>>       struct acpi_device *adev;
+>> -     acpi_status status;
+>> -     acpi_handle dummy;
+>> -
+>> -     /*
+>> -      * Evaluate and parse _PRT, if exists.  This code allows parsing of
+>> -      * _PRT objects within the scope of non-bridge devices.  Note that
+>> -      * _PRTs within the scope of a PCI bridge assume the bridge's
+>> -      * subordinate bus number.
+>> -      *
+>> -      * TBD: Can _PRTs exist within the scope of non-bridge PCI devices?
+>> -      */
+>> -     status = acpi_get_handle(handle, METHOD_NAME__PRT, &dummy);
+>> -     if (ACPI_SUCCESS(status)) {
+>> -             unsigned char bus;
+>> -
+>> -             bus = pci_dev->subordinate ?
+>> -                     pci_dev->subordinate->number : pci_dev->bus->number;
+>> -             acpi_pci_irq_add_prt(handle, pci_domain_nr(pci_dev->bus), bus);
+>> -     }
+>>
+>>       if (acpi_bus_get_device(handle, &adev) || !adev->wakeup.flags.valid)
+>>               return;
+>> @@ -340,7 +321,6 @@ static void pci_acpi_setup(struct device
+>>
+>>  static void pci_acpi_cleanup(struct device *dev)
+>>  {
+>> -     struct pci_dev *pci_dev = to_pci_dev(dev);
+>>       acpi_handle handle = ACPI_HANDLE(dev);
+>>       struct acpi_device *adev;
+>>
+>> @@ -349,10 +329,6 @@ static void pci_acpi_cleanup(struct devi
+>>               device_set_run_wake(dev, false);
+>>               pci_acpi_remove_pm_notifier(adev);
+>>       }
+>> -
+>> -     if (pci_dev->subordinate)
+>> -             acpi_pci_irq_del_prt(pci_domain_nr(pci_dev->bus),
+>> -                                  pci_dev->subordinate->number);
+>>  }
+>>
+>>  static struct acpi_bus_type acpi_pci_bus = {
+>> Index: linux-2.6/include/acpi/acpi_drivers.h
+>> ===================================================================
+>> --- linux-2.6.orig/include/acpi/acpi_drivers.h
+>> +++ linux-2.6/include/acpi/acpi_drivers.h
+>> @@ -90,11 +90,6 @@ int acpi_pci_link_allocate_irq(acpi_hand
+>>                              int *polarity, char **name);
+>>  int acpi_pci_link_free_irq(acpi_handle handle);
+>>
+>> -/* ACPI PCI Interrupt Routing (pci_irq.c) */
+>> -
+>> -int acpi_pci_irq_add_prt(acpi_handle handle, int segment, int bus);
+>> -void acpi_pci_irq_del_prt(int segment, int bus);
+>> -
+>>  /* ACPI PCI Device Binding (pci_bind.c) */
+>>
+>>  struct pci_bus;
+> --
+> I speak only for myself.
+> Rafael J. Wysocki, Intel Open Source Technology Center.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
