@@ -1,188 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:45718 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932294Ab3BLQ3T (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Feb 2013 11:29:19 -0500
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Cc: Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Andrew Murray <andrew.murray@arm.com>,
-	Andrew Murray <Andrew.Murray@arm.com>,
-	Liviu Dudau <Liviu.Dudau@arm.com>
-Subject: [PATCH 01/32] of/pci: Provide support for parsing PCI DT ranges property
-Date: Tue, 12 Feb 2013 17:28:35 +0100
-Message-Id: <1360686546-24277-2-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from cn.fujitsu.com ([222.73.24.84]:35854 "EHLO song.cn.fujitsu.com"
+	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S1758628Ab3BSKIB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 19 Feb 2013 05:08:01 -0500
+Message-ID: <51234EE2.6050807@cn.fujitsu.com>
+Date: Tue, 19 Feb 2013 18:07:30 +0800
+From: Gu Zheng <guz.fnst@cn.fujitsu.com>
+MIME-Version: 1.0
+To: Paul Bolle <pebolle@tiscali.nl>
+CC: Wei Yang <weiyang@linux.vnet.ibm.com>,
+	Oliver Neukum <oneukum@suse.de>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: pciehp: errors on resume
+References: <1359377173.1345.25.camel@x61.thuisdomein>  <512336fb.42d70e0a.73ed.ffffc77eSMTPIN_ADDED_BROKEN@mx.google.com> <1361266095.26423.19.camel@x61.thuisdomein>
+In-Reply-To: <1361266095.26423.19.camel@x61.thuisdomein>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Andrew Murray <andrew.murray@arm.com>
+On 02/19/2013 05:28 PM, Paul Bolle wrote:
 
-DT bindings for PCI host bridges often use the ranges property to describe
-memory and IO ranges - this binding tends to be the same across architectures
-yet several parsing implementations exist, e.g. arch/mips/pci/pci.c,
-arch/powerpc/kernel/pci-common.c, arch/sparc/kernel/pci.c and
-arch/microblaze/pci/pci-common.c (clone of PPC). Some of these duplicate
-functionality provided by drivers/of/address.c.
+> Richard,
+> 
+> On Tue, 2013-02-19 at 16:25 +0800, Wei Yang wrote:
+>> Sorry for bothering, I am looking at this and try to understand the process, 
+>> while get some confusion.
+>>
+>> 1. The error log will be printed every time suspend/resume, no matter whether
+>>    the device is plug in/plug out during the suspend as discussed below?
+>>
+>>    If the device is always there, no one touch it, the error message still be
+>>    printed?
+>>
+>> 2. In my mind, before the pcied_init is called, those pci_dev are
+>>    already enumerated, such as the wireless card in this case. 
+>>
+>>    During the boot stage, if the pciehp_force is set to true, the error messge
+>>    still be printed? Since I don't have those devices to create pcie_device, I
+>>    can't test this.
+>>
+>> 3. Do you think it would be find to remove those devices at the suspend stage?
+>>    Then they will be added again at the resume stage?
+> 
+> Bypassing your questions, I'd like to point you at
+> http://article.gmane.org/gmane.linux.kernel.pci/20077 , in which Rafael
+> suggested a possible solution to this situation. (There's some extra
+> info in other messages in this thread.)
 
-This patch provides a common iterator-based parser for the ranges property, it
-is hoped this will reduce DT representation differences between architectures
-and that architectures will migrate in part to this new parser.
 
-It is also hoped (and the motativation for the patch) that this patch will
-reduce duplication of code when writing host bridge drivers that are supported
-by multiple architectures.
+Yes, Rafael's suggestion seems a possible solution to this situation.
+In my mind, it's impossible to figure out a unique pci device with
+the registers in the PCI config space, something like "vender_id + device_id"
+can not describe a unique device.
+The pcie device has a feature likes "series number" which could be used to figure
+out a unique one, but this feature is optional. If it's not set, we still
+can not detect a unique pcie device.
+Sorry for my poor knowledge, if what I said has any mistake, please figure it out!:)
 
-This patch provides struct resources from a device tree node, e.g.:
+Thanks,
+Gu 
 
-	u32 *last = NULL;
-	struct resource res;
-	while ((last = of_pci_process_ranges(np, res, last))) {
-		//do something with res
-	}
-
-Platforms with quirks can then do what they like with the resource or migrate
-common quirk handling to the parser. In an ideal world drivers can just request
-the obtained resources and pass them on (e.g. pci_add_resource_offset).
-
-Signed-off-by: Andrew Murray <Andrew.Murray@arm.com>
-Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
-Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
----
- drivers/of/address.c       |   63 ++++++++++++++++++++++++++++++++++++++++++++
- include/linux/of_address.h |    9 +++++++
- 2 files changed, 72 insertions(+)
-
-diff --git a/drivers/of/address.c b/drivers/of/address.c
-index 0125524..d659527 100644
---- a/drivers/of/address.c
-+++ b/drivers/of/address.c
-@@ -13,6 +13,7 @@
- #define OF_CHECK_COUNTS(na, ns)	(OF_CHECK_ADDR_COUNT(na) && (ns) > 0)
  
- static struct of_bus *of_match_bus(struct device_node *np);
-+static struct of_bus *of_find_bus(const char *name);
- static int __of_address_to_resource(struct device_node *dev,
- 		const __be32 *addrp, u64 size, unsigned int flags,
- 		const char *name, struct resource *r);
-@@ -227,6 +228,57 @@ int of_pci_address_to_resource(struct device_node *dev, int bar,
- 	return __of_address_to_resource(dev, addrp, size, flags, NULL, r);
- }
- EXPORT_SYMBOL_GPL(of_pci_address_to_resource);
-+
-+const __be32 *of_pci_process_ranges(struct device_node *node,
-+				    struct resource *res, const __be32 *from)
-+{
-+	const __be32 *start, *end;
-+	int na, ns, np, pna;
-+	int rlen;
-+	struct of_bus *bus;
-+
-+	WARN_ON(!res);
-+
-+	bus = of_find_bus("pci");
-+	bus->count_cells(node, &na, &ns);
-+	if (!OF_CHECK_COUNTS(na, ns)) {
-+		pr_err("Bad cell count for %s\n", node->full_name);
-+		return NULL;
-+	}
-+
-+	pna = of_n_addr_cells(node);
-+	np = pna + na + ns;
-+
-+	start = of_get_property(node, "ranges", &rlen);
-+	if (start == NULL)
-+		return NULL;
-+
-+	end = start + rlen / sizeof(__be32);
-+
-+	if (!from)
-+		from = start;
-+
-+	while (from + np <= end) {
-+		u64 cpu_addr, size;
-+
-+		cpu_addr = of_translate_address(node, from + na);
-+		size = of_read_number(from + na + pna, ns);
-+		res->flags = bus->get_flags(from);
-+		from += np;
-+
-+		if (cpu_addr == OF_BAD_ADDR || size == 0)
-+			continue;
-+
-+		res->name = node->full_name;
-+		res->start = cpu_addr;
-+		res->end = res->start + size - 1;
-+		res->parent = res->child = res->sibling = NULL;
-+		return from;
-+	}
-+
-+	return NULL;
-+}
-+EXPORT_SYMBOL_GPL(of_pci_process_ranges);
- #endif /* CONFIG_PCI */
- 
- /*
-@@ -337,6 +389,17 @@ static struct of_bus *of_match_bus(struct device_node *np)
- 	return NULL;
- }
- 
-+static struct of_bus *of_find_bus(const char *name)
-+{
-+	unsigned int i;
-+
-+	for (i = 0; i < ARRAY_SIZE(of_busses); i++)
-+		if (strcmp(name, of_busses[i].name) == 0)
-+			return &of_busses[i];
-+
-+	return NULL;
-+}
-+
- static int of_translate_one(struct device_node *parent, struct of_bus *bus,
- 			    struct of_bus *pbus, __be32 *addr,
- 			    int na, int ns, int pna, const char *rprop)
-diff --git a/include/linux/of_address.h b/include/linux/of_address.h
-index 0506eb5..751e889 100644
---- a/include/linux/of_address.h
-+++ b/include/linux/of_address.h
-@@ -27,6 +27,8 @@ static inline unsigned long pci_address_to_pio(phys_addr_t addr) { return -1; }
- #define pci_address_to_pio pci_address_to_pio
- #endif
- 
-+const __be32 *of_pci_process_ranges(struct device_node *node,
-+				    struct resource *res, const __be32 *from);
- #else /* CONFIG_OF_ADDRESS */
- #ifndef of_address_to_resource
- static inline int of_address_to_resource(struct device_node *dev, int index,
-@@ -53,6 +55,13 @@ static inline const __be32 *of_get_address(struct device_node *dev, int index,
- {
- 	return NULL;
- }
-+
-+static inline const __be32 *of_pci_process_ranges(struct device_node *node,
-+						  struct resource *res,
-+						  const __be32 *from)
-+{
-+	return NULL;
-+}
- #endif /* CONFIG_OF_ADDRESS */
- 
- 
--- 
-1.7.9.5
+
+
+> I must confess that I'm not at all sure how to implement it and that so
+> far I have, rather cowardly, not even drafted a solution along those
+> lines.
+> 
+> 
+> Paul Bolle
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
 
