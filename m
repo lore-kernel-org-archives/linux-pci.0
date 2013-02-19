@@ -1,57 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:54230 "EHLO hydra.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755489Ab3BFV6z (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 6 Feb 2013 16:58:55 -0500
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Yinghai Lu <yinghai@kernel.org>,
-	Myron Stowe <myron.stowe@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Mauro Carvalho Chehab <mchehab@redhat.com>,
-	Tony Luck <tony.luck@intel.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, Russell King <linux@arm.linux.org.uk>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v3 00/22] PCI: Iterate pci host bridge instead of pci root bus
-Date: Wed, 06 Feb 2013 23:05:14 +0100
-Message-ID: <3459136.QID0qrXQHt@vostro.rjw.lan>
-In-Reply-To: <CAE9FiQXTRaP08ZeHWTJHt50DZO800BMigmo=q65-RLzZWkTvoQ@mail.gmail.com>
-References: <CAE9FiQXHG01NjnYNDbC-KEpbcvY-q4pBe97CxTOGS7W4vZQBYQ@mail.gmail.com> <52330506.F9m0tMYuG1@vostro.rjw.lan> <CAE9FiQXTRaP08ZeHWTJHt50DZO800BMigmo=q65-RLzZWkTvoQ@mail.gmail.com>
+Received: from mail-oa0-f54.google.com ([209.85.219.54]:58992 "EHLO
+	mail-oa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932823Ab3BSTrx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Feb 2013 14:47:53 -0500
+Received: by mail-oa0-f54.google.com with SMTP id n12so7362481oag.13
+        for <linux-pci@vger.kernel.org>; Tue, 19 Feb 2013 11:47:53 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <1361182193-31894-1-git-send-email-hare@suse.de>
+References: <1361182193-31894-1-git-send-email-hare@suse.de>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 19 Feb 2013 12:47:32 -0700
+Message-ID: <CAErSpo5j5WXx-Y4ML22yzsVzXgXnT9JoD1EGvGRMy55GGRdn6A@mail.gmail.com>
+Subject: Re: [PATCH] pci: do not try to assign irq 255
+To: Hannes Reinecke <hare@suse.de>
+Cc: linux-kernel@vger.kernel.org, Frederik Himpe <fhimpe@vub.ac.be>,
+	Oliver Neukum <oneukum@suse.de>,
+	David Haerdeman <david@hardeman.nu>, linux-usb@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, February 06, 2013 01:53:50 PM Yinghai Lu wrote:
-> On Wed, Feb 6, 2013 at 1:43 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> > On Wednesday, February 06, 2013 01:28:27 PM Yinghai Lu wrote:
-> >> so you still did not answer you want 1 or 2 yet:
-> >>
-> >> for sgi_hotplug,
-> >>
-> >> 1. still keep the module support, and register acpi_pci_driver later.
-> >> 2. built-in support only, and need to register acpi_pci_driver early.
-> >
-> > Please work with the assumption that acpi_pci_driver is not going to be there
-> > any more.
-> >
-> 
-> I think I could change ioapic and iommu hotplug to weak add/remove because they
-> should be built-in by nature.
-> 
-> but how about others like sgi_hotplug etc?
+On Mon, Feb 18, 2013 at 3:09 AM, Hannes Reinecke <hare@suse.de> wrote:
+> The PCI config space reseves a byte for the interrupt line,
+> so irq 255 actually refers to 'not set'.
+> However, the 'irq' field for struct pci_dev is an integer,
+> so the original meaning is lost, causing the system to
+> assign an interrupt '255', which fails.
+>
+> So we should _not_ assign an interrupt value here, and
+> allow upper layers to fixup things.
+>
+> This patch make PCI devices with MSI interrupts only
+> (like the xhci device on certain HP laptops) work properly.
+>
+> Cc: Frederik Himpe <fhimpe@vub.ac.be>
+> Cc: Oliver Neukum <oneukum@suse.de>
+> Cc: David Haerdeman <david@hardeman.nu>
+> Cc: linux-usb@vger.kernel.org
+> Cc: linux-pci@vger.kernel.org
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
+>
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 6186f03..a2db887f 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -923,7 +923,8 @@ static void pci_read_irq(struct pci_dev *dev)
+>         dev->pin = irq;
+>         if (irq)
+>                 pci_read_config_byte(dev, PCI_INTERRUPT_LINE, &irq);
+> -       dev->irq = irq;
+> +       if (irq < 255)
+> +               dev->irq = irq;
+>  }
+>
+>  void set_pcie_port_type(struct pci_dev *pdev)
 
-I'd really prefer to wait for the patchset removing acpi_pci_driver (from
-Myron) before proceeding with more changes in that area.
+Is there a bugzilla or other URL with more information (problem
+description, hardware involved, dmesg logs, acpidump, etc)?
 
-Myron, do you have a prototype based on the current linux-next?
-
-Rafael
-
-
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+Bjorn
