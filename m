@@ -1,39 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ia0-f177.google.com ([209.85.210.177]:48927 "EHLO
-	mail-ia0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755679Ab3BEBgY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 4 Feb 2013 20:36:24 -0500
-Received: by mail-ia0-f177.google.com with SMTP id h8so8840678iaa.22
-        for <linux-pci@vger.kernel.org>; Mon, 04 Feb 2013 17:36:24 -0800 (PST)
-Date: Mon, 4 Feb 2013 17:36:10 -0800
-From: Stephen Hemminger <stephen@networkplumber.org>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	David Woodhouse <dwmw2@infradead.org>,
-	iommu@lists.linux-foundation.org
-Subject: Re: PCI warning on boot 3.8.0-rc1
-Message-ID: <20130204173610.18a31d24@nehalam.linuxnetplumber.net>
-In-Reply-To: <1360017684.11144.547.camel@bling.home>
-References: <20130116143853.339dd89b@nehalam.linuxnetplumber.net>
-	<CAErSpo5eOE_=Ob2jN7ACy0eJBOa8k36XqCbHnGTCs-wfiy8tiw@mail.gmail.com>
-	<20130204103645.38ae2d5e@nehalam.linuxnetplumber.net>
-	<1360009684.11144.539.camel@bling.home>
-	<1360017684.11144.547.camel@bling.home>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-oa0-f41.google.com ([209.85.219.41]:32955 "EHLO
+	mail-oa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932846Ab3BSXJD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Feb 2013 18:09:03 -0500
+Received: by mail-oa0-f41.google.com with SMTP id i10so7596263oag.0
+        for <linux-pci@vger.kernel.org>; Tue, 19 Feb 2013 15:09:03 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <5122A19B.9090308@nber.org>
+References: <5122A19B.9090308@nber.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 19 Feb 2013 16:08:43 -0700
+Message-ID: <CAErSpo6KhkE2Z1smhqv3vct+B7z=21N4DVmzVdS=E6v-N=BxJQ@mail.gmail.com>
+Subject: Re: Problem with MSI with QLogic/HP 10Gigabit Ethernet NIC and IRQs
+ solved with pci=nomsi
+To: Alex Aminoff <aminoff@nber.org>
+Cc: linux-pci@vger.kernel.org, Daniel Feenberg <feenberg@nber.org>,
+	Mohan Ramanujan <mohan@nber.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 04 Feb 2013 15:41:24 -0700
-Alex Williamson <alex.williamson@redhat.com> wrote:
+On Mon, Feb 18, 2013 at 2:48 PM, Alex Aminoff <aminoff@nber.org> wrote:
+>
+> As recommended in the MSI-HOWTO, we are submitting our case where we believe
+> that certain hardware does not work correctly with MSI.
 
-> +
-> +	if (pci_is_pcie(parent) &&
-> +	    (pci_pcie_type(parent) == PCI_EXP_TYPE_ROOT_PORT ||
-> +	     pci_pcie_type(parent) == PCI_EXP_TYPE_DOWNSTREAM)) {
-> +		pr_warn("WARNING: Your hardware is broken, device %s appears to be a\n Legacy PCI device attached directly to a PCIe device which is not a\n PCIe-to-PCI bridge.  Per section 7.8 of the PCI Express 3.0 spec, the\n PCI express capability structure is required for PCI express device\nfunctions.\n",
-> +		        pci_name(pdev));
+Thanks for your report!
 
-Too whiny!
-Two short lines seems to be more the enough. Users can't do anything about
-hardware not following spec. Put any outher stuff into comments.
+> We have two machines running Scientific Linux:
+>
+> Linux age9 2.6.32-279.19.1.el6.x86_64 #1 SMP Tue Dec 18 17:22:54 CST 2012
+> x86_64 x86_64 x86_64 GNU/Linux
+
+As I'm sure you know, this is a pretty old kernel, and any fixes to it
+would be made by your vendor.
+
+Is it possible for you to test a current kernel, e.g., v3.8?  The bug
+may have been fixed between 2.6.32 and 3.8.  If not, I'd definitely
+like to fix it in the upstream kernel so v3.9 would work out of the
+box.  If you could collect complete dmesg logs from v3.8 both with and
+without "pci=nomsi", that would be very helpful.
+
+> The symptom appeared to be problems with the 10G ethernet card that produced
+> error messages about do_IRQ. (It so happens that these machines boot
+> diskless so NFS problems would crash or hang the machines; therefore others
+> with the same setup but booting from local disk might not experience this to
+> the same severity).
+>
+> The problems appear to be gone now that we are booting with pci=nomsi.
+
+Bjorn
