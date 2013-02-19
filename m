@@ -1,142 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f173.google.com ([209.85.214.173]:41422 "EHLO
-	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755679Ab3BMOcS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Feb 2013 09:32:18 -0500
-Received: by mail-ob0-f173.google.com with SMTP id dn14so1291412obc.18
-        for <linux-pci@vger.kernel.org>; Wed, 13 Feb 2013 06:32:18 -0800 (PST)
+Received: from mxin.vub.ac.be ([134.184.129.112]:16164 "EHLO mxin.vub.ac.be"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933133Ab3BSWq0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 19 Feb 2013 17:46:26 -0500
+Date: Tue, 19 Feb 2013 23:36:22 +0100
+From: Frederik Himpe <fhimpe@vub.ac.be>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Hannes Reinecke <hare@suse.de>, linux-kernel@vger.kernel.org,
+	Oliver Neukum <oneukum@suse.de>,
+	David Haerdeman <david@hardeman.nu>, linux-usb@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH] pci: do not try to assign irq 255
+Message-ID: <20130219223622.GA31434@artipc10.vub.ac.be>
+References: <1361182193-31894-1-git-send-email-hare@suse.de>
+ <CAErSpo5j5WXx-Y4ML22yzsVzXgXnT9JoD1EGvGRMy55GGRdn6A@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1843565.7Y1sC8j6FG@vostro.rjw.lan>
-References: <CAMVG2svG21yiM1wkH4_2pen2n+cr2-Zv7TbH3Gj+8MwevZjDbw@mail.gmail.com>
-	<CAErSpo6rGYLQeP8Myu=octSPY_0R+B7ptBLhLawd_A2E3NRsAw@mail.gmail.com>
-	<6086479.ycKj2j8yeP@vostro.rjw.lan>
-	<1843565.7Y1sC8j6FG@vostro.rjw.lan>
-Date: Wed, 13 Feb 2013 22:32:17 +0800
-Message-ID: <CAMVG2ssOMMVBcD0kLX=Wo9x2cMfdi+3FYNEP-MiDRK4fs24auw@mail.gmail.com>
-Subject: Re: [3.8-rc7] PCI hotplug wakeup oops
-From: Daniel J Blueman <daniel@quora.org>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Linux Kernel <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo5j5WXx-Y4ML22yzsVzXgXnT9JoD1EGvGRMy55GGRdn6A@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12 February 2013 03:49, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> On Monday, February 11, 2013 08:27:49 PM Rafael J. Wysocki wrote:
->> On Monday, February 11, 2013 12:01:37 PM Bjorn Helgaas wrote:
->> > [+cc Rafael]
->> >
->> > On Mon, Feb 11, 2013 at 10:08 AM, Daniel J Blueman <daniel@quora.org> wrote:
->> > > On 11 February 2013 21:03, Daniel J Blueman <daniel@quora.org> wrote:
->> > >> With 3.8-rc7, when unplugging the Thunderbolt ethernet adapter (bus 0a
->> > >> [1]) on a Macbook Pro 10,1, we see the PCIe port correctly released:
->> > >>
->> > >> pciehp 0000:06:03.0:pcie24: Card not present on Slot(3)
->> > >> tg3 0000:0a:00.0: tg3_abort_hw timed out, TX_MODE_ENABLE will not
->> > >> clear MAC_TX_MODE=ffffffff
->> > >> tg3 0000:0a:00.0 eth0: No firmware running
->> > >> tg3 0000:0a:00.0 eth0: Link is down
->> > >> [sched_delayed] sched: RT throttling activated
->> > >> pcieport 0000:00:01.1: System wakeup enabled by ACPI
->> > >> pciehp 0000:09:00.0:pcie24: unloading service driver pciehp
->> > >> pci_bus 0000:0a: busn_res: [bus 0a] is released
->> > >> pci_bus 0000:09: busn_res: [bus 09-0a] is released
->> > >>
->> > >> After some activity later (eg I can reproduce this by switching to a
->> > >> text console and back), often we'll see an oops:
->> > >>
->> > >> Unable to handle kernel paging request at 0000000000001070
->> > >> pci_pme_list_scan+0x3d/0xe0
->> > >> Call Trace:
->> > >> process_one_work+0x193
->> > >> ? process_one_work+0x131
->> > >> ? pci_pme_wakeup+0x60
->> > >> worker_thread+0x15d
->> > >>
->> > >> (gdb) list *(pci_pme_list_scan+0x3d)
->> > >> 0xffffffff8123f6dd is in pci_pme_list_scan (drivers/pci/pci.c:1556).
->> > >> 1551                                    /*
->> > >> 1552                                     * If bridge is in low power state, the
->> > >> 1553                                     * configuration space of subordinate devices
->> > >> 1554                                     * may be not accessible
->> > >> 1555                                     */
->> > >> 1556                                    if (bridge && bridge->current_state != PCI_D0)
->> > >> 1557                                            continue;
->> > >> 1558                                    pci_pme_wakeup(pme_dev->dev, NULL);
->> > >> 1559                            } else {
->> > >> 1560                                    list_del(&pme_dev->list);
->> > >>
->> > >> Since a panic in vsnprintf happens after the oops (hence I can't catch
->> > >> it with EFI pstore), it is almost certainly significant heap
->> > >> corruption; this would explain why pme_dev became null (the load has
->> > >> been ordered ahead).
->> > >>
->> > >> I'll see what I can find out with memory poisoning and list debugging.
->> > >
->> > > Enabling a bunch of related debugging, we see pme_dev is non-null and:
->> > >
->> > > BUG: Unable to handle NULL pointer dereference at
->> > > pci_bus_read_config_word+0x6c
->> > > PGD 26314c067 PUD 2633f9067 PMD 0
->> > > Oops: 0000 [#1] SMP
->> > > pci_check_pme_status+0x4f
->> > > pci_pme_wakeup+0x21
->> > > pci_pme_list_scan+0xd5
->> > > process_one_work+0x1ca
->> > > ? process_one_work+0x160
->> > > ? pci_pme_wakeup+0x60
->> > > worker_thread+0x14e
->> > >
->> > > Anyway, it looks like the device being unplugged wasn't removed from
->> > > pci_pme_list as pci_pme_active(dev, false) wasn't called.
->> > >
->> > > From a quick review, I wasn't able to find the right place in the
->> > > call-chain which I only see releases the child busses and PCIe port
->> > > drivers. Anyone?
->> >
->> > It looks like drivers *add* devices to pci_pme_list when they use
->> > pci_enable_wake() or pci_wake_from_d3().  But many drivers never
->> > remove their devices, and I don't see any place where the core does it
->> > either.  My guess is we need to remove it in pci_stop_dev() (we
->> > already do pcie_aspm_exit_link_state() there) or somewhere similar.
->>
->> Yes, we should call pci_pme_active(dev, false) somewhere in there I think.
->> It's fine to call that even if PME was not "active" before.
->
-> Daniel, I wonder if the patch below helps?
->
-> Rafael
->
->
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> ---
->  drivers/pci/remove.c |    2 ++
->  1 file changed, 2 insertions(+)
->
-> Index: test/drivers/pci/remove.c
-> ===================================================================
-> --- test.orig/drivers/pci/remove.c
-> +++ test/drivers/pci/remove.c
-> @@ -19,6 +19,8 @@ static void pci_free_resources(struct pc
->
->  static void pci_stop_dev(struct pci_dev *dev)
->  {
-> +       pci_pme_active(dev, false);
-> +
->         if (dev->is_added) {
->                 pci_proc_detach_device(dev);
->                 pci_remove_sysfs_dev_files(dev);
+On Tue, Feb 19, 2013 at 12:47:32PM -0700, Bjorn Helgaas wrote:
+> On Mon, Feb 18, 2013 at 3:09 AM, Hannes Reinecke <hare@suse.de> wrote:
+> > The PCI config space reseves a byte for the interrupt line,
+> > so irq 255 actually refers to 'not set'.
+> > However, the 'irq' field for struct pci_dev is an integer,
+> > so the original meaning is lost, causing the system to
+> > assign an interrupt '255', which fails.
+> >
+> > So we should _not_ assign an interrupt value here, and
+> > allow upper layers to fixup things.
+> >
+> > This patch make PCI devices with MSI interrupts only
+> > (like the xhci device on certain HP laptops) work properly.
+> >
+> > Cc: Frederik Himpe <fhimpe@vub.ac.be>
+> > Cc: Oliver Neukum <oneukum@suse.de>
+> > Cc: David Haerdeman <david@hardeman.nu>
+> > Cc: linux-usb@vger.kernel.org
+> > Cc: linux-pci@vger.kernel.org
+> > Signed-off-by: Hannes Reinecke <hare@suse.de>
+> >
+> > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> > index 6186f03..a2db887f 100644
+> > --- a/drivers/pci/probe.c
+> > +++ b/drivers/pci/probe.c
+> > @@ -923,7 +923,8 @@ static void pci_read_irq(struct pci_dev *dev)
+> >         dev->pin = irq;
+> >         if (irq)
+> >                 pci_read_config_byte(dev, PCI_INTERRUPT_LINE, &irq);
+> > -       dev->irq = irq;
+> > +       if (irq < 255)
+> > +               dev->irq = irq;
+> >  }
+> >
+> >  void set_pcie_port_type(struct pci_dev *pdev)
+> 
+> Is there a bugzilla or other URL with more information (problem
+> description, hardware involved, dmesg logs, acpidump, etc)?
 
-Indeed, the oops would prevent hitting the lockdep warning, which is a
-secondary matter.
+https://bugzilla.kernel.org/show_bug.cgi?id=52591
+https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1072918
 
-As it stands, this fix prevents the fatal oops, so IMHO is urgent
-material for 3.8-final. I can't prove that is_added will always be
-true, so let's stick with your patch.
+Basically it looks like most HP Probook/Elitebook of the Ivy Bridge
+generation are affected.
 
-Tested-by: Daniel J Blueman <daniel@quora.org>
 -- 
-Daniel J Blueman
+Frederik Himpe
