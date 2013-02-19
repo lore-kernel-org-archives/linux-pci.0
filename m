@@ -1,62 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:53940 "EHLO quartz.orcorp.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758789Ab3BGSQD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 7 Feb 2013 13:16:03 -0500
-Date: Thu, 7 Feb 2013 11:15:59 -0700
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Received: from iolanthe.rowland.org ([192.131.102.54]:59544 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1758541Ab3BSQWs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Feb 2013 11:22:48 -0500
+Date: Tue, 19 Feb 2013 11:22:47 -0500 (EST)
+From: Alan Stern <stern@rowland.harvard.edu>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Maen Suleiman <maen@marvell.com>, linux-pci@vger.kernel.org,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH v2 19/27] pci: PCIe driver for Marvell Armada 370/XP
- systems
-Message-ID: <20130207181559.GA31508@obsidianresearch.com>
-References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
- <1359399397-29729-20-git-send-email-thomas.petazzoni@free-electrons.com>
- <5106F9F9.3010905@wwwdotorg.org>
- <20130129094143.1aad9377@skate>
- <20130129092006.GA16377@avionic-0098.mockup.avionic-design.de>
- <20130207112459.5f382ad4@skate>
- <CAErSpo7UOTGH7kjYBADymDdgmHwPxbXqczeXm1BH9C+XViQDRQ@mail.gmail.com>
- <20130207170020.289bac08@skate>
- <CAErSpo797rhH=xt2x7eqdu7Vwf43FXoXQVcypvHM8-54LRC0wQ@mail.gmail.com>
+cc: "Artem S. Tashkinov" <t.artem@lycos.com>,
+	<torvalds@linux-foundation.org>, <linux-kernel@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: Abysmal HDD/USB write speed after sleep on a UEFI system
+In-Reply-To: <CAErSpo7qj2SNR7BfuBsfF-saZXvgcqqLtgoP5Hyb5u99qR4Ncg@mail.gmail.com>
+Message-ID: <Pine.LNX.4.44L0.1302191119270.2215-100000@iolanthe.rowland.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo797rhH=xt2x7eqdu7Vwf43FXoXQVcypvHM8-54LRC0wQ@mail.gmail.com>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 07, 2013 at 11:08:45AM -0700, Bjorn Helgaas wrote:
- 
-> I think the way you'll have to fix this in the meantime is to use
-> pci_create_root_bus() directly so you can do things in this sequence:
+On Tue, 12 Feb 2013, Bjorn Helgaas wrote:
+
+> [+cc linux-pci, Rafael, Alan]
 > 
->   pci_create_root_bus
->   pci_scan_child_bus
->   pci_bus_assign_resources
->   pci_bus_add_devices
+> [https://bugzilla.kernel.org/show_bug.cgi?id=53551]
 > 
-> dino_probe() is an example of similar code that does this.
+> On Tue, Feb 12, 2013 at 1:13 PM, Artem S. Tashkinov <t.artem@lycos.com> wrote:
+> > Feb 13, 2013 01:32:53 AM, Linus Torvalds wrote:
+> > On Tue, Feb 12, 2013 at 10:29 AM, Artem S. Tashkinov wrote:
+> >>> Feb 12, 2013 11:30:20 PM, Linus Torvalds wrote:
+> >>>>
+> >>>>A few things to try to pinpoint:
+> >>>>
+> >>>> (a) Is it *only* write performance that suffers, or is it other
+> >>>>performance too? Networking (DMA? Perhaps only writing *to* the
+> >>>>network?)? CPU?
+> >>>
+> >>> I  've tested hdpard -tT --direct and the output on boot and after suspend
+> >>> is quite similar.
+> >>>
+> >>> I  've also checked my network read/write speed, and it  's the same
+> >>> ~ 100MBit/sec (I have no 1Gbit computers on my network
+> >>> unfortunately).
+> >>
+> >>Ok. So it really sounds like just USB and HD writes. Which is quite
+> >>odd, since they have basically nothing in common I can think of
+> >>(except the obvious block layer issues).
 
-Erm, but isn't this problem going to strike any system that doesn't
-have resources assigned by the firmware?
+There's a slight chance that we might get some ideas by comparing
+usbmon traces showing disk activity before and after the
+problem-causing suspend.
 
-If so, a common 'pci_scan_bus_from_scratch' would at least highlight
-the problem and centralize the work around until it is fixed...
+Alan Stern
 
-Many embedded systems will require this..
-
-Regards,
-Jason
