@@ -1,78 +1,51 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from col0-omc3-s9.col0.hotmail.com ([65.55.34.147]:3035 "EHLO
+	col0-omc3-s9.col0.hotmail.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758487Ab3BTTBO convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 20 Feb 2013 14:01:14 -0500
+Message-ID: <COL002-W10189D7B4C89FE14A17AE16D4F60@phx.gbl>
+From: Pramod KS <prsudhee@outlook.com>
+To: Greg KH <gregkh@linuxfoundation.org>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: RE: Linux reserved MSI - how many?
+Date: Wed, 20 Feb 2013 19:01:14 +0000
+In-Reply-To: <20130220141846.GB5705@kroah.com>
+References: <COL002-W3294F1D83AA5EB392D867DD4F50@phx.gbl>,<20130220141846.GB5705@kroah.com>
+Content-Type: text/plain; charset=US-ASCII
 MIME-Version: 1.0
-In-Reply-To: <1360351703-20571-26-git-send-email-yinghai@kernel.org>
-References: <1360351703-20571-1-git-send-email-yinghai@kernel.org> <1360351703-20571-26-git-send-email-yinghai@kernel.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 8 Feb 2013 14:14:20 -0700
-Message-ID: <CAErSpo4iA17jh5rw05q=uaKOyMKesrPnxYrN2EvqWT_tGmE_FQ@mail.gmail.com>
-Subject: Re: [PATCH v2 25/26] PCI: Disable mem in the ioapic removing path
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Feb 8, 2013 at 12:28 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> For physical hot plug should be ok, but for remove/rescan path will
-> need us to disable that.
+----------------------------------------
+> Date: Wed, 20 Feb 2013 06:18:46 -0800
+> From: gregkh@linuxfoundation.org
+> To: prsudhee@outlook.com
+> CC: linux-pci@vger.kernel.org
+> Subject: Re: Linux reserved MSI - how many?
 >
-> otherwise rescan mmio resource for pci ioapic device will not be
-> sized and allocated, aka skiped.
-
-When we scan other PCI devices, we can size memory BARs even if
-PCI_COMMAND_MEMORY is already set.  So there must be something
-different about IOAPICs?  Or maybe it's something different about
-rescan vs. the initial scan?
-
-> For ioapic_probe:pci_enable_device will not enable the device
-> correctly, and will bail out early.
-
-Exactly where and why do we bail out early?  The only early bail out I
-see is where __pci_enable_device_flags() returns if "dev->enable_cnt >
-1".  Is that what you mean?
-
-> So we can just disable mmio for all removing case, and that will not hurt
-> real hotplug path.
-
-> Signed-off-by: <yinghai@kernel.org>
-> ---
->  drivers/pci/ioapic.c |   13 +++++++++++++
->  1 file changed, 13 insertions(+)
+> On Tue, Feb 19, 2013 at 09:07:09AM +0000, Pramod KS wrote:
+> > I'm tasked to find out number of MSI that kinux kernel reserve for itself.
 >
-> diff --git a/drivers/pci/ioapic.c b/drivers/pci/ioapic.c
-> index 3c6bbdd..8dacfd0 100644
-> --- a/drivers/pci/ioapic.c
-> +++ b/drivers/pci/ioapic.c
-> @@ -88,6 +88,17 @@ exit_free:
->         return -ENODEV;
->  }
+> What do you mean by "reserve for itself"? And why do you need this
+> number, what will you do with it?
+
+I've been told that kernel reserve 16 out of 256 MSI available for itself to get CPU attention - I'm not sure what kernel really does with these 16 MSIs'.
+I need this number because we are configuring a failrly complex PCIe system ( Gen 2) and we are hitting limit of maximum 256 possible MSIs'. We need to budget the available 256 MSI across whole system and for now we have allocated 16 MSI for linux kernel. Now, I speculate if kernel really needs these MSI and if yes, where can I see the description, if any, on how and why kernel uses these MSI'?
+
 >
-> +static void pci_disable_device_mem(struct pci_dev *dev)
-> +{
-> +       u16 pci_command;
-> +
-> +       pci_read_config_word(dev, PCI_COMMAND, &pci_command);
-> +       if (pci_command & PCI_COMMAND_MEMORY) {
-> +               pci_command &= ~PCI_COMMAND_MEMORY;
-> +               pci_write_config_word(dev, PCI_COMMAND, pci_command);
-> +       }
-> +}
-> +
->  static void ioapic_remove(struct pci_dev *dev)
->  {
->         struct ioapic *ioapic = pci_get_drvdata(dev);
-> @@ -95,6 +106,8 @@ static void ioapic_remove(struct pci_dev *dev)
->         acpi_unregister_ioapic(ioapic->handle, ioapic->gsi_base);
->         pci_release_region(dev, 0);
->         pci_disable_device(dev);
-> +       /* need to disable it, otherwise remove/rescan will not work */
-> +       pci_disable_device_mem(dev);
->         kfree(ioapic);
->  }
+> > I'm not sure where to find the exact numbers.
 >
+> Have you run in MSI mode and looked?
+
+You mean, enable MSI while building kernel and spin that kernel to see the MSI usage?
+Yes, but what do I look for?
+
+
+
+>
+> greg k-h
 > --
-> 1.7.10.4
->
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at http://vger.kernel.org/majordomo-info.html 		 	   		  
