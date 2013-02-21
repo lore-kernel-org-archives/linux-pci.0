@@ -1,67 +1,69 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-oa0-f41.google.com ([209.85.219.41]:63352 "EHLO
+	mail-oa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752920Ab3BUBTr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Feb 2013 20:19:47 -0500
+Received: by mail-oa0-f41.google.com with SMTP id i10so8826614oag.14
+        for <linux-pci@vger.kernel.org>; Wed, 20 Feb 2013 17:19:47 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1359657310.6022.4.camel@x61.thuisdomein>
-References: <1359367251.883.13.camel@x61.thuisdomein> <CAErSpo7grYijCUZGWGM4jao+MUqXYQ66q1az6bbKPMX4_Jwcyg@mail.gmail.com>
- <1450113.teKM2dvJbO@vostro.rjw.lan> <1359657310.6022.4.camel@x61.thuisdomein>
+In-Reply-To: <1360623637.2950.63.camel@lorien2>
+References: <1360623637.2950.63.camel@lorien2>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 1 Feb 2013 15:57:34 -0700
-Message-ID: <CAErSpo7TD8Vw-6V_-pZzarRd=APzEV-xfXQBYTNPceyxyojfsQ@mail.gmail.com>
-Subject: Re: [PATCH v2] PCI: pciehp: drop ENTRY messages
-To: Paul Bolle <pebolle@tiscali.nl>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
+Date: Wed, 20 Feb 2013 18:19:27 -0700
+Message-ID: <CAErSpo6jY1bX9G59uz8Zt_pDJ4OoR=kJkGjNLYYRTrKVXM8+eg@mail.gmail.com>
+Subject: Re: [PATCH 1/4] pci: Add PCI_BUS() and PCI_DEVID() interfaces to
+ return bus number and device id
+To: shuah.khan@hp.com, dhowells@redhat.com
+Cc: Joerg Roedel <joro@8bytes.org>, paulmck@linux.vnet.ibm.com,
+	linasvepstas@gmail.com, davej@redhat.com, tglx@linutronix.de,
+	mtk.manpages@gmail.com, iommu@lists.linux-foundation.org,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	shemminger@vyatta.com, jiang.liu@huawei.com, wangyijing@huawei.com,
+	shuahkhan@gmail.com
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jan 31, 2013 at 11:35 AM, Paul Bolle <pebolle@tiscali.nl> wrote:
-> In each suspend and resume cycle my laptop prints these messages at
-> KERN_INFO level:
->     pciehp 0000:00:1c.1:pcie04: pciehp_suspend ENTRY
->     pciehp 0000:00:1c.0:pcie04: pciehp_suspend ENTRY
+On Mon, Feb 11, 2013 at 4:00 PM, Shuah Khan <shuah.khan@hp.com> wrote:
+> pci defines PCI_DEVFN(), PCI_SLOT(), and PCI_FUNC() interfaces, however,
+> it doesn't have interfaces to return PCI bus and PCI device id. Drivers
+> (AMD IOMMU, and AER) implement module specific definitions for PCI_BUS()
+> and AMD_IOMMU driver also has a module specific interface to calculate PCI
+> device id from bus number and devfn.
 >
-> and
->     pciehp 0000:00:1c.0:pcie04: pciehp_resume ENTRY
->     pciehp 0000:00:1c.1:pcie04: pciehp_resume ENTRY
+> Add PCI_BUS and PCI_DEVID interfaces to return PCI bus number and PCI device
+> id respectively to avoid the need for duplicate definitions in other modules.
+> AER driver code and AMD IOMMU driver define PCI_BUS. AMD IOMMU driver defines
+> an interface to calculate device id from bus number, and devfn pair.
 >
-> Drop these messages, that were probably used to debug the suspend and
-> resume code, but now serve no purpose.
+> Signed-off-by: Shuah Khan <shuah.khan@hp.com>
+> ---
+>  include/uapi/linux/pci.h |    4 ++++
+>  1 file changed, 4 insertions(+)
 >
-> Signed-off-by: Paul Bolle <pebolle@tiscali.nl>
+> diff --git a/include/uapi/linux/pci.h b/include/uapi/linux/pci.h
+> index 3c292bc0..6b2c8b3 100644
+> --- a/include/uapi/linux/pci.h
+> +++ b/include/uapi/linux/pci.h
+> @@ -30,6 +30,10 @@
+>  #define PCI_DEVFN(slot, func)  ((((slot) & 0x1f) << 3) | ((func) & 0x07))
+>  #define PCI_SLOT(devfn)                (((devfn) >> 3) & 0x1f)
+>  #define PCI_FUNC(devfn)                ((devfn) & 0x07)
+> +#define PCI_DEVID(bus, devfn)  ((((u16)bus) << 8) | devfn)
+> +
+> +/* return bus from PCI devid = ((u16)bus_number) << 8) | devfn */
+> +#define PCI_BUS(x) (((x) >> 8) & 0xff)
+>
+>  /* Ioctls for /proc/bus/pci/X/Y nodes. */
+>  #define PCIIOC_BASE            ('P' << 24 | 'C' << 16 | 'I' << 8)
 
-I applied this to pci/misc for v3.9.  Thanks!
+David, can you point me at a description of include/uapi ... what is
+there and why, and how we should decide what new things go in
+include/uapi/linux/pci.h as opposed to include/linux/pci.h?  Maybe
+there should be something in Documentation/?
+
+I'm guessing it's something to do with being exported to userland, but
+I'm not sure the things in this patch (PCI_DEV_ID, PCI_BUS) are really
+exportable in the sense of being used for syscalls, etc.
 
 Bjorn
-
-> ---
-> 0) v1 was called "PCI: pciehp: hide ENTRY messages behind ctrl_dbg()".
-> But Bjorn and Rafael prefer to drop these messages completely.
->
-> 1) Not even compile tested!
->
->  drivers/pci/hotplug/pciehp_core.c | 2 --
->  1 file changed, 2 deletions(-)
->
-> diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
-> index 939bd1d..7d72c5e 100644
-> --- a/drivers/pci/hotplug/pciehp_core.c
-> +++ b/drivers/pci/hotplug/pciehp_core.c
-> @@ -293,7 +293,6 @@ static void pciehp_remove(struct pcie_device *dev)
->  #ifdef CONFIG_PM
->  static int pciehp_suspend (struct pcie_device *dev)
->  {
-> -       dev_info(&dev->device, "%s ENTRY\n", __func__);
->         return 0;
->  }
->
-> @@ -303,7 +302,6 @@ static int pciehp_resume (struct pcie_device *dev)
->         struct slot *slot;
->         u8 status;
->
-> -       dev_info(&dev->device, "%s ENTRY\n", __func__);
->         ctrl = get_service_data(dev);
->
->         /* reinitialize the chipset's event detection logic */
-> --
-> 1.7.11.7
->
