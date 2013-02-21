@@ -1,60 +1,105 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:52940 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752117Ab3BUGxU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 21 Feb 2013 01:53:20 -0500
+Message-ID: <5125C45A.5020208@suse.de>
+Date: Thu, 21 Feb 2013 07:53:14 +0100
+From: Hannes Reinecke <hare@suse.de>
 MIME-Version: 1.0
-In-Reply-To: <3459136.QID0qrXQHt@vostro.rjw.lan>
-References: <CAE9FiQXHG01NjnYNDbC-KEpbcvY-q4pBe97CxTOGS7W4vZQBYQ@mail.gmail.com>
- <52330506.F9m0tMYuG1@vostro.rjw.lan> <CAE9FiQXTRaP08ZeHWTJHt50DZO800BMigmo=q65-RLzZWkTvoQ@mail.gmail.com>
- <3459136.QID0qrXQHt@vostro.rjw.lan>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 6 Feb 2013 16:02:33 -0700
-Message-ID: <CAErSpo4vd+GhTVpoLb=sFTqBZMG=xva1QUUhyJrO4o0ytPXmqg@mail.gmail.com>
-Subject: Re: [PATCH v3 00/22] PCI: Iterate pci host bridge instead of pci root bus
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	Myron Stowe <myron.stowe@gmail.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Mauro Carvalho Chehab <mchehab@redhat.com>,
-	Tony Luck <tony.luck@intel.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, Russell King <linux@arm.linux.org.uk>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
+	Frederik Himpe <fhimpe@vub.ac.be>,
+	Oliver Neukum <oneukum@suse.de>,
+	David Haerdeman <david@hardeman.nu>, linux-usb@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH] pci: do not try to assign irq 255
+References: <1361182193-31894-1-git-send-email-hare@suse.de> <CAE9FiQWP1F5mLUoHoTHXy-wQoGxVK66QuuHYydaq3YfysS5Etg@mail.gmail.com> <5124820D.2080900@suse.de> <CAE9FiQXHteymDNzu0GqWtVSVhu3g2hCT+K9e5tB1mR-OBX1ffA@mail.gmail.com>
+In-Reply-To: <CAE9FiQXHteymDNzu0GqWtVSVhu3g2hCT+K9e5tB1mR-OBX1ffA@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 6, 2013 at 3:05 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> On Wednesday, February 06, 2013 01:53:50 PM Yinghai Lu wrote:
->> On Wed, Feb 6, 2013 at 1:43 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
->> > On Wednesday, February 06, 2013 01:28:27 PM Yinghai Lu wrote:
->> >> so you still did not answer you want 1 or 2 yet:
->> >>
->> >> for sgi_hotplug,
->> >>
->> >> 1. still keep the module support, and register acpi_pci_driver later.
->> >> 2. built-in support only, and need to register acpi_pci_driver early.
->> >
->> > Please work with the assumption that acpi_pci_driver is not going to be there
->> > any more.
->> >
+On 02/20/2013 05:57 PM, Yinghai Lu wrote:
+> On Tue, Feb 19, 2013 at 11:58 PM, Hannes Reinecke <hare@suse.de> wrote:
+>>>
+>> Apparently this device is meant to use MSI _only_ so the BIOS developer
+>> didn't feel the need to assign an INTx here.
 >>
->> I think I could change ioapic and iommu hotplug to weak add/remove because they
->> should be built-in by nature.
+>> According to PCI-3.0, section 6.8 (Message Signalled Interrupts):
+>>> It is recommended that devices implement interrupt pins to
+>>> provide compatibility in systems that do not support MSI
+>>> (devices default to interrupt pins). However, it is expected
+>>> that the need for interrupt pins will diminish over time.
+>>> Devices that do not support interrupt pins due to pin
+>>> constraints (rely on polling for device service) may implement
+>>> messages to increase performance without adding additional pins. >
+>>> Therefore, system configuration software must not assume that a
+>>> message capable device has an interrupt pin.
 >>
->> but how about others like sgi_hotplug etc?
-
-I think that could be handled with pcibios_root_bridge_prepare() or
-something similar -- something that happens in the "add host bridge"
-path.  I'm not saying we necessarily have all the right hooks in place
-yet.  It's just that I'd rather figure out what the right hooks *are*
-and add them if necessary, than just convert pci_root_buses to
-for_each_pci_host_bridge().
-
-> I'd really prefer to wait for the patchset removing acpi_pci_driver (from
-> Myron) before proceeding with more changes in that area.
+>> Which sounds to me as if the implementation is valid...
 >
-> Myron, do you have a prototype based on the current linux-next?
+> it seems you mess pin with interrupt line.
+>
+> current code:
+>          unsigned char irq;
+>
+>          pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &irq);
+>          dev->pin = irq;
+>          if (irq)
+>                  pci_read_config_byte(dev, PCI_INTERRUPT_LINE, &irq);
+>          dev->irq = irq;
+>
+> so if the device does not have interrupt pin implemented, pin should be zero.
+> and  pin and irq in dev should
+> be all 0.
+>
+But the device _has_ an interrupt pin implemented.
+The whole point here is that the interrupt line is _NOT_ zero.
 
-I think it's really the acpiphp/pciehp issue that's holding up the
-removal of acpi_pci_driver.  I'm not sure if anybody's working on
-that.
+00:14.0 USB controller [0c03]: Intel Corporation 7 Series/C210 
+Series Chipset Family USB xHCI Host Controller [8086:1e31] (rev 04) 
+(prog-if 30 [XHCI])
+	Subsystem: Hewlett-Packard Company Device [103c:179b]
+	Control: I/O- Mem+ BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- 
+Stepping- SERR- FastB2B- DisINTx-
+	Status: Cap+ 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- 
+<TAbort- <MAbort- >SERR- <PERR- INTx-
+	Interrupt: pin A routed to IRQ 255
+	Region 0: Memory at d4720000 (64-bit, non-prefetchable) [size=64K]
+	Capabilities: [70] Power Management version 2
+		Flags: PMEClk- DSI- D1- D2- AuxCurrent=375mA 
+PME(D0-,D1-,D2-,D3hot+,D3cold+)
+		Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
+	Capabilities: [80] MSI: Enable- Count=1/8 Maskable- 64bit+
+		Address: 0000000000000000  Data: 0000
+
+So at one point we have to decide that ->irq is not valid, despite 
+it being not set to zero.
+An alternative fix would be this:
+
+diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
+index 68a921d..4a480cb 100644
+--- a/drivers/acpi/pci_irq.c
++++ b/drivers/acpi/pci_irq.c
+@@ -469,6 +469,7 @@ int acpi_pci_irq_enable(struct pci_dev *dev)
+                 } else {
+                         dev_warn(&dev->dev, "PCI INT %c: no GSI\n",
+                                  pin_name(pin));
++                       dev->irq = 0;
+                 }
+                 return 0;
+         }
+
+Which probably is a better solution, as here ->irq is _definitely_
+not valid, so we should reset it to '0' to avoid confusion on upper
+layers.
+
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: J. Hawn, J. Guild, F. Imendörffer, HRB 16746 (AG Nürnberg)
