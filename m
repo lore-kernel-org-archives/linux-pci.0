@@ -1,88 +1,65 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.10]:59537 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932297Ab3BMSyN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Feb 2013 13:54:13 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Subject: Re: Giving special alignment/size constraints to the Linux PCI core?
-Date: Wed, 13 Feb 2013 18:53:14 +0000
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	"Russell King - ARM Linux" <linux@arm.linux.org.uk>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	linux-pci@vger.kernel.org,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	"Eran Ben-Avi" <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	linux-arm-kernel@lists.infradead.org
-References: <20130130120344.GA29490@avionic-0098.mockup.avionic-design.de> <201302122305.28467.arnd@arndb.de> <20130213003224.GA32535@obsidianresearch.com>
-In-Reply-To: <20130213003224.GA32535@obsidianresearch.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+Cc: linux-pci@vger.kernel.org, linux-usb@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Huang Ying <ying.huang@intel.com>
+Subject: Re: PCI D3 wakeup failure on Lynx Point xHCI
+Date: Thu, 21 Feb 2013 23:54:55 +0100
+Message-ID: <2088156.nL7UmaIX3H@vostro.rjw.lan>
+In-Reply-To: <20130221214145.GA25639@xanatos>
+References: <20130221214145.GA25639@xanatos>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201302131853.14617.arnd@arndb.de>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday 13 February 2013, Jason Gunthorpe wrote:
-> On Tue, Feb 12, 2013 at 11:05:28PM +0000, Arnd Bergmann wrote:
-> > On Tuesday 12 February 2013, Jason Gunthorpe wrote:
-> > > PCI-E hotplug can be supported through the generic /sys/bus/pci/rescan
-> > > mechanism, which forces a rediscovery/re-evaluation of all the buses
-> > > in the system. The PCI core is smart enough to know what it can/can
-> > > not reassign and can move the bridge windows around (IIRC most of the
-> > > issues here are resolved these days?).
-> > > 
-> > > For PCI-E, the root port bridge can be placed anywhere in the host
-> > > aperture, so as long as the host aperture isn't filled the core can
-> > > allocate a memory region for the now active port.
-> > > 
-> > > Thomas's driver should support this as the regions and windows are all
-> > > properly dynamic.
-> > 
-> > Ah, so you only allow hotplugging into the root ports, but not behind
-> > additional bridges that have active devices on them, right?
->  
-> > I guess that is a common limitation for PCIe hotplugging.
+On Thursday, February 21, 2013 01:41:45 PM Sarah Sharp wrote:
+> Hi Rafael,
+
+Hi,
+ 
+> I'm running into some issues with PCI D3
+
+Do you mean D3hot?
+
+> wakeup on the latest version of the Lynx Point chipset.  I can give you the
+> stepping and BIOS version privately if you need it.
 > 
-> In all the cases I've worked with, it has been a root port hot plug,
-> but I could imagine something like ExpressCard requiring a second
-> bridge.
-
-Ok, I see.
-
-> The standard answer is to leave appropriate gaps. My *guess* on this
-> matter is that on x86 the gaps are left, as appropriate, by the boot
-> firmware. Eg an ExpressCard slot will always have a window assigned to
-> its bridge and Linux would typically not reassign it (or similar).
+> Basically, I think PMEs are being lost somewhere in the ACPI or PCI
+> stack.  I'm not sure how to further debug this issue, so I'm hoping you have
+> some pointers.
 > 
-> PCI core support for firmware-less embedded will someday need to do
-> something similar, eg via a special DT attribute on hot plug capable
-> ports.
+> This is reproduced on the 3.7.1, 3.7.7, and 3.8.0 kernels.
+> 
+> First, I go into powertop and basically change all the 'Bad' entries to
+> 'Good', which turns on runtime PM for all PCI devices, bridges, and
+> rootports.  I have no USB devices plugged into the xHCI host, and I wait
+> until the host is suspended, and the PCI device is in D3.
+> 
+> Then I run:
+> 
+> watch -n 1 'sudo lspci -vvv -s 00:14.0'
+> 
+> When I plug in a USB 2.0 device to a USB 2.0 port, the hotplug event is
+> lost.  I can see from the lspci output that the Status line under the PM
+> capabilities changes when I plug in the device.  The PME- changes to
+> PME+, which I assume means a PME happened.  But the USB core's PCI
+> resume functions are never called.
+> 
+> Wakeup from D3 works fine on the previous generation chipset (Panther
+> Point) on my Lenovo x230 laptop, so this makes me suspicious that it's a
+> hardware or BIOS issue.  I'll try updating my BIOS and seeing if that
+> helps.
 
-I saw that the PCI core reserves 2MB memory space and 256 bytes of
-I/O space per hotplug capable bridge by default, and you can override
-these at boot time if you need more. I wonder if this means that
-we end up using two of the precious address space windows for each
-unused root port to already map these at boot time, and it certainly
-works for most adapters, but this does not seem better than assigning
-static windows of the same size at boot time for each port.
+In addition to that you can see if the number of ACPI interrupts (in
+/proc/interrupts) grows when you plug the USB device in and if so,
+whether or not any of the numbers in /sys/firmware/acpi/interrupts/gpe*
+grows at the same time.
 
-> Just to circle back on this whole thread - Thomas's solution is pretty
-> good, it covers pretty much all the use cases. I think it is a good
-> place to start, and as the firmware-less 'drivers/pci/host' concept
-> develops the right support will eventually come, as everyone is now
-> aware of the need to control the host bridge aperture from the core
-> PCI code.
+Thanks,
+Rafael
 
-I agree the solution is not all that bad, I just want to be convinced
-that it actually has advantages over the simpler approaches.
 
-	Arnd
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
