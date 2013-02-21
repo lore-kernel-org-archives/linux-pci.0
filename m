@@ -1,81 +1,50 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga09.intel.com ([134.134.136.24]:53178 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753022Ab3BUVlq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 21 Feb 2013 16:41:46 -0500
+Date: Thu, 21 Feb 2013 13:41:45 -0800
+From: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-pci@vger.kernel.org, linux-usb@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: PCI D3 wakeup failure on Lynx Point xHCI
+Message-ID: <20130221214145.GA25639@xanatos>
 MIME-Version: 1.0
-In-Reply-To: <20130206065340.416a708b@redhat.com>
-References: <CAE9FiQXHG01NjnYNDbC-KEpbcvY-q4pBe97CxTOGS7W4vZQBYQ@mail.gmail.com>
- <1359314629-18651-1-git-send-email-yinghai@kernel.org> <CAErSpo6r_LNEtYB3j5ELb8NdHu0a6_YOVj8S32CmByGFUpSsbg@mail.gmail.com>
- <CAE9FiQXg1YcPPJLCgPbKOKXHk-LRQv4bbBGH9jyuATQa2ANLkg@mail.gmail.com>
- <CAE9FiQX2DbTO0qCzGO4iMTkU_mPM2oZL+R5UoZ5dj=as6MUAsw@mail.gmail.com>
- <CAErSpo7-dULYwWQ=f5CBCxOULKJE9=n6Ha4jkVKd8enspuYjTA@mail.gmail.com>
- <CAE9FiQWvmK7N2z19B9ZiMyc_T6cJdpWoWr3mExpuwUA4ogBc3w@mail.gmail.com> <20130206065340.416a708b@redhat.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 6 Feb 2013 10:45:16 -0700
-Message-ID: <CAErSpo4jtrp4ashHsfZP580_qdCXBEqmdd=SBfQrgQTV4uM4EA@mail.gmail.com>
-Subject: Re: [PATCH v3 00/22] PCI: Iterate pci host bridge instead of pci root bus
-To: Mauro Carvalho Chehab <mchehab@redhat.com>
-Cc: Yinghai Lu <yinghai@kernel.org>, Jiang Liu <jiang.liu@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, Russell King <linux@arm.linux.org.uk>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 6, 2013 at 1:53 AM, Mauro Carvalho Chehab
-<mchehab@redhat.com> wrote:
-> Em Tue, 5 Feb 2013 16:47:10 -0800
-> Yinghai Lu <yinghai@kernel.org> escreveu:
->
->> On Tue, Feb 5, 2013 at 4:19 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> >
->> > Maybe.  I'd rather not introduce for_each_pci_host_bridge() at all, if
->> > we can avoid it.  Every place it's used is a place we have to audit to
->> > make sure it's safe.  I think your audit above is correct and
->> > complete, but it relies on way too much architecture knowledge.  It's
->> > better if we can deduce correctness without knowing which arches
->> > support hotplug and which CPUs support EDAC.
->> >
->> > As soon as for_each_pci_host_bridge() is in the tree, those uses can
->> > be copied to even more places.  It's a macro, so it's usable by any
->> > module, even out-of-tree ones that we'll never see and can't fix.  So
->> > we won't really have a good way to deprecate and remove it.
->>
->> Now we only have two references in modules.
->>
->> drivers/edac/i7core_edac.c:     for_each_pci_host_bridge(host_bridge) {
->> drivers/pci/hotplug/sgi_hotplug.c:      for_each_pci_host_bridge(host_bridge) {
->>
->> for the sgi_hotplug.c, it should be same problem that have for acpiphp
->> and pciehp.
->> need to make it support pci host bridge hotplug anyway.
->>
->> for edac, we need to check Mauro about their plan.
->
-> The i7core_pci_lastbus() code at i7core_edac is there to make it work
-> with some Nehalem/Nehalem-EP machines that hide the memory controller's
-> PCI ID by using an artificially low last bus.
+Hi Rafael,
 
-I don't really understand how this helps.  An example would probably
-make it clearer.
+I'm running into some issues with PCI D3 wakeup on the latest version of
+the Lynx Point chipset.  I can give you the stepping and BIOS version
+privately if you need it.
 
-i7core_edac.c has some very creative use of PCI infrastructure.
-Normally a driver has a pci_device_id table that identifies the
-vendor/device IDs of the devices it cares about, and the driver's
-.probe() method is called for every matching device.
+Basically, I think PMEs are being lost somewhere in the ACPI or PCI
+stack.  I'm not sure how to further debug this issue, so I'm hoping you have
+some pointers.
 
-But i7core_edac only has two entries in its id_table.  When we find a
-device that matches one of those two entries, we call i7core_probe(),
-which then gropes around for all the *other* devices related to that
-original one.  This is a bit messy.
+This is reproduced on the 3.7.1, 3.7.7, and 3.8.0 kernels.
 
-I'd like it a lot better if the device IDs in
-pci_dev_descr_i7core_nehalem[], pci_dev_descr_lynnfield[], etc., were
-just in the pci_device_id table directly.  Then i7core_probe() would
-be called directly for every device you care about, and you could sort
-them out there.  That should work without any need for
-pci_get_device(), i7core_pci_lastbus(), etc.
+First, I go into powertop and basically change all the 'Bad' entries to
+'Good', which turns on runtime PM for all PCI devices, bridges, and
+rootports.  I have no USB devices plugged into the xHCI host, and I wait
+until the host is suspended, and the PCI device is in D3.
 
-Bjorn
+Then I run:
+
+watch -n 1 'sudo lspci -vvv -s 00:14.0'
+
+When I plug in a USB 2.0 device to a USB 2.0 port, the hotplug event is
+lost.  I can see from the lspci output that the Status line under the PM
+capabilities changes when I plug in the device.  The PME- changes to
+PME+, which I assume means a PME happened.  But the USB core's PCI
+resume functions are never called.
+
+Wakeup from D3 works fine on the previous generation chipset (Panther
+Point) on my Lenovo x230 laptop, so this makes me suspicious that it's a
+hardware or BIOS issue.  I'll try updating my BIOS and seeing if that
+helps.
+
+Sarah Sharp
