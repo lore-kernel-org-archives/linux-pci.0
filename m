@@ -1,41 +1,48 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [PATCH v2 3/7] PCI: catch enable-counter underflows
-To: e1000-devel@lists.sourceforge.net, linux-pci@vger.kernel.org,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	linux-kernel@vger.kernel.org
-From: Konstantin Khlebnikov <khlebnikov@openvz.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 04 Feb 2013 15:56:01 +0400
-Message-ID: <20130204115601.5569.27640.stgit@zurg>
-In-Reply-To: <20130204115246.5569.85829.stgit@zurg>
-References: <20130204115246.5569.85829.stgit@zurg>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pb0-f49.google.com ([209.85.160.49]:51641 "EHLO
+	mail-pb0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753650Ab3BVC3Y (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 Feb 2013 21:29:24 -0500
+Received: by mail-pb0-f49.google.com with SMTP id xa12so118577pbc.36
+        for <linux-pci@vger.kernel.org>; Thu, 21 Feb 2013 18:29:24 -0800 (PST)
+Date: Thu, 21 Feb 2013 18:29:49 -0800
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Cole Mickens <cole.mickens@gmail.com>
+Cc: linux-pci@vger.kernel.org
+Subject: Re: Hot (un)plugging a Thunderbolt Ethernet adapter causes kernel
+ panic
+Message-ID: <20130222022949.GA25464@kroah.com>
+References: <CAJ9Gbf1o0JHTWRvx=5x51q-wpZctkjFQuufR4fdNja_kV56dqw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAJ9Gbf1o0JHTWRvx=5x51q-wpZctkjFQuufR4fdNja_kV56dqw@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds single WARN_ONCE() check for catching 'enable_cnt' imbalances.
+On Thu, Feb 21, 2013 at 05:45:29PM -0600, Cole Mickens wrote:
+> Hello, I was instructed to send this issue to this mailing list:
+> https://bugzilla.kernel.org/show_bug.cgi?id=54131
+> 
+> --
+> 
+> I have a Macbook Air 2012 running Ubuntu 13.04 with the 3.8.0 kernel
+> (not an RC).
+> 
+> My Thunderbolt Ethernet adapter is usable but only if it is inserted at boot.
+> 
+> If it is removed after being available, the kernel will panic. Generally it
+> takes a minute or two or I have to fire up Chrome or something to stir it.
+> 
+> I assume the crash isn't written out on a Mac EFI system but I can easily
+> reproduce it and retype whatever bits are important. I did take a
+> snapshot with my camera: http://i.imgur.com/q2iuHWZ.jpg
 
-Signed-off-by: Konstantin Khlebnikov <khlebnikov@openvz.org>
-Cc: linux-pci@vger.kernel.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/pci/pci.c |    3 +++
- 1 file changed, 3 insertions(+)
+This doesn't happen in 3.7.0, right?  Any chance you can run 'git
+bisect' to track down the offending patch?
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 5cb5820..ff93f8f 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -1401,6 +1401,9 @@ pci_disable_device(struct pci_dev *dev)
- 	if (dr)
- 		dr->enabled = 0;
- 
-+	dev_WARN_ONCE(&dev->dev, atomic_read(&dev->enable_cnt) <= 0,
-+			"enable counter underflow");
-+
- 	if (atomic_sub_return(1, &dev->enable_cnt) != 0)
- 		return;
- 
+If not, no big deal, I can do it tomorrow as I have one of these boxes
+here as well.
 
+thanks,
+
+greg k-h
