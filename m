@@ -1,77 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ve0-f180.google.com ([209.85.128.180]:60115 "EHLO
-	mail-ve0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757885Ab3BAXHH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 Feb 2013 18:07:07 -0500
-Received: by mail-ve0-f180.google.com with SMTP id jx10so3325801veb.25
-        for <linux-pci@vger.kernel.org>; Fri, 01 Feb 2013 15:07:06 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1359562210-26536-1-git-send-email-jiang.liu@huawei.com>
-References: <1359562210-26536-1-git-send-email-jiang.liu@huawei.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 1 Feb 2013 16:06:45 -0700
-Message-ID: <CAErSpo5CcEudpbozcu49EOQ4eL2bE40YVNDji7RbSA7Z28y1cw@mail.gmail.com>
-Subject: Re: [PATCH 1/2] acpiphp: create companion ACPI devices before
- creating PCI devices
-To: Jiang Liu <liuj97@gmail.com>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga03.intel.com ([143.182.124.21]:23018 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756449Ab3BVJzr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 22 Feb 2013 04:55:47 -0500
+From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+To: Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Cole Mickens <cole.mickens@gmail.com>
+CC: linux-pci@vger.kernel.org, kirill.shutemov@linux.intel.com,
+	Mika Westerberg <mika.westerberg@linux.intel.com>
+In-Reply-To: <5127203F.1040007@cn.fujitsu.com>
+References: <CAJ9Gbf1o0JHTWRvx=5x51q-wpZctkjFQuufR4fdNja_kV56dqw@mail.gmail.com>
+ <5127203F.1040007@cn.fujitsu.com>
+Subject: Re: Hot (un)plugging a Thunderbolt Ethernet adapter causes kernel
+ panic
+Message-Id: <20130222095713.A7520E0085@blue.fi.intel.com>
+Date: Fri, 22 Feb 2013 11:57:13 +0200 (EET)
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 30, 2013 at 9:10 AM, Jiang Liu <liuj97@gmail.com> wrote:
-> From: Jiang Liu <jiang.liu@huawei.com>
->
-> With commit 4f535093cf8f6da8c "PCI: Put pci_dev in device tree as
-> early as possible", companion ACPI devices should be created before
-> creating correspoding PCI devices, otherwise it will break the ACPI
-> PCI binding logic.
->
-> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-> ---
-> Hi Bjorn,
->         This patch set applies to your pci/yinghai-root-bus branch.
-> There are still other potential bugs in the acpiphp driver under
-> investigation. So I will send out these two first to catch up with
-> the 3.9 merging window.
->         Thanks!
->         Gerry
+Gu Zheng wrote:
+> On 02/22/2013 07:45 AM, Cole Mickens wrote:
+> 
+> > Hello, I was instructed to send this issue to this mailing list:
+> > https://bugzilla.kernel.org/show_bug.cgi?id=54131
+> > 
+> > --
+> > 
+> > I have a Macbook Air 2012 running Ubuntu 13.04 with the 3.8.0 kernel
+> > (not an RC).
+> > 
+> > My Thunderbolt Ethernet adapter is usable but only if it is inserted at boot.
 
-I assume this fixes some sort of user-visible issue with acpiphp.
-What failure does the user see?
+It's expected behaviour.
 
-> ---
->  drivers/pci/hotplug/acpiphp_glue.c |    6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-> index bd784ff..acb7af2 100644
-> --- a/drivers/pci/hotplug/acpiphp_glue.c
-> +++ b/drivers/pci/hotplug/acpiphp_glue.c
-> @@ -839,6 +839,9 @@ static int __ref enable_device(struct acpiphp_slot *slot)
->         if (slot->flags & SLOT_ENABLED)
->                 goto err_exit;
->
-> +       list_for_each_entry(func, &slot->funcs, sibling)
-> +               acpiphp_bus_add(func);
-> +
->         num = pci_scan_slot(bus, PCI_DEVFN(slot->device, 0));
->         if (num == 0) {
->                 /* Maybe only part of funcs are added. */
-> @@ -862,9 +865,6 @@ static int __ref enable_device(struct acpiphp_slot *slot)
->                 }
->         }
->
-> -       list_for_each_entry(func, &slot->funcs, sibling)
-> -               acpiphp_bus_add(func);
-> -
->         pci_bus_assign_resources(bus);
->         acpiphp_sanitize_bus(bus);
->         acpiphp_set_hpp_values(bus);
-> --
-> 1.7.9.5
->
+Apple has different Thunderbolt implementation. On PC it's just a ACPI
+Hotplug, on Apple kernel have to deal with Thunderbolt controller
+directly. We don't have a driver for that yet. It's on todo list, but not
+any time soon.
+
+> > If it is removed after being available, the kernel will panic. Generally it
+> > takes a minute or two or I have to fire up Chrome or something to stir it.
+
+Hm. We will try to trigger it. Will see if we can do anything about that.
+
+> > I assume the crash isn't written out on a Mac EFI system but I can easily
+> > reproduce it and retype whatever bits are important. I did take a
+> > snapshot with my camera: http://i.imgur.com/q2iuHWZ.jpg
+> > 
+> > Apologies if this is the wrong format or place for this; I'm reporting my first
+> > kernel bug. Cheers.
+> 
+> Hi Cole,
+> It seems not a new issue, see these: 
+> https://lkml.org/lkml/2012/12/13/589
+> http://help.lockergnome.com/linux/Linux-Support-Thunderbolt-Apple-Monitor--ftopict553657.html
+> Maybe Thunderbolt hotplug is not well supported now.
+> If this issue does disturb you, you can try Kirill's patch <https://lkml.org/lkml/2012/12/13/589>,
+> maybe it can help you.:)
+
+It will not help. :(
+
+-- 
+ Kirill A. Shutemov
