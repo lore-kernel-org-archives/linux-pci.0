@@ -1,157 +1,208 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:45905 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933371Ab3BLQ3l (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Feb 2013 11:29:41 -0500
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Cc: Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Tawfik Bayouk <tawfik@marvell.com>
-Subject: [PATCH 19/32] arm: plat-orion: introduce orion_{alloc,free}_cpu_win() functions
-Date: Tue, 12 Feb 2013 17:28:53 +0100
-Message-Id: <1360686546-24277-20-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from g5t0006.atlanta.hp.com ([15.192.0.43]:21686 "EHLO
+	g5t0006.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751414Ab3BXFZx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 24 Feb 2013 00:25:53 -0500
+From: Vijay Mohan Pandarathil <vijaymohan.pandarathil@hp.com>
+To: alex.williamson@redhat.com, gleb@redhat.com, bhelgaas@google.com,
+	blauwirbel@gmail.com, lance.oritz@hp.com, kvm@vger.kernel.org,
+	qemu-devel@nongnu.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: Vijay Mohan Pandarathil <vijaymohan.pandarathil@hp.com>
+Subject: [PATCH v5 2/3] VFIO-AER: Vfio-pci driver changes for supporting AER
+Date: Sat, 23 Feb 2013 23:25:15 -0600
+Message-Id: <1361683516-31946-3-git-send-email-vijaymohan.pandarathil@hp.com>
+In-Reply-To: <1361683516-31946-1-git-send-email-vijaymohan.pandarathil@hp.com>
+References: <1361683516-31946-1-git-send-email-vijaymohan.pandarathil@hp.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In the address decoding code, we implement two new functions:
-orion_alloc_cpu_win() and orion_free_cpu_win(). The first function
-finds an unused address decoding window, and configures it according
-to the given arguments (in terms of base address, size, target,
-attributes). The second function frees an address decoding window,
-given a physical base address.
+	- New VFIO_SET_IRQ ioctl option to pass the eventfd that is signaled when
+          an error occurs in the vfio_pci_device
 
-Those two new functions will be used by the PCIe code, which needs to
-dynamically register address decoding windows depending on the PCIe
-devices that are detected.
+	- Register pci_error_handler for the vfio_pci driver
 
-The orion_free_cpu_win() function is only here to handle error cases
-in the PCIe devices initialization, in the normal case, address
-decoding windows are never freed.
+	- When the device encounters an error, the error handler registered by
+          the vfio_pci driver gets invoked by the AER infrastructure
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+	- In the error handler, signal the eventfd registered for the device.
+
+	- This results in the qemu eventfd handler getting invoked and
+          appropriate action taken for the guest.
+
+Signed-off-by: Vijay Mohan Pandarathil <vijaymohan.pandarathil@hp.com>
 ---
- arch/arm/plat-orion/addr-map.c              |   75 +++++++++++++++++++++++++++
- arch/arm/plat-orion/include/plat/addr-map.h |    7 +++
- 2 files changed, 82 insertions(+)
+ drivers/vfio/pci/vfio_pci.c         | 44 ++++++++++++++++++++++++++++++++-
+ drivers/vfio/pci/vfio_pci_intrs.c   | 49 +++++++++++++++++++++++++++++++++++++
+ drivers/vfio/pci/vfio_pci_private.h |  1 +
+ include/uapi/linux/vfio.h           |  1 +
+ 4 files changed, 94 insertions(+), 1 deletion(-)
 
-diff --git a/arch/arm/plat-orion/addr-map.c b/arch/arm/plat-orion/addr-map.c
-index a187524..a7bdc21 100644
---- a/arch/arm/plat-orion/addr-map.c
-+++ b/arch/arm/plat-orion/addr-map.c
-@@ -108,6 +108,81 @@ static void orion_disable_cpu_win(const struct orion_addr_map_cfg *cfg,
- 	}
+diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
+index b28e66c..cd99321 100644
+--- a/drivers/vfio/pci/vfio_pci.c
++++ b/drivers/vfio/pci/vfio_pci.c
+@@ -196,7 +196,9 @@ static int vfio_pci_get_irq_count(struct vfio_pci_device *vdev, int irq_type)
+ 
+ 			return (flags & PCI_MSIX_FLAGS_QSIZE) + 1;
+ 		}
+-	}
++	} else if (irq_type == VFIO_PCI_ERR_IRQ_INDEX)
++		if (pci_is_pcie(vdev->pdev))
++			return 1;
+ 
+ 	return 0;
+ }
+@@ -302,6 +304,17 @@ static long vfio_pci_ioctl(void *device_data,
+ 		if (info.argsz < minsz || info.index >= VFIO_PCI_NUM_IRQS)
+ 			return -EINVAL;
+ 
++		switch (info.index) {
++		case VFIO_PCI_INTX_IRQ_INDEX ... VFIO_PCI_MSIX_IRQ_INDEX:
++			break;
++		case VFIO_PCI_ERR_IRQ_INDEX:
++			if (pci_is_pcie(vdev->pdev))
++				break;
++		/* pass thru to return error */
++		default:
++			return -EINVAL;
++		}
++
+ 		info.flags = VFIO_IRQ_INFO_EVENTFD;
+ 
+ 		info.count = vfio_pci_get_irq_count(vdev, info.index);
+@@ -538,11 +551,40 @@ static void vfio_pci_remove(struct pci_dev *pdev)
+ 	kfree(vdev);
  }
  
-+static int orion_window_is_free(const struct orion_addr_map_cfg *cfg,
-+				const int win)
++static pci_ers_result_t vfio_pci_aer_err_detected(struct pci_dev *pdev,
++						  pci_channel_state_t state)
 +{
-+	void __iomem *addr = cfg->win_cfg_base(cfg, win);
-+	u32 ctrl = readl(addr + WIN_CTRL_OFF);
-+	return !(ctrl & WIN_CTRL_ENABLE);
-+}
++	struct vfio_pci_device *vdev;
++	struct vfio_device *device;
 +
-+/*
-+ * Find an unused address decoding window, and enable it according to
-+ * the arguments passed (base, size, target, attributes, remap).
-+ */
-+int orion_alloc_cpu_win(const struct orion_addr_map_cfg *cfg,
-+			const u32 base, const u32 size,
-+			const u8 target, const u8 attr, const u32 remap)
-+{
-+	int win;
++	device = vfio_device_get_from_dev(&pdev->dev);
++	if (device == NULL)
++		return PCI_ERS_RESULT_DISCONNECT;
 +
-+	/*
-+	 * If we don't need to remap, try to first allocate a window
-+	 * that doesn't have remapping capabilities, since those are
-+	 * pretty limited in number.
-+	 */
-+	if (remap == ORION_ADDR_MAP_NO_REMAP) {
-+		for (win = cfg->remappable_wins; win < cfg->num_wins; win++)
-+			if (orion_window_is_free(cfg, win))
-+				break;
-+
-+		if (win < cfg->num_wins) {
-+			orion_setup_cpu_win(cfg, win, base, size, target, attr, remap);
-+			return 0;
-+		}
++	vdev = vfio_device_data(device);
++	if (vdev == NULL) {
++		vfio_device_put(device);
++		return PCI_ERS_RESULT_DISCONNECT;
 +	}
 +
-+	/*
-+	 * We need a remap window, or we haven't found a non-remap
-+	 * capable window.
-+	 */
-+	for (win = 0; win < cfg->num_wins; win++)
-+		if (orion_window_is_free(cfg, win))
-+			break;
++	if (vdev->err_trigger)
++		eventfd_signal(vdev->err_trigger, 1);
 +
-+	if (win < cfg->num_wins) {
-+		orion_setup_cpu_win(cfg, win, base, size, target, attr, remap);
++	vfio_device_put(device);
++
++	return PCI_ERS_RESULT_CAN_RECOVER;
++}
++
++static struct pci_error_handlers vfio_err_handlers = {
++	.error_detected = vfio_pci_aer_err_detected,
++};
++
+ static struct pci_driver vfio_pci_driver = {
+ 	.name		= "vfio-pci",
+ 	.id_table	= NULL, /* only dynamic ids */
+ 	.probe		= vfio_pci_probe,
+ 	.remove		= vfio_pci_remove,
++	.err_handler	= &vfio_err_handlers,
+ };
+ 
+ static void __exit vfio_pci_cleanup(void)
+diff --git a/drivers/vfio/pci/vfio_pci_intrs.c b/drivers/vfio/pci/vfio_pci_intrs.c
+index 3639371..4a29830 100644
+--- a/drivers/vfio/pci/vfio_pci_intrs.c
++++ b/drivers/vfio/pci/vfio_pci_intrs.c
+@@ -745,6 +745,48 @@ static int vfio_pci_set_msi_trigger(struct vfio_pci_device *vdev,
+ 	return 0;
+ }
+ 
++static int vfio_pci_set_err_trigger(struct vfio_pci_device *vdev,
++				    unsigned index, unsigned start,
++				    unsigned count, uint32_t flags, void *data)
++{
++	int32_t fd = *(int32_t *)data;
++
++	if ((index != VFIO_PCI_ERR_IRQ_INDEX) ||
++	    !(flags & VFIO_IRQ_SET_DATA_TYPE_MASK))
++		return -EINVAL;
++
++	/* DATA_NONE/DATA_BOOL enables loopback testing */
++
++	if (flags & VFIO_IRQ_SET_DATA_NONE) {
++		if (vdev->err_trigger)
++			eventfd_signal(vdev->err_trigger, 1);
++		return 0;
++	} else if (flags & VFIO_IRQ_SET_DATA_BOOL) {
++		uint8_t trigger = *(uint8_t *)data;
++		if (trigger && vdev->err_trigger)
++			eventfd_signal(vdev->err_trigger, 1);
 +		return 0;
 +	}
 +
-+	/* No window found */
-+	return -ENOMEM;
++	/* Handle SET_DATA_EVENTFD */
++
++	if (fd == -1) {
++		if (vdev->err_trigger)
++			eventfd_ctx_put(vdev->err_trigger);
++		vdev->err_trigger = NULL;
++		return 0;
++	} else if (fd >= 0) {
++		struct eventfd_ctx *efdctx;
++		efdctx = eventfd_ctx_fdget(fd);
++		if (IS_ERR(efdctx))
++			return PTR_ERR(efdctx);
++		if (vdev->err_trigger)
++			eventfd_ctx_put(vdev->err_trigger);
++		vdev->err_trigger = efdctx;
++		return 0;
++	} else
++		return -EINVAL;
 +}
-+
-+/*
-+ * Free an address decoding window, given its base address.
-+ */
-+int orion_free_cpu_win(const struct orion_addr_map_cfg *cfg,
-+		       const u32 base)
-+{
-+	int win;
-+
-+	for (win = 0; win < cfg->num_wins; win++) {
-+		void __iomem *addr = cfg->win_cfg_base(cfg, win);
-+		u32 winbase = readl(addr + WIN_BASE_OFF);
-+
-+		if (orion_window_is_free(cfg, win))
-+			continue;
-+
-+		if (winbase == (base & 0xffff0000)) {
-+			orion_disable_cpu_win(cfg, win);
-+			return 0;
+ int vfio_pci_set_irqs_ioctl(struct vfio_pci_device *vdev, uint32_t flags,
+ 			    unsigned index, unsigned start, unsigned count,
+ 			    void *data)
+@@ -779,6 +821,13 @@ int vfio_pci_set_irqs_ioctl(struct vfio_pci_device *vdev, uint32_t flags,
+ 			break;
+ 		}
+ 		break;
++	case VFIO_PCI_ERR_IRQ_INDEX:
++		switch (flags & VFIO_IRQ_SET_ACTION_TYPE_MASK) {
++		case VFIO_IRQ_SET_ACTION_TRIGGER:
++			if (pci_is_pcie(vdev->pdev))
++				func = vfio_pci_set_err_trigger;
++			break;
 +		}
-+	}
-+
-+	return -EINVAL;
-+}
-+
- /*
-  * Configure a number of windows.
-  */
-diff --git a/arch/arm/plat-orion/include/plat/addr-map.h b/arch/arm/plat-orion/include/plat/addr-map.h
-index a5b21a9..fc46878 100644
---- a/arch/arm/plat-orion/include/plat/addr-map.h
-+++ b/arch/arm/plat-orion/include/plat/addr-map.h
-@@ -51,6 +51,13 @@ void orion_setup_cpu_win(const struct orion_addr_map_cfg *cfg,
- 			 const u32 size, const u8 target,
- 			 const u8 attr, const u32 remap);
+ 	}
  
-+int orion_alloc_cpu_win(const struct orion_addr_map_cfg *cfg,
-+			const u32 base, const u32 size,
-+			const u8 target, const u8 attr, const u32 remap);
-+
-+int orion_free_cpu_win(const struct orion_addr_map_cfg *cfg,
-+		       const u32 base);
-+
- void __init orion_setup_cpu_mbus_target(const struct orion_addr_map_cfg *cfg,
- 					const void __iomem *ddr_window_cpu_base);
- #endif
+ 	if (!func)
+diff --git a/drivers/vfio/pci/vfio_pci_private.h b/drivers/vfio/pci/vfio_pci_private.h
+index 611827c..daee62f 100644
+--- a/drivers/vfio/pci/vfio_pci_private.h
++++ b/drivers/vfio/pci/vfio_pci_private.h
+@@ -55,6 +55,7 @@ struct vfio_pci_device {
+ 	bool			bardirty;
+ 	struct pci_saved_state	*pci_saved_state;
+ 	atomic_t		refcnt;
++	struct eventfd_ctx	*err_trigger;
+ };
+ 
+ #define is_intx(vdev) (vdev->irq_type == VFIO_PCI_INTX_IRQ_INDEX)
+diff --git a/include/uapi/linux/vfio.h b/include/uapi/linux/vfio.h
+index 4758d1b..7d50af4 100644
+--- a/include/uapi/linux/vfio.h
++++ b/include/uapi/linux/vfio.h
+@@ -310,6 +310,7 @@ enum {
+ 	VFIO_PCI_INTX_IRQ_INDEX,
+ 	VFIO_PCI_MSI_IRQ_INDEX,
+ 	VFIO_PCI_MSIX_IRQ_INDEX,
++	VFIO_PCI_ERR_IRQ_INDEX,
+ 	VFIO_PCI_NUM_IRQS
+ };
+ 
 -- 
-1.7.9.5
+1.7.11.3
 
