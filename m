@@ -1,78 +1,85 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vc0-f172.google.com ([209.85.220.172]:36184 "EHLO
-	mail-vc0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751724Ab3BFRIu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Feb 2013 12:08:50 -0500
-Received: by mail-vc0-f172.google.com with SMTP id l6so1007814vcl.17
-        for <linux-pci@vger.kernel.org>; Wed, 06 Feb 2013 09:08:49 -0800 (PST)
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PM list <linux-pm@vger.kernel.org>,
+	Len Brown <lenb@kernel.org>,
+	Fabio Baltieri <fabio.baltieri@linaro.org>,
+	Dave Jones <davej@redhat.com>, linux-pci@vger.kernel.org
+Subject: [GIT PULL] ACPI and power management fixes for v3.9-rc1
+Date: Sun, 24 Feb 2013 15:29:25 +0100
+Message-ID: <1663657.ypAtqGpGAq@vostro.rjw.lan>
 MIME-Version: 1.0
-In-Reply-To: <CADnq5_NsB=xZA-vMr8OkHF6W0GZgWEyZzBMD5AGMOr_jKj_jCw@mail.gmail.com>
-References: <002b01ce0429$59d7acc0$0d870640$%han@samsung.com> <CADnq5_NsB=xZA-vMr8OkHF6W0GZgWEyZzBMD5AGMOr_jKj_jCw@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 6 Feb 2013 10:08:12 -0700
-Message-ID: <CAErSpo6k=AfkAbM70Xzyvq61t2HP+YqWStdSU3eK1kXbbCjV2Q@mail.gmail.com>
-Subject: Re: [PATCH] drm/pci: use PCI_EXP_LNKCAP_SLS_2_5GB/5_0GB instead of
- hardcoded values
-To: Alex Deucher <alexdeucher@gmail.com>
-Cc: Jingoo Han <jg1.han@samsung.com>, David Airlie <airlied@linux.ie>,
-	linux-pci@vger.kernel.org, dri-devel@lists.freedesktop.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 6, 2013 at 7:27 AM, Alex Deucher <alexdeucher@gmail.com> wrote:
-> On Wed, Feb 6, 2013 at 12:18 AM, Jingoo Han <jg1.han@samsung.com> wrote:
->> Use PCI_EXP_LNKCAP_SLS_2_5GB and PCI_EXP_LNKCAP_SLS_5_0GB instead
->> of hardcoded values for readability. These bit definitions were
->> added by commit 130f1b8 ("PCI: Add PCIe Link Capability link speed
->> and width names")
->>
->> Signed-off-by: Jingoo Han <jg1.han@samsung.com>
->
-> Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+Hi Linus,
 
-Reviewed-by: Bjorn Helgaas <bhelgaas@google.com>
+Please pull from the git repository at
 
-I posted the same patch last month, along with two other patches that
-fix the reporting for pre-r3.0 devices and simplify the code a bit:
+  git://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm.git pm+acpi-fixes-3.9-rc1
 
-    http://marc.info/?l=linux-pci&m=135732663513525&w=2
-    http://marc.info/?l=linux-pci&m=135732713413779&w=2
-    http://marc.info/?l=linux-pci&m=135732666213542&w=2
+to receive ACPI and power management fixes for v3.9-rc1 with top-most commit
+4383822020c54c21eb2eb939a3233b44a51e8ca0
 
-I don't know the status of any of these; I'm expecting Dave to do
-whatever he thinks is best.
+  Merge branch 'acpi-pm' into fixes
 
->
->> ---
->>  drivers/gpu/drm/drm_pci.c |    4 ++--
->>  1 files changed, 2 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/gpu/drm/drm_pci.c b/drivers/gpu/drm/drm_pci.c
->> index 754bc96..11c8add 100644
->> --- a/drivers/gpu/drm/drm_pci.c
->> +++ b/drivers/gpu/drm/drm_pci.c
->> @@ -504,9 +504,9 @@ int drm_pcie_get_speed_cap_mask(struct drm_device *dev, u32 *mask)
->>                 if (lnkcap2 & PCI_EXP_LNKCAP2_SLS_8_0GB)
->>                         *mask |= DRM_PCIE_SPEED_80;
->>         } else {
->> -               if (lnkcap & 1)
->> +               if (lnkcap & PCI_EXP_LNKCAP_SLS_2_5GB)
->>                         *mask |= DRM_PCIE_SPEED_25;
->> -               if (lnkcap & 2)
->> +               if (lnkcap & PCI_EXP_LNKCAP_SLS_5_0GB)
->>                         *mask |= DRM_PCIE_SPEED_50;
->>         }
->>
->> --
->> 1.7.2.5
->>
->>
->> _______________________________________________
->> dri-devel mailing list
->> dri-devel@lists.freedesktop.org
->> http://lists.freedesktop.org/mailman/listinfo/dri-devel
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+on top of commit a0b1c42951dd06ec83cc1bc2c9788131d9fefcd8
+
+  Merge git://git.kernel.org/pub/scm/linux/kernel/git/davem/net-next
+
+The changes below fix problems introduced by the new ACPI and PM
+commits merged earlier and one older build issue.
+
+Included are:
+
+- Fixes for blackfin and microblaze build problems introduced by the
+  removal of global pm_idle.  From Lars-Peter Clausen.
+
+- OPP core build fix from Shawn Guo.
+
+- Error condition check fix for the new imx6q-cpufreq driver from
+  Wei Yongjun.
+
+- Fix for an AER driver crash related to the lack of APEI
+  initialization for acpi=off.  From yours truly.
+
+- Fix for the USB breakage on Thinkpad T430 related to ACPI power
+  resources and PCI wakeup reported by Dave and Fabio (you know
+  about this one).
+
+Thanks!
+
+---------------
+
+Lars-Peter Clausen (2):
+      blackfin idle: Fix compile error
+      microblaze idle: Fix compile error
+
+Rafael J. Wysocki (2):
+      ACPI / APEI: Fix crash in apei_hest_parse() for acpi=off
+      ACPI / PM: Take unusual configurations of power resources into account
+
+Shawn Guo (1):
+      PM / OPP: fix condition for empty of_init_opp_table()
+
+Wei Yongjun (1):
+      imx6q-cpufreq: fix return value check in imx6q_cpufreq_probe()
+
+---------------
+
+ arch/blackfin/kernel/process.c   |    4 +-
+ arch/microblaze/kernel/process.c |    5 +--
+ drivers/acpi/apei/hest.c         |    5 +--
+ drivers/acpi/internal.h          |    2 +-
+ drivers/acpi/power.c             |  112 +++++++++++++++++++++++++++++++++++-----------
+ drivers/acpi/scan.c              |    9 +++-
+ drivers/cpufreq/imx6q-cpufreq.c  |    2 +-
+ include/linux/opp.h              |   18 ++++----
+ 8 files changed, 107 insertions(+), 50 deletions(-)
+
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
