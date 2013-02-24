@@ -1,101 +1,228 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:44480 "EHLO quartz.orcorp.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752826Ab3BLWfI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 12 Feb 2013 17:35:08 -0500
-Date: Tue, 12 Feb 2013 15:35:11 -0700
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Tawfik Bayouk <tawfik@marvell.com>
-Subject: Re: [PATCH 24/32] pci: PCIe driver for Marvell Armada 370/XP systems
-Message-ID: <20130212223511.GB31555@obsidianresearch.com>
-References: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com>
- <1360686546-24277-25-git-send-email-thomas.petazzoni@free-electrons.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1360686546-24277-25-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from g6t0185.atlanta.hp.com ([15.193.32.62]:4450 "EHLO
+	g6t0185.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751421Ab3BXFZ4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 24 Feb 2013 00:25:56 -0500
+From: Vijay Mohan Pandarathil <vijaymohan.pandarathil@hp.com>
+To: alex.williamson@redhat.com, gleb@redhat.com, bhelgaas@google.com,
+	blauwirbel@gmail.com, lance.oritz@hp.com, kvm@vger.kernel.org,
+	qemu-devel@nongnu.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: Vijay Mohan Pandarathil <vijaymohan.pandarathil@hp.com>
+Subject: [PATCH v5 3/3] QEMU-AER: Qemu changes to support AER for VFIO-PCI devices
+Date: Sat, 23 Feb 2013 23:25:16 -0600
+Message-Id: <1361683516-31946-4-git-send-email-vijaymohan.pandarathil@hp.com>
+In-Reply-To: <1361683516-31946-1-git-send-email-vijaymohan.pandarathil@hp.com>
+References: <1361683516-31946-1-git-send-email-vijaymohan.pandarathil@hp.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 12, 2013 at 05:28:58PM +0100, Thomas Petazzoni wrote:
-> +++ b/Documentation/devicetree/bindings/pci/mvebu-pci.txt
-[..]
-> +pcie-controller {
-> +	compatible = "marvell,armada-370-xp-pcie";
-> +	status = "disabled";
-> +
-> +	#address-cells = <3>;
-> +	#size-cells = <2>;
-> +
-> +	bus-range = <0x00 0xff>;
-> +
-> +	ranges = <0x00000800 0 0xd0040000 0xd0040000 0 0x00002000   /* port 0.0 registers */
-> +	          0x00004800 0 0xd0042000 0xd0042000 0 0x00002000   /* port 2.0 registers */
-> +	          0x00001000 0 0xd0044000 0xd0044000 0 0x00002000   /* port 0.1 registers */
-> +	          0x00001800 0 0xd0048000 0xd0048000 0 0x00002000   /* port 0.2 registers */
-> +	          0x00002000 0 0xd004C000 0xd004C000 0 0x00002000   /* port 0.3 registers */
-> +		  0x00002800 0 0xd0080000 0xd0080000 0 0x00002000   /* port 1.0 registers */
-> +	          0x00005000 0 0xd0082000 0xd0082000 0 0x00002000   /* port 3.0 registers */
-> +		  0x00003000 0 0xd0084000 0xd0084000 0 0x00002000   /* port 1.1 registers */
-> +		  0x00003800 0 0xd0088000 0xd0088000 0 0x00002000   /* port 1.2 registers */
-> +		  0x00004000 0 0xd008C000 0xd008C000 0 0x00002000   /* port 1.3 registers */
-> +		  0x81000000 0 0	  0xc0000000 0 0x00100000   /* downstream I/O */
-> +		  0x82000000 0 0	  0xc1000000 0 0x08000000>; /* non-prefetchable memory */
-> +
-> +	#interrupt-cells = <1>;
-> +	interrupt-map-mask = <0xf800 0 0 1>;
-> +	interrupt-map = <0x0800 0 0 1 &mpic 58
-> +		         0x1000 0 0 1 &mpic 59
-> +			 0x1800 0 0 1 &mpic 60
-> +			 0x2000 0 0 1 &mpic 61
-> +			 0x2800 0 0 1 &mpic 62
-> +		         0x3000 0 0 1 &mpic 63
-> +			 0x3800 0 0 1 &mpic 64
-> +			 0x4000 0 0 1 &mpic 65
-> +			 0x4800 0 0 1 &mpic 99
-> +			 0x5000 0 0 1 &mpic 103>;
+	- Create eventfd per vfio device assigned to a guest and register an
+          event handler
 
-This is out of date now?
+	- This fd is passed to the vfio_pci driver through the SET_IRQ ioctl
 
-> +	pcie@0,0 {
-> +		device_type = "pciex";
-> +		reg = <0x0800 0 0xd0040000 0 0x2000>;
+	- When the device encounters an error, the eventfd is signalled
+          and the qemu eventfd handler gets invoked.
 
-It would be great to get this sorted as per my prior comments.. Maybe
-like this is easy?
+	- In the handler decide what action to take. Current action taken
+          is to stop the guest.
 
-pcie-controller {
- compatible = "marvell,armada-370-xp-pcie";
+Signed-off-by: Vijay Mohan Pandarathil <vijaymohan.pandarathil@hp.com>
+---
+ hw/vfio_pci.c              | 123 +++++++++++++++++++++++++++++++++++++++++++++
+ linux-headers/linux/vfio.h |   1 +
+ 2 files changed, 124 insertions(+)
 
- // Index by marvell,pcie-port ?
- regs = <0xd0040000 0x00002000
-         0xd0080000 0x00002000>;
-
- ranges = <0x81000000 0 0  0xc0000000  0 0x00010000   /* downstream I/O */
-           0x82000000 0 0  0xc1000000  0 0x08000000>; /* non-prefetchable memory */
-
- pcie@0,0 {
-      device_type = "pci";
-      reg = <0x0800 0 0 0>; // 00:01.0  (????)
-      marvell,pcie-port = <0>;
+diff --git a/hw/vfio_pci.c b/hw/vfio_pci.c
+index ad9ae36..3c78771 100644
+--- a/hw/vfio_pci.c
++++ b/hw/vfio_pci.c
+@@ -38,6 +38,7 @@
+ #include "qemu/error-report.h"
+ #include "qemu/queue.h"
+ #include "qemu/range.h"
++#include "sysemu/sysemu.h"
+ 
+ /* #define DEBUG_VFIO */
+ #ifdef DEBUG_VFIO
+@@ -129,7 +130,9 @@ typedef struct VFIODevice {
+     PCIHostDeviceAddress host;
+     QLIST_ENTRY(VFIODevice) next;
+     struct VFIOGroup *group;
++    EventNotifier err_notifier;
+     bool reset_works;
++    bool pci_aer;
+ } VFIODevice;
+ 
+ typedef struct VFIOGroup {
+@@ -1802,6 +1805,7 @@ static int vfio_get_device(VFIOGroup *group, const char *name, VFIODevice *vdev)
+ {
+     struct vfio_device_info dev_info = { .argsz = sizeof(dev_info) };
+     struct vfio_region_info reg_info = { .argsz = sizeof(reg_info) };
++    struct vfio_irq_info irq_info = { .argsz = sizeof(irq_info) };
+     int ret, i;
+ 
+     ret = ioctl(group->fd, VFIO_GROUP_GET_DEVICE_FD, name);
+@@ -1904,6 +1908,18 @@ static int vfio_get_device(VFIOGroup *group, const char *name, VFIODevice *vdev)
+     }
+     vdev->config_offset = reg_info.offset;
+ 
++    irq_info.index = VFIO_PCI_ERR_IRQ_INDEX;
++
++    ret = ioctl(vdev->fd, VFIO_DEVICE_GET_IRQ_INFO, &irq_info);
++    if (ret) {
++        /* This can fail for an old kernel or legacy PCI dev */
++        DPRINTF("VFIO_DEVICE_GET_IRQ_INFO failure ret=%d\n", ret);
++        ret = 0;
++    } else if (irq_info.count == 1) {
++        vdev->pci_aer = true;
++    } else {
++        error_report("vfio: Warning: Could not enable error recovery for the device\n");
++    }
+ error:
+     if (ret) {
+         QLIST_REMOVE(vdev, next);
+@@ -1925,6 +1941,110 @@ static void vfio_put_device(VFIODevice *vdev)
+     }
+ }
+ 
++static void vfio_err_notifier_handler(void *opaque)
++{
++    VFIODevice *vdev = opaque;
++
++    if (!event_notifier_test_and_clear(&vdev->err_notifier)) {
++        return;
++    }
++
++    /*
++     * TBD. Retrieve the error details and decide what action
++     * needs to be taken. One of the actions could be to pass
++     * the error to the guest and have the guest driver recover
++     * from the error. This requires that PCIe capabilities be
++     * exposed to the guest. For now, we just terminate the
++     * guest to contain the error.
++     */
++
++    error_report("%s (%04x:%02x:%02x.%x)"
++        "Unrecoverable error detected...\n"
++        "Please collect any data possible and then kill the guest",
++        __func__, vdev->host.domain, vdev->host.bus,
++        vdev->host.slot, vdev->host.function);
++
++    vm_stop(RUN_STATE_IO_ERROR);
++}
++
++/*
++ * Registers error notifier for devices supporting error recovery.
++ * If we encounter a failure in this function, we report an error
++ * and continue after disabling error recovery support for the
++ * device.
++ */
++static void vfio_register_err_notifier(VFIODevice *vdev)
++{
++    int ret;
++    int argsz;
++    struct vfio_irq_set *irq_set;
++    int32_t *pfd;
++
++    if (!vdev->pci_aer) {
++        return;
++    }
++
++    if (event_notifier_init(&vdev->err_notifier, 0)) {
++        error_report("vfio: Warning: Unable to init event notifier for error detection\n");
++        vdev->pci_aer = false;
++        return;
++    }
++
++    argsz = sizeof(*irq_set) + sizeof(*pfd);
++
++    irq_set = g_malloc0(argsz);
++    irq_set->argsz = argsz;
++    irq_set->flags = VFIO_IRQ_SET_DATA_EVENTFD |
++                     VFIO_IRQ_SET_ACTION_TRIGGER;
++    irq_set->index = VFIO_PCI_ERR_IRQ_INDEX;
++    irq_set->start = 0;
++    irq_set->count = 1;
++    pfd = (int32_t *)&irq_set->data;
++
++    *pfd = event_notifier_get_fd(&vdev->err_notifier);
++    qemu_set_fd_handler(*pfd, vfio_err_notifier_handler, NULL, vdev);
++
++    ret = ioctl(vdev->fd, VFIO_DEVICE_SET_IRQS, irq_set);
++    if (ret) {
++        error_report("vfio: Failed to set up error notification\n");
++        qemu_set_fd_handler(*pfd, NULL, NULL, vdev);
++        event_notifier_cleanup(&vdev->err_notifier);
++        vdev->pci_aer = false;
++    }
++    g_free(irq_set);
++}
++static void vfio_unregister_err_notifier(VFIODevice *vdev)
++{
++    int argsz;
++    struct vfio_irq_set *irq_set;
++    int32_t *pfd;
++    int ret;
++
++    if (!vdev->pci_aer) {
++        return;
++    }
++
++    argsz = sizeof(*irq_set) + sizeof(*pfd);
++
++    irq_set = g_malloc0(argsz);
++    irq_set->argsz = argsz;
++    irq_set->flags = VFIO_IRQ_SET_DATA_EVENTFD |
++                     VFIO_IRQ_SET_ACTION_TRIGGER;
++    irq_set->index = VFIO_PCI_ERR_IRQ_INDEX;
++    irq_set->start = 0;
++    irq_set->count = 1;
++    pfd = (int32_t *)&irq_set->data;
++    *pfd = -1;
++
++    ret = ioctl(vdev->fd, VFIO_DEVICE_SET_IRQS, irq_set);
++    if (ret) {
++        error_report("vfio: Failed to de-assign error fd: %d\n", ret);
++    }
++    g_free(irq_set);
++    qemu_set_fd_handler(event_notifier_get_fd(&vdev->err_notifier),
++                        NULL, NULL, vdev);
++    event_notifier_cleanup(&vdev->err_notifier);
++}
+ static int vfio_initfn(PCIDevice *pdev)
+ {
+     VFIODevice *pvdev, *vdev = DO_UPCAST(VFIODevice, pdev, pdev);
+@@ -2035,6 +2155,8 @@ static int vfio_initfn(PCIDevice *pdev)
+         }
+     }
+ 
++    vfio_register_err_notifier(vdev);
++
+     return 0;
+ 
+ out_teardown:
+@@ -2052,6 +2174,7 @@ static void vfio_exitfn(PCIDevice *pdev)
+     VFIODevice *vdev = DO_UPCAST(VFIODevice, pdev, pdev);
+     VFIOGroup *group = vdev->group;
+ 
++    vfio_unregister_err_notifier(vdev);
+     pci_device_set_intx_routing_notifier(&vdev->pdev, NULL);
+     vfio_disable_interrupts(vdev);
+     if (vdev->intx.mmap_timer) {
+diff --git a/linux-headers/linux/vfio.h b/linux-headers/linux/vfio.h
+index f787b72..6b20849 100644
+--- a/linux-headers/linux/vfio.h
++++ b/linux-headers/linux/vfio.h
+@@ -310,6 +310,7 @@ enum {
+ 	VFIO_PCI_INTX_IRQ_INDEX,
+ 	VFIO_PCI_MSI_IRQ_INDEX,
+ 	VFIO_PCI_MSIX_IRQ_INDEX,
++	VFIO_PCI_ERR_IRQ_INDEX,
+ 	VFIO_PCI_NUM_IRQS
  };
-}
+ 
+-- 
+1.7.11.3
 
-It is abusive to map the device internal per-port registers through
-'0x00000800 0 0xd0040000' and 'reg' - that is not really the intent of
-the OF spec.
-
-Jason
