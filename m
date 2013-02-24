@@ -1,152 +1,116 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-oa0-f49.google.com ([209.85.219.49]:45342 "EHLO
+	mail-oa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759306Ab3BXDNM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 23 Feb 2013 22:13:12 -0500
+Received: by mail-oa0-f49.google.com with SMTP id j6so1788986oag.8
+        for <linux-pci@vger.kernel.org>; Sat, 23 Feb 2013 19:13:11 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAErSpo7BeCiKHecJgX9GBR7DYf4M9mrXK+qMLMDXFykxq5C7sQ@mail.gmail.com>
+References: <alpine.DEB.2.02.1301181302260.31163@jlaw-desktop.mno.stratus.com>
+	<alpine.DEB.2.02.1301181322500.31163@jlaw-desktop.mno.stratus.com>
+	<51122BED.8090308@cn.fujitsu.com>
+	<CAErSpo6aGiuBbgcVfcduPk++7B_zzuk2Y+fjLiJBvdOqnU+Qmw@mail.gmail.com>
+	<5122F276.80807@cn.fujitsu.com>
+	<CAErSpo7BeCiKHecJgX9GBR7DYf4M9mrXK+qMLMDXFykxq5C7sQ@mail.gmail.com>
+Date: Sat, 23 Feb 2013 19:13:11 -0800
+Message-ID: <CAE9FiQV814mCKqcOKAE_y3JSUq2HotVjde6VYW4M8Zb2-S=NRA@mail.gmail.com>
+Subject: Re: [PATCH 1/2] PCI: ASPM exit link state code could skip devices
 From: Yinghai Lu <yinghai@kernel.org>
-To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>, Pavel Machek <pavel@ucw.cz>,
-	Joerg Roedel <joro@8bytes.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-Subject: [PATCH v2 17/26] x86, irq: Add ioapic_gsi_to_irq
-Date: Fri,  8 Feb 2013 11:28:14 -0800
-Message-Id: <1360351703-20571-18-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1360351703-20571-1-git-send-email-yinghai@kernel.org>
-References: <1360351703-20571-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Joe Lawrence <Joe.Lawrence@stratus.com>,
+	linux-pci@vger.kernel.org, Matthew Garrett <mjg59@srcf.ucam.org>,
+	Myron Stowe <mstowe@redhat.com>,
+	David Bulkow <david.bulkow@stratus.com>
+Content-Type: multipart/mixed; boundary=bcaec5523bb6e9d06c04d66fcd98
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For hot add ioapic, irq_base is not equal to gsi_base.
+--bcaec5523bb6e9d06c04d66fcd98
+Content-Type: text/plain; charset=ISO-8859-1
 
-So we need a way to do mapping between gsi and irq.
+On Sat, Feb 23, 2013 at 4:20 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> I think this is a general object lifetime issue that really has
+> nothing to do with ASPM except that ASPM happens to be the victim.
+>
+> You're doing this:
+>
+>     echo -n 1 > /sys/bus/pci/devices/0000\:10\:00.0/remove ; echo -n 1
+>>  /sys/bus/pci/devices/0000\:1a\:01.0/remove
+>
+> The 1a:01.0 device is downstream from the 10:00.0 bridge.  The sysfs
+> interface remove_store() uses device_schedule_callback() to schedule
+> the remove for later.  I think what's happening is that we schedule
+> remove_callback() for both devices before 10:00.0 has been removed,
+> like this:
+>
+>     # echo -n 1 > /sys/bus/pci/devices/0000\:10\:00.0/remove
+>     remove_store  # for 10:00.0
+>       device_schedule_callback(10:00.0, remove_callback)
+>         sysfs_schedule_callback
+>           kobject_get
+>           queue_work
+>     # echo -n 1 >  /sys/bus/pci/devices/0000\:1a\:01.0/remove
+>     remove_store  # for 1a:01.0
+>       device_schedule_callback(1a:01.0, remove_callback)
+>         sysfs_schedule_callback
+>           kobject_get
+>           queue_work
+>
+> Note that we acquire a reference on each pci_dev before queuing the work item.
+>
+> Later, we run the callbacks, starting with 10:00.0.  This calls
+> remove_callback() to perform the remove:
+>
+>     remove_callback(10:00.0)
+>       mutex_lock(&pci_remove_rescan_mutex)
+>       pci_stop_and_remove_bus_device(pdev)
+>       mutex_unlock(&pci_remove_rescan_mutex)
+>
+> This will stop and remove the subtree below 10:00.0, but it does not
+> actually free the pci_dev for 1a:01.0 because we increased its ref
+> count in sysfs_schedule_callback.  So after completing
+> remove_callback(10:00.0), we run the second callback for 1a:01.0.
+>
+> The remove for 1a:01.0 calls pcie_aspm_exit_link_state() from
+> pci_stop_dev().  This is where we blow up because, according to your
+> debugging, pdev->bus->self is no longer valid.
+>
+> The PCI core did this removal wrong.  If we have a valid pci_dev
+> pointer, as we do in pcie_aspm_exit_link_state(), the whole object
+> ought to be valid.  But the PCI core deallocated the struct pci_bus
+> for bus 0000:1a too soon.
+>
+> My guess is that when we build a pci_dev, we need to increase the ref
+> count on the pci_bus where that pci_dev lives.  That way we can keep
+> around all the buses and bridges leading from the root to the device
+> in question.
 
-Also remove irq_to_gsi that is causing confusing, just use that array
-directly as only caller already check input irq before.
+Agreed, Please check if attached is what you want.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Pavel Machek <pavel@ucw.cz>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
----
- arch/x86/include/asm/io_apic.h |    1 +
- arch/x86/kernel/acpi/boot.c    |   22 +++++-----------------
- arch/x86/kernel/apic/io_apic.c |   29 ++++++++++++++++++++++++++++-
- 3 files changed, 34 insertions(+), 18 deletions(-)
+Thanks
 
-diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
-index 8181fd8..02ac411 100644
---- a/arch/x86/include/asm/io_apic.h
-+++ b/arch/x86/include/asm/io_apic.h
-@@ -180,6 +180,7 @@ struct mp_ioapic_gsi{
- };
- extern struct mp_ioapic_gsi  mp_gsi_routing[];
- extern u32 gsi_top;
-+int ioapic_gsi_to_irq(u32 gsi);
- int mp_find_ioapic(u32 gsi);
- int mp_find_ioapic_pin(int ioapic, u32 gsi);
- void __init mp_register_ioapic(int id, u32 address, u32 gsi_base);
-diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
-index bacf4b0..350879f 100644
---- a/arch/x86/kernel/acpi/boot.c
-+++ b/arch/x86/kernel/acpi/boot.c
-@@ -112,6 +112,10 @@ static unsigned int gsi_to_irq(unsigned int gsi)
- 		}
- 	}
- 
-+#ifdef CONFIG_X86_IO_APIC
-+	if (acpi_irq_model == ACPI_IRQ_MODEL_IOAPIC)
-+		return ioapic_gsi_to_irq(gsi);
-+#endif
- 	/* Provide an identity mapping of gsi == irq
- 	 * except on truly weird platforms that have
- 	 * non isa irqs in the first 16 gsis.
-@@ -124,22 +128,6 @@ static unsigned int gsi_to_irq(unsigned int gsi)
- 	return irq;
- }
- 
--static u32 irq_to_gsi(int irq)
--{
--	unsigned int gsi;
--
--	if (irq < NR_IRQS_LEGACY)
--		gsi = isa_irq_to_gsi[irq];
--	else if (irq < gsi_top)
--		gsi = irq;
--	else if (irq < (gsi_top + NR_IRQS_LEGACY))
--		gsi = irq - gsi_top;
--	else
--		gsi = 0xffffffff;
--
--	return gsi;
--}
--
- /*
-  * Temporarily use the virtual area starting from FIX_IO_APIC_BASE_END,
-  * to map the target physical address. The problem is that set_fixmap()
-@@ -529,7 +517,7 @@ int acpi_isa_irq_to_gsi(unsigned isa_irq, u32 *gsi)
- {
- 	if (isa_irq >= 16)
- 		return -1;
--	*gsi = irq_to_gsi(isa_irq);
-+	*gsi = isa_irq_to_gsi[isa_irq];
- 	return 0;
- }
- 
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index c499c88..9514728 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -1044,13 +1044,16 @@ static int pin_2_irq(int idx, int apic, int pin)
- 
- 	if (test_bit(bus, mp_bus_not_pci)) {
- 		irq = mp_irqs[idx].srcbusirq;
--	} else {
-+	} else if (gsi_cfg->gsi_base == gsi_cfg->irq_base) {
- 		u32 gsi = gsi_cfg->gsi_base + pin;
- 
- 		if (gsi >= NR_IRQS_LEGACY)
- 			irq = gsi;
- 		else
- 			irq = gsi_top + gsi;
-+	} else {
-+		/* hotadd ioapic */
-+		irq = gsi_cfg->irq_base + pin;
- 	}
- 
- #ifdef CONFIG_X86_32
-@@ -1476,6 +1479,30 @@ static void __init setup_IO_APIC_irqs(void)
- 		__io_apic_setup_irqs(ioapic_idx);
- }
- 
-+int ioapic_gsi_to_irq(u32 gsi)
-+{
-+	int ioapic_idx = 0, irq = gsi;
-+	struct mp_ioapic_gsi *gsi_cfg;
-+
-+	ioapic_idx = mp_find_ioapic(gsi);
-+	if (ioapic_idx < 0)
-+		return -1;
-+
-+	gsi_cfg = mp_ioapic_gsi_routing(ioapic_idx);
-+	if (gsi_cfg->gsi_base == gsi_cfg->irq_base) {
-+		if (gsi < NR_IRQS_LEGACY)
-+			irq = gsi_top + gsi;
-+	} else {
-+		int pin = mp_find_ioapic_pin(ioapic_idx, gsi);
-+
-+		if (pin < 0)
-+			return -1;
-+		/* hotadd ioapic */
-+		irq = gsi_cfg->irq_base + pin;
-+	}
-+
-+	return irq;
-+}
- /*
-  * for the gsit that is not in first ioapic
-  * but could not use acpi_register_gsi()
--- 
-1.7.10.4
+Yinghai
 
+--bcaec5523bb6e9d06c04d66fcd98
+Content-Type: application/octet-stream; name="pci_dev_bus_ref.patch"
+Content-Disposition: attachment; filename="pci_dev_bus_ref.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_hdjmgwqs0
+
+ZGlmZiAtLWdpdCBhL2RyaXZlcnMvcGNpL3Byb2JlLmMgYi9kcml2ZXJzL3BjaS9wcm9iZS5jCmlu
+ZGV4IGI0OTQwNjYuLjZkZjU0MjggMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvcGNpL3Byb2JlLmMKKysr
+IGIvZHJpdmVycy9wY2kvcHJvYmUuYwpAQCAtMTMzNyw2ICsxMzM3LDcgQEAgdm9pZCBwY2lfZGV2
+aWNlX2FkZChzdHJ1Y3QgcGNpX2RldiAqZGV2LCBzdHJ1Y3QgcGNpX2J1cyAqYnVzKQogCSAqLwog
+CWRvd25fd3JpdGUoJnBjaV9idXNfc2VtKTsKIAlsaXN0X2FkZF90YWlsKCZkZXYtPmJ1c19saXN0
+LCAmYnVzLT5kZXZpY2VzKTsKKwlnZXRfZGV2aWNlKCZidXMtPmRldik7CiAJdXBfd3JpdGUoJnBj
+aV9idXNfc2VtKTsKIAogCXBjaV9maXh1cF9kZXZpY2UocGNpX2ZpeHVwX2ZpbmFsLCBkZXYpOwpk
+aWZmIC0tZ2l0IGEvZHJpdmVycy9wY2kvcmVtb3ZlLmMgYi9kcml2ZXJzL3BjaS9yZW1vdmUuYwpp
+bmRleCBjYzg3NWU2Li5hNzJiNzAwIDEwMDY0NAotLS0gYS9kcml2ZXJzL3BjaS9yZW1vdmUuYwor
+KysgYi9kcml2ZXJzL3BjaS9yZW1vdmUuYwpAQCAtMzYsNiArMzYsNyBAQCBzdGF0aWMgdm9pZCBw
+Y2lfZGVzdHJveV9kZXYoc3RydWN0IHBjaV9kZXYgKmRldikKIHsKIAlkb3duX3dyaXRlKCZwY2lf
+YnVzX3NlbSk7CiAJbGlzdF9kZWwoJmRldi0+YnVzX2xpc3QpOworCXB1dF9kZXZpY2UoJmRldi0+
+YnVzLT5kZXYpOwogCXVwX3dyaXRlKCZwY2lfYnVzX3NlbSk7CiAKIAlwY2lfZnJlZV9yZXNvdXJj
+ZXMoZGV2KTsK
+--bcaec5523bb6e9d06c04d66fcd98--
