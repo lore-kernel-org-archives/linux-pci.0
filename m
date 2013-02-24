@@ -1,119 +1,64 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-Subject: [PATCH v2 21/26] x86, irq: Add mp_unregister_ioapic to handle hot-remove ioapic
-Date: Fri,  8 Feb 2013 11:28:18 -0800
-Message-Id: <1360351703-20571-22-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1360351703-20571-1-git-send-email-yinghai@kernel.org>
-References: <1360351703-20571-1-git-send-email-yinghai@kernel.org>
+From: Vijay Mohan Pandarathil <vijaymohan.pandarathil@hp.com>
+To: alex.williamson@redhat.com, gleb@redhat.com, bhelgaas@google.com,
+	blauwirbel@gmail.com, lance.oritz@hp.com, kvm@vger.kernel.org,
+	qemu-devel@nongnu.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v5 0/3] AER-KVM: Error containment of VFIO devices assigned to KVM guests
+Date: Sat, 23 Feb 2013 23:25:13 -0600
+Message-Id: <1361683516-31946-1-git-send-email-vijaymohan.pandarathil@hp.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-It will free ioapic related irq_desc and also clear allocated_irqs bits.
+Add support for error containment when a VFIO device assigned to a KVM
+guest encounters an error. This is for PCIe devices/drivers that support AER
+functionality. When the host OS is notified of an error in a device either
+through the firmware first approach or through an interrupt handled by the AER
+root port driver, the error handler registered by the vfio-pci driver gets
+invoked. The qemu process is signaled through an eventfd registered per
+VFIO device by the qemu process. In the eventfd handler, qemu decides on
+what action to take. In this implementation, guest is brought down to
+contain the error.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+
+v5:
+ - Rebased to latest upstream stable bits
+ - Incorporated v4 feedback
+v4:
+ - Stop the guest instead of terminating
+ - Remove unwanted returns from functions
+ - Incorporate other feedback
+v3:
+ - Removed PCI_AER* flags from device info ioctl.
+ - Incorporated feedback
+v2:
+ - Rebased to latest upstream stable bits
+ - Changed the new ioctl to be part of VFIO_SET_IRQs ioctl
+ - Added a new patch to get/put reference to a vfio device from struct device
+ - Incorporated all other feedback.
+
 ---
- arch/x86/include/asm/mpspec.h  |    1 +
- arch/x86/kernel/apic/io_apic.c |   42 ++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 43 insertions(+)
 
-diff --git a/arch/x86/include/asm/mpspec.h b/arch/x86/include/asm/mpspec.h
-index 11bb6ea..e70b7e5 100644
---- a/arch/x86/include/asm/mpspec.h
-+++ b/arch/x86/include/asm/mpspec.h
-@@ -97,6 +97,7 @@ static inline void early_reserve_e820_mpc_new(void) { }
- void __cpuinit generic_processor_info(int apicid, int version);
- #ifdef CONFIG_ACPI
- int __mp_register_ioapic(int id, u32 address, u32 gsi_base, bool hot);
-+int mp_unregister_ioapic(u32 gsi_base);
- extern void mp_register_ioapic(int id, u32 address, u32 gsi_base);
- extern void mp_override_legacy_irq(u8 bus_irq, u8 polarity, u8 trigger,
- 				   u32 gsi);
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index d3b3c14..4a9ccf6 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -256,6 +256,14 @@ static void free_irq_at(unsigned int at, struct irq_cfg *cfg)
- 	irq_free_desc(at);
- }
- 
-+static void free_irqs(unsigned int from, int cnt)
-+{
-+	int i;
-+
-+	for (i = from; i < from + cnt; i++)
-+		free_irq_at(i, irq_get_chip_data(i));
-+}
-+
- static struct irq_cfg *realloc_irq_and_cfg_at(unsigned int at, int node)
- {
- 	struct irq_desc *desc = irq_to_desc(at);
-@@ -329,6 +337,16 @@ static void __init reserve_ioapic_gsi_irq_extra(void)
- 	}
- }
- 
-+static void free_ioapic_gsi_irq_base(int idx)
-+{
-+	struct mp_ioapic_gsi *gsi_cfg = mp_ioapic_gsi_routing(idx);
-+	int irq_base = gsi_cfg->irq_base;
-+	int irq_cnt = gsi_cfg->gsi_end - gsi_cfg->gsi_base + 1;
-+
-+	if (irq_base > 0)
-+		free_irqs(irq_base, irq_cnt);
-+}
-+
- static void alloc_ioapic_saved_registers(int idx)
- {
- 	if (ioapics[idx].saved_registers)
-@@ -342,6 +360,11 @@ static void alloc_ioapic_saved_registers(int idx)
- 		pr_err("IOAPIC %d: suspend/resume impossible!\n", idx);
- }
- 
-+static void free_ioapic_saved_registers(int idx)
-+{
-+	kfree(ioapics[idx].saved_registers);
-+}
-+
- int __init arch_early_irq_init(void)
- {
- 	int node = cpu_to_node(0);
-@@ -3983,6 +4006,25 @@ void mp_register_ioapic(int id, u32 address, u32 gsi_base)
- 	__mp_register_ioapic(id, address, gsi_base, false);
- }
- 
-+int mp_unregister_ioapic(u32 gsi_base)
-+{
-+	int idx;
-+
-+	idx = mp_find_ioapic(gsi_base);
-+	if (idx < 0)
-+		return -EINVAL;
-+
-+	free_ioapic_saved_registers(idx);
-+
-+	free_ioapic_gsi_irq_base(idx);
-+
-+	clear_fixmap(FIX_IO_APIC_BASE_0 + idx);
-+	memset(&ioapics[idx], 0, sizeof(struct ioapic));
-+	ioapics[idx].mp_config.apicid = 0xff;
-+
-+	return 0;
-+}
-+
- /* Enable IOAPIC early just for system timer */
- void __init pre_init_apic_IRQ0(void)
- {
--- 
-1.7.10.4
+Vijay Mohan Pandarathil(3):
 
+[PATCH 1/3] VFIO: Wrapper to get reference to vfio_device from device 
+[PATCH 2/3] VFIO-AER: Vfio-pci driver changes for supporting AER
+[PATCH 3/3] QEMU-AER: Qemu changes to support AER for VFIO-PCI devices
+
+Kernel files changed
+
+ drivers/vfio/vfio.c  | 47 ++++++++++++++++++++++++++++++++++-------------
+ include/linux/vfio.h |  3 +++
+ 2 files changed, 37 insertions(+), 13 deletions(-)
+
+ drivers/vfio/pci/vfio_pci.c         | 44 ++++++++++++++++++++++++++++++++-
+ drivers/vfio/pci/vfio_pci_intrs.c   | 49 +++++++++++++++++++++++++++++++++++++
+ drivers/vfio/pci/vfio_pci_private.h |  1 +
+ include/uapi/linux/vfio.h           |  1 +
+ 4 files changed, 94 insertions(+), 1 deletion(-)
+
+Qemu files changed
+
+ hw/vfio_pci.c              | 123 +++++++++++++++++++++++++++++++++++++++++++++
+ linux-headers/linux/vfio.h |   1 +
+ 2 files changed, 124 insertions(+)
