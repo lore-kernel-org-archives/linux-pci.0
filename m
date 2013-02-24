@@ -1,69 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f41.google.com ([209.85.219.41]:63352 "EHLO
-	mail-oa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752920Ab3BUBTr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Feb 2013 20:19:47 -0500
-Received: by mail-oa0-f41.google.com with SMTP id i10so8826614oag.14
-        for <linux-pci@vger.kernel.org>; Wed, 20 Feb 2013 17:19:47 -0800 (PST)
+Received: from hydra.sisk.pl ([212.160.235.94]:42966 "EHLO hydra.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757164Ab3BXOQh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 24 Feb 2013 09:16:37 -0500
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [GIT PULL] PCI changes for v3.9
+Date: Sun, 24 Feb 2013 15:23:18 +0100
+Message-ID: <8468951.JBoAbzYJmH@vostro.rjw.lan>
+In-Reply-To: <CAE9FiQWDktthNN3aCq-+tqWJU+Cz+PjN57E=pHzBBErCsZ8B7Q@mail.gmail.com>
+References: <20130223212120.GA4593@google.com> <CAE9FiQWDktthNN3aCq-+tqWJU+Cz+PjN57E=pHzBBErCsZ8B7Q@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1360623637.2950.63.camel@lorien2>
-References: <1360623637.2950.63.camel@lorien2>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 20 Feb 2013 18:19:27 -0700
-Message-ID: <CAErSpo6jY1bX9G59uz8Zt_pDJ4OoR=kJkGjNLYYRTrKVXM8+eg@mail.gmail.com>
-Subject: Re: [PATCH 1/4] pci: Add PCI_BUS() and PCI_DEVID() interfaces to
- return bus number and device id
-To: shuah.khan@hp.com, dhowells@redhat.com
-Cc: Joerg Roedel <joro@8bytes.org>, paulmck@linux.vnet.ibm.com,
-	linasvepstas@gmail.com, davej@redhat.com, tglx@linutronix.de,
-	mtk.manpages@gmail.com, iommu@lists.linux-foundation.org,
-	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	shemminger@vyatta.com, jiang.liu@huawei.com, wangyijing@huawei.com,
-	shuahkhan@gmail.com
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Feb 11, 2013 at 4:00 PM, Shuah Khan <shuah.khan@hp.com> wrote:
-> pci defines PCI_DEVFN(), PCI_SLOT(), and PCI_FUNC() interfaces, however,
-> it doesn't have interfaces to return PCI bus and PCI device id. Drivers
-> (AMD IOMMU, and AER) implement module specific definitions for PCI_BUS()
-> and AMD_IOMMU driver also has a module specific interface to calculate PCI
-> device id from bus number and devfn.
->
-> Add PCI_BUS and PCI_DEVID interfaces to return PCI bus number and PCI device
-> id respectively to avoid the need for duplicate definitions in other modules.
-> AER driver code and AMD IOMMU driver define PCI_BUS. AMD IOMMU driver defines
-> an interface to calculate device id from bus number, and devfn pair.
->
-> Signed-off-by: Shuah Khan <shuah.khan@hp.com>
-> ---
->  include/uapi/linux/pci.h |    4 ++++
->  1 file changed, 4 insertions(+)
->
-> diff --git a/include/uapi/linux/pci.h b/include/uapi/linux/pci.h
-> index 3c292bc0..6b2c8b3 100644
-> --- a/include/uapi/linux/pci.h
-> +++ b/include/uapi/linux/pci.h
-> @@ -30,6 +30,10 @@
->  #define PCI_DEVFN(slot, func)  ((((slot) & 0x1f) << 3) | ((func) & 0x07))
->  #define PCI_SLOT(devfn)                (((devfn) >> 3) & 0x1f)
->  #define PCI_FUNC(devfn)                ((devfn) & 0x07)
-> +#define PCI_DEVID(bus, devfn)  ((((u16)bus) << 8) | devfn)
-> +
-> +/* return bus from PCI devid = ((u16)bus_number) << 8) | devfn */
-> +#define PCI_BUS(x) (((x) >> 8) & 0xff)
->
->  /* Ioctls for /proc/bus/pci/X/Y nodes. */
->  #define PCIIOC_BASE            ('P' << 24 | 'C' << 16 | 'I' << 8)
+On Saturday, February 23, 2013 06:49:27 PM Yinghai Lu wrote:
+> On Sat, Feb 23, 2013 at 1:21 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> > The following changes since commit d1c3ed669a2d452cacfb48c2d171a1f364dae2ed:
+> >
+> >   Linux 3.8-rc2 (2013-01-02 18:13:21 -0800)
+> >
+> > are available in the git repository at:
+> >
+> >   git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/pci-v3.9-changes
+> >
+> > for you to fetch changes up to 018ba0a6efada61b9bc17500101d81c3d35807c2:
+> >
+> >   Merge branch 'pci/yinghai-root-bus-hotplug' into next (2013-02-19 11:42:17 -0700)
+> 
+> may render of bunch of conflicts...
+> 
+> Please check if attached diff is right, and hope it could save Linus some time.
 
-David, can you point me at a description of include/uapi ... what is
-there and why, and how we should decide what new things go in
-include/uapi/linux/pci.h as opposed to include/linux/pci.h?  Maybe
-there should be something in Documentation/?
+It looks correct to me as far as the ACPI part is concerned.
 
-I'm guessing it's something to do with being exported to userland, but
-I'm not sure the things in this patch (PCI_DEV_ID, PCI_BUS) are really
-exportable in the sense of being used for syscalls, etc.
+Thanks,
+Rafael
 
-Bjorn
+
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
