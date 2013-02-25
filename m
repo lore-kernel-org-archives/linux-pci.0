@@ -1,61 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.186]:56535 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755140Ab3BGJKX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Feb 2013 04:10:23 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: Re: [PATCH v2 22/27] arm: mvebu: add PCIe Device Tree informations for Armada XP
-Date: Thu, 7 Feb 2013 09:09:26 +0000
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	"Eran Ben-Avi" <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	"Russell King - ARM Linux" <linux@arm.linux.org.uk>
-References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com> <201302070804.12256.arnd@arndb.de> <20130207094556.423de279@skate>
-In-Reply-To: <20130207094556.423de279@skate>
+Received: from mail-oa0-f47.google.com ([209.85.219.47]:45207 "EHLO
+	mail-oa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759833Ab3BYV5m (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 25 Feb 2013 16:57:42 -0500
+Received: by mail-oa0-f47.google.com with SMTP id o17so3980352oag.34
+        for <linux-pci@vger.kernel.org>; Mon, 25 Feb 2013 13:57:42 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201302070909.26701.arnd@arndb.de>
+In-Reply-To: <Pine.LNX.4.44L0.1302191119270.2215-100000@iolanthe.rowland.org>
+References: <CAErSpo7qj2SNR7BfuBsfF-saZXvgcqqLtgoP5Hyb5u99qR4Ncg@mail.gmail.com>
+ <Pine.LNX.4.44L0.1302191119270.2215-100000@iolanthe.rowland.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 25 Feb 2013 14:57:20 -0700
+Message-ID: <CAErSpo7NZoOQZyW76HEoOTVgdqL2CgbVScAeF6HGLAVaNCq0=w@mail.gmail.com>
+Subject: Re: Abysmal HDD/USB write speed after sleep on a UEFI system
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: "Artem S. Tashkinov" <t.artem@lycos.com>,
+	torvalds@linux-foundation.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday 07 February 2013, Thomas Petazzoni wrote:
-> Unfortunately, this means the windows are statically defined in the DT,
-> which is simply not possible for PCIe, as we have already explained
-> several times in this thread.
-> 
-> Any solution where the PCIe windows are statically described is
-> simply not acceptable.
-> 
-> We have 10 PCIe interfaces, each requiring up to two windows, and we
-> have on the system a total of 20 windows. Doing static assignments of
-> windows is simply not an option.
-> 
-> Of course, you'll tell me that it's up to each board .dts to have a
-> number of windows that matches the number of actually existing PCIe
-> interface. But it means that each and every developer adding the
-> support for a new board must understand this complex problem, which is
-> something we do not want. We have a solution that makes all of this
-> PCIe window assignment dynamic, so it surprises me that we have to
-> continue to explain why a static solution is not appropriate.
+On Tue, Feb 19, 2013 at 9:22 AM, Alan Stern <stern@rowland.harvard.edu> wrote:
+> On Tue, 12 Feb 2013, Bjorn Helgaas wrote:
+>
+>> [+cc linux-pci, Rafael, Alan]
+>>
+>> [https://bugzilla.kernel.org/show_bug.cgi?id=53551]
+>>
+>> On Tue, Feb 12, 2013 at 1:13 PM, Artem S. Tashkinov <t.artem@lycos.com> wrote:
+>> > Feb 13, 2013 01:32:53 AM, Linus Torvalds wrote:
+>> > On Tue, Feb 12, 2013 at 10:29 AM, Artem S. Tashkinov wrote:
+>> >>> Feb 12, 2013 11:30:20 PM, Linus Torvalds wrote:
+>> >>>>
+>> >>>>A few things to try to pinpoint:
+>> >>>>
+>> >>>> (a) Is it *only* write performance that suffers, or is it other
+>> >>>>performance too? Networking (DMA? Perhaps only writing *to* the
+>> >>>>network?)? CPU?
+>> >>>
+>> >>> I  've tested hdpard -tT --direct and the output on boot and after suspend
+>> >>> is quite similar.
+>> >>>
+>> >>> I  've also checked my network read/write speed, and it  's the same
+>> >>> ~ 100MBit/sec (I have no 1Gbit computers on my network
+>> >>> unfortunately).
+>> >>
+>> >>Ok. So it really sounds like just USB and HD writes. Which is quite
+>> >>odd, since they have basically nothing in common I can think of
+>> >>(except the obvious block layer issues).
+>
+> There's a slight chance that we might get some ideas by comparing
+> usbmon traces showing disk activity before and after the
+> problem-causing suspend.
 
-No, the idea here was actually to leave out any of the dynamic mappings
-from the device tree and do the PCI bus probe for each port based
-on a local bus address starting at 0 for each port. After all
-BARs are assigned, you can then map each port to a convenient physical
-address and register it by passing the start offset so that the
-pci resources are adapted correctly.
-
-	Arnd
+Where are we at with this, Artem?  I assume it's still a problem.
