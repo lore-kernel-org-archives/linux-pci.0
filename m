@@ -1,53 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:59544 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1758541Ab3BSQWs (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Feb 2013 11:22:48 -0500
-Date: Tue, 19 Feb 2013 11:22:47 -0500 (EST)
-From: Alan Stern <stern@rowland.harvard.edu>
-To: Bjorn Helgaas <bhelgaas@google.com>
-cc: "Artem S. Tashkinov" <t.artem@lycos.com>,
-	<torvalds@linux-foundation.org>, <linux-kernel@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: Abysmal HDD/USB write speed after sleep on a UEFI system
-In-Reply-To: <CAErSpo7qj2SNR7BfuBsfF-saZXvgcqqLtgoP5Hyb5u99qR4Ncg@mail.gmail.com>
-Message-ID: <Pine.LNX.4.44L0.1302191119270.2215-100000@iolanthe.rowland.org>
+Received: from mail-oa0-f49.google.com ([209.85.219.49]:54395 "EHLO
+	mail-oa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754479Ab3BYV3P (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 25 Feb 2013 16:29:15 -0500
+Received: by mail-oa0-f49.google.com with SMTP id j6so3792264oag.8
+        for <linux-pci@vger.kernel.org>; Mon, 25 Feb 2013 13:29:15 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+In-Reply-To: <1360623637.2950.63.camel@lorien2>
+References: <1360623637.2950.63.camel@lorien2>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 25 Feb 2013 14:28:55 -0700
+Message-ID: <CAErSpo5sqUgvRRsVCZVMihaHo68WMmGTkdjf5zQp_3QuR7zD0A@mail.gmail.com>
+Subject: Re: [PATCH 1/4] pci: Add PCI_BUS() and PCI_DEVID() interfaces to
+ return bus number and device id
+To: shuah.khan@hp.com
+Cc: Joerg Roedel <joro@8bytes.org>, paulmck@linux.vnet.ibm.com,
+	linasvepstas@gmail.com, dhowells@redhat.com, davej@redhat.com,
+	tglx@linutronix.de, mtk.manpages@gmail.com,
+	iommu@lists.linux-foundation.org,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	shemminger@vyatta.com, jiang.liu@huawei.com, wangyijing@huawei.com,
+	shuahkhan@gmail.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 12 Feb 2013, Bjorn Helgaas wrote:
+On Mon, Feb 11, 2013 at 4:00 PM, Shuah Khan <shuah.khan@hp.com> wrote:
+> pci defines PCI_DEVFN(), PCI_SLOT(), and PCI_FUNC() interfaces, however,
+> it doesn't have interfaces to return PCI bus and PCI device id. Drivers
+> (AMD IOMMU, and AER) implement module specific definitions for PCI_BUS()
+> and AMD_IOMMU driver also has a module specific interface to calculate PCI
+> device id from bus number and devfn.
+>
+> Add PCI_BUS and PCI_DEVID interfaces to return PCI bus number and PCI device
+> id respectively to avoid the need for duplicate definitions in other modules.
+> AER driver code and AMD IOMMU driver define PCI_BUS. AMD IOMMU driver defines
+> an interface to calculate device id from bus number, and devfn pair.
+>
+> Signed-off-by: Shuah Khan <shuah.khan@hp.com>
+> ---
+>  include/uapi/linux/pci.h |    4 ++++
+>  1 file changed, 4 insertions(+)
+>
+> diff --git a/include/uapi/linux/pci.h b/include/uapi/linux/pci.h
+> index 3c292bc0..6b2c8b3 100644
+> --- a/include/uapi/linux/pci.h
+> +++ b/include/uapi/linux/pci.h
+> @@ -30,6 +30,10 @@
+>  #define PCI_DEVFN(slot, func)  ((((slot) & 0x1f) << 3) | ((func) & 0x07))
+>  #define PCI_SLOT(devfn)                (((devfn) >> 3) & 0x1f)
+>  #define PCI_FUNC(devfn)                ((devfn) & 0x07)
+> +#define PCI_DEVID(bus, devfn)  ((((u16)bus) << 8) | devfn)
+> +
+> +/* return bus from PCI devid = ((u16)bus_number) << 8) | devfn */
+> +#define PCI_BUS(x) (((x) >> 8) & 0xff)
 
-> [+cc linux-pci, Rafael, Alan]
-> 
-> [https://bugzilla.kernel.org/show_bug.cgi?id=53551]
-> 
-> On Tue, Feb 12, 2013 at 1:13 PM, Artem S. Tashkinov <t.artem@lycos.com> wrote:
-> > Feb 13, 2013 01:32:53 AM, Linus Torvalds wrote:
-> > On Tue, Feb 12, 2013 at 10:29 AM, Artem S. Tashkinov wrote:
-> >>> Feb 12, 2013 11:30:20 PM, Linus Torvalds wrote:
-> >>>>
-> >>>>A few things to try to pinpoint:
-> >>>>
-> >>>> (a) Is it *only* write performance that suffers, or is it other
-> >>>>performance too? Networking (DMA? Perhaps only writing *to* the
-> >>>>network?)? CPU?
-> >>>
-> >>> I  've tested hdpard -tT --direct and the output on boot and after suspend
-> >>> is quite similar.
-> >>>
-> >>> I  've also checked my network read/write speed, and it  's the same
-> >>> ~ 100MBit/sec (I have no 1Gbit computers on my network
-> >>> unfortunately).
-> >>
-> >>Ok. So it really sounds like just USB and HD writes. Which is quite
-> >>odd, since they have basically nothing in common I can think of
-> >>(except the obvious block layer issues).
+BTW, in the next round, maybe we should call this PCI_BUS_NR() or
+similar to avoid confusion with "struct pci_bus"?
 
-There's a slight chance that we might get some ideas by comparing
-usbmon traces showing disk activity before and after the
-problem-causing suspend.
-
-Alan Stern
-
+Bjorn
