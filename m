@@ -1,86 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx4-phx2.redhat.com ([209.132.183.25]:38517 "EHLO
-	mx4-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753827Ab3BCXDS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 3 Feb 2013 18:03:18 -0500
-Date: Sun, 3 Feb 2013 18:03:00 -0500 (EST)
-From: David Airlie <airlied@redhat.com>
-To: Konstantin Khlebnikov <khlebnikov@openvz.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
-	e1000-devel@lists.sourceforge.net, linux-pci@vger.kernel.org,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-Message-ID: <1702145791.9796585.1359932580460.JavaMail.root@redhat.com>
-In-Reply-To: <510D0293.8030509@openvz.org>
-Subject: Re: [PATCH 3/5] PCI: revert preparing for wakeup in runtime-suspend
- finalization
+Received: from mail-la0-f54.google.com ([209.85.215.54]:42009 "EHLO
+	mail-la0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754959Ab3BYIib (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 25 Feb 2013 03:38:31 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <5127C716.6050903@linux-ipv6.be>
+References: <1354533387-4110-1-git-send-email-acooks@gmail.com>
+	<1355914703-28576-1-git-send-email-acooks@gmail.com>
+	<5127C716.6050903@linux-ipv6.be>
+Date: Mon, 25 Feb 2013 16:37:08 +0800
+Message-ID: <CAJtEV7avQcDokktNdziQ+8j+37q7PSbZstxQ09xNWq-6XfAFbw@mail.gmail.com>
+Subject: Re: [RFC PATCH] Fix Intel IOMMU support for Marvell 88SE91xx SATA controllers.
+From: Andrew Cooks <acooks@gmail.com>
+To: Stijn Tintel <stijn@linux-ipv6.be>
+Cc: "open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
+	Joerg Roedel <joro@8bytes.org>, YingChu <xjtuychu@hotmail.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	Justin Piszcz <jpiszcz@lucidpixels.com>,
+	David Woodhouse <dwmw2@infradead.org>,
+	open list <linux-kernel@vger.kernel.org>,
+	"open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Sat, Feb 23, 2013 at 3:29 AM, Stijn Tintel <stijn@linux-ipv6.be> wrote:
+> On 19-12-12 11:58, Andrew Cooks wrote:
+>> This is my second attempt to make Marvell 88SE91xx SATA controllers work when IOMMU is enabled.[1][2]
+>> As suggested, it no longer tries to add support for phantom functions.
+>>
+>> What's missing:
+>> * No AMD support. I need some help with this.
+>> * Table of affected chip IDs is incomplete. I think 0x9123, 0x9125, 0x9128 are also affected.
+> This one is also affected: 08:00.0 0106: 1b4b:9130 (rev 11), this is in
+> dmesg:
+>
+> [    1.914086] dmar: DMAR:[DMA Read] Request device [08:00.1] fault addr
+> fff00000
 
-> Rafael J. Wysocki wrote:
-> > On Tuesday, January 29, 2013 12:55:15 PM Rafael J. Wysocki wrote:
-> >> On Tuesday, January 29, 2013 11:04:57 AM Konstantin Khlebnikov
-> >> wrote:
-> >>> Rafael J. Wysocki wrote:
-> >>>> On Monday, January 28, 2013 04:17:42 PM Bjorn Helgaas wrote:
-> >>>>> [+cc Rafael]
-> >>>>>
-> >>>>> On Fri, Jan 18, 2013 at 4:42 AM, Konstantin Khlebnikov
-> >>>>> <khlebnikov@openvz.org>   wrote:
-> >>>>>> This patch effectively reverts commit
-> >>>>>> 42eca2302146fed51335b95128e949ee6f54478f
-> >>>>>> ("PCI: Don't touch card regs after runtime suspend D3")
-> >>>>>>
-> >>>>>> | This patch checks whether the pci state is saved and doesn't
-> >>>>>> | attempt to hit
-> >>>>>> | any registers after that point if it is.
-> >>>>>>
-> >>>>>> This seems completely wrong. Yes, PCI configuration space has
-> >>>>>> been saved by
-> >>>>>> driver, but this doesn't means that all job is done and device
-> >>>>>> has been
-> >>>>>> suspended and ready for waking up in the future.
-> >>>>>>
-> >>>>>> For example driver e1000e for ethernet in my thinkpad x220
-> >>>>>> saves pci-state
-> >>>>>> but device cannot wakeup after that, because it needs some
-> >>>>>> ACPI callbacks
-> >>>>>> which usually called from pci_finish_runtime_suspend().
-> >>>>>>
-> >>>>>> | Optimus (dual-gpu) laptops seem to have their own form of
-> >>>>>> | D3cold, but
-> >>>>>> | unfortunately enter it on normal D3 transitions via the ACPI
-> >>>>>> | callback.
-> >>>>>>
-> >>>>>> Hardware which disappears from the bus unexpectedly is
-> >>>>>> exception, so let's
-> >>>>>> handle it as an exception. Its driver should set device state
-> >>>>>> to D3cold and
-> >>>>>> the rest code will handle it properly.
-> >>>>>
-> >>>>> Functions in D3cold don't have power, so it's completely
-> >>>>> expected that
-> >>>>> they would disappear from the bus and not respond to config
-> >>>>> accesses.
-> >>>>> Maybe Dave was referring to D3hot, where functions *should*
-> >>>>> respond to
-> >>>>> config accesses.  I dunno.
+Handling specific chip revisions is another issue I'm not sure how to
+handle. We could use another bitmap field, but we need more vendor
+cooperation to know exactly which chip model and revision combinations
+are affected.
 
-Just to clarify what is going on with optimus laptops:
+>>
+>> Patch is against 3.7.1
+>>
+>> Review and feedback would be appreciated.
+> I changed your patch to check for my chip ID, and it solves my problem:
+> no more hang during boot, and the HDD connected to this controller is
+> now detected with IOMMU enabled.
+>
+> Also see 1 minor comment inline.
 
-D3cold didn't exist as a real thing, so when you call the ACPI method
-to enter D3, it actually powers off the card completely, I've actually
-in my future work fixed it so that the driver then reports it being in
-D3cold when that happens.
-
-The problem here was originally that the kernel didn't care if we hit
-D3hot or D3cold, it wanted to finish the dynamic suspend, however
-in this case there was no way it could.
-
-So I'm happy with any solution that means cards reporting being in D3cold,
-won't get touched again after they return.
-
-Dave.
+Thanks for the feedback!  I'll include your PCI_VENDOR_ID change in
+the next iteration of the patch.
