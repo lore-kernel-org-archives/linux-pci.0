@@ -1,141 +1,97 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-Subject: [PATCH v2 13/26] x86, irq: Move down arch_early_irq_init()
-Date: Fri,  8 Feb 2013 11:28:10 -0800
-Message-Id: <1360351703-20571-14-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1360351703-20571-1-git-send-email-yinghai@kernel.org>
-References: <1360351703-20571-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PM list <linux-pm@vger.kernel.org>,
+	Len Brown <lenb@kernel.org>,
+	Fabio Baltieri <fabio.baltieri@linaro.org>,
+	Dave Jones <davej@redhat.com>, linux-pci@vger.kernel.org
+Subject: Re: [GIT PULL] ACPI and power management fixes for v3.9-rc1
+Date: Tue, 26 Feb 2013 04:17:08 +0100
+Message-ID: <1781256.mPQbtiUPYR@vostro.rjw.lan>
+In-Reply-To: <1663657.ypAtqGpGAq@vostro.rjw.lan>
+References: <1663657.ypAtqGpGAq@vostro.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Change position only.
+Hi Linus,
 
-Prepare to update arch_early_irq_init(), it needs call some static functions.
+I wonder if this went unnoticed or there's anything wrong with it or it just
+needs to wait for some more time?
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
----
- arch/x86/kernel/apic/io_apic.c |   89 ++++++++++++++++++++--------------------
- 1 file changed, 44 insertions(+), 45 deletions(-)
+Rafael
 
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 72a1351..deda981 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -185,51 +185,6 @@ static struct irq_pin_list *alloc_irq_pin_list(int node)
- 	return kzalloc_node(sizeof(struct irq_pin_list), GFP_KERNEL, node);
- }
- 
--
--/* irq_cfg is indexed by the sum of all RTEs in all I/O APICs. */
--static struct irq_cfg irq_cfgx[NR_IRQS_LEGACY];
--
--int __init arch_early_irq_init(void)
--{
--	struct irq_cfg *cfg;
--	int count, node, i;
--
--	if (!legacy_pic->nr_legacy_irqs)
--		io_apic_irqs = ~0UL;
--
--	for (i = 0; i < nr_ioapics; i++) {
--		ioapics[i].saved_registers =
--			kzalloc(sizeof(struct IO_APIC_route_entry) *
--				ioapics[i].nr_registers, GFP_KERNEL);
--		if (!ioapics[i].saved_registers)
--			pr_err("IOAPIC %d: suspend/resume impossible!\n", i);
--	}
--
--	cfg = irq_cfgx;
--	count = ARRAY_SIZE(irq_cfgx);
--	node = cpu_to_node(0);
--
--	/* Make sure the legacy interrupts are marked in the bitmap */
--	irq_reserve_irqs(0, legacy_pic->nr_legacy_irqs);
--
--	for (i = 0; i < count; i++) {
--		INIT_LIST_HEAD(&cfg[i].irq_2_pin);
--		irq_set_chip_data(i, &cfg[i]);
--		zalloc_cpumask_var_node(&cfg[i].domain, GFP_KERNEL, node);
--		zalloc_cpumask_var_node(&cfg[i].old_domain, GFP_KERNEL, node);
--		/*
--		 * For legacy IRQ's, start with assigning irq0 to irq15 to
--		 * IRQ0_VECTOR to IRQ15_VECTOR for all cpu's.
--		 */
--		if (i < legacy_pic->nr_legacy_irqs) {
--			cfg[i].vector = IRQ0_VECTOR + i;
--			cpumask_setall(cfg[i].domain);
--		}
--	}
--
--	return 0;
--}
--
- static struct irq_cfg *irq_cfg(unsigned int irq)
- {
- 	return irq_get_chip_data(irq);
-@@ -332,6 +287,50 @@ static struct irq_cfg *realloc_irq_and_cfg_at(unsigned int at, int node)
- 	return alloc_irq_and_cfg_at(at, node);
- }
- 
-+/* irq_cfg is indexed by the sum of all RTEs in all I/O APICs. */
-+static struct irq_cfg irq_cfgx[NR_IRQS_LEGACY];
-+
-+int __init arch_early_irq_init(void)
-+{
-+	struct irq_cfg *cfg;
-+	int count, node, i;
-+
-+	if (!legacy_pic->nr_legacy_irqs)
-+		io_apic_irqs = ~0UL;
-+
-+	for (i = 0; i < nr_ioapics; i++) {
-+		ioapics[i].saved_registers =
-+			kzalloc(sizeof(struct IO_APIC_route_entry) *
-+				ioapics[i].nr_registers, GFP_KERNEL);
-+		if (!ioapics[i].saved_registers)
-+			pr_err("IOAPIC %d: suspend/resume impossible!\n", i);
-+	}
-+
-+	cfg = irq_cfgx;
-+	count = ARRAY_SIZE(irq_cfgx);
-+	node = cpu_to_node(0);
-+
-+	/* Make sure the legacy interrupts are marked in the bitmap */
-+	irq_reserve_irqs(0, legacy_pic->nr_legacy_irqs);
-+
-+	for (i = 0; i < count; i++) {
-+		INIT_LIST_HEAD(&cfg[i].irq_2_pin);
-+		irq_set_chip_data(i, &cfg[i]);
-+		zalloc_cpumask_var_node(&cfg[i].domain, GFP_KERNEL, node);
-+		zalloc_cpumask_var_node(&cfg[i].old_domain, GFP_KERNEL, node);
-+		/*
-+		 * For legacy IRQ's, start with assigning irq0 to irq15 to
-+		 * IRQ0_VECTOR to IRQ15_VECTOR for all cpu's.
-+		 */
-+		if (i < legacy_pic->nr_legacy_irqs) {
-+			cfg[i].vector = IRQ0_VECTOR + i;
-+			cpumask_setall(cfg[i].domain);
-+		}
-+	}
-+
-+	return 0;
-+}
-+
- struct io_apic {
- 	unsigned int index;
- 	unsigned int unused[3];
+
+On Sunday, February 24, 2013 03:29:25 PM Rafael J. Wysocki wrote:
+> Hi Linus,
+> 
+> Please pull from the git repository at
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm.git pm+acpi-fixes-3.9-rc1
+> 
+> to receive ACPI and power management fixes for v3.9-rc1 with top-most commit
+> 4383822020c54c21eb2eb939a3233b44a51e8ca0
+> 
+>   Merge branch 'acpi-pm' into fixes
+> 
+> on top of commit a0b1c42951dd06ec83cc1bc2c9788131d9fefcd8
+> 
+>   Merge git://git.kernel.org/pub/scm/linux/kernel/git/davem/net-next
+> 
+> The changes below fix problems introduced by the new ACPI and PM
+> commits merged earlier and one older build issue.
+> 
+> Included are:
+> 
+> - Fixes for blackfin and microblaze build problems introduced by the
+>   removal of global pm_idle.  From Lars-Peter Clausen.
+> 
+> - OPP core build fix from Shawn Guo.
+> 
+> - Error condition check fix for the new imx6q-cpufreq driver from
+>   Wei Yongjun.
+> 
+> - Fix for an AER driver crash related to the lack of APEI
+>   initialization for acpi=off.  From yours truly.
+> 
+> - Fix for the USB breakage on Thinkpad T430 related to ACPI power
+>   resources and PCI wakeup reported by Dave and Fabio (you know
+>   about this one).
+> 
+> Thanks!
+> 
+> ---------------
+> 
+> Lars-Peter Clausen (2):
+>       blackfin idle: Fix compile error
+>       microblaze idle: Fix compile error
+> 
+> Rafael J. Wysocki (2):
+>       ACPI / APEI: Fix crash in apei_hest_parse() for acpi=off
+>       ACPI / PM: Take unusual configurations of power resources into account
+> 
+> Shawn Guo (1):
+>       PM / OPP: fix condition for empty of_init_opp_table()
+> 
+> Wei Yongjun (1):
+>       imx6q-cpufreq: fix return value check in imx6q_cpufreq_probe()
+> 
+> ---------------
+> 
+>  arch/blackfin/kernel/process.c   |    4 +-
+>  arch/microblaze/kernel/process.c |    5 +--
+>  drivers/acpi/apei/hest.c         |    5 +--
+>  drivers/acpi/internal.h          |    2 +-
+>  drivers/acpi/power.c             |  112 +++++++++++++++++++++++++++++++++++-----------
+>  drivers/acpi/scan.c              |    9 +++-
+>  drivers/cpufreq/imx6q-cpufreq.c  |    2 +-
+>  include/linux/opp.h              |   18 ++++----
+>  8 files changed, 107 insertions(+), 50 deletions(-)
+> 
+> 
 -- 
-1.7.10.4
-
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
