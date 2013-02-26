@@ -1,93 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:45966 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933377Ab3BLQ3u (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Feb 2013 11:29:50 -0500
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Cc: Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Tawfik Bayouk <tawfik@marvell.com>
-Subject: [PATCH 26/32] arm: mvebu: add PCIe Device Tree informations for Armada 370
-Date: Tue, 12 Feb 2013 17:29:00 +0100
-Message-Id: <1360686546-24277-27-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from mail-ia0-f172.google.com ([209.85.210.172]:49017 "EHLO
+	mail-ia0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754926Ab3BZGqp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Feb 2013 01:46:45 -0500
+MIME-Version: 1.0
+In-Reply-To: <CA+55aFx7jq7ruTN+pnp-4hPHnkr1G-1WAiAJSQYTPr7GOJjExw@mail.gmail.com>
+References: <20130223212120.GA4593@google.com>
+	<CAE9FiQWDktthNN3aCq-+tqWJU+Cz+PjN57E=pHzBBErCsZ8B7Q@mail.gmail.com>
+	<CA+55aFx7jq7ruTN+pnp-4hPHnkr1G-1WAiAJSQYTPr7GOJjExw@mail.gmail.com>
+Date: Mon, 25 Feb 2013 22:46:44 -0800
+Message-ID: <CAE9FiQUT+iHHZwn-2OsoJX0zXJ6rt6n0zuT+mLP=M8yFMxmMdg@mail.gmail.com>
+Subject: Re: [GIT PULL] PCI changes for v3.9
+From: Yinghai Lu <yinghai@kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: multipart/mixed; boundary=f46d044788d95336c404d69b05ee
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The Armada 370 SoC has two 1x PCIe 2.0 interfaces, so we add the
-necessary Device Tree informations to make these interfaces availabel.
+--f46d044788d95336c404d69b05ee
+Content-Type: text/plain; charset=ISO-8859-1
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
----
- arch/arm/boot/dts/armada-370.dtsi |   43 +++++++++++++++++++++++++++++++++++++
- 1 file changed, 43 insertions(+)
+On Mon, Feb 25, 2013 at 9:19 PM, Linus Torvalds
+<torvalds@linux-foundation.org> wrote:
+> On Sat, Feb 23, 2013 at 6:49 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>>
+>> Please check if attached diff is right, and hope it could save Linus some time.
+>
+> Hmm. I did things a bit differently, moving things around more in
+> drivers/acpi/internal.h.
 
-diff --git a/arch/arm/boot/dts/armada-370.dtsi b/arch/arm/boot/dts/armada-370.dtsi
-index 636cf7d..39055ba 100644
---- a/arch/arm/boot/dts/armada-370.dtsi
-+++ b/arch/arm/boot/dts/armada-370.dtsi
-@@ -132,5 +132,48 @@
- 				dmacap,memset;
- 			};
- 		};
-+
-+		pcie-controller {
-+			compatible = "marvell,armada-370-xp-pcie";
-+			status = "disabled";
-+
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+
-+			bus-range = <0x00 0xff>;
-+
-+			ranges = <0x00000800 0 0xd0040000 0xd0040000 0 0x00002000   /* port 0.0 registers */
-+				  0x00001000 0 0xd0080000 0xd0080000 0 0x00002000   /* port 1.0 registers */
-+				  0x81000000 0 0	  0xc0000000 0 0x00010000   /* downstream I/O */
-+				  0x82000000 0 0	  0xc1000000 0 0x08000000>; /* non-prefetchable memory */
-+
-+			pcie@0,0 {
-+				device_type = "pciex";
-+				reg = <0x0800 0 0xd0040000 0 0x2000>;
-+				#address-cells = <3>;
-+				#size-cells = <2>;
-+				#interrupt-cells = <1>;
-+				interrupt-map-mask = <0 0 0 0>;
-+				interrupt-map = <0 0 0 0 &mpic 58>;
-+				marvell,pcie-port = <0>;
-+				marvell,pcie-lane = <0>;
-+				clocks = <&gateclk 5>;
-+				status = "disabled";
-+			};
-+
-+			pcie@1,0 {
-+				device_type = "pciex";
-+				reg = <0x1000 0 0xd0080000 0 0x2000>;
-+				#address-cells = <3>;
-+				#size-cells = <2>;
-+				#interrupt-cells = <1>;
-+				interrupt-map-mask = <0 0 0 0>;
-+				interrupt-map = <0 0 0 0 &mpic 62>;
-+				marvell,pcie-port = <1>;
-+				marvell,pcie-lane = <0>;
-+				clocks = <&gateclk 9>;
-+				status = "disabled";
-+			};
-+		};
- 	};
- };
--- 
-1.7.9.5
+Yes, it is better to put them together with acpi_pci_root_init().
 
+>
+> Also, my *gut* feel is that the new _handle_hotplug_event_root()
+> function should do that whole dance with
+> acpi_scan_lock_acquire()/acpi_scan_lock_release(), but I didn't really
+> know if it's required or appropriate, so I left it alone. Could you
+> take a look?
+
+Yes, we need that for root bridge hot add path.
+
+for hot remove path, we already have lock acquire/release in
+acpi_bus_hot_remove_device().
+
+Please check attached patch for hot add path.
+
+Thanks
+
+Yinghai
+
+--f46d044788d95336c404d69b05ee
+Content-Type: application/octet-stream;
+	name="fix_acpi_pci_root_acquire_lock.patch"
+Content-Disposition: attachment;
+	filename="fix_acpi_pci_root_acquire_lock.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_hdmozj600
+
+LS0tCiBkcml2ZXJzL2FjcGkvcGNpX3Jvb3QuYyB8ICAgIDIgKysKIDEgZmlsZSBjaGFuZ2VkLCAy
+IGluc2VydGlvbnMoKykKCkluZGV4OiBsaW51eC0yLjYvZHJpdmVycy9hY3BpL3BjaV9yb290LmMK
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PQotLS0gbGludXgtMi42Lm9yaWcvZHJpdmVycy9hY3BpL3BjaV9yb290LmMKKysr
+IGxpbnV4LTIuNi9kcml2ZXJzL2FjcGkvcGNpX3Jvb3QuYwpAQCAtNjQwLDggKzY0MCwxMCBAQCBz
+dGF0aWMgdm9pZCBoYW5kbGVfcm9vdF9icmlkZ2VfaW5zZXJ0aW9uCiAJCXJldHVybjsKIAl9CiAK
+KwlhY3BpX3NjYW5fbG9ja19hY3F1aXJlKCk7CiAJaWYgKGFjcGlfYnVzX3NjYW4oaGFuZGxlKSkK
+IAkJcHJpbnRrKEtFUk5fRVJSICJjYW5ub3QgYWRkIGJyaWRnZSB0byBhY3BpIGxpc3RcbiIpOwor
+CWFjcGlfc2Nhbl9sb2NrX3JlbGVhc2UoKTsKIH0KIAogc3RhdGljIHZvaWQgaGFuZGxlX3Jvb3Rf
+YnJpZGdlX3JlbW92YWwoc3RydWN0IGFjcGlfZGV2aWNlICpkZXZpY2UpCg==
+--f46d044788d95336c404d69b05ee--
