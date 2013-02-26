@@ -1,43 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cpsmtpb-ews07.kpnxchange.com ([213.75.39.10]:63331 "EHLO
-	cpsmtpb-ews07.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S934883Ab3BTIIl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Feb 2013 03:08:41 -0500
-Message-ID: <1361347716.1341.9.camel@x61.thuisdomein>
-Subject: Re: pciehp: errors on resume
-From: Paul Bolle <pebolle@tiscali.nl>
-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-Cc: Oliver Neukum <oneukum@suse.de>, "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Date: Wed, 20 Feb 2013 09:08:36 +0100
-In-Reply-To: <5124284e.09d80e0a.294a.ffff9ee6SMTPIN_ADDED_BROKEN@mx.google.com>
-References: <1359377173.1345.25.camel@x61.thuisdomein>
-	 <512336fb.42d70e0a.73ed.ffffc77eSMTPIN_ADDED_BROKEN@mx.google.com>
-	 <1361266095.26423.19.camel@x61.thuisdomein>
-	 <5124284e.09d80e0a.294a.ffff9ee6SMTPIN_ADDED_BROKEN@mx.google.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from hydra.sisk.pl ([212.160.235.94]:44639 "EHLO hydra.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759707Ab3BZDzz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 25 Feb 2013 22:55:55 -0500
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: ALLurGroceries <allurgroceries@gmail.com>,
+	Huang Ying <ying.huang@intel.com>,
+	Zheng Yan <zheng.z.yan@intel.com>, linux-pci@vger.kernel.org
+Subject: Re: [Bug 53811] [REGRESSION]: acpiphp broken on Lenovo X220 from 3.6 onwards
+Date: Tue, 26 Feb 2013 05:02:39 +0100
+Message-ID: <5101020.3N450MHRvH@vostro.rjw.lan>
+In-Reply-To: <CAErSpo6_tO8r2xq-7uo8H18L61Kunb0HgTOvZv0u-sCQKwipxA@mail.gmail.com>
+References: <CAErSpo5PFn9gDgKWHoGpiSEE9862WbTDm7VVtxMxX05zK7b6kw@mail.gmail.com> <1360874504.16827.5.camel@x220> <CAErSpo6_tO8r2xq-7uo8H18L61Kunb0HgTOvZv0u-sCQKwipxA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Richard,
+On Monday, February 25, 2013 08:52:42 PM Bjorn Helgaas wrote:
+> [+to Huang]
+> 
+> On Thu, Feb 14, 2013 at 1:41 PM, ALLurGroceries
+> <allurgroceries@gmail.com> wrote:
+> > On Thu, 2013-02-14 at 10:40 -0700, Bjorn Helgaas wrote:
+> >> [+cc Zheng, Rafael, linux-pci]
+> >>
+> >> On Wed, Feb 13, 2013 at 11:55 PM,  <bugzilla-daemon@bugzilla.kernel.org> wrote:
+> >> > https://bugzilla.kernel.org/show_bug.cgi?id=53811
+> >> >
+> >> >            Summary: acpiphp broken on Lenovo X220 from 3.6 onwards
+> >>
+> >> Thanks for the report.  Can you please attach complete dmesg logs from
+> >> kernels with your patch (showing a working hotplug) and without your
+> >> patch (showing the failing hotplug)?
+> >
+> > OK, they're attached. The hotplug is at the very end of both. Without
+> > the patch, when I try to power the card on with
+> > echo 1 > /sys/bus/pci/slots/1/power
+> >
+> > I get:
+> > acpiphp_glue: acpiphp_enable_slot: Slot status is not ACPI_STA_ALL
+> 
+> Does anybody care about this runtime PM support for PCIe ports?
 
-On Wed, 2013-02-20 at 09:34 +0800, Wei Yang wrote:
-> I hope I can have similar devices, so I can reproduce it. Since I am not very
-> familiar with the process.
+Yes.
 
-Well, here it is triggered by the combination of this port
-    00:1c.1 PCI bridge [0604]: Intel Corporation 82801H (ICH8 Family) PCI Express Port 2 [8086:2841] (rev 03)
+> If nobody wants to fix this regression, I'm going to revert 71a83bd727
+> "PCI/PM: add runtime PM support to PCIe port" and anything that
+> depends on it.
 
-with this card
-    03:00.0 Network controller [0280]: Intel Corporation PRO/Wireless 4965 AG or AGN [Kedron] Network Connection [8086:4230] (rev 61)
+I'll have a look at this tomorrow.
 
-(The first PCIE port is apparently unused on this machine. I assume it's
-meant for a WWAN card, which I don't use.)
-
-But feel free to post some code here. I'm fine with testing any
-reasonable solution.
+Thanks,
+Rafael
 
 
-Paul Bolle
-
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
