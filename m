@@ -1,73 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f178.google.com ([209.85.223.178]:52840 "EHLO
-	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750734Ab3BMBz1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Feb 2013 20:55:27 -0500
+Received: from mail-oa0-f45.google.com ([209.85.219.45]:64582 "EHLO
+	mail-oa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753868Ab3BZSrC (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Feb 2013 13:47:02 -0500
+Received: by mail-oa0-f45.google.com with SMTP id o6so5942793oag.18
+        for <linux-pci@vger.kernel.org>; Tue, 26 Feb 2013 10:47:01 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1837481.7dT8hTZ4MT@vostro.rjw.lan>
-References: <1837481.7dT8hTZ4MT@vostro.rjw.lan>
-Date: Tue, 12 Feb 2013 17:55:26 -0800
-Message-ID: <CAE9FiQVR+0iXtYF4AcLZs5_SsOtUJp5dF5fpk0XZKTcVanoL6A@mail.gmail.com>
-Subject: Re: [PATCH] ACPI / hotplug: Fix concurrency issues and memory leaks
-From: Yinghai Lu <yinghai@kernel.org>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jiang Liu <liuj97@gmail.com>, Toshi Kani <toshi.kani@hp.com>,
-	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
-	Myron Stowe <mstowe@redhat.com>, linux-pci@vger.kernel.org
+In-Reply-To: <337833384.57445.1361860509194.JavaMail.mail@webmail08>
+References: <CAErSpo7qj2SNR7BfuBsfF-saZXvgcqqLtgoP5Hyb5u99qR4Ncg@mail.gmail.com>
+	<Pine.LNX.4.44L0.1302191119270.2215-100000@iolanthe.rowland.org>
+	<CAErSpo7NZoOQZyW76HEoOTVgdqL2CgbVScAeF6HGLAVaNCq0=w@mail.gmail.com>
+	<337833384.57445.1361860509194.JavaMail.mail@webmail08>
+Date: Tue, 26 Feb 2013 11:46:59 -0700
+Message-ID: <CAErSpo6CbO5KYXiErv6J_Dnm1u694C5fQPP2_cZL8VKDEnZa9A@mail.gmail.com>
+Subject: Re: Abysmal HDD/USB write speed after sleep on a UEFI system
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: "Artem S. Tashkinov" <t.artem@lycos.com>
+Cc: stern@rowland.harvard.edu, torvalds@linux-foundation.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	rjw@sisk.pl
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 12, 2013 at 4:19 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Mon, Feb 25, 2013 at 11:35 PM, Artem S. Tashkinov <t.artem@lycos.com> wrote:
+> Feb 26, 2013 03:57:52 AM, Bjorn Helgaas wrote:
+>>
+>>Where are we at with this, Artem?  I assume it's still a problem.
+>>
 >
-> This changeset is aimed at fixing a few different but related
-> problems in the ACPI hotplug infrastructure.
+> Yes, it is, Bjorn.
 >
-> First of all, since notify handlers may be run in parallel with
-> acpi_bus_scan(), acpi_bus_trim() and acpi_bus_hot_remove_device()
-> and some of them are installed for ACPI handles that have no struct
-> acpi_device objects attached (i.e. before those objects are created),
-> those notify handlers have to take acpi_scan_lock to prevent races
-> from taking place (e.g. a struct acpi_device is found to be present
-> for the given ACPI handle, but right after that it is removed by
-> acpi_bus_trim() running in parallel to the given notify handler).
-> Moreover, since some of them call acpi_bus_scan() and
-> acpi_bus_trim(), this leads to the conclusion that acpi_scan_lock
-> should be acquired by the callers of these two funtions rather by
-> these functions themselves.
+> In order to eliminate this problem I switched back to MBR yesterday, because
+> so far I haven't received any instructions or guidance as to how I can debug
+> it further. I'm absolutely sure USB write speed is just another manifestation of
+> it so I decided not to debug USB specifically (it just doesn't make too much
+> sense).
 >
-> For these reasons, make all notify handlers that can handle device
-> addition and eject events take acpi_scan_lock and remove the
-> acpi_scan_lock locking from acpi_bus_scan() and acpi_bus_trim().
-> Accordingly, update all of their users to make sure that they
-> are always called under acpi_scan_lock.
+> What I see is that something terribly wrong is going on but if Linus has no ideas
+> I, as an average Joe, don't have a slightest clue as to what I can do.
 >
-> Furthermore, since eject operations are carried out asynchronously
-> with respect to the notify events that trigger them, with the help
-> of acpi_bus_hot_remove_device(), even if notify handlers take the
-> ACPI scan lock, it still is possible that, for example,
-> acpi_bus_trim() will run between acpi_bus_hot_remove_device() and
-> the notify handler that scheduled its execution and that
-> acpi_bus_trim() will remove the device node passed to
-> acpi_bus_hot_remove_device() for ejection.  In that case, the struct
-> acpi_device object obtained by acpi_bus_hot_remove_device() will be
-> invalid and not-so-funny things will ensue.  To protect agaist that,
-> make the users of acpi_bus_hot_remove_device() run get_device() on
-> ACPI device node objects that are about to be passed to it and make
-> acpi_bus_hot_remove_device() run put_device() on them and check if
-> their ACPI handles are not NULL (make acpi_device_unregister() clear
-> the device nodes' ACPI handles for that check to work).
+> The bug report with necessary, but seemingly useless information, can be
+> found here: https://bugzilla.kernel.org/show_bug.cgi?id=53551
 >
-> Finally, observe that acpi_os_hotplug_execute() actually can fail,
-> in which case its caller ought to free memory allocated for the
-> context object to prevent leaks from happening.  It also needs to
-> run put_device() on the device node that it ran get_device() on
-> previously in that case.  Modify the code accordingly.
->
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> If anyone comes up with new ideas I can quickly try UEFI again now that I
+> have two HDDs at my disposal (the old one is formatted as GPT, the new one is
+> MBR).
 
-Acked-by: Yinghai Lu <yinghai@kernel.org>
+The ideas I saw are:
+
+1) Figure out whether it ever worked.  If an older kernel worked
+correctly and a newer one is broken, bisection is at least a
+possibility.  You mentioned that it did work before (Feb 12), but in
+the past you never suspended twice in one boot session, whereas maybe
+you did when seeing the problem?
+
+2) Try the "setpci" to set the MSI address back to the original value
+to see if it makes a difference (see my Feb 12 message).
+
+3) Collect "lspci -vvv -xxxx" output to investigate the XHCI
+Unsupported Request errors.
+
+4) Use usbmon to collect traces before and after the suspend.
+
+I googled around a bit looking for similar reports.  I found lots of
+suspend issues, mostly with Windows, but no leads yet.  It looks like
+the board has been around for a while, so you would think we'd have
+some other reports of a problem this bad.  But maybe it really is
+related to UEFI and nobody really uses that yet?
+
+Bjorn
