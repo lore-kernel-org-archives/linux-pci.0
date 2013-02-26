@@ -1,90 +1,76 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:45887 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933369Ab3BLQ3i (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Feb 2013 11:29:38 -0500
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Cc: Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Tawfik Bayouk <tawfik@marvell.com>
-Subject: [PATCH 17/32] arm: plat-orion: convert 'int remap' to 'u32 remap'
-Date: Tue, 12 Feb 2013 17:28:51 +0100
-Message-Id: <1360686546-24277-18-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>
+Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Subject: [PATCH v8 04/13] ACPI/acpiphp: replace local macros with standard ACPI macros
+Date: Tue, 26 Feb 2013 23:25:44 +0800
+Message-Id: <1361892353-14786-5-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1361892353-14786-1-git-send-email-jiang.liu@huawei.com>
+References: <1361892353-14786-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now that we have ORION_ADDR_MAP_NO_REMAP in place, we can easily
-convert the 'int remap' field to a 'u32 remap' field, and accept any
-remapping address, except the magical ORION_ADDR_MAP_NO_REMAP.
+Replace local defined macros (ACPI_STA_xxx) with standard ACPI macros
+(ACPI_STA_DEVICE_xxx).
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Cc: Toshi Kani <toshi.kani@hp.com>
+Cc: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 ---
- arch/arm/plat-orion/addr-map.c              |    4 ++--
- arch/arm/plat-orion/include/plat/addr-map.h |    6 +++---
- 2 files changed, 5 insertions(+), 5 deletions(-)
+ drivers/pci/hotplug/acpiphp.h      |    4 ----
+ drivers/pci/hotplug/acpiphp_glue.c |    4 ++--
+ 2 files changed, 2 insertions(+), 6 deletions(-)
 
-diff --git a/arch/arm/plat-orion/addr-map.c b/arch/arm/plat-orion/addr-map.c
-index dd98638..b1d4806 100644
---- a/arch/arm/plat-orion/addr-map.c
-+++ b/arch/arm/plat-orion/addr-map.c
-@@ -69,7 +69,7 @@ static int __init orion_cpu_win_can_remap(const struct orion_addr_map_cfg *cfg,
- void __init orion_setup_cpu_win(const struct orion_addr_map_cfg *cfg,
- 				const int win, const u32 base,
- 				const u32 size, const u8 target,
--				const u8 attr, const int remap)
-+				const u8 attr, const u32 remap)
- {
- 	void __iomem *addr = cfg->win_cfg_base(cfg, win);
- 	u32 ctrl, base_high, remap_addr;
-@@ -86,7 +86,7 @@ void __init orion_setup_cpu_win(const struct orion_addr_map_cfg *cfg,
- 	writel(base_high, addr + WIN_BASE_OFF);
- 	writel(ctrl, addr + WIN_CTRL_OFF);
- 	if (cfg->cpu_win_can_remap(cfg, win)) {
--		if (remap < 0)
-+		if (remap == ORION_ADDR_MAP_NO_REMAP)
- 			remap_addr = base;
- 		else
- 			remap_addr = remap;
-diff --git a/arch/arm/plat-orion/include/plat/addr-map.h b/arch/arm/plat-orion/include/plat/addr-map.h
-index 0861b8c..6533c47 100644
---- a/arch/arm/plat-orion/include/plat/addr-map.h
-+++ b/arch/arm/plat-orion/include/plat/addr-map.h
-@@ -38,10 +38,10 @@ struct orion_addr_map_info {
- 	const u32 size;
- 	const u8 target;
- 	const u8 attr;
--	const int remap;
-+	const u32 remap;
- };
+diff --git a/drivers/pci/hotplug/acpiphp.h b/drivers/pci/hotplug/acpiphp.h
+index b70ac00..1b311f9 100644
+--- a/drivers/pci/hotplug/acpiphp.h
++++ b/drivers/pci/hotplug/acpiphp.h
+@@ -146,10 +146,6 @@ struct acpiphp_attention_info
+ #define ACPI_PCI_HOST_HID		"PNP0A03"
  
--#define ORION_ADDR_MAP_NO_REMAP (-1)
-+#define ORION_ADDR_MAP_NO_REMAP (0xFFFFFFFF)
+ /* ACPI _STA method value (ignore bit 4; battery present) */
+-#define ACPI_STA_PRESENT		(0x00000001)
+-#define ACPI_STA_ENABLED		(0x00000002)
+-#define ACPI_STA_SHOW_IN_UI		(0x00000004)
+-#define ACPI_STA_FUNCTIONING		(0x00000008)
+ #define ACPI_STA_ALL			(0x0000000f)
  
- void __init orion_config_wins(struct orion_addr_map_cfg *cfg,
- 			      const struct orion_addr_map_info *info);
-@@ -49,7 +49,7 @@ void __init orion_config_wins(struct orion_addr_map_cfg *cfg,
- void __init orion_setup_cpu_win(const struct orion_addr_map_cfg *cfg,
- 				const int win, const u32 base,
- 				const u32 size, const u8 target,
--				const u8 attr, const int remap);
-+				const u8 attr, const u32 remap);
+ /* bridge flags */
+diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+index 4101c15..89e0c36 100644
+--- a/drivers/pci/hotplug/acpiphp_glue.c
++++ b/drivers/pci/hotplug/acpiphp_glue.c
+@@ -487,7 +487,7 @@ static int add_bridge(struct acpi_pci_root *root)
+ 			dbg("%s: _STA evaluation failure\n", __func__);
+ 			return 0;
+ 		}
+-		if ((tmp & ACPI_STA_FUNCTIONING) == 0)
++		if ((tmp & ACPI_STA_DEVICE_FUNCTIONING) == 0)
+ 			/* don't register this object */
+ 			return 0;
+ 	}
+@@ -1387,7 +1387,7 @@ u8 acpiphp_get_latch_status(struct acpiphp_slot *slot)
  
- void __init orion_setup_cpu_mbus_target(const struct orion_addr_map_cfg *cfg,
- 					const void __iomem *ddr_window_cpu_base);
+ 	sta = get_slot_status(slot);
+ 
+-	return (sta & ACPI_STA_SHOW_IN_UI) ? 0 : 1;
++	return (sta & ACPI_STA_DEVICE_UI) ? 0 : 1;
+ }
+ 
+ 
 -- 
 1.7.9.5
 
