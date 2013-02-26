@@ -1,71 +1,63 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:57912 "EHLO quartz.orcorp.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933153Ab3BLTir (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 12 Feb 2013 14:38:47 -0500
-Date: Tue, 12 Feb 2013 12:38:48 -0700
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Stephen Warren <swarren@wwwdotorg.org>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>
+Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>, linux-kernel@vger.kernel.org,
 	linux-pci@vger.kernel.org,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: Giving special alignment/size constraints to the Linux PCI core?
-Message-ID: <20130212193848.GE1471@obsidianresearch.com>
-References: <20130130120344.GA29490@avionic-0098.mockup.avionic-design.de>
- <201302121600.08434.arnd@arndb.de>
- <20130212184127.GA1471@obsidianresearch.com>
- <201302121902.14276.arnd@arndb.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201302121902.14276.arnd@arndb.de>
-Sender: linux-pci-owner@vger.kernel.org
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Subject: [PATCH v8 03/13] PCI/acpiphp: don't rely on function 0 in disable_device()
+Date: Tue, 26 Feb 2013 23:25:43 +0800
+Message-Id: <1361892353-14786-4-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1361892353-14786-1-git-send-email-jiang.liu@huawei.com>
+References: <1361892353-14786-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 12, 2013 at 07:02:14PM +0000, Arnd Bergmann wrote:
-> On Tuesday 12 February 2013, Jason Gunthorpe wrote:
-> > > My feeling is that an easier solution would be to keep separate
-> > > root buses for each port, which then behaves completely PCIe
-> > > compliant, but add a hook in the procedure above to set up the
-> > > address translation windows between the pci_bus_size_bridges()
-> > > and the pci_bus_assign_resources() calls.
-> > 
-> > This process is only done during driver initialization. How would you
-> > support PCI-E device hotplug (my systems rely on this)? Hotplug works
-> > today with the existing Marvell driver, however that relies on
-> > pre-allocated windows.
-> 
-> I did not expect hotplug to work with either approach. How does
-> it work with the existing driver? From my understanding, you still
-> assign all the top-level P2P bridge resources at bootup, and only
-> if that happens to have some space left before the next bridge,
-> it would be possible to fit in a hotplug device.
+Currently function disable_device() detects slot state by checking
+existence of PCI device for function 0. It's unreliable because PCI
+device for function 0 may be removed through sysfs interface. If that
+happens, it will cause powering off a hotplug slot without destroying
+all PCI devices.
 
-PCI-E hotplug can be supported through the generic /sys/bus/pci/rescan
-mechanism, which forces a rediscovery/re-evaluation of all the buses
-in the system. The PCI core is smart enough to know what it can/can
-not reassign and can move the bridge windows around (IIRC most of the
-issues here are resolved these days?).
+On the other hand, it won't hurt us except wasting some computation
+power if the check is removed, because all code of disable_device()
+is self-protected. So remove the check.
 
-For PCI-E, the root port bridge can be placed anywhere in the host
-aperture, so as long as the host aperture isn't filled the core can
-allocate a memory region for the now active port.
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Cc: Toshi Kani <toshi.kani@hp.com>
+Cc: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+---
+ drivers/pci/hotplug/acpiphp_glue.c |    7 -------
+ 1 file changed, 7 deletions(-)
 
-Thomas's driver should support this as the regions and windows are all
-properly dynamic.
+diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+index 514851d8..4101c15 100644
+--- a/drivers/pci/hotplug/acpiphp_glue.c
++++ b/drivers/pci/hotplug/acpiphp_glue.c
+@@ -918,13 +918,6 @@ static int disable_device(struct acpiphp_slot *slot)
+ 	struct pci_dev *pdev;
+ 	struct pci_bus *bus = slot->bridge->pci_bus;
+ 
+-	/* The slot will be enabled when func 0 is added, so check
+-	   func 0 before disable the slot. */
+-	pdev = pci_get_slot(bus, PCI_DEVFN(slot->device, 0));
+-	if (!pdev)
+-		goto err_exit;
+-	pci_dev_put(pdev);
+-
+ 	list_for_each_entry(func, &slot->funcs, sibling) {
+ 		if (func->bridge) {
+ 			/* cleanup p2p bridges under this P2P bridge */
+-- 
+1.7.9.5
 
-This is one reason why re-using the PCI core code is so desirable, it
-handles all these complexities.
-
-Jason
