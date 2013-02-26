@@ -1,155 +1,52 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-Subject: [PATCH v2 20/26] x86, irq: Make mp_register_ioapic handle hotadd ioapic
-Date: Fri,  8 Feb 2013 11:28:17 -0800
-Message-Id: <1360351703-20571-21-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1360351703-20571-1-git-send-email-yinghai@kernel.org>
-References: <1360351703-20571-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qa0-f41.google.com ([209.85.216.41]:64007 "EHLO
+	mail-qa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757513Ab3BZDwn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 25 Feb 2013 22:52:43 -0500
+Received: by mail-qa0-f41.google.com with SMTP id bs12so2125365qab.14
+        for <linux-pci@vger.kernel.org>; Mon, 25 Feb 2013 19:52:42 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1360874504.16827.5.camel@x220>
+References: <CAErSpo5PFn9gDgKWHoGpiSEE9862WbTDm7VVtxMxX05zK7b6kw@mail.gmail.com>
+	<1360874504.16827.5.camel@x220>
+Date: Mon, 25 Feb 2013 20:52:42 -0700
+Message-ID: <CAErSpo6_tO8r2xq-7uo8H18L61Kunb0HgTOvZv0u-sCQKwipxA@mail.gmail.com>
+Subject: Re: [Bug 53811] [REGRESSION]: acpiphp broken on Lenovo X220 from 3.6 onwards
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: ALLurGroceries <allurgroceries@gmail.com>,
+	Huang Ying <ying.huang@intel.com>
+Cc: Zheng Yan <zheng.z.yan@intel.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-It needs to reserve irq range in allocated_irqs bitmaps
-and irq_base will be used to get right irq for ioapic/pin or gsi.
+[+to Huang]
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Paul Gortmaker <paul.gortmaker@windriver.com>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
----
- arch/x86/include/asm/mpspec.h  |    1 +
- arch/x86/kernel/apic/io_apic.c |   59 ++++++++++++++++++++++++++++++----------
- 2 files changed, 46 insertions(+), 14 deletions(-)
+On Thu, Feb 14, 2013 at 1:41 PM, ALLurGroceries
+<allurgroceries@gmail.com> wrote:
+> On Thu, 2013-02-14 at 10:40 -0700, Bjorn Helgaas wrote:
+>> [+cc Zheng, Rafael, linux-pci]
+>>
+>> On Wed, Feb 13, 2013 at 11:55 PM,  <bugzilla-daemon@bugzilla.kernel.org> wrote:
+>> > https://bugzilla.kernel.org/show_bug.cgi?id=53811
+>> >
+>> >            Summary: acpiphp broken on Lenovo X220 from 3.6 onwards
+>>
+>> Thanks for the report.  Can you please attach complete dmesg logs from
+>> kernels with your patch (showing a working hotplug) and without your
+>> patch (showing the failing hotplug)?
+>
+> OK, they're attached. The hotplug is at the very end of both. Without
+> the patch, when I try to power the card on with
+> echo 1 > /sys/bus/pci/slots/1/power
+>
+> I get:
+> acpiphp_glue: acpiphp_enable_slot: Slot status is not ACPI_STA_ALL
 
-diff --git a/arch/x86/include/asm/mpspec.h b/arch/x86/include/asm/mpspec.h
-index 3e2f42a..11bb6ea 100644
---- a/arch/x86/include/asm/mpspec.h
-+++ b/arch/x86/include/asm/mpspec.h
-@@ -96,6 +96,7 @@ static inline void early_reserve_e820_mpc_new(void) { }
- 
- void __cpuinit generic_processor_info(int apicid, int version);
- #ifdef CONFIG_ACPI
-+int __mp_register_ioapic(int id, u32 address, u32 gsi_base, bool hot);
- extern void mp_register_ioapic(int id, u32 address, u32 gsi_base);
- extern void mp_override_legacy_irq(u8 bus_irq, u8 polarity, u8 trigger,
- 				   u32 gsi);
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 8e92ba0..d3b3c14 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -3893,7 +3893,7 @@ static __init int bad_ioapic_register(int idx)
- 	return 0;
- }
- 
--void __init mp_register_ioapic(int id, u32 address, u32 gsi_base)
-+int __mp_register_ioapic(int id, u32 address, u32 gsi_base, bool hotadd)
- {
- 	int idx;
- 	int entries;
-@@ -3901,11 +3901,19 @@ void __init mp_register_ioapic(int id, u32 address, u32 gsi_base)
- 
- 	idx = __mp_find_ioapic(gsi_base, true);
- 	if (idx >= 0)
--		return;
-+		return -EINVAL;
- 
- 	idx = nr_ioapics;
-+	if (hotadd) {
-+		/* find free spot */
-+		for (idx = 0; idx < nr_ioapics; idx++)
-+			if (!ioapics[idx].nr_registers &&
-+			    ioapics[idx].mp_config.apicid == 0xff)
-+				break;
-+	}
-+
- 	if (bad_ioapic(idx, address))
--		return;
-+		return -EINVAL;
- 
- 	ioapics[idx].mp_config.type = MP_IOAPIC;
- 	ioapics[idx].mp_config.flags = MPC_APIC_USABLE;
-@@ -3913,10 +3921,8 @@ void __init mp_register_ioapic(int id, u32 address, u32 gsi_base)
- 
- 	set_fixmap_nocache(FIX_IO_APIC_BASE_0 + idx, address);
- 
--	if (bad_ioapic_register(idx)) {
--		clear_fixmap(FIX_IO_APIC_BASE_0 + idx);
--		return;
--	}
-+	if (bad_ioapic_register(idx))
-+		goto failed;
- 
- 	ioapics[idx].mp_config.apicid = io_apic_unique_id(id);
- 	ioapics[idx].mp_config.apicver = io_apic_get_version(idx);
-@@ -3927,10 +3933,8 @@ void __init mp_register_ioapic(int id, u32 address, u32 gsi_base)
- 	 */
- 	entries = io_apic_get_redir_entries(idx);
- 
--	if (!entries || entries > MP_MAX_IOAPIC_PIN) {
--		clear_fixmap(FIX_IO_APIC_BASE_0 + idx);
--		return;
--	}
-+	if (!entries || entries > MP_MAX_IOAPIC_PIN)
-+		goto failed;
- 
- 	gsi_cfg = mp_ioapic_gsi_routing(idx);
- 	gsi_cfg->gsi_base = gsi_base;
-@@ -3941,15 +3945,42 @@ void __init mp_register_ioapic(int id, u32 address, u32 gsi_base)
- 	 */
- 	ioapics[idx].nr_registers = entries;
- 
--	if (gsi_cfg->gsi_end >= gsi_top)
--		gsi_top = gsi_cfg->gsi_end + 1;
-+	if (!hotadd) {
-+		/*
-+		 * irqs will be reserved in arch_early_irq_init()
-+		 * don't need to update gsi_top for hot add case
-+		 */
-+		if (gsi_cfg->gsi_end >= gsi_top)
-+			gsi_top = gsi_cfg->gsi_end + 1;
-+	} else {
-+		int irq = reserve_ioapic_gsi_irq_base(idx);
-+
-+		if (irq < 0)
-+			goto failed;
-+
-+		alloc_ioapic_saved_registers(idx);
-+	}
- 
- 	pr_info("IOAPIC[%d]: apic_id %d, version %d, address 0x%x, GSI %d-%d\n",
- 		idx, mpc_ioapic_id(idx),
- 		mpc_ioapic_ver(idx), mpc_ioapic_addr(idx),
- 		gsi_cfg->gsi_base, gsi_cfg->gsi_end);
- 
--	nr_ioapics++;
-+	if (idx == nr_ioapics)
-+		nr_ioapics++;
-+
-+	return 0;
-+
-+failed:
-+	clear_fixmap(FIX_IO_APIC_BASE_0 + idx);
-+	memset(&ioapics[idx], 0, sizeof(struct ioapic));
-+	ioapics[idx].mp_config.apicid = 0xff;
-+	return -EINVAL;
-+}
-+
-+void mp_register_ioapic(int id, u32 address, u32 gsi_base)
-+{
-+	__mp_register_ioapic(id, address, gsi_base, false);
- }
- 
- /* Enable IOAPIC early just for system timer */
--- 
-1.7.10.4
+Does anybody care about this runtime PM support for PCIe ports?  If
+nobody wants to fix this regression, I'm going to revert 71a83bd727
+"PCI/PM: add runtime PM support to PCIe port" and anything that
+depends on it.
 
+Bjorn
