@@ -1,131 +1,45 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:37265 "EHLO hydra.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759797Ab3BKTnY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 11 Feb 2013 14:43:24 -0500
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Daniel J Blueman <daniel@quora.org>
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: Re: [3.8-rc7] PCI hotplug wakeup oops
-Date: Mon, 11 Feb 2013 20:49:49 +0100
-Message-ID: <1843565.7Y1sC8j6FG@vostro.rjw.lan>
-In-Reply-To: <6086479.ycKj2j8yeP@vostro.rjw.lan>
-References: <CAMVG2svG21yiM1wkH4_2pen2n+cr2-Zv7TbH3Gj+8MwevZjDbw@mail.gmail.com> <CAErSpo6rGYLQeP8Myu=octSPY_0R+B7ptBLhLawd_A2E3NRsAw@mail.gmail.com> <6086479.ycKj2j8yeP@vostro.rjw.lan>
+Received: from mail-ee0-f43.google.com ([74.125.83.43]:39978 "EHLO
+	mail-ee0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751620Ab3BZFbr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Feb 2013 00:31:47 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <1781256.mPQbtiUPYR@vostro.rjw.lan>
+References: <1663657.ypAtqGpGAq@vostro.rjw.lan>
+	<1781256.mPQbtiUPYR@vostro.rjw.lan>
+Date: Mon, 25 Feb 2013 21:31:45 -0800
+Message-ID: <CA+55aFyzjN_wMH+2RCEA+aNLY0Z7fn4YU7VOtTALbgngn1+vCw@mail.gmail.com>
+Subject: Re: [GIT PULL] ACPI and power management fixes for v3.9-rc1
+From: Linus Torvalds <torvalds@linux-foundation.org>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PM list <linux-pm@vger.kernel.org>,
+	Len Brown <lenb@kernel.org>,
+	Fabio Baltieri <fabio.baltieri@linaro.org>,
+	Dave Jones <davej@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, February 11, 2013 08:27:49 PM Rafael J. Wysocki wrote:
-> On Monday, February 11, 2013 12:01:37 PM Bjorn Helgaas wrote:
-> > [+cc Rafael]
-> > 
-> > On Mon, Feb 11, 2013 at 10:08 AM, Daniel J Blueman <daniel@quora.org> wrote:
-> > > On 11 February 2013 21:03, Daniel J Blueman <daniel@quora.org> wrote:
-> > >> With 3.8-rc7, when unplugging the Thunderbolt ethernet adapter (bus 0a
-> > >> [1]) on a Macbook Pro 10,1, we see the PCIe port correctly released:
-> > >>
-> > >> pciehp 0000:06:03.0:pcie24: Card not present on Slot(3)
-> > >> tg3 0000:0a:00.0: tg3_abort_hw timed out, TX_MODE_ENABLE will not
-> > >> clear MAC_TX_MODE=ffffffff
-> > >> tg3 0000:0a:00.0 eth0: No firmware running
-> > >> tg3 0000:0a:00.0 eth0: Link is down
-> > >> [sched_delayed] sched: RT throttling activated
-> > >> pcieport 0000:00:01.1: System wakeup enabled by ACPI
-> > >> pciehp 0000:09:00.0:pcie24: unloading service driver pciehp
-> > >> pci_bus 0000:0a: busn_res: [bus 0a] is released
-> > >> pci_bus 0000:09: busn_res: [bus 09-0a] is released
-> > >>
-> > >> After some activity later (eg I can reproduce this by switching to a
-> > >> text console and back), often we'll see an oops:
-> > >>
-> > >> Unable to handle kernel paging request at 0000000000001070
-> > >> pci_pme_list_scan+0x3d/0xe0
-> > >> Call Trace:
-> > >> process_one_work+0x193
-> > >> ? process_one_work+0x131
-> > >> ? pci_pme_wakeup+0x60
-> > >> worker_thread+0x15d
-> > >>
-> > >> (gdb) list *(pci_pme_list_scan+0x3d)
-> > >> 0xffffffff8123f6dd is in pci_pme_list_scan (drivers/pci/pci.c:1556).
-> > >> 1551                                    /*
-> > >> 1552                                     * If bridge is in low power state, the
-> > >> 1553                                     * configuration space of subordinate devices
-> > >> 1554                                     * may be not accessible
-> > >> 1555                                     */
-> > >> 1556                                    if (bridge && bridge->current_state != PCI_D0)
-> > >> 1557                                            continue;
-> > >> 1558                                    pci_pme_wakeup(pme_dev->dev, NULL);
-> > >> 1559                            } else {
-> > >> 1560                                    list_del(&pme_dev->list);
-> > >>
-> > >> Since a panic in vsnprintf happens after the oops (hence I can't catch
-> > >> it with EFI pstore), it is almost certainly significant heap
-> > >> corruption; this would explain why pme_dev became null (the load has
-> > >> been ordered ahead).
-> > >>
-> > >> I'll see what I can find out with memory poisoning and list debugging.
-> > >
-> > > Enabling a bunch of related debugging, we see pme_dev is non-null and:
-> > >
-> > > BUG: Unable to handle NULL pointer dereference at
-> > > pci_bus_read_config_word+0x6c
-> > > PGD 26314c067 PUD 2633f9067 PMD 0
-> > > Oops: 0000 [#1] SMP
-> > > pci_check_pme_status+0x4f
-> > > pci_pme_wakeup+0x21
-> > > pci_pme_list_scan+0xd5
-> > > process_one_work+0x1ca
-> > > ? process_one_work+0x160
-> > > ? pci_pme_wakeup+0x60
-> > > worker_thread+0x14e
-> > >
-> > > Anyway, it looks like the device being unplugged wasn't removed from
-> > > pci_pme_list as pci_pme_active(dev, false) wasn't called.
-> > >
-> > > From a quick review, I wasn't able to find the right place in the
-> > > call-chain which I only see releases the child busses and PCIe port
-> > > drivers. Anyone?
-> > 
-> > It looks like drivers *add* devices to pci_pme_list when they use
-> > pci_enable_wake() or pci_wake_from_d3().  But many drivers never
-> > remove their devices, and I don't see any place where the core does it
-> > either.  My guess is we need to remove it in pci_stop_dev() (we
-> > already do pcie_aspm_exit_link_state() there) or somewhere similar.
-> 
-> Yes, we should call pci_pme_active(dev, false) somewhere in there I think.
-> It's fine to call that even if PME was not "active" before.
+On Mon, Feb 25, 2013 at 7:17 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+>
+> I wonder if this went unnoticed or there's anything wrong with it or it just
+> needs to wait for some more time?
 
-Daniel, I wonder if the patch below helps?
+Just going through things slowly. It's merged in my tree now.
 
-Rafael
+Oh, and a request: _please_ don't use unknown TLA's like OPP. This has
+become a huge problem, to the point that we have a
+"Documentation/power/opp.txt" file THAT NEVER CLEARLY STATES WHAT THE
+F*CK OPP ACTUALLY MEANS! What nice "documentation".
 
+Ok, I can look up things like this and find that it is "Operating
+Performance Points". At least in this context. But no, it's not some
+kind of generic standard, and no, it's not something people should be
+expected to know in general. Please stop doing "explanations" of
+things that use TLA's like this. And people shouldn't have to even
+wonder.
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/pci/remove.c |    2 ++
- 1 file changed, 2 insertions(+)
-
-Index: test/drivers/pci/remove.c
-===================================================================
---- test.orig/drivers/pci/remove.c
-+++ test/drivers/pci/remove.c
-@@ -19,6 +19,8 @@ static void pci_free_resources(struct pc
- 
- static void pci_stop_dev(struct pci_dev *dev)
- {
-+	pci_pme_active(dev, false);
-+
- 	if (dev->is_added) {
- 		pci_proc_detach_device(dev);
- 		pci_remove_sysfs_dev_files(dev);
-
-
-
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+                   Linus
