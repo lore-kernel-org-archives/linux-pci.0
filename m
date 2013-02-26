@@ -1,147 +1,86 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:50500 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754062Ab3BENmj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 5 Feb 2013 08:42:39 -0500
-Date: Tue, 5 Feb 2013 15:42:33 +0200
-From: Gleb Natapov <gleb@redhat.com>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: "Pandarathil, Vijaymohan R" <vijaymohan.pandarathil@hp.com>,
-	Blue Swirl <blauwirbel@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Ortiz, Lance E" <lance.oritz@hp.com>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	"qemu-devel@nongnu.org" <qemu-devel@nongnu.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v3 3/3] QEMU-AER: Qemu changes to support AER for
- VFIO-PCI devices
-Message-ID: <20130205134233.GK23213@redhat.com>
-References: <F9E001219150CB45BEDC82A650F360C9014AAF07@G9W0717.americas.hpqcorp.net>
- <CAAu8pHvk_2Mf2F-YTDC-wdyD1Jic-DHUanSQfOa3g0VchTcNig@mail.gmail.com>
- <20130205080436.GV23213@redhat.com>
- <F9E001219150CB45BEDC82A650F360C9014B42EE@G9W0717.americas.hpqcorp.net>
- <20130205092110.GB23213@redhat.com>
- <F9E001219150CB45BEDC82A650F360C9014B43DC@G9W0717.americas.hpqcorp.net>
- <20130205113645.GE23213@redhat.com>
- <F9E001219150CB45BEDC82A650F360C9014B445B@G9W0717.americas.hpqcorp.net>
- <1360071455.11144.552.camel@bling.home>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <512CBD88.5020008@suse.de>
+Date: Tue, 26 Feb 2013 14:50:00 +0100
+From: Hannes Reinecke <hare@suse.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1360071455.11144.552.camel@bling.home>
-Sender: linux-pci-owner@vger.kernel.org
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-kernel@vger.kernel.org, Frederik Himpe <fhimpe@vub.ac.be>,
+	Oliver Neukum <oneukum@suse.de>, linux-usb@vger.kernel.org,
+	linux-pci@vger.kernel.org, Len Brown <lenb@kernel.org>
+Subject: Re: [PATCH] pci: do not try to assign irq 255
+References: <1361182193-31894-1-git-send-email-hare@suse.de> <CAE9FiQWP1F5mLUoHoTHXy-wQoGxVK66QuuHYydaq3YfysS5Etg@mail.gmail.com> <5124820D.2080900@suse.de> <CAE9FiQXHteymDNzu0GqWtVSVhu3g2hCT+K9e5tB1mR-OBX1ffA@mail.gmail.com> <5125C45A.5020208@suse.de> <20130226132905.GB24959@hardeman.nu>
+In-Reply-To: <20130226132905.GB24959@hardeman.nu>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 05, 2013 at 06:37:35AM -0700, Alex Williamson wrote:
-> On Tue, 2013-02-05 at 12:05 +0000, Pandarathil, Vijaymohan R wrote:
-> > 
-> > > -----Original Message-----
-> > > From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-
-> > > owner@vger.kernel.org] On Behalf Of Gleb Natapov
-> > > Sent: Tuesday, February 05, 2013 3:37 AM
-> > > To: Pandarathil, Vijaymohan R
-> > > Cc: Blue Swirl; Alex Williamson; Bjorn Helgaas; Ortiz, Lance E;
-> > > kvm@vger.kernel.org; qemu-devel@nongnu.org; linux-pci@vger.kernel.org;
-> > > linux-kernel@vger.kernel.org
-> > > Subject: Re: [PATCH v3 3/3] QEMU-AER: Qemu changes to support AER for VFIO-
-> > > PCI devices
-> > > 
-> > > On Tue, Feb 05, 2013 at 10:59:41AM +0000, Pandarathil, Vijaymohan R wrote:
-> > > >
-> > > >
-> > > > > -----Original Message-----
-> > > > > From: Gleb Natapov [mailto:gleb@redhat.com]
-> > > > > Sent: Tuesday, February 05, 2013 1:21 AM
-> > > > > To: Pandarathil, Vijaymohan R
-> > > > > Cc: Blue Swirl; Alex Williamson; Bjorn Helgaas; Ortiz, Lance E;
-> > > > > kvm@vger.kernel.org; qemu-devel@nongnu.org; linux-pci@vger.kernel.org;
-> > > > > linux-kernel@vger.kernel.org
-> > > > > Subject: Re: [PATCH v3 3/3] QEMU-AER: Qemu changes to support AER for
-> > > VFIO-
-> > > > > PCI devices
-> > > > >
-> > > > > On Tue, Feb 05, 2013 at 09:05:19AM +0000, Pandarathil, Vijaymohan R
-> > > wrote:
-> > > > > >
-> > > > > >
-> > > > > > > -----Original Message-----
-> > > > > > > From: Gleb Natapov [mailto:gleb@redhat.com]
-> > > > > > > Sent: Tuesday, February 05, 2013 12:05 AM
-> > > > > > > To: Blue Swirl
-> > > > > > > Cc: Pandarathil, Vijaymohan R; Alex Williamson; Bjorn Helgaas;
-> > > Ortiz,
-> > > > > Lance
-> > > > > > > E; kvm@vger.kernel.org; qemu-devel@nongnu.org; linux-
-> > > > > pci@vger.kernel.org;
-> > > > > > > linux-kernel@vger.kernel.org
-> > > > > > > Subject: Re: [PATCH v3 3/3] QEMU-AER: Qemu changes to support AER
-> > > for
-> > > > > VFIO-
-> > > > > > > PCI devices
-> > > > > > >
-> > > > > > > On Sun, Feb 03, 2013 at 04:36:11PM +0000, Blue Swirl wrote:
-> > > > > > > > On Sun, Feb 3, 2013 at 2:10 PM, Pandarathil, Vijaymohan R
-> > > > > > > > <vijaymohan.pandarathil@hp.com> wrote:
-> > > > > > > > >         - Create eventfd per vfio device assigned to a guest
-> > > and
-> > > > > > > register an
-> > > > > > > > >           event handler
-> > > > > > > > >
-> > > > > > > > >         - This fd is passed to the vfio_pci driver through the
-> > > > > SET_IRQ
-> > > > > > > ioctl
-> > > > > > > > >
-> > > > > > > > >         - When the device encounters an error, the eventfd is
-> > > > > signalled
-> > > > > > > > >           and the qemu eventfd handler gets invoked.
-> > > > > > > > >
-> > > > > > > > >         - In the handler decide what action to take. Current
-> > > action
-> > > > > > > taken
-> > > > > > > > >           is to terminate the guest.
-> > > > > > > >
-> > > > > > > > Usually this is not OK, but I guess this is not guest
-> > > triggerable.
-> > > > > > > >
-> > > > > > > Still not OK. Why not stop a guest with appropriate stop reason?
-> > > > > >
-> > > > > > The thinking was that since this is a hardware error, we would want
-> > > to
-> > > > > stop the guest at the earliest. The hw_error() routine which aborts the
-> > > > > qemu process was suggested by Alex and that seemed appropriate. Earlier
-> > > I
-> > > > > was using qemu_system_shutdown_request().  Any suggestions ?
-> > > > > >
-> > > > > I am thinking vm_stop(). Stopping SMP guest (and UP too in fact)
-> > > > > involves sending IPIs to other cpus running guest's vcpus. Both exit()
-> > > > > and vm_stop() will do it, but former is implicitly in the kernel and
-> > > > > later is explicitly in QEMU.
-> > > >
-> > > > I had used vm_stop(RUN_STATE_SHUTDOWN) earlier in my code. But while
-> > > testing, guest ended up in a hang rather than exiting. There seems to some
-> > > cleanup work which is being done as part of vm_stop. In our case, we wanted
-> > > the guest to exit immediately. So use of hw_error() seemed appropriate.
-> > > >
-> > > What makes you think it hang? It stopped, precisely what it should do if
-> > > you call vm_stop(). Now it is possible for vm user to investigate what
-> > > happened and even salvage some data from guest memory.
-> > 
-> > That was ignorance on my part on the expected behavior of vm_stop(). 
-> > So what you are suggesting is to stop the guest displaying an appropriate 
-> > error/next-steps message and have the users do any data-collection/investigation 
-> > and then manually kill the guest, if they so desire. Right ?
-> > 
-> > Sounds reasonable. As long as the guest is not touching the device, it should be okay.
-> > Alex, Any comments ?
-> 
-> What's the libvirt behavior when a guest goes to vm_stop?  My only
-> concern would be whether the user is going to be confused by a state
-> where the vm is still up, but not running.  I imagine they'll have to
-> manually stop it and restart it to continue.  Thanks,
-> 
-vm_stop() is already the behaviour on KVM internal errors, so management
-stack knows how to handle those. Of course vfio should use meaningful
-stop reason and not just reuse existing one.
+On 02/26/2013 02:29 PM, David Härdeman wrote:
+> On Thu, Feb 21, 2013 at 07:53:14AM +0100, Hannes Reinecke wrote:
+>> On 02/20/2013 05:57 PM, Yinghai Lu wrote:
+>>> it seems you mess pin with interrupt line.
+>>>
+>>> current code:
+>>>          unsigned char irq;
+>>>
+>>>          pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &irq);
+>>>          dev->pin = irq;
+>>>          if (irq)
+>>>                  pci_read_config_byte(dev, PCI_INTERRUPT_LINE, &irq);
+>>>          dev->irq = irq;
+>>>
+>>> so if the device does not have interrupt pin implemented, pin should be zero.
+>>> and  pin and irq in dev should
+>>> be all 0.
+>>>
+>> But the device _has_ an interrupt pin implemented.
+>> The whole point here is that the interrupt line is _NOT_ zero.
+>>
+> ...
+>>
+>> So at one point we have to decide that ->irq is not valid, despite it
+>> being not set to zero.
+>> An alternative fix would be this:
+>>
+>> diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
+>> index 68a921d..4a480cb 100644
+>> --- a/drivers/acpi/pci_irq.c
+>> +++ b/drivers/acpi/pci_irq.c
+>> @@ -469,6 +469,7 @@ int acpi_pci_irq_enable(struct pci_dev *dev)
+>>                 } else {
+>>                         dev_warn(&dev->dev, "PCI INT %c: no GSI\n",
+>>                                  pin_name(pin));
+>> +                       dev->irq = 0;
+>>                 }
+>>                 return 0;
+>>         }
+>>
+>> Which probably is a better solution, as here ->irq is _definitely_
+>> not valid, so we should reset it to '0' to avoid confusion on upper
+>> layers.
+>>
+>
+> Is there any agreement on how to proceed?
+>
+I would actually prefer the second solution, as the ACPI code gives
+some better guarantees here. With the original solution it _might_ 
+be that on non-ACPI systems an interrupt 255 is valid, so it might
+incur unwanted regressions.
 
---
-			Gleb.
+However, for an ACPI system we only have the two choices, assigning
+an interrupt via ACPI tables or use a default GSI value.
+If both failed the interrupt definitely is not valid and can safely
+be reset to 0.
+
+But this would need a formal ACK from the ACPI gods ...
+Len? Rafael?
+
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: J. Hawn, J. Guild, F. Imendörffer, HRB 16746 (AG Nürnberg)
