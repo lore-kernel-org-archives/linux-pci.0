@@ -1,42 +1,166 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 26 Feb 2013 06:35:09 +0000 (UTC)
-From: "Artem S. Tashkinov" <t.artem@lycos.com>
-To: bhelgaas@google.com
-Cc: stern@rowland.harvard.edu, torvalds@linux-foundation.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	rjw@sisk.pl
-Message-ID: <337833384.57445.1361860509194.JavaMail.mail@webmail08>
-References: <CAErSpo7qj2SNR7BfuBsfF-saZXvgcqqLtgoP5Hyb5u99qR4Ncg@mail.gmail.com>
- <Pine.LNX.4.44L0.1302191119270.2215-100000@iolanthe.rowland.org><CAErSpo7NZoOQZyW76HEoOTVgdqL2CgbVScAeF6HGLAVaNCq0=w@mail.gmail.com>
-Subject: Re: Abysmal HDD/USB write speed after sleep on a UEFI system
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <1361892353-14786-14-git-send-email-jiang.liu@huawei.com>
+References: <1361892353-14786-1-git-send-email-jiang.liu@huawei.com>
+	<1361892353-14786-14-git-send-email-jiang.liu@huawei.com>
+Date: Tue, 26 Feb 2013 11:07:36 -0800
+Message-ID: <CAE9FiQV_hv3fD166LuZYhTKGxeKKKCw-Dak+8UYou7tRa-4hYw@mail.gmail.com>
+Subject: Re: [PATCH v8 13/13] PCI, ACPI: remove support of ACPI PCI subdrivers
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jiang Liu <liuj97@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Feb 26, 2013 03:57:52 AM, Bjorn Helgaas wrote:
+On Tue, Feb 26, 2013 at 7:25 AM, Jiang Liu <liuj97@gmail.com> wrote:
+> From: Myron Stowe <myron.stowe@redhat.com>
 >
->Where are we at with this, Artem?  I assume it's still a problem.
+> Both sub-drivers of the "PCI Root Bridge ("pci_bridge")" driver, "acpiphp"
+> and "pci_slot", have been converted to hook directly into the PCI core.
 >
+> With the conversions there are no remaining usages of the 'struct
+> acpi_pci_driver' list based infrastructure.  This patch removes it.
+>
+> Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+> Cc: Yinghai Lu <yinghai@kernel.org>
+> Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+> Cc: Toshi Kani <toshi.kani@hp.com>
+> Cc: linux-pci@vger.kernel.org
+> Cc: linux-kernel@vger.kernel.org
 
-Yes, it is, Bjorn.
+Nice cleanup!
 
-In order to eliminate this problem I switched back to MBR yesterday, because
-so far I haven't received any instructions or guidance as to how I can debug
-it further. I'm absolutely sure USB write speed is just another manifestation of
-it so I decided not to debug USB specifically (it just doesn't make too much
-sense).
+for 1-13,
+Reviewed-by: Yinghai Lu <yinghai@kernel.org>
 
-What I see is that something terribly wrong is going on but if Linus has no ideas
-I, as an average Joe, don't have a slightest clue as to what I can do.
+Thanks
 
-The bug report with necessary, but seemingly useless information, can be 
-found here: https://bugzilla.kernel.org/show_bug.cgi?id=53551
+Yinghai
 
-If anyone comes up with new ideas I can quickly try UEFI again now that I
-have two HDDs at my disposal (the old one is formatted as GPT, the new one is
-MBR).
-
-Best regards,
-
-Artem
+> ---
+>  drivers/acpi/pci_root.c |   48 +----------------------------------------------
+>  include/linux/acpi.h    |    9 ---------
+>  2 files changed, 1 insertion(+), 56 deletions(-)
+>
+> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+> index 8b5a73b..2ef0c91 100644
+> --- a/drivers/acpi/pci_root.c
+> +++ b/drivers/acpi/pci_root.c
+> @@ -69,44 +69,12 @@ static struct acpi_driver acpi_pci_root_driver = {
+>                 },
+>  };
+>
+> -/* Lock to protect both acpi_pci_roots and acpi_pci_drivers lists */
+> +/* Lock to protect both acpi_pci_roots lists */
+>  static DEFINE_MUTEX(acpi_pci_root_lock);
+>  static LIST_HEAD(acpi_pci_roots);
+> -static LIST_HEAD(acpi_pci_drivers);
+>
+>  static DEFINE_MUTEX(osc_lock);
+>
+> -int acpi_pci_register_driver(struct acpi_pci_driver *driver)
+> -{
+> -       int n = 0;
+> -       struct acpi_pci_root *root;
+> -
+> -       mutex_lock(&acpi_pci_root_lock);
+> -       list_add_tail(&driver->node, &acpi_pci_drivers);
+> -       if (driver->add)
+> -               list_for_each_entry(root, &acpi_pci_roots, node) {
+> -                       driver->add(root);
+> -                       n++;
+> -               }
+> -       mutex_unlock(&acpi_pci_root_lock);
+> -
+> -       return n;
+> -}
+> -EXPORT_SYMBOL(acpi_pci_register_driver);
+> -
+> -void acpi_pci_unregister_driver(struct acpi_pci_driver *driver)
+> -{
+> -       struct acpi_pci_root *root;
+> -
+> -       mutex_lock(&acpi_pci_root_lock);
+> -       list_del(&driver->node);
+> -       if (driver->remove)
+> -               list_for_each_entry(root, &acpi_pci_roots, node)
+> -                       driver->remove(root);
+> -       mutex_unlock(&acpi_pci_root_lock);
+> -}
+> -EXPORT_SYMBOL(acpi_pci_unregister_driver);
+> -
+>  /**
+>   * acpi_is_root_bridge - determine whether an ACPI CA node is a PCI root bridge
+>   * @handle - the ACPI CA node in question.
+> @@ -416,7 +384,6 @@ static int acpi_pci_root_add(struct acpi_device *device)
+>         acpi_status status;
+>         int result;
+>         struct acpi_pci_root *root;
+> -       struct acpi_pci_driver *driver;
+>         u32 flags, base_flags;
+>         bool is_osc_granted = false;
+>
+> @@ -576,12 +543,6 @@ static int acpi_pci_root_add(struct acpi_device *device)
+>                 pci_assign_unassigned_bus_resources(root->bus);
+>         }
+>
+> -       mutex_lock(&acpi_pci_root_lock);
+> -       list_for_each_entry(driver, &acpi_pci_drivers, node)
+> -               if (driver->add)
+> -                       driver->add(root);
+> -       mutex_unlock(&acpi_pci_root_lock);
+> -
+>         /* need to after hot-added ioapic is registered */
+>         if (system_state != SYSTEM_BOOTING)
+>                 pci_enable_bridges(root->bus);
+> @@ -602,16 +563,9 @@ end:
+>  static int acpi_pci_root_remove(struct acpi_device *device, int type)
+>  {
+>         struct acpi_pci_root *root = acpi_driver_data(device);
+> -       struct acpi_pci_driver *driver;
+>
+>         pci_stop_root_bus(root->bus);
+>
+> -       mutex_lock(&acpi_pci_root_lock);
+> -       list_for_each_entry_reverse(driver, &acpi_pci_drivers, node)
+> -               if (driver->remove)
+> -                       driver->remove(root);
+> -       mutex_unlock(&acpi_pci_root_lock);
+> -
+>         device_set_run_wake(root->bus->bridge, false);
+>         pci_acpi_remove_bus_pm_notifier(device);
+>
+> diff --git a/include/linux/acpi.h b/include/linux/acpi.h
+> index 8c1d6f2..eeb5600 100644
+> --- a/include/linux/acpi.h
+> +++ b/include/linux/acpi.h
+> @@ -147,15 +147,6 @@ void acpi_penalize_isa_irq(int irq, int active);
+>
+>  void acpi_pci_irq_disable (struct pci_dev *dev);
+>
+> -struct acpi_pci_driver {
+> -       struct list_head node;
+> -       int (*add)(struct acpi_pci_root *root);
+> -       void (*remove)(struct acpi_pci_root *root);
+> -};
+> -
+> -int acpi_pci_register_driver(struct acpi_pci_driver *driver);
+> -void acpi_pci_unregister_driver(struct acpi_pci_driver *driver);
+> -
+>  extern int ec_read(u8 addr, u8 *val);
+>  extern int ec_write(u8 addr, u8 val);
+>  extern int ec_transaction(u8 command,
+> --
+> 1.7.9.5
+>
