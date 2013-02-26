@@ -1,141 +1,106 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:57242 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754325Ab3BGQTK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Feb 2013 11:19:10 -0500
-Date: Thu, 7 Feb 2013 17:19:04 +0100
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Andrew Murray <andrew.murray@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>
-Subject: Re: [PATCH v2 19/27] pci: PCIe driver for Marvell Armada 370/XP
- systems
-Message-ID: <20130207171904.70270598@skate>
-In-Reply-To: <20130207155117.GA19666@arm.com>
-References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
-	<1359399397-29729-20-git-send-email-thomas.petazzoni@free-electrons.com>
-	<20130129132204.GA23886@arm.com>
-	<20130207153750.0fef1192@skate>
-	<20130207155117.GA19666@arm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>
+Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Subject: [PATCH v8 01/13] PCI: do not check is_added flag in pci_remove_bus()
+Date: Tue, 26 Feb 2013 23:25:41 +0800
+Message-Id: <1361892353-14786-2-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1361892353-14786-1-git-send-email-jiang.liu@huawei.com>
+References: <1361892353-14786-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Andrew Murray,
+The is_added flag in struct pci_bus is always set after invoking
+device_register() and pci_create_legacy_files(). The related code
+paths are:
+1) pci_create_root_bus() and pci_add_new_bus()
+	bus = pci_alloc_bus()
+	device_register(&bus->dev)
+	pci_create_legacy_file(bus)
+2.a) pci_scan_child_bus(bus)
+	set is_added flag for PCI root buses
+2.b) pci_bus_add_devices(bus)
+	set is_added flag for normal PCI buses
 
-On Thu, 7 Feb 2013 15:51:17 +0000, Andrew Murray wrote:
+So pci_remove_bus() shouldn't use is_added flag to guard invoking of
+pci_remove_lagecy_files() and device_unregister().
 
-> > First of all, I didn't reimplement the pcibios_get_phb_of_node(), but
-> > instead, as Thierry Reding suggested, simply implemented the
-> > hw_pci.scan() function as follows:
-> 
-> I've not had any time to test Thierry's solution to avoid implementing
-> pcibios_get_phb_of_node - but it did seem to work for him and seem correct
-> at the time.
+One more step further, now bus->is_added is only used to guard invoking
+of pcibios_fixup_bus(), so cleaup the code.
 
-At least there are device tree nodes associated to PCI devices, so it
-looks good from this perspective.
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Cc: Toshi Kani <toshi.kani@hp.com>
+Cc: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+---
+ drivers/pci/bus.c    |   11 ++---------
+ drivers/pci/probe.c  |    3 +--
+ drivers/pci/remove.c |    3 ---
+ 3 files changed, 3 insertions(+), 14 deletions(-)
 
-
-> > To me, the "struct pci_dev" representing the real PCIe devices should
-> > have a NULL "struct device_node" pointer, because those device are not
-> > represented in the DT. If this was the case, then the of_irq_map_pci()
-> > would go one level up in the PCI hierarchy, find the "struct pci_dev"
-> > that corresponds to the PCI-to-PCI bridge, which generates an laddr[]
-> > having a bus number a devfn value matching the interrupt-map property.
-> 
-> Yes this is my current understanding.
-
-Ok. But that's not what happens: the "struct pci_dev" representing the
-real PCIe device *DOES* have a non-NULL struct device_node pointer. And
-this is what makes the entire thing fail.
-
-> I would suggest the issue isn't in the PCI/DT code. This is what I see
-
-I believe it is, because as I said above, the struct pci_dev associated
-to a real PCIe device should not have a struct device_node pointer,
-because this PCIe device has been dynamically enumerated and is
-therefore not part of the device tree.
-
-> with my implementation (which uses an implementation of
-> pcibios_get_phb_of_node) - I'd like to believe this is correct behaviour:
-> 
-> - of_irq_map_pci is called for an endpoint (5:0:0), its pdev->dev.of_node
->   is NULL. As I don't have a representation of this endpoint in my DT the
->   of_irq_map_pci code proceeds to walk the fabric.
-
-I believe this should be the behavior. But this not what happens: the
-pdev->dev.of_node of an endpoint pci_dev is not NULL.
-
-> - Starting with the pdev for 5:0:0, of_irq_map_pci sees it has a parent
->   (downstream switch bridge), in this case pdev(5:0:0)->bus->self->dev.of_node
->   is NULL, due to this swizzling occurs and we walk the parent's bus (bus 2)
-> - This continues to bus 1 and then bus 0 where of_irq_map_pci realises that
->   it has no parent (its the host bridge). Due to the implementation of
->   pcibios_get_phb_of_node a of_node is produced, this is then used to construct
->   a lspec (for bus number 0).
-> 
-> The of_irq_map_pci code stops walking as soon as it finds a function in the
-> tree that has a device node. This suggests that if you represent a bridge
-> you must also include an interrupt-map. The problem here is that you have
-> represented a bridge but not included a map.
-
-I understood that it walks up the PCI hierarchy, and that's fine. As
-I've shown in my previous e-mail, the only problem is that this
-pdev->dev.of_node should be NULL for the PCIe endpoint device. If it
-were NULL, then everything would work correctly, as I could confirmed
-by the hack I did in of_irq_map_pci().
-
-> I can think of three solutions:
-> 
-> 1. Something like this:
-> 
->                  } else {
->                          /* We found a P2P bridge, check if it has a node */
->                          ppnode = pci_device_to_OF_node(ppdev);
->  +                       if (ppnode doesnt have an interrupt-map)//if (pdev->bus->number != 0)
->  +                               ppnode = NULL;
->                  }
-> 
-> 2. Remove the bridges from the DT? Or remove the map from pcie-controller and
->    add a map each to pcie@0,1 and pcie@1,1?
-> 
-> 3. Change the mask of your map so that it doesn't care about bus numbers. I
->    have a map that looks like this:
-> 
->                 interrupt-map-mask = <0 0 0 7>;
->                 interrupt-map = <0 0 0 1 ... //anything coming in on INTA
->                                  0 0 0 2 ... //anything coming in on INTB
->                                  0 0 0 3 ... ...
->                                  0 0 0 4 ... ...
-
-Unfortunately, I don't quite agree with any of your three solutions. I
-still do believe the root problem is that pdev->dev.of_node should be
-NULL for the PCIe endpoints, since those devices are not probed with
-the Device Tree.
-
-Best regards,
-
-Thomas
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index 8647dc6..bdc1e8b 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -206,16 +206,9 @@ void pci_bus_add_devices(const struct pci_bus *bus)
+ 
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		BUG_ON(!dev->is_added);
+-
+ 		child = dev->subordinate;
+-
+-		if (!child)
+-			continue;
+-		pci_bus_add_devices(child);
+-
+-		if (child->is_added)
+-			continue;
+-		child->is_added = 1;
++		if (child)
++			pci_bus_add_devices(child);
+ 	}
+ }
+ 
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index b494066..45c93b3 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1627,8 +1627,7 @@ unsigned int pci_scan_child_bus(struct pci_bus *bus)
+ 	if (!bus->is_added) {
+ 		dev_dbg(&bus->dev, "fixups for bus\n");
+ 		pcibios_fixup_bus(bus);
+-		if (pci_is_root_bus(bus))
+-			bus->is_added = 1;
++		bus->is_added = 1;
+ 	}
+ 
+ 	for (pass=0; pass < 2; pass++)
+diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+index fc38c48..66967e5 100644
+--- a/drivers/pci/remove.c
++++ b/drivers/pci/remove.c
+@@ -48,9 +48,6 @@ void pci_remove_bus(struct pci_bus *bus)
+ 	list_del(&bus->node);
+ 	pci_bus_release_busn_res(bus);
+ 	up_write(&pci_bus_sem);
+-	if (!bus->is_added)
+-		return;
+-
+ 	pci_remove_legacy_files(bus);
+ 	device_unregister(&bus->dev);
+ }
 -- 
-Thomas Petazzoni, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
+1.7.9.5
+
