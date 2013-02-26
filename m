@@ -1,74 +1,91 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ia0-f179.google.com ([209.85.210.179]:63671 "EHLO
-	mail-ia0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755064Ab3BFS7M (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Feb 2013 13:59:12 -0500
-MIME-Version: 1.0
-In-Reply-To: <CAErSpo4x-GzGxJOWgwP_DEqNhefDo0V1zTT5GBR30+Q57=E-hg@mail.gmail.com>
-References: <CAE9FiQXHG01NjnYNDbC-KEpbcvY-q4pBe97CxTOGS7W4vZQBYQ@mail.gmail.com>
-	<1359314629-18651-1-git-send-email-yinghai@kernel.org>
-	<CAErSpo6r_LNEtYB3j5ELb8NdHu0a6_YOVj8S32CmByGFUpSsbg@mail.gmail.com>
-	<CAE9FiQXg1YcPPJLCgPbKOKXHk-LRQv4bbBGH9jyuATQa2ANLkg@mail.gmail.com>
-	<CAE9FiQX2DbTO0qCzGO4iMTkU_mPM2oZL+R5UoZ5dj=as6MUAsw@mail.gmail.com>
-	<CAErSpo7-dULYwWQ=f5CBCxOULKJE9=n6Ha4jkVKd8enspuYjTA@mail.gmail.com>
-	<CAE9FiQWvmK7N2z19B9ZiMyc_T6cJdpWoWr3mExpuwUA4ogBc3w@mail.gmail.com>
-	<CAErSpo4x-GzGxJOWgwP_DEqNhefDo0V1zTT5GBR30+Q57=E-hg@mail.gmail.com>
-Date: Wed, 6 Feb 2013 10:59:11 -0800
-Message-ID: <CAE9FiQVYvmRr5oGLfLCPFPV_G_r-fqG9GZaK_wxNW8aO_oyuRA@mail.gmail.com>
-Subject: Re: [PATCH v3 00/22] PCI: Iterate pci host bridge instead of pci root bus
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	Mauro Carvalho Chehab <mchehab@redhat.com>,
-	Tony Luck <tony.luck@intel.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Toshi Kani <toshi.kani@hp.com>,
+Received: from mail-pa0-f45.google.com ([209.85.220.45]:56961 "EHLO
+	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759361Ab3BZPa2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Feb 2013 10:30:28 -0500
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>
+Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, Russell King <linux@arm.linux.org.uk>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>
+Subject: [PATCH v8 00/13] Get rid of the ACPI PCI subdriver mechanism
+Date: Tue, 26 Feb 2013 23:25:40 +0800
+Message-Id: <1361892353-14786-1-git-send-email-jiang.liu@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 6, 2013 at 9:54 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> I think you're missing the point.
->
-> Search the tree for uses of "for_each_pci_dev()."  Almost every
-> occurrence is a bug because that code doesn't work correctly for
-> hot-added devices.  That code gets run for devices that are present at
-> boot, but not for devices hot-added later.
->
-> You're proposing to add "for_each_pci_host_bridge()."  That will have
-> the exact same problem as for_each_pci_dev() already does.  Code that
-> uses it will work for host bridges present at boot, but not for
-> bridges hot-added later.
->
-> Why would we want to add an interface when every use of that interface
-> will be a design bug?  I think we should fix the existing users of
-> pci_root_buses by changing their designs so they will work correctly
-> with host bridge hotplug.
+PCI, ACPI: remove ACPI PCI subdriver mechanism
 
-I'm a little confused about what you want.
+This patch set is directly derived from two sources:
+1) '[PATCH 00/15] PCI/ACPI: Remove "pci_root" sub-driver support' at
+https://lkml.org/lkml/2012/12/7/11 from Myron Stowe
+The major goal is to resolve any potential sequencing inter-dependencies
+by converting sub-driver functionality to being only supported as
+statically built-in to the kernel as part of the "pci_root" driver
+itself.
 
-In boot stage using for_each_pci_host_bridge or pci_root_buses is fine.
+2) 'introduce PCI bus notifier chain to get rid of the ACPI PCI subdriver'
+at http://lwn.net/Articles/533547/
+The major goal is to update PCI slots(pci_slot), ACPI based PCI hotplug
+slots(acpiphp), PCIe AER(aer) etc when hot-plugging PCI devices and P2P
+bridges, and eventually get rid of the ACPI PCI subdriver interfaces.
 
-For those cases that it should support host-bridge by nature.
-there are two solutions:
-1. use for_each_pci_host_bridge, and it is hotplug-safe.
-and make sgi_hotplug to use acpi_pci_driver interface.
-and acpi_pci_root_add() will call .add in the acpi_pci_driver.
+This patchset applies to Bjorn's pci-next branch. Patch 1-4 are minor
+fixups for 3.9-rc1. Patch 5-8 introduce two hooks into PCI core which
+will be called when creating/destroying PCI buses. Patch 9-12 replace
+ACPI PCI subdriver interfaces with the new hook mechanism for pci_slot
+and acpiphp. Patch 13 removes the ACPI PCI subdriver interfaces.
 
-2. make them all to be built-in, and  those acpi_pci_driver should be registered
-much early before acpi_pci_root_add is called.
-then we don't need to call for_each_host_bridge for it.
+v7->v8:
+	Hook directly into the PCI core to replace pci_bus notification
+	Remove ACPI PCI subdriver related code
 
-So difference between them:
-1. still keep the module support, and register acpi_pci_driver later.
-2. built-in support only, and need to register acpi_pci_driver early.
+Jiang Liu (10):
+  PCI: do not check is_added flag in pci_remove_bus()
+  PCI/acpiphp: don't rely on function 0 in disable_device()
+  ACPI/acpiphp: replace local macros with standard ACPI macros
+  PCI: introduce platform dependent hooks for creating/destroying PCI
+    busses
+  PCI, ACPI: prepare stub functions to handle ACPI PCI (hotplug) slots
+  PCI, IA64: implement pcibios_{add|remove}_bus() hooks
+  PCI, x86: implement pcibios_{add|remove}_bus() hooks
+  PCI, ACPI: handle PCI slot devices when creating/destroying PCI
+    busses
+  PCI/acpiphp: do not use ACPI PCI subdriver mechanism
+  PCI/acpiphp: protect acpiphp data structures from concurrent updating
 
-Please let me which one you like.
+Myron Stowe (1):
+  PCI, ACPI: remove support of ACPI PCI subdrivers
 
-Thanks
+Yijing Wang (2):
+  PCI/acpiphp: use list_for_each_entry_safe() in acpiphp_sanitize_bus()
+  PCI/acpiphp: use normal list to simplify implementation
 
-Yinghai
+ arch/ia64/pci/pci.c                |   11 +
+ arch/x86/pci/common.c              |   11 +
+ drivers/acpi/internal.h            |    5 -
+ drivers/acpi/pci_root.c            |   48 +----
+ drivers/acpi/pci_slot.c            |  177 +++-------------
+ drivers/acpi/scan.c                |    1 -
+ drivers/pci/bus.c                  |   11 +-
+ drivers/pci/hotplug/Kconfig        |    7 +-
+ drivers/pci/hotplug/acpiphp.h      |   12 +-
+ drivers/pci/hotplug/acpiphp_core.c |   23 +-
+ drivers/pci/hotplug/acpiphp_glue.c |  409 ++++++++++++------------------------
+ drivers/pci/pci-acpi.c             |   30 +++
+ drivers/pci/probe.c                |   15 +-
+ drivers/pci/remove.c               |    4 +-
+ include/linux/acpi.h               |    9 -
+ include/linux/pci-acpi.h           |   26 +++
+ include/linux/pci.h                |    2 +
+ 17 files changed, 268 insertions(+), 533 deletions(-)
+
+-- 
+1.7.9.5
+
