@@ -1,94 +1,358 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:55374 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754442Ab3BGIqM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Feb 2013 03:46:12 -0500
-Date: Thu, 7 Feb 2013 09:45:56 +0100
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	"Eran Ben-Avi" <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	"Russell King - ARM Linux" <linux@arm.linux.org.uk>
-Subject: Re: [PATCH v2 22/27] arm: mvebu: add PCIe Device Tree informations
- for Armada XP
-Message-ID: <20130207094556.423de279@skate>
-In-Reply-To: <201302070804.12256.arnd@arndb.de>
-References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
-	<201302062241.14444.arnd@arndb.de>
-	<20130207000715.0b3d662d@skate>
-	<201302070804.12256.arnd@arndb.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>
+Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Subject: [PATCH v8 12/13] PCI/acpiphp: protect acpiphp data structures from concurrent updating
+Date: Tue, 26 Feb 2013 23:25:52 +0800
+Message-Id: <1361892353-14786-13-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1361892353-14786-1-git-send-email-jiang.liu@huawei.com>
+References: <1361892353-14786-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Arnd Bergmann,
+Now acpiphp_enumerate_slots() and acpiphp_remove_slots() may be invoked
+concurrently by the PCI core, so add a bridge_mutex and reference count
+mechanism to protect acpiphp bridge/slot/function data structures.
 
-On Thu, 7 Feb 2013 08:04:12 +0000, Arnd Bergmann wrote:
-> 	address-map {
-> 		/* this device translates 64 bit MMIO bus addresses into 32 bit CPU addresses */
-> 		compatible = "marvell,armada-addr-decoding-controller";
-> 		reg = <0xd0020000 0x258>;
-> 		#addres-cells = <2>;
-> 		#address-cells = <1>;
-> 
-> 		/* each remapped window has one entry here */
-> 		ranges = <0xa 0 0xc0000000 0x10000>,     /* map window a to 0xc0000000 */
-> 		         <0xb 0 0xc1000000 0x08000000>,  /* map window b to 0xc1000000 */
-> 			 <...>; /* more windows */
-> 
-> 		pciex {
-> 			#addres-cells = <3>;
-> 			#size-cells = <2>;
-> 			ranges = <0x81000000 0 0 0xa 0 0 0x00010000,  /* I/O is window a */
-> 				  0x82000000 0 0 0xb 0 0 0x08000000>; /* non-prefetchable memory */
-> 			...
-> 		};
-> 
-> 
-> 		something-else {
-> 			...
-> 			reg = <0xc 0 0x10000>; /* window c */
-> 		};
-> 	};
-> };
+To avoid deadlock, handle_hotplug_event_bridge() will requeue the
+hotplug event onto the kacpi_hotplug_wq by calling alloc_acpi_hp_work().
+But the workaround has introduced a minor race window because the
+'bridge' passed to _handle_hotplug_event_bridge() may have already been
+destroyed when _handle_hotplug_event_bridge() is actually executed by
+the kacpi_hotplug_wq. So hold a reference count on the passed 'bridge'.
+Fix the same issue for handle_hotplug_event_func() too.
 
-Unfortunately, this means the windows are statically defined in the DT,
-which is simply not possible for PCIe, as we have already explained
-several times in this thread.
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Cc: Toshi Kani <toshi.kani@hp.com>
+Cc: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+---
+ drivers/pci/hotplug/acpiphp.h      |    1 +
+ drivers/pci/hotplug/acpiphp_glue.c |   95 +++++++++++++++++++++++++++++-------
+ 2 files changed, 78 insertions(+), 18 deletions(-)
 
-Any solution where the PCIe windows are statically described is
-simply /not/ acceptable.
-
-We have 10 PCIe interfaces, each requiring up to two windows, and we
-have on the system a *total* of 20 windows. Doing static assignments of
-windows is simply not an option.
-
-Of course, you'll tell me that it's up to each board .dts to have a
-number of windows that matches the number of actually existing PCIe
-interface. But it means that each and every developer adding the
-support for a new board must understand this complex problem, which is
-something we do not want. We have a solution that makes all of this
-PCIe window assignment dynamic, so it surprises me that we have to
-continue to explain why a static solution is not appropriate.
-
-Best regards,
-
-Thomas
+diff --git a/drivers/pci/hotplug/acpiphp.h b/drivers/pci/hotplug/acpiphp.h
+index 0b30045..7577bb3 100644
+--- a/drivers/pci/hotplug/acpiphp.h
++++ b/drivers/pci/hotplug/acpiphp.h
+@@ -74,6 +74,7 @@ static inline const char *slot_name(struct slot *slot)
+ struct acpiphp_bridge {
+ 	struct list_head list;
+ 	struct list_head slots;
++	struct kref ref;
+ 	acpi_handle handle;
+ 
+ 	/* Ejectable PCI-to-PCI bridge (PCI bridge and PCI function) */
+diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+index 3566f9a..f3647ae 100644
+--- a/drivers/pci/hotplug/acpiphp_glue.c
++++ b/drivers/pci/hotplug/acpiphp_glue.c
+@@ -54,6 +54,7 @@
+ #include "acpiphp.h"
+ 
+ static LIST_HEAD(bridge_list);
++static DEFINE_MUTEX(bridge_mutex);
+ 
+ #define MY_NAME "acpiphp_glue"
+ 
+@@ -61,6 +62,7 @@ static void handle_hotplug_event_bridge (acpi_handle, u32, void *);
+ static void acpiphp_sanitize_bus(struct pci_bus *bus);
+ static void acpiphp_set_hpp_values(struct pci_bus *bus);
+ static void handle_hotplug_event_func(acpi_handle handle, u32 type, void *context);
++static void free_bridge(struct kref *kref);
+ 
+ /* callback routine to check for the existence of a pci dock device */
+ static acpi_status
+@@ -76,6 +78,39 @@ is_pci_dock_device(acpi_handle handle, u32 lvl, void *context, void **rv)
+ 	}
+ }
+ 
++static inline void get_bridge(struct acpiphp_bridge *bridge)
++{
++	kref_get(&bridge->ref);
++}
++
++static inline void put_bridge(struct acpiphp_bridge *bridge)
++{
++	kref_put(&bridge->ref, free_bridge);
++}
++
++static void free_bridge(struct kref *kref)
++{
++	struct acpiphp_bridge *bridge;
++	struct acpiphp_slot *slot, *next;
++	struct acpiphp_func *func, *tmp;
++
++	bridge = container_of(kref, struct acpiphp_bridge, ref);
++
++	list_for_each_entry_safe(slot, next, &bridge->slots, node) {
++		list_for_each_entry_safe(func, tmp, &slot->funcs, sibling) {
++			kfree(func);
++		}
++		kfree(slot);
++	}
++
++	/* Release reference acquired by acpiphp_bridge_handle_to_function() */
++	if ((bridge->flags & BRIDGE_HAS_EJ0) && bridge->func)
++		put_bridge(bridge->func->slot->bridge);
++	put_device(&bridge->pci_bus->dev);
++	pci_dev_put(bridge->pci_dev);
++	kfree(bridge);
++}
++
+ /*
+  * the _DCK method can do funny things... and sometimes not
+  * hah-hah funny.
+@@ -171,7 +206,7 @@ register_slot(acpi_handle handle, u32 lvl, void *context, void **rv)
+ 	device = (adr >> 16) & 0xffff;
+ 	function = adr & 0xffff;
+ 
+-	pdev = pbus->self;
++	pdev = bridge->pci_dev;
+ 	if (pdev && device_is_managed_by_native_pciehp(pdev))
+ 		return AE_OK;
+ 
+@@ -179,7 +214,6 @@ register_slot(acpi_handle handle, u32 lvl, void *context, void **rv)
+ 	if (!newfunc)
+ 		return AE_NO_MEMORY;
+ 
+-	INIT_LIST_HEAD(&newfunc->sibling);
+ 	newfunc->handle = handle;
+ 	newfunc->function = function;
+ 
+@@ -229,7 +263,9 @@ register_slot(acpi_handle handle, u32 lvl, void *context, void **rv)
+ 		INIT_LIST_HEAD(&slot->funcs);
+ 		mutex_init(&slot->crit_sect);
+ 
++		mutex_lock(&bridge_mutex);
+ 		list_add_tail(&slot->node, &bridge->slots);
++		mutex_unlock(&bridge_mutex);
+ 		bridge->nr_slots++;
+ 
+ 		dbg("found ACPI PCI Hotplug slot %llu at PCI %04x:%02x:%02x\n",
+@@ -247,7 +283,9 @@ register_slot(acpi_handle handle, u32 lvl, void *context, void **rv)
+ 	}
+ 
+ 	newfunc->slot = slot;
++	mutex_lock(&bridge_mutex);
+ 	list_add_tail(&newfunc->sibling, &slot->funcs);
++	mutex_unlock(&bridge_mutex);
+ 
+ 	if (pci_bus_read_dev_vendor_id(pbus, PCI_DEVFN(device, function),
+ 				       &val, 60*1000))
+@@ -288,7 +326,9 @@ register_slot(acpi_handle handle, u32 lvl, void *context, void **rv)
+ 
+  err_exit:
+ 	bridge->nr_slots--;
++	mutex_lock(&bridge_mutex);
+ 	list_del(&slot->node);
++	mutex_unlock(&bridge_mutex);
+ 	kfree(slot);
+ 	kfree(newfunc);
+ 
+@@ -313,13 +353,17 @@ static void init_bridge_misc(struct acpiphp_bridge *bridge)
+ 	acpi_status status;
+ 
+ 	/* must be added to the list prior to calling register_slot */
++	mutex_lock(&bridge_mutex);
+ 	list_add(&bridge->list, &bridge_list);
++	mutex_unlock(&bridge_mutex);
+ 
+ 	/* register all slot objects under this bridge */
+ 	status = acpi_walk_namespace(ACPI_TYPE_DEVICE, bridge->handle, (u32)1,
+ 				     register_slot, NULL, bridge, NULL);
+ 	if (ACPI_FAILURE(status)) {
++		mutex_lock(&bridge_mutex);
+ 		list_del(&bridge->list);
++		mutex_unlock(&bridge_mutex);
+ 		return;
+ 	}
+ 
+@@ -349,16 +393,21 @@ static struct acpiphp_func *acpiphp_bridge_handle_to_function(acpi_handle handle
+ {
+ 	struct acpiphp_bridge *bridge;
+ 	struct acpiphp_slot *slot;
+-	struct acpiphp_func *func;
++	struct acpiphp_func *func = NULL;
+ 
++	mutex_lock(&bridge_mutex);
+ 	list_for_each_entry(bridge, &bridge_list, list) {
+ 		list_for_each_entry(slot, &bridge->slots, node) {
+ 			list_for_each_entry(func, &slot->funcs, sibling) {
+-				if (func->handle == handle)
++				if (func->handle == handle) {
++					get_bridge(func->slot->bridge);
++					mutex_unlock(&bridge_mutex);
+ 					return func;
++				}
+ 			}
+ 		}
+ 	}
++	mutex_unlock(&bridge_mutex);
+ 
+ 	return NULL;
+ }
+@@ -368,17 +417,22 @@ static struct acpiphp_bridge *acpiphp_handle_to_bridge(acpi_handle handle)
+ {
+ 	struct acpiphp_bridge *bridge;
+ 
++	mutex_lock(&bridge_mutex);
+ 	list_for_each_entry(bridge, &bridge_list, list)
+-		if (bridge->handle == handle)
++		if (bridge->handle == handle) {
++			get_bridge(bridge);
++			mutex_unlock(&bridge_mutex);
+ 			return bridge;
++		}
++	mutex_unlock(&bridge_mutex);
+ 
+ 	return NULL;
+ }
+ 
+ static void cleanup_bridge(struct acpiphp_bridge *bridge)
+ {
+-	struct acpiphp_slot *slot, *next;
+-	struct acpiphp_func *func, *tmp;
++	struct acpiphp_slot *slot;
++	struct acpiphp_func *func;
+ 	acpi_status status;
+ 	acpi_handle handle = bridge->handle;
+ 
+@@ -399,8 +453,8 @@ static void cleanup_bridge(struct acpiphp_bridge *bridge)
+ 			err("failed to install interrupt notify handler\n");
+ 	}
+ 
+-	list_for_each_entry_safe(slot, next, &bridge->slots, node) {
+-		list_for_each_entry_safe(func, tmp, &slot->funcs, sibling) {
++	list_for_each_entry(slot, &bridge->slots, node) {
++		list_for_each_entry(func, &slot->funcs, sibling) {
+ 			if (is_dock_device(func->handle)) {
+ 				unregister_hotplug_dock_device(func->handle);
+ 				unregister_dock_notifier(&func->nb);
+@@ -412,18 +466,13 @@ static void cleanup_bridge(struct acpiphp_bridge *bridge)
+ 				if (ACPI_FAILURE(status))
+ 					err("failed to remove notify handler\n");
+ 			}
+-			list_del(&func->sibling);
+-			kfree(func);
+ 		}
+ 		acpiphp_unregister_hotplug_slot(slot);
+-		list_del(&slot->funcs);
+-		kfree(slot);
+ 	}
+ 
+-	put_device(&bridge->pci_bus->dev);
+-	pci_dev_put(bridge->pci_dev);
++	mutex_lock(&bridge_mutex);
+ 	list_del(&bridge->list);
+-	kfree(bridge);
++	mutex_unlock(&bridge_mutex);
+ }
+ 
+ static int power_on_slot(struct acpiphp_slot *slot)
+@@ -624,7 +673,6 @@ static int __ref enable_device(struct acpiphp_slot *slot)
+ 	struct pci_dev *dev;
+ 	struct pci_bus *bus = slot->bridge->pci_bus;
+ 	struct acpiphp_func *func;
+-	int retval = 0;
+ 	int num, max, pass;
+ 
+ 	if (slot->flags & SLOT_ENABLED)
+@@ -684,7 +732,7 @@ static int __ref enable_device(struct acpiphp_slot *slot)
+ 
+ 
+  err_exit:
+-	return retval;
++	return 0;
+ }
+ 
+ /* return first device in slot, acquiring a reference on it */
+@@ -901,6 +949,7 @@ check_sub_bridges(acpi_handle handle, u32 lvl, void *context, void **rv)
+ 		dbg("%s: re-enumerating slots under %s\n",
+ 			__func__, objname);
+ 		acpiphp_check_bridge(bridge);
++		put_bridge(bridge);
+ 	}
+ 	return AE_OK ;
+ }
+@@ -975,6 +1024,7 @@ static void _handle_hotplug_event_bridge(struct work_struct *work)
+ 	}
+ 
+ 	kfree(hp_work); /* allocated in handle_hotplug_event_bridge */
++	put_bridge(bridge);
+ }
+ 
+ /**
+@@ -988,6 +1038,8 @@ static void _handle_hotplug_event_bridge(struct work_struct *work)
+ static void handle_hotplug_event_bridge(acpi_handle handle, u32 type,
+ 					void *context)
+ {
++	struct acpiphp_bridge *bridge = context;
++
+ 	/*
+ 	 * Currently the code adds all hotplug events to the kacpid_wq
+ 	 * queue when it should add hotplug events to the kacpi_hotplug_wq.
+@@ -996,6 +1048,7 @@ static void handle_hotplug_event_bridge(acpi_handle handle, u32 type,
+ 	 * For now just re-add this work to the kacpi_hotplug_wq so we
+ 	 * don't deadlock on hotplug actions.
+ 	 */
++	get_bridge(bridge);
+ 	alloc_acpi_hp_work(handle, type, context, _handle_hotplug_event_bridge);
+ }
+ 
+@@ -1047,6 +1100,7 @@ static void _handle_hotplug_event_func(struct work_struct *work)
+ 	}
+ 
+ 	kfree(hp_work); /* allocated in handle_hotplug_event_func */
++	put_bridge(func->slot->bridge);
+ }
+ 
+ /**
+@@ -1060,6 +1114,8 @@ static void _handle_hotplug_event_func(struct work_struct *work)
+ static void handle_hotplug_event_func(acpi_handle handle, u32 type,
+ 				      void *context)
+ {
++	struct acpiphp_func *func = context;
++
+ 	/*
+ 	 * Currently the code adds all hotplug events to the kacpid_wq
+ 	 * queue when it should add hotplug events to the kacpi_hotplug_wq.
+@@ -1068,6 +1124,7 @@ static void handle_hotplug_event_func(acpi_handle handle, u32 type,
+ 	 * For now just re-add this work to the kacpi_hotplug_wq so we
+ 	 * don't deadlock on hotplug actions.
+ 	 */
++	get_bridge(func->slot->bridge);
+ 	alloc_acpi_hp_work(handle, type, context, _handle_hotplug_event_func);
+ }
+ 
+@@ -1090,6 +1147,7 @@ void acpiphp_enumerate_slots(struct pci_bus *bus, acpi_handle handle)
+ 	}
+ 
+ 	INIT_LIST_HEAD(&bridge->slots);
++	kref_init(&bridge->ref);
+ 	bridge->handle = handle;
+ 	bridge->pci_dev = pci_dev_get(bus->self);
+ 	bridge->pci_bus = bus;
+@@ -1120,6 +1178,7 @@ void acpiphp_remove_slots(struct pci_bus *bus)
+ 	list_for_each_entry_safe(bridge, tmp, &bridge_list, list)
+ 		if (bridge->pci_bus == bus) {
+ 			cleanup_bridge(bridge);
++			put_bridge(bridge);
+ 			break;
+ 		}
+ }
 -- 
-Thomas Petazzoni, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
+1.7.9.5
+
