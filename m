@@ -1,93 +1,144 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f179.google.com ([209.85.223.179]:51279 "EHLO
-	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755892Ab3BBABH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 Feb 2013 19:01:07 -0500
+Received: from mail-vc0-f202.google.com ([209.85.220.202]:44829 "EHLO
+	mail-vc0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752437Ab3B0UOv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Feb 2013 15:14:51 -0500
+Received: by mail-vc0-f202.google.com with SMTP id m8so106142vcd.5
+        for <linux-pci@vger.kernel.org>; Wed, 27 Feb 2013 12:14:49 -0800 (PST)
+Date: Wed, 27 Feb 2013 13:14:49 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Joe Lawrence <Joe.Lawrence@stratus.com>,
+	linux-pci@vger.kernel.org, Matthew Garrett <mjg59@srcf.ucam.org>,
+	Myron Stowe <mstowe@redhat.com>,
+	David Bulkow <david.bulkow@stratus.com>
+Subject: Re: [PATCH 1/2] PCI: ASPM exit link state code could skip devices
+Message-ID: <20130227201449.GA6409@google.com>
+References: <alpine.DEB.2.02.1301181302260.31163@jlaw-desktop.mno.stratus.com>
+ <alpine.DEB.2.02.1301181322500.31163@jlaw-desktop.mno.stratus.com>
+ <51122BED.8090308@cn.fujitsu.com>
+ <CAErSpo6aGiuBbgcVfcduPk++7B_zzuk2Y+fjLiJBvdOqnU+Qmw@mail.gmail.com>
+ <5122F276.80807@cn.fujitsu.com>
+ <CAErSpo7BeCiKHecJgX9GBR7DYf4M9mrXK+qMLMDXFykxq5C7sQ@mail.gmail.com>
+ <CAE9FiQV814mCKqcOKAE_y3JSUq2HotVjde6VYW4M8Zb2-S=NRA@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <510B81D1.5070302@huawei.com>
-References: <1359562210-26536-1-git-send-email-jiang.liu@huawei.com>
-	<1359562210-26536-2-git-send-email-jiang.liu@huawei.com>
-	<CAE9FiQU2LvEjTpbjs+LUb=vU7XDC_76OEo5irR_Bn_DjvfgQ0w@mail.gmail.com>
-	<510A8F9C.5090306@gmail.com>
-	<CAE9FiQXBOj7wCJkXPoBDPiVNH7K0iQPExfrWhAuzwVcyrN+ZZQ@mail.gmail.com>
-	<510B81D1.5070302@huawei.com>
-Date: Fri, 1 Feb 2013 16:01:06 -0800
-Message-ID: <CAE9FiQVH=0H+YPDKSO3t5Mdi-KndZtFXBit826HCNXQ_X3USyA@mail.gmail.com>
-Subject: Re: [PATCH 2/2] acpiphp: remove dead code for PCI host bridge hotplug
-From: Yinghai Lu <yinghai@kernel.org>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Jiang Liu <liuj97@gmail.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Jiang Liu <jiang.liu@huawei.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAE9FiQV814mCKqcOKAE_y3JSUq2HotVjde6VYW4M8Zb2-S=NRA@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Feb 1, 2013 at 12:50 AM, Yijing Wang <wangyijing@huawei.com> wrote:
-> On 2013/1/31 23:59, Yinghai Lu wrote:
->> On Thu, Jan 31, 2013 at 7:37 AM, Jiang Liu <liuj97@gmail.com> wrote:
->>>
->>> So I think the code in handle_hotplug_event_bridge() to handle P2P hot-addition
->>> is dead. Yijing has helped to test the code by faking ACPI CUSTOM_METHOD, and it
->>> does work as expected.
->>
->> ok, then.
->>
->> It would be better if you can append some print out from Yijing's test
->> in the changelog.
->>
->
-> Hi Yinghai,
->    I used custom_method module to make root port device 0000:00:07.0 support acpi hotplug (by adding _EJ0 method),
-> This root port device also connected to a slot which support hotplug. I tested to hot plug root port device 0000:00:07.0,
-> and test steps and info as bellow, if there are somethings missing during test, please let me know.
-> Thanks very much!
->
-> linux-ha2:/sys/bus/pci/slots # lspci -tv
->  \-[0000:00]-+-00.0  Intel Corporation 5520/5500/X58 I/O Hub to ESI Port
->              +-01.0-[0000:01]--+-00.0  Intel Corporation 82576 Gigabit Network Connection
->              |                 \-00.1  Intel Corporation 82576 Gigabit Network Connection
->              +-03.0-[0000:02]----00.0  LSI Logic / Symbios Logic SAS1064ET PCI-Express Fusion-MPT SAS
->              +-04.0-[0000:03]--
->              +-05.0-[0000:04]--
->              +-07.0-[0000:05]--+-00.0  nVidia Corporation GT218 [GeForce G210]
->              |                 \-00.1  nVidia Corporation High Definition Audio Controller
->              +-0d.0  Intel Corporation Device 343a
-> linux-ha2:/sys/bus/pci/slots # ls
-> 0  0-1  1  3  5  7
-> linux-ha2:/sys/bus/pci/slots # cat 1/address
-> 0000:00:07
-> linux-ha2:/sys/bus/pci/slots # cd 1
-> linux-ha2:/sys/bus/pci/slots/1 # ls
-> adapter  address  attention  cur_bus_speed  latch  max_bus_speed  module  power
-> linux-ha2:/sys/bus/pci/slots/1 # cat power
-> 1
-> linux-ha2:/sys/bus/pci/slots/1 # echo "\_SB_.NOD0.PCI0.MRP7 3" > /sys/kernel/debug/acpi/sci_notify
-> linux-ha2:/sys/bus/pci/slots/1 # cat power
-> 0
-> linux-ha2:/sys/bus/pci/slots/1 # lspci -tv
->  \-[0000:00]-+-00.0  Intel Corporation 5520/5500/X58 I/O Hub to ESI Port
->              +-01.0-[0000:01]--+-00.0  Intel Corporation 82576 Gigabit Network Connection
->              |                 \-00.1  Intel Corporation 82576 Gigabit Network Connection
->              +-03.0-[0000:02]----00.0  LSI Logic / Symbios Logic SAS1064ET PCI-Express Fusion-MPT SAS
->              +-04.0-[0000:03]--
->              +-05.0-[0000:04]--
->              +-0d.0  Intel Corporation Device 343a
-> linux-ha2:/sys/bus/pci/slots/1 # echo "\_SB_.NOD0.PCI0.MRP7 1" > /sys/kernel/debug/acpi/sci_notify
-> linux-ha2:/sys/bus/pci/slots/1 # cat power
-> 1
-> linux-ha2:/sys/bus/pci/slots/1 # lspci -tv
->  \-[0000:00]-+-00.0  Intel Corporation 5520/5500/X58 I/O Hub to ESI Port
->              +-01.0-[0000:01]--+-00.0  Intel Corporation 82576 Gigabit Network Connection
->              |                 \-00.1  Intel Corporation 82576 Gigabit Network Connection
->              +-03.0-[0000:02]----00.0  LSI Logic / Symbios Logic SAS1064ET PCI-Express Fusion-MPT SAS
->              +-04.0-[0000:03]--
->              +-05.0-[0000:04]--
->              +-07.0-[0000:05]--+-00.0  nVidia Corporation GT218 [GeForce G210]
->              |                 \-00.1  nVidia Corporation High Definition Audio Controller
->              +-0d.0  Intel Corporation Device 343a
+On Sat, Feb 23, 2013 at 07:13:11PM -0800, Yinghai Lu wrote:
+> On Sat, Feb 23, 2013 at 4:20 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> > I think this is a general object lifetime issue that really has
+> > nothing to do with ASPM except that ASPM happens to be the victim.
+> >
+> > You're doing this:
+> >
+> >     echo -n 1 > /sys/bus/pci/devices/0000\:10\:00.0/remove ; echo -n 1
+> >>  /sys/bus/pci/devices/0000\:1a\:01.0/remove
+> >
+> > The 1a:01.0 device is downstream from the 10:00.0 bridge.  The sysfs
+> > interface remove_store() uses device_schedule_callback() to schedule
+> > the remove for later.  I think what's happening is that we schedule
+> > remove_callback() for both devices before 10:00.0 has been removed,
+> > like this:
+> >
+> >     # echo -n 1 > /sys/bus/pci/devices/0000\:10\:00.0/remove
+> >     remove_store  # for 10:00.0
+> >       device_schedule_callback(10:00.0, remove_callback)
+> >         sysfs_schedule_callback
+> >           kobject_get
+> >           queue_work
+> >     # echo -n 1 >  /sys/bus/pci/devices/0000\:1a\:01.0/remove
+> >     remove_store  # for 1a:01.0
+> >       device_schedule_callback(1a:01.0, remove_callback)
+> >         sysfs_schedule_callback
+> >           kobject_get
+> >           queue_work
+> >
+> > Note that we acquire a reference on each pci_dev before queuing the work item.
+> >
+> > Later, we run the callbacks, starting with 10:00.0.  This calls
+> > remove_callback() to perform the remove:
+> >
+> >     remove_callback(10:00.0)
+> >       mutex_lock(&pci_remove_rescan_mutex)
+> >       pci_stop_and_remove_bus_device(pdev)
+> >       mutex_unlock(&pci_remove_rescan_mutex)
+> >
+> > This will stop and remove the subtree below 10:00.0, but it does not
+> > actually free the pci_dev for 1a:01.0 because we increased its ref
+> > count in sysfs_schedule_callback.  So after completing
+> > remove_callback(10:00.0), we run the second callback for 1a:01.0.
+> >
+> > The remove for 1a:01.0 calls pcie_aspm_exit_link_state() from
+> > pci_stop_dev().  This is where we blow up because, according to your
+> > debugging, pdev->bus->self is no longer valid.
+> >
+> > The PCI core did this removal wrong.  If we have a valid pci_dev
+> > pointer, as we do in pcie_aspm_exit_link_state(), the whole object
+> > ought to be valid.  But the PCI core deallocated the struct pci_bus
+> > for bus 0000:1a too soon.
+> >
+> > My guess is that when we build a pci_dev, we need to increase the ref
+> > count on the pci_bus where that pci_dev lives.  That way we can keep
+> > around all the buses and bridges leading from the root to the device
+> > in question.
+> 
+> Agreed, Please check if attached is what you want.
 
-looks good.
+I included the patch directly below for convenience.
 
-Thanks
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index b494066..6df5428 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1337,6 +1337,7 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+>  	 */
+>  	down_write(&pci_bus_sem);
+>  	list_add_tail(&dev->bus_list, &bus->devices);
+> +	get_device(&bus->dev);
+>  	up_write(&pci_bus_sem);
+
+This suggests that taking the reference must be protected by
+pci_bus_sem, but I don't think that's the case, is it?
+
+>  	pci_fixup_device(pci_fixup_final, dev);
+> diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+> index cc875e6..a72b700 100644
+> --- a/drivers/pci/remove.c
+> +++ b/drivers/pci/remove.c
+> @@ -36,6 +36,7 @@ static void pci_destroy_dev(struct pci_dev *dev)
+>  {
+>  	down_write(&pci_bus_sem);
+>  	list_del(&dev->bus_list);
+> +	put_device(&dev->bus->dev);
+>  	up_write(&pci_bus_sem);
+>  
+>  	pci_free_resources(dev);
+
+The problem is that we capture the struct pci_bus pointer without
+taking a reference on the bus object.  The capture occurs in
+pci_scan_device() (and other callers of alloc_pci_dev()) where we do
+this:
+
+    dev = alloc_pci_dev();
+    dev->bus = bus;
+
+To make code analysis easier, I think we should take the reference at
+the exact point where we capture the pointer, using something like:
+
+    dev->bus = pci_bus_get(bus);
+
+It'd probably be even better to deprecate alloc_pci_dev() and make a
+pci_alloc_dev(struct pci_bus *bus) that takes care of acquiring the
+reference itself.
+
+But I don't think this takes care of the whole issue.  What protects
+the pci_scan_slot() path against concurrent removal of the pci_bus?
+I don't see anything in the hotplug drivers or in the
+pci_scan_child_bus() path that acquires a reference or does locking
+for this.
+
+Bjorn
