@@ -1,101 +1,55 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56009 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751146Ab3BELgu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 5 Feb 2013 06:36:50 -0500
-Date: Tue, 5 Feb 2013 13:36:45 +0200
-From: Gleb Natapov <gleb@redhat.com>
-To: "Pandarathil, Vijaymohan R" <vijaymohan.pandarathil@hp.com>
-Cc: Blue Swirl <blauwirbel@gmail.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Ortiz, Lance E" <lance.oritz@hp.com>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	"qemu-devel@nongnu.org" <qemu-devel@nongnu.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v3 3/3] QEMU-AER: Qemu changes to support AER for
- VFIO-PCI devices
-Message-ID: <20130205113645.GE23213@redhat.com>
-References: <F9E001219150CB45BEDC82A650F360C9014AAF07@G9W0717.americas.hpqcorp.net>
- <CAAu8pHvk_2Mf2F-YTDC-wdyD1Jic-DHUanSQfOa3g0VchTcNig@mail.gmail.com>
- <20130205080436.GV23213@redhat.com>
- <F9E001219150CB45BEDC82A650F360C9014B42EE@G9W0717.americas.hpqcorp.net>
- <20130205092110.GB23213@redhat.com>
- <F9E001219150CB45BEDC82A650F360C9014B43DC@G9W0717.americas.hpqcorp.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <F9E001219150CB45BEDC82A650F360C9014B43DC@G9W0717.americas.hpqcorp.net>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <1362001700.2808.9.camel@lorien2>
+Subject: Re: [PATCH 1/4] pci: Add PCI_BUS() and PCI_DEVID() interfaces to
+ return bus number and device id
+From: Shuah Khan <shuah@fc.hp.com>
+Reply-To: shuah@fc.hp.com
+To: Bjorn Helgaas <bhelgaas@google.com>, joro@8bytes.org
+Cc: dhowells@redhat.com, paulmck@linux.vnet.ibm.com,
+	linasvepstas@gmail.com, davej@redhat.com, tglx@linutronix.de,
+	mtk.manpages@gmail.com, iommu@lists.linux-foundation.org,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	shemminger@vyatta.com, jiang.liu@huawei.com, wangyijing@huawei.com,
+	shuahkhan@gmail.com
+Date: Wed, 27 Feb 2013 14:48:20 -0700
+In-Reply-To: <1361829202.2958.3.camel@lorien2>
+References: <1360623637.2950.63.camel@lorien2>
+	 <CAErSpo6jY1bX9G59uz8Zt_pDJ4OoR=kJkGjNLYYRTrKVXM8+eg@mail.gmail.com>
+	 <1361810245.2975.14.camel@lorien2>
+	 <CAErSpo7u+vos73jTR1ASzv3XRwcMX1XwptP41mUWekz7Tv249w@mail.gmail.com>
+	 <1361829202.2958.3.camel@lorien2>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 05, 2013 at 10:59:41AM +0000, Pandarathil, Vijaymohan R wrote:
-> 
-> 
-> > -----Original Message-----
-> > From: Gleb Natapov [mailto:gleb@redhat.com]
-> > Sent: Tuesday, February 05, 2013 1:21 AM
-> > To: Pandarathil, Vijaymohan R
-> > Cc: Blue Swirl; Alex Williamson; Bjorn Helgaas; Ortiz, Lance E;
-> > kvm@vger.kernel.org; qemu-devel@nongnu.org; linux-pci@vger.kernel.org;
-> > linux-kernel@vger.kernel.org
-> > Subject: Re: [PATCH v3 3/3] QEMU-AER: Qemu changes to support AER for VFIO-
-> > PCI devices
-> > 
-> > On Tue, Feb 05, 2013 at 09:05:19AM +0000, Pandarathil, Vijaymohan R wrote:
-> > >
-> > >
-> > > > -----Original Message-----
-> > > > From: Gleb Natapov [mailto:gleb@redhat.com]
-> > > > Sent: Tuesday, February 05, 2013 12:05 AM
-> > > > To: Blue Swirl
-> > > > Cc: Pandarathil, Vijaymohan R; Alex Williamson; Bjorn Helgaas; Ortiz,
-> > Lance
-> > > > E; kvm@vger.kernel.org; qemu-devel@nongnu.org; linux-
-> > pci@vger.kernel.org;
-> > > > linux-kernel@vger.kernel.org
-> > > > Subject: Re: [PATCH v3 3/3] QEMU-AER: Qemu changes to support AER for
-> > VFIO-
-> > > > PCI devices
-> > > >
-> > > > On Sun, Feb 03, 2013 at 04:36:11PM +0000, Blue Swirl wrote:
-> > > > > On Sun, Feb 3, 2013 at 2:10 PM, Pandarathil, Vijaymohan R
-> > > > > <vijaymohan.pandarathil@hp.com> wrote:
-> > > > > >         - Create eventfd per vfio device assigned to a guest and
-> > > > register an
-> > > > > >           event handler
-> > > > > >
-> > > > > >         - This fd is passed to the vfio_pci driver through the
-> > SET_IRQ
-> > > > ioctl
-> > > > > >
-> > > > > >         - When the device encounters an error, the eventfd is
-> > signalled
-> > > > > >           and the qemu eventfd handler gets invoked.
-> > > > > >
-> > > > > >         - In the handler decide what action to take. Current action
-> > > > taken
-> > > > > >           is to terminate the guest.
-> > > > >
-> > > > > Usually this is not OK, but I guess this is not guest triggerable.
-> > > > >
-> > > > Still not OK. Why not stop a guest with appropriate stop reason?
-> > >
-> > > The thinking was that since this is a hardware error, we would want to
-> > stop the guest at the earliest. The hw_error() routine which aborts the
-> > qemu process was suggested by Alex and that seemed appropriate. Earlier I
-> > was using qemu_system_shutdown_request().  Any suggestions ?
-> > >
-> > I am thinking vm_stop(). Stopping SMP guest (and UP too in fact)
-> > involves sending IPIs to other cpus running guest's vcpus. Both exit()
-> > and vm_stop() will do it, but former is implicitly in the kernel and
-> > later is explicitly in QEMU.
-> 
-> I had used vm_stop(RUN_STATE_SHUTDOWN) earlier in my code. But while testing, guest ended up in a hang rather than exiting. There seems to some cleanup work which is being done as part of vm_stop. In our case, we wanted the guest to exit immediately. So use of hw_error() seemed appropriate.
-> 
-What makes you think it hang? It stopped, precisely what it should do if
-you call vm_stop(). Now it is possible for vm user to investigate what
-happened and even salvage some data from guest memory.
+On Mon, 2013-02-25 at 14:53 -0700, Shuah Khan wrote:
+> On Mon, 2013-02-25 at 14:23 -0700, Bjorn Helgaas wrote:
+> > On Mon, Feb 25, 2013 at 9:37 AM, Shuah Khan <shuah.khan@hp.com> wrote:
+> > > On Wed, 2013-02-20 at 18:19 -0700, Bjorn Helgaas wrote:
+> > >> On Mon, Feb 11, 2013 at 4:00 PM, Shuah Khan <shuah.khan@hp.com> wrote:
 
---
-			Gleb.
+> > 
+> > It's not nice and consistent, but it does follow the simple rule of
+> > "don't expose things to user-space unnecessarily."  We might want to
+> > add a comment to keep somebody from cleaning it up later.
+> 
+> ok. Will resend patches adding the new defines to linux/pci.h and
+> renaming PCI_BUS() to PCI_BUS_NR() or PCI_BUS_NUM() like you suggested.
+> 
+> Thanks,
+> -- Shuah
+> 
+
+Bjorn/Joerg,
+
+I added PCI_BUS_NUM() amd PCI_DEVID() to linux/pci.h. Please note that
+changing PCI_BUS() to PCI_BUS_NUM() required additional changes to AMD
+IOMMU source files and aer driver. Essentially in addition to removing
+local PCI_BUS() define, PCI_BUS() usages are changed to PCI_BUS_NUM(). I
+am resending the patches.
+
+Thanks,
+-- Shuah
+
+
