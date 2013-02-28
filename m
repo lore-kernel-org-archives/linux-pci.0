@@ -1,75 +1,89 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Sun, 3 Feb 2013 16:21:33 +0200
-From: Gleb Natapov <gleb@redhat.com>
-To: "Pandarathil, Vijaymohan R" <vijaymohan.pandarathil@hp.com>
-Cc: Alex Williamson <alex.williamson@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Blue Swirl <blauwirbel@gmail.com>,
-	"Ortiz, Lance E" <lance.oritz@hp.com>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	"qemu-devel@nongnu.org" <qemu-devel@nongnu.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v3 0/3] AER-KVM: Error containment of VFIO devices
- assigned to KVM guests
-Message-ID: <20130203142133.GH23213@redhat.com>
-References: <F9E001219150CB45BEDC82A650F360C9014AAEF8@G9W0717.americas.hpqcorp.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <F9E001219150CB45BEDC82A650F360C9014AAEF8@G9W0717.americas.hpqcorp.net>
+Message-ID: <1362010050.2808.37.camel@lorien2>
+Subject: [PATCH v2 4/4] iommu/amd: Remove calc_devid() and use PCI_DEVID()
+ from pci
+From: Shuah Khan <shuah.khan@hp.com>
+Reply-To: shuah.khan@hp.com
+To: Joerg Roedel <joro@8bytes.org>, bhelgaas@google.com
+Cc: jiang.liu@huawei.com, shemminger@vyatta.com,
+	paulmck@linux.vnet.ibm.com, linasvepstas@gmail.com,
+	dhowells@redhat.com, davej@redhat.com, tglx@linutronix.de,
+	mtk.manpages@gmail.com, iommu@lists.linux-foundation.org,
+	linux-pci@vger.kernel.org, wangyijing@huawei.com,
+	LKML <linux-kernel@vger.kernel.org>, shuahkhan@gmail.com
+Date: Wed, 27 Feb 2013 17:07:30 -0700
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Please use "git send-email --thread --no-chain-reply-to" when sending
-patch series.
+Change to remove calc_devid() and use PCI_DEVID() from pci instead.
 
-On Sun, Feb 03, 2013 at 02:10:08PM +0000, Pandarathil, Vijaymohan R wrote:
-> 
-> Add support for error containment when a VFIO device assigned to a KVM
-> guest encounters an error. This is for PCIe devices/drivers that support AER
-> functionality. When the host OS is notified of an error in a device either
-> through the firmware first approach or through an interrupt handled by the AER
-> root port driver, the error handler registered by the vfio-pci driver gets
-> invoked. The qemu process is signaled through an eventfd registered per
-> VFIO device by the qemu process. In the eventfd handler, qemu decides on
-> what action to take. In this implementation, guest is brought down to
-> contain the error.
-> 
-> 
-> v3:
->  - Removed PCI_AER* flags from device info ioctl.
->  - Incorporated feedback
-> v2:
->  - Rebased to latest upstream stable bits
->  - Changed the new ioctl to be part of VFIO_SET_IRQs ioctl
->  - Added a new patch to get/put reference to a vfio device from struct device
->  - Incorporated all other feedback.
-> 
-> ---
-> 
-> Vijay Mohan Pandarathil(3):
-> 
-> [PATCH 1/3] VFIO: Wrapper for getting reference to vfio_device from device 
-> [PATCH 2/3] VFIO-AER: Vfio-pci driver changes for supporting AER
-> [PATCH 3/3] QEMU-AER: Qemu changes to support AER for VFIO-PCI devices
-> 
-> Kernel files changed
-> 
->  drivers/vfio/vfio.c  | 41 ++++++++++++++++++++++++++++++++---------
->  include/linux/vfio.h |  3 +++
->  2 files changed, 35 insertions(+), 9 deletions(-)
-> 
->  drivers/vfio/pci/vfio_pci.c         | 43 ++++++++++++++++++++++++++++++++++++-
->  drivers/vfio/pci/vfio_pci_intrs.c   | 30 ++++++++++++++++++++++++++
->  drivers/vfio/pci/vfio_pci_private.h |  1 +
->  include/uapi/linux/vfio.h           |  1 +
->  4 files changed, 74 insertions(+), 1 deletion(-)
-> 
-> Qemu files changed
-> 
->  hw/vfio_pci.c              | 105 +++++++++++++++++++++++++++++++++++++++++++++
->  linux-headers/linux/vfio.h |   1 +
->  2 files changed, 106 insertions(+)
+Signed-off-by: Shuah Khan <shuah.khan@hp.com>
+---
+ drivers/iommu/amd_iommu.c       |    2 +-
+ drivers/iommu/amd_iommu_init.c  |    6 +++---
+ drivers/iommu/amd_iommu_types.h |    7 -------
+ 3 files changed, 4 insertions(+), 11 deletions(-)
 
---
-			Gleb.
+diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
+index c1c74e0..38c1392 100644
+--- a/drivers/iommu/amd_iommu.c
++++ b/drivers/iommu/amd_iommu.c
+@@ -173,7 +173,7 @@ static inline u16 get_device_id(struct device *dev)
+ {
+ 	struct pci_dev *pdev = to_pci_dev(dev);
+ 
+-	return calc_devid(pdev->bus->number, pdev->devfn);
++	return PCI_DEVID(pdev->bus->number, pdev->devfn);
+ }
+ 
+ static struct iommu_dev_data *get_dev_data(struct device *dev)
+diff --git a/drivers/iommu/amd_iommu_init.c b/drivers/iommu/amd_iommu_init.c
+index faf10ba..582b5df 100644
+--- a/drivers/iommu/amd_iommu_init.c
++++ b/drivers/iommu/amd_iommu_init.c
+@@ -406,7 +406,7 @@ static int __init find_last_devid_on_pci(int bus, int dev, int fn, int cap_ptr)
+ 	u32 cap;
+ 
+ 	cap = read_pci_config(bus, dev, fn, cap_ptr+MMIO_RANGE_OFFSET);
+-	update_last_devid(calc_devid(MMIO_GET_BUS(cap), MMIO_GET_LD(cap)));
++	update_last_devid(PCI_DEVID(MMIO_GET_BUS(cap), MMIO_GET_LD(cap)));
+ 
+ 	return 0;
+ }
+@@ -1128,9 +1128,9 @@ static int iommu_init_pci(struct amd_iommu *iommu)
+ 	pci_read_config_dword(iommu->dev, cap_ptr + MMIO_MISC_OFFSET,
+ 			      &misc);
+ 
+-	iommu->first_device = calc_devid(MMIO_GET_BUS(range),
++	iommu->first_device = PCI_DEVID(MMIO_GET_BUS(range),
+ 					 MMIO_GET_FD(range));
+-	iommu->last_device = calc_devid(MMIO_GET_BUS(range),
++	iommu->last_device = PCI_DEVID(MMIO_GET_BUS(range),
+ 					MMIO_GET_LD(range));
+ 
+ 	if (!(iommu->cap & (1 << IOMMU_CAP_IOTLB)))
+diff --git a/drivers/iommu/amd_iommu_types.h b/drivers/iommu/amd_iommu_types.h
+index a07882f..ec36cf6 100644
+--- a/drivers/iommu/amd_iommu_types.h
++++ b/drivers/iommu/amd_iommu_types.h
+@@ -701,13 +701,6 @@ extern int amd_iommu_max_glx_val;
+  */
+ extern void iommu_flush_all_caches(struct amd_iommu *iommu);
+ 
+-/* takes bus and device/function and returns the device id
+- * FIXME: should that be in generic PCI code? */
+-static inline u16 calc_devid(u8 bus, u8 devfn)
+-{
+-	return (((u16)bus) << 8) | devfn;
+-}
+-
+ static inline int get_ioapic_devid(int id)
+ {
+ 	struct devid_map *entry;
+-- 
+1.7.9.5
+
+
+
