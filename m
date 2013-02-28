@@ -1,113 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:35544 "EHLO quartz.orcorp.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757498Ab3BFRuT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 6 Feb 2013 12:50:19 -0500
-Date: Wed, 6 Feb 2013 10:50:19 -0700
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	linux-pci@vger.kernel.org,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH v2 19/27] pci: PCIe driver for Marvell Armada 370/XP
- systems
-Message-ID: <20130206175019.GA24248@obsidianresearch.com>
-References: <20130130120344.GA29490@avionic-0098.mockup.avionic-design.de>
- <2776630.gp5gC9tvLk@wuerfel>
- <20130131180249.GA30869@obsidianresearch.com>
- <201301312046.22560.arnd@arndb.de>
- <20130131224459.GA11846@obsidianresearch.com>
- <20130206175128.1b64196d@skate>
- <20130206170903.GA28198@obsidianresearch.com>
- <20130206181852.4eca53e3@skate>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130206181852.4eca53e3@skate>
+Received: from g6t0185.atlanta.hp.com ([15.193.32.62]:7517 "EHLO
+	g6t0185.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752650Ab3B1AGY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Feb 2013 19:06:24 -0500
+Message-ID: <1362009978.2808.33.camel@lorien2>
+Subject: [PATCH v2 0/4] pci: Add PCI_BUS() and PCI_DEVID() interfaces to
+ return bus number and device id
+From: Shuah Khan <shuah.khan@hp.com>
+Reply-To: shuah.khan@hp.com
+To: Joerg Roedel <joro@8bytes.org>, bhelgaas@google.com
+Cc: jiang.liu@huawei.com, shemminger@vyatta.com,
+	paulmck@linux.vnet.ibm.com, linasvepstas@gmail.com,
+	dhowells@redhat.com, davej@redhat.com, tglx@linutronix.de,
+	mtk.manpages@gmail.com, iommu@lists.linux-foundation.org,
+	linux-pci@vger.kernel.org, wangyijing@huawei.com,
+	LKML <linux-kernel@vger.kernel.org>, shuahkhan@gmail.com
+Date: Wed, 27 Feb 2013 17:06:18 -0700
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 06, 2013 at 06:18:52PM +0100, Thomas Petazzoni wrote:
-> Dear Jason Gunthorpe,
-> 
-> On Wed, 6 Feb 2013 10:09:03 -0700, Jason Gunthorpe wrote:
-> 
-> > Link 0 translates like:
-> > 
-> > - Linux driver does inl(0x4)
-> > - ARM layer converts that into a read from PCI_IO_VIRT_BASE + 0x4
-> > - The CPU TLB converts that into a read from CPU physical
-> >   0xc0000000 + 0x4
-> > - The MBUS window remap register converts that into a read from IO
-> >   space 0x4
-> > - The address 0x4 is placed in the PCI-E IO transaction of link 0
-> > 
-> > Link 1 translates like:
-> > 
-> > - Linux driver does inl(0x1004)
-> > - ARM layer converts that into a read from PCI_IO_VIRT_BASE + 0x1004
-> > - The CPU TLB converts that into a read from CPU physical
-> >   0xc0000000 + 0x11004 (ie the mbus window for the link 1)
-> > - The MBUS window remap register converts that into a read from IO
-> >   space 0x1004
-> > - The address 0x1004 is placed in the PCI-E IO transaction of link 1
-> 
-> This last step is exactly what I thought would not work. If the PCIe
-> device has say 64 bytes of I/O space, then this 0x1004 PCI-E
-> transaction will be out of bounds, no?
+pci defines PCI_DEVFN(), PCI_SLOT(), and PCI_FUNC() interfaces, however,
+it doesn't have interfaces to return PCI bus and PCI device id. Drivers
+(AMD IOMMU, and AER) have module specific definitions for PCI_BUS() and
+AMD_IOMMU driver also has a module specific interface to calculate PCI
+device id from bus number and devfn.
 
-No.. PCI end devices are required to decode all 32 bits of address,
-less the bits requires for their allocation. So a device with 64 bytes
-of IO will match bits 31:6 and then use bits 5:0 for the internal
-register.
+This patch set adds PCI_BUS_NUM(), and PCI_DEVID() to pci.h, changes AER
+to use PCI_BUS_NUM() from pci and remove local PCI_BUS() define. Changes
+AMD_IOMMU driver to use PCI_BUS_NUM() and PCI_DEVID() from pci and remove
+local PCI_BUS() define and local PCI_DEVID() implementation.
 
-So a full 32 bit address is technically fine, according to the spec,
-however:
- - The 32 bit decode is an optional feature on bridges
- - Some devices are broken because x86 only uses the low 64k.
+Files changed:
 
-So for best compatibility it is ideal to put everything in the low
-64k.
+[PATCH v2 1/4] pci: Add PCI_BUS_NUM() and PCI_DEVID() interfaces to return bus
+           number and device id
 
-However, IO space really should not be used by anything except very
-legacy devices, so if the MMU business is a hassle for some reason I'd
-just go with the 64k aligned method.
+ include/linux/pci.h |   15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
 
-> > > Can't this be solved using the window_alignement() hook we've been
-> > > discussing separately? Just like we teach the Linux PCI core about our
-> > > alignment requirements of 64K for the I/O regions, we could teach it
-> > > about our alignment requirement on memory regions as well. No?
-> > 
-> > Hopefully :) As long as it can adjust the start and length you should
-> > be fine.
-> 
-> Why would you need to adjust the length? If Linux allocates a 2 MB
-> resource on a 1 MB boundary, we simply increase the start address to
-> the next 2 MB boundary, and that's it. Why would the length need to
-> change?
+[PATCH v2 2/4] pci/aer: Remove local PCI_BUS() define and use PCI_BUS_NUM()
+           from pci
 
-Well, lets say 3MB is the example. A 3mb region needs to fit inside a
-4mb MBUS window. If you align the start to 4mb then the pci-e core
-needs to know that it can't use the extra 1mb covered by the mbus
-window. mbus windows must not overlap.
+ drivers/pci/pcie/aer/aerdrv_core.c |    4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-Adjusting the bridge window length to be 4mb communicates that dead
-space to the PCI core, and presumably this shows up in lspci and
-whatnot.
+[PATCH v2 3/4] iommu/amd: Remove local PCI_BUS() define and use PCI_BUS_NUM()
+           from pci
 
-I suppose if you align the end to 4mb (thus creating the gap before,
-not after) things should work out OK, but the information that the gap
-is routed to a specific PCI link is lost..
+ drivers/iommu/amd_iommu.c       |   12 ++++++------
+ drivers/iommu/amd_iommu_init.c  |   34 +++++++++++++++++-----------------
+ drivers/iommu/amd_iommu_types.h |    4 +---
+ 3 files changed, 24 insertions(+), 26 deletions(-)
 
-Jason
+[PATCH v2 4/4] iommu/amd: Remove calc_devid() and use PCI_DEVID() from pci
+(no change to this patch - but tagging it v2 for clarity)
+
+ drivers/iommu/amd_iommu.c       |    2 +-
+ drivers/iommu/amd_iommu_init.c  |    6 +++---
+ drivers/iommu/amd_iommu_types.h |    7 -------
+ 3 files changed, 4 insertions(+), 11 deletions(-)
+
+
+
