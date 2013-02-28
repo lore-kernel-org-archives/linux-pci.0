@@ -1,65 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f182.google.com ([209.85.223.182]:51304 "EHLO
-	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933049Ab3BSTlA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Feb 2013 14:41:00 -0500
-MIME-Version: 1.0
-In-Reply-To: <1361182193-31894-1-git-send-email-hare@suse.de>
-References: <1361182193-31894-1-git-send-email-hare@suse.de>
-Date: Tue, 19 Feb 2013 11:40:59 -0800
-Message-ID: <CAE9FiQWP1F5mLUoHoTHXy-wQoGxVK66QuuHYydaq3YfysS5Etg@mail.gmail.com>
-Subject: Re: [PATCH] pci: do not try to assign irq 255
-From: Yinghai Lu <yinghai@kernel.org>
-To: Hannes Reinecke <hare@suse.de>, Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org, Frederik Himpe <fhimpe@vub.ac.be>,
-	Oliver Neukum <oneukum@suse.de>,
-	David Haerdeman <david@hardeman.nu>, linux-usb@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from g4t0017.houston.hp.com ([15.201.24.20]:13631 "EHLO
+	g4t0017.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751532Ab3B1AGw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Feb 2013 19:06:52 -0500
+Message-ID: <1362010005.2808.34.camel@lorien2>
+Subject: [PATCH v2 1/4] pci: Add PCI_BUS_NUM() and PCI_DEVID() interfaces to
+ return bus number and device id
+From: Shuah Khan <shuah.khan@hp.com>
+Reply-To: shuah.khan@hp.com
+To: Joerg Roedel <joro@8bytes.org>, bhelgaas@google.com
+Cc: jiang.liu@huawei.com, shemminger@vyatta.com,
+	paulmck@linux.vnet.ibm.com, linasvepstas@gmail.com,
+	dhowells@redhat.com, davej@redhat.com, tglx@linutronix.de,
+	mtk.manpages@gmail.com, iommu@lists.linux-foundation.org,
+	linux-pci@vger.kernel.org, wangyijing@huawei.com,
+	LKML <linux-kernel@vger.kernel.org>, shuahkhan@gmail.com
+Date: Wed, 27 Feb 2013 17:06:45 -0700
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Feb 18, 2013 at 2:09 AM, Hannes Reinecke <hare@suse.de> wrote:
-> The PCI config space reseves a byte for the interrupt line,
-> so irq 255 actually refers to 'not set'.
-> However, the 'irq' field for struct pci_dev is an integer,
-> so the original meaning is lost, causing the system to
-> assign an interrupt '255', which fails.
->
-> So we should _not_ assign an interrupt value here, and
-> allow upper layers to fixup things.
->
-> This patch make PCI devices with MSI interrupts only
-> (like the xhci device on certain HP laptops) work properly.
+pci defines PCI_DEVFN(), PCI_SLOT(), and PCI_FUNC() interfaces, however,
+it doesn't have interfaces to return PCI bus and PCI device id. Drivers
+(AMD IOMMU, and AER) implement module specific definitions for PCI_BUS()
+and AMD_IOMMU driver also has a module specific interface to calculate PCI
+device id from bus number and devfn.
 
-looks like the bios does not provide _PRT for device in ACPI.
+Add PCI_BUS_NUM and PCI_DEVID interfaces to return PCI bus number and PCI
+device id respectively to avoid the need for duplicate definitions in other
+modules. AER driver code and AMD IOMMU driver define PCI_BUS. AMD IOMMU driver
+defines an interface to calculate device id from bus number, and devfn pair.
 
-also according to PCI spec, BIOS *must* set interrupt line.
+PCI_DEVFN(), PCI_SLOT(), and PCI_FUNC() interfaces are exported to user-space
+via uapi/linux/pci.h. However, in the interest to keep the new interfaces as
+kernel only and not export them to user-space unnecessarily, added them to
+linux/pci.h instead.
 
->
-> Cc: Frederik Himpe <fhimpe@vub.ac.be>
-> Cc: Oliver Neukum <oneukum@suse.de>
-> Cc: David Haerdeman <david@hardeman.nu>
-> Cc: linux-usb@vger.kernel.org
-> Cc: linux-pci@vger.kernel.org
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
->
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 6186f03..a2db887f 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -923,7 +923,8 @@ static void pci_read_irq(struct pci_dev *dev)
->         dev->pin = irq;
->         if (irq)
->                 pci_read_config_byte(dev, PCI_INTERRUPT_LINE, &irq);
-> -       dev->irq = irq;
-> +       if (irq < 255)
-> +               dev->irq = irq;
->  }
->
->  void set_pcie_port_type(struct pci_dev *pdev)
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+Signed-off-by: Shuah Khan <shuah.khan@hp.com>
+---
+ include/linux/pci.h |   15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
+
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 15472d6..95c105a 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -35,6 +35,21 @@
+ /* Include the ID list */
+ #include <linux/pci_ids.h>
+ 
++/*
++ * The PCI interface treats multi-function devices as independent
++ * devices.  The slot/function address of each device is encoded
++ * in a single byte as follows:
++ *
++ *	7:3 = slot
++ *	2:0 = function
++ * PCI_DEVFN(), PCI_SLOT(), and PCI_FUNC() are defined uapi/linux/pci.h
++ * In the interest of not exposing interfaces to user-space unnecessarily,
++ * the following kernel only defines are being added here.
++ */
++#define PCI_DEVID(bus, devfn)  ((((u16)bus) << 8) | devfn)
++/* return bus from PCI devid = ((u16)bus_number) << 8) | devfn */
++#define PCI_BUS_NUM(x) (((x) >> 8) & 0xff)
++
+ /* pci_slot represents a physical slot */
+ struct pci_slot {
+ 	struct pci_bus *bus;		/* The bus this slot is on */
+-- 
+1.7.9.5
+
+
+
