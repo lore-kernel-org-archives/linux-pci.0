@@ -1,58 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout3.samsung.com ([203.254.224.33]:48474 "EHLO
-	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750895Ab3BFFSL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Feb 2013 00:18:11 -0500
-Received: from epcpsbgm1.samsung.com (epcpsbgm1 [203.254.230.26])
- by mailout3.samsung.com
- (Oracle Communications Messaging Server 7u4-24.01(7.0.4.24.0) 64bit (built Nov
- 17 2011)) with ESMTP id <0MHS003YL9E9PRO0@mailout3.samsung.com> for
- linux-pci@vger.kernel.org; Wed, 06 Feb 2013 14:18:09 +0900 (KST)
-Received: from DOJG1HAN02 ([12.23.120.99])
- by mmp2.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTPA id <0MHS00F1F9E8SAG0@mmp2.samsung.com> for
- linux-pci@vger.kernel.org; Wed, 06 Feb 2013 14:18:08 +0900 (KST)
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'David Airlie' <airlied@linux.ie>
-Cc: dri-devel@lists.freedesktop.org, linux-pci@vger.kernel.org,
-	'Jingoo Han' <jg1.han@samsung.com>
-Subject: [PATCH] drm/pci: use PCI_EXP_LNKCAP_SLS_2_5GB/5_0GB instead of
- hardcoded values
-Date: Wed, 06 Feb 2013 14:18:08 +0900
-Message-id: <002b01ce0429$59d7acc0$0d870640$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+Received: from mail-ie0-f172.google.com ([209.85.223.172]:52552 "EHLO
+	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760106Ab3B1PLq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 28 Feb 2013 10:11:46 -0500
+Received: by mail-ie0-f172.google.com with SMTP id c10so2208145ieb.3
+        for <linux-pci@vger.kernel.org>; Thu, 28 Feb 2013 07:11:46 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <512F35D3.6080009@cn.fujitsu.com>
+References: <alpine.DEB.2.02.1301181302260.31163@jlaw-desktop.mno.stratus.com>
+	<alpine.DEB.2.02.1301181322500.31163@jlaw-desktop.mno.stratus.com>
+	<51122BED.8090308@cn.fujitsu.com>
+	<CAErSpo6aGiuBbgcVfcduPk++7B_zzuk2Y+fjLiJBvdOqnU+Qmw@mail.gmail.com>
+	<5122F276.80807@cn.fujitsu.com>
+	<CAErSpo7BeCiKHecJgX9GBR7DYf4M9mrXK+qMLMDXFykxq5C7sQ@mail.gmail.com>
+	<512AFDB7.5030105@cn.fujitsu.com>
+	<CAL-B5D0xN6bs3oXugS9FOS5bQiFRJQ9766u5wsXw4UQdUmwfyw@mail.gmail.com>
+	<512DAAC9.8030400@cn.fujitsu.com>
+	<CAE9FiQU6Sj=wkare0VCJwP1Yr09o=xVMrhsY_xJ1_41=YMkwMg@mail.gmail.com>
+	<512F35D3.6080009@cn.fujitsu.com>
+Date: Thu, 28 Feb 2013 07:11:45 -0800
+Message-ID: <CAE9FiQV2=B-qw7SSXRL7wj6F=3O7tXnX3JbLXCtrk62nV=MOfA@mail.gmail.com>
+Subject: Re: [PATCH 1/2] PCI: ASPM exit link state code could skip devices
+From: Yinghai Lu <yinghai@kernel.org>
+To: Gu Zheng <guz.fnst@cn.fujitsu.com>
+Cc: Myron Stowe <myron.stowe@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Joe Lawrence <Joe.Lawrence@stratus.com>,
+	linux-pci@vger.kernel.org, Matthew Garrett <mjg59@srcf.ucam.org>,
+	Myron Stowe <mstowe@redhat.com>,
+	David Bulkow <david.bulkow@stratus.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use PCI_EXP_LNKCAP_SLS_2_5GB and PCI_EXP_LNKCAP_SLS_5_0GB instead
-of hardcoded values for readability. These bit definitions were
-added by commit 130f1b8 ("PCI: Add PCIe Link Capability link speed
-and width names")
+On Thu, Feb 28, 2013 at 2:47 AM, Gu Zheng <guz.fnst@cn.fujitsu.com> wrote:
+> On 02/27/2013 02:47 PM, Yinghai Lu wrote:
+>
+>> On Tue, Feb 26, 2013 at 10:42 PM, Gu Zheng <guz.fnst@cn.fujitsu.com> wrote:
+>>>     I just agree with Bjorn's analysis. And I have test Yinghai's patch on kernel 3.8
+>>> , but it seems does not work. More infos, please refer to bugzilla:
+>>> https://bugzilla.kernel.org/show_bug.cgi?id=54411
+>>
+>> you need to test that on linus's tree of 2013-02-26.
+>> or v3.9-rc1
+>
+> Hi Yinghai,
+>         I test your patch on linus' tree of 2-26
+> commit d895cb1af15c04c522a25c79cc429076987c089b
+> But it still does not work~
 
-Signed-off-by: Jingoo Han <jg1.han@samsung.com>
----
- drivers/gpu/drm/drm_pci.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+Still have full of warning in dmesg?
 
-diff --git a/drivers/gpu/drm/drm_pci.c b/drivers/gpu/drm/drm_pci.c
-index 754bc96..11c8add 100644
---- a/drivers/gpu/drm/drm_pci.c
-+++ b/drivers/gpu/drm/drm_pci.c
-@@ -504,9 +504,9 @@ int drm_pcie_get_speed_cap_mask(struct drm_device *dev, u32 *mask)
- 		if (lnkcap2 & PCI_EXP_LNKCAP2_SLS_8_0GB)
- 			*mask |= DRM_PCIE_SPEED_80;
- 	} else {
--		if (lnkcap & 1)
-+		if (lnkcap & PCI_EXP_LNKCAP_SLS_2_5GB)
- 			*mask |= DRM_PCIE_SPEED_25;
--		if (lnkcap & 2)
-+		if (lnkcap & PCI_EXP_LNKCAP_SLS_5_0GB)
- 			*mask |= DRM_PCIE_SPEED_50;
- 	}
- 
--- 
-1.7.2.5
+or double remove does not work.
 
+Thanks
 
+Yinghai
