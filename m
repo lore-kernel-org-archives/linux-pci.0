@@ -1,169 +1,244 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <510C78F5.6050902@huawei.com>
-Date: Sat, 2 Feb 2013 10:24:53 +0800
-From: Yijing Wang <wangyijing@huawei.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <liuj97@gmail.com>, Yinghai Lu <yinghai@kernel.org>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 1/2] acpiphp: create companion ACPI devices before creating
- PCI devices
-References: <1359562210-26536-1-git-send-email-jiang.liu@huawei.com> <CAErSpo5CcEudpbozcu49EOQ4eL2bE40YVNDji7RbSA7Z28y1cw@mail.gmail.com>
-In-Reply-To: <CAErSpo5CcEudpbozcu49EOQ4eL2bE40YVNDji7RbSA7Z28y1cw@mail.gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Message-ID: <1362010039.2808.36.camel@lorien2>
+Subject: [PATCH v2 3/4] iommu/amd: Remove local PCI_BUS() define and use
+ PCI_BUS_NUM() from pci
+From: Shuah Khan <shuah.khan@hp.com>
+Reply-To: shuah.khan@hp.com
+To: Joerg Roedel <joro@8bytes.org>, bhelgaas@google.com
+Cc: jiang.liu@huawei.com, shemminger@vyatta.com,
+	paulmck@linux.vnet.ibm.com, linasvepstas@gmail.com,
+	dhowells@redhat.com, davej@redhat.com, tglx@linutronix.de,
+	mtk.manpages@gmail.com, iommu@lists.linux-foundation.org,
+	linux-pci@vger.kernel.org, wangyijing@huawei.com,
+	LKML <linux-kernel@vger.kernel.org>, shuahkhan@gmail.com
+Date: Wed, 27 Feb 2013 17:07:19 -0700
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2013/2/2 7:06, Bjorn Helgaas wrote:
-> On Wed, Jan 30, 2013 at 9:10 AM, Jiang Liu <liuj97@gmail.com> wrote:
->> From: Jiang Liu <jiang.liu@huawei.com>
->>
->> With commit 4f535093cf8f6da8c "PCI: Put pci_dev in device tree as
->> early as possible", companion ACPI devices should be created before
->> creating correspoding PCI devices, otherwise it will break the ACPI
->> PCI binding logic.
->>
->> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
->> ---
->> Hi Bjorn,
->>         This patch set applies to your pci/yinghai-root-bus branch.
->> There are still other potential bugs in the acpiphp driver under
->> investigation. So I will send out these two first to catch up with
->> the 3.9 merging window.
->>         Thanks!
->>         Gerry
-> 
-> I assume this fixes some sort of user-visible issue with acpiphp.
-> What failure does the user see?
+Change to remove local PCI_BUS() define and use the new PCI_BUS_NUM()
+interface from pci.
 
-Hi Bjorn,
-   Before applied this patch, after hot remove and hot add pci device by acpiphp,
-we can find firmware_node under the pci device was missed.
+Signed-off-by: Shuah Khan <shuah.khan@hp.com>
+---
+ drivers/iommu/amd_iommu.c       |   12 ++++++------
+ drivers/iommu/amd_iommu_init.c  |   34 +++++++++++++++++-----------------
+ drivers/iommu/amd_iommu_types.h |    4 +---
+ 3 files changed, 24 insertions(+), 26 deletions(-)
 
-Detailed info as bellow:
-linux-ha2:/sys/bus/pci/slots # ls /sys/bus/pci/devices/0000\:05\:00.0/ -al
-total 0
-drwxr-xr-x 3 root root         0 Jan 31 10:19 .
-drwxr-xr-x 9 root root         0 Jan 31 10:19 ..
--r--r--r-- 1 root root     65536 Jan 31 10:31 boot_vga
--rw-r--r-- 1 root root     65536 Jan 31 10:31 broken_parity_status
--r--r--r-- 1 root root     65536 Jan 31 10:19 class
--rw-r--r-- 1 root root      4096 Jan 31 10:31 config
--r--r--r-- 1 root root     65536 Jan 31 10:31 consistent_dma_mask_bits
--rw-r--r-- 1 root root     65536 Jan 31 10:31 d3cold_allowed
--r--r--r-- 1 root root     65536 Jan 31 10:19 device
--r--r--r-- 1 root root     65536 Jan 31 10:31 dma_mask_bits
--rw------- 1 root root     65536 Jan 31 10:31 enable
-lrwxrwxrwx 1 root root         0 Jan 31 10:31 firmware_node -> ../../../LNXSYSTM:00/device:00/ACPI0004:00/PNP0A08:00/device:07/device:08
--r--r--r-- 1 root root     65536 Jan 31 10:19 irq
--r--r--r-- 1 root root     65536 Jan 31 10:31 local_cpulist
--r--r--r-- 1 root root     65536 Jan 31 10:20 local_cpus
--r--r--r-- 1 root root     65536 Jan 31 10:31 modalias
--rw-r--r-- 1 root root     65536 Jan 31 10:31 msi_bus
--r--r--r-- 1 root root     65536 Jan 31 10:31 numa_node
-drwxr-xr-x 2 root root         0 Jan 31 10:31 power
---w--w---- 1 root root     65536 Jan 31 10:31 remove
---w--w---- 1 root root     65536 Jan 31 10:31 rescan
--r--r--r-- 1 root root     65536 Jan 31 10:19 resource
--rw------- 1 root root  16777216 Jan 31 10:31 resource0
--rw------- 1 root root 268435456 Jan 31 10:31 resource1
--rw------- 1 root root 268435456 Jan 31 10:31 resource1_wc
--rw------- 1 root root  33554432 Jan 31 10:31 resource3
--rw------- 1 root root  33554432 Jan 31 10:31 resource3_wc
--rw------- 1 root root       128 Jan 31 10:31 resource5
--rw------- 1 root root    524288 Jan 31 10:31 rom
-lrwxrwxrwx 1 root root         0 Jan 31 10:19 subsystem -> ../../../../bus/pci
--r--r--r-- 1 root root     65536 Jan 31 10:19 subsystem_device
--r--r--r-- 1 root root     65536 Jan 31 10:19 subsystem_vendor
--rw-r--r-- 1 root root     65536 Jan 31 10:19 uevent
--r--r--r-- 1 root root     65536 Jan 31 10:19 vendor
-linux-ha2:/sys/bus/pci/slots # cd 0
-linux-ha2:/sys/bus/pci/slots/0 # cat address
-0000:05:00
-linux-ha2:/sys/bus/pci/slots/0 # cat power
-1
-linux-ha2:/sys/bus/pci/slots/0 # echo 0 > power
-linux-ha2:/sys/bus/pci/slots/0 # echo 1 > power
-linux-ha2:/sys/bus/pci/slots/0 # ls /sys/bus/pci/devices/0000\:05\:00.0/ -al
-total 0
-drwxr-xr-x 3 root root         0 Jan 31 10:31 .
-drwxr-xr-x 9 root root         0 Jan 31 10:19 ..
--r--r--r-- 1 root root     65536 Jan 31 10:31 boot_vga
--rw-r--r-- 1 root root     65536 Jan 31 10:31 broken_parity_status
--r--r--r-- 1 root root     65536 Jan 31 10:31 class
--rw-r--r-- 1 root root      4096 Jan 31 10:31 config
--r--r--r-- 1 root root     65536 Jan 31 10:31 consistent_dma_mask_bits
--rw-r--r-- 1 root root     65536 Jan 31 10:31 d3cold_allowed
--r--r--r-- 1 root root     65536 Jan 31 10:31 device
--r--r--r-- 1 root root     65536 Jan 31 10:31 dma_mask_bits
--rw------- 1 root root     65536 Jan 31 10:31 enable
--r--r--r-- 1 root root     65536 Jan 31 10:31 irq
--r--r--r-- 1 root root     65536 Jan 31 10:31 local_cpulist
--r--r--r-- 1 root root     65536 Jan 31 10:31 local_cpus
--r--r--r-- 1 root root     65536 Jan 31 10:31 modalias
--rw-r--r-- 1 root root     65536 Jan 31 10:31 msi_bus
--r--r--r-- 1 root root     65536 Jan 31 10:31 numa_node
-drwxr-xr-x 2 root root         0 Jan 31 10:31 power
---w--w---- 1 root root     65536 Jan 31 10:31 remove
---w--w---- 1 root root     65536 Jan 31 10:31 rescan
--r--r--r-- 1 root root     65536 Jan 31 10:31 resource
--rw------- 1 root root  16777216 Jan 31 10:31 resource0
--rw------- 1 root root 268435456 Jan 31 10:31 resource1
--rw------- 1 root root 268435456 Jan 31 10:31 resource1_wc
--rw------- 1 root root  33554432 Jan 31 10:31 resource3
--rw------- 1 root root  33554432 Jan 31 10:31 resource3_wc
--rw------- 1 root root       128 Jan 31 10:31 resource5
--rw------- 1 root root    524288 Jan 31 10:31 rom
-lrwxrwxrwx 1 root root         0 Jan 31 10:31 subsystem -> ../../../../bus/pci
--r--r--r-- 1 root root     65536 Jan 31 10:31 subsystem_device
--r--r--r-- 1 root root     65536 Jan 31 10:31 subsystem_vendor
--rw-r--r-- 1 root root     65536 Jan 31 10:31 uevent
--r--r--r-- 1 root root     65536 Jan 31 10:31 vendor
-linux-ha2:/sys/bus/pci/slots/0 #
-
-So after hot add pci device again, we lost the firmware_node link under device.
-firmware_node -> ../../../LNXSYSTM:00/device:00/ACPI0004:00/PNP0A08:00/device:07/device:08
-
-
-> 
->> ---
->>  drivers/pci/hotplug/acpiphp_glue.c |    6 +++---
->>  1 file changed, 3 insertions(+), 3 deletions(-)
->>
->> diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
->> index bd784ff..acb7af2 100644
->> --- a/drivers/pci/hotplug/acpiphp_glue.c
->> +++ b/drivers/pci/hotplug/acpiphp_glue.c
->> @@ -839,6 +839,9 @@ static int __ref enable_device(struct acpiphp_slot *slot)
->>         if (slot->flags & SLOT_ENABLED)
->>                 goto err_exit;
->>
->> +       list_for_each_entry(func, &slot->funcs, sibling)
->> +               acpiphp_bus_add(func);
->> +
->>         num = pci_scan_slot(bus, PCI_DEVFN(slot->device, 0));
->>         if (num == 0) {
->>                 /* Maybe only part of funcs are added. */
->> @@ -862,9 +865,6 @@ static int __ref enable_device(struct acpiphp_slot *slot)
->>                 }
->>         }
->>
->> -       list_for_each_entry(func, &slot->funcs, sibling)
->> -               acpiphp_bus_add(func);
->> -
->>         pci_bus_assign_resources(bus);
->>         acpiphp_sanitize_bus(bus);
->>         acpiphp_set_hpp_values(bus);
->> --
->> 1.7.9.5
->>
-> 
-> 
-
-
+diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
+index 98f555d..2a50fbe 100644
+--- a/drivers/iommu/amd_iommu.c
++++ b/drivers/iommu/amd_iommu.c
+@@ -649,26 +649,26 @@ retry:
+ 	case EVENT_TYPE_ILL_DEV:
+ 		printk("ILLEGAL_DEV_TABLE_ENTRY device=%02x:%02x.%x "
+ 		       "address=0x%016llx flags=0x%04x]\n",
+-		       PCI_BUS(devid), PCI_SLOT(devid), PCI_FUNC(devid),
++		       PCI_BUS_NUM(devid), PCI_SLOT(devid), PCI_FUNC(devid),
+ 		       address, flags);
+ 		dump_dte_entry(devid);
+ 		break;
+ 	case EVENT_TYPE_IO_FAULT:
+ 		printk("IO_PAGE_FAULT device=%02x:%02x.%x "
+ 		       "domain=0x%04x address=0x%016llx flags=0x%04x]\n",
+-		       PCI_BUS(devid), PCI_SLOT(devid), PCI_FUNC(devid),
++		       PCI_BUS_NUM(devid), PCI_SLOT(devid), PCI_FUNC(devid),
+ 		       domid, address, flags);
+ 		break;
+ 	case EVENT_TYPE_DEV_TAB_ERR:
+ 		printk("DEV_TAB_HARDWARE_ERROR device=%02x:%02x.%x "
+ 		       "address=0x%016llx flags=0x%04x]\n",
+-		       PCI_BUS(devid), PCI_SLOT(devid), PCI_FUNC(devid),
++		       PCI_BUS_NUM(devid), PCI_SLOT(devid), PCI_FUNC(devid),
+ 		       address, flags);
+ 		break;
+ 	case EVENT_TYPE_PAGE_TAB_ERR:
+ 		printk("PAGE_TAB_HARDWARE_ERROR device=%02x:%02x.%x "
+ 		       "domain=0x%04x address=0x%016llx flags=0x%04x]\n",
+-		       PCI_BUS(devid), PCI_SLOT(devid), PCI_FUNC(devid),
++		       PCI_BUS_NUM(devid), PCI_SLOT(devid), PCI_FUNC(devid),
+ 		       domid, address, flags);
+ 		break;
+ 	case EVENT_TYPE_ILL_CMD:
+@@ -682,13 +682,13 @@ retry:
+ 	case EVENT_TYPE_IOTLB_INV_TO:
+ 		printk("IOTLB_INV_TIMEOUT device=%02x:%02x.%x "
+ 		       "address=0x%016llx]\n",
+-		       PCI_BUS(devid), PCI_SLOT(devid), PCI_FUNC(devid),
++		       PCI_BUS_NUM(devid), PCI_SLOT(devid), PCI_FUNC(devid),
+ 		       address);
+ 		break;
+ 	case EVENT_TYPE_INV_DEV_REQ:
+ 		printk("INVALID_DEVICE_REQUEST device=%02x:%02x.%x "
+ 		       "address=0x%016llx flags=0x%04x]\n",
+-		       PCI_BUS(devid), PCI_SLOT(devid), PCI_FUNC(devid),
++		       PCI_BUS_NUM(devid), PCI_SLOT(devid), PCI_FUNC(devid),
+ 		       address, flags);
+ 		break;
+ 	default:
+diff --git a/drivers/iommu/amd_iommu_init.c b/drivers/iommu/amd_iommu_init.c
+index b6ecddb..f8ed6f1 100644
+--- a/drivers/iommu/amd_iommu_init.c
++++ b/drivers/iommu/amd_iommu_init.c
+@@ -423,7 +423,7 @@ static int __init find_last_devid_from_ivhd(struct ivhd_header *h)
+ 	p += sizeof(*h);
+ 	end += h->length;
+ 
+-	find_last_devid_on_pci(PCI_BUS(h->devid),
++	find_last_devid_on_pci(PCI_BUS_NUM(h->devid),
+ 			PCI_SLOT(h->devid),
+ 			PCI_FUNC(h->devid),
+ 			h->cap_ptr);
+@@ -784,10 +784,10 @@ static int __init init_iommu_from_acpi(struct amd_iommu *iommu,
+ 
+ 			DUMP_printk("  DEV_ALL\t\t\t first devid: %02x:%02x.%x"
+ 				    " last device %02x:%02x.%x flags: %02x\n",
+-				    PCI_BUS(iommu->first_device),
++				    PCI_BUS_NUM(iommu->first_device),
+ 				    PCI_SLOT(iommu->first_device),
+ 				    PCI_FUNC(iommu->first_device),
+-				    PCI_BUS(iommu->last_device),
++				    PCI_BUS_NUM(iommu->last_device),
+ 				    PCI_SLOT(iommu->last_device),
+ 				    PCI_FUNC(iommu->last_device),
+ 				    e->flags);
+@@ -801,7 +801,7 @@ static int __init init_iommu_from_acpi(struct amd_iommu *iommu,
+ 
+ 			DUMP_printk("  DEV_SELECT\t\t\t devid: %02x:%02x.%x "
+ 				    "flags: %02x\n",
+-				    PCI_BUS(e->devid),
++				    PCI_BUS_NUM(e->devid),
+ 				    PCI_SLOT(e->devid),
+ 				    PCI_FUNC(e->devid),
+ 				    e->flags);
+@@ -813,7 +813,7 @@ static int __init init_iommu_from_acpi(struct amd_iommu *iommu,
+ 
+ 			DUMP_printk("  DEV_SELECT_RANGE_START\t "
+ 				    "devid: %02x:%02x.%x flags: %02x\n",
+-				    PCI_BUS(e->devid),
++				    PCI_BUS_NUM(e->devid),
+ 				    PCI_SLOT(e->devid),
+ 				    PCI_FUNC(e->devid),
+ 				    e->flags);
+@@ -827,11 +827,11 @@ static int __init init_iommu_from_acpi(struct amd_iommu *iommu,
+ 
+ 			DUMP_printk("  DEV_ALIAS\t\t\t devid: %02x:%02x.%x "
+ 				    "flags: %02x devid_to: %02x:%02x.%x\n",
+-				    PCI_BUS(e->devid),
++				    PCI_BUS_NUM(e->devid),
+ 				    PCI_SLOT(e->devid),
+ 				    PCI_FUNC(e->devid),
+ 				    e->flags,
+-				    PCI_BUS(e->ext >> 8),
++				    PCI_BUS_NUM(e->ext >> 8),
+ 				    PCI_SLOT(e->ext >> 8),
+ 				    PCI_FUNC(e->ext >> 8));
+ 
+@@ -846,11 +846,11 @@ static int __init init_iommu_from_acpi(struct amd_iommu *iommu,
+ 			DUMP_printk("  DEV_ALIAS_RANGE\t\t "
+ 				    "devid: %02x:%02x.%x flags: %02x "
+ 				    "devid_to: %02x:%02x.%x\n",
+-				    PCI_BUS(e->devid),
++				    PCI_BUS_NUM(e->devid),
+ 				    PCI_SLOT(e->devid),
+ 				    PCI_FUNC(e->devid),
+ 				    e->flags,
+-				    PCI_BUS(e->ext >> 8),
++				    PCI_BUS_NUM(e->ext >> 8),
+ 				    PCI_SLOT(e->ext >> 8),
+ 				    PCI_FUNC(e->ext >> 8));
+ 
+@@ -864,7 +864,7 @@ static int __init init_iommu_from_acpi(struct amd_iommu *iommu,
+ 
+ 			DUMP_printk("  DEV_EXT_SELECT\t\t devid: %02x:%02x.%x "
+ 				    "flags: %02x ext: %08x\n",
+-				    PCI_BUS(e->devid),
++				    PCI_BUS_NUM(e->devid),
+ 				    PCI_SLOT(e->devid),
+ 				    PCI_FUNC(e->devid),
+ 				    e->flags, e->ext);
+@@ -877,7 +877,7 @@ static int __init init_iommu_from_acpi(struct amd_iommu *iommu,
+ 
+ 			DUMP_printk("  DEV_EXT_SELECT_RANGE\t devid: "
+ 				    "%02x:%02x.%x flags: %02x ext: %08x\n",
+-				    PCI_BUS(e->devid),
++				    PCI_BUS_NUM(e->devid),
+ 				    PCI_SLOT(e->devid),
+ 				    PCI_FUNC(e->devid),
+ 				    e->flags, e->ext);
+@@ -890,7 +890,7 @@ static int __init init_iommu_from_acpi(struct amd_iommu *iommu,
+ 		case IVHD_DEV_RANGE_END:
+ 
+ 			DUMP_printk("  DEV_RANGE_END\t\t devid: %02x:%02x.%x\n",
+-				    PCI_BUS(e->devid),
++				    PCI_BUS_NUM(e->devid),
+ 				    PCI_SLOT(e->devid),
+ 				    PCI_FUNC(e->devid));
+ 
+@@ -924,7 +924,7 @@ static int __init init_iommu_from_acpi(struct amd_iommu *iommu,
+ 
+ 			DUMP_printk("  DEV_SPECIAL(%s[%d])\t\tdevid: %02x:%02x.%x\n",
+ 				    var, (int)handle,
+-				    PCI_BUS(devid),
++				    PCI_BUS_NUM(devid),
+ 				    PCI_SLOT(devid),
+ 				    PCI_FUNC(devid));
+ 
+@@ -1086,7 +1086,7 @@ static int __init init_iommu_all(struct acpi_table_header *table)
+ 
+ 			DUMP_printk("device: %02x:%02x.%01x cap: %04x "
+ 				    "seg: %d flags: %01x info %04x\n",
+-				    PCI_BUS(h->devid), PCI_SLOT(h->devid),
++				    PCI_BUS_NUM(h->devid), PCI_SLOT(h->devid),
+ 				    PCI_FUNC(h->devid), h->cap_ptr,
+ 				    h->pci_seg, h->flags, h->info);
+ 			DUMP_printk("       mmio-addr: %016llx\n",
+@@ -1116,7 +1116,7 @@ static int iommu_init_pci(struct amd_iommu *iommu)
+ 	int cap_ptr = iommu->cap_ptr;
+ 	u32 range, misc, low, high;
+ 
+-	iommu->dev = pci_get_bus_and_slot(PCI_BUS(iommu->devid),
++	iommu->dev = pci_get_bus_and_slot(PCI_BUS_NUM(iommu->devid),
+ 					  iommu->devid & 0xff);
+ 	if (!iommu->dev)
+ 		return -ENODEV;
+@@ -1388,8 +1388,8 @@ static int __init init_unity_map_range(struct ivmd_header *m)
+ 
+ 	DUMP_printk("%s devid_start: %02x:%02x.%x devid_end: %02x:%02x.%x"
+ 		    " range_start: %016llx range_end: %016llx flags: %x\n", s,
+-		    PCI_BUS(e->devid_start), PCI_SLOT(e->devid_start),
+-		    PCI_FUNC(e->devid_start), PCI_BUS(e->devid_end),
++		    PCI_BUS_NUM(e->devid_start), PCI_SLOT(e->devid_start),
++		    PCI_FUNC(e->devid_start), PCI_BUS_NUM(e->devid_end),
+ 		    PCI_SLOT(e->devid_end), PCI_FUNC(e->devid_end),
+ 		    e->address_start, e->address_end, m->flags);
+ 
+diff --git a/drivers/iommu/amd_iommu_types.h b/drivers/iommu/amd_iommu_types.h
+index e38ab43..a07882f 100644
+--- a/drivers/iommu/amd_iommu_types.h
++++ b/drivers/iommu/amd_iommu_types.h
+@@ -24,6 +24,7 @@
+ #include <linux/mutex.h>
+ #include <linux/list.h>
+ #include <linux/spinlock.h>
++#include <linux/pci.h>
+ 
+ /*
+  * Maximum number of IOMMUs supported
+@@ -315,9 +316,6 @@
+ 
+ #define MAX_DOMAIN_ID 65536
+ 
+-/* FIXME: move this macro to <linux/pci.h> */
+-#define PCI_BUS(x) (((x) >> 8) & 0xff)
+-
+ /* Protection domain flags */
+ #define PD_DMA_OPS_MASK		(1UL << 0) /* domain used for dma_ops */
+ #define PD_DEFAULT_MASK		(1UL << 1) /* domain is a default dma_ops
 -- 
-Thanks!
-Yijing
+1.7.9.5
+
+
 
