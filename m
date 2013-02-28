@@ -1,60 +1,31 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:39797 "EHLO quartz.orcorp.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759512Ab3BMAlO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 12 Feb 2013 19:41:14 -0500
-Date: Tue, 12 Feb 2013 17:41:18 -0700
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Tawfik Bayouk <tawfik@marvell.com>
-Subject: Re: [PATCH 24/32] pci: PCIe driver for Marvell Armada 370/XP systems
-Message-ID: <20130213004118.GB1052@obsidianresearch.com>
-References: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com>
- <201302121830.11375.arnd@arndb.de>
- <20130212202252.3a9ee3d0@skate>
- <201302122259.54073.arnd@arndb.de>
+Received: from fold.natur.cuni.cz ([195.113.57.32]:42997 "HELO
+	fold.natur.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751132Ab3B1KTe (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 28 Feb 2013 05:19:34 -0500
+Message-ID: <512F2F32.40001@fold.natur.cuni.cz>
+Date: Thu, 28 Feb 2013 11:19:30 +0100
+From: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201302122259.54073.arnd@arndb.de>
+To: Guenter Roeck <linux@roeck-us.net>
+CC: Yinghai Lu <yinghai@kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org
+Subject: Re: ACPI based PCI/PCIe bridge hotplug
+References: <20130228044205.GA30949@roeck-us.net> <CAE9FiQX3Q+2ycXpR=Bn=tqW94F6e8cDZjiiE8vxO7wmJn_kUCg@mail.gmail.com> <20130228050857.GA31066@roeck-us.net>
+In-Reply-To: <20130228050857.GA31066@roeck-us.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 12, 2013 at 10:59:53PM +0000, Arnd Bergmann wrote:
- 
-> b) drivers/bus/<something>
-> This would make a lot more sense if we followed the scheme I explained
-> in my discussion to Jason Gunthorpe, where we basically treat this
-> bus as a parent node in the device tree for anything that can get remapped.
-> Without that change, it feels a little misplaced
+Guenter Roeck wrote:
 
-Also, FWIW, recall this related discussion and other possible DT
-binding:
+> [ Bjorn, sorry I dropped you from the Cc:, but my e-mail provider and Google
+>   still don't like each other ]
 
-http://www.spinics.net/lists/arm-kernel/msg219992.html
+I also observe that emails from Bjorn often end up in gmail's SPAM folder while
+lots of other emails coming also from linux-pci, lkml, etc. do get through into
+Inbox. Don't know why. Just to let you know. Moving them out of SPAM folder into
+Inbox does not seem to teach gmail.
 
-drivers/bus/orion-mbus.c feels like the right option, but when I
-looked at it, getting the DT binding, and full dynamicness setup
-seemed like it would be best done after non-DT support was purged, and
-that is somewhat contigent on getting the irqchip and timer stuff
-sorted (see my first attempt at that):
-
-https://patchwork.kernel.org/patch/1852011/
-
-Guess it depends where you want to draw the line on cleanups before
-something can be accepted..
-
-Regards,
-Jason
+Martin
+[Bjorn in Bcc:] ;-)
