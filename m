@@ -1,53 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f53.google.com ([209.85.160.53]:53899 "EHLO
-	mail-pb0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751693Ab3CPWKw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 16 Mar 2013 18:10:52 -0400
-Received: by mail-pb0-f53.google.com with SMTP id un1so5248963pbc.26
-        for <linux-pci@vger.kernel.org>; Sat, 16 Mar 2013 15:10:52 -0700 (PDT)
-Date: Sat, 16 Mar 2013 15:11:59 -0700
+Received: from mail-pa0-f45.google.com ([209.85.220.45]:63243 "EHLO
+	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751973Ab3CAVxu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 Mar 2013 16:53:50 -0500
+Received: by mail-pa0-f45.google.com with SMTP id kl14so2070213pab.18
+        for <linux-pci@vger.kernel.org>; Fri, 01 Mar 2013 13:53:49 -0800 (PST)
+Date: Fri, 1 Mar 2013 13:53:46 -0800
 From: Greg KH <gregkh@linuxfoundation.org>
-To: Myron Stowe <myron.stowe@redhat.com>
-Cc: kay@vrfy.org, linux-hotplug@vger.kernel.org,
-	alex.williamson@redhat.com, linux-pci@vger.kernel.org,
-	yuxiangl@marvell.com, yxlraid@gmail.com,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] udevadm-info: Don't access sysfs 'resource<N>' files
-Message-ID: <20130316221159.GA3702@kroah.com>
-References: <20130316213512.2974.17303.stgit@amt.stowe>
- <20130316213519.2974.38954.stgit@amt.stowe>
+To: Pete Zievers <pjz@att.net>
+Cc: linux-pci@vger.kernel.org
+Subject: Re: PCI rescan
+Message-ID: <20130301215346.GA3103@kroah.com>
+References: <5130BF39.60403@att.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130316213519.2974.38954.stgit@amt.stowe>
+In-Reply-To: <5130BF39.60403@att.net>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Mar 16, 2013 at 03:35:19PM -0600, Myron Stowe wrote:
-> Sysfs includes entries to memory that backs a PCI device's BARs, both I/O
-> Port space and MMIO.  This memory regions correspond to the device's
-> internal status and control registers used to drive the device.
+On Fri, Mar 01, 2013 at 08:46:17AM -0600, Pete Zievers wrote:
+>  Hi-
 > 
-> Accessing these registers from userspace such as "udevadm info
-> --attribute-walk --path=/sys/devices/..." does can not be allowed as
-> such accesses outside of the driver, even just reading, can yield
-> catastrophic consequences.
+> Right now I am using 64-bit Red Hat Fedora 16.  The kernel version
+> is 3.1.0-7.fc16.x86_64.
 > 
-> Udevadm-info skips parsing a specific set of sysfs entries including
-> 'resource'.  This patch extends the set to include the additional
-> 'resource<N>' entries that correspond to a PCI device's BARs.
+> I'm interested in an API that will achieve from within C-language
+> code compiled using gcc what can be accomplished from the shell with
+> the following invocation:
+> 
+> echo 1 > /sys/bus/pci/devices/<device designator>/remove
+> echo 1 > /sys/bus/pci/rescan
+> 
+> I find that at the shell level the above works great for me but is
+> slow.  I need it to work perhaps an order of magnitude faster for
+> what I'm attempting.
 
-Nice, are you also going to patch bash to prevent a user from reading
-these sysfs files as well?  :)
+PCI device removal and recanning is not a fast process, what is "slow"
+about doing it in this manner?  All of the delay is in the kernel here,
+not in your userspace code.
 
-And pciutils?
+What is wrong with doing the above "writing of values" in C code?
 
-You get my point here, right?  The root user just asked to read all of
-the data for this device, so why wouldn't you allow it?  Just like
-'lspci' does.  Or bash does.
-
-If this hardware has a problem, then it needs to be fixed in the kernel,
-not have random band-aids added to various userspace programs to paper
-over the root problem here.  Please fix the kernel driver and all should
-be fine.  No need to change udevadm.
+confused,
 
 greg k-h
