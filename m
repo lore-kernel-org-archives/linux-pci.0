@@ -1,61 +1,39 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:60480 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751683Ab3C0Oks (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Mar 2013 10:40:48 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Russell King <linux@arm.linux.org.uk>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	devicetree-discuss@lists.ozlabs.org,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Maen Suleiman <maen@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Olof Johansson <olof@lixom.net>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Mitch Bradley <wmb@firmworks.com>,
-	Andrew Murray <andrew.murray@arm.com>,
-	Mike Turquette <mturquette@linaro.org>
-Subject: [PATCHv7 06/17] clk: mvebu: create parent-child relation for PCIe clocks on Armada 370
-Date: Wed, 27 Mar 2013 15:40:23 +0100
-Message-Id: <1364395234-11195-7-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1364395234-11195-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1364395234-11195-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from nm14.access.bullet.mail.mud.yahoo.com ([66.94.237.215]:46179
+	"EHLO nm14.access.bullet.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750696Ab3CAPMN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 Mar 2013 10:12:13 -0500
+Message-ID: <5130BF39.60403@att.net>
+Date: Fri, 01 Mar 2013 08:46:17 -0600
+From: Pete Zievers <pjz@att.net>
+MIME-Version: 1.0
+To: linux-pci@vger.kernel.org
+Subject: PCI rescan
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The Armada 370 has two gatable clocks for each PCIe interface, and we
-want both of them to be enabled. We therefore make one of the two
-clocks a child of the other, as we did for the sataX and sataXlnk
-clocks on Armada XP.
+  Hi-
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Mike Turquette <mturquette@linaro.org>
----
- drivers/clk/mvebu/clk-gating-ctrl.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Right now I am using 64-bit Red Hat Fedora 16.  The kernel version is 
+3.1.0-7.fc16.x86_64.
 
-diff --git a/drivers/clk/mvebu/clk-gating-ctrl.c b/drivers/clk/mvebu/clk-gating-ctrl.c
-index ebf141d..b35785a 100644
---- a/drivers/clk/mvebu/clk-gating-ctrl.c
-+++ b/drivers/clk/mvebu/clk-gating-ctrl.c
-@@ -119,8 +119,8 @@ static const struct mvebu_soc_descr __initconst armada_370_gating_descr[] = {
- 	{ "pex1_en", NULL,  2 },
- 	{ "ge1", NULL, 3 },
- 	{ "ge0", NULL, 4 },
--	{ "pex0", NULL, 5 },
--	{ "pex1", NULL, 9 },
-+	{ "pex0", "pex0_en", 5 },
-+	{ "pex1", "pex1_en", 9 },
- 	{ "sata0", NULL, 15 },
- 	{ "sdio", NULL, 17 },
- 	{ "tdm", NULL, 25 },
--- 
-1.7.9.5
+I'm interested in an API that will achieve from within C-language code 
+compiled using gcc what can be accomplished from the shell with the 
+following invocation:
 
+echo 1 > /sys/bus/pci/devices/<device designator>/remove
+echo 1 > /sys/bus/pci/rescan
+
+I find that at the shell level the above works great for me but is 
+slow.  I need it to work perhaps an order of magnitude faster for what 
+I'm attempting.
+
+Any help you could give me would be greatly appreciated.  If possible it 
+would be great if you could give me a short code snippet and whichever 
+libraries are involved with some indication as to where I'd need to get 
+such libraries.  If I need to upgrade my Linux that's a perfectly okay 
+thing to suggest.
+
+regards
+Pete Zievers
