@@ -1,68 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f172.google.com ([209.85.217.172]:56171 "EHLO
-	mail-lb0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754567Ab3BDL4D (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 4 Feb 2013 06:56:03 -0500
-Subject: [PATCH v2 2/7] PCI: don't touch enable_cnt in pci_device_shutdown()
-To: e1000-devel@lists.sourceforge.net, linux-pci@vger.kernel.org,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	linux-kernel@vger.kernel.org
-From: Konstantin Khlebnikov <khlebnikov@openvz.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Khalid Aziz <khalid.aziz@hp.com>,
-	Andi Kleen <ak@linux.intel.com>,
-	Alan Cox <alan@lxorguk.ukuu.org.uk>,
-	Matthew Garrett <mjg@redhat.com>
-Date: Mon, 04 Feb 2013 15:55:58 +0400
-Message-ID: <20130204115557.5569.9748.stgit@zurg>
-In-Reply-To: <20130204115246.5569.85829.stgit@zurg>
-References: <20130204115246.5569.85829.stgit@zurg>
+Received: from mail-ie0-f182.google.com ([209.85.223.182]:36542 "EHLO
+	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751651Ab3CABYC (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 28 Feb 2013 20:24:02 -0500
+Received: by mail-ie0-f182.google.com with SMTP id k14so2953227iea.27
+        for <linux-pci@vger.kernel.org>; Thu, 28 Feb 2013 17:24:01 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <20130221154709.GA26660@arm.com>
+References: <20130221154709.GA26660@arm.com>
+Date: Fri, 1 Mar 2013 02:24:00 +0100
+Message-ID: <CACRpkda9pVafqMRrZ-h6ry6X57754bb4pWRW8CWbF0n37pkVNA@mail.gmail.com>
+Subject: Re: [RFC PATCH v2] of/pci: Provide support for parsing PCI DT ranges property
+From: Linus Walleij <linus.walleij@linaro.org>
+To: Andrew Murray <Andrew.Murray@arm.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"devicetree-discuss@lists.ozlabs.org"
+	<devicetree-discuss@lists.ozlabs.org>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	"rob.herring@calxeda.com" <rob.herring@calxeda.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-comment in commit b566a22c23327f18ce941ffad0ca907e50a53d41
-("PCI: disable Bus Master on PCI device shutdown") says:
-| Disable Bus Master bit on the device in pci_device_shutdown() to ensure PCI
-| devices do not continue to DMA data after shutdown.  This can cause memory
-| corruption in case of a kexec where the current kernel shuts down and
-| transfers control to a new kernel while a PCI device continues to DMA to
-| memory that does not belong to it any more in the new kernel.
+On Thu, Feb 21, 2013 at 4:47 PM, Andrew Murray <Andrew.Murray@arm.com> wrote:
 
-Seems like pci_clear_master() must be used here instead of pci_disable_device(),
-because it disables Bus Muster unconditionally and doesn't changes enable_cnt.
+> DT bindings for PCI host bridges often use the ranges property to describe
+> memory and IO ranges - this binding tends to be the same across architectures
+> yet several parsing implementations exist, e.g. arch/mips/pci/pci.c,
+> arch/powerpc/kernel/pci-common.c, arch/sparc/kernel/pci.c and
+> arch/microblaze/pci/pci-common.c (clone of PPC). Some of these duplicate
+> functionality provided by drivers/of/address.c.
 
-Matthew Garrett and Alan Cox said (see LKML link below) that clearing bus-master
-for all PCI devices may lead to unpredictable consequences, some devices ignores
-this bit and continues DMA, some of them hang after that or crash whole system.
-Probably we should leave here only warning and disable bus-mastering for each
-driver individually in ->shutdown() callback.
+Hm I wanted to test but was blocked by this:
 
-Link: https://lkml.org/lkml/2012/6/6/278
-Signed-off-by: Konstantin Khlebnikov <khlebnikov@openvz.org>
-Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Khalid Aziz <khalid.aziz@hp.com>
-Cc: linux-pci@vger.kernel.org
-Cc: Matthew Garrett <mjg@redhat.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Andi Kleen <ak@linux.intel.com>
----
- drivers/pci/pci-driver.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Content-Type: text/plain; charset=WINDOWS-1252
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-index f79cbcd..dc5bdce 100644
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -392,7 +392,7 @@ static void pci_device_shutdown(struct device *dev)
- 	 * Turn off Bus Master bit on the device to tell it to not
- 	 * continue to do DMA
- 	 */
--	pci_disable_device(pci_dev);
-+	pci_clear_master(pci_dev);
- }
- 
- #ifdef CONFIG_PM
+Making the raw patch look like this:
 
+=09const u32 *ranges;
+-=09int rlen;
+-=09int pna =3D of_n_addr_cells(dev);
+-=09int np =3D pna + 5;
+ =09int memno =3D 0, isa_hole =3D -1;
+
+I bet the other ARM guys can help you get the format right
+somehow... can't you just use git send-email?
+
+Yours,
+Linus Walleij
