@@ -1,61 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:55147 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751355Ab3CURan (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 Mar 2013 13:30:43 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
+Received: from mail-oa0-f45.google.com ([209.85.219.45]:35477 "EHLO
+	mail-oa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750779Ab3CAPNi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 Mar 2013 10:13:38 -0500
+Message-ID: <5130C59E.8020702@gmail.com>
+Date: Fri, 01 Mar 2013 09:13:34 -0600
+From: Rob Herring <robherring2@gmail.com>
+MIME-Version: 1.0
+To: Andrew Murray <Andrew.Murray@arm.com>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"devicetree-discuss@lists.ozlabs.org"
+	<devicetree-discuss@lists.ozlabs.org>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	"rob.herring@calxeda.com" <rob.herring@calxeda.com>,
 	Grant Likely <grant.likely@secretlab.ca>,
-	Russell King <linux@arm.linux.org.uk>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	devicetree-discuss@lists.ozlabs.org,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Maen Suleiman <maen@marvell.com>,
 	Thierry Reding <thierry.reding@avionic-design.de>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Olof Johansson <olof@lixom.net>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Mitch Bradley <wmb@firmworks.com>,
-	Andrew Murray <andrew.murray@arm.com>,
-	Mike Turquette <mturquette@linaro.org>
-Subject: [PATCH v5 06/17] clk: mvebu: create parent-child relation for PCIe clocks on Armada 370
-Date: Thu, 21 Mar 2013 18:30:14 +0100
-Message-Id: <1363887025-19931-7-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1363887025-19931-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1363887025-19931-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>
+Subject: Re: [RFC PATCH RESEND v2] of/pci: Provide support for parsing PCI
+ DT ranges property
+References: <1362140616-19346-1-git-send-email-Andrew.Murray@arm.com>
+In-Reply-To: <1362140616-19346-1-git-send-email-Andrew.Murray@arm.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The Armada 370 has two gatable clocks for each PCIe interface, and we
-want both of them to be enabled. We therefore make one of the two
-clocks a child of the other, as we did for the sataX and sataXlnk
-clocks on Armada XP.
+On 03/01/2013 06:23 AM, Andrew Murray wrote:
+> This patch factors out common implementations patterns to reduce overall kernel
+> code and provide a means for host bridge drivers to directly obtain struct
+> resources from the DT's ranges property without relying on architecture specific
+> DT handling. This will make it easier to write archiecture independent host bridge
+> drivers and mitigate against further duplication of DT parsing code.
+> 
+> This patch can be used in the following way:
+> 
+> 	struct of_pci_range_iter iter;
+> 	for_each_of_pci_range(&iter, np) {
+> 
+> 		//directly access properties of the address range, e.g.:
+> 		//iter.pci_space, iter.pci_addr, iter.cpu_addr, iter.size or
+> 		//iter.flags
+> 
+> 		//alternatively obtain a struct resource, e.g.:
+> 		//struct resource res;
+> 		//range_iter_fill_resource(iter, np, res);
+> 	}
+> 
+> Additionally the implementation takes care of adjacent ranges and merges them
+> into a single range (as was the case with powerpc and microblaze).
+> 
+> The modifications to microblaze, mips and powerpc have not been tested.
+> 
+> v2:
+>   This follows on from suggestions made by Grant Likely
+>   (marc.info/?l=linux-kernel&m=136079602806328)
+> 
+> Signed-off-by: Andrew Murray <Andrew.Murray@arm.com>
+> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+> ---
+>  arch/microblaze/pci/pci-common.c |  100 +++++++++++--------------------------
+>  arch/mips/pci/pci.c              |   44 ++++-------------
+>  arch/powerpc/kernel/pci-common.c |   93 ++++++++++-------------------------
+>  drivers/of/address.c             |   54 ++++++++++++++++++++
+>  include/linux/of_address.h       |   30 +++++++++++
+>  5 files changed, 151 insertions(+), 170 deletions(-)
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Mike Turquette <mturquette@linaro.org>
----
- drivers/clk/mvebu/clk-gating-ctrl.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+The thing is that this still leaves pci_process_bridge_OF_ranges
+basically identical for microblaze and powerpc which is really what
+needs to be moved out to common code. Obviously, struct pci_controller
+vs. struct pci_sys_data on ARM is an issue, but they all have
+fundamentally the same data.
 
-diff --git a/drivers/clk/mvebu/clk-gating-ctrl.c b/drivers/clk/mvebu/clk-gating-ctrl.c
-index ebf141d..b35785a 100644
---- a/drivers/clk/mvebu/clk-gating-ctrl.c
-+++ b/drivers/clk/mvebu/clk-gating-ctrl.c
-@@ -119,8 +119,8 @@ static const struct mvebu_soc_descr __initconst armada_370_gating_descr[] = {
- 	{ "pex1_en", NULL,  2 },
- 	{ "ge1", NULL, 3 },
- 	{ "ge0", NULL, 4 },
--	{ "pex0", NULL, 5 },
--	{ "pex1", NULL, 9 },
-+	{ "pex0", "pex0_en", 5 },
-+	{ "pex1", "pex1_en", 9 },
- 	{ "sata0", NULL, 15 },
- 	{ "sdio", NULL, 17 },
- 	{ "tdm", NULL, 25 },
--- 
-1.7.9.5
+All these common fields should be in a common PCI controller struct.
+Perhaps introducing this with just what you need would work. Depending
+how invasive moving those fields to a new struct is, you could have a
+wrapper that just copies/translates the fields to the arch specific struct.
+
+There's also things like ioremap of the i/o range. ARM uses a fixed
+virtual address, so we need to do something different. Just returning
+the i/o cpu_addr and moving the ioremap out of this function would solve
+that.
+
+Rob
 
