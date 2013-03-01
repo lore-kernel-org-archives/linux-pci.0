@@ -1,94 +1,115 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.samsung.com ([203.254.224.24]:20386 "EHLO
-	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755776Ab3CDKXr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 4 Mar 2013 05:23:47 -0500
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Kukjin Kim' <kgene.kim@samsung.com>,
-	linux-samsung-soc@vger.kernel.org
-Cc: linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
-	'Surendranath Gurivireddy Balla' <suren.reddy@samsung.com>,
-	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
-	'Jingoo Han' <jg1.han@samsung.com>
-References: <016b01ce18c2$2c366f10$84a34d30$%han@samsung.com>
-In-reply-to: <016b01ce18c2$2c366f10$84a34d30$%han@samsung.com>
-Subject: [PATCH 2/2] ARM: dts: Add pcie controller node for Samsung EXYNOS5440
- SoC
-Date: Mon, 04 Mar 2013 19:23:44 +0900
-Message-id: <016c01ce18c2$59bf89d0$0d3e9d70$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+Received: from mail-qe0-f52.google.com ([209.85.128.52]:43571 "EHLO
+	mail-qe0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751320Ab3CARyc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 Mar 2013 12:54:32 -0500
+Received: by mail-qe0-f52.google.com with SMTP id s14so2118950qeb.39
+        for <linux-pci@vger.kernel.org>; Fri, 01 Mar 2013 09:54:31 -0800 (PST)
+From: "Justin Piszcz" <jpiszcz@lucidpixels.com>
+To: "'Andrew Cooks'" <acooks@gmail.com>, <joro@8bytes.org>,
+	<xjtuychu@hotmail.com>, <gm.ychu@gmail.com>,
+	<alex.williamson@redhat.com>, <bhelgaas@google.com>,
+	<dwmw2@infradead.org>
+Cc: "'open list:INTEL IOMMU \(VT-d\)'" <iommu@lists.linux-foundation.org>,
+	"'open list'" <linux-kernel@vger.kernel.org>,
+	"'open list:PCI SUBSYSTEM'" <linux-pci@vger.kernel.org>
+References: <1354533387-4110-1-git-send-email-acooks@gmail.com>, <1355914703-28576-1-git-send-email-acooks@gmail.com> <1362126373-32318-1-git-send-email-acooks@gmail.com>
+In-Reply-To: <1362126373-32318-1-git-send-email-acooks@gmail.com>
+Subject: RE: [PATCH] Quirk to support Marvell 88SE91xx SATA controllers with Intel IOMMU.
+Date: Fri, 1 Mar 2013 12:54:30 -0500
+Message-ID: <007f01ce16a5$d362de50$7a289af0$@lucidpixels.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Exynos5440 has two PCIe controllers which can be used as root complex
-for PCIe interface.
 
-Signed-off-by: Jingoo Han <jg1.han@samsung.com>
----
- arch/arm/boot/dts/exynos5440-ssdk5440.dts |    8 +++++++
- arch/arm/boot/dts/exynos5440.dtsi         |   32 +++++++++++++++++++++++++++++
- 2 files changed, 40 insertions(+), 0 deletions(-)
 
-diff --git a/arch/arm/boot/dts/exynos5440-ssdk5440.dts b/arch/arm/boot/dts/exynos5440-ssdk5440.dts
-index 81e2c96..ecf6906 100644
---- a/arch/arm/boot/dts/exynos5440-ssdk5440.dts
-+++ b/arch/arm/boot/dts/exynos5440-ssdk5440.dts
-@@ -43,4 +43,12 @@
- 	rtc {
- 		status = "disabled";
- 	};
-+
-+	pcie0@40000000 {
-+		reset-gpio = <5>;
-+	};
-+
-+	pcie1@60000000 {
-+		reset-gpio = <22>;
-+	};
- };
-diff --git a/arch/arm/boot/dts/exynos5440.dtsi b/arch/arm/boot/dts/exynos5440.dtsi
-index 0bde96d..16bb994 100644
---- a/arch/arm/boot/dts/exynos5440.dtsi
-+++ b/arch/arm/boot/dts/exynos5440.dtsi
-@@ -151,4 +151,36 @@
- 		reg = <0x130000 0x1000>;
- 		interrupts = <0 17 0>, <0 16 0>;
- 	};
-+
-+	pcie0@40000000 {
-+		compatible = "samsung,pcie-host";
-+		reg = <0x40000000 0x4000
-+			0x290000 0x1000
-+			0x270000 0x1000
-+			0x271000 0x40>;
-+		interrupts = <0 20 0>, <0 21 0>, <0 22 0>;
-+		pcie-host,io_size = <0x4000>;
-+		pcie-host,cfg0_size = <0x100000>;
-+		pcie-host,cfg1_size = <0x100000>;
-+		pcie-host,mem_size = <0x10000000>;
-+		pcie-host,in_mem_size = <0x8000000>;
-+		#address-cells = <1>;
-+		#size-cells = <0>;
-+	};
-+
-+	pcie1@60000000 {
-+		compatible = "samsung,pcie-host";
-+		reg = <0x60000000 0x4000
-+			0x2a0000 0x1000
-+			0x272000 0x1000
-+			0x271040 0x40>;
-+		interrupts = <0 23 0>, <0 24 0>, <0 25 0>;
-+		pcie-host,io_size = <0x4000>;
-+		pcie-host,cfg0_size = <0x100000>;
-+		pcie-host,cfg1_size = <0x100000>;
-+		pcie-host,mem_size = <0x10000000>;
-+		pcie-host,in_mem_size = <0x8000000>;
-+		#address-cells = <1>;
-+		#size-cells = <0>;
-+	};
- };
--- 
-1.7.2.5
+-----Original Message-----
+From: Andrew Cooks [mailto:acooks@gmail.com] 
+Sent: Friday, March 01, 2013 3:26 AM
+To: acooks@gmail.com; joro@8bytes.org; xjtuychu@hotmail.com;
+gm.ychu@gmail.com; alex.williamson@redhat.com; bhelgaas@google.com;
+jpiszcz@lucidpixels.com; dwmw2@infradead.org
+Cc: open list:INTEL IOMMU (VT-d); open list; open list:PCI SUBSYSTEM
+Subject: [PATCH] Quirk to support Marvell 88SE91xx SATA controllers with
+Intel IOMMU.
+
+This is my third submitted patch to make Marvell 88SE91xx SATA controllers
+work when IOMMU is enabled.[1][2]
+
+What's changed:
+* Adopt David Woodhouse's terminology by referring to the quirky functions
+as 'ghost' functions.
+* Unmap ghost functions when device is detached from IOMMU.
+* Stub function for when CONFIG_PCI_QUIRKS is not enabled.
+
+The bad:
+* Still no AMD support.
+* The table of affected chip IDs is as complete as I can make it by googling
+for bug reports.
+
+This patch was generated against commit
+b0af9cd9aab60ceb17d3ebabb9fdf4ff0a99cf50, but will also apply cleanly to
+3.7.10.
+
+--
+
+Hi,
+
+Against 3.7.10:
+
+# patch -p1 <
+../RFC-Fix-Intel-IOMMU-support-for-Marvell-88SE91xx-SATA-controllers..patch 
+patching file drivers/iommu/intel-iommu.c
+patching file drivers/pci/quirks.c
+Hunk #1 succeeded at 3230 (offset 3 lines).
+patching file include/linux/pci.h
+#
+
+Recompile kernel, reboot..
+
+Shutdown host, re-attach to Marvell Controller w/IOMMU.
+
+The host still failed to boot, dmesg/panic here:
+http://home.comcast.net/~jpiszcz/20130301/boot_failure.JPG
+
+(The root disk is /dev/sdc)
+
+I recompiled again with IOMMU off and it booted ok:
+
+# uname -a
+Linux host 3.7.10 #2 SMP Fri Mar 1 12:44:25 EST 2013 x86_64 GNU/Linux
+
+Here is the part of dmesg (what it looks like when it succeeds with
+IOMMU=off)
+
+[    4.288113] input: American Megatrends Inc. Virtual Keyboard and Mouse as
+/devices/pci0000:00/0000:00:1a.1/usb4/4-2/4-2:1.0/input/input3
+[    4.289025] hid-generic 0003:046B:FF10.0001: input,hidraw0: USB HID v1.10
+Keyboard [American Megatrends Inc. Virtual Keyboard and Mouse] on
+usb-0000:00:1a.1-2/input0
+[    4.305993] input: American Megatrends Inc. Virtual Keyboard and Mouse as
+/devices/pci0000:00/0000:00:1a.1/usb4/4-2/4-2:1.1/input/input4
+[    4.307106] hid-generic 0003:046B:FF10.0002: input,hidraw1: USB HID v1.10
+Mouse [American Megatrends Inc. Virtual Keyboard and Mouse] on
+usb-0000:00:1a.1-2/input1
+[    4.326481] ata6: SATA link down (SStatus 0 SControl 300)
+[    4.327324] scsi 7:0:0:0: Direct-Access     ATA      INTEL SSDSC2MH25
+PWG4 PQ: 0 ANSI: 5
+[    4.329953] sd 7:0:0:0: [sdc] 488397168 512-byte logical blocks: (250
+GB/232 GiB)
+[    4.330639] scsi 14:0:0:0: Processor         Marvell  91xx Config
+1.01 PQ: 0 ANSI: 5
+[    4.333276] sd 7:0:0:0: [sdc] Write Protect is off
+[    4.334746] sd 7:0:0:0: [sdc] Mode Sense: 00 3a 00 00
+[    4.334921] sd 7:0:0:0: [sdc] Write cache: enabled, read cache: enabled,
+doesn't support DPO or FUA
+[    4.345622]  sdc: sdc1 sdc2
+[    4.347493] sd 7:0:0:0: [sdc] Attached SCSI disk
+
+Justin.
+ 
 
 
