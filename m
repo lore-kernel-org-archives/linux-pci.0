@@ -1,100 +1,106 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <1363802953.24132.513.camel@bling.home>
-Subject: Re: [PATCH] pciehp: Add pciehp_surprise module option
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Takashi Iwai <tiwai@suse.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Oliver Neukum <oneukum@suse.de>, Michal Marek <mmarek@suse.cz>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Wed, 20 Mar 2013 12:09:13 -0600
-In-Reply-To: <s5h38vqjhk6.wl%tiwai@suse.de>
-References: <s5h38vqjhk6.wl%tiwai@suse.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:45246 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750822Ab3CBQVs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 2 Mar 2013 11:21:48 -0500
+Message-ID: <51322709.6060702@redhat.com>
+Date: Sat, 02 Mar 2013 11:21:29 -0500
+From: Prarit Bhargava <prarit@redhat.com>
+MIME-Version: 1.0
+To: Neil Horman <nhorman@tuxdriver.com>
+CC: linux-kernel@vger.kernel.org, Don Zickus <dzickus@redhat.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Asit Mallick <asit.k.mallick@intel.com>,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH] irq: add quirk for broken interrupt remapping on 55XX
+ chipsets
+References: <1362158276-4901-1-git-send-email-nhorman@tuxdriver.com>
+In-Reply-To: <1362158276-4901-1-git-send-email-nhorman@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2013-03-20 at 15:02 +0100, Takashi Iwai wrote:
-> We encountered a problem that on some HP machines the Realtek PCI-e
-> card reader device appears only when you inserted a card before the
-> cold boot.  While debugging, it turned out that the device is actually
-> handled via PCI-e hotplug in some level.  The device sends a presence
-> change notification, and pciehp receives it, but it's ignored because
-> of lack of the hotplug surprise (PCI_EXP_SLTCAP_HPS) capability bit.
-> Once when this check passes, everything starts working -- the device
-> appears upon plugging the card properly.
+On 03/01/2013 12:17 PM, Neil Horman wrote:
+> A few years back intel published a spec update:
+> http://www.intel.com/content/dam/doc/specification-update/5520-and-5500-chipset-ioh-specification-update.pdf
 > 
-> There are a few other bug reports indicating the similar problems
-> (e.g. on recent Dell laptops), and I guess the culprit is same.
+> For the 5520 and 5500 chipsets which contained an errata (specificially errata
+> 53), which noted that these chipsets can't properly do interrupt remapping, and
+> as a result the recommend that interrupt remapping be disabled in bios.  While
+> many vendors have a bios update to do exactly that, not all do, and of course
+> not all users update their bios to a level that corrects the problem.  As a
+> result, occasionally interrupts can arrive at a cpu even after affinity for that
+> interrupt has be moved, leading to lost or spurrious interrupts (usually
+> characterized by the message:
+> kernel: do_IRQ: 7.71 No irq handler for vector (irq -1)
 > 
-> This patch adds a new module option, pciehp_surprise, to pciehp as a
-> workaround.  When pciehp_surprise=1 is given, pciehp handles the
-> presence change as the device on/off as if PCI_EXP_SLTCAP_HPS is set.
-> Unless it's set explicitly, there is no impact on the existing
-> behavior.
+> There have been several incidents recently of people seeing this error, and
+> investigation has shown that they have system for which their BIOS level is such
+> that this feature was not properly turned off.  As such, it would be good to
+> give them a reminder that their systems are vulnurable to this problem.
 > 
-> Signed-off-by: Takashi Iwai <tiwai@suse.de>
+> Signed-off-by: Neil Horman <nhorman@tuxdriver.com>
+> CC: Prarit Bhargava <prarit@redhat.com>
+> CC: Don Zickus <dzickus@redhat.com>
+> CC: Don Dutile <ddutile@redhat.com>
+> CC: Bjorn Helgaas <bhelgaas@google.com>
+> CC: Asit Mallick <asit.k.mallick@intel.com>
+> CC: linux-pci@vger.kernel.org
 > ---
->  drivers/pci/hotplug/pciehp.h      | 3 ++-
->  drivers/pci/hotplug/pciehp_core.c | 3 +++
->  2 files changed, 5 insertions(+), 1 deletion(-)
+>  drivers/iommu/intel_irq_remapping.c | 20 ++++++++++++++++++++
+>  include/linux/pci_ids.h             |  2 ++
+>  2 files changed, 22 insertions(+)
 > 
-> diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
-> index 2c113de..314f3be 100644
-> --- a/drivers/pci/hotplug/pciehp.h
-> +++ b/drivers/pci/hotplug/pciehp.h
-> @@ -44,6 +44,7 @@ extern bool pciehp_poll_mode;
->  extern int pciehp_poll_time;
->  extern bool pciehp_debug;
->  extern bool pciehp_force;
-> +extern bool pciehp_surprise;
->  
->  #define dbg(format, arg...)						\
->  do {									\
-> @@ -122,7 +123,7 @@ struct controller {
->  #define MRL_SENS(ctrl)		((ctrl)->slot_cap & PCI_EXP_SLTCAP_MRLSP)
->  #define ATTN_LED(ctrl)		((ctrl)->slot_cap & PCI_EXP_SLTCAP_AIP)
->  #define PWR_LED(ctrl)		((ctrl)->slot_cap & PCI_EXP_SLTCAP_PIP)
-> -#define HP_SUPR_RM(ctrl)	((ctrl)->slot_cap & PCI_EXP_SLTCAP_HPS)
-> +#define HP_SUPR_RM(ctrl)	(pciehp_surprise || ((ctrl)->slot_cap & PCI_EXP_SLTCAP_HPS))
->  #define EMI(ctrl)		((ctrl)->slot_cap & PCI_EXP_SLTCAP_EIP)
->  #define NO_CMD_CMPL(ctrl)	((ctrl)->slot_cap & PCI_EXP_SLTCAP_NCCS)
->  #define PSN(ctrl)		((ctrl)->slot_cap >> 19)
-> diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
-> index 7d72c5e..c3a574e 100644
-> --- a/drivers/pci/hotplug/pciehp_core.c
-> +++ b/drivers/pci/hotplug/pciehp_core.c
-> @@ -42,6 +42,7 @@ bool pciehp_debug;
->  bool pciehp_poll_mode;
->  int pciehp_poll_time;
->  bool pciehp_force;
-> +bool pciehp_surprise;
->  
->  #define DRIVER_VERSION	"0.4"
->  #define DRIVER_AUTHOR	"Dan Zink <dan.zink@compaq.com>, Greg Kroah-Hartman <greg@kroah.com>, Dely Sy <dely.l.sy@intel.com>"
-> @@ -55,10 +56,12 @@ module_param(pciehp_debug, bool, 0644);
->  module_param(pciehp_poll_mode, bool, 0644);
->  module_param(pciehp_poll_time, int, 0644);
->  module_param(pciehp_force, bool, 0644);
-> +module_param(pciehp_surprise, bool, 0644);
->  MODULE_PARM_DESC(pciehp_debug, "Debugging mode enabled or not");
->  MODULE_PARM_DESC(pciehp_poll_mode, "Using polling mechanism for hot-plug events or not");
->  MODULE_PARM_DESC(pciehp_poll_time, "Polling mechanism frequency, in seconds");
->  MODULE_PARM_DESC(pciehp_force, "Force pciehp, even if OSHP is missing");
-> +MODULE_PARM_DESC(pciehp_surprise, "Force to set hotplug-surprise capability");
->  
->  #define PCIE_MODULE_NAME "pciehp"
->  
+> diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
+> index f3b8f23..9bfb6c2 100644
+> --- a/drivers/iommu/intel_irq_remapping.c
+> +++ b/drivers/iommu/intel_irq_remapping.c
+> @@ -1113,3 +1113,23 @@ struct irq_remap_ops intel_irq_remap_ops = {
+>  	.msi_setup_irq		= intel_msi_setup_irq,
+>  	.setup_hpet_msi		= intel_setup_hpet_msi,
+>  };
+> +
+> +
+> +static void intel_remapping_check(struct pci_dev *dev)
+> +{
+> +	u8 revision;
+> +
+> +	pci_read_config_byte(dev, PCI_REVISION_ID, &revision);
+> +
+> +	if ((revision == 0x13) && irq_remapping_enabled) {
+> +		pr_warn("WARNING WARNING WARNING WARNING WARNING WARNING\n"
+> +			"This system BIOS has enabled interrupt remapping\n"
+> +			"on a chipset that contains an errata making that\n"
+> +			"feature unstable.  Please reboot with nointremap\n"
+> +			"added to the kernel command line and contact\n"
+> +			"your BIOS vendor for an update");
 
-Please no.  Can we quirk just the device with the problem?  My issue
-with turning on surprise hotplug across the system is that secondary bus
-resets will trigger a device hot unplug, hot re-plug.  I have a system
-with an integrated broadcom NIC behind a root port that claims to
-support surprise hotplug (even though this NIC is soldered to the
-motherboard) and it's nearly impossible to use it with KVM device
-assignment because the struct pci_dev goes away as we're trying to use
-it.  This patch is only going to make that problem more widespread.
-Thanks,
+Make this one line?  Might be too long but I believe the preferred policy is now
+to keep the output on one line so that it is easy to find in the kernel source.
 
-Alex
+Also, IMO, remove the WARNING WARNING stuff.
+
+You also should probably use HW_ERR here too.
+
+P.
+
+> +	}
+> +}
+> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_5520_IOHUB, intel_remapping_check);
+> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_5500_IOHUB, intel_remapping_check);
+> +
+> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+> index 31717bd..54027a6 100644
+> --- a/include/linux/pci_ids.h
+> +++ b/include/linux/pci_ids.h
+> @@ -2732,6 +2732,8 @@
+>  #define PCI_DEVICE_ID_INTEL_LYNNFIELD_MC_CH2_RANK_REV2  0x2db2
+>  #define PCI_DEVICE_ID_INTEL_LYNNFIELD_MC_CH2_TC_REV2    0x2db3
+>  #define PCI_DEVICE_ID_INTEL_82855PM_HB	0x3340
+> +#define PCI_DEVICE_ID_INTEL_5500_IOHUB	0x3403
+> +#define PCI_DEVICE_ID_INTEL_5520_IOHUB	0x3406
+>  #define PCI_DEVICE_ID_INTEL_IOAT_TBG4	0x3429
+>  #define PCI_DEVICE_ID_INTEL_IOAT_TBG5	0x342a
+>  #define PCI_DEVICE_ID_INTEL_IOAT_TBG6	0x342b
 
