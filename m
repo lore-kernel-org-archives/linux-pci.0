@@ -1,158 +1,68 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:47175 "EHLO hydra.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757266Ab3C3Bkw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 29 Mar 2013 21:40:52 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
-Cc: Huang Ying <ying.huang@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: Re: 3.9-rc1: pciehp and eSATA card SiI 3132, no XHCI
-Date: Sat, 30 Mar 2013 02:48:22 +0100
-Message-ID: <2764533.egTWJWstJg@vostro.rjw.lan>
-In-Reply-To: <51563D32.70106@fold.natur.cuni.cz>
-References: <513E7E1E.80508@fold.natur.cuni.cz> <5381191.45N5KLLmWJ@vostro.rjw.lan> <51563D32.70106@fold.natur.cuni.cz>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Vijay Mohan Pandarathil <vijaymohan.pandarathil@hp.com>
+To: alex.williamson@redhat.com, gleb@redhat.com, bhelgaas@google.com,
+	blauwirbel@gmail.com, lance.oritz@hp.com, kvm@vger.kernel.org,
+	qemu-devel@nongnu.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v6 0/3] AER-KVM: Error containment of VFIO devices assigned to KVM guests
+Date: Sat,  2 Mar 2013 01:16:56 -0600
+Message-Id: <1362208619-5028-1-git-send-email-vijaymohan.pandarathil@hp.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Saturday, March 30, 2013 02:17:38 AM Martin Mokrejs wrote:
-> Rafael J. Wysocki wrote:
-> > On Friday, March 29, 2013 03:11:13 PM Martin Mokrejs wrote:
-> >> Hi Ying,
-> >>   thank you for the patch. Here are the results.
-> >>
-> >> Huang Ying wrote:
-> >>> On Thu, 2013-03-28 at 19:38 +0100, Martin Mokrejs wrote:
-> >>>> Hi Ying,
-> >>>>   would you please tell me how this report relate to this patch?
-> >>>>
-> >>>> [PATCH] PCI / ACPI: Always resume devices on ACPI wakeup notifications
-> >>>>
-> >>>>   Could you tell me why this PME was being flipped back and forth now?
-> >>>> Actually, does that make finally some sense to you, pci/acpi devs?
-> > 
-> > Can you please test this patch:
-> > 
-> > https://patchwork.kernel.org/patch/2359611/
-> > 
-> > and report back as I asked you?
-> 
-> Sorry for the delay I just had to sort out what belongs under what thread
-> and the patch was under the other. But I agree its testing with this
-> particular eSATA/ExpressCardSlot/PM fits better here.
-> 
-> 
-> The good news is that the eSATA card hotplug works almost perfectly with the patch.
-> I cold booted as always with the card in the slot already loaded, same kernel
-> .config and commandline options as described under this thread. But the kernel
-> was 3.8.3! Not 3.9-rc1.
-
-Good.  The goal was to fix the problem with eSATA hotplug.
-
-> What is important is the fact that this patch resulted in runtime_status set to
-> "active" instead of "auto" (3.8.3 with incidentally enabled laptop-mode-tools)
-> or "on" (also tested on 3.8.3 once laptop-mode-tools were uninstalled). With this
-> patch, devices did not get suspended during the tests (per /sys/*/power/runtime_status
-> files).
-
-You seem to be confusing power/runtime_status with power/control.  runtime_status
-can never be "on", while control can never be "active".
-
-> I haven't realized so far that the rtl8169 card at 05:00 and the TI xHCI
-> controller at 0b:00 support D2 state.
-
-Which probably doesn't matter, because that state isn't used by the kernel
-anyway.
-
-> # grep PME dmesg_final.txt 
-> [    1.571475] pci 0000:00:16.0: PME# supported from D0 D3hot D3cold
-> [    1.571500] pci 0000:00:16.0: PME# disabled
-> [    1.571760] pci 0000:00:1a.0: PME# supported from D0 D3hot D3cold
-> [    1.571766] pci 0000:00:1a.0: PME# disabled
-> [    1.571991] pci 0000:00:1b.0: PME# supported from D0 D3hot D3cold
-> [    1.571997] pci 0000:00:1b.0: PME# disabled
-> [    1.572200] pci 0000:00:1c.0: PME# supported from D0 D3hot D3cold
-> [    1.572205] pci 0000:00:1c.0: PME# disabled
-> [    1.572409] pci 0000:00:1c.1: PME# supported from D0 D3hot D3cold
-> [    1.572414] pci 0000:00:1c.1: PME# disabled
-> [    1.572618] pci 0000:00:1c.3: PME# supported from D0 D3hot D3cold
-> [    1.572623] pci 0000:00:1c.3: PME# disabled
-> [    1.572826] pci 0000:00:1c.4: PME# supported from D0 D3hot D3cold
-> [    1.572832] pci 0000:00:1c.4: PME# disabled
-> [    1.573042] pci 0000:00:1c.7: PME# supported from D0 D3hot D3cold
-> [    1.573047] pci 0000:00:1c.7: PME# disabled
-> [    1.573292] pci 0000:00:1d.0: PME# supported from D0 D3hot D3cold
-> [    1.573297] pci 0000:00:1d.0: PME# disabled
-> [    1.573765] pci 0000:00:1f.2: PME# supported from D3hot
-> [    1.573770] pci 0000:00:1f.2: PME# disabled
-> [    1.574521] pci 0000:05:00.0: PME# supported from D0 D1 D2 D3hot D3cold
-> [    1.574528] pci 0000:05:00.0: PME# disabled
-> [    1.587449] pci 0000:09:00.0: PME# supported from D0 D3hot D3cold
-> [    1.587500] pci 0000:09:00.0: PME# disabled
-> [    1.605568] pci 0000:0b:00.0: PME# supported from D0 D1 D2 D3hot D3cold
-> [    1.605575] pci 0000:0b:00.0: PME# disabled
-> [  362.712584] sata_sil24 0000:11:00.0: PME# disabled
-> [ 1069.949732] sata_sil24 0000:11:00.0: PME# disabled
-> [ 1083.878783] sata_sil24 0000:11:00.0: PME# disabled
-> [ 1096.679536] sata_sil24 0000:11:00.0: PME# disabled
-> [ 1107.503274] sata_sil24 0000:11:00.0: PME# disabled
-> #
-
-The part above is totally irrelevant.  It's just the initial configuration.
-
-> Seems the sata_sil24 does not report an equivalent of, for example:
-> [    1.605568] pci 0000:0b:00.0: PME# supported from D0 D1 D2 D3hot D3cold
-
-Apparently, they don't support PME and pci_pme_active() should check
-dev->pme_support, but it doesn't.  Still not relevant, though.
-
-> The states before/after tests (did not change):
-
-What tests?
-
-And why would you expect them to change?
-
-> /sys/bus/pci/devices/0000:00:00.0/power/control:on
-> /sys/bus/pci/devices/0000:00:02.0/power/control:on
-> /sys/bus/pci/devices/0000:00:16.0/power/control:on
-> /sys/bus/pci/devices/0000:00:1a.0/power/control:on
-> /sys/bus/pci/devices/0000:00:1b.0/power/control:on
-> /sys/bus/pci/devices/0000:00:1c.0/power/control:on
-> /sys/bus/pci/devices/0000:00:1c.1/power/control:on
-> /sys/bus/pci/devices/0000:00:1c.3/power/control:on
-> /sys/bus/pci/devices/0000:00:1c.4/power/control:on
-> /sys/bus/pci/devices/0000:00:1c.7/power/control:on
-> /sys/bus/pci/devices/0000:00:1d.0/power/control:on
-> /sys/bus/pci/devices/0000:00:1f.0/power/control:on
-> /sys/bus/pci/devices/0000:00:1f.2/power/control:on
-> /sys/bus/pci/devices/0000:00:1f.3/power/control:on
-> /sys/bus/pci/devices/0000:05:00.0/power/control:on
-> /sys/bus/pci/devices/0000:09:00.0/power/control:on
-> /sys/bus/pci/devices/0000:0b:00.0/power/control:on
-> /sys/bus/pci/devices/0000:11:00.0/power/control:on
-
-Sure, all of these devices are always on.  You need to write "auto" to their
-power/control files to change that, which still doesn't mean they will be
-runtime-suspended.
-
-The patch in question doesn't have any effect on those settings.
-
-> These 2 lines only are logged during hot eject of the eSATA card:
-> 
-> +[  362.712584] sata_sil24 0000:11:00.0: PME# disabled
-> +[  362.715773] sata_sil24: IRQ status == 0xffffffff, PCI fault or device removal?
-
-Device removal I suppose.
-
-Thanks,
-Rafael
+Add support for error containment when a VFIO device assigned to a KVM
+guest encounters an error. This is for PCIe devices/drivers that support AER
+functionality. When the host OS is notified of an error in a device either
+through the firmware first approach or through an interrupt handled by the AER
+root port driver, the error handler registered by the vfio-pci driver gets
+invoked. The qemu process is signaled through an eventfd registered per
+VFIO device by the qemu process. In the eventfd handler, qemu decides on
+what action to take. In this implementation, guest is brought down to
+contain the error.
 
 
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+v6:
+ - Rebased to latest upstream
+ - Resolved merge conflict with vfio_dev_present()
+v5:
+ - Rebased to latest upstream stable bits
+ - Incorporated v4 feedback
+v4:
+ - Stop the guest instead of terminating
+ - Remove unwanted returns from functions
+ - Incorporate other feedback
+v3:
+ - Removed PCI_AER* flags from device info ioctl.
+ - Incorporated feedback
+v2:
+ - Rebased to latest upstream stable bits
+ - Changed the new ioctl to be part of VFIO_SET_IRQs ioctl
+ - Added a new patch to get/put reference to a vfio device from struct device
+ - Incorporated all other feedback.
+
+---
+
+Vijay Mohan Pandarathil(3):
+
+[PATCH 1/3] VFIO: Wrapper to get reference to vfio_device from device 
+[PATCH 2/3] VFIO-AER: Vfio-pci driver changes for supporting AER
+[PATCH 3/3] QEMU-AER: Qemu changes to support AER for VFIO-PCI devices
+
+Kernel files changed
+
+
+ drivers/vfio/vfio.c  | 27 ++++++++++++++++++++++++++-
+ include/linux/vfio.h |  3 +++
+ 2 files changed, 29 insertions(+), 1 deletion(-)
+
+ drivers/vfio/pci/vfio_pci.c         | 44 ++++++++++++++++++++++++++++++++-
+ drivers/vfio/pci/vfio_pci_intrs.c   | 49 +++++++++++++++++++++++++++++++++++++
+ drivers/vfio/pci/vfio_pci_private.h |  1 +
+ include/uapi/linux/vfio.h           |  1 +
+ 4 files changed, 94 insertions(+), 1 deletion(-)
+
+Qemu files changed
+
+ hw/vfio_pci.c              | 123 +++++++++++++++++++++++++++++++++++++++++++++
+ linux-headers/linux/vfio.h |   1 +
+ 2 files changed, 124 insertions(+)
