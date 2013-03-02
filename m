@@ -1,137 +1,125 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Shawn Starr <shawn.starr@rogers.com>
-To: Daniel Vetter <daniel.vetter@ffwll.ch>
-Cc: Chris Wilson <chris@chris-wilson.co.uk>,
-	Jiri Kosina <jkosina@suse.cz>, Daniel Vetter <daniel@ffwll.ch>,
-	Greg KH <greg@kroah.com>,
-	Harald Arnesen <skogtun.linux@gmail.com>,
-	Kernel development list <linux-kernel@vger.kernel.org>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Peter Hurley <peter@hurleysoftware.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Thomas Meyer <thomas@m3y3r.de>,
-	USB list <linux-usb@vger.kernel.org>,
-	linux-acpi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Imre Deak <imre.deak@intel.com>,
-	Daniel Kurtz <djkurtz@chromium.org>,
-	dri-devel@lists.freedesktop.org,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	Arkadiusz Miskiewicz <a.miskiewicz@gmail.com>
-Subject: Re: gm45 intel gfx can generate non-MSI irq# in MSI mode (was Re: [PATCH] drm/i915: stop using GMBUS IRQs on Gen4 chips (was Re: [3.9-rc1] irq 16: nobody cared (was [3.9-rc1] very poor interrupt responses)))
-Date: Sun, 24 Mar 2013 15:44:59 -0400
-Message-ID: <1941778.XPux1HxP8Z@segfault.sh0n.net>
-In-Reply-To: <CAKMK7uGnZFaLQaZtoQ0Fz0ViNNjBvmf0Ak=qPmdAcm2mRBD7rA@mail.gmail.com>
-References: <CAKMK7uGnZFaLQaZtoQ0Fz0ViNNjBvmf0Ak=qPmdAcm2mRBD7rA@mail.gmail.com>
+Message-ID: <513163B7.9010309@gmail.com>
+Date: Sat, 02 Mar 2013 10:28:07 +0800
+From: Jiang Liu <liuj97@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: Yinghai Lu <yinghai@kernel.org>
+CC: Neil Horman <nhorman@tuxdriver.com>, linux-kernel@vger.kernel.org,
+	Prarit Bhargava <prarit@redhat.com>,
+	Don Zickus <dzickus@redhat.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Asit Mallick <asit.k.mallick@intel.com>,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH] irq: add quirk for broken interrupt remapping on 55XX
+ chipsets
+References: <1362158276-4901-1-git-send-email-nhorman@tuxdriver.com> <CAE9FiQWaunJL+196W_oRxLJ9nSO6PDQePCG2-52NCfGCtvwURA@mail.gmail.com>
+In-Reply-To: <CAE9FiQWaunJL+196W_oRxLJ9nSO6PDQePCG2-52NCfGCtvwURA@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, March 19, 2013 04:12:18 PM Daniel Vetter wrote:
-> On Tue, Mar 19, 2013 at 10:03 AM, Chris Wilson <chris@chris-wilson.co.uk> 
-wrote:
-> >> > How about just using:
-> >> >   if (!HAS_GMBUS_IRQ(dev_priv->dev)) gmbus4_irq_en = 0;
-> >> > 
-> >> > and the existing wait loop?
-> >> 
-> >> I explicitly wanted to avoid touching GMBUS4 register, as the real cause
-> >> of the failure is not clear.
-> >> 
-> >> But, as Yinghai Lu points out, the problem is most likely caused by
-> >> interrupt disabling not working properly (see his very good point
-> >> regarding DisINTx+ and INTx+ discrepancy), so zeroing the register out
-> >> should work .... and it indeed does in my case, hence the (tested) patch
-> >> below.
-> >> 
-> >> I think it's a 3.9-rc material, and I am all open to debug this further
-> >> for 3.10 so that the race is closed and gmbus irqs can be used on Gen4
-> >> platform properly.
-> > 
-> > Agreed. Using the IRQ for GMBUS is just a performance feature that can
-> > be deferred until after we determine the root cause - and hope that the
-> > failure is somehow peculiar to GMBUS.
+On 03/02/2013 02:20 AM, Yinghai Lu wrote:
+> On Fri, Mar 1, 2013 at 9:17 AM, Neil Horman <nhorman@tuxdriver.com> wrote:
+>> A few years back intel published a spec update:
+>> http://www.intel.com/content/dam/doc/specification-update/5520-and-5500-chipset-ioh-specification-update.pdf
+>>
+>> For the 5520 and 5500 chipsets which contained an errata (specificially errata
+>> 53), which noted that these chipsets can't properly do interrupt remapping, and
+>> as a result the recommend that interrupt remapping be disabled in bios.  While
+>> many vendors have a bios update to do exactly that, not all do, and of course
+>> not all users update their bios to a level that corrects the problem.  As a
+>> result, occasionally interrupts can arrive at a cpu even after affinity for that
+>> interrupt has be moved, leading to lost or spurrious interrupts (usually
+>> characterized by the message:
+>> kernel: do_IRQ: 7.71 No irq handler for vector (irq -1)
+>>
+>> There have been several incidents recently of people seeing this error, and
+>> investigation has shown that they have system for which their BIOS level is such
+>> that this feature was not properly turned off.  As such, it would be good to
+>> give them a reminder that their systems are vulnurable to this problem.
+>>
+>> Signed-off-by: Neil Horman <nhorman@tuxdriver.com>
+>> CC: Prarit Bhargava <prarit@redhat.com>
+>> CC: Don Zickus <dzickus@redhat.com>
+>> CC: Don Dutile <ddutile@redhat.com>
+>> CC: Bjorn Helgaas <bhelgaas@google.com>
+>> CC: Asit Mallick <asit.k.mallick@intel.com>
+>> CC: linux-pci@vger.kernel.org
+>> ---
+>>  drivers/iommu/intel_irq_remapping.c | 20 ++++++++++++++++++++
+>>  include/linux/pci_ids.h             |  2 ++
+>>  2 files changed, 22 insertions(+)
+>>
+>> diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
+>> index f3b8f23..9bfb6c2 100644
+>> --- a/drivers/iommu/intel_irq_remapping.c
+>> +++ b/drivers/iommu/intel_irq_remapping.c
+>> @@ -1113,3 +1113,23 @@ struct irq_remap_ops intel_irq_remap_ops = {
+>>         .msi_setup_irq          = intel_msi_setup_irq,
+>>         .setup_hpet_msi         = intel_setup_hpet_msi,
+>>  };
+>> +
+>> +
+>> +static void intel_remapping_check(struct pci_dev *dev)
+>> +{
+>> +       u8 revision;
+>> +
+>> +       pci_read_config_byte(dev, PCI_REVISION_ID, &revision);
+>> +
+>> +       if ((revision == 0x13) && irq_remapping_enabled) {
+>> +               pr_warn("WARNING WARNING WARNING WARNING WARNING WARNING\n"
+>> +                       "This system BIOS has enabled interrupt remapping\n"
+>> +                       "on a chipset that contains an errata making that\n"
+>> +                       "feature unstable.  Please reboot with nointremap\n"
+>> +                       "added to the kernel command line and contact\n"
+>> +                       "your BIOS vendor for an update");
+>> +       }
+>> +}
+>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_5520_IOHUB, intel_remapping_check);
+>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_5500_IOHUB, intel_remapping_check);
 > 
-> Ok, I've merged this patch. But some further investigation points at a
-> much more severe dragon hiding here: The MSI interrupt for the intel
-> gfx is commonly in the 40+ range, but the interrupt vector with the
-> spurious interrupts is 16. Which is the irq of the intel gfx when MSI
-> is disabled!
+> only for x86 platform?
+> If so, you can check that in arch/x86/kernel/early-quirks.c::early_quirks()
+> and set one flag and later print warning and skip there if someone
+> need to enable intr-remap.
+> So users will not need to reboot the system...
+We have just struggled with this issue when doing kvm restarting stress tests,
+and finally found it's a chipset errata. Thanks for fix it.
+And I think 5520/5500 is for x86 only, so could move it to x86 arch subdirectory.
+
+Regards!
+Gerry
+
 > 
-> So it looks like gmbus on the intel gfx is capable of generating
-> non-MSI interrupts in parallel to the MSI interrupts (since apparently
-> gmbus still works, so we get the interrupts we expect). I have no idea
-> how that could happen. Hence adding a bunch of people with more clue
-> than me.
+> Thanks
+> 
+> Yinghai
+> 
+>> +
+>> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+>> index 31717bd..54027a6 100644
+>> --- a/include/linux/pci_ids.h
+>> +++ b/include/linux/pci_ids.h
+>> @@ -2732,6 +2732,8 @@
+>>  #define PCI_DEVICE_ID_INTEL_LYNNFIELD_MC_CH2_RANK_REV2  0x2db2
+>>  #define PCI_DEVICE_ID_INTEL_LYNNFIELD_MC_CH2_TC_REV2    0x2db3
+>>  #define PCI_DEVICE_ID_INTEL_82855PM_HB 0x3340
+>> +#define PCI_DEVICE_ID_INTEL_5500_IOHUB 0x3403
+>> +#define PCI_DEVICE_ID_INTEL_5520_IOHUB 0x3406
+>>  #define PCI_DEVICE_ID_INTEL_IOAT_TBG4  0x3429
+>>  #define PCI_DEVICE_ID_INTEL_IOAT_TBG5  0x342a
+>>  #define PCI_DEVICE_ID_INTEL_IOAT_TBG6  0x342b
+>> --
+>> 1.7.11.7
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > 
 
-Hello folks,
-
-I am using Linus git master and built an rpm for 3.9.0-rc4 which has Jiri's 
-patch. I confirm this patch returns the GMA 4500 to working behavior as in 
-3.8.
-
-Thanks everyone.
-Shawn
-
-> For reference below the updated commit message.
-> 
-> Cheers, Daniel
-> 
-> Author: Jiri Kosina <jkosina@suse.cz>
-> Date:   Tue Mar 19 09:56:57 2013 +0100
-> 
->     drm/i915: stop using GMBUS IRQs on Gen4 chips
-> 
->     Commit 28c70f162 ("drm/i915: use the gmbus irq for waits") switched to
->     using GMBUS irqs instead of GPIO bit-banging for chipset generations 4
->     and above.
-> 
->     It turns out though that on many systems this leads to spurious
-> interrupts being generated, long after the register write to disable the
-> IRQs has been issued.
-> 
->     Typically this results in the spurious interrupt source getting
->     disabled:
-> 
->     [    9.636345] irq 16: nobody cared (try booting with the "irqpoll"
-> option) [    9.637915] Pid: 4157, comm: ifup Tainted: GF
-> 3.9.0-rc2-00341-g0863702 #422
->     [    9.639484] Call Trace:
->     [    9.640731]  <IRQ>  [<ffffffff8109b40d>] __report_bad_irq+0x1d/0xc7
->     [    9.640731]  [<ffffffff8109b7db>] note_interrupt+0x15b/0x1e8
->     [    9.640731]  [<ffffffff810999f7>] handle_irq_event_percpu+0x1bf/0x214
-> [    9.640731]  [<ffffffff81099a88>] handle_irq_event+0x3c/0x5c [   
-> 9.640731]  [<ffffffff8109c139>] handle_fasteoi_irq+0x7a/0xb0 [    9.640731]
->  [<ffffffff8100400e>] handle_irq+0x1a/0x24
->     [    9.640731]  [<ffffffff81003d17>] do_IRQ+0x48/0xaf
->     [    9.640731]  [<ffffffff8142f1ea>] common_interrupt+0x6a/0x6a
->     [    9.640731]  <EOI>  [<ffffffff8142f952>] ?
-> system_call_fastpath+0x16/0x1b [    9.640731] handlers:
->     [    9.640731] [<ffffffffa000d771>] usb_hcd_irq [usbcore]
->     [    9.640731] [<ffffffffa0306189>] yenta_interrupt [yenta_socket]
->     [    9.640731] Disabling IRQ #16
-> 
->     The really curious thing is now that irq 16 is _not_ the interrupt for
->     the i915 driver when using MSI, but it _is_ the interrupt when not
->     using MSI. So by all indications it seems like gmbus is able to
->     generate a legacy (shared) interrupt in MSI mode on some
->     configurations. I've tried to reproduce this and the differentiating
->     thing seems to be that on unaffected systems no other device uses irq
->     16 (which seems to be the non-MSI intel gfx interrupt on all gm45).
-> 
->     I have no idea how that even can happen.
-> 
->     To avoid tempting this elephant into a rage, just disable gmbus
->     interrupt support on gen 4.
-> 
->     v2: Improve the commit message with exact details of what's going on.
->     Also add a comment in the code to warn against this particular
->     elephant in the room.
-> 
->     Signed-off-by: Jiri Kosina <jkosina@suse.cz> (v1)
->     Acked-by: Chris Wilson <chris@chris-wilson.co.uk> (v1)
->     References: https://lkml.org/lkml/2013/3/8/325
->     Signed-off-by: Daniel Vetter <daniel.vetter@ffwll.ch>
