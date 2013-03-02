@@ -1,50 +1,94 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cn.fujitsu.com ([222.73.24.84]:40756 "EHLO song.cn.fujitsu.com"
-	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1754809Ab3C1Br4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 27 Mar 2013 21:47:56 -0400
-Message-ID: <5153A1C7.6030409@cn.fujitsu.com>
-Date: Thu, 28 Mar 2013 09:49:59 +0800
-From: Lin Feng <linfeng@cn.fujitsu.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org,
-	"x86@kernel.org" <x86@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: Re: [PATCH] kernel/range.c: subtract_range: fix the broken phrase
- issued by printk
-References: <CAE9FiQUrt11A0YAOLgvv3uTAWtTvVg3Mho9eD53orbxW6Jd8Vg@mail.gmail.com> <1363665251-14377-1-git-send-email-linfeng@cn.fujitsu.com> <CAErSpo6DWfHii8d8rGPJ1dLj5TVzsgU7QGDoAvBM5Fb_N5=mtw@mail.gmail.com>
-In-Reply-To: <CAErSpo6DWfHii8d8rGPJ1dLj5TVzsgU7QGDoAvBM5Fb_N5=mtw@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Vijay Mohan Pandarathil <vijaymohan.pandarathil@hp.com>
+To: alex.williamson@redhat.com, gleb@redhat.com, bhelgaas@google.com,
+	blauwirbel@gmail.com, lance.oritz@hp.com, kvm@vger.kernel.org,
+	qemu-devel@nongnu.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: Vijay Mohan Pandarathil <vijaymohan.pandarathil@hp.com>
+Subject: [PATCH v6 1/3] VFIO: Wrapper for getting reference to vfio_device from device
+Date: Sat,  2 Mar 2013 01:16:57 -0600
+Message-Id: <1362208619-5028-2-git-send-email-vijaymohan.pandarathil@hp.com>
+In-Reply-To: <1362208619-5028-1-git-send-email-vijaymohan.pandarathil@hp.com>
+References: <1362208619-5028-1-git-send-email-vijaymohan.pandarathil@hp.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn and others,
+	- Added vfio_device_get_from_dev() as wrapper to get
+          reference to vfio_device from struct device.
 
-On 03/28/2013 01:27 AM, Bjorn Helgaas wrote:
->> -                               printk(KERN_ERR "run of slot in ranges\n");
->> > +                               pr_err("%s: run out of slot in ranges\n",
->> > +                                       __func__);
->> >                         }
->> >                         range[j].end = start;
->> >                         continue;
-> So now the user might see:
-> 
->     subtract_range: run out of slot in ranges
-> 
-> What is the user supposed to do when he sees that?  If he happens to
-> mention it on LKML, what are we going to do about it?  If he attaches
-> the complete dmesg log, is there enough information to do something?
-> 
-> IMHO, that message is still totally useless.
-> 
+	- Added vfio_device_data() as a wrapper to get device_data from
+          vfio_device.
 
-Yes, we need to issue some useful message. 
-How about dump_stack() there so that we can find some clues more since
-subtract_range() is called mtrr_bp_init path and pci relative path, then
-it may help to instruct us to do something ;-) ?
+Signed-off-by: Vijay Mohan Pandarathil <vijaymohan.pandarathil@hp.com>
+---
+ drivers/vfio/vfio.c  | 27 ++++++++++++++++++++++++++-
+ include/linux/vfio.h |  3 +++
+ 2 files changed, 29 insertions(+), 1 deletion(-)
 
-thanks,
-linfeng
+diff --git a/drivers/vfio/vfio.c b/drivers/vfio/vfio.c
+index 28e2d5b..eec6674 100644
+--- a/drivers/vfio/vfio.c
++++ b/drivers/vfio/vfio.c
+@@ -407,12 +407,13 @@ static void vfio_device_release(struct kref *kref)
+ }
+ 
+ /* Device reference always implies a group reference */
+-static void vfio_device_put(struct vfio_device *device)
++void vfio_device_put(struct vfio_device *device)
+ {
+ 	struct vfio_group *group = device->group;
+ 	kref_put_mutex(&device->kref, vfio_device_release, &group->device_lock);
+ 	vfio_group_put(group);
+ }
++EXPORT_SYMBOL_GPL(vfio_device_put);
+ 
+ static void vfio_device_get(struct vfio_device *device)
+ {
+@@ -642,6 +643,30 @@ int vfio_add_group_dev(struct device *dev,
+ }
+ EXPORT_SYMBOL_GPL(vfio_add_group_dev);
+ 
++/**
++ * This does a get on the vfio_device from device.
++ * Callers of this function will have to call vfio_put_device() to
++ * remove the reference.
++ */
++struct vfio_device *vfio_device_get_from_dev(struct device *dev)
++{
++	struct vfio_device *device = dev_get_drvdata(dev);
++
++	vfio_device_get(device);
++
++	return device;
++}
++EXPORT_SYMBOL_GPL(vfio_device_get_from_dev);
++
++/*
++ * Caller must hold a reference to the vfio_device
++ */
++void *vfio_device_data(struct vfio_device *device)
++{
++	return device->device_data;
++}
++EXPORT_SYMBOL_GPL(vfio_device_data);
++
+ /* Given a referenced group, check if it contains the device */
+ static bool vfio_dev_present(struct vfio_group *group, struct device *dev)
+ {
+diff --git a/include/linux/vfio.h b/include/linux/vfio.h
+index ab9e862..ac8d488 100644
+--- a/include/linux/vfio.h
++++ b/include/linux/vfio.h
+@@ -45,6 +45,9 @@ extern int vfio_add_group_dev(struct device *dev,
+ 			      void *device_data);
+ 
+ extern void *vfio_del_group_dev(struct device *dev);
++extern struct vfio_device *vfio_device_get_from_dev(struct device *dev);
++extern void vfio_device_put(struct vfio_device *device);
++extern void *vfio_device_data(struct vfio_device *device);
+ 
+ /**
+  * struct vfio_iommu_driver_ops - VFIO IOMMU driver callbacks
+-- 
+1.7.11.3
+
