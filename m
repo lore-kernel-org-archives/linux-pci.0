@@ -1,40 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f171.google.com ([209.85.223.171]:39235 "EHLO
-	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754491Ab3C0Rvz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Mar 2013 13:51:55 -0400
+Received: from rhlx01.hs-esslingen.de ([129.143.116.10]:40156 "EHLO
+	rhlx01.hs-esslingen.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751725Ab3CBP7o (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 2 Mar 2013 10:59:44 -0500
+Date: Sat, 2 Mar 2013 16:59:42 +0100
+From: Andreas Mohr <andi@lisas.de>
+To: Neil Horman <nhorman@tuxdriver.com>
+Cc: linux-kernel@vger.kernel.org, Neil Horman <nhorman@tuxdriver.com>,
+	Prarit Bhargava <prarit@redhat.com>,
+	Don Zickus <dzickus@redhat.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Asit Mallick <asit.k.mallick@intel.com>,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH] irq: add quirk for broken interrupt remapping on 55XX
+ chipsets
+Message-ID: <20130302155942.GA353@rhlx01.hs-esslingen.de>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo6DWfHii8d8rGPJ1dLj5TVzsgU7QGDoAvBM5Fb_N5=mtw@mail.gmail.com>
-References: <CAE9FiQUrt11A0YAOLgvv3uTAWtTvVg3Mho9eD53orbxW6Jd8Vg@mail.gmail.com>
-	<1363665251-14377-1-git-send-email-linfeng@cn.fujitsu.com>
-	<CAErSpo6DWfHii8d8rGPJ1dLj5TVzsgU7QGDoAvBM5Fb_N5=mtw@mail.gmail.com>
-Date: Wed, 27 Mar 2013 10:51:55 -0700
-Message-ID: <CAE9FiQU3z0jC5-_JLsc4i2yTnWxTv5V9WRThYD-Q5NrrnxvZuw@mail.gmail.com>
-Subject: Re: [PATCH] kernel/range.c: subtract_range: fix the broken phrase
- issued by printk
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Lin Feng <linfeng@cn.fujitsu.com>,
-	Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org,
-	"x86@kernel.org" <x86@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1362158276-4901-1-git-send-email-nhorman@tuxdriver.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 27, 2013 at 10:27 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+Hi,
 
-> So now the user might see:
->
->     subtract_range: run out of slot in ranges
->
-> What is the user supposed to do when he sees that?  If he happens to
-> mention it on LKML, what are we going to do about it?  If he attaches
-> the complete dmesg log, is there enough information to do something?
->
-> IMHO, that message is still totally useless.
+> if ((revision == 0x13) && irq_remapping_enabled) {
+> +		pr_warn("WARNING WARNING WARNING WARNING WARNING
+> WARNING\n"
+> +			"This system BIOS has enabled interrupt
+> remapping\n"
+> +			"on a chipset that contains an errata making
+> that\n"
+> +			"feature unstable.  Please reboot with
+> nointremap\n"
+> +			"added to the kernel command line and contact\n"
+> +			"your BIOS vendor for an update");
+> +	}
 
-Change to WARN_ONCE?
+Forgive me, but ISTR that there's a special BIOS firmware quirk bug annotating
+logger warning message mechanism (have I managed to hit all keywords yet? ;)
+in the kernel which might be useful in this case.
 
-Yinghai
+
+OK, found something (but I don't think it was the mechanism
+that ISTR - perhaps it got modernized?):
+
+
+include/linux/printk.h:
+
+/*
+ * FW_BUG
+ * Add this to a message where you are sure the firmware is buggy or
+ * behaves
+ * really stupid or out of spec. Be aware that the responsible BIOS
+ * developer
+ * should be able to fix this issue or at least get a concrete idea of
+ * the
+ * problem by reading your message without the need of looking at the
+ * kernel
+ * code.
+ *
+ * Use it for definite and high priority BIOS bugs.
+ *
+ * FW_WARN
+ * Use it for not that clear (e.g. could the kernel messed up things
+ * already?)
+ * and medium priority BIOS bugs.
+ *
+ * FW_INFO
+ * Use this one if you want to tell the user or vendor about something
+ * suspicious, but generally harmless related to the firmware.
+ *
+ * Use it for information or very low priority BIOS bugs.
+ */
+
+
+So perhaps it is appropriate to be used here.
+
+
+HTH,
+
+Andreas Mohr
