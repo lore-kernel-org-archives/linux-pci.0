@@ -1,83 +1,208 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rhlx01.hs-esslingen.de ([129.143.116.10]:40156 "EHLO
-	rhlx01.hs-esslingen.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751725Ab3CBP7o (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 2 Mar 2013 10:59:44 -0500
-Date: Sat, 2 Mar 2013 16:59:42 +0100
-From: Andreas Mohr <andi@lisas.de>
-To: Neil Horman <nhorman@tuxdriver.com>
-Cc: linux-kernel@vger.kernel.org, Neil Horman <nhorman@tuxdriver.com>,
-	Prarit Bhargava <prarit@redhat.com>,
-	Don Zickus <dzickus@redhat.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Asit Mallick <asit.k.mallick@intel.com>,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH] irq: add quirk for broken interrupt remapping on 55XX
- chipsets
-Message-ID: <20130302155942.GA353@rhlx01.hs-esslingen.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1362158276-4901-1-git-send-email-nhorman@tuxdriver.com>
+Received: from g5t0006.atlanta.hp.com ([15.192.0.43]:34318 "EHLO
+	g5t0006.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752082Ab3CBHRQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 2 Mar 2013 02:17:16 -0500
+From: Vijay Mohan Pandarathil <vijaymohan.pandarathil@hp.com>
+To: alex.williamson@redhat.com, gleb@redhat.com, bhelgaas@google.com,
+	blauwirbel@gmail.com, lance.oritz@hp.com, kvm@vger.kernel.org,
+	qemu-devel@nongnu.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: Vijay Mohan Pandarathil <vijaymohan.pandarathil@hp.com>
+Subject: [PATCH v6 2/3] VFIO-AER: Vfio-pci driver changes for supporting AER
+Date: Sat,  2 Mar 2013 01:16:58 -0600
+Message-Id: <1362208619-5028-3-git-send-email-vijaymohan.pandarathil@hp.com>
+In-Reply-To: <1362208619-5028-1-git-send-email-vijaymohan.pandarathil@hp.com>
+References: <1362208619-5028-1-git-send-email-vijaymohan.pandarathil@hp.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+	- New VFIO_SET_IRQ ioctl option to pass the eventfd that is signaled when
+          an error occurs in the vfio_pci_device
 
-> if ((revision == 0x13) && irq_remapping_enabled) {
-> +		pr_warn("WARNING WARNING WARNING WARNING WARNING
-> WARNING\n"
-> +			"This system BIOS has enabled interrupt
-> remapping\n"
-> +			"on a chipset that contains an errata making
-> that\n"
-> +			"feature unstable.  Please reboot with
-> nointremap\n"
-> +			"added to the kernel command line and contact\n"
-> +			"your BIOS vendor for an update");
-> +	}
+	- Register pci_error_handler for the vfio_pci driver
 
-Forgive me, but ISTR that there's a special BIOS firmware quirk bug annotating
-logger warning message mechanism (have I managed to hit all keywords yet? ;)
-in the kernel which might be useful in this case.
+	- When the device encounters an error, the error handler registered by
+          the vfio_pci driver gets invoked by the AER infrastructure
 
+	- In the error handler, signal the eventfd registered for the device.
 
-OK, found something (but I don't think it was the mechanism
-that ISTR - perhaps it got modernized?):
+	- This results in the qemu eventfd handler getting invoked and
+          appropriate action taken for the guest.
 
+Signed-off-by: Vijay Mohan Pandarathil <vijaymohan.pandarathil@hp.com>
+---
+ drivers/vfio/pci/vfio_pci.c         | 44 ++++++++++++++++++++++++++++++++-
+ drivers/vfio/pci/vfio_pci_intrs.c   | 49 +++++++++++++++++++++++++++++++++++++
+ drivers/vfio/pci/vfio_pci_private.h |  1 +
+ include/uapi/linux/vfio.h           |  1 +
+ 4 files changed, 94 insertions(+), 1 deletion(-)
 
-include/linux/printk.h:
+diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
+index 8189cb6..acfcb1a 100644
+--- a/drivers/vfio/pci/vfio_pci.c
++++ b/drivers/vfio/pci/vfio_pci.c
+@@ -201,7 +201,9 @@ static int vfio_pci_get_irq_count(struct vfio_pci_device *vdev, int irq_type)
+ 
+ 			return (flags & PCI_MSIX_FLAGS_QSIZE) + 1;
+ 		}
+-	}
++	} else if (irq_type == VFIO_PCI_ERR_IRQ_INDEX)
++		if (pci_is_pcie(vdev->pdev))
++			return 1;
+ 
+ 	return 0;
+ }
+@@ -317,6 +319,17 @@ static long vfio_pci_ioctl(void *device_data,
+ 		if (info.argsz < minsz || info.index >= VFIO_PCI_NUM_IRQS)
+ 			return -EINVAL;
+ 
++		switch (info.index) {
++		case VFIO_PCI_INTX_IRQ_INDEX ... VFIO_PCI_MSIX_IRQ_INDEX:
++			break;
++		case VFIO_PCI_ERR_IRQ_INDEX:
++			if (pci_is_pcie(vdev->pdev))
++				break;
++		/* pass thru to return error */
++		default:
++			return -EINVAL;
++		}
++
+ 		info.flags = VFIO_IRQ_INFO_EVENTFD;
+ 
+ 		info.count = vfio_pci_get_irq_count(vdev, info.index);
+@@ -551,11 +564,40 @@ static void vfio_pci_remove(struct pci_dev *pdev)
+ 	kfree(vdev);
+ }
+ 
++static pci_ers_result_t vfio_pci_aer_err_detected(struct pci_dev *pdev,
++						  pci_channel_state_t state)
++{
++	struct vfio_pci_device *vdev;
++	struct vfio_device *device;
++
++	device = vfio_device_get_from_dev(&pdev->dev);
++	if (device == NULL)
++		return PCI_ERS_RESULT_DISCONNECT;
++
++	vdev = vfio_device_data(device);
++	if (vdev == NULL) {
++		vfio_device_put(device);
++		return PCI_ERS_RESULT_DISCONNECT;
++	}
++
++	if (vdev->err_trigger)
++		eventfd_signal(vdev->err_trigger, 1);
++
++	vfio_device_put(device);
++
++	return PCI_ERS_RESULT_CAN_RECOVER;
++}
++
++static struct pci_error_handlers vfio_err_handlers = {
++	.error_detected = vfio_pci_aer_err_detected,
++};
++
+ static struct pci_driver vfio_pci_driver = {
+ 	.name		= "vfio-pci",
+ 	.id_table	= NULL, /* only dynamic ids */
+ 	.probe		= vfio_pci_probe,
+ 	.remove		= vfio_pci_remove,
++	.err_handler	= &vfio_err_handlers,
+ };
+ 
+ static void __exit vfio_pci_cleanup(void)
+diff --git a/drivers/vfio/pci/vfio_pci_intrs.c b/drivers/vfio/pci/vfio_pci_intrs.c
+index 3639371..4a29830 100644
+--- a/drivers/vfio/pci/vfio_pci_intrs.c
++++ b/drivers/vfio/pci/vfio_pci_intrs.c
+@@ -745,6 +745,48 @@ static int vfio_pci_set_msi_trigger(struct vfio_pci_device *vdev,
+ 	return 0;
+ }
+ 
++static int vfio_pci_set_err_trigger(struct vfio_pci_device *vdev,
++				    unsigned index, unsigned start,
++				    unsigned count, uint32_t flags, void *data)
++{
++	int32_t fd = *(int32_t *)data;
++
++	if ((index != VFIO_PCI_ERR_IRQ_INDEX) ||
++	    !(flags & VFIO_IRQ_SET_DATA_TYPE_MASK))
++		return -EINVAL;
++
++	/* DATA_NONE/DATA_BOOL enables loopback testing */
++
++	if (flags & VFIO_IRQ_SET_DATA_NONE) {
++		if (vdev->err_trigger)
++			eventfd_signal(vdev->err_trigger, 1);
++		return 0;
++	} else if (flags & VFIO_IRQ_SET_DATA_BOOL) {
++		uint8_t trigger = *(uint8_t *)data;
++		if (trigger && vdev->err_trigger)
++			eventfd_signal(vdev->err_trigger, 1);
++		return 0;
++	}
++
++	/* Handle SET_DATA_EVENTFD */
++
++	if (fd == -1) {
++		if (vdev->err_trigger)
++			eventfd_ctx_put(vdev->err_trigger);
++		vdev->err_trigger = NULL;
++		return 0;
++	} else if (fd >= 0) {
++		struct eventfd_ctx *efdctx;
++		efdctx = eventfd_ctx_fdget(fd);
++		if (IS_ERR(efdctx))
++			return PTR_ERR(efdctx);
++		if (vdev->err_trigger)
++			eventfd_ctx_put(vdev->err_trigger);
++		vdev->err_trigger = efdctx;
++		return 0;
++	} else
++		return -EINVAL;
++}
+ int vfio_pci_set_irqs_ioctl(struct vfio_pci_device *vdev, uint32_t flags,
+ 			    unsigned index, unsigned start, unsigned count,
+ 			    void *data)
+@@ -779,6 +821,13 @@ int vfio_pci_set_irqs_ioctl(struct vfio_pci_device *vdev, uint32_t flags,
+ 			break;
+ 		}
+ 		break;
++	case VFIO_PCI_ERR_IRQ_INDEX:
++		switch (flags & VFIO_IRQ_SET_ACTION_TYPE_MASK) {
++		case VFIO_IRQ_SET_ACTION_TRIGGER:
++			if (pci_is_pcie(vdev->pdev))
++				func = vfio_pci_set_err_trigger;
++			break;
++		}
+ 	}
+ 
+ 	if (!func)
+diff --git a/drivers/vfio/pci/vfio_pci_private.h b/drivers/vfio/pci/vfio_pci_private.h
+index d7e55d0..9c6d5d0 100644
+--- a/drivers/vfio/pci/vfio_pci_private.h
++++ b/drivers/vfio/pci/vfio_pci_private.h
+@@ -56,6 +56,7 @@ struct vfio_pci_device {
+ 	bool			has_vga;
+ 	struct pci_saved_state	*pci_saved_state;
+ 	atomic_t		refcnt;
++	struct eventfd_ctx	*err_trigger;
+ };
+ 
+ #define is_intx(vdev) (vdev->irq_type == VFIO_PCI_INTX_IRQ_INDEX)
+diff --git a/include/uapi/linux/vfio.h b/include/uapi/linux/vfio.h
+index 4f41f30..284ff24 100644
+--- a/include/uapi/linux/vfio.h
++++ b/include/uapi/linux/vfio.h
+@@ -319,6 +319,7 @@ enum {
+ 	VFIO_PCI_INTX_IRQ_INDEX,
+ 	VFIO_PCI_MSI_IRQ_INDEX,
+ 	VFIO_PCI_MSIX_IRQ_INDEX,
++	VFIO_PCI_ERR_IRQ_INDEX,
+ 	VFIO_PCI_NUM_IRQS
+ };
+ 
+-- 
+1.7.11.3
 
-/*
- * FW_BUG
- * Add this to a message where you are sure the firmware is buggy or
- * behaves
- * really stupid or out of spec. Be aware that the responsible BIOS
- * developer
- * should be able to fix this issue or at least get a concrete idea of
- * the
- * problem by reading your message without the need of looking at the
- * kernel
- * code.
- *
- * Use it for definite and high priority BIOS bugs.
- *
- * FW_WARN
- * Use it for not that clear (e.g. could the kernel messed up things
- * already?)
- * and medium priority BIOS bugs.
- *
- * FW_INFO
- * Use this one if you want to tell the user or vendor about something
- * suspicious, but generally harmless related to the firmware.
- *
- * Use it for information or very low priority BIOS bugs.
- */
-
-
-So perhaps it is appropriate to be used here.
-
-
-HTH,
-
-Andreas Mohr
