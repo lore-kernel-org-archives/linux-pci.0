@@ -1,134 +1,231 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fold.natur.cuni.cz ([195.113.57.32]:36374 "HELO
-	fold.natur.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753513Ab3C1SiP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 28 Mar 2013 14:38:15 -0400
-Message-ID: <51548E13.8030308@fold.natur.cuni.cz>
-Date: Thu, 28 Mar 2013 19:38:11 +0100
-From: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
-MIME-Version: 1.0
-To: Yijing Wang <wangyijing@huawei.com>,
-	Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, Yinghai Lu <yinghai@kernel.org>,
-	Huang Ying <ying.huang@intel.com>
-Subject: Re: 3.9-rc1: pciehp and eSATA card SiI 3132, no XHCI
-References: <513E7E1E.80508@fold.natur.cuni.cz> <513FE7AD.2020408@huawei.com> <5141145E.4020300@fold.natur.cuni.cz> <51417C28.40402@huawei.com> <5141C9D7.9040706@fold.natur.cuni.cz> <51428A72.2060602@huawei.com>
-In-Reply-To: <51428A72.2060602@huawei.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from mx1.redhat.com ([209.132.183.28]:23494 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932346Ab3CDUSV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 4 Mar 2013 15:18:21 -0500
+Message-ID: <1362428296.2489.119.camel@bling.home>
+Subject: Re: [PATCH v6 2/3] VFIO-AER: Vfio-pci driver changes for supporting
+ AER
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Vijay Mohan Pandarathil <vijaymohan.pandarathil@hp.com>
+Cc: gleb@redhat.com, bhelgaas@google.com, blauwirbel@gmail.com,
+	lance.oritz@hp.com, kvm@vger.kernel.org, qemu-devel@nongnu.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Mon, 04 Mar 2013 13:18:16 -0700
+In-Reply-To: <1362208619-5028-3-git-send-email-vijaymohan.pandarathil@hp.com>
+References: <1362208619-5028-1-git-send-email-vijaymohan.pandarathil@hp.com>
+	 <1362208619-5028-3-git-send-email-vijaymohan.pandarathil@hp.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Ying,
-  would you please tell me how this report relate to this patch?
-
-[PATCH] PCI / ACPI: Always resume devices on ACPI wakeup notifications
-
-  Could you tell me why this PME was being flipped back and forth now?
-Actually, does that make finally some sense to you, pci/acpi devs?
-
-
-  Does is help to say that on the SandyBridge chip I have the following root ports
-hooked to the following end devices?:
-
-1.c1 -> rtl8169 05:00.0
-1.c3 -> iwlwifi 09:00.0
-1.c4 -> xhci_hcd 0b:00.0
-1.c7 -> 00:11: express card slot
-
-
-  Why didn't I see interleraved lines with 1.c7 *and* 00:11? See the interleaving
-happening with the network card on 3.7.10 kernel (not broken kernel):
-
-[138268.870070] r8169 0000:05:00.0 eth0: link down
-[138270.809811] r8169 0000:05:00.0 eth0: link up
-[138365.599744] r8169 0000:05:00.0 eth0: link down
-[138370.594343] r8169 0000:05:00.0: PME# enabled
-[138370.623852] pcieport 0000:00:1c.1: PME# enabled
-[169885.247386] pcieport 0000:00:1c.1: PME# disabled
-[169885.267374] r8169 0000:05:00.0: PME# disabled
-[169885.330160] r8169 0000:05:00.0 eth0: link down
-[169886.992531] r8169 0000:05:00.0 eth0: link up
-[169904.405769] r8169 0000:05:00.0 eth0: link down
-[169909.401237] r8169 0000:05:00.0: PME# enabled
-[169909.430782] pcieport 0000:00:1c.1: PME# enabled
-[170090.538980] pcieport 0000:00:1c.1: PME# disabled
-[170090.559088] r8169 0000:05:00.0: PME# disabled
-[170090.640494] r8169 0000:05:00.0: PME# enabled
-[170090.678425] pcieport 0000:00:1c.1: PME# enabled
-[170090.829959] pcieport 0000:00:1c.1: PME# disabled
-[170090.848479] r8169 0000:05:00.0: PME# disabled
-[170090.892011] r8169 0000:05:00.0 eth0: link down
-[170090.892134] r8169 0000:05:00.0 eth0: link down
-[170090.930998] r8169 0000:05:00.0 eth0: link down
-[170092.554553] r8169 0000:05:00.0 eth0: link up
-
-
-Thank you,
-Martin
-
-Yijing Wang wrote:
-> +CC Huang Ying <ying.huang@intel.com>
->>> As you mentioned before
->>> cold boot 0040 -> eject 0100 hotplug insert -> 0140 eject -> 0100 hotplug insert -> 0140 eject -> 0100
->>> cold boot(PCIe card detected in slot)-->eject(Data Link state changed detected)-->.....
->>> detail info reference at PCIe Spec 3.0  7.8.11
->>
->> So doesn't pciehp/acpiphp complain when values 0000, 0108, 0138, 0148 appear?
+On Sat, 2013-03-02 at 01:16 -0600, Vijay Mohan Pandarathil wrote:
+> 	- New VFIO_SET_IRQ ioctl option to pass the eventfd that is signaled when
+>           an error occurs in the vfio_pci_device
 > 
-> I think the slot status changes is ok. The most important bit here is Presence Detect state
-> and Presence Detect Changed bits. And as your diff info, it seems ok.
+> 	- Register pci_error_handler for the vfio_pci driver
 > 
->>
->>>
->>>>
->>> I guess these memory ranges disabled because the original MMIO(coldplug boot) is still in system after eject device,
->>> the new device insert cannot get the needed MMIO in system.
+> 	- When the device encounters an error, the error handler registered by
+>           the vfio_pci driver gets invoked by the AER infrastructure
 > 
-> Sorry, my fault. I scan the lspci source code, and found the "[disable]" means memory/ioport decoding disabled.
-> This shows that the device maybe not enabled by driver.
+> 	- In the error handler, signal the eventfd registered for the device.
 > 
-> [virtual] meaning /* Reported by the OS, but not by the device */
-> I also doubt this comment.
+> 	- This results in the qemu eventfd handler getting invoked and
+>           appropriate action taken for the guest.
 > 
->>
->> But then some driver is stupid and should loudly complain. Looks nobody even knows
->> why lspci prints those "[disabled]" and "[virtual]" strings in its output.
->> What are the normal cases of "virtual" ROMs and "disabled" ranges? What *functional*
->> devices have them and why are they disabled? Is this like a disabled BOOT ROM on a network
->> card or what?
->>
+> Signed-off-by: Vijay Mohan Pandarathil <vijaymohan.pandarathil@hp.com>
+> ---
+>  drivers/vfio/pci/vfio_pci.c         | 44 ++++++++++++++++++++++++++++++++-
+>  drivers/vfio/pci/vfio_pci_intrs.c   | 49 +++++++++++++++++++++++++++++++++++++
+>  drivers/vfio/pci/vfio_pci_private.h |  1 +
+>  include/uapi/linux/vfio.h           |  1 +
+>  4 files changed, 94 insertions(+), 1 deletion(-)
 > 
-> 
->> # diff -u -w iomem.txt iomem_ejected.txt 
->> # diff -u -w dmesg_ejected.txt dmesg_ejected_rmmod_sata_sil24.txt 
->> --- dmesg_ejected.txt   2013-03-14 11:03:42.000000000 +0100
->> +++ dmesg_ejected_rmmod_sata_sil24.txt  2013-03-14 11:05:00.000000000 +0100
->> @@ -824,3 +824,173 @@
->>  [   38.223082] r8169 0000:05:00.0 eth0: link up
->>  [   39.471099] r8169 0000:05:00.0 eth0: link down
->>  [   41.857999] r8169 0000:05:00.0 eth0: link up
->> +[  270.090796] sata_sil24: IRQ status == 0xffffffff, PCI fault or device removal?
->> +[  270.091728] pcieport 0000:00:1c.7: PME# enabled
->> +[  270.972562] pcieport 0000:00:1c.7: PME# disabled
->> +[  270.982338] pcieport 0000:00:1c.7: PME# enabled
->> +[  271.022611] pcieport 0000:00:1c.7: PME# disabled
->> +[  271.032560] pcieport 0000:00:1c.7: PME# enabled
->> +[  272.053850] pcieport 0000:00:1c.7: PME# disabled
->> +[  272.063619] pcieport 0000:00:1c.7: PME# enabled
->> +[  272.103916] pcieport 0000:00:1c.7: PME# disabled
->> +[  272.113838] pcieport 0000:00:1c.7: PME# enabled
->> +[  273.145186] pcieport 0000:00:1c.7: PME# disabled
->> +[  273.156282] pcieport 0000:00:1c.7: PME# enabled
->> +[  273.195718] pcieport 0000:00:1c.7: PME# disabled
->> +[  273.205228] pcieport 0000:00:1c.7: PME# enabled
->> +[  274.226918] pcieport 0000:00:1c.7: PME# disabled
->> [cut] repeated forever
->>
-> 
-> I added Huang Ying <ying.huang@intel.com> to cc list, Rafael and Huang Ying.
-> Both of them are familiar with PM. Obviously, this is an unnormal phenomenon.
-> 
-> 
-> 
+> diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
+> index 8189cb6..acfcb1a 100644
+> --- a/drivers/vfio/pci/vfio_pci.c
+> +++ b/drivers/vfio/pci/vfio_pci.c
+> @@ -201,7 +201,9 @@ static int vfio_pci_get_irq_count(struct vfio_pci_device *vdev, int irq_type)
+>  
+>  			return (flags & PCI_MSIX_FLAGS_QSIZE) + 1;
+>  		}
+> -	}
+> +	} else if (irq_type == VFIO_PCI_ERR_IRQ_INDEX)
+> +		if (pci_is_pcie(vdev->pdev))
+> +			return 1;
+>  
+>  	return 0;
+>  }
+> @@ -317,6 +319,17 @@ static long vfio_pci_ioctl(void *device_data,
+>  		if (info.argsz < minsz || info.index >= VFIO_PCI_NUM_IRQS)
+>  			return -EINVAL;
+>  
+> +		switch (info.index) {
+> +		case VFIO_PCI_INTX_IRQ_INDEX ... VFIO_PCI_MSIX_IRQ_INDEX:
+> +			break;
+> +		case VFIO_PCI_ERR_IRQ_INDEX:
+> +			if (pci_is_pcie(vdev->pdev))
+> +				break;
+> +		/* pass thru to return error */
+> +		default:
+> +			return -EINVAL;
+> +		}
+> +
+>  		info.flags = VFIO_IRQ_INFO_EVENTFD;
+>  
+>  		info.count = vfio_pci_get_irq_count(vdev, info.index);
+> @@ -551,11 +564,40 @@ static void vfio_pci_remove(struct pci_dev *pdev)
+>  	kfree(vdev);
+>  }
+>  
+> +static pci_ers_result_t vfio_pci_aer_err_detected(struct pci_dev *pdev,
+> +						  pci_channel_state_t state)
+> +{
+> +	struct vfio_pci_device *vdev;
+> +	struct vfio_device *device;
+> +
+> +	device = vfio_device_get_from_dev(&pdev->dev);
+> +	if (device == NULL)
+> +		return PCI_ERS_RESULT_DISCONNECT;
+> +
+> +	vdev = vfio_device_data(device);
+> +	if (vdev == NULL) {
+> +		vfio_device_put(device);
+> +		return PCI_ERS_RESULT_DISCONNECT;
+> +	}
+> +
+> +	if (vdev->err_trigger)
+> +		eventfd_signal(vdev->err_trigger, 1);
+> +
+> +	vfio_device_put(device);
+> +
+> +	return PCI_ERS_RESULT_CAN_RECOVER;
+> +}
+> +
+> +static struct pci_error_handlers vfio_err_handlers = {
+> +	.error_detected = vfio_pci_aer_err_detected,
+> +};
+> +
+>  static struct pci_driver vfio_pci_driver = {
+>  	.name		= "vfio-pci",
+>  	.id_table	= NULL, /* only dynamic ids */
+>  	.probe		= vfio_pci_probe,
+>  	.remove		= vfio_pci_remove,
+> +	.err_handler	= &vfio_err_handlers,
+>  };
+>  
+>  static void __exit vfio_pci_cleanup(void)
+> diff --git a/drivers/vfio/pci/vfio_pci_intrs.c b/drivers/vfio/pci/vfio_pci_intrs.c
+> index 3639371..4a29830 100644
+> --- a/drivers/vfio/pci/vfio_pci_intrs.c
+> +++ b/drivers/vfio/pci/vfio_pci_intrs.c
+> @@ -745,6 +745,48 @@ static int vfio_pci_set_msi_trigger(struct vfio_pci_device *vdev,
+>  	return 0;
+>  }
+>  
+> +static int vfio_pci_set_err_trigger(struct vfio_pci_device *vdev,
+> +				    unsigned index, unsigned start,
+> +				    unsigned count, uint32_t flags, void *data)
+> +{
+> +	int32_t fd = *(int32_t *)data;
+> +
+> +	if ((index != VFIO_PCI_ERR_IRQ_INDEX) ||
+> +	    !(flags & VFIO_IRQ_SET_DATA_TYPE_MASK))
+> +		return -EINVAL;
+> +
+> +	/* DATA_NONE/DATA_BOOL enables loopback testing */
+> +
+> +	if (flags & VFIO_IRQ_SET_DATA_NONE) {
+> +		if (vdev->err_trigger)
+> +			eventfd_signal(vdev->err_trigger, 1);
+> +		return 0;
+> +	} else if (flags & VFIO_IRQ_SET_DATA_BOOL) {
+> +		uint8_t trigger = *(uint8_t *)data;
+> +		if (trigger && vdev->err_trigger)
+> +			eventfd_signal(vdev->err_trigger, 1);
+> +		return 0;
+> +	}
+> +
+> +	/* Handle SET_DATA_EVENTFD */
+> +
+> +	if (fd == -1) {
+> +		if (vdev->err_trigger)
+> +			eventfd_ctx_put(vdev->err_trigger);
+
+I mentioned ordering/locking issues back on v3 and I don't think they've
+been addressed yet.
+
+What happens if error_detected is called here?
+
+> +		vdev->err_trigger = NULL;
+> +		return 0;
+> +	} else if (fd >= 0) {
+> +		struct eventfd_ctx *efdctx;
+> +		efdctx = eventfd_ctx_fdget(fd);
+> +		if (IS_ERR(efdctx))
+> +			return PTR_ERR(efdctx);
+> +		if (vdev->err_trigger)
+> +			eventfd_ctx_put(vdev->err_trigger);
+
+Or here?
+
+Both are brief windows where vdev->err_trigger is neither NULL nor
+valid.  The other trigger setup functions do a 1) disable, 2) re-enable
+where the disable is synchronous and avoids this race.  I don't know if
+you have that capability, so we have to assume that error_detected can
+be called at any time.  I notice that report_error_detected() wraps the
+callback in a device_lock(), so you could potentially use
+device_lock/unlock here to avoid racing it.  Thanks,
+
+Alex
+
+> +		vdev->err_trigger = efdctx;
+> +		return 0;
+> +	} else
+> +		return -EINVAL;
+> +}
+>  int vfio_pci_set_irqs_ioctl(struct vfio_pci_device *vdev, uint32_t flags,
+>  			    unsigned index, unsigned start, unsigned count,
+>  			    void *data)
+> @@ -779,6 +821,13 @@ int vfio_pci_set_irqs_ioctl(struct vfio_pci_device *vdev, uint32_t flags,
+>  			break;
+>  		}
+>  		break;
+> +	case VFIO_PCI_ERR_IRQ_INDEX:
+> +		switch (flags & VFIO_IRQ_SET_ACTION_TYPE_MASK) {
+> +		case VFIO_IRQ_SET_ACTION_TRIGGER:
+> +			if (pci_is_pcie(vdev->pdev))
+> +				func = vfio_pci_set_err_trigger;
+> +			break;
+> +		}
+>  	}
+>  
+>  	if (!func)
+> diff --git a/drivers/vfio/pci/vfio_pci_private.h b/drivers/vfio/pci/vfio_pci_private.h
+> index d7e55d0..9c6d5d0 100644
+> --- a/drivers/vfio/pci/vfio_pci_private.h
+> +++ b/drivers/vfio/pci/vfio_pci_private.h
+> @@ -56,6 +56,7 @@ struct vfio_pci_device {
+>  	bool			has_vga;
+>  	struct pci_saved_state	*pci_saved_state;
+>  	atomic_t		refcnt;
+> +	struct eventfd_ctx	*err_trigger;
+>  };
+>  
+>  #define is_intx(vdev) (vdev->irq_type == VFIO_PCI_INTX_IRQ_INDEX)
+> diff --git a/include/uapi/linux/vfio.h b/include/uapi/linux/vfio.h
+> index 4f41f30..284ff24 100644
+> --- a/include/uapi/linux/vfio.h
+> +++ b/include/uapi/linux/vfio.h
+> @@ -319,6 +319,7 @@ enum {
+>  	VFIO_PCI_INTX_IRQ_INDEX,
+>  	VFIO_PCI_MSI_IRQ_INDEX,
+>  	VFIO_PCI_MSIX_IRQ_INDEX,
+> +	VFIO_PCI_ERR_IRQ_INDEX,
+>  	VFIO_PCI_NUM_IRQS
+>  };
+>  
+
+
+
