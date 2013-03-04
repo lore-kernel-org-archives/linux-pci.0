@@ -1,178 +1,122 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Wed, 20 Mar 2013 17:29:29 +0100 (CET)
-From: Jiri Kosina <jkosina@suse.cz>
-To: Alan Stern <stern@rowland.harvard.edu>,
-	Daniel Vetter <daniel.vetter@ffwll.ch>
-Cc: Chris Wilson <chris@chris-wilson.co.uk>, Greg KH <greg@kroah.com>,
-	Harald Arnesen <skogtun.linux@gmail.com>,
-	Kernel development list <linux-kernel@vger.kernel.org>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Peter Hurley <peter@hurleysoftware.com>,
-	Thomas Meyer <thomas@m3y3r.de>,
-	Shawn Starr <shawn.starr@rogers.com>,
-	USB list <linux-usb@vger.kernel.org>,
-	linux-acpi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Imre Deak <imre.deak@intel.com>,
-	Daniel Kurtz <djkurtz@chromium.org>,
-	dri-devel@lists.freedesktop.org,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	Arkadiusz Miskiewicz <a.miskiewicz@gmail.com>
-Subject: Re: gm45 intel gfx can generate non-MSI irq# in MSI mode (was Re:
- [PATCH] drm/i915: stop using GMBUS IRQs on Gen4 chips (was Re: [3.9-rc1]
- irq 16: nobody cared (was [3.9-rc1] very poor interrupt respo
-In-Reply-To: <Pine.LNX.4.44L0.1303191417440.1302-100000@iolanthe.rowland.org>
-Message-ID: <alpine.LNX.2.00.1303201728070.17295@pobox.suse.cz>
-References: <Pine.LNX.4.44L0.1303191417440.1302-100000@iolanthe.rowland.org>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:33654 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758166Ab3CDTEn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 4 Mar 2013 14:04:43 -0500
+From: Neil Horman <nhorman@tuxdriver.com>
+To: linux-kernel@vger.kernel.org
+Cc: Neil Horman <nhorman@tuxdriver.com>,
+	Prarit Bhargava <prarit@redhat.com>,
+	Don Zickus <dzickus@redhat.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Asit Mallick <asit.k.mallick@intel.com>,
+	linux-pci@vger.kernel.org
+Subject: [PATCH v2] irq: add quirk for broken interrupt remapping on 55XX chipsets
+Date: Mon,  4 Mar 2013 14:04:19 -0500
+Message-Id: <1362423859-18516-1-git-send-email-nhorman@tuxdriver.com>
+In-Reply-To: <1362158276-4901-1-git-send-email-nhorman@tuxdriver.com>
+References: <1362158276-4901-1-git-send-email-nhorman@tuxdriver.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 19 Mar 2013, Alan Stern wrote:
+A few years back intel published a spec update:
+http://www.intel.com/content/dam/doc/specification-update/5520-and-5500-chipset-ioh-specification-update.pdf
 
-> > > That might be misleading.  It's possible that the erroneous IRQs _are_
-> > > being issued but you're simply not aware of them.  If the kernel thinks
-> > > that no device is using IRQ 16 then it will leave that IRQ disabled.
-> > 
-> > I guess I should have phrased it more precisely, but that's exactly
-> > what I expect is happening on my machine: I don't have anything on
-> > irq16 (i.e. in non-msi mode the gfx interrupt isn't shared) and hence
-> > the irq is completely disabled. Which obviously makes it impossible
-> > for me to reproduce the issue. To test that theory, is there a quick
-> > way to force-enable a given interrupt, short of just hacking up a 2nd
-> > dummy irq handler in my driver?
-> 
-> I don't know of any way.  In fact, I have been thinking of writing a 
-> test driver module, with a module parameter telling it which IRQ number 
-> to register for.  It seems like the sort of thing that would be useful 
-> to have, from time to time.
+For the 5520 and 5500 chipsets which contained an errata (specificially errata
+53), which noted that these chipsets can't properly do interrupt remapping, and
+as a result the recommend that interrupt remapping be disabled in bios.  While
+many vendors have a bios update to do exactly that, not all do, and of course
+not all users update their bios to a level that corrects the problem.  As a
+result, occasionally interrupts can arrive at a cpu even after affinity for that
+interrupt has be moved, leading to lost or spurrious interrupts (usually
+characterized by the message:
+kernel: do_IRQ: 7.71 No irq handler for vector (irq -1)
 
-Ok, so how about this?
-Daniel, is it enough to make the problem appear on your system (by 
-building this into the kernel and booting with dummy-irq.irq=16)?
+There have been several incidents recently of people seeing this error, and
+investigation has shown that they have system for which their BIOS level is such
+that this feature was not properly turned off.  As such, it would be good to
+give them a reminder that their systems are vulnurable to this problem.
 
-Thanks.
+Signed-off-by: Neil Horman <nhorman@tuxdriver.com>
+CC: Prarit Bhargava <prarit@redhat.com>
+CC: Don Zickus <dzickus@redhat.com>
+CC: Don Dutile <ddutile@redhat.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>
+CC: Asit Mallick <asit.k.mallick@intel.com>
+CC: linux-pci@vger.kernel.org
 
-
-
-
-
-From: Jiri Kosina <jkosina@suse.cz>
-Subject: [PATCH] dummy-irq: introduce a dummy IRQ handler driver
-
-This module accepts a single 'irq' parameter, which it should register for.
-
-Its sole purpose is to help with debugging of IRQ sharing problems, by
-force-enabling IRQ that would otherwise be disabled.
-
-Suggested-by: Alan Stern <stern@rowland.harvard.edu>
-Signed-off-by: Jiri Kosina <jkosina@suse.cz>
 ---
- drivers/misc/Kconfig     |    8 ++++++
- drivers/misc/Makefile    |    1 +
- drivers/misc/dummy-irq.c |   59 ++++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 68 insertions(+), 0 deletions(-)
- create mode 100644 drivers/misc/dummy-irq.c
 
-diff --git a/drivers/misc/Kconfig b/drivers/misc/Kconfig
-index e83fdfe..db24b79 100644
---- a/drivers/misc/Kconfig
-+++ b/drivers/misc/Kconfig
-@@ -93,6 +93,14 @@ config ATMEL_TCB_CLKSRC_BLOCK
- 	  TC can be used for other purposes, such as PWM generation and
- 	  interval timing.
+Change notes:
+
+v2)
+
+* Moved the quirk to the x86 arch, since consensus seems to be that the 55XX
+chipset series is x86 only.  I decided however to keep the quirk as a regular
+quirk, not an early_quirk.  Early quirks have no way currently to determine if
+BIOS has properly disabled the feature in the iommu, at least not without
+significant hacking, and since its quite possible this will be a short lived
+quirk, should Don Z's workaround code prove successful (and it looks like it may
+well), I don't think that necessecary.
+
+* Removed the WARNING banner from the quirk, and added the HW_ERR token to the
+string, I opted to leave the newlines in place however, as I really couldnt
+find a way to keep the text on a single line is still legible from a code
+perspective.  I think theres enough language in there that using cscope on just
+about any substring however will turn it up, and again, this may be a short
+lived quirk.
+---
+ arch/x86/kernel/quirks.c | 18 ++++++++++++++++++
+ include/linux/pci_ids.h  |  2 ++
+ 2 files changed, 20 insertions(+)
+
+diff --git a/arch/x86/kernel/quirks.c b/arch/x86/kernel/quirks.c
+index 26ee48a..a718ea2 100644
+--- a/arch/x86/kernel/quirks.c
++++ b/arch/x86/kernel/quirks.c
+@@ -5,6 +5,7 @@
+ #include <linux/irq.h>
  
-+config DUMMY_IRQ
-+	tristate "Dummy IRQ handler"
-+	default n
-+	---help---
-+	  This module accepts a single 'irq' parameter, which it should register for.
-+	  Its sole purpose is to help with debugging of IRQ sharing problems, by
-+	  force-enabling IRQ that would otherwise be disabled.
+ #include <asm/hpet.h>
++#include "../../../drivers/iommu/irq_remapping.h"
+ 
+ #if defined(CONFIG_X86_IO_APIC) && defined(CONFIG_SMP) && defined(CONFIG_PCI)
+ 
+@@ -567,3 +568,20 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_NB_F5,
+ 			quirk_amd_nb_node);
+ 
+ #endif
 +
- config IBM_ASM
- 	tristate "Device driver for IBM RSA service processor"
- 	depends on X86 && PCI && INPUT
-diff --git a/drivers/misc/Makefile b/drivers/misc/Makefile
-index 35a1463..28ff261 100644
---- a/drivers/misc/Makefile
-+++ b/drivers/misc/Makefile
-@@ -13,6 +13,7 @@ obj-$(CONFIG_ATMEL_TCLIB)	+= atmel_tclib.o
- obj-$(CONFIG_BMP085)		+= bmp085.o
- obj-$(CONFIG_BMP085_I2C)	+= bmp085-i2c.o
- obj-$(CONFIG_BMP085_SPI)	+= bmp085-spi.o
-+obj-$(CONFIG_DUMMY_IRQ)		+= dummy-irq.o
- obj-$(CONFIG_ICS932S401)	+= ics932s401.o
- obj-$(CONFIG_LKDTM)		+= lkdtm.o
- obj-$(CONFIG_TIFM_CORE)       	+= tifm_core.o
-diff --git a/drivers/misc/dummy-irq.c b/drivers/misc/dummy-irq.c
-new file mode 100644
-index 0000000..4fc13e0
---- /dev/null
-+++ b/drivers/misc/dummy-irq.c
-@@ -0,0 +1,59 @@
-+/*
-+ * Dummy IRQ handler driver.
-+ *
-+ * This module only registers itself as a handler that is specified to it
-+ * by the 'irq' parameter.
-+ *
-+ * The sole purpose of this module is to help with debugging of systems on
-+ * which spurious IRQs cause the IRQ to be disabled.
-+ *
-+ * Copyright (C) 2013 Jiri Kosina
-+ */
-+
-+/*
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of the GNU General Public License version 2 as published by
-+ * the Free Software Foundation.
-+ */
-+#include <linux/module.h>
-+#include <linux/irq.h>
-+#include <linux/interrupt.h>
-+
-+static int irq;
-+
-+static irqreturn_t dummy_interrupt(int irq, void *dev_id)
++static void intel_remapping_check(struct pci_dev *dev)
 +{
-+	static int count = 0;
++	u8 revision;
 +
-+	if (count == 0) {
-+		printk("dummy-irq: interrupt occured on IRQ %d\n", irq);
-+		count++;
++	pci_read_config_byte(dev, PCI_REVISION_ID, &revision);
++
++	if ((revision == 0x13) && irq_remapping_enabled) {
++                pr_warn(HW_ERR "This system BIOS has enabled interrupt remapping\n"
++                        "on a chipset that contains an errata making that\n"
++                        "feature unstable.  Please reboot with nointremap\n"
++                        "added to the kernel command line and contact\n"
++                        "your BIOS vendor for an update");
 +	}
-+
-+	return IRQ_NONE;
 +}
-+
-+static int __init dummy_irq_init(void)
-+{
-+	if (request_irq(irq, &dummy_interrupt, IRQF_SHARED, "dummy_irq", &irq)) {
-+		printk(KERN_ERR "dummy-irq: cannot register IRQ %d\n", irq);
-+		return -EIO;
-+	}
-+	printk(KERN_INFO "dummy-irq: registered for IRQ %d\n", irq);
-+	return 0;
-+}
-+
-+static void __exit dummy_irq_exit(void)
-+{
-+	printk(KERN_INFO "dummy-irq unloaded\n");
-+	free_irq(irq, &irq);
-+	return;
-+}
-+
-+module_init(dummy_irq_init);
-+module_exit(dummy_irq_exit);
-+
-+MODULE_LICENSE("GPL");
-+MODULE_AUTHOR("Jiri Kosina");
-+module_param_named(irq, irq, uint, 0444);
-+MODULE_PARM_DESC(irq, "The IRQ to register for");
-
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_5520_IOHUB, intel_remapping_check);
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_5500_IOHUB, intel_remapping_check);
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index 31717bd..54027a6 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -2732,6 +2732,8 @@
+ #define PCI_DEVICE_ID_INTEL_LYNNFIELD_MC_CH2_RANK_REV2  0x2db2
+ #define PCI_DEVICE_ID_INTEL_LYNNFIELD_MC_CH2_TC_REV2    0x2db3
+ #define PCI_DEVICE_ID_INTEL_82855PM_HB	0x3340
++#define PCI_DEVICE_ID_INTEL_5500_IOHUB	0x3403
++#define PCI_DEVICE_ID_INTEL_5520_IOHUB	0x3406
+ #define PCI_DEVICE_ID_INTEL_IOAT_TBG4	0x3429
+ #define PCI_DEVICE_ID_INTEL_IOAT_TBG5	0x342a
+ #define PCI_DEVICE_ID_INTEL_IOAT_TBG6	0x342b
 -- 
-Jiri Kosina
-SUSE Labs
+1.7.11.7
+
