@@ -1,50 +1,43 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Mon, 18 Mar 2013 23:04:21 +0100 (CET)
-From: Jiri Kosina <jkosina@suse.cz>
-To: Daniel Vetter <daniel@ffwll.ch>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	Harald Arnesen <skogtun.linux@gmail.com>,
-	Kernel development list <linux-kernel@vger.kernel.org>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Peter Hurley <peter@hurleysoftware.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Thomas Meyer <thomas@m3y3r.de>,
-	Shawn Starr <shawn.starr@rogers.com>,
-	USB list <linux-usb@vger.kernel.org>,
-	linux-acpi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, Daniel Vetter <daniel.vetter@ffwll.ch>,
-	Imre Deak <imre.deak@intel.com>,
-	Daniel Kurtz <djkurtz@chromium.org>,
-	dri-devel@lists.freedesktop.org
-Subject: Re: [3.9-rc1] irq 16: nobody cared (was [3.9-rc1] very poor interrupt
- responses)
-In-Reply-To: <20130318191903.GS9021@phenom.ffwll.local>
-Message-ID: <alpine.LNX.2.00.1303182301450.9529@pobox.suse.cz>
-References: <Pine.LNX.4.44L0.1303141050310.1983-100000@iolanthe.rowland.org> <1460519.ejNFI1DrGk@vostro.rjw.lan> <1363280764.26318.4.camel@thor.lan> <5657408.cYX6iimiA4@vostro.rjw.lan> <alpine.LNX.2.00.1303150851020.9529@pobox.suse.cz> <5142E7F0.4020002@gmail.com>
- <alpine.LNX.2.00.1303151424140.9529@pobox.suse.cz> <alpine.LNX.2.00.1303151609480.9529@pobox.suse.cz> <CAE9FiQUqPTUqPOzANnxpdfoRYPr+OiU5pFEoLKRiOFHd9Py4XQ@mail.gmail.com> <alpine.LNX.2.00.1303181010080.9529@pobox.suse.cz>
- <20130318191903.GS9021@phenom.ffwll.local>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-la0-f51.google.com ([209.85.215.51]:35439 "EHLO
+	mail-la0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757486Ab3CDR67 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 4 Mar 2013 12:58:59 -0500
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <20130304154832.GD3021@redhat.com>
+References: <CANUX_P3F5YhbZX3WGU-j1AGpbXb_T9Bis2ErhvKkFMtDvzatVQ@mail.gmail.com>
+	<20130304134949.GB3021@redhat.com>
+	<CANUX_P0JhuVWcQjTckYzG8eBb2MtT_=prKqV38mCpVjfLmGtCA@mail.gmail.com>
+	<20130304154832.GD3021@redhat.com>
+Date: Mon, 4 Mar 2013 19:58:57 +0200
+Message-ID: <CANUX_P22AkqeOROP1QHzp20wGWgDbRzy+9FZy2KvHLXCQ5AVnA@mail.gmail.com>
+Subject: Re: is L1 really disabled in iwlwifi
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-pci@vger.kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	John Linville <linville@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 18 Mar 2013, Daniel Vetter wrote:
+On Mon, Mar 4, 2013 at 5:48 PM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+> On Mon, Mar 04, 2013 at 04:57:46PM +0200, Emmanuel Grumbach wrote:
+>
+>> This is what I did. On 3.7, lspci tells me that ASPM is enabled before
+>> I load the module. And same after I load the module.
+>
+> CONFIG_PCIEASPM disabled ?
+>
 
-> Yep, there's a big comment in the irq handler for that chipset that we
-> have a gaping race with when using MSI interrupts. Although the comment
-> bodly claims that the race is small enough to avoid the dreaded "nobody
-> cared" message. Looks like gmbus is good at hitting that race - on newer
-> chips it already brought up a similar race in handling pch interrupts.
+nope - enabled on both kernel: 3.1 and 3.7. Makes sense though.
+CONFIG_PCIEASPM enabled, I have L1. Just wondering why doesn't that
+pci_disable_link_state do anything....
+Also, I remember so issues Mathew Garret debugged and he ended up
+disabling ASPM on older kernel because some BIOS issue (don't remember
+really). Apparently, ASPM is enabled again in newer kernels.
 
-I see ... will target my focus in that direction, thanks.
-
-> Can you please give the below patch a whirl? It removes the probably race
-> msi race avoidance code and replaces it with the same trick Paulo used to
-> fix pch irq handling races.
-
-Unfortunately it didn't change anything, the spurious interrupt report is 
-still there.
-
--- 
-Jiri Kosina
-SUSE Labs
+Anyway - I think I will just remove this pci_disable_link_state call
+and hopefully, it will stay long enough in linux-next so that people
+will report issues before it get into linux.
+I don't like leaving that code if it doesn't do anything.
