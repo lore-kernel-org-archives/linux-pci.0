@@ -1,55 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:51992 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751425Ab3CIUtx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 9 Mar 2013 15:49:53 -0500
-Date: Sat, 9 Mar 2013 15:49:40 -0500
-From: Neil Horman <nhorman@tuxdriver.com>
-To: linux-kernel@vger.kernel.org
-Cc: Prarit Bhargava <prarit@redhat.com>,
-	Don Zickus <dzickus@redhat.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Asit Mallick <asit.k.mallick@intel.com>,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2] irq: add quirk for broken interrupt remapping on 55XX
- chipsets
-Message-ID: <20130309204940.GA31808@neilslaptop.think-freely.org>
-References: <1362158276-4901-1-git-send-email-nhorman@tuxdriver.com>
- <1362423859-18516-1-git-send-email-nhorman@tuxdriver.com>
+Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:33180 "EHLO
+	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754544Ab3CDA5X (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 3 Mar 2013 19:57:23 -0500
+Message-ID: <5133F14D.4060906@jp.fujitsu.com>
+Date: Mon, 04 Mar 2013 09:56:45 +0900
+From: Takao Indoh <indou.takao@jp.fujitsu.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1362423859-18516-1-git-send-email-nhorman@tuxdriver.com>
+To: trenn@suse.de
+CC: yinghai@kernel.org, muneda.takahiro@jp.fujitsu.com,
+	linux-pci@vger.kernel.org, x86@kernel.org,
+	linux-kernel@vger.kernel.org, andi@firstfloor.org,
+	tokunaga.keiich@jp.fujitsu.com, kexec@lists.infradead.org,
+	hbabu@us.ibm.com, mingo@redhat.com, ddutile@redhat.com,
+	vgoyal@redhat.com, ishii.hironobu@jp.fujitsu.com, hpa@zytor.com,
+	bhelgaas@google.com, tglx@linutronix.de, khalid@gonehiking.org
+Subject: Re: [PATCH v7 0/5] Reset PCIe devices to address DMA problem on kdump
+ with iommu
+References: <20121127004144.3604.61708.sendpatchset@tindoh.g01.fujitsu.local> <1593084.QhbTkmoq3N@hammer82.arch.suse.de> <50FC95A8.6060402@jp.fujitsu.com> <1508535.gXZDAVy6sT@hammer82.arch.suse.de>
+In-Reply-To: <1508535.gXZDAVy6sT@hammer82.arch.suse.de>
+Content-Type: text/plain; charset=ISO-2022-JP
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 04, 2013 at 02:04:19PM -0500, Neil Horman wrote:
-> A few years back intel published a spec update:
-> http://www.intel.com/content/dam/doc/specification-update/5520-and-5500-chipset-ioh-specification-update.pdf
-> 
-> For the 5520 and 5500 chipsets which contained an errata (specificially errata
-> 53), which noted that these chipsets can't properly do interrupt remapping, and
-> as a result the recommend that interrupt remapping be disabled in bios.  While
-> many vendors have a bios update to do exactly that, not all do, and of course
-> not all users update their bios to a level that corrects the problem.  As a
-> result, occasionally interrupts can arrive at a cpu even after affinity for that
-> interrupt has be moved, leading to lost or spurrious interrupts (usually
-> characterized by the message:
-> kernel: do_IRQ: 7.71 No irq handler for vector (irq -1)
-> 
-> There have been several incidents recently of people seeing this error, and
-> investigation has shown that they have system for which their BIOS level is such
-> that this feature was not properly turned off.  As such, it would be good to
-> give them a reminder that their systems are vulnurable to this problem.
-> 
-> Signed-off-by: Neil Horman <nhorman@tuxdriver.com>
-> CC: Prarit Bhargava <prarit@redhat.com>
-> CC: Don Zickus <dzickus@redhat.com>
-> CC: Don Dutile <ddutile@redhat.com>
-> CC: Bjorn Helgaas <bhelgaas@google.com>
-> CC: Asit Mallick <asit.k.mallick@intel.com>
-> CC: linux-pci@vger.kernel.org
-> 
-Ping, anyone want to Ack/Nack this?
-Neil
+(2013/01/23 9:47), Thomas Renninger wrote:
+> On Monday, January 21, 2013 10:11:04 AM Takao Indoh wrote:
+>> (2013/01/08 4:09), Thomas Renninger wrote:
+> ...
+>>> I tried the provided patches first on 2.6.32, then I verfied with 3.8-rc2
+>>> and in both cases the disk is not detected anymore in
+>>> reset_devices (kexec'ed/kdump) case (but things work fine without these
+>>> patches).
+>>
+>> So the problem that the disk is not detected was caused by exactmap
+>> problem you guys are discussing? Or still not detected even if exactmap
+>> problem is fixed?
+> This problem is related to the 5 PCI resetting patches.
+> Dumping worked with a 2.6.32 and a 3.8-rc2 kernel, adding the PCI resetting
+> patches broke both. I first tried 2.6.32 and verified with 3.8-rc2 to make sure
+> I didn't mess up the backport adjustings of the patches to 2.6.32.
+>
+> Unfortunately this Dell platform takes really long to boot.
+> I can give it the one or other test, but please do not bomb me with patches.
+>
+> For info:
+> About the interrupt remapping error interrupt storm in kdump case I tried to
+> reproduce on this machine, but never could: The guys who saw that also cannot
+> reproduce this anymore.
+>
+> Two ideas I had about this:
+>    - As said already, (also) try to catch the error case and try to reset the
+>      the device in AER/Specific iterrupt remapping error interrupt caught.
+
+I tried this idea but it did not work on megaraid_sas.
+
+I made a experimental patch so that devices are reset when DMAR error is
+detected on it. What happened is that:
+1) megaraid_sas module is loaded.
+2) DMAR error is detected during the driver initialization.
+3) Reset device
+4) kdump fails because the disk is not found.
+
+When I tested patches which reset all devices in early boot time, the
+disk was recognized correctly, so it seems that device reset during its
+driver loading does something wrong. I think we need reset device at
+least before its driver is loaded.
+
+Thanks,
+Takao Indoh
+
+
+>    - Have a look at coreboot, these guys should know how to initialize the PCI
+>      subsystem from scratch and might have some well tested PCI resetting
+>      code in place already (no idea, just a thought).
+>
+>      Thomas
+>
+>
 
