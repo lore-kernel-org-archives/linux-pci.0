@@ -1,51 +1,64 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-lb0-f178.google.com ([209.85.217.178]:48635 "EHLO
+	mail-lb0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757835Ab3CDO5s (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 4 Mar 2013 09:57:48 -0500
 MIME-Version: 1.0
-In-Reply-To: <510A5F0E.6010100@googlemail.com>
-References: <51016937.1020202@googlemail.com> <510189B1.606@fold.natur.cuni.cz>
- <5104427D.2050002@googlemail.com> <510494D6.1010000@gmail.com>
- <51050D43.2050703@googlemail.com> <51051B1B.3080105@gmail.com>
- <51052DB2.4090702@googlemail.com> <51053917.6060400@fold.natur.cuni.cz>
- <5105491E.9050907@googlemail.com> <510558CE.9000600@fold.natur.cuni.cz>
- <5105AFDB.9000200@googlemail.com> <5105E51D.2020606@huawei.com>
- <51064F1A.1020909@googlemail.com> <51065FA6.4070208@googlemail.com>
- <51066B46.10409@fold.natur.cuni.cz> <5106CD6C.4070009@googlemail.com>
- <5106E770.9070602@fold.natur.cuni.cz> <510A5F0E.6010100@googlemail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 6 Mar 2013 16:45:43 -0700
-Message-ID: <CAErSpo4x8pb7J8MnokXiFTE=01-TffCk6CKC0VS7CEf3X1bSBw@mail.gmail.com>
-Subject: Re: 3.8.0-rc4+ - Oops on removing WinTV-HVR-1400 expresscard TV Tuner
-To: Chris Clayton <chris2553@googlemail.com>
-Cc: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Yijing Wang <wangyijing0307@gmail.com>,
-	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org
+In-Reply-To: <20130304134949.GB3021@redhat.com>
+References: <CANUX_P3F5YhbZX3WGU-j1AGpbXb_T9Bis2ErhvKkFMtDvzatVQ@mail.gmail.com>
+	<20130304134949.GB3021@redhat.com>
+Date: Mon, 4 Mar 2013 16:57:46 +0200
+Message-ID: <CANUX_P0JhuVWcQjTckYzG8eBb2MtT_=prKqV38mCpVjfLmGtCA@mail.gmail.com>
+Subject: Re: is L1 really disabled in iwlwifi
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-pci@vger.kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	John Linville <linville@tuxdriver.com>
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jan 31, 2013 at 5:09 AM, Chris Clayton <chris2553@googlemail.com> wrote:
-
-> My usb3 expresscard device has arrived and I get an oops with that too, if I
-> remove it without unloading the driver first. I guess it shouldn't be a
-> surprise that the driver isn't expecting the device to disappear.
+>>
+>>       /* W/A - seems to solve weird behavior. We need to remove this if we
+>>        * don't want to stay in L1 all the time. This wastes a lot of power */
+>>       pci_disable_link_state(pdev, PCIE_LINK_STATE_L0S | PCIE_LINK_STATE_L1 |
+>>                              PCIE_LINK_STATE_CLKPM);
+>>
+>> Now, I took a laptop with 3.7.9 (that supports L1) and measured power.
+>> I would expect to see that as long as the driver isn't loaded, the
+>> power consumption is low (L1 enabled), and when I load the driver, the
+>> power consumption rises because L1 gets disabled.
+>> But this is not what I see. I see more the less the same numbers
+>> before and after driver load.
+>> I don't remember exactly the numbers, but I do remember they were low
+>> (around 1mA or so) - but I really need to check.
+>> I also removed the code above, and it didn't change anything.
+>> Can it be that this code doesn't have any effect?
 >
-> As I mentioned, I have some trouble with the WinTV-HVR-1400 card, which
-> sometimes pops out again, if I push it into the slot too hard (but I'm
-> geeting better at that with practice). So what I've done (with the usb3 card
-> too) to avoid the oopsen is blacklist the driver in
-> /etc/modprobe.d/blacklist.conf and then load them when I'm sure the card is
-> properly inserted. Not exactly hotplug, but at least I don't have to reboot
-> because of an oops- and it's not something I'm doing several times an hour.
+> Depend on BIOS settings ASPM can be enabled or disabled on the whole
+> system. I think kernel can change settings globally as well.
 
-Hi Chris,
+Obviously kernel can change things here. I have 3.1 (!) and 3.7 on the
+same machines, on the first, ASPM is disabled, on the latter it is
+enabled.
 
-What's the current state of this?  It sounds to me like it still
-doesn't work out of the box.  Having to blacklist the driver and load
-it manually is a completely unacceptable user experience.  If you have
-to manually choose acpiphp over pciehp, that is also unacceptable.
+> Reloading driver can not be enough to check that, try to reboot the
+> system with iwlwifi module blacklisted and check lspci -vvv to see
+> LnkCtl ASPM settings.
+>
 
-So if you're still limping along with hacky workarounds like this, I'd
-like to pursue this more and see if we can't figure out a better
-solution.
+This is what I did. On 3.7, lspci tells me that ASPM is enabled before
+I load the module. And same after I load the module.
 
-Bjorn
+> Additionally despite above code, iwlwifi try to enable L0S in
+> iwl_pcie_apm_config(), what is basically wrong.
+>
+
+Right, good point. The thing is that the device doesn't know how to do
+both L0S and L1. This is the origin of this code. But obviously, we
+first need to make sure that L0S is supported in the LnkCtl. Will
+check.
+Thanks!
+
+So - what about just removing this code?
