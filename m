@@ -1,265 +1,359 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:55043 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751268Ab3CURa3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 Mar 2013 13:30:29 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Russell King <linux@arm.linux.org.uk>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	devicetree-discuss@lists.ozlabs.org,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Maen Suleiman <maen@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Olof Johansson <olof@lixom.net>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Mitch Bradley <wmb@firmworks.com>,
-	Andrew Murray <andrew.murray@arm.com>
-Subject: [PATCH v5 00/17] PCIe support for the Armada 370 and Armada XP SoCs
-Date: Thu, 21 Mar 2013 18:30:08 +0100
-Message-Id: <1363887025-19931-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from mail-oa0-f42.google.com ([209.85.219.42]:51120 "EHLO
+	mail-oa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752898Ab3CEXNh convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Mar 2013 18:13:37 -0500
+Received: by mail-oa0-f42.google.com with SMTP id i18so11857033oag.15
+        for <linux-pci@vger.kernel.org>; Tue, 05 Mar 2013 15:13:37 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <B2FD678A64EAAD45B089B123FDFC3ED75E690FE449@inbmail01.lsi.com>
+References: <alpine.DEB.2.02.1303041046230.1736@jlaw-desktop.mno.stratus.com>
+ <alpine.DEB.2.02.1303041052420.1736@jlaw-desktop.mno.stratus.com> <B2FD678A64EAAD45B089B123FDFC3ED75E690FE449@inbmail01.lsi.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 5 Mar 2013 16:13:16 -0700
+Message-ID: <CAErSpo5BFPE3CxycQpER9A4c-gpdRuMKDbnuvr7BXL-hSdi2aQ@mail.gmail.com>
+Subject: Re: [PATCH 1/2] mptfusion, mpt2sas, mpt3sas: Don't remove dead IOC
+ PCI device
+To: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
+Cc: Joe Lawrence <Joe.Lawrence@stratus.com>,
+	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+	DL-MPT Fusion Linux <DL-MPTFusionLinux@lsi.com>,
+	Support <support@lsi.com>,
+	"Reddy, Sreekanth" <Sreekanth.Reddy@lsi.com>,
+	"Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>,
+	"James E.J. Bottomley" <JBottomley@parallels.com>,
+	linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
+[+cc linux-pci]
 
-This series of patches introduces PCIe support for the Marvell Armada
-370 and Armada XP. In the future, we plan to extend the driver to
-cover Kirkwood platforms, and possibly other Marvell EBU platforms as
-well.
+On Mon, Mar 4, 2013 at 11:02 AM, Desai, Kashyap <Kashyap.Desai@lsi.com> wrote:
+>
+>
+>> -----Original Message-----
+>> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
+>> owner@vger.kernel.org] On Behalf Of Joe Lawrence
+>> Sent: Monday, March 04, 2013 9:26 PM
+>> To: linux-scsi@vger.kernel.org
+>> Cc: DL-MPT Fusion Linux; Support; Reddy, Sreekanth; Nandigama,
+>> Nagalakshmi; James E.J. Bottomley; Bjorn Helgaas
+>> Subject: [PATCH 1/2] mptfusion, mpt2sas, mpt3sas: Don't remove dead IOC
+>> PCI device
+>>
+>> Device removal/addition is a PCI core function, not an HBA function.
+>> Calling pci_stop_and_remove_bus_device() from a SCSI LLD may introduce
+>> device removal races with PCI hotplug.  Remove these calls from
+>> mptfusion, mpt2sas, and mpt3sas, but leave remaining dead IOC code in
+>> place that flushes outstanding commands and sets IOC state.
+>
+> Joe: I agree that only mptsas/mpt2sas/mpt3sas is calling " pci_stop_and_remove_bus_device" from LLD. If through sysfs we can hot add/remove the device, It would be OK to allow similar simulation from LLD. (In case it is really require.) I agree that calling " pci_stop_and_remove_bus_device" is PCI subsystem's responsibility.
+> Please consider that finding bad IOC on field is very rare.
+>
+> In our case, user wants BAD IOC to be detected immediately (due to performance and mission critical IOs) and it should be removed from the topology ASAP to allow other good IOC and connected topology to work well.
 
-As we are approaching 3.10, I would now like to get formal Acked-by,
-or disagreements from the following maintainers/developers :
+It doesn't matter how rare bad IOCs are.  But I certainly agree that
+when we do find a bad IOC, we want to detect it and stop using it as
+soon as possible.
 
- * Grant Likely, as the OF maintainer, for patches 1, 2 and 3
+> With the new proposed change you posted with this patch half of the problem still do not resolve.
+>
+>  Driver set ioc->remove_host = 1 when bad IOC is detected, but IOs to the connected topology will still continue to flood ( if we do not detach bad IOC from topology) and Scsi Mid layer be busy sending inactive IOs to the bad IOC, and IOs will be return to the OS with "DID_NO_CONNECT".
+>
+> So finally to release the topology from BAD IOC from OS is also equally important. This can be achieved either calling ".remove" entry point or what currently driver is doing "remove the IOC from PCI layer which will allow better cleanup.
 
-   [PATCH v5 01/17] of/pci: Provide support for parsing PCI DT ranges
-   [PATCH v5 02/17] of/pci: Add of_pci_get_devfn() function
-   [PATCH v5 03/17] of/pci: Add of_pci_parse_bus_range() function
+Joe's patch remove the call to pci_stop_and_remove_bus_device(), so
+the IOC will remain attached to the driver.  What if he *did* call the
+driver's . remove() method instead of calling
+pci_stop_and_remove_bus_device()?  Would that resolve your concern?
+If not, why not?
 
- * Bjorn Helgaas, as the PCI maintainer, for patches 4 and 8
+I would really like to get rid of pci_stop_and_remove_bus_device() in
+drivers.  I don't think there's anything special about
+mptsas/mpt2sas/mpt3sas that makes it useful for these drivers but not
+others.
 
-   [PATCH v5 04/17] pci: infrastructure to add drivers in drivers/pci/host
-   [PATCH v5 08/17] pci: PCIe driver for Marvell Armada 370/XP systems
+Bjorn
 
- * Russell King, as the ARM maintainer, for patch 5
-
-   [PATCH v5 05/17] arm: pci: add a align_resource hook
-
- * Arnd Bergmann, Mitch Bradley and Jason Gunthorpe, for patch 8 (the
-   PCIe driver itself), and specifically the Device Tree binding.
-
-   [PATCH v5 08/17] pci: PCIe driver for Marvell Armada 370/XP systems
-
-This patch set depends on:
-
- * The arm-soc/mvebu/cleanup branch in Arnd and Olof arm-soc tree
-
- * [PATCH v3 for 3.10] Introduce a Marvell EBU MBus driver
-   http://lists.infradead.org/pipermail/linux-arm-kernel/2013-March/156883.html
-
-For easier testing, the code has been pushed to:
-
-  git://github.com/MISL-EBU-System-SW/mainline-public.git marvell-pcie-v5
-
-  (note however that this branch will no work as-is, due to completely
-   unrelated regressions, that have in the mean-time been fixed in
-   3.9-rc3. At least 1b72b78fda0433a7e115bc2d78603fde65fae0e7 and
-   e366154f70c54dee3665d1c0f780007e514412f3 must be cherry-picked)
-
-This PATCHv5 follows:
- * PATCHv4, sent on March, 8th 2013
- * PATCHv3, sent on February, 12th 2013
- * PATCHv2, sent on January, 28th 2013
- * RFCv1, sent on December, 7th 2012
-
-Changes between v4 and v5:
-
- * Rebased on top of 3.9-rc2 + the new mvebu-mbus driver (v3).
-
- * Changed the names of the PCI DT sub-nodes to match the OF
-   specifications: they should be named pcie@DD,FF where DD is the
-   device number and FF the function number. Requested by Mitch
-   Bradley.
-
- * Add the device_type = "pci" property at the pcie-controller
-   level. Requested by Mitch Bradley.
-
- * Drop patch 'of/pci: Add of_pci_get_bus() function' because it
-   wasn't actually used in the rest of the patch series.
-
- * Updated the patch 'of/pci: Provide support for parsing PCI DT
-   ranges property' to use the latest version proposed by Andrew
-   Murray on the devicetree-discuss@ mailing list.
-
-Changes between v3 and v4:
-
- * Rebased on top of 3.9-rc1.
-
- * Drop patch "ARM: pci: Allow passing per-controller private data"
-   because it was merged in 3.9.
-
- * Drop patch "lib: devres: don't enclose pcim_*() functions in
-   CONFIG_HAS_IOPORT", because it was merged in 3.9.
-
- * Added CONFIG_PCI_MVEBU=y in mvebu_defconfig, so that the right PCI
-   host controller driver is automatically enabled.
-
- * Instead of using the DT 'ranges' property to encode the PCIe
-   register ranges, use a 'reg' property on the main PCIe controller
-   DT node together with a 'reg-names' property. Suggested by Jason
-   Gunthorpe.
-
- * Don't select PCI_SW_HOST_BRIDGE and PCI_SW_PCI_PCI_BRIDGE, they
-   don't exist anymore. Reported by Bjorn Helgaas.
-
- * Added support for the Armada XP GP board.
-
- * Fix the 'ranges' property so that the memory range is an identity
-   map between CPU addresses and bus addresses. Suggested by Arnd
-   Bergmann.
-
- * Changed the 'ranges' property to have the I/O region after the
-   memory region.
-
- * Use the new mvebu-mbus driver API to create/remove address decoding
-   windows when needed. This remove the need to include
-   <mach/addr-map.h>. Requested by Arnd Bergmann.
-
- * Include directly into the driver the few common PCIe functions we
-   were using from arch/arm/plat-orion/pcie.c. This allows to remove
-   the inclusion of <plat/pcie.h>. Requested by Arnd Bergmann.
-
- * Directly set up the address decoding windows when the memory
-   base/limit and I/O base/limit are configured in the PCI-to-PCI
-   bridge instead of relying on the memory and I/O accesses being
-   enabled in the PCI_COMMAND register. Suggested by Bjorn Helgaas.
-
- * Added some comments on top of the calculations of the I/O
-   base/limit and memory base/limit. Suggested by Arnd Bergmann.
-
- * Changed a bit the way the "realio" resource is created, from
-   suggestions given by Arnd Bergmann.
-
- * Updated the Device Tree binding documentation. Reported by Jason
-   Gunthorpe.
-
- * Instead of using "marvell,armada-370-xp-pcie" as the DT compatible
-   string, use two separate compatible strings:
-   "marvell,armada-370-pcie" and "marvell,armada-xp-pcie". For now,
-   the driver does the same thing for both.
-
-Changes between v2 and v3:
-
- * Use of_irq_map_pci() instead of of_irq_map_raw(), as suggested by
-   Andrew Murray. In order to do this, we moved the interrupt-map and
-   interrupt-map-mask DT properties from the main PCIe controller node
-   to the DT subnodes representing each PCIe interface.
-
- * Remove the usage of the emulated host bridge.
-
- * Move the emulated PCI-to-PCI bridge code into the Marvell PCI
-   driver itself, in order to allow a tighter integration. Suggested
-   by Bjorn Helgaas and Jason Gunthorpe.
-
- * Make the allocation of address decoding windows dynamic: it's when
-   memory accesses or I/O accesses are enabled at the PCI-to-PCI
-   bridge level that we allocate and setup the corresponding address
-   decoding window. Requested by Bjorn Helgaas.
-
- * Fixed the implementation of I/O accesses to use I/O addresses that
-   fall within the normal IO_SPACE_LIMIT. This required using the
-   "remap" functionality of address decoding windows, and therefore
-   some changes in the address decoding window allocator. Follows a
-   long discussion about I/O accesses.
-
- * Set up a correct bus number in the configuration of the PCIe
-   interfaces so that we don't have to fake bus numbers
-   anymore. Requested by Jason Gunthorpe.
-
- * Fix the of_pci_get_devfn() implementation according to Stephen
-   Warren's comment.
-
- * Use CFLAGS_ instead of ccflags to add the mach-mvebu and plat-orion
-   include paths when building the pci-mvebu driver. This ensures that
-   the include paths are only added when building this specific
-   driver. Requested by Stephen Warren.
-
- * Fix the ->resource_align() to only apply on bus 0 (the one on which
-   the emulated PCI-to-PCI bridges sit), and to request an alignment
-   on the size of the window (and not only 64 KB for I/O windows and 1
-   MB for memory windows).
-
- * Clarified the commit log of "clk: mvebu: create parent-child
-   relation for PCIe clocks on Armada 370"
-
-Thanks,
-
-Thomas
-
-Andrew Murray (1):
-  of/pci: Provide support for parsing PCI DT ranges property
-
-Thierry Reding (2):
-  of/pci: Add of_pci_get_devfn() function
-  of/pci: Add of_pci_parse_bus_range() function
-
-Thomas Petazzoni (14):
-  pci: infrastructure to add drivers in drivers/pci/host
-  arm: pci: add a align_resource hook
-  clk: mvebu: create parent-child relation for PCIe clocks on Armada
-    370
-  clk: mvebu: add more PCIe clocks for Armada XP
-  pci: PCIe driver for Marvell Armada 370/XP systems
-  arm: mvebu: PCIe support is now available on mvebu
-  arm: mvebu: add PCIe Device Tree informations for Armada 370
-  arm: mvebu: add PCIe Device Tree informations for Armada XP
-  arm: mvebu: PCIe Device Tree informations for OpenBlocks AX3-4
-  arm: mvebu: PCIe Device Tree informations for Armada XP DB
-  arm: mvebu: PCIe Device Tree informations for Armada 370 Mirabox
-  arm: mvebu: PCIe Device Tree informations for Armada 370 DB
-  arm: mvebu: PCIe Device Tree informations for Armada XP GP
-  arm: mvebu: update defconfig with PCI and USB support
-
- .../devicetree/bindings/pci/mvebu-pci.txt          |  201 +++++
- arch/arm/boot/dts/armada-370-db.dts                |   17 +
- arch/arm/boot/dts/armada-370-mirabox.dts           |   16 +
- arch/arm/boot/dts/armada-370.dtsi                  |   45 +
- arch/arm/boot/dts/armada-xp-db.dts                 |   33 +
- arch/arm/boot/dts/armada-xp-gp.dts                 |   21 +
- arch/arm/boot/dts/armada-xp-mv78230.dtsi           |   98 +++
- arch/arm/boot/dts/armada-xp-mv78260.dtsi           |  113 +++
- arch/arm/boot/dts/armada-xp-mv78460.dtsi           |  170 ++++
- arch/arm/boot/dts/armada-xp-openblocks-ax3-4.dts   |    9 +
- arch/arm/configs/mvebu_defconfig                   |    3 +
- arch/arm/include/asm/mach/pci.h                    |   11 +
- arch/arm/kernel/bios32.c                           |    6 +
- arch/arm/mach-mvebu/Kconfig                        |    2 +
- arch/microblaze/pci/pci-common.c                   |  106 +--
- arch/mips/pci/pci.c                                |   44 +-
- arch/powerpc/kernel/pci-common.c                   |   93 +-
- drivers/clk/mvebu/clk-gating-ctrl.c                |   18 +-
- drivers/of/address.c                               |   54 ++
- drivers/of/of_pci.c                                |   59 +-
- drivers/pci/Kconfig                                |    2 +
- drivers/pci/Makefile                               |    3 +
- drivers/pci/host/Kconfig                           |    8 +
- drivers/pci/host/Makefile                          |    4 +
- drivers/pci/host/pci-mvebu.c                       |  927 ++++++++++++++++++++
- include/linux/of_address.h                         |   31 +
- include/linux/of_pci.h                             |    2 +
- 27 files changed, 1912 insertions(+), 184 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/pci/mvebu-pci.txt
- create mode 100644 drivers/pci/host/Kconfig
- create mode 100644 drivers/pci/host/Makefile
- create mode 100644 drivers/pci/host/pci-mvebu.c
-
--- 
-1.7.9.5
-
+>> Signed-off-by: Joe Lawrence <joe.lawrence@stratus.com>
+>> Cc: Bjorn Helgaas <bhelgaas@google.com>
+>> Cc: James E.J. Bottomley <JBottomley@parallels.com>
+>> Cc: Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>
+>> Cc: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
+>> Cc: support@lsi.com
+>> Cc: DL-MPTFusionLinux@lsi.com
+>> Cc: linux-scsi@vger.kernel.org
+>> ---
+>>  drivers/message/fusion/mptbase.c    | 41 +-----------------------------
+>> ------
+>>  drivers/scsi/mpt2sas/mpt2sas_base.c | 42 ++----------------------------
+>> -------
+>>  drivers/scsi/mpt3sas/mpt3sas_base.c | 40 ++----------------------------
+>> -----
+>>  3 files changed, 5 insertions(+), 118 deletions(-)
+>>
+>> diff --git a/drivers/message/fusion/mptbase.c
+>> b/drivers/message/fusion/mptbase.c
+>> index fb69baa..28a421d 100644
+>> --- a/drivers/message/fusion/mptbase.c
+>> +++ b/drivers/message/fusion/mptbase.c
+>> @@ -63,7 +63,6 @@
+>>  #ifdef CONFIG_MTRR
+>>  #include <asm/mtrr.h>
+>>  #endif
+>> -#include <linux/kthread.h>
+>>  #include <scsi/scsi_host.h>
+>>
+>>  #include "mptbase.h"
+>> @@ -328,31 +327,6 @@ mpt_is_discovery_complete(MPT_ADAPTER *ioc)
+>>
+>>
+>>  /**
+>> - *  mpt_remove_dead_ioc_func - kthread context to remove dead ioc
+>> - * @arg: input argument, used to derive ioc
+>> - *
+>> - * Return 0 if controller is removed from pci subsystem.
+>> - * Return -1 for other case.
+>> - */
+>> -static int mpt_remove_dead_ioc_func(void *arg) -{
+>> -     MPT_ADAPTER *ioc = (MPT_ADAPTER *)arg;
+>> -     struct pci_dev *pdev;
+>> -
+>> -     if ((ioc == NULL))
+>> -             return -1;
+>> -
+>> -     pdev = ioc->pcidev;
+>> -     if ((pdev == NULL))
+>> -             return -1;
+>> -
+>> -     pci_stop_and_remove_bus_device(pdev);
+>> -     return 0;
+>> -}
+>> -
+>> -
+>> -
+>> -/**
+>>   *   mpt_fault_reset_work - work performed on workq after ioc fault
+>>   *   @work: input argument, used to derive ioc
+>>   *
+>> @@ -366,7 +340,6 @@ mpt_fault_reset_work(struct work_struct *work)
+>>       int              rc;
+>>       unsigned long    flags;
+>>       MPT_SCSI_HOST   *hd;
+>> -     struct task_struct *p;
+>>
+>>       if (ioc->ioc_reset_in_progress || !ioc->active)
+>>               goto out;
+>> @@ -380,25 +353,13 @@ mpt_fault_reset_work(struct work_struct *work)
+>>               /*
+>>                * Call mptscsih_flush_pending_cmds callback so that we
+>>                * flush all pending commands back to OS.
+>> -              * This call is required to aovid deadlock at block layer.
+>> +              * This call is required to avoid deadlock at block layer.
+>>                * Dead IOC will fail to do diag reset,and this call is safe
+>>                * since dead ioc will never return any command back from
+>> HW.
+>>                */
+>>               hd = shost_priv(ioc->sh);
+>>               ioc->schedule_dead_ioc_flush_running_cmds(hd);
+>>
+>> -             /*Remove the Dead Host */
+>> -             p = kthread_run(mpt_remove_dead_ioc_func, ioc,
+>> -                             "mpt_dead_ioc_%d", ioc->id);
+>> -             if (IS_ERR(p))  {
+>> -                     printk(MYIOC_s_ERR_FMT
+>> -                             "%s: Running mpt_dead_ioc thread failed !\n",
+>> -                             ioc->name, __func__);
+>> -             } else {
+>> -                     printk(MYIOC_s_WARN_FMT
+>> -                             "%s: Running mpt_dead_ioc thread success !\n",
+>> -                             ioc->name, __func__);
+>> -             }
+>>               return; /* don't rearm timer */
+>>       }
+>>
+>> diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c
+>> b/drivers/scsi/mpt2sas/mpt2sas_base.c
+>> index ffd85c5..a97d10c 100644
+>> --- a/drivers/scsi/mpt2sas/mpt2sas_base.c
+>> +++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
+>> @@ -57,7 +57,6 @@
+>>  #include <linux/sort.h>
+>>  #include <linux/io.h>
+>>  #include <linux/time.h>
+>> -#include <linux/kthread.h>
+>>  #include <linux/aer.h>
+>>
+>>  #include "mpt2sas_base.h"
+>> @@ -115,29 +114,6 @@ module_param_call(mpt2sas_fwfault_debug,
+>> _scsih_set_fwfault_debug,
+>>      param_get_int, &mpt2sas_fwfault_debug, 0644);
+>>
+>>  /**
+>> - *  mpt2sas_remove_dead_ioc_func - kthread context to remove dead ioc
+>> - * @arg: input argument, used to derive ioc
+>> - *
+>> - * Return 0 if controller is removed from pci subsystem.
+>> - * Return -1 for other case.
+>> - */
+>> -static int mpt2sas_remove_dead_ioc_func(void *arg) -{
+>> -             struct MPT2SAS_ADAPTER *ioc = (struct MPT2SAS_ADAPTER *)arg;
+>> -             struct pci_dev *pdev;
+>> -
+>> -             if ((ioc == NULL))
+>> -                     return -1;
+>> -
+>> -             pdev = ioc->pdev;
+>> -             if ((pdev == NULL))
+>> -                     return -1;
+>> -             pci_stop_and_remove_bus_device(pdev);
+>> -             return 0;
+>> -}
+>> -
+>> -
+>> -/**
+>>   * _base_fault_reset_work - workq handling ioc fault conditions
+>>   * @work: input argument, used to derive ioc
+>>   * Context: sleep.
+>> @@ -152,7 +128,6 @@ _base_fault_reset_work(struct work_struct *work)
+>>       unsigned long    flags;
+>>       u32 doorbell;
+>>       int rc;
+>> -     struct task_struct *p;
+>>
+>>       spin_lock_irqsave(&ioc->ioc_reset_in_progress_lock, flags);
+>>       if (ioc->shost_recovery)
+>> @@ -166,29 +141,16 @@ _base_fault_reset_work(struct work_struct *work)
+>>
+>>               /*
+>>                * Call _scsih_flush_pending_cmds callback so that we flush
+>> all
+>> -              * pending commands back to OS. This call is required to
+>> aovid
+>> +              * pending commands back to OS. This call is required to
+>> avoid
+>>                * deadlock at block layer. Dead IOC will fail to do diag
+>> reset,
+>>                * and this call is safe since dead ioc will never return
+>> any
+>>                * command back from HW.
+>>                */
+>>               ioc->schedule_dead_ioc_flush_running_cmds(ioc);
+>>               /*
+>> -              * Set remove_host flag early since kernel thread will
+>> -              * take some time to execute.
+>> +              * Indicate to scsi callbacks that the host has been
+>> removed.
+>>                */
+>>               ioc->remove_host = 1;
+>> -             /*Remove the Dead Host */
+>> -             p = kthread_run(mpt2sas_remove_dead_ioc_func, ioc,
+>> -                 "mpt2sas_dead_ioc_%d", ioc->id);
+>> -             if (IS_ERR(p)) {
+>> -                     printk(MPT2SAS_ERR_FMT
+>> -                     "%s: Running mpt2sas_dead_ioc thread failed !!!!\n",
+>> -                     ioc->name, __func__);
+>> -             } else {
+>> -                 printk(MPT2SAS_ERR_FMT
+>> -                     "%s: Running mpt2sas_dead_ioc thread success !!!!\n",
+>> -                     ioc->name, __func__);
+>> -             }
+>>
+>>               return; /* don't rearm timer */
+>>       }
+>> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c
+>> b/drivers/scsi/mpt3sas/mpt3sas_base.c
+>> index 04f8010..24fd122 100644
+>> --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
+>> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+>> @@ -57,7 +57,6 @@
+>>  #include <linux/dma-mapping.h>
+>>  #include <linux/io.h>
+>>  #include <linux/time.h>
+>> -#include <linux/kthread.h>
+>>  #include <linux/aer.h>
+>>
+>>
+>> @@ -111,28 +110,6 @@ module_param_call(mpt3sas_fwfault_debug,
+>> _scsih_set_fwfault_debug,
+>>       param_get_int, &mpt3sas_fwfault_debug, 0644);
+>>
+>>  /**
+>> - *  mpt3sas_remove_dead_ioc_func - kthread context to remove dead ioc
+>> - * @arg: input argument, used to derive ioc
+>> - *
+>> - * Return 0 if controller is removed from pci subsystem.
+>> - * Return -1 for other case.
+>> - */
+>> -static int mpt3sas_remove_dead_ioc_func(void *arg) -{
+>> -     struct MPT3SAS_ADAPTER *ioc = (struct MPT3SAS_ADAPTER *)arg;
+>> -     struct pci_dev *pdev;
+>> -
+>> -     if ((ioc == NULL))
+>> -             return -1;
+>> -
+>> -     pdev = ioc->pdev;
+>> -     if ((pdev == NULL))
+>> -             return -1;
+>> -     pci_stop_and_remove_bus_device(pdev);
+>> -     return 0;
+>> -}
+>> -
+>> -/**
+>>   * _base_fault_reset_work - workq handling ioc fault conditions
+>>   * @work: input argument, used to derive ioc
+>>   * Context: sleep.
+>> @@ -147,7 +124,6 @@ _base_fault_reset_work(struct work_struct *work)
+>>       unsigned long    flags;
+>>       u32 doorbell;
+>>       int rc;
+>> -     struct task_struct *p;
+>>
+>>
+>>       spin_lock_irqsave(&ioc->ioc_reset_in_progress_lock, flags); @@ -
+>> 162,28 +138,16 @@ _base_fault_reset_work(struct work_struct *work)
+>>
+>>               /*
+>>                * Call _scsih_flush_pending_cmds callback so that we flush
+>> all
+>> -              * pending commands back to OS. This call is required to
+>> aovid
+>> +              * pending commands back to OS. This call is required to
+>> avoid
+>>                * deadlock at block layer. Dead IOC will fail to do diag
+>> reset,
+>>                * and this call is safe since dead ioc will never return
+>> any
+>>                * command back from HW.
+>>                */
+>>               ioc->schedule_dead_ioc_flush_running_cmds(ioc);
+>>               /*
+>> -              * Set remove_host flag early since kernel thread will
+>> -              * take some time to execute.
+>> +              * Indicate to scsi callbacks that the host has been
+>> removed.
+>>                */
+>>               ioc->remove_host = 1;
+>> -             /*Remove the Dead Host */
+>> -             p = kthread_run(mpt3sas_remove_dead_ioc_func, ioc,
+>> -                 "mpt3sas_dead_ioc_%d", ioc->id);
+>> -             if (IS_ERR(p))
+>> -                     pr_err(MPT3SAS_FMT
+>> -                     "%s: Running mpt3sas_dead_ioc thread failed !!!!\n",
+>> -                     ioc->name, __func__);
+>> -             else
+>> -                     pr_err(MPT3SAS_FMT
+>> -                     "%s: Running mpt3sas_dead_ioc thread success !!!!\n",
+>> -                     ioc->name, __func__);
+>>               return; /* don't rearm timer */
+>>       }
+>>
+>> --
+>> 1.8.1.2
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+>> the body of a message to majordomo@vger.kernel.org More majordomo info
+>> at  http://vger.kernel.org/majordomo-info.html
+>
