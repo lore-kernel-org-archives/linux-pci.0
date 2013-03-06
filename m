@@ -1,28 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ch1ehsobe005.messaging.microsoft.com ([216.32.181.185]:1098
-	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754430Ab3CTB2T (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Mar 2013 21:28:19 -0400
-From: Matthew Garrett <matthew.garrett@nebula.com>
-To: "H. Peter Anvin" <hpa@zytor.com>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-security-module@vger.kernel.org"
-	<linux-security-module@vger.kernel.org>,
-	"linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
-	"kexec@lists.infradead.org" <kexec@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 01/12] Security: Add CAP_COMPROMISE_KERNEL
-Date: Wed, 20 Mar 2013 01:28:06 +0000
-Message-ID: <3pfl8u1ugprwkcs5xmtjth3l.1363742692541@email.android.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from mailout1.samsung.com ([203.254.224.24]:11857 "EHLO
+	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750798Ab3CFIkc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Mar 2013 03:40:32 -0500
+Received: from epcpsbgr4.samsung.com
+ (u144.gpu120.samsung.co.kr [203.254.230.144])
+ by mailout1.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+ (7.0.4.24.0) 64bit (built Nov 17 2011))
+ with ESMTP id <0MJ80054QDFELGJ0@mailout1.samsung.com> for
+ linux-pci@vger.kernel.org; Wed, 06 Mar 2013 17:40:30 +0900 (KST)
+Date: Wed, 06 Mar 2013 08:40:19 +0000 (GMT)
+From: Jingoo Han <jg1.han@samsung.com>
+Subject: Re: [PATCH 05/32] lib: devres: don't enclose pcim_*() functions in
+ CONFIG_HAS_IOPORT
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Lior Amsalem <alior@marvell.com>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Jingoo Han <jg1.han@samsung.com>
+Reply-to: jg1.han@samsung.com
+MIME-version: 1.0
+Content-type: text/plain; charset=euc-kr
+MIME-version: 1.0
+Message-id: <22387327.428751362559215433.JavaMail.weblogic@epml07>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-TW0uIFRoZSBxdWVzdGlvbiBpcyB3aGV0aGVyIHdlIGNhbiByZWxpYWJseSBkZXRlcm1pbmUgdGhl
-IHJhbmdlcyBhIGRldmljZSBzaG91bGQgYmUgYWJsZSB0byBhY2Nlc3Mgd2l0aG91dCBoYXZpbmcg
-dG8gdHJ1c3QgdXNlcnNwYWNlIChhbmQsIGlkZWFsbHksIHdpdGhvdXQgaGF2aW5nIHRvIHdvcnJ5
-IGFib3V0IHdoZXRoZXIgaW9tbXUgdmVuZG9ycyBoYXZlIGRvbmUgdGhlaXIgam9iKS4gSXQncyBw
-cmV0dHkgaW1wb3J0YW50IGZvciBQQ0kgcGFzc3Rocm91Z2gsIHNvIHdlIGRvIG5lZWQgdG8gY2Fy
-ZS4gCi0tIApNYXR0aGV3IEdhcnJldHQgfCBtYXR0aGV3LmdhcnJldHRAbmVidWxhLmNvbQ==
+T24gV2VkbmVzZGF5LCBNYXJjaCAwNiwgMjAxMyA1OjI2IFBNLCBUaG9tYXMgUGV0YXp6b25pIHdy
+b3RlOg0KPiANCj4gRGVhciBKaW5nb28gSGFuLA0KPiANCj4gT24gV2VkLCAwNiBNYXIgMjAxMyAw
+NjoyODowOCArMDAwMCAoR01UKSwgSmluZ29vIEhhbiB3cm90ZToNCj4gDQo+ID4gU29ycnksIEkg
+ZGlkIG5vdCBrbm93IHRoYXQgeW91IHN1Ym1pdHRlZCB0aGUgcGF0Y2guDQo+IA0KPiBObyBwcm9i
+bGVtLCBJJ20gaGFwcHkgdG8gaGF2ZSBvbmUgbGVzcyBwYXRjaCB0byBjYXJyeSBpbiBteSBQQ0ll
+IHBhdGNoDQo+IHNldCA6KQ0KDQpUaGFuayB5b3UgOikNCg0KPiANCj4gPiBMaWtlIHlvdSwgSSBh
+bSBkZXZlbG9waW5nIFBDSWUgSG9zdCBkcml2ZXIuDQo+IA0KPiBKdXN0IGN1cmlvdXMsIGRvIHlv
+dSBhbHJlYWR5IGhhdmUgc29tZSBjb2RlPyBUaGllcnJ5IFJlZGluZyBhbmQgbXlzZWxmDQo+IGhh
+dmUgYmVlbiBsb29raW5nIGF0IGVhY2ggb3RoZXIncyBQQ0llIGhvc3QgZHJpdmVyIHNpbmNlIGEg
+d2hpbGUgaW4NCj4gb3JkZXIgdG8gbWFrZSBzb21lIGNvbnNpc3RlbnQgY2hvaWNlcyB3aGVyZSBw
+b3NzaWJsZS4gSXQgd291bGQgYmUgZ29vZA0KPiB0byBzZWUgeW91ciBjb2RlIGFzIHdlbGwuDQoN
+ClllcywgSSBhbSBkZXZlbG9waW5nIGEgUENJZSBkcml2ZXIgZm9yIFNhbXN1bmcgRXh5bm9zIFNv
+Q3MuDQpBbHNvLCAyIGRheXMgYWdvLCBJIHN1Ym1pdHRlZCB0aGUgUENJZSBkcml2ZXIuDQoNCmh0
+dHA6Ly93d3cuc3Bpbmljcy5uZXQvbGlzdHMvbGludXgtcGNpL21zZzIwNTQ4Lmh0bWwNCmh0dHA6
+Ly93d3cuc3Bpbmljcy5uZXQvbGlzdHMvbGludXgtcGNpL21zZzIwNTQ5Lmh0bWwNCg0KSWYgc29t
+ZW9uZSBsb29rIGF0IG15IGNvZGUsIGl0IHdpbGwgYmUgdmVyeSBoZWxwZnVsLg0KVGhhbmsgeW91
+IDopDQoNCkJlc3QgcmVnYXJkcywNCkppbmdvbyBIYW4NCg0KPiANCj4gQmVzdCByZWdhcmRzLA0K
+PiANCj4gVGhvbWFzDQo+IC0tDQo+IFRob21hcyBQZXRhenpvbmksIEZyZWUgRWxlY3Ryb25zDQo+
+IEtlcm5lbCwgZHJpdmVycywgcmVhbC10aW1lIGFuZCBlbWJlZGRlZCBMaW51eA0KPiBkZXZlbG9w
+bWVudCwgY29uc3VsdGluZywgdHJhaW5pbmcgYW5kIHN1cHBvcnQuDQo+IGh0dHA6Ly9mcmVlLWVs
+ZWN0cm9ucy5jb20NCg==
+
 
