@@ -1,76 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:39365 "EHLO mx2.suse.de"
+Received: from mail.mev.co.uk ([62.49.15.74]:55066 "EHLO mail.mev.co.uk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754556Ab3COPO0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 15 Mar 2013 11:14:26 -0400
-Date: Fri, 15 Mar 2013 16:14:17 +0100 (CET)
-From: Jiri Kosina <jkosina@suse.cz>
-To: Harald Arnesen <skogtun.linux@gmail.com>
-Cc: Kernel development list <linux-kernel@vger.kernel.org>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Peter Hurley <peter@hurleysoftware.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Thomas Meyer <thomas@m3y3r.de>,
-	Shawn Starr <shawn.starr@rogers.com>,
-	USB list <linux-usb@vger.kernel.org>,
-	linux-acpi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Daniel Vetter <daniel.vetter@ffwll.ch>,
-	Imre Deak <imre.deak@intel.com>,
-	Daniel Kurtz <djkurtz@chromium.org>,
-	dri-devel@lists.freedesktop.org
-Subject: Re: [3.9-rc1] irq 16: nobody cared  (was [3.9-rc1] very poor interrupt
- responses)
-In-Reply-To: <alpine.LNX.2.00.1303151424140.9529@pobox.suse.cz>
-Message-ID: <alpine.LNX.2.00.1303151609480.9529@pobox.suse.cz>
-References: <Pine.LNX.4.44L0.1303141050310.1983-100000@iolanthe.rowland.org> <1460519.ejNFI1DrGk@vostro.rjw.lan> <1363280764.26318.4.camel@thor.lan> <5657408.cYX6iimiA4@vostro.rjw.lan> <alpine.LNX.2.00.1303150851020.9529@pobox.suse.cz> <5142E7F0.4020002@gmail.com>
- <alpine.LNX.2.00.1303151424140.9529@pobox.suse.cz>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+	id S1756919Ab3CFOOx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 6 Mar 2013 09:14:53 -0500
+From: Ian Abbott <abbotti@mev.co.uk>
+To: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Ian Abbott <abbotti@mev.co.uk>
+Subject: [PATCH] pci_ids.h: add PCI_VENDOR_ID_AMCC
+Date: Wed,  6 Mar 2013 14:14:38 +0000
+Message-Id: <1362579278-6534-1-git-send-email-abbotti@mev.co.uk>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 15 Mar 2013, Jiri Kosina wrote:
+Vendor ID 0x10e8 is assigned to Applied Micro Circuits Corporation
+(recently AppliedMicro, but AMCC on NASDAQ).  The ID currently appears
+as PCI_VENDOR_ID_ADDIDATA_OLD in pci_ids.h, which is wrong.  Some older
+PCI boards made by ADDI-DATA used PCI interface chips made by AMCC and
+used device IDs assigned by AMCC.
 
-> > I have the same problem on my Lenovo T500. I think the graphics card is
-> > involved.
-> > 
-> > This laptop has "hybrid graphics" - one Intel GMA 4500MHD and one ATI
-> > Mobility Radeon HD 3650. When I boot with the Intel card, I get "irq 16:
-> > nobody cared" during boot, not when I boot with the ATI card.
-> 
-> Confirming this. After a lot of hassle, I have bisected this reliably to
-> 
-> 	commit 28c70f162a315bdcfbe0bf940a740ef8bfb918d6
-> 	Author: Daniel Vetter <daniel.vetter@ffwll.ch>
-> 	Date:   Sat Dec 1 13:53:45 2012 +0100
-> 
-> 	    drm/i915: use the gmbus irq for waits
-> 
-> Adding Daniel, Imre and Daniel to CC while I will try to figure out what's 
-> happening in parallel.
-> 
-> Attaching dmesg.txt from the machine with 28c70f162a as head, with 
-> drm.debug=0xe.
+Add PCI_VENDOR_ID_AMCC and mark PCI_VENDOR_ID_ADDIDATA_OLD as a
+duplicate.
 
-Just a datapoint -- I have put a trivial debugging patch in place, and it 
-reveals that "nobody cared" for irq 16 happens long after last
+Note that PCI_VENDOR_ID_AMCC is defined identically in
+"drivers/staging/comedi/comedidev.h" for use by the adl_pci9118 comedi
+driver.  Various other comedi drivers currently use
+PCI_VENDOR_ID_ADDIDATA_OLD, but these can be changed to use
+PCI_VENDOR_ID_AMCC easily enough.  The only other user of
+PCI_VENDOR_ID_ADDIDATA_OLD is "drivers/tty/serial/8250_pci.c" which
+could also be changed to use AMCC easily enough.  Once all that is done,
+PCI_VENDOR_ID_ADDIDATA_OLD can be removed.
 
-	I915_WRITE(GMBUS4 + reg_offset, 0);
+Signed-off-by: Ian Abbott <abbotti@mev.co.uk>
+---
+ include/linux/pci_ids.h | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-has been performed in gmbus_wait_hw_status(). On the other hand, if I 
-comment out both GMBUS4 register offset writes in gmbus_wait_hw_status(), 
-then it of course falls back to GPIO bit-banging, but the "nobody cared" 
-for irq 16 is gone. 
-
-So it seems like something gets severely confused by the I915_WRITE to 
-GMBUS4 + reg_offset. So far this seems to have been reported solely on 
-Lenovos as far as I can see (although a completely different types), so it 
-might be some platform-specific quirk?
-
-Honestly, I still don't understand how all the GMBUS stuff relates to IRQ 
-16 at all. 
-
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index f11c1c2..902e41a 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -1309,6 +1309,8 @@
+ #define PCI_DEVICE_ID_IMS_TT128		0x9128
+ #define PCI_DEVICE_ID_IMS_TT3D		0x9135
+ 
++#define PCI_VENDOR_ID_AMCC		0x10e8
++
+ #define PCI_VENDOR_ID_INTERG		0x10ea
+ #define PCI_DEVICE_ID_INTERG_1682	0x1682
+ #define PCI_DEVICE_ID_INTERG_2000	0x2000
+@@ -2249,7 +2251,7 @@
+ /*
+  * ADDI-DATA GmbH communication cards <info@addi-data.com>
+  */
+-#define PCI_VENDOR_ID_ADDIDATA_OLD             0x10E8
++#define PCI_VENDOR_ID_ADDIDATA_OLD             0x10E8	/* actually AMCC */
+ #define PCI_VENDOR_ID_ADDIDATA                 0x15B8
+ #define PCI_DEVICE_ID_ADDIDATA_APCI7500        0x7000
+ #define PCI_DEVICE_ID_ADDIDATA_APCI7420        0x7001
 -- 
-Jiri Kosina
-SUSE Labs
+1.8.1.2
+
