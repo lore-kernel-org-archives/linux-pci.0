@@ -1,97 +1,51 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rs140.luxsci.com ([74.205.78.114]:55105 "EHLO rs140.luxsci.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755678Ab3CNBV6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 13 Mar 2013 21:21:58 -0400
-Message-ID: <514125FA.7060800@firmworks.com>
-Date: Wed, 13 Mar 2013 15:20:58 -1000
-From: Mitch Bradley <wmb@firmworks.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-To: Rob Herring <robherring2@gmail.com>
-CC: Thierry Reding <thierry.reding@avionic-design.de>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Nadav Haklai <nadavh@marvell.com>, linux-pci@vger.kernel.org,
-	devicetree-discuss@lists.ozlabs.org,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH 24/32] pci: PCIe driver for Marvell Armada 370/XP systems
-References: <20130312070852.GA6727@avionic-0098.mockup.avionic-design.de> <20130312155749.GA1820@obsidianresearch.com> <20130312203819.GA23221@avionic-0098.mockup.avionic-design.de> <20130312210328.GA22702@obsidianresearch.com> <20130312213006.GA23717@avionic-0098.mockup.avionic-design.de> <20130312220854.GA23112@obsidianresearch.com> <20130313081815.GD25940@avionic-0098.mockup.avionic-design.de> <20130313170205.GB24042@obsidianresearch.com> <20130313192628.GA28714@avionic-0098.mockup.avionic-design.de> <5140E85A.3040900@firmworks.com> <20130313213344.GA29402@avionic-0098.mockup.avionic-design.de> <5141023C.3010200@firmworks.com> <51411D4B.4000104@gmail.com>
-In-Reply-To: <51411D4B.4000104@gmail.com>
+In-Reply-To: <510A5F0E.6010100@googlemail.com>
+References: <51016937.1020202@googlemail.com> <510189B1.606@fold.natur.cuni.cz>
+ <5104427D.2050002@googlemail.com> <510494D6.1010000@gmail.com>
+ <51050D43.2050703@googlemail.com> <51051B1B.3080105@gmail.com>
+ <51052DB2.4090702@googlemail.com> <51053917.6060400@fold.natur.cuni.cz>
+ <5105491E.9050907@googlemail.com> <510558CE.9000600@fold.natur.cuni.cz>
+ <5105AFDB.9000200@googlemail.com> <5105E51D.2020606@huawei.com>
+ <51064F1A.1020909@googlemail.com> <51065FA6.4070208@googlemail.com>
+ <51066B46.10409@fold.natur.cuni.cz> <5106CD6C.4070009@googlemail.com>
+ <5106E770.9070602@fold.natur.cuni.cz> <510A5F0E.6010100@googlemail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 6 Mar 2013 16:45:43 -0700
+Message-ID: <CAErSpo4x8pb7J8MnokXiFTE=01-TffCk6CKC0VS7CEf3X1bSBw@mail.gmail.com>
+Subject: Re: 3.8.0-rc4+ - Oops on removing WinTV-HVR-1400 expresscard TV Tuner
+To: Chris Clayton <chris2553@googlemail.com>
+Cc: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Yijing Wang <wangyijing0307@gmail.com>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 3/13/2013 2:43 PM, Rob Herring wrote:
-> On 03/13/2013 05:48 PM, Mitch Bradley wrote:
->> On 3/13/2013 11:33 AM, Thierry Reding wrote:
->>> On Wed, Mar 13, 2013 at 10:58:02AM -1000, Mitch Bradley wrote:
->>> [...]
->>>> In this case, the answer to "what does pcie_controller do?" is "it
->>>> implements a PCI bus" below.  So 'device_type = "pci"' is appropriate.
->>>
->>> Alright, that's 2 against 1. I don't have much of a choice but to yield.
->>
->> All issues of "voting" aside, 'device_type = pci' is what tells
->> of_get_pci_address() to use the 3/2 interpretation.  So if you want a
->> node to implement 3/2 addresses, it must say device_type = pci, unless
->> you do address translation some other way.
-> 
-> I should note that device_type is used for OF, but is supposed to not be
-> used for FDT as matching against compatible properties is preferred. I
-> don't have a good reason as to why, but Mitch may know the history.
-> However, there are numerous exceptions to that for compatibility and to
-> work with existing s/w. So this may be one of those cases.
+On Thu, Jan 31, 2013 at 5:09 AM, Chris Clayton <chris2553@googlemail.com> wrote:
 
-Indeed.  The history is that, originally, the "name" property was
-supposed to be a very precise name, like what is now the most specific
-part of "compatible".  And "device_type" was "what, in general, does
-this device do".
+> My usb3 expresscard device has arrived and I get an oops with that too, if I
+> remove it without unloading the driver first. I guess it shouldn't be a
+> surprise that the driver isn't expecting the device to disappear.
+>
+> As I mentioned, I have some trouble with the WinTV-HVR-1400 card, which
+> sometimes pops out again, if I push it into the slot too hard (but I'm
+> geeting better at that with practice). So what I've done (with the usb3 card
+> too) to avoid the oopsen is blacklist the driver in
+> /etc/modprobe.d/blacklist.conf and then load them when I'm sure the card is
+> properly inserted. Not exactly hotplug, but at least I don't have to reboot
+> because of an oops- and it's not something I'm doing several times an hour.
 
-But with rule, pathnames quickly became unusable to humans:
+Hi Chris,
 
-  /marvell,mv87230/marvell,svxyz/adaptec,12345/wd,8876
+What's the current state of this?  It sounds to me like it still
+doesn't work out of the box.  Having to blacklist the driver and load
+it manually is a completely unacceptable user experience.  If you have
+to manually choose acpiphp over pciehp, that is also unacceptable.
 
-What the heck is that?  Model names are like hashes; they have no rhyme
-or reason and humans cannot remember them for long.  In order for a
-random person to have a clue about what something was, it was much
-better for pathname components to represent the generic function:
+So if you're still limping along with hacky workarounds like this, I'd
+like to pursue this more and see if we can't figure out a better
+solution.
 
-  /pci/pci/scsi/disk
-
-Now it's clear that we are looking at a bridged PCI domain hosting a
-SCSI disk. That's very useful for a system administrator; the
-gobbledygook name is not.
-
-Furthermore, in light of the facts that model numbers change much more
-rapidly than programming interfaces, companies clone each others
-programming interfaces, and companies change their names, a much more
-capable way of describing programming models was needed.
-
-So the "generic names" recommended practice changed things to make
-"name" mean what "device_type" used to vaguely mean, "device_type" was
-deprecated (it was never very precisely defined, and
-mutually-conflicting usage patterns had developed), and "compatible" in
-its present form was introduced.  "Generic names" was quite
-controversial at the time - I think David Kahn wanted to strangle me at
-one point - but it was the right thing.  (Not to mention the
-embarrassing mistake of the underscore in device_type, mea culpa.)
-
-That being the case, I personally would like for device_type to
-disappear forever.  But the fact exists that address.c currently uses it
-(and fdt.c duly parses it), which I why I said that, if you want to use
-of_get_pci_address() in its present form, device_type=pci must be
-present in the bus node that implements the 3/2 address domain.
-
-So, yeah, it's compability with existing s/w, namely the PCI support in
-address.c .
-
-> 
-> Rob
-> 
+Bjorn
