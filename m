@@ -1,43 +1,59 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-la0-f51.google.com ([209.85.215.51]:35439 "EHLO
-	mail-la0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757486Ab3CDR67 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 4 Mar 2013 12:58:59 -0500
-MIME-Version: 1.0
-In-Reply-To: <20130304154832.GD3021@redhat.com>
-References: <CANUX_P3F5YhbZX3WGU-j1AGpbXb_T9Bis2ErhvKkFMtDvzatVQ@mail.gmail.com>
-	<20130304134949.GB3021@redhat.com>
-	<CANUX_P0JhuVWcQjTckYzG8eBb2MtT_=prKqV38mCpVjfLmGtCA@mail.gmail.com>
-	<20130304154832.GD3021@redhat.com>
-Date: Mon, 4 Mar 2013 19:58:57 +0200
-Message-ID: <CANUX_P22AkqeOROP1QHzp20wGWgDbRzy+9FZy2KvHLXCQ5AVnA@mail.gmail.com>
-Subject: Re: is L1 really disabled in iwlwifi
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: linux-pci@vger.kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 6 Mar 2013 09:26:00 +0100
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: jg1.han@samsung.com
+Cc: Arnd Bergmann <arnd@arndb.de>, Lior Amsalem <alior@marvell.com>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Subject: Re: [PATCH 05/32] lib: devres: don't enclose pcim_*() functions in
+ CONFIG_HAS_IOPORT
+Message-ID: <20130306092600.391f123c@skate>
+In-Reply-To: <17540873.418471362551288113.JavaMail.weblogic@epml07>
+References: <17540873.418471362551288113.JavaMail.weblogic@epml07>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 4, 2013 at 5:48 PM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
-> On Mon, Mar 04, 2013 at 04:57:46PM +0200, Emmanuel Grumbach wrote:
->
->> This is what I did. On 3.7, lspci tells me that ASPM is enabled before
->> I load the module. And same after I load the module.
->
-> CONFIG_PCIEASPM disabled ?
->
+Dear Jingoo Han,
 
-nope - enabled on both kernel: 3.1 and 3.7. Makes sense though.
-CONFIG_PCIEASPM enabled, I have L1. Just wondering why doesn't that
-pci_disable_link_state do anything....
-Also, I remember so issues Mathew Garret debugged and he ended up
-disabling ASPM on older kernel because some BIOS issue (don't remember
-really). Apparently, ASPM is enabled again in newer kernels.
+On Wed, 06 Mar 2013 06:28:08 +0000 (GMT), Jingoo Han wrote:
 
-Anyway - I think I will just remove this pci_disable_link_state call
-and hopefully, it will stay long enough in linux-next so that people
-will report issues before it get into linux.
-I don't like leaving that code if it doesn't do anything.
+> Sorry, I did not know that you submitted the patch.
+
+No problem, I'm happy to have one less patch to carry in my PCIe patch
+set :)
+
+> Like you, I am developing PCIe Host driver.
+
+Just curious, do you already have some code? Thierry Reding and myself
+have been looking at each other's PCIe host driver since a while in
+order to make some consistent choices where possible. It would be good
+to see your code as well.
+
+Best regards,
+
+Thomas
+-- 
+Thomas Petazzoni, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
