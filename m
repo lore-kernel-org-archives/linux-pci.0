@@ -1,82 +1,150 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45203 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753425Ab3CKBcQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 10 Mar 2013 21:32:16 -0400
-Message-ID: <513D340E.5030908@redhat.com>
-Date: Sun, 10 Mar 2013 21:31:58 -0400
-From: Don Dutile <ddutile@redhat.com>
-MIME-Version: 1.0
-To: Myron Stowe <myron.stowe@gmail.com>
-CC: Neil Horman <nhorman@tuxdriver.com>, linux-kernel@vger.kernel.org,
-	Prarit Bhargava <prarit@redhat.com>,
-	Don Zickus <dzickus@redhat.com>,
+Received: from moutng.kundenserver.de ([212.227.17.9]:53525 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757730Ab3CFMLk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Mar 2013 07:11:40 -0500
+Date: Wed, 6 Mar 2013 13:11:19 +0100
+From: Thierry Reding <thierry.reding@avionic-design.de>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	linux-pci@vger.kernel.org, Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Asit Mallick <asit.k.mallick@intel.com>,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2] irq: add quirk for broken interrupt remapping on 55XX
- chipsets
-References: <1362158276-4901-1-git-send-email-nhorman@tuxdriver.com> <1362423859-18516-1-git-send-email-nhorman@tuxdriver.com> <20130309204940.GA31808@neilslaptop.think-freely.org> <CAL-B5D15YY6L01q6BCNnP5VCJN7=LeHJSYLjNGXZPRx7VhsZCg@mail.gmail.com>
-In-Reply-To: <CAL-B5D15YY6L01q6BCNnP5VCJN7=LeHJSYLjNGXZPRx7VhsZCg@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH 24/32] pci: PCIe driver for Marvell Armada 370/XP systems
+Message-ID: <20130306121118.GA17079@avionic-0098.mockup.avionic-design.de>
+References: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com>
+ <1360686546-24277-25-git-send-email-thomas.petazzoni@free-electrons.com>
+ <20130212223511.GB31555@obsidianresearch.com>
+ <20130306105441.4d24033e@skate>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="YZ5djTAD1cGYuMQK"
+In-Reply-To: <20130306105441.4d24033e@skate>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/09/2013 05:20 PM, Myron Stowe wrote:
-> On Sat, Mar 9, 2013 at 1:49 PM, Neil Horman<nhorman@tuxdriver.com>  wrote:
->> On Mon, Mar 04, 2013 at 02:04:19PM -0500, Neil Horman wrote:
->>> A few years back intel published a spec update:
->>> http://www.intel.com/content/dam/doc/specification-update/5520-and-5500-chipset-ioh-specification-update.pdf
->>>
->>> For the 5520 and 5500 chipsets which contained an errata (specificially errata
->>> 53), which noted that these chipsets can't properly do interrupt remapping, and
->>> as a result the recommend that interrupt remapping be disabled in bios.  While
->>> many vendors have a bios update to do exactly that, not all do, and of course
->>> not all users update their bios to a level that corrects the problem.  As a
->>> result, occasionally interrupts can arrive at a cpu even after affinity for that
->>> interrupt has be moved, leading to lost or spurrious interrupts (usually
->>> characterized by the message:
->>> kernel: do_IRQ: 7.71 No irq handler for vector (irq -1)
->>>
->>> There have been several incidents recently of people seeing this error, and
->>> investigation has shown that they have system for which their BIOS level is such
->>> that this feature was not properly turned off.  As such, it would be good to
->>> give them a reminder that their systems are vulnurable to this problem.
->>>
->>> Signed-off-by: Neil Horman<nhorman@tuxdriver.com>
->>> CC: Prarit Bhargava<prarit@redhat.com>
->>> CC: Don Zickus<dzickus@redhat.com>
->>> CC: Don Dutile<ddutile@redhat.com>
->>> CC: Bjorn Helgaas<bhelgaas@google.com>
->>> CC: Asit Mallick<asit.k.mallick@intel.com>
->>> CC: linux-pci@vger.kernel.org
->>>
->> Ping, anyone want to Ack/Nack this?
->
-> Don's comment earlier seems to imply that this is a short term fix and
-> that a more long term fix may be coming soon.  If that is the case
-> wouldn't we want to wait for the long term fix and just pull that in?
->
-> Myron
->
-At the time of Neil's postings, multiple changes were being considered,
-and we didn't know how long it would take to verify any one change.
-Thus, Neil's patch was proposed to identify a known problem that was
-being seen on multiple systems, and it was proposed so further
-system issues wouldn't go mis-diagnosed.
 
-We are still testing a minor change, and test results are positive so far.
-After we're sure of its logic as it's results, it can be posted and
-this patch can be removed if it is taken before we are certain.
+--YZ5djTAD1cGYuMQK
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-As Prarit stated, we should be sure of changes in this area before
-throwing this patch away for an option that could yield other failures.
+On Wed, Mar 06, 2013 at 10:54:41AM +0100, Thomas Petazzoni wrote:
+> Dear Jason Gunthorpe,
+>=20
+> On Tue, 12 Feb 2013 15:35:11 -0700, Jason Gunthorpe wrote:
+>=20
+> > > +	pcie@0,0 {
+> > > +		device_type =3D "pciex";
+> > > +		reg =3D <0x0800 0 0xd0040000 0 0x2000>;
+> >=20
+> > It would be great to get this sorted as per my prior comments.. Maybe
+> > like this is easy?
+> >=20
+> > pcie-controller {
+> >  compatible =3D "marvell,armada-370-xp-pcie";
+> >=20
+> >  // Index by marvell,pcie-port ?
+> >  regs =3D <0xd0040000 0x00002000
+> >          0xd0080000 0x00002000>;
+> >=20
+> >  ranges =3D <0x81000000 0 0  0xc0000000  0 0x00010000   /* downstream I=
+/O */
+> >            0x82000000 0 0  0xc1000000  0 0x08000000>; /* non-prefetchab=
+le memory */
+> >=20
+> >  pcie@0,0 {
+> >       device_type =3D "pci";
+> >       reg =3D <0x0800 0 0 0>; // 00:01.0  (????)
+> >       marvell,pcie-port =3D <0>;
+> >  };
+> > }
+> >=20
+> > It is abusive to map the device internal per-port registers through
+> > '0x00000800 0 0xd0040000' and 'reg' - that is not really the intent of
+> > the OF spec.
+>=20
+> The Device Tree would really look odd. We have one register range for
+> each PCIe interface, but instead of nicely putting them inside the
+> pcie@X,Y subnodes, we have a global regs =3D <..> property at the
+> pcie-controller level? I can do that if you want, but it really sounds
+> like the standard PCI DT bindings are horrible. Those register ranges
+> are *per* PCIe interface, so any logical person would expect them
+> inside the pcie@X,Y node...
 
-- Don
->> Neil
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I agree here. It seems that back at the time when the PCI DT bindings
+were devised no hardware existed with these properties. So I think that
+maybe it needs to be revised to take into account some of these new
+requirements. Just adding a bunch of properties to work around
+shortcomings in the specification doesn't seem very desirable to me.
 
+That said, on Tegra there's an additional argument in favour of this
+because the addresses mapped through the ranges/reg properties are
+actually used to access the device's configuration space, which the
+'ss' field in the first cell specifies. Quoting the DTS:
+
+	pcie-controller {
+		...
+		ranges =3D <0x00000800 0 0x80000000 0x80000000 0 0x00001000   /* port 0 r=
+egisters */
+			  0x00001000 0 0x80001000 0x80001000 0 0x00001000   /* port 1 registers =
+*/
+			  0x81000000 0 0          0x82000000 0 0x00010000   /* downstream I/O */
+			  0x82000000 0 0          0xa0000000 0 0x10000000   /* non-prefetchable =
+memory */
+			  0xc2000000 0 0          0xb0000000 0 0x10000000>; /* prefetchable memo=
+ry */
+		...
+		pci@1,0 {
+			...
+			reg =3D <0x000800 0 0x80000000 0 0x1000>;
+			...
+		};
+
+		pci@2,0 {
+			...
+			reg =3D <0x001000 0 0x80001000 0 0x1000>;
+			...
+		};
+	};
+
+So we're actually mapping the configuration space of pci@1,0 and pci@2,0
+to the 0x80000000 and 0x80001000 addresses of the CPU physical address
+space. According to the PCI DT specification this isn't allowed, but it
+works on Linux and quite frankly I don't see why it shouldn't be
+allowed.
+
+Thierry
+
+--YZ5djTAD1cGYuMQK
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQIcBAEBAgAGBQJRNzJmAAoJEN0jrNd/PrOhJ3wQAKEB9DkiTpZRgjoZVDVzO7nr
+EYMIyESIudQgKV5rGGpA50GodpzM/aOBP5obQL5tAmUD2zCyMc/tv7c1MP3pgQUK
+NtNTZ7mIGILQFTtR2uftLzsxD5BmPxUqz+HKRWPL6TgL81Hujbes7unW+vt+1Suz
+uH8/Y8KYGdsoLvYkJ5xrND6d5bXr/bmo4LlRfR+fNU8vv/+1m2dY3cIhRjZv7GqQ
+bKqlnPe7Ka7ytBL3TneQXT33uXCZGAWFIvCpQvrTZg6h+ylf8/LnvqDI887W4zDW
+tQHUe02AFz2/CE6c2zJfDl/Dnr7gPdsRySYVaRSDqsElf/IcRKtRxhMH9Qxndpzb
+bov1LWM3AG+9VDECKnnQC1RKLtWA5LiGTA0TCNX69/mQuKemSVZLFt9F8v3x1Lm4
+VLWWYLnwj0PQ4gS8HMMXiMAWzBW4dMJISugDUzZannyzes52i5XvIXt4nCjPbl8J
+bay53R8aNjzyMO0ek9bX/rTa+q9HOtuwL14g8bmqVlpkNVKwFvcjnT2NPcX98vLN
+aiD4YnJel3Md6UQtcjr2+9ltEop350Tgc1bkQHtjXCYhmxTs+X/5uEE/evLDf03M
+S6bqxvCG5CpeS/7nZ5cfATzE4mpDq7IJyVcacU2HIkltEzPBJqmHFkunQoFTNPfx
+kAcjYDl/dd7QqgYjZN5L
+=HUYc
+-----END PGP SIGNATURE-----
+
+--YZ5djTAD1cGYuMQK--
