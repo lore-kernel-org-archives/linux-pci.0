@@ -1,57 +1,113 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:53522 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754042Ab3CFNH4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Mar 2013 08:07:56 -0500
-Date: Wed, 6 Mar 2013 14:07:52 +0100
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Thomas Abraham <thomas.abraham@linaro.org>
-Cc: Jingoo Han <jg1.han@samsung.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org,
-	devicetree-discuss@lists.ozlabs.org,
-	Surendranath Gurivireddy Balla <suren.reddy@samsung.com>,
-	Siva Reddy Kallam <siva.kallam@samsung.com>
-Subject: Re: [PATCH 1/2] ARM: EXYNOS: Add PCIe driver support
-Message-ID: <20130306140752.7e5d68c8@skate>
-In-Reply-To: <CAJuYYwTKe6cC+eMmyAAskCJrDrbS3SmYRYhzL9iui5m1zvgbzw@mail.gmail.com>
-References: <016b01ce18c2$2c366f10$84a34d30$%han@samsung.com>
-	<CAJuYYwTKe6cC+eMmyAAskCJrDrbS3SmYRYhzL9iui5m1zvgbzw@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from service87.mimecast.com ([91.220.42.44]:43757 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753554Ab3CFJnB convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Mar 2013 04:43:01 -0500
+Date: Wed, 6 Mar 2013 09:42:56 +0000
+From: Andrew Murray <andrew.murray@arm.com>
+To: Rob Herring <robherring2@gmail.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"devicetree-discuss@lists.ozlabs.org"
+	<devicetree-discuss@lists.ozlabs.org>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	"rob.herring@calxeda.com" <rob.herring@calxeda.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>, jg1.han@samsung.com
+Subject: Re: [RFC PATCH RESEND v2] of/pci: Provide support for parsing PCI
+ DT ranges property
+Message-ID: <20130306094255.GA9814@arm.com>
+References: <1362140616-19346-1-git-send-email-Andrew.Murray@arm.com>
+ <5130C59E.8020702@gmail.com>
+MIME-Version: 1.0
+In-Reply-To: <5130C59E.8020702@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Thomas Abraham,
-
-On Mon, 4 Mar 2013 16:01:59 +0530, Thomas Abraham wrote:
-> On 4 March 2013 15:52, Jingoo Han <jg1.han@samsung.com> wrote:
-> > Exynos5440 has two PCIe controllers which can be used as Root Complex.
-> > This driver supports the PCIe controllers as Root Complex mode.
-> >
-> > Signed-off-by: Surendranath Gurivireddy Balla <suren.reddy@samsung.com>
-> > Signed-off-by: Siva Reddy Kallam <siva.kallam@samsung.com>
-> > Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+On Fri, Mar 01, 2013 at 03:13:34PM +0000, Rob Herring wrote:
+> On 03/01/2013 06:23 AM, Andrew Murray wrote:
+> > This patch factors out common implementations patterns to reduce overall kernel
+> > code and provide a means for host bridge drivers to directly obtain struct
+> > resources from the DT's ranges property without relying on architecture specific
+> > DT handling. This will make it easier to write archiecture independent host bridge
+> > drivers and mitigate against further duplication of DT parsing code.
+> > 
+> > This patch can be used in the following way:
+> > 
+> > 	struct of_pci_range_iter iter;
+> > 	for_each_of_pci_range(&iter, np) {
+> > 
+> > 		//directly access properties of the address range, e.g.:
+> > 		//iter.pci_space, iter.pci_addr, iter.cpu_addr, iter.size or
+> > 		//iter.flags
+> > 
+> > 		//alternatively obtain a struct resource, e.g.:
+> > 		//struct resource res;
+> > 		//range_iter_fill_resource(iter, np, res);
+> > 	}
+> > 
+> > Additionally the implementation takes care of adjacent ranges and merges them
+> > into a single range (as was the case with powerpc and microblaze).
+> > 
+> > The modifications to microblaze, mips and powerpc have not been tested.
+> > 
+> > v2:
+> >   This follows on from suggestions made by Grant Likely
+> >   (marc.info/?l=linux-kernel&m=136079602806328)
+> > 
+> > Signed-off-by: Andrew Murray <Andrew.Murray@arm.com>
+> > Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
 > > ---
-> >  .../devicetree/bindings/pci/exynos-pcie.txt        |   58 ++
-> >  arch/arm/Kconfig                                   |    2 +
-> >  arch/arm/mach-exynos/Kconfig                       |    8 +
-> >  arch/arm/mach-exynos/Makefile                      |    2 +
-> >  arch/arm/mach-exynos/include/mach/pcie.h           |  146 +++
-> >  arch/arm/mach-exynos/pcie.c                        | 1009 ++++++++++++++++++++
+> >  arch/microblaze/pci/pci-common.c |  100 +++++++++++--------------------------
+> >  arch/mips/pci/pci.c              |   44 ++++-------------
+> >  arch/powerpc/kernel/pci-common.c |   93 ++++++++++-------------------------
+> >  drivers/of/address.c             |   54 ++++++++++++++++++++
+> >  include/linux/of_address.h       |   30 +++++++++++
+> >  5 files changed, 151 insertions(+), 170 deletions(-)
 > 
-> Is there any reason to place this code in arch/arm/...? As you know,
-> there is a constant effort to relocate as much code as possible from
-> arch/arm/mach-exynos. So there must be a strong justification for
-> keeping this code in arch/arm/mach-exynos.
+> The thing is that this still leaves pci_process_bridge_OF_ranges
+> basically identical for microblaze and powerpc which is really what
+> needs to be moved out to common code. Obviously, struct pci_controller
+> vs. struct pci_sys_data on ARM is an issue, but they all have
+> fundamentally the same data.
+Yes it does. To make things worse struct pci_controller is duplicated and
+pretty much identical between microblaze and powerpc. There is good scope
+for getting rid of lots of code here :).
 
-Indeed. Thierry Reding (doing the Tegra PCIe driver) and myself (doing
-the Marvell PCIe driver) are putting our drivers in drivers/pci/host/,
-in agreement with the PCI maintainers.
+> 
+> All these common fields should be in a common PCI controller struct.
+> Perhaps introducing this with just what you need would work. Depending
+> how invasive moving those fields to a new struct is, you could have a
+> wrapper that just copies/translates the fields to the arch specific struct.
+Yes I see how this would be a good approach. Though my concern would be how
+quirks are handled - if microblaze has the same quirks as powerpc then you'll
+see the same duplicated code between those two architectures. Or you'd see
+the architecture code pick apart the common pci controller struct... I'll
+investigate and see what can be done.
 
-Thomas
--- 
-Thomas Petazzoni, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
+A lack of an accepted way to parse DT ranges on ARM is blocking Thierry,
+Thomas and Jingoo from upstreaming their drivers - do you think there is some
+middle ground or temporary solution for these drivers?
+
+> 
+> There's also things like ioremap of the i/o range. ARM uses a fixed
+> virtual address, so we need to do something different. Just returning
+> the i/o cpu_addr and moving the ioremap out of this function would solve
+> that.
+Yes I've noticed this wasn't quite right. I'm not quite sure how this fits
+in with the DT. I guess the DT ranges would contain 0 for the PCI address
+and a physical address which represents the host bridges I/O range. You
+would then use these two addresses as inputs to pci_ioremap_io - and then
+set the start address of the struct resource to 0 and pass to
+pci_add_resource_offset with io_offset set to 0 - does this seem correct for
+ARM?
+
+Andrew Murray
+> 
+> Rob
+> 
+> 
+
