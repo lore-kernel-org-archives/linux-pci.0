@@ -1,59 +1,93 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Jiri Kosina <jkosina@suse.cz>
-Cc: Alan Stern <stern@rowland.harvard.edu>,
-	Peter Hurley <peter@hurleysoftware.com>,
-	Thomas Meyer <thomas@m3y3r.de>,
-	Shawn Starr <shawn.starr@rogers.com>,
-	Kernel development list <linux-kernel@vger.kernel.org>,
-	USB list <linux-usb@vger.kernel.org>,
-	linux-acpi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: Re: [3.9-rc1] irq 16: nobody cared  (was [3.9-rc1] very poor interrupt responses)
-Date: Thu, 14 Mar 2013 17:46:10 +0100
-Message-ID: <1460519.ejNFI1DrGk@vostro.rjw.lan>
-In-Reply-To: <alpine.LNX.2.00.1303141709000.30118@pobox.suse.cz>
-References: <Pine.LNX.4.44L0.1303141050310.1983-100000@iolanthe.rowland.org> <alpine.LNX.2.00.1303141555090.30118@pobox.suse.cz> <alpine.LNX.2.00.1303141709000.30118@pobox.suse.cz>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from quartz.orcorp.ca ([184.70.90.242]:55144 "EHLO quartz.orcorp.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755581Ab3CGUCo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 7 Mar 2013 15:02:44 -0500
+Date: Thu, 7 Mar 2013 13:02:35 -0700
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Thierry Reding <thierry.reding@avionic-design.de>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	linux-pci@vger.kernel.org, Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH 24/32] pci: PCIe driver for Marvell Armada 370/XP systems
+Message-ID: <20130307200235.GB20695@obsidianresearch.com>
+References: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com>
+ <1360686546-24277-25-git-send-email-thomas.petazzoni@free-electrons.com>
+ <20130212223511.GB31555@obsidianresearch.com>
+ <20130306105441.4d24033e@skate>
+ <20130306121118.GA17079@avionic-0098.mockup.avionic-design.de>
+ <20130306180946.GA2433@obsidianresearch.com>
+ <20130307080832.GD3451@avionic-0098.mockup.avionic-design.de>
+ <20130307174955.GC20840@obsidianresearch.com>
+ <20130307194830.GA1811@avionic-0098.mockup.avionic-design.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130307194830.GA1811@avionic-0098.mockup.avionic-design.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, March 14, 2013 05:09:59 PM Jiri Kosina wrote:
-> On Thu, 14 Mar 2013, Jiri Kosina wrote:
-> 
-> > > > I don't think I have seen this message on rc1+ (8343bce, to be precise), 
-> > > > but I have definitely seen sluggish system response on that kernel as 
-> > > > well.
-> > > > 
-> > > > Attaching lspci, /proc/interrupts and dmesg. 
+On Thu, Mar 07, 2013 at 08:48:30PM +0100, Thierry Reding wrote:
+> On Thu, Mar 07, 2013 at 10:49:55AM -0700, Jason Gunthorpe wrote:
+> > On Thu, Mar 07, 2013 at 09:08:32AM +0100, Thierry Reding wrote:
+> [...]
+> > > > Both have various problems, but I think I prefer the first one as it
+> > > > doesn't conflate the contoller registers and host apertures in a
+> > > > single ranges..
 > > > 
-> > > Can you try to do a git bisect for this?  Is the sluggish system 
-> > > response clear enough that you can tell reliably when it is present and 
-> > > when it isn't?
+> > > I think a better alternative would be (and this matches what Thomas has
+> > > said elsewhere) to use something like the first alternative but move the
+> > > regs property into the pcie@0,X nodes. That would save us from having to
+> > > index a property in the parent. At least from a DT point of view I find
+> > > that to be a more consistent representation.
 > > 
-> > That was my first thought, but unfortunately I am afraid there will be 
-> > point at which I will easily make a bisection mistake, as the 
-> > responsiveness of the system varies over time, so it's not really a 
-> > 100% objective measure.
+> > You are thinking a new property 'host-controller-regs' or the like?
 > 
-> So I will try a bisect, but it'll take some time so that I could claim it 
-> to be trustworthy.
-> 
-> Therefore in case anyone has any idea in parallel, I am all ears.
+> Well, something shorter would be nice, but that's the general idea, yes.
+> As I mentioned before, for Tegra these registers aren't actually any
+> controller specific registers but rather a window to access the PCI
+> configuration space for the root ports.
 
-This one is a candidate to focus on I think:
+Yes, I understand - but in this DT model configuration space access is
+a host controller function, not a PCI-device function. Anyhow I was
+also thinking that by the choice of the name it could do translation
+from the host-controller scope, not from the bridge scope - so the
+extra elements in ranges could be avoided as well. Hence the name..
 
-commit 181380b702eee1a9aca51354d7b87c7b08541fcf
-Author: Yinghai Lu <yinghai@kernel.org>
-Date:   Sat Feb 16 11:58:34 2013 -0700
+> I don't think assigned-addresses is a good fit either. The PCI binding
+> document is equally specific about it as it is about the reg property.
+> So in my opinion a separate property would be a better choice. The only
+> big obstacle is that it needs to be somehow hooked up with the OF core
+> so that proper address translation can be performed.
 
-    PCI/ACPI: Don't cache _PRT, and don't associate them with bus numbers
+Yes, agreed.
 
-Thanks,
-Rafael
+My suggestion is to get the OF experts like GKL/Rob H/etc to weigh in
+on a preferred approach to this problem with the goal of standardizing
+across all PCI host drivers. Seems like there are 2 main options
+(outside regs + regnames/etc or new 'regs' in the bridge) and 1 hacky
+one (assigned addresses)
 
+> One possible solution that wouldn't be too hard to implement is to
+> provide a new function (say of_get_named_address()) similar to
+> of_get_address() which doesn't get the name of the register property
+> from the struct of_bus but from a parameter and call that function from
+> another new function similar to of_address_to_resource() that also gets
+> the property name from a parameter. I can't think of a better name for
+> the latter than of_named_address_to_resource(), which is rather long.
 
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+Seems like a reasonable API, maybe pass in a be32*/length pointer
+instead of a name to be more flexible?
+
+Cheers,
+Jason
