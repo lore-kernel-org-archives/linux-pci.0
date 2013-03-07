@@ -1,36 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:58468 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758075Ab3CDPPZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 4 Mar 2013 10:15:25 -0500
-Date: Mon, 4 Mar 2013 10:11:33 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>, linux-pci@vger.kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: is L1 really disabled in iwlwifi
-Message-ID: <20130304151133.GD23686@tuxdriver.com>
-References: <CANUX_P3F5YhbZX3WGU-j1AGpbXb_T9Bis2ErhvKkFMtDvzatVQ@mail.gmail.com>
- <20130304134949.GB3021@redhat.com>
- <CANUX_P0JhuVWcQjTckYzG8eBb2MtT_=prKqV38mCpVjfLmGtCA@mail.gmail.com>
+Received: from mail-oa0-f41.google.com ([209.85.219.41]:39481 "EHLO
+	mail-oa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755076Ab3CGQZQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Mar 2013 11:25:16 -0500
+Received: by mail-oa0-f41.google.com with SMTP id i10so801510oag.28
+        for <linux-pci@vger.kernel.org>; Thu, 07 Mar 2013 08:25:15 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CANUX_P0JhuVWcQjTckYzG8eBb2MtT_=prKqV38mCpVjfLmGtCA@mail.gmail.com>
+In-Reply-To: <1362666523-9961-1-git-send-email-yxlraid@gmail.com>
+References: <1362666523-9961-1-git-send-email-yxlraid@gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 7 Mar 2013 09:24:55 -0700
+Message-ID: <CAErSpo69g-dJo4xW+bvGuz=TALfMLQBgQ-_PLvsa-c58AzOVJA@mail.gmail.com>
+Subject: Re: [PATCH 1/2] PCI: define macro for marvell vendor ID
+To: yxlraid@gmail.com
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Xiangliang Yu <yuxiangl@marvell.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 04, 2013 at 04:57:46PM +0200, Emmanuel Grumbach wrote:
+On Thu, Mar 7, 2013 at 7:28 AM,  <yxlraid@gmail.com> wrote:
+> From: Xiangliang Yu <yuxiangl@marvell.com>
+>
+> Define PCI_VENDOR_MARVELL_ID_EXT macro for 0x1b4b vendor ID
 
-> Right, good point. The thing is that the device doesn't know how to do
-> both L0S and L1. This is the origin of this code. But obviously, we
-> first need to make sure that L0S is supported in the LnkCtl. Will
-> check.
-> Thanks!
-> 
-> So - what about just removing this code?
+"PCI_VENDOR_MARVELL_ID_EXT" is not actually the symbol you defined below.
 
-As long as the device doesn't randoly disconnect itself from the bus...
+Per the comment at the top of pci_ids.h, we don't add things here
+unless they are shared between multiple drivers.
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+That said, the 0x1b4b vendor ID is used in mv_init.c, mvumi.h,
+mvumi.c, and ahci.c.  If you want to unify all those so they all use
+same symbol, and define that symbol here in pci_ids.h, that would be
+fine with me.
+
+> ---
+>  include/linux/pci_ids.h |    1 +
+>  1 files changed, 1 insertions(+), 0 deletions(-)
+>
+> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+> index f11c1c2..a80f9e6 100644
+> --- a/include/linux/pci_ids.h
+> +++ b/include/linux/pci_ids.h
+> @@ -1604,6 +1604,7 @@
+>  #define PCI_SUBDEVICE_ID_KEYSPAN_SX2   0x5334
+>
+>  #define PCI_VENDOR_ID_MARVELL          0x11ab
+> +#define PCI_VENDOR_ID_MARVELL_EXT      0x1b4b
+>  #define PCI_DEVICE_ID_MARVELL_GT64111  0x4146
+>  #define PCI_DEVICE_ID_MARVELL_GT64260  0x6430
+>  #define PCI_DEVICE_ID_MARVELL_MV64360  0x6460
+> --
+> 1.7.5.4
+>
