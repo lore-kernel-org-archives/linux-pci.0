@@ -1,189 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:35853 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757836Ab3CHPTc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 Mar 2013 10:19:32 -0500
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Cc: Arnd Bergmann <arnd@arndb.de>, Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>, Olof Johansson <olof@lixom.net>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Yehuda Yitschak <yehuday@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Andrew Murray <andrew.murray@arm.com>,
-	Andrew Murray <Andrew.Murray@arm.com>,
-	Liviu Dudau <Liviu.Dudau@arm.com>
-Subject: [PATCH v4 01/18] of/pci: Provide support for parsing PCI DT ranges property
-Date: Fri,  8 Mar 2013 16:19:03 +0100
-Message-Id: <1362755960-30791-2-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1362755960-30791-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1362755960-30791-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from mailout1.samsung.com ([203.254.224.24]:52058 "EHLO
+	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752475Ab3CGBRW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Mar 2013 20:17:22 -0500
+From: Kukjin Kim <kgene.kim@samsung.com>
+To: 'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
+	'Thomas Abraham' <thomas.abraham@linaro.org>
+Cc: 'Jingoo Han' <jg1.han@samsung.com>,
+	linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org,
+	devicetree-discuss@lists.ozlabs.org,
+	'Surendranath Gurivireddy Balla' <suren.reddy@samsung.com>,
+	'Siva Reddy Kallam' <siva.kallam@samsung.com>
+References: <016b01ce18c2$2c366f10$84a34d30$%han@samsung.com>
+ <CAJuYYwTKe6cC+eMmyAAskCJrDrbS3SmYRYhzL9iui5m1zvgbzw@mail.gmail.com>
+ <20130306140752.7e5d68c8@skate>
+In-reply-to: <20130306140752.7e5d68c8@skate>
+Subject: RE: [PATCH 1/2] ARM: EXYNOS: Add PCIe driver support
+Date: Thu, 07 Mar 2013 10:17:15 +0900
+Message-id: <015101ce1ad1$80e4fa20$82aeee60$%kim@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Andrew Murray <andrew.murray@arm.com>
+Thomas Petazzoni wrote:
+> 
+> Dear Thomas Abraham,
+> 
+> On Mon, 4 Mar 2013 16:01:59 +0530, Thomas Abraham wrote:
+> > On 4 March 2013 15:52, Jingoo Han <jg1.han@samsung.com> wrote:
+> > > Exynos5440 has two PCIe controllers which can be used as Root Complex.
+> > > This driver supports the PCIe controllers as Root Complex mode.
+> > >
+> > > Signed-off-by: Surendranath Gurivireddy Balla
+> <suren.reddy@samsung.com>
+> > > Signed-off-by: Siva Reddy Kallam <siva.kallam@samsung.com>
+> > > Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+> > > ---
+> > >  .../devicetree/bindings/pci/exynos-pcie.txt        |   58 ++
+> > >  arch/arm/Kconfig                                   |    2 +
+> > >  arch/arm/mach-exynos/Kconfig                       |    8 +
+> > >  arch/arm/mach-exynos/Makefile                      |    2 +
+> > >  arch/arm/mach-exynos/include/mach/pcie.h           |  146 +++
+> > >  arch/arm/mach-exynos/pcie.c                        | 1009
+> ++++++++++++++++++++
+> >
+> > Is there any reason to place this code in arch/arm/...? As you know,
+> > there is a constant effort to relocate as much code as possible from
+> > arch/arm/mach-exynos. So there must be a strong justification for
+> > keeping this code in arch/arm/mach-exynos.
+> 
+> Indeed. Thierry Reding (doing the Tegra PCIe driver) and myself (doing
+> the Marvell PCIe driver) are putting our drivers in drivers/pci/host/,
+> in agreement with the PCI maintainers.
+> 
+I agree.
 
-DT bindings for PCI host bridges often use the ranges property to describe
-memory and IO ranges - this binding tends to be the same across architectures
-yet several parsing implementations exist, e.g. arch/mips/pci/pci.c,
-arch/powerpc/kernel/pci-common.c, arch/sparc/kernel/pci.c and
-arch/microblaze/pci/pci-common.c (clone of PPC). Some of these duplicate
-functionality provided by drivers/of/address.c.
+Jingoo, please move this stuff into drivers/pci when you address comments.
 
-This patch provides a common iterator-based parser for the ranges property, it
-is hoped this will reduce DT representation differences between architectures
-and that architectures will migrate in part to this new parser.
+Thanks.
 
-It is also hoped (and the motativation for the patch) that this patch will
-reduce duplication of code when writing host bridge drivers that are supported
-by multiple architectures.
-
-This patch provides struct resources from a device tree node, e.g.:
-
-	u32 *last = NULL;
-	struct resource res;
-	while ((last = of_pci_process_ranges(np, res, last))) {
-		//do something with res
-	}
-
-Platforms with quirks can then do what they like with the resource or migrate
-common quirk handling to the parser. In an ideal world drivers can just request
-the obtained resources and pass them on (e.g. pci_add_resource_offset).
-
-Signed-off-by: Andrew Murray <Andrew.Murray@arm.com>
-Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
-Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
----
- drivers/of/address.c       |   63 ++++++++++++++++++++++++++++++++++++++++++++
- include/linux/of_address.h |    9 +++++++
- 2 files changed, 72 insertions(+)
-
-diff --git a/drivers/of/address.c b/drivers/of/address.c
-index 04da786..f607008 100644
---- a/drivers/of/address.c
-+++ b/drivers/of/address.c
-@@ -13,6 +13,7 @@
- #define OF_CHECK_COUNTS(na, ns)	(OF_CHECK_ADDR_COUNT(na) && (ns) > 0)
- 
- static struct of_bus *of_match_bus(struct device_node *np);
-+static struct of_bus *of_find_bus(const char *name);
- static int __of_address_to_resource(struct device_node *dev,
- 		const __be32 *addrp, u64 size, unsigned int flags,
- 		const char *name, struct resource *r);
-@@ -227,6 +228,57 @@ int of_pci_address_to_resource(struct device_node *dev, int bar,
- 	return __of_address_to_resource(dev, addrp, size, flags, NULL, r);
- }
- EXPORT_SYMBOL_GPL(of_pci_address_to_resource);
-+
-+const __be32 *of_pci_process_ranges(struct device_node *node,
-+				    struct resource *res, const __be32 *from)
-+{
-+	const __be32 *start, *end;
-+	int na, ns, np, pna;
-+	int rlen;
-+	struct of_bus *bus;
-+
-+	WARN_ON(!res);
-+
-+	bus = of_find_bus("pci");
-+	bus->count_cells(node, &na, &ns);
-+	if (!OF_CHECK_COUNTS(na, ns)) {
-+		pr_err("Bad cell count for %s\n", node->full_name);
-+		return NULL;
-+	}
-+
-+	pna = of_n_addr_cells(node);
-+	np = pna + na + ns;
-+
-+	start = of_get_property(node, "ranges", &rlen);
-+	if (start == NULL)
-+		return NULL;
-+
-+	end = start + rlen / sizeof(__be32);
-+
-+	if (!from)
-+		from = start;
-+
-+	while (from + np <= end) {
-+		u64 cpu_addr, size;
-+
-+		cpu_addr = of_translate_address(node, from + na);
-+		size = of_read_number(from + na + pna, ns);
-+		res->flags = bus->get_flags(from);
-+		from += np;
-+
-+		if (cpu_addr == OF_BAD_ADDR || size == 0)
-+			continue;
-+
-+		res->name = node->full_name;
-+		res->start = cpu_addr;
-+		res->end = res->start + size - 1;
-+		res->parent = res->child = res->sibling = NULL;
-+		return from;
-+	}
-+
-+	return NULL;
-+}
-+EXPORT_SYMBOL_GPL(of_pci_process_ranges);
- #endif /* CONFIG_PCI */
- 
- /*
-@@ -337,6 +389,17 @@ static struct of_bus *of_match_bus(struct device_node *np)
- 	return NULL;
- }
- 
-+static struct of_bus *of_find_bus(const char *name)
-+{
-+	unsigned int i;
-+
-+	for (i = 0; i < ARRAY_SIZE(of_busses); i++)
-+		if (strcmp(name, of_busses[i].name) == 0)
-+			return &of_busses[i];
-+
-+	return NULL;
-+}
-+
- static int of_translate_one(struct device_node *parent, struct of_bus *bus,
- 			    struct of_bus *pbus, __be32 *addr,
- 			    int na, int ns, int pna, const char *rprop)
-diff --git a/include/linux/of_address.h b/include/linux/of_address.h
-index 0506eb5..751e889 100644
---- a/include/linux/of_address.h
-+++ b/include/linux/of_address.h
-@@ -27,6 +27,8 @@ static inline unsigned long pci_address_to_pio(phys_addr_t addr) { return -1; }
- #define pci_address_to_pio pci_address_to_pio
- #endif
- 
-+const __be32 *of_pci_process_ranges(struct device_node *node,
-+				    struct resource *res, const __be32 *from);
- #else /* CONFIG_OF_ADDRESS */
- #ifndef of_address_to_resource
- static inline int of_address_to_resource(struct device_node *dev, int index,
-@@ -53,6 +55,13 @@ static inline const __be32 *of_get_address(struct device_node *dev, int index,
- {
- 	return NULL;
- }
-+
-+static inline const __be32 *of_pci_process_ranges(struct device_node *node,
-+						  struct resource *res,
-+						  const __be32 *from)
-+{
-+	return NULL;
-+}
- #endif /* CONFIG_OF_ADDRESS */
- 
- 
--- 
-1.7.9.5
+- Kukjin
 
