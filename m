@@ -1,48 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from terminus.zytor.com ([198.137.202.10]:42251 "EHLO mail.zytor.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932679Ab3CTBDD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 19 Mar 2013 21:03:03 -0400
-Message-ID: <51490ABD.3050205@zytor.com>
-Date: Tue, 19 Mar 2013 18:02:53 -0700
-From: "H. Peter Anvin" <hpa@zytor.com>
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:28681 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751487Ab3CGP6E convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Mar 2013 10:58:04 -0500
+From: "Huang, Xiong" <xiong@qca.qualcomm.com>
+To: Wei Yang <weiyang@linux.vnet.ibm.com>
+CC: "bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"unified-drivers@lists.infradead.org"
+	<unified-drivers@lists.infradead.org>,
+	nic-devel <nic-devel@qca.qualcomm.com>
+Subject: RE: [PATCH] PCI: add MSI INTX_DISABLE quirks for
+ AR8161/AR8162/AR8171/AR8172
+Date: Thu, 7 Mar 2013 15:57:59 +0000
+Message-ID: <157393863283F442885425D2C4542856489D6DA2@nasanexd02f.na.qualcomm.com>
+References: <1362549547-2160-1-git-send-email-xiong@qca.qualcomm.com>
+ <20130307094214.GA2317@richard.(null)>
+In-Reply-To: <20130307094214.GA2317@richard.(null)>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-To: Matthew Garrett <matthew.garrett@nebula.com>
-CC: linux-kernel@vger.kernel.org,
-	linux-security-module@vger.kernel.org, linux-efi@vger.kernel.org,
-	kexec@lists.infradead.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 01/12] Security: Add CAP_COMPROMISE_KERNEL
-References: <1363642353-30749-1-git-send-email-matthew.garrett@nebula.com>
-In-Reply-To: <1363642353-30749-1-git-send-email-matthew.garrett@nebula.com>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/18/2013 02:32 PM, Matthew Garrett wrote:
+> >+static void quirk_msi_intx_disable_qca_bug(struct pci_dev *dev) {
+> >+	static u16 qca_eth_devid[] = {
+> >+			PCI_DEVICE_ID_AR8161,
+> >+			PCI_DEVICE_ID_AR8162,
+> >+			PCI_DEVICE_ID_AR8171,
+> >+			PCI_DEVICE_ID_AR8172};
+> >+	struct pci_dev *p;
+> >+	int i;
+> >+
+> >+	/* AR816X/AR817X MSI is fixed at HW level from revision 0x18 */
+> >+	for (i = 0; i < ARRAY_SIZE(qca_eth_devid); i++) {
+> >+		p = pci_get_device(PCI_VENDOR_ID_ATTANSIC,
+> >+				   qca_eth_devid[i],
 > 
-> This means we can return our focus to the kernel. There's currently a number
-> of kernel interfaces that permit privileged userspace to modify the running
-> kernel. These are currently protected by CAP_SYS_RAWIO, but unfortunately
-> the semantics of this capability are poorly defined and it now covers a large
-> superset of the desired behaviour.
+> xiong,
 > 
+> The "FINAL" fixup is called just in pci_apply_final_quirks(), if I am correct.
+> 
+> In this function, it will go through all the pci devices which are registered in
+> the system. And try to invoke the fixup hook.
+> 
+> Also, before invode the hook, in function pci_do_fixups() it will make sure
+> the hook just apply to the devices whose VendorID and DeviceID match what
+> you defined in DECLARE_PCI_FIXUP_FINAL.
+> 
+> So I think there is no need to iterate on all those pci device, before you want
+> to change the pci_dev->dev_flags.
+> 
+> >+				   NULL);
+> >+		if (!p)
+> >+			return;
+> >+
+> >+		if (p->revision < 0x18)
+> >+			dev->dev_flags |=
+> PCI_DEV_FLAGS_MSI_INTX_DISABLE_BUG;
+> >+		pci_dev_put(p);
+> >+	}
 
-... except it doesn't.
+Wei, thanks for you feedback, this patch is just follow the function 'quirk_msi_intx_disable_ati_bug' in quirks.c
+Is it ok if I revise code as:
+	static void quirk_msi_intx_disable_qca_bug(struct pci_dev *dev)
+	{
+		If (dev->revision < 0x18)
+			dev->dev_flags |=  PCI_DEV_FLAGS_MSI_INTX_DISABLE_BUG;
+	}
 
-Looking at it in detail, EVERYTHING in CAP_SYS_RAWIO has the possibility
-of compromising the kernel, because they let device drivers be bypassed,
-which means arbitrary DMA, which means you have everything.
+Please advise, thanks !
 
-Now, a lot of the abuses of CAP_SYS_RAWIO have clearly been added by
-people who had *no bloody clue* what that capability meant, but it
-really doesn't change the fact that pretty much if you have
-CAP_SYS_RAWIO you have the machine.
-
-So just reject CAP_SYS_RAWIO.
-
-	-hpa
-
--- 
-H. Peter Anvin, Intel Open Source Technology Center
-I work for Intel.  I don't speak on their behalf.
+-Xiong
+		
 
