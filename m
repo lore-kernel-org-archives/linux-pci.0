@@ -1,41 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e9.ny.us.ibm.com ([32.97.182.139]:54708 "EHLO e9.ny.us.ibm.com"
+Received: from quartz.orcorp.ca ([184.70.90.242]:60111 "EHLO quartz.orcorp.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753451Ab3C0I4M (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 27 Mar 2013 04:56:12 -0400
-Received: from /spool/local
-	by e9.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <shangw@linux.vnet.ibm.com>;
-	Wed, 27 Mar 2013 04:56:11 -0400
-Received: from d01relay05.pok.ibm.com (d01relay05.pok.ibm.com [9.56.227.237])
-	by d01dlp01.pok.ibm.com (Postfix) with ESMTP id 755D238C801A
-	for <linux-pci@vger.kernel.org>; Wed, 27 Mar 2013 04:56:09 -0400 (EDT)
-Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
-	by d01relay05.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id r2R8u972335098
-	for <linux-pci@vger.kernel.org>; Wed, 27 Mar 2013 04:56:09 -0400
-Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
-	by d01av02.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id r2R8u8kT002184
-	for <linux-pci@vger.kernel.org>; Wed, 27 Mar 2013 05:56:09 -0300
-From: Gavin Shan <shangw@linux.vnet.ibm.com>
-To: linux-pci@vger.kernel.org
-Cc: bhelgaas@google.com, Gavin Shan <shangw@linux.vnet.ibm.com>
-Subject: [PATCH 0/4] Retrieve MSI/MSIX cap struct for once on setup
-Date: Wed, 27 Mar 2013 16:56:00 +0800
-Message-Id: <1364374564-19096-1-git-send-email-shangw@linux.vnet.ibm.com>
+	id S1756100Ab3CGRuJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 7 Mar 2013 12:50:09 -0500
+Date: Thu, 7 Mar 2013 10:49:55 -0700
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Thierry Reding <thierry.reding@avionic-design.de>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	linux-pci@vger.kernel.org, Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH 24/32] pci: PCIe driver for Marvell Armada 370/XP
+ systems
+Message-ID: <20130307174955.GC20840@obsidianresearch.com>
+References: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com>
+ <1360686546-24277-25-git-send-email-thomas.petazzoni@free-electrons.com>
+ <20130212223511.GB31555@obsidianresearch.com>
+ <20130306105441.4d24033e@skate>
+ <20130306121118.GA17079@avionic-0098.mockup.avionic-design.de>
+ <20130306180946.GA2433@obsidianresearch.com>
+ <20130307080832.GD3451@avionic-0098.mockup.avionic-design.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130307080832.GD3451@avionic-0098.mockup.avionic-design.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-While we setup MSI or MSI-X for specific PCI device, the address of
-MSI or MSI-X capability structure is figured out from the config
-space for multiple times. That's unnecessary and the patchset addresses
-that. With the patchset applied, the latency for MSI or MSI-X setup
-would be decreased hopefully.
+On Thu, Mar 07, 2013 at 09:08:32AM +0100, Thierry Reding wrote:
 
-drivers/pci/msi.c               |   51 ++++++++++++++++++++------------------
-drivers/pci/pcie/portdrv_core.c |    2 +-
-include/linux/pci.h             |    4 +-
-3 files changed, 30 insertions(+), 27 deletions(-)
+> Actually I do use device_type = "pciex" for the pci@1,0 and pci@2,0
+> nodes which was suggested back when I first posted this series. Yet the
+> address translation still works properly. And it should since they are
+> translated to the parent bus which is used to access the configuration
+> space window for each root port.
 
-Thanks,
-Gavin
+Right - pciex != pci - as you note:
 
+> Looking at the code it looks indeed like the OF core only matches on
+> "pci" (and "vci"), but not "pciex". Perhaps I should change both nodes
+> to device_type = "pci" and see what the results are.
+
+The string 'pci' engages the special behavior, pciex isn't a valid
+keyword.
+
+This is why I keep saying these bindings need to use 'device_type = "pci"' :)
+
+> > Both have various problems, but I think I prefer the first one as it
+> > doesn't conflate the contoller registers and host apertures in a
+> > single ranges..
+> 
+> I think a better alternative would be (and this matches what Thomas has
+> said elsewhere) to use something like the first alternative but move the
+> regs property into the pcie@0,X nodes. That would save us from having to
+> index a property in the parent. At least from a DT point of view I find
+> that to be a more consistent representation.
+
+You are thinking a new property 'host-controller-regs' or the like?
+
+> However that would probably not work out-of-the-box with the current OF
+> core because of_address_to_resource() won't know how to find the new
+> property. The assigned-addresses alternative seems to be the only one
+> that would work on the current OF core and achieve proper address
+> translation. But it doesn't seem like a good solution either since it
+> repurposes the meaning of the property and therefore isn't any better
+> than encoding the same information in the reg property.
+
+Except that reg is specifically not supposed to be handling CPU bus
+addresses and assigned-addresses is.
+
+Adding a hidden non-standard BAR to model the hidden non-standard
+memory region associated with the bridge is a stretch, but it is not a
+very big stretch...
+
+In any event, regs should not be used, and something needs to be
+decided!
+
+Regards,
+Jason
