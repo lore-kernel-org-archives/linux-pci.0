@@ -1,40 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from terminus.zytor.com ([198.137.202.10]:48745 "EHLO mail.zytor.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933184Ab3CTQqJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 20 Mar 2013 12:46:09 -0400
-Message-ID: <5149E7C3.3080707@zytor.com>
-Date: Wed, 20 Mar 2013 09:45:55 -0700
-From: "H. Peter Anvin" <hpa@zytor.com>
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:43022 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932690Ab3CGSzs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Mar 2013 13:55:48 -0500
+From: xiong <xiong@qca.qualcomm.com>
+To: <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <unified-drivers@lists.infradead.org>,
+	<nic-devel@qca.qualcomm.com>,
+	"Huang,Xiong" <xiong@qca.qualcomm.com>
+Subject: [PATCH] PCI: add MSI INTX_DISABLE quirks for AR8161/AR8162/AR8171/AR8172/E210X
+Date: Fri, 8 Mar 2013 02:55:16 +0800
+Message-ID: <1362682516-9840-1-git-send-email-xiong@qca.qualcomm.com>
 MIME-Version: 1.0
-To: Matthew Garrett <matthew.garrett@nebula.com>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-security-module@vger.kernel.org"
-	<linux-security-module@vger.kernel.org>,
-	"linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
-	"kexec@lists.infradead.org" <kexec@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 01/12] Security: Add CAP_COMPROMISE_KERNEL
-References: <1363642353-30749-1-git-send-email-matthew.garrett@nebula.com>  <51490ABD.3050205@zytor.com>  <1363785354.2553.15.camel@x230.sbx07502.somerma.wayport.net>  <db71c48c-4ec4-4611-935b-bb1b0441112d@email.android.com> <1363792462.2553.24.camel@x230.sbx07502.somerma.wayport.net>
-In-Reply-To: <1363792462.2553.24.camel@x230.sbx07502.somerma.wayport.net>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/20/2013 08:14 AM, Matthew Garrett wrote:
-> On Wed, 2013-03-20 at 08:03 -0700, H. Peter Anvin wrote:
->> CAP_SYS_RAWIO is definitely inappropriate there.
-> 
-> Ok. How do we fix that without breaking userspace that expects
-> CAP_SYS_RAWIO to be sufficient?
-> 
+From: "Huang,Xiong" <xiong@qca.qualcomm.com>
 
-I don't think we can to some way, because when what you have is
-fundamentally broken, it's hard to fix.
+following PCIe Devices with revision lower than 0x18 have this bug:
 
-However, it is extremely likely that the number of affected applications
-is vanishingly small.  There probably are a handful of apps that do
-this, and I wouldn't be surprised if most of them simply run as root.
+ AR8161(1091)/AR8162(1090)/AR8171(10A1)/AR8172(10A0)/E210X(E091).
 
-	-hpa
+Signed-off-by: Huang,Xiong <xiong@qca.qualcomm.com>
+---
+ drivers/pci/quirks.c | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
+
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 0369fb6..4273a2d 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -2594,6 +2594,14 @@ static void quirk_msi_intx_disable_ati_bug(struct pci_dev *dev)
+ 		dev->dev_flags |= PCI_DEV_FLAGS_MSI_INTX_DISABLE_BUG;
+ 	pci_dev_put(p);
+ }
++static void quirk_msi_intx_disable_qca_bug(struct pci_dev *dev)
++{
++	/* AR816X/AR817X/E210X MSI is fixed at HW level from revision 0x18 */
++	if (dev->revision < 0x18) {
++		dev_info(&dev->dev, "set MSI_INTX_DISABLE_BUG flag\n");
++		dev->dev_flags |= PCI_DEV_FLAGS_MSI_INTX_DISABLE_BUG;
++	}
++}
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_BROADCOM,
+ 			PCI_DEVICE_ID_TIGON3_5780,
+ 			quirk_msi_intx_disable_bug);
+@@ -2643,6 +2651,16 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATTANSIC, 0x1073,
+ 			quirk_msi_intx_disable_bug);
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATTANSIC, 0x1083,
+ 			quirk_msi_intx_disable_bug);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATTANSIC, 0x1090,
++			quirk_msi_intx_disable_qca_bug);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATTANSIC, 0x1091,
++			quirk_msi_intx_disable_qca_bug);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATTANSIC, 0x10a0,
++			quirk_msi_intx_disable_qca_bug);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATTANSIC, 0x10a1,
++			quirk_msi_intx_disable_qca_bug);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATTANSIC, 0xe091,
++			quirk_msi_intx_disable_qca_bug);
+ #endif /* CONFIG_PCI_MSI */
+ 
+ /* Allow manual resource allocation for PCI hotplug bridges
+-- 
+1.7.11.7
 
