@@ -1,52 +1,46 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>, Ram Pai <linuxram@us.ibm.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
-	Huang Ying <ying.huang@intel.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: [PATCH v3 19/27] PCI, x86: Use for_each_pci_resource() with mrst
-Date: Wed, 13 Mar 2013 16:28:14 -0700
-Message-Id: <1363217302-14383-20-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1363217302-14383-1-git-send-email-yinghai@kernel.org>
-References: <1363217302-14383-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: 2013 Linux Plumbers PCI Microconference proposal call for
+ participaton
+From: Myron Stowe <mstowe@redhat.com>
+To: linux-pci <linux-pci@vger.kernel.org>
+Cc: linux-acpi <linux-acpi@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	linux-arm-kernel <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 07 Mar 2013 09:11:01 -0700
+Message-ID: <1362672661.2276.3.camel@zim.stowe>
+Mime-Version: 1.0
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: x86@kernel.org
-Cc: Huang Ying <ying.huang@intel.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
----
- arch/x86/pci/mrst.c |    7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+All:
 
-diff --git a/arch/x86/pci/mrst.c b/arch/x86/pci/mrst.c
-index 6eb18c4..884ea69 100644
---- a/arch/x86/pci/mrst.c
-+++ b/arch/x86/pci/mrst.c
-@@ -280,6 +280,7 @@ static void pci_fixed_bar_fixup(struct pci_dev *dev)
- 	unsigned long offset;
- 	u32 size;
- 	int i;
-+	struct resource *res;
- 
- 	if (!pci_soc_mode)
- 		return;
-@@ -294,10 +295,10 @@ static void pci_fixed_bar_fixup(struct pci_dev *dev)
- 	    PCI_DEVFN(2, 2) == dev->devfn)
- 		return;
- 
--	for (i = 0; i < PCI_ROM_RESOURCE; i++) {
-+	for_each_pci_resource(dev, res, i, PCI_STD_RES) {
- 		pci_read_config_dword(dev, offset + 8 + (i * 4), &size);
--		dev->resource[i].end = dev->resource[i].start + size - 1;
--		dev->resource[i].flags |= IORESOURCE_PCI_FIXED;
-+		res->end = res->start + size - 1;
-+		res->flags |= IORESOURCE_PCI_FIXED;
- 	}
- }
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, PCI_ANY_ID, pci_fixed_bar_fixup);
--- 
-1.7.10.4
+Bjorn and I would like to chair a PCI subsystem focused microconference
+as part of this year's Linux Plumbers conference but first we need to
+find out if there is enough interest and material that needs covered
+( http://wiki.linuxplumbersconf.org/2013:topics ).
+
+Please respond to this invitation by submitting presentation or
+discussion proposals that you would be willing to cover for
+consideration (just respond to this mail on the linux-pci list).  You
+should also feel free to submit ideas as proposals for others to cover.
+
+If approved by the program committee we will give precedence to
+proposals that bring up current issues that need attention, help, or
+resolution.  We would like for the majority of the microconference to be
+"working session discussions" in which a current issue in the PCI
+subsystem's space that needs solving is introduced and then opened up
+for live discussion by attendees - much like what took place last year.
+
+As a possible aid towards promoting topics for submissions we have
+listed a few candidates that seem to meet the criteria in the
+microconference proposals wiki located at
+http://wiki.linuxplumbersconf.org/2013:pci_subsystem
+
+
+Please feel free to forward this invitation on to any others, or
+relevant lists, that seem appropriate.
+
+Thanks,
+Bjorn Helgaas and Myron Stowe 
 
