@@ -1,83 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f172.google.com ([209.85.223.172]:37716 "EHLO
-	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754912Ab3C2SCx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 29 Mar 2013 14:02:53 -0400
+Received: from mail-oa0-f54.google.com ([209.85.219.54]:57278 "EHLO
+	mail-oa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753265Ab3CGARq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Mar 2013 19:17:46 -0500
+Received: by mail-oa0-f54.google.com with SMTP id n12so13534339oag.13
+        for <linux-pci@vger.kernel.org>; Wed, 06 Mar 2013 16:17:46 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo7ChfRiEn0eR1rf-mVheUS9Yf8f+j4n78PJcGYh+yMVgA@mail.gmail.com>
-References: <CAE9FiQXmeb66dc8fET0y99BjqpUXp11c7utiQ5keR1Wf+N9xaA@mail.gmail.com>
-	<1363628226-6679-1-git-send-email-yinghai@kernel.org>
-	<CAErSpo6v0mj9=Q13d=G4hho0mb9XTcsmefzke9fROYmZ7oBWxQ@mail.gmail.com>
-	<CAE9FiQU7cDzJdHxmqhJNgc9UCsRLgvCFQpv8+fLxD79pLEUC5A@mail.gmail.com>
-	<CAErSpo4ncW8rkcpDiccORZedj30m7jRmpXK+amfDGn_wjwt7EA@mail.gmail.com>
-	<CAE9FiQVqKag2TGah7x_1MAJ+c0UWgywgM_jKUoOnh+rq3bwBhg@mail.gmail.com>
-	<CAE9FiQVMgdj5edbR4qZny29fV9-bW_We_G4Wpn_yruDLQZiQiQ@mail.gmail.com>
-	<20130329032200.GA11990@google.com>
-	<CAE9FiQVu5QyxaKsYzzQoroQD=TvsziHzDOtoeg=FvhZ8HyN5yw@mail.gmail.com>
-	<CAErSpo7ChfRiEn0eR1rf-mVheUS9Yf8f+j4n78PJcGYh+yMVgA@mail.gmail.com>
-Date: Fri, 29 Mar 2013 11:02:52 -0700
-Message-ID: <CAE9FiQXkDg7Y336S=DXoms44=5HLaiUx=sWviupz1fJmaDUEzQ@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Remove not needed check in disable aspm link
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Roman Yepishev <roman.yepishev@gmail.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Matthew Garrett <matthew.garrett@nebula.com>,
-	"e1000-devel@lists.sourceforge.net"
-	<e1000-devel@lists.sourceforge.net>
+In-Reply-To: <569718148.80620.1361906088301.JavaMail.mail@webmail13>
+References: <CAErSpo7qj2SNR7BfuBsfF-saZXvgcqqLtgoP5Hyb5u99qR4Ncg@mail.gmail.com>
+ <Pine.LNX.4.44L0.1302191119270.2215-100000@iolanthe.rowland.org>
+ <CAErSpo7NZoOQZyW76HEoOTVgdqL2CgbVScAeF6HGLAVaNCq0=w@mail.gmail.com>
+ <337833384.57445.1361860509194.JavaMail.mail@webmail08> <CAErSpo6CbO5KYXiErv6J_Dnm1u694C5fQPP2_cZL8VKDEnZa9A@mail.gmail.com>
+ <569718148.80620.1361906088301.JavaMail.mail@webmail13>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 6 Mar 2013 17:17:26 -0700
+Message-ID: <CAErSpo6UkVhSf+nFW4zwJLBQw_0RQ5H9Bv-UuQRb6zdwsFPw4g@mail.gmail.com>
+Subject: Re: Abysmal HDD/USB write speed after sleep on a UEFI system
+To: "Artem S. Tashkinov" <t.artem@lycos.com>
+Cc: stern@rowland.harvard.edu, torvalds@linux-foundation.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	rjw@sisk.pl
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 29, 2013 at 5:24 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+On Tue, Feb 26, 2013 at 12:14 PM, Artem S. Tashkinov <t.artem@lycos.com> wrote:
+> Feb 27, 2013 12:47:01 AM, Bjorn Helgaas wrote:
+> On Mon, Feb 25, 2013 at 11:35 PM, Artem S. Tashkinov wrote:
+>>> Feb 26, 2013 03:57:52 AM, Bjorn Helgaas wrote:
+>>>>
+>>>>Where are we at with this, Artem?  I assume it's still a problem.
+>>>>
+>>>
+>>> Yes, it is, Bjorn.
+>>>
+>>> In order to eliminate this problem I switched back to MBR yesterday, because
+>>> so far I haven't received any instructions or guidance as to how I can debug
+>>> it further. I'm absolutely sure USB write speed is just another manifestation of
+>>> it so I decided not to debug USB specifically (it just doesn't make too much
+>>> sense).
+>>>
+>>> What I see is that something terribly wrong is going on but if Linus has no ideas
+>>> I, as an average Joe, don't have a slightest clue as to what I can do.
+>>>
+>>> The bug report with necessary, but seemingly useless information, can be
+>>> found here: https://bugzilla.kernel.org/show_bug.cgi?id=53551
+>>>
+>>> If anyone comes up with new ideas I can quickly try UEFI again now that I
+>>> have two HDDs at my disposal (the old one is formatted as GPT, the new one is
+>>> MBR).
+>>
+>>The ideas I saw are:
+>>
+>>1) Figure out whether it ever worked.  If an older kernel worked
+>>correctly and a newer one is broken, bisection is at least a
+>>possibility.  You mentioned that it did work before (Feb 12), but in
+>>the past you never suspended twice in one boot session, whereas maybe
+>>you did when seeing the problem?
 >
-> Half of your v1 patch (removing the pcie_aspm_sanity_check() test)
-> *might* be the right thing, but only if you can clearly explain why
-> that will not reintroduce the bug Matthew fixed with c9651e70.
+> This is difficult to say since the first kernel I tried to run in EUFI mode was
+> 3.7.x, so I've no idea if any previous ones ever worked.
 >
-> I think we also need to fix the PCI_FIXUP_FINAL quirk regression, but
-> that's a separate issue and should be a separate patch.
+>>
+>>2) Try the "setpci" to set the MSI address back to the original value
+>>to see if it makes a difference (see my Feb 12 message).
+>
+> I will try it soon and report back to you.
+>
+>>
+>>3) Collect "lspci -vvv -xxxx" output to investigate the XHCI
+>>Unsupported Request errors.
+>>
+>>4) Use usbmon to collect traces before and after the suspend.
+>
+> Likewise. Still I don't quite understand why you are persistent in your
+> desire to investigate USB controllers specifically - my problem affects
+> all storage devices that I have.
 
+Well, in the absence of good ideas about what's going on, I guess we
+have to pursue even the bad ideas that don't seem like they'd be
+related :)  Speaking of bad ideas, any news on 2) and 3) above?
 
-First commit from Matthew
- 0ae5eaf10     PCI: ignore pre-1.1 ASPM quirking when ASPM is disabled
-    Right now we won't touch ASPM state if ASPM is disabled, except in the case
-    where we find a device that appears to be too old to reliably support ASPM.
-    Right now we'll clear it in that case, which is almost certainly the wrong
-    thing to do
+You mentioned in the bugzilla that Windows complains about MTRRs being
+changed across the S4 sleep state transition.  I don't think Linux
+looks for such a change.  You could try looking at /proc/mtrr before
+and after the suspend/resume to see if anything changed there.  It
+looks like there's even support for *writing* the MTRRs via
+/proc/mtrr, so if anything did change, you could also try changing it
+back.
 
-Try to not touch pre-1.1 ASPM for all, and it causes lots of regression.
-
-So second commit
-
-cdb0f9a1ad2e ASPM: Fix pcie devices with non-pcie children
-    Since 3.2.12 and 3.3, some systems are failing to boot with a BUG_ON.
-    Some other systems using the pata_jmicron driver fail to boot because no
-    disks are detected.  Passing pcie_aspm=force on the kernel command line
-    works around it.
-
-move the check aspm_disabled down.
-
-but ath5 and etc (pre-1.1) really need to aspm_disable to change their
-hw setting.
-
-So the right solution would be dropping pcie_aspm_sanity_check()
-change -in v2 should make all both happy, as quirk and disable that in
-driver for ath5 are calling
-pcie_disable_aspm_state explicitly.
-
-In v2, we already removed pcie_clear_aspm() that is calling
-pcie_disable_aspm_state.
-
-
-Please check attached -v3.
-
-
-Thanks
-
-Yinghai
+Bjorn
