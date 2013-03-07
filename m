@@ -1,87 +1,169 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Tue, 19 Mar 2013 11:38:48 -0400 (EDT)
-From: Alan Stern <stern@rowland.harvard.edu>
-To: Daniel Vetter <daniel.vetter@ffwll.ch>
-cc: Chris Wilson <chris@chris-wilson.co.uk>,
-	Jiri Kosina <jkosina@suse.cz>, Daniel Vetter <daniel@ffwll.ch>,
-	Greg KH <greg@kroah.com>,
-	Harald Arnesen <skogtun.linux@gmail.com>,
-	Kernel development list <linux-kernel@vger.kernel.org>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Peter Hurley <peter@hurleysoftware.com>,
-	Thomas Meyer <thomas@m3y3r.de>,
-	Shawn Starr <shawn.starr@rogers.com>,
-	USB list <linux-usb@vger.kernel.org>,
-	<linux-acpi@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>, Yinghai Lu <yinghai@kernel.org>,
-	Imre Deak <imre.deak@intel.com>,
-	Daniel Kurtz <djkurtz@chromium.org>,
-	<dri-devel@lists.freedesktop.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"H. Peter Anvin" <hpa@zytor.com>, <x86@kernel.org>,
-	Arkadiusz Miskiewicz <a.miskiewicz@gmail.com>
-Subject: Re: gm45 intel gfx can generate non-MSI irq# in MSI mode (was Re:
- [PATCH] drm/i915: stop using GMBUS IRQs on Gen4 chips (was Re: [3.9-rc1]
- irq 16: nobody cared (was [3.9-rc1] very poor interrupt responses
-In-Reply-To: <CAKMK7uGnZFaLQaZtoQ0Fz0ViNNjBvmf0Ak=qPmdAcm2mRBD7rA@mail.gmail.com>
-Message-ID: <Pine.LNX.4.44L0.1303191136020.15684-100000@netrider.rowland.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from moutng.kundenserver.de ([212.227.126.187]:55609 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754451Ab3CGIIw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Mar 2013 03:08:52 -0500
+Date: Thu, 7 Mar 2013 09:08:32 +0100
+From: Thierry Reding <thierry.reding@avionic-design.de>
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	linux-pci@vger.kernel.org, Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH 24/32] pci: PCIe driver for Marvell Armada 370/XP systems
+Message-ID: <20130307080832.GD3451@avionic-0098.mockup.avionic-design.de>
+References: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com>
+ <1360686546-24277-25-git-send-email-thomas.petazzoni@free-electrons.com>
+ <20130212223511.GB31555@obsidianresearch.com>
+ <20130306105441.4d24033e@skate>
+ <20130306121118.GA17079@avionic-0098.mockup.avionic-design.de>
+ <20130306180946.GA2433@obsidianresearch.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="3Pql8miugIZX0722"
+In-Reply-To: <20130306180946.GA2433@obsidianresearch.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 19 Mar 2013, Daniel Vetter wrote:
 
-> For reference below the updated commit message.
-> 
-> Cheers, Daniel
-> 
-> Author: Jiri Kosina <jkosina@suse.cz>
-> Date:   Tue Mar 19 09:56:57 2013 +0100
+--3Pql8miugIZX0722
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> 
->     drm/i915: stop using GMBUS IRQs on Gen4 chips
-> 
->     Commit 28c70f162 ("drm/i915: use the gmbus irq for waits") switched to
->     using GMBUS irqs instead of GPIO bit-banging for chipset generations 4
->     and above.
-> 
->     It turns out though that on many systems this leads to spurious interrupts
->     being generated, long after the register write to disable the IRQs has been
->     issued.
-> 
->     Typically this results in the spurious interrupt source getting
->     disabled:
-> 
->     [    9.636345] irq 16: nobody cared (try booting with the "irqpoll" option)
->     [    9.637915] Pid: 4157, comm: ifup Tainted: GF
-> 3.9.0-rc2-00341-g0863702 #422
->     [    9.639484] Call Trace:
->     [    9.640731]  <IRQ>  [<ffffffff8109b40d>] __report_bad_irq+0x1d/0xc7
->     [    9.640731]  [<ffffffff8109b7db>] note_interrupt+0x15b/0x1e8
->     [    9.640731]  [<ffffffff810999f7>] handle_irq_event_percpu+0x1bf/0x214
->     [    9.640731]  [<ffffffff81099a88>] handle_irq_event+0x3c/0x5c
->     [    9.640731]  [<ffffffff8109c139>] handle_fasteoi_irq+0x7a/0xb0
->     [    9.640731]  [<ffffffff8100400e>] handle_irq+0x1a/0x24
->     [    9.640731]  [<ffffffff81003d17>] do_IRQ+0x48/0xaf
->     [    9.640731]  [<ffffffff8142f1ea>] common_interrupt+0x6a/0x6a
->     [    9.640731]  <EOI>  [<ffffffff8142f952>] ? system_call_fastpath+0x16/0x1b
->     [    9.640731] handlers:
->     [    9.640731] [<ffffffffa000d771>] usb_hcd_irq [usbcore]
->     [    9.640731] [<ffffffffa0306189>] yenta_interrupt [yenta_socket]
->     [    9.640731] Disabling IRQ #16
-> 
->     The really curious thing is now that irq 16 is _not_ the interrupt for
->     the i915 driver when using MSI, but it _is_ the interrupt when not
->     using MSI. So by all indications it seems like gmbus is able to
->     generate a legacy (shared) interrupt in MSI mode on some
->     configurations. I've tried to reproduce this and the differentiating
->     thing seems to be that on unaffected systems no other device uses irq
->     16 (which seems to be the non-MSI intel gfx interrupt on all gm45).
+On Wed, Mar 06, 2013 at 11:09:46AM -0700, Jason Gunthorpe wrote:
+> On Wed, Mar 06, 2013 at 01:11:19PM +0100, Thierry Reding wrote:
+>=20
+> > I agree here. It seems that back at the time when the PCI DT bindings
+> > were devised no hardware existed with these properties. So I think that
+> > maybe it needs to be revised to take into account some of these new
+> > requirements. Just adding a bunch of properties to work around
+> > shortcomings in the specification doesn't seem very desirable to me.
+>=20
+> Well, all the PCI hosts should use the same mechanism, and it should
+> make sense in the context of the rest of the spec. So I think some
+> approval/comment on this specific issue by Grant/Rob/Arnd is important
+> at this point.
+>=20
+> The way the spec is written, 'reg' in a 'device_type =3D pci' context is
+> the device's config address - it is like 'reg' in a CPU block, or I2C
+> bus - the value has nothing to do with CPU mappable memory.
+>=20
+> > space. According to the PCI DT specification this isn't allowed, but it
+> > works on Linux and quite frankly I don't see why it shouldn't be
+> > allowed.
+>=20
+> AFAIK, this only works because you are not using 'device_type =3D pci'.
+>=20
+> IMHO, 'device_type =3D pci' is not optional, so you need to come up with
+> something that works under those conditions, and it changes how the OF
+> core handles 'reg' and the like.
 
-That might be misleading.  It's possible that the erroneous IRQs _are_
-being issued but you're simply not aware of them.  If the kernel thinks
-that no device is using IRQ 16 then it will leave that IRQ disabled.
+Actually I do use device_type =3D "pciex" for the pci@1,0 and pci@2,0
+nodes which was suggested back when I first posted this series. Yet the
+address translation still works properly. And it should since they are
+translated to the parent bus which is used to access the configuration
+space window for each root port.
 
-Alan Stern
+Looking at the code it looks indeed like the OF core only matches on
+"pci" (and "vci"), but not "pciex". Perhaps I should change both nodes
+to device_type =3D "pci" and see what the results are.
 
+> As I said before, the two best options to me seem to be:
+>=20
+> pcie-controller {
+>  compatible =3D "marvell,armada-370-xp-pcie";
+>=20
+>   // Index by marvell,pcie-port/reg-names/etc
+>   regs =3D <0xd0040000 0x00002000
+>           0xd0080000 0x00002000>;
+>=20
+>   ranges =3D <0x81000000 0 0  0xc0000000  0 0x00010000   /* downstream I/=
+O */
+>             0x82000000 0 0  0xc1000000  0 0x08000000>; /* non-prefetchabl=
+e memory */
+>=20
+>   pcie@0,0 {
+>        device_type =3D "pci";
+>        reg =3D <0x0800 0 0 0>; // 00:01.0  (????)
+>        marvell,pcie-port =3D <0>;
+>   };
+> }
+>=20
+> or:
+>=20
+> pcie-controller {
+>   compatible =3D "marvell,armada-370-xp-pcie";
+>=20
+>   ranges =3D <0x81000000 0 0  0xc0000000  0 0x00010000   /* downstream I/=
+O */
+>             0x82000000 0 0  0xc1000000  0 0x08000000   /* non-prefetchabl=
+e memory */
+>             // Mapping for per-port host controller registers
+>             0x82000000 0x10000000 0xd0040000  0xd0040000  0 0x2000>;
+>=20
+>   pcie@0,0 {
+>        device_type =3D "pci";
+>        reg =3D <0x0800 0 0 0>; // 00:01.0  (????)
+>        marvell,pcie-port =3D <0>;
+>       =20
+>        assigned-addresses =3D <0 0 0  0 0 // BAR 0 of the bridge, unused
+>        			     0 0 0  0 0 // BAR 1 of the bridge, unused
+>                              0x82000000 0x10000000 0xd0040000  0 0x2000>;=
+ // Extended
+>=20
+>   };
+> }
+>=20
+> Both have various problems, but I think I prefer the first one as it
+> doesn't conflate the contoller registers and host apertures in a
+> single ranges..
+
+I think a better alternative would be (and this matches what Thomas has
+said elsewhere) to use something like the first alternative but move the
+regs property into the pcie@0,X nodes. That would save us from having to
+index a property in the parent. At least from a DT point of view I find
+that to be a more consistent representation.
+
+However that would probably not work out-of-the-box with the current OF
+core because of_address_to_resource() won't know how to find the new
+property. The assigned-addresses alternative seems to be the only one
+that would work on the current OF core and achieve proper address
+translation. But it doesn't seem like a good solution either since it
+repurposes the meaning of the property and therefore isn't any better
+than encoding the same information in the reg property.
+
+Thierry
+
+--3Pql8miugIZX0722
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQIcBAEBAgAGBQJROEsAAAoJEN0jrNd/PrOhUPIP+wbO88+FvbyUxMpxukEitSiI
+kbT9f7K0DOFS9mnKruyahs7TIOmYcXlwmI4JbHcMuYXv5Xwl+mpu/nPp4S94uZRc
+tRRdoDkPtIze4aBO2AwUSGhWworFXZWIpBz5NszKeQXCVPNE69sTKHII+977HdKM
+RNlLcKffGY5LzBMI1qEFjDpB1NV8vijjerl5IjjwcXvZUmYZVCZZnwmam1rNgjUJ
+D3xKGPCXDEdqDklZzGC9myMO73Oy+IVihDY51oGdl7FbgnQchUPxDb42aBS3h/6S
+PbZ0LYERSQIY2f4I0+IbRc2iH0liESqfpxx/F+2+FkWIMP8/sVR+MEQG3ETlqNNI
+FakJiM8IYTPSpa3CSWw/SOLTbIHpBn7H6HlGz0X3MoqT1a/mJKUSvPmurm287qaC
+ILUK1nn1N5S4s0jCoYvUt1Qgf1xayld2iUlKUsdEoSIkQbtUJWvKgXg1gpyVc3SX
+v7OiZpCYUVsiW+XLP5tawyT/ISuMkFPcimlM1DcnxxiBGlf9G7HxgRd0LMBdGPf3
+AUvbEEy8SLCUnirdwEJXnSnn99jqMCurvTI8NV2iRkKfePAfpo2MuEVD/TYX4F/V
++UeHp6hq2VKaqnlU1Nrym3KyKTtdLMysbqBVBUJ0WpfwfluJiT0cJEdZBtjYr561
+kKvH3dNvxA3Gg7cGkxwK
+=fqj/
+-----END PGP SIGNATURE-----
+
+--3Pql8miugIZX0722--
