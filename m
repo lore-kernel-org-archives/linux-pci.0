@@ -1,40 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f170.google.com ([209.85.217.170]:45495 "EHLO
-	mail-lb0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754315Ab3CLGFb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Mar 2013 02:05:31 -0400
-Received: by mail-lb0-f170.google.com with SMTP id ge1so3788086lbb.29
-        for <linux-pci@vger.kernel.org>; Mon, 11 Mar 2013 23:05:29 -0700 (PDT)
-MIME-Version: 1.0
-Date: Tue, 12 Mar 2013 16:05:26 +1000
-Message-ID: <CAPM=9tzbb7dMZgtVOE4wNosHFcFX30u3OjtP0GcxeQnT3O+9cg@mail.gmail.com>
-Subject: sub function power management (gpu + audio device)
-From: Dave Airlie <airlied@gmail.com>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>, linux-pci@vger.kernel.org,
-	dri-devel <dri-devel@lists.freedesktop.org>,
-	Takashi Iwai <tiwai@suse.de>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail.free-electrons.com ([94.23.35.102]:35926 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933075Ab3CHPTi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 Mar 2013 10:19:38 -0500
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Cc: Arnd Bergmann <arnd@arndb.de>, Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>, Olof Johansson <olof@lixom.net>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Yehuda Yitschak <yehuday@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Mike Turquette <mturquette@linaro.org>
+Subject: [PATCH v4 07/18] clk: mvebu: create parent-child relation for PCIe clocks on Armada 370
+Date: Fri,  8 Mar 2013 16:19:09 +0100
+Message-Id: <1362755960-30791-8-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1362755960-30791-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1362755960-30791-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hey guys,
+The Armada 370 has two gatable clocks for each PCIe interface, and we
+want both of them to be enabled. We therefore make one of the two
+clocks a child of the other, as we did for the sataX and sataXlnk
+clocks on Armada XP.
 
-I've been writing dynamic power management code for the secondary
-GPUs, however a lot of these GPUs have audio codecs as a subfunction
-PCI device.
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Mike Turquette <mturquette@linaro.org>
+---
+ drivers/clk/mvebu/clk-gating-ctrl.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-So we get 01:00.0 as the GPU and 01:00.1 as the HDMI audio device.
+diff --git a/drivers/clk/mvebu/clk-gating-ctrl.c b/drivers/clk/mvebu/clk-gating-ctrl.c
+index ebf141d..b35785a 100644
+--- a/drivers/clk/mvebu/clk-gating-ctrl.c
++++ b/drivers/clk/mvebu/clk-gating-ctrl.c
+@@ -119,8 +119,8 @@ static const struct mvebu_soc_descr __initconst armada_370_gating_descr[] = {
+ 	{ "pex1_en", NULL,  2 },
+ 	{ "ge1", NULL, 3 },
+ 	{ "ge0", NULL, 4 },
+-	{ "pex0", NULL, 5 },
+-	{ "pex1", NULL, 9 },
++	{ "pex0", "pex0_en", 5 },
++	{ "pex1", "pex1_en", 9 },
+ 	{ "sata0", NULL, 15 },
+ 	{ "sdio", NULL, 17 },
+ 	{ "tdm", NULL, 25 },
+-- 
+1.7.9.5
 
-Now we have a single power switch for these devices, and generally the
-power switch is hit when the ACPI entry to D3 is called for the GPU
-and it shuts off the whole device.
-
-So the problem I'm having is how to have the audio device
-(snd_hda_intel), understand that it needs to have the GPU devices D0
-called before it can do its own D0, and thats its D3 should be called
-before the GPU drivers D3.
-
-Any pointers? Do I need to create a separate pm domain for these
-devices? how does the ordering work then?
-
-Dave.
