@@ -1,54 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from elijah-5.iglou.com ([64.253.103.13]:49650 "EHLO eli.elilabs.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752148Ab3CRSfj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 18 Mar 2013 14:35:39 -0400
-Message-ID: <51475699.3030406@elilabs.com>
-Date: Mon, 18 Mar 2013 14:02:01 -0400
-From: Robert Brown <rj@elilabs.com>
+Received: from mail-da0-f47.google.com ([209.85.210.47]:38479 "EHLO
+	mail-da0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932863Ab3CHXMI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 Mar 2013 18:12:08 -0500
+Received: by mail-da0-f47.google.com with SMTP id s35so226187dak.6
+        for <linux-pci@vger.kernel.org>; Fri, 08 Mar 2013 15:12:07 -0800 (PST)
+Message-ID: <513A7044.1020700@gmail.com>
+Date: Fri, 08 Mar 2013 17:12:04 -0600
+From: Rob Herring <robherring2@gmail.com>
 MIME-Version: 1.0
-To: Alex Williamson <alex.williamson@redhat.com>
-CC: =?ISO-8859-1?Q?Bj=F8rn_Mork?= <bjorn@mork.no>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	Kay Sievers <kay@vrfy.org>, Myron Stowe <mstowe@redhat.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	linux-hotplug@vger.kernel.org, linux-pci@vger.kernel.org,
-	yuxiangl@marvell.com, yxlraid@gmail.com,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] udevadm-info: Don't access sysfs 'resource<N>' files
-References: <20130316213512.2974.17303.stgit@amt.stowe>  <20130316213519.2974.38954.stgit@amt.stowe>  <20130316221159.GA3702@kroah.com> <1363477853.2423.25.camel@zim.stowe>  <20130317010317.GB9641@kroah.com> <1363493482.16793.69.camel@ul30vt.home>  <20130317053611.GC948@kroah.com> <1363527503.16793.75.camel@ul30vt.home>  <CAPXgP12vmx9j_jJW3HXb2deRapFKAofTVzEbdyS=Z1VUBswE_Q@mail.gmail.com>  <1363623880.24132.351.camel@bling.home> <20130318164126.GA20565@kroah.com>  <1363625463.24132.367.camel@bling.home> <87obeg39qp.fsf@nemi.mork.no> <1363629287.24132.380.camel@bling.home>
-In-Reply-To: <1363629287.24132.380.camel@bling.home>
+To: Thierry Reding <thierry.reding@avionic-design.de>
+CC: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	linux-pci@vger.kernel.org, Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	linux-arm-kernel@lists.infradead.org,
+	devicetree-discuss@lists.ozlabs.org
+Subject: Re: [PATCH 24/32] pci: PCIe driver for Marvell Armada 370/XP systems
+References: <20130212223511.GB31555@obsidianresearch.com> <20130306105441.4d24033e@skate> <20130306121118.GA17079@avionic-0098.mockup.avionic-design.de> <20130306180946.GA2433@obsidianresearch.com> <20130307080832.GD3451@avionic-0098.mockup.avionic-design.de> <20130307174955.GC20840@obsidianresearch.com> <20130307194830.GA1811@avionic-0098.mockup.avionic-design.de> <20130307200235.GB20695@obsidianresearch.com> <20130307204726.GB1811@avionic-0098.mockup.avionic-design.de> <51392B4D.9040404@gmail.com> <20130308071443.GA5772@avionic-0098.mockup.avionic-design.de>
+In-Reply-To: <20130308071443.GA5772@avionic-0098.mockup.avionic-design.de>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/18/13 13:54, Alex Williamson wrote:
-> On Mon, 2013-03-18 at 18:20 +0100, Bjørn Mork wrote:
->> Alex Williamson <alex.williamson@redhat.com> writes:
+On 03/08/2013 01:14 AM, Thierry Reding wrote:
+> On Thu, Mar 07, 2013 at 06:05:33PM -0600, Rob Herring wrote:
+>> On 03/07/2013 02:47 PM, Thierry Reding wrote:
+> [...]
+>>> In a nutshell (since some of the context isn't quoted anymore) the
+>>> problem that we're trying to solve is that some of the embedded SoCs
+>>> require per-root-port registers for configuration. The PCI DT
+>>> specification doesn't make any provisions for this. A few alternatives
+>>> have been discussed so far:
 >>
->>> At least for KVM the kernel fix is the addition of the vfio driver which
->>> gives us a non-sysfs way to do this.  If this problem was found a few
->>> years later and we were ready to make the switch I'd support just
->>> removing these resource files.  In the meantime we have userspace that
->>> depends on this interface, so I'm open to suggestions how to fix it.
->> I am puzzled by a couple of things in this discussion:
->>
->> 1) do you seriously mean that a userspace application (any, not just
->>    udevadm or qemu or whatever) should be able to read and write these
->>    registers while the device is owned by a driver?  How is that ever
->>    going to work?
-> The expectation is that the user doesn't mess with the device through
-> pci-sysfs while it's running.  This is really no different than config
-> space or MMIO space in that respect.  You can use setpci to break your
-> PCI card while it's used by the driver today.  The difference is that
-> MMIO spaces side-step the issue by only allowing mmap and config space
-> is known not to have read side-effects.
->
->> 2) is it really so that a device can be so fundamentally screwed up by
->>    reading some registers, that a later driver probe cannot properly
->>    reinitialize it?
-> Never underestimate how broken hardware can be, though in this case
-> reading a device register seems to be causing a system hang/reset.
-The real problem is that PCI devices can be bus masters, which means
-they can screw up *ANYTHING* (almost)!
+>> I'm not sure I follow. This is different than the host controller
+>> registers? Why would this not just be multiple entries in the reg property?
+> 
+> Well the register regions are per root-port. On Tegra20 there's 2 of
+> them, Tegra30 has 3 and if I understand correctly Marvell can have up to
+> 10 (!). Adding all of them to the reg property of the host controller
+> could work but it needs some way to match the reg entry to the root port
+> similar to option 1 below.
+
+The compatible property of the PCI host controller can imply what each
+index of the reg property entries is for.
+
+> 
+> Adding a property in the root port nodes seems like a cleaner and more
+> accurate representation of the hardware to me, but if that's not
+> acceptable perhaps we need to bite the bullet and add the code to look
+> the registers up from the parent's reg property.
+
+What I don't like is a new property defined to describe mmio addresses.
+We already have a property for that and it is "reg". But I think I'm
+still missing something:
+
+>>> 			pci@0,1 {
+>>> 				...
+>>> 				reg = <0x00000800 0 0 0 0>;
+
+Is this a PCI bus address?
+
+>>> 				regs = <0x80000000 0x00001000>;
+>>> 			};
+
+Rob
 
