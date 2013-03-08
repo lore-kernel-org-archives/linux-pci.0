@@ -1,49 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.186]:56845 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751483Ab3CZWET (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Mar 2013 18:04:19 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Subject: Re: [RFCv1 07/11] irqchip: armada-370-xp: add MSI support to interrupt controller driver
-Date: Tue, 26 Mar 2013 22:04:05 +0000
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	devicetree-discuss@lists.ozlabs.org,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Maen Suleiman <maen@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
+Received: from mail.free-electrons.com ([94.23.35.102]:35909 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757836Ab3CHPTg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 Mar 2013 10:19:36 -0500
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Cc: Arnd Bergmann <arnd@arndb.de>, Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>, Olof Johansson <olof@lixom.net>,
 	Gregory Clement <gregory.clement@free-electrons.com>,
 	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Olof Johansson <olof@lixom.net>,
+	Russell King <linux@arm.linux.org.uk>,
 	Tawfik Bayouk <tawfik@marvell.com>,
-	Mitch Bradley <wmb@firmworks.com>,
-	Andrew Murray <andrew.murray@arm.com>
-References: <1364316746-8702-1-git-send-email-thomas.petazzoni@free-electrons.com> <20130326221654.34bce6d7@skate> <20130326215546.GA8650@obsidianresearch.com>
-In-Reply-To: <20130326215546.GA8650@obsidianresearch.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201303262204.05546.arnd@arndb.de>
+	Shadi Ammouri <shadi@marvell.com>,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Yehuda Yitschak <yehuday@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Stephen Warren <swarren@wwwdotorg.org>
+Subject: [PATCH v4 05/18] pci: infrastructure to add drivers in drivers/pci/host
+Date: Fri,  8 Mar 2013 16:19:07 +0100
+Message-Id: <1362755960-30791-6-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1362755960-30791-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1362755960-30791-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday 26 March 2013, Jason Gunthorpe wrote:
-> > I'll let Arnd answer this one, but I'm pretty sure that using IRQ
-> > domains is the way to go. The fact that a number of drivers don't yet
-> > use IRQ domains is maybe just because they haven't been converted yet.
-> 
-> Maybe, but they have irq domain code as well.. I'm curious about the
-> answer too :)
+As agreed by the community, PCI host drivers will now be stored in
+drivers/pci/host. This commit adds this directory and the related
+Kconfig/Makefile changes to allow new drivers to be added in this
+directory.
 
-To expand on my previous answer: irq_alloc_descs can require a lot of
-memory if you have a lot of MSIs. If the driver only has 16 MSIs,
-there is probably no reason to not assign all of them at once, but if
-you have 2048 MSIs, creating the mapping only when you need it is
-much more space efficient.
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+---
+ drivers/pci/Kconfig      |    2 ++
+ drivers/pci/Makefile     |    3 +++
+ drivers/pci/host/Kconfig |    4 ++++
+ 3 files changed, 9 insertions(+)
+ create mode 100644 drivers/pci/host/Kconfig
 
-	Arnd
+diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+index 6d51aa6..ac45398 100644
+--- a/drivers/pci/Kconfig
++++ b/drivers/pci/Kconfig
+@@ -119,3 +119,5 @@ config PCI_IOAPIC
+ config PCI_LABEL
+ 	def_bool y if (DMI || ACPI)
+ 	select NLS
++
++source "drivers/pci/host/Kconfig"
+diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
+index 0c3efcf..6ebf5bf 100644
+--- a/drivers/pci/Makefile
++++ b/drivers/pci/Makefile
+@@ -67,3 +67,6 @@ obj-$(CONFIG_XEN_PCIDEV_FRONTEND) += xen-pcifront.o
+ obj-$(CONFIG_OF) += of.o
+ 
+ ccflags-$(CONFIG_PCI_DEBUG) := -DDEBUG
++
++# PCI host controller drivers
++obj-y += host/
+diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+new file mode 100644
+index 0000000..cc3a1af
+--- /dev/null
++++ b/drivers/pci/host/Kconfig
+@@ -0,0 +1,4 @@
++menu "PCI host controller drivers"
++	depends on PCI
++
++endmenu
+-- 
+1.7.9.5
+
