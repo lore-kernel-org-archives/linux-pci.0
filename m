@@ -1,109 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e39.co.us.ibm.com ([32.97.110.160]:44489 "EHLO
-	e39.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754463Ab3C0I4O (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Mar 2013 04:56:14 -0400
-Received: from /spool/local
-	by e39.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <shangw@linux.vnet.ibm.com>;
-	Wed, 27 Mar 2013 02:56:13 -0600
-Received: from d01relay06.pok.ibm.com (d01relay06.pok.ibm.com [9.56.227.116])
-	by d01dlp02.pok.ibm.com (Postfix) with ESMTP id D08466E8040
-	for <linux-pci@vger.kernel.org>; Wed, 27 Mar 2013 04:56:07 -0400 (EDT)
-Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
-	by d01relay06.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id r2R8uAOP26411224
-	for <linux-pci@vger.kernel.org>; Wed, 27 Mar 2013 04:56:10 -0400
-Received: from d01av01.pok.ibm.com (loopback [127.0.0.1])
-	by d01av01.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id r2R8u8nR014422
-	for <linux-pci@vger.kernel.org>; Wed, 27 Mar 2013 04:56:09 -0400
-From: Gavin Shan <shangw@linux.vnet.ibm.com>
-To: linux-pci@vger.kernel.org
-Cc: bhelgaas@google.com, Gavin Shan <shangw@linux.vnet.ibm.com>
-Subject: [PATCH 2/4] PCI: Allow pci_msix_table_size() take MSIX cap struct
-Date: Wed, 27 Mar 2013 16:56:02 +0800
-Message-Id: <1364374564-19096-3-git-send-email-shangw@linux.vnet.ibm.com>
-In-Reply-To: <1364374564-19096-1-git-send-email-shangw@linux.vnet.ibm.com>
-References: <1364374564-19096-1-git-send-email-shangw@linux.vnet.ibm.com>
+Received: from na3sys009aog124.obsmtp.com ([74.125.149.151]:46651 "EHLO
+	na3sys009aog124.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753117Ab3CHGvd convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 8 Mar 2013 01:51:33 -0500
+From: Xiangliang Yu <yuxiangl@marvell.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: yxlraid <yxlraid@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Date: Thu, 7 Mar 2013 22:51:26 -0800
+Subject: RE: [PATCH 2/2] PCI: fix system hang issue of Marvell SATA host
+ controller
+Message-ID: <F766E4F80769BD478052FB6533FA745D25F436861C@SC-VEXCH4.marvell.com>
+References: <1362666556-10036-1-git-send-email-yxlraid@gmail.com>
+ <CAErSpo7feQK7pXD=moA_hf=Y-j82oZZKwfDNzfo2Ea7i9VPxtA@mail.gmail.com>
+ <F766E4F80769BD478052FB6533FA745D25F436856A@SC-VEXCH4.marvell.com>
+ <CAErSpo6RDC+QyyN4kwt7-kU5d8b1iu+zCQZTGZPxCJU2UicTCA@mail.gmail.com>
+In-Reply-To: <CAErSpo6RDC+QyyN4kwt7-kU5d8b1iu+zCQZTGZPxCJU2UicTCA@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The patch introduces additional parameter to pci_msix_table_size()
-to allow it take the address of MSI-X capability structure. If that's
-zero, we need figure out the address from PCI config space.
+Hi, Bjorn
 
-Signed-off-by: Gavin Shan <shangw@linux.vnet.ibm.com>
----
- drivers/pci/msi.c               |    9 +++++----
- drivers/pci/pcie/portdrv_core.c |    2 +-
- include/linux/pci.h             |    4 ++--
- 3 files changed, 8 insertions(+), 7 deletions(-)
+> >> > Fix system hang issue: if first accessed resource file of BAR0 ~
+> >> > BAR4, system will hang after executing lspci command
+> >>
+> >> This needs more explanation.  We've already read the BARs by the time
+> >> header quirks are run, so apparently it's not just the mere act of
+> >> accessing a BAR that causes a hang.
+> >>
+> >> We need to know exactly what's going on here.  For example, do BARs
+> >> 0-4 exist?  Does the device decode accesses to the regions described
+> >> by the BARs?  The PCI core has to know what resources the device uses,
+> >> so if the device decodes accesses, we can't just throw away the
+> >> start/end information.
+> > The BARs 0-4 is exist and the PCI device is enable IO space, but user access
+> the regions file by udevadm command with info parameter, the system will hang.
+> > Like this: udevadmin info --attribut-walk
+> --path=/sys/device/pci-device/000:*.
+> > Because the device is just AHCI host controller, don't need the BAR0 ~ 4 region
+> file.
+> > Is my explanation ok for the patch?
+> 
+> No, I still don't know what causes the hang; I only know that udevadm
+> can trigger it.  I don't want to just paper over the problem until we
+> know what the root cause is.
+> 
+> Does "lspci -H1 -vv" also cause a hang?  What about "setpci -s<dev>
+> BASE_ADDRESS_0"?  "setpci -H1 -s<dev> BASE_ADDRESS_0"?
+The commands are ok because the commands can't find the device after accessing IO port.
+The root cause is that accessing of IO port will make the chip go bad. So, the point of the patch is don't export capability of the IO accessing.
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 05e9604..7ba9461 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -917,13 +917,14 @@ EXPORT_SYMBOL(pci_disable_msi);
- /**
-  * pci_msix_table_size - return the number of device's MSI-X table entries
-  * @dev: pointer to the pci_dev data structure of MSI-X device function
-+ * @pos: address of MSI-X capability structure
-  */
--int pci_msix_table_size(struct pci_dev *dev)
-+int pci_msix_table_size(struct pci_dev *dev, int pos)
- {
--	int pos;
- 	u16 control;
- 
--	pos = pci_find_capability(dev, PCI_CAP_ID_MSIX);
-+	if (!pos)
-+		pos = pci_find_capability(dev, PCI_CAP_ID_MSIX);
- 	if (!pos)
- 		return 0;
- 
-@@ -958,7 +959,7 @@ int pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries, int nvec)
- 	if (status)
- 		return status;
- 
--	nr_entries = pci_msix_table_size(dev);
-+	nr_entries = pci_msix_table_size(dev, pos);
- 	if (nvec > nr_entries)
- 		return nr_entries;
- 
-diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-index 31063ac..d9600f3 100644
---- a/drivers/pci/pcie/portdrv_core.c
-+++ b/drivers/pci/pcie/portdrv_core.c
-@@ -79,7 +79,7 @@ static int pcie_port_enable_msix(struct pci_dev *dev, int *vectors, int mask)
- 	u16 reg16;
- 	u32 reg32;
- 
--	nr_entries = pci_msix_table_size(dev);
-+	nr_entries = pci_msix_table_size(dev, 0);
- 	if (!nr_entries)
- 		return -EINVAL;
- 	if (nr_entries > PCIE_PORT_MAX_MSIX_ENTRIES)
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 2461033a..1b7e7dc 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1116,7 +1116,7 @@ static inline void pci_msi_shutdown(struct pci_dev *dev)
- static inline void pci_disable_msi(struct pci_dev *dev)
- { }
- 
--static inline int pci_msix_table_size(struct pci_dev *dev)
-+static inline int pci_msix_table_size(struct pci_dev *dev, int pos)
- {
- 	return 0;
- }
-@@ -1145,7 +1145,7 @@ extern int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec);
- extern int pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *maxvec);
- extern void pci_msi_shutdown(struct pci_dev *dev);
- extern void pci_disable_msi(struct pci_dev *dev);
--extern int pci_msix_table_size(struct pci_dev *dev);
-+extern int pci_msix_table_size(struct pci_dev *dev, int pos);
- extern int pci_enable_msix(struct pci_dev *dev,
- 	struct msix_entry *entries, int nvec);
- extern void pci_msix_shutdown(struct pci_dev *dev);
--- 
-1.7.5.4
-
+> 
+> >>
+> >> > ---
+> >> >  drivers/pci/quirks.c |   15 +++++++++++++++
+> >> >  1 files changed, 15 insertions(+), 0 deletions(-)
+> >> >
+> >> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> >> > index 0369fb6..d49f8dc 100644
+> >> > --- a/drivers/pci/quirks.c
+> >> > +++ b/drivers/pci/quirks.c
+> >> > @@ -44,6 +44,21 @@ static void quirk_mmio_always_on(struct pci_dev *dev)
+> >> >  DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_ANY_ID, PCI_ANY_ID,
+> >> >                                 PCI_CLASS_BRIDGE_HOST, 8,
+> >> quirk_mmio_always_on);
+> >> >
+> >> > +/* The BAR0 ~ BAR4 of Marvell 9125 device can't be accessed
+> >> > +*  by IO resource file, and need to skip the files
+> >> > +*/
+> >> > +static void quirk_marvell_mask_bar(struct pci_dev *dev)
+> >> > +{
+> >> > +       int i;
+> >> > +
+> >> > +       for (i = 0; i < 5; i++)
+> >> > +               if (dev->resource[i].start)
+> >> > +                       dev->resource[i].start =
+> >> > +                               dev->resource[i].end = 0;
+> >> > +}
+> >> > +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x9125,
+> >> > +                               quirk_marvell_mask_bar);
+> >> > +
+> >> >  /* The Mellanox Tavor device gives false positive parity errors
+> >> >   * Mark this device with a broken_parity_status, to allow
+> >> >   * PCI scanning code to "skip" this now blacklisted device.
+> >> > --
+> >> > 1.7.5.4
+> >> >
