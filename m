@@ -1,67 +1,163 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f48.google.com ([209.85.219.48]:36790 "EHLO
-	mail-oa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751279Ab3CIWVA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 9 Mar 2013 17:21:00 -0500
-MIME-Version: 1.0
-In-Reply-To: <20130309204940.GA31808@neilslaptop.think-freely.org>
-References: <1362158276-4901-1-git-send-email-nhorman@tuxdriver.com>
-	<1362423859-18516-1-git-send-email-nhorman@tuxdriver.com>
-	<20130309204940.GA31808@neilslaptop.think-freely.org>
-Date: Sat, 9 Mar 2013 15:20:57 -0700
-Message-ID: <CAL-B5D15YY6L01q6BCNnP5VCJN7=LeHJSYLjNGXZPRx7VhsZCg@mail.gmail.com>
-Subject: Re: [PATCH v2] irq: add quirk for broken interrupt remapping on 55XX chipsets
-From: Myron Stowe <myron.stowe@gmail.com>
-To: Neil Horman <nhorman@tuxdriver.com>
-Cc: linux-kernel@vger.kernel.org, Prarit Bhargava <prarit@redhat.com>,
-	Don Zickus <dzickus@redhat.com>,
-	Don Dutile <ddutile@redhat.com>,
+Received: from userp1040.oracle.com ([156.151.31.81]:23385 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755096Ab3CHTvd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 Mar 2013 14:51:33 -0500
+Date: Fri, 8 Mar 2013 14:50:55 -0500
+From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Asit Mallick <asit.k.mallick@intel.com>,
-	linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>,
+	Joerg Roedel <joro@8bytes.org>
+Subject: Re: [PATCH v2 10/26] x86, irq: Convert irq_2_pin list to generic list
+Message-ID: <20130308195055.GD6622@phenom.dumpdata.com>
+References: <1360351703-20571-1-git-send-email-yinghai@kernel.org>
+ <1360351703-20571-11-git-send-email-yinghai@kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1360351703-20571-11-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Mar 9, 2013 at 1:49 PM, Neil Horman <nhorman@tuxdriver.com> wrote:
-> On Mon, Mar 04, 2013 at 02:04:19PM -0500, Neil Horman wrote:
->> A few years back intel published a spec update:
->> http://www.intel.com/content/dam/doc/specification-update/5520-and-5500-chipset-ioh-specification-update.pdf
->>
->> For the 5520 and 5500 chipsets which contained an errata (specificially errata
->> 53), which noted that these chipsets can't properly do interrupt remapping, and
->> as a result the recommend that interrupt remapping be disabled in bios.  While
->> many vendors have a bios update to do exactly that, not all do, and of course
->> not all users update their bios to a level that corrects the problem.  As a
->> result, occasionally interrupts can arrive at a cpu even after affinity for that
->> interrupt has be moved, leading to lost or spurrious interrupts (usually
->> characterized by the message:
->> kernel: do_IRQ: 7.71 No irq handler for vector (irq -1)
->>
->> There have been several incidents recently of people seeing this error, and
->> investigation has shown that they have system for which their BIOS level is such
->> that this feature was not properly turned off.  As such, it would be good to
->> give them a reminder that their systems are vulnurable to this problem.
->>
->> Signed-off-by: Neil Horman <nhorman@tuxdriver.com>
->> CC: Prarit Bhargava <prarit@redhat.com>
->> CC: Don Zickus <dzickus@redhat.com>
->> CC: Don Dutile <ddutile@redhat.com>
->> CC: Bjorn Helgaas <bhelgaas@google.com>
->> CC: Asit Mallick <asit.k.mallick@intel.com>
->> CC: linux-pci@vger.kernel.org
->>
-> Ping, anyone want to Ack/Nack this?
+On Fri, Feb 08, 2013 at 11:28:07AM -0800, Yinghai Lu wrote:
+> Now irq_2_pin list is own grown list.
 
-Don's comment earlier seems to imply that this is a short term fix and
-that a more long term fix may be coming soon.  If that is the case
-wouldn't we want to wait for the long term fix and just pull that in?
+I think you meant to say 'has its own list'. Not sure how
+its growing?
 
-Myron
+> We can use generic list to replace it so we could generic helper
+> functions to operate it.
 
-> Neil
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+You need to put the verb a bit earlier. Perhaps:
+
+".. generic list to replace so that we can operate using
+generic helper functions."
+
+> 
+> Also make free_irq_cfg() free irq_2_pin list to support coming ioapic
+> hotplug.
+
+If you have them ready - could you say the titles of the patches here?
+
+> 
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+> Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+> Cc: Joerg Roedel <joro@8bytes.org>
+> ---
+>  arch/x86/include/asm/hw_irq.h  |    2 +-
+>  arch/x86/kernel/apic/io_apic.c |   22 ++++++++++++----------
+>  2 files changed, 13 insertions(+), 11 deletions(-)
+> 
+> diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
+> index 10a78c3..69743f8 100644
+> --- a/arch/x86/include/asm/hw_irq.h
+> +++ b/arch/x86/include/asm/hw_irq.h
+> @@ -121,7 +121,7 @@ struct irq_2_irte {
+>   * Most irqs are mapped 1:1 with pins.
+>   */
+>  struct irq_cfg {
+> -	struct irq_pin_list	*irq_2_pin;
+> +	struct list_head	irq_2_pin;
+>  	cpumask_var_t		domain;
+>  	cpumask_var_t		old_domain;
+>  	u8			vector;
+> diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+> index 4c1a726..d2b4988 100644
+> --- a/arch/x86/kernel/apic/io_apic.c
+> +++ b/arch/x86/kernel/apic/io_apic.c
+> @@ -66,7 +66,7 @@
+>  #define __apicdebuginit(type) static type __init
+>  
+>  #define for_each_irq_pin(entry, head) \
+> -	for (entry = head; entry; entry = entry->next)
+> +	list_for_each_entry(entry, &head, list)
+>  
+>  /*
+>   *      Is the SiS APIC rmw bug present ?
+> @@ -176,8 +176,8 @@ void mp_save_irq(struct mpc_intsrc *m)
+>  }
+>  
+>  struct irq_pin_list {
+> +	struct list_head list;
+>  	int apic, pin;
+> -	struct irq_pin_list *next;
+>  };
+>  
+>  static struct irq_pin_list *alloc_irq_pin_list(int node)
+> @@ -213,6 +213,7 @@ int __init arch_early_irq_init(void)
+>  	irq_reserve_irqs(0, legacy_pic->nr_legacy_irqs);
+>  
+>  	for (i = 0; i < count; i++) {
+> +		INIT_LIST_HEAD(&cfg[i].irq_2_pin);
+>  		irq_set_chip_data(i, &cfg[i]);
+>  		zalloc_cpumask_var_node(&cfg[i].domain, GFP_KERNEL, node);
+>  		zalloc_cpumask_var_node(&cfg[i].old_domain, GFP_KERNEL, node);
+> @@ -245,6 +246,7 @@ static struct irq_cfg *alloc_irq_cfg(unsigned int irq, int node)
+>  		goto out_cfg;
+>  	if (!zalloc_cpumask_var_node(&cfg->old_domain, GFP_KERNEL, node))
+>  		goto out_domain;
+> +	INIT_LIST_HEAD(&cfg->irq_2_pin);
+>  	return cfg;
+>  out_domain:
+>  	free_cpumask_var(cfg->domain);
+> @@ -255,11 +257,15 @@ out_cfg:
+>  
+>  static void free_irq_cfg(unsigned int at, struct irq_cfg *cfg)
+>  {
+> +	struct irq_pin_list *entry, *tmp;
+> +
+>  	if (!cfg)
+>  		return;
+>  	irq_set_chip_data(at, NULL);
+>  	free_cpumask_var(cfg->domain);
+>  	free_cpumask_var(cfg->old_domain);
+> +	list_for_each_entry_safe(entry, tmp, &cfg->irq_2_pin, list)
+> +		kfree(entry);
+>  	kfree(cfg);
+>  }
+>  
+> @@ -420,15 +426,12 @@ static void ioapic_mask_entry(int apic, int pin)
+>   */
+>  static int __add_pin_to_irq_node(struct irq_cfg *cfg, int node, int apic, int pin)
+>  {
+> -	struct irq_pin_list **last, *entry;
+> +	struct irq_pin_list *entry;
+>  
+>  	/* don't allow duplicates */
+> -	last = &cfg->irq_2_pin;
+> -	for_each_irq_pin(entry, cfg->irq_2_pin) {
+> +	for_each_irq_pin(entry, cfg->irq_2_pin)
+>  		if (entry->apic == apic && entry->pin == pin)
+>  			return 0;
+> -		last = &entry->next;
+> -	}
+>  
+>  	entry = alloc_irq_pin_list(node);
+>  	if (!entry) {
+> @@ -439,7 +442,7 @@ static int __add_pin_to_irq_node(struct irq_cfg *cfg, int node, int apic, int pi
+>  	entry->apic = apic;
+>  	entry->pin = pin;
+>  
+> -	*last = entry;
+> +	list_add_tail(&entry->list, &cfg->irq_2_pin);
+>  	return 0;
+>  }
+>  
+> @@ -1622,8 +1625,7 @@ __apicdebuginit(void) print_IO_APICs(void)
+>  		cfg = irq_get_chip_data(irq);
+>  		if (!cfg)
+>  			continue;
+> -		entry = cfg->irq_2_pin;
+> -		if (!entry)
+> +		if (list_empty(&cfg->irq_2_pin))
+>  			continue;
+>  		printk(KERN_DEBUG "IRQ%d ", irq);
+>  		for_each_irq_pin(entry, cfg->irq_2_pin)
+> -- 
+> 1.7.10.4
+> 
