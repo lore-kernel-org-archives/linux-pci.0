@@ -1,60 +1,189 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout01.c08.mtsvc.net ([205.186.168.189]:51898 "EHLO
-	mailout01.c08.mtsvc.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932487Ab3CNQmk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 14 Mar 2013 12:42:40 -0400
-Message-ID: <1363279329.7443.10.camel@thor.lan>
-Subject: Re: [3.9-rc1] irq 16: nobody cared  (was [3.9-rc1] very poor
- interrupt responses)
-From: Peter Hurley <peter@hurleysoftware.com>
-To: Jiri Kosina <jkosina@suse.cz>
-Cc: Alan Stern <stern@rowland.harvard.edu>,
-	Thomas Meyer <thomas@m3y3r.de>,
-	Shawn Starr <shawn.starr@rogers.com>,
-	Kernel development list <linux-kernel@vger.kernel.org>,
-	USB list <linux-usb@vger.kernel.org>,
-	linux-acpi@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Date: Thu, 14 Mar 2013 12:42:09 -0400
-In-Reply-To: <alpine.LNX.2.00.1303141709000.30118@pobox.suse.cz>
-References: <Pine.LNX.4.44L0.1303141050310.1983-100000@iolanthe.rowland.org>
-	 <alpine.LNX.2.00.1303141555090.30118@pobox.suse.cz>
-	 <alpine.LNX.2.00.1303141709000.30118@pobox.suse.cz>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail.free-electrons.com ([94.23.35.102]:35853 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757836Ab3CHPTc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 Mar 2013 10:19:32 -0500
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Cc: Arnd Bergmann <arnd@arndb.de>, Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>, Olof Johansson <olof@lixom.net>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Yehuda Yitschak <yehuday@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Andrew Murray <andrew.murray@arm.com>,
+	Andrew Murray <Andrew.Murray@arm.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>
+Subject: [PATCH v4 01/18] of/pci: Provide support for parsing PCI DT ranges property
+Date: Fri,  8 Mar 2013 16:19:03 +0100
+Message-Id: <1362755960-30791-2-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1362755960-30791-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1362755960-30791-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2013-03-14 at 17:09 +0100, Jiri Kosina wrote:
-> On Thu, 14 Mar 2013, Jiri Kosina wrote:
-> 
-> > > > I don't think I have seen this message on rc1+ (8343bce, to be precise), 
-> > > > but I have definitely seen sluggish system response on that kernel as 
-> > > > well.
-> > > > 
-> > > > Attaching lspci, /proc/interrupts and dmesg. 
-> > > 
-> > > Can you try to do a git bisect for this?  Is the sluggish system 
-> > > response clear enough that you can tell reliably when it is present and 
-> > > when it isn't?
-> > 
-> > That was my first thought, but unfortunately I am afraid there will be 
-> > point at which I will easily make a bisection mistake, as the 
-> > responsiveness of the system varies over time, so it's not really a 
-> > 100% objective measure.
-> 
-> So I will try a bisect, but it'll take some time so that I could claim it 
-> to be trustworthy.
-> 
-> Therefore in case anyone has any idea in parallel, I am all ears.
+From: Andrew Murray <andrew.murray@arm.com>
 
-When I had this happen on -next, it was PCI + ACPI-related and I had to
-bisect it. But for me the problem was quite noticable and showed up
-right at login prompt.
+DT bindings for PCI host bridges often use the ranges property to describe
+memory and IO ranges - this binding tends to be the same across architectures
+yet several parsing implementations exist, e.g. arch/mips/pci/pci.c,
+arch/powerpc/kernel/pci-common.c, arch/sparc/kernel/pci.c and
+arch/microblaze/pci/pci-common.c (clone of PPC). Some of these duplicate
+functionality provided by drivers/of/address.c.
 
-Regards,
-Peter Hurley
+This patch provides a common iterator-based parser for the ranges property, it
+is hoped this will reduce DT representation differences between architectures
+and that architectures will migrate in part to this new parser.
 
-PS - I already confirmed that the commit that fixes that is in 3.9-rc1
+It is also hoped (and the motativation for the patch) that this patch will
+reduce duplication of code when writing host bridge drivers that are supported
+by multiple architectures.
 
+This patch provides struct resources from a device tree node, e.g.:
+
+	u32 *last = NULL;
+	struct resource res;
+	while ((last = of_pci_process_ranges(np, res, last))) {
+		//do something with res
+	}
+
+Platforms with quirks can then do what they like with the resource or migrate
+common quirk handling to the parser. In an ideal world drivers can just request
+the obtained resources and pass them on (e.g. pci_add_resource_offset).
+
+Signed-off-by: Andrew Murray <Andrew.Murray@arm.com>
+Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
+---
+ drivers/of/address.c       |   63 ++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/of_address.h |    9 +++++++
+ 2 files changed, 72 insertions(+)
+
+diff --git a/drivers/of/address.c b/drivers/of/address.c
+index 04da786..f607008 100644
+--- a/drivers/of/address.c
++++ b/drivers/of/address.c
+@@ -13,6 +13,7 @@
+ #define OF_CHECK_COUNTS(na, ns)	(OF_CHECK_ADDR_COUNT(na) && (ns) > 0)
+ 
+ static struct of_bus *of_match_bus(struct device_node *np);
++static struct of_bus *of_find_bus(const char *name);
+ static int __of_address_to_resource(struct device_node *dev,
+ 		const __be32 *addrp, u64 size, unsigned int flags,
+ 		const char *name, struct resource *r);
+@@ -227,6 +228,57 @@ int of_pci_address_to_resource(struct device_node *dev, int bar,
+ 	return __of_address_to_resource(dev, addrp, size, flags, NULL, r);
+ }
+ EXPORT_SYMBOL_GPL(of_pci_address_to_resource);
++
++const __be32 *of_pci_process_ranges(struct device_node *node,
++				    struct resource *res, const __be32 *from)
++{
++	const __be32 *start, *end;
++	int na, ns, np, pna;
++	int rlen;
++	struct of_bus *bus;
++
++	WARN_ON(!res);
++
++	bus = of_find_bus("pci");
++	bus->count_cells(node, &na, &ns);
++	if (!OF_CHECK_COUNTS(na, ns)) {
++		pr_err("Bad cell count for %s\n", node->full_name);
++		return NULL;
++	}
++
++	pna = of_n_addr_cells(node);
++	np = pna + na + ns;
++
++	start = of_get_property(node, "ranges", &rlen);
++	if (start == NULL)
++		return NULL;
++
++	end = start + rlen / sizeof(__be32);
++
++	if (!from)
++		from = start;
++
++	while (from + np <= end) {
++		u64 cpu_addr, size;
++
++		cpu_addr = of_translate_address(node, from + na);
++		size = of_read_number(from + na + pna, ns);
++		res->flags = bus->get_flags(from);
++		from += np;
++
++		if (cpu_addr == OF_BAD_ADDR || size == 0)
++			continue;
++
++		res->name = node->full_name;
++		res->start = cpu_addr;
++		res->end = res->start + size - 1;
++		res->parent = res->child = res->sibling = NULL;
++		return from;
++	}
++
++	return NULL;
++}
++EXPORT_SYMBOL_GPL(of_pci_process_ranges);
+ #endif /* CONFIG_PCI */
+ 
+ /*
+@@ -337,6 +389,17 @@ static struct of_bus *of_match_bus(struct device_node *np)
+ 	return NULL;
+ }
+ 
++static struct of_bus *of_find_bus(const char *name)
++{
++	unsigned int i;
++
++	for (i = 0; i < ARRAY_SIZE(of_busses); i++)
++		if (strcmp(name, of_busses[i].name) == 0)
++			return &of_busses[i];
++
++	return NULL;
++}
++
+ static int of_translate_one(struct device_node *parent, struct of_bus *bus,
+ 			    struct of_bus *pbus, __be32 *addr,
+ 			    int na, int ns, int pna, const char *rprop)
+diff --git a/include/linux/of_address.h b/include/linux/of_address.h
+index 0506eb5..751e889 100644
+--- a/include/linux/of_address.h
++++ b/include/linux/of_address.h
+@@ -27,6 +27,8 @@ static inline unsigned long pci_address_to_pio(phys_addr_t addr) { return -1; }
+ #define pci_address_to_pio pci_address_to_pio
+ #endif
+ 
++const __be32 *of_pci_process_ranges(struct device_node *node,
++				    struct resource *res, const __be32 *from);
+ #else /* CONFIG_OF_ADDRESS */
+ #ifndef of_address_to_resource
+ static inline int of_address_to_resource(struct device_node *dev, int index,
+@@ -53,6 +55,13 @@ static inline const __be32 *of_get_address(struct device_node *dev, int index,
+ {
+ 	return NULL;
+ }
++
++static inline const __be32 *of_pci_process_ranges(struct device_node *node,
++						  struct resource *res,
++						  const __be32 *from)
++{
++	return NULL;
++}
+ #endif /* CONFIG_OF_ADDRESS */
+ 
+ 
+-- 
+1.7.9.5
 
