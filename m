@@ -1,45 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from terminus.zytor.com ([198.137.202.10]:42995 "EHLO mail.zytor.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751475Ab3CTDIf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 19 Mar 2013 23:08:35 -0400
-Message-ID: <51492828.5070803@zytor.com>
-Date: Tue, 19 Mar 2013 20:08:24 -0700
-From: "H. Peter Anvin" <hpa@zytor.com>
+Received: from na3sys009aog115.obsmtp.com ([74.125.149.238]:40897 "EHLO
+	na3sys009aog115.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1760216Ab3CHCWy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Mar 2013 21:22:54 -0500
+From: Xiangliang Yu <yuxiangl@marvell.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	"yxlraid@gmail.com" <yxlraid@gmail.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Date: Thu, 7 Mar 2013 18:22:10 -0800
+Subject: RE: [PATCH 1/2] PCI: define macro for marvell vendor ID
+Message-ID: <F766E4F80769BD478052FB6533FA745D25F4368537@SC-VEXCH4.marvell.com>
+References: <1362666523-9961-1-git-send-email-yxlraid@gmail.com>
+ <CAErSpo69g-dJo4xW+bvGuz=TALfMLQBgQ-_PLvsa-c58AzOVJA@mail.gmail.com>
+In-Reply-To: <CAErSpo69g-dJo4xW+bvGuz=TALfMLQBgQ-_PLvsa-c58AzOVJA@mail.gmail.com>
+Content-Type: text/plain; charset="gb2312"
 MIME-Version: 1.0
-To: Matthew Garrett <matthew.garrett@nebula.com>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-security-module@vger.kernel.org"
-	<linux-security-module@vger.kernel.org>,
-	"linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
-	"kexec@lists.infradead.org" <kexec@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 01/12] Security: Add CAP_COMPROMISE_KERNEL
-References: <3pfl8u1ugprwkcs5xmtjth3l.1363742692541@email.android.com> <51492379.3090302@zytor.com>
-In-Reply-To: <51492379.3090302@zytor.com>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/19/2013 07:48 PM, H. Peter Anvin wrote:
-> On 03/19/2013 06:28 PM, Matthew Garrett wrote:
->> Mm. The question is whether we can reliably determine the ranges a device should be able to access without having to trust userspace (and, ideally, without having to worry about whether iommu vendors have done their job). It's pretty important for PCI passthrough, so we do need to care. 
-> 
-> It is actually very simple: the device should be able to DMA into/out of:
-> 
-> 1. pinned pages
-> 2. owned by the process controlling the device
-> 
-> ... and nothing else.
-> 
-
-The "pinning" process needs to involve a call to the kernel to process
-the page for DMA (pinning the page and opening it in the iommu) and
-return a transaction address, of course.
-
-I think we have the interface for that in vfio, but I haven't followed
-that work.
-
-	-hpa
-
-
+SGksIEJqb3JuDQpJIHdpbGwgdXBkYXRlIG12c2FzIGFuZCBhaGNpIHdpdGggdGhlIG1hY3JvLCBq
+dXN0IG5lZWQgbW9yZSB0aW1lIHRvIHRlc3QgaXQuDQpUaGFua3MhDQoNCj4gLS0tLS1PcmlnaW5h
+bCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogQmpvcm4gSGVsZ2FhcyBbbWFpbHRvOmJoZWxnYWFzQGdv
+b2dsZS5jb21dDQo+IFNlbnQ6IDIwMTPE6jPUwjjI1SAwOjI1DQo+IFRvOiB5eGxyYWlkQGdtYWls
+LmNvbQ0KPiBDYzogbGludXgtcGNpQHZnZXIua2VybmVsLm9yZzsgbGludXgta2VybmVsQHZnZXIu
+a2VybmVsLm9yZzsgWGlhbmdsaWFuZyBZdQ0KPiBTdWJqZWN0OiBSZTogW1BBVENIIDEvMl0gUENJ
+OiBkZWZpbmUgbWFjcm8gZm9yIG1hcnZlbGwgdmVuZG9yIElEDQo+IA0KPiBPbiBUaHUsIE1hciA3
+LCAyMDEzIGF0IDc6MjggQU0sICA8eXhscmFpZEBnbWFpbC5jb20+IHdyb3RlOg0KPiA+IEZyb206
+IFhpYW5nbGlhbmcgWXUgPHl1eGlhbmdsQG1hcnZlbGwuY29tPg0KPiA+DQo+ID4gRGVmaW5lIFBD
+SV9WRU5ET1JfTUFSVkVMTF9JRF9FWFQgbWFjcm8gZm9yIDB4MWI0YiB2ZW5kb3IgSUQNCj4gDQo+
+ICJQQ0lfVkVORE9SX01BUlZFTExfSURfRVhUIiBpcyBub3QgYWN0dWFsbHkgdGhlIHN5bWJvbCB5
+b3UgZGVmaW5lZCBiZWxvdy4NCj4gDQo+IFBlciB0aGUgY29tbWVudCBhdCB0aGUgdG9wIG9mIHBj
+aV9pZHMuaCwgd2UgZG9uJ3QgYWRkIHRoaW5ncyBoZXJlDQo+IHVubGVzcyB0aGV5IGFyZSBzaGFy
+ZWQgYmV0d2VlbiBtdWx0aXBsZSBkcml2ZXJzLg0KPiANCj4gVGhhdCBzYWlkLCB0aGUgMHgxYjRi
+IHZlbmRvciBJRCBpcyB1c2VkIGluIG12X2luaXQuYywgbXZ1bWkuaCwNCj4gbXZ1bWkuYywgYW5k
+IGFoY2kuYy4gIElmIHlvdSB3YW50IHRvIHVuaWZ5IGFsbCB0aG9zZSBzbyB0aGV5IGFsbCB1c2UN
+Cj4gc2FtZSBzeW1ib2wsIGFuZCBkZWZpbmUgdGhhdCBzeW1ib2wgaGVyZSBpbiBwY2lfaWRzLmgs
+IHRoYXQgd291bGQgYmUNCj4gZmluZSB3aXRoIG1lLg0KPiANCj4gPiAtLS0NCj4gPiAgaW5jbHVk
+ZS9saW51eC9wY2lfaWRzLmggfCAgICAxICsNCj4gPiAgMSBmaWxlcyBjaGFuZ2VkLCAxIGluc2Vy
+dGlvbnMoKyksIDAgZGVsZXRpb25zKC0pDQo+ID4NCj4gPiBkaWZmIC0tZ2l0IGEvaW5jbHVkZS9s
+aW51eC9wY2lfaWRzLmggYi9pbmNsdWRlL2xpbnV4L3BjaV9pZHMuaA0KPiA+IGluZGV4IGYxMWMx
+YzIuLmE4MGY5ZTYgMTAwNjQ0DQo+ID4gLS0tIGEvaW5jbHVkZS9saW51eC9wY2lfaWRzLmgNCj4g
+PiArKysgYi9pbmNsdWRlL2xpbnV4L3BjaV9pZHMuaA0KPiA+IEBAIC0xNjA0LDYgKzE2MDQsNyBA
+QA0KPiA+ICAjZGVmaW5lIFBDSV9TVUJERVZJQ0VfSURfS0VZU1BBTl9TWDIgICAweDUzMzQNCj4g
+Pg0KPiA+ICAjZGVmaW5lIFBDSV9WRU5ET1JfSURfTUFSVkVMTCAgICAgICAgICAweDExYWINCj4g
+PiArI2RlZmluZSBQQ0lfVkVORE9SX0lEX01BUlZFTExfRVhUICAgICAgMHgxYjRiDQo+ID4gICNk
+ZWZpbmUgUENJX0RFVklDRV9JRF9NQVJWRUxMX0dUNjQxMTEgIDB4NDE0Ng0KPiA+ICAjZGVmaW5l
+IFBDSV9ERVZJQ0VfSURfTUFSVkVMTF9HVDY0MjYwICAweDY0MzANCj4gPiAgI2RlZmluZSBQQ0lf
+REVWSUNFX0lEX01BUlZFTExfTVY2NDM2MCAgMHg2NDYwDQo+ID4gLS0NCj4gPiAxLjcuNS40DQo+
+ID4NCg==
