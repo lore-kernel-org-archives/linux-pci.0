@@ -1,40 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.gentoo.org ([140.211.166.183]:59898 "EHLO smtp.gentoo.org"
+Received: from quartz.orcorp.ca ([184.70.90.242]:50291 "EHLO quartz.orcorp.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751761Ab3CZVdO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 26 Mar 2013 17:33:14 -0400
-Received: from [10.170.225.34] (85-76-17-66-nat.elisa-mobile.fi [85.76.17.66])
-	(using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	(Authenticated sender: ssuominen)
-	by smtp.gentoo.org (Postfix) with ESMTPSA id 76E8533DAFD
-	for <linux-pci@vger.kernel.org>; Tue, 26 Mar 2013 21:33:13 +0000 (UTC)
-Message-ID: <515213CF.7000804@gentoo.org>
-Date: Tue, 26 Mar 2013 23:31:59 +0200
-From: Samuli Suominen <ssuominen@gentoo.org>
+	id S933517Ab3CHQwm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 8 Mar 2013 11:52:42 -0500
+Date: Fri, 8 Mar 2013 09:52:28 -0700
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Thierry Reding <thierry.reding@avionic-design.de>
+Cc: Rob Herring <robherring2@gmail.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	linux-pci@vger.kernel.org, Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	linux-arm-kernel@lists.infradead.org,
+	devicetree-discuss@lists.ozlabs.org
+Subject: Re: [PATCH 24/32] pci: PCIe driver for Marvell Armada 370/XP
+ systems
+Message-ID: <20130308165228.GB4094@obsidianresearch.com>
+References: <20130306105441.4d24033e@skate>
+ <20130306121118.GA17079@avionic-0098.mockup.avionic-design.de>
+ <20130306180946.GA2433@obsidianresearch.com>
+ <20130307080832.GD3451@avionic-0098.mockup.avionic-design.de>
+ <20130307174955.GC20840@obsidianresearch.com>
+ <20130307194830.GA1811@avionic-0098.mockup.avionic-design.de>
+ <20130307200235.GB20695@obsidianresearch.com>
+ <20130307204726.GB1811@avionic-0098.mockup.avionic-design.de>
+ <51392B4D.9040404@gmail.com>
+ <20130308071443.GA5772@avionic-0098.mockup.avionic-design.de>
 MIME-Version: 1.0
-To: linux-pci@vger.kernel.org
-Subject: lspci -k is broken with depmod from kmod since it doesn't generate
- modules.pcimap anymore
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130308071443.GA5772@avionic-0098.mockup.avionic-design.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The depmod from kmod no longer generates file modules.pcimap, and lspci 
--k relies on that as noted at:
+On Fri, Mar 08, 2013 at 08:14:44AM +0100, Thierry Reding wrote:
+> On Thu, Mar 07, 2013 at 06:05:33PM -0600, Rob Herring wrote:
+> > On 03/07/2013 02:47 PM, Thierry Reding wrote:
+> [...]
+> > > In a nutshell (since some of the context isn't quoted anymore) the
+> > > problem that we're trying to solve is that some of the embedded SoCs
+> > > require per-root-port registers for configuration. The PCI DT
+> > > specification doesn't make any provisions for this. A few alternatives
+> > > have been discussed so far:
+> > 
+> > I'm not sure I follow. This is different than the host controller
+> > registers? Why would this not just be multiple entries in the reg property?
+> 
+> Well the register regions are per root-port. On Tegra20 there's 2 of
+> them, Tegra30 has 3 and if I understand correctly Marvell can have up to
+> 10 (!). Adding all of them to the reg property of the host controller
+> could work but it needs some way to match the reg entry to the root port
+> similar to option 1 below.
 
-https://bugs.gentoo.org/show_bug.cgi?id=462982
+Thomas just posted an implementation like this, please see:
 
-null pciutils-3.1.10 # grep -r modules.*map *
-ls-kernel.c:      sprintf(name, "/lib/modules/%s/modules.pcimap", 
-uts.release);
-lspci.c:char *opt_pcimap;			/* Override path to Linux modules.pcimap */
-lspci.c:"-p <file>\tLook up kernel modules in a given file instead of 
-default modules.pcimap\n"
-lspci.man:.RI /lib/modules/ kernel_version /modules.pcimap.
+http://www.spinics.net/lists/arm-kernel/msg228749.html
 
-Since this is not fixed in git, I figured it's time to let people know 
-of it here
-
-Thanks for looking into it,
-Samuli
+Jason
