@@ -1,43 +1,67 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 14 Mar 2013 12:13:10 -0400 (EDT)
-From: Alan Stern <stern@rowland.harvard.edu>
-To: Jiri Kosina <jkosina@suse.cz>
-cc: Peter Hurley <peter@hurleysoftware.com>,
-	Thomas Meyer <thomas@m3y3r.de>,
-	Shawn Starr <shawn.starr@rogers.com>,
-	Kernel development list <linux-kernel@vger.kernel.org>,
-	USB list <linux-usb@vger.kernel.org>,
-	<linux-acpi@vger.kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>
-Subject: Re: [3.9-rc1] irq 16: nobody cared  (was [3.9-rc1] very poor interrupt
- responses)
-In-Reply-To: <alpine.LNX.2.00.1303141634440.30118@pobox.suse.cz>
-Message-ID: <Pine.LNX.4.44L0.1303141212170.1983-100000@iolanthe.rowland.org>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.free-electrons.com ([94.23.35.102]:36055 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933075Ab3CHPTx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 Mar 2013 10:19:53 -0500
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Cc: Arnd Bergmann <arnd@arndb.de>, Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>, Olof Johansson <olof@lixom.net>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Yehuda Yitschak <yehuday@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Stephen Warren <swarren@wwwdotorg.org>
+Subject: [PATCH v4 18/18] arm: mvebu: update defconfig with PCI and USB support
+Date: Fri,  8 Mar 2013 16:19:20 +0100
+Message-Id: <1362755960-30791-19-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1362755960-30791-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1362755960-30791-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 14 Mar 2013, Jiri Kosina wrote:
+Now that we have the necessary drivers and Device Tree informations to
+support PCIe on Armada 370 and Armada XP, enable the CONFIG_PCI
+option.
 
-> > There have been only three significant changes to uhci-hcd since last 
-> > summer, and two of them appear to be completely unrelated to this 
-> > issue.  The three commits are
-> > 
-> > 	3171fcabb169  USB: uhci: beautify source code
-> > 	13996ca7afd5  USB: uhci: check buffer length to avoid memory 
-> > 			overflow
-> > 	0f815a0a700b  USB: UHCI: fix IRQ race during initialization
-> > 
-> > Reverting the first two almost certainly will not have any effect, but
-> > you may as well try it anyway.  The third commit may be relevant.
-> 
-> I have reverted all three commits, and the "nobody cared" is still there. 
+Also, since the Armada 370 Mirabox has a built-in USB XHCI controller
+connected on the PCIe bus, enable the corresponding options as well.
 
-There's one other commit I failed to find at first: 840008bb5162 (USB: 
-UHCI: notify usbcore about port resumes).  Probably not relevant, but 
-you should check to make sure.
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+---
+ arch/arm/configs/mvebu_defconfig |    3 +++
+ 1 file changed, 3 insertions(+)
 
-Alan Stern
+diff --git a/arch/arm/configs/mvebu_defconfig b/arch/arm/configs/mvebu_defconfig
+index 2ec8119..071a5b1 100644
+--- a/arch/arm/configs/mvebu_defconfig
++++ b/arch/arm/configs/mvebu_defconfig
+@@ -13,6 +13,8 @@ CONFIG_MACH_ARMADA_370=y
+ CONFIG_MACH_ARMADA_XP=y
+ # CONFIG_CACHE_L2X0 is not set
+ # CONFIG_SWP_EMULATE is not set
++CONFIG_PCI=y
++CONFIG_PCI_MVEBU=y
+ CONFIG_SMP=y
+ CONFIG_AEABI=y
+ CONFIG_HIGHMEM=y
+@@ -53,6 +55,7 @@ CONFIG_USB_SUPPORT=y
+ CONFIG_USB=y
+ CONFIG_USB_EHCI_HCD=y
+ CONFIG_USB_EHCI_ROOT_HUB_TT=y
++CONFIG_USB_XHCI_HCD=y
+ CONFIG_MMC=y
+ CONFIG_MMC_MVSDIO=y
+ CONFIG_NEW_LEDS=y
+-- 
+1.7.9.5
 
