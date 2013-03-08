@@ -1,45 +1,59 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>, Ram Pai <linuxram@us.ibm.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v3 17/27] PCI: Use for_each_pci_resource() in pci resource release
-Date: Wed, 13 Mar 2013 16:28:12 -0700
-Message-Id: <1363217302-14383-18-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1363217302-14383-1-git-send-email-yinghai@kernel.org>
-References: <1363217302-14383-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:25898 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750851Ab3CHToo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 Mar 2013 14:44:44 -0500
+Date: Fri, 8 Mar 2013 14:43:57 -0500
+From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, xen-devel@lists.xensource.com
+Subject: Re: [PATCH v2 15/26] xen, irq: call irq_realloc_desc_at() at first
+Message-ID: <20130308194357.GA6622@phenom.dumpdata.com>
+References: <1360351703-20571-1-git-send-email-yinghai@kernel.org>
+ <1360351703-20571-16-git-send-email-yinghai@kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1360351703-20571-16-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Replace those open code, and make code more readable.
+On Fri, Feb 08, 2013 at 11:28:12AM -0800, Yinghai Lu wrote:
+> We will pre-reserve irq for all gsi at first for x86, so we have to
+> use realloc with it.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/remove.c |    5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+Where are the GSI's pre-allocated?
 
-diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-index cc875e6..af8ace9 100644
---- a/drivers/pci/remove.c
-+++ b/drivers/pci/remove.c
-@@ -6,15 +6,14 @@
- static void pci_free_resources(struct pci_dev *dev)
- {
- 	int i;
-+	struct resource *res;
- 
-  	msi_remove_pci_irq_vectors(dev);
- 
- 	pci_cleanup_rom(dev);
--	for (i = 0; i < PCI_NUM_RESOURCES; i++) {
--		struct resource *res = dev->resource + i;
-+	for_each_pci_resource(dev, res, i, PCI_ALL_RES)
- 		if (res->parent)
- 			release_resource(res);
--	}
- }
- 
- static void pci_stop_dev(struct pci_dev *dev)
--- 
-1.7.10.4
-
+> 
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+> Cc: xen-devel@lists.xensource.com
+> ---
+>  drivers/xen/events.c |    8 ++++++--
+>  1 file changed, 6 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/xen/events.c b/drivers/xen/events.c
+> index 0be4df3..dda38db 100644
+> --- a/drivers/xen/events.c
+> +++ b/drivers/xen/events.c
+> @@ -482,8 +482,12 @@ static int __must_check xen_allocate_irq_gsi(unsigned gsi)
+>  	/* Legacy IRQ descriptors are already allocated by the arch. */
+>  	if (gsi < NR_IRQS_LEGACY)
+>  		irq = gsi;
+> -	else
+> -		irq = irq_alloc_desc_at(gsi, -1);
+> +	else {
+> +		/* for x86, irq already get reserved for gsi */
+> +		irq = irq_realloc_desc_at(gsi, -1);
+> +		if (irq < 0)
+> +			irq = irq_alloc_desc_at(gsi, -1);
+> +	}
+>  
+>  	xen_irq_init(irq);
+>  
+> -- 
+> 1.7.10.4
+> 
