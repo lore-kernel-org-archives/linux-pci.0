@@ -1,58 +1,98 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cavan.codon.org.uk ([93.93.128.6]:36047 "EHLO
-	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933659Ab3CRVic (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 Mar 2013 17:38:32 -0400
-From: Matthew Garrett <matthew.garrett@nebula.com>
-To: linux-kernel@vger.kernel.org
-Cc: linux-security-module@vger.kernel.org, linux-efi@vger.kernel.org,
-	kexec@lists.infradead.org, linux-pci@vger.kernel.org,
-	Kees Cook <keescook@chromium.org>,
-	Matthew Garrett <matthew.garrett@nebula.com>
-Subject: [PATCH 11/12] x86: Require CAP_COMPROMISE_KERNEL for MSR writing
-Date: Mon, 18 Mar 2013 17:32:32 -0400
-Message-Id: <1363642353-30749-11-git-send-email-matthew.garrett@nebula.com>
-In-Reply-To: <1363642353-30749-1-git-send-email-matthew.garrett@nebula.com>
-References: <1363642353-30749-1-git-send-email-matthew.garrett@nebula.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 8 Mar 2013 14:46:27 -0500
+From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Joerg Roedel <joro@8bytes.org>,
+	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Subject: Re: [PATCH v2 05/26] x86, irq: Show pci device name for msi in
+ /proc/interrupt
+Message-ID: <20130308194627.GB6622@phenom.dumpdata.com>
+References: <1360351703-20571-1-git-send-email-yinghai@kernel.org>
+ <1360351703-20571-6-git-send-email-yinghai@kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1360351703-20571-6-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Kees Cook <keescook@chromium.org>
+On Fri, Feb 08, 2013 at 11:28:02AM -0800, Yinghai Lu wrote:
+> We could find out which device is using that MSI/MSI-X.
+> Use irq_print_chip() to append pci device name.
 
-Writing to MSRs should not be allowed unless CAP_COMPROMISE_KERNEL is
-set since it could lead to execution of arbitrary code in kernel mode.
+What would the end result be? For example for:
 
-Signed-off-by: Kees Cook <keescook@chromium.org>
-Signed-off-by: Matthew Garrett <matthew.garrett@nebula.com>
----
- arch/x86/kernel/msr.c | 7 +++++++
- 1 file changed, 7 insertions(+)
+80:	some values PCI-MSI-edge      xhci_hcd
 
-diff --git a/arch/x86/kernel/msr.c b/arch/x86/kernel/msr.c
-index ce13049..fa4dc6c 100644
---- a/arch/x86/kernel/msr.c
-+++ b/arch/x86/kernel/msr.c
-@@ -103,6 +103,9 @@ static ssize_t msr_write(struct file *file, const char __user *buf,
- 	int err = 0;
- 	ssize_t bytes = 0;
- 
-+	if (!capable(CAP_COMPROMISE_KERNEL))
-+		return -EPERM;
-+
- 	if (count % 8)
- 		return -EINVAL;	/* Invalid chunk size */
- 
-@@ -150,6 +153,10 @@ static long msr_ioctl(struct file *file, unsigned int ioc, unsigned long arg)
- 			err = -EBADF;
- 			break;
- 		}
-+		if (!capable(CAP_COMPROMISE_KERNEL)) {
-+			err = -EPERM;
-+			break;
-+		}
- 		if (copy_from_user(&regs, uregs, sizeof regs)) {
- 			err = -EFAULT;
- 			break;
--- 
-1.8.1.2
+Is it going to be:
 
+80:	some values PCI-MSI-edge-xhci_hcd	xhci_hcd
+
+?
+
+> 
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> Cc: Joerg Roedel <joro@8bytes.org>
+> Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+> Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+> ---
+>  arch/x86/kernel/apic/io_apic.c |    9 ++++++---
+>  drivers/iommu/irq_remapping.c  |    8 ++++++++
+>  2 files changed, 14 insertions(+), 3 deletions(-)
+> 
+> diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+> index f8d4d8d..8b03875 100644
+> --- a/arch/x86/kernel/apic/io_apic.c
+> +++ b/arch/x86/kernel/apic/io_apic.c
+> @@ -3089,8 +3089,11 @@ msi_set_affinity(struct irq_data *data, const struct cpumask *mask, bool force)
+>  
+>  static void msi_irq_print_chip(struct irq_data *data, struct seq_file *p)
+>  {
+> -	seq_printf(p, " %s%s", data->chip->name,
+> -			data->msi_desc->msi_attrib.is_msix ? "-X" : "");
+> +	struct pci_dev *dev = data->msi_desc->dev;
+> +
+> +	seq_printf(p, " %s%s-edge@%s", data->chip->name,
+> +			data->msi_desc->msi_attrib.is_msix ? "-X" : "",
+> +			dev_name(&dev->dev));
+>  }
+>  
+>  /*
+> @@ -3130,7 +3133,7 @@ int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
+>  
+>  	setup_remapped_irq(irq, irq_get_chip_data(irq), chip);
+>  
+> -	irq_set_chip_and_handler_name(irq, chip, handle_edge_irq, "edge");
+> +	irq_set_chip_and_handler(irq, chip, handle_edge_irq);
+>  
+>  	dev_printk(KERN_DEBUG, &dev->dev, "irq %d for MSI%s\n", irq,
+>  			 msidesc->msi_attrib.is_msix ? "-X" : "");
+> diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
+> index e245ab0..ca595f7 100644
+> --- a/drivers/iommu/irq_remapping.c
+> +++ b/drivers/iommu/irq_remapping.c
+> @@ -365,10 +365,18 @@ static void ir_ack_apic_level(struct irq_data *data)
+>  
+>  static void ir_print_prefix(struct irq_data *data, struct seq_file *p)
+>  {
+> +	struct pci_dev *dev = NULL;
+> +
+>  	seq_printf(p, " IR-%s%s", data->chip->name,
+>  			data->msi_desc ?
+>  			 (data->msi_desc->msi_attrib.is_msix ? "-X" : "")
+>  			 : "");
+> +
+> +	if (data->msi_desc)
+> +		dev = data->msi_desc->dev;
+> +
+> +	if (dev)
+> +		seq_printf(p, "-edge@%s", dev_name(&dev->dev));
+>  }
+>  
+>  static void __init irq_remap_modify_chip_defaults(struct irq_chip *chip)
+> -- 
+> 1.7.10.4
+> 
