@@ -1,61 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e24smtp02.br.ibm.com ([32.104.18.86]:39990 "EHLO
-	e24smtp02.br.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754854Ab3CTFZX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Mar 2013 01:25:23 -0400
-Received: from /spool/local
-	by e24smtp02.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <lucaskt@linux.vnet.ibm.com>;
-	Wed, 20 Mar 2013 02:25:21 -0300
-Received: from d24relay01.br.ibm.com (d24relay01.br.ibm.com [9.8.31.16])
-	by d24dlp01.br.ibm.com (Postfix) with ESMTP id E0C4C3520064
-	for <linux-pci@vger.kernel.org>; Wed, 20 Mar 2013 01:25:02 -0400 (EDT)
-Received: from d24av05.br.ibm.com (d24av05.br.ibm.com [9.18.232.44])
-	by d24relay01.br.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id r2K5Mqjs2138332
-	for <linux-pci@vger.kernel.org>; Wed, 20 Mar 2013 02:22:52 -0300
-Received: from d24av05.br.ibm.com (loopback [127.0.0.1])
-	by d24av05.br.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id r2K5P1Kk029675
-	for <linux-pci@vger.kernel.org>; Wed, 20 Mar 2013 02:25:02 -0300
-From: Lucas Kannebley Tavares <lucaskt@linux.vnet.ibm.com>
-To: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	dri-devel@lists.freedesktop.org
-Cc: Lucas Kannebley Tavares <lucaskt@linux.vnet.ibm.com>,
+Received: from www.linutronix.de ([62.245.132.108]:56441 "EHLO
+	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751136Ab3CHULE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 Mar 2013 15:11:04 -0500
+Date: Fri, 8 Mar 2013 21:10:49 +0100 (CET)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Yinghai Lu <yinghai@kernel.org>
+cc: Ingo Molnar <mingo@elte.hu>, "H. Peter Anvin" <hpa@zytor.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	David Airlie <airlied@linux.ie>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Brian King <brking@linux.vnet.ibm.com>,
-	Thadeu Cascardo <cascardo@linux.vnet.ibm.com>,
-	Alex Deucher <alexander.deucher@amd.com>
-Subject: [PATCHv2 0/3] PCI Speed Cap Fixes for ppc64
-Date: Wed, 20 Mar 2013 02:24:36 -0300
-Message-Id: <1363757079-23550-1-git-send-email-lucaskt@linux.vnet.ibm.com>
+	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>,
+	Joerg Roedel <joro@8bytes.org>
+Subject: Re: [PATCH v2 02/26] x86, irq: Modify irq chip once for irq
+ remapping
+In-Reply-To: <alpine.LFD.2.02.1303082104580.22263@ionos>
+Message-ID: <alpine.LFD.2.02.1303082108590.22263@ionos>
+References: <1360351703-20571-1-git-send-email-yinghai@kernel.org> <1360351703-20571-3-git-send-email-yinghai@kernel.org> <alpine.LFD.2.02.1303082104580.22263@ionos>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch series first implements a function called pcie_get_speed_cap_mask 
-in the PCI subsystem based off from drm_pcie_get_speed_cap_mask in drm. Then 
-it removes the latter and fixes all references to it. And ultimately, it
-implements an architecture-specific version of the same function for ppc64.
+On Fri, 8 Mar 2013, Thomas Gleixner wrote:
+> On Fri, 8 Feb 2013, Yinghai Lu wrote:
+> 
+> > Now after irq remapping is enabled, irq_chip fields are modified during
+> > every irq setup.
+> > 
+> > Only need to change them one during we enable irq mapping.
+> 
+> Can you please start to write sensible changelogs? I'm really sick of
+> your sloppyness.
+> 
+> > Also change irq_remap_modify_chip_defaults() to __init.
+> 
+> Why can you do that ?
+>   
+> > We don't need to use #ifdef in irq_remap_modify_chips(), as
+> > IRQ_REMAP only support x86_64 AND X86_IO_APIC AND PCI_MSI,
+> > also HPET_TIMER is set when x86_64 is set.
+> 
+> You should not describe what the patch is doing, you are again missing
+> to describe why the patch is doing this. 
 
-The refactor is done because the function that was used by drm is more 
-architecture goo than module-specific. Whilst the function also needed a 
-platform-specific implementation to get PCIE Gen2 speeds on ppc64.
+And just for clarification. If you are not going to provide proper
+changelogs for _all_ patches of the series, this stuff is going
+directly towards /dev/null. I'm not wasting my time to review any of
+that otherwise.
 
-Lucas Kannebley Tavares (3):
-  pci: added pcie_get_speed_cap_mask function
-  drm: removed drm_pcie_get_speed_cap_mask function
-  ppc64: implemented pcibios_get_speed_cap_mask
+Thanks,
 
- arch/powerpc/platforms/pseries/pci.c |   35 +++++++++++++++++++++++++++
- drivers/gpu/drm/drm_pci.c            |   38 -----------------------------
- drivers/gpu/drm/radeon/evergreen.c   |    5 ++-
- drivers/gpu/drm/radeon/r600.c        |    5 ++-
- drivers/gpu/drm/radeon/rv770.c       |    5 ++-
- drivers/pci/pci.c                    |   44 ++++++++++++++++++++++++++++++++++
- include/drm/drmP.h                   |    6 ----
- include/linux/pci.h                  |    6 ++++
- 8 files changed, 94 insertions(+), 50 deletions(-)
-
--- 
-1.7.4.4
-
+	tglx
