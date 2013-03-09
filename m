@@ -1,260 +1,101 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>, Ram Pai <linuxram@us.ibm.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v3 26/27] PCI: Make quirk_io_region to use addon_res
-Date: Wed, 13 Mar 2013 16:28:21 -0700
-Message-Id: <1363217302-14383-27-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1363217302-14383-1-git-send-email-yinghai@kernel.org>
-References: <1363217302-14383-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from g4t0014.houston.hp.com ([15.201.24.17]:41649 "EHLO
+	g4t0014.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932209Ab3CIHw3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 9 Mar 2013 02:52:29 -0500
+From: Vijay Mohan Pandarathil <vijaymohan.pandarathil@hp.com>
+To: alex.williamson@redhat.com, gleb@redhat.com, bhelgaas@google.com,
+	blauwirbel@gmail.com, lance.oritz@hp.com, kvm@vger.kernel.org,
+	qemu-devel@nongnu.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: Vijay Mohan Pandarathil <vijaymohan.pandarathil@hp.com>
+Subject: [PATCH v7 1/3] VFIO: Wrapper for getting reference to vfio_device from device
+Date: Sat,  9 Mar 2013 01:52:15 -0600
+Message-Id: <1362815537-27303-2-git-send-email-vijaymohan.pandarathil@hp.com>
+In-Reply-To: <1362815537-27303-1-git-send-email-vijaymohan.pandarathil@hp.com>
+References: <1362815537-27303-1-git-send-email-vijaymohan.pandarathil@hp.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-After they are put in add-on resources, they will be safely claimed later.
+	- Added vfio_device_get_from_dev() as wrapper to get
+          reference to vfio_device from struct device.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+	- Added vfio_device_data() as a wrapper to get device_data from
+          vfio_device.
+
+Signed-off-by: Vijay Mohan Pandarathil <vijaymohan.pandarathil@hp.com>
 ---
- drivers/pci/quirks.c |  155 +++++++++++++++++++++++---------------------------
- 1 file changed, 70 insertions(+), 85 deletions(-)
+ drivers/vfio/vfio.c  | 30 +++++++++++++++++++++++++++++-
+ include/linux/vfio.h |  3 +++
+ 2 files changed, 32 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 7e5392c..6d379d6 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -324,29 +324,61 @@ static void quirk_cs5536_vsa(struct pci_dev *dev)
+diff --git a/drivers/vfio/vfio.c b/drivers/vfio/vfio.c
+index fcc12f3..21eddd9 100644
+--- a/drivers/vfio/vfio.c
++++ b/drivers/vfio/vfio.c
+@@ -392,12 +392,13 @@ static void vfio_device_release(struct kref *kref)
  }
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_CS5536_ISA, quirk_cs5536_vsa);
  
--static void quirk_io_region(struct pci_dev *dev, unsigned region,
--	unsigned size, int nr, const char *name)
-+static int quirk_read_io(struct pci_dev *dev, struct resource *res, int port)
+ /* Device reference always implies a group reference */
+-static void vfio_device_put(struct vfio_device *device)
++void vfio_device_put(struct vfio_device *device)
  {
--	region &= ~(size-1);
--	if (region) {
--		struct pci_bus_region bus_region;
--		struct resource *res = dev->resource + nr;
-+	struct pci_bus_region bus_region;
-+	u16 region;
-+	unsigned size = to_pci_dev_addon_resource(res)->size;
+ 	struct vfio_group *group = device->group;
+ 	kref_put_mutex(&device->kref, vfio_device_release, &group->device_lock);
+ 	vfio_group_put(group);
+ }
++EXPORT_SYMBOL_GPL(vfio_device_put);
  
--		res->name = pci_name(dev);
--		res->start = region;
--		res->end = region + size - 1;
--		res->flags = IORESOURCE_IO;
-+	pci_read_config_word(dev, port, &region);
-+	region &= ~(size - 1);
+ static void vfio_device_get(struct vfio_device *device)
+ {
+@@ -627,6 +628,33 @@ int vfio_add_group_dev(struct device *dev,
+ }
+ EXPORT_SYMBOL_GPL(vfio_add_group_dev);
  
--		/* Convert from PCI bus to resource space.  */
--		bus_region.start = res->start;
--		bus_region.end = res->end;
--		pcibios_bus_to_resource(dev, res, &bus_region);
-+	/* Convert from PCI bus to resource space.  */
-+	bus_region.start = region;
-+	bus_region.end = region + size - 1;
- 
--		if (pci_claim_resource(dev, nr) == 0)
--			dev_info(&dev->dev, "quirk: %pR claimed by %s\n",
--				 res, name);
--	}
--}	
-+	pcibios_bus_to_resource(dev, res, &bus_region);
-+
-+	res->flags |= IORESOURCE_IO;
-+	dev_info(&dev->dev, "PIO at %pR\n", res);
-+
-+	return 0;
-+}
-+static int quirk_write_io(struct pci_dev *dev, struct resource *res, int port)
++/**
++ * Get a reference to the vfio_device for a device that is known to
++ * be bound to a vfio driver.  The driver implicitly holds a
++ * vfio_device reference between vfio_add_group_dev and
++ * vfio_del_group_dev.  We can therefore use drvdata to increment
++ * that reference from the struct device.  This additional
++ * reference must be released by calling vfio_device_put.
++ */
++struct vfio_device *vfio_device_get_from_dev(struct device *dev)
 +{
-+	struct pci_bus_region bus_region;
-+	u16 region;
-+	unsigned size = to_pci_dev_addon_resource(res)->size;
++	struct vfio_device *device = dev_get_drvdata(dev);
 +
-+	pci_read_config_word(dev, port, &region);
-+	region &= size - 1;
++	vfio_device_get(device);
 +
-+	/* Convert to PCI bus space.  */
-+	pcibios_resource_to_bus(dev, &bus_region, res);
-+	region |= bus_region.start & (~(size - 1));
-+
-+	pci_write_config_word(dev, port, region);
-+
-+	return 0;
++	return device;
 +}
-+static struct resource_ops quirk_io_ops = {
-+	.read = quirk_read_io,
-+	.write = quirk_write_io,
-+};
++EXPORT_SYMBOL_GPL(vfio_device_get_from_dev);
 +
-+static void quirk_io_region(struct pci_dev *dev, int port,
-+					unsigned size, char *name)
++/*
++ * Caller must hold a reference to the vfio_device
++ */
++void *vfio_device_data(struct vfio_device *device)
 +{
-+	u16 region;
-+
-+	pci_read_config_word(dev, port, &region);
-+	region &= size - 1;
-+
-+	if (!region)
-+		return;
-+
-+	pci_add_dev_addon_resource(dev, port, size, &quirk_io_ops, name);
++	return device->device_data;
 +}
- 
- /*
-  *	ATI Northbridge setups MCE the processor if you even
-@@ -374,12 +406,8 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI,	PCI_DEVICE_ID_ATI_RS100,   quirk_ati_
-  */
- static void quirk_ali7101_acpi(struct pci_dev *dev)
++EXPORT_SYMBOL_GPL(vfio_device_data);
++
+ /* Given a referenced group, check if it contains the device */
+ static bool vfio_dev_present(struct vfio_group *group, struct device *dev)
  {
--	u16 region;
--
--	pci_read_config_word(dev, 0xE0, &region);
--	quirk_io_region(dev, region, 64, PCI_BRIDGE_RESOURCES, "ali7101 ACPI");
--	pci_read_config_word(dev, 0xE2, &region);
--	quirk_io_region(dev, region, 32, PCI_BRIDGE_RESOURCES+1, "ali7101 SMB");
-+	quirk_io_region(dev, 0xE0, 64, "ali7101 ACPI");
-+	quirk_io_region(dev, 0xE2, 32, "ali7101 SMB");
- }
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_AL,	PCI_DEVICE_ID_AL_M7101,		quirk_ali7101_acpi);
+diff --git a/include/linux/vfio.h b/include/linux/vfio.h
+index ab9e862..ac8d488 100644
+--- a/include/linux/vfio.h
++++ b/include/linux/vfio.h
+@@ -45,6 +45,9 @@ extern int vfio_add_group_dev(struct device *dev,
+ 			      void *device_data);
  
-@@ -503,12 +531,10 @@ static void piix4_mem_quirk(struct pci_dev *dev, char *name, unsigned int port,
-  */
- static void quirk_piix4_acpi(struct pci_dev *dev)
- {
--	u32 region, res_a;
-+	u32 res_a;
+ extern void *vfio_del_group_dev(struct device *dev);
++extern struct vfio_device *vfio_device_get_from_dev(struct device *dev);
++extern void vfio_device_put(struct vfio_device *device);
++extern void *vfio_device_data(struct vfio_device *device);
  
--	pci_read_config_dword(dev, 0x40, &region);
--	quirk_io_region(dev, region, 64, PCI_BRIDGE_RESOURCES, "PIIX4 ACPI");
--	pci_read_config_dword(dev, 0x90, &region);
--	quirk_io_region(dev, region, 16, PCI_BRIDGE_RESOURCES+1, "PIIX4 SMB");
-+	quirk_io_region(dev, 0x40, 64, "PIIX4 ACPI");
-+	quirk_io_region(dev, 0x90, 16, "PIIX4 SMB");
- 
- 	/* Device resource A has enables for some of the other ones */
- 	pci_read_config_dword(dev, 0x5c, &res_a);
-@@ -552,7 +578,6 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_82443MX_3,	qui
-  */
- static void quirk_ich4_lpc_acpi(struct pci_dev *dev)
- {
--	u32 region;
- 	u8 enable;
- 
- 	/*
-@@ -564,22 +589,12 @@ static void quirk_ich4_lpc_acpi(struct pci_dev *dev)
- 	*/
- 
- 	pci_read_config_byte(dev, ICH_ACPI_CNTL, &enable);
--	if (enable & ICH4_ACPI_EN) {
--		pci_read_config_dword(dev, ICH_PMBASE, &region);
--		region &= PCI_BASE_ADDRESS_IO_MASK;
--		if (region >= PCIBIOS_MIN_IO)
--			quirk_io_region(dev, region, 128, PCI_BRIDGE_RESOURCES,
--					"ICH4 ACPI/GPIO/TCO");
--	}
-+	if (enable & ICH4_ACPI_EN)
-+		quirk_io_region(dev, ICH_PMBASE, 128, "ICH4 ACPI/GPIO/TCO");
- 
- 	pci_read_config_byte(dev, ICH4_GPIO_CNTL, &enable);
--	if (enable & ICH4_GPIO_EN) {
--		pci_read_config_dword(dev, ICH4_GPIOBASE, &region);
--		region &= PCI_BASE_ADDRESS_IO_MASK;
--		if (region >= PCIBIOS_MIN_IO)
--			quirk_io_region(dev, region, 64,
--					PCI_BRIDGE_RESOURCES + 1, "ICH4 GPIO");
--	}
-+	if (enable & ICH4_GPIO_EN)
-+		quirk_io_region(dev, ICH4_GPIOBASE, 64, "ICH4 GPIO");
- }
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL,    PCI_DEVICE_ID_INTEL_82801AA_0,		quirk_ich4_lpc_acpi);
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL,    PCI_DEVICE_ID_INTEL_82801AB_0,		quirk_ich4_lpc_acpi);
-@@ -594,26 +609,15 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL,    PCI_DEVICE_ID_INTEL_ESB_1,		qui
- 
- static void ich6_lpc_acpi_gpio(struct pci_dev *dev)
- {
--	u32 region;
- 	u8 enable;
- 
- 	pci_read_config_byte(dev, ICH_ACPI_CNTL, &enable);
--	if (enable & ICH6_ACPI_EN) {
--		pci_read_config_dword(dev, ICH_PMBASE, &region);
--		region &= PCI_BASE_ADDRESS_IO_MASK;
--		if (region >= PCIBIOS_MIN_IO)
--			quirk_io_region(dev, region, 128, PCI_BRIDGE_RESOURCES,
--					"ICH6 ACPI/GPIO/TCO");
--	}
-+	if (enable & ICH6_ACPI_EN)
-+		quirk_io_region(dev, ICH_PMBASE, 128, "ICH6 ACPI/GPIO/TCO");
- 
- 	pci_read_config_byte(dev, ICH6_GPIO_CNTL, &enable);
--	if (enable & ICH6_GPIO_EN) {
--		pci_read_config_dword(dev, ICH6_GPIOBASE, &region);
--		region &= PCI_BASE_ADDRESS_IO_MASK;
--		if (region >= PCIBIOS_MIN_IO)
--			quirk_io_region(dev, region, 64,
--					PCI_BRIDGE_RESOURCES + 1, "ICH6 GPIO");
--	}
-+	if (enable & ICH6_GPIO_EN)
-+		quirk_io_region(dev, ICH6_GPIOBASE, 64, "ICH6 GPIO");
- }
- 
- static void ich6_lpc_generic_decode(struct pci_dev *dev, unsigned reg, const char *name, int dynsize)
-@@ -711,13 +715,8 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL,   PCI_DEVICE_ID_INTEL_ICH10_1, qui
-  */
- static void quirk_vt82c586_acpi(struct pci_dev *dev)
- {
--	u32 region;
--
--	if (dev->revision & 0x10) {
--		pci_read_config_dword(dev, 0x48, &region);
--		region &= PCI_BASE_ADDRESS_IO_MASK;
--		quirk_io_region(dev, region, 256, PCI_BRIDGE_RESOURCES, "vt82c586 ACPI");
--	}
-+	if (dev->revision & 0x10)
-+		quirk_io_region(dev, 0x48, 256, "vt82c586 ACPI");
- }
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_VIA,	PCI_DEVICE_ID_VIA_82C586_3,	quirk_vt82c586_acpi);
- 
-@@ -729,18 +728,11 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_VIA,	PCI_DEVICE_ID_VIA_82C586_3,	quirk_vt
-  */
- static void quirk_vt82c686_acpi(struct pci_dev *dev)
- {
--	u16 hm;
--	u32 smb;
--
- 	quirk_vt82c586_acpi(dev);
- 
--	pci_read_config_word(dev, 0x70, &hm);
--	hm &= PCI_BASE_ADDRESS_IO_MASK;
--	quirk_io_region(dev, hm, 128, PCI_BRIDGE_RESOURCES + 1, "vt82c686 HW-mon");
-+	quirk_io_region(dev, 0x70, 128, "vt82c686 HW-mon");
- 
--	pci_read_config_dword(dev, 0x90, &smb);
--	smb &= PCI_BASE_ADDRESS_IO_MASK;
--	quirk_io_region(dev, smb, 16, PCI_BRIDGE_RESOURCES + 2, "vt82c686 SMB");
-+	quirk_io_region(dev, 0x90, 16, "vt82c686 SMB");
- }
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_VIA,	PCI_DEVICE_ID_VIA_82C686_4,	quirk_vt82c686_acpi);
- 
-@@ -751,15 +743,8 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_VIA,	PCI_DEVICE_ID_VIA_82C686_4,	quirk_vt
-  */
- static void quirk_vt8235_acpi(struct pci_dev *dev)
- {
--	u16 pm, smb;
--
--	pci_read_config_word(dev, 0x88, &pm);
--	pm &= PCI_BASE_ADDRESS_IO_MASK;
--	quirk_io_region(dev, pm, 128, PCI_BRIDGE_RESOURCES, "vt8235 PM");
--
--	pci_read_config_word(dev, 0xd0, &smb);
--	smb &= PCI_BASE_ADDRESS_IO_MASK;
--	quirk_io_region(dev, smb, 16, PCI_BRIDGE_RESOURCES + 1, "vt8235 SMB");
-+	quirk_io_region(dev, 0x88, 128, "vt8235 PM");
-+	quirk_io_region(dev, 0xd0, 16, "vt8235 SMB");
- }
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_VIA,	PCI_DEVICE_ID_VIA_8235,	quirk_vt8235_acpi);
- 
+ /**
+  * struct vfio_iommu_driver_ops - VFIO IOMMU driver callbacks
 -- 
-1.7.10.4
+1.7.11.3
 
