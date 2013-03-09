@@ -1,56 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:38790 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754205Ab3CLCwx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Mar 2013 22:52:53 -0400
-Message-ID: <513E983E.6050400@huawei.com>
-Date: Tue, 12 Mar 2013 10:51:42 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from na3sys009aog103.obsmtp.com ([74.125.149.71]:50180 "EHLO
+	na3sys009aog103.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757854Ab3CIOtU convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 9 Mar 2013 09:49:20 -0500
+From: Xiangliang Yu <yuxiangl@marvell.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: yxlraid <yxlraid@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Date: Sat, 9 Mar 2013 06:49:12 -0800
+Subject: RE: [PATCH 2/2] PCI: fix system hang issue of Marvell SATA host
+ controller
+Message-ID: <F766E4F80769BD478052FB6533FA745D25F440A477@SC-VEXCH4.marvell.com>
+References: <1362666556-10036-1-git-send-email-yxlraid@gmail.com>
+ <CAErSpo7feQK7pXD=moA_hf=Y-j82oZZKwfDNzfo2Ea7i9VPxtA@mail.gmail.com>
+ <F766E4F80769BD478052FB6533FA745D25F436856A@SC-VEXCH4.marvell.com>
+ <CAErSpo6RDC+QyyN4kwt7-kU5d8b1iu+zCQZTGZPxCJU2UicTCA@mail.gmail.com>
+ <F766E4F80769BD478052FB6533FA745D25F436861C@SC-VEXCH4.marvell.com>
+ <CAErSpo6ascpN=bBUUzkk5W3-Wee_1ZztAyTwnKd-tq=L_9Q3mw@mail.gmail.com>
+In-Reply-To: <CAErSpo6ascpN=bBUUzkk5W3-Wee_1ZztAyTwnKd-tq=L_9Q3mw@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-To: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, Yinghai Lu <yinghai@kernel.org>
-Subject: Re: 3.9-rc1: pciehp and eSATA card SiI 3132, no XHCI
-References: <513E7E1E.80508@fold.natur.cuni.cz>
-In-Reply-To: <513E7E1E.80508@fold.natur.cuni.cz>
-Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2013/3/12 9:00, Martin Mokrejs wrote:
-> Hi,
->   I cold-booted a computer with the card inserted before power-on and collected
-> lspci output and express card slot status every second. Then I tried eject and
-> hotplug inserts and it appearts the card is not detected, actually maybe pciehp
-> is not even suppoosed to work in this case as the slot was occupied during boot.
-> But let me come to it later.
-> 
-> I noted the following on the very first eject of the so far cold-plugged card
-> that lspci properly reports PresDet change on the Changed: line. The only time
-> I ever saw it. ;-)
+Hi, Bjorn
 
-Hi Martin,
-   PresDet change bit will be cleaned as soon as pciehp driver received the inturrupt from hardware,
-So it's difficult to capture the change.
+>> >> > Fix system hang issue: if first accessed resource file of BAR0 ~ 
+>> >> > BAR4, system will hang after executing lspci command
+>> >>
+>> >> This needs more explanation.  We've already read the BARs by the 
+>> >> time header quirks are run, so apparently it's not just the mere 
+>> >> act of accessing a BAR that causes a hang.
+>> >>
+>> >> We need to know exactly what's going on here.  For example, do 
+>> >> BARs
+>> >> 0-4 exist?  Does the device decode accesses to the regions 
+>> >> described by the BARs?  The PCI core has to know what resources 
+>> >> the device uses, so if the device decodes accesses, we can't just 
+>> >> throw away the start/end information.
+>> > The BARs 0-4 is exist and the PCI device is enable IO space, but 
+>> > user access
+>> the regions file by udevadm command with info parameter, the system will hang.
+>> > Like this: udevadmin info --attribut-walk
+>> --path=/sys/device/pci-device/000:*.
+>> > Because the device is just AHCI host controller, don't need the 
+>> > BAR0 ~ 4 region
+>> file.
+>> > Is my explanation ok for the patch?
+>>
+>> No, I still don't know what causes the hang; I only know that udevadm 
+>> can trigger it.  I don't want to just paper over the problem until we 
+>> know what the root cause is.
+>>
+>> Does "lspci -H1 -vv" also cause a hang?  What about "setpci -s<dev> 
+>> BASE_ADDRESS_0"?  "setpci -H1 -s<dev> BASE_ADDRESS_0"?
+> The commands are ok because the commands can't find the device after accessing IO port.
+> The root cause is that accessing of IO port will make the chip go bad. So, the point of the patch is don't export capability of the IO accessing.
 
-> 
-> 
-> I re-plugged the card and ejected several times while the while loops
-> collecting lspci and slot_status via the setpci shell command harvested
-> data. Still, in dmesg there was nothing logged regarding card insert/eject.
-> Eventually, I tried rmmod sata_sil24 (did NOT need 'rmmod -f') and that
-> did log something new.
+>Ah, so the problem is not with accessing the BAR in config space.  The problem is with accessing the I/O port space mapped by the BAR.  Is that right?
 
-No new dmesg info when insert/eject maybe indicate the pciehp driver never received the
-interrupt or there is no bit set about Presence Detect Changed here. Or there is debug info
-like :
-pcie_isr: intr_loc %x at least.
+Yes...
 
-eSATA card SiI 3132, no XHCI, hotplug only got problem with 3.9-rc1? or both at 3.7 3.8?
+>Does "udevadm info --attribute-walk" really access the device address space mapped by the BARs?  
 
+The older version maybe will access the space, I just got the info from HP. And I simplify the issue by executing following command:
+Cat /sys/devices/pci-device/**/resourceX
 
--- 
-Thanks!
-Yijing
+I want to set the resources of BAR0 ~ 4 to 0 to avoid the IO accessing by user.
+
+Any question? Thanks!
+
 
