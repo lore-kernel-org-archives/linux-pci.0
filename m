@@ -1,161 +1,151 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f170.google.com ([209.85.214.170]:33177 "EHLO
-	mail-ob0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760102Ab3CZSkC (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Mar 2013 14:40:02 -0400
-Received: by mail-ob0-f170.google.com with SMTP id wc20so7444106obb.15
-        for <linux-pci@vger.kernel.org>; Tue, 26 Mar 2013 11:40:00 -0700 (PDT)
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:60700 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933699Ab3CIDv3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 Mar 2013 22:51:29 -0500
+Received: by mail-ob0-f174.google.com with SMTP id 16so1876286obc.19
+        for <linux-pci@vger.kernel.org>; Fri, 08 Mar 2013 19:51:29 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1363757079-23550-2-git-send-email-lucaskt@linux.vnet.ibm.com>
-References: <1363757079-23550-1-git-send-email-lucaskt@linux.vnet.ibm.com> <1363757079-23550-2-git-send-email-lucaskt@linux.vnet.ibm.com>
+In-Reply-To: <51394317.20104@fold.natur.cuni.cz>
+References: <50EDF8FE.6040607@fold.natur.cuni.cz> <CAErSpo6etF7_fZH9nNoAhtRXdGEmBrNE7v84TRkoawyG9s4AGw@mail.gmail.com>
+ <51371AD9.4040801@fold.natur.cuni.cz> <CAErSpo5wmM8+Qd4FH0WeNS_DJEk2Tmmivk-FgEbD-UbTMQf+ZQ@mail.gmail.com>
+ <51394317.20104@fold.natur.cuni.cz>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 26 Mar 2013 12:39:39 -0600
-Message-ID: <CAErSpo4rc=8mYgwuTO6693QCQJ9nsPsxmh7YAwxMygiVrPQR0A@mail.gmail.com>
-Subject: Re: [PATCHv2 1/3] pci: added pcie_get_speed_cap_mask function
-To: Lucas Kannebley Tavares <lucaskt@linux.vnet.ibm.com>
+Date: Fri, 8 Mar 2013 20:51:08 -0700
+Message-ID: <CAErSpo7wsduVN1Q6k_D7r24AhpVcARZRXtv6FvSfMMjFNJMcRA@mail.gmail.com>
+Subject: Re: Dell Vostro 3550: pci_hotplug+acpiphp require 'pcie_aspm=force'
+ on kernel command-line for hotplug to work
+To: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
 Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	DRI mailing list <dri-devel@lists.freedesktop.org>,
-	David Airlie <airlied@linux.ie>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Brian King <brking@linux.vnet.ibm.com>,
-	Thadeu Cascardo <cascardo@linux.vnet.ibm.com>,
-	Alex Deucher <alexander.deucher@amd.com>
+	Yinghai Lu <yinghai@kernel.org>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
+	Alan Stern <stern@rowland.harvard.edu>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 19, 2013 at 11:24 PM, Lucas Kannebley Tavares
-<lucaskt@linux.vnet.ibm.com> wrote:
-> Added function to gather the speed cap for a device and return a mask to
-> supported speeds. The function is divided into an interface and a weak
-> implementation so that architecture-specific functions can be called.
+On Thu, Mar 7, 2013 at 6:47 PM, Martin Mokrejs
+<mmokrejs@fold.natur.cuni.cz> wrote:
+> Bjorn Helgaas wrote:
+>> On Wed, Mar 6, 2013 at 3:30 AM, Martin Mokrejs
+>> <mmokrejs@fold.natur.cuni.cz> wrote:
+>>> Bjorn Helgaas wrote:
+>>>> On Wed, Jan 9, 2013 at 4:10 PM, Martin Mokrejs
+>>>> <mmokrejs@fold.natur.cuni.cz> wrote:
+>>>>>   I am following up on a former thread
+>>>>> Re: 3.2.11: PCI Express card cannot be re-detected withing cca 60sec timeframe
+>>>>> about the same issue. I think I found some new info while playing with 3.7.1 kernel.
+>>>>> It happened to me that my hotplug of express cards stopped working so it made me to
+>>>>> to dive in a figure out what driver did I do to my .config, and what combinations
+>>>>> of drivers and kernel command-line parameters work and which not. This email will
+>>>>> cover just one case.
+>>>>>
+>>>>> On this Dell Vostro 3550 express card slot works if kernel is without pciehp
+>>>>> altogether and pci_hotplug+acpiphp are loaded as modules later on. The problem
+>>>>> is that I must use pcie_aspm=off.
+>>>>
+>>>> I confess I am completely bewildered here.  Something is clearly badly
+>>>> broken, but I'm having a hard time figuring out exactly what it is.  I
+>>>> think I'm overwhelmed by all the data :)
 >
-> This is the first step in moving function drm_pcie_get_speed_cap_mask
-> from the drm subsystem to the pci one.
+> It won't be easier now but you asked for it. ;)
 
-This still doesn't feel right to me.
+Well, I didn't really ask for 500kB of logs with 150-character
+pathnames.  I am unable to process that much stuff.  I'm not
+interested in random lspci differences, virtual console bugs, or OHCI
+driver crashes at this point, so let's not muddy the waters with them.
+ I only want to figure out if pciehp can correctly detect and
+enumerate a newly inserted card, and if it can correctly clean up when
+a card is removed.  After we figure that out, we can worry about more
+complicated issues.
 
-I'm definitely not a hardware guy, but my understanding based on the
-PCIe spec r3.0, sec 6.11, is that the hardware will automatically
-maintain the link at the highest speed supported by both ends of the
-link, unless software sets a lower Target Link Speed.  The only users
-of this function are some Radeon drivers, and it looks like they only
-use it because the hardware doesn't conform to this aspect of the spec
-and requires device-specific tweaking.
+I *think* the bottom line of the Slot Status experiment is that the
+Presence Detect bit was reported correctly in every case, for every
+card, regardless of BIOS settings.  Right?
 
-We already have bus->max_bus_speed, which should tell you the max
-speed supported by the upstream component.  Is that enough
-information?  Maybe the radeon drivers could simply do something like
-this:
+There are three cards on the table now:
 
-    speed = rdev->ddev->pdev->bus->max_bus_speed;
-    if (speed == PCI_SPEED_UNKNOWN || speed < PCIE_SPEED_5_0GT)
-        return;
+  pci 0000:11:00.0: [1095:3132] SiI 3132 Serial ATA Raid II Controller
+  pci 0000:11:00.0: [1106:3403] VT6315 Series Firewire Controller
+  pci 0000:11:00.0: [1033:0194] NEC Corporation uPD720200 USB 3.0 Host
+Controller
 
-In your original email [1], you mentioned a null pointer dereference,
-presumably when reading the PCIe capability for dev->pdev->bus->self,
-with "self" being NULL.  This only happens for a bus with no upstream
-P2P bridge, i.e., self will be NULL only if pdev is on a root bus.
-But we also know pdev is a PCIe device, and I think a PCIe device on a
-root bus must be a "Root Complex Integrated Endpoint" (PCIe spec sec
-1.3.2.3).  Such a device does not have a link at all, so there's no
-point in fiddling with its link speed.
+I assume all the cards work fine if there's no hotplug, i.e., if the
+card is present at boot and you never remove it.  Right?
 
-I don't see how a radeon device could be an integrated endpoint, but
-in your hypervisor environment, maybe it isn't quite spec-compliant in
-terms of its attachment.  Can you collect the output of "lspci -vv"?
-Maybe that will make things clearer.
+> In Linux pciehp
+> still complains about Surprise Removal even when I insert the card for the very
+> first time after a coldboot
 
-In any case, if a radeon device is on a root bus, I think the root bus
-max_bus_speed will be PCI_SPEED_UNKNOWN, and if it's not on a root
-bus, max_bus_speed should be set correctly based on the upstream PCIe
-port.
+Hmm.  pciehp prints "Surprise Removal" whether you inserted or removed
+the card.  Stupid driver.
+
+> (so the ExpressCard slot is not completely dead but
+> neither sata_sil24 nor fw_ohci picks up the device).
+
+I thought the only card with a problem was the USB3.0 card.  But here
+you suggest that there *is* a problem with the SATA and Firewire
+cards.  Can you describe that problem in one sentence?
+
+> My question is. Has the laptop hardwired the ExpressCard slot somehow through USB
+> to the SandyBridge chip?
+
+An ExpressCard slot (spec at [1]) supports both a PCIe interface and a
+USB interface, so the slot *should* be connected to a USB controller
+as well as to a PCIe root port.  An ExpressCard can contain either a
+PCIe device or a USB device or both.  Section 6.3 of the spec talks
+about ACPI requirements to describe the relationship between the PCIe
+and USB devices.  I'm not sure that Linux pays any attention to this
+in the hotplug paths, so I'm a little worried about this.  (Maybe it
+doesn't need to in the PCIe-aware case; I don't know.)
+
+It would be interesting to know exactly what devices are on your
+cards.  Assuming they all work when present at boot, you could find
+that by doing a single "lspci -vv" and "lsusb -v" after a boot with an
+empty slot, and doing it again after a boot with a card in the slot.
+The difference should be the ExpressCard devices.  I'm sure this is
+buried in your tarball somewhere, but all I want is the info from a
+machine in default configuration -- MediaCard enabled, etc.  Just the
+way a typical user would be using the machine.
+
+[1] http://www.usb.org/developers/expresscard/EC_specifications/ExpressCard_2_0_FINAL.pdf
+
+> The hotplug issue itself. I do not understand the PCI(e) hotplug, lspci output but
+> why is there any difference between a cold booted status of an empty expresscard slot
+> compared to the status when a card is unloaded?
+
+In principle there shouldn't be any difference, but Linux isn't that good yet.
+
+> --- without_XHCI_with_EHCI_no_ACPIPHP_with_PCIEHP/disabled_MediaCard_reader/USB3/lspci_vv_initial.txt   2013-03-07 22:27:30.000000000 +0100
+> +++ without_XHCI_with_EHCI_no_ACPIPHP_with_PCIEHP/disabled_MediaCard_reader/USB3/lspci_vv_unloading_USB3_card.txt       2013-03-07
+
+> -       Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- <SERR- <PERR-
+> +       Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort+ <SERR- <PERR-
+>
+> Shouldn't the MAbort been cleared sometimes? Doesn't this fool the PresDet interpretation in kernel?
+
+I doubt it.  Presence Detect is a very simple mechanism that basically
+just reports the current state of the CPPE# signal in the ExpressCard
+slot.  There's no reason this should be related to MAbort.
+
+> The eSATA behaves differently maybe because 0100 does not change to 0140 like USB3 card but to 0103?
+> Um, the shell while loop calling setpci does not report 0103 but the driver say this:
+>
+> [  211.879397] sata_sil24 0000:11:00.0: enabling device (0100 -> 0103)
+
+This is completely unrelated.  The shell "setpci" command is printing
+the Slot Status register; the "0100 -> 0103" above is a change in the
+PCI Command register.
+
+> I do not remember with 3.2.x and 3.7x kernels seeing this with the USB3 card:
+> +[  594.622211] pci 0000:11:00.0: calling quirk_usb_early_handoff+0x0/0x657
+> +[  594.622223] pci 0000:11:00.0: device not available (can't reserve [mem 0x00000000-0x00001fff 64bit])
+> +[  594.622225] pci 0000:11:00.0: Can't enable PCI device, BIOS handoff failed.
+
+This is a result of trying to run the quirk on a hot-inserted device
+where we haven't assigned resources to it yet.  I don't think we
+should really be running quirks on a device that early.  We can look
+at that later, if we think this is related to the immediate problem.
 
 Bjorn
-
-[1] http://lkml.kernel.org/r/50819140.8030806@linux.vnet.ibm.com
-
-> Signed-off-by: Lucas Kannebley Tavares <lucaskt@linux.vnet.ibm.com>
-> ---
->  drivers/pci/pci.c   |   44 ++++++++++++++++++++++++++++++++++++++++++++
->  include/linux/pci.h |    6 ++++++
->  2 files changed, 50 insertions(+), 0 deletions(-)
->
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index b099e00..d94ab79 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -3931,6 +3931,50 @@ static int __init pci_setup(char *str)
->  }
->  early_param("pci", pci_setup);
->
-> +int __weak pcibios_get_speed_cap_mask(struct pci_dev *dev, u32 *mask)
-> +{
-> +       struct pci_dev *root;
-> +       u32 lnkcap, lnkcap2;
-> +
-> +       *mask = 0;
-> +       if (!dev)
-> +               return -EINVAL;
-> +
-> +       root = dev->bus->self;
-> +
-> +       /* we've been informed via and serverworks don't make the cut */
-> +       if (root->vendor == PCI_VENDOR_ID_VIA ||
-> +           root->vendor == PCI_VENDOR_ID_SERVERWORKS)
-> +               return -EINVAL;
-> +
-> +       pcie_capability_read_dword(root, PCI_EXP_LNKCAP, &lnkcap);
-> +       pcie_capability_read_dword(root, PCI_EXP_LNKCAP2, &lnkcap2);
-> +
-> +       if (lnkcap2) {  /* PCIe r3.0-compliant */
-> +               if (lnkcap2 & PCI_EXP_LNKCAP2_SLS_2_5GB)
-> +                       *mask |= PCIE_SPEED_25;
-> +               if (lnkcap2 & PCI_EXP_LNKCAP2_SLS_5_0GB)
-> +                       *mask |= PCIE_SPEED_50;
-> +               if (lnkcap2 & PCI_EXP_LNKCAP2_SLS_8_0GB)
-> +                       *mask |= PCIE_SPEED_80;
-> +       } else {        /* pre-r3.0 */
-> +               if (lnkcap & PCI_EXP_LNKCAP_SLS_2_5GB)
-> +                       *mask |= PCIE_SPEED_25;
-> +               if (lnkcap & PCI_EXP_LNKCAP_SLS_5_0GB)
-> +                       *mask |= (PCIE_SPEED_25 | PCIE_SPEED_50);
-> +       }
-> +
-> +       dev_info(&dev->dev, "probing gen 2 caps for device %x:%x = %x/%x\n",
-> +               root->vendor, root->device, lnkcap, lnkcap2);
-> +       return 0;
-> +}
-> +
-> +int pcie_get_speed_cap_mask(struct pci_dev *dev, u32 *mask)
-> +{
-> +       return pcibios_get_speed_cap_mask(dev, mask);
-> +}
-> +EXPORT_SYMBOL(pcie_get_speed_cap_mask);
-> +
->  EXPORT_SYMBOL(pci_reenable_device);
->  EXPORT_SYMBOL(pci_enable_device_io);
->  EXPORT_SYMBOL(pci_enable_device_mem);
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 2461033a..24a2f63 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1861,4 +1861,10 @@ static inline struct eeh_dev *pci_dev_to_eeh_dev(struct pci_dev *pdev)
->   */
->  struct pci_dev *pci_find_upstream_pcie_bridge(struct pci_dev *pdev);
->
-> +#define PCIE_SPEED_25 1
-> +#define PCIE_SPEED_50 2
-> +#define PCIE_SPEED_80 4
-> +
-> +extern int pcie_get_speed_cap_mask(struct pci_dev *dev, u32 *speed_mask);
-> +
->  #endif /* LINUX_PCI_H */
-> --
-> 1.7.4.4
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
