@@ -1,53 +1,39 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-db8lp0187.outbound.messaging.microsoft.com ([213.199.154.187]:5664
-	"EHLO db8outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750866Ab3CTVSq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Mar 2013 17:18:46 -0400
-From: Matthew Garrett <matthew.garrett@nebula.com>
-To: Mimi Zohar <zohar@linux.vnet.ibm.com>
-CC: James Morris <jmorris@namei.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-security-module@vger.kernel.org"
-	<linux-security-module@vger.kernel.org>,
-	"linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
-	"kexec@lists.infradead.org" <kexec@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Serge E. Hallyn" <serge@hallyn.com>
-Subject: Re: [PATCH 01/12] Security: Add CAP_COMPROMISE_KERNEL
-Date: Wed, 20 Mar 2013 21:18:10 +0000
-Message-ID: <1363814289.2553.41.camel@x230.sbx07502.somerma.wayport.net>
-References: <1363642353-30749-1-git-send-email-matthew.garrett@nebula.com>
-	 <alpine.LRH.2.02.1303191542200.30973@tundra.namei.org>
-	 <1363797717.2580.10.camel@falcor1.watson.ibm.com>
-	 <1363798166.2553.29.camel@x230.sbx07502.somerma.wayport.net>
-	 <1363802506.2580.55.camel@falcor1.watson.ibm.com>
-	 <1363803158.2553.33.camel@x230.sbx07502.somerma.wayport.net>
-	 <1363806968.2580.86.camel@falcor1.watson.ibm.com>
-	 <1363811856.2553.37.camel@x230.sbx07502.somerma.wayport.net>
-	 <1363813877.2580.120.camel@falcor1.watson.ibm.com>
-In-Reply-To: <1363813877.2580.120.camel@falcor1.watson.ibm.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-ia0-f172.google.com ([209.85.210.172]:60440 "EHLO
+	mail-ia0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754764Ab3CIHZr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 9 Mar 2013 02:25:47 -0500
 MIME-Version: 1.0
+In-Reply-To: <alpine.LFD.2.02.1303082108590.22263@ionos>
+References: <1360351703-20571-1-git-send-email-yinghai@kernel.org>
+	<1360351703-20571-3-git-send-email-yinghai@kernel.org>
+	<alpine.LFD.2.02.1303082104580.22263@ionos>
+	<alpine.LFD.2.02.1303082108590.22263@ionos>
+Date: Fri, 8 Mar 2013 23:25:47 -0800
+Message-ID: <CAE9FiQVGN6ZheaYaj-tztNZpMZ9QN4X=kKu5_yX=bamV2b2FxA@mail.gmail.com>
+Subject: Re: [PATCH v2 02/26] x86, irq: Modify irq chip once for irq remapping
+From: Yinghai Lu <yinghai@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: Ingo Molnar <mingo@elte.hu>, "H. Peter Anvin" <hpa@zytor.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>,
+	Joerg Roedel <joro@8bytes.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-T24gV2VkLCAyMDEzLTAzLTIwIGF0IDE3OjExIC0wNDAwLCBNaW1pIFpvaGFyIHdyb3RlOg0KPiBP
-biBXZWQsIDIwMTMtMDMtMjAgYXQgMjA6MzcgKzAwMDAsIE1hdHRoZXcgR2FycmV0dCB3cm90ZToN
-Cj4gPiBSaWdodCwgdGhhdCdkIGJlIHRoZSByb3VnaCBpZGVhLiBBbnkgZnVydGhlciBydW50aW1l
-IHBvbGljeSB1cGRhdGVzDQo+ID4gd291bGQgcHJlc3VtYWJseSBuZWVkIHRvIGJlIHNpZ25lZCB3
-aXRoIGEgdHJ1c3RlZCBrZXkuDQo+IA0KPiBJJ20gcmVhbGx5IHNvcnJ5IHRvIGJlbGFib3IgdGhp
-cyBwb2ludCwgYnV0IGNhbiBrZXhlYyByZWx5IG9uIGFuIExTTQ0KPiBsYWJlbCB0byBpZGVudGlm
-eSBhIHNwZWNpZmljIGZpbGUsIG91dCBvZiBhbGwgdGhlIGZpbGVzIGJlaW5nIGV4ZWN1dGVkLA0K
-PiBpbiBhIHNlY3VyZSBib290IGVudmlyb25tZW50PyAgVGhlIFNFTGludXggaW50ZWdyaXR5IHJ1
-bGUgZm9yIGtleGVjDQo+IHdvdWxkIHRoZW4gbG9vayBzb21ldGhpbmcgbGlrZSwNCj4NCj4gYXBw
-cmFpc2UgZnVuYz1CUFJNX0NIRUNLIG9ial90eXBlPWtkdW1wX2V4ZWNfdCBhcHByYWlzZV90eXBl
-PWltYXNpZw0KDQpJdCB3b3VsZCBjZXJ0YWlubHkgYmUgcG9zc2libGUgdG8gY29uZmlndXJlIGEg
-c3lzdGVtIHN1Y2ggdGhhdCB0aGlzIHdhcw0KdHJ1ZSAoYXNzdW1pbmcgc3VwcG9ydCBmb3Igc2ln
-bmVkIGluaXRyYW1mcyBhbmQgcmVzdHJpY3RlZCBwb2xpY3kNCmxvYWRpbmcpLCBhbmQgYW55b25l
-IHdhbnRpbmcgdG8gZW5zdXJlIHRoYXQga2V4ZWMgb25seSBsb2FkZWQgdHJ1c3RlZA0KYmluYXJp
-ZXMgd291bGQgaGF2ZSB0byBlbnN1cmUgdGhhdCB0aGVpciBzeXN0ZW0gd2FzIGFwcHJvcHJpYXRl
-bHkNCmNvbmZpZ3VyZWQuIEhhdmluZyBzb21lIG1lY2hhbmlzbSB0byB0aGVuIGdpdmUgdGhlIGtl
-eGVjIGJpbmFyeQ0KQ0FQX01PRElGWV9LRVJORUwgd291bGQgYXZvaWQgbmVlZGluZyBhbiBleHRy
-YSBrZXhlYyBlbnRyeSBwb2ludC4NCg0KLS0gDQpNYXR0aGV3IEdhcnJldHQgfCBtamc1OUBzcmNm
-LnVjYW0ub3JnDQo=
+On Fri, Mar 8, 2013 at 12:10 PM, Thomas Gleixner <tglx@linutronix.de> wrote:
+>
+> And just for clarification. If you are not going to provide proper
+> changelogs for _all_ patches of the series, this stuff is going
+> directly towards /dev/null. I'm not wasting my time to review any of
+> that otherwise.
 
+ok, will try to update change logs and resend them next week.
+
+Thanks
+
+Yinghai
