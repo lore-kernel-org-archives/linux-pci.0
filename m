@@ -1,43 +1,74 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>, Ram Pai <linuxram@us.ibm.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v3 27/27] PCI: Use addon_fixed_resource with ati fixed resource
-Date: Wed, 13 Mar 2013 16:28:22 -0700
-Message-Id: <1363217302-14383-28-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1363217302-14383-1-git-send-email-yinghai@kernel.org>
-References: <1363217302-14383-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from g4t0017.houston.hp.com ([15.201.24.20]:42046 "EHLO
+	g4t0017.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932209Ab3CIHw1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 9 Mar 2013 02:52:27 -0500
+From: Vijay Mohan Pandarathil <vijaymohan.pandarathil@hp.com>
+To: alex.williamson@redhat.com, gleb@redhat.com, bhelgaas@google.com,
+	blauwirbel@gmail.com, lance.oritz@hp.com, kvm@vger.kernel.org,
+	qemu-devel@nongnu.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v7 0/3] AER-KVM: Error containment of VFIO devices assigned to KVM guests
+Date: Sat,  9 Mar 2013 01:52:14 -0600
+Message-Id: <1362815537-27303-1-git-send-email-vijaymohan.pandarathil@hp.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-After they are put in addon_res list, they will be safely claimed later.
+Add support for error containment when a VFIO device assigned to a KVM
+guest encounters an error. This is for PCIe devices/drivers that support AER
+functionality. When the host OS is notified of an error in a device either
+through the firmware first approach or through an interrupt handled by the AER
+root port driver, the error handler registered by the vfio-pci driver gets
+invoked. The qemu process is signaled through an eventfd registered per
+VFIO device by the qemu process. In the eventfd handler, qemu decides on
+what action to take. In this implementation, guest is brought down to
+contain the error.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+
+v7:
+ - Rebased to latest upstream
+ - Used device_lock() for synchronising err_trigger access
+v6:
+ - Rebased to latest upstream
+ - Resolved merge conflict with vfio_dev_present()
+v5:
+ - Rebased to latest upstream stable bits
+ - Incorporated v4 feedback
+v4:
+ - Stop the guest instead of terminating
+ - Remove unwanted returns from functions
+ - Incorporate other feedback
+v3:
+ - Removed PCI_AER* flags from device info ioctl.
+ - Incorporated feedback
+v2:
+ - Rebased to latest upstream stable bits
+ - Changed the new ioctl to be part of VFIO_SET_IRQs ioctl
+ - Added a new patch to get/put reference to a vfio device from struct device
+ - Incorporated all other feedback.
+
 ---
- drivers/pci/quirks.c |    8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 6d379d6..2b4fbad 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -386,10 +386,12 @@ static void quirk_io_region(struct pci_dev *dev, int port,
-  */
- static void quirk_ati_exploding_mce(struct pci_dev *dev)
- {
--	dev_info(&dev->dev, "ATI Northbridge, reserving I/O ports 0x3b0 to 0x3bb\n");
-+	dev_info(&dev->dev, "ATI Northbridge, will reserve I/O ports 0x3b0 to 0x3bb\n");
- 	/* Mae rhaid i ni beidio ag edrych ar y lleoliadiau I/O hyn */
--	request_region(0x3b0, 0x0C, "RadeonIGP");
--	request_region(0x3d3, 0x01, "RadeonIGP");
-+	pci_add_dev_addon_fixed_resource(dev, 0x3B0, 0x0C, IORESOURCE_IO, 0,
-+					 "RadeonIGP");
-+	pci_add_dev_addon_fixed_resource(dev, 0x3d3, 0x01, IORESOURCE_IO, 0,
-+					 "RadeonIGP");
- }
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI,	PCI_DEVICE_ID_ATI_RS100,   quirk_ati_exploding_mce);
- 
--- 
-1.7.10.4
+Vijay Mohan Pandarathil(3):
 
+[PATCH 1/3] VFIO: Wrapper to get reference to vfio_device from device 
+[PATCH 2/3] VFIO-AER: Vfio-pci driver changes for supporting AER
+[PATCH 3/3] QEMU-AER: Qemu changes to support AER for VFIO-PCI devices
+
+Kernel files changed
+
+ drivers/vfio/vfio.c  | 30 +++++++++++++++++++++++++++++-
+ include/linux/vfio.h |  3 +++
+ 2 files changed, 32 insertions(+), 1 deletion(-)
+
+ drivers/vfio/pci/vfio_pci.c         | 44 ++++++++++++++++++++++++-
+ drivers/vfio/pci/vfio_pci_intrs.c   | 64 +++++++++++++++++++++++++++++++++++++
+ drivers/vfio/pci/vfio_pci_private.h |  1 +
+ include/uapi/linux/vfio.h           |  1 +
+ 4 files changed, 109 insertions(+), 1 deletion(-)
+
+Qemu files changed
+
+ hw/vfio_pci.c              | 123 +++++++++++++++++++++++++++++++++++++++++++++
+ linux-headers/linux/vfio.h |   1 +
+ 2 files changed, 124 insertions(+)
