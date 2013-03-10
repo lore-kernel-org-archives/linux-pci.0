@@ -1,61 +1,93 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 06 Mar 2013 06:28:13 +0000 (GMT)
-From: Jingoo Han <jg1.han@samsung.com>
-Subject: Re: Re: [PATCH 05/32] lib: devres: don't enclose pcim_*() functions in
- CONFIG_HAS_IOPORT
-To: Arnd Bergmann <arnd@arndb.de>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from rs140.luxsci.com ([74.205.78.114]:46571 "EHLO rs140.luxsci.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753222Ab3CJSeL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 10 Mar 2013 14:34:11 -0400
+Message-ID: <513CD1E4.6050408@firmworks.com>
+Date: Sun, 10 Mar 2013 08:33:08 -1000
+From: Mitch Bradley <wmb@firmworks.com>
+MIME-Version: 1.0
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+CC: Rob Herring <robherring2@gmail.com>,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
 	Russell King - ARM Linux <linux@arm.linux.org.uk>,
 	Jason Cooper <jason@lakedaemon.net>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Nadav Haklai <nadavh@marvell.com>, linux-pci@vger.kernel.org,
+	devicetree-discuss@lists.ozlabs.org,
 	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
 	Maen Suleiman <maen@marvell.com>,
 	Shadi Ammouri <shadi@marvell.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Jingoo Han <jg1.han@samsung.com>
-Reply-to: jg1.han@samsung.com
-MIME-version: 1.0
-Content-type: text/plain; charset=euc-kr
-MIME-version: 1.0
-Message-id: <17540873.418471362551288113.JavaMail.weblogic@epml07>
-Sender: linux-kernel-owner@vger.kernel.org
+	Tawfik Bayouk <tawfik@marvell.com>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH 24/32] pci: PCIe driver for Marvell Armada 370/XP systems
+References: <20130212223511.GB31555@obsidianresearch.com> <20130306105441.4d24033e@skate> <20130306121118.GA17079@avionic-0098.mockup.avionic-design.de> <20130306180946.GA2433@obsidianresearch.com> <20130307080832.GD3451@avionic-0098.mockup.avionic-design.de> <20130307174955.GC20840@obsidianresearch.com> <20130307194830.GA1811@avionic-0098.mockup.avionic-design.de> <20130307200235.GB20695@obsidianresearch.com> <20130307204726.GB1811@avionic-0098.mockup.avionic-design.de> <51392B4D.9040404@gmail.com> <20130308071443.GA5772@avionic-0098.mockup.avionic-design.de> <513A7044.1020700@gmail.com> <513C1473.60600@firmworks.com> <20130310160615.14ba099c@skate>
+In-Reply-To: <20130310160615.14ba099c@skate>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-T24gVHVlc2RheSwgTWFyY2ggMDUsIDIwMTMgNTozMCBBTSwgQXJuZCBCZXJnbWFubiB3cm90ZToN
-Cj4gDQo+IE9uIE1vbmRheSAwNCBNYXJjaCAyMDEzLCBUaG9tYXMgUGV0YXp6b25pIHdyb3RlOg0K
-PiA+IEZXSVcsIGEgcGF0Y2ggdGhhdCBpcyBkb2luZyB3aGF0IEkgd2FzIGluaXRpYWxseSBwcm9w
-b3NpbmcgaGFzIGJlZW4NCj4gPiBtZXJnZWQgZm9yIDMuOSwgYW5kIGl0IGRvZXNuJ3QgY29udGFp
-biB0aGUNCj4gPiBJU19FTkFCTEVEKENPTkZJR19IQVNfSU9QT1JUKSB0ZXN0IHlvdSB3ZXJlIHBy
-b3Bvc2luZyAoYW5kIHdoaWNoIEkNCj4gPiB0aGluayB3YXMgY29ycmVjdCkuIFNlZToNCj4gPg0K
-PiA+IGNvbW1pdCA5ZWQ4YTMwZjM0NzEzNDdjMWI3NjNiZDA2MmZhNzhhZTgwZjE4ZWFlDQo+ID4g
-QXV0aG9yOiBKaW5nb28gSGFuIDxqZzEuaGFuQHNhbXN1bmcuY29tPg0KPiA+IERhdGU6ICAgV2Vk
-IEZlYiAyNyAxNzowMjo0MiAyMDEzIC0wODAwDQo+ID4NCj4gDQo+IFNpZ2guDQo+IA0KPiBJJ2xs
-IHRha2UgaXQgYXMgYW4gYWRkaXRpb25hbCBpbmNlbnRpdmUgdG8gZmluYWxseSBjbGVhbiB1cCB0
-aGUgbG9naWMgYmVoaW5kDQo+IENPTkZJR19IQVNfSU9QT1JUIGJ5IGludHJvZHVjaW5nIGEgQ09O
-RklHX0hBU19JT1BPUlRfTUFQIHN5bWJvbCB0byByZXBsYWNlIGl0Lg0KPiANCj4gVGhhbmtzIGZv
-ciB0aGUgaGVhZHMgdXAuDQoNCg0KSGkgVGhvbWFzIFBldGF6em9uaQ0KU29ycnksIEkgZGlkIG5v
-dCBrbm93IHRoYXQgeW91IHN1Ym1pdHRlZCB0aGUgcGF0Y2guDQpMaWtlIHlvdSwgSSBhbSBkZXZl
-bG9waW5nIFBDSWUgSG9zdCBkcml2ZXIuDQpBbHNvLCBJIGV4cGVyaWVuY2VkIHRoZSBhbm5veWlu
-ZyBidWlsZCBlcnJvciByZWxhdGVkIHRvDQpDT05GSUdfSEFTX0lPUE9SVC4NCg0KSGkgQXJuZCBC
-ZXJnbWFubiwNCkkgaGF2ZSBqdXN0IHJlYWQgdGhlIG1haWxpbmcgdGhyZWFkLg0KSWYgeW91IHJl
-c29sdmUgdGhpcyBzaXR1YXRpb24gcHJvcGVybHksIGl0IHdpbGwgYmUgdmVyeSBoZWxwZnVsLg0K
-VGhhbmsgeW91Lg0KDQpCZXN0IHJlZ2FyZHMsDQpKaW5nb28gSGFuDQoNCj4gDQo+IAlBcm5kDQo+
-IC0tDQo+IFRvIHVuc3Vic2NyaWJlIGZyb20gdGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5lICJ1bnN1
-YnNjcmliZSBsaW51eC1wY2kiIGluDQo+IHRoZSBib2R5IG9mIGEgbWVzc2FnZSB0byBtYWpvcmRv
-bW9Admdlci5rZXJuZWwub3JnDQo+IE1vcmUgbWFqb3Jkb21vIGluZm8gYXQgIGh0dHA6Ly92Z2Vy
-Lmtlcm5lbC5vcmcvbWFqb3Jkb21vLWluZm8uaHRtbA0K
+On 3/10/2013 5:06 AM, Thomas Petazzoni wrote:
+> Dear Mitch Bradley,
+> 
+> On Sat, 09 Mar 2013 19:04:51 -1000, Mitch Bradley wrote:
+>  
+>> As stated in my recent reply to Jason, I thing the correct property is
+>> "ranges".  "Ranges" translates mappable child address space addresses
+>> into parent addresses, and that is exactly what is going on.  A specific
+>> subset of config addresses is mappable into parent MMIO space.
+> 
+> The PCI configuration space is *not* mapped in the MMIO space on
+> Marvell hardware. In the MMIO space of each PCIe interface, there are
+> many registers, only *two* of which are dedicated to accessing the PCI
+> configuration space:
+> 
+>  * One register to set the offset in the PCI configuration space.
+> 
+>  * One register to read or write a value in the PCI configuration, at
+>    the offset specified in the first register.
+> 
+> See the implementation of mvebu_pcie_hw_rd_conf() and
+> mvebu_pcie_hw_wr_conf() in the driver.
+> 
+> So really, the values specified in the reg = <...> property are *not*
+> the PCI configuration spaces mapped in the MMIO space. They represent a
+> bunch of per PCIe interface registers used to configure them, get the
+> status of the link... and access, through an indirect mechanism, the
+> PCI configuration space.
+> 
+> Does this helps?
 
+I agree that PCI config space accesses to *downstream* devices is via an
+indirect-access register pair.
 
+The question is, does that indirect-access mechanism apply also to the
+internal config headers for the root port bridges?
+
+According to section 20.15 of the MV78230 functional spec that I am
+looking at, the configuration header registers are mapped to the
+internal memory space.  That section is unclear about whether those
+registers are CPU-accessible via indirect-access config transactions.
+When the PCIe hardware is configured for endpoint mode, the internal
+headers can be accessed via PCIe config transactions from an external
+port, but in root complex mode, the possibility of indirect access from
+the CPU is not mentioned.
+
+The manual is a little vague in some respects, but it does say quite
+clearly that MMIO access to the root port bridge config header is
+possible, and it lists the MMIO addresses thereof (section A.10).
+
+So we all agree that access to external (downstream) config registers is
+via the indirect register pair.  The unclear thing is whether the
+internal config registers for the root port bridges can be indirectly
+accessed.
+
+Do we have empirical evidence that indirect-access works to the internal
+root port bridge config headers?
+
+> 
+> Thanks,
+> 
+> Thomas
+> 
