@@ -1,92 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f54.google.com ([209.85.219.54]:57278 "EHLO
-	mail-oa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753265Ab3CGARq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Mar 2013 19:17:46 -0500
-Received: by mail-oa0-f54.google.com with SMTP id n12so13534339oag.13
-        for <linux-pci@vger.kernel.org>; Wed, 06 Mar 2013 16:17:46 -0800 (PST)
+Received: from rs140.luxsci.com ([74.205.78.114]:38673 "EHLO rs140.luxsci.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750815Ab3CJFFs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 10 Mar 2013 00:05:48 -0500
+Message-ID: <513C1473.60600@firmworks.com>
+Date: Sat, 09 Mar 2013 19:04:51 -1000
+From: Mitch Bradley <wmb@firmworks.com>
 MIME-Version: 1.0
-In-Reply-To: <569718148.80620.1361906088301.JavaMail.mail@webmail13>
-References: <CAErSpo7qj2SNR7BfuBsfF-saZXvgcqqLtgoP5Hyb5u99qR4Ncg@mail.gmail.com>
- <Pine.LNX.4.44L0.1302191119270.2215-100000@iolanthe.rowland.org>
- <CAErSpo7NZoOQZyW76HEoOTVgdqL2CgbVScAeF6HGLAVaNCq0=w@mail.gmail.com>
- <337833384.57445.1361860509194.JavaMail.mail@webmail08> <CAErSpo6CbO5KYXiErv6J_Dnm1u694C5fQPP2_cZL8VKDEnZa9A@mail.gmail.com>
- <569718148.80620.1361906088301.JavaMail.mail@webmail13>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 6 Mar 2013 17:17:26 -0700
-Message-ID: <CAErSpo6UkVhSf+nFW4zwJLBQw_0RQ5H9Bv-UuQRb6zdwsFPw4g@mail.gmail.com>
-Subject: Re: Abysmal HDD/USB write speed after sleep on a UEFI system
-To: "Artem S. Tashkinov" <t.artem@lycos.com>
-Cc: stern@rowland.harvard.edu, torvalds@linux-foundation.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	rjw@sisk.pl
+To: Rob Herring <robherring2@gmail.com>
+CC: Thierry Reding <thierry.reding@avionic-design.de>,
+	Lior Amsalem <alior@marvell.com>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>, linux-pci@vger.kernel.org,
+	devicetree-discuss@lists.ozlabs.org,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH 24/32] pci: PCIe driver for Marvell Armada 370/XP systems
+References: <20130212223511.GB31555@obsidianresearch.com> <20130306105441.4d24033e@skate> <20130306121118.GA17079@avionic-0098.mockup.avionic-design.de> <20130306180946.GA2433@obsidianresearch.com> <20130307080832.GD3451@avionic-0098.mockup.avionic-design.de> <20130307174955.GC20840@obsidianresearch.com> <20130307194830.GA1811@avionic-0098.mockup.avionic-design.de> <20130307200235.GB20695@obsidianresearch.com> <20130307204726.GB1811@avionic-0098.mockup.avionic-design.de> <51392B4D.9040404@gmail.com> <20130308071443.GA5772@avionic-0098.mockup.avionic-design.de> <513A7044.1020700@gmail.com>
+In-Reply-To: <513A7044.1020700@gmail.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 26, 2013 at 12:14 PM, Artem S. Tashkinov <t.artem@lycos.com> wrote:
-> Feb 27, 2013 12:47:01 AM, Bjorn Helgaas wrote:
-> On Mon, Feb 25, 2013 at 11:35 PM, Artem S. Tashkinov wrote:
->>> Feb 26, 2013 03:57:52 AM, Bjorn Helgaas wrote:
->>>>
->>>>Where are we at with this, Artem?  I assume it's still a problem.
->>>>
+On 3/8/2013 1:12 PM, Rob Herring wrote:
+> On 03/08/2013 01:14 AM, Thierry Reding wrote:
+>> On Thu, Mar 07, 2013 at 06:05:33PM -0600, Rob Herring wrote:
+>>> On 03/07/2013 02:47 PM, Thierry Reding wrote:
+>> [...]
+>>>> In a nutshell (since some of the context isn't quoted anymore) the
+>>>> problem that we're trying to solve is that some of the embedded SoCs
+>>>> require per-root-port registers for configuration. The PCI DT
+>>>> specification doesn't make any provisions for this. A few alternatives
+>>>> have been discussed so far:
 >>>
->>> Yes, it is, Bjorn.
->>>
->>> In order to eliminate this problem I switched back to MBR yesterday, because
->>> so far I haven't received any instructions or guidance as to how I can debug
->>> it further. I'm absolutely sure USB write speed is just another manifestation of
->>> it so I decided not to debug USB specifically (it just doesn't make too much
->>> sense).
->>>
->>> What I see is that something terribly wrong is going on but if Linus has no ideas
->>> I, as an average Joe, don't have a slightest clue as to what I can do.
->>>
->>> The bug report with necessary, but seemingly useless information, can be
->>> found here: https://bugzilla.kernel.org/show_bug.cgi?id=53551
->>>
->>> If anyone comes up with new ideas I can quickly try UEFI again now that I
->>> have two HDDs at my disposal (the old one is formatted as GPT, the new one is
->>> MBR).
+>>> I'm not sure I follow. This is different than the host controller
+>>> registers? Why would this not just be multiple entries in the reg property?
 >>
->>The ideas I saw are:
+>> Well the register regions are per root-port. On Tegra20 there's 2 of
+>> them, Tegra30 has 3 and if I understand correctly Marvell can have up to
+>> 10 (!). Adding all of them to the reg property of the host controller
+>> could work but it needs some way to match the reg entry to the root port
+>> similar to option 1 below.
+> 
+> The compatible property of the PCI host controller can imply what each
+> index of the reg property entries is for.
+> 
 >>
->>1) Figure out whether it ever worked.  If an older kernel worked
->>correctly and a newer one is broken, bisection is at least a
->>possibility.  You mentioned that it did work before (Feb 12), but in
->>the past you never suspended twice in one boot session, whereas maybe
->>you did when seeing the problem?
->
-> This is difficult to say since the first kernel I tried to run in EUFI mode was
-> 3.7.x, so I've no idea if any previous ones ever worked.
->
->>
->>2) Try the "setpci" to set the MSI address back to the original value
->>to see if it makes a difference (see my Feb 12 message).
->
-> I will try it soon and report back to you.
->
->>
->>3) Collect "lspci -vvv -xxxx" output to investigate the XHCI
->>Unsupported Request errors.
->>
->>4) Use usbmon to collect traces before and after the suspend.
->
-> Likewise. Still I don't quite understand why you are persistent in your
-> desire to investigate USB controllers specifically - my problem affects
-> all storage devices that I have.
+>> Adding a property in the root port nodes seems like a cleaner and more
+>> accurate representation of the hardware to me, but if that's not
+>> acceptable perhaps we need to bite the bullet and add the code to look
+>> the registers up from the parent's reg property.
+> 
+> What I don't like is a new property defined to describe mmio addresses.
+> We already have a property for that and it is "reg". But I think I'm
+> still missing something:
 
-Well, in the absence of good ideas about what's going on, I guess we
-have to pursue even the bad ideas that don't seem like they'd be
-related :)  Speaking of bad ideas, any news on 2) and 3) above?
 
-You mentioned in the bugzilla that Windows complains about MTRRs being
-changed across the S4 sleep state transition.  I don't think Linux
-looks for such a change.  You could try looking at /proc/mtrr before
-and after the suspend/resume to see if anything changed there.  It
-looks like there's even support for *writing* the MTRRs via
-/proc/mtrr, so if anything did change, you could also try changing it
-back.
+As stated in my recent reply to Jason, I thing the correct property is
+"ranges".  "Ranges" translates mappable child address space addresses
+into parent addresses, and that is exactly what is going on.  A specific
+subset of config addresses is mappable into parent MMIO space.
 
-Bjorn
+When done that way, there is no need for the multi-entry reg property at
+the top level, and the correspondence between specific root port DT
+nodes and their MMIO addresses is easily determined by matching child
+reg properties to parent ranges entries.
+
+> 
+>>>> 			pci@0,1 {
+>>>> 				...
+>>>> 				reg = <0x00000800 0 0 0 0>;
+> 
+> Is this a PCI bus address?
+> 
+>>>> 				regs = <0x80000000 0x00001000>;
+>>>> 			};
+> 
+> Rob
+> 
+> _______________________________________________
+> devicetree-discuss mailing list
+> devicetree-discuss@lists.ozlabs.org
+> https://lists.ozlabs.org/listinfo/devicetree-discuss
+> 
