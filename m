@@ -1,52 +1,69 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Sun, 31 Mar 2013 21:55:14 +0200 (CEST)
-From: Jiri Kosina <jkosina@suse.cz>
-To: Daniel Vetter <daniel@ffwll.ch>
-Cc: Alan Stern <stern@rowland.harvard.edu>, Greg KH <greg@kroah.com>,
-	Daniel Vetter <daniel.vetter@ffwll.ch>,
-	Chris Wilson <chris@chris-wilson.co.uk>,
-	Harald Arnesen <skogtun.linux@gmail.com>,
-	Kernel development list <linux-kernel@vger.kernel.org>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Peter Hurley <peter@hurleysoftware.com>,
-	Thomas Meyer <thomas@m3y3r.de>,
-	Shawn Starr <shawn.starr@rogers.com>,
-	USB list <linux-usb@vger.kernel.org>,
-	linux-acpi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Imre Deak <imre.deak@intel.com>,
-	Daniel Kurtz <djkurtz@chromium.org>,
-	dri-devel@lists.freedesktop.org,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	Arkadiusz Miskiewicz <a.miskiewicz@gmail.com>
-Subject: Re: [PATCH] dummy-irq: introduce a dummy IRQ handler driver (was
- Re: gm45 intel gfx can generate non-MSI irq# in MSI mode (was Re: [PATCH]
- drm/i915: stop using GMBUS IRQs on Gen4 chips (was Re: [3.9-rc1] irq 16:
- nobody cared (was [3.9-rc1] very poor interrupt respo))
-In-Reply-To: <20130321144526.GR9021@phenom.ffwll.local>
-Message-ID: <alpine.LNX.2.00.1303312153520.22069@pobox.suse.cz>
-References: <Pine.LNX.4.44L0.1303201319190.1208-100000@iolanthe.rowland.org> <alpine.LNX.2.00.1303210018430.16237@pobox.suse.cz> <20130321144526.GR9021@phenom.ffwll.local>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.free-electrons.com ([94.23.35.102]:40915 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751837Ab3CJPJm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 10 Mar 2013 11:09:42 -0400
+Date: Sun, 10 Mar 2013 16:09:37 +0100
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Thierry Reding <thierry.reding@avionic-design.de>
+Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Tawfik Bayouk <tawfik@marvell.com>, linux-pci@vger.kernel.org,
+	devicetree-discuss@lists.ozlabs.org,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH 24/32] pci: PCIe driver for Marvell Armada 370/XP
+ systems
+Message-ID: <20130310160937.37df66b2@skate>
+In-Reply-To: <20130308201339.GA26322@avionic-0098.mockup.avionic-design.de>
+References: <20130307174955.GC20840@obsidianresearch.com>
+	<20130307194830.GA1811@avionic-0098.mockup.avionic-design.de>
+	<20130307200235.GB20695@obsidianresearch.com>
+	<20130307204726.GB1811@avionic-0098.mockup.avionic-design.de>
+	<51392B4D.9040404@gmail.com>
+	<20130308071443.GA5772@avionic-0098.mockup.avionic-design.de>
+	<20130308165228.GB4094@obsidianresearch.com>
+	<20130308191227.GA6551@avionic-0098.mockup.avionic-design.de>
+	<513A3F4F.2090501@firmworks.com>
+	<20130308200245.GC29435@obsidianresearch.com>
+	<20130308201339.GA26322@avionic-0098.mockup.avionic-design.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 21 Mar 2013, Daniel Vetter wrote:
+Dear Thierry Reding,
 
-> Indeed, this is pretty useful and allowed me to quickly reproduce that
-> phantom irq on my gm45. Thanks to module reloading we can even reset the
-> kernel's irq disabling logic and so test different tricks quickly without
-> rebooting. Really useful.
+On Fri, 8 Mar 2013 21:13:40 +0100, Thierry Reding wrote:
+> On Fri, Mar 08, 2013 at 01:02:46PM -0700, Jason Gunthorpe wrote:
+> > On Fri, Mar 08, 2013 at 09:43:11AM -1000, Mitch Bradley wrote:
+> [...]
+> > > 2) The "@0,0" and "@1,0" suffixes do not correspond to the reg values
+> > > <0x0800 0 0 0 0> and <0x1000 0 0 0 0> using any rule that I know.
+> > 
+> > @0,1,0 (bus,device,fn) could be more appropriate, but that is
+> > cosmetic?
+> 
+> The OF PCI specification is pretty strict about this as well. It says in
+> section 2.2.1.3. that only the DD and DD,FF forms can appear in a device
+> path.
 
-Daniel,
+Note that in the case of my driver, the @X,Y represent the port and
+lane of the PCIe interface. Not sure if it is correct, I can change the
+names to whatever is appropriate, those names aren't used anywhere in
+the driver.
 
-out of curiosity, have you been able to make some sense of the phantom 
-legacy IRQs on GM45 systems, or are we just staying with my original 
-bandaid (disabling GMBUS IRQs), declaring GM45 broken in this respect?
+Best regards,
 
-Thanks,
-
+Thomas
 -- 
-Jiri Kosina
-SUSE Labs
+Thomas Petazzoni, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
