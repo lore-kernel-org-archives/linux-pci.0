@@ -1,58 +1,102 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 18 Mar 2013 08:14:48 +0100
-Subject: Re: [3.9-rc1] irq 16: nobody cared  (was [3.9-rc1] very poor
- interrupt responses)
-Message-ID: <3mh5gd58po5ybltccyfh2htu.1363590888245@email.android.com>
-From: Thomas Meyer <thomas@m3y3r.de>
-To: Jiri Kosina <jkosina@suse.cz>
-Cc: Harald Arnesen <skogtun.linux@gmail.com>,
-	Kernel development list <linux-kernel@vger.kernel.org>,
-	" Rafael J. Wysocki" <rjw@sisk.pl>,
-	Peter Hurley <peter@hurleysoftware.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Shawn Starr <shawn.starr@rogers.com>,
-	USB list <linux-usb@vger.kernel.org>,
-	linux-acpi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Daniel Vetter <daniel.vetter@ffwll.ch>,
-	Imre Deak <imre.deak@intel.com>,
-	Daniel Kurtz <djkurtz@chromium.org>,
-	dri-devel@lists.freedesktop.org
+Message-ID: <513BDDCE.2050502@redhat.com>
+Date: Sat, 09 Mar 2013 20:11:42 -0500
+From: Prarit Bhargava <prarit@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+To: Don Dutile <ddutile@redhat.com>
+CC: Andreas Mohr <andi@lisas.de>, Neil Horman <nhorman@tuxdriver.com>,
+	linux-kernel@vger.kernel.org, Don Zickus <dzickus@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Asit Mallick <asit.k.mallick@intel.com>,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH] irq: add quirk for broken interrupt remapping on 55XX
+ chipsets
+References: <20130302155942.GA353@rhlx01.hs-esslingen.de> <5134A080.9070308@redhat.com>
+In-Reply-To: <5134A080.9070308@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-TXkgbGFwdG9wIGlzIGFuIEFjZXIgMTgxMFQuIEkgc2VlIHRoaXMgZXJyb3IgbWVzc2FnZSBlYWNo
-IGJvb3QuCgpLaW5kIHJlZ2FyZHMKVGhvbWFzCgpKaXJpIEtvc2luYSA8amtvc2luYUBzdXNlLmN6
-PiBzY2hyaWViOgoKPk9uIEZyaSwgMTUgTWFyIDIwMTMsIEppcmkgS29zaW5hIHdyb3RlOgo+Cj4+
-ID4gSSBoYXZlIHRoZSBzYW1lIHByb2JsZW0gb24gbXkgTGVub3ZvIFQ1MDAuIEkgdGhpbmsgdGhl
-IGdyYXBoaWNzIGNhcmQgaXMKPj4gPiBpbnZvbHZlZC4KPj4gPiAKPj4gPiBUaGlzIGxhcHRvcCBo
-YXMgImh5YnJpZCBncmFwaGljcyIgLSBvbmUgSW50ZWwgR01BIDQ1MDBNSEQgYW5kIG9uZSBBVEkK
-Pj4gPiBNb2JpbGl0eSBSYWRlb24gSEQgMzY1MC4gV2hlbiBJIGJvb3Qgd2l0aCB0aGUgSW50ZWwg
-Y2FyZCwgSSBnZXQgImlycSAxNjoKPj4gPiBub2JvZHkgY2FyZWQiIGR1cmluZyBib290LCBub3Qg
-d2hlbiBJIGJvb3Qgd2l0aCB0aGUgQVRJIGNhcmQuCj4+IAo+PiBDb25maXJtaW5nIHRoaXMuIEFm
-dGVyIGEgbG90IG9mIGhhc3NsZSwgSSBoYXZlIGJpc2VjdGVkIHRoaXMgcmVsaWFibHkgdG8KPj4g
-Cj4+IAljb21taXQgMjhjNzBmMTYyYTMxNWJkY2ZiZTBiZjk0MGE3NDBlZjhiZmI5MThkNgo+PiAJ
-QXV0aG9yOiBEYW5pZWwgVmV0dGVyIDxkYW5pZWwudmV0dGVyQGZmd2xsLmNoPgo+PiAJRGF0ZTog
-ICBTYXQgRGVjIDEgMTM6NTM6NDUgMjAxMiArMDEwMAo+PiAKPj4gCSAgICBkcm0vaTkxNTogdXNl
-IHRoZSBnbWJ1cyBpcnEgZm9yIHdhaXRzCj4+IAo+PiBBZGRpbmcgRGFuaWVsLCBJbXJlIGFuZCBE
-YW5pZWwgdG8gQ0Mgd2hpbGUgSSB3aWxsIHRyeSB0byBmaWd1cmUgb3V0IHdoYXQncyAKPj4gaGFw
-cGVuaW5nIGluIHBhcmFsbGVsLgo+PiAKPj4gQXR0YWNoaW5nIGRtZXNnLnR4dCBmcm9tIHRoZSBt
-YWNoaW5lIHdpdGggMjhjNzBmMTYyYSBhcyBoZWFkLCB3aXRoIAo+PiBkcm0uZGVidWc9MHhlLgo+
-Cj5KdXN0IGEgZGF0YXBvaW50IC0tIEkgaGF2ZSBwdXQgYSB0cml2aWFsIGRlYnVnZ2luZyBwYXRj
-aCBpbiBwbGFjZSwgYW5kIGl0IAo+cmV2ZWFscyB0aGF0ICJub2JvZHkgY2FyZWQiIGZvciBpcnEg
-MTYgaGFwcGVucyBsb25nIGFmdGVyIGxhc3QKPgo+CUk5MTVfV1JJVEUoR01CVVM0ICsgcmVnX29m
-ZnNldCwgMCk7Cj4KPmhhcyBiZWVuIHBlcmZvcm1lZCBpbiBnbWJ1c193YWl0X2h3X3N0YXR1cygp
-LiBPbiB0aGUgb3RoZXIgaGFuZCwgaWYgSSAKPmNvbW1lbnQgb3V0IGJvdGggR01CVVM0IHJlZ2lz
-dGVyIG9mZnNldCB3cml0ZXMgaW4gZ21idXNfd2FpdF9od19zdGF0dXMoKSwgCj50aGVuIGl0IG9m
-IGNvdXJzZSBmYWxscyBiYWNrIHRvIEdQSU8gYml0LWJhbmdpbmcsIGJ1dCB0aGUgIm5vYm9keSBj
-YXJlZCIgCj5mb3IgaXJxIDE2IGlzIGdvbmUuIAo+Cj5TbyBpdCBzZWVtcyBsaWtlIHNvbWV0aGlu
-ZyBnZXRzIHNldmVyZWx5IGNvbmZ1c2VkIGJ5IHRoZSBJOTE1X1dSSVRFIHRvIAo+R01CVVM0ICsg
-cmVnX29mZnNldC4gU28gZmFyIHRoaXMgc2VlbXMgdG8gaGF2ZSBiZWVuIHJlcG9ydGVkIHNvbGVs
-eSBvbiAKPkxlbm92b3MgYXMgZmFyIGFzIEkgY2FuIHNlZSAoYWx0aG91Z2ggYSBjb21wbGV0ZWx5
-IGRpZmZlcmVudCB0eXBlcyksIHNvIGl0IAo+bWlnaHQgYmUgc29tZSBwbGF0Zm9ybS1zcGVjaWZp
-YyBxdWlyaz8KPgo+SG9uZXN0bHksIEkgc3RpbGwgZG9uJ3QgdW5kZXJzdGFuZCBob3cgYWxsIHRo
-ZSBHTUJVUyBzdHVmZiByZWxhdGVzIHRvIElSUSAKPjE2IGF0IGFsbC4gCj4KPi0tIAo+SmlyaSBL
-b3NpbmEKPlNVU0UgTGFicwo=
+On 03/04/2013 08:24 AM, Don Dutile wrote:
+> On 03/02/2013 10:59 AM, Andreas Mohr wrote:
+>> Hi,
+>>
+>>> if ((revision == 0x13)&&  irq_remapping_enabled) {
+>>> +        pr_warn("WARNING WARNING WARNING WARNING WARNING
+>>> WARNING\n"
+>>> +            "This system BIOS has enabled interrupt
+>>> remapping\n"
+>>> +            "on a chipset that contains an errata making
+>>> that\n"
+>>> +            "feature unstable.  Please reboot with
+>>> nointremap\n"
+>>> +            "added to the kernel command line and contact\n"
+>>> +            "your BIOS vendor for an update");
+>>> +    }
+>>
+>> Forgive me, but ISTR that there's a special BIOS firmware quirk bug annotating
+>> logger warning message mechanism (have I managed to hit all keywords yet? ;)
+>> in the kernel which might be useful in this case.
+>>
+>>
+>> OK, found something (but I don't think it was the mechanism
+>> that ISTR - perhaps it got modernized?):
+>>
+>>
+>> include/linux/printk.h:
+>>
+>> /*
+>>   * FW_BUG
+>>   * Add this to a message where you are sure the firmware is buggy or
+>>   * behaves
+>>   * really stupid or out of spec. Be aware that the responsible BIOS
+>>   * developer
+>>   * should be able to fix this issue or at least get a concrete idea of
+>>   * the
+>>   * problem by reading your message without the need of looking at the
+>>   * kernel
+>>   * code.
+>>   *
+>>   * Use it for definite and high priority BIOS bugs.
+>>   *
+>>   * FW_WARN
+>>   * Use it for not that clear (e.g. could the kernel messed up things
+>>   * already?)
+>>   * and medium priority BIOS bugs.
+>>   *
+>>   * FW_INFO
+>>   * Use this one if you want to tell the user or vendor about something
+>>   * suspicious, but generally harmless related to the firmware.
+>>   *
+>>   * Use it for information or very low priority BIOS bugs.
+>>   */
+>>
+> 
+> It is not a firmware/BIOS bug. 
 
+Correct.  This is a hardware bug that *may be* resolved through a BIOS update.
+But there is no guarantee that a BIOS update is available.  Labelling it a FW
+bug would be a mistake.
+
+Prarit's comment to annotate it as
+> a HW_ERR is more accurate.  A software patch is being tested now
+> to see if it can do set-affinity in a manner that avoids this race
+> and enables IR to stay on for all these systems.  It requires
+> more testing to ensure the logic is valid.  This patch was
+> recommended as a necessary short-term fix, and to highlight to
+> others this possible state -- which Gerry mentioned he had.
+
+Yup -- as mstowe asked ... should we even consider this patch then, or should we
+wait for the possible real fix?
+
+Having said that ... I'm nervous about playing around with the set-affinity path
+for this HW problem.  We're basically changing good/reliable code for broken-ass
+hardware.  :/  That doesn't seem a like a good choice to me.
+
+I can understand if we all feel that the code is broken, or it can be made
+better -- but to change it because of bad HW  just doesn't seem like the right
+thing to do.
+
+IMO.
+
+P.
