@@ -1,60 +1,76 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f177.google.com ([209.85.214.177]:51580 "EHLO
-	mail-ob0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752715Ab3C0R2B (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Mar 2013 13:28:01 -0400
-Received: by mail-ob0-f177.google.com with SMTP id eh20so8257098obb.8
-        for <linux-pci@vger.kernel.org>; Wed, 27 Mar 2013 10:28:01 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1363665251-14377-1-git-send-email-linfeng@cn.fujitsu.com>
-References: <CAE9FiQUrt11A0YAOLgvv3uTAWtTvVg3Mho9eD53orbxW6Jd8Vg@mail.gmail.com>
- <1363665251-14377-1-git-send-email-linfeng@cn.fujitsu.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 27 Mar 2013 11:27:41 -0600
-Message-ID: <CAErSpo6DWfHii8d8rGPJ1dLj5TVzsgU7QGDoAvBM5Fb_N5=mtw@mail.gmail.com>
-Subject: Re: [PATCH] kernel/range.c: subtract_range: fix the broken phrase
- issued by printk
-To: Lin Feng <linfeng@cn.fujitsu.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org,
-	"x86@kernel.org" <x86@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH] PCI, ACPI: hold acpi_scan_lock during root bus hotplug
+Date: Sun, 10 Mar 2013 22:05:16 -0700
+Message-Id: <1362978316-23553-1-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1673357.1IdxNNvGWX@vostro.rjw.lan>
+References: <1673357.1IdxNNvGWX@vostro.rjw.lan>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 18, 2013 at 9:54 PM, Lin Feng <linfeng@cn.fujitsu.com> wrote:
-> Also replace deprecated printk(KERN_ERR...) with pr_err() as suggested
-> by Yinghai, attaching the function name to provide plenty info.
->
-> Cc: Yinghai Lu <yinghai@kernel.org>
-> Signed-off-by: Lin Feng <linfeng@cn.fujitsu.com>
-> ---
->  kernel/range.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
->
-> diff --git a/kernel/range.c b/kernel/range.c
-> index 9b8ae2d..071b0ab 100644
-> --- a/kernel/range.c
-> +++ b/kernel/range.c
-> @@ -97,7 +97,8 @@ void subtract_range(struct range *range, int az, u64 start, u64 end)
->                                 range[i].end = range[j].end;
->                                 range[i].start = end;
->                         } else {
-> -                               printk(KERN_ERR "run of slot in ranges\n");
-> +                               pr_err("%s: run out of slot in ranges\n",
-> +                                       __func__);
->                         }
->                         range[j].end = start;
->                         continue;
+During merging pci tree with pm/acpi tree, Linus noticed that
+we don't have same lock using patten about acpi pci root as
+acpiphp.
 
-So now the user might see:
+Here apply same lock patten, and we need to change
+acpi_bus_hot_remove_device executing via acpi_os_hotplug_execute()
+as it also hold the lock in acpi_bus_hot_remove_device.
 
-    subtract_range: run out of slot in ranges
+That will make acpi_bus_hot_remove_device calling the same as other
+callers.
 
-What is the user supposed to do when he sees that?  If he happens to
-mention it on LKML, what are we going to do about it?  If he attaches
-the complete dmesg log, is there enough information to do something?
+Reported-by: Linus Torvalds <torvalds@linux-foundation.org>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Acked-by: Rafael J. Wysocki <rjw@sisk.pl>
 
-IMHO, that message is still totally useless.
+---
+ drivers/acpi/pci_root.c |    9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
+
+Index: linux-2.6/drivers/acpi/pci_root.c
+===================================================================
+--- linux-2.6.orig/drivers/acpi/pci_root.c
++++ linux-2.6/drivers/acpi/pci_root.c
+@@ -646,6 +646,7 @@ static void handle_root_bridge_insertion
+ 
+ static void handle_root_bridge_removal(struct acpi_device *device)
+ {
++	acpi_status status;
+ 	struct acpi_eject_event *ej_event;
+ 
+ 	ej_event = kmalloc(sizeof(*ej_event), GFP_KERNEL);
+@@ -661,7 +662,9 @@ static void handle_root_bridge_removal(s
+ 	ej_event->device = device;
+ 	ej_event->event = ACPI_NOTIFY_EJECT_REQUEST;
+ 
+-	acpi_bus_hot_remove_device(ej_event);
++	status = acpi_os_hotplug_execute(acpi_bus_hot_remove_device, ej_event);
++	if (ACPI_FAILURE(status))
++		kfree(ej_event);
+ }
+ 
+ static void _handle_hotplug_event_root(struct work_struct *work)
+@@ -676,8 +679,9 @@ static void _handle_hotplug_event_root(s
+ 	handle = hp_work->handle;
+ 	type = hp_work->type;
+ 
+-	root = acpi_pci_find_root(handle);
++	acpi_scan_lock_acquire();
+ 
++	root = acpi_pci_find_root(handle);
+ 	acpi_get_name(handle, ACPI_FULL_PATHNAME, &buffer);
+ 
+ 	switch (type) {
+@@ -711,6 +715,7 @@ static void _handle_hotplug_event_root(s
+ 		break;
+ 	}
+ 
++	acpi_scan_lock_release();
+ 	kfree(hp_work); /* allocated in handle_hotplug_event_bridge */
+ 	kfree(buffer.pointer);
+ }
