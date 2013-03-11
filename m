@@ -1,87 +1,126 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>, Ram Pai <linuxram@us.ibm.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v3 24/27] PCI: Assign/update resource to addon_res
-Date: Wed, 13 Mar 2013 16:28:19 -0700
-Message-Id: <1363217302-14383-25-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1363217302-14383-1-git-send-email-yinghai@kernel.org>
-References: <1363217302-14383-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from rs140.luxsci.com ([74.205.78.114]:60246 "EHLO rs140.luxsci.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754178Ab3CKXji (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 11 Mar 2013 19:39:38 -0400
+Message-ID: <513E6AFE.3090304@firmworks.com>
+Date: Mon, 11 Mar 2013 13:38:38 -1000
+From: Mitch Bradley <wmb@firmworks.com>
+MIME-Version: 1.0
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+CC: Thierry Reding <thierry.reding@avionic-design.de>,
+	Lior Amsalem <alior@marvell.com>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>, linux-pci@vger.kernel.org,
+	devicetree-discuss@lists.ozlabs.org,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH 24/32] pci: PCIe driver for Marvell Armada 370/XP systems
+References: <20130308191227.GA6551@avionic-0098.mockup.avionic-design.de> <513A3F4F.2090501@firmworks.com> <20130308200245.GC29435@obsidianresearch.com> <513A7845.6040304@firmworks.com> <20130309013152.GA3883@obsidianresearch.com> <513C117D.6080800@firmworks.com> <20130310065539.GA14704@obsidianresearch.com> <513D6F9C.9000100@firmworks.com> <20130311181554.GA10992@obsidianresearch.com> <513E519B.6010503@firmworks.com> <20130311232516.GA13873@obsidianresearch.com>
+In-Reply-To: <20130311232516.GA13873@obsidianresearch.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Extend pci_update_resource to check resno and call addon resources
-ops to update bar for it.
+On 3/11/2013 1:25 PM, Jason Gunthorpe wrote:
+> On Mon, Mar 11, 2013 at 11:50:19AM -1000, Mitch Bradley wrote:
+> 
+>>> However - the driver runs the core in a 'root port bridge mode' where
+>>> the config header register block you are looking at is inhibited. The
+>>> Marvell IP block requires software support to run in bridge mode. So
+>>> Marvell really has only (2), while Tegra has only (1).
+>>
+>> Interesting.
+>>
+>> For Marvell, if Marvell has only (2), does that imply that standard PCI
+>> discovery and enumeration code cannot find the root port bridges, and
+>> also there is no way to auto-configure the bridges with common pci-pci
+>> bridge code?
+> 
+> The driver is required to take care of all of this. From the common
+> code's perspective there is a bridge config header, and writing to it
+> controls the device, as the PCI spec intends. But the driver doesn't
+> copy those read/writes 1:1 to any HW register block, it distributes
+> them around the device's register space as necessary to create the
+> PCI bridge config header.
+> 
+> The DT is still modeling the HW, there really are root port bridge(s),
+> that are completely conformant at the TLP level, but the IP designers
+> choose to leave the detail of the bridge config space up to a SW
+> implementation.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-res.c |   24 ++++++++++++++++++------
- 1 file changed, 18 insertions(+), 6 deletions(-)
+Oh, ouch, deep spoofing.  I had to do that in system management mode
+firmware for a Geode chip.  What a pain that was.
 
-diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
-index 94ef232..6a85dcf 100644
---- a/drivers/pci/setup-res.c
-+++ b/drivers/pci/setup-res.c
-@@ -35,7 +35,7 @@ void pci_update_resource(struct pci_dev *dev, int resno)
- 	u32 new, check, mask;
- 	int reg;
- 	enum pci_bar_type type;
--	struct resource *res = dev->resource + resno;
-+	struct resource *res = pci_dev_resource_n(dev, resno);
- 
- 	/*
- 	 * Ignore resources for unimplemented BARs and unused resource slots
-@@ -52,6 +52,21 @@ void pci_update_resource(struct pci_dev *dev, int resno)
- 	if (res->flags & IORESOURCE_PCI_FIXED)
- 		return;
- 
-+	if (resno >= PCI_NUM_RESOURCES) {
-+		struct pci_dev_addon_resource *addon_res;
-+
-+		addon_res = to_pci_dev_addon_resource(res);
-+		reg = addon_res->reg_addr;
-+		if (addon_res->ops) {
-+			addon_res->ops->write(dev, res, reg);
-+			return;
-+		}
-+	} else
-+		reg = pci_resource_bar(dev, resno, &type);
-+
-+	if (!reg)
-+		return;
-+
- 	pcibios_resource_to_bus(dev, &region, res);
- 
- 	new = region.start | (res->flags & PCI_REGION_FLAG_MASK);
-@@ -60,9 +75,6 @@ void pci_update_resource(struct pci_dev *dev, int resno)
- 	else
- 		mask = (u32)PCI_BASE_ADDRESS_MEM_MASK;
- 
--	reg = pci_resource_bar(dev, resno, &type);
--	if (!reg)
--		return;
- 	if (type != pci_bar_unknown) {
- 		if (!(res->flags & IORESOURCE_ROM_ENABLE))
- 			return;
-@@ -286,7 +298,7 @@ int pci_assign_resource(struct pci_dev *dev, int resno)
- 	if (!ret) {
- 		res->flags &= ~IORESOURCE_STARTALIGN;
- 		dev_info(&dev->dev, "BAR %d: assigned %pR\n", resno, res);
--		if (resno < PCI_BRIDGE_RESOURCES)
-+		if (!is_pci_bridge_resource_idx(resno))
- 			pci_update_resource(dev, resno);
- 	}
- 	return ret;
-@@ -311,7 +323,7 @@ int pci_reassign_resource(struct pci_dev *dev, int resno, resource_size_t addsiz
- 	if (!ret) {
- 		res->flags &= ~IORESOURCE_STARTALIGN;
- 		dev_info(&dev->dev, "BAR %d: reassigned %pR\n", resno, res);
--		if (resno < PCI_BRIDGE_RESOURCES)
-+		if (!is_pci_bridge_resource_idx(resno))
- 			pci_update_resource(dev, resno);
- 	}
- 	return ret;
--- 
-1.7.10.4
+> 
+>> At this point I am confused again.  There was talk of the need to
+>> use standard PCI enumeration code to deal with the bridges, thus the
+>> need for 3/2 to describe the interface between root-complex and the
+>> child root-port nodes.
+> 
+> I think your confusion is coming from your expectation that the PCI-E
+> IP block would be an entirely self contained root port, rather than
+> 'tools to build a root port, with the right driver SW'.
+> 
+>>> Further, review section 12 about how ranges should be treated - it
+>>> specifically says that the b,d,f bits in ranges should be 0, and the
+>>> child address should have those bits masked prior to searching the
+>>> ranges.
+>>>
+>>> Section 12 would seem to forbid this:
+>>>
+>>>       ranges = <0x00000800 0 0          0xd4004000 0 0x00000800   /* Root port config header */
+>>>                 0x00001000 0 0          0xd4008000 0 0x00000800   /* Root port config header */
+>>>
+>>> Are you reading that differently?
+>>
+>> I wasn't reading it at all, until you pointed it out to me :-)  I was
+>> just reasoning based on my mental model.
+>>
+>> Again, I agree with your reading of the spec, but I can't think of any
+>> reason why relaxing that restriction to permit config space mappings
+>> would be a problem.
+> 
+> Okay, just wanted to confirm that, I think I follow you now. :)
+> 
+> So you are basically proposing a small update to Section 12 that would
+> read something like:
+> 
+> 'When matching a config space address, the b,d,f bits are valid in the
+>  ranges and left unmasked in the child. The r bits in the ranges
+>  should be 0, and the r bits from the child are copied in the last DW
+>  and masked off in the first DW.'
+> 
+> Which, as you note, would not conflict with any existing usage..
+> 
+> Though, I can already see that the above language is not good enough,
+> it doesn't elegantly represent standard ECAM, for instance.. How would
+> you even represent ECAM with ranges??
+> 
+> Another wrinkle is that tegra not only has the per-bridge memory
+> mapped config space, bit it also has 4 'all port' ECAM-like memory
+> mapped config spaces. The rules around them are sufficiently
+> specialized that I'm not sure a ranges mapping would ever be
+> practical.. So right out of the gate we'd fail to capture memory
+> mapped config access via ranges on at least one SOC.
+> 
+> So, to me, this seems like overkill. Only ECAM has a hope of having a
+> common implementation, everything else will be host driver specific,
+> so why go to the trouble to revise the OF PCI specification for config
+> space?
+> 
+> Particularly since there are patches waiting on this question being
+> resolved :)
 
+Okay, so I'll just bow out.  Do what you have to do.
+
+> 
+> Regards,
+> Jason
+> 
