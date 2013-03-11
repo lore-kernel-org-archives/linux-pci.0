@@ -1,57 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:33656 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752472Ab3C0SFK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Mar 2013 14:05:10 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Russell King <linux@arm.linux.org.uk>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	devicetree-discuss@lists.ozlabs.org,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Maen Suleiman <maen@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Olof Johansson <olof@lixom.net>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Mitch Bradley <wmb@firmworks.com>,
-	Andrew Murray <andrew.murray@arm.com>
-Subject: [RFC PATCHv1 2/5] bus: mvebu: fix mistake in PCIe window target attribute for Kirkwood
-Date: Wed, 27 Mar 2013 19:05:01 +0100
-Message-Id: <1364407504-13524-3-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1364407504-13524-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1364407504-13524-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from iolanthe.rowland.org ([192.131.102.54]:50248 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1750923Ab3CKQFS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Mar 2013 12:05:18 -0400
+Date: Mon, 11 Mar 2013 12:05:16 -0400 (EDT)
+From: Alan Stern <stern@rowland.harvard.edu>
+To: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
+cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Sarah Sharp <sarah.a.sharp@linux.intel.com>
+Subject: Re: 3.8.2: stale pci device info for a previously inserted express
+ card
+In-Reply-To: <513DFCD4.2070309@fold.natur.cuni.cz>
+Message-ID: <Pine.LNX.4.44L0.1303111155380.2246-100000@iolanthe.rowland.org>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The target and attributes for the PCIe address decoding windows were
-not correct on Kirkwood for the second PCIe interface.
+On Mon, 11 Mar 2013, Martin Mokrejs wrote:
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
----
-Note: this patch should be merged with the existing mvebu-mbus driver.
----
- drivers/bus/mvebu-mbus.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> > Did you check to see if there were any hung processes?
+> 
+> I did not reboot yet. What commands?
 
-diff --git a/drivers/bus/mvebu-mbus.c b/drivers/bus/mvebu-mbus.c
-index 586d03e..4de2c6b 100644
---- a/drivers/bus/mvebu-mbus.c
-+++ b/drivers/bus/mvebu-mbus.c
-@@ -626,7 +626,7 @@ static const struct mvebu_mbus_soc_data armada_xp_mbus_data = {
- 
- static const struct mvebu_mbus_mapping kirkwood_map[] = {
- 	MAPDEF("pcie0.0", 4, 0xe0, MAPDEF_PCIMASK),
--	MAPDEF("pcie1.0", 8, 0xe0, MAPDEF_PCIMASK),
-+	MAPDEF("pcie1.0", 4, 0xd0, MAPDEF_PCIMASK),
- 	MAPDEF("sram",    3, 0x01, MAPDEF_NOMASK),
- 	MAPDEF("nand",    1, 0x2f, MAPDEF_NOMASK),
- 	{},
--- 
-1.7.9.5
+Alt-SysRq-W from a VT console.
+
+> > Is this repeatable?  It would be more meaningful to see a kmemleak
+> 
+> No idea, saw it for the first time. Nobody ever told me whether kmemleak is
+> able to report the leak immediately or whether that is some background process
+> which is always lagging, by definition. If the latter is true, it could be
+> I have meanwhile done something else (popped in or out another card). Until
+> I know what to expect I am just lost with what I see logged.
+
+kmemleak is described in the Documentation directory.  As I understand
+it, there is a background process which wakes up from time to time and
+looks for leaks, and there is a way to ask it to wake up and look
+whenever you want.
+
+> > report for immediately after the USB-3 card is removed.  The leak may
+> > be related to these two lines in the log (they occurred only once):
+> > 
+> > [ 8768.825242] xhci_hcd 0000:11:00.0: Abort command ring failed
+> > [ 8768.825244] xhci_hcd 0000:11:00.0: HC died; cleaning up
+> > 
+> > Perhaps cleaning up after a dead controller doesn't deallocate all that
+> > it should.  Quite possibly this is connected with the fact that on this
+> > attempt, you removed the USB-3 card while the WD disk drive was plugged
+> > into it.
+> 
+> I am not that skilled but I believe somebody could help me to provide you
+> with the current time value in the epoch way to translate two lines
+>   comm "kworker/0:1", pid 675, jiffies 4295795189 (age 58365.960s)
+>   comm "kworker/0:1", pid 675, jiffies 4295809367 (age 58224.180s)
+> into human date. Same for the timestamps in dmesg output.
+
+Those values probably wouldn't mean much.  In fact, I don't see how the 
+process's age (58365 seconds) could be larger than the time since 
+boot-up (either 9893 or 11735 seconds).
+
+> Well, from the
+
+...
+> [ 9893.877224] kmemleak: 1 new suspected memory leaks (see /sys/kernel/debug/kmemleak)
+> [11735.840095] kmemleak: 1 new suspected memory leaks (see /sys/kernel/debug/kmemleak)
+...
+> 
+> I bet both kmemleaks happened before I ejected the USB card (at about [16849.168366]).
+
+I suspect they happened during the eject at about 8763 -- that's when 
+the "HC died" message occurred.
+
+> But why the two kmemleak lines are so much lagging after any previous log lines
+> I don't know but I am repeating here myself. The system is 99% idle. What process
+> shoudl I be looking for? Or you mean some SysRq magic?
+
+Read Documentation/kmemleak.txt.
+
+Alan Stern
 
