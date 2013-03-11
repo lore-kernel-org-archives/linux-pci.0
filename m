@@ -1,135 +1,126 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f181.google.com ([209.85.223.181]:44504 "EHLO
-	mail-ie0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755520Ab3CSPMT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Mar 2013 11:12:19 -0400
-Received: by mail-ie0-f181.google.com with SMTP id 17so704464iea.26
-        for <linux-pci@vger.kernel.org>; Tue, 19 Mar 2013 08:12:18 -0700 (PDT)
+Received: from quartz.orcorp.ca ([184.70.90.242]:47601 "EHLO quartz.orcorp.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754045Ab3CKXZ3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 11 Mar 2013 19:25:29 -0400
+Date: Mon, 11 Mar 2013 17:25:16 -0600
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Mitch Bradley <wmb@firmworks.com>
+Cc: Thierry Reding <thierry.reding@avionic-design.de>,
+	Lior Amsalem <alior@marvell.com>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>, linux-pci@vger.kernel.org,
+	devicetree-discuss@lists.ozlabs.org,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH 24/32] pci: PCIe driver for Marvell Armada 370/XP systems
+Message-ID: <20130311232516.GA13873@obsidianresearch.com>
+References: <20130308191227.GA6551@avionic-0098.mockup.avionic-design.de>
+ <513A3F4F.2090501@firmworks.com>
+ <20130308200245.GC29435@obsidianresearch.com>
+ <513A7845.6040304@firmworks.com>
+ <20130309013152.GA3883@obsidianresearch.com>
+ <513C117D.6080800@firmworks.com>
+ <20130310065539.GA14704@obsidianresearch.com>
+ <513D6F9C.9000100@firmworks.com>
+ <20130311181554.GA10992@obsidianresearch.com>
+ <513E519B.6010503@firmworks.com>
 MIME-Version: 1.0
-Date: Tue, 19 Mar 2013 16:12:18 +0100
-Message-ID: <CAKMK7uGnZFaLQaZtoQ0Fz0ViNNjBvmf0Ak=qPmdAcm2mRBD7rA@mail.gmail.com>
-Subject: gm45 intel gfx can generate non-MSI irq# in MSI mode (was Re: [PATCH]
- drm/i915: stop using GMBUS IRQs on Gen4 chips (was Re: [3.9-rc1] irq 16:
- nobody cared (was [3.9-rc1] very poor interrupt responses)))
-From: Daniel Vetter <daniel.vetter@ffwll.ch>
-To: Chris Wilson <chris@chris-wilson.co.uk>,
-	Jiri Kosina <jkosina@suse.cz>, Daniel Vetter <daniel@ffwll.ch>,
-	Greg KH <greg@kroah.com>,
-	Harald Arnesen <skogtun.linux@gmail.com>,
-	Kernel development list <linux-kernel@vger.kernel.org>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Peter Hurley <peter@hurleysoftware.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Thomas Meyer <thomas@m3y3r.de>,
-	Shawn Starr <shawn.starr@rogers.com>,
-	USB list <linux-usb@vger.kernel.org>,
-	linux-acpi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Daniel Vetter <daniel.vetter@ffwll.ch>,
-	Imre Deak <imre.deak@intel.com>,
-	Daniel Kurtz <djkurtz@chromium.org>,
-	dri-devel@lists.freedesktop.org,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	Arkadiusz Miskiewicz <a.miskiewicz@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <513E519B.6010503@firmworks.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 19, 2013 at 10:03 AM, Chris Wilson <chris@chris-wilson.co.uk> wrote:
->> > How about just using:
->> >   if (!HAS_GMBUS_IRQ(dev_priv->dev)) gmbus4_irq_en = 0;
->> > and the existing wait loop?
->>
->> I explicitly wanted to avoid touching GMBUS4 register, as the real cause
->> of the failure is not clear.
->>
->> But, as Yinghai Lu points out, the problem is most likely caused by
->> interrupt disabling not working properly (see his very good point
->> regarding DisINTx+ and INTx+ discrepancy), so zeroing the register out
->> should work .... and it indeed does in my case, hence the (tested) patch
->> below.
->>
->> I think it's a 3.9-rc material, and I am all open to debug this further
->> for 3.10 so that the race is closed and gmbus irqs can be used on Gen4
->> platform properly.
->
-> Agreed. Using the IRQ for GMBUS is just a performance feature that can
-> be deferred until after we determine the root cause - and hope that the
-> failure is somehow peculiar to GMBUS.
+On Mon, Mar 11, 2013 at 11:50:19AM -1000, Mitch Bradley wrote:
 
-Ok, I've merged this patch. But some further investigation points at a
-much more severe dragon hiding here: The MSI interrupt for the intel
-gfx is commonly in the 40+ range, but the interrupt vector with the
-spurious interrupts is 16. Which is the irq of the intel gfx when MSI
-is disabled!
+> > However - the driver runs the core in a 'root port bridge mode' where
+> > the config header register block you are looking at is inhibited. The
+> > Marvell IP block requires software support to run in bridge mode. So
+> > Marvell really has only (2), while Tegra has only (1).
+> 
+> Interesting.
+> 
+> For Marvell, if Marvell has only (2), does that imply that standard PCI
+> discovery and enumeration code cannot find the root port bridges, and
+> also there is no way to auto-configure the bridges with common pci-pci
+> bridge code?
 
-So it looks like gmbus on the intel gfx is capable of generating
-non-MSI interrupts in parallel to the MSI interrupts (since apparently
-gmbus still works, so we get the interrupts we expect). I have no idea
-how that could happen. Hence adding a bunch of people with more clue
-than me.
+The driver is required to take care of all of this. From the common
+code's perspective there is a bridge config header, and writing to it
+controls the device, as the PCI spec intends. But the driver doesn't
+copy those read/writes 1:1 to any HW register block, it distributes
+them around the device's register space as necessary to create the
+PCI bridge config header.
 
-For reference below the updated commit message.
+The DT is still modeling the HW, there really are root port bridge(s),
+that are completely conformant at the TLP level, but the IP designers
+choose to leave the detail of the bridge config space up to a SW
+implementation.
 
-Cheers, Daniel
+> At this point I am confused again.  There was talk of the need to
+> use standard PCI enumeration code to deal with the bridges, thus the
+> need for 3/2 to describe the interface between root-complex and the
+> child root-port nodes.
 
-Author: Jiri Kosina <jkosina@suse.cz>
-Date:   Tue Mar 19 09:56:57 2013 +0100
+I think your confusion is coming from your expectation that the PCI-E
+IP block would be an entirely self contained root port, rather than
+'tools to build a root port, with the right driver SW'.
 
-    drm/i915: stop using GMBUS IRQs on Gen4 chips
+> > Further, review section 12 about how ranges should be treated - it
+> > specifically says that the b,d,f bits in ranges should be 0, and the
+> > child address should have those bits masked prior to searching the
+> > ranges.
+> > 
+> > Section 12 would seem to forbid this:
+> > 
+> >       ranges = <0x00000800 0 0          0xd4004000 0 0x00000800   /* Root port config header */
+> >                 0x00001000 0 0          0xd4008000 0 0x00000800   /* Root port config header */
+> > 
+> > Are you reading that differently?
+> 
+> I wasn't reading it at all, until you pointed it out to me :-)  I was
+> just reasoning based on my mental model.
+> 
+> Again, I agree with your reading of the spec, but I can't think of any
+> reason why relaxing that restriction to permit config space mappings
+> would be a problem.
 
-    Commit 28c70f162 ("drm/i915: use the gmbus irq for waits") switched to
-    using GMBUS irqs instead of GPIO bit-banging for chipset generations 4
-    and above.
+Okay, just wanted to confirm that, I think I follow you now. :)
 
-    It turns out though that on many systems this leads to spurious interrupts
-    being generated, long after the register write to disable the IRQs has been
-    issued.
+So you are basically proposing a small update to Section 12 that would
+read something like:
 
-    Typically this results in the spurious interrupt source getting
-    disabled:
+'When matching a config space address, the b,d,f bits are valid in the
+ ranges and left unmasked in the child. The r bits in the ranges
+ should be 0, and the r bits from the child are copied in the last DW
+ and masked off in the first DW.'
 
-    [    9.636345] irq 16: nobody cared (try booting with the "irqpoll" option)
-    [    9.637915] Pid: 4157, comm: ifup Tainted: GF
-3.9.0-rc2-00341-g0863702 #422
-    [    9.639484] Call Trace:
-    [    9.640731]  <IRQ>  [<ffffffff8109b40d>] __report_bad_irq+0x1d/0xc7
-    [    9.640731]  [<ffffffff8109b7db>] note_interrupt+0x15b/0x1e8
-    [    9.640731]  [<ffffffff810999f7>] handle_irq_event_percpu+0x1bf/0x214
-    [    9.640731]  [<ffffffff81099a88>] handle_irq_event+0x3c/0x5c
-    [    9.640731]  [<ffffffff8109c139>] handle_fasteoi_irq+0x7a/0xb0
-    [    9.640731]  [<ffffffff8100400e>] handle_irq+0x1a/0x24
-    [    9.640731]  [<ffffffff81003d17>] do_IRQ+0x48/0xaf
-    [    9.640731]  [<ffffffff8142f1ea>] common_interrupt+0x6a/0x6a
-    [    9.640731]  <EOI>  [<ffffffff8142f952>] ? system_call_fastpath+0x16/0x1b
-    [    9.640731] handlers:
-    [    9.640731] [<ffffffffa000d771>] usb_hcd_irq [usbcore]
-    [    9.640731] [<ffffffffa0306189>] yenta_interrupt [yenta_socket]
-    [    9.640731] Disabling IRQ #16
+Which, as you note, would not conflict with any existing usage..
 
-    The really curious thing is now that irq 16 is _not_ the interrupt for
-    the i915 driver when using MSI, but it _is_ the interrupt when not
-    using MSI. So by all indications it seems like gmbus is able to
-    generate a legacy (shared) interrupt in MSI mode on some
-    configurations. I've tried to reproduce this and the differentiating
-    thing seems to be that on unaffected systems no other device uses irq
-    16 (which seems to be the non-MSI intel gfx interrupt on all gm45).
+Though, I can already see that the above language is not good enough,
+it doesn't elegantly represent standard ECAM, for instance.. How would
+you even represent ECAM with ranges??
 
-    I have no idea how that even can happen.
+Another wrinkle is that tegra not only has the per-bridge memory
+mapped config space, bit it also has 4 'all port' ECAM-like memory
+mapped config spaces. The rules around them are sufficiently
+specialized that I'm not sure a ranges mapping would ever be
+practical.. So right out of the gate we'd fail to capture memory
+mapped config access via ranges on at least one SOC.
 
-    To avoid tempting this elephant into a rage, just disable gmbus
-    interrupt support on gen 4.
+So, to me, this seems like overkill. Only ECAM has a hope of having a
+common implementation, everything else will be host driver specific,
+so why go to the trouble to revise the OF PCI specification for config
+space?
 
-    v2: Improve the commit message with exact details of what's going on.
-    Also add a comment in the code to warn against this particular
-    elephant in the room.
+Particularly since there are patches waiting on this question being
+resolved :)
 
-    Signed-off-by: Jiri Kosina <jkosina@suse.cz> (v1)
-    Acked-by: Chris Wilson <chris@chris-wilson.co.uk> (v1)
-    References: https://lkml.org/lkml/2013/3/8/325
-    Signed-off-by: Daniel Vetter <daniel.vetter@ffwll.ch>
--- 
-Daniel Vetter
-Software Engineer, Intel Corporation
-+41 (0) 79 365 57 48 - http://blog.ffwll.ch
+Regards,
+Jason
