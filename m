@@ -1,156 +1,41 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: linux-acpi@vger.kernel.org, "Rafael J . Wysocki" <rjw@sisk.pl>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: [PATCHv2 5/5] ACPI / pcie: suppress compiler warning in portdrv_acpi.c
+Date: Mon, 11 Mar 2013 11:17:08 +0200
+Message-Id: <1362993428-14823-5-git-send-email-andriy.shevchenko@linux.intel.com>
+In-Reply-To: <1362993428-14823-1-git-send-email-andriy.shevchenko@linux.intel.com>
+References: <1362993428-14823-1-git-send-email-andriy.shevchenko@linux.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <1363628226-6679-1-git-send-email-yinghai@kernel.org>
-References: <CAE9FiQXmeb66dc8fET0y99BjqpUXp11c7utiQ5keR1Wf+N9xaA@mail.gmail.com>
- <1363628226-6679-1-git-send-email-yinghai@kernel.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 27 Mar 2013 16:56:37 -0600
-Message-ID: <CAErSpo6v0mj9=Q13d=G4hho0mb9XTcsmefzke9fROYmZ7oBWxQ@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Remove not needed check in disable aspm link
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	stable@kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 18, 2013 at 11:37 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> Roman reported ath5k does not work anymore on 3.8.
-> Bisected to
-> | commit 8c33f51df406e1a1f7fa4e9b244845b7ebd61fa6
-> | Author: Taku Izumi <izumi.taku@jp.fujitsu.com>
-> | Date:   Tue Oct 30 15:27:13 2012 +0900
-> |
-> |    PCI/ACPI: Request _OSC control before scanning PCI root bus
-> |
-> |    This patch moves up the code block to request _OSC control in order to
-> |    separate ACPI work and PCI work in acpi_pci_root_add().
->
-> It make pci_disable_link_state does not work anymore as acpi_disabled
-> is set before pci root bus scanning.
-> It will skip that in quirks and pcie_aspm_sanity_check.
->
-> We could revert to old logic, but that will make booting path and hotplug
-> path with different aspm_disabled again.
->
-> Acctually we don't need to check aspm_disabled in disable link, as
-> we already have protection about link state following.
->
-> https://bugzilla.kernel.org/show_bug.cgi?id=55211
-> http://article.gmane.org/gmane.linux.kernel.pci/20640
->
-> Need it for 3.8 stable.
->
-> Reported-by: Roman Yepishev <roman.yepishev@gmail.com>
-> Bisected-by: Roman Yepishev <roman.yepishev@gmail.com>
-> Tested-by: Roman Yepishev <roman.yepishev@gmail.com>
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> Cc: Taku Izumi <izumi.taku@jp.fujitsu.com>
-> Cc: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
-> Cc: stable@kernel.org
->
-> ---
->  drivers/pci/pcie/aspm.c |   21 ++++-----------------
->  1 file changed, 4 insertions(+), 17 deletions(-)
->
-> Index: linux-2.6/drivers/pci/pcie/aspm.c
-> ===================================================================
-> --- linux-2.6.orig/drivers/pci/pcie/aspm.c
-> +++ linux-2.6/drivers/pci/pcie/aspm.c
-> @@ -493,15 +493,6 @@ static int pcie_aspm_sanity_check(struct
->                         return -EINVAL;
->
->                 /*
-> -                * If ASPM is disabled then we're not going to change
-> -                * the BIOS state. It's safe to continue even if it's a
-> -                * pre-1.1 device
-> -                */
-> -
-> -               if (aspm_disabled)
-> -                       continue;
-> -
-> -               /*
->                  * Disable ASPM for pre-1.1 PCIe device, we follow MS to use
->                  * RBER bit to determine if a function is 1.1 version device
->                  */
-> @@ -718,15 +709,11 @@ void pcie_aspm_powersave_config_link(str
->   * pci_disable_link_state - disable pci device's link state, so the link will
->   * never enter specific states
->   */
-> -static void __pci_disable_link_state(struct pci_dev *pdev, int state, bool sem,
-> -                                    bool force)
-> +static void __pci_disable_link_state(struct pci_dev *pdev, int state, bool sem)
->  {
->         struct pci_dev *parent = pdev->bus->self;
->         struct pcie_link_state *link;
->
-> -       if (aspm_disabled && !force)
-> -               return;
-> -
->         if (!pci_is_pcie(pdev))
->                 return;
->
-> @@ -757,13 +744,13 @@ static void __pci_disable_link_state(str
->
->  void pci_disable_link_state_locked(struct pci_dev *pdev, int state)
->  {
-> -       __pci_disable_link_state(pdev, state, false, false);
-> +       __pci_disable_link_state(pdev, state, false);
->  }
->  EXPORT_SYMBOL(pci_disable_link_state_locked);
->
->  void pci_disable_link_state(struct pci_dev *pdev, int state)
->  {
-> -       __pci_disable_link_state(pdev, state, true, false);
-> +       __pci_disable_link_state(pdev, state, true);
->  }
->  EXPORT_SYMBOL(pci_disable_link_state);
->
-> @@ -781,7 +768,7 @@ void pcie_clear_aspm(struct pci_bus *bus
->                 __pci_disable_link_state(child, PCIE_LINK_STATE_L0S |
->                                          PCIE_LINK_STATE_L1 |
->                                          PCIE_LINK_STATE_CLKPM,
-> -                                        false, true);
-> +                                        false);
->         }
->  }
->
+This patch fixes following compiler warning when build via make W=1:
 
-This might fix the problem, but the code is still a mess.  In
-acpi_pci_root_add(), why do we have the following?
+drivers/pci/pcie/portdrv_acpi.c:34:5: warning: no previous prototype for ‘pcie_port_acpi_setup’ [-Wmissing-prototypes]
 
-    acpi_pci_root_add
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+---
+ drivers/pci/pcie/portdrv_acpi.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-      acpi_pci_osc_support
-      if (flags != base_flags)
-        pcie_no_aspm
-      if (...)
-        acpi_pci_osc_control_set
-        if (ACPI_SUCCESS)
-          is_osc_granted = true
+diff --git a/drivers/pci/pcie/portdrv_acpi.c b/drivers/pci/pcie/portdrv_acpi.c
+index a86b56e..b4d2894 100644
+--- a/drivers/pci/pcie/portdrv_acpi.c
++++ b/drivers/pci/pcie/portdrv_acpi.c
+@@ -17,6 +17,7 @@
+ 
+ #include "aer/aerdrv.h"
+ #include "../pci.h"
++#include "portdrv.h"
+ 
+ /**
+  * pcie_port_acpi_setup - Request the BIOS to release control of PCIe services.
+-- 
+1.8.2.rc0.22.gb3600c3
 
-      pci_acpi_scan_root
-
-      if (is_osc_granted)
-        if (acpi_gbl_FADT.boot_flags & ACPI_FADT_NO_ASPM)
-          pcie_clear_aspm
-      else
-        pcie_no_aspm
-
-Why can't we set all the ASPM flags *first*, before calling
-pci_acpi_scan_root()?  That way we could just do the correct ASPM
-setup as we discover devices during enumeration, rather than trying to
-fix things up afterwards.  I suspect pcie_clear_aspm() is broken
-anyway, because it looks like it only touches one level of the
-hierarchy, without recursively descending it.
-
-But Taku went to some trouble in 8c33f51d to introduce is_osc_granted
-to remember this until after pci_acpi_scan_root(), so presumably
-there's some reason for this.  Do you remember why, Taku?
-
-Bjorn
