@@ -1,52 +1,36 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ia0-f174.google.com ([209.85.210.174]:58890 "EHLO
-	mail-ia0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751136Ab3CHUAo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 Mar 2013 15:00:44 -0500
+Received: from iolanthe.rowland.org ([192.131.102.54]:50282 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754054Ab3CKQfV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Mar 2013 12:35:21 -0400
+Date: Mon, 11 Mar 2013 12:35:20 -0400 (EDT)
+From: Alan Stern <stern@rowland.harvard.edu>
+To: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
+cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Sarah Sharp <sarah.a.sharp@linux.intel.com>
+Subject: Re: 3.8.2: stale pci device info for a previously inserted express
+ card
+In-Reply-To: <513E02B7.4080900@fold.natur.cuni.cz>
+Message-ID: <Pine.LNX.4.44L0.1303111234300.2246-100000@iolanthe.rowland.org>
 MIME-Version: 1.0
-In-Reply-To: <20130308195055.GD6622@phenom.dumpdata.com>
-References: <1360351703-20571-1-git-send-email-yinghai@kernel.org>
-	<1360351703-20571-11-git-send-email-yinghai@kernel.org>
-	<20130308195055.GD6622@phenom.dumpdata.com>
-Date: Fri, 8 Mar 2013 12:00:43 -0800
-Message-ID: <CAE9FiQXZAdndUMEH-yBOvvx2jSMC3tQqs73LmdaY_ni+W=nFHw@mail.gmail.com>
-Subject: Re: [PATCH v2 10/26] x86, irq: Convert irq_2_pin list to generic list
-From: Yinghai Lu <yinghai@kernel.org>
-To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>,
-	Joerg Roedel <joro@8bytes.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 8, 2013 at 11:50 AM, Konrad Rzeszutek Wilk
-<konrad.wilk@oracle.com> wrote:
-> On Fri, Feb 08, 2013 at 11:28:07AM -0800, Yinghai Lu wrote:
->> Now irq_2_pin list is own grown list.
->
-> I think you meant to say 'has its own list'. Not sure how
-> its growing?
->
->> We can use generic list to replace it so we could generic helper
->> functions to operate it.
->
-> You need to put the verb a bit earlier. Perhaps:
->
-> ".. generic list to replace so that we can operate using
-> generic helper functions."
+On Mon, 11 Mar 2013, Martin Mokrejs wrote:
 
-missed use before generic helper.
+> Alan Stern wrote:
+> > On Mon, 11 Mar 2013, Martin Mokrejs wrote:
+> > 
+> >>> Did you check to see if there were any hung processes?
+> >>
+> >> I did not reboot yet. What commands?
+> > 
+> > Alt-SysRq-W from a VT console.
+> 
+> Attached.
 
->
->>
->> Also make free_irq_cfg() free irq_2_pin list to support coming ioapic
->> hotplug.
->
-> If you have them ready - could you say the titles of the patches here?
+No processes are hung up.  So much for that idea.
 
-list them all ?
+Alan Stern
+
