@@ -1,44 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fold.natur.cuni.cz ([195.113.57.32]:44807 "HELO
-	fold.natur.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753379Ab3CRSwO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 Mar 2013 14:52:14 -0400
-Message-ID: <5147625A.7010306@fold.natur.cuni.cz>
-Date: Mon, 18 Mar 2013 19:52:10 +0100
-From: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
+Received: from iolanthe.rowland.org ([192.131.102.54]:50207 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751868Ab3CKPDi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Mar 2013 11:03:38 -0400
+Date: Mon, 11 Mar 2013 11:03:37 -0400 (EDT)
+From: Alan Stern <stern@rowland.harvard.edu>
+To: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
+cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Sarah Sharp <sarah.a.sharp@linux.intel.com>
+Subject: Re: Dell Vostro 3550: pci_hotplug+acpiphp require 'pcie_aspm=force'
+ on kernel command-line for hotplug to work
+In-Reply-To: <513D2CD3.5000309@fold.natur.cuni.cz>
+Message-ID: <Pine.LNX.4.44L0.1303111101090.2246-100000@iolanthe.rowland.org>
 MIME-Version: 1.0
-To: Sarah Sharp <sarah.a.sharp@linux.intel.com>
-CC: USB list <linux-usb@vger.kernel.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Lan Tianyu <tianyu.lan@intel.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: 3.8.2: xhci port is dead until pcieport PME# goes to disabled
-References: <5142094D.2070305@fold.natur.cuni.cz> <20130318170159.GF17414@xanatos> <51474CCC.3090802@fold.natur.cuni.cz> <20130318182604.GI17414@xanatos>
-In-Reply-To: <20130318182604.GI17414@xanatos>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Sarah Sharp wrote:
-> On Mon, Mar 18, 2013 at 06:20:12PM +0100, Martin Mokrejs wrote:
->> Hi Sarah,
->>   in this particular thread, the USB3 socket of the laptop works once
->> I plugin a device. When I unplug it and insert same or another device it appears
->> to be dead until I use 'lsusb -vvv'. After that, I see in dmesg the two lines:
+On Mon, 11 Mar 2013, Martin Mokrejs wrote:
+
+> > I thought the only card with a problem was the USB3.0 card.  But here
+> > you suggest that there *is* a problem with the SATA and Firewire
+> > cards.  Can you describe that problem in one sentence?
 > 
-> Which kernel are you running on?  We had a regression that involved dead
+> One sentence? No. ;-)
+> 
+> None of the cards works when 'nousb' and while are disabled USB
+> devices in BIOS (which can be altered at all, don't know whether that really
+> disables all USB in BIOS or not, hence I used the 'nousb' to be sure).
 
-As the subject says, 3.8.2. I really started last week several different email
-threads, each independent.
+Martin:
 
-> ports after a USB disconnect in 3.8.  This was was fixed in 3.8.3.  Can
-> you please retest with that kernel version?
+I don't know about Bjorn, but I find it very difficult to work on more 
+than one bug at a time.  Since your low-level PCI hotplug problems 
+seem to be more fundamental than the USB problems, I'll wait until the 
+PCI part is under control before trying to contribute.
 
-Hmm, will do. What change do you mean exactly?
+Alan Stern
 
-BTW, how about this bugfix which just appeared at linux-pci?
-[PATCH] PCI: Remove not needed check in disable aspm link
-
-
-Thank you,
-Martin
