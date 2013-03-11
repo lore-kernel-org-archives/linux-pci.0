@@ -1,57 +1,53 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 18 Mar 2013 19:35:25 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Robert Hancock <hancockrwd@gmail.com>
-Cc: Myron Stowe <mstowe@redhat.com>,
-	Myron Stowe <myron.stowe@redhat.com>, kay@vrfy.org,
-	linux-hotplug@vger.kernel.org, alex.williamson@redhat.com,
-	linux-pci@vger.kernel.org, yuxiangl@marvell.com, yxlraid@gmail.com,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] udevadm-info: Don't access sysfs 'resource<N>' files
-Message-ID: <20130319023525.GA21789@kroah.com>
-References: <20130316213512.2974.17303.stgit@amt.stowe>
- <20130316213519.2974.38954.stgit@amt.stowe>
- <20130316221159.GA3702@kroah.com>
- <1363477853.2423.25.camel@zim.stowe>
- <20130317010317.GB9641@kroah.com>
- <5147C541.1080304@gmail.com>
- <20130319020316.GB21319@kroah.com>
- <CADLC3L2hKYPsW4fvg6tbptBc1r7LS=7Ndwhp4mZ3BKzJq6z-eg@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from iolanthe.rowland.org ([192.131.102.54]:50223 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751702Ab3CKP01 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Mar 2013 11:26:27 -0400
+Date: Mon, 11 Mar 2013 11:26:26 -0400 (EDT)
+From: Alan Stern <stern@rowland.harvard.edu>
+To: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
+cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Sarah Sharp <sarah.a.sharp@linux.intel.com>
+Subject: Re: 3.8.2: stale pci device info for a previously inserted express
+ card
+In-Reply-To: <513DD059.5030604@fold.natur.cuni.cz>
+Message-ID: <Pine.LNX.4.44L0.1303111111220.2246-100000@iolanthe.rowland.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CADLC3L2hKYPsW4fvg6tbptBc1r7LS=7Ndwhp4mZ3BKzJq6z-eg@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 18, 2013 at 08:09:22PM -0600, Robert Hancock wrote:
-> > Great, that's one possible solution, the other is just not creating the
-> > files at all for known problem devices, right?
-> 
-> I don't think one can reasonably enumerate all problem devices. There
-> are probably countless devices which can potentially break if their
-> resources (especially IO ports) are read in unexpected ways. Aside
-> from devices like this one, which apparently don't like certain IO
-> ports being read with certain access widths, there's every device in
-> existence with read-to-reset type registers. The fix to this needs to
-> apply to all devices.
-> 
-> >
-> > My main point here is, you aren't going to fix this in userspace, fix it
-> > in the kernel.
-> 
-> The kernel can help the situation by blocking access to devices with
-> an active driver, but it can't fix all cases. Suppose the device has
-> no driver loaded yet, how is the kernel supposed to tell the
-> difference between software with a legitimate need to access these
-> files for virtualization device assignment, etc. and something like
-> udevadm or a random grep command that's reading the files without any
-> idea what it's doing? udevadm does need to be fixed to avoid accessing
-> these files because it's unnecessary and dangerous.
+On Mon, 11 Mar 2013, Martin Mokrejs wrote:
 
-Are you going to also fix grep?  bash?  cat?
+> Hi,
+>   I use for my daily work acpiphp to manage express cards in Dell Vostro 3550.
+> I have never seen something like this before and believe this is some new regression
+> in 3.8 series. I had in teh a USB3 card and ejected it. Then I inserted a
+> SATA Sil3132 card but it is not detected and dmesg still ends with last lines
+> added when the USB card was being removed. The funny thing is that lspci reports
+> a mixture of USB-card properties with NEC chips along with Silicon Image eSATA card.
 
-Come on, be realistic.  If these files are so dangerous then they need
-to just be removed entirely from the kernel.  You aren't going to be
-able to patch grep for this.
+...
 
-greg k-h
+When did you run this lspci command?  After inserting the SATA card?
+
+Did you check to see if there were any hung processes?
+
+>   I think as a guide you can take the kmemleak report showing that USB did not
+> release its resources completely? Did I screw something with having USB HID generic
+> driver?
+
+Is this repeatable?  It would be more meaningful to see a kmemleak
+report for immediately after the USB-3 card is removed.  The leak may
+be related to these two lines in the log (they occurred only once):
+
+[ 8768.825242] xhci_hcd 0000:11:00.0: Abort command ring failed
+[ 8768.825244] xhci_hcd 0000:11:00.0: HC died; cleaning up
+
+Perhaps cleaning up after a dead controller doesn't deallocate all that
+it should.  Quite possibly this is connected with the fact that on this
+attempt, you removed the USB-3 card while the WD disk drive was plugged
+into it.
+
+Alan Stern
+
