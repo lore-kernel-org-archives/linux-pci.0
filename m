@@ -1,55 +1,70 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55933 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757027Ab3CSRH4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 19 Mar 2013 13:07:56 -0400
-Date: Tue, 19 Mar 2013 13:07:48 -0400
-From: Josh Boyer <jwboyer@redhat.com>
-To: Matthew Garrett <matthew.garrett@nebula.com>
-Cc: Dave Young <dyoung@redhat.com>, linux-kernel@vger.kernel.org,
-	linux-security-module@vger.kernel.org, linux-efi@vger.kernel.org,
-	kexec@lists.infradead.org, linux-pci@vger.kernel.org
-Subject: [PATCH v2] acpi: Ignore acpi_rsdp kernel parameter in a secure boot
- environment
-Message-ID: <20130319170747.GA15821@hansolo.jdub.homelinux.org>
-References: <1363642353-30749-1-git-send-email-matthew.garrett@nebula.com>
- <1363642353-30749-10-git-send-email-matthew.garrett@nebula.com>
- <5148261F.3030806@redhat.com>
- <20130319111916.GI11243@hansolo.jdub.homelinux.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 11 Mar 2013 07:25:00 -0400
+From: Neil Horman <nhorman@tuxdriver.com>
+To: Myron Stowe <myron.stowe@gmail.com>
+Cc: linux-kernel@vger.kernel.org, Prarit Bhargava <prarit@redhat.com>,
+	Don Zickus <dzickus@redhat.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Asit Mallick <asit.k.mallick@intel.com>,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2] irq: add quirk for broken interrupt remapping on 55XX
+ chipsets
+Message-ID: <20130311112500.GA12682@hmsreliant.think-freely.org>
+References: <1362158276-4901-1-git-send-email-nhorman@tuxdriver.com>
+ <1362423859-18516-1-git-send-email-nhorman@tuxdriver.com>
+ <20130309204940.GA31808@neilslaptop.think-freely.org>
+ <CAL-B5D15YY6L01q6BCNnP5VCJN7=LeHJSYLjNGXZPRx7VhsZCg@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130319111916.GI11243@hansolo.jdub.homelinux.org>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAL-B5D15YY6L01q6BCNnP5VCJN7=LeHJSYLjNGXZPRx7VhsZCg@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This option allows userspace to pass the RSDP address to the kernel.  This
-could potentially be used to circumvent the secure boot trust model.
-This is setup through the setup_arch function, which is called before the
-security_init function sets up the security_ops, so we cannot use a
-capable call here.  We ignore the setting if we are booted in Secure Boot
-mode.
-
-Signed-off-by: Josh Boyer <jwboyer@redhat.com>
----
-
- v2: Actually send it to Matthew this time
-
- drivers/acpi/osl.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/acpi/osl.c b/drivers/acpi/osl.c
-index 586e7e9..8950454 100644
---- a/drivers/acpi/osl.c
-+++ b/drivers/acpi/osl.c
-@@ -245,7 +245,7 @@ early_param("acpi_rsdp", setup_acpi_rsdp);
- acpi_physical_address __init acpi_os_get_root_pointer(void)
- {
- #ifdef CONFIG_KEXEC
--	if (acpi_rsdp)
-+	if (acpi_rsdp && !efi_enabled(EFI_SECURE_BOOT))
- 		return acpi_rsdp;
- #endif
+On Sat, Mar 09, 2013 at 03:20:57PM -0700, Myron Stowe wrote:
+> On Sat, Mar 9, 2013 at 1:49 PM, Neil Horman <nhorman@tuxdriver.com> wrote:
+> > On Mon, Mar 04, 2013 at 02:04:19PM -0500, Neil Horman wrote:
+> >> A few years back intel published a spec update:
+> >> http://www.intel.com/content/dam/doc/specification-update/5520-and-5500-chipset-ioh-specification-update.pdf
+> >>
+> >> For the 5520 and 5500 chipsets which contained an errata (specificially errata
+> >> 53), which noted that these chipsets can't properly do interrupt remapping, and
+> >> as a result the recommend that interrupt remapping be disabled in bios.  While
+> >> many vendors have a bios update to do exactly that, not all do, and of course
+> >> not all users update their bios to a level that corrects the problem.  As a
+> >> result, occasionally interrupts can arrive at a cpu even after affinity for that
+> >> interrupt has be moved, leading to lost or spurrious interrupts (usually
+> >> characterized by the message:
+> >> kernel: do_IRQ: 7.71 No irq handler for vector (irq -1)
+> >>
+> >> There have been several incidents recently of people seeing this error, and
+> >> investigation has shown that they have system for which their BIOS level is such
+> >> that this feature was not properly turned off.  As such, it would be good to
+> >> give them a reminder that their systems are vulnurable to this problem.
+> >>
+> >> Signed-off-by: Neil Horman <nhorman@tuxdriver.com>
+> >> CC: Prarit Bhargava <prarit@redhat.com>
+> >> CC: Don Zickus <dzickus@redhat.com>
+> >> CC: Don Dutile <ddutile@redhat.com>
+> >> CC: Bjorn Helgaas <bhelgaas@google.com>
+> >> CC: Asit Mallick <asit.k.mallick@intel.com>
+> >> CC: linux-pci@vger.kernel.org
+> >>
+> > Ping, anyone want to Ack/Nack this?
+> 
+> Don's comment earlier seems to imply that this is a short term fix and
+> that a more long term fix may be coming soon.  If that is the case
+> wouldn't we want to wait for the long term fix and just pull that in?
+> 
+> Myron
+> 
+As Don and Prarit have mentioned, an alternate change is being worked on and
+tested that may work around this issue, but we're not yet sure that it will, and
+we're not sure of the time frame for this fix.  Normally I would agree, that it
+would be easier just to wait for the long term fix, but as Prarit noted, since
+this hardware is in fact broken, I would rather do a both approach.  Its fine if
+this gets reverted tomorrow with a longer term fix as far as I'm concerned, its
+just caused enough problems already that I'd like to see it in place until the
+better solution arrives.
+Neil
  
--- 
-1.8.1.2
-
