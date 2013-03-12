@@ -1,49 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from avon.wwwdotorg.org ([70.85.31.133]:52517 "EHLO
-	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751931Ab3CNE40 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 14 Mar 2013 00:56:26 -0400
-Message-ID: <51415879.5080902@wwwdotorg.org>
-Date: Wed, 13 Mar 2013 22:56:25 -0600
-From: Stephen Warren <swarren@wwwdotorg.org>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:38790 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754205Ab3CLCwx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Mar 2013 22:52:53 -0400
+Message-ID: <513E983E.6050400@huawei.com>
+Date: Tue, 12 Mar 2013 10:51:42 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-To: Thierry Reding <thierry.reding@avionic-design.de>
-CC: Mitch Bradley <wmb@firmworks.com>,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Nadav Haklai <nadavh@marvell.com>, linux-pci@vger.kernel.org,
-	devicetree-discuss@lists.ozlabs.org,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
+To: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH 24/32] pci: PCIe driver for Marvell Armada 370/XP systems
-References: <20130312070852.GA6727@avionic-0098.mockup.avionic-design.de> <20130312155749.GA1820@obsidianresearch.com> <20130312203819.GA23221@avionic-0098.mockup.avionic-design.de> <20130312210328.GA22702@obsidianresearch.com> <20130312213006.GA23717@avionic-0098.mockup.avionic-design.de> <20130312220854.GA23112@obsidianresearch.com> <20130313081815.GD25940@avionic-0098.mockup.avionic-design.de> <20130313170205.GB24042@obsidianresearch.com> <20130313192628.GA28714@avionic-0098.mockup.avionic-design.de> <5140E85A.3040900@firmworks.com> <20130313213344.GA29402@avionic-0098.mockup.avionic-design.de>
-In-Reply-To: <20130313213344.GA29402@avionic-0098.mockup.avionic-design.de>
-Content-Type: text/plain; charset=ISO-8859-1
+	"Rafael J. Wysocki" <rjw@sisk.pl>, Yinghai Lu <yinghai@kernel.org>
+Subject: Re: 3.9-rc1: pciehp and eSATA card SiI 3132, no XHCI
+References: <513E7E1E.80508@fold.natur.cuni.cz>
+In-Reply-To: <513E7E1E.80508@fold.natur.cuni.cz>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/13/2013 03:33 PM, Thierry Reding wrote:
-> On Wed, Mar 13, 2013 at 10:58:02AM -1000, Mitch Bradley wrote: 
-> [...]
->> In this case, the answer to "what does pcie_controller do?" is
->> "it implements a PCI bus" below.  So 'device_type = "pci"' is
->> appropriate.
+On 2013/3/12 9:00, Martin Mokrejs wrote:
+> Hi,
+>   I cold-booted a computer with the card inserted before power-on and collected
+> lspci output and express card slot status every second. Then I tried eject and
+> hotplug inserts and it appearts the card is not detected, actually maybe pciehp
+> is not even suppoosed to work in this case as the slot was occupied during boot.
+> But let me come to it later.
 > 
-> Alright, that's 2 against 1. I don't have much of a choice but to
-> yield.
+> I noted the following on the very first eject of the so far cold-plugged card
+> that lspci properly reports PresDet change on the Changed: line. The only time
+> I ever saw it. ;-)
 
-Just one note here though re: how the Tegra HW works:
+Hi Martin,
+   PresDet change bit will be cleaned as soon as pciehp driver received the inturrupt from hardware,
+So it's difficult to capture the change.
 
-The Tegra "PCIe controller" HW translates from a SoC-internal bus to
-another SoC-internal bus. The "PCIe root ports" translate from that
-second SoC-internal bus to a PCIe bus. That's exactly why the PCIe
-root port configuration registers don't show up via type 0 PCIe
-configuration transactions. Thus, from a HW perspective, it really is
-true that the PCIe root ports are PCI devices, but the "PCIe
-controller" really isn't anything to do with PCIe.
+> 
+> 
+> I re-plugged the card and ejected several times while the while loops
+> collecting lspci and slot_status via the setpci shell command harvested
+> data. Still, in dmesg there was nothing logged regarding card insert/eject.
+> Eventually, I tried rmmod sata_sil24 (did NOT need 'rmmod -f') and that
+> did log something new.
+
+No new dmesg info when insert/eject maybe indicate the pciehp driver never received the
+interrupt or there is no bit set about Presence Detect Changed here. Or there is debug info
+like :
+pcie_isr: intr_loc %x at least.
+
+eSATA card SiI 3132, no XHCI, hotplug only got problem with 3.9-rc1? or both at 3.7 3.8?
+
+
+-- 
+Thanks!
+Yijing
+
