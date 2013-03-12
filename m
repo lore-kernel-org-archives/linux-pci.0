@@ -1,408 +1,421 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:33705 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752472Ab3C0SFO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Mar 2013 14:05:14 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Russell King <linux@arm.linux.org.uk>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	devicetree-discuss@lists.ozlabs.org,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Maen Suleiman <maen@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Olof Johansson <olof@lixom.net>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Mitch Bradley <wmb@firmworks.com>,
-	Andrew Murray <andrew.murray@arm.com>
-Subject: [RFC PATCHv1 5/5] arm: kirkwood: convert db-88f6281 to the Device Tree
-Date: Wed, 27 Mar 2013 19:05:04 +0100
-Message-Id: <1364407504-13524-6-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1364407504-13524-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1364407504-13524-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from fold.natur.cuni.cz ([195.113.57.32]:43041 "HELO
+	fold.natur.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S932432Ab3CLQDz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Mar 2013 12:03:55 -0400
+Message-ID: <513F51DE.1070101@fold.natur.cuni.cz>
+Date: Tue, 12 Mar 2013 17:03:42 +0100
+From: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
+MIME-Version: 1.0
+To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, Yinghai Lu <yinghai@kernel.org>
+Subject: Re: 3.7.10: acpiphp with pcie_aspm=off and eSATA card Sil 3132
+References: <513E4A30.5070909@fold.natur.cuni.cz>
+In-Reply-To: <513E4A30.5070909@fold.natur.cuni.cz>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This commit converts the db-88f6281 board to the Device Tree.
+Martin Mokrejs wrote:
+> Hi,
+>   while testing how acpiphp behaves when an eSATA express card is repeatedly
+> inserted and removed from a slot, I realized few new things. The 
+> 
+> while true; do echo -n "$(date +%T) SlotStatus "; setpci -s1c.7 0x5a.w; sleep 1; done
+> 
+> reveals that when I cold boot with a card in a slot, it reports 0040. When I boot with
+> an empty slot, we start with 0000 instead.
+> 
+> The first insertion of the card moves us to 0140.
+> 
+> If the mechanics works well, value stays at 0140 and upon sucessfull eject it falls down to 0100.
+> 
+> If the card slips out (like in this case) the value reports 0140 while the
+> slot is actually empty. Then the next insert in unnoticed, value is still 0140, and following
+> eject (even eject) rescues us and the slot reports 0100 properly.
 
-Note: this commit is not entirely correct. The db-88f6281 code was in
-fact handling both the case of a board having the 6281 (one PCIe
-interface) and the 6282 (two PCIe interfaces). For now, we make the
-assumption that we have two PCIe interfaces (because that's the board
-I have in my hands). We'll probably have to create two separate Device
-Trees to distinguish between those two boards.
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
----
- arch/arm/boot/dts/Makefile                  |    1 +
- arch/arm/boot/dts/kirkwood-db-88f6281.dts   |   96 ++++++++++++++++++++++++
- arch/arm/mach-kirkwood/Kconfig              |   12 +--
- arch/arm/mach-kirkwood/Makefile             |    2 +-
- arch/arm/mach-kirkwood/board-db88f6281-bp.c |   26 +++++++
- arch/arm/mach-kirkwood/board-dt.c           |    6 ++
- arch/arm/mach-kirkwood/common.h             |    6 ++
- arch/arm/mach-kirkwood/db88f6281-bp-setup.c |  108 ---------------------------
- 8 files changed, 142 insertions(+), 115 deletions(-)
- create mode 100644 arch/arm/boot/dts/kirkwood-db-88f6281.dts
- create mode 100644 arch/arm/mach-kirkwood/board-db88f6281-bp.c
- delete mode 100644 arch/arm/mach-kirkwood/db88f6281-bp-setup.c
+Below is a comparison with a cold-booted laptop using the same card
+inserted (still acpiphp as in $subj).
 
-diff --git a/arch/arm/boot/dts/Makefile b/arch/arm/boot/dts/Makefile
-index 9c62558..07ae76d 100644
---- a/arch/arm/boot/dts/Makefile
-+++ b/arch/arm/boot/dts/Makefile
-@@ -64,6 +64,7 @@ dtb-$(CONFIG_ARCH_KIRKWOOD) += kirkwood-dns320.dtb \
- 	kirkwood-km_kirkwood.dtb \
- 	kirkwood-lschlv2.dtb \
- 	kirkwood-lsxhl.dtb \
-+	kirkwood-db-88f6281.dtb \
- 	kirkwood-mplcec4.dtb \
- 	kirkwood-ns2.dtb \
- 	kirkwood-ns2lite.dtb \
-diff --git a/arch/arm/boot/dts/kirkwood-db-88f6281.dts b/arch/arm/boot/dts/kirkwood-db-88f6281.dts
-new file mode 100644
-index 0000000..8fceee9
---- /dev/null
-+++ b/arch/arm/boot/dts/kirkwood-db-88f6281.dts
-@@ -0,0 +1,96 @@
-+/*
-+ * Marvell DB-88F6281-BP Development Board Setup
-+ *
-+ * Saeed Bishara <saeed@marvell.com>
-+ * Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-+ *
-+ * This file is licensed under the terms of the GNU General Public
-+ * License version 2.  This program is licensed "as is" without any
-+ * warranty of any kind, whether express or implied.
-+ */
-+
-+/dts-v1/;
-+
-+/include/ "kirkwood.dtsi"
-+/include/ "kirkwood-6281.dtsi"
-+
-+/ {
-+	model = "Marvell DB-88F6281-BP Development Board";
-+	compatible = "marvell,db-88f6281-bp", "marvell,kirkwood-88f6281", "marvell,kirkwood";
-+
-+	memory {
-+		device_type = "memory";
-+		reg = <0x00000000 0x20000000>; /* 512 MB */
-+	};
-+
-+	chosen {
-+		bootargs = "console=ttyS0,115200n8 earlyprintk";
-+	};
-+
-+	ocp@f1000000 {
-+		pinctrl@10000 {
-+			pmx_sdio_gpios: pmx-sdio-gpios {
-+				marvell,pins = "mpp37", "mpp38";
-+				marvell,function = "gpio";
-+			};
-+		};
-+
-+		serial@12000 {
-+			pinctrl-0 = <&pmx_uart0>;
-+			pinctrl-names = "default";
-+			clock-frequency = <200000000>;
-+			status = "ok";
-+		};
-+
-+		nand@3000000 {
-+			pinctrl-0 = <&pmx_nand>;
-+			pinctrl-names = "default";
-+			chip-delay = <25>;
-+			status = "okay";
-+
-+			partition@0 {
-+				label = "uboot";
-+				reg = <0x0 0x100000>;
-+			};
-+
-+			partition@100000 {
-+				label = "uImage";
-+				reg = <0x100000 0x400000>;
-+			};
-+
-+			partition@500000 {
-+				label = "root";
-+				reg = <0x500000 0x1fb00000>;
-+			};
-+		};
-+
-+		sata@80000 {
-+			nr-ports = <2>;
-+			status = "okay";
-+		};
-+
-+		ehci@50000 {
-+			status = "okay";
-+		};
-+
-+		mvsdio@90000 {
-+			pinctrl-0 = <&pmx_sdio_gpios>;
-+			pinctrl-names = "default";
-+			wp-gpios = <&gpio1 5 0>;
-+			cd-gpios = <&gpio1 6 0>;
-+			status = "okay";
-+		};
-+
-+		pcie-controller {
-+			status = "okay";
-+
-+			pcie@1,0 {
-+				status = "okay";
-+			};
-+
-+			pcie@2,0 {
-+				status = "okay";
-+			};
-+		};
-+	};
-+};
-diff --git a/arch/arm/mach-kirkwood/Kconfig b/arch/arm/mach-kirkwood/Kconfig
-index 7b6a64b..56bbeb0 100644
---- a/arch/arm/mach-kirkwood/Kconfig
-+++ b/arch/arm/mach-kirkwood/Kconfig
-@@ -2,12 +2,6 @@ if ARCH_KIRKWOOD
- 
- menu "Marvell Kirkwood Implementations"
- 
--config MACH_DB88F6281_BP
--	bool "Marvell DB-88F6281-BP Development Board"
--	help
--	  Say 'Y' here if you want your kernel to support the
--	  Marvell DB-88F6281-BP Development Board.
--
- config MACH_RD88F6192_NAS
- 	bool "Marvell RD-88F6192-NAS Reference Board"
- 	help
-@@ -58,6 +52,12 @@ config ARCH_KIRKWOOD_DT
- 	  Say 'Y' here if you want your kernel to support the
- 	  Marvell Kirkwood using flattened device tree.
- 
-+config MACH_DB88F6281_BP_DT
-+	bool "Marvell DB-88F6281-BP Development Board (Flattened Device Tree)"
-+	help
-+	  Say 'Y' here if you want your kernel to support the Marvell
-+	  DB-88F6281-BP Development Board (Flattened Device Tree).
-+
- config MACH_GURUPLUG_DT
- 	bool "Marvell GuruPlug Reference Board (Flattened Device Tree)"
- 	select ARCH_KIRKWOOD_DT
-diff --git a/arch/arm/mach-kirkwood/Makefile b/arch/arm/mach-kirkwood/Makefile
-index d805f80..ea5a2f8 100644
---- a/arch/arm/mach-kirkwood/Makefile
-+++ b/arch/arm/mach-kirkwood/Makefile
-@@ -1,6 +1,5 @@
- obj-y				+= common.o irq.o pcie.o mpp.o
- 
--obj-$(CONFIG_MACH_DB88F6281_BP)		+= db88f6281-bp-setup.o
- obj-$(CONFIG_MACH_RD88F6192_NAS)	+= rd88f6192-nas-setup.o
- obj-$(CONFIG_MACH_RD88F6281)		+= rd88f6281-setup.o
- obj-$(CONFIG_MACH_MV88F6281GTW_GE)	+= mv88f6281gtw_ge-setup.o
-@@ -20,6 +19,7 @@ obj-$(CONFIG_MACH_NET5BIG_V2)		+= netxbig_v2-setup.o lacie_v2-common.o
- obj-$(CONFIG_MACH_T5325)		+= t5325-setup.o
- 
- obj-$(CONFIG_ARCH_KIRKWOOD_DT)		+= board-dt.o
-+obj-$(CONFIG_MACH_DB88F6281_BP_DT)	+= board-db88f6281-bp.o
- obj-$(CONFIG_MACH_DREAMPLUG_DT)		+= board-dreamplug.o
- obj-$(CONFIG_MACH_GURUPLUG_DT)		+= board-guruplug.o
- obj-$(CONFIG_MACH_ICONNECT_DT)		+= board-iconnect.o
-diff --git a/arch/arm/mach-kirkwood/board-db88f6281-bp.c b/arch/arm/mach-kirkwood/board-db88f6281-bp.c
-new file mode 100644
-index 0000000..bffd160
---- /dev/null
-+++ b/arch/arm/mach-kirkwood/board-db88f6281-bp.c
-@@ -0,0 +1,26 @@
-+/*
-+ * arch/arm/mach-kirkwood/db88f6281-bp-setup.c
-+ *
-+ * Saeed Bishara <saeed@marvell.com>
-+ *
-+ * Marvell DB-88F6281-BP Development Board Setup
-+ *
-+ * This file is licensed under the terms of the GNU General Public
-+ * License version 2.  This program is licensed "as is" without any
-+ * warranty of any kind, whether express or implied.
-+ */
-+
-+#include <linux/kernel.h>
-+#include <linux/init.h>
-+#include <linux/of.h>
-+#include <linux/mv643xx_eth.h>
-+#include "common.h"
-+
-+static struct mv643xx_eth_platform_data db88f6281_ge00_data = {
-+	.phy_addr	= MV643XX_ETH_PHY_ADDR(8),
-+};
-+
-+void __init db88f6281_init(void)
-+{
-+	kirkwood_ge00_init(&db88f6281_ge00_data);
-+}
-diff --git a/arch/arm/mach-kirkwood/board-dt.c b/arch/arm/mach-kirkwood/board-dt.c
-index 1b4675f..fbc0d8b 100644
---- a/arch/arm/mach-kirkwood/board-dt.c
-+++ b/arch/arm/mach-kirkwood/board-dt.c
-@@ -137,6 +137,11 @@ static void __init kirkwood_dt_init(void)
- 	    of_machine_is_compatible("lacie,netspace_mini_v2"))
- 		ns2_init();
- 
-+	if (of_machine_is_compatible("marvell,db-88f6281-bp")) {
-+		needs_pcie_wins = 0;
-+		db88f6281_init();
-+	}
-+
- 	if (of_machine_is_compatible("mpl,cec4"))
- 		mplcec4_init();
- 
-@@ -170,6 +175,7 @@ static const char * const kirkwood_dt_board_compat[] = {
- 	"lacie,netspace_v2",
- 	"lacie,netspace_lite_v2",
- 	"lacie,netspace_mini_v2",
-+	"marvell,db-88f6281-bp",
- 	"mpl,cec4",
- 	"plathome,openblocks-a6",
- 	"usi,topkick",
-diff --git a/arch/arm/mach-kirkwood/common.h b/arch/arm/mach-kirkwood/common.h
-index de280f5..410b1ff 100644
---- a/arch/arm/mach-kirkwood/common.h
-+++ b/arch/arm/mach-kirkwood/common.h
-@@ -120,6 +120,12 @@ void km_kirkwood_init(void);
- static inline void km_kirkwood_init(void) {};
- #endif
- 
-+#ifdef CONFIG_MACH_DB88F6281_BP_DT
-+void db88f6281_init(void);
-+#else
-+static inline void db88f6281_init(void) {};
-+#endif
-+
- #ifdef CONFIG_MACH_MPLCEC4_DT
- void mplcec4_init(void);
- #else
-diff --git a/arch/arm/mach-kirkwood/db88f6281-bp-setup.c b/arch/arm/mach-kirkwood/db88f6281-bp-setup.c
-deleted file mode 100644
-index 5a369fe..0000000
---- a/arch/arm/mach-kirkwood/db88f6281-bp-setup.c
-+++ /dev/null
-@@ -1,108 +0,0 @@
--/*
-- * arch/arm/mach-kirkwood/db88f6281-bp-setup.c
-- *
-- * Marvell DB-88F6281-BP Development Board Setup
-- *
-- * This file is licensed under the terms of the GNU General Public
-- * License version 2.  This program is licensed "as is" without any
-- * warranty of any kind, whether express or implied.
-- */
--
--#include <linux/kernel.h>
--#include <linux/init.h>
--#include <linux/sizes.h>
--#include <linux/platform_device.h>
--#include <linux/mtd/partitions.h>
--#include <linux/ata_platform.h>
--#include <linux/mv643xx_eth.h>
--#include <asm/mach-types.h>
--#include <asm/mach/arch.h>
--#include <mach/kirkwood.h>
--#include <linux/platform_data/mmc-mvsdio.h>
--#include "common.h"
--#include "mpp.h"
--
--static struct mtd_partition db88f6281_nand_parts[] = {
--	{
--		.name = "u-boot",
--		.offset = 0,
--		.size = SZ_1M
--	}, {
--		.name = "uImage",
--		.offset = MTDPART_OFS_NXTBLK,
--		.size = SZ_4M
--	}, {
--		.name = "root",
--		.offset = MTDPART_OFS_NXTBLK,
--		.size = MTDPART_SIZ_FULL
--	},
--};
--
--static struct mv643xx_eth_platform_data db88f6281_ge00_data = {
--	.phy_addr	= MV643XX_ETH_PHY_ADDR(8),
--};
--
--static struct mv_sata_platform_data db88f6281_sata_data = {
--	.n_ports	= 2,
--};
--
--static struct mvsdio_platform_data db88f6281_mvsdio_data = {
--	.gpio_write_protect	= 37,
--	.gpio_card_detect	= 38,
--};
--
--static unsigned int db88f6281_mpp_config[] __initdata = {
--	MPP0_NF_IO2,
--	MPP1_NF_IO3,
--	MPP2_NF_IO4,
--	MPP3_NF_IO5,
--	MPP4_NF_IO6,
--	MPP5_NF_IO7,
--	MPP18_NF_IO0,
--	MPP19_NF_IO1,
--	MPP37_GPIO,
--	MPP38_GPIO,
--	0
--};
--
--static void __init db88f6281_init(void)
--{
--	/*
--	 * Basic setup. Needs to be called early.
--	 */
--	kirkwood_init();
--	kirkwood_mpp_conf(db88f6281_mpp_config);
--
--	kirkwood_nand_init(ARRAY_AND_SIZE(db88f6281_nand_parts), 25);
--	kirkwood_ehci_init();
--	kirkwood_ge00_init(&db88f6281_ge00_data);
--	kirkwood_sata_init(&db88f6281_sata_data);
--	kirkwood_uart0_init();
--	kirkwood_sdio_init(&db88f6281_mvsdio_data);
--}
--
--static int __init db88f6281_pci_init(void)
--{
--	if (machine_is_db88f6281_bp()) {
--		u32 dev, rev;
--
--		kirkwood_pcie_id(&dev, &rev);
--		if (dev == MV88F6282_DEV_ID)
--			kirkwood_pcie_init(KW_PCIE1 | KW_PCIE0);
--		else
--			kirkwood_pcie_init(KW_PCIE0);
--	}
--	return 0;
--}
--subsys_initcall(db88f6281_pci_init);
--
--MACHINE_START(DB88F6281_BP, "Marvell DB-88F6281-BP Development Board")
--	/* Maintainer: Saeed Bishara <saeed@marvell.com> */
--	.atag_offset	= 0x100,
--	.init_machine	= db88f6281_init,
--	.map_io		= kirkwood_map_io,
--	.init_early	= kirkwood_init_early,
--	.init_irq	= kirkwood_init_irq,
--	.init_time	= kirkwood_timer_init,
--	.restart	= kirkwood_restart,
--MACHINE_END
--- 
-1.7.9.5
+Interesting is that on the lines starting with + sign (cold booted with
+an empty card slot, the hotplug insert via acpiphp on 3.7.10 kernel with
+pcie_aspm=off) and reg 10, 18, 20, 30 the hex values are zeroed in their
+upper bits. Is this same as
+'[virtual] Expansion ROM at f0000000 [disabled] [size=512K]'
+in lspci ouput?
 
+
+# cut -c 16- eSATA_inserted_coldboot/dmesg_after_HDD_attached.txt > /tmp/dmesg_eSATA_inserted_coldboot.txt
+# cut -c 16- eSATA_hotplug_disabled_Media_card_reader/dmesg_after.txt > /tmp/dmesg_eSATA_hotplug_disabled_Media_card_reader.txt
+# diff -u -w /tmp/dmesg_eSATA_inserted_coldboot.txt /tmp/dmesg_eSATA_hotplug_disabled_Media_card_reader.txt | less
+
+--- /tmp/dmesg_eSATA_inserted_coldboot.txt      2013-03-12 15:55:55.000000000 +0100
++++ /tmp/dmesg_eSATA_hotplug_disabled_Media_card_reader.txt     2013-03-12 15:56:13.000000000 +0100
+@@ -369,12 +369,6 @@
+ pci_bus 0000:0b: bus scan returning with max=0b
+ pci 0000:00:1c.7: scanning [bus 11-16] behind bridge, pass 0
+ pci_bus 0000:11: scanning bus
+-pci 0000:11:00.0: [1095:3132] type 00 class 0x018000
+-pci 0000:11:00.0: reg 10: [mem 0xf6c84000-0xf6c8407f 64bit]
+-pci 0000:11:00.0: reg 18: [mem 0xf6c80000-0xf6c83fff 64bit]
+-pci 0000:11:00.0: reg 20: [io  0xc000-0xc07f]
+-pci 0000:11:00.0: reg 30: [mem 0xf6c00000-0xf6c7ffff pref]
+-pci 0000:11:00.0: supports D1 D2
+ pci_bus 0000:11: fixups for bus
+ pci 0000:00:1c.7: PCI bridge to [bus 11-16]
+ pci 0000:00:1c.7:   bridge window [io  0xc000-0xdfff]
+@@ -439,9 +433,6 @@
+ pci 0000:09:00.0: BAR 0: reserving [mem 0xf7e00000-0xf7e01fff flags 0x140204] (d=0, p=0)
+ pci 0000:0b:00.0: BAR 0: reserving [mem 0xf7d00000-0xf7d0ffff flags 0x140204] (d=0, p=0)
+ pci 0000:0b:00.0: BAR 2: reserving [mem 0xf7d10000-0xf7d11fff flags 0x140204] (d=0, p=0)
+-pci 0000:11:00.0: BAR 0: reserving [mem 0xf6c84000-0xf6c8407f flags 0x140204] (d=0, p=0)
+-pci 0000:11:00.0: BAR 2: reserving [mem 0xf6c80000-0xf6c83fff flags 0x140204] (d=0, p=0)
+-pci 0000:11:00.0: BAR 4: reserving [io  0xc000-0xc07f flags 0x40101] (d=0, p=0)
+ e820: reserve RAM buffer [mem 0x0009d400-0x0009ffff]
+ e820: reserve RAM buffer [mem 0xda4e5000-0xdbffffff]
+ e820: reserve RAM buffer [mem 0xda793000-0xdbffffff]
+[cut]
++pci 0000:11:00.0: [1095:3132] type 00 class 0x018000
++pci 0000:11:00.0: reg 10: [mem 0x00000000-0x0000007f 64bit]
++pci 0000:11:00.0: reg 18: [mem 0x00000000-0x00003fff 64bit]
++pci 0000:11:00.0: reg 20: [io  0x0000-0x007f]
++pci 0000:11:00.0: reg 30: [mem 0x00000000-0x0007ffff pref]
++pci 0000:11:00.0: supports D1 D2
++pci 0000:11:00.0: BAR 6: assigned [mem 0xf0000000-0xf007ffff pref]
++pci 0000:11:00.0: BAR 2: assigned [mem 0xf6c00000-0xf6c03fff 64bit]
++pci 0000:11:00.0: BAR 2: set to [mem 0xf6c00000-0xf6c03fff 64bit] (PCI address [0xf6c00000-0xf6c03fff])
++pci 0000:11:00.0: BAR 0: assigned [mem 0xf6c04000-0xf6c0407f 64bit]
++pci 0000:11:00.0: BAR 0: set to [mem 0xf6c04000-0xf6c0407f 64bit] (PCI address [0xf6c04000-0xf6c0407f])
++pci 0000:11:00.0: BAR 4: assigned [io  0xc000-0xc07f]
++pci 0000:11:00.0: BAR 4: set to [io  0xc000-0xc07f] (PCI address [0xc000-0xc07f])
++sata_sil24 0000:11:00.0: version 1.1
++sata_sil24 0000:11:00.0: enabling device (0100 -> 0103)
++sata_sil24 0000:11:00.0: enabling bus mastering
++scsi6 : sata_sil24
++scsi7 : sata_sil24
++ata7: SATA max UDMA/100 host m128@0xf6c04000 port 0xf6c00000 irq 19
++ata8: SATA max UDMA/100 host m128@0xf6c04000 port 0xf6c02000 irq 19
++ata7: SATA link down (SStatus 0 SControl 0)
++ata8: SATA link down (SStatus 0 SControl 0)
++sata_sil24 0000:11:00.0: PME# disabled
++sata_sil24: IRQ status == 0xffffffff, PCI fault or device removal?
+
+
+
+
+
+
+
+Below is merely another example of the same thing but with MediaCardReader enabled
+in BIOS.
+It is in turn being "reset" by ehci_hcd in the end. I believe this is why I observed
+that the media card reader sometime appears in the system only after I plugged into
+the express card slot a card (not sure from top of my head if that only only with
+this eSATA card or even other cards, could be that this is sata_sil24-specific).
+I gather the Media Card Reader is just an innocent victim as I haven't found
+lsusb/lspci diffs when I have the card reader or disabled in BIOS, except that device
+being one. Why other USB-bound devices, like the UVC Camera, are not being reset as
+well by ehci_hcd, I do not know. Maybe usb-storage or ums-realtek looks only for
+disk-like devices? Or sata_sil24 looks for disk-like devices to reset them?
+
+
+# cut -c 16- eSATA_hotplug/dmesg_after.txt > /tmp/dmesg_eSATA_hotplug_enabled_Media_card_reader.txt
+# diff -u -w /tmp/dmesg_eSATA_inserted_coldboot.txt /tmp/dmesg_eSATA_hotplug_enabled_Media_card_reader.txt | less
+
+--- /tmp/dmesg_eSATA_inserted_coldboot.txt      2013-03-12 15:55:55.000000000 +0100
++++ /tmp/dmesg_eSATA_hotplug_enabled_Media_card_reader.txt      2013-03-12 16:24:48.000000000 +0100
+@@ -369,12 +369,6 @@
+ pci_bus 0000:0b: bus scan returning with max=0b
+ pci 0000:00:1c.7: scanning [bus 11-16] behind bridge, pass 0
+ pci_bus 0000:11: scanning bus
+-pci 0000:11:00.0: [1095:3132] type 00 class 0x018000
+-pci 0000:11:00.0: reg 10: [mem 0xf6c84000-0xf6c8407f 64bit]
+-pci 0000:11:00.0: reg 18: [mem 0xf6c80000-0xf6c83fff 64bit]
+-pci 0000:11:00.0: reg 20: [io  0xc000-0xc07f]
+-pci 0000:11:00.0: reg 30: [mem 0xf6c00000-0xf6c7ffff pref]
+-pci 0000:11:00.0: supports D1 D2
+ pci_bus 0000:11: fixups for bus
+ pci 0000:00:1c.7: PCI bridge to [bus 11-16]
+ pci 0000:00:1c.7:   bridge window [io  0xc000-0xdfff]
+@@ -439,9 +433,6 @@
+ pci 0000:09:00.0: BAR 0: reserving [mem 0xf7e00000-0xf7e01fff flags 0x140204] (d=0, p=0)
+ pci 0000:0b:00.0: BAR 0: reserving [mem 0xf7d00000-0xf7d0ffff flags 0x140204] (d=0, p=0)
+ pci 0000:0b:00.0: BAR 2: reserving [mem 0xf7d10000-0xf7d11fff flags 0x140204] (d=0, p=0)
+-pci 0000:11:00.0: BAR 0: reserving [mem 0xf6c84000-0xf6c8407f flags 0x140204] (d=0, p=0)
+-pci 0000:11:00.0: BAR 2: reserving [mem 0xf6c80000-0xf6c83fff flags 0x140204] (d=0, p=0)
+-pci 0000:11:00.0: BAR 4: reserving [io  0xc000-0xc07f flags 0x40101] (d=0, p=0)
+ e820: reserve RAM buffer [mem 0x0009d400-0x0009ffff]
+ e820: reserve RAM buffer [mem 0xda4e5000-0xdbffffff]
+ e820: reserve RAM buffer [mem 0xda793000-0xdbffffff]
+[cut]
++pci 0000:11:00.0: [1095:3132] type 00 class 0x018000
++pci 0000:11:00.0: reg 10: [mem 0x00000000-0x0000007f 64bit]
++pci 0000:11:00.0: reg 18: [mem 0x00000000-0x00003fff 64bit]
++pci 0000:11:00.0: reg 20: [io  0x0000-0x007f]
++pci 0000:11:00.0: reg 30: [mem 0x00000000-0x0007ffff pref]
++pci 0000:11:00.0: supports D1 D2
++pci 0000:11:00.0: BAR 6: assigned [mem 0xf0000000-0xf007ffff pref]
++pci 0000:11:00.0: BAR 2: assigned [mem 0xf6c00000-0xf6c03fff 64bit]
++pci 0000:11:00.0: BAR 2: set to [mem 0xf6c00000-0xf6c03fff 64bit] (PCI address [0xf6c00000-0xf6c03fff])
++pci 0000:11:00.0: BAR 0: assigned [mem 0xf6c04000-0xf6c0407f 64bit]
++pci 0000:11:00.0: BAR 0: set to [mem 0xf6c04000-0xf6c0407f 64bit] (PCI address [0xf6c04000-0xf6c0407f])
++pci 0000:11:00.0: BAR 4: assigned [io  0xc000-0xc07f]
++pci 0000:11:00.0: BAR 4: set to [io  0xc000-0xc07f] (PCI address [0xc000-0xc07f])
++sata_sil24 0000:11:00.0: version 1.1
++sata_sil24 0000:11:00.0: enabling device (0100 -> 0103)
++sata_sil24 0000:11:00.0: enabling bus mastering
++scsi7 : sata_sil24
++scsi8 : sata_sil24
++ata7: SATA max UDMA/100 host m128@0xf6c04000 port 0xf6c00000 irq 19
++ata8: SATA max UDMA/100 host m128@0xf6c04000 port 0xf6c02000 irq 19
++sata_sil24 0000:11:00.0: PME# disabled
++ata7: SATA link down (SStatus FFFFFFFF SControl FFFFFFFF)
++------------[ cut here ]------------
++WARNING: at drivers/ata/libata-core.c:6243 ata_host_detach+0x75/0xdb()
++Hardware name: Vostro 3550
++Modules linked in: sata_sil24 i915 fbcon bitblit cfbfillrect softcursor cfbimgblt font i2c_algo_bit cfbcopyarea drm_kms_helper drm fb iwldvm iwlwifi fbdev
++Pid: 4, comm: kworker/0:0 Not tainted 3.7.10-default #2
++Call Trace:
++ [<ffffffff81077a43>] warn_slowpath_common+0x7e/0x96
++ [<ffffffff81077a70>] warn_slowpath_null+0x15/0x17
++ [<ffffffff81340de4>] ata_host_detach+0x75/0xdb
++ [<ffffffff81340e62>] ata_pci_remove_one+0x18/0x1a
++ [<ffffffff81281c84>] pci_device_remove+0x38/0x8b
++ [<ffffffff81307a41>] __device_release_driver+0x81/0xd4
++ [<ffffffff81307ab4>] device_release_driver+0x20/0x2d
++ [<ffffffff813075ee>] bus_remove_device+0xef/0x103
++ [<ffffffff813052fe>] device_del+0x131/0x183
++ [<ffffffff8130535e>] device_unregister+0xe/0x1a
++ [<ffffffff8127d741>] pci_stop_bus_device+0x65/0x87
++ [<ffffffff8127d8af>] pci_stop_and_remove_bus_device+0xf/0x1c
++ [<ffffffff8128d516>] acpiphp_disable_slot+0x8f/0x17e
++ [<ffffffff8128c593>] ? get_slot_status+0x38/0x9b
++ [<ffffffff8128d63a>] acpiphp_check_bridge.isra.16+0x35/0xc6
++ [<ffffffff8128db5b>] _handle_hotplug_event_bridge+0x275/0x3de
++ [<ffffffff8108b770>] ? process_one_work+0x144/0x2d2
++ [<ffffffff810b4944>] ? trace_hardirqs_on_caller+0x121/0x158
++ [<ffffffff8108b7da>] process_one_work+0x1ae/0x2d2
++ [<ffffffff8108b770>] ? process_one_work+0x144/0x2d2
++ [<ffffffff8128d8e6>] ? _handle_hotplug_event_func+0x17f/0x17f
++ [<ffffffff8108c4d2>] worker_thread+0x13e/0x1d5
++ [<ffffffff8108c394>] ? manage_workers+0x23d/0x23d
++ [<ffffffff8108ff0a>] kthread+0xac/0xb4
++ [<ffffffff8108fe5e>] ? __init_kthread_worker+0x54/0x54
++ [<ffffffff815e542c>] ret_from_fork+0x7c/0xb0
++ [<ffffffff8108fe5e>] ? __init_kthread_worker+0x54/0x54
++---[ end trace 6a632979eae68aa3 ]---
++------------[ cut here ]------------
++WARNING: at drivers/ata/libata-core.c:6243 ata_host_detach+0x75/0xdb()
++Hardware name: Vostro 3550
++Modules linked in: sata_sil24 i915 fbcon bitblit cfbfillrect softcursor cfbimgblt font i2c_algo_bit cfbcopyarea drm_kms_helper drm fb iwldvm iwlwifi fbdev
++Pid: 4, comm: kworker/0:0 Tainted: G        W    3.7.10-default #2
++Call Trace:
++ [<ffffffff81077a43>] warn_slowpath_common+0x7e/0x96
++ [<ffffffff81077a70>] warn_slowpath_null+0x15/0x17
++ [<ffffffff81340de4>] ata_host_detach+0x75/0xdb
++ [<ffffffff81340e62>] ata_pci_remove_one+0x18/0x1a
++ [<ffffffff81281c84>] pci_device_remove+0x38/0x8b
++ [<ffffffff81307a41>] __device_release_driver+0x81/0xd4
++ [<ffffffff81307ab4>] device_release_driver+0x20/0x2d
++ [<ffffffff813075ee>] bus_remove_device+0xef/0x103
++ [<ffffffff813052fe>] device_del+0x131/0x183
++ [<ffffffff8130535e>] device_unregister+0xe/0x1a
++ [<ffffffff8127d741>] pci_stop_bus_device+0x65/0x87
++ [<ffffffff8127d8af>] pci_stop_and_remove_bus_device+0xf/0x1c
++ [<ffffffff8128d516>] acpiphp_disable_slot+0x8f/0x17e
++ [<ffffffff8128c593>] ? get_slot_status+0x38/0x9b
++ [<ffffffff8128d63a>] acpiphp_check_bridge.isra.16+0x35/0xc6
++ [<ffffffff8128db5b>] _handle_hotplug_event_bridge+0x275/0x3de
++ [<ffffffff8108b770>] ? process_one_work+0x144/0x2d2
++ [<ffffffff810b4944>] ? trace_hardirqs_on_caller+0x121/0x158
++ [<ffffffff8108b7da>] process_one_work+0x1ae/0x2d2
++ [<ffffffff8108b770>] ? process_one_work+0x144/0x2d2
++ [<ffffffff8128d8e6>] ? _handle_hotplug_event_func+0x17f/0x17f
++ [<ffffffff8108c4d2>] worker_thread+0x13e/0x1d5
++ [<ffffffff8108c394>] ? manage_workers+0x23d/0x23d
++ [<ffffffff8108ff0a>] kthread+0xac/0xb4
++ [<ffffffff8108fe5e>] ? __init_kthread_worker+0x54/0x54
++ [<ffffffff815e542c>] ret_from_fork+0x7c/0xb0
++ [<ffffffff8108fe5e>] ? __init_kthread_worker+0x54/0x54
++---[ end trace 6a632979eae68aa4 ]---
++sata_sil24: IRQ status == 0xffffffff, PCI fault or device removal?
++pci 0000:11:00.0: [1095:3132] type 00 class 0x018000
++pci 0000:11:00.0: reg 10: [mem 0x00000000-0x0000007f 64bit]
++pci 0000:11:00.0: reg 18: [mem 0x00000000-0x00003fff 64bit]
++pci 0000:11:00.0: reg 20: [io  0x0000-0x007f]
++pci 0000:11:00.0: reg 30: [mem 0x00000000-0x0007ffff pref]
++pci 0000:11:00.0: supports D1 D2
++pci 0000:11:00.0: BAR 6: assigned [mem 0xf0000000-0xf007ffff pref]
++pci 0000:11:00.0: BAR 2: assigned [mem 0xf6c00000-0xf6c03fff 64bit]
++pci 0000:11:00.0: BAR 2: set to [mem 0xf6c00000-0xf6c03fff 64bit] (PCI address [0xf6c00000-0xf6c03fff])
++pci 0000:11:00.0: BAR 0: assigned [mem 0xf6c04000-0xf6c0407f 64bit]
++pci 0000:11:00.0: BAR 0: set to [mem 0xf6c04000-0xf6c0407f 64bit] (PCI address [0xf6c04000-0xf6c0407f])
++pci 0000:11:00.0: BAR 4: assigned [io  0xc000-0xc07f]
++pci 0000:11:00.0: BAR 4: set to [io  0xc000-0xc07f] (PCI address [0xc000-0xc07f])
++sata_sil24 0000:11:00.0: enabling device (0100 -> 0103)
++sata_sil24 0000:11:00.0: enabling bus mastering
++scsi9 : sata_sil24
++scsi10 : sata_sil24
++ata9: SATA max UDMA/100 host m128@0xf6c04000 port 0xf6c00000 irq 19
++ata10: SATA max UDMA/100 host m128@0xf6c04000 port 0xf6c02000 irq 19
++ehci_hcd 0000:00:1d.0: detected XactErr len 0/13 retry 1
++ehci_hcd 0000:00:1d.0: detected XactErr len 0/13 retry 2
++ehci_hcd 0000:00:1d.0: detected XactErr len 0/13 retry 3
++ehci_hcd 0000:00:1d.0: detected XactErr len 0/13 retry 4
++ehci_hcd 0000:00:1d.0: detected XactErr len 0/13 retry 5
++ehci_hcd 0000:00:1d.0: detected XactErr len 0/13 retry 6
++ehci_hcd 0000:00:1d.0: detected XactErr len 0/13 retry 7
++ehci_hcd 0000:00:1d.0: detected XactErr len 0/13 retry 8
++ehci_hcd 0000:00:1d.0: detected XactErr len 0/13 retry 9
++ehci_hcd 0000:00:1d.0: detected XactErr len 0/13 retry 10
++ehci_hcd 0000:00:1d.0: detected XactErr len 0/13 retry 11
++ehci_hcd 0000:00:1d.0: detected XactErr len 0/13 retry 12
++ehci_hcd 0000:00:1d.0: detected XactErr len 0/13 retry 13
++ehci_hcd 0000:00:1d.0: detected XactErr len 0/13 retry 14
++ehci_hcd 0000:00:1d.0: detected XactErr len 0/13 retry 15
++ehci_hcd 0000:00:1d.0: detected XactErr len 0/13 retry 16
++ehci_hcd 0000:00:1d.0: detected XactErr len 0/13 retry 17
++ehci_hcd 0000:00:1d.0: detected XactErr len 0/13 retry 18
++ehci_hcd 0000:00:1d.0: detected XactErr len 0/13 retry 19
++ehci_hcd 0000:00:1d.0: detected XactErr len 0/13 retry 20
++ehci_hcd 0000:00:1d.0: detected XactErr len 0/13 retry 21
++ehci_hcd 0000:00:1d.0: detected XactErr len 0/13 retry 22
++ehci_hcd 0000:00:1d.0: detected XactErr len 0/13 retry 23
++ehci_hcd 0000:00:1d.0: detected XactErr len 0/13 retry 24
++ehci_hcd 0000:00:1d.0: detected XactErr len 0/13 retry 25
++ehci_hcd 0000:00:1d.0: detected XactErr len 0/13 retry 26
++ehci_hcd 0000:00:1d.0: detected XactErr len 0/13 retry 27
++ehci_hcd 0000:00:1d.0: detected XactErr len 0/13 retry 28
++ehci_hcd 0000:00:1d.0: detected XactErr len 0/13 retry 29
++ehci_hcd 0000:00:1d.0: detected XactErr len 0/13 retry 30
++ehci_hcd 0000:00:1d.0: detected XactErr len 0/13 retry 31
++ehci_hcd 0000:00:1d.0: devpath 1.6 ep2in 3strikes
++hub 2-1:1.0: logical disconnect on port 6
++hub 2-1:1.0: state 7 ports 8 chg 0040 evt 0000
++hub 2-1:1.0: port 6, status 0100, change 0001, 12 Mb/s
++usb 2-1.6: USB disconnect, device number 5
++usb 2-1.6: unregistering device
++usb 2-1.6: unregistering interface 2-1.6:1.0
++usb 2-1.6: usb_disable_device nuking all URBs
++hub 2-1:1.0: debounce: port 6: total 100ms stable 100ms status 0x100
++ata9: SATA link down (SStatus 0 SControl 0)
++hub 2-1:1.0: state 7 ports 8 chg 0000 evt 0040
++hub 2-1:1.0: port 6, status 0101, change 0001, 12 Mb/s
++hub 2-1:1.0: debounce: port 6: total 100ms stable 100ms status 0x101
++usb 2-1.6: new high-speed USB device number 8 using ehci_hcd
++usb 2-1.6: default language 0x0409
++usb 2-1.6: udev 8, busnum 2, minor = 135
++usb 2-1.6: New USB device found, idVendor=0bda, idProduct=0138
++usb 2-1.6: New USB device strings: Mfr=1, Product=2, SerialNumber=3
++usb 2-1.6: Product: USB2.0-CRW
++usb 2-1.6: Manufacturer: Generic
++usb 2-1.6: SerialNumber: 20090516388200000
++usb 2-1.6: usb_probe_device
++usb 2-1.6: configuration #1 chosen from 1 choice
++usb 2-1.6: adding 2-1.6:1.0 (config #1, interface 0)
++usb-storage 2-1.6:1.0: usb_probe_interface
++usb-storage 2-1.6:1.0: usb_probe_interface - got id
++ums-realtek 2-1.6:1.0: usb_probe_interface
++ums-realtek 2-1.6:1.0: usb_probe_interface - got id
++scsi11 : usb-storage 2-1.6:1.0
++hub 2-1:1.0: state 7 ports 8 chg 0000 evt 0040
++sata_sil24 0000:11:00.0: PME# disabled
+
+
+I still do not know what those [virtual] Expansion ROM lines really mean
+but let me complete the picture of coldplug vs. hotplug of the eSATA card with:
+
+--- eSATA_inserted_coldboot/lspci_vvvxxx_after_HDD_attached.txt 2013-03-11 18:12:27.000000000 +0100
++++ eSATA_hotplug/lspci_vvvxxx_after.txt        2013-03-11 20:20:59.000000000 +0100
+@@ -74,7 +74,7 @@
+ 10: 04 a0 f0 f7 00 00 00 00 00 00 00 00 00 00 00 00
+ 20: 00 00 00 00 00 00 00 00 00 00 00 00 28 10 b3 04
+ 30: 00 00 00 00 50 00 00 00 00 00 00 00 0b 01 00 00
+-40: 45 02 00 1e 08 00 01 80 06 00 00 66 f8 3f 00 10
++40: 45 02 00 1e 08 00 01 80 06 00 00 60 f8 3f 00 10
+ 50: 01 8c 03 c8 08 00 00 00 00 00 00 00 00 00 00 00
+ 60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+ 70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+@@ -439,7 +439,7 @@
+        I/O behind bridge: 0000c000-0000dfff
+        Memory behind bridge: f6c00000-f7cfffff
+        Prefetchable memory behind bridge: 00000000f0000000-00000000f10fffff
+-       Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- <SERR- <PERR-
++       Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort+ <SERR- <PERR-
+        BridgeCtl: Parity- SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
+                PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
+        Capabilities: [40] Express (v2) Root Port (Slot+), MSI 00
+@@ -459,7 +459,7 @@
+                SltCtl: Enable: AttnBtn- PwrFlt- MRL- PresDet- CmdCplt- HPIrq- LinkChg-
+                        Control: AttnInd Unknown, PwrInd Unknown, Power- Interlock-
+                SltSta: Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet+ Interlock-
+-                       Changed: MRL- PresDet- LinkState-
++                       Changed: MRL- PresDet- LinkState+
+                RootCtl: ErrCorrectable- ErrNon-Fatal- ErrFatal- PMEIntEna- CRSVisible-
+                RootCap: CRSVisible-
+                RootSta: PME ReqID 0000, PMEStatus- PMEPending-
+@@ -478,11 +478,11 @@
+                Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
+        Kernel driver in use: pcieport
+ 00: 86 80 1e 1c 07 00 10 00 b5 00 04 06 10 00 81 00
+-10: 00 00 00 00 00 00 00 00 00 11 16 00 c0 d0 00 00
++10: 00 00 00 00 00 00 00 00 00 11 16 00 c0 d0 00 20
+ 20: c0 f6 c0 f7 01 f0 01 f1 00 00 00 00 00 00 00 00
+ 30: 00 00 00 00 40 00 00 00 00 00 00 00 0a 04 10 00
+ 40: 10 80 42 01 00 80 00 00 00 00 10 00 12 3c 12 08
+-50: 40 00 11 70 60 b2 3c 00 00 00 40 00 00 00 00 00
++50: 40 00 11 70 60 b2 3c 00 00 00 40 01 00 00 00 00
+ 60: 00 00 00 00 16 00 00 00 00 00 00 00 00 00 00 00
+ 70: 01 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00
+ 80: 05 90 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+@@ -544,7 +544,7 @@
+ 70: 78 f0 79 f0 7a f0 7b f0 7c f0 7d f0 7e f0 7f f0
+ 80: 00 00 00 3c 00 00 00 00 6d 00 04 00 00 00 00 00
+ 90: 00 00 00 00 00 0f 00 00 01 00 80 fe 00 00 00 00
+-a0: 04 0e a0 00 71 18 06 00 00 47 00 00 00 00 00 80
++a0: 04 0e 80 00 71 18 06 00 00 47 00 00 00 00 00 80
+ b0: 00 00 00 00 00 00 00 00 04 81 00 00 00 00 00 00
+ c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+ d0: 33 22 11 00 67 45 00 00 cf ff 00 00 00 00 00 00
+@@ -802,14 +802,14 @@
+ 11:00.0 Mass storage controller: Silicon Image, Inc. SiI 3132 Serial ATA Raid II Controller (rev 01)
+        Subsystem: Silicon Image, Inc. SiI 3132 Serial ATA Raid II Controller
+        Physical Slot: 1
+-       Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
++       Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx-
+        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+-       Latency: 0, Cache Line Size: 64 bytes
++       Latency: 0, Cache Line Size: 32 bytes
+        Interrupt: pin A routed to IRQ 19
+-       Region 0: Memory at f6c84000 (64-bit, non-prefetchable) [size=128]
+-       Region 2: Memory at f6c80000 (64-bit, non-prefetchable) [size=16K]
++       Region 0: Memory at f6c04000 (64-bit, non-prefetchable) [size=128]
++       Region 2: Memory at f6c00000 (64-bit, non-prefetchable) [size=16K]
+        Region 4: I/O ports at c000 [size=128]
+-       Expansion ROM at f6c00000 [disabled] [size=512K]
++       [virtual] Expansion ROM at f0000000 [disabled] [size=512K]
+        Capabilities: [54] Power Management version 2
+                Flags: PMEClk- DSI+ D1+ D2+ AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
+                Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=1 PME-
+@@ -835,10 +835,10 @@
+                CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
+                AERCap: First Error Pointer: 14, GenCap+ CGenEn- ChkCap+ ChkEn-
+        Kernel driver in use: sata_sil24
+-00: 95 10 32 31 07 00 10 00 01 00 80 01 10 00 00 00
+-10: 04 40 c8 f6 00 00 00 00 04 00 c8 f6 00 00 00 00
++00: 95 10 32 31 07 01 10 00 01 00 80 01 08 00 00 00
++10: 04 40 c0 f6 00 00 00 00 04 00 c0 f6 00 00 00 00
+ 20: 01 c0 00 00 00 00 00 00 00 00 00 00 95 10 32 31
+-30: 00 00 c0 f6 54 00 00 00 00 00 00 00 0a 01 00 00
++30: 00 00 00 00 54 00 00 00 00 00 00 00 00 01 00 00
+ 40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+ 50: 00 00 00 00 01 5c 22 06 00 20 00 0c 05 70 80 00
+ 60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+
+
+I will let you breath now for a while. ;-)
+
+Regards,
+Martin
