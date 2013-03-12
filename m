@@ -1,82 +1,82 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	Len Brown <lenb@kernel.org>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
-	"Accardi, Kristen C" <kristen.c.accardi@intel.com>,
-	"Huang, Ying" <ying.huang@intel.com>, linux-pci@vger.kernel.org
-Subject: [Update][PATCH] PCI / ACPI: Always resume devices on ACPI wakeup notifications
-Date: Thu, 28 Mar 2013 22:07:29 +0100
-Message-ID: <2699206.HmPyNvCpNR@vostro.rjw.lan>
-In-Reply-To: <1396732.fV788D0xgr@vostro.rjw.lan>
-References: <2282655.IicBMMa6jN@vostro.rjw.lan> <1396732.fV788D0xgr@vostro.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from quartz.orcorp.ca ([184.70.90.242]:52109 "EHLO quartz.orcorp.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932664Ab3CLVDj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 12 Mar 2013 17:03:39 -0400
+Date: Tue, 12 Mar 2013 15:03:28 -0600
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Thierry Reding <thierry.reding@avionic-design.de>
+Cc: Mitch Bradley <wmb@firmworks.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>, linux-pci@vger.kernel.org,
+	devicetree-discuss@lists.ozlabs.org,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH 24/32] pci: PCIe driver for Marvell Armada 370/XP systems
+Message-ID: <20130312210328.GA22702@obsidianresearch.com>
+References: <513C117D.6080800@firmworks.com>
+ <20130310065539.GA14704@obsidianresearch.com>
+ <513D6F9C.9000100@firmworks.com>
+ <20130311181554.GA10992@obsidianresearch.com>
+ <513E519B.6010503@firmworks.com>
+ <20130311232516.GA13873@obsidianresearch.com>
+ <513E6AFE.3090304@firmworks.com>
+ <20130312070852.GA6727@avionic-0098.mockup.avionic-design.de>
+ <20130312155749.GA1820@obsidianresearch.com>
+ <20130312203819.GA23221@avionic-0098.mockup.avionic-design.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130312203819.GA23221@avionic-0098.mockup.avionic-design.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Subject: PCI / ACPI: Always resume devices on ACPI wakeup notifications
+On Tue, Mar 12, 2013 at 09:38:19PM +0100, Thierry Reding wrote:
 
-It turns out that the _Lxx control methods provided by some BIOSes
-clear the PME Status bit of PCI devices they handle, which means that
-pci_acpi_wake_dev() cannot really use that bit to check whether or
-not the device has signalled wakeup.
+> I've also verified that things actually do work with the binding that I
+> proposed for Tegra, even if I add device_type = "pci" to the root port
+> nodes. The reason is that the OF core looks up the type of the *parent*
+> node to find a matching bus. This happens to be the pcie-controller node
+> which is not a PCI device and therefore the address translation works
+> properly.
 
-One symptom of the problem is, for example, that when an affected PCI
-USB controller is runtime-suspended, then plugging in a new USB device
-into one of the controller's ports will not wake up the controller,
-which should happen.
+Mitch pointed out early on that the parent node needs a 'device_type =
+"pci"' as well.
 
-For this reason, make pci_acpi_wake_dev() always attempt to resume
-the device it is called for regardless of the device's PME Status bit
-value (that bit still has to be cleared if set at this point,
-though).
+The pcie-controller node would be classified as a 'bus node' according
+to the spec.
 
-Reported-by: Sarah Sharp <sarah.a.sharp@linux.intel.com>
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Acked-by: Matthew Garrett <mjg59@srcf.ucam.org>
-Cc: 3.7+ <stable@vger.kernel.org>
----
+Not going down the of_pci_* code paths for address translation at the
+root port bridge nodes is certainly not right.
 
-The changelog in this version is slightly better than in the previous one, IMHO.
+> ranges = <0x00000800 0 0 0x80000000 0 0x00001000   /* port 0 configuration space */
+>           0x00001000 0 0 0x80001000 0 0x00001000   /* port 1 configuration space */
 
-Thanks,
-Rafael
+Section 12 says that the 'b,d,f' bits are 0 in ranges, so the above is
+in conflict with that language:
 
----
- drivers/pci/pci-acpi.c |   15 ++++++++-------
- 1 file changed, 8 insertions(+), 7 deletions(-)
+ In particular, the phys.hi fields of the child address spaces in the
+ "ranges" property for PCI does not contain the same information as
+ "reg" property entries within PCI nodes. The only information that is
+ present in "ranges" phys.hi entries are the non-relocatable,
+ prefetchable and the PCI address space bits for which the entry
+ applies. I.e., only the n, p and ss bits are present; the bbbbbbbb,
+ ddddd, fff and rrrrrrrr fields are 0.
 
-Index: linux-pm/drivers/pci/pci-acpi.c
-===================================================================
---- linux-pm.orig/drivers/pci/pci-acpi.c
-+++ linux-pm/drivers/pci/pci-acpi.c
-@@ -53,14 +53,15 @@ static void pci_acpi_wake_dev(acpi_handl
- 		return;
- 	}
- 
--	if (!pci_dev->pm_cap || !pci_dev->pme_support
--	     || pci_check_pme_status(pci_dev)) {
--		if (pci_dev->pme_poll)
--			pci_dev->pme_poll = false;
-+	/* Clear PME Status if set. */
-+	if (pci_dev->pme_support)
-+		pci_check_pme_status(pci_dev);
- 
--		pci_wakeup_event(pci_dev);
--		pm_runtime_resume(&pci_dev->dev);
--	}
-+	if (pci_dev->pme_poll)
-+		pci_dev->pme_poll = false;
-+
-+	pci_wakeup_event(pci_dev);
-+	pm_runtime_resume(&pci_dev->dev);
- 
- 	if (pci_dev->subordinate)
- 		pci_pme_wakeup_bus(pci_dev->subordinate);
+And the further requirement:
 
+ When an address is to be mapped through a PCI bus bridge node, the
+ phys.hi value of the address to be mapped and the child field of a
+ "ranges" entry should be masked so that only the ss bits are compared.
+
+Which is embodied by the code in of_bus_pci_map, meaning the OF core
+won't even look at the bits in the high DW when searching ranges.
+
+Regards,
+Jason
