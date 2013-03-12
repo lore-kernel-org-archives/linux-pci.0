@@ -1,122 +1,113 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e24smtp03.br.ibm.com ([32.104.18.24]:43960 "EHLO
-	e24smtp03.br.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751436Ab3CTFZN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Mar 2013 01:25:13 -0400
-Received: from /spool/local
-	by e24smtp03.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <lucaskt@linux.vnet.ibm.com>;
-	Wed, 20 Mar 2013 02:25:12 -0300
-Received: from d24relay03.br.ibm.com (d24relay03.br.ibm.com [9.13.184.25])
-	by d24dlp02.br.ibm.com (Postfix) with ESMTP id 817241DC004E
-	for <linux-pci@vger.kernel.org>; Wed, 20 Mar 2013 01:25:04 -0400 (EDT)
-Received: from d24av05.br.ibm.com (d24av05.br.ibm.com [9.18.232.44])
-	by d24relay03.br.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id r2K5OKvl20709578
-	for <linux-pci@vger.kernel.org>; Wed, 20 Mar 2013 02:24:20 -0300
-Received: from d24av05.br.ibm.com (loopback [127.0.0.1])
-	by d24av05.br.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id r2K5P2S5029720
-	for <linux-pci@vger.kernel.org>; Wed, 20 Mar 2013 02:25:04 -0300
-From: Lucas Kannebley Tavares <lucaskt@linux.vnet.ibm.com>
-To: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	dri-devel@lists.freedesktop.org
-Cc: Lucas Kannebley Tavares <lucaskt@linux.vnet.ibm.com>,
+Received: from rs140.luxsci.com ([74.205.78.114]:42296 "EHLO rs140.luxsci.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933457Ab3CLX0r (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 12 Mar 2013 19:26:47 -0400
+Message-ID: <513FB973.3060002@firmworks.com>
+Date: Tue, 12 Mar 2013 13:25:39 -1000
+From: Mitch Bradley <wmb@firmworks.com>
+MIME-Version: 1.0
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+CC: Thierry Reding <thierry.reding@avionic-design.de>,
+	Lior Amsalem <alior@marvell.com>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>, linux-pci@vger.kernel.org,
+	devicetree-discuss@lists.ozlabs.org,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	David Airlie <airlied@linux.ie>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Brian King <brking@linux.vnet.ibm.com>,
-	Thadeu Cascardo <cascardo@linux.vnet.ibm.com>,
-	Alex Deucher <alexander.deucher@amd.com>
-Subject: [PATCHv2 1/3] pci: added pcie_get_speed_cap_mask function
-Date: Wed, 20 Mar 2013 02:24:37 -0300
-Message-Id: <1363757079-23550-2-git-send-email-lucaskt@linux.vnet.ibm.com>
-In-Reply-To: <1363757079-23550-1-git-send-email-lucaskt@linux.vnet.ibm.com>
-References: <1363757079-23550-1-git-send-email-lucaskt@linux.vnet.ibm.com>
+	Shadi Ammouri <shadi@marvell.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH 24/32] pci: PCIe driver for Marvell Armada 370/XP systems
+References: <513D6F9C.9000100@firmworks.com> <20130311181554.GA10992@obsidianresearch.com> <513E519B.6010503@firmworks.com> <20130311232516.GA13873@obsidianresearch.com> <513E6AFE.3090304@firmworks.com> <20130312070852.GA6727@avionic-0098.mockup.avionic-design.de> <20130312155749.GA1820@obsidianresearch.com> <20130312203819.GA23221@avionic-0098.mockup.avionic-design.de> <20130312210328.GA22702@obsidianresearch.com> <20130312213006.GA23717@avionic-0098.mockup.avionic-design.de> <20130312220854.GA23112@obsidianresearch.com>
+In-Reply-To: <20130312220854.GA23112@obsidianresearch.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Added function to gather the speed cap for a device and return a mask to
-supported speeds. The function is divided into an interface and a weak
-implementation so that architecture-specific functions can be called.
+On 3/12/2013 12:08 PM, Jason Gunthorpe wrote:
+> On Tue, Mar 12, 2013 at 10:30:06PM +0100, Thierry Reding wrote:
+> 
+>>> Not going down the of_pci_* code paths for address translation at the
+>>> root port bridge nodes is certainly not right.
+>>
+>> I'm not so sure. Why should the pcie-controller be a PCI device?
+> 
+> The spec is clear on that point as well:
+> 
+>  device_type
+>   A Standard Package conforming to this specification and corresponding
+>   to a device that implements a PCI bus shall implement this property
+>   with the string value "pci"
+> 
+> The children of a pcie-controller node are PCI devices, thus the
+> pcie-controller node 'implements a PCI bus'. Or, as you say 'device on
+> the processor/SoC/platform bus that bridges to the PCI bus'
+> 
+> Think of device_type as also meaning bus_type and it makes more
+> logical sense, the name is terrible, but its usage is governed by the
+> OF docs..
 
-This is the first step in moving function drm_pcie_get_speed_cap_mask
-from the drm subsystem to the pci one.
+I beg to differ about the name.  device_type means "what kind of
+functionality is implemented by this device", not "what interface
+connects this device to the rest of the system".   The use of
+"device_type" for that meaning is perfectly reasonable in the English
+language.
 
-Signed-off-by: Lucas Kannebley Tavares <lucaskt@linux.vnet.ibm.com>
----
- drivers/pci/pci.c   |   44 ++++++++++++++++++++++++++++++++++++++++++++
- include/linux/pci.h |    6 ++++++
- 2 files changed, 50 insertions(+), 0 deletions(-)
+The DT answers the "what interface connects me to the system" question
+by looking at the parent.
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index b099e00..d94ab79 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3931,6 +3931,50 @@ static int __init pci_setup(char *str)
- }
- early_param("pci", pci_setup);
- 
-+int __weak pcibios_get_speed_cap_mask(struct pci_dev *dev, u32 *mask)
-+{
-+	struct pci_dev *root;
-+	u32 lnkcap, lnkcap2;
-+
-+	*mask = 0;
-+	if (!dev)
-+		return -EINVAL;
-+
-+	root = dev->bus->self;
-+
-+	/* we've been informed via and serverworks don't make the cut */
-+	if (root->vendor == PCI_VENDOR_ID_VIA ||
-+	    root->vendor == PCI_VENDOR_ID_SERVERWORKS)
-+		return -EINVAL;
-+
-+	pcie_capability_read_dword(root, PCI_EXP_LNKCAP, &lnkcap);
-+	pcie_capability_read_dword(root, PCI_EXP_LNKCAP2, &lnkcap2);
-+
-+	if (lnkcap2) {	/* PCIe r3.0-compliant */
-+		if (lnkcap2 & PCI_EXP_LNKCAP2_SLS_2_5GB)
-+			*mask |= PCIE_SPEED_25;
-+		if (lnkcap2 & PCI_EXP_LNKCAP2_SLS_5_0GB)
-+			*mask |= PCIE_SPEED_50;
-+		if (lnkcap2 & PCI_EXP_LNKCAP2_SLS_8_0GB)
-+			*mask |= PCIE_SPEED_80;
-+	} else {	/* pre-r3.0 */
-+		if (lnkcap & PCI_EXP_LNKCAP_SLS_2_5GB)
-+			*mask |= PCIE_SPEED_25;
-+		if (lnkcap & PCI_EXP_LNKCAP_SLS_5_0GB)
-+			*mask |= (PCIE_SPEED_25 | PCIE_SPEED_50);
-+	}
-+
-+	dev_info(&dev->dev, "probing gen 2 caps for device %x:%x = %x/%x\n",
-+		root->vendor, root->device, lnkcap, lnkcap2);
-+	return 0;
-+}
-+
-+int pcie_get_speed_cap_mask(struct pci_dev *dev, u32 *mask)
-+{
-+	return pcibios_get_speed_cap_mask(dev, mask);
-+}
-+EXPORT_SYMBOL(pcie_get_speed_cap_mask);
-+
- EXPORT_SYMBOL(pci_reenable_device);
- EXPORT_SYMBOL(pci_enable_device_io);
- EXPORT_SYMBOL(pci_enable_device_mem);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 2461033a..24a2f63 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1861,4 +1861,10 @@ static inline struct eeh_dev *pci_dev_to_eeh_dev(struct pci_dev *pdev)
-  */
- struct pci_dev *pci_find_upstream_pcie_bridge(struct pci_dev *pdev);
- 
-+#define PCIE_SPEED_25 1
-+#define PCIE_SPEED_50 2
-+#define PCIE_SPEED_80 4
-+
-+extern int pcie_get_speed_cap_mask(struct pci_dev *dev, u32 *speed_mask);
-+
- #endif /* LINUX_PCI_H */
--- 
-1.7.4.4
+> 
+>> The other alternative would be to amend the specification. Besides the
+>> fact that the specification says so I don't see any reason why this
+>> shouldn't be allowed.
+> 
+> 'the specification says so' *IS* the reason. DT isn't a free for all
+> where you get to do whatever you want, or whatever 'feels' right. It
+> is supposed to be a stable, OS agnostic ABI. That means bindings have
+> to follow the specs (when available).
+> 
+> Maybe a future revision will support PCI-E ECAM, but we don't know
+> what that will look like, and I'm pretty sure you don't want to hold
+> up your patches until an IEEE committee gets around to deciding
+> something ;)
 
+The Open Firmware Working Group quit doing things under the IEEE banner
+a long long time ago, precisely for the reason that the IEEE process was
+too slow, cumbersome, and expensive.  The group thereafter published
+"Recommended Practices" documents under its own non-authority instead of
+going through the IEEE ratification process.  The group's only
+"authority" arose from the fact that the members had expertise and
+worked for companies that needed to use the results.
+
+The Working Group is now inactive.  I am in contact with many of the
+former members, but by and large they are no longer interested in
+firmware standardization.  Many of them work for companies that now hold
+their cards closely, that seemingly being the only way to make enough
+money to stay in business.
+
+In other words, there is no committee.
+
+New versions of the document in question, or of any document for that
+matter, can be issued by the simple expedient of interested parties
+coming to agreement and writing down that agreement.  In practice, that
+is what happens in Linux land for nearly every issue.
+
+At this time, the primary "interest group" for device tree issues
+revolves around the Linux kernel - the devicetree-discuss list is where
+all the action is.  I suppose that Oracle still cares about Open
+Firmware on its SPARC systems, but it is likely that Oracle is going to
+do whatever they want no matter what Linux people say or do.  In
+principle, the DT is supposed to be OS-agnostic, but in practice, which
+other OS both uses the DT and has enough users to matter?  So it would
+be entirely reasonable for a group of Linux kernel people to publish
+revised documents, as has already been done in the form of
+Documentation/ files setting down usage rules.
+
+
+> 
+> Jason
+> 
