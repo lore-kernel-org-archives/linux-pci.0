@@ -1,71 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f53.google.com ([209.85.219.53]:48705 "EHLO
-	mail-oa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759548Ab3CGQ3T (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Mar 2013 11:29:19 -0500
-Received: by mail-oa0-f53.google.com with SMTP id m1so815893oag.12
-        for <linux-pci@vger.kernel.org>; Thu, 07 Mar 2013 08:29:19 -0800 (PST)
+Received: from mail-lb0-f172.google.com ([209.85.217.172]:64981 "EHLO
+	mail-lb0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753685Ab3CLFXE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Mar 2013 01:23:04 -0400
 MIME-Version: 1.0
-In-Reply-To: <1362666556-10036-1-git-send-email-yxlraid@gmail.com>
-References: <1362666556-10036-1-git-send-email-yxlraid@gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 7 Mar 2013 09:28:58 -0700
-Message-ID: <CAErSpo7feQK7pXD=moA_hf=Y-j82oZZKwfDNzfo2Ea7i9VPxtA@mail.gmail.com>
-Subject: Re: [PATCH 2/2] PCI: fix system hang issue of Marvell SATA host controller
-To: yxlraid <yxlraid@gmail.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+In-Reply-To: <CAErSpo69g-dJo4xW+bvGuz=TALfMLQBgQ-_PLvsa-c58AzOVJA@mail.gmail.com>
+References: <1362666523-9961-1-git-send-email-yxlraid@gmail.com>
+	<CAErSpo69g-dJo4xW+bvGuz=TALfMLQBgQ-_PLvsa-c58AzOVJA@mail.gmail.com>
+Date: Tue, 12 Mar 2013 13:23:02 +0800
+Message-ID: <CAJtEV7YDNGq-t1W2Q4=mBobKGATz14hqkamauL=5KqZ728U9wg@mail.gmail.com>
+Subject: Re: [PATCH 1/2] PCI: define macro for marvell vendor ID
+From: Andrew Cooks <acooks@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: yxlraid@gmail.com,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
 	Xiangliang Yu <yuxiangl@marvell.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 7, 2013 at 7:29 AM,  <yxlraid@gmail.com> wrote:
-> From: Xiangliang Yu <yuxiangl@marvell.com>
+On Fri, Mar 8, 2013 at 12:24 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Thu, Mar 7, 2013 at 7:28 AM,  <yxlraid@gmail.com> wrote:
+>> From: Xiangliang Yu <yuxiangl@marvell.com>
+>>
+>> Define PCI_VENDOR_MARVELL_ID_EXT macro for 0x1b4b vendor ID
 >
-> Fix system hang issue: if first accessed resource file of BAR0 ~
-> BAR4, system will hang after executing lspci command
+> "PCI_VENDOR_MARVELL_ID_EXT" is not actually the symbol you defined below.
+>
+> Per the comment at the top of pci_ids.h, we don't add things here
+> unless they are shared between multiple drivers.
+>
+> That said, the 0x1b4b vendor ID is used in mv_init.c, mvumi.h,
+> mvumi.c, and ahci.c.  If you want to unify all those so they all use
+> same symbol, and define that symbol here in pci_ids.h, that would be
+> fine with me.
+>
 
-This needs more explanation.  We've already read the BARs by the time
-header quirks are run, so apparently it's not just the mere act of
-accessing a BAR that causes a hang.
+This symbol will also be useful for the quirk that creates iommu
+context entries for Marvell devices that use incorrect dma source
+tags. I'll update and resend that patch when this change has been
+merged.
 
-We need to know exactly what's going on here.  For example, do BARs
-0-4 exist?  Does the device decode accesses to the regions described
-by the BARs?  The PCI core has to know what resources the device uses,
-so if the device decodes accesses, we can't just throw away the
-start/end information.
-
-> ---
->  drivers/pci/quirks.c |   15 +++++++++++++++
->  1 files changed, 15 insertions(+), 0 deletions(-)
->
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 0369fb6..d49f8dc 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -44,6 +44,21 @@ static void quirk_mmio_always_on(struct pci_dev *dev)
->  DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_ANY_ID, PCI_ANY_ID,
->                                 PCI_CLASS_BRIDGE_HOST, 8, quirk_mmio_always_on);
->
-> +/* The BAR0 ~ BAR4 of Marvell 9125 device can't be accessed
-> +*  by IO resource file, and need to skip the files
-> +*/
-> +static void quirk_marvell_mask_bar(struct pci_dev *dev)
-> +{
-> +       int i;
-> +
-> +       for (i = 0; i < 5; i++)
-> +               if (dev->resource[i].start)
-> +                       dev->resource[i].start =
-> +                               dev->resource[i].end = 0;
-> +}
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x9125,
-> +                               quirk_marvell_mask_bar);
-> +
->  /* The Mellanox Tavor device gives false positive parity errors
->   * Mark this device with a broken_parity_status, to allow
->   * PCI scanning code to "skip" this now blacklisted device.
-> --
-> 1.7.5.4
->
+Thanks
+Andrew
