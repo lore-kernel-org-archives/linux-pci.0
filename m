@@ -1,101 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g4t0014.houston.hp.com ([15.201.24.17]:41649 "EHLO
-	g4t0014.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932209Ab3CIHw3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 9 Mar 2013 02:52:29 -0500
-From: Vijay Mohan Pandarathil <vijaymohan.pandarathil@hp.com>
-To: alex.williamson@redhat.com, gleb@redhat.com, bhelgaas@google.com,
-	blauwirbel@gmail.com, lance.oritz@hp.com, kvm@vger.kernel.org,
-	qemu-devel@nongnu.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: Vijay Mohan Pandarathil <vijaymohan.pandarathil@hp.com>
-Subject: [PATCH v7 1/3] VFIO: Wrapper for getting reference to vfio_device from device
-Date: Sat,  9 Mar 2013 01:52:15 -0600
-Message-Id: <1362815537-27303-2-git-send-email-vijaymohan.pandarathil@hp.com>
-In-Reply-To: <1362815537-27303-1-git-send-email-vijaymohan.pandarathil@hp.com>
-References: <1362815537-27303-1-git-send-email-vijaymohan.pandarathil@hp.com>
+Received: from fold.natur.cuni.cz ([195.113.57.32]:56125 "HELO
+	fold.natur.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S932304Ab3CLJ5e (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Mar 2013 05:57:34 -0400
+Message-ID: <513EFC08.7040904@fold.natur.cuni.cz>
+Date: Tue, 12 Mar 2013 10:57:28 +0100
+From: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
+MIME-Version: 1.0
+To: Yijing Wang <wangyijing@huawei.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, Yinghai Lu <yinghai@kernel.org>
+Subject: Re: 3.9-rc1: pciehp and eSATA card SiI 3132, no XHCI
+References: <513E7E1E.80508@fold.natur.cuni.cz> <513E983E.6050400@huawei.com>
+In-Reply-To: <513E983E.6050400@huawei.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-	- Added vfio_device_get_from_dev() as wrapper to get
-          reference to vfio_device from struct device.
+Yijing Wang wrote:
+> On 2013/3/12 9:00, Martin Mokrejs wrote:
+>> Hi,
+>>   I cold-booted a computer with the card inserted before power-on and collected
+>> lspci output and express card slot status every second. Then I tried eject and
+>> hotplug inserts and it appearts the card is not detected, actually maybe pciehp
+>> is not even suppoosed to work in this case as the slot was occupied during boot.
+>> But let me come to it later.
+>>
+>> I noted the following on the very first eject of the so far cold-plugged card
+>> that lspci properly reports PresDet change on the Changed: line. The only time
+>> I ever saw it. ;-)
+> 
+> Hi Martin,
+>    PresDet change bit will be cleaned as soon as pciehp driver received the
+> inturrupt from hardware, so it's difficult to capture the change.
 
-	- Added vfio_device_data() as a wrapper to get device_data from
-          vfio_device.
+Why? What is the purpose of having PresDet+ on the Status: line and PresDet- on
+the Changed: line? Why isn't LinkState+ cleared on the Changed: line as well
+at least? Sometimes I was even thinking that maybe some broken code in hotplug
+changes LinkState instead of the PresDet on the Changed: line.
 
-Signed-off-by: Vijay Mohan Pandarathil <vijaymohan.pandarathil@hp.com>
----
- drivers/vfio/vfio.c  | 30 +++++++++++++++++++++++++++++-
- include/linux/vfio.h |  3 +++
- 2 files changed, 32 insertions(+), 1 deletion(-)
+> 
+>>
+>>
+>> I re-plugged the card and ejected several times while the while loops
+>> collecting lspci and slot_status via the setpci shell command harvested
+>> data. Still, in dmesg there was nothing logged regarding card insert/eject.
+>> Eventually, I tried rmmod sata_sil24 (did NOT need 'rmmod -f') and that
+>> did log something new.
+> 
+> No new dmesg info when insert/eject maybe indicate the pciehp driver never received the
+> interrupt or there is no bit set about Presence Detect Changed here.
 
-diff --git a/drivers/vfio/vfio.c b/drivers/vfio/vfio.c
-index fcc12f3..21eddd9 100644
---- a/drivers/vfio/vfio.c
-+++ b/drivers/vfio/vfio.c
-@@ -392,12 +392,13 @@ static void vfio_device_release(struct kref *kref)
- }
- 
- /* Device reference always implies a group reference */
--static void vfio_device_put(struct vfio_device *device)
-+void vfio_device_put(struct vfio_device *device)
- {
- 	struct vfio_group *group = device->group;
- 	kref_put_mutex(&device->kref, vfio_device_release, &group->device_lock);
- 	vfio_group_put(group);
- }
-+EXPORT_SYMBOL_GPL(vfio_device_put);
- 
- static void vfio_device_get(struct vfio_device *device)
- {
-@@ -627,6 +628,33 @@ int vfio_add_group_dev(struct device *dev,
- }
- EXPORT_SYMBOL_GPL(vfio_add_group_dev);
- 
-+/**
-+ * Get a reference to the vfio_device for a device that is known to
-+ * be bound to a vfio driver.  The driver implicitly holds a
-+ * vfio_device reference between vfio_add_group_dev and
-+ * vfio_del_group_dev.  We can therefore use drvdata to increment
-+ * that reference from the struct device.  This additional
-+ * reference must be released by calling vfio_device_put.
-+ */
-+struct vfio_device *vfio_device_get_from_dev(struct device *dev)
-+{
-+	struct vfio_device *device = dev_get_drvdata(dev);
-+
-+	vfio_device_get(device);
-+
-+	return device;
-+}
-+EXPORT_SYMBOL_GPL(vfio_device_get_from_dev);
-+
-+/*
-+ * Caller must hold a reference to the vfio_device
-+ */
-+void *vfio_device_data(struct vfio_device *device)
-+{
-+	return device->device_data;
-+}
-+EXPORT_SYMBOL_GPL(vfio_device_data);
-+
- /* Given a referenced group, check if it contains the device */
- static bool vfio_dev_present(struct vfio_group *group, struct device *dev)
- {
-diff --git a/include/linux/vfio.h b/include/linux/vfio.h
-index ab9e862..ac8d488 100644
---- a/include/linux/vfio.h
-+++ b/include/linux/vfio.h
-@@ -45,6 +45,9 @@ extern int vfio_add_group_dev(struct device *dev,
- 			      void *device_data);
- 
- extern void *vfio_del_group_dev(struct device *dev);
-+extern struct vfio_device *vfio_device_get_from_dev(struct device *dev);
-+extern void vfio_device_put(struct vfio_device *device);
-+extern void *vfio_device_data(struct vfio_device *device);
- 
- /**
-  * struct vfio_iommu_driver_ops - VFIO IOMMU driver callbacks
--- 
-1.7.11.3
+But it seems it is received - per the Status: line. What the driver does with
+the PresDet value on the Changed: line should not matter in this regard, right?
 
+> Or there is debug info like :
+> pcie_isr: intr_loc %x at least.
+
+Sorry, this does not help me. Would you please modify the setpci shell command
+to print more values in the while loop? Or even better, provide me with a debug
+patch showing whenever a value in those registers and additionally derived variables
+is changed (0000, 0040, 0100, 0108, 0140, 0148)?
+
+
+
+In the "Dell Vostro 3550: pci_hotplug+acpiphp require 'pcie_aspm=force' on kernel command-line for hotplug to work"
+thread I already reported how pciehp hotplug under same 3.9-rc1 like here works for the eSATA card:
+
+pciehp hotplug:
+    [  211.879397] sata_sil24 0000:11:00.0: enabling device (0100 -> 0103)
+coldplug+(unnoticed ejects+inserts)+rmmod sata_sil24:
+    [  605.818923] sata_sil24 0000:11:00.0: enabling device (0000 -> 0003)
+
+The cold-plugged eSATA card gave somewhat different output during coldboot
+compared to those lines when hotplug happens, so I am not able to compare the
+output directly. In the mentioned tar.bz2 archive you could have found yourself
+in dmesg_after_rmmod_and_modprobe_sata_sil24.txt file:
+
+[    9.662550] sata_sil24 0000:11:00.0: version 1.1
+[    9.665780] scsi6 : sata_sil24
+[    9.667526] scsi7 : sata_sil24
+[    9.668028] ata7: SATA max UDMA/100 host m128@0xf6c84000 port 0xf6c80000 irq 19
+[    9.668032] ata8: SATA max UDMA/100 host m128@0xf6c84000 port 0xf6c82000 irq 19
+
+Not much verbose on coldboot, isn't it?
+
+
+> 
+> eSATA card SiI 3132, no XHCI, hotplug only got problem with 3.9-rc1? or both at 3.7 3.8?
+
+In earlier times I never fiddled xhci disabled under 3.7 nor 3.8. Second, I had to use
+acpiphp instead due to the breakage around 3.5. But you might compare with locks
+held by sata_sil24 in dmesg files in 
+"3.7.10: acpiphp with pcie_aspm=off and eSATA card Sil 3132" thread. That could give
+you a clue. Maybe. ;-)
+
+Martin
