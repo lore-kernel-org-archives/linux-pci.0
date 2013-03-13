@@ -1,79 +1,88 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <1362834476.7755.33.camel@thor.lan>
-Subject: Re: [3.9-rc1] irq 16: nobody cared  (was [3.9-rc1] very poor
- interrupt responses)
-From: Peter Hurley <peter@hurleysoftware.com>
-To: Thomas Meyer <thomas@m3y3r.de>,
-	Shawn Starr <shawn.starr@rogers.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>,
-	Kernel development list <linux-kernel@vger.kernel.org>,
-	USB list <linux-usb@vger.kernel.org>,
-	linux-acpi@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Date: Sat, 09 Mar 2013 08:07:56 -0500
-In-Reply-To: <1362819234.1220.1.camel@localhost.localdomain>
-References: <Pine.LNX.4.44L0.1303082116310.28403-100000@netrider.rowland.org>
-	 <1362819234.1220.1.camel@localhost.localdomain>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from quartz.orcorp.ca ([184.70.90.242]:52046 "EHLO quartz.orcorp.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933201Ab3CMT7L (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 13 Mar 2013 15:59:11 -0400
+Date: Wed, 13 Mar 2013 13:59:01 -0600
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Thierry Reding <thierry.reding@avionic-design.de>
+Cc: Mitch Bradley <wmb@firmworks.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>, linux-pci@vger.kernel.org,
+	devicetree-discuss@lists.ozlabs.org,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH 24/32] pci: PCIe driver for Marvell Armada 370/XP systems
+Message-ID: <20130313195901.GA26550@obsidianresearch.com>
+References: <513E6AFE.3090304@firmworks.com>
+ <20130312070852.GA6727@avionic-0098.mockup.avionic-design.de>
+ <20130312155749.GA1820@obsidianresearch.com>
+ <20130312203819.GA23221@avionic-0098.mockup.avionic-design.de>
+ <20130312210328.GA22702@obsidianresearch.com>
+ <20130312213006.GA23717@avionic-0098.mockup.avionic-design.de>
+ <20130312220854.GA23112@obsidianresearch.com>
+ <20130313081815.GD25940@avionic-0098.mockup.avionic-design.de>
+ <20130313170205.GB24042@obsidianresearch.com>
+ <20130313192628.GA28714@avionic-0098.mockup.avionic-design.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130313192628.GA28714@avionic-0098.mockup.avionic-design.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[ +linux-pci, +linux-acpi, +Rafael Wysocki, +Bjorn Helgaas ]
+On Wed, Mar 13, 2013 at 08:26:28PM +0100, Thierry Reding wrote:
 
-On Sat, 2013-03-09 at 09:53 +0100, Thomas Meyer wrote:
-> Am Freitag, den 08.03.2013, 21:19 -0500 schrieb Alan Stern:
-> > On Fri, 8 Mar 2013, Peter Hurley wrote:
-> > 
-> > > [ +linux-usb ]
-> > > 
-> > > On Fri, 2013-03-08 at 14:12 -0500, Shawn Starr wrote:
-> > > > Hello folks,
-> > > > 
-> > > > I am noticing since rc0 and now rc1, very poor interrupt handling. Keyboard response, mouse movements, display refreshing etc. General input/display sluggishness. Did something break IRQ handling somewhere? I need to validate if this happens with X not running also if it is i915 related somehow. The behavor is noticed in a console login however.
-> > > > 
-> > > > Device: Lenovo W500 laptop
-> > > 
-> > > Hi Shawn,
-> > > 
-> > > Unhandled interrupts is the problem.
-> > > 
-> > > Is the device below being id'd properly?
-> > > If you remove this device, does the problem go away?
-> > 
-> > Does either of the kernels in question have commit 0f815a0a700b (USB:
-> > UHCI: fix IRQ race during initialization)?  That commit was added to
-> > fix precisely this sort of thing.
+> As Mitch already said there's very little chance that the specification
+> update will be ratified through IEEE, so I think that we might just as
+> well put a corresponding text somewhere below Documentation/devicetree.
+
+Sure, I'm fine with that.
+ 
+> Also note that this has absolutely nothing to do with ECAM. All I'm
+> proposing is to allow the reg property of a root port to be translated
+> into a CPU addressable memory region through the ranges property. This
+> turns out to actually work properly with the current OF core in Linux.
+
+ECAM is the only standard based mechanism that could possibly use this
+new config space ranges concept. Whatever you do for tegra shouldn't
+stomp on the possibility of making that work in the future. So at
+least think about how ECAM could be modeled for a few mins before
+going ahead.
+
+Tegra is the non-standard unusual case here, an update to the PCI OF
+binding should be of general use.
+
+> > Anyhow, I think this has been hashed to death, as long as your final
+> > binding has the 'device_type = pci' on the pcie-controller node I
+> > think it will be fine.
 > 
-> I think so:
-> 
-> $ git describe
-> v3.9-rc1-211-g47b3bc9
-> 
-> $ git branch --contains 0f815a0a700b
-> * master
+> No. The pcie-controller is *not* a PCI device. It is a PCI host bridge.
+> It is the instance that translates from the platform to the PCI bus. Why
+> should it be device_type = "pci"? 
 
-This might not be caused by USB. There were a lot of changes to PCI and
-ACPI for 3.9.
+Spec says so, Mitch said so, other PCI host bridge bindings in the
+tree work like this. Do a grep in the powerpc tree, for instance.
 
-Probably best to each file a bug at bugzilla.kernel.org with:
+arch/x86/platform/ce4100/falconfalls.dts is a pretty comprehensive
+example.
 
-Last known good kernel version
+> And we've also been over this before, making that change stops the
+> proposed binding from working properly because the entry in the reg
+> property can't be translated into a CPU addressable memory region.
 
--- For both good and bad kernels (preferably as attachments) --
-/proc/interrupts
-lsusb
-lspci
-dmesg
+Sigh, that's because the change makes things follow the OF PCI
+spec. The Linux OF core follows the spec. Config space ranges binding
+is specifically *defined to not work* in the spec. Why should it work
+today?
 
-and reply back with the bugzilla #.
+You have to deal with this problem somehow, and omitting the top level
+device_type is not a solution.
 
-It may be necessary to bisect this problem.
-
-Regards,
-Peter Hurley
-
-PS - I know it can be difficult to get those things on the bad kernel.
-It's easier if you boot to console.
-
-
+Jason
