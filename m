@@ -1,40 +1,142 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Matthew Garrett <matthew.garrett@nebula.com>
-To: linux-kernel@vger.kernel.org
-Cc: linux-security-module@vger.kernel.org, linux-efi@vger.kernel.org,
-	kexec@lists.infradead.org, linux-pci@vger.kernel.org,
-	Matthew Garrett <matthew.garrett@nebula.com>
-Subject: [PATCH 07/12] ACPI: Limit access to custom_method
-Date: Mon, 18 Mar 2013 17:32:28 -0400
-Message-Id: <1363642353-30749-7-git-send-email-matthew.garrett@nebula.com>
-In-Reply-To: <1363642353-30749-1-git-send-email-matthew.garrett@nebula.com>
-References: <1363642353-30749-1-git-send-email-matthew.garrett@nebula.com>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>, Ram Pai <linuxram@us.ibm.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v3 03/27] PCI: pci resource iterator
+Date: Wed, 13 Mar 2013 16:27:58 -0700
+Message-Id: <1363217302-14383-4-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1363217302-14383-1-git-send-email-yinghai@kernel.org>
+References: <1363217302-14383-1-git-send-email-yinghai@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-It must be impossible for even root to get code executed in kernel context
-under a secure boot environment. custom_method effectively allows arbitrary
-access to system memory, so it needs to have a capability check here.
+From: Ram Pai <linuxram@us.ibm.com>
 
-Signed-off-by: Matthew Garrett <matthew.garrett@nebula.com>
+Currently pci_dev structure holds an array of 17 PCI resources; six base
+BARs, one ROM BAR, four BRIDGE BARs, six sriov BARs.  This is wasteful.
+A bridge device just needs the 4 bridge resources. A non-bridge device
+just needs the six base resources and one ROM resource. The sriov
+resources are needed only if the device has SRIOV capability.
+
+The pci_dev structure needs to be re-organized to avoid unnecessary
+bloating.  However too much code outside the pci-bus driver, assumes the
+internal details of the pci_dev structure, thus making it hard to
+re-organize the datastructure.
+
+As a first step this patch provides generic methods to access the
+resource structure of the pci_dev.
+
+Finally we can re-organize the resource structure in the pci_dev
+structure and correspondingly update the methods.
+
+-v2: Consolidated iterator interface as per Bjorn's suggestion.
+-v3: Add the idx back - Yinghai Lu
+-v7: Change to use bitmap for searching - Yinghai Lu
+-v8: Fix acpiphp module compiling error that is found by
+	Steven Newbury <steve@snewbury.org.uk> - Yinghai Lu
+
+Signed-off-by: Ram Pai <linuxram@us.ibm.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/acpi/custom_method.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/pci/probe.c |   48 ++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/pci.h |   24 ++++++++++++++++++++++++
+ 2 files changed, 72 insertions(+)
 
-diff --git a/drivers/acpi/custom_method.c b/drivers/acpi/custom_method.c
-index 12b62f2..edf0710 100644
---- a/drivers/acpi/custom_method.c
-+++ b/drivers/acpi/custom_method.c
-@@ -29,6 +29,9 @@ static ssize_t cm_write(struct file *file, const char __user * user_buf,
- 	struct acpi_table_header table;
- 	acpi_status status;
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 1df75f7..ac751a6 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -123,6 +123,54 @@ int pci_dev_resource_idx(struct pci_dev *dev, struct resource *res)
+ 	return -1;
+ }
  
-+	if (!capable(CAP_COMPROMISE_KERNEL))
-+		return -EPERM;
++static void __init_res_idx_mask(unsigned long *mask, int flag)
++{
++	bitmap_zero(mask, PCI_NUM_RESOURCES);
++	if (flag & PCI_STD_RES)
++		bitmap_set(mask, PCI_STD_RESOURCES,
++			PCI_STD_RESOURCE_END - PCI_STD_RESOURCES + 1);
++	if (flag & PCI_ROM_RES)
++		bitmap_set(mask, PCI_ROM_RESOURCE, 1);
++#ifdef CONFIG_PCI_IOV
++	if (flag & PCI_IOV_RES)
++		bitmap_set(mask, PCI_IOV_RESOURCES,
++			PCI_IOV_RESOURCE_END - PCI_IOV_RESOURCES + 1);
++#endif
++	if (flag & PCI_BRIDGE_RES)
++		bitmap_set(mask, PCI_BRIDGE_RESOURCES,
++			PCI_BRIDGE_RESOURCE_END - PCI_BRIDGE_RESOURCES + 1);
++}
 +
- 	if (!(*ppos)) {
- 		/* parse the table header to get the table length */
- 		if (count <= sizeof(struct acpi_table_header))
++static DECLARE_BITMAP(res_idx_mask[1 << PCI_RES_BLOCK_NUM], PCI_NUM_RESOURCES);
++static int __init pci_res_idx_mask_init(void)
++{
++	int i;
++
++	for (i = 0; i < (1 << PCI_RES_BLOCK_NUM); i++)
++		__init_res_idx_mask(res_idx_mask[i], i);
++
++	return 0;
++}
++postcore_initcall(pci_res_idx_mask_init);
++
++static inline unsigned long *get_res_idx_mask(int flag)
++{
++	return res_idx_mask[flag & ((1 << PCI_RES_BLOCK_NUM) - 1)];
++}
++
++int pci_next_resource_idx(int i, int flag)
++{
++	i++;
++	if (i < PCI_NUM_RESOURCES)
++		i = find_next_bit(get_res_idx_mask(flag), PCI_NUM_RESOURCES, i);
++
++	if (i < PCI_NUM_RESOURCES)
++		return i;
++
++	return -1;
++}
++EXPORT_SYMBOL(pci_next_resource_idx);
++
+ static u64 pci_size(u64 base, u64 maxbase, u64 mask)
+ {
+ 	u64 size = mask & maxbase;	/* Find the significant bits */
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index aefff8b..127a856 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -341,6 +341,30 @@ struct pci_dev {
+ struct resource *pci_dev_resource_n(struct pci_dev *dev, int n);
+ int pci_dev_resource_idx(struct pci_dev *dev, struct resource *res);
+ 
++#define PCI_STD_RES		(1<<0)
++#define PCI_ROM_RES		(1<<1)
++#define PCI_IOV_RES		(1<<2)
++#define PCI_BRIDGE_RES		(1<<3)
++#define PCI_RES_BLOCK_NUM	4
++
++#define PCI_ALL_RES		(PCI_STD_RES | PCI_ROM_RES | PCI_BRIDGE_RES | PCI_IOV_RES)
++#define PCI_NOSTD_RES		(PCI_ALL_RES & ~PCI_STD_RES)
++#define PCI_NOIOV_RES		(PCI_ALL_RES & ~PCI_IOV_RES)
++#define PCI_NOROM_RES		(PCI_ALL_RES & ~PCI_ROM_RES)
++#define PCI_NOBRIDGE_RES	(PCI_ALL_RES & ~PCI_BRIDGE_RES)
++#define PCI_STD_ROM_RES		(PCI_STD_RES | PCI_ROM_RES)
++#define PCI_STD_IOV_RES		(PCI_STD_RES | PCI_IOV_RES)
++#define PCI_STD_ROM_IOV_RES	(PCI_STD_RES | PCI_ROM_RES | PCI_IOV_RES)
++
++int pci_next_resource_idx(int i, int flag);
++
++#define for_each_pci_resource(dev, res, i, flag)	\
++	for (i = pci_next_resource_idx(-1, flag),	\
++		res = pci_dev_resource_n(dev, i);	\
++	     res;					\
++	     i = pci_next_resource_idx(i, flag),	\
++		res = pci_dev_resource_n(dev, i))
++
+ static inline struct pci_dev *pci_physfn(struct pci_dev *dev)
+ {
+ #ifdef CONFIG_PCI_IOV
 -- 
-1.8.1.2
+1.7.10.4
 
