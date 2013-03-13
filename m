@@ -1,126 +1,656 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:47601 "EHLO quartz.orcorp.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754045Ab3CKXZ3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 11 Mar 2013 19:25:29 -0400
-Date: Mon, 11 Mar 2013 17:25:16 -0600
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Mitch Bradley <wmb@firmworks.com>
-Cc: Thierry Reding <thierry.reding@avionic-design.de>,
-	Lior Amsalem <alior@marvell.com>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>, linux-pci@vger.kernel.org,
-	devicetree-discuss@lists.ozlabs.org,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH 24/32] pci: PCIe driver for Marvell Armada 370/XP systems
-Message-ID: <20130311232516.GA13873@obsidianresearch.com>
-References: <20130308191227.GA6551@avionic-0098.mockup.avionic-design.de>
- <513A3F4F.2090501@firmworks.com>
- <20130308200245.GC29435@obsidianresearch.com>
- <513A7845.6040304@firmworks.com>
- <20130309013152.GA3883@obsidianresearch.com>
- <513C117D.6080800@firmworks.com>
- <20130310065539.GA14704@obsidianresearch.com>
- <513D6F9C.9000100@firmworks.com>
- <20130311181554.GA10992@obsidianresearch.com>
- <513E519B.6010503@firmworks.com>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:29464 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755705Ab3CMCnO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Mar 2013 22:43:14 -0400
+Message-ID: <513FE7AD.2020408@huawei.com>
+Date: Wed, 13 Mar 2013 10:42:53 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <513E519B.6010503@firmworks.com>
+To: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, Yinghai Lu <yinghai@kernel.org>
+Subject: Re: 3.9-rc1: pciehp and eSATA card SiI 3132, no XHCI
+References: <513E7E1E.80508@fold.natur.cuni.cz>
+In-Reply-To: <513E7E1E.80508@fold.natur.cuni.cz>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 11, 2013 at 11:50:19AM -1000, Mitch Bradley wrote:
+Hi Martin,
+   From your diff info, maybe we can analyze this problem step by step.
+1、According to your diff info about first eject and first hot add, the pci device 11:00.0 Mass storage
+   controller was removed and was added ok at pci device level;
+2、The main problem is 11:00.0 Mass storage controller can not bind its driver normally, right?
+3、According to diff info about first hotadd and coldplug, the mainly diff is
+> +       Region 0: Memory at f6c84000 (64-bit, non-prefetchable) [disabled] [size=128]
+> +       Region 2: Memory at f6c80000 (64-bit, non-prefetchable) [disabled] [size=16K]
+> +       Region 4: I/O ports at c000 [disabled] [size=128]
 
-> > However - the driver runs the core in a 'root port bridge mode' where
-> > the config header register block you are looking at is inhibited. The
-> > Marvell IP block requires software support to run in bridge mode. So
-> > Marvell really has only (2), while Tegra has only (1).
+and
+MaxReadReq 4096 bytes ----> MaxReadReq 512 bytes
+
+So maybe we can try to find why the memory range was disabled after hot add.
+
+Martin, can you provide  /proc/iomem info when the system bootup, after first eject and
+first hot-add?
+
+I suspect the driver release its MMIO successfully after first eject.
+
+Thanks!
+Yijing.
+
+
+On 2013/3/12 9:00, Martin Mokrejs wrote:
+> Hi,
+>   I cold-booted a computer with the card inserted before power-on and collected
+> lspci output and express card slot status every second. Then I tried eject and
+> hotplug inserts and it appearts the card is not detected, actually maybe pciehp
+> is not even suppoosed to work in this case as the slot was occupied during boot.
+> But let me come to it later.
 > 
-> Interesting.
+> I noted the following on the very first eject of the so far cold-plugged card
+> that lspci properly reports PresDet change on the Changed: line. The only time
+> I ever saw it. ;-)
+> However, for any following inserts and ejects the value is not updated but slot
+> status bits are updated. I had BIOS defaults loaded and additionally, disabled
+> MediaCardReader.
 > 
-> For Marvell, if Marvell has only (2), does that imply that standard PCI
-> discovery and enumeration code cannot find the root port bridges, and
-> also there is no way to auto-configure the bridges with common pci-pci
-> bridge code?
-
-The driver is required to take care of all of this. From the common
-code's perspective there is a bridge config header, and writing to it
-controls the device, as the PCI spec intends. But the driver doesn't
-copy those read/writes 1:1 to any HW register block, it distributes
-them around the device's register space as necessary to create the
-PCI bridge config header.
-
-The DT is still modeling the HW, there really are root port bridge(s),
-that are completely conformant at the TLP level, but the IP designers
-choose to leave the detail of the bridge config space up to a SW
-implementation.
-
-> At this point I am confused again.  There was talk of the need to
-> use standard PCI enumeration code to deal with the bridges, thus the
-> need for 3/2 to describe the interface between root-complex and the
-> child root-port nodes.
-
-I think your confusion is coming from your expectation that the PCI-E
-IP block would be an entirely self contained root port, rather than
-'tools to build a root port, with the right driver SW'.
-
-> > Further, review section 12 about how ranges should be treated - it
-> > specifically says that the b,d,f bits in ranges should be 0, and the
-> > child address should have those bits masked prior to searching the
-> > ranges.
-> > 
-> > Section 12 would seem to forbid this:
-> > 
-> >       ranges = <0x00000800 0 0          0xd4004000 0 0x00000800   /* Root port config header */
-> >                 0x00001000 0 0          0xd4008000 0 0x00000800   /* Root port config header */
-> > 
-> > Are you reading that differently?
+> The slot status bits read by setpci were changing in this path:
+> card in slot and cold boot 0040 -> eject 0100 hotplug insert -> 0140 eject -> 0100 hotplug insert -> 0140 eject -> 0100
 > 
-> I wasn't reading it at all, until you pointed it out to me :-)  I was
-> just reasoning based on my mental model.
 > 
-> Again, I agree with your reading of the spec, but I can't think of any
-> reason why relaxing that restriction to permit config space mappings
-> would be a problem.
+> 
+> --- lspci_loop.23:58:50 2013-03-11 23:58:50.000000000 +0100
+> +++ lspci_loop.23:58:51 2013-03-11 23:58:51.000000000 +0100
+> @@ -439,7 +439,7 @@
+>         I/O behind bridge: 0000c000-0000dfff
+>         Memory behind bridge: f6c00000-f7cfffff
+>         Prefetchable memory behind bridge: 00000000f0000000-00000000f10fffff
+> -       Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- <SERR- <PERR-
+> +       Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort+ <SERR- <PERR-
+>         BridgeCtl: Parity- SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
+>                 PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
+>         Capabilities: [40] Express (v2) Root Port (Slot+), MSI 00
+> @@ -453,13 +453,13 @@
+>                         ClockPM- Surprise- LLActRep+ BwNot-
+>                 LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk+
+>                         ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+> -               LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive+ BWMgmt+ ABWMgmt-
+> +               LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt+ ABWMgmt-
+>                 SltCap: AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug+ Surprise+
+>                         Slot #7, PowerLimit 10.000W; Interlock- NoCompl+
+>                 SltCtl: Enable: AttnBtn- PwrFlt- MRL- PresDet- CmdCplt- HPIrq- LinkChg-
+>                         Control: AttnInd Unknown, PwrInd Unknown, Power- Interlock-
+> -               SltSta: Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet+ Interlock-
+> -                       Changed: MRL- PresDet- LinkState-
+> +               SltSta: Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet- Interlock-
+> +                       Changed: MRL- PresDet+ LinkState+
+>                 RootCtl: ErrCorrectable- ErrNon-Fatal- ErrFatal- PMEIntEna- CRSVisible-
+>                 RootCap: CRSVisible-
+>                 RootSta: PME ReqID 0000, PMEStatus- PMEPending-
+> @@ -478,11 +478,11 @@
+>                 Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
+>         Kernel driver in use: pcieport
+>  00: 86 80 1e 1c 07 00 10 00 b5 00 04 06 10 00 81 00
+> -10: 00 00 00 00 00 00 00 00 00 11 16 00 c0 d0 00 00
+> +10: 00 00 00 00 00 00 00 00 00 11 16 00 c0 d0 00 20
+>  20: c0 f6 c0 f7 01 f0 01 f1 00 00 00 00 00 00 00 00
+>  30: 00 00 00 00 40 00 00 00 00 00 00 00 0a 04 10 00
+>  40: 10 80 42 01 00 80 00 00 00 00 10 00 12 3c 12 08
+> -50: 40 00 11 70 60 b2 3c 00 00 00 40 00 00 00 00 00
+> +50: 40 00 11 50 60 b2 3c 00 00 00 08 01 00 00 00 00
+>  60: 00 00 00 00 16 00 00 00 00 00 00 00 00 00 00 00
+>  70: 01 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00
+>  80: 05 90 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> @@ -490,7 +490,7 @@
+>  a0: 01 00 02 c8 00 00 00 00 00 00 00 00 00 00 00 00
+>  b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+>  c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> -d0: 00 00 00 01 02 0b 00 00 02 80 11 c1 00 00 00 00
+> +d0: 00 00 00 01 02 0b 00 00 02 80 11 c1 00 00 00 40
+>  e0: 00 03 00 00 00 00 00 00 01 00 00 00 00 00 00 00
+>  f0: 00 00 00 00 00 00 00 00 87 0f 05 08 00 00 00 00
+>  
+> @@ -797,55 +797,23 @@
+>  e0: 00 00 40 63 00 00 00 00 00 00 00 00 00 00 00 00
+>  f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+>  
+> -11:00.0 Mass storage controller: Silicon Image, Inc. SiI 3132 Serial ATA Raid II Controller (rev 01)
+> -       Subsystem: Silicon Image, Inc. SiI 3132 Serial ATA Raid II Controller
+> -       Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+> -       Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+> -       Latency: 0, Cache Line Size: 64 bytes
+> -       Interrupt: pin A routed to IRQ 19
+> -       Region 0: Memory at f6c84000 (64-bit, non-prefetchable) [size=128]
+> -       Region 2: Memory at f6c80000 (64-bit, non-prefetchable) [size=16K]
+> -       Region 4: I/O ports at c000 [size=128]
+> -       Expansion ROM at f6c00000 [disabled] [size=512K]
+> -       Capabilities: [54] Power Management version 2
+> -               Flags: PMEClk- DSI+ D1+ D2+ AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
+> -               Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=1 PME-
+> -       Capabilities: [5c] MSI: Enable- Count=1/1 Maskable- 64bit+
+> -               Address: 0000000000000000  Data: 0000
+> -       Capabilities: [70] Express (v1) Legacy Endpoint, MSI 00
+> -               DevCap: MaxPayload 1024 bytes, PhantFunc 0, Latency L0s <64ns, L1 <1us
+> -                       ExtTag- AttnBtn- AttnInd- PwrInd- RBE- FLReset-
+> -               DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
+> -                       RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
+> -                       MaxPayload 128 bytes, MaxReadReq 4096 bytes
+> -               DevSta: CorrErr- UncorrErr+ FatalErr- UnsuppReq+ AuxPwr- TransPend-
+> -               LnkCap: Port #0, Speed 2.5GT/s, Width x1, ASPM L0s, Latency L0 unlimited, L1 unlimited
+> -                       ClockPM- Surprise- LLActRep- BwNot-
+> -               LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk+
+> -                       ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+> -               LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
+> -       Capabilities: [100 v1] Advanced Error Reporting
+> -               UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq+ ACSViol-
+> -               UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+> -               UESvrt: DLP+ SDES- TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
+> -               CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
+> -               CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
+> -               AERCap: First Error Pointer: 14, GenCap+ CGenEn- ChkCap+ ChkEn-
+> +11:00.0 Mass storage controller: Silicon Image, Inc. SiI 3132 Serial ATA Raid II Controller (rev ff) (prog-if ff)
+> +       !!! Unknown header type 7f
+>         Kernel driver in use: sata_sil24
+> -00: 95 10 32 31 07 00 10 00 01 00 80 01 10 00 00 00
+> -10: 04 40 c8 f6 00 00 00 00 04 00 c8 f6 00 00 00 00
+> -20: 01 c0 00 00 00 00 00 00 00 00 00 00 95 10 32 31
+> -30: 00 00 c0 f6 54 00 00 00 00 00 00 00 0a 01 00 00
+> -40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> -50: 00 00 00 00 01 5c 22 06 00 20 00 0c 05 70 80 00
+> -60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> -70: 10 00 11 00 03 00 00 00 00 50 0a 00 11 f4 03 00
+> -80: 40 00 11 10 00 00 00 00 00 00 00 00 00 00 00 00
+> -90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> -a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> -b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> -c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> -d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> -e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> -f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> +00: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+> +10: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+> +20: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+> +30: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+> +40: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+> +50: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+> +60: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+> +70: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+> +80: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+> +90: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+> +a0: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+> +b0: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+> +c0: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+> +d0: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+> +e0: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+> +f0: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+> --- lspci_loop.23:58:51 2013-03-11 23:58:51.000000000 +0100
+> +++ lspci_loop.23:58:52 2013-03-11 23:58:52.000000000 +0100
+> @@ -459,7 +459,7 @@
+>                 SltCtl: Enable: AttnBtn- PwrFlt- MRL- PresDet- CmdCplt- HPIrq- LinkChg-
+>                         Control: AttnInd Unknown, PwrInd Unknown, Power- Interlock-
+>                 SltSta: Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet- Interlock-
+> -                       Changed: MRL- PresDet+ LinkState+
+> +                       Changed: MRL- PresDet- LinkState+
+>                 RootCtl: ErrCorrectable- ErrNon-Fatal- ErrFatal- PMEIntEna- CRSVisible-
+>                 RootCap: CRSVisible-
+>                 RootSta: PME ReqID 0000, PMEStatus- PMEPending-
+> @@ -482,7 +482,7 @@
+>  20: c0 f6 c0 f7 01 f0 01 f1 00 00 00 00 00 00 00 00
+>  30: 00 00 00 00 40 00 00 00 00 00 00 00 0a 04 10 00
+>  40: 10 80 42 01 00 80 00 00 00 00 10 00 12 3c 12 08
+> -50: 40 00 11 50 60 b2 3c 00 00 00 08 01 00 00 00 00
+> +50: 40 00 11 50 60 b2 3c 00 00 00 00 01 00 00 00 00
+>  60: 00 00 00 00 16 00 00 00 00 00 00 00 00 00 00 00
+>  70: 01 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00
+>  80: 05 90 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> @@ -490,7 +490,7 @@
+>  a0: 01 00 02 c8 00 00 00 00 00 00 00 00 00 00 00 00
+>  b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+>  c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> -d0: 00 00 00 01 02 0b 00 00 02 80 11 c1 00 00 00 40
+> +d0: 00 00 00 01 02 0b 00 00 02 80 11 c1 00 00 00 00
+>  e0: 00 03 00 00 00 00 00 00 01 00 00 00 00 00 00 00
+>  f0: 00 00 00 00 00 00 00 00 87 0f 05 08 00 00 00 00
+> --- lspci_loop.23:58:58 2013-03-11 23:58:58.000000000 +0100
+> +++ lspci_loop.23:58:59 2013-03-11 23:58:59.000000000 +0100
+> @@ -101,7 +101,7 @@
+>         Capabilities: [98] PCI Advanced Features
+>                 AFCap: TP+ FLR+
+>                 AFCtrl: FLR-
+> -               AFStatus: TP-
+> +               AFStatus: TP+
+>         Kernel driver in use: ehci-pci
+>  00: 86 80 2d 1c 06 00 90 02 05 20 03 0c 00 00 00 00
+>  10: 00 80 f0 f7 00 00 00 00 00 00 00 00 00 00 00 00
+> --- lspci_loop.23:58:59 2013-03-11 23:58:59.000000000 +0100
+> +++ lspci_loop.23:59:00 2013-03-11 23:59:00.000000000 +0100
+> @@ -101,7 +101,7 @@
+>         Capabilities: [98] PCI Advanced Features
+>                 AFCap: TP+ FLR+
+>                 AFCtrl: FLR-
+> -               AFStatus: TP+
+> +               AFStatus: TP-
+>         Kernel driver in use: ehci-pci
+>  00: 86 80 2d 1c 06 00 90 02 05 20 03 0c 00 00 00 00
+>  10: 00 80 f0 f7 00 00 00 00 00 00 00 00 00 00 00 00
+> 
+> 
+> 
+> Below is the first hotplug of the card.
+> 
+> --- lspci_loop.23:59:09 2013-03-11 23:59:09.000000000 +0100
+> +++ lspci_loop.23:59:10 2013-03-11 23:59:10.000000000 +0100
+> @@ -453,12 +453,12 @@
+>                         ClockPM- Surprise- LLActRep+ BwNot-
+>                 LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk+
+>                         ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+> -               LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt+ ABWMgmt-
+> +               LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive+ BWMgmt+ ABWMgmt-
+>                 SltCap: AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug+ Surprise+
+>                         Slot #7, PowerLimit 10.000W; Interlock- NoCompl+
+>                 SltCtl: Enable: AttnBtn- PwrFlt- MRL- PresDet- CmdCplt- HPIrq- LinkChg-
+>                         Control: AttnInd Unknown, PwrInd Unknown, Power- Interlock-
+> -               SltSta: Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet- Interlock-
+> +               SltSta: Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet+ Interlock-
+>                         Changed: MRL- PresDet- LinkState+
+>                 RootCtl: ErrCorrectable- ErrNon-Fatal- ErrFatal- PMEIntEna- CRSVisible-
+>                 RootCap: CRSVisible-
+> @@ -482,7 +482,7 @@
+>  20: c0 f6 c0 f7 01 f0 01 f1 00 00 00 00 00 00 00 00
+>  30: 00 00 00 00 40 00 00 00 00 00 00 00 0a 04 10 00
+>  40: 10 80 42 01 00 80 00 00 00 00 10 00 12 3c 12 08
+> -50: 40 00 11 50 60 b2 3c 00 00 00 00 01 00 00 00 00
+> +50: 40 00 11 70 60 b2 3c 00 00 00 40 01 00 00 00 00
+>  60: 00 00 00 00 16 00 00 00 00 00 00 00 00 00 00 00
+>  70: 01 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00
+>  80: 05 90 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> @@ -797,23 +797,54 @@
+>  e0: 00 00 40 63 00 00 00 00 00 00 00 00 00 00 00 00
+>  f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+>  
+> -11:00.0 Mass storage controller: Silicon Image, Inc. SiI 3132 Serial ATA Raid II Controller (rev ff) (prog-if ff)
+> -       !!! Unknown header type 7f
+> +11:00.0 Mass storage controller: Silicon Image, Inc. SiI 3132 Serial ATA Raid II Controller (rev 01)
+> +       Subsystem: Silicon Image, Inc. SiI 3132 Serial ATA Raid II Controller
+> +       Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+> +       Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+> +       Interrupt: pin A routed to IRQ 19
+> +       Region 0: Memory at f6c84000 (64-bit, non-prefetchable) [disabled] [size=128]
+> +       Region 2: Memory at f6c80000 (64-bit, non-prefetchable) [disabled] [size=16K]
+> +       Region 4: I/O ports at c000 [disabled] [size=128]
+> +       [virtual] Expansion ROM at f6c00000 [disabled] [size=512K]
+> +       Capabilities: [54] Power Management version 2
+> +               Flags: PMEClk- DSI+ D1+ D2+ AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
+> +               Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=1 PME-
+> +       Capabilities: [5c] MSI: Enable- Count=1/1 Maskable- 64bit+
+> +               Address: 0000000000000000  Data: 0000
+> +       Capabilities: [70] Express (v1) Legacy Endpoint, MSI 00
+> +               DevCap: MaxPayload 1024 bytes, PhantFunc 0, Latency L0s <64ns, L1 <1us
+> +                       ExtTag- AttnBtn- AttnInd- PwrInd- RBE- FLReset-
+> +               DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
+> +                       RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
+> +                       MaxPayload 128 bytes, MaxReadReq 512 bytes
+> +               DevSta: CorrErr- UncorrErr+ FatalErr- UnsuppReq+ AuxPwr- TransPend-
+> +               LnkCap: Port #0, Speed 2.5GT/s, Width x1, ASPM L0s, Latency L0 unlimited, L1 unlimited
+> +                       ClockPM- Surprise- LLActRep- BwNot-
+> +               LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk+
+> +                       ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+> +               LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
+> +       Capabilities: [100 v1] Advanced Error Reporting
+> +               UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq+ ACSViol-
+> +               UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+> +               UESvrt: DLP+ SDES- TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
+> +               CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
+> +               CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
+> +               AERCap: First Error Pointer: 14, GenCap+ CGenEn- ChkCap+ ChkEn-
+>         Kernel driver in use: sata_sil24
+> -00: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+> -10: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+> -20: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+> -30: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+> -40: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+> -50: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+> -60: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+> -70: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+> -80: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+> -90: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+> -a0: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+> -b0: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+> -c0: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+> -d0: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+> -e0: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+> -f0: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+> +00: 95 10 32 31 00 00 10 00 01 00 80 01 00 00 00 00
+> +10: 04 00 00 00 00 00 00 00 04 00 00 00 00 00 00 00
+> +20: 01 00 00 00 00 00 00 00 00 00 00 00 95 10 32 31
+> +30: 00 00 00 00 54 00 00 00 00 00 00 00 00 01 00 00
+> +40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> +50: 00 00 00 00 01 5c 22 06 00 20 00 0c 05 70 80 00
+> +60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> +70: 10 00 11 00 03 00 00 00 00 20 0a 00 11 f4 03 00
+> +80: 40 00 11 10 00 00 00 00 00 00 00 00 00 00 00 00
+> +90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> +a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> +b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> +c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> +d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> +e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> +f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> --- lspci_loop.23:59:15 2013-03-11 23:59:15.000000000 +0100
+> +++ lspci_loop.23:59:16 2013-03-11 23:59:16.000000000 +0100
+> @@ -519,7 +519,7 @@
+>  60: 20 20 ff 07 00 00 00 00 01 00 00 01 00 00 08 40
+>  70: 00 00 df 3f 00 00 00 00 00 00 00 00 00 00 00 00
+>  80: 00 00 80 00 11 88 0c 93 30 0d 00 24 00 00 00 00
+> -90: 00 00 00 00 00 00 00 00 13 00 06 03 00 00 00 00
+> +90: 00 00 00 00 00 00 00 00 13 00 06 03 00 01 00 00
+>  a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+>  b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+>  c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> --- lspci_loop.23:59:16 2013-03-11 23:59:16.000000000 +0100
+> +++ lspci_loop.23:59:17 2013-03-11 23:59:17.000000000 +0100
+> @@ -519,7 +519,7 @@
+>  60: 20 20 ff 07 00 00 00 00 01 00 00 01 00 00 08 40
+>  70: 00 00 df 3f 00 00 00 00 00 00 00 00 00 00 00 00
+>  80: 00 00 80 00 11 88 0c 93 30 0d 00 24 00 00 00 00
+> -90: 00 00 00 00 00 00 00 00 13 00 06 03 00 01 00 00
+> +90: 00 00 00 00 00 00 00 00 13 00 06 03 00 00 00 00
+>  a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+>  b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+>  c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> 
+> 
+> And later unplug of the hotplugged device:
+> 
+> --- lspci_loop.23:59:18 2013-03-11 23:59:18.000000000 +0100
+> +++ lspci_loop.23:59:19 2013-03-11 23:59:19.000000000 +0100
+> @@ -453,12 +453,12 @@
+>                         ClockPM- Surprise- LLActRep+ BwNot-
+>                 LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk+
+>                         ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+> -               LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive+ BWMgmt+ ABWMgmt-
+> +               LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt+ ABWMgmt-
+>                 SltCap: AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug+ Surprise+
+>                         Slot #7, PowerLimit 10.000W; Interlock- NoCompl+
+>                 SltCtl: Enable: AttnBtn- PwrFlt- MRL- PresDet- CmdCplt- HPIrq- LinkChg-
+>                         Control: AttnInd Unknown, PwrInd Unknown, Power- Interlock-
+> -               SltSta: Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet+ Interlock-
+> +               SltSta: Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet- Interlock-
+>                         Changed: MRL- PresDet- LinkState+
+>                 RootCtl: ErrCorrectable- ErrNon-Fatal- ErrFatal- PMEIntEna- CRSVisible-
+>                 RootCap: CRSVisible-
+> @@ -482,7 +482,7 @@
+>  20: c0 f6 c0 f7 01 f0 01 f1 00 00 00 00 00 00 00 00
+>  30: 00 00 00 00 40 00 00 00 00 00 00 00 0a 04 10 00
+>  40: 10 80 42 01 00 80 00 00 00 00 10 00 12 3c 12 08
+> -50: 40 00 11 70 60 b2 3c 00 00 00 40 01 00 00 00 00
+> +50: 40 00 11 50 60 b2 3c 00 00 00 00 01 00 00 00 00
+>  60: 00 00 00 00 16 00 00 00 00 00 00 00 00 00 00 00
+>  70: 01 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00
+>  80: 05 90 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> @@ -797,54 +797,23 @@
+>  e0: 00 00 40 63 00 00 00 00 00 00 00 00 00 00 00 00
+>  f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+>  
+> -11:00.0 Mass storage controller: Silicon Image, Inc. SiI 3132 Serial ATA Raid II Controller (rev 01)
+> -       Subsystem: Silicon Image, Inc. SiI 3132 Serial ATA Raid II Controller
+> -       Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+> -       Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+> -       Interrupt: pin A routed to IRQ 19
+> -       Region 0: Memory at f6c84000 (64-bit, non-prefetchable) [disabled] [size=128]
+> -       Region 2: Memory at f6c80000 (64-bit, non-prefetchable) [disabled] [size=16K]
+> -       Region 4: I/O ports at c000 [disabled] [size=128]
+> -       [virtual] Expansion ROM at f6c00000 [disabled] [size=512K]
+> -       Capabilities: [54] Power Management version 2
+> -               Flags: PMEClk- DSI+ D1+ D2+ AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
+> -               Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=1 PME-
+> -       Capabilities: [5c] MSI: Enable- Count=1/1 Maskable- 64bit+
+> -               Address: 0000000000000000  Data: 0000
+> -       Capabilities: [70] Express (v1) Legacy Endpoint, MSI 00
+> -               DevCap: MaxPayload 1024 bytes, PhantFunc 0, Latency L0s <64ns, L1 <1us
+> -                       ExtTag- AttnBtn- AttnInd- PwrInd- RBE- FLReset-
+> -               DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
+> -                       RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
+> -                       MaxPayload 128 bytes, MaxReadReq 512 bytes
+> -               DevSta: CorrErr- UncorrErr+ FatalErr- UnsuppReq+ AuxPwr- TransPend-
+> -               LnkCap: Port #0, Speed 2.5GT/s, Width x1, ASPM L0s, Latency L0 unlimited, L1 unlimited
+> -                       ClockPM- Surprise- LLActRep- BwNot-
+> -               LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk+
+> -                       ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+> -               LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
+> -       Capabilities: [100 v1] Advanced Error Reporting
+> -               UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq+ ACSViol-
+> -               UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+> -               UESvrt: DLP+ SDES- TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
+> -               CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
+> -               CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
+> -               AERCap: First Error Pointer: 14, GenCap+ CGenEn- ChkCap+ ChkEn-
+> +11:00.0 Mass storage controller: Silicon Image, Inc. SiI 3132 Serial ATA Raid II Controller (rev ff) (prog-if ff)
+> +       !!! Unknown header type 7f
+>         Kernel driver in use: sata_sil24
+> -00: 95 10 32 31 00 00 10 00 01 00 80 01 00 00 00 00
+> -10: 04 00 00 00 00 00 00 00 04 00 00 00 00 00 00 00
+> -20: 01 00 00 00 00 00 00 00 00 00 00 00 95 10 32 31
+> -30: 00 00 00 00 54 00 00 00 00 00 00 00 00 01 00 00
+> -40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> -50: 00 00 00 00 01 5c 22 06 00 20 00 0c 05 70 80 00
+> -60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> -70: 10 00 11 00 03 00 00 00 00 20 0a 00 11 f4 03 00
+> -80: 40 00 11 10 00 00 00 00 00 00 00 00 00 00 00 00
+> -90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> -a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> -b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> -c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> -d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> -e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> -f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> +00: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+> +10: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+> +20: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+> +30: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+> +40: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+> +50: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+> +60: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+> +70: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+> +80: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+> +90: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+> +a0: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+> +b0: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+> +c0: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+> +d0: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+> +e0: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+> +f0: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+> 
+> 
+> 
+> 
+> 
+> Already from other tests I realized a hotplugged eSATA has some "[virtual]
+> Expansion ROM". Here is a reasonably complete diff between a coldplugged
+> state of the same card and after a hotplug. In dmesg pciehp complained
+> upon its loading that Cache Line Size 64 is not supported so maybe the below
+> difference is a direct result of that? Similarly, MaxReadReq is different
+> and I bet the lines
+> 
+> +       Region 0: Memory at f6c84000 (64-bit, non-prefetchable) [disabled] [size=128]
+> +       Region 2: Memory at f6c80000 (64-bit, non-prefetchable) [disabled] [size=16K]
+> +       Region 4: I/O ports at c000 [disabled] [size=128]
+> 
+> actually mean the card is left disabled. Then, I am not surprised nothing
+> is shown upon its hotplug insert/eject in dmesg. ;-) In this particular setup
+> I don't think we are facing a PresDet issue. Either, the value is overwritten
+> by some other process, or the bug is somewhere else.
+> 
+> 
+> --- lspci_loop.23:58:26 2013-03-11 23:58:26.000000000 +0100
+> +++ lspci_loop.23:59:10 2013-03-11 23:59:10.000000000 +0100
+> @@ -439,7 +439,7 @@
+>         I/O behind bridge: 0000c000-0000dfff
+>         Memory behind bridge: f6c00000-f7cfffff
+>         Prefetchable memory behind bridge: 00000000f0000000-00000000f10fffff
+> -       Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- <SERR- <PERR-
+> +       Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort+ <SERR- <PERR-
+>         BridgeCtl: Parity- SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
+>                 PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
+>         Capabilities: [40] Express (v2) Root Port (Slot+), MSI 00
+> @@ -459,7 +459,7 @@
+>                 SltCtl: Enable: AttnBtn- PwrFlt- MRL- PresDet- CmdCplt- HPIrq- LinkChg-
+>                         Control: AttnInd Unknown, PwrInd Unknown, Power- Interlock-
+>                 SltSta: Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet+ Interlock-
+> -                       Changed: MRL- PresDet- LinkState-
+> +                       Changed: MRL- PresDet- LinkState+
+>                 RootCtl: ErrCorrectable- ErrNon-Fatal- ErrFatal- PMEIntEna- CRSVisible-
+>                 RootCap: CRSVisible-
+>                 RootSta: PME ReqID 0000, PMEStatus- PMEPending-
+> @@ -478,11 +478,11 @@
+>                 Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
+>         Kernel driver in use: pcieport
+>  00: 86 80 1e 1c 07 00 10 00 b5 00 04 06 10 00 81 00
+> -10: 00 00 00 00 00 00 00 00 00 11 16 00 c0 d0 00 00
+> +10: 00 00 00 00 00 00 00 00 00 11 16 00 c0 d0 00 20
+>  20: c0 f6 c0 f7 01 f0 01 f1 00 00 00 00 00 00 00 00
+>  30: 00 00 00 00 40 00 00 00 00 00 00 00 0a 04 10 00
+>  40: 10 80 42 01 00 80 00 00 00 00 10 00 12 3c 12 08
+> -50: 40 00 11 70 60 b2 3c 00 00 00 40 00 00 00 00 00
+> +50: 40 00 11 70 60 b2 3c 00 00 00 40 01 00 00 00 00
+>  60: 00 00 00 00 16 00 00 00 00 00 00 00 00 00 00 00
+>  70: 01 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00
+>  80: 05 90 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> @@ -799,14 +799,13 @@
+>  
+>  11:00.0 Mass storage controller: Silicon Image, Inc. SiI 3132 Serial ATA Raid II Controller (rev 01)
+>         Subsystem: Silicon Image, Inc. SiI 3132 Serial ATA Raid II Controller
+> -       Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+> +       Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+>         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+> -       Latency: 0, Cache Line Size: 64 bytes
+>         Interrupt: pin A routed to IRQ 19
+> -       Region 0: Memory at f6c84000 (64-bit, non-prefetchable) [size=128]
+> -       Region 2: Memory at f6c80000 (64-bit, non-prefetchable) [size=16K]
+> -       Region 4: I/O ports at c000 [size=128]
+> -       Expansion ROM at f6c00000 [disabled] [size=512K]
+> +       Region 0: Memory at f6c84000 (64-bit, non-prefetchable) [disabled] [size=128]
+> +       Region 2: Memory at f6c80000 (64-bit, non-prefetchable) [disabled] [size=16K]
+> +       Region 4: I/O ports at c000 [disabled] [size=128]
+> +       [virtual] Expansion ROM at f6c00000 [disabled] [size=512K]
+>         Capabilities: [54] Power Management version 2
+>                 Flags: PMEClk- DSI+ D1+ D2+ AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
+>                 Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=1 PME-
+> @@ -817,7 +816,7 @@
+>                         ExtTag- AttnBtn- AttnInd- PwrInd- RBE- FLReset-
+>                 DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
+>                         RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
+> -                       MaxPayload 128 bytes, MaxReadReq 4096 bytes
+> +                       MaxPayload 128 bytes, MaxReadReq 512 bytes
+>                 DevSta: CorrErr- UncorrErr+ FatalErr- UnsuppReq+ AuxPwr- TransPend-
+>                 LnkCap: Port #0, Speed 2.5GT/s, Width x1, ASPM L0s, Latency L0 unlimited, L1 unlimited
+>                         ClockPM- Surprise- LLActRep- BwNot-
+> @@ -832,14 +831,14 @@
+>                 CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
+>                 AERCap: First Error Pointer: 14, GenCap+ CGenEn- ChkCap+ ChkEn-
+>         Kernel driver in use: sata_sil24
+> -00: 95 10 32 31 07 00 10 00 01 00 80 01 10 00 00 00
+> -10: 04 40 c8 f6 00 00 00 00 04 00 c8 f6 00 00 00 00
+> -20: 01 c0 00 00 00 00 00 00 00 00 00 00 95 10 32 31
+> -30: 00 00 c0 f6 54 00 00 00 00 00 00 00 0a 01 00 00
+> +00: 95 10 32 31 00 00 10 00 01 00 80 01 00 00 00 00
+> +10: 04 00 00 00 00 00 00 00 04 00 00 00 00 00 00 00
+> +20: 01 00 00 00 00 00 00 00 00 00 00 00 95 10 32 31
+> +30: 00 00 00 00 54 00 00 00 00 00 00 00 00 01 00 00
+>  40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+>  50: 00 00 00 00 01 5c 22 06 00 20 00 0c 05 70 80 00
+>  60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> -70: 10 00 11 00 03 00 00 00 00 50 0a 00 11 f4 03 00
+> +70: 10 00 11 00 03 00 00 00 00 20 0a 00 11 f4 03 00
+>  80: 40 00 11 10 00 00 00 00 00 00 00 00 00 00 00 00
+>  90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+>  a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> 
+> 
+> 
+> Sadly, although the very first eject was notified the sata_sila24 neither
+> did "release" the device nor did it complain that it suddenly disappeared.
+> That was so far always in dmesg output (like for example):
+> 
+> [  251.632928] sata_sil24 0000:11:00.0: PME# disabled
+> [  251.636498] sata_sil24: IRQ status == 0xffffffff, PCI fault or device removal?
+> 
+> 
+> I re-plugged the card and ejected several times while the while loops
+> collecting lspci and slot_status via the setpci shell command harvested
+> data. Still, in dmesg there was nothing logged regarding card insert/eject.
+> Eventually, I tried rmmod sata_sil24 (did NOT need 'rmmod -f') and that
+> did log something new.
+> 
+> [  529.571040] ata8.00: disabled
+> [  529.576365] sd 7:0:0:0: [sdb] Synchronizing SCSI cache
+> [  529.577202] sd 7:0:0:0: [sdb]  
+> [  529.577204] Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
+> [  529.577205] sd 7:0:0:0: [sdb] Stopping disk
+> [  529.577251] sd 7:0:0:0: [sdb] START_STOP FAILED
+> [  529.577253] sd 7:0:0:0: [sdb]  
+> [  529.577254] Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
+> [  529.578309] sata_sil24: IRQ status == 0xffffffff, PCI fault or device removal?
+> [  605.818905] sata_sil24 0000:11:00.0: version 1.1
+> [  605.818923] sata_sil24 0000:11:00.0: enabling device (0000 -> 0003)
+> [  605.914722] sata_sil24 0000:11:00.0: failed to clear port RST
+> [  606.014860] sata_sil24 0000:11:00.0: failed to clear port RST
+> [  606.014882] sata_sil24 0000:11:00.0: enabling bus mastering
+> [  606.017741] scsi8 : sata_sil24
+> [  606.019388] scsi9 : sata_sil24
+> [  606.019898] ata9: SATA max UDMA/100 host m128@0xf6c84000 port 0xf6c80000 irq 19
+> [  606.019902] ata10: SATA max UDMA/100 host m128@0xf6c84000 port 0xf6c82000 irq 19
+> [  606.115003] ata9: controller in dubious state, performing PORT_RST
+> [  608.327747] ata9: SATA link down (SStatus FFFFFFFF SControl FFFFFFFF)
+> [  608.427847] ata10: controller in dubious state, performing PORT_RST
+> [  610.640619] ata10: SATA link down (SStatus FFFFFFFF SControl FFFFFFFF)
+> 
+> 
+> 
+> 
+> Finally, I am tempted to say that pciehp does not work at all under 3.9-rc1
+> if the slot was occupied during boot. It does NOT contain the usual debug
+> info spanning several lines and it only said:
+> 
+> [    2.109629] pci_hotplug: PCI Hot Plug PCI Core version: 0.5
+> [    2.110225] pciehp: pcie_port_service_register = 0
+> [    2.110226] pciehp: PCI Express Hot Plug Controller Driver version: 0.4
+> 
+> If that is intentional the driver should complain loudly. Please educate me
+> what those "[virtual] Expansion ROM's" were in lspci above and whether those
+> "[disabled]" memory ranges relate to that as well. If the card is not thought
+> to be present or just not recognized ... why is that printed in lspci at all?
+> Similarly, what can you tell me if lspci output shows only:
+> 
+> Latency: 0
+> 
+> or even lacks the whole "Latency" line altoghether, is that also a disabled device?
+> 
+> I believe in working cases there is "Latency: 0, Cache Line Size: 64 bytes" instead.
+> 
+> 
+> 
+> Details and raw files at: http://195.113.57.32/~mmokrejs/tmp/3.9-rc1_disabled_MediaCard_reader_eSATA_coldplugged.tar.bz2
+> 
+> To inspect the incremental diffs of lspci output I used:
+> 
+> prev='/dev/null'; ls -latr lspci_* | awk '{print $9}' | while read cur; do diff -u -w $prev $cur | less; prev=$cur; done
+> 
+> Thank you,
+> Martin
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> .
+> 
 
-Okay, just wanted to confirm that, I think I follow you now. :)
 
-So you are basically proposing a small update to Section 12 that would
-read something like:
+-- 
+Thanks!
+Yijing
 
-'When matching a config space address, the b,d,f bits are valid in the
- ranges and left unmasked in the child. The r bits in the ranges
- should be 0, and the r bits from the child are copied in the last DW
- and masked off in the first DW.'
-
-Which, as you note, would not conflict with any existing usage..
-
-Though, I can already see that the above language is not good enough,
-it doesn't elegantly represent standard ECAM, for instance.. How would
-you even represent ECAM with ranges??
-
-Another wrinkle is that tegra not only has the per-bridge memory
-mapped config space, bit it also has 4 'all port' ECAM-like memory
-mapped config spaces. The rules around them are sufficiently
-specialized that I'm not sure a ranges mapping would ever be
-practical.. So right out of the gate we'd fail to capture memory
-mapped config access via ranges on at least one SOC.
-
-So, to me, this seems like overkill. Only ECAM has a hope of having a
-common implementation, everything else will be host driver specific,
-so why go to the trouble to revise the OF PCI specification for config
-space?
-
-Particularly since there are patches waiting on this question being
-resolved :)
-
-Regards,
-Jason
