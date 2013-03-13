@@ -1,191 +1,119 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f177.google.com ([209.85.223.177]:38112 "EHLO
-	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752037Ab3CQRTl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 17 Mar 2013 13:19:41 -0400
-MIME-Version: 1.0
-In-Reply-To: <20130317155023.5B2EB11FB81@bugzilla.kernel.org>
-References: <bug-55211-13546@https.bugzilla.kernel.org/>
-	<20130317155023.5B2EB11FB81@bugzilla.kernel.org>
-Date: Sun, 17 Mar 2013 10:19:40 -0700
-Message-ID: <CAE9FiQXmeb66dc8fET0y99BjqpUXp11c7utiQ5keR1Wf+N9xaA@mail.gmail.com>
-Subject: Re: [Bug 55211] pci_disable_link_state PCIE_LINK_STATE_L0S no longer
- disables ASPM for ath5k
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Yinghai Lu <yinghai@kernel.org>
-To: bugzilla-daemon@bugzilla.kernel.org,
-	Roman Yepishev <roman.yepishev@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	linux-pci@vger.kernel.org, NetDev <netdev@vger.kernel.org>
-Content-Type: multipart/mixed; boundary=089e0129483adcaef004d82213ba
-Sender: linux-pci-owner@vger.kernel.org
+To: Bjorn Helgaas <bhelgaas@google.com>, Ram Pai <linuxram@us.ibm.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v3 13/27] PCI: Use for_each_pci_resource() with pci bar reassign funcs
+Date: Wed, 13 Mar 2013 16:28:08 -0700
+Message-Id: <1363217302-14383-14-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1363217302-14383-1-git-send-email-yinghai@kernel.org>
+References: <1363217302-14383-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---089e0129483adcaef004d82213ba
-Content-Type: text/plain; charset=ISO-8859-1
+Replace those open code, and make code more readable.
 
-On Sun, Mar 17, 2013 at 8:50 AM,  <bugzilla-daemon@bugzilla.kernel.org> wrote:
-> https://bugzilla.kernel.org/show_bug.cgi?id=55211
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c |   28 ++++++++++++----------------
+ 1 file changed, 12 insertions(+), 16 deletions(-)
 
-> --- Comment #9 from Roman Yepishev <roman.yepishev@gmail.com>  2013-03-17 15:50:23 ---
-> Re-tested on two laptops - AOA150, ath5k device got ASPM disabled and on a
-> Lenovo E420 I got ASPM disabled for iwlwifi-driven Intel Corporation Centrino
-> Wireless-N 1000 [8086:0084].
->
-> Also I found http://article.gmane.org/gmane.linux.kernel.pci/20640 where a
-> question was raised why pci_disable_link_state stopped doing anything for
-> iwlwifi devices too.
->
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 7e8739e..b23ef4c 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -106,7 +106,7 @@ static resource_size_t get_res_add_size(struct list_head *head,
+ 
+ 	list_for_each_entry(dev_res, head, list) {
+ 		if (dev_res->res == res) {
+-			int idx = res - &dev_res->dev->resource[0];
++			int idx = pci_dev_resource_idx(dev_res->dev, res);
+ 
+ 			dev_printk(KERN_DEBUG, &dev_res->dev->dev,
+ 				 "res[%d]=%pR get_res_add_size add_size %llx\n",
+@@ -124,15 +124,13 @@ static resource_size_t get_res_add_size(struct list_head *head,
+ static void pdev_sort_resources(struct pci_dev *dev, struct list_head *head)
+ {
+ 	int i;
++	struct resource *r;
+ 
+-	for (i = 0; i < PCI_NUM_RESOURCES; i++) {
+-		struct resource *r;
++	for_each_pci_resource(dev, r, i, PCI_ALL_RES) {
+ 		struct pci_dev_resource *dev_res, *tmp;
+ 		resource_size_t r_align;
+ 		struct list_head *n;
+ 
+-		r = &dev->resource[i];
+-
+ 		if (r->flags & IORESOURCE_PCI_FIXED)
+ 			continue;
+ 
+@@ -237,7 +235,7 @@ static void reassign_resources_sorted(struct list_head *realloc_head,
+ 		if (!found_match)/* just skip */
+ 			continue;
+ 
+-		idx = res - &add_res->dev->resource[0];
++		idx = pci_dev_resource_idx(add_res->dev, res);
+ 		add_size = add_res->add_size;
+ 		if (!resource_size(res)) {
+ 			res->start = add_res->start;
+@@ -280,7 +278,7 @@ static void assign_requested_resources_sorted(struct list_head *head,
+ 
+ 	list_for_each_entry(dev_res, head, list) {
+ 		res = dev_res->res;
+-		idx = res - &dev_res->dev->resource[0];
++		idx = pci_dev_resource_idx(dev_res->dev, res);
+ 		if (resource_size(res) &&
+ 		    pci_assign_resource(dev_res->dev, idx)) {
+ 			if (fail_head) {
+@@ -757,9 +755,9 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ 	io_align = min_align = window_alignment(bus, IORESOURCE_IO);
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		int i;
++		struct resource *r;
+ 
+-		for (i = 0; i < PCI_NUM_RESOURCES; i++) {
+-			struct resource *r = &dev->resource[i];
++		for_each_pci_resource(dev, r, i, PCI_ALL_RES) {
+ 			unsigned long r_size;
+ 
+ 			if (r->parent || !(r->flags & IORESOURCE_IO))
+@@ -870,9 +868,9 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		int i;
++		struct resource *r;
+ 
+-		for (i = 0; i < PCI_NUM_RESOURCES; i++) {
+-			struct resource *r = &dev->resource[i];
++		for_each_pci_resource(dev, r, i, PCI_ALL_RES) {
+ 			resource_size_t r_size;
+ 
+ 			if (r->parent || (r->flags & mask) != type)
+@@ -1196,9 +1194,7 @@ static void pci_bridge_release_resources(struct pci_bus *bus,
+ 				  IORESOURCE_PREFETCH;
+ 
+ 	dev = bus->self;
+-	for (idx = PCI_BRIDGE_RESOURCES; idx <= PCI_BRIDGE_RESOURCE_END;
+-	     idx++) {
+-		r = &dev->resource[idx];
++	for_each_pci_resource(dev, r, idx, PCI_BRIDGE_RES) {
+ 		if ((r->flags & type_mask) != type)
+ 			continue;
+ 		if (!r->parent)
+@@ -1369,9 +1365,9 @@ static void __init pci_realloc_detect(void)
+ 
+ 	for_each_pci_dev(dev) {
+ 		int i;
++		struct resource *r;
+ 
+-		for (i = PCI_IOV_RESOURCES; i <= PCI_IOV_RESOURCE_END; i++) {
+-			struct resource *r = &dev->resource[i];
++		for_each_pci_resource(dev, r, i, PCI_IOV_RES) {
+ 
+ 			/* Not assigned, or rejected by kernel ? */
+ 			if (r->flags && !r->start) {
+-- 
+1.7.10.4
 
-good.
-
-Did you test first patch or second patch?
-
-Please test second patch only on affected platforms.
-
-old logic is quite strange, on boot path and hotplug path it have
-different aspm_disabled setting.
-as it could set aspm_disabled after pci root bus scanning.
-
-Second patch will not restore to old logic, and just remove not needed
-aspm_disabled checking
-for disabling path.
-
-So second patch is right fix, but it need more test.
-
-Thanks
-
-Yinghai
-
---089e0129483adcaef004d82213ba
-Content-Type: application/octet-stream; name="pci_acpi_osc_aspm_fix.patch"
-Content-Disposition: attachment; filename="pci_acpi_osc_aspm_fix.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_heegqwlh0
-
-U3ViamVjdDogW1BBVENIXSBQQ0ksIEFDUEk6IERlbGF5IHBjaWVfbm9fYXNwbSgpIGNhbGxpbmcK
-ClJvbWFuIHJlcG9ydGVkIGF0aDVrIGRvZXMgbm90IHdvcmsgYW55bW9yZSBvbiAzLjguCkJpc2Vj
-dGVkIHRvCnwgY29tbWl0IDhjMzNmNTFkZjQwNmUxYTFmN2ZhNGU5YjI0NDg0NWI3ZWJkNjFmYTYK
-fCBBdXRob3I6IFRha3UgSXp1bWkgPGl6dW1pLnRha3VAanAuZnVqaXRzdS5jb20+CnwgRGF0ZTog
-ICBUdWUgT2N0IDMwIDE1OjI3OjEzIDIwMTIgKzA5MDAKfAp8ICAgIFBDSS9BQ1BJOiBSZXF1ZXN0
-IF9PU0MgY29udHJvbCBiZWZvcmUgc2Nhbm5pbmcgUENJIHJvb3QgYnVzCnwKfCAgICBUaGlzIHBh
-dGNoIG1vdmVzIHVwIHRoZSBjb2RlIGJsb2NrIHRvIHJlcXVlc3QgX09TQyBjb250cm9sIGluIG9y
-ZGVyIHRvCnwgICAgc2VwYXJhdGUgQUNQSSB3b3JrIGFuZCBQQ0kgd29yayBpbiBhY3BpX3BjaV9y
-b290X2FkZCgpLgoKSXQgbWFrZSBwY2lfZGlzYWJsZV9saW5rX3N0YXRlIGRvZXMgbm90IHdvcmsg
-YW55bW9yZSBhcyBhY3BpX2Rpc2FibGVkCmlzIHNldCBiZWZvcmUgcGNpIHJvb3QgYnVzIHNjYW5u
-aW5nLgpJdCB3aWxsIHNraXAgdGhhdCBpbiBxdWlya3MgYW5kIHBjaWVfYXNwbV9zYW5pdHlfY2hl
-Y2suCgpSZXRvcmUgb2xkIGxvZ2ljIGp1c3QgZGVsYXkgY2FsbGluZyBwY2llX25vX2FzcG0oKSBs
-YXRlci4KCmh0dHBzOi8vYnVnemlsbGEua2VybmVsLm9yZy9zaG93X2J1Zy5jZ2k/aWQ9NTUyMTEK
-aHR0cDovL2FydGljbGUuZ21hbmUub3JnL2dtYW5lLmxpbnV4Lmtlcm5lbC5wY2kvMjA2NDAKCk5l
-ZWQgaXQgZm9yIDMuOCBzdGFibGUuCgpSZXBvcnRlZC1ieTogUm9tYW4gWWVwaXNoZXYgPHJvbWFu
-LnllcGlzaGV2QGdtYWlsLmNvbT4KQmlzZWN0ZWQtYnk6IFJvbWFuIFllcGlzaGV2IDxyb21hbi55
-ZXBpc2hldkBnbWFpbC5jb20+ClRlc3RlZC1ieTogUm9tYW4gWWVwaXNoZXYgPHJvbWFuLnllcGlz
-aGV2QGdtYWlsLmNvbT4KU2lnbmVkLW9mZi1ieTogWWluZ2hhaSBMdSA8eWluZ2hhaUBrZXJuZWwu
-b3JnPgpDYzogc3RhYmxlQGtlcm5lbC5vcmcKCi0tLQogZHJpdmVycy9hY3BpL3BjaV9yb290LmMg
-fCAgIDI4ICsrKysrKysrKysrKysrKysrLS0tLS0tLS0tLS0KIDEgZmlsZSBjaGFuZ2VkLCAxNyBp
-bnNlcnRpb25zKCspLCAxMSBkZWxldGlvbnMoLSkKCkluZGV4OiBsaW51eC0yLjYvZHJpdmVycy9h
-Y3BpL3BjaV9yb290LmMKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PQotLS0gbGludXgtMi42Lm9yaWcvZHJpdmVycy9hY3Bp
-L3BjaV9yb290LmMKKysrIGxpbnV4LTIuNi9kcml2ZXJzL2FjcGkvcGNpX3Jvb3QuYwpAQCAtNDE1
-LDcgKzQxNSw5IEBAIHN0YXRpYyBpbnQgYWNwaV9wY2lfcm9vdF9hZGQoc3RydWN0IGFjcGkKIAlz
-dHJ1Y3QgYWNwaV9wY2lfcm9vdCAqcm9vdDsKIAlzdHJ1Y3QgYWNwaV9wY2lfZHJpdmVyICpkcml2
-ZXI7CiAJdTMyIGZsYWdzLCBiYXNlX2ZsYWdzOwotCWJvb2wgaXNfb3NjX2dyYW50ZWQgPSBmYWxz
-ZTsKKwkvKiAtMTogbm90IGV2ZW4gdHJpZWQsIDA6IHRyaWVkIGJ1dCBmYWlsZWQsIDE6IHRyaWVk
-IGFuZCBzdWNjZXNmdWwgKi8KKwlpbnQgb3NjX3N1cHBvcnRfcXVlcnlfc3RhdGUgPSAtMTsKKwlp
-bnQgb3NjX2NvbnRyb2xfc2V0X3N0YXRlID0gLTE7CiAKIAlyb290ID0ga3phbGxvYyhzaXplb2Yo
-c3RydWN0IGFjcGlfcGNpX3Jvb3QpLCBHRlBfS0VSTkVMKTsKIAlpZiAoIXJvb3QpCkBAIC00ODgs
-MTEgKzQ5MCwxMiBAQCBzdGF0aWMgaW50IGFjcGlfcGNpX3Jvb3RfYWRkKHN0cnVjdCBhY3BpCiAJ
-aWYgKGZsYWdzICE9IGJhc2VfZmxhZ3MpIHsKIAkJc3RhdHVzID0gYWNwaV9wY2lfb3NjX3N1cHBv
-cnQocm9vdCwgZmxhZ3MpOwogCQlpZiAoQUNQSV9GQUlMVVJFKHN0YXR1cykpIHsKKwkJCW9zY19z
-dXBwb3J0X3F1ZXJ5X3N0YXRlID0gMDsKIAkJCWRldl9pbmZvKCZkZXZpY2UtPmRldiwgIkFDUEkg
-X09TQyBzdXBwb3J0ICIKLQkJCQkibm90aWZpY2F0aW9uIGZhaWxlZCwgZGlzYWJsaW5nIFBDSWUg
-QVNQTVxuIik7Ci0JCQlwY2llX25vX2FzcG0oKTsKKwkJCQkibm90aWZpY2F0aW9uIGZhaWxlZCwg
-UENJZSBBU1BNIHdpbGwgYmUgZGlzYWJsZWRcbiIpOwogCQkJZmxhZ3MgPSBiYXNlX2ZsYWdzOwot
-CQl9CisJCX0gZWxzZQorCQkJb3NjX3N1cHBvcnRfcXVlcnlfc3RhdGUgPSAxOwogCX0KIAlpZiAo
-IXBjaWVfcG9ydHNfZGlzYWJsZWQKIAkgICAgJiYgKGZsYWdzICYgQUNQSV9QQ0lFX1JFUV9TVVBQ
-T1JUKSA9PSBBQ1BJX1BDSUVfUkVRX1NVUFBPUlQpIHsKQEAgLTUxNCwxMSArNTE3LDExIEBAIHN0
-YXRpYyBpbnQgYWNwaV9wY2lfcm9vdF9hZGQoc3RydWN0IGFjcGkKIAkJc3RhdHVzID0gYWNwaV9w
-Y2lfb3NjX2NvbnRyb2xfc2V0KGRldmljZS0+aGFuZGxlLCAmZmxhZ3MsCiAJCQkJICAgICAgIE9T
-Q19QQ0lfRVhQUkVTU19DQVBfU1RSVUNUVVJFX0NPTlRST0wpOwogCQlpZiAoQUNQSV9TVUNDRVNT
-KHN0YXR1cykpIHsKLQkJCWlzX29zY19ncmFudGVkID0gdHJ1ZTsKKwkJCW9zY19jb250cm9sX3Nl
-dF9zdGF0ZSA9IDE7CiAJCQlkZXZfaW5mbygmZGV2aWNlLT5kZXYsCiAJCQkJIkFDUEkgX09TQyBj
-b250cm9sICgweCUwMngpIGdyYW50ZWRcbiIsIGZsYWdzKTsKIAkJfSBlbHNlIHsKLQkJCWlzX29z
-Y19ncmFudGVkID0gZmFsc2U7CisJCQlvc2NfY29udHJvbF9zZXRfc3RhdGUgPSAwOwogCQkJZGV2
-X2luZm8oJmRldmljZS0+ZGV2LAogCQkJCSJBQ1BJIF9PU0MgcmVxdWVzdCBmYWlsZWQgKCVzKSwg
-IgogCQkJCSJyZXR1cm5lZCBjb250cm9sIG1hc2s6IDB4JTAyeFxuIiwKQEAgLTU1NSwxMyArNTU4
-LDE2IEBAIHN0YXRpYyBpbnQgYWNwaV9wY2lfcm9vdF9hZGQoc3RydWN0IGFjcGkKIAl9CiAKIAkv
-KiBBU1BNIHNldHRpbmcgKi8KLQlpZiAoaXNfb3NjX2dyYW50ZWQpIHsKKwlpZiAob3NjX3N1cHBv
-cnRfcXVlcnlfc3RhdGUgPT0gMCkgeworCQlkZXZfaW5mbygmZGV2aWNlLT5kZXYsICJBQ1BJIF9P
-U0Mgc3VwcG9ydCBub3RpZmljYXRpb24gZmFpbGVkLCBQQ0llIEFTUE0gZGlzYWJsZWRcbiIpOwor
-CQlwY2llX25vX2FzcG0oKTsKKwl9CisJaWYgKG9zY19jb250cm9sX3NldF9zdGF0ZSA9PSAxKSB7
-CiAJCWlmIChhY3BpX2dibF9GQURULmJvb3RfZmxhZ3MgJiBBQ1BJX0ZBRFRfTk9fQVNQTSkKIAkJ
-CXBjaWVfY2xlYXJfYXNwbShyb290LT5idXMpOwotCX0gZWxzZSB7Ci0JCXByX2luZm8oIkFDUEkg
-X09TQyBjb250cm9sIGZvciBQQ0llIG5vdCBncmFudGVkLCAiCi0JCQkiZGlzYWJsaW5nIEFTUE1c
-biIpOwotCQlwY2llX25vX2FzcG0oKTsKKwl9IGVsc2UgaWYgKG9zY19jb250cm9sX3NldF9zdGF0
-ZSA9PSAwKSB7CisJCQlkZXZfaW5mbygmZGV2aWNlLT5kZXYsICJBQ1BJIF9PU0MgY29udHJvbCBu
-b3QgZ3JhbnRlZCwgUENJZSBBU1BNIGRpc2FibGVkXG4iKTsKKwkJCXBjaWVfbm9fYXNwbSgpOwog
-CX0KIAogCXBjaV9hY3BpX2FkZF9idXNfcG1fbm90aWZpZXIoZGV2aWNlLCByb290LT5idXMpOwo=
---089e0129483adcaef004d82213ba
-Content-Type: application/octet-stream;
-	name="disable_aspm_remove_not_needed_check.patch"
-Content-Disposition: attachment;
-	filename="disable_aspm_remove_not_needed_check.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_heegrbta1
-
-U3ViamVjdDogW1BBVENIXSBQQ0k6IFJlbW92ZSBub3QgbmVlZGVkIGNoZWNrIGluIGRpc2FibGUg
-YXNwbSBsaW5rCgpSb21hbiByZXBvcnRlZCBhdGg1ayBkb2VzIG5vdCB3b3JrIGFueW1vcmUgb24g
-My44LgpCaXNlY3RlZCB0bwp8IGNvbW1pdCA4YzMzZjUxZGY0MDZlMWExZjdmYTRlOWIyNDQ4NDVi
-N2ViZDYxZmE2CnwgQXV0aG9yOiBUYWt1IEl6dW1pIDxpenVtaS50YWt1QGpwLmZ1aml0c3UuY29t
-Pgp8IERhdGU6ICAgVHVlIE9jdCAzMCAxNToyNzoxMyAyMDEyICswOTAwCnwKfCAgICBQQ0kvQUNQ
-STogUmVxdWVzdCBfT1NDIGNvbnRyb2wgYmVmb3JlIHNjYW5uaW5nIFBDSSByb290IGJ1cwp8Cnwg
-ICAgVGhpcyBwYXRjaCBtb3ZlcyB1cCB0aGUgY29kZSBibG9jayB0byByZXF1ZXN0IF9PU0MgY29u
-dHJvbCBpbiBvcmRlciB0bwp8ICAgIHNlcGFyYXRlIEFDUEkgd29yayBhbmQgUENJIHdvcmsgaW4g
-YWNwaV9wY2lfcm9vdF9hZGQoKS4KCkl0IG1ha2UgcGNpX2Rpc2FibGVfbGlua19zdGF0ZSBkb2Vz
-IG5vdCB3b3JrIGFueW1vcmUgYXMgYWNwaV9kaXNhYmxlZAppcyBzZXQgYmVmb3JlIHBjaSByb290
-IGJ1cyBzY2FubmluZy4KSXQgd2lsbCBza2lwIHRoYXQgaW4gcXVpcmtzIGFuZCBwY2llX2FzcG1f
-c2FuaXR5X2NoZWNrLgoKQWNjdHVhbGx5IHdlIGRvbid0IG5lZWQgdG8gY2hlY2sgYXNwbV9kaXNh
-YmxlZCBpbiBkaXNhYmxlIGxpbmssIGFzCndlIGFscmVhZHkgaGF2ZSBwcm90ZWN0aW9uIGFib3V0
-IGxpbmsgc3RhdGUgZm9sbG93aW5nLgoKaHR0cHM6Ly9idWd6aWxsYS5rZXJuZWwub3JnL3Nob3df
-YnVnLmNnaT9pZD01NTIxMQpodHRwOi8vYXJ0aWNsZS5nbWFuZS5vcmcvZ21hbmUubGludXgua2Vy
-bmVsLnBjaS8yMDY0MAoKTmVlZCBpdCBmb3IgMy44IHN0YWJsZS4KClJlcG9ydGVkLWJ5OiBSb21h
-biBZZXBpc2hldiA8cm9tYW4ueWVwaXNoZXZAZ21haWwuY29tPgpCaXNlY3RlZC1ieTogUm9tYW4g
-WWVwaXNoZXYgPHJvbWFuLnllcGlzaGV2QGdtYWlsLmNvbT4KU2lnbmVkLW9mZi1ieTogWWluZ2hh
-aSBMdSA8eWluZ2hhaUBrZXJuZWwub3JnPgpDYzogc3RhYmxlQGtlcm5lbC5vcmcKCi0tLQogZHJp
-dmVycy9wY2kvcGNpZS9hc3BtLmMgfCAgIDIxICsrKystLS0tLS0tLS0tLS0tLS0tLQogMSBmaWxl
-IGNoYW5nZWQsIDQgaW5zZXJ0aW9ucygrKSwgMTcgZGVsZXRpb25zKC0pCgpJbmRleDogbGludXgt
-Mi42L2RyaXZlcnMvcGNpL3BjaWUvYXNwbS5jCj09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0KLS0tIGxpbnV4LTIuNi5vcmln
-L2RyaXZlcnMvcGNpL3BjaWUvYXNwbS5jCisrKyBsaW51eC0yLjYvZHJpdmVycy9wY2kvcGNpZS9h
-c3BtLmMKQEAgLTQ5MywxNSArNDkzLDYgQEAgc3RhdGljIGludCBwY2llX2FzcG1fc2FuaXR5X2No
-ZWNrKHN0cnVjdAogCQkJcmV0dXJuIC1FSU5WQUw7CiAKIAkJLyoKLQkJICogSWYgQVNQTSBpcyBk
-aXNhYmxlZCB0aGVuIHdlJ3JlIG5vdCBnb2luZyB0byBjaGFuZ2UKLQkJICogdGhlIEJJT1Mgc3Rh
-dGUuIEl0J3Mgc2FmZSB0byBjb250aW51ZSBldmVuIGlmIGl0J3MgYQotCQkgKiBwcmUtMS4xIGRl
-dmljZQotCQkgKi8KLQotCQlpZiAoYXNwbV9kaXNhYmxlZCkKLQkJCWNvbnRpbnVlOwotCi0JCS8q
-CiAJCSAqIERpc2FibGUgQVNQTSBmb3IgcHJlLTEuMSBQQ0llIGRldmljZSwgd2UgZm9sbG93IE1T
-IHRvIHVzZQogCQkgKiBSQkVSIGJpdCB0byBkZXRlcm1pbmUgaWYgYSBmdW5jdGlvbiBpcyAxLjEg
-dmVyc2lvbiBkZXZpY2UKIAkJICovCkBAIC03MTgsMTUgKzcwOSwxMSBAQCB2b2lkIHBjaWVfYXNw
-bV9wb3dlcnNhdmVfY29uZmlnX2xpbmsoc3RyCiAgKiBwY2lfZGlzYWJsZV9saW5rX3N0YXRlIC0g
-ZGlzYWJsZSBwY2kgZGV2aWNlJ3MgbGluayBzdGF0ZSwgc28gdGhlIGxpbmsgd2lsbAogICogbmV2
-ZXIgZW50ZXIgc3BlY2lmaWMgc3RhdGVzCiAgKi8KLXN0YXRpYyB2b2lkIF9fcGNpX2Rpc2FibGVf
-bGlua19zdGF0ZShzdHJ1Y3QgcGNpX2RldiAqcGRldiwgaW50IHN0YXRlLCBib29sIHNlbSwKLQkJ
-CQkgICAgIGJvb2wgZm9yY2UpCitzdGF0aWMgdm9pZCBfX3BjaV9kaXNhYmxlX2xpbmtfc3RhdGUo
-c3RydWN0IHBjaV9kZXYgKnBkZXYsIGludCBzdGF0ZSwgYm9vbCBzZW0pCiB7CiAJc3RydWN0IHBj
-aV9kZXYgKnBhcmVudCA9IHBkZXYtPmJ1cy0+c2VsZjsKIAlzdHJ1Y3QgcGNpZV9saW5rX3N0YXRl
-ICpsaW5rOwogCi0JaWYgKGFzcG1fZGlzYWJsZWQgJiYgIWZvcmNlKQotCQlyZXR1cm47Ci0KIAlp
-ZiAoIXBjaV9pc19wY2llKHBkZXYpKQogCQlyZXR1cm47CiAKQEAgLTc1NywxMyArNzQ0LDEzIEBA
-IHN0YXRpYyB2b2lkIF9fcGNpX2Rpc2FibGVfbGlua19zdGF0ZShzdHIKIAogdm9pZCBwY2lfZGlz
-YWJsZV9saW5rX3N0YXRlX2xvY2tlZChzdHJ1Y3QgcGNpX2RldiAqcGRldiwgaW50IHN0YXRlKQog
-ewotCV9fcGNpX2Rpc2FibGVfbGlua19zdGF0ZShwZGV2LCBzdGF0ZSwgZmFsc2UsIGZhbHNlKTsK
-KwlfX3BjaV9kaXNhYmxlX2xpbmtfc3RhdGUocGRldiwgc3RhdGUsIGZhbHNlKTsKIH0KIEVYUE9S
-VF9TWU1CT0wocGNpX2Rpc2FibGVfbGlua19zdGF0ZV9sb2NrZWQpOwogCiB2b2lkIHBjaV9kaXNh
-YmxlX2xpbmtfc3RhdGUoc3RydWN0IHBjaV9kZXYgKnBkZXYsIGludCBzdGF0ZSkKIHsKLQlfX3Bj
-aV9kaXNhYmxlX2xpbmtfc3RhdGUocGRldiwgc3RhdGUsIHRydWUsIGZhbHNlKTsKKwlfX3BjaV9k
-aXNhYmxlX2xpbmtfc3RhdGUocGRldiwgc3RhdGUsIHRydWUpOwogfQogRVhQT1JUX1NZTUJPTChw
-Y2lfZGlzYWJsZV9saW5rX3N0YXRlKTsKIApAQCAtNzgxLDcgKzc2OCw3IEBAIHZvaWQgcGNpZV9j
-bGVhcl9hc3BtKHN0cnVjdCBwY2lfYnVzICpidXMKIAkJX19wY2lfZGlzYWJsZV9saW5rX3N0YXRl
-KGNoaWxkLCBQQ0lFX0xJTktfU1RBVEVfTDBTIHwKIAkJCQkJIFBDSUVfTElOS19TVEFURV9MMSB8
-CiAJCQkJCSBQQ0lFX0xJTktfU1RBVEVfQ0xLUE0sCi0JCQkJCSBmYWxzZSwgdHJ1ZSk7CisJCQkJ
-CSBmYWxzZSk7CiAJfQogfQogCg==
---089e0129483adcaef004d82213ba--
