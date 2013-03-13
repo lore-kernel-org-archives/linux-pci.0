@@ -1,164 +1,90 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:30430 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751136Ab3CHTx5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 Mar 2013 14:53:57 -0500
-Date: Fri, 8 Mar 2013 14:53:24 -0500
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Joerg Roedel <joro@8bytes.org>,
-	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-Subject: Re: [PATCH v2 12/26] x86, irq: Add realloc_irq_and_cfg_at()
-Message-ID: <20130308195324.GE6622@phenom.dumpdata.com>
-References: <1360351703-20571-1-git-send-email-yinghai@kernel.org>
- <1360351703-20571-13-git-send-email-yinghai@kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1360351703-20571-13-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>, Ram Pai <linuxram@us.ibm.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v3 08/27] PCI: Use for_each_pci_resource() with IOV releated functions
+Date: Wed, 13 Mar 2013 16:28:03 -0700
+Message-Id: <1363217302-14383-9-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1363217302-14383-1-git-send-email-yinghai@kernel.org>
+References: <1363217302-14383-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Feb 08, 2013 at 11:28:09AM -0800, Yinghai Lu wrote:
-> For ioapic hotplug support, we need to reserve irq range for hot
-> added ioapic controller. After that we need to allocate those
-> pre-reserved one.
-> 
-> Add realloc_irq_and_cfg_at() to really allocate irq_desc and cfg
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/iov.c |   31 +++++++++++++++----------------
+ 1 file changed, 15 insertions(+), 16 deletions(-)
 
-Put a period at 'cfg'.
-> as pre-reserved only hold bit in allocate_irqs bit maps.
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index ee599f2..baf6c80 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -93,17 +93,20 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
+ 	pci_setup_device(virtfn);
+ 	virtfn->dev.parent = dev->dev.parent;
+ 
+-	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
+-		res = dev->resource + PCI_IOV_RESOURCES + i;
++	for_each_pci_resource(dev, res, i, PCI_IOV_RES) {
++		struct resource *virtfn_res;
++
+ 		if (!res->parent)
+ 			continue;
+-		virtfn->resource[i].name = pci_name(virtfn);
+-		virtfn->resource[i].flags = res->flags;
++
++		virtfn_res = pci_dev_resource_n(virtfn, i - PCI_IOV_RESOURCES);
++		virtfn_res->name = pci_name(virtfn);
++		virtfn_res->flags = res->flags;
+ 		size = resource_size(res);
+ 		do_div(size, iov->total_VFs);
+-		virtfn->resource[i].start = res->start + size * id;
+-		virtfn->resource[i].end = virtfn->resource[i].start + size - 1;
+-		rc = request_resource(res, &virtfn->resource[i]);
++		virtfn_res->start = res->start + size * id;
++		virtfn_res->end = virtfn_res->start + size - 1;
++		rc = request_resource(res, virtfn_res);
+ 		BUG_ON(rc);
+ 	}
+ 
+@@ -305,9 +308,8 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+ 		return -EIO;
+ 
+ 	nres = 0;
+-	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
+-		bars |= (1 << (i + PCI_IOV_RESOURCES));
+-		res = dev->resource + PCI_IOV_RESOURCES + i;
++	for_each_pci_resource(dev, res, i, PCI_IOV_RES) {
++		bars |= 1 << i;
+ 		if (res->parent)
+ 			nres++;
+ 	}
+@@ -465,10 +467,9 @@ found:
+ 	pci_write_config_dword(dev, pos + PCI_SRIOV_SYS_PGSIZE, pgsz);
+ 
+ 	nres = 0;
+-	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
+-		res = dev->resource + PCI_IOV_RESOURCES + i;
++	for_each_pci_resource(dev, res, i, PCI_IOV_RES) {
+ 		i += __pci_read_base(dev, pci_bar_unknown, res,
+-				     pos + PCI_SRIOV_BAR + i * 4);
++			     pos + PCI_SRIOV_BAR + (i - PCI_IOV_RESOURCES) * 4);
+ 		if (!res->flags)
+ 			continue;
+ 		if (resource_size(res) & (PAGE_SIZE - 1)) {
+@@ -511,10 +512,8 @@ found:
+ 	return 0;
+ 
+ failed:
+-	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
+-		res = dev->resource + PCI_IOV_RESOURCES + i;
++	for_each_pci_resource(dev, res, i, PCI_IOV_RES)
+ 		res->flags = 0;
+-	}
+ 
+ 	return rc;
+ }
+-- 
+1.7.10.4
 
-And then start the new sentence here saying 'Pre-reserved (XX function
-name) only holds bits in .."
-
-> 
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> Cc: Joerg Roedel <joro@8bytes.org>
-> Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-> Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-> ---
->  arch/x86/kernel/apic/io_apic.c |   32 +++++++++++++++++++++++++++++++-
->  include/linux/irq.h            |    5 +++++
->  kernel/irq/irqdesc.c           |   26 ++++++++++++++++++++++++++
->  3 files changed, 62 insertions(+), 1 deletion(-)
-> 
-> diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-> index d2b4988..72a1351 100644
-> --- a/arch/x86/kernel/apic/io_apic.c
-> +++ b/arch/x86/kernel/apic/io_apic.c
-> @@ -301,6 +301,36 @@ static void free_irq_at(unsigned int at, struct irq_cfg *cfg)
->  	irq_free_desc(at);
->  }
->  
-> +static struct irq_cfg *realloc_irq_and_cfg_at(unsigned int at, int node)
-> +{
-> +	struct irq_desc *desc = irq_to_desc(at);
-> +	struct irq_cfg *cfg;
-> +	int res;
-> +
-> +	if (desc) {
-> +		if (irq_desc_get_irq_data(desc)->node == node)
-> +			return alloc_irq_and_cfg_at(at, node);
-> +
-> +		cfg = irq_desc_get_chip_data(desc);
-> +		if (cfg) {
-> +			/* shared irq */
-> +			if (!list_empty(&cfg->irq_2_pin))
-> +				return cfg;
-> +			free_irq_cfg(at, cfg);
-> +		}
-> +	}
-> +
-> +	res = irq_realloc_desc_at(at, node);
-> +	if (res >= 0) {
-> +		cfg = alloc_irq_cfg(at, node);
-> +		if (cfg) {
-> +			irq_set_chip_data(at, cfg);
-> +			return cfg;
-> +		}
-> +	}
-> +
-> +	return alloc_irq_and_cfg_at(at, node);
-> +}
->  
->  struct io_apic {
->  	unsigned int index;
-> @@ -3355,7 +3385,7 @@ int arch_setup_ht_irq(unsigned int irq, struct pci_dev *dev)
->  static int
->  io_apic_setup_irq_pin(unsigned int irq, int node, struct io_apic_irq_attr *attr)
->  {
-> -	struct irq_cfg *cfg = alloc_irq_and_cfg_at(irq, node);
-> +	struct irq_cfg *cfg = realloc_irq_and_cfg_at(irq, node);
->  	int ret;
->  
->  	if (!cfg)
-> diff --git a/include/linux/irq.h b/include/linux/irq.h
-> index 4e0fcbb..9c6c047 100644
-> --- a/include/linux/irq.h
-> +++ b/include/linux/irq.h
-> @@ -602,6 +602,11 @@ void irq_free_descs(unsigned int irq, unsigned int cnt);
->  int irq_reserve_irqs(unsigned int from, unsigned int cnt);
->  int __irq_reserve_irqs(int irq, unsigned int from, unsigned int cnt);
->  
-> +int __irq_realloc_desc(int at, int node, struct module *owner);
-> +/* use macros to avoid needing export.h for THIS_MODULE */
-> +#define irq_realloc_desc_at(at, node)	\
-> +	__irq_realloc_desc(at, node, THIS_MODULE)
-> +
->  static inline void irq_free_desc(unsigned int irq)
->  {
->  	irq_free_descs(irq, 1);
-> diff --git a/kernel/irq/irqdesc.c b/kernel/irq/irqdesc.c
-> index 3b9fb92..b48f65b 100644
-> --- a/kernel/irq/irqdesc.c
-> +++ b/kernel/irq/irqdesc.c
-> @@ -99,6 +99,11 @@ EXPORT_SYMBOL_GPL(nr_irqs);
->  static DEFINE_MUTEX(sparse_irq_lock);
->  static DECLARE_BITMAP(allocated_irqs, IRQ_BITMAP_BITS);
->  
-> +static bool __irq_is_reserved(int irq)
-> +{
-> +	return !!test_bit(irq, allocated_irqs);
-> +}
-> +
->  #ifdef CONFIG_SPARSE_IRQ
->  
->  static RADIX_TREE(irq_desc_tree, GFP_KERNEL);
-> @@ -410,6 +415,27 @@ __irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
->  EXPORT_SYMBOL_GPL(__irq_alloc_descs);
->  
->  /**
-> + * irq_realloc_desc - allocate irq descriptor for irq that is already reserved
-
-Which begs the question - why was it not allocated when it was reserved?
-
-> + * @irq:	Allocate for specific irq number if irq >= 0
-> + * @node:	Preferred node on which the irq descriptor should be allocated
-> + * @owner:	Owning module (can be NULL)
-> + *
-> + * Returns the irq number or error code
-> + */
-> +int __ref
-> +__irq_realloc_desc(int irq, int node, struct module *owner)
-> +{
-> +	if (!__irq_is_reserved(irq))
-> +		return -EINVAL;
-> +
-> +	if (irq_to_desc(irq))
-> +		free_desc(irq);
-> +
-> +	return alloc_descs(irq, 1, node, owner);
-> +}
-> +EXPORT_SYMBOL_GPL(__irq_realloc_desc);
-> +
-> +/**
->   * irq_reserve_irqs - mark irqs allocated
->   * @from:	mark from irq number
->   * @cnt:	number of irqs to mark
-> -- 
-> 1.7.10.4
-> 
