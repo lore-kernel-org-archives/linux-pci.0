@@ -1,75 +1,68 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Matthew Garrett <matthew.garrett@nebula.com>
-To: linux-kernel@vger.kernel.org
-Cc: linux-security-module@vger.kernel.org, linux-efi@vger.kernel.org,
-	kexec@lists.infradead.org, linux-pci@vger.kernel.org,
-	Josh Boyer <jwboyer@redhat.com>
-Subject: [PATCH 03/12] Secure boot: Add a dummy kernel parameter that will switch on Secure Boot mode
-Date: Mon, 18 Mar 2013 17:32:24 -0400
-Message-Id: <1363642353-30749-3-git-send-email-matthew.garrett@nebula.com>
-In-Reply-To: <1363642353-30749-1-git-send-email-matthew.garrett@nebula.com>
-References: <1363642353-30749-1-git-send-email-matthew.garrett@nebula.com>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>, Ram Pai <linuxram@us.ibm.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v3 01/27] PCI: Add pci_dev_resource_n()
+Date: Wed, 13 Mar 2013 16:27:56 -0700
+Message-Id: <1363217302-14383-2-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1363217302-14383-1-git-send-email-yinghai@kernel.org>
+References: <1363217302-14383-1-git-send-email-yinghai@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Josh Boyer <jwboyer@redhat.com>
+Now pci device resource iteration is done via "for (i=0...)" open code.
+That make code hard to read esp when only bridge or sriov resources
+are involved.
 
-This forcibly drops CAP_COMPROMISE_KERNEL from both cap_permitted and cap_bset
-in the init_cred struct, which everything else inherits from.  This works on
-any machine and can be used to develop even if the box doesn't have UEFI.
+We want to replace those open code with for_each_pci_resource().
+Also want to add addon_resource handling, and need to make addon resource
+to be treated as normal PCI resources during iteration.
 
-Signed-off-by: Josh Boyer <jwboyer@redhat.com>
+Add pci_device_resource_n() instead of using dev->resources[n].
+Use it with for_each_pci_resource macro and addon_resource support.
+
+-v2: Add EXPORT_SYMBOL to find building error found by Gary Hade
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- Documentation/kernel-parameters.txt |  7 +++++++
- kernel/cred.c                       | 17 +++++++++++++++++
- 2 files changed, 24 insertions(+)
+ drivers/pci/probe.c |    9 +++++++++
+ include/linux/pci.h |    2 ++
+ 2 files changed, 11 insertions(+)
 
-diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
-index 4609e81..7c0b137 100644
---- a/Documentation/kernel-parameters.txt
-+++ b/Documentation/kernel-parameters.txt
-@@ -2683,6 +2683,13 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
- 			Note: increases power consumption, thus should only be
- 			enabled if running jitter sensitive (HPC/RT) workloads.
- 
-+	secureboot_enable=
-+			[KNL] Enables an emulated UEFI Secure Boot mode.  This
-+			locks down various aspects of the kernel guarded by the
-+			CAP_COMPROMISE_KERNEL capability.  This includes things
-+			like /dev/mem, IO port access, and other areas.  It can
-+			be used on non-UEFI machines for testing purposes.
-+
- 	security=	[SECURITY] Choose a security module to enable at boot.
- 			If this boot parameter is not specified, only the first
- 			security module asking for security registration will be
-diff --git a/kernel/cred.c b/kernel/cred.c
-index e0573a4..c3f4e3e 100644
---- a/kernel/cred.c
-+++ b/kernel/cred.c
-@@ -565,6 +565,23 @@ void __init cred_init(void)
- 				     0, SLAB_HWCACHE_ALIGN|SLAB_PANIC, NULL);
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index b494066..9cb3eb3 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -105,6 +105,15 @@ static int __init pcibus_class_init(void)
  }
+ postcore_initcall(pcibus_class_init);
  
-+void __init secureboot_enable()
++struct resource *pci_dev_resource_n(struct pci_dev *dev, int n)
 +{
-+	pr_info("Secure boot enabled\n");
-+	cap_lower((&init_cred)->cap_bset, CAP_COMPROMISE_KERNEL);
-+	cap_lower((&init_cred)->cap_permitted, CAP_COMPROMISE_KERNEL);
-+}
++	if (n >= 0 && n < PCI_NUM_RESOURCES)
++		return &dev->resource[n];
 +
-+/* Dummy Secure Boot enable option to fake out UEFI SB=1 */
-+static int __init secureboot_enable_opt(char *str)
-+{
-+	int sb_enable = !!simple_strtol(str, NULL, 0);
-+	if (sb_enable)
-+		secureboot_enable();
-+	return 1;
++	return NULL;
 +}
-+__setup("secureboot_enable=", secureboot_enable_opt);
++EXPORT_SYMBOL(pci_dev_resource_n);
 +
- /**
-  * prepare_kernel_cred - Prepare a set of credentials for a kernel service
-  * @daemon: A userspace daemon to be used as a reference
+ static u64 pci_size(u64 base, u64 maxbase, u64 mask)
+ {
+ 	u64 size = mask & maxbase;	/* Find the significant bits */
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 2461033a..00d5367 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -338,6 +338,8 @@ struct pci_dev {
+ 	size_t romlen; /* Length of ROM if it's not from the BAR */
+ };
+ 
++struct resource *pci_dev_resource_n(struct pci_dev *dev, int n);
++
+ static inline struct pci_dev *pci_physfn(struct pci_dev *dev)
+ {
+ #ifdef CONFIG_PCI_IOV
 -- 
-1.8.1.2
+1.7.10.4
 
