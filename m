@@ -1,14 +1,12 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rs140.luxsci.com ([74.205.78.114]:38578 "EHLO rs140.luxsci.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751124Ab3CJExJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 9 Mar 2013 23:53:09 -0500
-Message-ID: <513C117D.6080800@firmworks.com>
-Date: Sat, 09 Mar 2013 18:52:13 -1000
-From: Mitch Bradley <wmb@firmworks.com>
-MIME-Version: 1.0
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-CC: Thierry Reding <thierry.reding@avionic-design.de>,
+Received: from moutng.kundenserver.de ([212.227.17.8]:49738 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933309Ab3CMVdz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Mar 2013 17:33:55 -0400
+Date: Wed, 13 Mar 2013 22:33:44 +0100
+From: Thierry Reding <thierry.reding@avionic-design.de>
+To: Mitch Bradley <wmb@firmworks.com>
+Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
 	Lior Amsalem <alior@marvell.com>,
 	Russell King - ARM Linux <linux@arm.linux.org.uk>,
 	Jason Cooper <jason@lakedaemon.net>,
@@ -22,180 +20,110 @@ CC: Thierry Reding <thierry.reding@avionic-design.de>,
 	Tawfik Bayouk <tawfik@marvell.com>,
 	linux-arm-kernel@lists.infradead.org
 Subject: Re: [PATCH 24/32] pci: PCIe driver for Marvell Armada 370/XP systems
-References: <20130307194830.GA1811@avionic-0098.mockup.avionic-design.de> <20130307200235.GB20695@obsidianresearch.com> <20130307204726.GB1811@avionic-0098.mockup.avionic-design.de> <51392B4D.9040404@gmail.com> <20130308071443.GA5772@avionic-0098.mockup.avionic-design.de> <20130308165228.GB4094@obsidianresearch.com> <20130308191227.GA6551@avionic-0098.mockup.avionic-design.de> <513A3F4F.2090501@firmworks.com> <20130308200245.GC29435@obsidianresearch.com> <513A7845.6040304@firmworks.com> <20130309013152.GA3883@obsidianresearch.com>
-In-Reply-To: <20130309013152.GA3883@obsidianresearch.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Message-ID: <20130313213344.GA29402@avionic-0098.mockup.avionic-design.de>
+References: <20130312070852.GA6727@avionic-0098.mockup.avionic-design.de>
+ <20130312155749.GA1820@obsidianresearch.com>
+ <20130312203819.GA23221@avionic-0098.mockup.avionic-design.de>
+ <20130312210328.GA22702@obsidianresearch.com>
+ <20130312213006.GA23717@avionic-0098.mockup.avionic-design.de>
+ <20130312220854.GA23112@obsidianresearch.com>
+ <20130313081815.GD25940@avionic-0098.mockup.avionic-design.de>
+ <20130313170205.GB24042@obsidianresearch.com>
+ <20130313192628.GA28714@avionic-0098.mockup.avionic-design.de>
+ <5140E85A.3040900@firmworks.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="bg08WKrSYDhXBjb5"
+In-Reply-To: <5140E85A.3040900@firmworks.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 3/8/2013 3:31 PM, Jason Gunthorpe wrote:
-> On Fri, Mar 08, 2013 at 01:46:13PM -1000, Mitch Bradley wrote:
->> On 3/8/2013 10:02 AM, Jason Gunthorpe wrote:
->>> On Fri, Mar 08, 2013 at 09:43:11AM -1000, Mitch Bradley wrote:
->>>
->>>>>> http://www.spinics.net/lists/arm-kernel/msg228749.html
->>>>
->>>> The example in that posting looks messed up to me.
->>>>
->>>> 1) It has "reg = <0x0800 0 0 0 0>", but 0x0800 0 0  is not a valid
->>>> address in the address space defined by its parent - because the
-form of
->>>> the parent's ranges property indicates that it's a PCI-style address
->>>> form.  0x0800 0 0 lacks the top bits that indicate non-relocatable and
->>>> the type (I/O, memory, etc).
->>>
->>> You need to review the OF PCI bindings to make sense of this.  The
->>> subnodes are PCI devices. Those PCI devices show up in the
->>> configuration space (ie lspci). They are the PCI root port bridges.
->>
->> As it turns out, I wrote those bindings, almost 20 years ago.
->>
->> Having dug through old versions of that patch, I think I see the source
->> of the confusion.
->
-> Not sure, I think this has gone into a weird tangent, your conclusions
-> don't match how the PCI-E root complex is presented to the kernel.
->
-> Lets just go back to the start?
->
-> The pci-controller node is a root complex.
->
-> The children of that node are elements in the root complex - they are
-> the root port bridges. They are all on PCI bus 0.
->
-> Each root port bridge responds to configuration cycles, and has a PCI
-> configuration space. They show up in lspci.
->
-> The host controller device driver knows how to issue configuration
-> cycles, and it knows how to deliver configuration cycles on bus 0 to
-> the bridges.
->
-> This one:
-> +			pcie@0,0 {
-> +				device_type = "pci";
-> +				reg = <0x0800 0 0 0 0>;
->
-> Responds to bus 0, device 1, function 0.
->
-> Each root port bridge has an associated non-PCI MMIO address
-> space. The child above is associated with 0xd0040000. This MMIO
-> address space is needed by the host controller driver to operate the
-> port.
->
-> The text after the @ is a mistake, Linux doesn't enforce anything
-> about this text so nobody noticed till now, it should be corrected to
-> @1,0, similarly for the second one.
->
-> Also, from your comments the top level should gain a 'device_type =
-> "pci"'.
->
-> So, from that point, does the DT start to make sense? Are there other
-> problems?
->
-> The question at hand is how do you associate the non-PCI MMIO space
-> 0xd0040000 with the root port bridge 'pcie@1,0' ? The patch proposes
-> to use a reg array in the controller plus reg-names to do this.
->
-> I have trouble making sense of your suggestions to switch away from
-> 5dw addressing. It is critical that the DT child stanza be associated
-> with the PCI discovered root port bridge. By my understanding Linux
-> does this based on the configuration space format 'reg' value. How is
-> that association possible if you switch things away from 5dw
-> addressing?
->
-> Also, this is for firmware-less embedded. Linux is required to scan
-> the bus and do full address assignment of all PCI devies, including
-> the root port bridges. The ranges property on the top node specifies
-> the addressing apertures that are available for this process. This is
-> common practice, there are many examples of this in kernel dts for PCI
-> controllers.
 
-Okay, I think I finally get it.  The Marvell root port bridge setup
-registers look like standard config headers, even though they aren't
-really in config space (because you need a different access method for
-them, compared to real config accesses to downstream devices).
+--bg08WKrSYDhXBjb5
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-So, in order for the common code that enumerates the PCI bus to work,
-you need to "spoof" the config accesses so that when you try to access
-those particular "pseudo config headers", it uses the MMIO method
-instead of the real config access method.
+On Wed, Mar 13, 2013 at 10:58:02AM -1000, Mitch Bradley wrote:
+[...]
+> In this case, the answer to "what does pcie_controller do?" is "it
+> implements a PCI bus" below.  So 'device_type =3D "pci"' is appropriate.
 
-If that is indeed the case, them I would vote for a slight modification
-of the intermediate patch that I cited earlier - the one in which the
-ranges property includes translations from those special config
-addresses into CPU addresses.  The modification is to fix the sizes,
-changing 0x2000 to 0x800, so those ranges entries do not overlap in the
-child address domain.
+Alright, that's 2 against 1. I don't have much of a choice but to yield.
 
-With that change, plus fixing the "@port,lane" strings to be "@dev,fun",
-the DT would not raise all the red flags that led me down this rathole.
+> Having just re-read the code in drivers/of/address.c, I think I have a
+> deeper understanding of a few practical issues:
+>=20
+> In order to translate a 3/2 PCI address via of_get_pci_address(), the
+> parent device (i.e. root complex / pcie-controller) must have both
+> 'device_type =3D "pci"' (else of_match_bus() won't find the pci version of
+> "struct of_bus") and also 'name =3D "pci"' (else strcmp(bus->name, "pci")
+> will fail).
+>=20
+> So it would seem that, if you want to use address.c verbatim (for the
+> interface between pcie-controller and its direct children), not only do
+> you need device_type =3D pci, but you also need to rename
+> "pcie-controller" to "pci".
 
-The controller driver would still have to implement the magic spoofing
-of those funky config headers, but at least it would be doing it based
-on well-established representation principles, specifically ranges
-entries and well-formed child addresses, without having to resort to the
-new sideband "port and lane" address representation.
+bus->name refers to that of the of_bus structure, not the node name of
+the controller.
 
-Here's what it would look like:
+> But then you run into the problem that the pci variant of struct of_bus
+> uses "assigned-addresses" instead of "reg".  So it still doesn't work
+> as-is.  To make it work, you would need to add an "assigned-addresses"
+> property to each root port node.  That property value could be in
+> non-relocatable memory space, translatable via normal rules, in which
+> case the "map config space to MMIO via ranges" discussion is moot for
+> Marvell.
 
-pcie-controller {
-	compatible = "marvell,armada-370-pcie";
-	status = "disabled";
+At the risk of quoting the spec: it says (4.1.2) that the entries in the
+"assigned-addresses" property correspond to the function's configuration
+space BARs. In this case however that's no longer true. But if everybody
+thinks that repurposing the "assigned-addresses" property is more
+acceptable than leaving out the device_type =3D "pci" property from the
+pcie-controller node, then so be it.
 
-	#address-cells = <3>;
-	#size-cells = <2>;
+> Which re-raises a question for which I have not yet heard a compelling
+> answer:  Why use 3/2 PCI addressing between Marvell pcie-controller and
+> its root ports (with their unusual programming model)?  The Marvell
+> hardware address structure between controller and root ports is
+> definitely not 3/2.  Certainly you need 3/2 addressing below
+> (implemented by) the root ports, but I just don't see the utility of
+> pretending 3/2 addressing at the complex-to-port interface.  If the root
+> port hardware used the common programming model, with real config
+> headers and stuff, 3/2 would be good because you could use existing
+> drivers.  But since you need a special root-port driver anyway, why go
+> to the trouble of emulating non-existent addressing?
 
-	bus-range = <0x00 0xff>;
+I think the reason is that reg needs to be in the standard format for
+the device node matching code to work. There are various checks to make
+sure the reg property has entries which are 3/2 each.
 
-	ranges = <0x00000800 0 0          0xd4004000 0 0x00000800   /* Root
-port config header */
-	          0x00001000 0 0          0xd4008000 0 0x00000800   /* Root
-port config header */
-		  0x82000000 0 0xe0000000 0xe0000000 0 0x08000000   /*
-non-prefetchable memory */
-	          0x81000000 0 0          0xe8000000 0 0x00100000>; /*
-downstream I/O */
+There's also the issue that the pcie-controller's ranges property
+contains the mapping of the I/O and memory windows and therefore needs
+the 3/2 addressing to encode the type.
 
-	pcie@1,0 {
-		device_type = "pci";
-		reg = <0x0800 0 0 0 0>;
-		#address-cells = <3>;
-		#size-cells = <2>;
-		#interrupt-cells = <1>;
-		interrupt-map-mask = <0 0 0 0>;
-		interrupt-map = <0 0 0 0 &mpic 58>;
-		marvell,pcie-port = <0>;
-		marvell,pcie-lane = <0>;
-		clocks = <&gateclk 5>;
-		status = "disabled";
-	};
+Thierry
 
-	pcie@2,0 {
-		device_type = "pci";
-		reg = <0x1000 0 0 0 0>;
-		#address-cells = <3>;
-		#size-cells = <2>;
-		#interrupt-cells = <1>;
-		interrupt-map-mask = <0 0 0 0>;
-		interrupt-map = <0 0 0 0 &mpic 62>;
-		marvell,pcie-port = <1>;
-		marvell,pcie-lane = <0>;
-		clocks = <&gateclk 9>;
-		status = "disabled";
-	};
-};
+--bg08WKrSYDhXBjb5
+Content-Type: application/pgp-signature
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
 
->
-> It is impossible to specify any detail for the bridges (be it address
-> ranges or bus number ranges) because we have no idea what discovery
-> will find, or what values Linux will choose to assign.
->
->> In neither case would you need the controversial "reg-names" thing.
->
-> reg-names has been a standard feature in the Linux kernel for a bit
-> already..
->
-> Thanks a lot for looking at this,
-> Jason
->
+iQIcBAEBAgAGBQJRQPC4AAoJEN0jrNd/PrOh4hwQAIfCrinqyssPFH1YZChi0EbK
+jJimmstP3MLxc7CYNWkdsF+fCkiSasGY0m5tl4L9gy7FVhkDPbAe6rGDO3aqQN4n
+T0eBJN/k93H8oKkzPr3Sw3NRoDMpQ18YyG6o6MUN84otJQG8/ThJHDrZQzzTL88q
+Y3bZU1XB5dn5ijgu0x3vZgOF3h26C/JNnLURq6P6/WClFhsgNnYHVyDy1GOR1pVC
+zjM1dl26MD4onkR/AbgGRI7m8vEr8+6862qmsO7cvgvl8UaxXFh6vdU/+sd/a82Z
+cUjSkTq/PyWtaVRkzXYxa2cazPtDZ9byNo/5gjRXZvrSHUl+ynWB3eh0TGMIuIGo
+bFPkZUaXVB6kFHgqaB9SvEjv06nHL8zbpb7OeUQeAhcf9JeawDSCWTDoZhxNLrIy
+Ap4GItc8simq7dacuLMxWmF9szUwHi4FhtP97ckCDab9WVhjytze2nwydGAivfPW
+ZwojwaRczlvW/+rF4Uu2mldi3hQ1fA082NMVEVzl/noDzK891YrAwprQLXPNX96j
+pLaURarxeZU/eR5x1STYPgpWwElvea7u7rhjBfwwk3KKoq0wgXcla/d2YNMN+ezB
+ACMG5PQ6LMIMj+YQ9bjKAmircvow/kiQZetsgtwyyFVcR0kD01l701TdjimlDcvr
+zXf5E9ES4rx8r0g7Ylrv
+=AjXo
+-----END PGP SIGNATURE-----
+
+--bg08WKrSYDhXBjb5--
