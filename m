@@ -1,91 +1,61 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <5135196C.3020104@redhat.com>
-Date: Mon, 04 Mar 2013 17:00:12 -0500
-From: Don Dutile <ddutile@redhat.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from quartz.orcorp.ca ([184.70.90.242]:34512 "EHLO quartz.orcorp.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755265Ab3CMWVM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 13 Mar 2013 18:21:12 -0400
+Date: Wed, 13 Mar 2013 16:21:02 -0600
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Thierry Reding <thierry.reding@avionic-design.de>
+Cc: Mitch Bradley <wmb@firmworks.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>, linux-pci@vger.kernel.org,
+	devicetree-discuss@lists.ozlabs.org,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH 24/32] pci: PCIe driver for Marvell Armada 370/XP systems
+Message-ID: <20130313222102.GA28336@obsidianresearch.com>
+References: <20130312155749.GA1820@obsidianresearch.com>
+ <20130312203819.GA23221@avionic-0098.mockup.avionic-design.de>
+ <20130312210328.GA22702@obsidianresearch.com>
+ <20130312213006.GA23717@avionic-0098.mockup.avionic-design.de>
+ <20130312220854.GA23112@obsidianresearch.com>
+ <20130313081815.GD25940@avionic-0098.mockup.avionic-design.de>
+ <20130313170205.GB24042@obsidianresearch.com>
+ <20130313192628.GA28714@avionic-0098.mockup.avionic-design.de>
+ <5140E85A.3040900@firmworks.com>
+ <20130313220235.GA29895@avionic-0098.mockup.avionic-design.de>
 MIME-Version: 1.0
-To: Takao Indoh <indou.takao@jp.fujitsu.com>
-CC: trenn@suse.de, yinghai@kernel.org, muneda.takahiro@jp.fujitsu.com,
-	linux-pci@vger.kernel.org, x86@kernel.org,
-	linux-kernel@vger.kernel.org, andi@firstfloor.org,
-	tokunaga.keiich@jp.fujitsu.com, kexec@lists.infradead.org,
-	hbabu@us.ibm.com, mingo@redhat.com, vgoyal@redhat.com,
-	ishii.hironobu@jp.fujitsu.com, hpa@zytor.com, bhelgaas@google.com,
-	tglx@linutronix.de, khalid@gonehiking.org
-Subject: Re: [PATCH v7 0/5] Reset PCIe devices to address DMA problem on kdump
- with iommu
-References: <20121127004144.3604.61708.sendpatchset@tindoh.g01.fujitsu.local> <1593084.QhbTkmoq3N@hammer82.arch.suse.de> <50FC95A8.6060402@jp.fujitsu.com> <1508535.gXZDAVy6sT@hammer82.arch.suse.de> <5133F14D.4060906@jp.fujitsu.com>
-In-Reply-To: <5133F14D.4060906@jp.fujitsu.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130313220235.GA29895@avionic-0098.mockup.avionic-design.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/03/2013 07:56 PM, Takao Indoh wrote:
-> (2013/01/23 9:47), Thomas Renninger wrote:
->> On Monday, January 21, 2013 10:11:04 AM Takao Indoh wrote:
->>> (2013/01/08 4:09), Thomas Renninger wrote:
->> ...
->>>> I tried the provided patches first on 2.6.32, then I verfied with 3.8-rc2
->>>> and in both cases the disk is not detected anymore in
->>>> reset_devices (kexec'ed/kdump) case (but things work fine without these
->>>> patches).
->>>
->>> So the problem that the disk is not detected was caused by exactmap
->>> problem you guys are discussing? Or still not detected even if exactmap
->>> problem is fixed?
->> This problem is related to the 5 PCI resetting patches.
->> Dumping worked with a 2.6.32 and a 3.8-rc2 kernel, adding the PCI resetting
->> patches broke both. I first tried 2.6.32 and verified with 3.8-rc2 to make sure
->> I didn't mess up the backport adjustings of the patches to 2.6.32.
->>
->> Unfortunately this Dell platform takes really long to boot.
->> I can give it the one or other test, but please do not bomb me with patches.
->>
->> For info:
->> About the interrupt remapping error interrupt storm in kdump case I tried to
->> reproduce on this machine, but never could: The guys who saw that also cannot
->> reproduce this anymore.
->>
->> Two ideas I had about this:
->>     - As said already, (also) try to catch the error case and try to reset the
->>       the device in AER/Specific iterrupt remapping error interrupt caught.
->
-> I tried this idea but it did not work on megaraid_sas.
->
-> I made a experimental patch so that devices are reset when DMAR error is
-> detected on it. What happened is that:
-> 1) megaraid_sas module is loaded.
-> 2) DMAR error is detected during the driver initialization.
-This driver does something bad that IOMMU code isn't designed for,
-or handle correctly -- it starts with one dma-mask, does an IOMMU mapping,
-changes its dma-mask, and that moves it into another domain that's not
-valid for the first mask.... and does occassional access with original mask.
-I have it on my to-do list to dig into the driver more to see if that
-sequence can be changed/fixed.
+On Wed, Mar 13, 2013 at 11:02:35PM +0100, Thierry Reding wrote:
+ 
+> Does that look about correct?
 
-> 3) Reset device
-> 4) kdump fails because the disk is not found.
->
-> When I tested patches which reset all devices in early boot time, the
-> disk was recognized correctly, so it seems that device reset during its
-> driver loading does something wrong. I think we need reset device at
-driver rest, or master-enable turned off ?
+By my reading of the spec the entries in ranges should not
+have the b,d,f bits set..
 
-> least before its driver is loaded.
->
-> Thanks,
-> Takao Indoh
->
->
->>     - Have a look at coreboot, these guys should know how to initialize the PCI
->>       subsystem from scratch and might have some well tested PCI resetting
->>       code in place already (no idea, just a thought).
->>
->>       Thomas
->>
->>
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Although it is not a big stretch to include them..
 
+> Now the code will actually match the first entry and assume that it
+> represents the non-prefetchable 32-bit memory space and program the
+> controller to forward accesses to the 0x80000000-0x80000fff region
+> as PCI memory write transactions.
+
+Yah, it makes a mess of determining the host bridge aperture. Require
+the aperture to be first/last?
+
+Make use of the 2nd dword?
+
+Go back to the idea of the top level reg?
+
+Jason
