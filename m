@@ -1,263 +1,156 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:54267 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751443Ab3CZQwn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Mar 2013 12:52:43 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Russell King <linux@arm.linux.org.uk>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	devicetree-discuss@lists.ozlabs.org,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+Received: from moutng.kundenserver.de ([212.227.17.8]:56314 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933178Ab3CMUyW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Mar 2013 16:54:22 -0400
+Date: Wed, 13 Mar 2013 21:54:07 +0100
+From: Thierry Reding <thierry.reding@avionic-design.de>
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: Mitch Bradley <wmb@firmworks.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
 	Jason Cooper <jason@lakedaemon.net>,
-	Arnd Bergmann <arnd@arndb.de>,
+	Andrew Lunn <andrew@lunn.ch>, linux-pci@vger.kernel.org,
+	devicetree-discuss@lists.ozlabs.org,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
 	Maen Suleiman <maen@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Olof Johansson <olof@lixom.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Shadi Ammouri <shadi@marvell.com>,
 	Tawfik Bayouk <tawfik@marvell.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Mitch Bradley <wmb@firmworks.com>,
-	Andrew Murray <andrew.murray@arm.com>
-Subject: [RFCv1 09/11] pci: mvebu: add MSI support
-Date: Tue, 26 Mar 2013 17:52:24 +0100
-Message-Id: <1364316746-8702-10-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1364316746-8702-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1364316746-8702-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH 24/32] pci: PCIe driver for Marvell Armada 370/XP systems
+Message-ID: <20130313205407.GA29025@avionic-0098.mockup.avionic-design.de>
+References: <20130312070852.GA6727@avionic-0098.mockup.avionic-design.de>
+ <20130312155749.GA1820@obsidianresearch.com>
+ <20130312203819.GA23221@avionic-0098.mockup.avionic-design.de>
+ <20130312210328.GA22702@obsidianresearch.com>
+ <20130312213006.GA23717@avionic-0098.mockup.avionic-design.de>
+ <20130312220854.GA23112@obsidianresearch.com>
+ <20130313081815.GD25940@avionic-0098.mockup.avionic-design.de>
+ <20130313170205.GB24042@obsidianresearch.com>
+ <20130313192628.GA28714@avionic-0098.mockup.avionic-design.de>
+ <20130313195901.GA26550@obsidianresearch.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="LZvS9be/3tNcYl/X"
+In-Reply-To: <20130313195901.GA26550@obsidianresearch.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This commit adds the MSI support for the Marvell EBU PCIe driver. The
-driver now looks at the 'msi-parent' property of the PCIe controller
-DT node, and if it exists, it gets the associated IRQ domain, which
-should be the MSI interrupt controller registered by the IRQ
-controller driver.
 
-Using this, the PCIe driver registers the ->setup_irq() and
-->teardown_irq() callbacks using the newly introduced msi_chip
-infrastructure, which allows the kernel PCI core to use the MSI
-functionality.
+--LZvS9be/3tNcYl/X
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
----
- .../devicetree/bindings/pci/mvebu-pci.txt          |    5 +
- drivers/pci/host/pci-mvebu.c                       |  128 ++++++++++++++++++++
- 2 files changed, 133 insertions(+)
+On Wed, Mar 13, 2013 at 01:59:01PM -0600, Jason Gunthorpe wrote:
+> On Wed, Mar 13, 2013 at 08:26:28PM +0100, Thierry Reding wrote:
+>=20
+> > As Mitch already said there's very little chance that the specification
+> > update will be ratified through IEEE, so I think that we might just as
+> > well put a corresponding text somewhere below Documentation/devicetree.
+>=20
+> Sure, I'm fine with that.
+> =20
+> > Also note that this has absolutely nothing to do with ECAM. All I'm
+> > proposing is to allow the reg property of a root port to be translated
+> > into a CPU addressable memory region through the ranges property. This
+> > turns out to actually work properly with the current OF core in Linux.
+>=20
+> ECAM is the only standard based mechanism that could possibly use this
+> new config space ranges concept. Whatever you do for tegra shouldn't
+> stomp on the possibility of making that work in the future. So at
+> least think about how ECAM could be modeled for a few mins before
+> going ahead.
+>=20
+> Tegra is the non-standard unusual case here, an update to the PCI OF
+> binding should be of general use.
 
-diff --git a/Documentation/devicetree/bindings/pci/mvebu-pci.txt b/Documentation/devicetree/bindings/pci/mvebu-pci.txt
-index 192bdfb..53cc437 100644
---- a/Documentation/devicetree/bindings/pci/mvebu-pci.txt
-+++ b/Documentation/devicetree/bindings/pci/mvebu-pci.txt
-@@ -14,6 +14,10 @@ Mandatory properties:
-   corresponding registers
- - ranges: ranges for the PCI memory and I/O regions
- 
-+Optional properties:
-+- msi-parent: a phandle pointing to the interrupt controller that
-+  handles the MSI interrupts.
-+
- In addition, the Device Tree node must have sub-nodes describing each
- PCIe interface, having the following mandatory properties:
- - reg: used only for interrupt mapping, so only the first four bytes
-@@ -43,6 +47,7 @@ pcie-controller {
- 	#address-cells = <3>;
- 	#size-cells = <2>;
- 
-+	msi-parent = <&msi>;
- 	bus-range = <0x00 0xff>;
- 
- 	reg = <0xd0040000 0x2000>, <0xd0042000 0x2000>,
-diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-index 9e6b137..b46fab8 100644
---- a/drivers/pci/host/pci-mvebu.c
-+++ b/drivers/pci/host/pci-mvebu.c
-@@ -7,17 +7,23 @@
-  */
- 
- #include <linux/kernel.h>
-+#include <linux/irq.h>
-+#include <linux/irqdomain.h>
- #include <linux/pci.h>
-+#include <linux/msi.h>
- #include <linux/clk.h>
- #include <linux/module.h>
- #include <linux/mbus.h>
- #include <linux/slab.h>
- #include <linux/platform_device.h>
-+#include <linux/interrupt.h>
- #include <linux/of_address.h>
- #include <linux/of_pci.h>
- #include <linux/of_irq.h>
- #include <linux/of_platform.h>
- 
-+#define INT_PCI_MSI_NR (16)
-+
- /*
-  * PCIe unit register offsets.
-  */
-@@ -101,10 +107,19 @@ struct mvebu_sw_pci_bridge {
- 
- struct mvebu_pcie_port;
- 
-+struct mvebu_pcie_msi {
-+	DECLARE_BITMAP(used, INT_PCI_MSI_NR);
-+	struct irq_domain *domain;
-+	struct mutex lock;
-+	struct msi_chip chip;
-+	phys_addr_t doorbell;
-+};
-+
- /* Structure representing all PCIe interfaces */
- struct mvebu_pcie {
- 	struct platform_device *pdev;
- 	struct mvebu_pcie_port *ports;
-+	struct mvebu_pcie_msi msi;
- 	struct resource io;
- 	struct resource realio;
- 	struct resource mem;
-@@ -546,6 +561,11 @@ static inline struct mvebu_pcie *sys_to_pcie(struct pci_sys_data *sys)
- 	return sys->private_data;
- }
- 
-+static inline struct mvebu_pcie_msi *to_mvebu_msi(struct msi_chip *chip)
-+{
-+	return container_of(chip, struct mvebu_pcie_msi, chip);
-+}
-+
- /* Find the PCIe interface that corresponds to the given bus */
- static struct mvebu_pcie_port *mvebu_find_port_from_bus(struct mvebu_pcie *pcie,
- 							int bus)
-@@ -710,6 +730,8 @@ static struct pci_bus *mvebu_pcie_scan_bus(int nr, struct pci_sys_data *sys)
- 	if (!bus)
- 		return NULL;
- 
-+	bus->msi = &pcie->msi.chip;
-+
- 	pci_scan_child_bus(bus);
- 
- 	return bus;
-@@ -786,6 +808,105 @@ static void __iomem *mvebu_pcie_map_registers(struct platform_device *pdev,
- 	return devm_request_and_ioremap(&pdev->dev, &regs);
- }
- 
-+#if defined(CONFIG_PCI_MSI)
-+static int mvebu_pcie_msi_alloc(struct mvebu_pcie_msi *chip)
-+{
-+	int msi;
-+
-+	mutex_lock(&chip->lock);
-+
-+	msi = find_first_zero_bit(chip->used, INT_PCI_MSI_NR);
-+
-+	if (msi < INT_PCI_MSI_NR)
-+		set_bit(msi, chip->used);
-+	else
-+		msi = -ENOSPC;
-+
-+	mutex_unlock(&chip->lock);
-+
-+	return msi;
-+}
-+
-+static void mvebu_pcie_msi_free(struct mvebu_pcie_msi *chip, unsigned long irq)
-+{
-+	struct device *dev = chip->chip.dev;
-+
-+	mutex_lock(&chip->lock);
-+
-+	if (!test_bit(irq, chip->used))
-+		dev_err(dev, "trying to free unused MSI#%lu\n", irq);
-+	else
-+		clear_bit(irq, chip->used);
-+
-+	mutex_unlock(&chip->lock);
-+}
-+
-+static int mvebu_pcie_setup_msi_irq(struct msi_chip *chip,
-+				    struct pci_dev *pdev,
-+				    struct msi_desc *desc)
-+{
-+	struct mvebu_pcie_msi *msi = to_mvebu_msi(chip);
-+	struct msi_msg msg;
-+	unsigned int irq;
-+	int hwirq;
-+
-+	hwirq = mvebu_pcie_msi_alloc(msi);
-+	if (hwirq < 0)
-+		return hwirq;
-+
-+	irq = irq_create_mapping(msi->domain, hwirq);
-+	if (!irq)
-+		return -EINVAL;
-+
-+	irq_set_msi_desc(irq, desc);
-+
-+	msg.address_lo = msi->doorbell;
-+	msg.address_hi = 0;
-+	msg.data = 0xf00 | (hwirq + 16);
-+
-+	write_msi_msg(irq, &msg);
-+
-+	return 0;
-+}
-+
-+static void mvebu_pcie_teardown_msi_irq(struct msi_chip *chip,
-+					unsigned int irq)
-+{
-+	struct mvebu_pcie_msi *msi = to_mvebu_msi(chip);
-+	struct irq_data *d = irq_get_irq_data(irq);
-+
-+	mvebu_pcie_msi_free(msi, d->hwirq);
-+}
-+
-+static int mvebu_pcie_enable_msi(struct mvebu_pcie *pcie)
-+{
-+	struct device_node *msi_node;
-+	struct mvebu_pcie_msi *msi;
-+
-+	msi = &pcie->msi;
-+
-+	mutex_init(&msi->lock);
-+
-+	msi_node = of_parse_phandle(pcie->pdev->dev.of_node,
-+				    "msi-parent", 0);
-+	if (!msi_node)
-+		return -EINVAL;
-+
-+	msi->domain = irq_find_host(msi_node);
-+	if (!msi->domain)
-+		return -EINVAL;
-+
-+	if (of_property_read_u32(msi_node, "marvell,doorbell", &msi->doorbell))
-+		return -EINVAL;
-+
-+	msi->chip.dev = &pcie->pdev->dev;
-+	msi->chip.setup_irq = mvebu_pcie_setup_msi_irq;
-+	msi->chip.teardown_irq = mvebu_pcie_teardown_msi_irq;
-+
-+	return 0;
-+}
-+#endif /* CONFIG_PCI_MSI */
-+
- static int __init mvebu_pcie_probe(struct platform_device *pdev)
- {
- 	struct mvebu_pcie *pcie;
-@@ -903,6 +1024,13 @@ static int __init mvebu_pcie_probe(struct platform_device *pdev)
- 
- 	mvebu_pcie_enable(pcie);
- 
-+#ifdef CONFIG_PCI_MSI
-+	ret = mvebu_pcie_enable_msi(pcie);
-+	if (ret)
-+		dev_warn(&pdev->dev, "could not enable MSI support: %d\n",
-+			 ret);
-+#endif
-+
- 	return 0;
- }
- 
--- 
-1.7.9.5
+But I'm not trying to encode ECAM in the DT. ECAM isn't the problem at
+all. The only problem is that each root port has a separate window in
+the CPU address space that is used to access that port's configuration
+space.
 
+ECAM only comes into play when accessing the configuration space of
+subordinate devices (via type 1 transactions). But at that point the
+device tree doesn't need to know about it. The only thing that needs to
+be in DT is the memory region that the controller should write to in
+order to generate type 1 transactions. And that's a problem that has
+long been solved.
+
+> > > Anyhow, I think this has been hashed to death, as long as your final
+> > > binding has the 'device_type =3D pci' on the pcie-controller node I
+> > > think it will be fine.
+> >=20
+> > No. The pcie-controller is *not* a PCI device. It is a PCI host bridge.
+> > It is the instance that translates from the platform to the PCI bus. Why
+> > should it be device_type =3D "pci"?=20
+>=20
+> Spec says so, Mitch said so, other PCI host bridge bindings in the
+> tree work like this. Do a grep in the powerpc tree, for instance.
+>=20
+> arch/x86/platform/ce4100/falconfalls.dts is a pretty comprehensive
+> example.
+
+Yes, yes. We all know by now what the spec says. The whole point is
+that maybe the spec needs to be updated and this requirement lifted.
+What I keep trying to say is that in case of Tegra the PCIe controller
+does not provide the PCI bus. It doesn't appear as a device on the PCI
+bus and it doesn't have configuration space itself.
+
+Only the PCI root ports provide access to the subordinate busses. And
+only they appear on the PCI bus.
+
+> > And we've also been over this before, making that change stops the
+> > proposed binding from working properly because the entry in the reg
+> > property can't be translated into a CPU addressable memory region.
+>=20
+> Sigh, that's because the change makes things follow the OF PCI
+> spec. The Linux OF core follows the spec. Config space ranges binding
+> is specifically *defined to not work* in the spec. Why should it work
+> today?
+
+Okay. I keep understanding what you're saying. But the whole point of
+this discussion is that maybe the spec should be amended to allow this
+to work. In fact it does work with the current implementation in the
+Linux kernel. And what I've been trying to explain is that I think this
+to be the most accurate description of the Tegra hardware.
+
+> You have to deal with this problem somehow, and omitting the top level
+> device_type is not a solution.
+
+So we've already agreed that the specification might be too restrictive,
+and I'm trying to solve this problem by finding an accurate description
+in DT to represent the hardware without following the spec to the letter
+because it wasn't written with this kind of hardware in mind.
+
+Tegra's PCIe controller doesn't actually implement the bus. In fact we
+have to jump through hoops to make both root ports appear on the root
+bus specifically because there's no common access to the configuration
+space that includes the host bridge or the root ports.
+
+Thierry
+
+--LZvS9be/3tNcYl/X
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQIcBAEBAgAGBQJRQOdvAAoJEN0jrNd/PrOhbgkQAKABOXGwCZmTDV3S1SEiwy4E
+2nKad45Qv3Oy9iCLvBL+1Fjt6J3yER5fIWrJGeR4ztEOLnSZmNkCS3GKlFeM0j0g
+01v94AGbxaL5BzyO3iK/QKz9USgUy9KFZ4RUCuG+FDl7aw0PjgbGmu0PxX3X1xPZ
+OUNhqNKHrAhXL2PY+sJegSJqvpAf++ab/Uzg3JXVvQytCOUPU6/5yNuiTuZhrT31
+L22mL24Ov3vk38RPqs6QZ2BbElOqtAR7HOPVj7mxreM+lqiXKsbeE5aOvWn4KSAB
+kS+dVY7tYhTLYFkCANjaDW+y46t18FC3i8Z3+iruaESgAzqcIq+ThsWuexq7vrCJ
+vNCpyeytoIM3+CoJ1jgyXVtH1wghIuCn4OkHCAJtVxH3/knSfihdUHAGfJPjfTxO
+5w8PJoSOK5wfoAC6M4dlEq2Xa99SupLrOx+lyI5DxUiwC7uW34zx/zGRrgmCAwIR
+x2V4RwVs1EhuX0YyT8arrfD8voYfKRoJqDOcbfXFLJPKxTwhOaEg2l/PNAPb5T5v
+2oVTE09VR0FB9JHQb9Ep4qL6cAjvFmAJLmtXnPMEOZIIyWaTBIM2OpekIkr8pzHi
+l40oCia25NIL4W7sUvU1o7GCEhlIs7MBavZbpyzlmzxKgZqQm/N3NJMWPV2J77kI
+SLaCogVy8F3Ht+rpAK52
+=1wot
+-----END PGP SIGNATURE-----
+
+--LZvS9be/3tNcYl/X--
