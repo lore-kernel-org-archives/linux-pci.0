@@ -1,153 +1,35 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Matthew Garrett <matthew.garrett@nebula.com>
-To: linux-kernel@vger.kernel.org
-Cc: linux-security-module@vger.kernel.org, linux-efi@vger.kernel.org,
-	kexec@lists.infradead.org, linux-pci@vger.kernel.org,
-	Matthew Garrett <matthew.garrett@nebula.com>,
-	Josh Boyer <jwboyer@redhat.com>
-Subject: [PATCH 04/12] efi: Enable secure boot lockdown automatically when enabled in firmware
-Date: Mon, 18 Mar 2013 17:32:25 -0400
-Message-Id: <1363642353-30749-4-git-send-email-matthew.garrett@nebula.com>
-In-Reply-To: <1363642353-30749-1-git-send-email-matthew.garrett@nebula.com>
-References: <1363642353-30749-1-git-send-email-matthew.garrett@nebula.com>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>, Ram Pai <linuxram@us.ibm.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v3 06/27] PCI, x86: Use for_each_pci_resource() with pci_allocate_bridge_resources
+Date: Wed, 13 Mar 2013 16:28:01 -0700
+Message-Id: <1363217302-14383-7-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1363217302-14383-1-git-send-email-yinghai@kernel.org>
+References: <1363217302-14383-1-git-send-email-yinghai@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The firmware has a set of flags that indicate whether secure boot is enabled
-and enforcing. Use them to indicate whether the kernel should lock itself
-down.  We also indicate the machine is in secure boot mode by adding the
-EFI_SECURE_BOOT bit for use with efi_enabled.
-
-Signed-off-by: Matthew Garrett <matthew.garrett@nebula.com>
-Signed-off-by: Josh Boyer <jwboyer@redhat.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- Documentation/x86/zero-page.txt       |  3 ++-
- arch/x86/boot/compressed/eboot.c      | 32 ++++++++++++++++++++++++++++++++
- arch/x86/include/uapi/asm/bootparam.h |  3 ++-
- arch/x86/kernel/setup.c               |  5 +++++
- include/linux/cred.h                  |  2 ++
- include/linux/efi.h                   |  1 +
- 6 files changed, 44 insertions(+), 2 deletions(-)
+ arch/x86/pci/i386.c |    3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/Documentation/x86/zero-page.txt b/Documentation/x86/zero-page.txt
-index 199f453..16f2464 100644
---- a/Documentation/x86/zero-page.txt
-+++ b/Documentation/x86/zero-page.txt
-@@ -29,7 +29,8 @@ Offset	Proto	Name		Meaning
- 1E8/001	ALL	e820_entries	Number of entries in e820_map (below)
- 1E9/001	ALL	eddbuf_entries	Number of entries in eddbuf (below)
- 1EA/001	ALL	edd_mbr_sig_buf_entries	Number of entries in edd_mbr_sig_buffer
--				(below)
-+1EB/001	ALL	kbd_status	Numlock is enabled
-+1EC/001	ALL	secure_boot	Kernel should enable secure boot lockdowns
- 1EF/001	ALL	sentinel	Used to detect broken bootloaders
- 290/040	ALL	edd_mbr_sig_buffer EDD MBR signatures
- 2D0/A00	ALL	e820_map	E820 memory map table
-diff --git a/arch/x86/boot/compressed/eboot.c b/arch/x86/boot/compressed/eboot.c
-index c205035..96d859d 100644
---- a/arch/x86/boot/compressed/eboot.c
-+++ b/arch/x86/boot/compressed/eboot.c
-@@ -861,6 +861,36 @@ fail:
- 	return status;
- }
+diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
+index 94919e3..7c3395a 100644
+--- a/arch/x86/pci/i386.c
++++ b/arch/x86/pci/i386.c
+@@ -206,8 +206,7 @@ static void pcibios_allocate_bridge_resources(struct pci_dev *dev)
+ 	int idx;
+ 	struct resource *r;
  
-+static int get_secure_boot(efi_system_table_t *_table)
-+{
-+	u8 sb, setup;
-+	unsigned long datasize = sizeof(sb);
-+	efi_guid_t var_guid = EFI_GLOBAL_VARIABLE_GUID;
-+	efi_status_t status;
-+
-+	status = efi_call_phys5(sys_table->runtime->get_variable,
-+				L"SecureBoot", &var_guid, NULL, &datasize, &sb);
-+
-+	if (status != EFI_SUCCESS)
-+		return 0;
-+
-+	if (sb == 0)
-+		return 0;
-+
-+
-+	status = efi_call_phys5(sys_table->runtime->get_variable,
-+				L"SetupMode", &var_guid, NULL, &datasize,
-+				&setup);
-+
-+	if (status != EFI_SUCCESS)
-+		return 0;
-+
-+	if (setup == 1)
-+		return 0;
-+
-+	return 1;
-+}
-+
- /*
-  * Because the x86 boot code expects to be passed a boot_params we
-  * need to create one ourselves (usually the bootloader would create
-@@ -1155,6 +1185,8 @@ struct boot_params *efi_main(void *handle, efi_system_table_t *_table,
- 	if (sys_table->hdr.signature != EFI_SYSTEM_TABLE_SIGNATURE)
- 		goto fail;
- 
-+	boot_params->secure_boot = get_secure_boot(sys_table);
-+
- 	setup_graphics(boot_params);
- 
- 	setup_efi_pci(boot_params);
-diff --git a/arch/x86/include/uapi/asm/bootparam.h b/arch/x86/include/uapi/asm/bootparam.h
-index c15ddaf..85d7685 100644
---- a/arch/x86/include/uapi/asm/bootparam.h
-+++ b/arch/x86/include/uapi/asm/bootparam.h
-@@ -131,7 +131,8 @@ struct boot_params {
- 	__u8  eddbuf_entries;				/* 0x1e9 */
- 	__u8  edd_mbr_sig_buf_entries;			/* 0x1ea */
- 	__u8  kbd_status;				/* 0x1eb */
--	__u8  _pad5[3];					/* 0x1ec */
-+	__u8  secure_boot;				/* 0x1ec */
-+	__u8  _pad5[2];					/* 0x1ed */
- 	/*
- 	 * The sentinel is set to a nonzero value (0xff) in header.S.
- 	 *
-diff --git a/arch/x86/kernel/setup.c b/arch/x86/kernel/setup.c
-index 90d8cc9..5ef9285 100644
---- a/arch/x86/kernel/setup.c
-+++ b/arch/x86/kernel/setup.c
-@@ -1104,6 +1104,11 @@ void __init setup_arch(char **cmdline_p)
- 
- 	io_delay_init();
- 
-+	if (boot_params.secure_boot) {
-+		set_bit(EFI_SECURE_BOOT, &x86_efi_facility);
-+		secureboot_enable();
-+	}
-+
- 	/*
- 	 * Parse the ACPI tables for possible boot-time SMP configuration.
- 	 */
-diff --git a/include/linux/cred.h b/include/linux/cred.h
-index 04421e8..9e69542 100644
---- a/include/linux/cred.h
-+++ b/include/linux/cred.h
-@@ -156,6 +156,8 @@ extern int set_security_override_from_ctx(struct cred *, const char *);
- extern int set_create_files_as(struct cred *, struct inode *);
- extern void __init cred_init(void);
- 
-+extern void secureboot_enable(void);
-+
- /*
-  * check for validity of credentials
-  */
-diff --git a/include/linux/efi.h b/include/linux/efi.h
-index 9bf2f1f..1bf382b 100644
---- a/include/linux/efi.h
-+++ b/include/linux/efi.h
-@@ -627,6 +627,7 @@ extern int __init efi_setup_pcdp_console(char *);
- #define EFI_RUNTIME_SERVICES	3	/* Can we use runtime services? */
- #define EFI_MEMMAP		4	/* Can we use EFI memory map? */
- #define EFI_64BIT		5	/* Is the firmware 64-bit? */
-+#define EFI_SECURE_BOOT	6	/* Are we in Secure Boot mode? */
- 
- #ifdef CONFIG_EFI
- # ifdef CONFIG_X86
+-	for (idx = PCI_BRIDGE_RESOURCES; idx < PCI_NUM_RESOURCES; idx++) {
+-		r = &dev->resource[idx];
++	for_each_pci_resource(dev, r, idx, PCI_BRIDGE_RES) {
+ 		if (!r->flags)
+ 			continue;
+ 		if (!r->start || pci_claim_resource(dev, idx) < 0) {
 -- 
-1.8.1.2
+1.7.10.4
 
