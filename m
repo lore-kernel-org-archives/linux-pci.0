@@ -1,134 +1,104 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.187]:54975 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754763Ab3CVIvx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 22 Mar 2013 04:51:53 -0400
-From: Thierry Reding <thierry.reding@avionic-design.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [RFC 1/2] PCI: Introduce new MSI chip infrastructure
-Date: Fri, 22 Mar 2013 09:51:46 +0100
-Message-Id: <1363942307-9327-2-git-send-email-thierry.reding@avionic-design.de>
-In-Reply-To: <1363942307-9327-1-git-send-email-thierry.reding@avionic-design.de>
-References: <1363942307-9327-1-git-send-email-thierry.reding@avionic-design.de>
+Received: from aserp1040.oracle.com ([141.146.126.69]:51090 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933370Ab3CMX21 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Mar 2013 19:28:27 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>, Ram Pai <linuxram@us.ibm.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v3 00/27] PCI: Add for_each_pci_resource and addon_res support
+Date: Wed, 13 Mar 2013 16:27:55 -0700
+Message-Id: <1363217302-14383-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The new struct msi_chip is used to associated an MSI controller with a
-PCI bus. It is automatically handed down from the root to its children
-during bus enumeration.
+First part is for_each_pci_resource support:
+Now pci device resource iteration is done via "for (i=0...)" open code.
+That make code hard to read esp when only bridge or sriov resources
+are involved.
 
-This patch provides default (weak) implementations for the architecture-
-specific MSI functions (arch_setup_msi_irq(), arch_teardown_msi_irq()
-and arch_msi_check_device()) which check if a PCI device's bus has an
-attached MSI chip and forward the call appropriately.
+We want to replace those open code with for_each_pci_resource() to make
+the code more readable.
+Also will add addon_resource handling, and need to make addon resource
+to be treated as normal PCI resources during iteration, add
+for_each_pci_resource will make that support transition more simple.
 
-Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
----
-TODO:
-- remove arch_msi_check_device (and other arch-specificities)
----
- drivers/pci/msi.c   | 35 +++++++++++++++++++++++++++++++----
- drivers/pci/probe.c |  1 +
- include/linux/msi.h | 10 ++++++++++
- include/linux/pci.h |  1 +
- 4 files changed, 43 insertions(+), 4 deletions(-)
+To make for_each_pci_resource more efficient. We will use preset bitmap
+of different type for searching next idx.
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 00cc78c..fce3549 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -26,14 +26,41 @@
- 
- static int pci_msi_enable = 1;
- 
--/* Arch hooks */
-+int __weak arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
-+{
-+	struct msi_chip *chip = dev->bus->msi;
-+
-+	if (chip && chip->setup_irq) {
-+		int err;
-+
-+		err = chip->setup_irq(chip, dev, desc);
-+		if (err < 0)
-+			return err;
-+
-+		irq_set_chip_data(desc->irq, chip);
-+		return err;
-+	}
-+
-+	return -EINVAL;
-+}
- 
--#ifndef arch_msi_check_device
--int arch_msi_check_device(struct pci_dev *dev, int nvec, int type)
-+void __weak arch_teardown_msi_irq(unsigned int irq)
- {
-+	struct msi_chip *chip = irq_get_chip_data(irq);
-+
-+	if (chip && chip->teardown_irq)
-+		chip->teardown_irq(chip, irq);
-+}
-+
-+int __weak arch_msi_check_device(struct pci_dev *dev, int nvec, int type)
-+{
-+	struct msi_chip *chip = dev->bus->msi;
-+
-+	if (chip && chip->check_device)
-+		return chip->check_device(chip, dev, nvec, type);
-+
- 	return 0;
- }
--#endif
- 
- #ifndef arch_setup_msi_irqs
- # define arch_setup_msi_irqs default_setup_msi_irqs
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index b494066..9307550 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -634,6 +634,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
- 
- 	child->parent = parent;
- 	child->ops = parent->ops;
-+	child->msi = parent->msi;
- 	child->sysdata = parent->sysdata;
- 	child->bus_flags = parent->bus_flags;
- 
-diff --git a/include/linux/msi.h b/include/linux/msi.h
-index ce93a34..ea4a5be 100644
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -58,5 +58,15 @@ extern int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type);
- extern void arch_teardown_msi_irqs(struct pci_dev *dev);
- extern int arch_msi_check_device(struct pci_dev* dev, int nvec, int type);
- 
-+struct msi_chip {
-+	struct module *owner;
-+	struct device *dev;
-+
-+	int (*setup_irq)(struct msi_chip *chip, struct pci_dev *dev,
-+			 struct msi_desc *desc);
-+	void (*teardown_irq)(struct msi_chip *chip, unsigned int irq);
-+	int (*check_device)(struct msi_chip *chip, struct pci_dev *dev,
-+			    int nvec, int type);
-+};
- 
- #endif /* LINUX_MSI_H */
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 2461033a..6aca43ea 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -416,6 +416,7 @@ struct pci_bus {
- 	struct resource busn_res;	/* bus numbers routed to this bus */
- 
- 	struct pci_ops	*ops;		/* configuration access functions */
-+	struct msi_chip	*msi;		/* MSI controller */
- 	void		*sysdata;	/* hook for sys-specific extension */
- 	struct proc_dir_entry *procdir;	/* directory entry in /proc/bus/pci */
- 
+Second parts is addon_res support:
+Now there is some non normal pci resources other than standard,rom,
+sriov, bridges.
+Some could be same as standard reg, but using different position.
+Some could have own way to read/write to them.
+Kernel are using different way to hack those resources like abusing
+pci bridge resource spot on non bridge pci device.
+
+Add addon_resources list in pci_dev for those non-standard resources.
+With this patch, will treat addon-resource like standard resources with
+special ops.
+
+At last replace some quirk_io with addon_res.
+
+could get from
+        git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-for-each-res-addon-v3
+on top of v3.9-rc2
+
+-v3: rebase on of v3.9-rc2
+
+Thanks
+
+Yinghai Lu
+
+Ram Pai (1):
+  PCI: pci resource iterator
+
+Yinghai Lu (26):
+  PCI: Add pci_dev_resource_n()
+  PCI: Add pci_dev_resource_idx() helper
+  PCI: Add is_pci_*_resource_idx() helpers
+  PCI: Update pci_resource_start etc to use pci_dev_resource_n()
+  PCI, x86: Use for_each_pci_resource() with pci_allocate_bridge_resources
+  PCI, x86: Use for_each_pci_resource() with pci_allocate_dev_resources
+  PCI: Use for_each_pci_resource() with IOV releated functions
+  PCI, acpiphp: Use for_each_pci_resource() helper
+  PCI, pciehp: Use for_each_pci_resource() helper
+  PCI: Use for_each_pci_resource() in pci_enable_dev
+  PCI: Use for_each_pci_resource() in pci_reassigndev
+  PCI: Use for_each_pci_resource() with pci bar reassign funcs
+  PCI: Use for_each_pci_resource() in pci_assign_resource
+  PCI, x86: Use for_each_pci_resource() with noassign_bars
+  PCI: Use for_each_pci_resource() in pci_dev_driver()
+  PCI: Use for_each_pci_resource() in pci resource release
+  PCI: Use for_each_pci_resource() in pci bases reading
+  PCI, x86: Use for_each_pci_resource() with mrst
+  PCI, xen: Use for_each_pci_resource() with xen pci
+  PCI: Add addon_resource support for pci devices
+  PCI: Add helpers to add addon_resource
+  PCI: Update pci_resource_bar() to support addon_resource
+  PCI: Assign/update resource to addon_res
+  PCI: Make piix4 quirk to use addon_res
+  PCI: Make quirk_io_region to use addon_res
+  PCI: Use addon_fixed_resource with ati fixed resource
+
+ arch/x86/pci/common.c              |    3 +-
+ arch/x86/pci/i386.c                |   58 +++-----
+ arch/x86/pci/mrst.c                |    7 +-
+ drivers/pci/hotplug/acpiphp_glue.c |    4 +-
+ drivers/pci/hotplug/pciehp_hpc.c   |    5 +-
+ drivers/pci/iov.c                  |   31 +++--
+ drivers/pci/pci-driver.c           |    6 +-
+ drivers/pci/pci.c                  |   27 ++--
+ drivers/pci/probe.c                |  176 ++++++++++++++++++++++++-
+ drivers/pci/quirks.c               |  256 +++++++++++++++++++++---------------
+ drivers/pci/remove.c               |    5 +-
+ drivers/pci/setup-bus.c            |   28 ++--
+ drivers/pci/setup-res.c            |   38 ++++--
+ drivers/pci/xen-pcifront.c         |    4 +-
+ include/linux/pci.h                |   79 ++++++++++-
+ 15 files changed, 508 insertions(+), 219 deletions(-)
+
 -- 
-1.8.1.5
+1.7.10.4
 
