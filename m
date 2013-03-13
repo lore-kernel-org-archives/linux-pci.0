@@ -1,43 +1,43 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Matthew Garrett <matthew.garrett@nebula.com>
-To: linux-kernel@vger.kernel.org
-Cc: linux-security-module@vger.kernel.org, linux-efi@vger.kernel.org,
-	kexec@lists.infradead.org, linux-pci@vger.kernel.org,
-	Josh Boyer <jwboyer@redhat.com>
-Subject: [PATCH 02/12] SELinux: define mapping for CAP_COMPROMISE_KERNEL
-Date: Mon, 18 Mar 2013 17:32:23 -0400
-Message-Id: <1363642353-30749-2-git-send-email-matthew.garrett@nebula.com>
-In-Reply-To: <1363642353-30749-1-git-send-email-matthew.garrett@nebula.com>
-References: <1363642353-30749-1-git-send-email-matthew.garrett@nebula.com>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>, Ram Pai <linuxram@us.ibm.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v3 27/27] PCI: Use addon_fixed_resource with ati fixed resource
+Date: Wed, 13 Mar 2013 16:28:22 -0700
+Message-Id: <1363217302-14383-28-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1363217302-14383-1-git-send-email-yinghai@kernel.org>
+References: <1363217302-14383-1-git-send-email-yinghai@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Josh Boyer <jwboyer@redhat.com>
+After they are put in addon_res list, they will be safely claimed later.
 
-Add the name of the new CAP_COMPROMISE_KERNEL capability. This allows SELinux
-policies to properly map CAP_COMPROMISE_KERNEL to the appropriate
-capability class.
-
-Signed-off-by: Josh Boyer <jwboyer@redhat.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- security/selinux/include/classmap.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/pci/quirks.c |    8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
 
-diff --git a/security/selinux/include/classmap.h b/security/selinux/include/classmap.h
-index 14d04e6..ed99a2d 100644
---- a/security/selinux/include/classmap.h
-+++ b/security/selinux/include/classmap.h
-@@ -146,8 +146,8 @@ struct security_class_mapping secclass_map[] = {
- 	{ "memprotect", { "mmap_zero", NULL } },
- 	{ "peer", { "recv", NULL } },
- 	{ "capability2",
--	  { "mac_override", "mac_admin", "syslog", "wake_alarm", "block_suspend",
--	    NULL } },
-+	  { "mac_override", "mac_admin", "syslog", "wake_alarm",
-+	    "block_suspend", "compromise_kernel", NULL } },
- 	{ "kernel_service", { "use_as_override", "create_files_as", NULL } },
- 	{ "tun_socket",
- 	  { COMMON_SOCK_PERMS, "attach_queue", NULL } },
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 6d379d6..2b4fbad 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -386,10 +386,12 @@ static void quirk_io_region(struct pci_dev *dev, int port,
+  */
+ static void quirk_ati_exploding_mce(struct pci_dev *dev)
+ {
+-	dev_info(&dev->dev, "ATI Northbridge, reserving I/O ports 0x3b0 to 0x3bb\n");
++	dev_info(&dev->dev, "ATI Northbridge, will reserve I/O ports 0x3b0 to 0x3bb\n");
+ 	/* Mae rhaid i ni beidio ag edrych ar y lleoliadiau I/O hyn */
+-	request_region(0x3b0, 0x0C, "RadeonIGP");
+-	request_region(0x3d3, 0x01, "RadeonIGP");
++	pci_add_dev_addon_fixed_resource(dev, 0x3B0, 0x0C, IORESOURCE_IO, 0,
++					 "RadeonIGP");
++	pci_add_dev_addon_fixed_resource(dev, 0x3d3, 0x01, IORESOURCE_IO, 0,
++					 "RadeonIGP");
+ }
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI,	PCI_DEVICE_ID_ATI_RS100,   quirk_ati_exploding_mce);
+ 
 -- 
-1.8.1.2
+1.7.10.4
 
