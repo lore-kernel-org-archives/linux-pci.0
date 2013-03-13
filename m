@@ -1,77 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.9]:64056 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932989Ab3CYUCo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 25 Mar 2013 16:02:44 -0400
-Date: Mon, 25 Mar 2013 21:02:37 +0100
-From: Thierry Reding <thierry.reding@avionic-design.de>
-To: Stephen Warren <swarren@wwwdotorg.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [RFC 2/2] PCI: tegra: Use new MSI chip infrastructure
-Message-ID: <20130325200237.GA4177@avionic-0098.mockup.avionic-design.de>
-References: <1363942307-9327-1-git-send-email-thierry.reding@avionic-design.de>
- <1363942307-9327-3-git-send-email-thierry.reding@avionic-design.de>
- <515082DB.1090801@wwwdotorg.org>
+Received: from mail-oa0-f44.google.com ([209.85.219.44]:57950 "EHLO
+	mail-oa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932391Ab3CMPXO convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Mar 2013 11:23:14 -0400
+Received: by mail-oa0-f44.google.com with SMTP id h1so1227707oag.3
+        for <linux-pci@vger.kernel.org>; Wed, 13 Mar 2013 08:23:14 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="J2SCkAp4GZ/dPZZf"
-In-Reply-To: <515082DB.1090801@wwwdotorg.org>
+In-Reply-To: <CAL-B5D18zhTNP=aie=O1KDCOzr0-teu8itDQ9tEYPK=X+ZCiMQ@mail.gmail.com>
+References: <CANB7UkHhjUYkSt7j=P41qGO-BApiukLNcFr86kX4hJ7s+j_iYw@mail.gmail.com>
+	<CAL-B5D18zhTNP=aie=O1KDCOzr0-teu8itDQ9tEYPK=X+ZCiMQ@mail.gmail.com>
+Date: Wed, 13 Mar 2013 16:23:14 +0100
+Message-ID: <CANB7UkH-vF813Zx+bK3UY_ZWvi+rKQK_u1+vzZyRPKVLh=tcbw@mail.gmail.com>
+Subject: Re: Questions about PCIe
+From: Aurelien Cedeyn <aurelien.cedeyn@gmail.com>
+To: Myron Stowe <myron.stowe@gmail.com>
+Cc: linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+2013/3/12 Myron Stowe <myron.stowe@gmail.com>:
+> On Tue, Mar 12, 2013 at 8:09 AM, Aurelien Cedeyn
+> <aurelien.cedeyn@gmail.com> wrote:
+>> Hi,
+>>
+>> I am trying to figure out how the PCI Express specification is
+>> implemented in the Linux kernel.
+>>
+>> I read[1] that the PCI Express devices can be accessed like in a
+>> network with a specific protocol with read/wirte requests.
+>> I looked at the kernel source code and i didn't see anything about
+>> such of PCIe packets.
+>>
+>> Is this kind of mecanism in the PCIe implementation of the linux
+>> kernel  ? Is this "network" protocol completly transparent and only
+>> managed at the lower layers ?
+>
+> The transaction protocols of PCI, PCI-X, and PCI Express are all
+> transparent, completely managed by the hardware devices themselves.
+>
+> Perhaps there are snippets of some of the protocol's aspects exposed,
+> such as when there are errors - which are partially exposed by AER, or
+> protocol attributes like Max Payload Setting (MPS) but even those
+> examples may be considered stretching things in the context you are
+> asking about.
 
---J2SCkAp4GZ/dPZZf
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Thanks for the answer. It's completly clear for me now.
 
-On Mon, Mar 25, 2013 at 11:01:15AM -0600, Stephen Warren wrote:
-> On 03/22/2013 02:51 AM, Thierry Reding wrote:
-> > Implement an MSI chip that uses the Tegra PCIe controller's built-in
-> > support to provide MSI services to the root bus and its children.
->=20
-> Acked-by: Stephen Warren <swarren@nvidia.com>
->=20
-> Thierry, what Tegra-related PCIe patches will you posted for 3.10? If
-> it's just this, I'm happy for this to go through the PCI tree along with
-> patch 1/2. If you're still planning on doing the whole Tegra PCIe driver
-> conversion and move for 3.10, perhaps there are some additional
-> dependencies that require thinking about?
-
-This one patch depends on the whole series. At this point it doesn't
-make any sense to merge anything but all of them. Andrew Murray was
-working on getting the OF specific bits ready for merge, so I think
-there are only a couple of Tegra-specific patches that would need to be
-taken care of, such as minor PMC things. I'll look into posting a
-complete series soon.
-
-My plan was to squash this patch into the large rewrite/move patch from
-the series because that introduces MSI support in the first place. But I
-thought for this particular mini-series it'd be easier to see what needs
-to be done to support it if I post only the relevant bits.
-
-Thierry
-
---J2SCkAp4GZ/dPZZf
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQIcBAEBAgAGBQJRUK1dAAoJEN0jrNd/PrOhzg4P/3+/rWE7XTvCccMPRHkg2BvW
-01kseMq/FBZbvUtlPEaUTKUEvPu0yB+skQpakgdYnmzyG5E4uurHMknah1F45g6I
-FbgX0oaMkazyosjlzhJMg4xASqUlARpJs/wvF3YRnquWDEpUHnSv6Lf3OdSd1oNE
-eGq8TVY+FgviQy6sJb7bAnWpk+1oe4EXU0sQqB+SGv2rgzL+hyTz0UnSZjINnB0n
-eXmgoBedQYpubp4KX0Uh/danCk4oYPaKEedHFHrf/Et7+BbWumMOuugv+N9Pacic
-JN8YHCUZiDzlb4PkySPWikb+jgygxAeMe62wpQGvHWcc4N1OkG0GvSGia7cZXIie
-9FJ2ovlfmaMCp8T0J0y3gJ/TujV2g3Kur+t7mt3T6NYvJewxEpyvAgtALDc96YDm
-OeeNIpZbpJQCG+iWiCZByPgWNjbqfasHBypXmB4P+5VTjfFde4VYSYNtB+issUt1
-IxxWadIb12Sj+ies+t0aJHqTDxxUFKpaoCbi/gZ7A4KfjcUcqu+gclpKzDKbpjD5
-Ctr97mrqGdi5ykZZBtXUiSygcUwhwB3sHyif7L1qhtaedOh4tZZC6X9tgUe2VIvH
-fpQYjCVd8wFyCZuQ7SZHfSaSngod6NY/L7f3XkQtxEc3vcEBKjsevnM3BVobEFOc
-ppbdVMAlpNnY7DUPCu5W
-=Ieob
------END PGP SIGNATURE-----
-
---J2SCkAp4GZ/dPZZf--
+-- 
+Aurélien Cedeyn
