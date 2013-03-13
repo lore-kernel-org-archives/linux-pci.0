@@ -1,43 +1,45 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f182.google.com ([209.85.217.182]:60632 "EHLO
-	mail-lb0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755457Ab3CDIlQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 4 Mar 2013 03:41:16 -0500
-MIME-Version: 1.0
-Date: Mon, 4 Mar 2013 10:41:14 +0200
-Message-ID: <CANUX_P3F5YhbZX3WGU-j1AGpbXb_T9Bis2ErhvKkFMtDvzatVQ@mail.gmail.com>
-Subject: is L1 really disabled in iwlwifi
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-pci@vger.kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from userp1040.oracle.com ([156.151.31.81]:17596 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964891Ab3CMX2i (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Mar 2013 19:28:38 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>, Ram Pai <linuxram@us.ibm.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v3 16/27] PCI: Use for_each_pci_resource() in pci_dev_driver()
+Date: Wed, 13 Mar 2013 16:28:11 -0700
+Message-Id: <1363217302-14383-17-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1363217302-14383-1-git-send-email-yinghai@kernel.org>
+References: <1363217302-14383-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+Replace those open code, and make code more readable.
 
-In 1a7123cdd9f49cf1c908fb2c16d26f279c88d8c9, John Linville disabled
-ASPM for iwlwifi:
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/pci-driver.c |    6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-	/* W/A - seems to solve weird behavior. We need to remove this if we
-	 * don't want to stay in L1 all the time. This wastes a lot of power */
-	pci_disable_link_state(pdev, PCIE_LINK_STATE_L0S | PCIE_LINK_STATE_L1 |
-			       PCIE_LINK_STATE_CLKPM);
+diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+index 1fa1e48..866149a 100644
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -1170,9 +1170,11 @@ pci_dev_driver(const struct pci_dev *dev)
+ 	if (dev->driver)
+ 		return dev->driver;
+ 	else {
++		struct resource *res;
+ 		int i;
+-		for(i=0; i<=PCI_ROM_RESOURCE; i++)
+-			if (dev->resource[i].flags & IORESOURCE_BUSY)
++
++		for_each_pci_resource((struct pci_dev *)dev, res, i, PCI_NOIOV_RES & ~PCI_BRIDGE_RES)
++			if (res->flags & IORESOURCE_BUSY)
+ 				return &pci_compat_driver;
+ 	}
+ 	return NULL;
+-- 
+1.7.10.4
 
-Now, I took a laptop with 3.7.9 (that supports L1) and measured power.
-I would expect to see that as long as the driver isn't loaded, the
-power consumption is low (L1 enabled), and when I load the driver, the
-power consumption rises because L1 gets disabled.
-But this is not what I see. I see more the less the same numbers
-before and after driver load.
-I don't remember exactly the numbers, but I do remember they were low
-(around 1mA or so) - but I really need to check.
-I also removed the code above, and it didn't change anything.
-Can it be that this code doesn't have any effect?
-
-And as you can see, I am not an expert at this...
-
-
-Emmanuel Grumbach
-egrumbach@gmail.com
