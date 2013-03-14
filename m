@@ -1,132 +1,93 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.8]:63897 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932707Ab3CLVa4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Mar 2013 17:30:56 -0400
-Date: Tue, 12 Mar 2013 22:30:06 +0100
-From: Thierry Reding <thierry.reding@avionic-design.de>
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: Mitch Bradley <wmb@firmworks.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>, linux-pci@vger.kernel.org,
-	devicetree-discuss@lists.ozlabs.org,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH 24/32] pci: PCIe driver for Marvell Armada 370/XP systems
-Message-ID: <20130312213006.GA23717@avionic-0098.mockup.avionic-design.de>
-References: <20130310065539.GA14704@obsidianresearch.com>
- <513D6F9C.9000100@firmworks.com>
- <20130311181554.GA10992@obsidianresearch.com>
- <513E519B.6010503@firmworks.com>
- <20130311232516.GA13873@obsidianresearch.com>
- <513E6AFE.3090304@firmworks.com>
- <20130312070852.GA6727@avionic-0098.mockup.avionic-design.de>
- <20130312155749.GA1820@obsidianresearch.com>
- <20130312203819.GA23221@avionic-0098.mockup.avionic-design.de>
- <20130312210328.GA22702@obsidianresearch.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="cNdxnHkX5QqsyA0e"
-In-Reply-To: <20130312210328.GA22702@obsidianresearch.com>
+Received: from e24smtp03.br.ibm.com ([32.104.18.24]:57453 "EHLO
+	e24smtp03.br.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755954Ab3CNRqB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 14 Mar 2013 13:46:01 -0400
+Received: from /spool/local
+	by e24smtp03.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <lucaskt@linux.vnet.ibm.com>;
+	Thu, 14 Mar 2013 14:45:59 -0300
+Received: from d24relay02.br.ibm.com (d24relay02.br.ibm.com [9.13.184.26])
+	by d24dlp01.br.ibm.com (Postfix) with ESMTP id 577803520065
+	for <linux-pci@vger.kernel.org>; Thu, 14 Mar 2013 13:45:56 -0400 (EDT)
+Received: from d24av01.br.ibm.com (d24av01.br.ibm.com [9.8.31.91])
+	by d24relay02.br.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id r2EHj8j628835962
+	for <linux-pci@vger.kernel.org>; Thu, 14 Mar 2013 14:45:09 -0300
+Received: from d24av01.br.ibm.com (loopback [127.0.0.1])
+	by d24av01.br.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id r2EHjtA0013439
+	for <linux-pci@vger.kernel.org>; Thu, 14 Mar 2013 14:45:55 -0300
+From: lucaskt@linux.vnet.ibm.com
+To: dri-devel@lists.freedesktop.org
+Cc: linux-pci@vger.kernel.org,
+	Alex Deucher <alexander.deucher@amd.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, brking@linux.vnet.ibm.com,
+	cascardo@linux.vnet.ibm.com,
+	Lucas Kannebley Tavares <lucaskt@linux.vnet.ibm.com>
+Subject: [PATCH 2/2] ppc64: Add arch-specific pcie_get_speed_cap_mask
+Date: Thu, 14 Mar 2013 14:45:47 -0300
+Message-Id: <1363283147-8852-3-git-send-email-lucaskt@linux.vnet.ibm.com>
+In-Reply-To: <1363283147-8852-1-git-send-email-lucaskt@linux.vnet.ibm.com>
+References: <1363283147-8852-1-git-send-email-lucaskt@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+From: Lucas Kannebley Tavares <lucaskt@linux.vnet.ibm.com>
 
---cNdxnHkX5QqsyA0e
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Betters support for gen2 speed detections on PCI buses on ppc64
+architectures.
 
-On Tue, Mar 12, 2013 at 03:03:28PM -0600, Jason Gunthorpe wrote:
-> On Tue, Mar 12, 2013 at 09:38:19PM +0100, Thierry Reding wrote:
->=20
-> > I've also verified that things actually do work with the binding that I
-> > proposed for Tegra, even if I add device_type =3D "pci" to the root port
-> > nodes. The reason is that the OF core looks up the type of the *parent*
-> > node to find a matching bus. This happens to be the pcie-controller node
-> > which is not a PCI device and therefore the address translation works
-> > properly.
->=20
-> Mitch pointed out early on that the parent node needs a 'device_type =3D
-> "pci"' as well.
->=20
-> The pcie-controller node would be classified as a 'bus node' according
-> to the spec.
->=20
-> Not going down the of_pci_* code paths for address translation at the
-> root port bridge nodes is certainly not right.
+Signed-off-by: Lucas Kannebley Tavares <lucaskt@linux.vnet.ibm.com>
+---
+ arch/powerpc/platforms/pseries/pci.c |   32 ++++++++++++++++++++++++++++++++
+ 1 files changed, 32 insertions(+), 0 deletions(-)
 
-I'm not so sure. Why should the pcie-controller be a PCI device? It
-really isn't. Instead it is a device on the processor/SoC/platform bus
-that bridges to the PCI bus. As such its children should be PCI devices
-to reflect that the translation happens within the pcie-controller node.
+diff --git a/arch/powerpc/platforms/pseries/pci.c b/arch/powerpc/platforms/pseries/pci.c
+index 0b580f4..58469fe 100644
+--- a/arch/powerpc/platforms/pseries/pci.c
++++ b/arch/powerpc/platforms/pseries/pci.c
+@@ -24,6 +24,7 @@
+ #include <linux/kernel.h>
+ #include <linux/pci.h>
+ #include <linux/string.h>
++#include <linux/device.h>
+ 
+ #include <asm/eeh.h>
+ #include <asm/pci-bridge.h>
+@@ -108,3 +109,34 @@ static void fixup_winbond_82c105(struct pci_dev* dev)
+ }
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_WINBOND, PCI_DEVICE_ID_WINBOND_82C105,
+ 			 fixup_winbond_82c105);
++
++int pcibios_get_speed_cap_mask(struct pci_dev *dev, u32 *mask)
++{
++	struct device_node *dn, *pdn;
++	const uint32_t *pcie_link_speed_stats = NULL;
++
++	*mask = 0;
++	dn = pci_bus_to_OF_node(dev->bus);
++
++	/* Find nearest ibm,pcie-link-speed-stats, walking up the device tree */
++	for (pdn = dn; pdn != NULL; pdn = pdn->parent) {
++		pcie_link_speed_stats = (const uint32_t *) of_get_property(pdn,
++			"ibm,pcie-link-speed-stats", NULL);
++		if (pcie_link_speed_stats != NULL)
++			break;
++	}
++
++	if (pcie_link_speed_stats == NULL) {
++		dev_info(&dev->dev, "no ibm,pcie-link-speed-stats property\n");
++		return -EINVAL;
++	}
++
++	switch (pcie_link_speed_stats[0]) {
++		case 0x02:
++		*mask |= PCIE_SPEED_50;
++		case 0x01:
++		*mask |= PCIE_SPEED_25;
++	}
++
++	return 0;
++}
+-- 
+1.7.4.4
 
-In the above it is logical to not set the pcie-controller's device_type
-property to "pci".
-
-> > ranges =3D <0x00000800 0 0 0x80000000 0 0x00001000   /* port 0 configur=
-ation space */
-> >           0x00001000 0 0 0x80001000 0 0x00001000   /* port 1 configurat=
-ion space */
->=20
-> Section 12 says that the 'b,d,f' bits are 0 in ranges, so the above is
-> in conflict with that language:
->=20
->  In particular, the phys.hi fields of the child address spaces in the
->  "ranges" property for PCI does not contain the same information as
->  "reg" property entries within PCI nodes. The only information that is
->  present in "ranges" phys.hi entries are the non-relocatable,
->  prefetchable and the PCI address space bits for which the entry
->  applies. I.e., only the n, p and ss bits are present; the bbbbbbbb,
->  ddddd, fff and rrrrrrrr fields are 0.
->=20
-> And the further requirement:
->=20
->  When an address is to be mapped through a PCI bus bridge node, the
->  phys.hi value of the address to be mapped and the child field of a
->  "ranges" entry should be masked so that only the ss bits are compared.
->=20
-> Which is embodied by the code in of_bus_pci_map, meaning the OF core
-> won't even look at the bits in the high DW when searching ranges.
-
-Okay, so the problem with that is that we won't be able to include more
-entries for configuration space within a ranges property because we
-can't uniquely map them (they both have the same ss field values). One
-possibility would be to differentiate using the phys.mid and phys.low
-cells but they need to be 0 according to the spec.
-
-The other alternative would be to amend the specification. Besides the
-fact that the specification says so I don't see any reason why this
-shouldn't be allowed.
-
-Thierry
-
---cNdxnHkX5QqsyA0e
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQIcBAEBAgAGBQJRP55eAAoJEN0jrNd/PrOhdkwP/3iEgAq6TDL+G26l2fuQwa2T
-ALTxZT3wIZAYma0etWQ11q4OPwCSRWzNmefJaV9vEmwxIN1RV//It09htVLfxjK7
-ujMfP1Fxpcta1N0W0l71yeZlo61DHABR56SrwgsHGCUALSUQpoA+df0/P+T77Zqk
-fC8uI1/t0vbUF/0EiVYtz6+Ne8T3CyeHwbEaZufQL58YaTYGG4h9Egkjymzz2Mpu
-a6NdU+RMumvkZG/3qL2wZg8BKuY18Yq0AFMAOuqTvWiDTsGYMvBfmzH/zujtdOSw
-WDjTmuC71mFREx1RnXQUK6BDaFRjnltj9XPN23iuNAfgM7gZkrxHcFiDE2hP2EF4
-+21i8VSJ6BiOvAosWw+nJE57fkFPtmq/y3u+rhiPoFdPgWCLBFdBlaihRsE7bFhD
-kpe4d9zx4HtzRUXyGFXl4SWQj8sNkwiPSOEpG87soG2jY/6uMwXvOwgSCsG5upO0
-hunUuUcfkwQMCFiR+tgvds/Eug+gcvddkhCOLlQ2jqwOglkFAs5+vfU8xpqc8BCz
-2HpGPr5LpaNEOBLj6OHFSBcQu1uX7FYrJDAf0tQQRS3jp3vIn03JzKOAUkuCeWLG
-NEAZ1qBndvhkAUluSlc7JzHH1LgdBZ4ZIY1A2bNgffzjFncRXNKPqIbfNOjMd0m7
-iv1hJ50jhaoyGs6XJvfL
-=91eu
------END PGP SIGNATURE-----
-
---cNdxnHkX5QqsyA0e--
