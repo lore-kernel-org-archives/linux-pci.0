@@ -1,70 +1,281 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:60601 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752016Ab3C0OlC (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Mar 2013 10:41:02 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Russell King <linux@arm.linux.org.uk>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	devicetree-discuss@lists.ozlabs.org,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Maen Suleiman <maen@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Olof Johansson <olof@lixom.net>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Mitch Bradley <wmb@firmworks.com>,
-	Andrew Murray <andrew.murray@arm.com>
-Subject: [PATCHv7 14/17] arm: mvebu: PCIe Device Tree informations for Armada 370 Mirabox
-Date: Wed, 27 Mar 2013 15:40:31 +0100
-Message-Id: <1364395234-11195-15-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1364395234-11195-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1364395234-11195-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from e24smtp04.br.ibm.com ([32.104.18.25]:49227 "EHLO
+	e24smtp04.br.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751588Ab3CNSzV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 14 Mar 2013 14:55:21 -0400
+Received: from /spool/local
+	by e24smtp04.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <cascardo@linux.vnet.ibm.com>;
+	Thu, 14 Mar 2013 15:55:19 -0300
+Received: from d24relay02.br.ibm.com (d24relay02.br.ibm.com [9.13.184.26])
+	by d24dlp02.br.ibm.com (Postfix) with ESMTP id 7CF141DC0066
+	for <linux-pci@vger.kernel.org>; Thu, 14 Mar 2013 14:55:16 -0400 (EDT)
+Received: from d24av02.br.ibm.com (d24av02.br.ibm.com [9.8.31.93])
+	by d24relay02.br.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id r2EIsPpJ26673338
+	for <linux-pci@vger.kernel.org>; Thu, 14 Mar 2013 15:54:25 -0300
+Received: from d24av02.br.ibm.com (loopback [127.0.0.1])
+	by d24av02.br.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id r2EItBXU003738
+	for <linux-pci@vger.kernel.org>; Thu, 14 Mar 2013 15:55:12 -0300
+Date: Thu, 14 Mar 2013 15:55:10 -0300
+From: Thadeu Lima de Souza Cascardo <cascardo@linux.vnet.ibm.com>
+To: lucaskt@linux.vnet.ibm.com
+Cc: dri-devel@lists.freedesktop.org, linux-pci@vger.kernel.org,
+	Alex Deucher <alexander.deucher@amd.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, brking@linux.vnet.ibm.com
+Subject: Re: [PATCH 1/2] drm: Move drm_pcie_get_speed_cap_mask to PCI
+Message-ID: <20130314185510.GB13230@oc0268524204.ibm.com>
+References: <1363283147-8852-1-git-send-email-lucaskt@linux.vnet.ibm.com>
+ <1363283147-8852-2-git-send-email-lucaskt@linux.vnet.ibm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1363283147-8852-2-git-send-email-lucaskt@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The Globalscale Mirabox platform uses one PCIe interface for an
-available mini-PCIe slot, and the other PCIe interface for an internal
-USB 3.0 controller. We add the necessary Device Tree informations to
-enable those two interfaces.
+On Thu, Mar 14, 2013 at 02:45:46PM -0300, lucaskt@linux.vnet.ibm.com wrote:
+> From: Lucas Kannebley Tavares <lucaskt@linux.vnet.ibm.com>
+> 
+> This function was more architecture related than drm related, as such it was
+> moved to the PCI driver.
+> 
+> This patch also allows it to be overwritten by architecture-dependent
+> implementations, and fixes the radeon driver (only one that uses it).
+> 
+> Signed-off-by: Lucas Kannebley Tavares <lucaskt@linux.vnet.ibm.com>
+> ---
+>  drivers/gpu/drm/drm_pci.c          |   38 -------------------------------
+>  drivers/gpu/drm/radeon/evergreen.c |    5 ++-
+>  drivers/gpu/drm/radeon/r600.c      |    5 ++-
+>  drivers/gpu/drm/radeon/rv770.c     |    5 ++-
+>  drivers/pci/pci.c                  |   43 ++++++++++++++++++++++++++++++++++++
+>  include/drm/drmP.h                 |    6 -----
+>  include/linux/pci.h                |    6 +++++
+>  7 files changed, 58 insertions(+), 50 deletions(-)
+> 
+> diff --git a/drivers/gpu/drm/drm_pci.c b/drivers/gpu/drm/drm_pci.c
+> index bd719e9..ba70844 100644
+> --- a/drivers/gpu/drm/drm_pci.c
+> +++ b/drivers/gpu/drm/drm_pci.c
+> @@ -439,44 +439,6 @@ int drm_pci_init(struct drm_driver *driver, struct pci_driver *pdriver)
+>  	return 0;
+>  }
+> 
+> -int drm_pcie_get_speed_cap_mask(struct drm_device *dev, u32 *mask)
+> -{
+> -	struct pci_dev *root;
+> -	u32 lnkcap, lnkcap2;
+> -
+> -	*mask = 0;
+> -	if (!dev->pdev)
+> -		return -EINVAL;
+> -
+> -	root = dev->pdev->bus->self;
+> -
+> -	/* we've been informed via and serverworks don't make the cut */
+> -	if (root->vendor == PCI_VENDOR_ID_VIA ||
+> -	    root->vendor == PCI_VENDOR_ID_SERVERWORKS)
+> -		return -EINVAL;
+> -
+> -	pcie_capability_read_dword(root, PCI_EXP_LNKCAP, &lnkcap);
+> -	pcie_capability_read_dword(root, PCI_EXP_LNKCAP2, &lnkcap2);
+> -
+> -	if (lnkcap2) {	/* PCIe r3.0-compliant */
+> -		if (lnkcap2 & PCI_EXP_LNKCAP2_SLS_2_5GB)
+> -			*mask |= DRM_PCIE_SPEED_25;
+> -		if (lnkcap2 & PCI_EXP_LNKCAP2_SLS_5_0GB)
+> -			*mask |= DRM_PCIE_SPEED_50;
+> -		if (lnkcap2 & PCI_EXP_LNKCAP2_SLS_8_0GB)
+> -			*mask |= DRM_PCIE_SPEED_80;
+> -	} else {	/* pre-r3.0 */
+> -		if (lnkcap & PCI_EXP_LNKCAP_SLS_2_5GB)
+> -			*mask |= DRM_PCIE_SPEED_25;
+> -		if (lnkcap & PCI_EXP_LNKCAP_SLS_5_0GB)
+> -			*mask |= (DRM_PCIE_SPEED_25 | DRM_PCIE_SPEED_50);
+> -	}
+> -
+> -	DRM_INFO("probing gen 2 caps for device %x:%x = %x/%x\n", root->vendor, root->device, lnkcap, lnkcap2);
+> -	return 0;
+> -}
+> -EXPORT_SYMBOL(drm_pcie_get_speed_cap_mask);
+> -
+>  #else
+> 
+>  int drm_pci_init(struct drm_driver *driver, struct pci_driver *pdriver)
+> diff --git a/drivers/gpu/drm/radeon/evergreen.c b/drivers/gpu/drm/radeon/evergreen.c
+> index 305a657..6ba204d 100644
+> --- a/drivers/gpu/drm/radeon/evergreen.c
+> +++ b/drivers/gpu/drm/radeon/evergreen.c
+> @@ -24,6 +24,7 @@
+>  #include <linux/firmware.h>
+>  #include <linux/platform_device.h>
+>  #include <linux/slab.h>
+> +#include <linux/pci.h>
+>  #include <drm/drmP.h>
+>  #include "radeon.h"
+>  #include "radeon_asic.h"
+> @@ -3871,11 +3872,11 @@ void evergreen_pcie_gen2_enable(struct radeon_device *rdev)
+>  	if (ASIC_IS_X2(rdev))
+>  		return;
+> 
+> -	ret = drm_pcie_get_speed_cap_mask(rdev->ddev, &mask);
+> +	ret = pcie_get_speed_cap_mask(rdev->ddev->pdev, &mask);
+>  	if (ret != 0)
+>  		return;
+> 
+> -	if (!(mask & DRM_PCIE_SPEED_50))
+> +	if (!(mask & PCIE_SPEED_50))
+>  		return;
+> 
+>  	speed_cntl = RREG32_PCIE_P(PCIE_LC_SPEED_CNTL);
+> diff --git a/drivers/gpu/drm/radeon/r600.c b/drivers/gpu/drm/radeon/r600.c
+> index 0740db3..89a7387 100644
+> --- a/drivers/gpu/drm/radeon/r600.c
+> +++ b/drivers/gpu/drm/radeon/r600.c
+> @@ -30,6 +30,7 @@
+>  #include <linux/firmware.h>
+>  #include <linux/platform_device.h>
+>  #include <linux/module.h>
+> +#include <linux/pci.h>
+>  #include <drm/drmP.h>
+>  #include <drm/radeon_drm.h>
+>  #include "radeon.h"
+> @@ -4371,11 +4372,11 @@ static void r600_pcie_gen2_enable(struct radeon_device *rdev)
+>  	if (rdev->family <= CHIP_R600)
+>  		return;
+> 
+> -	ret = drm_pcie_get_speed_cap_mask(rdev->ddev, &mask);
+> +	ret = pcie_get_speed_cap_mask(rdev->ddev->pdev, &mask);
+>  	if (ret != 0)
+>  		return;
+> 
+> -	if (!(mask & DRM_PCIE_SPEED_50))
+> +	if (!(mask & PCIE_SPEED_50))
+>  		return;
+> 
+>  	speed_cntl = RREG32_PCIE_P(PCIE_LC_SPEED_CNTL);
+> diff --git a/drivers/gpu/drm/radeon/rv770.c b/drivers/gpu/drm/radeon/rv770.c
+> index d63fe1d..81c7f1c 100644
+> --- a/drivers/gpu/drm/radeon/rv770.c
+> +++ b/drivers/gpu/drm/radeon/rv770.c
+> @@ -28,6 +28,7 @@
+>  #include <linux/firmware.h>
+>  #include <linux/platform_device.h>
+>  #include <linux/slab.h>
+> +#include <linux/pci.h>
+>  #include <drm/drmP.h>
+>  #include "radeon.h"
+>  #include "radeon_asic.h"
+> @@ -1254,11 +1255,11 @@ static void rv770_pcie_gen2_enable(struct radeon_device *rdev)
+>  	if (ASIC_IS_X2(rdev))
+>  		return;
+> 
+> -	ret = drm_pcie_get_speed_cap_mask(rdev->ddev, &mask);
+> +	ret = pcie_get_speed_cap_mask(rdev->ddev->pdev, &mask);
+>  	if (ret != 0)
+>  		return;
+> 
+> -	if (!(mask & DRM_PCIE_SPEED_50))
+> +	if (!(mask & PCIE_SPEED_50))
+>  		return;
+> 
+>  	DRM_INFO("enabling PCIE gen 2 link speeds, disable with radeon.pcie_gen2=0\n");
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index b099e00..ebf130c 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -3931,6 +3931,49 @@ static int __init pci_setup(char *str)
+>  }
+>  early_param("pci", pci_setup);
+> 
+> +int __weak pcibios_get_speed_cap_mask(struct pci_dev *dev, u32 *mask)
+> +{
+> +	struct pci_dev *root;
+> +	u32 lnkcap, lnkcap2;
+> +
+> +	*mask = 0;
+> +	if (!dev)
+> +		return -EINVAL;
+> +
+> +	root = dev->bus->self;
+> +
+> +	/* we've been informed via and serverworks don't make the cut */
+> +	if (root->vendor == PCI_VENDOR_ID_VIA ||
+> +	    root->vendor == PCI_VENDOR_ID_SERVERWORKS)
+> +		return -EINVAL;
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
----
- arch/arm/boot/dts/armada-370-mirabox.dts |   16 ++++++++++++++++
- 1 file changed, 16 insertions(+)
+Does it make sense to exclude vendors here, or was this DRM specific?
 
-diff --git a/arch/arm/boot/dts/armada-370-mirabox.dts b/arch/arm/boot/dts/armada-370-mirabox.dts
-index dd0c57d..5549de6 100644
---- a/arch/arm/boot/dts/armada-370-mirabox.dts
-+++ b/arch/arm/boot/dts/armada-370-mirabox.dts
-@@ -70,5 +70,21 @@
- 		usb@d0051000 {
- 			status = "okay";
- 		};
-+
-+		pcie-controller {
-+			status = "okay";
-+
-+			/* Internal mini-PCIe connector */
-+			pcie@1,0 {
-+				/* Port 0, Lane 0 */
-+				status = "okay";
-+			};
-+
-+			/* Connected on the PCB to a USB 3.0 XHCI controller */
-+			pcie@2,0 {
-+				/* Port 1, Lane 0 */
-+				status = "okay";
-+			};
-+		};
- 	};
- };
--- 
-1.7.9.5
+> +
+> +	pcie_capability_read_dword(root, PCI_EXP_LNKCAP, &lnkcap);
+> +	pcie_capability_read_dword(root, PCI_EXP_LNKCAP2, &lnkcap2);
+> +
+> +	if (lnkcap2) {	/* PCIe r3.0-compliant */
+> +		if (lnkcap2 & PCI_EXP_LNKCAP2_SLS_2_5GB)
+> +			*mask |= PCIE_SPEED_25;
+> +		if (lnkcap2 & PCI_EXP_LNKCAP2_SLS_5_0GB)
+> +			*mask |= PCIE_SPEED_50;
+> +		if (lnkcap2 & PCI_EXP_LNKCAP2_SLS_8_0GB)
+> +			*mask |= PCIE_SPEED_80;
+> +	} else {	/* pre-r3.0 */
+> +		if (lnkcap & PCI_EXP_LNKCAP_SLS_2_5GB)
+> +			*mask |= PCIE_SPEED_25;
+> +		if (lnkcap & PCI_EXP_LNKCAP_SLS_5_0GB)
+> +			*mask |= (PCIE_SPEED_25 | PCIE_SPEED_50);
+> +	}
+> +
+> +	dev_info(&dev->dev, "probing gen 2 caps for device %x:%x = %x/%x\n",
+> +		root->vendor, root->device, lnkcap, lnkcap2);
+> +	return 0;
+> +}
+> +
+> +int pcie_get_speed_cap_mask(struct pci_dev *dev, u32 *mask) {
+
+Put the curly brackets in a separate line for a function. To avoid these
+coding styles issues, run scripts/checkpatch.pl.
+
+Regards.
+Cascardo.
+
+> +	return pcibios_get_speed_cap_mask(dev, mask);
+> +}
+> +EXPORT_SYMBOL(pcie_get_speed_cap_mask);
+> +
+>  EXPORT_SYMBOL(pci_reenable_device);
+>  EXPORT_SYMBOL(pci_enable_device_io);
+>  EXPORT_SYMBOL(pci_enable_device_mem);
+> diff --git a/include/drm/drmP.h b/include/drm/drmP.h
+> index 2d94d74..39b2872 100644
+> --- a/include/drm/drmP.h
+> +++ b/include/drm/drmP.h
+> @@ -1788,12 +1788,6 @@ extern int drm_get_pci_dev(struct pci_dev *pdev,
+>  			   const struct pci_device_id *ent,
+>  			   struct drm_driver *driver);
+> 
+> -#define DRM_PCIE_SPEED_25 1
+> -#define DRM_PCIE_SPEED_50 2
+> -#define DRM_PCIE_SPEED_80 4
+> -
+> -extern int drm_pcie_get_speed_cap_mask(struct drm_device *dev, u32 *speed_mask);
+> -
+>  /* platform section */
+>  extern int drm_platform_init(struct drm_driver *driver, struct platform_device *platform_device);
+>  extern void drm_platform_exit(struct drm_driver *driver, struct platform_device *platform_device);
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 2461033a..24a2f63 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -1861,4 +1861,10 @@ static inline struct eeh_dev *pci_dev_to_eeh_dev(struct pci_dev *pdev)
+>   */
+>  struct pci_dev *pci_find_upstream_pcie_bridge(struct pci_dev *pdev);
+> 
+> +#define PCIE_SPEED_25 1
+> +#define PCIE_SPEED_50 2
+> +#define PCIE_SPEED_80 4
+> +
+> +extern int pcie_get_speed_cap_mask(struct pci_dev *dev, u32 *speed_mask);
+> +
+>  #endif /* LINUX_PCI_H */
+> -- 
+> 1.7.4.4
+> 
 
