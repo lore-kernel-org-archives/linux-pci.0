@@ -1,109 +1,104 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.171]:54576 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750822Ab3CZVbz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Mar 2013 17:31:55 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: Re: [RFCv1 07/11] irqchip: armada-370-xp: add MSI support to interrupt controller driver
-Date: Tue, 26 Mar 2013 21:31:45 +0000
-Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	devicetree-discuss@lists.ozlabs.org,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Maen Suleiman <maen@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Olof Johansson <olof@lixom.net>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Mitch Bradley <wmb@firmworks.com>,
-	Andrew Murray <andrew.murray@arm.com>
-References: <1364316746-8702-1-git-send-email-thomas.petazzoni@free-electrons.com> <20130326180245.GA22775@obsidianresearch.com> <20130326221654.34bce6d7@skate>
-In-Reply-To: <20130326221654.34bce6d7@skate>
+Received: from e24smtp05.br.ibm.com ([32.104.18.26]:39575 "EHLO
+	e24smtp05.br.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752233Ab3CNSwY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 14 Mar 2013 14:52:24 -0400
+Received: from /spool/local
+	by e24smtp05.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <cascardo@linux.vnet.ibm.com>;
+	Thu, 14 Mar 2013 15:52:21 -0300
+Received: from d24relay03.br.ibm.com (d24relay03.br.ibm.com [9.13.184.25])
+	by d24dlp01.br.ibm.com (Postfix) with ESMTP id 46612352006E
+	for <linux-pci@vger.kernel.org>; Thu, 14 Mar 2013 14:52:19 -0400 (EDT)
+Received: from d24av02.br.ibm.com (d24av02.br.ibm.com [9.8.31.93])
+	by d24relay03.br.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id r2EIpasT16121946
+	for <linux-pci@vger.kernel.org>; Thu, 14 Mar 2013 15:51:36 -0300
+Received: from d24av02.br.ibm.com (loopback [127.0.0.1])
+	by d24av02.br.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id r2EIqG6w026095
+	for <linux-pci@vger.kernel.org>; Thu, 14 Mar 2013 15:52:17 -0300
+Date: Thu, 14 Mar 2013 15:52:14 -0300
+From: Thadeu Lima de Souza Cascardo <cascardo@linux.vnet.ibm.com>
+To: lucaskt@linux.vnet.ibm.com
+Cc: dri-devel@lists.freedesktop.org, linux-pci@vger.kernel.org,
+	Alex Deucher <alexander.deucher@amd.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, brking@linux.vnet.ibm.com,
+	linuxppc-dev@lists.ozlabs.org, benh@kernel.crashing.org
+Subject: Re: [PATCH 2/2] ppc64: Add arch-specific pcie_get_speed_cap_mask
+Message-ID: <20130314185214.GA13230@oc0268524204.ibm.com>
+References: <1363283147-8852-1-git-send-email-lucaskt@linux.vnet.ibm.com>
+ <1363283147-8852-3-git-send-email-lucaskt@linux.vnet.ibm.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201303262131.45410.arnd@arndb.de>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1363283147-8852-3-git-send-email-lucaskt@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday 26 March 2013, Thomas Petazzoni wrote:
-> > FWIW, MSI-X is not restricted to 16 bits, so if you can detect from
-> > the PCI layer if it is setting up MSI or MSI-X you could allocate low
-> > bits first to MSI-X and high bits first to MSI, increasing the number
-> > of available MSI/MSI-X vectors.
+On Thu, Mar 14, 2013 at 02:45:47PM -0300, lucaskt@linux.vnet.ibm.com wrote:
+> From: Lucas Kannebley Tavares <lucaskt@linux.vnet.ibm.com>
 > 
-> This could be an improvement. There are also other, non-per-CPU,
-> doorbell interrupts that could potentially be used. Can we consider
-> this a possible improvement, and not something that is fundamentally
-> necessary? For now, I'm trying to get the current feature set merged,
-> and not necessarily to extend it to cover all possible features of the
-> hardware.
-
-If we are extending the DT binding for the current feature, we should
-at least think about how it would look like for future extensions, to
-make sure it won't be fundamentally incompatible.
-
-> > > +   - marvell,doorbell: Gives the physical address at which PCIe
-> > > +     devices should write to signal an MSI interrupt.
-> > 
-> > Why is this necessary? Can't the doorbell register physical address be
-> > computed by the driver? AFAIK there is no possibility for address
-> > translation on SOC inbound TLPs.
+> Betters support for gen2 speed detections on PCI buses on ppc64
+> architectures.
 > 
-> It is the responsibility of the PCIe driver to prepare the 'struct
-> msi_msg', which contains the physical address at which the PCIe device
-> should write to trigger an MSI. But this physical address is part of
-> the interrupt controller registers, so there is no way for the PCIe
-> driver to magically know about it.
-
-If we introduce an irq_find_msi_host() interface, we can also introduce
-an interface to return the doorbell register, or more. I suppose
-we could actually have a generic version of your mvebu_pcie_setup_msi_irq()
-function that looks up the domain from the device node and calls
-a new irq_domain_ops function, which allocates a free MSI hwirq number,
-creates a mapping for it, and fills out a struct msi_msg with the
-doorbell register and data.
-
-> > Thinking about it a bit, maybe less magic code is needed here, be
-> > explicit about the available interrupts in the DT:
-> > 
-> > pcie-controller {
-> >    msi-interrupts = <0xd0020a04 (1<<16) &msi 16
-> >                      0xd0020a04 (1<<17) &msi 17
-> >                      [..]
-> >    msi-x-interrupts = <0xd0020a04 (1<<1) &msi 1
-> >                        0xd0020a04 (1<<2) &msi 2
-> >                        [..]
-> > 
-> > There is a better chance of that supporting other Marvell SOCs.. Not
-> > sure, just throwing it out there.
+> Signed-off-by: Lucas Kannebley Tavares <lucaskt@linux.vnet.ibm.com>
+> ---
+>  arch/powerpc/platforms/pseries/pci.c |   32 ++++++++++++++++++++++++++++++++
+>  1 files changed, 32 insertions(+), 0 deletions(-)
 > 
-> Isn't that very verbose, to list each and every MSI interrupt, bit per
-> bit? I'm fine with doing that (except maybe implement both MSI and
-> MSI-X support, I'd like to stick with the current feature set for now),
-> but it sounds like a lot more code in the DT and a lot more code in the
-> driver to parse this... just to get the exact same feature.
+> diff --git a/arch/powerpc/platforms/pseries/pci.c b/arch/powerpc/platforms/pseries/pci.c
+> index 0b580f4..58469fe 100644
+> --- a/arch/powerpc/platforms/pseries/pci.c
+> +++ b/arch/powerpc/platforms/pseries/pci.c
+> @@ -24,6 +24,7 @@
+>  #include <linux/kernel.h>
+>  #include <linux/pci.h>
+>  #include <linux/string.h>
+> +#include <linux/device.h>
 > 
-> Arnd, what is your feeling about this suggestion?
+>  #include <asm/eeh.h>
+>  #include <asm/pci-bridge.h>
+> @@ -108,3 +109,34 @@ static void fixup_winbond_82c105(struct pci_dev* dev)
+>  }
+>  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_WINBOND, PCI_DEVICE_ID_WINBOND_82C105,
+>  			 fixup_winbond_82c105);
+> +
+> +int pcibios_get_speed_cap_mask(struct pci_dev *dev, u32 *mask)
+> +{
+> +	struct device_node *dn, *pdn;
+> +	const uint32_t *pcie_link_speed_stats = NULL;
+> +
+> +	*mask = 0;
+> +	dn = pci_bus_to_OF_node(dev->bus);
+> +
+> +	/* Find nearest ibm,pcie-link-speed-stats, walking up the device tree */
+> +	for (pdn = dn; pdn != NULL; pdn = pdn->parent) {
+> +		pcie_link_speed_stats = (const uint32_t *) of_get_property(pdn,
+> +			"ibm,pcie-link-speed-stats", NULL);
+> +		if (pcie_link_speed_stats != NULL)
+> +			break;
+> +	}
+> +
+> +	if (pcie_link_speed_stats == NULL) {
+> +		dev_info(&dev->dev, "no ibm,pcie-link-speed-stats property\n");
+> +		return -EINVAL;
+> +	}
+> +
+> +	switch (pcie_link_speed_stats[0]) {
+> +		case 0x02:
+> +		*mask |= PCIE_SPEED_50;
+> +		case 0x01:
+> +		*mask |= PCIE_SPEED_25;
+> +	}
 
-I think we should only need an msi-parent property and let the details
-be handled by the irq driver.
- 
-> > Also, I'm not super familiar with the irq stuff, but is
-> > irq_find_mapping the best way? Most of the drivers I looked at used
-> > irq_alloc_descs to get a contiguous range of irq numbers and then just
-> > used a simple offset in the handle_irq...
+I recall seeing this returns 0x00 as well. Maybe you should include both
+0x00 and a default case and return EINVAL.
+
+Regards.
+Cascardo.
+
+> +
+> +	return 0;
+> +}
+> -- 
+> 1.7.4.4
 > 
-> I'll let Arnd answer this one, but I'm pretty sure that using IRQ
-> domains is the way to go. The fact that a number of drivers don't yet
-> use IRQ domains is maybe just because they haven't been converted yet.
 
-Yes, irq_find_mapping is what we should be using here.
-
-	Arnd
