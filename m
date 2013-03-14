@@ -1,131 +1,95 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:56134 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751940Ab3CZVr2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Mar 2013 17:47:28 -0400
-Date: Tue, 26 Mar 2013 22:47:13 +0100
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+Received: from moutng.kundenserver.de ([212.227.17.9]:63567 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751350Ab3CNVJo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 14 Mar 2013 17:09:44 -0400
+Date: Thu, 14 Mar 2013 22:09:26 +0100
+From: Thierry Reding <thierry.reding@avionic-design.de>
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: Mitch Bradley <wmb@firmworks.com>, linux-pci@vger.kernel.org,
 	devicetree-discuss@lists.ozlabs.org,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Maen Suleiman <maen@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Olof Johansson <olof@lixom.net>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Mitch Bradley <wmb@firmworks.com>,
-	Andrew Murray <andrew.murray@arm.com>
-Subject: Re: [RFCv1 07/11] irqchip: armada-370-xp: add MSI support to
- interrupt controller driver
-Message-ID: <20130326224713.04c85cd3@skate>
-In-Reply-To: <201303262131.45410.arnd@arndb.de>
-References: <1364316746-8702-1-git-send-email-thomas.petazzoni@free-electrons.com>
-	<20130326180245.GA22775@obsidianresearch.com>
-	<20130326221654.34bce6d7@skate>
-	<201303262131.45410.arnd@arndb.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH 24/32] pci: PCIe driver for Marvell Armada 370/XP systems
+Message-ID: <20130314210926.GA9098@avionic-0098.mockup.avionic-design.de>
+References: <20130312213006.GA23717@avionic-0098.mockup.avionic-design.de>
+ <20130312220854.GA23112@obsidianresearch.com>
+ <20130313081815.GD25940@avionic-0098.mockup.avionic-design.de>
+ <20130313170205.GB24042@obsidianresearch.com>
+ <20130313192628.GA28714@avionic-0098.mockup.avionic-design.de>
+ <5140E85A.3040900@firmworks.com>
+ <20130313220235.GA29895@avionic-0098.mockup.avionic-design.de>
+ <20130313222102.GA28336@obsidianresearch.com>
+ <20130314090120.GA2224@avionic-0098.mockup.avionic-design.de>
+ <20130314172555.GA14048@obsidianresearch.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="ibTvN161/egqYuK8"
+In-Reply-To: <20130314172555.GA14048@obsidianresearch.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Arnd Bergmann,
 
-On Tue, 26 Mar 2013 21:31:45 +0000, Arnd Bergmann wrote:
-> On Tuesday 26 March 2013, Thomas Petazzoni wrote:
-> > > FWIW, MSI-X is not restricted to 16 bits, so if you can detect from
-> > > the PCI layer if it is setting up MSI or MSI-X you could allocate low
-> > > bits first to MSI-X and high bits first to MSI, increasing the number
-> > > of available MSI/MSI-X vectors.
-> > 
-> > This could be an improvement. There are also other, non-per-CPU,
-> > doorbell interrupts that could potentially be used. Can we consider
-> > this a possible improvement, and not something that is fundamentally
-> > necessary? For now, I'm trying to get the current feature set merged,
-> > and not necessarily to extend it to cover all possible features of the
-> > hardware.
-> 
-> If we are extending the DT binding for the current feature, we should
-> at least think about how it would look like for future extensions, to
-> make sure it won't be fundamentally incompatible.
+--ibTvN161/egqYuK8
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Sure.
+On Thu, Mar 14, 2013 at 11:25:55AM -0600, Jason Gunthorpe wrote:
+[...]
+> I'm assuming 0x80000000, 0xa0000000 and 0xb0000000 are real CPU physical
+> addresses?
+>=20
+> Then it should probably look like:
+>=20
+> ranges =3D <0x82000000 0 0x80000000  0x80000000  0 0x00001000   /* port 0=
+ registers */
+> 	  0x82000000 0 0x80001000  0x80001000  0 0x00001000   /* port 1 register=
+s */
+> 	  0x81000000 0          0  0x82000000  0 0x00010000   /* downstream I/O =
+*/
+> 	  0x82000000 0 0xa0000000  0xa0000000  0 0x10000000   /* non-prefetchabl=
+e memory */
+> 	  0xc2000000 0 0xb0000000  0xb0000000  0 0x10000000>; /* prefetchable me=
+mory */
+>=20
+> Which says 'access to CPU address 0xa0000000 produces a PCI-E memory TLP =
+with
+> address 0xa0000000' - this is the 'normal' case, I assume that is what
+> happens on tegra?
+>=20
+> It also says 'access to CPU address 0x82000000 produces a PCI-E IO TLP
+> with address 0' - this translation is something Linux typically
+> expects..
 
-> > > > +   - marvell,doorbell: Gives the physical address at which PCIe
-> > > > +     devices should write to signal an MSI interrupt.
-> > > 
-> > > Why is this necessary? Can't the doorbell register physical address be
-> > > computed by the driver? AFAIK there is no possibility for address
-> > > translation on SOC inbound TLPs.
-> > 
-> > It is the responsibility of the PCIe driver to prepare the 'struct
-> > msi_msg', which contains the physical address at which the PCIe device
-> > should write to trigger an MSI. But this physical address is part of
-> > the interrupt controller registers, so there is no way for the PCIe
-> > driver to magically know about it.
-> 
-> If we introduce an irq_find_msi_host() interface, we can also introduce
-> an interface to return the doorbell register, or more. I suppose
-> we could actually have a generic version of your mvebu_pcie_setup_msi_irq()
-> function that looks up the domain from the device node and calls
-> a new irq_domain_ops function, which allocates a free MSI hwirq number,
-> creates a mapping for it, and fills out a struct msi_msg with the
-> doorbell register and data.
+Both of the above paragraphs are true. However accesses to the windows
+at 0x80000000 and 0x80001000 don't generate memory TLPs but type 0
+configuration space TLPs.
 
-Ok, sounds like a plan. I must admit I'm not very familiar with the IRQ
-domain code, but I guess I should take this as an opportunity to become
-a little bit more familiar :)
+So my first instinct was to make the first cell of the first two entries
+0, but that doesn't work, since the OF core expects to find either
+memory or I/O spaces. ss =3D=3D 2 isn't quite right here.
 
-> > > Thinking about it a bit, maybe less magic code is needed here, be
-> > > explicit about the available interrupts in the DT:
-> > > 
-> > > pcie-controller {
-> > >    msi-interrupts = <0xd0020a04 (1<<16) &msi 16
-> > >                      0xd0020a04 (1<<17) &msi 17
-> > >                      [..]
-> > >    msi-x-interrupts = <0xd0020a04 (1<<1) &msi 1
-> > >                        0xd0020a04 (1<<2) &msi 2
-> > >                        [..]
-> > > 
-> > > There is a better chance of that supporting other Marvell SOCs.. Not
-> > > sure, just throwing it out there.
-> > 
-> > Isn't that very verbose, to list each and every MSI interrupt, bit per
-> > bit? I'm fine with doing that (except maybe implement both MSI and
-> > MSI-X support, I'd like to stick with the current feature set for now),
-> > but it sounds like a lot more code in the DT and a lot more code in the
-> > driver to parse this... just to get the exact same feature.
-> > 
-> > Arnd, what is your feeling about this suggestion?
-> 
-> I think we should only need an msi-parent property and let the details
-> be handled by the irq driver.
+Thierry
 
-Ok. Having the irq driver allocate the MSI interrupt number as you
-suggested above seems a good idea.
+--ibTvN161/egqYuK8
+Content-Type: application/pgp-signature
 
-> > > Also, I'm not super familiar with the irq stuff, but is
-> > > irq_find_mapping the best way? Most of the drivers I looked at used
-> > > irq_alloc_descs to get a contiguous range of irq numbers and then just
-> > > used a simple offset in the handle_irq...
-> > 
-> > I'll let Arnd answer this one, but I'm pretty sure that using IRQ
-> > domains is the way to go. The fact that a number of drivers don't yet
-> > use IRQ domains is maybe just because they haven't been converted yet.
-> 
-> Yes, irq_find_mapping is what we should be using here.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
 
-Ok, thanks.
+iQIcBAEBAgAGBQJRQjyGAAoJEN0jrNd/PrOhSaIQAIY91SVCtiEHKtCja91PItQ9
+0fTNCdoXmJ4HYHjhT4jjYZnnsw36X7Jy+s86oybWOCJ1gI3DM7mF+wEh8awLperC
+1XPiT2/pTrQRRvySDwT2yielJw1EYlHGA2eZs9Ig5dy+Po38qyyF0q5so8fPLTqI
+XHoKxi0DBfhvDbgLdHr3H7xr7noa+xE9zwm3d+FOed/3J3IL26OpYbI6cOD1ZM7E
+ufgqaUD9kknt8w23ihuYJ3DFUIjL/HxlMENiIXXxqS35TdPYrWY5JcZgfTcMrlEd
+vdjTIXVTP8IsuEbfFZed98Fnl9DRh1auGnNheVrgyrJWSs2njVQFOwIvVMj7Nv2r
+4QsS2gk8lrMocM0HHkUG8tNYTHej6sM9mxJte4etBosrVuCL22PGARW/WeekRRcu
+25FCxjNpPKEOorqoSvjTxSgC0T3dOSB1NqfwMy80KBGSBuAugm5DPIngfW2kEV7P
+PeQqvds0OM7KOLYu5ReF9qfmYpPYkek+54iMnBHeMHCZrqtuSiWQdW8FNvJgRmPu
+vIU3QiXSQZ1DU09U6jKBCHRsD67p/HDJjuobIO7R45OHC4f2xg6e8zF1qCc9QYhS
+6sm6zVJjt1izV3bjlbAzyrQcT3HVNsax843mu9oA3Dh9SqfhPI+ZgKxyjOUYPgmm
+etbw6SWMYsA377g0Vlr+
+=G+g2
+-----END PGP SIGNATURE-----
 
-Thomas
--- 
-Thomas Petazzoni, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
+--ibTvN161/egqYuK8--
