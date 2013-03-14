@@ -1,140 +1,75 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f47.google.com ([209.85.219.47]:64179 "EHLO
-	mail-oa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755965Ab3CGRaj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Mar 2013 12:30:39 -0500
-Received: by mail-oa0-f47.google.com with SMTP id o17so897746oag.6
-        for <linux-pci@vger.kernel.org>; Thu, 07 Mar 2013 09:30:38 -0800 (PST)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Peter Hurley <peter@hurleysoftware.com>
+Cc: Jiri Kosina <jkosina@suse.cz>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Thomas Meyer <thomas@m3y3r.de>,
+	Shawn Starr <shawn.starr@rogers.com>,
+	Kernel development list <linux-kernel@vger.kernel.org>,
+	USB list <linux-usb@vger.kernel.org>,
+	linux-acpi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: Re: [3.9-rc1] irq 16: nobody cared  (was [3.9-rc1] very poor interrupt responses)
+Date: Thu, 14 Mar 2013 18:22:53 +0100
+Message-ID: <5657408.cYX6iimiA4@vostro.rjw.lan>
+In-Reply-To: <1363280764.26318.4.camel@thor.lan>
+References: <Pine.LNX.4.44L0.1303141050310.1983-100000@iolanthe.rowland.org> <1460519.ejNFI1DrGk@vostro.rjw.lan> <1363280764.26318.4.camel@thor.lan>
 MIME-Version: 1.0
-In-Reply-To: <5138C03C.8080600@googlemail.com>
-References: <51016937.1020202@googlemail.com> <510189B1.606@fold.natur.cuni.cz>
- <5104427D.2050002@googlemail.com> <510494D6.1010000@gmail.com>
- <51050D43.2050703@googlemail.com> <51051B1B.3080105@gmail.com>
- <51052DB2.4090702@googlemail.com> <51053917.6060400@fold.natur.cuni.cz>
- <5105491E.9050907@googlemail.com> <510558CE.9000600@fold.natur.cuni.cz>
- <5105AFDB.9000200@googlemail.com> <5105E51D.2020606@huawei.com>
- <51064F1A.1020909@googlemail.com> <51065FA6.4070208@googlemail.com>
- <51066B46.10409@fold.natur.cuni.cz> <5106CD6C.4070009@googlemail.com>
- <5106E770.9070602@fold.natur.cuni.cz> <510A5F0E.6010100@googlemail.com>
- <CAErSpo4x8pb7J8MnokXiFTE=01-TffCk6CKC0VS7CEf3X1bSBw@mail.gmail.com> <5138C03C.8080600@googlemail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 7 Mar 2013 10:30:18 -0700
-Message-ID: <CAErSpo4nyRgUf8hsbNKBTzW+eqzyNTrLFYFaJ6v=sSVQg7CBPw@mail.gmail.com>
-Subject: Re: 3.8.0-rc4+ - Oops on removing WinTV-HVR-1400 expresscard TV Tuner
-To: Chris Clayton <chris2553@googlemail.com>
-Cc: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Yijing Wang <wangyijing0307@gmail.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 7, 2013 at 9:28 AM, Chris Clayton <chris2553@googlemail.com> wrote:
->
->
-> On 03/06/13 23:45, Bjorn Helgaas wrote:
->>
->> On Thu, Jan 31, 2013 at 5:09 AM, Chris Clayton <chris2553@googlemail.com>
->> wrote:
->>
->>> My usb3 expresscard device has arrived and I get an oops with that too,
->>> if I
->>> remove it without unloading the driver first. I guess it shouldn't be a
->>> surprise that the driver isn't expecting the device to disappear.
->>>
->>> As I mentioned, I have some trouble with the WinTV-HVR-1400 card, which
->>> sometimes pops out again, if I push it into the slot too hard (but I'm
->>> geeting better at that with practice). So what I've done (with the usb3
->>> card
->>> too) to avoid the oopsen is blacklist the driver in
->>> /etc/modprobe.d/blacklist.conf and then load them when I'm sure the card
->>> is
->>> properly inserted. Not exactly hotplug, but at least I don't have to
->>> reboot
->>> because of an oops- and it's not something I'm doing several times an
->>> hour.
->>
->>
->> Hi Chris,
->>
->> What's the current state of this?  It sounds to me like it still
->> doesn't work out of the box.  Having to blacklist the driver and load
->> it manually is a completely unacceptable user experience.  If you have
->> to manually choose acpiphp over pciehp, that is also unacceptable.
->>
->> So if you're still limping along with hacky workarounds like this, I'd
->> like to pursue this more and see if we can't figure out a better
->> solution.
->>
->> Bjorn
->>
-> Hi Bjorn,
->
-> If I unblacklist the driver, insert the HVR-1400 card and then remove it, I
-> still get the oops. This is with kernel 3.8.2. I no longer get the oops with
-> the USB3 card, but I don't know how or when that was fixed.
->
-> I stopped working on it when, after finding the workaround to the oops and
-> then spending many many hours figuring out a fix so that scandvb would find
-> some channels, no one on the linux-media list seemed interested in the fix.
-> On top of that, even though scanning now finds all the available channels,
-> the quality of the TV picture and sound is very poor indeed. I didn't want
-> to bang my head against the linux-media wall again, so I abandoned the card
-> and now use a USB TV stick, which gives is much better results than the
-> card. It's a pity because the card also supports an analog signal which
-> means I can watch the RF output from my satellite box, which I have piped
-> around the house. Anyway, the linux-media folks are not your problem and if
-> I want to watch satellite TV on my laptop, I can make one of my rare visits
-> to Windows (where the picture and sound are good).
->
-> Having said (ranted?) all that, I would be more than happy to help fix the
-> oops. After I first reported it, I realised that I didn't have a hotplug
-> driver loaded. With help from Yijing Wang, we eventually managed to get the
-> card recognised and drivers loaded when it is inserted. That doesn't help
-> with the oops, though. I now have the pciehp driver compiled statically onto
-> the kernel (and pass pcie_ports=native to the kernel), but removing the card
-> with the cx23885 driver loaded always results in an oops. I originally
-> reported this to the linux-media list because functions from the cx23885
-> driver are at the top of the call trace, but only Martin responded with some
-> hotplug-related suggestions, which is what swung discussion the way of the
-> linux-pci list.
+On Thursday, March 14, 2013 01:06:04 PM Peter Hurley wrote:
+> On Thu, 2013-03-14 at 17:46 +0100, Rafael J. Wysocki wrote:
+> > On Thursday, March 14, 2013 05:09:59 PM Jiri Kosina wrote:
+> > > On Thu, 14 Mar 2013, Jiri Kosina wrote:
+> > > 
+> > > > > > I don't think I have seen this message on rc1+ (8343bce, to be precise), 
+> > > > > > but I have definitely seen sluggish system response on that kernel as 
+> > > > > > well.
+> > > > > > 
+> > > > > > Attaching lspci, /proc/interrupts and dmesg. 
+> > > > > 
+> > > > > Can you try to do a git bisect for this?  Is the sluggish system 
+> > > > > response clear enough that you can tell reliably when it is present and 
+> > > > > when it isn't?
+> > > > 
+> > > > That was my first thought, but unfortunately I am afraid there will be 
+> > > > point at which I will easily make a bisection mistake, as the 
+> > > > responsiveness of the system varies over time, so it's not really a 
+> > > > 100% objective measure.
+> > > 
+> > > So I will try a bisect, but it'll take some time so that I could claim it 
+> > > to be trustworthy.
+> > > 
+> > > Therefore in case anyone has any idea in parallel, I am all ears.
+> > 
+> > This one is a candidate to focus on I think:
+> > 
+> > commit 181380b702eee1a9aca51354d7b87c7b08541fcf
+> > Author: Yinghai Lu <yinghai@kernel.org>
+> > Date:   Sat Feb 16 11:58:34 2013 -0700
+> > 
+> >     PCI/ACPI: Don't cache _PRT, and don't associate them with bus numbers
+> 
+> This patch __fixed__ this problem for me in linux-next back in February.
+> 
+> Rafael, did you hold back some ACPI patches from 3.9 that would have
+> made fix no longer applicable?
 
-OK.  There are several potential problems here.
+No, I didn't.
 
-1) The change to make scandvb find some channels.  This is probably a
-cx23885 or linux-media issue, and I can't help with that.
+I'm afraid, though, that the fix might not be effective on some systems for a
+reason that's unclear at the moment.
 
-2) TV picture/sound quality problem.  Again, probably a cx23885 driver
-issue, and I can't help with that.
+So in fact the one to check is commit 4f535093cf ("PCI: Put pci_dev in device
+tree as early as possible") and if the problem doesn't appear before that, we
+need to figure out why the fix may not be sufficient.
 
-3) HVR-1400 not being recognized when inserted.  This is a PCI hotplug
-issue, and I *can* help with this.  I don't know what your hardware
-is, but in general, pciehp should take care of this.  If it doesn't,
-or if you have to use an argument like "pcie_ports=native", we should
-fix this.
+Thanks,
+Rafael
 
-4) Oops when removing HVR-1400 ExpressCard.  From the backtrace, I
-assume the cx23885 driver is still bound to the device when you remove
-the card.  It'd be nice if the driver could handle the device going
-away, but I'm not surprised that it doesn't.
 
-If you unbind the driver before removing the card, the oops should not
-happen.  You should be able to do this manually with something like
-this (with the address of your device, of course):
-
-    # echo 0000:05:00.0 > /sys/bus/pci/drivers/cx23885/unbind
-
-It would also be nice if there were a good user interface for doing
-this, e.g., something like "Safely remove hardware" on Windows.  But I
-don't know what it is on Linux.
-
-So 3) is the thing I might be able to help with.  If there's still a
-problem here (and even having to boot with an argument is a problem),
-let's start by collecting complete dmesg logs, with and without your
-"pcie_ports" option.  Boot without the card installed, then insert it
-and remove it.  If you can use something like v3.9-rc1 with
-CONFIG_HOTPLUG_PCI_PCIE=y, that would be ideal.
-
-Bjorn
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
