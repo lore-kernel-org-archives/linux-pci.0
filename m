@@ -1,156 +1,63 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>, Ram Pai <linuxram@us.ibm.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v3 25/27] PCI: Make piix4 quirk to use addon_res
-Date: Wed, 13 Mar 2013 16:28:20 -0700
-Message-Id: <1363217302-14383-26-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1363217302-14383-1-git-send-email-yinghai@kernel.org>
-References: <1363217302-14383-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <1363280764.26318.4.camel@thor.lan>
+Subject: Re: [3.9-rc1] irq 16: nobody cared  (was [3.9-rc1] very poor
+ interrupt responses)
+From: Peter Hurley <peter@hurleysoftware.com>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Jiri Kosina <jkosina@suse.cz>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Thomas Meyer <thomas@m3y3r.de>,
+	Shawn Starr <shawn.starr@rogers.com>,
+	Kernel development list <linux-kernel@vger.kernel.org>,
+	USB list <linux-usb@vger.kernel.org>,
+	linux-acpi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Date: Thu, 14 Mar 2013 13:06:04 -0400
+In-Reply-To: <1460519.ejNFI1DrGk@vostro.rjw.lan>
+References: <Pine.LNX.4.44L0.1303141050310.1983-100000@iolanthe.rowland.org>
+	 <alpine.LNX.2.00.1303141555090.30118@pobox.suse.cz>
+	 <alpine.LNX.2.00.1303141709000.30118@pobox.suse.cz>
+	 <1460519.ejNFI1DrGk@vostro.rjw.lan>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-After they are put in add-on resources, they will be safely claimed later.
+On Thu, 2013-03-14 at 17:46 +0100, Rafael J. Wysocki wrote:
+> On Thursday, March 14, 2013 05:09:59 PM Jiri Kosina wrote:
+> > On Thu, 14 Mar 2013, Jiri Kosina wrote:
+> > 
+> > > > > I don't think I have seen this message on rc1+ (8343bce, to be precise), 
+> > > > > but I have definitely seen sluggish system response on that kernel as 
+> > > > > well.
+> > > > > 
+> > > > > Attaching lspci, /proc/interrupts and dmesg. 
+> > > > 
+> > > > Can you try to do a git bisect for this?  Is the sluggish system 
+> > > > response clear enough that you can tell reliably when it is present and 
+> > > > when it isn't?
+> > > 
+> > > That was my first thought, but unfortunately I am afraid there will be 
+> > > point at which I will easily make a bisection mistake, as the 
+> > > responsiveness of the system varies over time, so it's not really a 
+> > > 100% objective measure.
+> > 
+> > So I will try a bisect, but it'll take some time so that I could claim it 
+> > to be trustworthy.
+> > 
+> > Therefore in case anyone has any idea in parallel, I am all ears.
+> 
+> This one is a candidate to focus on I think:
+> 
+> commit 181380b702eee1a9aca51354d7b87c7b08541fcf
+> Author: Yinghai Lu <yinghai@kernel.org>
+> Date:   Sat Feb 16 11:58:34 2013 -0700
+> 
+>     PCI/ACPI: Don't cache _PRT, and don't associate them with bus numbers
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/quirks.c |   93 +++++++++++++++++++++++++++++++++++++++++---------
- 1 file changed, 77 insertions(+), 16 deletions(-)
+This patch __fixed__ this problem for me in linux-next back in February.
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 0369fb6..7e5392c 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -383,14 +383,14 @@ static void quirk_ali7101_acpi(struct pci_dev *dev)
- }
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_AL,	PCI_DEVICE_ID_AL_M7101,		quirk_ali7101_acpi);
- 
--static void piix4_io_quirk(struct pci_dev *dev, const char *name, unsigned int port, unsigned int enable)
-+static int piix4_read_io(struct pci_dev *dev, struct resource *res, int port)
- {
- 	u32 devres;
- 	u32 mask, size, base;
-+	struct pci_bus_region bus_region;
- 
- 	pci_read_config_dword(dev, port, &devres);
--	if ((devres & enable) != enable)
--		return;
-+
- 	mask = (devres >> 16) & 15;
- 	base = devres & 0xffff;
- 	size = 16;
-@@ -400,23 +400,53 @@ static void piix4_io_quirk(struct pci_dev *dev, const char *name, unsigned int p
- 			break;
- 		size = bit;
- 	}
--	/*
--	 * For now we only print it out. Eventually we'll want to
--	 * reserve it (at least if it's in the 0x1000+ range), but
--	 * let's get enough confirmation reports first. 
--	 */
- 	base &= -size;
--	dev_info(&dev->dev, "%s PIO at %04x-%04x\n", name, base, base + size - 1);
-+
-+	bus_region.start = base;
-+	bus_region.end = base + size - 1;
-+	res->flags |= IORESOURCE_IO;
-+	pcibios_bus_to_resource(dev, res, &bus_region);
-+	dev_info(&dev->dev, "PIO at %pR\n", res);
-+
-+	return 0;
- }
-+static int piix4_write_io(struct pci_dev *dev, struct resource *res, int port)
-+{
-+	u32 devres;
-+	struct pci_bus_region bus_region;
-+
-+	pcibios_resource_to_bus(dev, &bus_region, res);
- 
--static void piix4_mem_quirk(struct pci_dev *dev, const char *name, unsigned int port, unsigned int enable)
-+	pci_read_config_dword(dev, port, &devres);
-+	devres &= 0xffff0000;
-+	devres |= bus_region.start & 0xffff;
-+	pci_write_config_dword(dev, port, devres);
-+
-+	return 0;
-+}
-+static struct resource_ops piix4_io_ops = {
-+	.read = piix4_read_io,
-+	.write = piix4_write_io,
-+};
-+static void piix4_io_quirk(struct pci_dev *dev, char *name, unsigned int port,
-+				unsigned int enable)
- {
- 	u32 devres;
--	u32 mask, size, base;
- 
- 	pci_read_config_dword(dev, port, &devres);
- 	if ((devres & enable) != enable)
- 		return;
-+
-+	pci_add_dev_addon_resource(dev, port, 0, &piix4_io_ops, name);
-+}
-+
-+static int piix4_read_mem(struct pci_dev *dev, struct resource *res, int port)
-+{
-+	u32 devres;
-+	u32 mask, size, base;
-+	struct pci_bus_region bus_region;
-+
-+	pci_read_config_dword(dev, port, &devres);
- 	base = devres & 0xffff0000;
- 	mask = (devres & 0x3f) << 16;
- 	size = 128 << 16;
-@@ -426,12 +456,43 @@ static void piix4_mem_quirk(struct pci_dev *dev, const char *name, unsigned int
- 			break;
- 		size = bit;
- 	}
--	/*
--	 * For now we only print it out. Eventually we'll want to
--	 * reserve it, but let's get enough confirmation reports first. 
--	 */
- 	base &= -size;
--	dev_info(&dev->dev, "%s MMIO at %04x-%04x\n", name, base, base + size - 1);
-+	bus_region.start = base;
-+	bus_region.end = base + size - 1;
-+	res->flags |= IORESOURCE_MEM;
-+	pcibios_bus_to_resource(dev, res, &bus_region);
-+	dev_info(&dev->dev, "MMIO at %pR\n", res);
-+
-+	return 0;
-+}
-+static int piix4_write_mem(struct pci_dev *dev, struct resource *res, int port)
-+{
-+	u32 devres;
-+	struct pci_bus_region bus_region;
-+
-+	pcibios_resource_to_bus(dev, &bus_region, res);
-+
-+	pci_read_config_dword(dev, port, &devres);
-+	devres &= 0x0000ffff;
-+	devres |= bus_region.start & 0xffff0000;
-+	pci_write_config_dword(dev, port, devres);
-+
-+	return 0;
-+}
-+static struct resource_ops piix4_mem_ops = {
-+	.read = piix4_read_mem,
-+	.write = piix4_write_mem,
-+};
-+static void piix4_mem_quirk(struct pci_dev *dev, char *name, unsigned int port,
-+				unsigned int enable)
-+{
-+	u32 devres;
-+
-+	pci_read_config_dword(dev, port, &devres);
-+	if ((devres & enable) != enable)
-+		return;
-+
-+	pci_add_dev_addon_resource(dev, port, 0, &piix4_mem_ops, name);
- }
- 
- /*
--- 
-1.7.10.4
+Rafael, did you hold back some ACPI patches from 3.9 that would have
+made fix no longer applicable?
+
 
