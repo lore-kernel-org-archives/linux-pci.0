@@ -1,154 +1,104 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:42275 "EHLO quartz.orcorp.ca"
+Received: from quartz.orcorp.ca ([184.70.90.242]:43512 "EHLO quartz.orcorp.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751843Ab3C0QOE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 27 Mar 2013 12:14:04 -0400
-Date: Wed, 27 Mar 2013 10:13:54 -0600
+	id S1755509Ab3CNRZ7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 14 Mar 2013 13:25:59 -0400
+Date: Thu, 14 Mar 2013 11:25:55 -0600
 From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Jingoo Han <jg1.han@samsung.com>
-Cc: 'Kukjin Kim' <kgene.kim@samsung.com>,
-	'Bjorn Helgaas' <bhelgaas@google.com>,
-	linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org,
+To: Thierry Reding <thierry.reding@avionic-design.de>
+Cc: Mitch Bradley <wmb@firmworks.com>, linux-pci@vger.kernel.org,
 	devicetree-discuss@lists.ozlabs.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	'Grant Likely' <grant.likely@secretlab.ca>,
-	'Andrew Murray' <andrew.murray@arm.com>,
-	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
-	'Thierry Reding' <thierry.reding@avionic-design.de>,
-	'Surendranath Gurivireddy Balla' <suren.reddy@samsung.com>,
-	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
-	'Thomas Abraham' <thomas.abraham@linaro.org>
-Subject: Re: [PATCH 6/6] ARM: dts: Add pcie controller node for Samsung
- EXYNOS5440 SoC
-Message-ID: <20130327161354.GB13830@obsidianresearch.com>
-References: <00c001ce277b$92b26ab0$b8174010$%han@samsung.com>
- <00c501ce277c$30e49dc0$92add940$%han@samsung.com>
- <20130325170448.GB16690@obsidianresearch.com>
- <020e01ce2ac6$14fd7850$3ef868f0$%han@samsung.com>
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH 24/32] pci: PCIe driver for Marvell Armada 370/XP systems
+Message-ID: <20130314172555.GA14048@obsidianresearch.com>
+References: <20130312210328.GA22702@obsidianresearch.com>
+ <20130312213006.GA23717@avionic-0098.mockup.avionic-design.de>
+ <20130312220854.GA23112@obsidianresearch.com>
+ <20130313081815.GD25940@avionic-0098.mockup.avionic-design.de>
+ <20130313170205.GB24042@obsidianresearch.com>
+ <20130313192628.GA28714@avionic-0098.mockup.avionic-design.de>
+ <5140E85A.3040900@firmworks.com>
+ <20130313220235.GA29895@avionic-0098.mockup.avionic-design.de>
+ <20130313222102.GA28336@obsidianresearch.com>
+ <20130314090120.GA2224@avionic-0098.mockup.avionic-design.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <020e01ce2ac6$14fd7850$3ef868f0$%han@samsung.com>
+In-Reply-To: <20130314090120.GA2224@avionic-0098.mockup.avionic-design.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 27, 2013 at 05:35:48PM +0900, Jingoo Han wrote:
+[trimm'd the cc list]
 
-> Here is the lspci -vv output.
-> I tested Exynos PCIe with e1000e lan card.
+On Thu, Mar 14, 2013 at 10:01:20AM +0100, Thierry Reding wrote:
+
+> It turns out that this works with the Tegra driver because it uses the
+> new of_pci_process_ranges() function and simply overwrites earlier
+> matches by subsequent ones.
 > 
-> 00:00.0 PCI bridge: Samsung Electronics Co Ltd Device a549 (rev 01) (prog-if 00 [Normal decode])
->         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr+ Stepping- SERR+ FastB2B- DisINTx-
->         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
->         Latency: 0, Cache Line Size: 64 bytes
->         Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
->         I/O behind bridge: 00000000-00000fff
->         Memory behind bridge: 40300000-403fffff
->         Prefetchable memory behind bridge: 40400000-404fffff
->         Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- <SERR- <PERR-
->         BridgeCtl: Parity+ SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
->                 PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
->         Capabilities: <access denied>
->         Kernel driver in use: pcieport
+> 	ranges = <0x82000000 0 0 0x80000000 0 0x00001000   /* port 0 registers */
+> 		  0x82000000 0 0 0x80001000 0 0x00001000   /* port 1 registers */
+> 		  0x81000000 0 0 0x82000000 0 0x00010000   /* downstream I/O */
+> 		  0x82000000 0 0 0xa0000000 0 0x10000000   /* non-prefetchable memory */
+> 		  0xc2000000 0 0 0xb0000000 0 0x10000000>; /* prefetchable memory */
 
-This is very similar to tegra, you should try to follow the same path
-as Thierry did.
+Okay.. There is still something funny here, the 3rd dword of the child
+address should not be 0 in every line and there shouldn't be overlaps
+in the child address space.
 
-Basically, have only one PCI host from Linux's perspective. This means
-the driver only calls pci_create_root_bus once. The driver makes all
-the ports available under that single root_bus. It does this by
-routing the config access to the four different MMIO config regions
-depending on the bus number and device number.
+I'm assuming 0x80000000, 0xa0000000 and 0xb0000000 are real CPU physical
+addresses?
 
-When done, lspci should look something like this:
+Then it should probably look like:
 
- 00:01.0 PCI bridge: Samsung Electronics Co Ltd Device a549 (rev 01) (prog-if 00 [Normal decode])
- 00:02.0 PCI bridge: Samsung Electronics Co Ltd Device a549 (rev 01) (prog-if 00 [Normal decode])
+ranges = <0x82000000 0 0x80000000  0x80000000  0 0x00001000   /* port 0 registers */
+	  0x82000000 0 0x80001000  0x80001000  0 0x00001000   /* port 1 registers */
+	  0x81000000 0          0  0x82000000  0 0x00010000   /* downstream I/O */
+	  0x82000000 0 0xa0000000  0xa0000000  0 0x10000000   /* non-prefetchable memory */
+	  0xc2000000 0 0xb0000000  0xb0000000  0 0x10000000>; /* prefetchable memory */
 
-Notice the bus number of both root port bridges is 0. This is now
-compliant with the PCI-E specification for root complex behavior. Bus
-0 is the root complex bus.
+Which says 'access to CPU address 0xa0000000 produces a PCI-E memory TLP with
+address 0xa0000000' - this is the 'normal' case, I assume that is what
+happens on tegra?
 
-The driver can then use this information in the bridges:
->         Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
-To route config transactions for bus != 0 to the proper port and
-correctly generate type 0 or type 1 config TLPs.
+It also says 'access to CPU address 0x82000000 produces a PCI-E IO TLP
+with address 0' - this translation is something Linux typically
+expects..
 
-I hope this makes sense. Tegra's implementation is very close to this,
-but the bus != 0 case will be more like Marvell. (If I read your
-driver right)
+Then you'd go on to have:
 
-> 10:00.0 PCI bridge: Samsung Electronics Co Ltd Device a549 (rev 01)
-> (prog-if 00 [Normal decode])
+               pci@1,0 {
+                        device_type = "pci";
+                        assigned-addresses = <0x82000000 0 0x80000000  0 0x1000>;
+                        reg = <0x000800 0 0 0 0>;
+               }
+               pci@2,0 {
+                        device_type = "pci";
+                        assigned-addresses = <0x82000000 0 0x80001000  0 0x1000>;
+                        reg = <0x001000 0 0 0 0>;
+               }
 
-There is something funny here, this is bus 0x10, but your bindings had
-bus-range 0 -> 0xf on both nodes.
+Notice I've made the upper dw of assigned-addresses's size 0 and
+included the full 3dw from the appropriate ranges line.
 
-> > However, based on your driver this HW looks similar to tegra, did you
-> > review how tegra is setup? Merging all the ports into a single domain
-> > is certainly preferred.
-> 
-> In Tegra case, the address of IO control register is same.
-> +	pcie-controller {
-> +		compatible = "nvidia,tegra20-pcie";
-> +		reg = <0x80003000 0x00000800   /* PADS registers */
-> +		       0x80003800 0x00000200   /* AFI registers */
-> +		       0x81000000 0x01000000   /* configuration space */
-> +		       0x90000000 0x10000000>; /* extended configuration space */
->
-> But, in Exynos case, address of IP control register is different
-> between PCIe0 and PCIe1.
+> So the above will actually work along with the corresponding root-port
+> "assigned-addresses" properties. I still don't like it much because I
+> don't think it accurately reflects the hardware. 
 
-tegra has both shared registers and per-port registers. The ones above
-are shared.
+There are lots of valid ways to model the same HW :(
 
-This message has the final DT bindings for the Marvell and tegra
-cases:
+Bear in mind, for the PCI case - the OF PCI bindings model the HW
+through the eyes of the abstractions in the PCI specification. That is
+to say, they are not supposed to be an exact representation of the on
+chip architecture.
 
-http://permalink.gmane.org/gmane.linux.kernel.pci/21209
+Perhaps this would be clearer if you used 'pcie-root-complex' as the
+name of the top level node?
 
-The per-port registers are being passed to the driver here:
+> same kludgy, non-spec conformant smack that my original proposal had
+> because it uses assigned-addresses for something it wasn't intended
+> to.
 
-   	     pci@1,0 {
- 	     	      device_type = "pci";
- 		      assigned-addresses = <0x82000800 0 0x80000000 0 0x1000>;
-                      reg = <0x000800 0 0 0 0>;
+Yes, only the top level 'reg' method avoids going outside any specs.
 
-via assigned-addresses.
-
-Marvell has no shared registers, you can see in its binding they are
-all passed through assigned-addresses.
-
-Also, the above DT nodes is representing the root port bridge PCI
-device. In your case it would be this:
-
- 00:01.0 PCI bridge: Samsung Electronics Co Ltd Device a549 (rev 01) (prog-if 00 [Normal decode])
-
-0x800 is the DT encoding of 00:01.0
-
-> > > +		ranges = <0x00000800 0 0x60000000 0x60000000 0 0x00200000   /* configuration space */
-> > 
-> > Do not include configuration space in ranges
-> 
-> How can I include configuration space?
-> Please let me know kindly :)
-
-There is no need to specify configuration space at all. If you copied
-this from an older tegra binding it was an early way to try and define
-per-port registers. After discussion the use of assigned-addresses was
-choosen instead.
- 
-> > It is usual to have an interrupt-map - have you tested that interrupts
-> > resolve properly?
->
-> There is no problem about interrupts.
-
-I see, you have exynos_pcie_map_irq in code. interrupt-map replaces
-that functionality in a standard way, and is more capable for edge
-cases.
-
-> However, I will consider an interrupt-map.
-
-You can copy the interrupt-map style from the Marvell driver, which
-seems like it matches your case..
-
+Regards,
 Jason
