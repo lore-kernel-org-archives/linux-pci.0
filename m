@@ -1,73 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:53200 "EHLO
-	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S932853Ab3CVJjv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 22 Mar 2013 05:39:51 -0400
-Date: Fri, 22 Mar 2013 09:39:36 +0000
-From: Andrew Murray <andrew.murray@arm.com>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"devicetree-discuss@lists.ozlabs.org"
-	<devicetree-discuss@lists.ozlabs.org>,
-	"rob.herring@calxeda.com" <rob.herring@calxeda.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>
-Subject: Re: [RFC PATCH RESEND v2] of/pci: Provide support for parsing PCI
- DT ranges property
-Message-ID: <20130322093936.GA875@arm.com>
-References: <1362140616-19346-1-git-send-email-Andrew.Murray@arm.com>
- <20130321170625.2a1bf226@skate>
+Received: from avon.wwwdotorg.org ([70.85.31.133]:52517 "EHLO
+	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751931Ab3CNE40 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 14 Mar 2013 00:56:26 -0400
+Message-ID: <51415879.5080902@wwwdotorg.org>
+Date: Wed, 13 Mar 2013 22:56:25 -0600
+From: Stephen Warren <swarren@wwwdotorg.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20130321170625.2a1bf226@skate>
+To: Thierry Reding <thierry.reding@avionic-design.de>
+CC: Mitch Bradley <wmb@firmworks.com>,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Nadav Haklai <nadavh@marvell.com>, linux-pci@vger.kernel.org,
+	devicetree-discuss@lists.ozlabs.org,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH 24/32] pci: PCIe driver for Marvell Armada 370/XP systems
+References: <20130312070852.GA6727@avionic-0098.mockup.avionic-design.de> <20130312155749.GA1820@obsidianresearch.com> <20130312203819.GA23221@avionic-0098.mockup.avionic-design.de> <20130312210328.GA22702@obsidianresearch.com> <20130312213006.GA23717@avionic-0098.mockup.avionic-design.de> <20130312220854.GA23112@obsidianresearch.com> <20130313081815.GD25940@avionic-0098.mockup.avionic-design.de> <20130313170205.GB24042@obsidianresearch.com> <20130313192628.GA28714@avionic-0098.mockup.avionic-design.de> <5140E85A.3040900@firmworks.com> <20130313213344.GA29402@avionic-0098.mockup.avionic-design.de>
+In-Reply-To: <20130313213344.GA29402@avionic-0098.mockup.avionic-design.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 21, 2013 at 04:06:25PM +0000, Thomas Petazzoni wrote:
-> Dear Andrew Murray,
+On 03/13/2013 03:33 PM, Thierry Reding wrote:
+> On Wed, Mar 13, 2013 at 10:58:02AM -1000, Mitch Bradley wrote: 
+> [...]
+>> In this case, the answer to "what does pcie_controller do?" is
+>> "it implements a PCI bus" below.  So 'device_type = "pci"' is
+>> appropriate.
 > 
-> On Fri,  1 Mar 2013 12:23:36 +0000, Andrew Murray wrote:
-> > This patch factors out common implementations patterns to reduce overall kernel
-> > code and provide a means for host bridge drivers to directly obtain struct
-> > resources from the DT's ranges property without relying on architecture specific
-> > DT handling. This will make it easier to write archiecture independent host bridge
-> > drivers and mitigate against further duplication of DT parsing code.
-> > 
-> > This patch can be used in the following way:
-> > 
-> > 	struct of_pci_range_iter iter;
-> > 	for_each_of_pci_range(&iter, np) {
-> > 
-> > 		//directly access properties of the address range, e.g.:
-> > 		//iter.pci_space, iter.pci_addr, iter.cpu_addr, iter.size or
-> > 		//iter.flags
-> > 
-> > 		//alternatively obtain a struct resource, e.g.:
-> > 		//struct resource res;
-> > 		//range_iter_fill_resource(iter, np, res);
-> > 	}
-> > 
-> > Additionally the implementation takes care of adjacent ranges and merges them
-> > into a single range (as was the case with powerpc and microblaze).
-> > 
-> > The modifications to microblaze, mips and powerpc have not been tested.
-> > 
-> > v2:
-> >   This follows on from suggestions made by Grant Likely
-> >   (marc.info/?l=linux-kernel&m=136079602806328)
-> > 
-> > Signed-off-by: Andrew Murray <Andrew.Murray@arm.com>
-> > Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
-> 
-> Thanks, I've tested this successfully with the Marvell PCIe driver. I'm
-> about to send a new version of the Marvell PCIe patch set that includes
-> this RFC proposal.
-> 
-> I only made two small changes compared to your version, detailed below.
+> Alright, that's 2 against 1. I don't have much of a choice but to
+> yield.
 
-Thanks for the feedback, all looks good to me. Do I need to give ack?
+Just one note here though re: how the Tegra HW works:
 
-Andrew Murray
+The Tegra "PCIe controller" HW translates from a SoC-internal bus to
+another SoC-internal bus. The "PCIe root ports" translate from that
+second SoC-internal bus to a PCIe bus. That's exactly why the PCIe
+root port configuration registers don't show up via type 0 PCIe
+configuration transactions. Thus, from a HW perspective, it really is
+true that the PCIe root ports are PCI devices, but the "PCIe
+controller" really isn't anything to do with PCIe.
