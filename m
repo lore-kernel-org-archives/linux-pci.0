@@ -1,103 +1,195 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rs140.luxsci.com ([74.205.78.114]:60241 "EHLO rs140.luxsci.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753557Ab3CHTwT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 8 Mar 2013 14:52:19 -0500
-Message-ID: <513A3F4F.2090501@firmworks.com>
-Date: Fri, 08 Mar 2013 09:43:11 -1000
-From: Mitch Bradley <wmb@firmworks.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-To: Thierry Reding <thierry.reding@avionic-design.de>
-CC: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>, linux-pci@vger.kernel.org,
-	devicetree-discuss@lists.ozlabs.org,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
+In-Reply-To: <51414F02.3020209@gmail.com>
+References: <1362666556-10036-1-git-send-email-yxlraid@gmail.com>
+	<CAErSpo7feQK7pXD=moA_hf=Y-j82oZZKwfDNzfo2Ea7i9VPxtA@mail.gmail.com>
+	<F766E4F80769BD478052FB6533FA745D25F436856A@SC-VEXCH4.marvell.com>
+	<CAErSpo6RDC+QyyN4kwt7-kU5d8b1iu+zCQZTGZPxCJU2UicTCA@mail.gmail.com>
+	<F766E4F80769BD478052FB6533FA745D25F436861C@SC-VEXCH4.marvell.com>
+	<CAL-B5D05V124xbG7z6UK9UWJ5PqmAVkqShdrMjWSGHDpTYZLQQ@mail.gmail.com>
+	<51414F02.3020209@gmail.com>
+Date: Thu, 14 Mar 2013 09:02:16 -0600
+Message-ID: <CAL-B5D19g7L=52dLjtCOHvtNXLd+DGhFZhHraytUuKhBd6OvdA@mail.gmail.com>
+Subject: Re: [PATCH 2/2] PCI: fix system hang issue of Marvell SATA host controller
+From: Myron Stowe <myron.stowe@gmail.com>
+To: Robert Hancock <hancockrwd@gmail.com>
+Cc: Xiangliang Yu <yuxiangl@marvell.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH 24/32] pci: PCIe driver for Marvell Armada 370/XP systems
-References: <20130306121118.GA17079@avionic-0098.mockup.avionic-design.de> <20130306180946.GA2433@obsidianresearch.com> <20130307080832.GD3451@avionic-0098.mockup.avionic-design.de> <20130307174955.GC20840@obsidianresearch.com> <20130307194830.GA1811@avionic-0098.mockup.avionic-design.de> <20130307200235.GB20695@obsidianresearch.com> <20130307204726.GB1811@avionic-0098.mockup.avionic-design.de> <51392B4D.9040404@gmail.com> <20130308071443.GA5772@avionic-0098.mockup.avionic-design.de> <20130308165228.GB4094@obsidianresearch.com> <20130308191227.GA6551@avionic-0098.mockup.avionic-design.de>
-In-Reply-To: <20130308191227.GA6551@avionic-0098.mockup.avionic-design.de>
+	yxlraid <yxlraid@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 3/8/2013 9:12 AM, Thierry Reding wrote:
-> On Fri, Mar 08, 2013 at 09:52:28AM -0700, Jason Gunthorpe wrote:
->> On Fri, Mar 08, 2013 at 08:14:44AM +0100, Thierry Reding wrote:
->>> On Thu, Mar 07, 2013 at 06:05:33PM -0600, Rob Herring wrote:
->>>> On 03/07/2013 02:47 PM, Thierry Reding wrote:
->>> [...]
->>>>> In a nutshell (since some of the context isn't quoted anymore) the
->>>>> problem that we're trying to solve is that some of the embedded SoCs
->>>>> require per-root-port registers for configuration. The PCI DT
->>>>> specification doesn't make any provisions for this. A few alternatives
->>>>> have been discussed so far:
->>>>
->>>> I'm not sure I follow. This is different than the host controller
->>>> registers? Why would this not just be multiple entries in the reg property?
+On Wed, Mar 13, 2013 at 10:16 PM, Robert Hancock <hancockrwd@gmail.com> wrote:
+> On 03/08/2013 09:18 PM, Myron Stowe wrote:
+>>
+>> On Thu, Mar 7, 2013 at 11:51 PM, Xiangliang Yu <yuxiangl@marvell.com>
+>> wrote:
 >>>
->>> Well the register regions are per root-port. On Tegra20 there's 2 of
->>> them, Tegra30 has 3 and if I understand correctly Marvell can have up to
->>> 10 (!). Adding all of them to the reg property of the host controller
->>> could work but it needs some way to match the reg entry to the root port
->>> similar to option 1 below.
+>>> Hi, Bjorn
+>>>
+>>>>>>> Fix system hang issue: if first accessed resource file of BAR0 ~
+>>>>>>> BAR4, system will hang after executing lspci command
+>>>>>>
+>>>>>>
+>>>>>> This needs more explanation.  We've already read the BARs by the time
+>>>>>> header quirks are run, so apparently it's not just the mere act of
+>>>>>> accessing a BAR that causes a hang.
+>>>>>>
+>>>>>> We need to know exactly what's going on here.  For example, do BARs
+>>>>>> 0-4 exist?  Does the device decode accesses to the regions described
+>>>>>> by the BARs?  The PCI core has to know what resources the device uses,
+>>>>>> so if the device decodes accesses, we can't just throw away the
+>>>>>> start/end information.
+>>>>>
+>>>>> The BARs 0-4 is exist and the PCI device is enable IO space, but user
+>>>>> access
+>>>>
+>>>> the regions file by udevadm command with info parameter, the system will
+>>>> hang.
+>>>>>
+>>>>> Like this: udevadmin info --attribut-walk
+>>>>
+>>>> --path=/sys/device/pci-device/000:*.
+>>>>>
+>>>>> Because the device is just AHCI host controller, don't need the BAR0 ~
+>>>>> 4 region
+>>>>
+>>>> file.
+>>>>>
+>>>>> Is my explanation ok for the patch?
+>>>>
+>>>>
+>>>> No, I still don't know what causes the hang; I only know that udevadm
+>>>> can trigger it.  I don't want to just paper over the problem until we
+>>>> know what the root cause is.
+>>>>
+>>>> Does "lspci -H1 -vv" also cause a hang?  What about "setpci -s<dev>
+>>>> BASE_ADDRESS_0"?  "setpci -H1 -s<dev> BASE_ADDRESS_0"?
+>>>
+>>> The commands are ok because the commands can't find the device after
+>>> accessing IO port.
 >>
->> Thomas just posted an implementation like this, please see:
 >>
->> http://www.spinics.net/lists/arm-kernel/msg228749.html
+>> Xiangliang:
+>>
+>> Sorry but I didn't understand your response above, could you elaborate
+>> a little more?
+>>
+>>
+>> Are the first five BARs of the suspect device all mapping to I/O port
+>> space - i.e. similar to something like this (a capture and inclusion
+>> of an 'lspci' of the suspect device would be nice to see):
+>>    00:1f.2 SATA controller:
+>>      Region 0: I/O ports at 1860 [size=8]
+>>      Region 1: I/O ports at 1814 [size=4]
+>>      Region 2: I/O ports at 1818 [size=8]
+>>      Region 3: I/O ports at 1810 [size=4]
+>>      Region 4: I/O ports at 1840 [size=32]
+>>      Region 5: Memory at f2827000 (32-bit, non-prefetchable) [size=2K]
+>>
+>> You have done a good job isolating the issue so far.  As Bjorn noted;
+>> it's looking as if the problem is with accessing the I/O port space
+>> mapped by the suspect device's BAR(s), not with accessing the BAR(s)
+>> in the device's configuration space.
+>
+>
+> It would seem so. My question is what is accessing the IO port space in the
+> first place. BAR5 is the MMIO region used by the AHCI driver. BARs 0-4 are
+> the legacy SFF-compatible ATA ports. Nothing should be messing with those IO
+> ports while AHCI is enabled. It's expected that doing that will break
+> things.
+>
+> If something in udev is randomly groveling around inside the resource files
+> for those BARs in sysfs, that seems like a really bad thing.
 
-The example in that posting looks messed up to me.
+Thanks Robert
 
-1) It has "reg = <0x0800 0 0 0 0>", but 0x0800 0 0  is not a valid
-address in the address space defined by its parent - because the form of
-the parent's ranges property indicates that it's a PCI-style address
-form.  0x0800 0 0 lacks the top bits that indicate non-relocatable and
-the type (I/O, memory, etc).
+I'll see if I can get someone knowledgable about udev to look at this
+since it seems to be the suspect currently.
 
-2) The "@0,0" and "@1,0" suffixes do not correspond to the reg values
-<0x0800 0 0 0 0> and <0x1000 0 0 0 0> using any rule that I know.
+Hopefully this will lead somewhere as the core isn't, and shouldn't
+be, concerned with the contents or access limitations of those
+regions.  If the 9125 doesn't respond correctly to 32-bit IO port
+reads and adjustments for such end up needing to be accounted for then
+they should to be covered by the driver and not the PCI core.
 
-What is address space represented by the pcie-controller node?  reg
-properties in child nodes must contain proper addresses in some
-well-defined address space.  It looks like this example is trying to put
-half of the PCI bus abstraction in the pcie-controller node and the rest
-in the pcie sub-nodes, with some handwaving address-space splicing
-between the two.  That's not kosher.  Each level of the tree needs a
-coherent address space definition, otherwise the address space
-"calculus" breaks.
-
-> 
-> Oh well. I don't like it, but if that's the way it has to be, then so be
-> it. Any reason why the reg-names can't match the root port's node name
-> so that it can be used directly instead of going through hoops to
-> construct a string from extra parameters? Like below:
-> 
-> 	pcie-controller {
-> 		regs = <...>;
-> 		reg-names = ..., "pcie@1,0", "pcie@2,0";
-> 
-> 		pcie@1,0 {
-> 			...
-> 		};
-> 
-> 		pcie@2,0 {
-> 			...
-> 		};
-> 	};
-> 
-> Thierry
-> 
-> 
-> 
-> _______________________________________________
-> devicetree-discuss mailing list
-> devicetree-discuss@lists.ozlabs.org
-> https://lists.ozlabs.org/listinfo/devicetree-discuss
-> 
+>
+>
+>>
+>> As you responded positively to earlier, as proposed the suspect device
+>> will still actively be decoding accesses to the regions described by
+>> the BARs.  Because the device is actively decoding the PCI core can't
+>> just throw away the BAR's corresponding resource regions, as the patch
+>> is currently doing, due to the possibility of another device being
+>> added at a later time.
+>>
+>> If a subsequent device were added later, the core may need to try and
+>> allocate resources for it and, in the worst case scenario, the core
+>> could end up allocating resources that conflict with this suspect
+>> device as a consequence of the suspect device's original resource
+>> allocations having been silently thrown away.  The result would be
+>> both devices believing they each exclusively own the same set (or
+>> subset) of I/O port mappings and thus both actively decoding accesses
+>> to such which.  A situation that would obviously be disastrous.
+>>
+>> There is still something going on here that we still do not
+>> understand.  Could you please capture the following information to
+>> help further isolate the issue:
+>>    A 'dmesg' log from the system which was booted using both the
+>> "debug" and "ignore_loglevel" boot parameters, a 'lspci -xxx -s<dev>'
+>> capture, and a 'lspci -vv' capture.
+>>
+>> Thanks,
+>>   Myron
+>>
+>>> The root cause is that accessing of IO port will make the chip go bad.
+>>> So, the point of the patch is don't export capability of the IO accessing.
+>>>
+>>>>
+>>>>>>
+>>>>>>> ---
+>>>>>>>   drivers/pci/quirks.c |   15 +++++++++++++++
+>>>>>>>   1 files changed, 15 insertions(+), 0 deletions(-)
+>>>>>>>
+>>>>>>> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+>>>>>>> index 0369fb6..d49f8dc 100644
+>>>>>>> --- a/drivers/pci/quirks.c
+>>>>>>> +++ b/drivers/pci/quirks.c
+>>>>>>> @@ -44,6 +44,21 @@ static void quirk_mmio_always_on(struct pci_dev
+>>>>>>> *dev)
+>>>>>>>   DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_ANY_ID, PCI_ANY_ID,
+>>>>>>>                                  PCI_CLASS_BRIDGE_HOST, 8,
+>>>>>>
+>>>>>> quirk_mmio_always_on);
+>>>>>>>
+>>>>>>>
+>>>>>>> +/* The BAR0 ~ BAR4 of Marvell 9125 device can't be accessed
+>>>>>>> +*  by IO resource file, and need to skip the files
+>>>>>>> +*/
+>>>>>>> +static void quirk_marvell_mask_bar(struct pci_dev *dev)
+>>>>>>> +{
+>>>>>>> +       int i;
+>>>>>>> +
+>>>>>>> +       for (i = 0; i < 5; i++)
+>>>>>>> +               if (dev->resource[i].start)
+>>>>>>> +                       dev->resource[i].start =
+>>>>>>> +                               dev->resource[i].end = 0;
+>>>>>>> +}
+>>>>>>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x9125,
+>>>>>>> +                               quirk_marvell_mask_bar);
+>>>>>>> +
+>>>>>>>   /* The Mellanox Tavor device gives false positive parity errors
+>>>>>>>    * Mark this device with a broken_parity_status, to allow
+>>>>>>>    * PCI scanning code to "skip" this now blacklisted device.
+>>>>>>> --
+>>>>>>> 1.7.5.4
+>>>>>>>
+>>> --
+>>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>
