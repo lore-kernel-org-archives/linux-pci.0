@@ -1,40 +1,59 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>, Ram Pai <linuxram@us.ibm.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
-	Myron Stowe <myron.stowe@redhat.com>
-Subject: [PATCH v3 15/27] PCI, x86: Use for_each_pci_resource() with noassign_bars
-Date: Wed, 13 Mar 2013 16:28:10 -0700
-Message-Id: <1363217302-14383-16-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1363217302-14383-1-git-send-email-yinghai@kernel.org>
-References: <1363217302-14383-1-git-send-email-yinghai@kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Jiri Kosina <jkosina@suse.cz>
+Cc: Alan Stern <stern@rowland.harvard.edu>,
+	Peter Hurley <peter@hurleysoftware.com>,
+	Thomas Meyer <thomas@m3y3r.de>,
+	Shawn Starr <shawn.starr@rogers.com>,
+	Kernel development list <linux-kernel@vger.kernel.org>,
+	USB list <linux-usb@vger.kernel.org>,
+	linux-acpi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: Re: [3.9-rc1] irq 16: nobody cared  (was [3.9-rc1] very poor interrupt responses)
+Date: Thu, 14 Mar 2013 17:46:10 +0100
+Message-ID: <1460519.ejNFI1DrGk@vostro.rjw.lan>
+In-Reply-To: <alpine.LNX.2.00.1303141709000.30118@pobox.suse.cz>
+References: <Pine.LNX.4.44L0.1303141050310.1983-100000@iolanthe.rowland.org> <alpine.LNX.2.00.1303141555090.30118@pobox.suse.cz> <alpine.LNX.2.00.1303141709000.30118@pobox.suse.cz>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Replace those open code, and make code more readable.
+On Thursday, March 14, 2013 05:09:59 PM Jiri Kosina wrote:
+> On Thu, 14 Mar 2013, Jiri Kosina wrote:
+> 
+> > > > I don't think I have seen this message on rc1+ (8343bce, to be precise), 
+> > > > but I have definitely seen sluggish system response on that kernel as 
+> > > > well.
+> > > > 
+> > > > Attaching lspci, /proc/interrupts and dmesg. 
+> > > 
+> > > Can you try to do a git bisect for this?  Is the sluggish system 
+> > > response clear enough that you can tell reliably when it is present and 
+> > > when it isn't?
+> > 
+> > That was my first thought, but unfortunately I am afraid there will be 
+> > point at which I will easily make a bisection mistake, as the 
+> > responsiveness of the system varies over time, so it's not really a 
+> > 100% objective measure.
+> 
+> So I will try a bisect, but it'll take some time so that I could claim it 
+> to be trustworthy.
+> 
+> Therefore in case anyone has any idea in parallel, I am all ears.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: x86@kernel.org
-Cc: Myron Stowe <myron.stowe@redhat.com>
----
- arch/x86/pci/common.c |    3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+This one is a candidate to focus on I think:
 
-diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-index 901177d..fe85836 100644
---- a/arch/x86/pci/common.c
-+++ b/arch/x86/pci/common.c
-@@ -136,8 +136,7 @@ static void pcibios_fixup_device_resources(struct pci_dev *dev)
- 		* resource so the kernel doesn't attmept to assign
- 		* it later on in pci_assign_unassigned_resources
- 		*/
--		for (bar = 0; bar <= PCI_STD_RESOURCE_END; bar++) {
--			bar_r = &dev->resource[bar];
-+		for_each_pci_resource(dev, bar_r, bar, PCI_NOIOV_RES & ~PCI_BRIDGE_RES & ~PCI_ROM_RES) {
- 			if (bar_r->start == 0 && bar_r->end != 0) {
- 				bar_r->flags = 0;
- 				bar_r->end = 0;
+commit 181380b702eee1a9aca51354d7b87c7b08541fcf
+Author: Yinghai Lu <yinghai@kernel.org>
+Date:   Sat Feb 16 11:58:34 2013 -0700
+
+    PCI/ACPI: Don't cache _PRT, and don't associate them with bus numbers
+
+Thanks,
+Rafael
+
+
 -- 
-1.7.10.4
-
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
