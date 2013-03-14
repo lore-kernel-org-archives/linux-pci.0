@@ -1,64 +1,85 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vb0-f54.google.com ([209.85.212.54]:50550 "EHLO
-	mail-vb0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754340Ab3COUJs convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 Mar 2013 16:09:48 -0400
-Received: by mail-vb0-f54.google.com with SMTP id l1so2134864vba.13
-        for <linux-pci@vger.kernel.org>; Fri, 15 Mar 2013 13:09:47 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CANB7UkH-vF813Zx+bK3UY_ZWvi+rKQK_u1+vzZyRPKVLh=tcbw@mail.gmail.com>
-References: <CANB7UkHhjUYkSt7j=P41qGO-BApiukLNcFr86kX4hJ7s+j_iYw@mail.gmail.com>
- <CAL-B5D18zhTNP=aie=O1KDCOzr0-teu8itDQ9tEYPK=X+ZCiMQ@mail.gmail.com> <CANB7UkH-vF813Zx+bK3UY_ZWvi+rKQK_u1+vzZyRPKVLh=tcbw@mail.gmail.com>
-From: Jorge Alberto Garcia <jorge.garcia.gonzalez@gmail.com>
-Date: Fri, 15 Mar 2013 14:09:17 -0600
-Message-ID: <CAPfrtUeO1=BDsiQ5hVzgbjNmUQUqzS-nqfqWAio-YfWiHX7ZXA@mail.gmail.com>
-Subject: Re: Questions about PCIe
-To: Aurelien Cedeyn <aurelien.cedeyn@gmail.com>
-Cc: Myron Stowe <myron.stowe@gmail.com>, linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <1363282018.26318.10.camel@thor.lan>
+Subject: Re: [3.9-rc1] irq 16: nobody cared  (was [3.9-rc1] very poor
+ interrupt responses)
+From: Peter Hurley <peter@hurleysoftware.com>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Jiri Kosina <jkosina@suse.cz>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Thomas Meyer <thomas@m3y3r.de>,
+	Shawn Starr <shawn.starr@rogers.com>,
+	Kernel development list <linux-kernel@vger.kernel.org>,
+	USB list <linux-usb@vger.kernel.org>,
+	linux-acpi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Date: Thu, 14 Mar 2013 13:26:58 -0400
+In-Reply-To: <5657408.cYX6iimiA4@vostro.rjw.lan>
+References: <Pine.LNX.4.44L0.1303141050310.1983-100000@iolanthe.rowland.org>
+	 <1460519.ejNFI1DrGk@vostro.rjw.lan> <1363280764.26318.4.camel@thor.lan>
+	 <5657408.cYX6iimiA4@vostro.rjw.lan>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
-you can read  a very complete guide for PCIE from this book
+On Thu, 2013-03-14 at 18:22 +0100, Rafael J. Wysocki wrote:
+> On Thursday, March 14, 2013 01:06:04 PM Peter Hurley wrote:
+> > On Thu, 2013-03-14 at 17:46 +0100, Rafael J. Wysocki wrote:
+> > > On Thursday, March 14, 2013 05:09:59 PM Jiri Kosina wrote:
+> > > > On Thu, 14 Mar 2013, Jiri Kosina wrote:
+> > > > 
+> > > > > > > I don't think I have seen this message on rc1+ (8343bce, to be precise), 
+> > > > > > > but I have definitely seen sluggish system response on that kernel as 
+> > > > > > > well.
+> > > > > > > 
+> > > > > > > Attaching lspci, /proc/interrupts and dmesg. 
+> > > > > > 
+> > > > > > Can you try to do a git bisect for this?  Is the sluggish system 
+> > > > > > response clear enough that you can tell reliably when it is present and 
+> > > > > > when it isn't?
+> > > > > 
+> > > > > That was my first thought, but unfortunately I am afraid there will be 
+> > > > > point at which I will easily make a bisection mistake, as the 
+> > > > > responsiveness of the system varies over time, so it's not really a 
+> > > > > 100% objective measure.
+> > > > 
+> > > > So I will try a bisect, but it'll take some time so that I could claim it 
+> > > > to be trustworthy.
+> > > > 
+> > > > Therefore in case anyone has any idea in parallel, I am all ears.
+> > > 
+> > > This one is a candidate to focus on I think:
+> > > 
+> > > commit 181380b702eee1a9aca51354d7b87c7b08541fcf
+> > > Author: Yinghai Lu <yinghai@kernel.org>
+> > > Date:   Sat Feb 16 11:58:34 2013 -0700
+> > > 
+> > >     PCI/ACPI: Don't cache _PRT, and don't associate them with bus numbers
+> > 
+> > This patch __fixed__ this problem for me in linux-next back in February.
+> > 
+> > Rafael, did you hold back some ACPI patches from 3.9 that would have
+> > made fix no longer applicable?
+> 
+> No, I didn't.
+> 
+> I'm afraid, though, that the fix might not be effective on some systems for a
+> reason that's unclear at the moment.
+> 
+> So in fact the one to check is commit 4f535093cf ("PCI: Put pci_dev in device
+> tree as early as possible") and if the problem doesn't appear before that, we
+> need to figure out why the fix may not be sufficient.
 
-PCI Express System Architecture  [Mindshare Inc. ]
+I agree. 
 
-Hope it helps!
+Commit 4f535093cf ("PCI: Put pci_dev in device tree as early as
+possible") is the likely culprit, and "Don't cache _PRT..." is probably
+an insufficient fix.
 
-On Wed, Mar 13, 2013 at 9:23 AM, Aurelien Cedeyn
-<aurelien.cedeyn@gmail.com> wrote:
-> 2013/3/12 Myron Stowe <myron.stowe@gmail.com>:
->> On Tue, Mar 12, 2013 at 8:09 AM, Aurelien Cedeyn
->> <aurelien.cedeyn@gmail.com> wrote:
->>> Hi,
->>>
->>> I am trying to figure out how the PCI Express specification is
->>> implemented in the Linux kernel.
->>>
->>> I read[1] that the PCI Express devices can be accessed like in a
->>> network with a specific protocol with read/wirte requests.
->>> I looked at the kernel source code and i didn't see anything about
->>> such of PCIe packets.
->>>
->>> Is this kind of mecanism in the PCIe implementation of the linux
->>> kernel  ? Is this "network" protocol completly transparent and only
->>> managed at the lower layers ?
->>
->> The transaction protocols of PCI, PCI-X, and PCI Express are all
->> transparent, completely managed by the hardware devices themselves.
->>
->> Perhaps there are snippets of some of the protocol's aspects exposed,
->> such as when there are errors - which are partially exposed by AER, or
->> protocol attributes like Max Payload Setting (MPS) but even those
->> examples may be considered stretching things in the context you are
->> asking about.
->
-> Thanks for the answer. It's completly clear for me now.
->
-> --
-> Aurélien Cedeyn
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Not so sure about the other reporters though because they had active
+devices on those USB ports.
+
+Regards,
+Peter Hurley
+
+
