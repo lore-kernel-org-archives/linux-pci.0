@@ -1,128 +1,159 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:54226 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751410Ab3CZQwg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Mar 2013 12:52:36 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Russell King <linux@arm.linux.org.uk>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+Received: from moutng.kundenserver.de ([212.227.126.186]:51299 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751426Ab3CNUjT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 14 Mar 2013 16:39:19 -0400
+Date: Thu, 14 Mar 2013 21:38:58 +0100
+From: Thierry Reding <thierry.reding@avionic-design.de>
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: Mitch Bradley <wmb@firmworks.com>, linux-pci@vger.kernel.org,
 	devicetree-discuss@lists.ozlabs.org,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Maen Suleiman <maen@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Olof Johansson <olof@lixom.net>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Mitch Bradley <wmb@firmworks.com>,
-	Andrew Murray <andrew.murray@arm.com>
-Subject: [RFCv1 06/11] irqchip: armada-370-xp: use a separate mpic node
-Date: Tue, 26 Mar 2013 17:52:21 +0100
-Message-Id: <1364316746-8702-7-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1364316746-8702-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1364316746-8702-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH 24/32] pci: PCIe driver for Marvell Armada 370/XP systems
+Message-ID: <20130314203858.GA4539@avionic-0098.mockup.avionic-design.de>
+References: <20130312213006.GA23717@avionic-0098.mockup.avionic-design.de>
+ <20130312220854.GA23112@obsidianresearch.com>
+ <20130313081815.GD25940@avionic-0098.mockup.avionic-design.de>
+ <20130313170205.GB24042@obsidianresearch.com>
+ <20130313192628.GA28714@avionic-0098.mockup.avionic-design.de>
+ <5140E85A.3040900@firmworks.com>
+ <20130313220235.GA29895@avionic-0098.mockup.avionic-design.de>
+ <20130313222102.GA28336@obsidianresearch.com>
+ <20130314090120.GA2224@avionic-0098.mockup.avionic-design.de>
+ <20130314172555.GA14048@obsidianresearch.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="ibTvN161/egqYuK8"
+In-Reply-To: <20130314172555.GA14048@obsidianresearch.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In the Marvell hardware, MSI interrupts are supported using doorbells,
-and those doorbells are handled through registers that are part of the
-registers managed by the IRQ controller driver: they are the same
-registers used for handling IPI interrupts. Therefore, it is clearly
-the responsability of the Armada 370/XP IRQ controller driver to
-expose the functionality of handling MSI interrupts.
 
-However, we need the driver to expose two different IRQ domains: one
-for the main interrupt controller itself, and one for the MSI
-interrupt controller. In order to achieve this, we will create two
-subnodes in the interrupt-controller@d0020000 node: one subnode for
-the main interrupt controller, and one subnode for the MSI interrupt
-controller. The two irq domains can't be registered on the same DT
-node, otherwise when irq_find_host() gets used by of_irq_map_one() to
-resolve IRQs of devices, they may find the MSI interrupt controller
-instead of the main interrupt controller.
+--ibTvN161/egqYuK8
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Note that both the parent and the child node need to have the
-'interrupt-controller' empty property:
+On Thu, Mar 14, 2013 at 11:25:55AM -0600, Jason Gunthorpe wrote:
+> [trimm'd the cc list]
+>=20
+> On Thu, Mar 14, 2013 at 10:01:20AM +0100, Thierry Reding wrote:
+>=20
+> > It turns out that this works with the Tegra driver because it uses the
+> > new of_pci_process_ranges() function and simply overwrites earlier
+> > matches by subsequent ones.
+> >=20
+> > 	ranges =3D <0x82000000 0 0 0x80000000 0 0x00001000   /* port 0 registe=
+rs */
+> > 		  0x82000000 0 0 0x80001000 0 0x00001000   /* port 1 registers */
+> > 		  0x81000000 0 0 0x82000000 0 0x00010000   /* downstream I/O */
+> > 		  0x82000000 0 0 0xa0000000 0 0x10000000   /* non-prefetchable memory=
+ */
+> > 		  0xc2000000 0 0 0xb0000000 0 0x10000000>; /* prefetchable memory */
+>=20
+> Okay.. There is still something funny here, the 3rd dword of the child
+> address should not be 0 in every line and there shouldn't be overlaps
+> in the child address space.
+>=20
+> I'm assuming 0x80000000, 0xa0000000 and 0xb0000000 are real CPU physical
+> addresses?
 
-  * The interrupt-controller property is needed in the main interrupt
-   controller node (interrupt-controller@d0020000) because the
-   of_irq_init() function skips nodes that are matching the given
-   compatible string, but that don't have the interrupt-controller
-   property.
+Yes.
 
- * The interrupt-controller property is needed in the child interrupt
-   controller node (main-intc@d0020000) otherwise the resolution done
-   by of_irq_map_one() doesn't work.
+> Then it should probably look like:
+>=20
+> ranges =3D <0x82000000 0 0x80000000  0x80000000  0 0x00001000   /* port 0=
+ registers */
+> 	  0x82000000 0 0x80001000  0x80001000  0 0x00001000   /* port 1 register=
+s */
+> 	  0x81000000 0          0  0x82000000  0 0x00010000   /* downstream I/O =
+*/
+> 	  0x82000000 0 0xa0000000  0xa0000000  0 0x10000000   /* non-prefetchabl=
+e memory */
+> 	  0xc2000000 0 0xb0000000  0xb0000000  0 0x10000000>; /* prefetchable me=
+mory */
+>=20
+> Which says 'access to CPU address 0xa0000000 produces a PCI-E memory TLP =
+with
+> address 0xa0000000' - this is the 'normal' case, I assume that is what
+> happens on tegra?
+>=20
+> It also says 'access to CPU address 0x82000000 produces a PCI-E IO TLP
+> with address 0' - this translation is something Linux typically
+> expects..
+>=20
+> Then you'd go on to have:
+>=20
+>                pci@1,0 {
+>                         device_type =3D "pci";
+>                         assigned-addresses =3D <0x82000000 0 0x80000000  =
+0 0x1000>;
+>                         reg =3D <0x000800 0 0 0 0>;
+>                }
+>                pci@2,0 {
+>                         device_type =3D "pci";
+>                         assigned-addresses =3D <0x82000000 0 0x80001000  =
+0 0x1000>;
+>                         reg =3D <0x001000 0 0 0 0>;
+>                }
+>=20
+> Notice I've made the upper dw of assigned-addresses's size 0 and
+> included the full 3dw from the appropriate ranges line.
 
-This commit is a preparation to this, by adding the subnode for the
-main interrupt controller, and by ensuring that the IRQ domain that
-corresponds to this IRQ controller is associated to this IRQ node.
+Okay, that all makes sense.
 
-Note that the Device Tree binding documentation is updated in the
-following patch, when the MSI interrupt support is added to the
-armada-370-xp irqchip driver.
+> > So the above will actually work along with the corresponding root-port
+> > "assigned-addresses" properties. I still don't like it much because I
+> > don't think it accurately reflects the hardware.=20
+>=20
+> There are lots of valid ways to model the same HW :(
+>=20
+> Bear in mind, for the PCI case - the OF PCI bindings model the HW
+> through the eyes of the abstractions in the PCI specification. That is
+> to say, they are not supposed to be an exact representation of the on
+> chip architecture.
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
----
- arch/arm/boot/dts/armada-370-xp.dtsi |    9 ++++++---
- drivers/irqchip/irq-armada-370-xp.c  |    9 +++++++--
- 2 files changed, 13 insertions(+), 5 deletions(-)
+That seems to be at odds with most other uses of DT that I've come
+across. Generally the guideline seems to be to describe hardware
+irrespective of the underlying implementation and leave it up to the
+driver to translate the DT description into something the OS can use.
 
-diff --git a/arch/arm/boot/dts/armada-370-xp.dtsi b/arch/arm/boot/dts/armada-370-xp.dtsi
-index 7704829..de054ed 100644
---- a/arch/arm/boot/dts/armada-370-xp.dtsi
-+++ b/arch/arm/boot/dts/armada-370-xp.dtsi
-@@ -28,11 +28,14 @@
- 		};
- 	};
- 
--	mpic: interrupt-controller@d0020000 {
-+	interrupt-controller@d0020000 {
- 	      compatible = "marvell,mpic";
--	      #interrupt-cells = <1>;
--	      #size-cells = <1>;
- 	      interrupt-controller;
-+
-+	      mpic: main-intc@d0020000 {
-+		    #interrupt-cells = <1>;
-+		    interrupt-controller;
-+	      };
- 	};
- 
- 	coherency-fabric@d0020200 {
-diff --git a/drivers/irqchip/irq-armada-370-xp.c b/drivers/irqchip/irq-armada-370-xp.c
-index ad1e642..4b2a6d7 100644
---- a/drivers/irqchip/irq-armada-370-xp.c
-+++ b/drivers/irqchip/irq-armada-370-xp.c
-@@ -254,6 +254,7 @@ armada_370_xp_handle_irq(struct pt_regs *regs)
- static int __init armada_370_xp_mpic_of_init(struct device_node *node,
- 					     struct device_node *parent)
- {
-+	struct device_node *mpic_node;
- 	u32 control;
- 
- 	main_int_base = of_iomap(node, 0);
-@@ -264,9 +265,13 @@ static int __init armada_370_xp_mpic_of_init(struct device_node *node,
- 
- 	control = readl(main_int_base + ARMADA_370_XP_INT_CONTROL);
- 
-+	mpic_node = of_get_child_by_name(node, "main-intc");
- 	armada_370_xp_mpic_domain =
--		irq_domain_add_linear(node, (control >> 2) & 0x3ff,
--				&armada_370_xp_mpic_irq_ops, NULL);
-+		irq_domain_add_linear(mpic_node, (control >> 2) & 0x3ff,
-+				      &armada_370_xp_mpic_irq_ops, NULL);
-+
-+	if (!armada_370_xp_mpic_domain)
-+		panic("Unable to add Armada_370_Xp MPIC irq domain (DT)\n");
- 
- 	if (!armada_370_xp_mpic_domain)
- 		panic("Unable to add Armada_370_Xp MPIC irq domain (DT)\n");
--- 
-1.7.9.5
+> Perhaps this would be clearer if you used 'pcie-root-complex' as the
+> name of the top level node?
 
+Perhaps. I'm not sure.
+
+> > same kludgy, non-spec conformant smack that my original proposal had
+> > because it uses assigned-addresses for something it wasn't intended
+> > to.
+>=20
+> Yes, only the top level 'reg' method avoids going outside any specs.
+
+Yes. It has a couple of other disadvantages, though, so if what we've
+been discussing here is in any way acceptable I'd rather go with that
+solution, even if I'm not entirely happy about it either.
+
+Thierry
+
+--ibTvN161/egqYuK8
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQIcBAEBAgAGBQJRQjViAAoJEN0jrNd/PrOhjLMP/0nS9+2R8Q6TmOUWMPwGW/9g
+T6mq2ZnWFEA40PyU2FFtyRdp7sleuWzx5ZUaXuLJ5RQ2XYOPXDhaIC/+r3iGsgeK
+VN+XlOkOrPuylqrmhyAOUqlk32WOuypUyI7rr9Si3l+7GfyagZobYIfuvusolrkN
+Jz6M2dR+27M6oWs3+rygsfW5bgOtxwE4XkqEH3NPFYpHW1YDThJdDqAFGz1Aadh1
+zPEFyfGP9u4Bgd+UmLzrUAdMYWwfXGoTtLrAAI0Z47IxLdhDS9JskE03Zj5QdQJw
+rEso3CkGKnL5tUbbyRfz1RMFvUKu/A8y0Oua0beDMUUqysYXbsw82PUxba675N4H
+mHNckfj/8kZuxQx+OGfdMucP/lFZ8ZqNE8+2qPabg0z1hL+K36tAG/rRgL1pOV2X
+7MM925GFLs4XsGYXNrn6lBmnBnuWlSmD08y+KmrniLoXFDFzyKcqOtzfygcKVe9D
++O21o/rvjnlzJJcK5HY0LTVpKFveIDNd6yKrRLhnbw7AnN1OSC3SD+86L6AukOvu
+g0WnrPp8UL0LT4fdtqIGv5fI77GZcnhItCpYUxz/qx+E0lmN02TUrWxyPFmqOZtT
+2ue7axWKuCDGMUjGEBe+LG7jQZMfgp05dRRJTAb/84erBsjifTjAz4r/GNA4PlWG
+kypEybh3GU+wIkWwM+ws
+=v5K4
+-----END PGP SIGNATURE-----
+
+--ibTvN161/egqYuK8--
