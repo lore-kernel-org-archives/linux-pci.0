@@ -1,93 +1,120 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:55144 "EHLO quartz.orcorp.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755581Ab3CGUCo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 7 Mar 2013 15:02:44 -0500
-Date: Thu, 7 Mar 2013 13:02:35 -0700
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Thierry Reding <thierry.reding@avionic-design.de>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+Received: from moutng.kundenserver.de ([212.227.17.9]:54751 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752294Ab3CNJCv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 14 Mar 2013 05:02:51 -0400
+Date: Thu, 14 Mar 2013 10:01:20 +0100
+From: Thierry Reding <thierry.reding@avionic-design.de>
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: Mitch Bradley <wmb@firmworks.com>,
+	Lior Amsalem <alior@marvell.com>,
 	Russell King - ARM Linux <linux@arm.linux.org.uk>,
 	Jason Cooper <jason@lakedaemon.net>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	linux-pci@vger.kernel.org, Eran Ben-Avi <benavi@marvell.com>,
+	Andrew Lunn <andrew@lunn.ch>, linux-pci@vger.kernel.org,
+	devicetree-discuss@lists.ozlabs.org,
+	Eran Ben-Avi <benavi@marvell.com>,
 	Nadav Haklai <nadavh@marvell.com>,
 	Maen Suleiman <maen@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
+	Shadi Ammouri <shadi@marvell.com>,
 	Tawfik Bayouk <tawfik@marvell.com>,
 	linux-arm-kernel@lists.infradead.org
 Subject: Re: [PATCH 24/32] pci: PCIe driver for Marvell Armada 370/XP systems
-Message-ID: <20130307200235.GB20695@obsidianresearch.com>
-References: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com>
- <1360686546-24277-25-git-send-email-thomas.petazzoni@free-electrons.com>
- <20130212223511.GB31555@obsidianresearch.com>
- <20130306105441.4d24033e@skate>
- <20130306121118.GA17079@avionic-0098.mockup.avionic-design.de>
- <20130306180946.GA2433@obsidianresearch.com>
- <20130307080832.GD3451@avionic-0098.mockup.avionic-design.de>
- <20130307174955.GC20840@obsidianresearch.com>
- <20130307194830.GA1811@avionic-0098.mockup.avionic-design.de>
+Message-ID: <20130314090120.GA2224@avionic-0098.mockup.avionic-design.de>
+References: <20130312203819.GA23221@avionic-0098.mockup.avionic-design.de>
+ <20130312210328.GA22702@obsidianresearch.com>
+ <20130312213006.GA23717@avionic-0098.mockup.avionic-design.de>
+ <20130312220854.GA23112@obsidianresearch.com>
+ <20130313081815.GD25940@avionic-0098.mockup.avionic-design.de>
+ <20130313170205.GB24042@obsidianresearch.com>
+ <20130313192628.GA28714@avionic-0098.mockup.avionic-design.de>
+ <5140E85A.3040900@firmworks.com>
+ <20130313220235.GA29895@avionic-0098.mockup.avionic-design.de>
+ <20130313222102.GA28336@obsidianresearch.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130307194830.GA1811@avionic-0098.mockup.avionic-design.de>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="UlVJffcvxoiEqYs2"
+In-Reply-To: <20130313222102.GA28336@obsidianresearch.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 07, 2013 at 08:48:30PM +0100, Thierry Reding wrote:
-> On Thu, Mar 07, 2013 at 10:49:55AM -0700, Jason Gunthorpe wrote:
-> > On Thu, Mar 07, 2013 at 09:08:32AM +0100, Thierry Reding wrote:
-> [...]
-> > > > Both have various problems, but I think I prefer the first one as it
-> > > > doesn't conflate the contoller registers and host apertures in a
-> > > > single ranges..
-> > > 
-> > > I think a better alternative would be (and this matches what Thomas has
-> > > said elsewhere) to use something like the first alternative but move the
-> > > regs property into the pcie@0,X nodes. That would save us from having to
-> > > index a property in the parent. At least from a DT point of view I find
-> > > that to be a more consistent representation.
-> > 
-> > You are thinking a new property 'host-controller-regs' or the like?
-> 
-> Well, something shorter would be nice, but that's the general idea, yes.
-> As I mentioned before, for Tegra these registers aren't actually any
-> controller specific registers but rather a window to access the PCI
-> configuration space for the root ports.
 
-Yes, I understand - but in this DT model configuration space access is
-a host controller function, not a PCI-device function. Anyhow I was
-also thinking that by the choice of the name it could do translation
-from the host-controller scope, not from the bridge scope - so the
-extra elements in ranges could be avoided as well. Hence the name..
+--UlVJffcvxoiEqYs2
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> I don't think assigned-addresses is a good fit either. The PCI binding
-> document is equally specific about it as it is about the reg property.
-> So in my opinion a separate property would be a better choice. The only
-> big obstacle is that it needs to be somehow hooked up with the OF core
-> so that proper address translation can be performed.
+On Wed, Mar 13, 2013 at 04:21:02PM -0600, Jason Gunthorpe wrote:
+> On Wed, Mar 13, 2013 at 11:02:35PM +0100, Thierry Reding wrote:
+> =20
+> > Does that look about correct?
+>=20
+> By my reading of the spec the entries in ranges should not
+> have the b,d,f bits set..
+>=20
+> Although it is not a big stretch to include them..
+>=20
+> > Now the code will actually match the first entry and assume that it
+> > represents the non-prefetchable 32-bit memory space and program the
+> > controller to forward accesses to the 0x80000000-0x80000fff region
+> > as PCI memory write transactions.
+>=20
+> Yah, it makes a mess of determining the host bridge aperture. Require
+> the aperture to be first/last?
+>=20
+> Make use of the 2nd dword?
+>=20
+> Go back to the idea of the top level reg?
 
-Yes, agreed.
+It turns out that this works with the Tegra driver because it uses the
+new of_pci_process_ranges() function and simply overwrites earlier
+matches by subsequent ones.
 
-My suggestion is to get the OF experts like GKL/Rob H/etc to weigh in
-on a preferred approach to this problem with the goal of standardizing
-across all PCI host drivers. Seems like there are 2 main options
-(outside regs + regnames/etc or new 'regs' in the bridge) and 1 hacky
-one (assigned addresses)
+	ranges =3D <0x82000000 0 0 0x80000000 0 0x00001000   /* port 0 registers */
+		  0x82000000 0 0 0x80001000 0 0x00001000   /* port 1 registers */
+		  0x81000000 0 0 0x82000000 0 0x00010000   /* downstream I/O */
+		  0x82000000 0 0 0xa0000000 0 0x10000000   /* non-prefetchable memory */
+		  0xc2000000 0 0 0xb0000000 0 0x10000000>; /* prefetchable memory */
 
-> One possible solution that wouldn't be too hard to implement is to
-> provide a new function (say of_get_named_address()) similar to
-> of_get_address() which doesn't get the name of the register property
-> from the struct of_bus but from a parameter and call that function from
-> another new function similar to of_address_to_resource() that also gets
-> the property name from a parameter. I can't think of a better name for
-> the latter than of_named_address_to_resource(), which is rather long.
+So the second entry would overwrite the non-prefetchable memory region
+as established by the first entry. Finally that will also be overwritten
+by the fourth entry.
 
-Seems like a reasonable API, maybe pass in a be32*/length pointer
-instead of a name to be more flexible?
+So the above will actually work along with the corresponding root-port
+"assigned-addresses" properties. I still don't like it much because I
+don't think it accurately reflects the hardware. Furthermore it has the
+same kludgy, non-spec conformant smack that my original proposal had
+because it uses assigned-addresses for something it wasn't intended to.
+Also the mapping is actually not correct, because the first two entries
+don't refer to 32-bit memory space. They really map configuration space
+and therefore the ss field is wrong IMO (it should be 00, but that won't
+work with the OF core). One of the very early versions of my Tegra PCIe
+patch series actually introduced an IORESOURCE_CS type to account for
+this but it didn't go anywhere and became obsolete when I switched to
+the new binding which side-steps this issue by not using the PCI bus'
+translation mechanism.
 
-Cheers,
-Jason
+Thierry
+
+--UlVJffcvxoiEqYs2
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQIcBAEBAgAGBQJRQZHgAAoJEN0jrNd/PrOhJ+cP+wYhgW6TV6RRi1LeCwj8aSG2
+ko3qcYg3qm/HmzygMyRMwhEfWx8oizT6TdbmlkrSTpbEBXxd5lS8ZydmX2p7uRLe
+3jOcQXW+cy21fmSLfMbhbWrkAXsCcTRO4mchJYRJzzfJTgf3Fxo5RvLXZBFMw4Jn
+5TjUEShQX3M/6DomvEDyMbQV4SDh97AcRnbJQjfGfdRVCzcM0wy5L6hr35dW1Jb+
+Iemn9fIiyJcNaPpbkIClHX03TfQBkUJ9N2oQ6M1rg7M1GbSypbFPmFFSc6H6Kond
+Z7qWC726VBRXAoIk0l1K/J1Afq8easpwX/xV7+XZlkzd7hXbuF7LHbFkL0qqGgoJ
+Gq7GVBZy/DkOir4qSMVXFCpHJYqk2gtrrjBUSiJBFG59dECyf6kwLEROuNaxFNMo
+xA9W46roZJFwE61EcQfPRYjkctaHL65a0kShx1fEhqd1kQYcvn82g2WkuzSoVQ4N
+xWMTHQhP6JOc24xqPb0X+a3/Yt94mY7DpOWmhg5kfVmH24gGsnIPjOSbg/EtvrW/
+IZzOLerGelU8xOVwebCjh2v+HarklCstlAzaGHeu848u8ts4HjA6rJPwUSK91KVx
+ILO/AKquEGTfNHy8MlfeXoAY7RJe7I1MiDtxWxT4gla57/4+Z8kwjwXHpywWZr19
+F9Nv/aqbVzFbrQ8HiXHM
+=FBlS
+-----END PGP SIGNATURE-----
+
+--UlVJffcvxoiEqYs2--
