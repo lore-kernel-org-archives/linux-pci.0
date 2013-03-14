@@ -1,93 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:56066 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751212Ab3CZVl2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Mar 2013 17:41:28 -0400
-Date: Tue, 26 Mar 2013 22:41:23 +0100
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Received: from moutng.kundenserver.de ([212.227.126.171]:61660 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753028Ab3CNVh6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 14 Mar 2013 17:37:58 -0400
+Date: Thu, 14 Mar 2013 22:37:41 +0100
+From: Thierry Reding <thierry.reding@avionic-design.de>
 To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+Cc: Mitch Bradley <wmb@firmworks.com>, linux-pci@vger.kernel.org,
 	devicetree-discuss@lists.ozlabs.org,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Maen Suleiman <maen@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Olof Johansson <olof@lixom.net>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Mitch Bradley <wmb@firmworks.com>,
-	Andrew Murray <andrew.murray@arm.com>
-Subject: Re: [RFCv1 07/11] irqchip: armada-370-xp: add MSI support to
- interrupt controller driver
-Message-ID: <20130326224123.2526124b@skate>
-In-Reply-To: <20130326211403.GA5198@obsidianresearch.com>
-References: <1364316746-8702-1-git-send-email-thomas.petazzoni@free-electrons.com>
-	<201303261707.41563.arnd@arndb.de>
-	<20130326181754.33b89559@skate>
-	<201303261838.23246.arnd@arndb.de>
-	<20130326214613.30fbdddf@skate>
-	<20130326211403.GA5198@obsidianresearch.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH 24/32] pci: PCIe driver for Marvell Armada 370/XP systems
+Message-ID: <20130314213741.GA17186@avionic-0098.mockup.avionic-design.de>
+References: <20130313081815.GD25940@avionic-0098.mockup.avionic-design.de>
+ <20130313170205.GB24042@obsidianresearch.com>
+ <20130313192628.GA28714@avionic-0098.mockup.avionic-design.de>
+ <5140E85A.3040900@firmworks.com>
+ <20130313220235.GA29895@avionic-0098.mockup.avionic-design.de>
+ <20130313222102.GA28336@obsidianresearch.com>
+ <20130314090120.GA2224@avionic-0098.mockup.avionic-design.de>
+ <20130314172555.GA14048@obsidianresearch.com>
+ <20130314210926.GA9098@avionic-0098.mockup.avionic-design.de>
+ <20130314212921.GB18505@obsidianresearch.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="8t9RHnE3ZwKMSgU+"
+In-Reply-To: <20130314212921.GB18505@obsidianresearch.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Jason Gunthorpe,
 
-On Tue, 26 Mar 2013 15:14:03 -0600, Jason Gunthorpe wrote:
-> On Tue, Mar 26, 2013 at 09:46:13PM +0100, Thomas Petazzoni wrote:
-> 
-> > To me, the topology of the hardware is really that a single device
-> > provides two features: the main interrupt controller and the MSI
-> > interrupt controller. But I will adapt to whatever DT binding you
-> > propose.
-> 
-> No.. the HW is a single device that provides an interrupt on register
-> write capability, so it ideally should be a single DT node..
+--8t9RHnE3ZwKMSgU+
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-No, here you're only talking about the interrupt on register write
-capability (used for doorbells), but the interrupt controller is also
-used for all other devices. Not only IPIs and MSIs are handled by this
-piece of code.
+On Thu, Mar 14, 2013 at 03:29:21PM -0600, Jason Gunthorpe wrote:
+> On Thu, Mar 14, 2013 at 10:09:26PM +0100, Thierry Reding wrote:
+>=20
+> > > ranges =3D <0x82000000 0 0x80000000  0x80000000  0 0x00001000   /* po=
+rt 0 registers */
+> > > 	  0x82000000 0 0x80001000  0x80001000  0 0x00001000   /* port 1 regi=
+sters */
+> > > 	  0x81000000 0          0  0x82000000  0 0x00010000   /* downstream =
+I/O */
+> > > 	  0x82000000 0 0xa0000000  0xa0000000  0 0x10000000   /* non-prefetc=
+hable memory */
+> > > 	  0xc2000000 0 0xb0000000  0xb0000000  0 0x10000000>; /* prefetchabl=
+e memory */
+> > >=20
+> > > Which says 'access to CPU address 0xa0000000 produces a PCI-E memory =
+TLP with
+> > > address 0xa0000000' - this is the 'normal' case, I assume that is what
+> > > happens on tegra?
+> > >=20
+> > > It also says 'access to CPU address 0x82000000 produces a PCI-E IO TLP
+> > > with address 0' - this translation is something Linux typically
+> > > expects..
+> >=20
+> > Both of the above paragraphs are true. However accesses to the windows
+> > at 0x80000000 and 0x80001000 don't generate memory TLPs but type 0
+> > configuration space TLPs.
+>=20
+> By my understanding access to 0x80000000/0x80001000 doesn't generate
+> any externally visible TLPs?
 
-> The need to distinguish MSI vs IPI vs other usage is completely a side
-> effect of how Linux's IRQ and PCI layers are hooked together today.
+Now that you mention it, that's probably correct, yes.
 
-Yes. And since I live in today's world, I try to adapt somewhat to
-it :-)
+> IHMO modeling this register space as a controller-internal MMIO region
+> associated with the bridge is reasonable... After all, you are
+> iomapping it and accessing it with readl/writel - those are MMIO
+> functions..
 
-> > > I still wonder if the real solution shouldn't instead be to make the
-> > > irq domain code MSI aware. For instance, you don't really need a
-> > > cell to describe an interrupt because the interrupt number is
-> 
-> Some kind of generic way for an irq chip driver to say 'here, I can
-> provide some MSI interrupts' and then for the PCI layer to say 'irq
-> layer, find me a driver that can provision a MSI with XXX properties' ?
-> 
-> This need to stack an irq chip under a MSI is not something I think
-> the kernel has had to support before, so new common code is probably
-> needed...
-> 
-> The interrupt chip should not need to know what the ultimate consumer
-> of the interrupt capability will be, it just needs to tell the
-> consumer 'write D to physical address A and irq I will trigger'.
+Yes, I think that'd be okay.
 
-I honestly don't see much difference between what you're saying here
-and what the proposed code is doing. The IRQ driver says "hay, I
-provide two IRQ domains, one is named mpic, one is named msi". And then
-all the regular devices have interrupt-parent = <&mpic> to say "I use
-legacy interrupts from that controller", and the PCIe controller has
-msi-parent = <&msi> to say "I use MSI interrupt from that controller".
+Thierry
 
-Best regards,
+--8t9RHnE3ZwKMSgU+
+Content-Type: application/pgp-signature
 
-Thomas
--- 
-Thomas Petazzoni, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQIcBAEBAgAGBQJRQkMlAAoJEN0jrNd/PrOh7DIP/i6GYJv4Kt+ubdF6DYCvWzIj
+6TJ9XCcrrVD6uU4MJRNuFnve/CRduMzH9J1M9hgBDDIxA2QB7SrSMV+6cYOg4fz0
+4g689oTDv4SgoZWiQ9BsA/aluzlR1nfWcd0IGOz0VppcWZ9t0o8EJ6UH4y7d0VEw
+1qPDdvdxDZgKMLPUfKdZziI+EAwTQrdj5cvujNXSw7MLZAxtRhRCQxc/9CbuB4xa
+cNd8w867fkzVuWBEQs/zc2ATUBIJZKmCKwCjpNzDnQV4bc2GNSRojrc/gKeHpwfH
+/bmtjuoy5aTxN8F3VWJ/Id33jYZH2U9k+Zq5YZ2L1RKSOYBjdFWxe7iHkb8VVLFW
+pShQcMV2izYEpdTxpHMwueda1g4QRz4rN6tel97B1Xpc5VeRUFlrP4GdSIDE4Nii
+jt3ndeV49xEouiE/urjH2jp45HpljpwiRwIu2bIoKY74sZtRwkFNuVDV8W2ZfDdh
+7MnaMLIMkBUAOuLS+0k7mhaEfQyRQzrTP0NbINUgMxXV5DbGxZXlYBa+Jnn8TdRl
+sDQlTCqGOlEjtgpKT0XywWNbYwXwV5UyKVCleiEiInDnaPR+NtDsAJRpc2Ym9Xr8
+fHqgE+pfqasX/bXMyAaTp6t+Mau8+Nd6Yzbue8Cl/58dA+3us09KEgVvqNx9a5+r
+zBnOCiE+Xi5MYJBDly/p
+=ZtWA
+-----END PGP SIGNATURE-----
+
+--8t9RHnE3ZwKMSgU+--
