@@ -1,74 +1,39 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from canardo.mork.no ([148.122.252.1]:35838 "EHLO canardo.mork.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752698Ab3CRRU7 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 Mar 2013 13:20:59 -0400
-From: =?utf-8?Q?Bj=C3=B8rn_Mork?= <bjorn@mork.no>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: Greg KH <gregkh@linuxfoundation.org>, Kay Sievers <kay@vrfy.org>,
-	Myron Stowe <mstowe@redhat.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	linux-hotplug@vger.kernel.org, linux-pci@vger.kernel.org,
-	yuxiangl@marvell.com, yxlraid@gmail.com,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] udevadm-info: Don't access sysfs 'resource<N>' files
-References: <20130316213512.2974.17303.stgit@amt.stowe>
-	<20130316213519.2974.38954.stgit@amt.stowe>
-	<20130316221159.GA3702@kroah.com> <1363477853.2423.25.camel@zim.stowe>
-	<20130317010317.GB9641@kroah.com>
-	<1363493482.16793.69.camel@ul30vt.home>
-	<20130317053611.GC948@kroah.com>
-	<1363527503.16793.75.camel@ul30vt.home>
-	<CAPXgP12vmx9j_jJW3HXb2deRapFKAofTVzEbdyS=Z1VUBswE_Q@mail.gmail.com>
-	<1363623880.24132.351.camel@bling.home>
-	<20130318164126.GA20565@kroah.com>
-	<1363625463.24132.367.camel@bling.home>
-Date: Mon, 18 Mar 2013 18:20:46 +0100
-In-Reply-To: <1363625463.24132.367.camel@bling.home> (Alex Williamson's
-	message of "Mon, 18 Mar 2013 10:51:03 -0600")
-Message-ID: <87obeg39qp.fsf@nemi.mork.no>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from e24smtp04.br.ibm.com ([32.104.18.25]:53647 "EHLO
+	e24smtp04.br.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757873Ab3CNRqB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 14 Mar 2013 13:46:01 -0400
+Received: from /spool/local
+	by e24smtp04.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <lucaskt@linux.vnet.ibm.com>;
+	Thu, 14 Mar 2013 14:45:58 -0300
+Received: from d24relay03.br.ibm.com (d24relay03.br.ibm.com [9.13.184.25])
+	by d24dlp02.br.ibm.com (Postfix) with ESMTP id 253AE1DC004E
+	for <linux-pci@vger.kernel.org>; Thu, 14 Mar 2013 13:45:56 -0400 (EDT)
+Received: from d24av01.br.ibm.com (d24av01.br.ibm.com [9.8.31.91])
+	by d24relay03.br.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id r2EHjD5R23658704
+	for <linux-pci@vger.kernel.org>; Thu, 14 Mar 2013 14:45:13 -0300
+Received: from d24av01.br.ibm.com (loopback [127.0.0.1])
+	by d24av01.br.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id r2EHjtl1013433
+	for <linux-pci@vger.kernel.org>; Thu, 14 Mar 2013 14:45:55 -0300
+From: lucaskt@linux.vnet.ibm.com
+To: dri-devel@lists.freedesktop.org
+Cc: linux-pci@vger.kernel.org,
+	Alex Deucher <alexander.deucher@amd.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, brking@linux.vnet.ibm.com,
+	cascardo@linux.vnet.ibm.com
+Subject: PCI Speed Cap Fixes for ppc64
+Date: Thu, 14 Mar 2013 14:45:45 -0300
+Message-Id: <1363283147-8852-1-git-send-email-lucaskt@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Alex Williamson <alex.williamson@redhat.com> writes:
+This patch series at first moves get_speed_cap_mask from DRM to PCI, fixes all
+radeon references (only driver that uses it) and then implements a architecture
+specific implementation for ppc64 for it.
 
-> At least for KVM the kernel fix is the addition of the vfio driver which
-> gives us a non-sysfs way to do this.  If this problem was found a few
-> years later and we were ready to make the switch I'd support just
-> removing these resource files.  In the meantime we have userspace that
-> depends on this interface, so I'm open to suggestions how to fix it.
+This is good because the drm_pcie_get_speed_cap_mask function is more
+architecture goo than something drm-specific, and also because this way
+architectures that have different means of obtaining these values can do it
+their way.
 
-I am puzzled by a couple of things in this discussion:
-
-1) do you seriously mean that a userspace application (any, not just
-   udevadm or qemu or whatever) should be able to read and write these
-   registers while the device is owned by a driver?  How is that ever
-   going to work?
-
-2) is it really so that a device can be so fundamentally screwed up by
-   reading some registers, that a later driver probe cannot properly
-   reinitialize it?
-
-I would have thought that the solution to all this was to return -EINVAL
-on any attemt to read or write these files while a driver is bound to
-the device.  If userspace is going to use the API, then the application
-better unbind any driver first.
-
-Or? Am I missing something here?
-
-> If we want to blacklist this specific device, that's fine, but as others
-> have pointed out it's really a class problem.  Perhaps we report 1 byte
-> extra for the file length where EOF-1 is an enable byte?  Is there
-> anything else in file ops that we could use to make it slightly more
-> complicated than open(), read() to access the device?  Thanks,
-
-If there really are devices which cannot handle reading at all, and
-cannot be reset to a sane state by later driver initialization, then a
-blacklist could be added for those devices.  This should not be a common
-problem.
-
-
-
-Bjørn
