@@ -1,83 +1,115 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:34319 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753994Ab3C0URV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Mar 2013 16:17:21 -0400
-Date: Wed, 27 Mar 2013 21:17:15 +0100
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	devicetree-discuss@lists.ozlabs.org,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Maen Suleiman <maen@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Olof Johansson <olof@lixom.net>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Mitch Bradley <wmb@firmworks.com>,
-	Andrew Murray <andrew.murray@arm.com>
-Subject: Re: [RFC PATCHv1 3/5] arm: mach-kirkwood: seperate PCIe window init
- from other windows
-Message-ID: <20130327211715.27058a10@skate>
-In-Reply-To: <20130327183534.GA9643@obsidianresearch.com>
-References: <1364407504-13524-1-git-send-email-thomas.petazzoni@free-electrons.com>
-	<1364407504-13524-4-git-send-email-thomas.petazzoni@free-electrons.com>
-	<20130327183534.GA9643@obsidianresearch.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from cantor2.suse.de ([195.135.220.15]:47523 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751089Ab3CNPjW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 14 Mar 2013 11:39:22 -0400
+Date: Thu, 14 Mar 2013 16:39:19 +0100 (CET)
+From: Jiri Kosina <jkosina@suse.cz>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Peter Hurley <peter@hurleysoftware.com>,
+	Thomas Meyer <thomas@m3y3r.de>,
+	Shawn Starr <shawn.starr@rogers.com>,
+	Kernel development list <linux-kernel@vger.kernel.org>,
+	USB list <linux-usb@vger.kernel.org>,
+	linux-acpi@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: [3.9-rc1] irq 16: nobody cared  (was [3.9-rc1] very poor interrupt
+ responses)
+In-Reply-To: <Pine.LNX.4.44L0.1303141111350.1983-100000@iolanthe.rowland.org>
+Message-ID: <alpine.LNX.2.00.1303141634440.30118@pobox.suse.cz>
+References: <Pine.LNX.4.44L0.1303141111350.1983-100000@iolanthe.rowland.org>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Jason Gunthorpe,
+On Thu, 14 Mar 2013, Alan Stern wrote:
 
-On Wed, 27 Mar 2013 12:35:34 -0600, Jason Gunthorpe wrote:
-> On Wed, Mar 27, 2013 at 07:05:02PM +0100, Thomas Petazzoni wrote:
+> > > Can you try to do a git bisect for this?  Is the sluggish system 
+> > > response clear enough that you can tell reliably when it is present and 
+> > > when it isn't?
+> > 
+> > That was my first thought, but unfortunately I am afraid there will be 
+> > point at which I will easily make a bisection mistake, as the 
+> > responsiveness of the system varies over time, so it's not really a 
+> > 100% objective measure.
 > 
-> This all looks really great to me, I hope to try it as well when I get
-> time. But just one small suggestion:
+> All right.
 > 
-> > diff --git a/arch/arm/mach-kirkwood/board-dt.c b/arch/arm/mach-kirkwood/board-dt.c
-> > index ea49476..1b4675f 100644
-> > +++ b/arch/arm/mach-kirkwood/board-dt.c
-> > @@ -72,6 +72,8 @@ static void __init kirkwood_of_clk_init(void)
-> >  
-> >  static void __init kirkwood_dt_init(void)
-> >  {
-> > +	int needs_pcie_wins = 1;
-> > +
-> >  	pr_info("Kirkwood: %s, TCLK=%d.\n", kirkwood_id(), kirkwood_tclk);
-> >  
-> >  	/*
-> > @@ -144,6 +146,9 @@ static void __init kirkwood_dt_init(void)
-> >  	if (of_machine_is_compatible("usi,topkick"))
-> >  		usi_topkick_init();
-> >  
-> > +	if (needs_pcie_wins)
-> > +		kirkwood_setup_pcie_wins();
-> > +
-> >  	of_platform_populate(NULL, kirkwood_dt_match_table, NULL, NULL);
-> >  }
+> There have been only three significant changes to uhci-hcd since last 
+> summer, and two of them appear to be completely unrelated to this 
+> issue.  The three commits are
 > 
-> Moving the window setup into mach-kirkwood/pcie.c:kirkwood_pcie_init
-> would avoid this needs_pcie_wins thing since kirkwood_pcie_init will
-> naturally never be called once the other patches are applied.
+> 	3171fcabb169  USB: uhci: beautify source code
+> 	13996ca7afd5  USB: uhci: check buffer length to avoid memory 
+> 			overflow
+> 	0f815a0a700b  USB: UHCI: fix IRQ race during initialization
+> 
+> Reverting the first two almost certainly will not have any effect, but
+> you may as well try it anyway.  The third commit may be relevant.
 
-Ah, yes, right. I now remember you made this suggestion when reviewing
-the mvebu-mbus patch set, and I replied that I would do it when I'll
-start working on using the pci-mvebu driver on Kirkwood. It looks like
-it's time for me to honor this commitment :-)
+I have reverted all three commits, and the "nobody cared" is still there. 
 
-Thanks for the feedback,
+> If you revert all three and still see the problem then it must be
+> caused by changes outside of the USB stack.  Differences in interrupt
+> routing could be a result of changes to PCI or ACPI.  Have you compared 
+> the current /proc/interrupts with versions from earlier kernels without 
+> this problem?
 
-Thomas
+The diff of stripped-down (without CPU statistics) /proc/interrupts from 
+some oldish working 3.1 and the current tree:
+
+--- /tmp/interrupts-old.txt	2013-03-14 16:30:46.938710286 +0100
++++ /tmp/interrupts-new.txt	2013-03-14 16:30:18.954571413 +0100
+@@ -3,27 +3,28 @@
+   8:IO-APIC-edge      rtc0
+   9:IO-APIC-fasteoi   acpi
+  12:IO-APIC-edge      i8042
+- 16:IO-APIC-fasteoi   uhci_hcd:usb6
+- 17:IO-APIC-fasteoi   uhci_hcd:usb7
+- 18:IO-APIC-fasteoi   ata_generic, uhci_hcd:usb8
+- 19:IO-APIC-fasteoi   ehci_hcd:usb2
+- 20:IO-APIC-fasteoi   uhci_hcd:usb3
+- 21:IO-APIC-fasteoi   uhci_hcd:usb4
+- 22:IO-APIC-fasteoi   uhci_hcd:usb5
+- 23:IO-APIC-fasteoi   ehci_hcd:usb1
++ 16:IO-APIC-fasteoi   uhci_hcd:usb4
++ 17:IO-APIC-fasteoi   uhci_hcd:usb5
++ 18:IO-APIC-fasteoi   ata_generic, uhci_hcd:usb6
++ 19:IO-APIC-fasteoi   ehci_hcd:usb8
++ 20:IO-APIC-fasteoi   uhci_hcd:usb1
++ 21:IO-APIC-fasteoi   uhci_hcd:usb2
++ 22:IO-APIC-fasteoi   uhci_hcd:usb3
++ 23:IO-APIC-fasteoi   ehci_hcd:usb7, i801_smbus
+  40:PCI-MSI-edge      PCIe PME
+  41:PCI-MSI-edge      PCIe PME
+  42:PCI-MSI-edge      PCIe PME
+  43:PCI-MSI-edge      ahci
+  44:PCI-MSI-edge      i915
+  45:PCI-MSI-edge      eth0
+- 46:PCI-MSI-edge      iwlagn
++ 46:PCI-MSI-edge      iwlwifi
+  47:PCI-MSI-edge      snd_hda_intel
+ NMI:Non-maskable interrupts
+ LOC:Local timer interrupts
+ SPU:Spurious interrupts
+ PMI:Performance monitoring interrupts
+ IWI:IRQ work interrupts
++RTR:APIC ICR read retries
+ RES:Rescheduling interrupts
+ CAL:Function call interrupts
+ TLB:TLB shootdowns
+
+IRQ16 is routed differently (usb4 vs usb6), so that might be relevant.
+
+> Is occurrence of the "nobody cared" connected with any particular 
+> device?  Somebody reported a similar problem not long ago (although IIRC 
+> it was for OHCI rather than UHCI) which appeared to be related to 
+> activity on the built-in webcam.
+
+Will check this. No external devices are plugged in, I think the only 
+internal one it has is bluetooth chip. I'll try turning it off.
+
 -- 
-Thomas Petazzoni, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
+Jiri Kosina
+SUSE Labs
