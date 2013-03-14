@@ -1,134 +1,78 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fold.natur.cuni.cz ([195.113.57.32]:33188 "HELO
-	fold.natur.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755287Ab3CaPEU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 31 Mar 2013 11:04:20 -0400
-Message-ID: <51585071.3090600@fold.natur.cuni.cz>
-Date: Sun, 31 Mar 2013 17:04:17 +0200
-From: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-To: Huang Ying <ying.huang@intel.com>
-CC: Yijing Wang <wangyijing@huawei.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, Yinghai Lu <yinghai@kernel.org>
-Subject: Re: 3.9-rc1: pciehp and eSATA card SiI 3132, no XHCI
-References: <513E7E1E.80508@fold.natur.cuni.cz>    <513FE7AD.2020408@huawei.com> <5141145E.4020300@fold.natur.cuni.cz>    <51417C28.40402@huawei.com> <5141C9D7.9040706@fold.natur.cuni.cz>    <51428A72.2060602@huawei.com> <51548E13.8030308@fold.natur.cuni.cz>   <1364545211.1817.228.camel@yhuang-dev>   <5155A101.2090705@fold.natur.cuni.cz>  <1364640886.5773.5.camel@yhuang-mobile.sh.intel.com>  <51581170.30708@fold.natur.cuni.cz> <1364739160.5947.5.camel@yhuang-mobile.sh.intel.com>
-In-Reply-To: <1364739160.5947.5.camel@yhuang-mobile.sh.intel.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <alpine.LRH.2.00.1303132233080.27467@twin.jikos.cz>
+References: <Pine.LNX.4.44L0.1303082116310.28403-100000@netrider.rowland.org>
+	<1362819234.1220.1.camel@localhost.localdomain>
+	<1362834476.7755.33.camel@thor.lan>
+	<alpine.LRH.2.00.1303132233080.27467@twin.jikos.cz>
+Date: Thu, 14 Mar 2013 11:48:05 -0700
+Message-ID: <CAE9FiQXM5qTasq38CoroJk8uzCt5GLFBL9jxN5SDBQreqA7pFw@mail.gmail.com>
+Subject: Re: [3.9-rc1] irq 16: nobody cared (was [3.9-rc1] very poor interrupt responses)
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jiri Kosina <jkosina@suse.cz>
+Cc: Peter Hurley <peter@hurleysoftware.com>,
+	Thomas Meyer <thomas@m3y3r.de>,
+	Shawn Starr <shawn.starr@rogers.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Kernel development list <linux-kernel@vger.kernel.org>,
+	USB list <linux-usb@vger.kernel.org>,
+	linux-acpi@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Ying,
-  
-Huang Ying wrote:
-> Hi, Martin,
-> 
-> Thanks for your testing!
-> 
-> On Sun, 2013-03-31 at 12:35 +0200, Martin Mokrejs wrote:
->> Hi Ying,
->>   I have tested 4x your last patch. Somehow nothing gets logged to "dmesg"
->> when I hotremove or hotinsert the coldbooted eSATA card. Logging works so
->> enabling wifi via Fn+F2 is being logged. Also, eventual stacktraces
->> and kmemleaks.
->>   I removed the coldbooted card, inserted it and ejected it.
->>
->>
->>   In brief, lspci reports changes but there are no changes in /proc/interrupts
->> related to
->>
->>   19:          0          0   IO-APIC-fasteoi   sata_sil24
->>
->>
->> and no changes at all in /proc/iomem which I expected to happen during
->> hotremoval and hotinsert (something broken in 3.9-rc1 with your patch).
->>
->> All the runtime_status data were same after every tested step, so again,
->> no diffs to show but here are the values confirming laptop-mode-tools
->> enabled powersaving:
->>
->> /sys/bus/pci/devices/0000:00:00.0/power/runtime_status:suspended
->> /sys/bus/pci/devices/0000:00:02.0/power/runtime_status:active
->> /sys/bus/pci/devices/0000:00:16.0/power/runtime_status:suspended
->> /sys/bus/pci/devices/0000:00:1a.0/power/runtime_status:suspended
->> /sys/bus/pci/devices/0000:00:1b.0/power/runtime_status:active
->> /sys/bus/pci/devices/0000:00:1c.0/power/runtime_status:suspended
->> /sys/bus/pci/devices/0000:00:1c.1/power/runtime_status:active
->> /sys/bus/pci/devices/0000:00:1c.3/power/runtime_status:active
->> /sys/bus/pci/devices/0000:00:1c.4/power/runtime_status:active
->> /sys/bus/pci/devices/0000:00:1c.7/power/runtime_status:active
-> 
-> It appears that 1c.7 is identified successfully as an hotplug-able PCIe
-> port, and never put into suspended state.
+On Wed, Mar 13, 2013 at 2:35 PM, Jiri Kosina <jkosina@suse.cz> wrote:
+> OK, this is a "me too", on Thinkpad x200s.
+>
+> [    4.116847] irq 16: nobody cared (try booting with the "irqpoll" option)
+> [    4.116849] Pid: 1, comm: systemd Not tainted 3.9.0-rc2-00188-g6c23cbb #186
+> [    4.116850] Call Trace:
+> [    4.116860]  <IRQ>  [<ffffffff810db0f8>] __report_bad_irq+0x38/0xf0
+> [    4.116862]  [<ffffffff810db3a3>] note_interrupt+0x1f3/0x240
+> [    4.116865]  [<ffffffff810d8977>] handle_irq_event_percpu+0x147/0x230
+> [    4.116867]  [<ffffffff810d8aa9>] handle_irq_event+0x49/0x70
+> [    4.116869]  [<ffffffff810dbbc1>] handle_fasteoi_irq+0x61/0x100
+> [    4.116873]  [<ffffffff81004689>] handle_irq+0x59/0x150
+> [    4.116877]  [<ffffffff8104e916>] ? irq_enter+0x16/0x80
+> [    4.116879]  [<ffffffff81003d4b>] do_IRQ+0x5b/0xe0
+> [    4.116883]  [<ffffffff815563ad>] common_interrupt+0x6d/0x6d
+> [    4.116888]  <EOI>  [<ffffffff81320dc1>] ? cfb_imageblit+0x581/0x5b0
+> [    4.116891]  [<ffffffff8131e019>] bit_putcs+0x329/0x560
+> [    4.116893]  [<ffffffff8131dc8f>] ? bit_cursor+0x5cf/0x630
+> [    4.116896]  [<ffffffff81317a28>] fbcon_putcs+0xf8/0x130
+> [    4.116898]  [<ffffffff8131dcf0>] ? bit_cursor+0x630/0x630
+> [    4.116900]  [<ffffffff8131a27e>] fbcon_redraw+0x16e/0x1e0
+> [    4.116902]  [<ffffffff8131a554>] fbcon_scroll+0x264/0xe40
+> [    4.116905]  [<ffffffff8138a263>] scrup+0x113/0x120
+> [    4.116907]  [<ffffffff8138a4d0>] lf+0x80/0x90
+> [    4.116910]  [<ffffffff8138e1dd>] do_con_trol+0xcd/0x1360
+> [    4.116912]  [<ffffffff8138f725>] do_con_write+0x2b5/0xa10
+> [    4.116915]  [<ffffffff81552bb7>] ? __mutex_lock_slowpath+0x237/0x2e0
+> [    4.116917]  [<ffffffff8138fed9>] con_write+0x19/0x30
+> [    4.116920]  [<ffffffff8137823b>] do_output_char+0x1eb/0x220
+> [    4.116922]  [<ffffffff813782b6>] process_output+0x46/0x70
+> [    4.116924]  [<ffffffff81378b0f>] n_tty_write+0x13f/0x2f0
+> [    4.116928]  [<ffffffff8107a900>] ? try_to_wake_up+0x2b0/0x2b0
+> [    4.116930]  [<ffffffff8137553c>] tty_write+0x1cc/0x280
+> [    4.116932]  [<ffffffff813789d0>] ? n_tty_ioctl+0x110/0x110
+> [    4.116934]  [<ffffffff8137569d>] redirected_tty_write+0xad/0xc0
+> [    4.116937]  [<ffffffff811733ab>] vfs_write+0xcb/0x130
+> [    4.116939]  [<ffffffff81173bac>] sys_write+0x5c/0xa0
+> [    4.116943]  [<ffffffff8155e4a9>] system_call_fastpath+0x16/0x1b
+> [    4.116943] handlers:
+> [    4.116959] [<ffffffffa0048450>] usb_hcd_irq [usbcore]
+> [    4.116960] Disabling IRQ #16
+>
+> I don't think I have seen this message on rc1+ (8343bce, to be precise),
+> but I have definitely seen sluggish system response on that kernel as
+> well.
+>
+> Attaching lspci, /proc/interrupts and dmesg.
 
-Yes. Truly said, after I now went to test your previous two patches
-on the 3.9-rc1 I confirm that the syslog logging is broken with all your
-three patches. I fear we are hitting here, with the pciehp problems
-not a powersaving issue but an upstream /proc or /sys files being outdated.
-Otherwise I can't figure out why disabling in runtime laptop-mode-tools
-and doing the "find /sys .... | while ... echo "on" > $f" trickery
-does not help to get pciehp working. This would have fixed the acpiphp
-at least on 3.8 kernel. I see that sata_sil24 is not loaded by itself
-during hotinsert. It seems lspci reports at such times 0xff for the 11:00
-eSATA card, /etc/iomem reports stale memory regions used by 11:00 while
-/proc/interrupts says no IRQ is assigned to sata_sil24 (well, sata_sil24
-is not loaded per lsmod, lspci would should report sata_sil24 also but
-provided the 11:00 entry is broken and shows the 0xff it maybe cannot
-report is sata_sil24 is loaded).
+can you post dmesg with "debug ignore_loglevel pci=routeirq" with
+current linus tree and v3.8 or previous working kernel?
 
-I will post a little more details as a proper answer to your other patch
-where I managed to get yet another stacktrace, about the eSATA thought to
-be D3 state. Physically the card was ejected and just a modprobe sata_sil24
-caused the sata_sil24 to use some outdated data. I will dive now into
-that. 
+Thanks
 
-
-
-> 
-> And from your description below, it appears that hot-add and hot-remove
-> of the eSATA card works for you, doesn't it?
-
-The PresDet works fine I think, yes. Sometimes I see in the lspci -vvv diffs:
-
--Control: I/O+ ... BusMaster+
-+Control: I/O- ... BusMaster-
-
-and sometimes 
-
--        Latency: 0, Cache Line Size: 64 bytes
-+        Latency: 0
-
-or even the Latency: line being gone completely from lspci -vvv output. Why is that?
-I think debug checks and prints in kernel are necessary.
-
-
-How do these related to /proc/interrupts not showing an IRQ for the 11:00 device?
-Does that prevent automated sata_sil24 loading once the card is inserted? Would
-you please add some extra debug prints and checks into the kernel?
-
-Take also into consideration the "3.8.2: stale pci device info for a previously inserted express card"
-for a list of chimeric entries reported by lspci. That could tell you which values
-are being cached and invalid. Hopefully some checks could be done between values
-read by lspci and those in /proc and /sys.
-
-
-
-Do you already know why almost nothing is logged by kernel wen either of your
-three patches (v1 sent on 03/29/13 08:41, v2 sent on 03/29/13 09:20, v3 sent on
-03/30/13 11:54)?
-
-
-I did not test the xHCI port behavior with any of your three patches because I have
-disabled USB support in this kernel altogether for 3.9-rc1 tests. And I would like to stick
-with that until we fix the pciehp issue. I stepped rather late into the big testing game,
-I believe the pciehp bug we are facing was not working since 3.5/3.6, I don't think
-the 3.9-rc1-based tests be much different from earlier kernels.
-
-For a broader view, on the 3.8 series we will meanwhile hopefully get to a fix of the
-PME# stuff. I think I reported quite a good number of potential problems yesterday.
-After that, I will check how xHCI behaves on 3.9 but I believe the PME#-related fix from
-3.8 will be also applicable to fixing 3.9 so the xHCI won't have problems there anymore.
-
-
-Martin
+Yinghai
