@@ -1,176 +1,45 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Thu, 21 Mar 2013 00:21:21 +0100 (CET)
+Date: Thu, 14 Mar 2013 17:09:59 +0100 (CET)
 From: Jiri Kosina <jkosina@suse.cz>
-To: Alan Stern <stern@rowland.harvard.edu>, Greg KH <greg@kroah.com>
-Cc: Daniel Vetter <daniel.vetter@ffwll.ch>,
-	Chris Wilson <chris@chris-wilson.co.uk>,
-	Harald Arnesen <skogtun.linux@gmail.com>,
-	Kernel development list <linux-kernel@vger.kernel.org>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Peter Hurley <peter@hurleysoftware.com>,
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Peter Hurley <peter@hurleysoftware.com>,
 	Thomas Meyer <thomas@m3y3r.de>,
 	Shawn Starr <shawn.starr@rogers.com>,
+	Kernel development list <linux-kernel@vger.kernel.org>,
 	USB list <linux-usb@vger.kernel.org>,
-	linux-acpi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Imre Deak <imre.deak@intel.com>,
-	Daniel Kurtz <djkurtz@chromium.org>,
-	dri-devel@lists.freedesktop.org,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	Arkadiusz Miskiewicz <a.miskiewicz@gmail.com>
-Subject: [PATCH] dummy-irq: introduce a dummy IRQ handler driver (was Re:
- gm45 intel gfx can generate non-MSI irq# in MSI mode (was Re: [PATCH]
- drm/i915: stop using GMBUS IRQs on Gen4 chips (was Re: [3.9-rc1] irq 16:
- nobody cared (was [3.9-rc1] very poor interrupt respo))
-In-Reply-To: <Pine.LNX.4.44L0.1303201319190.1208-100000@iolanthe.rowland.org>
-Message-ID: <alpine.LNX.2.00.1303210018430.16237@pobox.suse.cz>
-References: <Pine.LNX.4.44L0.1303201319190.1208-100000@iolanthe.rowland.org>
+	linux-acpi@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: [3.9-rc1] irq 16: nobody cared  (was [3.9-rc1] very poor interrupt
+ responses)
+In-Reply-To: <alpine.LNX.2.00.1303141555090.30118@pobox.suse.cz>
+Message-ID: <alpine.LNX.2.00.1303141709000.30118@pobox.suse.cz>
+References: <Pine.LNX.4.44L0.1303141050310.1983-100000@iolanthe.rowland.org> <alpine.LNX.2.00.1303141555090.30118@pobox.suse.cz>
 MIME-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 20 Mar 2013, Alan Stern wrote:
+On Thu, 14 Mar 2013, Jiri Kosina wrote:
 
-> > Ok, so how about this?
-> > Daniel, is it enough to make the problem appear on your system (by 
-> > building this into the kernel and booting with dummy-irq.irq=16)?
+> > > I don't think I have seen this message on rc1+ (8343bce, to be precise), 
+> > > but I have definitely seen sluggish system response on that kernel as 
+> > > well.
+> > > 
+> > > Attaching lspci, /proc/interrupts and dmesg. 
 > > 
-> > Thanks.
-> > 
-> > From: Jiri Kosina <jkosina@suse.cz>
-> > Subject: [PATCH] dummy-irq: introduce a dummy IRQ handler driver
-> > 
-> > This module accepts a single 'irq' parameter, which it should register for.
-> > 
-> > Its sole purpose is to help with debugging of IRQ sharing problems, by
-> > force-enabling IRQ that would otherwise be disabled.
-> > 
-> > Suggested-by: Alan Stern <stern@rowland.harvard.edu>
-> > Signed-off-by: Jiri Kosina <jkosina@suse.cz>
+> > Can you try to do a git bisect for this?  Is the sluggish system 
+> > response clear enough that you can tell reliably when it is present and 
+> > when it isn't?
 > 
-> This is just what I was thinking of.  Three extremely minor 
-> suggestions...
+> That was my first thought, but unfortunately I am afraid there will be 
+> point at which I will easily make a bisection mistake, as the 
+> responsiveness of the system varies over time, so it's not really a 
+> 100% objective measure.
 
-Thanks Alan. Updated version below.
+So I will try a bisect, but it'll take some time so that I could claim it 
+to be trustworthy.
 
-Greg, willing to merge this simple debugging facility?
-
-
-From: Jiri Kosina <jkosina@suse.cz>
-Subject: [PATCH] dummy-irq: introduce a dummy IRQ handler driver
-
-This module accepts a single 'irq' parameter, which it should register for.
-
-Its sole purpose is to help with debugging of IRQ sharing problems, by
-force-enabling IRQ that would otherwise be disabled.
-
-Suggested-by: Alan Stern <stern@rowland.harvard.edu>
-Signed-off-by: Jiri Kosina <jkosina@suse.cz>
----
- drivers/misc/Kconfig     |    8 ++++++
- drivers/misc/Makefile    |    1 +
- drivers/misc/dummy-irq.c |   59 ++++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 68 insertions(+), 0 deletions(-)
- create mode 100644 drivers/misc/dummy-irq.c
-
-diff --git a/drivers/misc/Kconfig b/drivers/misc/Kconfig
-index e83fdfe..69bb79d 100644
---- a/drivers/misc/Kconfig
-+++ b/drivers/misc/Kconfig
-@@ -93,6 +93,14 @@ config ATMEL_TCB_CLKSRC_BLOCK
- 	  TC can be used for other purposes, such as PWM generation and
- 	  interval timing.
- 
-+config DUMMY_IRQ
-+	tristate "Dummy IRQ handler"
-+	default n
-+	---help---
-+	  This module accepts a single 'irq' parameter, which it should register for.
-+	  The sole purpose of this module is to help with debugging of systems on
-+	  which spurious IRQs would happen on disabled IRQ vector.
-+
- config IBM_ASM
- 	tristate "Device driver for IBM RSA service processor"
- 	depends on X86 && PCI && INPUT
-diff --git a/drivers/misc/Makefile b/drivers/misc/Makefile
-index 35a1463..28ff261 100644
---- a/drivers/misc/Makefile
-+++ b/drivers/misc/Makefile
-@@ -13,6 +13,7 @@ obj-$(CONFIG_ATMEL_TCLIB)	+= atmel_tclib.o
- obj-$(CONFIG_BMP085)		+= bmp085.o
- obj-$(CONFIG_BMP085_I2C)	+= bmp085-i2c.o
- obj-$(CONFIG_BMP085_SPI)	+= bmp085-spi.o
-+obj-$(CONFIG_DUMMY_IRQ)		+= dummy-irq.o
- obj-$(CONFIG_ICS932S401)	+= ics932s401.o
- obj-$(CONFIG_LKDTM)		+= lkdtm.o
- obj-$(CONFIG_TIFM_CORE)       	+= tifm_core.o
-diff --git a/drivers/misc/dummy-irq.c b/drivers/misc/dummy-irq.c
-new file mode 100644
-index 0000000..7014167
---- /dev/null
-+++ b/drivers/misc/dummy-irq.c
-@@ -0,0 +1,59 @@
-+/*
-+ * Dummy IRQ handler driver.
-+ *
-+ * This module only registers itself as a handler that is specified to it
-+ * by the 'irq' parameter.
-+ *
-+ * The sole purpose of this module is to help with debugging of systems on
-+ * which spurious IRQs would happen on disabled IRQ vector.
-+ *
-+ * Copyright (C) 2013 Jiri Kosina
-+ */
-+
-+/*
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of the GNU General Public License version 2 as published by
-+ * the Free Software Foundation.
-+ */
-+#include <linux/module.h>
-+#include <linux/irq.h>
-+#include <linux/interrupt.h>
-+
-+static int irq;
-+
-+static irqreturn_t dummy_interrupt(int irq, void *dev_id)
-+{
-+	static int count = 0;
-+
-+	if (count == 0) {
-+		printk(KERN_INFO "dummy-irq: interrupt occured on IRQ %d\n",
-+				irq);
-+		count++;
-+	}
-+
-+	return IRQ_NONE;
-+}
-+
-+static int __init dummy_irq_init(void)
-+{
-+	if (request_irq(irq, &dummy_interrupt, IRQF_SHARED, "dummy_irq", &irq)) {
-+		printk(KERN_ERR "dummy-irq: cannot register IRQ %d\n", irq);
-+		return -EIO;
-+	}
-+	printk(KERN_INFO "dummy-irq: registered for IRQ %d\n", irq);
-+	return 0;
-+}
-+
-+static void __exit dummy_irq_exit(void)
-+{
-+	printk(KERN_INFO "dummy-irq unloaded\n");
-+	free_irq(irq, &irq);
-+}
-+
-+module_init(dummy_irq_init);
-+module_exit(dummy_irq_exit);
-+
-+MODULE_LICENSE("GPL");
-+MODULE_AUTHOR("Jiri Kosina");
-+module_param(irq, uint, 0444);
-+MODULE_PARM_DESC(irq, "The IRQ to register for");
+Therefore in case anyone has any idea in parallel, I am all ears.
 
 -- 
 Jiri Kosina
