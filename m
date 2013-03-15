@@ -1,53 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rs140.luxsci.com ([74.205.78.114]:54737 "EHLO rs140.luxsci.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750948Ab3CKTuM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 11 Mar 2013 15:50:12 -0400
-Message-ID: <513E3536.2060104@firmworks.com>
-Date: Mon, 11 Mar 2013 09:49:10 -1000
-From: Mitch Bradley <wmb@firmworks.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:28839 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754349Ab3CONg7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 Mar 2013 09:36:59 -0400
+Date: Fri, 15 Mar 2013 09:35:56 -0400
+From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Ram Pai <linuxram@us.ibm.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	virtualization@lists.linux-foundation.org
+Subject: Re: [PATCH v3 20/27] PCI, xen: Use for_each_pci_resource() with xen
+ pci
+Message-ID: <20130315133556.GK8582@phenom.dumpdata.com>
+References: <1363217302-14383-1-git-send-email-yinghai@kernel.org>
+ <1363217302-14383-21-git-send-email-yinghai@kernel.org>
 MIME-Version: 1.0
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-CC: Thierry Reding <thierry.reding@avionic-design.de>,
-	Lior Amsalem <alior@marvell.com>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>, linux-pci@vger.kernel.org,
-	devicetree-discuss@lists.ozlabs.org,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH 24/32] pci: PCIe driver for Marvell Armada 370/XP systems
-References: <20130308191227.GA6551@avionic-0098.mockup.avionic-design.de> <513A3F4F.2090501@firmworks.com> <20130308200245.GC29435@obsidianresearch.com> <513A7845.6040304@firmworks.com> <20130309013152.GA3883@obsidianresearch.com> <513C117D.6080800@firmworks.com> <20130310065539.GA14704@obsidianresearch.com> <513D6F9C.9000100@firmworks.com> <20130311074615.GA6365@avionic-0098.mockup.avionic-design.de> <513E1CBA.4040007@firmworks.com> <20130311182339.GB10992@obsidianresearch.com>
-In-Reply-To: <20130311182339.GB10992@obsidianresearch.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1363217302-14383-21-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 3/11/2013 8:23 AM, Jason Gunthorpe wrote:
->> (b) The discovery/enumeration code needs to access config space via
->> pci_ops.  The root complex driver implements pci_ops based on a trivial
->> parsing of ranges (omitting irrelevant details):
->>
->> pci_op_read(devfn, pos) {
->>    loop_over_ranges_entries {
->>       if (to_devfn(ranges_entry.child) == devfn) {
->>          return mmio_read(ranges_entry.parent + pos);
->                             ^^^^^^^^^^^^^^^^^^^
-> 
-> This has to be converted through all enclosing node's ranges prior to
-> being used as a CPU address - the OF core has all the code to do this,
-> but a new entry point would be needed for this specific application...
+On Wed, Mar 13, 2013 at 04:28:15PM -0700, Yinghai Lu wrote:
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
 
-Agreed.  But I was considering that detail to be outside the scope of
-this discussion because the same thing must happen for any physical
-address at this level of the tree.
 
+Reviewed-by: Rzeszutek Wilk <konrad.wilk@oracle.com>
+> Cc: virtualization@lists.linux-foundation.org
+> ---
+>  drivers/pci/xen-pcifront.c |    4 +---
+>  1 file changed, 1 insertion(+), 3 deletions(-)
 > 
-> Cheers,
-> Jason
+> diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
+> index 966abc6..c90835f 100644
+> --- a/drivers/pci/xen-pcifront.c
+> +++ b/drivers/pci/xen-pcifront.c
+> @@ -395,9 +395,7 @@ static int pcifront_claim_resource(struct pci_dev *dev, void *data)
+>  	int i;
+>  	struct resource *r;
+>  
+> -	for (i = 0; i < PCI_NUM_RESOURCES; i++) {
+> -		r = &dev->resource[i];
+> -
+> +	for_each_pci_resource(dev, r, i, PCI_ALL_RES) {
+>  		if (!r->parent && r->start && r->flags) {
+>  			dev_info(&pdev->xdev->dev, "claiming resource %s/%d\n",
+>  				pci_name(dev), i);
+> -- 
+> 1.7.10.4
 > 
