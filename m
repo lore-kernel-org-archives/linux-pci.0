@@ -1,70 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:55258 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751628Ab3CURa4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 Mar 2013 13:30:56 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Russell King <linux@arm.linux.org.uk>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	devicetree-discuss@lists.ozlabs.org,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Maen Suleiman <maen@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Olof Johansson <olof@lixom.net>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Mitch Bradley <wmb@firmworks.com>,
-	Andrew Murray <andrew.murray@arm.com>
-Subject: [PATCH v5 14/17] arm: mvebu: PCIe Device Tree informations for Armada 370 Mirabox
-Date: Thu, 21 Mar 2013 18:30:22 +0100
-Message-Id: <1363887025-19931-15-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1363887025-19931-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1363887025-19931-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from out1-smtp.messagingengine.com ([66.111.4.25]:52016 "EHLO
+	out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754139Ab3COPrl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 Mar 2013 11:47:41 -0400
+Date: Fri, 15 Mar 2013 08:47:39 -0700
+From: Greg KH <greg@kroah.com>
+To: Jiri Kosina <jkosina@suse.cz>
+Cc: Harald Arnesen <skogtun.linux@gmail.com>,
+	Kernel development list <linux-kernel@vger.kernel.org>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Peter Hurley <peter@hurleysoftware.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Thomas Meyer <thomas@m3y3r.de>,
+	Shawn Starr <shawn.starr@rogers.com>,
+	USB list <linux-usb@vger.kernel.org>,
+	linux-acpi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Daniel Vetter <daniel.vetter@ffwll.ch>,
+	Imre Deak <imre.deak@intel.com>,
+	Daniel Kurtz <djkurtz@chromium.org>,
+	dri-devel@lists.freedesktop.org
+Subject: Re: [3.9-rc1] irq 16: nobody cared  (was [3.9-rc1] very poor
+ interrupt responses)
+Message-ID: <20130315154739.GA1024@kroah.com>
+References: <Pine.LNX.4.44L0.1303141050310.1983-100000@iolanthe.rowland.org>
+ <1460519.ejNFI1DrGk@vostro.rjw.lan>
+ <1363280764.26318.4.camel@thor.lan>
+ <5657408.cYX6iimiA4@vostro.rjw.lan>
+ <alpine.LNX.2.00.1303150851020.9529@pobox.suse.cz>
+ <5142E7F0.4020002@gmail.com>
+ <alpine.LNX.2.00.1303151424140.9529@pobox.suse.cz>
+ <20130315153249.GA32425@kroah.com>
+ <alpine.LNX.2.00.1303151636481.9529@pobox.suse.cz>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <alpine.LNX.2.00.1303151636481.9529@pobox.suse.cz>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The Globalscale Mirabox platform uses one PCIe interface for an
-available mini-PCIe slot, and the other PCIe interface for an internal
-USB 3.0 controller. We add the necessary Device Tree informations to
-enable those two interfaces.
+On Fri, Mar 15, 2013 at 04:37:56PM +0100, Jiri Kosina wrote:
+> On Fri, 15 Mar 2013, Greg KH wrote:
+> 
+> > > > I have the same problem on my Lenovo T500. I think the graphics card is
+> > > > involved.
+> > > > 
+> > > > This laptop has "hybrid graphics" - one Intel GMA 4500MHD and one ATI
+> > > > Mobility Radeon HD 3650. When I boot with the Intel card, I get "irq 16:
+> > > > nobody cared" during boot, not when I boot with the ATI card.
+> > > 
+> > > Confirming this. After a lot of hassle, I have bisected this reliably to
+> > > 
+> > > 	commit 28c70f162a315bdcfbe0bf940a740ef8bfb918d6
+> > > 	Author: Daniel Vetter <daniel.vetter@ffwll.ch>
+> > > 	Date:   Sat Dec 1 13:53:45 2012 +0100
+> > > 
+> > > 	    drm/i915: use the gmbus irq for waits
+> > > 
+> > > Adding Daniel, Imre and Daniel to CC while I will try to figure out what's 
+> > > happening in parallel.
+> > 
+> > Wasn't this fixed by the merge from David
+> > (2cc79544bd0aabb4b3cf467ead5df526d9134c64)?
+> 
+> Why do you think it should, please?
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
----
- arch/arm/boot/dts/armada-370-mirabox.dts |   16 ++++++++++++++++
- 1 file changed, 16 insertions(+)
+The line:
+	- Fix PCH irq handling race which resulted in missed gmbus/dp
+	  aux irqs and subsequent fallout (Paulo)
 
-diff --git a/arch/arm/boot/dts/armada-370-mirabox.dts b/arch/arm/boot/dts/armada-370-mirabox.dts
-index dd0c57d..5549de6 100644
---- a/arch/arm/boot/dts/armada-370-mirabox.dts
-+++ b/arch/arm/boot/dts/armada-370-mirabox.dts
-@@ -70,5 +70,21 @@
- 		usb@d0051000 {
- 			status = "okay";
- 		};
-+
-+		pcie-controller {
-+			status = "okay";
-+
-+			/* Internal mini-PCIe connector */
-+			pcie@1,0 {
-+				/* Port 0, Lane 0 */
-+				status = "okay";
-+			};
-+
-+			/* Connected on the PCB to a USB 3.0 XHCI controller */
-+			pcie@2,0 {
-+				/* Port 1, Lane 0 */
-+				status = "okay";
-+			};
-+		};
- 	};
- };
--- 
-1.7.9.5
+> (I am seeing this with a2362d247 still).
 
+Ok, I guess it isn't still fixed properly, just was guessing :)
+
+greg k-h
