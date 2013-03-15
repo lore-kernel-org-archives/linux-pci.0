@@ -1,61 +1,59 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:54520 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752563Ab3CZRCV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Mar 2013 13:02:21 -0400
-Date: Tue, 26 Mar 2013 18:02:17 +0100
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Russell King <linux@arm.linux.org.uk>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Olof Johansson <olof@lixom.net>, linux-pci@vger.kernel.org,
-	devicetree-discuss@lists.ozlabs.org,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Maen Suleiman <maen@marvell.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Andrew Murray <andrew.murray@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Mitch Bradley <wmb@firmworks.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Subject: Re: [RFCv1 01/11] arm: mvebu: move L2 cache initialization in
- init_early()
-Message-ID: <20130326180217.4c471227@skate>
-In-Reply-To: <201303261653.48998.arnd@arndb.de>
-References: <1364316746-8702-1-git-send-email-thomas.petazzoni@free-electrons.com>
-	<1364316746-8702-2-git-send-email-thomas.petazzoni@free-electrons.com>
-	<201303261653.48998.arnd@arndb.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Fri, 15 Mar 2013 16:37:56 +0100 (CET)
+From: Jiri Kosina <jkosina@suse.cz>
+To: Greg KH <greg@kroah.com>
+Cc: Harald Arnesen <skogtun.linux@gmail.com>,
+	Kernel development list <linux-kernel@vger.kernel.org>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Peter Hurley <peter@hurleysoftware.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Thomas Meyer <thomas@m3y3r.de>,
+	Shawn Starr <shawn.starr@rogers.com>,
+	USB list <linux-usb@vger.kernel.org>,
+	linux-acpi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Daniel Vetter <daniel.vetter@ffwll.ch>,
+	Imre Deak <imre.deak@intel.com>,
+	Daniel Kurtz <djkurtz@chromium.org>,
+	dri-devel@lists.freedesktop.org
+Subject: Re: [3.9-rc1] irq 16: nobody cared  (was [3.9-rc1] very poor interrupt
+ responses)
+In-Reply-To: <20130315153249.GA32425@kroah.com>
+Message-ID: <alpine.LNX.2.00.1303151636481.9529@pobox.suse.cz>
+References: <Pine.LNX.4.44L0.1303141050310.1983-100000@iolanthe.rowland.org> <1460519.ejNFI1DrGk@vostro.rjw.lan> <1363280764.26318.4.camel@thor.lan> <5657408.cYX6iimiA4@vostro.rjw.lan> <alpine.LNX.2.00.1303150851020.9529@pobox.suse.cz> <5142E7F0.4020002@gmail.com>
+ <alpine.LNX.2.00.1303151424140.9529@pobox.suse.cz> <20130315153249.GA32425@kroah.com>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Arnd Bergmann,
+On Fri, 15 Mar 2013, Greg KH wrote:
 
-On Tue, 26 Mar 2013 16:53:48 +0000, Arnd Bergmann wrote:
-> On Tuesday 26 March 2013, Thomas Petazzoni wrote:
-> > @@ -72,6 +73,10 @@ void __init armada_370_xp_init_early(void)
-> >                         ARMADA_370_XP_MBUS_WINS_SIZE,
-> >                         ARMADA_370_XP_SDRAM_WINS_BASE,
-> >                         ARMADA_370_XP_SDRAM_WINS_SIZE);
-> > +
-> > +#ifdef CONFIG_CACHE_L2X0
-> > +       l2x0_of_init(0, ~0UL);
-> > +#endif
+> > > I have the same problem on my Lenovo T500. I think the graphics card is
+> > > involved.
+> > > 
+> > > This laptop has "hybrid graphics" - one Intel GMA 4500MHD and one ATI
+> > > Mobility Radeon HD 3650. When I boot with the Intel card, I get "irq 16:
+> > > nobody cared" during boot, not when I boot with the ATI card.
+> > 
+> > Confirming this. After a lot of hassle, I have bisected this reliably to
+> > 
+> > 	commit 28c70f162a315bdcfbe0bf940a740ef8bfb918d6
+> > 	Author: Daniel Vetter <daniel.vetter@ffwll.ch>
+> > 	Date:   Sat Dec 1 13:53:45 2012 +0100
+> > 
+> > 	    drm/i915: use the gmbus irq for waits
+> > 
+> > Adding Daniel, Imre and Daniel to CC while I will try to figure out what's 
+> > happening in parallel.
 > 
-> I guess you should remove the #ifdef as well here, it's not needed.
+> Wasn't this fixed by the merge from David
+> (2cc79544bd0aabb4b3cf467ead5df526d9134c64)?
 
-Right, will fix for the next version.
+Why do you think it should, please?
 
-Thanks,
+(I am seeing this with a2362d247 still).
 
-Thomas
 -- 
-Thomas Petazzoni, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
+Jiri Kosina
+SUSE Labs
