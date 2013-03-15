@@ -1,89 +1,53 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:35896 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757836Ab3CHPTf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 Mar 2013 10:19:35 -0500
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Cc: Arnd Bergmann <arnd@arndb.de>, Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>, Olof Johansson <olof@lixom.net>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Yehuda Yitschak <yehuday@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Stephen Warren <swarren@wwwdotorg.org>
-Subject: [PATCH v4 04/18] of/pci: Add of_pci_parse_bus_range() function
-Date: Fri,  8 Mar 2013 16:19:06 +0100
-Message-Id: <1362755960-30791-5-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1362755960-30791-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1362755960-30791-1-git-send-email-thomas.petazzoni@free-electrons.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Fri, 15 Mar 2013 08:59:06 +0100 (CET)
+From: Jiri Kosina <jkosina@suse.cz>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Peter Hurley <peter@hurleysoftware.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Thomas Meyer <thomas@m3y3r.de>,
+	Shawn Starr <shawn.starr@rogers.com>,
+	Kernel development list <linux-kernel@vger.kernel.org>,
+	USB list <linux-usb@vger.kernel.org>,
+	linux-acpi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: Re: [3.9-rc1] irq 16: nobody cared  (was [3.9-rc1] very poor interrupt
+ responses)
+In-Reply-To: <5657408.cYX6iimiA4@vostro.rjw.lan>
+Message-ID: <alpine.LNX.2.00.1303150851020.9529@pobox.suse.cz>
+References: <Pine.LNX.4.44L0.1303141050310.1983-100000@iolanthe.rowland.org> <1460519.ejNFI1DrGk@vostro.rjw.lan> <1363280764.26318.4.camel@thor.lan> <5657408.cYX6iimiA4@vostro.rjw.lan>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Thierry Reding <thierry.reding@avionic-design.de>
+On Thu, 14 Mar 2013, Rafael J. Wysocki wrote:
 
-This function can be used to parse a bus-range property as specified by
-device nodes representing PCI bridges.
+> > > commit 181380b702eee1a9aca51354d7b87c7b08541fcf
+> > > Author: Yinghai Lu <yinghai@kernel.org>
+> > > Date:   Sat Feb 16 11:58:34 2013 -0700
+> > > 
+> > >     PCI/ACPI: Don't cache _PRT, and don't associate them with bus numbers
+> > 
+> > This patch __fixed__ this problem for me in linux-next back in February.
+> > 
+> > Rafael, did you hold back some ACPI patches from 3.9 that would have
+> > made fix no longer applicable?
+> 
+> No, I didn't.
+> 
+> I'm afraid, though, that the fix might not be effective on some systems for a
+> reason that's unclear at the moment.
+> 
+> So in fact the one to check is commit 4f535093cf ("PCI: Put pci_dev in device
+> tree as early as possible") and if the problem doesn't appear before that, we
+> need to figure out why the fix may not be sufficient.
 
-Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
----
- drivers/of/of_pci.c    |   25 +++++++++++++++++++++++++
- include/linux/of_pci.h |    1 +
- 2 files changed, 26 insertions(+)
+With either 4f535093cf or 181380b702 I do *not* see the problem, i.e. 
+these commits are not the culprit and it was caused by some later change.
 
-diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
-index d6e6de5..fb92ded 100644
---- a/drivers/of/of_pci.c
-+++ b/drivers/of/of_pci.c
-@@ -85,3 +85,28 @@ int of_pci_get_devfn(struct device_node *np)
- 	return (be32_to_cpup(reg) >> 8) & 0xff;
- }
- EXPORT_SYMBOL_GPL(of_pci_get_devfn);
-+
-+/**
-+ * of_pci_parse_bus_range() - parse the bus-range property of a PCI device
-+ * @node: device node
-+ * @res: address to a struct resource to return the bus-range
-+ *
-+ * Returns 0 on success or a negative error-code on failure.
-+ */
-+int of_pci_parse_bus_range(struct device_node *node, struct resource *res)
-+{
-+	const __be32 *values;
-+	int len;
-+
-+	values = of_get_property(node, "bus-range", &len);
-+	if (!values || len < sizeof(*values) * 2)
-+		return -EINVAL;
-+
-+	res->name = node->name;
-+	res->start = be32_to_cpup(values++);
-+	res->end = be32_to_cpup(values);
-+	res->flags = IORESOURCE_BUS;
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(of_pci_parse_bus_range);
-diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
-index 9118321..fb6e95e 100644
---- a/include/linux/of_pci.h
-+++ b/include/linux/of_pci.h
-@@ -12,5 +12,6 @@ struct device_node *of_pci_find_child_device(struct device_node *parent,
- 					     unsigned int devfn);
- int of_pci_get_bus(struct device_node *np);
- int of_pci_get_devfn(struct device_node *np);
-+int of_pci_parse_bus_range(struct device_node *node, struct resource *res);
- 
- #endif
+I will proceed with bisect now, hopefully it'll produce a meaningful 
+result.
+
 -- 
-1.7.9.5
-
+Jiri Kosina
+SUSE Labs
