@@ -1,35 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from terminus.zytor.com ([198.137.202.10]:42326 "EHLO mail.zytor.com"
+Received: from cantor2.suse.de ([195.135.220.15]:34021 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754286Ab3CTBLo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 19 Mar 2013 21:11:44 -0400
-Message-ID: <51490CC8.80903@zytor.com>
-Date: Tue, 19 Mar 2013 18:11:36 -0700
-From: "H. Peter Anvin" <hpa@zytor.com>
+	id S1754349Ab3CONdT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 15 Mar 2013 09:33:19 -0400
+Date: Fri, 15 Mar 2013 14:33:13 +0100 (CET)
+From: Jiri Kosina <jkosina@suse.cz>
+To: Harald Arnesen <skogtun.linux@gmail.com>
+Cc: Kernel development list <linux-kernel@vger.kernel.org>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Peter Hurley <peter@hurleysoftware.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Thomas Meyer <thomas@m3y3r.de>,
+	Shawn Starr <shawn.starr@rogers.com>,
+	USB list <linux-usb@vger.kernel.org>,
+	linux-acpi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Daniel Vetter <daniel.vetter@ffwll.ch>,
+	Imre Deak <imre.deak@intel.com>,
+	Daniel Kurtz <djkurtz@chromium.org>,
+	dri-devel@lists.freedesktop.org
+Subject: Re: [3.9-rc1] irq 16: nobody cared  (was [3.9-rc1] very poor interrupt
+ responses)
+In-Reply-To: <5142E7F0.4020002@gmail.com>
+Message-ID: <alpine.LNX.2.00.1303151424140.9529@pobox.suse.cz>
+References: <Pine.LNX.4.44L0.1303141050310.1983-100000@iolanthe.rowland.org> <1460519.ejNFI1DrGk@vostro.rjw.lan> <1363280764.26318.4.camel@thor.lan> <5657408.cYX6iimiA4@vostro.rjw.lan> <alpine.LNX.2.00.1303150851020.9529@pobox.suse.cz>
+ <5142E7F0.4020002@gmail.com>
 MIME-Version: 1.0
-To: Matthew Garrett <matthew.garrett@nebula.com>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-security-module@vger.kernel.org"
-	<linux-security-module@vger.kernel.org>,
-	"linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
-	"kexec@lists.infradead.org" <kexec@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 01/12] Security: Add CAP_COMPROMISE_KERNEL
-References: <k1r3u75sumyfkayvoobjrce1.1363741640644@email.android.com>
-In-Reply-To: <k1r3u75sumyfkayvoobjrce1.1363741640644@email.android.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/19/2013 06:07 PM, Matthew Garrett wrote:
-> Yeah, I'd like the option of relaxing restrictions when drivers explicitly opt in based on iommu support.
+On Fri, 15 Mar 2013, Harald Arnesen wrote:
 
-When drivers opt in they can provide an interface.  The interesting case
-becomes non-drivers.
+> I have the same problem on my Lenovo T500. I think the graphics card is
+> involved.
+> 
+> This laptop has "hybrid graphics" - one Intel GMA 4500MHD and one ATI
+> Mobility Radeon HD 3650. When I boot with the Intel card, I get "irq 16:
+> nobody cared" during boot, not when I boot with the ATI card.
 
-	-hpa
+Confirming this. After a lot of hassle, I have bisected this reliably to
+
+	commit 28c70f162a315bdcfbe0bf940a740ef8bfb918d6
+	Author: Daniel Vetter <daniel.vetter@ffwll.ch>
+	Date:   Sat Dec 1 13:53:45 2012 +0100
+
+	    drm/i915: use the gmbus irq for waits
+
+Adding Daniel, Imre and Daniel to CC while I will try to figure out what's 
+happening in parallel.
+
+Attaching dmesg.txt from the machine with 28c70f162a as head, with 
+drm.debug=0xe.
 
 -- 
-H. Peter Anvin, Intel Open Source Technology Center
-I work for Intel.  I don't speak on their behalf.
-
+Jiri Kosina
+SUSE Labs
