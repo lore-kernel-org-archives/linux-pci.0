@@ -1,89 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:55096 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751355Ab3CURai (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 Mar 2013 13:30:38 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Russell King <linux@arm.linux.org.uk>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	devicetree-discuss@lists.ozlabs.org,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Maen Suleiman <maen@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Olof Johansson <olof@lixom.net>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Mitch Bradley <wmb@firmworks.com>,
-	Andrew Murray <andrew.murray@arm.com>
-Subject: [PATCH v5 03/17] of/pci: Add of_pci_parse_bus_range() function
-Date: Thu, 21 Mar 2013 18:30:11 +0100
-Message-Id: <1363887025-19931-4-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1363887025-19931-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1363887025-19931-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from cantor2.suse.de ([195.135.220.15]:39365 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754556Ab3COPO0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 15 Mar 2013 11:14:26 -0400
+Date: Fri, 15 Mar 2013 16:14:17 +0100 (CET)
+From: Jiri Kosina <jkosina@suse.cz>
+To: Harald Arnesen <skogtun.linux@gmail.com>
+Cc: Kernel development list <linux-kernel@vger.kernel.org>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Peter Hurley <peter@hurleysoftware.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Thomas Meyer <thomas@m3y3r.de>,
+	Shawn Starr <shawn.starr@rogers.com>,
+	USB list <linux-usb@vger.kernel.org>,
+	linux-acpi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Daniel Vetter <daniel.vetter@ffwll.ch>,
+	Imre Deak <imre.deak@intel.com>,
+	Daniel Kurtz <djkurtz@chromium.org>,
+	dri-devel@lists.freedesktop.org
+Subject: Re: [3.9-rc1] irq 16: nobody cared  (was [3.9-rc1] very poor interrupt
+ responses)
+In-Reply-To: <alpine.LNX.2.00.1303151424140.9529@pobox.suse.cz>
+Message-ID: <alpine.LNX.2.00.1303151609480.9529@pobox.suse.cz>
+References: <Pine.LNX.4.44L0.1303141050310.1983-100000@iolanthe.rowland.org> <1460519.ejNFI1DrGk@vostro.rjw.lan> <1363280764.26318.4.camel@thor.lan> <5657408.cYX6iimiA4@vostro.rjw.lan> <alpine.LNX.2.00.1303150851020.9529@pobox.suse.cz> <5142E7F0.4020002@gmail.com>
+ <alpine.LNX.2.00.1303151424140.9529@pobox.suse.cz>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Thierry Reding <thierry.reding@avionic-design.de>
+On Fri, 15 Mar 2013, Jiri Kosina wrote:
 
-This function can be used to parse a bus-range property as specified by
-device nodes representing PCI bridges.
+> > I have the same problem on my Lenovo T500. I think the graphics card is
+> > involved.
+> > 
+> > This laptop has "hybrid graphics" - one Intel GMA 4500MHD and one ATI
+> > Mobility Radeon HD 3650. When I boot with the Intel card, I get "irq 16:
+> > nobody cared" during boot, not when I boot with the ATI card.
+> 
+> Confirming this. After a lot of hassle, I have bisected this reliably to
+> 
+> 	commit 28c70f162a315bdcfbe0bf940a740ef8bfb918d6
+> 	Author: Daniel Vetter <daniel.vetter@ffwll.ch>
+> 	Date:   Sat Dec 1 13:53:45 2012 +0100
+> 
+> 	    drm/i915: use the gmbus irq for waits
+> 
+> Adding Daniel, Imre and Daniel to CC while I will try to figure out what's 
+> happening in parallel.
+> 
+> Attaching dmesg.txt from the machine with 28c70f162a as head, with 
+> drm.debug=0xe.
 
-Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
----
- drivers/of/of_pci.c    |   25 +++++++++++++++++++++++++
- include/linux/of_pci.h |    1 +
- 2 files changed, 26 insertions(+)
+Just a datapoint -- I have put a trivial debugging patch in place, and it 
+reveals that "nobody cared" for irq 16 happens long after last
 
-diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
-index 4dd7b9b..42c687a 100644
---- a/drivers/of/of_pci.c
-+++ b/drivers/of/of_pci.c
-@@ -64,3 +64,28 @@ int of_pci_get_devfn(struct device_node *np)
- 	return (be32_to_cpup(reg) >> 8) & 0xff;
- }
- EXPORT_SYMBOL_GPL(of_pci_get_devfn);
-+
-+/**
-+ * of_pci_parse_bus_range() - parse the bus-range property of a PCI device
-+ * @node: device node
-+ * @res: address to a struct resource to return the bus-range
-+ *
-+ * Returns 0 on success or a negative error-code on failure.
-+ */
-+int of_pci_parse_bus_range(struct device_node *node, struct resource *res)
-+{
-+	const __be32 *values;
-+	int len;
-+
-+	values = of_get_property(node, "bus-range", &len);
-+	if (!values || len < sizeof(*values) * 2)
-+		return -EINVAL;
-+
-+	res->name = node->name;
-+	res->start = be32_to_cpup(values++);
-+	res->end = be32_to_cpup(values);
-+	res->flags = IORESOURCE_BUS;
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(of_pci_parse_bus_range);
-diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
-index 91ec484..7a04826 100644
---- a/include/linux/of_pci.h
-+++ b/include/linux/of_pci.h
-@@ -11,5 +11,6 @@ struct device_node;
- struct device_node *of_pci_find_child_device(struct device_node *parent,
- 					     unsigned int devfn);
- int of_pci_get_devfn(struct device_node *np);
-+int of_pci_parse_bus_range(struct device_node *node, struct resource *res);
- 
- #endif
+	I915_WRITE(GMBUS4 + reg_offset, 0);
+
+has been performed in gmbus_wait_hw_status(). On the other hand, if I 
+comment out both GMBUS4 register offset writes in gmbus_wait_hw_status(), 
+then it of course falls back to GPIO bit-banging, but the "nobody cared" 
+for irq 16 is gone. 
+
+So it seems like something gets severely confused by the I915_WRITE to 
+GMBUS4 + reg_offset. So far this seems to have been reported solely on 
+Lenovos as far as I can see (although a completely different types), so it 
+might be some platform-specific quirk?
+
+Honestly, I still don't understand how all the GMBUS stuff relates to IRQ 
+16 at all. 
+
 -- 
-1.7.9.5
-
+Jiri Kosina
+SUSE Labs
