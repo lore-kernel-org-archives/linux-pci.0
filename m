@@ -1,113 +1,122 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-la0-f50.google.com ([209.85.215.50]:44172 "EHLO
-	mail-la0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752353Ab3CFG7Z (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Mar 2013 01:59:25 -0500
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <5142E7F0.4020002@gmail.com>
+Date: Fri, 15 Mar 2013 10:20:48 +0100
+From: Harald Arnesen <skogtun.linux@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1362542675.22132.86.camel@bling.home>
-References: <1354533387-4110-1-git-send-email-acooks@gmail.com>
-	<1355914703-28576-1-git-send-email-acooks@gmail.com>
-	<1362126373-32318-1-git-send-email-acooks@gmail.com>
-	<1362542675.22132.86.camel@bling.home>
-Date: Wed, 6 Mar 2013 14:59:23 +0800
-Message-ID: <CAJtEV7b4eyvWe36ttxR3mDVqNoQQM3BZ-LVn0BTxZCbPSY_o6w@mail.gmail.com>
-Subject: Re: [PATCH] Quirk to support Marvell 88SE91xx SATA controllers with
- Intel IOMMU.
-From: Andrew Cooks <acooks@gmail.com>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: Joerg Roedel <joro@8bytes.org>, YingChu <xjtuychu@hotmail.com>,
-	Chu Ying <gm.ychu@gmail.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	Justin Piszcz <jpiszcz@lucidpixels.com>,
-	David Woodhouse <dwmw2@infradead.org>,
-	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
-	open list <linux-kernel@vger.kernel.org>,
-	"open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>
+To: Kernel development list <linux-kernel@vger.kernel.org>
+CC: Jiri Kosina <jkosina@suse.cz>, "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Peter Hurley <peter@hurleysoftware.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Thomas Meyer <thomas@m3y3r.de>,
+	Shawn Starr <shawn.starr@rogers.com>,
+	USB list <linux-usb@vger.kernel.org>,
+	linux-acpi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: Re: [3.9-rc1] irq 16: nobody cared  (was [3.9-rc1] very poor interrupt
+ responses)
+References: <Pine.LNX.4.44L0.1303141050310.1983-100000@iolanthe.rowland.org> <1460519.ejNFI1DrGk@vostro.rjw.lan> <1363280764.26318.4.camel@thor.lan> <5657408.cYX6iimiA4@vostro.rjw.lan> <alpine.LNX.2.00.1303150851020.9529@pobox.suse.cz>
+In-Reply-To: <alpine.LNX.2.00.1303150851020.9529@pobox.suse.cz>
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 6, 2013 at 12:04 PM, Alex Williamson
-<alex.williamson@redhat.com> wrote:
-> On Fri, 2013-03-01 at 16:26 +0800, Andrew Cooks wrote:
->
->> +
->> +     for (fn = 1; fn < 8; fn++) {
->
-> Wouldn't you want to do 0 to 7, then add:
->
-> if (fn == PCI_FUNC(pdev->devfn))
->         continue;
->
-> You could also get more creative with the loop using shifts and exit
-> when the remaining map is 0.
+I have the same problem on my Lenovo T500. I think the graphics card is
+involved.
 
-Thanks, I'll use a shift instead.
+This laptop has "hybrid graphics" - one Intel GMA 4500MHD and one ATI
+Mobility Radeon HD 3650. When I boot with the Intel card, I get "irq 16:
+nobody cared" during boot, not when I boot with the ATI card.
 
-Up to now I've assumed that function 0 will always be the real device
-and that function 1-7 may be ghost functions, but as we saw in the
-case of the Marvell 88NV9143 in the Super Talent CoreStore MV 64GB
-mini-PCIe SSD, that assumption is probably wrong.
+And /proc/interrupts are surely different with the two cards. Look at
+the irq 16 line:
 
-To handle the case where the real device is function 1 and function 0
-needs to be mapped as a ghost function, would it be acceptable to
-iterate over 0 to 7 and let domain_context_mapping_one take care of
-preventing duplicates, or should I duplicate the
-device_to_context_entry and context_present function calls?
+$ cat intel-interrupts.txt
+           CPU0       CPU1
+  0:      23658      22859   IO-APIC-edge      timer
+  1:        168        177   IO-APIC-edge      i8042
+  8:          1          0   IO-APIC-edge      rtc0
+  9:        329        347   IO-APIC-fasteoi   acpi
+ 12:       3065       3166   IO-APIC-edge      i8042
+ 16:      49732      50269   IO-APIC-fasteoi   yenta, uhci_hcd:usb6
+ 17:          1          0   IO-APIC-fasteoi   firewire_ohci, uhci_hcd:usb7
+ 18:          0          0   IO-APIC-fasteoi   mmc0, uhci_hcd:usb8
+ 19:        216        204   IO-APIC-fasteoi   ehci_hcd:usb2
+ 20:          0          0   IO-APIC-fasteoi   uhci_hcd:usb3
+ 21:        114        103   IO-APIC-fasteoi   uhci_hcd:usb4
+ 22:          0          0   IO-APIC-fasteoi   uhci_hcd:usb5
+ 23:          9          9   IO-APIC-fasteoi   i801_smbus, ehci_hcd:usb1
+ 40:          0          0  DMAR_MSI-edge      dmar2
+ 41:          0          0  DMAR_MSI-edge      dmar0
+ 42:          0          0  DMAR_MSI-edge      dmar3
+ 43:          0          0   PCI-MSI-edge      PCIe PME
+ 44:          0          0   PCI-MSI-edge      PCIe PME
+ 45:          0          0   PCI-MSI-edge      PCIe PME
+ 46:          0          0   PCI-MSI-edge      PCIe PME
+ 47:      10023      10173   PCI-MSI-edge      ahci
+ 48:         10          8   PCI-MSI-edge      mei
+ 49:         22         30   PCI-MSI-edge      eth0
+ 50:         66         71   PCI-MSI-edge      i915
+ 51:       2508       2348   PCI-MSI-edge      iwlwifi
+ 52:        168        169   PCI-MSI-edge      snd_hda_intel
+NMI:         17         17   Non-maskable interrupts
+LOC:      27988      25243   Local timer interrupts
+SPU:          0          0   Spurious interrupts
+PMI:         17         17   Performance monitoring interrupts
+IWI:          0          0   IRQ work interrupts
+RTR:          0          0   APIC ICR read retries
+RES:       4584       2746   Rescheduling interrupts
+CAL:       6178       7492   Function call interrupts
+TLB:        702        651   TLB shootdowns
+TRM:          0          0   Thermal event interrupts
+THR:          0          0   Threshold APIC interrupts
+MCE:          0          0   Machine check exceptions
+MCP:          1          1   Machine check polls
+ERR:          0
+MIS:          0
 
->
->> +             if (fn_map & (1 << fn)) {
->> +                     err = domain_context_mapping_one(domain,
->> +                                     pci_domain_nr(pdev->bus),
->> +                                     pdev->bus->number,
->> +                                     PCI_DEVFN(PCI_SLOT(pdev->devfn), fn),
->> +                                     translation);
->> +                     if (err)
->> +                             return err;
->
-> I'd be worried that there's missing cleanup here, what if you were
-> mapping multiple ghost functions and the 2nd one failed, leaving one
-> attached?
-
-I don't understand the failure cases sufficiently, but I understand
-that it's better to have all mappings succeed or fail together. Will
-fix it.
-
->> +/* Table of multiple (ghost) source functions. This is similar to the
->> + * translated sources above, but with the following differences:
->> + * 1. the device may use multiple functions as DMA sources,
->> + * 2. these functions cannot be assumed to be actual devices,
->> + * 3. the specific ghost function for a request can not be exactly predicted.
->> + * The bitmap only contains the additional quirk functions.
->> + */
->> +static const struct pci_dev_dma_multi_func_sources {
->> +     u16 vendor;
->> +     u16 device;
->> +     u8 func_map;    /* bit map. lsb is fn 0. */
->> +} pci_dev_dma_multi_func_sources[] = {
->> +     { PCI_VENDOR_ID_MARVELL_2, 0x9123, (1<<0)|(1<<1)},
->> +     { PCI_VENDOR_ID_MARVELL_2, 0x9125, (1<<0)|(1<<1)},
->> +     { PCI_VENDOR_ID_MARVELL_2, 0x9128, (1<<0)|(1<<1)},
->> +     { PCI_VENDOR_ID_MARVELL_2, 0x9130, (1<<0)|(1<<1)},
->> +     { PCI_VENDOR_ID_MARVELL_2, 0x9172, (1<<0)|(1<<1)},
->
-> Links to bug reports in the comments might be useful for future
-> workarounds.  I'm also not sure what you mean in the 3rd bullet, the
-> non-ghost function of some of these is sometimes 0, sometimes 1?  And
-> the ghost function is the other?
-
-The ghost function is the one that doesn't correspond to an actual
-device, but the actual device could be either 0 or 1 and it could use
-both 0 and 1 for different requests, with no obvious way to tell when
-it will use 0 and when it will use 1. I'll reword the bullet.
-
-> Skipping fn 0 above, I assume all
-> cases are fn 0 exists and fn 1 is the ghost function, right?  If so,
-> then we probably only want bit 1 set.  I'm afraid to ask whether there
-> are configurations of this vendor/device that have a fn 1.
-
-See comment about Marvell 88NV9143 above.
-
-Thanks for reviewing!
-
-a.
+$ cat ati-interrupts.txt
+           CPU0       CPU1
+  0:      15488      15268   IO-APIC-edge      timer
+  1:        182        189   IO-APIC-edge      i8042
+  8:          1          0   IO-APIC-edge      rtc0
+  9:        328        339   IO-APIC-fasteoi   acpi
+ 12:       2071       1997   IO-APIC-edge      i8042
+ 16:         55         47   IO-APIC-fasteoi   yenta, uhci_hcd:usb4
+ 17:          1          1   IO-APIC-fasteoi   firewire_ohci, uhci_hcd:usb5
+ 18:          0          0   IO-APIC-fasteoi   uhci_hcd:usb6, mmc0
+ 19:        219        202   IO-APIC-fasteoi   ehci_hcd:usb8
+ 20:          0          0   IO-APIC-fasteoi   uhci_hcd:usb1
+ 21:        112        104   IO-APIC-fasteoi   uhci_hcd:usb2
+ 22:          0          0   IO-APIC-fasteoi   uhci_hcd:usb3
+ 23:         10          8   IO-APIC-fasteoi   i801_smbus, ehci_hcd:usb7
+ 40:          0          0  DMAR_MSI-edge      dmar1
+ 41:          0          0  DMAR_MSI-edge      dmar0
+ 42:          0          0  DMAR_MSI-edge      dmar2
+ 43:          0          0   PCI-MSI-edge      PCIe PME
+ 44:          0          0   PCI-MSI-edge      PCIe PME
+ 45:          0          0   PCI-MSI-edge      PCIe PME
+ 46:          0          0   PCI-MSI-edge      PCIe PME
+ 47:          0          0   PCI-MSI-edge      PCIe PME
+ 48:       9733       9932   PCI-MSI-edge      ahci
+ 49:          9          9   PCI-MSI-edge      mei
+ 50:       2308       2196   PCI-MSI-edge      iwlwifi
+ 51:         15         35   PCI-MSI-edge      eth0
+ 52:        818        815   PCI-MSI-edge      radeon
+ 53:        167        167   PCI-MSI-edge      snd_hda_intel
+NMI:         17         16   Non-maskable interrupts
+LOC:      18139      34223   Local timer interrupts
+SPU:          0          0   Spurious interrupts
+PMI:         17         16   Performance monitoring interrupts
+IWI:          0          0   IRQ work interrupts
+RTR:          0          0   APIC ICR read retries
+RES:       3788       3563   Rescheduling interrupts
+CAL:       6303       5894   Function call interrupts
+TLB:        711        711   TLB shootdowns
+TRM:          0          0   Thermal event interrupts
+THR:          0          0   Threshold APIC interrupts
+MCE:          0          0   Machine check exceptions
+MCP:          1          1   Machine check polls
+ERR:          0
+MIS:          0
+-- 
+Hilsen Harald
