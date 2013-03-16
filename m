@@ -1,39 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ia0-f172.google.com ([209.85.210.172]:60440 "EHLO
-	mail-ia0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754764Ab3CIHZr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 9 Mar 2013 02:25:47 -0500
+Received: from mail-pb0-f53.google.com ([209.85.160.53]:53899 "EHLO
+	mail-pb0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751693Ab3CPWKw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 16 Mar 2013 18:10:52 -0400
+Received: by mail-pb0-f53.google.com with SMTP id un1so5248963pbc.26
+        for <linux-pci@vger.kernel.org>; Sat, 16 Mar 2013 15:10:52 -0700 (PDT)
+Date: Sat, 16 Mar 2013 15:11:59 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Myron Stowe <myron.stowe@redhat.com>
+Cc: kay@vrfy.org, linux-hotplug@vger.kernel.org,
+	alex.williamson@redhat.com, linux-pci@vger.kernel.org,
+	yuxiangl@marvell.com, yxlraid@gmail.com,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] udevadm-info: Don't access sysfs 'resource<N>' files
+Message-ID: <20130316221159.GA3702@kroah.com>
+References: <20130316213512.2974.17303.stgit@amt.stowe>
+ <20130316213519.2974.38954.stgit@amt.stowe>
 MIME-Version: 1.0
-In-Reply-To: <alpine.LFD.2.02.1303082108590.22263@ionos>
-References: <1360351703-20571-1-git-send-email-yinghai@kernel.org>
-	<1360351703-20571-3-git-send-email-yinghai@kernel.org>
-	<alpine.LFD.2.02.1303082104580.22263@ionos>
-	<alpine.LFD.2.02.1303082108590.22263@ionos>
-Date: Fri, 8 Mar 2013 23:25:47 -0800
-Message-ID: <CAE9FiQVGN6ZheaYaj-tztNZpMZ9QN4X=kKu5_yX=bamV2b2FxA@mail.gmail.com>
-Subject: Re: [PATCH v2 02/26] x86, irq: Modify irq chip once for irq remapping
-From: Yinghai Lu <yinghai@kernel.org>
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: Ingo Molnar <mingo@elte.hu>, "H. Peter Anvin" <hpa@zytor.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>,
-	Joerg Roedel <joro@8bytes.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130316213519.2974.38954.stgit@amt.stowe>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 8, 2013 at 12:10 PM, Thomas Gleixner <tglx@linutronix.de> wrote:
->
-> And just for clarification. If you are not going to provide proper
-> changelogs for _all_ patches of the series, this stuff is going
-> directly towards /dev/null. I'm not wasting my time to review any of
-> that otherwise.
+On Sat, Mar 16, 2013 at 03:35:19PM -0600, Myron Stowe wrote:
+> Sysfs includes entries to memory that backs a PCI device's BARs, both I/O
+> Port space and MMIO.  This memory regions correspond to the device's
+> internal status and control registers used to drive the device.
+> 
+> Accessing these registers from userspace such as "udevadm info
+> --attribute-walk --path=/sys/devices/..." does can not be allowed as
+> such accesses outside of the driver, even just reading, can yield
+> catastrophic consequences.
+> 
+> Udevadm-info skips parsing a specific set of sysfs entries including
+> 'resource'.  This patch extends the set to include the additional
+> 'resource<N>' entries that correspond to a PCI device's BARs.
 
-ok, will try to update change logs and resend them next week.
+Nice, are you also going to patch bash to prevent a user from reading
+these sysfs files as well?  :)
 
-Thanks
+And pciutils?
 
-Yinghai
+You get my point here, right?  The root user just asked to read all of
+the data for this device, so why wouldn't you allow it?  Just like
+'lspci' does.  Or bash does.
+
+If this hardware has a problem, then it needs to be fixed in the kernel,
+not have random band-aids added to various userspace programs to paper
+over the root problem here.  Please fix the kernel driver and all should
+be fine.  No need to change udevadm.
+
+greg k-h
