@@ -1,109 +1,122 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:24257 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:50664 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756816Ab3CDNYp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 4 Mar 2013 08:24:45 -0500
-Message-ID: <5134A080.9070308@redhat.com>
-Date: Mon, 04 Mar 2013 08:24:16 -0500
-From: Don Dutile <ddutile@redhat.com>
+	id S1750913Ab3CPVfT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 16 Mar 2013 17:35:19 -0400
+From: Myron Stowe <myron.stowe@redhat.com>
+Subject: [PATCH] udevadm-info: Don't access sysfs entries backing device I/O
+	port space
+To: kay@vrfy.org
+Cc: linux-hotplug@vger.kernel.org, greg@kroah.com,
+	alex.williamson@redhat.com, linux-pci@vger.kernel.org,
+	yuxiangl@marvell.com, yxlraid@gmail.com,
+	linux-kernel@vger.kernel.org
+Date: Sat, 16 Mar 2013 15:35:12 -0600
+Message-ID: <20130316213512.2974.17303.stgit@amt.stowe>
 MIME-Version: 1.0
-To: Andreas Mohr <andi@lisas.de>
-CC: Neil Horman <nhorman@tuxdriver.com>, linux-kernel@vger.kernel.org,
-	Prarit Bhargava <prarit@redhat.com>,
-	Don Zickus <dzickus@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Asit Mallick <asit.k.mallick@intel.com>,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH] irq: add quirk for broken interrupt remapping on 55XX
- chipsets
-References: <20130302155942.GA353@rhlx01.hs-esslingen.de>
-In-Reply-To: <20130302155942.GA353@rhlx01.hs-esslingen.de>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/02/2013 10:59 AM, Andreas Mohr wrote:
-> Hi,
->
->> if ((revision == 0x13)&&  irq_remapping_enabled) {
->> +		pr_warn("WARNING WARNING WARNING WARNING WARNING
->> WARNING\n"
->> +			"This system BIOS has enabled interrupt
->> remapping\n"
->> +			"on a chipset that contains an errata making
->> that\n"
->> +			"feature unstable.  Please reboot with
->> nointremap\n"
->> +			"added to the kernel command line and contact\n"
->> +			"your BIOS vendor for an update");
->> +	}
->
-> Forgive me, but ISTR that there's a special BIOS firmware quirk bug annotating
-> logger warning message mechanism (have I managed to hit all keywords yet? ;)
-> in the kernel which might be useful in this case.
->
->
-> OK, found something (but I don't think it was the mechanism
-> that ISTR - perhaps it got modernized?):
->
->
-> include/linux/printk.h:
->
-> /*
->   * FW_BUG
->   * Add this to a message where you are sure the firmware is buggy or
->   * behaves
->   * really stupid or out of spec. Be aware that the responsible BIOS
->   * developer
->   * should be able to fix this issue or at least get a concrete idea of
->   * the
->   * problem by reading your message without the need of looking at the
->   * kernel
->   * code.
->   *
->   * Use it for definite and high priority BIOS bugs.
->   *
->   * FW_WARN
->   * Use it for not that clear (e.g. could the kernel messed up things
->   * already?)
->   * and medium priority BIOS bugs.
->   *
->   * FW_INFO
->   * Use this one if you want to tell the user or vendor about something
->   * suspicious, but generally harmless related to the firmware.
->   *
->   * Use it for information or very low priority BIOS bugs.
->   */
->
 
-It is not a firmware/BIOS bug. Prarit's comment to annotate it as
-a HW_ERR is more accurate.  A software patch is being tested now
-to see if it can do set-affinity in a manner that avoids this race
-and enables IR to stay on for all these systems.  It requires
-more testing to ensure the logic is valid.  This patch was
-recommended as a necessary short-term fix, and to highlight to
-others this possible state -- which Gerry mentioned he had.
+I've been working on identifying the root cause of an issue exposed by
+'udevadm' that was first exposed on the linux-pci mail list [1] and
+believe that there is now enough of an understanding to propose a fix.
 
-Note: the race condition is a very small window, and could not
-        be duplicated on upstream kernel on known-failing-hw b/c
-        the interrupt rate dropped by 80%.
+What was originally witnessed was the platform hanging after "udevadm info
+--attribute-walk --path=/sys/devices/pci0000:00/<...>/block/sda" is ran.
+Xiangliang was able to isolate the failure to accesses involving a Marvell
+9125 device's I/O BARs, or more specifically, accesses to the I/O port
+space backing the device's I/O BARs (a.k.a. the device's I/O port
+resources, or regions).  With this knowledge he was able to reproduce the
+hang targeting the device's sysfs 'resource<N>' entries, where N
+represents an I/O BARs, with "cat /sys/devices/<...>/resource<N>".
 
-The errata's recommendation (to disable IR in the BIOS) makes
-the option of a workaround impossible, since it will hide the
-IR hw (no DMAR table for it).  The BIOS 'update' may be avoided,
-and corrected, if testing yields positive results, and after
-posting, others don't see a flaw in the logic that was missed
-by other reviewers.
+In my research, looking for possible solutions, I noticed that kernel
+commit 8633328 introduced sysfs based reading and writing of I/O port
+related 'resource<N>' entries as part of adding virtualization based
+device assignment functionality [2].  Note that these regions directly map
+to the device's control and status registers [3].
 
->
-> So perhaps it is appropriate to be used here.
->
->
-> HTH,
->
-> Andreas Mohr
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Putting together these pieces of information we now understand that:
+  o  udevadm based attribute walking initiates read accesses of all the
+     entries in a device's sysfs directory [4],
+  o  sysfs 'resource<N>' entries correspond to the device's internal
+     status and control registers used for driving the device,
+  o  If the 'resource<N>' entry corresponds to a device's I/O BAR, the
+     device's control and status registers are directly accessible by
+     userspace.
 
+Allowing userspace access to a device's registers introduces potential
+simultaneous interaction with the device by a second, competing, entity;
+There is the device's driver, which believes it exclusively owns the
+device, and an unknown, potential second entity, which can effect control
+and status changes to the device asynchronously.
+
+Device status and control registers being accessed from an entity that has
+no idea what is being read or written is just asking for trouble.  Even
+just reading can have consequences as the register may be a "read once to
+clear" or some similar type.  I think we have just been lucky, or
+blissfully ignorant, concerning problems that may have, and still could
+be, occurring due to this situation.
+
+
+There is an aspect at play here that I still do not understand (likely
+something obvious that I'm just not seeing).  The sysfs read routine for
+accessing I/O port 'resource<N>' entries only supports 1, 2, and 4 byte
+reads (which respectively correspond to inb/outb, inw/outw, and inl/outl
+I/O port accessors).  When "udevadm ..." executes, the udev internals
+attempt reads of 4K byte chunks.
+
+  "udevadm info --attribute-walk --path=<pci_device_path>"
+
+  print_device_chain()
+    print_all_attributes()
+      ...
+      udev_device_get_sysattr_value()
+        char value[4096];
+        ...
+        size = read(fd, value, sizeof(value));
+        ...
+
+  -- ^ userspace ^ -- v kernel v --
+
+  pci_read_resource_io(..., count)	# sysfs read setup in pci_create_attr()
+    pci_resource_io(..., count, ...)
+      ...
+      if (port + count - 1 > pci_resource_end(pdev, i))
+        return -EINVAL;
+      ...
+
+What I don't understand is how the device's I/O port space is successfully
+getting read.  It looks to me like 'pci_resource_io()' would fail the
+access size check and return '-EINVAL' having never attempted the read's
+access to I/O port space causing the system to hang.
+
+I'm keep looking into this but I do *not* have access to a platform with a
+Marvell 9125 device.
+
+
+Reference(s)/Foot Note(s):
+  [1] https://lkml.org/lkml/2013/3/7/242
+  [2] Note that due to the implementation specifics only the 'resource<N>'
+      entries representing I/O BARs can be read or written via sysfs.
+      Sysfs' 'resource<N>' entries representing MMIO do not have sysfs
+      based read/write routines as only mmap'ing of these entries is
+      exposed (./drivers/pci/pci-sysfs.c::pci_create_attr()).
+  [3] The kernel's sysfs documentation states: "Attributes should be ASCII
+      text files..." (./Documentation/filesystems/sysfs.txt).  I wonder if
+      this is just out-of-date infomation as sysfs obviously supports
+      creating binary files (./fs/sysfs/bin.c::sysfs_create_bin_file()).
+  [4] Note that udevadm-info does skip a specifically named set of entries
+      (./src/udevadm-info.c::skip_attribute()).
+---
+
+Myron Stowe (1):
+      udevadm-info: Don't access sysfs 'resource<N>' files
+
+
+ src/udevadm-info.c |    7 ++++++-
+ 1 files changed, 6 insertions(+), 1 deletions(-)
+
+-- 
