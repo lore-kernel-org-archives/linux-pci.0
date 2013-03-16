@@ -1,80 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:59113 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754028Ab3CXOjn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 24 Mar 2013 10:39:43 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glp-linux-pci@m.gmane.org>)
-	id 1UJm5d-0003xR-0h
-	for linux-pci@vger.kernel.org; Sun, 24 Mar 2013 15:40:05 +0100
-Received: from 78-134-117-101.v4.ngi.it ([78.134.117.101])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-pci@vger.kernel.org>; Sun, 24 Mar 2013 15:40:05 +0100
-Received: from ordex by 78-134-117-101.v4.ngi.it with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-pci@vger.kernel.org>; Sun, 24 Mar 2013 15:40:05 +0100
+Received: from queue01c.mail.zen.net.uk ([212.23.3.237]:46293 "EHLO
+	queue01c.mail.zen.net.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750994Ab3CPJEb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 16 Mar 2013 05:04:31 -0400
+Received: from [212.23.1.3] (helo=smarthost03.mail.zen.net.uk)
+	by queue01c.mail.zen.net.uk with esmtp (Exim 4.72)
+	(envelope-from <rjt-linux-pci@thegrindstone.me.uk>)
+	id 1UGmGu-00067o-Hh
+	for linux-pci@vger.kernel.org; Sat, 16 Mar 2013 08:15:20 +0000
+Received: from [82.68.127.150] (helo=bee.taylor.home)
+	by smarthost03.mail.zen.net.uk with esmtp (Exim 4.72)
+	(envelope-from <rjt-linux-pci@thegrindstone.me.uk>)
+	id 1UGmFr-0000bx-E2
+	for linux-pci@vger.kernel.org; Sat, 16 Mar 2013 08:14:15 +0000
+Message-ID: <514429D7.5040203@thegrindstone.me.uk>
+Date: Sat, 16 Mar 2013 08:14:15 +0000
+From: Richard Taylor <rjt-linux-pci@thegrindstone.me.uk>
+MIME-Version: 1.0
 To: linux-pci@vger.kernel.org
-From: Antonio Quartulli <ordex@autistici.org>
-Subject: Re: =?utf-8?b?d2Fybl9zbG93cGF0aF9jb21tb24=?= in drivers/pci/search.c:44 on linux-3.4.0
-Date: Sun, 24 Mar 2013 14:34:37 +0000 (UTC)
-Message-ID: <loom.20130324T153215-633@post.gmane.org>
-References: <20120526082551.GA2723@ritirata.org> <CAErSpo553_-AivRa7VbjHrFraHaO4NYoYR7A9Am5fkDP-CMvSA@mail.gmail.com> <20120529083552.GN2604@amd.com> <20120529085648.GA13941@ritirata.org> <20120529101657.GO2604@amd.com> <4FC4F5BC.5000102@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: Configuration settings to return 0xFFFFFFFF on error?
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello people,
+Hi
 
-Jiang Liu <liuj97 <at> gmail.com> writes:
+I am struggling with a badly behaved PCIe device that is either not
+sending Read Completion packets or it is sending Unsupported Requests.
 
-> 
-> On 05/29/2012 06:16 PM, Joerg Roedel wrote:
-> > On Tue, May 29, 2012 at 10:56:50AM +0200, Antonio Quartulli wrote:
-> >> attached!
-> >> Some days ago I tried to put some printk in the code and, as far as I can
-> >> understand, you are right.
-> > 
-> > Hmm, looks like device 03:00.0 is a 32bit PCI device attached to device
-> > 00:1c.2 which calls itself a Root Port instead of a PCI Bridge. I am
-> > not sure if the check in search.c is really necessary. As I see it there
-> > are also other possible pcie_types like PCI_EXP_TYPE_PCIE_BRIDGE.
-> > Putting Anil Keshavamurthy on Cc.
-> > 
-> > Anil, is this check in pci_find_upstream_pcie_bridge() really
-> > necessary:
-> > 
-> >         /* PCI device should connect to a PCIe bridge */
-> >         if (pdev->pcie_type != PCI_EXP_TYPE_PCI_BRIDGE) {
-> >                 /* Busted hardware? */
-> >                 WARN_ON_ONCE(1);
-> >                 return NULL;
-> >         }
-> > 
-> > ? In the warning that triggers for Antonio the value of pcie_type seems
-> > to be PCI_EXP_TYPE_ROOT_PORT and from the available types I think that
-> > PCI_EXP_TYPE_PCIE_BRIDGE is also possible.
-> It seems that device 00:1c.2 is a real PCIe root port, and device 03:00.0
-> is a CardBus bridge. Should we call device 03:00.0 as Legacy Endpoint here?
-> Could a PCIe legacy endpoint be directly connected to root port and downstream
-> port? If the answer is yes, the assumption in pci_find_upstream_pcie_bridge()
-> 
-> BTW, does PCI_EXP_TYPE_PCIE_BRIDGE mean PCI/PCI-X to PCIe bridge? Do we
-> really have such chipsets?
-> 
+My problem is that the affect of these is to leave the Non-Posted
+transaction that is waiting for the Read Completion in a hung state,
+consuming 100% CPU.
 
-It has been a while that we did not discuss the issue :)
-Today, while checking my dmesg, I've seen the same warning.
-Now I am running linux-3.8.4.
+I have read a number of times that when an error occurs it should be
+possible to have the transaction return with 0xFFFFFFFF rather than hang.
 
-Did we/you find any possible answer to how to proceed given the existante of the 
-configuration that is triggering the warning?
+I suspect this may be something to do with error severity or error
+masking settings in the PCIe configuration registers.
 
-Let me know if you want me to test any code.
+The CPU is a QoriQ P2020.
 
-Thanks a lot.
-Cheers,
+Can anyone point me in the right direction for something to try?
 
+I have the AER driver installed and it shows error interrupts being
+generated - but the memory read call still does not terminate.
 
+I am not very familiar with PCI and I have struggled to find an
+explanation of this issue that gives me a clue on where to go next.
 
+Regards
+
+Richard
