@@ -1,148 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:54248 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751419Ab3CZQwl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Mar 2013 12:52:41 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Russell King <linux@arm.linux.org.uk>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	devicetree-discuss@lists.ozlabs.org,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Maen Suleiman <maen@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Olof Johansson <olof@lixom.net>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Mitch Bradley <wmb@firmworks.com>,
-	Andrew Murray <andrew.murray@arm.com>
-Subject: [RFCv1 08/11] PCI: Introduce new MSI chip infrastructure
-Date: Tue, 26 Mar 2013 17:52:23 +0100
-Message-Id: <1364316746-8702-9-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1364316746-8702-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1364316746-8702-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from mail-oa0-f52.google.com ([209.85.219.52]:54602 "EHLO
+	mail-oa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751001Ab3CPQsk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 16 Mar 2013 12:48:40 -0400
+Received: by mail-oa0-f52.google.com with SMTP id k14so4491039oag.11
+        for <linux-pci@vger.kernel.org>; Sat, 16 Mar 2013 09:48:39 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <514429D7.5040203@thegrindstone.me.uk>
+References: <514429D7.5040203@thegrindstone.me.uk>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Sat, 16 Mar 2013 10:48:19 -0600
+Message-ID: <CAErSpo6vbJ8wy8i7ZJbDni097e0gbpDXLhLRermYhkyt24fi1g@mail.gmail.com>
+Subject: Re: Configuration settings to return 0xFFFFFFFF on error?
+To: Richard Taylor <rjt-linux-pci@thegrindstone.me.uk>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Thierry Reding <thierry.reding@avionic-design.de>
+On Sat, Mar 16, 2013 at 2:14 AM, Richard Taylor
+<rjt-linux-pci@thegrindstone.me.uk> wrote:
+> Hi
+>
+> I am struggling with a badly behaved PCIe device that is either not
+> sending Read Completion packets or it is sending Unsupported Requests.
+>
+> My problem is that the affect of these is to leave the Non-Posted
+> transaction that is waiting for the Read Completion in a hung state,
+> consuming 100% CPU.
+>
+> I have read a number of times that when an error occurs it should be
+> possible to have the transaction return with 0xFFFFFFFF rather than hang.
 
-The new struct msi_chip is used to associated an MSI controller with a
-PCI bus. It is automatically handed down from the root to its children
-during bus enumeration.
+I'm not a hardware person, but I think this would be done by the Root Complex.
 
-This patch provides default (weak) implementations for the architecture-
-specific MSI functions (arch_setup_msi_irq(), arch_teardown_msi_irq()
-and arch_msi_check_device()) which check if a PCI device's bus has an
-attached MSI chip and forward the call appropriately.
+I found a QorIQ P2020 Integrated Processor Reference Manual, rev 0
+07/2009, and Table 16-125 seems to mention these cases in the first
+(no response) and third (UR response) rows.  These show logging the
+error and sending an interrupt to the PIC.  But the CPU probably won't
+recognize an interrupt until its read completes, so I doubt if the
+interrupt by itself helps.
 
-Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
----
- drivers/pci/msi.c   |   35 +++++++++++++++++++++++++++++++----
- drivers/pci/probe.c |    1 +
- include/linux/msi.h |   10 ++++++++++
- include/linux/pci.h |    1 +
- 4 files changed, 43 insertions(+), 4 deletions(-)
+The table does mention sending all 1s (0xFFFFFFFF), but it looks like
+only for config transactions.
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 00cc78c..fce3549 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -26,14 +26,41 @@
- 
- static int pci_msi_enable = 1;
- 
--/* Arch hooks */
-+int __weak arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
-+{
-+	struct msi_chip *chip = dev->bus->msi;
-+
-+	if (chip && chip->setup_irq) {
-+		int err;
-+
-+		err = chip->setup_irq(chip, dev, desc);
-+		if (err < 0)
-+			return err;
-+
-+		irq_set_chip_data(desc->irq, chip);
-+		return err;
-+	}
-+
-+	return -EINVAL;
-+}
- 
--#ifndef arch_msi_check_device
--int arch_msi_check_device(struct pci_dev *dev, int nvec, int type)
-+void __weak arch_teardown_msi_irq(unsigned int irq)
- {
-+	struct msi_chip *chip = irq_get_chip_data(irq);
-+
-+	if (chip && chip->teardown_irq)
-+		chip->teardown_irq(chip, irq);
-+}
-+
-+int __weak arch_msi_check_device(struct pci_dev *dev, int nvec, int type)
-+{
-+	struct msi_chip *chip = dev->bus->msi;
-+
-+	if (chip && chip->check_device)
-+		return chip->check_device(chip, dev, nvec, type);
-+
- 	return 0;
- }
--#endif
- 
- #ifndef arch_setup_msi_irqs
- # define arch_setup_msi_irqs default_setup_msi_irqs
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index b494066..9307550 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -634,6 +634,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
- 
- 	child->parent = parent;
- 	child->ops = parent->ops;
-+	child->msi = parent->msi;
- 	child->sysdata = parent->sysdata;
- 	child->bus_flags = parent->bus_flags;
- 
-diff --git a/include/linux/msi.h b/include/linux/msi.h
-index ce93a34..ea4a5be 100644
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -58,5 +58,15 @@ extern int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type);
- extern void arch_teardown_msi_irqs(struct pci_dev *dev);
- extern int arch_msi_check_device(struct pci_dev* dev, int nvec, int type);
- 
-+struct msi_chip {
-+	struct module *owner;
-+	struct device *dev;
-+
-+	int (*setup_irq)(struct msi_chip *chip, struct pci_dev *dev,
-+			 struct msi_desc *desc);
-+	void (*teardown_irq)(struct msi_chip *chip, unsigned int irq);
-+	int (*check_device)(struct msi_chip *chip, struct pci_dev *dev,
-+			    int nvec, int type);
-+};
- 
- #endif /* LINUX_MSI_H */
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 2461033a..6aca43ea 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -416,6 +416,7 @@ struct pci_bus {
- 	struct resource busn_res;	/* bus numbers routed to this bus */
- 
- 	struct pci_ops	*ops;		/* configuration access functions */
-+	struct msi_chip	*msi;		/* MSI controller */
- 	void		*sysdata;	/* hook for sys-specific extension */
- 	struct proc_dir_entry *procdir;	/* directory entry in /proc/bus/pci */
- 
--- 
-1.7.9.5
+So I agree; I would expect there would be a way to send 0xFFFFFFFF
+back to the CPU so it can continue, but I don't know how to make that
+happen.
 
+Doesn't the CPU have any kind of response timeout itself?  I would
+think the CPU itself would eventually time out the read and take a
+machine check or something.  I know that's not the response you're
+looking for, but at least it would keep the CPU from getting
+completely hung because of a broken peripheral.
+
+> I suspect this may be something to do with error severity or error
+> masking settings in the PCIe configuration registers.
+>
+> The CPU is a QoriQ P2020.
+>
+> Can anyone point me in the right direction for something to try?
+>
+> I have the AER driver installed and it shows error interrupts being
+> generated - but the memory read call still does not terminate.
