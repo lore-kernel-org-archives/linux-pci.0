@@ -1,96 +1,50 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 21 Mar 2013 17:06:25 +0100
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Andrew Murray <Andrew.Murray@arm.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"devicetree-discuss@lists.ozlabs.org"
-	<devicetree-discuss@lists.ozlabs.org>,
-	"rob.herring@calxeda.com" <rob.herring@calxeda.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>
-Subject: Re: [RFC PATCH RESEND v2] of/pci: Provide support for parsing PCI
- DT ranges property
-Message-ID: <20130321170625.2a1bf226@skate>
-In-Reply-To: <1362140616-19346-1-git-send-email-Andrew.Murray@arm.com>
-References: <1362140616-19346-1-git-send-email-Andrew.Murray@arm.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from plane.gmane.org ([80.91.229.3]:60000 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756252Ab3CQQEp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 17 Mar 2013 12:04:45 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glp-linux-pci@m.gmane.org>)
+	id 1UHG51-000805-RV
+	for linux-pci@vger.kernel.org; Sun, 17 Mar 2013 17:05:04 +0100
+Received: from 120819-2718A.teremki.kiev.ua ([178.159.236.29])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-pci@vger.kernel.org>; Sun, 17 Mar 2013 17:05:03 +0100
+Received: from roman.yepishev by 120819-2718A.teremki.kiev.ua with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-pci@vger.kernel.org>; Sun, 17 Mar 2013 17:05:03 +0100
+To: linux-pci@vger.kernel.org
+From: Roman Yepishev <roman.yepishev@gmail.com>
+Subject: Re: is L1 really disabled in iwlwifi
+Date: Sun, 17 Mar 2013 15:59:19 +0000 (UTC)
+Message-ID: <loom.20130317T165508-222@post.gmane.org>
+References: <CANUX_P3F5YhbZX3WGU-j1AGpbXb_T9Bis2ErhvKkFMtDvzatVQ@mail.gmail.com> <20130304134949.GB3021@redhat.com> <CANUX_P0JhuVWcQjTckYzG8eBb2MtT_=prKqV38mCpVjfLmGtCA@mail.gmail.com> <20130304154832.GD3021@redhat.com> <CANUX_P22AkqeOROP1QHzp20wGWgDbRzy+9FZy2KvHLXCQ5AVnA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Andrew Murray,
-
-On Fri,  1 Mar 2013 12:23:36 +0000, Andrew Murray wrote:
-> This patch factors out common implementations patterns to reduce overall kernel
-> code and provide a means for host bridge drivers to directly obtain struct
-> resources from the DT's ranges property without relying on architecture specific
-> DT handling. This will make it easier to write archiecture independent host bridge
-> drivers and mitigate against further duplication of DT parsing code.
+Emmanuel Grumbach <egrumbach <at> gmail.com> writes:
+> nope - enabled on both kernel: 3.1 and 3.7. Makes sense though.
+> CONFIG_PCIEASPM enabled, I have L1. Just wondering why doesn't that
+> pci_disable_link_state do anything....
+> Also, I remember so issues Mathew Garret debugged and he ended up
+> disabling ASPM on older kernel because some BIOS issue (don't remember
+> really). Apparently, ASPM is enabled again in newer kernels.
 > 
-> This patch can be used in the following way:
+> Anyway - I think I will just remove this pci_disable_link_state call
+> and hopefully, it will stay long enough in linux-next so that people
+> will report issues before it get into linux.
+> I don't like leaving that code if it doesn't do anything.
 > 
-> 	struct of_pci_range_iter iter;
-> 	for_each_of_pci_range(&iter, np) {
-> 
-> 		//directly access properties of the address range, e.g.:
-> 		//iter.pci_space, iter.pci_addr, iter.cpu_addr, iter.size or
-> 		//iter.flags
-> 
-> 		//alternatively obtain a struct resource, e.g.:
-> 		//struct resource res;
-> 		//range_iter_fill_resource(iter, np, res);
-> 	}
-> 
-> Additionally the implementation takes care of adjacent ranges and merges them
-> into a single range (as was the case with powerpc and microblaze).
-> 
-> The modifications to microblaze, mips and powerpc have not been tested.
-> 
-> v2:
->   This follows on from suggestions made by Grant Likely
->   (marc.info/?l=linux-kernel&m=136079602806328)
-> 
-> Signed-off-by: Andrew Murray <Andrew.Murray@arm.com>
-> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
 
-Thanks, I've tested this successfully with the Marvell PCIe driver. I'm
-about to send a new version of the Marvell PCIe patch set that includes
-this RFC proposal.
+Does this bug - https://bugzilla.kernel.org/show_bug.cgi?id=55211 look related?
 
-I only made two small changes compared to your version, detailed below.
+It deals with the changes to ASPM checks that broke the ability to use
+pci_disable_link_state calls to control ASPM status.
 
-
-> +#define for_each_of_pci_range(iter, np) \
-> +	for (; of_pci_process_ranges(iter, np);)
-
-In the initial part of the loop, I added a memset() to initialize to
-zero the "iter" structure. Otherwise, if you forget to do it before
-calling of_pci_process_ranges(), it may crash (depending on the random
-values present in the uninitialized structure).
-
-> +#define range_iter_fill_resource(iter, np, res) \
-> +	do { \
-> +		res->flags = iter.flags; \
-> +		res->start = iter.cpu_addr; \
-> +		res->end = iter.cpu_addr + iter.size - 1; \
-> +		res->parent = res->child = res->sibling = NULL; \
-> +		res->name = np->full_name; \
-> +	} while (0)
-
-And here, I enclosed all the usage of the macro parameters in
-parenthesis. Like (res)->flags instead of res->flags. If you don't do
-that, then passing &foobar as the 'res' parameter causes some
-compilation failure because &foobar->res is not valid, while
-(&foobar)->res is.
-
-Best regards,
-
-Thomas
 -- 
-Thomas Petazzoni, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
+Regards,
+Roman Yepishev
+
