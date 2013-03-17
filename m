@@ -1,53 +1,95 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Fri, 15 Mar 2013 08:59:06 +0100 (CET)
-From: Jiri Kosina <jkosina@suse.cz>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Peter Hurley <peter@hurleysoftware.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Thomas Meyer <thomas@m3y3r.de>,
-	Shawn Starr <shawn.starr@rogers.com>,
-	Kernel development list <linux-kernel@vger.kernel.org>,
-	USB list <linux-usb@vger.kernel.org>,
-	linux-acpi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: Re: [3.9-rc1] irq 16: nobody cared  (was [3.9-rc1] very poor interrupt
- responses)
-In-Reply-To: <5657408.cYX6iimiA4@vostro.rjw.lan>
-Message-ID: <alpine.LNX.2.00.1303150851020.9529@pobox.suse.cz>
-References: <Pine.LNX.4.44L0.1303141050310.1983-100000@iolanthe.rowland.org> <1460519.ejNFI1DrGk@vostro.rjw.lan> <1363280764.26318.4.camel@thor.lan> <5657408.cYX6iimiA4@vostro.rjw.lan>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:16994 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750699Ab3CQEL2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 17 Mar 2013 00:11:28 -0400
+Message-ID: <1363493482.16793.69.camel@ul30vt.home>
+Subject: Re: [PATCH] udevadm-info: Don't access sysfs 'resource<N>' files
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: Myron Stowe <mstowe@redhat.com>,
+	Myron Stowe <myron.stowe@redhat.com>, kay@vrfy.org,
+	linux-hotplug@vger.kernel.org, linux-pci@vger.kernel.org,
+	yuxiangl@marvell.com, yxlraid@gmail.com,
+	linux-kernel@vger.kernel.org
+Date: Sat, 16 Mar 2013 22:11:22 -0600
+In-Reply-To: <20130317010317.GB9641@kroah.com>
+References: <20130316213512.2974.17303.stgit@amt.stowe>
+	 <20130316213519.2974.38954.stgit@amt.stowe>
+	 <20130316221159.GA3702@kroah.com> <1363477853.2423.25.camel@zim.stowe>
+	 <20130317010317.GB9641@kroah.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 14 Mar 2013, Rafael J. Wysocki wrote:
-
-> > > commit 181380b702eee1a9aca51354d7b87c7b08541fcf
-> > > Author: Yinghai Lu <yinghai@kernel.org>
-> > > Date:   Sat Feb 16 11:58:34 2013 -0700
+On Sat, 2013-03-16 at 18:03 -0700, Greg KH wrote:
+> On Sat, Mar 16, 2013 at 05:50:53PM -0600, Myron Stowe wrote:
+> > On Sat, 2013-03-16 at 15:11 -0700, Greg KH wrote:
+> > > On Sat, Mar 16, 2013 at 03:35:19PM -0600, Myron Stowe wrote:
+> > > > Sysfs includes entries to memory that backs a PCI device's BARs, both I/O
+> > > > Port space and MMIO.  This memory regions correspond to the device's
+> > > > internal status and control registers used to drive the device.
+> > > > 
+> > > > Accessing these registers from userspace such as "udevadm info
+> > > > --attribute-walk --path=/sys/devices/..." does can not be allowed as
+> > > > such accesses outside of the driver, even just reading, can yield
+> > > > catastrophic consequences.
+> > > > 
+> > > > Udevadm-info skips parsing a specific set of sysfs entries including
+> > > > 'resource'.  This patch extends the set to include the additional
+> > > > 'resource<N>' entries that correspond to a PCI device's BARs.
 > > > 
-> > >     PCI/ACPI: Don't cache _PRT, and don't associate them with bus numbers
+> > > Nice, are you also going to patch bash to prevent a user from reading
+> > > these sysfs files as well?  :)
+> > > 
+> > > And pciutils?
+> > > 
+> > > You get my point here, right?  The root user just asked to read all of
+> > > the data for this device, so why wouldn't you allow it?  Just like
+> > > 'lspci' does.  Or bash does.
 > > 
-> > This patch __fixed__ this problem for me in linux-next back in February.
+> > Yes :P , you raise a very good point, there are a lot of way a user can
+> > poke around in those BARs.  However, there is a difference between
+> > shooting yourself in the foot and getting what you deserve versus
+> > unknowingly executing a common command such as udevadm and having the
+> > system hang.
+> > > 
+> > > If this hardware has a problem, then it needs to be fixed in the kernel,
+> > > not have random band-aids added to various userspace programs to paper
+> > > over the root problem here.  Please fix the kernel driver and all should
+> > > be fine.  No need to change udevadm.
 > > 
-> > Rafael, did you hold back some ACPI patches from 3.9 that would have
-> > made fix no longer applicable?
+> > Xiangliang initially proposed a patch within the PCI core.  Ignoring the
+> > specific issue with the proposal which I pointed out in the
+> > https://lkml.org/lkml/2013/3/7/242 thread, that just doesn't seem like
+> > the right place to effect a change either as PCI's core isn't concerned
+> > with the contents or access limitations of those regions, those are
+> > issues that the driver concerns itself with.
+> > 
+> > So things seem to be gravitating towards the driver.  I'm fairly
+> > ignorant of this area but as Robert succinctly pointed out in the
+> > originating thread - the AHCI driver only uses the device's MMIO region.
+> > The I/O related regions are for legacy SFF-compatible ATA ports and are
+> > not used to driver the device.  This, coupled with the observance that
+> > userspace accesses such as udevadm, and others like you additionally
+> > point out, do not filter through the device's driver for seems to
+> > suggest that changes to the driver will not help here either.
 > 
-> No, I didn't.
-> 
-> I'm afraid, though, that the fix might not be effective on some systems for a
-> reason that's unclear at the moment.
-> 
-> So in fact the one to check is commit 4f535093cf ("PCI: Put pci_dev in device
-> tree as early as possible") and if the problem doesn't appear before that, we
-> need to figure out why the fix may not be sufficient.
+> A PCI quirk should handle this properly, right?  Why not do that?  Worse
+> thing, the quirk could just not expose these sysfs files for this
+> device, which would solve all userspace program issues, right?
 
-With either 4f535093cf or 181380b702 I do *not* see the problem, i.e. 
-these commits are not the culprit and it was caused by some later change.
+Not exactly.  I/O port access through pci-sysfs was added for userspace
+programs, specifically qemu-kvm device assignment.  We use the I/O port
+resource# files to access device owned I/O port registers using file
+permissions rather than global permissions such as iopl/ioperm.  File
+permissions also prevent random users from accessing device registers
+through these files, but of course can't stop a privileged app that
+chooses to ignore the purpose of these files.  A quirk would therefore
+remove a file that actually has a useful purpose for one app just so
+another app that has no particular reason for dumping the contents can
+run unabated.  Thanks,
 
-I will proceed with bisect now, hopefully it'll produce a meaningful 
-result.
+Alex
 
--- 
-Jiri Kosina
-SUSE Labs
