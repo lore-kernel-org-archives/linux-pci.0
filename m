@@ -1,75 +1,103 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from caramon.arm.linux.org.uk ([78.32.30.218]:42645 "EHLO
-	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751244Ab3CWKm3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 23 Mar 2013 06:42:29 -0400
-Date: Sat, 23 Mar 2013 10:41:56 +0000
-From: Russell King - ARM Linux <linux@arm.linux.org.uk>
-To: Jingoo Han <jg1.han@samsung.com>
-Cc: 'Kukjin Kim' <kgene.kim@samsung.com>,
-	'Bjorn Helgaas' <bhelgaas@google.com>,
-	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
-	'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>,
-	linux-samsung-soc@vger.kernel.org,
-	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
-	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
-	'Thierry Reding' <thierry.reding@avionic-design.de>,
-	linux-kernel@vger.kernel.org,
-	'Grant Likely' <grant.likely@secretlab.ca>,
-	'Surendranath Gurivireddy Balla' <suren.reddy@samsung.com>,
-	'Thomas Abraham' <thomas.abraham@linaro.org>,
-	'Andrew Murray' <andrew.murray@arm.com>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH 1/6] of/pci: Provide support for parsing PCI DT ranges
-	property
-Message-ID: <20130323104156.GL4977@n2100.arm.linux.org.uk>
-References: <00c001ce277b$92b26ab0$b8174010$%han@samsung.com>
+Received: from mail-pb0-f50.google.com ([209.85.160.50]:49769 "EHLO
+	mail-pb0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751466Ab3CQFfB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 17 Mar 2013 01:35:01 -0400
+Received: by mail-pb0-f50.google.com with SMTP id up1so5444024pbc.9
+        for <linux-pci@vger.kernel.org>; Sat, 16 Mar 2013 22:35:00 -0700 (PDT)
+Date: Sat, 16 Mar 2013 22:36:11 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: Myron Stowe <mstowe@redhat.com>,
+	Myron Stowe <myron.stowe@redhat.com>, kay@vrfy.org,
+	linux-hotplug@vger.kernel.org, linux-pci@vger.kernel.org,
+	yuxiangl@marvell.com, yxlraid@gmail.com,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] udevadm-info: Don't access sysfs 'resource<N>' files
+Message-ID: <20130317053611.GC948@kroah.com>
+References: <20130316213512.2974.17303.stgit@amt.stowe>
+ <20130316213519.2974.38954.stgit@amt.stowe>
+ <20130316221159.GA3702@kroah.com>
+ <1363477853.2423.25.camel@zim.stowe>
+ <20130317010317.GB9641@kroah.com>
+ <1363493482.16793.69.camel@ul30vt.home>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <00c001ce277b$92b26ab0$b8174010$%han@samsung.com>
+In-Reply-To: <1363493482.16793.69.camel@ul30vt.home>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Mar 23, 2013 at 01:04:53PM +0900, Jingoo Han wrote:
-> -		switch ((pci_space >> 24) & 0x3) {
-> -		case 1:		/* PCI IO space */
-> +		if (iter.flags & IORESOURCE_IO) {
+On Sat, Mar 16, 2013 at 10:11:22PM -0600, Alex Williamson wrote:
+> On Sat, 2013-03-16 at 18:03 -0700, Greg KH wrote:
+> > On Sat, Mar 16, 2013 at 05:50:53PM -0600, Myron Stowe wrote:
+> > > On Sat, 2013-03-16 at 15:11 -0700, Greg KH wrote:
+> > > > On Sat, Mar 16, 2013 at 03:35:19PM -0600, Myron Stowe wrote:
+> > > > > Sysfs includes entries to memory that backs a PCI device's BARs, both I/O
+> > > > > Port space and MMIO.  This memory regions correspond to the device's
+> > > > > internal status and control registers used to drive the device.
+> > > > > 
+> > > > > Accessing these registers from userspace such as "udevadm info
+> > > > > --attribute-walk --path=/sys/devices/..." does can not be allowed as
+> > > > > such accesses outside of the driver, even just reading, can yield
+> > > > > catastrophic consequences.
+> > > > > 
+> > > > > Udevadm-info skips parsing a specific set of sysfs entries including
+> > > > > 'resource'.  This patch extends the set to include the additional
+> > > > > 'resource<N>' entries that correspond to a PCI device's BARs.
+> > > > 
+> > > > Nice, are you also going to patch bash to prevent a user from reading
+> > > > these sysfs files as well?  :)
+> > > > 
+> > > > And pciutils?
+> > > > 
+> > > > You get my point here, right?  The root user just asked to read all of
+> > > > the data for this device, so why wouldn't you allow it?  Just like
+> > > > 'lspci' does.  Or bash does.
+> > > 
+> > > Yes :P , you raise a very good point, there are a lot of way a user can
+> > > poke around in those BARs.  However, there is a difference between
+> > > shooting yourself in the foot and getting what you deserve versus
+> > > unknowingly executing a common command such as udevadm and having the
+> > > system hang.
+> > > > 
+> > > > If this hardware has a problem, then it needs to be fixed in the kernel,
+> > > > not have random band-aids added to various userspace programs to paper
+> > > > over the root problem here.  Please fix the kernel driver and all should
+> > > > be fine.  No need to change udevadm.
+> > > 
+> > > Xiangliang initially proposed a patch within the PCI core.  Ignoring the
+> > > specific issue with the proposal which I pointed out in the
+> > > https://lkml.org/lkml/2013/3/7/242 thread, that just doesn't seem like
+> > > the right place to effect a change either as PCI's core isn't concerned
+> > > with the contents or access limitations of those regions, those are
+> > > issues that the driver concerns itself with.
+> > > 
+> > > So things seem to be gravitating towards the driver.  I'm fairly
+> > > ignorant of this area but as Robert succinctly pointed out in the
+> > > originating thread - the AHCI driver only uses the device's MMIO region.
+> > > The I/O related regions are for legacy SFF-compatible ATA ports and are
+> > > not used to driver the device.  This, coupled with the observance that
+> > > userspace accesses such as udevadm, and others like you additionally
+> > > point out, do not filter through the device's driver for seems to
+> > > suggest that changes to the driver will not help here either.
+> > 
+> > A PCI quirk should handle this properly, right?  Why not do that?  Worse
+> > thing, the quirk could just not expose these sysfs files for this
+> > device, which would solve all userspace program issues, right?
+> 
+> Not exactly.  I/O port access through pci-sysfs was added for userspace
+> programs, specifically qemu-kvm device assignment.  We use the I/O port
+> resource# files to access device owned I/O port registers using file
+> permissions rather than global permissions such as iopl/ioperm.  File
+> permissions also prevent random users from accessing device registers
+> through these files, but of course can't stop a privileged app that
+> chooses to ignore the purpose of these files.  A quirk would therefore
+> remove a file that actually has a useful purpose for one app just so
+> another app that has no particular reason for dumping the contents can
+> run unabated.  Thanks,
 
-Please look at how IORESOURCE_* stuff is defined:
-#define IORESOURCE_TYPE_BITS    0x00001f00      /* Resource type */
-#define IORESOURCE_IO           0x00000100      /* PCI/ISA I/O ports */
-#define IORESOURCE_MEM          0x00000200
-#define IORESOURCE_REG          0x00000300      /* Register offsets */
-#define IORESOURCE_IRQ          0x00000400
-#define IORESOURCE_DMA          0x00000800
-#define IORESOURCE_BUS          0x00001000
+The quirk would only be for this one specific device, which obviously
+can't handle this type of access, so why would you want the sysfs files
+even present for it at all?
 
-Notice that it's not an array of bits.
-
-So this should be:
-		if ((iter.flags & IORESOURCE_TYPE_BITS) == IORESOURCE_IO) {
-
-> +			iter.cpu_addr = iter.pci_addr;
-> +		} else if (iter.flags & IORESOURCE_MEM) {
-
-And this should be:
-		} else if ((iter.flags & IORESOURCE_TYPE_BITS) == IORESOURCE_MEM) {
-
-> +		if (iter.flags & IORESOURCE_IO) {
-
-Same here.
-
-> +		} else if (iter.flags & IORESOURCE_MEM) {
-
-And again here.
-
-> -		switch ((pci_space >> 24) & 0x3) {
-> -		case 1:		/* PCI IO space */
-> +		if (iter.flags & IORESOURCE_IO) {
-
-ditto.
-
-> +			iter.cpu_addr = iter.pci_addr;
-> +		} else if (flags & IORESOURCE_MEM) {
-
-ditto.
+greg k-h
