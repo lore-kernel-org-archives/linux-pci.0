@@ -1,132 +1,84 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rs140.luxsci.com ([74.205.78.114]:49561 "EHLO rs140.luxsci.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933178Ab3CMU7E (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 13 Mar 2013 16:59:04 -0400
-Message-ID: <5140E85A.3040900@firmworks.com>
-Date: Wed, 13 Mar 2013 10:58:02 -1000
-From: Mitch Bradley <wmb@firmworks.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-To: Thierry Reding <thierry.reding@avionic-design.de>
-CC: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>, linux-pci@vger.kernel.org,
-	devicetree-discuss@lists.ozlabs.org,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH 24/32] pci: PCIe driver for Marvell Armada 370/XP systems
-References: <20130311232516.GA13873@obsidianresearch.com> <513E6AFE.3090304@firmworks.com> <20130312070852.GA6727@avionic-0098.mockup.avionic-design.de> <20130312155749.GA1820@obsidianresearch.com> <20130312203819.GA23221@avionic-0098.mockup.avionic-design.de> <20130312210328.GA22702@obsidianresearch.com> <20130312213006.GA23717@avionic-0098.mockup.avionic-design.de> <20130312220854.GA23112@obsidianresearch.com> <20130313081815.GD25940@avionic-0098.mockup.avionic-design.de> <20130313170205.GB24042@obsidianresearch.com> <20130313192628.GA28714@avionic-0098.mockup.avionic-design.de>
-In-Reply-To: <20130313192628.GA28714@avionic-0098.mockup.avionic-design.de>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1363531017.2423.50.camel@zim.stowe>
+References: <20130316213512.2974.17303.stgit@amt.stowe> <20130316213519.2974.38954.stgit@amt.stowe>
+ <20130316221159.GA3702@kroah.com> <1363477853.2423.25.camel@zim.stowe>
+ <20130317010317.GB9641@kroah.com> <1363493482.16793.69.camel@ul30vt.home>
+ <20130317053611.GC948@kroah.com> <1363527503.16793.75.camel@ul30vt.home>
+ <CAPXgP12vmx9j_jJW3HXb2deRapFKAofTVzEbdyS=Z1VUBswE_Q@mail.gmail.com>
+ <1363530028.2423.43.camel@zim.stowe> <CAPXgP13+BACQEid=xcFLDv+Tm3A1pCqDDfP4K+ZZrwGZBQ9A8g@mail.gmail.com>
+ <1363531017.2423.50.camel@zim.stowe>
+From: Kay Sievers <kay@vrfy.org>
+Date: Sun, 17 Mar 2013 15:43:42 +0100
+Message-ID: <CAPXgP13KkDfFb6tFKeetdDe+dnzr_m462Zd7HoR9kyHY=GgcpA@mail.gmail.com>
+Subject: Re: [PATCH] udevadm-info: Don't access sysfs 'resource<N>' files
+To: Myron Stowe <mstowe@redhat.com>
+Cc: Alex Williamson <alex.williamson@redhat.com>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	linux-hotplug@vger.kernel.org, linux-pci@vger.kernel.org,
+	yuxiangl@marvell.com, yxlraid@gmail.com,
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 3/13/2013 9:26 AM, Thierry Reding wrote:
-> On Wed, Mar 13, 2013 at 11:02:05AM -0600, Jason Gunthorpe wrote:
->> On Wed, Mar 13, 2013 at 09:18:15AM +0100, Thierry Reding wrote:
+On Sun, Mar 17, 2013 at 3:36 PM, Myron Stowe <mstowe@redhat.com> wrote:
+> On Sun, 2013-03-17 at 15:29 +0100, Kay Sievers wrote:
+>> On Sun, Mar 17, 2013 at 3:20 PM, Myron Stowe <mstowe@redhat.com> wrote:
+>> > On Sun, 2013-03-17 at 15:00 +0100, Kay Sievers wrote:
+>> >> On Sun, Mar 17, 2013 at 2:38 PM, Alex Williamson
+>> >> <alex.williamson@redhat.com> wrote:
+>> >> > I'm assuming that the device only breaks because udevadm is dumping the
+>> >> > full I/O port register space of the device and that if an actual driver
+>> >> > was interacting with it through this interface that it would work.  Who
+>> >> > knows how many devices will have read side-effects by udevadm blindly
+>> >> > dumping these files.  Thanks,
+>> >>
+>> >> Sysfs is a too public interface to export things there which make
+>> >> devices/driver choke on a simple read() of an attribute.
+>> >>
+>> >> This is nothing specific to udevadm, any tool can do that. Udevadm
+>> >> will never read any of the files during normal operation. The admin
+>> >> explicitly asked udevadm with a specific command to dump all the stuff
+>> >> the device offers.
+>> >>
+>> >> The kernel driver needs to be fixed to allow that, in the worst case,
+>> >> the attributes not exported at all. People should take more care what
+>> >> they export in /sys, it's not a hidden and private ioctl what's
+>> >> exported there, stuff is very visible and will be looked at.
+>> >>
+>> >> Telling userspace not to use specific stuff in /sys I would not expect
+>> >> to work as a strategy; there is too much weird stuff out there that
+>> >> will always try to do that ...
+>> >
+>> > Kay - could you comment on Foot Note 3 in
+>> > https://lkml.org/lkml/2013/3/16/168
+>> >
+>> > With respect to 'udev', you are working on the assumption that all files
+>> > in sysfs must be readable with no consequences which may be implied by
+>> > the Documentation's sysfs.txt file's mentioning ASCII.  If we are to
+>> > interpret that as strictly as you seem to want to then why is there
+>> > sysfs support for creating binary files?
 >>
->>> Mitch already answered this. The specification is now almost 15 years
->>> old and it couldn't possibly have foreseen all of the future use-cases.
->>> If the specification is too restrictive and Mitch gives his blessing to
->>> remove some of the restrictions, I don't see any reason why we shouldn't
->>> do so if it lets us represent the reality of hardware more accurately in
->>> DT.
+>> They cannot be distinguished from outside, so there is nothing I know
+>> that could make a difference to userspace tools.
+>
+> Agreed
 >>
->> I understand the spec is old, and I have no problem with making a
->> Linux specific revision, but do *that* - don't bury some random
->> deviation inside the bindings for a driver. I even suggested some
->> language, but I feel more thought is needed to consider how to model
->> the standardized ECAM mechanism..
-> 
-> As Mitch already said there's very little chance that the specification
-> update will be ratified through IEEE, so I think that we might just as
-> well put a corresponding text somewhere below Documentation/devicetree.
-> 
-> Also note that this has absolutely nothing to do with ECAM. All I'm
-> proposing is to allow the reg property of a root port to be translated
-> into a CPU addressable memory region through the ranges property. This
-> turns out to actually work properly with the current OF core in Linux.
-> 
->>> Furthermore we're not discussing radical changes. None of the changes
->>> will be backwards-incompatible, but they will allow recent hardware to
->>> be represented more correctly or conveniently.
->>
->> Sure, but it is still inconsistent, one MMIO config mechansim is in
->> ranges, one is in regs. Plus I don't think tegra's case is a great
->> starting point to design a spec update, it's config access mechanism
->> is especially strange...
-> 
-> Again, it is still the most accurate way to describe the hardware. I
-> know it's not terribly beautiful and doesn't match with what you'd
-> expect from PC hardware. However it is still a reality and something the
-> kernel will have to deal with. Marvell hardware isn't very pretty either
-> but that shouldn't exclude it from being supported by Linux.
-> 
->> Anyhow, I think this has been hashed to death, as long as your final
->> binding has the 'device_type = pci' on the pcie-controller node I
->> think it will be fine.
-> 
-> No. The pcie-controller is *not* a PCI device. It is a PCI host bridge.
-> It is the instance that translates from the platform to the PCI bus. Why
-> should it be device_type = "pci"? 
+>> Tools -- no matter how useful they are not not, it's that they do that
+>> for many years already -- need to be able to read() the stuff in
+>> there, without causing any damage to the system.
+>
+> So then, why are certain sysfs files skipped in udevadm-info's parsing
+> (./src/udevadm-info.c::skip_attribute())?
 
-device_type="pci" means that this device implements PCI functionality,
-which means that it is either a PCI host bridge or a PCI-to-PCI bridge.
+Because they are not useful to use in udev rules, or are just not
+recommended to use in rules because they break other assumptions and
+would encode specific settings, which can rightfully change at
+runtime, into rules.
 
-"device_type" answers the question "What does this device do?".  The
-alternative question "What bus does this device plug into?" is answered
-by looking at the parent.
+The list is in no way a list to ensure a system/driver/device is not
+choking on read().
 
-In this case, the answer to "what does pcie_controller do?" is "it
-implements a PCI bus" below.  So 'device_type = "pci"' is appropriate.
-
-Having just re-read the code in drivers/of/address.c, I think I have a
-deeper understanding of a few practical issues:
-
-In order to translate a 3/2 PCI address via of_get_pci_address(), the
-parent device (i.e. root complex / pcie-controller) must have both
-'device_type = "pci"' (else of_match_bus() won't find the pci version of
-"struct of_bus") and also 'name = "pci"' (else strcmp(bus->name, "pci")
-will fail).
-
-So it would seem that, if you want to use address.c verbatim (for the
-interface between pcie-controller and its direct children), not only do
-you need device_type = pci, but you also need to rename
-"pcie-controller" to "pci".
-
-But then you run into the problem that the pci variant of struct of_bus
-uses "assigned-addresses" instead of "reg".  So it still doesn't work
-as-is.  To make it work, you would need to add an "assigned-addresses"
-property to each root port node.  That property value could be in
-non-relocatable memory space, translatable via normal rules, in which
-case the "map config space to MMIO via ranges" discussion is moot for
-Marvell.
-
-Which re-raises a question for which I have not yet heard a compelling
-answer:  Why use 3/2 PCI addressing between Marvell pcie-controller and
-its root ports (with their unusual programming model)?  The Marvell
-hardware address structure between controller and root ports is
-definitely not 3/2.  Certainly you need 3/2 addressing below
-(implemented by) the root ports, but I just don't see the utility of
-pretending 3/2 addressing at the complex-to-port interface.  If the root
-port hardware used the common programming model, with real config
-headers and stuff, 3/2 would be good because you could use existing
-drivers.  But since you need a special root-port driver anyway, why go
-to the trouble of emulating non-existent addressing?
-
-
-
-And we've also been over this before,
-> making that change stops the proposed binding from working properly
-> because the entry in the reg property can't be translated into a CPU
-> addressable memory region.
-> 
-> Thierry
-> 
+Kay
