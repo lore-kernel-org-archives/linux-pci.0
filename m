@@ -1,81 +1,118 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:56706 "EHLO quartz.orcorp.ca"
+Received: from mx1.redhat.com ([209.132.183.28]:49553 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933282Ab3CMWWG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 13 Mar 2013 18:22:06 -0400
-Date: Wed, 13 Mar 2013 16:22:01 -0600
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Mitch Bradley <wmb@firmworks.com>
-Cc: Thierry Reding <thierry.reding@avionic-design.de>,
-	Lior Amsalem <alior@marvell.com>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>, linux-pci@vger.kernel.org,
-	devicetree-discuss@lists.ozlabs.org,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH 24/32] pci: PCIe driver for Marvell Armada 370/XP systems
-Message-ID: <20130313222201.GA27252@obsidianresearch.com>
-References: <20130312070852.GA6727@avionic-0098.mockup.avionic-design.de>
- <20130312155749.GA1820@obsidianresearch.com>
- <20130312203819.GA23221@avionic-0098.mockup.avionic-design.de>
- <20130312210328.GA22702@obsidianresearch.com>
- <20130312213006.GA23717@avionic-0098.mockup.avionic-design.de>
- <20130312220854.GA23112@obsidianresearch.com>
- <20130313081815.GD25940@avionic-0098.mockup.avionic-design.de>
- <20130313170205.GB24042@obsidianresearch.com>
- <20130313192628.GA28714@avionic-0098.mockup.avionic-design.de>
- <5140E85A.3040900@firmworks.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5140E85A.3040900@firmworks.com>
+	id S1756257Ab3CQOM1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 17 Mar 2013 10:12:27 -0400
+Subject: Re: [PATCH] udevadm-info: Don't access sysfs 'resource<N>' files
+From: Myron Stowe <mstowe@redhat.com>
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: Myron Stowe <myron.stowe@redhat.com>, kay@vrfy.org,
+	linux-hotplug@vger.kernel.org, alex.williamson@redhat.com,
+	linux-pci@vger.kernel.org, yuxiangl@marvell.com, yxlraid@gmail.com,
+	linux-kernel@vger.kernel.org
+In-Reply-To: <20130317010317.GB9641@kroah.com>
+References: <20130316213512.2974.17303.stgit@amt.stowe>
+	 <20130316213519.2974.38954.stgit@amt.stowe>
+	 <20130316221159.GA3702@kroah.com> <1363477853.2423.25.camel@zim.stowe>
+	 <20130317010317.GB9641@kroah.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sun, 17 Mar 2013 08:12:22 -0600
+Message-ID: <1363529542.2423.39.camel@zim.stowe>
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 13, 2013 at 10:58:02AM -1000, Mitch Bradley wrote:
+On Sat, 2013-03-16 at 18:03 -0700, Greg KH wrote:
+> On Sat, Mar 16, 2013 at 05:50:53PM -0600, Myron Stowe wrote:
+> > On Sat, 2013-03-16 at 15:11 -0700, Greg KH wrote:
+> > > On Sat, Mar 16, 2013 at 03:35:19PM -0600, Myron Stowe wrote:
+> > > > Sysfs includes entries to memory that backs a PCI device's BARs, both I/O
+> > > > Port space and MMIO.  This memory regions correspond to the device's
+> > > > internal status and control registers used to drive the device.
+> > > > 
+> > > > Accessing these registers from userspace such as "udevadm info
+> > > > --attribute-walk --path=/sys/devices/..." does can not be allowed as
+> > > > such accesses outside of the driver, even just reading, can yield
+> > > > catastrophic consequences.
+> > > > 
+> > > > Udevadm-info skips parsing a specific set of sysfs entries including
+> > > > 'resource'.  This patch extends the set to include the additional
+> > > > 'resource<N>' entries that correspond to a PCI device's BARs.
+> > > 
+> > > Nice, are you also going to patch bash to prevent a user from reading
+> > > these sysfs files as well?  :)
+> > > 
+> > > And pciutils?
+> > > 
+> > > You get my point here, right?  The root user just asked to read all of
+> > > the data for this device, so why wouldn't you allow it?  Just like
+> > > 'lspci' does.  Or bash does.
+> > 
+> > Yes :P , you raise a very good point, there are a lot of way a user can
+> > poke around in those BARs.  However, there is a difference between
+> > shooting yourself in the foot and getting what you deserve versus
+> > unknowingly executing a common command such as udevadm and having the
+> > system hang.
+> > > 
+> > > If this hardware has a problem, then it needs to be fixed in the kernel,
+> > > not have random band-aids added to various userspace programs to paper
+> > > over the root problem here.  Please fix the kernel driver and all should
+> > > be fine.  No need to change udevadm.
+> > 
+> > Xiangliang initially proposed a patch within the PCI core.  Ignoring the
+> > specific issue with the proposal which I pointed out in the
+> > https://lkml.org/lkml/2013/3/7/242 thread, that just doesn't seem like
+> > the right place to effect a change either as PCI's core isn't concerned
+> > with the contents or access limitations of those regions, those are
+> > issues that the driver concerns itself with.
+> > 
+> > So things seem to be gravitating towards the driver.  I'm fairly
+> > ignorant of this area but as Robert succinctly pointed out in the
+> > originating thread - the AHCI driver only uses the device's MMIO region.
+> > The I/O related regions are for legacy SFF-compatible ATA ports and are
+> > not used to driver the device.  This, coupled with the observance that
+> > userspace accesses such as udevadm, and others like you additionally
+> > point out, do not filter through the device's driver for seems to
+> > suggest that changes to the driver will not help here either.
+> 
+> A PCI quirk should handle this properly, right?  Why not do that?  Worse
+> thing, the quirk could just not expose these sysfs files for this
+> device, which would solve all userspace program issues, right?
 
-> port hardware used the common programming model, with real config
-> headers and stuff, 3/2 would be good because you could use existing
-> drivers.  But since you need a special root-port driver anyway, why go
-> to the trouble of emulating non-existent addressing?
+The quirk you are suggesting would basically have to be a reversion of
+commit 8633328 for the reasons that Bjorn pointed out so that we cover
+all devices, not just this one particular device:
+        We could put a quirk in the kernel for this device (obviously
+        the
+        issue is independent of whether the driver is loaded), but no
+        doubt
+        other devices with I/O BARs will have access size restrictions,
+        side
+        effects, or other issues.  Adding quirks for them feels like a
+        never-ending job.
 
-Yes, I'm sorry, I've tried not to explore the complexity behind this
-reasoning here.. Those discussions went on for a long time and I'm
-tired of rehashing them :)
+I'm beginning to think that people have not read the analysis which was
+the first mail entry of this thread (I meant for the Subject: to read
+"PATCH 0/1] ...) which is at https://lkml.org/lkml/2013/3/16/168
 
-It isn't existing drivers that are valuable, it is the entire common
-PCI infrastructure for dealing with discovery and address assignment
-that is has value.
+It appears [*] that we are exposed to this potential conflict with
+*every* PCI device's resource# files; not just this one particular
+device (again see the analysis cover email, especially the three
+paragraphs starting with "Putting together...").
 
-The common infrastructure can only allocate addresses within fixed
-regions assigned to each PCI domain - and it divides those addreses
-regions between ports in the root complex via the standard PCI-E root
-port bridge memory windows.
+[*] I carefully use the word "appears" due to the one aspect of this
+whole issue that I still do not understand which I also expressed in the
+cover - which is immediately below the section I just pointed out above.
 
-Now, the largest SOC has 10 of the PCI-E ports in it, with 32 bit
-addressing. It is essential that a small region of address space be
-set aside for PCI-E use, and thus it is critical that resource
-assignment be done across all ports, drawing on a common pool of
-address space.
 
-Thus two choices:
- 1) Keep the PCI core the same and let the host bridge driver
-    provide the missing configuration elements of the root
-    complex
- 2) Upgrade the PCI common core to deal with dynamic cross
-    domain resource allocation, including hot plug.
+So what I'd like to understand and why we are focusing on this one
+particular instance/device when we *appear* to be at risk with all
+devices and their resource# files?
 
-Based on discussion/analysis #1 was chosen. Lots of reasons.
+Myron
+> 
+> thanks,
+> 
+> greg k-h
 
->From that choice flows the DT bindings, which are now required to
-model the PCI bus 0.
 
-Does that help explain the rational?
-
-Cheers,
-Jason
