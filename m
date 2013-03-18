@@ -1,89 +1,121 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:54152 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751081Ab3CZQwa (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Mar 2013 12:52:30 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Russell King <linux@arm.linux.org.uk>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	devicetree-discuss@lists.ozlabs.org,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Maen Suleiman <maen@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Olof Johansson <olof@lixom.net>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Mitch Bradley <wmb@firmworks.com>,
-	Andrew Murray <andrew.murray@arm.com>
-Subject: [RFCv1 01/11] arm: mvebu: move L2 cache initialization in init_early()
-Date: Tue, 26 Mar 2013 17:52:16 +0100
-Message-Id: <1364316746-8702-2-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1364316746-8702-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1364316746-8702-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from canardo.mork.no ([148.122.252.1]:36581 "EHLO canardo.mork.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752420Ab3CRSZV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 18 Mar 2013 14:25:21 -0400
+In-Reply-To: <1363629287.24132.380.camel@bling.home>
+References: <20130316213512.2974.17303.stgit@amt.stowe> <20130316213519.2974.38954.stgit@amt.stowe> <20130316221159.GA3702@kroah.com> <1363477853.2423.25.camel@zim.stowe> <20130317010317.GB9641@kroah.com> <1363493482.16793.69.camel@ul30vt.home> <20130317053611.GC948@kroah.com> <1363527503.16793.75.camel@ul30vt.home> <CAPXgP12vmx9j_jJW3HXb2deRapFKAofTVzEbdyS=Z1VUBswE_Q@mail.gmail.com> <1363623880.24132.351.camel@bling.home> <20130318164126.GA20565@kroah.com> <1363625463.24132.367.camel@bling.home> <87obeg39qp.fsf@nemi.mork.no> <1363629287.24132.380.camel@bling.home>
+MIME-Version: 1.0
+Content-Type: text/plain;
+ charset=UTF-8
+Subject: Re: [PATCH] udevadm-info: Don't access sysfs 'resource<N>' files
+From: =?ISO-8859-1?Q?Bj=F8rn_Mork?= <bjorn@mork.no>
+Date: Mon, 18 Mar 2013 19:25:01 +0100
+To: Alex Williamson <alex.williamson@redhat.com>
+CC: Greg KH <gregkh@linuxfoundation.org>, Kay Sievers <kay@vrfy.org>,
+	Myron Stowe <mstowe@redhat.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	linux-hotplug@vger.kernel.org, linux-pci@vger.kernel.org,
+	yuxiangl@marvell.com, yxlraid@gmail.com,
+	linux-kernel@vger.kernel.org
+Message-ID: <f153b1ed-69e2-4576-a474-e770b90c87a5@email.android.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In preparation for moving the IRQ controller driver to
-drivers/irqchip/, we don't want the IRQ controller driver to be
-responsible for initializing the L2 cache. Instead, let's initialize
-the L2 cache at the init_early() level, like mach-exynos/common.c is
-doing.
+Alex Williamson <alex.williamson@redhat.com> wrote:
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
----
- arch/arm/mach-mvebu/armada-370-xp.c     |    5 +++++
- arch/arm/mach-mvebu/irq-armada-370-xp.c |    4 ----
- 2 files changed, 5 insertions(+), 4 deletions(-)
+>On Mon, 2013-03-18 at 18:20 +0100, Bjørn Mork wrote:
+>> Alex Williamson <alex.williamson@redhat.com> writes:
+>> 
+>> > At least for KVM the kernel fix is the addition of the vfio driver
+>which
+>> > gives us a non-sysfs way to do this.  If this problem was found a
+>few
+>> > years later and we were ready to make the switch I'd support just
+>> > removing these resource files.  In the meantime we have userspace
+>that
+>> > depends on this interface, so I'm open to suggestions how to fix
+>it.
+>> 
+>> I am puzzled by a couple of things in this discussion:
+>> 
+>> 1) do you seriously mean that a userspace application (any, not just
+>>    udevadm or qemu or whatever) should be able to read and write
+>these
+>>    registers while the device is owned by a driver?  How is that ever
+>>    going to work?
+>
+>The expectation is that the user doesn't mess with the device through
+>pci-sysfs while it's running.  This is really no different than config
+>space or MMIO space in that respect. 
 
-diff --git a/arch/arm/mach-mvebu/armada-370-xp.c b/arch/arm/mach-mvebu/armada-370-xp.c
-index 12d3655..d98a0ca 100644
---- a/arch/arm/mach-mvebu/armada-370-xp.c
-+++ b/arch/arm/mach-mvebu/armada-370-xp.c
-@@ -20,6 +20,7 @@
- #include <linux/clk/mvebu.h>
- #include <linux/dma-mapping.h>
- #include <linux/mbus.h>
-+#include <asm/hardware/cache-l2x0.h>
- #include <asm/mach/arch.h>
- #include <asm/mach/map.h>
- #include <asm/mach/time.h>
-@@ -72,6 +73,10 @@ void __init armada_370_xp_init_early(void)
- 			ARMADA_370_XP_MBUS_WINS_SIZE,
- 			ARMADA_370_XP_SDRAM_WINS_BASE,
- 			ARMADA_370_XP_SDRAM_WINS_SIZE);
-+
-+#ifdef CONFIG_CACHE_L2X0
-+	l2x0_of_init(0, ~0UL);
-+#endif
- }
- 
- static void __init armada_370_xp_dt_init(void)
-diff --git a/arch/arm/mach-mvebu/irq-armada-370-xp.c b/arch/arm/mach-mvebu/irq-armada-370-xp.c
-index 6a9195e..f6699f3 100644
---- a/arch/arm/mach-mvebu/irq-armada-370-xp.c
-+++ b/arch/arm/mach-mvebu/irq-armada-370-xp.c
-@@ -25,7 +25,6 @@
- #include <asm/mach/arch.h>
- #include <asm/exception.h>
- #include <asm/smp_plat.h>
--#include <asm/hardware/cache-l2x0.h>
- 
- /* Interrupt Controller Registers Map */
- #define ARMADA_370_XP_INT_SET_MASK_OFFS		(0x48)
-@@ -292,7 +291,4 @@ static const struct of_device_id mpic_of_match[] __initconst = {
- void __init armada_370_xp_init_irq(void)
- {
- 	of_irq_init(mpic_of_match);
--#ifdef CONFIG_CACHE_L2X0
--	l2x0_of_init(0, ~0UL);
--#endif
- }
--- 
-1.7.9.5
+But it is.  That's the problem. As a user I expect to be able to run e.g "grep . /sys/devices/whatever/*" with no ill effects. This holds for config space or MMIO space. It does not for any reset-on-read register.
+
+
+> You can use setpci to break your
+>PCI card while it's used by the driver today.  The difference is that
+>MMIO spaces side-step the issue by only allowing mmap and config space
+>is known not to have read side-effects.
+
+Yes. And that is why there is no problem exporting those. This difference is fundamental. 
+
+>> 2) is it really so that a device can be so fundamentally screwed up
+>by
+>>    reading some registers, that a later driver probe cannot properly
+>>    reinitialize it?
+>
+>Never underestimate how broken hardware can be, 
+
+True :)
+
+> though in this case
+>reading a device register seems to be causing a system hang/reset.
+
+I understand that it does so if the ahci driver is bound to the device while reading the registers, but does it also hang the system with no bound driver? How does it do that? By killing the bus?
+
+>> I would have thought that the solution to all this was to return
+>-EINVAL
+>> on any attemt to read or write these files while a driver is bound to
+>> the device.  If userspace is going to use the API, then the
+>application
+>> better unbind any driver first.
+>> 
+>> Or? Am I missing something here?
+>
+>That doesn't really solve anything though.  Let's pretend the resource
+>files only work while the device is bound to pci-stub.  Now what
+>happens
+>when you run this udevadm command as admin while it's in use by the
+>userspace driver?  All we've done is limit the scope of the problem.
+
+Assuming that the system hangs without driver help and that this brokenness is widespread. I don't think any of those assumptions hold. Do they?
+
+>> > If we want to blacklist this specific device, that's fine, but as
+>others
+>> > have pointed out it's really a class problem.  Perhaps we report 1
+>byte
+>> > extra for the file length where EOF-1 is an enable byte?  Is there
+>> > anything else in file ops that we could use to make it slightly
+>more
+>> > complicated than open(), read() to access the device?  Thanks,
+>> 
+>> If there really are devices which cannot handle reading at all, and
+>> cannot be reset to a sane state by later driver initialization, then
+>a
+>> blacklist could be added for those devices.  This should not be a
+>common
+>> problem.
+>
+>Yes, if these are dead registers, let's blacklist and move along.  I
+>suspect though that these registers probably work fine if you access
+>them according to the device programming model, so blacklisting just
+>prevents full use through something like KVM device assignment. 
+
+Well, if the device is that broken then I think it will require the kernel to police the device programming. I don't see how you can leave a bomb like that because it might be useful in a rare and very theoretical case.
+
+Easier to just blacklist it...
+
+
+Bjørn
+
 
