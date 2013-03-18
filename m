@@ -1,150 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.9]:53525 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757730Ab3CFMLk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Mar 2013 07:11:40 -0500
-Date: Wed, 6 Mar 2013 13:11:19 +0100
-From: Thierry Reding <thierry.reding@avionic-design.de>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	linux-pci@vger.kernel.org, Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH 24/32] pci: PCIe driver for Marvell Armada 370/XP systems
-Message-ID: <20130306121118.GA17079@avionic-0098.mockup.avionic-design.de>
-References: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com>
- <1360686546-24277-25-git-send-email-thomas.petazzoni@free-electrons.com>
- <20130212223511.GB31555@obsidianresearch.com>
- <20130306105441.4d24033e@skate>
+Received: from mail-ee0-f41.google.com ([74.125.83.41]:60038 "EHLO
+	mail-ee0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752219Ab3CRITN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 Mar 2013 04:19:13 -0400
+Received: by mail-ee0-f41.google.com with SMTP id c13so2408068eek.14
+        for <linux-pci@vger.kernel.org>; Mon, 18 Mar 2013 01:19:11 -0700 (PDT)
+Date: Mon, 18 Mar 2013 09:21:57 +0100
+From: Daniel Vetter <daniel@ffwll.ch>
+To: Greg KH <greg@kroah.com>
+Cc: Jiri Kosina <jkosina@suse.cz>,
+	Harald Arnesen <skogtun.linux@gmail.com>,
+	Kernel development list <linux-kernel@vger.kernel.org>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Peter Hurley <peter@hurleysoftware.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Thomas Meyer <thomas@m3y3r.de>,
+	Shawn Starr <shawn.starr@rogers.com>,
+	USB list <linux-usb@vger.kernel.org>,
+	linux-acpi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Daniel Vetter <daniel.vetter@ffwll.ch>,
+	Imre Deak <imre.deak@intel.com>,
+	Daniel Kurtz <djkurtz@chromium.org>,
+	dri-devel@lists.freedesktop.org
+Subject: Re: [3.9-rc1] irq 16: nobody cared  (was [3.9-rc1] very poor
+ interrupt responses)
+Message-ID: <20130318082156.GO9021@phenom.ffwll.local>
+References: <Pine.LNX.4.44L0.1303141050310.1983-100000@iolanthe.rowland.org>
+ <1460519.ejNFI1DrGk@vostro.rjw.lan>
+ <1363280764.26318.4.camel@thor.lan>
+ <5657408.cYX6iimiA4@vostro.rjw.lan>
+ <alpine.LNX.2.00.1303150851020.9529@pobox.suse.cz>
+ <5142E7F0.4020002@gmail.com>
+ <alpine.LNX.2.00.1303151424140.9529@pobox.suse.cz>
+ <20130315153249.GA32425@kroah.com>
+ <alpine.LNX.2.00.1303151636481.9529@pobox.suse.cz>
+ <20130315154739.GA1024@kroah.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="YZ5djTAD1cGYuMQK"
-In-Reply-To: <20130306105441.4d24033e@skate>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130315154739.GA1024@kroah.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Fri, Mar 15, 2013 at 08:47:39AM -0700, Greg KH wrote:
+> On Fri, Mar 15, 2013 at 04:37:56PM +0100, Jiri Kosina wrote:
+> > On Fri, 15 Mar 2013, Greg KH wrote:
+> > 
+> > > > > I have the same problem on my Lenovo T500. I think the graphics card is
+> > > > > involved.
+> > > > > 
+> > > > > This laptop has "hybrid graphics" - one Intel GMA 4500MHD and one ATI
+> > > > > Mobility Radeon HD 3650. When I boot with the Intel card, I get "irq 16:
+> > > > > nobody cared" during boot, not when I boot with the ATI card.
+> > > > 
+> > > > Confirming this. After a lot of hassle, I have bisected this reliably to
+> > > > 
+> > > > 	commit 28c70f162a315bdcfbe0bf940a740ef8bfb918d6
+> > > > 	Author: Daniel Vetter <daniel.vetter@ffwll.ch>
+> > > > 	Date:   Sat Dec 1 13:53:45 2012 +0100
+> > > > 
+> > > > 	    drm/i915: use the gmbus irq for waits
+> > > > 
+> > > > Adding Daniel, Imre and Daniel to CC while I will try to figure out what's 
+> > > > happening in parallel.
+> > > 
+> > > Wasn't this fixed by the merge from David
+> > > (2cc79544bd0aabb4b3cf467ead5df526d9134c64)?
+> > 
+> > Why do you think it should, please?
+> 
+> The line:
+> 	- Fix PCH irq handling race which resulted in missed gmbus/dp
+> 	  aux irqs and subsequent fallout (Paulo)
+> 
+> > (I am seeing this with a2362d247 still).
+> 
+> Ok, I guess it isn't still fixed properly, just was guessing :)
 
---YZ5djTAD1cGYuMQK
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-On Wed, Mar 06, 2013 at 10:54:41AM +0100, Thomas Petazzoni wrote:
-> Dear Jason Gunthorpe,
->=20
-> On Tue, 12 Feb 2013 15:35:11 -0700, Jason Gunthorpe wrote:
->=20
-> > > +	pcie@0,0 {
-> > > +		device_type =3D "pciex";
-> > > +		reg =3D <0x0800 0 0xd0040000 0 0x2000>;
-> >=20
-> > It would be great to get this sorted as per my prior comments.. Maybe
-> > like this is easy?
-> >=20
-> > pcie-controller {
-> >  compatible =3D "marvell,armada-370-xp-pcie";
-> >=20
-> >  // Index by marvell,pcie-port ?
-> >  regs =3D <0xd0040000 0x00002000
-> >          0xd0080000 0x00002000>;
-> >=20
-> >  ranges =3D <0x81000000 0 0  0xc0000000  0 0x00010000   /* downstream I=
-/O */
-> >            0x82000000 0 0  0xc1000000  0 0x08000000>; /* non-prefetchab=
-le memory */
-> >=20
-> >  pcie@0,0 {
-> >       device_type =3D "pci";
-> >       reg =3D <0x0800 0 0 0>; // 00:01.0  (????)
-> >       marvell,pcie-port =3D <0>;
-> >  };
-> > }
-> >=20
-> > It is abusive to map the device internal per-port registers through
-> > '0x00000800 0 0xd0040000' and 'reg' - that is not really the intent of
-> > the OF spec.
->=20
-> The Device Tree would really look odd. We have one register range for
-> each PCIe interface, but instead of nicely putting them inside the
-> pcie@X,Y subnodes, we have a global regs =3D <..> property at the
-> pcie-controller level? I can do that if you want, but it really sounds
-> like the standard PCI DT bindings are horrible. Those register ranges
-> are *per* PCIe interface, so any logical person would expect them
-> inside the pcie@X,Y node...
-
-I agree here. It seems that back at the time when the PCI DT bindings
-were devised no hardware existed with these properties. So I think that
-maybe it needs to be revised to take into account some of these new
-requirements. Just adding a bunch of properties to work around
-shortcomings in the specification doesn't seem very desirable to me.
-
-That said, on Tegra there's an additional argument in favour of this
-because the addresses mapped through the ranges/reg properties are
-actually used to access the device's configuration space, which the
-'ss' field in the first cell specifies. Quoting the DTS:
-
-	pcie-controller {
-		...
-		ranges =3D <0x00000800 0 0x80000000 0x80000000 0 0x00001000   /* port 0 r=
-egisters */
-			  0x00001000 0 0x80001000 0x80001000 0 0x00001000   /* port 1 registers =
-*/
-			  0x81000000 0 0          0x82000000 0 0x00010000   /* downstream I/O */
-			  0x82000000 0 0          0xa0000000 0 0x10000000   /* non-prefetchable =
-memory */
-			  0xc2000000 0 0          0xb0000000 0 0x10000000>; /* prefetchable memo=
-ry */
-		...
-		pci@1,0 {
-			...
-			reg =3D <0x000800 0 0x80000000 0 0x1000>;
-			...
-		};
-
-		pci@2,0 {
-			...
-			reg =3D <0x001000 0 0x80001000 0 0x1000>;
-			...
-		};
-	};
-
-So we're actually mapping the configuration space of pci@1,0 and pci@2,0
-to the 0x80000000 and 0x80001000 addresses of the CPU physical address
-space. According to the PCI DT specification this isn't allowed, but it
-works on Linux and quite frankly I don't see why it shouldn't be
-allowed.
-
-Thierry
-
---YZ5djTAD1cGYuMQK
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQIcBAEBAgAGBQJRNzJmAAoJEN0jrNd/PrOhJ3wQAKEB9DkiTpZRgjoZVDVzO7nr
-EYMIyESIudQgKV5rGGpA50GodpzM/aOBP5obQL5tAmUD2zCyMc/tv7c1MP3pgQUK
-NtNTZ7mIGILQFTtR2uftLzsxD5BmPxUqz+HKRWPL6TgL81Hujbes7unW+vt+1Suz
-uH8/Y8KYGdsoLvYkJ5xrND6d5bXr/bmo4LlRfR+fNU8vv/+1m2dY3cIhRjZv7GqQ
-bKqlnPe7Ka7ytBL3TneQXT33uXCZGAWFIvCpQvrTZg6h+ylf8/LnvqDI887W4zDW
-tQHUe02AFz2/CE6c2zJfDl/Dnr7gPdsRySYVaRSDqsElf/IcRKtRxhMH9Qxndpzb
-bov1LWM3AG+9VDECKnnQC1RKLtWA5LiGTA0TCNX69/mQuKemSVZLFt9F8v3x1Lm4
-VLWWYLnwj0PQ4gS8HMMXiMAWzBW4dMJISugDUzZannyzes52i5XvIXt4nCjPbl8J
-bay53R8aNjzyMO0ek9bX/rTa+q9HOtuwL14g8bmqVlpkNVKwFvcjnT2NPcX98vLN
-aiD4YnJel3Md6UQtcjr2+9ltEop350Tgc1bkQHtjXCYhmxTs+X/5uEE/evLDf03M
-S6bqxvCG5CpeS/7nZ5cfATzE4mpDq7IJyVcacU2HIkltEzPBJqmHFkunQoFTNPfx
-kAcjYDl/dd7QqgYjZN5L
-=HUYc
------END PGP SIGNATURE-----
-
---YZ5djTAD1cGYuMQK--
+Yeah, the above fix is for pch split platforms, whereas these reports here
+are for gm45 (which doesn't have the pch display split). Acking of gmbus
+interrupts works differently on those, I'm testing right now whether I can
+reproduce this fail.
+-Daniel
+-- 
+Daniel Vetter
+Software Engineer, Intel Corporation
++41 (0) 79 365 57 48 - http://blog.ffwll.ch
