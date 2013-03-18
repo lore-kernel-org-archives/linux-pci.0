@@ -1,92 +1,112 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Justin Piszcz" <jpiszcz@lucidpixels.com>
-To: "'Andrew Cooks'" <acooks@gmail.com>
-Cc: "'Joerg Roedel'" <joro@8bytes.org>,
-	"'YingChu'" <xjtuychu@hotmail.com>,
-	"'Chu Ying'" <gm.ychu@gmail.com>,
-	"'Alex Williamson'" <alex.williamson@redhat.com>,
-	<bhelgaas@google.com>, "'David Woodhouse'" <dwmw2@infradead.org>,
-	"'open list:INTEL IOMMU \(VT-d\)'" <iommu@lists.linux-foundation.org>,
-	"'open list'" <linux-kernel@vger.kernel.org>,
-	"'open list:PCI SUBSYSTEM'" <linux-pci@vger.kernel.org>
-References: <1354533387-4110-1-git-send-email-acooks@gmail.com>	<1355914703-28576-1-git-send-email-acooks@gmail.com>	<1362126373-32318-1-git-send-email-acooks@gmail.com>	<CAO9zADxjoP+R9ccz7vMPmcFvdYwNjErSjaWc_RFkW_FY3+SK=w@mail.gmail.com>	<CAJtEV7Zs2BiwJ9jdDeoceh9hiVXvVaSvj=9H+4+vEzhY72AS9g@mail.gmail.com>	<00b701ce16d3$0aabe0f0$2003a2d0$@lucidpixels.com> <CAJtEV7bvPORPoXgQY2OahNVMj+SY5z=xxQ=nueX7=kLVfpyF_A@mail.gmail.com>
-In-Reply-To: <CAJtEV7bvPORPoXgQY2OahNVMj+SY5z=xxQ=nueX7=kLVfpyF_A@mail.gmail.com>
-Subject: RE: [PATCH] Quirk to support Marvell 88SE91xx SATA controllers with Intel IOMMU.
-Date: Mon, 4 Mar 2013 06:32:11 -0500
-Message-ID: <003101ce18cb$ea51f330$bef5d990$@lucidpixels.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:51195 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751383Ab3CRP4L (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 18 Mar 2013 11:56:11 -0400
+Date: Mon, 18 Mar 2013 16:56:02 +0100 (CET)
+From: Jiri Kosina <jkosina@suse.cz>
+To: Daniel Vetter <daniel@ffwll.ch>,
+	Chris Wilson <chris@chris-wilson.co.uk>
+Cc: Greg KH <greg@kroah.com>, Harald Arnesen <skogtun.linux@gmail.com>,
+	Kernel development list <linux-kernel@vger.kernel.org>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Peter Hurley <peter@hurleysoftware.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Thomas Meyer <thomas@m3y3r.de>,
+	Shawn Starr <shawn.starr@rogers.com>,
+	USB list <linux-usb@vger.kernel.org>,
+	linux-acpi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Daniel Vetter <daniel.vetter@ffwll.ch>,
+	Imre Deak <imre.deak@intel.com>,
+	Daniel Kurtz <djkurtz@chromium.org>,
+	dri-devel@lists.freedesktop.org
+Subject: [PATCH] drm/i915: stop using GMBUS IRQs on Gen4 chips (was Re:
+ [3.9-rc1] irq 16: nobody cared  (was [3.9-rc1] very poor interrupt
+ responses))
+In-Reply-To: <20130318082156.GO9021@phenom.ffwll.local>
+Message-ID: <alpine.LNX.2.00.1303181522460.9529@pobox.suse.cz>
+References: <Pine.LNX.4.44L0.1303141050310.1983-100000@iolanthe.rowland.org> <1460519.ejNFI1DrGk@vostro.rjw.lan> <1363280764.26318.4.camel@thor.lan> <5657408.cYX6iimiA4@vostro.rjw.lan> <alpine.LNX.2.00.1303150851020.9529@pobox.suse.cz> <5142E7F0.4020002@gmail.com>
+ <alpine.LNX.2.00.1303151424140.9529@pobox.suse.cz> <20130315153249.GA32425@kroah.com> <alpine.LNX.2.00.1303151636481.9529@pobox.suse.cz> <20130315154739.GA1024@kroah.com> <20130318082156.GO9021@phenom.ffwll.local>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Okay, so I think that for 3.9 we want the patch below, and if eventually 
+hardware root cause / workaround is found for GM45, we can have it merged 
+later.
 
 
-On Sat, Mar 2, 2013 at 7:18 AM, Justin Piszcz <jpiszcz@lucidpixels.com>
-wrote:
->
-> Against a clean 3.7.10 (from ftp.kernel.org)
->
-> # patch -p1 <
->
-../patch/RFC-Fix-Intel-IOMMU-support-for-Marvell-88SE91xx-SATA-controllers..
-> patch
-> patching file drivers/iommu/intel-iommu.c
-> patching file drivers/pci/quirks.c
-> Hunk #1 succeeded at 3230 (offset 3 lines).
-> patching file include/linux/pci.h
-> # pwd
-> /usr/src/linux-3.7.10
->
 
-I've downloaded and patched the 3.7.10 tarball and still get the same
-output I got before; different output from yours. I'm not sure the
-patch is complete or applying correctly, are you?
-Could you please check whether the patch you're applying is the same
-as the attached file?
+From: Jiri Kosina <jkosina@suse.cz>
+Subject: [PATCH] drm/i915: stop using GMBUS IRQs on Gen4 chips
 
-Hi,
+Commit 28c70f162 ("drm/i915: use the gmbus irq for waits") switched to
+using GMBUS irqs instead of GPIO bit-banging for chipset generations 4
+and above.
 
-Success!
+It turns out though that on many systems this leads to spurious interrupts
+being generated, long after the register write to disable the IRQs has been
+issued.
 
-Patch from e-mail:
-# md5sum marvell_ghost_funcs.patch 
-718bfb5876e3538ec23a516ef28d03f5  marvell_ghost_funcs.patch
+Flushing of the register writes by POSTING_READ() directly after the register
+write doesn't work either.
 
-Kernel from ftp.kernel.org:
-# md5sum linux-3.7.10.tar.bz2
-56ec294a922b6112a1ef129668f38a83  linux-3.7.10.tar.bz2
+Disable using of GMBUS IRQs on Gen4 systems before the root cause is found and
+revert back to old behavior.
 
-Decompress, patch, re-compile w/IOMMU=on.
+Also be more careful about not issuing GMBUS4 register reads in 
+gmbus_wait_hw_status() if we are not using GMBUS IRQs.
 
-# tar jxf linux-3.7.10.tar.bz2 ; ln -s linux-3.7.10 linux   
-# cd linux; patch -p1 < ../marvell_ghost_funcs.patch
-patching file drivers/iommu/intel-iommu.c
-Hunk #1 succeeded at 1672 (offset -2 lines).
-Hunk #2 succeeded at 1729 (offset -2 lines).
-Hunk #3 succeeded at 3833 (offset -2 lines).
-patching file drivers/pci/quirks.c
-Hunk #1 succeeded at 3210 (offset -39 lines).
-Hunk #2 succeeded at 3240 (offset -39 lines).
-Hunk #3 succeeded at 3258 (offset -39 lines).
-patching file include/linux/pci.h
-Hunk #1 succeeded at 1546 (offset -32 lines).
-Hunk #2 succeeded at 1555 (offset -32 lines).
-patching file include/linux/pci_ids.h
+Signed-off-by: Jiri Kosina <jkosina@suse.cz>
+---
+ drivers/gpu/drm/i915/intel_i2c.c |   12 ++++++++++--
+ 1 files changed, 10 insertions(+), 2 deletions(-)
 
-Reboot, re-test.
+diff --git a/drivers/gpu/drm/i915/intel_i2c.c b/drivers/gpu/drm/i915/intel_i2c.c
+index acf8aec..8638036 100644
+--- a/drivers/gpu/drm/i915/intel_i2c.c
++++ b/drivers/gpu/drm/i915/intel_i2c.c
+@@ -58,12 +58,14 @@ to_intel_gmbus(struct i2c_adapter *i2c)
+ 	return container_of(i2c, struct intel_gmbus, adapter);
+ }
+ 
++#define HAS_GMBUS_IRQ(dev) (INTEL_INFO(dev)->gen >= 5)
+ void
+ intel_i2c_reset(struct drm_device *dev)
+ {
+ 	struct drm_i915_private *dev_priv = dev->dev_private;
+ 	I915_WRITE(dev_priv->gpio_mmio_base + GMBUS0, 0);
+-	I915_WRITE(dev_priv->gpio_mmio_base + GMBUS4, 0);
++	if (HAS_GMBUS_IRQ(dev))
++		I915_WRITE(dev_priv->gpio_mmio_base + GMBUS4, 0);
+ }
+ 
+ static void intel_i2c_quirk_set(struct drm_i915_private *dev_priv, bool enable)
+@@ -203,7 +205,6 @@ intel_gpio_setup(struct intel_gmbus *bus, u32 pin)
+ 	algo->data = bus;
+ }
+ 
+-#define HAS_GMBUS_IRQ(dev) (INTEL_INFO(dev)->gen >= 4)
+ static int
+ gmbus_wait_hw_status(struct drm_i915_private *dev_priv,
+ 		     u32 gmbus2_status,
+@@ -214,6 +215,13 @@ gmbus_wait_hw_status(struct drm_i915_private *dev_priv,
+ 	u32 gmbus2 = 0;
+ 	DEFINE_WAIT(wait);
+ 
++	if (!HAS_GMBUS_IRQ(dev_priv->dev)) {
++		int ret;
++		ret = wait_for((gmbus2 = I915_READ(GMBUS2 + reg_offset)) &
++				(GMBUS_SATOER | gmbus2_status),
++				50);
++		return ret;
++	}
+ 	/* Important: The hw handles only the first bit, so set only one! Since
+ 	 * we also need to check for NAKs besides the hw ready/idle signal, we
+ 	 * need to wake up periodically and check that ourselves. */
 
-# lilo
-Added 3.7.7-1
-Added 3.7.10-5-ioff
-Added 3.7.10-7    (iommu=off w/patch) = OK
-Added 3.7.10-8  * (iommu=on w/patch) = OK
-
-dmesg w/patch + iommu
-http://home.comcast.net/~jpiszcz/20130304/dmesg-success-patch.txt
-
-Thanks!
-
-Justin.
-
-
+-- 
+Jiri Kosina
+SUSE Labs
