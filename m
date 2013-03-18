@@ -1,121 +1,47 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>, Ram Pai <linuxram@us.ibm.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v3 22/27] PCI: Add helpers to add addon_resource
-Date: Wed, 13 Mar 2013 16:28:17 -0700
-Message-Id: <1363217302-14383-23-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1363217302-14383-1-git-send-email-yinghai@kernel.org>
-References: <1363217302-14383-1-git-send-email-yinghai@kernel.org>
+Date: Mon, 18 Mar 2013 23:05:02 +0100 (CET)
+From: Jiri Kosina <jkosina@suse.cz>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Harald Arnesen <skogtun.linux@gmail.com>,
+	Kernel development list <linux-kernel@vger.kernel.org>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Peter Hurley <peter@hurleysoftware.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Thomas Meyer <thomas@m3y3r.de>,
+	Shawn Starr <shawn.starr@rogers.com>,
+	USB list <linux-usb@vger.kernel.org>,
+	linux-acpi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org, Daniel Vetter <daniel.vetter@ffwll.ch>,
+	Imre Deak <imre.deak@intel.com>,
+	Daniel Kurtz <djkurtz@chromium.org>,
+	dri-devel@lists.freedesktop.org
+Subject: Re: [3.9-rc1] irq 16: nobody cared (was [3.9-rc1] very poor interrupt
+ responses)
+In-Reply-To: <CAE9FiQXj0oD7_Abhz305dGytwg9_VKeEVuX128VXxEKexyvTLg@mail.gmail.com>
+Message-ID: <alpine.LNX.2.00.1303182304320.9529@pobox.suse.cz>
+References: <Pine.LNX.4.44L0.1303141050310.1983-100000@iolanthe.rowland.org> <1460519.ejNFI1DrGk@vostro.rjw.lan> <1363280764.26318.4.camel@thor.lan> <5657408.cYX6iimiA4@vostro.rjw.lan> <alpine.LNX.2.00.1303150851020.9529@pobox.suse.cz> <5142E7F0.4020002@gmail.com>
+ <alpine.LNX.2.00.1303151424140.9529@pobox.suse.cz> <alpine.LNX.2.00.1303151609480.9529@pobox.suse.cz> <CAE9FiQUqPTUqPOzANnxpdfoRYPr+OiU5pFEoLKRiOFHd9Py4XQ@mail.gmail.com> <alpine.LNX.2.00.1303181010080.9529@pobox.suse.cz>
+ <CAE9FiQXj0oD7_Abhz305dGytwg9_VKeEVuX128VXxEKexyvTLg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add helper to put add_on resources into pci devices resource list.
+On Mon, 18 Mar 2013, Yinghai Lu wrote:
 
--v2: change one function to static according to Fengguang.
+> > Yes, switching from MSI to IO-APIC-fasteoi makes the report about lost
+> > interrupts go away.
+> >
+> > My understanding from the other mail is that DAniel Vetter already has an
+> > idea what might be going wrong with IRQ acking on GM45 chipsets; hopefully
+> > this datapoint regarding MSI will fit into it.
+> 
+> What is /proc/interrupts difference between with and without pci=nomsi ?
+> 
+> drm is forced to share irq 16?
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/probe.c |   68 +++++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/pci.h |    5 ++++
- 2 files changed, 73 insertions(+)
+Yup, IRQ 16 is being shared, and one of the owners is i915.
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 9e659c7..f3038c2 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -144,6 +144,74 @@ int pci_dev_resource_idx(struct pci_dev *dev, struct resource *res)
- 	return -1;
- }
- 
-+static struct pci_dev_addon_resource *pci_alloc_dev_addon_resource(
-+		 struct pci_dev *dev, int addr, char *name)
-+{
-+	struct pci_dev_addon_resource *addon_res;
-+
-+	addon_res = kzalloc(sizeof(*addon_res), GFP_KERNEL);
-+
-+	if (!addon_res)
-+		return NULL;
-+
-+	addon_res->reg_addr = addr;
-+
-+	if (name)
-+		addon_res->res.name = name;
-+	else
-+		addon_res->res.name = pci_name(dev);
-+
-+	list_add_tail(&addon_res->list, &dev->addon_resources);
-+
-+	return addon_res;
-+}
-+
-+struct pci_dev_addon_resource *pci_add_dev_addon_fixed_resource(
-+		 struct pci_dev *dev, int start, int size, int flags,
-+		 int addr, char *name)
-+{
-+	struct pci_dev_addon_resource *addon_res;
-+	struct resource *res;
-+
-+	addon_res = pci_alloc_dev_addon_resource(dev, addr, name);
-+	if (addon_res)
-+		return NULL;
-+
-+	res = &addon_res->res;
-+	res->start = start;
-+	res->end = start + size - 1;
-+	res->flags = flags | IORESOURCE_PCI_FIXED;
-+
-+	dev_printk(KERN_DEBUG, &dev->dev,
-+		   "addon fixed resource %s %pR added\n", res->name, res);
-+
-+	return addon_res;
-+}
-+
-+struct pci_dev_addon_resource *pci_add_dev_addon_resource(struct pci_dev *dev,
-+		 int addr, int size, struct resource_ops *ops, char *name)
-+{
-+	struct pci_dev_addon_resource *addon_res;
-+	struct resource *res;
-+
-+	addon_res = pci_alloc_dev_addon_resource(dev, addr, name);
-+	if (!addon_res)
-+		return NULL;
-+
-+	res = &addon_res->res;
-+	if (ops) {
-+		addon_res->ops = ops;
-+		addon_res->size = size;
-+		ops->read(dev, res, addr);
-+	} else
-+		__pci_read_base(dev, pci_bar_unknown, res, addr);
-+
-+	dev_printk(KERN_DEBUG, &dev->dev,
-+		   "addon resource %s %pR added\n", res->name, res);
-+
-+	return addon_res;
-+}
-+
- static void pci_release_dev_addon_resource(struct pci_dev *dev)
- {
- 	struct pci_dev_addon_resource *addon_res, *tmp;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index b73245b..624c62f 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -379,6 +379,11 @@ struct pci_dev_addon_resource {
- 
- struct resource *pci_dev_resource_n(struct pci_dev *dev, int n);
- int pci_dev_resource_idx(struct pci_dev *dev, struct resource *res);
-+struct pci_dev_addon_resource *pci_add_dev_addon_fixed_resource(
-+		 struct pci_dev *dev, int start, int size, int flags,
-+		 int addr, char *name);
-+struct pci_dev_addon_resource *pci_add_dev_addon_resource(struct pci_dev *dev,
-+		 int addr, int size, struct resource_ops *ops, char *name);
- 
- #define PCI_STD_RES		(1<<0)
- #define PCI_ROM_RES		(1<<1)
 -- 
-1.7.10.4
-
+Jiri Kosina
+SUSE Labs
