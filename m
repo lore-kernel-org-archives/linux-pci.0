@@ -1,57 +1,64 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:58173 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752607Ab3CVJtV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 22 Mar 2013 05:49:21 -0400
-Date: Fri, 22 Mar 2013 10:49:17 +0100
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Andrew Murray <andrew.murray@arm.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"devicetree-discuss@lists.ozlabs.org"
-	<devicetree-discuss@lists.ozlabs.org>,
-	"rob.herring@calxeda.com" <rob.herring@calxeda.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>
-Subject: Re: [RFC PATCH RESEND v2] of/pci: Provide support for parsing PCI
- DT ranges property
-Message-ID: <20130322104917.78e98b93@skate>
-In-Reply-To: <20130322093936.GA875@arm.com>
-References: <1362140616-19346-1-git-send-email-Andrew.Murray@arm.com>
-	<20130321170625.2a1bf226@skate>
-	<20130322093936.GA875@arm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Matthew Garrett <matthew.garrett@nebula.com>
+To: linux-kernel@vger.kernel.org
+Cc: linux-security-module@vger.kernel.org, linux-efi@vger.kernel.org,
+	kexec@lists.infradead.org, linux-pci@vger.kernel.org,
+	Matthew Garrett <matthew.garrett@nebula.com>
+Subject: [PATCH 06/12] x86: Require CAP_COMPROMISE_KERNEL for IO port access
+Date: Mon, 18 Mar 2013 17:32:27 -0400
+Message-Id: <1363642353-30749-6-git-send-email-matthew.garrett@nebula.com>
+In-Reply-To: <1363642353-30749-1-git-send-email-matthew.garrett@nebula.com>
+References: <1363642353-30749-1-git-send-email-matthew.garrett@nebula.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Andrew,
+IO port access would permit users to gain access to PCI configuration
+registers, which in turn (on a lot of hardware) give access to MMIO register
+space. This would potentially permit root to trigger arbitrary DMA, so lock
+it down by default.
 
-On Fri, 22 Mar 2013 09:39:36 +0000, Andrew Murray wrote:
+Signed-off-by: Matthew Garrett <matthew.garrett@nebula.com>
+---
+ arch/x86/kernel/ioport.c | 4 ++--
+ drivers/char/mem.c       | 3 +++
+ 2 files changed, 5 insertions(+), 2 deletions(-)
 
-> > Thanks, I've tested this successfully with the Marvell PCIe driver. I'm
-> > about to send a new version of the Marvell PCIe patch set that includes
-> > this RFC proposal.
-> > 
-> > I only made two small changes compared to your version, detailed below.
-> 
-> Thanks for the feedback, all looks good to me. Do I need to give ack?
-
-If you could ack the version I sent in the PCIe patch set yesterday, it
-would be great yes.
-
-I'm hoping also that Grant will have a look at this and say if he
-agrees. The entire PCIe patch set depends on this patch, so if any
-rework of this OF patch needs to be done, it'd be great to know it
-sooner rather than later.
-
-Thanks!
-
-Thomas
+diff --git a/arch/x86/kernel/ioport.c b/arch/x86/kernel/ioport.c
+index 4ddaf66..f505995 100644
+--- a/arch/x86/kernel/ioport.c
++++ b/arch/x86/kernel/ioport.c
+@@ -28,7 +28,7 @@ asmlinkage long sys_ioperm(unsigned long from, unsigned long num, int turn_on)
+ 
+ 	if ((from + num <= from) || (from + num > IO_BITMAP_BITS))
+ 		return -EINVAL;
+-	if (turn_on && !capable(CAP_SYS_RAWIO))
++	if (turn_on && (!capable(CAP_SYS_RAWIO) || !capable(CAP_COMPROMISE_KERNEL)))
+ 		return -EPERM;
+ 
+ 	/*
+@@ -103,7 +103,7 @@ SYSCALL_DEFINE1(iopl, unsigned int, level)
+ 		return -EINVAL;
+ 	/* Trying to gain more privileges? */
+ 	if (level > old) {
+-		if (!capable(CAP_SYS_RAWIO))
++		if (!capable(CAP_SYS_RAWIO) || !capable(CAP_COMPROMISE_KERNEL))
+ 			return -EPERM;
+ 	}
+ 	regs->flags = (regs->flags & ~X86_EFLAGS_IOPL) | (level << 12);
+diff --git a/drivers/char/mem.c b/drivers/char/mem.c
+index 2c644af..7eee4d8 100644
+--- a/drivers/char/mem.c
++++ b/drivers/char/mem.c
+@@ -597,6 +597,9 @@ static ssize_t write_port(struct file *file, const char __user *buf,
+ 	unsigned long i = *ppos;
+ 	const char __user *tmp = buf;
+ 
++	if (!capable(CAP_COMPROMISE_KERNEL))
++		return -EPERM;
++
+ 	if (!access_ok(VERIFY_READ, buf, count))
+ 		return -EFAULT;
+ 	while (count-- > 0 && i < 65536) {
 -- 
-Thomas Petazzoni, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
+1.8.1.2
+
