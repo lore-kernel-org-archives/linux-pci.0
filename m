@@ -1,169 +1,63 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:51213 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964854Ab3CMX2j (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Mar 2013 19:28:39 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>, Ram Pai <linuxram@us.ibm.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v3 21/27] PCI: Add addon_resource support for pci devices
-Date: Wed, 13 Mar 2013 16:28:16 -0700
-Message-Id: <1363217302-14383-22-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1363217302-14383-1-git-send-email-yinghai@kernel.org>
-References: <1363217302-14383-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 18 Mar 2013 10:12:49 +0100 (CET)
+From: Jiri Kosina <jkosina@suse.cz>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Harald Arnesen <skogtun.linux@gmail.com>,
+	Kernel development list <linux-kernel@vger.kernel.org>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Peter Hurley <peter@hurleysoftware.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Thomas Meyer <thomas@m3y3r.de>,
+	Shawn Starr <shawn.starr@rogers.com>,
+	USB list <linux-usb@vger.kernel.org>,
+	linux-acpi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org, Daniel Vetter <daniel.vetter@ffwll.ch>,
+	Imre Deak <imre.deak@intel.com>,
+	Daniel Kurtz <djkurtz@chromium.org>,
+	dri-devel@lists.freedesktop.org
+Subject: Re: [3.9-rc1] irq 16: nobody cared (was [3.9-rc1] very poor interrupt
+ responses)
+In-Reply-To: <CAE9FiQUqPTUqPOzANnxpdfoRYPr+OiU5pFEoLKRiOFHd9Py4XQ@mail.gmail.com>
+Message-ID: <alpine.LNX.2.00.1303181010080.9529@pobox.suse.cz>
+References: <Pine.LNX.4.44L0.1303141050310.1983-100000@iolanthe.rowland.org> <1460519.ejNFI1DrGk@vostro.rjw.lan> <1363280764.26318.4.camel@thor.lan> <5657408.cYX6iimiA4@vostro.rjw.lan> <alpine.LNX.2.00.1303150851020.9529@pobox.suse.cz> <5142E7F0.4020002@gmail.com>
+ <alpine.LNX.2.00.1303151424140.9529@pobox.suse.cz> <alpine.LNX.2.00.1303151609480.9529@pobox.suse.cz> <CAE9FiQUqPTUqPOzANnxpdfoRYPr+OiU5pFEoLKRiOFHd9Py4XQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now there is some non normal pci resources other than standard,rom,
-sriov, bridges.
-Some could be same as standard reg, but using different position.
-Some could have own way to read/write to them.
+On Fri, 15 Mar 2013, Yinghai Lu wrote:
 
-Kernel are using different way to hack those resources like abusing
-pci bridge resource spot on non bridge pci device.
+> > Just a datapoint -- I have put a trivial debugging patch in place, and it
+> > reveals that "nobody cared" for irq 16 happens long after last
+> >
+> >         I915_WRITE(GMBUS4 + reg_offset, 0);
+> >
+> > has been performed in gmbus_wait_hw_status(). On the other hand, if I
+> > comment out both GMBUS4 register offset writes in gmbus_wait_hw_status(),
+> > then it of course falls back to GPIO bit-banging, but the "nobody cared"
+> > for irq 16 is gone.
+> >
+> > So it seems like something gets severely confused by the I915_WRITE to
+> > GMBUS4 + reg_offset. So far this seems to have been reported solely on
+> > Lenovos as far as I can see (although a completely different types), so it
+> > might be some platform-specific quirk?
+> >
+> > Honestly, I still don't understand how all the GMBUS stuff relates to IRQ
+> > 16 at all.
+> 
+> that device is using
+> i915 0000:00:02.0: irq 44 for MSI/MSI-X
+> 
+> so can you try to boot with pci=nomsi?
 
-Add addon_resources list in pci_dev for those non-standard resources.
-With this patch, will treat addon-resource like standard resources with
-special ops.
+Yes, switching from MSI to IO-APIC-fasteoi makes the report about lost 
+interrupts go away.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/probe.c |   38 +++++++++++++++++++++++++++++++++++++-
- include/linux/pci.h |   20 +++++++++++++++++++-
- 2 files changed, 56 insertions(+), 2 deletions(-)
+My understanding from the other mail is that DAniel Vetter already has an 
+idea what might be going wrong with IRQ acking on GM45 chipsets; hopefully 
+this datapoint regarding MSI will fit into it.
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 263a575..9e659c7 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -107,22 +107,53 @@ postcore_initcall(pcibus_class_init);
- 
- struct resource *pci_dev_resource_n(struct pci_dev *dev, int n)
- {
--	if (n >= 0 && n < PCI_NUM_RESOURCES)
-+	struct pci_dev_addon_resource *addon_res;
-+
-+	if (n < 0)
-+		return NULL;
-+
-+	if (n < PCI_NUM_RESOURCES)
- 		return &dev->resource[n];
- 
-+	n -= PCI_NUM_RESOURCES;
-+	list_for_each_entry(addon_res, &dev->addon_resources, list) {
-+		if (n-- == 0)
-+			return &addon_res->res;
-+	}
-+
- 	return NULL;
- }
- EXPORT_SYMBOL(pci_dev_resource_n);
- 
- int pci_dev_resource_idx(struct pci_dev *dev, struct resource *res)
- {
-+	struct pci_dev_addon_resource *addon_res;
-+	int n;
-+
- 	if (res >= dev->resource &&
- 	    res <= dev->resource + (PCI_NUM_RESOURCES - 1))
- 		return res - dev->resource;
- 
-+	n = PCI_NUM_RESOURCES;
-+	list_for_each_entry(addon_res, &dev->addon_resources, list) {
-+		if (res == &addon_res->res)
-+			return n;
-+		n++;
-+	}
-+
- 	return -1;
- }
- 
-+static void pci_release_dev_addon_resource(struct pci_dev *dev)
-+{
-+	struct pci_dev_addon_resource *addon_res, *tmp;
-+
-+	list_for_each_entry_safe(addon_res, tmp, &dev->addon_resources, list) {
-+		list_del(&addon_res->list);
-+		kfree(addon_res);
-+	}
-+}
-+
- static void __init_res_idx_mask(unsigned long *mask, int flag)
- {
- 	bitmap_zero(mask, PCI_NUM_RESOURCES);
-@@ -167,6 +198,9 @@ int pci_next_resource_idx(int i, int flag)
- 	if (i < PCI_NUM_RESOURCES)
- 		return i;
- 
-+	if (flag & PCI_ADDON_RES)
-+		return i;
-+
- 	return -1;
- }
- EXPORT_SYMBOL(pci_next_resource_idx);
-@@ -1199,6 +1233,7 @@ static void pci_release_dev(struct device *dev)
- 	pci_dev = to_pci_dev(dev);
- 	pci_release_capabilities(pci_dev);
- 	pci_release_of_node(pci_dev);
-+	pci_release_dev_addon_resource(pci_dev);
- 	kfree(pci_dev);
- }
- 
-@@ -1276,6 +1311,7 @@ struct pci_dev *alloc_pci_dev(void)
- 		return NULL;
- 
- 	INIT_LIST_HEAD(&dev->bus_list);
-+	INIT_LIST_HEAD(&dev->addon_resources);
- 
- 	return dev;
- }
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 94935fc..b73245b 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -308,6 +308,7 @@ struct pci_dev {
- 	 */
- 	unsigned int	irq;
- 	struct resource resource[DEVICE_COUNT_RESOURCE]; /* I/O and memory regions + expansion ROMs */
-+	struct list_head addon_resources; /* addon I/O and memory resource */
- 
- 	bool match_driver;		/* Skip attaching driver */
- 	/* These fields are used by common fixups */
-@@ -361,6 +362,21 @@ struct pci_dev {
- 	size_t romlen; /* Length of ROM if it's not from the BAR */
- };
- 
-+struct resource_ops {
-+	int (*read)(struct pci_dev *dev, struct resource *res, int addr);
-+	int (*write)(struct pci_dev *dev, struct resource *res, int addr);
-+};
-+
-+struct pci_dev_addon_resource {
-+	struct list_head list;
-+	int reg_addr;
-+	int size;
-+	struct resource res;
-+	struct resource_ops *ops;
-+};
-+#define	to_pci_dev_addon_resource(n)					\
-+	container_of(n, struct pci_dev_addon_resource, res)
-+
- struct resource *pci_dev_resource_n(struct pci_dev *dev, int n);
- int pci_dev_resource_idx(struct pci_dev *dev, struct resource *res);
- 
-@@ -369,8 +385,10 @@ int pci_dev_resource_idx(struct pci_dev *dev, struct resource *res);
- #define PCI_IOV_RES		(1<<2)
- #define PCI_BRIDGE_RES		(1<<3)
- #define PCI_RES_BLOCK_NUM	4
-+/* addon does not need use bitmap ...*/
-+#define PCI_ADDON_RES		(1<<4)
- 
--#define PCI_ALL_RES		(PCI_STD_RES | PCI_ROM_RES | PCI_BRIDGE_RES | PCI_IOV_RES)
-+#define PCI_ALL_RES		(PCI_STD_RES | PCI_ROM_RES | PCI_BRIDGE_RES | PCI_IOV_RES | PCI_ADDON_RES)
- #define PCI_NOSTD_RES		(PCI_ALL_RES & ~PCI_STD_RES)
- #define PCI_NOIOV_RES		(PCI_ALL_RES & ~PCI_IOV_RES)
- #define PCI_NOROM_RES		(PCI_ALL_RES & ~PCI_ROM_RES)
 -- 
-1.7.10.4
-
+Jiri Kosina
+SUSE Labs
