@@ -1,48 +1,75 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:46991 "EHLO hydra.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756793Ab3C2VYN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 29 Mar 2013 17:24:13 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
-Cc: Huang Ying <ying.huang@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: Re: 3.9-rc1: pciehp and eSATA card SiI 3132, no XHCI
-Date: Fri, 29 Mar 2013 22:31:42 +0100
-Message-ID: <5381191.45N5KLLmWJ@vostro.rjw.lan>
-In-Reply-To: <5155A101.2090705@fold.natur.cuni.cz>
-References: <513E7E1E.80508@fold.natur.cuni.cz> <1364545211.1817.228.camel@yhuang-dev> <5155A101.2090705@fold.natur.cuni.cz>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Matthew Garrett <matthew.garrett@nebula.com>
+To: linux-kernel@vger.kernel.org
+Cc: linux-security-module@vger.kernel.org, linux-efi@vger.kernel.org,
+	kexec@lists.infradead.org, linux-pci@vger.kernel.org,
+	Josh Boyer <jwboyer@redhat.com>
+Subject: [PATCH 03/12] Secure boot: Add a dummy kernel parameter that will switch on Secure Boot mode
+Date: Mon, 18 Mar 2013 17:32:24 -0400
+Message-Id: <1363642353-30749-3-git-send-email-matthew.garrett@nebula.com>
+In-Reply-To: <1363642353-30749-1-git-send-email-matthew.garrett@nebula.com>
+References: <1363642353-30749-1-git-send-email-matthew.garrett@nebula.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, March 29, 2013 03:11:13 PM Martin Mokrejs wrote:
-> Hi Ying,
->   thank you for the patch. Here are the results.
-> 
-> Huang Ying wrote:
-> > On Thu, 2013-03-28 at 19:38 +0100, Martin Mokrejs wrote:
-> >> Hi Ying,
-> >>   would you please tell me how this report relate to this patch?
-> >>
-> >> [PATCH] PCI / ACPI: Always resume devices on ACPI wakeup notifications
-> >>
-> >>   Could you tell me why this PME was being flipped back and forth now?
-> >> Actually, does that make finally some sense to you, pci/acpi devs?
+From: Josh Boyer <jwboyer@redhat.com>
 
-Can you please test this patch:
+This forcibly drops CAP_COMPROMISE_KERNEL from both cap_permitted and cap_bset
+in the init_cred struct, which everything else inherits from.  This works on
+any machine and can be used to develop even if the box doesn't have UEFI.
 
-https://patchwork.kernel.org/patch/2359611/
+Signed-off-by: Josh Boyer <jwboyer@redhat.com>
+---
+ Documentation/kernel-parameters.txt |  7 +++++++
+ kernel/cred.c                       | 17 +++++++++++++++++
+ 2 files changed, 24 insertions(+)
 
-and report back as I asked you?
-
-Rafael
-
-
+diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
+index 4609e81..7c0b137 100644
+--- a/Documentation/kernel-parameters.txt
++++ b/Documentation/kernel-parameters.txt
+@@ -2683,6 +2683,13 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
+ 			Note: increases power consumption, thus should only be
+ 			enabled if running jitter sensitive (HPC/RT) workloads.
+ 
++	secureboot_enable=
++			[KNL] Enables an emulated UEFI Secure Boot mode.  This
++			locks down various aspects of the kernel guarded by the
++			CAP_COMPROMISE_KERNEL capability.  This includes things
++			like /dev/mem, IO port access, and other areas.  It can
++			be used on non-UEFI machines for testing purposes.
++
+ 	security=	[SECURITY] Choose a security module to enable at boot.
+ 			If this boot parameter is not specified, only the first
+ 			security module asking for security registration will be
+diff --git a/kernel/cred.c b/kernel/cred.c
+index e0573a4..c3f4e3e 100644
+--- a/kernel/cred.c
++++ b/kernel/cred.c
+@@ -565,6 +565,23 @@ void __init cred_init(void)
+ 				     0, SLAB_HWCACHE_ALIGN|SLAB_PANIC, NULL);
+ }
+ 
++void __init secureboot_enable()
++{
++	pr_info("Secure boot enabled\n");
++	cap_lower((&init_cred)->cap_bset, CAP_COMPROMISE_KERNEL);
++	cap_lower((&init_cred)->cap_permitted, CAP_COMPROMISE_KERNEL);
++}
++
++/* Dummy Secure Boot enable option to fake out UEFI SB=1 */
++static int __init secureboot_enable_opt(char *str)
++{
++	int sb_enable = !!simple_strtol(str, NULL, 0);
++	if (sb_enable)
++		secureboot_enable();
++	return 1;
++}
++__setup("secureboot_enable=", secureboot_enable_opt);
++
+ /**
+  * prepare_kernel_cred - Prepare a set of credentials for a kernel service
+  * @daemon: A userspace daemon to be used as a reference
 -- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+1.8.1.2
+
