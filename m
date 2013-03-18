@@ -1,219 +1,84 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Vijay Mohan Pandarathil <vijaymohan.pandarathil@hp.com>
-To: alex.williamson@redhat.com, gleb@redhat.com, bhelgaas@google.com,
-	blauwirbel@gmail.com, lance.oritz@hp.com, kvm@vger.kernel.org,
-	qemu-devel@nongnu.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: Vijay Mohan Pandarathil <vijaymohan.pandarathil@hp.com>
-Subject: [PATCH v7 2/3] VFIO-AER: Vfio-pci driver changes for supporting AER
-Date: Sat,  9 Mar 2013 01:52:16 -0600
-Message-Id: <1362815537-27303-3-git-send-email-vijaymohan.pandarathil@hp.com>
-In-Reply-To: <1362815537-27303-1-git-send-email-vijaymohan.pandarathil@hp.com>
-References: <1362815537-27303-1-git-send-email-vijaymohan.pandarathil@hp.com>
+Date: Mon, 18 Mar 2013 19:57:32 +0000
+From: Chris Wilson <chris@chris-wilson.co.uk>
+To: Jiri Kosina <jkosina@suse.cz>, Yinghai Lu <yinghai@kernel.org>,
+	Harald Arnesen <skogtun.linux@gmail.com>,
+	Kernel development list <linux-kernel@vger.kernel.org>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Peter Hurley <peter@hurleysoftware.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Thomas Meyer <thomas@m3y3r.de>,
+	Shawn Starr <shawn.starr@rogers.com>,
+	USB list <linux-usb@vger.kernel.org>,
+	linux-acpi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org, Imre Deak <imre.deak@intel.com>,
+	Daniel Kurtz <djkurtz@chromium.org>,
+	dri-devel@lists.freedesktop.org
+Subject: Re: [3.9-rc1] irq 16: nobody cared (was [3.9-rc1] very poor
+ interrupt responses)
+Message-ID: <20130318195728.GA3872@cantiga.alporthouse.com>
+References: <1460519.ejNFI1DrGk@vostro.rjw.lan>
+ <1363280764.26318.4.camel@thor.lan>
+ <5657408.cYX6iimiA4@vostro.rjw.lan>
+ <alpine.LNX.2.00.1303150851020.9529@pobox.suse.cz>
+ <5142E7F0.4020002@gmail.com>
+ <alpine.LNX.2.00.1303151424140.9529@pobox.suse.cz>
+ <alpine.LNX.2.00.1303151609480.9529@pobox.suse.cz>
+ <CAE9FiQUqPTUqPOzANnxpdfoRYPr+OiU5pFEoLKRiOFHd9Py4XQ@mail.gmail.com>
+ <alpine.LNX.2.00.1303181010080.9529@pobox.suse.cz>
+ <20130318191903.GS9021@phenom.ffwll.local>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130318191903.GS9021@phenom.ffwll.local>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-	- New VFIO_SET_IRQ ioctl option to pass the eventfd that is signaled when
-          an error occurs in the vfio_pci_device
+On Mon, Mar 18, 2013 at 08:19:03PM +0100, Daniel Vetter wrote:
+> On Mon, Mar 18, 2013 at 10:12:49AM +0100, Jiri Kosina wrote:
+> > On Fri, 15 Mar 2013, Yinghai Lu wrote:
+> > 
+> > > > Just a datapoint -- I have put a trivial debugging patch in place, and it
+> > > > reveals that "nobody cared" for irq 16 happens long after last
+> > > >
+> > > >         I915_WRITE(GMBUS4 + reg_offset, 0);
+> > > >
+> > > > has been performed in gmbus_wait_hw_status(). On the other hand, if I
+> > > > comment out both GMBUS4 register offset writes in gmbus_wait_hw_status(),
+> > > > then it of course falls back to GPIO bit-banging, but the "nobody cared"
+> > > > for irq 16 is gone.
+> > > >
+> > > > So it seems like something gets severely confused by the I915_WRITE to
+> > > > GMBUS4 + reg_offset. So far this seems to have been reported solely on
+> > > > Lenovos as far as I can see (although a completely different types), so it
+> > > > might be some platform-specific quirk?
+> > > >
+> > > > Honestly, I still don't understand how all the GMBUS stuff relates to IRQ
+> > > > 16 at all.
+> > > 
+> > > that device is using
+> > > i915 0000:00:02.0: irq 44 for MSI/MSI-X
+> > > 
+> > > so can you try to boot with pci=nomsi?
+> > 
+> > Yes, switching from MSI to IO-APIC-fasteoi makes the report about lost 
+> > interrupts go away.
+> > 
+> > My understanding from the other mail is that DAniel Vetter already has an 
+> > idea what might be going wrong with IRQ acking on GM45 chipsets; hopefully 
+> > this datapoint regarding MSI will fit into it.
+> 
+> Yep, there's a big comment in the irq handler for that chipset that we
+> have a gaping race with when using MSI interrupts. Although the comment
+> bodly claims that the race is small enough to avoid the dreaded "nobody
+> cared" message. Looks like gmbus is good at hitting that race - on newer
+> chips it already brought up a similar race in handling pch interrupts.
+> 
+> Can you please give the below patch a whirl? It removes the probably race
+> msi race avoidance code and replaces it with the same trick Paulo used to
+> fix pch irq handling races.
 
-	- Register pci_error_handler for the vfio_pci driver
+Still nobody cares about irq16.
+-Chris
 
-	- When the device encounters an error, the error handler registered by
-          the vfio_pci driver gets invoked by the AER infrastructure
-
-	- In the error handler, signal the eventfd registered for the device.
-
-	- This results in the qemu eventfd handler getting invoked and
-          appropriate action taken for the guest.
-
-Signed-off-by: Vijay Mohan Pandarathil <vijaymohan.pandarathil@hp.com>
----
- drivers/vfio/pci/vfio_pci.c         | 44 ++++++++++++++++++++++++-
- drivers/vfio/pci/vfio_pci_intrs.c   | 64 +++++++++++++++++++++++++++++++++++++
- drivers/vfio/pci/vfio_pci_private.h |  1 +
- include/uapi/linux/vfio.h           |  1 +
- 4 files changed, 109 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
-index 8189cb6..acfcb1a 100644
---- a/drivers/vfio/pci/vfio_pci.c
-+++ b/drivers/vfio/pci/vfio_pci.c
-@@ -201,7 +201,9 @@ static int vfio_pci_get_irq_count(struct vfio_pci_device *vdev, int irq_type)
- 
- 			return (flags & PCI_MSIX_FLAGS_QSIZE) + 1;
- 		}
--	}
-+	} else if (irq_type == VFIO_PCI_ERR_IRQ_INDEX)
-+		if (pci_is_pcie(vdev->pdev))
-+			return 1;
- 
- 	return 0;
- }
-@@ -317,6 +319,17 @@ static long vfio_pci_ioctl(void *device_data,
- 		if (info.argsz < minsz || info.index >= VFIO_PCI_NUM_IRQS)
- 			return -EINVAL;
- 
-+		switch (info.index) {
-+		case VFIO_PCI_INTX_IRQ_INDEX ... VFIO_PCI_MSIX_IRQ_INDEX:
-+			break;
-+		case VFIO_PCI_ERR_IRQ_INDEX:
-+			if (pci_is_pcie(vdev->pdev))
-+				break;
-+		/* pass thru to return error */
-+		default:
-+			return -EINVAL;
-+		}
-+
- 		info.flags = VFIO_IRQ_INFO_EVENTFD;
- 
- 		info.count = vfio_pci_get_irq_count(vdev, info.index);
-@@ -551,11 +564,40 @@ static void vfio_pci_remove(struct pci_dev *pdev)
- 	kfree(vdev);
- }
- 
-+static pci_ers_result_t vfio_pci_aer_err_detected(struct pci_dev *pdev,
-+						  pci_channel_state_t state)
-+{
-+	struct vfio_pci_device *vdev;
-+	struct vfio_device *device;
-+
-+	device = vfio_device_get_from_dev(&pdev->dev);
-+	if (device == NULL)
-+		return PCI_ERS_RESULT_DISCONNECT;
-+
-+	vdev = vfio_device_data(device);
-+	if (vdev == NULL) {
-+		vfio_device_put(device);
-+		return PCI_ERS_RESULT_DISCONNECT;
-+	}
-+
-+	if (vdev->err_trigger)
-+		eventfd_signal(vdev->err_trigger, 1);
-+
-+	vfio_device_put(device);
-+
-+	return PCI_ERS_RESULT_CAN_RECOVER;
-+}
-+
-+static struct pci_error_handlers vfio_err_handlers = {
-+	.error_detected = vfio_pci_aer_err_detected,
-+};
-+
- static struct pci_driver vfio_pci_driver = {
- 	.name		= "vfio-pci",
- 	.id_table	= NULL, /* only dynamic ids */
- 	.probe		= vfio_pci_probe,
- 	.remove		= vfio_pci_remove,
-+	.err_handler	= &vfio_err_handlers,
- };
- 
- static void __exit vfio_pci_cleanup(void)
-diff --git a/drivers/vfio/pci/vfio_pci_intrs.c b/drivers/vfio/pci/vfio_pci_intrs.c
-index 3639371..b84bf22 100644
---- a/drivers/vfio/pci/vfio_pci_intrs.c
-+++ b/drivers/vfio/pci/vfio_pci_intrs.c
-@@ -745,6 +745,63 @@ static int vfio_pci_set_msi_trigger(struct vfio_pci_device *vdev,
- 	return 0;
- }
- 
-+static int vfio_pci_set_err_trigger(struct vfio_pci_device *vdev,
-+				    unsigned index, unsigned start,
-+				    unsigned count, uint32_t flags, void *data)
-+{
-+	int32_t fd = *(int32_t *)data;
-+	struct pci_dev *pdev = vdev->pdev;
-+
-+	if ((index != VFIO_PCI_ERR_IRQ_INDEX) ||
-+	    !(flags & VFIO_IRQ_SET_DATA_TYPE_MASK))
-+		return -EINVAL;
-+
-+	/*
-+	 * device_lock synchronizes setting and checking of
-+	 * err_trigger. The vfio_pci_aer_err_detected() is also
-+	 * called with device_lock held.
-+	 */
-+
-+	/* DATA_NONE/DATA_BOOL enables loopback testing */
-+
-+	if (flags & VFIO_IRQ_SET_DATA_NONE) {
-+		device_lock(&pdev->dev);
-+		if (vdev->err_trigger)
-+			eventfd_signal(vdev->err_trigger, 1);
-+		device_unlock(&pdev->dev);
-+		return 0;
-+	} else if (flags & VFIO_IRQ_SET_DATA_BOOL) {
-+		uint8_t trigger = *(uint8_t *)data;
-+		device_lock(&pdev->dev);
-+		if (trigger && vdev->err_trigger)
-+			eventfd_signal(vdev->err_trigger, 1);
-+		device_unlock(&pdev->dev);
-+		return 0;
-+	}
-+
-+	/* Handle SET_DATA_EVENTFD */
-+
-+	if (fd == -1) {
-+		device_lock(&pdev->dev);
-+		if (vdev->err_trigger)
-+			eventfd_ctx_put(vdev->err_trigger);
-+		vdev->err_trigger = NULL;
-+		device_unlock(&pdev->dev);
-+		return 0;
-+	} else if (fd >= 0) {
-+		struct eventfd_ctx *efdctx;
-+		efdctx = eventfd_ctx_fdget(fd);
-+		if (IS_ERR(efdctx))
-+			return PTR_ERR(efdctx);
-+		device_lock(&pdev->dev);
-+		if (vdev->err_trigger)
-+			eventfd_ctx_put(vdev->err_trigger);
-+		vdev->err_trigger = efdctx;
-+		device_unlock(&pdev->dev);
-+		return 0;
-+	} else
-+		return -EINVAL;
-+}
- int vfio_pci_set_irqs_ioctl(struct vfio_pci_device *vdev, uint32_t flags,
- 			    unsigned index, unsigned start, unsigned count,
- 			    void *data)
-@@ -779,6 +836,13 @@ int vfio_pci_set_irqs_ioctl(struct vfio_pci_device *vdev, uint32_t flags,
- 			break;
- 		}
- 		break;
-+	case VFIO_PCI_ERR_IRQ_INDEX:
-+		switch (flags & VFIO_IRQ_SET_ACTION_TYPE_MASK) {
-+		case VFIO_IRQ_SET_ACTION_TRIGGER:
-+			if (pci_is_pcie(vdev->pdev))
-+				func = vfio_pci_set_err_trigger;
-+			break;
-+		}
- 	}
- 
- 	if (!func)
-diff --git a/drivers/vfio/pci/vfio_pci_private.h b/drivers/vfio/pci/vfio_pci_private.h
-index d7e55d0..9c6d5d0 100644
---- a/drivers/vfio/pci/vfio_pci_private.h
-+++ b/drivers/vfio/pci/vfio_pci_private.h
-@@ -56,6 +56,7 @@ struct vfio_pci_device {
- 	bool			has_vga;
- 	struct pci_saved_state	*pci_saved_state;
- 	atomic_t		refcnt;
-+	struct eventfd_ctx	*err_trigger;
- };
- 
- #define is_intx(vdev) (vdev->irq_type == VFIO_PCI_INTX_IRQ_INDEX)
-diff --git a/include/uapi/linux/vfio.h b/include/uapi/linux/vfio.h
-index 4f41f30..284ff24 100644
---- a/include/uapi/linux/vfio.h
-+++ b/include/uapi/linux/vfio.h
-@@ -319,6 +319,7 @@ enum {
- 	VFIO_PCI_INTX_IRQ_INDEX,
- 	VFIO_PCI_MSI_IRQ_INDEX,
- 	VFIO_PCI_MSIX_IRQ_INDEX,
-+	VFIO_PCI_ERR_IRQ_INDEX,
- 	VFIO_PCI_NUM_IRQS
- };
- 
 -- 
-1.7.11.3
-
+Chris Wilson, Intel Open Source Technology Centre
