@@ -1,180 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fold.natur.cuni.cz ([195.113.57.32]:52944 "HELO
-	fold.natur.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1757400Ab3C3BxE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 29 Mar 2013 21:53:04 -0400
-Message-ID: <5156457C.9020201@fold.natur.cuni.cz>
-Date: Sat, 30 Mar 2013 02:53:00 +0100
-From: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
-MIME-Version: 1.0
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-CC: Huang Ying <ying.huang@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: Re: 3.9-rc1: pciehp and eSATA card SiI 3132, no XHCI
-References: <513E7E1E.80508@fold.natur.cuni.cz> <5381191.45N5KLLmWJ@vostro.rjw.lan> <51563D32.70106@fold.natur.cuni.cz> <2764533.egTWJWstJg@vostro.rjw.lan>
-In-Reply-To: <2764533.egTWJWstJg@vostro.rjw.lan>
-Content-Type: text/plain; charset=UTF-8
+Received: from mx1.redhat.com ([209.132.183.28]:2020 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751271Ab3CRQYq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 18 Mar 2013 12:24:46 -0400
+Message-ID: <1363623880.24132.351.camel@bling.home>
+Subject: Re: [PATCH] udevadm-info: Don't access sysfs 'resource<N>' files
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Kay Sievers <kay@vrfy.org>
+Cc: Greg KH <gregkh@linuxfoundation.org>,
+	Myron Stowe <mstowe@redhat.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	linux-hotplug@vger.kernel.org, linux-pci@vger.kernel.org,
+	yuxiangl@marvell.com, yxlraid@gmail.com,
+	linux-kernel@vger.kernel.org
+Date: Mon, 18 Mar 2013 10:24:40 -0600
+In-Reply-To: <CAPXgP12vmx9j_jJW3HXb2deRapFKAofTVzEbdyS=Z1VUBswE_Q@mail.gmail.com>
+References: <20130316213512.2974.17303.stgit@amt.stowe>
+	 <20130316213519.2974.38954.stgit@amt.stowe>
+	 <20130316221159.GA3702@kroah.com> <1363477853.2423.25.camel@zim.stowe>
+	 <20130317010317.GB9641@kroah.com> <1363493482.16793.69.camel@ul30vt.home>
+	 <20130317053611.GC948@kroah.com> <1363527503.16793.75.camel@ul30vt.home>
+	 <CAPXgP12vmx9j_jJW3HXb2deRapFKAofTVzEbdyS=Z1VUBswE_Q@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Rafael J. Wysocki wrote:
-> On Saturday, March 30, 2013 02:17:38 AM Martin Mokrejs wrote:
->> Rafael J. Wysocki wrote:
->>> On Friday, March 29, 2013 03:11:13 PM Martin Mokrejs wrote:
->>>> Hi Ying,
->>>>   thank you for the patch. Here are the results.
->>>>
->>>> Huang Ying wrote:
->>>>> On Thu, 2013-03-28 at 19:38 +0100, Martin Mokrejs wrote:
->>>>>> Hi Ying,
->>>>>>   would you please tell me how this report relate to this patch?
->>>>>>
->>>>>> [PATCH] PCI / ACPI: Always resume devices on ACPI wakeup notifications
->>>>>>
->>>>>>   Could you tell me why this PME was being flipped back and forth now?
->>>>>> Actually, does that make finally some sense to you, pci/acpi devs?
->>>
->>> Can you please test this patch:
->>>
->>> https://patchwork.kernel.org/patch/2359611/
->>>
->>> and report back as I asked you?
->>
->> Sorry for the delay I just had to sort out what belongs under what thread
->> and the patch was under the other. But I agree its testing with this
->> particular eSATA/ExpressCardSlot/PM fits better here.
->>
->>
->> The good news is that the eSATA card hotplug works almost perfectly with the patch.
->> I cold booted as always with the card in the slot already loaded, same kernel
->> .config and commandline options as described under this thread. But the kernel
->> was 3.8.3! Not 3.9-rc1.
+On Sun, 2013-03-17 at 15:00 +0100, Kay Sievers wrote:
+> On Sun, Mar 17, 2013 at 2:38 PM, Alex Williamson
+> <alex.williamson@redhat.com> wrote:
+> > I'm assuming that the device only breaks because udevadm is dumping the
+> > full I/O port register space of the device and that if an actual driver
+> > was interacting with it through this interface that it would work.  Who
+> > knows how many devices will have read side-effects by udevadm blindly
+> > dumping these files.  Thanks,
 > 
-> Good.  The goal was to fix the problem with eSATA hotplug.
+> Sysfs is a too public interface to export things there which make
+> devices/driver choke on a simple read() of an attribute.
 
-I thought that was aimed at the XHCI dead port issue. ;-)
+That's why the default permissions for the file do not allow users to
+read it.  I wish we could do something as clever as the MMIO resource
+files, but I/O port spaces don't allow mmap for the predominant
+architecture.  Eventually VFIO is meant to replace this access and does
+move device register access behind ioctls, but for now legacy KVM device
+assignment relies on these files and so might some UIO drivers.
 
-> 
->> What is important is the fact that this patch resulted in runtime_status set to
->> "active" instead of "auto" (3.8.3 with incidentally enabled laptop-mode-tools)
->> or "on" (also tested on 3.8.3 once laptop-mode-tools were uninstalled). With this
->> patch, devices did not get suspended during the tests (per /sys/*/power/runtime_status
->> files).
-> 
-> You seem to be confusing power/runtime_status with power/control.  runtime_status
-> can never be "on", while control can never be "active".
+> This is nothing specific to udevadm, any tool can do that. Udevadm
+> will never read any of the files during normal operation. The admin
+> explicitly asked udevadm with a specific command to dump all the stuff
+> the device offers.
 
-Too late here, but yes, I likely swapped the two filename and value pairs. Thanks.
+Isn't it possible udevadm could drop privileges or filter out non-world
+readable files? 
 
-> 
->> I haven't realized so far that the rtl8169 card at 05:00 and the TI xHCI
->> controller at 0b:00 support D2 state.
-> 
-> Which probably doesn't matter, because that state isn't used by the kernel
-> anyway.
-> 
->> # grep PME dmesg_final.txt 
->> [    1.571475] pci 0000:00:16.0: PME# supported from D0 D3hot D3cold
->> [    1.571500] pci 0000:00:16.0: PME# disabled
->> [    1.571760] pci 0000:00:1a.0: PME# supported from D0 D3hot D3cold
->> [    1.571766] pci 0000:00:1a.0: PME# disabled
->> [    1.571991] pci 0000:00:1b.0: PME# supported from D0 D3hot D3cold
->> [    1.571997] pci 0000:00:1b.0: PME# disabled
->> [    1.572200] pci 0000:00:1c.0: PME# supported from D0 D3hot D3cold
->> [    1.572205] pci 0000:00:1c.0: PME# disabled
->> [    1.572409] pci 0000:00:1c.1: PME# supported from D0 D3hot D3cold
->> [    1.572414] pci 0000:00:1c.1: PME# disabled
->> [    1.572618] pci 0000:00:1c.3: PME# supported from D0 D3hot D3cold
->> [    1.572623] pci 0000:00:1c.3: PME# disabled
->> [    1.572826] pci 0000:00:1c.4: PME# supported from D0 D3hot D3cold
->> [    1.572832] pci 0000:00:1c.4: PME# disabled
->> [    1.573042] pci 0000:00:1c.7: PME# supported from D0 D3hot D3cold
->> [    1.573047] pci 0000:00:1c.7: PME# disabled
->> [    1.573292] pci 0000:00:1d.0: PME# supported from D0 D3hot D3cold
->> [    1.573297] pci 0000:00:1d.0: PME# disabled
->> [    1.573765] pci 0000:00:1f.2: PME# supported from D3hot
->> [    1.573770] pci 0000:00:1f.2: PME# disabled
->> [    1.574521] pci 0000:05:00.0: PME# supported from D0 D1 D2 D3hot D3cold
->> [    1.574528] pci 0000:05:00.0: PME# disabled
->> [    1.587449] pci 0000:09:00.0: PME# supported from D0 D3hot D3cold
->> [    1.587500] pci 0000:09:00.0: PME# disabled
->> [    1.605568] pci 0000:0b:00.0: PME# supported from D0 D1 D2 D3hot D3cold
->> [    1.605575] pci 0000:0b:00.0: PME# disabled
->> [  362.712584] sata_sil24 0000:11:00.0: PME# disabled
->> [ 1069.949732] sata_sil24 0000:11:00.0: PME# disabled
->> [ 1083.878783] sata_sil24 0000:11:00.0: PME# disabled
->> [ 1096.679536] sata_sil24 0000:11:00.0: PME# disabled
->> [ 1107.503274] sata_sil24 0000:11:00.0: PME# disabled
->> #
-> 
-> The part above is totally irrelevant.  It's just the initial configuration.
-> 
->> Seems the sata_sil24 does not report an equivalent of, for example:
->> [    1.605568] pci 0000:0b:00.0: PME# supported from D0 D1 D2 D3hot D3cold
-> 
-> Apparently, they don't support PME and pci_pme_active() should check
-> dev->pme_support, but it doesn't.  Still not relevant, though.
-> 
->> The states before/after tests (did not change):
-> 
-> What tests?
+> The kernel driver needs to be fixed to allow that, in the worst case,
+> the attributes not exported at all. People should take more care what
+> they export in /sys, it's not a hidden and private ioctl what's
+> exported there, stuff is very visible and will be looked at.
 
-Tests with express card plugged in, unloaded, but also USB devices bing plugged
-into the xHCI port to test whether it detects the change or not.
+File permissions...
 
-> 
-> And why would you expect them to change?
+> Telling userspace not to use specific stuff in /sys I would not expect
+> to work as a strategy; there is too much weird stuff out there that
+> will always try to do that ...
 
-It is my impression the xHCI port can be suspended after a device is unplugged.
-I might be wrong but doing just echo "auto" > /sys/.../control does not
-cause a device suspend in a few seconds. I have to plugin a device and only
-its unplug the "new setting" kicks in. Whether am right or not, I just wanted
-to know whether any of them felt a sleep, etc. So "no change" was a good news
-for me. ;-)
+I agree, the kernel needs to protect itself from malicious apps, but if
+you run a malicious app with admin access, how much can/should we do?
+If we're going to ignore file permissions, why limit ourselves to
+read(), should we make everything safe against write() as well?  Thanks,
 
-> 
->> /sys/bus/pci/devices/0000:00:00.0/power/control:on
->> /sys/bus/pci/devices/0000:00:02.0/power/control:on
->> /sys/bus/pci/devices/0000:00:16.0/power/control:on
->> /sys/bus/pci/devices/0000:00:1a.0/power/control:on
->> /sys/bus/pci/devices/0000:00:1b.0/power/control:on
->> /sys/bus/pci/devices/0000:00:1c.0/power/control:on
->> /sys/bus/pci/devices/0000:00:1c.1/power/control:on
->> /sys/bus/pci/devices/0000:00:1c.3/power/control:on
->> /sys/bus/pci/devices/0000:00:1c.4/power/control:on
->> /sys/bus/pci/devices/0000:00:1c.7/power/control:on
->> /sys/bus/pci/devices/0000:00:1d.0/power/control:on
->> /sys/bus/pci/devices/0000:00:1f.0/power/control:on
->> /sys/bus/pci/devices/0000:00:1f.2/power/control:on
->> /sys/bus/pci/devices/0000:00:1f.3/power/control:on
->> /sys/bus/pci/devices/0000:05:00.0/power/control:on
->> /sys/bus/pci/devices/0000:09:00.0/power/control:on
->> /sys/bus/pci/devices/0000:0b:00.0/power/control:on
->> /sys/bus/pci/devices/0000:11:00.0/power/control:on
-> 
-> Sure, all of these devices are always on.  You need to write "auto" to their
-> power/control files to change that, which still doesn't mean they will be
-> runtime-suspended.
+Alex
 
-That's what I learned. ;-)
-
-> 
-> The patch in question doesn't have any effect on those settings.
-
-Oh it does! There are "active" values instead of "on" or "auto".
-
-> 
->> These 2 lines only are logged during hot eject of the eSATA card:
->>
->> +[  362.712584] sata_sil24 0000:11:00.0: PME# disabled
->> +[  362.715773] sata_sil24: IRQ status == 0xffffffff, PCI fault or device removal?
-> 
-> Device removal I suppose.
-
-Yes. Provided Sarah wrote today that reading 'ff' is a false alarm for the
-HW died message from xhci_hcd this is probably same issue.
-
-Martin
