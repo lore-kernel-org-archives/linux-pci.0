@@ -1,199 +1,117 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e24smtp05.br.ibm.com ([32.104.18.26]:35532 "EHLO
-	e24smtp05.br.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751436Ab3CTFZL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Mar 2013 01:25:11 -0400
-Received: from /spool/local
-	by e24smtp05.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <lucaskt@linux.vnet.ibm.com>;
-	Wed, 20 Mar 2013 02:25:08 -0300
-Received: from d24relay03.br.ibm.com (d24relay03.br.ibm.com [9.13.184.25])
-	by d24dlp01.br.ibm.com (Postfix) with ESMTP id 4F4373520060
-	for <linux-pci@vger.kernel.org>; Wed, 20 Mar 2013 01:25:06 -0400 (EDT)
-Received: from d24av05.br.ibm.com (d24av05.br.ibm.com [9.18.232.44])
-	by d24relay03.br.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id r2K5OMJa25362548
-	for <linux-pci@vger.kernel.org>; Wed, 20 Mar 2013 02:24:22 -0300
-Received: from d24av05.br.ibm.com (loopback [127.0.0.1])
-	by d24av05.br.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id r2K5P49K029743
-	for <linux-pci@vger.kernel.org>; Wed, 20 Mar 2013 02:25:06 -0300
-From: Lucas Kannebley Tavares <lucaskt@linux.vnet.ibm.com>
-To: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	dri-devel@lists.freedesktop.org
-Cc: Lucas Kannebley Tavares <lucaskt@linux.vnet.ibm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	David Airlie <airlied@linux.ie>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Brian King <brking@linux.vnet.ibm.com>,
-	Thadeu Cascardo <cascardo@linux.vnet.ibm.com>,
-	Alex Deucher <alexander.deucher@amd.com>
-Subject: [PATCHv2 2/3] drm: removed drm_pcie_get_speed_cap_mask function
-Date: Wed, 20 Mar 2013 02:24:38 -0300
-Message-Id: <1363757079-23550-3-git-send-email-lucaskt@linux.vnet.ibm.com>
-In-Reply-To: <1363757079-23550-1-git-send-email-lucaskt@linux.vnet.ibm.com>
-References: <1363757079-23550-1-git-send-email-lucaskt@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	stable@kernel.org
+Subject: [PATCH] PCI: Remove not needed check in disable aspm link
+Date: Mon, 18 Mar 2013 10:37:06 -0700
+Message-Id: <1363628226-6679-1-git-send-email-yinghai@kernel.org>
+In-Reply-To: <CAE9FiQXmeb66dc8fET0y99BjqpUXp11c7utiQ5keR1Wf+N9xaA@mail.gmail.com>
+References: <CAE9FiQXmeb66dc8fET0y99BjqpUXp11c7utiQ5keR1Wf+N9xaA@mail.gmail.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This function was moved to the pci subsystem where it fits better, as
-this is much more of a generic pci task, than a drm specific one. All
-references to the function (all in the radeon driver) are updated.
+Roman reported ath5k does not work anymore on 3.8.
+Bisected to
+| commit 8c33f51df406e1a1f7fa4e9b244845b7ebd61fa6
+| Author: Taku Izumi <izumi.taku@jp.fujitsu.com>
+| Date:   Tue Oct 30 15:27:13 2012 +0900
+|
+|    PCI/ACPI: Request _OSC control before scanning PCI root bus
+|
+|    This patch moves up the code block to request _OSC control in order to
+|    separate ACPI work and PCI work in acpi_pci_root_add().
 
-This is the second step in moving function drm_pcie_get_speed_cap_mask
-from the drm subsystem to the pci one.
+It make pci_disable_link_state does not work anymore as acpi_disabled
+is set before pci root bus scanning.
+It will skip that in quirks and pcie_aspm_sanity_check.
 
-Signed-off-by: Lucas Kannebley Tavares <lucaskt@linux.vnet.ibm.com>
+We could revert to old logic, but that will make booting path and hotplug
+path with different aspm_disabled again.
+
+Acctually we don't need to check aspm_disabled in disable link, as
+we already have protection about link state following.
+
+https://bugzilla.kernel.org/show_bug.cgi?id=55211
+http://article.gmane.org/gmane.linux.kernel.pci/20640
+
+Need it for 3.8 stable.
+
+Reported-by: Roman Yepishev <roman.yepishev@gmail.com>
+Bisected-by: Roman Yepishev <roman.yepishev@gmail.com>
+Tested-by: Roman Yepishev <roman.yepishev@gmail.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Taku Izumi <izumi.taku@jp.fujitsu.com>
+Cc: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+Cc: stable@kernel.org
+
 ---
- drivers/gpu/drm/drm_pci.c          |   38 ------------------------------------
- drivers/gpu/drm/radeon/evergreen.c |    5 ++-
- drivers/gpu/drm/radeon/r600.c      |    5 ++-
- drivers/gpu/drm/radeon/rv770.c     |    5 ++-
- include/drm/drmP.h                 |    6 -----
- 5 files changed, 9 insertions(+), 50 deletions(-)
+ drivers/pci/pcie/aspm.c |   21 ++++-----------------
+ 1 file changed, 4 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/gpu/drm/drm_pci.c b/drivers/gpu/drm/drm_pci.c
-index bd719e9..ba70844 100644
---- a/drivers/gpu/drm/drm_pci.c
-+++ b/drivers/gpu/drm/drm_pci.c
-@@ -439,44 +439,6 @@ int drm_pci_init(struct drm_driver *driver, struct pci_driver *pdriver)
- 	return 0;
+Index: linux-2.6/drivers/pci/pcie/aspm.c
+===================================================================
+--- linux-2.6.orig/drivers/pci/pcie/aspm.c
++++ linux-2.6/drivers/pci/pcie/aspm.c
+@@ -493,15 +493,6 @@ static int pcie_aspm_sanity_check(struct
+ 			return -EINVAL;
+ 
+ 		/*
+-		 * If ASPM is disabled then we're not going to change
+-		 * the BIOS state. It's safe to continue even if it's a
+-		 * pre-1.1 device
+-		 */
+-
+-		if (aspm_disabled)
+-			continue;
+-
+-		/*
+ 		 * Disable ASPM for pre-1.1 PCIe device, we follow MS to use
+ 		 * RBER bit to determine if a function is 1.1 version device
+ 		 */
+@@ -718,15 +709,11 @@ void pcie_aspm_powersave_config_link(str
+  * pci_disable_link_state - disable pci device's link state, so the link will
+  * never enter specific states
+  */
+-static void __pci_disable_link_state(struct pci_dev *pdev, int state, bool sem,
+-				     bool force)
++static void __pci_disable_link_state(struct pci_dev *pdev, int state, bool sem)
+ {
+ 	struct pci_dev *parent = pdev->bus->self;
+ 	struct pcie_link_state *link;
+ 
+-	if (aspm_disabled && !force)
+-		return;
+-
+ 	if (!pci_is_pcie(pdev))
+ 		return;
+ 
+@@ -757,13 +744,13 @@ static void __pci_disable_link_state(str
+ 
+ void pci_disable_link_state_locked(struct pci_dev *pdev, int state)
+ {
+-	__pci_disable_link_state(pdev, state, false, false);
++	__pci_disable_link_state(pdev, state, false);
+ }
+ EXPORT_SYMBOL(pci_disable_link_state_locked);
+ 
+ void pci_disable_link_state(struct pci_dev *pdev, int state)
+ {
+-	__pci_disable_link_state(pdev, state, true, false);
++	__pci_disable_link_state(pdev, state, true);
+ }
+ EXPORT_SYMBOL(pci_disable_link_state);
+ 
+@@ -781,7 +768,7 @@ void pcie_clear_aspm(struct pci_bus *bus
+ 		__pci_disable_link_state(child, PCIE_LINK_STATE_L0S |
+ 					 PCIE_LINK_STATE_L1 |
+ 					 PCIE_LINK_STATE_CLKPM,
+-					 false, true);
++					 false);
+ 	}
  }
  
--int drm_pcie_get_speed_cap_mask(struct drm_device *dev, u32 *mask)
--{
--	struct pci_dev *root;
--	u32 lnkcap, lnkcap2;
--
--	*mask = 0;
--	if (!dev->pdev)
--		return -EINVAL;
--
--	root = dev->pdev->bus->self;
--
--	/* we've been informed via and serverworks don't make the cut */
--	if (root->vendor == PCI_VENDOR_ID_VIA ||
--	    root->vendor == PCI_VENDOR_ID_SERVERWORKS)
--		return -EINVAL;
--
--	pcie_capability_read_dword(root, PCI_EXP_LNKCAP, &lnkcap);
--	pcie_capability_read_dword(root, PCI_EXP_LNKCAP2, &lnkcap2);
--
--	if (lnkcap2) {	/* PCIe r3.0-compliant */
--		if (lnkcap2 & PCI_EXP_LNKCAP2_SLS_2_5GB)
--			*mask |= DRM_PCIE_SPEED_25;
--		if (lnkcap2 & PCI_EXP_LNKCAP2_SLS_5_0GB)
--			*mask |= DRM_PCIE_SPEED_50;
--		if (lnkcap2 & PCI_EXP_LNKCAP2_SLS_8_0GB)
--			*mask |= DRM_PCIE_SPEED_80;
--	} else {	/* pre-r3.0 */
--		if (lnkcap & PCI_EXP_LNKCAP_SLS_2_5GB)
--			*mask |= DRM_PCIE_SPEED_25;
--		if (lnkcap & PCI_EXP_LNKCAP_SLS_5_0GB)
--			*mask |= (DRM_PCIE_SPEED_25 | DRM_PCIE_SPEED_50);
--	}
--
--	DRM_INFO("probing gen 2 caps for device %x:%x = %x/%x\n", root->vendor, root->device, lnkcap, lnkcap2);
--	return 0;
--}
--EXPORT_SYMBOL(drm_pcie_get_speed_cap_mask);
--
- #else
- 
- int drm_pci_init(struct drm_driver *driver, struct pci_driver *pdriver)
-diff --git a/drivers/gpu/drm/radeon/evergreen.c b/drivers/gpu/drm/radeon/evergreen.c
-index 305a657..6ba204d 100644
---- a/drivers/gpu/drm/radeon/evergreen.c
-+++ b/drivers/gpu/drm/radeon/evergreen.c
-@@ -24,6 +24,7 @@
- #include <linux/firmware.h>
- #include <linux/platform_device.h>
- #include <linux/slab.h>
-+#include <linux/pci.h>
- #include <drm/drmP.h>
- #include "radeon.h"
- #include "radeon_asic.h"
-@@ -3871,11 +3872,11 @@ void evergreen_pcie_gen2_enable(struct radeon_device *rdev)
- 	if (ASIC_IS_X2(rdev))
- 		return;
- 
--	ret = drm_pcie_get_speed_cap_mask(rdev->ddev, &mask);
-+	ret = pcie_get_speed_cap_mask(rdev->ddev->pdev, &mask);
- 	if (ret != 0)
- 		return;
- 
--	if (!(mask & DRM_PCIE_SPEED_50))
-+	if (!(mask & PCIE_SPEED_50))
- 		return;
- 
- 	speed_cntl = RREG32_PCIE_P(PCIE_LC_SPEED_CNTL);
-diff --git a/drivers/gpu/drm/radeon/r600.c b/drivers/gpu/drm/radeon/r600.c
-index 0740db3..89a7387 100644
---- a/drivers/gpu/drm/radeon/r600.c
-+++ b/drivers/gpu/drm/radeon/r600.c
-@@ -30,6 +30,7 @@
- #include <linux/firmware.h>
- #include <linux/platform_device.h>
- #include <linux/module.h>
-+#include <linux/pci.h>
- #include <drm/drmP.h>
- #include <drm/radeon_drm.h>
- #include "radeon.h"
-@@ -4371,11 +4372,11 @@ static void r600_pcie_gen2_enable(struct radeon_device *rdev)
- 	if (rdev->family <= CHIP_R600)
- 		return;
- 
--	ret = drm_pcie_get_speed_cap_mask(rdev->ddev, &mask);
-+	ret = pcie_get_speed_cap_mask(rdev->ddev->pdev, &mask);
- 	if (ret != 0)
- 		return;
- 
--	if (!(mask & DRM_PCIE_SPEED_50))
-+	if (!(mask & PCIE_SPEED_50))
- 		return;
- 
- 	speed_cntl = RREG32_PCIE_P(PCIE_LC_SPEED_CNTL);
-diff --git a/drivers/gpu/drm/radeon/rv770.c b/drivers/gpu/drm/radeon/rv770.c
-index d63fe1d..81c7f1c 100644
---- a/drivers/gpu/drm/radeon/rv770.c
-+++ b/drivers/gpu/drm/radeon/rv770.c
-@@ -28,6 +28,7 @@
- #include <linux/firmware.h>
- #include <linux/platform_device.h>
- #include <linux/slab.h>
-+#include <linux/pci.h>
- #include <drm/drmP.h>
- #include "radeon.h"
- #include "radeon_asic.h"
-@@ -1254,11 +1255,11 @@ static void rv770_pcie_gen2_enable(struct radeon_device *rdev)
- 	if (ASIC_IS_X2(rdev))
- 		return;
- 
--	ret = drm_pcie_get_speed_cap_mask(rdev->ddev, &mask);
-+	ret = pcie_get_speed_cap_mask(rdev->ddev->pdev, &mask);
- 	if (ret != 0)
- 		return;
- 
--	if (!(mask & DRM_PCIE_SPEED_50))
-+	if (!(mask & PCIE_SPEED_50))
- 		return;
- 
- 	DRM_INFO("enabling PCIE gen 2 link speeds, disable with radeon.pcie_gen2=0\n");
-diff --git a/include/drm/drmP.h b/include/drm/drmP.h
-index 2d94d74..39b2872 100644
---- a/include/drm/drmP.h
-+++ b/include/drm/drmP.h
-@@ -1788,12 +1788,6 @@ extern int drm_get_pci_dev(struct pci_dev *pdev,
- 			   const struct pci_device_id *ent,
- 			   struct drm_driver *driver);
- 
--#define DRM_PCIE_SPEED_25 1
--#define DRM_PCIE_SPEED_50 2
--#define DRM_PCIE_SPEED_80 4
--
--extern int drm_pcie_get_speed_cap_mask(struct drm_device *dev, u32 *speed_mask);
--
- /* platform section */
- extern int drm_platform_init(struct drm_driver *driver, struct platform_device *platform_device);
- extern void drm_platform_exit(struct drm_driver *driver, struct platform_device *platform_device);
--- 
-1.7.4.4
-
