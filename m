@@ -1,69 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:44817 "EHLO quartz.orcorp.ca"
+Received: from mx1.redhat.com ([209.132.183.28]:49508 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751438Ab3CHUC4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 8 Mar 2013 15:02:56 -0500
-Date: Fri, 8 Mar 2013 13:02:46 -0700
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Mitch Bradley <wmb@firmworks.com>
-Cc: Thierry Reding <thierry.reding@avionic-design.de>,
-	Lior Amsalem <alior@marvell.com>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>, linux-pci@vger.kernel.org,
-	devicetree-discuss@lists.ozlabs.org,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH 24/32] pci: PCIe driver for Marvell Armada 370/XP systems
-Message-ID: <20130308200245.GC29435@obsidianresearch.com>
-References: <20130307080832.GD3451@avionic-0098.mockup.avionic-design.de>
- <20130307174955.GC20840@obsidianresearch.com>
- <20130307194830.GA1811@avionic-0098.mockup.avionic-design.de>
- <20130307200235.GB20695@obsidianresearch.com>
- <20130307204726.GB1811@avionic-0098.mockup.avionic-design.de>
- <51392B4D.9040404@gmail.com>
- <20130308071443.GA5772@avionic-0098.mockup.avionic-design.de>
- <20130308165228.GB4094@obsidianresearch.com>
- <20130308191227.GA6551@avionic-0098.mockup.avionic-design.de>
- <513A3F4F.2090501@firmworks.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <513A3F4F.2090501@firmworks.com>
+	id S1751813Ab3CRQvJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 18 Mar 2013 12:51:09 -0400
+Message-ID: <1363625463.24132.367.camel@bling.home>
+Subject: Re: [PATCH] udevadm-info: Don't access sysfs 'resource<N>' files
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: Kay Sievers <kay@vrfy.org>, Myron Stowe <mstowe@redhat.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	linux-hotplug@vger.kernel.org, linux-pci@vger.kernel.org,
+	yuxiangl@marvell.com, yxlraid@gmail.com,
+	linux-kernel@vger.kernel.org
+Date: Mon, 18 Mar 2013 10:51:03 -0600
+In-Reply-To: <20130318164126.GA20565@kroah.com>
+References: <20130316213512.2974.17303.stgit@amt.stowe>
+	 <20130316213519.2974.38954.stgit@amt.stowe>
+	 <20130316221159.GA3702@kroah.com> <1363477853.2423.25.camel@zim.stowe>
+	 <20130317010317.GB9641@kroah.com> <1363493482.16793.69.camel@ul30vt.home>
+	 <20130317053611.GC948@kroah.com> <1363527503.16793.75.camel@ul30vt.home>
+	 <CAPXgP12vmx9j_jJW3HXb2deRapFKAofTVzEbdyS=Z1VUBswE_Q@mail.gmail.com>
+	 <1363623880.24132.351.camel@bling.home> <20130318164126.GA20565@kroah.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 08, 2013 at 09:43:11AM -1000, Mitch Bradley wrote:
-
-> >> http://www.spinics.net/lists/arm-kernel/msg228749.html
+On Mon, 2013-03-18 at 09:41 -0700, Greg KH wrote:
+> On Mon, Mar 18, 2013 at 10:24:40AM -0600, Alex Williamson wrote:
+> > On Sun, 2013-03-17 at 15:00 +0100, Kay Sievers wrote:
+> > > On Sun, Mar 17, 2013 at 2:38 PM, Alex Williamson
+> > > <alex.williamson@redhat.com> wrote:
+> > > > I'm assuming that the device only breaks because udevadm is dumping the
+> > > > full I/O port register space of the device and that if an actual driver
+> > > > was interacting with it through this interface that it would work.  Who
+> > > > knows how many devices will have read side-effects by udevadm blindly
+> > > > dumping these files.  Thanks,
+> > > 
+> > > Sysfs is a too public interface to export things there which make
+> > > devices/driver choke on a simple read() of an attribute.
+> > 
+> > That's why the default permissions for the file do not allow users to
+> > read it.  I wish we could do something as clever as the MMIO resource
+> > files, but I/O port spaces don't allow mmap for the predominant
+> > architecture.  Eventually VFIO is meant to replace this access and does
+> > move device register access behind ioctls, but for now legacy KVM device
+> > assignment relies on these files and so might some UIO drivers.
+> > 
+> > > This is nothing specific to udevadm, any tool can do that. Udevadm
+> > > will never read any of the files during normal operation. The admin
+> > > explicitly asked udevadm with a specific command to dump all the stuff
+> > > the device offers.
+> > 
+> > Isn't it possible udevadm could drop privileges or filter out non-world
+> > readable files? 
 > 
-> The example in that posting looks messed up to me.
+> And you are going to do the same thing for bash?  All other shells?
 > 
-> 1) It has "reg = <0x0800 0 0 0 0>", but 0x0800 0 0  is not a valid
-> address in the address space defined by its parent - because the form of
-> the parent's ranges property indicates that it's a PCI-style address
-> form.  0x0800 0 0 lacks the top bits that indicate non-relocatable and
-> the type (I/O, memory, etc).
+> Come on, the user specifically asked to read this file, as root, and
+> udev did so.  Just like bash would.
+> 
+> Please fix the kernel if this is a real problem, you aren't going to be
+> able to patch all userspace programs, that's not the proper solution
+> here.
 
-You need to review the OF PCI bindings to make sense of this.  The
-subnodes are PCI devices. Those PCI devices show up in the
-configuration space (ie lspci). They are the PCI root port bridges.
+At least for KVM the kernel fix is the addition of the vfio driver which
+gives us a non-sysfs way to do this.  If this problem was found a few
+years later and we were ready to make the switch I'd support just
+removing these resource files.  In the meantime we have userspace that
+depends on this interface, so I'm open to suggestions how to fix it.
 
-The reg value follows the OF PCI spec and has the configuration
-address of the bridge. For the first port's bridge this address in
-lspci format is 00:01.0 which encodes to <0x800 0 0>
+If we want to blacklist this specific device, that's fine, but as others
+have pointed out it's really a class problem.  Perhaps we report 1 byte
+extra for the file length where EOF-1 is an enable byte?  Is there
+anything else in file ops that we could use to make it slightly more
+complicated than open(), read() to access the device?  Thanks,
 
-The Linux OF PCI core uses the reg value in this format to match the
-OF node in the DT to the PCI device node as it does PCI discovery.
+Alex
 
-> 2) The "@0,0" and "@1,0" suffixes do not correspond to the reg values
-> <0x0800 0 0 0 0> and <0x1000 0 0 0 0> using any rule that I know.
-
-@0,1,0 (bus,device,fn) could be more appropriate, but that is
-cosmetic?
-
-Jason
