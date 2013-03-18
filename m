@@ -1,63 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.9]:51937 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751540Ab3C0SIu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Mar 2013 14:08:50 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: Re: [RFC PATCHv1 0/5] Use the mvebu PCIe driver on Kirkwood
-Date: Wed, 27 Mar 2013 18:07:50 +0000
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	devicetree-discuss@lists.ozlabs.org,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Maen Suleiman <maen@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Olof Johansson <olof@lixom.net>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Mitch Bradley <wmb@firmworks.com>,
-	Andrew Murray <andrew.murray@arm.com>
-References: <1364407504-13524-1-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1364407504-13524-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from elijah-5.iglou.com ([64.253.103.13]:49650 "EHLO eli.elilabs.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752148Ab3CRSfj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 18 Mar 2013 14:35:39 -0400
+Message-ID: <51475699.3030406@elilabs.com>
+Date: Mon, 18 Mar 2013 14:02:01 -0400
+From: Robert Brown <rj@elilabs.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Message-Id: <201303271807.51023.arnd@arndb.de>
+To: Alex Williamson <alex.williamson@redhat.com>
+CC: =?ISO-8859-1?Q?Bj=F8rn_Mork?= <bjorn@mork.no>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	Kay Sievers <kay@vrfy.org>, Myron Stowe <mstowe@redhat.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	linux-hotplug@vger.kernel.org, linux-pci@vger.kernel.org,
+	yuxiangl@marvell.com, yxlraid@gmail.com,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] udevadm-info: Don't access sysfs 'resource<N>' files
+References: <20130316213512.2974.17303.stgit@amt.stowe>  <20130316213519.2974.38954.stgit@amt.stowe>  <20130316221159.GA3702@kroah.com> <1363477853.2423.25.camel@zim.stowe>  <20130317010317.GB9641@kroah.com> <1363493482.16793.69.camel@ul30vt.home>  <20130317053611.GC948@kroah.com> <1363527503.16793.75.camel@ul30vt.home>  <CAPXgP12vmx9j_jJW3HXb2deRapFKAofTVzEbdyS=Z1VUBswE_Q@mail.gmail.com>  <1363623880.24132.351.camel@bling.home> <20130318164126.GA20565@kroah.com>  <1363625463.24132.367.camel@bling.home> <87obeg39qp.fsf@nemi.mork.no> <1363629287.24132.380.camel@bling.home>
+In-Reply-To: <1363629287.24132.380.camel@bling.home>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday 27 March 2013, Thomas Petazzoni wrote:
-> Here is a set of five patches that demonstrate that the mvebu PCIe
-> driver can be used on Kirkwood with no modification at all. Those
-> patches are not meant to be applied yet, the Device Trees are not
-> completely correct yet (they don't take into account the fact that
-> 6281 has one PCIe interface and 6282 has two PCIe interface).
-> 
-> It took less than two hours to enable PCIe on Kirkwood (and in those
-> two hours, the conversion of the DB-88F6281 board to the Device Tree
-> has been done as well), and the result works fine:
-> 
-> # /usr/sbin/lspci
-> 00:01.0 PCI bridge: Marvell Technology Group Ltd. Device 7846
-> 00:02.0 PCI bridge: Marvell Technology Group Ltd. Device 7846
-> 01:00.0 SCSI storage controller: Marvell Technology Group Ltd. 88SX7042 PCI-e 4-port SATA-II (rev 02)
-> 02:00.0 Ethernet controller: Intel Corporation 82572EI Gigabit Ethernet Controller (Copper) (rev 06)
-> 
-> # cat /proc/cpuinfo | grep ^Hardware
-> Hardware        : Marvell Kirkwood (Flattened Device Tree)
+On 03/18/13 13:54, Alex Williamson wrote:
+> On Mon, 2013-03-18 at 18:20 +0100, Bjørn Mork wrote:
+>> Alex Williamson <alex.williamson@redhat.com> writes:
+>>
+>>> At least for KVM the kernel fix is the addition of the vfio driver which
+>>> gives us a non-sysfs way to do this.  If this problem was found a few
+>>> years later and we were ready to make the switch I'd support just
+>>> removing these resource files.  In the meantime we have userspace that
+>>> depends on this interface, so I'm open to suggestions how to fix it.
+>> I am puzzled by a couple of things in this discussion:
+>>
+>> 1) do you seriously mean that a userspace application (any, not just
+>>    udevadm or qemu or whatever) should be able to read and write these
+>>    registers while the device is owned by a driver?  How is that ever
+>>    going to work?
+> The expectation is that the user doesn't mess with the device through
+> pci-sysfs while it's running.  This is really no different than config
+> space or MMIO space in that respect.  You can use setpci to break your
+> PCI card while it's used by the driver today.  The difference is that
+> MMIO spaces side-step the issue by only allowing mmap and config space
+> is known not to have read side-effects.
+>
+>> 2) is it really so that a device can be so fundamentally screwed up by
+>>    reading some registers, that a later driver probe cannot properly
+>>    reinitialize it?
+> Never underestimate how broken hardware can be, though in this case
+> reading a device register seems to be causing a system hang/reset.
+The real problem is that PCI devices can be bus masters, which means
+they can screw up *ANYTHING* (almost)!
 
-Very nice!
-
-> I've tested both the e1000e NIC card and the SATA 4 ports card and
-> they work fine.
-
-I assume it works with PIO, but does the SATA card use the I/O
-space registers, or just memory space?
-
-	Arnd
