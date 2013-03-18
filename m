@@ -1,112 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:33687 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752472Ab3C0SFN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Mar 2013 14:05:13 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Russell King <linux@arm.linux.org.uk>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	devicetree-discuss@lists.ozlabs.org,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Maen Suleiman <maen@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Olof Johansson <olof@lixom.net>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Mitch Bradley <wmb@firmworks.com>,
-	Andrew Murray <andrew.murray@arm.com>
-Subject: [RFC PATCHv1 4/5] arm: kirkwood: add SoC-level Device Tree data for PCIe interfaces
-Date: Wed, 27 Mar 2013 19:05:03 +0100
-Message-Id: <1364407504-13524-5-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1364407504-13524-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1364407504-13524-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from mga02.intel.com ([134.134.136.20]:34085 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754670Ab3CRT6y (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 18 Mar 2013 15:58:54 -0400
+Date: Mon, 18 Mar 2013 12:58:53 -0700
+From: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+To: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
+Cc: USB list <linux-usb@vger.kernel.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Lan Tianyu <tianyu.lan@intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: 3.8.2: xhci port is dead until pcieport PME# goes to disabled
+Message-ID: <20130318195853.GA9063@xanatos>
+References: <5142094D.2070305@fold.natur.cuni.cz>
+ <20130318170159.GF17414@xanatos>
+ <51474CCC.3090802@fold.natur.cuni.cz>
+ <20130318182604.GI17414@xanatos>
+ <5147625A.7010306@fold.natur.cuni.cz>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5147625A.7010306@fold.natur.cuni.cz>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This commit adds Device Tree details to enable the PCIe interfaces on
-Kirkwood.
+On Mon, Mar 18, 2013 at 07:52:10PM +0100, Martin Mokrejs wrote:
+> Sarah Sharp wrote:
+> > On Mon, Mar 18, 2013 at 06:20:12PM +0100, Martin Mokrejs wrote:
+> >> Hi Sarah,
+> >>   in this particular thread, the USB3 socket of the laptop works once
+> >> I plugin a device. When I unplug it and insert same or another device it appears
+> >> to be dead until I use 'lsusb -vvv'. After that, I see in dmesg the two lines:
+> > 
+> > Which kernel are you running on?  We had a regression that involved dead
+> 
+> As the subject says, 3.8.2. I really started last week several different email
+> threads, each independent.
+> 
+> > ports after a USB disconnect in 3.8.  This was was fixed in 3.8.3.  Can
+> > you please retest with that kernel version?
+> 
+> Hmm, will do. What change do you mean exactly?
 
-Note: this commit is not correct. The 6281 Kirkwood has only one PCIe
-interface, and the 6282 has two PCIe interfaces, so this Device Tree
-change will require some modifications to take this into account.
+Commit d79303047f25957a3e00d25cc1eddb82b3ee0f89 "USB: Fix connected
+device switch to Inactive state." along with three others.
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
----
- arch/arm/boot/dts/kirkwood.dtsi |   49 +++++++++++++++++++++++++++++++++++++++
- 1 file changed, 49 insertions(+)
+> BTW, how about this bugfix which just appeared at linux-pci?
+> [PATCH] PCI: Remove not needed check in disable aspm link
 
-diff --git a/arch/arm/boot/dts/kirkwood.dtsi b/arch/arm/boot/dts/kirkwood.dtsi
-index 2c738d9..3d2cb12 100644
---- a/arch/arm/boot/dts/kirkwood.dtsi
-+++ b/arch/arm/boot/dts/kirkwood.dtsi
-@@ -19,6 +19,7 @@
- 	ocp@f1000000 {
- 		compatible = "simple-bus";
- 		ranges = <0x00000000 0xf1000000 0x4000000
-+		          0xe0000000 0xe0000000 0x8100000 /* PCIE */
- 		          0xf5000000 0xf5000000 0x0000400>;
- 		#address-cells = <1>;
- 		#size-cells = <1>;
-@@ -201,5 +202,53 @@
- 			clocks = <&gate_clk 4>;
- 			status = "disabled";
- 		};
-+
-+		pcie-controller {
-+			compatible = "marvell,kirkwood-pcie";
-+			status = "disabled";
-+			device_type = "pci";
-+
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+
-+			bus-range = <0x00 0xff>;
-+
-+			ranges = <0x82000000 0 0x00040000 0x00040000 0 0x00002000   /* Port 0.0 registers */
-+			          0x82000000 0 0x00044000 0x00044000 0 0x00002000   /* Port 1.0 registers */
-+				  0x82000000 0 0xe0000000 0xe0000000 0 0x08000000   /* non-prefetchable memory */
-+			          0x81000000 0 0          0xe8000000 0 0x00100000>; /* downstream I/O */
-+
-+			pcie@1,0 {
-+				device_type = "pci";
-+				assigned-addresses = <0x82000800 0 0x00040000 0 0x2000>;
-+				reg = <0x0800 0 0 0 0>;
-+				#address-cells = <3>;
-+				#size-cells = <2>;
-+				#interrupt-cells = <1>;
-+				ranges;
-+				interrupt-map-mask = <0 0 0 0>;
-+				interrupt-map = <0 0 0 0 &intc 9>;
-+				marvell,pcie-port = <0>;
-+				marvell,pcie-lane = <0>;
-+				clocks = <&gate_clk 2>;
-+				status = "disabled";
-+			};
-+
-+			pcie@2,0 {
-+				device_type = "pci";
-+				assigned-addresses = <0x82001000 0 0x00044000 0 0x2000>;
-+				reg = <0x1000 0 0 0 0>;
-+				#address-cells = <3>;
-+				#size-cells = <2>;
-+				#interrupt-cells = <1>;
-+				ranges;
-+				interrupt-map-mask = <0 0 0 0>;
-+				interrupt-map = <0 0 0 0 &intc 10>;
-+				marvell,pcie-port = <1>;
-+				marvell,pcie-lane = <0>;
-+				clocks = <&gate_clk 18>;
-+				status = "disabled";
-+			};
-+		};
- 	};
- };
--- 
-1.7.9.5
+I understand that you want to try and figure out on your own what bug
+you're hitting.  I'm really happy you're enthusiastic about reporting
+and testing bug fixes.  However, looking at random bug fix patches when
+we don't know the root cause is not very productive.  I would suggest
+you read http://www.chiark.greenend.org.uk/~sgtatham/bugs.html,
+especially the "I think the tachyon modulation must be wrongly
+polarised" section.
 
+We have no hard proof that this is even a PCI bug.  lsusb does cause the
+PCI host to wakeup out of D3, which triggers the PME disable messages
+you mentioned.  However, lsusb also triggers the USB core to look at the
+roothub status registers.  Without further debugging, we can't be sure
+if we lost a PCI wakeup from the port status change, or if the xHCI
+driver mishandled the USB device disconnect and running lsusb causes the
+USB core to notice the connect change.  Let's rule out the most common
+case, the xHCI driver, first.
+
+Please, try 3.8.3 first, and if that doesn't help, turn on
+CONFIG_USB_DEBUG and CONFIG_USB_XHCI_HCD_DEBUGGING, and send me the
+dmesg from the time you first unplug the USB 3.0 device to when you
+replug it in and have to run `sudo lsusb -v` to get the device to
+appear.
+
+Sarah Sharp
