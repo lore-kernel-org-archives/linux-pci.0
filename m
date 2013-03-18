@@ -1,90 +1,56 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.samsung.com ([203.254.224.24]:10849 "EHLO
-	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751832Ab3CWEF7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 23 Mar 2013 00:05:59 -0400
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Kukjin Kim' <kgene.kim@samsung.com>,
-	'Bjorn Helgaas' <bhelgaas@google.com>
-Cc: linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org,
-	devicetree-discuss@lists.ozlabs.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	'Grant Likely' <grant.likely@secretlab.ca>,
-	'Andrew Murray' <andrew.murray@arm.com>,
-	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
-	'Thierry Reding' <thierry.reding@avionic-design.de>,
-	'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>,
-	'Surendranath Gurivireddy Balla' <suren.reddy@samsung.com>,
-	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
-	'Thomas Abraham' <thomas.abraham@linaro.org>,
-	'Jingoo Han' <jg1.han@samsung.com>
-References: <00c001ce277b$92b26ab0$b8174010$%han@samsung.com>
-In-reply-to: <00c001ce277b$92b26ab0$b8174010$%han@samsung.com>
-Subject: [PATCH 2/6] of/pci: Add of_pci_parse_bus_range() function
-Date: Sat, 23 Mar 2013 13:05:56 +0900
-Message-id: <00c101ce277b$b8835b00$298a1100$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Matthew Garrett <matthew.garrett@nebula.com>
+To: linux-kernel@vger.kernel.org
+Cc: linux-security-module@vger.kernel.org, linux-efi@vger.kernel.org,
+	kexec@lists.infradead.org, linux-pci@vger.kernel.org,
+	Matthew Garrett <matthew.garrett@nebula.com>
+Subject: [PATCH 01/12] Security: Add CAP_COMPROMISE_KERNEL
+Date: Mon, 18 Mar 2013 17:32:22 -0400
+Message-Id: <1363642353-30749-1-git-send-email-matthew.garrett@nebula.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Thierry Reding <thierry.reding@avionic-design.de>
+Caring about protecting the kernel from UID 0 was previously relatively
+uninteresting, since an attacker could simply modify the kernel, a module
+or an earlier part of the boot chain in order to insert new code. However,
+there are now a range of widely-deployed mechanisms for ensuring the
+authenticity of the early boot process and kernel. The addition of module
+signing makes most of these attacks infeasible.
 
-This function can be used to parse a bus-range property as specified by
-device nodes representing PCI bridges.
+This means we can return our focus to the kernel. There's currently a number
+of kernel interfaces that permit privileged userspace to modify the running
+kernel. These are currently protected by CAP_SYS_RAWIO, but unfortunately
+the semantics of this capability are poorly defined and it now covers a large
+superset of the desired behaviour.
 
-Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
-Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+This patch introduces CAP_COMPROMISE_KERNEL. Holding this capability
+indicates that a process is empowered to perform tasks that may result in
+modification of the running kernel. While aimed at handling the specific
+use-case of Secure Boot, it is generalisable to any other environment where
+permitting userspace to modify the kernel is undesirable.
+
+Signed-off-by: Matthew Garrett <matthew.garrett@nebula.com>
 ---
- drivers/of/of_pci.c    |   25 +++++++++++++++++++++++++
- include/linux/of_pci.h |    1 +
- 2 files changed, 26 insertions(+), 0 deletions(-)
+ include/uapi/linux/capability.h | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
-index 13e37e2..4ca7837 100644
---- a/drivers/of/of_pci.c
-+++ b/drivers/of/of_pci.c
-@@ -40,3 +40,28 @@ struct device_node *of_pci_find_child_device(struct device_node *parent,
- 	return NULL;
- }
- EXPORT_SYMBOL_GPL(of_pci_find_child_device);
-+
-+/**
-+ * of_pci_parse_bus_range() - parse the bus-range property of a PCI device
-+ * @node: device node
-+ * @res: address to a struct resource to return the bus-range
-+ *
-+ * Returns 0 on success or a negative error-code on failure.
-+ */
-+int of_pci_parse_bus_range(struct device_node *node, struct resource *res)
-+{
-+	const __be32 *values;
-+	int len;
-+
-+	values = of_get_property(node, "bus-range", &len);
-+	if (!values || len < sizeof(*values) * 2)
-+		return -EINVAL;
-+
-+	res->name = node->name;
-+	res->start = be32_to_cpup(values++);
-+	res->end = be32_to_cpup(values);
-+	res->flags = IORESOURCE_BUS;
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(of_pci_parse_bus_range);
-diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
-index bb115de..178a5cc 100644
---- a/include/linux/of_pci.h
-+++ b/include/linux/of_pci.h
-@@ -10,5 +10,6 @@ int of_irq_map_pci(const struct pci_dev *pdev, struct of_irq *out_irq);
- struct device_node;
- struct device_node *of_pci_find_child_device(struct device_node *parent,
- 					     unsigned int devfn);
-+int of_pci_parse_bus_range(struct device_node *node, struct resource *res);
+diff --git a/include/uapi/linux/capability.h b/include/uapi/linux/capability.h
+index ba478fa..7109e650 100644
+--- a/include/uapi/linux/capability.h
++++ b/include/uapi/linux/capability.h
+@@ -343,7 +343,11 @@ struct vfs_cap_data {
  
- #endif
+ #define CAP_BLOCK_SUSPEND    36
+ 
+-#define CAP_LAST_CAP         CAP_BLOCK_SUSPEND
++/* Allow things that trivially permit root to modify the running kernel */
++
++#define CAP_COMPROMISE_KERNEL  37
++
++#define CAP_LAST_CAP         CAP_COMPROMISE_KERNEL
+ 
+ #define cap_valid(x) ((x) >= 0 && (x) <= CAP_LAST_CAP)
+ 
 -- 
-1.7.2.5
-
+1.8.1.2
 
