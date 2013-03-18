@@ -1,76 +1,40 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 21 Mar 2013 11:52:20 -0400
-From: Vivek Goyal <vgoyal@redhat.com>
-To: "Serge E. Hallyn" <serge@hallyn.com>
-Cc: Matthew Garrett <matthew.garrett@nebula.com>,
-	Mimi Zohar <zohar@linux.vnet.ibm.com>,
-	James Morris <jmorris@namei.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-security-module@vger.kernel.org"
-	<linux-security-module@vger.kernel.org>,
-	"linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
-	"kexec@lists.infradead.org" <kexec@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 01/12] Security: Add CAP_COMPROMISE_KERNEL
-Message-ID: <20130321155220.GL3934@redhat.com>
-References: <1363797717.2580.10.camel@falcor1.watson.ibm.com>
- <1363798166.2553.29.camel@x230.sbx07502.somerma.wayport.net>
- <1363802506.2580.55.camel@falcor1.watson.ibm.com>
- <1363803158.2553.33.camel@x230.sbx07502.somerma.wayport.net>
- <1363806968.2580.86.camel@falcor1.watson.ibm.com>
- <1363811856.2553.37.camel@x230.sbx07502.somerma.wayport.net>
- <1363813877.2580.120.camel@falcor1.watson.ibm.com>
- <1363814289.2553.41.camel@x230.sbx07502.somerma.wayport.net>
- <20130321134348.GA3934@redhat.com>
- <20130321153725.GA3656@austin.hallyn.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130321153725.GA3656@austin.hallyn.com>
+From: Matthew Garrett <matthew.garrett@nebula.com>
+To: linux-kernel@vger.kernel.org
+Cc: linux-security-module@vger.kernel.org, linux-efi@vger.kernel.org,
+	kexec@lists.infradead.org, linux-pci@vger.kernel.org,
+	Matthew Garrett <matthew.garrett@nebula.com>
+Subject: [PATCH 07/12] ACPI: Limit access to custom_method
+Date: Mon, 18 Mar 2013 17:32:28 -0400
+Message-Id: <1363642353-30749-7-git-send-email-matthew.garrett@nebula.com>
+In-Reply-To: <1363642353-30749-1-git-send-email-matthew.garrett@nebula.com>
+References: <1363642353-30749-1-git-send-email-matthew.garrett@nebula.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 21, 2013 at 10:37:25AM -0500, Serge E. Hallyn wrote:
-> Quoting Vivek Goyal (vgoyal@redhat.com):
-> ...
-> > Giving CAP_MODIFY_KERNEL to processess upon signature verification
-> > will simplify things a bit.
-> > 
-> > Only thing is that signature verification alone is not sufficient. We
-> > also need to make sure after signature verification executable can
-> > not be modified in memory in any way. So that means atleast couple of
-> > things.
-> 
-> Also what about context?  If I construct a mounts namespace a certain
-> way, can I trick this executable into loading an old singed bzImage that
-> I had laying around?
+It must be impossible for even root to get code executed in kernel context
+under a secure boot environment. custom_method effectively allows arbitrary
+access to system memory, so it needs to have a capability check here.
 
-We were thinking that /sbin/kexec will need to verify bzImage signature
-before loading it. 
+Signed-off-by: Matthew Garrett <matthew.garrett@nebula.com>
+---
+ drivers/acpi/custom_method.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-Key for verification is in kernel so idea was to take kernel's help
-in verifying signature.
+diff --git a/drivers/acpi/custom_method.c b/drivers/acpi/custom_method.c
+index 12b62f2..edf0710 100644
+--- a/drivers/acpi/custom_method.c
++++ b/drivers/acpi/custom_method.c
+@@ -29,6 +29,9 @@ static ssize_t cm_write(struct file *file, const char __user * user_buf,
+ 	struct acpi_table_header table;
+ 	acpi_status status;
+ 
++	if (!capable(CAP_COMPROMISE_KERNEL))
++		return -EPERM;
++
+ 	if (!(*ppos)) {
+ 		/* parse the table header to get the table length */
+ 		if (count <= sizeof(struct acpi_table_header))
+-- 
+1.8.1.2
 
-Not sure how exactly the interface should look like. 
-
-- I was thinking may be process can mmap() the bzImage with MAP_LOCKED.
-  We can create additional flag say MAP_VERIFY_SIG_POST, which tries
-  to verify signature/integrity of mapped region of file after mapping and
-  locking pages and mmap() fails if signature verification fails.
-
-There have been suggestions about creating new system call altogether.
-
-> 
-> ISTM the only sane thing to do, if you're going down this road,
-> is to have CAP_MODIFIY_KERNEL pulled from bounding set for everyone
-> except a getty started by init on ttyS0.  Then log in on serial
-> to update.  Or run a damon with CAP_MODIFIY_KERNEL which listens
-> to a init_net_ns netlink socket for very basic instructions, like
-> "find and install latest signed bzImage in /boot".  Then you can
-> at least trust that /boot for that daemon is not faked.
-
-daemon does not have the key and can't verify signature of signed
-bzImage. Even if it had the key, it can't trust the crypto code for
-signature verification as none of that is signed.
-
-Thanks
-Vivek
