@@ -1,67 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f45.google.com ([209.85.219.45]:48814 "EHLO
-	mail-oa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755291Ab3C1MqF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 28 Mar 2013 08:46:05 -0400
+Received: from canardo.mork.no ([148.122.252.1]:35838 "EHLO canardo.mork.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752698Ab3CRRU7 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 Mar 2013 13:20:59 -0400
+From: =?utf-8?Q?Bj=C3=B8rn_Mork?= <bjorn@mork.no>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: Greg KH <gregkh@linuxfoundation.org>, Kay Sievers <kay@vrfy.org>,
+	Myron Stowe <mstowe@redhat.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	linux-hotplug@vger.kernel.org, linux-pci@vger.kernel.org,
+	yuxiangl@marvell.com, yxlraid@gmail.com,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] udevadm-info: Don't access sysfs 'resource<N>' files
+References: <20130316213512.2974.17303.stgit@amt.stowe>
+	<20130316213519.2974.38954.stgit@amt.stowe>
+	<20130316221159.GA3702@kroah.com> <1363477853.2423.25.camel@zim.stowe>
+	<20130317010317.GB9641@kroah.com>
+	<1363493482.16793.69.camel@ul30vt.home>
+	<20130317053611.GC948@kroah.com>
+	<1363527503.16793.75.camel@ul30vt.home>
+	<CAPXgP12vmx9j_jJW3HXb2deRapFKAofTVzEbdyS=Z1VUBswE_Q@mail.gmail.com>
+	<1363623880.24132.351.camel@bling.home>
+	<20130318164126.GA20565@kroah.com>
+	<1363625463.24132.367.camel@bling.home>
+Date: Mon, 18 Mar 2013 18:20:46 +0100
+In-Reply-To: <1363625463.24132.367.camel@bling.home> (Alex Williamson's
+	message of "Mon, 18 Mar 2013 10:51:03 -0600")
+Message-ID: <87obeg39qp.fsf@nemi.mork.no>
 MIME-Version: 1.0
-In-Reply-To: <20130327150807.GC14004@redacted.bos.redhat.com>
-References: <1363642353-30749-1-git-send-email-matthew.garrett@nebula.com>
-	<1363642353-30749-5-git-send-email-matthew.garrett@nebula.com>
-	<CA+5PVA4VFgExGNrt5Yh+F4f48amAXKYAbdNFDy7VTFTguh6qTA@mail.gmail.com>
-	<20130327150807.GC14004@redacted.bos.redhat.com>
-Date: Thu, 28 Mar 2013 08:46:04 -0400
-Message-ID: <CA+5PVA6zYkjnzgHvso4zwg_PRZ+kssU76Fugc4p5rw3RDnYhpA@mail.gmail.com>
-Subject: Re: [PATCH 05/12] PCI: Require CAP_COMPROMISE_KERNEL for PCI BAR access
-From: Josh Boyer <jwboyer@gmail.com>
-To: Kyle McMartin <kmcmarti@redhat.com>
-Cc: Matthew Garrett <matthew.garrett@nebula.com>,
-	linux-kernel@vger.kernel.org,
-	linux-security-module@vger.kernel.org, linux-efi@vger.kernel.org,
-	kexec@lists.infradead.org, linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 27, 2013 at 11:08 AM, Kyle McMartin <kmcmarti@redhat.com> wrote:
-> On Wed, Mar 27, 2013 at 11:03:26AM -0400, Josh Boyer wrote:
->> On Mon, Mar 18, 2013 at 5:32 PM, Matthew Garrett
->> <matthew.garrett@nebula.com> wrote:
->> > Any hardware that can potentially generate DMA has to be locked down from
->> > userspace in order to avoid it being possible for an attacker to cause
->> > arbitrary kernel behaviour. Default to paranoid - in future we can
->> > potentially relax this for sufficiently IOMMU-isolated devices.
->> >
->> > Signed-off-by: Matthew Garrett <matthew.garrett@nebula.com>
->>
->> As noted here:
->>
->> https://bugzilla.redhat.com/show_bug.cgi?id=908888
->>
->> this breaks pci passthru with QEMU.  The suggestion in the bug is to move
->> the check from read/write to open, but sysfs makes that somewhat
->> difficult.  The open code is part of the core sysfs functionality shared
->> with the majority of sysfs files, so adding a check there would restrict
->> things that clearly don't need to be restricted.
->>
->> Kyle had the idea to add a cap field to the attribute structure, and do
->> a capable check if that is set.  That would allow for a more generic
->> usage of capabilities in sysfs code, at the cost of slightly increasing
->> the structure size and open path.  That seems somewhat promising if we
->> stick with capabilities.
->>
->> I would love to just squarely blame capabilities for causing this, but we
->> can't just replace it with an efi_enabled(EFI_SECURE_BOOT) check because
->> of the sysfs open case.  I'm not sure there are great answers here.
->>
->
-> Yeah, that was something like this (I don't even remember which Fedora
-> kernel version this was against.)
+Alex Williamson <alex.williamson@redhat.com> writes:
 
-Mostly an FYI for the peanut gallery, but we noticed moving the cap check
-to open breaks lspci being run by an unprivileged user.  It also doesn't
-fix pci passthrough because QEMU opens the PCI resource files by itself
-after it's already dropped all caps.
+> At least for KVM the kernel fix is the addition of the vfio driver which
+> gives us a non-sysfs way to do this.  If this problem was found a few
+> years later and we were ready to make the switch I'd support just
+> removing these resource files.  In the meantime we have userspace that
+> depends on this interface, so I'm open to suggestions how to fix it.
 
-More thinking required.
+I am puzzled by a couple of things in this discussion:
 
-josh
+1) do you seriously mean that a userspace application (any, not just
+   udevadm or qemu or whatever) should be able to read and write these
+   registers while the device is owned by a driver?  How is that ever
+   going to work?
+
+2) is it really so that a device can be so fundamentally screwed up by
+   reading some registers, that a later driver probe cannot properly
+   reinitialize it?
+
+I would have thought that the solution to all this was to return -EINVAL
+on any attemt to read or write these files while a driver is bound to
+the device.  If userspace is going to use the API, then the application
+better unbind any driver first.
+
+Or? Am I missing something here?
+
+> If we want to blacklist this specific device, that's fine, but as others
+> have pointed out it's really a class problem.  Perhaps we report 1 byte
+> extra for the file length where EOF-1 is an enable byte?  Is there
+> anything else in file ops that we could use to make it slightly more
+> complicated than open(), read() to access the device?  Thanks,
+
+If there really are devices which cannot handle reading at all, and
+cannot be reset to a sane state by later driver initialization, then a
+blacklist could be added for those devices.  This should not be a common
+problem.
+
+
+
+Bjørn
