@@ -1,67 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:54077 "EHLO quartz.orcorp.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750940Ab3CZVON (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 26 Mar 2013 17:14:13 -0400
-Date: Tue, 26 Mar 2013 15:14:03 -0600
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	devicetree-discuss@lists.ozlabs.org,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Maen Suleiman <maen@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Olof Johansson <olof@lixom.net>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Mitch Bradley <wmb@firmworks.com>,
-	Andrew Murray <andrew.murray@arm.com>
-Subject: Re: [RFCv1 07/11] irqchip: armada-370-xp: add MSI support to
- interrupt controller driver
-Message-ID: <20130326211403.GA5198@obsidianresearch.com>
-References: <1364316746-8702-1-git-send-email-thomas.petazzoni@free-electrons.com>
- <201303261707.41563.arnd@arndb.de>
- <20130326181754.33b89559@skate>
- <201303261838.23246.arnd@arndb.de>
- <20130326214613.30fbdddf@skate>
+Received: from mail-ia0-f175.google.com ([209.85.210.175]:42960 "EHLO
+	mail-ia0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753107Ab3CRRwi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 Mar 2013 13:52:38 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130326214613.30fbdddf@skate>
+In-Reply-To: <1363602109-12001-1-git-send-email-linfeng@cn.fujitsu.com>
+References: <1363602109-12001-1-git-send-email-linfeng@cn.fujitsu.com>
+Date: Mon, 18 Mar 2013 10:52:37 -0700
+Message-ID: <CAE9FiQUrt11A0YAOLgvv3uTAWtTvVg3Mho9eD53orbxW6Jd8Vg@mail.gmail.com>
+Subject: Re: [PATCH] kernel/range.c: subtract_range: return instead of
+ continue to save some loops
+From: Yinghai Lu <yinghai@kernel.org>
+To: Lin Feng <linfeng@cn.fujitsu.com>
+Cc: akpm@linux-foundation.org, bhelgaas@google.com, linux-mm@kvack.org,
+	x86@kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 26, 2013 at 09:46:13PM +0100, Thomas Petazzoni wrote:
+On Mon, Mar 18, 2013 at 3:21 AM, Lin Feng <linfeng@cn.fujitsu.com> wrote:
+> If we fall into that branch it means that there is a range fully covering the
+> subtract range, so it's suffice to return there if there isn't any other
+> overlapping ranges.
+>
+> Also fix the broken phrase issued by printk.
+>
+> Cc: Yinghai Lu <yinghai@kernel.org>
+> Signed-off-by: Lin Feng <linfeng@cn.fujitsu.com>
+> ---
+>  kernel/range.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+>
+> diff --git a/kernel/range.c b/kernel/range.c
+> index 9b8ae2d..223c6fe 100644
+> --- a/kernel/range.c
+> +++ b/kernel/range.c
+> @@ -97,10 +97,10 @@ void subtract_range(struct range *range, int az, u64 start, u64 end)
+>                                 range[i].end = range[j].end;
+>                                 range[i].start = end;
+>                         } else {
+> -                               printk(KERN_ERR "run of slot in ranges\n");
+> +                               printk(KERN_ERR "run out of slot in ranges\n");
 
-> To me, the topology of the hardware is really that a single device
-> provides two features: the main interrupt controller and the MSI
-> interrupt controller. But I will adapt to whatever DT binding you
-> propose.
+maybe could change to pr_err at the same time.
 
-No.. the HW is a single device that provides an interrupt on register
-write capability, so it ideally should be a single DT node..
+>                         }
+>                         range[j].end = start;
+> -                       continue;
+> +                       return;
 
-The need to distinguish MSI vs IPI vs other usage is completely a side
-effect of how Linux's IRQ and PCI layers are hooked together today.
+We don't say that ranges can not be overlapped in the array.
 
-> > I still wonder if the real solution shouldn't instead be to make the
-> > irq domain code MSI aware. For instance, you don't really need a
-> > cell to describe an interrupt because the interrupt number is
+Thanks
 
-Some kind of generic way for an irq chip driver to say 'here, I can
-provide some MSI interrupts' and then for the PCI layer to say 'irq
-layer, find me a driver that can provision a MSI with XXX properties' ?
-
-This need to stack an irq chip under a MSI is not something I think
-the kernel has had to support before, so new common code is probably
-needed...
-
-The interrupt chip should not need to know what the ultimate consumer
-of the interrupt capability will be, it just needs to tell the
-consumer 'write D to physical address A and irq I will trigger'.
-
-Jason
+Yinghai
