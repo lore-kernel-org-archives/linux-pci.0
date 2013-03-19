@@ -1,115 +1,115 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 25 Mar 2013 09:38:47 +0100
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Thierry Reding <thierry.reding@avionic-design.de>
-Cc: Andrew Murray <andrew.murray@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [RFC 0/2] PCI: Introduce MSI chip infrastructure
-Message-ID: <20130325093847.7474dc0e@skate>
-In-Reply-To: <20130325075810.GA28935@avionic-0098.mockup.avionic-design.de>
-References: <1363942307-9327-1-git-send-email-thierry.reding@avionic-design.de>
-	<20130322093027.GA521@arm.com>
-	<20130324120649.6fb8c05d@skate>
-	<20130325075810.GA28935@avionic-0098.mockup.avionic-design.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Date: Mon, 18 Mar 2013 19:03:16 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Robert Hancock <hancockrwd@gmail.com>
+Cc: Myron Stowe <mstowe@redhat.com>,
+	Myron Stowe <myron.stowe@redhat.com>, kay@vrfy.org,
+	linux-hotplug@vger.kernel.org, alex.williamson@redhat.com,
+	linux-pci@vger.kernel.org, yuxiangl@marvell.com, yxlraid@gmail.com,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] udevadm-info: Don't access sysfs 'resource<N>' files
+Message-ID: <20130319020316.GB21319@kroah.com>
+References: <20130316213512.2974.17303.stgit@amt.stowe>
+ <20130316213519.2974.38954.stgit@amt.stowe>
+ <20130316221159.GA3702@kroah.com>
+ <1363477853.2423.25.camel@zim.stowe>
+ <20130317010317.GB9641@kroah.com>
+ <5147C541.1080304@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5147C541.1080304@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Thierry Reding,
-
-Thanks for your feedback!
-
-On Mon, 25 Mar 2013 08:58:10 +0100, Thierry Reding wrote:
-
-> That sounds very much like one of the use-cases that were discussed. The
-> easiest solution would probably be to add an API to look up an MSI chip
-> from a DT phandle, so that the PCIe controller's device node could have
-> it as a property, somewhat like this:
+On Mon, Mar 18, 2013 at 07:54:09PM -0600, Robert Hancock wrote:
+> On 03/16/2013 07:03 PM, Greg KH wrote:
+> >On Sat, Mar 16, 2013 at 05:50:53PM -0600, Myron Stowe wrote:
+> >>On Sat, 2013-03-16 at 15:11 -0700, Greg KH wrote:
+> >>>On Sat, Mar 16, 2013 at 03:35:19PM -0600, Myron Stowe wrote:
+> >>>>Sysfs includes entries to memory that backs a PCI device's BARs, both I/O
+> >>>>Port space and MMIO.  This memory regions correspond to the device's
+> >>>>internal status and control registers used to drive the device.
+> >>>>
+> >>>>Accessing these registers from userspace such as "udevadm info
+> >>>>--attribute-walk --path=/sys/devices/..." does can not be allowed as
+> >>>>such accesses outside of the driver, even just reading, can yield
+> >>>>catastrophic consequences.
+> >>>>
+> >>>>Udevadm-info skips parsing a specific set of sysfs entries including
+> >>>>'resource'.  This patch extends the set to include the additional
+> >>>>'resource<N>' entries that correspond to a PCI device's BARs.
+> >>>
+> >>>Nice, are you also going to patch bash to prevent a user from reading
+> >>>these sysfs files as well?  :)
+> >>>
+> >>>And pciutils?
+> >>>
+> >>>You get my point here, right?  The root user just asked to read all of
+> >>>the data for this device, so why wouldn't you allow it?  Just like
+> >>>'lspci' does.  Or bash does.
 > 
-> 	msi: interrupt-controller {
-> 	};
+> lspci doesn't randomly attempt to access device registers, AFAIK..
+
+Have you read the man page for the '-xxx' option to lspci?  lspci can be
+quite intrusive, and I used to have a number of systems that it would
+trash very easily if you ran it on them as root.
+
+> >>Yes :P , you raise a very good point, there are a lot of way a user can
+> >>poke around in those BARs.  However, there is a difference between
+> >>shooting yourself in the foot and getting what you deserve versus
+> >>unknowingly executing a common command such as udevadm and having the
+> >>system hang.
+> >>>
+> >>>If this hardware has a problem, then it needs to be fixed in the kernel,
+> >>>not have random band-aids added to various userspace programs to paper
+> >>>over the root problem here.  Please fix the kernel driver and all should
+> >>>be fine.  No need to change udevadm.
+> >>
+> >>Xiangliang initially proposed a patch within the PCI core.  Ignoring the
+> >>specific issue with the proposal which I pointed out in the
+> >>https://lkml.org/lkml/2013/3/7/242 thread, that just doesn't seem like
+> >>the right place to effect a change either as PCI's core isn't concerned
+> >>with the contents or access limitations of those regions, those are
+> >>issues that the driver concerns itself with.
+> >>
+> >>So things seem to be gravitating towards the driver.  I'm fairly
+> >>ignorant of this area but as Robert succinctly pointed out in the
+> >>originating thread - the AHCI driver only uses the device's MMIO region.
+> >>The I/O related regions are for legacy SFF-compatible ATA ports and are
+> >>not used to driver the device.  This, coupled with the observance that
+> >>userspace accesses such as udevadm, and others like you additionally
+> >>point out, do not filter through the device's driver for seems to
+> >>suggest that changes to the driver will not help here either.
+> >
+> >A PCI quirk should handle this properly, right?  Why not do that?  Worse
+> >thing, the quirk could just not expose these sysfs files for this
+> >device, which would solve all userspace program issues, right?
 > 
-> 	pcie-controller {
-> 		...
-> 		marvell,msi = <&msi>;
-> 		...
-> 	};
+> A PCI quirk implies there is something wrong with this device in
+> particular. This isn't the case. The device responds properly when
+> it's accessed as intended. The problem is that udevadm (or other
+> processes, like a random grep through sysfs for example) is
+> effectively reading registers willy-nilly. This is absolutely not
+> safe to do on many devices - and certainly not while a driver is
+> attached to the device and has claimed the port or MMIO regions that
+> are being accessed.
 
-I'm not sure how to handle this msi interrupt controller with the main
-interrupt controller. For now, I have:
+Then we need to fix that!
 
-        mpic: interrupt-controller@d0020000 {
-              reg = <0xd0020a00 0x2d0>,
-                    <0xd0021070 0x58>;
-        };
+In the kernel!
 
-	[...]
+Don't try to gloss over the problem by changing one random userspace
+program, you will never catch them all.  Fix the root problem here
+people, that's all I'm asking for.
 
-	soc {
-                interrupt-parent = <&mpic>;
-		[...]
-	};
+> Blocking access through these files to a device with an active driver
+> that's claimed the regions would significantly reduce the chances of
+> something like this causing problems.
 
-And the MSI interrupt controller shares the same registers as the MPIC.
-So should it be something like:
+Great, that's one possible solution, the other is just not creating the
+files at all for known problem devices, right?
 
-	interrupt-controller {
-		reg = <0xd0020a00 0x2d0>,
-                    <0xd0021070 0x58>;
+My main point here is, you aren't going to fix this in userspace, fix it
+in the kernel.
 
-		mpic {
-			/* Not sure what to have here */
-		};
-
-		msi {
-
-			/* Here either */
-		};
-	};
-
-	soc {
-                interrupt-parent = <&mpic>;
-
-		pcie-controller {
-			marvell,msi = <&msi>;
-		};
-	};
-
-Or some other idea?
-
-> Then add some basic infrastructure to register the MSI chip with a
-> global list, call that from the interrupt controller initialization:
-> 
-> 	...
-> 	msi_chip_add(&msi);
-> 	...
-> 
-> And finally look it up from the PCIe controller driver:
-> 
-> 	node = of_parse_phandle(dev->of_node, "marvell,msi", 0);
-> 	if (node)
-> 		msi = of_find_msi_chip_by_node(node);
-> 
-> That's roughly what other subsystems do. I wrote something similar once
-> for backlight devices, though the registration step (msi_chip_add)
-> wasn't necessary there since backlight devices all go into a common
-> struct class so class_find_device() can be used instead of going through
-> a separate registry.
-
-Ok, that part sounds good to me. I'm still unsure about the DT
-representation, though (see above), and experience has shown that's
-it's a pretty good idea to discuss a little bit the DT representation
-before going on with some code :)
-
-Thanks again for your feedback!
-
-Thomas
--- 
-Thomas Petazzoni, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
+greg k-h
