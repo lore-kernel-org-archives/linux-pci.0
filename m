@@ -1,151 +1,233 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:60700 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933699Ab3CIDv3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 Mar 2013 22:51:29 -0500
-Received: by mail-ob0-f174.google.com with SMTP id 16so1876286obc.19
-        for <linux-pci@vger.kernel.org>; Fri, 08 Mar 2013 19:51:29 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <51394317.20104@fold.natur.cuni.cz>
-References: <50EDF8FE.6040607@fold.natur.cuni.cz> <CAErSpo6etF7_fZH9nNoAhtRXdGEmBrNE7v84TRkoawyG9s4AGw@mail.gmail.com>
- <51371AD9.4040801@fold.natur.cuni.cz> <CAErSpo5wmM8+Qd4FH0WeNS_DJEk2Tmmivk-FgEbD-UbTMQf+ZQ@mail.gmail.com>
- <51394317.20104@fold.natur.cuni.cz>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 8 Mar 2013 20:51:08 -0700
-Message-ID: <CAErSpo7wsduVN1Q6k_D7r24AhpVcARZRXtv6FvSfMMjFNJMcRA@mail.gmail.com>
-Subject: Re: Dell Vostro 3550: pci_hotplug+acpiphp require 'pcie_aspm=force'
- on kernel command-line for hotplug to work
-To: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
-	Alan Stern <stern@rowland.harvard.edu>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH] udevadm-info: Don't access sysfs 'resource<N>' files
+From: Myron Stowe <mstowe@redhat.com>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: =?ISO-8859-1?Q?Bj=F8rn?= Mork <bjorn@mork.no>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	Kay Sievers <kay@vrfy.org>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	linux-hotplug@vger.kernel.org, linux-pci@vger.kernel.org,
+	yuxiangl@marvell.com, yxlraid@gmail.com,
+	linux-kernel@vger.kernel.org
+In-Reply-To: <1363633176.24132.401.camel@bling.home>
+References: <20130316213512.2974.17303.stgit@amt.stowe>
+	 <20130316213519.2974.38954.stgit@amt.stowe>
+	 <20130316221159.GA3702@kroah.com> <1363477853.2423.25.camel@zim.stowe>
+	 <20130317010317.GB9641@kroah.com> <1363493482.16793.69.camel@ul30vt.home>
+	 <20130317053611.GC948@kroah.com> <1363527503.16793.75.camel@ul30vt.home>
+	 <CAPXgP12vmx9j_jJW3HXb2deRapFKAofTVzEbdyS=Z1VUBswE_Q@mail.gmail.com>
+	 <1363623880.24132.351.camel@bling.home> <20130318164126.GA20565@kroah.com>
+	 <1363625463.24132.367.camel@bling.home> <87obeg39qp.fsf@nemi.mork.no>
+	 <1363629287.24132.380.camel@bling.home>
+	 <f153b1ed-69e2-4576-a474-e770b90c87a5@email.android.com>
+	 <1363633176.24132.401.camel@bling.home>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 19 Mar 2013 10:57:49 -0600
+Message-ID: <1363712270.2399.62.camel@zim.stowe>
+Mime-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 7, 2013 at 6:47 PM, Martin Mokrejs
-<mmokrejs@fold.natur.cuni.cz> wrote:
-> Bjorn Helgaas wrote:
->> On Wed, Mar 6, 2013 at 3:30 AM, Martin Mokrejs
->> <mmokrejs@fold.natur.cuni.cz> wrote:
->>> Bjorn Helgaas wrote:
->>>> On Wed, Jan 9, 2013 at 4:10 PM, Martin Mokrejs
->>>> <mmokrejs@fold.natur.cuni.cz> wrote:
->>>>>   I am following up on a former thread
->>>>> Re: 3.2.11: PCI Express card cannot be re-detected withing cca 60sec timeframe
->>>>> about the same issue. I think I found some new info while playing with 3.7.1 kernel.
->>>>> It happened to me that my hotplug of express cards stopped working so it made me to
->>>>> to dive in a figure out what driver did I do to my .config, and what combinations
->>>>> of drivers and kernel command-line parameters work and which not. This email will
->>>>> cover just one case.
->>>>>
->>>>> On this Dell Vostro 3550 express card slot works if kernel is without pciehp
->>>>> altogether and pci_hotplug+acpiphp are loaded as modules later on. The problem
->>>>> is that I must use pcie_aspm=off.
->>>>
->>>> I confess I am completely bewildered here.  Something is clearly badly
->>>> broken, but I'm having a hard time figuring out exactly what it is.  I
->>>> think I'm overwhelmed by all the data :)
->
-> It won't be easier now but you asked for it. ;)
+On Mon, 2013-03-18 at 12:59 -0600, Alex Williamson wrote:
+> On Mon, 2013-03-18 at 19:25 +0100, Bjørn Mork wrote:
+> > Alex Williamson <alex.williamson@redhat.com> wrote:
+> > 
+> > >On Mon, 2013-03-18 at 18:20 +0100, Bjørn Mork wrote:
+> > >> Alex Williamson <alex.williamson@redhat.com> writes:
+> > >> 
+> > >> > At least for KVM the kernel fix is the addition of the vfio driver
+> > >which
+> > >> > gives us a non-sysfs way to do this.  If this problem was found a
+> > >few
+> > >> > years later and we were ready to make the switch I'd support just
+> > >> > removing these resource files.  In the meantime we have userspace
+> > >that
+> > >> > depends on this interface, so I'm open to suggestions how to fix
+> > >it.
+> > >> 
+> > >> I am puzzled by a couple of things in this discussion:
+> > >> 
+> > >> 1) do you seriously mean that a userspace application (any, not just
+> > >>    udevadm or qemu or whatever) should be able to read and write
+> > >these
+> > >>    registers while the device is owned by a driver?  How is that ever
+> > >>    going to work?
+> > >
+> > >The expectation is that the user doesn't mess with the device through
+> > >pci-sysfs while it's running.  This is really no different than config
+> > >space or MMIO space in that respect. 
+> > 
+> > But it is.  That's the problem. As a user I expect to be able to run
+> > e.g "grep . /sys/devices/whatever/*" with no ill effects. This holds
+> > for config space or MMIO space. It does not for any reset-on-read
+> > register.
+> 
+> As a non-admin user you can
+> 
+> > > You can use setpci to break your
+> > >PCI card while it's used by the driver today.  The difference is that
+> > >MMIO spaces side-step the issue by only allowing mmap and config space
+> > >is known not to have read side-effects.
+> > 
+> > Yes. And that is why there is no problem exporting those. This
+> > difference is fundamental. 
+> 
+> So how do we side-step the problem with I/O port registers?  If we
+> remove them then KVM needs to run with iopl which is a pretty serious
+> security hole should QEMU be exploited.  We could activate the resource
+> files only when the device is bound to pci-assign, but that only limits
+> the scope and might break UIO drivers.  We could modify the file to have
+> an enable sequence, but we can't do this without breaking current
+> userspace.  As I mentioned, the VFIO driver is intended to replace KVM's
+> use of these files, but we're not ready to rip it out, perhaps not even
+> ready to declare it deprecated.
+> 
+> > >> 2) is it really so that a device can be so fundamentally screwed up
+> > >by
+> > >>    reading some registers, that a later driver probe cannot properly
+> > >>    reinitialize it?
+> > >
+> > >Never underestimate how broken hardware can be, 
+> > 
+> > True :)
+> > 
+> > > though in this case
+> > >reading a device register seems to be causing a system hang/reset.
+> > 
+> > I understand that it does so if the ahci driver is bound to the device
+> > while reading the registers, but does it also hang the system with no
+> > bound driver? How does it do that? By killing the bus?
+> 
+> I don't know, Myron?
 
-Well, I didn't really ask for 500kB of logs with 150-character
-pathnames.  I am unable to process that much stuff.  I'm not
-interested in random lspci differences, virtual console bugs, or OHCI
-driver crashes at this point, so let's not muddy the waters with them.
- I only want to figure out if pciehp can correctly detect and
-enumerate a newly inserted card, and if it can correctly clean up when
-a card is removed.  After we figure that out, we can worry about more
-complicated issues.
+Yes - the system hangs when BAR1's (and likely BAR3's) I/O port space is
+read.
 
-I *think* the bottom line of the Slot Status experiment is that the
-Presence Detect bit was reported correctly in every case, for every
-card, regardless of BIOS settings.  Right?
+Here are the details that I've been able to put together from the two
+linux-pci threads and various online sources -
 
-There are three cards on the table now:
 
-  pci 0000:11:00.0: [1095:3132] SiI 3132 Serial ATA Raid II Controller
-  pci 0000:11:00.0: [1106:3403] VT6315 Series Firewire Controller
-  pci 0000:11:00.0: [1033:0194] NEC Corporation uPD720200 USB 3.0 Host
-Controller
+>From Robert Hancock - "... BAR5 is the MMIO region used by the AHCI
+driver. BARs 0-4 are the legacy SFF-compatible ATA ports.  Nothing
+should be messing with those IO ports while AHCI is enabled. ..."  This
+likely explains why the system boots and runs fine as long as the
+'udevadm ...' command is *not* ran (i.e. the driver never accesses the
+I/O port BARs).
 
-I assume all the cards work fine if there's no hotplug, i.e., if the
-card is present at boot and you never remove it.  Right?
+Using a SATA controller I have access to as an example for the details
+(Note: I do not have access to a system with the Marvell 9125 device):
+  00:1f.2 SATA controller: Intel Corporation 5 Series/3400 Series Chipset 6 port  SATA AHCI Controller (rev 06) (prog-if 01 [AHCI 1.0])
+  Subsystem: Lenovo Device 2168
+  Region 0: I/O ports at 1860 [size=8]
+  Region 1: I/O ports at 1814 [size=4]
+  Region 2: I/O ports at 1818 [size=8]
+  Region 3: I/O ports at 1810 [size=4]
+  Region 4: I/O ports at 1840 [size=32]
+  Region 5: Memory at f2827000 (32-bit, non-prefetchable) [size=2K]
 
-> In Linux pciehp
-> still complains about Surprise Removal even when I insert the card for the very
-> first time after a coldboot
+I/O port registers [1][2]:
+  Primary IDE controller  [0x1860-0x1867; 0x1814-0x1817]
+  BAR0  Base address for the command block registers for ATA Channel X
+    0x1860  (Read/Write): Data Register
+    0x1861  (Read): Error Register
+    0x1861  (Write): Features Register
+    0x1862  (Read/Write): Sector Count Register
+    0x1863  (Read/Write): LBA Low Register
+    0x1864  (Read/Write): LBA Mid Register
+    0x1865  (Read/Write): LBA High Register
+    0x1866  (Read/Write): Drive/Head Register
+    0x1867  (Read): Status Register
+    0x1867  (Write): Command Register
+  BAR1* Base address for the control register for ATA Channel X
+    0x1814  Reserved
+    0x1815  Reserved
+    0x1816  (Read): Alternate Status Register
+    0x1816  (Write): Device Control Register
+    0x1817  Reserved
 
-Hmm.  pciehp prints "Surprise Removal" whether you inserted or removed
-the card.  Stupid driver.
+* The base must be Dword aligned; a PCI requirement.  The Device Control
+  and Alternate Status Registers are at ofset 0x2 from this base.
 
-> (so the ExpressCard slot is not completely dead but
-> neither sata_sil24 nor fw_ohci picks up the device).
+[1] www.t13.org/documents/UploadedDocuments/project/d1510r1-Host-Adapter.pdf
+[2] lateblt.tripod.com/atapi.htm
 
-I thought the only card with a problem was the USB3.0 card.  But here
-you suggest that there *is* a problem with the SATA and Firewire
-cards.  Can you describe that problem in one sentence?
+>From Xiangliang - executing 'udevadm ...' causes a 32-bit I/O port read
+to BAR1's region.  This is shown by the BE (Byte Enable) value of
+0x1111.  So apparently reads to this region that include any of reserved
+Bytes causes "the chip will go bad."
 
-> My question is. Has the laptop hardwired the ExpressCard slot somehow through USB
-> to the SandyBridge chip?
+So, only a Byte access at offset 2 is successful.  I have not been able
+to get any more details as to the exact cause of the hang.  I would have
+thought that the PCI transaction would have just timed out, or errored
+out, or something but apparently the platform ends up hanging.
 
-An ExpressCard slot (spec at [1]) supports both a PCIe interface and a
-USB interface, so the slot *should* be connected to a USB controller
-as well as to a PCIe root port.  An ExpressCard can contain either a
-PCIe device or a USB device or both.  Section 6.3 of the spec talks
-about ACPI requirements to describe the relationship between the PCIe
-and USB devices.  I'm not sure that Linux pays any attention to this
-in the hotplug paths, so I'm a little worried about this.  (Maybe it
-doesn't need to in the PCIe-aware case; I don't know.)
+It appears that this device did not implement the reserved registers
+such that they would return 0 on reads or something more similarly sane.
 
-It would be interesting to know exactly what devices are on your
-cards.  Assuming they all work when present at boot, you could find
-that by doing a single "lspci -vv" and "lsusb -v" after a boot with an
-empty slot, and doing it again after a boot with a card in the slot.
-The difference should be the ExpressCard devices.  I'm sure this is
-buried in your tarball somewhere, but all I want is the info from a
-machine in default configuration -- MediaCard enabled, etc.  Just the
-way a typical user would be using the machine.
+Since BARs 2 and 3 are not 0, indicating the device only supports one
+channel, I expect the same issue will occur when accessing BAR3.  Again,
+I do not have access to a system with this device to test with.
 
-[1] http://www.usb.org/developers/expresscard/EC_specifications/ExpressCard_2_0_FINAL.pdf
+> 
+> > >> I would have thought that the solution to all this was to return
+> > >-EINVAL
+> > >> on any attemt to read or write these files while a driver is bound to
+> > >> the device.  If userspace is going to use the API, then the
+> > >application
+> > >> better unbind any driver first.
+> > >> 
+> > >> Or? Am I missing something here?
+> > >
+> > >That doesn't really solve anything though.  Let's pretend the resource
+> > >files only work while the device is bound to pci-stub.  Now what
+> > >happens
+> > >when you run this udevadm command as admin while it's in use by the
+> > >userspace driver?  All we've done is limit the scope of the problem.
+> > 
+> > Assuming that the system hangs without driver help and that this
+> > brokenness is widespread. I don't think any of those assumptions hold.
+> > Do they?
+> 
+> I thought it was true that for this device a system hang happened
+> regardless of the host driver, but haven't seen the original bug report.
+> As for widespread, this is the first I've heard of problems in the 2.5+
+> years that we've supported these I/O port resource files.  The rest is
+> probably just FUD about random userspace apps trolling through device
+> registers.
+> 
+> > >> > If we want to blacklist this specific device, that's fine, but as
+> > >others
+> > >> > have pointed out it's really a class problem.  Perhaps we report 1
+> > >byte
+> > >> > extra for the file length where EOF-1 is an enable byte?  Is there
+> > >> > anything else in file ops that we could use to make it slightly
+> > >more
+> > >> > complicated than open(), read() to access the device?  Thanks,
+> > >> 
+> > >> If there really are devices which cannot handle reading at all, and
+> > >> cannot be reset to a sane state by later driver initialization, then
+> > >a
+> > >> blacklist could be added for those devices.  This should not be a
+> > >common
+> > >> problem.
+> > >
+> > >Yes, if these are dead registers, let's blacklist and move along.  I
+> > >suspect though that these registers probably work fine if you access
+> > >them according to the device programming model, so blacklisting just
+> > >prevents full use through something like KVM device assignment. 
+> > 
+> > Well, if the device is that broken then I think it will require the
+> > kernel to police the device programming. I don't see how you can leave
+> > a bomb like that because it might be useful in a rare and very
+> > theoretical case.
+> > 
+> > Easier to just blacklist it...
+> 
+> Easier, yes.  But it likely just kicks the problem down the road until
+> the next device.  Thanks,
+> 
+> Alex
+> 
+> 
 
-> The hotplug issue itself. I do not understand the PCI(e) hotplug, lspci output but
-> why is there any difference between a cold booted status of an empty expresscard slot
-> compared to the status when a card is unloaded?
 
-In principle there shouldn't be any difference, but Linux isn't that good yet.
-
-> --- without_XHCI_with_EHCI_no_ACPIPHP_with_PCIEHP/disabled_MediaCard_reader/USB3/lspci_vv_initial.txt   2013-03-07 22:27:30.000000000 +0100
-> +++ without_XHCI_with_EHCI_no_ACPIPHP_with_PCIEHP/disabled_MediaCard_reader/USB3/lspci_vv_unloading_USB3_card.txt       2013-03-07
-
-> -       Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- <SERR- <PERR-
-> +       Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort+ <SERR- <PERR-
->
-> Shouldn't the MAbort been cleared sometimes? Doesn't this fool the PresDet interpretation in kernel?
-
-I doubt it.  Presence Detect is a very simple mechanism that basically
-just reports the current state of the CPPE# signal in the ExpressCard
-slot.  There's no reason this should be related to MAbort.
-
-> The eSATA behaves differently maybe because 0100 does not change to 0140 like USB3 card but to 0103?
-> Um, the shell while loop calling setpci does not report 0103 but the driver say this:
->
-> [  211.879397] sata_sil24 0000:11:00.0: enabling device (0100 -> 0103)
-
-This is completely unrelated.  The shell "setpci" command is printing
-the Slot Status register; the "0100 -> 0103" above is a change in the
-PCI Command register.
-
-> I do not remember with 3.2.x and 3.7x kernels seeing this with the USB3 card:
-> +[  594.622211] pci 0000:11:00.0: calling quirk_usb_early_handoff+0x0/0x657
-> +[  594.622223] pci 0000:11:00.0: device not available (can't reserve [mem 0x00000000-0x00001fff 64bit])
-> +[  594.622225] pci 0000:11:00.0: Can't enable PCI device, BIOS handoff failed.
-
-This is a result of trying to run the quirk on a hot-inserted device
-where we haven't assigned resources to it yet.  I don't think we
-should really be running quirks on a device that early.  We can look
-at that later, if we think this is related to the immediate problem.
-
-Bjorn
