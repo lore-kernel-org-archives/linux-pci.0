@@ -1,70 +1,35 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:36049 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933075Ab3CHPTw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 Mar 2013 10:19:52 -0500
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Cc: Arnd Bergmann <arnd@arndb.de>, Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>, Olof Johansson <olof@lixom.net>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Yehuda Yitschak <yehuday@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Stephen Warren <swarren@wwwdotorg.org>
-Subject: [PATCH v4 17/18] arm: mvebu: PCIe Device Tree informations for Armada XP GP
-Date: Fri,  8 Mar 2013 16:19:19 +0100
-Message-Id: <1362755960-30791-18-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1362755960-30791-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1362755960-30791-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from tundra.namei.org ([65.99.196.166]:34862 "EHLO tundra.namei.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752118Ab3CSEri (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 19 Mar 2013 00:47:38 -0400
+Date: Tue, 19 Mar 2013 15:47:59 +1100 (EST)
+From: James Morris <jmorris@namei.org>
+To: Matthew Garrett <matthew.garrett@nebula.com>
+cc: linux-kernel@vger.kernel.org,
+	linux-security-module@vger.kernel.org, linux-efi@vger.kernel.org,
+	kexec@lists.infradead.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 01/12] Security: Add CAP_COMPROMISE_KERNEL
+In-Reply-To: <1363642353-30749-1-git-send-email-matthew.garrett@nebula.com>
+Message-ID: <alpine.LRH.2.02.1303191542200.30973@tundra.namei.org>
+References: <1363642353-30749-1-git-send-email-matthew.garrett@nebula.com>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The Marvell Armada XP GP board has 3 physical full-size PCIe slots, so
-we enable the corresponding PCIe interfaces in the Device Tree.
+On Mon, 18 Mar 2013, Matthew Garrett wrote:
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
----
- arch/arm/boot/dts/armada-xp-gp.dts |   18 ++++++++++++++++++
- 1 file changed, 18 insertions(+)
+> This patch introduces CAP_COMPROMISE_KERNEL. 
 
-diff --git a/arch/arm/boot/dts/armada-xp-gp.dts b/arch/arm/boot/dts/armada-xp-gp.dts
-index 1c8afe2..34d7426 100644
---- a/arch/arm/boot/dts/armada-xp-gp.dts
-+++ b/arch/arm/boot/dts/armada-xp-gp.dts
-@@ -109,5 +109,23 @@
- 				spi-max-frequency = <108000000>;
- 			};
- 		};
-+
-+		pcie-controller {
-+			status = "okay";
-+
-+			/*
-+			 * The 3 slots are physically present as
-+			 * standard PCIe slots on the board.
-+			 */
-+			pcie@0,0 {
-+				status = "okay";
-+			};
-+			pcie@2,0 {
-+				status = "okay";
-+			};
-+			pcie@3,0 {
-+				status = "okay";
-+			};
-+		};
- 	};
- };
+I'd like to see this named CAP_MODIFY_KERNEL, which is more accurate and 
+less emotive.  Otherwise I think core kernel developers will be scratching 
+their head over where to sprinkle this.
+
+Apart from that, I like the idea, especially when it's wired up to MAC 
+security.
+
+
 -- 
-1.7.9.5
-
+James Morris
+<jmorris@namei.org>
