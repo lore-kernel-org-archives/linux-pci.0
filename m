@@ -1,40 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f51.google.com ([209.85.219.51]:58686 "EHLO
-	mail-oa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752392Ab3CZWfy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Mar 2013 18:35:54 -0400
-Received: by mail-oa0-f51.google.com with SMTP id g12so4828879oah.38
-        for <linux-pci@vger.kernel.org>; Tue, 26 Mar 2013 15:35:53 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:55933 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757027Ab3CSRH4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 19 Mar 2013 13:07:56 -0400
+Date: Tue, 19 Mar 2013 13:07:48 -0400
+From: Josh Boyer <jwboyer@redhat.com>
+To: Matthew Garrett <matthew.garrett@nebula.com>
+Cc: Dave Young <dyoung@redhat.com>, linux-kernel@vger.kernel.org,
+	linux-security-module@vger.kernel.org, linux-efi@vger.kernel.org,
+	kexec@lists.infradead.org, linux-pci@vger.kernel.org
+Subject: [PATCH v2] acpi: Ignore acpi_rsdp kernel parameter in a secure boot
+ environment
+Message-ID: <20130319170747.GA15821@hansolo.jdub.homelinux.org>
+References: <1363642353-30749-1-git-send-email-matthew.garrett@nebula.com>
+ <1363642353-30749-10-git-send-email-matthew.garrett@nebula.com>
+ <5148261F.3030806@redhat.com>
+ <20130319111916.GI11243@hansolo.jdub.homelinux.org>
 MIME-Version: 1.0
-In-Reply-To: <515213CF.7000804@gentoo.org>
-References: <515213CF.7000804@gentoo.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 26 Mar 2013 16:35:33 -0600
-Message-ID: <CAErSpo5wG8FUyomySdze56-e9Jr+3DevoCGGAnhLM8vpOBvQ5w@mail.gmail.com>
-Subject: Re: lspci -k is broken with depmod from kmod since it doesn't
- generate modules.pcimap anymore
-To: Samuli Suominen <ssuominen@gentoo.org>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Lucas De Marchi <lucas.demarchi@profusion.mobi>,
-	Kay Sievers <kay@vrfy.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130319111916.GI11243@hansolo.jdub.homelinux.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 26, 2013 at 3:31 PM, Samuli Suominen <ssuominen@gentoo.org> wrote:
-> The depmod from kmod no longer generates file modules.pcimap, and lspci -k
-> relies on that as noted at:
->
-> https://bugs.gentoo.org/show_bug.cgi?id=462982
->
-> null pciutils-3.1.10 # grep -r modules.*map *
-> ls-kernel.c:      sprintf(name, "/lib/modules/%s/modules.pcimap",
-> uts.release);
-> lspci.c:char *opt_pcimap;                       /* Override path to Linux
-> modules.pcimap */
-> lspci.c:"-p <file>\tLook up kernel modules in a given file instead of
-> default modules.pcimap\n"
-> lspci.man:.RI /lib/modules/ kernel_version /modules.pcimap.
+This option allows userspace to pass the RSDP address to the kernel.  This
+could potentially be used to circumvent the secure boot trust model.
+This is setup through the setup_arch function, which is called before the
+security_init function sets up the security_ops, so we cannot use a
+capable call here.  We ignore the setting if we are booted in Secure Boot
+mode.
 
-I don't think this is a kernel problem, and I don't know where to
-point you.  Maybe Lucas or Kay will know?
+Signed-off-by: Josh Boyer <jwboyer@redhat.com>
+---
+
+ v2: Actually send it to Matthew this time
+
+ drivers/acpi/osl.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/acpi/osl.c b/drivers/acpi/osl.c
+index 586e7e9..8950454 100644
+--- a/drivers/acpi/osl.c
++++ b/drivers/acpi/osl.c
+@@ -245,7 +245,7 @@ early_param("acpi_rsdp", setup_acpi_rsdp);
+ acpi_physical_address __init acpi_os_get_root_pointer(void)
+ {
+ #ifdef CONFIG_KEXEC
+-	if (acpi_rsdp)
++	if (acpi_rsdp && !efi_enabled(EFI_SECURE_BOOT))
+ 		return acpi_rsdp;
+ #endif
+ 
+-- 
+1.8.1.2
+
