@@ -1,106 +1,109 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e32.co.us.ibm.com ([32.97.110.150]:59549 "EHLO
-	e32.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751845Ab3C0I4L (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Mar 2013 04:56:11 -0400
-Received: from /spool/local
-	by e32.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <shangw@linux.vnet.ibm.com>;
-	Wed, 27 Mar 2013 02:56:11 -0600
-Received: from d03relay01.boulder.ibm.com (d03relay01.boulder.ibm.com [9.17.195.226])
-	by d03dlp03.boulder.ibm.com (Postfix) with ESMTP id 59E6719D8041
-	for <linux-pci@vger.kernel.org>; Wed, 27 Mar 2013 02:56:05 -0600 (MDT)
-Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
-	by d03relay01.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id r2R8u8Fd121744
-	for <linux-pci@vger.kernel.org>; Wed, 27 Mar 2013 02:56:08 -0600
-Received: from d03av01.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av01.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id r2R8u76P020707
-	for <linux-pci@vger.kernel.org>; Wed, 27 Mar 2013 02:56:08 -0600
-From: Gavin Shan <shangw@linux.vnet.ibm.com>
-To: linux-pci@vger.kernel.org
-Cc: bhelgaas@google.com, Gavin Shan <shangw@linux.vnet.ibm.com>
-Subject: [PATCH 1/4] PCI: Cache MSI/MSIX structure in pci_msi_check_device()
-Date: Wed, 27 Mar 2013 16:56:01 +0800
-Message-Id: <1364374564-19096-2-git-send-email-shangw@linux.vnet.ibm.com>
-In-Reply-To: <1364374564-19096-1-git-send-email-shangw@linux.vnet.ibm.com>
-References: <1364374564-19096-1-git-send-email-shangw@linux.vnet.ibm.com>
+Received: from mga11.intel.com ([192.55.52.93]:16019 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754912Ab3CSJDd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 19 Mar 2013 05:03:33 -0400
+Date: Tue, 19 Mar 2013 09:03:16 +0000
+From: Chris Wilson <chris@chris-wilson.co.uk>
+To: Jiri Kosina <jkosina@suse.cz>
+Cc: Daniel Vetter <daniel@ffwll.ch>, Greg KH <greg@kroah.com>,
+	Harald Arnesen <skogtun.linux@gmail.com>,
+	Kernel development list <linux-kernel@vger.kernel.org>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Peter Hurley <peter@hurleysoftware.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Thomas Meyer <thomas@m3y3r.de>,
+	Shawn Starr <shawn.starr@rogers.com>,
+	USB list <linux-usb@vger.kernel.org>,
+	linux-acpi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Daniel Vetter <daniel.vetter@ffwll.ch>,
+	Imre Deak <imre.deak@intel.com>,
+	Daniel Kurtz <djkurtz@chromium.org>,
+	dri-devel@lists.freedesktop.org
+Subject: Re: [PATCH] drm/i915: stop using GMBUS IRQs on Gen4 chips (was Re:
+ [3.9-rc1] irq 16: nobody cared  (was [3.9-rc1] very poor interrupt
+ responses))
+Message-ID: <20130319090316.GB3872@cantiga.alporthouse.com>
+References: <alpine.LNX.2.00.1303150851020.9529@pobox.suse.cz>
+ <5142E7F0.4020002@gmail.com>
+ <alpine.LNX.2.00.1303151424140.9529@pobox.suse.cz>
+ <20130315153249.GA32425@kroah.com>
+ <alpine.LNX.2.00.1303151636481.9529@pobox.suse.cz>
+ <20130315154739.GA1024@kroah.com>
+ <20130318082156.GO9021@phenom.ffwll.local>
+ <alpine.LNX.2.00.1303181522460.9529@pobox.suse.cz>
+ <20130318170424.GB5571@cantiga.alporthouse.com>
+ <alpine.LNX.2.00.1303190953010.9529@pobox.suse.cz>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <alpine.LNX.2.00.1303190953010.9529@pobox.suse.cz>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The patch introduces additional parameter to pci_msi_check_device()
-to trace the address of MSI or MSI-X capability structure so that
-we needn't retrieve that again while enabling MSI or MSI-X based
-interrupts for specific PCI device.
+On Tue, Mar 19, 2013 at 09:56:57AM +0100, Jiri Kosina wrote:
+> On Mon, 18 Mar 2013, Chris Wilson wrote:
+> 
+> > > +#define HAS_GMBUS_IRQ(dev) (INTEL_INFO(dev)->gen >= 5)
+> > >  void
+> > >  intel_i2c_reset(struct drm_device *dev)
+> > >  {
+> > >  	struct drm_i915_private *dev_priv = dev->dev_private;
+> > >  	I915_WRITE(dev_priv->gpio_mmio_base + GMBUS0, 0);
+> > > -	I915_WRITE(dev_priv->gpio_mmio_base + GMBUS4, 0);
+> > > +	if (HAS_GMBUS_IRQ(dev))
+> > > +		I915_WRITE(dev_priv->gpio_mmio_base + GMBUS4, 0);
+> > 
+> > There should not be any harm in always clearing GMBUS4, it exists on all
+> > platforms.
+> > 
+> > >  }
+> > >  
+> > >  static void intel_i2c_quirk_set(struct drm_i915_private *dev_priv, bool enable)
+> > > @@ -203,7 +205,6 @@ intel_gpio_setup(struct intel_gmbus *bus, u32 pin)
+> > >  	algo->data = bus;
+> > >  }
+> > >  
+> > > -#define HAS_GMBUS_IRQ(dev) (INTEL_INFO(dev)->gen >= 4)
+> > >  static int
+> > >  gmbus_wait_hw_status(struct drm_i915_private *dev_priv,
+> > >  		     u32 gmbus2_status,
+> > > @@ -214,6 +215,13 @@ gmbus_wait_hw_status(struct drm_i915_private *dev_priv,
+> > >  	u32 gmbus2 = 0;
+> > >  	DEFINE_WAIT(wait);
+> > >  
+> > > +	if (!HAS_GMBUS_IRQ(dev_priv->dev)) {
+> > > +		int ret;
+> > > +		ret = wait_for((gmbus2 = I915_READ(GMBUS2 + reg_offset)) &
+> > > +				(GMBUS_SATOER | gmbus2_status),
+> > > +				50);
+> > 
+> > This should couple up to the normal return code that chooses the
+> > appropriate return value based on gmbus2.
+> > 
+> > How about just using:
+> >   if (!HAS_GMBUS_IRQ(dev_priv->dev)) gmbus4_irq_en = 0;
+> > and the existing wait loop?
+> 
+> I explicitly wanted to avoid touching GMBUS4 register, as the real cause 
+> of the failure is not clear.
+> 
+> But, as Yinghai Lu points out, the problem is most likely caused by 
+> interrupt disabling not working properly (see his very good point 
+> regarding DisINTx+ and INTx+ discrepancy), so zeroing the register out 
+> should work .... and it indeed does in my case, hence the (tested) patch 
+> below.
+> 
+> I think it's a 3.9-rc material, and I am all open to debug this further 
+> for 3.10 so that the race is closed and gmbus irqs can be used on Gen4 
+> platform properly.
 
-Signed-off-by: Gavin Shan <shangw@linux.vnet.ibm.com>
----
- drivers/pci/msi.c |   15 +++++++++------
- 1 files changed, 9 insertions(+), 6 deletions(-)
+Agreed. Using the IRQ for GMBUS is just a performance feature that can
+be deferred until after we determine the root cause - and hope that the
+failure is somehow peculiar to GMBUS.
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 00cc78c..05e9604 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -758,12 +758,14 @@ error:
-  * @dev: pointer to the pci_dev data structure of MSI device function
-  * @nvec: how many MSIs have been requested ?
-  * @type: are we checking for MSI or MSI-X ?
-+ * @pos: address of MSI or MSI-X capability structure
-  *
-  * Look at global flags, the device itself, and its parent busses
-  * to determine if MSI/-X are supported for the device. If MSI/-X is
-  * supported return 0, else return an error code.
-  **/
--static int pci_msi_check_device(struct pci_dev *dev, int nvec, int type)
-+static int pci_msi_check_device(struct pci_dev *dev,
-+				int nvec, int type, int *pos)
- {
- 	struct pci_bus *bus;
- 	int ret;
-@@ -795,7 +797,8 @@ static int pci_msi_check_device(struct pci_dev *dev, int nvec, int type)
- 	if (ret)
- 		return ret;
- 
--	if (!pci_find_capability(dev, type))
-+	*pos = pci_find_capability(dev, type);
-+	if (!*pos)
- 		return -EINVAL;
- 
- 	return 0;
-@@ -816,7 +819,7 @@ static int pci_msi_check_device(struct pci_dev *dev, int nvec, int type)
-  */
- int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec)
- {
--	int status, pos, maxvec;
-+	int pos, status, maxvec;
- 	u16 msgctl;
- 
- 	pos = pci_find_capability(dev, PCI_CAP_ID_MSI);
-@@ -827,7 +830,7 @@ int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec)
- 	if (nvec > maxvec)
- 		return maxvec;
- 
--	status = pci_msi_check_device(dev, nvec, PCI_CAP_ID_MSI);
-+	status = pci_msi_check_device(dev, nvec, PCI_CAP_ID_MSI, &pos);
- 	if (status)
- 		return status;
- 
-@@ -945,13 +948,13 @@ int pci_msix_table_size(struct pci_dev *dev)
-  **/
- int pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries, int nvec)
- {
--	int status, nr_entries;
-+	int pos, status, nr_entries;
- 	int i, j;
- 
- 	if (!entries)
- 		return -EINVAL;
- 
--	status = pci_msi_check_device(dev, nvec, PCI_CAP_ID_MSIX);
-+	status = pci_msi_check_device(dev, nvec, PCI_CAP_ID_MSIX, &pos);
- 	if (status)
- 		return status;
- 
+Acked-by: Chris Wilson <chris@chris-wilson.co.uk>
+-Chris
+
 -- 
-1.7.5.4
-
+Chris Wilson, Intel Open Source Technology Centre
