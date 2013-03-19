@@ -1,116 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:59718 "EHLO mx2.suse.de"
+Received: from mx1.redhat.com ([209.132.183.28]:62331 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933480Ab3CVQPM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 22 Mar 2013 12:15:12 -0400
-Message-ID: <514C8388.3050200@suse.cz>
-Date: Fri, 22 Mar 2013 17:15:04 +0100
-From: Michal Marek <mmarek@suse.cz>
+	id S1754192Ab3CSIsE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 19 Mar 2013 04:48:04 -0400
+Message-ID: <5148261F.3030806@redhat.com>
+Date: Tue, 19 Mar 2013 16:47:27 +0800
+From: Dave Young <dyoung@redhat.com>
 MIME-Version: 1.0
-To: Alex Williamson <alex.williamson@redhat.com>,
-	Matthew Garrett <mjg59@srcf.ucam.org>
-Cc: Takashi Iwai <tiwai@suse.de>, Bjorn Helgaas <bhelgaas@google.com>,
-	Oliver Neukum <oneukum@suse.de>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] pciehp: Add pciehp_surprise module option
-References: <s5h38vqjhk6.wl%tiwai@suse.de> <1363802953.24132.513.camel@bling.home> <s5hr4j9q48d.wl%tiwai@suse.de>
-In-Reply-To: <s5hr4j9q48d.wl%tiwai@suse.de>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Matthew Garrett <matthew.garrett@nebula.com>
+CC: linux-kernel@vger.kernel.org,
+	linux-security-module@vger.kernel.org, linux-efi@vger.kernel.org,
+	kexec@lists.infradead.org, linux-pci@vger.kernel.org,
+	Josh Boyer <jwboyer@redhat.com>
+Subject: Re: [PATCH 10/12] acpi: Ignore acpi_rsdp kernel parameter in a secure
+ boot environment
+References: <1363642353-30749-1-git-send-email-matthew.garrett@nebula.com> <1363642353-30749-10-git-send-email-matthew.garrett@nebula.com>
+In-Reply-To: <1363642353-30749-10-git-send-email-matthew.garrett@nebula.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 20.3.2013 20:08, Takashi Iwai wrote:
-> At Wed, 20 Mar 2013 12:09:13 -0600,
-> Alex Williamson wrote:
->>
->> On Wed, 2013-03-20 at 15:02 +0100, Takashi Iwai wrote:
->>> We encountered a problem that on some HP machines the Realtek PCI-e
->>> card reader device appears only when you inserted a card before the
->>> cold boot.  While debugging, it turned out that the device is actually
->>> handled via PCI-e hotplug in some level.  The device sends a presence
->>> change notification, and pciehp receives it, but it's ignored because
->>> of lack of the hotplug surprise (PCI_EXP_SLTCAP_HPS) capability bit.
->>> Once when this check passes, everything starts working -- the device
->>> appears upon plugging the card properly.
->>>
->>> There are a few other bug reports indicating the similar problems
->>> (e.g. on recent Dell laptops), and I guess the culprit is same.
->>>
->>> This patch adds a new module option, pciehp_surprise, to pciehp as a
->>> workaround.  When pciehp_surprise=1 is given, pciehp handles the
->>> presence change as the device on/off as if PCI_EXP_SLTCAP_HPS is set.
->>> Unless it's set explicitly, there is no impact on the existing
->>> behavior.
->>>
->>> Signed-off-by: Takashi Iwai <tiwai@suse.de>
->>> ---
->>>  drivers/pci/hotplug/pciehp.h      | 3 ++-
->>>  drivers/pci/hotplug/pciehp_core.c | 3 +++
->>>  2 files changed, 5 insertions(+), 1 deletion(-)
->>>
->>> diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
->>> index 2c113de..314f3be 100644
->>> --- a/drivers/pci/hotplug/pciehp.h
->>> +++ b/drivers/pci/hotplug/pciehp.h
->>> @@ -44,6 +44,7 @@ extern bool pciehp_poll_mode;
->>>  extern int pciehp_poll_time;
->>>  extern bool pciehp_debug;
->>>  extern bool pciehp_force;
->>> +extern bool pciehp_surprise;
->>>  
->>>  #define dbg(format, arg...)						\
->>>  do {									\
->>> @@ -122,7 +123,7 @@ struct controller {
->>>  #define MRL_SENS(ctrl)		((ctrl)->slot_cap & PCI_EXP_SLTCAP_MRLSP)
->>>  #define ATTN_LED(ctrl)		((ctrl)->slot_cap & PCI_EXP_SLTCAP_AIP)
->>>  #define PWR_LED(ctrl)		((ctrl)->slot_cap & PCI_EXP_SLTCAP_PIP)
->>> -#define HP_SUPR_RM(ctrl)	((ctrl)->slot_cap & PCI_EXP_SLTCAP_HPS)
->>> +#define HP_SUPR_RM(ctrl)	(pciehp_surprise || ((ctrl)->slot_cap & PCI_EXP_SLTCAP_HPS))
->>>  #define EMI(ctrl)		((ctrl)->slot_cap & PCI_EXP_SLTCAP_EIP)
->>>  #define NO_CMD_CMPL(ctrl)	((ctrl)->slot_cap & PCI_EXP_SLTCAP_NCCS)
->>>  #define PSN(ctrl)		((ctrl)->slot_cap >> 19)
->>> diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
->>> index 7d72c5e..c3a574e 100644
->>> --- a/drivers/pci/hotplug/pciehp_core.c
->>> +++ b/drivers/pci/hotplug/pciehp_core.c
->>> @@ -42,6 +42,7 @@ bool pciehp_debug;
->>>  bool pciehp_poll_mode;
->>>  int pciehp_poll_time;
->>>  bool pciehp_force;
->>> +bool pciehp_surprise;
->>>  
->>>  #define DRIVER_VERSION	"0.4"
->>>  #define DRIVER_AUTHOR	"Dan Zink <dan.zink@compaq.com>, Greg Kroah-Hartman <greg@kroah.com>, Dely Sy <dely.l.sy@intel.com>"
->>> @@ -55,10 +56,12 @@ module_param(pciehp_debug, bool, 0644);
->>>  module_param(pciehp_poll_mode, bool, 0644);
->>>  module_param(pciehp_poll_time, int, 0644);
->>>  module_param(pciehp_force, bool, 0644);
->>> +module_param(pciehp_surprise, bool, 0644);
->>>  MODULE_PARM_DESC(pciehp_debug, "Debugging mode enabled or not");
->>>  MODULE_PARM_DESC(pciehp_poll_mode, "Using polling mechanism for hot-plug events or not");
->>>  MODULE_PARM_DESC(pciehp_poll_time, "Polling mechanism frequency, in seconds");
->>>  MODULE_PARM_DESC(pciehp_force, "Force pciehp, even if OSHP is missing");
->>> +MODULE_PARM_DESC(pciehp_surprise, "Force to set hotplug-surprise capability");
->>>  
->>>  #define PCIE_MODULE_NAME "pciehp"
->>>  
->>
->> Please no.  Can we quirk just the device with the problem?
+On 03/19/2013 05:32 AM, Matthew Garrett wrote:
+> From: Josh Boyer <jwboyer@redhat.com>
 > 
-> It'd be good to have a static quirk in the end, yes.
+> This option allows userspace to pass the RSDP address to the kernel.  This
+> could potentially be used to circumvent the secure boot trust model.
+> We ignore the setting if we don't have the CAP_COMPROMISE_KERNEL capability.
+> 
+> Signed-off-by: Josh Boyer <jwboyer@redhat.com>
+> ---
+>  drivers/acpi/osl.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/acpi/osl.c b/drivers/acpi/osl.c
+> index 586e7e9..0ef63f1 100644
+> --- a/drivers/acpi/osl.c
+> +++ b/drivers/acpi/osl.c
+> @@ -245,7 +245,7 @@ early_param("acpi_rsdp", setup_acpi_rsdp);
+>  acpi_physical_address __init acpi_os_get_root_pointer(void)
+>  {
+>  #ifdef CONFIG_KEXEC
+> -	if (acpi_rsdp)
+> +	if (acpi_rsdp && capable(CAP_COMPROMISE_KERNEL))
+>  		return acpi_rsdp;
+>  #endif
+>  
+> 
 
-Alex, Matthew, would it work for you to have this debug / band-aid
-option _and_ have a list of either machines' dmi strings that have this
-problem, or devices' PCI IDs (*), and enable the surprise event handling
-for such machines / devices automatically?  The option would be still
-useful for debugging, to be able to easily find out if given machine has
-this problem and needs to be added to the quirk list.
+This does not work because capable is not usable at this early point.
 
-(*) It would probably make more sense to have a list of dmi strings,
-because it's the PCIe controller that does not set the capability bit
-when it should. The device (Realtek card reader in this case) seems to
-behave correctly. The machines in question have been laptops or
-all-in-one PCs so far, so there should be no problem with dmi matches.
+Josh, could you update your fix here?
 
-Thanks,
-Michal
+-- 
+Thanks
+Dave
+
+
