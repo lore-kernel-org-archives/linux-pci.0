@@ -1,59 +1,128 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:33666 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754032Ab3CTFkJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 20 Mar 2013 01:40:09 -0400
-Message-ID: <1363757987.18880.31.camel@pasglop>
-Subject: Re: [PATCHv2 3/3] ppc64: implemented pcibios_get_speed_cap_mask
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Lucas Kannebley Tavares <lucaskt@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	dri-devel@lists.freedesktop.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	David Airlie <airlied@linux.ie>,
-	Brian King <brking@linux.vnet.ibm.com>,
-	Thadeu Cascardo <cascardo@linux.vnet.ibm.com>,
-	Alex Deucher <alexander.deucher@amd.com>
-Date: Wed, 20 Mar 2013 06:39:47 +0100
-In-Reply-To: <1363757079-23550-4-git-send-email-lucaskt@linux.vnet.ibm.com>
-References: <1363757079-23550-1-git-send-email-lucaskt@linux.vnet.ibm.com>
-	 <1363757079-23550-4-git-send-email-lucaskt@linux.vnet.ibm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from cavan.codon.org.uk ([93.93.128.6]:54457 "EHLO
+	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932226Ab3CSV13 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Mar 2013 17:27:29 -0400
+From: Matthew Garrett <matthew.garrett@nebula.com>
+To: grawity@gmail.com
+Cc: torvalds@linux-foundation.org, bhelgaas@google.com,
+	seth.forshee@canonical.com, airlied@gmail.com,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Matthew Garrett <matthew.garrett@nebula.com>
+Subject: [PATCH] PCI: Use ROM images from firmware only if no other ROM source available
+Date: Tue, 19 Mar 2013 17:26:57 -0400
+Message-Id: <1363728417-32450-1-git-send-email-matthew.garrett@nebula.com>
+In-Reply-To: <5148D5C8.2000701@gmail.com>
+References: <5148D5C8.2000701@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2013-03-20 at 02:24 -0300, Lucas Kannebley Tavares wrote:
-> Implementation of a architecture-specific pcibios_get_speed_cap_mask.
-> This implementation detects bus capabilities based on OF
-> ibm,pcie-link-speed-stats property.
+Mantas Mikulėnas reported that his graphics hardware failed to initialise
+after commit f9a37be0f02a. The aim of this commit was to ensure that ROM
+images were available on some Apple systems that don't expose the GPU ROM
+via any other source. In this case, UEFI appears to have provided a broken
+ROM image that we were using even though there was a perfectly valid ROM
+available via other sources. The simplest way to handle this seems to be
+to just re-order pci_map_rom() and leave any firmare-supplied ROM to last.
 
-The problem with your approach is that it's not a runtime detection...
+Signed-off-by: Matthew Garrett <matthew.garrett@nebula.com>
+Tested-by: Mantas Mikulėnas <grawity@gmail.com>
+---
+ drivers/pci/rom.c | 55 +++++++++++++++++++++++++++++++++++--------------------
+ 1 file changed, 35 insertions(+), 20 deletions(-)
 
-If the pseries machine is compiled into the kernel binary, it will
-override pcibios_get_speed_cap_mask() using the device-tree, regardless
-of whether the machine is currently booted on a pseries machine or not.
-
-This wouldn't be a big problem if the pseries
-pcibios_get_speed_cap_mask() was capable of doing a fallback to the
-generic one if the device-tree property is absent but that isn't the
-case.
-
-I think what you need to do is:
-
-  - Make it so the generic one can be called by the override. This can
-look a bit tricky but it's better that way. One way to do it is to have
-the actual implementation be in a __pci_* variant called by the weak
-pcibios_* variant
-
-  - Move the powerpc on to arch/powerpc/kernel/pci-common.c and make
-it call a ppc_md.pcibios_get_speed_cap_mask(). If the hook is absent
-(NULL), make it call the generic one
-
-  - pseries can then populate the hook in ppc_md. with its custom
-variant.
-
-Cheers,
-Ben.
-
+diff --git a/drivers/pci/rom.c b/drivers/pci/rom.c
+index ab886b7..b41ac77 100644
+--- a/drivers/pci/rom.c
++++ b/drivers/pci/rom.c
+@@ -100,6 +100,27 @@ size_t pci_get_rom_size(struct pci_dev *pdev, void __iomem *rom, size_t size)
+ 	return min((size_t)(image - rom), size);
+ }
+ 
++static loff_t pci_find_rom(struct pci_dev *pdev, size_t *size)
++{
++	struct resource *res = &pdev->resource[PCI_ROM_RESOURCE];
++	loff_t start;
++
++	/* assign the ROM an address if it doesn't have one */
++	if (res->parent == NULL && pci_assign_resource(pdev, PCI_ROM_RESOURCE))
++		return 0;
++	start = pci_resource_start(pdev, PCI_ROM_RESOURCE);
++	*size = pci_resource_len(pdev, PCI_ROM_RESOURCE);
++
++	if (*size == 0)
++		return 0;
++
++	/* Enable ROM space decodes */
++	if (pci_enable_rom(pdev))
++		return 0;
++
++	return start;
++}
++
+ /**
+  * pci_map_rom - map a PCI ROM to kernel space
+  * @pdev: pointer to pci device struct
+@@ -114,21 +135,15 @@ size_t pci_get_rom_size(struct pci_dev *pdev, void __iomem *rom, size_t size)
+ void __iomem *pci_map_rom(struct pci_dev *pdev, size_t *size)
+ {
+ 	struct resource *res = &pdev->resource[PCI_ROM_RESOURCE];
+-	loff_t start;
++	loff_t start = 0;
+ 	void __iomem *rom;
+ 
+ 	/*
+-	 * Some devices may provide ROMs via a source other than the BAR
+-	 */
+-	if (pdev->rom && pdev->romlen) {
+-		*size = pdev->romlen;
+-		return phys_to_virt(pdev->rom);
+-	/*
+ 	 * IORESOURCE_ROM_SHADOW set on x86, x86_64 and IA64 supports legacy
+ 	 * memory map if the VGA enable bit of the Bridge Control register is
+ 	 * set for embedded VGA.
+ 	 */
+-	} else if (res->flags & IORESOURCE_ROM_SHADOW) {
++	if (res->flags & IORESOURCE_ROM_SHADOW) {
+ 		/* primary video rom always starts here */
+ 		start = (loff_t)0xC0000;
+ 		*size = 0x20000; /* cover C000:0 through E000:0 */
+@@ -139,21 +154,21 @@ void __iomem *pci_map_rom(struct pci_dev *pdev, size_t *size)
+ 			return (void __iomem *)(unsigned long)
+ 				pci_resource_start(pdev, PCI_ROM_RESOURCE);
+ 		} else {
+-			/* assign the ROM an address if it doesn't have one */
+-			if (res->parent == NULL &&
+-			    pci_assign_resource(pdev,PCI_ROM_RESOURCE))
+-				return NULL;
+-			start = pci_resource_start(pdev, PCI_ROM_RESOURCE);
+-			*size = pci_resource_len(pdev, PCI_ROM_RESOURCE);
+-			if (*size == 0)
+-				return NULL;
+-
+-			/* Enable ROM space decodes */
+-			if (pci_enable_rom(pdev))
+-				return NULL;
++			start = pci_find_rom(pdev, size);
+ 		}
+ 	}
+ 
++	/*
++	 * Some devices may provide ROMs via a source other than the BAR
++	 */
++	if (!start && pdev->rom && pdev->romlen) {
++		*size = pdev->romlen;
++		return phys_to_virt(pdev->rom);
++	}
++
++	if (!start)
++		return NULL;
++
+ 	rom = ioremap(start, *size);
+ 	if (!rom) {
+ 		/* restore enable if ioremap fails */
+-- 
+1.8.1.2
 
