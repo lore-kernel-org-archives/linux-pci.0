@@ -1,80 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:60495 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751683Ab3C0Okt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Mar 2013 10:40:49 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Russell King <linux@arm.linux.org.uk>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	devicetree-discuss@lists.ozlabs.org,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Maen Suleiman <maen@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Olof Johansson <olof@lixom.net>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Mitch Bradley <wmb@firmworks.com>,
-	Andrew Murray <andrew.murray@arm.com>
-Subject: [PATCHv7 07/17] clk: mvebu: add more PCIe clocks for Armada XP
-Date: Wed, 27 Mar 2013 15:40:24 +0100
-Message-Id: <1364395234-11195-8-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1364395234-11195-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1364395234-11195-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from smtp3-g21.free.fr ([212.27.42.3]:48326 "EHLO smtp3-g21.free.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754858Ab3CSHTf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 19 Mar 2013 03:19:35 -0400
+Message-ID: <1363677512.30246.8.camel@scapa>
+Subject: Re: [PATCH 01/12] Security: Add CAP_COMPROMISE_KERNEL
+From: Yves-Alexis Perez <corsac@debian.org>
+To: Matthew Garrett <matthew.garrett@nebula.com>
+Cc: linux-kernel@vger.kernel.org,
+	linux-security-module@vger.kernel.org, linux-efi@vger.kernel.org,
+	kexec@lists.infradead.org, linux-pci@vger.kernel.org
+Date: Tue, 19 Mar 2013 08:18:32 +0100
+In-Reply-To: <1363642353-30749-1-git-send-email-matthew.garrett@nebula.com>
+References: <1363642353-30749-1-git-send-email-matthew.garrett@nebula.com>
+Content-Type: multipart/signed; micalg="pgp-sha256";
+	protocol="application/pgp-signature"; boundary="=-eUMu4ZYo4BfAZvVev1OO"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The current revision of the datasheet only mentions the gatable clocks
-for the PCIe 0.0, 0.1, 0.2 and 0.3 interfaces, and forgot to mention
-the ones for the PCIe 1.0, 1.1, 1.2, 1.3, 2.0 and 3.0
-interfaces. After confirmation with Marvell engineers, this patch adds
-the missing gatable clocks for those PCIe interfaces.
 
-It also changes the name of the previously existing PCIe gatable
-clocks, in order to match the naming using the datasheets.
+--=-eUMu4ZYo4BfAZvVev1OO
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
----
- drivers/clk/mvebu/clk-gating-ctrl.c |   14 ++++++++++----
- 1 file changed, 10 insertions(+), 4 deletions(-)
+On lun., 2013-03-18 at 17:32 -0400, Matthew Garrett wrote:
+> This patch introduces CAP_COMPROMISE_KERNEL. Holding this capability
+> indicates that a process is empowered to perform tasks that may result
+> in
+> modification of the running kernel. While aimed at handling the
+> specific
+> use-case of Secure Boot, it is generalisable to any other environment
+> where
+> permitting userspace to modify the kernel is undesirable.
 
-diff --git a/drivers/clk/mvebu/clk-gating-ctrl.c b/drivers/clk/mvebu/clk-gating-ctrl.c
-index b35785a..2f03723 100644
---- a/drivers/clk/mvebu/clk-gating-ctrl.c
-+++ b/drivers/clk/mvebu/clk-gating-ctrl.c
-@@ -137,10 +137,14 @@ static const struct mvebu_soc_descr __initconst armada_xp_gating_descr[] = {
- 	{ "ge2", NULL,  2 },
- 	{ "ge1", NULL, 3 },
- 	{ "ge0", NULL, 4 },
--	{ "pex0", NULL, 5 },
--	{ "pex1", NULL, 6 },
--	{ "pex2", NULL, 7 },
--	{ "pex3", NULL, 8 },
-+	{ "pex00", NULL, 5 },
-+	{ "pex01", NULL, 6 },
-+	{ "pex02", NULL, 7 },
-+	{ "pex03", NULL, 8 },
-+	{ "pex10", NULL, 9 },
-+	{ "pex11", NULL, 10 },
-+	{ "pex12", NULL, 11 },
-+	{ "pex13", NULL, 12 },
- 	{ "bp", NULL, 13 },
- 	{ "sata0lnk", NULL, 14 },
- 	{ "sata0", "sata0lnk", 15 },
-@@ -152,6 +156,8 @@ static const struct mvebu_soc_descr __initconst armada_xp_gating_descr[] = {
- 	{ "xor0", NULL, 22 },
- 	{ "crypto", NULL, 23 },
- 	{ "tdm", NULL, 25 },
-+	{ "pex20", NULL, 26 },
-+	{ "pex30", NULL, 27 },
- 	{ "xor1", NULL, 28 },
- 	{ "sata1lnk", NULL, 29 },
- 	{ "sata1", "sata1lnk", 30 },
--- 
-1.7.9.5
+About that, did someone looked at the way securelevel(7) is handled on
+OpenBSD? This is more or less the same thing, where there's a desire to
+distinguish uid 0 from ring0. They're not using a capability but more a
+global state which allows more or less stuff depending on the value
+(securelevel=3D-1 to securelevel=3D2).
 
+Regards,
+--=20
+Yves-Alexis
+
+--=-eUMu4ZYo4BfAZvVev1OO
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQEcBAABCAAGBQJRSBFIAAoJEG3bU/KmdcClL0gIAJRs+oqqdMUUXqQFHoXRqSD9
+LEcmDlaSh/QAkPr7TQjYMS40AGoY9j4aUzgNlCsQjXjGLYCledGtiZP2rUTWUEfV
+5x3vxb9Kv9rGb8GJ6LieRwqvoDEmtOg9nUbnr7/iHtzYYmuEhWUOdki2XuQ2n85q
+dO22Pd6aXtWQzFL/l91oHTOll9VB2iIwnKzUcQLpW241Be238YSB5tqD6Gc5yN4E
+uFu+NN7lDxSNPYa57WJvaPXQTwMtDBJZV2RekeLp+5DEVCPDjoXQP2h/KxUTmhBj
+EgvcQ8fxlKzb9UHMUDsFQHIRIpozCOuvVzIZdjZU0jSDEh9duNPmoMr4oOYIKm0=
+=z+Fj
+-----END PGP SIGNATURE-----
+
+--=-eUMu4ZYo4BfAZvVev1OO--
