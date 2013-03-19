@@ -1,46 +1,93 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f45.google.com ([209.85.220.45]:63243 "EHLO
-	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751973Ab3CAVxu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 Mar 2013 16:53:50 -0500
-Received: by mail-pa0-f45.google.com with SMTP id kl14so2070213pab.18
-        for <linux-pci@vger.kernel.org>; Fri, 01 Mar 2013 13:53:49 -0800 (PST)
-Date: Fri, 1 Mar 2013 13:53:46 -0800
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Pete Zievers <pjz@att.net>
-Cc: linux-pci@vger.kernel.org
-Subject: Re: PCI rescan
-Message-ID: <20130301215346.GA3103@kroah.com>
-References: <5130BF39.60403@att.net>
+Received: from mail-ia0-f176.google.com ([209.85.210.176]:58057 "EHLO
+	mail-ia0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754672Ab3CSByN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 Mar 2013 21:54:13 -0400
+Message-ID: <5147C541.1080304@gmail.com>
+Date: Mon, 18 Mar 2013 19:54:09 -0600
+From: Robert Hancock <hancockrwd@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5130BF39.60403@att.net>
+To: Greg KH <gregkh@linuxfoundation.org>
+CC: Myron Stowe <mstowe@redhat.com>,
+	Myron Stowe <myron.stowe@redhat.com>, kay@vrfy.org,
+	linux-hotplug@vger.kernel.org, alex.williamson@redhat.com,
+	linux-pci@vger.kernel.org, yuxiangl@marvell.com, yxlraid@gmail.com,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] udevadm-info: Don't access sysfs 'resource<N>' files
+References: <20130316213512.2974.17303.stgit@amt.stowe> <20130316213519.2974.38954.stgit@amt.stowe> <20130316221159.GA3702@kroah.com> <1363477853.2423.25.camel@zim.stowe> <20130317010317.GB9641@kroah.com>
+In-Reply-To: <20130317010317.GB9641@kroah.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 01, 2013 at 08:46:17AM -0600, Pete Zievers wrote:
->  Hi-
-> 
-> Right now I am using 64-bit Red Hat Fedora 16.  The kernel version
-> is 3.1.0-7.fc16.x86_64.
-> 
-> I'm interested in an API that will achieve from within C-language
-> code compiled using gcc what can be accomplished from the shell with
-> the following invocation:
-> 
-> echo 1 > /sys/bus/pci/devices/<device designator>/remove
-> echo 1 > /sys/bus/pci/rescan
-> 
-> I find that at the shell level the above works great for me but is
-> slow.  I need it to work perhaps an order of magnitude faster for
-> what I'm attempting.
+On 03/16/2013 07:03 PM, Greg KH wrote:
+> On Sat, Mar 16, 2013 at 05:50:53PM -0600, Myron Stowe wrote:
+>> On Sat, 2013-03-16 at 15:11 -0700, Greg KH wrote:
+>>> On Sat, Mar 16, 2013 at 03:35:19PM -0600, Myron Stowe wrote:
+>>>> Sysfs includes entries to memory that backs a PCI device's BARs, both I/O
+>>>> Port space and MMIO.  This memory regions correspond to the device's
+>>>> internal status and control registers used to drive the device.
+>>>>
+>>>> Accessing these registers from userspace such as "udevadm info
+>>>> --attribute-walk --path=/sys/devices/..." does can not be allowed as
+>>>> such accesses outside of the driver, even just reading, can yield
+>>>> catastrophic consequences.
+>>>>
+>>>> Udevadm-info skips parsing a specific set of sysfs entries including
+>>>> 'resource'.  This patch extends the set to include the additional
+>>>> 'resource<N>' entries that correspond to a PCI device's BARs.
+>>>
+>>> Nice, are you also going to patch bash to prevent a user from reading
+>>> these sysfs files as well?  :)
+>>>
+>>> And pciutils?
+>>>
+>>> You get my point here, right?  The root user just asked to read all of
+>>> the data for this device, so why wouldn't you allow it?  Just like
+>>> 'lspci' does.  Or bash does.
 
-PCI device removal and recanning is not a fast process, what is "slow"
-about doing it in this manner?  All of the delay is in the kernel here,
-not in your userspace code.
+lspci doesn't randomly attempt to access device registers, AFAIK..
 
-What is wrong with doing the above "writing of values" in C code?
+>>
+>> Yes :P , you raise a very good point, there are a lot of way a user can
+>> poke around in those BARs.  However, there is a difference between
+>> shooting yourself in the foot and getting what you deserve versus
+>> unknowingly executing a common command such as udevadm and having the
+>> system hang.
+>>>
+>>> If this hardware has a problem, then it needs to be fixed in the kernel,
+>>> not have random band-aids added to various userspace programs to paper
+>>> over the root problem here.  Please fix the kernel driver and all should
+>>> be fine.  No need to change udevadm.
+>>
+>> Xiangliang initially proposed a patch within the PCI core.  Ignoring the
+>> specific issue with the proposal which I pointed out in the
+>> https://lkml.org/lkml/2013/3/7/242 thread, that just doesn't seem like
+>> the right place to effect a change either as PCI's core isn't concerned
+>> with the contents or access limitations of those regions, those are
+>> issues that the driver concerns itself with.
+>>
+>> So things seem to be gravitating towards the driver.  I'm fairly
+>> ignorant of this area but as Robert succinctly pointed out in the
+>> originating thread - the AHCI driver only uses the device's MMIO region.
+>> The I/O related regions are for legacy SFF-compatible ATA ports and are
+>> not used to driver the device.  This, coupled with the observance that
+>> userspace accesses such as udevadm, and others like you additionally
+>> point out, do not filter through the device's driver for seems to
+>> suggest that changes to the driver will not help here either.
+>
+> A PCI quirk should handle this properly, right?  Why not do that?  Worse
+> thing, the quirk could just not expose these sysfs files for this
+> device, which would solve all userspace program issues, right?
 
-confused,
+A PCI quirk implies there is something wrong with this device in 
+particular. This isn't the case. The device responds properly when it's 
+accessed as intended. The problem is that udevadm (or other processes, 
+like a random grep through sysfs for example) is effectively reading 
+registers willy-nilly. This is absolutely not safe to do on many devices 
+- and certainly not while a driver is attached to the device and has 
+claimed the port or MMIO regions that are being accessed. Blocking 
+access through these files to a device with an active driver that's 
+claimed the regions would significantly reduce the chances of something 
+like this causing problems.
 
-greg k-h
