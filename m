@@ -1,53 +1,44 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f171.google.com ([209.85.214.171]:44897 "EHLO
-	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751475Ab3C0UfK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Mar 2013 16:35:10 -0400
-Received: by mail-ob0-f171.google.com with SMTP id x4so8608505obh.16
-        for <linux-pci@vger.kernel.org>; Wed, 27 Mar 2013 13:35:09 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAErSpo7ZYMsRAp=EKMS0YPmiw6YytN4pZVzoWPd-PL5EzT8+SQ@mail.gmail.com>
-References: <CAPM=9tyYMSsK_2eCNRTx5EsgAQtnvmHxhgPHP3GHPxKUn+wo5w@mail.gmail.com>
- <1364333156-4530-1-git-send-email-matthew.garrett@nebula.com>
- <CAErSpo7fy+MVxDoLe6w+4noH5X2xJw_Lfdg6fVvgcbhgvUyAaw@mail.gmail.com>
- <1364338554.2553.53.camel@x230.sbx07502.somerma.wayport.net> <CAErSpo7ZYMsRAp=EKMS0YPmiw6YytN4pZVzoWPd-PL5EzT8+SQ@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 27 Mar 2013 14:34:48 -0600
-Message-ID: <CAErSpo7rKr8Hi9nvenDbzhJCR5GFFn12dRYuEPY76YBOJEgoLg@mail.gmail.com>
-Subject: Re: [PATCH 1/3] pci: Add PCI ROM helper for platform-provided ROM images
-To: Matthew Garrett <matthew.garrett@nebula.com>
-Cc: Dave Airlie <airlied@gmail.com>,
-	Alex Deucher <alexander.deucher@amd.com>,
-	"skeggsb@gmail.com" <skeggsb@gmail.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Seth Forshee <seth.forshee@canonical.com>,
-	"grawity@gmail.com" <grawity@gmail.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Chris Murphy <bugzilla@colorremedies.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from cn.fujitsu.com ([222.73.24.84]:63371 "EHLO song.cn.fujitsu.com"
+	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S1754324Ab3CSDw0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 18 Mar 2013 23:52:26 -0400
+From: Lin Feng <linfeng@cn.fujitsu.com>
+To: akpm@linux-foundation.org, bhelgaas@google.com
+Cc: linux-mm@kvack.org, x86@kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, yinghai@kernel.org,
+	Lin Feng <linfeng@cn.fujitsu.com>
+Subject: [PATCH] kernel/range.c: subtract_range: fix the broken phrase issued by printk
+Date: Tue, 19 Mar 2013 11:54:11 +0800
+Message-Id: <1363665251-14377-1-git-send-email-linfeng@cn.fujitsu.com>
+In-Reply-To: <CAE9FiQUrt11A0YAOLgvv3uTAWtTvVg3Mho9eD53orbxW6Jd8Vg@mail.gmail.com>
+References: <CAE9FiQUrt11A0YAOLgvv3uTAWtTvVg3Mho9eD53orbxW6Jd8Vg@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc linux-pci]
+Also replace deprecated printk(KERN_ERR...) with pr_err() as suggested
+by Yinghai, attaching the function name to provide plenty info.
 
-On Wed, Mar 27, 2013 at 2:33 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> [+cc Mantas, Chris]
->
-> On Tue, Mar 26, 2013 at 4:55 PM, Matthew Garrett
-> <matthew.garrett@nebula.com> wrote:
->> On Tue, 2013-03-26 at 16:53 -0600, Bjorn Helgaas wrote:
->>
->>> I've been on vacation and didn't follow this closely, but it seems
->>> like this fixes a regression and should be merged before v3.9, right?
->>> Can you include a reference to a bugzilla or the mailing list
->>> discussion in the changelog?  I can just fold it in if you want.
->>
->> https://bugzilla.redhat.com/show_bug.cgi?id=927451
->
-> Thanks, I added that URL and queued up these patches.  I'll wait to
-> push them until we have confirmation from Mantas [1] and Chris [2]
-> that this fixes it for both.
->
-> [1] http://marc.info/?l=linux-kernel&m=136148818405871
-> [2] https://bugzilla.redhat.com/show_bug.cgi?id=927451
+Cc: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Lin Feng <linfeng@cn.fujitsu.com>
+---
+ kernel/range.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/kernel/range.c b/kernel/range.c
+index 9b8ae2d..071b0ab 100644
+--- a/kernel/range.c
++++ b/kernel/range.c
+@@ -97,7 +97,8 @@ void subtract_range(struct range *range, int az, u64 start, u64 end)
+ 				range[i].end = range[j].end;
+ 				range[i].start = end;
+ 			} else {
+-				printk(KERN_ERR "run of slot in ranges\n");
++				pr_err("%s: run out of slot in ranges\n",
++					__func__);
+ 			}
+ 			range[j].end = start;
+ 			continue;
+-- 
+1.8.0.1
+
