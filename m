@@ -1,39 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ia0-f169.google.com ([209.85.210.169]:59686 "EHLO
-	mail-ia0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754764Ab3CIHWo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 9 Mar 2013 02:22:44 -0500
-MIME-Version: 1.0
-In-Reply-To: <20130308195324.GE6622@phenom.dumpdata.com>
-References: <1360351703-20571-1-git-send-email-yinghai@kernel.org>
-	<1360351703-20571-13-git-send-email-yinghai@kernel.org>
-	<20130308195324.GE6622@phenom.dumpdata.com>
-Date: Fri, 8 Mar 2013 23:22:43 -0800
-Message-ID: <CAE9FiQUWxiLtw4xpe-Xt9peCpUMn-vsTHh4hDf=m5xs3pAf7nA@mail.gmail.com>
-Subject: Re: [PATCH v2 12/26] x86, irq: Add realloc_irq_and_cfg_at()
-From: Yinghai Lu <yinghai@kernel.org>
-To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Joerg Roedel <joro@8bytes.org>,
-	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from e34.co.us.ibm.com ([32.97.110.152]:51192 "EHLO
+	e34.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757797Ab3CTTQk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Mar 2013 15:16:40 -0400
+Received: from /spool/local
+	by e34.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <zohar@linux.vnet.ibm.com>;
+	Wed, 20 Mar 2013 13:16:39 -0600
+Message-ID: <1363806968.2580.86.camel@falcor1.watson.ibm.com>
+Subject: Re: [PATCH 01/12] Security: Add CAP_COMPROMISE_KERNEL
+From: Mimi Zohar <zohar@linux.vnet.ibm.com>
+To: Matthew Garrett <matthew.garrett@nebula.com>
+Cc: James Morris <jmorris@namei.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-security-module@vger.kernel.org"
+	<linux-security-module@vger.kernel.org>,
+	"linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
+	"kexec@lists.infradead.org" <kexec@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Date: Wed, 20 Mar 2013 15:16:08 -0400
+In-Reply-To: <1363803158.2553.33.camel@x230.sbx07502.somerma.wayport.net>
+References: <1363642353-30749-1-git-send-email-matthew.garrett@nebula.com>
+	 <alpine.LRH.2.02.1303191542200.30973@tundra.namei.org>
+	 <1363797717.2580.10.camel@falcor1.watson.ibm.com>
+	 <1363798166.2553.29.camel@x230.sbx07502.somerma.wayport.net>
+	 <1363802506.2580.55.camel@falcor1.watson.ibm.com>
+	 <1363803158.2553.33.camel@x230.sbx07502.somerma.wayport.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 8, 2013 at 11:53 AM, Konrad Rzeszutek Wilk
-<konrad.wilk@oracle.com> wrote:
->> + * irq_realloc_desc - allocate irq descriptor for irq that is already reserved
->
-> Which begs the question - why was it not allocated when it was reserved?
+On Wed, 2013-03-20 at 18:12 +0000, Matthew Garrett wrote:
+> On Wed, 2013-03-20 at 14:01 -0400, Mimi Zohar wrote:
+> 
+> > Sorry, I'm not sure to which work you're referring. If you're referring
+> > to Dmitry's "initramfs with digital signature protection" patches, then
+> > we're speaking about enforcing integrity, not MAC security.  
+> 
+> Well, in the absence of hardcoded in-kernel policy, there needs to be
+> some mechanism for ensuring the integrity of a policy. Shipping a signed
+> policy initramfs fragment and having any Secure Boot bootloaders pass a
+> flag in bootparams indicating that the kernel should panic if that
+> fragment isn't present would seem to be the easiest way of doing that.
+> Or have I misunderstood the question?
 
-The reasons for not allocating them during reserving:
-1. only several pins in ioapic are used, allocate for them pin, will
-   waste memory for not used one.
-2. relocate later could make sure irq_desc is allocated on local node ram.
+Ok, I was confused by the term "fragmented" initramfs.  So once you have
+verified the "early" fragmented initramfs signature, this initramfs will
+load the "trusted" public keys and could also load the MAC policy. (I
+realize that dracut is currently loading the MAC policy, not the
+initramfs.)  The MAC policy would then be trusted, right?  Could we then
+use the LSM labels for defining an integrity policy for kexec?
 
-Thanks
+thanks,
 
-Yinghai
+Mimi
+
+
