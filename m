@@ -1,56 +1,35 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:53606 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964850Ab3CZQS6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Mar 2013 12:18:58 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Russell King <linux@arm.linux.org.uk>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	devicetree-discuss@lists.ozlabs.org,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Maen Suleiman <maen@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Olof Johansson <olof@lixom.net>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Mitch Bradley <wmb@firmworks.com>,
-	Andrew Murray <andrew.murray@arm.com>
-Subject: [PATCHv6 09/17] arm: mvebu: PCIe support is now available on mvebu
-Date: Tue, 26 Mar 2013 17:18:31 +0100
-Message-Id: <1364314719-1049-10-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1364314719-1049-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1364314719-1049-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from cavan.codon.org.uk ([93.93.128.6]:40598 "EHLO
+	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751448Ab3CTRxS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Mar 2013 13:53:18 -0400
+Date: Wed, 20 Mar 2013 17:52:34 +0000
+From: Matthew Garrett <mjg59@srcf.ucam.org>
+To: Takashi Iwai <tiwai@suse.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Oliver Neukum <oneukum@suse.de>, Michal Marek <mmarek@suse.cz>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] pciehp: Add pciehp_surprise module option
+Message-ID: <20130320175234.GA8948@srcf.ucam.org>
+References: <s5h38vqjhk6.wl%tiwai@suse.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <s5h38vqjhk6.wl%tiwai@suse.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now that the PCIe driver for mvebu has been integrated and all its
-relevant dependencies, we can mark the ARCH_MVEBU platform has
-MIGHT_HAVE_PCI, which allows to select the PCI bus support if needed.
+On Wed, Mar 20, 2013 at 03:02:01PM +0100, Takashi Iwai wrote:
+> We encountered a problem that on some HP machines the Realtek PCI-e
+> card reader device appears only when you inserted a card before the
+> cold boot.  While debugging, it turned out that the device is actually
+> handled via PCI-e hotplug in some level.  The device sends a presence
+> change notification, and pciehp receives it, but it's ignored because
+> of lack of the hotplug surprise (PCI_EXP_SLTCAP_HPS) capability bit.
+> Once when this check passes, everything starts working -- the device
+> appears upon plugging the card properly.
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
----
- arch/arm/mach-mvebu/Kconfig |    2 ++
- 1 file changed, 2 insertions(+)
+Well that just sounds like a bug. What's the downside to just ignoring 
+that capability bit?
 
-diff --git a/arch/arm/mach-mvebu/Kconfig b/arch/arm/mach-mvebu/Kconfig
-index c3715a5..d353249 100644
---- a/arch/arm/mach-mvebu/Kconfig
-+++ b/arch/arm/mach-mvebu/Kconfig
-@@ -14,6 +14,8 @@ config ARCH_MVEBU
- 	select MVEBU_CLK_CPU
- 	select MVEBU_CLK_GATING
- 	select MVEBU_MBUS
-+	select MIGHT_HAVE_PCI
-+	select PCI_QUIRKS if PCI
- 
- if ARCH_MVEBU
- 
 -- 
-1.7.9.5
-
+Matthew Garrett | mjg59@srcf.ucam.org
