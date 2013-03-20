@@ -1,111 +1,42 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <1362428295.2489.118.camel@bling.home>
-Subject: Re: [PATCH v6 1/3] VFIO: Wrapper for getting reference to
- vfio_device from device
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Vijay Mohan Pandarathil <vijaymohan.pandarathil@hp.com>
-Cc: gleb@redhat.com, bhelgaas@google.com, blauwirbel@gmail.com,
-	lance.oritz@hp.com, kvm@vger.kernel.org, qemu-devel@nongnu.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Mon, 04 Mar 2013 13:18:15 -0700
-In-Reply-To: <1362208619-5028-2-git-send-email-vijaymohan.pandarathil@hp.com>
-References: <1362208619-5028-1-git-send-email-vijaymohan.pandarathil@hp.com>
-	 <1362208619-5028-2-git-send-email-vijaymohan.pandarathil@hp.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from terminus.zytor.com ([198.137.202.10]:42264 "EHLO mail.zytor.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932679Ab3CTBEF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 19 Mar 2013 21:04:05 -0400
+Message-ID: <51490AF6.4080707@zytor.com>
+Date: Tue, 19 Mar 2013 18:03:50 -0700
+From: "H. Peter Anvin" <hpa@zytor.com>
+MIME-Version: 1.0
+To: James Morris <jmorris@namei.org>
+CC: Matthew Garrett <matthew.garrett@nebula.com>,
+	linux-kernel@vger.kernel.org,
+	linux-security-module@vger.kernel.org, linux-efi@vger.kernel.org,
+	kexec@lists.infradead.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 01/12] Security: Add CAP_COMPROMISE_KERNEL
+References: <1363642353-30749-1-git-send-email-matthew.garrett@nebula.com> <alpine.LRH.2.02.1303191542200.30973@tundra.namei.org>
+In-Reply-To: <alpine.LRH.2.02.1303191542200.30973@tundra.namei.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, 2013-03-02 at 01:16 -0600, Vijay Mohan Pandarathil wrote:
-> 	- Added vfio_device_get_from_dev() as wrapper to get
->           reference to vfio_device from struct device.
+On 03/18/2013 09:47 PM, James Morris wrote:
+> On Mon, 18 Mar 2013, Matthew Garrett wrote:
 > 
-> 	- Added vfio_device_data() as a wrapper to get device_data from
->           vfio_device.
+>> This patch introduces CAP_COMPROMISE_KERNEL. 
 > 
-> Signed-off-by: Vijay Mohan Pandarathil <vijaymohan.pandarathil@hp.com>
-> ---
->  drivers/vfio/vfio.c  | 27 ++++++++++++++++++++++++++-
->  include/linux/vfio.h |  3 +++
->  2 files changed, 29 insertions(+), 1 deletion(-)
+> I'd like to see this named CAP_MODIFY_KERNEL, which is more accurate and 
+> less emotive.  Otherwise I think core kernel developers will be scratching 
+> their head over where to sprinkle this.
 > 
-> diff --git a/drivers/vfio/vfio.c b/drivers/vfio/vfio.c
-> index 28e2d5b..eec6674 100644
-> --- a/drivers/vfio/vfio.c
-> +++ b/drivers/vfio/vfio.c
-> @@ -407,12 +407,13 @@ static void vfio_device_release(struct kref *kref)
->  }
->  
->  /* Device reference always implies a group reference */
-> -static void vfio_device_put(struct vfio_device *device)
-> +void vfio_device_put(struct vfio_device *device)
->  {
->  	struct vfio_group *group = device->group;
->  	kref_put_mutex(&device->kref, vfio_device_release, &group->device_lock);
->  	vfio_group_put(group);
->  }
-> +EXPORT_SYMBOL_GPL(vfio_device_put);
->  
->  static void vfio_device_get(struct vfio_device *device)
->  {
-> @@ -642,6 +643,30 @@ int vfio_add_group_dev(struct device *dev,
->  }
->  EXPORT_SYMBOL_GPL(vfio_add_group_dev);
->  
-> +/**
-> + * This does a get on the vfio_device from device.
-> + * Callers of this function will have to call vfio_put_device() to
-> + * remove the reference.
-> + */
+> Apart from that, I like the idea, especially when it's wired up to MAC 
+> security.
 
-I think patch 2 is still racy, so let's try to improve this comment for
-the next version as well.  The key is that the device is bound to a vfio
-driver therefore the caller actually already has a reference to the
-vfio_device.  Perhaps:
+The wiring up to MAC security is a nice touch.
 
-        Get a reference to the vfio_device for a device that is known to
-        be bound to a vfio driver.  The driver implicitly holds a
-        vfio_device reference between vfio_add_group_dev and
-        vfio_del_group_dev.  We can therefore use drvdata to increment
-        that reference from the struct device.  This additional
-        reference must be released by calling vfio_device_put.
-
-> +struct vfio_device *vfio_device_get_from_dev(struct device *dev)
-> +{
-> +	struct vfio_device *device = dev_get_drvdata(dev);
-> +
-> +	vfio_device_get(device);
-> +
-> +	return device;
-> +}
-> +EXPORT_SYMBOL_GPL(vfio_device_get_from_dev);
-> +
-> +/*
-> + * Caller must hold a reference to the vfio_device
-> + */
-> +void *vfio_device_data(struct vfio_device *device)
-> +{
-> +	return device->device_data;
-> +}
-> +EXPORT_SYMBOL_GPL(vfio_device_data);
-> +
->  /* Given a referenced group, check if it contains the device */
->  static bool vfio_dev_present(struct vfio_group *group, struct device *dev)
->  {
-> diff --git a/include/linux/vfio.h b/include/linux/vfio.h
-> index ab9e862..ac8d488 100644
-> --- a/include/linux/vfio.h
-> +++ b/include/linux/vfio.h
-> @@ -45,6 +45,9 @@ extern int vfio_add_group_dev(struct device *dev,
->  			      void *device_data);
->  
->  extern void *vfio_del_group_dev(struct device *dev);
-> +extern struct vfio_device *vfio_device_get_from_dev(struct device *dev);
-> +extern void vfio_device_put(struct vfio_device *device);
-> +extern void *vfio_device_data(struct vfio_device *device);
->  
->  /**
->   * struct vfio_iommu_driver_ops - VFIO IOMMU driver callbacks
+	-hpa
 
 
+-- 
+H. Peter Anvin, Intel Open Source Technology Center
+I work for Intel.  I don't speak on their behalf.
 
