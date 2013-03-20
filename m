@@ -1,79 +1,54 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 21 Mar 2013 10:58:23 -0500
-From: "Serge E. Hallyn" <serge@hallyn.com>
-To: Vivek Goyal <vgoyal@redhat.com>
-Cc: "Serge E. Hallyn" <serge@hallyn.com>,
-	Matthew Garrett <matthew.garrett@nebula.com>,
-	Mimi Zohar <zohar@linux.vnet.ibm.com>,
-	James Morris <jmorris@namei.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:54696 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750910Ab3CTDSb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 19 Mar 2013 23:18:31 -0400
+Message-ID: <1363749503.24132.482.camel@bling.home>
+Subject: Re: [PATCH 01/12] Security: Add CAP_COMPROMISE_KERNEL
+From: Alex Williamson <alex.williamson@redhat.com>
+To: "H. Peter Anvin" <hpa@zytor.com>
+Cc: Matthew Garrett <matthew.garrett@nebula.com>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
 	"linux-security-module@vger.kernel.org"
 	<linux-security-module@vger.kernel.org>,
 	"linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
 	"kexec@lists.infradead.org" <kexec@lists.infradead.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 01/12] Security: Add CAP_COMPROMISE_KERNEL
-Message-ID: <20130321155823.GA4438@austin.hallyn.com>
-References: <1363798166.2553.29.camel@x230.sbx07502.somerma.wayport.net>
- <1363802506.2580.55.camel@falcor1.watson.ibm.com>
- <1363803158.2553.33.camel@x230.sbx07502.somerma.wayport.net>
- <1363806968.2580.86.camel@falcor1.watson.ibm.com>
- <1363811856.2553.37.camel@x230.sbx07502.somerma.wayport.net>
- <1363813877.2580.120.camel@falcor1.watson.ibm.com>
- <1363814289.2553.41.camel@x230.sbx07502.somerma.wayport.net>
- <20130321134348.GA3934@redhat.com>
- <20130321153725.GA3656@austin.hallyn.com>
- <20130321155220.GL3934@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130321155220.GL3934@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Date: Tue, 19 Mar 2013 21:18:23 -0600
+In-Reply-To: <51492828.5070803@zytor.com>
+References: <3pfl8u1ugprwkcs5xmtjth3l.1363742692541@email.android.com>
+	 <51492379.3090302@zytor.com> <51492828.5070803@zytor.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Quoting Vivek Goyal (vgoyal@redhat.com):
-> On Thu, Mar 21, 2013 at 10:37:25AM -0500, Serge E. Hallyn wrote:
-> > Quoting Vivek Goyal (vgoyal@redhat.com):
-> > ...
-> > > Giving CAP_MODIFY_KERNEL to processess upon signature verification
-> > > will simplify things a bit.
-> > > 
-> > > Only thing is that signature verification alone is not sufficient. We
-> > > also need to make sure after signature verification executable can
-> > > not be modified in memory in any way. So that means atleast couple of
-> > > things.
+On Tue, 2013-03-19 at 20:08 -0700, H. Peter Anvin wrote:
+> On 03/19/2013 07:48 PM, H. Peter Anvin wrote:
+> > On 03/19/2013 06:28 PM, Matthew Garrett wrote:
+> >> Mm. The question is whether we can reliably determine the ranges a
+> device should be able to access without having to trust userspace
+> (and, ideally, without having to worry about whether iommu vendors
+> have done their job). It's pretty important for PCI passthrough, so we
+> do need to care. 
 > > 
-> > Also what about context?  If I construct a mounts namespace a certain
-> > way, can I trick this executable into loading an old singed bzImage that
-> > I had laying around?
-> 
-> We were thinking that /sbin/kexec will need to verify bzImage signature
-> before loading it. 
-> 
-> Key for verification is in kernel so idea was to take kernel's help
-> in verifying signature.
-> 
-> Not sure how exactly the interface should look like. 
-> 
-> - I was thinking may be process can mmap() the bzImage with MAP_LOCKED.
->   We can create additional flag say MAP_VERIFY_SIG_POST, which tries
->   to verify signature/integrity of mapped region of file after mapping and
->   locking pages and mmap() fails if signature verification fails.
-> 
-> There have been suggestions about creating new system call altogether.
-> 
+> > It is actually very simple: the device should be able to DMA into/out of:
 > > 
-> > ISTM the only sane thing to do, if you're going down this road,
-> > is to have CAP_MODIFIY_KERNEL pulled from bounding set for everyone
-> > except a getty started by init on ttyS0.  Then log in on serial
-> > to update.  Or run a damon with CAP_MODIFIY_KERNEL which listens
-> > to a init_net_ns netlink socket for very basic instructions, like
-> > "find and install latest signed bzImage in /boot".  Then you can
-> > at least trust that /boot for that daemon is not faked.
+> > 1. pinned pages
+> > 2. owned by the process controlling the device
+> > 
+> > ... and nothing else.
+> > 
 > 
-> daemon does not have the key and can't verify signature of signed
-> bzImage. Even if it had the key, it can't trust the crypto code for
-> signature verification as none of that is signed.
+> The "pinning" process needs to involve a call to the kernel to process
+> the page for DMA (pinning the page and opening it in the iommu) and
+> return a transaction address, of course.
+> 
+> I think we have the interface for that in vfio, but I haven't followed
+> that work.
 
-I'm not saying not to use the kernel to verify the signature.
+Yes, vfio does this and is meant to provide a secure-boot-friendly PCI
+passthrough interface.  Thanks,
 
--serge
+Alex
+
