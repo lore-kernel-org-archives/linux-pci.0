@@ -1,56 +1,61 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 8 Mar 2013 15:13:31 -0500
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>,
-	Joerg Roedel <joro@8bytes.org>
-Subject: Re: [PATCH v2 10/26] x86, irq: Convert irq_2_pin list to generic list
-Message-ID: <20130308201331.GA21755@phenom.dumpdata.com>
-References: <1360351703-20571-1-git-send-email-yinghai@kernel.org>
- <1360351703-20571-11-git-send-email-yinghai@kernel.org>
- <20130308195055.GD6622@phenom.dumpdata.com>
- <CAE9FiQXZAdndUMEH-yBOvvx2jSMC3tQqs73LmdaY_ni+W=nFHw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAE9FiQXZAdndUMEH-yBOvvx2jSMC3tQqs73LmdaY_ni+W=nFHw@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:41078 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753207Ab3CTWEy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 20 Mar 2013 18:04:54 -0400
+Received: from int-mx11.intmail.prod.int.phx2.redhat.com (int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r2KM4sHo028268
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <linux-pci@vger.kernel.org>; Wed, 20 Mar 2013 18:04:54 -0400
+From: Prarit Bhargava <prarit@redhat.com>
+To: linux-pci@vger.kernel.org
+Cc: Prarit Bhargava <prarit@redhat.com>
+Subject: [PATCH] pci, aer_inject fix return values when device not found
+Date: Wed, 20 Mar 2013 18:04:43 -0400
+Message-Id: <1363817083-2807-1-git-send-email-prarit@redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 08, 2013 at 12:00:43PM -0800, Yinghai Lu wrote:
-> On Fri, Mar 8, 2013 at 11:50 AM, Konrad Rzeszutek Wilk
-> <konrad.wilk@oracle.com> wrote:
-> > On Fri, Feb 08, 2013 at 11:28:07AM -0800, Yinghai Lu wrote:
-> >> Now irq_2_pin list is own grown list.
-> >
-> > I think you meant to say 'has its own list'. Not sure how
-> > its growing?
-> >
-> >> We can use generic list to replace it so we could generic helper
-> >> functions to operate it.
-> >
-> > You need to put the verb a bit earlier. Perhaps:
-> >
-> > ".. generic list to replace so that we can operate using
-> > generic helper functions."
-> 
-> missed use before generic helper.
+Currently the aer_inject driver returns -ENOTTY when the target PCIE device
+root port is not found or if the device or root port doesn't support AER.
 
-That would work as well.
+In the case where the root port isn't found, the driver should return -ENODEV,
+and in the other cases it should return -EPERM.
 
-> 
-> >
-> >>
-> >> Also make free_irq_cfg() free irq_2_pin list to support coming ioapic
-> >> hotplug.
-> >
-> > If you have them ready - could you say the titles of the patches here?
-> 
-> list them all ?
+Signed-off-by: Prarit Bhargava <prarit@redhat.com>
+---
+ drivers/pci/pcie/aer/aer_inject.c |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-No that would not work. Perhaps the first one that introduces the code
-that uses irq_2_pin ?
+diff --git a/drivers/pci/pcie/aer/aer_inject.c b/drivers/pci/pcie/aer/aer_inject.c
+index 4e24cb8..8d4a5e3 100644
+--- a/drivers/pci/pcie/aer/aer_inject.c
++++ b/drivers/pci/pcie/aer/aer_inject.c
+@@ -334,13 +334,13 @@ static int aer_inject(struct aer_error_inj *einj)
+ 		return -ENODEV;
+ 	rpdev = pcie_find_root_port(dev);
+ 	if (!rpdev) {
+-		ret = -ENOTTY;
++		ret = -ENODEV;
+ 		goto out_put;
+ 	}
+ 
+ 	pos_cap_err = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
+ 	if (!pos_cap_err) {
+-		ret = -ENOTTY;
++		ret = -EPERM;
+ 		goto out_put;
+ 	}
+ 	pci_read_config_dword(dev, pos_cap_err + PCI_ERR_UNCOR_SEVER, &sever);
+@@ -350,7 +350,7 @@ static int aer_inject(struct aer_error_inj *einj)
+ 
+ 	rp_pos_cap_err = pci_find_ext_capability(rpdev, PCI_EXT_CAP_ID_ERR);
+ 	if (!rp_pos_cap_err) {
+-		ret = -ENOTTY;
++		ret = -EPERM;
+ 		goto out_put;
+ 	}
+ 
+-- 
+1.7.9.3
+
