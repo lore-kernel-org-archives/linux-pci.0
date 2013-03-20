@@ -1,113 +1,39 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fold.natur.cuni.cz ([195.113.57.32]:59311 "HELO
-	fold.natur.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754335Ab3C3XMv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 30 Mar 2013 19:12:51 -0400
-Message-ID: <5157716F.2040607@fold.natur.cuni.cz>
-Date: Sun, 31 Mar 2013 00:12:47 +0100
-From: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
+Received: from terminus.zytor.com ([198.137.202.10]:42888 "EHLO mail.zytor.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752561Ab3CTCsf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 19 Mar 2013 22:48:35 -0400
+Message-ID: <51492379.3090302@zytor.com>
+Date: Tue, 19 Mar 2013 19:48:25 -0700
+From: "H. Peter Anvin" <hpa@zytor.com>
 MIME-Version: 1.0
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-CC: Huang Ying <ying.huang@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: Re: 3.9-rc1: pciehp and eSATA card SiI 3132, no XHCI
-References: <513E7E1E.80508@fold.natur.cuni.cz> <5156457C.9020201@fold.natur.cuni.cz> <515725B0.60605@fold.natur.cuni.cz> <8031557.xcL7PI6L4K@vostro.rjw.lan>
-In-Reply-To: <8031557.xcL7PI6L4K@vostro.rjw.lan>
+To: Matthew Garrett <matthew.garrett@nebula.com>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-security-module@vger.kernel.org"
+	<linux-security-module@vger.kernel.org>,
+	"linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
+	"kexec@lists.infradead.org" <kexec@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH 01/12] Security: Add CAP_COMPROMISE_KERNEL
+References: <3pfl8u1ugprwkcs5xmtjth3l.1363742692541@email.android.com>
+In-Reply-To: <3pfl8u1ugprwkcs5xmtjth3l.1363742692541@email.android.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Rafael J. Wysocki wrote:
-> On Saturday, March 30, 2013 06:49:36 PM Martin Mokrejs wrote:
->> Martin Mokrejs wrote:
->>> Rafael J. Wysocki wrote:
->>>> On Saturday, March 30, 2013 02:17:38 AM Martin Mokrejs wrote:
->>>>> Rafael J. Wysocki wrote:
->>>>>> On Friday, March 29, 2013 03:11:13 PM Martin Mokrejs wrote:
->>>>>>> Hi Ying,
->>>>>>>   thank you for the patch. Here are the results.
->>>>>>>
->>>>>>> Huang Ying wrote:
->>>>>>>> On Thu, 2013-03-28 at 19:38 +0100, Martin Mokrejs wrote:
->>>>>>>>> Hi Ying,
->>>>>>>>>   would you please tell me how this report relate to this patch?
->>>>>>>>>
->>>>>>>>> [PATCH] PCI / ACPI: Always resume devices on ACPI wakeup notifications
->>>>>>>>>
->>>>>>>>>   Could you tell me why this PME was being flipped back and forth now?
->>>>>>>>> Actually, does that make finally some sense to you, pci/acpi devs?
->>>>>>
->>>>>> Can you please test this patch:
->>>>>>
->>>>>> https://patchwork.kernel.org/patch/2359611/
->>>>>>
->>>>>> and report back as I asked you?
->>>>>
->>>>> Sorry for the delay I just had to sort out what belongs under what thread
->>>>> and the patch was under the other. But I agree its testing with this
->>>>> particular eSATA/ExpressCardSlot/PM fits better here.
->>>>>
->>>>>
->>>>> The good news is that the eSATA card hotplug works almost perfectly with the patch.
->>>>> I cold booted as always with the card in the slot already loaded, same kernel
->>>>> .config and commandline options as described under this thread. But the kernel
->>>>> was 3.8.3! Not 3.9-rc1.
->>>>
->>>> Good.  The goal was to fix the problem with eSATA hotplug.
->>>
->>> I thought that was aimed at the XHCI dead port issue. ;-)
->>
->> Hi,
->>   first of all, a big fat note. The tests with 3.8.2 and 3.8.2 I always did with aciphp
->> and pcie_aspm=off. I somehow forgot about that and yesterday after testing the
->> patch from Huang Ying when it turned out the patch actually not only helps with the
->> dead xHCI port due to suspend but incidentally also fixes the eSATA card hotplug ...
-> 
-> Which patch you're talking about?
+On 03/19/2013 06:28 PM, Matthew Garrett wrote:
+> Mm. The question is whether we can reliably determine the ranges a device should be able to access without having to trust userspace (and, ideally, without having to worry about whether iommu vendors have done their job). It's pretty important for PCI passthrough, so we do need to care. 
 
-I mean this patch 
+It is actually very simple: the device should be able to DMA into/out of:
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Subject: PCI / PM: Disable runtime PM of PCIe ports
+1. pinned pages
+2. owned by the process controlling the device
 
-The runtime PM of PCIe ports turns out to be quite fragile, as in
-some cases things work while in some other cases they don't and we
-don't seem to have a good way to determine whether or not they are
-going to work in advance.
+... and nothing else.
 
-For this reason, avoid enabling runtime PM for PCIe ports by
-keeping their runtime PM reference counters always above 0 for the
-time being.
+	-hpa
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/pci/pcie/portdrv_pci.c |    5 -----
- 1 file changed, 5 deletions(-)
+-- 
+H. Peter Anvin, Intel Open Source Technology Center
+I work for Intel.  I don't speak on their behalf.
 
-
-
-https://patchwork.kernel.org/patch/2359611/
-
-which, also appearing like yours patch it is originally from Ying, right?:
-
-<quote>
-Hi, Martin,
-
-Sorry for late.  Just found your bug report.  That seems related with
-PCIe port runtime PM support.
-
-Can you try the debug patch attached?  And send me back the dmesg?
-
-Sorry I use gmail web client, so I can only send patch as attachment.
-
-Best Regards,
-Huang Ying
-</quote>
-
-
-
-
-Martin
