@@ -1,57 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ia0-f175.google.com ([209.85.210.175]:42960 "EHLO
-	mail-ia0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753107Ab3CRRwi (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 Mar 2013 13:52:38 -0400
-MIME-Version: 1.0
-In-Reply-To: <1363602109-12001-1-git-send-email-linfeng@cn.fujitsu.com>
-References: <1363602109-12001-1-git-send-email-linfeng@cn.fujitsu.com>
-Date: Mon, 18 Mar 2013 10:52:37 -0700
-Message-ID: <CAE9FiQUrt11A0YAOLgvv3uTAWtTvVg3Mho9eD53orbxW6Jd8Vg@mail.gmail.com>
-Subject: Re: [PATCH] kernel/range.c: subtract_range: return instead of
- continue to save some loops
-From: Yinghai Lu <yinghai@kernel.org>
-To: Lin Feng <linfeng@cn.fujitsu.com>
-Cc: akpm@linux-foundation.org, bhelgaas@google.com, linux-mm@kvack.org,
-	x86@kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from e35.co.us.ibm.com ([32.97.110.153]:46306 "EHLO
+	e35.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758265Ab3CTQmn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Mar 2013 12:42:43 -0400
+Received: from /spool/local
+	by e35.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <zohar@linux.vnet.ibm.com>;
+	Wed, 20 Mar 2013 10:42:41 -0600
+Message-ID: <1363797717.2580.10.camel@falcor1.watson.ibm.com>
+Subject: Re: [PATCH 01/12] Security: Add CAP_COMPROMISE_KERNEL
+From: Mimi Zohar <zohar@linux.vnet.ibm.com>
+To: James Morris <jmorris@namei.org>
+Cc: Matthew Garrett <matthew.garrett@nebula.com>,
+	linux-kernel@vger.kernel.org,
+	linux-security-module@vger.kernel.org, linux-efi@vger.kernel.org,
+	kexec@lists.infradead.org, linux-pci@vger.kernel.org
+Date: Wed, 20 Mar 2013 12:41:57 -0400
+In-Reply-To: <alpine.LRH.2.02.1303191542200.30973@tundra.namei.org>
+References: <1363642353-30749-1-git-send-email-matthew.garrett@nebula.com>
+	 <alpine.LRH.2.02.1303191542200.30973@tundra.namei.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 18, 2013 at 3:21 AM, Lin Feng <linfeng@cn.fujitsu.com> wrote:
-> If we fall into that branch it means that there is a range fully covering the
-> subtract range, so it's suffice to return there if there isn't any other
-> overlapping ranges.
->
-> Also fix the broken phrase issued by printk.
->
-> Cc: Yinghai Lu <yinghai@kernel.org>
-> Signed-off-by: Lin Feng <linfeng@cn.fujitsu.com>
-> ---
->  kernel/range.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/kernel/range.c b/kernel/range.c
-> index 9b8ae2d..223c6fe 100644
-> --- a/kernel/range.c
-> +++ b/kernel/range.c
-> @@ -97,10 +97,10 @@ void subtract_range(struct range *range, int az, u64 start, u64 end)
->                                 range[i].end = range[j].end;
->                                 range[i].start = end;
->                         } else {
-> -                               printk(KERN_ERR "run of slot in ranges\n");
-> +                               printk(KERN_ERR "run out of slot in ranges\n");
+On Tue, 2013-03-19 at 15:47 +1100, James Morris wrote:
+> On Mon, 18 Mar 2013, Matthew Garrett wrote:
+> 
+> > This patch introduces CAP_COMPROMISE_KERNEL. 
+> 
+> I'd like to see this named CAP_MODIFY_KERNEL, which is more accurate and 
+> less emotive.  Otherwise I think core kernel developers will be scratching 
+> their head over where to sprinkle this.
+> 
+> Apart from that, I like the idea, especially when it's wired up to MAC 
+> security.
 
-maybe could change to pr_err at the same time.
+Matthrew, perhaps you could clarify whether this will be tied to MAC
+security.  Based on the kexec thread, I'm under the impression that is
+not the intention, or at least not for kexec.  As root isn't trusted,
+neither is the boot command line, nor any policy that is loaded by root,
+including those for MAC.
 
->                         }
->                         range[j].end = start;
-> -                       continue;
-> +                       return;
+thanks,
 
-We don't say that ranges can not be overlapped in the array.
+Mimi
 
-Thanks
-
-Yinghai
