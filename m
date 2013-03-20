@@ -1,41 +1,25 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>, Ram Pai <linuxram@us.ibm.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v3 23/27] PCI: Update pci_resource_bar() to support addon_resource
-Date: Wed, 13 Mar 2013 16:28:18 -0700
-Message-Id: <1363217302-14383-24-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1363217302-14383-1-git-send-email-yinghai@kernel.org>
-References: <1363217302-14383-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from co1ehsobe003.messaging.microsoft.com ([216.32.180.186]:6738
+	"EHLO co1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754430Ab3CTBH3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Mar 2013 21:07:29 -0400
+From: Matthew Garrett <matthew.garrett@nebula.com>
+To: "H. Peter Anvin" <hpa@zytor.com>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-security-module@vger.kernel.org"
+	<linux-security-module@vger.kernel.org>,
+	"linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
+	"kexec@lists.infradead.org" <kexec@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH 01/12] Security: Add CAP_COMPROMISE_KERNEL
+Date: Wed, 20 Mar 2013 01:07:25 +0000
+Message-ID: <k1r3u75sumyfkayvoobjrce1.1363741640644@email.android.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Need to loop addon resource list to retrieve reg_addr in it.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/pci.c |    7 +++++++
- 1 file changed, 7 insertions(+)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index dca6c1a1..7dca4f1 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3613,6 +3613,13 @@ int pci_resource_bar(struct pci_dev *dev, int resno, enum pci_bar_type *type)
- 		reg = pci_iov_resource_bar(dev, resno, type);
- 		if (reg)
- 			return reg;
-+	} else if (resno >= PCI_NUM_RESOURCES) {
-+		struct resource *res = pci_dev_resource_n(dev, resno);
-+
-+		if (res) {
-+			*type = pci_bar_unknown;
-+			return to_pci_dev_addon_resource(res)->reg_addr;
-+		}
- 	}
- 
- 	dev_err(&dev->dev, "BAR %d: invalid resource\n", resno);
--- 
-1.7.10.4
+WWVhaCwgSSdkIGxpa2UgdGhlIG9wdGlvbiBvZiByZWxheGluZyByZXN0cmljdGlvbnMgd2hlbiBk
+cml2ZXJzIGV4cGxpY2l0bHkgb3B0IGluIGJhc2VkIG9uIGlvbW11IHN1cHBvcnQuCi0tIApNYXR0
+aGV3IEdhcnJldHQgfCBtYXR0aGV3LmdhcnJldHRAbmVidWxhLmNvbQ==
 
