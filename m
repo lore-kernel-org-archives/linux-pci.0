@@ -1,104 +1,170 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e24smtp05.br.ibm.com ([32.104.18.26]:39575 "EHLO
-	e24smtp05.br.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752233Ab3CNSwY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 14 Mar 2013 14:52:24 -0400
-Received: from /spool/local
-	by e24smtp05.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <cascardo@linux.vnet.ibm.com>;
-	Thu, 14 Mar 2013 15:52:21 -0300
-Received: from d24relay03.br.ibm.com (d24relay03.br.ibm.com [9.13.184.25])
-	by d24dlp01.br.ibm.com (Postfix) with ESMTP id 46612352006E
-	for <linux-pci@vger.kernel.org>; Thu, 14 Mar 2013 14:52:19 -0400 (EDT)
-Received: from d24av02.br.ibm.com (d24av02.br.ibm.com [9.8.31.93])
-	by d24relay03.br.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id r2EIpasT16121946
-	for <linux-pci@vger.kernel.org>; Thu, 14 Mar 2013 15:51:36 -0300
-Received: from d24av02.br.ibm.com (loopback [127.0.0.1])
-	by d24av02.br.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id r2EIqG6w026095
-	for <linux-pci@vger.kernel.org>; Thu, 14 Mar 2013 15:52:17 -0300
-Date: Thu, 14 Mar 2013 15:52:14 -0300
-From: Thadeu Lima de Souza Cascardo <cascardo@linux.vnet.ibm.com>
-To: lucaskt@linux.vnet.ibm.com
-Cc: dri-devel@lists.freedesktop.org, linux-pci@vger.kernel.org,
-	Alex Deucher <alexander.deucher@amd.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, brking@linux.vnet.ibm.com,
-	linuxppc-dev@lists.ozlabs.org, benh@kernel.crashing.org
-Subject: Re: [PATCH 2/2] ppc64: Add arch-specific pcie_get_speed_cap_mask
-Message-ID: <20130314185214.GA13230@oc0268524204.ibm.com>
-References: <1363283147-8852-1-git-send-email-lucaskt@linux.vnet.ibm.com>
- <1363283147-8852-3-git-send-email-lucaskt@linux.vnet.ibm.com>
+Received: from fold.natur.cuni.cz ([195.113.57.32]:36122 "HELO
+	fold.natur.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1755567Ab3CTSlm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Mar 2013 14:41:42 -0400
+Message-ID: <514A02E2.9030700@fold.natur.cuni.cz>
+Date: Wed, 20 Mar 2013 19:41:38 +0100
+From: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1363283147-8852-3-git-send-email-lucaskt@linux.vnet.ibm.com>
+To: Takashi Iwai <tiwai@suse.de>, Bjorn Helgaas <bhelgaas@google.com>
+CC: Oliver Neukum <oneukum@suse.de>, Michal Marek <mmarek@suse.cz>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] pciehp: Add pciehp_surprise module option
+References: <s5h38vqjhk6.wl%tiwai@suse.de>
+In-Reply-To: <s5h38vqjhk6.wl%tiwai@suse.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 14, 2013 at 02:45:47PM -0300, lucaskt@linux.vnet.ibm.com wrote:
-> From: Lucas Kannebley Tavares <lucaskt@linux.vnet.ibm.com>
+Hi Takashi,
+  would you please describe your test system in more detail? How
+about 'lspci -tv'? And 'lsusb -v' of the broken device?
+
+1. For me on Dell Vostro 3550 with a SandyBridge chip doing all SATA+USB2+ExpressCardSlot:
+
+00:00.0 Host bridge: Intel Corporation 2nd Generation Core Processor Family DRAM Controller (rev 09)
+00:02.0 VGA compatible controller: Intel Corporation 2nd Generation Core Processor Family Integrated Graphics Controller (rev 09) (prog-if 00 [VGA controller])
+00:16.0 Communication controller: Intel Corporation 6 Series/C200 Series Chipset Family MEI Controller #1 (rev 04)
+00:1a.0 USB controller: Intel Corporation 6 Series/C200 Series Chipset Family USB Enhanced Host Controller #2 (rev 05) (prog-if 20 [EHCI])
+00:1b.0 Audio device: Intel Corporation 6 Series/C200 Series Chipset Family High Definition Audio Controller (rev 05)
+00:1c.0 PCI bridge: Intel Corporation 6 Series/C200 Series Chipset Family PCI Express Root Port 1 (rev b5) (prog-if 00 [Normal decode])
+00:1c.1 PCI bridge: Intel Corporation 6 Series/C200 Series Chipset Family PCI Express Root Port 2 (rev b5) (prog-if 00 [Normal decode])
+00:1c.3 PCI bridge: Intel Corporation 6 Series/C200 Series Chipset Family PCI Express Root Port 4 (rev b5) (prog-if 00 [Normal decode])
+00:1c.4 PCI bridge: Intel Corporation 6 Series/C200 Series Chipset Family PCI Express Root Port 5 (rev b5) (prog-if 00 [Normal decode])
+00:1c.7 PCI bridge: Intel Corporation 6 Series/C200 Series Chipset Family PCI Express Root Port 8 (rev b5) (prog-if 00 [Normal decode])
+00:1d.0 USB controller: Intel Corporation 6 Series/C200 Series Chipset Family USB Enhanced Host Controller #1 (rev 05) (prog-if 20 [EHCI])
+00:1f.0 ISA bridge: Intel Corporation HM67 Express Chipset Family LPC Controller (rev 05)
+00:1f.2 SATA controller: Intel Corporation 6 Series/C200 Series Chipset Family 6 port SATA AHCI Controller (rev 05) (prog-if 01 [AHCI 1.0])
+00:1f.3 SMBus: Intel Corporation 6 Series/C200 Series Chipset Family SMBus Controller (rev 05)
+05:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd. RTL8111/8168 PCI Express Gigabit Ethernet controller (rev 06)
+09:00.0 Network controller: Intel Corporation Centrino Wireless-N 1030 [Rainbow Peak] (rev 34)
+0b:00.0 USB controller: Texas Instruments TUSB73x0 SuperSpeed USB 3.0 xHCI Host Controller (rev 02) (prog-if 30 [XHCI])
+11:00.0 Mass storage controller: Silicon Image, Inc. SiI 3132 Serial ATA Raid II Controller (rev 01)
+#
+
+If I have Realtek MediaCardReader enabled in BIOS, no card in it, coldboot, and hot
+insert an ExpressCard into the slot, the Realtek MediaCardReader pops up in dmesg as
+a new PCI device. How about you?
+
+My card does NOT show in lspci (maybe because I never plugged in a data card into it) but does show in lsusb:
+
+Bus 002 Device 005: ID 0bda:0138 Realtek Semiconductor Corp. RTS5138 Card Reader Controller
+Device Descriptor:
+  bLength                18
+  bDescriptorType         1
+  bcdUSB               2.00
+  bDeviceClass            0 (Defined at Interface level)
+  bDeviceSubClass         0 
+  bDeviceProtocol         0 
+  bMaxPacketSize0        64
+  idVendor           0x0bda Realtek Semiconductor Corp.
+  idProduct          0x0138 RTS5138 Card Reader Controller
+  bcdDevice           38.82
+  iManufacturer           1 Generic
+  iProduct                2 USB2.0-CRW
+  iSerial                 3 20090516388200000
+
+
+Can you try coldboot without a media card inserted before power up without
+your patch and check whether the CardReader pops up after you plugin some
+ExpressCard into an ExpressCardSlot (not the CardReader)? I presume it is
+a laptop. ;-)
+
+2. Is the hotplug broken also under acpiphp? And again, does it get detected
+once you plugin some card into an ExpressCard slot?
+
+3. Does the device appear under lsusb also in addition to lspci?
+
+4. How does the 'lack of the hotplug surprise (PCI_EXP_SLTCAP_HPS) capability bit'
+manifest in 'lspci -vvv' output? A diff before and after the patch?
+
+5. Where is the *real* bug in the code that "linux" ignores the fact that one of
+the PCIe Root Ports (or the whole PCI Bridge?) does not support 'hotplug surprise'?
+Or is this about the hooked up "third-party" PCI devices? Why does it affect
+other PCIe ports of the bridge?
+
+
+Would be nice if you look into any of my previous emails to linux-pci and
+with your current knowledge comment whether here or there I faced a same
+problem. Looks like. Disabling the hotplug is a no go for me, I need hotplug
+for my ExpressCards. So far am rather having disabled the MediaCardReader in
+BIOS. But thank you, I did not know that inserting a data card into a CardReader
+is supposed to give me a lspci entry for it. So far I saw only the one in lsusb.
+
+Thank you,
+Martin
+
+
+Takashi Iwai wrote:
+> We encountered a problem that on some HP machines the Realtek PCI-e
+> card reader device appears only when you inserted a card before the
+> cold boot.  While debugging, it turned out that the device is actually
+> handled via PCI-e hotplug in some level.  The device sends a presence
+> change notification, and pciehp receives it, but it's ignored because
+> of lack of the hotplug surprise (PCI_EXP_SLTCAP_HPS) capability bit.
+> Once when this check passes, everything starts working -- the device
+> appears upon plugging the card properly.
 > 
-> Betters support for gen2 speed detections on PCI buses on ppc64
-> architectures.
+> There are a few other bug reports indicating the similar problems
+> (e.g. on recent Dell laptops), and I guess the culprit is same.
 > 
-> Signed-off-by: Lucas Kannebley Tavares <lucaskt@linux.vnet.ibm.com>
+> This patch adds a new module option, pciehp_surprise, to pciehp as a
+> workaround.  When pciehp_surprise=1 is given, pciehp handles the
+> presence change as the device on/off as if PCI_EXP_SLTCAP_HPS is set.
+> Unless it's set explicitly, there is no impact on the existing
+> behavior.
+> 
+> Signed-off-by: Takashi Iwai <tiwai@suse.de>
 > ---
->  arch/powerpc/platforms/pseries/pci.c |   32 ++++++++++++++++++++++++++++++++
->  1 files changed, 32 insertions(+), 0 deletions(-)
+>  drivers/pci/hotplug/pciehp.h      | 3 ++-
+>  drivers/pci/hotplug/pciehp_core.c | 3 +++
+>  2 files changed, 5 insertions(+), 1 deletion(-)
 > 
-> diff --git a/arch/powerpc/platforms/pseries/pci.c b/arch/powerpc/platforms/pseries/pci.c
-> index 0b580f4..58469fe 100644
-> --- a/arch/powerpc/platforms/pseries/pci.c
-> +++ b/arch/powerpc/platforms/pseries/pci.c
-> @@ -24,6 +24,7 @@
->  #include <linux/kernel.h>
->  #include <linux/pci.h>
->  #include <linux/string.h>
-> +#include <linux/device.h>
+> diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
+> index 2c113de..314f3be 100644
+> --- a/drivers/pci/hotplug/pciehp.h
+> +++ b/drivers/pci/hotplug/pciehp.h
+> @@ -44,6 +44,7 @@ extern bool pciehp_poll_mode;
+>  extern int pciehp_poll_time;
+>  extern bool pciehp_debug;
+>  extern bool pciehp_force;
+> +extern bool pciehp_surprise;
+>  
+>  #define dbg(format, arg...)						\
+>  do {									\
+> @@ -122,7 +123,7 @@ struct controller {
+>  #define MRL_SENS(ctrl)		((ctrl)->slot_cap & PCI_EXP_SLTCAP_MRLSP)
+>  #define ATTN_LED(ctrl)		((ctrl)->slot_cap & PCI_EXP_SLTCAP_AIP)
+>  #define PWR_LED(ctrl)		((ctrl)->slot_cap & PCI_EXP_SLTCAP_PIP)
+> -#define HP_SUPR_RM(ctrl)	((ctrl)->slot_cap & PCI_EXP_SLTCAP_HPS)
+> +#define HP_SUPR_RM(ctrl)	(pciehp_surprise || ((ctrl)->slot_cap & PCI_EXP_SLTCAP_HPS))
+>  #define EMI(ctrl)		((ctrl)->slot_cap & PCI_EXP_SLTCAP_EIP)
+>  #define NO_CMD_CMPL(ctrl)	((ctrl)->slot_cap & PCI_EXP_SLTCAP_NCCS)
+>  #define PSN(ctrl)		((ctrl)->slot_cap >> 19)
+> diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
+> index 7d72c5e..c3a574e 100644
+> --- a/drivers/pci/hotplug/pciehp_core.c
+> +++ b/drivers/pci/hotplug/pciehp_core.c
+> @@ -42,6 +42,7 @@ bool pciehp_debug;
+>  bool pciehp_poll_mode;
+>  int pciehp_poll_time;
+>  bool pciehp_force;
+> +bool pciehp_surprise;
+>  
+>  #define DRIVER_VERSION	"0.4"
+>  #define DRIVER_AUTHOR	"Dan Zink <dan.zink@compaq.com>, Greg Kroah-Hartman <greg@kroah.com>, Dely Sy <dely.l.sy@intel.com>"
+> @@ -55,10 +56,12 @@ module_param(pciehp_debug, bool, 0644);
+>  module_param(pciehp_poll_mode, bool, 0644);
+>  module_param(pciehp_poll_time, int, 0644);
+>  module_param(pciehp_force, bool, 0644);
+> +module_param(pciehp_surprise, bool, 0644);
+>  MODULE_PARM_DESC(pciehp_debug, "Debugging mode enabled or not");
+>  MODULE_PARM_DESC(pciehp_poll_mode, "Using polling mechanism for hot-plug events or not");
+>  MODULE_PARM_DESC(pciehp_poll_time, "Polling mechanism frequency, in seconds");
+>  MODULE_PARM_DESC(pciehp_force, "Force pciehp, even if OSHP is missing");
+> +MODULE_PARM_DESC(pciehp_surprise, "Force to set hotplug-surprise capability");
+>  
+>  #define PCIE_MODULE_NAME "pciehp"
+>  
 > 
->  #include <asm/eeh.h>
->  #include <asm/pci-bridge.h>
-> @@ -108,3 +109,34 @@ static void fixup_winbond_82c105(struct pci_dev* dev)
->  }
->  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_WINBOND, PCI_DEVICE_ID_WINBOND_82C105,
->  			 fixup_winbond_82c105);
-> +
-> +int pcibios_get_speed_cap_mask(struct pci_dev *dev, u32 *mask)
-> +{
-> +	struct device_node *dn, *pdn;
-> +	const uint32_t *pcie_link_speed_stats = NULL;
-> +
-> +	*mask = 0;
-> +	dn = pci_bus_to_OF_node(dev->bus);
-> +
-> +	/* Find nearest ibm,pcie-link-speed-stats, walking up the device tree */
-> +	for (pdn = dn; pdn != NULL; pdn = pdn->parent) {
-> +		pcie_link_speed_stats = (const uint32_t *) of_get_property(pdn,
-> +			"ibm,pcie-link-speed-stats", NULL);
-> +		if (pcie_link_speed_stats != NULL)
-> +			break;
-> +	}
-> +
-> +	if (pcie_link_speed_stats == NULL) {
-> +		dev_info(&dev->dev, "no ibm,pcie-link-speed-stats property\n");
-> +		return -EINVAL;
-> +	}
-> +
-> +	switch (pcie_link_speed_stats[0]) {
-> +		case 0x02:
-> +		*mask |= PCIE_SPEED_50;
-> +		case 0x01:
-> +		*mask |= PCIE_SPEED_25;
-> +	}
-
-I recall seeing this returns 0x00 as well. Maybe you should include both
-0x00 and a default case and return EINVAL.
-
-Regards.
-Cascardo.
-
-> +
-> +	return 0;
-> +}
-> -- 
-> 1.7.4.4
-> 
-
