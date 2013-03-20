@@ -1,67 +1,35 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f51.google.com ([209.85.219.51]:51441 "EHLO
-	mail-oa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752178Ab3CZWoq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Mar 2013 18:44:46 -0400
-Received: by mail-oa0-f51.google.com with SMTP id g12so4855381oah.10
-        for <linux-pci@vger.kernel.org>; Tue, 26 Mar 2013 15:44:45 -0700 (PDT)
+Received: from terminus.zytor.com ([198.137.202.10]:42238 "EHLO mail.zytor.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755874Ab3CTBAh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 19 Mar 2013 21:00:37 -0400
+Message-ID: <51490A22.1080908@zytor.com>
+Date: Tue, 19 Mar 2013 18:00:18 -0700
+From: "H. Peter Anvin" <hpa@zytor.com>
 MIME-Version: 1.0
-In-Reply-To: <51522314.7050203@gentoo.org>
-References: <515213CF.7000804@gentoo.org> <CAErSpo5wG8FUyomySdze56-e9Jr+3DevoCGGAnhLM8vpOBvQ5w@mail.gmail.com>
- <51522314.7050203@gentoo.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 26 Mar 2013 16:44:25 -0600
-Message-ID: <CAErSpo5ZSP_udOZp7XZyEfKO-AuwaptR9EXra6ALnhrzfe0Z5w@mail.gmail.com>
-Subject: Re: lspci -k is broken with depmod from kmod since it doesn't
- generate modules.pcimap anymore
-To: Samuli Suominen <ssuominen@gentoo.org>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Lucas De Marchi <lucas.demarchi@profusion.mobi>,
-	Kay Sievers <kay@vrfy.org>,
-	=?ISO-8859-2?Q?Martin_Mare=B9?= <mj@ucw.cz>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Matthew Garrett <matthew.garrett@nebula.com>
+CC: linux-kernel@vger.kernel.org,
+	linux-security-module@vger.kernel.org, linux-efi@vger.kernel.org,
+	kexec@lists.infradead.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 06/12] x86: Require CAP_COMPROMISE_KERNEL for IO port
+ access
+References: <1363642353-30749-1-git-send-email-matthew.garrett@nebula.com> <1363642353-30749-6-git-send-email-matthew.garrett@nebula.com>
+In-Reply-To: <1363642353-30749-6-git-send-email-matthew.garrett@nebula.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Martin]
+On 03/18/2013 02:32 PM, Matthew Garrett wrote:
+> IO port access would permit users to gain access to PCI configuration
+> registers, which in turn (on a lot of hardware) give access to MMIO register
+> space. This would potentially permit root to trigger arbitrary DMA, so lock
+> it down by default.
+> 
 
-On Tue, Mar 26, 2013 at 4:37 PM, Samuli Suominen <ssuominen@gentoo.org> wrote:
-> On 27/03/13 00:35, Bjorn Helgaas wrote:
->>
->> On Tue, Mar 26, 2013 at 3:31 PM, Samuli Suominen <ssuominen@gentoo.org>
->> wrote:
->>>
->>> The depmod from kmod no longer generates file modules.pcimap, and lspci
->>> -k
->>> relies on that as noted at:
->>>
->>> https://bugs.gentoo.org/show_bug.cgi?id=462982
->>>
->>> null pciutils-3.1.10 # grep -r modules.*map *
->>> ls-kernel.c:      sprintf(name, "/lib/modules/%s/modules.pcimap",
->>> uts.release);
->>> lspci.c:char *opt_pcimap;                       /* Override path to Linux
->>> modules.pcimap */
->>> lspci.c:"-p <file>\tLook up kernel modules in a given file instead of
->>> default modules.pcimap\n"
->>> lspci.man:.RI /lib/modules/ kernel_version /modules.pcimap.
->>
->>
->> I don't think this is a kernel problem, and I don't know where to
->> point you.  Maybe Lucas or Kay will know?
->
->
-> This is the mailing list referred at pciutils homepage:
->
-> http://mj.ucw.cz/sw/pciutils/
->
-> "Feedback:
->
-> You can ask questions and report bugs on the linux-pci mailing list running
-> on Vger"
->
-> Some bug tracking system would be nice.
+Again, if you are going to do this, just kill bloody RAWIO.  Quite
+frankly saying brainfucked SCSI drivers have abused it doesn't hold
+water, because as far as you know those same commands can trigger
+arbitrary DMA activity.
 
-Don't worry, we'll figure out where this should go.  It's just that I
-don't know off the top of my head.  If it's a pciutils problem, Martin
-will surely know.
+	-hpa
+
