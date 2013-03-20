@@ -1,137 +1,199 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 19 Mar 2013 09:56:57 +0100 (CET)
-From: Jiri Kosina <jkosina@suse.cz>
-To: Chris Wilson <chris@chris-wilson.co.uk>
-Cc: Daniel Vetter <daniel@ffwll.ch>, Greg KH <greg@kroah.com>,
-	Harald Arnesen <skogtun.linux@gmail.com>,
-	Kernel development list <linux-kernel@vger.kernel.org>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Peter Hurley <peter@hurleysoftware.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Thomas Meyer <thomas@m3y3r.de>,
-	Shawn Starr <shawn.starr@rogers.com>,
-	USB list <linux-usb@vger.kernel.org>,
-	linux-acpi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Daniel Vetter <daniel.vetter@ffwll.ch>,
-	Imre Deak <imre.deak@intel.com>,
-	Daniel Kurtz <djkurtz@chromium.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e24smtp05.br.ibm.com ([32.104.18.26]:35532 "EHLO
+	e24smtp05.br.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751436Ab3CTFZL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Mar 2013 01:25:11 -0400
+Received: from /spool/local
+	by e24smtp05.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <lucaskt@linux.vnet.ibm.com>;
+	Wed, 20 Mar 2013 02:25:08 -0300
+Received: from d24relay03.br.ibm.com (d24relay03.br.ibm.com [9.13.184.25])
+	by d24dlp01.br.ibm.com (Postfix) with ESMTP id 4F4373520060
+	for <linux-pci@vger.kernel.org>; Wed, 20 Mar 2013 01:25:06 -0400 (EDT)
+Received: from d24av05.br.ibm.com (d24av05.br.ibm.com [9.18.232.44])
+	by d24relay03.br.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id r2K5OMJa25362548
+	for <linux-pci@vger.kernel.org>; Wed, 20 Mar 2013 02:24:22 -0300
+Received: from d24av05.br.ibm.com (loopback [127.0.0.1])
+	by d24av05.br.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id r2K5P49K029743
+	for <linux-pci@vger.kernel.org>; Wed, 20 Mar 2013 02:25:06 -0300
+From: Lucas Kannebley Tavares <lucaskt@linux.vnet.ibm.com>
+To: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
 	dri-devel@lists.freedesktop.org
-Subject: Re: [PATCH] drm/i915: stop using GMBUS IRQs on Gen4 chips (was Re:
- [3.9-rc1] irq 16: nobody cared  (was [3.9-rc1] very poor interrupt
- responses))
-In-Reply-To: <20130318170424.GB5571@cantiga.alporthouse.com>
-Message-ID: <alpine.LNX.2.00.1303190953010.9529@pobox.suse.cz>
-References: <1363280764.26318.4.camel@thor.lan> <5657408.cYX6iimiA4@vostro.rjw.lan> <alpine.LNX.2.00.1303150851020.9529@pobox.suse.cz> <5142E7F0.4020002@gmail.com> <alpine.LNX.2.00.1303151424140.9529@pobox.suse.cz> <20130315153249.GA32425@kroah.com>
- <alpine.LNX.2.00.1303151636481.9529@pobox.suse.cz> <20130315154739.GA1024@kroah.com> <20130318082156.GO9021@phenom.ffwll.local> <alpine.LNX.2.00.1303181522460.9529@pobox.suse.cz> <20130318170424.GB5571@cantiga.alporthouse.com>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Sender: linux-kernel-owner@vger.kernel.org
+Cc: Lucas Kannebley Tavares <lucaskt@linux.vnet.ibm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	David Airlie <airlied@linux.ie>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Brian King <brking@linux.vnet.ibm.com>,
+	Thadeu Cascardo <cascardo@linux.vnet.ibm.com>,
+	Alex Deucher <alexander.deucher@amd.com>
+Subject: [PATCHv2 2/3] drm: removed drm_pcie_get_speed_cap_mask function
+Date: Wed, 20 Mar 2013 02:24:38 -0300
+Message-Id: <1363757079-23550-3-git-send-email-lucaskt@linux.vnet.ibm.com>
+In-Reply-To: <1363757079-23550-1-git-send-email-lucaskt@linux.vnet.ibm.com>
+References: <1363757079-23550-1-git-send-email-lucaskt@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 18 Mar 2013, Chris Wilson wrote:
+This function was moved to the pci subsystem where it fits better, as
+this is much more of a generic pci task, than a drm specific one. All
+references to the function (all in the radeon driver) are updated.
 
-> > +#define HAS_GMBUS_IRQ(dev) (INTEL_INFO(dev)->gen >= 5)
-> >  void
-> >  intel_i2c_reset(struct drm_device *dev)
-> >  {
-> >  	struct drm_i915_private *dev_priv = dev->dev_private;
-> >  	I915_WRITE(dev_priv->gpio_mmio_base + GMBUS0, 0);
-> > -	I915_WRITE(dev_priv->gpio_mmio_base + GMBUS4, 0);
-> > +	if (HAS_GMBUS_IRQ(dev))
-> > +		I915_WRITE(dev_priv->gpio_mmio_base + GMBUS4, 0);
-> 
-> There should not be any harm in always clearing GMBUS4, it exists on all
-> platforms.
-> 
-> >  }
-> >  
-> >  static void intel_i2c_quirk_set(struct drm_i915_private *dev_priv, bool enable)
-> > @@ -203,7 +205,6 @@ intel_gpio_setup(struct intel_gmbus *bus, u32 pin)
-> >  	algo->data = bus;
-> >  }
-> >  
-> > -#define HAS_GMBUS_IRQ(dev) (INTEL_INFO(dev)->gen >= 4)
-> >  static int
-> >  gmbus_wait_hw_status(struct drm_i915_private *dev_priv,
-> >  		     u32 gmbus2_status,
-> > @@ -214,6 +215,13 @@ gmbus_wait_hw_status(struct drm_i915_private *dev_priv,
-> >  	u32 gmbus2 = 0;
-> >  	DEFINE_WAIT(wait);
-> >  
-> > +	if (!HAS_GMBUS_IRQ(dev_priv->dev)) {
-> > +		int ret;
-> > +		ret = wait_for((gmbus2 = I915_READ(GMBUS2 + reg_offset)) &
-> > +				(GMBUS_SATOER | gmbus2_status),
-> > +				50);
-> 
-> This should couple up to the normal return code that chooses the
-> appropriate return value based on gmbus2.
-> 
-> How about just using:
->   if (!HAS_GMBUS_IRQ(dev_priv->dev)) gmbus4_irq_en = 0;
-> and the existing wait loop?
+This is the second step in moving function drm_pcie_get_speed_cap_mask
+from the drm subsystem to the pci one.
 
-I explicitly wanted to avoid touching GMBUS4 register, as the real cause 
-of the failure is not clear.
-
-But, as Yinghai Lu points out, the problem is most likely caused by 
-interrupt disabling not working properly (see his very good point 
-regarding DisINTx+ and INTx+ discrepancy), so zeroing the register out 
-should work .... and it indeed does in my case, hence the (tested) patch 
-below.
-
-I think it's a 3.9-rc material, and I am all open to debug this further 
-for 3.10 so that the race is closed and gmbus irqs can be used on Gen4 
-platform properly.
-
-
-
-
-From: Jiri Kosina <jkosina@suse.cz>
-Subject: [PATCH] drm/i915: stop using GMBUS IRQs on Gen4 chips
-
-Commit 28c70f162 ("drm/i915: use the gmbus irq for waits") switched to
-using GMBUS irqs instead of GPIO bit-banging for chipset generations 4
-and above.
-
-It turns out though that on many systems this leads to spurious interrupts
-being generated, long after the register write to disable the IRQs has been
-issued.
-
-Flushing of the register writes by POSTING_READ() directly after the register
-write doesn't work either.
-
-Disable using of GMBUS IRQs on Gen4 systems before the root cause is found and
-revert back to old behavior.
-
-Signed-off-by: Jiri Kosina <jkosina@suse.cz>
+Signed-off-by: Lucas Kannebley Tavares <lucaskt@linux.vnet.ibm.com>
 ---
- drivers/gpu/drm/i915/intel_i2c.c |    4 +++-
- 1 files changed, 3 insertions(+), 1 deletions(-)
+ drivers/gpu/drm/drm_pci.c          |   38 ------------------------------------
+ drivers/gpu/drm/radeon/evergreen.c |    5 ++-
+ drivers/gpu/drm/radeon/r600.c      |    5 ++-
+ drivers/gpu/drm/radeon/rv770.c     |    5 ++-
+ include/drm/drmP.h                 |    6 -----
+ 5 files changed, 9 insertions(+), 50 deletions(-)
 
-diff --git a/drivers/gpu/drm/i915/intel_i2c.c b/drivers/gpu/drm/i915/intel_i2c.c
-index acf8aec..9934724 100644
---- a/drivers/gpu/drm/i915/intel_i2c.c
-+++ b/drivers/gpu/drm/i915/intel_i2c.c
-@@ -203,7 +203,7 @@ intel_gpio_setup(struct intel_gmbus *bus, u32 pin)
- 	algo->data = bus;
+diff --git a/drivers/gpu/drm/drm_pci.c b/drivers/gpu/drm/drm_pci.c
+index bd719e9..ba70844 100644
+--- a/drivers/gpu/drm/drm_pci.c
++++ b/drivers/gpu/drm/drm_pci.c
+@@ -439,44 +439,6 @@ int drm_pci_init(struct drm_driver *driver, struct pci_driver *pdriver)
+ 	return 0;
  }
  
--#define HAS_GMBUS_IRQ(dev) (INTEL_INFO(dev)->gen >= 4)
-+#define HAS_GMBUS_IRQ(dev) (INTEL_INFO(dev)->gen >= 5)
- static int
- gmbus_wait_hw_status(struct drm_i915_private *dev_priv,
- 		     u32 gmbus2_status,
-@@ -214,6 +214,8 @@ gmbus_wait_hw_status(struct drm_i915_private *dev_priv,
- 	u32 gmbus2 = 0;
- 	DEFINE_WAIT(wait);
+-int drm_pcie_get_speed_cap_mask(struct drm_device *dev, u32 *mask)
+-{
+-	struct pci_dev *root;
+-	u32 lnkcap, lnkcap2;
+-
+-	*mask = 0;
+-	if (!dev->pdev)
+-		return -EINVAL;
+-
+-	root = dev->pdev->bus->self;
+-
+-	/* we've been informed via and serverworks don't make the cut */
+-	if (root->vendor == PCI_VENDOR_ID_VIA ||
+-	    root->vendor == PCI_VENDOR_ID_SERVERWORKS)
+-		return -EINVAL;
+-
+-	pcie_capability_read_dword(root, PCI_EXP_LNKCAP, &lnkcap);
+-	pcie_capability_read_dword(root, PCI_EXP_LNKCAP2, &lnkcap2);
+-
+-	if (lnkcap2) {	/* PCIe r3.0-compliant */
+-		if (lnkcap2 & PCI_EXP_LNKCAP2_SLS_2_5GB)
+-			*mask |= DRM_PCIE_SPEED_25;
+-		if (lnkcap2 & PCI_EXP_LNKCAP2_SLS_5_0GB)
+-			*mask |= DRM_PCIE_SPEED_50;
+-		if (lnkcap2 & PCI_EXP_LNKCAP2_SLS_8_0GB)
+-			*mask |= DRM_PCIE_SPEED_80;
+-	} else {	/* pre-r3.0 */
+-		if (lnkcap & PCI_EXP_LNKCAP_SLS_2_5GB)
+-			*mask |= DRM_PCIE_SPEED_25;
+-		if (lnkcap & PCI_EXP_LNKCAP_SLS_5_0GB)
+-			*mask |= (DRM_PCIE_SPEED_25 | DRM_PCIE_SPEED_50);
+-	}
+-
+-	DRM_INFO("probing gen 2 caps for device %x:%x = %x/%x\n", root->vendor, root->device, lnkcap, lnkcap2);
+-	return 0;
+-}
+-EXPORT_SYMBOL(drm_pcie_get_speed_cap_mask);
+-
+ #else
  
-+	if (!HAS_GMBUS_IRQ(dev_priv->dev))
-+		gmbus4_irq_en = 0;
- 	/* Important: The hw handles only the first bit, so set only one! Since
- 	 * we also need to check for NAKs besides the hw ready/idle signal, we
- 	 * need to wake up periodically and check that ourselves. */
+ int drm_pci_init(struct drm_driver *driver, struct pci_driver *pdriver)
+diff --git a/drivers/gpu/drm/radeon/evergreen.c b/drivers/gpu/drm/radeon/evergreen.c
+index 305a657..6ba204d 100644
+--- a/drivers/gpu/drm/radeon/evergreen.c
++++ b/drivers/gpu/drm/radeon/evergreen.c
+@@ -24,6 +24,7 @@
+ #include <linux/firmware.h>
+ #include <linux/platform_device.h>
+ #include <linux/slab.h>
++#include <linux/pci.h>
+ #include <drm/drmP.h>
+ #include "radeon.h"
+ #include "radeon_asic.h"
+@@ -3871,11 +3872,11 @@ void evergreen_pcie_gen2_enable(struct radeon_device *rdev)
+ 	if (ASIC_IS_X2(rdev))
+ 		return;
+ 
+-	ret = drm_pcie_get_speed_cap_mask(rdev->ddev, &mask);
++	ret = pcie_get_speed_cap_mask(rdev->ddev->pdev, &mask);
+ 	if (ret != 0)
+ 		return;
+ 
+-	if (!(mask & DRM_PCIE_SPEED_50))
++	if (!(mask & PCIE_SPEED_50))
+ 		return;
+ 
+ 	speed_cntl = RREG32_PCIE_P(PCIE_LC_SPEED_CNTL);
+diff --git a/drivers/gpu/drm/radeon/r600.c b/drivers/gpu/drm/radeon/r600.c
+index 0740db3..89a7387 100644
+--- a/drivers/gpu/drm/radeon/r600.c
++++ b/drivers/gpu/drm/radeon/r600.c
+@@ -30,6 +30,7 @@
+ #include <linux/firmware.h>
+ #include <linux/platform_device.h>
+ #include <linux/module.h>
++#include <linux/pci.h>
+ #include <drm/drmP.h>
+ #include <drm/radeon_drm.h>
+ #include "radeon.h"
+@@ -4371,11 +4372,11 @@ static void r600_pcie_gen2_enable(struct radeon_device *rdev)
+ 	if (rdev->family <= CHIP_R600)
+ 		return;
+ 
+-	ret = drm_pcie_get_speed_cap_mask(rdev->ddev, &mask);
++	ret = pcie_get_speed_cap_mask(rdev->ddev->pdev, &mask);
+ 	if (ret != 0)
+ 		return;
+ 
+-	if (!(mask & DRM_PCIE_SPEED_50))
++	if (!(mask & PCIE_SPEED_50))
+ 		return;
+ 
+ 	speed_cntl = RREG32_PCIE_P(PCIE_LC_SPEED_CNTL);
+diff --git a/drivers/gpu/drm/radeon/rv770.c b/drivers/gpu/drm/radeon/rv770.c
+index d63fe1d..81c7f1c 100644
+--- a/drivers/gpu/drm/radeon/rv770.c
++++ b/drivers/gpu/drm/radeon/rv770.c
+@@ -28,6 +28,7 @@
+ #include <linux/firmware.h>
+ #include <linux/platform_device.h>
+ #include <linux/slab.h>
++#include <linux/pci.h>
+ #include <drm/drmP.h>
+ #include "radeon.h"
+ #include "radeon_asic.h"
+@@ -1254,11 +1255,11 @@ static void rv770_pcie_gen2_enable(struct radeon_device *rdev)
+ 	if (ASIC_IS_X2(rdev))
+ 		return;
+ 
+-	ret = drm_pcie_get_speed_cap_mask(rdev->ddev, &mask);
++	ret = pcie_get_speed_cap_mask(rdev->ddev->pdev, &mask);
+ 	if (ret != 0)
+ 		return;
+ 
+-	if (!(mask & DRM_PCIE_SPEED_50))
++	if (!(mask & PCIE_SPEED_50))
+ 		return;
+ 
+ 	DRM_INFO("enabling PCIE gen 2 link speeds, disable with radeon.pcie_gen2=0\n");
+diff --git a/include/drm/drmP.h b/include/drm/drmP.h
+index 2d94d74..39b2872 100644
+--- a/include/drm/drmP.h
++++ b/include/drm/drmP.h
+@@ -1788,12 +1788,6 @@ extern int drm_get_pci_dev(struct pci_dev *pdev,
+ 			   const struct pci_device_id *ent,
+ 			   struct drm_driver *driver);
+ 
+-#define DRM_PCIE_SPEED_25 1
+-#define DRM_PCIE_SPEED_50 2
+-#define DRM_PCIE_SPEED_80 4
+-
+-extern int drm_pcie_get_speed_cap_mask(struct drm_device *dev, u32 *speed_mask);
+-
+ /* platform section */
+ extern int drm_platform_init(struct drm_driver *driver, struct platform_device *platform_device);
+ extern void drm_platform_exit(struct drm_driver *driver, struct platform_device *platform_device);
 -- 
-Jiri Kosina
-SUSE Labs
+1.7.4.4
+
