@@ -1,82 +1,72 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Sarah Sharp <sarah.a.sharp@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	Len Brown <lenb@kernel.org>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	"Accardi, Kristen C" <kristen.c.accardi@intel.com>,
-	"Huang, Ying" <ying.huang@intel.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI / ACPI: Always resume devices on ACPI wakeup notifications
-Date: Mon, 25 Mar 2013 23:34:59 +0100
-Message-ID: <1467919.Hcd6xNPBOK@vostro.rjw.lan>
-In-Reply-To: <20130325164551.GA6869@xanatos>
-References: <2282655.IicBMMa6jN@vostro.rjw.lan> <20130325164551.GA6869@xanatos>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e7.ny.us.ibm.com ([32.97.182.137]:54873 "EHLO e7.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750758Ab3CTVLZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 20 Mar 2013 17:11:25 -0400
+Received: from /spool/local
+	by e7.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <zohar@linux.vnet.ibm.com>;
+	Wed, 20 Mar 2013 17:11:24 -0400
+Message-ID: <1363813877.2580.120.camel@falcor1.watson.ibm.com>
+Subject: Re: [PATCH 01/12] Security: Add CAP_COMPROMISE_KERNEL
+From: Mimi Zohar <zohar@linux.vnet.ibm.com>
+To: Matthew Garrett <matthew.garrett@nebula.com>
+Cc: James Morris <jmorris@namei.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-security-module@vger.kernel.org"
+	<linux-security-module@vger.kernel.org>,
+	"linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
+	"kexec@lists.infradead.org" <kexec@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"Serge E. Hallyn" <serge@hallyn.com>
+Date: Wed, 20 Mar 2013 17:11:17 -0400
+In-Reply-To: <1363811856.2553.37.camel@x230.sbx07502.somerma.wayport.net>
+References: <1363642353-30749-1-git-send-email-matthew.garrett@nebula.com>
+	 <alpine.LRH.2.02.1303191542200.30973@tundra.namei.org>
+	 <1363797717.2580.10.camel@falcor1.watson.ibm.com>
+	 <1363798166.2553.29.camel@x230.sbx07502.somerma.wayport.net>
+	 <1363802506.2580.55.camel@falcor1.watson.ibm.com>
+	 <1363803158.2553.33.camel@x230.sbx07502.somerma.wayport.net>
+	 <1363806968.2580.86.camel@falcor1.watson.ibm.com>
+	 <1363811856.2553.37.camel@x230.sbx07502.somerma.wayport.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, March 25, 2013 09:45:51 AM Sarah Sharp wrote:
-> On Sat, Mar 23, 2013 at 03:33:03PM +0100, Rafael J. Wysocki wrote:
-> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Wed, 2013-03-20 at 20:37 +0000, Matthew Garrett wrote:
+> On Wed, 2013-03-20 at 15:16 -0400, Mimi Zohar wrote:
+> > On Wed, 2013-03-20 at 18:12 +0000, Matthew Garrett wrote:
+> > > Well, in the absence of hardcoded in-kernel policy, there needs to be
+> > > some mechanism for ensuring the integrity of a policy. Shipping a signed
+> > > policy initramfs fragment and having any Secure Boot bootloaders pass a
+> > > flag in bootparams indicating that the kernel should panic if that
+> > > fragment isn't present would seem to be the easiest way of doing that.
+> > > Or have I misunderstood the question?
 > > 
-> > It turns out that _Lxx control methods provided by some BIOSes clear
-> > the PME Status bit of PCI devices they handle, which means that
-> > pci_acpi_wake_dev() cannot really use that bit to check whether or
-> > not the device has signalled wakeup.
-> > 
-> > For this reason, make pci_acpi_wake_dev() always attempt to resume
-> > the device it is called for regardless of the device's PME Status bit
-> > value (that bit still has to be cleared if set at this point,
-> > though).
-> > 
-> > Reported-by: Sarah Sharp <sarah.a.sharp@linux.intel.com>
-> > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > Ok, I was confused by the term "fragmented" initramfs.  So once you have
+> > verified the "early" fragmented initramfs signature, this initramfs will
+> > load the "trusted" public keys and could also load the MAC policy. (I
+> > realize that dracut is currently loading the MAC policy, not the
+> > initramfs.)  The MAC policy would then be trusted, right?  Could we then
+> > use the LSM labels for defining an integrity policy for kexec?
 > 
-> Should this be marked for stable?  I had this issue on 3.7 and 3.8 as
-> well.
+> Right, that'd be the rough idea. Any further runtime policy updates
+> would presumably need to be signed with a trusted key.
 
-Yes, it probably should, but that's the maintainer's call.
+I'm really sorry to belabor this point, but can kexec rely on an LSM
+label to identify a specific file, out of all the files being executed,
+in a secure boot environment?  The SELinux integrity rule for kexec
+would then look something like,
 
-Thanks,
-Rafael
+appraise func=BPRM_CHECK obj_type=kdump_exec_t appraise_type=imasig
 
+We could then follow this up with Serge's idea of, "a capset
+akin to the bounding set, saying you can only have the caps in this set
+if the running binary was a signed one."  kexec already requires
+CAP_SYS_BOOT.
 
-> > ---
-> >  drivers/pci/pci-acpi.c |   15 ++++++++-------
-> >  1 file changed, 8 insertions(+), 7 deletions(-)
-> > 
-> > Index: linux-pm/drivers/pci/pci-acpi.c
-> > ===================================================================
-> > --- linux-pm.orig/drivers/pci/pci-acpi.c
-> > +++ linux-pm/drivers/pci/pci-acpi.c
-> > @@ -53,14 +53,15 @@ static void pci_acpi_wake_dev(acpi_handl
-> >  		return;
-> >  	}
-> >  
-> > -	if (!pci_dev->pm_cap || !pci_dev->pme_support
-> > -	     || pci_check_pme_status(pci_dev)) {
-> > -		if (pci_dev->pme_poll)
-> > -			pci_dev->pme_poll = false;
-> > +	/* Clear PME Status if set. */
-> > +	if (pci_dev->pme_support)
-> > +		pci_check_pme_status(pci_dev);
-> >  
-> > -		pci_wakeup_event(pci_dev);
-> > -		pm_runtime_resume(&pci_dev->dev);
-> > -	}
-> > +	if (pci_dev->pme_poll)
-> > +		pci_dev->pme_poll = false;
-> > +
-> > +	pci_wakeup_event(pci_dev);
-> > +	pm_runtime_resume(&pci_dev->dev);
-> >  
-> >  	if (pci_dev->subordinate)
-> >  		pci_pme_wakeup_bus(pci_dev->subordinate);
-> > 
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+thanks,
+
+Mimi
+
