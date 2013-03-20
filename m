@@ -1,75 +1,59 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 25 Mar 2013 09:45:51 -0700
-From: Sarah Sharp <sarah.a.sharp@linux.intel.com>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	Len Brown <lenb@kernel.org>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	"Accardi, Kristen C" <kristen.c.accardi@intel.com>,
-	"Huang, Ying" <ying.huang@intel.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI / ACPI: Always resume devices on ACPI wakeup
- notifications
-Message-ID: <20130325164551.GA6869@xanatos>
-References: <2282655.IicBMMa6jN@vostro.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <2282655.IicBMMa6jN@vostro.rjw.lan>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from gate.crashing.org ([63.228.1.57]:33666 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754032Ab3CTFkJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 20 Mar 2013 01:40:09 -0400
+Message-ID: <1363757987.18880.31.camel@pasglop>
+Subject: Re: [PATCHv2 3/3] ppc64: implemented pcibios_get_speed_cap_mask
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Lucas Kannebley Tavares <lucaskt@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	dri-devel@lists.freedesktop.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	David Airlie <airlied@linux.ie>,
+	Brian King <brking@linux.vnet.ibm.com>,
+	Thadeu Cascardo <cascardo@linux.vnet.ibm.com>,
+	Alex Deucher <alexander.deucher@amd.com>
+Date: Wed, 20 Mar 2013 06:39:47 +0100
+In-Reply-To: <1363757079-23550-4-git-send-email-lucaskt@linux.vnet.ibm.com>
+References: <1363757079-23550-1-git-send-email-lucaskt@linux.vnet.ibm.com>
+	 <1363757079-23550-4-git-send-email-lucaskt@linux.vnet.ibm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Mar 23, 2013 at 03:33:03PM +0100, Rafael J. Wysocki wrote:
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> 
-> It turns out that _Lxx control methods provided by some BIOSes clear
-> the PME Status bit of PCI devices they handle, which means that
-> pci_acpi_wake_dev() cannot really use that bit to check whether or
-> not the device has signalled wakeup.
-> 
-> For this reason, make pci_acpi_wake_dev() always attempt to resume
-> the device it is called for regardless of the device's PME Status bit
-> value (that bit still has to be cleared if set at this point,
-> though).
-> 
-> Reported-by: Sarah Sharp <sarah.a.sharp@linux.intel.com>
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Wed, 2013-03-20 at 02:24 -0300, Lucas Kannebley Tavares wrote:
+> Implementation of a architecture-specific pcibios_get_speed_cap_mask.
+> This implementation detects bus capabilities based on OF
+> ibm,pcie-link-speed-stats property.
 
-Should this be marked for stable?  I had this issue on 3.7 and 3.8 as
-well.
+The problem with your approach is that it's not a runtime detection...
 
-Sarah
+If the pseries machine is compiled into the kernel binary, it will
+override pcibios_get_speed_cap_mask() using the device-tree, regardless
+of whether the machine is currently booted on a pseries machine or not.
 
-> ---
->  drivers/pci/pci-acpi.c |   15 ++++++++-------
->  1 file changed, 8 insertions(+), 7 deletions(-)
-> 
-> Index: linux-pm/drivers/pci/pci-acpi.c
-> ===================================================================
-> --- linux-pm.orig/drivers/pci/pci-acpi.c
-> +++ linux-pm/drivers/pci/pci-acpi.c
-> @@ -53,14 +53,15 @@ static void pci_acpi_wake_dev(acpi_handl
->  		return;
->  	}
->  
-> -	if (!pci_dev->pm_cap || !pci_dev->pme_support
-> -	     || pci_check_pme_status(pci_dev)) {
-> -		if (pci_dev->pme_poll)
-> -			pci_dev->pme_poll = false;
-> +	/* Clear PME Status if set. */
-> +	if (pci_dev->pme_support)
-> +		pci_check_pme_status(pci_dev);
->  
-> -		pci_wakeup_event(pci_dev);
-> -		pm_runtime_resume(&pci_dev->dev);
-> -	}
-> +	if (pci_dev->pme_poll)
-> +		pci_dev->pme_poll = false;
-> +
-> +	pci_wakeup_event(pci_dev);
-> +	pm_runtime_resume(&pci_dev->dev);
->  
->  	if (pci_dev->subordinate)
->  		pci_pme_wakeup_bus(pci_dev->subordinate);
-> 
+This wouldn't be a big problem if the pseries
+pcibios_get_speed_cap_mask() was capable of doing a fallback to the
+generic one if the device-tree property is absent but that isn't the
+case.
+
+I think what you need to do is:
+
+  - Make it so the generic one can be called by the override. This can
+look a bit tricky but it's better that way. One way to do it is to have
+the actual implementation be in a __pci_* variant called by the weak
+pcibios_* variant
+
+  - Move the powerpc on to arch/powerpc/kernel/pci-common.c and make
+it call a ppc_md.pcibios_get_speed_cap_mask(). If the hook is absent
+(NULL), make it call the generic one
+
+  - pseries can then populate the hook in ppc_md. with its custom
+variant.
+
+Cheers,
+Ben.
+
+
