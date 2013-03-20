@@ -1,119 +1,53 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>, Ram Pai <linuxram@us.ibm.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v3 13/27] PCI: Use for_each_pci_resource() with pci bar reassign funcs
-Date: Wed, 13 Mar 2013 16:28:08 -0700
-Message-Id: <1363217302-14383-14-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1363217302-14383-1-git-send-email-yinghai@kernel.org>
-References: <1363217302-14383-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-db8lp0187.outbound.messaging.microsoft.com ([213.199.154.187]:5664
+	"EHLO db8outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750866Ab3CTVSq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Mar 2013 17:18:46 -0400
+From: Matthew Garrett <matthew.garrett@nebula.com>
+To: Mimi Zohar <zohar@linux.vnet.ibm.com>
+CC: James Morris <jmorris@namei.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-security-module@vger.kernel.org"
+	<linux-security-module@vger.kernel.org>,
+	"linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
+	"kexec@lists.infradead.org" <kexec@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"Serge E. Hallyn" <serge@hallyn.com>
+Subject: Re: [PATCH 01/12] Security: Add CAP_COMPROMISE_KERNEL
+Date: Wed, 20 Mar 2013 21:18:10 +0000
+Message-ID: <1363814289.2553.41.camel@x230.sbx07502.somerma.wayport.net>
+References: <1363642353-30749-1-git-send-email-matthew.garrett@nebula.com>
+	 <alpine.LRH.2.02.1303191542200.30973@tundra.namei.org>
+	 <1363797717.2580.10.camel@falcor1.watson.ibm.com>
+	 <1363798166.2553.29.camel@x230.sbx07502.somerma.wayport.net>
+	 <1363802506.2580.55.camel@falcor1.watson.ibm.com>
+	 <1363803158.2553.33.camel@x230.sbx07502.somerma.wayport.net>
+	 <1363806968.2580.86.camel@falcor1.watson.ibm.com>
+	 <1363811856.2553.37.camel@x230.sbx07502.somerma.wayport.net>
+	 <1363813877.2580.120.camel@falcor1.watson.ibm.com>
+In-Reply-To: <1363813877.2580.120.camel@falcor1.watson.ibm.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Replace those open code, and make code more readable.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c |   28 ++++++++++++----------------
- 1 file changed, 12 insertions(+), 16 deletions(-)
-
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 7e8739e..b23ef4c 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -106,7 +106,7 @@ static resource_size_t get_res_add_size(struct list_head *head,
- 
- 	list_for_each_entry(dev_res, head, list) {
- 		if (dev_res->res == res) {
--			int idx = res - &dev_res->dev->resource[0];
-+			int idx = pci_dev_resource_idx(dev_res->dev, res);
- 
- 			dev_printk(KERN_DEBUG, &dev_res->dev->dev,
- 				 "res[%d]=%pR get_res_add_size add_size %llx\n",
-@@ -124,15 +124,13 @@ static resource_size_t get_res_add_size(struct list_head *head,
- static void pdev_sort_resources(struct pci_dev *dev, struct list_head *head)
- {
- 	int i;
-+	struct resource *r;
- 
--	for (i = 0; i < PCI_NUM_RESOURCES; i++) {
--		struct resource *r;
-+	for_each_pci_resource(dev, r, i, PCI_ALL_RES) {
- 		struct pci_dev_resource *dev_res, *tmp;
- 		resource_size_t r_align;
- 		struct list_head *n;
- 
--		r = &dev->resource[i];
--
- 		if (r->flags & IORESOURCE_PCI_FIXED)
- 			continue;
- 
-@@ -237,7 +235,7 @@ static void reassign_resources_sorted(struct list_head *realloc_head,
- 		if (!found_match)/* just skip */
- 			continue;
- 
--		idx = res - &add_res->dev->resource[0];
-+		idx = pci_dev_resource_idx(add_res->dev, res);
- 		add_size = add_res->add_size;
- 		if (!resource_size(res)) {
- 			res->start = add_res->start;
-@@ -280,7 +278,7 @@ static void assign_requested_resources_sorted(struct list_head *head,
- 
- 	list_for_each_entry(dev_res, head, list) {
- 		res = dev_res->res;
--		idx = res - &dev_res->dev->resource[0];
-+		idx = pci_dev_resource_idx(dev_res->dev, res);
- 		if (resource_size(res) &&
- 		    pci_assign_resource(dev_res->dev, idx)) {
- 			if (fail_head) {
-@@ -757,9 +755,9 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
- 	io_align = min_align = window_alignment(bus, IORESOURCE_IO);
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
- 		int i;
-+		struct resource *r;
- 
--		for (i = 0; i < PCI_NUM_RESOURCES; i++) {
--			struct resource *r = &dev->resource[i];
-+		for_each_pci_resource(dev, r, i, PCI_ALL_RES) {
- 			unsigned long r_size;
- 
- 			if (r->parent || !(r->flags & IORESOURCE_IO))
-@@ -870,9 +868,9 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
- 		int i;
-+		struct resource *r;
- 
--		for (i = 0; i < PCI_NUM_RESOURCES; i++) {
--			struct resource *r = &dev->resource[i];
-+		for_each_pci_resource(dev, r, i, PCI_ALL_RES) {
- 			resource_size_t r_size;
- 
- 			if (r->parent || (r->flags & mask) != type)
-@@ -1196,9 +1194,7 @@ static void pci_bridge_release_resources(struct pci_bus *bus,
- 				  IORESOURCE_PREFETCH;
- 
- 	dev = bus->self;
--	for (idx = PCI_BRIDGE_RESOURCES; idx <= PCI_BRIDGE_RESOURCE_END;
--	     idx++) {
--		r = &dev->resource[idx];
-+	for_each_pci_resource(dev, r, idx, PCI_BRIDGE_RES) {
- 		if ((r->flags & type_mask) != type)
- 			continue;
- 		if (!r->parent)
-@@ -1369,9 +1365,9 @@ static void __init pci_realloc_detect(void)
- 
- 	for_each_pci_dev(dev) {
- 		int i;
-+		struct resource *r;
- 
--		for (i = PCI_IOV_RESOURCES; i <= PCI_IOV_RESOURCE_END; i++) {
--			struct resource *r = &dev->resource[i];
-+		for_each_pci_resource(dev, r, i, PCI_IOV_RES) {
- 
- 			/* Not assigned, or rejected by kernel ? */
- 			if (r->flags && !r->start) {
--- 
-1.7.10.4
+T24gV2VkLCAyMDEzLTAzLTIwIGF0IDE3OjExIC0wNDAwLCBNaW1pIFpvaGFyIHdyb3RlOg0KPiBP
+biBXZWQsIDIwMTMtMDMtMjAgYXQgMjA6MzcgKzAwMDAsIE1hdHRoZXcgR2FycmV0dCB3cm90ZToN
+Cj4gPiBSaWdodCwgdGhhdCdkIGJlIHRoZSByb3VnaCBpZGVhLiBBbnkgZnVydGhlciBydW50aW1l
+IHBvbGljeSB1cGRhdGVzDQo+ID4gd291bGQgcHJlc3VtYWJseSBuZWVkIHRvIGJlIHNpZ25lZCB3
+aXRoIGEgdHJ1c3RlZCBrZXkuDQo+IA0KPiBJJ20gcmVhbGx5IHNvcnJ5IHRvIGJlbGFib3IgdGhp
+cyBwb2ludCwgYnV0IGNhbiBrZXhlYyByZWx5IG9uIGFuIExTTQ0KPiBsYWJlbCB0byBpZGVudGlm
+eSBhIHNwZWNpZmljIGZpbGUsIG91dCBvZiBhbGwgdGhlIGZpbGVzIGJlaW5nIGV4ZWN1dGVkLA0K
+PiBpbiBhIHNlY3VyZSBib290IGVudmlyb25tZW50PyAgVGhlIFNFTGludXggaW50ZWdyaXR5IHJ1
+bGUgZm9yIGtleGVjDQo+IHdvdWxkIHRoZW4gbG9vayBzb21ldGhpbmcgbGlrZSwNCj4NCj4gYXBw
+cmFpc2UgZnVuYz1CUFJNX0NIRUNLIG9ial90eXBlPWtkdW1wX2V4ZWNfdCBhcHByYWlzZV90eXBl
+PWltYXNpZw0KDQpJdCB3b3VsZCBjZXJ0YWlubHkgYmUgcG9zc2libGUgdG8gY29uZmlndXJlIGEg
+c3lzdGVtIHN1Y2ggdGhhdCB0aGlzIHdhcw0KdHJ1ZSAoYXNzdW1pbmcgc3VwcG9ydCBmb3Igc2ln
+bmVkIGluaXRyYW1mcyBhbmQgcmVzdHJpY3RlZCBwb2xpY3kNCmxvYWRpbmcpLCBhbmQgYW55b25l
+IHdhbnRpbmcgdG8gZW5zdXJlIHRoYXQga2V4ZWMgb25seSBsb2FkZWQgdHJ1c3RlZA0KYmluYXJp
+ZXMgd291bGQgaGF2ZSB0byBlbnN1cmUgdGhhdCB0aGVpciBzeXN0ZW0gd2FzIGFwcHJvcHJpYXRl
+bHkNCmNvbmZpZ3VyZWQuIEhhdmluZyBzb21lIG1lY2hhbmlzbSB0byB0aGVuIGdpdmUgdGhlIGtl
+eGVjIGJpbmFyeQ0KQ0FQX01PRElGWV9LRVJORUwgd291bGQgYXZvaWQgbmVlZGluZyBhbiBleHRy
+YSBrZXhlYyBlbnRyeSBwb2ludC4NCg0KLS0gDQpNYXR0aGV3IEdhcnJldHQgfCBtamc1OUBzcmNm
+LnVjYW0ub3JnDQo=
 
