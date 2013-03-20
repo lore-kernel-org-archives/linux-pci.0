@@ -1,97 +1,84 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:55207 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751563Ab3CURau (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 Mar 2013 13:30:50 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Russell King <linux@arm.linux.org.uk>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	devicetree-discuss@lists.ozlabs.org,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Maen Suleiman <maen@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Olof Johansson <olof@lixom.net>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Mitch Bradley <wmb@firmworks.com>,
-	Andrew Murray <andrew.murray@arm.com>
-Subject: [PATCH v5 10/17] arm: mvebu: add PCIe Device Tree informations for Armada 370
-Date: Thu, 21 Mar 2013 18:30:18 +0100
-Message-Id: <1363887025-19931-11-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1363887025-19931-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1363887025-19931-1-git-send-email-thomas.petazzoni@free-electrons.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 21 Mar 2013 00:14:22 +0100 (CET)
+From: Jiri Kosina <jkosina@suse.cz>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Daniel Vetter <daniel.vetter@ffwll.ch>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Chris Wilson <chris@chris-wilson.co.uk>,
+	Greg KH <greg@kroah.com>,
+	Harald Arnesen <skogtun.linux@gmail.com>,
+	Kernel development list <linux-kernel@vger.kernel.org>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Peter Hurley <peter@hurleysoftware.com>,
+	Thomas Meyer <thomas@m3y3r.de>,
+	Shawn Starr <shawn.starr@rogers.com>,
+	USB list <linux-usb@vger.kernel.org>,
+	linux-acpi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org, Imre Deak <imre.deak@intel.com>,
+	Daniel Kurtz <djkurtz@chromium.org>,
+	dri-devel@lists.freedesktop.org,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	Arkadiusz Miskiewicz <a.miskiewicz@gmail.com>
+Subject: Re: gm45 intel gfx can generate non-MSI irq# in MSI mode (was Re:
+ [PATCH] drm/i915: stop using GMBUS IRQs on Gen4 chips (was Re: [3.9-rc1]
+ irq 16: nobody cared (was [3.9-rc1] very poor interrupt responses
+In-Reply-To: <CAE9FiQUyr4Tjw9F6o8FMf0+WMSFuucanskTT7e=eqjvRqi0HPQ@mail.gmail.com>
+Message-ID: <alpine.LNX.2.00.1303210012001.16237@pobox.suse.cz>
+References: <CAKMK7uGnZFaLQaZtoQ0Fz0ViNNjBvmf0Ak=qPmdAcm2mRBD7rA@mail.gmail.com> <Pine.LNX.4.44L0.1303191136020.15684-100000@netrider.rowland.org> <CAKMK7uGtLcuSsoumAgdB7ri+fR5ReNYcZELbqDcSueXVsewppg@mail.gmail.com>
+ <CAE9FiQUyr4Tjw9F6o8FMf0+WMSFuucanskTT7e=eqjvRqi0HPQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The Armada 370 SoC has two 1x PCIe 2.0 interfaces, so we add the
-necessary Device Tree informations to make these interfaces availabel.
+On Tue, 19 Mar 2013, Yinghai Lu wrote:
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+> > I guess I should have phrased it more precisely, but that's exactly
+> > what I expect is happening on my machine: I don't have anything on
+> > irq16 (i.e. in non-msi mode the gfx interrupt isn't shared) and hence
+> > the irq is completely disabled. Which obviously makes it impossible
+> > for me to reproduce the issue. To test that theory, is there a quick
+> > way to force-enable a given interrupt, short of just hacking up a 2nd
+> > dummy irq handler in my driver?
+> 
+> You may try to add another request_irq()
+> after i915_load_modeset_init==>drm_irq_install.
+> That could install one dummy action for ioapic irq for i915.
+> 
+> Also you may need to add one quirk that does not disable intx during
+> msi enabling like:
+> DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL,
+>                         0x2e22,
+>                         quirk_msi_intx_disable_bug);
+> 
+
+This seemed to be really promising idea to me, as the DisINTx+ vs INTx+ 
+discrepancy is very good hint, but unfortunately, after applying this:
+
 ---
- arch/arm/boot/dts/armada-370.dtsi |   45 +++++++++++++++++++++++++++++++++++++
- 1 file changed, 45 insertions(+)
+ drivers/pci/quirks.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
 
-diff --git a/arch/arm/boot/dts/armada-370.dtsi b/arch/arm/boot/dts/armada-370.dtsi
-index 8188d13..b0468fd 100644
---- a/arch/arm/boot/dts/armada-370.dtsi
-+++ b/arch/arm/boot/dts/armada-370.dtsi
-@@ -153,5 +153,50 @@
- 			clocks = <&coreclk 0>;
- 		};
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 0369fb6..8508e24 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -2643,6 +2643,9 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATTANSIC, 0x1073,
+ 			quirk_msi_intx_disable_bug);
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATTANSIC, 0x1083,
+ 			quirk_msi_intx_disable_bug);
++
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x2a42,
++			quirk_msi_intx_disable_bug);
+ #endif /* CONFIG_PCI_MSI */
  
-+		pcie-controller {
-+			compatible = "marvell,armada-370-pcie";
-+			status = "disabled";
-+			device_type = "pci";
-+
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+
-+			bus-range = <0x00 0xff>;
-+
-+			reg = <0xd0040000 0x2000>, <0xd0080000 0x2000>;
-+
-+			reg-names = "pcie0.0", "pcie1.0";
-+
-+			ranges = <0x82000000 0 0xe0000000 0xe0000000 0 0x08000000   /* non-prefetchable memory */
-+			          0x81000000 0 0          0xe8000000 0 0x00100000>; /* downstream I/O */
-+
-+			pcie@1,0 {
-+				device_type = "pci";
-+				reg = <0x0800 0 0 0 0>;
-+				#address-cells = <3>;
-+				#size-cells = <2>;
-+				#interrupt-cells = <1>;
-+				interrupt-map-mask = <0 0 0 0>;
-+				interrupt-map = <0 0 0 0 &mpic 58>;
-+				marvell,pcie-port = <0>;
-+				marvell,pcie-lane = <0>;
-+				clocks = <&gateclk 5>;
-+				status = "disabled";
-+			};
-+
-+			pcie@2,0 {
-+				device_type = "pci";
-+				reg = <0x1000 0 0 0 0>;
-+				#address-cells = <3>;
-+				#size-cells = <2>;
-+				#interrupt-cells = <1>;
-+				interrupt-map-mask = <0 0 0 0>;
-+				interrupt-map = <0 0 0 0 &mpic 62>;
-+				marvell,pcie-port = <1>;
-+				marvell,pcie-lane = <0>;
-+				clocks = <&gateclk 9>;
-+				status = "disabled";
-+			};
-+		};
- 	};
- };
--- 
-1.7.9.5
+ /* Allow manual resource allocation for PCI hotplug bridges
 
+
+The problem is still there ... so the inconsistency between DisINTx+ and 
+INTx+ is unfortunately not the whole story.
+
+-- 
+Jiri Kosina
+SUSE Labs
