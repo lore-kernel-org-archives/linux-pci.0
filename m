@@ -1,129 +1,112 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.8]:49738 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933309Ab3CMVdz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Mar 2013 17:33:55 -0400
-Date: Wed, 13 Mar 2013 22:33:44 +0100
-From: Thierry Reding <thierry.reding@avionic-design.de>
-To: Mitch Bradley <wmb@firmworks.com>
-Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>, linux-pci@vger.kernel.org,
-	devicetree-discuss@lists.ozlabs.org,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH 24/32] pci: PCIe driver for Marvell Armada 370/XP systems
-Message-ID: <20130313213344.GA29402@avionic-0098.mockup.avionic-design.de>
-References: <20130312070852.GA6727@avionic-0098.mockup.avionic-design.de>
- <20130312155749.GA1820@obsidianresearch.com>
- <20130312203819.GA23221@avionic-0098.mockup.avionic-design.de>
- <20130312210328.GA22702@obsidianresearch.com>
- <20130312213006.GA23717@avionic-0098.mockup.avionic-design.de>
- <20130312220854.GA23112@obsidianresearch.com>
- <20130313081815.GD25940@avionic-0098.mockup.avionic-design.de>
- <20130313170205.GB24042@obsidianresearch.com>
- <20130313192628.GA28714@avionic-0098.mockup.avionic-design.de>
- <5140E85A.3040900@firmworks.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Wed, 20 Mar 2013 13:23:13 -0400 (EDT)
+From: Alan Stern <stern@rowland.harvard.edu>
+To: Jiri Kosina <jkosina@suse.cz>
+cc: Daniel Vetter <daniel.vetter@ffwll.ch>,
+	Chris Wilson <chris@chris-wilson.co.uk>,
+	Greg KH <greg@kroah.com>,
+	Harald Arnesen <skogtun.linux@gmail.com>,
+	Kernel development list <linux-kernel@vger.kernel.org>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Peter Hurley <peter@hurleysoftware.com>,
+	Thomas Meyer <thomas@m3y3r.de>,
+	Shawn Starr <shawn.starr@rogers.com>,
+	USB list <linux-usb@vger.kernel.org>,
+	<linux-acpi@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	<linux-pci@vger.kernel.org>, Yinghai Lu <yinghai@kernel.org>,
+	Imre Deak <imre.deak@intel.com>,
+	Daniel Kurtz <djkurtz@chromium.org>,
+	<dri-devel@lists.freedesktop.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"H. Peter Anvin" <hpa@zytor.com>, <x86@kernel.org>,
+	Arkadiusz Miskiewicz <a.miskiewicz@gmail.com>
+Subject: Re: gm45 intel gfx can generate non-MSI irq# in MSI mode (was Re:
+ [PATCH] drm/i915: stop using GMBUS IRQs on Gen4 chips (was Re: [3.9-rc1]
+ irq 16: nobody cared (was [3.9-rc1] very poor interrupt respo
+In-Reply-To: <alpine.LNX.2.00.1303201728070.17295@pobox.suse.cz>
+Message-ID: <Pine.LNX.4.44L0.1303201319190.1208-100000@iolanthe.rowland.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="bg08WKrSYDhXBjb5"
-In-Reply-To: <5140E85A.3040900@firmworks.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Wed, 20 Mar 2013, Jiri Kosina wrote:
 
---bg08WKrSYDhXBjb5
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+> > I don't know of any way.  In fact, I have been thinking of writing a 
+> > test driver module, with a module parameter telling it which IRQ number 
+> > to register for.  It seems like the sort of thing that would be useful 
+> > to have, from time to time.
+> 
+> Ok, so how about this?
+> Daniel, is it enough to make the problem appear on your system (by 
+> building this into the kernel and booting with dummy-irq.irq=16)?
+> 
+> Thanks.
+> 
+> 
+> 
+> 
+> 
+> From: Jiri Kosina <jkosina@suse.cz>
+> Subject: [PATCH] dummy-irq: introduce a dummy IRQ handler driver
+> 
+> This module accepts a single 'irq' parameter, which it should register for.
+> 
+> Its sole purpose is to help with debugging of IRQ sharing problems, by
+> force-enabling IRQ that would otherwise be disabled.
+> 
+> Suggested-by: Alan Stern <stern@rowland.harvard.edu>
+> Signed-off-by: Jiri Kosina <jkosina@suse.cz>
 
-On Wed, Mar 13, 2013 at 10:58:02AM -1000, Mitch Bradley wrote:
-[...]
-> In this case, the answer to "what does pcie_controller do?" is "it
-> implements a PCI bus" below.  So 'device_type =3D "pci"' is appropriate.
+This is just what I was thinking of.  Three extremely minor 
+suggestions...
 
-Alright, that's 2 against 1. I don't have much of a choice but to yield.
+> +static irqreturn_t dummy_interrupt(int irq, void *dev_id)
+> +{
+> +	static int count = 0;
+> +
+> +	if (count == 0) {
+> +		printk("dummy-irq: interrupt occured on IRQ %d\n", irq);
 
-> Having just re-read the code in drivers/of/address.c, I think I have a
-> deeper understanding of a few practical issues:
->=20
-> In order to translate a 3/2 PCI address via of_get_pci_address(), the
-> parent device (i.e. root complex / pcie-controller) must have both
-> 'device_type =3D "pci"' (else of_match_bus() won't find the pci version of
-> "struct of_bus") and also 'name =3D "pci"' (else strcmp(bus->name, "pci")
-> will fail).
->=20
-> So it would seem that, if you want to use address.c verbatim (for the
-> interface between pcie-controller and its direct children), not only do
-> you need device_type =3D pci, but you also need to rename
-> "pcie-controller" to "pci".
+You probably should put a severity level here.  KERN_INFO?
 
-bus->name refers to that of the of_bus structure, not the node name of
-the controller.
+> +		count++;
+> +	}
+> +
+> +	return IRQ_NONE;
+> +}
+> +
+> +static int __init dummy_irq_init(void)
+> +{
+> +	if (request_irq(irq, &dummy_interrupt, IRQF_SHARED, "dummy_irq", &irq)) {
+> +		printk(KERN_ERR "dummy-irq: cannot register IRQ %d\n", irq);
+> +		return -EIO;
+> +	}
+> +	printk(KERN_INFO "dummy-irq: registered for IRQ %d\n", irq);
+> +	return 0;
+> +}
+> +
+> +static void __exit dummy_irq_exit(void)
+> +{
+> +	printk(KERN_INFO "dummy-irq unloaded\n");
+> +	free_irq(irq, &irq);
+> +	return;
 
-> But then you run into the problem that the pci variant of struct of_bus
-> uses "assigned-addresses" instead of "reg".  So it still doesn't work
-> as-is.  To make it work, you would need to add an "assigned-addresses"
-> property to each root port node.  That property value could be in
-> non-relocatable memory space, translatable via normal rules, in which
-> case the "map config space to MMIO via ranges" discussion is moot for
-> Marvell.
+A return statement isn't needed here.
 
-At the risk of quoting the spec: it says (4.1.2) that the entries in the
-"assigned-addresses" property correspond to the function's configuration
-space BARs. In this case however that's no longer true. But if everybody
-thinks that repurposing the "assigned-addresses" property is more
-acceptable than leaving out the device_type =3D "pci" property from the
-pcie-controller node, then so be it.
+> +}
+> +
+> +module_init(dummy_irq_init);
+> +module_exit(dummy_irq_exit);
+> +
+> +MODULE_LICENSE("GPL");
+> +MODULE_AUTHOR("Jiri Kosina");
+> +module_param_named(irq, irq, uint, 0444);
 
-> Which re-raises a question for which I have not yet heard a compelling
-> answer:  Why use 3/2 PCI addressing between Marvell pcie-controller and
-> its root ports (with their unusual programming model)?  The Marvell
-> hardware address structure between controller and root ports is
-> definitely not 3/2.  Certainly you need 3/2 addressing below
-> (implemented by) the root ports, but I just don't see the utility of
-> pretending 3/2 addressing at the complex-to-port interface.  If the root
-> port hardware used the common programming model, with real config
-> headers and stuff, 3/2 would be good because you could use existing
-> drivers.  But since you need a special root-port driver anyway, why go
-> to the trouble of emulating non-existent addressing?
+module_param is good enough when the parameter's name is the same as 
+the variable's name.
 
-I think the reason is that reg needs to be in the standard format for
-the device node matching code to work. There are various checks to make
-sure the reg property has entries which are 3/2 each.
+> +MODULE_PARM_DESC(irq, "The IRQ to register for");
 
-There's also the issue that the pcie-controller's ranges property
-contains the mapping of the I/O and memory windows and therefore needs
-the 3/2 addressing to encode the type.
+Alan Stern
 
-Thierry
-
---bg08WKrSYDhXBjb5
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQIcBAEBAgAGBQJRQPC4AAoJEN0jrNd/PrOh4hwQAIfCrinqyssPFH1YZChi0EbK
-jJimmstP3MLxc7CYNWkdsF+fCkiSasGY0m5tl4L9gy7FVhkDPbAe6rGDO3aqQN4n
-T0eBJN/k93H8oKkzPr3Sw3NRoDMpQ18YyG6o6MUN84otJQG8/ThJHDrZQzzTL88q
-Y3bZU1XB5dn5ijgu0x3vZgOF3h26C/JNnLURq6P6/WClFhsgNnYHVyDy1GOR1pVC
-zjM1dl26MD4onkR/AbgGRI7m8vEr8+6862qmsO7cvgvl8UaxXFh6vdU/+sd/a82Z
-cUjSkTq/PyWtaVRkzXYxa2cazPtDZ9byNo/5gjRXZvrSHUl+ynWB3eh0TGMIuIGo
-bFPkZUaXVB6kFHgqaB9SvEjv06nHL8zbpb7OeUQeAhcf9JeawDSCWTDoZhxNLrIy
-Ap4GItc8simq7dacuLMxWmF9szUwHi4FhtP97ckCDab9WVhjytze2nwydGAivfPW
-ZwojwaRczlvW/+rF4Uu2mldi3hQ1fA082NMVEVzl/noDzK891YrAwprQLXPNX96j
-pLaURarxeZU/eR5x1STYPgpWwElvea7u7rhjBfwwk3KKoq0wgXcla/d2YNMN+ezB
-ACMG5PQ6LMIMj+YQ9bjKAmircvow/kiQZetsgtwyyFVcR0kD01l701TdjimlDcvr
-zXf5E9ES4rx8r0g7Ylrv
-=AjXo
------END PGP SIGNATURE-----
-
---bg08WKrSYDhXBjb5--
