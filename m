@@ -1,68 +1,100 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:50470 "EHLO
-	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753081Ab3CYKVx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 25 Mar 2013 06:21:53 -0400
-Date: Mon, 25 Mar 2013 10:21:06 +0000
-From: Andrew Murray <andrew.murray@arm.com>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	Jingoo Han <jg1.han@samsung.com>,
-	"'Kukjin Kim'" <kgene.kim@samsung.com>,
-	"'Bjorn Helgaas'" <bhelgaas@google.com>,
-	"'Jason Gunthorpe'" <jgunthorpe@obsidianresearch.com>,
-	"linux-samsung-soc@vger.kernel.org"
-	<linux-samsung-soc@vger.kernel.org>,
-	"'Siva Reddy Kallam'" <siva.kallam@samsung.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree-discuss@lists.ozlabs.org"
-	<devicetree-discuss@lists.ozlabs.org>,
-	"'Thierry Reding'" <thierry.reding@avionic-design.de>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"'Grant Likely'" <grant.likely@secretlab.ca>,
-	"'Surendranath Gurivireddy Balla'" <suren.reddy@samsung.com>,
-	"'Thomas Abraham'" <thomas.abraham@linaro.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH 1/6] of/pci: Provide support for parsing PCI DT ranges
- property
-Message-ID: <20130325102106.GA20770@arm.com>
-References: <00c001ce277b$92b26ab0$b8174010$%han@samsung.com>
- <20130323104156.GL4977@n2100.arm.linux.org.uk>
- <20130323143704.5da5d20c@skate>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20130323143704.5da5d20c@skate>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <1363802953.24132.513.camel@bling.home>
+Subject: Re: [PATCH] pciehp: Add pciehp_surprise module option
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Takashi Iwai <tiwai@suse.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Oliver Neukum <oneukum@suse.de>, Michal Marek <mmarek@suse.cz>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Wed, 20 Mar 2013 12:09:13 -0600
+In-Reply-To: <s5h38vqjhk6.wl%tiwai@suse.de>
+References: <s5h38vqjhk6.wl%tiwai@suse.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Mar 23, 2013 at 01:37:04PM +0000, Thomas Petazzoni wrote:
+On Wed, 2013-03-20 at 15:02 +0100, Takashi Iwai wrote:
+> We encountered a problem that on some HP machines the Realtek PCI-e
+> card reader device appears only when you inserted a card before the
+> cold boot.  While debugging, it turned out that the device is actually
+> handled via PCI-e hotplug in some level.  The device sends a presence
+> change notification, and pciehp receives it, but it's ignored because
+> of lack of the hotplug surprise (PCI_EXP_SLTCAP_HPS) capability bit.
+> Once when this check passes, everything starts working -- the device
+> appears upon plugging the card properly.
 > 
-> On Sat, 23 Mar 2013 10:41:56 +0000, Russell King - ARM Linux wrote:
+> There are a few other bug reports indicating the similar problems
+> (e.g. on recent Dell laptops), and I guess the culprit is same.
 > 
-> > Please look at how IORESOURCE_* stuff is defined:
-> > #define IORESOURCE_TYPE_BITS    0x00001f00      /* Resource type */
-> > #define IORESOURCE_IO           0x00000100      /* PCI/ISA I/O ports */
-> > #define IORESOURCE_MEM          0x00000200
-> > #define IORESOURCE_REG          0x00000300      /* Register offsets */
-> > #define IORESOURCE_IRQ          0x00000400
-> > #define IORESOURCE_DMA          0x00000800
-> > #define IORESOURCE_BUS          0x00001000
-> > 
-> > Notice that it's not an array of bits.
-> > 
-> > So this should be:
-> > 		if ((iter.flags & IORESOURCE_TYPE_BITS) == IORESOURCE_IO) {
+> This patch adds a new module option, pciehp_surprise, to pciehp as a
+> workaround.  When pciehp_surprise=1 is given, pciehp handles the
+> presence change as the device on/off as if PCI_EXP_SLTCAP_HPS is set.
+> Unless it's set explicitly, there is no impact on the existing
+> behavior.
 > 
-> What I've done for the Marvell PCIe driver is:
+> Signed-off-by: Takashi Iwai <tiwai@suse.de>
+> ---
+>  drivers/pci/hotplug/pciehp.h      | 3 ++-
+>  drivers/pci/hotplug/pciehp_core.c | 3 +++
+>  2 files changed, 5 insertions(+), 1 deletion(-)
 > 
-> +	for_each_of_pci_range(&iter, np) {
-> +		unsigned long restype = iter.flags & IORESOURCE_TYPE_BITS;
-> +		if (restype == IORESOURCE_IO) {
-> [...]
-> +		if (restype == IORESOURCE_MEM) {
-> [...]
+> diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
+> index 2c113de..314f3be 100644
+> --- a/drivers/pci/hotplug/pciehp.h
+> +++ b/drivers/pci/hotplug/pciehp.h
+> @@ -44,6 +44,7 @@ extern bool pciehp_poll_mode;
+>  extern int pciehp_poll_time;
+>  extern bool pciehp_debug;
+>  extern bool pciehp_force;
+> +extern bool pciehp_surprise;
+>  
+>  #define dbg(format, arg...)						\
+>  do {									\
+> @@ -122,7 +123,7 @@ struct controller {
+>  #define MRL_SENS(ctrl)		((ctrl)->slot_cap & PCI_EXP_SLTCAP_MRLSP)
+>  #define ATTN_LED(ctrl)		((ctrl)->slot_cap & PCI_EXP_SLTCAP_AIP)
+>  #define PWR_LED(ctrl)		((ctrl)->slot_cap & PCI_EXP_SLTCAP_PIP)
+> -#define HP_SUPR_RM(ctrl)	((ctrl)->slot_cap & PCI_EXP_SLTCAP_HPS)
+> +#define HP_SUPR_RM(ctrl)	(pciehp_surprise || ((ctrl)->slot_cap & PCI_EXP_SLTCAP_HPS))
+>  #define EMI(ctrl)		((ctrl)->slot_cap & PCI_EXP_SLTCAP_EIP)
+>  #define NO_CMD_CMPL(ctrl)	((ctrl)->slot_cap & PCI_EXP_SLTCAP_NCCS)
+>  #define PSN(ctrl)		((ctrl)->slot_cap >> 19)
+> diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
+> index 7d72c5e..c3a574e 100644
+> --- a/drivers/pci/hotplug/pciehp_core.c
+> +++ b/drivers/pci/hotplug/pciehp_core.c
+> @@ -42,6 +42,7 @@ bool pciehp_debug;
+>  bool pciehp_poll_mode;
+>  int pciehp_poll_time;
+>  bool pciehp_force;
+> +bool pciehp_surprise;
+>  
+>  #define DRIVER_VERSION	"0.4"
+>  #define DRIVER_AUTHOR	"Dan Zink <dan.zink@compaq.com>, Greg Kroah-Hartman <greg@kroah.com>, Dely Sy <dely.l.sy@intel.com>"
+> @@ -55,10 +56,12 @@ module_param(pciehp_debug, bool, 0644);
+>  module_param(pciehp_poll_mode, bool, 0644);
+>  module_param(pciehp_poll_time, int, 0644);
+>  module_param(pciehp_force, bool, 0644);
+> +module_param(pciehp_surprise, bool, 0644);
+>  MODULE_PARM_DESC(pciehp_debug, "Debugging mode enabled or not");
+>  MODULE_PARM_DESC(pciehp_poll_mode, "Using polling mechanism for hot-plug events or not");
+>  MODULE_PARM_DESC(pciehp_poll_time, "Polling mechanism frequency, in seconds");
+>  MODULE_PARM_DESC(pciehp_force, "Force pciehp, even if OSHP is missing");
+> +MODULE_PARM_DESC(pciehp_surprise, "Force to set hotplug-surprise capability");
+>  
+>  #define PCIE_MODULE_NAME "pciehp"
+>  
 
-OK I'll update this patch and also include Thierry's suggestions.
+Please no.  Can we quirk just the device with the problem?  My issue
+with turning on surprise hotplug across the system is that secondary bus
+resets will trigger a device hot unplug, hot re-plug.  I have a system
+with an integrated broadcom NIC behind a root port that claims to
+support surprise hotplug (even though this NIC is soldered to the
+motherboard) and it's nearly impossible to use it with KVM device
+assignment because the struct pci_dev goes away as we're trying to use
+it.  This patch is only going to make that problem more widespread.
+Thanks,
 
-Andrew Murray
+Alex
+
