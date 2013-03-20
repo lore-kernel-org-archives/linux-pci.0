@@ -1,44 +1,33 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cn.fujitsu.com ([222.73.24.84]:63371 "EHLO song.cn.fujitsu.com"
-	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1754324Ab3CSDw0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 18 Mar 2013 23:52:26 -0400
-From: Lin Feng <linfeng@cn.fujitsu.com>
-To: akpm@linux-foundation.org, bhelgaas@google.com
-Cc: linux-mm@kvack.org, x86@kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, yinghai@kernel.org,
-	Lin Feng <linfeng@cn.fujitsu.com>
-Subject: [PATCH] kernel/range.c: subtract_range: fix the broken phrase issued by printk
-Date: Tue, 19 Mar 2013 11:54:11 +0800
-Message-Id: <1363665251-14377-1-git-send-email-linfeng@cn.fujitsu.com>
-In-Reply-To: <CAE9FiQUrt11A0YAOLgvv3uTAWtTvVg3Mho9eD53orbxW6Jd8Vg@mail.gmail.com>
-References: <CAE9FiQUrt11A0YAOLgvv3uTAWtTvVg3Mho9eD53orbxW6Jd8Vg@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Matthew Garrett <matthew.garrett@nebula.com>
+To: Mimi Zohar <zohar@linux.vnet.ibm.com>
+CC: James Morris <jmorris@namei.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-security-module@vger.kernel.org"
+	<linux-security-module@vger.kernel.org>,
+	"linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
+	"kexec@lists.infradead.org" <kexec@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH 01/12] Security: Add CAP_COMPROMISE_KERNEL
+Date: Wed, 20 Mar 2013 16:49:26 +0000
+Message-ID: <1363798166.2553.29.camel@x230.sbx07502.somerma.wayport.net>
+References: <1363642353-30749-1-git-send-email-matthew.garrett@nebula.com>
+	 <alpine.LRH.2.02.1303191542200.30973@tundra.namei.org>
+	 <1363797717.2580.10.camel@falcor1.watson.ibm.com>
+In-Reply-To: <1363797717.2580.10.camel@falcor1.watson.ibm.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Also replace deprecated printk(KERN_ERR...) with pr_err() as suggested
-by Yinghai, attaching the function name to provide plenty info.
-
-Cc: Yinghai Lu <yinghai@kernel.org>
-Signed-off-by: Lin Feng <linfeng@cn.fujitsu.com>
----
- kernel/range.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/kernel/range.c b/kernel/range.c
-index 9b8ae2d..071b0ab 100644
---- a/kernel/range.c
-+++ b/kernel/range.c
-@@ -97,7 +97,8 @@ void subtract_range(struct range *range, int az, u64 start, u64 end)
- 				range[i].end = range[j].end;
- 				range[i].start = end;
- 			} else {
--				printk(KERN_ERR "run of slot in ranges\n");
-+				pr_err("%s: run out of slot in ranges\n",
-+					__func__);
- 			}
- 			range[j].end = start;
- 			continue;
--- 
-1.8.0.1
+T24gV2VkLCAyMDEzLTAzLTIwIGF0IDEyOjQxIC0wNDAwLCBNaW1pIFpvaGFyIHdyb3RlOg0KDQo+
+IE1hdHRocmV3LCBwZXJoYXBzIHlvdSBjb3VsZCBjbGFyaWZ5IHdoZXRoZXIgdGhpcyB3aWxsIGJl
+IHRpZWQgdG8gTUFDDQo+IHNlY3VyaXR5LiAgQmFzZWQgb24gdGhlIGtleGVjIHRocmVhZCwgSSdt
+IHVuZGVyIHRoZSBpbXByZXNzaW9uIHRoYXQgaXMNCj4gbm90IHRoZSBpbnRlbnRpb24sIG9yIGF0
+IGxlYXN0IG5vdCBmb3Iga2V4ZWMuICBBcyByb290IGlzbid0IHRydXN0ZWQsDQo+IG5laXRoZXIg
+aXMgdGhlIGJvb3QgY29tbWFuZCBsaW5lLCBub3IgYW55IHBvbGljeSB0aGF0IGlzIGxvYWRlZCBi
+eSByb290LA0KPiBpbmNsdWRpbmcgdGhvc2UgZm9yIE1BQy4NCg0KVGhlIHdvcmsgZG9uZSBvbiBz
+aWduZWQgaW5pdHJhbWZzIGZyYWdtZW50cyB3b3VsZCBzZWVtIHRvIGJlIHRoZSBiZXN0DQpvcHRp
+b24gaGVyZSBzbyBmYXI/DQoNCi0tIA0KTWF0dGhldyBHYXJyZXR0IHwgbWpnNTlAc3JjZi51Y2Ft
+Lm9yZw0K
 
