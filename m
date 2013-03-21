@@ -1,192 +1,459 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fold.natur.cuni.cz ([195.113.57.32]:54998 "HELO
-	fold.natur.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S932065Ab3CLQfg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Mar 2013 12:35:36 -0400
-Message-ID: <513F5954.9060701@fold.natur.cuni.cz>
-Date: Tue, 12 Mar 2013 17:35:32 +0100
-From: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
-	Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: Dell Vostro 3550: pci_hotplug+acpiphp require 'pcie_aspm=force'
- on kernel command-line for hotplug to work
-References: <50EDF8FE.6040607@fold.natur.cuni.cz> <CAErSpo6etF7_fZH9nNoAhtRXdGEmBrNE7v84TRkoawyG9s4AGw@mail.gmail.com> <51371AD9.4040801@fold.natur.cuni.cz> <CAErSpo5wmM8+Qd4FH0WeNS_DJEk2Tmmivk-FgEbD-UbTMQf+ZQ@mail.gmail.com> <51394317.20104@fold.natur.cuni.cz> <CAErSpo7wsduVN1Q6k_D7r24AhpVcARZRXtv6FvSfMMjFNJMcRA@mail.gmail.com>
-In-Reply-To: <CAErSpo7wsduVN1Q6k_D7r24AhpVcARZRXtv6FvSfMMjFNJMcRA@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from mail.free-electrons.com ([94.23.35.102]:55214 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751475Ab3CURaw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 Mar 2013 13:30:52 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Russell King <linux@arm.linux.org.uk>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	devicetree-discuss@lists.ozlabs.org,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Maen Suleiman <maen@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Olof Johansson <olof@lixom.net>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Mitch Bradley <wmb@firmworks.com>,
+	Andrew Murray <andrew.murray@arm.com>
+Subject: [PATCH v5 11/17] arm: mvebu: add PCIe Device Tree informations for Armada XP
+Date: Thu, 21 Mar 2013 18:30:19 +0100
+Message-Id: <1363887025-19931-12-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1363887025-19931-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1363887025-19931-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Bjorn Helgaas wrote:
-> On Thu, Mar 7, 2013 at 6:47 PM, Martin Mokrejs <mmokrejs@fold.natur.cuni.cz> wrote:
+The Armada XP SoCs have multiple PCIe interfaces. The MV78230 has 2
+PCIe units (one 4x or quad 1x, the other 1x only), the MV78260 has 3
+PCIe units (two 4x or quad 1x and one 4x/1x), the MV78460 has 4 PCIe
+units (two 4x or quad 1x and two 4x/1x). We therefore add the
+necessary Device Tree informations to make those PCIe interfaces
+usable.
 
-> 
-> There are three cards on the table now:
-> 
->   pci 0000:11:00.0: [1095:3132] SiI 3132 Serial ATA Raid II Controller
->   pci 0000:11:00.0: [1106:3403] VT6315 Series Firewire Controller
->   pci 0000:11:00.0: [1033:0194] NEC Corporation uPD720200 USB 3.0 Host
-> Controller
-> 
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+---
+ arch/arm/boot/dts/armada-xp-mv78230.dtsi |   98 +++++++++++++++++
+ arch/arm/boot/dts/armada-xp-mv78260.dtsi |  113 ++++++++++++++++++++
+ arch/arm/boot/dts/armada-xp-mv78460.dtsi |  170 ++++++++++++++++++++++++++++++
+ 3 files changed, 381 insertions(+)
 
->> My question is. Has the laptop hardwired the ExpressCard slot somehow through USB
->> to the SandyBridge chip?
-> 
-> An ExpressCard slot (spec at [1]) supports both a PCIe interface and a
-> USB interface, so the slot *should* be connected to a USB controller
-> as well as to a PCIe root port.  An ExpressCard can contain either a
-> PCIe device or a USB device or both.  Section 6.3 of the spec talks
-> about ACPI requirements to describe the relationship between the PCIe
-> and USB devices.  I'm not sure that Linux pays any attention to this
-> in the hotplug paths, so I'm a little worried about this.  (Maybe it
-> doesn't need to in the PCIe-aware case; I don't know.)
-> 
-> It would be interesting to know exactly what devices are on your
-> cards.  Assuming they all work when present at boot, you could find
-> that by doing a single "lspci -vv" and "lsusb -v" after a boot with an
-> empty slot, and doing it again after a boot with a card in the slot.
+diff --git a/arch/arm/boot/dts/armada-xp-mv78230.dtsi b/arch/arm/boot/dts/armada-xp-mv78230.dtsi
+index f56c405..4b05815 100644
+--- a/arch/arm/boot/dts/armada-xp-mv78230.dtsi
++++ b/arch/arm/boot/dts/armada-xp-mv78230.dtsi
+@@ -76,5 +76,103 @@
+ 			#interrupts-cells = <2>;
+ 			interrupts = <87>, <88>, <89>;
+ 		};
++
++		/*
++		 * MV78230 has 2 PCIe units Gen2.0: One unit can be
++		 * configured as x4 or quad x1 lanes. One unit is
++		 * x4/x1.
++		 */
++		pcie-controller {
++			compatible = "marvell,armada-xp-pcie";
++			status = "disabled";
++			device_type = "pci";
++
++			#address-cells = <3>;
++			#size-cells = <2>;
++
++			bus-range = <0x00 0xff>;
++
++			reg = <0xd0040000 0x2000>, <0xd0042000 0x2000>,
++			      <0xd0044000 0x2000>, <0xd0048000 0x2000>,
++			      <0xd004C000 0x2000>;
++
++			reg-names = "pcie0.0", "pcie2.0",
++				  "pcie0.1", "pcie0.2",
++				  "pcie0.3";
++
++			ranges = <0x82000000 0 0xe0000000 0xe0000000 0 0x08000000   /* non-prefetchable memory */
++			          0x81000000 0 0          0xe8000000 0 0x00100000>; /* downstream I/O */
++
++
++			pcie@1,0 {
++				device_type = "pci";
++				reg = <0x0800 0 0 0 0>;
++				#address-cells = <3>;
++				#size-cells = <2>;
++				#interrupt-cells = <1>;
++				interrupt-map-mask = <0 0 0 0>;
++				interrupt-map = <0 0 0 0 &mpic 58>;
++				marvell,pcie-port = <0>;
++				marvell,pcie-lane = <0>;
++				clocks = <&gateclk 5>;
++				status = "disabled";
++			};
++
++			pcie@2,0 {
++				device_type = "pci";
++				reg = <0x1000 0 0 0 0>;
++				#address-cells = <3>;
++				#size-cells = <2>;
++				#interrupt-cells = <1>;
++				interrupt-map-mask = <0 0 0 0>;
++				interrupt-map = <0 0 0 0 &mpic 59>;
++				marvell,pcie-port = <0>;
++				marvell,pcie-lane = <1>;
++				clocks = <&gateclk 6>;
++				status = "disabled";
++			};
++
++			pcie@3,0 {
++				device_type = "pci";
++				reg = <0x1800 0 0 0 0>;
++				#address-cells = <3>;
++				#size-cells = <2>;
++				#interrupt-cells = <1>;
++				interrupt-map-mask = <0 0 0 0>;
++				interrupt-map = <0 0 0 0 &mpic 60>;
++				marvell,pcie-port = <0>;
++				marvell,pcie-lane = <2>;
++				clocks = <&gateclk 7>;
++				status = "disabled";
++			};
++
++			pcie@4,0 {
++				device_type = "pci";
++				reg = <0x2000 0 0 0 0>;
++				#address-cells = <3>;
++				#size-cells = <2>;
++				#interrupt-cells = <1>;
++				interrupt-map-mask = <0 0 0 0>;
++				interrupt-map = <0 0 0 0 &mpic 61>;
++				marvell,pcie-port = <0>;
++				marvell,pcie-lane = <3>;
++				clocks = <&gateclk 8>;
++				status = "disabled";
++			};
++
++			pcie@9,0 {
++				device_type = "pci";
++				reg = <0x4800 0 0 0 0>;
++				#address-cells = <3>;
++				#size-cells = <2>;
++				#interrupt-cells = <1>;
++				interrupt-map-mask = <0 0 0 0>;
++				interrupt-map = <0 0 0 0 &mpic 99>;
++				marvell,pcie-port = <2>;
++				marvell,pcie-lane = <0>;
++				clocks = <&gateclk 26>;
++				status = "disabled";
++			};
++		};
+ 	};
+ };
+diff --git a/arch/arm/boot/dts/armada-xp-mv78260.dtsi b/arch/arm/boot/dts/armada-xp-mv78260.dtsi
+index f8f2b78..ee6c269 100644
+--- a/arch/arm/boot/dts/armada-xp-mv78260.dtsi
++++ b/arch/arm/boot/dts/armada-xp-mv78260.dtsi
+@@ -96,5 +96,118 @@
+ 				clocks = <&gateclk 1>;
+ 				status = "disabled";
+ 		};
++
++		/*
++		 * MV78260 has 3 PCIe units Gen2.0: Two units can be
++		 * configured as x4 or quad x1 lanes. One unit is
++		 * x4/x1.
++		 */
++		pcie-controller {
++			compatible = "marvell,armada-xp-pcie";
++			status = "disabled";
++			device_type = "pci";
++
++			#address-cells = <3>;
++			#size-cells = <2>;
++
++			bus-range = <0x00 0xff>;
++
++			reg = <0xd0040000 0x2000>, <0xd0042000 0x2000>,
++			      <0xd0044000 0x2000>, <0xd0048000 0x2000>,
++			      <0xd004C000 0x2000>, <0xd0080000 0x2000>,
++			      <0xd0082000 0x2000>;
++
++			reg-names = "pcie0.0", "pcie2.0",
++				  "pcie0.1", "pcie0.2",
++				  "pcie0.3", "pcie1.0",
++				  "pcie3.0";
++
++			ranges = <0x82000000 0 0xe0000000 0xe0000000 0 0x08000000   /* non-prefetchable memory */
++			          0x81000000 0 0          0xe8000000 0 0x00100000>; /* downstream I/O */
++
++			pcie@1,0 {
++				device_type = "pci";
++				reg = <0x0800 0 0 0 0>;
++				#address-cells = <3>;
++				#size-cells = <2>;
++				#interrupt-cells = <1>;
++				interrupt-map-mask = <0 0 0 0>;
++				interrupt-map = <0 0 0 0 &mpic 58>;
++				marvell,pcie-port = <0>;
++				marvell,pcie-lane = <0>;
++				clocks = <&gateclk 5>;
++				status = "disabled";
++			};
++
++			pcie@2,0 {
++				device_type = "pci";
++				reg = <0x1000 0 0 0 0>;
++				#address-cells = <3>;
++				#size-cells = <2>;
++				#interrupt-cells = <1>;
++				interrupt-map-mask = <0 0 0 0>;
++				interrupt-map = <0 0 0 0 &mpic 59>;
++				marvell,pcie-port = <0>;
++				marvell,pcie-lane = <1>;
++				clocks = <&gateclk 6>;
++				status = "disabled";
++			};
++
++			pcie@3,0 {
++				device_type = "pci";
++				reg = <0x1800 0 0 0 0>;
++				#address-cells = <3>;
++				#size-cells = <2>;
++				#interrupt-cells = <1>;
++				interrupt-map-mask = <0 0 0 0>;
++				interrupt-map = <0 0 0 0 &mpic 60>;
++				marvell,pcie-port = <0>;
++				marvell,pcie-lane = <2>;
++				clocks = <&gateclk 7>;
++				status = "disabled";
++			};
++
++			pcie@4,0 {
++				device_type = "pci";
++				reg = <0x2000 0 0 0 0>;
++				#address-cells = <3>;
++				#size-cells = <2>;
++				#interrupt-cells = <1>;
++				interrupt-map-mask = <0 0 0 0>;
++				interrupt-map = <0 0 0 0 &mpic 61>;
++				marvell,pcie-port = <0>;
++				marvell,pcie-lane = <3>;
++				clocks = <&gateclk 8>;
++				status = "disabled";
++			};
++
++			pcie@9,0 {
++				device_type = "pci";
++				reg = <0x4800 0 0 0 0>;
++				#address-cells = <3>;
++				#size-cells = <2>;
++				#interrupt-cells = <1>;
++				interrupt-map-mask = <0 0 0 0>;
++				interrupt-map = <0 0 0 0 &mpic 99>;
++				marvell,pcie-port = <2>;
++				marvell,pcie-lane = <0>;
++				clocks = <&gateclk 26>;
++				status = "disabled";
++			};
++
++			pcie@10,0 {
++				device_type = "pci";
++				reg = <0x5000 0 0 0 0>;
++				#address-cells = <3>;
++				#size-cells = <2>;
++				#interrupt-cells = <1>;
++				interrupt-map-mask = <0 0 0 0>;
++				interrupt-map = <0 0 0 0 &mpic 103>;
++				marvell,pcie-port = <3>;
++				marvell,pcie-lane = <0>;
++				clocks = <&gateclk 27>;
++				status = "disabled";
++			};
++		};
+ 	};
+ };
+diff --git a/arch/arm/boot/dts/armada-xp-mv78460.dtsi b/arch/arm/boot/dts/armada-xp-mv78460.dtsi
+index 936c25d..ba54990 100644
+--- a/arch/arm/boot/dts/armada-xp-mv78460.dtsi
++++ b/arch/arm/boot/dts/armada-xp-mv78460.dtsi
+@@ -111,5 +111,175 @@
+ 				clocks = <&gateclk 1>;
+ 				status = "disabled";
+ 		};
++
++		/*
++		 * MV78460 has 4 PCIe units Gen2.0: Two units can be
++		 * configured as x4 or quad x1 lanes. Two units are
++		 * x4/x1.
++		 */
++		pcie-controller {
++			compatible = "marvell,armada-xp-pcie";
++			status = "disabled";
++			device_type = "pci";
++
++			#address-cells = <3>;
++			#size-cells = <2>;
++
++			bus-range = <0x00 0xff>;
++
++			reg = <0xd0040000 0x2000>, <0xd0042000 0x2000>,
++			      <0xd0044000 0x2000>, <0xd0048000 0x2000>,
++			      <0xd004C000 0x2000>, <0xd0080000 0x2000>,
++			      <0xd0082000 0x2000>, <0xd0084000 0x2000>,
++			      <0xd0088000 0x2000>, <0xd008C000 0x2000>;
++
++			reg-names = "pcie0.0", "pcie2.0",
++				  "pcie0.1", "pcie0.2",
++				  "pcie0.3", "pcie1.0",
++				  "pcie3.0", "pcie1.1",
++				  "pcie1.2", "pcie1.3";
++
++			ranges = <0x82000000 0 0xe0000000 0xe0000000 0 0x08000000   /* non-prefetchable memory */
++			          0x81000000 0 0          0xe8000000 0 0x00100000>; /* downstream I/O */
++
++			pcie@1,0 {
++				device_type = "pci";
++				reg = <0x0800 0 0 0 0>;
++				#address-cells = <3>;
++				#size-cells = <2>;
++				#interrupt-cells = <1>;
++				interrupt-map-mask = <0 0 0 0>;
++				interrupt-map = <0 0 0 0 &mpic 58>;
++				marvell,pcie-port = <0>;
++				marvell,pcie-lane = <0>;
++				clocks = <&gateclk 5>;
++				status = "disabled";
++			};
++
++			pcie@2,0 {
++				device_type = "pci";
++				reg = <0x1000 0 0 0 0>;
++				#address-cells = <3>;
++				#size-cells = <2>;
++				#interrupt-cells = <1>;
++				interrupt-map-mask = <0 0 0 0>;
++				interrupt-map = <0 0 0 0 &mpic 59>;
++				marvell,pcie-port = <0>;
++				marvell,pcie-lane = <1>;
++				clocks = <&gateclk 6>;
++				status = "disabled";
++			};
++
++			pcie@3,0 {
++				device_type = "pci";
++				reg = <0x1800 0 0 0 0>;
++				#address-cells = <3>;
++				#size-cells = <2>;
++				#interrupt-cells = <1>;
++				interrupt-map-mask = <0 0 0 0>;
++				interrupt-map = <0 0 0 0 &mpic 60>;
++				marvell,pcie-port = <0>;
++				marvell,pcie-lane = <2>;
++				clocks = <&gateclk 7>;
++				status = "disabled";
++			};
++
++			pcie@4,0 {
++				device_type = "pci";
++				reg = <0x2000 0 0 0 0>;
++				#address-cells = <3>;
++				#size-cells = <2>;
++				#interrupt-cells = <1>;
++				interrupt-map-mask = <0 0 0 0>;
++				interrupt-map = <0 0 0 0 &mpic 61>;
++				marvell,pcie-port = <0>;
++				marvell,pcie-lane = <3>;
++				clocks = <&gateclk 8>;
++				status = "disabled";
++			};
++
++			pcie@5,0 {
++				device_type = "pci";
++				reg = <0x2800 0 0 0 0>;
++				#address-cells = <3>;
++				#size-cells = <2>;
++				#interrupt-cells = <1>;
++				interrupt-map-mask = <0 0 0 0>;
++				interrupt-map = <0 0 0 0 &mpic 62>;
++				marvell,pcie-port = <1>;
++				marvell,pcie-lane = <0>;
++				clocks = <&gateclk 9>;
++				status = "disabled";
++			};
++
++			pcie@6,0 {
++				device_type = "pci";
++				reg = <0x3000 0 0 0 0>;
++				#address-cells = <3>;
++				#size-cells = <2>;
++				#interrupt-cells = <1>;
++				interrupt-map-mask = <0 0 0 0>;
++				interrupt-map = <0 0 0 0 &mpic 63>;
++				marvell,pcie-port = <1>;
++				marvell,pcie-lane = <1>;
++				clocks = <&gateclk 10>;
++				status = "disabled";
++			};
++
++			pcie@7,0 {
++				device_type = "pci";
++				reg = <0x3800 0 0 0 0>;
++				#address-cells = <3>;
++				#size-cells = <2>;
++				#interrupt-cells = <1>;
++				interrupt-map-mask = <0 0 0 0>;
++				interrupt-map = <0 0 0 0 &mpic 64>;
++				marvell,pcie-port = <1>;
++				marvell,pcie-lane = <2>;
++				clocks = <&gateclk 11>;
++				status = "disabled";
++			};
++
++			pcie@8,0 {
++				device_type = "pci";
++				reg = <0x4000 0 0 0 0>;
++				#address-cells = <3>;
++				#size-cells = <2>;
++				#interrupt-cells = <1>;
++				interrupt-map-mask = <0 0 0 0>;
++				interrupt-map = <0 0 0 0 &mpic 65>;
++				marvell,pcie-port = <1>;
++				marvell,pcie-lane = <3>;
++				clocks = <&gateclk 12>;
++				status = "disabled";
++			};
++			pcie@9,0 {
++				device_type = "pci";
++				reg = <0x4800 0 0 0 0>;
++				#address-cells = <3>;
++				#size-cells = <2>;
++				#interrupt-cells = <1>;
++				interrupt-map-mask = <0 0 0 0>;
++				interrupt-map = <0 0 0 0 &mpic 99>;
++				marvell,pcie-port = <2>;
++				marvell,pcie-lane = <0>;
++				clocks = <&gateclk 26>;
++				status = "disabled";
++			};
++
++			pcie@10,0 {
++				device_type = "pci";
++				reg = <0x5000 0 0 0 0>;
++				#address-cells = <3>;
++				#size-cells = <2>;
++				#interrupt-cells = <1>;
++				interrupt-map-mask = <0 0 0 0>;
++				interrupt-map = <0 0 0 0 &mpic 103>;
++				marvell,pcie-port = <3>;
++				marvell,pcie-lane = <0>;
++				clocks = <&gateclk 27>;
++				status = "disabled";
++			};
++		};
+ 	};
+  };
+-- 
+1.7.9.5
 
-There is no USB device hidden in the eSATA card (SiI 3132) and
-lspci -vvvxxx does not reveal any other device either. I also failed to 
-ind any hidden interface in the Firewire card (based on VIA VT6315)
-both using lspci -vvvxxx and lsusb -vv and comparing outputs gather
-upon coldplug with a card in a slot and an empty slot. I even compared to
-states with a hotplugged card.
-
-The only difference I would mention is that acpiphp vs. pciehp give:
-
--       Physical Slot: 1
-+       Physical Slot: 7
-
-for whatever card is placed in the card slot.
-
-Sometimes there is a difference in 
-
--       Latency: 0, Cache Line Size: 64 bytes
-+       Latency: 0, Cache Line Size: 32 bytes
-
-
--                AERCap: First Error Pointer: 00, ...
-+                AERCap: First Error Pointer: 14, ...
-
-
-> The difference should be the ExpressCard devices.  I'm sure this is
-> buried in your tarball somewhere, but all I want is the info from a
-> machine in default configuration -- MediaCard enabled, etc.  Just the
-> way a typical user would be using the machine.
-> 
-> [1] http://www.usb.org/developers/expresscard/EC_specifications/ExpressCard_2_0_FINAL.pdf
-
-I tried to find some differences when I have Enabled (default) or Disables Media
-Card Reader in BIOS. Unfortunately I had also disabled Intel WIFI and Bluetooth
-via Fn+F2 (there is no BIOS entry for it so I forgot about the hotkey). The wifi
-can be seen in lsusb and lspci. The bluetooth ... I don't know, looks btusb driver
-is using it.
-The MediaCard Reader device appears only in lsusb. If I disable it in BIOS its port
-is left powered on. Below, one of the changes is the disabled wifi, the other is
-the card reader being gone.
-
---- eSATA_inserted_coldboot/lsusb_vv_after_HDD_attached.txt     2013-03-11 18:12:05.000000000 +0100
-+++ eSATA_hotplug_disabled_Media_card_reader/lsusb_vv.txt       2013-03-11 22:49:51.000000000 +0100
-@@ -62,7 +62,7 @@
-    Port 1: 0000.0100 power
-    Port 2: 0000.0100 power
-    Port 3: 0000.0100 power
--   Port 4: 0000.0103 power enable connect
-+   Port 4: 0000.0100 power
-    Port 5: 0000.0503 highspeed power enable connect
-    Port 6: 0000.0100 power
- Device Qualifier (for other device speed):
-@@ -142,7 +142,7 @@
-    Port 3: 0000.0103 power enable connect
-    Port 4: 0000.0100 power
-    Port 5: 0000.0100 power
--   Port 6: 0000.0503 highspeed power enable connect
-+   Port 6: 0000.0100 power
-    Port 7: 0000.0100 power
-    Port 8: 0000.0100 power
- Device Qualifier (for other device speed):
-@@ -1568,76 +1318,7 @@
- Device Status:     0x0000
-   (Bus Powered)
- 
--Bus 002 Device 005: ID 0bda:0138 Realtek Semiconductor Corp. RTS5138 Card Reader Controller
--Device Descriptor:
--  bLength                18
--  bDescriptorType         1
--  bcdUSB               2.00
--  bDeviceClass            0 (Defined at Interface level)
--  bDeviceSubClass         0 
--  bDeviceProtocol         0 
--  bMaxPacketSize0        64
--  idVendor           0x0bda Realtek Semiconductor Corp.
--  idProduct          0x0138 RTS5138 Card Reader Controller
--  bcdDevice           38.82
--  iManufacturer           1 Generic
--  iProduct                2 USB2.0-CRW
--  iSerial                 3 20090516388200000
--  bNumConfigurations      1
--  Configuration Descriptor:
--    bLength                 9
--    bDescriptorType         2
--    wTotalLength           32
--    bNumInterfaces          1
--    bConfigurationValue     1
--    iConfiguration          4 CARD READER
--    bmAttributes         0xa0
--      (Bus Powered)
--      Remote Wakeup
--    MaxPower              500mA
--    Interface Descriptor:
--      bLength                 9
--      bDescriptorType         4
--      bInterfaceNumber        0
--      bAlternateSetting       0
--      bNumEndpoints           2
--      bInterfaceClass         8 Mass Storage
--      bInterfaceSubClass      6 SCSI
--      bInterfaceProtocol     80 Bulk-Only
--      iInterface              5 Bulk-In, Bulk-Out, Interface
--      Endpoint Descriptor:
--        bLength                 7
--        bDescriptorType         5
--        bEndpointAddress     0x01  EP 1 OUT
--        bmAttributes            2
--          Transfer Type            Bulk
--          Synch Type               None
--          Usage Type               Data
--        wMaxPacketSize     0x0200  1x 512 bytes
--        bInterval               0
--      Endpoint Descriptor:
--        bLength                 7
--        bDescriptorType         5
--        bEndpointAddress     0x82  EP 2 IN
--        bmAttributes            2
--          Transfer Type            Bulk
--          Synch Type               None
--          Usage Type               Data
--        wMaxPacketSize     0x0200  1x 512 bytes
--        bInterval               0
--Device Qualifier (for other device speed):
--  bLength                10
--  bDescriptorType         6
--  bcdUSB               2.00
--  bDeviceClass            0 (Defined at Interface level)
--  bDeviceSubClass         0 
--  bDeviceProtocol         0 
--  bMaxPacketSize0        64
--  bNumConfigurations      1
--Device Status:     0x0000
--  (Bus Powered)
--
-[cut]
-
-
-
-Looks that is all I could add to the whole story.
-
-Martin
