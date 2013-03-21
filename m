@@ -1,39 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e24smtp04.br.ibm.com ([32.104.18.25]:53647 "EHLO
-	e24smtp04.br.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757873Ab3CNRqB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 14 Mar 2013 13:46:01 -0400
-Received: from /spool/local
-	by e24smtp04.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <lucaskt@linux.vnet.ibm.com>;
-	Thu, 14 Mar 2013 14:45:58 -0300
-Received: from d24relay03.br.ibm.com (d24relay03.br.ibm.com [9.13.184.25])
-	by d24dlp02.br.ibm.com (Postfix) with ESMTP id 253AE1DC004E
-	for <linux-pci@vger.kernel.org>; Thu, 14 Mar 2013 13:45:56 -0400 (EDT)
-Received: from d24av01.br.ibm.com (d24av01.br.ibm.com [9.8.31.91])
-	by d24relay03.br.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id r2EHjD5R23658704
-	for <linux-pci@vger.kernel.org>; Thu, 14 Mar 2013 14:45:13 -0300
-Received: from d24av01.br.ibm.com (loopback [127.0.0.1])
-	by d24av01.br.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id r2EHjtl1013433
-	for <linux-pci@vger.kernel.org>; Thu, 14 Mar 2013 14:45:55 -0300
-From: lucaskt@linux.vnet.ibm.com
-To: dri-devel@lists.freedesktop.org
-Cc: linux-pci@vger.kernel.org,
-	Alex Deucher <alexander.deucher@amd.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, brking@linux.vnet.ibm.com,
-	cascardo@linux.vnet.ibm.com
-Subject: PCI Speed Cap Fixes for ppc64
-Date: Thu, 14 Mar 2013 14:45:45 -0300
-Message-Id: <1363283147-8852-1-git-send-email-lucaskt@linux.vnet.ibm.com>
+Received: from mail.free-electrons.com ([94.23.35.102]:55295 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751635Ab3CURa7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 Mar 2013 13:30:59 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Russell King <linux@arm.linux.org.uk>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	devicetree-discuss@lists.ozlabs.org,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Maen Suleiman <maen@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Olof Johansson <olof@lixom.net>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Mitch Bradley <wmb@firmworks.com>,
+	Andrew Murray <andrew.murray@arm.com>
+Subject: [PATCH v5 17/17] arm: mvebu: update defconfig with PCI and USB support
+Date: Thu, 21 Mar 2013 18:30:25 +0100
+Message-Id: <1363887025-19931-18-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1363887025-19931-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1363887025-19931-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch series at first moves get_speed_cap_mask from DRM to PCI, fixes all
-radeon references (only driver that uses it) and then implements a architecture
-specific implementation for ppc64 for it.
+Now that we have the necessary drivers and Device Tree informations to
+support PCIe on Armada 370 and Armada XP, enable the CONFIG_PCI
+option.
 
-This is good because the drm_pcie_get_speed_cap_mask function is more
-architecture goo than something drm-specific, and also because this way
-architectures that have different means of obtaining these values can do it
-their way.
+Also, since the Armada 370 Mirabox has a built-in USB XHCI controller
+connected on the PCIe bus, enable the corresponding options as well.
+
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+---
+ arch/arm/configs/mvebu_defconfig |    3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/arch/arm/configs/mvebu_defconfig b/arch/arm/configs/mvebu_defconfig
+index 2ec8119..071a5b1 100644
+--- a/arch/arm/configs/mvebu_defconfig
++++ b/arch/arm/configs/mvebu_defconfig
+@@ -13,6 +13,8 @@ CONFIG_MACH_ARMADA_370=y
+ CONFIG_MACH_ARMADA_XP=y
+ # CONFIG_CACHE_L2X0 is not set
+ # CONFIG_SWP_EMULATE is not set
++CONFIG_PCI=y
++CONFIG_PCI_MVEBU=y
+ CONFIG_SMP=y
+ CONFIG_AEABI=y
+ CONFIG_HIGHMEM=y
+@@ -53,6 +55,7 @@ CONFIG_USB_SUPPORT=y
+ CONFIG_USB=y
+ CONFIG_USB_EHCI_HCD=y
+ CONFIG_USB_EHCI_ROOT_HUB_TT=y
++CONFIG_USB_XHCI_HCD=y
+ CONFIG_MMC=y
+ CONFIG_MMC_MVSDIO=y
+ CONFIG_NEW_LEDS=y
+-- 
+1.7.9.5
 
