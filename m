@@ -1,34 +1,56 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 20 Mar 2013 19:12:50 +0000
-From: Matthew Garrett <mjg59@srcf.ucam.org>
-To: Takashi Iwai <tiwai@suse.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Oliver Neukum <oneukum@suse.de>, Michal Marek <mmarek@suse.cz>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] pciehp: Add pciehp_surprise module option
-Message-ID: <20130320191250.GA11262@srcf.ucam.org>
-References: <s5h38vqjhk6.wl%tiwai@suse.de>
- <20130320175234.GA8948@srcf.ucam.org>
- <s5hppytq430.wl%tiwai@suse.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <s5hppytq430.wl%tiwai@suse.de>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.free-electrons.com ([94.23.35.102]:55189 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751443Ab3CURas (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 Mar 2013 13:30:48 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Russell King <linux@arm.linux.org.uk>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	devicetree-discuss@lists.ozlabs.org,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Maen Suleiman <maen@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Olof Johansson <olof@lixom.net>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Mitch Bradley <wmb@firmworks.com>,
+	Andrew Murray <andrew.murray@arm.com>
+Subject: [PATCH v5 09/17] arm: mvebu: PCIe support is now available on mvebu
+Date: Thu, 21 Mar 2013 18:30:17 +0100
+Message-Id: <1363887025-19931-10-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1363887025-19931-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1363887025-19931-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 20, 2013 at 08:11:15PM +0100, Takashi Iwai wrote:
-> At Wed, 20 Mar 2013 17:52:34 +0000,
-> Matthew Garrett wrote:
-> > Well that just sounds like a bug. What's the downside to just ignoring 
-> > that capability bit?
-> 
-> I'm afraid that it's too radical to enable always.
+Now that the PCIe driver for mvebu has been integrated and all its
+relevant dependencies, we can mark the ARCH_MVEBU platform has
+MIGHT_HAVE_PCI, which allows to select the PCI bus support if needed.
 
-Why?
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+---
+ arch/arm/mach-mvebu/Kconfig |    2 ++
+ 1 file changed, 2 insertions(+)
 
-> Or, what about to check this bit only for disable path?
-
-What happens if you unplug the device on one of the affected machines?
-
+diff --git a/arch/arm/mach-mvebu/Kconfig b/arch/arm/mach-mvebu/Kconfig
+index c3715a5..d353249 100644
+--- a/arch/arm/mach-mvebu/Kconfig
++++ b/arch/arm/mach-mvebu/Kconfig
+@@ -14,6 +14,8 @@ config ARCH_MVEBU
+ 	select MVEBU_CLK_CPU
+ 	select MVEBU_CLK_GATING
+ 	select MVEBU_MBUS
++	select MIGHT_HAVE_PCI
++	select PCI_QUIRKS if PCI
+ 
+ if ARCH_MVEBU
+ 
 -- 
-Matthew Garrett | mjg59@srcf.ucam.org
+1.7.9.5
+
