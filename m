@@ -1,73 +1,86 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.8]:56588 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751812Ab3CZVyD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Mar 2013 17:54:03 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: Re: [RFCv1 07/11] irqchip: armada-370-xp: add MSI support to interrupt controller driver
-Date: Tue, 26 Mar 2013 21:53:53 +0000
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	devicetree-discuss@lists.ozlabs.org,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Maen Suleiman <maen@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Olof Johansson <olof@lixom.net>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Mitch Bradley <wmb@firmworks.com>,
-	Andrew Murray <andrew.murray@arm.com>
-References: <1364316746-8702-1-git-send-email-thomas.petazzoni@free-electrons.com> <201303262110.15582.arnd@arndb.de> <20130326223748.242f0046@skate>
-In-Reply-To: <20130326223748.242f0046@skate>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 21 Mar 2013 12:04:41 -0400
+From: Vivek Goyal <vgoyal@redhat.com>
+To: "Serge E. Hallyn" <serge@hallyn.com>
+Cc: Matthew Garrett <matthew.garrett@nebula.com>,
+	Mimi Zohar <zohar@linux.vnet.ibm.com>,
+	James Morris <jmorris@namei.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-security-module@vger.kernel.org"
+	<linux-security-module@vger.kernel.org>,
+	"linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
+	"kexec@lists.infradead.org" <kexec@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH 01/12] Security: Add CAP_COMPROMISE_KERNEL
+Message-ID: <20130321160441.GB6575@redhat.com>
+References: <1363802506.2580.55.camel@falcor1.watson.ibm.com>
+ <1363803158.2553.33.camel@x230.sbx07502.somerma.wayport.net>
+ <1363806968.2580.86.camel@falcor1.watson.ibm.com>
+ <1363811856.2553.37.camel@x230.sbx07502.somerma.wayport.net>
+ <1363813877.2580.120.camel@falcor1.watson.ibm.com>
+ <1363814289.2553.41.camel@x230.sbx07502.somerma.wayport.net>
+ <20130321134348.GA3934@redhat.com>
+ <20130321153725.GA3656@austin.hallyn.com>
+ <20130321155220.GL3934@redhat.com>
+ <20130321155823.GA4438@austin.hallyn.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201303262153.53698.arnd@arndb.de>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130321155823.GA4438@austin.hallyn.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday 26 March 2013, Thomas Petazzoni wrote:
-> On Tue, 26 Mar 2013 21:10:15 +0000, Arnd Bergmann wrote:
-> 
-> > > To which children? Only to the main-intc children? If so,
-> > > armada_370_xp_mpic_of_init() would be called with a 'device_node *'
-> > > that points to the main-intc, correct? Then it would have to go back up
-> > > in the Device Tree to find the msi node? It's doable of course, but
-> > > sounds strange, no?
+On Thu, Mar 21, 2013 at 10:58:23AM -0500, Serge E. Hallyn wrote:
+> Quoting Vivek Goyal (vgoyal@redhat.com):
+> > On Thu, Mar 21, 2013 at 10:37:25AM -0500, Serge E. Hallyn wrote:
+> > > Quoting Vivek Goyal (vgoyal@redhat.com):
+> > > ...
+> > > > Giving CAP_MODIFY_KERNEL to processess upon signature verification
+> > > > will simplify things a bit.
+> > > > 
+> > > > Only thing is that signature verification alone is not sufficient. We
+> > > > also need to make sure after signature verification executable can
+> > > > not be modified in memory in any way. So that means atleast couple of
+> > > > things.
+> > > 
+> > > Also what about context?  If I construct a mounts namespace a certain
+> > > way, can I trick this executable into loading an old singed bzImage that
+> > > I had laying around?
 > > 
-> > I was thinking of registering two init functions as well.
+> > We were thinking that /sbin/kexec will need to verify bzImage signature
+> > before loading it. 
+> > 
+> > Key for verification is in kernel so idea was to take kernel's help
+> > in verifying signature.
+> > 
+> > Not sure how exactly the interface should look like. 
+> > 
+> > - I was thinking may be process can mmap() the bzImage with MAP_LOCKED.
+> >   We can create additional flag say MAP_VERIFY_SIG_POST, which tries
+> >   to verify signature/integrity of mapped region of file after mapping and
+> >   locking pages and mmap() fails if signature verification fails.
+> > 
+> > There have been suggestions about creating new system call altogether.
+> > 
+> > > 
+> > > ISTM the only sane thing to do, if you're going down this road,
+> > > is to have CAP_MODIFIY_KERNEL pulled from bounding set for everyone
+> > > except a getty started by init on ttyS0.  Then log in on serial
+> > > to update.  Or run a damon with CAP_MODIFIY_KERNEL which listens
+> > > to a init_net_ns netlink socket for very basic instructions, like
+> > > "find and install latest signed bzImage in /boot".  Then you can
+> > > at least trust that /boot for that daemon is not faked.
+> > 
+> > daemon does not have the key and can't verify signature of signed
+> > bzImage. Even if it had the key, it can't trust the crypto code for
+> > signature verification as none of that is signed.
 > 
-> But then which of the two init functions would do the of_iomap() (or
-> whatever ioremap()ing function you use) ?
+> I'm not saying not to use the kernel to verify the signature.
 
-I agree this is where it get a little fishy, hence my preference to
-use a single node.
+Ok. So why can't /sbin/kexec can do the verification of bzImage with
+kernel's help. Due to crafted /boot/ it might load old signed bzImage,
+but it can't load unsigned/untrusted code on secureboot system at ring 0.
 
-> Remember, the very reason what we have one driver for both interrupt
-> controllers is because the registers are completely mixed. So to me
-> it's really the case of one device providing two features, like a
-> device that would be both an Ethernet interface and a SPI controller.
-> You have a single ->probe() function that gets called when the device
-> is detected, and this ->probe() function registers both an Ethernet
-> interface and a SPI controller.b
-> 
-> To me, the case we have here is really identical: we have one single set
-> of registers that provide multiple features.
+I am hoping I did not miss your point entirely.
 
-The problem here is that the irq subsystem makes certain assumptions
-about one device node being the controller and mapping to a single
-irq domain, so you'd have to cheat one way or another. Using the
-sub-nodes the way you do in your patch is bending the rules for
-the device tree binding, which I think is more problematic than
-bending the rules for the code. Regarding the call to of_iomap(),
-you could work around it by having a static variable in the driver
-that remembers the mmio address and gets set by whichever device node
-init function gets called first.
-
-	Arnd
+Thanks
+Vivek
