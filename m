@@ -1,73 +1,44 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-we0-f182.google.com ([74.125.82.182]:46865 "EHLO
-	mail-we0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756261Ab3CQOaB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 17 Mar 2013 10:30:01 -0400
-Received: by mail-we0-f182.google.com with SMTP id t57so4252959wey.27
-        for <linux-pci@vger.kernel.org>; Sun, 17 Mar 2013 07:30:00 -0700 (PDT)
+Received: from tundra.namei.org ([65.99.196.166]:32898 "EHLO tundra.namei.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756487Ab3CUB6C (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 20 Mar 2013 21:58:02 -0400
+Date: Thu, 21 Mar 2013 12:58:04 +1100 (EST)
+From: James Morris <jmorris@namei.org>
+To: Mimi Zohar <zohar@linux.vnet.ibm.com>
+cc: Matthew Garrett <matthew.garrett@nebula.com>,
+	linux-kernel@vger.kernel.org,
+	linux-security-module@vger.kernel.org, linux-efi@vger.kernel.org,
+	kexec@lists.infradead.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 01/12] Security: Add CAP_COMPROMISE_KERNEL
+In-Reply-To: <1363797717.2580.10.camel@falcor1.watson.ibm.com>
+Message-ID: <alpine.LRH.2.02.1303211257420.9518@tundra.namei.org>
+References: <1363642353-30749-1-git-send-email-matthew.garrett@nebula.com>  <alpine.LRH.2.02.1303191542200.30973@tundra.namei.org> <1363797717.2580.10.camel@falcor1.watson.ibm.com>
 MIME-Version: 1.0
-In-Reply-To: <1363530028.2423.43.camel@zim.stowe>
-References: <20130316213512.2974.17303.stgit@amt.stowe> <20130316213519.2974.38954.stgit@amt.stowe>
- <20130316221159.GA3702@kroah.com> <1363477853.2423.25.camel@zim.stowe>
- <20130317010317.GB9641@kroah.com> <1363493482.16793.69.camel@ul30vt.home>
- <20130317053611.GC948@kroah.com> <1363527503.16793.75.camel@ul30vt.home>
- <CAPXgP12vmx9j_jJW3HXb2deRapFKAofTVzEbdyS=Z1VUBswE_Q@mail.gmail.com> <1363530028.2423.43.camel@zim.stowe>
-From: Kay Sievers <kay@vrfy.org>
-Date: Sun, 17 Mar 2013 15:29:39 +0100
-Message-ID: <CAPXgP13+BACQEid=xcFLDv+Tm3A1pCqDDfP4K+ZZrwGZBQ9A8g@mail.gmail.com>
-Subject: Re: [PATCH] udevadm-info: Don't access sysfs 'resource<N>' files
-To: Myron Stowe <mstowe@redhat.com>
-Cc: Alex Williamson <alex.williamson@redhat.com>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	linux-hotplug@vger.kernel.org, linux-pci@vger.kernel.org,
-	yuxiangl@marvell.com, yxlraid@gmail.com,
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Mar 17, 2013 at 3:20 PM, Myron Stowe <mstowe@redhat.com> wrote:
-> On Sun, 2013-03-17 at 15:00 +0100, Kay Sievers wrote:
->> On Sun, Mar 17, 2013 at 2:38 PM, Alex Williamson
->> <alex.williamson@redhat.com> wrote:
->> > I'm assuming that the device only breaks because udevadm is dumping the
->> > full I/O port register space of the device and that if an actual driver
->> > was interacting with it through this interface that it would work.  Who
->> > knows how many devices will have read side-effects by udevadm blindly
->> > dumping these files.  Thanks,
->>
->> Sysfs is a too public interface to export things there which make
->> devices/driver choke on a simple read() of an attribute.
->>
->> This is nothing specific to udevadm, any tool can do that. Udevadm
->> will never read any of the files during normal operation. The admin
->> explicitly asked udevadm with a specific command to dump all the stuff
->> the device offers.
->>
->> The kernel driver needs to be fixed to allow that, in the worst case,
->> the attributes not exported at all. People should take more care what
->> they export in /sys, it's not a hidden and private ioctl what's
->> exported there, stuff is very visible and will be looked at.
->>
->> Telling userspace not to use specific stuff in /sys I would not expect
->> to work as a strategy; there is too much weird stuff out there that
->> will always try to do that ...
->
-> Kay - could you comment on Foot Note 3 in
-> https://lkml.org/lkml/2013/3/16/168
->
-> With respect to 'udev', you are working on the assumption that all files
-> in sysfs must be readable with no consequences which may be implied by
-> the Documentation's sysfs.txt file's mentioning ASCII.  If we are to
-> interpret that as strictly as you seem to want to then why is there
-> sysfs support for creating binary files?
+On Wed, 20 Mar 2013, Mimi Zohar wrote:
 
-They cannot be distinguished from outside, so there is nothing I know
-that could make a difference to userspace tools.
+> On Tue, 2013-03-19 at 15:47 +1100, James Morris wrote:
+> > On Mon, 18 Mar 2013, Matthew Garrett wrote:
+> > 
+> > > This patch introduces CAP_COMPROMISE_KERNEL. 
+> > 
+> > I'd like to see this named CAP_MODIFY_KERNEL, which is more accurate and 
+> > less emotive.  Otherwise I think core kernel developers will be scratching 
+> > their head over where to sprinkle this.
+> > 
+> > Apart from that, I like the idea, especially when it's wired up to MAC 
+> > security.
+> 
+> Matthrew, perhaps you could clarify whether this will be tied to MAC
+> security.
 
-Tools -- no matter how useful they are not not, it's that they do that
-for many years already -- need to be able to read() the stuff in
-there, without causing any damage to the system.
+All capabilities are, via LSM.
 
-Kay
+
+-- 
+James Morris
+<jmorris@namei.org>
