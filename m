@@ -1,92 +1,114 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f180.google.com ([209.85.214.180]:44100 "EHLO
-	mail-ob0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756235Ab3CGRoE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Mar 2013 12:44:04 -0500
-Received: by mail-ob0-f180.google.com with SMTP id ef5so553698obb.39
-        for <linux-pci@vger.kernel.org>; Thu, 07 Mar 2013 09:44:03 -0800 (PST)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 21 Mar 2013 11:19:52 -0500
+From: "Serge E. Hallyn" <serge@hallyn.com>
+To: Vivek Goyal <vgoyal@redhat.com>
+Cc: "Serge E. Hallyn" <serge@hallyn.com>,
+	Matthew Garrett <matthew.garrett@nebula.com>,
+	Mimi Zohar <zohar@linux.vnet.ibm.com>,
+	James Morris <jmorris@namei.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-security-module@vger.kernel.org"
+	<linux-security-module@vger.kernel.org>,
+	"linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
+	"kexec@lists.infradead.org" <kexec@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH 01/12] Security: Add CAP_COMPROMISE_KERNEL
+Message-ID: <20130321161952.GA4957@austin.hallyn.com>
+References: <1363803158.2553.33.camel@x230.sbx07502.somerma.wayport.net>
+ <1363806968.2580.86.camel@falcor1.watson.ibm.com>
+ <1363811856.2553.37.camel@x230.sbx07502.somerma.wayport.net>
+ <1363813877.2580.120.camel@falcor1.watson.ibm.com>
+ <1363814289.2553.41.camel@x230.sbx07502.somerma.wayport.net>
+ <20130321134348.GA3934@redhat.com>
+ <20130321153725.GA3656@austin.hallyn.com>
+ <20130321155220.GL3934@redhat.com>
+ <20130321155823.GA4438@austin.hallyn.com>
+ <20130321160441.GB6575@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <157393863283F442885425D2C4542856489D6DA2@nasanexd02f.na.qualcomm.com>
-References: <1362549547-2160-1-git-send-email-xiong@qca.qualcomm.com> <157393863283F442885425D2C4542856489D6DA2@nasanexd02f.na.qualcomm.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 7 Mar 2013 10:43:43 -0700
-Message-ID: <CAErSpo4BEiL6+0LJo0_yavVv4gTBanJnp39FUX8eNL9Lqbmtfg@mail.gmail.com>
-Subject: Re: [PATCH] PCI: add MSI INTX_DISABLE quirks for AR8161/AR8162/AR8171/AR8172
-To: "Huang, Xiong" <xiong@qca.qualcomm.com>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"unified-drivers@lists.infradead.org"
-	<unified-drivers@lists.infradead.org>,
-	nic-devel <nic-devel@qca.qualcomm.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130321160441.GB6575@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 7, 2013 at 8:57 AM, Huang, Xiong <xiong@qca.qualcomm.com> wrote:
->> >+static void quirk_msi_intx_disable_qca_bug(struct pci_dev *dev) {
->> >+    static u16 qca_eth_devid[] = {
->> >+                    PCI_DEVICE_ID_AR8161,
->> >+                    PCI_DEVICE_ID_AR8162,
->> >+                    PCI_DEVICE_ID_AR8171,
->> >+                    PCI_DEVICE_ID_AR8172};
->> >+    struct pci_dev *p;
->> >+    int i;
->> >+
->> >+    /* AR816X/AR817X MSI is fixed at HW level from revision 0x18 */
->> >+    for (i = 0; i < ARRAY_SIZE(qca_eth_devid); i++) {
->> >+            p = pci_get_device(PCI_VENDOR_ID_ATTANSIC,
->> >+                               qca_eth_devid[i],
->>
->> xiong,
->>
->> The "FINAL" fixup is called just in pci_apply_final_quirks(), if I am correct.
->>
->> In this function, it will go through all the pci devices which are registered in
->> the system. And try to invoke the fixup hook.
->>
->> Also, before invode the hook, in function pci_do_fixups() it will make sure
->> the hook just apply to the devices whose VendorID and DeviceID match what
->> you defined in DECLARE_PCI_FIXUP_FINAL.
->>
->> So I think there is no need to iterate on all those pci device, before you want
->> to change the pci_dev->dev_flags.
->>
->> >+                               NULL);
->> >+            if (!p)
->> >+                    return;
->> >+
->> >+            if (p->revision < 0x18)
->> >+                    dev->dev_flags |=
->> PCI_DEV_FLAGS_MSI_INTX_DISABLE_BUG;
->> >+            pci_dev_put(p);
->> >+    }
->
-> Wei, thanks for you feedback, this patch is just follow the function 'quirk_msi_intx_disable_ati_bug' in quirks.c
-> Is it ok if I revise code as:
->         static void quirk_msi_intx_disable_qca_bug(struct pci_dev *dev)
->         {
->                 If (dev->revision < 0x18)
->                         dev->dev_flags |=  PCI_DEV_FLAGS_MSI_INTX_DISABLE_BUG;
->         }
+Quoting Vivek Goyal (vgoyal@redhat.com):
+> On Thu, Mar 21, 2013 at 10:58:23AM -0500, Serge E. Hallyn wrote:
+> > Quoting Vivek Goyal (vgoyal@redhat.com):
+> > > On Thu, Mar 21, 2013 at 10:37:25AM -0500, Serge E. Hallyn wrote:
+> > > > Quoting Vivek Goyal (vgoyal@redhat.com):
+> > > > ...
+> > > > > Giving CAP_MODIFY_KERNEL to processess upon signature verification
+> > > > > will simplify things a bit.
+> > > > > 
+> > > > > Only thing is that signature verification alone is not sufficient. We
+> > > > > also need to make sure after signature verification executable can
+> > > > > not be modified in memory in any way. So that means atleast couple of
+> > > > > things.
+> > > > 
+> > > > Also what about context?  If I construct a mounts namespace a certain
+> > > > way, can I trick this executable into loading an old singed bzImage that
+> > > > I had laying around?
+> > > 
+> > > We were thinking that /sbin/kexec will need to verify bzImage signature
+> > > before loading it. 
+> > > 
+> > > Key for verification is in kernel so idea was to take kernel's help
+> > > in verifying signature.
+> > > 
+> > > Not sure how exactly the interface should look like. 
+> > > 
+> > > - I was thinking may be process can mmap() the bzImage with MAP_LOCKED.
+> > >   We can create additional flag say MAP_VERIFY_SIG_POST, which tries
+> > >   to verify signature/integrity of mapped region of file after mapping and
+> > >   locking pages and mmap() fails if signature verification fails.
+> > > 
+> > > There have been suggestions about creating new system call altogether.
+> > > 
+> > > > 
+> > > > ISTM the only sane thing to do, if you're going down this road,
+> > > > is to have CAP_MODIFIY_KERNEL pulled from bounding set for everyone
+> > > > except a getty started by init on ttyS0.  Then log in on serial
+> > > > to update.  Or run a damon with CAP_MODIFIY_KERNEL which listens
+> > > > to a init_net_ns netlink socket for very basic instructions, like
+> > > > "find and install latest signed bzImage in /boot".  Then you can
+> > > > at least trust that /boot for that daemon is not faked.
+> > > 
+> > > daemon does not have the key and can't verify signature of signed
+> > > bzImage. Even if it had the key, it can't trust the crypto code for
+> > > signature verification as none of that is signed.
+> > 
+> > I'm not saying not to use the kernel to verify the signature.
+> 
+> Ok. So why can't /sbin/kexec can do the verification of bzImage with
+> kernel's help. Due to crafted /boot/ it might load old signed bzImage,
+> but it can't load unsigned/untrusted code on secureboot system at ring 0.
+> 
+> I am hoping I did not miss your point entirely.
 
-Per the comment in pci_ids.h, you should not add #defines there unless
-they are used in more than one place.  So in this case, you would just
-use the hex constants directly in quirks.c, as we already do for the
-existing ATTANSIC quirks.
+No, you didn't.  If replay attacks are not a concern then that bit
+doesn't matter.  But if^Wwhen there is a vulnerability in a signed kernel,
+and a user has a copy of bzImage sitting around, signed kexec alone does
+not suffice (and I'm assuming revocation is not going into the kernel?).
+It seems to me if replay attacks are ignored, this is all for theater...
 
-As far as the loop with pci_get_device(), the revised patch is
-probably what you want, but it is not functionally equivalent to the
-original.  Let's say you have two devices:
+The other concern is analogous, just more general - seems like I may very
+well be able to find a way to corrupt kexec or even corrupt the kernel with
+a bad environment.
 
-  1) 8161 rev 0x18
-  2) 8171 rev 0x17
+So I'm just saying that in general it doesn't seem worth having a special
+list of capabilities that only signed executables can have, without doing 
+something about the environment.  And that the solution to that seems like
+what we can already do today (with a bounding set and init-launched
+services).
 
-The original patch will disable MSI for the 8161 because there is
-*another* device (the 8171) with rev < 0x18.  I doubt that's what you
-want.
+All of this is probably premature though.  IIUC the first thing you are
+after is a way to record on the file the fact that it is a verified-signature
+binary, and that's what CAP_SIGNED meant right?  I agree we need something
+like that, but using a capability is not right.  You can add a field to
+the binprm or file or f_cred, or even add a field to the capability struct,
+meaningful only on files, to show it was signed - but not taint the list of
+capabilities with something that is not a capability.  I haven't looked
+closer to see which would be the best way (my hunch would be binprm), will 
+be happy to come up with a proposal when I have time, but I don't want to slow
+you down :)
 
-I'd like to see a dev_info() saying that you're disabling MSI for this
-device so that when somebody complains "my device should be using MSI
-but isn't," it's easy to figure out why not.
-
-Bjorn
+-serge
