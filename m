@@ -1,95 +1,86 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <alpine.LNX.2.00.1303182304320.9529@pobox.suse.cz>
-References: <Pine.LNX.4.44L0.1303141050310.1983-100000@iolanthe.rowland.org>
-	<1460519.ejNFI1DrGk@vostro.rjw.lan>
-	<1363280764.26318.4.camel@thor.lan>
-	<5657408.cYX6iimiA4@vostro.rjw.lan>
-	<alpine.LNX.2.00.1303150851020.9529@pobox.suse.cz>
-	<5142E7F0.4020002@gmail.com>
-	<alpine.LNX.2.00.1303151424140.9529@pobox.suse.cz>
-	<alpine.LNX.2.00.1303151609480.9529@pobox.suse.cz>
-	<CAE9FiQUqPTUqPOzANnxpdfoRYPr+OiU5pFEoLKRiOFHd9Py4XQ@mail.gmail.com>
-	<alpine.LNX.2.00.1303181010080.9529@pobox.suse.cz>
-	<CAE9FiQXj0oD7_Abhz305dGytwg9_VKeEVuX128VXxEKexyvTLg@mail.gmail.com>
-	<alpine.LNX.2.00.1303182304320.9529@pobox.suse.cz>
-Date: Mon, 18 Mar 2013 15:50:06 -0700
-Message-ID: <CAE9FiQVhrJov=it3Q5EB5fTJwA7tKQwScKSDfb_LgFE7_dEBkA@mail.gmail.com>
-Subject: Re: [3.9-rc1] irq 16: nobody cared (was [3.9-rc1] very poor interrupt responses)
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jiri Kosina <jkosina@suse.cz>
-Cc: Harald Arnesen <skogtun.linux@gmail.com>,
-	Kernel development list <linux-kernel@vger.kernel.org>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Peter Hurley <peter@hurleysoftware.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Thomas Meyer <thomas@m3y3r.de>,
-	Shawn Starr <shawn.starr@rogers.com>,
-	USB list <linux-usb@vger.kernel.org>,
-	linux-acpi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, Daniel Vetter <daniel.vetter@ffwll.ch>,
-	Imre Deak <imre.deak@intel.com>,
-	Daniel Kurtz <djkurtz@chromium.org>,
-	dri-devel@lists.freedesktop.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.free-electrons.com ([94.23.35.102]:55249 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751601Ab3CURay (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 Mar 2013 13:30:54 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Russell King <linux@arm.linux.org.uk>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	devicetree-discuss@lists.ozlabs.org,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Maen Suleiman <maen@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Olof Johansson <olof@lixom.net>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Mitch Bradley <wmb@firmworks.com>,
+	Andrew Murray <andrew.murray@arm.com>
+Subject: [PATCH v5 13/17] arm: mvebu: PCIe Device Tree informations for Armada XP DB
+Date: Thu, 21 Mar 2013 18:30:21 +0100
+Message-Id: <1363887025-19931-14-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1363887025-19931-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1363887025-19931-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 18, 2013 at 3:05 PM, Jiri Kosina <jkosina@suse.cz> wrote:
-> On Mon, 18 Mar 2013, Yinghai Lu wrote:
->
->> > Yes, switching from MSI to IO-APIC-fasteoi makes the report about lost
->> > interrupts go away.
->> >
->> > My understanding from the other mail is that DAniel Vetter already has an
->> > idea what might be going wrong with IRQ acking on GM45 chipsets; hopefully
->> > this datapoint regarding MSI will fit into it.
->>
->> What is /proc/interrupts difference between with and without pci=nomsi ?
->>
->> drm is forced to share irq 16?
->
-> Yup, IRQ 16 is being shared, and one of the owners is i915.
+The Marvell evaluation board (DB) for the Armada XP SoC has 6
+physicals full-size PCIe slots, so we enable the corresponding PCIe
+interfaces in the Device Tree.
 
-the vga report strange INTx status...
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+---
+ arch/arm/boot/dts/armada-xp-db.dts |   33 +++++++++++++++++++++++++++++++++
+ 1 file changed, 33 insertions(+)
 
-00:02.0 VGA compatible controller: Intel Corporation Mobile 4 Series
-Chipset Integrated Graphics Controller (rev 07) (prog-if 00 [VGA
-controller])
-	Subsystem: Lenovo Device 20e4
-	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr-
-Stepping- SERR- FastB2B- DisINTx+
-	Status: Cap+ 66MHz- UDF- FastB2B+ ParErr- DEVSEL=fast >TAbort-
-<TAbort- <MAbort- >SERR- <PERR- INTx+
-	Latency: 0
-	Interrupt: pin A routed to IRQ 44
-	Region 0: Memory at f2000000 (64-bit, non-prefetchable) [size=4M]
-	Region 2: Memory at d0000000 (64-bit, prefetchable) [size=256M]
-	Region 4: I/O ports at 1800 [size=8]
-	Expansion ROM at <unassigned> [disabled]
-	Capabilities: [90] MSI: Enable+ Count=1/1 Maskable- 64bit-
-		Address: fee0100c  Data: 4142
-	Capabilities: [d0] Power Management version 3
-		Flags: PMEClk- DSI+ D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
-		Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
-	Kernel driver in use: i915
-	Kernel modules: i915
+diff --git a/arch/arm/boot/dts/armada-xp-db.dts b/arch/arm/boot/dts/armada-xp-db.dts
+index e83505e..54cc5bb 100644
+--- a/arch/arm/boot/dts/armada-xp-db.dts
++++ b/arch/arm/boot/dts/armada-xp-db.dts
+@@ -121,5 +121,38 @@
+ 				spi-max-frequency = <20000000>;
+ 			};
+ 		};
++
++		pcie-controller {
++			status = "okay";
++
++			/*
++			 * All 6 slots are physically present as
++			 * standard PCIe slots on the board.
++			 */
++			pcie@1,0 {
++				/* Port 0, Lane 0 */
++				status = "okay";
++			};
++			pcie@2,0 {
++				/* Port 0, Lane 1 */
++				status = "okay";
++			};
++			pcie@3,0 {
++				/* Port 0, Lane 2 */
++				status = "okay";
++			};
++			pcie@4,0 {
++				/* Port 0, Lane 3 */
++				status = "okay";
++			};
++			pcie@9,0 {
++				/* Port 2, Lane 0 */
++				status = "okay";
++			};
++			pcie@10,0 {
++				/* Port 3, Lane 0 */
++				status = "okay";
++			};
++		};
+ 	};
+ };
+-- 
+1.7.9.5
 
-it should be INTx-, after we have set DisINTx+ in control.
-
-So INTx can not be disabled after it get enabled before ?
-
-the VGA on my T420 looks right.
-
-00:02.0 VGA compatible controller: Intel Corporation 2nd Generation
-Core Processor Family Integrated Graphics Controller (rev 09) (prog-if
-00 [VGA controller])
-	Subsystem: Lenovo Device 21ce
-	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr-
-Stepping- SERR- FastB2B- DisINTx+
-	Status: Cap+ 66MHz- UDF- FastB2B+ ParErr- DEVSEL=fast >TAbort-
-<TAbort- <MAbort- >SERR- <PERR- INTx-
-
-Thanks
-
-Yinghai
