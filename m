@@ -1,141 +1,106 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <514729C2.3080308@redhat.com>
-Date: Mon, 18 Mar 2013 10:50:42 -0400
-From: Don Dutile <ddutile@redhat.com>
+Date: Thu, 21 Mar 2013 13:15:56 -0400
+From: Vivek Goyal <vgoyal@redhat.com>
+To: "Serge E. Hallyn" <serge@hallyn.com>
+Cc: Matthew Garrett <matthew.garrett@nebula.com>,
+	Mimi Zohar <zohar@linux.vnet.ibm.com>,
+	James Morris <jmorris@namei.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-security-module@vger.kernel.org"
+	<linux-security-module@vger.kernel.org>,
+	"linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
+	"kexec@lists.infradead.org" <kexec@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH 01/12] Security: Add CAP_COMPROMISE_KERNEL
+Message-ID: <20130321171556.GM3934@redhat.com>
+References: <1363806968.2580.86.camel@falcor1.watson.ibm.com>
+ <1363811856.2553.37.camel@x230.sbx07502.somerma.wayport.net>
+ <1363813877.2580.120.camel@falcor1.watson.ibm.com>
+ <1363814289.2553.41.camel@x230.sbx07502.somerma.wayport.net>
+ <20130321134348.GA3934@redhat.com>
+ <20130321153725.GA3656@austin.hallyn.com>
+ <20130321155220.GL3934@redhat.com>
+ <20130321155823.GA4438@austin.hallyn.com>
+ <20130321160441.GB6575@redhat.com>
+ <20130321161952.GA4957@austin.hallyn.com>
 MIME-Version: 1.0
-To: Alex Williamson <alex.williamson@redhat.com>
-CC: Myron Stowe <mstowe@redhat.com>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	Myron Stowe <myron.stowe@redhat.com>, kay@vrfy.org,
-	linux-hotplug@vger.kernel.org, linux-pci@vger.kernel.org,
-	yuxiangl@marvell.com, yxlraid@gmail.com,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] udevadm-info: Don't access sysfs 'resource<N>' files
-References: <20130316213512.2974.17303.stgit@amt.stowe>  <20130316213519.2974.38954.stgit@amt.stowe>  <20130316221159.GA3702@kroah.com> <1363477853.2423.25.camel@zim.stowe>  <20130317010317.GB9641@kroah.com> <1363493482.16793.69.camel@ul30vt.home>  <20130317053611.GC948@kroah.com>  <1363527503.16793.75.camel@ul30vt.home>  <1363530785.2423.47.camel@zim.stowe> <1363559328.16793.82.camel@ul30vt.home>
-In-Reply-To: <1363559328.16793.82.camel@ul30vt.home>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130321161952.GA4957@austin.hallyn.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/17/2013 06:28 PM, Alex Williamson wrote:
-> On Sun, 2013-03-17 at 08:33 -0600, Myron Stowe wrote:
->> On Sun, 2013-03-17 at 07:38 -0600, Alex Williamson wrote:
->>> On Sat, 2013-03-16 at 22:36 -0700, Greg KH wrote:
->>>> On Sat, Mar 16, 2013 at 10:11:22PM -0600, Alex Williamson wrote:
->>>>> On Sat, 2013-03-16 at 18:03 -0700, Greg KH wrote:
->>>>>> On Sat, Mar 16, 2013 at 05:50:53PM -0600, Myron Stowe wrote:
->>>>>>> On Sat, 2013-03-16 at 15:11 -0700, Greg KH wrote:
->>>>>>>> On Sat, Mar 16, 2013 at 03:35:19PM -0600, Myron Stowe wrote:
->>>>>>>>> Sysfs includes entries to memory that backs a PCI device's BARs, both I/O
->>>>>>>>> Port space and MMIO.  This memory regions correspond to the device's
->>>>>>>>> internal status and control registers used to drive the device.
->>>>>>>>>
->>>>>>>>> Accessing these registers from userspace such as "udevadm info
->>>>>>>>> --attribute-walk --path=/sys/devices/..." does can not be allowed as
->>>>>>>>> such accesses outside of the driver, even just reading, can yield
->>>>>>>>> catastrophic consequences.
->>>>>>>>>
->>>>>>>>> Udevadm-info skips parsing a specific set of sysfs entries including
->>>>>>>>> 'resource'.  This patch extends the set to include the additional
->>>>>>>>> 'resource<N>' entries that correspond to a PCI device's BARs.
->>>>>>>>
->>>>>>>> Nice, are you also going to patch bash to prevent a user from reading
->>>>>>>> these sysfs files as well?  :)
->>>>>>>>
->>>>>>>> And pciutils?
->>>>>>>>
->>>>>>>> You get my point here, right?  The root user just asked to read all of
->>>>>>>> the data for this device, so why wouldn't you allow it?  Just like
->>>>>>>> 'lspci' does.  Or bash does.
->>>>>>>
->>>>>>> Yes :P , you raise a very good point, there are a lot of way a user can
->>>>>>> poke around in those BARs.  However, there is a difference between
->>>>>>> shooting yourself in the foot and getting what you deserve versus
->>>>>>> unknowingly executing a common command such as udevadm and having the
->>>>>>> system hang.
->>>>>>>>
->>>>>>>> If this hardware has a problem, then it needs to be fixed in the kernel,
->>>>>>>> not have random band-aids added to various userspace programs to paper
->>>>>>>> over the root problem here.  Please fix the kernel driver and all should
->>>>>>>> be fine.  No need to change udevadm.
->>>>>>>
->>>>>>> Xiangliang initially proposed a patch within the PCI core.  Ignoring the
->>>>>>> specific issue with the proposal which I pointed out in the
->>>>>>> https://lkml.org/lkml/2013/3/7/242 thread, that just doesn't seem like
->>>>>>> the right place to effect a change either as PCI's core isn't concerned
->>>>>>> with the contents or access limitations of those regions, those are
->>>>>>> issues that the driver concerns itself with.
->>>>>>>
->>>>>>> So things seem to be gravitating towards the driver.  I'm fairly
->>>>>>> ignorant of this area but as Robert succinctly pointed out in the
->>>>>>> originating thread - the AHCI driver only uses the device's MMIO region.
->>>>>>> The I/O related regions are for legacy SFF-compatible ATA ports and are
->>>>>>> not used to driver the device.  This, coupled with the observance that
->>>>>>> userspace accesses such as udevadm, and others like you additionally
->>>>>>> point out, do not filter through the device's driver for seems to
->>>>>>> suggest that changes to the driver will not help here either.
->>>>>>
->>>>>> A PCI quirk should handle this properly, right?  Why not do that?  Worse
->>>>>> thing, the quirk could just not expose these sysfs files for this
->>>>>> device, which would solve all userspace program issues, right?
->>>>>
->>>>> Not exactly.  I/O port access through pci-sysfs was added for userspace
->>>>> programs, specifically qemu-kvm device assignment.  We use the I/O port
->>>>> resource# files to access device owned I/O port registers using file
->>>>> permissions rather than global permissions such as iopl/ioperm.  File
->>>>> permissions also prevent random users from accessing device registers
->>>>> through these files, but of course can't stop a privileged app that
->>>>> chooses to ignore the purpose of these files.  A quirk would therefore
->>>>> remove a file that actually has a useful purpose for one app just so
->>>>> another app that has no particular reason for dumping the contents can
->>>>> run unabated.  Thanks,
->>>>
->>>> The quirk would only be for this one specific device, which obviously
->>>> can't handle this type of access, so why would you want the sysfs files
->>>> even present for it at all?
->>>
->>> I'm assuming that the device only breaks because udevadm is dumping the
->>> full I/O port register space of the device and that if an actual driver
->>> was interacting with it through this interface that it would work.
->>
->> Correct:
->>          the AHCI driver only uses the device's MMIO region.  The I/O
->>          related regions are for legacy SFF-compatible ATA ports and are
->>          not used to driver the device.  This, coupled with the
->>          observance that userspace accesses such as udevadm, and others
->>          like Greg additionally pointed out, do not filter through the
->>          device's driver seems to suggest that changes to the driver will
->>          not help here either.
->
-> That may be true of our AHCI driver, but when it's assigned to a guest
-> we're potentially using a completely different stack and cannot make
-> that assumption.  A guest running in compatibility mode or the option
-> ROM for the device may still use I/O port regions.  Thanks,
->
-> Alex
->
->
+On Thu, Mar 21, 2013 at 11:19:52AM -0500, Serge E. Hallyn wrote:
 
-In quick summary:
-(1)reading a device's registers may have side effects
-     on the device operation, e.g., a register maps to a device's FIFO register.
-(2) Having two threads read such device registers can cause unknown results,
-      i.e., driver & user-app.
-(3) It may be valid for a user-app to read device regs, e.g.,
-     qemu-kvm assigned device
+[..]
+> > I am hoping I did not miss your point entirely.
+> 
+> No, you didn't.  If replay attacks are not a concern then that bit
+> doesn't matter.  But if^Wwhen there is a vulnerability in a signed kernel,
+> and a user has a copy of bzImage sitting around, signed kexec alone does
+> not suffice (and I'm assuming revocation is not going into the kernel?).
+> It seems to me if replay attacks are ignored, this is all for theater...
+> 
 
-So, can't it be solved by:
-(a) if no driver is configured for the device, than it's valid for a user-app
-     to read the device regs ?
-      -- although diff. user apps doing so still exposes the problem, and
-         can't be distinguished, e.g.,  	qemu-kvm + udevadm
-		-- or can file permissions (set by libvirt driving qemu-kvm
-		   device assignment) block multiple user-app reading ?
-		   i.e., basically, a user-level version of a driver allocating
-			 the device, which in the case of qemu-kvm device-assignment,
-			 is what is actually happening! :)
-(b) if driver is configured, need a quirk-registration, or generic, optional,
-	driver function to check for user-app reading approval.
+As matthew mentioned, revocation list is in kernel. So old vulnerable
+kernels should fail signature verification.
 
-ok, bash away...
+> The other concern is analogous, just more general - seems like I may very
+> well be able to find a way to corrupt kexec or even corrupt the kernel with
+> a bad environment.
+> 
+> So I'm just saying that in general it doesn't seem worth having a special
+> list of capabilities that only signed executables can have, without doing 
+> something about the environment.
 
+Agreed that only being signed is part of the problem. Environment is
+important too. And running signed binaries memory locked is I think
+one part of controlling the environment. But there might be other
+things too which I am blissfully unaware of.
+
+Right now there were few things we were considering for controlling
+the environemnt.
+
+- Build /sbin/kexec statically and sign only statically linked exeutables.
+- Run executables memory locked
+- Unsigned binary can not ptrace() signed one.
+
+> And that the solution to that seems like
+> what we can already do today (with a bounding set and init-launched
+> services).
+
+Frankly speaking I did not understand this part. For secureboot issue
+we don't trust root and don't trust init. I am assuming any restricted
+environment setup will have to be done by a trusted entity.
+ 
+> 
+> All of this is probably premature though.  IIUC the first thing you are
+> after is a way to record on the file the fact that it is a verified-signature
+> binary, and that's what CAP_SIGNED meant right?
+
+Yes, that was the first thing. How to reliably sign and verify signature
+of a executable. Also make sure executable code/data can not modified
+in memory later by anything untrusted.
+
+>   I agree we need something
+> like that, but using a capability is not right.  You can add a field to
+> the binprm or file or f_cred, or even add a field to the capability struct,
+> meaningful only on files, to show it was signed - but not taint the list of
+> capabilities with something that is not a capability. 
+
+Ok, I will look into other options too. Agreed being signed is not a
+capability. But being signed along with other attributes should allow to 
+get one a capability (CAP_MODIFY_KERNEL in this case). I am not sure why
+nobody likes that idea. But that's fine, I will go with advice of subject
+matter experts.
+
+> I haven't looked
+> closer to see which would be the best way (my hunch would be binprm), will 
+> be happy to come up with a proposal when I have time, but I don't want to slow
+> you down :)
+
+Any suggetions are greatly appreciated whenever time permits. In the mean
+time I will atleast write more code and post it for RFC and hopefully
+there will be some consensus on how to solve kexec issue.
+
+Thanks
+Vivek
