@@ -1,109 +1,57 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Matthew Garrett <matthew.garrett@nebula.com>
-To: linux-kernel@vger.kernel.org
-Cc: linux-security-module@vger.kernel.org, linux-efi@vger.kernel.org,
-	kexec@lists.infradead.org, linux-pci@vger.kernel.org,
-	Matthew Garrett <matthew.garrett@nebula.com>
-Subject: [PATCH 05/12] PCI: Require CAP_COMPROMISE_KERNEL for PCI BAR access
-Date: Mon, 18 Mar 2013 17:32:26 -0400
-Message-Id: <1363642353-30749-5-git-send-email-matthew.garrett@nebula.com>
-In-Reply-To: <1363642353-30749-1-git-send-email-matthew.garrett@nebula.com>
-References: <1363642353-30749-1-git-send-email-matthew.garrett@nebula.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:24052 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754529Ab3CUPgi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 Mar 2013 11:36:38 -0400
+Date: Thu, 21 Mar 2013 10:37:25 -0500
+From: "Serge E. Hallyn" <serge@hallyn.com>
+To: Vivek Goyal <vgoyal@redhat.com>
+Cc: Matthew Garrett <matthew.garrett@nebula.com>,
+	Mimi Zohar <zohar@linux.vnet.ibm.com>,
+	James Morris <jmorris@namei.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-security-module@vger.kernel.org"
+	<linux-security-module@vger.kernel.org>,
+	"linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
+	"kexec@lists.infradead.org" <kexec@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"Serge E. Hallyn" <serge@hallyn.com>
+Subject: Re: [PATCH 01/12] Security: Add CAP_COMPROMISE_KERNEL
+Message-ID: <20130321153725.GA3656@austin.hallyn.com>
+References: <alpine.LRH.2.02.1303191542200.30973@tundra.namei.org>
+ <1363797717.2580.10.camel@falcor1.watson.ibm.com>
+ <1363798166.2553.29.camel@x230.sbx07502.somerma.wayport.net>
+ <1363802506.2580.55.camel@falcor1.watson.ibm.com>
+ <1363803158.2553.33.camel@x230.sbx07502.somerma.wayport.net>
+ <1363806968.2580.86.camel@falcor1.watson.ibm.com>
+ <1363811856.2553.37.camel@x230.sbx07502.somerma.wayport.net>
+ <1363813877.2580.120.camel@falcor1.watson.ibm.com>
+ <1363814289.2553.41.camel@x230.sbx07502.somerma.wayport.net>
+ <20130321134348.GA3934@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130321134348.GA3934@redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Any hardware that can potentially generate DMA has to be locked down from
-userspace in order to avoid it being possible for an attacker to cause
-arbitrary kernel behaviour. Default to paranoid - in future we can
-potentially relax this for sufficiently IOMMU-isolated devices.
+Quoting Vivek Goyal (vgoyal@redhat.com):
+...
+> Giving CAP_MODIFY_KERNEL to processess upon signature verification
+> will simplify things a bit.
+> 
+> Only thing is that signature verification alone is not sufficient. We
+> also need to make sure after signature verification executable can
+> not be modified in memory in any way. So that means atleast couple of
+> things.
 
-Signed-off-by: Matthew Garrett <matthew.garrett@nebula.com>
----
- drivers/pci/pci-sysfs.c | 9 +++++++++
- drivers/pci/proc.c      | 8 +++++++-
- drivers/pci/syscall.c   | 2 +-
- 3 files changed, 17 insertions(+), 2 deletions(-)
+Also what about context?  If I construct a mounts namespace a certain
+way, can I trick this executable into loading an old singed bzImage that
+I had laying around?
 
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 9c6e9bb..b966089 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -622,6 +622,9 @@ pci_write_config(struct file* filp, struct kobject *kobj,
- 	loff_t init_off = off;
- 	u8 *data = (u8*) buf;
- 
-+	if (!capable(CAP_COMPROMISE_KERNEL))
-+		return -EPERM;
-+
- 	if (off > dev->cfg_size)
- 		return 0;
- 	if (off + count > dev->cfg_size) {
-@@ -928,6 +931,9 @@ pci_mmap_resource(struct kobject *kobj, struct bin_attribute *attr,
- 	resource_size_t start, end;
- 	int i;
- 
-+	if (!capable(CAP_COMPROMISE_KERNEL))
-+		return -EPERM;
-+
- 	for (i = 0; i < PCI_ROM_RESOURCE; i++)
- 		if (res == &pdev->resource[i])
- 			break;
-@@ -1035,6 +1041,9 @@ pci_write_resource_io(struct file *filp, struct kobject *kobj,
- 		      struct bin_attribute *attr, char *buf,
- 		      loff_t off, size_t count)
- {
-+	if (!capable(CAP_COMPROMISE_KERNEL))
-+		return -EPERM;
-+
- 	return pci_resource_io(filp, kobj, attr, buf, off, count, true);
- }
- 
-diff --git a/drivers/pci/proc.c b/drivers/pci/proc.c
-index 0b00947..7639f68 100644
---- a/drivers/pci/proc.c
-+++ b/drivers/pci/proc.c
-@@ -139,6 +139,9 @@ proc_bus_pci_write(struct file *file, const char __user *buf, size_t nbytes, lof
- 	int size = dp->size;
- 	int cnt;
- 
-+	if (!capable(CAP_COMPROMISE_KERNEL))
-+		return -EPERM;
-+
- 	if (pos >= size)
- 		return 0;
- 	if (nbytes >= size)
-@@ -219,6 +222,9 @@ static long proc_bus_pci_ioctl(struct file *file, unsigned int cmd,
- #endif /* HAVE_PCI_MMAP */
- 	int ret = 0;
- 
-+	if (!capable(CAP_COMPROMISE_KERNEL))
-+		return -EPERM;
-+
- 	switch (cmd) {
- 	case PCIIOC_CONTROLLER:
- 		ret = pci_domain_nr(dev->bus);
-@@ -259,7 +265,7 @@ static int proc_bus_pci_mmap(struct file *file, struct vm_area_struct *vma)
- 	struct pci_filp_private *fpriv = file->private_data;
- 	int i, ret;
- 
--	if (!capable(CAP_SYS_RAWIO))
-+	if (!capable(CAP_SYS_RAWIO) || !capable(CAP_COMPROMISE_KERNEL))
- 		return -EPERM;
- 
- 	/* Make sure the caller is mapping a real resource for this device */
-diff --git a/drivers/pci/syscall.c b/drivers/pci/syscall.c
-index e1c1ec5..97e785f 100644
---- a/drivers/pci/syscall.c
-+++ b/drivers/pci/syscall.c
-@@ -92,7 +92,7 @@ SYSCALL_DEFINE5(pciconfig_write, unsigned long, bus, unsigned long, dfn,
- 	u32 dword;
- 	int err = 0;
- 
--	if (!capable(CAP_SYS_ADMIN))
-+	if (!capable(CAP_SYS_ADMIN) || !capable(CAP_COMPROMISE_KERNEL))
- 		return -EPERM;
- 
- 	dev = pci_get_bus_and_slot(bus, dfn);
--- 
-1.8.1.2
-
+ISTM the only sane thing to do, if you're going down this road,
+is to have CAP_MODIFIY_KERNEL pulled from bounding set for everyone
+except a getty started by init on ttyS0.  Then log in on serial
+to update.  Or run a damon with CAP_MODIFIY_KERNEL which listens
+to a init_net_ns netlink socket for very basic instructions, like
+"find and install latest signed bzImage in /boot".  Then you can
+at least trust that /boot for that daemon is not faked.
