@@ -1,47 +1,89 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:40420 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751077Ab3C0P0n (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 27 Mar 2013 11:26:43 -0400
-Message-ID: <1364397928.11644.41.camel@pasglop>
-Subject: Re: [PATCHv2 1/3] pci: added pcie_get_speed_cap_mask function
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Lucas Kannebley Tavares <lucaskt@linux.vnet.ibm.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 21 Mar 2013 09:43:48 -0400
+From: Vivek Goyal <vgoyal@redhat.com>
+To: Matthew Garrett <matthew.garrett@nebula.com>
+Cc: Mimi Zohar <zohar@linux.vnet.ibm.com>,
+	James Morris <jmorris@namei.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-security-module@vger.kernel.org"
+	<linux-security-module@vger.kernel.org>,
+	"linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
+	"kexec@lists.infradead.org" <kexec@lists.infradead.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	DRI mailing list <dri-devel@lists.freedesktop.org>,
-	David Airlie <airlied@linux.ie>,
-	Brian King <brking@linux.vnet.ibm.com>,
-	Thadeu Cascardo <cascardo@linux.vnet.ibm.com>,
-	Alex Deucher <alexander.deucher@amd.com>
-Date: Wed, 27 Mar 2013 16:25:28 +0100
-In-Reply-To: <CAErSpo4rc=8mYgwuTO6693QCQJ9nsPsxmh7YAwxMygiVrPQR0A@mail.gmail.com>
-References: <1363757079-23550-1-git-send-email-lucaskt@linux.vnet.ibm.com>
-	 <1363757079-23550-2-git-send-email-lucaskt@linux.vnet.ibm.com>
-	 <CAErSpo4rc=8mYgwuTO6693QCQJ9nsPsxmh7YAwxMygiVrPQR0A@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+	"Serge E. Hallyn" <serge@hallyn.com>
+Subject: Re: [PATCH 01/12] Security: Add CAP_COMPROMISE_KERNEL
+Message-ID: <20130321134348.GA3934@redhat.com>
+References: <1363642353-30749-1-git-send-email-matthew.garrett@nebula.com>
+ <alpine.LRH.2.02.1303191542200.30973@tundra.namei.org>
+ <1363797717.2580.10.camel@falcor1.watson.ibm.com>
+ <1363798166.2553.29.camel@x230.sbx07502.somerma.wayport.net>
+ <1363802506.2580.55.camel@falcor1.watson.ibm.com>
+ <1363803158.2553.33.camel@x230.sbx07502.somerma.wayport.net>
+ <1363806968.2580.86.camel@falcor1.watson.ibm.com>
+ <1363811856.2553.37.camel@x230.sbx07502.somerma.wayport.net>
+ <1363813877.2580.120.camel@falcor1.watson.ibm.com>
+ <1363814289.2553.41.camel@x230.sbx07502.somerma.wayport.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1363814289.2553.41.camel@x230.sbx07502.somerma.wayport.net>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2013-03-26 at 12:39 -0600, Bjorn Helgaas wrote:
-> But we also know pdev is a PCIe device, and I think a PCIe device on a
-> root bus must be a "Root Complex Integrated Endpoint" (PCIe spec sec
-> 1.3.2.3).  Such a device does not have a link at all, so there's no
-> point in fiddling with its link speed.
+On Wed, Mar 20, 2013 at 09:18:10PM +0000, Matthew Garrett wrote:
+> On Wed, 2013-03-20 at 17:11 -0400, Mimi Zohar wrote:
+> > On Wed, 2013-03-20 at 20:37 +0000, Matthew Garrett wrote:
+> > > Right, that'd be the rough idea. Any further runtime policy updates
+> > > would presumably need to be signed with a trusted key.
+> > 
+> > I'm really sorry to belabor this point, but can kexec rely on an LSM
+> > label to identify a specific file, out of all the files being executed,
+> > in a secure boot environment?  The SELinux integrity rule for kexec
+> > would then look something like,
+> >
+> > appraise func=BPRM_CHECK obj_type=kdump_exec_t appraise_type=imasig
+> 
+> It would certainly be possible to configure a system such that this was
+> true (assuming support for signed initramfs and restricted policy
+> loading), and anyone wanting to ensure that kexec only loaded trusted
+> binaries would have to ensure that their system was appropriately
+> configured. Having some mechanism to then give the kexec binary
+> CAP_MODIFY_KERNEL would avoid needing an extra kexec entry point.
 
-This is where our IBM hypervisor makes things murky. It doesn't expose
-the PCIe parents (basically somewhat makes PCIe look like PCI except we
-still have the PCIe caps on the child devices, just no access to the
-parent device).
+Giving CAP_MODIFY_KERNEL to processess upon signature verification
+will simplify things a bit.
 
-It's garbage but can't be fixed (would break AIX :-)
+Only thing is that signature verification alone is not sufficient. We
+also need to make sure after signature verification executable can
+not be modified in memory in any way. So that means atleast couple of
+things.
 
-However we might be able to populate the bus->max_bus_speed from some
-architecture specific quirk and have radeon use that.
+- Process code/data should not be swapped out. Otherwise it can possibly
+  be written by unsigned priviliged processes and then faulted in back.
 
-Cheers,
-Ben.
+- Because priviliged unsigned processes can bypass file system and
+  directly write to disk, do not cache appraisal results. So create a
+  way in IMA rules to not cache the results.
 
+I think memory locking part is little tricky as what part of files are
+to be locked will depend on the binary loader (and not IMA). May be IMA
+can set a flag somewhere which gives an hint to binary loader that lock
+down file. Once the file has been locked down, binary loader should
+set some flag too and call security hook. This flag will be a hint to IMA
+that file has been locked down, another appraisal happens and if
+it passes successfuly, then IMA can give CAP_MODIFY_KERNEL capability
+to the process.
 
+Another small nit is appraise_type=imasig. Given the fact that there
+can be many formats of digital signature, we might have to make it
+more fine grained to be able to specify a particular kind of digital
+signature and not every possible digital signature supported. 
+
+Assuming all this works, I can look into how /sbin/kexec can call into
+kernel to verify integrity of bzImage before it is loaded. Not sure one
+needs to very PE/COFF signature or bzImage will be re-signed using IMA
+and one needs to call into IMA. I think here also we will have to first
+lock down file in memory, make sure nobody can open file for writes,
+and then do signature verification. 
+
+Thanks
+Vivek
