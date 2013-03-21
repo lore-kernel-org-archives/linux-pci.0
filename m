@@ -1,70 +1,122 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ia0-f182.google.com ([209.85.210.182]:41424 "EHLO
-	mail-ia0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751813Ab3CVAve (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 Mar 2013 20:51:34 -0400
-Message-ID: <514BAB13.3000101@gmail.com>
-Date: Thu, 21 Mar 2013 18:51:31 -0600
-From: Robert Hancock <hancockrwd@gmail.com>
-MIME-Version: 1.0
-To: Myron Stowe <myron.stowe@redhat.com>
-CC: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	yuxiangl@marvell.com, yxlraid@gmail.com, greg@kroah.com,
-	alex.williamson@redhat.com, kay@vrfy.org,
-	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 2/3] PCI: Handle device quirks when accessing sysfs resource<N>
- entries
-References: <20130321043449.7229.81056.stgit@amt.stowe> <20130321043502.7229.43877.stgit@amt.stowe>
-In-Reply-To: <20130321043502.7229.43877.stgit@amt.stowe>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from mail.free-electrons.com ([94.23.35.102]:55131 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751355Ab3CURam (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 Mar 2013 13:30:42 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Russell King <linux@arm.linux.org.uk>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	devicetree-discuss@lists.ozlabs.org,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Maen Suleiman <maen@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Olof Johansson <olof@lixom.net>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Mitch Bradley <wmb@firmworks.com>,
+	Andrew Murray <andrew.murray@arm.com>
+Subject: [PATCH v5 05/17] arm: pci: add a align_resource hook
+Date: Thu, 21 Mar 2013 18:30:13 +0100
+Message-Id: <1363887025-19931-6-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1363887025-19931-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1363887025-19931-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/20/2013 10:35 PM, Myron Stowe wrote:
-> Sysfs includes entries to memory regions that back a PCI device's BARs.
-> The pci-sysfs entries backing I/O Port BARs can be accessed by userspace,
-> providing direct access to the device's registers.  File permissions
-> prevent random users from accessing the device's registers through these
-> files, but don't stop a privileged app that chooses to ignore the purpose
-> of these files from doing so.
->
-> There are devices with abnormally strict restrictions with respect to
-> accessing their registers; aspects that are typically handled by the
-> device's driver.  When these access restrictions are not followed - as
-> when a userspace app such as "udevadm info --attribute-walk
-> --path=/sys/..." parses though reading all the device's sysfs entries - it
-> can cause such devices to fail.
->
-> This patch introduces a quirking mechanism that can be used to detect
-> accesses that do no meet the device's restrictions, letting a device
-> specific method intervene and decide how to progress.
->
-> Reported-by: Xiangliang Yu <yuxiangl@marvell.com>
-> Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+The PCI specifications says that an I/O region must be aligned on a 4
+KB boundary, and a memory region aligned on a 1 MB boundary.
 
-I honestly don't think there's much point in even attempting this 
-strategy. This list of devices in the quirk can't possibly be complete. 
-It would likely be easier to enumerate a white-list of devices that can 
-deal with their IO ports being read willy-nilly than a blacklist of 
-those that don't, as there's likely countless devices that fall into 
-this category. Even if they don't choke as badly as these ones do, it's 
-quite likely that bad behavior will result.
+However, the Marvell PCIe interfaces rely on address decoding windows
+(which allow to associate a range of physical addresses with a given
+device). For PCIe memory windows, those windows are defined with a 1
+MB granularity (which matches the PCI specs), but PCIe I/O windows can
+only be defined with a 64 KB granularity, so they have to be 64 KB
+aligned. We therefore need to tell the PCI core about this special
+alignement requirement.
 
-I think there's a few things that need to be done:
+The PCI core already calls pcibios_align_resource() in the ARM PCI
+core, specifically for such purposes. So this patch extends the ARM
+PCI core so that it calls a ->align_resource() hook registered by the
+PCI driver, exactly like the existing ->map_irq() and ->swizzle()
+hooks.
 
--Fix the bug in udevadm that caused it to trawl through these files 
-willy-nilly,
+A particular PCI driver can register a align_resource() hook, and do
+its own specific alignement, depending on the specific constraints of
+the underlying hardware.
 
--Fix the kernel so that access through these files complies with the 
-kernel's mechanisms for claiming IO/memory regions to prevent access 
-conflicts (i.e. opening these files should claim the resource region 
-they refer to, and should fail with EBUSY or something if another 
-process or a kernel driver is using it).
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Russell King <linux@arm.linux.org.uk>
+---
+ arch/arm/include/asm/mach/pci.h |   11 +++++++++++
+ arch/arm/kernel/bios32.c        |    6 ++++++
+ 2 files changed, 17 insertions(+)
 
--Reconsider whether supporting read/write on the resource files for IO 
-port regions like these makes any sense. Obviously mmap isn't very 
-practical for IO port access on x86 but you could even do something like 
-an ioctl for this purpose. Not very many pieces of software would need 
-to access these files so it's likely OK if the API is a bit ugly. That 
-would prevent something like grepping through sysfs from generating port 
-accesses to random devices.
+diff --git a/arch/arm/include/asm/mach/pci.h b/arch/arm/include/asm/mach/pci.h
+index 5cf2e97..7d2c3c8 100644
+--- a/arch/arm/include/asm/mach/pci.h
++++ b/arch/arm/include/asm/mach/pci.h
+@@ -30,6 +30,11 @@ struct hw_pci {
+ 	void		(*postinit)(void);
+ 	u8		(*swizzle)(struct pci_dev *dev, u8 *pin);
+ 	int		(*map_irq)(const struct pci_dev *dev, u8 slot, u8 pin);
++	resource_size_t (*align_resource)(struct pci_dev *dev,
++					  const struct resource *res,
++					  resource_size_t start,
++					  resource_size_t size,
++					  resource_size_t align);
+ };
+ 
+ /*
+@@ -51,6 +56,12 @@ struct pci_sys_data {
+ 	u8		(*swizzle)(struct pci_dev *, u8 *);
+ 					/* IRQ mapping				*/
+ 	int		(*map_irq)(const struct pci_dev *, u8, u8);
++					/* Resource alignement requirements	*/
++	resource_size_t (*align_resource)(struct pci_dev *dev,
++					  const struct resource *res,
++					  resource_size_t start,
++					  resource_size_t size,
++					  resource_size_t align);
+ 	void		*private_data;	/* platform controller private data	*/
+ };
+ 
+diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
+index a1f73b5..b2ed73c 100644
+--- a/arch/arm/kernel/bios32.c
++++ b/arch/arm/kernel/bios32.c
+@@ -462,6 +462,7 @@ static void pcibios_init_hw(struct hw_pci *hw, struct list_head *head)
+ 		sys->busnr   = busnr;
+ 		sys->swizzle = hw->swizzle;
+ 		sys->map_irq = hw->map_irq;
++		sys->align_resource = hw->align_resource;
+ 		INIT_LIST_HEAD(&sys->resources);
+ 
+ 		if (hw->private_data)
+@@ -574,6 +575,8 @@ char * __init pcibios_setup(char *str)
+ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+ 				resource_size_t size, resource_size_t align)
+ {
++	struct pci_dev *dev = data;
++	struct pci_sys_data *sys = dev->sysdata;
+ 	resource_size_t start = res->start;
+ 
+ 	if (res->flags & IORESOURCE_IO && start & 0x300)
+@@ -581,6 +584,9 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+ 
+ 	start = (start + align - 1) & ~(align - 1);
+ 
++	if (sys->align_resource)
++		return sys->align_resource(dev, res, start, size, align);
++
+ 	return start;
+ }
+ 
+-- 
+1.7.9.5
+
