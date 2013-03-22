@@ -1,179 +1,122 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:2740 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755809Ab3BDWld (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 4 Feb 2013 17:41:33 -0500
-Message-ID: <1360017684.11144.547.camel@bling.home>
-Subject: Re: PCI warning on boot 3.8.0-rc1
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Stephen Hemminger <stephen@networkplumber.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	David Woodhouse <dwmw2@infradead.org>,
-	iommu@lists.linux-foundation.org
-Date: Mon, 04 Feb 2013 15:41:24 -0700
-In-Reply-To: <1360009684.11144.539.camel@bling.home>
-References: <20130116143853.339dd89b@nehalam.linuxnetplumber.net>
-	 <CAErSpo5eOE_=Ob2jN7ACy0eJBOa8k36XqCbHnGTCs-wfiy8tiw@mail.gmail.com>
-	 <20130204103645.38ae2d5e@nehalam.linuxnetplumber.net>
-	 <1360009684.11144.539.camel@bling.home>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-ob0-f175.google.com ([209.85.214.175]:62750 "EHLO
+	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933538Ab3CVPjo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 22 Mar 2013 11:39:44 -0400
+MIME-Version: 1.0
+In-Reply-To: <514BAB13.3000101@gmail.com>
+References: <20130321043449.7229.81056.stgit@amt.stowe>
+	<20130321043502.7229.43877.stgit@amt.stowe>
+	<514BAB13.3000101@gmail.com>
+Date: Fri, 22 Mar 2013 09:39:44 -0600
+Message-ID: <CAL-B5D2zJYPNYcCD3StXjnmQit5k05_Zp=cjeeqRLQkzb2g4UQ@mail.gmail.com>
+Subject: Re: [PATCH 2/3] PCI: Handle device quirks when accessing sysfs
+ resource<N> entries
+From: Myron Stowe <myron.stowe@gmail.com>
+To: Robert Hancock <hancockrwd@gmail.com>
+Cc: Myron Stowe <myron.stowe@redhat.com>, bhelgaas@google.com,
+	linux-pci@vger.kernel.org, yuxiangl@marvell.com, yxlraid@gmail.com,
+	greg@kroah.com, alex.williamson@redhat.com, kay@vrfy.org,
+	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 2013-02-04 at 13:28 -0700, Alex Williamson wrote:
-> On Mon, 2013-02-04 at 10:36 -0800, Stephen Hemminger wrote:
-> > > I think drivers/pci/search.c is identical between 3.7 and 3.8-rc1.  Is
-> > > this the first time you've turned on the IOMMU on that box?
-> > 
-> > It exists in 3.7 and earlier kernels, just haven't turned on same config.
-> > 
-> > > It's the same warning as in this bugzilla:
-> > > https://bugzilla.kernel.org/show_bug.cgi?id=44881, and there's a patch
-> > > there at https://bugzilla.kernel.org/show_bug.cgi?id=44881#c11, but
-> > > it's just a quirk that turns off VT-d if we find certain broken
-> > > bridges.  It doesn't look like you have any of those (although I don't
-> > > know what you have at 05:00.0).
-> > > 
-> > > Bjorn
-> > 
-> > This is a standard ASUS motherboard, and don't want to disable VT-d.
-> 
-> Stephen,
-> 
-> Can you give the lspci -vvv of device 5:00.0 to see if it's one we've
-> seen before?  Does the patch below help?
-> 
-> Bjorn, I think we need to quirk it somehow.  So far they've all been
-> PCI-to-PCI bridges attached to root ports where we expect it's actually
-> a PCIe-to-PCI bridge.  Seems like maybe we could have the same attached
-> to a downstream port.  The patch below avoids the WARN and gives us a
-> device, but of course pci_is_pcie reports wrong for this device and may
-> cause some trickle down breakage.  A more complete option might be to
-> add a is_pcie flag to the device that can be set independent of
-> pcie_cap.  We'd need to check all the callers for assumptions, but then
-> we could put the quirk in one place and hopefully fix everything.
-> Thoughts?  Thanks,
+On Thu, Mar 21, 2013 at 6:51 PM, Robert Hancock <hancockrwd@gmail.com> wrote:
+> On 03/20/2013 10:35 PM, Myron Stowe wrote:
+>>
+>> Sysfs includes entries to memory regions that back a PCI device's BARs.
+>> The pci-sysfs entries backing I/O Port BARs can be accessed by userspace,
+>> providing direct access to the device's registers.  File permissions
+>> prevent random users from accessing the device's registers through these
+>> files, but don't stop a privileged app that chooses to ignore the purpose
+>> of these files from doing so.
+>>
+>> There are devices with abnormally strict restrictions with respect to
+>> accessing their registers; aspects that are typically handled by the
+>> device's driver.  When these access restrictions are not followed - as
+>> when a userspace app such as "udevadm info --attribute-walk
+>> --path=/sys/..." parses though reading all the device's sysfs entries - it
+>> can cause such devices to fail.
+>>
+>> This patch introduces a quirking mechanism that can be used to detect
+>> accesses that do no meet the device's restrictions, letting a device
+>> specific method intervene and decide how to progress.
+>>
+>> Reported-by: Xiangliang Yu <yuxiangl@marvell.com>
+>> Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+>
+>
+> I honestly don't think there's much point in even attempting this strategy.
+> This list of devices in the quirk can't possibly be complete. It would
+> likely be easier to enumerate a white-list of devices that can deal with
+> their IO ports being read willy-nilly than a blacklist of those that don't,
+> as there's likely countless devices that fall into this category. Even if
+> they don't choke as badly as these ones do, it's quite likely that bad
+> behavior will result.
 
-This latter approach seems like it might be easier than I expected since
-all the users are so well filtered through the access functions.  A
-quick look through who uses pci_is_pcie seems like this might be
-complete, but more eyes are required.  I'll upload this to the bz for
-those reporters to test as well.  Thoughts?  Thanks,
+For the device in question, it seems abnormally restrictive in its
+access limitations to BAR1 and BAR3.  The device reserves 4 Bytes of
+I/O Port space for these BARs, which is likely based on PCI's DWord
+based protocol, but "chokes (we still have not received any specifics
+on this yet)" on any access other than a single Byte access at offset
+0x2 (x86 supports 1, 2, and 4 Byte I/O Port accesses).  This seems to
+imply that the device did not back the other three reserved Bytes it
+claims in any way, which again, seems peculiar to this particular
+device as other similar devices tend to back the reserved bytes they
+claim and return 0's when accessed.
 
-Alex
+So in the case where two entities such as the devices driver and an
+app like 'udevadm' are *not* simultaneously accessing it, so in effect
+the device is idle with no device driver attached and a user app like
+'udevadm' accesses it: do you still contend that there are countless
+devices that will not deal with their IO ports being read willy-nilly?
 
-commit 60d668a3cdeeb0e29570cf0043736436c146bde8
-Author: Alex Williamson <alex.williamson@redhat.com>
-Date:   Mon Feb 4 15:34:34 2013 -0700
-
-    pci: Handle unadvertised PCIe bridges
-    
-    There seem to be several PCIe-to-PCI bridges out in the wild that
-    blatantly ignore the PCIe specification and do not expose a PCIe
-    capability.  We can attempt to deduce their existence by looking
-    for PCI bridges directly connected to root ports or downstream
-    ports.  What this means is that pci_is_pcie() does not imply PCIe
-    capability and we un-deprecate is_pcie to denote the difference.
-    All the accesses seem to go through pcie_capability_reg_implemented,
-    so we can significantly limit the footprint of this change by
-    checking things there.
-    
-    Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-
-diff --git a/drivers/pci/access.c b/drivers/pci/access.c
-index 3af0478..3df24e7 100644
---- a/drivers/pci/access.c
-+++ b/drivers/pci/access.c
-@@ -511,7 +511,7 @@ static inline bool pcie_cap_has_rtctl(const struct pci_dev *dev)
- 
- static bool pcie_capability_reg_implemented(struct pci_dev *dev, int pos)
- {
--	if (!pci_is_pcie(dev))
-+	if (!pci_is_pcie(dev) || !pci_pcie_cap(dev))
- 		return false;
- 
- 	switch (pos) {
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 6186f03..0a87b6b 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -926,20 +926,46 @@ static void pci_read_irq(struct pci_dev *dev)
- 	dev->irq = irq;
- }
- 
-+static bool is_unadvertised_pcie_bridge(struct pci_dev *pdev)
-+{
-+	struct pci_dev *parent;
-+
-+	if (pdev->hdr_type != PCI_HEADER_TYPE_BRIDGE ||
-+	    pci_find_capability(pdev, PCI_CAP_ID_EXP) ||
-+            pci_is_root_bus(pdev->bus))
-+		return false;
-+
-+	parent = pdev->bus->self;
-+
-+	if (pci_is_pcie(parent) &&
-+	    (pci_pcie_type(parent) == PCI_EXP_TYPE_ROOT_PORT ||
-+	     pci_pcie_type(parent) == PCI_EXP_TYPE_DOWNSTREAM)) {
-+		pr_warn("WARNING: Your hardware is broken, device %s appears to be a\n Legacy PCI device attached directly to a PCIe device which is not a\n PCIe-to-PCI bridge.  Per section 7.8 of the PCI Express 3.0 spec, the\n PCI express capability structure is required for PCI express device\nfunctions.\n",
-+		        pci_name(pdev));
-+		return true;
-+	}
-+
-+	return false;
-+}
-+
- void set_pcie_port_type(struct pci_dev *pdev)
- {
- 	int pos;
--	u16 reg16;
-+	u16 flags, caps = 0;
- 
- 	pos = pci_find_capability(pdev, PCI_CAP_ID_EXP);
--	if (!pos)
-+	if (pos) {
-+		pci_read_config_word(pdev, pos + PCI_EXP_FLAGS, &flags);
-+		pci_read_config_word(pdev, pos + PCI_EXP_DEVCAP, &caps);
-+	} else if (is_unadvertised_pcie_bridge(pdev))
-+		flags = PCI_EXP_TYPE_PCI_BRIDGE << 4;
-+	else
- 		return;
-+
- 	pdev->is_pcie = 1;
- 	pdev->pcie_cap = pos;
--	pci_read_config_word(pdev, pos + PCI_EXP_FLAGS, &reg16);
--	pdev->pcie_flags_reg = reg16;
--	pci_read_config_word(pdev, pos + PCI_EXP_DEVCAP, &reg16);
--	pdev->pcie_mpss = reg16 & PCI_EXP_DEVCAP_PAYLOAD;
-+	pdev->pcie_flags_reg = flags;
-+	pdev->pcie_mpss = caps & PCI_EXP_DEVCAP_PAYLOAD;
- }
- 
- void set_pcie_hotplug_bridge(struct pci_dev *pdev)
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 15472d6..c9ef42c 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -300,8 +300,8 @@ struct pci_dev {
- 	unsigned int	msix_enabled:1;
- 	unsigned int	ari_enabled:1;	/* ARI forwarding */
- 	unsigned int	is_managed:1;
--	unsigned int	is_pcie:1;	/* Obsolete. Will be removed.
--					   Use pci_is_pcie() instead */
-+	unsigned int	is_pcie:1;	/* Don't access directly,
-+					   use pci_is_pcie() instead */
- 	unsigned int    needs_freset:1; /* Dev requires fundamental reset */
- 	unsigned int	state_saved:1;
- 	unsigned int	is_physfn:1;
-@@ -1689,7 +1689,7 @@ static inline int pci_pcie_cap(struct pci_dev *dev)
-  */
- static inline bool pci_is_pcie(struct pci_dev *dev)
- {
--	return !!pci_pcie_cap(dev);
-+	return dev->is_pcie;
- }
- 
- /**
+The reason I ask is related to what I stated in the cover [PATCH 0/3]
+- "If on the other hand, consensus is that we need userspace device
+register access capabilities - say for UIO drivers or such - then,
+depending on the tact taken, we'll need this solution, or something
+like it, as part of that overall strategy."  So, if it isn't too
+uncommon for devices to choke with normal I/O Port accesses then I
+believe that this solution would be part of a larger strategy to
+support userspace direct access to devices and also works as a
+compromise for the immediate issue today.
 
 
+You make some good suggestions below on possible tactics related to
+allowing userspace access to device registers but I question whether
+or not we really want, or need, to.  Are we, by de-facto, just
+assuming we need to?  Is there consensus that Linux needs to support
+such functionality?  Yes, we are already there (to some extent) with
+commit 8633328 but I think we are seeing the implications of such a
+direction and we also know that the tact that this commit took should
+be going away when VFIO matures.
+
+Thanks for participating in this conversation - you helped in
+understanding the real root cause in the originating thread and have
+brought up some good points to consider,
+ Myron
+
+>
+> I think there's a few things that need to be done:
+>
+> -Fix the bug in udevadm that caused it to trawl through these files
+> willy-nilly,
+>
+> -Fix the kernel so that access through these files complies with the
+> kernel's mechanisms for claiming IO/memory regions to prevent access
+> conflicts (i.e. opening these files should claim the resource region they
+> refer to, and should fail with EBUSY or something if another process or a
+> kernel driver is using it).
+>
+> -Reconsider whether supporting read/write on the resource files for IO port
+> regions like these makes any sense. Obviously mmap isn't very practical for
+> IO port access on x86 but you could even do something like an ioctl for this
+> purpose. Not very many pieces of software would need to access these files
+> so it's likely OK if the API is a bit ugly. That would prevent something
+> like grepping through sysfs from generating port accesses to random devices.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
