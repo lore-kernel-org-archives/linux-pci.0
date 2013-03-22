@@ -1,53 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:50223 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751702Ab3CKP01 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Mar 2013 11:26:27 -0400
-Date: Mon, 11 Mar 2013 11:26:26 -0400 (EDT)
-From: Alan Stern <stern@rowland.harvard.edu>
-To: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
-cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Sarah Sharp <sarah.a.sharp@linux.intel.com>
-Subject: Re: 3.8.2: stale pci device info for a previously inserted express
- card
-In-Reply-To: <513DD059.5030604@fold.natur.cuni.cz>
-Message-ID: <Pine.LNX.4.44L0.1303111111220.2246-100000@iolanthe.rowland.org>
+Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:53200 "EHLO
+	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S932853Ab3CVJjv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 22 Mar 2013 05:39:51 -0400
+Date: Fri, 22 Mar 2013 09:39:36 +0000
+From: Andrew Murray <andrew.murray@arm.com>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"devicetree-discuss@lists.ozlabs.org"
+	<devicetree-discuss@lists.ozlabs.org>,
+	"rob.herring@calxeda.com" <rob.herring@calxeda.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>
+Subject: Re: [RFC PATCH RESEND v2] of/pci: Provide support for parsing PCI
+ DT ranges property
+Message-ID: <20130322093936.GA875@arm.com>
+References: <1362140616-19346-1-git-send-email-Andrew.Murray@arm.com>
+ <20130321170625.2a1bf226@skate>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20130321170625.2a1bf226@skate>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 11 Mar 2013, Martin Mokrejs wrote:
+On Thu, Mar 21, 2013 at 04:06:25PM +0000, Thomas Petazzoni wrote:
+> Dear Andrew Murray,
+> 
+> On Fri,  1 Mar 2013 12:23:36 +0000, Andrew Murray wrote:
+> > This patch factors out common implementations patterns to reduce overall kernel
+> > code and provide a means for host bridge drivers to directly obtain struct
+> > resources from the DT's ranges property without relying on architecture specific
+> > DT handling. This will make it easier to write archiecture independent host bridge
+> > drivers and mitigate against further duplication of DT parsing code.
+> > 
+> > This patch can be used in the following way:
+> > 
+> > 	struct of_pci_range_iter iter;
+> > 	for_each_of_pci_range(&iter, np) {
+> > 
+> > 		//directly access properties of the address range, e.g.:
+> > 		//iter.pci_space, iter.pci_addr, iter.cpu_addr, iter.size or
+> > 		//iter.flags
+> > 
+> > 		//alternatively obtain a struct resource, e.g.:
+> > 		//struct resource res;
+> > 		//range_iter_fill_resource(iter, np, res);
+> > 	}
+> > 
+> > Additionally the implementation takes care of adjacent ranges and merges them
+> > into a single range (as was the case with powerpc and microblaze).
+> > 
+> > The modifications to microblaze, mips and powerpc have not been tested.
+> > 
+> > v2:
+> >   This follows on from suggestions made by Grant Likely
+> >   (marc.info/?l=linux-kernel&m=136079602806328)
+> > 
+> > Signed-off-by: Andrew Murray <Andrew.Murray@arm.com>
+> > Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+> 
+> Thanks, I've tested this successfully with the Marvell PCIe driver. I'm
+> about to send a new version of the Marvell PCIe patch set that includes
+> this RFC proposal.
+> 
+> I only made two small changes compared to your version, detailed below.
 
-> Hi,
->   I use for my daily work acpiphp to manage express cards in Dell Vostro 3550.
-> I have never seen something like this before and believe this is some new regression
-> in 3.8 series. I had in teh a USB3 card and ejected it. Then I inserted a
-> SATA Sil3132 card but it is not detected and dmesg still ends with last lines
-> added when the USB card was being removed. The funny thing is that lspci reports
-> a mixture of USB-card properties with NEC chips along with Silicon Image eSATA card.
+Thanks for the feedback, all looks good to me. Do I need to give ack?
 
-...
-
-When did you run this lspci command?  After inserting the SATA card?
-
-Did you check to see if there were any hung processes?
-
->   I think as a guide you can take the kmemleak report showing that USB did not
-> release its resources completely? Did I screw something with having USB HID generic
-> driver?
-
-Is this repeatable?  It would be more meaningful to see a kmemleak
-report for immediately after the USB-3 card is removed.  The leak may
-be related to these two lines in the log (they occurred only once):
-
-[ 8768.825242] xhci_hcd 0000:11:00.0: Abort command ring failed
-[ 8768.825244] xhci_hcd 0000:11:00.0: HC died; cleaning up
-
-Perhaps cleaning up after a dead controller doesn't deallocate all that
-it should.  Quite possibly this is connected with the fact that on this
-attempt, you removed the USB-3 card while the WD disk drive was plugged
-into it.
-
-Alan Stern
-
+Andrew Murray
