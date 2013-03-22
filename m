@@ -1,81 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:33638 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752234Ab3C0SFI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Mar 2013 14:05:08 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Russell King <linux@arm.linux.org.uk>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	devicetree-discuss@lists.ozlabs.org,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Maen Suleiman <maen@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Olof Johansson <olof@lixom.net>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Mitch Bradley <wmb@firmworks.com>,
-	Andrew Murray <andrew.murray@arm.com>
-Subject: [RFC PATCHv1 1/5] pci: mvebu: enable driver usage on Kirkwood
-Date: Wed, 27 Mar 2013 19:05:00 +0100
-Message-Id: <1364407504-13524-2-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1364407504-13524-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1364407504-13524-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from out1-smtp.messagingengine.com ([66.111.4.25]:45436 "EHLO
+	out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932843Ab3CVBY6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 Mar 2013 21:24:58 -0400
+Date: Thu, 21 Mar 2013 18:24:55 -0700
+From: Greg KH <greg@kroah.com>
+To: Robert Hancock <hancockrwd@gmail.com>
+Cc: Myron Stowe <myron.stowe@redhat.com>, bhelgaas@google.com,
+	linux-pci@vger.kernel.org, yuxiangl@marvell.com, yxlraid@gmail.com,
+	alex.williamson@redhat.com, kay@vrfy.org,
+	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 2/3] PCI: Handle device quirks when accessing sysfs
+ resource<N> entries
+Message-ID: <20130322012455.GB2009@kroah.com>
+References: <20130321043449.7229.81056.stgit@amt.stowe>
+ <20130321043502.7229.43877.stgit@amt.stowe>
+ <514BAB13.3000101@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <514BAB13.3000101@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We allow the pci-mvebu driver to be compiled on the Kirkwood platform,
-and add the 'marvell,kirkwood-pcie' as a compatible string supported
-by the driver.
+On Thu, Mar 21, 2013 at 06:51:31PM -0600, Robert Hancock wrote:
+> On 03/20/2013 10:35 PM, Myron Stowe wrote:
+> >Sysfs includes entries to memory regions that back a PCI device's BARs.
+> >The pci-sysfs entries backing I/O Port BARs can be accessed by userspace,
+> >providing direct access to the device's registers.  File permissions
+> >prevent random users from accessing the device's registers through these
+> >files, but don't stop a privileged app that chooses to ignore the purpose
+> >of these files from doing so.
+> >
+> >There are devices with abnormally strict restrictions with respect to
+> >accessing their registers; aspects that are typically handled by the
+> >device's driver.  When these access restrictions are not followed - as
+> >when a userspace app such as "udevadm info --attribute-walk
+> >--path=/sys/..." parses though reading all the device's sysfs entries - it
+> >can cause such devices to fail.
+> >
+> >This patch introduces a quirking mechanism that can be used to detect
+> >accesses that do no meet the device's restrictions, letting a device
+> >specific method intervene and decide how to progress.
+> >
+> >Reported-by: Xiangliang Yu <yuxiangl@marvell.com>
+> >Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+> 
+> I honestly don't think there's much point in even attempting this
+> strategy. This list of devices in the quirk can't possibly be
+> complete. It would likely be easier to enumerate a white-list of
+> devices that can deal with their IO ports being read willy-nilly
+> than a blacklist of those that don't, as there's likely countless
+> devices that fall into this category. Even if they don't choke as
+> badly as these ones do, it's quite likely that bad behavior will
+> result.
+> 
+> I think there's a few things that need to be done:
+> 
+> -Fix the bug in udevadm that caused it to trawl through these files
+> willy-nilly,
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
----
- .../devicetree/bindings/pci/mvebu-pci.txt          |    1 +
- drivers/pci/host/Kconfig                           |    2 +-
- drivers/pci/host/pci-mvebu.c                       |    1 +
- 3 files changed, 3 insertions(+), 1 deletion(-)
+There's no "bug" in udevadm, the user explicitly asked for it to read
+all of those files.  Just like grep or bash could be used to ask to read
+those files.
 
-diff --git a/Documentation/devicetree/bindings/pci/mvebu-pci.txt b/Documentation/devicetree/bindings/pci/mvebu-pci.txt
-index eb69d92..f8d4058 100644
---- a/Documentation/devicetree/bindings/pci/mvebu-pci.txt
-+++ b/Documentation/devicetree/bindings/pci/mvebu-pci.txt
-@@ -4,6 +4,7 @@ Mandatory properties:
- - compatible: one of the following values:
-     marvell,armada-370-pcie
-     marvell,armada-xp-pcie
-+    marvell,kirkwood-pcie
- - #address-cells, set to <3>
- - #size-cells, set to <2>
- - #interrupt-cells, set to <1>
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index 6918fbc..1f1d67f 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -3,6 +3,6 @@ menu "PCI host controller drivers"
- 
- config PCI_MVEBU
- 	bool "Marvell EBU PCIe controller"
--	depends on ARCH_MVEBU
-+	depends on ARCH_MVEBU || ARCH_KIRKWOOD
- 
- endmenu
-diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-index 289babd..8d6b5ea 100644
---- a/drivers/pci/host/pci-mvebu.c
-+++ b/drivers/pci/host/pci-mvebu.c
-@@ -901,6 +901,7 @@ static int __init mvebu_pcie_probe(struct platform_device *pdev)
- static const struct of_device_id mvebu_pcie_of_match_table[] = {
- 	{ .compatible = "marvell,armada-xp-pcie", },
- 	{ .compatible = "marvell,armada-370-pcie", },
-+	{ .compatible = "marvell,kirkwood-pcie", },
- 	{},
- };
- MODULE_DEVICE_TABLE(of, mvebu_pcie_of_match_table);
--- 
-1.7.9.5
+If the kernel is going to provide files to userspace, the kernel can't
+suddenly get upset if userspace actually reads those files.
 
+Fix the kernel here please.
+
+> -Fix the kernel so that access through these files complies with the
+> kernel's mechanisms for claiming IO/memory regions to prevent access
+> conflicts (i.e. opening these files should claim the resource region
+> they refer to, and should fail with EBUSY or something if another
+> process or a kernel driver is using it).
+
+Yes, this is a good solution.
+
+> -Reconsider whether supporting read/write on the resource files for
+> IO port regions like these makes any sense. Obviously mmap isn't
+> very practical for IO port access on x86 but you could even do
+> something like an ioctl for this purpose. Not very many pieces of
+> software would need to access these files so it's likely OK if the
+> API is a bit ugly. That would prevent something like grepping
+> through sysfs from generating port accesses to random devices.
+
+Also a good solution.
+
+greg k-h
