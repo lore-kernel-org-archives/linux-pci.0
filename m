@@ -1,131 +1,123 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f54.google.com ([209.85.219.54]:41399 "EHLO
-	mail-oa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757848Ab3CHRB2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 Mar 2013 12:01:28 -0500
-Received: by mail-oa0-f54.google.com with SMTP id n12so2220762oag.27
-        for <linux-pci@vger.kernel.org>; Fri, 08 Mar 2013 09:01:28 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <F766E4F80769BD478052FB6533FA745D25F436861C@SC-VEXCH4.marvell.com>
-References: <1362666556-10036-1-git-send-email-yxlraid@gmail.com>
- <CAErSpo7feQK7pXD=moA_hf=Y-j82oZZKwfDNzfo2Ea7i9VPxtA@mail.gmail.com>
- <F766E4F80769BD478052FB6533FA745D25F436856A@SC-VEXCH4.marvell.com>
- <CAErSpo6RDC+QyyN4kwt7-kU5d8b1iu+zCQZTGZPxCJU2UicTCA@mail.gmail.com> <F766E4F80769BD478052FB6533FA745D25F436861C@SC-VEXCH4.marvell.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 8 Mar 2013 10:01:03 -0700
-Message-ID: <CAErSpo6ascpN=bBUUzkk5W3-Wee_1ZztAyTwnKd-tq=L_9Q3mw@mail.gmail.com>
-Subject: Re: [PATCH 2/2] PCI: fix system hang issue of Marvell SATA host controller
-To: Xiangliang Yu <yuxiangl@marvell.com>
-Cc: yxlraid <yxlraid@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mx1.redhat.com ([209.132.183.28]:51871 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933862Ab3CVQVb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 22 Mar 2013 12:21:31 -0400
+Message-ID: <1363969243.24132.613.camel@bling.home>
+Subject: Re: [PATCH] pciehp: Add pciehp_surprise module option
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Michal Marek <mmarek@suse.cz>
+Cc: Matthew Garrett <mjg59@srcf.ucam.org>,
+	Takashi Iwai <tiwai@suse.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Oliver Neukum <oneukum@suse.de>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Date: Fri, 22 Mar 2013 10:20:43 -0600
+In-Reply-To: <514C8388.3050200@suse.cz>
+References: <s5h38vqjhk6.wl%tiwai@suse.de>
+	 <1363802953.24132.513.camel@bling.home> <s5hr4j9q48d.wl%tiwai@suse.de>
+	 <514C8388.3050200@suse.cz>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 7, 2013 at 11:51 PM, Xiangliang Yu <yuxiangl@marvell.com> wrote:
-> Hi, Bjorn
->
->> >> > Fix system hang issue: if first accessed resource file of BAR0 ~
->> >> > BAR4, system will hang after executing lspci command
->> >>
->> >> This needs more explanation.  We've already read the BARs by the time
->> >> header quirks are run, so apparently it's not just the mere act of
->> >> accessing a BAR that causes a hang.
->> >>
->> >> We need to know exactly what's going on here.  For example, do BARs
->> >> 0-4 exist?  Does the device decode accesses to the regions described
->> >> by the BARs?  The PCI core has to know what resources the device uses,
->> >> so if the device decodes accesses, we can't just throw away the
->> >> start/end information.
->> > The BARs 0-4 is exist and the PCI device is enable IO space, but user access
->> the regions file by udevadm command with info parameter, the system will hang.
->> > Like this: udevadmin info --attribut-walk
->> --path=/sys/device/pci-device/000:*.
->> > Because the device is just AHCI host controller, don't need the BAR0 ~ 4 region
->> file.
->> > Is my explanation ok for the patch?
->>
->> No, I still don't know what causes the hang; I only know that udevadm
->> can trigger it.  I don't want to just paper over the problem until we
->> know what the root cause is.
->>
->> Does "lspci -H1 -vv" also cause a hang?  What about "setpci -s<dev>
->> BASE_ADDRESS_0"?  "setpci -H1 -s<dev> BASE_ADDRESS_0"?
-> The commands are ok because the commands can't find the device after accessing IO port.
-> The root cause is that accessing of IO port will make the chip go bad. So, the point of the patch is don't export capability of the IO accessing.
+On Fri, 2013-03-22 at 17:15 +0100, Michal Marek wrote:
+> On 20.3.2013 20:08, Takashi Iwai wrote:
+> > At Wed, 20 Mar 2013 12:09:13 -0600,
+> > Alex Williamson wrote:
+> >>
+> >> On Wed, 2013-03-20 at 15:02 +0100, Takashi Iwai wrote:
+> >>> We encountered a problem that on some HP machines the Realtek PCI-e
+> >>> card reader device appears only when you inserted a card before the
+> >>> cold boot.  While debugging, it turned out that the device is actually
+> >>> handled via PCI-e hotplug in some level.  The device sends a presence
+> >>> change notification, and pciehp receives it, but it's ignored because
+> >>> of lack of the hotplug surprise (PCI_EXP_SLTCAP_HPS) capability bit.
+> >>> Once when this check passes, everything starts working -- the device
+> >>> appears upon plugging the card properly.
+> >>>
+> >>> There are a few other bug reports indicating the similar problems
+> >>> (e.g. on recent Dell laptops), and I guess the culprit is same.
+> >>>
+> >>> This patch adds a new module option, pciehp_surprise, to pciehp as a
+> >>> workaround.  When pciehp_surprise=1 is given, pciehp handles the
+> >>> presence change as the device on/off as if PCI_EXP_SLTCAP_HPS is set.
+> >>> Unless it's set explicitly, there is no impact on the existing
+> >>> behavior.
+> >>>
+> >>> Signed-off-by: Takashi Iwai <tiwai@suse.de>
+> >>> ---
+> >>>  drivers/pci/hotplug/pciehp.h      | 3 ++-
+> >>>  drivers/pci/hotplug/pciehp_core.c | 3 +++
+> >>>  2 files changed, 5 insertions(+), 1 deletion(-)
+> >>>
+> >>> diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
+> >>> index 2c113de..314f3be 100644
+> >>> --- a/drivers/pci/hotplug/pciehp.h
+> >>> +++ b/drivers/pci/hotplug/pciehp.h
+> >>> @@ -44,6 +44,7 @@ extern bool pciehp_poll_mode;
+> >>>  extern int pciehp_poll_time;
+> >>>  extern bool pciehp_debug;
+> >>>  extern bool pciehp_force;
+> >>> +extern bool pciehp_surprise;
+> >>>  
+> >>>  #define dbg(format, arg...)						\
+> >>>  do {									\
+> >>> @@ -122,7 +123,7 @@ struct controller {
+> >>>  #define MRL_SENS(ctrl)		((ctrl)->slot_cap & PCI_EXP_SLTCAP_MRLSP)
+> >>>  #define ATTN_LED(ctrl)		((ctrl)->slot_cap & PCI_EXP_SLTCAP_AIP)
+> >>>  #define PWR_LED(ctrl)		((ctrl)->slot_cap & PCI_EXP_SLTCAP_PIP)
+> >>> -#define HP_SUPR_RM(ctrl)	((ctrl)->slot_cap & PCI_EXP_SLTCAP_HPS)
+> >>> +#define HP_SUPR_RM(ctrl)	(pciehp_surprise || ((ctrl)->slot_cap & PCI_EXP_SLTCAP_HPS))
+> >>>  #define EMI(ctrl)		((ctrl)->slot_cap & PCI_EXP_SLTCAP_EIP)
+> >>>  #define NO_CMD_CMPL(ctrl)	((ctrl)->slot_cap & PCI_EXP_SLTCAP_NCCS)
+> >>>  #define PSN(ctrl)		((ctrl)->slot_cap >> 19)
+> >>> diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
+> >>> index 7d72c5e..c3a574e 100644
+> >>> --- a/drivers/pci/hotplug/pciehp_core.c
+> >>> +++ b/drivers/pci/hotplug/pciehp_core.c
+> >>> @@ -42,6 +42,7 @@ bool pciehp_debug;
+> >>>  bool pciehp_poll_mode;
+> >>>  int pciehp_poll_time;
+> >>>  bool pciehp_force;
+> >>> +bool pciehp_surprise;
+> >>>  
+> >>>  #define DRIVER_VERSION	"0.4"
+> >>>  #define DRIVER_AUTHOR	"Dan Zink <dan.zink@compaq.com>, Greg Kroah-Hartman <greg@kroah.com>, Dely Sy <dely.l.sy@intel.com>"
+> >>> @@ -55,10 +56,12 @@ module_param(pciehp_debug, bool, 0644);
+> >>>  module_param(pciehp_poll_mode, bool, 0644);
+> >>>  module_param(pciehp_poll_time, int, 0644);
+> >>>  module_param(pciehp_force, bool, 0644);
+> >>> +module_param(pciehp_surprise, bool, 0644);
+> >>>  MODULE_PARM_DESC(pciehp_debug, "Debugging mode enabled or not");
+> >>>  MODULE_PARM_DESC(pciehp_poll_mode, "Using polling mechanism for hot-plug events or not");
+> >>>  MODULE_PARM_DESC(pciehp_poll_time, "Polling mechanism frequency, in seconds");
+> >>>  MODULE_PARM_DESC(pciehp_force, "Force pciehp, even if OSHP is missing");
+> >>> +MODULE_PARM_DESC(pciehp_surprise, "Force to set hotplug-surprise capability");
+> >>>  
+> >>>  #define PCIE_MODULE_NAME "pciehp"
+> >>>  
+> >>
+> >> Please no.  Can we quirk just the device with the problem?
+> > 
+> > It'd be good to have a static quirk in the end, yes.
+> 
+> Alex, Matthew, would it work for you to have this debug / band-aid
+> option _and_ have a list of either machines' dmi strings that have this
+> problem, or devices' PCI IDs (*), and enable the surprise event handling
+> for such machines / devices automatically?  The option would be still
+> useful for debugging, to be able to easily find out if given machine has
+> this problem and needs to be added to the quirk list.
+> 
+> (*) It would probably make more sense to have a list of dmi strings,
+> because it's the PCIe controller that does not set the capability bit
+> when it should. The device (Realtek card reader in this case) seems to
+> behave correctly. The machines in question have been laptops or
+> all-in-one PCs so far, so there should be no problem with dmi matches.
 
-Ah, so the problem is not with accessing the BAR in config space.  The
-problem is with accessing the I/O port space mapped by the BAR.  Is
-that right?
+Yep, I think that makes sense, leave the global option for debugging but
+fix individual known broken devices through dmi quirks.  Thanks,
 
-Does "udevadm info --attribute-walk" really access the device address
-space mapped by the BARs?  That seems surprising to me, and I don't
-see any indication of it when I try it on an AHCI device on my system:
+Alex
 
-# udevadm info --attribute-walk --path=/sys/devices/pci0000:00/0000:00:1f.2
-
-Udevadm info starts with the device specified by the devpath and then
-walks up the chain of parent devices. It prints for every device
-found, all possible attributes in the udev rules key format.
-A rule to match, can be composed by the attributes of the device
-and the attributes from one single parent device.
-
-  looking at device '/devices/pci0000:00/0000:00:1f.2':
-    KERNEL=="0000:00:1f.2"
-    SUBSYSTEM=="pci"
-    DRIVER=="ahci"
-    ATTR{irq}=="40"
-    ATTR{subsystem_vendor}=="0x17aa"
-    ATTR{broken_parity_status}=="0"
-    ATTR{class}=="0x010601"
-    ATTR{consistent_dma_mask_bits}=="64"
-    ATTR{dma_mask_bits}=="64"
-    ATTR{local_cpus}=="00000000,00000000,00000000,00000000,00000000,00000000,00000000,0000000f"
-    ATTR{device}=="0x3b2f"
-    ATTR{enable}=="1"
-    ATTR{msi_bus}==""
-    ATTR{local_cpulist}=="0-3"
-    ATTR{vendor}=="0x8086"
-    ATTR{subsystem_device}=="0x2168"
-    ATTR{numa_node}=="-1"
-
-  looking at parent device '/devices/pci0000:00':
-    KERNELS=="pci0000:00"
-    SUBSYSTEMS==""
-    DRIVERS==""
-
->> >> > ---
->> >> >  drivers/pci/quirks.c |   15 +++++++++++++++
->> >> >  1 files changed, 15 insertions(+), 0 deletions(-)
->> >> >
->> >> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
->> >> > index 0369fb6..d49f8dc 100644
->> >> > --- a/drivers/pci/quirks.c
->> >> > +++ b/drivers/pci/quirks.c
->> >> > @@ -44,6 +44,21 @@ static void quirk_mmio_always_on(struct pci_dev *dev)
->> >> >  DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_ANY_ID, PCI_ANY_ID,
->> >> >                                 PCI_CLASS_BRIDGE_HOST, 8,
->> >> quirk_mmio_always_on);
->> >> >
->> >> > +/* The BAR0 ~ BAR4 of Marvell 9125 device can't be accessed
->> >> > +*  by IO resource file, and need to skip the files
->> >> > +*/
->> >> > +static void quirk_marvell_mask_bar(struct pci_dev *dev)
->> >> > +{
->> >> > +       int i;
->> >> > +
->> >> > +       for (i = 0; i < 5; i++)
->> >> > +               if (dev->resource[i].start)
->> >> > +                       dev->resource[i].start =
->> >> > +                               dev->resource[i].end = 0;
->> >> > +}
->> >> > +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x9125,
->> >> > +                               quirk_marvell_mask_bar);
->> >> > +
->> >> >  /* The Mellanox Tavor device gives false positive parity errors
->> >> >   * Mark this device with a broken_parity_status, to allow
->> >> >   * PCI scanning code to "skip" this now blacklisted device.
->> >> > --
->> >> > 1.7.5.4
->> >> >
