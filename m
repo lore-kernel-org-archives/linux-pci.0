@@ -1,51 +1,57 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <F766E4F80769BD478052FB6533FA745D25F440A9C6@SC-VEXCH4.marvell.com>
-References: <1362666556-10036-1-git-send-email-yxlraid@gmail.com>
- <CAErSpo7feQK7pXD=moA_hf=Y-j82oZZKwfDNzfo2Ea7i9VPxtA@mail.gmail.com>
- <F766E4F80769BD478052FB6533FA745D25F436856A@SC-VEXCH4.marvell.com>
- <CAErSpo6RDC+QyyN4kwt7-kU5d8b1iu+zCQZTGZPxCJU2UicTCA@mail.gmail.com>
- <F766E4F80769BD478052FB6533FA745D25F436861C@SC-VEXCH4.marvell.com>
- <CAErSpo6ascpN=bBUUzkk5W3-Wee_1ZztAyTwnKd-tq=L_9Q3mw@mail.gmail.com>
- <F766E4F80769BD478052FB6533FA745D25F440A477@SC-VEXCH4.marvell.com>
- <CAL-B5D1=zqB_9sWL9A_GgY6OgGdw18qxBHbgj_YG2bj0VGDh4Q@mail.gmail.com>
- <F766E4F80769BD478052FB6533FA745D25F440A64D@SC-VEXCH4.marvell.com>
- <CAL-B5D3od8zhtYguH36r1XmHw_rvg0Tcdgv8ewYrgHFsJ2Sefw@mail.gmail.com> <F766E4F80769BD478052FB6533FA745D25F440A9C6@SC-VEXCH4.marvell.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 12 Mar 2013 10:21:24 -0600
-Message-ID: <CAErSpo7ufeQK1e=HSTYCNie7yfPouYE4-ot9dUX5r-upBtVt=A@mail.gmail.com>
-Subject: Re: [PATCH 2/2] PCI: fix system hang issue of Marvell SATA host controller
-To: Xiangliang Yu <yuxiangl@marvell.com>
-Cc: Myron Stowe <myron.stowe@gmail.com>, yxlraid <yxlraid@gmail.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.free-electrons.com ([94.23.35.102]:58173 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752607Ab3CVJtV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 22 Mar 2013 05:49:21 -0400
+Date: Fri, 22 Mar 2013 10:49:17 +0100
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Andrew Murray <andrew.murray@arm.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"devicetree-discuss@lists.ozlabs.org"
+	<devicetree-discuss@lists.ozlabs.org>,
+	"rob.herring@calxeda.com" <rob.herring@calxeda.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+	Linus Walleij <linus.walleij@linaro.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>
+Subject: Re: [RFC PATCH RESEND v2] of/pci: Provide support for parsing PCI
+ DT ranges property
+Message-ID: <20130322104917.78e98b93@skate>
+In-Reply-To: <20130322093936.GA875@arm.com>
+References: <1362140616-19346-1-git-send-email-Andrew.Murray@arm.com>
+	<20130321170625.2a1bf226@skate>
+	<20130322093936.GA875@arm.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 12, 2013 at 3:22 AM, Xiangliang Yu <yuxiangl@marvell.com> wrote:
-> Hi, Myron
->> > Now, the situation is like this:
->> > I captured the PCIE trace with analyzer and found that 1st BE is 0x1111
->> > when
->> > accessing IO port space. But 9125 spec has some limitation, and the BE
->> > must
->> > be
->> > 0x0100, to access the 2nd byte only. So, the chip will go to bad.
->>
->> Great, this is new, interesting, data.  Is the 9125 spec publicly
->> accessible and/or could you elaborate on the "some limitation"
->> comment?
-> 9125 spec is publicly accessible.
+Andrew,
 
-Please provide a URL for the spec.
+On Fri, 22 Mar 2013 09:39:36 +0000, Andrew Murray wrote:
 
->> A byte enable (BE) of 0x1111 suggests the CPU did a 32-bit I/O port
->> read.  Does the 9125 device only support one-byte I/O port accesses
->> and when presented with larger request types it doesn't respond
->> properly?
-> Yes, the hardware engineer had confirmed the situation.
+> > Thanks, I've tested this successfully with the Marvell PCIe driver. I'm
+> > about to send a new version of the Marvell PCIe patch set that includes
+> > this RFC proposal.
+> > 
+> > I only made two small changes compared to your version, detailed below.
+> 
+> Thanks for the feedback, all looks good to me. Do I need to give ack?
 
-Please provide a URL for the erratum describing this 9125 issue.
+If you could ack the version I sent in the PCIe patch set yesterday, it
+would be great yes.
 
-Bjorn
+I'm hoping also that Grant will have a look at this and say if he
+agrees. The entire PCIe patch set depends on this patch, so if any
+rework of this OF patch needs to be done, it'd be great to know it
+sooner rather than later.
+
+Thanks!
+
+Thomas
+-- 
+Thomas Petazzoni, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
