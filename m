@@ -1,89 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:35881 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757836Ab3CHPTe (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 Mar 2013 10:19:34 -0500
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Cc: Arnd Bergmann <arnd@arndb.de>, Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>, Olof Johansson <olof@lixom.net>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Yehuda Yitschak <yehuday@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Stephen Warren <swarren@wwwdotorg.org>
-Subject: [PATCH v4 03/18] of/pci: Add of_pci_get_bus() function
-Date: Fri,  8 Mar 2013 16:19:05 +0100
-Message-Id: <1362755960-30791-4-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1362755960-30791-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1362755960-30791-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from mail-ia0-f182.google.com ([209.85.210.182]:41424 "EHLO
+	mail-ia0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751813Ab3CVAve (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 Mar 2013 20:51:34 -0400
+Message-ID: <514BAB13.3000101@gmail.com>
+Date: Thu, 21 Mar 2013 18:51:31 -0600
+From: Robert Hancock <hancockrwd@gmail.com>
+MIME-Version: 1.0
+To: Myron Stowe <myron.stowe@redhat.com>
+CC: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	yuxiangl@marvell.com, yxlraid@gmail.com, greg@kroah.com,
+	alex.williamson@redhat.com, kay@vrfy.org,
+	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 2/3] PCI: Handle device quirks when accessing sysfs resource<N>
+ entries
+References: <20130321043449.7229.81056.stgit@amt.stowe> <20130321043502.7229.43877.stgit@amt.stowe>
+In-Reply-To: <20130321043502.7229.43877.stgit@amt.stowe>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Thierry Reding <thierry.reding@avionic-design.de>
+On 03/20/2013 10:35 PM, Myron Stowe wrote:
+> Sysfs includes entries to memory regions that back a PCI device's BARs.
+> The pci-sysfs entries backing I/O Port BARs can be accessed by userspace,
+> providing direct access to the device's registers.  File permissions
+> prevent random users from accessing the device's registers through these
+> files, but don't stop a privileged app that chooses to ignore the purpose
+> of these files from doing so.
+>
+> There are devices with abnormally strict restrictions with respect to
+> accessing their registers; aspects that are typically handled by the
+> device's driver.  When these access restrictions are not followed - as
+> when a userspace app such as "udevadm info --attribute-walk
+> --path=/sys/..." parses though reading all the device's sysfs entries - it
+> can cause such devices to fail.
+>
+> This patch introduces a quirking mechanism that can be used to detect
+> accesses that do no meet the device's restrictions, letting a device
+> specific method intervene and decide how to progress.
+>
+> Reported-by: Xiangliang Yu <yuxiangl@marvell.com>
+> Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
 
-This function can be used to parse the number of a device's parent PCI
-bus from a standard 5-cell PCI resource.
+I honestly don't think there's much point in even attempting this 
+strategy. This list of devices in the quirk can't possibly be complete. 
+It would likely be easier to enumerate a white-list of devices that can 
+deal with their IO ports being read willy-nilly than a blacklist of 
+those that don't, as there's likely countless devices that fall into 
+this category. Even if they don't choke as badly as these ones do, it's 
+quite likely that bad behavior will result.
 
-Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
----
- drivers/of/of_pci.c    |   21 +++++++++++++++++++++
- include/linux/of_pci.h |    1 +
- 2 files changed, 22 insertions(+)
+I think there's a few things that need to be done:
 
-diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
-index 4dd7b9b..d6e6de5 100644
---- a/drivers/of/of_pci.c
-+++ b/drivers/of/of_pci.c
-@@ -43,6 +43,27 @@ struct device_node *of_pci_find_child_device(struct device_node *parent,
- EXPORT_SYMBOL_GPL(of_pci_find_child_device);
- 
- /**
-+ * of_pci_get_bus() - Get bus number for a device node
-+ * @np: device node
-+ *
-+ * Parses a standard 5-cell PCI resource and returns the 8-bit bus number of
-+ * the device's parent PCI bus. On error a negative error code is returned.
-+ */
-+int of_pci_get_bus(struct device_node *np)
-+{
-+	unsigned int size;
-+	const __be32 *reg;
-+
-+	reg = of_get_property(np, "reg", &size);
-+
-+	if (!reg || size < 5 * sizeof(__be32))
-+		return -EINVAL;
-+
-+	return (be32_to_cpup(reg) >> 16) & 0xff;
-+}
-+EXPORT_SYMBOL_GPL(of_pci_get_bus);
-+
-+/**
-  * of_pci_get_devfn() - Get device and function numbers for a device node
-  * @np: device node
-  *
-diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
-index 91ec484..9118321 100644
---- a/include/linux/of_pci.h
-+++ b/include/linux/of_pci.h
-@@ -10,6 +10,7 @@ int of_irq_map_pci(const struct pci_dev *pdev, struct of_irq *out_irq);
- struct device_node;
- struct device_node *of_pci_find_child_device(struct device_node *parent,
- 					     unsigned int devfn);
-+int of_pci_get_bus(struct device_node *np);
- int of_pci_get_devfn(struct device_node *np);
- 
- #endif
--- 
-1.7.9.5
+-Fix the bug in udevadm that caused it to trawl through these files 
+willy-nilly,
 
+-Fix the kernel so that access through these files complies with the 
+kernel's mechanisms for claiming IO/memory regions to prevent access 
+conflicts (i.e. opening these files should claim the resource region 
+they refer to, and should fail with EBUSY or something if another 
+process or a kernel driver is using it).
+
+-Reconsider whether supporting read/write on the resource files for IO 
+port regions like these makes any sense. Obviously mmap isn't very 
+practical for IO port access on x86 but you could even do something like 
+an ioctl for this purpose. Not very many pieces of software would need 
+to access these files so it's likely OK if the API is a bit ugly. That 
+would prevent something like grepping through sysfs from generating port 
+accesses to random devices.
