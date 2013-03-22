@@ -1,97 +1,116 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:53626 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964858Ab3CZQS7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Mar 2013 12:18:59 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Russell King <linux@arm.linux.org.uk>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	devicetree-discuss@lists.ozlabs.org,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Maen Suleiman <maen@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Olof Johansson <olof@lixom.net>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Mitch Bradley <wmb@firmworks.com>,
-	Andrew Murray <andrew.murray@arm.com>
-Subject: [PATCHv6 10/17] arm: mvebu: add PCIe Device Tree informations for Armada 370
-Date: Tue, 26 Mar 2013 17:18:32 +0100
-Message-Id: <1364314719-1049-11-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1364314719-1049-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1364314719-1049-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from cantor2.suse.de ([195.135.220.15]:59718 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933480Ab3CVQPM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 22 Mar 2013 12:15:12 -0400
+Message-ID: <514C8388.3050200@suse.cz>
+Date: Fri, 22 Mar 2013 17:15:04 +0100
+From: Michal Marek <mmarek@suse.cz>
+MIME-Version: 1.0
+To: Alex Williamson <alex.williamson@redhat.com>,
+	Matthew Garrett <mjg59@srcf.ucam.org>
+Cc: Takashi Iwai <tiwai@suse.de>, Bjorn Helgaas <bhelgaas@google.com>,
+	Oliver Neukum <oneukum@suse.de>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] pciehp: Add pciehp_surprise module option
+References: <s5h38vqjhk6.wl%tiwai@suse.de> <1363802953.24132.513.camel@bling.home> <s5hr4j9q48d.wl%tiwai@suse.de>
+In-Reply-To: <s5hr4j9q48d.wl%tiwai@suse.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The Armada 370 SoC has two 1x PCIe 2.0 interfaces, so we add the
-necessary Device Tree informations to make these interfaces availabel.
+On 20.3.2013 20:08, Takashi Iwai wrote:
+> At Wed, 20 Mar 2013 12:09:13 -0600,
+> Alex Williamson wrote:
+>>
+>> On Wed, 2013-03-20 at 15:02 +0100, Takashi Iwai wrote:
+>>> We encountered a problem that on some HP machines the Realtek PCI-e
+>>> card reader device appears only when you inserted a card before the
+>>> cold boot.  While debugging, it turned out that the device is actually
+>>> handled via PCI-e hotplug in some level.  The device sends a presence
+>>> change notification, and pciehp receives it, but it's ignored because
+>>> of lack of the hotplug surprise (PCI_EXP_SLTCAP_HPS) capability bit.
+>>> Once when this check passes, everything starts working -- the device
+>>> appears upon plugging the card properly.
+>>>
+>>> There are a few other bug reports indicating the similar problems
+>>> (e.g. on recent Dell laptops), and I guess the culprit is same.
+>>>
+>>> This patch adds a new module option, pciehp_surprise, to pciehp as a
+>>> workaround.  When pciehp_surprise=1 is given, pciehp handles the
+>>> presence change as the device on/off as if PCI_EXP_SLTCAP_HPS is set.
+>>> Unless it's set explicitly, there is no impact on the existing
+>>> behavior.
+>>>
+>>> Signed-off-by: Takashi Iwai <tiwai@suse.de>
+>>> ---
+>>>  drivers/pci/hotplug/pciehp.h      | 3 ++-
+>>>  drivers/pci/hotplug/pciehp_core.c | 3 +++
+>>>  2 files changed, 5 insertions(+), 1 deletion(-)
+>>>
+>>> diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
+>>> index 2c113de..314f3be 100644
+>>> --- a/drivers/pci/hotplug/pciehp.h
+>>> +++ b/drivers/pci/hotplug/pciehp.h
+>>> @@ -44,6 +44,7 @@ extern bool pciehp_poll_mode;
+>>>  extern int pciehp_poll_time;
+>>>  extern bool pciehp_debug;
+>>>  extern bool pciehp_force;
+>>> +extern bool pciehp_surprise;
+>>>  
+>>>  #define dbg(format, arg...)						\
+>>>  do {									\
+>>> @@ -122,7 +123,7 @@ struct controller {
+>>>  #define MRL_SENS(ctrl)		((ctrl)->slot_cap & PCI_EXP_SLTCAP_MRLSP)
+>>>  #define ATTN_LED(ctrl)		((ctrl)->slot_cap & PCI_EXP_SLTCAP_AIP)
+>>>  #define PWR_LED(ctrl)		((ctrl)->slot_cap & PCI_EXP_SLTCAP_PIP)
+>>> -#define HP_SUPR_RM(ctrl)	((ctrl)->slot_cap & PCI_EXP_SLTCAP_HPS)
+>>> +#define HP_SUPR_RM(ctrl)	(pciehp_surprise || ((ctrl)->slot_cap & PCI_EXP_SLTCAP_HPS))
+>>>  #define EMI(ctrl)		((ctrl)->slot_cap & PCI_EXP_SLTCAP_EIP)
+>>>  #define NO_CMD_CMPL(ctrl)	((ctrl)->slot_cap & PCI_EXP_SLTCAP_NCCS)
+>>>  #define PSN(ctrl)		((ctrl)->slot_cap >> 19)
+>>> diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
+>>> index 7d72c5e..c3a574e 100644
+>>> --- a/drivers/pci/hotplug/pciehp_core.c
+>>> +++ b/drivers/pci/hotplug/pciehp_core.c
+>>> @@ -42,6 +42,7 @@ bool pciehp_debug;
+>>>  bool pciehp_poll_mode;
+>>>  int pciehp_poll_time;
+>>>  bool pciehp_force;
+>>> +bool pciehp_surprise;
+>>>  
+>>>  #define DRIVER_VERSION	"0.4"
+>>>  #define DRIVER_AUTHOR	"Dan Zink <dan.zink@compaq.com>, Greg Kroah-Hartman <greg@kroah.com>, Dely Sy <dely.l.sy@intel.com>"
+>>> @@ -55,10 +56,12 @@ module_param(pciehp_debug, bool, 0644);
+>>>  module_param(pciehp_poll_mode, bool, 0644);
+>>>  module_param(pciehp_poll_time, int, 0644);
+>>>  module_param(pciehp_force, bool, 0644);
+>>> +module_param(pciehp_surprise, bool, 0644);
+>>>  MODULE_PARM_DESC(pciehp_debug, "Debugging mode enabled or not");
+>>>  MODULE_PARM_DESC(pciehp_poll_mode, "Using polling mechanism for hot-plug events or not");
+>>>  MODULE_PARM_DESC(pciehp_poll_time, "Polling mechanism frequency, in seconds");
+>>>  MODULE_PARM_DESC(pciehp_force, "Force pciehp, even if OSHP is missing");
+>>> +MODULE_PARM_DESC(pciehp_surprise, "Force to set hotplug-surprise capability");
+>>>  
+>>>  #define PCIE_MODULE_NAME "pciehp"
+>>>  
+>>
+>> Please no.  Can we quirk just the device with the problem?
+> 
+> It'd be good to have a static quirk in the end, yes.
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
----
- arch/arm/boot/dts/armada-370.dtsi |   45 +++++++++++++++++++++++++++++++++++++
- 1 file changed, 45 insertions(+)
+Alex, Matthew, would it work for you to have this debug / band-aid
+option _and_ have a list of either machines' dmi strings that have this
+problem, or devices' PCI IDs (*), and enable the surprise event handling
+for such machines / devices automatically?  The option would be still
+useful for debugging, to be able to easily find out if given machine has
+this problem and needs to be added to the quirk list.
 
-diff --git a/arch/arm/boot/dts/armada-370.dtsi b/arch/arm/boot/dts/armada-370.dtsi
-index 8188d13..b0468fd 100644
---- a/arch/arm/boot/dts/armada-370.dtsi
-+++ b/arch/arm/boot/dts/armada-370.dtsi
-@@ -153,5 +153,50 @@
- 			clocks = <&coreclk 0>;
- 		};
- 
-+		pcie-controller {
-+			compatible = "marvell,armada-370-pcie";
-+			status = "disabled";
-+			device_type = "pci";
-+
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+
-+			bus-range = <0x00 0xff>;
-+
-+			reg = <0xd0040000 0x2000>, <0xd0080000 0x2000>;
-+
-+			reg-names = "pcie0.0", "pcie1.0";
-+
-+			ranges = <0x82000000 0 0xe0000000 0xe0000000 0 0x08000000   /* non-prefetchable memory */
-+			          0x81000000 0 0          0xe8000000 0 0x00100000>; /* downstream I/O */
-+
-+			pcie@1,0 {
-+				device_type = "pci";
-+				reg = <0x0800 0 0 0 0>;
-+				#address-cells = <3>;
-+				#size-cells = <2>;
-+				#interrupt-cells = <1>;
-+				interrupt-map-mask = <0 0 0 0>;
-+				interrupt-map = <0 0 0 0 &mpic 58>;
-+				marvell,pcie-port = <0>;
-+				marvell,pcie-lane = <0>;
-+				clocks = <&gateclk 5>;
-+				status = "disabled";
-+			};
-+
-+			pcie@2,0 {
-+				device_type = "pci";
-+				reg = <0x1000 0 0 0 0>;
-+				#address-cells = <3>;
-+				#size-cells = <2>;
-+				#interrupt-cells = <1>;
-+				interrupt-map-mask = <0 0 0 0>;
-+				interrupt-map = <0 0 0 0 &mpic 62>;
-+				marvell,pcie-port = <1>;
-+				marvell,pcie-lane = <0>;
-+				clocks = <&gateclk 9>;
-+				status = "disabled";
-+			};
-+		};
- 	};
- };
--- 
-1.7.9.5
+(*) It would probably make more sense to have a list of dmi strings,
+because it's the PCIe controller that does not set the capability bit
+when it should. The device (Realtek card reader in this case) seems to
+behave correctly. The machines in question have been laptops or
+all-in-one PCs so far, so there should be no problem with dmi matches.
 
+Thanks,
+Michal
