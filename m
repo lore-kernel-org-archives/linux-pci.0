@@ -1,54 +1,143 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from g4t0016.houston.hp.com ([15.201.24.19]:29264 "EHLO
+	g4t0016.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754957Ab3CVTxm convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 22 Mar 2013 15:53:42 -0400
+From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
+To: Myron Stowe <myron.stowe@gmail.com>,
+	Robert Hancock <hancockrwd@gmail.com>
+CC: Myron Stowe <myron.stowe@redhat.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"yuxiangl@marvell.com" <yuxiangl@marvell.com>,
+	"yxlraid@gmail.com" <yxlraid@gmail.com>,
+	"greg@kroah.com" <greg@kroah.com>,
+	"alex.williamson@redhat.com" <alex.williamson@redhat.com>,
+	"kay@vrfy.org" <kay@vrfy.org>,
+	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] PCI, ACPI: hold acpi_scan_lock during root bus hotplug
-Date: Tue, 26 Mar 2013 23:58:50 +0100
-Message-ID: <13791994.aJX11d8f7N@vostro.rjw.lan>
-In-Reply-To: <CAErSpo7obx9Ay+sZZtki5ZBrSpYfJ+dnxxoH0=ReqOOByVkXhA@mail.gmail.com>
-References: <1673357.1IdxNNvGWX@vostro.rjw.lan> <2166148.RX0m5V0khX@vostro.rjw.lan> <CAErSpo7obx9Ay+sZZtki5ZBrSpYfJ+dnxxoH0=ReqOOByVkXhA@mail.gmail.com>
+Subject: RE: [PATCH 2/3] PCI: Handle device quirks when accessing sysfs
+ resource<N> entries
+Date: Fri, 22 Mar 2013 19:52:36 +0000
+Message-ID: <94D0CD8314A33A4D9D801C0FE68B402950DAF0FE@G9W0745.americas.hpqcorp.net>
+References: <20130321043449.7229.81056.stgit@amt.stowe>
+	<20130321043502.7229.43877.stgit@amt.stowe>	<514BAB13.3000101@gmail.com>
+	<CAL-B5D2zJYPNYcCD3StXjnmQit5k05_Zp=cjeeqRLQkzb2g4UQ@mail.gmail.com>
+	<CADLC3L33VbGGRPpVA2vUzE1KtT7ow5oTM0KCbSENo456dEYPUg@mail.gmail.com>
+ <CAL-B5D3YHUsDfJS4spKkc7sTFM=e8ZwMcaiKoMfHnEdQQsHHBA@mail.gmail.com>
+In-Reply-To: <CAL-B5D3YHUsDfJS4spKkc7sTFM=e8ZwMcaiKoMfHnEdQQsHHBA@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, March 26, 2013 04:48:49 PM Bjorn Helgaas wrote:
-> On Tue, Mar 26, 2013 at 4:54 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> > On Tuesday, March 26, 2013 08:12:30 AM Yinghai Lu wrote:
-> >> On Tue, Mar 26, 2013 at 6:24 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> >> > On Sunday, March 10, 2013 10:05:16 PM Yinghai Lu wrote:
-> >> >> During merging pci tree with pm/acpi tree, Linus noticed that
-> >> >> we don't have same lock using patten about acpi pci root as
-> >> >> acpiphp.
-> >> >>
-> >> >> Here apply same lock patten, and we need to change
-> >> >> acpi_bus_hot_remove_device executing via acpi_os_hotplug_execute()
-> >> >> as it also hold the lock in acpi_bus_hot_remove_device.
-> >> >>
-> >> >> That will make acpi_bus_hot_remove_device calling the same as other
-> >> >> callers.
-> >> >>
-> >> >> Reported-by: Linus Torvalds <torvalds@linux-foundation.org>
-> >> >> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> >> >> Acked-by: Rafael J. Wysocki <rjw@sisk.pl>
-> >> >
-> >> > Bjorn, this needs to go in before final 3.9.
-> >> >
-> >> > Are you going to handle it, or should I take care of it?
+
+
+> On Fri, Mar 22, 2013 at 9:55 AM, Robert Hancock <hancockrwd@gmail.com>
+> wrote:
+> > On Fri, Mar 22, 2013 at 9:39 AM, Myron Stowe <myron.stowe@gmail.com>
+> wrote:
+> >> On Thu, Mar 21, 2013 at 6:51 PM, Robert Hancock
+> <hancockrwd@gmail.com> wrote:
+> >>> On 03/20/2013 10:35 PM, Myron Stowe wrote:
+> >>>>
+> >>>> Sysfs includes entries to memory regions that back a PCI device's BARs.
+> >>>> The pci-sysfs entries backing I/O Port BARs can be accessed by userspace,
+> >>>> providing direct access to the device's registers.  File permissions
+> >>>> prevent random users from accessing the device's registers through these
+> >>>> files, but don't stop a privileged app that chooses to ignore the purpose
+> >>>> of these files from doing so.
+> >>>>
+> >>>> There are devices with abnormally strict restrictions with respect to
+> >>>> accessing their registers; aspects that are typically handled by the
+> >>>> device's driver.  When these access restrictions are not followed - as
+> >>>> when a userspace app such as "udevadm info --attribute-walk
+> >>>> --path=/sys/..." parses though reading all the device's sysfs entries - it
+> >>>> can cause such devices to fail.
+> >>>>
+> >>>> This patch introduces a quirking mechanism that can be used to detect
+> >>>> accesses that do no meet the device's restrictions, letting a device
+> >>>> specific method intervene and decide how to progress.
+> >>>>
+> >>>> Reported-by: Xiangliang Yu <yuxiangl@marvell.com>
+> >>>> Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+> >>>
+> >>>
+> >>> I honestly don't think there's much point in even attempting this strategy.
+> >>> This list of devices in the quirk can't possibly be complete. It would
+> >>> likely be easier to enumerate a white-list of devices that can deal with
+> >>> their IO ports being read willy-nilly than a blacklist of those that don't,
+> >>> as there's likely countless devices that fall into this category. Even if
+> >>> they don't choke as badly as these ones do, it's quite likely that bad
+> >>> behavior will result.
 > >>
-> >> It should be better via your pm+acpi tree, as that lock is added via your tree.
+> >> For the device in question, it seems abnormally restrictive in its
+> >> access limitations to BAR1 and BAR3.  The device reserves 4 Bytes of
+> >> I/O Port space for these BARs, which is likely based on PCI's DWord
+> >> based protocol, but "chokes (we still have not received any specifics
+> >> on this yet)" on any access other than a single Byte access at offset
+> >> 0x2 (x86 supports 1, 2, and 4 Byte I/O Port accesses).  This seems to
+> >> imply that the device did not back the other three reserved Bytes it
+> >> claims in any way, which again, seems peculiar to this particular
+> >> device as other similar devices tend to back the reserved bytes they
+> >> claim and return 0's when accessed.
 > >
-> > OK, I'll take it, then, if Bjorn doesn't object.
+> > I don't think it's really that unusual. IO ports are weird, they're
+> > not necessarily emulating any kind of normal memory - doing a 32-bit
+> > access on IO port 0 isn't necessarily equivalent at all to doing
+> > separate 8-bit accesses on IO ports 0, 1, 2 and 3 for example. They
+> > can do completely different things. For legacy SFF ATA controllers,
+> > IIRC most of the IO ports only expect 8-bit accesses other than the
+> > PIO data register which can do 16 or 32-bit accesses (which just gives
+> > you a different amount of data when doing different size reads from
+> > the same location - it doesn't give you the data for the IO ports 2 or
+> > 3 bytes ahead of that when doing a 32-bit read, like you might expect
+> > if you were thinking of it like memory).
 > 
-> Yep, that's fine with me.
+> Very good point; I did have a more memory based mindset.
+> 
+> > So it's not too shocking that
+> > the designer of these Marvell devices didn't pay too much attention to
+> > what happens if you access the ports in an unexpected way.
+> >
+> > ...
+> >>
+> >> ...
+> 
+> So this suggests that we will never be able to deal with a userspace
+> app accessing device registers in a unknowledgable, random, fashion -
+> the exact situation we are currently in today.  We could get to the
+> point of supporting UIO drivers, which would be more like device
+> drivers and have intimate detailed knowledge of what they are driving
+> and which would also introduce some of the mutual-exclusive ownership
+> issues we have talked about, but not unknowing userspace apps.
+> 
 
-Cool, thanks. :-)
+The PCI Express specification allows devices to choose what types of accesses they support to the 
+IO or memory address spaces provided by their BARs:
+
+Excerpt from PCI Express Base Specification 3.0 page 109:
+" When a device's programming model restricts (vs. what is otherwise permitted in PCI Express) the
+characteristics of a Request, that device is permitted to "Completer Abort" any Requests which
+violate the programming model. Examples include unaligned or wrong-size access to a register
+block and unsupported size of request to a Memory Space.
+
+Generally, devices are able to assume a restricted programming model when all communication will
+be between the device's driver software and the device itself. Devices which may be accessed
+directly by operating system software or by applications which may not comprehend the restricted
+programming model of the device (typically devices which implement legacy capabilities) should be
+designed to support all types of Requests which are possible in the existing usage model for the
+device. If this is not done, the device may fail to operate with existing software."
+
+How the system handles errors like Completer Aborts will vary - NMIs, hangs, or even processing 
+bogus data are all possible.
+
+There are some baseline rules on configuration space accesses (so generic PCI topology software
+can work with all PCI cards), but not IO and memory space.  It's prudent to not generate IO
+or memory accesses you don't know are supposed to work.
+
+---
+Rob Elliott    HP Server Storage
 
 
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+
