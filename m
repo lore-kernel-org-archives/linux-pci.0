@@ -1,38 +1,41 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:60404 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1161015Ab3CVQfm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 22 Mar 2013 12:35:42 -0400
+Message-ID: <514C8858.3050702@suse.cz>
+Date: Fri, 22 Mar 2013 17:35:36 +0100
+From: Michal Marek <mmarek@suse.cz>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo4nAN7wFaRebw5fM3gQVppaQoSSh3PdFumgCS1SGhcxcw@mail.gmail.com>
-References: <1361182193-31894-1-git-send-email-hare@suse.de>
-	<CAE9FiQWP1F5mLUoHoTHXy-wQoGxVK66QuuHYydaq3YfysS5Etg@mail.gmail.com>
-	<5124820D.2080900@suse.de>
-	<CAE9FiQXHteymDNzu0GqWtVSVhu3g2hCT+K9e5tB1mR-OBX1ffA@mail.gmail.com>
-	<5125C45A.5020208@suse.de>
-	<CAErSpo5j3Qge5Q2S+hyMGOcmoN77V0T=1+6OJdNJfJdnvT8wgg@mail.gmail.com>
-	<51305B99.6080806@suse.de>
-	<20130305224150.GE8339@xanatos>
-	<CAErSpo4nAN7wFaRebw5fM3gQVppaQoSSh3PdFumgCS1SGhcxcw@mail.gmail.com>
-Date: Tue, 26 Mar 2013 16:34:45 -0700
-Message-ID: <CAE9FiQUUyqY_FHCRZQ0aHu+2V-yqqdD1YVRp5rHnULBMY7BUfA@mail.gmail.com>
-Subject: Re: [PATCH] pci: do not try to assign irq 255
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Sarah Sharp <sarah.a.sharp@linux.intel.com>,
-	Hannes Reinecke <hare@suse.de>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Frederik Himpe <fhimpe@vub.ac.be>,
-	Oliver Neukum <oneukum@suse.de>,
-	David Haerdeman <david@hardeman.nu>,
-	USB list <linux-usb@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Andy Grover <agrover@redhat.com>
+To: Matthew Garrett <mjg59@srcf.ucam.org>
+Cc: Alex Williamson <alex.williamson@redhat.com>,
+	Takashi Iwai <tiwai@suse.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Oliver Neukum <oneukum@suse.de>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] pciehp: Add pciehp_surprise module option
+References: <s5h38vqjhk6.wl%tiwai@suse.de> <1363802953.24132.513.camel@bling.home> <s5hr4j9q48d.wl%tiwai@suse.de> <514C8388.3050200@suse.cz> <20130322161644.GA28760@srcf.ucam.org>
+In-Reply-To: <20130322161644.GA28760@srcf.ucam.org>
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 26, 2013 at 2:54 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+On 22.3.2013 17:16, Matthew Garrett wrote:
+> On Fri, Mar 22, 2013 at 05:15:04PM +0100, Michal Marek wrote:
+> 
+>> Alex, Matthew, would it work for you to have this debug / band-aid
+>> option _and_ have a list of either machines' dmi strings that have this
+>> problem, or devices' PCI IDs (*), and enable the surprise event handling
+>> for such machines / devices automatically?  The option would be still
+>> useful for debugging, to be able to easily find out if given machine has
+>> this problem and needs to be added to the quirk list.
+> 
+> That's be preferable, but if there's anything we've learned about dmi 
+> strings it's that they usually mean we're doing something wrong. Does 
+> this work with Windows without any quirking? Is there a machine-specific 
+> driver for the PCIe chipset?
 
-> Where are we at with this?  I don't see Sarah's patch in the tree, and
-> I haven't applied any changes, so my guess is this is still broken.
+I don't know. Oliver and Takashi have the machines, but I'm not sure if
+they have a working Windows image for them.
 
-Yes, the fix is in the linus tree.
-
-https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=00eed9c814cb8f281be6f0f5d8f45025dc0a97eb
+Michal
