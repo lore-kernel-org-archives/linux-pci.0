@@ -1,86 +1,28 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:60586 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752016Ab3C0OlA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Mar 2013 10:41:00 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Russell King <linux@arm.linux.org.uk>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	devicetree-discuss@lists.ozlabs.org,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Maen Suleiman <maen@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Olof Johansson <olof@lixom.net>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Mitch Bradley <wmb@firmworks.com>,
-	Andrew Murray <andrew.murray@arm.com>
-Subject: [PATCHv7 13/17] arm: mvebu: PCIe Device Tree informations for Armada XP DB
-Date: Wed, 27 Mar 2013 15:40:30 +0100
-Message-Id: <1364395234-11195-14-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1364395234-11195-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1364395234-11195-1-git-send-email-thomas.petazzoni@free-electrons.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 22 Mar 2013 09:30:27 +0000
+From: Andrew Murray <andrew.murray@arm.com>
+To: Thierry Reding <thierry.reding@avionic-design.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [RFC 0/2] PCI: Introduce MSI chip infrastructure
+Message-ID: <20130322093027.GA521@arm.com>
+References: <1363942307-9327-1-git-send-email-thierry.reding@avionic-design.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1363942307-9327-1-git-send-email-thierry.reding@avionic-design.de>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The Marvell evaluation board (DB) for the Armada XP SoC has 6
-physicals full-size PCIe slots, so we enable the corresponding PCIe
-interfaces in the Device Tree.
+On Fri, Mar 22, 2013 at 08:51:45AM +0000, Thierry Reding wrote:
+> It
+> is the responsibility of the PCI host bridge driver to setup the MSI
+> chip for the root bus.
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
----
- arch/arm/boot/dts/armada-xp-db.dts |   33 +++++++++++++++++++++++++++++++++
- 1 file changed, 33 insertions(+)
+I think this could work well. In the future if the use of an independent MSI
+controller is required, then new DT bindings for host-bridges could use
+phandles to reference independent MSI controllers as their providers of
+MSIs. I guess this functionality can be built on top of what you have proposed
+later as the need arises.
 
-diff --git a/arch/arm/boot/dts/armada-xp-db.dts b/arch/arm/boot/dts/armada-xp-db.dts
-index e83505e..54cc5bb 100644
---- a/arch/arm/boot/dts/armada-xp-db.dts
-+++ b/arch/arm/boot/dts/armada-xp-db.dts
-@@ -121,5 +121,38 @@
- 				spi-max-frequency = <20000000>;
- 			};
- 		};
-+
-+		pcie-controller {
-+			status = "okay";
-+
-+			/*
-+			 * All 6 slots are physically present as
-+			 * standard PCIe slots on the board.
-+			 */
-+			pcie@1,0 {
-+				/* Port 0, Lane 0 */
-+				status = "okay";
-+			};
-+			pcie@2,0 {
-+				/* Port 0, Lane 1 */
-+				status = "okay";
-+			};
-+			pcie@3,0 {
-+				/* Port 0, Lane 2 */
-+				status = "okay";
-+			};
-+			pcie@4,0 {
-+				/* Port 0, Lane 3 */
-+				status = "okay";
-+			};
-+			pcie@9,0 {
-+				/* Port 2, Lane 0 */
-+				status = "okay";
-+			};
-+			pcie@10,0 {
-+				/* Port 3, Lane 0 */
-+				status = "okay";
-+			};
-+		};
- 	};
- };
--- 
-1.7.9.5
-
+Andrew Murray
