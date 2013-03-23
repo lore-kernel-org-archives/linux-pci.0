@@ -1,64 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f178.google.com ([209.85.217.178]:48635 "EHLO
-	mail-lb0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757835Ab3CDO5s (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 4 Mar 2013 09:57:48 -0500
-MIME-Version: 1.0
-In-Reply-To: <20130304134949.GB3021@redhat.com>
-References: <CANUX_P3F5YhbZX3WGU-j1AGpbXb_T9Bis2ErhvKkFMtDvzatVQ@mail.gmail.com>
-	<20130304134949.GB3021@redhat.com>
-Date: Mon, 4 Mar 2013 16:57:46 +0200
-Message-ID: <CANUX_P0JhuVWcQjTckYzG8eBb2MtT_=prKqV38mCpVjfLmGtCA@mail.gmail.com>
-Subject: Re: is L1 really disabled in iwlwifi
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: linux-pci@vger.kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mailout3.samsung.com ([203.254.224.33]:59528 "EHLO
+	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752580Ab3CWEGw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 23 Mar 2013 00:06:52 -0400
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Kukjin Kim' <kgene.kim@samsung.com>,
+	'Bjorn Helgaas' <bhelgaas@google.com>
+Cc: linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org,
+	devicetree-discuss@lists.ozlabs.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	'Grant Likely' <grant.likely@secretlab.ca>,
+	'Andrew Murray' <andrew.murray@arm.com>,
+	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
+	'Thierry Reding' <thierry.reding@avionic-design.de>,
+	'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>,
+	'Surendranath Gurivireddy Balla' <suren.reddy@samsung.com>,
+	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
+	'Thomas Abraham' <thomas.abraham@linaro.org>,
+	'Jingoo Han' <jg1.han@samsung.com>
+References: <00c001ce277b$92b26ab0$b8174010$%han@samsung.com>
+In-reply-to: <00c001ce277b$92b26ab0$b8174010$%han@samsung.com>
+Subject: [PATCH 3/6] pci: infrastructure to add drivers in drivers/pci/host
+Date: Sat, 23 Mar 2013 13:06:50 +0900
+Message-id: <00c201ce277b$d88be2f0$89a3a8d0$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->>
->>       /* W/A - seems to solve weird behavior. We need to remove this if we
->>        * don't want to stay in L1 all the time. This wastes a lot of power */
->>       pci_disable_link_state(pdev, PCIE_LINK_STATE_L0S | PCIE_LINK_STATE_L1 |
->>                              PCIE_LINK_STATE_CLKPM);
->>
->> Now, I took a laptop with 3.7.9 (that supports L1) and measured power.
->> I would expect to see that as long as the driver isn't loaded, the
->> power consumption is low (L1 enabled), and when I load the driver, the
->> power consumption rises because L1 gets disabled.
->> But this is not what I see. I see more the less the same numbers
->> before and after driver load.
->> I don't remember exactly the numbers, but I do remember they were low
->> (around 1mA or so) - but I really need to check.
->> I also removed the code above, and it didn't change anything.
->> Can it be that this code doesn't have any effect?
->
-> Depend on BIOS settings ASPM can be enabled or disabled on the whole
-> system. I think kernel can change settings globally as well.
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
 
-Obviously kernel can change things here. I have 3.1 (!) and 3.7 on the
-same machines, on the first, ASPM is disabled, on the latter it is
-enabled.
+As agreed by the community, PCI host drivers will now be stored in
+drivers/pci/host. This commit adds this directory and the related
+Kconfig/Makefile changes to allow new drivers to be added in this
+directory.
 
-> Reloading driver can not be enough to check that, try to reboot the
-> system with iwlwifi module blacklisted and check lspci -vvv to see
-> LnkCtl ASPM settings.
->
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+---
+ drivers/pci/Kconfig      |    2 ++
+ drivers/pci/Makefile     |    3 +++
+ drivers/pci/host/Kconfig |    4 ++++
+ 3 files changed, 9 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/pci/host/Kconfig
 
-This is what I did. On 3.7, lspci tells me that ASPM is enabled before
-I load the module. And same after I load the module.
+diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+index 6d51aa6..ac45398 100644
+--- a/drivers/pci/Kconfig
++++ b/drivers/pci/Kconfig
+@@ -119,3 +119,5 @@ config PCI_IOAPIC
+ config PCI_LABEL
+ 	def_bool y if (DMI || ACPI)
+ 	select NLS
++
++source "drivers/pci/host/Kconfig"
+diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
+index 0c3efcf..6ebf5bf 100644
+--- a/drivers/pci/Makefile
++++ b/drivers/pci/Makefile
+@@ -67,3 +67,6 @@ obj-$(CONFIG_XEN_PCIDEV_FRONTEND) += xen-pcifront.o
+ obj-$(CONFIG_OF) += of.o
+ 
+ ccflags-$(CONFIG_PCI_DEBUG) := -DDEBUG
++
++# PCI host controller drivers
++obj-y += host/
+diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+new file mode 100644
+index 0000000..cc3a1af
+--- /dev/null
++++ b/drivers/pci/host/Kconfig
+@@ -0,0 +1,4 @@
++menu "PCI host controller drivers"
++	depends on PCI
++
++endmenu
+-- 
+1.7.2.5
 
-> Additionally despite above code, iwlwifi try to enable L0S in
-> iwl_pcie_apm_config(), what is basically wrong.
->
 
-Right, good point. The thing is that the device doesn't know how to do
-both L0S and L1. This is the origin of this code. But obviously, we
-first need to make sure that L0S is supported in the LnkCtl. Will
-check.
-Thanks!
-
-So - what about just removing this code?
