@@ -1,38 +1,75 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Matthew Garrett <matthew.garrett@nebula.com>
-To: Mimi Zohar <zohar@linux.vnet.ibm.com>
-CC: James Morris <jmorris@namei.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-security-module@vger.kernel.org"
-	<linux-security-module@vger.kernel.org>,
-	"linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
-	"kexec@lists.infradead.org" <kexec@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 01/12] Security: Add CAP_COMPROMISE_KERNEL
-Date: Wed, 20 Mar 2013 18:12:38 +0000
-Message-ID: <1363803158.2553.33.camel@x230.sbx07502.somerma.wayport.net>
-References: <1363642353-30749-1-git-send-email-matthew.garrett@nebula.com>
-	 <alpine.LRH.2.02.1303191542200.30973@tundra.namei.org>
-	 <1363797717.2580.10.camel@falcor1.watson.ibm.com>
-	 <1363798166.2553.29.camel@x230.sbx07502.somerma.wayport.net>
-	 <1363802506.2580.55.camel@falcor1.watson.ibm.com>
-In-Reply-To: <1363802506.2580.55.camel@falcor1.watson.ibm.com>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from caramon.arm.linux.org.uk ([78.32.30.218]:42645 "EHLO
+	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751244Ab3CWKm3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 23 Mar 2013 06:42:29 -0400
+Date: Sat, 23 Mar 2013 10:41:56 +0000
+From: Russell King - ARM Linux <linux@arm.linux.org.uk>
+To: Jingoo Han <jg1.han@samsung.com>
+Cc: 'Kukjin Kim' <kgene.kim@samsung.com>,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
+	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
+	'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>,
+	linux-samsung-soc@vger.kernel.org,
+	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
+	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
+	'Thierry Reding' <thierry.reding@avionic-design.de>,
+	linux-kernel@vger.kernel.org,
+	'Grant Likely' <grant.likely@secretlab.ca>,
+	'Surendranath Gurivireddy Balla' <suren.reddy@samsung.com>,
+	'Thomas Abraham' <thomas.abraham@linaro.org>,
+	'Andrew Murray' <andrew.murray@arm.com>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH 1/6] of/pci: Provide support for parsing PCI DT ranges
+	property
+Message-ID: <20130323104156.GL4977@n2100.arm.linux.org.uk>
+References: <00c001ce277b$92b26ab0$b8174010$%han@samsung.com>
 MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <00c001ce277b$92b26ab0$b8174010$%han@samsung.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-T24gV2VkLCAyMDEzLTAzLTIwIGF0IDE0OjAxIC0wNDAwLCBNaW1pIFpvaGFyIHdyb3RlOg0KDQo+
-IFNvcnJ5LCBJJ20gbm90IHN1cmUgdG8gd2hpY2ggd29yayB5b3UncmUgcmVmZXJyaW5nLiBJZiB5
-b3UncmUgcmVmZXJyaW5nDQo+IHRvIERtaXRyeSdzICJpbml0cmFtZnMgd2l0aCBkaWdpdGFsIHNp
-Z25hdHVyZSBwcm90ZWN0aW9uIiBwYXRjaGVzLCB0aGVuDQo+IHdlJ3JlIHNwZWFraW5nIGFib3V0
-IGVuZm9yY2luZyBpbnRlZ3JpdHksIG5vdCBNQUMgc2VjdXJpdHkuICANCg0KV2VsbCwgaW4gdGhl
-IGFic2VuY2Ugb2YgaGFyZGNvZGVkIGluLWtlcm5lbCBwb2xpY3ksIHRoZXJlIG5lZWRzIHRvIGJl
-DQpzb21lIG1lY2hhbmlzbSBmb3IgZW5zdXJpbmcgdGhlIGludGVncml0eSBvZiBhIHBvbGljeS4g
-U2hpcHBpbmcgYSBzaWduZWQNCnBvbGljeSBpbml0cmFtZnMgZnJhZ21lbnQgYW5kIGhhdmluZyBh
-bnkgU2VjdXJlIEJvb3QgYm9vdGxvYWRlcnMgcGFzcyBhDQpmbGFnIGluIGJvb3RwYXJhbXMgaW5k
-aWNhdGluZyB0aGF0IHRoZSBrZXJuZWwgc2hvdWxkIHBhbmljIGlmIHRoYXQNCmZyYWdtZW50IGlz
-bid0IHByZXNlbnQgd291bGQgc2VlbSB0byBiZSB0aGUgZWFzaWVzdCB3YXkgb2YgZG9pbmcgdGhh
-dC4NCk9yIGhhdmUgSSBtaXN1bmRlcnN0b29kIHRoZSBxdWVzdGlvbj8NCg0KLS0gDQpNYXR0aGV3
-IEdhcnJldHQgfCBtamc1OUBzcmNmLnVjYW0ub3JnDQo=
+On Sat, Mar 23, 2013 at 01:04:53PM +0900, Jingoo Han wrote:
+> -		switch ((pci_space >> 24) & 0x3) {
+> -		case 1:		/* PCI IO space */
+> +		if (iter.flags & IORESOURCE_IO) {
 
+Please look at how IORESOURCE_* stuff is defined:
+#define IORESOURCE_TYPE_BITS    0x00001f00      /* Resource type */
+#define IORESOURCE_IO           0x00000100      /* PCI/ISA I/O ports */
+#define IORESOURCE_MEM          0x00000200
+#define IORESOURCE_REG          0x00000300      /* Register offsets */
+#define IORESOURCE_IRQ          0x00000400
+#define IORESOURCE_DMA          0x00000800
+#define IORESOURCE_BUS          0x00001000
+
+Notice that it's not an array of bits.
+
+So this should be:
+		if ((iter.flags & IORESOURCE_TYPE_BITS) == IORESOURCE_IO) {
+
+> +			iter.cpu_addr = iter.pci_addr;
+> +		} else if (iter.flags & IORESOURCE_MEM) {
+
+And this should be:
+		} else if ((iter.flags & IORESOURCE_TYPE_BITS) == IORESOURCE_MEM) {
+
+> +		if (iter.flags & IORESOURCE_IO) {
+
+Same here.
+
+> +		} else if (iter.flags & IORESOURCE_MEM) {
+
+And again here.
+
+> -		switch ((pci_space >> 24) & 0x3) {
+> -		case 1:		/* PCI IO space */
+> +		if (iter.flags & IORESOURCE_IO) {
+
+ditto.
+
+> +			iter.cpu_addr = iter.pci_addr;
+> +		} else if (flags & IORESOURCE_MEM) {
+
+ditto.
