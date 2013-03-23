@@ -1,95 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:54280 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751446Ab3CZQwn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Mar 2013 12:52:43 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Russell King <linux@arm.linux.org.uk>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+Received: from mailout1.samsung.com ([203.254.224.24]:10849 "EHLO
+	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751832Ab3CWEF7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 23 Mar 2013 00:05:59 -0400
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Kukjin Kim' <kgene.kim@samsung.com>,
+	'Bjorn Helgaas' <bhelgaas@google.com>
+Cc: linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org,
 	devicetree-discuss@lists.ozlabs.org,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Maen Suleiman <maen@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Olof Johansson <olof@lixom.net>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Mitch Bradley <wmb@firmworks.com>,
-	Andrew Murray <andrew.murray@arm.com>
-Subject: [RFCv1 10/11] arm: mvebu: enable MSI support in DT
-Date: Tue, 26 Mar 2013 17:52:25 +0100
-Message-Id: <1364316746-8702-11-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1364316746-8702-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1364316746-8702-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	'Grant Likely' <grant.likely@secretlab.ca>,
+	'Andrew Murray' <andrew.murray@arm.com>,
+	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
+	'Thierry Reding' <thierry.reding@avionic-design.de>,
+	'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>,
+	'Surendranath Gurivireddy Balla' <suren.reddy@samsung.com>,
+	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
+	'Thomas Abraham' <thomas.abraham@linaro.org>,
+	'Jingoo Han' <jg1.han@samsung.com>
+References: <00c001ce277b$92b26ab0$b8174010$%han@samsung.com>
+In-reply-to: <00c001ce277b$92b26ab0$b8174010$%han@samsung.com>
+Subject: [PATCH 2/6] of/pci: Add of_pci_parse_bus_range() function
+Date: Sat, 23 Mar 2013 13:05:56 +0900
+Message-id: <00c101ce277b$b8835b00$298a1100$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now that the Marvell EBU PCIe driver supports MSI, we can adjust the
-Device Tree for the Armada 370 and Armada XP SoCs so that the PCIe
-controller nodes point to the MSI interrupt controller using the
-'msi-parent' property.
+From: Thierry Reding <thierry.reding@avionic-design.de>
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+This function can be used to parse a bus-range property as specified by
+device nodes representing PCI bridges.
+
+Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
+Signed-off-by: Jingoo Han <jg1.han@samsung.com>
 ---
- arch/arm/boot/dts/armada-370.dtsi        |    1 +
- arch/arm/boot/dts/armada-xp-mv78230.dtsi |    1 +
- arch/arm/boot/dts/armada-xp-mv78260.dtsi |    1 +
- arch/arm/boot/dts/armada-xp-mv78460.dtsi |    1 +
- 4 files changed, 4 insertions(+)
+ drivers/of/of_pci.c    |   25 +++++++++++++++++++++++++
+ include/linux/of_pci.h |    1 +
+ 2 files changed, 26 insertions(+), 0 deletions(-)
 
-diff --git a/arch/arm/boot/dts/armada-370.dtsi b/arch/arm/boot/dts/armada-370.dtsi
-index a23a74f..e9cda70 100644
---- a/arch/arm/boot/dts/armada-370.dtsi
-+++ b/arch/arm/boot/dts/armada-370.dtsi
-@@ -161,6 +161,7 @@
- 			#address-cells = <3>;
- 			#size-cells = <2>;
+diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
+index 13e37e2..4ca7837 100644
+--- a/drivers/of/of_pci.c
++++ b/drivers/of/of_pci.c
+@@ -40,3 +40,28 @@ struct device_node *of_pci_find_child_device(struct device_node *parent,
+ 	return NULL;
+ }
+ EXPORT_SYMBOL_GPL(of_pci_find_child_device);
++
++/**
++ * of_pci_parse_bus_range() - parse the bus-range property of a PCI device
++ * @node: device node
++ * @res: address to a struct resource to return the bus-range
++ *
++ * Returns 0 on success or a negative error-code on failure.
++ */
++int of_pci_parse_bus_range(struct device_node *node, struct resource *res)
++{
++	const __be32 *values;
++	int len;
++
++	values = of_get_property(node, "bus-range", &len);
++	if (!values || len < sizeof(*values) * 2)
++		return -EINVAL;
++
++	res->name = node->name;
++	res->start = be32_to_cpup(values++);
++	res->end = be32_to_cpup(values);
++	res->flags = IORESOURCE_BUS;
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(of_pci_parse_bus_range);
+diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
+index bb115de..178a5cc 100644
+--- a/include/linux/of_pci.h
++++ b/include/linux/of_pci.h
+@@ -10,5 +10,6 @@ int of_irq_map_pci(const struct pci_dev *pdev, struct of_irq *out_irq);
+ struct device_node;
+ struct device_node *of_pci_find_child_device(struct device_node *parent,
+ 					     unsigned int devfn);
++int of_pci_parse_bus_range(struct device_node *node, struct resource *res);
  
-+			msi-parent = <&msi>;
- 			bus-range = <0x00 0xff>;
- 
- 			reg = <0xd0040000 0x2000>, <0xd0080000 0x2000>;
-diff --git a/arch/arm/boot/dts/armada-xp-mv78230.dtsi b/arch/arm/boot/dts/armada-xp-mv78230.dtsi
-index 4b05815..0e0c891 100644
---- a/arch/arm/boot/dts/armada-xp-mv78230.dtsi
-+++ b/arch/arm/boot/dts/armada-xp-mv78230.dtsi
-@@ -90,6 +90,7 @@
- 			#address-cells = <3>;
- 			#size-cells = <2>;
- 
-+			msi-parent = <&msi>;
- 			bus-range = <0x00 0xff>;
- 
- 			reg = <0xd0040000 0x2000>, <0xd0042000 0x2000>,
-diff --git a/arch/arm/boot/dts/armada-xp-mv78260.dtsi b/arch/arm/boot/dts/armada-xp-mv78260.dtsi
-index ee6c269..1db9da0 100644
---- a/arch/arm/boot/dts/armada-xp-mv78260.dtsi
-+++ b/arch/arm/boot/dts/armada-xp-mv78260.dtsi
-@@ -110,6 +110,7 @@
- 			#address-cells = <3>;
- 			#size-cells = <2>;
- 
-+			msi-parent = <&msi>;
- 			bus-range = <0x00 0xff>;
- 
- 			reg = <0xd0040000 0x2000>, <0xd0042000 0x2000>,
-diff --git a/arch/arm/boot/dts/armada-xp-mv78460.dtsi b/arch/arm/boot/dts/armada-xp-mv78460.dtsi
-index ba54990..1263269 100644
---- a/arch/arm/boot/dts/armada-xp-mv78460.dtsi
-+++ b/arch/arm/boot/dts/armada-xp-mv78460.dtsi
-@@ -125,6 +125,7 @@
- 			#address-cells = <3>;
- 			#size-cells = <2>;
- 
-+			msi-parent = <&msi>;
- 			bus-range = <0x00 0xff>;
- 
- 			reg = <0xd0040000 0x2000>, <0xd0042000 0x2000>,
+ #endif
 -- 
-1.7.9.5
+1.7.2.5
+
 
