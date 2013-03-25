@@ -1,53 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-la0-f52.google.com ([209.85.215.52]:52535 "EHLO
-	mail-la0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757021Ab3C3Sie (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 30 Mar 2013 14:38:34 -0400
+Received: from moutng.kundenserver.de ([212.227.17.9]:64056 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932989Ab3CYUCo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 25 Mar 2013 16:02:44 -0400
+Date: Mon, 25 Mar 2013 21:02:37 +0100
+From: Thierry Reding <thierry.reding@avionic-design.de>
+To: Stephen Warren <swarren@wwwdotorg.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [RFC 2/2] PCI: tegra: Use new MSI chip infrastructure
+Message-ID: <20130325200237.GA4177@avionic-0098.mockup.avionic-design.de>
+References: <1363942307-9327-1-git-send-email-thierry.reding@avionic-design.de>
+ <1363942307-9327-3-git-send-email-thierry.reding@avionic-design.de>
+ <515082DB.1090801@wwwdotorg.org>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo5gVsUxB6ebQGAN-7jsZiRYZ+SyJn5gKZrSuOzzkJ-QjQ@mail.gmail.com>
-References: <CANUX_P3F5YhbZX3WGU-j1AGpbXb_T9Bis2ErhvKkFMtDvzatVQ@mail.gmail.com>
-	<20130304134949.GB3021@redhat.com>
-	<CANUX_P0JhuVWcQjTckYzG8eBb2MtT_=prKqV38mCpVjfLmGtCA@mail.gmail.com>
-	<20130304154832.GD3021@redhat.com>
-	<CANUX_P22AkqeOROP1QHzp20wGWgDbRzy+9FZy2KvHLXCQ5AVnA@mail.gmail.com>
-	<CAErSpo5gVsUxB6ebQGAN-7jsZiRYZ+SyJn5gKZrSuOzzkJ-QjQ@mail.gmail.com>
-Date: Sat, 30 Mar 2013 21:38:32 +0300
-Message-ID: <CANUX_P2-V0-=sfofxYwAYCRvqPPf5Z2wy6CUNQmGQQ2NqjZJ_A@mail.gmail.com>
-Subject: Re: is L1 really disabled in iwlwifi
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>,
-	Roman Yepishev <roman.yepishev@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="J2SCkAp4GZ/dPZZf"
+In-Reply-To: <515082DB.1090801@wwwdotorg.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->>
->> Anyway - I think I will just remove this pci_disable_link_state call
->> and hopefully, it will stay long enough in linux-next so that people
->> will report issues before it get into linux.
->> I don't like leaving that code if it doesn't do anything.
->
-> I think we broke at least some cases of pci_disable_link_state() a
-> while back.  I'd like to fix it rather than just removing calls to it.
->
-> Can someone collect a complete dmesg log and "lspci -vv" output?
->
 
-I will. But I am on vacation right now and my linux box is not
-accessible right now...
-In any case, what you'll see is that ASPM is enabled (L1 enabled with
-or without driver).
-We are also seeing some really weird stuff (which I can't reproduce of
-course) like HW becoming not accessible, I guess it would be worth
-trying to *really* disable L1. I can tweak that in the code of the
-driver and tell the NIC that L1 is disabled.
+--J2SCkAp4GZ/dPZZf
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-	/* Disable L1-Active */
-	iwl_set_bits_prph(trans, APMG_PCIDEV_STT_REG,
-			  APMG_PCIDEV_STT_VAL_L1_ACT_DIS);
+On Mon, Mar 25, 2013 at 11:01:15AM -0600, Stephen Warren wrote:
+> On 03/22/2013 02:51 AM, Thierry Reding wrote:
+> > Implement an MSI chip that uses the Tegra PCIe controller's built-in
+> > support to provide MSI services to the root bus and its children.
+>=20
+> Acked-by: Stephen Warren <swarren@nvidia.com>
+>=20
+> Thierry, what Tegra-related PCIe patches will you posted for 3.10? If
+> it's just this, I'm happy for this to go through the PCI tree along with
+> patch 1/2. If you're still planning on doing the whole Tegra PCIe driver
+> conversion and move for 3.10, perhaps there are some additional
+> dependencies that require thinking about?
 
-Do you have an idea about *when* did pci_disable_link_state() break?
+This one patch depends on the whole series. At this point it doesn't
+make any sense to merge anything but all of them. Andrew Murray was
+working on getting the OF specific bits ready for merge, so I think
+there are only a couple of Tegra-specific patches that would need to be
+taken care of, such as minor PMC things. I'll look into posting a
+complete series soon.
+
+My plan was to squash this patch into the large rewrite/move patch from
+the series because that introduces MSI support in the first place. But I
+thought for this particular mini-series it'd be easier to see what needs
+to be done to support it if I post only the relevant bits.
+
+Thierry
+
+--J2SCkAp4GZ/dPZZf
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQIcBAEBAgAGBQJRUK1dAAoJEN0jrNd/PrOhzg4P/3+/rWE7XTvCccMPRHkg2BvW
+01kseMq/FBZbvUtlPEaUTKUEvPu0yB+skQpakgdYnmzyG5E4uurHMknah1F45g6I
+FbgX0oaMkazyosjlzhJMg4xASqUlARpJs/wvF3YRnquWDEpUHnSv6Lf3OdSd1oNE
+eGq8TVY+FgviQy6sJb7bAnWpk+1oe4EXU0sQqB+SGv2rgzL+hyTz0UnSZjINnB0n
+eXmgoBedQYpubp4KX0Uh/danCk4oYPaKEedHFHrf/Et7+BbWumMOuugv+N9Pacic
+JN8YHCUZiDzlb4PkySPWikb+jgygxAeMe62wpQGvHWcc4N1OkG0GvSGia7cZXIie
+9FJ2ovlfmaMCp8T0J0y3gJ/TujV2g3Kur+t7mt3T6NYvJewxEpyvAgtALDc96YDm
+OeeNIpZbpJQCG+iWiCZByPgWNjbqfasHBypXmB4P+5VTjfFde4VYSYNtB+issUt1
+IxxWadIb12Sj+ies+t0aJHqTDxxUFKpaoCbi/gZ7A4KfjcUcqu+gclpKzDKbpjD5
+Ctr97mrqGdi5ykZZBtXUiSygcUwhwB3sHyif7L1qhtaedOh4tZZC6X9tgUe2VIvH
+fpQYjCVd8wFyCZuQ7SZHfSaSngod6NY/L7f3XkQtxEc3vcEBKjsevnM3BVobEFOc
+ppbdVMAlpNnY7DUPCu5W
+=Ieob
+-----END PGP SIGNATURE-----
+
+--J2SCkAp4GZ/dPZZf--
