@@ -1,74 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g4t0017.houston.hp.com ([15.201.24.20]:42046 "EHLO
-	g4t0017.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932209Ab3CIHw1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 9 Mar 2013 02:52:27 -0500
-From: Vijay Mohan Pandarathil <vijaymohan.pandarathil@hp.com>
-To: alex.williamson@redhat.com, gleb@redhat.com, bhelgaas@google.com,
-	blauwirbel@gmail.com, lance.oritz@hp.com, kvm@vger.kernel.org,
-	qemu-devel@nongnu.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH v7 0/3] AER-KVM: Error containment of VFIO devices assigned to KVM guests
-Date: Sat,  9 Mar 2013 01:52:14 -0600
-Message-Id: <1362815537-27303-1-git-send-email-vijaymohan.pandarathil@hp.com>
+Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:50470 "EHLO
+	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753081Ab3CYKVx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 25 Mar 2013 06:21:53 -0400
+Date: Mon, 25 Mar 2013 10:21:06 +0000
+From: Andrew Murray <andrew.murray@arm.com>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	Jingoo Han <jg1.han@samsung.com>,
+	"'Kukjin Kim'" <kgene.kim@samsung.com>,
+	"'Bjorn Helgaas'" <bhelgaas@google.com>,
+	"'Jason Gunthorpe'" <jgunthorpe@obsidianresearch.com>,
+	"linux-samsung-soc@vger.kernel.org"
+	<linux-samsung-soc@vger.kernel.org>,
+	"'Siva Reddy Kallam'" <siva.kallam@samsung.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"devicetree-discuss@lists.ozlabs.org"
+	<devicetree-discuss@lists.ozlabs.org>,
+	"'Thierry Reding'" <thierry.reding@avionic-design.de>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"'Grant Likely'" <grant.likely@secretlab.ca>,
+	"'Surendranath Gurivireddy Balla'" <suren.reddy@samsung.com>,
+	"'Thomas Abraham'" <thomas.abraham@linaro.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH 1/6] of/pci: Provide support for parsing PCI DT ranges
+ property
+Message-ID: <20130325102106.GA20770@arm.com>
+References: <00c001ce277b$92b26ab0$b8174010$%han@samsung.com>
+ <20130323104156.GL4977@n2100.arm.linux.org.uk>
+ <20130323143704.5da5d20c@skate>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20130323143704.5da5d20c@skate>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add support for error containment when a VFIO device assigned to a KVM
-guest encounters an error. This is for PCIe devices/drivers that support AER
-functionality. When the host OS is notified of an error in a device either
-through the firmware first approach or through an interrupt handled by the AER
-root port driver, the error handler registered by the vfio-pci driver gets
-invoked. The qemu process is signaled through an eventfd registered per
-VFIO device by the qemu process. In the eventfd handler, qemu decides on
-what action to take. In this implementation, guest is brought down to
-contain the error.
+On Sat, Mar 23, 2013 at 01:37:04PM +0000, Thomas Petazzoni wrote:
+> 
+> On Sat, 23 Mar 2013 10:41:56 +0000, Russell King - ARM Linux wrote:
+> 
+> > Please look at how IORESOURCE_* stuff is defined:
+> > #define IORESOURCE_TYPE_BITS    0x00001f00      /* Resource type */
+> > #define IORESOURCE_IO           0x00000100      /* PCI/ISA I/O ports */
+> > #define IORESOURCE_MEM          0x00000200
+> > #define IORESOURCE_REG          0x00000300      /* Register offsets */
+> > #define IORESOURCE_IRQ          0x00000400
+> > #define IORESOURCE_DMA          0x00000800
+> > #define IORESOURCE_BUS          0x00001000
+> > 
+> > Notice that it's not an array of bits.
+> > 
+> > So this should be:
+> > 		if ((iter.flags & IORESOURCE_TYPE_BITS) == IORESOURCE_IO) {
+> 
+> What I've done for the Marvell PCIe driver is:
+> 
+> +	for_each_of_pci_range(&iter, np) {
+> +		unsigned long restype = iter.flags & IORESOURCE_TYPE_BITS;
+> +		if (restype == IORESOURCE_IO) {
+> [...]
+> +		if (restype == IORESOURCE_MEM) {
+> [...]
 
+OK I'll update this patch and also include Thierry's suggestions.
 
-v7:
- - Rebased to latest upstream
- - Used device_lock() for synchronising err_trigger access
-v6:
- - Rebased to latest upstream
- - Resolved merge conflict with vfio_dev_present()
-v5:
- - Rebased to latest upstream stable bits
- - Incorporated v4 feedback
-v4:
- - Stop the guest instead of terminating
- - Remove unwanted returns from functions
- - Incorporate other feedback
-v3:
- - Removed PCI_AER* flags from device info ioctl.
- - Incorporated feedback
-v2:
- - Rebased to latest upstream stable bits
- - Changed the new ioctl to be part of VFIO_SET_IRQs ioctl
- - Added a new patch to get/put reference to a vfio device from struct device
- - Incorporated all other feedback.
-
----
-
-Vijay Mohan Pandarathil(3):
-
-[PATCH 1/3] VFIO: Wrapper to get reference to vfio_device from device 
-[PATCH 2/3] VFIO-AER: Vfio-pci driver changes for supporting AER
-[PATCH 3/3] QEMU-AER: Qemu changes to support AER for VFIO-PCI devices
-
-Kernel files changed
-
- drivers/vfio/vfio.c  | 30 +++++++++++++++++++++++++++++-
- include/linux/vfio.h |  3 +++
- 2 files changed, 32 insertions(+), 1 deletion(-)
-
- drivers/vfio/pci/vfio_pci.c         | 44 ++++++++++++++++++++++++-
- drivers/vfio/pci/vfio_pci_intrs.c   | 64 +++++++++++++++++++++++++++++++++++++
- drivers/vfio/pci/vfio_pci_private.h |  1 +
- include/uapi/linux/vfio.h           |  1 +
- 4 files changed, 109 insertions(+), 1 deletion(-)
-
-Qemu files changed
-
- hw/vfio_pci.c              | 123 +++++++++++++++++++++++++++++++++++++++++++++
- linux-headers/linux/vfio.h |   1 +
- 2 files changed, 124 insertions(+)
+Andrew Murray
