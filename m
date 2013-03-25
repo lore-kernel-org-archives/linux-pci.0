@@ -1,59 +1,102 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Fri, 15 Mar 2013 16:37:56 +0100 (CET)
-From: Jiri Kosina <jkosina@suse.cz>
-To: Greg KH <greg@kroah.com>
-Cc: Harald Arnesen <skogtun.linux@gmail.com>,
-	Kernel development list <linux-kernel@vger.kernel.org>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Peter Hurley <peter@hurleysoftware.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Thomas Meyer <thomas@m3y3r.de>,
-	Shawn Starr <shawn.starr@rogers.com>,
-	USB list <linux-usb@vger.kernel.org>,
-	linux-acpi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Daniel Vetter <daniel.vetter@ffwll.ch>,
-	Imre Deak <imre.deak@intel.com>,
-	Daniel Kurtz <djkurtz@chromium.org>,
-	dri-devel@lists.freedesktop.org
-Subject: Re: [3.9-rc1] irq 16: nobody cared  (was [3.9-rc1] very poor interrupt
- responses)
-In-Reply-To: <20130315153249.GA32425@kroah.com>
-Message-ID: <alpine.LNX.2.00.1303151636481.9529@pobox.suse.cz>
-References: <Pine.LNX.4.44L0.1303141050310.1983-100000@iolanthe.rowland.org> <1460519.ejNFI1DrGk@vostro.rjw.lan> <1363280764.26318.4.camel@thor.lan> <5657408.cYX6iimiA4@vostro.rjw.lan> <alpine.LNX.2.00.1303150851020.9529@pobox.suse.cz> <5142E7F0.4020002@gmail.com>
- <alpine.LNX.2.00.1303151424140.9529@pobox.suse.cz> <20130315153249.GA32425@kroah.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from quartz.orcorp.ca ([184.70.90.242]:47200 "EHLO quartz.orcorp.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758675Ab3CYRE6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 25 Mar 2013 13:04:58 -0400
+Date: Mon, 25 Mar 2013 11:04:48 -0600
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Jingoo Han <jg1.han@samsung.com>
+Cc: 'Kukjin Kim' <kgene.kim@samsung.com>,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
+	linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org,
+	devicetree-discuss@lists.ozlabs.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	'Grant Likely' <grant.likely@secretlab.ca>,
+	'Andrew Murray' <andrew.murray@arm.com>,
+	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
+	'Thierry Reding' <thierry.reding@avionic-design.de>,
+	'Surendranath Gurivireddy Balla' <suren.reddy@samsung.com>,
+	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
+	'Thomas Abraham' <thomas.abraham@linaro.org>
+Subject: Re: [PATCH 6/6] ARM: dts: Add pcie controller node for Samsung
+ EXYNOS5440 SoC
+Message-ID: <20130325170448.GB16690@obsidianresearch.com>
+References: <00c001ce277b$92b26ab0$b8174010$%han@samsung.com>
+ <00c501ce277c$30e49dc0$92add940$%han@samsung.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <00c501ce277c$30e49dc0$92add940$%han@samsung.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 15 Mar 2013, Greg KH wrote:
+On Sat, Mar 23, 2013 at 01:09:18PM +0900, Jingoo Han wrote:
 
-> > > I have the same problem on my Lenovo T500. I think the graphics card is
-> > > involved.
-> > > 
-> > > This laptop has "hybrid graphics" - one Intel GMA 4500MHD and one ATI
-> > > Mobility Radeon HD 3650. When I boot with the Intel card, I get "irq 16:
-> > > nobody cared" during boot, not when I boot with the ATI card.
-> > 
-> > Confirming this. After a lot of hassle, I have bisected this reliably to
-> > 
-> > 	commit 28c70f162a315bdcfbe0bf940a740ef8bfb918d6
-> > 	Author: Daniel Vetter <daniel.vetter@ffwll.ch>
-> > 	Date:   Sat Dec 1 13:53:45 2012 +0100
-> > 
-> > 	    drm/i915: use the gmbus irq for waits
-> > 
-> > Adding Daniel, Imre and Daniel to CC while I will try to figure out what's 
-> > happening in parallel.
-> 
-> Wasn't this fixed by the merge from David
-> (2cc79544bd0aabb4b3cf467ead5df526d9134c64)?
+> +	pcie0@40000000 {
+> +		compatible = "samsung,exynos5440-pcie";
+> +		reg = <0x40000000 0x4000
+> +			0x290000 0x1000
+> +			0x270000 0x1000
+> +			0x271000 0x40>;
+> +		interrupts = <0 20 0>, <0 21 0>, <0 22 0>;
+> +		#address-cells = <3>;
+> +		#size-cells = <2>;
+> +		device_type = "pci";
+> +		bus-range = <0x0 0xf>;
+> +		ranges = <0x00000800 0 0x40000000 0x40000000 0 0x00200000   /* configuration space */
+> +			  0x81000000 0 0	  0x40200000 0 0x00004000   /* downstream I/O */
+> +			  0x82000000 0 0	  0x40204000 0 0x10000000>; /* non-prefetchable memory */
+> +	};
 
-Why do you think it should, please?
+Can you send the lspci output so these bindings can be properly
+reviewed? What PCI devices are internal to the SOC?
 
-(I am seeing this with a2362d247 still).
+What is behind 'exynos_pcie_wr_own_conf' ? Is this a root port bridge
+config space? What line is it in the lspci output? Can you include a
+lspci -vv for it as well?
 
--- 
-Jiri Kosina
-SUSE Labs
+Your DT has overlapping bus-ranges, and two top level nodes. This is
+going to require separate PCI domains in Linux.
+
+However, based on your driver this HW looks similar to tegra, did you
+review how tegra is setup? Merging all the ports into a single domain
+is certainly preferred.
+
+> +	pcie1@60000000 {
+> +		compatible = "samsung,exynos5440-pcie";
+> +		reg = <0x60000000 0x4000
+> +			0x2a0000 0x1000
+> +			0x272000 0x1000
+> +			0x271040 0x40>;
+> +		interrupts = <0 23 0>, <0 24 0>, <0 25 0>;
+> +		#address-cells = <3>;
+> +		#size-cells = <2>;
+> +		device_type = "pci";
+> +		bus-range = <0x0 0xf>;
+> +		ranges = <0x00000800 0 0x60000000 0x60000000 0 0x00200000   /* configuration space */
+
+Do not include configuration space in ranges
+
+> +			  0x81000000 0 0	  0x60200000 0 0x00004000   /* downstream I/O */
+
+Please confirm that an MMIO to 0x60200000 produces a PCI-E IO TLP to
+address 0
+
+> +			  0x82000000 0 0	  0x60204000 0 0x10000000>; /* non-prefetchable memory */
+
+Please check this, generally it should be:
+
+			  0x82000000 0 0x60204000 0x60204000 0 0x10000000>; /* non-prefetchable memory */
+
+Reflecting an identity mapping for MMIO - eg MMIO access to 0x60204000
+producse a PCI Memory TLP to address 0x60204000 - unless your hardware
+is actually doing address translation (then there are other things to
+confirm..)
+
+It is usual to have an interrupt-map - have you tested that interrupts
+resolve properly?
+
+It looks like the INTx's should be routed by an interrupt-map to the
+pulse pin. Consider an interrupt controller to decode the INT ABCD.
+
+Regards,
+Jason
