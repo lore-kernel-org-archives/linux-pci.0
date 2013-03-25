@@ -1,111 +1,138 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.10]:62105 "EHLO
+Received: from moutng.kundenserver.de ([212.227.126.171]:53070 "EHLO
 	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751251Ab3CZVKY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Mar 2013 17:10:24 -0400
-From: Arnd Bergmann <arnd@arndb.de>
+	with ESMTP id S1758072Ab3CYJPl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 25 Mar 2013 05:15:41 -0400
+Date: Mon, 25 Mar 2013 10:15:34 +0100
+From: Thierry Reding <thierry.reding@avionic-design.de>
 To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: Re: [RFCv1 07/11] irqchip: armada-370-xp: add MSI support to interrupt controller driver
-Date: Tue, 26 Mar 2013 21:10:15 +0000
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	devicetree-discuss@lists.ozlabs.org,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Maen Suleiman <maen@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Olof Johansson <olof@lixom.net>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Mitch Bradley <wmb@firmworks.com>,
-	Andrew Murray <andrew.murray@arm.com>
-References: <1364316746-8702-1-git-send-email-thomas.petazzoni@free-electrons.com> <201303261838.23246.arnd@arndb.de> <20130326214613.30fbdddf@skate>
-In-Reply-To: <20130326214613.30fbdddf@skate>
+Cc: Andrew Murray <andrew.murray@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [RFC 0/2] PCI: Introduce MSI chip infrastructure
+Message-ID: <20130325091534.GA21054@avionic-0098.mockup.avionic-design.de>
+References: <1363942307-9327-1-git-send-email-thierry.reding@avionic-design.de>
+ <20130322093027.GA521@arm.com>
+ <20130324120649.6fb8c05d@skate>
+ <20130325075810.GA28935@avionic-0098.mockup.avionic-design.de>
+ <20130325093847.7474dc0e@skate>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201303262110.15582.arnd@arndb.de>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="5vNYLRcllDrimb99"
+In-Reply-To: <20130325093847.7474dc0e@skate>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday 26 March 2013, Thomas Petazzoni wrote:
-> Dear Arnd Bergmann,
-> 
-> On Tue, 26 Mar 2013 18:38:22 +0000, Arnd Bergmann wrote:
-> 
-> > >     Note that both the parent and the child node need to have the
-> > >     'interrupt-controller' empty property:
-> > >     
-> > >       * The interrupt-controller property is needed in the main
-> > >     interrupt controller node (interrupt-controller@d0020000)
-> > > because the of_irq_init() function skips nodes that are matching
-> > > the given compatible string, but that don't have the
-> > > interrupt-controller property.
-> > >     
-> > >      * The interrupt-controller property is needed in the child
-> > >     interrupt controller node (main-intc@d0020000) otherwise the
-> > >     resolution done by of_irq_map_one() doesn't work.
-> > 
-> > If you add compatible properties to the children, that would work
-> > I suppose.
-> 
-> To which children? Only to the main-intc children? If so,
-> armada_370_xp_mpic_of_init() would be called with a 'device_node *'
-> that points to the main-intc, correct? Then it would have to go back up
-> in the Device Tree to find the msi node? It's doable of course, but
-> sounds strange, no?
 
-I was thinking of registering two init functions as well.
+--5vNYLRcllDrimb99
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> To me, the topology of the hardware is really that a single device
-> provides two features: the main interrupt controller and the MSI
-> interrupt controller. But I will adapt to whatever DT binding you
-> propose.
+On Mon, Mar 25, 2013 at 09:38:47AM +0100, Thomas Petazzoni wrote:
+> Dear Thierry Reding,
+>=20
+> Thanks for your feedback!
+>=20
+> On Mon, 25 Mar 2013 08:58:10 +0100, Thierry Reding wrote:
+>=20
+> > That sounds very much like one of the use-cases that were discussed. The
+> > easiest solution would probably be to add an API to look up an MSI chip
+> > from a DT phandle, so that the PCIe controller's device node could have
+> > it as a property, somewhat like this:
+> >=20
+> > 	msi: interrupt-controller {
+> > 	};
+> >=20
+> > 	pcie-controller {
+> > 		...
+> > 		marvell,msi =3D <&msi>;
+> > 		...
+> > 	};
+>=20
+> I'm not sure how to handle this msi interrupt controller with the main
+> interrupt controller. For now, I have:
+>=20
+>         mpic: interrupt-controller@d0020000 {
+>               reg =3D <0xd0020a00 0x2d0>,
+>                     <0xd0021070 0x58>;
+>         };
+>=20
+> 	[...]
+>=20
+> 	soc {
+>                 interrupt-parent =3D <&mpic>;
+> 		[...]
+> 	};
+>=20
+> And the MSI interrupt controller shares the same registers as the MPIC.
+> So should it be something like:
+>=20
+> 	interrupt-controller {
+> 		reg =3D <0xd0020a00 0x2d0>,
+>                     <0xd0021070 0x58>;
+>=20
+> 		mpic {
+> 			/* Not sure what to have here */
+> 		};
+>=20
+> 		msi {
+>=20
+> 			/* Here either */
+> 		};
+> 	};
+>=20
+> 	soc {
+>                 interrupt-parent =3D <&mpic>;
+>=20
+> 		pcie-controller {
+> 			marvell,msi =3D <&msi>;
+> 		};
+> 	};
+>=20
+> Or some other idea?
 
-My preference would be to have no sub-nodes but rather make the
-code deal with an interrupt controller that has an interrupt domain
-for regular IRQs but can also handle MSI.
+I think you can just make this:
 
-> > I still wonder if the real solution shouldn't instead be to make the
-> > irq domain code MSI aware. For instance, you don't really need a
-> > cell to describe an interrupt because the interrupt number is
-> > not a hardware property. So an MSI using device doesn't really
-> > needs an "msis" or "interrupts" property, just an "msi-parent",
-> > and we can add code to handle as a separate domain even if you
-> > have a single device node that can do both level and message
-> > interrupts.
-> 
-> So the msi-parent property should point to the single mpic node? But
-> then the IRQ domain for MSI cannot be registered on this single MPIC
-> node. Then, what would be the first argument of:
-> 
->         armada_370_xp_msi_domain =
->                 irq_domain_add_linear(msi_node, PCI_MSI_DOORBELL_NR,
->                                       &armada_370_xp_msi_irq_ops, NULL);
-> 
-> and how would the PCIe driver get a pointer to this IRQ domain? (In the
-> currently proposed code, it just does a irq_find_host(), which sounded
-> very simple and straightforward).
+	mpic: interrupt-controller@d0020000 {
+		...
+	};
 
-I guess one way would be to have a single domain that is responsible
-for the controller and handles both MSI and legacy interrupts. That
-could probably be done without changes to the interrupt domain code.
+	...
 
-Another option would be to add an irq_domain_add_msi() function that
-creates a domain which is also tied to the same device node but does
-not interact with it when going through the legacy interrupts.
-You could then add a matching msi_find_host() or irq_find_msi_host()
-function to return the domain.
+	soc {
+		pcie-controller {
+			marvell,msi =3D <&mpic>;
+		};
+	};
 
-> To clarify: I really don't mind reworking the code, but unfortunately
-> "make the IRQ domain code MSI aware" is too vague for me to understand
-> the direction you're thinking of.
+And everything else should just work given the APIs I mentioned. But as
+you said it'd be good if somebody else could share their opinion about
+this.
 
-I don't have specific code in mind yet, mainly playing around with the
-possibilities for now.
+Thierry
 
-	Arnd
+--5vNYLRcllDrimb99
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQIcBAEBAgAGBQJRUBW2AAoJEN0jrNd/PrOhlUgP/1lyP8ei3IS0VzjybCcXZ1Wm
+UnJQ+u9wT45cuYiP+Cew6uXR2hVuAfY/1jEgW0TafBS/CN9z/40WmkHC4R9fbyL/
+UVWyhT+6iiOAC5xWKUXScpDmgjOF2umJcq08CO/P08r2VLRm4wsuYp7SJiV+ERZr
+hCLqcQ+s0t0nyxUPSTjFdOiuDeK5KMl4zBVNHO/Q5nU4DtjvkVzkb0hmKmqAQ+gj
+xUIFS+v1n9JePfr6zQpBu6305o8a2WELI1CZSDKfb3rNbL7xeL6XSxjQB77HrB0v
+ACKtOxf9HFHUeErDPn3MnNqa8Xr+yFNnvTiAUVhA6tsVd30GlnffceFtu3ywZm8s
+ssSmvfeBgIJBuWTrjbkO5KwBf73djahMq7NpQjmkKJFEQYXoesdN3Qiy+k2caJCb
+gHxHn3nk1xmRUlSz7NglWOAceYAUuc0uv0CeiXJLBO1HUYm6Jt8CS7t6k0ro818+
+ClwZ8tY4516MkCRTk2WRVW0/BsWFjxkH9fDH06AJI9XqmJvPBsHtwuAQiP67QhEp
+7Aqb+7NRsPh8UXNroiNc/Z43JJqRO2gXnGM35g/B3z3JuKKYNa3gZjEnww3vDNYn
+4KlRdNmS7jK7gYH43etc4m7fjfBWXfGoqbAvVnbCAw42TpOU7d9MUPZ4VQzOUKLg
+r2rNTUn6Ryi/iZV+jrg1
+=GSB1
+-----END PGP SIGNATURE-----
+
+--5vNYLRcllDrimb99--
