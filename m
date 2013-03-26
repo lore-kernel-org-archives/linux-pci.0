@@ -1,65 +1,122 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f175.google.com ([209.85.214.175]:56025 "EHLO
-	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751725Ab3CZVzO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Mar 2013 17:55:14 -0400
-Received: by mail-ob0-f175.google.com with SMTP id va7so4453047obc.20
-        for <linux-pci@vger.kernel.org>; Tue, 26 Mar 2013 14:55:14 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20130305224150.GE8339@xanatos>
-References: <1361182193-31894-1-git-send-email-hare@suse.de>
- <CAE9FiQWP1F5mLUoHoTHXy-wQoGxVK66QuuHYydaq3YfysS5Etg@mail.gmail.com>
- <5124820D.2080900@suse.de> <CAE9FiQXHteymDNzu0GqWtVSVhu3g2hCT+K9e5tB1mR-OBX1ffA@mail.gmail.com>
- <5125C45A.5020208@suse.de> <CAErSpo5j3Qge5Q2S+hyMGOcmoN77V0T=1+6OJdNJfJdnvT8wgg@mail.gmail.com>
- <51305B99.6080806@suse.de> <20130305224150.GE8339@xanatos>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 26 Mar 2013 15:54:52 -0600
-Message-ID: <CAErSpo4nAN7wFaRebw5fM3gQVppaQoSSh3PdFumgCS1SGhcxcw@mail.gmail.com>
-Subject: Re: [PATCH] pci: do not try to assign irq 255
-To: Sarah Sharp <sarah.a.sharp@linux.intel.com>
-Cc: Hannes Reinecke <hare@suse.de>, Yinghai Lu <yinghai@kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Frederik Himpe <fhimpe@vub.ac.be>,
-	Oliver Neukum <oneukum@suse.de>,
-	David Haerdeman <david@hardeman.nu>,
-	USB list <linux-usb@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Andy Grover <agrover@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail.free-electrons.com ([94.23.35.102]:53560 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934996Ab3CZQSw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Mar 2013 12:18:52 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Russell King <linux@arm.linux.org.uk>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	devicetree-discuss@lists.ozlabs.org,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Maen Suleiman <maen@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Olof Johansson <olof@lixom.net>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Mitch Bradley <wmb@firmworks.com>,
+	Andrew Murray <andrew.murray@arm.com>
+Subject: [PATCHv6 05/17] arm: pci: add a align_resource hook
+Date: Tue, 26 Mar 2013 17:18:27 +0100
+Message-Id: <1364314719-1049-6-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1364314719-1049-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1364314719-1049-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 5, 2013 at 3:41 PM, Sarah Sharp
-<sarah.a.sharp@linux.intel.com> wrote:
-> On Fri, Mar 01, 2013 at 08:41:13AM +0100, Hannes Reinecke wrote:
->> On 02/27/2013 10:13 PM, Bjorn Helgaas wrote:
->> >[+cc Andy]
->> >
->> >3) I don't understand why the xhci init fails in the first place.  It
->> >looks like the "request interrupt 255 failed" message is from
->> >xhci_try_enable_msi(), but that function tries to enable MSI-X, then
->> >MSI, then falls back to legacy interrupts, where we get the error.
->> >But the device supports MSI, so I don't know why we even fall back to
->> >trying legacy interrupts.  Hannes, do you have any insight into that?
->> >Obviously I'm missing something here.
->> >
->> Hehe. Due to overly clever design.
->> xhci actually sets up interrupts _twice_, once per request_irq() in
->> the generic code and a second time during xhci_run.
->> But as the first call fails it'll never ever run the second part.
->>
->> I'll be sending a patch.
->
-> Something like this?
->
-> http://marc.info/?l=linux-usb&m=132972894117916&w=2
->
-> (Apparently we had this issue around the same time last year, but we
-> thought the BIOS bug had been resolved.)
->
-> Sarah Sharp
+The PCI specifications says that an I/O region must be aligned on a 4
+KB boundary, and a memory region aligned on a 1 MB boundary.
 
-Where are we at with this?  I don't see Sarah's patch in the tree, and
-I haven't applied any changes, so my guess is this is still broken.
+However, the Marvell PCIe interfaces rely on address decoding windows
+(which allow to associate a range of physical addresses with a given
+device). For PCIe memory windows, those windows are defined with a 1
+MB granularity (which matches the PCI specs), but PCIe I/O windows can
+only be defined with a 64 KB granularity, so they have to be 64 KB
+aligned. We therefore need to tell the PCI core about this special
+alignement requirement.
 
-Bjorn
+The PCI core already calls pcibios_align_resource() in the ARM PCI
+core, specifically for such purposes. So this patch extends the ARM
+PCI core so that it calls a ->align_resource() hook registered by the
+PCI driver, exactly like the existing ->map_irq() and ->swizzle()
+hooks.
+
+A particular PCI driver can register a align_resource() hook, and do
+its own specific alignement, depending on the specific constraints of
+the underlying hardware.
+
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Russell King <linux@arm.linux.org.uk>
+---
+ arch/arm/include/asm/mach/pci.h |   11 +++++++++++
+ arch/arm/kernel/bios32.c        |    6 ++++++
+ 2 files changed, 17 insertions(+)
+
+diff --git a/arch/arm/include/asm/mach/pci.h b/arch/arm/include/asm/mach/pci.h
+index 5cf2e97..7d2c3c8 100644
+--- a/arch/arm/include/asm/mach/pci.h
++++ b/arch/arm/include/asm/mach/pci.h
+@@ -30,6 +30,11 @@ struct hw_pci {
+ 	void		(*postinit)(void);
+ 	u8		(*swizzle)(struct pci_dev *dev, u8 *pin);
+ 	int		(*map_irq)(const struct pci_dev *dev, u8 slot, u8 pin);
++	resource_size_t (*align_resource)(struct pci_dev *dev,
++					  const struct resource *res,
++					  resource_size_t start,
++					  resource_size_t size,
++					  resource_size_t align);
+ };
+ 
+ /*
+@@ -51,6 +56,12 @@ struct pci_sys_data {
+ 	u8		(*swizzle)(struct pci_dev *, u8 *);
+ 					/* IRQ mapping				*/
+ 	int		(*map_irq)(const struct pci_dev *, u8, u8);
++					/* Resource alignement requirements	*/
++	resource_size_t (*align_resource)(struct pci_dev *dev,
++					  const struct resource *res,
++					  resource_size_t start,
++					  resource_size_t size,
++					  resource_size_t align);
+ 	void		*private_data;	/* platform controller private data	*/
+ };
+ 
+diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
+index a1f73b5..b2ed73c 100644
+--- a/arch/arm/kernel/bios32.c
++++ b/arch/arm/kernel/bios32.c
+@@ -462,6 +462,7 @@ static void pcibios_init_hw(struct hw_pci *hw, struct list_head *head)
+ 		sys->busnr   = busnr;
+ 		sys->swizzle = hw->swizzle;
+ 		sys->map_irq = hw->map_irq;
++		sys->align_resource = hw->align_resource;
+ 		INIT_LIST_HEAD(&sys->resources);
+ 
+ 		if (hw->private_data)
+@@ -574,6 +575,8 @@ char * __init pcibios_setup(char *str)
+ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+ 				resource_size_t size, resource_size_t align)
+ {
++	struct pci_dev *dev = data;
++	struct pci_sys_data *sys = dev->sysdata;
+ 	resource_size_t start = res->start;
+ 
+ 	if (res->flags & IORESOURCE_IO && start & 0x300)
+@@ -581,6 +584,9 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+ 
+ 	start = (start + align - 1) & ~(align - 1);
+ 
++	if (sys->align_resource)
++		return sys->align_resource(dev, res, start, size, align);
++
+ 	return start;
+ }
+ 
+-- 
+1.7.9.5
+
