@@ -1,66 +1,62 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <CAL-B5D15UP0-z+4whBVxsbHm6_43DEK5+BOr=PZYsc-DNB7VrQ@mail.gmail.com>
-References: <1362666556-10036-1-git-send-email-yxlraid@gmail.com>
-	<CAErSpo7feQK7pXD=moA_hf=Y-j82oZZKwfDNzfo2Ea7i9VPxtA@mail.gmail.com>
-	<F766E4F80769BD478052FB6533FA745D25F436856A@SC-VEXCH4.marvell.com>
-	<CAErSpo6RDC+QyyN4kwt7-kU5d8b1iu+zCQZTGZPxCJU2UicTCA@mail.gmail.com>
-	<F766E4F80769BD478052FB6533FA745D25F436861C@SC-VEXCH4.marvell.com>
-	<CAErSpo6ascpN=bBUUzkk5W3-Wee_1ZztAyTwnKd-tq=L_9Q3mw@mail.gmail.com>
-	<F766E4F80769BD478052FB6533FA745D25F440A477@SC-VEXCH4.marvell.com>
-	<CAL-B5D1=zqB_9sWL9A_GgY6OgGdw18qxBHbgj_YG2bj0VGDh4Q@mail.gmail.com>
-	<F766E4F80769BD478052FB6533FA745D25F440A64D@SC-VEXCH4.marvell.com>
-	<CAL-B5D3od8zhtYguH36r1XmHw_rvg0Tcdgv8ewYrgHFsJ2Sefw@mail.gmail.com>
-	<F766E4F80769BD478052FB6533FA745D25F440A9C6@SC-VEXCH4.marvell.com>
-	<CAErSpo7ufeQK1e=HSTYCNie7yfPouYE4-ot9dUX5r-upBtVt=A@mail.gmail.com>
-	<F766E4F80769BD478052FB6533FA745D25F440ACE9@SC-VEXCH4.marvell.com>
-	<CAL-B5D0JOTBTRhh-i=DkiUjSsid1v408DE5nj_R2qvaHDtEQ=g@mail.gmail.com>
-	<CAL-B5D15UP0-z+4whBVxsbHm6_43DEK5+BOr=PZYsc-DNB7VrQ@mail.gmail.com>
-Date: Thu, 21 Mar 2013 10:00:46 -0600
-Message-ID: <CAL-B5D3bVe5TyG7iVxUewXdd6q5DBOTTV6tKu3kTbQPJK6sJpQ@mail.gmail.com>
-Subject: Re: [PATCH 2/2] PCI: fix system hang issue of Marvell SATA host controller
-From: Myron Stowe <myron.stowe@gmail.com>
-To: Xiangliang Yu <yuxiangl@marvell.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, yxlraid <yxlraid@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.free-electrons.com ([94.23.35.102]:53654 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964879Ab3CZQTC (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Mar 2013 12:19:02 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Russell King <linux@arm.linux.org.uk>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	devicetree-discuss@lists.ozlabs.org,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Maen Suleiman <maen@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Olof Johansson <olof@lixom.net>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Mitch Bradley <wmb@firmworks.com>,
+	Andrew Murray <andrew.murray@arm.com>
+Subject: [PATCHv6 12/17] arm: mvebu: PCIe Device Tree informations for OpenBlocks AX3-4
+Date: Tue, 26 Mar 2013 17:18:34 +0100
+Message-Id: <1364314719-1049-13-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1364314719-1049-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1364314719-1049-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Mar 16, 2013 at 6:13 PM, Myron Stowe <myron.stowe@gmail.com> wrote:
-> On Thu, Mar 14, 2013 at 9:03 AM, Myron Stowe <myron.stowe@gmail.com> wrote:
->> On Wed, Mar 13, 2013 at 3:40 AM, Xiangliang Yu <yuxiangl@marvell.com> wrote:
->>> Hi, Bjorn
->>>
->>>> >> > Now, the situation is like this:
->>>> >> > I captured the PCIE trace with analyzer and found that 1st BE is 0x1111
->>>> >> > when
->>>> >> > accessing IO port space. But 9125 spec has some limitation, and the BE
->>>> >> > must
->>>> >> > be
->>>> >> > 0x0100, to access the 2nd byte only. So, the chip will go to bad.
->>>> >>
->>>> >> Great, this is new, interesting, data.  Is the 9125 spec publicly
->>>> >> accessible and/or could you elaborate on the "some limitation"
->>>> >> comment?
->>>> > 9125 spec is publicly accessible.
->>> If you can't see the pic, please open the attachment. Thanks!
->>
->> Neither Bjorn nor myself could see the pic (from the previous thread
->> or this thread's attachment).
->>
->>>
->>>
->
-> Just an FYI that I proposed a different tact at
-> https://lkml.org/lkml/2013/3/16/168.  For those following this thread
-> you may want to start following that thread also.
+The PlatHome OpenBlocks AX3-4 has an internal mini-PCIe slot that can
+be used to plug mini-PCIe devices. We therefore enable the PCIe
+interface that corresponds to this slot.
 
-I posted a third approach last night.  For those of you following this
-thread there are now three streams:
-  This stream,
-  https://lkml.org/lkml/2013/3/16/168 (which is also on the linux-pci list),
-  and https://lkml.org/lkml/2013/3/21/12 (which is also on the linux-pci list).
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+---
+ arch/arm/boot/dts/armada-xp-openblocks-ax3-4.dts |    9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-Perhaps the third time will be a charm
+diff --git a/arch/arm/boot/dts/armada-xp-openblocks-ax3-4.dts b/arch/arm/boot/dts/armada-xp-openblocks-ax3-4.dts
+index 3818a82..5a748bd 100644
+--- a/arch/arm/boot/dts/armada-xp-openblocks-ax3-4.dts
++++ b/arch/arm/boot/dts/armada-xp-openblocks-ax3-4.dts
+@@ -139,5 +139,14 @@
+ 		usb@d0051000 {
+ 			status = "okay";
+ 		};
++
++		pcie-controller {
++			status = "okay";
++			/* Internal mini-PCIe connector */
++			pcie@1,0 {
++				/* Port 0, Lane 0 */
++				status = "okay";
++			};
++		};
+ 	};
+ };
+-- 
+1.7.9.5
+
