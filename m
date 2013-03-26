@@ -1,105 +1,54 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f182.google.com ([209.85.223.182]:45868 "EHLO
-	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756996Ab3CSQyv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Mar 2013 12:54:51 -0400
-Received: by mail-ie0-f182.google.com with SMTP id k14so889609iea.13
-        for <linux-pci@vger.kernel.org>; Tue, 19 Mar 2013 09:54:50 -0700 (PDT)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] PCI, ACPI: hold acpi_scan_lock during root bus hotplug
+Date: Tue, 26 Mar 2013 23:58:50 +0100
+Message-ID: <13791994.aJX11d8f7N@vostro.rjw.lan>
+In-Reply-To: <CAErSpo7obx9Ay+sZZtki5ZBrSpYfJ+dnxxoH0=ReqOOByVkXhA@mail.gmail.com>
+References: <1673357.1IdxNNvGWX@vostro.rjw.lan> <2166148.RX0m5V0khX@vostro.rjw.lan> <CAErSpo7obx9Ay+sZZtki5ZBrSpYfJ+dnxxoH0=ReqOOByVkXhA@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <Pine.LNX.4.44L0.1303191136020.15684-100000@netrider.rowland.org>
-References: <CAKMK7uGnZFaLQaZtoQ0Fz0ViNNjBvmf0Ak=qPmdAcm2mRBD7rA@mail.gmail.com>
-	<Pine.LNX.4.44L0.1303191136020.15684-100000@netrider.rowland.org>
-Date: Tue, 19 Mar 2013 17:54:50 +0100
-Message-ID: <CAKMK7uGtLcuSsoumAgdB7ri+fR5ReNYcZELbqDcSueXVsewppg@mail.gmail.com>
-Subject: Re: gm45 intel gfx can generate non-MSI irq# in MSI mode (was Re:
- [PATCH] drm/i915: stop using GMBUS IRQs on Gen4 chips (was Re: [3.9-rc1] irq
- 16: nobody cared (was [3.9-rc1] very poor interrupt responses
-From: Daniel Vetter <daniel.vetter@ffwll.ch>
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Chris Wilson <chris@chris-wilson.co.uk>,
-	Jiri Kosina <jkosina@suse.cz>, Greg KH <greg@kroah.com>,
-	Harald Arnesen <skogtun.linux@gmail.com>,
-	Kernel development list <linux-kernel@vger.kernel.org>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Peter Hurley <peter@hurleysoftware.com>,
-	Thomas Meyer <thomas@m3y3r.de>,
-	Shawn Starr <shawn.starr@rogers.com>,
-	USB list <linux-usb@vger.kernel.org>,
-	linux-acpi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Imre Deak <imre.deak@intel.com>,
-	Daniel Kurtz <djkurtz@chromium.org>,
-	dri-devel@lists.freedesktop.org,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	Arkadiusz Miskiewicz <a.miskiewicz@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 19, 2013 at 4:38 PM, Alan Stern <stern@rowland.harvard.edu> wrote:
-> On Tue, 19 Mar 2013, Daniel Vetter wrote:
->
->> For reference below the updated commit message.
->>
->> Cheers, Daniel
->>
->> Author: Jiri Kosina <jkosina@suse.cz>
->> Date:   Tue Mar 19 09:56:57 2013 +0100
->
->>
->>     drm/i915: stop using GMBUS IRQs on Gen4 chips
->>
->>     Commit 28c70f162 ("drm/i915: use the gmbus irq for waits") switched to
->>     using GMBUS irqs instead of GPIO bit-banging for chipset generations 4
->>     and above.
->>
->>     It turns out though that on many systems this leads to spurious interrupts
->>     being generated, long after the register write to disable the IRQs has been
->>     issued.
->>
->>     Typically this results in the spurious interrupt source getting
->>     disabled:
->>
->>     [    9.636345] irq 16: nobody cared (try booting with the "irqpoll" option)
->>     [    9.637915] Pid: 4157, comm: ifup Tainted: GF
->> 3.9.0-rc2-00341-g0863702 #422
->>     [    9.639484] Call Trace:
->>     [    9.640731]  <IRQ>  [<ffffffff8109b40d>] __report_bad_irq+0x1d/0xc7
->>     [    9.640731]  [<ffffffff8109b7db>] note_interrupt+0x15b/0x1e8
->>     [    9.640731]  [<ffffffff810999f7>] handle_irq_event_percpu+0x1bf/0x214
->>     [    9.640731]  [<ffffffff81099a88>] handle_irq_event+0x3c/0x5c
->>     [    9.640731]  [<ffffffff8109c139>] handle_fasteoi_irq+0x7a/0xb0
->>     [    9.640731]  [<ffffffff8100400e>] handle_irq+0x1a/0x24
->>     [    9.640731]  [<ffffffff81003d17>] do_IRQ+0x48/0xaf
->>     [    9.640731]  [<ffffffff8142f1ea>] common_interrupt+0x6a/0x6a
->>     [    9.640731]  <EOI>  [<ffffffff8142f952>] ? system_call_fastpath+0x16/0x1b
->>     [    9.640731] handlers:
->>     [    9.640731] [<ffffffffa000d771>] usb_hcd_irq [usbcore]
->>     [    9.640731] [<ffffffffa0306189>] yenta_interrupt [yenta_socket]
->>     [    9.640731] Disabling IRQ #16
->>
->>     The really curious thing is now that irq 16 is _not_ the interrupt for
->>     the i915 driver when using MSI, but it _is_ the interrupt when not
->>     using MSI. So by all indications it seems like gmbus is able to
->>     generate a legacy (shared) interrupt in MSI mode on some
->>     configurations. I've tried to reproduce this and the differentiating
->>     thing seems to be that on unaffected systems no other device uses irq
->>     16 (which seems to be the non-MSI intel gfx interrupt on all gm45).
->
-> That might be misleading.  It's possible that the erroneous IRQs _are_
-> being issued but you're simply not aware of them.  If the kernel thinks
-> that no device is using IRQ 16 then it will leave that IRQ disabled.
+On Tuesday, March 26, 2013 04:48:49 PM Bjorn Helgaas wrote:
+> On Tue, Mar 26, 2013 at 4:54 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> > On Tuesday, March 26, 2013 08:12:30 AM Yinghai Lu wrote:
+> >> On Tue, Mar 26, 2013 at 6:24 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> >> > On Sunday, March 10, 2013 10:05:16 PM Yinghai Lu wrote:
+> >> >> During merging pci tree with pm/acpi tree, Linus noticed that
+> >> >> we don't have same lock using patten about acpi pci root as
+> >> >> acpiphp.
+> >> >>
+> >> >> Here apply same lock patten, and we need to change
+> >> >> acpi_bus_hot_remove_device executing via acpi_os_hotplug_execute()
+> >> >> as it also hold the lock in acpi_bus_hot_remove_device.
+> >> >>
+> >> >> That will make acpi_bus_hot_remove_device calling the same as other
+> >> >> callers.
+> >> >>
+> >> >> Reported-by: Linus Torvalds <torvalds@linux-foundation.org>
+> >> >> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> >> >> Acked-by: Rafael J. Wysocki <rjw@sisk.pl>
+> >> >
+> >> > Bjorn, this needs to go in before final 3.9.
+> >> >
+> >> > Are you going to handle it, or should I take care of it?
+> >>
+> >> It should be better via your pm+acpi tree, as that lock is added via your tree.
+> >
+> > OK, I'll take it, then, if Bjorn doesn't object.
+> 
+> Yep, that's fine with me.
 
-I guess I should have phrased it more precisely, but that's exactly
-what I expect is happening on my machine: I don't have anything on
-irq16 (i.e. in non-msi mode the gfx interrupt isn't shared) and hence
-the irq is completely disabled. Which obviously makes it impossible
-for me to reproduce the issue. To test that theory, is there a quick
-way to force-enable a given interrupt, short of just hacking up a 2nd
-dummy irq handler in my driver?
--Daniel
+Cool, thanks. :-)
+
+
 -- 
-Daniel Vetter
-Software Engineer, Intel Corporation
-+41 (0) 79 365 57 48 - http://blog.ffwll.ch
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
