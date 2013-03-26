@@ -1,65 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f178.google.com ([209.85.214.178]:51984 "EHLO
-	mail-ob0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754412Ab3C3V0t (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 30 Mar 2013 17:26:49 -0400
-Received: by mail-ob0-f178.google.com with SMTP id wd20so1109187obb.9
-        for <linux-pci@vger.kernel.org>; Sat, 30 Mar 2013 14:26:48 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CANUX_P2-V0-=sfofxYwAYCRvqPPf5Z2wy6CUNQmGQQ2NqjZJ_A@mail.gmail.com>
-References: <CANUX_P3F5YhbZX3WGU-j1AGpbXb_T9Bis2ErhvKkFMtDvzatVQ@mail.gmail.com>
- <20130304134949.GB3021@redhat.com> <CANUX_P0JhuVWcQjTckYzG8eBb2MtT_=prKqV38mCpVjfLmGtCA@mail.gmail.com>
- <20130304154832.GD3021@redhat.com> <CANUX_P22AkqeOROP1QHzp20wGWgDbRzy+9FZy2KvHLXCQ5AVnA@mail.gmail.com>
- <CAErSpo5gVsUxB6ebQGAN-7jsZiRYZ+SyJn5gKZrSuOzzkJ-QjQ@mail.gmail.com> <CANUX_P2-V0-=sfofxYwAYCRvqPPf5Z2wy6CUNQmGQQ2NqjZJ_A@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Sat, 30 Mar 2013 15:26:28 -0600
-Message-ID: <CAErSpo4xmDU2O35ge342nMuiVyDkzSGNRaz2O7-w6jDz_eBgyg@mail.gmail.com>
-Subject: Re: is L1 really disabled in iwlwifi
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>,
-	Roman Yepishev <roman.yepishev@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail.free-electrons.com ([94.23.35.102]:54466 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751826Ab3CZQ6Z (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Mar 2013 12:58:25 -0400
+Date: Tue, 26 Mar 2013 17:58:20 +0100
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	devicetree-discuss@lists.ozlabs.org,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Maen Suleiman <maen@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Olof Johansson <olof@lixom.net>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Mitch Bradley <wmb@firmworks.com>,
+	Andrew Murray <andrew.murray@arm.com>
+Subject: Re: [PATCHv6 10/17] arm: mvebu: add PCIe Device Tree informations
+ for Armada 370
+Message-ID: <20130326175820.78c9b3c7@skate>
+In-Reply-To: <20130326163421.GA30255@obsidianresearch.com>
+References: <1364314719-1049-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	<1364314719-1049-11-git-send-email-thomas.petazzoni@free-electrons.com>
+	<20130326163421.GA30255@obsidianresearch.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Mar 30, 2013 at 12:38 PM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
->>>
->>> Anyway - I think I will just remove this pci_disable_link_state call
->>> and hopefully, it will stay long enough in linux-next so that people
->>> will report issues before it get into linux.
->>> I don't like leaving that code if it doesn't do anything.
->>
->> I think we broke at least some cases of pci_disable_link_state() a
->> while back.  I'd like to fix it rather than just removing calls to it.
->>
->> Can someone collect a complete dmesg log and "lspci -vv" output?
->>
->
-> I will. But I am on vacation right now and my linux box is not
-> accessible right now...
-> In any case, what you'll see is that ASPM is enabled (L1 enabled with
-> or without driver).
-> We are also seeing some really weird stuff (which I can't reproduce of
-> course) like HW becoming not accessible, I guess it would be worth
-> trying to *really* disable L1. I can tweak that in the code of the
-> driver and tell the NIC that L1 is disabled.
->
->         /* Disable L1-Active */
->         iwl_set_bits_prph(trans, APMG_PCIDEV_STT_REG,
->                           APMG_PCIDEV_STT_VAL_L1_ACT_DIS);
->
-> Do you have an idea about *when* did pci_disable_link_state() break?
+Dear Jason Gunthorpe,
 
-No, not yet.  After we figure out exactly what the problem is, we
-should be able to determine when it broke.
+On Tue, 26 Mar 2013 10:34:21 -0600, Jason Gunthorpe wrote:
+> On Tue, Mar 26, 2013 at 05:18:32PM +0100, Thomas Petazzoni wrote:
+> 
+> > +		pcie-controller {
+> > +			compatible = "marvell,armada-370-pcie";
+> > +			status = "disabled";
+> > +			device_type = "pci";
+> > +
+> > +			#address-cells = <3>;
+> > +			#size-cells = <2>;
+> > +
+> > +			bus-range = <0x00 0xff>;
+> > +
+> > +			reg = <0xd0040000 0x2000>, <0xd0080000 0x2000>;
+> > +
+> > +			reg-names = "pcie0.0", "pcie1.0";
+> > +
+> > +			ranges = <0x82000000 0 0xe0000000 0xe0000000 0 0x08000000   /* non-prefetchable memory */
+> > +			          0x81000000 0 0          0xe8000000 0 0x00100000>; /* downstream I/O */
+> > +
+> > +			pcie@1,0 {
+> > +				device_type = "pci";
+> > +				reg = <0x0800 0 0 0 0>;
+> > +				#address-cells = <3>;
+> > +				#size-cells = <2>;
+> 
+> Very Minor Nit: These two # fields are not strictly necessary
 
-If I understand correctly, you have CONFIG_PCIEASPM=y, the iwlwifi
-driver uses pci_disable_link_state() to disable L1, but the link state
-stays in L0 all the time.  So I think we should look at the dmesg log,
-"lspci -vv" output before loading iwlwifi, and "lspci -vv" output
-after loading iwlwifi.
+Ok. I'll wait to see if there are more comments on this patch set,
+especially on deciding between reg = <...> or assigned-addresses, and
+I'll repost an updated version.
 
-Bjorn
+> This basically looks fine to me, however, I think it is valuable if
+> you and Thierry could use the same method to pass per-port registers. I
+> expect others are going to reference these bindings for future work,
+> and one standard method is more clear than two.
+> 
+> Thierry: Did you settle on using assigned-addresses? Can you share the
+> final binding for your driver?
+> 
+> Jingoo Han's driver for Exynos uses lots of per-port registers, so I'm
+> inclined to think that assigned-addresses is the clearer way forward.
+> 
+> This is a fairly minor comment. Would people be comfortable going in as-is
+> with a small follow-up revision to the DT?
+
+I'm fine reworking the driver in one way or another. I really don't
+care much about how the registers addresses are represented in the DT,
+as long as it gets the job done. So, let's wait for Thierry's opinion
+so we can align our DT bindings.
+
+Thanks,
+
+Thomas
+-- 
+Thomas Petazzoni, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
