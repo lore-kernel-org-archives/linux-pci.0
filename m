@@ -1,149 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:16558 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753040Ab3C2Oip (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 29 Mar 2013 10:38:45 -0400
-Message-ID: <1364567918.11026.3.camel@yhuang-mobile.sh.intel.com>
-Subject: Re: 3.9-rc1: pciehp and eSATA card SiI 3132, no XHCI
-From: Huang Ying <ying.huang@intel.com>
-To: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
-Cc: Yijing Wang <wangyijing@huawei.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, Yinghai Lu <yinghai@kernel.org>
-Date: Fri, 29 Mar 2013 22:38:38 +0800
-In-Reply-To: <5155924F.1070509@fold.natur.cuni.cz>
-References: <513E7E1E.80508@fold.natur.cuni.cz>
-	  <513FE7AD.2020408@huawei.com> <5141145E.4020300@fold.natur.cuni.cz>
-	  <51417C28.40402@huawei.com> <5141C9D7.9040706@fold.natur.cuni.cz>
-	  <51428A72.2060602@huawei.com> <51548E13.8030308@fold.natur.cuni.cz>
-	 <1364545211.1817.228.camel@yhuang-dev>
-	 <5155924F.1070509@fold.natur.cuni.cz>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail.free-electrons.com ([94.23.35.102]:54296 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751288Ab3CZQwp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Mar 2013 12:52:45 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Russell King <linux@arm.linux.org.uk>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	devicetree-discuss@lists.ozlabs.org,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Maen Suleiman <maen@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Olof Johansson <olof@lixom.net>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Mitch Bradley <wmb@firmworks.com>,
+	Andrew Murray <andrew.murray@arm.com>
+Subject: [RFCv1 11/11] arm: mvebu: enable PCI MSI support in defconfig
+Date: Tue, 26 Mar 2013 17:52:26 +0100
+Message-Id: <1364316746-8702-12-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1364316746-8702-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1364316746-8702-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2013-03-29 at 14:08 +0100, Martin Mokrejs wrote:
-> 
-> Huang Ying wrote:
-> > On Thu, 2013-03-28 at 19:38 +0100, Martin Mokrejs wrote:
-> >> Hi Ying,
-> >>   would you please tell me how this report relate to this patch?
-> >>
-> >> [PATCH] PCI / ACPI: Always resume devices on ACPI wakeup notifications
-> >>
-> >>   Could you tell me why this PME was being flipped back and forth now?
-> >> Actually, does that make finally some sense to you, pci/acpi devs?
-> >>
-> >>
-> >>   Does is help to say that on the SandyBridge chip I have the following root ports
-> >> hooked to the following end devices?:
-> >>
-> >> 1.c1 -> rtl8169 05:00.0
-> >> 1.c3 -> iwlwifi 09:00.0
-> >> 1.c4 -> xhci_hcd 0b:00.0
-> >> 1.c7 -> 00:11: express card slot
-> >>
-> >>
-> >>   Why didn't I see interleraved lines with 1.c7 *and* 00:11? See the interleaving
-> >> happening with the network card on 3.7.10 kernel (not broken kernel):
-> >>
-> >> [138268.870070] r8169 0000:05:00.0 eth0: link down
-> >> [138270.809811] r8169 0000:05:00.0 eth0: link up
-> >> [138365.599744] r8169 0000:05:00.0 eth0: link down
-> >> [138370.594343] r8169 0000:05:00.0: PME# enabled
-> >> [138370.623852] pcieport 0000:00:1c.1: PME# enabled
-> >> [169885.247386] pcieport 0000:00:1c.1: PME# disabled
-> >> [169885.267374] r8169 0000:05:00.0: PME# disabled
-> >> [169885.330160] r8169 0000:05:00.0 eth0: link down
-> >> [169886.992531] r8169 0000:05:00.0 eth0: link up
-> >> [169904.405769] r8169 0000:05:00.0 eth0: link down
-> >> [169909.401237] r8169 0000:05:00.0: PME# enabled
-> >> [169909.430782] pcieport 0000:00:1c.1: PME# enabled
-> >> [170090.538980] pcieport 0000:00:1c.1: PME# disabled
-> >> [170090.559088] r8169 0000:05:00.0: PME# disabled
-> >> [170090.640494] r8169 0000:05:00.0: PME# enabled
-> >> [170090.678425] pcieport 0000:00:1c.1: PME# enabled
-> >> [170090.829959] pcieport 0000:00:1c.1: PME# disabled
-> >> [170090.848479] r8169 0000:05:00.0: PME# disabled
-> >> [170090.892011] r8169 0000:05:00.0 eth0: link down
-> >> [170090.892134] r8169 0000:05:00.0 eth0: link down
-> >> [170090.930998] r8169 0000:05:00.0 eth0: link down
-> >> [170092.554553] r8169 0000:05:00.0 eth0: link up
-> > 
-> > I don't know exactly.  Can you give me the follow output?
-> > 
-> > grep . /sys/bus/pci/devices/*/power/control
-> > grep . /sys/bus/pci/devices/*/power/runtime_status
-> 
-> 
-> Hi Ying,
->   here is the output from the not-broken 3.7.10 kernel:
-> 
-> vostro ~ # uname -a
-> Linux vostro 3.7.10-default #2 SMP Tue Mar 5 09:52:12 MET 2013 x86_64 Intel(R) Core(TM) i7-2640M CPU @ 2.80GHz GenuineIntel GNU/Linux
-> vostro ~ # grep . /sys/bus/pci/devices/*/power/control
-> /sys/bus/pci/devices/0000:00:00.0/power/control:auto
-> /sys/bus/pci/devices/0000:00:02.0/power/control:auto
-> /sys/bus/pci/devices/0000:00:16.0/power/control:auto
-> /sys/bus/pci/devices/0000:00:1a.0/power/control:auto
-> /sys/bus/pci/devices/0000:00:1b.0/power/control:auto
-> /sys/bus/pci/devices/0000:00:1c.0/power/control:auto
-> /sys/bus/pci/devices/0000:00:1c.1/power/control:auto
-> /sys/bus/pci/devices/0000:00:1c.3/power/control:auto
-> /sys/bus/pci/devices/0000:00:1c.4/power/control:auto
-> /sys/bus/pci/devices/0000:00:1c.7/power/control:auto
-> /sys/bus/pci/devices/0000:00:1d.0/power/control:auto
-> /sys/bus/pci/devices/0000:00:1f.0/power/control:auto
-> /sys/bus/pci/devices/0000:00:1f.2/power/control:auto
-> /sys/bus/pci/devices/0000:00:1f.3/power/control:auto
-> /sys/bus/pci/devices/0000:05:00.0/power/control:auto
-> /sys/bus/pci/devices/0000:09:00.0/power/control:auto
-> /sys/bus/pci/devices/0000:0b:00.0/power/control:auto
-> /sys/bus/pci/devices/0000:11:00.0/power/control:auto
+Now that MSI support is available, both in the IRQ controller driver
+and in the PCIe driver, let's enable it in the mvebu_defconfig used
+for Armada 370/XP platforms.
 
-I guess you use laptop-mode-tool to turn on runtime PM for all PCI
-devices.  Is possible for you to turn off runtime PM for PCI devices in
-laptop-mode-tool if you use it or by hand as follow and test it again to
-check whether it is related to runtime PM support?
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+---
+ arch/arm/configs/mvebu_defconfig |    1 +
+ 1 file changed, 1 insertion(+)
 
-runtime PM for PCI devices can be turned off via the following command
-line as root:
-
-for ctrl in /sys/bus/pci/devices/*/power/control; do
-	echo on > $ctrl
-done
-
-Best Regards,
-Huang Ying
-
-> vostro ~ # grep . /sys/bus/pci/devices/*/power/runtime_status
-> /sys/bus/pci/devices/0000:00:00.0/power/runtime_status:suspended
-> /sys/bus/pci/devices/0000:00:02.0/power/runtime_status:active
-> /sys/bus/pci/devices/0000:00:16.0/power/runtime_status:suspended
-> /sys/bus/pci/devices/0000:00:1a.0/power/runtime_status:active
-> /sys/bus/pci/devices/0000:00:1b.0/power/runtime_status:active
-> /sys/bus/pci/devices/0000:00:1c.0/power/runtime_status:suspended
-> /sys/bus/pci/devices/0000:00:1c.1/power/runtime_status:active
-> /sys/bus/pci/devices/0000:00:1c.3/power/runtime_status:active
-> /sys/bus/pci/devices/0000:00:1c.4/power/runtime_status:active
-> /sys/bus/pci/devices/0000:00:1c.7/power/runtime_status:active
-> /sys/bus/pci/devices/0000:00:1d.0/power/runtime_status:active
-> /sys/bus/pci/devices/0000:00:1f.0/power/runtime_status:active
-> /sys/bus/pci/devices/0000:00:1f.2/power/runtime_status:active
-> /sys/bus/pci/devices/0000:00:1f.3/power/runtime_status:suspended
-> /sys/bus/pci/devices/0000:05:00.0/power/runtime_status:active
-> /sys/bus/pci/devices/0000:09:00.0/power/runtime_status:active
-> /sys/bus/pci/devices/0000:0b:00.0/power/runtime_status:active
-> /sys/bus/pci/devices/0000:11:00.0/power/runtime_status:active
-> vostro ~ # 
-> 
-> 
-> 
-> Now will go and test your patch for the 3.9-rc1 PME# storm when the coldplugged eSATA
-> is unplugged and rmmod sata_sil24 triggers the messages.
-> 
-> Martin
-
+diff --git a/arch/arm/configs/mvebu_defconfig b/arch/arm/configs/mvebu_defconfig
+index 071a5b1..a9d0fc6 100644
+--- a/arch/arm/configs/mvebu_defconfig
++++ b/arch/arm/configs/mvebu_defconfig
+@@ -14,6 +14,7 @@ CONFIG_MACH_ARMADA_XP=y
+ # CONFIG_CACHE_L2X0 is not set
+ # CONFIG_SWP_EMULATE is not set
+ CONFIG_PCI=y
++CONFIG_PCI_MSI=y
+ CONFIG_PCI_MVEBU=y
+ CONFIG_SMP=y
+ CONFIG_AEABI=y
+-- 
+1.7.9.5
 
