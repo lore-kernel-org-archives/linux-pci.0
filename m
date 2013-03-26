@@ -1,76 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:42838 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750903Ab3COQVm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 15 Mar 2013 12:21:42 -0400
-Date: Fri, 15 Mar 2013 17:21:37 +0100 (CET)
-From: Jiri Kosina <jkosina@suse.cz>
-To: Greg KH <greg@kroah.com>
-Cc: Harald Arnesen <skogtun.linux@gmail.com>,
-	Kernel development list <linux-kernel@vger.kernel.org>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Peter Hurley <peter@hurleysoftware.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Thomas Meyer <thomas@m3y3r.de>,
-	Shawn Starr <shawn.starr@rogers.com>,
-	USB list <linux-usb@vger.kernel.org>,
-	linux-acpi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Daniel Vetter <daniel.vetter@ffwll.ch>,
-	Imre Deak <imre.deak@intel.com>,
-	Daniel Kurtz <djkurtz@chromium.org>,
-	dri-devel@lists.freedesktop.org
-Subject: Re: [3.9-rc1] irq 16: nobody cared  (was [3.9-rc1] very poor interrupt
- responses)
-In-Reply-To: <20130315154739.GA1024@kroah.com>
-Message-ID: <alpine.LNX.2.00.1303151720400.9529@pobox.suse.cz>
-References: <Pine.LNX.4.44L0.1303141050310.1983-100000@iolanthe.rowland.org> <1460519.ejNFI1DrGk@vostro.rjw.lan> <1363280764.26318.4.camel@thor.lan> <5657408.cYX6iimiA4@vostro.rjw.lan> <alpine.LNX.2.00.1303150851020.9529@pobox.suse.cz> <5142E7F0.4020002@gmail.com>
- <alpine.LNX.2.00.1303151424140.9529@pobox.suse.cz> <20130315153249.GA32425@kroah.com> <alpine.LNX.2.00.1303151636481.9529@pobox.suse.cz> <20130315154739.GA1024@kroah.com>
+Received: from moutng.kundenserver.de ([212.227.126.171]:54881 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751659Ab3CZVNd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Mar 2013 17:13:33 -0400
+Date: Tue, 26 Mar 2013 22:12:34 +0100
+From: Thierry Reding <thierry.reding@avionic-design.de>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	devicetree-discuss@lists.ozlabs.org,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Maen Suleiman <maen@marvell.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Olof Johansson <olof@lixom.net>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Mitch Bradley <wmb@firmworks.com>,
+	Andrew Murray <andrew.murray@arm.com>
+Subject: Re: [PATCHv6 10/17] arm: mvebu: add PCIe Device Tree informations
+ for Armada 370
+Message-ID: <20130326211234.GA1295@avionic-0098.mockup.avionic-design.de>
+References: <1364314719-1049-1-git-send-email-thomas.petazzoni@free-electrons.com>
+ <20130326163421.GA30255@obsidianresearch.com>
+ <20130326201654.GA7109@avionic-0098.mockup.avionic-design.de>
+ <201303262050.12847.arnd@arndb.de>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="17pEHd4RhPHOinZp"
+In-Reply-To: <201303262050.12847.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 15 Mar 2013, Greg KH wrote:
 
-> > > > > I have the same problem on my Lenovo T500. I think the graphics card is
-> > > > > involved.
-> > > > > 
-> > > > > This laptop has "hybrid graphics" - one Intel GMA 4500MHD and one ATI
-> > > > > Mobility Radeon HD 3650. When I boot with the Intel card, I get "irq 16:
-> > > > > nobody cared" during boot, not when I boot with the ATI card.
-> > > > 
-> > > > Confirming this. After a lot of hassle, I have bisected this reliably to
-> > > > 
-> > > > 	commit 28c70f162a315bdcfbe0bf940a740ef8bfb918d6
-> > > > 	Author: Daniel Vetter <daniel.vetter@ffwll.ch>
-> > > > 	Date:   Sat Dec 1 13:53:45 2012 +0100
-> > > > 
-> > > > 	    drm/i915: use the gmbus irq for waits
-> > > > 
-> > > > Adding Daniel, Imre and Daniel to CC while I will try to figure out what's 
-> > > > happening in parallel.
-> > > 
-> > > Wasn't this fixed by the merge from David
-> > > (2cc79544bd0aabb4b3cf467ead5df526d9134c64)?
-> > 
-> > Why do you think it should, please?
-> 
-> The line:
-> 	- Fix PCH irq handling race which resulted in missed gmbus/dp
-> 	  aux irqs and subsequent fallout (Paulo)
+--17pEHd4RhPHOinZp
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Ah, that one. I believe that should be irrelevant for GM chipsets, as they 
-don't have AUX line, right?
+On Tue, Mar 26, 2013 at 08:50:12PM +0000, Arnd Bergmann wrote:
+> On Tuesday 26 March 2013, Thierry Reding wrote:
+> >                 pci@1,0 {
+> >                         device_type =3D "pci";
+> >                         assigned-addresses =3D <0x82000800 0 0x80000000=
+ 0 0x1000>;
+> >                         reg =3D <0x000800 0 0 0 0>;
+> >                         status =3D "disabled";
+> >=20
+> >                         #address-cells =3D <3>;
+> >                         #size-cells =3D <2>;
+> >=20
+> >                         nvidia,num-lanes =3D <2>;
+> >                 };
+>=20
+> Shouldn't there be an empty ranges property in there as well?
 
-> > (I am seeing this with a2362d247 still).
-> 
-> Ok, I guess it isn't still fixed properly, just was guessing :)
+Technically yes, I think. Though it doesn't make a bit of a difference
+on Linux.
 
-Seems like this is a different issue.
+Thierry
 
-Thanks,
+--17pEHd4RhPHOinZp
+Content-Type: application/pgp-signature
 
--- 
-Jiri Kosina
-SUSE Labs
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQIcBAEBAgAGBQJRUg9CAAoJEN0jrNd/PrOhcpcP/07knZ3ngXHD+sTb++WAbC82
+pWNjjuk9l0bRGSA27JzQQ8ezDmRWqUXH/Xi1FYLEe+yuYTsxf5ETkYdaMJWy8eG7
+iJIv0gNqPfxAynHzIZDUEgd0g548xO/+IXNrZjgFtu7Qnchup/9GOdf34MY98V7y
+LlTg2hRaMenCg1rmUz8BQogAfWxgPWkzEArl7MiXTnBHgXmVHDpYQtS/2mj3qln/
+Yc1GrmmSmUHCi7WCVs73NC1mPOJMkF5gqaFNuXtxIYvHpAYDRIrKyHKtChAgfwOa
+GWvx5Tt13Hb7lxVCKcX/VHmcYRJBJWeRD9mVZVp26BnlaM8nm6DhTUmBT7GFAaPl
+Bq53OWfGhNff8pgpXrnFS/99nW27vdVP34BYTVrmDBk4tDJVKnaSBfN9AkFc3hCY
+AS0hZOxzVbLUgxtX80UcR1ZxjS0Jbfltm7AXp0urrF8d6xJMmAfIuDvgGq9Q/QQG
+yWXRJ0GLpy0FkJzrqFF/alrQVj8BRhy3Unk/r2d75A5LBbIaxGEetvFCQ4kp5gyt
+zA8sBQJYwtXY1UuRFxkP1FksLGm/mm59+/vuVNdjXOdORU//NG5qts+lr6CXu/m+
+8UT2GQ6eEkdkEvO6i0H6o/rpqRegEJweyKhrYjupomuv4+24RKXDehjgdLb7zT3e
+0Zp/EOw0/0w98DO0AdU/
+=Jwhw
+-----END PGP SIGNATURE-----
+
+--17pEHd4RhPHOinZp--
