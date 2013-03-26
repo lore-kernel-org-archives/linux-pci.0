@@ -1,57 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:24052 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754529Ab3CUPgi (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 Mar 2013 11:36:38 -0400
-Date: Thu, 21 Mar 2013 10:37:25 -0500
-From: "Serge E. Hallyn" <serge@hallyn.com>
-To: Vivek Goyal <vgoyal@redhat.com>
-Cc: Matthew Garrett <matthew.garrett@nebula.com>,
-	Mimi Zohar <zohar@linux.vnet.ibm.com>,
-	James Morris <jmorris@namei.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-security-module@vger.kernel.org"
-	<linux-security-module@vger.kernel.org>,
-	"linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
-	"kexec@lists.infradead.org" <kexec@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Serge E. Hallyn" <serge@hallyn.com>
-Subject: Re: [PATCH 01/12] Security: Add CAP_COMPROMISE_KERNEL
-Message-ID: <20130321153725.GA3656@austin.hallyn.com>
-References: <alpine.LRH.2.02.1303191542200.30973@tundra.namei.org>
- <1363797717.2580.10.camel@falcor1.watson.ibm.com>
- <1363798166.2553.29.camel@x230.sbx07502.somerma.wayport.net>
- <1363802506.2580.55.camel@falcor1.watson.ibm.com>
- <1363803158.2553.33.camel@x230.sbx07502.somerma.wayport.net>
- <1363806968.2580.86.camel@falcor1.watson.ibm.com>
- <1363811856.2553.37.camel@x230.sbx07502.somerma.wayport.net>
- <1363813877.2580.120.camel@falcor1.watson.ibm.com>
- <1363814289.2553.41.camel@x230.sbx07502.somerma.wayport.net>
- <20130321134348.GA3934@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130321134348.GA3934@redhat.com>
+Received: from mail.free-electrons.com ([94.23.35.102]:53676 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964883Ab3CZQTE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Mar 2013 12:19:04 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Russell King <linux@arm.linux.org.uk>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	devicetree-discuss@lists.ozlabs.org,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Maen Suleiman <maen@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Olof Johansson <olof@lixom.net>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Mitch Bradley <wmb@firmworks.com>,
+	Andrew Murray <andrew.murray@arm.com>
+Subject: [PATCHv6 13/17] arm: mvebu: PCIe Device Tree informations for Armada XP DB
+Date: Tue, 26 Mar 2013 17:18:35 +0100
+Message-Id: <1364314719-1049-14-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1364314719-1049-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1364314719-1049-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Quoting Vivek Goyal (vgoyal@redhat.com):
-...
-> Giving CAP_MODIFY_KERNEL to processess upon signature verification
-> will simplify things a bit.
-> 
-> Only thing is that signature verification alone is not sufficient. We
-> also need to make sure after signature verification executable can
-> not be modified in memory in any way. So that means atleast couple of
-> things.
+The Marvell evaluation board (DB) for the Armada XP SoC has 6
+physicals full-size PCIe slots, so we enable the corresponding PCIe
+interfaces in the Device Tree.
 
-Also what about context?  If I construct a mounts namespace a certain
-way, can I trick this executable into loading an old singed bzImage that
-I had laying around?
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+---
+ arch/arm/boot/dts/armada-xp-db.dts |   33 +++++++++++++++++++++++++++++++++
+ 1 file changed, 33 insertions(+)
 
-ISTM the only sane thing to do, if you're going down this road,
-is to have CAP_MODIFIY_KERNEL pulled from bounding set for everyone
-except a getty started by init on ttyS0.  Then log in on serial
-to update.  Or run a damon with CAP_MODIFIY_KERNEL which listens
-to a init_net_ns netlink socket for very basic instructions, like
-"find and install latest signed bzImage in /boot".  Then you can
-at least trust that /boot for that daemon is not faked.
+diff --git a/arch/arm/boot/dts/armada-xp-db.dts b/arch/arm/boot/dts/armada-xp-db.dts
+index e83505e..54cc5bb 100644
+--- a/arch/arm/boot/dts/armada-xp-db.dts
++++ b/arch/arm/boot/dts/armada-xp-db.dts
+@@ -121,5 +121,38 @@
+ 				spi-max-frequency = <20000000>;
+ 			};
+ 		};
++
++		pcie-controller {
++			status = "okay";
++
++			/*
++			 * All 6 slots are physically present as
++			 * standard PCIe slots on the board.
++			 */
++			pcie@1,0 {
++				/* Port 0, Lane 0 */
++				status = "okay";
++			};
++			pcie@2,0 {
++				/* Port 0, Lane 1 */
++				status = "okay";
++			};
++			pcie@3,0 {
++				/* Port 0, Lane 2 */
++				status = "okay";
++			};
++			pcie@4,0 {
++				/* Port 0, Lane 3 */
++				status = "okay";
++			};
++			pcie@9,0 {
++				/* Port 2, Lane 0 */
++				status = "okay";
++			};
++			pcie@10,0 {
++				/* Port 3, Lane 0 */
++				status = "okay";
++			};
++		};
+ 	};
+ };
+-- 
+1.7.9.5
+
