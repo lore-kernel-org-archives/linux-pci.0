@@ -1,44 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:30894 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758010Ab3CTD1X (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 19 Mar 2013 23:27:23 -0400
-Message-ID: <1363750040.24132.483.camel@bling.home>
-Subject: Re: [PATCH 01/12] Security: Add CAP_COMPROMISE_KERNEL
-From: Alex Williamson <alex.williamson@redhat.com>
-To: "H. Peter Anvin" <hpa@zytor.com>
-Cc: Matthew Garrett <matthew.garrett@nebula.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-security-module@vger.kernel.org"
-	<linux-security-module@vger.kernel.org>,
-	"linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
-	"kexec@lists.infradead.org" <kexec@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Date: Tue, 19 Mar 2013 21:27:20 -0600
-In-Reply-To: <51492B78.7020404@zytor.com>
-References: <3pfl8u1ugprwkcs5xmtjth3l.1363742692541@email.android.com>
-	  <51492379.3090302@zytor.com> <51492828.5070803@zytor.com>
-	 <1363749503.24132.482.camel@bling.home> <51492B78.7020404@zytor.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail.free-electrons.com ([94.23.35.102]:53696 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964850Ab3CZQTG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Mar 2013 12:19:06 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Russell King <linux@arm.linux.org.uk>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	devicetree-discuss@lists.ozlabs.org,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Maen Suleiman <maen@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Olof Johansson <olof@lixom.net>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Mitch Bradley <wmb@firmworks.com>,
+	Andrew Murray <andrew.murray@arm.com>
+Subject: [PATCHv6 15/17] arm: mvebu: PCIe Device Tree informations for Armada 370 DB
+Date: Tue, 26 Mar 2013 17:18:37 +0100
+Message-Id: <1364314719-1049-16-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1364314719-1049-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1364314719-1049-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2013-03-19 at 20:22 -0700, H. Peter Anvin wrote:
-> On 03/19/2013 08:18 PM, Alex Williamson wrote:
-> >>
-> >> The "pinning" process needs to involve a call to the kernel to process
-> >> the page for DMA (pinning the page and opening it in the iommu) and
-> >> return a transaction address, of course.
-> >>
-> >> I think we have the interface for that in vfio, but I haven't followed
-> >> that work.
-> > 
-> > Yes, vfio does this and is meant to provide a secure-boot-friendly PCI
-> > passthrough interface.  Thanks,
-> > 
-> 
-> Right, and presumably vfio does *not* require CAP_SYS_RAWIO, right?
+The Marvell evaluation board (DB) for the Armada 370 SoC has 2
+physical full-size PCIe slots, so we enable the corresponding PCIe
+interfaces in the Device Tree.
 
-Correct
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+---
+ arch/arm/boot/dts/armada-370-db.dts |   17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
+
+diff --git a/arch/arm/boot/dts/armada-370-db.dts b/arch/arm/boot/dts/armada-370-db.dts
+index e34b280..6403acd 100644
+--- a/arch/arm/boot/dts/armada-370-db.dts
++++ b/arch/arm/boot/dts/armada-370-db.dts
+@@ -94,5 +94,22 @@
+ 				spi-max-frequency = <50000000>;
+ 			};
+ 		};
++
++		pcie-controller {
++			status = "okay";
++			/*
++			 * The two PCIe units are accessible through
++			 * both standard PCIe slots and mini-PCIe
++			 * slots on the board.
++			 */
++			pcie@1,0 {
++				/* Port 0, Lane 0 */
++				status = "okay";
++			};
++			pcie@2,0 {
++				/* Port 1, Lane 0 */
++				status = "okay";
++			};
++		};
+ 	};
+ };
+-- 
+1.7.9.5
 
