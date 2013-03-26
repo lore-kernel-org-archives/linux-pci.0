@@ -1,117 +1,49 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	stable@kernel.org
-Subject: [PATCH] PCI: Remove not needed check in disable aspm link
-Date: Mon, 18 Mar 2013 10:37:06 -0700
-Message-Id: <1363628226-6679-1-git-send-email-yinghai@kernel.org>
-In-Reply-To: <CAE9FiQXmeb66dc8fET0y99BjqpUXp11c7utiQ5keR1Wf+N9xaA@mail.gmail.com>
-References: <CAE9FiQXmeb66dc8fET0y99BjqpUXp11c7utiQ5keR1Wf+N9xaA@mail.gmail.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from moutng.kundenserver.de ([212.227.126.186]:56845 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751483Ab3CZWET (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Mar 2013 18:04:19 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Subject: Re: [RFCv1 07/11] irqchip: armada-370-xp: add MSI support to interrupt controller driver
+Date: Tue, 26 Mar 2013 22:04:05 +0000
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	devicetree-discuss@lists.ozlabs.org,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Maen Suleiman <maen@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Olof Johansson <olof@lixom.net>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Mitch Bradley <wmb@firmworks.com>,
+	Andrew Murray <andrew.murray@arm.com>
+References: <1364316746-8702-1-git-send-email-thomas.petazzoni@free-electrons.com> <20130326221654.34bce6d7@skate> <20130326215546.GA8650@obsidianresearch.com>
+In-Reply-To: <20130326215546.GA8650@obsidianresearch.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201303262204.05546.arnd@arndb.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Roman reported ath5k does not work anymore on 3.8.
-Bisected to
-| commit 8c33f51df406e1a1f7fa4e9b244845b7ebd61fa6
-| Author: Taku Izumi <izumi.taku@jp.fujitsu.com>
-| Date:   Tue Oct 30 15:27:13 2012 +0900
-|
-|    PCI/ACPI: Request _OSC control before scanning PCI root bus
-|
-|    This patch moves up the code block to request _OSC control in order to
-|    separate ACPI work and PCI work in acpi_pci_root_add().
+On Tuesday 26 March 2013, Jason Gunthorpe wrote:
+> > I'll let Arnd answer this one, but I'm pretty sure that using IRQ
+> > domains is the way to go. The fact that a number of drivers don't yet
+> > use IRQ domains is maybe just because they haven't been converted yet.
+> 
+> Maybe, but they have irq domain code as well.. I'm curious about the
+> answer too :)
 
-It make pci_disable_link_state does not work anymore as acpi_disabled
-is set before pci root bus scanning.
-It will skip that in quirks and pcie_aspm_sanity_check.
+To expand on my previous answer: irq_alloc_descs can require a lot of
+memory if you have a lot of MSIs. If the driver only has 16 MSIs,
+there is probably no reason to not assign all of them at once, but if
+you have 2048 MSIs, creating the mapping only when you need it is
+much more space efficient.
 
-We could revert to old logic, but that will make booting path and hotplug
-path with different aspm_disabled again.
-
-Acctually we don't need to check aspm_disabled in disable link, as
-we already have protection about link state following.
-
-https://bugzilla.kernel.org/show_bug.cgi?id=55211
-http://article.gmane.org/gmane.linux.kernel.pci/20640
-
-Need it for 3.8 stable.
-
-Reported-by: Roman Yepishev <roman.yepishev@gmail.com>
-Bisected-by: Roman Yepishev <roman.yepishev@gmail.com>
-Tested-by: Roman Yepishev <roman.yepishev@gmail.com>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Taku Izumi <izumi.taku@jp.fujitsu.com>
-Cc: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
-Cc: stable@kernel.org
-
----
- drivers/pci/pcie/aspm.c |   21 ++++-----------------
- 1 file changed, 4 insertions(+), 17 deletions(-)
-
-Index: linux-2.6/drivers/pci/pcie/aspm.c
-===================================================================
---- linux-2.6.orig/drivers/pci/pcie/aspm.c
-+++ linux-2.6/drivers/pci/pcie/aspm.c
-@@ -493,15 +493,6 @@ static int pcie_aspm_sanity_check(struct
- 			return -EINVAL;
- 
- 		/*
--		 * If ASPM is disabled then we're not going to change
--		 * the BIOS state. It's safe to continue even if it's a
--		 * pre-1.1 device
--		 */
--
--		if (aspm_disabled)
--			continue;
--
--		/*
- 		 * Disable ASPM for pre-1.1 PCIe device, we follow MS to use
- 		 * RBER bit to determine if a function is 1.1 version device
- 		 */
-@@ -718,15 +709,11 @@ void pcie_aspm_powersave_config_link(str
-  * pci_disable_link_state - disable pci device's link state, so the link will
-  * never enter specific states
-  */
--static void __pci_disable_link_state(struct pci_dev *pdev, int state, bool sem,
--				     bool force)
-+static void __pci_disable_link_state(struct pci_dev *pdev, int state, bool sem)
- {
- 	struct pci_dev *parent = pdev->bus->self;
- 	struct pcie_link_state *link;
- 
--	if (aspm_disabled && !force)
--		return;
--
- 	if (!pci_is_pcie(pdev))
- 		return;
- 
-@@ -757,13 +744,13 @@ static void __pci_disable_link_state(str
- 
- void pci_disable_link_state_locked(struct pci_dev *pdev, int state)
- {
--	__pci_disable_link_state(pdev, state, false, false);
-+	__pci_disable_link_state(pdev, state, false);
- }
- EXPORT_SYMBOL(pci_disable_link_state_locked);
- 
- void pci_disable_link_state(struct pci_dev *pdev, int state)
- {
--	__pci_disable_link_state(pdev, state, true, false);
-+	__pci_disable_link_state(pdev, state, true);
- }
- EXPORT_SYMBOL(pci_disable_link_state);
- 
-@@ -781,7 +768,7 @@ void pcie_clear_aspm(struct pci_bus *bus
- 		__pci_disable_link_state(child, PCIE_LINK_STATE_L0S |
- 					 PCIE_LINK_STATE_L1 |
- 					 PCIE_LINK_STATE_CLKPM,
--					 false, true);
-+					 false);
- 	}
- }
- 
+	Arnd
