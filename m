@@ -1,122 +1,140 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:55131 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751355Ab3CURam (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 Mar 2013 13:30:42 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
+Received: from moutng.kundenserver.de ([212.227.17.8]:63510 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754822Ab3CZUR6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Mar 2013 16:17:58 -0400
+Date: Tue, 26 Mar 2013 21:16:54 +0100
+From: Thierry Reding <thierry.reding@avionic-design.de>
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
 	Grant Likely <grant.likely@secretlab.ca>,
-	Russell King <linux@arm.linux.org.uk>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
 	devicetree-discuss@lists.ozlabs.org,
 	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
 	Jason Cooper <jason@lakedaemon.net>,
 	Arnd Bergmann <arnd@arndb.de>,
 	Maen Suleiman <maen@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
 	Gregory Clement <gregory.clement@free-electrons.com>,
 	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
 	Olof Johansson <olof@lixom.net>,
 	Tawfik Bayouk <tawfik@marvell.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
 	Mitch Bradley <wmb@firmworks.com>,
 	Andrew Murray <andrew.murray@arm.com>
-Subject: [PATCH v5 05/17] arm: pci: add a align_resource hook
-Date: Thu, 21 Mar 2013 18:30:13 +0100
-Message-Id: <1363887025-19931-6-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1363887025-19931-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1363887025-19931-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Subject: Re: [PATCHv6 10/17] arm: mvebu: add PCIe Device Tree informations
+ for Armada 370
+Message-ID: <20130326201654.GA7109@avionic-0098.mockup.avionic-design.de>
+References: <1364314719-1049-1-git-send-email-thomas.petazzoni@free-electrons.com>
+ <1364314719-1049-11-git-send-email-thomas.petazzoni@free-electrons.com>
+ <20130326163421.GA30255@obsidianresearch.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="5mCyUwZo2JvN/JJP"
+In-Reply-To: <20130326163421.GA30255@obsidianresearch.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The PCI specifications says that an I/O region must be aligned on a 4
-KB boundary, and a memory region aligned on a 1 MB boundary.
 
-However, the Marvell PCIe interfaces rely on address decoding windows
-(which allow to associate a range of physical addresses with a given
-device). For PCIe memory windows, those windows are defined with a 1
-MB granularity (which matches the PCI specs), but PCIe I/O windows can
-only be defined with a 64 KB granularity, so they have to be 64 KB
-aligned. We therefore need to tell the PCI core about this special
-alignement requirement.
+--5mCyUwZo2JvN/JJP
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-The PCI core already calls pcibios_align_resource() in the ARM PCI
-core, specifically for such purposes. So this patch extends the ARM
-PCI core so that it calls a ->align_resource() hook registered by the
-PCI driver, exactly like the existing ->map_irq() and ->swizzle()
-hooks.
+On Tue, Mar 26, 2013 at 10:34:21AM -0600, Jason Gunthorpe wrote:
+[...]
+> This basically looks fine to me, however, I think it is valuable if
+> you and Thierry could use the same method to pass per-port registers. I
+> expect others are going to reference these bindings for future work,
+> and one standard method is more clear than two.
+>=20
+> Thierry: Did you settle on using assigned-addresses? Can you share the
+> final binding for your driver?
 
-A particular PCI driver can register a align_resource() hook, and do
-its own specific alignement, depending on the specific constraints of
-the underlying hardware.
+Yes, I have the final bindings ready and I was waiting for Andrew's new
+version of the ranges parsing patch before sending the next (and
+hopefully final) version of the series. He posted that patch now so I
+should have something ready soon. For now here's what I currently use
+for DT:
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Russell King <linux@arm.linux.org.uk>
----
- arch/arm/include/asm/mach/pci.h |   11 +++++++++++
- arch/arm/kernel/bios32.c        |    6 ++++++
- 2 files changed, 17 insertions(+)
+	pcie-controller {
+		compatible =3D "nvidia,tegra20-pcie";
+		device_type =3D "pci";
+		reg =3D <0x80003000 0x00000800   /* PADS registers */
+		       0x80003800 0x00000200   /* AFI registers */
+		       0x90000000 0x10000000>; /* configuration space */
+		reg-names =3D "pads", "afi", "cs";
+		interrupts =3D <0 98 0x04   /* controller interrupt */
+		              0 99 0x04>; /* MSI interrupt */
+		interrupt-names =3D "intr", "msi";
 
-diff --git a/arch/arm/include/asm/mach/pci.h b/arch/arm/include/asm/mach/pci.h
-index 5cf2e97..7d2c3c8 100644
---- a/arch/arm/include/asm/mach/pci.h
-+++ b/arch/arm/include/asm/mach/pci.h
-@@ -30,6 +30,11 @@ struct hw_pci {
- 	void		(*postinit)(void);
- 	u8		(*swizzle)(struct pci_dev *dev, u8 *pin);
- 	int		(*map_irq)(const struct pci_dev *dev, u8 slot, u8 pin);
-+	resource_size_t (*align_resource)(struct pci_dev *dev,
-+					  const struct resource *res,
-+					  resource_size_t start,
-+					  resource_size_t size,
-+					  resource_size_t align);
- };
- 
- /*
-@@ -51,6 +56,12 @@ struct pci_sys_data {
- 	u8		(*swizzle)(struct pci_dev *, u8 *);
- 					/* IRQ mapping				*/
- 	int		(*map_irq)(const struct pci_dev *, u8, u8);
-+					/* Resource alignement requirements	*/
-+	resource_size_t (*align_resource)(struct pci_dev *dev,
-+					  const struct resource *res,
-+					  resource_size_t start,
-+					  resource_size_t size,
-+					  resource_size_t align);
- 	void		*private_data;	/* platform controller private data	*/
- };
- 
-diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
-index a1f73b5..b2ed73c 100644
---- a/arch/arm/kernel/bios32.c
-+++ b/arch/arm/kernel/bios32.c
-@@ -462,6 +462,7 @@ static void pcibios_init_hw(struct hw_pci *hw, struct list_head *head)
- 		sys->busnr   = busnr;
- 		sys->swizzle = hw->swizzle;
- 		sys->map_irq = hw->map_irq;
-+		sys->align_resource = hw->align_resource;
- 		INIT_LIST_HEAD(&sys->resources);
- 
- 		if (hw->private_data)
-@@ -574,6 +575,8 @@ char * __init pcibios_setup(char *str)
- resource_size_t pcibios_align_resource(void *data, const struct resource *res,
- 				resource_size_t size, resource_size_t align)
- {
-+	struct pci_dev *dev = data;
-+	struct pci_sys_data *sys = dev->sysdata;
- 	resource_size_t start = res->start;
- 
- 	if (res->flags & IORESOURCE_IO && start & 0x300)
-@@ -581,6 +584,9 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
- 
- 	start = (start + align - 1) & ~(align - 1);
- 
-+	if (sys->align_resource)
-+		return sys->align_resource(dev, res, start, size, align);
-+
- 	return start;
- }
- 
--- 
-1.7.9.5
+		bus-range =3D <0x00 0xff>;
+		#address-cells =3D <3>;
+		#size-cells =3D <2>;
 
+		ranges =3D <0x82000000 0 0x80000000 0x80000000 0 0x00001000   /* port 0 r=
+egisters */
+			  0x82000000 0 0x80001000 0x80001000 0 0x00001000   /* port 1 registers =
+*/
+			  0x81000000 0 0          0x82000000 0 0x00010000   /* downstream I/O */
+			  0x82000000 0 0xa0000000 0xa0000000 0 0x10000000   /* non-prefetchable =
+memory */
+			  0xc2000000 0 0xb0000000 0xb0000000 0 0x10000000>; /* prefetchable memo=
+ry */
+
+		clocks =3D <&tegra_car 70>, <&tegra_car 72>, <&tegra_car 74>,
+			 <&tegra_car 118>;
+		clock-names =3D "pex", "afi", "pcie_xclk", "pll_e";
+		status =3D "disabled";
+
+		pci@1,0 {
+			device_type =3D "pci";
+			assigned-addresses =3D <0x82000800 0 0x80000000 0 0x1000>;
+			reg =3D <0x000800 0 0 0 0>;
+			status =3D "disabled";
+
+			#address-cells =3D <3>;
+			#size-cells =3D <2>;
+
+			nvidia,num-lanes =3D <2>;
+		};
+
+		pci@2,0 {
+			device_type =3D "pci";
+			assigned-addresses =3D <0x82001000 0 0x80001000 0 0x1000>;
+			reg =3D <0x001000 0 0 0 0>;
+			status =3D "disabled";
+
+			#address-cells =3D <3>;
+			#size-cells =3D <2>;
+
+			nvidia,num-lanes =3D <2>;
+		};
+	};
+
+I think that has everything that we discussed previously.
+
+Thierry
+
+--5mCyUwZo2JvN/JJP
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQIcBAEBAgAGBQJRUgI2AAoJEN0jrNd/PrOhaFkQAKkYjrCAD9YdSO7gM34Q01Z6
+w8J4wHXeBwCvbzAiJInQVVSzvusrD8kJVYpj4zvmD/fcCLcPNLHy6AFyZ7W4fcjy
+Z8byM5z8FW+bvV1+tvw9hiCa7f4bYfrZiG9iN8201OnfFoKcbm0PT95d0CZGf7OW
+l69d9GWLYRRV/Xgeqbp7uAbq0/aOsG0I8x3McUsbM52onsICPDQJFNvX7JYh+Vsz
+waNG314tBJdDgheqik4+zyZLZLy+SNNT11x6M+OW6jBqfkBa68udxSZDXeaveFoZ
+8oBCmWpuFDPtr9GI5eP62PtBCJ8dXgQp/shzytAUzd6Lcxi8fJmfpnqaGu4x3yKQ
++ePG+DJ+NEUddfMb1SF2Bm3u0AZl0FYX/VWRi8yTstXnNc2OZWcXj8uxiRDunt+F
+mOo/FJWtpwbM15OYrLdF333/cV331ihG+hhEiN9E92NcYKTz/79duJd9cAKWhIh4
+AVx8aWBtFv5gChJiIcwjP1SzGA/poskEd9nAq6lmq2QfW9l2SbDrY3pVo9jyep56
+FUlMJWdVkt8n/Iv0DbEWhAoxDI08dFnWWnY/CeZd9+HYp3nBpVc+KX+BLYAGkPCm
+GUe0szLDxE92L45y9aA87SjAGy/fHbbtAVH9upGcBONoGW0ivM7MdpoEtS4v1NVe
+wQFXaQ4RIMGo21he8U5F
+=amPE
+-----END PGP SIGNATURE-----
+
+--5mCyUwZo2JvN/JJP--
