@@ -1,84 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:31654 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751853Ab3CPXu7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 16 Mar 2013 19:50:59 -0400
-Subject: Re: [PATCH] udevadm-info: Don't access sysfs 'resource<N>' files
-From: Myron Stowe <mstowe@redhat.com>
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: Myron Stowe <myron.stowe@redhat.com>, kay@vrfy.org,
-	linux-hotplug@vger.kernel.org, alex.williamson@redhat.com,
-	linux-pci@vger.kernel.org, yuxiangl@marvell.com, yxlraid@gmail.com,
-	linux-kernel@vger.kernel.org
-In-Reply-To: <20130316221159.GA3702@kroah.com>
-References: <20130316213512.2974.17303.stgit@amt.stowe>
-	 <20130316213519.2974.38954.stgit@amt.stowe>
-	 <20130316221159.GA3702@kroah.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sat, 16 Mar 2013 17:50:53 -0600
-Message-ID: <1363477853.2423.25.camel@zim.stowe>
-Mime-Version: 1.0
+Received: from mail-ob0-f175.google.com ([209.85.214.175]:56025 "EHLO
+	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751725Ab3CZVzO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Mar 2013 17:55:14 -0400
+Received: by mail-ob0-f175.google.com with SMTP id va7so4453047obc.20
+        for <linux-pci@vger.kernel.org>; Tue, 26 Mar 2013 14:55:14 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20130305224150.GE8339@xanatos>
+References: <1361182193-31894-1-git-send-email-hare@suse.de>
+ <CAE9FiQWP1F5mLUoHoTHXy-wQoGxVK66QuuHYydaq3YfysS5Etg@mail.gmail.com>
+ <5124820D.2080900@suse.de> <CAE9FiQXHteymDNzu0GqWtVSVhu3g2hCT+K9e5tB1mR-OBX1ffA@mail.gmail.com>
+ <5125C45A.5020208@suse.de> <CAErSpo5j3Qge5Q2S+hyMGOcmoN77V0T=1+6OJdNJfJdnvT8wgg@mail.gmail.com>
+ <51305B99.6080806@suse.de> <20130305224150.GE8339@xanatos>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 26 Mar 2013 15:54:52 -0600
+Message-ID: <CAErSpo4nAN7wFaRebw5fM3gQVppaQoSSh3PdFumgCS1SGhcxcw@mail.gmail.com>
+Subject: Re: [PATCH] pci: do not try to assign irq 255
+To: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+Cc: Hannes Reinecke <hare@suse.de>, Yinghai Lu <yinghai@kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Frederik Himpe <fhimpe@vub.ac.be>,
+	Oliver Neukum <oneukum@suse.de>,
+	David Haerdeman <david@hardeman.nu>,
+	USB list <linux-usb@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Andy Grover <agrover@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, 2013-03-16 at 15:11 -0700, Greg KH wrote:
-> On Sat, Mar 16, 2013 at 03:35:19PM -0600, Myron Stowe wrote:
-> > Sysfs includes entries to memory that backs a PCI device's BARs, both I/O
-> > Port space and MMIO.  This memory regions correspond to the device's
-> > internal status and control registers used to drive the device.
-> > 
-> > Accessing these registers from userspace such as "udevadm info
-> > --attribute-walk --path=/sys/devices/..." does can not be allowed as
-> > such accesses outside of the driver, even just reading, can yield
-> > catastrophic consequences.
-> > 
-> > Udevadm-info skips parsing a specific set of sysfs entries including
-> > 'resource'.  This patch extends the set to include the additional
-> > 'resource<N>' entries that correspond to a PCI device's BARs.
-> 
-> Nice, are you also going to patch bash to prevent a user from reading
-> these sysfs files as well?  :)
-> 
-> And pciutils?
-> 
-> You get my point here, right?  The root user just asked to read all of
-> the data for this device, so why wouldn't you allow it?  Just like
-> 'lspci' does.  Or bash does.
+On Tue, Mar 5, 2013 at 3:41 PM, Sarah Sharp
+<sarah.a.sharp@linux.intel.com> wrote:
+> On Fri, Mar 01, 2013 at 08:41:13AM +0100, Hannes Reinecke wrote:
+>> On 02/27/2013 10:13 PM, Bjorn Helgaas wrote:
+>> >[+cc Andy]
+>> >
+>> >3) I don't understand why the xhci init fails in the first place.  It
+>> >looks like the "request interrupt 255 failed" message is from
+>> >xhci_try_enable_msi(), but that function tries to enable MSI-X, then
+>> >MSI, then falls back to legacy interrupts, where we get the error.
+>> >But the device supports MSI, so I don't know why we even fall back to
+>> >trying legacy interrupts.  Hannes, do you have any insight into that?
+>> >Obviously I'm missing something here.
+>> >
+>> Hehe. Due to overly clever design.
+>> xhci actually sets up interrupts _twice_, once per request_irq() in
+>> the generic code and a second time during xhci_run.
+>> But as the first call fails it'll never ever run the second part.
+>>
+>> I'll be sending a patch.
+>
+> Something like this?
+>
+> http://marc.info/?l=linux-usb&m=132972894117916&w=2
+>
+> (Apparently we had this issue around the same time last year, but we
+> thought the BIOS bug had been resolved.)
+>
+> Sarah Sharp
 
-Yes :P , you raise a very good point, there are a lot of way a user can
-poke around in those BARs.  However, there is a difference between
-shooting yourself in the foot and getting what you deserve versus
-unknowingly executing a common command such as udevadm and having the
-system hang.
-> 
-> If this hardware has a problem, then it needs to be fixed in the kernel,
-> not have random band-aids added to various userspace programs to paper
-> over the root problem here.  Please fix the kernel driver and all should
-> be fine.  No need to change udevadm.
+Where are we at with this?  I don't see Sarah's patch in the tree, and
+I haven't applied any changes, so my guess is this is still broken.
 
-Xiangliang initially proposed a patch within the PCI core.  Ignoring the
-specific issue with the proposal which I pointed out in the
-https://lkml.org/lkml/2013/3/7/242 thread, that just doesn't seem like
-the right place to effect a change either as PCI's core isn't concerned
-with the contents or access limitations of those regions, those are
-issues that the driver concerns itself with.
-
-So things seem to be gravitating towards the driver.  I'm fairly
-ignorant of this area but as Robert succinctly pointed out in the
-originating thread - the AHCI driver only uses the device's MMIO region.
-The I/O related regions are for legacy SFF-compatible ATA ports and are
-not used to driver the device.  This, coupled with the observance that
-userspace accesses such as udevadm, and others like you additionally
-point out, do not filter through the device's driver for seems to
-suggest that changes to the driver will not help here either.
-
-That said, I was attempting to point out an interesting problem and get
-the conversation started towards coming up with some type a solution.
-Let's continue the conversation and see where things go.
-
-Thanks,
- Myron
-> 
-> greg k-h
-
-
+Bjorn
