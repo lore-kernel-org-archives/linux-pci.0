@@ -1,39 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from terminus.zytor.com ([198.137.202.10]:42888 "EHLO mail.zytor.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752561Ab3CTCsf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 19 Mar 2013 22:48:35 -0400
-Message-ID: <51492379.3090302@zytor.com>
-Date: Tue, 19 Mar 2013 19:48:25 -0700
-From: "H. Peter Anvin" <hpa@zytor.com>
-MIME-Version: 1.0
-To: Matthew Garrett <matthew.garrett@nebula.com>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-security-module@vger.kernel.org"
-	<linux-security-module@vger.kernel.org>,
-	"linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
-	"kexec@lists.infradead.org" <kexec@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 01/12] Security: Add CAP_COMPROMISE_KERNEL
-References: <3pfl8u1ugprwkcs5xmtjth3l.1363742692541@email.android.com>
-In-Reply-To: <3pfl8u1ugprwkcs5xmtjth3l.1363742692541@email.android.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from mail.free-electrons.com ([94.23.35.102]:56094 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751378Ab3CZVmz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Mar 2013 17:42:55 -0400
+Date: Tue, 26 Mar 2013 22:42:51 +0100
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	devicetree-discuss@lists.ozlabs.org,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Maen Suleiman <maen@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Olof Johansson <olof@lixom.net>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Mitch Bradley <wmb@firmworks.com>,
+	Andrew Murray <andrew.murray@arm.com>
+Subject: Re: [RFCv1 07/11] irqchip: armada-370-xp: add MSI support to
+ interrupt controller driver
+Message-ID: <20130326224251.6a925892@skate>
+In-Reply-To: <201303262115.41200.arnd@arndb.de>
+References: <1364316746-8702-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	<1364316746-8702-8-git-send-email-thomas.petazzoni@free-electrons.com>
+	<201303262115.41200.arnd@arndb.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/19/2013 06:28 PM, Matthew Garrett wrote:
-> Mm. The question is whether we can reliably determine the ranges a device should be able to access without having to trust userspace (and, ideally, without having to worry about whether iommu vendors have done their job). It's pretty important for PCI passthrough, so we do need to care. 
+Dear Arnd Bergmann,
 
-It is actually very simple: the device should be able to DMA into/out of:
+On Tue, 26 Mar 2013 21:15:40 +0000, Arnd Bergmann wrote:
+> On Tuesday 26 March 2013, Thomas Petazzoni wrote:
+> > +                       msimask = readl_relaxed(per_cpu_int_base +
+> > +                                       ARMADA_370_XP_IN_DRBEL_CAUSE_OFFS)
+> > +                               & PCI_MSI_DOORBELL_MASK;
+> > +
+> > +                       writel(~PCI_MSI_DOORBELL_MASK, per_cpu_int_base +
+> > +                              ARMADA_370_XP_IN_DRBEL_CAUSE_OFFS);
+> > +
+> 
+> Upon reading this code again, I stumbled over the barriers. You use
+> a readl_relaxed() without barrier but a writel() with barrier. Is
+> that intentional? Are you sure that you don't need a full readl()
+> to guarantee that all inbound DMA that was sent by the device before
+> the MSI message has arrived by the time the interrupt handler function
+> is called? It depends on the implementation of the MSI controller whether
+> that guarantee is already made by the fact that you are handling the
+> interrupt.
 
-1. pinned pages
-2. owned by the process controlling the device
+This question I will have to raise to the Marvell HW engineers, the
+datasheet does not go into these considerations. For now, I'm rather
+trying to validate the 'architecture' of the code: DT binding,
+interaction between the IRQ controller driver and the PCIe driver, etc.
 
-... and nothing else.
+Thanks,
 
-	-hpa
-
+Thomas
 -- 
-H. Peter Anvin, Intel Open Source Technology Center
-I work for Intel.  I don't speak on their behalf.
-
+Thomas Petazzoni, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
