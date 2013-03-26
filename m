@@ -1,44 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from tundra.namei.org ([65.99.196.166]:32898 "EHLO tundra.namei.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756487Ab3CUB6C (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 20 Mar 2013 21:58:02 -0400
-Date: Thu, 21 Mar 2013 12:58:04 +1100 (EST)
-From: James Morris <jmorris@namei.org>
-To: Mimi Zohar <zohar@linux.vnet.ibm.com>
-cc: Matthew Garrett <matthew.garrett@nebula.com>,
-	linux-kernel@vger.kernel.org,
-	linux-security-module@vger.kernel.org, linux-efi@vger.kernel.org,
-	kexec@lists.infradead.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 01/12] Security: Add CAP_COMPROMISE_KERNEL
-In-Reply-To: <1363797717.2580.10.camel@falcor1.watson.ibm.com>
-Message-ID: <alpine.LRH.2.02.1303211257420.9518@tundra.namei.org>
-References: <1363642353-30749-1-git-send-email-matthew.garrett@nebula.com>  <alpine.LRH.2.02.1303191542200.30973@tundra.namei.org> <1363797717.2580.10.camel@falcor1.watson.ibm.com>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Received: from mail.free-electrons.com ([94.23.35.102]:54203 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751410Ab3CZQwe (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Mar 2013 12:52:34 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Russell King <linux@arm.linux.org.uk>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	devicetree-discuss@lists.ozlabs.org,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Maen Suleiman <maen@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Olof Johansson <olof@lixom.net>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Mitch Bradley <wmb@firmworks.com>,
+	Andrew Murray <andrew.murray@arm.com>
+Subject: [RFCv1 04/11] irqchip: armada-370-xp: slightly cleanup irq controller driver
+Date: Tue, 26 Mar 2013 17:52:19 +0100
+Message-Id: <1364316746-8702-5-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1364316746-8702-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1364316746-8702-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 20 Mar 2013, Mimi Zohar wrote:
+In preparation for the introduction of MSI support in the IRQ
+controller driver, we clarify the implementation of IPI using
+additional defines for the manipulation of doorbells. Just like IPIs
+are implemented using doorbells, MSIs will also use doorbells, so it
+makes sense to do this preparatory cleanup first.
 
-> On Tue, 2013-03-19 at 15:47 +1100, James Morris wrote:
-> > On Mon, 18 Mar 2013, Matthew Garrett wrote:
-> > 
-> > > This patch introduces CAP_COMPROMISE_KERNEL. 
-> > 
-> > I'd like to see this named CAP_MODIFY_KERNEL, which is more accurate and 
-> > less emotive.  Otherwise I think core kernel developers will be scratching 
-> > their head over where to sprinkle this.
-> > 
-> > Apart from that, I like the idea, especially when it's wired up to MAC 
-> > security.
-> 
-> Matthrew, perhaps you could clarify whether this will be tied to MAC
-> security.
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+---
+ drivers/irqchip/irq-armada-370-xp.c |   13 ++++++++-----
+ 1 file changed, 8 insertions(+), 5 deletions(-)
 
-All capabilities are, via LSM.
-
-
+diff --git a/drivers/irqchip/irq-armada-370-xp.c b/drivers/irqchip/irq-armada-370-xp.c
+index 1115bf8..ad1e642 100644
+--- a/drivers/irqchip/irq-armada-370-xp.c
++++ b/drivers/irqchip/irq-armada-370-xp.c
+@@ -48,7 +48,9 @@
+ 
+ #define ARMADA_370_XP_TIMER0_PER_CPU_IRQ	(5)
+ 
+-#define ACTIVE_DOORBELLS			(8)
++#define IPI_DOORBELL_START                      (0)
++#define IPI_DOORBELL_END                        (8)
++#define IPI_DOORBELL_MASK                       0xFF
+ 
+ static DEFINE_RAW_SPINLOCK(irq_controller_lock);
+ 
+@@ -192,7 +194,7 @@ void armada_xp_mpic_smp_cpu_init(void)
+ 	writel(0, per_cpu_int_base + ARMADA_370_XP_IN_DRBEL_CAUSE_OFFS);
+ 
+ 	/* Enable first 8 IPIs */
+-	writel((1 << ACTIVE_DOORBELLS) - 1, per_cpu_int_base +
++	writel(IPI_DOORBELL_MASK, per_cpu_int_base +
+ 		ARMADA_370_XP_IN_DRBEL_MSK_OFFS);
+ 
+ 	/* Unmask IPI interrupt */
+@@ -231,13 +233,14 @@ armada_370_xp_handle_irq(struct pt_regs *regs)
+ 
+ 			ipimask = readl_relaxed(per_cpu_int_base +
+ 						ARMADA_370_XP_IN_DRBEL_CAUSE_OFFS)
+-				& 0xFF;
++				& IPI_DOORBELL_MASK;
+ 
+-			writel(0x0, per_cpu_int_base +
++			writel(~IPI_DOORBELL_MASK, per_cpu_int_base +
+ 				ARMADA_370_XP_IN_DRBEL_CAUSE_OFFS);
+ 
+ 			/* Handle all pending doorbells */
+-			for (ipinr = 0; ipinr < ACTIVE_DOORBELLS; ipinr++) {
++			for (ipinr = IPI_DOORBELL_START;
++			     ipinr < IPI_DOORBELL_END; ipinr++) {
+ 				if (ipimask & (0x1 << ipinr))
+ 					handle_IPI(ipinr, regs);
+ 			}
 -- 
-James Morris
-<jmorris@namei.org>
+1.7.9.5
+
