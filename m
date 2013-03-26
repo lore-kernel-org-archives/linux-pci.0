@@ -1,83 +1,107 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f181.google.com ([209.85.214.181]:48309 "EHLO
-	mail-ob0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750961Ab3CFEJW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Mar 2013 23:09:22 -0500
-Received: by mail-ob0-f181.google.com with SMTP id ni5so3177106obc.40
-        for <linux-pci@vger.kernel.org>; Tue, 05 Mar 2013 20:09:21 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <50EDF8FE.6040607@fold.natur.cuni.cz>
-References: <50EDF8FE.6040607@fold.natur.cuni.cz>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 5 Mar 2013 21:09:01 -0700
-Message-ID: <CAErSpo6etF7_fZH9nNoAhtRXdGEmBrNE7v84TRkoawyG9s4AGw@mail.gmail.com>
-Subject: Re: Dell Vostro 3550: pci_hotplug+acpiphp require 'pcie_aspm=force'
- on kernel command-line for hotplug to work
-To: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
-Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail.free-electrons.com ([94.23.35.102]:54689 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751683Ab3CZRSB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Mar 2013 13:18:01 -0400
+Date: Tue, 26 Mar 2013 18:17:54 +0100
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	devicetree-discuss@lists.ozlabs.org,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Maen Suleiman <maen@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Olof Johansson <olof@lixom.net>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Mitch Bradley <wmb@firmworks.com>,
+	Andrew Murray <andrew.murray@arm.com>
+Subject: Re: [RFCv1 07/11] irqchip: armada-370-xp: add MSI support to
+ interrupt controller driver
+Message-ID: <20130326181754.33b89559@skate>
+In-Reply-To: <201303261707.41563.arnd@arndb.de>
+References: <1364316746-8702-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	<1364316746-8702-8-git-send-email-thomas.petazzoni@free-electrons.com>
+	<201303261707.41563.arnd@arndb.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 9, 2013 at 4:10 PM, Martin Mokrejs
-<mmokrejs@fold.natur.cuni.cz> wrote:
-> Hi,
->   I am following up on a former thread
-> Re: 3.2.11: PCI Express card cannot be re-detected withing cca 60sec timeframe
-> about the same issue. I think I found some new info while playing with 3.7.1 kernel.
-> It happened to me that my hotplug of express cards stopped working so it made me to
-> to dive in a figure out what driver did I do to my .config, and what combinations
-> of drivers and kernel command-line parameters work and which not. This email will
-> cover just one case.
->
-> On this Dell Vostro 3550 express card slot works if kernel is without pciehp
-> altogether and pci_hotplug+acpiphp are loaded as modules later on. The problem
-> is that I must use pcie_aspm=off.
+Dear Arnd Bergmann,
 
-I confess I am completely bewildered here.  Something is clearly badly
-broken, but I'm having a hard time figuring out exactly what it is.  I
-think I'm overwhelmed by all the data :)
+On Tue, 26 Mar 2013 17:07:41 +0000, Arnd Bergmann wrote:
 
->From your previous "3.2.11: PCI Express card cannot be re-detected
-withing cca 60sec timeframe" thread, I think:
+> I think the @d0020000 part needs to be removed for the nodes that
+> have no reg property.
 
-1) With pciehp, insertion and removal of an NEC uPD720200 USB3.0 card
-doesn't work correctly [1].  The insertion/removal events don't seem
-to be detected immediately.
-2) Insertion/removal of firewire card works correctly [2]
-3) Insertion/removal of AXAGO ECA-SP serial/parallel card works correctly [3]
-4) When the xhci driver is not loaded, insertion/removal events of the
-NEC USB3.0 card *are* detected correctly [4]
+Sure, will fix.
 
-The ExpressCard slot is below the 00:1c.7 root port, and this port
-supports native PCIe hotplug.  When CONFIG_HOTPLUG_PCI_PCIE=y, Linux
-requests control over PCIe native hotplug, and I think your BIOS
-grants it.
+> I think I did not follow the entire discussion. What has led to having
+> two subnodes in the end, rather than a single node like this?
+> 
+> 
+>        interrupt-controller@d0020000 {
+>               compatible = "marvell,mpic";
+>               #interrupt-cells = <1>;
+>               #msi-cells = <1>;
+>               #address-cells = <1>;
+>               #size-cells = <1>;
+>               interrupt-controller;
+>               msi-controller;
+>               reg = <0xd0020a00 0x1d0>,
+>                      <0xd0021070 0x58>;
+>               marvell,doorbell = <0xd0020a04>;
+>        };
 
-In this thread ("Dell Vostro 3550: pci_hotplug+acpiphp require
-'pcie_aspm=force' on kernel command-line for hotplug to work"), I
-think you are saying that if you disable pciehp and use acpiphp and
-the "pcie_aspm=off" parameter, the ExpressCard slot works perfectly.
+I've tried to explain that in the commit log of PATCH 6, which says:
 
-But I think it's a bad idea to go down the road of using acpiphp.
-Native PCIe hotplug (pciehp) is the default when it is supported, and
-as far as I can tell, it *is* supported on this system.  If we had
-some indication that it's not supported, e.g., if the BIOS declined to
-grant us control over PCIe native hotplug, then of course we would
-fall back to using acpiphp.  But I don't think we do, so we should
-figure out how to make pciehp work.
+    However, we need the driver to expose two different IRQ domains: one
+    for the main interrupt controller itself, and one for the MSI
+    interrupt controller. In order to achieve this, we will create two
+    subnodes in the interrupt-controller@d0020000 node: one subnode for
+    the main interrupt controller, and one subnode for the MSI interrupt
+    controller. The two irq domains can't be registered on the same DT
+    node, otherwise when irq_find_host() gets used by of_irq_map_one()
+    to resolve IRQs of devices, they may find the MSI interrupt
+    controller instead of the main interrupt controller.
+    
+    Note that both the parent and the child node need to have the
+    'interrupt-controller' empty property:
+    
+      * The interrupt-controller property is needed in the main
+    interrupt controller node (interrupt-controller@d0020000) because
+    the of_irq_init() function skips nodes that are matching the given
+       compatible string, but that don't have the interrupt-controller
+       property.
+    
+     * The interrupt-controller property is needed in the child
+    interrupt controller node (main-intc@d0020000) otherwise the
+    resolution done by of_irq_map_one() doesn't work.
 
-If it's really true that pciehp works perfectly except when xhci is
-loaded, that seems like a good clue, and we should look for some
-interaction between xhci and pciehp.
+So really, the thing is that irq_domain_add_linear() registers an IRQ
+domain on a specific DT node, and then irq_find_host() finds back an
+IRQ domain from a given DT node. So if you have two IRQ domains
+registered on the same DT node, then you don't know which one will be
+used.
 
-Martin, can you confirm my assumptions above or correct any mistakes I made?
+So if I do the two irq_domain_add_linear() (one for MPIC, one for MSI)
+on one single DT node, when the timer driver will request its
+interrupt, it turns out that the MSI IRQ domain is used and not the
+MPIC IRQ domain, even though the timer has <&mpic> as its interrupt
+parent.
 
-Bjorn
+Best regards,
 
-
-[1] http://marc.info/?l=linux-pci&m=133236584826563&w=1
-[2] http://marc.info/?l=linux-pci&m=133457374507707&w=1
-[3] http://marc.info/?l=linux-pci&m=133460527222076&w=1
-[4] http://marc.info/?l=linux-kernel&m=133547823904339&w=1
+Thomas
+-- 
+Thomas Petazzoni, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
