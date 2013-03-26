@@ -1,70 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:60617 "EHLO
+Received: from mail.free-electrons.com ([94.23.35.102]:54743 "EHLO
 	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752016Ab3C0OlE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Mar 2013 10:41:04 -0400
+	with ESMTP id S1752948Ab3CZRVN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Mar 2013 13:21:13 -0400
+Date: Tue, 26 Mar 2013 18:21:09 +0100
 From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	Grant Likely <grant.likely@secretlab.ca>,
-	Russell King <linux@arm.linux.org.uk>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	devicetree-discuss@lists.ozlabs.org,
+	Russell King <linux@arm.linux.org.uk>,
 	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
 	Jason Cooper <jason@lakedaemon.net>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Maen Suleiman <maen@marvell.com>,
+	Olof Johansson <olof@lixom.net>, linux-pci@vger.kernel.org,
+	devicetree-discuss@lists.ozlabs.org,
 	Thierry Reding <thierry.reding@avionic-design.de>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Olof Johansson <olof@lixom.net>,
-	Tawfik Bayouk <tawfik@marvell.com>,
 	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Mitch Bradley <wmb@firmworks.com>,
-	Andrew Murray <andrew.murray@arm.com>
-Subject: [PATCHv7 15/17] arm: mvebu: PCIe Device Tree informations for Armada 370 DB
-Date: Wed, 27 Mar 2013 15:40:32 +0100
-Message-Id: <1364395234-11195-16-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1364395234-11195-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1364395234-11195-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	Maen Suleiman <maen@marvell.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Andrew Murray <andrew.murray@arm.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Mitch Bradley <wmb@firmworks.com>
+Subject: Re: [RFCv1 00/11] MSI support for Marvell EBU PCIe driver
+Message-ID: <20130326182109.05da7690@skate>
+In-Reply-To: <201303261718.09160.arnd@arndb.de>
+References: <1364316746-8702-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	<20130326180514.2f7790d3@skate>
+	<201303261718.09160.arnd@arndb.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The Marvell evaluation board (DB) for the Armada 370 SoC has 2
-physical full-size PCIe slots, so we enable the corresponding PCIe
-interfaces in the Device Tree.
+Dear Arnd Bergmann,
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
----
- arch/arm/boot/dts/armada-370-db.dts |   17 +++++++++++++++++
- 1 file changed, 17 insertions(+)
+On Tue, 26 Mar 2013 17:18:08 +0000, Arnd Bergmann wrote:
 
-diff --git a/arch/arm/boot/dts/armada-370-db.dts b/arch/arm/boot/dts/armada-370-db.dts
-index e34b280..6403acd 100644
---- a/arch/arm/boot/dts/armada-370-db.dts
-+++ b/arch/arm/boot/dts/armada-370-db.dts
-@@ -94,5 +94,22 @@
- 				spi-max-frequency = <50000000>;
- 			};
- 		};
-+
-+		pcie-controller {
-+			status = "okay";
-+			/*
-+			 * The two PCIe units are accessible through
-+			 * both standard PCIe slots and mini-PCIe
-+			 * slots on the board.
-+			 */
-+			pcie@1,0 {
-+				/* Port 0, Lane 0 */
-+				status = "okay";
-+			};
-+			pcie@2,0 {
-+				/* Port 1, Lane 0 */
-+				status = "okay";
-+			};
-+		};
- 	};
- };
+> The mailing list rejects patches that have an in-reply-to header with
+> pointing to a different subject as the new email.
+> It also has an exception for emails that have the work PATCH in
+> brackets, but not [RFC] or [GIT PULL]. You can work around by using
+> [RFC PATCH 1/11] or [RFC][PATCH 1/11].
+
+Aah, thanks for the tip. Do you think there's a place where we could
+write this down for future reference? Maybe
+Documentation/arm/mailing-list or whatever?
+
+Best regards,
+
+Thomas
 -- 
-1.7.9.5
-
+Thomas Petazzoni, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
