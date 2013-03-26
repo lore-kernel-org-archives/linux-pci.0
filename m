@@ -1,49 +1,53 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <51521421.9020906@gmail.com>
-Date: Tue, 26 Mar 2013 16:33:21 -0500
-From: Rob Herring <robherring2@gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from moutng.kundenserver.de ([212.227.17.8]:60223 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751957Ab3CZVQD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Mar 2013 17:16:03 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Subject: Re: [RFCv1 07/11] irqchip: armada-370-xp: add MSI support to interrupt controller driver
+Date: Tue, 26 Mar 2013 21:15:40 +0000
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	devicetree-discuss@lists.ozlabs.org,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Maen Suleiman <maen@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Olof Johansson <olof@lixom.net>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Mitch Bradley <wmb@firmworks.com>,
+	Andrew Murray <andrew.murray@arm.com>
+References: <1364316746-8702-1-git-send-email-thomas.petazzoni@free-electrons.com> <1364316746-8702-8-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1364316746-8702-8-git-send-email-thomas.petazzoni@free-electrons.com>
 MIME-Version: 1.0
-To: Jingoo Han <jg1.han@samsung.com>
-CC: 'Kukjin Kim' <kgene.kim@samsung.com>,
-	'Bjorn Helgaas' <bhelgaas@google.com>,
-	'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>,
-	linux-samsung-soc@vger.kernel.org,
-	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
-	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
-	linux-kernel@vger.kernel.org,
-	'Surendranath Gurivireddy Balla' <suren.reddy@samsung.com>,
-	'Andrew Murray' <andrew.murray@arm.com>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH 4/6] pci: Add PCIe driver for Samsung Exynos
-References: <00c001ce277b$92b26ab0$b8174010$%han@samsung.com> <00c301ce277b$f2790080$d76b0180$%han@samsung.com>
-In-Reply-To: <00c301ce277b$f2790080$d76b0180$%han@samsung.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <201303262115.41200.arnd@arndb.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/22/2013 11:07 PM, Jingoo Han wrote:
-> Exynos5440 has a PCIe controller which can be used as Root Complex.
-> This driver supports a PCIe controller as Root Complex mode.
-> 
-> Signed-off-by: Surendranath Gurivireddy Balla <suren.reddy@samsung.com>
-> Signed-off-by: Siva Reddy Kallam <siva.kallam@samsung.com>
-> Signed-off-by: Jingoo Han <jg1.han@samsung.com>
-> ---
->  .../devicetree/bindings/pci/exynos-pcie.txt        |   56 +
->  drivers/pci/host/Kconfig                           |    5 +
->  drivers/pci/host/Makefile                          |    1 +
->  drivers/pci/host/pci-exynos.c                      | 1139 ++++++++++++++++++++
->  4 files changed, 1201 insertions(+), 0 deletions(-)
->  create mode 100644 Documentation/devicetree/bindings/pci/exynos-pcie.txt
->  create mode 100644 drivers/pci/host/Makefile
->  create mode 100644 drivers/pci/host/pci-exynos.c
-
-[...]
-
+On Tuesday 26 March 2013, Thomas Petazzoni wrote:
+> +                       msimask = readl_relaxed(per_cpu_int_base +
+> +                                       ARMADA_370_XP_IN_DRBEL_CAUSE_OFFS)
+> +                               & PCI_MSI_DOORBELL_MASK;
 > +
-> +/* synopsis specific PCIE configuration registers*/
+> +                       writel(~PCI_MSI_DOORBELL_MASK, per_cpu_int_base +
+> +                              ARMADA_370_XP_IN_DRBEL_CAUSE_OFFS);
+> +
 
-If this is a standard IP block, then the driver naming should reflect
-that. I suspect there are several others with the same IP block.
+Upon reading this code again, I stumbled over the barriers. You use
+a readl_relaxed() without barrier but a writel() with barrier. Is
+that intentional? Are you sure that you don't need a full readl()
+to guarantee that all inbound DMA that was sent by the device before
+the MSI message has arrived by the time the interrupt handler function
+is called? It depends on the implementation of the MSI controller whether
+that guarantee is already made by the fact that you are handling the
+interrupt.
 
-Rob
+	Arnd
