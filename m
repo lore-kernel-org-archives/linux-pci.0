@@ -1,87 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:38705 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755273Ab3CII65 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 9 Mar 2013 03:58:57 -0500
-Date: Sat, 9 Mar 2013 09:58:49 +0100
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Received: from moutng.kundenserver.de ([212.227.126.187]:56475 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752848Ab3CZUuV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Mar 2013 16:50:21 -0400
+From: Arnd Bergmann <arnd@arndb.de>
 To: Thierry Reding <thierry.reding@avionic-design.de>
+Subject: Re: [PATCHv6 10/17] arm: mvebu: add PCIe Device Tree informations for Armada 370
+Date: Tue, 26 Mar 2013 20:50:12 +0000
 Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Rob Herring <robherring2@gmail.com>,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	linux-pci@vger.kernel.org, Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
 	Grant Likely <grant.likely@secretlab.ca>,
-	linux-arm-kernel@lists.infradead.org,
-	devicetree-discuss@lists.ozlabs.org
-Subject: Re: [PATCH 24/32] pci: PCIe driver for Marvell Armada 370/XP
- systems
-Message-ID: <20130309095849.639f398e@skate>
-In-Reply-To: <20130308191227.GA6551@avionic-0098.mockup.avionic-design.de>
-References: <20130306121118.GA17079@avionic-0098.mockup.avionic-design.de>
-	<20130306180946.GA2433@obsidianresearch.com>
-	<20130307080832.GD3451@avionic-0098.mockup.avionic-design.de>
-	<20130307174955.GC20840@obsidianresearch.com>
-	<20130307194830.GA1811@avionic-0098.mockup.avionic-design.de>
-	<20130307200235.GB20695@obsidianresearch.com>
-	<20130307204726.GB1811@avionic-0098.mockup.avionic-design.de>
-	<51392B4D.9040404@gmail.com>
-	<20130308071443.GA5772@avionic-0098.mockup.avionic-design.de>
-	<20130308165228.GB4094@obsidianresearch.com>
-	<20130308191227.GA6551@avionic-0098.mockup.avionic-design.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	devicetree-discuss@lists.ozlabs.org,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Maen Suleiman <maen@marvell.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Olof Johansson <olof@lixom.net>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Mitch Bradley <wmb@firmworks.com>,
+	Andrew Murray <andrew.murray@arm.com>
+References: <1364314719-1049-1-git-send-email-thomas.petazzoni@free-electrons.com> <20130326163421.GA30255@obsidianresearch.com> <20130326201654.GA7109@avionic-0098.mockup.avionic-design.de>
+In-Reply-To: <20130326201654.GA7109@avionic-0098.mockup.avionic-design.de>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <201303262050.12847.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Thierry Reding,
-
-On Fri, 8 Mar 2013 20:12:27 +0100, Thierry Reding wrote:
-
-> Oh well. I don't like it, but if that's the way it has to be, then so be
-> it.
-
-I don't like it too much either, but it's not a big problem either. It
-works, and satisfies the DT requirements reasonably.
-
-> Any reason why the reg-names can't match the root port's node name
-> so that it can be used directly instead of going through hoops to
-> construct a string from extra parameters? Like below:
+On Tuesday 26 March 2013, Thierry Reding wrote:
+>                 pci@1,0 {
+>                         device_type = "pci";
+>                         assigned-addresses = <0x82000800 0 0x80000000 0 0x1000>;
+>                         reg = <0x000800 0 0 0 0>;
+>                         status = "disabled";
 > 
-> 	pcie-controller {
-> 		regs = <...>;
-> 		reg-names = ..., "pcie@1,0", "pcie@2,0";
+>                         #address-cells = <3>;
+>                         #size-cells = <2>;
 > 
-> 		pcie@1,0 {
-> 			...
-> 		};
-> 
-> 		pcie@2,0 {
-> 			...
-> 		};
-> 	};
+>                         nvidia,num-lanes = <2>;
+>                 };
 
-Yes, I thought about doing this, but in my driver, I also use the
-"pcie0.0" string to request the address decoding window from the
-mvebu-mbus driver. So I would anyway have to construct this "pciX.Y"
-string. But if you feel like using "pcie@X,Y" for the reg-names is
-better even if I still need to construct the "pcieX.Y" string, then I
-will be perfectly ok with making this change.
+Shouldn't there be an empty ranges property in there as well?
 
-Best regards,
-
-Thomas
--- 
-Thomas Petazzoni, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
+	Arnd
