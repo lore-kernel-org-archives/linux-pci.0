@@ -1,80 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:35942 "EHLO
+Received: from mail.free-electrons.com ([94.23.35.102]:53529 "EHLO
 	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933075Ab3CHPTj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 Mar 2013 10:19:39 -0500
+	with ESMTP id S964839Ab3CZQSt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Mar 2013 12:18:49 -0400
 From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Cc: Arnd Bergmann <arnd@arndb.de>, Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>, Olof Johansson <olof@lixom.net>,
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Russell King <linux@arm.linux.org.uk>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	devicetree-discuss@lists.ozlabs.org,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Maen Suleiman <maen@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
 	Gregory Clement <gregory.clement@free-electrons.com>,
 	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Russell King <linux@arm.linux.org.uk>,
+	Olof Johansson <olof@lixom.net>,
 	Tawfik Bayouk <tawfik@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Yehuda Yitschak <yehuday@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
 	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Stephen Warren <swarren@wwwdotorg.org>
-Subject: [PATCH v4 08/18] clk: mvebu: add more PCIe clocks for Armada XP
-Date: Fri,  8 Mar 2013 16:19:10 +0100
-Message-Id: <1362755960-30791-9-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1362755960-30791-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1362755960-30791-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	Mitch Bradley <wmb@firmworks.com>,
+	Andrew Murray <andrew.murray@arm.com>
+Subject: [PATCHv6 03/17] of/pci: Add of_pci_parse_bus_range() function
+Date: Tue, 26 Mar 2013 17:18:25 +0100
+Message-Id: <1364314719-1049-4-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1364314719-1049-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1364314719-1049-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The current revision of the datasheet only mentions the gatable clocks
-for the PCIe 0.0, 0.1, 0.2 and 0.3 interfaces, and forgot to mention
-the ones for the PCIe 1.0, 1.1, 1.2, 1.3, 2.0 and 3.0
-interfaces. After confirmation with Marvell engineers, this patch adds
-the missing gatable clocks for those PCIe interfaces.
+From: Thierry Reding <thierry.reding@avionic-design.de>
 
-It also changes the name of the previously existing PCIe gatable
-clocks, in order to match the naming using the datasheets.
+This function can be used to parse a bus-range property as specified by
+device nodes representing PCI bridges.
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
 ---
- drivers/clk/mvebu/clk-gating-ctrl.c |   14 ++++++++++----
- 1 file changed, 10 insertions(+), 4 deletions(-)
+ drivers/of/of_pci.c    |   25 +++++++++++++++++++++++++
+ include/linux/of_pci.h |    1 +
+ 2 files changed, 26 insertions(+)
 
-diff --git a/drivers/clk/mvebu/clk-gating-ctrl.c b/drivers/clk/mvebu/clk-gating-ctrl.c
-index b35785a..2f03723 100644
---- a/drivers/clk/mvebu/clk-gating-ctrl.c
-+++ b/drivers/clk/mvebu/clk-gating-ctrl.c
-@@ -137,10 +137,14 @@ static const struct mvebu_soc_descr __initconst armada_xp_gating_descr[] = {
- 	{ "ge2", NULL,  2 },
- 	{ "ge1", NULL, 3 },
- 	{ "ge0", NULL, 4 },
--	{ "pex0", NULL, 5 },
--	{ "pex1", NULL, 6 },
--	{ "pex2", NULL, 7 },
--	{ "pex3", NULL, 8 },
-+	{ "pex00", NULL, 5 },
-+	{ "pex01", NULL, 6 },
-+	{ "pex02", NULL, 7 },
-+	{ "pex03", NULL, 8 },
-+	{ "pex10", NULL, 9 },
-+	{ "pex11", NULL, 10 },
-+	{ "pex12", NULL, 11 },
-+	{ "pex13", NULL, 12 },
- 	{ "bp", NULL, 13 },
- 	{ "sata0lnk", NULL, 14 },
- 	{ "sata0", "sata0lnk", 15 },
-@@ -152,6 +156,8 @@ static const struct mvebu_soc_descr __initconst armada_xp_gating_descr[] = {
- 	{ "xor0", NULL, 22 },
- 	{ "crypto", NULL, 23 },
- 	{ "tdm", NULL, 25 },
-+	{ "pex20", NULL, 26 },
-+	{ "pex30", NULL, 27 },
- 	{ "xor1", NULL, 28 },
- 	{ "sata1lnk", NULL, 29 },
- 	{ "sata1", "sata1lnk", 30 },
+diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
+index 4dd7b9b..42c687a 100644
+--- a/drivers/of/of_pci.c
++++ b/drivers/of/of_pci.c
+@@ -64,3 +64,28 @@ int of_pci_get_devfn(struct device_node *np)
+ 	return (be32_to_cpup(reg) >> 8) & 0xff;
+ }
+ EXPORT_SYMBOL_GPL(of_pci_get_devfn);
++
++/**
++ * of_pci_parse_bus_range() - parse the bus-range property of a PCI device
++ * @node: device node
++ * @res: address to a struct resource to return the bus-range
++ *
++ * Returns 0 on success or a negative error-code on failure.
++ */
++int of_pci_parse_bus_range(struct device_node *node, struct resource *res)
++{
++	const __be32 *values;
++	int len;
++
++	values = of_get_property(node, "bus-range", &len);
++	if (!values || len < sizeof(*values) * 2)
++		return -EINVAL;
++
++	res->name = node->name;
++	res->start = be32_to_cpup(values++);
++	res->end = be32_to_cpup(values);
++	res->flags = IORESOURCE_BUS;
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(of_pci_parse_bus_range);
+diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
+index 91ec484..7a04826 100644
+--- a/include/linux/of_pci.h
++++ b/include/linux/of_pci.h
+@@ -11,5 +11,6 @@ struct device_node;
+ struct device_node *of_pci_find_child_device(struct device_node *parent,
+ 					     unsigned int devfn);
+ int of_pci_get_devfn(struct device_node *np);
++int of_pci_parse_bus_range(struct device_node *node, struct resource *res);
+ 
+ #endif
 -- 
 1.7.9.5
 
