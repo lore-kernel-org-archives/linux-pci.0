@@ -1,60 +1,109 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f176.google.com ([209.85.214.176]:59225 "EHLO
-	mail-ob0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752105Ab3CQANt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 16 Mar 2013 20:13:49 -0400
-MIME-Version: 1.0
-In-Reply-To: <CAL-B5D0JOTBTRhh-i=DkiUjSsid1v408DE5nj_R2qvaHDtEQ=g@mail.gmail.com>
-References: <1362666556-10036-1-git-send-email-yxlraid@gmail.com>
-	<CAErSpo7feQK7pXD=moA_hf=Y-j82oZZKwfDNzfo2Ea7i9VPxtA@mail.gmail.com>
-	<F766E4F80769BD478052FB6533FA745D25F436856A@SC-VEXCH4.marvell.com>
-	<CAErSpo6RDC+QyyN4kwt7-kU5d8b1iu+zCQZTGZPxCJU2UicTCA@mail.gmail.com>
-	<F766E4F80769BD478052FB6533FA745D25F436861C@SC-VEXCH4.marvell.com>
-	<CAErSpo6ascpN=bBUUzkk5W3-Wee_1ZztAyTwnKd-tq=L_9Q3mw@mail.gmail.com>
-	<F766E4F80769BD478052FB6533FA745D25F440A477@SC-VEXCH4.marvell.com>
-	<CAL-B5D1=zqB_9sWL9A_GgY6OgGdw18qxBHbgj_YG2bj0VGDh4Q@mail.gmail.com>
-	<F766E4F80769BD478052FB6533FA745D25F440A64D@SC-VEXCH4.marvell.com>
-	<CAL-B5D3od8zhtYguH36r1XmHw_rvg0Tcdgv8ewYrgHFsJ2Sefw@mail.gmail.com>
-	<F766E4F80769BD478052FB6533FA745D25F440A9C6@SC-VEXCH4.marvell.com>
-	<CAErSpo7ufeQK1e=HSTYCNie7yfPouYE4-ot9dUX5r-upBtVt=A@mail.gmail.com>
-	<F766E4F80769BD478052FB6533FA745D25F440ACE9@SC-VEXCH4.marvell.com>
-	<CAL-B5D0JOTBTRhh-i=DkiUjSsid1v408DE5nj_R2qvaHDtEQ=g@mail.gmail.com>
-Date: Sat, 16 Mar 2013 18:13:48 -0600
-Message-ID: <CAL-B5D15UP0-z+4whBVxsbHm6_43DEK5+BOr=PZYsc-DNB7VrQ@mail.gmail.com>
-Subject: Re: [PATCH 2/2] PCI: fix system hang issue of Marvell SATA host controller
-From: Myron Stowe <myron.stowe@gmail.com>
-To: Xiangliang Yu <yuxiangl@marvell.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, yxlraid <yxlraid@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail.free-electrons.com ([94.23.35.102]:53512 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934934Ab3CZQSs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Mar 2013 12:18:48 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Russell King <linux@arm.linux.org.uk>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	devicetree-discuss@lists.ozlabs.org,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Maen Suleiman <maen@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Olof Johansson <olof@lixom.net>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Mitch Bradley <wmb@firmworks.com>,
+	Andrew Murray <andrew.murray@arm.com>
+Subject: [PATCHv6 02/17] of/pci: Add of_pci_get_devfn() function
+Date: Tue, 26 Mar 2013 17:18:24 +0100
+Message-Id: <1364314719-1049-3-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1364314719-1049-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1364314719-1049-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 14, 2013 at 9:03 AM, Myron Stowe <myron.stowe@gmail.com> wrote:
-> On Wed, Mar 13, 2013 at 3:40 AM, Xiangliang Yu <yuxiangl@marvell.com> wrote:
->> Hi, Bjorn
->>
->>> >> > Now, the situation is like this:
->>> >> > I captured the PCIE trace with analyzer and found that 1st BE is 0x1111
->>> >> > when
->>> >> > accessing IO port space. But 9125 spec has some limitation, and the BE
->>> >> > must
->>> >> > be
->>> >> > 0x0100, to access the 2nd byte only. So, the chip will go to bad.
->>> >>
->>> >> Great, this is new, interesting, data.  Is the 9125 spec publicly
->>> >> accessible and/or could you elaborate on the "some limitation"
->>> >> comment?
->>> > 9125 spec is publicly accessible.
->> If you can't see the pic, please open the attachment. Thanks!
->
-> Neither Bjorn nor myself could see the pic (from the previous thread
-> or this thread's attachment).
->
->>
->>
+From: Thierry Reding <thierry.reding@avionic-design.de>
 
-Just an FYI that I proposed a different tact at
-https://lkml.org/lkml/2013/3/16/168.  For those following this thread
-you may want to start following that thread also.
+This function can be used to parse the device and function number from a
+standard 5-cell PCI resource. PCI_SLOT() and PCI_FUNC() can be used on
+the returned value obtain the device and function numbers respectively.
+
+Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
+---
+ drivers/of/of_pci.c    |   34 +++++++++++++++++++++++++++++-----
+ include/linux/of_pci.h |    1 +
+ 2 files changed, 30 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
+index 13e37e2..4dd7b9b 100644
+--- a/drivers/of/of_pci.c
++++ b/drivers/of/of_pci.c
+@@ -5,14 +5,15 @@
+ #include <asm/prom.h>
+ 
+ static inline int __of_pci_pci_compare(struct device_node *node,
+-				       unsigned int devfn)
++				       unsigned int data)
+ {
+-	unsigned int size;
+-	const __be32 *reg = of_get_property(node, "reg", &size);
++	int devfn;
+ 
+-	if (!reg || size < 5 * sizeof(__be32))
++	devfn = of_pci_get_devfn(node);
++	if (devfn < 0)
+ 		return 0;
+-	return ((be32_to_cpup(&reg[0]) >> 8) & 0xff) == devfn;
++
++	return devfn == data;
+ }
+ 
+ struct device_node *of_pci_find_child_device(struct device_node *parent,
+@@ -40,3 +41,26 @@ struct device_node *of_pci_find_child_device(struct device_node *parent,
+ 	return NULL;
+ }
+ EXPORT_SYMBOL_GPL(of_pci_find_child_device);
++
++/**
++ * of_pci_get_devfn() - Get device and function numbers for a device node
++ * @np: device node
++ *
++ * Parses a standard 5-cell PCI resource and returns an 8-bit value that can
++ * be passed to the PCI_SLOT() and PCI_FUNC() macros to extract the device
++ * and function numbers respectively. On error a negative error code is
++ * returned.
++ */
++int of_pci_get_devfn(struct device_node *np)
++{
++	unsigned int size;
++	const __be32 *reg;
++
++	reg = of_get_property(np, "reg", &size);
++
++	if (!reg || size < 5 * sizeof(__be32))
++		return -EINVAL;
++
++	return (be32_to_cpup(reg) >> 8) & 0xff;
++}
++EXPORT_SYMBOL_GPL(of_pci_get_devfn);
+diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
+index bb115de..91ec484 100644
+--- a/include/linux/of_pci.h
++++ b/include/linux/of_pci.h
+@@ -10,5 +10,6 @@ int of_irq_map_pci(const struct pci_dev *pdev, struct of_irq *out_irq);
+ struct device_node;
+ struct device_node *of_pci_find_child_device(struct device_node *parent,
+ 					     unsigned int devfn);
++int of_pci_get_devfn(struct device_node *np);
+ 
+ #endif
+-- 
+1.7.9.5
+
