@@ -1,59 +1,148 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 6 Mar 2013 09:26:00 +0100
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.free-electrons.com ([94.23.35.102]:54248 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751419Ab3CZQwl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Mar 2013 12:52:41 -0400
 From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: jg1.han@samsung.com
-Cc: Arnd Bergmann <arnd@arndb.de>, Lior Amsalem <alior@marvell.com>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Russell King <linux@arm.linux.org.uk>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	devicetree-discuss@lists.ozlabs.org,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
 	Jason Cooper <jason@lakedaemon.net>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
+	Arnd Bergmann <arnd@arndb.de>,
 	Maen Suleiman <maen@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
 	Gregory Clement <gregory.clement@free-electrons.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Subject: Re: [PATCH 05/32] lib: devres: don't enclose pcim_*() functions in
- CONFIG_HAS_IOPORT
-Message-ID: <20130306092600.391f123c@skate>
-In-Reply-To: <17540873.418471362551288113.JavaMail.weblogic@epml07>
-References: <17540873.418471362551288113.JavaMail.weblogic@epml07>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-kernel-owner@vger.kernel.org
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Olof Johansson <olof@lixom.net>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Mitch Bradley <wmb@firmworks.com>,
+	Andrew Murray <andrew.murray@arm.com>
+Subject: [RFCv1 08/11] PCI: Introduce new MSI chip infrastructure
+Date: Tue, 26 Mar 2013 17:52:23 +0100
+Message-Id: <1364316746-8702-9-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1364316746-8702-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1364316746-8702-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Jingoo Han,
+From: Thierry Reding <thierry.reding@avionic-design.de>
 
-On Wed, 06 Mar 2013 06:28:08 +0000 (GMT), Jingoo Han wrote:
+The new struct msi_chip is used to associated an MSI controller with a
+PCI bus. It is automatically handed down from the root to its children
+during bus enumeration.
 
-> Sorry, I did not know that you submitted the patch.
+This patch provides default (weak) implementations for the architecture-
+specific MSI functions (arch_setup_msi_irq(), arch_teardown_msi_irq()
+and arch_msi_check_device()) which check if a PCI device's bus has an
+attached MSI chip and forward the call appropriately.
 
-No problem, I'm happy to have one less patch to carry in my PCIe patch
-set :)
+Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+---
+ drivers/pci/msi.c   |   35 +++++++++++++++++++++++++++++++----
+ drivers/pci/probe.c |    1 +
+ include/linux/msi.h |   10 ++++++++++
+ include/linux/pci.h |    1 +
+ 4 files changed, 43 insertions(+), 4 deletions(-)
 
-> Like you, I am developing PCIe Host driver.
-
-Just curious, do you already have some code? Thierry Reding and myself
-have been looking at each other's PCIe host driver since a while in
-order to make some consistent choices where possible. It would be good
-to see your code as well.
-
-Best regards,
-
-Thomas
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 00cc78c..fce3549 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -26,14 +26,41 @@
+ 
+ static int pci_msi_enable = 1;
+ 
+-/* Arch hooks */
++int __weak arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
++{
++	struct msi_chip *chip = dev->bus->msi;
++
++	if (chip && chip->setup_irq) {
++		int err;
++
++		err = chip->setup_irq(chip, dev, desc);
++		if (err < 0)
++			return err;
++
++		irq_set_chip_data(desc->irq, chip);
++		return err;
++	}
++
++	return -EINVAL;
++}
+ 
+-#ifndef arch_msi_check_device
+-int arch_msi_check_device(struct pci_dev *dev, int nvec, int type)
++void __weak arch_teardown_msi_irq(unsigned int irq)
+ {
++	struct msi_chip *chip = irq_get_chip_data(irq);
++
++	if (chip && chip->teardown_irq)
++		chip->teardown_irq(chip, irq);
++}
++
++int __weak arch_msi_check_device(struct pci_dev *dev, int nvec, int type)
++{
++	struct msi_chip *chip = dev->bus->msi;
++
++	if (chip && chip->check_device)
++		return chip->check_device(chip, dev, nvec, type);
++
+ 	return 0;
+ }
+-#endif
+ 
+ #ifndef arch_setup_msi_irqs
+ # define arch_setup_msi_irqs default_setup_msi_irqs
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index b494066..9307550 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -634,6 +634,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
+ 
+ 	child->parent = parent;
+ 	child->ops = parent->ops;
++	child->msi = parent->msi;
+ 	child->sysdata = parent->sysdata;
+ 	child->bus_flags = parent->bus_flags;
+ 
+diff --git a/include/linux/msi.h b/include/linux/msi.h
+index ce93a34..ea4a5be 100644
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -58,5 +58,15 @@ extern int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type);
+ extern void arch_teardown_msi_irqs(struct pci_dev *dev);
+ extern int arch_msi_check_device(struct pci_dev* dev, int nvec, int type);
+ 
++struct msi_chip {
++	struct module *owner;
++	struct device *dev;
++
++	int (*setup_irq)(struct msi_chip *chip, struct pci_dev *dev,
++			 struct msi_desc *desc);
++	void (*teardown_irq)(struct msi_chip *chip, unsigned int irq);
++	int (*check_device)(struct msi_chip *chip, struct pci_dev *dev,
++			    int nvec, int type);
++};
+ 
+ #endif /* LINUX_MSI_H */
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 2461033a..6aca43ea 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -416,6 +416,7 @@ struct pci_bus {
+ 	struct resource busn_res;	/* bus numbers routed to this bus */
+ 
+ 	struct pci_ops	*ops;		/* configuration access functions */
++	struct msi_chip	*msi;		/* MSI controller */
+ 	void		*sysdata;	/* hook for sys-specific extension */
+ 	struct proc_dir_entry *procdir;	/* directory entry in /proc/bus/pci */
+ 
 -- 
-Thomas Petazzoni, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
+1.7.9.5
+
