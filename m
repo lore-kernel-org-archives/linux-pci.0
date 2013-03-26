@@ -1,52 +1,48 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Tue, 19 Mar 2013 14:18:59 -0400 (EDT)
-From: Alan Stern <stern@rowland.harvard.edu>
-To: Daniel Vetter <daniel.vetter@ffwll.ch>
-cc: Chris Wilson <chris@chris-wilson.co.uk>,
-	Jiri Kosina <jkosina@suse.cz>, Greg KH <greg@kroah.com>,
-	Harald Arnesen <skogtun.linux@gmail.com>,
-	Kernel development list <linux-kernel@vger.kernel.org>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Peter Hurley <peter@hurleysoftware.com>,
-	Thomas Meyer <thomas@m3y3r.de>,
-	Shawn Starr <shawn.starr@rogers.com>,
-	USB list <linux-usb@vger.kernel.org>,
-	<linux-acpi@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>, Yinghai Lu <yinghai@kernel.org>,
-	Imre Deak <imre.deak@intel.com>,
-	Daniel Kurtz <djkurtz@chromium.org>,
-	<dri-devel@lists.freedesktop.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"H. Peter Anvin" <hpa@zytor.com>, <x86@kernel.org>,
-	Arkadiusz Miskiewicz <a.miskiewicz@gmail.com>
-Subject: Re: gm45 intel gfx can generate non-MSI irq# in MSI mode (was Re:
- [PATCH] drm/i915: stop using GMBUS IRQs on Gen4 chips (was Re: [3.9-rc1]
- irq 16: nobody cared (was [3.9-rc1] very poor interrupt respo
-In-Reply-To: <CAKMK7uGtLcuSsoumAgdB7ri+fR5ReNYcZELbqDcSueXVsewppg@mail.gmail.com>
-Message-ID: <Pine.LNX.4.44L0.1303191417440.1302-100000@iolanthe.rowland.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from quartz.orcorp.ca ([184.70.90.242]:34358 "EHLO quartz.orcorp.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755214Ab3CZWvs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 26 Mar 2013 18:51:48 -0400
+Date: Tue, 26 Mar 2013 16:51:39 -0600
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Thierry Reding <thierry.reding@avionic-design.de>,
+	Lior Amsalem <alior@marvell.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Russell King <linux@arm.linux.org.uk>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Arnd Bergmann <arnd@arndb.de>, Andrew Lunn <andrew@lunn.ch>,
+	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
+	Olof Johansson <olof@lixom.net>,
+	Maen Suleiman <maen@marvell.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Andrew Murray <andrew.murray@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Mitch Bradley <wmb@firmworks.com>
+Subject: Re: [PATCHv6 10/17] arm: mvebu: add PCIe Device Tree informations
+ for Armada 370
+Message-ID: <20130326225139.GB10124@obsidianresearch.com>
+References: <1364314719-1049-1-git-send-email-thomas.petazzoni@free-electrons.com>
+ <1364314719-1049-11-git-send-email-thomas.petazzoni@free-electrons.com>
+ <20130326163421.GA30255@obsidianresearch.com>
+ <20130326201654.GA7109@avionic-0098.mockup.avionic-design.de>
+ <20130326222744.54e9fc82@skate>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130326222744.54e9fc82@skate>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 19 Mar 2013, Daniel Vetter wrote:
+On Tue, Mar 26, 2013 at 10:27:44PM +0100, Thomas Petazzoni wrote:
 
-> > That might be misleading.  It's possible that the erroneous IRQs _are_
-> > being issued but you're simply not aware of them.  If the kernel thinks
-> > that no device is using IRQ 16 then it will leave that IRQ disabled.
-> 
-> I guess I should have phrased it more precisely, but that's exactly
-> what I expect is happening on my machine: I don't have anything on
-> irq16 (i.e. in non-msi mode the gfx interrupt isn't shared) and hence
-> the irq is completely disabled. Which obviously makes it impossible
-> for me to reproduce the issue. To test that theory, is there a quick
-> way to force-enable a given interrupt, short of just hacking up a 2nd
-> dummy irq handler in my driver?
+> Is this correct? Thierry, Jason, if you could confirm my understanding,
+> that would be great. I could then rework and resend the patch set.
 
-I don't know of any way.  In fact, I have been thinking of writing a 
-test driver module, with a module parameter telling it which IRQ number 
-to register for.  It seems like the sort of thing that would be useful 
-to have, from time to time.
+It looked to me the same as what Thierry was doing, and Thierry's
+looked like it included everything from the big discussion on that
+subject. Seems good to go to me.
 
-Alan Stern
-
+Jason
