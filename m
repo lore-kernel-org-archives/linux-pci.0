@@ -1,58 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:34021 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754349Ab3CONdT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 15 Mar 2013 09:33:19 -0400
-Date: Fri, 15 Mar 2013 14:33:13 +0100 (CET)
-From: Jiri Kosina <jkosina@suse.cz>
-To: Harald Arnesen <skogtun.linux@gmail.com>
-Cc: Kernel development list <linux-kernel@vger.kernel.org>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Peter Hurley <peter@hurleysoftware.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Thomas Meyer <thomas@m3y3r.de>,
-	Shawn Starr <shawn.starr@rogers.com>,
-	USB list <linux-usb@vger.kernel.org>,
-	linux-acpi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Daniel Vetter <daniel.vetter@ffwll.ch>,
-	Imre Deak <imre.deak@intel.com>,
-	Daniel Kurtz <djkurtz@chromium.org>,
-	dri-devel@lists.freedesktop.org
-Subject: Re: [3.9-rc1] irq 16: nobody cared  (was [3.9-rc1] very poor interrupt
- responses)
-In-Reply-To: <5142E7F0.4020002@gmail.com>
-Message-ID: <alpine.LNX.2.00.1303151424140.9529@pobox.suse.cz>
-References: <Pine.LNX.4.44L0.1303141050310.1983-100000@iolanthe.rowland.org> <1460519.ejNFI1DrGk@vostro.rjw.lan> <1363280764.26318.4.camel@thor.lan> <5657408.cYX6iimiA4@vostro.rjw.lan> <alpine.LNX.2.00.1303150851020.9529@pobox.suse.cz>
- <5142E7F0.4020002@gmail.com>
+Received: from moutng.kundenserver.de ([212.227.17.9]:56736 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934635Ab3CZQdc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Mar 2013 12:33:32 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Subject: Re: [PATCHv6 00/17] PCIe support for the Armada 370 and Armada XP SoCs
+Date: Tue, 26 Mar 2013 16:32:44 +0000
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	devicetree-discuss@lists.ozlabs.org,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Maen Suleiman <maen@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Olof Johansson <olof@lixom.net>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Mitch Bradley <wmb@firmworks.com>,
+	Andrew Murray <andrew.murray@arm.com>
+References: <1364314719-1049-1-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1364314719-1049-1-git-send-email-thomas.petazzoni@free-electrons.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <201303261632.44955.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 15 Mar 2013, Harald Arnesen wrote:
-
-> I have the same problem on my Lenovo T500. I think the graphics card is
-> involved.
+On Tuesday 26 March 2013, Thomas Petazzoni wrote:
+> This series of patches introduces PCIe support for the Marvell Armada
+> 370 and Armada XP. In the future, we plan to extend the driver to
+> cover Kirkwood platforms, and possibly other Marvell EBU platforms as
+> well.
 > 
-> This laptop has "hybrid graphics" - one Intel GMA 4500MHD and one ATI
-> Mobility Radeon HD 3650. When I boot with the Intel card, I get "irq 16:
-> nobody cared" during boot, not when I boot with the ATI card.
+> As we are approaching 3.10, I would now like to get formal Acked-by,
+> or disagreements from the following maintainers/developers :
+> 
+>  * Grant Likely, as the OF maintainer, for patches 1, 2 and 3
+> 
+>    [PATCH v5 01/17] of/pci: Provide support for parsing PCI DT ranges
+>    [PATCH v5 02/17] of/pci: Add of_pci_get_devfn() function
+>    [PATCH v5 03/17] of/pci: Add of_pci_parse_bus_range() function
+> 
+>  * Bjorn Helgaas, as the PCI maintainer, for patches 4 and 8
+> 
+>    [PATCH v5 04/17] pci: infrastructure to add drivers in drivers/pci/host
+>    [PATCH v5 08/17] pci: PCIe driver for Marvell Armada 370/XP systems
+> 
+>  * Russell King, as the ARM maintainer, for patch 5
+> 
+>    [PATCH v5 05/17] arm: pci: add a align_resource hook
+> 
+>  * Arnd Bergmann, Mitch Bradley and Jason Gunthorpe, for patch 8 (the
+>    PCIe driver itself), and specifically the Device Tree binding.
+> 
+>    [PATCH v5 08/17] pci: PCIe driver for Marvell Armada 370/XP systems
+> 
 
-Confirming this. After a lot of hassle, I have bisected this reliably to
-
-	commit 28c70f162a315bdcfbe0bf940a740ef8bfb918d6
-	Author: Daniel Vetter <daniel.vetter@ffwll.ch>
-	Date:   Sat Dec 1 13:53:45 2012 +0100
-
-	    drm/i915: use the gmbus irq for waits
-
-Adding Daniel, Imre and Daniel to CC while I will try to figure out what's 
-happening in parallel.
-
-Attaching dmesg.txt from the machine with 28c70f162a as head, with 
-drm.debug=0xe.
-
--- 
-Jiri Kosina
-SUSE Labs
+Acked-by: Arnd Bergmann <arnd@arndb.de>
