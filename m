@@ -1,11 +1,11 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:55738 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751226Ab3CZUqS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Mar 2013 16:46:18 -0400
-Date: Tue, 26 Mar 2013 21:46:13 +0100
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Arnd Bergmann <arnd@arndb.de>
+Received: from quartz.orcorp.ca ([184.70.90.242]:50975 "EHLO quartz.orcorp.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751981Ab3CZVzu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 26 Mar 2013 17:55:50 -0400
+Date: Tue, 26 Mar 2013 15:55:46 -0600
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
 Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	Grant Likely <grant.likely@secretlab.ca>,
 	Russell King <linux@arm.linux.org.uk>,
@@ -13,101 +13,116 @@ Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	devicetree-discuss@lists.ozlabs.org,
 	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
 	Jason Cooper <jason@lakedaemon.net>,
+	Arnd Bergmann <arnd@arndb.de>,
 	Maen Suleiman <maen@marvell.com>,
 	Thierry Reding <thierry.reding@avionic-design.de>,
 	Gregory Clement <gregory.clement@free-electrons.com>,
 	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
 	Olof Johansson <olof@lixom.net>,
 	Tawfik Bayouk <tawfik@marvell.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
 	Mitch Bradley <wmb@firmworks.com>,
 	Andrew Murray <andrew.murray@arm.com>
 Subject: Re: [RFCv1 07/11] irqchip: armada-370-xp: add MSI support to
  interrupt controller driver
-Message-ID: <20130326214613.30fbdddf@skate>
-In-Reply-To: <201303261838.23246.arnd@arndb.de>
+Message-ID: <20130326215546.GA8650@obsidianresearch.com>
 References: <1364316746-8702-1-git-send-email-thomas.petazzoni@free-electrons.com>
-	<201303261707.41563.arnd@arndb.de>
-	<20130326181754.33b89559@skate>
-	<201303261838.23246.arnd@arndb.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+ <1364316746-8702-8-git-send-email-thomas.petazzoni@free-electrons.com>
+ <20130326180245.GA22775@obsidianresearch.com>
+ <20130326221654.34bce6d7@skate>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130326221654.34bce6d7@skate>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Arnd Bergmann,
+On Tue, Mar 26, 2013 at 10:16:54PM +0100, Thomas Petazzoni wrote:
 
-On Tue, 26 Mar 2013 18:38:22 +0000, Arnd Bergmann wrote:
-
-> >     Note that both the parent and the child node need to have the
-> >     'interrupt-controller' empty property:
-> >     
-> >       * The interrupt-controller property is needed in the main
-> >     interrupt controller node (interrupt-controller@d0020000)
-> > because the of_irq_init() function skips nodes that are matching
-> > the given compatible string, but that don't have the
-> > interrupt-controller property.
-> >     
-> >      * The interrupt-controller property is needed in the child
-> >     interrupt controller node (main-intc@d0020000) otherwise the
-> >     resolution done by of_irq_map_one() doesn't work.
+> > FWIW, MSI-X is not restricted to 16 bits, so if you can detect from
+> > the PCI layer if it is setting up MSI or MSI-X you could allocate low
+> > bits first to MSI-X and high bits first to MSI, increasing the number
+> > of available MSI/MSI-X vectors.
 > 
-> If you add compatible properties to the children, that would work
-> I suppose.
+> This could be an improvement. There are also other, non-per-CPU,
+> doorbell interrupts that could potentially be used. Can we consider
+> this a possible improvement, and not something that is fundamentally
+> necessary? For now, I'm trying to get the current feature set merged,
+> and not necessarily to extend it to cover all possible features of the
+> hardware.
 
-To which children? Only to the main-intc children? If so,
-armada_370_xp_mpic_of_init() would be called with a 'device_node *'
-that points to the main-intc, correct? Then it would have to go back up
-in the Device Tree to find the msi node? It's doable of course, but
-sounds strange, no?
+A major point of MSI is to be able to direct interrupts on a CPU by
+CPU basis. Looks like XP has per-cpu and all-cpu doorbell bits?
 
-To me, the topology of the hardware is really that a single device
-provides two features: the main interrupt controller and the MSI
-interrupt controller. But I will adapt to whatever DT binding you
-propose.
+Combined with this:
 
-> > So really, the thing is that irq_domain_add_linear() registers an
-> > IRQ domain on a specific DT node, and then irq_find_host() finds
-> > back an IRQ domain from a given DT node. So if you have two IRQ
-> > domains registered on the same DT node, then you don't know which
-> > one will be used.
-> > 
-> > So if I do the two irq_domain_add_linear() (one for MPIC, one for
-> > MSI) on one single DT node, when the timer driver will request its
-> > interrupt, it turns out that the MSI IRQ domain is used and not the
-> > MPIC IRQ domain, even though the timer has <&mpic> as its interrupt
-> > parent.
+> It is the responsibility of the PCIe driver to prepare the 'struct
+> msi_msg', which contains the physical address at which the PCIe device
+> should write to trigger an MSI. But this physical address is part of
+
+Makes me think the split of responsibility created by moving the MSI
+ops into the PCI host structure is not correct.
+
+The PCIe host driver just seems to get in the way, it has no knowledge
+it is adding to the process.
+
+irqchip knows:
+ - what the physical address of the doorbell is
+ - how to construct an address that is per-cpu or all-cpu
+ - which bits in the doorbell registers are allocated and which are
+   free
+
+pci has none of that info.
+
+Looking at this some more, there is tonnes of stuff in linux that when
+a PCI MSI is allocated a special IRQ number is created for it that has
+special properties - eg set_affinity on that number actually goes into
+the MSI table and changes it.
+
+The cleanest would be to keep the doorbell driver purely related to
+the doorbell and when a request for a PCI MSI comes in allocate a new
+irq_chip (like arch/x86/kernel/apic/io_apic.c does) that has all the
+special PCI stuff and chain it to the proper bit in the doorbell. 
+
+Optimizing to remove function calls from the interrupt stack could
+happen later.
+
+> > However, Marvell's doorbell can be controlled at the destination, so
+> > it is better to handle it that way, especially since it creates
+> > symmetry with the IPI usage.
 > 
-> I still wonder if the real solution shouldn't instead be to make the
-> irq domain code MSI aware. For instance, you don't really need a
-> cell to describe an interrupt because the interrupt number is
-> not a hardware property. So an MSI using device doesn't really
-> needs an "msis" or "interrupts" property, just an "msi-parent",
-> and we can add code to handle as a separate domain even if you
-> have a single device node that can do both level and message
-> interrupts.
+> Hum, ok. But the MSI and IPI are handled quite differently: MSIs have
+> to call handle_IRQ(), while IPIs have to call handle_IPI(), so you'd
+> still have to distinguish between IPIs and MSIs. In the current driver,
+> IPIs don't have an associated irq_chip structure.
 
-So the msi-parent property should point to the single mpic node? But
-then the IRQ domain for MSI cannot be registered on this single MPIC
-node. Then, what would be the first argument of:
+Once you have a proper generic interrupt driver you can go ahead and
+use request_irq to grab N bits of the doorbell register and assign
+them to a handler that only calls handle_IPI(ipinr,get_irq_regs()).
 
-        armada_370_xp_msi_domain =
-                irq_domain_add_linear(msi_node, PCI_MSI_DOORBELL_NR,
-                                      &armada_370_xp_msi_irq_ops, NULL);
+It is not necessary to keep IPI and the irqchip driver convoluted
+together.
 
-and how would the PCIe driver get a pointer to this IRQ domain? (In the
-currently proposed code, it just does a irq_find_host(), which sounded
-very simple and straightforward).
+> Again, I don't see how it's possible to not care whether it's MSI or
+> IPI. IPIs have to call handle_IPI() which is a ARM-specific call, and I
+> don't understand how handle_fasteoi_irq() would end up calling
+> handle_IPI().
 
-To clarify: I really don't mind reworking the code, but unfortunately
-"make the IRQ domain code MSI aware" is too vague for me to understand
-the direction you're thinking of.
+- The main IRQ vector is entered, it decodes the main cause register
+  and calls the handler for the doorbell
+- The doorbell handler is setup as a chained handler and it uses
+  handle_fasteoi_irq to enter into armada_370_xp_handle_irq
+- armada_370_xp_handle_irq then runs through all bits and calls their
+  handlers
+- the handler for IPI bits is associated with the IPI handler that
+  simply calls handle_IPI(...)
 
-Thanks for your review and comments!
+handle_fasteoi_irq acks's and clears the handled bits in the doorbell
+register at the proper time.
 
-Thomas
--- 
-Thomas Petazzoni, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
+> I'll let Arnd answer this one, but I'm pretty sure that using IRQ
+> domains is the way to go. The fact that a number of drivers don't yet
+> use IRQ domains is maybe just because they haven't been converted yet.
+
+Maybe, but they have irq domain code as well.. I'm curious about the
+answer too :)
+
+Jason
