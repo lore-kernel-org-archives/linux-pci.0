@@ -1,140 +1,154 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ea0-f173.google.com ([209.85.215.173]:38977 "EHLO
-	mail-ea0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754745Ab3CRTSw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 Mar 2013 15:18:52 -0400
-Received: by mail-ea0-f173.google.com with SMTP id h14so2647631eak.18
-        for <linux-pci@vger.kernel.org>; Mon, 18 Mar 2013 12:18:51 -0700 (PDT)
-Date: Mon, 18 Mar 2013 20:21:36 +0100
-From: Daniel Vetter <daniel@ffwll.ch>
-To: Jiri Kosina <jkosina@suse.cz>
-Cc: Daniel Vetter <daniel@ffwll.ch>,
-	Chris Wilson <chris@chris-wilson.co.uk>,
-	Greg KH <greg@kroah.com>,
-	Harald Arnesen <skogtun.linux@gmail.com>,
-	Kernel development list <linux-kernel@vger.kernel.org>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Peter Hurley <peter@hurleysoftware.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Thomas Meyer <thomas@m3y3r.de>,
-	Shawn Starr <shawn.starr@rogers.com>,
-	USB list <linux-usb@vger.kernel.org>,
-	linux-acpi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Daniel Vetter <daniel.vetter@ffwll.ch>,
-	Imre Deak <imre.deak@intel.com>,
-	Daniel Kurtz <djkurtz@chromium.org>,
-	dri-devel@lists.freedesktop.org
-Subject: Re: [PATCH] drm/i915: stop using GMBUS IRQs on Gen4 chips (was Re:
- [3.9-rc1] irq 16: nobody cared  (was [3.9-rc1] very poor interrupt
- responses))
-Message-ID: <20130318192135.GT9021@phenom.ffwll.local>
-References: <1363280764.26318.4.camel@thor.lan>
- <5657408.cYX6iimiA4@vostro.rjw.lan>
- <alpine.LNX.2.00.1303150851020.9529@pobox.suse.cz>
- <5142E7F0.4020002@gmail.com>
- <alpine.LNX.2.00.1303151424140.9529@pobox.suse.cz>
- <20130315153249.GA32425@kroah.com>
- <alpine.LNX.2.00.1303151636481.9529@pobox.suse.cz>
- <20130315154739.GA1024@kroah.com>
- <20130318082156.GO9021@phenom.ffwll.local>
- <alpine.LNX.2.00.1303181522460.9529@pobox.suse.cz>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <alpine.LNX.2.00.1303181522460.9529@pobox.suse.cz>
+Received: from mail.free-electrons.com ([94.23.35.102]:56280 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753268Ab3CZWHA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Mar 2013 18:07:00 -0400
+Date: Tue, 26 Mar 2013 23:06:56 +0100
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	devicetree-discuss@lists.ozlabs.org,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Maen Suleiman <maen@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Olof Johansson <olof@lixom.net>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Mitch Bradley <wmb@firmworks.com>,
+	Andrew Murray <andrew.murray@arm.com>
+Subject: Re: [RFCv1 07/11] irqchip: armada-370-xp: add MSI support to
+ interrupt controller driver
+Message-ID: <20130326230656.3326e187@skate>
+In-Reply-To: <20130326215546.GA8650@obsidianresearch.com>
+References: <1364316746-8702-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	<1364316746-8702-8-git-send-email-thomas.petazzoni@free-electrons.com>
+	<20130326180245.GA22775@obsidianresearch.com>
+	<20130326221654.34bce6d7@skate>
+	<20130326215546.GA8650@obsidianresearch.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 18, 2013 at 04:56:02PM +0100, Jiri Kosina wrote:
-> Okay, so I think that for 3.9 we want the patch below, and if eventually 
-> hardware root cause / workaround is found for GM45, we can have it merged 
-> later.
+Dear Jason Gunthorpe,
 
-I'd prefer if we dig into this for a bit more. I've been traveling last
-week and only just now recovered from the mail backlog, hence my delays in
-handling this.
+On Tue, 26 Mar 2013 15:55:46 -0600, Jason Gunthorpe wrote:
 
-Also the "nobody cared" showing up only very late after the last gmbus
-transaction isn't too surprising: It only fires after 100k interrupts, and
-apparently the irq handler is already a bit racy, so any interrupt might
-push it over the edge. gmbus interrupts are apparently just help to expose
-the race (presuming it's indeed the msi race already docuemented in the
-code).
--Daniel
+> > > FWIW, MSI-X is not restricted to 16 bits, so if you can detect from
+> > > the PCI layer if it is setting up MSI or MSI-X you could allocate low
+> > > bits first to MSI-X and high bits first to MSI, increasing the number
+> > > of available MSI/MSI-X vectors.
+> > 
+> > This could be an improvement. There are also other, non-per-CPU,
+> > doorbell interrupts that could potentially be used. Can we consider
+> > this a possible improvement, and not something that is fundamentally
+> > necessary? For now, I'm trying to get the current feature set merged,
+> > and not necessarily to extend it to cover all possible features of the
+> > hardware.
+> 
+> A major point of MSI is to be able to direct interrupts on a CPU by
+> CPU basis. Looks like XP has per-cpu and all-cpu doorbell bits?
 
-> From: Jiri Kosina <jkosina@suse.cz>
-> Subject: [PATCH] drm/i915: stop using GMBUS IRQs on Gen4 chips
-> 
-> Commit 28c70f162 ("drm/i915: use the gmbus irq for waits") switched to
-> using GMBUS irqs instead of GPIO bit-banging for chipset generations 4
-> and above.
-> 
-> It turns out though that on many systems this leads to spurious interrupts
-> being generated, long after the register write to disable the IRQs has been
-> issued.
-> 
-> Flushing of the register writes by POSTING_READ() directly after the register
-> write doesn't work either.
-> 
-> Disable using of GMBUS IRQs on Gen4 systems before the root cause is found and
-> revert back to old behavior.
-> 
-> Also be more careful about not issuing GMBUS4 register reads in 
-> gmbus_wait_hw_status() if we are not using GMBUS IRQs.
-> 
-> Signed-off-by: Jiri Kosina <jkosina@suse.cz>
-> ---
->  drivers/gpu/drm/i915/intel_i2c.c |   12 ++++++++++--
->  1 files changed, 10 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/gpu/drm/i915/intel_i2c.c b/drivers/gpu/drm/i915/intel_i2c.c
-> index acf8aec..8638036 100644
-> --- a/drivers/gpu/drm/i915/intel_i2c.c
-> +++ b/drivers/gpu/drm/i915/intel_i2c.c
-> @@ -58,12 +58,14 @@ to_intel_gmbus(struct i2c_adapter *i2c)
->  	return container_of(i2c, struct intel_gmbus, adapter);
->  }
->  
-> +#define HAS_GMBUS_IRQ(dev) (INTEL_INFO(dev)->gen >= 5)
->  void
->  intel_i2c_reset(struct drm_device *dev)
->  {
->  	struct drm_i915_private *dev_priv = dev->dev_private;
->  	I915_WRITE(dev_priv->gpio_mmio_base + GMBUS0, 0);
-> -	I915_WRITE(dev_priv->gpio_mmio_base + GMBUS4, 0);
-> +	if (HAS_GMBUS_IRQ(dev))
-> +		I915_WRITE(dev_priv->gpio_mmio_base + GMBUS4, 0);
->  }
->  
->  static void intel_i2c_quirk_set(struct drm_i915_private *dev_priv, bool enable)
-> @@ -203,7 +205,6 @@ intel_gpio_setup(struct intel_gmbus *bus, u32 pin)
->  	algo->data = bus;
->  }
->  
-> -#define HAS_GMBUS_IRQ(dev) (INTEL_INFO(dev)->gen >= 4)
->  static int
->  gmbus_wait_hw_status(struct drm_i915_private *dev_priv,
->  		     u32 gmbus2_status,
-> @@ -214,6 +215,13 @@ gmbus_wait_hw_status(struct drm_i915_private *dev_priv,
->  	u32 gmbus2 = 0;
->  	DEFINE_WAIT(wait);
->  
-> +	if (!HAS_GMBUS_IRQ(dev_priv->dev)) {
-> +		int ret;
-> +		ret = wait_for((gmbus2 = I915_READ(GMBUS2 + reg_offset)) &
-> +				(GMBUS_SATOER | gmbus2_status),
-> +				50);
-> +		return ret;
-> +	}
->  	/* Important: The hw handles only the first bit, so set only one! Since
->  	 * we also need to check for NAKs besides the hw ready/idle signal, we
->  	 * need to wake up periodically and check that ourselves. */
-> 
-> -- 
-> Jiri Kosina
-> SUSE Labs
+Yes. Two per-CPU interrupts, IRQ 0 for the low 16 bits of the first
+doorbell register, IRQ 1 for the high 16 bits of the first doorbell
+register. And then, three global interrupts, each with a 32 bits
+register associated to trigger the interrupt. At least, that's my
+understanding of the datasheet.
 
+> Combined with this:
+> 
+> > It is the responsibility of the PCIe driver to prepare the 'struct
+> > msi_msg', which contains the physical address at which the PCIe device
+> > should write to trigger an MSI. But this physical address is part of
+> 
+> Makes me think the split of responsibility created by moving the MSI
+> ops into the PCI host structure is not correct.
+> 
+> The PCIe host driver just seems to get in the way, it has no knowledge
+> it is adding to the process.
+> 
+> irqchip knows:
+>  - what the physical address of the doorbell is
+>  - how to construct an address that is per-cpu or all-cpu
+>  - which bits in the doorbell registers are allocated and which are
+>    free
+> 
+> pci has none of that info.
+
+Wait, wait. Did you look at the Tegra PCIe driver? In the Tegra case,
+the MSI stuff is handled completely by the PCIe unit, and does not need
+the special interaction with the IRQ controller driver that I need.
+
+The fact that PCIe and MSI handling are completely separate matters on
+Marvell may just be a specific situation. On other platforms, the
+physical register that gets written to by PCIe devices to trigger a MSI
+may well be located within the PCIe interface registers, and therefore
+the MSI thing should be handled by the PCIe driver.
+
+> Looking at this some more, there is tonnes of stuff in linux that when
+> a PCI MSI is allocated a special IRQ number is created for it that has
+> special properties - eg set_affinity on that number actually goes into
+> the MSI table and changes it.
+> 
+> The cleanest would be to keep the doorbell driver purely related to
+> the doorbell and when a request for a PCI MSI comes in allocate a new
+> irq_chip (like arch/x86/kernel/apic/io_apic.c does) that has all the
+> special PCI stuff and chain it to the proper bit in the doorbell. 
+> 
+> Optimizing to remove function calls from the interrupt stack could
+> happen later.
+> 
+> > > However, Marvell's doorbell can be controlled at the destination, so
+> > > it is better to handle it that way, especially since it creates
+> > > symmetry with the IPI usage.
+> > 
+> > Hum, ok. But the MSI and IPI are handled quite differently: MSIs have
+> > to call handle_IRQ(), while IPIs have to call handle_IPI(), so you'd
+> > still have to distinguish between IPIs and MSIs. In the current driver,
+> > IPIs don't have an associated irq_chip structure.
+> 
+> Once you have a proper generic interrupt driver you can go ahead and
+> use request_irq to grab N bits of the doorbell register and assign
+> them to a handler that only calls handle_IPI(ipinr,get_irq_regs()).
+> 
+> It is not necessary to keep IPI and the irqchip driver convoluted
+> together.
+> 
+> > Again, I don't see how it's possible to not care whether it's MSI or
+> > IPI. IPIs have to call handle_IPI() which is a ARM-specific call, and I
+> > don't understand how handle_fasteoi_irq() would end up calling
+> > handle_IPI().
+> 
+> - The main IRQ vector is entered, it decodes the main cause register
+>   and calls the handler for the doorbell
+> - The doorbell handler is setup as a chained handler and it uses
+>   handle_fasteoi_irq to enter into armada_370_xp_handle_irq
+> - armada_370_xp_handle_irq then runs through all bits and calls their
+>   handlers
+> - the handler for IPI bits is associated with the IPI handler that
+>   simply calls handle_IPI(...)
+> 
+> handle_fasteoi_irq acks's and clears the handled bits in the doorbell
+> register at the proper time.
+
+Could you propose some code that implements this? The existing code
+works fine, and is modeled after what the GIC IRQ driver is doing. I
+don't say what you're proposing is not interesting, but just that it
+looks like every time I come with some code, you're suggesting me to
+'reinvent' the whole world, and you've never come up with some code to
+help in a direction or another.
+
+Thanks,
+
+Thomas
 -- 
-Daniel Vetter
-Software Engineer, Intel Corporation
-+41 (0) 79 365 57 48 - http://blog.ffwll.ch
+Thomas Petazzoni, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
