@@ -1,54 +1,122 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f51.google.com ([209.85.219.51]:61360 "EHLO
-	mail-oa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755970Ab3C2SYx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 29 Mar 2013 14:24:53 -0400
-Received: by mail-oa0-f51.google.com with SMTP id g12so590673oah.38
-        for <linux-pci@vger.kernel.org>; Fri, 29 Mar 2013 11:24:53 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CANUX_P22AkqeOROP1QHzp20wGWgDbRzy+9FZy2KvHLXCQ5AVnA@mail.gmail.com>
-References: <CANUX_P3F5YhbZX3WGU-j1AGpbXb_T9Bis2ErhvKkFMtDvzatVQ@mail.gmail.com>
- <20130304134949.GB3021@redhat.com> <CANUX_P0JhuVWcQjTckYzG8eBb2MtT_=prKqV38mCpVjfLmGtCA@mail.gmail.com>
- <20130304154832.GD3021@redhat.com> <CANUX_P22AkqeOROP1QHzp20wGWgDbRzy+9FZy2KvHLXCQ5AVnA@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 29 Mar 2013 12:24:32 -0600
-Message-ID: <CAErSpo5gVsUxB6ebQGAN-7jsZiRYZ+SyJn5gKZrSuOzzkJ-QjQ@mail.gmail.com>
-Subject: Re: is L1 really disabled in iwlwifi
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>,
-	Roman Yepishev <roman.yepishev@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail.free-electrons.com ([94.23.35.102]:54137 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751410Ab3CZQw3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Mar 2013 12:52:29 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Russell King <linux@arm.linux.org.uk>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	devicetree-discuss@lists.ozlabs.org,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Maen Suleiman <maen@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Olof Johansson <olof@lixom.net>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Mitch Bradley <wmb@firmworks.com>,
+	Andrew Murray <andrew.murray@arm.com>
+Subject: [RFCv1 00/11] MSI support for Marvell EBU PCIe driver
+Date: Tue, 26 Mar 2013 17:52:15 +0100
+Message-Id: <1364316746-8702-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 4, 2013 at 10:58 AM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
-> On Mon, Mar 4, 2013 at 5:48 PM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
->> On Mon, Mar 04, 2013 at 04:57:46PM +0200, Emmanuel Grumbach wrote:
->>
->>> This is what I did. On 3.7, lspci tells me that ASPM is enabled before
->>> I load the module. And same after I load the module.
->>
->> CONFIG_PCIEASPM disabled ?
->>
->
-> nope - enabled on both kernel: 3.1 and 3.7. Makes sense though.
-> CONFIG_PCIEASPM enabled, I have L1. Just wondering why doesn't that
-> pci_disable_link_state do anything....
-> Also, I remember so issues Mathew Garret debugged and he ended up
-> disabling ASPM on older kernel because some BIOS issue (don't remember
-> really). Apparently, ASPM is enabled again in newer kernels.
->
-> Anyway - I think I will just remove this pci_disable_link_state call
-> and hopefully, it will stay long enough in linux-next so that people
-> will report issues before it get into linux.
-> I don't like leaving that code if it doesn't do anything.
+Hello,
 
-I think we broke at least some cases of pci_disable_link_state() a
-while back.  I'd like to fix it rather than just removing calls to it.
+This set of patches introduces Message Signaled Interrupt support in
+the Marvell EBU PCIe driver. It has been successfully tested on the
+Armada XP GP platform and the Armada 370 DB platform with an Intel
+e1000e PCIe network card that supports MSI.
 
-Can someone collect a complete dmesg log and "lspci -vv" output?
+This is based on work done by Lior Amsalem <alior@marvell.com>.
 
-Bjorn
+The patches do the following:
+
+ * Patches 1, 2 and 3 move the IRQ controller driver of Armada 370/XP
+   platforms from arch/arm/mach-mvebu/ into drivers/irqchip/ and use
+   the proper irqchip infrastructure. Those changes are not strictly
+   needed to add MSI interrupts support, but since we will be touching
+   the IRQ controller driver anyway, it sounded like the right time to
+   do this move.
+
+ * Patches 4 and 5 do some minor cleanups that will help for the
+   remainer of the changes.
+
+ * Patch 6 makes the MPIC node a subnode of the interrupt controller
+   node, since the MSI interrupt controller will be added as a second
+   subnode. The details on why this is needed are given in the commit
+   log. It is important to read those details to understand why such a
+   Device Tree representation was used.
+
+ * Patch 7 modifies the IRQ controller driver to support MSI.
+
+ * Patch 8 is a patch from Thierry Reding that introduces a small
+   infrastructure based on 'struct msi_chip' which makes the MSI
+   support usable on multiplatform kernel.
+
+ * Patch 9 adds the MSI support to the Marvell EBU PCIe driver.
+
+ * Patch 10 and 11 respectively update the Device Tree and the
+   defconfig of Armada 370/XP platforms to enable MSI.
+
+It is for now sent as a RFC in order to define whether the Device Tree
+representation is correct or not. Again, patch 6 gives the rationale
+for this choice.
+
+This patch set is meant to be applied on top of the Marvell PCIe
+driver. I keep it distinct from the PCIe driver patch set because the
+PCIe driver itself is mostly reading for merging (it has gone through
+multiple iterations over the last 3 months), while this patch set is
+brand new and will most likely need a bunch of iterations as well.
+
+Thanks,
+
+Thomas
+
+Thierry Reding (1):
+  PCI: Introduce new MSI chip infrastructure
+
+Thomas Petazzoni (10):
+  arm: mvebu: move L2 cache initialization in init_early()
+  irqchip: move IRQ driver for Armada 370/XP
+  irqchip: armada-370-xp: move IRQ handler to avoid forward declaration
+  irqchip: armada-370-xp: slightly cleanup irq controller driver
+  arm: mvebu: do not duplicate the mpic alias
+  irqchip: armada-370-xp: use a separate mpic node
+  irqchip: armada-370-xp: add MSI support to interrupt controller
+    driver
+  pci: mvebu: add MSI support
+  arm: mvebu: enable MSI support in DT
+  arm: mvebu: enable PCI MSI support in defconfig
+
+ .../devicetree/bindings/arm/armada-370-xp-mpic.txt |   39 +++-
+ .../devicetree/bindings/pci/mvebu-pci.txt          |    5 +
+ arch/arm/boot/dts/armada-370-xp.dtsi               |   15 +-
+ arch/arm/boot/dts/armada-370.dtsi                  |    3 +-
+ arch/arm/boot/dts/armada-xp-mv78230.dtsi           |    1 +
+ arch/arm/boot/dts/armada-xp-mv78260.dtsi           |    1 +
+ arch/arm/boot/dts/armada-xp-mv78460.dtsi           |    1 +
+ arch/arm/boot/dts/armada-xp.dtsi                   |    2 +-
+ arch/arm/configs/mvebu_defconfig                   |    1 +
+ arch/arm/mach-mvebu/Kconfig                        |    1 +
+ arch/arm/mach-mvebu/Makefile                       |    2 +-
+ arch/arm/mach-mvebu/armada-370-xp.c                |    9 +-
+ drivers/irqchip/Makefile                           |    1 +
+ .../irqchip}/irq-armada-370-xp.c                   |  202 ++++++++++++++------
+ drivers/pci/host/pci-mvebu.c                       |  128 +++++++++++++
+ drivers/pci/msi.c                                  |   35 +++-
+ drivers/pci/probe.c                                |    1 +
+ include/linux/msi.h                                |   10 +
+ include/linux/pci.h                                |    1 +
+ 19 files changed, 384 insertions(+), 74 deletions(-)
+ rename {arch/arm/mach-mvebu => drivers/irqchip}/irq-armada-370-xp.c (68%)
+
+-- 
+1.7.9.5
+
