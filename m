@@ -1,148 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:30630 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752146Ab3CHTyU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 Mar 2013 14:54:20 -0500
-Date: Fri, 8 Mar 2013 14:53:42 -0500
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Joerg Roedel <joro@8bytes.org>,
-	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-Subject: Re: [PATCH v2 13/26] x86, irq: Move down arch_early_irq_init()
-Message-ID: <20130308195342.GF6622@phenom.dumpdata.com>
-References: <1360351703-20571-1-git-send-email-yinghai@kernel.org>
- <1360351703-20571-14-git-send-email-yinghai@kernel.org>
+Received: from moutng.kundenserver.de ([212.227.126.186]:62739 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751419Ab3CZQzk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Mar 2013 12:55:40 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Subject: Re: [RFCv1 02/11] irqchip: move IRQ driver for Armada 370/XP
+Date: Tue, 26 Mar 2013 16:54:41 +0000
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	devicetree-discuss@lists.ozlabs.org,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Maen Suleiman <maen@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Olof Johansson <olof@lixom.net>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Mitch Bradley <wmb@firmworks.com>,
+	Andrew Murray <andrew.murray@arm.com>
+References: <1364316746-8702-1-git-send-email-thomas.petazzoni@free-electrons.com> <1364316746-8702-3-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1364316746-8702-3-git-send-email-thomas.petazzoni@free-electrons.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1360351703-20571-14-git-send-email-yinghai@kernel.org>
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <201303261654.41873.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Feb 08, 2013 at 11:28:10AM -0800, Yinghai Lu wrote:
-> Change position only.
+On Tuesday 26 March 2013, Thomas Petazzoni wrote:
+> When the Marvell Armada 370/XP support was included in the kernel, the
+> drivers/irqchip/ directory didn't exist and the minimal infrastructure
+> in it also didn't exist. Now that we have those things in place, we
+> move the Armada 370/XP IRQ controller driver from
+> arch/arm/mach-mvebu/irq-armada-370-xp.c to
+> drivers/irqchip/irq-armada-370-xp.c.
 > 
-> Prepare to update arch_early_irq_init(), it needs call some static functions.
-                                                   ^^-> to
+> Note in order to reduce code movement and therefore ease the review of
+> this patch, we intentionally introduce a forward declaration of
+> armada_370_xp_handle_irq(). It is in fact not needed because this
+> handler can now simply be implemented before
+> armada_370_xp_mpic_of_init(). That will be done in the next commit.
 > 
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> Cc: Joerg Roedel <joro@8bytes.org>
-> Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-> Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-> ---
->  arch/x86/kernel/apic/io_apic.c |   89 ++++++++++++++++++++--------------------
->  1 file changed, 44 insertions(+), 45 deletions(-)
-> 
-> diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-> index 72a1351..deda981 100644
-> --- a/arch/x86/kernel/apic/io_apic.c
-> +++ b/arch/x86/kernel/apic/io_apic.c
-> @@ -185,51 +185,6 @@ static struct irq_pin_list *alloc_irq_pin_list(int node)
->  	return kzalloc_node(sizeof(struct irq_pin_list), GFP_KERNEL, node);
->  }
->  
-> -
-> -/* irq_cfg is indexed by the sum of all RTEs in all I/O APICs. */
-> -static struct irq_cfg irq_cfgx[NR_IRQS_LEGACY];
-> -
-> -int __init arch_early_irq_init(void)
-> -{
-> -	struct irq_cfg *cfg;
-> -	int count, node, i;
-> -
-> -	if (!legacy_pic->nr_legacy_irqs)
-> -		io_apic_irqs = ~0UL;
-> -
-> -	for (i = 0; i < nr_ioapics; i++) {
-> -		ioapics[i].saved_registers =
-> -			kzalloc(sizeof(struct IO_APIC_route_entry) *
-> -				ioapics[i].nr_registers, GFP_KERNEL);
-> -		if (!ioapics[i].saved_registers)
-> -			pr_err("IOAPIC %d: suspend/resume impossible!\n", i);
-> -	}
-> -
-> -	cfg = irq_cfgx;
-> -	count = ARRAY_SIZE(irq_cfgx);
-> -	node = cpu_to_node(0);
-> -
-> -	/* Make sure the legacy interrupts are marked in the bitmap */
-> -	irq_reserve_irqs(0, legacy_pic->nr_legacy_irqs);
-> -
-> -	for (i = 0; i < count; i++) {
-> -		INIT_LIST_HEAD(&cfg[i].irq_2_pin);
-> -		irq_set_chip_data(i, &cfg[i]);
-> -		zalloc_cpumask_var_node(&cfg[i].domain, GFP_KERNEL, node);
-> -		zalloc_cpumask_var_node(&cfg[i].old_domain, GFP_KERNEL, node);
-> -		/*
-> -		 * For legacy IRQ's, start with assigning irq0 to irq15 to
-> -		 * IRQ0_VECTOR to IRQ15_VECTOR for all cpu's.
-> -		 */
-> -		if (i < legacy_pic->nr_legacy_irqs) {
-> -			cfg[i].vector = IRQ0_VECTOR + i;
-> -			cpumask_setall(cfg[i].domain);
-> -		}
-> -	}
-> -
-> -	return 0;
-> -}
-> -
->  static struct irq_cfg *irq_cfg(unsigned int irq)
->  {
->  	return irq_get_chip_data(irq);
-> @@ -332,6 +287,50 @@ static struct irq_cfg *realloc_irq_and_cfg_at(unsigned int at, int node)
->  	return alloc_irq_and_cfg_at(at, node);
->  }
->  
-> +/* irq_cfg is indexed by the sum of all RTEs in all I/O APICs. */
-> +static struct irq_cfg irq_cfgx[NR_IRQS_LEGACY];
-> +
-> +int __init arch_early_irq_init(void)
-> +{
-> +	struct irq_cfg *cfg;
-> +	int count, node, i;
-> +
-> +	if (!legacy_pic->nr_legacy_irqs)
-> +		io_apic_irqs = ~0UL;
-> +
-> +	for (i = 0; i < nr_ioapics; i++) {
-> +		ioapics[i].saved_registers =
-> +			kzalloc(sizeof(struct IO_APIC_route_entry) *
-> +				ioapics[i].nr_registers, GFP_KERNEL);
-> +		if (!ioapics[i].saved_registers)
-> +			pr_err("IOAPIC %d: suspend/resume impossible!\n", i);
-> +	}
-> +
-> +	cfg = irq_cfgx;
-> +	count = ARRAY_SIZE(irq_cfgx);
-> +	node = cpu_to_node(0);
-> +
-> +	/* Make sure the legacy interrupts are marked in the bitmap */
-> +	irq_reserve_irqs(0, legacy_pic->nr_legacy_irqs);
-> +
-> +	for (i = 0; i < count; i++) {
-> +		INIT_LIST_HEAD(&cfg[i].irq_2_pin);
-> +		irq_set_chip_data(i, &cfg[i]);
-> +		zalloc_cpumask_var_node(&cfg[i].domain, GFP_KERNEL, node);
-> +		zalloc_cpumask_var_node(&cfg[i].old_domain, GFP_KERNEL, node);
-> +		/*
-> +		 * For legacy IRQ's, start with assigning irq0 to irq15 to
-> +		 * IRQ0_VECTOR to IRQ15_VECTOR for all cpu's.
-> +		 */
-> +		if (i < legacy_pic->nr_legacy_irqs) {
-> +			cfg[i].vector = IRQ0_VECTOR + i;
-> +			cpumask_setall(cfg[i].domain);
-> +		}
-> +	}
-> +
-> +	return 0;
-> +}
-> +
->  struct io_apic {
->  	unsigned int index;
->  	unsigned int unused[3];
-> -- 
-> 1.7.10.4
-> 
+> Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+
+Acked-by: Arnd Bergmann <arnd@arndb.de>
