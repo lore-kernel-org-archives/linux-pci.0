@@ -1,60 +1,40 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:43171 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753079Ab3CXLGy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 24 Mar 2013 07:06:54 -0400
-Date: Sun, 24 Mar 2013 12:06:49 +0100
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Andrew Murray <andrew.murray@arm.com>
-Cc: Thierry Reding <thierry.reding@avionic-design.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [RFC 0/2] PCI: Introduce MSI chip infrastructure
-Message-ID: <20130324120649.6fb8c05d@skate>
-In-Reply-To: <20130322093027.GA521@arm.com>
-References: <1363942307-9327-1-git-send-email-thierry.reding@avionic-design.de>
-	<20130322093027.GA521@arm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from smtp.gentoo.org ([140.211.166.183]:59898 "EHLO smtp.gentoo.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751761Ab3CZVdO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 26 Mar 2013 17:33:14 -0400
+Received: from [10.170.225.34] (85-76-17-66-nat.elisa-mobile.fi [85.76.17.66])
+	(using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	(Authenticated sender: ssuominen)
+	by smtp.gentoo.org (Postfix) with ESMTPSA id 76E8533DAFD
+	for <linux-pci@vger.kernel.org>; Tue, 26 Mar 2013 21:33:13 +0000 (UTC)
+Message-ID: <515213CF.7000804@gentoo.org>
+Date: Tue, 26 Mar 2013 23:31:59 +0200
+From: Samuli Suominen <ssuominen@gentoo.org>
+MIME-Version: 1.0
+To: linux-pci@vger.kernel.org
+Subject: lspci -k is broken with depmod from kmod since it doesn't generate
+ modules.pcimap anymore
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Andrew, Thierry,
+The depmod from kmod no longer generates file modules.pcimap, and lspci 
+-k relies on that as noted at:
 
-On Fri, 22 Mar 2013 09:30:27 +0000, Andrew Murray wrote:
+https://bugs.gentoo.org/show_bug.cgi?id=462982
 
-> I think this could work well. In the future if the use of an independent MSI
-> controller is required, then new DT bindings for host-bridges could use
-> phandles to reference independent MSI controllers as their providers of
-> MSIs. I guess this functionality can be built on top of what you have proposed
-> later as the need arises.
+null pciutils-3.1.10 # grep -r modules.*map *
+ls-kernel.c:      sprintf(name, "/lib/modules/%s/modules.pcimap", 
+uts.release);
+lspci.c:char *opt_pcimap;			/* Override path to Linux modules.pcimap */
+lspci.c:"-p <file>\tLook up kernel modules in a given file instead of 
+default modules.pcimap\n"
+lspci.man:.RI /lib/modules/ kernel_version /modules.pcimap.
 
-On Marvell HW (at least Armada 370/XP), MSIs are handled by the
-main interrupt controller directly, or more precisely, managing the
-MSIs requires fiddling with registers that are part of the interrupt
-controller registers, and not part of the PCIe controller registers.
+Since this is not fixed in git, I figured it's time to let people know 
+of it here
 
-Basically, when a MSI interrupt is raised, it corresponds to IRQ 1 on
-the main interrupt controller. Then, one has to read a register of the
-main interrupt controller to find out which MSI interrupt was actually
-triggered. So in our case, the MSI irq_chip really belongs to the
-interrupt controller driver, and not the PCIe driver. Also, the
-physical address to be added in the 'struct msi_msg' is the physical
-address of an interrupt controller register.
-
-Therefore, I'm not sure how to do the interaction between the PCIe
-driver and the interrupt controller driver.
-
-Suggestions?
-
-I'll try to post some ugly code next week just to show what is
-happening.
-
-Thomas
--- 
-Thomas Petazzoni, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
+Thanks for looking into it,
+Samuli
