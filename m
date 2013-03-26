@@ -1,69 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:40915 "EHLO
+Received: from mail.free-electrons.com ([94.23.35.102]:53606 "EHLO
 	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751837Ab3CJPJm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 10 Mar 2013 11:09:42 -0400
-Date: Sun, 10 Mar 2013 16:09:37 +0100
+	with ESMTP id S964850Ab3CZQS6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Mar 2013 12:18:58 -0400
 From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Thierry Reding <thierry.reding@avionic-design.de>
-Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Tawfik Bayouk <tawfik@marvell.com>, linux-pci@vger.kernel.org,
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Russell King <linux@arm.linux.org.uk>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
 	devicetree-discuss@lists.ozlabs.org,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Arnd Bergmann <arnd@arndb.de>,
 	Maen Suleiman <maen@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH 24/32] pci: PCIe driver for Marvell Armada 370/XP
- systems
-Message-ID: <20130310160937.37df66b2@skate>
-In-Reply-To: <20130308201339.GA26322@avionic-0098.mockup.avionic-design.de>
-References: <20130307174955.GC20840@obsidianresearch.com>
-	<20130307194830.GA1811@avionic-0098.mockup.avionic-design.de>
-	<20130307200235.GB20695@obsidianresearch.com>
-	<20130307204726.GB1811@avionic-0098.mockup.avionic-design.de>
-	<51392B4D.9040404@gmail.com>
-	<20130308071443.GA5772@avionic-0098.mockup.avionic-design.de>
-	<20130308165228.GB4094@obsidianresearch.com>
-	<20130308191227.GA6551@avionic-0098.mockup.avionic-design.de>
-	<513A3F4F.2090501@firmworks.com>
-	<20130308200245.GC29435@obsidianresearch.com>
-	<20130308201339.GA26322@avionic-0098.mockup.avionic-design.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Olof Johansson <olof@lixom.net>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Mitch Bradley <wmb@firmworks.com>,
+	Andrew Murray <andrew.murray@arm.com>
+Subject: [PATCHv6 09/17] arm: mvebu: PCIe support is now available on mvebu
+Date: Tue, 26 Mar 2013 17:18:31 +0100
+Message-Id: <1364314719-1049-10-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1364314719-1049-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1364314719-1049-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Thierry Reding,
+Now that the PCIe driver for mvebu has been integrated and all its
+relevant dependencies, we can mark the ARCH_MVEBU platform has
+MIGHT_HAVE_PCI, which allows to select the PCI bus support if needed.
 
-On Fri, 8 Mar 2013 21:13:40 +0100, Thierry Reding wrote:
-> On Fri, Mar 08, 2013 at 01:02:46PM -0700, Jason Gunthorpe wrote:
-> > On Fri, Mar 08, 2013 at 09:43:11AM -1000, Mitch Bradley wrote:
-> [...]
-> > > 2) The "@0,0" and "@1,0" suffixes do not correspond to the reg values
-> > > <0x0800 0 0 0 0> and <0x1000 0 0 0 0> using any rule that I know.
-> > 
-> > @0,1,0 (bus,device,fn) could be more appropriate, but that is
-> > cosmetic?
-> 
-> The OF PCI specification is pretty strict about this as well. It says in
-> section 2.2.1.3. that only the DD and DD,FF forms can appear in a device
-> path.
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+---
+ arch/arm/mach-mvebu/Kconfig |    2 ++
+ 1 file changed, 2 insertions(+)
 
-Note that in the case of my driver, the @X,Y represent the port and
-lane of the PCIe interface. Not sure if it is correct, I can change the
-names to whatever is appropriate, those names aren't used anywhere in
-the driver.
-
-Best regards,
-
-Thomas
+diff --git a/arch/arm/mach-mvebu/Kconfig b/arch/arm/mach-mvebu/Kconfig
+index c3715a5..d353249 100644
+--- a/arch/arm/mach-mvebu/Kconfig
++++ b/arch/arm/mach-mvebu/Kconfig
+@@ -14,6 +14,8 @@ config ARCH_MVEBU
+ 	select MVEBU_CLK_CPU
+ 	select MVEBU_CLK_GATING
+ 	select MVEBU_MBUS
++	select MIGHT_HAVE_PCI
++	select PCI_QUIRKS if PCI
+ 
+ if ARCH_MVEBU
+ 
 -- 
-Thomas Petazzoni, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
+1.7.9.5
+
