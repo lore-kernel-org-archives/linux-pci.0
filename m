@@ -1,137 +1,287 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f181.google.com ([209.85.216.181]:61975 "EHLO
-	mail-qc0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754858Ab3CSCJX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 Mar 2013 22:09:23 -0400
-MIME-Version: 1.0
-In-Reply-To: <20130319020316.GB21319@kroah.com>
-References: <20130316213512.2974.17303.stgit@amt.stowe>
-	<20130316213519.2974.38954.stgit@amt.stowe>
-	<20130316221159.GA3702@kroah.com>
-	<1363477853.2423.25.camel@zim.stowe>
-	<20130317010317.GB9641@kroah.com>
-	<5147C541.1080304@gmail.com>
-	<20130319020316.GB21319@kroah.com>
-Date: Mon, 18 Mar 2013 20:09:22 -0600
-Message-ID: <CADLC3L2hKYPsW4fvg6tbptBc1r7LS=7Ndwhp4mZ3BKzJq6z-eg@mail.gmail.com>
-Subject: Re: [PATCH] udevadm-info: Don't access sysfs 'resource<N>' files
-From: Robert Hancock <hancockrwd@gmail.com>
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: Myron Stowe <mstowe@redhat.com>,
-	Myron Stowe <myron.stowe@redhat.com>, kay@vrfy.org,
-	linux-hotplug@vger.kernel.org, alex.williamson@redhat.com,
-	linux-pci@vger.kernel.org, yuxiangl@marvell.com, yxlraid@gmail.com,
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail.free-electrons.com ([94.23.35.102]:54237 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751419Ab3CZQwi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Mar 2013 12:52:38 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Russell King <linux@arm.linux.org.uk>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	devicetree-discuss@lists.ozlabs.org,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Maen Suleiman <maen@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Olof Johansson <olof@lixom.net>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Mitch Bradley <wmb@firmworks.com>,
+	Andrew Murray <andrew.murray@arm.com>
+Subject: [RFCv1 07/11] irqchip: armada-370-xp: add MSI support to interrupt controller driver
+Date: Tue, 26 Mar 2013 17:52:22 +0100
+Message-Id: <1364316746-8702-8-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1364316746-8702-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1364316746-8702-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 18, 2013 at 8:03 PM, Greg KH <gregkh@linuxfoundation.org> wrote:
-> On Mon, Mar 18, 2013 at 07:54:09PM -0600, Robert Hancock wrote:
->> On 03/16/2013 07:03 PM, Greg KH wrote:
->> >On Sat, Mar 16, 2013 at 05:50:53PM -0600, Myron Stowe wrote:
->> >>On Sat, 2013-03-16 at 15:11 -0700, Greg KH wrote:
->> >>>On Sat, Mar 16, 2013 at 03:35:19PM -0600, Myron Stowe wrote:
->> >>>>Sysfs includes entries to memory that backs a PCI device's BARs, both I/O
->> >>>>Port space and MMIO.  This memory regions correspond to the device's
->> >>>>internal status and control registers used to drive the device.
->> >>>>
->> >>>>Accessing these registers from userspace such as "udevadm info
->> >>>>--attribute-walk --path=/sys/devices/..." does can not be allowed as
->> >>>>such accesses outside of the driver, even just reading, can yield
->> >>>>catastrophic consequences.
->> >>>>
->> >>>>Udevadm-info skips parsing a specific set of sysfs entries including
->> >>>>'resource'.  This patch extends the set to include the additional
->> >>>>'resource<N>' entries that correspond to a PCI device's BARs.
->> >>>
->> >>>Nice, are you also going to patch bash to prevent a user from reading
->> >>>these sysfs files as well?  :)
->> >>>
->> >>>And pciutils?
->> >>>
->> >>>You get my point here, right?  The root user just asked to read all of
->> >>>the data for this device, so why wouldn't you allow it?  Just like
->> >>>'lspci' does.  Or bash does.
->>
->> lspci doesn't randomly attempt to access device registers, AFAIK..
->
-> Have you read the man page for the '-xxx' option to lspci?  lspci can be
-> quite intrusive, and I used to have a number of systems that it would
-> trash very easily if you ran it on them as root.
->
->> >>Yes :P , you raise a very good point, there are a lot of way a user can
->> >>poke around in those BARs.  However, there is a difference between
->> >>shooting yourself in the foot and getting what you deserve versus
->> >>unknowingly executing a common command such as udevadm and having the
->> >>system hang.
->> >>>
->> >>>If this hardware has a problem, then it needs to be fixed in the kernel,
->> >>>not have random band-aids added to various userspace programs to paper
->> >>>over the root problem here.  Please fix the kernel driver and all should
->> >>>be fine.  No need to change udevadm.
->> >>
->> >>Xiangliang initially proposed a patch within the PCI core.  Ignoring the
->> >>specific issue with the proposal which I pointed out in the
->> >>https://lkml.org/lkml/2013/3/7/242 thread, that just doesn't seem like
->> >>the right place to effect a change either as PCI's core isn't concerned
->> >>with the contents or access limitations of those regions, those are
->> >>issues that the driver concerns itself with.
->> >>
->> >>So things seem to be gravitating towards the driver.  I'm fairly
->> >>ignorant of this area but as Robert succinctly pointed out in the
->> >>originating thread - the AHCI driver only uses the device's MMIO region.
->> >>The I/O related regions are for legacy SFF-compatible ATA ports and are
->> >>not used to driver the device.  This, coupled with the observance that
->> >>userspace accesses such as udevadm, and others like you additionally
->> >>point out, do not filter through the device's driver for seems to
->> >>suggest that changes to the driver will not help here either.
->> >
->> >A PCI quirk should handle this properly, right?  Why not do that?  Worse
->> >thing, the quirk could just not expose these sysfs files for this
->> >device, which would solve all userspace program issues, right?
->>
->> A PCI quirk implies there is something wrong with this device in
->> particular. This isn't the case. The device responds properly when
->> it's accessed as intended. The problem is that udevadm (or other
->> processes, like a random grep through sysfs for example) is
->> effectively reading registers willy-nilly. This is absolutely not
->> safe to do on many devices - and certainly not while a driver is
->> attached to the device and has claimed the port or MMIO regions that
->> are being accessed.
->
-> Then we need to fix that!
->
-> In the kernel!
->
-> Don't try to gloss over the problem by changing one random userspace
-> program, you will never catch them all.  Fix the root problem here
-> people, that's all I'm asking for.
->
->> Blocking access through these files to a device with an active driver
->> that's claimed the regions would significantly reduce the chances of
->> something like this causing problems.
->
-> Great, that's one possible solution, the other is just not creating the
-> files at all for known problem devices, right?
+This commit introduces the support for the MSI interrupts in the
+armada-370-xp interrupt controller driver. It registers an IRQ domain
+associated with the 'msi' node in the Device Tree, which the PCI
+controller will refer to in a followup commit.
 
-I don't think one can reasonably enumerate all problem devices. There
-are probably countless devices which can potentially break if their
-resources (especially IO ports) are read in unexpected ways. Aside
-from devices like this one, which apparently don't like certain IO
-ports being read with certain access widths, there's every device in
-existence with read-to-reset type registers. The fix to this needs to
-apply to all devices.
+The MSI interrupts use the 16 high doorbells, and are therefore
+notified using IRQ1 of the main interrupt controller.
 
->
-> My main point here is, you aren't going to fix this in userspace, fix it
-> in the kernel.
+The Device Tree binding documentation for the armada-370-xp driver is
+also updated in the process.
 
-The kernel can help the situation by blocking access to devices with
-an active driver, but it can't fix all cases. Suppose the device has
-no driver loaded yet, how is the kernel supposed to tell the
-difference between software with a legitimate need to access these
-files for virtualization device assignment, etc. and something like
-udevadm or a random grep command that's reading the files without any
-idea what it's doing? udevadm does need to be fixed to avoid accessing
-these files because it's unnecessary and dangerous.
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+---
+ .../devicetree/bindings/arm/armada-370-xp-mpic.txt |   39 +++++++--
+ arch/arm/boot/dts/armada-370-xp.dtsi               |    6 ++
+ arch/arm/mach-mvebu/Kconfig                        |    1 +
+ drivers/irqchip/irq-armada-370-xp.c                |   91 +++++++++++++++++++-
+ 4 files changed, 130 insertions(+), 7 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/arm/armada-370-xp-mpic.txt b/Documentation/devicetree/bindings/arm/armada-370-xp-mpic.txt
+index 61df564..2233d20 100644
+--- a/Documentation/devicetree/bindings/arm/armada-370-xp-mpic.txt
++++ b/Documentation/devicetree/bindings/arm/armada-370-xp-mpic.txt
+@@ -4,8 +4,6 @@ Marvell Armada 370 and Armada XP Interrupt Controller
+ Required properties:
+ - compatible: Should be "marvell,mpic"
+ - interrupt-controller: Identifies the node as an interrupt controller.
+-- #interrupt-cells: The number of cells to define the interrupts. Should be 1.
+-  The cell is the IRQ number
+ 
+ - reg: Should contain PMIC registers location and length. First pair
+   for the main interrupt registers, second pair for the per-CPU
+@@ -14,16 +12,45 @@ Required properties:
+   automatically map to the interrupt controller registers of the
+   current CPU)
+ 
++The node should have two sub-nodes, each describing one aspect of the
++interrupt controller:
+ 
++ * A first node named main-intc that describes the main interrupt
++   controller itself, receiving interrupts from all devices.
++
++   This sub-node should have the following properties:
++   - interrupt-controller: identifies the code as an interrupt
++     controller.
++   - #interrupt-cells: The number of cells to define the
++     interrupts. Should be 1.  The cell is the IRQ number
++
++ * A second node named msi-intc that is used for Message Signaled
++   Interrupts of the PCIe bus.
++
++   This sub-node should have the following properties:
++   - interrupt-controller: identifies the code as an interrupt
++     controller.
++   - #interrupt-cells: The number of cells to define the
++     interrupts. Should be 1.  The cell is the IRQ number
++   - marvell,doorbell: Gives the physical address at which PCIe
++     devices should write to signal an MSI interrupt.
+ 
+ Example:
+ 
+-        mpic: interrupt-controller@d0020000 {
++        interrupt-controller@d0020000 {
+               compatible = "marvell,mpic";
+-              #interrupt-cells = <1>;
+-              #address-cells = <1>;
+-              #size-cells = <1>;
+               interrupt-controller;
+               reg = <0xd0020a00 0x1d0>,
+                     <0xd0021070 0x58>;
++
++              mpic: main-intc@d0020000 {
++                    #interrupt-cells = <1>;
++                    interrupt-controller;
++              };
++
++              msi: msi-intc@d0020000 {
++                    #interrupt-cells = <1>;
++                    interrupt-controller;
++                    marvell,doorbell = <0xd0020a04>;
++              };
+         };
+diff --git a/arch/arm/boot/dts/armada-370-xp.dtsi b/arch/arm/boot/dts/armada-370-xp.dtsi
+index de054ed..de6569cd 100644
+--- a/arch/arm/boot/dts/armada-370-xp.dtsi
++++ b/arch/arm/boot/dts/armada-370-xp.dtsi
+@@ -36,6 +36,12 @@
+ 		    #interrupt-cells = <1>;
+ 		    interrupt-controller;
+ 	      };
++
++	      msi: msi-intc@d0020000 {
++		    #interrupt-cells = <1>;
++		    interrupt-controller;
++		    marvell,doorbell = <0xd0020a04>;
++	      };
+ 	};
+ 
+ 	coherency-fabric@d0020200 {
+diff --git a/arch/arm/mach-mvebu/Kconfig b/arch/arm/mach-mvebu/Kconfig
+index d353249..3254b77 100644
+--- a/arch/arm/mach-mvebu/Kconfig
++++ b/arch/arm/mach-mvebu/Kconfig
+@@ -16,6 +16,7 @@ config ARCH_MVEBU
+ 	select MVEBU_MBUS
+ 	select MIGHT_HAVE_PCI
+ 	select PCI_QUIRKS if PCI
++	select ARCH_SUPPORTS_MSI if PCI
+ 
+ if ARCH_MVEBU
+ 
+diff --git a/drivers/irqchip/irq-armada-370-xp.c b/drivers/irqchip/irq-armada-370-xp.c
+index 4b2a6d7..3180797 100644
+--- a/drivers/irqchip/irq-armada-370-xp.c
++++ b/drivers/irqchip/irq-armada-370-xp.c
+@@ -22,6 +22,7 @@
+ #include <linux/of_address.h>
+ #include <linux/of_irq.h>
+ #include <linux/irqdomain.h>
++#include <linux/msi.h>
+ #include <asm/mach/arch.h>
+ #include <asm/exception.h>
+ #include <asm/smp_plat.h>
+@@ -51,6 +52,10 @@
+ #define IPI_DOORBELL_START                      (0)
+ #define IPI_DOORBELL_END                        (8)
+ #define IPI_DOORBELL_MASK                       0xFF
++#define PCI_MSI_DOORBELL_START                  (16)
++#define PCI_MSI_DOORBELL_NR                     (16)
++#define PCI_MSI_DOORBELL_END                    (32)
++#define PCI_MSI_DOORBELL_MASK                   0xFFFF0000
+ 
+ static DEFINE_RAW_SPINLOCK(irq_controller_lock);
+ 
+@@ -58,6 +63,10 @@ static void __iomem *per_cpu_int_base;
+ static void __iomem *main_int_base;
+ static struct irq_domain *armada_370_xp_mpic_domain;
+ 
++#ifdef CONFIG_PCI_MSI
++static struct irq_domain *armada_370_xp_msi_domain;
++#endif
++
+ /*
+  * In SMP mode:
+  * For shared global interrupts, mask/unmask global enable bit
+@@ -167,6 +176,57 @@ static int armada_370_xp_mpic_irq_map(struct irq_domain *h,
+ 	return 0;
+ }
+ 
++#ifdef CONFIG_PCI_MSI
++static struct irq_chip armada_370_xp_msi_irq_chip = {
++	.name = "armada_370_xp_msi_irq",
++	.irq_enable = unmask_msi_irq,
++	.irq_disable = mask_msi_irq,
++	.irq_mask = mask_msi_irq,
++	.irq_unmask = unmask_msi_irq,
++};
++
++static int armada_370_xp_msi_map(struct irq_domain *domain, unsigned int virq,
++				 irq_hw_number_t hw)
++{
++	irq_set_chip_and_handler(virq, &armada_370_xp_msi_irq_chip,
++				 handle_simple_irq);
++	set_irq_flags(virq, IRQF_VALID);
++
++	return 0;
++}
++
++static const struct irq_domain_ops armada_370_xp_msi_irq_ops = {
++	.map = armada_370_xp_msi_map,
++};
++
++void armada_370_xp_msi_init(struct device_node *node)
++{
++	struct device_node *msi_node;
++	u32 reg;
++
++	msi_node = of_get_child_by_name(node, "msi-intc");
++	if (!msi_node)
++		return;
++
++	armada_370_xp_msi_domain =
++		irq_domain_add_linear(msi_node, PCI_MSI_DOORBELL_NR,
++				      &armada_370_xp_msi_irq_ops, NULL);
++	if (!armada_370_xp_msi_domain)
++		panic("Unable to add Armada 370/XP MSI irq domain\n");
++
++	reg = readl(per_cpu_int_base + ARMADA_370_XP_IN_DRBEL_MSK_OFFS)
++		| PCI_MSI_DOORBELL_MASK;
++
++	writel(reg, per_cpu_int_base +
++	       ARMADA_370_XP_IN_DRBEL_MSK_OFFS);
++
++	/* Unmask IPI interrupt */
++	writel(1, per_cpu_int_base + ARMADA_370_XP_INT_CLEAR_MASK_OFFS);
++}
++#else
++static void armada_370_xp_msi_init(struct device_node *node) { }
++#endif  /* CONFIG_PCI_MSI */
++
+ #ifdef CONFIG_SMP
+ void armada_mpic_send_doorbell(const struct cpumask *mask, unsigned int irq)
+ {
+@@ -220,12 +280,39 @@ armada_370_xp_handle_irq(struct pt_regs *regs)
+ 		if (irqnr > 1022)
+ 			break;
+ 
+-		if (irqnr > 0) {
++		if (irqnr > 1) {
+ 			irqnr =	irq_find_mapping(armada_370_xp_mpic_domain,
+ 					irqnr);
+ 			handle_IRQ(irqnr, regs);
+ 			continue;
+ 		}
++
++#ifdef CONFIG_PCI_MSI
++		/* MSI handling */
++		if (irqnr == 1) {
++			u32 msimask, msinr;
++
++			msimask = readl_relaxed(per_cpu_int_base +
++					ARMADA_370_XP_IN_DRBEL_CAUSE_OFFS)
++				& PCI_MSI_DOORBELL_MASK;
++
++			writel(~PCI_MSI_DOORBELL_MASK, per_cpu_int_base +
++			       ARMADA_370_XP_IN_DRBEL_CAUSE_OFFS);
++
++			for (msinr = PCI_MSI_DOORBELL_START;
++			     msinr < PCI_MSI_DOORBELL_END; msinr++) {
++				int irq;
++
++				if (!(msimask & BIT(msinr)))
++					continue;
++
++				irq = irq_find_mapping(armada_370_xp_msi_domain,
++						       msinr - 16);
++				handle_IRQ(irq, regs);
++			}
++		}
++#endif
++
+ #ifdef CONFIG_SMP
+ 		/* IPI Handling */
+ 		if (irqnr == 0) {
+@@ -291,6 +378,8 @@ static int __init armada_370_xp_mpic_of_init(struct device_node *node,
+ 
+ #endif
+ 
++	armada_370_xp_msi_init(node);
++
+ 	set_handle_irq(armada_370_xp_handle_irq);
+ 
+ 	return 0;
+-- 
+1.7.9.5
+
