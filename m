@@ -1,75 +1,49 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:28681 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751487Ab3CGP6E convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Mar 2013 10:58:04 -0500
-From: "Huang, Xiong" <xiong@qca.qualcomm.com>
-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-CC: "bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"unified-drivers@lists.infradead.org"
-	<unified-drivers@lists.infradead.org>,
-	nic-devel <nic-devel@qca.qualcomm.com>
-Subject: RE: [PATCH] PCI: add MSI INTX_DISABLE quirks for
- AR8161/AR8162/AR8171/AR8172
-Date: Thu, 7 Mar 2013 15:57:59 +0000
-Message-ID: <157393863283F442885425D2C4542856489D6DA2@nasanexd02f.na.qualcomm.com>
-References: <1362549547-2160-1-git-send-email-xiong@qca.qualcomm.com>
- <20130307094214.GA2317@richard.(null)>
-In-Reply-To: <20130307094214.GA2317@richard.(null)>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <51521421.9020906@gmail.com>
+Date: Tue, 26 Mar 2013 16:33:21 -0500
+From: Rob Herring <robherring2@gmail.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+To: Jingoo Han <jg1.han@samsung.com>
+CC: 'Kukjin Kim' <kgene.kim@samsung.com>,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
+	'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>,
+	linux-samsung-soc@vger.kernel.org,
+	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
+	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
+	linux-kernel@vger.kernel.org,
+	'Surendranath Gurivireddy Balla' <suren.reddy@samsung.com>,
+	'Andrew Murray' <andrew.murray@arm.com>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH 4/6] pci: Add PCIe driver for Samsung Exynos
+References: <00c001ce277b$92b26ab0$b8174010$%han@samsung.com> <00c301ce277b$f2790080$d76b0180$%han@samsung.com>
+In-Reply-To: <00c301ce277b$f2790080$d76b0180$%han@samsung.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> >+static void quirk_msi_intx_disable_qca_bug(struct pci_dev *dev) {
-> >+	static u16 qca_eth_devid[] = {
-> >+			PCI_DEVICE_ID_AR8161,
-> >+			PCI_DEVICE_ID_AR8162,
-> >+			PCI_DEVICE_ID_AR8171,
-> >+			PCI_DEVICE_ID_AR8172};
-> >+	struct pci_dev *p;
-> >+	int i;
-> >+
-> >+	/* AR816X/AR817X MSI is fixed at HW level from revision 0x18 */
-> >+	for (i = 0; i < ARRAY_SIZE(qca_eth_devid); i++) {
-> >+		p = pci_get_device(PCI_VENDOR_ID_ATTANSIC,
-> >+				   qca_eth_devid[i],
+On 03/22/2013 11:07 PM, Jingoo Han wrote:
+> Exynos5440 has a PCIe controller which can be used as Root Complex.
+> This driver supports a PCIe controller as Root Complex mode.
 > 
-> xiong,
-> 
-> The "FINAL" fixup is called just in pci_apply_final_quirks(), if I am correct.
-> 
-> In this function, it will go through all the pci devices which are registered in
-> the system. And try to invoke the fixup hook.
-> 
-> Also, before invode the hook, in function pci_do_fixups() it will make sure
-> the hook just apply to the devices whose VendorID and DeviceID match what
-> you defined in DECLARE_PCI_FIXUP_FINAL.
-> 
-> So I think there is no need to iterate on all those pci device, before you want
-> to change the pci_dev->dev_flags.
-> 
-> >+				   NULL);
-> >+		if (!p)
-> >+			return;
-> >+
-> >+		if (p->revision < 0x18)
-> >+			dev->dev_flags |=
-> PCI_DEV_FLAGS_MSI_INTX_DISABLE_BUG;
-> >+		pci_dev_put(p);
-> >+	}
+> Signed-off-by: Surendranath Gurivireddy Balla <suren.reddy@samsung.com>
+> Signed-off-by: Siva Reddy Kallam <siva.kallam@samsung.com>
+> Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+> ---
+>  .../devicetree/bindings/pci/exynos-pcie.txt        |   56 +
+>  drivers/pci/host/Kconfig                           |    5 +
+>  drivers/pci/host/Makefile                          |    1 +
+>  drivers/pci/host/pci-exynos.c                      | 1139 ++++++++++++++++++++
+>  4 files changed, 1201 insertions(+), 0 deletions(-)
+>  create mode 100644 Documentation/devicetree/bindings/pci/exynos-pcie.txt
+>  create mode 100644 drivers/pci/host/Makefile
+>  create mode 100644 drivers/pci/host/pci-exynos.c
 
-Wei, thanks for you feedback, this patch is just follow the function 'quirk_msi_intx_disable_ati_bug' in quirks.c
-Is it ok if I revise code as:
-	static void quirk_msi_intx_disable_qca_bug(struct pci_dev *dev)
-	{
-		If (dev->revision < 0x18)
-			dev->dev_flags |=  PCI_DEV_FLAGS_MSI_INTX_DISABLE_BUG;
-	}
+[...]
 
-Please advise, thanks !
+> +
+> +/* synopsis specific PCIE configuration registers*/
 
--Xiong
-		
+If this is a standard IP block, then the driver naming should reflect
+that. I suspect there are several others with the same IP block.
 
+Rob
