@@ -1,126 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rs140.luxsci.com ([74.205.78.114]:60246 "EHLO rs140.luxsci.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754178Ab3CKXji (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 11 Mar 2013 19:39:38 -0400
-Message-ID: <513E6AFE.3090304@firmworks.com>
-Date: Mon, 11 Mar 2013 13:38:38 -1000
-From: Mitch Bradley <wmb@firmworks.com>
-MIME-Version: 1.0
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-CC: Thierry Reding <thierry.reding@avionic-design.de>,
-	Lior Amsalem <alior@marvell.com>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>, linux-pci@vger.kernel.org,
+Received: from mail.free-electrons.com ([94.23.35.102]:60495 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751683Ab3C0Okt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Mar 2013 10:40:49 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Russell King <linux@arm.linux.org.uk>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
 	devicetree-discuss@lists.ozlabs.org,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Arnd Bergmann <arnd@arndb.de>,
 	Maen Suleiman <maen@marvell.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Shadi Ammouri <shadi@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Olof Johansson <olof@lixom.net>,
 	Tawfik Bayouk <tawfik@marvell.com>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH 24/32] pci: PCIe driver for Marvell Armada 370/XP systems
-References: <20130308191227.GA6551@avionic-0098.mockup.avionic-design.de> <513A3F4F.2090501@firmworks.com> <20130308200245.GC29435@obsidianresearch.com> <513A7845.6040304@firmworks.com> <20130309013152.GA3883@obsidianresearch.com> <513C117D.6080800@firmworks.com> <20130310065539.GA14704@obsidianresearch.com> <513D6F9C.9000100@firmworks.com> <20130311181554.GA10992@obsidianresearch.com> <513E519B.6010503@firmworks.com> <20130311232516.GA13873@obsidianresearch.com>
-In-Reply-To: <20130311232516.GA13873@obsidianresearch.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Mitch Bradley <wmb@firmworks.com>,
+	Andrew Murray <andrew.murray@arm.com>
+Subject: [PATCHv7 07/17] clk: mvebu: add more PCIe clocks for Armada XP
+Date: Wed, 27 Mar 2013 15:40:24 +0100
+Message-Id: <1364395234-11195-8-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1364395234-11195-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1364395234-11195-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 3/11/2013 1:25 PM, Jason Gunthorpe wrote:
-> On Mon, Mar 11, 2013 at 11:50:19AM -1000, Mitch Bradley wrote:
-> 
->>> However - the driver runs the core in a 'root port bridge mode' where
->>> the config header register block you are looking at is inhibited. The
->>> Marvell IP block requires software support to run in bridge mode. So
->>> Marvell really has only (2), while Tegra has only (1).
->>
->> Interesting.
->>
->> For Marvell, if Marvell has only (2), does that imply that standard PCI
->> discovery and enumeration code cannot find the root port bridges, and
->> also there is no way to auto-configure the bridges with common pci-pci
->> bridge code?
-> 
-> The driver is required to take care of all of this. From the common
-> code's perspective there is a bridge config header, and writing to it
-> controls the device, as the PCI spec intends. But the driver doesn't
-> copy those read/writes 1:1 to any HW register block, it distributes
-> them around the device's register space as necessary to create the
-> PCI bridge config header.
-> 
-> The DT is still modeling the HW, there really are root port bridge(s),
-> that are completely conformant at the TLP level, but the IP designers
-> choose to leave the detail of the bridge config space up to a SW
-> implementation.
+The current revision of the datasheet only mentions the gatable clocks
+for the PCIe 0.0, 0.1, 0.2 and 0.3 interfaces, and forgot to mention
+the ones for the PCIe 1.0, 1.1, 1.2, 1.3, 2.0 and 3.0
+interfaces. After confirmation with Marvell engineers, this patch adds
+the missing gatable clocks for those PCIe interfaces.
 
-Oh, ouch, deep spoofing.  I had to do that in system management mode
-firmware for a Geode chip.  What a pain that was.
+It also changes the name of the previously existing PCIe gatable
+clocks, in order to match the naming using the datasheets.
 
-> 
->> At this point I am confused again.  There was talk of the need to
->> use standard PCI enumeration code to deal with the bridges, thus the
->> need for 3/2 to describe the interface between root-complex and the
->> child root-port nodes.
-> 
-> I think your confusion is coming from your expectation that the PCI-E
-> IP block would be an entirely self contained root port, rather than
-> 'tools to build a root port, with the right driver SW'.
-> 
->>> Further, review section 12 about how ranges should be treated - it
->>> specifically says that the b,d,f bits in ranges should be 0, and the
->>> child address should have those bits masked prior to searching the
->>> ranges.
->>>
->>> Section 12 would seem to forbid this:
->>>
->>>       ranges = <0x00000800 0 0          0xd4004000 0 0x00000800   /* Root port config header */
->>>                 0x00001000 0 0          0xd4008000 0 0x00000800   /* Root port config header */
->>>
->>> Are you reading that differently?
->>
->> I wasn't reading it at all, until you pointed it out to me :-)  I was
->> just reasoning based on my mental model.
->>
->> Again, I agree with your reading of the spec, but I can't think of any
->> reason why relaxing that restriction to permit config space mappings
->> would be a problem.
-> 
-> Okay, just wanted to confirm that, I think I follow you now. :)
-> 
-> So you are basically proposing a small update to Section 12 that would
-> read something like:
-> 
-> 'When matching a config space address, the b,d,f bits are valid in the
->  ranges and left unmasked in the child. The r bits in the ranges
->  should be 0, and the r bits from the child are copied in the last DW
->  and masked off in the first DW.'
-> 
-> Which, as you note, would not conflict with any existing usage..
-> 
-> Though, I can already see that the above language is not good enough,
-> it doesn't elegantly represent standard ECAM, for instance.. How would
-> you even represent ECAM with ranges??
-> 
-> Another wrinkle is that tegra not only has the per-bridge memory
-> mapped config space, bit it also has 4 'all port' ECAM-like memory
-> mapped config spaces. The rules around them are sufficiently
-> specialized that I'm not sure a ranges mapping would ever be
-> practical.. So right out of the gate we'd fail to capture memory
-> mapped config access via ranges on at least one SOC.
-> 
-> So, to me, this seems like overkill. Only ECAM has a hope of having a
-> common implementation, everything else will be host driver specific,
-> so why go to the trouble to revise the OF PCI specification for config
-> space?
-> 
-> Particularly since there are patches waiting on this question being
-> resolved :)
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+---
+ drivers/clk/mvebu/clk-gating-ctrl.c |   14 ++++++++++----
+ 1 file changed, 10 insertions(+), 4 deletions(-)
 
-Okay, so I'll just bow out.  Do what you have to do.
+diff --git a/drivers/clk/mvebu/clk-gating-ctrl.c b/drivers/clk/mvebu/clk-gating-ctrl.c
+index b35785a..2f03723 100644
+--- a/drivers/clk/mvebu/clk-gating-ctrl.c
++++ b/drivers/clk/mvebu/clk-gating-ctrl.c
+@@ -137,10 +137,14 @@ static const struct mvebu_soc_descr __initconst armada_xp_gating_descr[] = {
+ 	{ "ge2", NULL,  2 },
+ 	{ "ge1", NULL, 3 },
+ 	{ "ge0", NULL, 4 },
+-	{ "pex0", NULL, 5 },
+-	{ "pex1", NULL, 6 },
+-	{ "pex2", NULL, 7 },
+-	{ "pex3", NULL, 8 },
++	{ "pex00", NULL, 5 },
++	{ "pex01", NULL, 6 },
++	{ "pex02", NULL, 7 },
++	{ "pex03", NULL, 8 },
++	{ "pex10", NULL, 9 },
++	{ "pex11", NULL, 10 },
++	{ "pex12", NULL, 11 },
++	{ "pex13", NULL, 12 },
+ 	{ "bp", NULL, 13 },
+ 	{ "sata0lnk", NULL, 14 },
+ 	{ "sata0", "sata0lnk", 15 },
+@@ -152,6 +156,8 @@ static const struct mvebu_soc_descr __initconst armada_xp_gating_descr[] = {
+ 	{ "xor0", NULL, 22 },
+ 	{ "crypto", NULL, 23 },
+ 	{ "tdm", NULL, 25 },
++	{ "pex20", NULL, 26 },
++	{ "pex30", NULL, 27 },
+ 	{ "xor1", NULL, 28 },
+ 	{ "sata1lnk", NULL, 29 },
+ 	{ "sata1", "sata1lnk", 30 },
+-- 
+1.7.9.5
 
-> 
-> Regards,
-> Jason
-> 
