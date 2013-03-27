@@ -1,51 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.9]:55033 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751862Ab3CVIvu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 22 Mar 2013 04:51:50 -0400
-From: Thierry Reding <thierry.reding@avionic-design.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [RFC 0/2] PCI: Introduce MSI chip infrastructure
-Date: Fri, 22 Mar 2013 09:51:45 +0100
-Message-Id: <1363942307-9327-1-git-send-email-thierry.reding@avionic-design.de>
+Received: from mail.free-electrons.com ([94.23.35.102]:59607 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750716Ab3C0Mzm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Mar 2013 08:55:42 -0400
+Date: Wed, 27 Mar 2013 13:55:37 +0100
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Linus Walleij <linus.walleij@linaro.org>
+Cc: Andrew Murray <Andrew.Murray@arm.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"devicetree-discuss@lists.ozlabs.org"
+	<devicetree-discuss@lists.ozlabs.org>,
+	"rob.herring@calxeda.com" <rob.herring@calxeda.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	linux-pci@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [RFC PATCH v2] of/pci: Provide support for parsing PCI DT
+ ranges property
+Message-ID: <20130327135537.52da5818@skate>
+In-Reply-To: <CACRpkdZ_iuz96JWjHcr+6ugRY29MPA-wiGWtQQJqk30iTQE--Q@mail.gmail.com>
+References: <20130221154709.GA26660@arm.com>
+	<20130320210521.65261e77@skate>
+	<CACRpkdZ_iuz96JWjHcr+6ugRY29MPA-wiGWtQQJqk30iTQE--Q@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This pair of patches introduces a new MSI chip infrastructure aimed at
-replacing the current per-architecture implementation of the MSI support
-functions. The rationale being that for multi-platform support on ARM
-(and of course other architectures as well) per-architecture hooks no
-longer work, given that more than one implementation will be provided.
+Dear Linus Walleij,
 
-The approach chosen in this patch series is to introduce a new structure
-called struct msi_chip that contains pointers to the functions that have
-previously been implemented on a per-architecture basis. A pointer to
-this structure is embedded with each struct pci_bus, similar to struct
-pci_ops, and automatically passed to child busses during enumeration. It
-is the responsibility of the PCI host bridge driver to setup the MSI
-chip for the root bus.
+On Wed, 27 Mar 2013 13:50:09 +0100, Linus Walleij wrote:
 
-An example for the usage of this new infrastructure is provided in the
-second patch, which implements this for the Tegra PCIe controller
-driver. Note that this driver has not been merged yet because this MSI
-infrastructure is a prerequisite. Nevertheless it should serve as a
-reference for implementors on how to use the MSI chip.
+> > Would it be possible to get this patch merged for 3.10, or get some
+> > review comments that would allow us to rework it in time for 3.10 ?
+> 
+> Thomas can you supply a Reviewed-by/Tested-by tag?
+> That certainly helps...
 
-Thierry
+Yes, I'm planning on testing RFC v3 from Andrew right now, and send a
+new version of the Marvell PCIe patch set that includes it. If all goes
+well, should happen this afternoon.
 
-Thierry Reding (2):
-  PCI: Introduce new MSI chip infrastructure
-  PCI: tegra: Use new MSI chip infrastructure
+Thanks,
 
- drivers/pci/host/pci-tegra.c | 105 ++++++++++++++++++++++++-------------------
- drivers/pci/msi.c            |  35 +++++++++++++--
- drivers/pci/probe.c          |   1 +
- include/linux/msi.h          |  10 +++++
- include/linux/pci.h          |   1 +
- 5 files changed, 103 insertions(+), 49 deletions(-)
-
+Thomas
 -- 
-1.8.1.5
-
+Thomas Petazzoni, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
