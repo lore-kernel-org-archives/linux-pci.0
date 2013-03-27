@@ -1,56 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.9]:50594 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758577Ab3CDUaz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 4 Mar 2013 15:30:55 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: Re: [PATCH 05/32] lib: devres: don't enclose pcim_*() functions in CONFIG_HAS_IOPORT
-Date: Mon, 4 Mar 2013 20:30:01 +0000
-Cc: Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	"Russell King - ARM Linux" <linux@arm.linux.org.uk>,
+Received: from mail.free-electrons.com ([94.23.35.102]:33795 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752459Ab3C0SLT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Mar 2013 14:11:19 -0400
+Date: Wed, 27 Mar 2013 19:11:14 +0100
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	devicetree-discuss@lists.ozlabs.org,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
 	Jason Cooper <jason@lakedaemon.net>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	linux-pci@vger.kernel.org,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	linux-kernel@vger.kernel.org,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	"Eran Ben-Avi" <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
 	Maen Suleiman <maen@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
 	Gregory Clement <gregory.clement@free-electrons.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	linux-arm-kernel@lists.infradead.org,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-References: <1360686546-24277-1-git-send-email-thomas.petazzoni@free-electrons.com> <201302122236.37491.arnd@arndb.de> <20130304172850.5e18fbfb@skate>
-In-Reply-To: <20130304172850.5e18fbfb@skate>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201303042030.01817.arnd@arndb.de>
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Olof Johansson <olof@lixom.net>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Mitch Bradley <wmb@firmworks.com>,
+	Andrew Murray <andrew.murray@arm.com>
+Subject: Re: [RFC PATCHv1 0/5] Use the mvebu PCIe driver on Kirkwood
+Message-ID: <20130327191114.2662b3b8@skate>
+In-Reply-To: <201303271807.51023.arnd@arndb.de>
+References: <1364407504-13524-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	<201303271807.51023.arnd@arndb.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday 04 March 2013, Thomas Petazzoni wrote:
-> FWIW, a patch that is doing what I was initially proposing has been
-> merged for 3.9, and it doesn't contain the
-> IS_ENABLED(CONFIG_HAS_IOPORT) test you were proposing (and which I
-> think was correct). See:
+Dear Arnd Bergmann,
+
+On Wed, 27 Mar 2013 18:07:50 +0000, Arnd Bergmann wrote:
+
+> > # /usr/sbin/lspci
+> > 00:01.0 PCI bridge: Marvell Technology Group Ltd. Device 7846
+> > 00:02.0 PCI bridge: Marvell Technology Group Ltd. Device 7846
+> > 01:00.0 SCSI storage controller: Marvell Technology Group Ltd. 88SX7042 PCI-e 4-port SATA-II (rev 02)
+> > 02:00.0 Ethernet controller: Intel Corporation 82572EI Gigabit Ethernet Controller (Copper) (rev 06)
+> > 
+> > # cat /proc/cpuinfo | grep ^Hardware
+> > Hardware        : Marvell Kirkwood (Flattened Device Tree)
 > 
-> commit 9ed8a30f3471347c1b763bd062fa78ae80f18eae
-> Author: Jingoo Han <jg1.han@samsung.com>
-> Date:   Wed Feb 27 17:02:42 2013 -0800
+> Very nice!
+
+Yeah, I find it quite nice too :)
+
+> > I've tested both the e1000e NIC card and the SATA 4 ports card and
+> > they work fine.
 > 
+> I assume it works with PIO, but does the SATA card use the I/O
+> space registers, or just memory space?
 
-Sigh.
+Both cards only use memory space. I have a quick and dirty patch for
+the e1000e driver that makes it read/write one particular register from
+the I/O space to test that it works, but I haven't checked this yet on
+Kirkwood. I don't expect much troubles, but who knows.
 
-I'll take it as an additional incentive to finally clean up the logic behind
-CONFIG_HAS_IOPORT by introducing a CONFIG_HAS_IOPORT_MAP symbol to replace it.
+As I said, this patch set is for now just to show that it works, there
+are some adjustments to be made here and there before those patches are
+ready to be merged.
 
-Thanks for the heads up.
+Best regards,
 
-	Arnd
+Thomas
+-- 
+Thomas Petazzoni, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
