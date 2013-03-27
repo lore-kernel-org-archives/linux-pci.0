@@ -1,61 +1,106 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41078 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753207Ab3CTWEy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 20 Mar 2013 18:04:54 -0400
-Received: from int-mx11.intmail.prod.int.phx2.redhat.com (int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r2KM4sHo028268
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <linux-pci@vger.kernel.org>; Wed, 20 Mar 2013 18:04:54 -0400
-From: Prarit Bhargava <prarit@redhat.com>
-To: linux-pci@vger.kernel.org
-Cc: Prarit Bhargava <prarit@redhat.com>
-Subject: [PATCH] pci, aer_inject fix return values when device not found
-Date: Wed, 20 Mar 2013 18:04:43 -0400
-Message-Id: <1363817083-2807-1-git-send-email-prarit@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 27 Mar 2013 14:04:18 +0100
+From: Thierry Reding <thierry.reding@avionic-design.de>
+To: Andrew Murray <Andrew.Murray@arm.com>
+Cc: 'Bjorn Helgaas' <bhelgaas@google.com>,
+	'Grant Likely' <grant.likely@secretlab.ca>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	'Kukjin Kim' <kgene.kim@samsung.com>,
+	'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>,
+	"linux-samsung-soc@vger.kernel.org"
+	<linux-samsung-soc@vger.kernel.org>,
+	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"devicetree-discuss@lists.ozlabs.org"
+	<devicetree-discuss@lists.ozlabs.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	'Surendranath Gurivireddy Balla' <suren.reddy@samsung.com>,
+	'Thomas Abraham' <thomas.abraham@linaro.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Liviu Dudau <Liviu.Dudau@arm.com>
+Subject: Re: [PATCH v3] of/pci: Provide support for parsing PCI DT ranges
+ property
+Message-ID: <20130327130418.GA10480@avionic-0098.mockup.avionic-design.de>
+References: <20130326162022.GA25625@arm.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="Q68bSM7Ycu6FN28Q"
+In-Reply-To: <20130326162022.GA25625@arm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently the aer_inject driver returns -ENOTTY when the target PCIE device
-root port is not found or if the device or root port doesn't support AER.
 
-In the case where the root port isn't found, the driver should return -ENODEV,
-and in the other cases it should return -EPERM.
+--Q68bSM7Ycu6FN28Q
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Prarit Bhargava <prarit@redhat.com>
----
- drivers/pci/pcie/aer/aer_inject.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+On Tue, Mar 26, 2013 at 04:20:23PM +0000, Andrew Murray wrote:
+> This patch factors out common implementation patterns to reduce overall k=
+ernel
+> code and provide a means for host bridge drivers to directly obtain struct
+> resources from the DT's ranges property without relying on architecture s=
+pecific
+> DT handling. This will make it easier to write archiecture independent ho=
+st bridge
+> drivers and mitigate against further duplication of DT parsing code.
+>=20
+> This patch can be used in the following way:
+>=20
+> 	struct of_pci_range_parser parser;
+> 	struct of_pci_range range;
+>=20
+> 	if (of_pci_range_parser(&parser, np))
+> 		; //no ranges property
+>=20
+> 	for_each_of_pci_range(&parser, &range) {
+>=20
+> 		/*
+> 			directly access properties of the address range, e.g.:
+> 			range.pci_space, range.pci_addr, range.cpu_addr,
+> 			range.size, range.flags
+>=20
+> 			alternatively obtain a struct resource, e.g.:
+> 			struct resource res;
+> 			of_pci_range_to_resource(&range, np, &res);
+> 		*/
+> 	}
+>=20
+> Additionally the implementation takes care of adjacent ranges and merges =
+them
+> into a single range (as was the case with powerpc and microblaze).
+>=20
+> The modifications to microblaze, mips and powerpc have not been tested.
+>=20
+> Signed-off-by: Andrew Murray <Andrew.Murray@arm.com>
+> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+> Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
 
-diff --git a/drivers/pci/pcie/aer/aer_inject.c b/drivers/pci/pcie/aer/aer_inject.c
-index 4e24cb8..8d4a5e3 100644
---- a/drivers/pci/pcie/aer/aer_inject.c
-+++ b/drivers/pci/pcie/aer/aer_inject.c
-@@ -334,13 +334,13 @@ static int aer_inject(struct aer_error_inj *einj)
- 		return -ENODEV;
- 	rpdev = pcie_find_root_port(dev);
- 	if (!rpdev) {
--		ret = -ENOTTY;
-+		ret = -ENODEV;
- 		goto out_put;
- 	}
- 
- 	pos_cap_err = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
- 	if (!pos_cap_err) {
--		ret = -ENOTTY;
-+		ret = -EPERM;
- 		goto out_put;
- 	}
- 	pci_read_config_dword(dev, pos_cap_err + PCI_ERR_UNCOR_SEVER, &sever);
-@@ -350,7 +350,7 @@ static int aer_inject(struct aer_error_inj *einj)
- 
- 	rp_pos_cap_err = pci_find_ext_capability(rpdev, PCI_EXT_CAP_ID_ERR);
- 	if (!rp_pos_cap_err) {
--		ret = -ENOTTY;
-+		ret = -EPERM;
- 		goto out_put;
- 	}
- 
--- 
-1.7.9.3
+Tested-by: Thierry Reding <thierry.reding@avionic-design.de>
 
+--Q68bSM7Ycu6FN28Q
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQIcBAEBAgAGBQJRUu5SAAoJEN0jrNd/PrOhIg8QAK7GeB7tx8qPNJKxD4qKD6mi
+mBWePcVpcS0nG4OZkVH7p4/8n09krshGJW8lUg4YG8BjGipZcrYdOiExSY0ZpW7m
+sd5Zs+P6OKtVVkjn0nRdfwctXmwSl70N4ofo/MzIcI6mXyDsQCSgOoiieE2wm9zd
+aCiU7gHm3NP9vZBY5Z2aKLFsgeEiA3GASSWGw4MWU16t+zWCTbp0Kv1X1quVCE8r
+0Fqp5tIVX7Xx/1S+DAjyntlPs0EMFPCuBlNTB5U0dRUabxT8RORcRDWEQ+3FKpcM
+mZY7u6jkqZQxP8WnYjC8Upb8OefMK7RUXIOukvsmRVZECoUbcWBpbaAElbZk3qNw
+ytJiR9bBhQBS/z+txUq2ZG1lpe9IYPERruCoUAx3nJlJ8KxUGQUf6z/zei/qwp8a
+7fuUVVi8FuMT29P5dYn40DV4fgytI/x5dATR85g/xO5KkFvAL7CbPJEvekGmMKVU
+tNeOEpmw6K249XUCSLthGvh7Imh6hIBK9IEROnBUnKtgApCKVPtpVLrq1aTliVZc
+D9euw7Wknl+9Yl8ionY5+fE6nzrYIjcGbn+CYNIyz9gSURh+Evxs05tXLmSOACss
+4W32IIqrvZ2YwhiMNumCdLh+ovhzeW5hvdbIZ9lTSDQ3VypXIu76OE5Xcq2Q9mdD
+mfhblBZA86XCTC4xKbUB
+=FbDu
+-----END PGP SIGNATURE-----
+
+--Q68bSM7Ycu6FN28Q--
