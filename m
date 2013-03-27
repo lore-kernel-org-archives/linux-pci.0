@@ -1,41 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:60404 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1161015Ab3CVQfm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 22 Mar 2013 12:35:42 -0400
-Message-ID: <514C8858.3050702@suse.cz>
-Date: Fri, 22 Mar 2013 17:35:36 +0100
-From: Michal Marek <mmarek@suse.cz>
+Received: from mail-oa0-f46.google.com ([209.85.219.46]:56758 "EHLO
+	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751969Ab3C0ReX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Mar 2013 13:34:23 -0400
+Received: by mail-oa0-f46.google.com with SMTP id k1so9057669oag.5
+        for <linux-pci@vger.kernel.org>; Wed, 27 Mar 2013 10:34:23 -0700 (PDT)
 MIME-Version: 1.0
-To: Matthew Garrett <mjg59@srcf.ucam.org>
-Cc: Alex Williamson <alex.williamson@redhat.com>,
-	Takashi Iwai <tiwai@suse.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Oliver Neukum <oneukum@suse.de>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] pciehp: Add pciehp_surprise module option
-References: <s5h38vqjhk6.wl%tiwai@suse.de> <1363802953.24132.513.camel@bling.home> <s5hr4j9q48d.wl%tiwai@suse.de> <514C8388.3050200@suse.cz> <20130322161644.GA28760@srcf.ucam.org>
-In-Reply-To: <20130322161644.GA28760@srcf.ucam.org>
+In-Reply-To: <1363626009-25242-1-git-send-email-phil.edworthy@renesas.com>
+References: <1363626009-25242-1-git-send-email-phil.edworthy@renesas.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 27 Mar 2013 11:34:03 -0600
+Message-ID: <CAErSpo4zpOvVrirWFwCHjaGg-K2M1kdCAhxopkWmO5Lir16MKA@mail.gmail.com>
+Subject: Re: [PATCH] pci: Add ID for Renesas R-Car PCIe host
+To: Phil Edworthy <phil.edworthy@renesas.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Magnus <magnus.damm@gmail.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 22.3.2013 17:16, Matthew Garrett wrote:
-> On Fri, Mar 22, 2013 at 05:15:04PM +0100, Michal Marek wrote:
-> 
->> Alex, Matthew, would it work for you to have this debug / band-aid
->> option _and_ have a list of either machines' dmi strings that have this
->> problem, or devices' PCI IDs (*), and enable the surprise event handling
->> for such machines / devices automatically?  The option would be still
->> useful for debugging, to be able to easily find out if given machine has
->> this problem and needs to be added to the quirk list.
-> 
-> That's be preferable, but if there's anything we've learned about dmi 
-> strings it's that they usually mean we're doing something wrong. Does 
-> this work with Windows without any quirking? Is there a machine-specific 
-> driver for the PCIe chipset?
+On Mon, Mar 18, 2013 at 11:00 AM, Phil Edworthy
+<phil.edworthy@renesas.com> wrote:
+>
+> Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+> ---
+>  include/linux/pci_ids.h |    1 +
+>  1 files changed, 1 insertions(+), 0 deletions(-)
+>
+> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+> index f11c1c2..04693b7 100644
+> --- a/include/linux/pci_ids.h
+> +++ b/include/linux/pci_ids.h
+> @@ -2363,6 +2363,7 @@
+>  #define PCI_DEVICE_ID_RENESAS_SH7763   0x0004
+>  #define PCI_DEVICE_ID_RENESAS_SH7785   0x0007
+>  #define PCI_DEVICE_ID_RENESAS_SH7786   0x0010
+> +#define PCI_DEVICE_ID_RENESAS_RCAR     0x0018
 
-I don't know. Oliver and Takashi have the machines, but I'm not sure if
-they have a working Windows image for them.
+See the comment at the top of pci_ids.h.  If this ID is actually used
+in several places, please resend this patch along with the patches
+that add those uses.  If it's only used in one place, just put the
+definition there (or use the bare number).
 
-Michal
+>  #define PCI_VENDOR_ID_SOLARFLARE       0x1924
+>  #define PCI_DEVICE_ID_SOLARFLARE_SFC4000A_0    0x0703
+> --
+> 1.7.5.4
+>
