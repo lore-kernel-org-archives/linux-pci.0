@@ -1,57 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:41321 "EHLO quartz.orcorp.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752501Ab3CNVFj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 14 Mar 2013 17:05:39 -0400
-Date: Thu, 14 Mar 2013 15:05:34 -0600
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Thierry Reding <thierry.reding@avionic-design.de>
-Cc: Mitch Bradley <wmb@firmworks.com>, linux-pci@vger.kernel.org,
-	devicetree-discuss@lists.ozlabs.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH 24/32] pci: PCIe driver for Marvell Armada 370/XP systems
-Message-ID: <20130314210534.GA18505@obsidianresearch.com>
-References: <20130312220854.GA23112@obsidianresearch.com>
- <20130313081815.GD25940@avionic-0098.mockup.avionic-design.de>
- <20130313170205.GB24042@obsidianresearch.com>
- <20130313192628.GA28714@avionic-0098.mockup.avionic-design.de>
- <5140E85A.3040900@firmworks.com>
- <20130313220235.GA29895@avionic-0098.mockup.avionic-design.de>
- <20130313222102.GA28336@obsidianresearch.com>
- <20130314090120.GA2224@avionic-0098.mockup.avionic-design.de>
- <20130314172555.GA14048@obsidianresearch.com>
- <20130314203858.GA4539@avionic-0098.mockup.avionic-design.de>
+Received: from mail-ie0-f169.google.com ([209.85.223.169]:57867 "EHLO
+	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751995Ab3C0MuK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Mar 2013 08:50:10 -0400
+Received: by mail-ie0-f169.google.com with SMTP id qd14so8828700ieb.28
+        for <linux-pci@vger.kernel.org>; Wed, 27 Mar 2013 05:50:09 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130314203858.GA4539@avionic-0098.mockup.avionic-design.de>
+In-Reply-To: <20130320210521.65261e77@skate>
+References: <20130221154709.GA26660@arm.com>
+	<20130320210521.65261e77@skate>
+Date: Wed, 27 Mar 2013 13:50:09 +0100
+Message-ID: <CACRpkdZ_iuz96JWjHcr+6ugRY29MPA-wiGWtQQJqk30iTQE--Q@mail.gmail.com>
+Subject: Re: [RFC PATCH v2] of/pci: Provide support for parsing PCI DT ranges property
+From: Linus Walleij <linus.walleij@linaro.org>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Andrew Murray <Andrew.Murray@arm.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"devicetree-discuss@lists.ozlabs.org"
+	<devicetree-discuss@lists.ozlabs.org>,
+	"rob.herring@calxeda.com" <rob.herring@calxeda.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	linux-pci@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 14, 2013 at 09:38:58PM +0100, Thierry Reding wrote:
-> >                pci@1,0 {
-> >                         device_type = "pci";
-> >                         assigned-addresses = <0x82000000 0 0x80000000  0 0x1000>;
+On Wed, Mar 20, 2013 at 9:05 PM, Thomas Petazzoni
+<thomas.petazzoni@free-electrons.com> wrote:
 
-Sorry, I missed this. The b,d,f bits should be set:
+> What is the status of the below patch? Both Marvell PCIe driver and
+> Tegra PCIe driver need a way to parse the ranges = <...> property of
+> the PCI DT node.
+>
+> Would it be possible to get this patch merged for 3.10, or get some
+> review comments that would allow us to rework it in time for 3.10 ?
 
-                        assigned-addresses = <0x82000800 0 0x80000000  0 0x1000>;
+Thomas can you supply a Reviewed-by/Tested-by tag?
+That certainly helps...
 
+I was meaning to test it on the Integrator but I've been sidetracked.
 
-> >                         reg = <0x000800 0 0 0 0>;
-> >                }
-> >                pci@2,0 {
-> >                         device_type = "pci";
-> >                         assigned-addresses = <0x82000000 0 0x80001000  0 0x1000>;
+It'd be good to take this through ARM SoC's DT branch so different
+platforms can use it.
 
-                         assigned-addresses = <0x82001000 0 0x80001000  0 0x1000>;
-
-
-The 'ranges' stays the same, the PCI 3/2 parse will ignore the b,d,f
-bits when comparing against ranges.
-
-The use of r == 0 for assigned-addresses should be enough to
-disambiguate this case from any future use of assigned-addresses - the
-normal case has r == offset of the associated BAR != 0.
-
-Cheers,
-Jason
+Yours,
+Linus Walleij
