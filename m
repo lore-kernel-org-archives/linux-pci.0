@@ -1,120 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:48240 "EHLO hydra.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754187Ab3CaBoS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 30 Mar 2013 21:44:18 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
-Cc: Huang Ying <ying.huang@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: Re: 3.9-rc1: pciehp and eSATA card SiI 3132, no XHCI
-Date: Sun, 31 Mar 2013 03:51:49 +0200
-Message-ID: <3509333.cpbfJ8nYxq@vostro.rjw.lan>
-In-Reply-To: <5157716F.2040607@fold.natur.cuni.cz>
-References: <513E7E1E.80508@fold.natur.cuni.cz> <8031557.xcL7PI6L4K@vostro.rjw.lan> <5157716F.2040607@fold.natur.cuni.cz>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mail.free-electrons.com ([94.23.35.102]:60480 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751683Ab3C0Oks (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Mar 2013 10:40:48 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Russell King <linux@arm.linux.org.uk>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	devicetree-discuss@lists.ozlabs.org,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Maen Suleiman <maen@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Olof Johansson <olof@lixom.net>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Mitch Bradley <wmb@firmworks.com>,
+	Andrew Murray <andrew.murray@arm.com>,
+	Mike Turquette <mturquette@linaro.org>
+Subject: [PATCHv7 06/17] clk: mvebu: create parent-child relation for PCIe clocks on Armada 370
+Date: Wed, 27 Mar 2013 15:40:23 +0100
+Message-Id: <1364395234-11195-7-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1364395234-11195-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1364395234-11195-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sunday, March 31, 2013 12:12:47 AM Martin Mokrejs wrote:
-> Rafael J. Wysocki wrote:
-> > On Saturday, March 30, 2013 06:49:36 PM Martin Mokrejs wrote:
-> >> Martin Mokrejs wrote:
-> >>> Rafael J. Wysocki wrote:
-> >>>> On Saturday, March 30, 2013 02:17:38 AM Martin Mokrejs wrote:
-> >>>>> Rafael J. Wysocki wrote:
-> >>>>>> On Friday, March 29, 2013 03:11:13 PM Martin Mokrejs wrote:
-> >>>>>>> Hi Ying,
-> >>>>>>>   thank you for the patch. Here are the results.
-> >>>>>>>
-> >>>>>>> Huang Ying wrote:
-> >>>>>>>> On Thu, 2013-03-28 at 19:38 +0100, Martin Mokrejs wrote:
-> >>>>>>>>> Hi Ying,
-> >>>>>>>>>   would you please tell me how this report relate to this patch?
-> >>>>>>>>>
-> >>>>>>>>> [PATCH] PCI / ACPI: Always resume devices on ACPI wakeup notifications
-> >>>>>>>>>
-> >>>>>>>>>   Could you tell me why this PME was being flipped back and forth now?
-> >>>>>>>>> Actually, does that make finally some sense to you, pci/acpi devs?
-> >>>>>>
-> >>>>>> Can you please test this patch:
-> >>>>>>
-> >>>>>> https://patchwork.kernel.org/patch/2359611/
-> >>>>>>
-> >>>>>> and report back as I asked you?
-> >>>>>
-> >>>>> Sorry for the delay I just had to sort out what belongs under what thread
-> >>>>> and the patch was under the other. But I agree its testing with this
-> >>>>> particular eSATA/ExpressCardSlot/PM fits better here.
-> >>>>>
-> >>>>>
-> >>>>> The good news is that the eSATA card hotplug works almost perfectly with the patch.
-> >>>>> I cold booted as always with the card in the slot already loaded, same kernel
-> >>>>> .config and commandline options as described under this thread. But the kernel
-> >>>>> was 3.8.3! Not 3.9-rc1.
-> >>>>
-> >>>> Good.  The goal was to fix the problem with eSATA hotplug.
-> >>>
-> >>> I thought that was aimed at the XHCI dead port issue. ;-)
-> >>
-> >> Hi,
-> >>   first of all, a big fat note. The tests with 3.8.2 and 3.8.2 I always did with aciphp
-> >> and pcie_aspm=off. I somehow forgot about that and yesterday after testing the
-> >> patch from Huang Ying when it turned out the patch actually not only helps with the
-> >> dead xHCI port due to suspend but incidentally also fixes the eSATA card hotplug ...
-> > 
-> > Which patch you're talking about?
-> 
-> I mean this patch 
-> 
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> Subject: PCI / PM: Disable runtime PM of PCIe ports
-> 
-> The runtime PM of PCIe ports turns out to be quite fragile, as in
-> some cases things work while in some other cases they don't and we
-> don't seem to have a good way to determine whether or not they are
-> going to work in advance.
-> 
-> For this reason, avoid enabling runtime PM for PCIe ports by
-> keeping their runtime PM reference counters always above 0 for the
-> time being.
-> 
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> ---
->  drivers/pci/pcie/portdrv_pci.c |    5 -----
->  1 file changed, 5 deletions(-)
-> 
-> 
-> 
-> https://patchwork.kernel.org/patch/2359611/
-> 
-> which, also appearing like yours patch it is originally from Ying, right?:
+The Armada 370 has two gatable clocks for each PCIe interface, and we
+want both of them to be enabled. We therefore make one of the two
+clocks a child of the other, as we did for the sataX and sataXlnk
+clocks on Armada XP.
 
-No, I think that Ying was referring to a different patch he had attached.
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Mike Turquette <mturquette@linaro.org>
+---
+ drivers/clk/mvebu/clk-gating-ctrl.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Thanks,
-Rafael
-
-
-> <quote>
-> Hi, Martin,
-> 
-> Sorry for late.  Just found your bug report.  That seems related with
-> PCIe port runtime PM support.
-> 
-> Can you try the debug patch attached?  And send me back the dmesg?
-> 
-> Sorry I use gmail web client, so I can only send patch as attachment.
-> 
-> Best Regards,
-> Huang Ying
-> </quote>
-
-
+diff --git a/drivers/clk/mvebu/clk-gating-ctrl.c b/drivers/clk/mvebu/clk-gating-ctrl.c
+index ebf141d..b35785a 100644
+--- a/drivers/clk/mvebu/clk-gating-ctrl.c
++++ b/drivers/clk/mvebu/clk-gating-ctrl.c
+@@ -119,8 +119,8 @@ static const struct mvebu_soc_descr __initconst armada_370_gating_descr[] = {
+ 	{ "pex1_en", NULL,  2 },
+ 	{ "ge1", NULL, 3 },
+ 	{ "ge0", NULL, 4 },
+-	{ "pex0", NULL, 5 },
+-	{ "pex1", NULL, 9 },
++	{ "pex0", "pex0_en", 5 },
++	{ "pex1", "pex1_en", 9 },
+ 	{ "sata0", NULL, 15 },
+ 	{ "sdio", NULL, 17 },
+ 	{ "tdm", NULL, 25 },
 -- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+1.7.9.5
+
