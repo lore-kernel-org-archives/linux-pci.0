@@ -1,50 +1,48 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <CAPM=9tzmqof4Rzec_2bVm+UxH86Zas6JhgizfzHNfnvrsvhoYA@mail.gmail.com>
-References: <kg69ef$vdb$1@ger.gmane.org> <CAPM=9ty0Apsk_5v+aguHQMzFhi9A9kMcWb8fXBmWus9Z=tA=JA@mail.gmail.com>
- <5126C3E1.80801@gmail.com> <513BACAC.9050800@gmail.com> <CA+55aFyOypoeXgBWP0d7KmL3YezmjwEgrB=ntZaZdYjdmFkQpA@mail.gmail.com>
- <20130319195950.GA16828@srcf.ucam.org> <CA+55aFy9nbc+9VyCg0BA9E85sRwksQXvu6Wqgurf5omv2mPtZw@mail.gmail.com>
- <5148D5C8.2000701@gmail.com> <CAPM=9tyYMSsK_2eCNRTx5EsgAQtnvmHxhgPHP3GHPxKUn+wo5w@mail.gmail.com>
- <20130325235525.GA3423@srcf.ucam.org> <CAErSpo7iUsV4ca0vhs085_prsTXBEvuTnuw1O_NUr-CvUytYGQ@mail.gmail.com>
- <CAPM=9tzmqof4Rzec_2bVm+UxH86Zas6JhgizfzHNfnvrsvhoYA@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 27 Mar 2013 14:28:55 -0600
-Message-ID: <CAErSpo5X_KiDPh36J91P2Ux_RHJ6TNcJ+JPAOkP=JaNt+Rag5w@mail.gmail.com>
-Subject: Re: Regression: Screen turns off when booting in EFI mode
-To: Dave Airlie <airlied@gmail.com>
-Cc: Matthew Garrett <mjg59@srcf.ucam.org>,
-	=?UTF-8?Q?Mantas_Mikul=C4=97nas?= <grawity@gmail.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Matthew Garrett <mjg@redhat.com>,
-	Seth Forshee <seth.forshee@canonical.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Ben Skeggs <skeggsb@gmail.com>,
-	bugzilla <bugzilla@colorremedies.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+In-Reply-To: <1363642353-30749-5-git-send-email-matthew.garrett@nebula.com>
+References: <1363642353-30749-1-git-send-email-matthew.garrett@nebula.com>
+	<1363642353-30749-5-git-send-email-matthew.garrett@nebula.com>
+Date: Wed, 27 Mar 2013 11:03:26 -0400
+Message-ID: <CA+5PVA4VFgExGNrt5Yh+F4f48amAXKYAbdNFDy7VTFTguh6qTA@mail.gmail.com>
+Subject: Re: [PATCH 05/12] PCI: Require CAP_COMPROMISE_KERNEL for PCI BAR access
+From: Josh Boyer <jwboyer@gmail.com>
+To: Matthew Garrett <matthew.garrett@nebula.com>
+Cc: linux-kernel@vger.kernel.org,
+	linux-security-module@vger.kernel.org, linux-efi@vger.kernel.org,
+	kexec@lists.infradead.org, linux-pci@vger.kernel.org,
+	kmcmartin@redhat.com
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 27, 2013 at 2:02 PM, Dave Airlie <airlied@gmail.com> wrote:
->>
->> That RedHat bugzilla is from kernel-3.9.0-0.rc4.git0.1.fc19.x86_64.
->> Does that kernel include Matthew's patch from Mar 19?  I'm wondering
->> if that report is for the same problem Mantas saw and possibly would
->> be *fixed* by the Mar 19 patch, or if it is for a problem with the Mar
->> 19 patch itself.
->>
->> I would check this myself, but I don't know how to figure out what's
->> in kernel-3.9.0-0.rc4.git0.1.fc19.x86_64.
+On Mon, Mar 18, 2013 at 5:32 PM, Matthew Garrett
+<matthew.garrett@nebula.com> wrote:
+> Any hardware that can potentially generate DMA has to be locked down from
+> userspace in order to avoid it being possible for an attacker to cause
+> arbitrary kernel behaviour. Default to paranoid - in future we can
+> potentially relax this for sufficiently IOMMU-isolated devices.
 >
-> Its 3.9-rc4 + a git snapshot one day after,
->
-> From what I can see 3.9-rc4 contains this patch from Mar 19.
+> Signed-off-by: Matthew Garrett <matthew.garrett@nebula.com>
 
-Yep, looks like it to me, too.  Apparently the Mar 19 patch
-(547b52463) worked for Mantas but not for Chris.
+As noted here:
 
-So I'll wait for testing reports from Mantas and Chris before pushing
-the Mar 26 patches.  Linus can take them earlier if he wants, of
-course :)
+https://bugzilla.redhat.com/show_bug.cgi?id=908888
 
-Bjorn
+this breaks pci passthru with QEMU.  The suggestion in the bug is to move
+the check from read/write to open, but sysfs makes that somewhat
+difficult.  The open code is part of the core sysfs functionality shared
+with the majority of sysfs files, so adding a check there would restrict
+things that clearly don't need to be restricted.
+
+Kyle had the idea to add a cap field to the attribute structure, and do
+a capable check if that is set.  That would allow for a more generic
+usage of capabilities in sysfs code, at the cost of slightly increasing
+the structure size and open path.  That seems somewhat promising if we
+stick with capabilities.
+
+I would love to just squarely blame capabilities for causing this, but we
+can't just replace it with an efi_enabled(EFI_SECURE_BOOT) check because
+of the sysfs open case.  I'm not sure there are great answers here.
+
+josh
