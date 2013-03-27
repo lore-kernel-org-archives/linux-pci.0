@@ -1,63 +1,86 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <1363280764.26318.4.camel@thor.lan>
-Subject: Re: [3.9-rc1] irq 16: nobody cared  (was [3.9-rc1] very poor
- interrupt responses)
-From: Peter Hurley <peter@hurleysoftware.com>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Jiri Kosina <jkosina@suse.cz>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Thomas Meyer <thomas@m3y3r.de>,
-	Shawn Starr <shawn.starr@rogers.com>,
-	Kernel development list <linux-kernel@vger.kernel.org>,
-	USB list <linux-usb@vger.kernel.org>,
-	linux-acpi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Date: Thu, 14 Mar 2013 13:06:04 -0400
-In-Reply-To: <1460519.ejNFI1DrGk@vostro.rjw.lan>
-References: <Pine.LNX.4.44L0.1303141050310.1983-100000@iolanthe.rowland.org>
-	 <alpine.LNX.2.00.1303141555090.30118@pobox.suse.cz>
-	 <alpine.LNX.2.00.1303141709000.30118@pobox.suse.cz>
-	 <1460519.ejNFI1DrGk@vostro.rjw.lan>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.free-electrons.com ([94.23.35.102]:33621 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751914Ab3C0SFI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Mar 2013 14:05:08 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Russell King <linux@arm.linux.org.uk>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	devicetree-discuss@lists.ozlabs.org,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Maen Suleiman <maen@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Olof Johansson <olof@lixom.net>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Mitch Bradley <wmb@firmworks.com>,
+	Andrew Murray <andrew.murray@arm.com>
+Subject: [RFC PATCHv1 0/5] Use the mvebu PCIe driver on Kirkwood
+Date: Wed, 27 Mar 2013 19:04:59 +0100
+Message-Id: <1364407504-13524-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2013-03-14 at 17:46 +0100, Rafael J. Wysocki wrote:
-> On Thursday, March 14, 2013 05:09:59 PM Jiri Kosina wrote:
-> > On Thu, 14 Mar 2013, Jiri Kosina wrote:
-> > 
-> > > > > I don't think I have seen this message on rc1+ (8343bce, to be precise), 
-> > > > > but I have definitely seen sluggish system response on that kernel as 
-> > > > > well.
-> > > > > 
-> > > > > Attaching lspci, /proc/interrupts and dmesg. 
-> > > > 
-> > > > Can you try to do a git bisect for this?  Is the sluggish system 
-> > > > response clear enough that you can tell reliably when it is present and 
-> > > > when it isn't?
-> > > 
-> > > That was my first thought, but unfortunately I am afraid there will be 
-> > > point at which I will easily make a bisection mistake, as the 
-> > > responsiveness of the system varies over time, so it's not really a 
-> > > 100% objective measure.
-> > 
-> > So I will try a bisect, but it'll take some time so that I could claim it 
-> > to be trustworthy.
-> > 
-> > Therefore in case anyone has any idea in parallel, I am all ears.
-> 
-> This one is a candidate to focus on I think:
-> 
-> commit 181380b702eee1a9aca51354d7b87c7b08541fcf
-> Author: Yinghai Lu <yinghai@kernel.org>
-> Date:   Sat Feb 16 11:58:34 2013 -0700
-> 
->     PCI/ACPI: Don't cache _PRT, and don't associate them with bus numbers
+Hello,
 
-This patch __fixed__ this problem for me in linux-next back in February.
+Here is a set of five patches that demonstrate that the mvebu PCIe
+driver can be used on Kirkwood with no modification at all. Those
+patches are not meant to be applied yet, the Device Trees are not
+completely correct yet (they don't take into account the fact that
+6281 has one PCIe interface and 6282 has two PCIe interface).
 
-Rafael, did you hold back some ACPI patches from 3.9 that would have
-made fix no longer applicable?
+It took less than two hours to enable PCIe on Kirkwood (and in those
+two hours, the conversion of the DB-88F6281 board to the Device Tree
+has been done as well), and the result works fine:
 
+# /usr/sbin/lspci
+00:01.0 PCI bridge: Marvell Technology Group Ltd. Device 7846
+00:02.0 PCI bridge: Marvell Technology Group Ltd. Device 7846
+01:00.0 SCSI storage controller: Marvell Technology Group Ltd. 88SX7042 PCI-e 4-port SATA-II (rev 02)
+02:00.0 Ethernet controller: Intel Corporation 82572EI Gigabit Ethernet Controller (Copper) (rev 06)
+
+# cat /proc/cpuinfo | grep ^Hardware
+Hardware	: Marvell Kirkwood (Flattened Device Tree)
+
+I've tested both the e1000e NIC card and the SATA 4 ports card and
+they work fine.
+
+Best regards,
+
+Thomas
+
+Thomas Petazzoni (5):
+  pci: mvebu: enable driver usage on Kirkwood
+  bus: mvebu: fix mistake in PCIe window target attribute for Kirkwood
+  arm: mach-kirkwood: seperate PCIe window init from other windows
+  arm: kirkwood: add SoC-level Device Tree data for PCIe interfaces
+  arm: kirkwood: convert db-88f6281 to the Device Tree
+
+ .../devicetree/bindings/pci/mvebu-pci.txt          |    1 +
+ arch/arm/boot/dts/Makefile                         |    1 +
+ arch/arm/boot/dts/kirkwood-db-88f6281.dts          |   96 +++++++++++++++++
+ arch/arm/boot/dts/kirkwood.dtsi                    |   49 +++++++++
+ arch/arm/mach-kirkwood/Kconfig                     |   12 +--
+ arch/arm/mach-kirkwood/Makefile                    |    2 +-
+ arch/arm/mach-kirkwood/board-db88f6281-bp.c        |   26 +++++
+ arch/arm/mach-kirkwood/board-dt.c                  |   11 ++
+ arch/arm/mach-kirkwood/common.c                    |    7 +-
+ arch/arm/mach-kirkwood/common.h                    |    7 ++
+ arch/arm/mach-kirkwood/db88f6281-bp-setup.c        |  108 --------------------
+ drivers/bus/mvebu-mbus.c                           |    2 +-
+ drivers/pci/host/Kconfig                           |    2 +-
+ drivers/pci/host/pci-mvebu.c                       |    1 +
+ 14 files changed, 207 insertions(+), 118 deletions(-)
+ create mode 100644 arch/arm/boot/dts/kirkwood-db-88f6281.dts
+ create mode 100644 arch/arm/mach-kirkwood/board-db88f6281-bp.c
+ delete mode 100644 arch/arm/mach-kirkwood/db88f6281-bp-setup.c
+
+-- 
+1.7.9.5
 
