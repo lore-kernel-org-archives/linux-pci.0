@@ -1,99 +1,38 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>, Ram Pai <linuxram@us.ibm.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org
-Subject: [PATCH v3 07/27] PCI, x86: Use for_each_pci_resource() with pci_allocate_dev_resources
-Date: Wed, 13 Mar 2013 16:28:02 -0700
-Message-Id: <1363217302-14383-8-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1363217302-14383-1-git-send-email-yinghai@kernel.org>
-References: <1363217302-14383-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:58620 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751837Ab3C0QLC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 27 Mar 2013 12:11:02 -0400
+From: Oliver Neukum <oneukum@suse.de>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: Michal Marek <mmarek@suse.cz>,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	Takashi Iwai <tiwai@suse.de>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] pciehp: Add pciehp_surprise module option
+Date: Wed, 27 Mar 2013 17:11:39 +0100
+Message-ID: <5658592.BRAWLYK6e8@linux-5eaq.site>
+In-Reply-To: <1363969243.24132.613.camel@bling.home>
+References: <s5h38vqjhk6.wl%tiwai@suse.de> <514C8388.3050200@suse.cz> <1363969243.24132.613.camel@bling.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We can replace two layer loop with for_each_pci_resource(), and make
-the code more readable.
+On Friday 22 March 2013 10:20:43 Alex Williamson wrote:
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: x86@kernel.org
----
- arch/x86/pci/i386.c |   55 +++++++++++++++++++--------------------------------
- 1 file changed, 20 insertions(+), 35 deletions(-)
+> > (*) It would probably make more sense to have a list of dmi strings,
+> > because it's the PCIe controller that does not set the capability bit
+> > when it should. The device (Realtek card reader in this case) seems to
+> > behave correctly. The machines in question have been laptops or
+> > all-in-one PCs so far, so there should be no problem with dmi matches.
+> 
+> Yep, I think that makes sense, leave the global option for debugging but
+> fix individual known broken devices through dmi quirks.  Thanks,
 
-diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
-index 7c3395a..ed219c7 100644
---- a/arch/x86/pci/i386.c
-+++ b/arch/x86/pci/i386.c
-@@ -233,49 +233,34 @@ static void pcibios_allocate_bus_resources(struct pci_bus *bus)
- 		pcibios_allocate_bus_resources(child);
- }
- 
--struct pci_check_idx_range {
--	int start;
--	int end;
--};
--
- static void pcibios_allocate_dev_resources(struct pci_dev *dev, int pass)
- {
--	int idx, disabled, i;
-+	int idx, disabled;
- 	u16 command;
- 	struct resource *r;
- 
--	struct pci_check_idx_range idx_range[] = {
--		{ PCI_STD_RESOURCES, PCI_STD_RESOURCE_END },
--#ifdef CONFIG_PCI_IOV
--		{ PCI_IOV_RESOURCES, PCI_IOV_RESOURCE_END },
--#endif
--	};
--
- 	pci_read_config_word(dev, PCI_COMMAND, &command);
--	for (i = 0; i < ARRAY_SIZE(idx_range); i++)
--		for (idx = idx_range[i].start; idx <= idx_range[i].end; idx++) {
--			r = &dev->resource[idx];
--			if (r->parent)	/* Already allocated */
--				continue;
--			if (!r->start)	/* Address not assigned at all */
--				continue;
--			if (r->flags & IORESOURCE_IO)
--				disabled = !(command & PCI_COMMAND_IO);
--			else
--				disabled = !(command & PCI_COMMAND_MEMORY);
--			if (pass == disabled) {
--				dev_dbg(&dev->dev,
--					"BAR %d: reserving %pr (d=%d, p=%d)\n",
--					idx, r, disabled, pass);
--				if (pci_claim_resource(dev, idx) < 0) {
--					/* We'll assign a new address later */
--					pcibios_save_fw_addr(dev,
--							idx, r->start);
--					r->end -= r->start;
--					r->start = 0;
--				}
-+	for_each_pci_resource(dev, r, idx, PCI_NOROM_RES & ~PCI_BRIDGE_RES) {
-+		if (r->parent)	/* Already allocated */
-+			continue;
-+		if (!r->start)	/* Address not assigned at all */
-+			continue;
-+		if (r->flags & IORESOURCE_IO)
-+			disabled = !(command & PCI_COMMAND_IO);
-+		else
-+			disabled = !(command & PCI_COMMAND_MEMORY);
-+		if (pass == disabled) {
-+			dev_dbg(&dev->dev,
-+				"BAR %d: reserving %pr (d=%d, p=%d)\n",
-+				idx, r, disabled, pass);
-+			if (pci_claim_resource(dev, idx) < 0) {
-+				/* We'll assign a new address later */
-+				pcibios_save_fw_addr(dev, idx, r->start);
-+				r->end -= r->start;
-+				r->start = 0;
- 			}
- 		}
-+	}
- 	if (!pass) {
- 		r = &dev->resource[PCI_ROM_RESOURCE];
- 		if (r->flags & IORESOURCE_ROM_ENABLE) {
--- 
-1.7.10.4
+I checked with Win8 and it does ignore the surprise attribute.
+
+	Regards
+		Oliver
 
