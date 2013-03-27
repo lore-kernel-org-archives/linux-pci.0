@@ -1,52 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ve0-f176.google.com ([209.85.128.176]:47915 "EHLO
-	mail-ve0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754669Ab3C1Mq7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 28 Mar 2013 08:46:59 -0400
-Received: by mail-ve0-f176.google.com with SMTP id ox1so3407821veb.35
-        for <linux-pci@vger.kernel.org>; Thu, 28 Mar 2013 05:46:59 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAE9FiQU7cDzJdHxmqhJNgc9UCsRLgvCFQpv8+fLxD79pLEUC5A@mail.gmail.com>
-References: <CAE9FiQXmeb66dc8fET0y99BjqpUXp11c7utiQ5keR1Wf+N9xaA@mail.gmail.com>
- <1363628226-6679-1-git-send-email-yinghai@kernel.org> <CAErSpo6v0mj9=Q13d=G4hho0mb9XTcsmefzke9fROYmZ7oBWxQ@mail.gmail.com>
- <CAE9FiQU7cDzJdHxmqhJNgc9UCsRLgvCFQpv8+fLxD79pLEUC5A@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 28 Mar 2013 06:46:39 -0600
-Message-ID: <CAErSpo4ncW8rkcpDiccORZedj30m7jRmpXK+amfDGn_wjwt7EA@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Remove not needed check in disable aspm link
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	stable@kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail.free-electrons.com ([94.23.35.102]:60426 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751035Ab3C0Okp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Mar 2013 10:40:45 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Russell King <linux@arm.linux.org.uk>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	devicetree-discuss@lists.ozlabs.org,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Maen Suleiman <maen@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Olof Johansson <olof@lixom.net>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Mitch Bradley <wmb@firmworks.com>,
+	Andrew Murray <andrew.murray@arm.com>
+Subject: [PATCHv7 03/17] of/pci: Add of_pci_parse_bus_range() function
+Date: Wed, 27 Mar 2013 15:40:20 +0100
+Message-Id: <1364395234-11195-4-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1364395234-11195-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1364395234-11195-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 28, 2013 at 1:41 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Wed, Mar 27, 2013 at 3:56 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>
->> Why can't we set all the ASPM flags *first*, before calling
->> pci_acpi_scan_root()?  That way we could just do the correct ASPM
->> setup as we discover devices during enumeration, rather than trying to
->> fix things up afterwards.  I suspect pcie_clear_aspm() is broken
->> anyway, because it looks like it only touches one level of the
->> hierarchy, without recursively descending it.
->
-> Yes, we can clean up aspm stop/clear up.
-> and that should be for 3.10 right?
->
-> But this patch should be safe for 3.9 and stable.
+From: Thierry Reding <thierry.reding@avionic-design.de>
 
-This patch might be *safe*, but it (and the changelog) are completely
-unintelligible.
+This function can be used to parse a bus-range property as specified by
+device nodes representing PCI bridges.
 
-The problem with applying an unintelligible stop-gap patch is that it
-becomes forever part of the changelog, and it's a huge waste of time
-to everybody who tries to understand the history later.  That's why I
-think it's worth spending some time to make a good patch now.
+Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
+---
+ drivers/of/of_pci.c    |   25 +++++++++++++++++++++++++
+ include/linux/of_pci.h |    1 +
+ 2 files changed, 26 insertions(+)
 
-Bjorn
+diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
+index 4dd7b9b..42c687a 100644
+--- a/drivers/of/of_pci.c
++++ b/drivers/of/of_pci.c
+@@ -64,3 +64,28 @@ int of_pci_get_devfn(struct device_node *np)
+ 	return (be32_to_cpup(reg) >> 8) & 0xff;
+ }
+ EXPORT_SYMBOL_GPL(of_pci_get_devfn);
++
++/**
++ * of_pci_parse_bus_range() - parse the bus-range property of a PCI device
++ * @node: device node
++ * @res: address to a struct resource to return the bus-range
++ *
++ * Returns 0 on success or a negative error-code on failure.
++ */
++int of_pci_parse_bus_range(struct device_node *node, struct resource *res)
++{
++	const __be32 *values;
++	int len;
++
++	values = of_get_property(node, "bus-range", &len);
++	if (!values || len < sizeof(*values) * 2)
++		return -EINVAL;
++
++	res->name = node->name;
++	res->start = be32_to_cpup(values++);
++	res->end = be32_to_cpup(values);
++	res->flags = IORESOURCE_BUS;
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(of_pci_parse_bus_range);
+diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
+index 91ec484..7a04826 100644
+--- a/include/linux/of_pci.h
++++ b/include/linux/of_pci.h
+@@ -11,5 +11,6 @@ struct device_node;
+ struct device_node *of_pci_find_child_device(struct device_node *parent,
+ 					     unsigned int devfn);
+ int of_pci_get_devfn(struct device_node *np);
++int of_pci_parse_bus_range(struct device_node *node, struct resource *res);
+ 
+ #endif
+-- 
+1.7.9.5
+
