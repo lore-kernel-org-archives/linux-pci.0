@@ -1,55 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:37854 "EHLO quartz.orcorp.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751247Ab3CKSXp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 11 Mar 2013 14:23:45 -0400
-Date: Mon, 11 Mar 2013 12:23:39 -0600
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Mitch Bradley <wmb@firmworks.com>
-Cc: Thierry Reding <thierry.reding@avionic-design.de>,
-	Lior Amsalem <alior@marvell.com>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+Received: from mail.free-electrons.com ([94.23.35.102]:33870 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751705Ab3C0SSy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Mar 2013 14:18:54 -0400
+Date: Wed, 27 Mar 2013 19:18:50 +0100
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Russell King <linux@arm.linux.org.uk>,
 	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>, linux-pci@vger.kernel.org,
-	devicetree-discuss@lists.ozlabs.org,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Shadi Ammouri <shadi@marvell.com>,
 	Tawfik Bayouk <tawfik@marvell.com>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH 24/32] pci: PCIe driver for Marvell Armada 370/XP systems
-Message-ID: <20130311182339.GB10992@obsidianresearch.com>
-References: <20130308191227.GA6551@avionic-0098.mockup.avionic-design.de>
- <513A3F4F.2090501@firmworks.com>
- <20130308200245.GC29435@obsidianresearch.com>
- <513A7845.6040304@firmworks.com>
- <20130309013152.GA3883@obsidianresearch.com>
- <513C117D.6080800@firmworks.com>
- <20130310065539.GA14704@obsidianresearch.com>
- <513D6F9C.9000100@firmworks.com>
- <20130311074615.GA6365@avionic-0098.mockup.avionic-design.de>
- <513E1CBA.4040007@firmworks.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <513E1CBA.4040007@firmworks.com>
+	Olof Johansson <olof@lixom.net>, linux-pci@vger.kernel.org,
+	devicetree-discuss@lists.ozlabs.org,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Maen Suleiman <maen@marvell.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Andrew Murray <andrew.murray@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Mitch Bradley <wmb@firmworks.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Subject: Re: [RFC PATCHv1 0/5] Use the mvebu PCIe driver on Kirkwood
+Message-ID: <20130327191850.26ab1623@skate>
+In-Reply-To: <20130327191114.2662b3b8@skate>
+References: <1364407504-13524-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	<201303271807.51023.arnd@arndb.de>
+	<20130327191114.2662b3b8@skate>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> (b) The discovery/enumeration code needs to access config space via
-> pci_ops.  The root complex driver implements pci_ops based on a trivial
-> parsing of ranges (omitting irrelevant details):
+Arnd,
+
+On Wed, 27 Mar 2013 19:11:14 +0100, Thomas Petazzoni wrote:
+
+> > I assume it works with PIO, but does the SATA card use the I/O
+> > space registers, or just memory space?
 > 
-> pci_op_read(devfn, pos) {
->    loop_over_ranges_entries {
->       if (to_devfn(ranges_entry.child) == devfn) {
->          return mmio_read(ranges_entry.parent + pos);
-                            ^^^^^^^^^^^^^^^^^^^
+> Both cards only use memory space. I have a quick and dirty patch for
+> the e1000e driver that makes it read/write one particular register from
+> the I/O space to test that it works, but I haven't checked this yet on
+> Kirkwood. I don't expect much troubles, but who knows.
 
-This has to be converted through all enclosing node's ranges prior to
-being used as a CPU address - the OF core has all the code to do this,
-but a new entry point would be needed for this specific application...
+Just to let you know, I've tested the e1000e with my small changes that
+does one I/O access, and it seems to work properly. At least, I read
+from the register the value I should be reading (and therefore writing
+works, because the I/O space of the e1000e essentially has two
+registers: one address register, and one data register, so you must
+write one address in the address register before being able to read
+something from the data register).
 
-Cheers,
-Jason
+Best regards,
+
+Thomas
+-- 
+Thomas Petazzoni, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
