@@ -1,208 +1,149 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:47273 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751233Ab3CDBfQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 3 Mar 2013 20:35:16 -0500
+Received: from moutng.kundenserver.de ([212.227.17.10]:55525 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751523Ab3C0GhD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Mar 2013 02:37:03 -0400
+Date: Wed, 27 Mar 2013 07:36:36 +0100
+From: Thierry Reding <thierry.reding@avionic-design.de>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	devicetree-discuss@lists.ozlabs.org,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Maen Suleiman <maen@marvell.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Olof Johansson <olof@lixom.net>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Mitch Bradley <wmb@firmworks.com>,
+	Andrew Murray <andrew.murray@arm.com>
+Subject: Re: [PATCHv6 10/17] arm: mvebu: add PCIe Device Tree informations
+ for Armada 370
+Message-ID: <20130327063636.GA17821@avionic-0098.mockup.avionic-design.de>
+References: <1364314719-1049-1-git-send-email-thomas.petazzoni@free-electrons.com>
+ <1364314719-1049-11-git-send-email-thomas.petazzoni@free-electrons.com>
+ <20130326163421.GA30255@obsidianresearch.com>
+ <20130326201654.GA7109@avionic-0098.mockup.avionic-design.de>
+ <20130326222744.54e9fc82@skate>
 MIME-Version: 1.0
-In-Reply-To: <00b701ce16d3$0aabe0f0$2003a2d0$@lucidpixels.com>
-References: <1354533387-4110-1-git-send-email-acooks@gmail.com>
-	<1355914703-28576-1-git-send-email-acooks@gmail.com>
-	<1362126373-32318-1-git-send-email-acooks@gmail.com>
-	<CAO9zADxjoP+R9ccz7vMPmcFvdYwNjErSjaWc_RFkW_FY3+SK=w@mail.gmail.com>
-	<CAJtEV7Zs2BiwJ9jdDeoceh9hiVXvVaSvj=9H+4+vEzhY72AS9g@mail.gmail.com>
-	<00b701ce16d3$0aabe0f0$2003a2d0$@lucidpixels.com>
-Date: Mon, 4 Mar 2013 09:35:13 +0800
-Message-ID: <CAJtEV7bvPORPoXgQY2OahNVMj+SY5z=xxQ=nueX7=kLVfpyF_A@mail.gmail.com>
-Subject: Re: [PATCH] Quirk to support Marvell 88SE91xx SATA controllers with
- Intel IOMMU.
-From: Andrew Cooks <acooks@gmail.com>
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: Joerg Roedel <joro@8bytes.org>, YingChu <xjtuychu@hotmail.com>,
-	Chu Ying <gm.ychu@gmail.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	David Woodhouse <dwmw2@infradead.org>,
-	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
-	open list <linux-kernel@vger.kernel.org>,
-	"open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>
-Content-Type: multipart/mixed; boundary=bcaec555549456d3d004d70f5ee8
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="45Z9DzgjV8m4Oswq"
+In-Reply-To: <20130326222744.54e9fc82@skate>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---bcaec555549456d3d004d70f5ee8
-Content-Type: text/plain; charset=ISO-8859-1
 
-On Sat, Mar 2, 2013 at 7:18 AM, Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
->
-> Against a clean 3.7.10 (from ftp.kernel.org)
->
-> # patch -p1 <
-> ../patch/RFC-Fix-Intel-IOMMU-support-for-Marvell-88SE91xx-SATA-controllers..
-> patch
-> patching file drivers/iommu/intel-iommu.c
-> patching file drivers/pci/quirks.c
-> Hunk #1 succeeded at 3230 (offset 3 lines).
-> patching file include/linux/pci.h
-> # pwd
-> /usr/src/linux-3.7.10
->
+--45Z9DzgjV8m4Oswq
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-I've downloaded and patched the 3.7.10 tarball and still get the same
-output I got before; different output from yours. I'm not sure the
-patch is complete or applying correctly, are you?
-Could you please check whether the patch you're applying is the same
-as the attached file?
+On Tue, Mar 26, 2013 at 10:27:44PM +0100, Thomas Petazzoni wrote:
+[...]
+> and so now the suggestions is to do:
+>=20
+>                 pcie-controller {
+>                         compatible =3D "marvell,armada-xp-pcie";
+>                         status =3D "disabled";
+>                         device_type =3D "pci";
+>=20
+>                         #address-cells =3D <3>;
+>                         #size-cells =3D <2>;
+>=20
+>                         msi-parent =3D <&msi>;
+>                         bus-range =3D <0x00 0xff>;
+>=20
+> 			ranges =3D <0x82000000 0 0xd0040000 0xd0040000 0 0x00002000 /* Port 0.=
+0 registers */
+> 				  0x82000000 0 0xd0042000 0xd0042000 0 0x00002000 /* Port 2.0 registe=
+rs */
+> 				  0x82000000 0 0xd0044000 0xd0044000 0 0x00002000 /* Port 0.1 registe=
+rs */
+> 				  0x82000000 0 0xd0048000 0xd0048000 0 0x00002000 /* Port 0.2 registe=
+rs */
+> 				  0x82000000 0 0xd004c000 0xd004c000 0 0x00002000 /* Port 0.3 registe=
+rs */
+> 				  0x82000000 0 0xd0080000 0xd0080000 0 0x00002000 /* Port 1.0 registe=
+rs */
+> 				  0x82000000 0 0xd0082000 0xd0082000 0 0x00002000 /* Port 3.0 registe=
+rs */
+> 				  0x82000000 0 0xd0084000 0xd0084000 0 0x00002000 /* Port 1.1 registe=
+rs */
+> 				  0x82000000 0 0xd0088000 0xd0088000 0 0x00002000 /* Port 1.2 registe=
+rs */
+> 				  0x82000000 0 0xd008c000 0xd008c000 0 0x00002000 /* Port 1.3 registe=
+rs */
+> 				  0x82000000 0 0xe0000000 0xe0000000 0 0x08000000   /* non-prefetchab=
+le memory */
+>                                   0x81000000 0 0          0xe8000000 0 0x=
+00100000>; /* downstream I/O */
+>=20
+>                         pcie@1,0 {
+>                                 device_type =3D "pci";
+> 				assigned-addresses =3D <0x82000800 0 0xd0040000 0 0x2000>;
+>                                 reg =3D <0x0800 0 0 0 0>;
+>                                 #address-cells =3D <3>;
+>                                 #size-cells =3D <2>;
+>                                 #interrupt-cells =3D <1>;
+>                                 interrupt-map-mask =3D <0 0 0 0>;
+>                                 interrupt-map =3D <0 0 0 0 &mpic 58>;
+>                                 marvell,pcie-port =3D <0>;
+>                                 marvell,pcie-lane =3D <0>;
+>                                 clocks =3D <&gateclk 5>;
+>                                 status =3D "disabled";
+>                         };
+>=20
+>                         pcie@2,0 {
+>                                 device_type =3D "pci";
+> 				assigned-addresses =3D <0x82001000 0 0xd0042000 0 0x2000>;
+>                                 reg =3D <0x1000 0 0 0 0>;
+>                                 #address-cells =3D <3>;
+>                                 #size-cells =3D <2>;
+>                                 #interrupt-cells =3D <1>;
+>                                 interrupt-map-mask =3D <0 0 0 0>;
+>                                 interrupt-map =3D <0 0 0 0 &mpic 59>;
+>                                 marvell,pcie-port =3D <0>;
+>                                 marvell,pcie-lane =3D <1>;
+>                                 clocks =3D <&gateclk 6>;
+>                                 status =3D "disabled";
+>                         };
+>=20
+> 			[...]
+>=20
+> 		};
+>=20
+> Is this correct? Thierry, Jason, if you could confirm my understanding,
+> that would be great. I could then rework and resend the patch set.
 
-> Full dmesg with the patch applied: (but with IOMMU off)
-> http://home.comcast.net/~jpiszcz/20130301/dmesg-full.txt
->
-> Full dmesg (as much as possible through netconsole with IOMMU on)
-> http://home.comcast.net/~jpiszcz/20130301/dmesg-iommu-on.txt
->
-> Let me know if anything else is needed, thanks.
+Yes, that looks correct. And as Arnd mentioned the pci@x,y nodes should
+probably have an empty ranges property.
 
-I think some important error messages might have been lost here.
+Thierry
 
-You captured a complete dmesg at
-https://home.comcast.net/~jpiszcz/20121128/dmesg.txt
-with iommu on. Are you still able to get the same with 3.7.10 if you
-exclude this patch, or has something else changed?
+--45Z9DzgjV8m4Oswq
+Content-Type: application/pgp-signature
 
-a.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
 
---bcaec555549456d3d004d70f5ee8
-Content-Type: application/octet-stream; name="marvell_ghost_funcs.patch"
-Content-Disposition: attachment; filename="marvell_ghost_funcs.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_hduwen4s0
+iQIcBAEBAgAGBQJRUpN0AAoJEN0jrNd/PrOhklQP/1ee9x+45Mgui1HByWL/M86F
+KQGDL/W93wnVIR68pADYP9iEMAfNhgDU7vjI+sz3xkR8JX/Eg5bIcdO8z5Qwxlac
++VS/iGhzYyUj6MPulGtVQUrctefSwI41cyCMmo11iGuiqjRJQV/CHjDsuj2SMgFq
+lscpn0kEzXp3C/hbj76lfIflHzZIypR4jBS7Z1uNciEC4bLqm2zteBZQuM8EbbhW
+7xBxP/YTEShy3AZ6aTGiQuTyqpLYhpRzkNK/9wadsqwHDsh6ybJV6eBWWbYeLm0t
+ZiU21NQvRWta+XDK0ObiAnv4Gqm02f2yQL+QMNoTPfq49UBPDR4lKvgT5Kz0HEEl
+cPbbz/qymtv869q02wRAPhzl70vfusHFxcds3xPkbeZST8CL05GAydRez15I7Uyx
+bYlCZ3IgzKaT1s2gYPBigpHqCc2mhi6IDtV1eJq2xkjH6DnTc5IIXqfBWk2BLn3b
+KuVOa5s8lpstdds8DOaAK+r32+klcFqZTsQV4YODNhcD67IvgSxjraRz5vqluM2E
+U3QzdFfdTuzLPg3gD3iUSjI3zeQVCTTq1AcmEe91WETNdUsSsI2BQ6hwRYtjuOqB
+8pDRwWsLOMTAhLmepamig/XrAlgeJklMoKy6g3w884HNd5+E22H+AKDtesUJ+sKM
+pA9IBblNxKPSa1PD2vBH
+=H1gQ
+-----END PGP SIGNATURE-----
 
-RnJvbTogQW5kcmV3IENvb2tzIDxhY29va3NAZ21haWwuY29tPgpEYXRlOiBGcmksIDEgTWFyIDIw
-MTMgMTU6MjU6MTcgKzA4MDAKU3ViamVjdDogW1BBVENIXSBRdWlyayB0byBzdXBwb3J0IE1hcnZl
-bGwgODhTRTkxeHggU0FUQSBjb250cm9sbGVycyB3aXRoIEludGVsIElPTU1VLgoKVGhpcyBpcyBt
-eSB0aGlyZCBzdWJtaXR0ZWQgcGF0Y2ggdG8gbWFrZSBNYXJ2ZWxsIDg4U0U5MXh4IFNBVEEgY29u
-dHJvbGxlcnMgd29yayB3aGVuIElPTU1VIGlzIGVuYWJsZWQuWzFdWzJdCgpXaGF0J3MgY2hhbmdl
-ZDoKKiBBZG9wdCBEYXZpZCBXb29kaG91c2UncyB0ZXJtaW5vbG9neSBieSByZWZlcnJpbmcgdG8g
-dGhlIHF1aXJreSBmdW5jdGlvbnMgYXMgJ2dob3N0JyBmdW5jdGlvbnMuCiogVW5tYXAgZ2hvc3Qg
-ZnVuY3Rpb25zIHdoZW4gZGV2aWNlIGlzIGRldGFjaGVkIGZyb20gSU9NTVUuCiogU3R1YiBmdW5j
-dGlvbiBmb3Igd2hlbiBDT05GSUdfUENJX1FVSVJLUyBpcyBub3QgZW5hYmxlZC4KClRoZSBiYWQ6
-CiogU3RpbGwgbm8gQU1EIHN1cHBvcnQuCiogVGhlIHRhYmxlIG9mIGFmZmVjdGVkIGNoaXAgSURz
-IGlzIGFzIGNvbXBsZXRlIGFzIEkgY2FuIG1ha2UgaXQgYnkgZ29vZ2xpbmcgZm9yIGJ1ZyByZXBv
-cnRzLgoKVGhpcyBwYXRjaCB3YXMgZ2VuZXJhdGVkIGFnYWluc3QgY29tbWl0IGIwYWY5Y2Q5YWFi
-NjBjZWIxN2QzZWJhYmI5ZmRmNGZmMGE5OWNmNTAsIGJ1dCB3aWxsIGFsc28gYXBwbHkgY2xlYW5s
-eSB0byAzLjcuMTAuCgpCdWcgcmVwb3J0czoKMS4gaHR0cHM6Ly9idWd6aWxsYS5yZWRoYXQuY29t
-L3Nob3dfYnVnLmNnaT9pZD03NTcxNjYKMi4gaHR0cHM6Ly9idWd6aWxsYS5rZXJuZWwub3JnL3No
-b3dfYnVnLmNnaT9pZD00MjY3OQoKU2lnbmVkLW9mZi1ieTogQW5kcmV3IENvb2tzIDxhY29va3NA
-Z21haWwuY29tPgotLS0KIGRyaXZlcnMvaW9tbXUvaW50ZWwtaW9tbXUuYyB8ICAgNTAgKysrKysr
-KysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKwogZHJpdmVycy9wY2kvcXVpcmtz
-LmMgICAgICAgIHwgICA0NyArKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKyst
-CiBpbmNsdWRlL2xpbnV4L3BjaS5oICAgICAgICAgfCAgICA1ICsrKysKIGluY2x1ZGUvbGludXgv
-cGNpX2lkcy5oICAgICB8ICAgIDEgKwogNCBmaWxlcyBjaGFuZ2VkLCAxMDIgaW5zZXJ0aW9ucygr
-KSwgMSBkZWxldGlvbnMoLSkKCmRpZmYgLS1naXQgYS9kcml2ZXJzL2lvbW11L2ludGVsLWlvbW11
-LmMgYi9kcml2ZXJzL2lvbW11L2ludGVsLWlvbW11LmMKaW5kZXggMDA5OTY2Ny4uMTMzMjNmMiAx
-MDA2NDQKLS0tIGEvZHJpdmVycy9pb21tdS9pbnRlbC1pb21tdS5jCisrKyBiL2RyaXZlcnMvaW9t
-bXUvaW50ZWwtaW9tbXUuYwpAQCAtMTY3NCw2ICsxNjc0LDUwIEBAIHN0YXRpYyBpbnQgZG9tYWlu
-X2NvbnRleHRfbWFwcGluZ19vbmUoc3RydWN0IGRtYXJfZG9tYWluICpkb21haW4sIGludCBzZWdt
-ZW50LAogCXJldHVybiAwOwogfQogCisvKiBGb3IgcXVpcmt5IGRldmljZXMgbGlrZSBNYXJ2ZWxs
-IDg4U0U5MXh4IGNoaXBzIHRoYXQgdXNlIGdob3N0IGZ1bmN0aW9ucy4gKi8KK3N0YXRpYyBpbnQg
-bWFwX2dob3N0X2RtYV9mbihzdHJ1Y3QgZG1hcl9kb21haW4gKmRvbWFpbiwKKwkJc3RydWN0IHBj
-aV9kZXYgKnBkZXYsCisJCWludCB0cmFuc2xhdGlvbikKK3sKKwl1OCBmbiwgZm5fbWFwOworCWlu
-dCBlcnIgPSAwOworCisJZm5fbWFwID0gcGNpX2dldF9kbWFfc291cmNlX21hcChwZGV2KTsKKwor
-CWZvciAoZm4gPSAxOyBmbiA8IDg7IGZuKyspIHsKKwkJaWYgKGZuX21hcCAmICgxIDw8IGZuKSkg
-eworCQkJZXJyID0gZG9tYWluX2NvbnRleHRfbWFwcGluZ19vbmUoZG9tYWluLAorCQkJCQlwY2lf
-ZG9tYWluX25yKHBkZXYtPmJ1cyksCisJCQkJCXBkZXYtPmJ1cy0+bnVtYmVyLAorCQkJCQlQQ0lf
-REVWRk4oUENJX1NMT1QocGRldi0+ZGV2Zm4pLCBmbiksCisJCQkJCXRyYW5zbGF0aW9uKTsKKwkJ
-CWlmIChlcnIpCisJCQkJcmV0dXJuIGVycjsKKwkJCWRldl9kYmcoJnBkZXYtPmRldiwgImRtYSBx
-dWlyazsgZnVuYyAlZCBtYXBwZWQiLCBmbik7CisJCX0KKwl9CisJcmV0dXJuIDA7Cit9CisKK3N0
-YXRpYyB2b2lkIGlvbW11X2RldGFjaF9kZXYoc3RydWN0IGludGVsX2lvbW11ICppb21tdSwgdTgg
-YnVzLCB1OCBkZXZmbik7CisKK3N0YXRpYyB2b2lkIHVubWFwX2dob3N0X2RtYV9mbihzdHJ1Y3Qg
-aW50ZWxfaW9tbXUgKmlvbW11LAorCQlzdHJ1Y3QgcGNpX2RldiAqcGRldikKK3sKKwl1OCBmbiwg
-Zm5fbWFwOworCisJZm5fbWFwID0gcGNpX2dldF9kbWFfc291cmNlX21hcChwZGV2KTsKKworCWZv
-ciAoZm4gPSAxOyBmbiA8IDg7IGZuKyspIHsKKwkJaWYgKGZuX21hcCAmICgxIDw8IGZuKSkgewor
-CQkJaW9tbXVfZGV0YWNoX2Rldihpb21tdSwKKwkJCQkJcGRldi0+YnVzLT5udW1iZXIsCisJCQkJ
-CVBDSV9ERVZGTihQQ0lfU0xPVChwZGV2LT5kZXZmbiksIGZuKSk7CisJCQlkZXZfZGJnKCZwZGV2
-LT5kZXYsICJkbWEgcXVpcms7IGZ1bmMgJWQgdW5tYXBwZWQiLCBmbik7CisJCX0KKwl9Cit9CisK
-IHN0YXRpYyBpbnQKIGRvbWFpbl9jb250ZXh0X21hcHBpbmcoc3RydWN0IGRtYXJfZG9tYWluICpk
-b21haW4sIHN0cnVjdCBwY2lfZGV2ICpwZGV2LAogCQkJaW50IHRyYW5zbGF0aW9uKQpAQCAtMTY4
-Nyw2ICsxNzMxLDExIEBAIGRvbWFpbl9jb250ZXh0X21hcHBpbmcoc3RydWN0IGRtYXJfZG9tYWlu
-ICpkb21haW4sIHN0cnVjdCBwY2lfZGV2ICpwZGV2LAogCWlmIChyZXQpCiAJCXJldHVybiByZXQ7
-CiAKKwkvKiBxdWlyayBmb3IgdW5kZWNsYXJlZC9naG9zdCBwY2kgZnVuY3Rpb25zICovCisJcmV0
-ID0gbWFwX2dob3N0X2RtYV9mbihkb21haW4sIHBkZXYsIHRyYW5zbGF0aW9uKTsKKwlpZiAocmV0
-KQorCQlyZXR1cm4gcmV0OworCiAJLyogZGVwZW5kZW50IGRldmljZSBtYXBwaW5nICovCiAJdG1w
-ID0gcGNpX2ZpbmRfdXBzdHJlYW1fcGNpZV9icmlkZ2UocGRldik7CiAJaWYgKCF0bXApCkBAIC0z
-Nzg2LDYgKzM4MzUsNyBAQCBzdGF0aWMgdm9pZCBkb21haW5fcmVtb3ZlX29uZV9kZXZfaW5mbyhz
-dHJ1Y3QgZG1hcl9kb21haW4gKmRvbWFpbiwKIAkJCWlvbW11X2Rpc2FibGVfZGV2X2lvdGxiKGlu
-Zm8pOwogCQkJaW9tbXVfZGV0YWNoX2Rldihpb21tdSwgaW5mby0+YnVzLCBpbmZvLT5kZXZmbik7
-CiAJCQlpb21tdV9kZXRhY2hfZGVwZW5kZW50X2RldmljZXMoaW9tbXUsIHBkZXYpOworCQkJdW5t
-YXBfZ2hvc3RfZG1hX2ZuKGlvbW11LCBwZGV2KTsKIAkJCWZyZWVfZGV2aW5mb19tZW0oaW5mbyk7
-CiAKIAkJCXNwaW5fbG9ja19pcnFzYXZlKCZkZXZpY2VfZG9tYWluX2xvY2ssIGZsYWdzKTsKZGlm
-ZiAtLWdpdCBhL2RyaXZlcnMvcGNpL3F1aXJrcy5jIGIvZHJpdmVycy9wY2kvcXVpcmtzLmMKaW5k
-ZXggMDM2OWZiNi4uZDMxMTEwMCAxMDA2NDQKLS0tIGEvZHJpdmVycy9wY2kvcXVpcmtzLmMKKysr
-IGIvZHJpdmVycy9wY2kvcXVpcmtzLmMKQEAgLTMyNDksNiArMzI0OSwxMCBAQCBzdGF0aWMgc3Ry
-dWN0IHBjaV9kZXYgKnBjaV9mdW5jXzBfZG1hX3NvdXJjZShzdHJ1Y3QgcGNpX2RldiAqZGV2KQog
-CXJldHVybiBwY2lfZ2V0X3Nsb3QoZGV2LT5idXMsIFBDSV9ERVZGTihQQ0lfU0xPVChkZXYtPmRl
-dmZuKSwgMCkpOwogfQogCisvKiBUYWJsZSBvZiBzb3VyY2UgZnVuY3Rpb25zIGZvciByZWFsIGRl
-dmljZXMuIFRoZSBETUEgcmVxdWVzdHMgZm9yIHRoZQorICogZGV2aWNlIGFyZSB0YWdnZWQgd2l0
-aCBhIGRpZmZlcmVudCByZWFsIGZ1bmN0aW9uIGFzIHNvdXJjZS4gVGhpcyBpcworICogcmVsZXZh
-bnQgdG8gbXVsdGlmdW5jdGlvbiBkZXZpY2VzLgorICovCiBzdGF0aWMgY29uc3Qgc3RydWN0IHBj
-aV9kZXZfZG1hX3NvdXJjZSB7CiAJdTE2IHZlbmRvcjsKIAl1MTYgZGV2aWNlOwpAQCAtMzI3NSw3
-ICszMjc5LDggQEAgc3RhdGljIGNvbnN0IHN0cnVjdCBwY2lfZGV2X2RtYV9zb3VyY2UgewogICog
-dGhlIGRldmljZSBkb2luZyB0aGUgRE1BLCBidXQgc29tZXRpbWVzIGhhcmR3YXJlIGlzIGJyb2tl
-biBhbmQgd2lsbAogICogdGFnIHRoZSBETUEgYXMgYmVpbmcgc291cmNlZCBmcm9tIGEgZGlmZmVy
-ZW50IGRldmljZS4gIFRoaXMgZnVuY3Rpb24KICAqIGFsbG93cyB0aGF0IHRyYW5zbGF0aW9uLiAg
-Tm90ZSB0aGF0IHRoZSByZWZlcmVuY2UgY291bnQgb2YgdGhlCi0gKiByZXR1cm5lZCBkZXZpY2Ug
-aXMgaW5jcmVtZW50ZWQgb24gYWxsIHBhdGhzLgorICogcmV0dXJuZWQgZGV2aWNlIGlzIGluY3Jl
-bWVudGVkIG9uIGFsbCBwYXRocy4gVHJhbnNsYXRpb24gaXMgZG9uZSB3aGVuCisgKiB0aGUgZGV2
-aWNlIGlzIGFkZGVkIHRvIGFuIElPTU1VIGdyb3VwLgogICovCiBzdHJ1Y3QgcGNpX2RldiAqcGNp
-X2dldF9kbWFfc291cmNlKHN0cnVjdCBwY2lfZGV2ICpkZXYpCiB7CkBAIC0zMjkyLDYgKzMyOTcs
-NDYgQEAgc3RydWN0IHBjaV9kZXYgKnBjaV9nZXRfZG1hX3NvdXJjZShzdHJ1Y3QgcGNpX2RldiAq
-ZGV2KQogCXJldHVybiBwY2lfZGV2X2dldChkZXYpOwogfQogCisvKiBUYWJsZSBvZiBtdWx0aXBs
-ZSAoZ2hvc3QpIHNvdXJjZSBmdW5jdGlvbnMuIFRoaXMgaXMgc2ltaWxhciB0byB0aGUKKyAqIHRy
-YW5zbGF0ZWQgc291cmNlcyBhYm92ZSwgYnV0IHdpdGggdGhlIGZvbGxvd2luZyBkaWZmZXJlbmNl
-czoKKyAqIDEuIHRoZSBkZXZpY2UgbWF5IHVzZSBtdWx0aXBsZSBmdW5jdGlvbnMgYXMgRE1BIHNv
-dXJjZXMsCisgKiAyLiB0aGVzZSBmdW5jdGlvbnMgY2Fubm90IGJlIGFzc3VtZWQgdG8gYmUgYWN0
-dWFsIGRldmljZXMsCisgKiAzLiB0aGUgc3BlY2lmaWMgZ2hvc3QgZnVuY3Rpb24gZm9yIGEgcmVx
-dWVzdCBjYW4gbm90IGJlIGV4YWN0bHkgcHJlZGljdGVkLgorICogVGhlIGJpdG1hcCBvbmx5IGNv
-bnRhaW5zIHRoZSBhZGRpdGlvbmFsIHF1aXJrIGZ1bmN0aW9ucy4KKyAqLworc3RhdGljIGNvbnN0
-IHN0cnVjdCBwY2lfZGV2X2RtYV9tdWx0aV9mdW5jX3NvdXJjZXMgeworCXUxNiB2ZW5kb3I7CisJ
-dTE2IGRldmljZTsKKwl1OCBmdW5jX21hcDsJLyogYml0IG1hcC4gbHNiIGlzIGZuIDAuICovCit9
-IHBjaV9kZXZfZG1hX211bHRpX2Z1bmNfc291cmNlc1tdID0geworCXsgUENJX1ZFTkRPUl9JRF9N
-QVJWRUxMXzIsIDB4OTEyMywgKDE8PDApfCgxPDwxKX0sCisJeyBQQ0lfVkVORE9SX0lEX01BUlZF
-TExfMiwgMHg5MTI1LCAoMTw8MCl8KDE8PDEpfSwKKwl7IFBDSV9WRU5ET1JfSURfTUFSVkVMTF8y
-LCAweDkxMjgsICgxPDwwKXwoMTw8MSl9LAorCXsgUENJX1ZFTkRPUl9JRF9NQVJWRUxMXzIsIDB4
-OTEzMCwgKDE8PDApfCgxPDwxKX0sCisJeyBQQ0lfVkVORE9SX0lEX01BUlZFTExfMiwgMHg5MTcy
-LCAoMTw8MCl8KDE8PDEpfSwKKwl7IDAgfQorfTsKKworLyoKKyAqIFRoZSBtYXBwaW5nIG9mIGZh
-a2UvZ2hvc3QgZnVuY3Rpb25zIGlzIHVzZWQgd2hlbiB0aGUgcmVhbCBkZXZpY2UgaXMKKyAqIGF0
-dGFjaGVkIHRvIGFuIElPTU1VIGRvbWFpbi4gSU9NTVUgZ3JvdXBzIGFyZSBub3QgYXdhcmUgb2Yg
-dGhlc2UKKyAqIGZ1bmN0aW9ucywgYmVjYXVzZSB0aGV5J3JlIG5vdCByZWFsIGRldmljZXMuCisg
-Ki8KK3U4IHBjaV9nZXRfZG1hX3NvdXJjZV9tYXAoc3RydWN0IHBjaV9kZXYgKmRldikKK3sKKwlj
-b25zdCBzdHJ1Y3QgcGNpX2Rldl9kbWFfbXVsdGlfZnVuY19zb3VyY2VzICppOworCisJZm9yIChp
-ID0gcGNpX2Rldl9kbWFfbXVsdGlfZnVuY19zb3VyY2VzOyBpLT5mdW5jX21hcDsgaSsrKSB7CisJ
-CWlmICgoaS0+dmVuZG9yID09IGRldi0+dmVuZG9yIHx8CisJCSAgICAgaS0+dmVuZG9yID09ICh1
-MTYpUENJX0FOWV9JRCkgJiYKKwkJICAgIChpLT5kZXZpY2UgPT0gZGV2LT5kZXZpY2UgfHwKKwkJ
-ICAgICBpLT5kZXZpY2UgPT0gKHUxNilQQ0lfQU5ZX0lEKSkgeworCQkJcmV0dXJuIGktPmZ1bmNf
-bWFwOworCQl9CisJfQorCXJldHVybiAwOworfQorCiBzdGF0aWMgY29uc3Qgc3RydWN0IHBjaV9k
-ZXZfYWNzX2VuYWJsZWQgewogCXUxNiB2ZW5kb3I7CiAJdTE2IGRldmljZTsKZGlmZiAtLWdpdCBh
-L2luY2x1ZGUvbGludXgvcGNpLmggYi9pbmNsdWRlL2xpbnV4L3BjaS5oCmluZGV4IDI0NjEwMzMu
-LjVhZDM4MjIgMTAwNjQ0Ci0tLSBhL2luY2x1ZGUvbGludXgvcGNpLmgKKysrIGIvaW5jbHVkZS9s
-aW51eC9wY2kuaApAQCAtMTU3OCw2ICsxNTc4LDcgQEAgZW51bSBwY2lfZml4dXBfcGFzcyB7CiAj
-aWZkZWYgQ09ORklHX1BDSV9RVUlSS1MKIHZvaWQgcGNpX2ZpeHVwX2RldmljZShlbnVtIHBjaV9m
-aXh1cF9wYXNzIHBhc3MsIHN0cnVjdCBwY2lfZGV2ICpkZXYpOwogc3RydWN0IHBjaV9kZXYgKnBj
-aV9nZXRfZG1hX3NvdXJjZShzdHJ1Y3QgcGNpX2RldiAqZGV2KTsKK3U4IHBjaV9nZXRfZG1hX3Nv
-dXJjZV9tYXAoc3RydWN0IHBjaV9kZXYgKmRldik7CiBpbnQgcGNpX2Rldl9zcGVjaWZpY19hY3Nf
-ZW5hYmxlZChzdHJ1Y3QgcGNpX2RldiAqZGV2LCB1MTYgYWNzX2ZsYWdzKTsKICNlbHNlCiBzdGF0
-aWMgaW5saW5lIHZvaWQgcGNpX2ZpeHVwX2RldmljZShlbnVtIHBjaV9maXh1cF9wYXNzIHBhc3Ms
-CkBAIC0xNTg2LDYgKzE1ODcsMTAgQEAgc3RhdGljIGlubGluZSBzdHJ1Y3QgcGNpX2RldiAqcGNp
-X2dldF9kbWFfc291cmNlKHN0cnVjdCBwY2lfZGV2ICpkZXYpCiB7CiAJcmV0dXJuIHBjaV9kZXZf
-Z2V0KGRldik7CiB9Cit1OCBwY2lfZ2V0X2RtYV9zb3VyY2VfbWFwKHN0cnVjdCBwY2lfZGV2ICpk
-ZXYpCit7CisJcmV0dXJuIDA7Cit9CiBzdGF0aWMgaW5saW5lIGludCBwY2lfZGV2X3NwZWNpZmlj
-X2Fjc19lbmFibGVkKHN0cnVjdCBwY2lfZGV2ICpkZXYsCiAJCQkJCSAgICAgICB1MTYgYWNzX2Zs
-YWdzKQogewpkaWZmIC0tZ2l0IGEvaW5jbHVkZS9saW51eC9wY2lfaWRzLmggYi9pbmNsdWRlL2xp
-bnV4L3BjaV9pZHMuaAppbmRleCBmMTFjMWMyLi5kZjU3NDk2IDEwMDY0NAotLS0gYS9pbmNsdWRl
-L2xpbnV4L3BjaV9pZHMuaAorKysgYi9pbmNsdWRlL2xpbnV4L3BjaV9pZHMuaApAQCAtMTYwNCw2
-ICsxNjA0LDcgQEAKICNkZWZpbmUgUENJX1NVQkRFVklDRV9JRF9LRVlTUEFOX1NYMgkweDUzMzQK
-IAogI2RlZmluZSBQQ0lfVkVORE9SX0lEX01BUlZFTEwJCTB4MTFhYgorI2RlZmluZSBQQ0lfVkVO
-RE9SX0lEX01BUlZFTExfMgkweDFiNGIKICNkZWZpbmUgUENJX0RFVklDRV9JRF9NQVJWRUxMX0dU
-NjQxMTEJMHg0MTQ2CiAjZGVmaW5lIFBDSV9ERVZJQ0VfSURfTUFSVkVMTF9HVDY0MjYwCTB4NjQz
-MAogI2RlZmluZSBQQ0lfREVWSUNFX0lEX01BUlZFTExfTVY2NDM2MAkweDY0NjAKLS0gCjEuNy4x
-Cgo=
---bcaec555549456d3d004d70f5ee8--
+--45Z9DzgjV8m4Oswq--
