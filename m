@@ -1,41 +1,57 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>, Ram Pai <linuxram@us.ibm.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v3 05/27] PCI: Update pci_resource_start etc to use pci_dev_resource_n()
-Date: Wed, 13 Mar 2013 16:28:00 -0700
-Message-Id: <1363217302-14383-6-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1363217302-14383-1-git-send-email-yinghai@kernel.org>
-References: <1363217302-14383-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.free-electrons.com ([94.23.35.102]:33656 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752472Ab3C0SFK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Mar 2013 14:05:10 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Russell King <linux@arm.linux.org.uk>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	devicetree-discuss@lists.ozlabs.org,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Maen Suleiman <maen@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Olof Johansson <olof@lixom.net>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Mitch Bradley <wmb@firmworks.com>,
+	Andrew Murray <andrew.murray@arm.com>
+Subject: [RFC PATCHv1 2/5] bus: mvebu: fix mistake in PCIe window target attribute for Kirkwood
+Date: Wed, 27 Mar 2013 19:05:01 +0100
+Message-Id: <1364407504-13524-3-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1364407504-13524-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1364407504-13524-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now pci_resource_start is using dev->resource[n] directly.
-Replace it with pci_dev_resource[n] to prepare for addon resource support.
+The target and attributes for the PCIe address decoding windows were
+not correct on Kirkwood for the second PCIe interface.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
 ---
- include/linux/pci.h |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+Note: this patch should be merged with the existing mvebu-mbus driver.
+---
+ drivers/bus/mvebu-mbus.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index efb348b..94935fc 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1488,9 +1488,9 @@ static inline struct pci_dev *pci_dev_get(struct pci_dev *dev)
+diff --git a/drivers/bus/mvebu-mbus.c b/drivers/bus/mvebu-mbus.c
+index 586d03e..4de2c6b 100644
+--- a/drivers/bus/mvebu-mbus.c
++++ b/drivers/bus/mvebu-mbus.c
+@@ -626,7 +626,7 @@ static const struct mvebu_mbus_soc_data armada_xp_mbus_data = {
  
- /* these helpers provide future and backwards compatibility
-  * for accessing popular PCI BAR info */
--#define pci_resource_start(dev, bar)	((dev)->resource[(bar)].start)
--#define pci_resource_end(dev, bar)	((dev)->resource[(bar)].end)
--#define pci_resource_flags(dev, bar)	((dev)->resource[(bar)].flags)
-+#define pci_resource_start(dev, bar)	(pci_dev_resource_n(dev, (bar))->start)
-+#define pci_resource_end(dev, bar)	(pci_dev_resource_n(dev, (bar))->end)
-+#define pci_resource_flags(dev, bar)	(pci_dev_resource_n(dev, (bar))->flags)
- #define pci_resource_len(dev,bar) \
- 	((pci_resource_start((dev), (bar)) == 0 &&	\
- 	  pci_resource_end((dev), (bar)) ==		\
+ static const struct mvebu_mbus_mapping kirkwood_map[] = {
+ 	MAPDEF("pcie0.0", 4, 0xe0, MAPDEF_PCIMASK),
+-	MAPDEF("pcie1.0", 8, 0xe0, MAPDEF_PCIMASK),
++	MAPDEF("pcie1.0", 4, 0xd0, MAPDEF_PCIMASK),
+ 	MAPDEF("sram",    3, 0x01, MAPDEF_NOMASK),
+ 	MAPDEF("nand",    1, 0x2f, MAPDEF_NOMASK),
+ 	{},
 -- 
-1.7.10.4
+1.7.9.5
 
