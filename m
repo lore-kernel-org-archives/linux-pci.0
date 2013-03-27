@@ -1,268 +1,189 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e24smtp01.br.ibm.com ([32.104.18.85]:43127 "EHLO
-	e24smtp01.br.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755917Ab3CNRqB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 14 Mar 2013 13:46:01 -0400
-Received: from /spool/local
-	by e24smtp01.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <lucaskt@linux.vnet.ibm.com>;
-	Thu, 14 Mar 2013 14:45:59 -0300
-Received: from d24relay01.br.ibm.com (d24relay01.br.ibm.com [9.8.31.16])
-	by d24dlp02.br.ibm.com (Postfix) with ESMTP id 284331DC006E
-	for <linux-pci@vger.kernel.org>; Thu, 14 Mar 2013 13:45:56 -0400 (EDT)
-Received: from d24av01.br.ibm.com (d24av01.br.ibm.com [9.8.31.91])
-	by d24relay01.br.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id r2EHhoh72326598
-	for <linux-pci@vger.kernel.org>; Thu, 14 Mar 2013 14:43:50 -0300
-Received: from d24av01.br.ibm.com (loopback [127.0.0.1])
-	by d24av01.br.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id r2EHjtdQ013436
-	for <linux-pci@vger.kernel.org>; Thu, 14 Mar 2013 14:45:55 -0300
-From: lucaskt@linux.vnet.ibm.com
-To: dri-devel@lists.freedesktop.org
-Cc: linux-pci@vger.kernel.org,
-	Alex Deucher <alexander.deucher@amd.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, brking@linux.vnet.ibm.com,
-	cascardo@linux.vnet.ibm.com,
-	Lucas Kannebley Tavares <lucaskt@linux.vnet.ibm.com>
-Subject: [PATCH 1/2] drm: Move drm_pcie_get_speed_cap_mask to PCI
-Date: Thu, 14 Mar 2013 14:45:46 -0300
-Message-Id: <1363283147-8852-2-git-send-email-lucaskt@linux.vnet.ibm.com>
-In-Reply-To: <1363283147-8852-1-git-send-email-lucaskt@linux.vnet.ibm.com>
-References: <1363283147-8852-1-git-send-email-lucaskt@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>
+Cc: 'Kukjin Kim' <kgene.kim@samsung.com>,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
+	linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org,
+	devicetree-discuss@lists.ozlabs.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	'Grant Likely' <grant.likely@secretlab.ca>,
+	'Andrew Murray' <andrew.murray@arm.com>,
+	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
+	'Thierry Reding' <thierry.reding@avionic-design.de>,
+	'Surendranath Gurivireddy Balla' <suren.reddy@samsung.com>,
+	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
+	'Thomas Abraham' <thomas.abraham@linaro.org>,
+	'Jingoo Han' <jg1.han@samsung.com>
+References: <00c001ce277b$92b26ab0$b8174010$%han@samsung.com>
+ <00c501ce277c$30e49dc0$92add940$%han@samsung.com>
+ <20130325170448.GB16690@obsidianresearch.com>
+In-reply-to: <20130325170448.GB16690@obsidianresearch.com>
+Subject: Re: [PATCH 6/6] ARM: dts: Add pcie controller node for Samsung
+ EXYNOS5440 SoC
+Date: Wed, 27 Mar 2013 17:35:48 +0900
+Message-id: <020e01ce2ac6$14fd7850$3ef868f0$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Lucas Kannebley Tavares <lucaskt@linux.vnet.ibm.com>
+On Tuesday, March 26, 2013 2:05 AM, Jason Gunthorpe wrote:
+> 
+> On Sat, Mar 23, 2013 at 01:09:18PM +0900, Jingoo Han wrote:
+> 
+> > +	pcie0@40000000 {
+> > +		compatible = "samsung,exynos5440-pcie";
+> > +		reg = <0x40000000 0x4000
+> > +			0x290000 0x1000
+> > +			0x270000 0x1000
+> > +			0x271000 0x40>;
+> > +		interrupts = <0 20 0>, <0 21 0>, <0 22 0>;
+> > +		#address-cells = <3>;
+> > +		#size-cells = <2>;
+> > +		device_type = "pci";
+> > +		bus-range = <0x0 0xf>;
+> > +		ranges = <0x00000800 0 0x40000000 0x40000000 0 0x00200000   /* configuration space */
+> > +			  0x81000000 0 0	  0x40200000 0 0x00004000   /* downstream I/O */
+> > +			  0x82000000 0 0	  0x40204000 0 0x10000000>; /* non-prefetchable memory */
+> > +	};
+> 
+> Can you send the lspci output so these bindings can be properly
+> reviewed? What PCI devices are internal to the SOC?
+> 
+> What is behind 'exynos_pcie_wr_own_conf' ? Is this a root port bridge
+> config space? What line is it in the lspci output? Can you include a
+> lspci -vv for it as well?
 
-This function was more architecture related than drm related, as such it was
-moved to the PCI driver.
+Hi Jason Gunthorpe,
+Thank you for your comment :)
 
-This patch also allows it to be overwritten by architecture-dependent
-implementations, and fixes the radeon driver (only one that uses it).
+Here is the lspci -vv output.
+I tested Exynos PCIe with e1000e lan card.
 
-Signed-off-by: Lucas Kannebley Tavares <lucaskt@linux.vnet.ibm.com>
----
- drivers/gpu/drm/drm_pci.c          |   38 -------------------------------
- drivers/gpu/drm/radeon/evergreen.c |    5 ++-
- drivers/gpu/drm/radeon/r600.c      |    5 ++-
- drivers/gpu/drm/radeon/rv770.c     |    5 ++-
- drivers/pci/pci.c                  |   43 ++++++++++++++++++++++++++++++++++++
- include/drm/drmP.h                 |    6 -----
- include/linux/pci.h                |    6 +++++
- 7 files changed, 58 insertions(+), 50 deletions(-)
+00:00.0 PCI bridge: Samsung Electronics Co Ltd Device a549 (rev 01) (prog-if 00 [Normal decode])
+        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr+ Stepping- SERR+ FastB2B- DisINTx-
+        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+        Latency: 0, Cache Line Size: 64 bytes
+        Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
+        I/O behind bridge: 00000000-00000fff
+        Memory behind bridge: 40300000-403fffff
+        Prefetchable memory behind bridge: 40400000-404fffff
+        Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- <SERR- <PERR-
+        BridgeCtl: Parity+ SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
+                PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
+        Capabilities: <access denied>
+        Kernel driver in use: pcieport
 
-diff --git a/drivers/gpu/drm/drm_pci.c b/drivers/gpu/drm/drm_pci.c
-index bd719e9..ba70844 100644
---- a/drivers/gpu/drm/drm_pci.c
-+++ b/drivers/gpu/drm/drm_pci.c
-@@ -439,44 +439,6 @@ int drm_pci_init(struct drm_driver *driver, struct pci_driver *pdriver)
- 	return 0;
- }
- 
--int drm_pcie_get_speed_cap_mask(struct drm_device *dev, u32 *mask)
--{
--	struct pci_dev *root;
--	u32 lnkcap, lnkcap2;
--
--	*mask = 0;
--	if (!dev->pdev)
--		return -EINVAL;
--
--	root = dev->pdev->bus->self;
--
--	/* we've been informed via and serverworks don't make the cut */
--	if (root->vendor == PCI_VENDOR_ID_VIA ||
--	    root->vendor == PCI_VENDOR_ID_SERVERWORKS)
--		return -EINVAL;
--
--	pcie_capability_read_dword(root, PCI_EXP_LNKCAP, &lnkcap);
--	pcie_capability_read_dword(root, PCI_EXP_LNKCAP2, &lnkcap2);
--
--	if (lnkcap2) {	/* PCIe r3.0-compliant */
--		if (lnkcap2 & PCI_EXP_LNKCAP2_SLS_2_5GB)
--			*mask |= DRM_PCIE_SPEED_25;
--		if (lnkcap2 & PCI_EXP_LNKCAP2_SLS_5_0GB)
--			*mask |= DRM_PCIE_SPEED_50;
--		if (lnkcap2 & PCI_EXP_LNKCAP2_SLS_8_0GB)
--			*mask |= DRM_PCIE_SPEED_80;
--	} else {	/* pre-r3.0 */
--		if (lnkcap & PCI_EXP_LNKCAP_SLS_2_5GB)
--			*mask |= DRM_PCIE_SPEED_25;
--		if (lnkcap & PCI_EXP_LNKCAP_SLS_5_0GB)
--			*mask |= (DRM_PCIE_SPEED_25 | DRM_PCIE_SPEED_50);
--	}
--
--	DRM_INFO("probing gen 2 caps for device %x:%x = %x/%x\n", root->vendor, root->device, lnkcap, lnkcap2);
--	return 0;
--}
--EXPORT_SYMBOL(drm_pcie_get_speed_cap_mask);
--
- #else
- 
- int drm_pci_init(struct drm_driver *driver, struct pci_driver *pdriver)
-diff --git a/drivers/gpu/drm/radeon/evergreen.c b/drivers/gpu/drm/radeon/evergreen.c
-index 305a657..6ba204d 100644
---- a/drivers/gpu/drm/radeon/evergreen.c
-+++ b/drivers/gpu/drm/radeon/evergreen.c
-@@ -24,6 +24,7 @@
- #include <linux/firmware.h>
- #include <linux/platform_device.h>
- #include <linux/slab.h>
-+#include <linux/pci.h>
- #include <drm/drmP.h>
- #include "radeon.h"
- #include "radeon_asic.h"
-@@ -3871,11 +3872,11 @@ void evergreen_pcie_gen2_enable(struct radeon_device *rdev)
- 	if (ASIC_IS_X2(rdev))
- 		return;
- 
--	ret = drm_pcie_get_speed_cap_mask(rdev->ddev, &mask);
-+	ret = pcie_get_speed_cap_mask(rdev->ddev->pdev, &mask);
- 	if (ret != 0)
- 		return;
- 
--	if (!(mask & DRM_PCIE_SPEED_50))
-+	if (!(mask & PCIE_SPEED_50))
- 		return;
- 
- 	speed_cntl = RREG32_PCIE_P(PCIE_LC_SPEED_CNTL);
-diff --git a/drivers/gpu/drm/radeon/r600.c b/drivers/gpu/drm/radeon/r600.c
-index 0740db3..89a7387 100644
---- a/drivers/gpu/drm/radeon/r600.c
-+++ b/drivers/gpu/drm/radeon/r600.c
-@@ -30,6 +30,7 @@
- #include <linux/firmware.h>
- #include <linux/platform_device.h>
- #include <linux/module.h>
-+#include <linux/pci.h>
- #include <drm/drmP.h>
- #include <drm/radeon_drm.h>
- #include "radeon.h"
-@@ -4371,11 +4372,11 @@ static void r600_pcie_gen2_enable(struct radeon_device *rdev)
- 	if (rdev->family <= CHIP_R600)
- 		return;
- 
--	ret = drm_pcie_get_speed_cap_mask(rdev->ddev, &mask);
-+	ret = pcie_get_speed_cap_mask(rdev->ddev->pdev, &mask);
- 	if (ret != 0)
- 		return;
- 
--	if (!(mask & DRM_PCIE_SPEED_50))
-+	if (!(mask & PCIE_SPEED_50))
- 		return;
- 
- 	speed_cntl = RREG32_PCIE_P(PCIE_LC_SPEED_CNTL);
-diff --git a/drivers/gpu/drm/radeon/rv770.c b/drivers/gpu/drm/radeon/rv770.c
-index d63fe1d..81c7f1c 100644
---- a/drivers/gpu/drm/radeon/rv770.c
-+++ b/drivers/gpu/drm/radeon/rv770.c
-@@ -28,6 +28,7 @@
- #include <linux/firmware.h>
- #include <linux/platform_device.h>
- #include <linux/slab.h>
-+#include <linux/pci.h>
- #include <drm/drmP.h>
- #include "radeon.h"
- #include "radeon_asic.h"
-@@ -1254,11 +1255,11 @@ static void rv770_pcie_gen2_enable(struct radeon_device *rdev)
- 	if (ASIC_IS_X2(rdev))
- 		return;
- 
--	ret = drm_pcie_get_speed_cap_mask(rdev->ddev, &mask);
-+	ret = pcie_get_speed_cap_mask(rdev->ddev->pdev, &mask);
- 	if (ret != 0)
- 		return;
- 
--	if (!(mask & DRM_PCIE_SPEED_50))
-+	if (!(mask & PCIE_SPEED_50))
- 		return;
- 
- 	DRM_INFO("enabling PCIE gen 2 link speeds, disable with radeon.pcie_gen2=0\n");
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index b099e00..ebf130c 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3931,6 +3931,49 @@ static int __init pci_setup(char *str)
- }
- early_param("pci", pci_setup);
- 
-+int __weak pcibios_get_speed_cap_mask(struct pci_dev *dev, u32 *mask)
-+{
-+	struct pci_dev *root;
-+	u32 lnkcap, lnkcap2;
-+
-+	*mask = 0;
-+	if (!dev)
-+		return -EINVAL;
-+
-+	root = dev->bus->self;
-+
-+	/* we've been informed via and serverworks don't make the cut */
-+	if (root->vendor == PCI_VENDOR_ID_VIA ||
-+	    root->vendor == PCI_VENDOR_ID_SERVERWORKS)
-+		return -EINVAL;
-+
-+	pcie_capability_read_dword(root, PCI_EXP_LNKCAP, &lnkcap);
-+	pcie_capability_read_dword(root, PCI_EXP_LNKCAP2, &lnkcap2);
-+
-+	if (lnkcap2) {	/* PCIe r3.0-compliant */
-+		if (lnkcap2 & PCI_EXP_LNKCAP2_SLS_2_5GB)
-+			*mask |= PCIE_SPEED_25;
-+		if (lnkcap2 & PCI_EXP_LNKCAP2_SLS_5_0GB)
-+			*mask |= PCIE_SPEED_50;
-+		if (lnkcap2 & PCI_EXP_LNKCAP2_SLS_8_0GB)
-+			*mask |= PCIE_SPEED_80;
-+	} else {	/* pre-r3.0 */
-+		if (lnkcap & PCI_EXP_LNKCAP_SLS_2_5GB)
-+			*mask |= PCIE_SPEED_25;
-+		if (lnkcap & PCI_EXP_LNKCAP_SLS_5_0GB)
-+			*mask |= (PCIE_SPEED_25 | PCIE_SPEED_50);
-+	}
-+
-+	dev_info(&dev->dev, "probing gen 2 caps for device %x:%x = %x/%x\n",
-+		root->vendor, root->device, lnkcap, lnkcap2);
-+	return 0;
-+}
-+
-+int pcie_get_speed_cap_mask(struct pci_dev *dev, u32 *mask) {
-+	return pcibios_get_speed_cap_mask(dev, mask);
-+}
-+EXPORT_SYMBOL(pcie_get_speed_cap_mask);
-+
- EXPORT_SYMBOL(pci_reenable_device);
- EXPORT_SYMBOL(pci_enable_device_io);
- EXPORT_SYMBOL(pci_enable_device_mem);
-diff --git a/include/drm/drmP.h b/include/drm/drmP.h
-index 2d94d74..39b2872 100644
---- a/include/drm/drmP.h
-+++ b/include/drm/drmP.h
-@@ -1788,12 +1788,6 @@ extern int drm_get_pci_dev(struct pci_dev *pdev,
- 			   const struct pci_device_id *ent,
- 			   struct drm_driver *driver);
- 
--#define DRM_PCIE_SPEED_25 1
--#define DRM_PCIE_SPEED_50 2
--#define DRM_PCIE_SPEED_80 4
--
--extern int drm_pcie_get_speed_cap_mask(struct drm_device *dev, u32 *speed_mask);
--
- /* platform section */
- extern int drm_platform_init(struct drm_driver *driver, struct platform_device *platform_device);
- extern void drm_platform_exit(struct drm_driver *driver, struct platform_device *platform_device);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 2461033a..24a2f63 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1861,4 +1861,10 @@ static inline struct eeh_dev *pci_dev_to_eeh_dev(struct pci_dev *pdev)
-  */
- struct pci_dev *pci_find_upstream_pcie_bridge(struct pci_dev *pdev);
- 
-+#define PCIE_SPEED_25 1
-+#define PCIE_SPEED_50 2
-+#define PCIE_SPEED_80 4
-+
-+extern int pcie_get_speed_cap_mask(struct pci_dev *dev, u32 *speed_mask);
-+
- #endif /* LINUX_PCI_H */
--- 
-1.7.4.4
+01:00.0 Ethernet controller: Intel Corporation 82574L Gigabit Network Connection
+        Subsystem: Intel Corporation Gigabit CT Desktop Adapter
+        Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr+ Stepping- SERR+ FastB2B- DisINTx-
+        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+        Latency: 0, Cache Line Size: 64 bytes
+        Interrupt: pin A routed to IRQ 53
+        Region 0: Memory at 40380000 (32-bit, non-prefetchable) [size=128K]
+        Region 1: Memory at 40300000 (32-bit, non-prefetchable) [size=512K]
+        Region 2: I/O ports at 40200000 [disabled] [size=32]
+        Region 3: Memory at 403a0000 (32-bit, non-prefetchable) [size=16K]
+        [virtual] Expansion ROM at 40400000 [disabled] [size=256K]
+        Capabilities: <access denied>
+        Kernel driver in use: e1000e
+
+10:00.0 PCI bridge: Samsung Electronics Co Ltd Device a549 (rev 01) (prog-if 00 [Normal decode])
+        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr+ Stepping- SERR+ FastB2B- DisINTx-
+        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+        Latency: 0, Cache Line Size: 64 bytes
+        Bus: primary=10, secondary=11, subordinate=11, sec-latency=0
+        Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- <SERR- <PERR-
+        BridgeCtl: Parity+ SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
+                PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
+        Capabilities: <access denied>
+        Kernel driver in use: pcieport
+
+
+
+> 
+> Your DT has overlapping bus-ranges, and two top level nodes. This is
+> going to require separate PCI domains in Linux.
+> 
+> However, based on your driver this HW looks similar to tegra, did you
+> review how tegra is setup? Merging all the ports into a single domain
+> is certainly preferred.
+
+In Tegra case, the address of IO control register is same.
++	pcie-controller {
++		compatible = "nvidia,tegra20-pcie";
++		reg = <0x80003000 0x00000800   /* PADS registers */
++		       0x80003800 0x00000200   /* AFI registers */
++		       0x81000000 0x01000000   /* configuration space */
++		       0x90000000 0x10000000>; /* extended configuration space */
+
+But, in Exynos case, address of IP control register is different
+between PCIe0 and PCIe1.
+
++	pcie0@40000000 {
++		compatible = "samsung,exynos5440-pcie";
++		reg = <0x40000000 0x4000
++			0x290000 0x1000
++			0x270000 0x1000
++			0x271000 0x40>;
+
++	pcie1@60000000 {
++		compatible = "samsung,exynos5440-pcie";
++		reg = <0x60000000 0x4000
++			0x2a0000 0x1000
++			0x272000 0x1000
++			0x271040 0x40>;
+
+
+> 
+> > +	pcie1@60000000 {
+> > +		compatible = "samsung,exynos5440-pcie";
+> > +		reg = <0x60000000 0x4000
+> > +			0x2a0000 0x1000
+> > +			0x272000 0x1000
+> > +			0x271040 0x40>;
+> > +		interrupts = <0 23 0>, <0 24 0>, <0 25 0>;
+> > +		#address-cells = <3>;
+> > +		#size-cells = <2>;
+> > +		device_type = "pci";
+> > +		bus-range = <0x0 0xf>;
+> > +		ranges = <0x00000800 0 0x60000000 0x60000000 0 0x00200000   /* configuration space */
+> 
+> Do not include configuration space in ranges
+
+How can I include configuration space?
+Please let me know kindly :)
+
+> 
+> > +			  0x81000000 0 0	  0x60200000 0 0x00004000   /* downstream I/O */
+> 
+> Please confirm that an MMIO to 0x60200000 produces a PCI-E IO TLP to
+> address 0
+> 
+> > +			  0x82000000 0 0	  0x60204000 0 0x10000000>; /* non-prefetchable memory */
+> 
+> Please check this, generally it should be:
+> 
+> 			  0x82000000 0 0x60204000 0x60204000 0 0x10000000>; /* non-prefetchable memory */
+> 
+> Reflecting an identity mapping for MMIO - eg MMIO access to 0x60204000
+> producse a PCI Memory TLP to address 0x60204000 - unless your hardware
+> is actually doing address translation (then there are other things to
+> confirm..)
+
+OK, I will change it.
+
+> 
+> It is usual to have an interrupt-map - have you tested that interrupts
+> resolve properly?
+
+There is no problem about interrupts.
+However, I will consider an interrupt-map.
+
+> 
+> It looks like the INTx's should be routed by an interrupt-map to the
+> pulse pin. Consider an interrupt controller to decode the INT ABCD.
+> 
+> Regards,
+> Jason
 
