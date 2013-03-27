@@ -1,78 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:60448 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751683Ab3C0Okq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Mar 2013 10:40:46 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Russell King <linux@arm.linux.org.uk>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	devicetree-discuss@lists.ozlabs.org,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Maen Suleiman <maen@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Olof Johansson <olof@lixom.net>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Mitch Bradley <wmb@firmworks.com>,
-	Andrew Murray <andrew.murray@arm.com>
-Subject: [PATCHv7 04/17] pci: infrastructure to add drivers in drivers/pci/host
-Date: Wed, 27 Mar 2013 15:40:21 +0100
-Message-Id: <1364395234-11195-5-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1364395234-11195-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1364395234-11195-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from mail-ob0-f177.google.com ([209.85.214.177]:51580 "EHLO
+	mail-ob0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752715Ab3C0R2B (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Mar 2013 13:28:01 -0400
+Received: by mail-ob0-f177.google.com with SMTP id eh20so8257098obb.8
+        for <linux-pci@vger.kernel.org>; Wed, 27 Mar 2013 10:28:01 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1363665251-14377-1-git-send-email-linfeng@cn.fujitsu.com>
+References: <CAE9FiQUrt11A0YAOLgvv3uTAWtTvVg3Mho9eD53orbxW6Jd8Vg@mail.gmail.com>
+ <1363665251-14377-1-git-send-email-linfeng@cn.fujitsu.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 27 Mar 2013 11:27:41 -0600
+Message-ID: <CAErSpo6DWfHii8d8rGPJ1dLj5TVzsgU7QGDoAvBM5Fb_N5=mtw@mail.gmail.com>
+Subject: Re: [PATCH] kernel/range.c: subtract_range: fix the broken phrase
+ issued by printk
+To: Lin Feng <linfeng@cn.fujitsu.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org,
+	"x86@kernel.org" <x86@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As agreed by the community, PCI host drivers will now be stored in
-drivers/pci/host. This commit adds this directory and the related
-Kconfig/Makefile changes to allow new drivers to be added in this
-directory.
+On Mon, Mar 18, 2013 at 9:54 PM, Lin Feng <linfeng@cn.fujitsu.com> wrote:
+> Also replace deprecated printk(KERN_ERR...) with pr_err() as suggested
+> by Yinghai, attaching the function name to provide plenty info.
+>
+> Cc: Yinghai Lu <yinghai@kernel.org>
+> Signed-off-by: Lin Feng <linfeng@cn.fujitsu.com>
+> ---
+>  kernel/range.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+>
+> diff --git a/kernel/range.c b/kernel/range.c
+> index 9b8ae2d..071b0ab 100644
+> --- a/kernel/range.c
+> +++ b/kernel/range.c
+> @@ -97,7 +97,8 @@ void subtract_range(struct range *range, int az, u64 start, u64 end)
+>                                 range[i].end = range[j].end;
+>                                 range[i].start = end;
+>                         } else {
+> -                               printk(KERN_ERR "run of slot in ranges\n");
+> +                               pr_err("%s: run out of slot in ranges\n",
+> +                                       __func__);
+>                         }
+>                         range[j].end = start;
+>                         continue;
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
----
- drivers/pci/Kconfig      |    2 ++
- drivers/pci/Makefile     |    3 +++
- drivers/pci/host/Kconfig |    4 ++++
- 3 files changed, 9 insertions(+)
- create mode 100644 drivers/pci/host/Kconfig
+So now the user might see:
 
-diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
-index 6d51aa6..ac45398 100644
---- a/drivers/pci/Kconfig
-+++ b/drivers/pci/Kconfig
-@@ -119,3 +119,5 @@ config PCI_IOAPIC
- config PCI_LABEL
- 	def_bool y if (DMI || ACPI)
- 	select NLS
-+
-+source "drivers/pci/host/Kconfig"
-diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
-index 0c3efcf..6ebf5bf 100644
---- a/drivers/pci/Makefile
-+++ b/drivers/pci/Makefile
-@@ -67,3 +67,6 @@ obj-$(CONFIG_XEN_PCIDEV_FRONTEND) += xen-pcifront.o
- obj-$(CONFIG_OF) += of.o
- 
- ccflags-$(CONFIG_PCI_DEBUG) := -DDEBUG
-+
-+# PCI host controller drivers
-+obj-y += host/
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-new file mode 100644
-index 0000000..cc3a1af
---- /dev/null
-+++ b/drivers/pci/host/Kconfig
-@@ -0,0 +1,4 @@
-+menu "PCI host controller drivers"
-+	depends on PCI
-+
-+endmenu
--- 
-1.7.9.5
+    subtract_range: run out of slot in ranges
 
+What is the user supposed to do when he sees that?  If he happens to
+mention it on LKML, what are we going to do about it?  If he attaches
+the complete dmesg log, is there enough information to do something?
+
+IMHO, that message is still totally useless.
