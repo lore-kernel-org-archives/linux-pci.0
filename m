@@ -1,51 +1,53 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	Len Brown <lenb@kernel.org>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
-	"Accardi, Kristen C" <kristen.c.accardi@intel.com>,
-	"Huang, Ying" <ying.huang@intel.com>, linux-pci@vger.kernel.org
-Subject: Re: [Update][PATCH] PCI / ACPI: Always resume devices on ACPI wakeup notifications
-Date: Fri, 29 Mar 2013 22:34:53 +0100
-Message-ID: <2094285.pXOAcW8yQk@vostro.rjw.lan>
-In-Reply-To: <5155ADD2.3090005@fold.natur.cuni.cz>
-References: <2282655.IicBMMa6jN@vostro.rjw.lan> <2699206.HmPyNvCpNR@vostro.rjw.lan> <5155ADD2.3090005@fold.natur.cuni.cz>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ob0-f171.google.com ([209.85.214.171]:44897 "EHLO
+	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751475Ab3C0UfK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Mar 2013 16:35:10 -0400
+Received: by mail-ob0-f171.google.com with SMTP id x4so8608505obh.16
+        for <linux-pci@vger.kernel.org>; Wed, 27 Mar 2013 13:35:09 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <CAErSpo7ZYMsRAp=EKMS0YPmiw6YytN4pZVzoWPd-PL5EzT8+SQ@mail.gmail.com>
+References: <CAPM=9tyYMSsK_2eCNRTx5EsgAQtnvmHxhgPHP3GHPxKUn+wo5w@mail.gmail.com>
+ <1364333156-4530-1-git-send-email-matthew.garrett@nebula.com>
+ <CAErSpo7fy+MVxDoLe6w+4noH5X2xJw_Lfdg6fVvgcbhgvUyAaw@mail.gmail.com>
+ <1364338554.2553.53.camel@x230.sbx07502.somerma.wayport.net> <CAErSpo7ZYMsRAp=EKMS0YPmiw6YytN4pZVzoWPd-PL5EzT8+SQ@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 27 Mar 2013 14:34:48 -0600
+Message-ID: <CAErSpo7rKr8Hi9nvenDbzhJCR5GFFn12dRYuEPY76YBOJEgoLg@mail.gmail.com>
+Subject: Re: [PATCH 1/3] pci: Add PCI ROM helper for platform-provided ROM images
+To: Matthew Garrett <matthew.garrett@nebula.com>
+Cc: Dave Airlie <airlied@gmail.com>,
+	Alex Deucher <alexander.deucher@amd.com>,
+	"skeggsb@gmail.com" <skeggsb@gmail.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Seth Forshee <seth.forshee@canonical.com>,
+	"grawity@gmail.com" <grawity@gmail.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Chris Murphy <bugzilla@colorremedies.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, March 29, 2013 04:05:54 PM Martin Mokrejs wrote:
-> Hi,
->   I applied this patches over 3.8.3 hoping it will fix my issue under
-> thread: "Re: 3.8.2: xhci port is dead until pcieport PME# goes to disabled"
-> but unfortunately, it is even worse! Now, although lsusb -v nor lsusb -vv do
-> wakeup the XHCI port but it falls asleep immediately, more quickly than I am
-> able to plug a device into the socket. To get a device working in the USB3 socket
-> I need to plug it in, run lsusb -vv and then it is recognized.
-> 
-> Without the patch, the 'lsusb -vv' woke up the port (PME# disabled happened
-> on both 1c.4 and 0b:00.0) and I had unlimited time to find some USB device
-> around and to plug it into the slot.
+[+cc linux-pci]
 
-Well, using lsusb to work around problems in the PCI subsystem isn't even
-*supposed* to work as far as I can tell.
-
-First off, do you use laptop-mode (or something equivalent) to enable runtime
-PM for all PCI devices in your system?  If you do, please test things without
-it and see if they work then.
-
-Second, do things work after you echo "on" to the xHCI controller's
-/sys/devices/.../power/control file?
-
-Rafael
-
-
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+On Wed, Mar 27, 2013 at 2:33 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> [+cc Mantas, Chris]
+>
+> On Tue, Mar 26, 2013 at 4:55 PM, Matthew Garrett
+> <matthew.garrett@nebula.com> wrote:
+>> On Tue, 2013-03-26 at 16:53 -0600, Bjorn Helgaas wrote:
+>>
+>>> I've been on vacation and didn't follow this closely, but it seems
+>>> like this fixes a regression and should be merged before v3.9, right?
+>>> Can you include a reference to a bugzilla or the mailing list
+>>> discussion in the changelog?  I can just fold it in if you want.
+>>
+>> https://bugzilla.redhat.com/show_bug.cgi?id=927451
+>
+> Thanks, I added that URL and queued up these patches.  I'll wait to
+> push them until we have confirmation from Mantas [1] and Chris [2]
+> that this fixes it for both.
+>
+> [1] http://marc.info/?l=linux-kernel&m=136148818405871
+> [2] https://bugzilla.redhat.com/show_bug.cgi?id=927451
