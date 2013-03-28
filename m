@@ -1,56 +1,72 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:55189 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751443Ab3CURas (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 Mar 2013 13:30:48 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Russell King <linux@arm.linux.org.uk>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	devicetree-discuss@lists.ozlabs.org,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Maen Suleiman <maen@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Olof Johansson <olof@lixom.net>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Mitch Bradley <wmb@firmworks.com>,
-	Andrew Murray <andrew.murray@arm.com>
-Subject: [PATCH v5 09/17] arm: mvebu: PCIe support is now available on mvebu
-Date: Thu, 21 Mar 2013 18:30:17 +0100
-Message-Id: <1363887025-19931-10-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1363887025-19931-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1363887025-19931-1-git-send-email-thomas.petazzoni@free-electrons.com>
-Sender: linux-pci-owner@vger.kernel.org
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-pci@vger.kernel.org, Len Brown <len.brown@intel.com>,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>, stable@kernel.org
+Subject: [PATCH] PCI, ACPI: Don't query OSC support with all possible controls
+Date: Wed, 27 Mar 2013 21:28:58 -0700
+Message-Id: <1364444938-19801-1-git-send-email-yinghai@kernel.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now that the PCIe driver for mvebu has been integrated and all its
-relevant dependencies, we can mark the ARCH_MVEBU platform has
-MIGHT_HAVE_PCI, which allows to select the PCI bus support if needed.
+Found problem on system that firmware that could handle pci aer.
+Firmware get error reporting after pci injecting error, before os boots.
+But after os boots, firmware can not get report anymore, even pci=noaer
+is passed.
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Root cause: BIOS _OSC has problem with query bit checking.
+It turns out that BIOS vendor is copying example code from ACPI Spec.
+In ACPI Spec 5.0, page 290:
+
+	If (Not(And(CDW1,1))) // Query flag clear?
+	{	// Disable GPEs for features granted native control.
+		If (And(CTRL,0x01)) // Hot plug control granted?
+		{
+			Store(0,HPCE) // clear the hot plug SCI enable bit
+			Store(1,HPCS) // clear the hot plug SCI status bit
+		}
+	...
+	}
+
+When Query flag is set, And(CDW1,1) will be 1, Not(1) will return 0xfffffffe.
+So it will get into code path that should be for control set only.
+BIOS acpi code should be changed to "If (LEqual(And(CDW1,1), 0)))"
+
+Current kernel code is using _OSC query to notify firmware about support
+from OS and then use _OSC to set control bits.
+During query support, current code is using all possible controls.
+So will execute code that should be only for control set stage.
+
+That will have problem when pci=noaer or aer firmware_first is used.
+As firmware have that control set for os aer already in query support stage,
+but later will not os aer handling.
+
+We should avoid passing all possible controls, just use osc_control_set
+instead.
+That should workaround BIOS bugs with affected systems on the field
+as more bios vendors are copying sample code from ACPI spec.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: stable@kernel.org
+
 ---
- arch/arm/mach-mvebu/Kconfig |    2 ++
- 1 file changed, 2 insertions(+)
+ drivers/acpi/pci_root.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/arch/arm/mach-mvebu/Kconfig b/arch/arm/mach-mvebu/Kconfig
-index c3715a5..d353249 100644
---- a/arch/arm/mach-mvebu/Kconfig
-+++ b/arch/arm/mach-mvebu/Kconfig
-@@ -14,6 +14,8 @@ config ARCH_MVEBU
- 	select MVEBU_CLK_CPU
- 	select MVEBU_CLK_GATING
- 	select MVEBU_MBUS
-+	select MIGHT_HAVE_PCI
-+	select PCI_QUIRKS if PCI
+Index: linux-2.6/drivers/acpi/pci_root.c
+===================================================================
+--- linux-2.6.orig/drivers/acpi/pci_root.c
++++ linux-2.6/drivers/acpi/pci_root.c
+@@ -201,8 +201,8 @@ static acpi_status acpi_pci_query_osc(st
+ 		*control &= OSC_PCI_CONTROL_MASKS;
+ 		capbuf[OSC_CONTROL_TYPE] = *control | root->osc_control_set;
+ 	} else {
+-		/* Run _OSC query for all possible controls. */
+-		capbuf[OSC_CONTROL_TYPE] = OSC_PCI_CONTROL_MASKS;
++		/* Run _OSC query only with existing controls. */
++		capbuf[OSC_CONTROL_TYPE] = root->osc_control_set;
+ 	}
  
- if ARCH_MVEBU
- 
--- 
-1.7.9.5
-
+ 	status = acpi_pci_run_osc(root->device->handle, capbuf, &result);
