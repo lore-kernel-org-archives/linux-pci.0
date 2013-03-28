@@ -1,46 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from terminus.zytor.com ([198.137.202.10]:47904 "EHLO mail.zytor.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756079Ab3CTPDo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 20 Mar 2013 11:03:44 -0400
-In-Reply-To: <1363785354.2553.15.camel@x230.sbx07502.somerma.wayport.net>
-References: <1363642353-30749-1-git-send-email-matthew.garrett@nebula.com> <51490ABD.3050205@zytor.com> <1363785354.2553.15.camel@x230.sbx07502.somerma.wayport.net>
+Received: from mail-ie0-f178.google.com ([209.85.223.178]:63063 "EHLO
+	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755696Ab3C1Hll (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 28 Mar 2013 03:41:41 -0400
 MIME-Version: 1.0
-Content-Type: text/plain;
- charset=UTF-8
-Subject: Re: [PATCH 01/12] Security: Add CAP_COMPROMISE_KERNEL
-From: "H. Peter Anvin" <hpa@zytor.com>
-Date: Wed, 20 Mar 2013 08:03:37 -0700
-To: Matthew Garrett <matthew.garrett@nebula.com>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-security-module@vger.kernel.org"
-	<linux-security-module@vger.kernel.org>,
-	"linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
-	"kexec@lists.infradead.org" <kexec@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Message-ID: <db71c48c-4ec4-4611-935b-bb1b0441112d@email.android.com>
+In-Reply-To: <CAErSpo6v0mj9=Q13d=G4hho0mb9XTcsmefzke9fROYmZ7oBWxQ@mail.gmail.com>
+References: <CAE9FiQXmeb66dc8fET0y99BjqpUXp11c7utiQ5keR1Wf+N9xaA@mail.gmail.com>
+	<1363628226-6679-1-git-send-email-yinghai@kernel.org>
+	<CAErSpo6v0mj9=Q13d=G4hho0mb9XTcsmefzke9fROYmZ7oBWxQ@mail.gmail.com>
+Date: Thu, 28 Mar 2013 00:41:40 -0700
+Message-ID: <CAE9FiQU7cDzJdHxmqhJNgc9UCsRLgvCFQpv8+fLxD79pLEUC5A@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Remove not needed check in disable aspm link
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	stable@kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-CAP_SYS_RAWIO is definitely inappropriate there.
-
-Matthew Garrett <matthew.garrett@nebula.com> wrote:
-
->On Tue, 2013-03-19 at 18:02 -0700, H. Peter Anvin wrote:
+On Wed, Mar 27, 2013 at 3:56 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
 >
->> Looking at it in detail, EVERYTHING in CAP_SYS_RAWIO has the
->possibility
->> of compromising the kernel, because they let device drivers be
->bypassed,
->> which means arbitrary DMA, which means you have everything.
->
->Having checked again, I don't think this is true. The most obvious case
->is libata, which uses CAP_SYS_RAWIO to limit the ability to send raw
->ATA
->commands. Being able to do so clearly permits userspace to avoid any
->kind of policy the vfs has put in place, but there's no obvious way for
->the user to modify the running kernel. Are you suggesting that removing
->the CAP_SYS_RAWIO check there would be reasonable?
+> Why can't we set all the ASPM flags *first*, before calling
+> pci_acpi_scan_root()?  That way we could just do the correct ASPM
+> setup as we discover devices during enumeration, rather than trying to
+> fix things up afterwards.  I suspect pcie_clear_aspm() is broken
+> anyway, because it looks like it only touches one level of the
+> hierarchy, without recursively descending it.
 
--- 
-Sent from my mobile phone. Please excuse brevity and lack of formatting.
+Yes, we can clean up aspm stop/clear up.
+and that should be for 3.10 right?
+
+But this patch should be safe for 3.9 and stable.
+
+Thanks
+
+Yinghai
