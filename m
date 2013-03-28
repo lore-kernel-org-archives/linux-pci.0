@@ -1,110 +1,74 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f177.google.com ([209.85.214.177]:48605 "EHLO
-	mail-ob0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932323Ab3CYQ7C (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 25 Mar 2013 12:59:02 -0400
-Received: by mail-ob0-f177.google.com with SMTP id eh20so6093429obb.8
-        for <linux-pci@vger.kernel.org>; Mon, 25 Mar 2013 09:59:01 -0700 (PDT)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PM list <linux-pm@vger.kernel.org>,
+	Len Brown <lenb@kernel.org>,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
+	"Accardi, Kristen C" <kristen.c.accardi@intel.com>,
+	"Huang, Ying" <ying.huang@intel.com>, linux-pci@vger.kernel.org
+Subject: [Resend][PATCH] PCI / ACPI: Always resume devices on ACPI wakeup notifications
+Date: Thu, 28 Mar 2013 18:10:34 +0100
+Message-ID: <1396732.fV788D0xgr@vostro.rjw.lan>
+In-Reply-To: <2282655.IicBMMa6jN@vostro.rjw.lan>
+References: <2282655.IicBMMa6jN@vostro.rjw.lan>
 MIME-Version: 1.0
-In-Reply-To: <s5h38vqjhk6.wl%tiwai@suse.de>
-References: <s5h38vqjhk6.wl%tiwai@suse.de>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 25 Mar 2013 10:58:40 -0600
-Message-ID: <CAErSpo57ObGbTwLV+ji4bAtGBfT4=Y3wK1mFQdQGAx9oBcRZww@mail.gmail.com>
-Subject: Re: [PATCH] pciehp: Add pciehp_surprise module option
-To: Takashi Iwai <tiwai@suse.de>
-Cc: Oliver Neukum <oneukum@suse.de>, Michal Marek <mmarek@suse.cz>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 20, 2013 at 8:02 AM, Takashi Iwai <tiwai@suse.de> wrote:
-> We encountered a problem that on some HP machines the Realtek PCI-e
-> card reader device appears only when you inserted a card before the
-> cold boot.  While debugging, it turned out that the device is actually
-> handled via PCI-e hotplug in some level.  The device sends a presence
-> change notification, and pciehp receives it, but it's ignored because
-> of lack of the hotplug surprise (PCI_EXP_SLTCAP_HPS) capability bit.
-> Once when this check passes, everything starts working -- the device
-> appears upon plugging the card properly.
->
-> There are a few other bug reports indicating the similar problems
-> (e.g. on recent Dell laptops), and I guess the culprit is same.
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Can you point us at these bug reports, e.g., with URLs?  Hopefully
-they will contain complete dmesg logs and "lspci -vv" outputs so we
-can debug this a bit more.
+It turns out that the _Lxx control methods provided by some BIOSes
+clear the PME Status bit of PCI devices they handle, which means that
+pci_acpi_wake_dev() cannot really use that bit to check whether or
+not the device has signalled wakeup.
 
-I'm strongly opposed to adding a module option to work around this
-issue because the user experience is unacceptable.  We can't expect
-users to debug the problem and discover the option.
+The symptom of the problem is, for example, that when a PCI USB
+controller is affected, then plugging in a new USB device into one of
+the controller's ports will not wake up the controller, which should
+happen.
 
-I'm also opposed to a DMI quirk system because I think it's very
-likely that this device works correctly under Windows, and I doubt
-very much that Windows has to include the equivalent of DMI quirks.
-So we should, at least in principle, be able to figure out how to make
-it work, too.
+For this reason, make pci_acpi_wake_dev() always attempt to resume
+the device it is called for regardless of the device's PME Status bit
+value (that bit still has to be cleared if set at this point,
+though).
 
-> This patch adds a new module option, pciehp_surprise, to pciehp as a
-> workaround.  When pciehp_surprise=1 is given, pciehp handles the
-> presence change as the device on/off as if PCI_EXP_SLTCAP_HPS is set.
-> Unless it's set explicitly, there is no impact on the existing
-> behavior.
->
-> Signed-off-by: Takashi Iwai <tiwai@suse.de>
-> ---
->  drivers/pci/hotplug/pciehp.h      | 3 ++-
->  drivers/pci/hotplug/pciehp_core.c | 3 +++
->  2 files changed, 5 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
-> index 2c113de..314f3be 100644
-> --- a/drivers/pci/hotplug/pciehp.h
-> +++ b/drivers/pci/hotplug/pciehp.h
-> @@ -44,6 +44,7 @@ extern bool pciehp_poll_mode;
->  extern int pciehp_poll_time;
->  extern bool pciehp_debug;
->  extern bool pciehp_force;
-> +extern bool pciehp_surprise;
->
->  #define dbg(format, arg...)                                            \
->  do {                                                                   \
-> @@ -122,7 +123,7 @@ struct controller {
->  #define MRL_SENS(ctrl)         ((ctrl)->slot_cap & PCI_EXP_SLTCAP_MRLSP)
->  #define ATTN_LED(ctrl)         ((ctrl)->slot_cap & PCI_EXP_SLTCAP_AIP)
->  #define PWR_LED(ctrl)          ((ctrl)->slot_cap & PCI_EXP_SLTCAP_PIP)
-> -#define HP_SUPR_RM(ctrl)       ((ctrl)->slot_cap & PCI_EXP_SLTCAP_HPS)
-> +#define HP_SUPR_RM(ctrl)       (pciehp_surprise || ((ctrl)->slot_cap & PCI_EXP_SLTCAP_HPS))
->  #define EMI(ctrl)              ((ctrl)->slot_cap & PCI_EXP_SLTCAP_EIP)
->  #define NO_CMD_CMPL(ctrl)      ((ctrl)->slot_cap & PCI_EXP_SLTCAP_NCCS)
->  #define PSN(ctrl)              ((ctrl)->slot_cap >> 19)
-> diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
-> index 7d72c5e..c3a574e 100644
-> --- a/drivers/pci/hotplug/pciehp_core.c
-> +++ b/drivers/pci/hotplug/pciehp_core.c
-> @@ -42,6 +42,7 @@ bool pciehp_debug;
->  bool pciehp_poll_mode;
->  int pciehp_poll_time;
->  bool pciehp_force;
-> +bool pciehp_surprise;
->
->  #define DRIVER_VERSION "0.4"
->  #define DRIVER_AUTHOR  "Dan Zink <dan.zink@compaq.com>, Greg Kroah-Hartman <greg@kroah.com>, Dely Sy <dely.l.sy@intel.com>"
-> @@ -55,10 +56,12 @@ module_param(pciehp_debug, bool, 0644);
->  module_param(pciehp_poll_mode, bool, 0644);
->  module_param(pciehp_poll_time, int, 0644);
->  module_param(pciehp_force, bool, 0644);
-> +module_param(pciehp_surprise, bool, 0644);
->  MODULE_PARM_DESC(pciehp_debug, "Debugging mode enabled or not");
->  MODULE_PARM_DESC(pciehp_poll_mode, "Using polling mechanism for hot-plug events or not");
->  MODULE_PARM_DESC(pciehp_poll_time, "Polling mechanism frequency, in seconds");
->  MODULE_PARM_DESC(pciehp_force, "Force pciehp, even if OSHP is missing");
-> +MODULE_PARM_DESC(pciehp_surprise, "Force to set hotplug-surprise capability");
->
->  #define PCIE_MODULE_NAME "pciehp"
->
-> --
-> 1.8.2
->
+Reported-and-tested-by: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Acked-by: Matthew Garrett <mjg59@srcf.ucam.org>
+Cc: 3.7+ <stable@vger.kernel.org>
+---
+ drivers/pci/pci-acpi.c |   15 ++++++++-------
+ 1 file changed, 8 insertions(+), 7 deletions(-)
+
+Index: linux-pm/drivers/pci/pci-acpi.c
+===================================================================
+--- linux-pm.orig/drivers/pci/pci-acpi.c
++++ linux-pm/drivers/pci/pci-acpi.c
+@@ -53,14 +53,15 @@ static void pci_acpi_wake_dev(acpi_handl
+ 		return;
+ 	}
+ 
+-	if (!pci_dev->pm_cap || !pci_dev->pme_support
+-	     || pci_check_pme_status(pci_dev)) {
+-		if (pci_dev->pme_poll)
+-			pci_dev->pme_poll = false;
++	/* Clear PME Status if set. */
++	if (pci_dev->pme_support)
++		pci_check_pme_status(pci_dev);
+ 
+-		pci_wakeup_event(pci_dev);
+-		pm_runtime_resume(&pci_dev->dev);
+-	}
++	if (pci_dev->pme_poll)
++		pci_dev->pme_poll = false;
++
++	pci_wakeup_event(pci_dev);
++	pm_runtime_resume(&pci_dev->dev);
+ 
+ 	if (pci_dev->subordinate)
+ 		pci_pme_wakeup_bus(pci_dev->subordinate);
+
