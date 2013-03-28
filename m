@@ -1,86 +1,50 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>, Ram Pai <linuxram@us.ibm.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from cn.fujitsu.com ([222.73.24.84]:40756 "EHLO song.cn.fujitsu.com"
+	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S1754809Ab3C1Br4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 27 Mar 2013 21:47:56 -0400
+Message-ID: <5153A1C7.6030409@cn.fujitsu.com>
+Date: Thu, 28 Mar 2013 09:49:59 +0800
+From: Lin Feng <linfeng@cn.fujitsu.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org,
+	"x86@kernel.org" <x86@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
 	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v3 14/27] PCI: Use for_each_pci_resource() in pci_assign_resource
-Date: Wed, 13 Mar 2013 16:28:09 -0700
-Message-Id: <1363217302-14383-15-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1363217302-14383-1-git-send-email-yinghai@kernel.org>
-References: <1363217302-14383-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Subject: Re: [PATCH] kernel/range.c: subtract_range: fix the broken phrase
+ issued by printk
+References: <CAE9FiQUrt11A0YAOLgvv3uTAWtTvVg3Mho9eD53orbxW6Jd8Vg@mail.gmail.com> <1363665251-14377-1-git-send-email-linfeng@cn.fujitsu.com> <CAErSpo6DWfHii8d8rGPJ1dLj5TVzsgU7QGDoAvBM5Fb_N5=mtw@mail.gmail.com>
+In-Reply-To: <CAErSpo6DWfHii8d8rGPJ1dLj5TVzsgU7QGDoAvBM5Fb_N5=mtw@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Also replace dev->resource[n] with pci_dev_resource_n().
+Hi Bjorn and others,
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-res.c |   14 ++++++--------
- 1 file changed, 6 insertions(+), 8 deletions(-)
+On 03/28/2013 01:27 AM, Bjorn Helgaas wrote:
+>> -                               printk(KERN_ERR "run of slot in ranges\n");
+>> > +                               pr_err("%s: run out of slot in ranges\n",
+>> > +                                       __func__);
+>> >                         }
+>> >                         range[j].end = start;
+>> >                         continue;
+> So now the user might see:
+> 
+>     subtract_range: run out of slot in ranges
+> 
+> What is the user supposed to do when he sees that?  If he happens to
+> mention it on LKML, what are we going to do about it?  If he attaches
+> the complete dmesg log, is there enough information to do something?
+> 
+> IMHO, that message is still totally useless.
+> 
 
-diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
-index 81b88bd..94ef232 100644
---- a/drivers/pci/setup-res.c
-+++ b/drivers/pci/setup-res.c
-@@ -110,7 +110,7 @@ void pci_update_resource(struct pci_dev *dev, int resno)
- 
- int pci_claim_resource(struct pci_dev *dev, int resource)
- {
--	struct resource *res = &dev->resource[resource];
-+	struct resource *res = pci_dev_resource_n(dev, resource);
- 	struct resource *root, *conflict;
- 
- 	root = pci_find_parent_resource(dev, res);
-@@ -200,7 +200,7 @@ static int pci_revert_fw_address(struct resource *res, struct pci_dev *dev,
- static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
- 		int resno, resource_size_t size, resource_size_t align)
- {
--	struct resource *res = dev->resource + resno;
-+	struct resource *res = pci_dev_resource_n(dev, resno);
- 	resource_size_t min;
- 	int ret;
- 
-@@ -227,7 +227,7 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
- static int _pci_assign_resource(struct pci_dev *dev, int resno,
- 				resource_size_t size, resource_size_t min_align)
- {
--	struct resource *res = dev->resource + resno;
-+	struct resource *res = pci_dev_resource_n(dev, resno);
- 	struct pci_bus *bus;
- 	int ret;
- 	char *type;
-@@ -259,7 +259,7 @@ static int _pci_assign_resource(struct pci_dev *dev, int resno,
- 
- int pci_assign_resource(struct pci_dev *dev, int resno)
- {
--	struct resource *res = dev->resource + resno;
-+	struct resource *res = pci_dev_resource_n(dev, resno);
- 	resource_size_t align, size;
- 	struct pci_bus *bus;
- 	int ret;
-@@ -295,7 +295,7 @@ int pci_assign_resource(struct pci_dev *dev, int resno)
- int pci_reassign_resource(struct pci_dev *dev, int resno, resource_size_t addsize,
- 			resource_size_t min_align)
- {
--	struct resource *res = dev->resource + resno;
-+	struct resource *res = pci_dev_resource_n(dev, resno);
- 	resource_size_t new_size;
- 	int ret;
- 
-@@ -326,12 +326,10 @@ int pci_enable_resources(struct pci_dev *dev, int mask)
- 	pci_read_config_word(dev, PCI_COMMAND, &cmd);
- 	old_cmd = cmd;
- 
--	for (i = 0; i < PCI_NUM_RESOURCES; i++) {
-+	for_each_pci_resource(dev, r, i, PCI_ALL_RES) {
- 		if (!(mask & (1 << i)))
- 			continue;
- 
--		r = &dev->resource[i];
--
- 		if (!(r->flags & (IORESOURCE_IO | IORESOURCE_MEM)))
- 			continue;
- 		if ((i == PCI_ROM_RESOURCE) &&
--- 
-1.7.10.4
+Yes, we need to issue some useful message. 
+How about dump_stack() there so that we can find some clues more since
+subtract_range() is called mtrr_bp_init path and pci relative path, then
+it may help to instruct us to do something ;-) ?
 
+thanks,
+linfeng
