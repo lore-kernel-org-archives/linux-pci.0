@@ -1,103 +1,82 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 14 Mar 2013 12:10:36 -0400 (EDT)
-From: Alan Stern <stern@rowland.harvard.edu>
-To: Jiri Kosina <jkosina@suse.cz>
-cc: Peter Hurley <peter@hurleysoftware.com>,
-	Thomas Meyer <thomas@m3y3r.de>,
-	Shawn Starr <shawn.starr@rogers.com>,
-	Kernel development list <linux-kernel@vger.kernel.org>,
-	USB list <linux-usb@vger.kernel.org>,
-	<linux-acpi@vger.kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>
-Subject: Re: [3.9-rc1] irq 16: nobody cared  (was [3.9-rc1] very poor interrupt
- responses)
-In-Reply-To: <alpine.LNX.2.00.1303141634440.30118@pobox.suse.cz>
-Message-ID: <Pine.LNX.4.44L0.1303141151480.1983-100000@iolanthe.rowland.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PM list <linux-pm@vger.kernel.org>,
+	Len Brown <lenb@kernel.org>,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
+	"Accardi, Kristen C" <kristen.c.accardi@intel.com>,
+	"Huang, Ying" <ying.huang@intel.com>, linux-pci@vger.kernel.org
+Subject: [Update][PATCH] PCI / ACPI: Always resume devices on ACPI wakeup notifications
+Date: Thu, 28 Mar 2013 22:07:29 +0100
+Message-ID: <2699206.HmPyNvCpNR@vostro.rjw.lan>
+In-Reply-To: <1396732.fV788D0xgr@vostro.rjw.lan>
+References: <2282655.IicBMMa6jN@vostro.rjw.lan> <1396732.fV788D0xgr@vostro.rjw.lan>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 14 Mar 2013, Jiri Kosina wrote:
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Subject: PCI / ACPI: Always resume devices on ACPI wakeup notifications
 
-> I have reverted all three commits, and the "nobody cared" is still there. 
-> 
-> > If you revert all three and still see the problem then it must be
-> > caused by changes outside of the USB stack.  Differences in interrupt
-> > routing could be a result of changes to PCI or ACPI.  Have you compared 
-> > the current /proc/interrupts with versions from earlier kernels without 
-> > this problem?
-> 
-> The diff of stripped-down (without CPU statistics) /proc/interrupts from 
-> some oldish working 3.1 and the current tree:
-> 
-> --- /tmp/interrupts-old.txt	2013-03-14 16:30:46.938710286 +0100
-> +++ /tmp/interrupts-new.txt	2013-03-14 16:30:18.954571413 +0100
-> @@ -3,27 +3,28 @@
->    8:IO-APIC-edge      rtc0
->    9:IO-APIC-fasteoi   acpi
->   12:IO-APIC-edge      i8042
-> - 16:IO-APIC-fasteoi   uhci_hcd:usb6
-> - 17:IO-APIC-fasteoi   uhci_hcd:usb7
-> - 18:IO-APIC-fasteoi   ata_generic, uhci_hcd:usb8
-> - 19:IO-APIC-fasteoi   ehci_hcd:usb2
-> - 20:IO-APIC-fasteoi   uhci_hcd:usb3
-> - 21:IO-APIC-fasteoi   uhci_hcd:usb4
-> - 22:IO-APIC-fasteoi   uhci_hcd:usb5
-> - 23:IO-APIC-fasteoi   ehci_hcd:usb1
-> + 16:IO-APIC-fasteoi   uhci_hcd:usb4
-> + 17:IO-APIC-fasteoi   uhci_hcd:usb5
-> + 18:IO-APIC-fasteoi   ata_generic, uhci_hcd:usb6
-> + 19:IO-APIC-fasteoi   ehci_hcd:usb8
-> + 20:IO-APIC-fasteoi   uhci_hcd:usb1
-> + 21:IO-APIC-fasteoi   uhci_hcd:usb2
-> + 22:IO-APIC-fasteoi   uhci_hcd:usb3
-> + 23:IO-APIC-fasteoi   ehci_hcd:usb7, i801_smbus
->   40:PCI-MSI-edge      PCIe PME
->   41:PCI-MSI-edge      PCIe PME
->   42:PCI-MSI-edge      PCIe PME
->   43:PCI-MSI-edge      ahci
->   44:PCI-MSI-edge      i915
->   45:PCI-MSI-edge      eth0
-> - 46:PCI-MSI-edge      iwlagn
-> + 46:PCI-MSI-edge      iwlwifi
->   47:PCI-MSI-edge      snd_hda_intel
->  NMI:Non-maskable interrupts
->  LOC:Local timer interrupts
->  SPU:Spurious interrupts
->  PMI:Performance monitoring interrupts
->  IWI:IRQ work interrupts
-> +RTR:APIC ICR read retries
->  RES:Rescheduling interrupts
->  CAL:Function call interrupts
->  TLB:TLB shootdowns
-> 
-> IRQ16 is routed differently (usb4 vs usb6), so that might be relevant.
+It turns out that the _Lxx control methods provided by some BIOSes
+clear the PME Status bit of PCI devices they handle, which means that
+pci_acpi_wake_dev() cannot really use that bit to check whether or
+not the device has signalled wakeup.
 
-It looks like the order of probing changed.  The old kernel did 
-ehci-hcd before uhci-hcd and the new kernel did them in the opposite 
-order.  Consequently usb3-usb8 in the old kernel (the UHCI devices) are 
-the same as usb1-usb6 in the new kernel.  Likewise, usb1-usb2 in the 
-old kernel are usb7-usb8 in the new kernel.
+One symptom of the problem is, for example, that when an affected PCI
+USB controller is runtime-suspended, then plugging in a new USB device
+into one of the controller's ports will not wake up the controller,
+which should happen.
 
-In fact, the only major difference appears to be i801_smbus on IRQ 23.  
-It's hard to see how that could have any effect.
+For this reason, make pci_acpi_wake_dev() always attempt to resume
+the device it is called for regardless of the device's PME Status bit
+value (that bit still has to be cleared if set at this point,
+though).
 
-> > Is occurrence of the "nobody cared" connected with any particular 
-> > device?  Somebody reported a similar problem not long ago (although IIRC 
-> > it was for OHCI rather than UHCI) which appeared to be related to 
-> > activity on the built-in webcam.
-> 
-> Will check this. No external devices are plugged in, I think the only 
-> internal one it has is bluetooth chip. I'll try turning it off.
+Reported-by: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Acked-by: Matthew Garrett <mjg59@srcf.ucam.org>
+Cc: 3.7+ <stable@vger.kernel.org>
+---
 
-All right.
+The changelog in this version is slightly better than in the previous one, IMHO.
 
-One other thing you could try: Transplant the entire uhci-hcd driver 
-from 3.1 (or whatever) into 3.9-rc1.  It should go okay -- you may have 
-to apply by hand the appropriate parts of commits bc677d5b6464, 
-90ab5ee94171, and 9ffc93f203c1.
+Thanks,
+Rafael
 
-Alan Stern
+---
+ drivers/pci/pci-acpi.c |   15 ++++++++-------
+ 1 file changed, 8 insertions(+), 7 deletions(-)
+
+Index: linux-pm/drivers/pci/pci-acpi.c
+===================================================================
+--- linux-pm.orig/drivers/pci/pci-acpi.c
++++ linux-pm/drivers/pci/pci-acpi.c
+@@ -53,14 +53,15 @@ static void pci_acpi_wake_dev(acpi_handl
+ 		return;
+ 	}
+ 
+-	if (!pci_dev->pm_cap || !pci_dev->pme_support
+-	     || pci_check_pme_status(pci_dev)) {
+-		if (pci_dev->pme_poll)
+-			pci_dev->pme_poll = false;
++	/* Clear PME Status if set. */
++	if (pci_dev->pme_support)
++		pci_check_pme_status(pci_dev);
+ 
+-		pci_wakeup_event(pci_dev);
+-		pm_runtime_resume(&pci_dev->dev);
+-	}
++	if (pci_dev->pme_poll)
++		pci_dev->pme_poll = false;
++
++	pci_wakeup_event(pci_dev);
++	pm_runtime_resume(&pci_dev->dev);
+ 
+ 	if (pci_dev->subordinate)
+ 		pci_pme_wakeup_bus(pci_dev->subordinate);
 
