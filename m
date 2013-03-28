@@ -1,89 +1,40 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.187]:52960 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759995Ab3CZSir (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Mar 2013 14:38:47 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: Re: [RFCv1 07/11] irqchip: armada-370-xp: add MSI support to interrupt controller driver
-Date: Tue, 26 Mar 2013 18:38:22 +0000
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	devicetree-discuss@lists.ozlabs.org,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Maen Suleiman <maen@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Olof Johansson <olof@lixom.net>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Mitch Bradley <wmb@firmworks.com>,
-	Andrew Murray <andrew.murray@arm.com>
-References: <1364316746-8702-1-git-send-email-thomas.petazzoni@free-electrons.com> <201303261707.41563.arnd@arndb.de> <20130326181754.33b89559@skate>
-In-Reply-To: <20130326181754.33b89559@skate>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201303261838.23246.arnd@arndb.de>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAErSpo4ncW8rkcpDiccORZedj30m7jRmpXK+amfDGn_wjwt7EA@mail.gmail.com>
+References: <CAE9FiQXmeb66dc8fET0y99BjqpUXp11c7utiQ5keR1Wf+N9xaA@mail.gmail.com>
+	<1363628226-6679-1-git-send-email-yinghai@kernel.org>
+	<CAErSpo6v0mj9=Q13d=G4hho0mb9XTcsmefzke9fROYmZ7oBWxQ@mail.gmail.com>
+	<CAE9FiQU7cDzJdHxmqhJNgc9UCsRLgvCFQpv8+fLxD79pLEUC5A@mail.gmail.com>
+	<CAErSpo4ncW8rkcpDiccORZedj30m7jRmpXK+amfDGn_wjwt7EA@mail.gmail.com>
+Date: Thu, 28 Mar 2013 13:24:08 -0700
+Message-ID: <CAE9FiQVqKag2TGah7x_1MAJ+c0UWgywgM_jKUoOnh+rq3bwBhg@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Remove not needed check in disable aspm link
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Roman Yepishev <roman.yepishev@gmail.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday 26 March 2013, Thomas Petazzoni wrote:
+resending with adding To Roman.
 
-> 
-> I've tried to explain that in the commit log of PATCH 6, which says:
-> 
->     However, we need the driver to expose two different IRQ domains: one
->     for the main interrupt controller itself, and one for the MSI
->     interrupt controller. In order to achieve this, we will create two
->     subnodes in the interrupt-controller@d0020000 node: one subnode for
->     the main interrupt controller, and one subnode for the MSI interrupt
->     controller. The two irq domains can't be registered on the same DT
->     node, otherwise when irq_find_host() gets used by of_irq_map_one()
->     to resolve IRQs of devices, they may find the MSI interrupt
->     controller instead of the main interrupt controller.
+On Thu, Mar 28, 2013 at 5:46 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> This patch might be *safe*, but it (and the changelog) are completely
+> unintelligible.
+>
+> The problem with applying an unintelligible stop-gap patch is that it
+> becomes forever part of the changelog, and it's a huge waste of time
+> to everybody who tries to understand the history later.  That's why I
+> think it's worth spending some time to make a good patch now.
 
-Right, I should have read the commit log better ...
+Please check if attached patch is doing what you want.
 
->     Note that both the parent and the child node need to have the
->     'interrupt-controller' empty property:
->     
->       * The interrupt-controller property is needed in the main
->     interrupt controller node (interrupt-controller@d0020000) because
->     the of_irq_init() function skips nodes that are matching the given
->        compatible string, but that don't have the interrupt-controller
->        property.
->     
->      * The interrupt-controller property is needed in the child
->     interrupt controller node (main-intc@d0020000) otherwise the
->     resolution done by of_irq_map_one() doesn't work.
+Thanks
 
-If you add compatible properties to the children, that would work
-I suppose.
-
-> So really, the thing is that irq_domain_add_linear() registers an IRQ
-> domain on a specific DT node, and then irq_find_host() finds back an
-> IRQ domain from a given DT node. So if you have two IRQ domains
-> registered on the same DT node, then you don't know which one will be
-> used.
-> 
-> So if I do the two irq_domain_add_linear() (one for MPIC, one for MSI)
-> on one single DT node, when the timer driver will request its
-> interrupt, it turns out that the MSI IRQ domain is used and not the
-> MPIC IRQ domain, even though the timer has <&mpic> as its interrupt
-> parent.
-
-I still wonder if the real solution shouldn't instead be to make the
-irq domain code MSI aware. For instance, you don't really need a
-cell to describe an interrupt because the interrupt number is
-not a hardware property. So an MSI using device doesn't really
-needs an "msis" or "interrupts" property, just an "msi-parent",
-and we can add code to handle as a separate domain even if you
-have a single device node that can do both level and message
-interrupts.
-
-	Arnd
+Yinghai
