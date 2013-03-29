@@ -1,58 +1,60 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.186]:49168 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751172Ab3CZVRX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Mar 2013 17:17:23 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Thierry Reding <thierry.reding@avionic-design.de>
-Subject: Re: [PATCHv6 10/17] arm: mvebu: add PCIe Device Tree informations for Armada 370
-Date: Tue, 26 Mar 2013 21:17:17 +0000
-Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	devicetree-discuss@lists.ozlabs.org,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Maen Suleiman <maen@marvell.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Olof Johansson <olof@lixom.net>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Mitch Bradley <wmb@firmworks.com>,
-	Andrew Murray <andrew.murray@arm.com>
-References: <1364314719-1049-1-git-send-email-thomas.petazzoni@free-electrons.com> <201303262050.12847.arnd@arndb.de> <20130326211234.GA1295@avionic-0098.mockup.avionic-design.de>
-In-Reply-To: <20130326211234.GA1295@avionic-0098.mockup.avionic-design.de>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Message-Id: <201303262117.17478.arnd@arndb.de>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAJtEV7bvPORPoXgQY2OahNVMj+SY5z=xxQ=nueX7=kLVfpyF_A@mail.gmail.com>
+References: <1354533387-4110-1-git-send-email-acooks@gmail.com>
+	<1355914703-28576-1-git-send-email-acooks@gmail.com>
+	<1362126373-32318-1-git-send-email-acooks@gmail.com>
+	<CAO9zADxjoP+R9ccz7vMPmcFvdYwNjErSjaWc_RFkW_FY3+SK=w@mail.gmail.com>
+	<CAJtEV7Zs2BiwJ9jdDeoceh9hiVXvVaSvj=9H+4+vEzhY72AS9g@mail.gmail.com>
+	<00b701ce16d3$0aabe0f0$2003a2d0$@lucidpixels.com>
+	<CAJtEV7bvPORPoXgQY2OahNVMj+SY5z=xxQ=nueX7=kLVfpyF_A@mail.gmail.com>
+Date: Fri, 29 Mar 2013 10:36:33 -0400
+Message-ID: <CAO9zADxcQrUBYsOZST7C0RmMuWEPZjsqroM_LL82sGbt4+qZWA@mail.gmail.com>
+Subject: Re: [PATCH] Quirk to support Marvell 88SE91xx SATA controllers with
+ Intel IOMMU.
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+To: Andrew Cooks <acooks@gmail.com>
+Cc: Joerg Roedel <joro@8bytes.org>, YingChu <xjtuychu@hotmail.com>,
+	Chu Ying <gm.ychu@gmail.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	David Woodhouse <dwmw2@infradead.org>,
+	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
+	open list <linux-kernel@vger.kernel.org>,
+	"open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday 26 March 2013, Thierry Reding wrote:
-> On Tue, Mar 26, 2013 at 08:50:12PM +0000, Arnd Bergmann wrote:
-> > On Tuesday 26 March 2013, Thierry Reding wrote:
-> > >                 pci@1,0 {
-> > >                         device_type = "pci";
-> > >                         assigned-addresses = <0x82000800 0 0x80000000 0 0x1000>;
-> > >                         reg = <0x000800 0 0 0 0>;
-> > >                         status = "disabled";
-> > > 
-> > >                         #address-cells = <3>;
-> > >                         #size-cells = <2>;
-> > > 
-> > >                         nvidia,num-lanes = <2>;
-> > >                 };
-> > 
-> > Shouldn't there be an empty ranges property in there as well?
-> 
-> Technically yes, I think. Though it doesn't make a bit of a difference
-> on Linux.
+On Sun, Mar 3, 2013 at 8:35 PM, Andrew Cooks <acooks@gmail.com> wrote:
+> On Sat, Mar 2, 2013 at 7:18 AM, Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
+>>
+>> Against a clean 3.7.10 (from ftp.kernel.org)
+>>
+>> # patch -p1 <
+>> ../patch/RFC-Fix-Intel-IOMMU-support-for-Marvell-88SE91xx-SATA-controllers..
+>> patch
+>> patching file drivers/iommu/intel-iommu.c
+>> patching file drivers/pci/quirks.c
+>> Hunk #1 succeeded at 3230 (offset 3 lines).
+>> patching file include/linux/pci.h
+>> # pwd
+>> /usr/src/linux-3.7.10
+>>
+>
+> I've downloaded and patched the 3.7.10 tarball and still get the same
+> output I got before; different output from yours. I'm not sure the
+> patch is complete or applying correctly, are you?
+> Could you please check whether the patch you're applying is the same
 
-Only because we have a workaround for old Power Macintoshs that we should
-remove or at least disable on non-PowerPC systems.
+Hi,
 
-	Arnd
+As this patch is now working for some time (against 3.7.x), I was
+wondering when it was going to be included in mainline?
+
+I had upgraded to 3.8.x and rebooted and the same problem recurred and
+had to revert back to 3.7.x.
+
+Thanks,
+
+Justin.
