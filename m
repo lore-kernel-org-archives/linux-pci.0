@@ -1,55 +1,40 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-we0-f170.google.com ([74.125.82.170]:42846 "EHLO
-	mail-we0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756257Ab3CQOBV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 17 Mar 2013 10:01:21 -0400
-Received: by mail-we0-f170.google.com with SMTP id z53so4372268wey.1
-        for <linux-pci@vger.kernel.org>; Sun, 17 Mar 2013 07:01:20 -0700 (PDT)
+Received: from mail-ob0-f182.google.com ([209.85.214.182]:33929 "EHLO
+	mail-ob0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754712Ab3C2PQh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 29 Mar 2013 11:16:37 -0400
+Received: by mail-ob0-f182.google.com with SMTP id ef5so475717obb.13
+        for <linux-pci@vger.kernel.org>; Fri, 29 Mar 2013 08:16:37 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1363527503.16793.75.camel@ul30vt.home>
-References: <20130316213512.2974.17303.stgit@amt.stowe> <20130316213519.2974.38954.stgit@amt.stowe>
- <20130316221159.GA3702@kroah.com> <1363477853.2423.25.camel@zim.stowe>
- <20130317010317.GB9641@kroah.com> <1363493482.16793.69.camel@ul30vt.home>
- <20130317053611.GC948@kroah.com> <1363527503.16793.75.camel@ul30vt.home>
-From: Kay Sievers <kay@vrfy.org>
-Date: Sun, 17 Mar 2013 15:00:59 +0100
-Message-ID: <CAPXgP12vmx9j_jJW3HXb2deRapFKAofTVzEbdyS=Z1VUBswE_Q@mail.gmail.com>
-Subject: Re: [PATCH] udevadm-info: Don't access sysfs 'resource<N>' files
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: Greg KH <gregkh@linuxfoundation.org>,
-	Myron Stowe <mstowe@redhat.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	linux-hotplug@vger.kernel.org, linux-pci@vger.kernel.org,
-	yuxiangl@marvell.com, yxlraid@gmail.com,
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1364444885-19751-1-git-send-email-yinghai@kernel.org>
+References: <1364444885-19751-1-git-send-email-yinghai@kernel.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 29 Mar 2013 09:16:16 -0600
+Message-ID: <CAErSpo75xgZHyUtj2vGd-iuJvL8t8mK+EA8npRP2QCMjUbZEOw@mail.gmail.com>
+Subject: Re: [PATCH 0/2] eisa: fix eisa with PCI
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Matthew Whitehead <mwhitehe@redhat.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Mar 17, 2013 at 2:38 PM, Alex Williamson
-<alex.williamson@redhat.com> wrote:
-> I'm assuming that the device only breaks because udevadm is dumping the
-> full I/O port register space of the device and that if an actual driver
-> was interacting with it through this interface that it would work.  Who
-> knows how many devices will have read side-effects by udevadm blindly
-> dumping these files.  Thanks,
+[+cc linux-pci]
 
-Sysfs is a too public interface to export things there which make
-devices/driver choke on a simple read() of an attribute.
+On Wed, Mar 27, 2013 at 10:28 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> Looks like pci eisa bridge support is broken for a while.
+>
+> one is root io resource reference, and other one is pnp related.
+>
+> Please check if we can put them in v3.9.
+>         eisa, PCI: Fix bus res reference
+>         eisa, PCI: init eisa early before pnp step in
 
-This is nothing specific to udevadm, any tool can do that. Udevadm
-will never read any of the files during normal operation. The admin
-explicitly asked udevadm with a specific command to dump all the stuff
-the device offers.
+Both of these patches are to drivers/eisa/pci_eisa.c.  I don't see an
+EISA-specific maintainer, and I caused at least one of these problems,
+so I'll push these through my PCI tree unless somebody objects.
 
-The kernel driver needs to be fixed to allow that, in the worst case,
-the attributes not exported at all. People should take more care what
-they export in /sys, it's not a hidden and private ioctl what's
-exported there, stuff is very visible and will be looked at.
-
-Telling userspace not to use specific stuff in /sys I would not expect
-to work as a strategy; there is too much weird stuff out there that
-will always try to do that ...
-
-Thanks,
-Kay
+Bjorn
