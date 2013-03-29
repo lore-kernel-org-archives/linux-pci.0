@@ -1,88 +1,96 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:52046 "EHLO quartz.orcorp.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933201Ab3CMT7L (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 13 Mar 2013 15:59:11 -0400
-Date: Wed, 13 Mar 2013 13:59:01 -0600
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Thierry Reding <thierry.reding@avionic-design.de>
-Cc: Mitch Bradley <wmb@firmworks.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>, linux-pci@vger.kernel.org,
-	devicetree-discuss@lists.ozlabs.org,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH 24/32] pci: PCIe driver for Marvell Armada 370/XP systems
-Message-ID: <20130313195901.GA26550@obsidianresearch.com>
-References: <513E6AFE.3090304@firmworks.com>
- <20130312070852.GA6727@avionic-0098.mockup.avionic-design.de>
- <20130312155749.GA1820@obsidianresearch.com>
- <20130312203819.GA23221@avionic-0098.mockup.avionic-design.de>
- <20130312210328.GA22702@obsidianresearch.com>
- <20130312213006.GA23717@avionic-0098.mockup.avionic-design.de>
- <20130312220854.GA23112@obsidianresearch.com>
- <20130313081815.GD25940@avionic-0098.mockup.avionic-design.de>
- <20130313170205.GB24042@obsidianresearch.com>
- <20130313192628.GA28714@avionic-0098.mockup.avionic-design.de>
+Received: from mail-ie0-f172.google.com ([209.85.223.172]:58586 "EHLO
+	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755604Ab3C2SLc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 29 Mar 2013 14:11:32 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130313192628.GA28714@avionic-0098.mockup.avionic-design.de>
+In-Reply-To: <20130329032200.GA11990@google.com>
+References: <CAE9FiQXmeb66dc8fET0y99BjqpUXp11c7utiQ5keR1Wf+N9xaA@mail.gmail.com>
+	<1363628226-6679-1-git-send-email-yinghai@kernel.org>
+	<CAErSpo6v0mj9=Q13d=G4hho0mb9XTcsmefzke9fROYmZ7oBWxQ@mail.gmail.com>
+	<CAE9FiQU7cDzJdHxmqhJNgc9UCsRLgvCFQpv8+fLxD79pLEUC5A@mail.gmail.com>
+	<CAErSpo4ncW8rkcpDiccORZedj30m7jRmpXK+amfDGn_wjwt7EA@mail.gmail.com>
+	<CAE9FiQVqKag2TGah7x_1MAJ+c0UWgywgM_jKUoOnh+rq3bwBhg@mail.gmail.com>
+	<CAE9FiQVMgdj5edbR4qZny29fV9-bW_We_G4Wpn_yruDLQZiQiQ@mail.gmail.com>
+	<20130329032200.GA11990@google.com>
+Date: Fri, 29 Mar 2013 20:11:31 +0200
+Message-ID: <CAPTwTV9eXDUcr_4HyGFJ1aHkT-rB5jXcQVEKeJScasmUcUu6XQ@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Remove not needed check in disable aspm link
+From: Roman Yepishev <roman.yepishev@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Yinghai Lu <yinghai@kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Matthew Garrett <matthew.garrett@nebula.com>,
+	e1000-devel@lists.sourceforge.net
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 13, 2013 at 08:26:28PM +0100, Thierry Reding wrote:
+On Fri, Mar 29, 2013 at 5:22 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> [+cc Matthew]
+> [+cc e1000-devel@lists.sourceforge.net for suspected 82575/82598 regression]
+>
+> I think this regression has nothing to do with pci_disable_link_state().
+>
+> ...
+>
+> There are also PCI_FIXUP_FINAL quirks for 82575 and 82598 NICs that call
+> pci_disable_link_state().  In 3.7, these quirks are run before
+> aspm_disabled is set, but 8c33f51d moved the pcie_no_aspm() call up
+> before we start scanning the bus, so in 3.8, aspm_disabled is set
+> *before* we run them.  I think that means 8c33f51d broke all these
+> quirks.  That's also a problem, of course, but this isn't the one Roman
+> is seeing either.
+I have to say that my iwlwifi device (Intel Corporation Centrino
+Wireless-N 1000 [Condor Peak] [8086:0084] also appears to be affected
+- it calls pci_disable_link_state too and in current 3.8 that does not
+do anything. It looks like it affects something when the system is
+resumed from suspend, but I was not able to confirm that yet (but
+there's a thread about removing the code since it did not appear to
+work - http://thread.gmane.org/gmane.linux.kernel.pci/20628/focus=20640)
 
-> As Mitch already said there's very little chance that the specification
-> update will be ratified through IEEE, so I think that we might just as
-> well put a corresponding text somewhere below Documentation/devicetree.
+> I think the problem Roman is seeing happens when
+> pcie_aspm_init_link_state() calls pcie_aspm_sanity_check() during device
+> enumeration.  In 3.8, the fact that aspm_disabled is already set by the
+> time we get here means we skip the check for pre-1.1 PCIe devices, and
+> I think *this* is what Roman is seeing.
+>
+> I suspect the following hunk of your patch is enough to fix things for
+> Roman:
+>
+>> --- linux-2.6.orig/drivers/pci/pcie/aspm.c
+>> +++ linux-2.6/drivers/pci/pcie/aspm.c
+>> @@ -493,15 +492,6 @@ static int pcie_aspm_sanity_check(struct
+>>                       return -EINVAL;
+>>
+>>               /*
+>> -              * If ASPM is disabled then we're not going to change
+>> -              * the BIOS state. It's safe to continue even if it's a
+>> -              * pre-1.1 device
+>> -              */
+>> -
+>> -             if (aspm_disabled)
+>> -                     continue;
+>> -
+>> -             /*
+>>                * Disable ASPM for pre-1.1 PCIe device, we follow MS to use
+>>                * RBER bit to determine if a function is 1.1 version device
+>>                */
+>
+> However, this test was added by Matthew in c9651e70, and I can't remove
+> it unless we have an explanation of why removing it will not reintroduce
+> the bug he was fixing.
+>
+> This code is such a terrible mess that it's not surprising at all that
+> we have all these issues.  But there's too much to untangle in v3.9; all
+> we can hope for is to fix the regressions in v3.9 and clean it up later.
+>
+I have removed the check and indeed it allowed ASPM to become disabled
+during the ath5k driver load.
 
-Sure, I'm fine with that.
- 
-> Also note that this has absolutely nothing to do with ECAM. All I'm
-> proposing is to allow the reg property of a root port to be translated
-> into a CPU addressable memory region through the ranges property. This
-> turns out to actually work properly with the current OF core in Linux.
-
-ECAM is the only standard based mechanism that could possibly use this
-new config space ranges concept. Whatever you do for tegra shouldn't
-stomp on the possibility of making that work in the future. So at
-least think about how ECAM could be modeled for a few mins before
-going ahead.
-
-Tegra is the non-standard unusual case here, an update to the PCI OF
-binding should be of general use.
-
-> > Anyhow, I think this has been hashed to death, as long as your final
-> > binding has the 'device_type = pci' on the pcie-controller node I
-> > think it will be fine.
-> 
-> No. The pcie-controller is *not* a PCI device. It is a PCI host bridge.
-> It is the instance that translates from the platform to the PCI bus. Why
-> should it be device_type = "pci"? 
-
-Spec says so, Mitch said so, other PCI host bridge bindings in the
-tree work like this. Do a grep in the powerpc tree, for instance.
-
-arch/x86/platform/ce4100/falconfalls.dts is a pretty comprehensive
-example.
-
-> And we've also been over this before, making that change stops the
-> proposed binding from working properly because the entry in the reg
-> property can't be translated into a CPU addressable memory region.
-
-Sigh, that's because the change makes things follow the OF PCI
-spec. The Linux OF core follows the spec. Config space ranges binding
-is specifically *defined to not work* in the spec. Why should it work
-today?
-
-You have to deal with this problem somehow, and omitting the top level
-device_type is not a solution.
-
-Jason
+--
+Regards, Roman Yepishev
