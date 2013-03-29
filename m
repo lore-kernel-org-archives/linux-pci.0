@@ -1,79 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-da0-f47.google.com ([209.85.210.47]:38479 "EHLO
-	mail-da0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932863Ab3CHXMI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 Mar 2013 18:12:08 -0500
-Received: by mail-da0-f47.google.com with SMTP id s35so226187dak.6
-        for <linux-pci@vger.kernel.org>; Fri, 08 Mar 2013 15:12:07 -0800 (PST)
-Message-ID: <513A7044.1020700@gmail.com>
-Date: Fri, 08 Mar 2013 17:12:04 -0600
-From: Rob Herring <robherring2@gmail.com>
+Received: from mail-oa0-f51.google.com ([209.85.219.51]:61360 "EHLO
+	mail-oa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755970Ab3C2SYx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 29 Mar 2013 14:24:53 -0400
+Received: by mail-oa0-f51.google.com with SMTP id g12so590673oah.38
+        for <linux-pci@vger.kernel.org>; Fri, 29 Mar 2013 11:24:53 -0700 (PDT)
 MIME-Version: 1.0
-To: Thierry Reding <thierry.reding@avionic-design.de>
-CC: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	linux-pci@vger.kernel.org, Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	linux-arm-kernel@lists.infradead.org,
-	devicetree-discuss@lists.ozlabs.org
-Subject: Re: [PATCH 24/32] pci: PCIe driver for Marvell Armada 370/XP systems
-References: <20130212223511.GB31555@obsidianresearch.com> <20130306105441.4d24033e@skate> <20130306121118.GA17079@avionic-0098.mockup.avionic-design.de> <20130306180946.GA2433@obsidianresearch.com> <20130307080832.GD3451@avionic-0098.mockup.avionic-design.de> <20130307174955.GC20840@obsidianresearch.com> <20130307194830.GA1811@avionic-0098.mockup.avionic-design.de> <20130307200235.GB20695@obsidianresearch.com> <20130307204726.GB1811@avionic-0098.mockup.avionic-design.de> <51392B4D.9040404@gmail.com> <20130308071443.GA5772@avionic-0098.mockup.avionic-design.de>
-In-Reply-To: <20130308071443.GA5772@avionic-0098.mockup.avionic-design.de>
+In-Reply-To: <CANUX_P22AkqeOROP1QHzp20wGWgDbRzy+9FZy2KvHLXCQ5AVnA@mail.gmail.com>
+References: <CANUX_P3F5YhbZX3WGU-j1AGpbXb_T9Bis2ErhvKkFMtDvzatVQ@mail.gmail.com>
+ <20130304134949.GB3021@redhat.com> <CANUX_P0JhuVWcQjTckYzG8eBb2MtT_=prKqV38mCpVjfLmGtCA@mail.gmail.com>
+ <20130304154832.GD3021@redhat.com> <CANUX_P22AkqeOROP1QHzp20wGWgDbRzy+9FZy2KvHLXCQ5AVnA@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 29 Mar 2013 12:24:32 -0600
+Message-ID: <CAErSpo5gVsUxB6ebQGAN-7jsZiRYZ+SyJn5gKZrSuOzzkJ-QjQ@mail.gmail.com>
+Subject: Re: is L1 really disabled in iwlwifi
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	John Linville <linville@tuxdriver.com>,
+	Roman Yepishev <roman.yepishev@gmail.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/08/2013 01:14 AM, Thierry Reding wrote:
-> On Thu, Mar 07, 2013 at 06:05:33PM -0600, Rob Herring wrote:
->> On 03/07/2013 02:47 PM, Thierry Reding wrote:
-> [...]
->>> In a nutshell (since some of the context isn't quoted anymore) the
->>> problem that we're trying to solve is that some of the embedded SoCs
->>> require per-root-port registers for configuration. The PCI DT
->>> specification doesn't make any provisions for this. A few alternatives
->>> have been discussed so far:
+On Mon, Mar 4, 2013 at 10:58 AM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
+> On Mon, Mar 4, 2013 at 5:48 PM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+>> On Mon, Mar 04, 2013 at 04:57:46PM +0200, Emmanuel Grumbach wrote:
 >>
->> I'm not sure I follow. This is different than the host controller
->> registers? Why would this not just be multiple entries in the reg property?
-> 
-> Well the register regions are per root-port. On Tegra20 there's 2 of
-> them, Tegra30 has 3 and if I understand correctly Marvell can have up to
-> 10 (!). Adding all of them to the reg property of the host controller
-> could work but it needs some way to match the reg entry to the root port
-> similar to option 1 below.
+>>> This is what I did. On 3.7, lspci tells me that ASPM is enabled before
+>>> I load the module. And same after I load the module.
+>>
+>> CONFIG_PCIEASPM disabled ?
+>>
+>
+> nope - enabled on both kernel: 3.1 and 3.7. Makes sense though.
+> CONFIG_PCIEASPM enabled, I have L1. Just wondering why doesn't that
+> pci_disable_link_state do anything....
+> Also, I remember so issues Mathew Garret debugged and he ended up
+> disabling ASPM on older kernel because some BIOS issue (don't remember
+> really). Apparently, ASPM is enabled again in newer kernels.
+>
+> Anyway - I think I will just remove this pci_disable_link_state call
+> and hopefully, it will stay long enough in linux-next so that people
+> will report issues before it get into linux.
+> I don't like leaving that code if it doesn't do anything.
 
-The compatible property of the PCI host controller can imply what each
-index of the reg property entries is for.
+I think we broke at least some cases of pci_disable_link_state() a
+while back.  I'd like to fix it rather than just removing calls to it.
 
-> 
-> Adding a property in the root port nodes seems like a cleaner and more
-> accurate representation of the hardware to me, but if that's not
-> acceptable perhaps we need to bite the bullet and add the code to look
-> the registers up from the parent's reg property.
+Can someone collect a complete dmesg log and "lspci -vv" output?
 
-What I don't like is a new property defined to describe mmio addresses.
-We already have a property for that and it is "reg". But I think I'm
-still missing something:
-
->>> 			pci@0,1 {
->>> 				...
->>> 				reg = <0x00000800 0 0 0 0>;
-
-Is this a PCI bus address?
-
->>> 				regs = <0x80000000 0x00001000>;
->>> 			};
-
-Rob
-
+Bjorn
