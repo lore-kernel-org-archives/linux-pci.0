@@ -1,281 +1,126 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e24smtp04.br.ibm.com ([32.104.18.25]:49227 "EHLO
-	e24smtp04.br.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751588Ab3CNSzV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 14 Mar 2013 14:55:21 -0400
-Received: from /spool/local
-	by e24smtp04.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <cascardo@linux.vnet.ibm.com>;
-	Thu, 14 Mar 2013 15:55:19 -0300
-Received: from d24relay02.br.ibm.com (d24relay02.br.ibm.com [9.13.184.26])
-	by d24dlp02.br.ibm.com (Postfix) with ESMTP id 7CF141DC0066
-	for <linux-pci@vger.kernel.org>; Thu, 14 Mar 2013 14:55:16 -0400 (EDT)
-Received: from d24av02.br.ibm.com (d24av02.br.ibm.com [9.8.31.93])
-	by d24relay02.br.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id r2EIsPpJ26673338
-	for <linux-pci@vger.kernel.org>; Thu, 14 Mar 2013 15:54:25 -0300
-Received: from d24av02.br.ibm.com (loopback [127.0.0.1])
-	by d24av02.br.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id r2EItBXU003738
-	for <linux-pci@vger.kernel.org>; Thu, 14 Mar 2013 15:55:12 -0300
-Date: Thu, 14 Mar 2013 15:55:10 -0300
-From: Thadeu Lima de Souza Cascardo <cascardo@linux.vnet.ibm.com>
-To: lucaskt@linux.vnet.ibm.com
-Cc: dri-devel@lists.freedesktop.org, linux-pci@vger.kernel.org,
-	Alex Deucher <alexander.deucher@amd.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, brking@linux.vnet.ibm.com
-Subject: Re: [PATCH 1/2] drm: Move drm_pcie_get_speed_cap_mask to PCI
-Message-ID: <20130314185510.GB13230@oc0268524204.ibm.com>
-References: <1363283147-8852-1-git-send-email-lucaskt@linux.vnet.ibm.com>
- <1363283147-8852-2-git-send-email-lucaskt@linux.vnet.ibm.com>
+Received: from fold.natur.cuni.cz ([195.113.57.32]:54771 "HELO
+	fold.natur.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754069Ab3C2PD7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 29 Mar 2013 11:03:59 -0400
+Message-ID: <5155924F.1070509@fold.natur.cuni.cz>
+Date: Fri, 29 Mar 2013 14:08:31 +0100
+From: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1363283147-8852-2-git-send-email-lucaskt@linux.vnet.ibm.com>
+To: Huang Ying <ying.huang@intel.com>
+CC: Yijing Wang <wangyijing@huawei.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, Yinghai Lu <yinghai@kernel.org>
+Subject: Re: 3.9-rc1: pciehp and eSATA card SiI 3132, no XHCI
+References: <513E7E1E.80508@fold.natur.cuni.cz>  <513FE7AD.2020408@huawei.com> <5141145E.4020300@fold.natur.cuni.cz>  <51417C28.40402@huawei.com> <5141C9D7.9040706@fold.natur.cuni.cz>  <51428A72.2060602@huawei.com> <51548E13.8030308@fold.natur.cuni.cz> <1364545211.1817.228.camel@yhuang-dev>
+In-Reply-To: <1364545211.1817.228.camel@yhuang-dev>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 14, 2013 at 02:45:46PM -0300, lucaskt@linux.vnet.ibm.com wrote:
-> From: Lucas Kannebley Tavares <lucaskt@linux.vnet.ibm.com>
-> 
-> This function was more architecture related than drm related, as such it was
-> moved to the PCI driver.
-> 
-> This patch also allows it to be overwritten by architecture-dependent
-> implementations, and fixes the radeon driver (only one that uses it).
-> 
-> Signed-off-by: Lucas Kannebley Tavares <lucaskt@linux.vnet.ibm.com>
-> ---
->  drivers/gpu/drm/drm_pci.c          |   38 -------------------------------
->  drivers/gpu/drm/radeon/evergreen.c |    5 ++-
->  drivers/gpu/drm/radeon/r600.c      |    5 ++-
->  drivers/gpu/drm/radeon/rv770.c     |    5 ++-
->  drivers/pci/pci.c                  |   43 ++++++++++++++++++++++++++++++++++++
->  include/drm/drmP.h                 |    6 -----
->  include/linux/pci.h                |    6 +++++
->  7 files changed, 58 insertions(+), 50 deletions(-)
-> 
-> diff --git a/drivers/gpu/drm/drm_pci.c b/drivers/gpu/drm/drm_pci.c
-> index bd719e9..ba70844 100644
-> --- a/drivers/gpu/drm/drm_pci.c
-> +++ b/drivers/gpu/drm/drm_pci.c
-> @@ -439,44 +439,6 @@ int drm_pci_init(struct drm_driver *driver, struct pci_driver *pdriver)
->  	return 0;
->  }
-> 
-> -int drm_pcie_get_speed_cap_mask(struct drm_device *dev, u32 *mask)
-> -{
-> -	struct pci_dev *root;
-> -	u32 lnkcap, lnkcap2;
-> -
-> -	*mask = 0;
-> -	if (!dev->pdev)
-> -		return -EINVAL;
-> -
-> -	root = dev->pdev->bus->self;
-> -
-> -	/* we've been informed via and serverworks don't make the cut */
-> -	if (root->vendor == PCI_VENDOR_ID_VIA ||
-> -	    root->vendor == PCI_VENDOR_ID_SERVERWORKS)
-> -		return -EINVAL;
-> -
-> -	pcie_capability_read_dword(root, PCI_EXP_LNKCAP, &lnkcap);
-> -	pcie_capability_read_dword(root, PCI_EXP_LNKCAP2, &lnkcap2);
-> -
-> -	if (lnkcap2) {	/* PCIe r3.0-compliant */
-> -		if (lnkcap2 & PCI_EXP_LNKCAP2_SLS_2_5GB)
-> -			*mask |= DRM_PCIE_SPEED_25;
-> -		if (lnkcap2 & PCI_EXP_LNKCAP2_SLS_5_0GB)
-> -			*mask |= DRM_PCIE_SPEED_50;
-> -		if (lnkcap2 & PCI_EXP_LNKCAP2_SLS_8_0GB)
-> -			*mask |= DRM_PCIE_SPEED_80;
-> -	} else {	/* pre-r3.0 */
-> -		if (lnkcap & PCI_EXP_LNKCAP_SLS_2_5GB)
-> -			*mask |= DRM_PCIE_SPEED_25;
-> -		if (lnkcap & PCI_EXP_LNKCAP_SLS_5_0GB)
-> -			*mask |= (DRM_PCIE_SPEED_25 | DRM_PCIE_SPEED_50);
-> -	}
-> -
-> -	DRM_INFO("probing gen 2 caps for device %x:%x = %x/%x\n", root->vendor, root->device, lnkcap, lnkcap2);
-> -	return 0;
-> -}
-> -EXPORT_SYMBOL(drm_pcie_get_speed_cap_mask);
-> -
->  #else
-> 
->  int drm_pci_init(struct drm_driver *driver, struct pci_driver *pdriver)
-> diff --git a/drivers/gpu/drm/radeon/evergreen.c b/drivers/gpu/drm/radeon/evergreen.c
-> index 305a657..6ba204d 100644
-> --- a/drivers/gpu/drm/radeon/evergreen.c
-> +++ b/drivers/gpu/drm/radeon/evergreen.c
-> @@ -24,6 +24,7 @@
->  #include <linux/firmware.h>
->  #include <linux/platform_device.h>
->  #include <linux/slab.h>
-> +#include <linux/pci.h>
->  #include <drm/drmP.h>
->  #include "radeon.h"
->  #include "radeon_asic.h"
-> @@ -3871,11 +3872,11 @@ void evergreen_pcie_gen2_enable(struct radeon_device *rdev)
->  	if (ASIC_IS_X2(rdev))
->  		return;
-> 
-> -	ret = drm_pcie_get_speed_cap_mask(rdev->ddev, &mask);
-> +	ret = pcie_get_speed_cap_mask(rdev->ddev->pdev, &mask);
->  	if (ret != 0)
->  		return;
-> 
-> -	if (!(mask & DRM_PCIE_SPEED_50))
-> +	if (!(mask & PCIE_SPEED_50))
->  		return;
-> 
->  	speed_cntl = RREG32_PCIE_P(PCIE_LC_SPEED_CNTL);
-> diff --git a/drivers/gpu/drm/radeon/r600.c b/drivers/gpu/drm/radeon/r600.c
-> index 0740db3..89a7387 100644
-> --- a/drivers/gpu/drm/radeon/r600.c
-> +++ b/drivers/gpu/drm/radeon/r600.c
-> @@ -30,6 +30,7 @@
->  #include <linux/firmware.h>
->  #include <linux/platform_device.h>
->  #include <linux/module.h>
-> +#include <linux/pci.h>
->  #include <drm/drmP.h>
->  #include <drm/radeon_drm.h>
->  #include "radeon.h"
-> @@ -4371,11 +4372,11 @@ static void r600_pcie_gen2_enable(struct radeon_device *rdev)
->  	if (rdev->family <= CHIP_R600)
->  		return;
-> 
-> -	ret = drm_pcie_get_speed_cap_mask(rdev->ddev, &mask);
-> +	ret = pcie_get_speed_cap_mask(rdev->ddev->pdev, &mask);
->  	if (ret != 0)
->  		return;
-> 
-> -	if (!(mask & DRM_PCIE_SPEED_50))
-> +	if (!(mask & PCIE_SPEED_50))
->  		return;
-> 
->  	speed_cntl = RREG32_PCIE_P(PCIE_LC_SPEED_CNTL);
-> diff --git a/drivers/gpu/drm/radeon/rv770.c b/drivers/gpu/drm/radeon/rv770.c
-> index d63fe1d..81c7f1c 100644
-> --- a/drivers/gpu/drm/radeon/rv770.c
-> +++ b/drivers/gpu/drm/radeon/rv770.c
-> @@ -28,6 +28,7 @@
->  #include <linux/firmware.h>
->  #include <linux/platform_device.h>
->  #include <linux/slab.h>
-> +#include <linux/pci.h>
->  #include <drm/drmP.h>
->  #include "radeon.h"
->  #include "radeon_asic.h"
-> @@ -1254,11 +1255,11 @@ static void rv770_pcie_gen2_enable(struct radeon_device *rdev)
->  	if (ASIC_IS_X2(rdev))
->  		return;
-> 
-> -	ret = drm_pcie_get_speed_cap_mask(rdev->ddev, &mask);
-> +	ret = pcie_get_speed_cap_mask(rdev->ddev->pdev, &mask);
->  	if (ret != 0)
->  		return;
-> 
-> -	if (!(mask & DRM_PCIE_SPEED_50))
-> +	if (!(mask & PCIE_SPEED_50))
->  		return;
-> 
->  	DRM_INFO("enabling PCIE gen 2 link speeds, disable with radeon.pcie_gen2=0\n");
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index b099e00..ebf130c 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -3931,6 +3931,49 @@ static int __init pci_setup(char *str)
->  }
->  early_param("pci", pci_setup);
-> 
-> +int __weak pcibios_get_speed_cap_mask(struct pci_dev *dev, u32 *mask)
-> +{
-> +	struct pci_dev *root;
-> +	u32 lnkcap, lnkcap2;
-> +
-> +	*mask = 0;
-> +	if (!dev)
-> +		return -EINVAL;
-> +
-> +	root = dev->bus->self;
-> +
-> +	/* we've been informed via and serverworks don't make the cut */
-> +	if (root->vendor == PCI_VENDOR_ID_VIA ||
-> +	    root->vendor == PCI_VENDOR_ID_SERVERWORKS)
-> +		return -EINVAL;
 
-Does it make sense to exclude vendors here, or was this DRM specific?
 
-> +
-> +	pcie_capability_read_dword(root, PCI_EXP_LNKCAP, &lnkcap);
-> +	pcie_capability_read_dword(root, PCI_EXP_LNKCAP2, &lnkcap2);
-> +
-> +	if (lnkcap2) {	/* PCIe r3.0-compliant */
-> +		if (lnkcap2 & PCI_EXP_LNKCAP2_SLS_2_5GB)
-> +			*mask |= PCIE_SPEED_25;
-> +		if (lnkcap2 & PCI_EXP_LNKCAP2_SLS_5_0GB)
-> +			*mask |= PCIE_SPEED_50;
-> +		if (lnkcap2 & PCI_EXP_LNKCAP2_SLS_8_0GB)
-> +			*mask |= PCIE_SPEED_80;
-> +	} else {	/* pre-r3.0 */
-> +		if (lnkcap & PCI_EXP_LNKCAP_SLS_2_5GB)
-> +			*mask |= PCIE_SPEED_25;
-> +		if (lnkcap & PCI_EXP_LNKCAP_SLS_5_0GB)
-> +			*mask |= (PCIE_SPEED_25 | PCIE_SPEED_50);
-> +	}
-> +
-> +	dev_info(&dev->dev, "probing gen 2 caps for device %x:%x = %x/%x\n",
-> +		root->vendor, root->device, lnkcap, lnkcap2);
-> +	return 0;
-> +}
-> +
-> +int pcie_get_speed_cap_mask(struct pci_dev *dev, u32 *mask) {
-
-Put the curly brackets in a separate line for a function. To avoid these
-coding styles issues, run scripts/checkpatch.pl.
-
-Regards.
-Cascardo.
-
-> +	return pcibios_get_speed_cap_mask(dev, mask);
-> +}
-> +EXPORT_SYMBOL(pcie_get_speed_cap_mask);
-> +
->  EXPORT_SYMBOL(pci_reenable_device);
->  EXPORT_SYMBOL(pci_enable_device_io);
->  EXPORT_SYMBOL(pci_enable_device_mem);
-> diff --git a/include/drm/drmP.h b/include/drm/drmP.h
-> index 2d94d74..39b2872 100644
-> --- a/include/drm/drmP.h
-> +++ b/include/drm/drmP.h
-> @@ -1788,12 +1788,6 @@ extern int drm_get_pci_dev(struct pci_dev *pdev,
->  			   const struct pci_device_id *ent,
->  			   struct drm_driver *driver);
+Huang Ying wrote:
+> On Thu, 2013-03-28 at 19:38 +0100, Martin Mokrejs wrote:
+>> Hi Ying,
+>>   would you please tell me how this report relate to this patch?
+>>
+>> [PATCH] PCI / ACPI: Always resume devices on ACPI wakeup notifications
+>>
+>>   Could you tell me why this PME was being flipped back and forth now?
+>> Actually, does that make finally some sense to you, pci/acpi devs?
+>>
+>>
+>>   Does is help to say that on the SandyBridge chip I have the following root ports
+>> hooked to the following end devices?:
+>>
+>> 1.c1 -> rtl8169 05:00.0
+>> 1.c3 -> iwlwifi 09:00.0
+>> 1.c4 -> xhci_hcd 0b:00.0
+>> 1.c7 -> 00:11: express card slot
+>>
+>>
+>>   Why didn't I see interleraved lines with 1.c7 *and* 00:11? See the interleaving
+>> happening with the network card on 3.7.10 kernel (not broken kernel):
+>>
+>> [138268.870070] r8169 0000:05:00.0 eth0: link down
+>> [138270.809811] r8169 0000:05:00.0 eth0: link up
+>> [138365.599744] r8169 0000:05:00.0 eth0: link down
+>> [138370.594343] r8169 0000:05:00.0: PME# enabled
+>> [138370.623852] pcieport 0000:00:1c.1: PME# enabled
+>> [169885.247386] pcieport 0000:00:1c.1: PME# disabled
+>> [169885.267374] r8169 0000:05:00.0: PME# disabled
+>> [169885.330160] r8169 0000:05:00.0 eth0: link down
+>> [169886.992531] r8169 0000:05:00.0 eth0: link up
+>> [169904.405769] r8169 0000:05:00.0 eth0: link down
+>> [169909.401237] r8169 0000:05:00.0: PME# enabled
+>> [169909.430782] pcieport 0000:00:1c.1: PME# enabled
+>> [170090.538980] pcieport 0000:00:1c.1: PME# disabled
+>> [170090.559088] r8169 0000:05:00.0: PME# disabled
+>> [170090.640494] r8169 0000:05:00.0: PME# enabled
+>> [170090.678425] pcieport 0000:00:1c.1: PME# enabled
+>> [170090.829959] pcieport 0000:00:1c.1: PME# disabled
+>> [170090.848479] r8169 0000:05:00.0: PME# disabled
+>> [170090.892011] r8169 0000:05:00.0 eth0: link down
+>> [170090.892134] r8169 0000:05:00.0 eth0: link down
+>> [170090.930998] r8169 0000:05:00.0 eth0: link down
+>> [170092.554553] r8169 0000:05:00.0 eth0: link up
 > 
-> -#define DRM_PCIE_SPEED_25 1
-> -#define DRM_PCIE_SPEED_50 2
-> -#define DRM_PCIE_SPEED_80 4
-> -
-> -extern int drm_pcie_get_speed_cap_mask(struct drm_device *dev, u32 *speed_mask);
-> -
->  /* platform section */
->  extern int drm_platform_init(struct drm_driver *driver, struct platform_device *platform_device);
->  extern void drm_platform_exit(struct drm_driver *driver, struct platform_device *platform_device);
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 2461033a..24a2f63 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1861,4 +1861,10 @@ static inline struct eeh_dev *pci_dev_to_eeh_dev(struct pci_dev *pdev)
->   */
->  struct pci_dev *pci_find_upstream_pcie_bridge(struct pci_dev *pdev);
+> I don't know exactly.  Can you give me the follow output?
 > 
-> +#define PCIE_SPEED_25 1
-> +#define PCIE_SPEED_50 2
-> +#define PCIE_SPEED_80 4
-> +
-> +extern int pcie_get_speed_cap_mask(struct pci_dev *dev, u32 *speed_mask);
-> +
->  #endif /* LINUX_PCI_H */
-> -- 
-> 1.7.4.4
-> 
+> grep . /sys/bus/pci/devices/*/power/control
+> grep . /sys/bus/pci/devices/*/power/runtime_status
 
+
+Hi Ying,
+  here is the output from the not-broken 3.7.10 kernel:
+
+vostro ~ # uname -a
+Linux vostro 3.7.10-default #2 SMP Tue Mar 5 09:52:12 MET 2013 x86_64 Intel(R) Core(TM) i7-2640M CPU @ 2.80GHz GenuineIntel GNU/Linux
+vostro ~ # grep . /sys/bus/pci/devices/*/power/control
+/sys/bus/pci/devices/0000:00:00.0/power/control:auto
+/sys/bus/pci/devices/0000:00:02.0/power/control:auto
+/sys/bus/pci/devices/0000:00:16.0/power/control:auto
+/sys/bus/pci/devices/0000:00:1a.0/power/control:auto
+/sys/bus/pci/devices/0000:00:1b.0/power/control:auto
+/sys/bus/pci/devices/0000:00:1c.0/power/control:auto
+/sys/bus/pci/devices/0000:00:1c.1/power/control:auto
+/sys/bus/pci/devices/0000:00:1c.3/power/control:auto
+/sys/bus/pci/devices/0000:00:1c.4/power/control:auto
+/sys/bus/pci/devices/0000:00:1c.7/power/control:auto
+/sys/bus/pci/devices/0000:00:1d.0/power/control:auto
+/sys/bus/pci/devices/0000:00:1f.0/power/control:auto
+/sys/bus/pci/devices/0000:00:1f.2/power/control:auto
+/sys/bus/pci/devices/0000:00:1f.3/power/control:auto
+/sys/bus/pci/devices/0000:05:00.0/power/control:auto
+/sys/bus/pci/devices/0000:09:00.0/power/control:auto
+/sys/bus/pci/devices/0000:0b:00.0/power/control:auto
+/sys/bus/pci/devices/0000:11:00.0/power/control:auto
+vostro ~ # grep . /sys/bus/pci/devices/*/power/runtime_status
+/sys/bus/pci/devices/0000:00:00.0/power/runtime_status:suspended
+/sys/bus/pci/devices/0000:00:02.0/power/runtime_status:active
+/sys/bus/pci/devices/0000:00:16.0/power/runtime_status:suspended
+/sys/bus/pci/devices/0000:00:1a.0/power/runtime_status:active
+/sys/bus/pci/devices/0000:00:1b.0/power/runtime_status:active
+/sys/bus/pci/devices/0000:00:1c.0/power/runtime_status:suspended
+/sys/bus/pci/devices/0000:00:1c.1/power/runtime_status:active
+/sys/bus/pci/devices/0000:00:1c.3/power/runtime_status:active
+/sys/bus/pci/devices/0000:00:1c.4/power/runtime_status:active
+/sys/bus/pci/devices/0000:00:1c.7/power/runtime_status:active
+/sys/bus/pci/devices/0000:00:1d.0/power/runtime_status:active
+/sys/bus/pci/devices/0000:00:1f.0/power/runtime_status:active
+/sys/bus/pci/devices/0000:00:1f.2/power/runtime_status:active
+/sys/bus/pci/devices/0000:00:1f.3/power/runtime_status:suspended
+/sys/bus/pci/devices/0000:05:00.0/power/runtime_status:active
+/sys/bus/pci/devices/0000:09:00.0/power/runtime_status:active
+/sys/bus/pci/devices/0000:0b:00.0/power/runtime_status:active
+/sys/bus/pci/devices/0000:11:00.0/power/runtime_status:active
+vostro ~ # 
+
+
+
+Now will go and test your patch for the 3.9-rc1 PME# storm when the coldplugged eSATA
+is unplugged and rmmod sata_sil24 triggers the messages.
+
+Martin
