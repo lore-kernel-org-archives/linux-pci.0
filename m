@@ -1,48 +1,65 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ob0-f178.google.com ([209.85.214.178]:51984 "EHLO
+	mail-ob0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754412Ab3C3V0t (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 30 Mar 2013 17:26:49 -0400
+Received: by mail-ob0-f178.google.com with SMTP id wd20so1109187obb.9
+        for <linux-pci@vger.kernel.org>; Sat, 30 Mar 2013 14:26:48 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1363642353-30749-5-git-send-email-matthew.garrett@nebula.com>
-References: <1363642353-30749-1-git-send-email-matthew.garrett@nebula.com>
-	<1363642353-30749-5-git-send-email-matthew.garrett@nebula.com>
-Date: Wed, 27 Mar 2013 11:03:26 -0400
-Message-ID: <CA+5PVA4VFgExGNrt5Yh+F4f48amAXKYAbdNFDy7VTFTguh6qTA@mail.gmail.com>
-Subject: Re: [PATCH 05/12] PCI: Require CAP_COMPROMISE_KERNEL for PCI BAR access
-From: Josh Boyer <jwboyer@gmail.com>
-To: Matthew Garrett <matthew.garrett@nebula.com>
-Cc: linux-kernel@vger.kernel.org,
-	linux-security-module@vger.kernel.org, linux-efi@vger.kernel.org,
-	kexec@lists.infradead.org, linux-pci@vger.kernel.org,
-	kmcmartin@redhat.com
+In-Reply-To: <CANUX_P2-V0-=sfofxYwAYCRvqPPf5Z2wy6CUNQmGQQ2NqjZJ_A@mail.gmail.com>
+References: <CANUX_P3F5YhbZX3WGU-j1AGpbXb_T9Bis2ErhvKkFMtDvzatVQ@mail.gmail.com>
+ <20130304134949.GB3021@redhat.com> <CANUX_P0JhuVWcQjTckYzG8eBb2MtT_=prKqV38mCpVjfLmGtCA@mail.gmail.com>
+ <20130304154832.GD3021@redhat.com> <CANUX_P22AkqeOROP1QHzp20wGWgDbRzy+9FZy2KvHLXCQ5AVnA@mail.gmail.com>
+ <CAErSpo5gVsUxB6ebQGAN-7jsZiRYZ+SyJn5gKZrSuOzzkJ-QjQ@mail.gmail.com> <CANUX_P2-V0-=sfofxYwAYCRvqPPf5Z2wy6CUNQmGQQ2NqjZJ_A@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Sat, 30 Mar 2013 15:26:28 -0600
+Message-ID: <CAErSpo4xmDU2O35ge342nMuiVyDkzSGNRaz2O7-w6jDz_eBgyg@mail.gmail.com>
+Subject: Re: is L1 really disabled in iwlwifi
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	John Linville <linville@tuxdriver.com>,
+	Roman Yepishev <roman.yepishev@gmail.com>
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 18, 2013 at 5:32 PM, Matthew Garrett
-<matthew.garrett@nebula.com> wrote:
-> Any hardware that can potentially generate DMA has to be locked down from
-> userspace in order to avoid it being possible for an attacker to cause
-> arbitrary kernel behaviour. Default to paranoid - in future we can
-> potentially relax this for sufficiently IOMMU-isolated devices.
+On Sat, Mar 30, 2013 at 12:38 PM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
+>>>
+>>> Anyway - I think I will just remove this pci_disable_link_state call
+>>> and hopefully, it will stay long enough in linux-next so that people
+>>> will report issues before it get into linux.
+>>> I don't like leaving that code if it doesn't do anything.
+>>
+>> I think we broke at least some cases of pci_disable_link_state() a
+>> while back.  I'd like to fix it rather than just removing calls to it.
+>>
+>> Can someone collect a complete dmesg log and "lspci -vv" output?
+>>
 >
-> Signed-off-by: Matthew Garrett <matthew.garrett@nebula.com>
+> I will. But I am on vacation right now and my linux box is not
+> accessible right now...
+> In any case, what you'll see is that ASPM is enabled (L1 enabled with
+> or without driver).
+> We are also seeing some really weird stuff (which I can't reproduce of
+> course) like HW becoming not accessible, I guess it would be worth
+> trying to *really* disable L1. I can tweak that in the code of the
+> driver and tell the NIC that L1 is disabled.
+>
+>         /* Disable L1-Active */
+>         iwl_set_bits_prph(trans, APMG_PCIDEV_STT_REG,
+>                           APMG_PCIDEV_STT_VAL_L1_ACT_DIS);
+>
+> Do you have an idea about *when* did pci_disable_link_state() break?
 
-As noted here:
+No, not yet.  After we figure out exactly what the problem is, we
+should be able to determine when it broke.
 
-https://bugzilla.redhat.com/show_bug.cgi?id=908888
+If I understand correctly, you have CONFIG_PCIEASPM=y, the iwlwifi
+driver uses pci_disable_link_state() to disable L1, but the link state
+stays in L0 all the time.  So I think we should look at the dmesg log,
+"lspci -vv" output before loading iwlwifi, and "lspci -vv" output
+after loading iwlwifi.
 
-this breaks pci passthru with QEMU.  The suggestion in the bug is to move
-the check from read/write to open, but sysfs makes that somewhat
-difficult.  The open code is part of the core sysfs functionality shared
-with the majority of sysfs files, so adding a check there would restrict
-things that clearly don't need to be restricted.
-
-Kyle had the idea to add a cap field to the attribute structure, and do
-a capable check if that is set.  That would allow for a more generic
-usage of capabilities in sysfs code, at the cost of slightly increasing
-the structure size and open path.  That seems somewhat promising if we
-stick with capabilities.
-
-I would love to just squarely blame capabilities for causing this, but we
-can't just replace it with an efi_enabled(EFI_SECURE_BOOT) check because
-of the sysfs open case.  I'm not sure there are great answers here.
-
-josh
+Bjorn
