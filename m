@@ -1,104 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:51090 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933370Ab3CMX21 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Mar 2013 19:28:27 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>, Ram Pai <linuxram@us.ibm.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v3 00/27] PCI: Add for_each_pci_resource and addon_res support
-Date: Wed, 13 Mar 2013 16:27:55 -0700
-Message-Id: <1363217302-14383-1-git-send-email-yinghai@kernel.org>
+Received: from mail-la0-f52.google.com ([209.85.215.52]:52535 "EHLO
+	mail-la0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757021Ab3C3Sie (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 30 Mar 2013 14:38:34 -0400
+MIME-Version: 1.0
+In-Reply-To: <CAErSpo5gVsUxB6ebQGAN-7jsZiRYZ+SyJn5gKZrSuOzzkJ-QjQ@mail.gmail.com>
+References: <CANUX_P3F5YhbZX3WGU-j1AGpbXb_T9Bis2ErhvKkFMtDvzatVQ@mail.gmail.com>
+	<20130304134949.GB3021@redhat.com>
+	<CANUX_P0JhuVWcQjTckYzG8eBb2MtT_=prKqV38mCpVjfLmGtCA@mail.gmail.com>
+	<20130304154832.GD3021@redhat.com>
+	<CANUX_P22AkqeOROP1QHzp20wGWgDbRzy+9FZy2KvHLXCQ5AVnA@mail.gmail.com>
+	<CAErSpo5gVsUxB6ebQGAN-7jsZiRYZ+SyJn5gKZrSuOzzkJ-QjQ@mail.gmail.com>
+Date: Sat, 30 Mar 2013 21:38:32 +0300
+Message-ID: <CANUX_P2-V0-=sfofxYwAYCRvqPPf5Z2wy6CUNQmGQQ2NqjZJ_A@mail.gmail.com>
+Subject: Re: is L1 really disabled in iwlwifi
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	John Linville <linville@tuxdriver.com>,
+	Roman Yepishev <roman.yepishev@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-First part is for_each_pci_resource support:
-Now pci device resource iteration is done via "for (i=0...)" open code.
-That make code hard to read esp when only bridge or sriov resources
-are involved.
+>>
+>> Anyway - I think I will just remove this pci_disable_link_state call
+>> and hopefully, it will stay long enough in linux-next so that people
+>> will report issues before it get into linux.
+>> I don't like leaving that code if it doesn't do anything.
+>
+> I think we broke at least some cases of pci_disable_link_state() a
+> while back.  I'd like to fix it rather than just removing calls to it.
+>
+> Can someone collect a complete dmesg log and "lspci -vv" output?
+>
 
-We want to replace those open code with for_each_pci_resource() to make
-the code more readable.
-Also will add addon_resource handling, and need to make addon resource
-to be treated as normal PCI resources during iteration, add
-for_each_pci_resource will make that support transition more simple.
+I will. But I am on vacation right now and my linux box is not
+accessible right now...
+In any case, what you'll see is that ASPM is enabled (L1 enabled with
+or without driver).
+We are also seeing some really weird stuff (which I can't reproduce of
+course) like HW becoming not accessible, I guess it would be worth
+trying to *really* disable L1. I can tweak that in the code of the
+driver and tell the NIC that L1 is disabled.
 
-To make for_each_pci_resource more efficient. We will use preset bitmap
-of different type for searching next idx.
+	/* Disable L1-Active */
+	iwl_set_bits_prph(trans, APMG_PCIDEV_STT_REG,
+			  APMG_PCIDEV_STT_VAL_L1_ACT_DIS);
 
-Second parts is addon_res support:
-Now there is some non normal pci resources other than standard,rom,
-sriov, bridges.
-Some could be same as standard reg, but using different position.
-Some could have own way to read/write to them.
-Kernel are using different way to hack those resources like abusing
-pci bridge resource spot on non bridge pci device.
-
-Add addon_resources list in pci_dev for those non-standard resources.
-With this patch, will treat addon-resource like standard resources with
-special ops.
-
-At last replace some quirk_io with addon_res.
-
-could get from
-        git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-for-each-res-addon-v3
-on top of v3.9-rc2
-
--v3: rebase on of v3.9-rc2
-
-Thanks
-
-Yinghai Lu
-
-Ram Pai (1):
-  PCI: pci resource iterator
-
-Yinghai Lu (26):
-  PCI: Add pci_dev_resource_n()
-  PCI: Add pci_dev_resource_idx() helper
-  PCI: Add is_pci_*_resource_idx() helpers
-  PCI: Update pci_resource_start etc to use pci_dev_resource_n()
-  PCI, x86: Use for_each_pci_resource() with pci_allocate_bridge_resources
-  PCI, x86: Use for_each_pci_resource() with pci_allocate_dev_resources
-  PCI: Use for_each_pci_resource() with IOV releated functions
-  PCI, acpiphp: Use for_each_pci_resource() helper
-  PCI, pciehp: Use for_each_pci_resource() helper
-  PCI: Use for_each_pci_resource() in pci_enable_dev
-  PCI: Use for_each_pci_resource() in pci_reassigndev
-  PCI: Use for_each_pci_resource() with pci bar reassign funcs
-  PCI: Use for_each_pci_resource() in pci_assign_resource
-  PCI, x86: Use for_each_pci_resource() with noassign_bars
-  PCI: Use for_each_pci_resource() in pci_dev_driver()
-  PCI: Use for_each_pci_resource() in pci resource release
-  PCI: Use for_each_pci_resource() in pci bases reading
-  PCI, x86: Use for_each_pci_resource() with mrst
-  PCI, xen: Use for_each_pci_resource() with xen pci
-  PCI: Add addon_resource support for pci devices
-  PCI: Add helpers to add addon_resource
-  PCI: Update pci_resource_bar() to support addon_resource
-  PCI: Assign/update resource to addon_res
-  PCI: Make piix4 quirk to use addon_res
-  PCI: Make quirk_io_region to use addon_res
-  PCI: Use addon_fixed_resource with ati fixed resource
-
- arch/x86/pci/common.c              |    3 +-
- arch/x86/pci/i386.c                |   58 +++-----
- arch/x86/pci/mrst.c                |    7 +-
- drivers/pci/hotplug/acpiphp_glue.c |    4 +-
- drivers/pci/hotplug/pciehp_hpc.c   |    5 +-
- drivers/pci/iov.c                  |   31 +++--
- drivers/pci/pci-driver.c           |    6 +-
- drivers/pci/pci.c                  |   27 ++--
- drivers/pci/probe.c                |  176 ++++++++++++++++++++++++-
- drivers/pci/quirks.c               |  256 +++++++++++++++++++++---------------
- drivers/pci/remove.c               |    5 +-
- drivers/pci/setup-bus.c            |   28 ++--
- drivers/pci/setup-res.c            |   38 ++++--
- drivers/pci/xen-pcifront.c         |    4 +-
- include/linux/pci.h                |   79 ++++++++++-
- 15 files changed, 508 insertions(+), 219 deletions(-)
-
--- 
-1.7.10.4
-
+Do you have an idea about *when* did pci_disable_link_state() break?
