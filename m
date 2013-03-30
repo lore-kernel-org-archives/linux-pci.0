@@ -1,422 +1,303 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-db9lp0251.outbound.messaging.microsoft.com ([213.199.154.251]:27002
-	"EHLO db9outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750767Ab3CFCCT convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 5 Mar 2013 21:02:19 -0500
-From: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Joe Lawrence <Joe.Lawrence@stratus.com>,
-	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-	DL-MPT Fusion Linux <DL-MPTFusionLinux@lsi.com>,
-	Support <support@lsi.com>,
-	"Reddy, Sreekanth" <Sreekanth.Reddy@lsi.com>,
-	"Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>,
-	"James E.J. Bottomley" <JBottomley@parallels.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Date: Wed, 6 Mar 2013 07:16:42 +0530
-Subject: RE: [PATCH 1/2] mptfusion, mpt2sas, mpt3sas: Don't remove dead IOC
- PCI device
-Message-ID: <B2FD678A64EAAD45B089B123FDFC3ED75E690FE5DB@inbmail01.lsi.com>
-References: <alpine.DEB.2.02.1303041046230.1736@jlaw-desktop.mno.stratus.com>
- <alpine.DEB.2.02.1303041052420.1736@jlaw-desktop.mno.stratus.com>
- <B2FD678A64EAAD45B089B123FDFC3ED75E690FE449@inbmail01.lsi.com>
- <CAErSpo5BFPE3CxycQpER9A4c-gpdRuMKDbnuvr7BXL-hSdi2aQ@mail.gmail.com>
-In-Reply-To: <CAErSpo5BFPE3CxycQpER9A4c-gpdRuMKDbnuvr7BXL-hSdi2aQ@mail.gmail.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from fold.natur.cuni.cz ([195.113.57.32]:54315 "HELO
+	fold.natur.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1756971Ab3C3Rtj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 30 Mar 2013 13:49:39 -0400
+Message-ID: <515725B0.60605@fold.natur.cuni.cz>
+Date: Sat, 30 Mar 2013 18:49:36 +0100
+From: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
 MIME-Version: 1.0
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+CC: Huang Ying <ying.huang@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: Re: 3.9-rc1: pciehp and eSATA card SiI 3132, no XHCI
+References: <513E7E1E.80508@fold.natur.cuni.cz> <5381191.45N5KLLmWJ@vostro.rjw.lan> <51563D32.70106@fold.natur.cuni.cz> <2764533.egTWJWstJg@vostro.rjw.lan> <5156457C.9020201@fold.natur.cuni.cz>
+In-Reply-To: <5156457C.9020201@fold.natur.cuni.cz>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Martin Mokrejs wrote:
+> Rafael J. Wysocki wrote:
+>> On Saturday, March 30, 2013 02:17:38 AM Martin Mokrejs wrote:
+>>> Rafael J. Wysocki wrote:
+>>>> On Friday, March 29, 2013 03:11:13 PM Martin Mokrejs wrote:
+>>>>> Hi Ying,
+>>>>>   thank you for the patch. Here are the results.
+>>>>>
+>>>>> Huang Ying wrote:
+>>>>>> On Thu, 2013-03-28 at 19:38 +0100, Martin Mokrejs wrote:
+>>>>>>> Hi Ying,
+>>>>>>>   would you please tell me how this report relate to this patch?
+>>>>>>>
+>>>>>>> [PATCH] PCI / ACPI: Always resume devices on ACPI wakeup notifications
+>>>>>>>
+>>>>>>>   Could you tell me why this PME was being flipped back and forth now?
+>>>>>>> Actually, does that make finally some sense to you, pci/acpi devs?
+>>>>
+>>>> Can you please test this patch:
+>>>>
+>>>> https://patchwork.kernel.org/patch/2359611/
+>>>>
+>>>> and report back as I asked you?
+>>>
+>>> Sorry for the delay I just had to sort out what belongs under what thread
+>>> and the patch was under the other. But I agree its testing with this
+>>> particular eSATA/ExpressCardSlot/PM fits better here.
+>>>
+>>>
+>>> The good news is that the eSATA card hotplug works almost perfectly with the patch.
+>>> I cold booted as always with the card in the slot already loaded, same kernel
+>>> .config and commandline options as described under this thread. But the kernel
+>>> was 3.8.3! Not 3.9-rc1.
+>>
+>> Good.  The goal was to fix the problem with eSATA hotplug.
+> 
+> I thought that was aimed at the XHCI dead port issue. ;-)
+
+Hi,
+  first of all, a big fat note. The tests with 3.8.2 and 3.8.2 I always did with aciphp
+and pcie_aspm=off. I somehow forgot about that and yesterday after testing the
+patch from Huang Ying when it turned out the patch actually not only helps with the
+dead xHCI port due to suspend but incidentally also fixes the eSATA card hotplug ...
+I decided to move the part related to the eSATA card under this thread.
+Hmm, but I forgot that this thread is about pciehp while I was using pciehp.
+I will leave it as it is right now but please, bear in mind that with acpiphp
+I had principially not much problems on on 3.7 and above (unlike pciehp) and so far
+the eSATA card behaved weird under acpiphp unlike the other two cards.
+  It could be the pciehp suffers same PCI/PCIe powersaving issue but I cannot
+confirm that yet. Just in case you would be trying to find in source code a bug
+related to pciehp. Intentionally, while re-testing the behavior (further below)
+I left in a stacktrace showing acpiphp path. This email is a confirmation of what
+I found yesterday, just waned to emphasize the use of acpiphp vs. pciehp for 3.8.2/3.8.3
+testing.
 
 
-> -----Original Message-----
-> From: Bjorn Helgaas [mailto:bhelgaas@google.com]
-> Sent: Wednesday, March 06, 2013 4:43 AM
-> To: Desai, Kashyap
-> Cc: Joe Lawrence; linux-scsi@vger.kernel.org; DL-MPT Fusion Linux;
-> Support; Reddy, Sreekanth; Nandigama, Nagalakshmi; James E.J. Bottomley;
-> linux-pci@vger.kernel.org
-> Subject: Re: [PATCH 1/2] mptfusion, mpt2sas, mpt3sas: Don't remove dead
-> IOC PCI device
->
-> [+cc linux-pci]
->
-> On Mon, Mar 4, 2013 at 11:02 AM, Desai, Kashyap <Kashyap.Desai@lsi.com>
-> wrote:
-> >
-> >
-> >> -----Original Message-----
-> >> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
-> >> owner@vger.kernel.org] On Behalf Of Joe Lawrence
-> >> Sent: Monday, March 04, 2013 9:26 PM
-> >> To: linux-scsi@vger.kernel.org
-> >> Cc: DL-MPT Fusion Linux; Support; Reddy, Sreekanth; Nandigama,
-> >> Nagalakshmi; James E.J. Bottomley; Bjorn Helgaas
-> >> Subject: [PATCH 1/2] mptfusion, mpt2sas, mpt3sas: Don't remove dead
-> >> IOC PCI device
-> >>
-> >> Device removal/addition is a PCI core function, not an HBA function.
-> >> Calling pci_stop_and_remove_bus_device() from a SCSI LLD may
-> >> introduce device removal races with PCI hotplug.  Remove these calls
-> >> from mptfusion, mpt2sas, and mpt3sas, but leave remaining dead IOC
-> >> code in place that flushes outstanding commands and sets IOC state.
-> >
-> > Joe: I agree that only mptsas/mpt2sas/mpt3sas is calling "
-> pci_stop_and_remove_bus_device" from LLD. If through sysfs we can hot
-> add/remove the device, It would be OK to allow similar simulation from
-> LLD. (In case it is really require.) I agree that calling "
-> pci_stop_and_remove_bus_device" is PCI subsystem's responsibility.
-> > Please consider that finding bad IOC on field is very rare.
-> >
-> > In our case, user wants BAD IOC to be detected immediately (due to
-> performance and mission critical IOs) and it should be removed from the
-> topology ASAP to allow other good IOC and connected topology to work
-> well.
->
-> It doesn't matter how rare bad IOCs are.  But I certainly agree that
-> when we do find a bad IOC, we want to detect it and stop using it as
-> soon as possible.
->
-> > With the new proposed change you posted with this patch half of the
-> problem still do not resolve.
-> >
-> >  Driver set ioc->remove_host = 1 when bad IOC is detected, but IOs to
-> the connected topology will still continue to flood ( if we do not
-> detach bad IOC from topology) and Scsi Mid layer be busy sending
-> inactive IOs to the bad IOC, and IOs will be return to the OS with
-> "DID_NO_CONNECT".
-> >
-> > So finally to release the topology from BAD IOC from OS is also
-> equally important. This can be achieved either calling ".remove" entry
-> point or what currently driver is doing "remove the IOC from PCI layer
-> which will allow better cleanup.
->
-> Joe's patch remove the call to pci_stop_and_remove_bus_device(), so the
-> IOC will remain attached to the driver.  What if he *did* call the
-> driver's . remove() method instead of calling
-> pci_stop_and_remove_bus_device()?  Would that resolve your concern?
-> If not, why not?
+I tried to mimic what laptop-mode-tools caused on my system with vanilla 3.8.3
+kernel. I think I managed in the end. The eSATA card hotplug and hotremoval works
+(acpiphp with pcie_aspm=off) when 11:00 (ExpressCardSlot) and 1c.7 (its upstream
+root port) are set to on.
 
-I initially tried using Driver's .remove call instead of " pci_stop_and_remove_bus_device", but found inconsistent view from PCI layer and LLD will have its own disadvantage.
-With that approach, PCI layer sill observe the bad HBA, but instance of the same is not visible at LLD.
+Once I do 'find  /sys/bus/pci/devices/*/power/ -name control | while read f; do echo auto > $f; done'
+then the following fall asleep:
 
-Finally, when someone try to remove module/Do some manual PCI bus scan through sysfs functionality etc, LLD will not be able to handle those.
-Calling .remove entry point from Driver and still keeping instance at PCI layer will create inconsistency between two layers.
-
->
-> I would really like to get rid of pci_stop_and_remove_bus_device() in
-> drivers.  I don't think there's anything special about
-> mptsas/mpt2sas/mpt3sas that makes it useful for these drivers but not
-> others.
-
-I agree that calling " pci_stop_and_remove_bus_device" should be the last option, but as of now I found that is a safest way to achieve functionality.
-It is nothing special about mptsas/mpt2sas/mpt3sas related.
-
->
-> Bjorn
->
-> >> Signed-off-by: Joe Lawrence <joe.lawrence@stratus.com>
-> >> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> >> Cc: James E.J. Bottomley <JBottomley@parallels.com>
-> >> Cc: Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>
-> >> Cc: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
-> >> Cc: support@lsi.com
-> >> Cc: DL-MPTFusionLinux@lsi.com
-> >> Cc: linux-scsi@vger.kernel.org
-> >> ---
-> >>  drivers/message/fusion/mptbase.c    | 41 +--------------------------
-> ---
-> >> ------
-> >>  drivers/scsi/mpt2sas/mpt2sas_base.c | 42
-> >> ++----------------------------
-> >> -------
-> >>  drivers/scsi/mpt3sas/mpt3sas_base.c | 40
-> >> ++----------------------------
-> >> -----
-> >>  3 files changed, 5 insertions(+), 118 deletions(-)
-> >>
-> >> diff --git a/drivers/message/fusion/mptbase.c
-> >> b/drivers/message/fusion/mptbase.c
-> >> index fb69baa..28a421d 100644
-> >> --- a/drivers/message/fusion/mptbase.c
-> >> +++ b/drivers/message/fusion/mptbase.c
-> >> @@ -63,7 +63,6 @@
-> >>  #ifdef CONFIG_MTRR
-> >>  #include <asm/mtrr.h>
-> >>  #endif
-> >> -#include <linux/kthread.h>
-> >>  #include <scsi/scsi_host.h>
-> >>
-> >>  #include "mptbase.h"
-> >> @@ -328,31 +327,6 @@ mpt_is_discovery_complete(MPT_ADAPTER *ioc)
-> >>
-> >>
-> >>  /**
-> >> - *  mpt_remove_dead_ioc_func - kthread context to remove dead ioc
-> >> - * @arg: input argument, used to derive ioc
-> >> - *
-> >> - * Return 0 if controller is removed from pci subsystem.
-> >> - * Return -1 for other case.
-> >> - */
-> >> -static int mpt_remove_dead_ioc_func(void *arg) -{
-> >> -     MPT_ADAPTER *ioc = (MPT_ADAPTER *)arg;
-> >> -     struct pci_dev *pdev;
-> >> -
-> >> -     if ((ioc == NULL))
-> >> -             return -1;
-> >> -
-> >> -     pdev = ioc->pcidev;
-> >> -     if ((pdev == NULL))
-> >> -             return -1;
-> >> -
-> >> -     pci_stop_and_remove_bus_device(pdev);
-> >> -     return 0;
-> >> -}
-> >> -
-> >> -
-> >> -
-> >> -/**
-> >>   *   mpt_fault_reset_work - work performed on workq after ioc fault
-> >>   *   @work: input argument, used to derive ioc
-> >>   *
-> >> @@ -366,7 +340,6 @@ mpt_fault_reset_work(struct work_struct *work)
-> >>       int              rc;
-> >>       unsigned long    flags;
-> >>       MPT_SCSI_HOST   *hd;
-> >> -     struct task_struct *p;
-> >>
-> >>       if (ioc->ioc_reset_in_progress || !ioc->active)
-> >>               goto out;
-> >> @@ -380,25 +353,13 @@ mpt_fault_reset_work(struct work_struct *work)
-> >>               /*
-> >>                * Call mptscsih_flush_pending_cmds callback so that we
-> >>                * flush all pending commands back to OS.
-> >> -              * This call is required to aovid deadlock at block
-> layer.
-> >> +              * This call is required to avoid deadlock at block
-> layer.
-> >>                * Dead IOC will fail to do diag reset,and this call is
-> safe
-> >>                * since dead ioc will never return any command back
-> >> from HW.
-> >>                */
-> >>               hd = shost_priv(ioc->sh);
-> >>               ioc->schedule_dead_ioc_flush_running_cmds(hd);
-> >>
-> >> -             /*Remove the Dead Host */
-> >> -             p = kthread_run(mpt_remove_dead_ioc_func, ioc,
-> >> -                             "mpt_dead_ioc_%d", ioc->id);
-> >> -             if (IS_ERR(p))  {
-> >> -                     printk(MYIOC_s_ERR_FMT
-> >> -                             "%s: Running mpt_dead_ioc thread failed
-> !\n",
-> >> -                             ioc->name, __func__);
-> >> -             } else {
-> >> -                     printk(MYIOC_s_WARN_FMT
-> >> -                             "%s: Running mpt_dead_ioc thread
-> success !\n",
-> >> -                             ioc->name, __func__);
-> >> -             }
-> >>               return; /* don't rearm timer */
-> >>       }
-> >>
-> >> diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c
-> >> b/drivers/scsi/mpt2sas/mpt2sas_base.c
-> >> index ffd85c5..a97d10c 100644
-> >> --- a/drivers/scsi/mpt2sas/mpt2sas_base.c
-> >> +++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
-> >> @@ -57,7 +57,6 @@
-> >>  #include <linux/sort.h>
-> >>  #include <linux/io.h>
-> >>  #include <linux/time.h>
-> >> -#include <linux/kthread.h>
-> >>  #include <linux/aer.h>
-> >>
-> >>  #include "mpt2sas_base.h"
-> >> @@ -115,29 +114,6 @@ module_param_call(mpt2sas_fwfault_debug,
-> >> _scsih_set_fwfault_debug,
-> >>      param_get_int, &mpt2sas_fwfault_debug, 0644);
-> >>
-> >>  /**
-> >> - *  mpt2sas_remove_dead_ioc_func - kthread context to remove dead
-> >> ioc
-> >> - * @arg: input argument, used to derive ioc
-> >> - *
-> >> - * Return 0 if controller is removed from pci subsystem.
-> >> - * Return -1 for other case.
-> >> - */
-> >> -static int mpt2sas_remove_dead_ioc_func(void *arg) -{
-> >> -             struct MPT2SAS_ADAPTER *ioc = (struct MPT2SAS_ADAPTER
-> *)arg;
-> >> -             struct pci_dev *pdev;
-> >> -
-> >> -             if ((ioc == NULL))
-> >> -                     return -1;
-> >> -
-> >> -             pdev = ioc->pdev;
-> >> -             if ((pdev == NULL))
-> >> -                     return -1;
-> >> -             pci_stop_and_remove_bus_device(pdev);
-> >> -             return 0;
-> >> -}
-> >> -
-> >> -
-> >> -/**
-> >>   * _base_fault_reset_work - workq handling ioc fault conditions
-> >>   * @work: input argument, used to derive ioc
-> >>   * Context: sleep.
-> >> @@ -152,7 +128,6 @@ _base_fault_reset_work(struct work_struct *work)
-> >>       unsigned long    flags;
-> >>       u32 doorbell;
-> >>       int rc;
-> >> -     struct task_struct *p;
-> >>
-> >>       spin_lock_irqsave(&ioc->ioc_reset_in_progress_lock, flags);
-> >>       if (ioc->shost_recovery)
-> >> @@ -166,29 +141,16 @@ _base_fault_reset_work(struct work_struct
-> >> *work)
-> >>
-> >>               /*
-> >>                * Call _scsih_flush_pending_cmds callback so that we
-> >> flush all
-> >> -              * pending commands back to OS. This call is required
-> to
-> >> aovid
-> >> +              * pending commands back to OS. This call is required
-> >> + to
-> >> avoid
-> >>                * deadlock at block layer. Dead IOC will fail to do
-> >> diag reset,
-> >>                * and this call is safe since dead ioc will never
-> >> return any
-> >>                * command back from HW.
-> >>                */
-> >>               ioc->schedule_dead_ioc_flush_running_cmds(ioc);
-> >>               /*
-> >> -              * Set remove_host flag early since kernel thread will
-> >> -              * take some time to execute.
-> >> +              * Indicate to scsi callbacks that the host has been
-> >> removed.
-> >>                */
-> >>               ioc->remove_host = 1;
-> >> -             /*Remove the Dead Host */
-> >> -             p = kthread_run(mpt2sas_remove_dead_ioc_func, ioc,
-> >> -                 "mpt2sas_dead_ioc_%d", ioc->id);
-> >> -             if (IS_ERR(p)) {
-> >> -                     printk(MPT2SAS_ERR_FMT
-> >> -                     "%s: Running mpt2sas_dead_ioc thread failed
-> !!!!\n",
-> >> -                     ioc->name, __func__);
-> >> -             } else {
-> >> -                 printk(MPT2SAS_ERR_FMT
-> >> -                     "%s: Running mpt2sas_dead_ioc thread success
-> !!!!\n",
-> >> -                     ioc->name, __func__);
-> >> -             }
-> >>
-> >>               return; /* don't rearm timer */
-> >>       }
-> >> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c
-> >> b/drivers/scsi/mpt3sas/mpt3sas_base.c
-> >> index 04f8010..24fd122 100644
-> >> --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-> >> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-> >> @@ -57,7 +57,6 @@
-> >>  #include <linux/dma-mapping.h>
-> >>  #include <linux/io.h>
-> >>  #include <linux/time.h>
-> >> -#include <linux/kthread.h>
-> >>  #include <linux/aer.h>
-> >>
-> >>
-> >> @@ -111,28 +110,6 @@ module_param_call(mpt3sas_fwfault_debug,
-> >> _scsih_set_fwfault_debug,
-> >>       param_get_int, &mpt3sas_fwfault_debug, 0644);
-> >>
-> >>  /**
-> >> - *  mpt3sas_remove_dead_ioc_func - kthread context to remove dead
-> >> ioc
-> >> - * @arg: input argument, used to derive ioc
-> >> - *
-> >> - * Return 0 if controller is removed from pci subsystem.
-> >> - * Return -1 for other case.
-> >> - */
-> >> -static int mpt3sas_remove_dead_ioc_func(void *arg) -{
-> >> -     struct MPT3SAS_ADAPTER *ioc = (struct MPT3SAS_ADAPTER *)arg;
-> >> -     struct pci_dev *pdev;
-> >> -
-> >> -     if ((ioc == NULL))
-> >> -             return -1;
-> >> -
-> >> -     pdev = ioc->pdev;
-> >> -     if ((pdev == NULL))
-> >> -             return -1;
-> >> -     pci_stop_and_remove_bus_device(pdev);
-> >> -     return 0;
-> >> -}
-> >> -
-> >> -/**
-> >>   * _base_fault_reset_work - workq handling ioc fault conditions
-> >>   * @work: input argument, used to derive ioc
-> >>   * Context: sleep.
-> >> @@ -147,7 +124,6 @@ _base_fault_reset_work(struct work_struct *work)
-> >>       unsigned long    flags;
-> >>       u32 doorbell;
-> >>       int rc;
-> >> -     struct task_struct *p;
-> >>
-> >>
-> >>       spin_lock_irqsave(&ioc->ioc_reset_in_progress_lock, flags); @@
-> >> -
-> >> 162,28 +138,16 @@ _base_fault_reset_work(struct work_struct *work)
-> >>
-> >>               /*
-> >>                * Call _scsih_flush_pending_cmds callback so that we
-> >> flush all
-> >> -              * pending commands back to OS. This call is required
-> to
-> >> aovid
-> >> +              * pending commands back to OS. This call is required
-> >> + to
-> >> avoid
-> >>                * deadlock at block layer. Dead IOC will fail to do
-> >> diag reset,
-> >>                * and this call is safe since dead ioc will never
-> >> return any
-> >>                * command back from HW.
-> >>                */
-> >>               ioc->schedule_dead_ioc_flush_running_cmds(ioc);
-> >>               /*
-> >> -              * Set remove_host flag early since kernel thread will
-> >> -              * take some time to execute.
-> >> +              * Indicate to scsi callbacks that the host has been
-> >> removed.
-> >>                */
-> >>               ioc->remove_host = 1;
-> >> -             /*Remove the Dead Host */
-> >> -             p = kthread_run(mpt3sas_remove_dead_ioc_func, ioc,
-> >> -                 "mpt3sas_dead_ioc_%d", ioc->id);
-> >> -             if (IS_ERR(p))
-> >> -                     pr_err(MPT3SAS_FMT
-> >> -                     "%s: Running mpt3sas_dead_ioc thread failed
-> !!!!\n",
-> >> -                     ioc->name, __func__);
-> >> -             else
-> >> -                     pr_err(MPT3SAS_FMT
-> >> -                     "%s: Running mpt3sas_dead_ioc thread success
-> !!!!\n",
-> >> -                     ioc->name, __func__);
-> >>               return; /* don't rearm timer */
-> >>       }
-> >>
-> >> --
-> >> 1.8.1.2
-> >>
-> >> --
-> >> To unsubscribe from this list: send the line "unsubscribe linux-scsi"
-> >> in the body of a message to majordomo@vger.kernel.org More majordomo
-> >> info at  http://vger.kernel.org/majordomo-info.html
-> >
+--- runtime_status.txt  2013-03-30 11:01:42.000000000 +0100
++++ runtime_status__after__all_to_auto.txt      2013-03-30 11:04:21.000000000 +0100
+@@ -1,9 +1,9 @@
+-/sys/bus/pci/devices/0000:00:00.0/power/runtime_status:active
++/sys/bus/pci/devices/0000:00:00.0/power/runtime_status:suspended
+ /sys/bus/pci/devices/0000:00:02.0/power/runtime_status:active
+-/sys/bus/pci/devices/0000:00:16.0/power/runtime_status:active
++/sys/bus/pci/devices/0000:00:16.0/power/runtime_status:suspended
+ /sys/bus/pci/devices/0000:00:1a.0/power/runtime_status:active
+ /sys/bus/pci/devices/0000:00:1b.0/power/runtime_status:active
+-/sys/bus/pci/devices/0000:00:1c.0/power/runtime_status:active
++/sys/bus/pci/devices/0000:00:1c.0/power/runtime_status:suspended
+ /sys/bus/pci/devices/0000:00:1c.1/power/runtime_status:active
+ /sys/bus/pci/devices/0000:00:1c.3/power/runtime_status:active
+ /sys/bus/pci/devices/0000:00:1c.4/power/runtime_status:active
+@@ -11,8 +11,8 @@
+ /sys/bus/pci/devices/0000:00:1d.0/power/runtime_status:active
+ /sys/bus/pci/devices/0000:00:1f.0/power/runtime_status:active
+ /sys/bus/pci/devices/0000:00:1f.2/power/runtime_status:active
+-/sys/bus/pci/devices/0000:00:1f.3/power/runtime_status:active
++/sys/bus/pci/devices/0000:00:1f.3/power/runtime_status:suspended
+ /sys/bus/pci/devices/0000:05:00.0/power/runtime_status:active
+ /sys/bus/pci/devices/0000:09:00.0/power/runtime_status:active
+-/sys/bus/pci/devices/0000:0b:00.0/power/runtime_status:active
++/sys/bus/pci/devices/0000:0b:00.0/power/runtime_status:suspended
+ /sys/bus/pci/devices/0000:11:00.0/power/runtime_status:active
 
 
+Notably, 11:00 does not fall asleep by itself neither it's upstream
+port. The hotplug and removal still works but upon eject 11:00
+becomes to fall asleep. Sometimes, 1.c7 falls asleep and once that
+happens the express card slot is dead (11:00). After doing
+echo "on" > /sys/bus/pci/devices/0000:11:00.0/power/control
+does not help, one has to wakeup the upstream 1c.7 root port.
+
+
+Now results of the testing itself:
+
+eSATA card device ejected ... while 1c.7 was "on" and 11:00 in "auto" mode:
+
+[  825.471775] sata_sil24 0000:11:00.0: PME# disabled
+[  825.475184] sata_sil24: IRQ status == 0xffffffff, PCI fault or device removal?
+
+Now I set 1c.7 to "auto" as well. Hotinsert works because 1c.7 does not immediately
+fall asleep after the echo command but upon eject 1c.7 will fall asleep (I mean
+gets PME# enabled, can't comment about the eSATA card saying "supports D1 D2"):
+
+[  841.847469] pci 0000:11:00.0: [1095:3132] type 00 class 0x018000
+[  841.847514] pci 0000:11:00.0: reg 10: [mem 0x00000000-0x0000007f 64bit]
+[  841.847546] pci 0000:11:00.0: reg 18: [mem 0x00000000-0x00003fff 64bit]
+[  841.847567] pci 0000:11:00.0: reg 20: [io  0x0000-0x007f]
+[  841.847608] pci 0000:11:00.0: reg 30: [mem 0x00000000-0x0007ffff pref]
+[  841.847739] pci 0000:11:00.0: supports D1 D2
+[  841.868167] pci 0000:11:00.0: BAR 6: assigned [mem 0xf0000000-0xf007ffff pref]
+[  841.868171] pci 0000:11:00.0: BAR 2: assigned [mem 0xf6c00000-0xf6c03fff 64bit]
+[  841.868194] pci 0000:11:00.0: BAR 2: set to [mem 0xf6c00000-0xf6c03fff 64bit] (PCI address [0xf6c00000-0xf6c03fff])
+[  841.868196] pci 0000:11:00.0: BAR 0: assigned [mem 0xf6c04000-0xf6c0407f 64bit]
+[  841.868218] pci 0000:11:00.0: BAR 0: set to [mem 0xf6c04000-0xf6c0407f 64bit] (PCI address [0xf6c04000-0xf6c0407f])
+[  841.868219] pci 0000:11:00.0: BAR 4: assigned [io  0xc000-0xc07f]
+[  841.868227] pci 0000:11:00.0: BAR 4: set to [io  0xc000-0xc07f] (PCI address [0xc000-0xc07f])
+[  841.869418] pcieport 0000:00:1c.7: restoring config space at offset 0x1c (was 0x2000d0c0, writing 0xd0c0)
+[  841.869475] sata_sil24 0000:11:00.0: enabling device (0100 -> 0103)
+[  841.869681] sata_sil24 0000:11:00.0: enabling bus mastering
+[  841.873096] scsi8 : sata_sil24
+[  841.874967] scsi9 : sata_sil24
+[  841.875663] ata9: SATA max UDMA/100 host m128@0xf6c04000 port 0xf6c00000 irq 19
+[  841.875667] ata10: SATA max UDMA/100 host m128@0xf6c04000 port 0xf6c02000 irq 19
+[  843.953357] ata9: SATA link down (SStatus 0 SControl 0)
+[  846.040248] ata10: SATA link down (SStatus 0 SControl 0)
+[  909.965819] sata_sil24 0000:11:00.0: PME# disabled
+[  909.967937] sata_sil24: IRQ status == 0xffffffff, PCI fault or device removal?
+[  909.975174] pcieport 0000:00:1c.7: PME# enabled
+
+Now I will manually set 1c.7 back to "on" and subsequent hotinsert+hotremove will
+work again (11:00 is still in "auto"):
+
+[ 1032.752331] pcieport 0000:00:1c.7: PME# disabled
+[ 1051.405309] pci 0000:11:00.0: [1095:3132] type 00 class 0x018000
+[ 1051.405355] pci 0000:11:00.0: reg 10: [mem 0x00000000-0x0000007f 64bit]
+[ 1051.405388] pci 0000:11:00.0: reg 18: [mem 0x00000000-0x00003fff 64bit]
+[ 1051.405409] pci 0000:11:00.0: reg 20: [io  0x0000-0x007f]
+[ 1051.405449] pci 0000:11:00.0: reg 30: [mem 0x00000000-0x0007ffff pref]
+[ 1051.405568] pci 0000:11:00.0: supports D1 D2
+[ 1051.425977] pci 0000:11:00.0: BAR 6: assigned [mem 0xf0000000-0xf007ffff pref]
+[ 1051.425982] pci 0000:11:00.0: BAR 2: assigned [mem 0xf6c00000-0xf6c03fff 64bit]
+[ 1051.426004] pci 0000:11:00.0: BAR 2: set to [mem 0xf6c00000-0xf6c03fff 64bit] (PCI address [0xf6c00000-0xf6c03fff])
+[ 1051.426006] pci 0000:11:00.0: BAR 0: assigned [mem 0xf6c04000-0xf6c0407f 64bit]
+[ 1051.426028] pci 0000:11:00.0: BAR 0: set to [mem 0xf6c04000-0xf6c0407f 64bit] (PCI address [0xf6c04000-0xf6c0407f])
+[ 1051.426030] pci 0000:11:00.0: BAR 4: assigned [io  0xc000-0xc07f]
+[ 1051.426037] pci 0000:11:00.0: BAR 4: set to [io  0xc000-0xc07f] (PCI address [0xc000-0xc07f])
+[ 1051.427222] sata_sil24 0000:11:00.0: enabling device (0100 -> 0103)
+[ 1051.427413] sata_sil24 0000:11:00.0: enabling bus mastering
+[ 1051.430736] scsi10 : sata_sil24
+[ 1051.432608] scsi11 : sata_sil24
+[ 1051.433973] ata11: SATA max UDMA/100 host m128@0xf6c04000 port 0xf6c00000 irq 19
+[ 1051.433977] ata12: SATA max UDMA/100 host m128@0xf6c04000 port 0xf6c02000 irq 19
+[ 1053.521187] ata11: SATA link down (SStatus 0 SControl 0)
+[ 1055.608091] ata12: SATA link down (SStatus 0 SControl 0)
+[ 1070.576590] sata_sil24 0000:11:00.0: PME# disabled
+[ 1070.578631] sata_sil24: IRQ status == 0xffffffff, PCI fault or device removal?
+
+Again hot-insert and eject:
+
+[ 1072.334142] pci 0000:11:00.0: [1095:3132] type 00 class 0x018000
+[ 1072.334187] pci 0000:11:00.0: reg 10: [mem 0x00000000-0x0000007f 64bit]
+[ 1072.334220] pci 0000:11:00.0: reg 18: [mem 0x00000000-0x00003fff 64bit]
+[ 1072.334240] pci 0000:11:00.0: reg 20: [io  0x0000-0x007f]
+[ 1072.334281] pci 0000:11:00.0: reg 30: [mem 0x00000000-0x0007ffff pref]
+[ 1072.334398] pci 0000:11:00.0: supports D1 D2
+[ 1072.354775] pci 0000:11:00.0: BAR 6: assigned [mem 0xf0000000-0xf007ffff pref]
+[ 1072.354779] pci 0000:11:00.0: BAR 2: assigned [mem 0xf6c00000-0xf6c03fff 64bit]
+[ 1072.354802] pci 0000:11:00.0: BAR 2: set to [mem 0xf6c00000-0xf6c03fff 64bit] (PCI address [0xf6c00000-0xf6c03fff])
+[ 1072.354804] pci 0000:11:00.0: BAR 0: assigned [mem 0xf6c04000-0xf6c0407f 64bit]
+[ 1072.354825] pci 0000:11:00.0: BAR 0: set to [mem 0xf6c04000-0xf6c0407f 64bit] (PCI address [0xf6c04000-0xf6c0407f])
+[ 1072.354827] pci 0000:11:00.0: BAR 4: assigned [io  0xc000-0xc07f]
+[ 1072.354834] pci 0000:11:00.0: BAR 4: set to [io  0xc000-0xc07f] (PCI address [0xc000-0xc07f])
+[ 1072.355952] sata_sil24 0000:11:00.0: enabling device (0100 -> 0103)
+[ 1072.356141] sata_sil24 0000:11:00.0: enabling bus mastering
+[ 1072.360476] scsi12 : sata_sil24
+[ 1072.361719] scsi13 : sata_sil24
+[ 1072.363037] ata13: SATA max UDMA/100 host m128@0xf6c04000 port 0xf6c00000 irq 19
+[ 1072.363042] ata14: SATA max UDMA/100 host m128@0xf6c04000 port 0xf6c02000 irq 19
+[ 1074.450035] ata13: SATA link down (SStatus 0 SControl 0)
+[ 1076.536960] ata14: SATA link down (SStatus 0 SControl 0)
+[ 1078.634799] sata_sil24 0000:11:00.0: PME# disabled
+[ 1078.636829] sata_sil24: IRQ status == 0xffffffff, PCI fault or device removal?
+
+Below few more hotinserts and hotremovals, merely to show the stacktrace
+when I I remove/inserted the card too quickly.
+
+[ 1081.210918] pci 0000:11:00.0: [1095:3132] type 00 class 0x018000
+[ 1081.210963] pci 0000:11:00.0: reg 10: [mem 0x00000000-0x0000007f 64bit]
+[ 1081.210995] pci 0000:11:00.0: reg 18: [mem 0x00000000-0x00003fff 64bit]
+[ 1081.211016] pci 0000:11:00.0: reg 20: [io  0x0000-0x007f]
+[ 1081.211057] pci 0000:11:00.0: reg 30: [mem 0x00000000-0x0007ffff pref]
+[ 1081.211173] pci 0000:11:00.0: supports D1 D2
+[ 1081.231635] pci 0000:11:00.0: BAR 6: assigned [mem 0xf0000000-0xf007ffff pref]
+[ 1081.231640] pci 0000:11:00.0: BAR 2: assigned [mem 0xf6c00000-0xf6c03fff 64bit]
+[ 1081.231662] pci 0000:11:00.0: BAR 2: set to [mem 0xf6c00000-0xf6c03fff 64bit] (PCI address [0xf6c00000-0xf6c03fff])
+[ 1081.231664] pci 0000:11:00.0: BAR 0: assigned [mem 0xf6c04000-0xf6c0407f 64bit]
+[ 1081.231686] pci 0000:11:00.0: BAR 0: set to [mem 0xf6c04000-0xf6c0407f 64bit] (PCI address [0xf6c04000-0xf6c0407f])
+[ 1081.231687] pci 0000:11:00.0: BAR 4: assigned [io  0xc000-0xc07f]
+[ 1081.231694] pci 0000:11:00.0: BAR 4: set to [io  0xc000-0xc07f] (PCI address [0xc000-0xc07f])
+[ 1081.232773] sata_sil24 0000:11:00.0: enabling device (0100 -> 0103)
+[ 1081.232983] sata_sil24 0000:11:00.0: enabling bus mastering
+[ 1081.236374] scsi14 : sata_sil24
+[ 1081.238038] scsi15 : sata_sil24
+[ 1081.239819] ata15: SATA max UDMA/100 host m128@0xf6c04000 port 0xf6c00000 irq 19
+[ 1081.239823] ata16: SATA max UDMA/100 host m128@0xf6c04000 port 0xf6c02000 irq 19
+[ 1083.326798] ata15: SATA link down (SStatus 0 SControl 0)
+[ 1085.454431] sata_sil24 0000:11:00.0: PME# disabled
+[ 1087.430723] ata16: SATA link down (SStatus FFFFFFFF SControl FFFFFFFF)
+[ 1087.430761] ------------[ cut here ]------------
+[ 1087.430767] WARNING: at drivers/ata/libata-core.c:6244 ata_host_detach+0x75/0xdb()
+[ 1087.430768] Hardware name: Vostro 3550
+[ 1087.430769] Modules linked in: i915 fbcon cfbfillrect bitblit softcursor cfbimgblt font i2c_algo_bit cfbcopyarea drm_kms_helper drm iwldvm fb iwlwifi fbdev sata_sil24
+[ 1087.430783] Pid: 677, comm: kworker/0:1 Not tainted 3.8.3-default #1
+[ 1087.430784] Call Trace:
+[ 1087.430790]  [<ffffffff8107cbd7>] warn_slowpath_common+0x7e/0x96
+[ 1087.430792]  [<ffffffff8107cc04>] warn_slowpath_null+0x15/0x17
+[ 1087.430794]  [<ffffffff8136dfa8>] ata_host_detach+0x75/0xdb
+[ 1087.430797]  [<ffffffff8136e03f>] ata_pci_remove_one+0x18/0x1a
+[ 1087.430799]  [<ffffffff81293221>] pci_device_remove+0x38/0x8b
+[ 1087.430802]  [<ffffffff8132d93d>] __device_release_driver+0x81/0xd4
+[ 1087.430811]  [<ffffffff8132d9b0>] device_release_driver+0x20/0x2d
+[ 1087.430813]  [<ffffffff8132d4ea>] bus_remove_device+0xef/0x103
+[ 1087.430816]  [<ffffffff8132b1b5>] device_del+0x128/0x182
+[ 1087.430818]  [<ffffffff8132b21d>] device_unregister+0xe/0x1a
+[ 1087.430820]  [<ffffffff8128eb2d>] pci_stop_bus_device+0x65/0x87
+[ 1087.430822]  [<ffffffff8128ec9b>] pci_stop_and_remove_bus_device+0xf/0x1b
+[ 1087.430825]  [<ffffffff812a183d>] acpiphp_disable_slot+0x8f/0x17e
+[ 1087.430827]  [<ffffffff812a08bb>] ? get_slot_status+0x38/0x9b
+[ 1087.430830]  [<ffffffff812a1961>] acpiphp_check_bridge.isra.16+0x35/0xc6
+[ 1087.430832]  [<ffffffff812a1e82>] _handle_hotplug_event_bridge+0x275/0x3de
+[ 1087.430836]  [<ffffffff81090964>] ? process_one_work+0x15c/0x2f5
+[ 1087.430839]  [<ffffffff810ba154>] ? trace_hardirqs_on_caller+0x121/0x158
+[ 1087.430841]  [<ffffffff810909ce>] process_one_work+0x1c6/0x2f5
+[ 1087.430843]  [<ffffffff81090964>] ? process_one_work+0x15c/0x2f5
+[ 1087.430845]  [<ffffffff810916d1>] worker_thread+0x13e/0x1d5
+[ 1087.430847]  [<ffffffff81091593>] ? manage_workers+0x23d/0x23d
+[ 1087.430849]  [<ffffffff810951c6>] kthread+0xac/0xb4
+[ 1087.430852]  [<ffffffff8109511a>] ? __init_kthread_worker+0x54/0x54
+[ 1087.430855]  [<ffffffff8161222c>] ret_from_fork+0x7c/0xb0
+[ 1087.430857]  [<ffffffff8109511a>] ? __init_kthread_worker+0x54/0x54
+[ 1087.430858] ---[ end trace 5ef7a4c406a8ed2d ]---
+[ 1087.431895] sata_sil24: IRQ status == 0xffffffff, PCI fault or device removal?
+[ 1087.433409] pci 0000:11:00.0: [1095:3132] type 00 class 0x018000
+[ 1087.433454] pci 0000:11:00.0: reg 10: [mem 0x00000000-0x0000007f 64bit]
+[ 1087.433486] pci 0000:11:00.0: reg 18: [mem 0x00000000-0x00003fff 64bit]
+[ 1087.433508] pci 0000:11:00.0: reg 20: [io  0x0000-0x007f]
+[ 1087.433549] pci 0000:11:00.0: reg 30: [mem 0x00000000-0x0007ffff pref]
+[ 1087.433664] pci 0000:11:00.0: supports D1 D2
+[ 1087.452162] pci 0000:11:00.0: BAR 6: assigned [mem 0xf0000000-0xf007ffff pref]
+[ 1087.452166] pci 0000:11:00.0: BAR 2: assigned [mem 0xf6c00000-0xf6c03fff 64bit]
+[ 1087.452188] pci 0000:11:00.0: BAR 2: set to [mem 0xf6c00000-0xf6c03fff 64bit] (PCI address [0xf6c00000-0xf6c03fff])
+[ 1087.452190] pci 0000:11:00.0: BAR 0: assigned [mem 0xf6c04000-0xf6c0407f 64bit]
+[ 1087.452211] pci 0000:11:00.0: BAR 0: set to [mem 0xf6c04000-0xf6c0407f 64bit] (PCI address [0xf6c04000-0xf6c0407f])
+[ 1087.452212] pci 0000:11:00.0: BAR 4: assigned [io  0xc000-0xc07f]
+[ 1087.452219] pci 0000:11:00.0: BAR 4: set to [io  0xc000-0xc07f] (PCI address [0xc000-0xc07f])
+[ 1087.453329] sata_sil24 0000:11:00.0: enabling device (0100 -> 0103)
+[ 1087.453516] sata_sil24 0000:11:00.0: enabling bus mastering
+[ 1087.465089] scsi16 : sata_sil24
+[ 1087.467788] scsi17 : sata_sil24
+[ 1087.468468] ata17: SATA max UDMA/100 host m128@0xf6c04000 port 0xf6c00000 irq 19
+[ 1087.468471] ata18: SATA max UDMA/100 host m128@0xf6c04000 port 0xf6c02000 irq 19
+[ 1089.547535] ata17: SATA link down (SStatus 0 SControl 0)
+[ 1091.634429] ata18: SATA link down (SStatus 0 SControl 0)
+[ 1098.594853] sata_sil24 0000:11:00.0: PME# disabled
+[ 1098.596911] sata_sil24: IRQ status == 0xffffffff, PCI fault or device removal?
+
+So, this is principially same issue like with the xhci port dying after USB device unplug.
+The 0b:00 works even in "auto" mode until its upstream 1c.4 port is set to "auto" and
+becomes actually suspended. It is same story like the eSATA card woes. Just beware,
+this was acpiphp and  pcie_aspm=off instead of pciehp as I said in the beginning of this email.
+
+
+Martin
