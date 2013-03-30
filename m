@@ -1,73 +1,88 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f50.google.com ([209.85.160.50]:53450 "EHLO
-	mail-pb0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752709Ab3CRQkM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 Mar 2013 12:40:12 -0400
-Received: by mail-pb0-f50.google.com with SMTP id up1so6484656pbc.23
-        for <linux-pci@vger.kernel.org>; Mon, 18 Mar 2013 09:40:11 -0700 (PDT)
-Date: Mon, 18 Mar 2013 09:41:26 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: Kay Sievers <kay@vrfy.org>, Myron Stowe <mstowe@redhat.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	linux-hotplug@vger.kernel.org, linux-pci@vger.kernel.org,
-	yuxiangl@marvell.com, yxlraid@gmail.com,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] udevadm-info: Don't access sysfs 'resource<N>' files
-Message-ID: <20130318164126.GA20565@kroah.com>
-References: <20130316213512.2974.17303.stgit@amt.stowe>
- <20130316213519.2974.38954.stgit@amt.stowe>
- <20130316221159.GA3702@kroah.com>
- <1363477853.2423.25.camel@zim.stowe>
- <20130317010317.GB9641@kroah.com>
- <1363493482.16793.69.camel@ul30vt.home>
- <20130317053611.GC948@kroah.com>
- <1363527503.16793.75.camel@ul30vt.home>
- <CAPXgP12vmx9j_jJW3HXb2deRapFKAofTVzEbdyS=Z1VUBswE_Q@mail.gmail.com>
- <1363623880.24132.351.camel@bling.home>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Len Brown <len.brown@intel.com>, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, stable@kernel.org
+Subject: Re: [PATCH] PCI, ACPI: Don't query OSC support with all possible controls
+Date: Sat, 30 Mar 2013 01:36:04 +0100
+Message-ID: <2045510.EK2WTuFZxV@vostro.rjw.lan>
+In-Reply-To: <1364444938-19801-1-git-send-email-yinghai@kernel.org>
+References: <1364444938-19801-1-git-send-email-yinghai@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1363623880.24132.351.camel@bling.home>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 18, 2013 at 10:24:40AM -0600, Alex Williamson wrote:
-> On Sun, 2013-03-17 at 15:00 +0100, Kay Sievers wrote:
-> > On Sun, Mar 17, 2013 at 2:38 PM, Alex Williamson
-> > <alex.williamson@redhat.com> wrote:
-> > > I'm assuming that the device only breaks because udevadm is dumping the
-> > > full I/O port register space of the device and that if an actual driver
-> > > was interacting with it through this interface that it would work.  Who
-> > > knows how many devices will have read side-effects by udevadm blindly
-> > > dumping these files.  Thanks,
-> > 
-> > Sysfs is a too public interface to export things there which make
-> > devices/driver choke on a simple read() of an attribute.
+On Wednesday, March 27, 2013 09:28:58 PM Yinghai Lu wrote:
+> Found problem on system that firmware that could handle pci aer.
+> Firmware get error reporting after pci injecting error, before os boots.
+> But after os boots, firmware can not get report anymore, even pci=noaer
+> is passed.
 > 
-> That's why the default permissions for the file do not allow users to
-> read it.  I wish we could do something as clever as the MMIO resource
-> files, but I/O port spaces don't allow mmap for the predominant
-> architecture.  Eventually VFIO is meant to replace this access and does
-> move device register access behind ioctls, but for now legacy KVM device
-> assignment relies on these files and so might some UIO drivers.
+> Root cause: BIOS _OSC has problem with query bit checking.
+> It turns out that BIOS vendor is copying example code from ACPI Spec.
+> In ACPI Spec 5.0, page 290:
 > 
-> > This is nothing specific to udevadm, any tool can do that. Udevadm
-> > will never read any of the files during normal operation. The admin
-> > explicitly asked udevadm with a specific command to dump all the stuff
-> > the device offers.
+> 	If (Not(And(CDW1,1))) // Query flag clear?
+> 	{	// Disable GPEs for features granted native control.
+> 		If (And(CTRL,0x01)) // Hot plug control granted?
+> 		{
+> 			Store(0,HPCE) // clear the hot plug SCI enable bit
+> 			Store(1,HPCS) // clear the hot plug SCI status bit
+> 		}
+> 	...
+> 	}
 > 
-> Isn't it possible udevadm could drop privileges or filter out non-world
-> readable files? 
+> When Query flag is set, And(CDW1,1) will be 1, Not(1) will return 0xfffffffe.
+> So it will get into code path that should be for control set only.
+> BIOS acpi code should be changed to "If (LEqual(And(CDW1,1), 0)))"
+> 
+> Current kernel code is using _OSC query to notify firmware about support
+> from OS and then use _OSC to set control bits.
+> During query support, current code is using all possible controls.
+> So will execute code that should be only for control set stage.
+> 
+> That will have problem when pci=noaer or aer firmware_first is used.
+> As firmware have that control set for os aer already in query support stage,
+> but later will not os aer handling.
+> 
+> We should avoid passing all possible controls, just use osc_control_set
+> instead.
+> That should workaround BIOS bugs with affected systems on the field
+> as more bios vendors are copying sample code from ACPI spec.
+> 
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> Cc: stable@kernel.org
+> 
+> ---
+>  drivers/acpi/pci_root.c |    4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> Index: linux-2.6/drivers/acpi/pci_root.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/acpi/pci_root.c
+> +++ linux-2.6/drivers/acpi/pci_root.c
+> @@ -201,8 +201,8 @@ static acpi_status acpi_pci_query_osc(st
+>  		*control &= OSC_PCI_CONTROL_MASKS;
+>  		capbuf[OSC_CONTROL_TYPE] = *control | root->osc_control_set;
+>  	} else {
+> -		/* Run _OSC query for all possible controls. */
+> -		capbuf[OSC_CONTROL_TYPE] = OSC_PCI_CONTROL_MASKS;
+> +		/* Run _OSC query only with existing controls. */
+> +		capbuf[OSC_CONTROL_TYPE] = root->osc_control_set;
 
-And you are going to do the same thing for bash?  All other shells?
+I suppose we can do that, but then why this should be root->osc_control_set and
+not just 0?
 
-Come on, the user specifically asked to read this file, as root, and
-udev did so.  Just like bash would.
+>  	}
+>  
+>  	status = acpi_pci_run_osc(root->device->handle, capbuf, &result);
+> --
 
-Please fix the kernel if this is a real problem, you aren't going to be
-able to patch all userspace programs, that's not the proper solution
-here.
+Rafael
 
-thanks,
 
-greg k-h
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
