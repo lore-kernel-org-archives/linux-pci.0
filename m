@@ -1,62 +1,52 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:53654 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964879Ab3CZQTC (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Mar 2013 12:19:02 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Russell King <linux@arm.linux.org.uk>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	devicetree-discuss@lists.ozlabs.org,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Maen Suleiman <maen@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Olof Johansson <olof@lixom.net>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Mitch Bradley <wmb@firmworks.com>,
-	Andrew Murray <andrew.murray@arm.com>
-Subject: [PATCHv6 12/17] arm: mvebu: PCIe Device Tree informations for OpenBlocks AX3-4
-Date: Tue, 26 Mar 2013 17:18:34 +0100
-Message-Id: <1364314719-1049-13-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1364314719-1049-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1364314719-1049-1-git-send-email-thomas.petazzoni@free-electrons.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Sun, 31 Mar 2013 21:55:14 +0200 (CEST)
+From: Jiri Kosina <jkosina@suse.cz>
+To: Daniel Vetter <daniel@ffwll.ch>
+Cc: Alan Stern <stern@rowland.harvard.edu>, Greg KH <greg@kroah.com>,
+	Daniel Vetter <daniel.vetter@ffwll.ch>,
+	Chris Wilson <chris@chris-wilson.co.uk>,
+	Harald Arnesen <skogtun.linux@gmail.com>,
+	Kernel development list <linux-kernel@vger.kernel.org>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Peter Hurley <peter@hurleysoftware.com>,
+	Thomas Meyer <thomas@m3y3r.de>,
+	Shawn Starr <shawn.starr@rogers.com>,
+	USB list <linux-usb@vger.kernel.org>,
+	linux-acpi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Imre Deak <imre.deak@intel.com>,
+	Daniel Kurtz <djkurtz@chromium.org>,
+	dri-devel@lists.freedesktop.org,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	Arkadiusz Miskiewicz <a.miskiewicz@gmail.com>
+Subject: Re: [PATCH] dummy-irq: introduce a dummy IRQ handler driver (was
+ Re: gm45 intel gfx can generate non-MSI irq# in MSI mode (was Re: [PATCH]
+ drm/i915: stop using GMBUS IRQs on Gen4 chips (was Re: [3.9-rc1] irq 16:
+ nobody cared (was [3.9-rc1] very poor interrupt respo))
+In-Reply-To: <20130321144526.GR9021@phenom.ffwll.local>
+Message-ID: <alpine.LNX.2.00.1303312153520.22069@pobox.suse.cz>
+References: <Pine.LNX.4.44L0.1303201319190.1208-100000@iolanthe.rowland.org> <alpine.LNX.2.00.1303210018430.16237@pobox.suse.cz> <20130321144526.GR9021@phenom.ffwll.local>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The PlatHome OpenBlocks AX3-4 has an internal mini-PCIe slot that can
-be used to plug mini-PCIe devices. We therefore enable the PCIe
-interface that corresponds to this slot.
+On Thu, 21 Mar 2013, Daniel Vetter wrote:
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
----
- arch/arm/boot/dts/armada-xp-openblocks-ax3-4.dts |    9 +++++++++
- 1 file changed, 9 insertions(+)
+> Indeed, this is pretty useful and allowed me to quickly reproduce that
+> phantom irq on my gm45. Thanks to module reloading we can even reset the
+> kernel's irq disabling logic and so test different tricks quickly without
+> rebooting. Really useful.
 
-diff --git a/arch/arm/boot/dts/armada-xp-openblocks-ax3-4.dts b/arch/arm/boot/dts/armada-xp-openblocks-ax3-4.dts
-index 3818a82..5a748bd 100644
---- a/arch/arm/boot/dts/armada-xp-openblocks-ax3-4.dts
-+++ b/arch/arm/boot/dts/armada-xp-openblocks-ax3-4.dts
-@@ -139,5 +139,14 @@
- 		usb@d0051000 {
- 			status = "okay";
- 		};
-+
-+		pcie-controller {
-+			status = "okay";
-+			/* Internal mini-PCIe connector */
-+			pcie@1,0 {
-+				/* Port 0, Lane 0 */
-+				status = "okay";
-+			};
-+		};
- 	};
- };
+Daniel,
+
+out of curiosity, have you been able to make some sense of the phantom 
+legacy IRQs on GM45 systems, or are we just staying with my original 
+bandaid (disabling GMBUS IRQs), declaring GM45 broken in this respect?
+
+Thanks,
+
 -- 
-1.7.9.5
-
+Jiri Kosina
+SUSE Labs
