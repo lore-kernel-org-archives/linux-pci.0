@@ -1,46 +1,321 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Thu, 14 Mar 2013 17:09:59 +0100 (CET)
-From: Jiri Kosina <jkosina@suse.cz>
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Peter Hurley <peter@hurleysoftware.com>,
-	Thomas Meyer <thomas@m3y3r.de>,
-	Shawn Starr <shawn.starr@rogers.com>,
-	Kernel development list <linux-kernel@vger.kernel.org>,
-	USB list <linux-usb@vger.kernel.org>,
-	linux-acpi@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: [3.9-rc1] irq 16: nobody cared  (was [3.9-rc1] very poor interrupt
- responses)
-In-Reply-To: <alpine.LNX.2.00.1303141555090.30118@pobox.suse.cz>
-Message-ID: <alpine.LNX.2.00.1303141709000.30118@pobox.suse.cz>
-References: <Pine.LNX.4.44L0.1303141050310.1983-100000@iolanthe.rowland.org> <alpine.LNX.2.00.1303141555090.30118@pobox.suse.cz>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mho-02-ewr.mailhop.org ([204.13.248.72]:46995 "EHLO
+	mho-02-ewr.mailhop.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755167Ab3CaBGN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 30 Mar 2013 21:06:13 -0400
+Date: Sat, 30 Mar 2013 21:05:41 -0400
+From: Jason Cooper <jason@lakedaemon.net>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Arnd Bergmann <arnd@arndb.de>, Olof Johansson <olof@lixom.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Russell King <linux@arm.linux.org.uk>
+Cc: Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Andrew Murray <andrew.murray@arm.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Mitch Bradley <wmb@firmworks.com>
+Subject: Re: [PATCHv7 00/17] PCIe support for the Armada 370 and Armada XP
+ SoCs
+Message-ID: <20130331010541.GI13280@titan.lakedaemon.net>
+References: <1364395234-11195-1-git-send-email-thomas.petazzoni@free-electrons.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1364395234-11195-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 14 Mar 2013, Jiri Kosina wrote:
+Thomas, Arnd, Olof, Russell, Grant, Bjorn,
 
-> > > I don't think I have seen this message on rc1+ (8343bce, to be precise), 
-> > > but I have definitely seen sluggish system response on that kernel as 
-> > > well.
-> > > 
-> > > Attaching lspci, /proc/interrupts and dmesg. 
-> > 
-> > Can you try to do a git bisect for this?  Is the sluggish system 
-> > response clear enough that you can tell reliably when it is present and 
-> > when it isn't?
+On Wed, Mar 27, 2013 at 03:40:17PM +0100, Thomas Petazzoni wrote:
+> Hello,
 > 
-> That was my first thought, but unfortunately I am afraid there will be 
-> point at which I will easily make a bisection mistake, as the 
-> responsiveness of the system varies over time, so it's not really a 
-> 100% objective measure.
+> This series of patches introduces PCIe support for the Marvell Armada
+> 370 and Armada XP. In the future, we plan to extend the driver to
+> cover Kirkwood platforms, and possibly other Marvell EBU platforms as
+> well.
+> 
+> As we are approaching 3.10, I would now like to get formal Acked-by,
+> or disagreements from the following maintainers/developers :
+> 
+>  * Grant Likely, as the OF maintainer, for patches 1, 2 and 3
+> 
+>    [PATCH v5 01/17] of/pci: Provide support for parsing PCI DT ranges
+>    [PATCH v5 02/17] of/pci: Add of_pci_get_devfn() function
+>    [PATCH v5 03/17] of/pci: Add of_pci_parse_bus_range() function
+> 
+>  * Bjorn Helgaas, as the PCI maintainer, for patches 4 and 8
+> 
+>    [PATCH v5 04/17] pci: infrastructure to add drivers in drivers/pci/host
+>    [PATCH v5 08/17] pci: PCIe driver for Marvell Armada 370/XP systems
+> 
+>  * Russell King, as the ARM maintainer, for patch 5
+> 
+>    [PATCH v5 05/17] arm: pci: add a align_resource hook
+> 
+>  * Arnd Bergmann, Mitch Bradley and Jason Gunthorpe, for patch 8 (the
+>    PCIe driver itself), and specifically the Device Tree binding.
+> 
+>    [PATCH v5 08/17] pci: PCIe driver for Marvell Armada 370/XP systems
 
-So I will try a bisect, but it'll take some time so that I could claim it 
-to be trustworthy.
+How would you best like to handle this series?  I can take just 9-17
+without adding any external dependencies to the arm-soc tree.  Can each
+maintainer do the same for each each of the groups above?  I have a
+feeling the answer is no, especially with the dependency on
+mvebu/cleanup and the mvebu mbus driver currently in my tree.  It's
+probably best to keep this series together.  I'd really like to see this
+in for v3.10 if at all possible.
 
-Therefore in case anyone has any idea in parallel, I am all ears.
+Thoughts?
 
--- 
-Jiri Kosina
-SUSE Labs
+thx,
+
+Jason.
+
+> This patch set depends on:
+> 
+>  * The arm-soc/mvebu/cleanup branch in Arnd and Olof arm-soc tree
+> 
+>  * [PATCH v3 for 3.10] Introduce a Marvell EBU MBus driver
+>    http://lists.infradead.org/pipermail/linux-arm-kernel/2013-March/156883.html
+> 
+> For easier testing, the code has been pushed to:
+> 
+>   git://github.com/MISL-EBU-System-SW/mainline-public.git marvell-pcie-v7
+> 
+> This PATCHv7 follows:
+>  * PATCHv6, sent on March, 26st 2013
+>  * PATCHv5, sent on March, 21st 2013
+>  * PATCHv4, sent on March, 8th 2013
+>  * PATCHv3, sent on February, 12th 2013
+>  * PATCHv2, sent on January, 28th 2013
+>  * RFCv1, sent on December, 7th 2012
+> 
+> Changes between v6 and v7:
+> 
+>  * Use assigned-addresses in the DT subnodes for the MMIO PCIe
+>    registers, in order to align with what Thierry is doing on the
+>    Tegra PCIe driver.
+> 
+>  * Added empty 'ranges;' properties in the subnodes, as requested by
+>    Arnd. Note that due to this, it is not possible to remove the
+>    #address-cells and #size-cells properties from the subnodes, as
+>    Jason Gunthorpe requested, otherwise the DT compiler complains with:
+> 
+>      Warning (ranges_format): /soc/pcie-controller/pcie@1,0 has empty
+>      "ranges" property but its #address-cells (2) differs from
+>      /soc/pcie-controller (3)
+> 
+>      Warning (ranges_format): /soc/pcie-controller/pcie@1,0 has empty
+>      "ranges" property but its #size-cells (1) differs from
+>      /soc/pcie-controller (2)
+> 
+>  * Use the new RFCv3 patch from Andrew Murray for 'of/pci: Provide
+>    support for parsing PCI DT ranges property'.
+> 
+>  * Updated the DT binding documentation accordingly.
+> 
+> Changes between v5 and v6:
+> 
+>  * Use pci_create_root_bus() + pci_scan_child_bus() instead of
+>    pci_scan_root_bus(). This is needed to be able to add MSI support
+>    later on. Moreover Thierry Reding suggested that
+>    pci_scan_root_bus() "does a pci_bus_add_devices(), which is called
+>    again in pci_common_init() in the ARM code". Thanks Thierry for
+>    pointing out this issue.
+> 
+> Changes between v4 and v5:
+> 
+>  * Rebased on top of 3.9-rc2 + the new mvebu-mbus driver (v3).
+> 
+>  * Changed the names of the PCI DT sub-nodes to match the OF
+>    specifications: they should be named pcie@DD,FF where DD is the
+>    device number and FF the function number. Requested by Mitch
+>    Bradley.
+> 
+>  * Add the device_type = "pci" property at the pcie-controller
+>    level. Requested by Mitch Bradley.
+> 
+>  * Drop patch 'of/pci: Add of_pci_get_bus() function' because it
+>    wasn't actually used in the rest of the patch series.
+> 
+>  * Updated the patch 'of/pci: Provide support for parsing PCI DT
+>    ranges property' to use the latest version proposed by Andrew
+>    Murray on the devicetree-discuss@ mailing list.
+> 
+> Changes between v3 and v4:
+> 
+>  * Rebased on top of 3.9-rc1.
+> 
+>  * Drop patch "ARM: pci: Allow passing per-controller private data"
+>    because it was merged in 3.9.
+> 
+>  * Drop patch "lib: devres: don't enclose pcim_*() functions in
+>    CONFIG_HAS_IOPORT", because it was merged in 3.9.
+> 
+>  * Added CONFIG_PCI_MVEBU=y in mvebu_defconfig, so that the right PCI
+>    host controller driver is automatically enabled.
+> 
+>  * Instead of using the DT 'ranges' property to encode the PCIe
+>    register ranges, use a 'reg' property on the main PCIe controller
+>    DT node together with a 'reg-names' property. Suggested by Jason
+>    Gunthorpe.
+> 
+>  * Don't select PCI_SW_HOST_BRIDGE and PCI_SW_PCI_PCI_BRIDGE, they
+>    don't exist anymore. Reported by Bjorn Helgaas.
+> 
+>  * Added support for the Armada XP GP board.
+> 
+>  * Fix the 'ranges' property so that the memory range is an identity
+>    map between CPU addresses and bus addresses. Suggested by Arnd
+>    Bergmann.
+> 
+>  * Changed the 'ranges' property to have the I/O region after the
+>    memory region.
+> 
+>  * Use the new mvebu-mbus driver API to create/remove address decoding
+>    windows when needed. This remove the need to include
+>    <mach/addr-map.h>. Requested by Arnd Bergmann.
+> 
+>  * Include directly into the driver the few common PCIe functions we
+>    were using from arch/arm/plat-orion/pcie.c. This allows to remove
+>    the inclusion of <plat/pcie.h>. Requested by Arnd Bergmann.
+> 
+>  * Directly set up the address decoding windows when the memory
+>    base/limit and I/O base/limit are configured in the PCI-to-PCI
+>    bridge instead of relying on the memory and I/O accesses being
+>    enabled in the PCI_COMMAND register. Suggested by Bjorn Helgaas.
+> 
+>  * Added some comments on top of the calculations of the I/O
+>    base/limit and memory base/limit. Suggested by Arnd Bergmann.
+> 
+>  * Changed a bit the way the "realio" resource is created, from
+>    suggestions given by Arnd Bergmann.
+> 
+>  * Updated the Device Tree binding documentation. Reported by Jason
+>    Gunthorpe.
+> 
+>  * Instead of using "marvell,armada-370-xp-pcie" as the DT compatible
+>    string, use two separate compatible strings:
+>    "marvell,armada-370-pcie" and "marvell,armada-xp-pcie". For now,
+>    the driver does the same thing for both.
+> 
+> Changes between v2 and v3:
+> 
+>  * Use of_irq_map_pci() instead of of_irq_map_raw(), as suggested by
+>    Andrew Murray. In order to do this, we moved the interrupt-map and
+>    interrupt-map-mask DT properties from the main PCIe controller node
+>    to the DT subnodes representing each PCIe interface.
+> 
+>  * Remove the usage of the emulated host bridge.
+> 
+>  * Move the emulated PCI-to-PCI bridge code into the Marvell PCI
+>    driver itself, in order to allow a tighter integration. Suggested
+>    by Bjorn Helgaas and Jason Gunthorpe.
+> 
+>  * Make the allocation of address decoding windows dynamic: it's when
+>    memory accesses or I/O accesses are enabled at the PCI-to-PCI
+>    bridge level that we allocate and setup the corresponding address
+>    decoding window. Requested by Bjorn Helgaas.
+> 
+>  * Fixed the implementation of I/O accesses to use I/O addresses that
+>    fall within the normal IO_SPACE_LIMIT. This required using the
+>    "remap" functionality of address decoding windows, and therefore
+>    some changes in the address decoding window allocator. Follows a
+>    long discussion about I/O accesses.
+> 
+>  * Set up a correct bus number in the configuration of the PCIe
+>    interfaces so that we don't have to fake bus numbers
+>    anymore. Requested by Jason Gunthorpe.
+> 
+>  * Fix the of_pci_get_devfn() implementation according to Stephen
+>    Warren's comment.
+> 
+>  * Use CFLAGS_ instead of ccflags to add the mach-mvebu and plat-orion
+>    include paths when building the pci-mvebu driver. This ensures that
+>    the include paths are only added when building this specific
+>    driver. Requested by Stephen Warren.
+> 
+>  * Fix the ->resource_align() to only apply on bus 0 (the one on which
+>    the emulated PCI-to-PCI bridges sit), and to request an alignment
+>    on the size of the window (and not only 64 KB for I/O windows and 1
+>    MB for memory windows).
+> 
+>  * Clarified the commit log of "clk: mvebu: create parent-child
+>    relation for PCIe clocks on Armada 370"
+> 
+> Thanks,
+> 
+> Thomas
+> 
+> Andrew Murray (1):
+>   of/pci: Provide support for parsing PCI DT ranges property
+> 
+> Thierry Reding (2):
+>   of/pci: Add of_pci_get_devfn() function
+>   of/pci: Add of_pci_parse_bus_range() function
+> 
+> Thomas Petazzoni (14):
+>   pci: infrastructure to add drivers in drivers/pci/host
+>   arm: pci: add a align_resource hook
+>   clk: mvebu: create parent-child relation for PCIe clocks on Armada
+>     370
+>   clk: mvebu: add more PCIe clocks for Armada XP
+>   pci: PCIe driver for Marvell Armada 370/XP systems
+>   arm: mvebu: PCIe support is now available on mvebu
+>   arm: mvebu: add PCIe Device Tree informations for Armada 370
+>   arm: mvebu: add PCIe Device Tree informations for Armada XP
+>   arm: mvebu: PCIe Device Tree informations for OpenBlocks AX3-4
+>   arm: mvebu: PCIe Device Tree informations for Armada XP DB
+>   arm: mvebu: PCIe Device Tree informations for Armada 370 Mirabox
+>   arm: mvebu: PCIe Device Tree informations for Armada 370 DB
+>   arm: mvebu: PCIe Device Tree informations for Armada XP GP
+>   arm: mvebu: update defconfig with PCI and USB support
+> 
+>  .../devicetree/bindings/pci/mvebu-pci.txt          |  220 +++++
+>  arch/arm/boot/dts/armada-370-db.dts                |   17 +
+>  arch/arm/boot/dts/armada-370-mirabox.dts           |   16 +
+>  arch/arm/boot/dts/armada-370.dtsi                  |   51 ++
+>  arch/arm/boot/dts/armada-xp-db.dts                 |   33 +
+>  arch/arm/boot/dts/armada-xp-gp.dts                 |   21 +
+>  arch/arm/boot/dts/armada-xp-mv78230.dtsi           |  104 +++
+>  arch/arm/boot/dts/armada-xp-mv78260.dtsi           |  122 +++
+>  arch/arm/boot/dts/armada-xp-mv78460.dtsi           |  188 ++++
+>  arch/arm/boot/dts/armada-xp-openblocks-ax3-4.dts   |    9 +
+>  arch/arm/configs/mvebu_defconfig                   |    3 +
+>  arch/arm/include/asm/mach/pci.h                    |   11 +
+>  arch/arm/kernel/bios32.c                           |    6 +
+>  arch/arm/mach-mvebu/Kconfig                        |    2 +
+>  arch/microblaze/pci/pci-common.c                   |  110 +--
+>  arch/mips/pci/pci.c                                |   50 +-
+>  arch/powerpc/kernel/pci-common.c                   |   99 +--
+>  drivers/clk/mvebu/clk-gating-ctrl.c                |   18 +-
+>  drivers/of/address.c                               |   63 ++
+>  drivers/of/of_pci.c                                |   59 +-
+>  drivers/pci/Kconfig                                |    2 +
+>  drivers/pci/Makefile                               |    3 +
+>  drivers/pci/host/Kconfig                           |    8 +
+>  drivers/pci/host/Makefile                          |    4 +
+>  drivers/pci/host/pci-mvebu.c                       |  927 ++++++++++++++++++++
+>  include/linux/of_address.h                         |   42 +
+>  include/linux/of_pci.h                             |    2 +
+>  27 files changed, 2009 insertions(+), 181 deletions(-)
+>  create mode 100644 Documentation/devicetree/bindings/pci/mvebu-pci.txt
+>  create mode 100644 drivers/pci/host/Kconfig
+>  create mode 100644 drivers/pci/host/Makefile
+>  create mode 100644 drivers/pci/host/pci-mvebu.c
+> 
+> -- 
+> 1.7.9.5
+> 
+> 
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
