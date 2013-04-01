@@ -1,78 +1,66 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mho-02-ewr.mailhop.org ([204.13.248.72]:26377 "EHLO
-	mho-02-ewr.mailhop.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757209Ab3DCK6U (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 3 Apr 2013 06:58:20 -0400
-Date: Wed, 3 Apr 2013 06:57:57 -0400
-From: Jason Cooper <jason@lakedaemon.net>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Russell King <linux@arm.linux.org.uk>,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Olof Johansson <olof@lixom.net>, linux-pci@vger.kernel.org,
-	devicetree-discuss@lists.ozlabs.org,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Andrew Murray <andrew.murray@arm.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Mitch Bradley <wmb@firmworks.com>
-Subject: Re: [RFC PATCHv1 2/5] bus: mvebu: fix mistake in PCIe window
- target attribute for Kirkwood
-Message-ID: <20130403105757.GV13280@titan.lakedaemon.net>
-References: <1364407504-13524-1-git-send-email-thomas.petazzoni@free-electrons.com>
- <1364407504-13524-3-git-send-email-thomas.petazzoni@free-electrons.com>
- <20130403125247.5914a862@skate>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130403125247.5914a862@skate>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <alpine.LNX.2.00.1303312153520.22069@pobox.suse.cz>
+References: <Pine.LNX.4.44L0.1303201319190.1208-100000@iolanthe.rowland.org>
+	<alpine.LNX.2.00.1303210018430.16237@pobox.suse.cz>
+	<20130321144526.GR9021@phenom.ffwll.local>
+	<alpine.LNX.2.00.1303312153520.22069@pobox.suse.cz>
+Date: Mon, 1 Apr 2013 20:30:13 +0200
+Message-ID: <CAKMK7uFvbbUXZ4NGSWTMiqFEPxX+5CBnJE7t_A35vosxODVR9Q@mail.gmail.com>
+Subject: Re: [PATCH] dummy-irq: introduce a dummy IRQ handler driver (was Re:
+ gm45 intel gfx can generate non-MSI irq# in MSI mode (was Re: [PATCH]
+ drm/i915: stop using GMBUS IRQs on Gen4 chips (was Re: [3.9-rc1] irq 16:
+ nobody cared (was [3.9-rc1] very poor interrupt respo))
+From: Daniel Vetter <daniel@ffwll.ch>
+To: Jiri Kosina <jkosina@suse.cz>
+Cc: Alan Stern <stern@rowland.harvard.edu>, Greg KH <greg@kroah.com>,
+	Chris Wilson <chris@chris-wilson.co.uk>,
+	Harald Arnesen <skogtun.linux@gmail.com>,
+	Kernel development list <linux-kernel@vger.kernel.org>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Peter Hurley <peter@hurleysoftware.com>,
+	Thomas Meyer <thomas@m3y3r.de>,
+	Shawn Starr <shawn.starr@rogers.com>,
+	USB list <linux-usb@vger.kernel.org>,
+	linux-acpi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Imre Deak <imre.deak@intel.com>,
+	Daniel Kurtz <djkurtz@chromium.org>,
+	dri-devel@lists.freedesktop.org,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	Arkadiusz Miskiewicz <a.miskiewicz@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Thomas,
+On Sun, Mar 31, 2013 at 9:55 PM, Jiri Kosina <jkosina@suse.cz> wrote:
+> On Thu, 21 Mar 2013, Daniel Vetter wrote:
+>
+>> Indeed, this is pretty useful and allowed me to quickly reproduce that
+>> phantom irq on my gm45. Thanks to module reloading we can even reset the
+>> kernel's irq disabling logic and so test different tricks quickly without
+>> rebooting. Really useful.
+>
+> Daniel,
+>
+> out of curiosity, have you been able to make some sense of the phantom
+> legacy IRQs on GM45 systems, or are we just staying with my original
+> bandaid (disabling GMBUS IRQs), declaring GM45 broken in this respect?
 
-On Wed, Apr 03, 2013 at 12:52:47PM +0200, Thomas Petazzoni wrote:
-> Jason (Cooper),
-> 
-> Do you mind taking this patch in your mvebu/drivers branch, next to the
-> patch adding the mvebu-mbus driver? Or do you want a new mvebu-mbus
-> driver patch that contains this fix and would replace the one you have
-> already merged in mvebu/drivers?
+I've played around with dummy-irq on my own gm45 and afaict every
+gmbus interrupt generates both an msi and a legacy pci interrupt when
+msi is enabled. Everything else (= other interrupt sources) seems to
+work as expected, and disabling msi also papers over the issue.
+There's also scary comments in our gm45 irq handler that we need msi
+to paper over some other races.
 
-Thanks for pointing this out.  I'll put it in mvebu/drivers as you
-suggested.  I'll need to rebase mvebu/soc on it.  But I haven't done the
-PR yet, so not a big deal.
+So I've decided that I don't want to dwell any longer in this
+particular dungeon and that your bandaid (of just disabling this mess)
+is the real fix.
 
-thx,
-
-Jason.
-
-
-> On Wed, 27 Mar 2013 19:05:01 +0100, Thomas Petazzoni wrote:
-> > The target and attributes for the PCIe address decoding windows were
-> > not correct on Kirkwood for the second PCIe interface.
-> > 
-> > Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-> > ---
-> > Note: this patch should be merged with the existing mvebu-mbus driver.
-> > ---
-> >  drivers/bus/mvebu-mbus.c |    2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > 
-> > diff --git a/drivers/bus/mvebu-mbus.c b/drivers/bus/mvebu-mbus.c
-> > index 586d03e..4de2c6b 100644
-> > --- a/drivers/bus/mvebu-mbus.c
-> > +++ b/drivers/bus/mvebu-mbus.c
-> > @@ -626,7 +626,7 @@ static const struct mvebu_mbus_soc_data armada_xp_mbus_data = {
-> >  
-> >  static const struct mvebu_mbus_mapping kirkwood_map[] = {
-> >  	MAPDEF("pcie0.0", 4, 0xe0, MAPDEF_PCIMASK),
-> > -	MAPDEF("pcie1.0", 8, 0xe0, MAPDEF_PCIMASK),
-> > +	MAPDEF("pcie1.0", 4, 0xd0, MAPDEF_PCIMASK),
-> >  	MAPDEF("sram",    3, 0x01, MAPDEF_NOMASK),
-> >  	MAPDEF("nand",    1, 0x2f, MAPDEF_NOMASK),
-> >  	{},
+Thanks, Daniel
+-- 
+Daniel Vetter
+Software Engineer, Intel Corporation
++41 (0) 79 365 57 48 - http://blog.ffwll.ch
