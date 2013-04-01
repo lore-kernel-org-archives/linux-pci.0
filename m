@@ -1,108 +1,59 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <5165AF52.9000001@gmail.com>
-Date: Wed, 10 Apr 2013 13:28:34 -0500
-From: Rob Herring <robherring2@gmail.com>
-MIME-Version: 1.0
-To: Andrew Murray <Andrew.Murray@arm.com>
-CC: rob.herring@calxeda.com, siva.kallam@samsung.com,
-	linux-pci@vger.kernel.org, Liviu.Dudau@arm.com, paulus@samba.org,
-	linux-samsung-soc@vger.kernel.org, linux@arm.linux.org.uk,
-	jg1.han@samsung.com, jgunthorpe@obsidianresearch.com,
-	devicetree-discuss@lists.ozlabs.org, kgene.kim@samsung.com,
-	bhelgaas@google.com, linux-arm-kernel@lists.infradead.org,
-	linux-kernel@vger.kernel.org, suren.reddy@samsung.com
-Subject: Re: [PATCH v5 3/3] of/pci: mips: convert to common of_pci_range_parser
-References: <1365578969-30966-1-git-send-email-Andrew.Murray@arm.com> <1365578969-30966-4-git-send-email-Andrew.Murray@arm.com>
-In-Reply-To: <1365578969-30966-4-git-send-email-Andrew.Murray@arm.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:29068 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758362Ab3DAPQN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 1 Apr 2013 11:16:13 -0400
+Message-ID: <1364829361.2882.26.camel@bling.home>
+Subject: Re: [PATCH] PCI/VFIO: use pcie_flags_reg instead of access PCI-E
+ Capabilities Register
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org,
+	Hanjun Guo <guohanjun@huawei.com>, jiang.liu@huawei.com
+Date: Mon, 01 Apr 2013 09:16:01 -0600
+In-Reply-To: <1364375140-6388-1-git-send-email-wangyijing@huawei.com>
+References: <1364375140-6388-1-git-send-email-wangyijing@huawei.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/10/2013 02:29 AM, Andrew Murray wrote:
-> This patch converts the pci_load_of_ranges function to use the new common
-> of_pci_range_parser.
+On Wed, 2013-03-27 at 17:05 +0800, Yijing Wang wrote:
+> Currently, we use pcie_flags_reg to cache PCI-E Capabilities Register,
+> because PCI-E Capabilities Register bits are almost read-only. This patch
+> use pcie_flags_reg instead of another access PCI-E Capabilities Register.
 > 
-> Signed-off-by: Andrew Murray <Andrew.Murray@arm.com>
-> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
-
-Reviewed-by: Rob Herring <rob.herring@calxeda.com>
-
-
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 > ---
->  arch/mips/pci/pci.c |   50 ++++++++++++++++----------------------------------
->  1 files changed, 16 insertions(+), 34 deletions(-)
+>  drivers/vfio/pci/vfio_pci_config.c |    6 +-----
+>  1 files changed, 1 insertions(+), 5 deletions(-)
 > 
-> diff --git a/arch/mips/pci/pci.c b/arch/mips/pci/pci.c
-> index 0872f12..bee49a4 100644
-> --- a/arch/mips/pci/pci.c
-> +++ b/arch/mips/pci/pci.c
-> @@ -122,51 +122,33 @@ static void pcibios_scanbus(struct pci_controller *hose)
->  #ifdef CONFIG_OF
->  void pci_load_of_ranges(struct pci_controller *hose, struct device_node *node)
->  {
-> -	const __be32 *ranges;
-> -	int rlen;
-> -	int pna = of_n_addr_cells(node);
-> -	int np = pna + 5;
-> +	struct of_pci_range_range range;
-> +	struct of_pci_range_parser parser;
-> +	u32 res_type;
->  
->  	pr_info("PCI host bridge %s ranges:\n", node->full_name);
-> -	ranges = of_get_property(node, "ranges", &rlen);
-> -	if (ranges == NULL)
-> -		return;
->  	hose->of_node = node;
->  
-> -	while ((rlen -= np * 4) >= 0) {
-> -		u32 pci_space;
-> +	if (of_pci_range_parser(&parser, node))
-> +		return;
-> +
-> +	for_each_of_pci_range(&parser, &range) {
->  		struct resource *res = NULL;
-> -		u64 addr, size;
+> diff --git a/drivers/vfio/pci/vfio_pci_config.c b/drivers/vfio/pci/vfio_pci_config.c
+> index aeb00fc..afc6ca4 100644
+> --- a/drivers/vfio/pci/vfio_pci_config.c
+> +++ b/drivers/vfio/pci/vfio_pci_config.c
+> @@ -1017,13 +1017,9 @@ static int vfio_cap_len(struct vfio_pci_device *vdev, u8 cap, u8 pos)
+>  		return byte;
+>  	case PCI_CAP_ID_EXP:
+>  		/* length based on version */
+> -		ret = pci_read_config_word(pdev, pos + PCI_EXP_FLAGS, &word);
+> -		if (ret)
+> -			return pcibios_err_to_errno(ret);
 > -
-> -		pci_space = be32_to_cpup(&ranges[0]);
-> -		addr = of_translate_address(node, ranges + 3);
-> -		size = of_read_number(ranges + pna + 3, 2);
-> -		ranges += np;
-> -		switch ((pci_space >> 24) & 0x3) {
-> -		case 1:		/* PCI IO space */
-> +
-> +		res_type = range.flags & IORESOURCE_TYPE_BITS;
-> +		if (res_type == IORESOURCE_IO) {
->  			pr_info("  IO 0x%016llx..0x%016llx\n",
-> -					addr, addr + size - 1);
-> +				range.addr, range.addr + range.size - 1);
->  			hose->io_map_base =
-> -				(unsigned long)ioremap(addr, size);
-> +				(unsigned long)ioremap(range.addr, range.size);
->  			res = hose->io_resource;
-> -			res->flags = IORESOURCE_IO;
-> -			break;
-> -		case 2:		/* PCI Memory space */
-> -		case 3:		/* PCI 64 bits Memory space */
-> +		} else if (res_type == IORESOURCE_MEM) {
->  			pr_info(" MEM 0x%016llx..0x%016llx\n",
-> -					addr, addr + size - 1);
-> +				range.addr, range.addr + range.size - 1);
->  			res = hose->mem_resource;
-> -			res->flags = IORESOURCE_MEM;
-> -			break;
-> -		}
-> -		if (res != NULL) {
-> -			res->start = addr;
-> -			res->name = node->full_name;
-> -			res->end = res->start + size - 1;
-> -			res->parent = NULL;
-> -			res->sibling = NULL;
-> -			res->child = NULL;
->  		}
-> +		if (res != NULL)
-> +			of_pci_range_to_resource(&range, node, res);
->  	}
->  }
->  #endif
-> 
+>  		vdev->extended_caps = true;
+>  
+> -		if ((word & PCI_EXP_FLAGS_VERS) == 1)
+> +		if ((pdev->pcie_flags_reg & PCI_EXP_FLAGS_VERS) == 1)
+
+It looks like we should be using pcie_caps_reg(pdev) here instead of
+directly accessing pcie_flags_reg.  Thanks,
+
+Alex
+
+>  			return PCI_CAP_EXP_ENDPOINT_SIZEOF_V1;
+>  		else
+>  			return PCI_CAP_EXP_ENDPOINT_SIZEOF_V2;
+
+
 
