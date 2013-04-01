@@ -1,85 +1,44 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <516C4E14.1080708@amd.com>
-Date: Mon, 15 Apr 2013 13:59:32 -0500
-From: Aravind <aravind.gopalakrishnan@amd.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from jabberwock.ucw.cz ([46.255.230.98]:50815 "EHLO
+	jabberwock.ucw.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758222Ab3DALzu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 1 Apr 2013 07:55:50 -0400
+Received: from albireo.burrow.ucw.cz (albireo.ucw.cz [89.239.2.32])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(Client CN "albireo.ucw.cz", Issuer "ucw.cz" (verified OK))
+	by jabberwock.ucw.cz (Postfix) with ESMTPS id 7C68E1C009A
+	for <linux-pci@vger.kernel.org>; Mon,  1 Apr 2013 13:45:07 +0200 (CEST)
+Date: Mon, 1 Apr 2013 13:45:05 +0200
+From: Martin Mares <mj@ucw.cz>
+To: Kay Sievers <kay@vrfy.org>
+Cc: Lucas De Marchi <lucas.demarchi@profusion.mobi>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Samuli Suominen <ssuominen@gentoo.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: lspci -k is broken with depmod from kmod since it doesn't
+ generate modules.pcimap anymore
+Message-ID: <mj+md-20130401.114439.12968.albireo@ucw.cz>
+References: <515213CF.7000804@gentoo.org>
+ <CAErSpo5wG8FUyomySdze56-e9Jr+3DevoCGGAnhLM8vpOBvQ5w@mail.gmail.com>
+ <CAMOw1v4jZXqT5Zm2ssSM8A2-ztQr1ovRi1BhQkbiCMoO3ss9Qg@mail.gmail.com>
+ <CAPXgP13z3aoL+9zRpYnSkxYTdO6GFNgGRwaHbCAwFSRhnXtyjQ@mail.gmail.com>
 MIME-Version: 1.0
-To: Borislav Petkov <bp@alien8.de>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Doug Thompson <dougthompson@xmission.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	<linux-edac@vger.kernel.org>
-Subject: Re: [PATCH] edac: Handle EDAC ECC errors for Family 16h
-References: <1366039059-15772-1-git-send-email-Aravind.Gopalakrishnan@amd.com> <CAErSpo6cD4WtPhTbcBEyfOLNASJzr+cU2Lch=fVyqn-gh15drQ@mail.gmail.com> <20130415161121.GA18440@pd.tnic> <516C2EA2.1050806@amd.com>
-In-Reply-To: <516C2EA2.1050806@amd.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAPXgP13z3aoL+9zRpYnSkxYTdO6GFNgGRwaHbCAwFSRhnXtyjQ@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/15/2013 11:45 AM, Aravind wrote:
-> On 04/15/2013 11:11 AM, Borislav Petkov wrote:
->> On Mon, Apr 15, 2013 at 09:56:08AM -0600, Bjorn Helgaas wrote:
->>> On Mon, Apr 15, 2013 at 9:17 AM, Aravind Gopalakrishnan
->>>> @@ -172,7 +176,12 @@
->>>>    */
->>>>   #define PCI_DEVICE_ID_AMD_15H_NB_F1    0x1601
->>>>   #define PCI_DEVICE_ID_AMD_15H_NB_F2    0x1602
->>>> -
->>>> +#define PCI_DEVICE_ID_AMD_16H_NB_F0    0x1530
->>>> +#define PCI_DEVICE_ID_AMD_16H_NB_F1    0x1531
->>>> +#define PCI_DEVICE_ID_AMD_16H_NB_F2    0x1532
->>>> +#define PCI_DEVICE_ID_AMD_16H_NB_F3    0x1533
->>>> +#define PCI_DEVICE_ID_AMD_16H_NB_F4    0x1534
->>>> +#define PCI_DEVICE_ID_AMD_16H_NB_F5    0x1535
->>>>
->>>>   /*
->>>>    * Function 1 - Address Map
->>>> @@ -300,6 +309,7 @@ enum amd_families {
->>>>          K8_CPUS = 0,
->>>>          F10_CPUS,
->>>>          F15_CPUS,
->>>> +       F16_CPUS,
->>>>          NUM_FAMILIES,
->>>>   };
->>>>
->>>> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
->>>> index 1679ff6..59f732f 100644
->>>> --- a/include/linux/pci_ids.h
->>>> +++ b/include/linux/pci_ids.h
->>>> @@ -519,6 +519,8 @@
->>>>   #define PCI_DEVICE_ID_AMD_11H_NB_LINK  0x1304
->>>>   #define PCI_DEVICE_ID_AMD_15H_NB_F3    0x1603
->>>>   #define PCI_DEVICE_ID_AMD_15H_NB_F4    0x1604
->>>> +#define PCI_DEVICE_ID_AMD_16H_NB_F3    0x1533
->>>> +#define PCI_DEVICE_ID_AMD_16H_NB_F4    0x1534
->>> What is the point of adding identical #defines both here and in
->>> amd64_edac.h?  Also, read the note at the top of
->>> include/linux/pci_ids.h.
->> Yeah, they should be in pci_ids.h since they're used in amd_nb.c and
->> amd64_edac.c.
->>
->> But, what shouldn't be is adding unused defines (*_F0 and *_F5).
->> Aravind, please drop them.
->
->     Yes, I have made the changes and sent it out as version 2 of the 
-> PATCH.
->     Do have a look and let me know if I need to make any changes.
->
->
->> I'll review the rest of the patch when I get around to it this week.
->>
->
+Hello!
 
-      Correction: Fam16 does not support GART. I had mistakenly included 
-it in amd_nb.c (Apologies)
-      I have fixed it up and made few other cosmetic changes to the 
-patch. I have tested it once again to
-      make certain it works fine and it does..
-      Sending it out as V3 of the patch..
+> Yes, that needs to be converted to use modaliases, if that feature is
+> desired in lspci. The information is available in /sys and modprobe
+> can be used to resolve that to module names. The old hotplug maps
+> files are gone.
 
+I'm looking into that. Expect a pciutils patch soon.
 
-
+				Have a nice fortnight
+-- 
+Martin `MJ' Mares                          <mj@ucw.cz>   http://mj.ucw.cz/
+Faculty of Math and Physics, Charles University, Prague, Czech Rep., Earth
+The computer is mightier than the pen, the sword, and usually, the programmer.
