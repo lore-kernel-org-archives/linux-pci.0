@@ -1,223 +1,153 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <1366024734-12011-1-git-send-email-nhorman@tuxdriver.com>
-References: <1362158276-4901-1-git-send-email-nhorman@tuxdriver.com> <1366024734-12011-1-git-send-email-nhorman@tuxdriver.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 15 Apr 2013 09:30:36 -0600
-Message-ID: <CAErSpo5-EeAZbTyyoEfqGjS_SXN4P_APjdU7k+oPC3XKbgbwtw@mail.gmail.com>
-Subject: Re: [PATCH v7] irq: add quirk for broken interrupt remapping on 55XX chipsets
-To: Neil Horman <nhorman@tuxdriver.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Prarit Bhargava <prarit@redhat.com>,
-	Don Zickus <dzickus@redhat.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Asit Mallick <asit.k.mallick@intel.com>,
-	David Woodhouse <dwmw2@infradead.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga03.intel.com ([143.182.124.21]:42823 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750788Ab3DAHdL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 1 Apr 2013 03:33:11 -0400
+Message-ID: <1364801587.6298.8.camel@yhuang-dev>
+Subject: Re: 3.9-rc1: pciehp and eSATA card SiI 3132, no XHCI
+From: Huang Ying <ying.huang@intel.com>
+To: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
+Cc: Yijing Wang <wangyijing@huawei.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, Yinghai Lu <yinghai@kernel.org>
+Date: Mon, 01 Apr 2013 15:33:07 +0800
+In-Reply-To: <51585071.3090600@fold.natur.cuni.cz>
+References: <513E7E1E.80508@fold.natur.cuni.cz>
+	    <513FE7AD.2020408@huawei.com> <5141145E.4020300@fold.natur.cuni.cz>
+	    <51417C28.40402@huawei.com> <5141C9D7.9040706@fold.natur.cuni.cz>
+	    <51428A72.2060602@huawei.com> <51548E13.8030308@fold.natur.cuni.cz>
+	   <1364545211.1817.228.camel@yhuang-dev>
+	   <5155A101.2090705@fold.natur.cuni.cz>
+	  <1364640886.5773.5.camel@yhuang-mobile.sh.intel.com>
+	  <51581170.30708@fold.natur.cuni.cz>
+	 <1364739160.5947.5.camel@yhuang-mobile.sh.intel.com>
+	 <51585071.3090600@fold.natur.cuni.cz>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 15, 2013 at 5:18 AM, Neil Horman <nhorman@tuxdriver.com> wrote:
-> A few years back intel published a spec update:
-> http://www.intel.com/content/dam/doc/specification-update/5520-and-5500-chipset-ioh-specification-update.pdf
->
-> For the 5520 and 5500 chipsets which contained an errata (specificially errata
-> 53), which noted that these chipsets can't properly do interrupt remapping, and
-> as a result the recommend that interrupt remapping be disabled in bios.  While
-> many vendors have a bios update to do exactly that, not all do, and of course
-> not all users update their bios to a level that corrects the problem.  As a
-> result, occasionally interrupts can arrive at a cpu even after affinity for that
-> interrupt has be moved, leading to lost or spurrious interrupts (usually
-> characterized by the message:
-> kernel: do_IRQ: 7.71 No irq handler for vector (irq -1)
->
-> There have been several incidents recently of people seeing this error, and
-> investigation has shown that they have system for which their BIOS level is such
-> that this feature was not properly turned off.  As such, it would be good to
-> give them a reminder that their systems are vulnurable to this problem.  For
-> details of those that reported the problem, please see:
-> https://bugzilla.redhat.com/show_bug.cgi?id=887006
->
-> Signed-off-by: Neil Horman <nhorman@tuxdriver.com>
-> CC: Prarit Bhargava <prarit@redhat.com>
-> CC: Don Zickus <dzickus@redhat.com>
-> CC: Don Dutile <ddutile@redhat.com>
-> CC: Bjorn Helgaas <bhelgaas@google.com>
-> CC: Asit Mallick <asit.k.mallick@intel.com>
-> CC: David Woodhouse <dwmw2@infradead.org>
-> CC: linux-pci@vger.kernel.org
-> CC: Joerg Roedel <joro@8bytes.org>
-> CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-> ---
->
-> Change notes:
->
-> v2)
->
-> * Moved the quirk to the x86 arch, since consensus seems to be that the 55XX
-> chipset series is x86 only.  I decided however to keep the quirk as a regular
-> quirk, not an early_quirk.  Early quirks have no way currently to determine if
-> BIOS has properly disabled the feature in the iommu, at least not without
-> significant hacking, and since its quite possible this will be a short lived
-> quirk, should Don Z's workaround code prove successful (and it looks like it may
-> well), I don't think that necessecary.
->
-> * Removed the WARNING banner from the quirk, and added the HW_ERR token to the
-> string, I opted to leave the newlines in place however, as I really couldnt
-> find a way to keep the text on a single line is still legible from a code
-> perspective.  I think theres enough language in there that using cscope on just
-> about any substring however will turn it up, and again, this may be a short
-> lived quirk.
->
-> v3)
->
-> * Removed defines from pci_ids.h, and used direct id values as per request from
-> Bjorn.
->
-> v4)
->
-> * Converted pr_warn to WARN_TAINT(TAINT_FIRMWARE_WORKAROUND) as per David
-> Woodhouse
->
-> v5)
->
-> * Moved check to an early quirk, and flagged the broken chip, so we could
-> reasonably disable irq remapping during bootup.
->
-> v6)
->
-> * Clean up of stupid extra thrash in quirks.c
->
-> v7)
->
-> * Move broken check to intel_irq_remapping.c
-> * Fixed another typo
-> * Finally made the reference bugzilla public
-> ---
->  arch/x86/kernel/early-quirks.c      | 25 +++++++++++++++++++++++++
->  drivers/iommu/intel_irq_remapping.c | 10 ++++++++++
->  drivers/iommu/irq_remapping.c       | 12 ++++++++++++
->  drivers/iommu/irq_remapping.h       |  1 +
->  4 files changed, 48 insertions(+)
->
-> diff --git a/arch/x86/kernel/early-quirks.c b/arch/x86/kernel/early-quirks.c
-> index 3755ef4..bfa3139 100644
-> --- a/arch/x86/kernel/early-quirks.c
-> +++ b/arch/x86/kernel/early-quirks.c
-> @@ -192,6 +192,27 @@ static void __init ati_bugs_contd(int num, int slot, int func)
->  }
->  #endif
->
-> +#ifdef CONFIG_IRQ_REMAP
-> +static void __init intel_remapping_check(int num, int slot, int func)
-> +{
-> +       u8 revision;
-> +
-> +       revision = pci_read_config_byte(num, slot, func , PCI_REVISION_ID);
-> +
-> +       /*
-> +        * Revision 0x13 of this chipset supports irq remapping
-> +        * but has an erratum that breaks its behavior, flag it as such
-> +        */
-> +       if (revision == 0x13)
-> +               irq_remap_broken = 1;
-> +
-> +}
-> +#else
-> +static void __init intel_remapping_check(int num, int slot, int func)
-> +{
-> +}
-> +#endif
-> +
->  #define QFLAG_APPLY_ONCE       0x1
->  #define QFLAG_APPLIED          0x2
->  #define QFLAG_DONE             (QFLAG_APPLY_ONCE|QFLAG_APPLIED)
-> @@ -221,6 +242,10 @@ static struct chipset early_qrk[] __initdata = {
->           PCI_CLASS_SERIAL_SMBUS, PCI_ANY_ID, 0, ati_bugs },
->         { PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_SBX00_SMBUS,
->           PCI_CLASS_SERIAL_SMBUS, PCI_ANY_ID, 0, ati_bugs_contd },
-> +       { PCI_VENDOR_ID_INTEL, 0x3403, PCI_CLASS_BRIDGE_HOST,
-> +         PCI_BASE_CLASS_BRIDGE, 0, intel_remapping_check },
-> +       { PCI_VENDOR_ID_INTEL, 0x3406, PCI_CLASS_BRIDGE_HOST,
-> +         PCI_BASE_CLASS_BRIDGE, 0, intel_remapping_check },
->         {}
->  };
->
-> diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
-> index f3b8f23..5b19b2d 100644
-> --- a/drivers/iommu/intel_irq_remapping.c
-> +++ b/drivers/iommu/intel_irq_remapping.c
-> @@ -524,6 +524,16 @@ static int __init intel_irq_remapping_supported(void)
->
->         if (disable_irq_remap)
->                 return 0;
-> +       if (irq_remap_broken) {
-> +               WARN_TAINT(1, TAINT_FIRMWARE_WORKAROUND,
-> +                          "This system BIOS has enabled interrupt remapping\n"
-> +                          "on a chipset that contains an erratum making that\n"
-> +                          "feature unstable.  To maintain system stability\n"
-> +                          "interrupt remapping is being disabled.  Please\n"
-> +                          "contact your BIOS vendor for an update\n");
-> +               disable_irq_remap = 1;
-> +               return 0;
-> +       }
->
->         if (!dmar_ir_support())
->                 return 0;
-> diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
-> index d56f8c1..2b56e92 100644
-> --- a/drivers/iommu/irq_remapping.c
-> +++ b/drivers/iommu/irq_remapping.c
-> @@ -19,6 +19,7 @@
->  int irq_remapping_enabled;
->
->  int disable_irq_remap;
-> +int irq_remap_broken;
->  int disable_sourceid_checking;
->  int no_x2apic_optout;
->
-> @@ -216,6 +217,17 @@ int irq_remapping_supported(void)
->         if (disable_irq_remap)
->                 return 0;
->
-> +       if (irq_remap_broken) {
-> +               WARN_TAINT(1, TAIN_FIRMWARE_WORKAROUND,
-> +                          "This system BIOS has enabled interrupt remapping\n"
-> +                          "on a chipset that contains an erratum making that\n"
-> +                          "feature unstable.  Please reboot with nointremap\n"
-> +                          "added to the kernel command line and contact\n"
-> +                          "your BIOS vendor for an update");
-> +               disable_irq_remap = 1;
-> +               return 0;
-> +       }
-> +
+On Sun, 2013-03-31 at 17:04 +0200, Martin Mokrejs wrote:
+> Hi Ying,
+>   
+> Huang Ying wrote:
+> > Hi, Martin,
+> > 
+> > Thanks for your testing!
+> > 
+> > On Sun, 2013-03-31 at 12:35 +0200, Martin Mokrejs wrote:
+> >> Hi Ying,
+> >>   I have tested 4x your last patch. Somehow nothing gets logged to "dmesg"
+> >> when I hotremove or hotinsert the coldbooted eSATA card. Logging works so
+> >> enabling wifi via Fn+F2 is being logged. Also, eventual stacktraces
+> >> and kmemleaks.
+> >>   I removed the coldbooted card, inserted it and ejected it.
+> >>
+> >>
+> >>   In brief, lspci reports changes but there are no changes in /proc/interrupts
+> >> related to
+> >>
+> >>   19:          0          0   IO-APIC-fasteoi   sata_sil24
+> >>
+> >>
+> >> and no changes at all in /proc/iomem which I expected to happen during
+> >> hotremoval and hotinsert (something broken in 3.9-rc1 with your patch).
+> >>
+> >> All the runtime_status data were same after every tested step, so again,
+> >> no diffs to show but here are the values confirming laptop-mode-tools
+> >> enabled powersaving:
+> >>
+> >> /sys/bus/pci/devices/0000:00:00.0/power/runtime_status:suspended
+> >> /sys/bus/pci/devices/0000:00:02.0/power/runtime_status:active
+> >> /sys/bus/pci/devices/0000:00:16.0/power/runtime_status:suspended
+> >> /sys/bus/pci/devices/0000:00:1a.0/power/runtime_status:suspended
+> >> /sys/bus/pci/devices/0000:00:1b.0/power/runtime_status:active
+> >> /sys/bus/pci/devices/0000:00:1c.0/power/runtime_status:suspended
+> >> /sys/bus/pci/devices/0000:00:1c.1/power/runtime_status:active
+> >> /sys/bus/pci/devices/0000:00:1c.3/power/runtime_status:active
+> >> /sys/bus/pci/devices/0000:00:1c.4/power/runtime_status:active
+> >> /sys/bus/pci/devices/0000:00:1c.7/power/runtime_status:active
+> > 
+> > It appears that 1c.7 is identified successfully as an hotplug-able PCIe
+> > port, and never put into suspended state.
+> 
+> Yes. Truly said, after I now went to test your previous two patches
+> on the 3.9-rc1 I confirm that the syslog logging is broken with all your
+> three patches. I fear we are hitting here, with the pciehp problems
+> not a powersaving issue but an upstream /proc or /sys files being outdated.
+> Otherwise I can't figure out why disabling in runtime laptop-mode-tools
+> and doing the "find /sys .... | while ... echo "on" > $f" trickery
+> does not help to get pciehp working. This would have fixed the acpiphp
+> at least on 3.8 kernel. I see that sata_sil24 is not loaded by itself
+> during hotinsert. It seems lspci reports at such times 0xff for the 11:00
+> eSATA card, /etc/iomem reports stale memory regions used by 11:00 while
+> /proc/interrupts says no IRQ is assigned to sata_sil24 (well, sata_sil24
+> is not loaded per lsmod, lspci would should report sata_sil24 also but
+> provided the 11:00 entry is broken and shows the 0xff it maybe cannot
+> report is sata_sil24 is loaded).
+> 
+> I will post a little more details as a proper answer to your other patch
+> where I managed to get yet another stacktrace, about the eSATA thought to
+> be D3 state. Physically the card was ejected and just a modprobe sata_sil24
+> caused the sata_sil24 to use some outdated data. I will dive now into
+> that. 
+> 
+> 
+> 
+> > 
+> > And from your description below, it appears that hot-add and hot-remove
+> > of the eSATA card works for you, doesn't it?
+> 
+> The PresDet works fine I think, yes. Sometimes I see in the lspci -vvv diffs:
+> 
+> -Control: I/O+ ... BusMaster+
+> +Control: I/O- ... BusMaster-
 
-I think you probably intended to drop the change to this file, since
-you moved it to intel_irq_remapping.c.  If you did intend to keep it,
-s/TAIN_/TAINT_/.
+But after hot-insert, can you use your eSATA card?  It appears that it
+is detected properly.
 
->         if (!remap_ops || !remap_ops->supported)
->                 return 0;
->
-> diff --git a/drivers/iommu/irq_remapping.h b/drivers/iommu/irq_remapping.h
-> index ecb6376..d7537e4 100644
-> --- a/drivers/iommu/irq_remapping.h
-> +++ b/drivers/iommu/irq_remapping.h
-> @@ -32,6 +32,7 @@ struct pci_dev;
->  struct msi_msg;
->
->  extern int disable_irq_remap;
-> +extern int irq_remap_broken;
->  extern int disable_sourceid_checking;
->  extern int no_x2apic_optout;
->  extern int irq_remapping_enabled;
-> --
-> 1.8.1.4
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> and sometimes 
+> 
+> -        Latency: 0, Cache Line Size: 64 bytes
+> +        Latency: 0
+> 
+> or even the Latency: line being gone completely from lspci -vvv output. Why is that?
+> I think debug checks and prints in kernel are necessary.
+> 
+> 
+> How do these related to /proc/interrupts not showing an IRQ for the 11:00 device?
+> Does that prevent automated sata_sil24 loading once the card is inserted? Would
+> you please add some extra debug prints and checks into the kernel?
+> 
+> Take also into consideration the "3.8.2: stale pci device info for a previously inserted express card"
+> for a list of chimeric entries reported by lspci. That could tell you which values
+> are being cached and invalid. Hopefully some checks could be done between values
+> read by lspci and those in /proc and /sys.
+> 
+> 
+> 
+> Do you already know why almost nothing is logged by kernel wen either of your
+> three patches (v1 sent on 03/29/13 08:41, v2 sent on 03/29/13 09:20, v3 sent on
+> 03/30/13 11:54)?
+
+No.  Don't know why.  unpatched upstream kernel can produce kernel log?
+
+Best Regards,
+Huang Ying
+
+> I did not test the xHCI port behavior with any of your three patches because I have
+> disabled USB support in this kernel altogether for 3.9-rc1 tests. And I would like to stick
+> with that until we fix the pciehp issue. I stepped rather late into the big testing game,
+> I believe the pciehp bug we are facing was not working since 3.5/3.6, I don't think
+> the 3.9-rc1-based tests be much different from earlier kernels.
+> 
+> For a broader view, on the 3.8 series we will meanwhile hopefully get to a fix of the
+> PME# stuff. I think I reported quite a good number of potential problems yesterday.
+> After that, I will check how xHCI behaves on 3.9 but I believe the PME#-related fix from
+> 3.8 will be also applicable to fixing 3.9 so the xHCI won't have problems there anymore.
+> 
+> 
+> Martin
+
+
