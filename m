@@ -1,125 +1,180 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mho-03-ewr.mailhop.org ([204.13.248.66]:12723 "EHLO
-	mho-01-ewr.mailhop.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751361Ab3DOWYU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 15 Apr 2013 18:24:20 -0400
-Date: Mon, 15 Apr 2013 13:56:41 -0400
-From: Jason Cooper <jason@lakedaemon.net>
-To: Andrew Murray <Andrew.Murray@arm.com>
-Cc: rob.herring@calxeda.com, siva.kallam@samsung.com,
-	linux-pci@vger.kernel.org, linus.walleij@linaro.org,
-	thierry.reding@avionic-design.de, Liviu.Dudau@arm.com,
-	grant.likely@secretlab.ca, paulus@samba.org,
-	linux-samsung-soc@vger.kernel.org, linux@arm.linux.org.uk,
-	jg1.han@samsung.com, jgunthorpe@obsidianresearch.com,
-	thomas.abraham@linaro.org, benh@kernel.crashing.org, arnd@arndb.de,
-	devicetree-discuss@lists.ozlabs.org, kgene.kim@samsung.com,
-	bhelgaas@google.com, linux-arm-kernel@lists.infradead.org,
-	thomas.petazzoni@free-electrons.com, monstr@monstr.eu,
-	linux-kernel@vger.kernel.org, suren.reddy@samsung.com
-Subject: Re: [PATCH v6 0/3] of/pci: Provide common support for PCI DT
- parsing
-Message-ID: <20130415175641.GM28693@titan.lakedaemon.net>
-References: <1365693969-23907-1-git-send-email-Andrew.Murray@arm.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <515A00A6.7000301@fold.natur.cuni.cz>
+Date: Mon, 01 Apr 2013 23:48:22 +0200
+From: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1365693969-23907-1-git-send-email-Andrew.Murray@arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+CC: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Len Brown <lenb@kernel.org>,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Zheng Yan <zheng.z.yan@intel.com>
+Subject: Re: [Update][PATCH] PCI / PM: Disable runtime PM of PCIe ports
+References: <2282655.IicBMMa6jN@vostro.rjw.lan> <1378320.ernsY1JWPv@vostro.rjw.lan> <CAErSpo7kGBNEkLOftJ1J7ivaxZL-yVWyAwmoiQ1=NADpmJ67XA@mail.gmail.com> <3943547.m5K1tfygWn@vostro.rjw.lan> <CAErSpo5iyziiGDKiy-416UQ2xr+2hvcHz6do+ueMmnPM5oy6Cw@mail.gmail.com>
+In-Reply-To: <CAErSpo5iyziiGDKiy-416UQ2xr+2hvcHz6do+ueMmnPM5oy6Cw@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Andrew Murray, Thomas,
+Bjorn Helgaas wrote:
+> On Mon, Apr 1, 2013 at 2:51 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+>> On Monday, April 01, 2013 11:34:46 AM Bjorn Helgaas wrote:
+>>> [+cc Zheng, who added this with 71a83bd727]
+>>>
+>>> On Sat, Mar 30, 2013 at 4:38 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+>>>> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+>>>>
+>>>> The runtime PM of PCIe ports turns out to be quite fragile, as in
+>>>> some cases things work while in some other cases they don't and we
+>>>> don't seem to have a good way to determine whether or not they are
+>>>> going to work in advance.
+>>>
+>>> Do you have any references to problems encountered when enabling
+>>> runtime PM for PCIe ports?  That information will be useful to anybody
+>>> who wants to take another crack at getting this working.
+>>
+>> Well, bug 53811 is one example and problems recently reported by
+>> Martin are another.  Do you want me to dig deeper?
+> 
+> OK, I got this one:
+> 
+>   https://bugzilla.kernel.org/show_bug.cgi?id=53811
+> 
+> Martin has reported a lot of problems lately, and I don't know which
+> are related to runtime PM for PCIe ports.  I was hoping for a couple
+> URLs to put in the changelog so that when somebody gets the itch to
+> make this work, they have some useful info to start from.  If you
+> point me at a specific message, I'll dig up an archive URL for it.
 
-On Thu, Apr 11, 2013 at 04:26:06PM +0100, Andrew Murray wrote:
-> This patchset factors out duplicated code associated with parsing PCI
-> DT "ranges" properties across the architectures and introduces a
-> "ranges" parser. This parser "of_pci_range_parser" can be used directly
-> by ARM host bridge drivers enabling them to obtain ranges from device
-> trees.
-> 
-> I've included the Reviewed-by and Tested-by's received from v5 in this
-> patchset, earlier versions of this patchset (v3) have been tested-by:
-> 
-> Thierry Reding <thierry.reding@avionic-design.de>
-> Jingoo Han <jg1.han@samsung.com>
-> 
-> I believe a version of this patchset has also been tested through its
-> inclusion in Thomas Petazzoni's Armada 370 and Armada XP SoCs PCIe support by:
-> 
-> Linus Walleij <linus.walleij@linaro.org>
-> 
-> I've tested that this patchset builds and runs on ARM and that it builds on
-> PowerPC.
-> 
-> Compared to the v5 sent by Andrew Murray, the following changes have
-> been made:
-> 
->  * Use of CONFIG_64BIT instead of CONFIG_[a32bitarch] as suggested by
->    Rob Herring in drivers/of/of_pci.c
-> 
->  * Added forward declaration of struct pci_controller in linux/of_pci.h
->    to prevent compiler warning as suggested by Thomas Petazzoni
-> 
->  * Improved error checking (!range check), removal of unnecessary be32_to_cpup
->    call, improved formatting of struct of_pci_range_parser layout and
->    replacement of macro with a static inline. All suggested by Rob Herring.
-> 
-> Compared to the v4 (incorrectly labelled v3) sent by Andrew Murray,
-> the following changes have been made:
-> 
->  * Split the patch as suggested by Rob Herring
-> 
-> Compared to the v3 sent by Andrew Murray, the following changes have
-> been made:
-> 
->  * Unify and move duplicate pci_process_bridge_OF_ranges functions to
->    drivers/of/of_pci.c as suggested by Rob Herring
-> 
->  * Fix potential build errors with Microblaze/MIPS
-> 
-> Compared to "[PATCH v5 01/17] of/pci: Provide support for parsing PCI DT
-> ranges property", the following changes have been made:
-> 
->  * Correct use of IORESOURCE_* as suggested by Russell King
-> 
->  * Improved interface and naming as suggested by Thierry Reding
-> 
-> Compared to the v2 sent by Andrew Murray, Thomas Petazzoni did:
-> 
->  * Add a memset() on the struct of_pci_range_iter when starting the
->    for loop in for_each_pci_range(). Otherwise, with an uninitialized
->    of_pci_range_iter, of_pci_process_ranges() may crash.
-> 
->  * Add parenthesis around 'res', 'np' and 'iter' in the
->    for_each_of_pci_range macro definitions. Otherwise, passing
->    something like &foobar as 'res' didn't work.
-> 
->  * Rebased on top of 3.9-rc2, which required fixing a few conflicts in
->    the Microblaze code.
-> 
-> v2:
->   This follows on from suggestions made by Grant Likely
->   (marc.info/?l=linux-kernel&m=136079602806328)
-> 
-> Andrew Murray (3):
->   of/pci: Unify pci_process_bridge_OF_ranges from Microblaze and
->     PowerPC
->   of/pci: Provide support for parsing PCI DT ranges property
->   of/pci: mips: convert to common of_pci_range_parser
-> 
->  arch/microblaze/include/asm/pci-bridge.h |    5 +-
->  arch/microblaze/pci/pci-common.c         |  192 ------------------------------
->  arch/mips/pci/pci.c                      |   50 +++------
->  arch/powerpc/include/asm/pci-bridge.h    |    5 +-
->  arch/powerpc/kernel/pci-common.c         |  192 ------------------------------
->  drivers/of/address.c                     |   66 ++++++++++
->  drivers/of/of_pci.c                      |  168 ++++++++++++++++++++++++++
->  include/linux/of_address.h               |   46 +++++++
->  include/linux/of_pci.h                   |    4 +
->  9 files changed, 302 insertions(+), 426 deletions(-)
+In the thread
 
-As agreed with Rob Herring, series applied to mvebu/drivers to support
-mvebu pcie driver.
+Re: 3.8.2: xhci port is dead until pcieport PME# goes to disabled
+http://marc.info/?t=136328222600002&r=1&w=2
 
-thx,
+I reported that if an upstream express root port 1c.4 of the xHCI controller
+at 0b:00 is suspended the USB3 socket on the laptop appears dead.
+Initially I found that 'lsusb -v' rescues the dead socket and is accompanied
+by these in logs:
 
-Jason.
+[ 1445.597641] pcieport 0000:00:1c.4: PME# disabled
+[ 1445.617667] xhci_hcd 0000:0b:00.0: PME# disabled
+
+Ying Huang then realized elsewhere I am running laptop-mode-tools although
+in their config file I set that they should NOT be run when on AC power.
+Looks they do enable 'auto' power mode as seen in
+/sys/bus/pci/devices/*/power/control files already upon bootup.
+BTW, even worse, if I do /etc/init.d/laptop-mode-tools stop
+they restore to some initial values. :(( So, if I meanwhile forced
+'on' for some device they will return me back to 'auto' and the device
+will immediately do suspend. ;-)
+
+Provided I uninstalled the laptop-mode-tools and made sure all control
+files say 'on' (and hence runtime_status files say 'active') then
+my problem is with a dead xHCI port 'obeyed'.
+
+Myself it weird that suspend of the port happens only upon USB device
+unplug. The port does not suspend by itself if unused.
+
+
+What is not clear to me how kernel is going to handle laptop-mode-tools
+which enabled powersaving on the 1c.4. In my naive, user view kernel does
+not realize and *check* that no user tool or a desperate user tried to
+suspend an upstream port while there is something bound to it and it
+does not apply a check for cascaded devices (1c.4 > 0b:00 and
+1c.7 -> 11:00 in my case).
+
+I am writing this without a reference but modprobe of a driver can overcome
+suspended root port. I am in this particular case meaning my 1c.7 port
+and its downstream 11:00 express card device. From the top of my head
+I am not sure if modprobe overcame both 1c.7 and 11:00 being initially
+suspended. I could dig it out from the
+
+Re: 3.9-rc1: pciehp and eSATA card SiI 3132, no XHCI
+http://marc.info/?t=136305008800001&r=1&w=2
+
+thread if you want. Or it might be easier for you to test it yourself.
+
+
+
+So, for me the issue is not fixed but if you decide to disable runtime
+power saving for devices under pcieport I don't mind. Their mishandling
+definitely causes my acpiphp hotplug issues under 3.7-3.8 kernels
+(3.9-rc not tested) whereas these PM issues do not answer why pciehp
+is broken on 3.7-3.9-rc1.
+
+
+Anyway, this patch maybe only good because I would like to use the
+laptop-mode-tools and they for sure will put one of the devices into 'auto'
+and it will likely fall into suspend.
+Martin
+
+
+
+> 
+> Otherwise, I'm afraid we'll just oscillate between "enable PM, find
+> bug, disable PM, enable PM, find same bug, disable PM, etc..."
+> 
+> Bjorn
+> 
+>>>> For this reason, avoid enabling runtime PM for PCIe ports by
+>>>> keeping their runtime PM reference counters always above 0 for the
+>>>> time being.
+>>>>
+>>>> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+>>>> ---
+>>>>
+>>>> This version also removes the no longer necessary (and empty anyway)
+>>>> port_runtime_pm_black_list[] table.
+>>>>
+>>>> Thanks,
+>>>> Rafael
+>>>>
+>>>> ---
+>>>>  drivers/pci/pcie/portdrv_pci.c |   13 -------------
+>>>>  1 file changed, 13 deletions(-)
+>>>>
+>>>> Index: linux-pm/drivers/pci/pcie/portdrv_pci.c
+>>>> ===================================================================
+>>>> --- linux-pm.orig/drivers/pci/pcie/portdrv_pci.c
+>>>> +++ linux-pm/drivers/pci/pcie/portdrv_pci.c
+>>>> @@ -185,14 +185,6 @@ static const struct dev_pm_ops pcie_port
+>>>>  #endif /* !PM */
+>>>>
+>>>>  /*
+>>>> - * PCIe port runtime suspend is broken for some chipsets, so use a
+>>>> - * black list to disable runtime PM for these chipsets.
+>>>> - */
+>>>> -static const struct pci_device_id port_runtime_pm_black_list[] = {
+>>>> -       { /* end: all zeroes */ }
+>>>> -};
+>>>> -
+>>>> -/*
+>>>>   * pcie_portdrv_probe - Probe PCI-Express port devices
+>>>>   * @dev: PCI-Express port device being probed
+>>>>   *
+>>>> @@ -225,16 +217,11 @@ static int pcie_portdrv_probe(struct pci
+>>>>          * it by default.
+>>>>          */
+>>>>         dev->d3cold_allowed = false;
+>>>> -       if (!pci_match_id(port_runtime_pm_black_list, dev))
+>>>> -               pm_runtime_put_noidle(&dev->dev);
+>>>> -
+>>>>         return 0;
+>>>>  }
+>>>>
+>>>>  static void pcie_portdrv_remove(struct pci_dev *dev)
+>>>>  {
+>>>> -       if (!pci_match_id(port_runtime_pm_black_list, dev))
+>>>> -               pm_runtime_get_noresume(&dev->dev);
+>>>>         pcie_port_device_remove(dev);
+>>>>         pci_disable_device(dev);
+>>>>  }
+>>>>
+>> --
+>> I speak only for myself.
+>> Rafael J. Wysocki, Intel Open Source Technology Center.
+> 
+> 
