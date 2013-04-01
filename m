@@ -1,61 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f177.google.com ([209.85.223.177]:34995 "EHLO
-	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1749667Ab3DYEQT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Apr 2013 00:16:19 -0400
-Received: by mail-ie0-f177.google.com with SMTP id 9so2997925iec.8
-        for <linux-pci@vger.kernel.org>; Wed, 24 Apr 2013 21:16:19 -0700 (PDT)
+Received: from szxga01-in.huawei.com ([119.145.14.64]:5061 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758528Ab3DAJWj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 1 Apr 2013 05:22:39 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>
+CC: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Rafael <rjw@sisk.pl>, Hanjun Guo <guohanjun@huawei.com>,
+	<jiang.liu@huawei.com>, Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH 1/3] PCI,acpiphp: use generic pci_hp_add_bridge()
+Date: Mon, 1 Apr 2013 17:22:06 +0800
+Message-ID: <1364808128-12792-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQWFiOebCdGrzooMdhBfAHs7FUXX6piNi0p6J422Zs9ODw@mail.gmail.com>
-References: <CAAh6nkmbKR3HTqm5ommevsBwhL_u0N8Rk7Wsms_LfP=nBgKNew@mail.gmail.com>
-	<CAAh6nkmkbKh7FjEZea4GmEbZvH4qvnfOJ2Og8xHYm5othsWLwQ@mail.gmail.com>
-	<CAErSpo6zf34MOLNh5t_PifYhA87vFLRRx-g0WG5N=8+oUcWukQ@mail.gmail.com>
-	<3400627.YcEmgrxv5I@vostro.rjw.lan>
-	<CAE9FiQX7zyaZVm7QsZnOXtRD9qcCGCFpi2DLve863juL1ZxcWQ@mail.gmail.com>
-	<5E18B0C6DCFE1D46967DE5C51CD1AF9866346957@nkgeml506-mbx.china.huawei.com>
-	<CAE9FiQWFiOebCdGrzooMdhBfAHs7FUXX6piNi0p6J422Zs9ODw@mail.gmail.com>
-Date: Wed, 24 Apr 2013 21:16:17 -0700
-Message-ID: <CAE9FiQVbU2s6aOD_RbrxNDmONgxZ+aNP86T249=_cdL3=FoyjQ@mail.gmail.com>
-Subject: =?UTF-8?Q?Re=3A_=E7=AD=94=E5=A4=8D=3A_About_dynamically_loading_the_acpiphp=2Eko?=
-From: Yinghai Lu <yinghai@kernel.org>
-To: "Liujiang (Gerry, Euler)" <jiang.liu@huawei.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Gavin Guo <tuffkidtt@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 24, 2013 at 8:16 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Wed, Apr 24, 2013 at 7:08 PM, Liujiang (Gerry, Euler)
-> <jiang.liu@huawei.com> wrote:
->> Hi Yinghai,
->>         I have worked out a similar patch last night. Please refer to attachment.
->> I think following code may not work because acpiphp_handle_to_bridge()
->> will return NULL.
->
-> for root bus we have
-> pcibios_add_bus. ==> acpi_pci_add_bus==>call acpiphp_enumerate_slots.
-> so if there is hotplug slot on root bus directly, it will allocate the
-> acpiphp_bridge and register the slots.
->
-> then acpiphp_handle_to_bridge will return the right acpiphp_bridge with
-> slots list.
+Use pci_hp_add_bridge() like most other hotplug drivers
+rather than call pci_scan_bridge() directly.
 
-even there is not slot directly on root bus, but have slot in following bridge,
-acpiphp_bridge for root bus still get created, just no direct slots under it.
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/pci/hotplug/acpiphp_glue.c |   24 ++++++++++--------------
+ 1 files changed, 10 insertions(+), 14 deletions(-)
 
->
->
->> Could you please help to review my version?
->>         (Due to work environment limitations, sorry for sending out without
->> attachment and outlook).
->
-> looks the same to my patch, except you missed the acpiphp_check_bridge
-> calling.
->
-> Thanks
->
-> Yinghai
+diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+index 270fdba..7d7ed3f 100644
+--- a/drivers/pci/hotplug/acpiphp_glue.c
++++ b/drivers/pci/hotplug/acpiphp_glue.c
+@@ -811,7 +811,7 @@ static int __ref enable_device(struct acpiphp_slot *slot)
+ 	struct pci_bus *bus = slot->bridge->pci_bus;
+ 	struct acpiphp_func *func;
+ 	int retval = 0;
+-	int num, max, pass;
++	int num;
+ 	acpi_status status;
+ 
+ 	if (slot->flags & SLOT_ENABLED)
+@@ -827,22 +827,18 @@ static int __ref enable_device(struct acpiphp_slot *slot)
+ 		goto err_exit;
+ 	}
+ 
+-	max = acpiphp_max_busnr(bus);
+-	for (pass = 0; pass < 2; pass++) {
+-		list_for_each_entry(dev, &bus->devices, bus_list) {
+-			if (PCI_SLOT(dev->devfn) != slot->device)
++	list_for_each_entry(dev, &bus->devices, bus_list) {
++		if (PCI_SLOT(dev->devfn) != slot->device)
+ 				continue;
+-			if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE ||
+-			    dev->hdr_type == PCI_HEADER_TYPE_CARDBUS) {
+-				max = pci_scan_bridge(bus, dev, max, pass);
+-				if (pass && dev->subordinate) {
+-					check_hotplug_bridge(slot, dev);
+-					pci_bus_size_bridges(dev->subordinate);
+-				}
+-			}
++		if ((dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) ||
++				(dev->hdr_type == PCI_HEADER_TYPE_CARDBUS))
++			pci_hp_add_bridge(dev);
++		if (dev->subordinate) {
++			check_hotplug_bridge(slot, dev);
++			pci_bus_size_bridges(dev->subordinate);
+ 		}
+ 	}
+-
++
+ 	pci_bus_assign_resources(bus);
+ 	acpiphp_sanitize_bus(bus);
+ 	acpiphp_set_hpp_values(bus);
+-- 
+1.7.1
+
+
