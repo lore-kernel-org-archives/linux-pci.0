@@ -1,76 +1,99 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ve0-f177.google.com ([209.85.128.177]:58231 "EHLO
-	mail-ve0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750908Ab3D3Er0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 30 Apr 2013 00:47:26 -0400
-Received: by mail-ve0-f177.google.com with SMTP id cy12so77088veb.36
-        for <linux-pci@vger.kernel.org>; Mon, 29 Apr 2013 21:47:26 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <771333906.75854.1367057440028.JavaMail.mail@webmail08>
-References: <CAErSpo7qj2SNR7BfuBsfF-saZXvgcqqLtgoP5Hyb5u99qR4Ncg@mail.gmail.com>
- <Pine.LNX.4.44L0.1302191119270.2215-100000@iolanthe.rowland.org>
- <CAErSpo7NZoOQZyW76HEoOTVgdqL2CgbVScAeF6HGLAVaNCq0=w@mail.gmail.com>
- <337833384.57445.1361860509194.JavaMail.mail@webmail08> <CAErSpo6CbO5KYXiErv6J_Dnm1u694C5fQPP2_cZL8VKDEnZa9A@mail.gmail.com>
- <569718148.80620.1361906088301.JavaMail.mail@webmail13> <CAErSpo6UkVhSf+nFW4zwJLBQw_0RQ5H9Bv-UuQRb6zdwsFPw4g@mail.gmail.com>
- <CAErSpo4X+XXKvWDfqh2CKZAtJ9WMQk91OcsWwdxwYv2MfEM_zQ@mail.gmail.com> <771333906.75854.1367057440028.JavaMail.mail@webmail08>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 29 Apr 2013 22:47:05 -0600
-Message-ID: <CAErSpo4B4sRco-nuqgXiYtGQxBcbEB6ArQjHD0A9cj4TRE+qQw@mail.gmail.com>
-Subject: Re: Abysmal HDD/USB write speed after sleep on a UEFI system
-To: "Artem S. Tashkinov" <t.artem@lycos.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Len Brown <lenb@kernel.org>,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
+	LKML <linux-kernel@vger.kernel.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+	Zheng Yan <zheng.z.yan@intel.com>
+Subject: Re: [Update][PATCH] PCI / PM: Disable runtime PM of PCIe ports
+Date: Mon, 01 Apr 2013 22:51:08 +0200
+Message-ID: <3943547.m5K1tfygWn@vostro.rjw.lan>
+In-Reply-To: <CAErSpo7kGBNEkLOftJ1J7ivaxZL-yVWyAwmoiQ1=NADpmJ67XA@mail.gmail.com>
+References: <2282655.IicBMMa6jN@vostro.rjw.lan> <1378320.ernsY1JWPv@vostro.rjw.lan> <CAErSpo7kGBNEkLOftJ1J7ivaxZL-yVWyAwmoiQ1=NADpmJ67XA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Apr 27, 2013 at 4:10 AM, Artem S. Tashkinov <t.artem@lycos.com> wrote:
->>
->>Did this problem ever get resolved?
->>
->
-> Hello,
->
-> Unfortunately, no. Out of curiosity I've tried booting kernel
-> 3.9-rc8 in EUFI mode but it exhibits the same problem.
->
-> Right after the boot:
->
-> [root@localhost ~]# dd if=/dev/zero of=test bs=64M count=3
-> 3+0 records in
-> 3+0 records out
-> 201326592 bytes (201 MB) copied, 1.08544 s, 185 MB/s
->
-> After suspend/resume:
->
-> # dd if=/dev/zero of=test bs=64M count=3
-> 3+0 records in
-> 3+0 records out
-> 201326592 bytes (201 MB) copied, 66.5392 s, 3.0 MB/s
->
-> That's for my primary SATA-3 HDD.
->
-> Forgive me my impudence but I believe debugging the USB stack is
-> tangential to this problem. Something far deeper than USB support
-> breaks, but so far no one has come even with the slightest clue of
-> what that might be.
+On Monday, April 01, 2013 11:34:46 AM Bjorn Helgaas wrote:
+> [+cc Zheng, who added this with 71a83bd727]
+> 
+> On Sat, Mar 30, 2013 at 4:38 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> >
+> > The runtime PM of PCIe ports turns out to be quite fragile, as in
+> > some cases things work while in some other cases they don't and we
+> > don't seem to have a good way to determine whether or not they are
+> > going to work in advance.
+> 
+> Do you have any references to problems encountered when enabling
+> runtime PM for PCIe ports?  That information will be useful to anybody
+> who wants to take another crack at getting this working.
 
-I tend to agree that it sounds like something deeper than USB is
-broken.  I admit I'm just grasping at straws because I don't have any
-good ideas yet.
+Well, bug 53811 is one example and problems recently reported by
+Martin are another.  Do you want me to dig deeper?
 
-Here are three easy things you can try:
+Rafael
 
-1) Collect "lspci -vvv -xxxx" output before and after the
-suspend/resume to investigate the XHCI Unsupported Request errors.
 
-2) Collect the contents of /proc/mtrr before and after the suspend/resume.
-
-3) After the suspend/resume, try the "setpci" to set the MSI address
-back to the original value to see if it makes a difference (see my Feb
-12 message).
-
-Bjorn
+> > For this reason, avoid enabling runtime PM for PCIe ports by
+> > keeping their runtime PM reference counters always above 0 for the
+> > time being.
+> >
+> > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > ---
+> >
+> > This version also removes the no longer necessary (and empty anyway)
+> > port_runtime_pm_black_list[] table.
+> >
+> > Thanks,
+> > Rafael
+> >
+> > ---
+> >  drivers/pci/pcie/portdrv_pci.c |   13 -------------
+> >  1 file changed, 13 deletions(-)
+> >
+> > Index: linux-pm/drivers/pci/pcie/portdrv_pci.c
+> > ===================================================================
+> > --- linux-pm.orig/drivers/pci/pcie/portdrv_pci.c
+> > +++ linux-pm/drivers/pci/pcie/portdrv_pci.c
+> > @@ -185,14 +185,6 @@ static const struct dev_pm_ops pcie_port
+> >  #endif /* !PM */
+> >
+> >  /*
+> > - * PCIe port runtime suspend is broken for some chipsets, so use a
+> > - * black list to disable runtime PM for these chipsets.
+> > - */
+> > -static const struct pci_device_id port_runtime_pm_black_list[] = {
+> > -       { /* end: all zeroes */ }
+> > -};
+> > -
+> > -/*
+> >   * pcie_portdrv_probe - Probe PCI-Express port devices
+> >   * @dev: PCI-Express port device being probed
+> >   *
+> > @@ -225,16 +217,11 @@ static int pcie_portdrv_probe(struct pci
+> >          * it by default.
+> >          */
+> >         dev->d3cold_allowed = false;
+> > -       if (!pci_match_id(port_runtime_pm_black_list, dev))
+> > -               pm_runtime_put_noidle(&dev->dev);
+> > -
+> >         return 0;
+> >  }
+> >
+> >  static void pcie_portdrv_remove(struct pci_dev *dev)
+> >  {
+> > -       if (!pci_match_id(port_runtime_pm_black_list, dev))
+> > -               pm_runtime_get_noresume(&dev->dev);
+> >         pcie_port_device_remove(dev);
+> >         pci_disable_device(dev);
+> >  }
+> >
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
