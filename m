@@ -1,110 +1,90 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f50.google.com ([209.85.219.50]:47136 "EHLO
-	mail-oa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753095Ab3DOUSm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 15 Apr 2013 16:18:42 -0400
-Received: by mail-oa0-f50.google.com with SMTP id n1so4816685oag.37
-        for <linux-pci@vger.kernel.org>; Mon, 15 Apr 2013 13:18:40 -0700 (PDT)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQVEWy2MVfVmv4oL9D24OcF83dQv+OcFd5K6v8ZHeGumJA@mail.gmail.com>
-References: <48795235.crcTAaJqPb@vostro.rjw.lan> <CAE9FiQVEWy2MVfVmv4oL9D24OcF83dQv+OcFd5K6v8ZHeGumJA@mail.gmail.com>
+In-Reply-To: <1378320.ernsY1JWPv@vostro.rjw.lan>
+References: <2282655.IicBMMa6jN@vostro.rjw.lan> <51548C9E.9090703@fold.natur.cuni.cz>
+ <2990024.LMTIBUbM3d@vostro.rjw.lan> <1378320.ernsY1JWPv@vostro.rjw.lan>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 15 Apr 2013 14:18:18 -0600
-Message-ID: <CAErSpo7vUWSoav+rJgGK15xA7f0W+a0_16tZLFGCz5HO-HVZ2g@mail.gmail.com>
-Subject: Re: [PATCH] PCI / PM: Fix fallback to PCI_D0 in pci_platform_power_transition()
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
+Date: Mon, 1 Apr 2013 11:34:46 -0600
+Message-ID: <CAErSpo7kGBNEkLOftJ1J7ivaxZL-yVWyAwmoiQ1=NADpmJ67XA@mail.gmail.com>
+Subject: Re: [Update][PATCH] PCI / PM: Disable runtime PM of PCIe ports
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Len Brown <lenb@kernel.org>,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
 	LKML <linux-kernel@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	"Benenati, Chris J" <chris.j.benenati@intel.com>,
-	Ajaykumar Hotchandani <ajaykumar.hotchandani@oracle.com>
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Zheng Yan <zheng.z.yan@intel.com>
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 12, 2013 at 11:50 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Fri, Apr 12, 2013 at 4:58 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
->> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->>
->> Commit b51306c (PCI: Set device power state to PCI_D0 for device
->> without native PM support) modified pci_platform_power_transition()
->> by adding code causing dev->current_state for devices that don't
->> support native PCI PM but are power-manageable by the platform to be
->> changed to PCI_D0 regardless of the value returned by the preceding
->> platform_pci_set_power_state().  In particular, that also is done
->> if the platform_pci_set_power_state() has been successful, which
->> causes the correct power state of the device set by
->> pci_update_current_state() in that case to be overwritten by PCI_D0.
->>
->> Fix that mistake by making the fallback to PCI_D0 only happen if
->> the platform_pci_set_power_state() has returned an error.
->>
->> Reported-by: Chris J. Benenati <chris.j.benenati@intel.com>
->> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->> Cc: <stable@vger.kernel.org>
+[+cc Zheng, who added this with 71a83bd727]
 
-I folded in Yinghai's simplification and added a URL to Chris's report
-and applied to my pci/rafael-pm branch:
-http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/rafael-pm
-
-If it still looks good to you, Rafael, I'll merge it to next for v3.10.
-
-I don't know what the user-visible effect of this is, and it's been
-around for a long time, but if you think this should go in v3.9
-instead, let me know.
-
-Bjorn
-
->> ---
->>  drivers/pci/pci.c |    3 +--
->>  1 file changed, 1 insertion(+), 2 deletions(-)
->>
->> Index: linux-pm/drivers/pci/pci.c
->> ===================================================================
->> --- linux-pm.orig/drivers/pci/pci.c
->> +++ linux-pm/drivers/pci/pci.c
->> @@ -646,8 +646,7 @@ static int pci_platform_power_transition
->>                 error = platform_pci_set_power_state(dev, state);
->>                 if (!error)
->>                         pci_update_current_state(dev, state);
->> -               /* Fall back to PCI_D0 if native PM is not supported */
->> -               if (!dev->pm_cap)
->> +               else if (!dev->pm_cap) /* Fall back to PCI_D0 */
->>                         dev->current_state = PCI_D0;
->>         } else {
->>                 error = -ENODEV;
->>
+On Sat, Mar 30, 2013 at 4:38 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 >
-> Acked-by: Yinghai Lu <yinghai@kernel.org>
+> The runtime PM of PCIe ports turns out to be quite fragile, as in
+> some cases things work while in some other cases they don't and we
+> don't seem to have a good way to determine whether or not they are
+> going to work in advance.
+
+Do you have any references to problems encountered when enabling
+runtime PM for PCIe ports?  That information will be useful to anybody
+who wants to take another crack at getting this working.
+
+> For this reason, avoid enabling runtime PM for PCIe ports by
+> keeping their runtime PM reference counters always above 0 for the
+> time being.
 >
-> also could simplify it further.
+> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> ---
+>
+> This version also removes the no longer necessary (and empty anyway)
+> port_runtime_pm_black_list[] table.
+>
+> Thanks,
+> Rafael
 >
 > ---
->  drivers/pci/pci.c |   12 ++++--------
->  1 file changed, 4 insertions(+), 8 deletions(-)
+>  drivers/pci/pcie/portdrv_pci.c |   13 -------------
+>  1 file changed, 13 deletions(-)
 >
-> Index: linux-2.6/drivers/pci/pci.c
+> Index: linux-pm/drivers/pci/pcie/portdrv_pci.c
 > ===================================================================
-> --- linux-2.6.orig/drivers/pci/pci.c
-> +++ linux-2.6/drivers/pci/pci.c
-> @@ -646,15 +646,11 @@ static int pci_platform_power_transition
->          error = platform_pci_set_power_state(dev, state);
->          if (!error)
->              pci_update_current_state(dev, state);
-> -        /* Fall back to PCI_D0 if native PM is not supported */
-> -        if (!dev->pm_cap)
-> -            dev->current_state = PCI_D0;
-> -    } else {
-> +    } else
->          error = -ENODEV;
-> -        /* Fall back to PCI_D0 if native PM is not supported */
-> -        if (!dev->pm_cap)
-> -            dev->current_state = PCI_D0;
-> -    }
-> +
-> +    if (error && !dev->pm_cap) /* Fall back to PCI_D0 */
-> +        dev->current_state = PCI_D0;
+> --- linux-pm.orig/drivers/pci/pcie/portdrv_pci.c
+> +++ linux-pm/drivers/pci/pcie/portdrv_pci.c
+> @@ -185,14 +185,6 @@ static const struct dev_pm_ops pcie_port
+>  #endif /* !PM */
 >
->      return error;
+>  /*
+> - * PCIe port runtime suspend is broken for some chipsets, so use a
+> - * black list to disable runtime PM for these chipsets.
+> - */
+> -static const struct pci_device_id port_runtime_pm_black_list[] = {
+> -       { /* end: all zeroes */ }
+> -};
+> -
+> -/*
+>   * pcie_portdrv_probe - Probe PCI-Express port devices
+>   * @dev: PCI-Express port device being probed
+>   *
+> @@ -225,16 +217,11 @@ static int pcie_portdrv_probe(struct pci
+>          * it by default.
+>          */
+>         dev->d3cold_allowed = false;
+> -       if (!pci_match_id(port_runtime_pm_black_list, dev))
+> -               pm_runtime_put_noidle(&dev->dev);
+> -
+>         return 0;
 >  }
+>
+>  static void pcie_portdrv_remove(struct pci_dev *dev)
+>  {
+> -       if (!pci_match_id(port_runtime_pm_black_list, dev))
+> -               pm_runtime_get_noresume(&dev->dev);
+>         pcie_port_device_remove(dev);
+>         pci_disable_device(dev);
+>  }
+>
