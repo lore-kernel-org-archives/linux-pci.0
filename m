@@ -1,99 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f41.google.com ([209.85.219.41]:49820 "EHLO
-	mail-oa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752832Ab3DLTD7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 12 Apr 2013 15:03:59 -0400
-Received: by mail-oa0-f41.google.com with SMTP id f4so2896986oah.0
-        for <linux-pci@vger.kernel.org>; Fri, 12 Apr 2013 12:03:59 -0700 (PDT)
+Received: from mail-pa0-f52.google.com ([209.85.220.52]:51458 "EHLO
+	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758702Ab3DBBGP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 1 Apr 2013 21:06:15 -0400
+Received: by mail-pa0-f52.google.com with SMTP id fb10so1575921pad.25
+        for <linux-pci@vger.kernel.org>; Mon, 01 Apr 2013 18:06:14 -0700 (PDT)
+Date: Mon, 1 Apr 2013 18:06:09 -0700
+From: Jonathan Nieder <jrnieder@gmail.com>
+To: szabolcs <szabolcs@cohortor.org>
+Cc: linux-pci@vger.kernel.org, 701620@bugs.debian.org
+Subject: [3.8.y] Unable to use PCI cards on Intel DZ77SL50K motherboard
+ (likely any Z77 board)
+Message-ID: <20130402010609.GD28148@google.com>
+References: <CALvyPWOuPbx82JTuqcn1zva_8dmowQ=q26veKKdv0t9-yT7MPg@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <2781744.X672n7t2jq@vostro.rjw.lan>
-References: <20130221155329.GA26729@arm.com> <20130411234426.GA10196@google.com>
- <2781744.X672n7t2jq@vostro.rjw.lan>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 12 Apr 2013 13:03:39 -0600
-Message-ID: <CAErSpo78TrUtBBFM9AYciXWDtkPaQDnZt3kdYeBCpF3BOwhrng@mail.gmail.com>
-Subject: Re: [PATCH] pci: Remove unnecessary dependency between PME and ACPI.
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Andrew Murray <Andrew.Murray@arm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"thierry.reding@avionic-design.de" <thierry.reding@avionic-design.de>,
-	"thomas.petazzoni@free-electrons.com"
-	<thomas.petazzoni@free-electrons.com>,
-	"jbarnes@virtuousgeek.org" <jbarnes@virtuousgeek.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CALvyPWOuPbx82JTuqcn1zva_8dmowQ=q26veKKdv0t9-yT7MPg@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 12, 2013 at 5:13 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> On Thursday, April 11, 2013 05:44:26 PM Bjorn Helgaas wrote:
->> On Thu, Feb 21, 2013 at 03:53:29PM +0000, Andrew Murray wrote:
->> > Signed-off-by: Andrew Murray <Andrew.Murray@arm.com>
->> > Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
->> > ---
->> >  drivers/pci/pcie/Kconfig |    2 +-
->> >  1 files changed, 1 insertions(+), 1 deletions(-)
->> >
->> > diff --git a/drivers/pci/pcie/Kconfig b/drivers/pci/pcie/Kconfig
->> > index 6c8bc58..4cccd8c 100644
->> > --- a/drivers/pci/pcie/Kconfig
->> > +++ b/drivers/pci/pcie/Kconfig
->> > @@ -82,4 +82,4 @@ endchoice
->> >
->> >  config PCIE_PME
->> >     def_bool y
->> > -   depends on PCIEPORTBUS && PM_RUNTIME && EXPERIMENTAL && ACPI
->> > +   depends on PCIEPORTBUS && PM_RUNTIME && EXPERIMENTAL
->>
->> I think we can go even further and remove the ACPI-related #includes
->> as in the patch below.  Any objections to this?
->>
->>
->> commit 8bde83b5f5519b630e7630fb735f76c184c74289
->> Author: Bjorn Helgaas <bhelgaas@google.com>
->> Date:   Thu Apr 11 17:36:50 2013 -0600
->>
->>     PCI: Remove unnecessary dependencies between PME and ACPI
->>
->>     PCIe PME doesn't depend on ACPI, so remove the #includes and
->>     Kconfig dependency.
->>
->>     Based-on-patch-by: Andrew Murray <Andrew.Murray@arm.com>
->>     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Hi,
+
+szabolcs wrote[1]:
+
+> 2. unless I bring the interfaces associated with the network cards up,
+> everything works as expected.
 >
-> Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> 3. the moment I issue the 'ifup ethX' command, the following is printed in
+> /var/log/syslog:
+[...]
+> eth1: transmit timed out, tx_status 00 status 8601.
+>   diagnostics: net 0cd8 media 8880 dma 0000003a fifo 0000
+> eth1: Interrupt posted but not delivered -- IRQ blocked by another device?
+[...]
+>                                                                     After a few
+> minutes of running with the device brought up the output of /proc/interrupts
+> shows:
+>
+>                 CPU0    CPU1    CPU2    CPU3
+>  18:               0       0       0       0   IO-APIC-fasteoi  eth1 (the PCI card)
+>  40:            7154     721    4809     742   PCI-MSI-edge     eth0 (the integrated eth controller of the mobo)
+>
+> The attached 'lspci' logs also show the 3Com card had IRQ18 assigned to it.
+> NOTE: so did the motherboard's SMBus Controller (00:1f:3).
+>
+> Note 1: A side-effect of bringing the iface up is that my USB keyboard slows
+> down considerably (as if the rate at which it reads keypresses would go down to
+> ~10 presses per second).
+[...]
+>                                                                 the bug I am
+> reporting here applies exactly in the same manner to both 3.2 and 3.8 kernels.
+[...]
+> Note 4: This is likely not a HW issue, since I tested the configuration in
+> windoze, and all was working as expected.
+[...]
+> 00:1f.3 SMBus [0c05]: Intel Corporation 7 Series/C210 Series Chipset Family SMBus Controller [8086:1e22] (rev 04)
+> 	Subsystem: Intel Corporation Device [8086:2030]
+> 	Control: I/O+ Mem+ BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+> 	Status: Cap- 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+> 	Interrupt: pin C routed to IRQ 18
+> 	Region 0: Memory at f7d35000 (64-bit, non-prefetchable) [size=256]
+> 	Region 4: I/O ports at f040 [size=32]
+[...]
+> 03:02.0 Ethernet controller [0200]: 3Com Corporation 3c905B 100BaseTX [Cyclone] [10b7:9055] (rev 30)
+> 	Subsystem: 3Com Corporation 3C905B Fast Etherlink XL 10/100 [10b7:9055]
+> 	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+> 	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+> 	Latency: 64 (2500ns min, 2500ns max), Cache Line Size: 64 bytes
+> 	Interrupt: pin A routed to IRQ 18
+> 	Region 0: I/O ports at e000 [size=128]
+> 	Region 1: Memory at f7c20000 (32-bit, non-prefetchable) [size=128]
+> 	Expansion ROM at f7c00000 [disabled] [size=128K]
+> 	Capabilities: <access denied>
+> 	Kernel driver in use: 3c59x
+[...]
+> Would there be anything else I could help with to resolve this?
 
-I applied this for v3.10, thanks!
+Sorry for the slow response.
 
-Bjorn
+I'm curious: can you reproduce this with the 2.6.32.y kernel from squeeze as
+well?
 
->> diff --git a/drivers/pci/pcie/Kconfig b/drivers/pci/pcie/Kconfig
->> index fde4a32..569f82f 100644
->> --- a/drivers/pci/pcie/Kconfig
->> +++ b/drivers/pci/pcie/Kconfig
->> @@ -82,4 +82,4 @@ endchoice
->>
->>  config PCIE_PME
->>       def_bool y
->> -     depends on PCIEPORTBUS && PM_RUNTIME && ACPI
->> +     depends on PCIEPORTBUS && PM_RUNTIME
->> diff --git a/drivers/pci/pcie/pme.c b/drivers/pci/pcie/pme.c
->> index 9ca0dc9..795db1f 100644
->> --- a/drivers/pci/pcie/pme.c
->> +++ b/drivers/pci/pcie/pme.c
->> @@ -19,8 +19,6 @@
->>  #include <linux/interrupt.h>
->>  #include <linux/device.h>
->>  #include <linux/pcieport_if.h>
->> -#include <linux/acpi.h>
->> -#include <linux/pci-acpi.h>
->>  #include <linux/pm_runtime.h>
->>
->>  #include "../pci.h"
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> I speak only for myself.
-> Rafael J. Wysocki, Intel Open Source Technology Center.
+Not sure what else to try to track this down.  Cc-ing the Linux PCI
+maintainers in case they have hints.
+
+Thanks,
+Jonathan
+
+[1] http://bugs.debian.org/701620
