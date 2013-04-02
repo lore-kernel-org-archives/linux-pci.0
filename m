@@ -1,45 +1,39 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:58533 "EHLO
-	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1755292Ab3DYJuG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Apr 2013 05:50:06 -0400
-From: Andrew Murray <Andrew.Murray@arm.com>
-To: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	microblaze-uclinux@itee.uq.edu.au
-Cc: benh@kernel.crashing.org, monstr@monstr.eu, bhelgaas@google.com,
-	linux-kernel@vger.kernel.org, arnd@arndb.de,
-	grant.likely@secretlab.ca, Andrew Murray <Andrew.Murray@arm.com>
-Subject: [RFC PATCH 0/3] Unify definations of struct pci_controller
-Date: Thu, 25 Apr 2013 10:49:17 +0100
-Message-Id: <1366883360-14061-1-git-send-email-Andrew.Murray@arm.com>
+Received: from gate.crashing.org ([63.228.1.57]:53023 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932574Ab3DBPKm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 2 Apr 2013 11:10:42 -0400
+Message-ID: <1364915422.16520.8.camel@pasglop>
+Subject: Re: [PATCH] powerpc/pci: fix PCI-e devices rescan issue on powerpc
+ platform
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Yuanquan Chen <Yuanquan.Chen@freescale.com>
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	bhelgaas@google.com,
+	Hiroo Matsumoto <matsumoto.hiroo@jp.fujitsu.com>
+Date: Tue, 02 Apr 2013 17:10:22 +0200
+In-Reply-To: <1364902014-943-1-git-send-email-Yuanquan.Chen@freescale.com>
+References: <1364902014-943-1-git-send-email-Yuanquan.Chen@freescale.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PowerPC and Microblaze have nearly identical definations of struct
-pci_controller - this patch unifies them in asm-generic to reduce
-code duplication and to allow new architectures to reuse.
+On Tue, 2013-04-02 at 19:26 +0800, Yuanquan Chen wrote:
+> So we move the DMA & IRQ initialization code from pcibios_setup_devices() and
+> construct a new function pcibios_enable_device. We call this function in
+> pcibios_enable_device, which will be called by PCI-e rescan code. At the
+> meanwhile, we avoid the the impact on cardbus. I also validate this patch with
+> silicon's PCIe-sata which encounters the IRQ issue.
 
-This patchset follows and depends on "of/pci: Provide common
-support for PCI DT parsing" which provided common 'ranges' parsing
-code which uses an architecture defined struct pci_controller. This
-patch is currently in Jason Coopers mvebu-next/pcie branch.
+My worry is that this delays the setup of the IRQ and DMA to very late in
+the process, possibly after the quirks have been run, which can be
+problematic. We have platform hooks that might try to "fixup" specific
+IRQ issues on some platforms (especially macs) which I worry might fail
+if delayed that way (I may be wrong, I don't have a specific case in mind,
+but I would feel better if we kept setting up these things earlier).
 
-It is hoped this will pave the way for providing common
-implementations of commonly duplicated functions found across the
-architectures such as pcibios_alloc|free_controller and
-pcibios_setup_phb_resources type functions.
+Cheers,
+Ben.
 
-Andrew Murray (3):
-  powerpc: Move struct pci_controller to asm-generic
-  microblaze: Use asm-generic version of pci_controller
-  pci: Use common definations of INDIRECT_TYPE_*
-
- arch/microblaze/include/asm/pci-bridge.h |   70 +-----------------------
- arch/powerpc/include/asm/pci-bridge.h    |   82 ---------------------------
- arch/powerpc/sysdev/fsl_pci.c            |   16 +++---
- arch/powerpc/sysdev/indirect_pci.c       |   20 +++---
- arch/powerpc/sysdev/ppc4xx_pci.c         |    4 +-
- arch/powerpc/sysdev/xilinx_pci.c         |    2 +-
- include/asm-generic/pci-bridge.h         |   90 ++++++++++++++++++++++++++++++
- 7 files changed, 112 insertions(+), 172 deletions(-)
 
