@@ -1,45 +1,125 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ozlabs.org ([203.10.76.45]:34661 "EHLO ozlabs.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753631Ab3DEGwk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 5 Apr 2013 02:52:40 -0400
-Date: Fri, 5 Apr 2013 17:52:38 +1100
-From: Michael Ellerman <michael@ellerman.id.au>
-To: Brian King <brking@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org, klebers@linux.vnet.ibm.com,
-	lucaskt@linux.vnet.ibm.com, bhelgaas@google.com,
-	linuxppc-dev@lists.ozlabs.org
-Subject: Re: [PATCH 3/3] powerpc: Set default VGA device
-Message-ID: <20130405065238.GC5082@concordia>
-References: <201304042158.r34LwGPg010714@d03av02.boulder.ibm.com>
+Received: from co1ehsobe002.messaging.microsoft.com ([216.32.180.185]:29710
+	"EHLO co1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755328Ab3DBL0o (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 2 Apr 2013 07:26:44 -0400
+From: Yuanquan Chen <Yuanquan.Chen@freescale.com>
+To: <linuxppc-dev@lists.ozlabs.org>, <linux-pci@vger.kernel.org>,
+	<bhelgaas@google.com>
+CC: Yuanquan Chen <Yuanquan.Chen@freescale.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Hiroo Matsumoto <matsumoto.hiroo@jp.fujitsu.com>
+Subject: [PATCH] powerpc/pci: fix PCI-e devices rescan issue on powerpc platform
+Date: Tue, 2 Apr 2013 19:26:54 +0800
+Message-ID: <1364902014-943-1-git-send-email-Yuanquan.Chen@freescale.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201304042158.r34LwGPg010714@d03av02.boulder.ibm.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Brian,
+Powerpc initializes the DMA and IRQ information in pci_scan_child_bus()->
+pcibios_fixup_bus()->pcibios_setup_bus_devices(). But for the devices
+which are hotpluged, bus->is added has been set for the first scan of the
+PCI-e bus, so the initialization code won't be called. Then the hotpluged
+devices' driver will fail to load.
+
+For example :
+The PCI-e device 0001:03:00.0 is the Intel PCI-e e1000e network card, remove
+it from the system:
+
+    # echo 1 > /sys/bus/pci/devices/0001\:03\:00.0/remove
+    # e1000e 0001:03:00.0 eth0: removed PHC
+
+Rescan it from it's bus:
+
+    # echo 1 > /sys/bus/pci/devices/0001\:02\:00.0/rescan
+    ...
+    e1000e 0001:03:00.0: Disabling ASPM L0s L1
+    e1000e 0001:03:00.0: No usable DMA configuration, aborting
+    e1000e: probe of 0001:03:00.0 failed with error -5
+
+So we move the DMA & IRQ initialization code from pcibios_setup_devices() and
+construct a new function pcibios_enable_device. We call this function in
+pcibios_enable_device, which will be called by PCI-e rescan code. At the
+meanwhile, we avoid the the impact on cardbus. I also validate this patch with
+silicon's PCIe-sata which encounters the IRQ issue.
+
+Signed-off-by: Yuanquan Chen <Yuanquan.Chen@freescale.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Hiroo Matsumoto <matsumoto.hiroo@jp.fujitsu.com>
+---
+ arch/powerpc/kernel/pci-common.c |   43 +++++++++++++++++++++++---------------
+ 1 file changed, 26 insertions(+), 17 deletions(-)
+
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index fa12ae4..0324758 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -1023,6 +1023,27 @@ void pcibios_setup_bus_self(struct pci_bus *bus)
+ 		ppc_md.pci_dma_bus_setup(bus);
+ }
+ 
++void pcibios_setup_device(struct pci_dev *dev)
++{
++	/* Fixup NUMA node as it may not be setup yet by the generic
++	 * code and is needed by the DMA init
++	 */
++	set_dev_node(&dev->dev, pcibus_to_node(dev->bus));
++
++	/* Hook up default DMA ops */
++	set_dma_ops(&dev->dev, pci_dma_ops);
++	set_dma_offset(&dev->dev, PCI_DRAM_OFFSET);
++
++	/* Additional platform DMA/iommu setup */
++	if (ppc_md.pci_dma_dev_setup)
++		ppc_md.pci_dma_dev_setup(dev);
++
++	/* Read default IRQs and fixup if necessary */
++	pci_read_irq_line(dev);
++	if (ppc_md.pci_irq_fixup)
++		ppc_md.pci_irq_fixup(dev);
++}
++
+ void pcibios_setup_bus_devices(struct pci_bus *bus)
+ {
+ 	struct pci_dev *dev;
+@@ -1037,23 +1058,7 @@ void pcibios_setup_bus_devices(struct pci_bus *bus)
+ 		if (dev->is_added)
+ 			continue;
+ 
+-		/* Fixup NUMA node as it may not be setup yet by the generic
+-		 * code and is needed by the DMA init
+-		 */
+-		set_dev_node(&dev->dev, pcibus_to_node(dev->bus));
+-
+-		/* Hook up default DMA ops */
+-		set_dma_ops(&dev->dev, pci_dma_ops);
+-		set_dma_offset(&dev->dev, PCI_DRAM_OFFSET);
+-
+-		/* Additional platform DMA/iommu setup */
+-		if (ppc_md.pci_dma_dev_setup)
+-			ppc_md.pci_dma_dev_setup(dev);
+-
+-		/* Read default IRQs and fixup if necessary */
+-		pci_read_irq_line(dev);
+-		if (ppc_md.pci_irq_fixup)
+-			ppc_md.pci_irq_fixup(dev);
++		pcibios_setup_device(dev);
+ 	}
+ }
+ 
+@@ -1494,6 +1499,10 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
+ 		if (ppc_md.pcibios_enable_device_hook(dev))
+ 			return -EINVAL;
+ 
++	/* avoid pcie irq fix up impact on cardbus */
++	if (dev->hdr_type != PCI_HEADER_TYPE_CARDBUS)
++		pcibios_setup_device(dev);
++
+ 	return pci_enable_resources(dev, mask);
+ }
+ 
+-- 
+1.7.9.5
 
 
-On Thu, Apr 04, 2013 at 04:58:17PM -0500, Brian King wrote:
-> 
-> Add a PCI quirk for VGA devices on Power to set the default VGA device.
-> Ensures a default VGA is always set if a graphics adapter is present,
-> even if firmware did not initialize it. If more than one graphics
-> adapter is present, ensure the one initialized by firmware is set
-> as the default VGA device. This ensures that X autoconfiguration
-> will work.
-
-So a few things:
-
- - You are doing this on all power systems, not just pseries which is I
-   assume what you're testing on - that seems OK to me, but just
-   checking.
- - What is the "initialized by firmware" test? Just that IO & MEM are
-   enabled?
- - You potentially override an existing default, is that a problem? Can
-   the user set the default? (no AFAICS).
- - The x86 code is slightly different, they don't override an existing
-   default, why do we?
-
-cheers
