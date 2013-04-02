@@ -1,70 +1,52 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>
-CC: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Rafael <rjw@sisk.pl>, Hanjun Guo <guohanjun@huawei.com>,
-	<jiang.liu@huawei.com>, Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH 2/3] PCI: acpiphp: remove unused function acpiphp_max_busnr
-Date: Mon, 1 Apr 2013 17:22:07 +0800
-Message-ID: <1364808128-12792-2-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1364808128-12792-1-git-send-email-wangyijing@huawei.com>
-References: <1364808128-12792-1-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <3943547.m5K1tfygWn@vostro.rjw.lan>
+References: <2282655.IicBMMa6jN@vostro.rjw.lan>
+	<1378320.ernsY1JWPv@vostro.rjw.lan>
+	<CAErSpo7kGBNEkLOftJ1J7ivaxZL-yVWyAwmoiQ1=NADpmJ67XA@mail.gmail.com>
+	<3943547.m5K1tfygWn@vostro.rjw.lan>
+Date: Tue, 2 Apr 2013 13:28:46 +0800
+Message-ID: <CAC=cRTPyC0rrDeRaMop3GF17qa3i2mfQ3XyHgNaEmiKNOE1Auw@mail.gmail.com>
+Subject: Re: [Update][PATCH] PCI / PM: Disable runtime PM of PCIe ports
+From: huang ying <huang.ying.caritas@gmail.com>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Len Brown <lenb@kernel.org>,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Zheng Yan <zheng.z.yan@intel.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Clean up unuse function acpiphp_max_busnr() code.
+On Tue, Apr 2, 2013 at 4:51 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+>
+> On Monday, April 01, 2013 11:34:46 AM Bjorn Helgaas wrote:
+> > [+cc Zheng, who added this with 71a83bd727]
+> >
+> > On Sat, Mar 30, 2013 at 4:38 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> > > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > >
+> > > The runtime PM of PCIe ports turns out to be quite fragile, as in
+> > > some cases things work while in some other cases they don't and we
+> > > don't seem to have a good way to determine whether or not they are
+> > > going to work in advance.
+> >
+> > Do you have any references to problems encountered when enabling
+> > runtime PM for PCIe ports?  That information will be useful to anybody
+> > who wants to take another crack at getting this working.
+>
+> Well, bug 53811 is one example and problems recently reported by
+> Martin are another.  Do you want me to dig deeper?
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/pci/hotplug/acpiphp_glue.c |   30 ------------------------------
- 1 files changed, 0 insertions(+), 30 deletions(-)
+For bug 53811, I have a debug patch posted in bugzilla to disable
+runtime PM for PCIe port with hotplug capability.  It appears that
+patch resolved the issue for the reporter.  Do think that patch can
+solve the hotplug issue.
 
-diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-index 7d7ed3f..52e91bb 100644
---- a/drivers/pci/hotplug/acpiphp_glue.c
-+++ b/drivers/pci/hotplug/acpiphp_glue.c
-@@ -680,36 +680,6 @@ static int power_off_slot(struct acpiphp_slot *slot)
- 	return retval;
- }
- 
--
--
--/**
-- * acpiphp_max_busnr - return the highest reserved bus number under the given bus.
-- * @bus: bus to start search with
-- */
--static unsigned char acpiphp_max_busnr(struct pci_bus *bus)
--{
--	struct list_head *tmp;
--	unsigned char max, n;
--
--	/*
--	 * pci_bus_max_busnr will return the highest
--	 * reserved busnr for all these children.
--	 * that is equivalent to the bus->subordinate
--	 * value.  We don't want to use the parent's
--	 * bus->subordinate value because it could have
--	 * padding in it.
--	 */
--	max = bus->busn_res.start;
--
--	list_for_each(tmp, &bus->children) {
--		n = pci_bus_max_busnr(pci_bus_b(tmp));
--		if (n > max)
--			max = n;
--	}
--	return max;
--}
--
--
- /**
-  * acpiphp_bus_add - add a new bus to acpi subsystem
-  * @func: acpiphp_func of the bridge
--- 
-1.7.1
-
-
+Best Regards,
+Huang Ying
