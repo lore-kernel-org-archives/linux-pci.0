@@ -1,73 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-da0-f53.google.com ([209.85.210.53]:50837 "EHLO
-	mail-da0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754611Ab3DLPqT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 12 Apr 2013 11:46:19 -0400
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>
-Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>
-Subject: [PATCH v9 02/16] pci: clean up usages of pci_bus->is_added
-Date: Fri, 12 Apr 2013 23:44:16 +0800
-Message-Id: <1365781470-32379-3-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1365781470-32379-1-git-send-email-jiang.liu@huawei.com>
-References: <1365781470-32379-1-git-send-email-jiang.liu@huawei.com>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:7883 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757201Ab3DBBxT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 1 Apr 2013 21:53:19 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Alex Williamson <alex.williamson@redhat.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, Hanjun Guo <guohanjun@huawei.com>,
+	<jiang.liu@huawei.com>, Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH -v2] PCI/VFIO: use pcie_flags_reg instead of access PCI-E Capabilities Register
+Date: Tue, 2 Apr 2013 09:52:27 +0800
+Message-ID: <1364867547-15300-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now pci_bus->is_added is only used to guard invoking of
-pcibios_fixup_bus(), so clean up the code.
+Currently, we use pcie_flags_reg to cache PCI-E Capabilities Register,
+because PCI-E Capabilities Register bits are almost read-only. This patch
+use pcie_caps_reg() instead of another access PCI-E Capabilities Register.
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 ---
- drivers/pci/bus.c   |   11 ++---------
- drivers/pci/probe.c |    3 +--
- 2 files changed, 3 insertions(+), 11 deletions(-)
+ drivers/vfio/pci/vfio_pci_config.c |    6 +-----
+ 1 files changed, 1 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index 8647dc6..bdc1e8b 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -206,16 +206,9 @@ void pci_bus_add_devices(const struct pci_bus *bus)
- 
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
- 		BUG_ON(!dev->is_added);
+diff --git a/drivers/vfio/pci/vfio_pci_config.c b/drivers/vfio/pci/vfio_pci_config.c
+index aeb00fc..12a81f7 100644
+--- a/drivers/vfio/pci/vfio_pci_config.c
++++ b/drivers/vfio/pci/vfio_pci_config.c
+@@ -1017,13 +1017,9 @@ static int vfio_cap_len(struct vfio_pci_device *vdev, u8 cap, u8 pos)
+ 		return byte;
+ 	case PCI_CAP_ID_EXP:
+ 		/* length based on version */
+-		ret = pci_read_config_word(pdev, pos + PCI_EXP_FLAGS, &word);
+-		if (ret)
+-			return pcibios_err_to_errno(ret);
 -
- 		child = dev->subordinate;
--
--		if (!child)
--			continue;
--		pci_bus_add_devices(child);
--
--		if (child->is_added)
--			continue;
--		child->is_added = 1;
-+		if (child)
-+			pci_bus_add_devices(child);
- 	}
- }
+ 		vdev->extended_caps = true;
  
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index b494066..45c93b3 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1627,8 +1627,7 @@ unsigned int pci_scan_child_bus(struct pci_bus *bus)
- 	if (!bus->is_added) {
- 		dev_dbg(&bus->dev, "fixups for bus\n");
- 		pcibios_fixup_bus(bus);
--		if (pci_is_root_bus(bus))
--			bus->is_added = 1;
-+		bus->is_added = 1;
- 	}
- 
- 	for (pass=0; pass < 2; pass++)
+-		if ((word & PCI_EXP_FLAGS_VERS) == 1)
++		if ((pcie_caps_reg(pdev) & PCI_EXP_FLAGS_VERS) == 1)
+ 			return PCI_CAP_EXP_ENDPOINT_SIZEOF_V1;
+ 		else
+ 			return PCI_CAP_EXP_ENDPOINT_SIZEOF_V2;
 -- 
-1.7.9.5
+1.7.1
+
 
