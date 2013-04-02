@@ -1,108 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f49.google.com ([209.85.219.49]:37282 "EHLO
-	mail-oa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756528Ab3DZQ26 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 26 Apr 2013 12:28:58 -0400
-Received: by mail-oa0-f49.google.com with SMTP id j1so4217778oag.36
-        for <linux-pci@vger.kernel.org>; Fri, 26 Apr 2013 09:28:57 -0700 (PDT)
+Received: from mail-bk0-f43.google.com ([209.85.214.43]:58874 "EHLO
+	mail-bk0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760415Ab3DBFbs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 2 Apr 2013 01:31:48 -0400
 MIME-Version: 1.0
-In-Reply-To: <1366940841-15370-1-git-send-email-yinghai@kernel.org>
-References: <1366940841-15370-1-git-send-email-yinghai@kernel.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 26 Apr 2013 10:28:37 -0600
-Message-ID: <CAErSpo5zfHR-agNBdgqfVjCU+-KcTZV+1bvML5Uw-+icDqzzEA@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Fix racing for pci device removing via sysfs
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>,
+In-Reply-To: <CAC=cRTPyC0rrDeRaMop3GF17qa3i2mfQ3XyHgNaEmiKNOE1Auw@mail.gmail.com>
+References: <2282655.IicBMMa6jN@vostro.rjw.lan>
+	<1378320.ernsY1JWPv@vostro.rjw.lan>
+	<CAErSpo7kGBNEkLOftJ1J7ivaxZL-yVWyAwmoiQ1=NADpmJ67XA@mail.gmail.com>
+	<3943547.m5K1tfygWn@vostro.rjw.lan>
+	<CAC=cRTPyC0rrDeRaMop3GF17qa3i2mfQ3XyHgNaEmiKNOE1Auw@mail.gmail.com>
+Date: Tue, 2 Apr 2013 13:31:47 +0800
+Message-ID: <CAC=cRTOsPdYjLMrTGYi9PF27i6rqG9nm=RizfX+vkOz-bn1S8w@mail.gmail.com>
+Subject: Re: [Update][PATCH] PCI / PM: Disable runtime PM of PCIe ports
+From: huang ying <huang.ying.caritas@gmail.com>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Len Brown <lenb@kernel.org>,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
+	LKML <linux-kernel@vger.kernel.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Zheng Yan <zheng.z.yan@intel.com>,
+	Huang Ying <ying.huang@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 25, 2013 at 7:47 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> Gu found nested removing through
->         echo -n 1 > /sys/bus/pci/devices/0000\:10\:00.0/remove ; echo -n 1 >
-> /sys/bus/pci/devices/0000\:1a\:01.0/remove
+On Tue, Apr 2, 2013 at 1:28 PM, huang ying <huang.ying.caritas@gmail.com> wrote:
+> On Tue, Apr 2, 2013 at 4:51 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+>>
+>> On Monday, April 01, 2013 11:34:46 AM Bjorn Helgaas wrote:
+>> > [+cc Zheng, who added this with 71a83bd727]
+>> >
+>> > On Sat, Mar 30, 2013 at 4:38 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+>> > > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+>> > >
+>> > > The runtime PM of PCIe ports turns out to be quite fragile, as in
+>> > > some cases things work while in some other cases they don't and we
+>> > > don't seem to have a good way to determine whether or not they are
+>> > > going to work in advance.
+>> >
+>> > Do you have any references to problems encountered when enabling
+>> > runtime PM for PCIe ports?  That information will be useful to anybody
+>> > who wants to take another crack at getting this working.
+>>
+>> Well, bug 53811 is one example and problems recently reported by
+>> Martin are another.  Do you want me to dig deeper?
 >
-> will cause kernel crash as bus get freed.
->
-> [  418.946462] CPU 4
-> [  418.968377] Pid: 512, comm: kworker/u:2 Tainted: G        W    3.8.0 #2
-> FUJITSU-SV PRIMEQUEST 1800E/SB
-> [  419.081763] RIP: 0010:[<ffffffff8137972e>]  [<ffffffff8137972e>]
-> pci_bus_read_config_word+0x5e/0x90
-> [  420.494137] Call Trace:
-> [  420.523326]  [<ffffffff813851ef>] ? remove_callback+0x1f/0x40
-> [  420.591984]  [<ffffffff8138044b>] pci_pme_active+0x4b/0x1c0
-> [  420.658545]  [<ffffffff8137d8e7>] pci_stop_bus_device+0x57/0xb0
-> [  420.729259]  [<ffffffff8137dab6>] pci_stop_and_remove_bus_device+0x16/0x30
-> [  420.811392]  [<ffffffff813851fb>] remove_callback+0x2b/0x40
-> [  420.877955]  [<ffffffff81257a56>] sysfs_schedule_callback_work+0x26/0x70
->
-> https://bugzilla.kernel.org/show_bug.cgi?id=54411
->
-> We have one patch that will let device hold bus ref to prevent it from
-> being freed, but that will still generate warning.
->
-> ------------[ cut here ]------------
-> WARNING: at lib/list_debug.c:53 __list_del_entry+0x63/0xd0()
-> Hardware name: PRIMEQUEST 1800E
-> list_del corruption, ffff8807d1b6c000->next is LIST_POISON1 (dead000000100100)
-> Call Trace:
->  [<ffffffff81056d4f>] warn_slowpath_common+0x7f/0xc0
->  [<ffffffff81056e46>] warn_slowpath_fmt+0x46/0x50
->  [<ffffffff81280b13>] __list_del_entry+0x63/0xd0
->  [<ffffffff81280b91>] list_del+0x11/0x40
->  [<ffffffff81298331>] pci_destroy_dev+0x31/0xc0
->  [<ffffffff812985bb>] pci_remove_bus_device+0x5b/0x70
->  [<ffffffff812985ee>] pci_stop_and_remove_bus_device+0x1e/0x30
->  [<ffffffff8129fc89>] remove_callback+0x29/0x40
->  [<ffffffff811f3b84>] sysfs_schedule_callback_work+0x24/0x70
->
-> We can just check if the device get removed from pci tree
-> already in the protection under pci_remove_rescan_mutex.
->
-> Reported-by: Gu Zheng <guz.fnst@cn.fujitsu.com>
-> Tested-by: Gu Zheng <guz.fnst@cn.fujitsu.com>
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
->
-> ---
->  drivers/pci/pci-sysfs.c |    9 ++++++++-
->  1 file changed, 8 insertions(+), 1 deletion(-)
->
-> Index: linux-2.6/drivers/pci/pci-sysfs.c
-> ===================================================================
-> --- linux-2.6.orig/drivers/pci/pci-sysfs.c
-> +++ linux-2.6/drivers/pci/pci-sysfs.c
-> @@ -329,9 +329,16 @@ dev_rescan_store(struct device *dev, str
->  static void remove_callback(struct device *dev)
->  {
->         struct pci_dev *pdev = to_pci_dev(dev);
-> +       int domain = pci_domain_nr(pdev->bus);
-> +       u8 bus = pdev->bus->number;
-> +       u8 devfn = pdev->devfn;
->
->         mutex_lock(&pci_remove_rescan_mutex);
-> -       pci_stop_and_remove_bus_device(pdev);
-> +       pdev = pci_get_domain_bus_and_slot(domain, bus, devfn);
+> For bug 53811, I have a debug patch posted in bugzilla to disable
+> runtime PM for PCIe port with hotplug capability.  It appears that
+> patch resolved the issue for the reporter.  Do think that patch can
+> solve the hotplug issue.
 
-This is a gross hack.  Iterating through all known pci_devs to see if
-this one still exists?
+For Martin's hotplug issue, it appears that a similar patch I sent to
+him resolve his hotplug issue too.  For Martin's "XHCI dead port"
+issue, that is, PME issue.  I just sent him another debug patch to
+try.  Sorry for late!
 
-I reproduced the original problem, applied this patch, and verified
-that it avoids the original crash.
-
-However, it's still incorrect because now you're looking at pdev after
-it's been freed. With CONFIG_SLUB_DEBUG_ON=y, the removal still causes
-a crash in remove_callback().
-
-Bjorn
-
-> +       if (pdev) {
-> +               pci_dev_put(pdev);
-> +               pci_stop_and_remove_bus_device(pdev);
-> +       }
->         mutex_unlock(&pci_remove_rescan_mutex);
->  }
->
+Best Regards,
+Huang Ying
