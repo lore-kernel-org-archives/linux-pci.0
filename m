@@ -1,89 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:52072 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752630Ab3DVVue (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 22 Apr 2013 17:50:34 -0400
-Message-ID: <5175B0A9.7070100@intel.com>
-Date: Mon, 22 Apr 2013 14:50:33 -0700
-From: Alexander Duyck <alexander.h.duyck@intel.com>
+Received: from mail-ia0-f178.google.com ([209.85.210.178]:37323 "EHLO
+	mail-ia0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761077Ab3DBLg1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 2 Apr 2013 07:36:27 -0400
+Received: by mail-ia0-f178.google.com with SMTP id r13so225494iar.37
+        for <linux-pci@vger.kernel.org>; Tue, 02 Apr 2013 04:36:26 -0700 (PDT)
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: "Kirsher, Jeffrey T" <jeffrey.t.kirsher@intel.com>,
-	David Miller <davem@davemloft.net>,
-	netdev <netdev@vger.kernel.org>, gospo@redhat.com,
-	sassmann@redhat.com,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [net-next 08/14] pci: Add SRIOV helper function to determine
- if VFs are assigned to guest
-References: <1366451353-24714-1-git-send-email-jeffrey.t.kirsher@intel.com> <1366451353-24714-9-git-send-email-jeffrey.t.kirsher@intel.com> <1366515088.2209.15.camel@jtkirshe-mobl> <CAErSpo4D4rn4G56+YT4Ja-S4cjnJ6svBaH3v+_n=cmS5CooC+g@mail.gmail.com>
-In-Reply-To: <CAErSpo4D4rn4G56+YT4Ja-S4cjnJ6svBaH3v+_n=cmS5CooC+g@mail.gmail.com>
+In-Reply-To: <1364395234-11195-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1364395234-11195-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Date: Tue, 2 Apr 2013 13:36:26 +0200
+Message-ID: <CACRpkdb77h+7FCjEbc3Jy9+3M5KdCEk3ktsuTHOT1W6AKToJZw@mail.gmail.com>
+Subject: Re: [PATCHv7 00/17] PCIe support for the Armada 370 and Armada XP SoCs
+From: Linus Walleij <linus.walleij@linaro.org>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Rob Herring <rob.herring@calxeda.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Russell King <linux@arm.linux.org.uk>,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Jason Cooper <jason@lakedaemon.net>, linux-pci@vger.kernel.org,
+	devicetree-discuss@lists.ozlabs.org,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Andrew Murray <andrew.murray@arm.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Mitch Bradley <wmb@firmworks.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/22/2013 01:09 PM, Bjorn Helgaas wrote:
-> On Sat, Apr 20, 2013 at 9:31 PM, Jeff Kirsher
-> <jeffrey.t.kirsher@intel.com> wrote:
->> On Sat, 2013-04-20 at 02:49 -0700, Jeff Kirsher wrote:
->>> From: Alexander Duyck <alexander.h.duyck@intel.com>
->>>
->>> This function is meant to add a helper function that will determine if a PF
->>> has any VFs that are currently assigned to a guest.  We currently have been
->>> implementing this function per driver, and going forward I would like to avoid
->>> that by making this function generic and using this helper.
->>>
->>> Signed-off-by: Alexander Duyck <alexander.h.duyck@intel.com>
->>> Signed-off-by: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
->> Adding linux-pci mailing list and Bjorn to the CC.
->>
->> Bjorn- David Miller needs a signoff by PCI maintainer.
->>
->>> ---
->>>  drivers/pci/iov.c   | 41 +++++++++++++++++++++++++++++++++++++++++
->>>  include/linux/pci.h |  5 +++++
->>>  2 files changed, 46 insertions(+)
->>>
->>> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
->>> index ee599f2..fd99720 100644
->>> --- a/drivers/pci/iov.c
->>> +++ b/drivers/pci/iov.c
->>> @@ -729,6 +729,47 @@ int pci_num_vf(struct pci_dev *dev)
->>>  EXPORT_SYMBOL_GPL(pci_num_vf);
->>>
->>>  /**
->>> + * pci_vfs_assigned - returns number of VFs are assigned to a guest
->>> + * @dev: the PCI device
->>> + *
->>> + * Returns number of VFs belonging to this device that are assigned to a guest.
->>> + * If device is not a physical function returns -ENODEV.
->>> + */
->>> +int pci_vfs_assigned(struct pci_dev *dev)
-> I guess the idea here is to replace be_find_vfs(),
-> igb_vfs_are_assigned(), ixgbe_vfs_are_assigned(), etc.  It does seem
-> good to reduce duplicated code.
+On Wed, Mar 27, 2013 at 3:40 PM, Thomas Petazzoni
+<thomas.petazzoni@free-electrons.com> wrote:
 
-The general idea was just to remove duplicate code.  As is we have a
-couple more drivers on the way that would end up needing a similar function.
-
-> I'm trying to figure out why this is safe -- there's no explicit
-> synchronization between the iteration through PCI devices looking for
-> matching VFs and the device assignment/deassignment paths that set or
-> clear PCI_DEV_FLAGS_ASSIGNED, so on the face of it, it looks like
-> things could change between calling pci_vfs_assigned() and using the
-> result to make a decision.
+> As we are approaching 3.10, I would now like to get formal Acked-by,
+> or disagreements from the following maintainers/developers :
 >
-> Most of the calls would be in .remove() functions, so maybe there's
-> some sort of synchronization in that path that  makes this safe.
+>  * Grant Likely, as the OF maintainer, for patches 1, 2 and 3
 >
-> Bjorn
+>    [PATCH v5 01/17] of/pci: Provide support for parsing PCI DT ranges
+>    [PATCH v5 02/17] of/pci: Add of_pci_get_devfn() function
+>    [PATCH v5 03/17] of/pci: Add of_pci_parse_bus_range() function
 
-I'm assuming this will be used in regions that are somehow protected
-since the main spots where this might be called would be probe, remove,
-or when updating the number of VFs.  From what I can tell in the Xen
-case there is a driver stub that is loaded that sets the flag so that is
-covered by probe/remove.  I don't know about the KVM case.
+I think Rob Herring can help out in reviewing this, as comaintainer
+of devicetree stuff.
 
-Thanks,
-
-Alex
-
+Yours,
+Linus Walleij
