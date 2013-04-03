@@ -1,47 +1,136 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f181.google.com ([209.85.223.181]:51504 "EHLO
-	mail-ie0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753039Ab3DVXK2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Apr 2013 19:10:28 -0400
-Received: by mail-ie0-f181.google.com with SMTP id tp5so12591ieb.26
-        for <linux-pci@vger.kernel.org>; Mon, 22 Apr 2013 16:10:28 -0700 (PDT)
-Subject: [PATCH v4 02/22] PCI: Use u8, not int, for PM capability offset
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>
-Date: Mon, 22 Apr 2013 17:10:26 -0600
-Message-ID: <20130422231026.32621.14207.stgit@bhelgaas-glaptop>
-In-Reply-To: <20130422230012.32621.15224.stgit@bhelgaas-glaptop>
-References: <20130422230012.32621.15224.stgit@bhelgaas-glaptop>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Thierry Reding <thierry.reding@avionic-design.de>
+To: Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Russell King <linux@arm.linux.org.uk>,
+	Andrew Murray <andrew.murray@arm.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-tegra@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH v3 04/12] PCI: Introduce new MSI chip infrastructure
+Date: Wed,  3 Apr 2013 16:45:10 +0200
+Message-Id: <1365000318-28256-5-git-send-email-thierry.reding@avionic-design.de>
+In-Reply-To: <1365000318-28256-1-git-send-email-thierry.reding@avionic-design.de>
+References: <1365000318-28256-1-git-send-email-thierry.reding@avionic-design.de>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The Power Management Capability (PCI_CAP_ID_PM == 0x01) is defined by PCI
-and must appear in the 256-byte PCI Configuration Space from 0-0xff.  It
-cannot be in the PCIe Extended Configuration space from 0x100-0xfff, so
-we only need a u8 to hold its offset.
+The new struct msi_chip is used to associated an MSI controller with a
+PCI bus. It is automatically handed down from the root to its children
+during bus enumeration.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-CC: "Rafael J. Wysocki" <rjw@sisk.pl>
+This patch provides default (weak) implementations for the architecture-
+specific MSI functions (arch_setup_msi_irq(), arch_teardown_msi_irq()
+and arch_msi_check_device()) which check if a PCI device's bus has an
+attached MSI chip and forward the call appropriately.
+
+Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
 ---
- include/linux/pci.h |    3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/pci/msi.c   | 35 +++++++++++++++++++++++++++++++----
+ drivers/pci/probe.c |  1 +
+ include/linux/msi.h | 10 ++++++++++
+ include/linux/pci.h |  1 +
+ 4 files changed, 43 insertions(+), 4 deletions(-)
 
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 00cc78c..fce3549 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -26,14 +26,41 @@
+ 
+ static int pci_msi_enable = 1;
+ 
+-/* Arch hooks */
++int __weak arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
++{
++	struct msi_chip *chip = dev->bus->msi;
++
++	if (chip && chip->setup_irq) {
++		int err;
++
++		err = chip->setup_irq(chip, dev, desc);
++		if (err < 0)
++			return err;
++
++		irq_set_chip_data(desc->irq, chip);
++		return err;
++	}
++
++	return -EINVAL;
++}
+ 
+-#ifndef arch_msi_check_device
+-int arch_msi_check_device(struct pci_dev *dev, int nvec, int type)
++void __weak arch_teardown_msi_irq(unsigned int irq)
+ {
++	struct msi_chip *chip = irq_get_chip_data(irq);
++
++	if (chip && chip->teardown_irq)
++		chip->teardown_irq(chip, irq);
++}
++
++int __weak arch_msi_check_device(struct pci_dev *dev, int nvec, int type)
++{
++	struct msi_chip *chip = dev->bus->msi;
++
++	if (chip && chip->check_device)
++		return chip->check_device(chip, dev, nvec, type);
++
+ 	return 0;
+ }
+-#endif
+ 
+ #ifndef arch_setup_msi_irqs
+ # define arch_setup_msi_irqs default_setup_msi_irqs
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index b494066..9307550 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -634,6 +634,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
+ 
+ 	child->parent = parent;
+ 	child->ops = parent->ops;
++	child->msi = parent->msi;
+ 	child->sysdata = parent->sysdata;
+ 	child->bus_flags = parent->bus_flags;
+ 
+diff --git a/include/linux/msi.h b/include/linux/msi.h
+index ce93a34..ea4a5be 100644
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -58,5 +58,15 @@ extern int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type);
+ extern void arch_teardown_msi_irqs(struct pci_dev *dev);
+ extern int arch_msi_check_device(struct pci_dev* dev, int nvec, int type);
+ 
++struct msi_chip {
++	struct module *owner;
++	struct device *dev;
++
++	int (*setup_irq)(struct msi_chip *chip, struct pci_dev *dev,
++			 struct msi_desc *desc);
++	void (*teardown_irq)(struct msi_chip *chip, unsigned int irq);
++	int (*check_device)(struct msi_chip *chip, struct pci_dev *dev,
++			    int nvec, int type);
++};
+ 
+ #endif /* LINUX_MSI_H */
 diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 2461033a..9587d4d 100644
+index f42cdc6..7e44085 100644
 --- a/include/linux/pci.h
 +++ b/include/linux/pci.h
-@@ -249,8 +249,7 @@ struct pci_dev {
- 	pci_power_t     current_state;  /* Current operating state. In ACPI-speak,
- 					   this is D0-D3, D0 being fully functional,
- 					   and D3 being off. */
--	int		pm_cap;		/* PM capability offset in the
--					   configuration space */
-+	u8		pm_cap;		/* PM capability offset */
- 	unsigned int	pme_support:5;	/* Bitmask of states from which PME#
- 					   can be generated */
- 	unsigned int	pme_interrupt:1;
+@@ -431,6 +431,7 @@ struct pci_bus {
+ 	struct resource busn_res;	/* bus numbers routed to this bus */
+ 
+ 	struct pci_ops	*ops;		/* configuration access functions */
++	struct msi_chip	*msi;		/* MSI controller */
+ 	void		*sysdata;	/* hook for sys-specific extension */
+ 	struct proc_dir_entry *procdir;	/* directory entry in /proc/bus/pci */
+ 
+-- 
+1.8.2
 
