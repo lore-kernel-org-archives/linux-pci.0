@@ -1,17 +1,17 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:49446 "EHLO
+Received: from mail.free-electrons.com ([94.23.35.102]:56047 "EHLO
 	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753848Ab3DOQlB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 15 Apr 2013 12:41:01 -0400
-Date: Mon, 15 Apr 2013 18:40:57 +0200
+	with ESMTP id S1752552Ab3DCLF5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 3 Apr 2013 07:05:57 -0400
+Date: Wed, 3 Apr 2013 13:05:52 +0200
 From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
 To: Jason Cooper <jason@lakedaemon.net>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
+Cc: Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>,
 	Grant Likely <grant.likely@secretlab.ca>,
 	Russell King <linux@arm.linux.org.uk>,
 	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Arnd Bergmann <arnd@arndb.de>, Olof Johansson <olof@lixom.net>,
-	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
+	Olof Johansson <olof@lixom.net>, linux-pci@vger.kernel.org,
+	devicetree-discuss@lists.ozlabs.org,
 	Thierry Reding <thierry.reding@avionic-design.de>,
 	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
 	Maen Suleiman <maen@marvell.com>,
@@ -21,14 +21,14 @@ Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	Tawfik Bayouk <tawfik@marvell.com>,
 	linux-arm-kernel@lists.infradead.org,
 	Mitch Bradley <wmb@firmworks.com>
-Subject: Re: [PATCHv8 00/19] PCIe support for the Armada 370 and Armada XP
- SoCs
-Message-ID: <20130415184057.7783c272@skate>
-In-Reply-To: <20130415163845.GK28693@titan.lakedaemon.net>
-References: <1365541601-14095-1-git-send-email-thomas.petazzoni@free-electrons.com>
-	<20130415154620.GE28693@titan.lakedaemon.net>
-	<20130415183623.04797912@skate>
-	<20130415163845.GK28693@titan.lakedaemon.net>
+Subject: Re: [RFC PATCHv1 2/5] bus: mvebu: fix mistake in PCIe window target
+ attribute for Kirkwood
+Message-ID: <20130403130552.0c28ea34@skate>
+In-Reply-To: <20130403105757.GV13280@titan.lakedaemon.net>
+References: <1364407504-13524-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	<1364407504-13524-3-git-send-email-thomas.petazzoni@free-electrons.com>
+	<20130403125247.5914a862@skate>
+	<20130403105757.GV13280@titan.lakedaemon.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
@@ -36,17 +36,17 @@ List-ID: <linux-pci.vger.kernel.org>
 
 Dear Jason Cooper,
 
-On Mon, 15 Apr 2013 12:38:45 -0400, Jason Cooper wrote:
+On Wed, 3 Apr 2013 06:57:57 -0400, Jason Cooper wrote:
 
-> > This ones are more recent than the v5 I originally used as a base for
-> > my PCIe v8. I can resend a v9 of my PCIe patch set based on the v6 of
-> > Andrew, or you can directly use PATCH 1,2,3 from Andrew series to
-> > replace PATCH 1,2,3 from my series. Andrew v6 has quite a number of
-> > changes compared to v5, so I really recommend using those ones.
-> 
-> No need to mess with v9, I'll pull AndrewM's v6.
+> Thanks for pointing this out.  I'll put it in mvebu/drivers as you
+> suggested.  I'll need to rebase mvebu/soc on it.  But I haven't done the
+> PR yet, so not a big deal.
 
-Excellent, thanks.
+Ok, thanks. I'll finalize the cleanup of the kirkwood PCIe branch in
+order to be able to submit a version that hopefully should be
+acceptable.
+
+Thanks,
 
 Thomas
 -- 
