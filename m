@@ -1,46 +1,38 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ia0-f178.google.com ([209.85.210.178]:34486 "EHLO
-	mail-ia0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753761Ab3DVXMX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Apr 2013 19:12:23 -0400
-Received: by mail-ia0-f178.google.com with SMTP id j38so8986iad.37
-        for <linux-pci@vger.kernel.org>; Mon, 22 Apr 2013 16:12:23 -0700 (PDT)
-Subject: [PATCH v4 19/22] xen/pci: Use PCI_MSIX_TABLE_BIR,
- not PCI_MSIX_FLAGS_BIRMASK
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Gavin Shan <shangw@linux.vnet.ibm.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Date: Mon, 22 Apr 2013 17:12:21 -0600
-Message-ID: <20130422231221.32621.95466.stgit@bhelgaas-glaptop>
-In-Reply-To: <20130422230012.32621.15224.stgit@bhelgaas-glaptop>
-References: <20130422230012.32621.15224.stgit@bhelgaas-glaptop>
+Received: from mail-ob0-f179.google.com ([209.85.214.179]:54707 "EHLO
+	mail-ob0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761367Ab3DCXh6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 3 Apr 2013 19:37:58 -0400
+Received: by mail-ob0-f179.google.com with SMTP id vb8so1978395obc.38
+        for <linux-pci@vger.kernel.org>; Wed, 03 Apr 2013 16:37:57 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <1364374564-19096-1-git-send-email-shangw@linux.vnet.ibm.com>
+References: <1364374564-19096-1-git-send-email-shangw@linux.vnet.ibm.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 3 Apr 2013 17:37:37 -0600
+Message-ID: <CAErSpo4UNTKbH4ZORcArJF9GO627yMtYiTy8Q0wg_b0Vs3-QPQ@mail.gmail.com>
+Subject: Re: [PATCH 0/4] Retrieve MSI/MSIX cap struct for once on setup
+To: Gavin Shan <shangw@linux.vnet.ibm.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCI_MSIX_FLAGS_BIRMASK is mis-named because the BIR mask is in the
-Table Offset register, not the flags ("Message Control" per spec)
-register.
+On Wed, Mar 27, 2013 at 2:56 AM, Gavin Shan <shangw@linux.vnet.ibm.com> wrote:
+> While we setup MSI or MSI-X for specific PCI device, the address of
+> MSI or MSI-X capability structure is figured out from the config
+> space for multiple times. That's unnecessary and the patchset addresses
+> that. With the patchset applied, the latency for MSI or MSI-X setup
+> would be decreased hopefully.
+>
+> drivers/pci/msi.c               |   51 ++++++++++++++++++++------------------
+> drivers/pci/pcie/portdrv_core.c |    2 +-
+> include/linux/pci.h             |    4 +-
+> 3 files changed, 30 insertions(+), 27 deletions(-)
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
----
- arch/x86/pci/xen.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+It seems a bit complicated to be passing around "pos" or "&pos" all
+the time.  Wouldn't it be simpler to cache the MSI and MSI-X
+capability addresses directly in the pci_dev, like we do for the PCIe
+and PM capabilities?
 
-diff --git a/arch/x86/pci/xen.c b/arch/x86/pci/xen.c
-index 0e8a196..b9d1ff2 100644
---- a/arch/x86/pci/xen.c
-+++ b/arch/x86/pci/xen.c
-@@ -299,7 +299,7 @@ static int xen_initdom_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
- 
- 			pci_read_config_dword(dev, pos + PCI_MSIX_TABLE,
- 					      &table_offset);
--			bir = (u8)(table_offset & PCI_MSIX_FLAGS_BIRMASK);
-+			bir = (u8)(table_offset & PCI_MSIX_TABLE_BIR);
- 			table_offset &= PCI_MSIX_TABLE_OFFSET;
- 
- 			map_irq.table_base = pci_resource_start(dev, bir) +
-
+Bjorn
