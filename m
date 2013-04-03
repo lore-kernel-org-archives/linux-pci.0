@@ -1,156 +1,155 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cn.fujitsu.com ([222.73.24.84]:11918 "EHLO song.cn.fujitsu.com"
-	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1756041Ab3DRJPj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 18 Apr 2013 05:15:39 -0400
-Message-ID: <516FB647.5030203@cn.fujitsu.com>
-Date: Thu, 18 Apr 2013 17:00:55 +0800
-From: Gu Zheng <guz.fnst@cn.fujitsu.com>
-MIME-Version: 1.0
-To: linux-pci@vger.kernel.org
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	tangchen <tangchen@cn.fujitsu.com>,
-	"'Lin Feng'" <linfeng@cn.fujitsu.com>,
-	li guang <lig.fnst@cn.fujitsu.com>
-Subject: [PATCH 2/3] PCI: rename alloc_pci_dev() to pci_alloc_dev()
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Thierry Reding <thierry.reding@avionic-design.de>
+To: Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Russell King <linux@arm.linux.org.uk>,
+	Andrew Murray <andrew.murray@arm.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-tegra@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH v3 05/12] ARM: tegra: Move tegra_pcie_xclk_clamp() to PMC
+Date: Wed,  3 Apr 2013 16:45:11 +0200
+Message-Id: <1365000318-28256-6-git-send-email-thierry.reding@avionic-design.de>
+In-Reply-To: <1365000318-28256-1-git-send-email-thierry.reding@avionic-design.de>
+References: <1365000318-28256-1-git-send-email-thierry.reding@avionic-design.de>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->From a3135f4a814ec2faba007f030ca96ea2297484ef Mon Sep 17 00:00:00 2001
-From: Gu Zheng <guz.fnst@cn.fujitsu.com>
-Date: Thu, 18 Apr 2013 17:27:40 +0900
-Subject: [PATCH 2/3] PCI: rename alloc_pci_dev() to pci_alloc_dev()
+The PMC code already accesses to PMC registers so it makes sense to
+move this function there as well. While at it, rename the function to
+tegra_pmc_pcie_xclk_clamp() for consistency.
 
-Rename alloc_pci_dev() to pci_alloc_dev() to make the name style the same
-as pci_alloc_bus(), pci_destroy_dev().
-
-Signed-off-by: Gu Zheng <guz.fnst@cn.fujitsu.com>
-Reviewed-by: Li Guang <lig.fnst@cn.fujitsu.com>
+Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
+Acked-by: Stephen Warren <swarren@wwwdotorg.org>
 ---
- arch/powerpc/kernel/pci_of_scan.c |    2 +-
- drivers/char/agp/alpha-agp.c      |    2 +-
- drivers/char/agp/parisc-agp.c     |    2 +-
- drivers/pci/iov.c                 |    2 +-
- drivers/pci/probe.c               |    6 +++---
- drivers/scsi/megaraid.c           |    2 +-
- include/linux/pci.h               |    2 +-
- 7 files changed, 9 insertions(+), 9 deletions(-)
+ arch/arm/mach-tegra/pcie.c | 30 ++++--------------------------
+ arch/arm/mach-tegra/pmc.c  | 16 ++++++++++++++++
+ arch/arm/mach-tegra/pmc.h  |  1 +
+ 3 files changed, 21 insertions(+), 26 deletions(-)
 
-diff --git a/arch/powerpc/kernel/pci_of_scan.c b/arch/powerpc/kernel/pci_of_scan.c
-index 9e0f6fd..2e35d11 100644
---- a/arch/powerpc/kernel/pci_of_scan.c
-+++ b/arch/powerpc/kernel/pci_of_scan.c
-@@ -128,7 +128,7 @@ struct pci_dev *of_create_pci_dev(struct device_node *node,
- 	const char *type;
- 	struct pci_slot *slot;
+diff --git a/arch/arm/mach-tegra/pcie.c b/arch/arm/mach-tegra/pcie.c
+index 46144a1..6c1989b 100644
+--- a/arch/arm/mach-tegra/pcie.c
++++ b/arch/arm/mach-tegra/pcie.c
+@@ -41,6 +41,7 @@
  
--	dev = alloc_pci_dev();
-+	dev = pci_alloc_dev();
- 	if (!dev)
- 		return NULL;
- 	type = of_get_property(node, "device_type", NULL);
-diff --git a/drivers/char/agp/alpha-agp.c b/drivers/char/agp/alpha-agp.c
-index dd84af4..aad2756 100644
---- a/drivers/char/agp/alpha-agp.c
-+++ b/drivers/char/agp/alpha-agp.c
-@@ -174,7 +174,7 @@ alpha_core_agp_setup(void)
- 	/*
- 	 * Build a fake pci_dev struct
- 	 */
--	pdev = alloc_pci_dev();
-+	pdev = pci_alloc_dev();
- 	if (!pdev)
- 		return -ENOMEM;
- 	pdev->vendor = 0xffff;
-diff --git a/drivers/char/agp/parisc-agp.c b/drivers/char/agp/parisc-agp.c
-index 94821ab..1dd1914 100644
---- a/drivers/char/agp/parisc-agp.c
-+++ b/drivers/char/agp/parisc-agp.c
-@@ -333,7 +333,7 @@ parisc_agp_setup(void __iomem *ioc_hpa, void __iomem *lba_hpa)
- 	struct agp_bridge_data *bridge;
- 	int error = 0;
+ #include "board.h"
+ #include "iomap.h"
++#include "pmc.h"
  
--	fake_bridge_dev = alloc_pci_dev();
-+	fake_bridge_dev = pci_alloc_dev();
- 	if (!fake_bridge_dev) {
- 		error = -ENOMEM;
- 		goto fail;
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index 18798a7..4a15274 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -77,7 +77,7 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
- 	struct resource *res;
- 	struct pci_sriov *iov = dev->sriov;
+ /* Hack - need to parse this from DT */
+ #define INT_PCIE_INTR 130
+@@ -147,17 +148,6 @@
+ #define  PADS_PLL_CTL_TXCLKREF_DIV10		(0 << 20)
+ #define  PADS_PLL_CTL_TXCLKREF_DIV5		(1 << 20)
  
--	virtfn = alloc_pci_dev();
-+	virtfn = pci_alloc_dev();
- 	if (!virtfn)
- 		return -ENOMEM;
- 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 44a6f7d..44f29d3 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1199,7 +1199,7 @@ static void pci_release_bus_bridge_dev(struct device *dev)
- 	kfree(bridge);
+-/* PMC access is required for PCIE xclk (un)clamping */
+-#define PMC_SCRATCH42		0x144
+-#define PMC_SCRATCH42_PCX_CLAMP	(1 << 0)
+-
+-static void __iomem *reg_pmc_base = IO_ADDRESS(TEGRA_PMC_BASE);
+-
+-#define pmc_writel(value, reg) \
+-	__raw_writel(value, reg_pmc_base + (reg))
+-#define pmc_readl(reg) \
+-	__raw_readl(reg_pmc_base + (reg))
+-
+ /*
+  * Tegra2 defines 1GB in the AXI address map for PCIe.
+  *
+@@ -639,18 +629,6 @@ static int tegra_pcie_enable_controller(void)
+ 	return 0;
  }
  
--struct pci_dev *alloc_pci_dev(void)
-+struct pci_dev *pci_alloc_dev(void)
+-static void tegra_pcie_xclk_clamp(bool clamp)
+-{
+-	u32 reg;
+-
+-	reg = pmc_readl(PMC_SCRATCH42) & ~PMC_SCRATCH42_PCX_CLAMP;
+-
+-	if (clamp)
+-		reg |= PMC_SCRATCH42_PCX_CLAMP;
+-
+-	pmc_writel(reg, PMC_SCRATCH42);
+-}
+-
+ static void tegra_pcie_power_off(void)
  {
- 	struct pci_dev *dev;
+ 	tegra_periph_reset_assert(tegra_pcie.pcie_xclk);
+@@ -658,7 +636,7 @@ static void tegra_pcie_power_off(void)
+ 	tegra_periph_reset_assert(tegra_pcie.pex_clk);
  
-@@ -1211,7 +1211,7 @@ struct pci_dev *alloc_pci_dev(void)
- 
- 	return dev;
+ 	tegra_powergate_power_off(TEGRA_POWERGATE_PCIE);
+-	tegra_pcie_xclk_clamp(true);
++	tegra_pmc_pcie_xclk_clamp(true);
  }
--EXPORT_SYMBOL(alloc_pci_dev);
-+EXPORT_SYMBOL(pci_alloc_dev);
  
- bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
- 				 int crs_timeout)
-@@ -1261,7 +1261,7 @@ static struct pci_dev *pci_scan_device(struct pci_bus *bus, int devfn)
- 	if (!pci_bus_read_dev_vendor_id(bus, devfn, &l, 60*1000))
- 		return NULL;
+ static int tegra_pcie_power_regate(void)
+@@ -667,7 +645,7 @@ static int tegra_pcie_power_regate(void)
  
--	dev = alloc_pci_dev();
-+	dev = pci_alloc_dev();
- 	if (!dev)
- 		return NULL;
+ 	tegra_pcie_power_off();
  
-diff --git a/drivers/scsi/megaraid.c b/drivers/scsi/megaraid.c
-index 9504ec0..de2e61f 100644
---- a/drivers/scsi/megaraid.c
-+++ b/drivers/scsi/megaraid.c
-@@ -2025,7 +2025,7 @@ megaraid_abort_and_reset(adapter_t *adapter, Scsi_Cmnd *cmd, int aor)
- static inline int
- make_local_pdev(adapter_t *adapter, struct pci_dev **pdev)
+-	tegra_pcie_xclk_clamp(true);
++	tegra_pmc_pcie_xclk_clamp(true);
+ 
+ 	tegra_periph_reset_assert(tegra_pcie.pcie_xclk);
+ 	tegra_periph_reset_assert(tegra_pcie.afi_clk);
+@@ -681,7 +659,7 @@ static int tegra_pcie_power_regate(void)
+ 
+ 	tegra_periph_reset_deassert(tegra_pcie.afi_clk);
+ 
+-	tegra_pcie_xclk_clamp(false);
++	tegra_pmc_pcie_xclk_clamp(false);
+ 
+ 	clk_prepare_enable(tegra_pcie.afi_clk);
+ 	clk_prepare_enable(tegra_pcie.pex_clk);
+diff --git a/arch/arm/mach-tegra/pmc.c b/arch/arm/mach-tegra/pmc.c
+index b30e921..f82284c 100644
+--- a/arch/arm/mach-tegra/pmc.c
++++ b/arch/arm/mach-tegra/pmc.c
+@@ -44,6 +44,10 @@ static DEFINE_SPINLOCK(tegra_powergate_lock);
+ static void __iomem *tegra_pmc_base;
+ static bool tegra_pmc_invert_interrupt;
+ 
++/* PMC access is required for PCIE xclk (un)clamping */
++#define PMC_SCRATCH42		0x144
++#define PMC_SCRATCH42_PCX_CLAMP	(1 << 0)
++
+ static inline u32 tegra_pmc_readl(u32 reg)
  {
--	*pdev = alloc_pci_dev();
-+	*pdev = pci_alloc_dev();
- 
- 	if( *pdev == NULL ) return -1;
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index c4d064d..67edd5a 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -348,7 +348,7 @@ static inline struct pci_dev *pci_physfn(struct pci_dev *dev)
- 	return dev;
+ 	return readl(tegra_pmc_base + reg);
+@@ -166,3 +170,15 @@ void __init tegra_pmc_init(void)
+ 		val &= ~PMC_CTRL_INTR_LOW;
+ 	tegra_pmc_writel(val, PMC_CTRL);
  }
++
++void tegra_pmc_pcie_xclk_clamp(bool clamp)
++{
++	u32 reg;
++
++	reg = tegra_pmc_readl(PMC_SCRATCH42) & ~PMC_SCRATCH42_PCX_CLAMP;
++
++	if (clamp)
++		reg |= PMC_SCRATCH42_PCX_CLAMP;
++
++	tegra_pmc_writel(reg, PMC_SCRATCH42);
++}
+diff --git a/arch/arm/mach-tegra/pmc.h b/arch/arm/mach-tegra/pmc.h
+index 7d44710..c778451 100644
+--- a/arch/arm/mach-tegra/pmc.h
++++ b/arch/arm/mach-tegra/pmc.h
+@@ -23,5 +23,6 @@ int tegra_pmc_cpu_power_on(int cpuid);
+ int tegra_pmc_cpu_remove_clamping(int cpuid);
  
--extern struct pci_dev *alloc_pci_dev(void);
-+extern struct pci_dev *pci_alloc_dev(void);
+ void tegra_pmc_init(void);
++void tegra_pmc_pcie_xclk_clamp(bool clamp);
  
- #define	to_pci_dev(n) container_of(n, struct pci_dev, dev)
- #define for_each_pci_dev(d) while ((d = pci_get_device(PCI_ANY_ID, PCI_ANY_ID, d)) != NULL)
+ #endif
 -- 
-1.7.1
-
+1.8.2
 
