@@ -1,59 +1,83 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:29068 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758362Ab3DAPQN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 1 Apr 2013 11:16:13 -0400
-Message-ID: <1364829361.2882.26.camel@bling.home>
-Subject: Re: [PATCH] PCI/VFIO: use pcie_flags_reg instead of access PCI-E
- Capabilities Register
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org,
-	Hanjun Guo <guohanjun@huawei.com>, jiang.liu@huawei.com
-Date: Mon, 01 Apr 2013 09:16:01 -0600
-In-Reply-To: <1364375140-6388-1-git-send-email-wangyijing@huawei.com>
-References: <1364375140-6388-1-git-send-email-wangyijing@huawei.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Thierry Reding <thierry.reding@avionic-design.de>
+To: Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Russell King <linux@arm.linux.org.uk>,
+	Andrew Murray <andrew.murray@arm.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-tegra@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH v3 06/12] ARM: tegra: Move pmc.h to include/linux/tegra-pmc.h
+Date: Wed,  3 Apr 2013 16:45:12 +0200
+Message-Id: <1365000318-28256-7-git-send-email-thierry.reding@avionic-design.de>
+In-Reply-To: <1365000318-28256-1-git-send-email-thierry.reding@avionic-design.de>
+References: <1365000318-28256-1-git-send-email-thierry.reding@avionic-design.de>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2013-03-27 at 17:05 +0800, Yijing Wang wrote:
-> Currently, we use pcie_flags_reg to cache PCI-E Capabilities Register,
-> because PCI-E Capabilities Register bits are almost read-only. This patch
-> use pcie_flags_reg instead of another access PCI-E Capabilities Register.
-> 
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> ---
->  drivers/vfio/pci/vfio_pci_config.c |    6 +-----
->  1 files changed, 1 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/vfio/pci/vfio_pci_config.c b/drivers/vfio/pci/vfio_pci_config.c
-> index aeb00fc..afc6ca4 100644
-> --- a/drivers/vfio/pci/vfio_pci_config.c
-> +++ b/drivers/vfio/pci/vfio_pci_config.c
-> @@ -1017,13 +1017,9 @@ static int vfio_cap_len(struct vfio_pci_device *vdev, u8 cap, u8 pos)
->  		return byte;
->  	case PCI_CAP_ID_EXP:
->  		/* length based on version */
-> -		ret = pci_read_config_word(pdev, pos + PCI_EXP_FLAGS, &word);
-> -		if (ret)
-> -			return pcibios_err_to_errno(ret);
-> -
->  		vdev->extended_caps = true;
->  
-> -		if ((word & PCI_EXP_FLAGS_VERS) == 1)
-> +		if ((pdev->pcie_flags_reg & PCI_EXP_FLAGS_VERS) == 1)
+In preparation for moving the PCIe driver into the drivers/pci/host
+directory, this header, which contains prototypes that are required by
+the PCIe driver, needs to be moved to a globally visible location.
 
-It looks like we should be using pcie_caps_reg(pdev) here instead of
-directly accessing pcie_flags_reg.  Thanks,
+Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
+---
+Changes in v2:
+- keep tegra_pmc_init() prototype in arch/arm/mach-tegra/pmc.h
+- move pmc.h to includex/linux/tegra-pmc.h
 
-Alex
+Changes in v3:
+- update subject to match new location
 
->  			return PCI_CAP_EXP_ENDPOINT_SIZEOF_V1;
->  		else
->  			return PCI_CAP_EXP_ENDPOINT_SIZEOF_V2;
+ arch/arm/mach-tegra/pmc.h |  1 -
+ include/linux/tegra-pmc.h | 23 +++++++++++++++++++++++
+ 2 files changed, 23 insertions(+), 1 deletion(-)
+ create mode 100644 include/linux/tegra-pmc.h
 
-
+diff --git a/arch/arm/mach-tegra/pmc.h b/arch/arm/mach-tegra/pmc.h
+index c778451..7d44710 100644
+--- a/arch/arm/mach-tegra/pmc.h
++++ b/arch/arm/mach-tegra/pmc.h
+@@ -23,6 +23,5 @@ int tegra_pmc_cpu_power_on(int cpuid);
+ int tegra_pmc_cpu_remove_clamping(int cpuid);
+ 
+ void tegra_pmc_init(void);
+-void tegra_pmc_pcie_xclk_clamp(bool clamp);
+ 
+ #endif
+diff --git a/include/linux/tegra-pmc.h b/include/linux/tegra-pmc.h
+new file mode 100644
+index 0000000..b6296bf
+--- /dev/null
++++ b/include/linux/tegra-pmc.h
+@@ -0,0 +1,23 @@
++/*
++ * Copyright (C) 2012 NVIDIA CORPORATION. All rights reserved.
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms and conditions of the GNU General Public License,
++ * version 2, as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++ * more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
++ *
++ */
++
++#ifndef __LINUX_TEGRA_PMC_H
++#define __LINUX_TEGRA_PMC_H
++
++void tegra_pmc_pcie_xclk_clamp(bool clamp);
++
++#endif
+-- 
+1.8.2
 
