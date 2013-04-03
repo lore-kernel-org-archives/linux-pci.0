@@ -1,48 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f43.google.com ([209.85.219.43]:43787 "EHLO
-	mail-oa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762603Ab3DDO50 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Apr 2013 10:57:26 -0400
-Received: by mail-oa0-f43.google.com with SMTP id l10so2856169oag.30
-        for <linux-pci@vger.kernel.org>; Thu, 04 Apr 2013 07:57:26 -0700 (PDT)
+Received: from fold.natur.cuni.cz ([195.113.57.32]:58380 "HELO
+	fold.natur.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1759293Ab3DCKjk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 3 Apr 2013 06:39:40 -0400
+Message-ID: <515C06E8.4080906@fold.natur.cuni.cz>
+Date: Wed, 03 Apr 2013 12:39:36 +0200
+From: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
 MIME-Version: 1.0
-In-Reply-To: <20130404145012.GA3403@neilslaptop.think-freely.org>
-References: <1362158276-4901-1-git-send-email-nhorman@tuxdriver.com>
- <1362423859-18516-1-git-send-email-nhorman@tuxdriver.com> <CAErSpo4=L9q+q5hqP2Avw6uceQwZiPuOzadhsqGpu6aP53PMbQ@mail.gmail.com>
- <1365085649.28127.66.camel@i7.infradead.org> <20130404145012.GA3403@neilslaptop.think-freely.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 4 Apr 2013 08:57:06 -0600
-Message-ID: <CAErSpo6x5rokg8np7xEKO6y6Qke5X7=r7J7VB2LVrAGGzDC1sA@mail.gmail.com>
-Subject: Re: [PATCH v2] irq: add quirk for broken interrupt remapping on 55XX chipsets
-To: Neil Horman <nhorman@tuxdriver.com>
-Cc: David Woodhouse <dwmw2@infradead.org>,
-	Prarit Bhargava <prarit@redhat.com>,
-	Don Zickus <dzickus@redhat.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Asit Mallick <asit.k.mallick@intel.com>,
+To: huang ying <huang.ying.caritas@gmail.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, Len Brown <lenb@kernel.org>,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	iommu@lists.linux-foundation.org, Yinghai Lu <yinghai@kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Yinghai Lu <yinghai@kernel.org>,
+	Huang Ying <ying.huang@intel.com>
+Subject: Re: [PATCH] PCI / ACPI: Always resume devices on ACPI wakeup notifications
+References: <2282655.IicBMMa6jN@vostro.rjw.lan> <CAErSpo7QXe1-R5_jXCcc3g_J-_HXqO3V12nNB=Z6eCAt-vwKfA@mail.gmail.com> <51548C9E.9090703@fold.natur.cuni.cz> <2990024.LMTIBUbM3d@vostro.rjw.lan> <51564804.9000700@fold.natur.cuni.cz> <CAC=cRTMJH+40oPSM9pFzkb5x6Q42rWR8BPtUOxJn_3WopmOSvQ@mail.gmail.com> <515AF312.1010507@fold.natur.cuni.cz> <CAErSpo6EAkSniVF7NnDVsR=H_x0dHK=xQNbdKf67WDW=o1D+_Q@mail.gmail.com> <515B17D9.6030805@fold.natur.cuni.cz> <515B45A6.1020404@fold.natur.cuni.cz> <CAC=cRTPNfhwSC=3VuxNxXLcp5D_fK3UCwKykWk1yN-6SpGAbVQ@mail.gmail.com>
+In-Reply-To: <CAC=cRTPNfhwSC=3VuxNxXLcp5D_fK3UCwKykWk1yN-6SpGAbVQ@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 4, 2013 at 8:50 AM, Neil Horman <nhorman@tuxdriver.com> wrote:
-> On Thu, Apr 04, 2013 at 03:27:29PM +0100, David Woodhouse wrote:
->> On Wed, 2013-04-03 at 17:53 -0600, Bjorn Helgaas wrote:
->> > );
->> > > +
->> > > +       if ((revision == 0x13) && irq_remapping_enabled) {
->> > > +                pr_warn(HW_ERR "This system BIOS has enabled interrupt remapping\n"
->> > > +                        "on a chipset that contains an errata making that\n"
->> > > +                        "feature unstable.  Please reboot with nointremap\n"
->> > > +                        "added to the kernel command line and contact\n"
->> > > +                        "your BIOS vendor for an update");
+huang ying wrote:
+> Hi, Martin,
+> 
+> On Wed, Apr 3, 2013 at 4:55 AM, Martin Mokrejs
+> <mmokrejs@fold.natur.cuni.cz> wrote:
+>> [ +linux-pci and Yinghai as they suffered already those many emails on individual
+>>  threads so one overviewing email hopefully won't harm] ;-)
 >>
->> This should be WARN_TAINT(TAINT_FIRMWARE_WORKAROUND). And 'an erratum'.
+>> Martin Mokrejs wrote:
+>>>
+>>>
+>>> Bjorn Helgaas wrote:
+>>>> On Tue, Apr 2, 2013 at 9:02 AM, Martin Mokrejs
+>>>> <mmokrejs@fold.natur.cuni.cz> wrote:
+>>>>> Hi Ying,
+>>>>>
+>>>>> huang ying wrote:
+>>>>
+>>>>>> And please give me the full dmesg for boot and incremental dmesg for
+>>>>>> operations.
+>>>>>
+>>>>>
+>>>>> The incremental bits here, the full dmesg will send only directly to your email, due to its size.
+>>>>
+>>>> Is there a bugzilla for this issue?  Please attach the complete dmesg
+>>>> there or somewhere similar so we can all benefit.
+>>>
+>>> I changed my mind. I am attaching the dmesg here but omitting linux-acpi
+>>> list. After I hear a proposal from Rafel/Bjorn I will open separate bugs.
+>>> I thought that the threads I started so far were enough but yes, dmesg
+>>> files don't pass through list filters so I should move that to bugzilla.
+>>>
+>>> so far my view of the the bugs was:
+>>>
+>>> 1) acpiphp hotplug broken due to upstream pcieport 1c.7 PME# enabled
+>>>   (eSATA-based card)
 >>
-> Ok, copy that. I'll repost shortly
+>> Fixed by Ying Huang port_dbg.patch applied over 3.8.5 (fixes acpiphp hotplug
+>> of eSATA and Firewire cards, NOT the hotplug of a NEC-based USB3 card -> hence
+>> the bug 4) below). Now I can continue using laptop-mode-tools.
+>>
+>>
+>>> 2) xHCI dead due to to its suspend - 3.8 series and above
+>>
+>> Not fixed by port_dbg.patch applied over 3.8.5. Interestingly, a NEC-based
+>> XHCI card *in an express card slot* does not suffer this suspend issue.
+>> Although it is being put into suspend if a device is unplugged.
+> 
+> Do not find the dmesg or any other details about this.  Could you
+> provide some details?  Or I miss some emails from you?
 
-When you do, please include URLs for any problem reports or bugzillas you have.
+No, I did not send them away. ;-) I was really waiting for answers how to separate
+the bugs, how to name them, what components in bugzilla, etc.
 
-I assume Windows "just works" in this situation?
+
+So? ;)
+
+> 
+> Best Regards,
+> Huang Ying
+> 
+> 
