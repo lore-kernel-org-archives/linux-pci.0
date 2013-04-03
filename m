@@ -1,69 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from haggis.pcug.org.au ([203.10.76.10]:52947 "EHLO
-	members.tip.net.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751455Ab3DQXY4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 17 Apr 2013 19:24:56 -0400
-Date: Thu, 18 Apr 2013 09:24:44 +1000
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
-Subject: Re: PCI: Remove "extern" from function declarations
-Message-Id: <20130418092444.a4d64d8a9b5f700ba2aae779@canb.auug.org.au>
-Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pgp-signature";
- micalg="PGP-SHA256";
- boundary="Signature=_Thu__18_Apr_2013_09_24_44_+1000_HoRVY3qf2Dd2WFx."
+Received: from mail-ia0-f179.google.com ([209.85.210.179]:39475 "EHLO
+	mail-ia0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758007Ab3DCQb7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 3 Apr 2013 12:31:59 -0400
+Received: by mail-ia0-f179.google.com with SMTP id x24so1433681iak.38
+        for <linux-pci@vger.kernel.org>; Wed, 03 Apr 2013 09:31:59 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20130403142712.160be55e@skate>
+References: <1364395234-11195-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	<20130403142712.160be55e@skate>
+Date: Wed, 3 Apr 2013 18:31:58 +0200
+Message-ID: <CACRpkdYbxXqP_KdcfUFCU4ZyNLn3SmLYcio5QgPqE=zLP7FV2w@mail.gmail.com>
+Subject: Re: [PATCHv7 00/17] PCIe support for the Armada 370 and Armada XP SoCs
+From: Linus Walleij <linus.walleij@linaro.org>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Rob Herring <rob.herring@calxeda.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Russell King <linux@arm.linux.org.uk>,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Jason Cooper <jason@lakedaemon.net>, linux-pci@vger.kernel.org,
+	"devicetree-discuss@lists.ozlabs.org"
+	<devicetree-discuss@lists.ozlabs.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Andrew Murray <andrew.murray@arm.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Mitch Bradley <wmb@firmworks.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Signature=_Thu__18_Apr_2013_09_24_44_+1000_HoRVY3qf2Dd2WFx.
-Content-Type: text/plain; charset=US-ASCII
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+On Wed, Apr 3, 2013 at 2:27 PM, Thomas Petazzoni
+<thomas.petazzoni@free-electrons.com> wrote:
 
-Hi Bjorn,
+> Bjorn, Rob, Grant, Russell,
+>
+> Through this e-mail, I'd like to send you a kind reminder about this
+> patch series. The latest version has been sent a week ago, and there
+> has been only minor changes requested since v4 sent early March, i.e a
+> month ago. Therefore, I would hope for this series to enter 3.10.
+>
+> But this patch set is touching areas you are the maintainer for, so I
+> would appreciate if you could do a formal review and give your comments
+> or your Ack. I would especially appreciate if you do so in the very
+> near future, so that if there are comments, I'll have the time to fix
+> them and resubmit and updated version in time.
+>
+> Here are the patches, classified by maintainer area:
 
-I just noticed this commit (f39d5b72913e "PCI: Remove "extern" from
-function declarations") in the pci next branch.  Just wondering why you
-would do such a thing.  It is a lot of churn in quite a few header files
-and (in my opinion) goes the wrong way anyway.
+FYI I have applied patches 1 thru 3 and converted my PCI DT series
+for the Integrator to use the new infrastructure, so you can add
+Tested-by: Linus Walleij <linus.walleij@linaro.org>
+on these if you wish. (Working fine.)
 
-It may not actually make any difference to the compiler for functions, but
-for variables, it does.   A variable declared in a header file without
-"extern" will effectively define it in every compilation that includes
-the header file, one with "extern" will only produce references.
+The Integrator PCI DT work is dependent on these patches so I
+also have a strong interest to have them merged somewhere so I
+can submit my series against them...
 
-So, since, the global variables really should have the "extern", the
-functions are now inconsistent with that.
-
-It also means that when someone copies a function declaration to make a
-"static inline" stub, the "extern" is a big hint for them to remember to
-make the stub "static" - I have seen several occasions when this was not
-done and that causes compilation failures (but usually only in the
-configuration that the author did not bother to test).
---=20
-Cheers,
-Stephen Rothwell                    sfr@canb.auug.org.au
-
---Signature=_Thu__18_Apr_2013_09_24_44_+1000_HoRVY3qf2Dd2WFx.
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIcBAEBCAAGBQJRby88AAoJEECxmPOUX5FENoEP/1f+udRQ8Edap+MUyWWdrHXd
-yTOOgcSFOgHPpTXnMiPPm31JmMHE6HppsFSps2ITJJ6687S2tvgW6i5BvEzDDY6g
-mtg+1NOCkLwCPqW5oWV2Bp92B3q3YRzYKYGX3rBICjYQ4LvoMS9CdmBqDU1Ubu9O
-r0Uvol1WrUHkOo3FVjz12Gs/kR9Han2m5gqvi0MTV7jwx5ijKyXtjHW3D5UYQHfi
-jDvMNiLLFxLLD9I4le0FKSzM2Dktvjjj55s5o3lMeJmrLSUVdqTO4Ab5Olr3ypFu
-qwk3W8VY1IHYYLnj0CmYttiJP5QCTmQBBhRdwoVImiEVfnNu+KsnStj9yI+fYitt
-cn3QqQ7FkTmpTCI/wkuhM6dDaf3ac4LCQMTm+vrwioRaHEXq74DuSqTh3kGegaD/
-W+J91S/r8KFFOxvXCLdj5cJUqB/cHwR28Ve8TW1MI7Z5vT6JH1X3YfQSnmByTH4w
-zkor/bfnLDEyxcDexPCgAHNU1+P3LvmRShUsqRX8doyzHGH6poqteEGoKGoVcKzp
-QWzeHRL6w0vT6zvWIn/c12+30h7PLfY4Q01VurYiOnjJfnrgPoUm8luHVvrpQdhv
-Lo4UWPFaKHt63QMGW3YlJ/X2twEX4rz7zT5LXFYUoPXaaXtYizYBe1OePozPyzkd
-xm7QT/t8eFGJq7F+w5S5
-=iHpk
------END PGP SIGNATURE-----
-
---Signature=_Thu__18_Apr_2013_09_24_44_+1000_HoRVY3qf2Dd2WFx.--
+Yours,
+Linus Walleij
