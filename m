@@ -1,49 +1,60 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qa0-f53.google.com ([209.85.216.53]:60478 "EHLO
-	mail-qa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751732Ab3DNNnp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 14 Apr 2013 09:43:45 -0400
-Date: Sun, 14 Apr 2013 06:43:39 -0700
-From: Tejun Heo <tj@kernel.org>
-To: Or Gerlitz <ogerlitz@mellanox.com>
-Cc: "Michael S. Tsirkin" <mst@redhat.com>,
-	Ming Lei <ming.lei@canonical.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	David Miller <davem@davemloft.net>,
-	Roland Dreier <roland@kernel.org>,
-	netdev <netdev@vger.kernel.org>, Yan Burman <yanb@mellanox.com>,
-	Jack Morgenstein <jackm@dev.mellanox.co.il>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH repost for-3.9] pci: avoid work_on_cpu for nested SRIOV
- probes
-Message-ID: <20130414134339.GA3050@htj.dyndns.org>
-References: <20130411153030.GA22743@redhat.com>
- <20130411180517.GJ17641@mtj.dyndns.org>
- <20130411185853.GE23301@redhat.com>
- <20130411190408.GM17641@mtj.dyndns.org>
- <20130411191717.GB25515@redhat.com>
- <20130411192005.GN17641@mtj.dyndns.org>
- <20130411203053.GC25515@redhat.com>
- <20130411204104.GC11956@mtj.dyndns.org>
- <516AA80F.7040505@mellanox.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <516AA80F.7040505@mellanox.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Thierry Reding <thierry.reding@avionic-design.de>
+To: Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Russell King <linux@arm.linux.org.uk>,
+	Andrew Murray <andrew.murray@arm.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-tegra@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH v3 09/12] ARM: tegra: tec: Add PCIe support
+Date: Wed,  3 Apr 2013 16:45:15 +0200
+Message-Id: <1365000318-28256-10-git-send-email-thierry.reding@avionic-design.de>
+In-Reply-To: <1365000318-28256-1-git-send-email-thierry.reding@avionic-design.de>
+References: <1365000318-28256-1-git-send-email-thierry.reding@avionic-design.de>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Apr 14, 2013 at 03:58:55PM +0300, Or Gerlitz wrote:
-> So the patch eliminated the lockdep warning for mlx4 nested probing
-> sequence, but introduced lockdep warning for
-> 00:13.0 PIC: Intel Corporation 7500/5520/5500/X58 I/O Hub I/OxAPIC
-> Interrupt Controller (rev 22)
+Enable the first PCIe root port which is connected to an FPGA on the
+Tamonten Evaluation Carrier and add device nodes for each of the PCI
+endpoints available in the standard configuration.
 
-Oops, the patch in itself doesn't really change anything.  The caller
-should use a different subclass for the nested invocation, just like
-spin_lock_nested() and friends.  Sorry about not being clear.
-Michael, can you please help?
+Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
+---
+Changes in v2:
+- remove duplicate nodes and properties defined in tegra20-tamonten.dtsi
 
-Thanks.
+Changes in v3:
+- remove PCIe endpoint device tree nodes, all devices can be discovered
+  via standard PCI enumeration
 
+ arch/arm/boot/dts/tegra20-tec.dts | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/arch/arm/boot/dts/tegra20-tec.dts b/arch/arm/boot/dts/tegra20-tec.dts
+index 1ae37ba..e396cb2 100644
+--- a/arch/arm/boot/dts/tegra20-tec.dts
++++ b/arch/arm/boot/dts/tegra20-tec.dts
+@@ -64,6 +64,14 @@
+ 		};
+ 	};
+ 
++	pcie-controller {
++		status = "okay";
++
++		pci@1,0 {
++			status = "okay";
++		};
++	};
++
+ 	sound {
+ 		compatible = "ad,tegra-audio-wm8903-tec",
+ 			     "nvidia,tegra-audio-wm8903";
 -- 
-tejun
+1.8.2
+
