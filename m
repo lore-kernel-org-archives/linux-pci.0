@@ -1,68 +1,107 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from avon.wwwdotorg.org ([70.85.31.133]:35180 "EHLO
-	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751183Ab3DLRB4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 12 Apr 2013 13:01:56 -0400
-Message-ID: <51683E00.4020506@wwwdotorg.org>
-Date: Fri, 12 Apr 2013 11:01:52 -0600
-From: Stephen Warren <swarren@wwwdotorg.org>
-MIME-Version: 1.0
-To: Jay Agarwal <jagarwal@nvidia.com>
-CC: Prashant Gaikwad <pgaikwad@nvidia.com>,
-	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
-	Krishna Thota <kthota@nvidia.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Peter De Schrijver <pdeschrijver@nvidia.com>,
-	"thierry.reding@avionic-design.de" <thierry.reding@avionic-design.de>,
-	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"olof@lixom.net" <olof@lixom.net>,
-	Laxman Dewangan <ldewangan@nvidia.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"mturquette@linaro.org" <mturquette@linaro.org>,
-	Juha Tukkinen <jtukkinen@nvidia.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Hiroshi Doyu <hdoyu@nvidia.com>
-Subject: Re: [PATCH 1/3] ARM: tegra: pcie: Add tegra3 support
-References: <1365435688-4179-1-git-send-email-jagarwal@nvidia.com> <51630ABB.1020200@wwwdotorg.org> <C79B248886DD134989C8FF6B096A91AB91B36FB300@BGMAIL01.nvidia.com>
-In-Reply-To: <C79B248886DD134989C8FF6B096A91AB91B36FB300@BGMAIL01.nvidia.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Thierry Reding <thierry.reding@avionic-design.de>
+To: Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Russell King <linux@arm.linux.org.uk>,
+	Andrew Murray <andrew.murray@arm.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-tegra@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH v3 00/12] Rewrite Tegra PCIe driver
+Date: Wed,  3 Apr 2013 16:45:06 +0200
+Message-Id: <1365000318-28256-1-git-send-email-thierry.reding@avionic-design.de>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/12/2013 10:43 AM, Jay Agarwal wrote:
->> On 04/08/2013 09:41 AM, Jay Agarwal wrote:
->>> Signed-off-by: Jay Agarwal <jagarwal@nvidia.com>
->>>
->>> - Enable pcie root port 2 for cardhu
->>> - Make private data structure for each SOC
->>> - Add required tegra3 clocks and regulators
->>> - Add tegra3 specific code in enable controller
->>> - Modify clock tree to get clocks based on device
->>> - Based on git://gitorious.org/thierryreding/linux.git
->> 	
->> A couple more points on this patch:
->>
->> * You didn't mention that this series is based on Thierry's work-in-progress
->> tree, and not something immediately destined for upstream. As such, only
->> Thierry is expected to actually apply any of these patches.
->>
-> [>] Stephen, I have mentioned it in comment description as Based on git://gitorious.org/thierryreding/linux.git, is this not enough?
+This patch series contains an almost complete rewrite of the Tegra PCIe
+driver. The code is moved to the drivers/pci/host directory and turned
+into a proper platform driver, adding MSI and DT support while at it.
+Other PCI host controller drivers can be added to that directory in an
+attempt to make it easier to factor out common code.
 
-Well, first off, there are many branches there, and secondly the branch
-that a series is based on doesn't necessarily imply much about what you
-expect people to do with it.
+Patches 1 to 3 add generic OF helpers to parse a PCI node's ranges
+property as well as obtain the device and function numbers from a node's
+reg property.
 
-> 
->> * Your changes to the Tegra PCIe driver require that device tree include
->> extra clocks and regulators. You need to update
->> Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt to describe
->> these new requirements.
->
-> [>] Should I create tegra30-pcie.txt? or made changes in tegra20-pcie.txt itself?
+Patch 4 introduces a new MSI chip infrastructure which is required to
+make multiple platform-specific implementations of the MSI support
+functions coexist peacefully.
 
-(What is "[>]"?)
+Patches 5 and 6 move some of the Tegra specific code around to allow it
+to be used from outside the arch/arm/mach-tegra directory.
 
-It'd probably be simplest to edit tegra20-pcie.txt, and just mention the
-extra requirements for Tegra30.
+Patch 7 moves the Tegra PCIe controller driver to the drivers/pci/host
+directory and turns it into a proper platform driver. It also adds MSI
+(based on patches by NVIDIA) and DT support.
+
+Patches 8 to 11 add device tree based probing for the TEC, Harmony and
+TrimSlice boards. Finally the default configuration for Tegra is updated
+in patch 12.
+
+Thierry
+
+Andrew Murray (1):
+  of/pci: Provide support for parsing PCI DT ranges property
+
+Thierry Reding (11):
+  of/pci: Add of_pci_get_devfn() function
+  of/pci: Add of_pci_parse_bus_range() function
+  PCI: Introduce new MSI chip infrastructure
+  ARM: tegra: Move tegra_pcie_xclk_clamp() to PMC
+  ARM: tegra: Move pmc.h to include/linux/tegra-pmc.h
+  PCI: tegra: Move PCIe driver to drivers/pci/host
+  ARM: tegra: tamonten: Add PCIe support
+  ARM: tegra: tec: Add PCIe support
+  ARM: tegra: harmony: Initialize PCIe from DT
+  ARM: tegra: trimslice: Initialize PCIe from DT
+  ARM: tegra: Update default configuration (PCIe)
+
+ .../bindings/pci/nvidia,tegra20-pcie.txt           |  123 ++
+ arch/arm/boot/dts/tegra20-harmony.dts              |   20 +-
+ arch/arm/boot/dts/tegra20-tamonten.dtsi            |   17 +-
+ arch/arm/boot/dts/tegra20-tec.dts                  |    8 +
+ arch/arm/boot/dts/tegra20-trimslice.dts            |   28 +
+ arch/arm/boot/dts/tegra20.dtsi                     |   53 +
+ arch/arm/configs/tegra_defconfig                   |    4 +-
+ arch/arm/mach-tegra/Kconfig                        |    7 +-
+ arch/arm/mach-tegra/Makefile                       |    3 -
+ arch/arm/mach-tegra/board-harmony-pcie.c           |   89 --
+ arch/arm/mach-tegra/board.h                        |    8 -
+ arch/arm/mach-tegra/iomap.h                        |    3 -
+ arch/arm/mach-tegra/pcie.c                         |  886 -----------
+ arch/arm/mach-tegra/pmc.c                          |   16 +
+ arch/arm/mach-tegra/tegra.c                        |   24 -
+ arch/microblaze/pci/pci-common.c                   |  110 +-
+ arch/mips/pci/pci.c                                |   50 +-
+ arch/powerpc/kernel/pci-common.c                   |   99 +-
+ drivers/of/address.c                               |   63 +
+ drivers/of/of_pci.c                                |   59 +-
+ drivers/pci/Kconfig                                |    2 +
+ drivers/pci/Makefile                               |    3 +
+ drivers/pci/host/Kconfig                           |    8 +
+ drivers/pci/host/Makefile                          |    1 +
+ drivers/pci/host/pci-tegra.c                       | 1560 ++++++++++++++++++++
+ drivers/pci/msi.c                                  |   35 +-
+ drivers/pci/probe.c                                |    1 +
+ include/linux/msi.h                                |   10 +
+ include/linux/of_address.h                         |   42 +
+ include/linux/of_pci.h                             |    2 +
+ include/linux/pci.h                                |    1 +
+ include/linux/tegra-pmc.h                          |   23 +
+ 32 files changed, 2155 insertions(+), 1203 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
+ delete mode 100644 arch/arm/mach-tegra/board-harmony-pcie.c
+ delete mode 100644 arch/arm/mach-tegra/pcie.c
+ create mode 100644 drivers/pci/host/Kconfig
+ create mode 100644 drivers/pci/host/Makefile
+ create mode 100644 drivers/pci/host/pci-tegra.c
+ create mode 100644 include/linux/tegra-pmc.h
+
+-- 
+1.8.2
+
