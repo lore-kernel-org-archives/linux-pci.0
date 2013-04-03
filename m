@@ -1,49 +1,89 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f175.google.com ([209.85.223.175]:37543 "EHLO
-	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1763865Ab3DDRkI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Apr 2013 13:40:08 -0400
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <515DB7F6.8010502@redhat.com>
-References: <1362158276-4901-1-git-send-email-nhorman@tuxdriver.com>
-	<1365088091-10862-1-git-send-email-nhorman@tuxdriver.com>
-	<CAE9FiQUq8m_2fpyRrLweCZwR7cqFBfbZrt9ZeK-PVL3Puxjp0g@mail.gmail.com>
-	<515DB7F6.8010502@redhat.com>
-Date: Thu, 4 Apr 2013 10:40:07 -0700
-Message-ID: <CAE9FiQVXG+ns00sCAKGY5Xs3BT3Cc=LRyEkZzHP9DQXS+4KCKg@mail.gmail.com>
-Subject: Re: [PATCH v4] irq: add quirk for broken interrupt remapping on 55XX chipsets
-From: Yinghai Lu <yinghai@kernel.org>
-To: Don Dutile <ddutile@redhat.com>
-Cc: Neil Horman <nhorman@tuxdriver.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Prarit Bhargava <prarit@redhat.com>,
-	Don Zickus <dzickus@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Asit Mallick <asit.k.mallick@intel.com>,
-	David Woodhouse <dwmw2@infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+In-Reply-To: <1364444938-19801-1-git-send-email-yinghai@kernel.org>
+References: <1364444938-19801-1-git-send-email-yinghai@kernel.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 3 Apr 2013 17:00:59 -0600
+Message-ID: <CAErSpo5s59VB5-9r3Ns5w5i2orfaYDujGs4YL0r-kSziJuc41A@mail.gmail.com>
+Subject: Re: [PATCH] PCI, ACPI: Don't query OSC support with all possible controls
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Len Brown <len.brown@intel.com>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Bob Moore <robert.moore@intel.com>
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 4, 2013 at 10:27 AM, Don Dutile <ddutile@redhat.com> wrote:
->> You need to move the quirk to early_quirk to append nointremap to
->> avoid extra rebooting.
->>
-> The pci-dev's of all the (minimally, root, 5500-chipset) pci-dev's are
-> known/scanned/created by that time?
+[+cc Bob for spec typo question]
 
-in arch/x86/kernel/early-quirk.c
+On Wed, Mar 27, 2013 at 10:28 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> Found problem on system that firmware that could handle pci aer.
+> Firmware get error reporting after pci injecting error, before os boots.
+> But after os boots, firmware can not get report anymore, even pci=noaer
+> is passed.
+>
+> Root cause: BIOS _OSC has problem with query bit checking.
+> It turns out that BIOS vendor is copying example code from ACPI Spec.
+> In ACPI Spec 5.0, page 290:
+>
+>         If (Not(And(CDW1,1))) // Query flag clear?
+>         {       // Disable GPEs for features granted native control.
+>                 If (And(CTRL,0x01)) // Hot plug control granted?
+>                 {
+>                         Store(0,HPCE) // clear the hot plug SCI enable bit
+>                         Store(1,HPCS) // clear the hot plug SCI status bit
+>                 }
+>         ...
+>         }
+>
+> When Query flag is set, And(CDW1,1) will be 1, Not(1) will return 0xfffffffe.
+> So it will get into code path that should be for control set only.
+> BIOS acpi code should be changed to "If (LEqual(And(CDW1,1), 0)))"
 
-and on top of
-https://git.kernel.org/cgit/linux/kernel/git/yinghai/linux-yinghai.git/commit/?h=for-x86-early-quirk-usb&id=de38757e964cfee20e6da1977572a2191d7f4aa0
+Isn't this just a typo in the spec?  Shouldn't it be using "LNot"
+instead of "Not"?
 
-You could add one entry in early_qrk[].
+         If (LNot(And(CDW1,1))) // Query flag clear?
 
-Some one already try to use that path to disable x2apic on some thinkpad.
+Of course, that doesn't change the need for your Linux change, though
+a comment about the hazard might be nice for future readers.
 
-So it should work on nointrremap too.
-
-Thanks
-
-Yinghai
+> Current kernel code is using _OSC query to notify firmware about support
+> from OS and then use _OSC to set control bits.
+> During query support, current code is using all possible controls.
+> So will execute code that should be only for control set stage.
+>
+> That will have problem when pci=noaer or aer firmware_first is used.
+> As firmware have that control set for os aer already in query support stage,
+> but later will not os aer handling.
+>
+> We should avoid passing all possible controls, just use osc_control_set
+> instead.
+> That should workaround BIOS bugs with affected systems on the field
+> as more bios vendors are copying sample code from ACPI spec.
+>
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> Cc: stable@kernel.org
+>
+> ---
+>  drivers/acpi/pci_root.c |    4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+>
+> Index: linux-2.6/drivers/acpi/pci_root.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/acpi/pci_root.c
+> +++ linux-2.6/drivers/acpi/pci_root.c
+> @@ -201,8 +201,8 @@ static acpi_status acpi_pci_query_osc(st
+>                 *control &= OSC_PCI_CONTROL_MASKS;
+>                 capbuf[OSC_CONTROL_TYPE] = *control | root->osc_control_set;
+>         } else {
+> -               /* Run _OSC query for all possible controls. */
+> -               capbuf[OSC_CONTROL_TYPE] = OSC_PCI_CONTROL_MASKS;
+> +               /* Run _OSC query only with existing controls. */
+> +               capbuf[OSC_CONTROL_TYPE] = root->osc_control_set;
+>         }
+>
+>         status = acpi_pci_run_osc(root->device->handle, capbuf, &result);
