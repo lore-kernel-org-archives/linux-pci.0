@@ -1,64 +1,84 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f171.google.com ([209.85.223.171]:60768 "EHLO
-	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934468Ab3DKQz1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 11 Apr 2013 12:55:27 -0400
-Received: by mail-ie0-f171.google.com with SMTP id e14so2317153iej.30
-        for <linux-pci@vger.kernel.org>; Thu, 11 Apr 2013 09:55:26 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1365693969-23907-1-git-send-email-Andrew.Murray@arm.com>
-References: <1365693969-23907-1-git-send-email-Andrew.Murray@arm.com>
-Date: Thu, 11 Apr 2013 18:55:26 +0200
-Message-ID: <CACRpkda_LxhoS5eciuC7F3_zmfYLyNO2fALi=ABeqGJDpSpKWw@mail.gmail.com>
-Subject: Re: [PATCH v6 0/3] of/pci: Provide common support for PCI DT parsing
-From: Linus Walleij <linus.walleij@linaro.org>
-To: Andrew Murray <Andrew.Murray@arm.com>
-Cc: Rob Herring <rob.herring@calxeda.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Thierry Reding <thierry.reding@avionic-design.de>
+To: Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Russell King <linux@arm.linux.org.uk>,
+	Andrew Murray <andrew.murray@arm.com>,
 	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	siva.kallam@samsung.com, linux-pci@vger.kernel.org,
-	"devicetree-discuss@lists.ozlabs.org"
-	<devicetree-discuss@lists.ozlabs.org>,
-	Jingoo Han <jg1.han@samsung.com>, Liviu.Dudau@arm.com,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-samsung-soc <linux-samsung-soc@vger.kernel.org>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	suren.reddy@samsung.com,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Michal Simek <monstr@monstr.eu>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Paul Mackerras <paulus@samba.org>,
-	Grant Likely <grant.likely@secretlab.ca>,
+	Arnd Bergmann <arnd@arndb.de>,
 	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Thomas Abraham <thomas.abraham@linaro.org>,
-	Arnd Bergmann <arnd@arndb.de>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+	devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-tegra@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH v3 11/12] ARM: tegra: trimslice: Initialize PCIe from DT
+Date: Wed,  3 Apr 2013 16:45:17 +0200
+Message-Id: <1365000318-28256-12-git-send-email-thierry.reding@avionic-design.de>
+In-Reply-To: <1365000318-28256-1-git-send-email-thierry.reding@avionic-design.de>
+References: <1365000318-28256-1-git-send-email-thierry.reding@avionic-design.de>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 11, 2013 at 5:26 PM, Andrew Murray <Andrew.Murray@arm.com> wrote:
+With the device tree support in place, probe the PCIe controller from
+the device tree and remove the corresponding workaround in the board
+file.
 
-> This patchset factors out duplicated code associated with parsing PCI
-> DT "ranges" properties across the architectures and introduces a
-> "ranges" parser. This parser "of_pci_range_parser" can be used directly
-> by ARM host bridge drivers enabling them to obtain ranges from device
-> trees.
->
-> I've included the Reviewed-by and Tested-by's received from v5 in this
-> patchset, earlier versions of this patchset (v3) have been tested-by:
->
-> Thierry Reding <thierry.reding@avionic-design.de>
-> Jingoo Han <jg1.han@samsung.com>
->
-> I believe a version of this patchset has also been tested through its
-> inclusion in Thomas Petazzoni's Armada 370 and Armada XP SoCs PCIe support by:
->
-> Linus Walleij <linus.walleij@linaro.org>
+Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
+---
+Changes in v2:
+- add missing dummy regulator nodes by Stephen Warren
+- rename port 0 DT node and disable unused port 1
 
-Yes you can add my Tested-by tag.
+ arch/arm/boot/dts/tegra20-trimslice.dts | 28 ++++++++++++++++++++++++++++
+ 1 file changed, 28 insertions(+)
 
-Yours,
-Linus Walleij
+diff --git a/arch/arm/boot/dts/tegra20-trimslice.dts b/arch/arm/boot/dts/tegra20-trimslice.dts
+index 955bf49..dc081c3 100644
+--- a/arch/arm/boot/dts/tegra20-trimslice.dts
++++ b/arch/arm/boot/dts/tegra20-trimslice.dts
+@@ -300,6 +300,16 @@
+ 		};
+ 	};
+ 
++	pcie-controller {
++		status = "okay";
++		pex-clk-supply = <&pci_clk_reg>;
++		vdd-supply = <&pci_vdd_reg>;
++
++		pci@1,0 {
++			status = "okay";
++		};
++	};
++
+ 	usb@c5000000 {
+ 		status = "okay";
+ 		nvidia,vbus-gpio = <&gpio 170 0>; /* gpio PV2 */
+@@ -357,6 +367,24 @@
+ 			regulator-max-microvolt = <1800000>;
+ 			regulator-always-on;
+ 		};
++
++		pci_clk_reg: regulator@2 {
++			compatible = "regulator-fixed";
++			reg = <2>;
++			regulator-name = "pci_clk";
++			regulator-min-microvolt = <3300000>;
++			regulator-max-microvolt = <3300000>;
++			regulator-always-on;
++		};
++
++		pci_vdd_reg: regulator@3 {
++			compatible = "regulator-fixed";
++			reg = <3>;
++			regulator-name = "pci_vdd";
++			regulator-min-microvolt = <1050000>;
++			regulator-max-microvolt = <1050000>;
++			regulator-always-on;
++		};
+ 	};
+ 
+ 	sound {
+-- 
+1.8.2
+
