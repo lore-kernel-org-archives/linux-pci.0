@@ -1,121 +1,101 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:34471 "EHLO hydra.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S935536Ab3DPRxm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 16 Apr 2013 13:53:42 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	"Benenati, Chris J" <chris.j.benenati@intel.com>,
-	Ajaykumar Hotchandani <ajaykumar.hotchandani@oracle.com>
-Subject: Re: [PATCH] PCI / PM: Fix fallback to PCI_D0 in pci_platform_power_transition()
-Date: Tue, 16 Apr 2013 20:01:33 +0200
-Message-ID: <2880576.TkeK8oBDas@vostro.rjw.lan>
-In-Reply-To: <CAErSpo7vUWSoav+rJgGK15xA7f0W+a0_16tZLFGCz5HO-HVZ2g@mail.gmail.com>
-References: <48795235.crcTAaJqPb@vostro.rjw.lan> <CAE9FiQVEWy2MVfVmv4oL9D24OcF83dQv+OcFd5K6v8ZHeGumJA@mail.gmail.com> <CAErSpo7vUWSoav+rJgGK15xA7f0W+a0_16tZLFGCz5HO-HVZ2g@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Thierry Reding <thierry.reding@avionic-design.de>
+To: Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Russell King <linux@arm.linux.org.uk>,
+	Andrew Murray <andrew.murray@arm.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-tegra@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH v3 02/12] of/pci: Add of_pci_get_devfn() function
+Date: Wed,  3 Apr 2013 16:45:08 +0200
+Message-Id: <1365000318-28256-3-git-send-email-thierry.reding@avionic-design.de>
+In-Reply-To: <1365000318-28256-1-git-send-email-thierry.reding@avionic-design.de>
+References: <1365000318-28256-1-git-send-email-thierry.reding@avionic-design.de>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, April 15, 2013 02:18:18 PM Bjorn Helgaas wrote:
-> On Fri, Apr 12, 2013 at 11:50 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> > On Fri, Apr 12, 2013 at 4:58 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> >> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> >>
-> >> Commit b51306c (PCI: Set device power state to PCI_D0 for device
-> >> without native PM support) modified pci_platform_power_transition()
-> >> by adding code causing dev->current_state for devices that don't
-> >> support native PCI PM but are power-manageable by the platform to be
-> >> changed to PCI_D0 regardless of the value returned by the preceding
-> >> platform_pci_set_power_state().  In particular, that also is done
-> >> if the platform_pci_set_power_state() has been successful, which
-> >> causes the correct power state of the device set by
-> >> pci_update_current_state() in that case to be overwritten by PCI_D0.
-> >>
-> >> Fix that mistake by making the fallback to PCI_D0 only happen if
-> >> the platform_pci_set_power_state() has returned an error.
-> >>
-> >> Reported-by: Chris J. Benenati <chris.j.benenati@intel.com>
-> >> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> >> Cc: <stable@vger.kernel.org>
-> 
-> I folded in Yinghai's simplification and added a URL to Chris's report
-> and applied to my pci/rafael-pm branch:
-> http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/rafael-pm
-> 
-> If it still looks good to you, Rafael, I'll merge it to next for v3.10.
+This function can be used to parse the device and function number from a
+standard 5-cell PCI resource. PCI_SLOT() and PCI_FUNC() can be used on
+the returned value obtain the device and function numbers respectively.
 
-Well, the simplification adds an extra check for error into both code paths,
-so I'm not sure if it's really worth it (that's why I didn't do it originally
-in the first place), but I suppose that's not a big deal.  It looks good as far
-as the correctness is concerned anyway.
+Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
+---
+Changes in v2:
+- rename devfn and err variables for clarity
 
-> I don't know what the user-visible effect of this is, and it's been
-> around for a long time, but if you think this should go in v3.9
-> instead, let me know.
+ drivers/of/of_pci.c    | 34 +++++++++++++++++++++++++++++-----
+ include/linux/of_pci.h |  1 +
+ 2 files changed, 30 insertions(+), 5 deletions(-)
 
-I think v3.9+stable should be sufficient.
-
-Thanks,
-Rafael
-
-
-> >> ---
-> >>  drivers/pci/pci.c |    3 +--
-> >>  1 file changed, 1 insertion(+), 2 deletions(-)
-> >>
-> >> Index: linux-pm/drivers/pci/pci.c
-> >> ===================================================================
-> >> --- linux-pm.orig/drivers/pci/pci.c
-> >> +++ linux-pm/drivers/pci/pci.c
-> >> @@ -646,8 +646,7 @@ static int pci_platform_power_transition
-> >>                 error = platform_pci_set_power_state(dev, state);
-> >>                 if (!error)
-> >>                         pci_update_current_state(dev, state);
-> >> -               /* Fall back to PCI_D0 if native PM is not supported */
-> >> -               if (!dev->pm_cap)
-> >> +               else if (!dev->pm_cap) /* Fall back to PCI_D0 */
-> >>                         dev->current_state = PCI_D0;
-> >>         } else {
-> >>                 error = -ENODEV;
-> >>
-> >
-> > Acked-by: Yinghai Lu <yinghai@kernel.org>
-> >
-> > also could simplify it further.
-> >
-> > ---
-> >  drivers/pci/pci.c |   12 ++++--------
-> >  1 file changed, 4 insertions(+), 8 deletions(-)
-> >
-> > Index: linux-2.6/drivers/pci/pci.c
-> > ===================================================================
-> > --- linux-2.6.orig/drivers/pci/pci.c
-> > +++ linux-2.6/drivers/pci/pci.c
-> > @@ -646,15 +646,11 @@ static int pci_platform_power_transition
-> >          error = platform_pci_set_power_state(dev, state);
-> >          if (!error)
-> >              pci_update_current_state(dev, state);
-> > -        /* Fall back to PCI_D0 if native PM is not supported */
-> > -        if (!dev->pm_cap)
-> > -            dev->current_state = PCI_D0;
-> > -    } else {
-> > +    } else
-> >          error = -ENODEV;
-> > -        /* Fall back to PCI_D0 if native PM is not supported */
-> > -        if (!dev->pm_cap)
-> > -            dev->current_state = PCI_D0;
-> > -    }
-> > +
-> > +    if (error && !dev->pm_cap) /* Fall back to PCI_D0 */
-> > +        dev->current_state = PCI_D0;
-> >
-> >      return error;
-> >  }
+diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
+index 13e37e2..4dd7b9b 100644
+--- a/drivers/of/of_pci.c
++++ b/drivers/of/of_pci.c
+@@ -5,14 +5,15 @@
+ #include <asm/prom.h>
+ 
+ static inline int __of_pci_pci_compare(struct device_node *node,
+-				       unsigned int devfn)
++				       unsigned int data)
+ {
+-	unsigned int size;
+-	const __be32 *reg = of_get_property(node, "reg", &size);
++	int devfn;
+ 
+-	if (!reg || size < 5 * sizeof(__be32))
++	devfn = of_pci_get_devfn(node);
++	if (devfn < 0)
+ 		return 0;
+-	return ((be32_to_cpup(&reg[0]) >> 8) & 0xff) == devfn;
++
++	return devfn == data;
+ }
+ 
+ struct device_node *of_pci_find_child_device(struct device_node *parent,
+@@ -40,3 +41,26 @@ struct device_node *of_pci_find_child_device(struct device_node *parent,
+ 	return NULL;
+ }
+ EXPORT_SYMBOL_GPL(of_pci_find_child_device);
++
++/**
++ * of_pci_get_devfn() - Get device and function numbers for a device node
++ * @np: device node
++ *
++ * Parses a standard 5-cell PCI resource and returns an 8-bit value that can
++ * be passed to the PCI_SLOT() and PCI_FUNC() macros to extract the device
++ * and function numbers respectively. On error a negative error code is
++ * returned.
++ */
++int of_pci_get_devfn(struct device_node *np)
++{
++	unsigned int size;
++	const __be32 *reg;
++
++	reg = of_get_property(np, "reg", &size);
++
++	if (!reg || size < 5 * sizeof(__be32))
++		return -EINVAL;
++
++	return (be32_to_cpup(reg) >> 8) & 0xff;
++}
++EXPORT_SYMBOL_GPL(of_pci_get_devfn);
+diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
+index bb115de..91ec484 100644
+--- a/include/linux/of_pci.h
++++ b/include/linux/of_pci.h
+@@ -10,5 +10,6 @@ int of_irq_map_pci(const struct pci_dev *pdev, struct of_irq *out_irq);
+ struct device_node;
+ struct device_node *of_pci_find_child_device(struct device_node *parent,
+ 					     unsigned int devfn);
++int of_pci_get_devfn(struct device_node *np);
+ 
+ #endif
 -- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+1.8.2
+
