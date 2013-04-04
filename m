@@ -1,48 +1,137 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-we0-f175.google.com ([74.125.82.175]:53698 "EHLO
-	mail-we0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754426Ab3DRJ5X (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 18 Apr 2013 05:57:23 -0400
-Received: by mail-we0-f175.google.com with SMTP id t11so2138406wey.34
-        for <linux-pci@vger.kernel.org>; Thu, 18 Apr 2013 02:57:22 -0700 (PDT)
-From: Jack Morgenstein <jackm@dev.mellanox.co.il>
-To: "Michael S. Tsirkin" <mst@redhat.com>
-Subject: Re: [PATCH repost for-3.9] pci: avoid work_on_cpu for nested SRIOV probes
-Date: Thu, 18 Apr 2013 12:57:50 +0300
-Cc: Tejun Heo <tj@kernel.org>, Or Gerlitz <ogerlitz@mellanox.com>,
-	Ming Lei <ming.lei@canonical.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	David Miller <davem@davemloft.net>,
-	Roland Dreier <roland@kernel.org>,
-	netdev <netdev@vger.kernel.org>, Yan Burman <yanb@mellanox.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-References: <20130411153030.GA22743@redhat.com> <201304181240.10239.jackm@dev.mellanox.co.il> <20130418084832.GA16728@redhat.com>
-In-Reply-To: <20130418084832.GA16728@redhat.com>
+Received: from mail-ob0-f175.google.com ([209.85.214.175]:46191 "EHLO
+	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1764944Ab3DDVgI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Apr 2013 17:36:08 -0400
+Received: by mail-ob0-f175.google.com with SMTP id va7so3116191obc.34
+        for <linux-pci@vger.kernel.org>; Thu, 04 Apr 2013 14:36:06 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <201304181257.50915.jackm@dev.mellanox.co.il>
+In-Reply-To: <1363217302-14383-27-git-send-email-yinghai@kernel.org>
+References: <1363217302-14383-1-git-send-email-yinghai@kernel.org> <1363217302-14383-27-git-send-email-yinghai@kernel.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 4 Apr 2013 15:35:44 -0600
+Message-ID: <CAErSpo7DhyVwNng=uBR=YMC3ZMFUtV-MDuukjMMGFxMmgHZR=w@mail.gmail.com>
+Subject: Re: [PATCH v3 26/27] PCI: Make quirk_io_region to use addon_res
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Ram Pai <linuxram@us.ibm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday 18 April 2013 11:48, Michael S. Tsirkin wrote:
-> On Thu, Apr 18, 2013 at 12:40:09PM +0300, Jack Morgenstein wrote:
-> > On Thursday 18 April 2013 11:33, Michael S. Tsirkin wrote:
-> > > But for pci_sriov_enable, the situation is actually very simple:
-> > > VFs almost never use the same driver as the PF so the warning
-> > > is bogus there.
-> > > 
-> > What about the case where the VF driver IS the same as the PF driver?
-> 
-> Then it can deadlock, e.g. if driver takes a global mutex.  But it's an
-> internal driver issue the, you can trigger a deadlock through hardware
-> too, e.g. if VF initialization blocks until PF is fully initialized.
-> I think it's not the case for Mellanox, is it?
+On Wed, Mar 13, 2013 at 5:28 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> After they are put in add-on resources, they will be safely claimed later.
+>
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> ---
+>  drivers/pci/quirks.c |  155 +++++++++++++++++++++++---------------------------
+>  1 file changed, 70 insertions(+), 85 deletions(-)
+>
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index 7e5392c..6d379d6 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -324,29 +324,61 @@ static void quirk_cs5536_vsa(struct pci_dev *dev)
+>  }
+>  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_CS5536_ISA, quirk_cs5536_vsa);
+>
+> -static void quirk_io_region(struct pci_dev *dev, unsigned region,
+> -       unsigned size, int nr, const char *name)
+> +static int quirk_read_io(struct pci_dev *dev, struct resource *res, int port)
+>  {
+> -       region &= ~(size-1);
+> -       if (region) {
+> -               struct pci_bus_region bus_region;
+> -               struct resource *res = dev->resource + nr;
+> +       struct pci_bus_region bus_region;
+> +       u16 region;
+> +       unsigned size = to_pci_dev_addon_resource(res)->size;
+>
+> -               res->name = pci_name(dev);
+> -               res->start = region;
+> -               res->end = region + size - 1;
+> -               res->flags = IORESOURCE_IO;
+> +       pci_read_config_word(dev, port, &region);
+> +       region &= ~(size - 1);
+>
+> -               /* Convert from PCI bus to resource space.  */
+> -               bus_region.start = res->start;
+> -               bus_region.end = res->end;
+> -               pcibios_bus_to_resource(dev, res, &bus_region);
+> +       /* Convert from PCI bus to resource space.  */
+> +       bus_region.start = region;
+> +       bus_region.end = region + size - 1;
+>
+> -               if (pci_claim_resource(dev, nr) == 0)
+> -                       dev_info(&dev->dev, "quirk: %pR claimed by %s\n",
+> -                                res, name);
+> -       }
+> -}
+> +       pcibios_bus_to_resource(dev, res, &bus_region);
+> +
+> +       res->flags |= IORESOURCE_IO;
+> +       dev_info(&dev->dev, "PIO at %pR\n", res);
+> +
+> +       return 0;
+> +}
+> +static int quirk_write_io(struct pci_dev *dev, struct resource *res, int port)
+> +{
+> +       struct pci_bus_region bus_region;
+> +       u16 region;
+> +       unsigned size = to_pci_dev_addon_resource(res)->size;
+> +
+> +       pci_read_config_word(dev, port, &region);
+> +       region &= size - 1;
+> +
+> +       /* Convert to PCI bus space.  */
+> +       pcibios_resource_to_bus(dev, &bus_region, res);
+> +       region |= bus_region.start & (~(size - 1));
+> +
+> +       pci_write_config_word(dev, port, region);
+> +
+> +       return 0;
+> +}
+> +static struct resource_ops quirk_io_ops = {
+> +       .read = quirk_read_io,
+> +       .write = quirk_write_io,
+> +};
+> +
+> +static void quirk_io_region(struct pci_dev *dev, int port,
+> +                                       unsigned size, char *name)
+> +{
+> +       u16 region;
+> +
+> +       pci_read_config_word(dev, port, &region);
+> +       region &= size - 1;
+> +
+> +       if (!region)
+> +               return;
+> +
+> +       pci_add_dev_addon_resource(dev, port, size, &quirk_io_ops, name);
+> +}
+>
+>  /*
+>   *     ATI Northbridge setups MCE the processor if you even
+> @@ -374,12 +406,8 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_RS100,   quirk_ati_
+>   */
+>  static void quirk_ali7101_acpi(struct pci_dev *dev)
+>  {
+> -       u16 region;
+> -
+> -       pci_read_config_word(dev, 0xE0, &region);
+> -       quirk_io_region(dev, region, 64, PCI_BRIDGE_RESOURCES, "ali7101 ACPI");
+> -       pci_read_config_word(dev, 0xE2, &region);
+> -       quirk_io_region(dev, region, 32, PCI_BRIDGE_RESOURCES+1, "ali7101 SMB");
+> +       quirk_io_region(dev, 0xE0, 64, "ali7101 ACPI");
+> +       quirk_io_region(dev, 0xE2, 32, "ali7101 SMB");
 
-Correct, the Mellanox driver does not deadlock.
+This patch has two changes that need to be separated:
 
-> This is what I refer to: would be nice to fix nested probing in general
-> but it seems disabling the warning is the best we can do for 3.9 since
-> it causes false positives.
-> 
-> 
+  1) Refactoring quirk_io_region() so the pci_read_config_word() is
+done by quirk_io_region() rather than the caller.
+  2) Whatever pci_dev resource changes we end up making.
+
+I think part 1 can be done at any time and is probably not controversial.
+
+Bjorn
