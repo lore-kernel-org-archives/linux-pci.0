@@ -1,40 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36545 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752204Ab3DQFeQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 17 Apr 2013 01:34:16 -0400
-Date: Wed, 17 Apr 2013 07:33:41 +0200
-From: Veaceslav Falico <vfalico@redhat.com>
-To: Rusty Russell <rusty@rustcorp.com.au>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	gregkh@linuxfoundation.org, bhelgaas@google.com
-Subject: Re: [PATCH] module: add kset_obj_exists() and use it
-Message-ID: <20130417053341.GA7195@redhat.com>
-References: <1365506529-8396-1-git-send-email-vfalico@redhat.com>
- <87y5cq6ei9.fsf@rustcorp.com.au>
- <20130411095537.GC21320@redhat.com>
- <87vc7o8r7o.fsf@rustcorp.com.au>
- <20130416122653.GB31290@redhat.com>
- <87txn56cbi.fsf@rustcorp.com.au>
+Received: from mail-ob0-f176.google.com ([209.85.214.176]:53720 "EHLO
+	mail-ob0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1763285Ab3DDQd5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Apr 2013 12:33:57 -0400
+Received: by mail-ob0-f176.google.com with SMTP id er7so2737754obc.35
+        for <linux-pci@vger.kernel.org>; Thu, 04 Apr 2013 09:33:56 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-In-Reply-To: <87txn56cbi.fsf@rustcorp.com.au>
+In-Reply-To: <1365075572-20763-3-git-send-email-shangw@linux.vnet.ibm.com>
+References: <1365075572-20763-1-git-send-email-shangw@linux.vnet.ibm.com> <1365075572-20763-3-git-send-email-shangw@linux.vnet.ibm.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 4 Apr 2013 10:33:36 -0600
+Message-ID: <CAErSpo43ZT05aO-H14AN6DTg3-Qw21fHv37Qb-KTZFPO4Q3bMQ@mail.gmail.com>
+Subject: Re: [PATCH 2/5] PCI: Use MSI/MSI-X cap cache in pci_msi_check_device()
+To: Gavin Shan <shangw@linux.vnet.ibm.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 17, 2013 at 01:25:13PM +0930, Rusty Russell wrote:
->Veaceslav Falico <vfalico@redhat.com> writes:
->> Tested for a day on two reproducers on the latest upstream kernel, with the
->> recent kobject fix a49b7e82 ("kobject: fix kset_find_obj() race with
->> concurrent last kobject_put()") - it fixes the issue, no regressions met.
+On Thu, Apr 4, 2013 at 5:39 AM, Gavin Shan <shangw@linux.vnet.ibm.com> wrote:
+> The function pci_msi_check_device() is called while enabling MSI
+> or MSI-X interrupts to make sure the PCI device can support MSI
+> or MSI-X capability. The patch changes the function for a bit to
+> use the cached MSI or MSI-X capability in pci_dev instead of polling
+> them from config space.
 >
->Thanks, I've included the fix in my modules-next tree.
+> Signed-off-by: Gavin Shan <shangw@linux.vnet.ibm.com>
+> ---
+>  drivers/pci/msi.c |    8 +++++---
+>  1 files changed, 5 insertions(+), 3 deletions(-)
 >
->I did not CC:stable, since concurrent unload and reload is not really a
->normal condition.
+> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> index 3459bdf..5f51e10 100644
+> --- a/drivers/pci/msi.c
+> +++ b/drivers/pci/msi.c
+> @@ -772,6 +772,11 @@ static int pci_msi_check_device(struct pci_dev *dev, int nvec, int type)
+>         if (!pci_msi_enable || !dev || dev->no_msi)
+>                 return -EINVAL;
+>
+> +       /* Check if the PCI device has MSI or MSI-X capability */
+> +       if ((type == PCI_CAP_ID_MSI && !dev->msi_cap) ||
+> +           (type == PCI_CAP_ID_MSIX && !dev->msix_cap))
+> +               return -EINVAL;
 
-Sounds great, thank you!
+The whole point of this is simplification, so just add "if
+(!dev->msi_cap) return -EINVAL" (or "if (!dev->msix_cap)") to the
+callers and drop the checking here in pci_msi_check_device().
 
+> +
+>         /*
+>          * You can't ask to have 0 or less MSIs configured.
+>          *  a) it's stupid ..
+> @@ -795,9 +800,6 @@ static int pci_msi_check_device(struct pci_dev *dev, int nvec, int type)
+>         if (ret)
+>                 return ret;
 >
->Cheers,
->Rusty.
+> -       if (!pci_find_capability(dev, type))
+> -               return -EINVAL;
+> -
+>         return 0;
+>  }
+>
+> --
+> 1.7.5.4
+>
