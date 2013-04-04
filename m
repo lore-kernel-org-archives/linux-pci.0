@@ -1,103 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:53111 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S936489Ab3DIVHJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Apr 2013 17:07:09 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Russell King <linux@arm.linux.org.uk>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	devicetree-discuss@lists.ozlabs.org,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Maen Suleiman <maen@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Olof Johansson <olof@lixom.net>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Mitch Bradley <wmb@firmworks.com>,
-	Andrew Murray <andrew.murray@arm.com>
-Subject: [PATCHv8 12/19] arm: mvebu: add PCIe Device Tree informations for Armada 370
-Date: Tue,  9 Apr 2013 23:06:33 +0200
-Message-Id: <1365541601-14095-13-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1365541601-14095-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1365541601-14095-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from e35.co.us.ibm.com ([32.97.110.153]:58966 "EHLO
+	e35.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758672Ab3DDLjm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Apr 2013 07:39:42 -0400
+Received: from /spool/local
+	by e35.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <shangw@linux.vnet.ibm.com>;
+	Thu, 4 Apr 2013 05:39:41 -0600
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by d03dlp02.boulder.ibm.com (Postfix) with ESMTP id 8BECC3E40040
+	for <linux-pci@vger.kernel.org>; Thu,  4 Apr 2013 05:39:26 -0600 (MDT)
+Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
+	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id r34Bdc7a331286
+	for <linux-pci@vger.kernel.org>; Thu, 4 Apr 2013 05:39:38 -0600
+Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av04.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id r34Bdbnc017989
+	for <linux-pci@vger.kernel.org>; Thu, 4 Apr 2013 05:39:38 -0600
+From: Gavin Shan <shangw@linux.vnet.ibm.com>
+To: linux-pci@vger.kernel.org
+Cc: bhelgaas@google.com, Gavin Shan <shangw@linux.vnet.ibm.com>
+Subject: [PATCH 2/5] PCI: Use MSI/MSI-X cap cache in pci_msi_check_device()
+Date: Thu,  4 Apr 2013 19:39:29 +0800
+Message-Id: <1365075572-20763-3-git-send-email-shangw@linux.vnet.ibm.com>
+In-Reply-To: <1365075572-20763-1-git-send-email-shangw@linux.vnet.ibm.com>
+References: <1365075572-20763-1-git-send-email-shangw@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The Armada 370 SoC has two 1x PCIe 2.0 interfaces, so we add the
-necessary Device Tree informations to make these interfaces availabel.
+The function pci_msi_check_device() is called while enabling MSI
+or MSI-X interrupts to make sure the PCI device can support MSI
+or MSI-X capability. The patch changes the function for a bit to
+use the cached MSI or MSI-X capability in pci_dev instead of polling
+them from config space.
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Signed-off-by: Gavin Shan <shangw@linux.vnet.ibm.com>
 ---
- arch/arm/boot/dts/armada-370.dtsi |   51 +++++++++++++++++++++++++++++++++++++
- 1 file changed, 51 insertions(+)
+ drivers/pci/msi.c |    8 +++++---
+ 1 files changed, 5 insertions(+), 3 deletions(-)
 
-diff --git a/arch/arm/boot/dts/armada-370.dtsi b/arch/arm/boot/dts/armada-370.dtsi
-index 8188d13..2d9f8d6 100644
---- a/arch/arm/boot/dts/armada-370.dtsi
-+++ b/arch/arm/boot/dts/armada-370.dtsi
-@@ -153,5 +153,56 @@
- 			clocks = <&coreclk 0>;
- 		};
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 3459bdf..5f51e10 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -772,6 +772,11 @@ static int pci_msi_check_device(struct pci_dev *dev, int nvec, int type)
+ 	if (!pci_msi_enable || !dev || dev->no_msi)
+ 		return -EINVAL;
  
-+		pcie-controller {
-+			compatible = "marvell,armada-370-pcie";
-+			status = "disabled";
-+			device_type = "pci";
++	/* Check if the PCI device has MSI or MSI-X capability */
++	if ((type == PCI_CAP_ID_MSI && !dev->msi_cap) ||
++	    (type == PCI_CAP_ID_MSIX && !dev->msix_cap))
++		return -EINVAL;
 +
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+
-+			bus-range = <0x00 0xff>;
-+
-+			reg = <0xd0040000 0x2000>, <0xd0080000 0x2000>;
-+
-+			reg-names = "pcie0.0", "pcie1.0";
-+
-+			ranges = <0x82000000 0 0xd0040000 0xd0040000 0 0x00002000   /* Port 0.0 registers */
-+				  0x82000000 0 0xd0080000 0xd0080000 0 0x00002000   /* Port 1.0 registers */
-+				  0x82000000 0 0xe0000000 0xe0000000 0 0x08000000   /* non-prefetchable memory */
-+			          0x81000000 0 0          0xe8000000 0 0x00100000>; /* downstream I/O */
-+
-+			pcie@1,0 {
-+				device_type = "pci";
-+				assigned-addresses = <0x82000800 0 0xd0040000 0 0x2000>;
-+				reg = <0x0800 0 0 0 0>;
-+				#address-cells = <3>;
-+				#size-cells = <2>;
-+				#interrupt-cells = <1>;
-+				ranges;
-+				interrupt-map-mask = <0 0 0 0>;
-+				interrupt-map = <0 0 0 0 &mpic 58>;
-+				marvell,pcie-port = <0>;
-+				marvell,pcie-lane = <0>;
-+				clocks = <&gateclk 5>;
-+				status = "disabled";
-+			};
-+
-+			pcie@2,0 {
-+				device_type = "pci";
-+				assigned-addresses = <0x82002800 0 0xd0080000 0 0x2000>;
-+				reg = <0x1000 0 0 0 0>;
-+				#address-cells = <3>;
-+				#size-cells = <2>;
-+				#interrupt-cells = <1>;
-+				ranges;
-+				interrupt-map-mask = <0 0 0 0>;
-+				interrupt-map = <0 0 0 0 &mpic 62>;
-+				marvell,pcie-port = <1>;
-+				marvell,pcie-lane = <0>;
-+				clocks = <&gateclk 9>;
-+				status = "disabled";
-+			};
-+		};
- 	};
- };
+ 	/*
+ 	 * You can't ask to have 0 or less MSIs configured.
+ 	 *  a) it's stupid ..
+@@ -795,9 +800,6 @@ static int pci_msi_check_device(struct pci_dev *dev, int nvec, int type)
+ 	if (ret)
+ 		return ret;
+ 
+-	if (!pci_find_capability(dev, type))
+-		return -EINVAL;
+-
+ 	return 0;
+ }
+ 
 -- 
-1.7.9.5
+1.7.5.4
 
