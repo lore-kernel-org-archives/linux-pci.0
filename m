@@ -1,88 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:55372 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1764511Ab3DDTTd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 4 Apr 2013 15:19:33 -0400
-Date: Thu, 4 Apr 2013 12:19:33 -0700
-From: Sarah Sharp <sarah.a.sharp@linux.intel.com>
-To: Huang Ying <ying.huang@intel.com>
-Cc: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	huang ying <huang.ying.caritas@gmail.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, Len Brown <lenb@kernel.org>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: Re: [PATCH] PCI / ACPI: Always resume devices on ACPI wakeup
- notifications
-Message-ID: <20130404191933.GC15489@xanatos>
-References: <51548C9E.9090703@fold.natur.cuni.cz>
- <2990024.LMTIBUbM3d@vostro.rjw.lan>
- <51564804.9000700@fold.natur.cuni.cz>
- <CAC=cRTMJH+40oPSM9pFzkb5x6Q42rWR8BPtUOxJn_3WopmOSvQ@mail.gmail.com>
- <515AF312.1010507@fold.natur.cuni.cz>
- <CAErSpo6EAkSniVF7NnDVsR=H_x0dHK=xQNbdKf67WDW=o1D+_Q@mail.gmail.com>
- <515B17D9.6030805@fold.natur.cuni.cz>
- <515B45A6.1020404@fold.natur.cuni.cz>
- <515C1DB8.5020905@fold.natur.cuni.cz>
- <1365075019.8901.9.camel@yhuang-mobile.sh.intel.com>
+Received: from mail-oa0-f45.google.com ([209.85.219.45]:55545 "EHLO
+	mail-oa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1763761Ab3DDROw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Apr 2013 13:14:52 -0400
+Received: by mail-oa0-f45.google.com with SMTP id o6so3070963oag.18
+        for <linux-pci@vger.kernel.org>; Thu, 04 Apr 2013 10:14:51 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1365075019.8901.9.camel@yhuang-mobile.sh.intel.com>
+In-Reply-To: <20130404153905.GB3403@neilslaptop.think-freely.org>
+References: <1362158276-4901-1-git-send-email-nhorman@tuxdriver.com>
+ <1362423859-18516-1-git-send-email-nhorman@tuxdriver.com> <CAErSpo4=L9q+q5hqP2Avw6uceQwZiPuOzadhsqGpu6aP53PMbQ@mail.gmail.com>
+ <1365085649.28127.66.camel@i7.infradead.org> <20130404145012.GA3403@neilslaptop.think-freely.org>
+ <CAErSpo6x5rokg8np7xEKO6y6Qke5X7=r7J7VB2LVrAGGzDC1sA@mail.gmail.com> <20130404153905.GB3403@neilslaptop.think-freely.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 4 Apr 2013 11:14:30 -0600
+Message-ID: <CAErSpo7Mup+k7UmZsH1ZidCM1dJw-rNfdtCC6dSF+cZe1d+aBg@mail.gmail.com>
+Subject: Re: [PATCH v2] irq: add quirk for broken interrupt remapping on 55XX chipsets
+To: Neil Horman <nhorman@tuxdriver.com>
+Cc: David Woodhouse <dwmw2@infradead.org>,
+	Prarit Bhargava <prarit@redhat.com>,
+	Don Zickus <dzickus@redhat.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Asit Mallick <asit.k.mallick@intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	iommu@lists.linux-foundation.org, Yinghai Lu <yinghai@kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 04, 2013 at 07:30:19PM +0800, Huang Ying wrote:
-> Hi, Martin,
-> 
-> On Wed, 2013-04-03 at 14:16 +0200, Martin Mokrejs wrote:
-> > >> 2) xHCI dead due to to its suspend - 3.8 series and above
-> > > 
-> > > Not fixed by port_dbg.patch applied over 3.8.5. Interestingly, a NEC-based
-> > > XHCI card *in an express card slot* does not suffer this suspend issue.
-> > > Although it is being put into suspend if a device is unplugged.
-> > 
-> > 20130402/3.8.5-ying_port-dbg__with_laptop-mode-tools_xHCI_test_TI-based
-> > 20130402/3.8.5-ying_port-dbg__with_laptop-mode-tools_xHCI_test_NEC-based
-> > 
-> > Same thing but yet without the port_dbg.patch:
-> > 20130402/3.9-rc5__with_2368081__with-latop-mode-tools_xhci_testing/
-> 
-> It appears that TI xHCI dead port issue will present even if the PCIe
-> port will never go suspended.  So I think this bug is not related to
-> PCIe port runtime PM but related to USB xHCI.
-> 
-> Do you agree Sarah?
+On Thu, Apr 4, 2013 at 9:39 AM, Neil Horman <nhorman@tuxdriver.com> wrote:
+> On Thu, Apr 04, 2013 at 08:57:06AM -0600, Bjorn Helgaas wrote:
+>> On Thu, Apr 4, 2013 at 8:50 AM, Neil Horman <nhorman@tuxdriver.com> wrote:
+>> > On Thu, Apr 04, 2013 at 03:27:29PM +0100, David Woodhouse wrote:
+>> >> On Wed, 2013-04-03 at 17:53 -0600, Bjorn Helgaas wrote:
+>> >> > );
+>> >> > > +
+>> >> > > +       if ((revision == 0x13) && irq_remapping_enabled) {
+>> >> > > +                pr_warn(HW_ERR "This system BIOS has enabled interrupt remapping\n"
+>> >> > > +                        "on a chipset that contains an errata making that\n"
+>> >> > > +                        "feature unstable.  Please reboot with nointremap\n"
+>> >> > > +                        "added to the kernel command line and contact\n"
+>> >> > > +                        "your BIOS vendor for an update");
+>> >>
+>> >> This should be WARN_TAINT(TAINT_FIRMWARE_WORKAROUND). And 'an erratum'.
+>> >>
+>> > Ok, copy that. I'll repost shortly
+>>
+>> When you do, please include URLs for any problem reports or bugzillas you have.
+>>
+> Well, those are going to be vendor specific, so I'm not sure we can really do
+> that, at least not in any meaningful way.
 
-No.  The symptoms he described (in another email) were that the port
-only becomes "dead" after a USB 2.0 device is removed, and the host was
-suspended.  The issue was that the TI host is simply not reporting the
-USB device connect, even if it is manually resumed.  The port status
-registers do not show a device connect at all.
+Sorry, I don't understand your point.  It's useful to know who
+reported it (e.g., for future testers) and what happened and what
+bugzillas it solved.  Of course it applies only to machines with this
+chipset and certain BIOS revisions.
 
-Martin, can you confirm this by trying this, and sending me dmesg of the
-test with CONFIG_USB_DEBUG and CONFIG_USB_XHCI_HCD_DEBUGGING turned on:
+>> I assume Windows "just works" in this situation?
+> No more or less than linux does in this case.  The Intel provided errata
+> indicates that the only acceptable workaround is to disable remapping in the
+> BIOS, so I would presume that if a windows system has a BIOS that doesn't
+> implement this fix, its just as exposed as we are.
 
-1. Remove the laptop mode tools
-2. Reboot with no USB devices attached to the TI host
-3. Make sure the xHCI PCI device's power/control file is set to 'on'
-   You will find that file in /sys/bus/pci/devices/.  Use lspci to
-   figure out which directory is the xHCI PCI device.
-4. Plug in a USB 2.0 device and make sure it works (e.g. wiggle a
-   mouse)
-5. Unplug the device, replug it, and check to see if it works.
+It sounds like the effect of this bug is that on Linux, devices may
+not work at all because of lost interrupts.  Either Windows must never
+enable remapping (so it never sees the bug), or it must be designed in
+a way that tolerates the problem.  I can't believe these machines
+shipped with Windows certification if devices didn't work correctly.
 
-If you have problems, stop here.  Otherwise try:
+Either way, I don't understand why we can't make the quirk just fix
+this.  Booting with "nointremap" only sets disable_irq_remap, which is
+only used by irq_remapping_supported().  Early quirks are run before
+irq_remapping_supported () is ever called, so an early quirk ought to
+be just as effective as the command line option.  Here's the relevant
+call tree I see:
 
-6. Unplug all USB devices
-7. echo 'auto' to the xHCI PCI device's power/control file in
-8. echo 'auto' to both xHCI roothubs in /sys/bus/usb/devices/
-   (i.e. all usbN directories)
-9. Wait a few seconds or so until the xHCI PCI host suspends, meaning the
-   power/runtime_status file reads as 'suspended'
-10. Plug in the same USB 2.0 device, and check if it works.
-11. Unplug the device, and wait until the PCI host is suspended.
-12. Replug the device, and check to see if it works.
+  start_kernel
+    setup_arch
+      parse_early_param
+      early_quirks
+    rest_init
+      ...
+        <first use of disable_irq_remap>
 
-Sarah Sharp
+The x86 setup_arch() does call generic_apic_probe(), but as far as I
+can tell, none of the APIC .probe() methods reference
+disable_irq_remap, so that doesn't look like a problem.
+
+Bjorn
