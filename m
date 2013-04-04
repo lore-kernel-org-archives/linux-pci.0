@@ -1,62 +1,97 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ia0-f173.google.com ([209.85.210.173]:50138 "EHLO
-	mail-ia0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754549Ab3DFCcT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Apr 2013 22:32:19 -0400
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <7u61w2ppuct79kmjwclqv15y.1365211547178@email.android.com>
-References: <7u61w2ppuct79kmjwclqv15y.1365211547178@email.android.com>
-Date: Fri, 5 Apr 2013 19:32:19 -0700
-Message-ID: <CAE9FiQVuLCaCxTrgpVm7nmJbFkAWTRJqA9T6oJo3LSqSKwq3Fg@mail.gmail.com>
-Subject: Re: [PATCH v6] irq: add quirk for broken interrupt remapping on 55XX chipsets
-From: Yinghai Lu <yinghai@kernel.org>
-To: Neil Horman <nhorman@tuxdriver.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Prarit Bhargava <prarit@redhat.com>,
-	Don Zickus <dzickus@redhat.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Asit Mallick <asit.k.mallick@intel.com>,
-	David Woodhouse <dwmw2@infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+In-Reply-To: <514BAB13.3000101@gmail.com>
+References: <20130321043449.7229.81056.stgit@amt.stowe> <20130321043502.7229.43877.stgit@amt.stowe>
+ <514BAB13.3000101@gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 4 Apr 2013 12:06:58 -0600
+Message-ID: <CAErSpo4FajG4hz8ELinnFLjk_3j=gQpC9zi4jR6pi=qoOda5cg@mail.gmail.com>
+Subject: Re: [PATCH 2/3] PCI: Handle device quirks when accessing sysfs
+ resource<N> entries
+To: Robert Hancock <hancockrwd@gmail.com>
+Cc: Myron Stowe <myron.stowe@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Xiangliang Yu <yuxiangl@marvell.com>,
+	xiangliang yu <yxlraid@gmail.com>,
+	Greg Kroah-Hartman <greg@kroah.com>,
+	"alex.williamson@redhat.com" <alex.williamson@redhat.com>,
+	Kay Sievers <kay@vrfy.org>,
+	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 5, 2013 at 6:25 PM, Neil Horman <nhorman@tuxdriver.com> wrote:
-> I'm sorry.  Forgot to change the wording of the error for the new model that I'm following here.  Although the message is mostly right as bios is responsible for setting and clearing the IRQ remapping feature bit in the chips capabilities register.
+On Thu, Mar 21, 2013 at 6:51 PM, Robert Hancock <hancockrwd@gmail.com> wrote:
+> On 03/20/2013 10:35 PM, Myron Stowe wrote:
+>>
+>> Sysfs includes entries to memory regions that back a PCI device's BARs.
+>> The pci-sysfs entries backing I/O Port BARs can be accessed by userspace,
+>> providing direct access to the device's registers.  File permissions
+>> prevent random users from accessing the device's registers through these
+>> files, but don't stop a privileged app that chooses to ignore the purpose
+>> of these files from doing so.
+>>
+>> There are devices with abnormally strict restrictions with respect to
+>> accessing their registers; aspects that are typically handled by the
+>> device's driver.  When these access restrictions are not followed - as
+>> when a userspace app such as "udevadm info --attribute-walk
+>> --path=/sys/..." parses though reading all the device's sysfs entries - it
+>> can cause such devices to fail.
+>>
+>> This patch introduces a quirking mechanism that can be used to detect
+>> accesses that do no meet the device's restrictions, letting a device
+>> specific method intervene and decide how to progress.
+>>
+>> Reported-by: Xiangliang Yu <yuxiangl@marvell.com>
+>> Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
 >
-> I'll fix and repost Monday
+>
+> I honestly don't think there's much point in even attempting this strategy.
+> This list of devices in the quirk can't possibly be complete. It would
+> likely be easier to enumerate a white-list of devices that can deal with
+> their IO ports being read willy-nilly than a blacklist of those that don't,
+> as there's likely countless devices that fall into this category. Even if
+> they don't choke as badly as these ones do, it's quite likely that bad
+> behavior will result.
 
->>> diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
->>> index d56f8c1..2b56e92 100644
->>> --- a/drivers/iommu/irq_remapping.c
->>> +++ b/drivers/iommu/irq_remapping.c
->>> @@ -19,6 +19,7 @@
->>>  int irq_remapping_enabled;
->>>
->>>  int disable_irq_remap;
->>> +int irq_remap_broken;
->>>  int disable_sourceid_checking;
->>>  int no_x2apic_optout;
->>>
->>> @@ -216,6 +217,17 @@ int irq_remapping_supported(void)
->>>         if (disable_irq_remap)
->>>                 return 0;
->>>
->>> +       if (irq_remap_broken) {
->>> +               WARN_TAINT(1, TAIN_FIRMWARE_WORKAROUND,
->>> +                          "This system BIOS has enabled interrupt remapping\n"
->>> +                          "on a chipset that contains an erratum making that\n"
->>> +                          "feature unstable.  Please reboot with nointremap\n"
->>> +                          "added to the kernel command line and contact\n"
->>> +                          "your BIOS vendor for an update");
+I agree, I'm not inclined to add a bunch of code that only fixes one
+device when there are likely many others with similar problems.
 
-Also please put those warning code in to
-drivers/iommu/intel_irq_remapping.c::intel_irq_remapping_supported()
+> I think there's a few things that need to be done:
+>
+> -Fix the bug in udevadm that caused it to trawl through these files
+> willy-nilly,
 
-It does not belong to drivers/iommu/irq_remapping.c.
+We can argue about whether this is actually a bug in udevadm, but
+either way, my opinion is that the data that udevadm prints out from
+these files is uninteresting in the same way the data from "uevent,"
+"dev," "modalias," "resource," etc. is uninteresting.  So to me, a
+udevadm change seems justified for that reason.
 
-Thanks
+> -Fix the kernel so that access through these files complies with the
+> kernel's mechanisms for claiming IO/memory regions to prevent access
+> conflicts (i.e. opening these files should claim the resource region they
+> refer to, and should fail with EBUSY or something if another process or a
+> kernel driver is using it).
+>
+> -Reconsider whether supporting read/write on the resource files for IO port
+> regions like these makes any sense. Obviously mmap isn't very practical for
+> IO port access on x86 but you could even do something like an ioctl for this
+> purpose. Not very many pieces of software would need to access these files
+> so it's likely OK if the API is a bit ugly. That would prevent something
+> like grepping through sysfs from generating port accesses to random devices.
 
-Yinghai
+This is the approach I'd like to push on for a kernel fix.  I'm not a
+VM person, but if it were possible to support .mmap() in such a way
+that a handler would be called for every access to the region, we
+could easily support I/O port access that way.
+
+Along that line, I'm concerned that we may have a hole in the MEM BAR
+.mmap() path.  What happens if we have BARs from two different devices
+in the same page, and we mmap() one of them?  Does the user also get
+access to the second device's BAR on the same page?  If so, that could
+also be fixed with an .mmap() trap approach.  Performance would suck
+for these small BARs, of course.
+
+Bjorn
