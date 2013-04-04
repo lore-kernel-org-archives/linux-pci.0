@@ -1,69 +1,84 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 17 Apr 2013 21:32:42 +0400
-From: Artem Savkov <artem.savkov@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Li Zhong <zhong@linux.vnet.ibm.com>,
-	linux-next list <linux-next@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: Re: [PATCH] PCI: pci_bus_add_device() should succeed even if
- creating sysfs files fails
-Message-ID: <20130417173229.GA23950@thinkpad.lan>
-References: <1366196798-15929-1-git-send-email-artem.savkov@gmail.com>
- <CAErSpo6uAbiJ5GtvOmoABvwSnWj3DRRrXB6K1PzQSnReFqbqxA@mail.gmail.com>
- <CAErSpo7nj3DQ-RB0UJdkzfN0L891xiTH8yzzcv7pW4AZ6waJ2A@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <CAErSpo7nj3DQ-RB0UJdkzfN0L891xiTH8yzzcv7pW4AZ6waJ2A@mail.gmail.com>
+In-Reply-To: <1363217302-14383-3-git-send-email-yinghai@kernel.org>
+References: <1363217302-14383-1-git-send-email-yinghai@kernel.org> <1363217302-14383-3-git-send-email-yinghai@kernel.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 4 Apr 2013 16:00:30 -0600
+Message-ID: <CAErSpo6rmxMrX8EWiaut3wLSCu7LvmstyadEnTRu4Bv5MVyXJw@mail.gmail.com>
+Subject: Re: [PATCH v3 02/27] PCI: Add pci_dev_resource_idx() helper
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Ram Pai <linuxram@us.ibm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 17, 2013 at 10:42:12AM -0600, Bjorn Helgaas wrote:
-> On Wed, Apr 17, 2013 at 9:54 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> > On Wed, Apr 17, 2013 at 5:06 AM, Artem Savkov <artem.savkov@gmail.com> wrote:
-> >> Introduced in cc8f7f9e4e79a0940af6b4b6fdfbcf18a03aa9f4
-> >> ("PCI: Fix __must_check annotation on pci_create_sysfs_dev_files()")
-> >>
-> >> pci_bus_add_device() should not fail to add device if
-> >> pci_create_sysfs_dev_files() call fails, as sysfs files are not critical.
-> >>
-> >> pci_sysfs_init() is a "late_initcall" and is called after acpi_init, so
-> >> pci_bus_add_device() fails to create devices during boot resulting in a
-> >> bug during acpi_init. It is safe not to create sysfs_dev_files in
-> >> pci_bus_add_device() as they are later created in pci_sysfs_ini().
-> >> ...
-> 
-> > Sorry for the breakage.  Thanks for the report, analysis, and fix.
-> > I'll fix this up
-> 
-> It's not clear to me what the best fix is, so I just dropped my original patch.
-> 
-> It's clearly wrong to have __must_check on the
-> pci_create_sysfs_dev_files() definition, because it doesn't do
-> anything there.
-> 
-> We could simply drop the __must_check altogether, as you suggest, but
-> I'd rather structure things to avoid the failure in the first place
-> rather than ignoring an error.
-> 
-> It would be ideal if we could get rid of the pci_sysfs_init()
-> late_initcall and just make the pci_create_sysfs_dev_files() from
-> pci_bus_add_device() work all the time, even at boot-time.  I didn't
-> look hard enough to figure out why this needs to be a late_initcall.
-> In any case, we can figure this out later, after we merge the current
-> stuff for v3.10.
+On Wed, Mar 13, 2013 at 5:27 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> Use resource pointer to get index in pci resources array/list.
+>
+> -v2: export symbol for acpiphp compiling error, found by
+>        Steven Newbury <steve@snewbury.org.uk>
+>
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> ---
+>  drivers/pci/probe.c |    9 +++++++++
+>  include/linux/pci.h |    1 +
+>  2 files changed, 10 insertions(+)
+>
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 9cb3eb3..1df75f7 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -114,6 +114,15 @@ struct resource *pci_dev_resource_n(struct pci_dev *dev, int n)
+>  }
+>  EXPORT_SYMBOL(pci_dev_resource_n);
+>
+> +int pci_dev_resource_idx(struct pci_dev *dev, struct resource *res)
+> +{
+> +       if (res >= dev->resource &&
+> +           res <= dev->resource + (PCI_NUM_RESOURCES - 1))
+> +               return res - dev->resource;
+> +
+> +       return -1;
+> +}
 
-It looks like late_initcall is either due to "it belongs there" or maybe
-pci_create_sysfs_dev_files() was initially only called from
-pci_sysfs_init() and pci subsystem should have been initialized before
-this for devices to be there to add to sysfs. I've tried changing
-late_initcall to subsys_initcall and didn't see any immediate problems.
+I'm dubious about the whole idea of a resource *index*.  I'd like to
+get away from that concept completely.
 
-Anyway even with things properly aligned it still sounds like a bad idea
-to fail pci_bus_add_device() call just because creating sysfs files
-fails. Some kind of warning should be enough.
+Some uses of this are just for printing and are obviously unnecessary
+(get_res_add_size()).
 
--- 
-Regards,
-Artem
+Other places we pass around the index, e.g.,
+reassign_resources_sorted() passes it to pci_assign_resource() and
+pci_reassign_resource(), and eventually we just pass the index to
+pci_dev_resource_n() to get back what we started with.  I'd rather
+just pass around a pointer instead of this half pointer/half index
+strategy.
+
+We might need a "struct pci_resource" or something that contains the
+type (BAR, IOV, bridge window, etc), a BAR number, etc.  There's
+already a "struct pci_resource" in cpqphp, but that's isolated to
+cpqphp and could be easily changed if you wanted that name.
+
+It's going to be very confusing to have a "struct pci_dev_resource"
+and a "pci_dev_resource_n()" that have nothing to do with each other.
+
+>  static u64 pci_size(u64 base, u64 maxbase, u64 mask)
+>  {
+>         u64 size = mask & maxbase;      /* Find the significant bits */
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 00d5367..aefff8b 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -339,6 +339,7 @@ struct pci_dev {
+>  };
+>
+>  struct resource *pci_dev_resource_n(struct pci_dev *dev, int n);
+> +int pci_dev_resource_idx(struct pci_dev *dev, struct resource *res);
+>
+>  static inline struct pci_dev *pci_physfn(struct pci_dev *dev)
+>  {
+> --
+> 1.7.10.4
+>
