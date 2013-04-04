@@ -1,180 +1,158 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <515A00A6.7000301@fold.natur.cuni.cz>
-Date: Mon, 01 Apr 2013 23:48:22 +0200
-From: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-CC: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Len Brown <lenb@kernel.org>,
+Message-ID: <1365075019.8901.9.camel@yhuang-mobile.sh.intel.com>
+Subject: Re: [PATCH] PCI / ACPI: Always resume devices on ACPI wakeup
+ notifications
+From: Huang Ying <ying.huang@intel.com>
+To: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>,
+	Sarah Sharp <sarah.a.sharp@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	huang ying <huang.ying.caritas@gmail.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, Len Brown <lenb@kernel.org>,
 	Matthew Garrett <mjg59@srcf.ucam.org>,
-	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
-	LKML <linux-kernel@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Zheng Yan <zheng.z.yan@intel.com>
-Subject: Re: [Update][PATCH] PCI / PM: Disable runtime PM of PCIe ports
-References: <2282655.IicBMMa6jN@vostro.rjw.lan> <1378320.ernsY1JWPv@vostro.rjw.lan> <CAErSpo7kGBNEkLOftJ1J7ivaxZL-yVWyAwmoiQ1=NADpmJ67XA@mail.gmail.com> <3943547.m5K1tfygWn@vostro.rjw.lan> <CAErSpo5iyziiGDKiy-416UQ2xr+2hvcHz6do+ueMmnPM5oy6Cw@mail.gmail.com>
-In-Reply-To: <CAErSpo5iyziiGDKiy-416UQ2xr+2hvcHz6do+ueMmnPM5oy6Cw@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+	Yinghai Lu <yinghai@kernel.org>
+In-Reply-To: <515C1DB8.5020905@fold.natur.cuni.cz>
+References: <2282655.IicBMMa6jN@vostro.rjw.lan>
+	 <CAErSpo7QXe1-R5_jXCcc3g_J-_HXqO3V12nNB=Z6eCAt-vwKfA@mail.gmail.com>
+	 <51548C9E.9090703@fold.natur.cuni.cz> <2990024.LMTIBUbM3d@vostro.rjw.lan>
+	 <51564804.9000700@fold.natur.cuni.cz>
+	 <CAC=cRTMJH+40oPSM9pFzkb5x6Q42rWR8BPtUOxJn_3WopmOSvQ@mail.gmail.com>
+	 <515AF312.1010507@fold.natur.cuni.cz>
+	 <CAErSpo6EAkSniVF7NnDVsR=H_x0dHK=xQNbdKf67WDW=o1D+_Q@mail.gmail.com>
+	 <515B17D9.6030805@fold.natur.cuni.cz> <515B45A6.1020404@fold.natur.cuni.cz>
+	 <515C1DB8.5020905@fold.natur.cuni.cz>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 04 Apr 2013 19:30:19 +0800
+Mime-Version: 1.0
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Bjorn Helgaas wrote:
-> On Mon, Apr 1, 2013 at 2:51 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
->> On Monday, April 01, 2013 11:34:46 AM Bjorn Helgaas wrote:
->>> [+cc Zheng, who added this with 71a83bd727]
->>>
->>> On Sat, Mar 30, 2013 at 4:38 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
->>>> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->>>>
->>>> The runtime PM of PCIe ports turns out to be quite fragile, as in
->>>> some cases things work while in some other cases they don't and we
->>>> don't seem to have a good way to determine whether or not they are
->>>> going to work in advance.
->>>
->>> Do you have any references to problems encountered when enabling
->>> runtime PM for PCIe ports?  That information will be useful to anybody
->>> who wants to take another crack at getting this working.
->>
->> Well, bug 53811 is one example and problems recently reported by
->> Martin are another.  Do you want me to dig deeper?
+Hi, Martin,
+
+On Wed, 2013-04-03 at 14:16 +0200, Martin Mokrejs wrote:
+> Meanwhile, the raw data: http://195.113.57.32/~mmokrejs/tmp/20130402.tar.bz2
+> (size 468641 bytes)
+
+Thanks a lot!  Your information is very complete and clear :)
+
+> They were collected by:
 > 
-> OK, I got this one:
+> # cat ~/bin/collect_runtime_status.sh 
+> #!/bin/sh
+> grep . /sys/bus/pci/devices/*/power/runtime_status > runtime_status_"$1".txt
+> grep . /sys/bus/pci/devices/*/power/control > control_"$1".txt
+> cat /proc/interrupts > interrupts_"$1".txt
+> cat /proc/iomem > iomem_"$1".txt
+> lspci -vvv > lspci_vvv_"$1".txt
+> dmesg > dmesg_"$1".txt
+> #
 > 
->   https://bugzilla.kernel.org/show_bug.cgi?id=53811
+> Just do 'ls -latr' to see the ordering of the files as they were created.
+> The longer the filename, the later in the test process. The names should be
+> relatively self-explaining. Definitely, from the log files you should see
+> what happened in real and therefore, can figure out what the (maybe weird)
+> long filename really meant.
 > 
-> Martin has reported a lot of problems lately, and I don't know which
-> are related to runtime PM for PCIe ports.  I was hoping for a couple
-> URLs to put in the changelog so that when somebody gets the itch to
-> make this work, they have some useful info to start from.  If you
-> point me at a specific message, I'll dig up an archive URL for it.
-
-In the thread
-
-Re: 3.8.2: xhci port is dead until pcieport PME# goes to disabled
-http://marc.info/?t=136328222600002&r=1&w=2
-
-I reported that if an upstream express root port 1c.4 of the xHCI controller
-at 0b:00 is suspended the USB3 socket on the laptop appears dead.
-Initially I found that 'lsusb -v' rescues the dead socket and is accompanied
-by these in logs:
-
-[ 1445.597641] pcieport 0000:00:1c.4: PME# disabled
-[ 1445.617667] xhci_hcd 0000:0b:00.0: PME# disabled
-
-Ying Huang then realized elsewhere I am running laptop-mode-tools although
-in their config file I set that they should NOT be run when on AC power.
-Looks they do enable 'auto' power mode as seen in
-/sys/bus/pci/devices/*/power/control files already upon bootup.
-BTW, even worse, if I do /etc/init.d/laptop-mode-tools stop
-they restore to some initial values. :(( So, if I meanwhile forced
-'on' for some device they will return me back to 'auto' and the device
-will immediately do suspend. ;-)
-
-Provided I uninstalled the laptop-mode-tools and made sure all control
-files say 'on' (and hence runtime_status files say 'active') then
-my problem is with a dead xHCI port 'obeyed'.
-
-Myself it weird that suspend of the port happens only upon USB device
-unplug. The port does not suspend by itself if unused.
-
-
-What is not clear to me how kernel is going to handle laptop-mode-tools
-which enabled powersaving on the 1c.4. In my naive, user view kernel does
-not realize and *check* that no user tool or a desperate user tried to
-suspend an upstream port while there is something bound to it and it
-does not apply a check for cascaded devices (1c.4 > 0b:00 and
-1c.7 -> 11:00 in my case).
-
-I am writing this without a reference but modprobe of a driver can overcome
-suspended root port. I am in this particular case meaning my 1c.7 port
-and its downstream 11:00 express card device. From the top of my head
-I am not sure if modprobe overcame both 1c.7 and 11:00 being initially
-suspended. I could dig it out from the
-
-Re: 3.9-rc1: pciehp and eSATA card SiI 3132, no XHCI
-http://marc.info/?t=136305008800001&r=1&w=2
-
-thread if you want. Or it might be easier for you to test it yourself.
-
-
-
-So, for me the issue is not fixed but if you decide to disable runtime
-power saving for devices under pcieport I don't mind. Their mishandling
-definitely causes my acpiphp hotplug issues under 3.7-3.8 kernels
-(3.9-rc not tested) whereas these PM issues do not answer why pciehp
-is broken on 3.7-3.9-rc1.
-
-
-Anyway, this patch maybe only good because I would like to use the
-laptop-mode-tools and they for sure will put one of the devices into 'auto'
-and it will likely fall into suspend.
-Martin
-
-
-
+> Sometimes I manually recorded lsusb of dmesg_final.txt, mostly after I did some
+> extra tests but but not want to record every step by the above 6 files.
 > 
-> Otherwise, I'm afraid we'll just oscillate between "enable PM, find
-> bug, disable PM, enable PM, find same bug, disable PM, etc..."
-> 
-> Bjorn
-> 
->>>> For this reason, avoid enabling runtime PM for PCIe ports by
->>>> keeping their runtime PM reference counters always above 0 for the
->>>> time being.
->>>>
->>>> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->>>> ---
->>>>
->>>> This version also removes the no longer necessary (and empty anyway)
->>>> port_runtime_pm_black_list[] table.
->>>>
->>>> Thanks,
->>>> Rafael
->>>>
->>>> ---
->>>>  drivers/pci/pcie/portdrv_pci.c |   13 -------------
->>>>  1 file changed, 13 deletions(-)
->>>>
->>>> Index: linux-pm/drivers/pci/pcie/portdrv_pci.c
->>>> ===================================================================
->>>> --- linux-pm.orig/drivers/pci/pcie/portdrv_pci.c
->>>> +++ linux-pm/drivers/pci/pcie/portdrv_pci.c
->>>> @@ -185,14 +185,6 @@ static const struct dev_pm_ops pcie_port
->>>>  #endif /* !PM */
->>>>
->>>>  /*
->>>> - * PCIe port runtime suspend is broken for some chipsets, so use a
->>>> - * black list to disable runtime PM for these chipsets.
->>>> - */
->>>> -static const struct pci_device_id port_runtime_pm_black_list[] = {
->>>> -       { /* end: all zeroes */ }
->>>> -};
->>>> -
->>>> -/*
->>>>   * pcie_portdrv_probe - Probe PCI-Express port devices
->>>>   * @dev: PCI-Express port device being probed
->>>>   *
->>>> @@ -225,16 +217,11 @@ static int pcie_portdrv_probe(struct pci
->>>>          * it by default.
->>>>          */
->>>>         dev->d3cold_allowed = false;
->>>> -       if (!pci_match_id(port_runtime_pm_black_list, dev))
->>>> -               pm_runtime_put_noidle(&dev->dev);
->>>> -
->>>>         return 0;
->>>>  }
->>>>
->>>>  static void pcie_portdrv_remove(struct pci_dev *dev)
->>>>  {
->>>> -       if (!pci_match_id(port_runtime_pm_black_list, dev))
->>>> -               pm_runtime_get_noresume(&dev->dev);
->>>>         pcie_port_device_remove(dev);
->>>>         pci_disable_device(dev);
->>>>  }
->>>>
->> --
->> I speak only for myself.
->> Rafael J. Wysocki, Intel Open Source Technology Center.
+> In one or two places I added some my own notes into COMMENTS file.
 > 
 > 
+> 
+> 
+> I will try to guide your below where you can study which of the bugs. Mostly,
+> for each bug you need just one subdirectory to look into, the other are just
+> repeated the same bug under different kernel version or another patch.
+> However, Sarah for the xHCI dead port issue will need to compare by diff
+> two directories, one with the TI-based controller tests, the other with the
+> NEC-based tests. Especially there, I would do something like:
+> 
+> cd *TI-based; for f in dmesg*; do cut -c 15- $f > /tmp/TI/$f; done
+> cd ../*NEC-based; for f in dmesg*; do cut -c 15- $f > /tmp/NEC/$f; done
+> 
+> Then it should be easier to poke through file captured at the same test step,
+> like:
+> 
+> diff -u -w /tmp/TI/dmesg_initial__mouse_attached__unplugged__reattached_but_port_dead.txt \
+> /tmp/NEC/dmesg_initial__mouse_attached__detached__reattached.txt
+> 
+> 
+> 
+> Other than that, just diff pairs of files with each other, like:
+> 
+> diff -u -w lspci_vvv_initial.txt lspci_vvv_initial__mouse_attached.txt
+> 
+> 
+> Sorry that I sometimes used only a single underscore instead of double underscores
+> to separate the test steps from each other in the filename.
+> 
+> 
+> Martin Mokrejs wrote:
+> > [ +linux-pci and Yinghai as they suffered already those many emails on individual
+> >  threads so one overviewing email hopefully won't harm] ;-)
+> > 
+> > Martin Mokrejs wrote:
+> >>
+> >>
+> >> Bjorn Helgaas wrote:
+> >>> On Tue, Apr 2, 2013 at 9:02 AM, Martin Mokrejs
+> >>> <mmokrejs@fold.natur.cuni.cz> wrote:
+> >>>> Hi Ying,
+> >>>>
+> >>>> huang ying wrote:
+> >>>
+> >>>>> And please give me the full dmesg for boot and incremental dmesg for
+> >>>>> operations.
+> >>>>
+> >>>>
+> >>>> The incremental bits here, the full dmesg will send only directly to your email, due to its size.
+> >>>
+> >>> Is there a bugzilla for this issue?  Please attach the complete dmesg
+> >>> there or somewhere similar so we can all benefit.
+> >>
+> >> I changed my mind. I am attaching the dmesg here but omitting linux-acpi
+> >> list. After I hear a proposal from Rafel/Bjorn I will open separate bugs.
+> >> I thought that the threads I started so far were enough but yes, dmesg
+> >> files don't pass through list filters so I should move that to bugzilla.
+> >>
+> >> so far my view of the the bugs was:
+> >>
+> >> 1) acpiphp hotplug broken due to upstream pcieport 1c.7 PME# enabled
+> >>   (eSATA-based card)
+> > 
+> > Fixed by Ying Huang port_dbg.patch applied over 3.8.5 (fixes acpiphp hotplug
+> > of eSATA and Firewire cards, NOT the hotplug of a NEC-based USB3 card -> hence
+> > the bug 4) below). Now I can continue using laptop-mode-tools.
+> 
+> 20130402/3.8.5-ying_port-dbg__with_laptop-mode-tools_eSATA_testing
+> 20130402/3.8.3-vanilla__with_laptop-mode-tools (with some comments in
+>                                                 COMMENTS file)
+
+Thanks for your testing!
+
+> >> 2) xHCI dead due to to its suspend - 3.8 series and above
+> > 
+> > Not fixed by port_dbg.patch applied over 3.8.5. Interestingly, a NEC-based
+> > XHCI card *in an express card slot* does not suffer this suspend issue.
+> > Although it is being put into suspend if a device is unplugged.
+> 
+> 20130402/3.8.5-ying_port-dbg__with_laptop-mode-tools_xHCI_test_TI-based
+> 20130402/3.8.5-ying_port-dbg__with_laptop-mode-tools_xHCI_test_NEC-based
+> 
+> Same thing but yet without the port_dbg.patch:
+> 20130402/3.9-rc5__with_2368081__with-latop-mode-tools_xhci_testing/
+
+It appears that TI xHCI dead port issue will present even if the PCIe
+port will never go suspended.  So I think this bug is not related to
+PCIe port runtime PM but related to USB xHCI.
+
+Do you agree Sarah?
+
+[snip]
+
+Best Regards,
+Huang Ying
+
+
