@@ -1,180 +1,44 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>, Ram Pai <linuxram@us.ibm.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v4 22/29] PCI: Add addon_resource support for pci devices
-Date: Fri, 12 Apr 2013 15:44:36 -0700
-Message-Id: <1365806683-26717-23-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1365806683-26717-1-git-send-email-yinghai@kernel.org>
-References: <1365806683-26717-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hydra.sisk.pl ([212.160.235.94]:51420 "EHLO hydra.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1764182Ab3DDUK0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 4 Apr 2013 16:10:26 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Huang Ying <ying.huang@intel.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux PM list <linux-pm@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
+Subject: Re: [PATCH 0/4] PCI/PM: D3cold support for system suspend
+Date: Thu, 04 Apr 2013 22:18:04 +0200
+Message-ID: <40154903.vXKcu58qDG@vostro.rjw.lan>
+In-Reply-To: <CAErSpo6m=3txSUH5Bwm7Y7K=25UWA4-kgPs_fs-Pa8jkP5WRDA@mail.gmail.com>
+References: <1359434058-15918-1-git-send-email-ying.huang@intel.com> <CAErSpo6m=3txSUH5Bwm7Y7K=25UWA4-kgPs_fs-Pa8jkP5WRDA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now there is some non normal pci resources other than standard,rom,
-sriov, bridges.
-Some could be same as standard reg, but using different position.
-Some could have own way to read/write to them.
+On Thursday, April 04, 2013 12:26:52 PM Bjorn Helgaas wrote:
+> On Mon, Jan 28, 2013 at 9:34 PM, Huang Ying <ying.huang@intel.com> wrote:
+> > [PATCH 1/4] PCI/ACPI: Add target state as parameter to pci_platform_pm_ops->run_wake
+> > [PATCH 2/4] PCI: Rename pci_dev->runtime_d3cold to pci_dev->set_d3cold
+> > [PATCH 3/4] PCI/PM: Set pci_dev->set_d3cold in pci_set_power_state
+> > [PATCH 4/4] PCI/PM: Enable D3cold support for system suspend
+> 
+> Do we still need these?
+> 
+> What problem do they solve?  Or what new functionality do they add?
 
-Kernel are using different way to hack those resources like abusing
-pci bridge resource spot on non bridge pci device.
+They were supposed to allow PCI devices to be put into D3cold (via ACPI)
+during system suspend, but I think it's better not to do that at this
+point.
 
-Add addon_resources list in pci_dev for those non-standard resources.
-With this patch, will treat addon-resource like standard resources with
-special ops.
+Thanks,
+Rafael
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/probe.c | 38 +++++++++++++++++++++++++++++++++++++-
- include/linux/pci.h | 28 +++++++++++++++++++++++++++-
- 2 files changed, 64 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 263a575..9e659c7 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -107,22 +107,53 @@ postcore_initcall(pcibus_class_init);
- 
- struct resource *pci_dev_resource_n(struct pci_dev *dev, int n)
- {
--	if (n >= 0 && n < PCI_NUM_RESOURCES)
-+	struct pci_dev_addon_resource *addon_res;
-+
-+	if (n < 0)
-+		return NULL;
-+
-+	if (n < PCI_NUM_RESOURCES)
- 		return &dev->resource[n];
- 
-+	n -= PCI_NUM_RESOURCES;
-+	list_for_each_entry(addon_res, &dev->addon_resources, list) {
-+		if (n-- == 0)
-+			return &addon_res->res;
-+	}
-+
- 	return NULL;
- }
- EXPORT_SYMBOL(pci_dev_resource_n);
- 
- int pci_dev_resource_idx(struct pci_dev *dev, struct resource *res)
- {
-+	struct pci_dev_addon_resource *addon_res;
-+	int n;
-+
- 	if (res >= dev->resource &&
- 	    res <= dev->resource + (PCI_NUM_RESOURCES - 1))
- 		return res - dev->resource;
- 
-+	n = PCI_NUM_RESOURCES;
-+	list_for_each_entry(addon_res, &dev->addon_resources, list) {
-+		if (res == &addon_res->res)
-+			return n;
-+		n++;
-+	}
-+
- 	return -1;
- }
- 
-+static void pci_release_dev_addon_resource(struct pci_dev *dev)
-+{
-+	struct pci_dev_addon_resource *addon_res, *tmp;
-+
-+	list_for_each_entry_safe(addon_res, tmp, &dev->addon_resources, list) {
-+		list_del(&addon_res->list);
-+		kfree(addon_res);
-+	}
-+}
-+
- static void __init_res_idx_mask(unsigned long *mask, int flag)
- {
- 	bitmap_zero(mask, PCI_NUM_RESOURCES);
-@@ -167,6 +198,9 @@ int pci_next_resource_idx(int i, int flag)
- 	if (i < PCI_NUM_RESOURCES)
- 		return i;
- 
-+	if (flag & PCI_ADDON_RES)
-+		return i;
-+
- 	return -1;
- }
- EXPORT_SYMBOL(pci_next_resource_idx);
-@@ -1199,6 +1233,7 @@ static void pci_release_dev(struct device *dev)
- 	pci_dev = to_pci_dev(dev);
- 	pci_release_capabilities(pci_dev);
- 	pci_release_of_node(pci_dev);
-+	pci_release_dev_addon_resource(pci_dev);
- 	kfree(pci_dev);
- }
- 
-@@ -1276,6 +1311,7 @@ struct pci_dev *alloc_pci_dev(void)
- 		return NULL;
- 
- 	INIT_LIST_HEAD(&dev->bus_list);
-+	INIT_LIST_HEAD(&dev->addon_resources);
- 
- 	return dev;
- }
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 044c474..c337c51 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -323,6 +323,7 @@ struct pci_dev {
- 	 */
- 	unsigned int	irq;
- 	struct resource resource[DEVICE_COUNT_RESOURCE]; /* I/O and memory regions + expansion ROMs */
-+	struct list_head addon_resources; /* addon I/O and memory resource */
- 
- 	bool match_driver;		/* Skip attaching driver */
- 	/* These fields are used by common fixups */
-@@ -376,6 +377,21 @@ struct pci_dev {
- 	size_t romlen; /* Length of ROM if it's not from the BAR */
- };
- 
-+struct resource_ops {
-+	int (*read)(struct pci_dev *dev, struct resource *res, int addr);
-+	int (*write)(struct pci_dev *dev, struct resource *res, int addr);
-+};
-+
-+struct pci_dev_addon_resource {
-+	struct list_head list;
-+	int reg_addr;
-+	int size;
-+	struct resource res;
-+	struct resource_ops *ops;
-+};
-+#define	to_pci_dev_addon_resource(n)					\
-+	container_of(n, struct pci_dev_addon_resource, res)
-+
- struct resource *pci_dev_resource_n(struct pci_dev *dev, int n);
- int pci_dev_resource_idx(struct pci_dev *dev, struct resource *res);
- 
-@@ -384,8 +400,10 @@ int pci_dev_resource_idx(struct pci_dev *dev, struct resource *res);
- #define PCI_IOV_RES		(1<<2)
- #define PCI_BRIDGE_RES		(1<<3)
- #define PCI_RES_BLOCK_NUM	4
-+/* addon does not need to use bitmap. */
-+#define PCI_ADDON_RES		(1<<4)
- 
--#define PCI_ALL_RES		(PCI_STD_RES | PCI_ROM_RES | PCI_BRIDGE_RES | PCI_IOV_RES)
-+#define PCI_ALL_RES		(PCI_STD_RES | PCI_ROM_RES | PCI_BRIDGE_RES | PCI_IOV_RES | PCI_ADDON_RES)
- #define PCI_ROM_IOV_BRIDGE_RES	(PCI_ROM_RES | PCI_BRIDGE_RES | PCI_IOV_RES)
- #define PCI_STD_ROM_BRIDGE_RES	(PCI_STD_RES | PCI_ROM_RES | PCI_BRIDGE_RES)
- #define PCI_STD_IOV_BRIDGE_RES	(PCI_STD_RES | PCI_IOV_RES | PCI_BRIDGE_RES)
-@@ -393,6 +411,14 @@ int pci_dev_resource_idx(struct pci_dev *dev, struct resource *res);
- #define PCI_STD_ROM_RES		(PCI_STD_RES | PCI_ROM_RES)
- #define PCI_STD_IOV_RES		(PCI_STD_RES | PCI_IOV_RES)
- #define PCI_STD_ROM_IOV_RES	(PCI_STD_RES | PCI_ROM_RES | PCI_IOV_RES)
-+/* try to treat add on as std */
-+#define PCI_STD_ADDON_RES		(PCI_STD_RES | PCI_ADDON_RES)
-+#define PCI_STD_ROM_BRIDGE_ADDON_RES	(PCI_STD_RES | PCI_ROM_RES | PCI_BRIDGE_RES | PCI_ADDON_RES)
-+#define PCI_STD_IOV_BRIDGE_ADDON_RES	(PCI_STD_RES | PCI_IOV_RES | PCI_BRIDGE_RES | PCI_ADDON_RES)
-+#define PCI_STD_ROM_IOV_ADDON_RES	(PCI_STD_RES | PCI_ROM_RES | PCI_IOV_RES | PCI_ADDON_RES)
-+#define PCI_STD_ROM_ADDON_RES		(PCI_STD_RES | PCI_ROM_RES | PCI_ADDON_RES)
-+#define PCI_STD_IOV_ADDON_RES		(PCI_STD_RES | PCI_IOV_RES | PCI_ADDON_RES)
-+#define PCI_STD_ROM_IOV_ADDON_RES	(PCI_STD_RES | PCI_ROM_RES | PCI_IOV_RES | PCI_ADDON_RES)
- 
- int pci_next_resource_idx(int i, int flag);
- 
 -- 
-1.8.1.4
-
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
