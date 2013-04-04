@@ -1,52 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qa0-f45.google.com ([209.85.216.45]:62453 "EHLO
-	mail-qa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S936163Ab3DKSFY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 11 Apr 2013 14:05:24 -0400
-Date: Thu, 11 Apr 2013 11:05:17 -0700
-From: Tejun Heo <tj@kernel.org>
-To: "Michael S. Tsirkin" <mst@redhat.com>
-Cc: Or Gerlitz <ogerlitz@mellanox.com>,
-	Ming Lei <ming.lei@canonical.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	David Miller <davem@davemloft.net>,
-	Roland Dreier <roland@kernel.org>,
-	netdev <netdev@vger.kernel.org>, Yan Burman <yanb@mellanox.com>,
-	Jack Morgenstein <jackm@dev.mellanox.co.il>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH repost for-3.9] pci: avoid work_on_cpu for nested SRIOV
- probes
-Message-ID: <20130411180517.GJ17641@mtj.dyndns.org>
-References: <20130411153030.GA22743@redhat.com>
+Received: from mail-oa0-f49.google.com ([209.85.219.49]:39135 "EHLO
+	mail-oa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762626Ab3DDWYM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Apr 2013 18:24:12 -0400
+Received: by mail-oa0-f49.google.com with SMTP id j6so3439129oag.36
+        for <linux-pci@vger.kernel.org>; Thu, 04 Apr 2013 15:24:11 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130411153030.GA22743@redhat.com>
+In-Reply-To: <1363217302-14383-5-git-send-email-yinghai@kernel.org>
+References: <1363217302-14383-1-git-send-email-yinghai@kernel.org> <1363217302-14383-5-git-send-email-yinghai@kernel.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 4 Apr 2013 16:23:50 -0600
+Message-ID: <CAErSpo7S3cu_OB0Hz9XtH6UN+4JssvOO9D_kykzemQ30PB7L-w@mail.gmail.com>
+Subject: Re: [PATCH v3 04/27] PCI: Add is_pci_*_resource_idx() helpers
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Ram Pai <linuxram@us.ibm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
+On Wed, Mar 13, 2013 at 5:27 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> According to resource pointer find out if the resource is some type resource
+> like bridge, sriov, or std.
+>
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> ---
+>  include/linux/pci.h |   23 +++++++++++++++++++++++
+>  1 file changed, 23 insertions(+)
+>
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 127a856..efb348b 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -92,6 +92,29 @@ enum {
+>         DEVICE_COUNT_RESOURCE = PCI_NUM_RESOURCES,
+>  };
+>
+> +static inline bool is_pci_std_resource_idx(int i)
+> +{
+> +       return i >= PCI_STD_RESOURCES && i <= PCI_STD_RESOURCE_END;
+> +}
+> +
+> +static inline bool is_pci_rom_resource_idx(int i)
+> +{
+> +       return i == PCI_ROM_RESOURCE;
+> +}
+> +
+> +static inline bool is_pci_iov_resource_idx(int i)
+> +{
+> +#ifdef CONFIG_PCI_IOV
+> +       return i >= PCI_IOV_RESOURCES && i <= PCI_IOV_RESOURCE_END;
+> +#endif
+> +       return false;
+> +}
+> +
+> +static inline bool is_pci_bridge_resource_idx(int i)
+> +{
+> +       return i >= PCI_BRIDGE_RESOURCES && i <= PCI_BRIDGE_RESOURCE_END;
+> +}
+> +
+>  typedef int __bitwise pci_power_t;
+>
+>  #define PCI_D0         ((pci_power_t __force) 0)
 
-On Thu, Apr 11, 2013 at 06:30:30PM +0300, Michael S. Tsirkin wrote:
-> The issue is that a driver, in it's probe function, calls
-> pci_sriov_enable so a PF device probe causes VF probe (AKA nested
-> probe).  Each probe in pci_device_probe is (normally) run through
-> work_on_cpu (this is to get the right numa node for memory allocated by
-> the driver).  In turn work_on_cpu does this internally:
-> 
->         schedule_work_on(cpu, &wfc.work);
->         flush_work(&wfc.work);
-> 
-> So if you are running probe on CPU1, and cause another
-> probe on the same CPU, this will try to flush
-> workqueue from inside same workqueue which of course
-> deadlocks.
-> 
-> Nested probing might be tricky to get right generally.
+1) I don't like adding more "_idx()" interfaces.
 
-Hmm... how about adding a work_on_cpu_nested() which takes @subclass
-argument?  Wouldn't that be much cleaner?
+2) The only one of these that's even used is "is_pci_bridge_resource_idx()"
 
-Thanks.
-
--- 
-tejun
+3) I think adding a wrapper struct with a "type" or "flags" field
+would make this trivial, e.g., "pres->flags & PCI_RESOURCE_WINDOW" or
+something.
