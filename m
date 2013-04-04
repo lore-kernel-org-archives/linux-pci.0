@@ -1,57 +1,46 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Libin <huawei.libin@huawei.com>
-To: Arnd Bergmann <arnd@arndb.de>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	David Airlie <airlied@linux.ie>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Hans J. Koch" <hjk@hansjkoch.de>,
-	Petr Vandrovec <petr@vandrovec.name>,
-	Andrew Morton <akpm@linux-foundation.org>
-CC: Konstantin Khlebnikov <khlebnikov@openvz.org>,
-	Thomas Hellstrom <thellstrom@vmware.com>,
-	Dave Airlie <airlied@redhat.com>,
-	Nadia Yvette Chambers <nyc@holomorphy.com>,
-	Jiri Kosina <jkosina@suse.cz>,
-	Al Viro <viro@zeniv.linux.org.uk>,
-	Mel Gorman <mgorman@suse.de>, Hugh Dickins <hughd@google.com>,
-	Rik van Riel <riel@redhat.com>,
-	David Rientjes <rientjes@google.com>,
-	Michel Lespinasse <walken@google.com>,
-	<linux-kernel@vger.kernel.org>, <dri-devel@lists.freedesktop.org>,
-	<linux-pci@vger.kernel.org>, <linux-mm@kvack.org>,
-	<guohanjun@huawei.com>, <wangyijing@huawei.com>
-Subject: [PATCH 4/6] char: use vma_pages() to replace (vm_end - vm_start) >> PAGE_SHIFT
-Date: Mon, 15 Apr 2013 20:48:56 +0800
-Message-ID: <1366030138-71292-4-git-send-email-huawei.libin@huawei.com>
-In-Reply-To: <1366030138-71292-1-git-send-email-huawei.libin@huawei.com>
-References: <1366030138-71292-1-git-send-email-huawei.libin@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from avon.wwwdotorg.org ([70.85.31.133]:52669 "EHLO
+	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1764789Ab3DDVaF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Apr 2013 17:30:05 -0400
+Message-ID: <515DF0D9.40007@wwwdotorg.org>
+Date: Thu, 04 Apr 2013 15:30:01 -0600
+From: Stephen Warren <swarren@wwwdotorg.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+To: Thierry Reding <thierry.reding@avionic-design.de>
+CC: Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Andrew Murray <andrew.murray@arm.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-tegra@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v3 07/12] PCI: tegra: Move PCIe driver to drivers/pci/host
+References: <1365000318-28256-1-git-send-email-thierry.reding@avionic-design.de> <1365000318-28256-8-git-send-email-thierry.reding@avionic-design.de> <515DF096.2000703@wwwdotorg.org>
+In-Reply-To: <515DF096.2000703@wwwdotorg.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-(*->vm_end - *->vm_start) >> PAGE_SHIFT operation is implemented
-as a inline funcion vma_pages() in linux/mm.h, so using it.
+On 04/04/2013 03:28 PM, Stephen Warren wrote:
+> On 04/03/2013 08:45 AM, Thierry Reding wrote:
+>> Move the PCIe driver from arch/arm/mach-tegra into the drivers/pci/host
+>> directory. The motivation is to collect various host controller drivers
+>> in the same location in order to facilitate refactoring.
+>>
+>> The Tegra PCIe driver has been largely rewritten, both in order to turn
+>> it into a proper platform driver and to add MSI (based on code by
+>> Krishna Kishore <kthota@nvidia.com>) as well as device tree support.
+> 
+>>  arch/arm/boot/dts/tegra20.dtsi                     |   53 +
+> 
+> I guess this has to touch both the driver and the dtsi file so that
+> bisectabilty isn't broken? I guess that's OK.
 
-Signed-off-by: Libin <huawei.libin@huawei.com>
----
- drivers/char/mspec.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/char/mspec.c b/drivers/char/mspec.c
-index e1f60f9..ed0703f 100644
---- a/drivers/char/mspec.c
-+++ b/drivers/char/mspec.c
-@@ -168,7 +168,7 @@ mspec_close(struct vm_area_struct *vma)
- 	if (!atomic_dec_and_test(&vdata->refcnt))
- 		return;
- 
--	last_index = (vdata->vm_end - vdata->vm_start) >> PAGE_SHIFT;
-+	last_index = vma_pages(vdata);
- 	for (index = 0; index < last_index; index++) {
- 		if (vdata->maddr[index] == 0)
- 			continue;
--- 
-1.8.2.1
-
-
+Actually, can't you move all the *.dts/*.dtsi changes to the start of
+the series, then put the driver conversion patch last, to avoid any
+bisectability issues and still keep code and DT changes separate?
