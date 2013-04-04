@@ -1,132 +1,166 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <515EC3D0.4070308@fold.natur.cuni.cz>
-Date: Fri, 05 Apr 2013 14:30:08 +0200
-From: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
-MIME-Version: 1.0
-To: Sarah Sharp <sarah.a.sharp@linux.intel.com>,
-	Huang Ying <ying.huang@intel.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	huang ying <huang.ying.caritas@gmail.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, Len Brown <lenb@kernel.org>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: Re: [PATCH] PCI / ACPI: Always resume devices on ACPI wakeup notifications
-References: <51548C9E.9090703@fold.natur.cuni.cz> <2990024.LMTIBUbM3d@vostro.rjw.lan> <51564804.9000700@fold.natur.cuni.cz> <CAC=cRTMJH+40oPSM9pFzkb5x6Q42rWR8BPtUOxJn_3WopmOSvQ@mail.gmail.com> <515AF312.1010507@fold.natur.cuni.cz> <CAErSpo6EAkSniVF7NnDVsR=H_x0dHK=xQNbdKf67WDW=o1D+_Q@mail.gmail.com> <515B17D9.6030805@fold.natur.cuni.cz> <515B45A6.1020404@fold.natur.cuni.cz> <515C1DB8.5020905@fold.natur.cuni.cz> <1365075019.8901.9.camel@yhuang-mobile.sh.intel.com> <20130404191933.GC15489@xanatos>
-In-Reply-To: <20130404191933.GC15489@xanatos>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from arrakis.dune.hu ([78.24.191.176]:59917 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1764208Ab3DDSBL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 4 Apr 2013 14:01:11 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ralf Baechle <ralf@linux-mips.org>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-mips@linux-mips.org,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 1/2] pci/of: remove weak annotation of pcibios_get_phb_of_node
+Date: Thu,  4 Apr 2013 20:01:22 +0200
+Message-Id: <1365098483-26821-1-git-send-email-juhosg@openwrt.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Due to the __weak annotation in the forward declaration
+of the 'pcibios_get_phb_of_node' function GCC will emit
+a weak symbol for this functions even if the actual
+implementation does not use the weak attribute.
 
+If an architecture tries to override the function
+by providing its own implementation there will be
+multiple weak symbols with the same name in the
+object files. When the kernel is linked from the
+object files the linking order determines which
+implementation will be used in the final image.
 
-Sarah Sharp wrote:
-> On Thu, Apr 04, 2013 at 07:30:19PM +0800, Huang Ying wrote:
->> Hi, Martin,
->>
->> On Wed, 2013-04-03 at 14:16 +0200, Martin Mokrejs wrote:
->>>>> 2) xHCI dead due to to its suspend - 3.8 series and above
->>>>
->>>> Not fixed by port_dbg.patch applied over 3.8.5. Interestingly, a NEC-based
->>>> XHCI card *in an express card slot* does not suffer this suspend issue.
->>>> Although it is being put into suspend if a device is unplugged.
->>>
->>> 20130402/3.8.5-ying_port-dbg__with_laptop-mode-tools_xHCI_test_TI-based
->>> 20130402/3.8.5-ying_port-dbg__with_laptop-mode-tools_xHCI_test_NEC-based
->>>
->>> Same thing but yet without the port_dbg.patch:
->>> 20130402/3.9-rc5__with_2368081__with-latop-mode-tools_xhci_testing/
->>
->> It appears that TI xHCI dead port issue will present even if the PCIe
->> port will never go suspended.  So I think this bug is not related to
->> PCIe port runtime PM but related to USB xHCI.
->>
->> Do you agree Sarah?
-> 
-> No.  The symptoms he described (in another email) were that the port
-> only becomes "dead" after a USB 2.0 device is removed, and the host was
-> suspended.  The issue was that the TI host is simply not reporting the
-> USB device connect, even if it is manually resumed.  The port status
-> registers do not show a device connect at all.
-> 
-> Martin, can you confirm this by trying this, and sending me dmesg of the
-> test with CONFIG_USB_DEBUG and CONFIG_USB_XHCI_HCD_DEBUGGING turned on:
-> 
-> 1. Remove the laptop mode tools
-> 2. Reboot with no USB devices attached to the TI host
-> 3. Make sure the xHCI PCI device's power/control file is set to 'on'
->    You will find that file in /sys/bus/pci/devices/.  Use lspci to
->    figure out which directory is the xHCI PCI device.
-> 4. Plug in a USB 2.0 device and make sure it works (e.g. wiggle a
->    mouse)
-> 5. Unplug the device, replug it, and check to see if it works.
+On x86 and on powerpc the architecture specific
+version gets used:
 
-Works. Actually, I plugged in the mouse in and out several times
-to show that the *unplug* does not kill the socket.
+  $ readelf -s  arch/x86/kernel/built-in.o drivers/pci/built-in.o \
+    vmlinux.o | grep pcibios_get_phb_of_node
+    3338: 00029b80    86 FUNC    WEAK   DEFAULT    1 pcibios_get_phb_of_node
+    1701: 00012710    77 FUNC    WEAK   DEFAULT    1 pcibios_get_phb_of_node
+   52072: 0002a170    86 FUNC    WEAK   DEFAULT    1 pcibios_get_phb_of_node
+  $
 
+  $ powerpc-openwrt-linux-uclibc-readelf -s arch/powerpc/kernel/built-in.o \
+    drivers/pci/built-in.o vmlinux.o | grep pcibios_get_phb_of_node
+    1001: 0000cbb8    12 FUNC    WEAK   DEFAULT    1 pcibios_get_phb_of_node
+    1484: 0001471c    88 FUNC    WEAK   DEFAULT    1 pcibios_get_phb_of_node
+   28652: 0000d6f8    12 FUNC    WEAK   DEFAULT    1 pcibios_get_phb_of_node
+  $
 
-> If you have problems, stop here.  Otherwise try:
-> 
-> 6. Unplug all USB devices
-> 7. echo 'auto' to the xHCI PCI device's power/control file in
+However on MIPS, the linker puts the default
+implementation into the final image:
 
-The 0b:00.0 is already suspended after the echo 'auto', but I tried to continue
-with step 8. Some default kicks in?
+  $ mipsel-openwrt-linux-readelf -s arch/mips/pci/built-in.o \
+    drivers/pci/built-in.o vmlinux.o | grep pcibios_get_phb_of_node
+      86: 0000046c    12 FUNC    WEAK   DEFAULT    2 pcibios_get_phb_of_node
+    1430: 00012e2c   104 FUNC    WEAK   DEFAULT    2 pcibios_get_phb_of_node
+   31898: 0017e4ec   104 FUNC    WEAK   DEFAULT    2 pcibios_get_phb_of_node
+  $
 
+Rename the default implementation and remove the
+__weak annotation of that. This ensures that there
+will be no multiple weak symbols with the same name
+in the object files. In order to keep the expected
+behaviour, call the architecture specific function
+if the weak symbol is resolved.
 
-> 8. echo 'auto' to both xHCI roothubs in /sys/bus/usb/devices/
->    (i.e. all usbN directories)
+Also move the renamed function to the top instead
+of adding a new forward declaration for that.
 
-No need, they are already suspended:
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+---
+Notes:
 
-# cat /sys/devices/pci0000\:00/0000:00:1c.4/0000:0b:00.0/usb3/power/control
-auto
-# cat /sys/devices/pci0000\:00/0000:00:1c.4/0000:0b:00.0/usb3/power/runtime_status
-suspended
-# cat /sys/devices/pci0000\:00/0000:00:1c.4/0000:0b:00.0/usb4/power/runtime_status
-suspended
-#
+Unfortunately I'm not a binutils/gcc expert, so
+I don't know if this is the expected behaviour
+of those or not.
 
-> 9. Wait a few seconds or so until the xHCI PCI host suspends, meaning the
->    power/runtime_status file reads as 'suspended'
-> 10. Plug in the same USB 2.0 device, and check if it works.
+Removing the __weak annotation from the forward
+declaration of 'pcibios_get_phb_of_node' in
+'include/linux/pci.h' also fixes the problem.
 
-It works.
+The microblaze architecture also provides its own
+implementation. The behaviour of that is not tested
+but I assume that the linker chooses the arch specific
+implementation on that as well similarly to the
+x86/powerpc.
 
-> 11. Unplug the device, and wait until the PCI host is suspended.
+The MIPS version is implemented in the followup
+patch.
 
-Unplug causes death per dmesg.
+Removing the __weak annotation from the forward
+declaration of 'pcibios_get_phb_of_node' in
+'include/linux/pci.h' also fixes the problem.
 
-[  932.419828] xhci_hcd 0000:0b:00.0: Cached old ring, 1 ring cached
-[  932.420240] xhci_hcd 0000:0b:00.0: // Ding dong!
-[  932.420342] xhci_hcd 0000:0b:00.0: get port status, actual port 1 status  = 0x2a0
-[  932.420344] xhci_hcd 0000:0b:00.0: Get port status returned 0x100
-[  932.454637] xhci_hcd 0000:0b:00.0: get port status, actual port 1 status  = 0x2a0
-[  932.454638] xhci_hcd 0000:0b:00.0: Get port status returned 0x100
-[  932.494828] xhci_hcd 0000:0b:00.0: get port status, actual port 1 status  = 0x2a0
-[  932.494831] xhci_hcd 0000:0b:00.0: Get port status returned 0x100
-[  932.534856] xhci_hcd 0000:0b:00.0: get port status, actual port 1 status  = 0x2a0
-[  932.534859] xhci_hcd 0000:0b:00.0: Get port status returned 0x100
-[  932.574871] xhci_hcd 0000:0b:00.0: get port status, actual port 1 status  = 0x2a0
-[  932.574874] xhci_hcd 0000:0b:00.0: Get port status returned 0x100
-[  932.574888] hub 3-0:1.0: debounce: port 2: total 100ms stable 100ms status 0x100
-[  932.574905] hub 3-0:1.0: hub_suspend
-[  932.574912] usb usb3: bus auto-suspend, wakeup 1
-[  932.574928] xhci_hcd 0000:0b:00.0: xhci_hub_status_data: stopping port polling.
-[  932.574947] xhci_hcd 0000:0b:00.0: xhci_suspend: stopping port polling.
-[  932.574974] xhci_hcd 0000:0b:00.0: // Setting command ring address to 0xd6007001
-[  932.575026] xhci_hcd 0000:0b:00.0: hcd_pci_runtime_suspend: 0
-[  932.575119] xhci_hcd 0000:0b:00.0: PME# enabled
-[  932.594863] xhci_hcd 0000:0b:00.0: pfrs: target: 3, 0
+-Gabor
+---
+ drivers/pci/of.c |   41 +++++++++++++++++++++++------------------
+ 1 file changed, 23 insertions(+), 18 deletions(-)
 
+diff --git a/drivers/pci/of.c b/drivers/pci/of.c
+index f092993..5794840 100644
+--- a/drivers/pci/of.c
++++ b/drivers/pci/of.c
+@@ -15,10 +15,32 @@
+ #include <linux/of_pci.h>
+ #include "pci.h"
+ 
++static struct device_node *__pcibios_get_phb_of_node(struct pci_bus *bus)
++{
++	/* This should only be called for PHBs */
++	if (WARN_ON(bus->self || bus->parent))
++		return NULL;
++
++	if (pcibios_get_phb_of_node)
++		return pcibios_get_phb_of_node(bus);
++
++	/* Look for a node pointer in either the intermediary device we
++	 * create above the root bus or it's own parent. Normally only
++	 * the later is populated.
++	 */
++	if (bus->bridge->of_node)
++		return of_node_get(bus->bridge->of_node);
++	if (bus->bridge->parent && bus->bridge->parent->of_node)
++		return of_node_get(bus->bridge->parent->of_node);
++
++	return NULL;
++}
++
+ void pci_set_of_node(struct pci_dev *dev)
+ {
+ 	if (!dev->bus->dev.of_node)
+ 		return;
++
+ 	dev->dev.of_node = of_pci_find_child_device(dev->bus->dev.of_node,
+ 						    dev->devfn);
+ }
+@@ -32,7 +54,7 @@ void pci_release_of_node(struct pci_dev *dev)
+ void pci_set_bus_of_node(struct pci_bus *bus)
+ {
+ 	if (bus->self == NULL)
+-		bus->dev.of_node = pcibios_get_phb_of_node(bus);
++		bus->dev.of_node = __pcibios_get_phb_of_node(bus);
+ 	else
+ 		bus->dev.of_node = of_node_get(bus->self->dev.of_node);
+ }
+@@ -42,20 +64,3 @@ void pci_release_bus_of_node(struct pci_bus *bus)
+ 	of_node_put(bus->dev.of_node);
+ 	bus->dev.of_node = NULL;
+ }
+-
+-struct device_node * __weak pcibios_get_phb_of_node(struct pci_bus *bus)
+-{
+-	/* This should only be called for PHBs */
+-	if (WARN_ON(bus->self || bus->parent))
+-		return NULL;
+-
+-	/* Look for a node pointer in either the intermediary device we
+-	 * create above the root bus or it's own parent. Normally only
+-	 * the later is populated.
+-	 */
+-	if (bus->bridge->of_node)
+-		return of_node_get(bus->bridge->of_node);
+-	if (bus->bridge->parent && bus->bridge->parent->of_node)
+-		return of_node_get(bus->bridge->parent->of_node);
+-	return NULL;
+-}
+-- 
+1.7.10
 
-> 12. Replug the device, and check to see if it works.
-
-Is dead.
-
-Full logs at:
-http://195.113.57.32/~mmokrejs/tmp/20130405.tar.bz2 (unpack, 'ls -latr', diff as you like).
-Also .config is in there.
-
-Martin
