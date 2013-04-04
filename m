@@ -1,76 +1,102 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ozlabs.org ([203.10.76.45]:58670 "EHLO ozlabs.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751936Ab3DHFV2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 8 Apr 2013 01:21:28 -0400
-Date: Mon, 8 Apr 2013 15:21:25 +1000
-From: Michael Ellerman <michael@ellerman.id.au>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:59303 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1763493Ab3DDUCf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Apr 2013 16:02:35 -0400
+Date: Thu, 4 Apr 2013 16:02:09 -0400
+From: Neil Horman <nhorman@tuxdriver.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Brian King <brking@linux.vnet.ibm.com>,
+Cc: Don Dutile <ddutile@redhat.com>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Prarit Bhargava <prarit@redhat.com>,
+	Don Zickus <dzickus@redhat.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Asit Mallick <asit.k.mallick@intel.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Lucas Kannebley Tavares <lucaskt@linux.vnet.ibm.com>,
-	klebers <klebers@linux.vnet.ibm.com>, sparclinux@vger.kernel.org
-Subject: Re: [PATCH 3/3] powerpc: Set default VGA device
-Message-ID: <20130408052124.GA9550@concordia>
-References: <201304042158.r34LwGPg010714@d03av02.boulder.ibm.com>
- <CAErSpo4LsJjRkw6UektwqW8m1NXdU6BTjhTDA9eORM3z3qDcdA@mail.gmail.com>
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: Re: [PATCH v2] irq: add quirk for broken interrupt remapping on 55XX
+ chipsets
+Message-ID: <20130404200209.GA19354@hmsreliant.think-freely.org>
+References: <1362158276-4901-1-git-send-email-nhorman@tuxdriver.com>
+ <1362423859-18516-1-git-send-email-nhorman@tuxdriver.com>
+ <CAErSpo4=L9q+q5hqP2Avw6uceQwZiPuOzadhsqGpu6aP53PMbQ@mail.gmail.com>
+ <1365085649.28127.66.camel@i7.infradead.org>
+ <20130404145012.GA3403@neilslaptop.think-freely.org>
+ <CAErSpo6x5rokg8np7xEKO6y6Qke5X7=r7J7VB2LVrAGGzDC1sA@mail.gmail.com>
+ <20130404153905.GB3403@neilslaptop.think-freely.org>
+ <CAErSpo7Mup+k7UmZsH1ZidCM1dJw-rNfdtCC6dSF+cZe1d+aBg@mail.gmail.com>
+ <20130404175117.GC3403@neilslaptop.think-freely.org>
+ <CAErSpo7CPb7p4Psyz-dFtwwgNf8Y9Y+b+w9e7XNHZOmiPOnPog@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo4LsJjRkw6UektwqW8m1NXdU6BTjhTDA9eORM3z3qDcdA@mail.gmail.com>
+In-Reply-To: <CAErSpo7CPb7p4Psyz-dFtwwgNf8Y9Y+b+w9e7XNHZOmiPOnPog@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 05, 2013 at 02:24:09PM -0600, Bjorn Helgaas wrote:
-> On Thu, Apr 4, 2013 at 3:58 PM, Brian King <brking@linux.vnet.ibm.com> wrote:
-> > @@ -1725,3 +1726,15 @@ static void fixup_hide_host_resource_fsl
-> >  }
-> >  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MOTOROLA, PCI_ANY_ID, fixup_hide_host_resource_fsl);
-> >  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_FREESCALE, PCI_ANY_ID, fixup_hide_host_resource_fsl);
-> > +
-> > +static void fixup_vga(struct pci_dev *pdev)
-> > +{
-> > +       u16 cmd;
-> > +
-> > +       pci_read_config_word(pdev, PCI_COMMAND, &cmd);
-> > +       if ((cmd & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) || !vga_default_device())
-> > +               vga_set_default_device(pdev);
-> > +
-> > +}
-> > +DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_ANY_ID, PCI_ANY_ID,
-> > +                             PCI_CLASS_DISPLAY_VGA, 8, fixup_vga);
+On Thu, Apr 04, 2013 at 12:41:27PM -0600, Bjorn Helgaas wrote:
+> On Thu, Apr 4, 2013 at 11:51 AM, Neil Horman <nhorman@tuxdriver.com> wrote:
 > 
-> This not really an arch-specific issue, so it's a shame to add another
-> arch-specific quirk for it (in addition to the x86 and ia64 ones we
-> already have).
+> > Oh, you want the bug report that I'm fixing this against?  Sure, I can do that.
+> > I thought you wanted me to include a url in the WARN_TAINT, with which user
+> > could report occurances of this bug.  Yeah, the bug that this is reported in is:
+> > https://bugzilla.redhat.com/show_bug.cgi?id=887006
+> >
+> > Its standing in for about a dozen or so variants of this issue we've seen
 > 
-> In b5e4efe7e0, Eiichiro Oiwa <eiichiro.oiwa.nm@hitachi.com> tried to
-> make this quirk generic, but the implementation was naive and it
-> didn't work for sparc64.  There's a good thread about the sparc issue
-> at https://lkml.org/lkml/2006/10/19/17
+> Exactly -- I'm just hoping for something in the changelog.  BTW, this
+> particular bugzilla is not public.
 > 
-> The outcome was to basically revert back to arch-specific quirks with
-> 6b5c76b8e2, but I think the generic version probably could have been
-> made to work, possibly with a pcibios hook or something for anything
-> that really is arch-dependent, like the shadowed ROM image.
+Ok, that I can do, I'll get the bz fixed up to be public in a bit.
+
+
+> > Regardless, theres also the security issue to consider here - namely that
+> > disabling irq remapping opens up users of virt to a possible security bug
+> > (potential irq injection).  Some users may wish to live with the remapping
+> > error, given that error typically leads to devices that need to be
+> > restarted/reset to start working again, rather than live with the security hole.
+> > I rather like the warning, that gives users a choice, but I'll spin up a version
+> > that just disables it if you would rather.
 > 
-> This particular patch is arch-specific, and I'm not going to try to
-> nack it because I'm not the powerpc maintainer, but I will certainly
-> try to help you if you want to push on making a generic version.
+> I don't believe users will want to make a choice like that or even be
+> sophisticated enough to do it, at least not based on something in
+> dmesg.  I'm pretty sure I'm not  :)
+> 
+> The only supportable thing I can imagine doing would be:
+> 
+>   - Disable interrupt remapping if this chipset defect is present, so
+> devices work reliably (they don't need whatever restart/reset you
+> referred to above).
+>   - Disable virt functionality when interrupt remapping is disabled to
+> avoid the security problem (I don't know the details of this.)
+>   - Add a command-line option to enable interrupt remapping (I think
+> "intremap=on" is currently parsed too early, but maybe this could be
+> reworked so the option could override the quirk disable).
+>   - Add release notes saying "boot with 'intremap=on' if you want the
+> virt functionality and can accept unreliable devices."
+> 
+> That way the default behavior is safe and reliable (though perhaps
+> lacking some functionality), and you have told the user a way to get
+> safe and unreliable operation if he's willing to accept that.  At
+> least, that's what I think I would want if I were in RH's shoes.
+> 
+Theres a long argument behind this, and I'm with you.  At the least I don't see
+a problem with disabling it upstream, at least not a policy-oriented reason.
+That said, having looked back at my notes, I do now recall a technical
+impediment behind disabling interrupt remapping.  If we were to do this in an
+early quirk, we would need to determine the status of the interrupt remapping
+capability flag in the iommu in question.  Looking at the interrupt remapping
+code, it appears that the capability flag isn't directly contained in the pci
+config space, but rather in a memory mapped address range who's base address is
+parsed out of an acpi table.  Since we check the irq_remapping_enabled flag in
+the current quirk (which is set after the early quirks run), to do this in an
+early quirk, we would need to somehow parse that base address register out of
+the available acpi tables ourselves, and I'm not at all sure how to do that.  Do
+you know if theres some available parsing mechanism that early in boot?  If so,
+I can probably make this happen.
 
-OK.
+Neil
 
-Looking at x86, ia64 and ours, there's a fair bit of difference.
-
-x86/ia64 both walk up the parents checking PCI_BRIDGE_CTL_VGA, which
-powerpc doesn't (though maybe it should?).
-
-x86/ia64 set IORESOURCE_ROM_SHADOW, which powerpc doesn't.
-
-ia64 doesn't call vga_set_default_device(), x86 and powerpc do.
-
-So we'll merge this and maybe someone can tease out the common bits, but
-personally I don't see that there's an obvious chunk of generic logic.
-
-cheers
+> Bjorn
+> 
