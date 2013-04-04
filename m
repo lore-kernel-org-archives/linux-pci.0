@@ -1,191 +1,171 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cn.fujitsu.com ([222.73.24.84]:50910 "EHLO song.cn.fujitsu.com"
-	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1759933Ab3D3JTB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 30 Apr 2013 05:19:01 -0400
-Message-ID: <517F8C14.90104@cn.fujitsu.com>
-Date: Tue, 30 Apr 2013 17:17:08 +0800
-From: Gu Zheng <guz.fnst@cn.fujitsu.com>
-MIME-Version: 1.0
+Received: from 173-166-109-252-newengland.hfc.comcastbusiness.net ([173.166.109.252]:51807
+	"EHLO bombadil.infradead.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1761625Ab3DDO1w (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Apr 2013 10:27:52 -0400
+Message-ID: <1365085649.28127.66.camel@i7.infradead.org>
+Subject: Re: [PATCH v2] irq: add quirk for broken interrupt remapping on
+ 55XX chipsets
+From: David Woodhouse <dwmw2@infradead.org>
 To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Yinghai Lu <yinghai@kernel.org>,
+Cc: Neil Horman <nhorman@tuxdriver.com>,
+	Prarit Bhargava <prarit@redhat.com>,
+	Don Zickus <dzickus@redhat.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Asit Mallick <asit.k.mallick@intel.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Sarah Sharp <sarah.a.sharp@linux.intel.com>
-Subject: Re: [PATCH] PCI: Fix racing for pci device removing via sysfs
-References: <1366940841-15370-1-git-send-email-yinghai@kernel.org> <CAErSpo5zfHR-agNBdgqfVjCU+-KcTZV+1bvML5Uw-+icDqzzEA@mail.gmail.com> <CAE9FiQVEQO-dLJRjn9Z7JgwGWAn1M8S1Tn2_V0Fq+6kB0rG=Bg@mail.gmail.com> <CAErSpo7DUDQ_XgVKAfWxqYJA=q85ps46bffV-4a7b0vOzAP5DA@mail.gmail.com> <CAE9FiQWv-bN2XzHiQ0WU+Y678zcqs_Owua6vXXijdMO6=0OWpg@mail.gmail.com> <517E45C8.4060407@cn.fujitsu.com> <CAE9FiQUXxCH0xjFPk1S7e_JRsBPosqQ=N5Kpcrjp3RNWDh9yZQ@mail.gmail.com> <20130429181550.GA17343@google.com>
-In-Reply-To: <20130429181550.GA17343@google.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	iommu@lists.linux-foundation.org, Yinghai Lu <yinghai@kernel.org>
+Date: Thu, 04 Apr 2013 15:27:29 +0100
+In-Reply-To: <CAErSpo4=L9q+q5hqP2Avw6uceQwZiPuOzadhsqGpu6aP53PMbQ@mail.gmail.com>
+References: <1362158276-4901-1-git-send-email-nhorman@tuxdriver.com>
+	 <1362423859-18516-1-git-send-email-nhorman@tuxdriver.com>
+	 <CAErSpo4=L9q+q5hqP2Avw6uceQwZiPuOzadhsqGpu6aP53PMbQ@mail.gmail.com>
+Content-Type: multipart/signed; micalg="sha1"; protocol="application/x-pkcs7-signature";
+	boundary="=-GWBWnoCyMHWEzvdvYbSD"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/30/2013 02:15 AM, Bjorn Helgaas wrote:
 
-> On Mon, Apr 29, 2013 at 08:19:10AM -0700, Yinghai Lu wrote:
->> On Mon, Apr 29, 2013 at 3:04 AM, Gu Zheng <guz.fnst@cn.fujitsu.com> wrote:
->>> On 04/27/2013 05:01 AM, Yinghai Lu wrote:
->>>> On Fri, Apr 26, 2013 at 1:53 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>>>>
->>>>> You can't be serious.  This is a disgusting mess.  Checking a list
->>>>> pointer for LIST_POISON1?  As far as I'm concerned, this is a waste of
->>>>> my time.
->>
->> looks like xhci is using that LIST_POISON1 ...
->>
->>>> Well, then need to hold the bus ref, and check bus->devices list instead.
->>>
->>> @@ -341,6 +352,7 @@ remove_store(struct device *dev, struct
->>>  {
->>>         int err;
->>>         unsigned long val;
->>> +       struct pci_dev *pdev;
->>>
->>>         if (strict_strtoul(buf, 0, &val) < 0)
->>>                 return -EINVAL;
->>> @@ -351,9 +363,14 @@ remove_store(struct device *dev, struct
->>>         /* An attribute cannot be unregistered by one of its own methods,
->>>          * so we have to use this roundabout approach.
->>>          */
->>> +       pdev = pci_dev_get(to_pci_dev(dev));
->>>
->>> There is no need to increase pci_dev's ref here, because we'll increase it
->>> in sysfs_schedule_callback.
->>
->> ok, i missed that. if we can use LIST_POISON, then could be more simple.
->> like -v4.
-> 
-> I inlined your v4 patch below for convenience.
-> 
-> Maybe my allergic reaction to your use of LIST_POISON1 is unjustified,
-> but I am dubious about the idea that xhci was the only place that needed
-> it before now, and we just happened to find one more place in PCI that
-> needs it.  That doesn't make sense because good design patterns are used
-> many times, not just once or twice.
-> 
-> I thought the whole point of the get/put scheme was that if we had a
-> pointer to a correctly reference-counted object, we didn't need to check
-> whether the object was still valid because the object remains valid until
-> all the references are released.
+--=-GWBWnoCyMHWEzvdvYbSD
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Agree.
+On Wed, 2013-04-03 at 17:53 -0600, Bjorn Helgaas wrote:
+> );
+> > +
+> > +       if ((revision =3D=3D 0x13) && irq_remapping_enabled) {
+> > +                pr_warn(HW_ERR "This system BIOS has enabled interrupt=
+ remapping\n"
+> > +                        "on a chipset that contains an errata making t=
+hat\n"
+> > +                        "feature unstable.  Please reboot with nointre=
+map\n"
+> > +                        "added to the kernel command line and contact\=
+n"
+> > +                        "your BIOS vendor for an update");
 
-> 
-> Gu's "[v2 2/2] PCI: Convert alloc_pci_dev(void) to pci_alloc_dev(bus)"
-> patch essentially did this:
-> 
->     pci_destroy_dev(struct pci_dev *dev) {
->       ...
-> +     pci_bus_put(dev->bus)
->       pci_free_resources(dev)
->       put_device(&dev->dev)
->     }
-> 
-> I think this is the wrong place to do the pci_bus_put() because the
-> pci_dev is reference-counted, and there may be other users that still
-> have valid references to it.
+This should be WARN_TAINT(TAINT_FIRMWARE_WORKAROUND). And 'an erratum'.
 
-Thanks for your correction.
+--=20
+dwmw2
 
-> 
-> In this case, 10:00.0 is a bridge leading to [bus 11-1e], and 1a:01.0 is
-> part of that subtree.  The user removed both 10:00.0 and 1a:01.0 almost
-> simultaneously via sysfs and we scheduled a callback for each.
-> 
-> Each callback acquires a pci_dev reference, and removal of 10:00.0 and the
-> subtree below it, including pci_destroy_dev(1a:01.0), is done first.  The
-> callback to remove 1a:01.0 is still pending and has a valid reference to
-> the 1a:01.0 pci_dev.
-> 
-> Since the 1a:01.0 callback is still pending, the put_device in that first
-> pci_destroy_dev(1a:01.0) call decrements the ref count but doesn't release
-> the pci_dev.
-> 
-> I think the 1a:01.0 pci_dev should retain its reference to the pci_bus
-> for as long as the pci_dev exists, so the pci_bus_put() should go in
-> pci_release_dev() instead.
+--=-GWBWnoCyMHWEzvdvYbSD
+Content-Type: application/x-pkcs7-signature; name="smime.p7s"
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Transfer-Encoding: base64
 
-Yes, it's the correct way.
+MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIIUbjCCBjQw
+ggQcoAMCAQICAR4wDQYJKoZIhvcNAQEFBQAwfTELMAkGA1UEBhMCSUwxFjAUBgNVBAoTDVN0YXJ0
+Q29tIEx0ZC4xKzApBgNVBAsTIlNlY3VyZSBEaWdpdGFsIENlcnRpZmljYXRlIFNpZ25pbmcxKTAn
+BgNVBAMTIFN0YXJ0Q29tIENlcnRpZmljYXRpb24gQXV0aG9yaXR5MB4XDTA3MTAyNDIxMDE1NVoX
+DTE3MTAyNDIxMDE1NVowgYwxCzAJBgNVBAYTAklMMRYwFAYDVQQKEw1TdGFydENvbSBMdGQuMSsw
+KQYDVQQLEyJTZWN1cmUgRGlnaXRhbCBDZXJ0aWZpY2F0ZSBTaWduaW5nMTgwNgYDVQQDEy9TdGFy
+dENvbSBDbGFzcyAxIFByaW1hcnkgSW50ZXJtZWRpYXRlIENsaWVudCBDQTCCASIwDQYJKoZIhvcN
+AQEBBQADggEPADCCAQoCggEBAMcJg8zOLdgasSmkLhOrlr6KMoOMpohBllVHrdRvEg/q6r8jR+EK
+75xCGhR8ToREoqe7zM9/UnC6TS2y9UKTpT1v7RSMzR0t6ndl0TWBuUr/UXBhPk+Kmy7bI4yW4urC
++y7P3/1/X7U8ocb8VpH/Clt+4iq7nirMcNh6qJR+xjOhV+VHzQMALuGYn5KZmc1NbJQYclsGkDxD
+z2UbFqE2+6vIZoL+jb9x4Pa5gNf1TwSDkOkikZB1xtB4ZqtXThaABSONdfmv/Z1pua3FYxnCFmdr
+/+N2JLKutIxMYqQOJebr/f/h5t95m4JgrM3Y/w7YX9d7YAL9jvN4SydHsU6n65cCAwEAAaOCAa0w
+ggGpMA8GA1UdEwEB/wQFMAMBAf8wDgYDVR0PAQH/BAQDAgEGMB0GA1UdDgQWBBRTcu2SnODaywFc
+fH6WNU7y1LhRgjAfBgNVHSMEGDAWgBROC+8apEBbpRdphzDKNGhD0EGu8jBmBggrBgEFBQcBAQRa
+MFgwJwYIKwYBBQUHMAGGG2h0dHA6Ly9vY3NwLnN0YXJ0c3NsLmNvbS9jYTAtBggrBgEFBQcwAoYh
+aHR0cDovL3d3dy5zdGFydHNzbC5jb20vc2ZzY2EuY3J0MFsGA1UdHwRUMFIwJ6AloCOGIWh0dHA6
+Ly93d3cuc3RhcnRzc2wuY29tL3Nmc2NhLmNybDAnoCWgI4YhaHR0cDovL2NybC5zdGFydHNzbC5j
+b20vc2ZzY2EuY3JsMIGABgNVHSAEeTB3MHUGCysGAQQBgbU3AQIBMGYwLgYIKwYBBQUHAgEWImh0
+dHA6Ly93d3cuc3RhcnRzc2wuY29tL3BvbGljeS5wZGYwNAYIKwYBBQUHAgEWKGh0dHA6Ly93d3cu
+c3RhcnRzc2wuY29tL2ludGVybWVkaWF0ZS5wZGYwDQYJKoZIhvcNAQEFBQADggIBAAqDCH14qywG
+XLhjjF6uHLkjd02hcdh9hrw+VUsv+q1eeQWB21jWj3kJ96AUlPCoEGZ/ynJNScWy6QMVQjbbMXlt
+UfO4n4bGGdKo3awPWp61tjAFgraLJgDk+DsSvUD6EowjMTNx25GQgyYJ5RPIzKKR9tQW8gGK+2+R
+HxkUCTbYFnL6kl8Ch507rUdPPipJ9CgJFws3kDS3gOS5WFMxcjO5DwKfKSETEPrHh7p5shuuNktv
+sv6hxHTLhiMKX893gxdT3XLS9OKmCv87vkINQcNEcIIoFWbP9HORz9v3vQwR4e3ksLc2JZOAFK+s
+sS5XMEoznzpihEP0PLc4dCBYjbvSD7kxgDwZ+Aj8Q9PkbvE9sIPP7ON0fz095HdThKjiVJe6vofq
++n6b1NBc8XdrQvBmunwxD5nvtTW4vtN6VY7mUCmxsCieuoBJ9OlqmsVWQvifIYf40dJPZkk9YgGT
+zWLpXDSfLSplbY2LL9C9U0ptvjcDjefLTvqSFc7tw1sEhF0n/qpA2r0GpvkLRDmcSwVyPvmjFBGq
+Up/pNy8ZuPGQmHwFi2/14+xeSUDG2bwnsYJQG2EdJCB6luQ57GEnTA/yKZSTKI8dDQa8Sd3zfXb1
+9mOgSF0bBdXbuKhEpuP9wirslFe6fQ1t5j5R0xi72MZ8ikMu1RQZKCyDbMwazlHiMIIHFzCCBf+g
+AwIBAgIDBCZ6MA0GCSqGSIb3DQEBBQUAMIGMMQswCQYDVQQGEwJJTDEWMBQGA1UEChMNU3RhcnRD
+b20gTHRkLjErMCkGA1UECxMiU2VjdXJlIERpZ2l0YWwgQ2VydGlmaWNhdGUgU2lnbmluZzE4MDYG
+A1UEAxMvU3RhcnRDb20gQ2xhc3MgMSBQcmltYXJ5IEludGVybWVkaWF0ZSBDbGllbnQgQ0EwHhcN
+MTIwNTAxMTI1ODI3WhcNMTMwNTAzMTEzNzIwWjBdMRkwFwYDVQQNExA4Y1VOSzUzMTc0ODRYRjk3
+MRwwGgYDVQQDDBNkd213MkBpbmZyYWRlYWQub3JnMSIwIAYJKoZIhvcNAQkBFhNkd213MkBpbmZy
+YWRlYWQub3JnMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAyYe7wo6MrtrB4uIGGbrY
+4IifY/Xsq22pSv605yganL0+uyUdd8rCjrYlH6Q/ra5TVJCQFTgzaepkuqPQc79DC/Cxmzm6Qo+s
+wLZy868oFsccsVokL2bPAWIPaRXfNPJKkYR1FTWQfZpWJVQmT+sPf1XFUullVBAK+d9RztopyacI
+xWoZ/W/Cmv7mseQbttYTtGKJa0btX73nsQRWl6SgErWXo59zg9friCLTy1GXMXJYB8H+PtnuwX0w
+MrAvWDdX1ABgIlA17W3FraCn0eW15ZM46eyu0/amGzJZNtemCWF73P7BAijzeV1jNmiJFXdZ0DT0
+w+hmtMO9PxdDUyt78QIDAQABo4IDrjCCA6owCQYDVR0TBAIwADALBgNVHQ8EBAMCBLAwHQYDVR0l
+BBYwFAYIKwYBBQUHAwIGCCsGAQUFBwMEMB0GA1UdDgQWBBTkfe5UOr3PcirsjApibyyUEfsyRzAf
+BgNVHSMEGDAWgBRTcu2SnODaywFcfH6WNU7y1LhRgjAeBgNVHREEFzAVgRNkd213MkBpbmZyYWRl
+YWQub3JnMIICIQYDVR0gBIICGDCCAhQwggIQBgsrBgEEAYG1NwECAjCCAf8wLgYIKwYBBQUHAgEW
+Imh0dHA6Ly93d3cuc3RhcnRzc2wuY29tL3BvbGljeS5wZGYwNAYIKwYBBQUHAgEWKGh0dHA6Ly93
+d3cuc3RhcnRzc2wuY29tL2ludGVybWVkaWF0ZS5wZGYwgfcGCCsGAQUFBwICMIHqMCcWIFN0YXJ0
+Q29tIENlcnRpZmljYXRpb24gQXV0aG9yaXR5MAMCAQEagb5UaGlzIGNlcnRpZmljYXRlIHdhcyBp
+c3N1ZWQgYWNjb3JkaW5nIHRvIHRoZSBDbGFzcyAxIFZhbGlkYXRpb24gcmVxdWlyZW1lbnRzIG9m
+IHRoZSBTdGFydENvbSBDQSBwb2xpY3ksIHJlbGlhbmNlIG9ubHkgZm9yIHRoZSBpbnRlbmRlZCBw
+dXJwb3NlIGluIGNvbXBsaWFuY2Ugb2YgdGhlIHJlbHlpbmcgcGFydHkgb2JsaWdhdGlvbnMuMIGc
+BggrBgEFBQcCAjCBjzAnFiBTdGFydENvbSBDZXJ0aWZpY2F0aW9uIEF1dGhvcml0eTADAgECGmRM
+aWFiaWxpdHkgYW5kIHdhcnJhbnRpZXMgYXJlIGxpbWl0ZWQhIFNlZSBzZWN0aW9uICJMZWdhbCBh
+bmQgTGltaXRhdGlvbnMiIG9mIHRoZSBTdGFydENvbSBDQSBwb2xpY3kuMDYGA1UdHwQvMC0wK6Ap
+oCeGJWh0dHA6Ly9jcmwuc3RhcnRzc2wuY29tL2NydHUxLWNybC5jcmwwgY4GCCsGAQUFBwEBBIGB
+MH8wOQYIKwYBBQUHMAGGLWh0dHA6Ly9vY3NwLnN0YXJ0c3NsLmNvbS9zdWIvY2xhc3MxL2NsaWVu
+dC9jYTBCBggrBgEFBQcwAoY2aHR0cDovL2FpYS5zdGFydHNzbC5jb20vY2VydHMvc3ViLmNsYXNz
+MS5jbGllbnQuY2EuY3J0MCMGA1UdEgQcMBqGGGh0dHA6Ly93d3cuc3RhcnRzc2wuY29tLzANBgkq
+hkiG9w0BAQUFAAOCAQEAqDU1FKifNtCFJbLnvOi1BLRfk7mut55PMtPSZLJ4/AnG7AjmJnbBI4U5
+DELwvVq3mIpwUpGqZUkqkZMEfBPIbfq517UZB3h4iANtqif+ULfTLhg5XgcK5eF8/T6EtX2c3epq
+ylARdleCbj/0FwiUDvPlTsA6PIN4SCekjRLgjKERrL3heFz+Hteq1rtMAvMkNuyL0/0ijyyg2y45
+NASAl2Afl9SLes/fnoh9nBwzfNQfb6qDYUFpnglfpGrq/0b1NtaOUb2z1SR+H1tKlb8bVJJIdvpu
+mEi27kSRIhzk3h30uTfKkKetgy++ouyldxZ7KZ0PuoLQrBy465EoQLosETCCBxcwggX/oAMCAQIC
+AwQmejANBgkqhkiG9w0BAQUFADCBjDELMAkGA1UEBhMCSUwxFjAUBgNVBAoTDVN0YXJ0Q29tIEx0
+ZC4xKzApBgNVBAsTIlNlY3VyZSBEaWdpdGFsIENlcnRpZmljYXRlIFNpZ25pbmcxODA2BgNVBAMT
+L1N0YXJ0Q29tIENsYXNzIDEgUHJpbWFyeSBJbnRlcm1lZGlhdGUgQ2xpZW50IENBMB4XDTEyMDUw
+MTEyNTgyN1oXDTEzMDUwMzExMzcyMFowXTEZMBcGA1UEDRMQOGNVTks1MzE3NDg0WEY5NzEcMBoG
+A1UEAwwTZHdtdzJAaW5mcmFkZWFkLm9yZzEiMCAGCSqGSIb3DQEJARYTZHdtdzJAaW5mcmFkZWFk
+Lm9yZzCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAMmHu8KOjK7aweLiBhm62OCIn2P1
+7KttqUr+tOcoGpy9PrslHXfKwo62JR+kP62uU1SQkBU4M2nqZLqj0HO/QwvwsZs5ukKPrMC2cvOv
+KBbHHLFaJC9mzwFiD2kV3zTySpGEdRU1kH2aViVUJk/rD39VxVLpZVQQCvnfUc7aKcmnCMVqGf1v
+wpr+5rHkG7bWE7RiiWtG7V+957EEVpekoBK1l6Ofc4PX64gi08tRlzFyWAfB/j7Z7sF9MDKwL1g3
+V9QAYCJQNe1txa2gp9HlteWTOOnsrtP2phsyWTbXpglhe9z+wQIo83ldYzZoiRV3WdA09MPoZrTD
+vT8XQ1Mre/ECAwEAAaOCA64wggOqMAkGA1UdEwQCMAAwCwYDVR0PBAQDAgSwMB0GA1UdJQQWMBQG
+CCsGAQUFBwMCBggrBgEFBQcDBDAdBgNVHQ4EFgQU5H3uVDq9z3Iq7IwKYm8slBH7MkcwHwYDVR0j
+BBgwFoAUU3Ltkpzg2ssBXHx+ljVO8tS4UYIwHgYDVR0RBBcwFYETZHdtdzJAaW5mcmFkZWFkLm9y
+ZzCCAiEGA1UdIASCAhgwggIUMIICEAYLKwYBBAGBtTcBAgIwggH/MC4GCCsGAQUFBwIBFiJodHRw
+Oi8vd3d3LnN0YXJ0c3NsLmNvbS9wb2xpY3kucGRmMDQGCCsGAQUFBwIBFihodHRwOi8vd3d3LnN0
+YXJ0c3NsLmNvbS9pbnRlcm1lZGlhdGUucGRmMIH3BggrBgEFBQcCAjCB6jAnFiBTdGFydENvbSBD
+ZXJ0aWZpY2F0aW9uIEF1dGhvcml0eTADAgEBGoG+VGhpcyBjZXJ0aWZpY2F0ZSB3YXMgaXNzdWVk
+IGFjY29yZGluZyB0byB0aGUgQ2xhc3MgMSBWYWxpZGF0aW9uIHJlcXVpcmVtZW50cyBvZiB0aGUg
+U3RhcnRDb20gQ0EgcG9saWN5LCByZWxpYW5jZSBvbmx5IGZvciB0aGUgaW50ZW5kZWQgcHVycG9z
+ZSBpbiBjb21wbGlhbmNlIG9mIHRoZSByZWx5aW5nIHBhcnR5IG9ibGlnYXRpb25zLjCBnAYIKwYB
+BQUHAgIwgY8wJxYgU3RhcnRDb20gQ2VydGlmaWNhdGlvbiBBdXRob3JpdHkwAwIBAhpkTGlhYmls
+aXR5IGFuZCB3YXJyYW50aWVzIGFyZSBsaW1pdGVkISBTZWUgc2VjdGlvbiAiTGVnYWwgYW5kIExp
+bWl0YXRpb25zIiBvZiB0aGUgU3RhcnRDb20gQ0EgcG9saWN5LjA2BgNVHR8ELzAtMCugKaAnhiVo
+dHRwOi8vY3JsLnN0YXJ0c3NsLmNvbS9jcnR1MS1jcmwuY3JsMIGOBggrBgEFBQcBAQSBgTB/MDkG
+CCsGAQUFBzABhi1odHRwOi8vb2NzcC5zdGFydHNzbC5jb20vc3ViL2NsYXNzMS9jbGllbnQvY2Ew
+QgYIKwYBBQUHMAKGNmh0dHA6Ly9haWEuc3RhcnRzc2wuY29tL2NlcnRzL3N1Yi5jbGFzczEuY2xp
+ZW50LmNhLmNydDAjBgNVHRIEHDAahhhodHRwOi8vd3d3LnN0YXJ0c3NsLmNvbS8wDQYJKoZIhvcN
+AQEFBQADggEBAKg1NRSonzbQhSWy57zotQS0X5O5rreeTzLT0mSyePwJxuwI5iZ2wSOFOQxC8L1a
+t5iKcFKRqmVJKpGTBHwTyG36ude1GQd4eIgDbaon/lC30y4YOV4HCuXhfP0+hLV9nN3qaspQEXZX
+gm4/9BcIlA7z5U7AOjyDeEgnpI0S4IyhEay94Xhc/h7Xqta7TALzJDbsi9P9Io8soNsuOTQEgJdg
+H5fUi3rP356IfZwcM3zUH2+qg2FBaZ4JX6Rq6v9G9TbWjlG9s9Ukfh9bSpW/G1SSSHb6bphItu5E
+kSIc5N4d9Lk3ypCnrYMvvqLspXcWeymdD7qC0KwcuOuRKEC6LBExggNvMIIDawIBATCBlDCBjDEL
+MAkGA1UEBhMCSUwxFjAUBgNVBAoTDVN0YXJ0Q29tIEx0ZC4xKzApBgNVBAsTIlNlY3VyZSBEaWdp
+dGFsIENlcnRpZmljYXRlIFNpZ25pbmcxODA2BgNVBAMTL1N0YXJ0Q29tIENsYXNzIDEgUHJpbWFy
+eSBJbnRlcm1lZGlhdGUgQ2xpZW50IENBAgMEJnowCQYFKw4DAhoFAKCCAa8wGAYJKoZIhvcNAQkD
+MQsGCSqGSIb3DQEHATAcBgkqhkiG9w0BCQUxDxcNMTMwNDA0MTQyNzI5WjAjBgkqhkiG9w0BCQQx
+FgQUY1uysk0UfDM/+AwipmSb3/crBJ4wgaUGCSsGAQQBgjcQBDGBlzCBlDCBjDELMAkGA1UEBhMC
+SUwxFjAUBgNVBAoTDVN0YXJ0Q29tIEx0ZC4xKzApBgNVBAsTIlNlY3VyZSBEaWdpdGFsIENlcnRp
+ZmljYXRlIFNpZ25pbmcxODA2BgNVBAMTL1N0YXJ0Q29tIENsYXNzIDEgUHJpbWFyeSBJbnRlcm1l
+ZGlhdGUgQ2xpZW50IENBAgMEJnowgacGCyqGSIb3DQEJEAILMYGXoIGUMIGMMQswCQYDVQQGEwJJ
+TDEWMBQGA1UEChMNU3RhcnRDb20gTHRkLjErMCkGA1UECxMiU2VjdXJlIERpZ2l0YWwgQ2VydGlm
+aWNhdGUgU2lnbmluZzE4MDYGA1UEAxMvU3RhcnRDb20gQ2xhc3MgMSBQcmltYXJ5IEludGVybWVk
+aWF0ZSBDbGllbnQgQ0ECAwQmejANBgkqhkiG9w0BAQEFAASCAQBXa6zom88BQ3SrpvcbeDOwaMF8
+PLuWU2Ken7dSTcMpJQk64n+mPO4zIuH9koBMROkJ6nQncwfdhzpLmeQD8ZyHhfqA97pDXFvVqcaX
+d2iyTEiQ7aoSNMst0GiVtp2qnJV1VVh9DCbzjYDc9JQMNHcwfHhkVNc08ghbM9zdq4sEpj/AZ2If
+oBBHnb7lZ9zoElDdMoiqS2kSal5mDolt7D76uHVhSzEmw7oEx2gf0SHWzF+hki/mH4bcFa+mIc/S
+J4PNFaPiRaWh08LGA+dU0I8IQXUCO51/JQz/oDqRyZodv0wdNA0d5J5lzRAfd65KtzUw8WqEExkl
+54wcPpyn6e33AAAAAAAA
 
-Best regards,
-Gu
 
-> 
-> Bjorn
-> 
->> Subject: [PATCH -v4] PCI: Fix racing for pci device removing via sysfs
->> From: Yinghai Lu <yinghai@kernel.org>
->>
->> Gu found nested removing through
->> 	echo -n 1 > /sys/bus/pci/devices/0000\:10\:00.0/remove ; echo -n 1 >
->> /sys/bus/pci/devices/0000\:1a\:01.0/remove
->>
->> will cause kernel crash as bus get freed.
->>
->> [  418.946462] CPU 4
->> [  418.968377] Pid: 512, comm: kworker/u:2 Tainted: G        W    3.8.0 #2
->> FUJITSU-SV PRIMEQUEST 1800E/SB
->> [  419.081763] RIP: 0010:[<ffffffff8137972e>]  [<ffffffff8137972e>]
->> pci_bus_read_config_word+0x5e/0x90
->> [  420.494137] Call Trace:
->> [  420.523326]  [<ffffffff813851ef>] ? remove_callback+0x1f/0x40
->> [  420.591984]  [<ffffffff8138044b>] pci_pme_active+0x4b/0x1c0
->> [  420.658545]  [<ffffffff8137d8e7>] pci_stop_bus_device+0x57/0xb0
->> [  420.729259]  [<ffffffff8137dab6>] pci_stop_and_remove_bus_device+0x16/0x30
->> [  420.811392]  [<ffffffff813851fb>] remove_callback+0x2b/0x40
->> [  420.877955]  [<ffffffff81257a56>] sysfs_schedule_callback_work+0x26/0x70
->>
->> https://bugzilla.kernel.org/show_bug.cgi?id=54411
->>
->> We have one patch that will let device hold bus ref to prevent it from
->> being freed, but that will still generate warning.
->>
->> ------------[ cut here ]------------
->> WARNING: at lib/list_debug.c:53 __list_del_entry+0x63/0xd0()
->> Hardware name: PRIMEQUEST 1800E
->> list_del corruption, ffff8807d1b6c000->next is LIST_POISON1 (dead000000100100)
->> Call Trace:
->>  [<ffffffff81056d4f>] warn_slowpath_common+0x7f/0xc0
->>  [<ffffffff81056e46>] warn_slowpath_fmt+0x46/0x50
->>  [<ffffffff81280b13>] __list_del_entry+0x63/0xd0
->>  [<ffffffff81280b91>] list_del+0x11/0x40
->>  [<ffffffff81298331>] pci_destroy_dev+0x31/0xc0
->>  [<ffffffff812985bb>] pci_remove_bus_device+0x5b/0x70
->>  [<ffffffff812985ee>] pci_stop_and_remove_bus_device+0x1e/0x30
->>  [<ffffffff8129fc89>] remove_callback+0x29/0x40
->>  [<ffffffff811f3b84>] sysfs_schedule_callback_work+0x24/0x70
->>
->> We can just check if the device get removed from pci tree
->> already in the protection under pci_remove_rescan_mutex.
->>
->> -v2: check if the dev->bus_list is poisoned instead to
->>      find out if it is removed already.
->>      Also add one extra ref to dev to make sure dev is not
->>      get freed too early.
->> -v4: remove not needed ref holding pointed by Gu Zheng.
->>
->> Reported-by: Gu Zheng <guz.fnst@cn.fujitsu.com>
->> Tested-by: Gu Zheng <guz.fnst@cn.fujitsu.com>
->> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
->>
->> ---
->>  drivers/pci/pci-sysfs.c |    3 ++-
->>  1 file changed, 2 insertions(+), 1 deletion(-)
->>
->> Index: linux-2.6/drivers/pci/pci-sysfs.c
->> ===================================================================
->> --- linux-2.6.orig/drivers/pci/pci-sysfs.c
->> +++ linux-2.6/drivers/pci/pci-sysfs.c
->> @@ -331,7 +331,8 @@ static void remove_callback(struct devic
->>  	struct pci_dev *pdev = to_pci_dev(dev);
->>  
->>  	mutex_lock(&pci_remove_rescan_mutex);
->> -	pci_stop_and_remove_bus_device(pdev);
->> +	if (pdev->bus_list.next != LIST_POISON1)
->> +		pci_stop_and_remove_bus_device(pdev);
->>  	mutex_unlock(&pci_remove_rescan_mutex);
->>  }
->>  
-> 
-
+--=-GWBWnoCyMHWEzvdvYbSD--
 
