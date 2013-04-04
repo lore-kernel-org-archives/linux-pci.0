@@ -1,59 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f180.google.com ([209.85.214.180]:40868 "EHLO
-	mail-ob0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755470Ab3DLUyz convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 12 Apr 2013 16:54:55 -0400
-Received: by mail-ob0-f180.google.com with SMTP id un3so2672046obb.25
-        for <linux-pci@vger.kernel.org>; Fri, 12 Apr 2013 13:54:54 -0700 (PDT)
+Received: from mail-oa0-f41.google.com ([209.85.219.41]:47006 "EHLO
+	mail-oa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762136Ab3DDSlu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Apr 2013 14:41:50 -0400
+Received: by mail-oa0-f41.google.com with SMTP id f4so3198075oah.14
+        for <linux-pci@vger.kernel.org>; Thu, 04 Apr 2013 11:41:48 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1362993428-14823-5-git-send-email-andriy.shevchenko@linux.intel.com>
-References: <1362993428-14823-1-git-send-email-andriy.shevchenko@linux.intel.com>
- <1362993428-14823-5-git-send-email-andriy.shevchenko@linux.intel.com>
+In-Reply-To: <20130404175117.GC3403@neilslaptop.think-freely.org>
+References: <1362158276-4901-1-git-send-email-nhorman@tuxdriver.com>
+ <1362423859-18516-1-git-send-email-nhorman@tuxdriver.com> <CAErSpo4=L9q+q5hqP2Avw6uceQwZiPuOzadhsqGpu6aP53PMbQ@mail.gmail.com>
+ <1365085649.28127.66.camel@i7.infradead.org> <20130404145012.GA3403@neilslaptop.think-freely.org>
+ <CAErSpo6x5rokg8np7xEKO6y6Qke5X7=r7J7VB2LVrAGGzDC1sA@mail.gmail.com>
+ <20130404153905.GB3403@neilslaptop.think-freely.org> <CAErSpo7Mup+k7UmZsH1ZidCM1dJw-rNfdtCC6dSF+cZe1d+aBg@mail.gmail.com>
+ <20130404175117.GC3403@neilslaptop.think-freely.org>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 12 Apr 2013 14:54:34 -0600
-Message-ID: <CAErSpo7b6CvQgo44oRi+iREq1zduHMLTvw0r_7McroLc38r97A@mail.gmail.com>
-Subject: Re: [PATCHv2 5/5] ACPI / pcie: suppress compiler warning in portdrv_acpi.c
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=windows-1252
+Date: Thu, 4 Apr 2013 12:41:27 -0600
+Message-ID: <CAErSpo7CPb7p4Psyz-dFtwwgNf8Y9Y+b+w9e7XNHZOmiPOnPog@mail.gmail.com>
+Subject: Re: [PATCH v2] irq: add quirk for broken interrupt remapping on 55XX chipsets
+To: Neil Horman <nhorman@tuxdriver.com>,
+	Don Dutile <ddutile@redhat.com>
+Cc: David Woodhouse <dwmw2@infradead.org>,
+	Prarit Bhargava <prarit@redhat.com>,
+	Don Zickus <dzickus@redhat.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Asit Mallick <asit.k.mallick@intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
+	Yinghai Lu <yinghai@kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 11, 2013 at 3:17 AM, Andy Shevchenko
-<andriy.shevchenko@linux.intel.com> wrote:
-> This patch fixes following compiler warning when build via make W=1:
->
-> drivers/pci/pcie/portdrv_acpi.c:34:5: warning: no previous prototype for ‘pcie_port_acpi_setup’ [-Wmissing-prototypes]
->
-> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: linux-pci@vger.kernel.org
+On Thu, Apr 4, 2013 at 11:51 AM, Neil Horman <nhorman@tuxdriver.com> wrote:
 
-I applied this and several similar patches to my pci/cleanup branch
-for v3.10.  Thanks!
+> Oh, you want the bug report that I'm fixing this against?  Sure, I can do that.
+> I thought you wanted me to include a url in the WARN_TAINT, with which user
+> could report occurances of this bug.  Yeah, the bug that this is reported in is:
+> https://bugzilla.redhat.com/show_bug.cgi?id=887006
+>
+> Its standing in for about a dozen or so variants of this issue we've seen
 
-http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/cleanup
+Exactly -- I'm just hoping for something in the changelog.  BTW, this
+particular bugzilla is not public.
+
+> Regardless, theres also the security issue to consider here - namely that
+> disabling irq remapping opens up users of virt to a possible security bug
+> (potential irq injection).  Some users may wish to live with the remapping
+> error, given that error typically leads to devices that need to be
+> restarted/reset to start working again, rather than live with the security hole.
+> I rather like the warning, that gives users a choice, but I'll spin up a version
+> that just disables it if you would rather.
+
+I don't believe users will want to make a choice like that or even be
+sophisticated enough to do it, at least not based on something in
+dmesg.  I'm pretty sure I'm not  :)
+
+The only supportable thing I can imagine doing would be:
+
+  - Disable interrupt remapping if this chipset defect is present, so
+devices work reliably (they don't need whatever restart/reset you
+referred to above).
+  - Disable virt functionality when interrupt remapping is disabled to
+avoid the security problem (I don't know the details of this.)
+  - Add a command-line option to enable interrupt remapping (I think
+"intremap=on" is currently parsed too early, but maybe this could be
+reworked so the option could override the quirk disable).
+  - Add release notes saying "boot with 'intremap=on' if you want the
+virt functionality and can accept unreliable devices."
+
+That way the default behavior is safe and reliable (though perhaps
+lacking some functionality), and you have told the user a way to get
+safe and unreliable operation if he's willing to accept that.  At
+least, that's what I think I would want if I were in RH's shoes.
 
 Bjorn
-
-> ---
->  drivers/pci/pcie/portdrv_acpi.c | 1 +
->  1 file changed, 1 insertion(+)
->
-> diff --git a/drivers/pci/pcie/portdrv_acpi.c b/drivers/pci/pcie/portdrv_acpi.c
-> index a86b56e..b4d2894 100644
-> --- a/drivers/pci/pcie/portdrv_acpi.c
-> +++ b/drivers/pci/pcie/portdrv_acpi.c
-> @@ -17,6 +17,7 @@
->
->  #include "aer/aerdrv.h"
->  #include "../pci.h"
-> +#include "portdrv.h"
->
->  /**
->   * pcie_port_acpi_setup - Request the BIOS to release control of PCIe services.
-> --
-> 1.8.2.rc0.22.gb3600c3
->
