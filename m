@@ -1,188 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ozlabs.org ([203.10.76.45]:56613 "EHLO ozlabs.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S936155Ab3DJKf1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 10 Apr 2013 06:35:27 -0400
-From: Rusty Russell <rusty@rustcorp.com.au>
-To: Veaceslav Falico <vfalico@redhat.com>, linux-kernel@vger.kernel.org
-Cc: vfalico@redhat.com, linux-pci@vger.kernel.org,
-	gregkh@linuxfoundation.org, bhelgaas@google.com
-Subject: Re: [PATCH] module: add kset_obj_exists() and use it
-In-Reply-To: <1365506529-8396-1-git-send-email-vfalico@redhat.com>
-References: <1365506529-8396-1-git-send-email-vfalico@redhat.com>
-Date: Wed, 10 Apr 2013 16:47:34 +0930
-Message-ID: <87y5cq6ei9.fsf@rustcorp.com.au>
+Received: from mail-oa0-f49.google.com ([209.85.219.49]:38626 "EHLO
+	mail-oa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1763682Ab3DDRRK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Apr 2013 13:17:10 -0400
+Received: by mail-oa0-f49.google.com with SMTP id j6so3005849oag.22
+        for <linux-pci@vger.kernel.org>; Thu, 04 Apr 2013 10:17:10 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1365075572-20763-4-git-send-email-shangw@linux.vnet.ibm.com>
+References: <1365075572-20763-1-git-send-email-shangw@linux.vnet.ibm.com> <1365075572-20763-4-git-send-email-shangw@linux.vnet.ibm.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 4 Apr 2013 11:16:49 -0600
+Message-ID: <CAErSpo73=V5eHF4uWtc0FsEaFygGG7uDTsqCWzQsTEeiyH9gCA@mail.gmail.com>
+Subject: Re: [PATCH 3/5] PCI: Use cached MSI cap while enabling MSI interrupts
+To: Gavin Shan <shangw@linux.vnet.ibm.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Veaceslav Falico <vfalico@redhat.com> writes:
-> Add a new function, kset_obj_exists(), which is identical to
-> kset_find_obj() but doesn't take a reference to the kobject
-> found and only returns bool if found/not found.
+On Thu, Apr 4, 2013 at 5:39 AM, Gavin Shan <shangw@linux.vnet.ibm.com> wrote:
+> The patch intends to use the cached MSI capability offset in
+> pci_dev instead of polling that from config space when enabling
+> MSI interrupts.
 >
-> The main purpose would be to avoid the possible race scenario,
-> when we could get the reference in between the kref_put() and
-> kobject_release() functions (i.e. kref_put() already ran,
-> refcount became 0, but the kobject_release() function still
-> didn't run, and we try to get via kobject_get() and thus ending
-> up with a released kobject).
-
-What?  If refcount is zero, there should be no more references to it.
-That's what 0 means.
-
-If you want 0-and-then-cleanup, you need atomic_dec_and_lock().
-
-> It can be triggered, for example,
-> by running insmod/rmmod bonding in parallel, which ends up in
-> a race between kset_obj_find() in mod_sysfs_init() and rmmod's
-> mod_sysfs_fini()/kobject_put().
-
-That's a bug.  We should be cleaning up sysfs before we unlike the
-removed module from the list.
-
-Because the same thing applies to ddebug info, which is also keyed by
-module name.
-
-Something like this (untested!):
-
-diff --git a/kernel/module.c b/kernel/module.c
-index 3c2c72d..8d4de82 100644
---- a/kernel/module.c
-+++ b/kernel/module.c
-@@ -1862,10 +1862,10 @@ static void free_module(struct module *mod)
- {
- 	trace_module_free(mod);
- 
--	/* Delete from various lists */
--	mutex_lock(&module_mutex);
--	stop_machine(__unlink_module, mod, NULL);
--	mutex_unlock(&module_mutex);
-+	/* We leave it in list to prevent duplicate loads while we clean
-+	 * up sysfs, ddebug and any other external exposure. */
-+	mod->state = MODULE_STATE_UNFORMED;
-+
- 	mod_sysfs_teardown(mod);
- 
- 	/* Remove dynamic debug info */
-@@ -1880,6 +1880,11 @@ static void free_module(struct module *mod)
- 	/* Free any allocated parameters. */
- 	destroy_params(mod->kp, mod->num_kp);
- 
-+	/* Now we can delete it from the lists */
-+	mutex_lock(&module_mutex);
-+	stop_machine(__unlink_module, mod, NULL);
-+	mutex_unlock(&module_mutex);
-+
- 	/* This may be NULL, but that's OK */
- 	unset_module_init_ro_nx(mod);
- 	module_free(mod, mod->module_init);
-
-> It also saves us some CPU time in several places where we don't
-> need the kobject itself and only need to verify if it actually
-> exists, by not taking the kref (and thus we don't need to
-> kobject_put() afterwards).
->
-> Signed-off-by: Veaceslav Falico <vfalico@redhat.com>
+> Signed-off-by: Gavin Shan <shangw@linux.vnet.ibm.com>
 > ---
->  drivers/pci/slot.c      |    5 +----
->  include/linux/kobject.h |    1 +
->  kernel/module.c         |    5 +----
->  lib/kobject.c           |   28 ++++++++++++++++++++++++++++
->  4 files changed, 31 insertions(+), 8 deletions(-)
+>  drivers/pci/msi.c |   19 +++++++++----------
+>  1 files changed, 9 insertions(+), 10 deletions(-)
 >
-> diff --git a/drivers/pci/slot.c b/drivers/pci/slot.c
-> index ac6412f..3988d75 100644
-> --- a/drivers/pci/slot.c
-> +++ b/drivers/pci/slot.c
-> @@ -154,11 +154,8 @@ static char *make_slot_name(const char *name)
->  	dup = 1;
->  
->  	for (;;) {
-> -		struct kobject *dup_slot;
-> -		dup_slot = kset_find_obj(pci_slots_kset, new_name);
-> -		if (!dup_slot)
-> +		if (!kset_obj_exists(pci_slots_kset, new_name))
->  			break;
-> -		kobject_put(dup_slot);
->  		if (dup == max) {
->  			len++;
->  			max *= 10;
-> diff --git a/include/linux/kobject.h b/include/linux/kobject.h
-> index 939b112..7cde72c 100644
-> --- a/include/linux/kobject.h
-> +++ b/include/linux/kobject.h
-> @@ -191,6 +191,7 @@ static inline struct kobj_type *get_ktype(struct kobject *kobj)
->  }
->  
->  extern struct kobject *kset_find_obj(struct kset *, const char *);
-> +extern bool kset_obj_exists(struct kset *, const char *);
->  
->  /* The global /sys/kernel/ kobject for people to chain off of */
->  extern struct kobject *kernel_kobj;
-> diff --git a/kernel/module.c b/kernel/module.c
-> index 0925c9a..1df13a3 100644
-> --- a/kernel/module.c
-> +++ b/kernel/module.c
-> @@ -1606,7 +1606,6 @@ static void module_remove_modinfo_attrs(struct module *mod)
->  static int mod_sysfs_init(struct module *mod)
+> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> index 5f51e10..182474d 100644
+> --- a/drivers/pci/msi.c
+> +++ b/drivers/pci/msi.c
+> @@ -552,14 +552,14 @@ out_unroll:
+>  static int msi_capability_init(struct pci_dev *dev, int nvec)
 >  {
->  	int err;
-> -	struct kobject *kobj;
->  
->  	if (!module_sysfs_initialized) {
->  		printk(KERN_ERR "%s: module sysfs not initialized\n",
-> @@ -1615,10 +1614,8 @@ static int mod_sysfs_init(struct module *mod)
->  		goto out;
->  	}
->  
-> -	kobj = kset_find_obj(module_kset, mod->name);
-> -	if (kobj) {
-> +	if (kset_obj_exists(module_kset, mod->name)) {
->  		printk(KERN_ERR "%s: module is already loaded\n", mod->name);
-> -		kobject_put(kobj);
->  		err = -EINVAL;
->  		goto out;
->  	}
-> diff --git a/lib/kobject.c b/lib/kobject.c
-> index e07ee1f..b82633f 100644
-> --- a/lib/kobject.c
-> +++ b/lib/kobject.c
-> @@ -760,6 +760,34 @@ struct kobject *kset_find_obj(struct kset *kset, const char *name)
->  	return ret;
->  }
->  
-> +/**
-> + * kset_obj_exists - verify if an object exists in kset
-> + * @kset: kset we're looking in.
-> + * @name: object's name.
-> + *
-> + * Lock kset via @kset->subsys, and iterate over @kset->list,
-> + * looking for a matching kobject. Returns bool, found/not found.
-> + * This function does not take a reference and thus doesn't
-> + * guarantee that the object won't go away any time after.
-> + */
-> +
-> +bool kset_obj_exists(struct kset *kset, const char *name)
-> +{
-> +	struct kobject *k;
-> +
-> +	spin_lock(&kset->list_lock);
-> +
-> +	list_for_each_entry(k, &kset->list, entry) {
-> +		if (kobject_name(k) && !strcmp(kobject_name(k), name)) {
-> +			spin_unlock(&kset->list_lock);
-> +			return true;
-> +		}
-> +	}
-> +
-> +	spin_unlock(&kset->list_lock);
-> +	return false;
-> +}
-> +
->  static void kset_release(struct kobject *kobj)
+>         struct msi_desc *entry;
+> -       int pos, ret;
+> +       int ret;
+>         u16 control;
+>         unsigned mask;
+>
+> -       pos = pci_find_capability(dev, PCI_CAP_ID_MSI);
+> -       msi_set_enable(dev, 0); /* Disable MSI during set up */
+> +       /* Disable MSI during set up */
+> +       msi_set_enable(dev, 0);
+>
+> -       pci_read_config_word(dev, msi_control_reg(pos), &control);
+> +       pci_read_config_word(dev, msi_control_reg(dev->msi_cap), &control);
+
+While you're at at, can you get rid of msi_control_reg() and friends?
+They are needlessly different from the common style in this file,
+e.g., "pos + PCI_MSI_FLAGS".
+
+>         /* MSI Entry Initialization */
+>         entry = alloc_msi_entry(dev);
+>         if (!entry)
+> @@ -570,9 +570,9 @@ static int msi_capability_init(struct pci_dev *dev, int nvec)
+>         entry->msi_attrib.entry_nr      = 0;
+>         entry->msi_attrib.maskbit       = is_mask_bit_support(control);
+>         entry->msi_attrib.default_irq   = dev->irq;     /* Save IOAPIC IRQ */
+> -       entry->msi_attrib.pos           = pos;
+> +       entry->msi_attrib.pos           = dev->msi_cap;
+>
+> -       entry->mask_pos = msi_mask_reg(pos, entry->msi_attrib.is_64);
+> +       entry->mask_pos = msi_mask_reg(dev->msi_cap, entry->msi_attrib.is_64);
+>         /* All MSIs are unmasked by default, Mask them all */
+>         if (entry->msi_attrib.maskbit)
+>                 pci_read_config_dword(dev, entry->mask_pos, &entry->masked);
+> @@ -818,13 +818,12 @@ static int pci_msi_check_device(struct pci_dev *dev, int nvec, int type)
+>   */
+>  int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec)
 >  {
->  	struct kset *kset = container_of(kobj, struct kset, kobj);
-> -- 
-> 1.7.1
+> -       int status, pos, maxvec;
+> +       int status, maxvec;
+>         u16 msgctl;
+>
+> -       pos = pci_find_capability(dev, PCI_CAP_ID_MSI);
+> -       if (!pos)
+> +       if (!dev->msi_cap)
+>                 return -EINVAL;
+> -       pci_read_config_word(dev, pos + PCI_MSI_FLAGS, &msgctl);
+> +       pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &msgctl);
+>         maxvec = 1 << ((msgctl & PCI_MSI_FLAGS_QMASK) >> 1);
+>         if (nvec > maxvec)
+>                 return maxvec;
+> --
+> 1.7.5.4
+>
