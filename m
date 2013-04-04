@@ -1,335 +1,56 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:58297 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754019Ab3D0JOg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 27 Apr 2013 05:14:36 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, Hanjun Guo <guohanjun@huawei.com>,
-	<jiang.liu@huawei.com>, Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	Fenghua Yu <fenghua.yu@intel.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	<linux-ia64@vger.kernel.org>
-Subject: [PATCH 3/7] PCI/IA64: make pci_root_info holds pci hostbridge resources
-Date: Sat, 27 Apr 2013 17:12:25 +0800
-Message-ID: <1367053949-38424-4-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1367053949-38424-1-git-send-email-wangyijing@huawei.com>
-References: <1367053949-38424-1-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20130404200455.GB19354@hmsreliant.think-freely.org>
+References: <1362158276-4901-1-git-send-email-nhorman@tuxdriver.com>
+ <1365088091-10862-1-git-send-email-nhorman@tuxdriver.com> <CAE9FiQUq8m_2fpyRrLweCZwR7cqFBfbZrt9ZeK-PVL3Puxjp0g@mail.gmail.com>
+ <515DB7F6.8010502@redhat.com> <CAE9FiQVXG+ns00sCAKGY5Xs3BT3Cc=LRyEkZzHP9DQXS+4KCKg@mail.gmail.com>
+ <20130404200455.GB19354@hmsreliant.think-freely.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 4 Apr 2013 14:33:31 -0600
+Message-ID: <CAErSpo5sW-uibP=TNnfSq4u8phm5NdmNkapcF+UUVgW9LiAMZA@mail.gmail.com>
+Subject: Re: [PATCH v4] irq: add quirk for broken interrupt remapping on 55XX chipsets
+To: Neil Horman <nhorman@tuxdriver.com>
+Cc: Yinghai Lu <yinghai@kernel.org>, Don Dutile <ddutile@redhat.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Prarit Bhargava <prarit@redhat.com>,
+	Don Zickus <dzickus@redhat.com>,
+	Asit Mallick <asit.k.mallick@intel.com>,
+	David Woodhouse <dwmw2@infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently, pcibios_resource_to_bus() and pcibios_bus_to_resource()
-functions use pci_host_bridge to translate bus side address from/to
-cpu side address. The pci_window in pci_controller never be used again.
-So we remove pci_window in pci_controller and make pci_root_info hold
-the pci hostbridge resources like in x86.
+On Thu, Apr 4, 2013 at 2:04 PM, Neil Horman <nhorman@tuxdriver.com> wrote:
+> On Thu, Apr 04, 2013 at 10:40:07AM -0700, Yinghai Lu wrote:
+>> On Thu, Apr 4, 2013 at 10:27 AM, Don Dutile <ddutile@redhat.com> wrote:
+>> >> You need to move the quirk to early_quirk to append nointremap to
+>> >> avoid extra rebooting.
+>> >>
+>> > The pci-dev's of all the (minimally, root, 5500-chipset) pci-dev's are
+>> > known/scanned/created by that time?
+>>
+>> in arch/x86/kernel/early-quirk.c
+>>
+>> and on top of
+>> https://git.kernel.org/cgit/linux/kernel/git/yinghai/linux-yinghai.git/commit/?h=for-x86-early-quirk-usb&id=de38757e964cfee20e6da1977572a2191d7f4aa0
+>>
+>> You could add one entry in early_qrk[].
+>>
+>> Some one already try to use that path to disable x2apic on some thinkpad.
+>>
+>> So it should work on nointrremap too.
+>>
+> See my last email to Bjorn.  Doing this in early-quirks in such a way that we
+> can detect an iommu that has interrupt remapping enabled (so we don't just
+> unilaterally print this quirk all the time) requires that we be able to parse
+> acpi tables very early in the boot.  If you know of how to do that, I can make
+> this happen.  If not, I suppose another alternative would be to have the early
+> quirk set a flag that tells us this is a bogus chip, and if we try to enable irq
+> remapping with that flag set, we should fail, and report the error at that time,
+> but I'm not sure I like that solution.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Fenghua Yu <fenghua.yu@intel.com>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Thierry Reding <thierry.reding@avionic-design.de>
-Cc: linux-ia64@vger.kernel.org
----
- arch/ia64/include/asm/pci.h   |   18 ++++++-----
- arch/ia64/pci/pci.c           |   68 ++++++++++++++++++++--------------------
- arch/ia64/sn/kernel/io_init.c |   67 ++++++++++++++++++++++++---------------
- 3 files changed, 85 insertions(+), 68 deletions(-)
+I like that solution :)  It seems very simple -- you don't have to
+parse any tables or anything.
 
-diff --git a/arch/ia64/include/asm/pci.h b/arch/ia64/include/asm/pci.h
-index 5e04b59..82a236c 100644
---- a/arch/ia64/include/asm/pci.h
-+++ b/arch/ia64/include/asm/pci.h
-@@ -89,23 +89,25 @@ extern int pci_mmap_legacy_page_range(struct pci_bus *bus,
- #define pci_legacy_read platform_pci_legacy_read
- #define pci_legacy_write platform_pci_legacy_write
- 
--struct pci_window {
--	struct resource resource;
--	u64 offset;
--};
--
- struct pci_controller {
- 	void *acpi_handle;
- 	void *iommu;
- 	int segment;
- 	int node;		/* nearest node with memory or -1 for global allocation */
- 
--	unsigned int windows;
--	struct pci_window *window;
--
- 	void *platform_data;
- };
- 
-+struct pci_root_info {
-+	struct acpi_device *bridge;
-+	struct pci_controller *controller;
-+	struct list_head resources;
-+	struct resource *res;
-+	resource_size_t *res_offset;
-+	unsigned int res_num;
-+	char *name;
-+};
-+
- #define PCI_CONTROLLER(busdev) ((struct pci_controller *) busdev->sysdata)
- #define pci_domain_nr(busdev)    (PCI_CONTROLLER(busdev)->segment)
- 
-diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
-index de1474f..d7681c6 100644
---- a/arch/ia64/pci/pci.c
-+++ b/arch/ia64/pci/pci.c
-@@ -130,12 +130,6 @@ static struct pci_controller *alloc_pci_controller(int seg)
- 	return controller;
- }
- 
--struct pci_root_info {
--	struct acpi_device *bridge;
--	struct pci_controller *controller;
--	struct list_head resources;
--	char *name;
--};
- 
- static unsigned int
- new_space (u64 phys_base, int sparse)
-@@ -265,7 +259,7 @@ static acpi_status count_window(struct acpi_resource *resource, void *data)
- static acpi_status add_window(struct acpi_resource *res, void *data)
- {
- 	struct pci_root_info *info = data;
--	struct pci_window *window;
-+	struct resource *resource;
- 	struct acpi_resource_address64 addr;
- 	acpi_status status;
- 	unsigned long flags, offset = 0;
-@@ -289,37 +283,36 @@ static acpi_status add_window(struct acpi_resource *res, void *data)
- 	} else
- 		return AE_OK;
- 
--	window = &info->controller->window[info->controller->windows++];
--	window->resource.name = info->name;
--	window->resource.flags = flags;
--	window->resource.start = addr.minimum + offset;
--	window->resource.end = window->resource.start + addr.address_length - 1;
--	window->offset = offset;
-+	resource = &info->res[info->res_num];
-+	resource->name = info->name;
-+	resource->flags = flags;
-+	resource->start = addr.minimum + offset;
-+	resource->end = resource->start + addr.address_length - 1;
-+	info->res_offset[info->res_num] = offset;
- 
--	if (insert_resource(root, &window->resource)) {
-+	if (insert_resource(root, resource)) {
- 		dev_err(&info->bridge->dev,
- 			"can't allocate host bridge window %pR\n",
--			&window->resource);
-+			resource);
- 	} else {
- 		if (offset)
- 			dev_info(&info->bridge->dev, "host bridge window %pR "
- 				 "(PCI address [%#llx-%#llx])\n",
--				 &window->resource,
--				 window->resource.start - offset,
--				 window->resource.end - offset);
-+				 resource,
-+				 resource->start - offset,
-+				 resource->end - offset);
- 		else
- 			dev_info(&info->bridge->dev,
--				 "host bridge window %pR\n",
--				 &window->resource);
-+				 "host bridge window %pR\n", resource);
- 	}
--
- 	/* HP's firmware has a hack to work around a Windows bug.
- 	 * Ignore these tiny memory ranges */
--	if (!((window->resource.flags & IORESOURCE_MEM) &&
--	      (window->resource.end - window->resource.start < 16)))
--		pci_add_resource_offset(&info->resources, &window->resource,
--					window->offset);
-+	if (!((resource->flags & IORESOURCE_MEM) &&
-+	      (resource->end - resource->start < 16)))
-+		pci_add_resource_offset(&info->resources, resource,
-+					info->res_offset[info->res_num]);
- 
-+	info->res_num++;
- 	return AE_OK;
- }
- 
-@@ -329,7 +322,6 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 	int domain = root->segment;
- 	int bus = root->secondary.start;
- 	struct pci_controller *controller;
--	unsigned int windows = 0;
- 	struct pci_root_info info;
- 	struct pci_bus *pbus;
- 	char *name;
-@@ -351,22 +343,29 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 	/* insert busn resource at first */
- 	pci_add_resource(&info.resources, &root->secondary);
- 	acpi_walk_resources(device->handle, METHOD_NAME__CRS, count_window,
--			&windows);
--	if (windows) {
--		controller->window =
--			kzalloc_node(sizeof(*controller->window) * windows,
-+			&info.res_num);
-+	if (info.res_num) {
-+		info.res =
-+			kzalloc_node(sizeof(*info.res) * info.res_num,
- 				     GFP_KERNEL, controller->node);
--		if (!controller->window)
-+		if (!info.res)
- 			goto out2;
-+
-+		info.res_offset =
-+			kzalloc_node(sizeof(*info.res_offset) * info.res_num,
-+				GFP_KERNEL, controller->node);
-+		if (!info.res_offset)
-+			goto out3;
- 
- 		name = kmalloc(16, GFP_KERNEL);
- 		if (!name)
--			goto out3;
-+			goto out4;
- 
- 		sprintf(name, "PCI Bus %04x:%02x", domain, bus);
- 		info.bridge = device;
- 		info.controller = controller;
- 		info.name = name;
-+		info.res_num = 0;
- 		acpi_walk_resources(device->handle, METHOD_NAME__CRS,
- 			add_window, &info);
- 	}
-@@ -385,9 +384,10 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 
- 	pci_scan_child_bus(pbus);
- 	return pbus;
--
-+out4:
-+	kfree(info.res_offset);
- out3:
--	kfree(controller->window);
-+	kfree(info.res);
- out2:
- 	kfree(controller);
- out1:
-diff --git a/arch/ia64/sn/kernel/io_init.c b/arch/ia64/sn/kernel/io_init.c
-index 99710f5..86c2335 100644
---- a/arch/ia64/sn/kernel/io_init.c
-+++ b/arch/ia64/sn/kernel/io_init.c
-@@ -125,27 +125,39 @@ static void __init sn_fixup_ionodes(void)
-  *				and their resources (_CRS),
-  */
- static void
--sn_legacy_pci_window_fixup(struct pci_controller *controller,
-+sn_legacy_pci_window_fixup(struct pci_root_info *info,
- 			   u64 legacy_io, u64 legacy_mem)
- {
--		controller->window = kcalloc(2, sizeof(struct pci_window),
--					     GFP_KERNEL);
--		BUG_ON(controller->window == NULL);
--		controller->window[0].offset = legacy_io;
--		controller->window[0].resource.name = "legacy_io";
--		controller->window[0].resource.flags = IORESOURCE_IO;
--		controller->window[0].resource.start = legacy_io;
--		controller->window[0].resource.end =
--	    			controller->window[0].resource.start + 0xffff;
--		controller->window[0].resource.parent = &ioport_resource;
--		controller->window[1].offset = legacy_mem;
--		controller->window[1].resource.name = "legacy_mem";
--		controller->window[1].resource.flags = IORESOURCE_MEM;
--		controller->window[1].resource.start = legacy_mem;
--		controller->window[1].resource.end =
--	    	       controller->window[1].resource.start + (1024 * 1024) - 1;
--		controller->window[1].resource.parent = &iomem_resource;
--		controller->windows = 2;
-+	info->res_num = 2;
-+	info->res = kzalloc(sizeof(*info->res) * info->res_num, GFP_KERNEL);
-+	if (!info->res) {
-+		info->res_num = 0;
-+		return;
-+	}
-+
-+	info->res_offset = kzalloc(sizeof(*info->res_offset) * info->res_num,
-+			GFP_KERNEL);
-+	if (!info->res_offset) {
-+		kfree(info->res);
-+		info->res = NULL;
-+		info->res_num = 0;
-+		return;
-+	}
-+
-+	info->res_offset[0] = legacy_io;
-+	info->res[0].name = "legacy_io";
-+	info->res[0].flags = IORESOURCE_IO;
-+	info->res[0].start = legacy_io;
-+	info->res[0].end =
-+		info->res[0].start + 0xffff;
-+	info->res[0].parent = &ioport_resource;
-+	info->res_offset[1] = legacy_mem;
-+	info->res[1].name = "legacy_mem";
-+	info->res[1].flags = IORESOURCE_MEM;
-+	info->res[1].start = legacy_mem;
-+	info->res[1].end =
-+		info->res[1].start + (1024 * 1024) - 1;
-+	info->res[1].parent = &iomem_resource;
- }
- 
- /*
-@@ -248,6 +260,7 @@ static void __init
- sn_pci_controller_fixup(int segment, int busnum, struct pci_bus *bus)
- {
- 	s64 status = 0;
-+	struct pci_root_info info;
- 	struct pci_controller *controller;
- 	struct pcibus_bussoft *prom_bussoft_ptr;
- 	LIST_HEAD(resources);
-@@ -262,20 +275,21 @@ sn_pci_controller_fixup(int segment, int busnum, struct pci_bus *bus)
- 	controller = kzalloc(sizeof(*controller), GFP_KERNEL);
- 	BUG_ON(!controller);
- 	controller->segment = segment;
--
--	/*
-+		/*
- 	 * Temporarily save the prom_bussoft_ptr for use by sn_bus_fixup().
- 	 * (platform_data will be overwritten later in sn_common_bus_fixup())
- 	 */
- 	controller->platform_data = prom_bussoft_ptr;
-+
-+	info.controller = controller;
- 
--	sn_legacy_pci_window_fixup(controller,
-+	sn_legacy_pci_window_fixup(&info,
- 				   prom_bussoft_ptr->bs_legacy_io,
- 				   prom_bussoft_ptr->bs_legacy_mem);
--	for (i = 0; i < controller->windows; i++)
-+	for (i = 0; i < info.res_num; i++)
- 		pci_add_resource_offset(&resources,
--					&controller->window[i].resource,
--					controller->window[i].offset);
-+					&info.res[i],
-+					info.res_offset[i]);
- 	bus = pci_scan_root_bus(NULL, busnum, &pci_root_ops, controller,
- 				&resources);
-  	if (bus == NULL)
-@@ -286,8 +300,9 @@ sn_pci_controller_fixup(int segment, int busnum, struct pci_bus *bus)
- 	return;
- 
- error_return:
--
- 	kfree(controller);
-+	kfree(info.res);
-+	kfree(info.res_offset);
- 	return;
- }
- 
--- 
-1.7.1
-
-
+Bjorn
