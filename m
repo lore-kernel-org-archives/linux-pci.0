@@ -1,130 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f46.google.com ([209.85.219.46]:57099 "EHLO
-	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1764374Ab3DDSYS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Apr 2013 14:24:18 -0400
-Received: by mail-oa0-f46.google.com with SMTP id k1so3125337oag.5
-        for <linux-pci@vger.kernel.org>; Thu, 04 Apr 2013 11:24:17 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20130321043509.7229.93525.stgit@amt.stowe>
-References: <20130321043449.7229.81056.stgit@amt.stowe> <20130321043509.7229.93525.stgit@amt.stowe>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 4 Apr 2013 12:23:57 -0600
-Message-ID: <CAErSpo77UWR3u+DfdaOW0hG6FXQv+ADsb24bjKQ3fJOR5SFBZg@mail.gmail.com>
-Subject: Re: [PATCH 3/3] PCI, scsi, ahci: Unify usages of 0x1b4b vendor ID to
- use PCI_VENDOR_ID_MARVELL_EXT
-To: Myron Stowe <myron.stowe@redhat.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-	linux-ide@vger.kernel.org,
-	"James E.J. Bottomley" <JBottomley@parallels.com>,
-	Jeff Garzik <jgarzik@pobox.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from e32.co.us.ibm.com ([32.97.110.150]:34047 "EHLO
+	e32.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760606Ab3DDV6T (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Apr 2013 17:58:19 -0400
+Received: from /spool/local
+	by e32.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <brking@linux.vnet.ibm.com>;
+	Thu, 4 Apr 2013 15:58:18 -0600
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by d03dlp03.boulder.ibm.com (Postfix) with ESMTP id 1CB8619D8042
+	for <linux-pci@vger.kernel.org>; Thu,  4 Apr 2013 15:58:13 -0600 (MDT)
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id r34LwHPL368230
+	for <linux-pci@vger.kernel.org>; Thu, 4 Apr 2013 15:58:17 -0600
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id r34LwGAi010682
+	for <linux-pci@vger.kernel.org>; Thu, 4 Apr 2013 15:58:16 -0600
+Message-Id: <201304042158.r34LwEOV010607@d03av02.boulder.ibm.com>
+Subject: [PATCH 2/3] powerpc: Enable boot_vga sysfs attribute for graphics adapters on Power
+To: linux-pci@vger.kernel.org
+Cc: bhelgaas@google.com, linuxppc-dev@lists.ozlabs.org,
+	benh@kernel.crashing.org, lucaskt@linux.vnet.ibm.com,
+	klebers@linux.vnet.ibm.com, brking@linux.vnet.ibm.com
+From: Brian King <brking@linux.vnet.ibm.com>
+Date: Thu, 04 Apr 2013 16:58:15 -0500
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 20, 2013 at 10:35 PM, Myron Stowe <myron.stowe@redhat.com> wrote:
-> With the 0x1b4b vendor ID #define in place, convert hard-coded ID values.
-> Also, unify the previous SCSI specific use of this vendor ID to the new
-> macro.
->
-> Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
-> ---
->
->  drivers/ata/ahci.c           |   10 +++++-----
->  drivers/scsi/mvsas/mv_init.c |    6 +++---
->  drivers/scsi/mvumi.c         |    4 ++--
->  drivers/scsi/mvumi.h         |    1 -
->  4 files changed, 10 insertions(+), 11 deletions(-)
 
-Jeff & James, if you don't object to these, I can push them through my
-PCI tree along with the corresponding pci_ids.h addition.
+Initialize dev->dev.type such that the PCI group attributes for boot_vga
+and SR-IOV can be displayed if appropriate. This fixes an issue seen on
+Power preventing X from auto initializing a graphics adapter when using KMS.
 
-Or I can just make the pci_ids.h change and you can take these if you'd prefer.
+Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
+---
 
-> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-> index a99112c..616952f 100644
-> --- a/drivers/ata/ahci.c
-> +++ b/drivers/ata/ahci.c
-> @@ -413,17 +413,17 @@ static const struct pci_device_id ahci_pci_tbl[] = {
->         /* Marvell */
->         { PCI_VDEVICE(MARVELL, 0x6145), board_ahci_mv },        /* 6145 */
->         { PCI_VDEVICE(MARVELL, 0x6121), board_ahci_mv },        /* 6121 */
-> -       { PCI_DEVICE(0x1b4b, 0x9123),
-> +       { PCI_DEVICE(PCI_VENDOR_ID_MARVELL_EXT, 0x9123),
->           .class = PCI_CLASS_STORAGE_SATA_AHCI,
->           .class_mask = 0xffffff,
->           .driver_data = board_ahci_yes_fbs },                  /* 88se9128 */
-> -       { PCI_DEVICE(0x1b4b, 0x9125),
-> +       { PCI_DEVICE(PCI_VENDOR_ID_MARVELL_EXT, 0x9125),
->           .driver_data = board_ahci_yes_fbs },                  /* 88se9125 */
-> -       { PCI_DEVICE(0x1b4b, 0x917a),
-> +       { PCI_DEVICE(PCI_VENDOR_ID_MARVELL_EXT, 0x917a),
->           .driver_data = board_ahci_yes_fbs },                  /* 88se9172 */
-> -       { PCI_DEVICE(0x1b4b, 0x9192),
-> +       { PCI_DEVICE(PCI_VENDOR_ID_MARVELL_EXT, 0x9192),
->           .driver_data = board_ahci_yes_fbs },                  /* 88se9172 on some Gigabyte */
-> -       { PCI_DEVICE(0x1b4b, 0x91a3),
-> +       { PCI_DEVICE(PCI_VENDOR_ID_MARVELL_EXT, 0x91a3),
->           .driver_data = board_ahci_yes_fbs },
->
->         /* Promise */
-> diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
-> index ce90d05..7455092 100644
-> --- a/drivers/scsi/mvsas/mv_init.c
-> +++ b/drivers/scsi/mvsas/mv_init.c
-> @@ -703,7 +703,7 @@ static struct pci_device_id mvs_pci_table[] = {
->         { PCI_VDEVICE(TTI, 0x2744), chip_9480 },
->         { PCI_VDEVICE(TTI, 0x2760), chip_9480 },
->         {
-> -               .vendor         = 0x1b4b,
-> +               .vendor         = PCI_VENDOR_ID_MARVELL_EXT,
->                 .device         = 0x9480,
->                 .subvendor      = PCI_ANY_ID,
->                 .subdevice      = 0x9480,
-> @@ -712,7 +712,7 @@ static struct pci_device_id mvs_pci_table[] = {
->                 .driver_data    = chip_9480,
->         },
->         {
-> -               .vendor         = 0x1b4b,
-> +               .vendor         = PCI_VENDOR_ID_MARVELL_EXT,
->                 .device         = 0x9445,
->                 .subvendor      = PCI_ANY_ID,
->                 .subdevice      = 0x9480,
-> @@ -721,7 +721,7 @@ static struct pci_device_id mvs_pci_table[] = {
->                 .driver_data    = chip_9445,
->         },
->         {
-> -               .vendor         = 0x1b4b,
-> +               .vendor         = PCI_VENDOR_ID_MARVELL_EXT,
->                 .device         = 0x9485,
->                 .subvendor      = PCI_ANY_ID,
->                 .subdevice      = 0x9480,
-> diff --git a/drivers/scsi/mvumi.c b/drivers/scsi/mvumi.c
-> index 4594cca..c3601b5 100644
-> --- a/drivers/scsi/mvumi.c
-> +++ b/drivers/scsi/mvumi.c
-> @@ -49,8 +49,8 @@ MODULE_AUTHOR("jyli@marvell.com");
->  MODULE_DESCRIPTION("Marvell UMI Driver");
->
->  static DEFINE_PCI_DEVICE_TABLE(mvumi_pci_table) = {
-> -       { PCI_DEVICE(PCI_VENDOR_ID_MARVELL_2, PCI_DEVICE_ID_MARVELL_MV9143) },
-> -       { PCI_DEVICE(PCI_VENDOR_ID_MARVELL_2, PCI_DEVICE_ID_MARVELL_MV9580) },
-> +       { PCI_DEVICE(PCI_VENDOR_ID_MARVELL_EXT, PCI_DEVICE_ID_MARVELL_MV9143) },
-> +       { PCI_DEVICE(PCI_VENDOR_ID_MARVELL_EXT, PCI_DEVICE_ID_MARVELL_MV9580) },
->         { 0 }
->  };
->
-> diff --git a/drivers/scsi/mvumi.h b/drivers/scsi/mvumi.h
-> index e360135..41f1687 100644
-> --- a/drivers/scsi/mvumi.h
-> +++ b/drivers/scsi/mvumi.h
-> @@ -32,7 +32,6 @@
->  #define VER_BUILD              1500
->
->  #define MV_DRIVER_NAME                 "mvumi"
-> -#define PCI_VENDOR_ID_MARVELL_2                0x1b4b
->  #define PCI_DEVICE_ID_MARVELL_MV9143   0x9143
->  #define PCI_DEVICE_ID_MARVELL_MV9580   0x9580
->
->
+ arch/powerpc/kernel/pci_of_scan.c |    1 +
+ 1 file changed, 1 insertion(+)
+
+diff -puN arch/powerpc/kernel/pci_of_scan.c~powerpc_set_pci_dev_type arch/powerpc/kernel/pci_of_scan.c
+--- linux/arch/powerpc/kernel/pci_of_scan.c~powerpc_set_pci_dev_type	2013-04-03 09:43:19.000000000 -0500
++++ linux-bjking1/arch/powerpc/kernel/pci_of_scan.c	2013-04-03 09:43:19.000000000 -0500
+@@ -141,6 +141,7 @@ struct pci_dev *of_create_pci_dev(struct
+ 	dev->dev.of_node = of_node_get(node);
+ 	dev->dev.parent = bus->bridge;
+ 	dev->dev.bus = &pci_bus_type;
++	dev->dev.type = &pci_dev_type;
+ 	dev->devfn = devfn;
+ 	dev->multifunction = 0;		/* maybe a lie? */
+ 	dev->needs_freset = 0;		/* pcie fundamental reset required */
+_
+
