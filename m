@@ -1,112 +1,56 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from avon.wwwdotorg.org ([70.85.31.133]:46499 "EHLO
-	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762858Ab3DHSLo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Apr 2013 14:11:44 -0400
-Message-ID: <51630852.1000107@wwwdotorg.org>
-Date: Mon, 08 Apr 2013 12:11:30 -0600
-From: Stephen Warren <swarren@wwwdotorg.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 4 Apr 2013 11:39:05 -0400
+From: Neil Horman <nhorman@tuxdriver.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: David Woodhouse <dwmw2@infradead.org>,
+	Prarit Bhargava <prarit@redhat.com>,
+	Don Zickus <dzickus@redhat.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Asit Mallick <asit.k.mallick@intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	iommu@lists.linux-foundation.org, Yinghai Lu <yinghai@kernel.org>
+Subject: Re: [PATCH v2] irq: add quirk for broken interrupt remapping on 55XX
+ chipsets
+Message-ID: <20130404153905.GB3403@neilslaptop.think-freely.org>
+References: <1362158276-4901-1-git-send-email-nhorman@tuxdriver.com>
+ <1362423859-18516-1-git-send-email-nhorman@tuxdriver.com>
+ <CAErSpo4=L9q+q5hqP2Avw6uceQwZiPuOzadhsqGpu6aP53PMbQ@mail.gmail.com>
+ <1365085649.28127.66.camel@i7.infradead.org>
+ <20130404145012.GA3403@neilslaptop.think-freely.org>
+ <CAErSpo6x5rokg8np7xEKO6y6Qke5X7=r7J7VB2LVrAGGzDC1sA@mail.gmail.com>
 MIME-Version: 1.0
-To: Jay Agarwal <jagarwal@nvidia.com>
-CC: linux@arm.linux.org.uk, thierry.reding@avionic-design.de,
-	ldewangan@nvidia.com, bhelgaas@google.com, olof@lixom.net,
-	hdoyu@nvidia.com, pgaikwad@nvidia.com, mturquette@linaro.org,
-	pdeschrijver@nvidia.com, linux-arm-kernel@lists.infradead.org,
-	linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, jtukkinen@nvidia.com, kthota@nvidia.com
-Subject: Re: [PATCH 1/3] ARM: tegra: pcie: Add tegra3 support
-References: <1365435688-4179-1-git-send-email-jagarwal@nvidia.com>
-In-Reply-To: <1365435688-4179-1-git-send-email-jagarwal@nvidia.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo6x5rokg8np7xEKO6y6Qke5X7=r7J7VB2LVrAGGzDC1sA@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/08/2013 09:41 AM, Jay Agarwal wrote:
-> Signed-off-by: Jay Agarwal <jagarwal@nvidia.com>
+On Thu, Apr 04, 2013 at 08:57:06AM -0600, Bjorn Helgaas wrote:
+> On Thu, Apr 4, 2013 at 8:50 AM, Neil Horman <nhorman@tuxdriver.com> wrote:
+> > On Thu, Apr 04, 2013 at 03:27:29PM +0100, David Woodhouse wrote:
+> >> On Wed, 2013-04-03 at 17:53 -0600, Bjorn Helgaas wrote:
+> >> > );
+> >> > > +
+> >> > > +       if ((revision == 0x13) && irq_remapping_enabled) {
+> >> > > +                pr_warn(HW_ERR "This system BIOS has enabled interrupt remapping\n"
+> >> > > +                        "on a chipset that contains an errata making that\n"
+> >> > > +                        "feature unstable.  Please reboot with nointremap\n"
+> >> > > +                        "added to the kernel command line and contact\n"
+> >> > > +                        "your BIOS vendor for an update");
+> >>
+> >> This should be WARN_TAINT(TAINT_FIRMWARE_WORKAROUND). And 'an erratum'.
+> >>
+> > Ok, copy that. I'll repost shortly
 > 
-> - Enable pcie root port 2 for cardhu
-> - Make private data structure for each SOC
-> - Add required tegra3 clocks and regulators
-> - Add tegra3 specific code in enable controller
-> - Modify clock tree to get clocks based on device
-> - Based on git://gitorious.org/thierryreding/linux.git
+> When you do, please include URLs for any problem reports or bugzillas you have.
+> 
+Well, those are going to be vendor specific, so I'm not sure we can really do
+that, at least not in any meaningful way.
 
-There are quite a few capitalization errors above. The correct versions
-are: PCIe, Cardhu, SoC, Tegra.
-
-Upstream uses engineering names not marketing names, so Tegra30 not Tegra3.
-
->  drivers/clk/tegra/clk-tegra30.c |   12 ++--
->  drivers/pci/host/pci-tegra.c    |  146 ++++++++++++++++++++++++++++++++++-----
-
-This patch touches two unrelated drivers. There is no dependency between
-the changes, since PCIe doesn't work yet on Tegra30, so there's no need
-for those unrelated changes to be part of the same patch. Please split
-them into separate patches. The clk patch can likely be applied very
-soon, without waiting for any of the other PCIe patches.
-
-> - Modify clock tree to get clocks based on device
-
-That description doesn't seem to describe the change made to
-clk-tegra30.c. Can you please include more details re: what the patch is
-doing and why.
-
-> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-
-> +/* used to differente tegra chips code */
-
-differentiate
-
-> +struct tegra_pcie_soc_data {
-...
-> +	bool need_avdd_supply;
-> +	bool need_cml0_clk;
-
-s/need/has/ would be better.
-
-> @@ -749,6 +778,11 @@ static int tegra_pcie_enable_controller(struct tegra_pcie *pcie)
->  	struct tegra_pcie_port *port;
->  	unsigned int timeout;
->  	unsigned long value;
-> +	struct tegra_pcie_soc_data *soc = pcie->soc_data;
-> +
-> +	/* power down to PCIe slot clock bias pad */
-> +	if (soc->pex_bias_ctrl)
-> +		afi_writel(pcie, 0, AFI_PEXBIAS_CTRL_0);
-
-Power down when /enabling/ a controller?
-
->  	err = regulator_disable(pcie->pex_clk_supply);
->  	if (err < 0)
-> -		dev_err(pcie->dev, "failed to disable pex-clk regulator: %d\n",
-> +		dev_warn(pcie->dev, "failed to disable pex-clk regulator: %d\n",
->  			err);
->  
->  	err = regulator_disable(pcie->vdd_supply);
->  	if (err < 0)
-> -		dev_err(pcie->dev, "failed to disable VDD regulator: %d\n",
-> +		dev_warn(pcie->dev, "failed to disable VDD regulator: %d\n",
->  			err);
-
-Please explain why that change is correct. If the regulators only exist
-on Tegra20, please represent that fact in the SoC data. Regulators must
-always exist, so enable/disable should never fail due to missing
-regulators. Actual run-time failures seem like something that really is
-an error.
-
-> @@ -1489,6 +1597,11 @@ static int tegra_pcie_probe(struct platform_device *pdev)
->  	INIT_LIST_HEAD(&pcie->busses);
->  	INIT_LIST_HEAD(&pcie->ports);
->  	pcie->dev = &pdev->dev;
-> +	match = of_match_device(tegra_pcie_of_match, &pdev->dev);
-> +	if (match)
-> +		pcie->soc_data = (struct tegra_pcie_soc_data *)match->data;
-> +	else
-> +		return -ENODEV;
-
-that would be more idiomatic as:
-
-if (!match)
-	return -ENODEV;
-pcie->soc_data = ...;
+> I assume Windows "just works" in this situation?
+No more or less than linux does in this case.  The Intel provided errata
+indicates that the only acceptable workaround is to disable remapping in the
+BIOS, so I would presume that if a windows system has a BIOS that doesn't
+implement this fix, its just as exposed as we are.
+Neil
 
