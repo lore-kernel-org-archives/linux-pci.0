@@ -1,61 +1,119 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:53036 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S936434Ab3DIVHB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Apr 2013 17:07:01 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Russell King <linux@arm.linux.org.uk>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	devicetree-discuss@lists.ozlabs.org,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Maen Suleiman <maen@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Olof Johansson <olof@lixom.net>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Mitch Bradley <wmb@firmworks.com>,
+Received: from avon.wwwdotorg.org ([70.85.31.133]:55267 "EHLO
+	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1764789Ab3DDV26 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Apr 2013 17:28:58 -0400
+Message-ID: <515DF096.2000703@wwwdotorg.org>
+Date: Thu, 04 Apr 2013 15:28:54 -0600
+From: Stephen Warren <swarren@wwwdotorg.org>
+MIME-Version: 1.0
+To: Thierry Reding <thierry.reding@avionic-design.de>
+CC: Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Russell King <linux@arm.linux.org.uk>,
 	Andrew Murray <andrew.murray@arm.com>,
-	Mike Turquette <mturquette@linaro.org>
-Subject: [PATCHv8 08/19] clk: mvebu: create parent-child relation for PCIe clocks on Armada 370
-Date: Tue,  9 Apr 2013 23:06:29 +0200
-Message-Id: <1365541601-14095-9-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1365541601-14095-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1365541601-14095-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-tegra@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v3 07/12] PCI: tegra: Move PCIe driver to drivers/pci/host
+References: <1365000318-28256-1-git-send-email-thierry.reding@avionic-design.de> <1365000318-28256-8-git-send-email-thierry.reding@avionic-design.de>
+In-Reply-To: <1365000318-28256-8-git-send-email-thierry.reding@avionic-design.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The Armada 370 has two gatable clocks for each PCIe interface, and we
-want both of them to be enabled. We therefore make one of the two
-clocks a child of the other, as we did for the sataX and sataXlnk
-clocks on Armada XP.
+On 04/03/2013 08:45 AM, Thierry Reding wrote:
+> Move the PCIe driver from arch/arm/mach-tegra into the drivers/pci/host
+> directory. The motivation is to collect various host controller drivers
+> in the same location in order to facilitate refactoring.
+> 
+> The Tegra PCIe driver has been largely rewritten, both in order to turn
+> it into a proper platform driver and to add MSI (based on code by
+> Krishna Kishore <kthota@nvidia.com>) as well as device tree support.
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Mike Turquette <mturquette@linaro.org>
----
- drivers/clk/mvebu/clk-gating-ctrl.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+>  arch/arm/boot/dts/tegra20.dtsi                     |   53 +
 
-diff --git a/drivers/clk/mvebu/clk-gating-ctrl.c b/drivers/clk/mvebu/clk-gating-ctrl.c
-index ebf141d..b35785a 100644
---- a/drivers/clk/mvebu/clk-gating-ctrl.c
-+++ b/drivers/clk/mvebu/clk-gating-ctrl.c
-@@ -119,8 +119,8 @@ static const struct mvebu_soc_descr __initconst armada_370_gating_descr[] = {
- 	{ "pex1_en", NULL,  2 },
- 	{ "ge1", NULL, 3 },
- 	{ "ge0", NULL, 4 },
--	{ "pex0", NULL, 5 },
--	{ "pex1", NULL, 9 },
-+	{ "pex0", "pex0_en", 5 },
-+	{ "pex1", "pex1_en", 9 },
- 	{ "sata0", NULL, 15 },
- 	{ "sdio", NULL, 17 },
- 	{ "tdm", NULL, 25 },
--- 
-1.7.9.5
+I guess this has to touch both the driver and the dtsi file so that
+bisectabilty isn't broken? I guess that's OK.
 
+> diff --git a/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt b/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
+
+> +Required properties:
+
+> +- interrupts: the interrupt outputs of the controller
+> +- interrupt-names: list of names to identify interrupts
+
+The specification part of this file should define which interrupt
+outputs must be included in this list, and the order they must appear in
+the list. I believe that the entries in the interrupts property must
+have a defined order, so I'm not sure whether interrupt-names is useful
+here?
+
+> +- ranges: describes the translation of addresses for root ports
+
+Shouldn't there be some discussion re: how the range are expected to be
+set up so that everything works? We shouldn't expect people to just
+blindly copy the example without any way of understanding it.
+
+> +- clocks: the clock inputs of the controller
+> +- clock-names: list of names to identify clocks
+
+The specification part of this file should define which clocks are
+required, and not rely on the example below to do this. I would suggest
+re-writing this as:
+
+- clocks : Must contain an entry for each entry in clock-names.
+- clock-names : Must include the following entries:
+  "pex" (The Tegra clock of that name)
+  "afi" (The Tegra clock of that name)
+  "pcie_xclk" (The Tegra clock of that name)
+  "pll_e" (The Tegra clock of that name)
+
+> +Root ports are defined as subnodes of the PCIe controller node.
+> +
+> +Required properties:
+...
+> +- ranges: sub-ranges distributed from the PCIe controller node
+
+Here, I think it's worth mentioning that an empty ranges is all that's
+required.
+
+> +Board DTS:
+> +
+> +	pcie-controller {
+> +		status = "okay";
+> +
+> +		vdd-supply = <&pci_vdd_reg>;
+> +		pex-clk-supply = <&pci_clk_reg>;
+> +
+> +		/* root port 00:01.0 */
+> +		pci@1,0 {
+> +			status = "okay";
+
+Is it worth putting a comment here stating that the explicit devices
+included below in this example are entirely optional?
+
+> diff --git a/arch/arm/mach-tegra/board-harmony-pcie.c b/arch/arm/mach-tegra/board-harmony-pcie.c
+> deleted file mode 100644
+
+Hmmm. Is this patch meant to include a change to tegra20-harmony.dtsi to
+hook up all the regulators through device tree? Same for TrimSlice?
+
+> diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+> diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
+> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+> diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
+
+I think the creation of those files should be a separate patch, and
+hopefully get into 3.10 to remove any dependencies. Otherwise, 3 or 4
+different patches are all going to try and do the same thing. Didn't the
+Marvell series split out the creation of drivers/pci/host/ into a
+separate patch that's suitable for this, and could go into 3.10?
+
+> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+
+I'll review that file separately later.
