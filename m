@@ -1,112 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:41331 "EHLO quartz.orcorp.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760109Ab3DHQ4h (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 8 Apr 2013 12:56:37 -0400
-Date: Mon, 8 Apr 2013 10:56:26 -0600
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Jingoo Han <jg1.han@samsung.com>
-Cc: 'Kukjin Kim' <kgene.kim@samsung.com>,
-	'Bjorn Helgaas' <bhelgaas@google.com>,
-	linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org,
-	devicetree-discuss@lists.ozlabs.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	'Grant Likely' <grant.likely@secretlab.ca>,
-	'Andrew Murray' <andrew.murray@arm.com>,
-	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
-	'Thierry Reding' <thierry.reding@avionic-design.de>,
-	'Surendranath Gurivireddy Balla' <suren.reddy@samsung.com>,
-	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
-	'Thomas Abraham' <thomas.abraham@linaro.org>
-Subject: Re: [PATCH 6/6] ARM: dts: Add pcie controller node for Samsung
- EXYNOS5440 SoC
-Message-ID: <20130408165626.GA30824@obsidianresearch.com>
-References: <00c001ce277b$92b26ab0$b8174010$%han@samsung.com>
- <00c501ce277c$30e49dc0$92add940$%han@samsung.com>
- <000001ce3438$b136e1e0$13a4a5a0$%han@samsung.com>
+Received: from mail-oa0-f42.google.com ([209.85.219.42]:64542 "EHLO
+	mail-oa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1162823Ab3DEUYc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Apr 2013 16:24:32 -0400
+Received: by mail-oa0-f42.google.com with SMTP id i18so4478610oag.29
+        for <linux-pci@vger.kernel.org>; Fri, 05 Apr 2013 13:24:30 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <000001ce3438$b136e1e0$13a4a5a0$%han@samsung.com>
+In-Reply-To: <201304042158.r34LwGPg010714@d03av02.boulder.ibm.com>
+References: <201304042158.r34LwGPg010714@d03av02.boulder.ibm.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 5 Apr 2013 14:24:09 -0600
+Message-ID: <CAErSpo4LsJjRkw6UektwqW8m1NXdU6BTjhTDA9eORM3z3qDcdA@mail.gmail.com>
+Subject: Re: [PATCH 3/3] powerpc: Set default VGA device
+To: Brian King <brking@linux.vnet.ibm.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Lucas Kannebley Tavares <lucaskt@linux.vnet.ibm.com>,
+	klebers <klebers@linux.vnet.ibm.com>,
+	Michael Ellerman <michael@ellerman.id.au>,
+	sparclinux@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 08, 2013 at 06:08:53PM +0900, Jingoo Han wrote:
-
-> I have a question.  Now, I am reviewing the Tegra PCIe, Marvell PCIe
-> patchset.  However, in the case of Exynos PCIe, 'downstream I/O' and
-> 'non-prefetchable memory' are different between PCIe0 and PCIe1.
-> These regions are not shared.
-> 
-> PCIe0:
-> 	ranges = <0x00000800 0 0x40000000 0x40000000 0 0x00200000   /* configuration space */
-> 		  0x81000000 0 0	  0x40200000 0 0x00004000   /* downstream I/O */
-> 		  0x82000000 0 0	  0x40204000 0 0x10000000>; /* non-prefetchable memory */
-> 
-> PCIe1:
-> 	ranges = <0x00000800 0 0x40000000 0x40000000 0 0x00200000   /* configuration space */
-> 		  0x81000000 0 0	  0x40200000 0 0x00004000   /* downstream I/O */
-> 		  0x82000000 0 0	  0x40204000 0 0x10000000>; /* non-prefetchable memory */
-> 
-> PCIe0 uses 0x40000000~0x5fffffff, PCI1 uses 0x60000000~0x7fffffff.
-> 
-> How can I handle this? :)
-
-You need to dig into where this range restriction comes from, and how
-it interacts with the PCI-E root bridge's window registers. Is there
-another set of registers that control this? Is it hardwired into the
-silicon? Do the root port window registers control this? 
-
-I'm looking at functions like exynos_pcie_prog_viewport_mem_outbound
-and wondering if the driver already controls this window.. But it
-looks like there may be some restrictions.
-
-Marvell also has unshared regions, but the driver arranges for those
-ranges to be setup dynamically based on writes to the bridge's window
-registers from the Linux PCI core, so the region is always in sync
-with what the Linux PCI core is trying to do.
-
-The desired perfect outcome is to have a single logical 'shared'
-region for memory and I/O - give that region to the PCI core via
-struct resources, then the PCI core tells the driver and HW what
-portion of that region belongs to each root port via a write to the
-root port bridge's window registers. The net result is still
-non-overlapping regions, but the allocation of space between port 0
-and port 1 is performed at run time.
-
-I don't really know enough about your hardware to give you better
-advice, sorry. The general guidance to try and follow the PCI-E spec
-for a root complex is good, but if the HW can't do it, or it would
-make the driver too complex, then one PCI domain per port will always
-work (this is similar to your original driver, but with domains).
-
-The main advantage to following the PCI-E specs and allowing for
-dynamic allocation of address space is that it lets you reserve less
-address space for PCI-E, and this in turn gives you more low mem
-address space to use for DRAM.
-
-> The following is right?
- 
-> +       pcie-controller {
-> 		.....
-> +               ranges = <0x82000000 0 0x40000000 0x40000000 0 0x00200000   /* port 0 registers */
-> +                         0x82000000 0 0x60000000 0x60000000 0 0x00200000   /* port 1 registers */
-> +                         0x81000000 0 0          0x40200000 0 0x00004000   /* port 0 downstream I/O */
-> +                         0x81000000 0 0          0x60200000 0 0x00004000   /* port 1 downstream I/O */
-> +                         0x82000000 0 0x40204000 0x40204000 0 0x10000000>; /* port 0 non-prefetchable memory */
-> +                         0x82000000 0 0x40204000 0x60204000 0 0x10000000>; /* port 1 non-prefetchable memory */
-
-
+On Thu, Apr 4, 2013 at 3:58 PM, Brian King <brking@linux.vnet.ibm.com> wrote:
+>
+> Add a PCI quirk for VGA devices on Power to set the default VGA device.
+> Ensures a default VGA is always set if a graphics adapter is present,
+> even if firmware did not initialize it. If more than one graphics
+> adapter is present, ensure the one initialized by firmware is set
+> as the default VGA device. This ensures that X autoconfiguration
+> will work.
+>
+> Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
+> ---
+>
+>  arch/powerpc/kernel/pci-common.c |   13 +++++++++++++
+>  1 file changed, 13 insertions(+)
+>
+> diff -puN arch/powerpc/kernel/pci-common.c~powerpc_vga_default_device arch/powerpc/kernel/pci-common.c
+> --- linux/arch/powerpc/kernel/pci-common.c~powerpc_vga_default_device   2013-04-03 09:50:33.000000000 -0500
+> +++ linux-bjking1/arch/powerpc/kernel/pci-common.c      2013-04-03 09:50:33.000000000 -0500
+> @@ -30,6 +30,7 @@
+>  #include <linux/irq.h>
+>  #include <linux/vmalloc.h>
+>  #include <linux/slab.h>
+> +#include <linux/vgaarb.h>
+>
+>  #include <asm/processor.h>
+>  #include <asm/io.h>
+> @@ -1725,3 +1726,15 @@ static void fixup_hide_host_resource_fsl
+>  }
+>  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MOTOROLA, PCI_ANY_ID, fixup_hide_host_resource_fsl);
+>  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_FREESCALE, PCI_ANY_ID, fixup_hide_host_resource_fsl);
 > +
-> +               pci@1,0 {
-> +                       device_type = "pci";
-> +                       assigned-addresses = <0x82000800 0 0x40000000 0 0x00200000
-> +                                                 0x81000800 0 0x40200000 0 0x00004000
-> +                                                 0x81000800 0 0x40204000 0 0x10000000>;
+> +static void fixup_vga(struct pci_dev *pdev)
+> +{
+> +       u16 cmd;
+> +
+> +       pci_read_config_word(pdev, PCI_COMMAND, &cmd);
+> +       if ((cmd & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) || !vga_default_device())
+> +               vga_set_default_device(pdev);
+> +
+> +}
+> +DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_ANY_ID, PCI_ANY_ID,
+> +                             PCI_CLASS_DISPLAY_VGA, 8, fixup_vga);
 
-Would be:
+This not really an arch-specific issue, so it's a shame to add another
+arch-specific quirk for it (in addition to the x86 and ia64 ones we
+already have).
 
-                       ranges = <0x81000800 0 0x40200000  0x81000800 0 0x40200000  0 0x00004000
-                                 0x81000800 0 0x40204000  0x81000800 0 0x40204000  0 0x10000000>;
-                       assigned-addresses = <0x82000800 0 0x40000000  0 0x00200000>;
+In b5e4efe7e0, Eiichiro Oiwa <eiichiro.oiwa.nm@hitachi.com> tried to
+make this quirk generic, but the implementation was naive and it
+didn't work for sparc64.  There's a good thread about the sparc issue
+at https://lkml.org/lkml/2006/10/19/17
 
-Jason
+The outcome was to basically revert back to arch-specific quirks with
+6b5c76b8e2, but I think the generic version probably could have been
+made to work, possibly with a pcibios hook or something for anything
+that really is arch-dependent, like the shadowed ROM image.
+
+This particular patch is arch-specific, and I'm not going to try to
+nack it because I'm not the powerpc maintainer, but I will certainly
+try to help you if you want to push on making a generic version.
+
+Bjorn
