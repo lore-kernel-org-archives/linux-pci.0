@@ -1,132 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:35599 "EHLO hydra.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752070Ab3DQQLT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 17 Apr 2013 12:11:19 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	"Benenati, Chris J" <chris.j.benenati@intel.com>,
-	Ajaykumar Hotchandani <ajaykumar.hotchandani@oracle.com>
-Subject: Re: [PATCH] PCI / PM: Fix fallback to PCI_D0 in pci_platform_power_transition()
-Date: Wed, 17 Apr 2013 18:19:12 +0200
-Message-ID: <5921138.PXoHfspviV@vostro.rjw.lan>
-In-Reply-To: <CAErSpo69sjvPRX5kXcb4kN14HxVBXMVWnG-nGDVaFZd2pUY3YQ@mail.gmail.com>
-References: <48795235.crcTAaJqPb@vostro.rjw.lan> <2880576.TkeK8oBDas@vostro.rjw.lan> <CAErSpo69sjvPRX5kXcb4kN14HxVBXMVWnG-nGDVaFZd2pUY3YQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mail.free-electrons.com ([94.23.35.102]:38970 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161369Ab3DEN6k (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Apr 2013 09:58:40 -0400
+Date: Fri, 5 Apr 2013 15:58:33 +0200
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Mike Turquette <mturquette@linaro.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Russell King <linux@arm.linux.org.uk>,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Arnd Bergmann <arnd@arndb.de>, Olof Johansson <olof@lixom.net>,
+	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Andrew Murray <andrew.murray@arm.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Mitch Bradley <wmb@firmworks.com>
+Subject: Re: [PATCHv7 06/17] clk: mvebu: create parent-child relation for
+ PCIe clocks on Armada 370
+Message-ID: <20130405155833.6e6a4b75@skate>
+In-Reply-To: <1364395234-11195-7-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1364395234-11195-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	<1364395234-11195-7-git-send-email-thomas.petazzoni@free-electrons.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, April 16, 2013 12:31:55 PM Bjorn Helgaas wrote:
-> On Tue, Apr 16, 2013 at 12:01 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> > On Monday, April 15, 2013 02:18:18 PM Bjorn Helgaas wrote:
-> >> On Fri, Apr 12, 2013 at 11:50 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> >> > On Fri, Apr 12, 2013 at 4:58 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> >> >> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> >> >>
-> >> >> Commit b51306c (PCI: Set device power state to PCI_D0 for device
-> >> >> without native PM support) modified pci_platform_power_transition()
-> >> >> by adding code causing dev->current_state for devices that don't
-> >> >> support native PCI PM but are power-manageable by the platform to be
-> >> >> changed to PCI_D0 regardless of the value returned by the preceding
-> >> >> platform_pci_set_power_state().  In particular, that also is done
-> >> >> if the platform_pci_set_power_state() has been successful, which
-> >> >> causes the correct power state of the device set by
-> >> >> pci_update_current_state() in that case to be overwritten by PCI_D0.
-> >> >>
-> >> >> Fix that mistake by making the fallback to PCI_D0 only happen if
-> >> >> the platform_pci_set_power_state() has returned an error.
-> >> >>
-> >> >> Reported-by: Chris J. Benenati <chris.j.benenati@intel.com>
-> >> >> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> >> >> Cc: <stable@vger.kernel.org>
-> >>
-> >> I folded in Yinghai's simplification and added a URL to Chris's report
-> >> and applied to my pci/rafael-pm branch:
-> >> http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/rafael-pm
-> >>
-> >> If it still looks good to you, Rafael, I'll merge it to next for v3.10.
-> >
-> > Well, the simplification adds an extra check for error into both code paths,
-> > so I'm not sure if it's really worth it (that's why I didn't do it originally
-> > in the first place), but I suppose that's not a big deal.  It looks good as far
-> > as the correctness is concerned anyway.
-> >
-> >> I don't know what the user-visible effect of this is, and it's been
-> >> around for a long time, but if you think this should go in v3.9
-> >> instead, let me know.
-> >
-> > I think v3.9+stable should be sufficient.
+Mike,
+
+Could we have your opinion on this patch, and possibly a Acked-by to
+pass it through arm-soc?
+
+Thanks!
+
+Thomas
+
+On Wed, 27 Mar 2013 15:40:23 +0100, Thomas Petazzoni wrote:
+> The Armada 370 has two gatable clocks for each PCIe interface, and we
+> want both of them to be enabled. We therefore make one of the two
+> clocks a child of the other, as we did for the sataX and sataXlnk
+> clocks on Armada XP.
 > 
-> It sounds like you meant to say "v3.10+stable should be sufficient".
-> Is that right, or do you want me to push this to Linus before v3.9 is
-> released?
+> Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+> Cc: Mike Turquette <mturquette@linaro.org>
+> ---
+>  drivers/clk/mvebu/clk-gating-ctrl.c |    4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/clk/mvebu/clk-gating-ctrl.c b/drivers/clk/mvebu/clk-gating-ctrl.c
+> index ebf141d..b35785a 100644
+> --- a/drivers/clk/mvebu/clk-gating-ctrl.c
+> +++ b/drivers/clk/mvebu/clk-gating-ctrl.c
+> @@ -119,8 +119,8 @@ static const struct mvebu_soc_descr __initconst armada_370_gating_descr[] = {
+>  	{ "pex1_en", NULL,  2 },
+>  	{ "ge1", NULL, 3 },
+>  	{ "ge0", NULL, 4 },
+> -	{ "pex0", NULL, 5 },
+> -	{ "pex1", NULL, 9 },
+> +	{ "pex0", "pex0_en", 5 },
+> +	{ "pex1", "pex1_en", 9 },
+>  	{ "sata0", NULL, 15 },
+>  	{ "sdio", NULL, 17 },
+>  	{ "tdm", NULL, 25 },
 
-Yes, I meant v3.10+stable.  Sorry.
-
-Thanks,
-Rafael
 
 
-> >> >> ---
-> >> >>  drivers/pci/pci.c |    3 +--
-> >> >>  1 file changed, 1 insertion(+), 2 deletions(-)
-> >> >>
-> >> >> Index: linux-pm/drivers/pci/pci.c
-> >> >> ===================================================================
-> >> >> --- linux-pm.orig/drivers/pci/pci.c
-> >> >> +++ linux-pm/drivers/pci/pci.c
-> >> >> @@ -646,8 +646,7 @@ static int pci_platform_power_transition
-> >> >>                 error = platform_pci_set_power_state(dev, state);
-> >> >>                 if (!error)
-> >> >>                         pci_update_current_state(dev, state);
-> >> >> -               /* Fall back to PCI_D0 if native PM is not supported */
-> >> >> -               if (!dev->pm_cap)
-> >> >> +               else if (!dev->pm_cap) /* Fall back to PCI_D0 */
-> >> >>                         dev->current_state = PCI_D0;
-> >> >>         } else {
-> >> >>                 error = -ENODEV;
-> >> >>
-> >> >
-> >> > Acked-by: Yinghai Lu <yinghai@kernel.org>
-> >> >
-> >> > also could simplify it further.
-> >> >
-> >> > ---
-> >> >  drivers/pci/pci.c |   12 ++++--------
-> >> >  1 file changed, 4 insertions(+), 8 deletions(-)
-> >> >
-> >> > Index: linux-2.6/drivers/pci/pci.c
-> >> > ===================================================================
-> >> > --- linux-2.6.orig/drivers/pci/pci.c
-> >> > +++ linux-2.6/drivers/pci/pci.c
-> >> > @@ -646,15 +646,11 @@ static int pci_platform_power_transition
-> >> >          error = platform_pci_set_power_state(dev, state);
-> >> >          if (!error)
-> >> >              pci_update_current_state(dev, state);
-> >> > -        /* Fall back to PCI_D0 if native PM is not supported */
-> >> > -        if (!dev->pm_cap)
-> >> > -            dev->current_state = PCI_D0;
-> >> > -    } else {
-> >> > +    } else
-> >> >          error = -ENODEV;
-> >> > -        /* Fall back to PCI_D0 if native PM is not supported */
-> >> > -        if (!dev->pm_cap)
-> >> > -            dev->current_state = PCI_D0;
-> >> > -    }
-> >> > +
-> >> > +    if (error && !dev->pm_cap) /* Fall back to PCI_D0 */
-> >> > +        dev->current_state = PCI_D0;
-> >> >
-> >> >      return error;
-> >> >  }
-> > --
-> > I speak only for myself.
-> > Rafael J. Wysocki, Intel Open Source Technology Center.
 -- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+Thomas Petazzoni, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
