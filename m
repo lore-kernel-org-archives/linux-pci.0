@@ -1,67 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cn.fujitsu.com ([222.73.24.84]:45661 "EHLO song.cn.fujitsu.com"
-	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1750765Ab3DXEJH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 24 Apr 2013 00:09:07 -0400
-Message-ID: <51775A32.5030803@cn.fujitsu.com>
-Date: Wed, 24 Apr 2013 12:06:10 +0800
-From: Gu Zheng <guz.fnst@cn.fujitsu.com>
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:35235 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1162136Ab3DEQ4w (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Apr 2013 12:56:52 -0400
+Received: by mail-ob0-f174.google.com with SMTP id wm15so1297026obc.33
+        for <linux-pci@vger.kernel.org>; Fri, 05 Apr 2013 09:56:51 -0700 (PDT)
 MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	tangchen <tangchen@cn.fujitsu.com>,
-	Lin Feng <linfeng@cn.fujitsu.com>,
-	li guang <lig.fnst@cn.fujitsu.com>,
-	Mike Qiu <qiudayu@linux.vnet.ibm.com>
-Subject: Re: [PATCH v2 2/2] PCI: Convert alloc_pci_dev(void) to pci_alloc_dev(bus)
- instead
-References: <516FB647.5030203@cn.fujitsu.com> <CAErSpo65ARR_fZwsGCZDJqbPWktHYUkufgPt-2mWwur=nPR1Qg@mail.gmail.com> <51763847.8090808@cn.fujitsu.com> <CAE9FiQV3e7tiUwg5qtw0=1ncRykJ5Pkog2C9cYG3VkfkKAgZnA@mail.gmail.com>
-In-Reply-To: <CAE9FiQV3e7tiUwg5qtw0=1ncRykJ5Pkog2C9cYG3VkfkKAgZnA@mail.gmail.com>
+In-Reply-To: <20130405101227.2AC9511FB82@bugzilla.kernel.org>
+References: <bug-53811-41252@https.bugzilla.kernel.org/> <20130405101227.2AC9511FB82@bugzilla.kernel.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 5 Apr 2013 10:56:30 -0600
+Message-ID: <CAErSpo5n3svysQ71vStCfAOikTZBo89gmwOwHOXLTB4KSXk0zw@mail.gmail.com>
+Subject: Re: [Bug 53811] acpiphp broken on Lenovo X220 from 3.6 onwards
+To: bugzilla-daemon@bugzilla.kernel.org
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/24/2013 01:34 AM, Yinghai Lu wrote:
+>> If the problem is with config space access, not with the SCI, why
+>> can't you just put the root port back in D0 before scanning its
+>> secondary bus?  That seems like a more direct fix.
+>
+> comment #4 patch does exactly like that.  ALLurGroceries tried that patch and
+> it works for him in comment #7.  But in comment #14, ALLurGroceries reported
+> that it does not work reliably enough.  So I write comment #26 patch to fix the
+> issue in a more conservative way, and it works reliable for ALLurGroceries.
 
-> On Tue, Apr 23, 2013 at 12:29 AM, Gu Zheng <guz.fnst@cn.fujitsu.com> wrote:
->> From b01e61759f894b651ed3bb39c9fc18e0b66d7cb3 Mon Sep 17 00:00:00 2001
->> From: GuZheng <guz.fnst@cn.fujitsu.com>
->> Date: Tue, 23 Apr 2013 14:01:39 +0800
->> Subject: [PATCH v2 2/2] PCI: Convert alloc_pci_dev(void) to pci_alloc_dev(bus)
->>  instead
->>
->> Use the new pci_alloc_dev(bus) to replace the existing using of alloc_pci_dev(void).
->> And new functions pci_bus_get/put() are introdued to hide pci_bus' reference management.
->>
->> v2:
->>   Follow Yinghai's suggestions to reduce pci_bus' ref when destroying pci device.
->>   Add new functions pci_bus_get/put() to hide pci_bus' reference management.
-> 
-> You did not tell us if the remove test scripts works after put the line back.
+The comment #4 patch adds "pm_runtime_get_sync(&bridge->pci_dev->dev)"
+before re-enumerating.  If that is supposed to keep the bridge in D0
+but doesn't, we need to figure out why.  I don't know how PM works,
+but maybe Rafael will chime in.
 
-Hi Yinghai,
-    As you know, I split this patch from the original bug-fix one, and this one is
-not used to fix the bug we discussed. My test box is on the duty of other tests, I'll do the
-test and send out the result as soon as it is ready for me.
+> If acpiphp cannot identify the slots, acpiphp cannot work regardless whether
+> the bridge is put into low power state.  If acpiphp can identify the slots,
+> with the help of comment #26 patch, acpiphp can work properly and the root port
+> will not be put into low power state.  So I think the point is to make acpiphp
+> identify all slots.  And comment #26 patch is a valid fix.
 
-BTW, Could please split a while to answer the two questions I asked you yesterday?
-> 
+Please look at the bug #54981 DSDT and explain either (1) why we
+should use pciehp rather than acpiphp on that machine, or (2) how we
+can make acpiphp identify the ExpressCard slot.
 
-> If it does not work, what is the point of this patch?
-
-I think the patch title and the change log can explain all. It introduce a new pci_alloc_dev(bus)
-to replace the alloc_pci_dev(), and add the pci_bus' reference management when we deal with its downstream
-pci devices.
-
-Thanks,
-Gu
-
-> 
-> Yinghai
-> 
-
-
+My contention is that the "slot identification" model currently used
+by acpiphp is fundamentally broken and that we should change acpiphp
+so it doesn't depend on identifying slots.  I don't believe it is
+possible to identify all possible slots by looking at the DSDT, and
+therefore, I don't want to make changes like the comment #26 patch
+that depend on identifying slots.
