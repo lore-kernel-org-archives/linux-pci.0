@@ -1,73 +1,45 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>
-Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org
-Subject: [PATCH v9 09/16] PCI, x86: implement pcibios_{add|remove}_bus() hooks
-Date: Fri, 12 Apr 2013 23:44:23 +0800
-Message-Id: <1365781470-32379-10-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1365781470-32379-1-git-send-email-jiang.liu@huawei.com>
-References: <1365781470-32379-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ozlabs.org ([203.10.76.45]:34661 "EHLO ozlabs.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753631Ab3DEGwk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 5 Apr 2013 02:52:40 -0400
+Date: Fri, 5 Apr 2013 17:52:38 +1100
+From: Michael Ellerman <michael@ellerman.id.au>
+To: Brian King <brking@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org, klebers@linux.vnet.ibm.com,
+	lucaskt@linux.vnet.ibm.com, bhelgaas@google.com,
+	linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH 3/3] powerpc: Set default VGA device
+Message-ID: <20130405065238.GC5082@concordia>
+References: <201304042158.r34LwGPg010714@d03av02.boulder.ibm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201304042158.r34LwGPg010714@d03av02.boulder.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Implement pcibios_{add|remove}_bus() hooks for x86 platforms.
+Hi Brian,
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Toshi Kani <toshi.kani@hp.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>
-Cc: Ingo Molnar <mingo@redhat.com>
-Cc: "H. Peter Anvin" <hpa@zytor.com>
-Cc: Myron Stowe <myron.stowe@redhat.com>
-Cc: linux-kernel@vger.kernel.org
-Cc: x86@kernel.org
----
- arch/x86/pci/common.c |   11 +++++++++++
- 1 file changed, 11 insertions(+)
 
-diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-index 901177d..305c68b 100644
---- a/arch/x86/pci/common.c
-+++ b/arch/x86/pci/common.c
-@@ -6,6 +6,7 @@
- 
- #include <linux/sched.h>
- #include <linux/pci.h>
-+#include <linux/pci-acpi.h>
- #include <linux/ioport.h>
- #include <linux/init.h>
- #include <linux/dmi.h>
-@@ -170,6 +171,16 @@ void pcibios_fixup_bus(struct pci_bus *b)
- 		pcibios_fixup_device_resources(dev);
- }
- 
-+void pcibios_add_bus(struct pci_bus *bus)
-+{
-+	acpi_pci_add_bus(bus);
-+}
-+
-+void pcibios_remove_bus(struct pci_bus *bus)
-+{
-+	acpi_pci_remove_bus(bus);
-+}
-+
- /*
-  * Only use DMI information to set this if nothing was passed
-  * on the kernel command line (which was parsed earlier).
--- 
-1.7.9.5
+On Thu, Apr 04, 2013 at 04:58:17PM -0500, Brian King wrote:
+> 
+> Add a PCI quirk for VGA devices on Power to set the default VGA device.
+> Ensures a default VGA is always set if a graphics adapter is present,
+> even if firmware did not initialize it. If more than one graphics
+> adapter is present, ensure the one initialized by firmware is set
+> as the default VGA device. This ensures that X autoconfiguration
+> will work.
 
+So a few things:
+
+ - You are doing this on all power systems, not just pseries which is I
+   assume what you're testing on - that seems OK to me, but just
+   checking.
+ - What is the "initialized by firmware" test? Just that IO & MEM are
+   enabled?
+ - You potentially override an existing default, is that a problem? Can
+   the user set the default? (no AFAICS).
+ - The x86 code is slightly different, they don't override an existing
+   default, why do we?
+
+cheers
