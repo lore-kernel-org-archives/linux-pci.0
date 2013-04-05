@@ -1,100 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:29615 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751253Ab3DPI4a (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Apr 2013 04:56:30 -0400
-Message-ID: <516D120E.3030907@huawei.com>
-Date: Tue, 16 Apr 2013 16:55:42 +0800
-From: Yijing Wang <wangyijing@huawei.com>
-MIME-Version: 1.0
-To: huang ying <huang.ying.caritas@gmail.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Hanjun Guo <guohanjun@huawei.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Shengzhou Liu <Shengzhou.Liu@freescale.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Huang Ying <ying.huang@intel.com>
-Subject: Re: [PATCH -v2 1/2] PCI: decrease pci_dev->enable_cnt when no pcie
- capability found
-References: <1366009135-19088-1-git-send-email-wangyijing@huawei.com> <CAErSpo7dgFR8a7Wee4CE7Rj+nZg_-+8uNOFq__d8EzY+gHQHGQ@mail.gmail.com> <CAC=cRTOPg+Db8AkA6sWMe9ggESY=vO7W1zWzr5E-JWLxoxg=7Q@mail.gmail.com>
-In-Reply-To: <CAC=cRTOPg+Db8AkA6sWMe9ggESY=vO7W1zWzr5E-JWLxoxg=7Q@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+Received: from e39.co.us.ibm.com ([32.97.110.160]:36545 "EHLO
+	e39.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161461Ab3DECyl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Apr 2013 22:54:41 -0400
+Received: from /spool/local
+	by e39.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <shangw@linux.vnet.ibm.com>;
+	Thu, 4 Apr 2013 20:54:41 -0600
+Received: from d03relay05.boulder.ibm.com (d03relay05.boulder.ibm.com [9.17.195.107])
+	by d03dlp02.boulder.ibm.com (Postfix) with ESMTP id E7B1C3E4003F
+	for <linux-pci@vger.kernel.org>; Thu,  4 Apr 2013 20:54:25 -0600 (MDT)
+Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
+	by d03relay05.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id r352sbRk140116
+	for <linux-pci@vger.kernel.org>; Thu, 4 Apr 2013 20:54:37 -0600
+Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av04.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id r352sbYw032569
+	for <linux-pci@vger.kernel.org>; Thu, 4 Apr 2013 20:54:37 -0600
+From: Gavin Shan <shangw@linux.vnet.ibm.com>
+To: linux-pci@vger.kernel.org
+Cc: bhelgaas@google.com, Gavin Shan <shangw@linux.vnet.ibm.com>
+Subject: [PATCH 2/4] PCI: Remove MSI/MSI-X cap check in pci_msi_check_device()
+Date: Fri,  5 Apr 2013 10:54:31 +0800
+Message-Id: <1365130473-7413-3-git-send-email-shangw@linux.vnet.ibm.com>
+In-Reply-To: <1365130473-7413-1-git-send-email-shangw@linux.vnet.ibm.com>
+References: <1365130473-7413-1-git-send-email-shangw@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2013/4/16 16:22, huang ying wrote:
-> On Mon, Apr 15, 2013 at 11:27 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> [+cc Rafael, Huang]
->>
->> On Mon, Apr 15, 2013 at 12:58 AM, Yijing Wang <wangyijing@huawei.com> wrote:
->>> We should decrease dev->enable_cnt when no pcie port capability
->>> found for balance.
->>>
->>> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
->>> Cc: Jiang Liu <jiang.liu@huawei.com>
->>> Cc: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
->>> Cc: Shengzhou Liu <Shengzhou.Liu@freescale.com>
->>> ---
->>>  drivers/pci/pcie/portdrv_core.c |    4 ++--
->>>  1 files changed, 2 insertions(+), 2 deletions(-)
->>>
->>> diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
->>> index 31063ac..aef3fac 100644
->>> --- a/drivers/pci/pcie/portdrv_core.c
->>> +++ b/drivers/pci/pcie/portdrv_core.c
->>> @@ -369,8 +369,8 @@ int pcie_port_device_register(struct pci_dev *dev)
->>>
->>>         /* Get and check PCI Express port services */
->>>         capabilities = get_port_device_capability(dev);
->>> -       if (!capabilities)
->>> -               return 0;
->>> +       if (!capabilities)
->>> +               goto error_disable;
->>>
->>>         pci_set_master(dev);
->>>         /*
->>
->> Does this fix a problem you observed?  If so, please refer to it in
->> your changelog.
->>
->> I think this patch is incorrect because pcie_portdrv_probe() will
->> return 0 (success) with the device disabled.  When we call
->> pcie_portdrv_remove(), we will attempt to disable the device again,
->> even though it's already disabled.
->>
->> I don't know whether it is desirable for pcie_portdrv_probe() to
->> succeed when no capabilities are available or not.  Maybe somebody
->> else has an opinion.
-> 
-> I think this patchset is incorrect too.  Even if there is no PCIe
-> services for the PCIe port.  We still need the PCIe drivers, at least
-> for runtime power management.  Although runtime power management is
-> disabled for the PCIe port now, I think we will enable it again after
-> we fixed the corresponding issues.
+The function pci_msi_check_device() is called while enabling MSI
+or MSI-X interrupts to make sure the PCI device can support MSI
+or MSI-X capability. The patch removes the check on MSI or MSI-X
+capability in the function and lets the caller does the check.
 
-Hi Huang Ying,
-   Thanks for your comments! I will drop this patch, because as you said pcie port
-device need pcie port driver regardless any pcie capabilities found.
+Signed-off-by: Gavin Shan <shangw@linux.vnet.ibm.com>
+---
+ drivers/pci/msi.c |    5 +----
+ 1 files changed, 1 insertions(+), 4 deletions(-)
 
-But there is still a problem about two pci_disable_device() called in pcie_portdrv_remove().
-In this case, If we unbind pcie port driver, the pcie port device will be disabled. The child devices
-under it cannot use anymore. I send this patch in another reply.
-
-Thanks!
-Yijing
-
-> 
-> Best Regards,
-> Huang Ying
-> 
-> .
-> 
-
-
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 5fdc5d9..1ec1ba9 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -789,9 +789,6 @@ static int pci_msi_check_device(struct pci_dev *dev, int nvec, int type)
+ 	if (ret)
+ 		return ret;
+ 
+-	if (!pci_find_capability(dev, type))
+-		return -EINVAL;
+-
+ 	return 0;
+ }
+ 
+@@ -942,7 +939,7 @@ int pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries, int nvec)
+ 	int status, nr_entries;
+ 	int i, j;
+ 
+-	if (!entries)
++	if (!entries || !dev->msix_cap)
+ 		return -EINVAL;
+ 
+ 	status = pci_msi_check_device(dev, nvec, PCI_CAP_ID_MSIX);
 -- 
-Thanks!
-Yijing
+1.7.5.4
 
