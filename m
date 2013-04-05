@@ -1,125 +1,132 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ia0-f176.google.com ([209.85.210.176]:35723 "EHLO
-	mail-ia0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753848Ab3DLUrz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 12 Apr 2013 16:47:55 -0400
-Received: by mail-ia0-f176.google.com with SMTP id i9so472491iad.35
-        for <linux-pci@vger.kernel.org>; Fri, 12 Apr 2013 13:47:55 -0700 (PDT)
-Subject: [PATCH 2/6] PCI: Remove unused variables
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Date: Fri, 12 Apr 2013 14:47:51 -0600
-Message-ID: <20130412204751.5237.1749.stgit@bhelgaas-glaptop>
-In-Reply-To: <20130412204510.5237.25443.stgit@bhelgaas-glaptop>
-References: <20130412204510.5237.25443.stgit@bhelgaas-glaptop>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <515EC3D0.4070308@fold.natur.cuni.cz>
+Date: Fri, 05 Apr 2013 14:30:08 +0200
+From: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+To: Sarah Sharp <sarah.a.sharp@linux.intel.com>,
+	Huang Ying <ying.huang@intel.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	huang ying <huang.ying.caritas@gmail.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, Len Brown <lenb@kernel.org>,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: Re: [PATCH] PCI / ACPI: Always resume devices on ACPI wakeup notifications
+References: <51548C9E.9090703@fold.natur.cuni.cz> <2990024.LMTIBUbM3d@vostro.rjw.lan> <51564804.9000700@fold.natur.cuni.cz> <CAC=cRTMJH+40oPSM9pFzkb5x6Q42rWR8BPtUOxJn_3WopmOSvQ@mail.gmail.com> <515AF312.1010507@fold.natur.cuni.cz> <CAErSpo6EAkSniVF7NnDVsR=H_x0dHK=xQNbdKf67WDW=o1D+_Q@mail.gmail.com> <515B17D9.6030805@fold.natur.cuni.cz> <515B45A6.1020404@fold.natur.cuni.cz> <515C1DB8.5020905@fold.natur.cuni.cz> <1365075019.8901.9.camel@yhuang-mobile.sh.intel.com> <20130404191933.GC15489@xanatos>
+In-Reply-To: <20130404191933.GC15489@xanatos>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This fixes "set but not used" warnings found via "make W=1".
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/hotplug/pci_hotplug_core.c |    2 --
- drivers/pci/pcie/portdrv_pci.c         |   17 +++++------------
- drivers/pci/setup-res.c                |    2 --
- 3 files changed, 5 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/pci/hotplug/pci_hotplug_core.c b/drivers/pci/hotplug/pci_hotplug_core.c
-index 202f4a9..d9a528f 100644
---- a/drivers/pci/hotplug/pci_hotplug_core.c
-+++ b/drivers/pci/hotplug/pci_hotplug_core.c
-@@ -527,10 +527,8 @@ int pci_hp_deregister(struct hotplug_slot *hotplug)
- int __must_check pci_hp_change_slot_info(struct hotplug_slot *hotplug,
- 					 struct hotplug_slot_info *info)
- {
--	struct pci_slot *slot;
- 	if (!hotplug || !info)
- 		return -ENODEV;
--	slot = hotplug->pci_slot;
- 
- 	memcpy(hotplug->info, info, sizeof(struct hotplug_slot_info));
- 
-diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
-index 08c243a..0efba05 100644
---- a/drivers/pci/pcie/portdrv_pci.c
-+++ b/drivers/pci/pcie/portdrv_pci.c
-@@ -272,11 +272,9 @@ static pci_ers_result_t pcie_portdrv_error_detected(struct pci_dev *dev,
- 					enum pci_channel_state error)
- {
- 	struct aer_broadcast_data data = {error, PCI_ERS_RESULT_CAN_RECOVER};
--	int ret;
--
--	/* can not fail */
--	ret = device_for_each_child(&dev->dev, &data, error_detected_iter);
- 
-+	/* get true return value from &data */
-+	device_for_each_child(&dev->dev, &data, error_detected_iter);
- 	return data.result;
- }
- 
-@@ -308,10 +306,9 @@ static int mmio_enabled_iter(struct device *device, void *data)
- static pci_ers_result_t pcie_portdrv_mmio_enabled(struct pci_dev *dev)
- {
- 	pci_ers_result_t status = PCI_ERS_RESULT_RECOVERED;
--	int retval;
- 
- 	/* get true return value from &status */
--	retval = device_for_each_child(&dev->dev, &status, mmio_enabled_iter);
-+	device_for_each_child(&dev->dev, &status, mmio_enabled_iter);
- 	return status;
- }
- 
-@@ -343,7 +340,6 @@ static int slot_reset_iter(struct device *device, void *data)
- static pci_ers_result_t pcie_portdrv_slot_reset(struct pci_dev *dev)
- {
- 	pci_ers_result_t status = PCI_ERS_RESULT_RECOVERED;
--	int retval;
- 
- 	/* If fatal, restore cfg space for possible link reset at upstream */
- 	if (dev->error_state == pci_channel_io_frozen) {
-@@ -354,8 +350,7 @@ static pci_ers_result_t pcie_portdrv_slot_reset(struct pci_dev *dev)
- 	}
- 
- 	/* get true return value from &status */
--	retval = device_for_each_child(&dev->dev, &status, slot_reset_iter);
--
-+	device_for_each_child(&dev->dev, &status, slot_reset_iter);
- 	return status;
- }
- 
-@@ -381,9 +376,7 @@ static int resume_iter(struct device *device, void *data)
- 
- static void pcie_portdrv_err_resume(struct pci_dev *dev)
- {
--	int retval;
--	/* nothing to do with error value, if it ever happens */
--	retval = device_for_each_child(&dev->dev, NULL, resume_iter);
-+	device_for_each_child(&dev->dev, NULL, resume_iter);
- }
- 
- /*
-diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
-index 81b88bd..07f2edd 100644
---- a/drivers/pci/setup-res.c
-+++ b/drivers/pci/setup-res.c
-@@ -261,7 +261,6 @@ int pci_assign_resource(struct pci_dev *dev, int resno)
- {
- 	struct resource *res = dev->resource + resno;
- 	resource_size_t align, size;
--	struct pci_bus *bus;
- 	int ret;
- 
- 	align = pci_resource_alignment(dev, res);
-@@ -271,7 +270,6 @@ int pci_assign_resource(struct pci_dev *dev, int resno)
- 		return -EINVAL;
- 	}
- 
--	bus = dev->bus;
- 	size = resource_size(res);
- 	ret = _pci_assign_resource(dev, resno, size, align);
- 
+Sarah Sharp wrote:
+> On Thu, Apr 04, 2013 at 07:30:19PM +0800, Huang Ying wrote:
+>> Hi, Martin,
+>>
+>> On Wed, 2013-04-03 at 14:16 +0200, Martin Mokrejs wrote:
+>>>>> 2) xHCI dead due to to its suspend - 3.8 series and above
+>>>>
+>>>> Not fixed by port_dbg.patch applied over 3.8.5. Interestingly, a NEC-based
+>>>> XHCI card *in an express card slot* does not suffer this suspend issue.
+>>>> Although it is being put into suspend if a device is unplugged.
+>>>
+>>> 20130402/3.8.5-ying_port-dbg__with_laptop-mode-tools_xHCI_test_TI-based
+>>> 20130402/3.8.5-ying_port-dbg__with_laptop-mode-tools_xHCI_test_NEC-based
+>>>
+>>> Same thing but yet without the port_dbg.patch:
+>>> 20130402/3.9-rc5__with_2368081__with-latop-mode-tools_xhci_testing/
+>>
+>> It appears that TI xHCI dead port issue will present even if the PCIe
+>> port will never go suspended.  So I think this bug is not related to
+>> PCIe port runtime PM but related to USB xHCI.
+>>
+>> Do you agree Sarah?
+> 
+> No.  The symptoms he described (in another email) were that the port
+> only becomes "dead" after a USB 2.0 device is removed, and the host was
+> suspended.  The issue was that the TI host is simply not reporting the
+> USB device connect, even if it is manually resumed.  The port status
+> registers do not show a device connect at all.
+> 
+> Martin, can you confirm this by trying this, and sending me dmesg of the
+> test with CONFIG_USB_DEBUG and CONFIG_USB_XHCI_HCD_DEBUGGING turned on:
+> 
+> 1. Remove the laptop mode tools
+> 2. Reboot with no USB devices attached to the TI host
+> 3. Make sure the xHCI PCI device's power/control file is set to 'on'
+>    You will find that file in /sys/bus/pci/devices/.  Use lspci to
+>    figure out which directory is the xHCI PCI device.
+> 4. Plug in a USB 2.0 device and make sure it works (e.g. wiggle a
+>    mouse)
+> 5. Unplug the device, replug it, and check to see if it works.
 
+Works. Actually, I plugged in the mouse in and out several times
+to show that the *unplug* does not kill the socket.
+
+
+> If you have problems, stop here.  Otherwise try:
+> 
+> 6. Unplug all USB devices
+> 7. echo 'auto' to the xHCI PCI device's power/control file in
+
+The 0b:00.0 is already suspended after the echo 'auto', but I tried to continue
+with step 8. Some default kicks in?
+
+
+> 8. echo 'auto' to both xHCI roothubs in /sys/bus/usb/devices/
+>    (i.e. all usbN directories)
+
+No need, they are already suspended:
+
+# cat /sys/devices/pci0000\:00/0000:00:1c.4/0000:0b:00.0/usb3/power/control
+auto
+# cat /sys/devices/pci0000\:00/0000:00:1c.4/0000:0b:00.0/usb3/power/runtime_status
+suspended
+# cat /sys/devices/pci0000\:00/0000:00:1c.4/0000:0b:00.0/usb4/power/runtime_status
+suspended
+#
+
+> 9. Wait a few seconds or so until the xHCI PCI host suspends, meaning the
+>    power/runtime_status file reads as 'suspended'
+> 10. Plug in the same USB 2.0 device, and check if it works.
+
+It works.
+
+> 11. Unplug the device, and wait until the PCI host is suspended.
+
+Unplug causes death per dmesg.
+
+[  932.419828] xhci_hcd 0000:0b:00.0: Cached old ring, 1 ring cached
+[  932.420240] xhci_hcd 0000:0b:00.0: // Ding dong!
+[  932.420342] xhci_hcd 0000:0b:00.0: get port status, actual port 1 status  = 0x2a0
+[  932.420344] xhci_hcd 0000:0b:00.0: Get port status returned 0x100
+[  932.454637] xhci_hcd 0000:0b:00.0: get port status, actual port 1 status  = 0x2a0
+[  932.454638] xhci_hcd 0000:0b:00.0: Get port status returned 0x100
+[  932.494828] xhci_hcd 0000:0b:00.0: get port status, actual port 1 status  = 0x2a0
+[  932.494831] xhci_hcd 0000:0b:00.0: Get port status returned 0x100
+[  932.534856] xhci_hcd 0000:0b:00.0: get port status, actual port 1 status  = 0x2a0
+[  932.534859] xhci_hcd 0000:0b:00.0: Get port status returned 0x100
+[  932.574871] xhci_hcd 0000:0b:00.0: get port status, actual port 1 status  = 0x2a0
+[  932.574874] xhci_hcd 0000:0b:00.0: Get port status returned 0x100
+[  932.574888] hub 3-0:1.0: debounce: port 2: total 100ms stable 100ms status 0x100
+[  932.574905] hub 3-0:1.0: hub_suspend
+[  932.574912] usb usb3: bus auto-suspend, wakeup 1
+[  932.574928] xhci_hcd 0000:0b:00.0: xhci_hub_status_data: stopping port polling.
+[  932.574947] xhci_hcd 0000:0b:00.0: xhci_suspend: stopping port polling.
+[  932.574974] xhci_hcd 0000:0b:00.0: // Setting command ring address to 0xd6007001
+[  932.575026] xhci_hcd 0000:0b:00.0: hcd_pci_runtime_suspend: 0
+[  932.575119] xhci_hcd 0000:0b:00.0: PME# enabled
+[  932.594863] xhci_hcd 0000:0b:00.0: pfrs: target: 3, 0
+
+
+> 12. Replug the device, and check to see if it works.
+
+Is dead.
+
+Full logs at:
+http://195.113.57.32/~mmokrejs/tmp/20130405.tar.bz2 (unpack, 'ls -latr', diff as you like).
+Also .config is in there.
+
+Martin
