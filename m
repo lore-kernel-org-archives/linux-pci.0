@@ -1,110 +1,233 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f173.google.com ([209.85.192.173]:32795 "EHLO
-	mail-pd0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751360Ab3DUCVr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 20 Apr 2013 22:21:47 -0400
-Received: by mail-pd0-f173.google.com with SMTP id v10so92836pde.18
-        for <linux-pci@vger.kernel.org>; Sat, 20 Apr 2013 19:21:46 -0700 (PDT)
-Message-ID: <51734D36.4000802@gmail.com>
-Date: Sun, 21 Apr 2013 10:21:42 +0800
-From: Jiang Liu <liuj97@gmail.com>
-MIME-Version: 1.0
-To: Frank Rizzo <thefrankrizzo@hotmail.com>
-CC: Yijing Wang <wangyijing@huawei.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 5 Apr 2013 09:53:49 +0200
+From: Thierry Reding <thierry.reding@avionic-design.de>
+To: Stephen Warren <swarren@wwwdotorg.org>
+Cc: Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: Rescan PCIE bus to find recently powered on device.
-References: <SNT136-W425B9A4DBEA719E570080DB2C80@phx.gbl> <5170B9BD.6040408@huawei.com> <CAErSpo43xWdYE8MT9Y4Hdi0bkNh3D4Su6zThAVs72+nYiUD5qg@mail.gmail.com> <BLU0-SMTP305A7D1308063E03F4C5CE9B2C90@phx.gbl> <5171F610.80001@huawei.com> <BLU0-SMTP185893DF37F0C811FA0BCB7B2C90@phx.gbl> <517204AE.9030907@huawei.com> <BLU0-SMTP106EAAAE910BEDD2F047B19B2C90@phx.gbl> <5172BF84.9090307@gmail.com> <BLU0-SMTP461505AE1FB450731CCD2B2B2C90@phx.gbl>
-In-Reply-To: <BLU0-SMTP461505AE1FB450731CCD2B2B2C90@phx.gbl>
-Content-Type: text/plain; charset=ISO-8859-15
-Sender: linux-pci-owner@vger.kernel.org
+	Russell King <linux@arm.linux.org.uk>,
+	Andrew Murray <andrew.murray@arm.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-tegra@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v3 07/12] PCI: tegra: Move PCIe driver to drivers/pci/host
+Message-ID: <20130405075348.GC15848@avionic-0098.mockup.avionic-design.de>
+References: <1365000318-28256-1-git-send-email-thierry.reding@avionic-design.de>
+ <1365000318-28256-8-git-send-email-thierry.reding@avionic-design.de>
+ <515DF096.2000703@wwwdotorg.org>
+ <20130405073703.GB15848@avionic-0098.mockup.avionic-design.de>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="UfEAyuTBtIjiZzX6"
+In-Reply-To: <20130405073703.GB15848@avionic-0098.mockup.avionic-design.de>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/21/2013 04:52 AM, Frank Rizzo wrote:
->> Hi Frank,
->>     Message from "sudo lspci -vvv" gives more information, including PCIe capabilities,
->> so please help to send out "sudo lspci -vvv" instead of "lspci -v".
->>     Thanks!
-> 
-> Here's the info:
-> 
-> root@frank-System-Product-Name:~# lspci -vvv
-> 00:00.0 Host bridge: Advanced Micro Devices [AMD] RS780 Host Bridge
->         Subsystem: ASUSTeK Computer Inc. M3A78-EH Motherboard
->         Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
->         Status: Cap+ 66MHz+ UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort+ >SERR- <PERR- INTx-
->         Latency: 0
->         Capabilities: [c4] HyperTransport: Slave or Primary Interface
->                 Command: BaseUnitID=0 UnitCnt=12 MastHost- DefDir- DUL-
->                 Link Control 0: CFlE- CST- CFE- <LkFail- Init+ EOC- TXO- <CRCErr=0 IsocEn- LSEn- ExtCTL- 64b-
->                 Link Config 0: MLWI=16bit DwFcIn- MLWO=16bit DwFcOut- LWI=16bit DwFcInEn- LWO=16bit DwFcOutEn-
->                 Link Control 1: CFlE- CST- CFE- <LkFail+ Init- EOC+ TXO+ <CRCErr=0 IsocEn- LSEn- ExtCTL- 64b-
->                 Link Config 1: MLWI=8bit DwFcIn- MLWO=8bit DwFcOut- LWI=8bit DwFcInEn- LWO=8bit DwFcOutEn-
->                 Revision ID: 3.00
->                 Link Frequency 0: [b]
->                 Link Error 0: <Prot- <Ovfl- <EOC- CTLTm-
->                 Link Frequency Capability 0: 200MHz+ 300MHz- 400MHz+ 500MHz- 600MHz+ 800MHz+ 1.0GHz+ 1.2GHz- 1.4GHz- 1.6GHz- Vend-
->                 Feature Capability: IsocFC- LDTSTOP+ CRCTM- ECTLT- 64bA- UIDRD-
->                 Link Frequency 1: 200MHz
->                 Link Error 1: <Prot- <Ovfl- <EOC- CTLTm-
->                 Link Frequency Capability 1: 200MHz- 300MHz- 400MHz- 500MHz- 600MHz- 800MHz- 1.0GHz- 1.2GHz- 1.4GHz- 1.6GHz- Vend-
->                 Error Handling: PFlE- OFlE- PFE- OFE- EOCFE- RFE- CRCFE- SERRFE- CF- RE+ PNFE- ONFE- EOCNFE- RNFE- CRCNFE- SERRNFE-
->                 Prefetchable memory behind bridge Upper: 00-00
->                 Bus Number: 00
->         Capabilities: [54] HyperTransport: UnitID Clumping
->         Capabilities: [40] HyperTransport: Retry Mode
->         Capabilities: [9c] HyperTransport: #1a
->         Capabilities: [f8] HyperTransport: #1c
-> 
-> 00:01.0 PCI bridge: ASUSTeK Computer Inc. RS880 PCI to PCI bridge (int gfx) (prog-if 00 [Normal decode])
->         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx-
->         Status: Cap+ 66MHz+ UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
->         Latency: 64
->         Bus: primary=00, secondary=01, subordinate=01, sec-latency=64
->         I/O behind bridge: 0000d000-0000dfff
->         Memory behind bridge: fb900000-fbafffff
->         Prefetchable memory behind bridge: 00000000d0000000-00000000dfffffff
->         Secondary status: 66MHz+ FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- <SERR- <PERR-
->         BridgeCtl: Parity- SERR+ NoISA- VGA+ MAbort- >Reset- FastB2B-
->                 PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
->         Capabilities: [44] HyperTransport: MSI Mapping Enable+ Fixed+
->         Capabilities: [b0] Subsystem: ASUSTeK Computer Inc. Device 82f1
->         Kernel modules: shpchp
-> 
-> 00:02.0 PCI bridge: Advanced Micro Devices [AMD] RS780 PCI to PCI bridge (ext gfx port 0) (prog-if 00 [Normal decode])
->         Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx+
->         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
->         Latency: 0, Cache Line Size: 64 bytes
->         Bus: primary=00, secondary=02, subordinate=02, sec-latency=0
->         I/O behind bridge: 0000f000-00000fff
->         Memory behind bridge: fbb00000-fbdfffff
->         Prefetchable memory behind bridge: 00000000fff00000-00000000000fffff
->         Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort+ <SERR- <PERR-
->         BridgeCtl: Parity+ SERR+ NoISA- VGA- MAbort- >Reset- FastB2B-
->                 PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
->         Capabilities: [50] Power Management version 3
->                 Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
->                 Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
->         Capabilities: [58] Express (v2) Root Port (Slot+), MSI 00
->                 DevCap: MaxPayload 128 bytes, PhantFunc 0, Latency L0s <64ns, L1 <1us
->                         ExtTag+ RBE+ FLReset-
->                 DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
->                         RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+
->                         MaxPayload 128 bytes, MaxReadReq 128 bytes
->                 DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr- TransPend-
->                 LnkCap: Port #0, Speed 5GT/s, Width x16, ASPM L0s L1, Latency L0 <64ns, L1 <1us
->                         ClockPM- Surprise- LLActRep+ BwNot+
->                 LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk+
->                         ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
->                 LnkSta: Speed 2.5GT/s, Width x4, TrErr- Train- SlotClk+ DLActive+ BWMgmt+ ABWMgmt-
->                 SltCap: AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug- Surprise-
->                         Slot #2, PowerLimit 75.000W; Interlock- NoCompl+
-Hi Frank,
-	According to "Hotplug-" flag above, the slot for 00:02.0 doesn't support hotplug.
-Actually no slot in this system supports PCI devic hotplug at all. So simply powering on
-the device connected to the adapter after booting won't work. Please find another system
-with PCIe device hotplug capability for your tests. You may confirm PCIe hotplug capability
-by scanning "hotplug+" flag and also insmod pciehp.
-	Regards!
-	Gerry
 
+--UfEAyuTBtIjiZzX6
+Content-Type: multipart/mixed; boundary="V88s5gaDVPzZ0KCq"
+Content-Disposition: inline
+
+
+--V88s5gaDVPzZ0KCq
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+
+For reference, here's the new binding document with all your comments
+addressed (I think).
+
+Thierry
+
+--V88s5gaDVPzZ0KCq
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline; filename="nvidia,tegra20-pcie.txt"
+
+NVIDIA Tegra PCIe controller
+
+Required properties:
+- compatible: "nvidia,tegra20-pcie"
+- device_type: Must be "pci"
+- reg: A list of physical base address and length for each set of controller
+  registers. Must contain an entry for each entry in the reg-names property.
+- reg-names: Must include the following entries:
+  "pads": PADS registers
+  "afi": AFI registers
+  "cs": configuration space region
+- interrupts: A list of interrupt outputs of the controller. Must contain an
+  entry for each entry in the interrupt-names property.
+- interrupt-names: Must include the following entries:
+  "intr": The Tegra interrupt that is asserted for controller interrupts
+  "msi": The Tegra interrupt that is asserted when an MSI is received
+- pex-clk-supply: Supply voltage for internal reference clock
+- vdd-supply: Power supply for controller (1.05V)
+- bus-range: Range of bus numbers associated with this controller
+- #address-cells: Address representation for root ports (must be 3)
+  - cell 0 specifies the bus and device numbers of the root port:
+    [23:16]: bus number
+    [15:11]: device number
+  - cell 1 denotes the upper 32 address bits and should be 0
+  - cell 2 contains the lower 32 address bits and is used to translate to the
+    CPU address space
+- #size-cells: Size representation for root ports (must be 2)
+- ranges: Describes the translation of addresses for root ports and standard
+  PCI regions. The entries must be 6 cells each, where the first three cells
+  correspond to the address as described for the #address-cells property
+  above, the fourth cell is the physical CPU address to translate to and the
+  fifth and six cells are as described for the #size-cells property above.
+  - The first two entries are expected to translate the addresses for the root
+    port registers, which are referenced by the assigned-addresses property of
+    the root port nodes (see below).
+  - The remaining entries setup the mapping for the standard I/O, memory and
+    prefetchable PCI regions. The first cell determines the type of region
+    that is setup:
+    - 0x81000000: I/O memory region
+    - 0x82000000: non-prefetchable memory region
+    - 0xc2000000: prefetchable memory region
+  Please refer to the standard PCI bus binding document for a more detailed
+  explanation.
+- clocks: List of clock inputs of the controller. Must contain an entry for
+  each entry in the clock-names property.
+- clock-names: Must include the following entries:
+  "pex": The Tegra clock of that name
+  "afi": The Tegra clock of that name
+  "pcie_xclk": The Tegra clock of that name
+  "pll_e": The Tegra clock of that name
+
+Root ports are defined as subnodes of the PCIe controller node.
+
+Required properties:
+- device_type: Must be "pci"
+- assigned-addresses: Address and size of the port configuration registers
+- reg: PCI bus address of the root port
+- #address-cells: Must be 3
+- #size-cells: Must be 2
+- ranges: Sub-ranges distributed from the PCIe controller node. An empty
+  property is sufficient.
+- nvidia,num-lanes: Number of lanes to use for this port. Valid combinations
+  are:
+  - Root port 0 uses 4 lanes, root port 1 is unused.
+  - Both root ports use 2 lanes.
+
+Example:
+
+SoC DTSI:
+
+	pcie-controller {
+		compatible = "nvidia,tegra20-pcie";
+		device_type = "pci";
+		reg = <0x80003000 0x00000800   /* PADS registers */
+		       0x80003800 0x00000200   /* AFI registers */
+		       0x90000000 0x10000000>; /* configuration space */
+		reg-names = "pads", "afi", "cs";
+		interrupts = <0 98 0x04   /* controller interrupt */
+		              0 99 0x04>; /* MSI interrupt */
+		interrupt-names = "intr", "msi";
+
+		bus-range = <0x00 0xff>;
+		#address-cells = <3>;
+		#size-cells = <2>;
+
+		ranges = <0x82000000 0 0x80000000 0x80000000 0 0x00001000   /* port 0 registers */
+			  0x82000000 0 0x80001000 0x80001000 0 0x00001000   /* port 1 registers */
+			  0x81000000 0 0          0x82000000 0 0x00010000   /* downstream I/O */
+			  0x82000000 0 0xa0000000 0xa0000000 0 0x10000000   /* non-prefetchable memory */
+			  0xc2000000 0 0xb0000000 0xb0000000 0 0x10000000>; /* prefetchable memory */
+
+		clocks = <&tegra_car 70>, <&tegra_car 72>, <&tegra_car 74>,
+			 <&tegra_car 118>;
+		clock-names = "pex", "afi", "pcie_xclk", "pll_e";
+		status = "disabled";
+
+		pci@1,0 {
+			device_type = "pci";
+			assigned-addresses = <0x82000800 0 0x80000000 0 0x1000>;
+			reg = <0x000800 0 0 0 0>;
+			status = "disabled";
+
+			#address-cells = <3>;
+			#size-cells = <2>;
+
+			ranges;
+
+			nvidia,num-lanes = <2>;
+		};
+
+		pci@2,0 {
+			device_type = "pci";
+			assigned-addresses = <0x82001000 0 0x80001000 0 0x1000>;
+			reg = <0x001000 0 0 0 0>;
+			status = "disabled";
+
+			#address-cells = <3>;
+			#size-cells = <2>;
+
+			ranges;
+
+			nvidia,num-lanes = <2>;
+		};
+	};
+
+
+Board DTS:
+
+	pcie-controller {
+		status = "okay";
+
+		vdd-supply = <&pci_vdd_reg>;
+		pex-clk-supply = <&pci_clk_reg>;
+
+		/* root port 00:01.0 */
+		pci@1,0 {
+			status = "okay";
+
+			/* bridge 01:00.0 (optional) */
+			pci@0,0 {
+				reg = <0x010000 0 0 0 0>;
+
+				#address-cells = <3>;
+				#size-cells = <2>;
+
+				device_type = "pci";
+
+				/* endpoint 02:00.0 */
+				pci@0,0 {
+					reg = <0x020000 0 0 0 0>;
+				};
+			};
+		};
+	};
+
+Note that devices on the PCI bus are dynamically discovered using PCI's bus
+enumeration and therefore don't need corresponding device nodes in DT. However
+if a device on the PCI bus provides a non-probeable bus such as I2C or SPI,
+device nodes need to be added in order to allow the bus' children to be
+instantiated at the proper location in the operating system's device tree (as
+illustrated by the optional nodes in the example above).
+
+--V88s5gaDVPzZ0KCq--
+
+--UfEAyuTBtIjiZzX6
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQIcBAEBAgAGBQJRXoMMAAoJEN0jrNd/PrOhEscP/2t4BExCgPEZeJs6Wxkx0P9v
+tbON506DFGBmoD1pN8olOM4jSR2GnWEC+aMtszV9ATH4/3aTTP4kTG34w3Pruti0
+wn8QPSr/dbmXwcWqMqjan9P+p43o/EhaQXVmoNL/i2xh1nrSpLMfylQmzXumfeat
+Ax40zgEhN9CyNPKS4uoYmVPRLQnNPKN++G8hqm2XypJ6g6300ntm5GbyCWGldIiR
+0xHcfv6hxiaC0/QU8B+TzpJP/xQ1TGzDaNf4VvJQVl7NdINFXUVL2pdTVYLeLt41
+uRu+hFyyWcihlNlUr6CpV6E7Fca4Ymtq6azGOfYdnQ30dCS9rHD2nHx2VAUsvdY6
+2+Ygx4TzjQruz6H+90RGubpdpYv/vMESD+sbOLGm/98UUykPAmKuKdjiwDcKcIfs
+oFHw06LugZLdw/cXcqT7YNcfL/mV+2mXTgaYkfUlka/khnzAFN80Tyv3WV8zetZ+
+AGf8lwvJJd3AUybVx0lyjclkORi4icHeoW/LYlvXIa88/Hk+ZFMEGVYFL4jl+vhq
+2S/lHfiQEtqcCaltgthKBvE9svCFJTwV2YCRLHGL/xGOuCL1r+JIZmI+l7pIzuaj
+cccbGTp/yXtyxzcd6xvhiV0iKTaQ2XRBG4hGMSqZzgI6zYCBKnwbf2zPNwng/CDz
+wN0Yg6/YVU7JxsG2HUrZ
+=WF+a
+-----END PGP SIGNATURE-----
+
+--UfEAyuTBtIjiZzX6--
