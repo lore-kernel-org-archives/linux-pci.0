@@ -1,62 +1,32 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 16 Apr 2013 11:05:37 -0400
-From: Jason Cooper <jason@lakedaemon.net>
-To: Andrew Murray <Andrew.Murray@arm.com>
-Cc: linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org,
-	siva.kallam@samsung.com, linux-pci@vger.kernel.org,
-	linus.walleij@linaro.org, thierry.reding@avionic-design.de,
-	Liviu.Dudau@arm.com, grant.likely@secretlab.ca, paulus@samba.org,
-	linux-samsung-soc@vger.kernel.org, linux@arm.linux.org.uk,
-	jg1.han@samsung.com, jgunthorpe@obsidianresearch.com,
-	thomas.abraham@linaro.org, benh@kernel.crashing.org, arnd@arndb.de,
-	devicetree-discuss@lists.ozlabs.org, rob.herring@calxeda.com,
-	kgene.kim@samsung.com, bhelgaas@google.com,
-	linux-arm-kernel@lists.infradead.org,
-	thomas.petazzoni@free-electrons.com, monstr@monstr.eu,
-	linux-kernel@vger.kernel.org, suren.reddy@samsung.com
-Subject: Re: [PATCH v7 0/3] of/pci: Provide common support for PCI DT
- parsing
-Message-ID: <20130416150537.GC28693@titan.lakedaemon.net>
-References: <1366107508-12672-1-git-send-email-Andrew.Murray@arm.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pb0-f53.google.com ([209.85.160.53]:49791 "EHLO
+	mail-pb0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932572Ab3DEGrz convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Apr 2013 02:47:55 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1366107508-12672-1-git-send-email-Andrew.Murray@arm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Date: Fri, 5 Apr 2013 12:17:54 +0530
+Message-ID: <CAJ61zBAP3E6bSaKSm=qwxnMyY_BBkA9W=kOMg-QSv90wJc=iTw@mail.gmail.com>
+Subject: [OT] LDD3 Query
+From: Vijay Chauhan <kernel.vijay@gmail.com>
+To: linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 16, 2013 at 11:18:25AM +0100, Andrew Murray wrote:
-> This patchset factors out duplicated code associated with parsing PCI
-> DT "ranges" properties across the architectures and introduces a
-> "ranges" parser. This parser "of_pci_range_parser" can be used directly
-> by ARM host bridge drivers enabling them to obtain ranges from device
-> trees.
-> 
-> I've included the Reviewed-by and Tested-by's received from v5/v6 in this
-> patchset, earlier versions of this patchset (v3) have been tested-by:
-> 
-> Thierry Reding <thierry.reding@avionic-design.de>
-> Jingoo Han <jg1.han@samsung.com>
-> 
-> I've tested that this patchset builds and runs on ARM and that it builds on
-> PowerPC and x86_64.
+Hi,
 
-Series replaces v6 in mvebu/drivers
+I am new to Linux Device Driver and reading LDD3.
 
-thx,
+It mentions that the disadvantage of dynamic major number allocation
+is that you can’t create the device nodes in
+advance, because the major number assigned to your module will vary.
 
-Jason.
+To solve this problem, it says that create a script to invoke insmod
+and after calling insmod, reads /proc/devices in order to create the
+special file(s).
 
-> 
-> Compared to the v6 sent by Andrew Murray, the following changes have
-> been made in response to build errors/warnings:
-> 
->  * Inclusion of linux/of_address.h in of_pci.c as suggested by Michal
->    Simek to prevent compilation failures on Microblaze (and others) and his
->    ack.
-> 
->  * Use of externs, static inlines and a typo in linux/of_address.h in response
->    to linker errors (multiple defination) on x86_64 as spotted by a kbuild test
->    robot on (jcooper/linux.git mvebu/drivers)
-> 
->  * Add EXPORT_SYMBOL_GPL to of_pci_range_parser function to be consistent
->    with of_pci_process_ranges function
+My question is, is there no way to do it inside the module? How other
+modules does?
+
+---
+Vijay
