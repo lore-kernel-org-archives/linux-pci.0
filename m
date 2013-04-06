@@ -1,97 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:16291 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965593Ab3DTDAQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 19 Apr 2013 23:00:16 -0400
-Message-ID: <517204AE.9030907@huawei.com>
-Date: Sat, 20 Apr 2013 10:59:58 +0800
-From: Yijing Wang <wangyijing@huawei.com>
-MIME-Version: 1.0
-To: Frank Rizzo <thefrankrizzo@hotmail.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: Rescan PCIE bus to find recently powered on device.
-References: <SNT136-W425B9A4DBEA719E570080DB2C80@phx.gbl> <5170B9BD.6040408@huawei.com> <CAErSpo43xWdYE8MT9Y4Hdi0bkNh3D4Su6zThAVs72+nYiUD5qg@mail.gmail.com> <BLU0-SMTP305A7D1308063E03F4C5CE9B2C90@phx.gbl> <5171F610.80001@huawei.com> <BLU0-SMTP185893DF37F0C811FA0BCB7B2C90@phx.gbl>
-In-Reply-To: <BLU0-SMTP185893DF37F0C811FA0BCB7B2C90@phx.gbl>
-Content-Type: text/plain; charset="ISO-8859-15"
+Received: from gate.crashing.org ([63.228.1.57]:42316 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932670Ab3DFIAU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 6 Apr 2013 04:00:20 -0400
+Message-ID: <1365235201.31207.9.camel@pasglop>
+Subject: Re: [PATCH 2/3] powerpc: Enable boot_vga sysfs attribute for
+ graphics adapters on Power
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Brian King <brking@linux.vnet.ibm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	Lucas Kannebley Tavares <lucaskt@linux.vnet.ibm.com>,
+	klebers@linux.vnet.ibm.com, sparclinux@vger.kernel.org
+Date: Sat, 06 Apr 2013 10:00:01 +0200
+In-Reply-To: <CAErSpo5ReUcSPvyBs_u0HLh=90anEREZn4p6EUX4yO52bDBaeg@mail.gmail.com>
+References: <201304042158.r34LwEOV010607@d03av02.boulder.ibm.com>
+	 <CAErSpo5ReUcSPvyBs_u0HLh=90anEREZn4p6EUX4yO52bDBaeg@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2013/4/20 10:22, Frank Rizzo wrote:
-> (with device powered on AFTER boot)
+On Fri, 2013-04-05 at 14:11 -0600, Bjorn Helgaas wrote:
 > 
-> root@frank-System-Product-Name:~# echo 1 > /sys/bus/pci/rescan
+> I think sparc has the same issue in its own copy of
+> of_create_pci_dev().
+> 
+> Of course, both of_create_pci_dev() implementations are basically
+> copies of the generic pci_setup_device() that most arches use.  That's
+> the reason why I wish sparc and powerpc had used config space
+> accessors that hid the OF mangling internally so they could use the
+> generic pci_setup_device() instead of cloning it.
 
-Hi Frank,
-   When you do rescan here, any new message info will print in dmesg?
-Compare the two lspci info, it seems like your external device is
-02.0-[02]----00.0  Device 1a39:0004, which include a pci bridge and a pci endpoint device.
-But let me confused is that after you rescan (with device powered on AFTER boot),
-there is no any new device found, normally, at least we should found the bridge device.
-Maybe the link between host bridge and your external device got some problems? I am not sure.
+I disagree :-) I want the config space accessors to actually do the
+config space access (it might be necessary for some reasons, if anything
+for diagnostic). Also one of the reasons we create devices that way
+originally iirc, is that on older pre-PCIe setups, we could have cases
+of a bridge showing up at function N > 0 without anything at function
+0. 
 
-> root@frank-System-Product-Name:~# lspci -tv
-> -[0000:00]-+-00.0  Advanced Micro Devices [AMD] RS780 Host Bridge
->            +-01.0-[01]--+-05.0  Advanced Micro Devices [AMD] nee ATI RS780 [Radeon HD 3200]
->            |            \-05.1  Advanced Micro Devices [AMD] nee ATI RS780 HDMI Audio [Radeon HD 3000-3300 Series]
->            +-05.0-[02]----00.0  JMicron Technology Corp. IEEE 1394 Host Controller
->            +-06.0-[03]----00.0  Realtek Semiconductor Co., Ltd. RTL8111/8168B PCI Express Gigabit Ethernet controller
->            +-11.0  Advanced Micro Devices [AMD] nee ATI SB7x0/SB8x0/SB9x0 SATA Controller [IDE mode]
->            +-12.0  Advanced Micro Devices [AMD] nee ATI SB7x0/SB8x0/SB9x0 USB OHCI0 Controller
->            +-12.1  Advanced Micro Devices [AMD] nee ATI SB7x0 USB OHCI1 Controller
->            +-12.2  Advanced Micro Devices [AMD] nee ATI SB7x0/SB8x0/SB9x0 USB EHCI Controller
->            +-13.0  Advanced Micro Devices [AMD] nee ATI SB7x0/SB8x0/SB9x0 USB OHCI0 Controller
->            +-13.1  Advanced Micro Devices [AMD] nee ATI SB7x0 USB OHCI1 Controller
->            +-13.2  Advanced Micro Devices [AMD] nee ATI SB7x0/SB8x0/SB9x0 USB EHCI Controller
->            +-14.0  Advanced Micro Devices [AMD] nee ATI SBx00 SMBus Controller
->            +-14.1  Advanced Micro Devices [AMD] nee ATI SB7x0/SB8x0/SB9x0 IDE Controller
->            +-14.2  Advanced Micro Devices [AMD] nee ATI SBx00 Azalia (Intel HDA)
->            +-14.3  Advanced Micro Devices [AMD] nee ATI SB7x0/SB8x0/SB9x0 LPC host controller
->            +-14.4-[04]--
->            +-14.5  Advanced Micro Devices [AMD] nee ATI SB7x0/SB8x0/SB9x0 USB OHCI2 Controller
->            +-18.0  Advanced Micro Devices [AMD] Family 10h Processor HyperTransport Configuration
->            +-18.1  Advanced Micro Devices [AMD] Family 10h Processor Address Map
->            +-18.2  Advanced Micro Devices [AMD] Family 10h Processor DRAM Controller
->            +-18.3  Advanced Micro Devices [AMD] Family 10h Processor Miscellaneous Control
->            \-18.4  Advanced Micro Devices [AMD] Family 10h Processor Link Control
-> 
-> 
+We are also not allowed to mess with bridge BARs on old EADS bridges,
+and similar issues where the hypervisor can get upset.
 
+A "filtering" config space code would be a lot messier than just
+creating them like we do.
 
-> 
-> (with device powered on BEFORE boot)
-> 
-> root@frank-System-Product-Name:~# lspci -tv
-> -[0000:00]-+-00.0  Advanced Micro Devices [AMD] RS780 Host Bridge
->            +-01.0-[01]--+-05.0  Advanced Micro Devices [AMD] nee ATI RS780 [Radeon HD 3200]
->            |            \-05.1  Advanced Micro Devices [AMD] nee ATI RS780 HDMI Audio [Radeon HD 3000-3300 Series]
->            +-02.0-[02]----00.0  Device 1a39:0004
->            +-05.0-[03]----00.0  JMicron Technology Corp. IEEE 1394 Host Controller
->            +-06.0-[04]----00.0  Realtek Semiconductor Co., Ltd. RTL8111/8168B PCI Express Gigabit Ethernet controller
->            +-11.0  Advanced Micro Devices [AMD] nee ATI SB7x0/SB8x0/SB9x0 SATA Controller [IDE mode]
->            +-12.0  Advanced Micro Devices [AMD] nee ATI SB7x0/SB8x0/SB9x0 USB OHCI0 Controller
->            +-12.1  Advanced Micro Devices [AMD] nee ATI SB7x0 USB OHCI1 Controller
->            +-12.2  Advanced Micro Devices [AMD] nee ATI SB7x0/SB8x0/SB9x0 USB EHCI Controller
->            +-13.0  Advanced Micro Devices [AMD] nee ATI SB7x0/SB8x0/SB9x0 USB OHCI0 Controller
->            +-13.1  Advanced Micro Devices [AMD] nee ATI SB7x0 USB OHCI1 Controller
->            +-13.2  Advanced Micro Devices [AMD] nee ATI SB7x0/SB8x0/SB9x0 USB EHCI Controller
->            +-14.0  Advanced Micro Devices [AMD] nee ATI SBx00 SMBus Controller
->            +-14.1  Advanced Micro Devices [AMD] nee ATI SB7x0/SB8x0/SB9x0 IDE Controller
->            +-14.2  Advanced Micro Devices [AMD] nee ATI SBx00 Azalia (Intel HDA)
->            +-14.3  Advanced Micro Devices [AMD] nee ATI SB7x0/SB8x0/SB9x0 LPC host controller
->            +-14.4-[05]--
->            +-14.5  Advanced Micro Devices [AMD] nee ATI SB7x0/SB8x0/SB9x0 USB OHCI2 Controller
->            +-18.0  Advanced Micro Devices [AMD] Family 10h Processor HyperTransport Configuration
->            +-18.1  Advanced Micro Devices [AMD] Family 10h Processor Address Map
->            +-18.2  Advanced Micro Devices [AMD] Family 10h Processor DRAM Controller
->            +-18.3  Advanced Micro Devices [AMD] Family 10h Processor Miscellaneous Control
->            \-18.4  Advanced Micro Devices [AMD] Family 10h Processor Link Control
-> 
-> .
-> 
+However we could/should probably make the code more common between
+powerpc and sparc and maybe move the bulk of it to a generic place more
+easily grepped by the PCI folks.
 
+> Of course, they don't, and that's too much work for fixing this issue,
+> but if anybody wanted to work on that, I think it would be an
+> interesting project.
+> 
+> But what if you set dev->dev.type in alloc_pci_dev()?  I think if you
+> did that, you wouldn't need to export "pci_dev_type," and  it should
+> fix this for both powerpc and sparc.
 
--- 
-Thanks!
-Yijing
+Cheers,
+Ben.
+
 
