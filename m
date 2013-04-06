@@ -1,41 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-da0-f48.google.com ([209.85.210.48]:50394 "EHLO
-	mail-da0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1163063Ab3DEXxJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Apr 2013 19:53:09 -0400
-Received: by mail-da0-f48.google.com with SMTP id p8so1777423dan.21
-        for <linux-pci@vger.kernel.org>; Fri, 05 Apr 2013 16:53:09 -0700 (PDT)
-Date: Fri, 5 Apr 2013 16:53:07 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Vijay Chauhan <kernel.vijay@gmail.com>
-Cc: linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org
-Subject: Re: [OT] LDD3 Query
-Message-ID: <20130405235307.GA13235@kroah.com>
-References: <CAJ61zBAP3E6bSaKSm=qwxnMyY_BBkA9W=kOMg-QSv90wJc=iTw@mail.gmail.com>
+Received: from mail-ob0-f172.google.com ([209.85.214.172]:50601 "EHLO
+	mail-ob0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756293Ab3DFBbx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Apr 2013 21:31:53 -0400
+Received: by mail-ob0-f172.google.com with SMTP id eh20so852215obb.3
+        for <linux-pci@vger.kernel.org>; Fri, 05 Apr 2013 18:31:52 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <CAJ61zBAP3E6bSaKSm=qwxnMyY_BBkA9W=kOMg-QSv90wJc=iTw@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 5 Apr 2013 19:31:32 -0600
+Message-ID: <CAErSpo5w=uJ2sXzXhyS0AyPFTbxPM44djdEMb6bR2SQu1O+u2A@mail.gmail.com>
+Subject: [GIT PULL] PCI updates for v3.9
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Konstantin Khlebnikov <khlebnikov@openvz.org>,
+	Matthew Garrett <matthew.garrett@nebula.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, Yinghai Lu <yinghai@kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 05, 2013 at 12:17:54PM +0530, Vijay Chauhan wrote:
-> Hi,
-> 
-> I am new to Linux Device Driver and reading LDD3.
-> 
-> It mentions that the disadvantage of dynamic major number allocation
-> is that you can’t create the device nodes in
-> advance, because the major number assigned to your module will vary.
+Hi Linus,
 
-That's extremely out of date, all distros now use udev (or mdev) and as
-such, dynamic major/minor are fine to use, and recommended.
+Here are some fixes for v3.9.  They include fixes for an ASPM problem
+that affects pre-1.1 PCIe devices, a kexec problem, the platform ROM
+image problem, a couple hotplug issues related to PM, and a fix for
+PCI-EISA bridges that have been broken for a long time.
 
-> To solve this problem, it says that create a script to invoke insmod
-> and after calling insmod, reads /proc/devices in order to create the
-> special file(s).
+Bjorn
 
-Not needed anymore, udev handles this for you.
 
-Hope this helps,
+The following changes since commit 8bb9660418e05bb1845ac1a2428444d78e322cc7:
 
-greg k-h
+  Linux 3.9-rc4 (2013-03-23 16:52:44 -0700)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git
+tags/pci-v3.9-fixes-1
+
+for you to fetch changes up to de7d5f729c72638f41d7c17487bccb1c570ff144:
+
+  PCI/PM: Disable runtime PM of PCIe ports (2013-04-03 15:54:59 -0600)
+
+----------------------------------------------------------------
+PCI updates for v3.9:
+
+  ASPM
+      Revert "PCI/ACPI: Request _OSC control before scanning PCI root bus"
+  kexec
+      PCI: Don't try to disable Bus Master on disconnected PCI devices
+  Platform ROM images
+      PCI: Add PCI ROM helper for platform-provided ROM images
+      nouveau: Attempt to use platform-provided ROM image
+      radeon: Attempt to use platform-provided ROM image
+  Hotplug
+      PCI/ACPI: Always resume devices on ACPI wakeup notifications
+      PCI/PM: Disable runtime PM of PCIe ports
+  EISA
+      EISA/PCI: Fix bus res reference
+      EISA/PCI: Init EISA early, before PNP
+
+----------------------------------------------------------------
+Bjorn Helgaas (3):
+      Merge branch 'pci/mjg-rom' into for-linus
+      Merge branch 'pci/yinghai-eisa' into for-linus
+      Revert "PCI/ACPI: Request _OSC control before scanning PCI root bus"
+
+Konstantin Khlebnikov (1):
+      PCI: Don't try to disable Bus Master on disconnected PCI devices
+
+Matthew Garrett (3):
+      PCI: Add PCI ROM helper for platform-provided ROM images
+      nouveau: Attempt to use platform-provided ROM image
+      radeon: Attempt to use platform-provided ROM image
+
+Rafael J. Wysocki (2):
+      PCI/ACPI: Always resume devices on ACPI wakeup notifications
+      PCI/PM: Disable runtime PM of PCIe ports
+
+Yinghai Lu (2):
+      EISA/PCI: Fix bus res reference
+      EISA/PCI: Init EISA early, before PNP
+
+ drivers/acpi/pci_root.c                         | 76 ++++++++++++-------------
+ drivers/eisa/pci_eisa.c                         | 67 +++++++++++++++-------
+ drivers/gpu/drm/nouveau/core/subdev/bios/base.c | 17 ++++++
+ drivers/gpu/drm/radeon/radeon_bios.c            | 26 +++++++++
+ drivers/pci/pci-acpi.c                          | 15 ++---
+ drivers/pci/pci-driver.c                        |  5 +-
+ drivers/pci/pcie/portdrv_pci.c                  | 13 -----
+ drivers/pci/rom.c                               | 67 ++++++++++------------
+ include/linux/pci.h                             |  1 +
+ 9 files changed, 169 insertions(+), 118 deletions(-)
