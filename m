@@ -1,168 +1,163 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:35609 "EHLO hydra.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753765Ab3DQQSD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 17 Apr 2013 12:18:03 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Subject: Re: Changes for v3.10 merge window
-Date: Wed, 17 Apr 2013 18:25:56 +0200
-Message-ID: <1825980.1C7UKqDGj6@vostro.rjw.lan>
-In-Reply-To: <20130416171732.GA6356@google.com>
-References: <20130416171732.GA6356@google.com>
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:39002 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756466Ab3DFB4M (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Apr 2013 21:56:12 -0400
+Received: by mail-ob0-f174.google.com with SMTP id wm15so1649151obc.5
+        for <linux-pci@vger.kernel.org>; Fri, 05 Apr 2013 18:56:11 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <1365190294-9061-1-git-send-email-nhorman@tuxdriver.com>
+References: <1362158276-4901-1-git-send-email-nhorman@tuxdriver.com> <1365190294-9061-1-git-send-email-nhorman@tuxdriver.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 5 Apr 2013 19:55:51 -0600
+Message-ID: <CAErSpo6z8oqiaUBCieUMsS_c5xvVFUDbHqVO_eBBde3uv2=zcg@mail.gmail.com>
+Subject: Re: [PATCH v6] irq: add quirk for broken interrupt remapping on 55XX chipsets
+To: Neil Horman <nhorman@tuxdriver.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Prarit Bhargava <prarit@redhat.com>,
+	Don Zickus <dzickus@redhat.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Asit Mallick <asit.k.mallick@intel.com>,
+	David Woodhouse <dwmw2@infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, April 16, 2013 11:17:32 AM Bjorn Helgaas wrote:
-> Below are the patches currently in my "next" branch, planned for
-> release in v3.10.  If I'm missing something important, let me know.
+On Fri, Apr 5, 2013 at 1:31 PM, Neil Horman <nhorman@tuxdriver.com> wrote:
+> A few years back intel published a spec update:
+> http://www.intel.com/content/dam/doc/specification-update/5520-and-5500-chipset-ioh-specification-update.pdf
+>
+> For the 5520 and 5500 chipsets which contained an errata (specificially errata
+> 53), which noted that these chipsets can't properly do interrupt remapping, and
+> as a result the recommend that interrupt remapping be disabled in bios.  While
+> many vendors have a bios update to do exactly that, not all do, and of course
+> not all users update their bios to a level that corrects the problem.  As a
+> result, occasionally interrupts can arrive at a cpu even after affinity for that
+> interrupt has be moved, leading to lost or spurrious interrupts (usually
+> characterized by the message:
+> kernel: do_IRQ: 7.71 No irq handler for vector (irq -1)
+>
+> There have been several incidents recently of people seeing this error, and
+> investigation has shown that they have system for which their BIOS level is such
+> that this feature was not properly turned off.  As such, it would be good to
+> give them a reminder that their systems are vulnurable to this problem.
 
-Well, you said you took the "PCI / PM: Make pci_pme_active() ignore devices
-without PME support" patch for v3.10, but it is not listed below.
+I'd still like to mention the bugzilla URL in the changelog
+(https://bugzilla.redhat.com/show_bug.cgi?id=887006) if it can be made
+public.
 
-Thanks,
-Rafael
+> ...
 
+> diff --git a/arch/x86/kernel/early-quirks.c b/arch/x86/kernel/early-quirks.c
+> index 3755ef4..bfa3139 100644
+> --- a/arch/x86/kernel/early-quirks.c
+> +++ b/arch/x86/kernel/early-quirks.c
+> @@ -192,6 +192,27 @@ static void __init ati_bugs_contd(int num, int slot, int func)
+>  }
+>  #endif
+>
+> +#ifdef CONFIG_IRQ_REMAP
+> +static void __init intel_remapping_check(int num, int slot, int func)
+> +{
+> +       u8 revision;
+> +
+> +       revision = pci_read_config_byte(num, slot, func , PCI_REVISION_ID);
+> +
+> +       /*
+> +        * Revision 0x13 of this chipset supports irq remapping
+> +        * but has an erratum that breaks its behavior, flag it as such
+> +        */
+> +       if (revision == 0x13)
+> +               irq_remap_broken = 1;
+> +
+> +}
+> +#else
+> +static void __init intel_remapping_check(int num, int slot, int func)
+> +{
+> +}
+> +#endif
+> +
+>  #define QFLAG_APPLY_ONCE       0x1
+>  #define QFLAG_APPLIED          0x2
+>  #define QFLAG_DONE             (QFLAG_APPLY_ONCE|QFLAG_APPLIED)
+> @@ -221,6 +242,10 @@ static struct chipset early_qrk[] __initdata = {
+>           PCI_CLASS_SERIAL_SMBUS, PCI_ANY_ID, 0, ati_bugs },
+>         { PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_SBX00_SMBUS,
+>           PCI_CLASS_SERIAL_SMBUS, PCI_ANY_ID, 0, ati_bugs_contd },
+> +       { PCI_VENDOR_ID_INTEL, 0x3403, PCI_CLASS_BRIDGE_HOST,
+> +         PCI_BASE_CLASS_BRIDGE, 0, intel_remapping_check },
+> +       { PCI_VENDOR_ID_INTEL, 0x3406, PCI_CLASS_BRIDGE_HOST,
+> +         PCI_BASE_CLASS_BRIDGE, 0, intel_remapping_check },
+>         {}
+>  };
+>
+> diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
+> index d56f8c1..2b56e92 100644
+> --- a/drivers/iommu/irq_remapping.c
+> +++ b/drivers/iommu/irq_remapping.c
+> @@ -19,6 +19,7 @@
+>  int irq_remapping_enabled;
+>
+>  int disable_irq_remap;
+> +int irq_remap_broken;
+>  int disable_sourceid_checking;
+>  int no_x2apic_optout;
+>
+> @@ -216,6 +217,17 @@ int irq_remapping_supported(void)
+>         if (disable_irq_remap)
+>                 return 0;
+>
+> +       if (irq_remap_broken) {
+> +               WARN_TAINT(1, TAIN_FIRMWARE_WORKAROUND,
 
-> Andy Shevchenko (1):
->       PCI: Fix missing prototype for pcie_port_acpi_setup()
-> 
-> Bjorn Helgaas (20):
->       Merge branch 'pci/shuah-defines' into next
->       PCI: Remove __weak annotation from pcibios_get_phb_of_node decl
->       PCI: Make local functions/structs static
->       PCI: Move cpci_hotplug_init() proto to header file
->       PCI: Remove unused variables
->       PCI: Fix __must_check annotation on pci_create_sysfs_dev_files()
->       PCI: Remove __must_check from definitions
->       PCI: Warn about failures instead of "must_check" functions
->       PCI: Remove "extern" from function declarations
->       Merge branch 'pci/gabor-get-of-node' into next
->       PCI: Remove unnecessary dependencies between PME and ACPI
->       PCI: Use PCI_EXP_SLTCAP_PSN mask when extracting slot number
->       EISA: Use dev_printk() when possible
->       EISA: Mark vendor ID resource as I/O port space
->       EISA: Initialize device before its resources
->       EISA: Log device resources in dmesg
->       Merge branch 'pci/bjorn-eisa' into next
->       Merge branch 'pci/misc' into next
->       Merge branch 'pci/jiang-subdrivers' into next
->       Merge branch 'pci/cleanup' into next
-> 
-> Gabor Juhos (1):
->       MIPS/PCI: Implement pcibios_get_phb_of_node
-> 
-> Jiang Liu (12):
->       PCI: When removing bus, always remove legacy files & unregister
->       PCI: Clean up usages of pci_bus->is_added
->       PCI: acpiphp: Remove all functions even if function 0 doesn't exist
->       PCI: acpiphp: Replace local macros with standard ACPI macros
->       PCI: Add pcibios hooks for adding and removing PCI buses
->       PCI/ACPI: Prepare stub functions to handle ACPI PCI (hotplug) slots
->       ia64/PCI: Implement pcibios_{add|remove}_bus() hooks
->       x86/PCI: Implement pcibios_{add|remove}_bus() hooks
->       PCI/ACPI: Handle PCI slot devices when creating/destroying PCI buses
->       PCI: acpiphp: Convert acpiphp to be builtin only, not modular
->       PCI: acpiphp: Do not use ACPI PCI subdriver mechanism
->       PCI: acpiphp: Protect acpiphp data structures from concurrent updates
-> 
-> Libin (1):
->       PCI: Use vma_pages() to replace (vm_end - vm_start) >> PAGE_SHIFT
-> 
-> Myron Stowe (4):
->       ahci: Use PCI_VENDOR_ID_MARVELL_EXT for 0x1b4b
->       [SCSI] mvsas: Use PCI_VENDOR_ID_MARVELL_EXT for 0x1b4b
->       [SCSI] mvumi: Use PCI_VENDOR_ID_MARVELL_EXT for 0x1b4b
->       PCI/ACPI: Remove support of ACPI PCI subdrivers
-> 
-> Prarit Bhargava (1):
->       PCI: aer_inject: Fix return values when device not found
-> 
-> Shuah Khan (4):
->       PCI: Add PCI_BUS_NUM() and PCI_DEVID() interfaces
->       PCI/AER: Remove local PCI_BUS() define and use PCI_BUS_NUM() from PCI
->       iommu/amd: Remove local PCI_BUS() define and use PCI_BUS_NUM() from PCI
->       iommu/amd: Remove calc_devid() and use PCI_DEVID() from PCI
-> 
-> Xiangliang Yu (1):
->       PCI: Define macro for Marvell vendor ID
-> 
-> Xiong Huang (1):
->       PCI: Add MSI INTX_DISABLE quirks for AR8161/AR8162/AR8171/AR8172/E210X
-> 
-> Yijing Wang (2):
->       PCI: acpiphp: Use list_for_each_entry_safe() in acpiphp_sanitize_bus()
->       PCI: acpiphp: Use normal list to simplify implementation
-> 
-> Yinghai Lu (1):
->       PCI: Clean up quirk_io_region
-> 
->  arch/ia64/pci/pci.c                    |  11 +
->  arch/mips/pci/pci.c                    |   8 +-
->  arch/x86/pci/common.c                  |  11 +
->  drivers/acpi/pci_root.c                |  48 +---
->  drivers/acpi/pci_slot.c                | 170 ++------------
->  drivers/acpi/scan.c                    |   1 -
->  drivers/ata/ahci.c                     |  10 +-
->  drivers/eisa/eisa-bus.c                |  82 +++----
->  drivers/eisa/pci_eisa.c                |   5 +-
->  drivers/iommu/amd_iommu.c              |  14 +-
->  drivers/iommu/amd_iommu_init.c         |  40 ++--
->  drivers/iommu/amd_iommu_types.h        |  11 +-
->  drivers/pci/bus.c                      |  18 +-
->  drivers/pci/hotplug/Kconfig            |   7 +-
->  drivers/pci/hotplug/acpiphp.h          |  35 ++-
->  drivers/pci/hotplug/acpiphp_core.c     |  30 +--
->  drivers/pci/hotplug/acpiphp_glue.c     | 415 ++++++++++++---------------------
->  drivers/pci/hotplug/cpci_hotplug.h     |  44 ++--
->  drivers/pci/hotplug/cpqphp.h           |  70 +++---
->  drivers/pci/hotplug/cpqphp_nvram.h     |  12 +-
->  drivers/pci/hotplug/ibmphp.h           |  66 +++---
->  drivers/pci/hotplug/pci_hotplug_core.c |  15 +-
->  drivers/pci/hotplug/pciehp.h           |  22 +-
->  drivers/pci/hotplug/pciehp_acpi.c      |   2 +-
->  drivers/pci/hotplug/rpadlpar.h         |   8 +-
->  drivers/pci/hotplug/rpaphp.h           |  16 +-
->  drivers/pci/hotplug/shpchp.h           |  26 +--
->  drivers/pci/hotplug/shpchp_sysfs.c     |   2 +-
->  drivers/pci/msi.c                      |   4 +-
->  drivers/pci/pci-acpi.c                 |  30 +++
->  drivers/pci/pci-sysfs.c                |   4 +-
->  drivers/pci/pci.c                      |   8 +-
->  drivers/pci/pci.h                      |  89 ++++---
->  drivers/pci/pcie/Kconfig               |   2 +-
->  drivers/pci/pcie/aer/aer_inject.c      |  10 +-
->  drivers/pci/pcie/aer/aerdrv.h          |  14 +-
->  drivers/pci/pcie/aer/aerdrv_core.c     |   4 +-
->  drivers/pci/pcie/pme.c                 |   2 -
->  drivers/pci/pcie/portdrv.h             |  18 +-
->  drivers/pci/pcie/portdrv_acpi.c        |   1 +
->  drivers/pci/pcie/portdrv_pci.c         |  17 +-
->  drivers/pci/probe.c                    |  15 +-
->  drivers/pci/quirks.c                   | 148 +++++-------
->  drivers/pci/remove.c                   |   4 +-
->  drivers/pci/setup-bus.c                |   4 +-
->  drivers/pci/setup-res.c                |   2 -
->  drivers/pci/slot.c                     |   7 +-
->  drivers/scsi/mvsas/mv_init.c           |   6 +-
->  drivers/scsi/mvumi.c                   |   4 +-
->  drivers/scsi/mvumi.h                   |   1 -
->  include/linux/acpi.h                   |   9 -
->  include/linux/pci-acpi.h               |  29 +++
->  include/linux/pci-aspm.h               |  20 +-
->  include/linux/pci-ats.h                |  26 +--
->  include/linux/pci.h                    | 112 +++++----
->  include/linux/pci_hotplug.h            |  12 +-
->  include/linux/pci_ids.h                |   1 +
->  include/linux/pcieport_if.h            |   4 +-
->  58 files changed, 764 insertions(+), 1042 deletions(-)
+This looks like a typo (s/TAIN/TAINT/).
+
+> +                          "This system BIOS has enabled interrupt remapping\n"
+> +                          "on a chipset that contains an erratum making that\n"
+> +                          "feature unstable.  Please reboot with nointremap\n"
+> +                          "added to the kernel command line and contact\n"
+> +                          "your BIOS vendor for an update");
+
+I suspect your updated message won't mention "nointremap", but if it
+does, Documentation/kernel-parameters.txt says that option is
+deprecated and "intremap=off" should be used instead.
+
+> +               disable_irq_remap = 1;
+
+Tell me if I have this correct:
+
+Before this patch, we had interrupt remapping enabled and
+virtualization enabled.  This is safe, but devices might need resets
+to deal with lost or spurious interrupts.
+
+After this patch, these same machines will by default have interrupt
+remapping disabled and virtualization enabled.  The lost or spurious
+interrupt problem should be gone, but we now have the IRQ injection
+security bug.
+
+If that's really the change we're making, I'm not comfortable applying
+this patch.  But I don't know the details of the IRQ injection
+problem, so maybe my understanding of the implications is wrong.
+
+> +               return 0;
+> +       }
+> +
+>         if (!remap_ops || !remap_ops->supported)
+>                 return 0;
+>
+> diff --git a/drivers/iommu/irq_remapping.h b/drivers/iommu/irq_remapping.h
+> index ecb6376..d7537e4 100644
+> --- a/drivers/iommu/irq_remapping.h
+> +++ b/drivers/iommu/irq_remapping.h
+> @@ -32,6 +32,7 @@ struct pci_dev;
+>  struct msi_msg;
+>
+>  extern int disable_irq_remap;
+> +extern int irq_remap_broken;
+>  extern int disable_sourceid_checking;
+>  extern int no_x2apic_optout;
+>  extern int irq_remapping_enabled;
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+> 1.8.1.4
+>
