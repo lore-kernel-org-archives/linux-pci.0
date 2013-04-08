@@ -1,53 +1,45 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f173.google.com ([209.85.223.173]:33534 "EHLO
-	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754354Ab3DZVlM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 26 Apr 2013 17:41:12 -0400
-Received: by mail-ie0-f173.google.com with SMTP id k5so5498695iea.32
-        for <linux-pci@vger.kernel.org>; Fri, 26 Apr 2013 14:41:11 -0700 (PDT)
+Received: from mail-qc0-f177.google.com ([209.85.216.177]:44045 "EHLO
+	mail-qc0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S935073Ab3DHSkP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Apr 2013 14:40:15 -0400
+Message-ID: <51630F0A.2090108@pobox.com>
+Date: Mon, 08 Apr 2013 14:40:10 -0400
+From: Jeff Garzik <jgarzik@pobox.com>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo5_4HfGP_-4jzQCBHok6tFvAmCg+6G4_b9fYX=vuA00hg@mail.gmail.com>
-References: <CAErSpo5_4HfGP_-4jzQCBHok6tFvAmCg+6G4_b9fYX=vuA00hg@mail.gmail.com>
-Date: Fri, 26 Apr 2013 14:41:11 -0700
-Message-ID: <CAE9FiQVKkfGMAy3vVALjaSTXK-n1ZiaLwPm7GEgNQXiOhe9bMA@mail.gmail.com>
-Subject: Re: device_unregister() for PCI host bridge removal
-From: Yinghai Lu <yinghai@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Jiang Liu <jiang.liu@huawei.com>
-Content-Type: text/plain; charset=ISO-8859-1
+CC: Myron Stowe <myron.stowe@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+	linux-ide@vger.kernel.org,
+	"James E.J. Bottomley" <JBottomley@parallels.com>
+Subject: Re: [PATCH 3/3] PCI, scsi, ahci: Unify usages of 0x1b4b vendor ID
+ to use PCI_VENDOR_ID_MARVELL_EXT
+References: <20130321043449.7229.81056.stgit@amt.stowe> <20130321043509.7229.93525.stgit@amt.stowe> <CAErSpo77UWR3u+DfdaOW0hG6FXQv+ADsb24bjKQ3fJOR5SFBZg@mail.gmail.com>
+In-Reply-To: <CAErSpo77UWR3u+DfdaOW0hG6FXQv+ADsb24bjKQ3fJOR5SFBZg@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 26, 2013 at 2:25 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> I'm trying to figure out where we call device_unregister() when
-> removing a PCI host bridge.  I see the device_register() in the
-> following path:
+On 04/04/2013 02:23 PM, Bjorn Helgaas wrote:
+> On Wed, Mar 20, 2013 at 10:35 PM, Myron Stowe <myron.stowe@redhat.com> wrote:
+>> With the 0x1b4b vendor ID #define in place, convert hard-coded ID values.
+>> Also, unify the previous SCSI specific use of this vendor ID to the new
+>> macro.
+>>
+>> Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+>> ---
+>>
+>>   drivers/ata/ahci.c           |   10 +++++-----
+>>   drivers/scsi/mvsas/mv_init.c |    6 +++---
+>>   drivers/scsi/mvumi.c         |    4 ++--
+>>   drivers/scsi/mvumi.h         |    1 -
+>>   4 files changed, 10 insertions(+), 11 deletions(-)
 >
->     acpi_pci_root_add
->       pci_acpi_scan_root
->         pci_create_root_bus
->           bridge = pci_alloc_host_bridge
->           bridge->dev.release = pci_release_bus_bridge_dev
->           device_register(&bridge->dev)
->         pci_set_host_bridge_release(..., release_pci_root_info, ...)
->
-> But I don't see any device_unregister() in the remove path:
->
->     acpi_pci_root_remove
->       pci_remove_root_bus
->         put_device(&host_bridge->dev)
->
->     pci_release_bus_bridge_dev
->       bridge->release_fn        # e.g., release_pci_root_info
->         release_pci_root_info
->           __release_pci_root_info
->             release_resource
->             free_pci_root_info_res
->             teardown_mcfg_map
->
-> What am I missing?
+> Jeff & James, if you don't object to these, I can push them through my
+> PCI tree along with the corresponding pci_ids.h addition.
 
-pci_stop_root_bus
-         /* stop the host bridge */
-        device_del(&host_bridge->dev);
+ACK
+
+
+
