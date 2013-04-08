@@ -1,13 +1,13 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.187]:54192 "EHLO
+Received: from moutng.kundenserver.de ([212.227.126.186]:51195 "EHLO
 	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S935487Ab3DITJ5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Apr 2013 15:09:57 -0400
+	with ESMTP id S936173Ab3DHVbl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Apr 2013 17:31:41 -0400
 From: Arnd Bergmann <arnd@arndb.de>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
 Subject: Re: [PATCHv7 08/17] pci: PCIe driver for Marvell Armada 370/XP systems
-Date: Tue, 9 Apr 2013 21:09:43 +0200
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
+Date: Mon, 8 Apr 2013 23:31:30 +0200
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
 	Grant Likely <grant.likely@secretlab.ca>,
 	Russell King <linux@arm.linux.org.uk>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
@@ -25,28 +25,34 @@ Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
 	Mitch Bradley <wmb@firmworks.com>,
 	Andrew Murray <andrew.murray@arm.com>
-References: <1364395234-11195-1-git-send-email-thomas.petazzoni@free-electrons.com> <201304090014.06959.arnd@arndb.de> <20130409210652.3bc1958b@skate>
-In-Reply-To: <20130409210652.3bc1958b@skate>
+References: <1364395234-11195-1-git-send-email-thomas.petazzoni@free-electrons.com> <1364395234-11195-9-git-send-email-thomas.petazzoni@free-electrons.com> <CAErSpo7fGPe3wFha36kNMxeRP4gBpBWgfw85aTLey-DSz2ZYew@mail.gmail.com>
+In-Reply-To: <CAErSpo7fGPe3wFha36kNMxeRP4gBpBWgfw85aTLey-DSz2ZYew@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: Text/Plain;
   charset="iso-8859-1"
-Message-Id: <201304092109.43404.arnd@arndb.de>
+Message-Id: <201304082331.30809.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday 09 April 2013, Thomas Petazzoni wrote:
-> Dear Arnd Bergmann,
+On Monday 08 April 2013, Bjorn Helgaas wrote:
+> On Wed, Mar 27, 2013 at 8:40 AM, Thomas Petazzoni
 > 
-> On Tue, 9 Apr 2013 00:14:06 +0200, Arnd Bergmann wrote:
+> > diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
+> > new file mode 100644
+> > index 0000000..3ad563f
+> > --- /dev/null
+> > +++ b/drivers/pci/host/Makefile
+> > @@ -0,0 +1,4 @@
+> > +obj-$(CONFIG_PCI_MVEBU) += pci-mvebu.o
+> > +CFLAGS_pci-mvebu.o += \
+> > +       -I$(srctree)/arch/arm/plat-orion/include \
+> > +       -I$(srctree)/arch/arm/mach-mvebu/include
 > 
-> >       pcie->realio.type = IORESOURCE_IO;
-> >       pcie->realio.start = max(PCIBIOS_MIN_IO, range->pci_addr);
-> >       pcie->realio.end = max(IO_SPACE_LIMIT, range->pci_addr + range->size);
-> 
-> Shouldn't this last line be using "min()" so that we guarantee we don't
-> have an I/O region that goes beyond IO_SPACE_LIMIT?
-> 
+> Too bad to have to adjust CFLAGS here.  Seems like I remember earlier
+> discussion, but I didn't pay much attention, and if this is the best
+> we can do, I guess it's OK.
 
-Yes, of course. Sorry for not typing what I was thinking ;-)
+I'm pretty sure I NAK'ed this part. I'm surprised it's still there.
+
 
 	Arnd
