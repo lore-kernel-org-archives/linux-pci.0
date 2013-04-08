@@ -1,86 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f53.google.com ([209.85.214.53]:45715 "EHLO
-	mail-bk0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761044Ab3DCCep (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 2 Apr 2013 22:34:45 -0400
-MIME-Version: 1.0
-In-Reply-To: <515B45A6.1020404@fold.natur.cuni.cz>
-References: <2282655.IicBMMa6jN@vostro.rjw.lan>
-	<CAErSpo7QXe1-R5_jXCcc3g_J-_HXqO3V12nNB=Z6eCAt-vwKfA@mail.gmail.com>
-	<51548C9E.9090703@fold.natur.cuni.cz>
-	<2990024.LMTIBUbM3d@vostro.rjw.lan>
-	<51564804.9000700@fold.natur.cuni.cz>
-	<CAC=cRTMJH+40oPSM9pFzkb5x6Q42rWR8BPtUOxJn_3WopmOSvQ@mail.gmail.com>
-	<515AF312.1010507@fold.natur.cuni.cz>
-	<CAErSpo6EAkSniVF7NnDVsR=H_x0dHK=xQNbdKf67WDW=o1D+_Q@mail.gmail.com>
-	<515B17D9.6030805@fold.natur.cuni.cz>
-	<515B45A6.1020404@fold.natur.cuni.cz>
-Date: Wed, 3 Apr 2013 10:34:43 +0800
-Message-ID: <CAC=cRTPNfhwSC=3VuxNxXLcp5D_fK3UCwKykWk1yN-6SpGAbVQ@mail.gmail.com>
-Subject: Re: [PATCH] PCI / ACPI: Always resume devices on ACPI wakeup notifications
-From: huang ying <huang.ying.caritas@gmail.com>
-To: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, Len Brown <lenb@kernel.org>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Huang Ying <ying.huang@intel.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from mx1.redhat.com ([209.132.183.28]:14606 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S936089Ab3DHOXW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 8 Apr 2013 10:23:22 -0400
+Message-ID: <1365431000.16420.11.camel@bling.home>
+Subject: Re: [Question] Failed to access the BAR MMIO space of PCI device
+From: Alex Williamson <alex.williamson@redhat.com>
+To: zhengfei <zhef2000@gmail.com>
+Cc: linux-pci@vger.kernel.org
+Date: Mon, 08 Apr 2013 08:23:20 -0600
+In-Reply-To: <loom.20130407T204756-980@post.gmane.org>
+References: <loom.20130407T204756-980@post.gmane.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi, Martin,
+On Sun, 2013-04-07 at 19:19 +0000, zhengfei wrote:
+> Hi,
+> 
+> I'm writing a driver for a SR-IOV device on the PCI bus. My architecture is 
+> a 64-bit X86 of intel Sandy bridge.
+> 
+> In my device driver, I want to configure the device to transfer data to/from 
+> X86.I get the the device BAR MMIO base address with the command "lspci -s 
+> 04:00.03 -xxx" in the guest os(kvm).
+> But after I ioremap() that MMIO base address,I failed to access the BAR MMIO 
+> space in the guest os(kvm).
+> 
+> Is there a function which show mapping between the real PCI address stored in 
+> the BAR and the emulated address stored in the BAR?
 
-On Wed, Apr 3, 2013 at 4:55 AM, Martin Mokrejs
-<mmokrejs@fold.natur.cuni.cz> wrote:
-> [ +linux-pci and Yinghai as they suffered already those many emails on individual
->  threads so one overviewing email hopefully won't harm] ;-)
->
-> Martin Mokrejs wrote:
->>
->>
->> Bjorn Helgaas wrote:
->>> On Tue, Apr 2, 2013 at 9:02 AM, Martin Mokrejs
->>> <mmokrejs@fold.natur.cuni.cz> wrote:
->>>> Hi Ying,
->>>>
->>>> huang ying wrote:
->>>
->>>>> And please give me the full dmesg for boot and incremental dmesg for
->>>>> operations.
->>>>
->>>>
->>>> The incremental bits here, the full dmesg will send only directly to your email, due to its size.
->>>
->>> Is there a bugzilla for this issue?  Please attach the complete dmesg
->>> there or somewhere similar so we can all benefit.
->>
->> I changed my mind. I am attaching the dmesg here but omitting linux-acpi
->> list. After I hear a proposal from Rafel/Bjorn I will open separate bugs.
->> I thought that the threads I started so far were enough but yes, dmesg
->> files don't pass through list filters so I should move that to bugzilla.
->>
->> so far my view of the the bugs was:
->>
->> 1) acpiphp hotplug broken due to upstream pcieport 1c.7 PME# enabled
->>   (eSATA-based card)
->
-> Fixed by Ying Huang port_dbg.patch applied over 3.8.5 (fixes acpiphp hotplug
-> of eSATA and Firewire cards, NOT the hotplug of a NEC-based USB3 card -> hence
-> the bug 4) below). Now I can continue using laptop-mode-tools.
->
->
->> 2) xHCI dead due to to its suspend - 3.8 series and above
->
-> Not fixed by port_dbg.patch applied over 3.8.5. Interestingly, a NEC-based
-> XHCI card *in an express card slot* does not suffer this suspend issue.
-> Although it is being put into suspend if a device is unplugged.
+Is this a userspace driver or a kernel driver?  I can't figure out why
+you would use lspci to get a static BAR address, then use ioremap() to
+map it.  If it's a kernel driver, the sequence you want is something
+like:
 
-Do not find the dmesg or any other details about this.  Could you
-provide some details?  Or I miss some emails from you?
+pci_enable_device
+pci_request_selected_regions
+pci_iomap
 
-Best Regards,
-Huang Ying
+Thanks,
+Alex
+
+
