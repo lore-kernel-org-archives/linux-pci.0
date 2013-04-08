@@ -1,194 +1,76 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>, Ram Pai <linuxram@us.ibm.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v4 28/29] PCI: Make quirk_io_region to use addon_res
-Date: Fri, 12 Apr 2013 15:44:42 -0700
-Message-Id: <1365806683-26717-29-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1365806683-26717-1-git-send-email-yinghai@kernel.org>
-References: <1365806683-26717-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ozlabs.org ([203.10.76.45]:58670 "EHLO ozlabs.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751936Ab3DHFV2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 8 Apr 2013 01:21:28 -0400
+Date: Mon, 8 Apr 2013 15:21:25 +1000
+From: Michael Ellerman <michael@ellerman.id.au>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Brian King <brking@linux.vnet.ibm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Lucas Kannebley Tavares <lucaskt@linux.vnet.ibm.com>,
+	klebers <klebers@linux.vnet.ibm.com>, sparclinux@vger.kernel.org
+Subject: Re: [PATCH 3/3] powerpc: Set default VGA device
+Message-ID: <20130408052124.GA9550@concordia>
+References: <201304042158.r34LwGPg010714@d03av02.boulder.ibm.com>
+ <CAErSpo4LsJjRkw6UektwqW8m1NXdU6BTjhTDA9eORM3z3qDcdA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo4LsJjRkw6UektwqW8m1NXdU6BTjhTDA9eORM3z3qDcdA@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-After they are put in add-on resources, they will be safely claimed later.
+On Fri, Apr 05, 2013 at 02:24:09PM -0600, Bjorn Helgaas wrote:
+> On Thu, Apr 4, 2013 at 3:58 PM, Brian King <brking@linux.vnet.ibm.com> wrote:
+> > @@ -1725,3 +1726,15 @@ static void fixup_hide_host_resource_fsl
+> >  }
+> >  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MOTOROLA, PCI_ANY_ID, fixup_hide_host_resource_fsl);
+> >  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_FREESCALE, PCI_ANY_ID, fixup_hide_host_resource_fsl);
+> > +
+> > +static void fixup_vga(struct pci_dev *pdev)
+> > +{
+> > +       u16 cmd;
+> > +
+> > +       pci_read_config_word(pdev, PCI_COMMAND, &cmd);
+> > +       if ((cmd & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) || !vga_default_device())
+> > +               vga_set_default_device(pdev);
+> > +
+> > +}
+> > +DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_ANY_ID, PCI_ANY_ID,
+> > +                             PCI_CLASS_DISPLAY_VGA, 8, fixup_vga);
+> 
+> This not really an arch-specific issue, so it's a shame to add another
+> arch-specific quirk for it (in addition to the x86 and ia64 ones we
+> already have).
+> 
+> In b5e4efe7e0, Eiichiro Oiwa <eiichiro.oiwa.nm@hitachi.com> tried to
+> make this quirk generic, but the implementation was naive and it
+> didn't work for sparc64.  There's a good thread about the sparc issue
+> at https://lkml.org/lkml/2006/10/19/17
+> 
+> The outcome was to basically revert back to arch-specific quirks with
+> 6b5c76b8e2, but I think the generic version probably could have been
+> made to work, possibly with a pcibios hook or something for anything
+> that really is arch-dependent, like the shadowed ROM image.
+> 
+> This particular patch is arch-specific, and I'm not going to try to
+> nack it because I'm not the powerpc maintainer, but I will certainly
+> try to help you if you want to push on making a generic version.
 
--v2: According to Bjorn, split change about quirk_io_region calling
-     pci_read_config_word to another patch.
+OK.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/quirks.c | 91 ++++++++++++++++++++++++++++++++--------------------
- 1 file changed, 57 insertions(+), 34 deletions(-)
+Looking at x86, ia64 and ours, there's a fair bit of difference.
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 6706182..53aea7c9 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -324,12 +324,52 @@ static void quirk_cs5536_vsa(struct pci_dev *dev)
- }
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_CS5536_ISA, quirk_cs5536_vsa);
- 
--static void quirk_io_region(struct pci_dev *dev, int port,
--				unsigned size, int nr, const char *name)
-+static int quirk_read_io(struct pci_dev *dev, struct resource *res, int port)
- {
-+	struct pci_bus_region bus_region;
- 	u16 region;
-+	unsigned size = to_pci_dev_addon_resource(res)->size;
-+
-+	pci_read_config_word(dev, port, &region);
-+	region &= ~(size - 1);
-+
-+	/* Convert from PCI bus to resource space.  */
-+	bus_region.start = region;
-+	bus_region.end = region + size - 1;
-+
-+	pcibios_bus_to_resource(dev, res, &bus_region);
-+
-+	res->flags |= IORESOURCE_IO;
-+	dev_info(&dev->dev, "PIO at %pR\n", res);
-+
-+	return 0;
-+}
-+static int quirk_write_io(struct pci_dev *dev, struct resource *res, int port)
-+{
- 	struct pci_bus_region bus_region;
--	struct resource *res = dev->resource + nr;
-+	u16 region;
-+	unsigned size = to_pci_dev_addon_resource(res)->size;
-+
-+	pci_read_config_word(dev, port, &region);
-+	region &= size - 1;
-+
-+	/* Convert to PCI bus space.  */
-+	pcibios_resource_to_bus(dev, &bus_region, res);
-+	region |= bus_region.start & (~(size - 1));
-+
-+	pci_write_config_word(dev, port, region);
-+
-+	return 0;
-+}
-+static struct resource_ops quirk_io_ops = {
-+	.read = quirk_read_io,
-+	.write = quirk_write_io,
-+};
-+
-+static void quirk_io_region(struct pci_dev *dev, int port,
-+					unsigned size, char *name)
-+{
-+	u16 region;
- 
- 	pci_read_config_word(dev, port, &region);
- 	region &= ~(size - 1);
-@@ -337,18 +377,7 @@ static void quirk_io_region(struct pci_dev *dev, int port,
- 	if (!region)
- 		return;
- 
--	res->name = pci_name(dev);
--	res->start = region;
--	res->end = region + size - 1;
--	res->flags = IORESOURCE_IO;
--
--	/* Convert from PCI bus to resource space.  */
--	bus_region.start = res->start;
--	bus_region.end = res->end;
--	pcibios_bus_to_resource(dev, res, &bus_region);
--
--	if (!pci_claim_resource(dev, nr))
--		dev_info(&dev->dev, "quirk: %pR claimed by %s\n", res, name);
-+	pci_add_dev_addon_resource(dev, port, size, &quirk_io_ops, name);
- }
- 
- /*
-@@ -377,8 +406,8 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI,	PCI_DEVICE_ID_ATI_RS100,   quirk_ati_
-  */
- static void quirk_ali7101_acpi(struct pci_dev *dev)
- {
--	quirk_io_region(dev, 0xE0, 64, PCI_BRIDGE_RESOURCES, "ali7101 ACPI");
--	quirk_io_region(dev, 0xE2, 32, PCI_BRIDGE_RESOURCES+1, "ali7101 SMB");
-+	quirk_io_region(dev, 0xE0, 64, "ali7101 ACPI");
-+	quirk_io_region(dev, 0xE2, 32, "ali7101 SMB");
- }
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_AL,	PCI_DEVICE_ID_AL_M7101,		quirk_ali7101_acpi);
- 
-@@ -506,8 +535,8 @@ static void quirk_piix4_acpi(struct pci_dev *dev)
- {
- 	u32 res_a;
- 
--	quirk_io_region(dev, 0x40, 64, PCI_BRIDGE_RESOURCES, "PIIX4 ACPI");
--	quirk_io_region(dev, 0x90, 16, PCI_BRIDGE_RESOURCES+1, "PIIX4 SMB");
-+	quirk_io_region(dev, 0x40, 64, "PIIX4 ACPI");
-+	quirk_io_region(dev, 0x90, 16, "PIIX4 SMB");
- 
- 	/* Device resource A has enables for some of the other ones */
- 	pci_read_config_dword(dev, 0x5c, &res_a);
-@@ -563,13 +592,11 @@ static void quirk_ich4_lpc_acpi(struct pci_dev *dev)
- 
- 	pci_read_config_byte(dev, ICH_ACPI_CNTL, &enable);
- 	if (enable & ICH4_ACPI_EN)
--		quirk_io_region(dev, ICH_PMBASE, 128, PCI_BRIDGE_RESOURCES,
--				 "ICH4 ACPI/GPIO/TCO");
-+		quirk_io_region(dev, ICH_PMBASE, 128, "ICH4 ACPI/GPIO/TCO");
- 
- 	pci_read_config_byte(dev, ICH4_GPIO_CNTL, &enable);
- 	if (enable & ICH4_GPIO_EN)
--		quirk_io_region(dev, ICH4_GPIOBASE, 64, PCI_BRIDGE_RESOURCES+1,
--				"ICH4 GPIO");
-+		quirk_io_region(dev, ICH4_GPIOBASE, 64, "ICH4 GPIO");
- }
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL,    PCI_DEVICE_ID_INTEL_82801AA_0,		quirk_ich4_lpc_acpi);
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL,    PCI_DEVICE_ID_INTEL_82801AB_0,		quirk_ich4_lpc_acpi);
-@@ -588,13 +615,11 @@ static void ich6_lpc_acpi_gpio(struct pci_dev *dev)
- 
- 	pci_read_config_byte(dev, ICH_ACPI_CNTL, &enable);
- 	if (enable & ICH6_ACPI_EN)
--		quirk_io_region(dev, ICH_PMBASE, 128, PCI_BRIDGE_RESOURCES,
--				 "ICH6 ACPI/GPIO/TCO");
-+		quirk_io_region(dev, ICH_PMBASE, 128, "ICH6 ACPI/GPIO/TCO");
- 
- 	pci_read_config_byte(dev, ICH6_GPIO_CNTL, &enable);
- 	if (enable & ICH6_GPIO_EN)
--		quirk_io_region(dev, ICH6_GPIOBASE, 64, PCI_BRIDGE_RESOURCES+1,
--				"ICH6 GPIO");
-+		quirk_io_region(dev, ICH6_GPIOBASE, 64, "ICH6 GPIO");
- }
- 
- static void ich6_lpc_generic_decode(struct pci_dev *dev, unsigned reg, const char *name, int dynsize)
-@@ -693,8 +718,7 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL,   PCI_DEVICE_ID_INTEL_ICH10_1, qui
- static void quirk_vt82c586_acpi(struct pci_dev *dev)
- {
- 	if (dev->revision & 0x10)
--		quirk_io_region(dev, 0x48, 256, PCI_BRIDGE_RESOURCES,
--				"vt82c586 ACPI");
-+		quirk_io_region(dev, 0x48, 256, "vt82c586 ACPI");
- }
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_VIA,	PCI_DEVICE_ID_VIA_82C586_3,	quirk_vt82c586_acpi);
- 
-@@ -708,10 +732,9 @@ static void quirk_vt82c686_acpi(struct pci_dev *dev)
- {
- 	quirk_vt82c586_acpi(dev);
- 
--	quirk_io_region(dev, 0x70, 128, PCI_BRIDGE_RESOURCES+1,
--				 "vt82c686 HW-mon");
-+	quirk_io_region(dev, 0x70, 128, "vt82c686 HW-mon");
- 
--	quirk_io_region(dev, 0x90, 16, PCI_BRIDGE_RESOURCES+2, "vt82c686 SMB");
-+	quirk_io_region(dev, 0x90, 16, "vt82c686 SMB");
- }
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_VIA,	PCI_DEVICE_ID_VIA_82C686_4,	quirk_vt82c686_acpi);
- 
-@@ -722,8 +745,8 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_VIA,	PCI_DEVICE_ID_VIA_82C686_4,	quirk_vt
-  */
- static void quirk_vt8235_acpi(struct pci_dev *dev)
- {
--	quirk_io_region(dev, 0x88, 128, PCI_BRIDGE_RESOURCES, "vt8235 PM");
--	quirk_io_region(dev, 0xd0, 16, PCI_BRIDGE_RESOURCES+1, "vt8235 SMB");
-+	quirk_io_region(dev, 0x88, 128, "vt8235 PM");
-+	quirk_io_region(dev, 0xd0, 16, "vt8235 SMB");
- }
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_VIA,	PCI_DEVICE_ID_VIA_8235,	quirk_vt8235_acpi);
- 
--- 
-1.8.1.4
+x86/ia64 both walk up the parents checking PCI_BRIDGE_CTL_VGA, which
+powerpc doesn't (though maybe it should?).
 
+x86/ia64 set IORESOURCE_ROM_SHADOW, which powerpc doesn't.
+
+ia64 doesn't call vga_set_default_device(), x86 and powerpc do.
+
+So we'll merge this and maybe someone can tease out the common bits, but
+personally I don't see that there's an obvious chunk of generic logic.
+
+cheers
