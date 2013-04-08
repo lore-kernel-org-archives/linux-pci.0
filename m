@@ -1,49 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ia0-f178.google.com ([209.85.210.178]:37323 "EHLO
-	mail-ia0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761077Ab3DBLg1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 2 Apr 2013 07:36:27 -0400
-Received: by mail-ia0-f178.google.com with SMTP id r13so225494iar.37
-        for <linux-pci@vger.kernel.org>; Tue, 02 Apr 2013 04:36:26 -0700 (PDT)
+Received: from hqemgate03.nvidia.com ([216.228.121.140]:13658 "EHLO
+	hqemgate03.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760355Ab3DHPkY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Apr 2013 11:40:24 -0400
+From: Jay Agarwal <jagarwal@nvidia.com>
+To: <linux@arm.linux.org.uk>, <swarren@wwwdotorg.org>,
+	<thierry.reding@avionic-design.de>, <ldewangan@nvidia.com>,
+	<bhelgaas@google.com>, <olof@lixom.net>, <hdoyu@nvidia.com>,
+	<pgaikwad@nvidia.com>, <mturquette@linaro.org>,
+	<pdeschrijver@nvidia.com>, <linux-arm-kernel@lists.infradead.org>,
+	<linux-tegra@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>
+CC: <jtukkinen@nvidia.com>, <kthota@nvidia.com>, <jagarwal@nvidia.com>
+Subject: [PATCH 3/3] ARM: dts: tegra: Add PCIe entry for cardhu
+Date: Mon, 8 Apr 2013 21:11:28 +0530
+Message-ID: <1365435688-4179-3-git-send-email-jagarwal@nvidia.com>
+In-Reply-To: <1365435688-4179-1-git-send-email-jagarwal@nvidia.com>
+References: <1365435688-4179-1-git-send-email-jagarwal@nvidia.com>
 MIME-Version: 1.0
-In-Reply-To: <1364395234-11195-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1364395234-11195-1-git-send-email-thomas.petazzoni@free-electrons.com>
-Date: Tue, 2 Apr 2013 13:36:26 +0200
-Message-ID: <CACRpkdb77h+7FCjEbc3Jy9+3M5KdCEk3ktsuTHOT1W6AKToJZw@mail.gmail.com>
-Subject: Re: [PATCHv7 00/17] PCIe support for the Armada 370 and Armada XP SoCs
-From: Linus Walleij <linus.walleij@linaro.org>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Rob Herring <rob.herring@calxeda.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Russell King <linux@arm.linux.org.uk>,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Jason Cooper <jason@lakedaemon.net>, linux-pci@vger.kernel.org,
-	devicetree-discuss@lists.ozlabs.org,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Andrew Murray <andrew.murray@arm.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Mitch Bradley <wmb@firmworks.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 27, 2013 at 3:40 PM, Thomas Petazzoni
-<thomas.petazzoni@free-electrons.com> wrote:
+Signed-off-by: Jay Agarwal <jagarwal@nvidia.com>
 
-> As we are approaching 3.10, I would now like to get formal Acked-by,
-> or disagreements from the following maintainers/developers :
->
->  * Grant Likely, as the OF maintainer, for patches 1, 2 and 3
->
->    [PATCH v5 01/17] of/pci: Provide support for parsing PCI DT ranges
->    [PATCH v5 02/17] of/pci: Add of_pci_get_devfn() function
->    [PATCH v5 03/17] of/pci: Add of_pci_parse_bus_range() function
+- Add PCIe node entry for cardhu
+- Enable only root port 2
+- Initialize regulators required for tegra30
+- Based on git://gitorious.org/thierryreding/linux.git
 
-I think Rob Herring can help out in reviewing this, as comaintainer
-of devicetree stuff.
+ arch/arm/boot/dts/tegra30-cardhu.dtsi |   11 +++++++++++
+ 1 files changed, 11 insertions(+), 0 deletions(-)
 
-Yours,
-Linus Walleij
+diff --git a/arch/arm/boot/dts/tegra30-cardhu.dtsi b/arch/arm/boot/dts/tegra30-cardhu.dtsi
+index d2fdf95..b64113e 100644
+--- a/arch/arm/boot/dts/tegra30-cardhu.dtsi
++++ b/arch/arm/boot/dts/tegra30-cardhu.dtsi
+@@ -137,6 +137,17 @@
+ 		};
+ 	};
+ 
++	pcie-controller {
++		status = "okay";
++		pex-clk-supply = <&pex_hvdd_3v3_reg>;
++		vdd-supply = <&ldo1_reg>;
++		avdd-supply = <&ldo2_reg>;
++
++		pci@3,0 {
++			status = "okay";
++		};
++	};
++
+ 	serial@70006000 {
+ 		status = "okay";
+ 	};
+-- 
+1.7.0.4
+
