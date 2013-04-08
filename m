@@ -1,69 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.153]:58966 "EHLO
-	e35.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758672Ab3DDLjm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Apr 2013 07:39:42 -0400
-Received: from /spool/local
-	by e35.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <shangw@linux.vnet.ibm.com>;
-	Thu, 4 Apr 2013 05:39:41 -0600
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by d03dlp02.boulder.ibm.com (Postfix) with ESMTP id 8BECC3E40040
-	for <linux-pci@vger.kernel.org>; Thu,  4 Apr 2013 05:39:26 -0600 (MDT)
-Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
-	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id r34Bdc7a331286
-	for <linux-pci@vger.kernel.org>; Thu, 4 Apr 2013 05:39:38 -0600
-Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av04.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id r34Bdbnc017989
-	for <linux-pci@vger.kernel.org>; Thu, 4 Apr 2013 05:39:38 -0600
-From: Gavin Shan <shangw@linux.vnet.ibm.com>
-To: linux-pci@vger.kernel.org
-Cc: bhelgaas@google.com, Gavin Shan <shangw@linux.vnet.ibm.com>
-Subject: [PATCH 2/5] PCI: Use MSI/MSI-X cap cache in pci_msi_check_device()
-Date: Thu,  4 Apr 2013 19:39:29 +0800
-Message-Id: <1365075572-20763-3-git-send-email-shangw@linux.vnet.ibm.com>
-In-Reply-To: <1365075572-20763-1-git-send-email-shangw@linux.vnet.ibm.com>
-References: <1365075572-20763-1-git-send-email-shangw@linux.vnet.ibm.com>
+Received: from mail-oa0-f54.google.com ([209.85.219.54]:55866 "EHLO
+	mail-oa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S935818Ab3DHUca (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Apr 2013 16:32:30 -0400
+Received: by mail-oa0-f54.google.com with SMTP id n12so6630854oag.27
+        for <linux-pci@vger.kernel.org>; Mon, 08 Apr 2013 13:32:29 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20130328082436.317d698a@skate>
+References: <1364395234-11195-1-git-send-email-thomas.petazzoni@free-electrons.com>
+ <1364395234-11195-5-git-send-email-thomas.petazzoni@free-electrons.com>
+ <CAAfodu2t4j4ZASzdaKV0QarffXRwMgkMESGy=dDq1oMfTANEeg@mail.gmail.com> <20130328082436.317d698a@skate>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 8 Apr 2013 14:32:09 -0600
+Message-ID: <CAErSpo61=gqnNkUYhsu88UUBRQN0SBynG07mby1f3HJUm=oZKA@mail.gmail.com>
+Subject: Re: [PATCHv7 04/17] pci: infrastructure to add drivers in drivers/pci/host
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Neil Greatorex <neil@fatboyfat.co.uk>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Russell King <linux@arm.linux.org.uk>,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Arnd Bergmann <arnd@arndb.de>, Olof Johansson <olof@lixom.net>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"devicetree-discuss@lists.ozlabs.org"
+	<devicetree-discuss@lists.ozlabs.org>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Andrew Murray <andrew.murray@arm.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	Mitch Bradley <wmb@firmworks.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The function pci_msi_check_device() is called while enabling MSI
-or MSI-X interrupts to make sure the PCI device can support MSI
-or MSI-X capability. The patch changes the function for a bit to
-use the cached MSI or MSI-X capability in pci_dev instead of polling
-them from config space.
+On Thu, Mar 28, 2013 at 1:24 AM, Thomas Petazzoni
+<thomas.petazzoni@free-electrons.com> wrote:
+> Dear Neil Greatorex,
+>
+> On Thu, 28 Mar 2013 00:28:02 +0000, Neil Greatorex wrote:
+>
+>> Surely this patch should include the drivers/pci/host/Makefile or it will
+>> not build?
+>
+> Ah, correct. I'll fix that up in the v8. Thank you for noticing!
 
-Signed-off-by: Gavin Shan <shangw@linux.vnet.ibm.com>
----
- drivers/pci/msi.c |    8 +++++---
- 1 files changed, 5 insertions(+), 3 deletions(-)
+With the fix, looks OK to me.
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 3459bdf..5f51e10 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -772,6 +772,11 @@ static int pci_msi_check_device(struct pci_dev *dev, int nvec, int type)
- 	if (!pci_msi_enable || !dev || dev->no_msi)
- 		return -EINVAL;
- 
-+	/* Check if the PCI device has MSI or MSI-X capability */
-+	if ((type == PCI_CAP_ID_MSI && !dev->msi_cap) ||
-+	    (type == PCI_CAP_ID_MSIX && !dev->msix_cap))
-+		return -EINVAL;
-+
- 	/*
- 	 * You can't ask to have 0 or less MSIs configured.
- 	 *  a) it's stupid ..
-@@ -795,9 +800,6 @@ static int pci_msi_check_device(struct pci_dev *dev, int nvec, int type)
- 	if (ret)
- 		return ret;
- 
--	if (!pci_find_capability(dev, type))
--		return -EINVAL;
--
- 	return 0;
- }
- 
--- 
-1.7.5.4
-
+Bjorn
