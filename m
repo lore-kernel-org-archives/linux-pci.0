@@ -1,78 +1,84 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <517FAB8D.2060702@cn.fujitsu.com>
-Date: Tue, 30 Apr 2013 19:31:25 +0800
-From: Gu Zheng <guz.fnst@cn.fujitsu.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e36.co.us.ibm.com ([32.97.110.154]:50173 "EHLO
+	e36.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S935424Ab3DHNNw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Apr 2013 09:13:52 -0400
+Received: from /spool/local
+	by e36.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <brking@linux.vnet.ibm.com>;
+	Mon, 8 Apr 2013 07:13:51 -0600
+Message-ID: <5162C11A.8040201@linux.vnet.ibm.com>
+Date: Mon, 08 Apr 2013 08:07:38 -0500
+From: Brian King <brking@linux.vnet.ibm.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	tangchen <tangchen@cn.fujitsu.com>,
-	Lin Feng <linfeng@cn.fujitsu.com>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	guz.fnst@cn.fujitsu.com
-Subject: [PATCH v2 2/4] PCI: introduce pci_bus_get()/pci_bus_put() to hide
- pci_bus' reference management
-References: <516FB647.5030203@cn.fujitsu.com> <CAErSpo65ARR_fZwsGCZDJqbPWktHYUkufgPt-2mWwur=nPR1Qg@mail.gmail.com>
-In-Reply-To: <CAErSpo65ARR_fZwsGCZDJqbPWktHYUkufgPt-2mWwur=nPR1Qg@mail.gmail.com>
+To: Michael Ellerman <michael@ellerman.id.au>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	klebers@linux.vnet.ibm.com, sparclinux@vger.kernel.org,
+	Lucas Kannebley Tavares <lucaskt@linux.vnet.ibm.com>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
+Subject: Re: [PATCH 2/3] powerpc: Enable boot_vga sysfs attribute for graphics
+ adapters on Power
+References: <201304042158.r34LwEOV010607@d03av02.boulder.ibm.com> <CAErSpo5ReUcSPvyBs_u0HLh=90anEREZn4p6EUX4yO52bDBaeg@mail.gmail.com> <20130408052522.GB9550@concordia>
+In-Reply-To: <20130408052522.GB9550@concordia>
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->From ff785e84afd2558dd52de8e73c4f75b7563a595b Mon Sep 17 00:00:00 2001
-From: Gu Zheng <guz.fnst@cn.fujitsu.com>
-Date: Tue, 30 Apr 2013 17:22:02 +0900
-Subject: [PATCH v2 2/4] PCI: introduce pci_bus_get()/pci_bus_put() to hide
- pci_bus' reference management
+On 04/08/2013 12:25 AM, Michael Ellerman wrote:
+> On Fri, Apr 05, 2013 at 02:11:01PM -0600, Bjorn Helgaas wrote:
+>> On Thu, Apr 4, 2013 at 3:58 PM, Brian King <brking@linux.vnet.ibm.com> wrote:
+>>>
+>>> Initialize dev->dev.type such that the PCI group attributes for boot_vga
+>>> and SR-IOV can be displayed if appropriate. This fixes an issue seen on
+>>> Power preventing X from auto initializing a graphics adapter when using KMS.
+>>>
+>>> Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
+>>> ---
+>>>
+>>>  arch/powerpc/kernel/pci_of_scan.c |    1 +
+>>>  1 file changed, 1 insertion(+)
+>>>
+>>> diff -puN arch/powerpc/kernel/pci_of_scan.c~powerpc_set_pci_dev_type arch/powerpc/kernel/pci_of_scan.c
+>>> --- linux/arch/powerpc/kernel/pci_of_scan.c~powerpc_set_pci_dev_type    2013-04-03 09:43:19.000000000 -0500
+>>> +++ linux-bjking1/arch/powerpc/kernel/pci_of_scan.c     2013-04-03 09:43:19.000000000 -0500
+>>> @@ -141,6 +141,7 @@ struct pci_dev *of_create_pci_dev(struct
+>>>         dev->dev.of_node = of_node_get(node);
+>>>         dev->dev.parent = bus->bridge;
+>>>         dev->dev.bus = &pci_bus_type;
+>>> +       dev->dev.type = &pci_dev_type;
+>>>         dev->devfn = devfn;
+>>>         dev->multifunction = 0;         /* maybe a lie? */
+>>>         dev->needs_freset = 0;          /* pcie fundamental reset required */
+>>
+>> I think sparc has the same issue in its own copy of of_create_pci_dev().
+>>
+>> Of course, both of_create_pci_dev() implementations are basically
+>> copies of the generic pci_setup_device() that most arches use.  That's
+>> the reason why I wish sparc and powerpc had used config space
+>> accessors that hid the OF mangling internally so they could use the
+>> generic pci_setup_device() instead of cloning it.
+>>
+>> Of course, they don't, and that's too much work for fixing this issue,
+>> but if anybody wanted to work on that, I think it would be an
+>> interesting project.
+>>
+>> But what if you set dev->dev.type in alloc_pci_dev()?  I think if you
+>> did that, you wouldn't need to export "pci_dev_type," and  it should
+>> fix this for both powerpc and sparc.
+> 
+> That sounds good, Brian can you confirm that works and send a new series
+> using that technique.
 
-Signed-off-by: Gu Zheng <guz.fnst@cn.fujitsu.com>
----
- drivers/pci/bus.c   |   15 +++++++++++++++
- include/linux/pci.h |    3 +++
- 2 files changed, 18 insertions(+), 0 deletions(-)
+It does indeed work. I've sent a new series using this technique.
 
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index 748f8f3..93f4dc0 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -18,6 +18,21 @@
- 
- #include "pci.h"
- 
-+struct pci_bus *pci_bus_get(struct pci_bus *bus)
-+{
-+	if (bus)
-+		get_device(&bus->dev);
-+	return bus;
-+}
-+EXPORT_SYMBOL(pci_bus_get);
-+
-+void pci_bus_put(struct pci_bus *bus)
-+{
-+	if (bus)
-+		put_device(&bus->dev);
-+}
-+EXPORT_SYMBOL(pci_bus_put);
-+
- void pci_add_resource_offset(struct list_head *resources, struct resource *res,
- 			     resource_size_t offset)
- {
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 6c09949..2581e53 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1020,6 +1020,9 @@ int pci_request_selected_regions_exclusive(struct pci_dev *, int, const char *);
- void pci_release_selected_regions(struct pci_dev *, int);
- 
- /* drivers/pci/bus.c */
-+extern struct pci_bus *pci_bus_get(struct pci_bus *bus);
-+extern void pci_bus_put(struct pci_bus *bus);
-+
- void pci_add_resource(struct list_head *resources, struct resource *res);
- void pci_add_resource_offset(struct list_head *resources, struct resource *res,
- 			     resource_size_t offset);
+Thanks,
+
+Brian
+
 -- 
-1.7.7
+Brian King
+Power Linux I/O
+IBM Linux Technology Center
+
 
