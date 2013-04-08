@@ -1,72 +1,212 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:54665 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754791Ab3DKRPT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 11 Apr 2013 13:15:19 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glp-linux-pci@m.gmane.org>)
-	id 1UQL5h-0001vW-GF
-	for linux-pci@vger.kernel.org; Thu, 11 Apr 2013 19:15:17 +0200
-Received: from 183.12.184.59 ([183.12.184.59])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-pci@vger.kernel.org>; Thu, 11 Apr 2013 19:15:17 +0200
-Received: from zhef2000 by 183.12.184.59 with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-pci@vger.kernel.org>; Thu, 11 Apr 2013 19:15:17 +0200
-To: linux-pci@vger.kernel.org
-From: zhengfei <zhef2000@gmail.com>
-Subject: Re: [Question] Failed to access the BAR MMIO space of PCI device
-Date: Thu, 11 Apr 2013 17:15:06 +0000 (UTC)
-Message-ID: <loom.20130411T190021-709@post.gmane.org>
-References: <loom.20130407T204756-980@post.gmane.org> <1365431000.16420.11.camel@bling.home>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 8 Apr 2013 13:42:57 -0400
+From: Neil Horman <nhorman@tuxdriver.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Don Dutile <ddutile@redhat.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Prarit Bhargava <prarit@redhat.com>,
+	Don Zickus <dzickus@redhat.com>,
+	Asit Mallick <asit.k.mallick@intel.com>,
+	David Woodhouse <dwmw2@infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Subject: Re: [PATCH v6] irq: add quirk for broken interrupt remapping on 55XX
+ chipsets
+Message-ID: <20130408174257.GA13960@hmsreliant.think-freely.org>
+References: <1362158276-4901-1-git-send-email-nhorman@tuxdriver.com>
+ <1365190294-9061-1-git-send-email-nhorman@tuxdriver.com>
+ <CAErSpo6z8oqiaUBCieUMsS_c5xvVFUDbHqVO_eBBde3uv2=zcg@mail.gmail.com>
+ <5162E266.6080002@redhat.com>
+ <CAErSpo5DNe-x6Fi3i6K=9xnd47d-T-q4_bH0tiud_8Ak2eL=TQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo5DNe-x6Fi3i6K=9xnd47d-T-q4_bH0tiud_8Ak2eL=TQ@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Alex Williamson <alex.williamson <at> redhat.com> writes:
+On Mon, Apr 08, 2013 at 11:17:23AM -0600, Bjorn Helgaas wrote:
+> [+cc Joerg, Konrad]
+> 
+> On Mon, Apr 8, 2013 at 9:29 AM, Don Dutile <ddutile@redhat.com> wrote:
+> > On 04/05/2013 09:55 PM, Bjorn Helgaas wrote:
+> >>
+> >> On Fri, Apr 5, 2013 at 1:31 PM, Neil Horman<nhorman@tuxdriver.com>  wrote:
+> >>>
+> >>> A few years back intel published a spec update:
+> >>>
+> >>> http://www.intel.com/content/dam/doc/specification-update/5520-and-5500-chipset-ioh-specification-update.pdf
+> >>>
+> >>> For the 5520 and 5500 chipsets which contained an errata (specificially
+> >>> errata
+> >>> 53), which noted that these chipsets can't properly do interrupt
+> >>> remapping, and
+> >>> as a result the recommend that interrupt remapping be disabled in bios.
+> >>> While
+> >>> many vendors have a bios update to do exactly that, not all do, and of
+> >>> course
+> >>> not all users update their bios to a level that corrects the problem.  As
+> >>> a
+> >>> result, occasionally interrupts can arrive at a cpu even after affinity
+> >>> for that
+> >>> interrupt has be moved, leading to lost or spurrious interrupts (usually
+> >>> characterized by the message:
+> >>> kernel: do_IRQ: 7.71 No irq handler for vector (irq -1)
+> >>>
+> >>> There have been several incidents recently of people seeing this error,
+> >>> and
+> >>> investigation has shown that they have system for which their BIOS level
+> >>> is such
+> >>> that this feature was not properly turned off.  As such, it would be good
+> >>> to
+> >>> give them a reminder that their systems are vulnurable to this problem.
+> >>
+> >>
+> >> I'd still like to mention the bugzilla URL in the changelog
+> >> (https://bugzilla.redhat.com/show_bug.cgi?id=887006) if it can be made
+> >> public.
+> >>
+> >>> ...
+> >>
+> >>
+> >>> diff --git a/arch/x86/kernel/early-quirks.c
+> >>> b/arch/x86/kernel/early-quirks.c
+> >>> index 3755ef4..bfa3139 100644
+> >>> --- a/arch/x86/kernel/early-quirks.c
+> >>> +++ b/arch/x86/kernel/early-quirks.c
+> >>> @@ -192,6 +192,27 @@ static void __init ati_bugs_contd(int num, int slot,
+> >>> int func)
+> >>>   }
+> >>>   #endif
+> >>>
+> >>> +#ifdef CONFIG_IRQ_REMAP
+> >>> +static void __init intel_remapping_check(int num, int slot, int func)
+> >>> +{
+> >>> +       u8 revision;
+> >>> +
+> >>> +       revision = pci_read_config_byte(num, slot, func ,
+> >>> PCI_REVISION_ID);
+> >>> +
+> >>> +       /*
+> >>> +        * Revision 0x13 of this chipset supports irq remapping
+> >>> +        * but has an erratum that breaks its behavior, flag it as such
+> >>> +        */
+> >>> +       if (revision == 0x13)
+> >>> +               irq_remap_broken = 1;
+> >>> +
+> >>> +}
+> >>> +#else
+> >>> +static void __init intel_remapping_check(int num, int slot, int func)
+> >>> +{
+> >>> +}
+> >>> +#endif
+> >>> +
+> >>>   #define QFLAG_APPLY_ONCE       0x1
+> >>>   #define QFLAG_APPLIED          0x2
+> >>>   #define QFLAG_DONE             (QFLAG_APPLY_ONCE|QFLAG_APPLIED)
+> >>> @@ -221,6 +242,10 @@ static struct chipset early_qrk[] __initdata = {
+> >>>            PCI_CLASS_SERIAL_SMBUS, PCI_ANY_ID, 0, ati_bugs },
+> >>>          { PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_SBX00_SMBUS,
+> >>>            PCI_CLASS_SERIAL_SMBUS, PCI_ANY_ID, 0, ati_bugs_contd },
+> >>> +       { PCI_VENDOR_ID_INTEL, 0x3403, PCI_CLASS_BRIDGE_HOST,
+> >>> +         PCI_BASE_CLASS_BRIDGE, 0, intel_remapping_check },
+> >>> +       { PCI_VENDOR_ID_INTEL, 0x3406, PCI_CLASS_BRIDGE_HOST,
+> >>> +         PCI_BASE_CLASS_BRIDGE, 0, intel_remapping_check },
+> >>>          {}
+> >>>   };
+> >>>
+> >>> diff --git a/drivers/iommu/irq_remapping.c
+> >>> b/drivers/iommu/irq_remapping.c
+> >>> index d56f8c1..2b56e92 100644
+> >>> --- a/drivers/iommu/irq_remapping.c
+> >>> +++ b/drivers/iommu/irq_remapping.c
+> >>> @@ -19,6 +19,7 @@
+> >>>   int irq_remapping_enabled;
+> >>>
+> >>>   int disable_irq_remap;
+> >>> +int irq_remap_broken;
+> >>>   int disable_sourceid_checking;
+> >>>   int no_x2apic_optout;
+> >>>
+> >>> @@ -216,6 +217,17 @@ int irq_remapping_supported(void)
+> >>>          if (disable_irq_remap)
+> >>>                  return 0;
+> >>>
+> >>> +       if (irq_remap_broken) {
+> >>> +               WARN_TAINT(1, TAIN_FIRMWARE_WORKAROUND,
+> >>
+> >>
+> >> This looks like a typo (s/TAIN/TAINT/).
+> >>
+> >>> +                          "This system BIOS has enabled interrupt
+> >>> remapping\n"
+> >>> +                          "on a chipset that contains an erratum making
+> >>> that\n"
+> >>> +                          "feature unstable.  Please reboot with
+> >>> nointremap\n"
+> >>> +                          "added to the kernel command line and
+> >>> contact\n"
+> >>> +                          "your BIOS vendor for an update");
+> >>
+> >>
+> >> I suspect your updated message won't mention "nointremap", but if it
+> >> does, Documentation/kernel-parameters.txt says that option is
+> >> deprecated and "intremap=off" should be used instead.
+> >>
+> >>> +               disable_irq_remap = 1;
+> >>
+> >>AMD
+> >> Tell me if I have this correct:
+> >>
+> >> Before this patch, we had interrupt remapping enabled and
+> >> virtualization enabled.  This is safe, but devices might need resets
+> >> to deal with lost or spurious interrupts.
+> >>
+> > Bigger then that -- system reboots are often necessary, and for
+> > virtualization,
+> > that means not just the lost of the device, but all guests running on that
+> > host.
+> >
+> >
+> >> After this patch, these same machines will by default have interrupt
+> >> remapping disabled and virtualization enabled.  The lost or spurious
+> >> interrupt problem should be gone, but we now have the IRQ injection
+> >> security bug.
+> >>
+> > IRQ injection security bug *if* device-assignment of a PCI(e) device
+> > to a KVM guest is done.  To do so, requires kvm to be loaded with
+> > a parameter to allow device-assignment w/o intr-remapping (b/c certain
+> > chipsets
+> > didn't have intr-remap support complete until this past summer).
+> > So, a sysadmin would have to consciously enable this security vulnerability,
+> > and is only a vulnerability if (a) the guest is not well known/behaved or
+> > (b) the assigned device goes-bonkers/breaks.
+> > This vulnerability has been known and in existence since the beginning of
+> > device-assignment; intr-remap is the way to isolate it.
+> > The end result on this (rev of this) chip set is the equivalent of running
+> > device-assignment on a (2009 era) Q35 chipset -- a VT-d1 (IOMMU-only,
+> > no-intr-remap) capable chipset.
+> 
+> Thanks for the details, Don.  It makes sense to me to disable
+> intr-remap on this chipset and handle it like an older machine that's
+> not capable of intr-remap at all.  The IRQ injection issue should be
+> no worse than on those older machines.
+> 
+> I don't care whether the "if (irq_remap_broken)" test is in
+> irq_remapping.c or intel_irq_remapping.c.  The quirk itself, where we
+> actually look at config space, is clearly Intel-specific, but there
+> could easily be similar AMD quirks that could also set
+> irq_remap_broken.  In that case, it would make sense to have the test
+> in the common code.
+> 
+I've moved it to intel specific code for the time being, since it currently is
+intel specific, its an easy move to put it in a common location if other vendors
+have a need for it.
 
-> 
-> On Sun, 2013-04-07 at 19:19 +0000, zhengfei wrote:
-> > Hi,
-> > 
-> > I'm writing a driver for a SR-IOV device on the PCI bus. My architecture 
-is 
-> > a 64-bit X86 of intel Sandy bridge.
-> > 
-> > In my device driver, I want to configure the device to transfer data 
-to/from 
-> > X86.I get the the device BAR MMIO base address with the command "lspci -
-s 
-> > 04:00.03 -xxx" in the guest os(kvm).
-> > But after I ioremap() that MMIO base address,I failed to access the BAR 
-MMIO 
-> > space in the guest os(kvm).
-> > 
-> > Is there a function which show mapping between the real PCI address 
-stored in 
-> > the BAR and the emulated address stored in the BAR?
-> 
-> Is this a userspace driver or a kernel driver?  I can't figure out why
-> you would use lspci to get a static BAR address, then use ioremap() to
-> map it.  If it's a kernel driver, the sequence you want is something
-> like:
-> 
-> pci_enable_device
-> pci_request_selected_regions
-> pci_iomap
-> 
-> Thanks,
-> Alex
-> 
-> 
-
-It is a userspace driver on guest os.To be simply,I got the BAR0 
-address(gpa) on guest os,but I failed to access real BAR0 MMIO address space 
-of the device with the gpa.So what can I do next? and in which source code 
-file,could I find the procedure of mapping the real BAR address space（hpa) 
-to gpa?
+I'm currently waiting on aproval to make the bz public, so that its inclusion in
+the changelog is more than just an irritation when following the link results in
+a 403 error.  As soon as thats square, I'll post this again, CC-ing Jeorg and
+Konrad.
 
 Thanks
-
+Neil
