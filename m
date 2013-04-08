@@ -1,68 +1,44 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:34736 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1765169Ab3DEAYi (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Apr 2013 20:24:38 -0400
-Date: Thu, 4 Apr 2013 20:24:05 -0400
-From: Neil Horman <nhorman@tuxdriver.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Prarit Bhargava <prarit@redhat.com>,
-	Don Zickus <dzickus@redhat.com>,
-	Asit Mallick <asit.k.mallick@intel.com>,
-	David Woodhouse <dwmw2@infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v4] irq: add quirk for broken interrupt remapping on 55XX
- chipsets
-Message-ID: <20130405002405.GA24109@hmsreliant.think-freely.org>
-References: <1362158276-4901-1-git-send-email-nhorman@tuxdriver.com>
- <1365088091-10862-1-git-send-email-nhorman@tuxdriver.com>
- <CAE9FiQUq8m_2fpyRrLweCZwR7cqFBfbZrt9ZeK-PVL3Puxjp0g@mail.gmail.com>
- <515DB7F6.8010502@redhat.com>
- <CAE9FiQVXG+ns00sCAKGY5Xs3BT3Cc=LRyEkZzHP9DQXS+4KCKg@mail.gmail.com>
- <20130404200455.GB19354@hmsreliant.think-freely.org>
- <CAErSpo5sW-uibP=TNnfSq4u8phm5NdmNkapcF+UUVgW9LiAMZA@mail.gmail.com>
- <CAE9FiQUL1wQFSO_47nc4dbZ5GseSBOXvrW8OhduZ3w3gjj8pJw@mail.gmail.com>
+Received: from avon.wwwdotorg.org ([70.85.31.133]:50389 "EHLO
+	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934699Ab3DHSVw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Apr 2013 14:21:52 -0400
+Message-ID: <51630ABB.1020200@wwwdotorg.org>
+Date: Mon, 08 Apr 2013 12:21:47 -0600
+From: Stephen Warren <swarren@wwwdotorg.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAE9FiQUL1wQFSO_47nc4dbZ5GseSBOXvrW8OhduZ3w3gjj8pJw@mail.gmail.com>
+To: Jay Agarwal <jagarwal@nvidia.com>
+CC: linux@arm.linux.org.uk, thierry.reding@avionic-design.de,
+	ldewangan@nvidia.com, bhelgaas@google.com, olof@lixom.net,
+	hdoyu@nvidia.com, pgaikwad@nvidia.com, mturquette@linaro.org,
+	pdeschrijver@nvidia.com, linux-arm-kernel@lists.infradead.org,
+	linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, jtukkinen@nvidia.com, kthota@nvidia.com
+Subject: Re: [PATCH 1/3] ARM: tegra: pcie: Add tegra3 support
+References: <1365435688-4179-1-git-send-email-jagarwal@nvidia.com>
+In-Reply-To: <1365435688-4179-1-git-send-email-jagarwal@nvidia.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 04, 2013 at 02:11:54PM -0700, Yinghai Lu wrote:
-> On Thu, Apr 4, 2013 at 1:33 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> >> See my last email to Bjorn.  Doing this in early-quirks in such a way that we
-> >> can detect an iommu that has interrupt remapping enabled (so we don't just
-> >> unilaterally print this quirk all the time) requires that we be able to parse
-> >> acpi tables very early in the boot.  If you know of how to do that, I can make
-> >> this happen.  If not, I suppose another alternative would be to have the early
-> >> quirk set a flag that tells us this is a bogus chip, and if we try to enable irq
-> >> remapping with that flag set, we should fail, and report the error at that time,
-> >> but I'm not sure I like that solution.
-> >
-> > I like that solution :)  It seems very simple -- you don't have to
-> > parse any tables or anything.
+On 04/08/2013 09:41 AM, Jay Agarwal wrote:
+> Signed-off-by: Jay Agarwal <jagarwal@nvidia.com>
 > 
-> You are right, we don't need to parse any acpi tables.
-> 
-> just add one quirk in early-quirk.c to set
->    disable_irq_remap = 1;
-> 
-Well, I can't just do that.  We need to issue a warning to the user as well, and
-to do so conditionally (we don't want to warn users who have prorperly updated
-BIOSes), I would need to know if irq remapping is actually on or not, which
-would require parsing ACPI tables
+> - Enable pcie root port 2 for cardhu
+> - Make private data structure for each SOC
+> - Add required tegra3 clocks and regulators
+> - Add tegra3 specific code in enable controller
+> - Modify clock tree to get clocks based on device
+> - Based on git://gitorious.org/thierryreding/linux.git
 
-But, as noted above, I can just set a flag, and defer the printing of the
-warning until later in the boot process, when we know that information already.
-Bjorn seems on board with that idea, so I'll spin up a patch for it in the AM.
+A couple more points on this patch:
 
-Thanks!
-Neil
+* You didn't mention that this series is based on Thierry's
+work-in-progress tree, and not something immediately destined for
+upstream. As such, only Thierry is expected to actually apply any of
+these patches.
 
-> Thanks
-> 
-> Yinghai
-> 
+* Your changes to the Tegra PCIe driver require that device tree include
+extra clocks and regulators. You need to update
+Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt to
+describe these new requirements.
