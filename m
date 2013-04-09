@@ -1,11 +1,12 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:51775 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S936370Ab3DHVxq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Apr 2013 17:53:46 -0400
-Date: Mon, 8 Apr 2013 23:53:41 +0200
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Arnd Bergmann <arnd@arndb.de>
+Received: from moutng.kundenserver.de ([212.227.126.187]:54192 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S935487Ab3DITJ5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Apr 2013 15:09:57 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Subject: Re: [PATCHv7 08/17] pci: PCIe driver for Marvell Armada 370/XP systems
+Date: Tue, 9 Apr 2013 21:09:43 +0200
 Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	Grant Likely <grant.likely@secretlab.ca>,
 	Russell King <linux@arm.linux.org.uk>,
@@ -24,44 +25,28 @@ Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
 	Mitch Bradley <wmb@firmworks.com>,
 	Andrew Murray <andrew.murray@arm.com>
-Subject: Re: [PATCHv7 08/17] pci: PCIe driver for Marvell Armada 370/XP
- systems
-Message-ID: <20130408235341.7012b791@skate>
-In-Reply-To: <201304082334.13186.arnd@arndb.de>
-References: <1364395234-11195-1-git-send-email-thomas.petazzoni@free-electrons.com>
-	<CAErSpo7fGPe3wFha36kNMxeRP4gBpBWgfw85aTLey-DSz2ZYew@mail.gmail.com>
-	<20130408225741.74fc383c@skate>
-	<201304082334.13186.arnd@arndb.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+References: <1364395234-11195-1-git-send-email-thomas.petazzoni@free-electrons.com> <201304090014.06959.arnd@arndb.de> <20130409210652.3bc1958b@skate>
+In-Reply-To: <20130409210652.3bc1958b@skate>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201304092109.43404.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Arnd Bergmann,
-
-On Mon, 8 Apr 2013 23:34:12 +0200, Arnd Bergmann wrote:
-
-> > No, I'm assuming PCIBIOS_MIN_IO is always 0. So presumarly, this should
-> > be something like:
-> > 
-> >         pcie->realio.end = min(PCIBIOS_MIN_IO +
-> >                                 resource_size(&pcie->io),
-> >                                 IO_SPACE_LIMIT);
-> > 
+On Tuesday 09 April 2013, Thomas Petazzoni wrote:
+> Dear Arnd Bergmann,
 > 
-> Normally PCIBIOS_MIN_IO is 0x1000, since the first 4096 ports are reserved
-> for ISA and PCMCIA compatible drivers and should not be assigned to
-> PCI devices. So the first port should get ports 0x1000 to 0xffff, later
-> ones can used the entire 65536 ports e.g. 0x10000 to 0x1ffff.
+> On Tue, 9 Apr 2013 00:14:06 +0200, Arnd Bergmann wrote:
+> 
+> >       pcie->realio.type = IORESOURCE_IO;
+> >       pcie->realio.start = max(PCIBIOS_MIN_IO, range->pci_addr);
+> >       pcie->realio.end = max(IO_SPACE_LIMIT, range->pci_addr + range->size);
+> 
+> Shouldn't this last line be using "min()" so that we guarantee we don't
+> have an I/O region that goes beyond IO_SPACE_LIMIT?
+> 
 
-Then I guess it should work with the code I'm proposing here, no?
+Yes, of course. Sorry for not typing what I was thinking ;-)
 
-Note: this pcie->realio region is global: it will be shared by all PCIe
-interfaces.
-
-Thomas
--- 
-Thomas Petazzoni, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
+	Arnd
