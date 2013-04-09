@@ -1,59 +1,88 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jay Agarwal <jagarwal@nvidia.com>
-To: 'Stephen Warren' <swarren@wwwdotorg.org>
-CC: Prashant Gaikwad <pgaikwad@nvidia.com>,
-	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
-	Krishna Thota <kthota@nvidia.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Peter De Schrijver <pdeschrijver@nvidia.com>,
-	"thierry.reding@avionic-design.de" <thierry.reding@avionic-design.de>,
-	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"olof@lixom.net" <olof@lixom.net>,
-	Laxman Dewangan <ldewangan@nvidia.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"mturquette@linaro.org" <mturquette@linaro.org>,
-	Juha Tukkinen <jtukkinen@nvidia.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Hiroshi Doyu <hdoyu@nvidia.com>
-Date: Fri, 12 Apr 2013 22:36:12 +0530
-Subject: RE: [PATCH 1/3] ARM: tegra: pcie: Add tegra3 support
-Message-ID: <C79B248886DD134989C8FF6B096A91AB91B36FB302@BGMAIL01.nvidia.com>
-References: <1365435688-4179-1-git-send-email-jagarwal@nvidia.com>
- <51630ABB.1020200@wwwdotorg.org>
- <C79B248886DD134989C8FF6B096A91AB91B36FB300@BGMAIL01.nvidia.com>
- <51683E00.4020506@wwwdotorg.org>
-In-Reply-To: <51683E00.4020506@wwwdotorg.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.free-electrons.com ([94.23.35.102]:53004 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934864Ab3DIVG6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Apr 2013 17:06:58 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Russell King <linux@arm.linux.org.uk>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	devicetree-discuss@lists.ozlabs.org,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Maen Suleiman <maen@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Olof Johansson <olof@lixom.net>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Mitch Bradley <wmb@firmworks.com>,
+	Andrew Murray <andrew.murray@arm.com>
+Subject: [PATCHv8 06/19] pci: infrastructure to add drivers in drivers/pci/host
+Date: Tue,  9 Apr 2013 23:06:27 +0200
+Message-Id: <1365541601-14095-7-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1365541601-14095-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1365541601-14095-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> On 04/12/2013 10:43 AM, Jay Agarwal wrote:
-> >> On 04/08/2013 09:41 AM, Jay Agarwal wrote:
-> >>> Signed-off-by: Jay Agarwal <jagarwal@nvidia.com>
-> >>>
-> >>> - Enable pcie root port 2 for cardhu
-> >>> - Make private data structure for each SOC
-> >>> - Add required tegra3 clocks and regulators
-> >>> - Add tegra3 specific code in enable controller
-> >>> - Modify clock tree to get clocks based on device
-> >>> - Based on git://gitorious.org/thierryreding/linux.git
-> >>
-> >> A couple more points on this patch:
-> >>
-> >> * You didn't mention that this series is based on Thierry's
-> >> work-in-progress tree, and not something immediately destined for
-> >> upstream. As such, only Thierry is expected to actually apply any of these
-> patches.
-> >>
-> > [>] Stephen, I have mentioned it in comment description as Based on
-> git://gitorious.org/thierryreding/linux.git, is this not enough?
-> 
-> Well, first off, there are many branches there, and secondly the branch that
-> a series is based on doesn't necessarily imply much about what you expect
-> people to do with it.
-> 
-I am not clear, What should I mention then?
+As agreed by the community, PCI host drivers will now be stored in
+drivers/pci/host. This commit adds this directory and the related
+Kconfig/Makefile changes to allow new drivers to be added in this
+directory.
+
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/Kconfig       |    2 ++
+ drivers/pci/Makefile      |    3 +++
+ drivers/pci/host/Kconfig  |    4 ++++
+ drivers/pci/host/Makefile |    1 +
+ 4 files changed, 10 insertions(+)
+ create mode 100644 drivers/pci/host/Kconfig
+ create mode 100644 drivers/pci/host/Makefile
+
+diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+index 6d51aa6..ac45398 100644
+--- a/drivers/pci/Kconfig
++++ b/drivers/pci/Kconfig
+@@ -119,3 +119,5 @@ config PCI_IOAPIC
+ config PCI_LABEL
+ 	def_bool y if (DMI || ACPI)
+ 	select NLS
++
++source "drivers/pci/host/Kconfig"
+diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
+index 0c3efcf..6ebf5bf 100644
+--- a/drivers/pci/Makefile
++++ b/drivers/pci/Makefile
+@@ -67,3 +67,6 @@ obj-$(CONFIG_XEN_PCIDEV_FRONTEND) += xen-pcifront.o
+ obj-$(CONFIG_OF) += of.o
+ 
+ ccflags-$(CONFIG_PCI_DEBUG) := -DDEBUG
++
++# PCI host controller drivers
++obj-y += host/
+diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+new file mode 100644
+index 0000000..cc3a1af
+--- /dev/null
++++ b/drivers/pci/host/Kconfig
+@@ -0,0 +1,4 @@
++menu "PCI host controller drivers"
++	depends on PCI
++
++endmenu
+diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
+new file mode 100644
+index 0000000..636bc1a
+--- /dev/null
++++ b/drivers/pci/host/Makefile
+@@ -0,0 +1 @@
++# intentionally empty
+-- 
+1.7.9.5
 
