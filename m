@@ -1,162 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:47280 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755334Ab3DLWpZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 12 Apr 2013 18:45:25 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>, Ram Pai <linuxram@us.ibm.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v4 27/29] PCI: Make piix4 quirk to use addon_res
-Date: Fri, 12 Apr 2013 15:44:41 -0700
-Message-Id: <1365806683-26717-28-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1365806683-26717-1-git-send-email-yinghai@kernel.org>
-References: <1365806683-26717-1-git-send-email-yinghai@kernel.org>
+Received: from mail.free-electrons.com ([94.23.35.102]:53036 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S936434Ab3DIVHB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Apr 2013 17:07:01 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Russell King <linux@arm.linux.org.uk>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	devicetree-discuss@lists.ozlabs.org,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Maen Suleiman <maen@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Olof Johansson <olof@lixom.net>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Mitch Bradley <wmb@firmworks.com>,
+	Andrew Murray <andrew.murray@arm.com>,
+	Mike Turquette <mturquette@linaro.org>
+Subject: [PATCHv8 08/19] clk: mvebu: create parent-child relation for PCIe clocks on Armada 370
+Date: Tue,  9 Apr 2013 23:06:29 +0200
+Message-Id: <1365541601-14095-9-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1365541601-14095-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1365541601-14095-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-After they are put in add-on resources, they will be safely claimed later.
+The Armada 370 has two gatable clocks for each PCIe interface, and we
+want both of them to be enabled. We therefore make one of the two
+clocks a child of the other, as we did for the sataX and sataXlnk
+clocks on Armada XP.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Mike Turquette <mturquette@linaro.org>
 ---
- drivers/pci/quirks.c | 95 +++++++++++++++++++++++++++++++++++++++++++---------
- 1 file changed, 79 insertions(+), 16 deletions(-)
+ drivers/clk/mvebu/clk-gating-ctrl.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 2dac170..6706182 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -382,14 +382,14 @@ static void quirk_ali7101_acpi(struct pci_dev *dev)
- }
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_AL,	PCI_DEVICE_ID_AL_M7101,		quirk_ali7101_acpi);
- 
--static void piix4_io_quirk(struct pci_dev *dev, const char *name, unsigned int port, unsigned int enable)
-+static int piix4_read_io(struct pci_dev *dev, struct resource *res, int port)
- {
- 	u32 devres;
- 	u32 mask, size, base;
-+	struct pci_bus_region bus_region;
- 
- 	pci_read_config_dword(dev, port, &devres);
--	if ((devres & enable) != enable)
--		return;
-+
- 	mask = (devres >> 16) & 15;
- 	base = devres & 0xffff;
- 	size = 16;
-@@ -399,23 +399,54 @@ static void piix4_io_quirk(struct pci_dev *dev, const char *name, unsigned int p
- 			break;
- 		size = bit;
- 	}
--	/*
--	 * For now we only print it out. Eventually we'll want to
--	 * reserve it (at least if it's in the 0x1000+ range), but
--	 * let's get enough confirmation reports first. 
--	 */
- 	base &= -size;
--	dev_info(&dev->dev, "%s PIO at %04x-%04x\n", name, base, base + size - 1);
-+
-+	bus_region.start = base;
-+	bus_region.end = base + size - 1;
-+	res->flags |= IORESOURCE_IO;
-+	pcibios_bus_to_resource(dev, res, &bus_region);
-+	dev_info(&dev->dev, "PIO at %pR\n", res);
-+
-+	return 0;
- }
-+static int piix4_write_io(struct pci_dev *dev, struct resource *res, int port)
-+{
-+	u32 devres;
-+	struct pci_bus_region bus_region;
-+	unsigned size = to_pci_dev_addon_resource(res)->size;
- 
--static void piix4_mem_quirk(struct pci_dev *dev, const char *name, unsigned int port, unsigned int enable)
-+	pcibios_resource_to_bus(dev, &bus_region, res);
-+
-+	pci_read_config_dword(dev, port, &devres);
-+	devres &= 0xffff0000 | (size - 1);
-+	devres |= bus_region.start & 0xffff & (~(size - 1));
-+	pci_write_config_dword(dev, port, devres);
-+
-+	return 0;
-+}
-+static struct resource_ops piix4_io_ops = {
-+	.read = piix4_read_io,
-+	.write = piix4_write_io,
-+};
-+static void piix4_io_quirk(struct pci_dev *dev, char *name, unsigned int port,
-+				unsigned int enable)
- {
- 	u32 devres;
--	u32 mask, size, base;
- 
- 	pci_read_config_dword(dev, port, &devres);
- 	if ((devres & enable) != enable)
- 		return;
-+
-+	pci_add_dev_addon_resource(dev, port, 0, &piix4_io_ops, name);
-+}
-+
-+static int piix4_read_mem(struct pci_dev *dev, struct resource *res, int port)
-+{
-+	u32 devres;
-+	u32 mask, size, base;
-+	struct pci_bus_region bus_region;
-+
-+	pci_read_config_dword(dev, port, &devres);
- 	base = devres & 0xffff0000;
- 	mask = (devres & 0x3f) << 16;
- 	size = 128 << 16;
-@@ -425,12 +456,44 @@ static void piix4_mem_quirk(struct pci_dev *dev, const char *name, unsigned int
- 			break;
- 		size = bit;
- 	}
--	/*
--	 * For now we only print it out. Eventually we'll want to
--	 * reserve it, but let's get enough confirmation reports first. 
--	 */
- 	base &= -size;
--	dev_info(&dev->dev, "%s MMIO at %04x-%04x\n", name, base, base + size - 1);
-+	bus_region.start = base;
-+	bus_region.end = base + size - 1;
-+	res->flags |= IORESOURCE_MEM;
-+	pcibios_bus_to_resource(dev, res, &bus_region);
-+	dev_info(&dev->dev, "MMIO at %pR\n", res);
-+
-+	return 0;
-+}
-+static int piix4_write_mem(struct pci_dev *dev, struct resource *res, int port)
-+{
-+	u32 devres;
-+	struct pci_bus_region bus_region;
-+	unsigned size = to_pci_dev_addon_resource(res)->size;
-+
-+	pcibios_resource_to_bus(dev, &bus_region, res);
-+
-+	pci_read_config_dword(dev, port, &devres);
-+	devres &= 0x0000ffff | ((size - 1) & 0xffff0000);
-+	devres |= bus_region.start & 0xffff0000 & (~(size - 1));
-+	pci_write_config_dword(dev, port, devres);
-+
-+	return 0;
-+}
-+static struct resource_ops piix4_mem_ops = {
-+	.read = piix4_read_mem,
-+	.write = piix4_write_mem,
-+};
-+static void piix4_mem_quirk(struct pci_dev *dev, char *name, unsigned int port,
-+				unsigned int enable)
-+{
-+	u32 devres;
-+
-+	pci_read_config_dword(dev, port, &devres);
-+	if ((devres & enable) != enable)
-+		return;
-+
-+	pci_add_dev_addon_resource(dev, port, 0, &piix4_mem_ops, name);
- }
- 
- /*
+diff --git a/drivers/clk/mvebu/clk-gating-ctrl.c b/drivers/clk/mvebu/clk-gating-ctrl.c
+index ebf141d..b35785a 100644
+--- a/drivers/clk/mvebu/clk-gating-ctrl.c
++++ b/drivers/clk/mvebu/clk-gating-ctrl.c
+@@ -119,8 +119,8 @@ static const struct mvebu_soc_descr __initconst armada_370_gating_descr[] = {
+ 	{ "pex1_en", NULL,  2 },
+ 	{ "ge1", NULL, 3 },
+ 	{ "ge0", NULL, 4 },
+-	{ "pex0", NULL, 5 },
+-	{ "pex1", NULL, 9 },
++	{ "pex0", "pex0_en", 5 },
++	{ "pex1", "pex1_en", 9 },
+ 	{ "sata0", NULL, 15 },
+ 	{ "sdio", NULL, 17 },
+ 	{ "tdm", NULL, 25 },
 -- 
-1.8.1.4
+1.7.9.5
 
