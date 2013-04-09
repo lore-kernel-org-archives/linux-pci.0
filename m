@@ -1,112 +1,492 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:48698 "EHLO
-	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754503Ab3DPKTy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Apr 2013 06:19:54 -0400
-From: Andrew Murray <Andrew.Murray@arm.com>
-To: linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org
-Cc: rob.herring@calxeda.com, jgunthorpe@obsidianresearch.com,
-	linux@arm.linux.org.uk, siva.kallam@samsung.com,
-	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
-	jg1.han@samsung.com, Liviu.Dudau@arm.com,
-	linux-kernel@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
-	kgene.kim@samsung.com, bhelgaas@google.com,
-	suren.reddy@samsung.com, linux-arm-kernel@lists.infradead.org,
-	monstr@monstr.eu, benh@kernel.crashing.org, paulus@samba.org,
-	grant.likely@secretlab.ca, thomas.petazzoni@free-electrons.com,
-	thierry.reding@avionic-design.de, thomas.abraham@linaro.org,
-	arnd@arndb.de, linus.walleij@linaro.org,
-	Andrew Murray <Andrew.Murray@arm.com>
-Subject: [PATCH v7 3/3] of/pci: mips: convert to common of_pci_range_parser
-Date: Tue, 16 Apr 2013 11:18:28 +0100
-Message-Id: <1366107508-12672-4-git-send-email-Andrew.Murray@arm.com>
-In-Reply-To: <1366107508-12672-1-git-send-email-Andrew.Murray@arm.com>
-References: <1366107508-12672-1-git-send-email-Andrew.Murray@arm.com>
+Received: from mail.free-electrons.com ([94.23.35.102]:53121 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S936490Ab3DIVHM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Apr 2013 17:07:12 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Russell King <linux@arm.linux.org.uk>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	devicetree-discuss@lists.ozlabs.org,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Maen Suleiman <maen@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Olof Johansson <olof@lixom.net>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Mitch Bradley <wmb@firmworks.com>,
+	Andrew Murray <andrew.murray@arm.com>
+Subject: [PATCHv8 13/19] arm: mvebu: add PCIe Device Tree informations for Armada XP
+Date: Tue,  9 Apr 2013 23:06:34 +0200
+Message-Id: <1365541601-14095-14-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1365541601-14095-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1365541601-14095-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch converts the pci_load_of_ranges function to use the new common
-of_pci_range_parser.
+The Armada XP SoCs have multiple PCIe interfaces. The MV78230 has 2
+PCIe units (one 4x or quad 1x, the other 1x only), the MV78260 has 3
+PCIe units (two 4x or quad 1x and one 4x/1x), the MV78460 has 4 PCIe
+units (two 4x or quad 1x and two 4x/1x). We therefore add the
+necessary Device Tree informations to make those PCIe interfaces
+usable.
 
-Signed-off-by: Andrew Murray <Andrew.Murray@arm.com>
-Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
-Reviewed-by: Rob Herring <rob.herring@calxeda.com>
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
 ---
- arch/mips/pci/pci.c |   50 ++++++++++++++++----------------------------------
- 1 files changed, 16 insertions(+), 34 deletions(-)
+ arch/arm/boot/dts/armada-xp-mv78230.dtsi |  104 +++++++++++++++++
+ arch/arm/boot/dts/armada-xp-mv78260.dtsi |  122 +++++++++++++++++++
+ arch/arm/boot/dts/armada-xp-mv78460.dtsi |  188 ++++++++++++++++++++++++++++++
+ 3 files changed, 414 insertions(+)
 
-diff --git a/arch/mips/pci/pci.c b/arch/mips/pci/pci.c
-index 0872f12..bee49a4 100644
---- a/arch/mips/pci/pci.c
-+++ b/arch/mips/pci/pci.c
-@@ -122,51 +122,33 @@ static void pcibios_scanbus(struct pci_controller *hose)
- #ifdef CONFIG_OF
- void pci_load_of_ranges(struct pci_controller *hose, struct device_node *node)
- {
--	const __be32 *ranges;
--	int rlen;
--	int pna = of_n_addr_cells(node);
--	int np = pna + 5;
-+	struct of_pci_range_range range;
-+	struct of_pci_range_parser parser;
-+	u32 res_type;
- 
- 	pr_info("PCI host bridge %s ranges:\n", node->full_name);
--	ranges = of_get_property(node, "ranges", &rlen);
--	if (ranges == NULL)
--		return;
- 	hose->of_node = node;
- 
--	while ((rlen -= np * 4) >= 0) {
--		u32 pci_space;
-+	if (of_pci_range_parser(&parser, node))
-+		return;
+diff --git a/arch/arm/boot/dts/armada-xp-mv78230.dtsi b/arch/arm/boot/dts/armada-xp-mv78230.dtsi
+index f56c405..c2c7845 100644
+--- a/arch/arm/boot/dts/armada-xp-mv78230.dtsi
++++ b/arch/arm/boot/dts/armada-xp-mv78230.dtsi
+@@ -76,5 +76,109 @@
+ 			#interrupts-cells = <2>;
+ 			interrupts = <87>, <88>, <89>;
+ 		};
 +
-+	for_each_of_pci_range(&parser, &range) {
- 		struct resource *res = NULL;
--		u64 addr, size;
--
--		pci_space = be32_to_cpup(&ranges[0]);
--		addr = of_translate_address(node, ranges + 3);
--		size = of_read_number(ranges + pna + 3, 2);
--		ranges += np;
--		switch ((pci_space >> 24) & 0x3) {
--		case 1:		/* PCI IO space */
++		/*
++		 * MV78230 has 2 PCIe units Gen2.0: One unit can be
++		 * configured as x4 or quad x1 lanes. One unit is
++		 * x4/x1.
++		 */
++		pcie-controller {
++			compatible = "marvell,armada-xp-pcie";
++			status = "disabled";
++			device_type = "pci";
 +
-+		res_type = range.flags & IORESOURCE_TYPE_BITS;
-+		if (res_type == IORESOURCE_IO) {
- 			pr_info("  IO 0x%016llx..0x%016llx\n",
--					addr, addr + size - 1);
-+				range.addr, range.addr + range.size - 1);
- 			hose->io_map_base =
--				(unsigned long)ioremap(addr, size);
-+				(unsigned long)ioremap(range.addr, range.size);
- 			res = hose->io_resource;
--			res->flags = IORESOURCE_IO;
--			break;
--		case 2:		/* PCI Memory space */
--		case 3:		/* PCI 64 bits Memory space */
-+		} else if (res_type == IORESOURCE_MEM) {
- 			pr_info(" MEM 0x%016llx..0x%016llx\n",
--					addr, addr + size - 1);
-+				range.addr, range.addr + range.size - 1);
- 			res = hose->mem_resource;
--			res->flags = IORESOURCE_MEM;
--			break;
--		}
--		if (res != NULL) {
--			res->start = addr;
--			res->name = node->full_name;
--			res->end = res->start + size - 1;
--			res->parent = NULL;
--			res->sibling = NULL;
--			res->child = NULL;
- 		}
-+		if (res != NULL)
-+			of_pci_range_to_resource(&range, node, res);
- 	}
- }
- #endif
++			#address-cells = <3>;
++			#size-cells = <2>;
++
++			bus-range = <0x00 0xff>;
++
++			ranges = <0x82000000 0 0xd0040000 0xd0040000 0 0x00002000   /* Port 0.0 registers */
++				  0x82000000 0 0xd0042000 0xd0042000 0 0x00002000   /* Port 2.0 registers */
++				  0x82000000 0 0xd0044000 0xd0044000 0 0x00002000   /* Port 0.1 registers */
++				  0x82000000 0 0xd0048000 0xd0048000 0 0x00002000   /* Port 0.2 registers */
++				  0x82000000 0 0xd004c000 0xd004c000 0 0x00002000   /* Port 0.3 registers */
++				  0x82000000 0 0xe0000000 0xe0000000 0 0x08000000   /* non-prefetchable memory */
++				  0x81000000 0 0	  0xe8000000 0 0x00100000>; /* downstream I/O */
++
++			pcie@1,0 {
++				device_type = "pci";
++				assigned-addresses = <0x82000800 0 0xd0040000 0 0x2000>;
++				reg = <0x0800 0 0 0 0>;
++				#address-cells = <3>;
++				#size-cells = <2>;
++				#interrupt-cells = <1>;
++				ranges;
++				interrupt-map-mask = <0 0 0 0>;
++				interrupt-map = <0 0 0 0 &mpic 58>;
++				marvell,pcie-port = <0>;
++				marvell,pcie-lane = <0>;
++				clocks = <&gateclk 5>;
++				status = "disabled";
++			};
++
++			pcie@2,0 {
++				device_type = "pci";
++				assigned-addresses = <0x82000800 0 0xd0044000 0 0x2000>;
++				reg = <0x1000 0 0 0 0>;
++				#address-cells = <3>;
++				#size-cells = <2>;
++				#interrupt-cells = <1>;
++				ranges;
++				interrupt-map-mask = <0 0 0 0>;
++				interrupt-map = <0 0 0 0 &mpic 59>;
++				marvell,pcie-port = <0>;
++				marvell,pcie-lane = <1>;
++				clocks = <&gateclk 6>;
++				status = "disabled";
++			};
++
++			pcie@3,0 {
++				device_type = "pci";
++				assigned-addresses = <0x82000800 0 0xd0048000 0 0x2000>;
++				reg = <0x1800 0 0 0 0>;
++				#address-cells = <3>;
++				#size-cells = <2>;
++				#interrupt-cells = <1>;
++				ranges;
++				interrupt-map-mask = <0 0 0 0>;
++				interrupt-map = <0 0 0 0 &mpic 60>;
++				marvell,pcie-port = <0>;
++				marvell,pcie-lane = <2>;
++				clocks = <&gateclk 7>;
++				status = "disabled";
++			};
++
++			pcie@4,0 {
++				device_type = "pci";
++				assigned-addresses = <0x82000800 0 0xd004c000 0 0x2000>;
++				reg = <0x2000 0 0 0 0>;
++				#address-cells = <3>;
++				#size-cells = <2>;
++				#interrupt-cells = <1>;
++				ranges;
++				interrupt-map-mask = <0 0 0 0>;
++				interrupt-map = <0 0 0 0 &mpic 61>;
++				marvell,pcie-port = <0>;
++				marvell,pcie-lane = <3>;
++				clocks = <&gateclk 8>;
++				status = "disabled";
++			};
++
++			pcie@9,0 {
++				device_type = "pci";
++				assigned-addresses = <0x82000800 0 0xd0042000 0 0x2000>;
++				reg = <0x4800 0 0 0 0>;
++				#address-cells = <3>;
++				#size-cells = <2>;
++				#interrupt-cells = <1>;
++				ranges;
++				interrupt-map-mask = <0 0 0 0>;
++				interrupt-map = <0 0 0 0 &mpic 99>;
++				marvell,pcie-port = <2>;
++				marvell,pcie-lane = <0>;
++				clocks = <&gateclk 26>;
++				status = "disabled";
++			};
++		};
+ 	};
+ };
+diff --git a/arch/arm/boot/dts/armada-xp-mv78260.dtsi b/arch/arm/boot/dts/armada-xp-mv78260.dtsi
+index f8f2b78..885bf22 100644
+--- a/arch/arm/boot/dts/armada-xp-mv78260.dtsi
++++ b/arch/arm/boot/dts/armada-xp-mv78260.dtsi
+@@ -96,5 +96,127 @@
+ 				clocks = <&gateclk 1>;
+ 				status = "disabled";
+ 		};
++
++		/*
++		 * MV78260 has 3 PCIe units Gen2.0: Two units can be
++		 * configured as x4 or quad x1 lanes. One unit is
++		 * x4/x1.
++		 */
++		pcie-controller {
++			compatible = "marvell,armada-xp-pcie";
++			status = "disabled";
++			device_type = "pci";
++
++			#address-cells = <3>;
++			#size-cells = <2>;
++
++			bus-range = <0x00 0xff>;
++
++			ranges = <0x82000000 0 0xd0040000 0xd0040000 0 0x00002000   /* Port 0.0 registers */
++				  0x82000000 0 0xd0042000 0xd0042000 0 0x00002000   /* Port 2.0 registers */
++				  0x82000000 0 0xd0044000 0xd0044000 0 0x00002000   /* Port 0.1 registers */
++				  0x82000000 0 0xd0048000 0xd0048000 0 0x00002000   /* Port 0.2 registers */
++				  0x82000000 0 0xd004c000 0xd004c000 0 0x00002000   /* Port 0.3 registers */
++				  0x82000000 0 0xd0080000 0xd0080000 0 0x00002000   /* Port 1.0 registers */
++				  0x82000000 0 0xd0082000 0xd0082000 0 0x00002000   /* Port 3.0 registers */
++				  0x82000000 0 0xe0000000 0xe0000000 0 0x08000000   /* non-prefetchable memory */
++				  0x81000000 0 0	  0xe8000000 0 0x00100000>; /* downstream I/O */
++
++			pcie@1,0 {
++				device_type = "pci";
++				assigned-addresses = <0x82000800 0 0xd0040000 0 0x2000>;
++				reg = <0x0800 0 0 0 0>;
++				#address-cells = <3>;
++				#size-cells = <2>;
++				#interrupt-cells = <1>;
++				ranges;
++				interrupt-map-mask = <0 0 0 0>;
++				interrupt-map = <0 0 0 0 &mpic 58>;
++				marvell,pcie-port = <0>;
++				marvell,pcie-lane = <0>;
++				clocks = <&gateclk 5>;
++				status = "disabled";
++			};
++
++			pcie@2,0 {
++				device_type = "pci";
++				assigned-addresses = <0x82000800 0 0xd0044000 0 0x2000>;
++				reg = <0x1000 0 0 0 0>;
++				#address-cells = <3>;
++				#size-cells = <2>;
++				#interrupt-cells = <1>;
++				ranges;
++				interrupt-map-mask = <0 0 0 0>;
++				interrupt-map = <0 0 0 0 &mpic 59>;
++				marvell,pcie-port = <0>;
++				marvell,pcie-lane = <1>;
++				clocks = <&gateclk 6>;
++				status = "disabled";
++			};
++
++			pcie@3,0 {
++				device_type = "pci";
++				assigned-addresses = <0x82000800 0 0xd0048000 0 0x2000>;
++				reg = <0x1800 0 0 0 0>;
++				#address-cells = <3>;
++				#size-cells = <2>;
++				#interrupt-cells = <1>;
++				ranges;
++				interrupt-map-mask = <0 0 0 0>;
++				interrupt-map = <0 0 0 0 &mpic 60>;
++				marvell,pcie-port = <0>;
++				marvell,pcie-lane = <2>;
++				clocks = <&gateclk 7>;
++				status = "disabled";
++			};
++
++			pcie@4,0 {
++				device_type = "pci";
++				assigned-addresses = <0x82000800 0 0xd004c000 0 0x2000>;
++				reg = <0x2000 0 0 0 0>;
++				#address-cells = <3>;
++				#size-cells = <2>;
++				#interrupt-cells = <1>;
++				ranges;
++				interrupt-map-mask = <0 0 0 0>;
++				interrupt-map = <0 0 0 0 &mpic 61>;
++				marvell,pcie-port = <0>;
++				marvell,pcie-lane = <3>;
++				clocks = <&gateclk 8>;
++				status = "disabled";
++			};
++
++			pcie@9,0 {
++				device_type = "pci";
++				assigned-addresses = <0x82000800 0 0xd0042000 0 0x2000>;
++				reg = <0x4800 0 0 0 0>;
++				#address-cells = <3>;
++				#size-cells = <2>;
++				#interrupt-cells = <1>;
++				ranges;
++				interrupt-map-mask = <0 0 0 0>;
++				interrupt-map = <0 0 0 0 &mpic 99>;
++				marvell,pcie-port = <2>;
++				marvell,pcie-lane = <0>;
++				clocks = <&gateclk 26>;
++				status = "disabled";
++			};
++
++			pcie@10,0 {
++				device_type = "pci";
++				assigned-addresses = <0x82000800 0 0xd0082000 0 0x2000>;
++				reg = <0x5000 0 0 0 0>;
++				#address-cells = <3>;
++				#size-cells = <2>;
++				#interrupt-cells = <1>;
++				ranges;
++				interrupt-map-mask = <0 0 0 0>;
++				interrupt-map = <0 0 0 0 &mpic 103>;
++				marvell,pcie-port = <3>;
++				marvell,pcie-lane = <0>;
++				clocks = <&gateclk 27>;
++				status = "disabled";
++			};
++		};
+ 	};
+ };
+diff --git a/arch/arm/boot/dts/armada-xp-mv78460.dtsi b/arch/arm/boot/dts/armada-xp-mv78460.dtsi
+index 936c25d..23a5ac4 100644
+--- a/arch/arm/boot/dts/armada-xp-mv78460.dtsi
++++ b/arch/arm/boot/dts/armada-xp-mv78460.dtsi
+@@ -111,5 +111,193 @@
+ 				clocks = <&gateclk 1>;
+ 				status = "disabled";
+ 		};
++
++		/*
++		 * MV78460 has 4 PCIe units Gen2.0: Two units can be
++		 * configured as x4 or quad x1 lanes. Two units are
++		 * x4/x1.
++		 */
++		pcie-controller {
++			compatible = "marvell,armada-xp-pcie";
++			status = "disabled";
++			device_type = "pci";
++
++			#address-cells = <3>;
++			#size-cells = <2>;
++
++			bus-range = <0x00 0xff>;
++
++			ranges = <0x82000000 0 0xd0040000 0xd0040000 0 0x00002000   /* Port 0.0 registers */
++				  0x82000000 0 0xd0042000 0xd0042000 0 0x00002000   /* Port 2.0 registers */
++				  0x82000000 0 0xd0044000 0xd0044000 0 0x00002000   /* Port 0.1 registers */
++				  0x82000000 0 0xd0048000 0xd0048000 0 0x00002000   /* Port 0.2 registers */
++				  0x82000000 0 0xd004c000 0xd004c000 0 0x00002000   /* Port 0.3 registers */
++				  0x82000000 0 0xd0080000 0xd0080000 0 0x00002000   /* Port 1.0 registers */
++				  0x82000000 0 0xd0082000 0xd0082000 0 0x00002000   /* Port 3.0 registers */
++				  0x82000000 0 0xd0084000 0xd0084000 0 0x00002000   /* Port 1.1 registers */
++				  0x82000000 0 0xd0088000 0xd0088000 0 0x00002000   /* Port 1.2 registers */
++				  0x82000000 0 0xd008c000 0xd008c000 0 0x00002000   /* Port 1.3 registers */
++				  0x82000000 0 0xe0000000 0xe0000000 0 0x08000000   /* non-prefetchable memory */
++				  0x81000000 0 0	  0xe8000000 0 0x00100000>; /* downstream I/O */
++
++			pcie@1,0 {
++				device_type = "pci";
++				assigned-addresses = <0x82000800 0 0xd0040000 0 0x2000>;
++				reg = <0x0800 0 0 0 0>;
++				#address-cells = <3>;
++				#size-cells = <2>;
++				#interrupt-cells = <1>;
++				ranges;
++				interrupt-map-mask = <0 0 0 0>;
++				interrupt-map = <0 0 0 0 &mpic 58>;
++				marvell,pcie-port = <0>;
++				marvell,pcie-lane = <0>;
++				clocks = <&gateclk 5>;
++				status = "disabled";
++			};
++
++			pcie@2,0 {
++				device_type = "pci";
++				assigned-addresses = <0x82001000 0 0xd0044000 0 0x2000>;
++				reg = <0x1000 0 0 0 0>;
++				#address-cells = <3>;
++				#size-cells = <2>;
++				#interrupt-cells = <1>;
++				ranges;
++				interrupt-map-mask = <0 0 0 0>;
++				interrupt-map = <0 0 0 0 &mpic 59>;
++				marvell,pcie-port = <0>;
++				marvell,pcie-lane = <1>;
++				clocks = <&gateclk 6>;
++				status = "disabled";
++			};
++
++			pcie@3,0 {
++				device_type = "pci";
++				assigned-addresses = <0x82001800 0 0xd0048000 0 0x2000>;
++				reg = <0x1800 0 0 0 0>;
++				#address-cells = <3>;
++				#size-cells = <2>;
++				#interrupt-cells = <1>;
++				ranges;
++				interrupt-map-mask = <0 0 0 0>;
++				interrupt-map = <0 0 0 0 &mpic 60>;
++				marvell,pcie-port = <0>;
++				marvell,pcie-lane = <2>;
++				clocks = <&gateclk 7>;
++				status = "disabled";
++			};
++
++			pcie@4,0 {
++				device_type = "pci";
++				assigned-addresses = <0x82002000 0 0xd004c000 0 0x2000>;
++				reg = <0x2000 0 0 0 0>;
++				#address-cells = <3>;
++				#size-cells = <2>;
++				#interrupt-cells = <1>;
++				ranges;
++				interrupt-map-mask = <0 0 0 0>;
++				interrupt-map = <0 0 0 0 &mpic 61>;
++				marvell,pcie-port = <0>;
++				marvell,pcie-lane = <3>;
++				clocks = <&gateclk 8>;
++				status = "disabled";
++			};
++
++			pcie@5,0 {
++				device_type = "pci";
++				assigned-addresses = <0x82002800 0 0xd0080000 0 0x2000>;
++				reg = <0x2800 0 0 0 0>;
++				#address-cells = <3>;
++				#size-cells = <2>;
++				#interrupt-cells = <1>;
++				ranges;
++				interrupt-map-mask = <0 0 0 0>;
++				interrupt-map = <0 0 0 0 &mpic 62>;
++				marvell,pcie-port = <1>;
++				marvell,pcie-lane = <0>;
++				clocks = <&gateclk 9>;
++				status = "disabled";
++			};
++
++			pcie@6,0 {
++				device_type = "pci";
++				assigned-addresses = <0x82003000 0 0xd0084000 0 0x2000>;
++				reg = <0x3000 0 0 0 0>;
++				#address-cells = <3>;
++				#size-cells = <2>;
++				#interrupt-cells = <1>;
++				ranges;
++				interrupt-map-mask = <0 0 0 0>;
++				interrupt-map = <0 0 0 0 &mpic 63>;
++				marvell,pcie-port = <1>;
++				marvell,pcie-lane = <1>;
++				clocks = <&gateclk 10>;
++				status = "disabled";
++			};
++
++			pcie@7,0 {
++				device_type = "pci";
++				assigned-addresses = <0x82003800 0 0xd0088000 0 0x2000>;
++				reg = <0x3800 0 0 0 0>;
++				#address-cells = <3>;
++				#size-cells = <2>;
++				#interrupt-cells = <1>;
++				ranges;
++				interrupt-map-mask = <0 0 0 0>;
++				interrupt-map = <0 0 0 0 &mpic 64>;
++				marvell,pcie-port = <1>;
++				marvell,pcie-lane = <2>;
++				clocks = <&gateclk 11>;
++				status = "disabled";
++			};
++
++			pcie@8,0 {
++				device_type = "pci";
++				assigned-addresses = <0x82004000 0 0xd008c000 0 0x2000>;
++				reg = <0x4000 0 0 0 0>;
++				#address-cells = <3>;
++				#size-cells = <2>;
++				#interrupt-cells = <1>;
++				ranges;
++				interrupt-map-mask = <0 0 0 0>;
++				interrupt-map = <0 0 0 0 &mpic 65>;
++				marvell,pcie-port = <1>;
++				marvell,pcie-lane = <3>;
++				clocks = <&gateclk 12>;
++				status = "disabled";
++			};
++			pcie@9,0 {
++				device_type = "pci";
++				assigned-addresses = <0x82004800 0 0xd0042000 0 0x2000>;
++				reg = <0x4800 0 0 0 0>;
++				#address-cells = <3>;
++				#size-cells = <2>;
++				#interrupt-cells = <1>;
++				ranges;
++				interrupt-map-mask = <0 0 0 0>;
++				interrupt-map = <0 0 0 0 &mpic 99>;
++				marvell,pcie-port = <2>;
++				marvell,pcie-lane = <0>;
++				clocks = <&gateclk 26>;
++				status = "disabled";
++			};
++
++			pcie@10,0 {
++				device_type = "pci";
++				assigned-addresses = <0x82005000 0 0xd0082000 0 0x2000>;
++				reg = <0x5000 0 0 0 0>;
++				#address-cells = <3>;
++				#size-cells = <2>;
++				#interrupt-cells = <1>;
++				ranges;
++				interrupt-map-mask = <0 0 0 0>;
++				interrupt-map = <0 0 0 0 &mpic 103>;
++				marvell,pcie-port = <3>;
++				marvell,pcie-lane = <0>;
++				clocks = <&gateclk 27>;
++				status = "disabled";
++			};
++		};
+ 	};
+  };
 -- 
-1.7.0.4
+1.7.9.5
 
