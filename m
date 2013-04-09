@@ -1,67 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f179.google.com ([209.85.223.179]:63618 "EHLO
-	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753938Ab3DLUrj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 12 Apr 2013 16:47:39 -0400
-Received: by mail-ie0-f179.google.com with SMTP id qd14so1122500ieb.24
-        for <linux-pci@vger.kernel.org>; Fri, 12 Apr 2013 13:47:38 -0700 (PDT)
-Subject: [PATCH 0/6] PCI warning cleanups
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Date: Fri, 12 Apr 2013 14:47:36 -0600
-Message-ID: <20130412204510.5237.25443.stgit@bhelgaas-glaptop>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mail.free-electrons.com ([94.23.35.102]:53139 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S936486Ab3DIVHN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Apr 2013 17:07:13 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Russell King <linux@arm.linux.org.uk>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	devicetree-discuss@lists.ozlabs.org,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Maen Suleiman <maen@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Olof Johansson <olof@lixom.net>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Mitch Bradley <wmb@firmworks.com>,
+	Andrew Murray <andrew.murray@arm.com>
+Subject: [PATCHv8 14/19] arm: mvebu: PCIe Device Tree informations for OpenBlocks AX3-4
+Date: Tue,  9 Apr 2013 23:06:35 +0200
+Message-Id: <1365541601-14095-15-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1365541601-14095-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1365541601-14095-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-These follow Andy's pcie_port_acpi_setup() warning fix.  With these,
-building drivers/pci with "make W=1" is clean except for some ftrace-
-related thing that I don't know how to fix.
+The PlatHome OpenBlocks AX3-4 has an internal mini-PCIe slot that can
+be used to plug mini-PCIe devices. We therefore enable the PCIe
+interface that corresponds to this slot.
 
-The last "extern" patch doesn't fix any warnings, but makes function
-declarations in PCI consistent.
-
-If there are no issues, I'll put these in v3.10.
-
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
 ---
+ arch/arm/boot/dts/armada-xp-openblocks-ax3-4.dts |    9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-Bjorn Helgaas (6):
-      PCI: Make local functions/structs static
-      PCI: Remove unused variables
-      PCI: Fix __must_check annotation on pci_create_sysfs_dev_files()
-      PCI: Remove __must_check from definitions
-      PCI: Warn about failures instead of "must_check" functions
-      PCI: Remove "extern" from function declarations
+diff --git a/arch/arm/boot/dts/armada-xp-openblocks-ax3-4.dts b/arch/arm/boot/dts/armada-xp-openblocks-ax3-4.dts
+index 3818a82..5a748bd 100644
+--- a/arch/arm/boot/dts/armada-xp-openblocks-ax3-4.dts
++++ b/arch/arm/boot/dts/armada-xp-openblocks-ax3-4.dts
+@@ -139,5 +139,14 @@
+ 		usb@d0051000 {
+ 			status = "okay";
+ 		};
++
++		pcie-controller {
++			status = "okay";
++			/* Internal mini-PCIe connector */
++			pcie@1,0 {
++				/* Port 0, Lane 0 */
++				status = "okay";
++			};
++		};
+ 	};
+ };
+-- 
+1.7.9.5
 
-
- drivers/pci/bus.c                      |    7 ++
- drivers/pci/hotplug/acpiphp.h          |   26 ++++-----
- drivers/pci/hotplug/cpci_hotplug.h     |   36 ++++++------
- drivers/pci/hotplug/cpqphp.h           |   70 +++++++++++-------------
- drivers/pci/hotplug/cpqphp_nvram.h     |   12 ++--
- drivers/pci/hotplug/ibmphp.h           |   68 +++++++++++------------
- drivers/pci/hotplug/pci_hotplug_core.c |   10 +--
- drivers/pci/hotplug/pciehp.h           |   22 ++++---
- drivers/pci/hotplug/rpadlpar.h         |    8 +--
- drivers/pci/hotplug/rpaphp.h           |   16 +++--
- drivers/pci/hotplug/shpchp.h           |   26 ++++-----
- drivers/pci/hotplug/shpchp_sysfs.c     |    2 -
- drivers/pci/msi.c                      |    4 +
- drivers/pci/pci-sysfs.c                |    2 -
- drivers/pci/pci.c                      |    8 +--
- drivers/pci/pci.h                      |   89 ++++++++++++++----------------
- drivers/pci/pcie/aer/aerdrv.h          |   14 ++---
- drivers/pci/pcie/portdrv.h             |   18 +++---
- drivers/pci/pcie/portdrv_pci.c         |   17 ++----
- drivers/pci/setup-bus.c                |    4 +
- drivers/pci/setup-res.c                |    2 -
- drivers/pci/slot.c                     |    7 ++
- include/linux/pci-aspm.h               |   20 +++----
- include/linux/pci-ats.h                |   26 ++++-----
- include/linux/pci.h                    |   95 ++++++++++++++++----------------
- include/linux/pci_hotplug.h            |   12 ++--
- include/linux/pcieport_if.h            |    4 +
- 27 files changed, 307 insertions(+), 318 deletions(-)
