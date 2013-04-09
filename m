@@ -1,115 +1,95 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 16 Apr 2013 20:18:02 +0200
-From: Borislav Petkov <bp@alien8.de>
-To: Aravind <aravind.gopalakrishnan@amd.com>
-Cc: tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com,
-	dougthompson@xmission.com, jbarnes@virtuousgeek.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-edac@vger.kernel.org
-Subject: Re: [PATCH v3] edac: Handle EDAC ECC errors for Family 16h
-Message-ID: <20130416181802.GI5332@pd.tnic>
-References: <1366052160-3091-1-git-send-email-Aravind.Gopalakrishnan@amd.com>
- <20130416142432.GF5332@pd.tnic>
- <516D8743.4080206@amd.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:50807 "EHLO
+	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1755065Ab3DIIMH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Apr 2013 04:12:07 -0400
+Date: Tue, 9 Apr 2013 09:11:19 +0100
+From: Andrew Murray <andrew.murray@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Russell King <linux@arm.linux.org.uk>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	"devicetree-discuss@lists.ozlabs.org"
+	<devicetree-discuss@lists.ozlabs.org>,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Maen Suleiman <maen@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Olof Johansson <olof@lixom.net>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Mitch Bradley <wmb@firmworks.com>
+Subject: Re: [RFCv1 08/11] PCI: Introduce new MSI chip infrastructure
+Message-ID: <20130409081119.GA30736@arm.com>
+References: <1364316746-8702-1-git-send-email-thomas.petazzoni@free-electrons.com>
+ <1364316746-8702-9-git-send-email-thomas.petazzoni@free-electrons.com>
+ <CAErSpo42AFdKH2RKTxOaeJgCPrYD5KYkOs3UEBez8x8Bjmun5w@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-In-Reply-To: <516D8743.4080206@amd.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <CAErSpo42AFdKH2RKTxOaeJgCPrYD5KYkOs3UEBez8x8Bjmun5w@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 16, 2013 at 12:15:47PM -0500, Aravind wrote:
-> >This one case in point, please redo it against tip/master.
+On Mon, Apr 08, 2013 at 11:28:58PM +0100, Bjorn Helgaas wrote:
+> On Tue, Mar 26, 2013 at 10:52 AM, Thomas Petazzoni
+> <thomas.petazzoni@free-electrons.com> wrote:
+> > From: Thierry Reding <thierry.reding@avionic-design.de>
+> >
+> >  #endif /* LINUX_MSI_H */
+> > diff --git a/include/linux/pci.h b/include/linux/pci.h
+> > index 2461033a..6aca43ea 100644
+> > --- a/include/linux/pci.h
+> > +++ b/include/linux/pci.h
+> > @@ -416,6 +416,7 @@ struct pci_bus {
+> >         struct resource busn_res;       /* bus numbers routed to this bus */
+> >
+> >         struct pci_ops  *ops;           /* configuration access functions */
+> > +       struct msi_chip *msi;           /* MSI controller */
 > 
->     I had based off bp.git's master... and it misses an additional
-> 'PCI_DEVICE' line (Hence the conflict)
->     I shall redo it against Linus's tree..
-
-No, against tip/master, please.
-
-git://git.kernel.org/pub/scm/linux/kernel/git/tip/tip.git, the master branch.
-
-> >>@@ -133,6 +134,15 @@ static int f15_read_dct_pci_cfg(struct amd64_pvt *pvt, int addr, u32 *val,
-> >>  	return __amd64_read_pci_cfg_dword(pvt->F2, addr, val, func);
-> >>  }
-> >>+static int f16_read_dct_pci_cfg(struct amd64_pvt *pvt, int addr, u32 *val,
-> >>+				const char *func)
-> >>+{
-> >>+	if (addr >= 0x100)
-> >>+		return -EINVAL;
-> >I'm very sceptical F16h doesn't have F2 extended PCI config addresses.
-> >Please check the BKDG.
-> >
-> >If it does have, use f10_read_dct_pci_cfg, if it doesn't, use
-> >k8_read_dct_pci_cfg without introducing a new accessor while the other
-> >ones can be used.
-> >
-> >Whichever one you take, please add a comment somewhere explaining why it
-> >is ok to use it on F16h.
+> "msi" seems like a too-generic name here; it suggests an interrupt or
+> IRQ, not a controller.
 > 
->     Here, What I really wanted to do was to restrict the access to
-> only 1 DCT (as fam16 does not have a DCT1 and hence not allow any
-> addr > =0x100).
-
-What are you talking about?
-
-I'm sure it has, say, D18F2x110 DRAM Controller Select Low, for example.
-And this address is > 0x100.
-
-So for F16h you can simply take the F10h methods and ignore DctCfgSel
-because it always will be 0.
-
-> Yes, for this I can modify the code to just use f10_read_dct_pci_cfg
-> or k8_read_dct_pci_cfg.
-
-Yes, please do that.
-
-> >>+		u64 base_bits_low, base_bits_high;
-> >>+		u64 mask_bits_low, mask_bits_high;
-> >>+		u8 addr_shift_low, addr_shift_high;
-> >>+
-> >>+		csbase          = pvt->csels[dct].csbases[csrow];
-> >>+		csmask          = pvt->csels[dct].csmasks[csrow >> 1];
-> >>+		base_bits_low = mask_bits_low = GENMASK(5 , 15);
-> >>+		base_bits_high = mask_bits_high = GENMASK(19 , 30);
-> >>+		addr_shift_low = 6;
-> >>+		addr_shift_high = 8;
-> >Hold on, are you saying "D18F2x[5C:40]_dct[1:0] DRAM CS Base Address"
-> >register definitions in the F16h BKDG has this:
-> >
-> >30:19 -> BaseAddr[38:27]: normalized physical base address bits [38:27]
-> >
-> >and
-> >
-> >15:5  -> BaseAddr[21:11]: normalized physical base address bits [21:11]
-> >
-> >?
-> >
-> >Please verify with BKDG authors whether those numbers are correct
-> >because the diff of 8 address bits has always been this up until now.
+> I'm not sure this is the correct place for it.  Having it in the
+> struct pci_bus means you need arch code to fill it in, e.g., you added
+> it in mvebu_pcie_scan_bus() in patch 09/11.  There's no good way to do
+> that for arches that use pci_scan_root_bus(), which is the direction
+> I'd like to go.
 > 
->     That is correct. (I have verified it internally too..)
+> I think it probably should go in sysdata instead.  That would mean you
+> can't really do generic weak setup/tear-down functions, because they
+> wouldn't know how to pull the MSI controller info out of the
+> arch-specific sysdata.  But there are so many levels of weak-ness
+> going on there, maybe it would be a good thing to get rid of one :)
 
-Ok, then do the following:
+But generic setup/tear-down functions would allow for architecture
+independent MSI controllers. This would be useful for MSI controllers that
+are unrelated to PCI host controllers or a specific architecture. It would
+make drivers sit more comfortably in drivers/irqchip or drivers/pci/host. Also
+having the msi_chip in struct pci_bus could allow there to exist multiple
+MSI controllers on a PCI fabric and is consistent with pci_ops.
 
-Read the low bits, shift them by 2 so that they're at the right position
-to be shifted by 8 like the high bits:
+Assuming the MSI controller is represented in the device tree and there is a
+relationship between the controller and the host bridge
+(phandle/interrupt-parent) then as Thierry suggested[1] previously you could call
+something like of_find_msi_chip_by_node(node) to locate an msi_chip from a
+device node. Could this look up exist in pci_scan_root_bus via its struct
+device.of_node? Perhaps pci_create_root_bus can be changed to take a parameter
+for msi_chip alongside the ops parameter? The of_find_msi_chip_by_node could
+walk up the device tree until it finds an MSI controller.
 
-	*base =  (csbase & GENMASK(5, 15)) << 2;
-	*mask =  (csmask & GENMASK(5, 15)) << 2;
+In the case where device tree isn't used - then I guess the weakly defined
+arch_ callbacks would be replaced with the architectures existing
+implementation. Or perhaps if MSI controllers are registered (msi_chip_add)
+then pci_scan_root_bus could use the first controller it finds.
 
-	*base |= (csbase & GENMASK(19, 30)) << 8;
-	*mask |= (csmask & GENMASK(19, 30)) << 8;
+Also I believe pci_alloc_child_bus function would need to be changed to add
+"b->msi = msi" to inherit msi_chip for child buses in the above patch?
 
-	return;
+Andrew Murray
 
-AFAICT, this looks much simpler. Also, add a small comment why the
-special handling for F16h.
-
-Thanks.
-
--- 
-Regards/Gruss,
-    Boris.
-
-Sent from a fat crate under my desk. Formatting is fine.
---
+[1] http://lkml.org/lkml/2013/3/25/67
