@@ -1,87 +1,138 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:59174 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S936673Ab3DJVds (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Apr 2013 17:33:48 -0400
-Date: Wed, 10 Apr 2013 23:33:30 +0200
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Andrew Murray <Andrew.Murray@arm.com>
-Cc: rob.herring@calxeda.com, siva.kallam@samsung.com,
-	linux-pci@vger.kernel.org, thierry.reding@avionic-design.de,
-	Liviu.Dudau@arm.com, grant.likely@secretlab.ca, paulus@samba.org,
-	linux-samsung-soc@vger.kernel.org, linux@arm.linux.org.uk,
-	jg1.han@samsung.com, jgunthorpe@obsidianresearch.com,
-	thomas.abraham@linaro.org, benh@kernel.crashing.org, arnd@arndb.de,
-	devicetree-discuss@lists.ozlabs.org, kgene.kim@samsung.com,
-	bhelgaas@google.com, linux-arm-kernel@lists.infradead.org,
-	monstr@monstr.eu, linux-kernel@vger.kernel.org,
-	suren.reddy@samsung.com
-Subject: Re: [PATCH v5 1/3] of/pci: Unify pci_process_bridge_OF_ranges from
- Microblaze and PowerPC
-Message-ID: <20130410233330.4e9479b0@skate>
-In-Reply-To: <1365578969-30966-2-git-send-email-Andrew.Murray@arm.com>
-References: <1365578969-30966-1-git-send-email-Andrew.Murray@arm.com>
-	<1365578969-30966-2-git-send-email-Andrew.Murray@arm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mx1.redhat.com ([209.132.183.28]:25608 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933562Ab3DILV6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 9 Apr 2013 07:21:58 -0400
+From: Veaceslav Falico <vfalico@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: vfalico@redhat.com, linux-pci@vger.kernel.org,
+	rusty@rustcorp.com.au, gregkh@linuxfoundation.org,
+	bhelgaas@google.com
+Subject: [PATCH] module: add kset_obj_exists() and use it
+Date: Tue,  9 Apr 2013 13:22:09 +0200
+Message-Id: <1365506529-8396-1-git-send-email-vfalico@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Andrew Murray,
+Add a new function, kset_obj_exists(), which is identical to
+kset_find_obj() but doesn't take a reference to the kobject
+found and only returns bool if found/not found.
 
-On Wed, 10 Apr 2013 08:29:26 +0100, Andrew Murray wrote:
+The main purpose would be to avoid the possible race scenario,
+when we could get the reference in between the kref_put() and
+kobject_release() functions (i.e. kref_put() already ran,
+refcount became 0, but the kobject_release() function still
+didn't run, and we try to get via kobject_get() and thus ending
+up with a released kobject). It can be triggered, for example,
+by running insmod/rmmod bonding in parallel, which ends up in
+a race between kset_obj_find() in mod_sysfs_init() and rmmod's
+mod_sysfs_fini()/kobject_put().
 
-> diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
-> index bb115de..6852481 100644
-> --- a/include/linux/of_pci.h
-> +++ b/include/linux/of_pci.h
-> @@ -11,4 +11,7 @@ struct device_node;
->  struct device_node *of_pci_find_child_device(struct device_node *parent,
->  					     unsigned int devfn);
->  
-> +void pci_process_bridge_OF_ranges(struct pci_controller *hose,
-> +			struct device_node *dev, int primary);
-> +
->  #endif
+It also saves us some CPU time in several places where we don't
+need the kobject itself and only need to verify if it actually
+exists, by not taking the kref (and thus we don't need to
+kobject_put() afterwards).
 
-In this file, 'struct pci_controller' is not defined anywhere, and not
-in any header file that is included. So I get a warning at compile time
-when <linux/of_pci.h> is included, but nothing has defined 'struct
-pci_controller' beforehand. So I think this file should carry a change
-like:
+Signed-off-by: Veaceslav Falico <vfalico@redhat.com>
+---
+ drivers/pci/slot.c      |    5 +----
+ include/linux/kobject.h |    1 +
+ kernel/module.c         |    5 +----
+ lib/kobject.c           |   28 ++++++++++++++++++++++++++++
+ 4 files changed, 31 insertions(+), 8 deletions(-)
 
-+struct pci_controller;
-
-In my version of the patch I added it, see:
-
-diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
-index bb115de..e56182f 100644
---- a/include/linux/of_pci.h
-+++ b/include/linux/of_pci.h
-@@ -4,6 +4,7 @@
- #include <linux/pci.h>
+diff --git a/drivers/pci/slot.c b/drivers/pci/slot.c
+index ac6412f..3988d75 100644
+--- a/drivers/pci/slot.c
++++ b/drivers/pci/slot.c
+@@ -154,11 +154,8 @@ static char *make_slot_name(const char *name)
+ 	dup = 1;
  
- struct pci_dev;
-+struct pci_controller;
- struct of_irq;
- int of_irq_map_pci(const struct pci_dev *pdev, struct of_irq *out_irq);
+ 	for (;;) {
+-		struct kobject *dup_slot;
+-		dup_slot = kset_find_obj(pci_slots_kset, new_name);
+-		if (!dup_slot)
++		if (!kset_obj_exists(pci_slots_kset, new_name))
+ 			break;
+-		kobject_put(dup_slot);
+ 		if (dup == max) {
+ 			len++;
+ 			max *= 10;
+diff --git a/include/linux/kobject.h b/include/linux/kobject.h
+index 939b112..7cde72c 100644
+--- a/include/linux/kobject.h
++++ b/include/linux/kobject.h
+@@ -191,6 +191,7 @@ static inline struct kobj_type *get_ktype(struct kobject *kobj)
+ }
  
-@@ -11,4 +12,7 @@ struct device_node;
- struct device_node *of_pci_find_child_device(struct device_node *parent,
- 					     unsigned int devfn);
+ extern struct kobject *kset_find_obj(struct kset *, const char *);
++extern bool kset_obj_exists(struct kset *, const char *);
  
-+void pci_process_bridge_OF_ranges(struct pci_controller *hose,
-+			struct device_node *dev, int primary);
+ /* The global /sys/kernel/ kobject for people to chain off of */
+ extern struct kobject *kernel_kobj;
+diff --git a/kernel/module.c b/kernel/module.c
+index 0925c9a..1df13a3 100644
+--- a/kernel/module.c
++++ b/kernel/module.c
+@@ -1606,7 +1606,6 @@ static void module_remove_modinfo_attrs(struct module *mod)
+ static int mod_sysfs_init(struct module *mod)
+ {
+ 	int err;
+-	struct kobject *kobj;
+ 
+ 	if (!module_sysfs_initialized) {
+ 		printk(KERN_ERR "%s: module sysfs not initialized\n",
+@@ -1615,10 +1614,8 @@ static int mod_sysfs_init(struct module *mod)
+ 		goto out;
+ 	}
+ 
+-	kobj = kset_find_obj(module_kset, mod->name);
+-	if (kobj) {
++	if (kset_obj_exists(module_kset, mod->name)) {
+ 		printk(KERN_ERR "%s: module is already loaded\n", mod->name);
+-		kobject_put(kobj);
+ 		err = -EINVAL;
+ 		goto out;
+ 	}
+diff --git a/lib/kobject.c b/lib/kobject.c
+index e07ee1f..b82633f 100644
+--- a/lib/kobject.c
++++ b/lib/kobject.c
+@@ -760,6 +760,34 @@ struct kobject *kset_find_obj(struct kset *kset, const char *name)
+ 	return ret;
+ }
+ 
++/**
++ * kset_obj_exists - verify if an object exists in kset
++ * @kset: kset we're looking in.
++ * @name: object's name.
++ *
++ * Lock kset via @kset->subsys, and iterate over @kset->list,
++ * looking for a matching kobject. Returns bool, found/not found.
++ * This function does not take a reference and thus doesn't
++ * guarantee that the object won't go away any time after.
++ */
 +
- #endif
-
-But otherwise, for PATCH 1/3 and 2/3,
-
-Tested-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-
-Thomas
++bool kset_obj_exists(struct kset *kset, const char *name)
++{
++	struct kobject *k;
++
++	spin_lock(&kset->list_lock);
++
++	list_for_each_entry(k, &kset->list, entry) {
++		if (kobject_name(k) && !strcmp(kobject_name(k), name)) {
++			spin_unlock(&kset->list_lock);
++			return true;
++		}
++	}
++
++	spin_unlock(&kset->list_lock);
++	return false;
++}
++
+ static void kset_release(struct kobject *kobj)
+ {
+ 	struct kset *kset = container_of(kobj, struct kset, kobj);
 -- 
-Thomas Petazzoni, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
+1.7.1
+
