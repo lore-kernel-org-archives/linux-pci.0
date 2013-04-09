@@ -1,55 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f171.google.com ([209.85.223.171]:53010 "EHLO
-	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932118Ab3DYDQx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Apr 2013 23:16:53 -0400
-Received: by mail-ie0-f171.google.com with SMTP id e11so3070007iej.16
-        for <linux-pci@vger.kernel.org>; Wed, 24 Apr 2013 20:16:53 -0700 (PDT)
+Received: from avon.wwwdotorg.org ([70.85.31.133]:38917 "EHLO
+	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932898Ab3DIPqK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Apr 2013 11:46:10 -0400
+Message-ID: <516437BC.8060707@wwwdotorg.org>
+Date: Tue, 09 Apr 2013 09:46:04 -0600
+From: Stephen Warren <swarren@wwwdotorg.org>
 MIME-Version: 1.0
-In-Reply-To: <5E18B0C6DCFE1D46967DE5C51CD1AF9866346957@nkgeml506-mbx.china.huawei.com>
-References: <CAAh6nkmbKR3HTqm5ommevsBwhL_u0N8Rk7Wsms_LfP=nBgKNew@mail.gmail.com>
-	<CAAh6nkmkbKh7FjEZea4GmEbZvH4qvnfOJ2Og8xHYm5othsWLwQ@mail.gmail.com>
-	<CAErSpo6zf34MOLNh5t_PifYhA87vFLRRx-g0WG5N=8+oUcWukQ@mail.gmail.com>
-	<3400627.YcEmgrxv5I@vostro.rjw.lan>
-	<CAE9FiQX7zyaZVm7QsZnOXtRD9qcCGCFpi2DLve863juL1ZxcWQ@mail.gmail.com>
-	<5E18B0C6DCFE1D46967DE5C51CD1AF9866346957@nkgeml506-mbx.china.huawei.com>
-Date: Wed, 24 Apr 2013 20:16:53 -0700
-Message-ID: <CAE9FiQWFiOebCdGrzooMdhBfAHs7FUXX6piNi0p6J422Zs9ODw@mail.gmail.com>
-Subject: =?UTF-8?Q?Re=3A_=E7=AD=94=E5=A4=8D=3A_About_dynamically_loading_the_acpiphp=2Eko?=
-From: Yinghai Lu <yinghai@kernel.org>
-To: "Liujiang (Gerry, Euler)" <jiang.liu@huawei.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Gavin Guo <tuffkidtt@gmail.com>,
+To: Peter De Schrijver <pdeschrijver@nvidia.com>
+CC: Jay Agarwal <jagarwal@nvidia.com>,
+	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
+	"thierry.reding@avionic-design.de" <thierry.reding@avionic-design.de>,
+	Laxman Dewangan <ldewangan@nvidia.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"olof@lixom.net" <olof@lixom.net>, Hiroshi Doyu <hdoyu@nvidia.com>,
+	Prashant Gaikwad <pgaikwad@nvidia.com>,
+	"mturquette@linaro.org" <mturquette@linaro.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+	Juha Tukkinen <jtukkinen@nvidia.com>,
+	Krishna Thota <kthota@nvidia.com>
+Subject: Re: [PATCH 2/3] ARM: dts: tegra: Correct PCIe entry
+References: <1365435688-4179-1-git-send-email-jagarwal@nvidia.com> <1365435688-4179-2-git-send-email-jagarwal@nvidia.com> <51630BF4.6000605@wwwdotorg.org> <20130409083050.GQ3572@tbergstrom-lnx.Nvidia.com>
+In-Reply-To: <20130409083050.GQ3572@tbergstrom-lnx.Nvidia.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 24, 2013 at 7:08 PM, Liujiang (Gerry, Euler)
-<jiang.liu@huawei.com> wrote:
-> Hi Yinghai,
->         I have worked out a similar patch last night. Please refer to attachment.
-> I think following code may not work because acpiphp_handle_to_bridge()
-> will return NULL.
+On 04/09/2013 02:30 AM, Peter De Schrijver wrote:
+> On Mon, Apr 08, 2013 at 08:27:00PM +0200, Stephen Warren wrote:
+>> On 04/08/2013 09:41 AM, Jay Agarwal wrote:
+>>> Signed-off-by: Jay Agarwal <jagarwal@nvidia.com>
+>>
+>> Your s-o-b line should be below the patch description, not above it.
+>> Please see Documentation/SubmittingPatches.
+>>
+>> I also don't see a --- line between the patch description and diffstat.
+>> How are you generating these patch emails? Please see our internal wiki,
+>> or other git documentation.
+>>
+>>> diff --git a/arch/arm/boot/dts/tegra30.dtsi b/arch/arm/boot/dts/tegra30.dtsi
+>>
+>>> -		clock-names = "pex", "afi", "pcie_xclk", "pll_e", "cml";
+>>> +		clock-names = "pex", "afi", "pcie_xclk", "pll_e", "cml0";
+>>
+>> Can you please explain more about this change?
+>>
+>> I see the Tegra clock driver provides both a "cml0" and a "cml1" clock.
+>> Are both of those used for PCIe?
+>>
+> 
+> cml0 is used for pcie and cml1 is used for sata.
 
-for root bus we have
-pcibios_add_bus. ==> acpi_pci_add_bus==>call acpiphp_enumerate_slots.
-so if there is hotplug slot on root bus directly, it will allocate the
-acpiphp_bridge and register the slots.
-
-then acpiphp_handle_to_bridge will return the right acpiphp_bridge with
-slots list.
-
-
-> Could you please help to review my version?
->         (Due to work environment limitations, sorry for sending out without
-> attachment and outlook).
-
-looks the same to my patch, except you missed the acpiphp_check_bridge
-calling.
-
-Thanks
-
-Yinghai
+OK, so the PCIe drivers' clock-names property may as well contain just
+cml then. Same for SATA. The clock name at the provider isn't relevant.
