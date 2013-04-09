@@ -1,64 +1,111 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e34.co.us.ibm.com ([32.97.110.152]:48270 "EHLO
-	e34.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760606Ab3DDV6V (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Apr 2013 17:58:21 -0400
-Received: from /spool/local
-	by e34.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <brking@linux.vnet.ibm.com>;
-	Thu, 4 Apr 2013 15:58:20 -0600
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by d03dlp03.boulder.ibm.com (Postfix) with ESMTP id A0BC719D8045
-	for <linux-pci@vger.kernel.org>; Thu,  4 Apr 2013 15:58:11 -0600 (MDT)
-Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id r34LwF8E308050
-	for <linux-pci@vger.kernel.org>; Thu, 4 Apr 2013 15:58:15 -0600
-Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id r34LwEeg010547
-	for <linux-pci@vger.kernel.org>; Thu, 4 Apr 2013 15:58:14 -0600
-Message-Id: <201304042158.r34LwDHx010466@d03av02.boulder.ibm.com>
-Subject: [PATCH 1/3] pci: Export pci_dev_type
-To: linux-pci@vger.kernel.org
-Cc: bhelgaas@google.com, linuxppc-dev@lists.ozlabs.org,
-	benh@kernel.crashing.org, lucaskt@linux.vnet.ibm.com,
-	klebers@linux.vnet.ibm.com, brking@linux.vnet.ibm.com
-From: Brian King <brking@linux.vnet.ibm.com>
-Date: Thu, 04 Apr 2013 16:58:13 -0500
+Received: from mail.free-electrons.com ([94.23.35.102]:52978 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934864Ab3DIVG4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Apr 2013 17:06:56 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Russell King <linux@arm.linux.org.uk>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	devicetree-discuss@lists.ozlabs.org,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Maen Suleiman <maen@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Olof Johansson <olof@lixom.net>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Mitch Bradley <wmb@firmworks.com>,
+	Andrew Murray <andrew.murray@arm.com>
+Subject: [PATCHv8 04/19] of/pci: Add of_pci_get_devfn() function
+Date: Tue,  9 Apr 2013 23:06:25 +0200
+Message-Id: <1365541601-14095-5-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1365541601-14095-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1365541601-14095-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+From: Thierry Reding <thierry.reding@avionic-design.de>
 
-Export pci_dev_type so that arch specific PCI probing code can
-initialize a new PCI device struct.
+This function can be used to parse the device and function number from a
+standard 5-cell PCI resource. PCI_SLOT() and PCI_FUNC() can be used on
+the returned value obtain the device and function numbers respectively.
 
-Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
+Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
 ---
+ drivers/of/of_pci.c    |   34 +++++++++++++++++++++++++++++-----
+ include/linux/of_pci.h |    1 +
+ 2 files changed, 30 insertions(+), 5 deletions(-)
 
- drivers/pci/pci.h   |    1 -
- include/linux/pci.h |    1 +
- 2 files changed, 1 insertion(+), 1 deletion(-)
-
-diff -puN drivers/pci/pci.h~pci_export_pci_dev_type drivers/pci/pci.h
---- linux/drivers/pci/pci.h~pci_export_pci_dev_type	2013-04-02 17:01:25.000000000 -0500
-+++ linux-bjking1/drivers/pci/pci.h	2013-04-02 17:02:31.000000000 -0500
-@@ -153,7 +153,6 @@ static inline int pci_no_d1d2(struct pci
+diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
+index ebb408b..b77e8d8 100644
+--- a/drivers/of/of_pci.c
++++ b/drivers/of/of_pci.c
+@@ -9,14 +9,15 @@
+ #endif
+ 
+ static inline int __of_pci_pci_compare(struct device_node *node,
+-				       unsigned int devfn)
++				       unsigned int data)
+ {
+-	unsigned int size;
+-	const __be32 *reg = of_get_property(node, "reg", &size);
++	int devfn;
+ 
+-	if (!reg || size < 5 * sizeof(__be32))
++	devfn = of_pci_get_devfn(node);
++	if (devfn < 0)
+ 		return 0;
+-	return ((be32_to_cpup(&reg[0]) >> 8) & 0xff) == devfn;
++
++	return devfn == data;
  }
- extern struct device_attribute pci_dev_attrs[];
- extern struct device_attribute pcibus_dev_attrs[];
--extern struct device_type pci_dev_type;
- extern struct bus_attribute pci_bus_attrs[];
  
+ struct device_node *of_pci_find_child_device(struct device_node *parent,
+@@ -208,3 +209,26 @@ void pci_process_bridge_OF_ranges(struct pci_controller *hose,
+ 	}
+ }
+ #endif
++
++/**
++ * of_pci_get_devfn() - Get device and function numbers for a device node
++ * @np: device node
++ *
++ * Parses a standard 5-cell PCI resource and returns an 8-bit value that can
++ * be passed to the PCI_SLOT() and PCI_FUNC() macros to extract the device
++ * and function numbers respectively. On error a negative error code is
++ * returned.
++ */
++int of_pci_get_devfn(struct device_node *np)
++{
++	unsigned int size;
++	const __be32 *reg;
++
++	reg = of_get_property(np, "reg", &size);
++
++	if (!reg || size < 5 * sizeof(__be32))
++		return -EINVAL;
++
++	return (be32_to_cpup(reg) >> 8) & 0xff;
++}
++EXPORT_SYMBOL_GPL(of_pci_get_devfn);
+diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
+index e56182f..302aca0 100644
+--- a/include/linux/of_pci.h
++++ b/include/linux/of_pci.h
+@@ -11,6 +11,7 @@ int of_irq_map_pci(const struct pci_dev *pdev, struct of_irq *out_irq);
+ struct device_node;
+ struct device_node *of_pci_find_child_device(struct device_node *parent,
+ 					     unsigned int devfn);
++int of_pci_get_devfn(struct device_node *np);
  
-diff -puN include/linux/pci.h~pci_export_pci_dev_type include/linux/pci.h
---- linux/include/linux/pci.h~pci_export_pci_dev_type	2013-04-02 17:01:59.000000000 -0500
-+++ linux-bjking1/include/linux/pci.h	2013-04-02 17:02:29.000000000 -0500
-@@ -670,6 +670,7 @@ enum pcie_bus_config_types {
- extern enum pcie_bus_config_types pcie_bus_config;
- 
- extern struct bus_type pci_bus_type;
-+extern struct device_type pci_dev_type;
- 
- /* Do NOT directly access these two variables, unless you are arch specific pci
-  * code, or pci core code. */
-_
+ void pci_process_bridge_OF_ranges(struct pci_controller *hose,
+ 			struct device_node *dev, int primary);
+-- 
+1.7.9.5
 
