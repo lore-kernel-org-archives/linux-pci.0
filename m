@@ -1,90 +1,82 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>, Ram Pai <linuxram@us.ibm.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v4 09/29] PCI: Use for_each_pci_resource() with IOV releated functions
-Date: Fri, 12 Apr 2013 15:44:23 -0700
-Message-Id: <1365806683-26717-10-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1365806683-26717-1-git-send-email-yinghai@kernel.org>
-References: <1365806683-26717-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.free-electrons.com ([94.23.35.102]:53058 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934864Ab3DIVHC (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Apr 2013 17:07:02 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Russell King <linux@arm.linux.org.uk>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	devicetree-discuss@lists.ozlabs.org,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Maen Suleiman <maen@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Olof Johansson <olof@lixom.net>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Mitch Bradley <wmb@firmworks.com>,
+	Andrew Murray <andrew.murray@arm.com>,
+	Mike Turquette <mturquette@linaro.org>
+Subject: [PATCHv8 09/19] clk: mvebu: add more PCIe clocks for Armada XP
+Date: Tue,  9 Apr 2013 23:06:30 +0200
+Message-Id: <1365541601-14095-10-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1365541601-14095-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1365541601-14095-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/iov.c | 31 +++++++++++++++----------------
- 1 file changed, 15 insertions(+), 16 deletions(-)
+The current revision of the datasheet only mentions the gatable clocks
+for the PCIe 0.0, 0.1, 0.2 and 0.3 interfaces, and forgot to mention
+the ones for the PCIe 1.0, 1.1, 1.2, 1.3, 2.0 and 3.0
+interfaces. After confirmation with Marvell engineers, this patch adds
+the missing gatable clocks for those PCIe interfaces.
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index ee599f2..baf6c80 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -93,17 +93,20 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
- 	pci_setup_device(virtfn);
- 	virtfn->dev.parent = dev->dev.parent;
- 
--	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
--		res = dev->resource + PCI_IOV_RESOURCES + i;
-+	for_each_pci_resource(dev, res, i, PCI_IOV_RES) {
-+		struct resource *virtfn_res;
-+
- 		if (!res->parent)
- 			continue;
--		virtfn->resource[i].name = pci_name(virtfn);
--		virtfn->resource[i].flags = res->flags;
-+
-+		virtfn_res = pci_dev_resource_n(virtfn, i - PCI_IOV_RESOURCES);
-+		virtfn_res->name = pci_name(virtfn);
-+		virtfn_res->flags = res->flags;
- 		size = resource_size(res);
- 		do_div(size, iov->total_VFs);
--		virtfn->resource[i].start = res->start + size * id;
--		virtfn->resource[i].end = virtfn->resource[i].start + size - 1;
--		rc = request_resource(res, &virtfn->resource[i]);
-+		virtfn_res->start = res->start + size * id;
-+		virtfn_res->end = virtfn_res->start + size - 1;
-+		rc = request_resource(res, virtfn_res);
- 		BUG_ON(rc);
- 	}
- 
-@@ -305,9 +308,8 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- 		return -EIO;
- 
- 	nres = 0;
--	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
--		bars |= (1 << (i + PCI_IOV_RESOURCES));
--		res = dev->resource + PCI_IOV_RESOURCES + i;
-+	for_each_pci_resource(dev, res, i, PCI_IOV_RES) {
-+		bars |= 1 << i;
- 		if (res->parent)
- 			nres++;
- 	}
-@@ -465,10 +467,9 @@ found:
- 	pci_write_config_dword(dev, pos + PCI_SRIOV_SYS_PGSIZE, pgsz);
- 
- 	nres = 0;
--	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
--		res = dev->resource + PCI_IOV_RESOURCES + i;
-+	for_each_pci_resource(dev, res, i, PCI_IOV_RES) {
- 		i += __pci_read_base(dev, pci_bar_unknown, res,
--				     pos + PCI_SRIOV_BAR + i * 4);
-+			     pos + PCI_SRIOV_BAR + (i - PCI_IOV_RESOURCES) * 4);
- 		if (!res->flags)
- 			continue;
- 		if (resource_size(res) & (PAGE_SIZE - 1)) {
-@@ -511,10 +512,8 @@ found:
- 	return 0;
- 
- failed:
--	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
--		res = dev->resource + PCI_IOV_RESOURCES + i;
-+	for_each_pci_resource(dev, res, i, PCI_IOV_RES)
- 		res->flags = 0;
--	}
- 
- 	return rc;
- }
+It also changes the name of the previously existing PCIe gatable
+clocks, in order to match the naming using the datasheets.
+
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Mike Turquette <mturquette@linaro.org>
+---
+ drivers/clk/mvebu/clk-gating-ctrl.c |   14 ++++++++++----
+ 1 file changed, 10 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/clk/mvebu/clk-gating-ctrl.c b/drivers/clk/mvebu/clk-gating-ctrl.c
+index b35785a..2f03723 100644
+--- a/drivers/clk/mvebu/clk-gating-ctrl.c
++++ b/drivers/clk/mvebu/clk-gating-ctrl.c
+@@ -137,10 +137,14 @@ static const struct mvebu_soc_descr __initconst armada_xp_gating_descr[] = {
+ 	{ "ge2", NULL,  2 },
+ 	{ "ge1", NULL, 3 },
+ 	{ "ge0", NULL, 4 },
+-	{ "pex0", NULL, 5 },
+-	{ "pex1", NULL, 6 },
+-	{ "pex2", NULL, 7 },
+-	{ "pex3", NULL, 8 },
++	{ "pex00", NULL, 5 },
++	{ "pex01", NULL, 6 },
++	{ "pex02", NULL, 7 },
++	{ "pex03", NULL, 8 },
++	{ "pex10", NULL, 9 },
++	{ "pex11", NULL, 10 },
++	{ "pex12", NULL, 11 },
++	{ "pex13", NULL, 12 },
+ 	{ "bp", NULL, 13 },
+ 	{ "sata0lnk", NULL, 14 },
+ 	{ "sata0", "sata0lnk", 15 },
+@@ -152,6 +156,8 @@ static const struct mvebu_soc_descr __initconst armada_xp_gating_descr[] = {
+ 	{ "xor0", NULL, 22 },
+ 	{ "crypto", NULL, 23 },
+ 	{ "tdm", NULL, 25 },
++	{ "pex20", NULL, 26 },
++	{ "pex30", NULL, 27 },
+ 	{ "xor1", NULL, 28 },
+ 	{ "sata1lnk", NULL, 29 },
+ 	{ "sata1", "sata1lnk", 30 },
 -- 
-1.8.1.4
+1.7.9.5
 
