@@ -1,153 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ia0-f176.google.com ([209.85.210.176]:36797 "EHLO
-	mail-ia0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753039Ab3DVXKf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Apr 2013 19:10:35 -0400
-Received: by mail-ia0-f176.google.com with SMTP id i9so9599iad.21
-        for <linux-pci@vger.kernel.org>; Mon, 22 Apr 2013 16:10:35 -0700 (PDT)
-Subject: [PATCH v4 03/22] PCI: Cache MSI/MSI-X capability offsets in struct
- pci_dev
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Gavin Shan <shangw@linux.vnet.ibm.com>
-Date: Mon, 22 Apr 2013 17:10:33 -0600
-Message-ID: <20130422231033.32621.34498.stgit@bhelgaas-glaptop>
-In-Reply-To: <20130422230012.32621.15224.stgit@bhelgaas-glaptop>
-References: <20130422230012.32621.15224.stgit@bhelgaas-glaptop>
+Received: from moutng.kundenserver.de ([212.227.17.10]:57075 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S935334Ab3DIIWu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Apr 2013 04:22:50 -0400
+Date: Tue, 9 Apr 2013 10:22:33 +0200
+From: Thierry Reding <thierry.reding@avionic-design.de>
+To: Andrew Murray <andrew.murray@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Russell King <linux@arm.linux.org.uk>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	"devicetree-discuss@lists.ozlabs.org"
+	<devicetree-discuss@lists.ozlabs.org>,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Maen Suleiman <maen@marvell.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Olof Johansson <olof@lixom.net>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Mitch Bradley <wmb@firmworks.com>
+Subject: Re: [RFCv1 08/11] PCI: Introduce new MSI chip infrastructure
+Message-ID: <20130409082232.GC27255@avionic-0098.mockup.avionic-design.de>
+References: <1364316746-8702-1-git-send-email-thomas.petazzoni@free-electrons.com>
+ <1364316746-8702-9-git-send-email-thomas.petazzoni@free-electrons.com>
+ <CAErSpo42AFdKH2RKTxOaeJgCPrYD5KYkOs3UEBez8x8Bjmun5w@mail.gmail.com>
+ <20130409081119.GA30736@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="uh9ZiVrAOUUm9fzH"
+In-Reply-To: <20130409081119.GA30736@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Gavin Shan <shangw@linux.vnet.ibm.com>
 
-The patch caches the MSI and MSI-X capability offset in PCI device
-(struct pci_dev) so that we needn't read it from the config space
-upon enabling or disabling MSI or MSI-X interrupts.
+--uh9ZiVrAOUUm9fzH
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-[bhelgaas: moved pm_cap size change to separate patch]
-Signed-off-by: Gavin Shan <shangw@linux.vnet.ibm.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/msi.c   |   42 +++++++++++++++++++-----------------------
- include/linux/pci.h |    2 ++
- 2 files changed, 21 insertions(+), 23 deletions(-)
+On Tue, Apr 09, 2013 at 09:11:19AM +0100, Andrew Murray wrote:
+[...]
+> Also I believe pci_alloc_child_bus function would need to be changed to add
+> "b->msi = msi" to inherit msi_chip for child buses in the above patch?
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 00cc78c..99befbd 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -111,32 +111,26 @@ void default_restore_msi_irqs(struct pci_dev *dev, int irq)
- }
- #endif
- 
--static void msi_set_enable(struct pci_dev *dev, int pos, int enable)
-+static void msi_set_enable(struct pci_dev *dev, int enable)
- {
- 	u16 control;
- 
--	BUG_ON(!pos);
--
--	pci_read_config_word(dev, pos + PCI_MSI_FLAGS, &control);
-+	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &control);
- 	control &= ~PCI_MSI_FLAGS_ENABLE;
- 	if (enable)
- 		control |= PCI_MSI_FLAGS_ENABLE;
--	pci_write_config_word(dev, pos + PCI_MSI_FLAGS, control);
-+	pci_write_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, control);
- }
- 
- static void msix_set_enable(struct pci_dev *dev, int enable)
- {
--	int pos;
- 	u16 control;
- 
--	pos = pci_find_capability(dev, PCI_CAP_ID_MSIX);
--	if (pos) {
--		pci_read_config_word(dev, pos + PCI_MSIX_FLAGS, &control);
--		control &= ~PCI_MSIX_FLAGS_ENABLE;
--		if (enable)
--			control |= PCI_MSIX_FLAGS_ENABLE;
--		pci_write_config_word(dev, pos + PCI_MSIX_FLAGS, control);
--	}
-+	pci_read_config_word(dev, dev->msix_cap + PCI_MSIX_FLAGS, &control);
-+	control &= ~PCI_MSIX_FLAGS_ENABLE;
-+	if (enable)
-+		control |= PCI_MSIX_FLAGS_ENABLE;
-+	pci_write_config_word(dev, dev->msix_cap + PCI_MSIX_FLAGS, control);
- }
- 
- static inline __attribute_const__ u32 msi_mask(unsigned x)
-@@ -402,7 +396,7 @@ static void __pci_restore_msi_state(struct pci_dev *dev)
- 	pos = entry->msi_attrib.pos;
- 
- 	pci_intx_for_msi(dev, 0);
--	msi_set_enable(dev, pos, 0);
-+	msi_set_enable(dev, 0);
- 	arch_restore_msi_irqs(dev, dev->irq);
- 
- 	pci_read_config_word(dev, pos + PCI_MSI_FLAGS, &control);
-@@ -557,7 +551,7 @@ static int msi_capability_init(struct pci_dev *dev, int nvec)
- 	unsigned mask;
- 
- 	pos = pci_find_capability(dev, PCI_CAP_ID_MSI);
--	msi_set_enable(dev, pos, 0);	/* Disable MSI during set up */
-+	msi_set_enable(dev, 0);	/* Disable MSI during set up */
- 
- 	pci_read_config_word(dev, msi_control_reg(pos), &control);
- 	/* MSI Entry Initialization */
-@@ -598,7 +592,7 @@ static int msi_capability_init(struct pci_dev *dev, int nvec)
- 
- 	/* Set MSI enabled bits	 */
- 	pci_intx_for_msi(dev, 0);
--	msi_set_enable(dev, pos, 1);
-+	msi_set_enable(dev, 1);
- 	dev->msi_enabled = 1;
- 
- 	dev->irq = entry->irq;
-@@ -885,7 +879,7 @@ void pci_msi_shutdown(struct pci_dev *dev)
- 	desc = list_first_entry(&dev->msi_list, struct msi_desc, list);
- 	pos = desc->msi_attrib.pos;
- 
--	msi_set_enable(dev, pos, 0);
-+	msi_set_enable(dev, 0);
- 	pci_intx_for_msi(dev, 1);
- 	dev->msi_enabled = 0;
- 
-@@ -1048,15 +1042,17 @@ EXPORT_SYMBOL(pci_msi_enabled);
- 
- void pci_msi_init_pci_dev(struct pci_dev *dev)
- {
--	int pos;
- 	INIT_LIST_HEAD(&dev->msi_list);
- 
- 	/* Disable the msi hardware to avoid screaming interrupts
- 	 * during boot.  This is the power on reset default so
- 	 * usually this should be a noop.
- 	 */
--	pos = pci_find_capability(dev, PCI_CAP_ID_MSI);
--	if (pos)
--		msi_set_enable(dev, pos, 0);
--	msix_set_enable(dev, 0);
-+	dev->msi_cap = pci_find_capability(dev, PCI_CAP_ID_MSI);
-+	if (dev->msi_cap)
-+		msi_set_enable(dev, 0);
-+
-+	dev->msix_cap = pci_find_capability(dev, PCI_CAP_ID_MSIX);
-+	if (dev->msix_cap)
-+		msix_set_enable(dev, 0);
- }
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 9587d4d..b73c246 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -232,6 +232,8 @@ struct pci_dev {
- 	u8		revision;	/* PCI revision, low byte of class word */
- 	u8		hdr_type;	/* PCI header type (`multi' flag masked out) */
- 	u8		pcie_cap;	/* PCI-E capability offset */
-+	u8		msi_cap;	/* MSI capability offset */
-+	u8		msix_cap;	/* MSI-X capability offset */
- 	u8		pcie_mpss:3;	/* PCI-E Max Payload Size Supported */
- 	u8		rom_base_reg;	/* which config register controls the ROM */
- 	u8		pin;  		/* which interrupt pin this device uses */
+The patch already does:
 
+	child->msi = parent->msi;
+
+in pci_alloc_child_bus(), the same way that ops is inherited. I have
+admittedly only tested this code on Tegra, but I don't see why that
+wouldn't be enough. Or maybe I haven't understood your question?
+
+Thierry
+
+--uh9ZiVrAOUUm9fzH
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQIcBAEBAgAGBQJRY8/IAAoJEN0jrNd/PrOhbekQAKkjrnRsOfVv4qKeB1sc+W1S
+ptqQkqHoA1NoNWFyOIffRpVKoI3CqCbxiIW5nssN1N3pOkAmhYgWdJWDfVefY5ir
+UzZXk7KKBrbDXfFSUOeoFLAC2ZwU96uL5VB260KDRw79x4ptw9g2lTGC2ksqjGmb
+KjycUQFD4KbG24AC9TOsDby7BBmP3tqjqQJMlc1zBThJSdhqEV+3heb2VRXYrBHK
+BD7+HDXKaZ/ysmanFprJPiTN8SSVQn+F2Q4bYZT0KpyRelJHyhbeDLHM/BuevEwA
+cLOrKqdsog6kuesxNdztrqfB/R+gv8RtgLkkHDtFNAUnZtcjM8ZJneWpUFtYGXwO
+Ta6FveIFCa9DHH6KfBNprV3zqwJwhLQZQuEogdNw0kcl/pmCO10chStKZ82Lq9eR
+FSs2kRY4mHsPv8SXnsIAPZxyWGY9lda6shXBD17pnPIQ57IeCWHxgetA/CYaPlX+
+szYGOS28iHfwdQ7mvUu+znhMBRDisbKb3y15dR8YwUluZwnU7+9Nj5aLBD8q4cLt
+eDJCv2uQr0GSYRjwIk2hpFY32IZzfd41QaUSMk3G5zhI6OOGheRwkD1d+q1E1dv6
+vTa7gQ0r3BCPrMk0hzH56rzlzdQUJT9LvqjVG3epUbNMopjwIVMrXCOxpsmTJ1D2
+hUzr3i0oJebiI8QiCmh+
+=SRPZ
+-----END PGP SIGNATURE-----
+
+--uh9ZiVrAOUUm9fzH--
