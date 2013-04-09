@@ -1,41 +1,103 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from jabberwock.ucw.cz ([46.255.230.98]:56780 "EHLO
-	jabberwock.ucw.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759465Ab3DATw3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 1 Apr 2013 15:52:29 -0400
-Received: from albireo.burrow.ucw.cz (albireo.ucw.cz [89.239.2.32])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(Client CN "albireo.ucw.cz", Issuer "ucw.cz" (verified OK))
-	by jabberwock.ucw.cz (Postfix) with ESMTPS id 928E41C0097
-	for <linux-pci@vger.kernel.org>; Mon,  1 Apr 2013 21:52:28 +0200 (CEST)
-Date: Mon, 1 Apr 2013 21:52:28 +0200
-From: Martin Mares <mj@ucw.cz>
-To: Mike Frysinger <vapier@gentoo.org>
-Cc: linux-pci@vger.kernel.org
-Subject: [PCIUTILS] Re: [PATCH] update-pciids: fix PCI_COMPRESSED_IDS value
- when zlib is disabled
-Message-ID: <mj+md-20130401.195202.10741.albireo@ucw.cz>
-References: <1328025411-8281-1-git-send-email-vapier@gentoo.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1328025411-8281-1-git-send-email-vapier@gentoo.org>
+Received: from mail.free-electrons.com ([94.23.35.102]:53111 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S936489Ab3DIVHJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Apr 2013 17:07:09 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Russell King <linux@arm.linux.org.uk>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	devicetree-discuss@lists.ozlabs.org,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Maen Suleiman <maen@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Olof Johansson <olof@lixom.net>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Mitch Bradley <wmb@firmworks.com>,
+	Andrew Murray <andrew.murray@arm.com>
+Subject: [PATCHv8 12/19] arm: mvebu: add PCIe Device Tree informations for Armada 370
+Date: Tue,  9 Apr 2013 23:06:33 +0200
+Message-Id: <1365541601-14095-13-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1365541601-14095-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1365541601-14095-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello!
+The Armada 370 SoC has two 1x PCIe 2.0 interfaces, so we add the
+necessary Device Tree informations to make these interfaces availabel.
 
-> If you build with zlib disabled, then PCI_COMPRESSED_IDS is not defined,
-> which generates the line in the update script:
-> 	PCI_COMPRESSED_IDS=
-> which in turn causes the update script to warn:
-> 	bash: [: : integer expression expected
-> 
-> So default it to 0 to avoid that logic.
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+---
+ arch/arm/boot/dts/armada-370.dtsi |   51 +++++++++++++++++++++++++++++++++++++
+ 1 file changed, 51 insertions(+)
 
-I hope that this is already fixed in the current tree, could you please check?
-
-				Have a nice fortnight
+diff --git a/arch/arm/boot/dts/armada-370.dtsi b/arch/arm/boot/dts/armada-370.dtsi
+index 8188d13..2d9f8d6 100644
+--- a/arch/arm/boot/dts/armada-370.dtsi
++++ b/arch/arm/boot/dts/armada-370.dtsi
+@@ -153,5 +153,56 @@
+ 			clocks = <&coreclk 0>;
+ 		};
+ 
++		pcie-controller {
++			compatible = "marvell,armada-370-pcie";
++			status = "disabled";
++			device_type = "pci";
++
++			#address-cells = <3>;
++			#size-cells = <2>;
++
++			bus-range = <0x00 0xff>;
++
++			reg = <0xd0040000 0x2000>, <0xd0080000 0x2000>;
++
++			reg-names = "pcie0.0", "pcie1.0";
++
++			ranges = <0x82000000 0 0xd0040000 0xd0040000 0 0x00002000   /* Port 0.0 registers */
++				  0x82000000 0 0xd0080000 0xd0080000 0 0x00002000   /* Port 1.0 registers */
++				  0x82000000 0 0xe0000000 0xe0000000 0 0x08000000   /* non-prefetchable memory */
++			          0x81000000 0 0          0xe8000000 0 0x00100000>; /* downstream I/O */
++
++			pcie@1,0 {
++				device_type = "pci";
++				assigned-addresses = <0x82000800 0 0xd0040000 0 0x2000>;
++				reg = <0x0800 0 0 0 0>;
++				#address-cells = <3>;
++				#size-cells = <2>;
++				#interrupt-cells = <1>;
++				ranges;
++				interrupt-map-mask = <0 0 0 0>;
++				interrupt-map = <0 0 0 0 &mpic 58>;
++				marvell,pcie-port = <0>;
++				marvell,pcie-lane = <0>;
++				clocks = <&gateclk 5>;
++				status = "disabled";
++			};
++
++			pcie@2,0 {
++				device_type = "pci";
++				assigned-addresses = <0x82002800 0 0xd0080000 0 0x2000>;
++				reg = <0x1000 0 0 0 0>;
++				#address-cells = <3>;
++				#size-cells = <2>;
++				#interrupt-cells = <1>;
++				ranges;
++				interrupt-map-mask = <0 0 0 0>;
++				interrupt-map = <0 0 0 0 &mpic 62>;
++				marvell,pcie-port = <1>;
++				marvell,pcie-lane = <0>;
++				clocks = <&gateclk 9>;
++				status = "disabled";
++			};
++		};
+ 	};
+ };
 -- 
-Martin `MJ' Mares                          <mj@ucw.cz>   http://mj.ucw.cz/
-Faculty of Math and Physics, Charles University, Prague, Czech Rep., Earth
-Outside of a dog, a book is man's best friend. Inside a dog, it's too dark to read.
+1.7.9.5
+
