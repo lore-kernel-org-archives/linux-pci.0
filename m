@@ -1,72 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:57134 "EHLO quartz.orcorp.ca"
+Received: from 8bytes.org ([85.214.48.195]:35332 "EHLO mail.8bytes.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S935794Ab3DRRlQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 18 Apr 2013 13:41:16 -0400
-Date: Thu, 18 Apr 2013 11:41:12 -0600
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Andrew Murray <andrew.murray@arm.com>
-Cc: linux-pci@vger.kernel.org, linux@arm.linux.org.uk,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: I/O and multiple PCI buses
-Message-ID: <20130418174112.GA1127@obsidianresearch.com>
-References: <20130418152747.GA19258@arm.com>
+	id S937394Ab3DIKIF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 9 Apr 2013 06:08:05 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by mail.8bytes.org (Postfix) with SMTP id D771A12B114
+	for <linux-pci@vger.kernel.org>; Tue,  9 Apr 2013 12:08:03 +0200 (CEST)
+Date: Tue, 9 Apr 2013 12:08:01 +0200
+From: Joerg Roedel <joro@8bytes.org>
+To: Neil Horman <nhorman@tuxdriver.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Don Dutile <ddutile@redhat.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Prarit Bhargava <prarit@redhat.com>,
+	Don Zickus <dzickus@redhat.com>,
+	Asit Mallick <asit.k.mallick@intel.com>,
+	David Woodhouse <dwmw2@infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Subject: Re: [PATCH v6] irq: add quirk for broken interrupt remapping on 55XX
+ chipsets
+Message-ID: <20130409100801.GF6858@8bytes.org>
+References: <1362158276-4901-1-git-send-email-nhorman@tuxdriver.com>
+ <1365190294-9061-1-git-send-email-nhorman@tuxdriver.com>
+ <CAErSpo6z8oqiaUBCieUMsS_c5xvVFUDbHqVO_eBBde3uv2=zcg@mail.gmail.com>
+ <5162E266.6080002@redhat.com>
+ <CAErSpo5DNe-x6Fi3i6K=9xnd47d-T-q4_bH0tiud_8Ak2eL=TQ@mail.gmail.com>
+ <20130408174257.GA13960@hmsreliant.think-freely.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130418152747.GA19258@arm.com>
+In-Reply-To: <20130408174257.GA13960@hmsreliant.think-freely.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 18, 2013 at 04:27:48PM +0100, Andrew Murray wrote:
-> I'm trying to understand PCI I/O addressing in the kernel... (again)
+On Mon, Apr 08, 2013 at 01:42:57PM -0400, Neil Horman wrote:
+> On Mon, Apr 08, 2013 at 11:17:23AM -0600, Bjorn Helgaas wrote:
+
+> > I don't care whether the "if (irq_remap_broken)" test is in
+> > irq_remapping.c or intel_irq_remapping.c.  The quirk itself, where we
+> > actually look at config space, is clearly Intel-specific, but there
+> > could easily be similar AMD quirks that could also set
+> > irq_remap_broken.  In that case, it would make sense to have the test
+> > in the common code.
+> > 
+> I've moved it to intel specific code for the time being, since it currently is
+> intel specific, its an easy move to put it in a common location if other vendors
+> have a need for it.
 > 
-> I understand that ideally you want to give PCI bus addresses to PCI
-> devices in the range of 0K to 64K. This seems to be achieved in
-> pcibios_init_resources in arm's kernel/bios32.c implementation.
+> I'm currently waiting on aproval to make the bz public, so that its inclusion in
+> the changelog is more than just an irritation when following the link results in
+> a 403 error.  As soon as thats square, I'll post this again, CC-ing Jeorg and
+> Konrad.
 
-The ideal world (for small scale systems) is to have only one PCI host
-bridge, and multiple root port bridges. This way the 0->64k range can
-be shared between all the ports and this problem doesn't come up. Look
-at how the new tegra and marvell work in this regard.
+Thanks Neil. As long as this quirk is intel specific it should be in
+the intel-code.
 
-There are two motivations to use the low space.. Firstly some HW is
-just broken with 32 bit IO because x86 doesn't use it. Secondly, the
-legacy ISA 'no-BAR' or subtractive decode IO addresses are fixed (eg
-0x3bx is VGA related) and the HW needs to be able to route them to the
-VGA card, independently of the PCI compliant BAR based IO routing.
 
-> What happens if you want to add another root bus? In this
-> implementation the start address of the io_res is now 64K and as
-> sys->io_offset is set to 0 the bus addresses under this second root
-> bus will be 64K-128K - which I assume may break some things.
+	Joerg
 
-In this case you want to set io_offset for each host bridge to
-translate 64k*nr -> 0 (ie, don't set it to 0) and IO map the right 64k
-of MMIO space to 64k*nr to make this work.
 
-The translation should look like:
-  Linux driver does IO to 64k+1
-  ARM io port wrapper translates 64k+1 to (IO base + 64k+1) virtual address
-  TLB translates (IO base + 64k+1) to physical X+1
-  HW converts physical X+1 to PCI IO transaction with IO address 1
-
-The io_offset, which impacts pci_add_resource_offset, is used to tell
-the Linux PCI core that BAR address 1, is actually seen in Linux as
-IO 64k+1.
-
-But, if you do this, I really recommend using separate PCI domains. It
-is very wonky to see a single PCI bus hierarchy with overlapping
-BAR addresses. Using proper bridges and sharing the space like x86
-does is vastly preferred, IMHO.
-
-> And to allow subsequent busses to use I/O starting from 0, you'd have to set
-> sys->io_offset to 64K*nr and adapt functions such as pci_iomap to use the
-> offset?
-
-I think all the support is already there? The translation happens in
-the PCI core when working with BARs, the Linux struct resource layer
-already has io_offset included. The only impact the offset has is in
-how the PCI core deals with BARs.
-
-Regards,
-Jason
