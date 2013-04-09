@@ -1,80 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qe0-f50.google.com ([209.85.128.50]:48863 "EHLO
-	mail-qe0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751746Ab3DJNOE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Apr 2013 09:14:04 -0400
-Message-ID: <51656592.7070806@gmail.com>
-Date: Wed, 10 Apr 2013 08:13:54 -0500
-From: Rob Herring <robherring2@gmail.com>
-MIME-Version: 1.0
-To: Andrew Murray <Andrew.Murray@arm.com>
-CC: rob.herring@calxeda.com, siva.kallam@samsung.com,
-	linux-pci@vger.kernel.org, Liviu.Dudau@arm.com, paulus@samba.org,
-	linux-samsung-soc@vger.kernel.org, linux@arm.linux.org.uk,
-	jg1.han@samsung.com, jgunthorpe@obsidianresearch.com,
-	devicetree-discuss@lists.ozlabs.org, kgene.kim@samsung.com,
-	bhelgaas@google.com, linux-arm-kernel@lists.infradead.org,
-	linux-kernel@vger.kernel.org, suren.reddy@samsung.com,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Michal Simek <monstr@monstr.eu>
-Subject: Re: [PATCH v5 1/3] of/pci: Unify pci_process_bridge_OF_ranges from
- Microblaze and PowerPC
-References: <1365578969-30966-1-git-send-email-Andrew.Murray@arm.com> <1365578969-30966-2-git-send-email-Andrew.Murray@arm.com>
-In-Reply-To: <1365578969-30966-2-git-send-email-Andrew.Murray@arm.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail.free-electrons.com ([94.23.35.102]:53198 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S936486Ab3DIVHS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Apr 2013 17:07:18 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Russell King <linux@arm.linux.org.uk>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	devicetree-discuss@lists.ozlabs.org,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Maen Suleiman <maen@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Olof Johansson <olof@lixom.net>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Mitch Bradley <wmb@firmworks.com>,
+	Andrew Murray <andrew.murray@arm.com>
+Subject: [PATCHv8 18/19] arm: mvebu: PCIe Device Tree informations for Armada XP GP
+Date: Tue,  9 Apr 2013 23:06:39 +0200
+Message-Id: <1365541601-14095-19-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1365541601-14095-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1365541601-14095-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Adding Ben H and Michal...
+The Marvell Armada XP GP board has 3 physical full-size PCIe slots, so
+we enable the corresponding PCIe interfaces in the Device Tree.
 
-On 04/10/2013 02:29 AM, Andrew Murray wrote:
-> The pci_process_bridge_OF_ranges function, used to parse the "ranges"
-> property of a PCI host device, is found in both Microblaze and PowerPC
-> architectures. These implementations are nearly identical. This patch
-> moves this common code to a common place.
-> 
-> Signed-off-by: Andrew Murray <Andrew.Murray@arm.com>
-> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+---
+ arch/arm/boot/dts/armada-xp-gp.dts |   21 +++++++++++++++++++++
+ 1 file changed, 21 insertions(+)
 
-One comment below. Otherwise,
-
-Reviewed-by: Rob Herring <rob.herring@calxeda.com>
-
-You need also need acks from Ben and Michal.
-
-[...]
-
-> +		/* Act based on address space type */
-> +		res = NULL;
-> +		switch ((pci_space >> 24) & 0x3) {
-> +		case 1:		/* PCI IO space */
-> +			pr_info("  IO 0x%016llx..0x%016llx -> 0x%016llx\n",
-> +			       cpu_addr, cpu_addr + size - 1, pci_addr);
-> +
-> +			/* We support only one IO range */
-> +			if (hose->pci_io_size) {
-> +				pr_info(" \\--> Skipped (too many) !\n");
-> +				continue;
-> +			}
-> +#if defined(CONFIG_PPC32) || defined(CONFIG_MICROBLAZE)
-
-How about "if (!IS_ENABLED(CONFIG_64BIT))" instead.
-
-> +			/* On 32 bits, limit I/O space to 16MB */
-> +			if (size > 0x01000000)
-> +				size = 0x01000000;
-> +
-> +			/* 32 bits needs to map IOs here */
-> +			hose->io_base_virt = ioremap(cpu_addr, size);
-> +
-> +			/* Expect trouble if pci_addr is not 0 */
-> +			if (primary)
-> +				isa_io_base =
-> +					(unsigned long)hose->io_base_virt;
-> +#endif /* CONFIG_PPC32 || CONFIG_MICROBLAZE */
-> +			/* pci_io_size and io_base_phys always represent IO
-> +			 * space starting at 0 so we factor in pci_addr
-> +			 */
-> +			hose->pci_io_size = pci_addr + size;
-> +			hose->io_base_phys = cpu_addr - pci_addr;
+diff --git a/arch/arm/boot/dts/armada-xp-gp.dts b/arch/arm/boot/dts/armada-xp-gp.dts
+index 1c8afe2..e2bf6b4 100644
+--- a/arch/arm/boot/dts/armada-xp-gp.dts
++++ b/arch/arm/boot/dts/armada-xp-gp.dts
+@@ -109,5 +109,26 @@
+ 				spi-max-frequency = <108000000>;
+ 			};
+ 		};
++
++		pcie-controller {
++			status = "okay";
++
++			/*
++			 * The 3 slots are physically present as
++			 * standard PCIe slots on the board.
++			 */
++			pcie@1,0 {
++				/* Port 0, Lane 0 */
++				status = "okay";
++			};
++			pcie@9,0 {
++				/* Port 2, Lane 0 */
++				status = "okay";
++			};
++			pcie@10,0 {
++				/* Port 3, Lane 0 */
++				status = "okay";
++			};
++		};
+ 	};
+ };
+-- 
+1.7.9.5
 
