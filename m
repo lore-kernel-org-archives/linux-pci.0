@@ -1,425 +1,259 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wg0-f41.google.com ([74.125.82.41]:62675 "EHLO
-	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S966678Ab3DQPDI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 17 Apr 2013 11:03:08 -0400
-Received: by mail-wg0-f41.google.com with SMTP id e11so2384853wgh.0
-        for <linux-pci@vger.kernel.org>; Wed, 17 Apr 2013 08:03:06 -0700 (PDT)
-From: Grant Likely <grant.likely@secretlab.ca>
-Subject: Re: [PATCH 26/28] proc: Supply a function to remove a proc entry by PDE [RFC]
-To: David Howells <dhowells@redhat.com>, linux-kernel@vger.kernel.org
-Cc: alsa-devel@alsa-project.org, linux-pci@vger.kernel.org,
-	devicetree-discuss@lists.ozlabs.org, linux-acpi@vger.kernel.org,
-	netfilter-devel@vger.kernel.org, viro@zeniv.linux.org.uk,
-	netdev@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	openipmi-developer@lists.sourceforge.net
-In-Reply-To: <20130416182734.27773.47452.stgit@warthog.procyon.org.uk>
-References: <20130416182550.27773.89310.stgit@warthog.procyon.org.uk> <20130416182734.27773.47452.stgit@warthog.procyon.org.uk>
-Date: Wed, 17 Apr 2013 16:03:01 +0100
-Message-Id: <20130417150301.DCA443E2B73@localhost>
+Received: from mail-ie0-f170.google.com ([209.85.223.170]:37367 "EHLO
+	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759476Ab3DJWgy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Apr 2013 18:36:54 -0400
+Received: by mail-ie0-f170.google.com with SMTP id c11so1273865ieb.15
+        for <linux-pci@vger.kernel.org>; Wed, 10 Apr 2013 15:36:54 -0700 (PDT)
+Date: Wed, 10 Apr 2013 16:36:50 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: Stephen Hemminger <stephen@networkplumber.org>,
+	linux-pci@vger.kernel.org, David Woodhouse <dwmw2@infradead.org>,
+	iommu@lists.linux-foundation.org
+Subject: Re: PCI warning on boot 3.8.0-rc1
+Message-ID: <20130410223650.GA6109@google.com>
+References: <20130116143853.339dd89b@nehalam.linuxnetplumber.net>
+ <CAErSpo5eOE_=Ob2jN7ACy0eJBOa8k36XqCbHnGTCs-wfiy8tiw@mail.gmail.com>
+ <20130204103645.38ae2d5e@nehalam.linuxnetplumber.net>
+ <1360009684.11144.539.camel@bling.home>
+ <1360017684.11144.547.camel@bling.home>
+ <20130206074900.02f04e3f@nehalam.linuxnetplumber.net>
+ <1360166321.11144.638.camel@bling.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1360166321.11144.638.camel@bling.home>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 16 Apr 2013 19:27:34 +0100, David Howells <dhowells@redhat.com> wrote:
-> Supply a function (proc_remove()) to remove a proc entry (and any subtree
-> rooted there) by proc_dir_entry pointer rather than by name and (optionally)
-> root dir entry pointer.  This allows us to eliminate all remaining pde->name
-> accesses outside of procfs.
+On Wed, Feb 06, 2013 at 08:58:41AM -0700, Alex Williamson wrote:
+> On Wed, 2013-02-06 at 07:49 -0800, Stephen Hemminger wrote:
+> > On Mon, 04 Feb 2013 15:41:24 -0700
+> > Alex Williamson <alex.williamson@redhat.com> wrote:
+> > 
+> > > On Mon, 2013-02-04 at 13:28 -0700, Alex Williamson wrote:
+> > > > On Mon, 2013-02-04 at 10:36 -0800, Stephen Hemminger wrote:
+> > > > > > I think drivers/pci/search.c is identical between 3.7 and 3.8-rc1.  Is
+> > > > > > this the first time you've turned on the IOMMU on that box?
+> > > > > 
+> > > > > It exists in 3.7 and earlier kernels, just haven't turned on same config.
+> > > > > 
+> > > > > > It's the same warning as in this bugzilla:
+> > > > > > https://bugzilla.kernel.org/show_bug.cgi?id=44881, and there's a patch
+> > > > > > there at https://bugzilla.kernel.org/show_bug.cgi?id=44881#c11, but
+> > > > > > it's just a quirk that turns off VT-d if we find certain broken
+> > > > > > bridges.  It doesn't look like you have any of those (although I don't
+> > > > > > know what you have at 05:00.0).
+> > > > > > 
+> > > > > > Bjorn
+> > > > > 
+> > > > > This is a standard ASUS motherboard, and don't want to disable VT-d.
+> > > > 
+> > > > Stephen,
+> > > > 
+> > > > Can you give the lspci -vvv of device 5:00.0 to see if it's one we've
+> > > > seen before?  Does the patch below help?
+> > > > 
+> > > > Bjorn, I think we need to quirk it somehow.  So far they've all been
+> > > > PCI-to-PCI bridges attached to root ports where we expect it's actually
+> > > > a PCIe-to-PCI bridge.  Seems like maybe we could have the same attached
+> > > > to a downstream port.  The patch below avoids the WARN and gives us a
+> > > > device, but of course pci_is_pcie reports wrong for this device and may
+> > > > cause some trickle down breakage.  A more complete option might be to
+> > > > add a is_pcie flag to the device that can be set independent of
+> > > > pcie_cap.  We'd need to check all the callers for assumptions, but then
+> > > > we could put the quirk in one place and hopefully fix everything.
+> > > > Thoughts?  Thanks,
+> > > 
+> > > This latter approach seems like it might be easier than I expected since
+> > > all the users are so well filtered through the access functions.  A
+> > > quick look through who uses pci_is_pcie seems like this might be
+> > > complete, but more eyes are required.  I'll upload this to the bz for
+> > > those reporters to test as well.  Thoughts?  Thanks,
+> > > 
+> > > Alex
+> > 
+> > On my hardware this gives:
 > 
-> Signed-off-by: David Howells <dhowells@redhat.com>
-> cc: linux-acpi@vger.kernel.org
-> cc: openipmi-developer@lists.sourceforge.net
-> cc: devicetree-discuss@lists.ozlabs.org
-> cc: linux-pci@vger.kernel.org
-> cc: netdev@vger.kernel.org
-> cc: netfilter-devel@vger.kernel.org
-> cc: alsa-devel@alsa-project.org
-
-Looks okay to me. For the OF portion:
-
-Acked-by: Grant Likely <grant.likely@linaro.or>
-
-> ---
+> > [    0.254621] pci_bus 0000:05: busn_res: can not insert [bus 05-ff] under [bus 00-3e] (conflicts with (null) [bus 00-3e])
+> > [    0.254647] WARNING: Your hardware is broken, device (null) appears to be a
+> > [    0.254647]  Legacy PCI device attached directly to a PCIe device which is not a
+> > [    0.254647]  PCIe-to-PCI bridge.  Per section 7.8 of the PCI Express 3.0 spec, the
+> > [    0.254647]  PCI express capability structure is required for PCI express device
+> > [    0.254647] functions.
+> > [    0.254653] pci 0000:05:00.0: [1b21:1080] type 01 class 0x060401
 > 
->  drivers/acpi/sbs.c                  |   21 ++++-----------------
->  drivers/char/ipmi/ipmi_msghandler.c |    2 +-
->  drivers/misc/sgi-gru/gruprocfs.c    |    2 +-
->  drivers/of/base.c                   |   11 +----------
->  drivers/pci/proc.c                  |   12 +++---------
->  fs/proc/generic.c                   |    7 +++++++
->  fs/proc/vmcore.c                    |    2 +-
->  include/linux/proc_fs.h             |    2 ++
->  kernel/irq/proc.c                   |    6 +-----
->  net/8021q/vlanproc.c                |    9 ++-------
->  net/core/pktgen.c                   |    6 ++----
->  net/ipv4/netfilter/ipt_CLUSTERIP.c  |    4 ++--
->  net/ipv6/proc.c                     |    3 +--
->  net/netfilter/xt_hashlimit.c        |    4 ++--
->  sound/core/info.c                   |   19 +++++--------------
->  15 files changed, 35 insertions(+), 75 deletions(-)
+> I guess I must be calling pci_name() before it's set.  The warning
+> message needs some work too, it's mainly meant for hardware vendors with
+> the hope that they might test Linux and see it before shipping these
+> broken devices.  Bjorn, does this approach seem worth pursuing?  Thanks,
+
+Sorry I dropped this for so long.  I'm looking at the patch
+here: https://bugzilla.kernel.org/attachment.cgi?id=92521,
+appended for convenience.
+
+In case anybody else needs the context, I think we have
+this scenario (from John Wehin's original report at
+https://bugzilla.kernel.org/show_bug.cgi?id=44881):
+
+    pci 0000:00:1c.4: PCI bridge to [bus 03-04]	# PCIe root port
+    pci 0000:03:00.0: PCI bridge to [bus 04]	# no PCIe cap
+    ...
+    pci 0000:03:00.0: expected upstream PCIe bridge; 0000:00:1c.4 is type 0x4
+
+We called pci_find_upstream_pcie_bridge(03:00.0), which generated
+the warning because:
+
+    - 03:00.0 is not a PCIe device, and
+    - 00:1c.4 (its upstream bridge) *is* a PCIe device, and
+    - 00:1c.4 is a Root Port (PCI_EXP_TYPE_ROOT_PORT == 0x4),
+      not a PCIe-to-PCI bridge (PCI_EXP_TYPE_PCI_BRIDGE == 0x7)
+      as we expected
+
+> commit 60d668a3cdeeb0e29570cf0043736436c146bde8
+> Author: Alex Williamson <alex.williamson@redhat.com>
+> Date:   Mon Feb 4 15:34:34 2013 -0700
 > 
-> diff --git a/drivers/acpi/sbs.c b/drivers/acpi/sbs.c
-> index a296e08..b6241ee 100644
-> --- a/drivers/acpi/sbs.c
-> +++ b/drivers/acpi/sbs.c
-> @@ -521,19 +521,6 @@ acpi_sbs_add_fs(struct proc_dir_entry **dir,
->  	return 0;
->  }
+>     pci: Handle unadvertised PCIe bridges
+>     
+>     There seem to be several PCIe-to-PCI bridges out in the wild that
+>     blatantly ignore the PCIe specification and do not expose a PCIe
+>     capability.  We can attempt to deduce their existence by looking
+>     for PCI bridges directly connected to root ports or downstream
+>     ports.  What this means is that pci_is_pcie() does not imply PCIe
+>     capability and we un-deprecate is_pcie to denote the difference.
+>     All the accesses seem to go through pcie_capability_reg_implemented,
+>     so we can significantly limit the footprint of this change by
+>     checking things there.
+>     
+>     Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+> 
+> diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+> index 3af0478..3df24e7 100644
+> --- a/drivers/pci/access.c
+> +++ b/drivers/pci/access.c
+> @@ -511,7 +511,7 @@ static inline bool pcie_cap_has_rtctl(const struct pci_dev *dev)
 >  
-> -static void
-> -acpi_sbs_remove_fs(struct proc_dir_entry **dir,
-> -			   struct proc_dir_entry *parent_dir)
-> -{
-> -	if (*dir) {
-> -		remove_proc_entry(ACPI_SBS_FILE_INFO, *dir);
-> -		remove_proc_entry(ACPI_SBS_FILE_STATE, *dir);
-> -		remove_proc_entry(ACPI_SBS_FILE_ALARM, *dir);
-> -		remove_proc_entry((*dir)->name, parent_dir);
-> -		*dir = NULL;
-> -	}
-> -}
-> -
->  /* Smart Battery Interface */
->  static struct proc_dir_entry *acpi_battery_dir = NULL;
->  
-> @@ -836,8 +823,8 @@ static void acpi_battery_remove(struct acpi_sbs *sbs, int id)
->  		power_supply_unregister(&battery->bat);
->  	}
->  #ifdef CONFIG_ACPI_PROCFS_POWER
-> -	if (battery->proc_entry)
-> -		acpi_sbs_remove_fs(&battery->proc_entry, acpi_battery_dir);
-> +	proc_remove(battery->proc_entry);
-> +	battery->proc_entry = NULL;
->  #endif
->  }
->  
-> @@ -873,8 +860,8 @@ static void acpi_charger_remove(struct acpi_sbs *sbs)
->  	if (sbs->charger.dev)
->  		power_supply_unregister(&sbs->charger);
->  #ifdef CONFIG_ACPI_PROCFS_POWER
-> -	if (sbs->charger_entry)
-> -		acpi_sbs_remove_fs(&sbs->charger_entry, acpi_ac_dir);
-> +	proc_remove(sbs->charger_entry);
-> +	sbs->charger_entry = NULL;
->  #endif
->  }
->  
-> diff --git a/drivers/char/ipmi/ipmi_msghandler.c b/drivers/char/ipmi/ipmi_msghandler.c
-> index 1420bbb..4d439d2 100644
-> --- a/drivers/char/ipmi/ipmi_msghandler.c
-> +++ b/drivers/char/ipmi/ipmi_msghandler.c
-> @@ -4541,7 +4541,7 @@ static void __exit cleanup_ipmi(void)
->  	del_timer_sync(&ipmi_timer);
->  
->  #ifdef CONFIG_PROC_FS
-> -	remove_proc_entry(proc_ipmi_root->name, NULL);
-> +	proc_remove(proc_ipmi_root);
->  #endif /* CONFIG_PROC_FS */
->  
->  	driver_unregister(&ipmidriver.driver);
-> diff --git a/drivers/misc/sgi-gru/gruprocfs.c b/drivers/misc/sgi-gru/gruprocfs.c
-> index 950dbe9..797d796 100644
-> --- a/drivers/misc/sgi-gru/gruprocfs.c
-> +++ b/drivers/misc/sgi-gru/gruprocfs.c
-> @@ -355,7 +355,7 @@ static void delete_proc_files(void)
->  		for (p = proc_files; p->name; p++)
->  			if (p->entry)
->  				remove_proc_entry(p->name, proc_gru);
-> -		remove_proc_entry("gru", proc_gru->parent);
-> +		proc_remove(proc_gru);
->  	}
->  }
->  
-> diff --git a/drivers/of/base.c b/drivers/of/base.c
-> index 321d3ef..9c70436 100644
-> --- a/drivers/of/base.c
-> +++ b/drivers/of/base.c
-> @@ -1452,16 +1452,7 @@ int of_attach_node(struct device_node *np)
->  #ifdef CONFIG_PROC_DEVICETREE
->  static void of_remove_proc_dt_entry(struct device_node *dn)
+>  static bool pcie_capability_reg_implemented(struct pci_dev *dev, int pos)
 >  {
-> -	struct device_node *parent = dn->parent;
-> -	struct property *prop = dn->properties;
-> -
-> -	while (prop) {
-> -		remove_proc_entry(prop->name, dn->pde);
-> -		prop = prop->next;
-> -	}
-> -
-> -	if (dn->pde)
-> -		remove_proc_entry(dn->pde->name, parent->pde);
-> +	proc_remove(dn->pde);
->  }
->  #else
->  static void of_remove_proc_dt_entry(struct device_node *dn)
-> diff --git a/drivers/pci/proc.c b/drivers/pci/proc.c
-> index 7cde7c1..0812608 100644
-> --- a/drivers/pci/proc.c
-> +++ b/drivers/pci/proc.c
-> @@ -427,20 +427,14 @@ int pci_proc_attach_device(struct pci_dev *dev)
+> -	if (!pci_is_pcie(dev))
+> +	if (!pci_is_pcie(dev) || !pci_pcie_cap(dev))
+>  		return false;
 >  
->  int pci_proc_detach_device(struct pci_dev *dev)
->  {
-> -	struct proc_dir_entry *e;
-> -
-> -	if ((e = dev->procent)) {
-> -		remove_proc_entry(e->name, dev->bus->procdir);
-> -		dev->procent = NULL;
-> -	}
-> +	proc_remove(dev->procent);
-> +	dev->procent = NULL;
->  	return 0;
+>  	switch (pos) {
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 6186f03..0a87b6b 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -926,20 +926,46 @@ static void pci_read_irq(struct pci_dev *dev)
+>  	dev->irq = irq;
 >  }
 >  
->  int pci_proc_detach_bus(struct pci_bus* bus)
->  {
-> -	struct proc_dir_entry *de = bus->procdir;
-> -	if (de)
-> -		remove_proc_entry(de->name, proc_bus_pci_dir);
-> +	proc_remove(bus->procdir);
->  	return 0;
->  }
->  
-> diff --git a/fs/proc/generic.c b/fs/proc/generic.c
-> index 2c6d6be..4b48033 100644
-> --- a/fs/proc/generic.c
-> +++ b/fs/proc/generic.c
-> @@ -630,3 +630,10 @@ const char *get_proc_name(const struct proc_dir_entry *de)
->  	return de->name;
->  }
->  EXPORT_SYMBOL_GPL(get_proc_name);
-> +
-> +void proc_remove(struct proc_dir_entry *de)
+> +static bool is_unadvertised_pcie_bridge(struct pci_dev *pdev)
 > +{
-> +	if (de)
-> +		remove_proc_subtree(de->name, de->parent);
-> +}
-> +EXPORT_SYMBOL(proc_remove);
-> diff --git a/fs/proc/vmcore.c b/fs/proc/vmcore.c
-> index 38edddc..17f7e08 100644
-> --- a/fs/proc/vmcore.c
-> +++ b/fs/proc/vmcore.c
-> @@ -699,7 +699,7 @@ void vmcore_cleanup(void)
->  	struct list_head *pos, *next;
->  
->  	if (proc_vmcore) {
-> -		remove_proc_entry(proc_vmcore->name, proc_vmcore->parent);
-> +		proc_remove(proc_vmcore);
->  		proc_vmcore = NULL;
->  	}
->  
-> diff --git a/include/linux/proc_fs.h b/include/linux/proc_fs.h
-> index 7abc72a..b8949b1 100644
-> --- a/include/linux/proc_fs.h
-> +++ b/include/linux/proc_fs.h
-> @@ -67,6 +67,7 @@ struct proc_dir_entry *proc_create_data(const char *name, umode_t mode,
->  				struct proc_dir_entry *parent,
->  				const struct file_operations *proc_fops,
->  				void *data);
-> +extern void proc_remove(struct proc_dir_entry *);
->  extern void remove_proc_entry(const char *name, struct proc_dir_entry *parent);
->  extern int remove_proc_subtree(const char *name, struct proc_dir_entry *parent);
->  
-> @@ -103,6 +104,7 @@ static inline struct proc_dir_entry *proc_create_data(const char *name,
->  {
->  	return NULL;
->  }
-> +static inline void proc_remove(struct proc_dir_entry *de) {}
->  #define remove_proc_entry(name, parent) do {} while (0)
->  #define remove_proc_subtree(name, parent) do {} while (0)
->  
-> diff --git a/kernel/irq/proc.c b/kernel/irq/proc.c
-> index d59ae37..19ed5c4 100644
-> --- a/kernel/irq/proc.c
-> +++ b/kernel/irq/proc.c
-> @@ -366,11 +366,7 @@ void unregister_irq_proc(unsigned int irq, struct irq_desc *desc)
->  
->  void unregister_handler_proc(unsigned int irq, struct irqaction *action)
->  {
-> -	if (action->dir) {
-> -		struct irq_desc *desc = irq_to_desc(irq);
-> -
-> -		remove_proc_entry(action->dir->name, desc->dir);
-> -	}
-> +	proc_remove(action->dir);
->  }
->  
->  static void register_default_affinity_proc(void)
-> diff --git a/net/8021q/vlanproc.c b/net/8021q/vlanproc.c
-> index 959ddbb..1d0e8921 100644
-> --- a/net/8021q/vlanproc.c
-> +++ b/net/8021q/vlanproc.c
-> @@ -184,14 +184,9 @@ int vlan_proc_add_dev(struct net_device *vlandev)
->   */
->  int vlan_proc_rem_dev(struct net_device *vlandev)
->  {
-> -	struct vlan_net *vn = net_generic(dev_net(vlandev), vlan_net_id);
-> -
->  	/** NOTE:  This will consume the memory pointed to by dent, it seems. */
-> -	if (vlan_dev_priv(vlandev)->dent) {
-> -		remove_proc_entry(vlan_dev_priv(vlandev)->dent->name,
-> -				  vn->proc_vlan_dir);
-> -		vlan_dev_priv(vlandev)->dent = NULL;
-> -	}
-> +	proc_remove(vlan_dev_priv(vlandev)->dent);
-> +	vlan_dev_priv(vlandev)->dent = NULL;
->  	return 0;
->  }
->  
-> diff --git a/net/core/pktgen.c b/net/core/pktgen.c
-> index f6af4fe..6c41e97 100644
-> --- a/net/core/pktgen.c
-> +++ b/net/core/pktgen.c
-> @@ -1904,7 +1904,7 @@ static void pktgen_change_name(const struct pktgen_net *pn, struct net_device *d
->  			if (pkt_dev->odev != dev)
->  				continue;
->  
-> -			remove_proc_entry(pkt_dev->entry->name, pn->proc_dir);
-> +			proc_remove(pkt_dev->entry);
->  
->  			pkt_dev->entry = proc_create_data(dev->name, 0600,
->  							  pn->proc_dir,
-> @@ -3576,8 +3576,6 @@ static void _rem_dev_from_if_list(struct pktgen_thread *t,
->  static int pktgen_remove_device(struct pktgen_thread *t,
->  				struct pktgen_dev *pkt_dev)
->  {
-> -	struct pktgen_net *pn = t->net;
-> -
->  	pr_debug("remove_device pkt_dev=%p\n", pkt_dev);
->  
->  	if (pkt_dev->running) {
-> @@ -3597,7 +3595,7 @@ static int pktgen_remove_device(struct pktgen_thread *t,
->  	_rem_dev_from_if_list(t, pkt_dev);
->  
->  	if (pkt_dev->entry)
-> -		remove_proc_entry(pkt_dev->entry->name, pn->proc_dir);
-> +		proc_remove(pkt_dev->entry);
->  
->  #ifdef CONFIG_XFRM
->  	free_SAs(pkt_dev);
-> diff --git a/net/ipv4/netfilter/ipt_CLUSTERIP.c b/net/ipv4/netfilter/ipt_CLUSTERIP.c
-> index e4738fe..0b732ef 100644
-> --- a/net/ipv4/netfilter/ipt_CLUSTERIP.c
-> +++ b/net/ipv4/netfilter/ipt_CLUSTERIP.c
-> @@ -105,7 +105,7 @@ clusterip_config_entry_put(struct clusterip_config *c)
->  		 * functions are also incrementing the refcount on their own,
->  		 * so it's safe to remove the entry even if it's in use. */
->  #ifdef CONFIG_PROC_FS
-> -		remove_proc_entry(c->pde->name, c->pde->parent);
-> +		proc_remove(c->pde);
->  #endif
->  		return;
->  	}
-> @@ -736,7 +736,7 @@ static void __exit clusterip_tg_exit(void)
->  {
->  	pr_info("ClusterIP Version %s unloading\n", CLUSTERIP_VERSION);
->  #ifdef CONFIG_PROC_FS
-> -	remove_proc_entry(clusterip_procdir->name, clusterip_procdir->parent);
-> +	proc_remove(clusterip_procdir);
->  #endif
->  	nf_unregister_hook(&cip_arp_ops);
->  	xt_unregister_target(&clusterip_tg_reg);
-> diff --git a/net/ipv6/proc.c b/net/ipv6/proc.c
-> index 7ea6e18..537d9ee 100644
-> --- a/net/ipv6/proc.c
-> +++ b/net/ipv6/proc.c
-> @@ -287,8 +287,7 @@ int snmp6_unregister_dev(struct inet6_dev *idev)
->  		return -ENOENT;
->  	if (!idev->stats.proc_dir_entry)
->  		return -EINVAL;
-> -	remove_proc_entry(idev->stats.proc_dir_entry->name,
-> -			  net->mib.proc_net_devsnmp6);
-> +	proc_remove(idev->stats.proc_dir_entry);
->  	idev->stats.proc_dir_entry = NULL;
->  	return 0;
->  }
-> diff --git a/net/netfilter/xt_hashlimit.c b/net/netfilter/xt_hashlimit.c
-> index d2fd53b..40002ef 100644
-> --- a/net/netfilter/xt_hashlimit.c
-> +++ b/net/netfilter/xt_hashlimit.c
-> @@ -330,7 +330,7 @@ static void htable_destroy(struct xt_hashlimit_htable *hinfo)
->  		parent = hashlimit_net->ip6t_hashlimit;
->  
->  	if(parent != NULL)
-> -		remove_proc_entry(hinfo->pde->name, parent);
-> +		proc_remove(hinfo->pde);
->  
->  	htable_selective_cleanup(hinfo, select_all);
->  	vfree(hinfo);
-> @@ -887,7 +887,7 @@ static void __net_exit hashlimit_proc_net_exit(struct net *net)
->  		pde = hashlimit_net->ip6t_hashlimit;
->  
->  	hlist_for_each_entry(hinfo, &hashlimit_net->htables, node)
-> -		remove_proc_entry(hinfo->pde->name, pde);
-> +		proc_remove(hinfo->pde);
->  
->  	hashlimit_net->ipt_hashlimit = NULL;
->  	hashlimit_net->ip6t_hashlimit = NULL;
-> diff --git a/sound/core/info.c b/sound/core/info.c
-> index c7f41c3..3c9bd6b 100644
-> --- a/sound/core/info.c
-> +++ b/sound/core/info.c
-> @@ -153,13 +153,6 @@ EXPORT_SYMBOL(snd_seq_root);
->  struct snd_info_entry *snd_oss_root;
->  #endif
->  
-> -static void snd_remove_proc_entry(struct proc_dir_entry *parent,
-> -				  struct proc_dir_entry *de)
-> -{
-> -	if (de)
-> -		remove_proc_entry(de->name, parent);
-> -}
-> -
->  static loff_t snd_info_entry_llseek(struct file *file, loff_t offset, int orig)
->  {
->  	struct snd_info_private_data *data;
-> @@ -580,7 +573,7 @@ int __exit snd_info_done(void)
->  #ifdef CONFIG_SND_OSSEMUL
->  		snd_info_free_entry(snd_oss_root);
->  #endif
-> -		snd_remove_proc_entry(NULL, snd_proc_root);
-> +		proc_remove(snd_proc_root);
->  	}
->  	return 0;
->  }
-> @@ -642,7 +635,7 @@ void snd_info_card_id_change(struct snd_card *card)
->  {
->  	mutex_lock(&info_mutex);
->  	if (card->proc_root_link) {
-> -		snd_remove_proc_entry(snd_proc_root, card->proc_root_link);
-> +		proc_remove(card->proc_root_link);
->  		card->proc_root_link = NULL;
->  	}
->  	if (strcmp(card->id, card->proc_root->name))
-> @@ -661,10 +654,8 @@ void snd_info_card_disconnect(struct snd_card *card)
->  	if (!card)
->  		return;
->  	mutex_lock(&info_mutex);
-> -	if (card->proc_root_link) {
-> -		snd_remove_proc_entry(snd_proc_root, card->proc_root_link);
-> -		card->proc_root_link = NULL;
-> -	}
-> +	proc_remove(card->proc_root_link);
-> +	card->proc_root_link = NULL;
->  	if (card->proc_root)
->  		snd_info_disconnect(card->proc_root);
->  	mutex_unlock(&info_mutex);
-> @@ -856,7 +847,7 @@ static void snd_info_disconnect(struct snd_info_entry *entry)
->  	list_del_init(&entry->list);
->  	root = entry->parent == NULL ? snd_proc_root : entry->parent->p;
->  	snd_BUG_ON(!root);
-> -	snd_remove_proc_entry(root, entry->p);
-> +	proc_remove(entry->p);
->  	entry->p = NULL;
->  }
->  
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+> +	struct pci_dev *parent;
+> +
+> +	if (pdev->hdr_type != PCI_HEADER_TYPE_BRIDGE ||
+> +	    pci_find_capability(pdev, PCI_CAP_ID_EXP) ||
+> +            pci_is_root_bus(pdev->bus))
+> +		return false;
+> +
+> +	parent = pdev->bus->self;
+> +
+> +	if (pci_is_pcie(parent) &&
+> +	    (pci_pcie_type(parent) == PCI_EXP_TYPE_ROOT_PORT ||
+> +	     pci_pcie_type(parent) == PCI_EXP_TYPE_DOWNSTREAM)) {
+> +		pr_warn("WARNING: Your hardware is broken, device %s appears to be a\n Legacy PCI device attached directly to a PCIe device which is not a\n PCIe-to-PCI bridge.  Per section 7.8 of the PCI Express 3.0 spec, the\n PCI express capability structure is required for PCI express device\nfunctions.\n",
+> +		        pci_name(pdev));
 
--- 
-Grant Likely, B.Sc, P.Eng.
-Secret Lab Technologies, Ltd.
+Vendors might see this warning, but I'm doubtful they'll do anything
+about it.  I suspect it will result in a lot of emails from concerned
+users to LKML and linux-pci, and we really can't do anything other
+than say "yup, it's broken, report it to your vendor."
+
+And since the hardware seems to actually *work* if we just pretend that
+the problem device (e.g., 03:00.0 above) is PCIe, it's doubtful that
+the vendor would do anything anyway, so maybe a dev_info() would be
+sufficient.
+
+> +		return true;
+> +	}
+> +
+> +	return false;
+> +}
+> +
+>  void set_pcie_port_type(struct pci_dev *pdev)
+>  {
+>  	int pos;
+> -	u16 reg16;
+> +	u16 flags, caps = 0;
+>  
+>  	pos = pci_find_capability(pdev, PCI_CAP_ID_EXP);
+> -	if (!pos)
+> +	if (pos) {
+> +		pci_read_config_word(pdev, pos + PCI_EXP_FLAGS, &flags);
+> +		pci_read_config_word(pdev, pos + PCI_EXP_DEVCAP, &caps);
+> +	} else if (is_unadvertised_pcie_bridge(pdev))
+> +		flags = PCI_EXP_TYPE_PCI_BRIDGE << 4;
+> +	else
+>  		return;
+> +
+>  	pdev->is_pcie = 1;
+>  	pdev->pcie_cap = pos;
+> -	pci_read_config_word(pdev, pos + PCI_EXP_FLAGS, &reg16);
+> -	pdev->pcie_flags_reg = reg16;
+> -	pci_read_config_word(pdev, pos + PCI_EXP_DEVCAP, &reg16);
+> -	pdev->pcie_mpss = reg16 & PCI_EXP_DEVCAP_PAYLOAD;
+> +	pdev->pcie_flags_reg = flags;
+
+If we can avoid it, I'd prefer not to complicate the meaning of
+"pci_is_pcie()" -- it used to mean "this device has a PCIe
+capability and you can do PCIe things with it."  But now it
+means something else, and we can't do PCIe things with these
+problem devices anyway.
+
+Could we accomplish basically the same thing by making
+pci_find_upstream_pcie_bridge() look like this?
+
+    if (pci_is_pcie(pdev))
+	    return NULL;
+
++   bridge = pdev->bus->self;
++   if (bridge && pci_is_pcie(bridge) &&
++	(pci_pcie_type(bridge) == PCI_EXP_TYPE_ROOT_PORT ||
++	 pci_pcie_type(bridge) == PCI_EXP_TYPE_DOWNSTREAM))
++	    return NULL;
+
+    while (1) {
+	...
+
+Bjorn
+
+> +	pdev->pcie_mpss = caps & PCI_EXP_DEVCAP_PAYLOAD;
+>  }
+>  
+>  void set_pcie_hotplug_bridge(struct pci_dev *pdev)
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 15472d6..c9ef42c 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -300,8 +300,8 @@ struct pci_dev {
+>  	unsigned int	msix_enabled:1;
+>  	unsigned int	ari_enabled:1;	/* ARI forwarding */
+>  	unsigned int	is_managed:1;
+> -	unsigned int	is_pcie:1;	/* Obsolete. Will be removed.
+> -					   Use pci_is_pcie() instead */
+> +	unsigned int	is_pcie:1;	/* Don't access directly,
+> +					   use pci_is_pcie() instead */
+>  	unsigned int    needs_freset:1; /* Dev requires fundamental reset */
+>  	unsigned int	state_saved:1;
+>  	unsigned int	is_physfn:1;
+> @@ -1689,7 +1689,7 @@ static inline int pci_pcie_cap(struct pci_dev *dev)
+>   */
+>  static inline bool pci_is_pcie(struct pci_dev *dev)
+>  {
+> -	return !!pci_pcie_cap(dev);
+> +	return dev->is_pcie;
+>  }
+>  
+>  /**
