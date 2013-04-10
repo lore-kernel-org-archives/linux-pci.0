@@ -1,184 +1,175 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:8372 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S936341Ab3DHP35 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 8 Apr 2013 11:29:57 -0400
-Message-ID: <5162E266.6080002@redhat.com>
-Date: Mon, 08 Apr 2013 11:29:42 -0400
-From: Don Dutile <ddutile@redhat.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
+In-Reply-To: <CAErSpo4VzBZ=fAzPm1yWEs4+09_D1=rysMf6tGgnqpVEKytSzQ@mail.gmail.com>
+References: <1363217302-14383-1-git-send-email-yinghai@kernel.org>
+	<1363217302-14383-4-git-send-email-yinghai@kernel.org>
+	<CAErSpo4VzBZ=fAzPm1yWEs4+09_D1=rysMf6tGgnqpVEKytSzQ@mail.gmail.com>
+Date: Wed, 10 Apr 2013 09:12:15 -0700
+Message-ID: <CAE9FiQV=Wv0SKKyrpauh6u2jkCYyWAthFH0FcXqGw5zKLnnQVQ@mail.gmail.com>
+Subject: Re: [PATCH v3 03/27] PCI: pci resource iterator
+From: Yinghai Lu <yinghai@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Neil Horman <nhorman@tuxdriver.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Prarit Bhargava <prarit@redhat.com>,
-	Don Zickus <dzickus@redhat.com>,
-	Asit Mallick <asit.k.mallick@intel.com>,
-	David Woodhouse <dwmw2@infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v6] irq: add quirk for broken interrupt remapping on 55XX
- chipsets
-References: <1362158276-4901-1-git-send-email-nhorman@tuxdriver.com> <1365190294-9061-1-git-send-email-nhorman@tuxdriver.com> <CAErSpo6z8oqiaUBCieUMsS_c5xvVFUDbHqVO_eBBde3uv2=zcg@mail.gmail.com>
-In-Reply-To: <CAErSpo6z8oqiaUBCieUMsS_c5xvVFUDbHqVO_eBBde3uv2=zcg@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Cc: Ram Pai <linuxram@us.ibm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/05/2013 09:55 PM, Bjorn Helgaas wrote:
-> On Fri, Apr 5, 2013 at 1:31 PM, Neil Horman<nhorman@tuxdriver.com>  wrote:
->> A few years back intel published a spec update:
->> http://www.intel.com/content/dam/doc/specification-update/5520-and-5500-chipset-ioh-specification-update.pdf
+On Thu, Apr 4, 2013 at 3:18 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Wed, Mar 13, 2013 at 5:27 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> From: Ram Pai <linuxram@us.ibm.com>
 >>
->> For the 5520 and 5500 chipsets which contained an errata (specificially errata
->> 53), which noted that these chipsets can't properly do interrupt remapping, and
->> as a result the recommend that interrupt remapping be disabled in bios.  While
->> many vendors have a bios update to do exactly that, not all do, and of course
->> not all users update their bios to a level that corrects the problem.  As a
->> result, occasionally interrupts can arrive at a cpu even after affinity for that
->> interrupt has be moved, leading to lost or spurrious interrupts (usually
->> characterized by the message:
->> kernel: do_IRQ: 7.71 No irq handler for vector (irq -1)
+>> Currently pci_dev structure holds an array of 17 PCI resources; six base
+>> BARs, one ROM BAR, four BRIDGE BARs, six sriov BARs.  This is wasteful.
+>> A bridge device just needs the 4 bridge resources. A non-bridge device
+>> just needs the six base resources and one ROM resource. The sriov
+>> resources are needed only if the device has SRIOV capability.
 >>
->> There have been several incidents recently of people seeing this error, and
->> investigation has shown that they have system for which their BIOS level is such
->> that this feature was not properly turned off.  As such, it would be good to
->> give them a reminder that their systems are vulnurable to this problem.
->
-> I'd still like to mention the bugzilla URL in the changelog
-> (https://bugzilla.redhat.com/show_bug.cgi?id=887006) if it can be made
-> public.
->
->> ...
->
->> diff --git a/arch/x86/kernel/early-quirks.c b/arch/x86/kernel/early-quirks.c
->> index 3755ef4..bfa3139 100644
->> --- a/arch/x86/kernel/early-quirks.c
->> +++ b/arch/x86/kernel/early-quirks.c
->> @@ -192,6 +192,27 @@ static void __init ati_bugs_contd(int num, int slot, int func)
->>   }
->>   #endif
+>> The pci_dev structure needs to be re-organized to avoid unnecessary
+>> bloating.  However too much code outside the pci-bus driver, assumes the
+>> internal details of the pci_dev structure, thus making it hard to
+>> re-organize the datastructure.
 >>
->> +#ifdef CONFIG_IRQ_REMAP
->> +static void __init intel_remapping_check(int num, int slot, int func)
+>> As a first step this patch provides generic methods to access the
+>> resource structure of the pci_dev.
+>>
+>> Finally we can re-organize the resource structure in the pci_dev
+>> structure and correspondingly update the methods.
+>>
+>> -v2: Consolidated iterator interface as per Bjorn's suggestion.
+>> -v3: Add the idx back - Yinghai Lu
+>> -v7: Change to use bitmap for searching - Yinghai Lu
+>> -v8: Fix acpiphp module compiling error that is found by
+>>         Steven Newbury <steve@snewbury.org.uk> - Yinghai Lu
+>>
+>> Signed-off-by: Ram Pai <linuxram@us.ibm.com>
+>> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+>> ---
+>>  drivers/pci/probe.c |   48 ++++++++++++++++++++++++++++++++++++++++++++++++
+>>  include/linux/pci.h |   24 ++++++++++++++++++++++++
+>>  2 files changed, 72 insertions(+)
+>>
+>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+>> index 1df75f7..ac751a6 100644
+>> --- a/drivers/pci/probe.c
+>> +++ b/drivers/pci/probe.c
+>> @@ -123,6 +123,54 @@ int pci_dev_resource_idx(struct pci_dev *dev, struct resource *res)
+>>         return -1;
+>>  }
+>>
+>> +static void __init_res_idx_mask(unsigned long *mask, int flag)
 >> +{
->> +       u8 revision;
->> +
->> +       revision = pci_read_config_byte(num, slot, func , PCI_REVISION_ID);
->> +
->> +       /*
->> +        * Revision 0x13 of this chipset supports irq remapping
->> +        * but has an erratum that breaks its behavior, flag it as such
->> +        */
->> +       if (revision == 0x13)
->> +               irq_remap_broken = 1;
->> +
->> +}
->> +#else
->> +static void __init intel_remapping_check(int num, int slot, int func)
->> +{
->> +}
+>> +       bitmap_zero(mask, PCI_NUM_RESOURCES);
+>> +       if (flag & PCI_STD_RES)
+>> +               bitmap_set(mask, PCI_STD_RESOURCES,
+>> +                       PCI_STD_RESOURCE_END - PCI_STD_RESOURCES + 1);
+>> +       if (flag & PCI_ROM_RES)
+>> +               bitmap_set(mask, PCI_ROM_RESOURCE, 1);
+>> +#ifdef CONFIG_PCI_IOV
+>> +       if (flag & PCI_IOV_RES)
+>> +               bitmap_set(mask, PCI_IOV_RESOURCES,
+>> +                       PCI_IOV_RESOURCE_END - PCI_IOV_RESOURCES + 1);
 >> +#endif
+>> +       if (flag & PCI_BRIDGE_RES)
+>> +               bitmap_set(mask, PCI_BRIDGE_RESOURCES,
+>> +                       PCI_BRIDGE_RESOURCE_END - PCI_BRIDGE_RESOURCES + 1);
+>> +}
 >> +
->>   #define QFLAG_APPLY_ONCE       0x1
->>   #define QFLAG_APPLIED          0x2
->>   #define QFLAG_DONE             (QFLAG_APPLY_ONCE|QFLAG_APPLIED)
->> @@ -221,6 +242,10 @@ static struct chipset early_qrk[] __initdata = {
->>            PCI_CLASS_SERIAL_SMBUS, PCI_ANY_ID, 0, ati_bugs },
->>          { PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_SBX00_SMBUS,
->>            PCI_CLASS_SERIAL_SMBUS, PCI_ANY_ID, 0, ati_bugs_contd },
->> +       { PCI_VENDOR_ID_INTEL, 0x3403, PCI_CLASS_BRIDGE_HOST,
->> +         PCI_BASE_CLASS_BRIDGE, 0, intel_remapping_check },
->> +       { PCI_VENDOR_ID_INTEL, 0x3406, PCI_CLASS_BRIDGE_HOST,
->> +         PCI_BASE_CLASS_BRIDGE, 0, intel_remapping_check },
->>          {}
->>   };
->>
->> diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
->> index d56f8c1..2b56e92 100644
->> --- a/drivers/iommu/irq_remapping.c
->> +++ b/drivers/iommu/irq_remapping.c
->> @@ -19,6 +19,7 @@
->>   int irq_remapping_enabled;
->>
->>   int disable_irq_remap;
->> +int irq_remap_broken;
->>   int disable_sourceid_checking;
->>   int no_x2apic_optout;
->>
->> @@ -216,6 +217,17 @@ int irq_remapping_supported(void)
->>          if (disable_irq_remap)
->>                  return 0;
->>
->> +       if (irq_remap_broken) {
->> +               WARN_TAINT(1, TAIN_FIRMWARE_WORKAROUND,
->
-> This looks like a typo (s/TAIN/TAINT/).
->
->> +                          "This system BIOS has enabled interrupt remapping\n"
->> +                          "on a chipset that contains an erratum making that\n"
->> +                          "feature unstable.  Please reboot with nointremap\n"
->> +                          "added to the kernel command line and contact\n"
->> +                          "your BIOS vendor for an update");
->
-> I suspect your updated message won't mention "nointremap", but if it
-> does, Documentation/kernel-parameters.txt says that option is
-> deprecated and "intremap=off" should be used instead.
->
->> +               disable_irq_remap = 1;
->
-> Tell me if I have this correct:
->
-> Before this patch, we had interrupt remapping enabled and
-> virtualization enabled.  This is safe, but devices might need resets
-> to deal with lost or spurious interrupts.
->
-Bigger then that -- system reboots are often necessary, and for virtualization,
-that means not just the lost of the device, but all guests running on that host.
-
-> After this patch, these same machines will by default have interrupt
-> remapping disabled and virtualization enabled.  The lost or spurious
-> interrupt problem should be gone, but we now have the IRQ injection
-> security bug.
->
-IRQ injection security bug *if* device-assignment of a PCI(e) device
-to a KVM guest is done.  To do so, requires kvm to be loaded with
-a parameter to allow device-assignment w/o intr-remapping (b/c certain chipsets
-didn't have intr-remap support complete until this past summer).
-So, a sysadmin would have to consciously enable this security vulnerability,
-and is only a vulnerability if (a) the guest is not well known/behaved or
-(b) the assigned device goes-bonkers/breaks.
-This vulnerability has been known and in existence since the beginning of
-device-assignment; intr-remap is the way to isolate it.
-The end result on this (rev of this) chip set is the equivalent of running
-device-assignment on a (2009 era) Q35 chipset -- a VT-d1 (IOMMU-only,
-no-intr-remap) capable chipset.
-
-> If that's really the change we're making, I'm not comfortable applying
-> this patch.  But I don't know the details of the IRQ injection
-> problem, so maybe my understanding of the implications is wrong.
->
->> +               return 0;
->> +       }
+>> +static DECLARE_BITMAP(res_idx_mask[1 << PCI_RES_BLOCK_NUM], PCI_NUM_RESOURCES);
+>> +static int __init pci_res_idx_mask_init(void)
+>> +{
+>> +       int i;
 >> +
->>          if (!remap_ops || !remap_ops->supported)
->>                  return 0;
+>> +       for (i = 0; i < (1 << PCI_RES_BLOCK_NUM); i++)
+>> +               __init_res_idx_mask(res_idx_mask[i], i);
+>> +
+>> +       return 0;
+>> +}
+>> +postcore_initcall(pci_res_idx_mask_init);
+>> +
+>> +static inline unsigned long *get_res_idx_mask(int flag)
+>> +{
+>> +       return res_idx_mask[flag & ((1 << PCI_RES_BLOCK_NUM) - 1)];
+>> +}
+>> +
+>> +int pci_next_resource_idx(int i, int flag)
+>> +{
+>> +       i++;
+>> +       if (i < PCI_NUM_RESOURCES)
+>> +               i = find_next_bit(get_res_idx_mask(flag), PCI_NUM_RESOURCES, i);
+>> +
+>> +       if (i < PCI_NUM_RESOURCES)
+>> +               return i;
+>> +
+>> +       return -1;
+>> +}
+>> +EXPORT_SYMBOL(pci_next_resource_idx);
+>> +
+>>  static u64 pci_size(u64 base, u64 maxbase, u64 mask)
+>>  {
+>>         u64 size = mask & maxbase;      /* Find the significant bits */
+>> diff --git a/include/linux/pci.h b/include/linux/pci.h
+>> index aefff8b..127a856 100644
+>> --- a/include/linux/pci.h
+>> +++ b/include/linux/pci.h
+>> @@ -341,6 +341,30 @@ struct pci_dev {
+>>  struct resource *pci_dev_resource_n(struct pci_dev *dev, int n);
+>>  int pci_dev_resource_idx(struct pci_dev *dev, struct resource *res);
 >>
->> diff --git a/drivers/iommu/irq_remapping.h b/drivers/iommu/irq_remapping.h
->> index ecb6376..d7537e4 100644
->> --- a/drivers/iommu/irq_remapping.h
->> +++ b/drivers/iommu/irq_remapping.h
->> @@ -32,6 +32,7 @@ struct pci_dev;
->>   struct msi_msg;
->>
->>   extern int disable_irq_remap;
->> +extern int irq_remap_broken;
->>   extern int disable_sourceid_checking;
->>   extern int no_x2apic_optout;
->>   extern int irq_remapping_enabled;
->> --
->> 1.8.1.4
->>
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> +#define PCI_STD_RES            (1<<0)
+>> +#define PCI_ROM_RES            (1<<1)
+>> +#define PCI_IOV_RES            (1<<2)
+>> +#define PCI_BRIDGE_RES         (1<<3)
+>> +#define PCI_RES_BLOCK_NUM      4
+>> +
+>> +#define PCI_ALL_RES            (PCI_STD_RES | PCI_ROM_RES | PCI_BRIDGE_RES | PCI_IOV_RES)
+>> +#define PCI_NOSTD_RES          (PCI_ALL_RES & ~PCI_STD_RES)
+>> +#define PCI_NOIOV_RES          (PCI_ALL_RES & ~PCI_IOV_RES)
+>> +#define PCI_NOROM_RES          (PCI_ALL_RES & ~PCI_ROM_RES)
+>> +#define PCI_NOBRIDGE_RES       (PCI_ALL_RES & ~PCI_BRIDGE_RES)
+>> +#define PCI_STD_ROM_RES                (PCI_STD_RES | PCI_ROM_RES)
+>> +#define PCI_STD_IOV_RES                (PCI_STD_RES | PCI_IOV_RES)
+>> +#define PCI_STD_ROM_IOV_RES    (PCI_STD_RES | PCI_ROM_RES | PCI_IOV_RES)
+>> +
+>> +int pci_next_resource_idx(int i, int flag);
+>> +
+>> +#define for_each_pci_resource(dev, res, i, flag)       \
+>> +       for (i = pci_next_resource_idx(-1, flag),       \
+>> +               res = pci_dev_resource_n(dev, i);       \
+>> +            res;                                       \
+>> +            i = pci_next_resource_idx(i, flag),        \
+>> +               res = pci_dev_resource_n(dev, i))
+>> +
+>>  static inline struct pci_dev *pci_physfn(struct pci_dev *dev)
+>>  {
+>>  #ifdef CONFIG_PCI_IOV
+>
+> I think this turned out to be a disaster, with all the bitmaps and
+> helper functions.  Filtering in the bodies of the
+> for_each_pci_resource() users has *got* to be better.  That probably
+> requires a wrapper struct around the struct resource.  Or possibly
+> having a wrapper struct with a "type" or "flags" field would make
+> filtering in for_each_pci_resources() itself cleaner to implement.
 
+Do you mean have extra struct that will wrapper resource ?
+and the struct will have type that will tell that resource is PCI bridge
+resource or other std/sriov resource?
+
+then that struct need to have BAR in it.
+
+that looks like addon_res that is added in this patchset.
+
+but for the std/bridge/sriov, idx is used all the way and in all over
+the drivers.
+
+>
+> I think it would also help if we got rid of all the "PCI_NO*_RES"
+> definitions and just had the users explicitly specify what they *do*
+> want.
+
+yes, remove PCI_NO*_RES should be more clean
+
+Thanks
+
+Yinghai
