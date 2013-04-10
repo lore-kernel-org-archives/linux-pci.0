@@ -1,63 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from co1ehsobe005.messaging.microsoft.com ([216.32.180.188]:33318
-	"EHLO co1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753151Ab3DVXw3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Apr 2013 19:52:29 -0400
-From: "Radford, Adam" <Adam.Radford@lsi.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-CC: DL-MegaRAID Linux <megaraidlinux@lsi.com>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>,
-	"James E.J. Bottomley" <JBottomley@parallels.com>
-Date: Mon, 22 Apr 2013 17:52:23 -0600
-Subject: RE: [PATCH v4 01/22] [SCSI] megaraid_sas: Use correct #define for
- MSI-X capability
-Message-ID: <E2CCFB5B3585F949A16AD87BA4CE34250338920277@cosmail02.lsi.com>
-References: <20130422230012.32621.15224.stgit@bhelgaas-glaptop>
- <20130422231019.32621.25028.stgit@bhelgaas-glaptop>
-In-Reply-To: <20130422231019.32621.25028.stgit@bhelgaas-glaptop>
-Content-Type: text/plain; charset="utf-8"
+Received: from avon.wwwdotorg.org ([70.85.31.133]:46804 "EHLO
+	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759912Ab3DJWq7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Apr 2013 18:46:59 -0400
+Message-ID: <5165EBDE.3080202@wwwdotorg.org>
+Date: Wed, 10 Apr 2013 16:46:54 -0600
+From: Stephen Warren <swarren@wwwdotorg.org>
 MIME-Version: 1.0
+To: Thierry Reding <thierry.reding@avionic-design.de>
+CC: Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Andrew Murray <andrew.murray@arm.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-tegra@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v3 07/12] PCI: tegra: Move PCIe driver to drivers/pci/host
+References: <1365000318-28256-1-git-send-email-thierry.reding@avionic-design.de> <1365000318-28256-8-git-send-email-thierry.reding@avionic-design.de> <515DF096.2000703@wwwdotorg.org> <515DF0D9.40007@wwwdotorg.org> <20130405060351.GA15848@avionic-0098.mockup.avionic-design.de>
+In-Reply-To: <20130405060351.GA15848@avionic-0098.mockup.avionic-design.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Qmpvcm4sIHBsZWFzZSBwb3N0IHRoaXMgcGF0Y2ggdG8gbGludXgtc2NzaSwgd2hlcmUgSSB3aWxs
-IEFDSyBpdC4NCg0KLUFkYW0NCg0KLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IEJq
-b3JuIEhlbGdhYXMgW21haWx0bzpiaGVsZ2Fhc0Bnb29nbGUuY29tXSANClNlbnQ6IE1vbmRheSwg
-QXByaWwgMjIsIDIwMTMgNDoxMCBQTQ0KVG86IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmcNCkNj
-OiBETC1NZWdhUkFJRCBMaW51eDsgR2F2aW4gU2hhbjsgSmFtZXMgRS5KLiBCb3R0b21sZXkNClN1
-YmplY3Q6IFtQQVRDSCB2NCAwMS8yMl0gW1NDU0ldIG1lZ2FyYWlkX3NhczogVXNlIGNvcnJlY3Qg
-I2RlZmluZSBmb3IgTVNJLVggY2FwYWJpbGl0eQ0KDQpQcmV2aW91c2x5IHdlIHVzZWQgUENJX01T
-SV9GTEFHUyB0byBsb2NhdGUgYSByZWdpc3RlciBpbiB0aGUgTVNJLVggY2FwYWJpbGl0eS4gIFRo
-aXMgZGlkIHdvcmsgYmVjYXVzZSB0aGUgTVNJIGFuZCBNU0ktWCBmbGFncyBoYXBwZW4gdG8gYmUg
-YXQgdGhlIHNhbWUgb2Zmc2V0cywgYnV0IHdhcyBjb25mdXNpbmcuDQoNClBDSV9NU0lYX0ZMQUdT
-X0VOQUJMRSBpcyBhbHJlYWR5IGRlZmluZWQgaW4gaW5jbHVkZS91YXBpL2xpbnV4L3BjaV9yZWdz
-LmgsIHNvIG5vIG5lZWQgdG8gZGVmaW5lIGl0IGFnYWluLg0KDQpTaWduZWQtb2ZmLWJ5OiBCam9y
-biBIZWxnYWFzIDxiaGVsZ2Fhc0Bnb29nbGUuY29tPg0KQ0M6IE5lZWxhIFN5YW0gS29sbGkgPG1l
-Z2FyYWlkbGludXhAbHNpLmNvbT4NCkNDOiAiSmFtZXMgRS5KLiBCb3R0b21sZXkiIDxKQm90dG9t
-bGV5QHBhcmFsbGVscy5jb20+DQotLS0NCiBkcml2ZXJzL3Njc2kvbWVnYXJhaWQvbWVnYXJhaWRf
-c2FzLmggICAgICB8ICAgIDMgLS0tDQogZHJpdmVycy9zY3NpL21lZ2FyYWlkL21lZ2FyYWlkX3Nh
-c19iYXNlLmMgfCAgICA0ICsrLS0NCiAyIGZpbGVzIGNoYW5nZWQsIDIgaW5zZXJ0aW9ucygrKSwg
-NSBkZWxldGlvbnMoLSkNCg0KZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9tZWdh
-cmFpZF9zYXMuaCBiL2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9tZWdhcmFpZF9zYXMuaA0KaW5kZXgg
-NDA4ZDI1NC4uNjg0Y2MzNCAxMDA2NDQNCi0tLSBhL2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9tZWdh
-cmFpZF9zYXMuaA0KKysrIGIvZHJpdmVycy9zY3NpL21lZ2FyYWlkL21lZ2FyYWlkX3Nhcy5oDQpA
-QCAtMTQ4OCw3ICsxNDg4LDQgQEAgc3RydWN0IG1lZ2FzYXNfbWdtdF9pbmZvIHsNCiAJaW50IG1h
-eF9pbmRleDsNCiB9Ow0KIA0KLSNkZWZpbmUgbXNpX2NvbnRyb2xfcmVnKGJhc2UpIChiYXNlICsg
-UENJX01TSV9GTEFHUykgLSNkZWZpbmUgUENJX01TSVhfRkxBR1NfRU5BQkxFICgxIDw8IDE1KQ0K
-LQ0KICNlbmRpZgkJCQkvKkxTSV9NRUdBUkFJRF9TQVNfSCAqLw0KZGlmZiAtLWdpdCBhL2RyaXZl
-cnMvc2NzaS9tZWdhcmFpZC9tZWdhcmFpZF9zYXNfYmFzZS5jIGIvZHJpdmVycy9zY3NpL21lZ2Fy
-YWlkL21lZ2FyYWlkX3Nhc19iYXNlLmMNCmluZGV4IDlkNTM1NDAuLjdjOTBkNTcgMTAwNjQ0DQot
-LS0gYS9kcml2ZXJzL3Njc2kvbWVnYXJhaWQvbWVnYXJhaWRfc2FzX2Jhc2UuYw0KKysrIGIvZHJp
-dmVycy9zY3NpL21lZ2FyYWlkL21lZ2FyYWlkX3Nhc19iYXNlLmMNCkBAIC0zOTg0LDEyICszOTg0
-LDEyIEBAIHN0YXRpYyBpbnQgbWVnYXNhc19wcm9iZV9vbmUoc3RydWN0IHBjaV9kZXYgKnBkZXYs
-DQogCWlmIChyZXNldF9kZXZpY2VzKSB7DQogCQlwb3MgPSBwY2lfZmluZF9jYXBhYmlsaXR5KHBk
-ZXYsIFBDSV9DQVBfSURfTVNJWCk7DQogCQlpZiAocG9zKSB7DQotCQkJcGNpX3JlYWRfY29uZmln
-X3dvcmQocGRldiwgbXNpX2NvbnRyb2xfcmVnKHBvcyksDQorCQkJcGNpX3JlYWRfY29uZmlnX3dv
-cmQocGRldiwgcG9zICsgUENJX01TSVhfRkxBR1MsDQogCQkJCQkgICAgICZjb250cm9sKTsNCiAJ
-CQlpZiAoY29udHJvbCAmIFBDSV9NU0lYX0ZMQUdTX0VOQUJMRSkgew0KIAkJCQlkZXZfaW5mbygm
-cGRldi0+ZGV2LCAicmVzZXR0aW5nIE1TSS1YXG4iKTsNCiAJCQkJcGNpX3dyaXRlX2NvbmZpZ193
-b3JkKHBkZXYsDQotCQkJCQkJICAgICAgbXNpX2NvbnRyb2xfcmVnKHBvcyksDQorCQkJCQkJICAg
-ICAgcG9zICsgUENJX01TSVhfRkxBR1MsDQogCQkJCQkJICAgICAgY29udHJvbCAmDQogCQkJCQkJ
-ICAgICAgflBDSV9NU0lYX0ZMQUdTX0VOQUJMRSk7DQogCQkJfQ0KDQoNCg==
+On 04/05/2013 12:03 AM, Thierry Reding wrote:
+> On Thu, Apr 04, 2013 at 03:30:01PM -0600, Stephen Warren wrote:
+>> On 04/04/2013 03:28 PM, Stephen Warren wrote:
+>>> On 04/03/2013 08:45 AM, Thierry Reding wrote:
+>>>> Move the PCIe driver from arch/arm/mach-tegra into the
+>>>> drivers/pci/host directory. The motivation is to collect
+>>>> various host controller drivers in the same location in order
+>>>> to facilitate refactoring.
+>>>> 
+>>>> The Tegra PCIe driver has been largely rewritten, both in
+>>>> order to turn it into a proper platform driver and to add MSI
+>>>> (based on code by Krishna Kishore <kthota@nvidia.com>) as
+>>>> well as device tree support.
+>>> 
+>>>> arch/arm/boot/dts/tegra20.dtsi                     |   53 +
+>>> 
+>>> I guess this has to touch both the driver and the dtsi file so
+>>> that bisectabilty isn't broken? I guess that's OK.
+>> 
+>> Actually, can't you move all the *.dts/*.dtsi changes to the
+>> start of the series, then put the driver conversion patch last,
+>> to avoid any bisectability issues and still keep code and DT
+>> changes separate?
+> 
+> I'm not sure if that'll work. There's this oddity in the Harmony
+> DTS where the regulator@3 is disabled with a comment that this is a
+> hack required until board-harmony-pcie.c is removed. If we change
+> the DTS before the driver rewrite I think that would break
+> requesting the GPIO in the board file.
 
+Hmm. Well I guess that PCIe doesn't really work right now anyway. I
+mean the enumeration works, but actual instantiation of the Linux
+devices doesn't due to the resource conflict issues, which your new
+driver works around.
+
+As such, it might be simplest to just submit all the following in a
+single kernel version:
+
+* Delete old Tegra PCI support.
+* Add new driver (add not move); this would just touch drivers/pci/host.
+* Add all the required new DT content.
+
+That would be basically what you've already posted, except that the DT
+changes in this patch can be moved later, and all the arch/arm/*.c
+patches can happen earlier if you want.
+
+Does that sound reasonable?
+
+I think you can do:
+
+* All the DT changes first, except the one-line change to enable the
+regulator. DT additions for the new PCIe controller would be
+status=disabled.
+
+* Add/move the new PCI.
+
+We'd probably still want all this to go through a single tree so (i.e.
+the Tegra tree, and not submit the drivers/pci/host addition through
+the PCI tree) to avoid ever having 2 drivers at once for the Tegra PCI
+controller.
