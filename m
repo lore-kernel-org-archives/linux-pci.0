@@ -1,81 +1,203 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.10]:57075 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S935334Ab3DIIWu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Apr 2013 04:22:50 -0400
-Date: Tue, 9 Apr 2013 10:22:33 +0200
-From: Thierry Reding <thierry.reding@avionic-design.de>
-To: Andrew Murray <andrew.murray@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Russell King <linux@arm.linux.org.uk>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>,
-	"devicetree-discuss@lists.ozlabs.org"
-	<devicetree-discuss@lists.ozlabs.org>,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Maen Suleiman <maen@marvell.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Olof Johansson <olof@lixom.net>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Mitch Bradley <wmb@firmworks.com>
-Subject: Re: [RFCv1 08/11] PCI: Introduce new MSI chip infrastructure
-Message-ID: <20130409082232.GC27255@avionic-0098.mockup.avionic-design.de>
-References: <1364316746-8702-1-git-send-email-thomas.petazzoni@free-electrons.com>
- <1364316746-8702-9-git-send-email-thomas.petazzoni@free-electrons.com>
- <CAErSpo42AFdKH2RKTxOaeJgCPrYD5KYkOs3UEBez8x8Bjmun5w@mail.gmail.com>
- <20130409081119.GA30736@arm.com>
+Received: from avon.wwwdotorg.org ([70.85.31.133]:36429 "EHLO
+	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S937398Ab3DJXFF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Apr 2013 19:05:05 -0400
+Message-ID: <5165F01C.70703@wwwdotorg.org>
+Date: Wed, 10 Apr 2013 17:05:00 -0600
+From: Stephen Warren <swarren@wwwdotorg.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="uh9ZiVrAOUUm9fzH"
-In-Reply-To: <20130409081119.GA30736@arm.com>
+To: Thierry Reding <thierry.reding@avionic-design.de>
+CC: Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Andrew Murray <andrew.murray@arm.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-tegra@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v3 07/12] PCI: tegra: Move PCIe driver to drivers/pci/host
+References: <1365000318-28256-1-git-send-email-thierry.reding@avionic-design.de> <1365000318-28256-8-git-send-email-thierry.reding@avionic-design.de> <515DF096.2000703@wwwdotorg.org> <20130405073703.GB15848@avionic-0098.mockup.avionic-design.de>
+In-Reply-To: <20130405073703.GB15848@avionic-0098.mockup.avionic-design.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On 04/05/2013 01:37 AM, Thierry Reding wrote:
+> On Thu, Apr 04, 2013 at 03:28:54PM -0600, Stephen Warren wrote: 
+> [...]
+>>> diff --git
+>>> a/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
+>>> b/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
+>>
+>>>
+>>> 
++Required properties:
+>> 
+>>> +- interrupts: the interrupt outputs of the controller +-
+>>> interrupt-names: list of names to identify interrupts
+>> 
+>> The specification part of this file should define which
+>> interrupt outputs must be included in this list, and the order
+>> they must appear in the list.
+...
+>> I believe that the entries in the interrupts property must have a
+>> defined order, so I'm not sure whether interrupt-names is useful 
+>> here?
+> 
+> Actually the interrupt-names property is there specifically so that
+> the order doesn't matter. The driver uses
+> platform_get_irq_byname(), using "intr" and "msi" respectively so
+> that they don't have to appear in a specific order. I did this so
+> that it is more in line with properties such as clocks and reg.
 
---uh9ZiVrAOUUm9fzH
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+I believe that reg and interrupts must be possible to interpret
+without resorting to reg-names and interrupt-names. In other words,
+one must always define a specific order for those properties, and the
+-names properties must follow that order. This is different than some
+newer bindings where the order is arbitrary and based on whatever
+random order the entries appear in *-names.
 
-On Tue, Apr 09, 2013 at 09:11:19AM +0100, Andrew Murray wrote:
-[...]
-> Also I believe pci_alloc_child_bus function would need to be changed to add
-> "b->msi = msi" to inherit msi_chip for child buses in the above patch?
+Given that, I'm not actually convinced that reg-names or
+interrupt-names actually make any sense...
 
-The patch already does:
+For background, see:
+http://www.spinics.net/lists/linux-samsung-soc/msg16704.html
 
-	child->msi = parent->msi;
+>>> +- ranges: describes the translation of addresses for root
+>>> ports
+>> 
+>> Shouldn't there be some discussion re: how the range are expected
+>> to be set up so that everything works? We shouldn't expect people
+>> to just blindly copy the example without any way of understanding
+>> it.
+> 
+> Possibly. I wouldn't like to go too much into the details, though,
+> since the ranges property is not only rather complex but also well
+> documented in other places.
 
-in pci_alloc_child_bus(), the same way that ops is inherited. I have
-admittedly only tested this code on Tegra, but I don't see why that
-wouldn't be enough. Or maybe I haven't understood your question?
+The complexity is exactly why this needs to be fully documented. It's
+very important to document not only what needs to be there, but also
+the rationale behind the choice of exactly what and how to represent
+in ranges. This is necessary so that (a) everyone who participated in
+the discussion of that ranges definition can ensure that the final
+result and rationale is what was expected (b) if somebody else extends
+the binding for a new Tegra SoC in the future, they will have enough
+information to fully respect the rationale behind the existing binding.
 
-Thierry
+Is ranges really well-documented elsewhere? The raw property certainly
+is (although a link would be useful), but I'm not convinced that the
+concept of what each cell in the PCIe controller's own internal
+address space means actually is documented. Otherwise, why would there
+have been such a discussion on this topic?
 
---uh9ZiVrAOUUm9fzH
-Content-Type: application/pgp-signature
+> But I could add some explanation about which entries are expected
+> and how they work together. In this case even order is important.
+> The port register entries need to be listed before the 
+> non-prefetchable memory window entry, otherwise the ranges parser
+> gets confused. How does the following sound?
+> 
+> - ranges: Describes the translation of addresses for root ports and
+> standard PCI regions. The entries must be 6 cells each, where the
+> first three cells correspond to the address as described for the
+> #address-cells property above, the fourth cell is the physical CPU
+> address to translate to and the fifth and six cells are as
+> described for the #size-cells property above. - The first two
+> entries are expected to translate the addresses for the root port
+> registers, which are referenced by the assigned-addresses property
+> of the root port nodes (see below). - The remaining entries setup
+> the mapping for the standard I/O, memory and
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
+s/setup/set up/
 
-iQIcBAEBAgAGBQJRY8/IAAoJEN0jrNd/PrOhbekQAKkjrnRsOfVv4qKeB1sc+W1S
-ptqQkqHoA1NoNWFyOIffRpVKoI3CqCbxiIW5nssN1N3pOkAmhYgWdJWDfVefY5ir
-UzZXk7KKBrbDXfFSUOeoFLAC2ZwU96uL5VB260KDRw79x4ptw9g2lTGC2ksqjGmb
-KjycUQFD4KbG24AC9TOsDby7BBmP3tqjqQJMlc1zBThJSdhqEV+3heb2VRXYrBHK
-BD7+HDXKaZ/ysmanFprJPiTN8SSVQn+F2Q4bYZT0KpyRelJHyhbeDLHM/BuevEwA
-cLOrKqdsog6kuesxNdztrqfB/R+gv8RtgLkkHDtFNAUnZtcjM8ZJneWpUFtYGXwO
-Ta6FveIFCa9DHH6KfBNprV3zqwJwhLQZQuEogdNw0kcl/pmCO10chStKZ82Lq9eR
-FSs2kRY4mHsPv8SXnsIAPZxyWGY9lda6shXBD17pnPIQ57IeCWHxgetA/CYaPlX+
-szYGOS28iHfwdQ7mvUu+znhMBRDisbKb3y15dR8YwUluZwnU7+9Nj5aLBD8q4cLt
-eDJCv2uQr0GSYRjwIk2hpFY32IZzfd41QaUSMk3G5zhI6OOGheRwkD1d+q1E1dv6
-vTa7gQ0r3BCPrMk0hzH56rzlzdQUJT9LvqjVG3epUbNMopjwIVMrXCOxpsmTJ1D2
-hUzr3i0oJebiI8QiCmh+
-=SRPZ
------END PGP SIGNATURE-----
+> prefetchable PCI regions. The first cell determines the type of
+> region
 
---uh9ZiVrAOUUm9fzH--
+I assume this definition of "the first cell determines ..." only
+applies to these remaining entries, and not the first two entries.
+Perhaps prefix that sentence with "For these entries, "?
+
+> that is setup: - 0x81000000: I/O memory region - 0x82000000:
+> non-prefetchable memory region - 0xc2000000: prefetchable memory
+> region Please refer to the standard PCI bus binding document for a
+> more detailed explanation.
+
+That looks OK, yes.
+
+
+>>> +- clocks: the clock inputs of the controller +- clock-names:
+>>> list of names to identify clocks
+>> 
+>> The specification part of this file should define which clocks
+>> are required, and not rely on the example below to do this. I
+>> would suggest re-writing this as:
+>> 
+>> - clocks : Must contain an entry for each entry in clock-names. -
+>> clock-names : Must include the following entries: "pex" (The
+>> Tegra clock of that name) "afi" (The Tegra clock of that name) 
+>> "pcie_xclk" (The Tegra clock of that name) "pll_e" (The Tegra
+>> clock of that name)
+> 
+> Okay, sounds good. Although the Tegra clocks are named somewhat 
+> differently.
+
+Hmm. That's true. Perhaps replace "(The Tegra clock of that name)"
+with some more logical-level description of what those clocks are used
+for by the module.
+
+> "pex" is named "pcie" and "pcie_xclk" is "unassigned" (!) according
+> to the nvidia,tegra20-car.txt binding document. Perhaps I should
+> update the binding document to replace unassigned with pcie_xclk 
+> for clock 74.
+
+The CAR binding shouldn't change for now at least. The clock IDs there
+were chosen to match /both/ the CAR clock enable registers /and/ the
+CAR module reset registers. Where there isn't an exact 1:1
+correspondance between those two sets of registers, that clock ID was
+not used, and instead a clock ID >96 was chosen. This was done to
+hightlight the lack of 1:1 correspondence. See the explanatory text
+before the list, in the CAR binding document.
+
+> And maybe rename pex in the PCIe binding to pcie to match the CAR
+> binding?
+
+The PCIe binding should really name its resources based on what makes
+sense for the PCIe HW in isolation. pex is probably fine here,
+especially if it happens to match some PCIe signal.
+
+>>> +Board DTS: + +	pcie-controller { +		status = "okay"; + +
+>>> vdd-supply = <&pci_vdd_reg>; +		pex-clk-supply =
+>>> <&pci_clk_reg>; + +		/* root port 00:01.0 */ +		pci@1,0 { +
+>>> status = "okay";
+>> 
+>> Is it worth putting a comment here stating that the explicit
+>> devices included below in this example are entirely optional?
+> 
+> Would it be acceptable to annotate the 01:00.0 bridge with
+> "optional"? Like so:
+> 
+> pcie-controller { ... pci@1,0 { ... /* bridge 01:00.0 (optional)
+> */ pci@0,0 {
+
+Yes, that'd be fine.
+
+> Alternatively I could add something like below:
+> 
+> ---snip---
+> 
+> Note that devices on the PCI bus are dynamically discovered using
+> PCI's bus enumeration and therefore don't need corresponding device
+> nodes in DT. However if a device on the PCI bus provides a
+> non-probeable bus such as I2C or SPI, device nodes need to be added
+> in order to allow the bus' children to be instantiated at the
+> proper location in the operating system's device tree (as 
+> illustrated by the optional nodes in the example above).
+> 
+> ---snip---
+> 
+> Maybe I'll just do both.
+
+Yes, that explanatory text is very useful & good.
