@@ -1,72 +1,110 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>, Ram Pai <linuxram@us.ibm.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v4 03/29] PCI: Update pci_resource_start etc to use pci_dev_resource_n()
-Date: Fri, 12 Apr 2013 15:44:17 -0700
-Message-Id: <1365806683-26717-4-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1365806683-26717-1-git-send-email-yinghai@kernel.org>
-References: <1365806683-26717-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:57117 "EHLO
+	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S965017Ab3DJHbZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Apr 2013 03:31:25 -0400
+From: Andrew Murray <Andrew.Murray@arm.com>
+To: rob.herring@calxeda.com
+Cc: jgunthorpe@obsidianresearch.com, linux@arm.linux.org.uk,
+	siva.kallam@samsung.com, linux-pci@vger.kernel.org,
+	devicetree-discuss@lists.ozlabs.org, jg1.han@samsung.com,
+	Liviu.Dudau@arm.com, linux-kernel@vger.kernel.org,
+	linux-samsung-soc@vger.kernel.org, kgene.kim@samsung.com,
+	bhelgaas@google.com, suren.reddy@samsung.com,
+	linux-arm-kernel@lists.infradead.org, monstr@monstr.eu,
+	benh@kernel.crashing.org, paulus@samba.org,
+	grant.likely@secretlab.ca, thomas.petazzoni@free-electrons.com,
+	thierry.reding@avionic-design.de, thomas.abraham@linaro.org,
+	arnd@arndb.de, Andrew Murray <Andrew.Murray@arm.com>
+Subject: [PATCH v5 3/3] of/pci: mips: convert to common of_pci_range_parser
+Date: Wed, 10 Apr 2013 08:29:28 +0100
+Message-Id: <1365578969-30966-4-git-send-email-Andrew.Murray@arm.com>
+In-Reply-To: <1365578969-30966-1-git-send-email-Andrew.Murray@arm.com>
+References: <1365578969-30966-1-git-send-email-Andrew.Murray@arm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now pci_resource_start is using dev->resource[n] directly.
-Replace it with pci_dev_resource[n] to prepare for addon resource support.
+This patch converts the pci_load_of_ranges function to use the new common
+of_pci_range_parser.
 
--v2: fix warning about const pointer that Fengguang found.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Andrew Murray <Andrew.Murray@arm.com>
+Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
 ---
- include/linux/pci.h | 35 +++++++++++++++++++++++++----------
- 1 file changed, 25 insertions(+), 10 deletions(-)
+ arch/mips/pci/pci.c |   50 ++++++++++++++++----------------------------------
+ 1 files changed, 16 insertions(+), 34 deletions(-)
 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index ffff013..6d450d2 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1455,16 +1455,31 @@ static inline struct pci_dev *pci_dev_get(struct pci_dev *dev)
+diff --git a/arch/mips/pci/pci.c b/arch/mips/pci/pci.c
+index 0872f12..bee49a4 100644
+--- a/arch/mips/pci/pci.c
++++ b/arch/mips/pci/pci.c
+@@ -122,51 +122,33 @@ static void pcibios_scanbus(struct pci_controller *hose)
+ #ifdef CONFIG_OF
+ void pci_load_of_ranges(struct pci_controller *hose, struct device_node *node)
+ {
+-	const __be32 *ranges;
+-	int rlen;
+-	int pna = of_n_addr_cells(node);
+-	int np = pna + 5;
++	struct of_pci_range_range range;
++	struct of_pci_range_parser parser;
++	u32 res_type;
  
- /* these helpers provide future and backwards compatibility
-  * for accessing popular PCI BAR info */
--#define pci_resource_start(dev, bar)	((dev)->resource[(bar)].start)
--#define pci_resource_end(dev, bar)	((dev)->resource[(bar)].end)
--#define pci_resource_flags(dev, bar)	((dev)->resource[(bar)].flags)
--#define pci_resource_len(dev,bar) \
--	((pci_resource_start((dev), (bar)) == 0 &&	\
--	  pci_resource_end((dev), (bar)) ==		\
--	  pci_resource_start((dev), (bar))) ? 0 :	\
--							\
--	 (pci_resource_end((dev), (bar)) -		\
--	  pci_resource_start((dev), (bar)) + 1))
-+static inline resource_size_t pci_resource_start(const struct pci_dev *dev,
-+						 int bar)
-+{
-+	return pci_dev_resource_n((struct pci_dev *)dev, bar)->start;
-+}
-+static inline resource_size_t pci_resource_end(const struct pci_dev *dev,
-+						int bar)
-+{
-+	return pci_dev_resource_n((struct pci_dev *)dev, bar)->end;
-+}
-+static inline unsigned long pci_resource_flags(const struct pci_dev *dev,
-+						 int bar)
-+{
-+	return pci_dev_resource_n((struct pci_dev *)dev, bar)->flags;
-+}
-+static inline resource_size_t pci_resource_len(const struct pci_dev *dev,
-+							 int bar)
-+{
-+	struct resource *res = pci_dev_resource_n((struct pci_dev *)dev, bar);
-+
-+	if (res->start == 0 && res->end == res->start)
-+		return 0;
-+
-+	return res->end - res->start + 1;
-+}
+ 	pr_info("PCI host bridge %s ranges:\n", node->full_name);
+-	ranges = of_get_property(node, "ranges", &rlen);
+-	if (ranges == NULL)
+-		return;
+ 	hose->of_node = node;
  
- /* Similar to the helpers above, these manipulate per-pci_dev
-  * driver-specific data.  They are really just a wrapper around
+-	while ((rlen -= np * 4) >= 0) {
+-		u32 pci_space;
++	if (of_pci_range_parser(&parser, node))
++		return;
++
++	for_each_of_pci_range(&parser, &range) {
+ 		struct resource *res = NULL;
+-		u64 addr, size;
+-
+-		pci_space = be32_to_cpup(&ranges[0]);
+-		addr = of_translate_address(node, ranges + 3);
+-		size = of_read_number(ranges + pna + 3, 2);
+-		ranges += np;
+-		switch ((pci_space >> 24) & 0x3) {
+-		case 1:		/* PCI IO space */
++
++		res_type = range.flags & IORESOURCE_TYPE_BITS;
++		if (res_type == IORESOURCE_IO) {
+ 			pr_info("  IO 0x%016llx..0x%016llx\n",
+-					addr, addr + size - 1);
++				range.addr, range.addr + range.size - 1);
+ 			hose->io_map_base =
+-				(unsigned long)ioremap(addr, size);
++				(unsigned long)ioremap(range.addr, range.size);
+ 			res = hose->io_resource;
+-			res->flags = IORESOURCE_IO;
+-			break;
+-		case 2:		/* PCI Memory space */
+-		case 3:		/* PCI 64 bits Memory space */
++		} else if (res_type == IORESOURCE_MEM) {
+ 			pr_info(" MEM 0x%016llx..0x%016llx\n",
+-					addr, addr + size - 1);
++				range.addr, range.addr + range.size - 1);
+ 			res = hose->mem_resource;
+-			res->flags = IORESOURCE_MEM;
+-			break;
+-		}
+-		if (res != NULL) {
+-			res->start = addr;
+-			res->name = node->full_name;
+-			res->end = res->start + size - 1;
+-			res->parent = NULL;
+-			res->sibling = NULL;
+-			res->child = NULL;
+ 		}
++		if (res != NULL)
++			of_pci_range_to_resource(&range, node, res);
+ 	}
+ }
+ #endif
 -- 
-1.8.1.4
+1.7.0.4
 
