@@ -1,26 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from snt0-omc4-s31.snt0.hotmail.com ([65.55.90.234]:34046 "EHLO
-	snt0-omc4-s31.snt0.hotmail.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S967698Ab3DSDFU convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 18 Apr 2013 23:05:20 -0400
-Message-ID: <SNT136-W425B9A4DBEA719E570080DB2C80@phx.gbl>
-From: Frank Rizzo <thefrankrizzo@hotmail.com>
-To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Rescan PCIE bus to find recently powered on device.
-Date: Thu, 18 Apr 2013 19:59:11 -0700
-Content-Type: text/plain; charset="iso-8859-1"
-MIME-Version: 1.0
+Received: from mail.free-electrons.com ([94.23.35.102]:59142 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761615Ab3DJVbE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Apr 2013 17:31:04 -0400
+Date: Wed, 10 Apr 2013 23:30:59 +0200
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Michal Simek <monstr@monstr.eu>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Rob Herring <robherring2@gmail.com>,
+	Andrew Murray <Andrew.Murray@arm.com>,
+	linux-samsung-soc@vger.kernel.org, linux@arm.linux.org.uk,
+	siva.kallam@samsung.com, linux-pci@vger.kernel.org,
+	devicetree-discuss@lists.ozlabs.org, jg1.han@samsung.com,
+	Liviu.Dudau@arm.com, linux-kernel@vger.kernel.org,
+	rob.herring@calxeda.com, jgunthorpe@obsidianresearch.com,
+	kgene.kim@samsung.com, paulus@samba.org, bhelgaas@google.com,
+	suren.reddy@samsung.com, linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH v5 1/3] of/pci: Unify pci_process_bridge_OF_ranges from
+ Microblaze and PowerPC
+Message-ID: <20130410233059.5cdcc119@skate>
+In-Reply-To: <51656592.7070806@gmail.com>
+References: <1365578969-30966-1-git-send-email-Andrew.Murray@arm.com>
+	<1365578969-30966-2-git-send-email-Andrew.Murray@arm.com>
+	<51656592.7070806@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hey list.
+Ben, Michal,
 
-I'm working on a driver for a device that's external from the PC.  It's connected to the PC via a weird cable that connects to a PCIE card inside the case that appears to be nothing other than glue logic to allow the signals from the cable to be tossed onto the bus.
+On Wed, 10 Apr 2013 08:13:54 -0500, Rob Herring wrote:
+> Adding Ben H and Michal...
+> 
+> On 04/10/2013 02:29 AM, Andrew Murray wrote:
+> > The pci_process_bridge_OF_ranges function, used to parse the
+> > "ranges" property of a PCI host device, is found in both Microblaze
+> > and PowerPC architectures. These implementations are nearly
+> > identical. This patch moves this common code to a common place.
+> > 
+> > Signed-off-by: Andrew Murray <Andrew.Murray@arm.com>
+> > Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+> 
+> One comment below. Otherwise,
+> 
+> Reviewed-by: Rob Herring <rob.herring@calxeda.com>
+> 
+> You need also need acks from Ben and Michal.
 
-When the external device is powered off during boot, nothing is found.  hwinfo doesn't find it, lspci doesn't find it, etc.  If you power on the device BEFORE booting, everything is found, and it works fine.  And lastly, if you power it on AFTER Linux has booted, you still can't find it.  I've tried echoing "1" to rescan, and everything else that I could find via Google search.
+Ben, Michal, could you review/test this patch from Andrew Murray? I
+need it as a dependency of "[PATCH v5 2/3] of/pci: Provide support for
+parsing PCI DT ranges property", which itself is used by the Marvell
+PCIe driver I'm hoping to get merged in 3.10.
 
-So, what are my options here?  I'm not allergic to adding code to the driver to scan for the device periodically, if I knew HOW to find it.  And, once found, how do I get it registered?
+Thanks a lot for your feedback,
 
-
-Thanks! 		 	   		  
+Thomas
+-- 
+Thomas Petazzoni, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
