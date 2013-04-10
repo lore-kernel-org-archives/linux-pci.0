@@ -1,81 +1,70 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pd0-f175.google.com ([209.85.192.175]:36710 "EHLO
+	mail-pd0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752018Ab3DJIJI convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Apr 2013 04:09:08 -0400
+Received: by mail-pd0-f175.google.com with SMTP id g10so132519pdj.20
+        for <linux-pci@vger.kernel.org>; Wed, 10 Apr 2013 01:09:06 -0700 (PDT)
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <516616F0.6040508@huawei.com>
-References: <1361892353-14786-1-git-send-email-jiang.liu@huawei.com>
- <1361892353-14786-11-git-send-email-jiang.liu@huawei.com> <CAErSpo4uyqPRDWKvH_3rtnGzbro1+_SnGH9GBU_-tz1p2a+AMQ@mail.gmail.com>
- <51658FCB.3030906@gmail.com> <CAErSpo7O1L2aRc2aVSqwj2CKwwoC9dbFWgukNj=jCkG-PjYOMA@mail.gmail.com>
- <516616F0.6040508@huawei.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 11 Apr 2013 11:29:42 -0600
-Message-ID: <CAErSpo7=BoNAXQ_shm8M8FoLuZPVJGK9k5-LQhX4X30sFoaWjg@mail.gmail.com>
-Subject: Re: [PATCH v8 10/13] PCI/acpiphp: do not use ACPI PCI subdriver mechanism
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Jiang Liu <liuj97@gmail.com>, "Rafael J . Wysocki" <rjw@sisk.pl>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-acpi-owner@vger.kernel.org
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Russell King <linux@arm.linux.org.uk>
+From: Mike Turquette <mturquette@linaro.org>
+In-Reply-To: <1364395234-11195-7-git-send-email-thomas.petazzoni@free-electrons.com>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	devicetree-discuss@lists.ozlabs.org,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Maen Suleiman <maen@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Olof Johansson <olof@lixom.net>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Mitch Bradley <wmb@firmworks.com>,
+	Andrew Murray <andrew.murray@arm.com>
+References: <1364395234-11195-1-git-send-email-thomas.petazzoni@free-electrons.com>
+ <1364395234-11195-7-git-send-email-thomas.petazzoni@free-electrons.com>
+Message-ID: <20130410080900.14359.97128@quantum>
+Subject: Re: [PATCHv7 06/17] clk: mvebu: create parent-child relation for PCIe clocks
+ on Armada 370
+Date: Wed, 10 Apr 2013 01:09:00 -0700
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 10, 2013 at 7:50 PM, Yijing Wang <wangyijing@huawei.com> wrote:
->>> Hi Bjorn,
->>>         Thanks for review.
->>>
->>>> My goal is that a user should never have to specify a kernel boot
->>>> parameter or edit a modules.conf file, but the user did previously
->>>> have some way to influence whether we use pciehp or acpiphp.  I know
->>>> we still have some issues, particularly with acpiphp, so I'm a little
->>>> concerned that by removing the CONFIG_HOTPLUG_PCI_ACPI=m, we might be
->>>> removing a way to work around those issues.
->>>>
->>>> A distro that previously used CONFIG_HOTPLUG_PCI_ACPI=m will now have
->>>> to use =y, so modules.conf is no longer applicable.  Can you convince
->>>> me that the user still has a way to work around issues?  I spent quite
->>>> a while trying to understand the pciehp/acpiphp dependencies, but it's
->>>> pretty tangled web.
->>> I will try my best to explain the relationships between pciehp and acpiphp
->>> as of v3.9-rc6.
->>>
->>> The pciehp driver always have priority over the acpiphp driver.
->>> That is, the acpiphp driver rejects binding to an ACPI PCI hotplug slot if
->>> a) The slot's parent is a PCIe port with native hotplug capability
->>> b) OSPM has taken over PCIe native hotplug control from BIOS.
->>>         !(root->osc_control_set & OSC_PCI_EXPRESS_NATIVE_HP_CONTROL)
->>> The above check has no dependency on the loading order of pciehp and acpiphp
->>> drivers. So converting acpiphp driver to builit-in should be ok.
->>>
->>> On the other hand, I remember Yinghai has mentioned that some PCIe ports
->>> with native hotplug capability doesn't work as expected with the pciehp driver
->>> and should be managed by the acpiphp driver. Currently we could achieve that
->>> by using boot param "pcie_ports=compat", but this will disable PCIe port
->>> drivers altogether. And I also remember that Rafael has mentioned that
->>> some BIOSes exhibit strange dependency among PCIe OSC controls, so it's
->>> not feasible to only disable PCIe native hotplug.
->>>
->>> For "pciehp_force", it does only affect the way pciehp to detect a hotplug
->>> slot, it doesn't affect acpiphp at all.
->>>
->>> To sum up, converting acpiphp as built-in should not affect the relationship
->>> between pciehp and acpiphp driver.
->>
->> My concern is that a user used to be able to remove acpiphp from
->> modules.conf.  Now removing acpiphp will require a kernel rebuild.
->> But maybe that won't turn out to be a problem.
->
-> Hi Bjorn,
->    If user don't want to occupy the slot by acpiphp. Conservative approach, what about add a kernel parameter
-> to control acpiphp to enumerate slot ?
+Quoting Thomas Petazzoni (2013-03-27 07:40:23)
+> The Armada 370 has two gatable clocks for each PCIe interface, and we
+> want both of them to be enabled. We therefore make one of the two
+> clocks a child of the other, as we did for the sataX and sataXlnk
+> clocks on Armada XP.
+> 
+> Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+> Cc: Mike Turquette <mturquette@linaro.org>
 
-Yes, that's what I'm thinking.  A "Please report a bug if you have to
-use this parameter" chicken switch.  Hopefully nobody will need to use
-it, but if somebody *does* need it, it's a lot better than having to
-tell him to rebuild the kernel.
+Acked-by: Mike Turquette <mturquette@linaro.org>
 
-Bjorn
+> ---
+>  drivers/clk/mvebu/clk-gating-ctrl.c |    4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/clk/mvebu/clk-gating-ctrl.c b/drivers/clk/mvebu/clk-gating-ctrl.c
+> index ebf141d..b35785a 100644
+> --- a/drivers/clk/mvebu/clk-gating-ctrl.c
+> +++ b/drivers/clk/mvebu/clk-gating-ctrl.c
+> @@ -119,8 +119,8 @@ static const struct mvebu_soc_descr __initconst armada_370_gating_descr[] = {
+>         { "pex1_en", NULL,  2 },
+>         { "ge1", NULL, 3 },
+>         { "ge0", NULL, 4 },
+> -       { "pex0", NULL, 5 },
+> -       { "pex1", NULL, 9 },
+> +       { "pex0", "pex0_en", 5 },
+> +       { "pex1", "pex1_en", 9 },
+>         { "sata0", NULL, 15 },
+>         { "sdio", NULL, 17 },
+>         { "tdm", NULL, 25 },
+> -- 
+> 1.7.9.5
