@@ -1,383 +1,724 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fold.natur.cuni.cz ([195.113.57.32]:56268 "EHLO
-	fold.natur.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964977Ab3DSXtV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 19 Apr 2013 19:49:21 -0400
-Message-ID: <5171D7FD.7070609@fold.natur.cuni.cz>
-Date: Sat, 20 Apr 2013 01:49:17 +0200
-From: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
-MIME-Version: 1.0
-To: Huang Ying <ying.huang@intel.com>,
-	Sarah Sharp <sarah.a.sharp@linux.intel.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	huang ying <huang.ying.caritas@gmail.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, Len Brown <lenb@kernel.org>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: Re: [PATCH] PCI / ACPI: Always resume devices on ACPI wakeup notifications
-References: <2282655.IicBMMa6jN@vostro.rjw.lan>  <CAErSpo7QXe1-R5_jXCcc3g_J-_HXqO3V12nNB=Z6eCAt-vwKfA@mail.gmail.com>  <51548C9E.9090703@fold.natur.cuni.cz> <2990024.LMTIBUbM3d@vostro.rjw.lan>  <51564804.9000700@fold.natur.cuni.cz>  <CAC=cRTMJH+40oPSM9pFzkb5x6Q42rWR8BPtUOxJn_3WopmOSvQ@mail.gmail.com>  <515AF312.1010507@fold.natur.cuni.cz>  <CAErSpo6EAkSniVF7NnDVsR=H_x0dHK=xQNbdKf67WDW=o1D+_Q@mail.gmail.com>  <515B17D9.6030805@fold.natur.cuni.cz> <515B45A6.1020404@fold.natur.cuni.cz>  <515C1DB8.5020905@fold.natur.cuni.cz> <1365075019.8901.9.camel@yhuang-mobile.sh.intel.com> <515EC645.7020403@fold.natur.cuni.cz>
-In-Reply-To: <515EC645.7020403@fold.natur.cuni.cz>
-Content-Type: text/plain; charset=UTF-8
+Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:57152 "EHLO
+	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S965053Ab3DJHb3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Apr 2013 03:31:29 -0400
+From: Andrew Murray <Andrew.Murray@arm.com>
+To: rob.herring@calxeda.com
+Cc: jgunthorpe@obsidianresearch.com, linux@arm.linux.org.uk,
+	siva.kallam@samsung.com, linux-pci@vger.kernel.org,
+	devicetree-discuss@lists.ozlabs.org, jg1.han@samsung.com,
+	Liviu.Dudau@arm.com, linux-kernel@vger.kernel.org,
+	linux-samsung-soc@vger.kernel.org, kgene.kim@samsung.com,
+	bhelgaas@google.com, suren.reddy@samsung.com,
+	linux-arm-kernel@lists.infradead.org, monstr@monstr.eu,
+	benh@kernel.crashing.org, paulus@samba.org,
+	grant.likely@secretlab.ca, thomas.petazzoni@free-electrons.com,
+	thierry.reding@avionic-design.de, thomas.abraham@linaro.org,
+	arnd@arndb.de, Andrew Murray <Andrew.Murray@arm.com>
+Subject: [PATCH v5 1/3] of/pci: Unify pci_process_bridge_OF_ranges from Microblaze and PowerPC
+Date: Wed, 10 Apr 2013 08:29:26 +0100
+Message-Id: <1365578969-30966-2-git-send-email-Andrew.Murray@arm.com>
+In-Reply-To: <1365578969-30966-1-git-send-email-Andrew.Murray@arm.com>
+References: <1365578969-30966-1-git-send-email-Andrew.Murray@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Sarah,
-  does anyone has any comments to this thread? I just retried with 3.8.8
-kernel and it is still same issue. I can put to 'auto' upstream 1c.4 port,
-detach mouse and the 1c.4 does not suspend (due to a recent patch I think
-around 3.8.5).
-If I set also its downstream 0b:00 to 'auto', plugin mouse ... mouse works,
-after I unplug the mouse the 0b:00 goes 'suspended' and XHCI socket dies.
+The pci_process_bridge_OF_ranges function, used to parse the "ranges"
+property of a PCI host device, is found in both Microblaze and PowerPC
+architectures. These implementations are nearly identical. This patch
+moves this common code to a common place.
 
-Here is comparison of the 'active' state and of the 'suspended' to death
-(note pcie_aspm=off on my kernel command line):
---- lspci_vvv_initial.txt       2013-04-20 00:16:11.000000000 +0200
-+++ lspci_vvv_initial__mouse_attached__detached__attached__1c.4_to_auto__detached__0b:00_to_auto.txt    2013-04-20 00:18:38.000000000 +0200
-@@ -484,15 +484,14 @@
+Signed-off-by: Andrew Murray <Andrew.Murray@arm.com>
+Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+---
+ arch/microblaze/include/asm/pci-bridge.h |    5 +-
+ arch/microblaze/pci/pci-common.c         |  192 ----------------------------
+ arch/powerpc/include/asm/pci-bridge.h    |    5 +-
+ arch/powerpc/kernel/pci-common.c         |  192 ----------------------------
+ drivers/of/of_pci.c                      |  200 ++++++++++++++++++++++++++++++
+ include/linux/of_pci.h                   |    3 +
+ 6 files changed, 205 insertions(+), 392 deletions(-)
+
+diff --git a/arch/microblaze/include/asm/pci-bridge.h b/arch/microblaze/include/asm/pci-bridge.h
+index cb5d397..5783cd6 100644
+--- a/arch/microblaze/include/asm/pci-bridge.h
++++ b/arch/microblaze/include/asm/pci-bridge.h
+@@ -10,6 +10,7 @@
+ #include <linux/pci.h>
+ #include <linux/list.h>
+ #include <linux/ioport.h>
++#include <linux/of_pci.h>
  
- 0b:00.0 USB controller: Texas Instruments TUSB73x0 SuperSpeed USB 3.0 xHCI Host Controller (rev 02) (prog-if 30 [XHCI])
-        Subsystem: Dell Device 04b3
--       Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx+
-+       Control: I/O- Mem+ BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx+
-        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
--       Latency: 0, Cache Line Size: 64 bytes
-        Interrupt: pin A routed to IRQ 16
-        Region 0: Memory at f7d00000 (64-bit, non-prefetchable) [size=64K]
-        Region 2: Memory at f7d10000 (64-bit, non-prefetchable) [size=8K]
-        Capabilities: [40] Power Management version 3
-                Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=100mA PME(D0+,D1+,D2+,D3hot+,D3cold+)
--               Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
-+               Status: D3 NoSoftRst+ PME-Enable+ DSel=0 DScale=0 PME-
-        Capabilities: [48] MSI: Enable- Count=1/8 Maskable- 64bit+
-                Address: 0000000000000000  Data: 0000
-        Capabilities: [70] Express (v2) Endpoint, MSI 00
-
-
-If I put back 0b:00/control to 'on' I rescue the XHCI socket.
-
-
-
-So, should the TI host be blacklisted so that it is never put into suspend
-state? I wrote already that I don't think it is necessary but looks nobody
-looked into the lspci files. So, here is my interpretation:
-
-
-See another test scenario:
-
-1. When I bootup without any devices attached to the TI host (no laptop-mode-tools), the TI host at 0b:00 is active.
-
-2. If I enable powersaving via setting control file to 'auto' of 1c.4 (just to be sure) and 0b:00,
-the 0b:00 goes after a while suspended. But it is not dead, if I connect a mouse to the XHCI socket
-it would work. BUt look how such 'softly suspended' state looks like:
-
-# diff -u -w lspci_vvv_initial.txt lspci_vvv_initial__1c.4_and_0b:00_to_auto.txt
---- lspci_vvv_initial.txt       2013-04-20 01:06:51.000000000 +0200
-+++ lspci_vvv_initial__1c.4_and_0b:00_to_auto.txt       2013-04-20 01:08:46.000000000 +0200
-@@ -484,15 +484,14 @@
+ struct device_node;
  
- 0b:00.0 USB controller: Texas Instruments TUSB73x0 SuperSpeed USB 3.0 xHCI Host Controller (rev 02) (prog-if 30 [XHCI])
-        Subsystem: Dell Device 04b3
--       Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx+
-+       Control: I/O- Mem+ BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx+
-        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
--       Latency: 0, Cache Line Size: 64 bytes
-        Interrupt: pin A routed to IRQ 16
-        Region 0: Memory at f7d00000 (64-bit, non-prefetchable) [size=64K]
-        Region 2: Memory at f7d10000 (64-bit, non-prefetchable) [size=8K]
-        Capabilities: [40] Power Management version 3
-                Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=100mA PME(D0+,D1+,D2+,D3hot+,D3cold+)
--               Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
-+               Status: D3 NoSoftRst+ PME-Enable+ DSel=0 DScale=0 PME-
-        Capabilities: [48] MSI: Enable- Count=1/8 Maskable- 64bit+
-                Address: 0000000000000000  Data: 0000
-        Capabilities: [70] Express (v2) Endpoint, MSI 00
-#
-
-
-3. Now, look what happens if I plugin a mouse (works, as I said, and uplug it, which triggers a deadly suspend,
-although reversible):
-
-# diff -u -w lspci_vvv_initial__1c.4_and_0b:00_to_auto.txt lspci_vvv_initial__1c.4_and_0b:00_to_auto__mouse_attached_and_works__detached.txt
---- lspci_vvv_initial__1c.4_and_0b:00_to_auto.txt       2013-04-20 01:08:46.000000000 +0200
-+++ lspci_vvv_initial__1c.4_and_0b:00_to_auto__mouse_attached_and_works__detached.txt   2013-04-20 01:10:06.000000000 +0200
-@@ -271,7 +271,7 @@
-                        Changed: MRL- PresDet- LinkState+
-                RootCtl: ErrCorrectable- ErrNon-Fatal- ErrFatal- PMEIntEna- CRSVisible-
-                RootCap: CRSVisible-
--               RootSta: PME ReqID 0000, PMEStatus- PMEPending-
-+               RootSta: PME ReqID 0b00, PMEStatus- PMEPending-
-                DevCap2: Completion Timeout: Range BC, TimeoutDis+, LTR-, OBFF Not Supported ARIFwd-
-                DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-, LTR-, OBFF Disabled ARIFwd-
-                LnkCtl2: Target Link Speed: 5GT/s, EnterCompliance- SpeedDis-
-
-4. Interestingly, if I connect a mouse to the socket to show it is "dead" there is a tiny change in lspci:
-
---- lspci_vvv_initial__1c.4_and_0b:00_to_auto__mouse_attached_and_works__detached.txt   2013-04-20 01:10:06.000000000 +0200
-+++ lspci_vvv_initial__1c.4_and_0b:00_to_auto__mouse_attached_and_works__detached__reattached_but_dead.txt      2013-04-20 01:10:28.000000000 +0200
-@@ -491,7 +491,7 @@
-        Region 2: Memory at f7d10000 (64-bit, non-prefetchable) [size=8K]
-        Capabilities: [40] Power Management version 3
-                Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=100mA PME(D0+,D1+,D2+,D3hot+,D3cold+)
--               Status: D3 NoSoftRst+ PME-Enable+ DSel=0 DScale=0 PME-
-+               Status: D3 NoSoftRst+ PME-Enable+ DSel=0 DScale=0 PME+
-        Capabilities: [48] MSI: Enable- Count=1/8 Maskable- 64bit+
-                Address: 0000000000000000  Data: 0000
-        Capabilities: [70] Express (v2) Endpoint, MSI 00
-
-
-5. I said the port 'suspended to death' can be rescued by echo 'on' > .../*0b:00*/control (the mouse was
-plugged in during the echo command so we see not only PME changes but also D3 to D0 change because the
-mouse is attached):
-
-# diff -u -w lspci_vvv_initial__1c.4_and_0b\:00_to_auto__mouse_attached_and_works__detached__reattached_but_dead.txt lspci_vvv_initial__1c.4_and_0b\:00_to_auto__mouse_attached_and_works__detached__rea
-ttached_but_dead__0b\:00_to_on_rescues.txt 
---- lspci_vvv_initial__1c.4_and_0b:00_to_auto__mouse_attached_and_works__detached__reattached_but_dead.txt      2013-04-20 01:10:28.000000000 +0200
-+++ lspci_vvv_initial__1c.4_and_0b:00_to_auto__mouse_attached_and_works__detached__reattached_but_dead__0b:00_to_on_rescues.txt 2013-04-20 01:12:25.000000000 +0200
-@@ -484,14 +484,15 @@
+@@ -132,10 +133,6 @@ extern void setup_indirect_pci(struct pci_controller *hose,
+ extern struct pci_controller *pci_find_hose_for_OF_device(
+ 			struct device_node *node);
  
- 0b:00.0 USB controller: Texas Instruments TUSB73x0 SuperSpeed USB 3.0 xHCI Host Controller (rev 02) (prog-if 30 [XHCI])
-        Subsystem: Dell Device 04b3
--       Control: I/O- Mem+ BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx+
-+       Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx+
-        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-+       Latency: 0, Cache Line Size: 64 bytes
-        Interrupt: pin A routed to IRQ 16
-        Region 0: Memory at f7d00000 (64-bit, non-prefetchable) [size=64K]
-        Region 2: Memory at f7d10000 (64-bit, non-prefetchable) [size=8K]
-        Capabilities: [40] Power Management version 3
-                Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=100mA PME(D0+,D1+,D2+,D3hot+,D3cold+)
--               Status: D3 NoSoftRst+ PME-Enable+ DSel=0 DScale=0 PME+
-+               Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
-        Capabilities: [48] MSI: Enable- Count=1/8 Maskable- 64bit+
-                Address: 0000000000000000  Data: 0000
-        Capabilities: [70] Express (v2) Endpoint, MSI 00
-
-
-
-6. When I unplug the mouse of course the port does not die because the control file is set to 'on'.
-I already demonstrated that but once again, setting 0b:00 to 'auto':
-
-# diff -u -w lspci_vvv_initial__1c.4_and_0b\:00_to_auto__mouse_attached_and_works__detached__reattached_but_dead__0b\:00_to_on_rescues__detached.txt lspci_vvv_initial__1c.4_and_0b\:00_to_auto__mouse_attached_and_works__detached__reattached_but_dead__0b\:00_to_on_rescues__detached__0b\:00_to_auto.txt 
---- lspci_vvv_initial__1c.4_and_0b:00_to_auto__mouse_attached_and_works__detached__reattached_but_dead__0b:00_to_on_rescues__detached.txt       2013-04-20 01:13:36.000000000 +0200
-+++ lspci_vvv_initial__1c.4_and_0b:00_to_auto__mouse_attached_and_works__detached__reattached_but_dead__0b:00_to_on_rescues__detached__0b:00_to_auto.txt        2013-04-20 01:14:41.000000000 +0200
-@@ -484,15 +484,14 @@
+-/* Fill up host controller resources from the OF node */
+-extern void pci_process_bridge_OF_ranges(struct pci_controller *hose,
+-			struct device_node *dev, int primary);
+-
+ /* Allocate & free a PCI host bridge structure */
+ extern struct pci_controller *pcibios_alloc_controller(struct device_node *dev);
+ extern void pcibios_free_controller(struct pci_controller *phb);
+diff --git a/arch/microblaze/pci/pci-common.c b/arch/microblaze/pci/pci-common.c
+index 9ea521e..2735ad9 100644
+--- a/arch/microblaze/pci/pci-common.c
++++ b/arch/microblaze/pci/pci-common.c
+@@ -622,198 +622,6 @@ void pci_resource_to_user(const struct pci_dev *dev, int bar,
+ 	*end = rsrc->end - offset;
+ }
  
- 0b:00.0 USB controller: Texas Instruments TUSB73x0 SuperSpeed USB 3.0 xHCI Host Controller (rev 02) (prog-if 30 [XHCI])
-        Subsystem: Dell Device 04b3
--       Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx+
-+       Control: I/O- Mem+ BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx+
-        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
--       Latency: 0, Cache Line Size: 64 bytes
-        Interrupt: pin A routed to IRQ 16
-        Region 0: Memory at f7d00000 (64-bit, non-prefetchable) [size=64K]
-        Region 2: Memory at f7d10000 (64-bit, non-prefetchable) [size=8K]
-        Capabilities: [40] Power Management version 3
-                Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=100mA PME(D0+,D1+,D2+,D3hot+,D3cold+)
--               Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
-+               Status: D3 NoSoftRst+ PME-Enable+ DSel=0 DScale=0 PME-
-        Capabilities: [48] MSI: Enable- Count=1/8 Maskable- 64bit+
-                Address: 0000000000000000  Data: 0000
-        Capabilities: [70] Express (v2) Endpoint, MSI 00
-@@ -521,7 +520,7 @@
-                UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-                UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-                UESvrt: DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
--               CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
-+               CESta:  RxErr- BadTLP- BadDLLP+ Rollover- Timeout- NonFatalErr+
-                CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
-                AERCap: First Error Pointer: 00, GenCap+ CGenEn- ChkCap+ ChkEn-
-        Capabilities: [150 v1] Device Serial Number 08-00-28-00-00-20-00-00
+-/**
+- * pci_process_bridge_OF_ranges - Parse PCI bridge resources from device tree
+- * @hose: newly allocated pci_controller to be setup
+- * @dev: device node of the host bridge
+- * @primary: set if primary bus (32 bits only, soon to be deprecated)
+- *
+- * This function will parse the "ranges" property of a PCI host bridge device
+- * node and setup the resource mapping of a pci controller based on its
+- * content.
+- *
+- * Life would be boring if it wasn't for a few issues that we have to deal
+- * with here:
+- *
+- *   - We can only cope with one IO space range and up to 3 Memory space
+- *     ranges. However, some machines (thanks Apple !) tend to split their
+- *     space into lots of small contiguous ranges. So we have to coalesce.
+- *
+- *   - We can only cope with all memory ranges having the same offset
+- *     between CPU addresses and PCI addresses. Unfortunately, some bridges
+- *     are setup for a large 1:1 mapping along with a small "window" which
+- *     maps PCI address 0 to some arbitrary high address of the CPU space in
+- *     order to give access to the ISA memory hole.
+- *     The way out of here that I've chosen for now is to always set the
+- *     offset based on the first resource found, then override it if we
+- *     have a different offset and the previous was set by an ISA hole.
+- *
+- *   - Some busses have IO space not starting at 0, which causes trouble with
+- *     the way we do our IO resource renumbering. The code somewhat deals with
+- *     it for 64 bits but I would expect problems on 32 bits.
+- *
+- *   - Some 32 bits platforms such as 4xx can have physical space larger than
+- *     32 bits so we need to use 64 bits values for the parsing
+- */
+-void pci_process_bridge_OF_ranges(struct pci_controller *hose,
+-				  struct device_node *dev, int primary)
+-{
+-	const u32 *ranges;
+-	int rlen;
+-	int pna = of_n_addr_cells(dev);
+-	int np = pna + 5;
+-	int memno = 0, isa_hole = -1;
+-	u32 pci_space;
+-	unsigned long long pci_addr, cpu_addr, pci_next, cpu_next, size;
+-	unsigned long long isa_mb = 0;
+-	struct resource *res;
+-
+-	pr_info("PCI host bridge %s %s ranges:\n",
+-	       dev->full_name, primary ? "(primary)" : "");
+-
+-	/* Get ranges property */
+-	ranges = of_get_property(dev, "ranges", &rlen);
+-	if (ranges == NULL)
+-		return;
+-
+-	/* Parse it */
+-	pr_debug("Parsing ranges property...\n");
+-	while ((rlen -= np * 4) >= 0) {
+-		/* Read next ranges element */
+-		pci_space = ranges[0];
+-		pci_addr = of_read_number(ranges + 1, 2);
+-		cpu_addr = of_translate_address(dev, ranges + 3);
+-		size = of_read_number(ranges + pna + 3, 2);
+-
+-		pr_debug("pci_space: 0x%08x pci_addr:0x%016llx ",
+-				pci_space, pci_addr);
+-		pr_debug("cpu_addr:0x%016llx size:0x%016llx\n",
+-					cpu_addr, size);
+-
+-		ranges += np;
+-
+-		/* If we failed translation or got a zero-sized region
+-		 * (some FW try to feed us with non sensical zero sized regions
+-		 * such as power3 which look like some kind of attempt
+-		 * at exposing the VGA memory hole)
+-		 */
+-		if (cpu_addr == OF_BAD_ADDR || size == 0)
+-			continue;
+-
+-		/* Now consume following elements while they are contiguous */
+-		for (; rlen >= np * sizeof(u32);
+-		     ranges += np, rlen -= np * 4) {
+-			if (ranges[0] != pci_space)
+-				break;
+-			pci_next = of_read_number(ranges + 1, 2);
+-			cpu_next = of_translate_address(dev, ranges + 3);
+-			if (pci_next != pci_addr + size ||
+-			    cpu_next != cpu_addr + size)
+-				break;
+-			size += of_read_number(ranges + pna + 3, 2);
+-		}
+-
+-		/* Act based on address space type */
+-		res = NULL;
+-		switch ((pci_space >> 24) & 0x3) {
+-		case 1:		/* PCI IO space */
+-			pr_info("  IO 0x%016llx..0x%016llx -> 0x%016llx\n",
+-			       cpu_addr, cpu_addr + size - 1, pci_addr);
+-
+-			/* We support only one IO range */
+-			if (hose->pci_io_size) {
+-				pr_info(" \\--> Skipped (too many) !\n");
+-				continue;
+-			}
+-			/* On 32 bits, limit I/O space to 16MB */
+-			if (size > 0x01000000)
+-				size = 0x01000000;
+-
+-			/* 32 bits needs to map IOs here */
+-			hose->io_base_virt = ioremap(cpu_addr, size);
+-
+-			/* Expect trouble if pci_addr is not 0 */
+-			if (primary)
+-				isa_io_base =
+-					(unsigned long)hose->io_base_virt;
+-			/* pci_io_size and io_base_phys always represent IO
+-			 * space starting at 0 so we factor in pci_addr
+-			 */
+-			hose->pci_io_size = pci_addr + size;
+-			hose->io_base_phys = cpu_addr - pci_addr;
+-
+-			/* Build resource */
+-			res = &hose->io_resource;
+-			res->flags = IORESOURCE_IO;
+-			res->start = pci_addr;
+-			break;
+-		case 2:		/* PCI Memory space */
+-		case 3:		/* PCI 64 bits Memory space */
+-			pr_info(" MEM 0x%016llx..0x%016llx -> 0x%016llx %s\n",
+-			       cpu_addr, cpu_addr + size - 1, pci_addr,
+-			       (pci_space & 0x40000000) ? "Prefetch" : "");
+-
+-			/* We support only 3 memory ranges */
+-			if (memno >= 3) {
+-				pr_info(" \\--> Skipped (too many) !\n");
+-				continue;
+-			}
+-			/* Handles ISA memory hole space here */
+-			if (pci_addr == 0) {
+-				isa_mb = cpu_addr;
+-				isa_hole = memno;
+-				if (primary || isa_mem_base == 0)
+-					isa_mem_base = cpu_addr;
+-				hose->isa_mem_phys = cpu_addr;
+-				hose->isa_mem_size = size;
+-			}
+-
+-			/* We get the PCI/Mem offset from the first range or
+-			 * the, current one if the offset came from an ISA
+-			 * hole. If they don't match, bugger.
+-			 */
+-			if (memno == 0 ||
+-			    (isa_hole >= 0 && pci_addr != 0 &&
+-			     hose->pci_mem_offset == isa_mb))
+-				hose->pci_mem_offset = cpu_addr - pci_addr;
+-			else if (pci_addr != 0 &&
+-				 hose->pci_mem_offset != cpu_addr - pci_addr) {
+-				pr_info(" \\--> Skipped (offset mismatch) !\n");
+-				continue;
+-			}
+-
+-			/* Build resource */
+-			res = &hose->mem_resources[memno++];
+-			res->flags = IORESOURCE_MEM;
+-			if (pci_space & 0x40000000)
+-				res->flags |= IORESOURCE_PREFETCH;
+-			res->start = cpu_addr;
+-			break;
+-		}
+-		if (res != NULL) {
+-			res->name = dev->full_name;
+-			res->end = res->start + size - 1;
+-			res->parent = NULL;
+-			res->sibling = NULL;
+-			res->child = NULL;
+-		}
+-	}
+-
+-	/* If there's an ISA hole and the pci_mem_offset is -not- matching
+-	 * the ISA hole offset, then we need to remove the ISA hole from
+-	 * the resource list for that brige
+-	 */
+-	if (isa_hole >= 0 && hose->pci_mem_offset != isa_mb) {
+-		unsigned int next = isa_hole + 1;
+-		pr_info(" Removing ISA hole at 0x%016llx\n", isa_mb);
+-		if (next < memno)
+-			memmove(&hose->mem_resources[isa_hole],
+-				&hose->mem_resources[next],
+-				sizeof(struct resource) * (memno - next));
+-		hose->mem_resources[--memno].flags = 0;
+-	}
+-}
+-
+ /* Decide whether to display the domain number in /proc */
+ int pci_proc_domain(struct pci_bus *bus)
+ {
+diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+index 025a130..205bfba 100644
+--- a/arch/powerpc/include/asm/pci-bridge.h
++++ b/arch/powerpc/include/asm/pci-bridge.h
+@@ -10,6 +10,7 @@
+ #include <linux/pci.h>
+ #include <linux/list.h>
+ #include <linux/ioport.h>
++#include <linux/of_pci.h>
+ #include <asm-generic/pci-bridge.h>
+ 
+ struct device_node;
+@@ -231,10 +232,6 @@ extern int pcibios_map_io_space(struct pci_bus *bus);
+ extern struct pci_controller *pci_find_hose_for_OF_device(
+ 			struct device_node* node);
+ 
+-/* Fill up host controller resources from the OF node */
+-extern void pci_process_bridge_OF_ranges(struct pci_controller *hose,
+-			struct device_node *dev, int primary);
+-
+ /* Allocate & free a PCI host bridge structure */
+ extern struct pci_controller *pcibios_alloc_controller(struct device_node *dev);
+ extern void pcibios_free_controller(struct pci_controller *phb);
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index fa12ae4..6edf396 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -640,198 +640,6 @@ void pci_resource_to_user(const struct pci_dev *dev, int bar,
+ 	*end = rsrc->end - offset;
+ }
+ 
+-/**
+- * pci_process_bridge_OF_ranges - Parse PCI bridge resources from device tree
+- * @hose: newly allocated pci_controller to be setup
+- * @dev: device node of the host bridge
+- * @primary: set if primary bus (32 bits only, soon to be deprecated)
+- *
+- * This function will parse the "ranges" property of a PCI host bridge device
+- * node and setup the resource mapping of a pci controller based on its
+- * content.
+- *
+- * Life would be boring if it wasn't for a few issues that we have to deal
+- * with here:
+- *
+- *   - We can only cope with one IO space range and up to 3 Memory space
+- *     ranges. However, some machines (thanks Apple !) tend to split their
+- *     space into lots of small contiguous ranges. So we have to coalesce.
+- *
+- *   - We can only cope with all memory ranges having the same offset
+- *     between CPU addresses and PCI addresses. Unfortunately, some bridges
+- *     are setup for a large 1:1 mapping along with a small "window" which
+- *     maps PCI address 0 to some arbitrary high address of the CPU space in
+- *     order to give access to the ISA memory hole.
+- *     The way out of here that I've chosen for now is to always set the
+- *     offset based on the first resource found, then override it if we
+- *     have a different offset and the previous was set by an ISA hole.
+- *
+- *   - Some busses have IO space not starting at 0, which causes trouble with
+- *     the way we do our IO resource renumbering. The code somewhat deals with
+- *     it for 64 bits but I would expect problems on 32 bits.
+- *
+- *   - Some 32 bits platforms such as 4xx can have physical space larger than
+- *     32 bits so we need to use 64 bits values for the parsing
+- */
+-void pci_process_bridge_OF_ranges(struct pci_controller *hose,
+-				  struct device_node *dev, int primary)
+-{
+-	const u32 *ranges;
+-	int rlen;
+-	int pna = of_n_addr_cells(dev);
+-	int np = pna + 5;
+-	int memno = 0, isa_hole = -1;
+-	u32 pci_space;
+-	unsigned long long pci_addr, cpu_addr, pci_next, cpu_next, size;
+-	unsigned long long isa_mb = 0;
+-	struct resource *res;
+-
+-	printk(KERN_INFO "PCI host bridge %s %s ranges:\n",
+-	       dev->full_name, primary ? "(primary)" : "");
+-
+-	/* Get ranges property */
+-	ranges = of_get_property(dev, "ranges", &rlen);
+-	if (ranges == NULL)
+-		return;
+-
+-	/* Parse it */
+-	while ((rlen -= np * 4) >= 0) {
+-		/* Read next ranges element */
+-		pci_space = ranges[0];
+-		pci_addr = of_read_number(ranges + 1, 2);
+-		cpu_addr = of_translate_address(dev, ranges + 3);
+-		size = of_read_number(ranges + pna + 3, 2);
+-		ranges += np;
+-
+-		/* If we failed translation or got a zero-sized region
+-		 * (some FW try to feed us with non sensical zero sized regions
+-		 * such as power3 which look like some kind of attempt at exposing
+-		 * the VGA memory hole)
+-		 */
+-		if (cpu_addr == OF_BAD_ADDR || size == 0)
+-			continue;
+-
+-		/* Now consume following elements while they are contiguous */
+-		for (; rlen >= np * sizeof(u32);
+-		     ranges += np, rlen -= np * 4) {
+-			if (ranges[0] != pci_space)
+-				break;
+-			pci_next = of_read_number(ranges + 1, 2);
+-			cpu_next = of_translate_address(dev, ranges + 3);
+-			if (pci_next != pci_addr + size ||
+-			    cpu_next != cpu_addr + size)
+-				break;
+-			size += of_read_number(ranges + pna + 3, 2);
+-		}
+-
+-		/* Act based on address space type */
+-		res = NULL;
+-		switch ((pci_space >> 24) & 0x3) {
+-		case 1:		/* PCI IO space */
+-			printk(KERN_INFO
+-			       "  IO 0x%016llx..0x%016llx -> 0x%016llx\n",
+-			       cpu_addr, cpu_addr + size - 1, pci_addr);
+-
+-			/* We support only one IO range */
+-			if (hose->pci_io_size) {
+-				printk(KERN_INFO
+-				       " \\--> Skipped (too many) !\n");
+-				continue;
+-			}
+-#ifdef CONFIG_PPC32
+-			/* On 32 bits, limit I/O space to 16MB */
+-			if (size > 0x01000000)
+-				size = 0x01000000;
+-
+-			/* 32 bits needs to map IOs here */
+-			hose->io_base_virt = ioremap(cpu_addr, size);
+-
+-			/* Expect trouble if pci_addr is not 0 */
+-			if (primary)
+-				isa_io_base =
+-					(unsigned long)hose->io_base_virt;
+-#endif /* CONFIG_PPC32 */
+-			/* pci_io_size and io_base_phys always represent IO
+-			 * space starting at 0 so we factor in pci_addr
+-			 */
+-			hose->pci_io_size = pci_addr + size;
+-			hose->io_base_phys = cpu_addr - pci_addr;
+-
+-			/* Build resource */
+-			res = &hose->io_resource;
+-			res->flags = IORESOURCE_IO;
+-			res->start = pci_addr;
+-			break;
+-		case 2:		/* PCI Memory space */
+-		case 3:		/* PCI 64 bits Memory space */
+-			printk(KERN_INFO
+-			       " MEM 0x%016llx..0x%016llx -> 0x%016llx %s\n",
+-			       cpu_addr, cpu_addr + size - 1, pci_addr,
+-			       (pci_space & 0x40000000) ? "Prefetch" : "");
+-
+-			/* We support only 3 memory ranges */
+-			if (memno >= 3) {
+-				printk(KERN_INFO
+-				       " \\--> Skipped (too many) !\n");
+-				continue;
+-			}
+-			/* Handles ISA memory hole space here */
+-			if (pci_addr == 0) {
+-				isa_mb = cpu_addr;
+-				isa_hole = memno;
+-				if (primary || isa_mem_base == 0)
+-					isa_mem_base = cpu_addr;
+-				hose->isa_mem_phys = cpu_addr;
+-				hose->isa_mem_size = size;
+-			}
+-
+-			/* We get the PCI/Mem offset from the first range or
+-			 * the, current one if the offset came from an ISA
+-			 * hole. If they don't match, bugger.
+-			 */
+-			if (memno == 0 ||
+-			    (isa_hole >= 0 && pci_addr != 0 &&
+-			     hose->pci_mem_offset == isa_mb))
+-				hose->pci_mem_offset = cpu_addr - pci_addr;
+-			else if (pci_addr != 0 &&
+-				 hose->pci_mem_offset != cpu_addr - pci_addr) {
+-				printk(KERN_INFO
+-				       " \\--> Skipped (offset mismatch) !\n");
+-				continue;
+-			}
+-
+-			/* Build resource */
+-			res = &hose->mem_resources[memno++];
+-			res->flags = IORESOURCE_MEM;
+-			if (pci_space & 0x40000000)
+-				res->flags |= IORESOURCE_PREFETCH;
+-			res->start = cpu_addr;
+-			break;
+-		}
+-		if (res != NULL) {
+-			res->name = dev->full_name;
+-			res->end = res->start + size - 1;
+-			res->parent = NULL;
+-			res->sibling = NULL;
+-			res->child = NULL;
+-		}
+-	}
+-
+-	/* If there's an ISA hole and the pci_mem_offset is -not- matching
+-	 * the ISA hole offset, then we need to remove the ISA hole from
+-	 * the resource list for that brige
+-	 */
+-	if (isa_hole >= 0 && hose->pci_mem_offset != isa_mb) {
+-		unsigned int next = isa_hole + 1;
+-		printk(KERN_INFO " Removing ISA hole at 0x%016llx\n", isa_mb);
+-		if (next < memno)
+-			memmove(&hose->mem_resources[isa_hole],
+-				&hose->mem_resources[next],
+-				sizeof(struct resource) * (memno - next));
+-		hose->mem_resources[--memno].flags = 0;
+-	}
+-}
+-
+ /* Decide whether to display the domain number in /proc */
+ int pci_proc_domain(struct pci_bus *bus)
+ {
+diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
+index 13e37e2..0611248 100644
+--- a/drivers/of/of_pci.c
++++ b/drivers/of/of_pci.c
+@@ -4,6 +4,10 @@
+ #include <linux/of_pci.h>
+ #include <asm/prom.h>
+ 
++#if defined(CONFIG_PPC32) || defined(CONFIG_PPC64) || defined(CONFIG_MICROBLAZE)
++#include <asm/pci-bridge.h>
++#endif
++
+ static inline int __of_pci_pci_compare(struct device_node *node,
+ 				       unsigned int devfn)
+ {
+@@ -40,3 +44,199 @@ struct device_node *of_pci_find_child_device(struct device_node *parent,
+ 	return NULL;
+ }
+ EXPORT_SYMBOL_GPL(of_pci_find_child_device);
++
++/**
++ * pci_process_bridge_OF_ranges - Parse PCI bridge resources from device tree
++ * @hose: newly allocated pci_controller to be setup
++ * @dev: device node of the host bridge
++ * @primary: set if primary bus (32 bits only, soon to be deprecated)
++ *
++ * This function will parse the "ranges" property of a PCI host bridge device
++ * node and setup the resource mapping of a pci controller based on its
++ * content.
++ *
++ * Life would be boring if it wasn't for a few issues that we have to deal
++ * with here:
++ *
++ *   - We can only cope with one IO space range and up to 3 Memory space
++ *     ranges. However, some machines (thanks Apple !) tend to split their
++ *     space into lots of small contiguous ranges. So we have to coalesce.
++ *
++ *   - We can only cope with all memory ranges having the same offset
++ *     between CPU addresses and PCI addresses. Unfortunately, some bridges
++ *     are setup for a large 1:1 mapping along with a small "window" which
++ *     maps PCI address 0 to some arbitrary high address of the CPU space in
++ *     order to give access to the ISA memory hole.
++ *     The way out of here that I've chosen for now is to always set the
++ *     offset based on the first resource found, then override it if we
++ *     have a different offset and the previous was set by an ISA hole.
++ *
++ *   - Some busses have IO space not starting at 0, which causes trouble with
++ *     the way we do our IO resource renumbering. The code somewhat deals with
++ *     it for 64 bits but I would expect problems on 32 bits.
++ *
++ *   - Some 32 bits platforms such as 4xx can have physical space larger than
++ *     32 bits so we need to use 64 bits values for the parsing
++ */
++#if defined(CONFIG_PPC32) || defined(CONFIG_PPC64) || defined(CONFIG_MICROBLAZE)
++void pci_process_bridge_OF_ranges(struct pci_controller *hose,
++				  struct device_node *dev, int primary)
++{
++	const u32 *ranges;
++	int rlen;
++	int pna = of_n_addr_cells(dev);
++	int np = pna + 5;
++	int memno = 0, isa_hole = -1;
++	u32 pci_space;
++	unsigned long long pci_addr, cpu_addr, pci_next, cpu_next, size;
++	unsigned long long isa_mb = 0;
++	struct resource *res;
++
++	pr_info("PCI host bridge %s %s ranges:\n",
++	       dev->full_name, primary ? "(primary)" : "");
++
++	/* Get ranges property */
++	ranges = of_get_property(dev, "ranges", &rlen);
++	if (ranges == NULL)
++		return;
++
++	/* Parse it */
++	pr_debug("Parsing ranges property...\n");
++	while ((rlen -= np * 4) >= 0) {
++		/* Read next ranges element */
++		pci_space = ranges[0];
++		pci_addr = of_read_number(ranges + 1, 2);
++		cpu_addr = of_translate_address(dev, ranges + 3);
++		size = of_read_number(ranges + pna + 3, 2);
++
++		pr_debug("pci_space: 0x%08x pci_addr:0x%016llx ",
++				pci_space, pci_addr);
++		pr_debug("cpu_addr:0x%016llx size:0x%016llx\n",
++					cpu_addr, size);
++
++		ranges += np;
++
++		/* If we failed translation or got a zero-sized region
++		 * (some FW try to feed us with non sensical zero sized regions
++		 * such as power3 which look like some kind of attempt
++		 * at exposing the VGA memory hole)
++		 */
++		if (cpu_addr == OF_BAD_ADDR || size == 0)
++			continue;
++
++		/* Now consume following elements while they are contiguous */
++		for (; rlen >= np * sizeof(u32);
++		     ranges += np, rlen -= np * 4) {
++			if (ranges[0] != pci_space)
++				break;
++			pci_next = of_read_number(ranges + 1, 2);
++			cpu_next = of_translate_address(dev, ranges + 3);
++			if (pci_next != pci_addr + size ||
++			    cpu_next != cpu_addr + size)
++				break;
++			size += of_read_number(ranges + pna + 3, 2);
++		}
++
++		/* Act based on address space type */
++		res = NULL;
++		switch ((pci_space >> 24) & 0x3) {
++		case 1:		/* PCI IO space */
++			pr_info("  IO 0x%016llx..0x%016llx -> 0x%016llx\n",
++			       cpu_addr, cpu_addr + size - 1, pci_addr);
++
++			/* We support only one IO range */
++			if (hose->pci_io_size) {
++				pr_info(" \\--> Skipped (too many) !\n");
++				continue;
++			}
++#if defined(CONFIG_PPC32) || defined(CONFIG_MICROBLAZE)
++			/* On 32 bits, limit I/O space to 16MB */
++			if (size > 0x01000000)
++				size = 0x01000000;
++
++			/* 32 bits needs to map IOs here */
++			hose->io_base_virt = ioremap(cpu_addr, size);
++
++			/* Expect trouble if pci_addr is not 0 */
++			if (primary)
++				isa_io_base =
++					(unsigned long)hose->io_base_virt;
++#endif /* CONFIG_PPC32 || CONFIG_MICROBLAZE */
++			/* pci_io_size and io_base_phys always represent IO
++			 * space starting at 0 so we factor in pci_addr
++			 */
++			hose->pci_io_size = pci_addr + size;
++			hose->io_base_phys = cpu_addr - pci_addr;
++
++			/* Build resource */
++			res = &hose->io_resource;
++			res->flags = IORESOURCE_IO;
++			res->start = pci_addr;
++			break;
++		case 2:		/* PCI Memory space */
++		case 3:		/* PCI 64 bits Memory space */
++			pr_info(" MEM 0x%016llx..0x%016llx -> 0x%016llx %s\n",
++			       cpu_addr, cpu_addr + size - 1, pci_addr,
++			       (pci_space & 0x40000000) ? "Prefetch" : "");
++
++			/* We support only 3 memory ranges */
++			if (memno >= 3) {
++				pr_info(" \\--> Skipped (too many) !\n");
++				continue;
++			}
++			/* Handles ISA memory hole space here */
++			if (pci_addr == 0) {
++				isa_mb = cpu_addr;
++				isa_hole = memno;
++				if (primary || isa_mem_base == 0)
++					isa_mem_base = cpu_addr;
++				hose->isa_mem_phys = cpu_addr;
++				hose->isa_mem_size = size;
++			}
++
++			/* We get the PCI/Mem offset from the first range or
++			 * the, current one if the offset came from an ISA
++			 * hole. If they don't match, bugger.
++			 */
++			if (memno == 0 ||
++			    (isa_hole >= 0 && pci_addr != 0 &&
++			     hose->pci_mem_offset == isa_mb))
++				hose->pci_mem_offset = cpu_addr - pci_addr;
++			else if (pci_addr != 0 &&
++				 hose->pci_mem_offset != cpu_addr - pci_addr) {
++				pr_info(" \\--> Skipped (offset mismatch) !\n");
++				continue;
++			}
++
++			/* Build resource */
++			res = &hose->mem_resources[memno++];
++			res->flags = IORESOURCE_MEM;
++			if (pci_space & 0x40000000)
++				res->flags |= IORESOURCE_PREFETCH;
++			res->start = cpu_addr;
++			break;
++		}
++		if (res != NULL) {
++			res->name = dev->full_name;
++			res->end = res->start + size - 1;
++			res->parent = NULL;
++			res->sibling = NULL;
++			res->child = NULL;
++		}
++	}
++
++	/* If there's an ISA hole and the pci_mem_offset is -not- matching
++	 * the ISA hole offset, then we need to remove the ISA hole from
++	 * the resource list for that brige
++	 */
++	if (isa_hole >= 0 && hose->pci_mem_offset != isa_mb) {
++		unsigned int next = isa_hole + 1;
++		pr_info(" Removing ISA hole at 0x%016llx\n", isa_mb);
++		if (next < memno)
++			memmove(&hose->mem_resources[isa_hole],
++				&hose->mem_resources[next],
++				sizeof(struct resource) * (memno - next));
++		hose->mem_resources[--memno].flags = 0;
++	}
++}
++#endif
+diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
+index bb115de..6852481 100644
+--- a/include/linux/of_pci.h
++++ b/include/linux/of_pci.h
+@@ -11,4 +11,7 @@ struct device_node;
+ struct device_node *of_pci_find_child_device(struct device_node *parent,
+ 					     unsigned int devfn);
+ 
++void pci_process_bridge_OF_ranges(struct pci_controller *hose,
++			struct device_node *dev, int primary);
++
+ #endif
+-- 
+1.7.0.4
 
-
-7. Now, a question to the reader: If I attach the mouse, will it work or not?
-
-
-# diff -u -w lspci_vvv_initial__1c.4_and_0b\:00_to_auto__mouse_attached_and_works__detached__reattached_but_dead__0b\:00_to_on_rescues__detached__0b\:00_to_auto.txt lspci_vvv_initial__1c.4_and_0b\:00_to_auto__mouse_attached_and_works__detached__reattached_but_dead__0b\:00_to_on_rescues__detached__0b\:00_to_auto__attached_dead.txt 
---- lspci_vvv_initial__1c.4_and_0b:00_to_auto__mouse_attached_and_works__detached__reattached_but_dead__0b:00_to_on_rescues__detached__0b:00_to_auto.txt        2013-04-20 01:14:41.000000000 +0200
-+++ lspci_vvv_initial__1c.4_and_0b:00_to_auto__mouse_attached_and_works__detached__reattached_but_dead__0b:00_to_on_rescues__detached__0b:00_to_auto__attached_dead.txt 2013-04-20 01:17:59.000000000 +0200
-@@ -491,7 +491,7 @@
-        Region 2: Memory at f7d10000 (64-bit, non-prefetchable) [size=8K]
-        Capabilities: [40] Power Management version 3
-                Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=100mA PME(D0+,D1+,D2+,D3hot+,D3cold+)
--               Status: D3 NoSoftRst+ PME-Enable+ DSel=0 DScale=0 PME-
-+               Status: D3 NoSoftRst+ PME-Enable+ DSel=0 DScale=0 PME+
-        Capabilities: [48] MSI: Enable- Count=1/8 Maskable- 64bit+
-                Address: 0000000000000000  Data: 0000
-        Capabilities: [70] Express (v2) Endpoint, MSI 00
-#
-
-
-No, it did not work. Situation in step 7 is same like in step 4. The diff below is likely benign:
-
-# diff -u -w lspci_vvv_initial__1c.4_and_0b\:00_to_auto__mouse_attached_and_works__detached__reattached_but_dead.txt lspci_vvv_initial__1c.4_and_0b\:00_to_auto__mouse_attached_and_works__detached__reattached_but_dead__0b\:00_to_on_rescues__detached__0b\:00_to_auto__attached_dead.txt 
---- lspci_vvv_initial__1c.4_and_0b:00_to_auto__mouse_attached_and_works__detached__reattached_but_dead.txt      2013-04-20 01:10:28.000000000 +0200
-+++ lspci_vvv_initial__1c.4_and_0b:00_to_auto__mouse_attached_and_works__detached__reattached_but_dead__0b:00_to_on_rescues__detached__0b:00_to_auto__attached_dead.txt 2013-04-20 01:17:59.000000000 +0200
-@@ -520,7 +520,7 @@
-                UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-                UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-                UESvrt: DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
--               CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
-+               CESta:  RxErr- BadTLP- BadDLLP+ Rollover- Timeout- NonFatalErr+
-                CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
-                AERCap: First Error Pointer: 00, GenCap+ CGenEn- ChkCap+ ChkEn-
-        Capabilities: [150 v1] Device Serial Number 08-00-28-00-00-20-00-00
-#
-
-
-
-Collected data are at http://195.113.57.32/~mmokrejs/tmp/20130420.tar.bz2 (90kB)
-
-Thanks,
-Martin
-
-
-Martin Mokrejs wrote:
-> 
-> 
-> Huang Ying wrote:
->> Hi, Martin,
->>
->> On Wed, 2013-04-03 at 14:16 +0200, Martin Mokrejs wrote:
->>> Meanwhile, the raw data: http://195.113.57.32/~mmokrejs/tmp/20130402.tar.bz2
->>> (size 468641 bytes)
->>
->> Thanks a lot!  Your information is very complete and clear :)
->>
->>> They were collected by:
->>>
->>> # cat ~/bin/collect_runtime_status.sh 
->>> #!/bin/sh
->>> grep . /sys/bus/pci/devices/*/power/runtime_status > runtime_status_"$1".txt
->>> grep . /sys/bus/pci/devices/*/power/control > control_"$1".txt
->>> cat /proc/interrupts > interrupts_"$1".txt
->>> cat /proc/iomem > iomem_"$1".txt
->>> lspci -vvv > lspci_vvv_"$1".txt
->>> dmesg > dmesg_"$1".txt
->>> #
->>>
->>> Just do 'ls -latr' to see the ordering of the files as they were created.
->>> The longer the filename, the later in the test process. The names should be
->>> relatively self-explaining. Definitely, from the log files you should see
->>> what happened in real and therefore, can figure out what the (maybe weird)
->>> long filename really meant.
->>>
->>> Sometimes I manually recorded lsusb of dmesg_final.txt, mostly after I did some
->>> extra tests but but not want to record every step by the above 6 files.
->>>
->>> In one or two places I added some my own notes into COMMENTS file.
->>>
->>>
->>>
->>>
->>> I will try to guide your below where you can study which of the bugs. Mostly,
->>> for each bug you need just one subdirectory to look into, the other are just
->>> repeated the same bug under different kernel version or another patch.
->>> However, Sarah for the xHCI dead port issue will need to compare by diff
->>> two directories, one with the TI-based controller tests, the other with the
->>> NEC-based tests. Especially there, I would do something like:
->>>
->>> cd *TI-based; for f in dmesg*; do cut -c 15- $f > /tmp/TI/$f; done
->>> cd ../*NEC-based; for f in dmesg*; do cut -c 15- $f > /tmp/NEC/$f; done
->>>
->>> Then it should be easier to poke through file captured at the same test step,
->>> like:
->>>
->>> diff -u -w /tmp/TI/dmesg_initial__mouse_attached__unplugged__reattached_but_port_dead.txt \
->>> /tmp/NEC/dmesg_initial__mouse_attached__detached__reattached.txt
->>>
->>>
->>>
->>> Other than that, just diff pairs of files with each other, like:
->>>
->>> diff -u -w lspci_vvv_initial.txt lspci_vvv_initial__mouse_attached.txt
->>>
->>>
->>> Sorry that I sometimes used only a single underscore instead of double underscores
->>> to separate the test steps from each other in the filename.
->>>
->>>
->>> Martin Mokrejs wrote:
->>>> [ +linux-pci and Yinghai as they suffered already those many emails on individual
->>>>  threads so one overviewing email hopefully won't harm] ;-)
->>>>
->>>> Martin Mokrejs wrote:
->>>>>
->>>>>
->>>>> Bjorn Helgaas wrote:
->>>>>> On Tue, Apr 2, 2013 at 9:02 AM, Martin Mokrejs
->>>>>> <mmokrejs@fold.natur.cuni.cz> wrote:
->>>>>>> Hi Ying,
->>>>>>>
->>>>>>> huang ying wrote:
->>>>>>
->>>>>>>> And please give me the full dmesg for boot and incremental dmesg for
->>>>>>>> operations.
->>>>>>>
->>>>>>>
->>>>>>> The incremental bits here, the full dmesg will send only directly to your email, due to its size.
->>>>>>
->>>>>> Is there a bugzilla for this issue?  Please attach the complete dmesg
->>>>>> there or somewhere similar so we can all benefit.
->>>>>
->>>>> I changed my mind. I am attaching the dmesg here but omitting linux-acpi
->>>>> list. After I hear a proposal from Rafel/Bjorn I will open separate bugs.
->>>>> I thought that the threads I started so far were enough but yes, dmesg
->>>>> files don't pass through list filters so I should move that to bugzilla.
->>>>>
->>>>> so far my view of the the bugs was:
->>>>>
->>>>> 1) acpiphp hotplug broken due to upstream pcieport 1c.7 PME# enabled
->>>>>   (eSATA-based card)
->>>>
->>>> Fixed by Ying Huang port_dbg.patch applied over 3.8.5 (fixes acpiphp hotplug
->>>> of eSATA and Firewire cards, NOT the hotplug of a NEC-based USB3 card -> hence
->>>> the bug 4) below). Now I can continue using laptop-mode-tools.
->>>
->>> 20130402/3.8.5-ying_port-dbg__with_laptop-mode-tools_eSATA_testing
->>> 20130402/3.8.3-vanilla__with_laptop-mode-tools (with some comments in
->>>                                                 COMMENTS file)
->>
->> Thanks for your testing!
->>
->>>>> 2) xHCI dead due to to its suspend - 3.8 series and above
->>>>
->>>> Not fixed by port_dbg.patch applied over 3.8.5. Interestingly, a NEC-based
->>>> XHCI card *in an express card slot* does not suffer this suspend issue.
->>>> Although it is being put into suspend if a device is unplugged.
->>>
->>> 20130402/3.8.5-ying_port-dbg__with_laptop-mode-tools_xHCI_test_TI-based
->>> 20130402/3.8.5-ying_port-dbg__with_laptop-mode-tools_xHCI_test_NEC-based
->>>
->>> Same thing but yet without the port_dbg.patch:
->>> 20130402/3.9-rc5__with_2368081__with-latop-mode-tools_xhci_testing/
->>
->> It appears that TI xHCI dead port issue will present even if the PCIe
->> port will never go suspended.  So I think this bug is not related to
->> PCIe port runtime PM but related to USB xHCI.
->>
->> Do you agree Sarah?
-> 
-> Although I confirmed with 20130405.tar.bz2 dataset what Sarah repeated from our
-> past findings in the email which should be just in your your inbox, one thing is
-> puzzling:
-> When I have powersaving enabled upon bootup with NO USB devices attached to the TI
-> controller, effectively while reaching multiuser mode the 0b:00.0 is in a suspend
-> state. But, somehow, the very first mouse plugin works. Only the reject causes
-> more 'aggressive' suspend.
-> As it seems no upstream 1c.4 is messing up here (in the test Sarah wanted me to do
-> we have all control files 'on' except the end 0b:00.0) then really still something
-> *else* is causing the dead port *in conjunction* with 'suspended' runtime state.
-> Please double check what I wrote initially about the 20130402.tar.bz2 dataset.
-> Notably, I would compare lspci outputs from a cold boot state with no devices
-> attached and suspended 0b:00.0 (the 20130402.tar.bz2 dataset) with the dead port
-> status in lspci (find any in 20130402.tar.bz2 or now in 20130405.tar.bz2).
-> 
-> Martin
-> 
->>
->> [snip]
->>
->> Best Regards,
->> Huang Ying
