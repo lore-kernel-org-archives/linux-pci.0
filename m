@@ -1,333 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp08.in.ibm.com ([122.248.162.8]:56299 "EHLO
-	e28smtp08.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932584Ab3DYPXC (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Apr 2013 11:23:02 -0400
-Received: from /spool/local
-	by e28smtp08.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <hegdevasant@linux.vnet.ibm.com>;
-	Thu, 25 Apr 2013 20:46:52 +0530
-Message-ID: <51794A3C.3040406@linux.vnet.ibm.com>
-Date: Thu, 25 Apr 2013 20:52:36 +0530
-From: Vasant Hegde <hegdevasant@linux.vnet.ibm.com>
+Received: from avon.wwwdotorg.org ([70.85.31.133]:57238 "EHLO
+	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964846Ab3DJRXR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Apr 2013 13:23:17 -0400
+Message-ID: <5165A001.9030408@wwwdotorg.org>
+Date: Wed, 10 Apr 2013 11:23:13 -0600
+From: Stephen Warren <swarren@wwwdotorg.org>
 MIME-Version: 1.0
-To: David Howells <dhowells@redhat.com>
-CC: linux-kernel@vger.kernel.org, alsa-devel@alsa-project.org,
-	linux-pci@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netfilter-devel@vger.kernel.org, viro@zeniv.linux.org.uk,
-	netdev@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org, linux-media@vger.kernel.org
-Subject: Re: [PATCH 04/28] proc: Supply PDE attribute setting accessor functions
- [RFC]
-References: <20130416182550.27773.89310.stgit@warthog.procyon.org.uk> <20130416182606.27773.55054.stgit@warthog.procyon.org.uk>
-In-Reply-To: <20130416182606.27773.55054.stgit@warthog.procyon.org.uk>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: Jay Agarwal <jagarwal@nvidia.com>
+CC: linux@arm.linux.org.uk, thierry.reding@avionic-design.de,
+	ldewangan@nvidia.com, bhelgaas@google.com, olof@lixom.net,
+	hdoyu@nvidia.com, pgaikwad@nvidia.com, mturquette@linaro.org,
+	pdeschrijver@nvidia.com, linux-arm-kernel@lists.infradead.org,
+	linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, jtukkinen@nvidia.com, kthota@nvidia.com
+Subject: Re: [PATCH 1/3] ARM: tegra: pcie: Add tegra3 support
+References: <1365435688-4179-1-git-send-email-jagarwal@nvidia.com>
+In-Reply-To: <1365435688-4179-1-git-send-email-jagarwal@nvidia.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/16/2013 11:56 PM, David Howells wrote:
-> Supply accessor functions to set attributes in proc_dir_entry structs.
->
-> The following are supplied: proc_set_size() and proc_set_user().
->
-> Signed-off-by: David Howells<dhowells@redhat.com>
-> cc: linuxppc-dev@lists.ozlabs.org
-> cc: linux-media@vger.kernel.org
-> cc: netdev@vger.kernel.org
-> cc: linux-wireless@vger.kernel.org
-> cc: linux-pci@vger.kernel.org
-> cc: netfilter-devel@vger.kernel.org
-> cc: alsa-devel@alsa-project.org
-> ---
->
->   arch/powerpc/kernel/proc_powerpc.c        |    2 +-
->   arch/powerpc/platforms/pseries/reconfig.c |    2 +-
+On 04/08/2013 09:41 AM, Jay Agarwal wrote:
+> Signed-off-by: Jay Agarwal <jagarwal@nvidia.com>
+> 
+> - Enable pcie root port 2 for cardhu
+> - Make private data structure for each SOC
+> - Add required tegra3 clocks and regulators
+> - Add tegra3 specific code in enable controller
+> - Modify clock tree to get clocks based on device
+> - Based on git://gitorious.org/thierryreding/linux.git
 
-arch/powerpc side changes looks good.
+Did you test these patches? They don't work for me on my Cardhu A04.
 
--Vasant
+First off, I had to change the num-lanes properties to match Cardhu's
+actual configuration:
 
->   drivers/media/pci/ttpci/av7110_ir.c       |    2 +-
->   drivers/net/irda/vlsi_ir.c                |    2 +-
->   drivers/net/wireless/airo.c               |   34 +++++++++--------------------
->   drivers/pci/proc.c                        |    2 +-
->   fs/proc/generic.c                         |   13 +++++++++++
->   include/linux/proc_fs.h                   |    5 ++++
->   kernel/configs.c                          |    2 +-
->   kernel/profile.c                          |    2 +-
->   net/netfilter/xt_recent.c                 |    3 +--
->   sound/core/info.c                         |    2 +-
->   12 files changed, 38 insertions(+), 33 deletions(-)
->
-> diff --git a/arch/powerpc/kernel/proc_powerpc.c b/arch/powerpc/kernel/proc_powerpc.c
-> index 41d8ee9..feb8580 100644
-> --- a/arch/powerpc/kernel/proc_powerpc.c
-> +++ b/arch/powerpc/kernel/proc_powerpc.c
-> @@ -83,7 +83,7 @@ static int __init proc_ppc64_init(void)
->   			&page_map_fops, vdso_data);
->   	if (!pde)
->   		return 1;
-> -	pde->size = PAGE_SIZE;
-> +	proc_set_size(pde, PAGE_SIZE);
->
->   	return 0;
->   }
-> diff --git a/arch/powerpc/platforms/pseries/reconfig.c b/arch/powerpc/platforms/pseries/reconfig.c
-> index d6491bd..f93cdf5 100644
-> --- a/arch/powerpc/platforms/pseries/reconfig.c
-> +++ b/arch/powerpc/platforms/pseries/reconfig.c
-> @@ -452,7 +452,7 @@ static int proc_ppc64_create_ofdt(void)
->
->   	ent = proc_create("powerpc/ofdt", S_IWUSR, NULL,&ofdt_fops);
->   	if (ent)
-> -		ent->size = 0;
-> +		proc_set_size(ent, 0);
->
->   	return 0;
->   }
-> diff --git a/drivers/media/pci/ttpci/av7110_ir.c b/drivers/media/pci/ttpci/av7110_ir.c
-> index eb82286..0e763a7 100644
-> --- a/drivers/media/pci/ttpci/av7110_ir.c
-> +++ b/drivers/media/pci/ttpci/av7110_ir.c
-> @@ -375,7 +375,7 @@ int av7110_ir_init(struct av7110 *av7110)
->   	if (av_cnt == 1) {
->   		e = proc_create("av7110_ir", S_IWUSR, NULL,&av7110_ir_proc_fops);
->   		if (e)
-> -			e->size = 4 + 256 * sizeof(u16);
-> +			proc_set_size(e, 4 + 256 * sizeof(u16));
->   	}
->
->   	tasklet_init(&av7110->ir.ir_tasklet, av7110_emit_key, (unsigned long)&av7110->ir);
-> diff --git a/drivers/net/irda/vlsi_ir.c b/drivers/net/irda/vlsi_ir.c
-> index e22cd4e..5f47584 100644
-> --- a/drivers/net/irda/vlsi_ir.c
-> +++ b/drivers/net/irda/vlsi_ir.c
-> @@ -1678,7 +1678,7 @@ vlsi_irda_probe(struct pci_dev *pdev, const struct pci_device_id *id)
->   			IRDA_WARNING("%s: failed to create proc entry\n",
->   				     __func__);
->   		} else {
-> -			ent->size = 0;
-> +			proc_set_size(ent, 0);
->   		}
->   		idev->proc_entry = ent;
->   	}
-> diff --git a/drivers/net/wireless/airo.c b/drivers/net/wireless/airo.c
-> index 66e398d..21d0233 100644
-> --- a/drivers/net/wireless/airo.c
-> +++ b/drivers/net/wireless/airo.c
-> @@ -4507,73 +4507,63 @@ static int setup_proc_entry( struct net_device *dev,
->   					    airo_entry);
->   	if (!apriv->proc_entry)
->   		goto fail;
-> -	apriv->proc_entry->uid = proc_kuid;
-> -	apriv->proc_entry->gid = proc_kgid;
-> +	proc_set_user(apriv->proc_entry, proc_kuid, proc_kgid);
->
->   	/* Setup the StatsDelta */
->   	entry = proc_create_data("StatsDelta", S_IRUGO&  proc_perm,
->   				 apriv->proc_entry,&proc_statsdelta_ops, dev);
->   	if (!entry)
->   		goto fail_stats_delta;
-> -	entry->uid = proc_kuid;
-> -	entry->gid = proc_kgid;
-> +	proc_set_user(entry, proc_kuid, proc_kgid);
->
->   	/* Setup the Stats */
->   	entry = proc_create_data("Stats", S_IRUGO&  proc_perm,
->   				 apriv->proc_entry,&proc_stats_ops, dev);
->   	if (!entry)
->   		goto fail_stats;
-> -	entry->uid = proc_kuid;
-> -	entry->gid = proc_kgid;
-> +	proc_set_user(entry, proc_kuid, proc_kgid);
->
->   	/* Setup the Status */
->   	entry = proc_create_data("Status", S_IRUGO&  proc_perm,
->   				 apriv->proc_entry,&proc_status_ops, dev);
->   	if (!entry)
->   		goto fail_status;
-> -	entry->uid = proc_kuid;
-> -	entry->gid = proc_kgid;
-> +	proc_set_user(entry, proc_kuid, proc_kgid);
->
->   	/* Setup the Config */
->   	entry = proc_create_data("Config", proc_perm,
->   				 apriv->proc_entry,&proc_config_ops, dev);
->   	if (!entry)
->   		goto fail_config;
-> -	entry->uid = proc_kuid;
-> -	entry->gid = proc_kgid;
-> +	proc_set_user(entry, proc_kuid, proc_kgid);
->
->   	/* Setup the SSID */
->   	entry = proc_create_data("SSID", proc_perm,
->   				 apriv->proc_entry,&proc_SSID_ops, dev);
->   	if (!entry)
->   		goto fail_ssid;
-> -	entry->uid = proc_kuid;
-> -	entry->gid = proc_kgid;
-> +	proc_set_user(entry, proc_kuid, proc_kgid);
->
->   	/* Setup the APList */
->   	entry = proc_create_data("APList", proc_perm,
->   				 apriv->proc_entry,&proc_APList_ops, dev);
->   	if (!entry)
->   		goto fail_aplist;
-> -	entry->uid = proc_kuid;
-> -	entry->gid = proc_kgid;
-> +	proc_set_user(entry, proc_kuid, proc_kgid);
->
->   	/* Setup the BSSList */
->   	entry = proc_create_data("BSSList", proc_perm,
->   				 apriv->proc_entry,&proc_BSSList_ops, dev);
->   	if (!entry)
->   		goto fail_bsslist;
-> -	entry->uid = proc_kuid;
-> -	entry->gid = proc_kgid;
-> +	proc_set_user(entry, proc_kuid, proc_kgid);
->
->   	/* Setup the WepKey */
->   	entry = proc_create_data("WepKey", proc_perm,
->   				 apriv->proc_entry,&proc_wepkey_ops, dev);
->   	if (!entry)
->   		goto fail_wepkey;
-> -	entry->uid = proc_kuid;
-> -	entry->gid = proc_kgid;
-> -
-> +	proc_set_user(entry, proc_kuid, proc_kgid);
->   	return 0;
->
->   fail_wepkey:
-> @@ -5695,10 +5685,8 @@ static int __init airo_init_module( void )
->
->   	airo_entry = proc_mkdir_mode("driver/aironet", airo_perm, NULL);
->
-> -	if (airo_entry) {
-> -		airo_entry->uid = proc_kuid;
-> -		airo_entry->gid = proc_kgid;
-> -	}
-> +	if (airo_entry)
-> +		proc_set_user(airo_entry, proc_kuid, proc_kgid);
->
->   	for (i = 0; i<  4&&  io[i]&&  irq[i]; i++) {
->   		airo_print_info("", "Trying to configure ISA adapter at irq=%d "
-> diff --git a/drivers/pci/proc.c b/drivers/pci/proc.c
-> index 12e4fb5..7cde7c1 100644
-> --- a/drivers/pci/proc.c
-> +++ b/drivers/pci/proc.c
-> @@ -419,7 +419,7 @@ int pci_proc_attach_device(struct pci_dev *dev)
->   			&proc_bus_pci_operations, dev);
->   	if (!e)
->   		return -ENOMEM;
-> -	e->size = dev->cfg_size;
-> +	proc_set_size(e, dev->cfg_size);
->   	dev->procent = e;
->
->   	return 0;
-> diff --git a/fs/proc/generic.c b/fs/proc/generic.c
-> index 1c07cad..5f6f6c3 100644
-> --- a/fs/proc/generic.c
-> +++ b/fs/proc/generic.c
-> @@ -498,6 +498,19 @@ out:
->   	return NULL;
->   }
->   EXPORT_SYMBOL(proc_create_data);
+> diff --git a/arch/arm/boot/dts/tegra30-cardhu.dtsi b/arch/arm/boot/dts/tegra30-cardhu.dtsi
+> index d64d12c..6426226 100644
+> --- a/arch/arm/boot/dts/tegra30-cardhu.dtsi
+> +++ b/arch/arm/boot/dts/tegra30-cardhu.dtsi
+> @@ -143,8 +143,17 @@
+>                 vdd-supply = <&ldo1_reg>;
+>                 avdd-supply = <&ldo2_reg>;
+>  
+> +               pci@1,0 {
+> +                       nvidia,num-lanes = <4>;
+> +               };
 > +
-> +void proc_set_size(struct proc_dir_entry *de, loff_t size)
-> +{
-> +	de->size = size;
-> +}
-> +EXPORT_SYMBOL(proc_set_size);
+> +               pci@2,0 {
+> +                       nvidia,num-lanes = <1>;
+> +               };
 > +
-> +void proc_set_user(struct proc_dir_entry *de, kuid_t uid, kgid_t gid)
-> +{
-> +	de->uid = uid;
-> +	de->gid = gid;
-> +}
-> +EXPORT_SYMBOL(proc_set_user);
->
->   static void free_proc_entry(struct proc_dir_entry *de)
->   {
-> diff --git a/include/linux/proc_fs.h b/include/linux/proc_fs.h
-> index 805edac..28a4d7e 100644
-> --- a/include/linux/proc_fs.h
-> +++ b/include/linux/proc_fs.h
-> @@ -130,6 +130,9 @@ static inline struct proc_dir_entry *proc_create(const char *name, umode_t mode,
->   extern struct proc_dir_entry *proc_net_mkdir(struct net *net, const char *name,
->   	struct proc_dir_entry *parent);
->
-> +extern void proc_set_size(struct proc_dir_entry *, loff_t);
-> +extern void proc_set_user(struct proc_dir_entry *, kuid_t, kgid_t);
-> +
->   extern struct file *proc_ns_fget(int fd);
->   extern bool proc_ns_inode(struct inode *inode);
->
-> @@ -158,6 +161,8 @@ static inline struct proc_dir_entry *proc_mkdir(const char *name,
->   	struct proc_dir_entry *parent) {return NULL;}
->   static inline struct proc_dir_entry *proc_mkdir_mode(const char *name,
->   	umode_t mode, struct proc_dir_entry *parent) { return NULL; }
-> +static inline void proc_set_size(struct proc_dir_entry *de, loff_t size) {}
-> +static inline void proc_set_user(struct proc_dir_entry *de, kuid_t uid, kgid_t gid) {}
->
->   struct tty_driver;
->   static inline void proc_tty_register_driver(struct tty_driver *driver) {};
-> diff --git a/kernel/configs.c b/kernel/configs.c
-> index 42e8fa0..c18b1f1 100644
-> --- a/kernel/configs.c
-> +++ b/kernel/configs.c
-> @@ -79,7 +79,7 @@ static int __init ikconfig_init(void)
->   	if (!entry)
->   		return -ENOMEM;
->
-> -	entry->size = kernel_config_data_size;
-> +	proc_set_size(entry, kernel_config_data_size);
->
->   	return 0;
->   }
-> diff --git a/kernel/profile.c b/kernel/profile.c
-> index 524ce5e..0bf4007 100644
-> --- a/kernel/profile.c
-> +++ b/kernel/profile.c
-> @@ -600,7 +600,7 @@ int __ref create_proc_profile(void) /* false positive from hotcpu_notifier */
->   			    NULL,&proc_profile_operations);
->   	if (!entry)
->   		return 0;
-> -	entry->size = (1+prof_len) * sizeof(atomic_t);
-> +	proc_set_size(entry, (1 + prof_len) * sizeof(atomic_t));
->   	hotcpu_notifier(profile_cpu_callback, 0);
->   	return 0;
->   }
-> diff --git a/net/netfilter/xt_recent.c b/net/netfilter/xt_recent.c
-> index 3db2d38..1e657cf 100644
-> --- a/net/netfilter/xt_recent.c
-> +++ b/net/netfilter/xt_recent.c
-> @@ -401,8 +401,7 @@ static int recent_mt_check(const struct xt_mtchk_param *par,
->   		ret = -ENOMEM;
->   		goto out;
->   	}
-> -	pde->uid = uid;
-> -	pde->gid = gid;
-> +	proc_set_user(pde, uid, gid);
->   #endif
->   	spin_lock_bh(&recent_lock);
->   	list_add_tail(&t->list,&recent_net->tables);
-> diff --git a/sound/core/info.c b/sound/core/info.c
-> index 3aa8864..c7f41c3 100644
-> --- a/sound/core/info.c
-> +++ b/sound/core/info.c
-> @@ -970,7 +970,7 @@ int snd_info_register(struct snd_info_entry * entry)
->   			mutex_unlock(&info_mutex);
->   			return -ENOMEM;
->   		}
-> -		p->size = entry->size;
-> +		proc_set_size(p, entry->size);
->   	}
->   	entry->p = p;
->   	if (entry->parent)
->
-> _______________________________________________
-> Linuxppc-dev mailing list
-> Linuxppc-dev@lists.ozlabs.org
-> https://lists.ozlabs.org/listinfo/linuxppc-dev
->
+>                 pci@3,0 {
+>                         status = "okay";
+> +                       nvidia,num-lanes = <1>;
+>                 };
+>         };
+>  
 
+However, even after doing that, the driver doesn't detect anything
+attached to port@3,0, even though I have the board plugged into the
+docking station, and hence the PCI Ethernet should be detected:
+
+> [    3.103860] tegra-pcie 3000.pcie-controller: 4x1, 1x2 configuration
+> [    3.113755] tegra-pcie 3000.pcie-controller: probing port 2, using 1 lanes
+> [    3.324364] tegra-pcie 3000.pcie-controller: link 2 down, retrying
+> [    3.534249] tegra-pcie 3000.pcie-controller: link 2 down, retrying
+> [    3.744160] tegra-pcie 3000.pcie-controller: link 2 down, retrying
+> [    3.751359] tegra-pcie 3000.pcie-controller: link 2 down, ignoring
+
+(I see the same messages even without fixing the lane configuration,
+exception for the first configuration message obviously prints something
+different).
+
+Are you testing with U-Boot, or using our binary bootloader? Upstream
+code must be tested with U-Boot, to make sure it doesn't rely on any HW
+programming performed by the bootloader.
