@@ -1,47 +1,91 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Wed, 17 Apr 2013 13:49:10 -0700 (PDT)
-From: David Rientjes <rientjes@google.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-cc: Jiang Liu <liuj97@gmail.com>, "Rafael J . Wysocki" <rjw@sisk.pl>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, "x86@kernel.org" <x86@kernel.org>
-Subject: Re: [PATCH v9 09/16] PCI, x86: implement pcibios_{add|remove}_bus()
- hooks
-In-Reply-To: <CAErSpo7A3paLJ8u5FxPZpy=9yT_ZkXvEbcHbKLd7iMutdDaBUA@mail.gmail.com>
-Message-ID: <alpine.DEB.2.02.1304171348420.31235@chino.kir.corp.google.com>
-References: <1365781470-32379-1-git-send-email-jiang.liu@huawei.com> <1365781470-32379-10-git-send-email-jiang.liu@huawei.com> <alpine.DEB.2.02.1304161324500.30779@chino.kir.corp.google.com>
- <CAErSpo7A3paLJ8u5FxPZpy=9yT_ZkXvEbcHbKLd7iMutdDaBUA@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from tx2ehsobe002.messaging.microsoft.com ([65.55.88.12]:21419 "EHLO
+	tx2outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753176Ab3DJJI2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Apr 2013 05:08:28 -0400
+Message-ID: <51652C20.2060105@freescale.com>
+Date: Wed, 10 Apr 2013 17:08:48 +0800
+From: Chen Yuanquan-B41889 <B41889@freescale.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Sender: linux-acpi-owner@vger.kernel.org
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+CC: Yuanquan Chen <Yuanquan.Chen@freescale.com>,
+	<linuxppc-dev@lists.ozlabs.org>, <linux-pci@vger.kernel.org>,
+	<bhelgaas@google.com>,
+	Hiroo Matsumoto <matsumoto.hiroo@jp.fujitsu.com>
+Subject: Re: [PATCH] powerpc/pci: fix PCI-e devices rescan issue on powerpc
+ platform
+References: <1364902014-943-1-git-send-email-Yuanquan.Chen@freescale.com> <1364915422.16520.8.camel@pasglop> <515BAB44.9070001@freescale.com>
+In-Reply-To: <515BAB44.9070001@freescale.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 16 Apr 2013, Bjorn Helgaas wrote:
+On 04/03/2013 12:08 PM, Chen Yuanquan-B41889 wrote:
+> On 04/02/2013 11:10 PM, Benjamin Herrenschmidt wrote:
+>> On Tue, 2013-04-02 at 19:26 +0800, Yuanquan Chen wrote:
+>>> So we move the DMA & IRQ initialization code from 
+>>> pcibios_setup_devices() and
+>>> construct a new function pcibios_enable_device. We call this 
+>>> function in
+>>> pcibios_enable_device, which will be called by PCI-e rescan code. At 
+>>> the
+>>> meanwhile, we avoid the the impact on cardbus. I also validate this 
+>>> patch with
+>>> silicon's PCIe-sata which encounters the IRQ issue.
+>> My worry is that this delays the setup of the IRQ and DMA to very 
+>> late in
+>> the process, possibly after the quirks have been run, which can be
+>> problematic. We have platform hooks that might try to "fixup" specific
+>> IRQ issues on some platforms (especially macs) which I worry might fail
+>> if delayed that way (I may be wrong, I don't have a specific case in 
+>> mind,
+>> but I would feel better if we kept setting up these things earlier).
+>>
+>> Cheers,
+>> Ben.
+>>
+>
+> Hi Ben,
+>
+> I have checked all the quirk functions which are declared in kernel 
+> arch/powerpc
+> with command :
+> grep DECLARE_PCI_FIXUP_ `find arch/powerpc/ *.[hc]`
+>
+> All the quirk function are defined as DECLARE_PCI_FIXUP_EARLY , 
+> DECLARE_PCI_FIXUP_HEADER
+> and DECLARE_PCI_FIXUP_FINAL, except quirk_uli5229() in 
+> arch/powerpc/platforms/fsl_uli1575.c, which is
+> defined both as DECLARE_PCI_FIXUP_HEADER and DECLARE_PCI_FIXUP_RESUME. 
+> So the quirk_uli5229()
+> will also be called with PCI pm module. The quirk functions defined as 
+> xxx_FINAL, HEADER and EARLY,
+> will be called in the path:
+>
+> pci_scan_child_bus()->pci_scan_slot()->pci_scan_single_device()->pci_scan_device()->pci_setup_device() 
+>
+> ->pci_device_add()
+>
+> the pci_scan_slot() is called earlier than pcibios_fixup_bus() even 
+> for the first scan of PCI-e bus, so the quirk
+> functions on powerpc platform is called before the DMA & IRQ fixup. So 
+> in reality, the delay of DMA & IRQ fixup
+> won't affect anything.
+>
+> Regards,
+> Yuanquan
+>
 
-> Thanks for the report!
-> 
-> I'm pretty sure I fixed this:
-> http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/commit/?h=pci/jiang-subdrivers&id=3b63aaa70e1ccc4b66d60acc78da09700706a703
-> 
-> The acpi_pci_add_bus()/acpi_pci_remove_bus() stubs for CONFIG_ACPI=n
-> were added early in the series (patch 07/16: "PCI/ACPI: Prepare stub
-> functions to handle ACPI PCI (hotplug) slots") but were mistakenly
-> removed in patch 12/16: "PCI: acpiphp: Do not use ACPI PCI subdriver
-> mechanism".
-> 
-> I updated my "next" branch with the fixed version of patch 12/16, so
-> the 20130417 linux-next tree should have the fix.
-> 
+Hi Ben,
 
-Confirmed it's fixed, thanks.
+How do you think about this? Do you have any comment?
+
+Thanks,
+Yuanquan
+
+>>
+>>
+>>
+>
+
+
