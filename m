@@ -1,102 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ia0-f175.google.com ([209.85.210.175]:43962 "EHLO
-	mail-ia0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753629Ab3DVXKt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Apr 2013 19:10:49 -0400
-Received: by mail-ia0-f175.google.com with SMTP id i38so8482iae.34
-        for <linux-pci@vger.kernel.org>; Mon, 22 Apr 2013 16:10:48 -0700 (PDT)
-Subject: [PATCH v4 05/22] PCI: Use cached MSI cap while enabling MSI interrupts
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Gavin Shan <shangw@linux.vnet.ibm.com>
-Date: Mon, 22 Apr 2013 17:10:46 -0600
-Message-ID: <20130422231046.32621.65448.stgit@bhelgaas-glaptop>
-In-Reply-To: <20130422230012.32621.15224.stgit@bhelgaas-glaptop>
-References: <20130422230012.32621.15224.stgit@bhelgaas-glaptop>
+Received: from mail-oa0-f43.google.com ([209.85.219.43]:63078 "EHLO
+	mail-oa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S937032Ab3DJQbZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Apr 2013 12:31:25 -0400
+Received: by mail-oa0-f43.google.com with SMTP id l10so644407oag.16
+        for <linux-pci@vger.kernel.org>; Wed, 10 Apr 2013 09:31:23 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <1365098483-26821-2-git-send-email-juhosg@openwrt.org>
+References: <1365098483-26821-1-git-send-email-juhosg@openwrt.org> <1365098483-26821-2-git-send-email-juhosg@openwrt.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 10 Apr 2013 10:31:02 -0600
+Message-ID: <CAErSpo4ih-Kgp4LxX1MDodac-eoPo=Mu1d6ex8oNnaEEc_GQnw@mail.gmail.com>
+Subject: Re: [PATCH 2/2] MIPS: implement pcibios_get_phb_of_node
+To: Gabor Juhos <juhosg@openwrt.org>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-mips@linux-mips.org" <linux-mips@linux-mips.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Gavin Shan <shangw@linux.vnet.ibm.com>
+On Thu, Apr 4, 2013 at 12:01 PM, Gabor Juhos <juhosg@openwrt.org> wrote:
+> The of_node field of the device assigned to a
+> PCI bus is used during scanning of the PCI bus.
+> However on MIPS, the of_node field is assigned
+> only after the bus has been scanned.
+>
+> Implement the architecture specific version of
+> 'pcibios_get_phb_of_node'. Which ensures that the
+> PCI driver core will initialize the of_node field
+> before starting the scan.
+>
+> Also remove the local assignment of bus->dev.of_node,
+> it is not needed after the patch.
+>
+> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
 
-The patch uses the cached MSI capability offset in pci_dev instead
-of reading it from config space when enabling MSI interrupts.
+I removed the __weak annotation from include/linux/pci.h and applied
+this patch to my pci/gabor-get-of-node.  Give it a try and make sure
+it solves your problem.  If so, and Ralph approves, I can push both
+for v3.10.  It should appear at
+http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/gabor-get-of-node
+soon.
 
-[bhelgaas: removed unrelated msi_control_reg() changes]
-Signed-off-by: Gavin Shan <shangw@linux.vnet.ibm.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/msi.c |   24 +++++++++++-------------
- 1 file changed, 11 insertions(+), 13 deletions(-)
+Or if you prefer, you can take them through the MIPS tree.
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 60a4b10..0138550 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -546,14 +546,13 @@ out_unroll:
- static int msi_capability_init(struct pci_dev *dev, int nvec)
- {
- 	struct msi_desc *entry;
--	int pos, ret;
-+	int ret;
- 	u16 control;
- 	unsigned mask;
- 
--	pos = pci_find_capability(dev, PCI_CAP_ID_MSI);
- 	msi_set_enable(dev, 0);	/* Disable MSI during set up */
- 
--	pci_read_config_word(dev, msi_control_reg(pos), &control);
-+	pci_read_config_word(dev, msi_control_reg(dev->msi_cap), &control);
- 	/* MSI Entry Initialization */
- 	entry = alloc_msi_entry(dev);
- 	if (!entry)
-@@ -564,9 +563,9 @@ static int msi_capability_init(struct pci_dev *dev, int nvec)
- 	entry->msi_attrib.entry_nr	= 0;
- 	entry->msi_attrib.maskbit	= is_mask_bit_support(control);
- 	entry->msi_attrib.default_irq	= dev->irq;	/* Save IOAPIC IRQ */
--	entry->msi_attrib.pos		= pos;
-+	entry->msi_attrib.pos		= dev->msi_cap;
- 
--	entry->mask_pos = msi_mask_reg(pos, entry->msi_attrib.is_64);
-+	entry->mask_pos = msi_mask_reg(dev->msi_cap, entry->msi_attrib.is_64);
- 	/* All MSIs are unmasked by default, Mask them all */
- 	if (entry->msi_attrib.maskbit)
- 		pci_read_config_dword(dev, entry->mask_pos, &entry->masked);
-@@ -807,13 +806,13 @@ static int pci_msi_check_device(struct pci_dev *dev, int nvec, int type)
-  */
- int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec)
- {
--	int status, pos, maxvec;
-+	int status, maxvec;
- 	u16 msgctl;
- 
--	pos = pci_find_capability(dev, PCI_CAP_ID_MSI);
--	if (!pos)
-+	if (!dev->msi_cap)
- 		return -EINVAL;
--	pci_read_config_word(dev, pos + PCI_MSI_FLAGS, &msgctl);
-+
-+	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &msgctl);
- 	maxvec = 1 << ((msgctl & PCI_MSI_FLAGS_QMASK) >> 1);
- 	if (nvec > maxvec)
- 		return maxvec;
-@@ -838,14 +837,13 @@ EXPORT_SYMBOL(pci_enable_msi_block);
- 
- int pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *maxvec)
- {
--	int ret, pos, nvec;
-+	int ret, nvec;
- 	u16 msgctl;
- 
--	pos = pci_find_capability(dev, PCI_CAP_ID_MSI);
--	if (!pos)
-+	if (!dev->msi_cap)
- 		return -EINVAL;
- 
--	pci_read_config_word(dev, pos + PCI_MSI_FLAGS, &msgctl);
-+	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &msgctl);
- 	ret = 1 << ((msgctl & PCI_MSI_FLAGS_QMASK) >> 1);
- 
- 	if (maxvec)
+Bjorn
 
+> ---
+>  arch/mips/pci/pci.c |    8 +++++++-
+>  1 file changed, 7 insertions(+), 1 deletion(-)
+>
+> diff --git a/arch/mips/pci/pci.c b/arch/mips/pci/pci.c
+> index 0872f12..594e60d 100644
+> --- a/arch/mips/pci/pci.c
+> +++ b/arch/mips/pci/pci.c
+> @@ -115,7 +115,6 @@ static void pcibios_scanbus(struct pci_controller *hose)
+>                         pci_bus_assign_resources(bus);
+>                         pci_enable_bridges(bus);
+>                 }
+> -               bus->dev.of_node = hose->of_node;
+>         }
+>  }
+>
+> @@ -169,6 +168,13 @@ void pci_load_of_ranges(struct pci_controller *hose, struct device_node *node)
+>                 }
+>         }
+>  }
+> +
+> +struct device_node *pcibios_get_phb_of_node(struct pci_bus *bus)
+> +{
+> +       struct pci_controller *hose = bus->sysdata;
+> +
+> +       return of_node_get(hose->of_node);
+> +}
+>  #endif
+>
+>  static DEFINE_MUTEX(pci_scan_mutex);
+> --
+> 1.7.10
+>
