@@ -1,53 +1,108 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:27879 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757408Ab3DAJX0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 1 Apr 2013 05:23:26 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>
-CC: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Rafael <rjw@sisk.pl>, Hanjun Guo <guohanjun@huawei.com>,
-	<jiang.liu@huawei.com>, Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH 3/3] PCI, pciehp: remove check for configure display devices
-Date: Mon, 1 Apr 2013 17:22:08 +0800
-Message-ID: <1364808128-12792-3-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1364808128-12792-1-git-send-email-wangyijing@huawei.com>
-References: <1364808128-12792-1-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <5165AF52.9000001@gmail.com>
+Date: Wed, 10 Apr 2013 13:28:34 -0500
+From: Rob Herring <robherring2@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+To: Andrew Murray <Andrew.Murray@arm.com>
+CC: rob.herring@calxeda.com, siva.kallam@samsung.com,
+	linux-pci@vger.kernel.org, Liviu.Dudau@arm.com, paulus@samba.org,
+	linux-samsung-soc@vger.kernel.org, linux@arm.linux.org.uk,
+	jg1.han@samsung.com, jgunthorpe@obsidianresearch.com,
+	devicetree-discuss@lists.ozlabs.org, kgene.kim@samsung.com,
+	bhelgaas@google.com, linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org, suren.reddy@samsung.com
+Subject: Re: [PATCH v5 3/3] of/pci: mips: convert to common of_pci_range_parser
+References: <1365578969-30966-1-git-send-email-Andrew.Murray@arm.com> <1365578969-30966-4-git-send-email-Andrew.Murray@arm.com>
+In-Reply-To: <1365578969-30966-4-git-send-email-Andrew.Murray@arm.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Commit ac81860 removed unnecessary check for hotplug of display
-device. Currently pciehp is allowd to hotplug display device,
-So we also configure display device when hot added.
+On 04/10/2013 02:29 AM, Andrew Murray wrote:
+> This patch converts the pci_load_of_ranges function to use the new common
+> of_pci_range_parser.
+> 
+> Signed-off-by: Andrew Murray <Andrew.Murray@arm.com>
+> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/pci/hotplug/pciehp_pci.c |    6 +-----
- 1 files changed, 1 insertions(+), 5 deletions(-)
+Reviewed-by: Rob Herring <rob.herring@calxeda.com>
 
-diff --git a/drivers/pci/hotplug/pciehp_pci.c b/drivers/pci/hotplug/pciehp_pci.c
-index aac7a40..c9d2df3 100644
---- a/drivers/pci/hotplug/pciehp_pci.c
-+++ b/drivers/pci/hotplug/pciehp_pci.c
-@@ -64,12 +64,8 @@ int pciehp_configure_device(struct slot *p_slot)
- 
- 	pci_assign_unassigned_bridge_resources(bridge);
- 
--	list_for_each_entry(dev, &parent->devices, bus_list) {
--		if ((dev->class >> 16) == PCI_BASE_CLASS_DISPLAY)
--			continue;
--
-+	list_for_each_entry(dev, &parent->devices, bus_list)
- 		pci_configure_slot(dev);
--	}
- 
- 	pci_bus_add_devices(parent);
- 
--- 
-1.7.1
 
+> ---
+>  arch/mips/pci/pci.c |   50 ++++++++++++++++----------------------------------
+>  1 files changed, 16 insertions(+), 34 deletions(-)
+> 
+> diff --git a/arch/mips/pci/pci.c b/arch/mips/pci/pci.c
+> index 0872f12..bee49a4 100644
+> --- a/arch/mips/pci/pci.c
+> +++ b/arch/mips/pci/pci.c
+> @@ -122,51 +122,33 @@ static void pcibios_scanbus(struct pci_controller *hose)
+>  #ifdef CONFIG_OF
+>  void pci_load_of_ranges(struct pci_controller *hose, struct device_node *node)
+>  {
+> -	const __be32 *ranges;
+> -	int rlen;
+> -	int pna = of_n_addr_cells(node);
+> -	int np = pna + 5;
+> +	struct of_pci_range_range range;
+> +	struct of_pci_range_parser parser;
+> +	u32 res_type;
+>  
+>  	pr_info("PCI host bridge %s ranges:\n", node->full_name);
+> -	ranges = of_get_property(node, "ranges", &rlen);
+> -	if (ranges == NULL)
+> -		return;
+>  	hose->of_node = node;
+>  
+> -	while ((rlen -= np * 4) >= 0) {
+> -		u32 pci_space;
+> +	if (of_pci_range_parser(&parser, node))
+> +		return;
+> +
+> +	for_each_of_pci_range(&parser, &range) {
+>  		struct resource *res = NULL;
+> -		u64 addr, size;
+> -
+> -		pci_space = be32_to_cpup(&ranges[0]);
+> -		addr = of_translate_address(node, ranges + 3);
+> -		size = of_read_number(ranges + pna + 3, 2);
+> -		ranges += np;
+> -		switch ((pci_space >> 24) & 0x3) {
+> -		case 1:		/* PCI IO space */
+> +
+> +		res_type = range.flags & IORESOURCE_TYPE_BITS;
+> +		if (res_type == IORESOURCE_IO) {
+>  			pr_info("  IO 0x%016llx..0x%016llx\n",
+> -					addr, addr + size - 1);
+> +				range.addr, range.addr + range.size - 1);
+>  			hose->io_map_base =
+> -				(unsigned long)ioremap(addr, size);
+> +				(unsigned long)ioremap(range.addr, range.size);
+>  			res = hose->io_resource;
+> -			res->flags = IORESOURCE_IO;
+> -			break;
+> -		case 2:		/* PCI Memory space */
+> -		case 3:		/* PCI 64 bits Memory space */
+> +		} else if (res_type == IORESOURCE_MEM) {
+>  			pr_info(" MEM 0x%016llx..0x%016llx\n",
+> -					addr, addr + size - 1);
+> +				range.addr, range.addr + range.size - 1);
+>  			res = hose->mem_resource;
+> -			res->flags = IORESOURCE_MEM;
+> -			break;
+> -		}
+> -		if (res != NULL) {
+> -			res->start = addr;
+> -			res->name = node->full_name;
+> -			res->end = res->start + size - 1;
+> -			res->parent = NULL;
+> -			res->sibling = NULL;
+> -			res->child = NULL;
+>  		}
+> +		if (res != NULL)
+> +			of_pci_range_to_resource(&range, node, res);
+>  	}
+>  }
+>  #endif
+> 
 
