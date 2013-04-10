@@ -1,69 +1,37 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:34486 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754826Ab3DPNgE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Apr 2013 09:36:04 -0400
-Date: Tue, 16 Apr 2013 09:35:56 -0400
-From: Neil Horman <nhorman@tuxdriver.com>
-To: Joerg Roedel <joro@8bytes.org>
-Cc: linux-kernel@vger.kernel.org, Prarit Bhargava <prarit@redhat.com>,
-	Don Zickus <dzickus@redhat.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Asit Mallick <asit.k.mallick@intel.com>,
-	David Woodhouse <dwmw2@infradead.org>,
-	linux-pci@vger.kernel.org,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Arkadiusz =?utf-8?Q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
-Subject: Re: [PATCH v9] irq: add quirk for broken interrupt remapping on 55XX
- chipsets
-Message-ID: <20130416133555.GB9241@hmsreliant.think-freely.org>
-References: <1362158276-4901-1-git-send-email-nhorman@tuxdriver.com>
- <1366065677-3431-1-git-send-email-nhorman@tuxdriver.com>
- <20130416102454.GS6858@8bytes.org>
+Received: from mail-ie0-f180.google.com ([209.85.223.180]:59814 "EHLO
+	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751300Ab3DJCRR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Apr 2013 22:17:17 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130416102454.GS6858@8bytes.org>
+In-Reply-To: <CAErSpo7DhyVwNng=uBR=YMC3ZMFUtV-MDuukjMMGFxMmgHZR=w@mail.gmail.com>
+References: <1363217302-14383-1-git-send-email-yinghai@kernel.org>
+	<1363217302-14383-27-git-send-email-yinghai@kernel.org>
+	<CAErSpo7DhyVwNng=uBR=YMC3ZMFUtV-MDuukjMMGFxMmgHZR=w@mail.gmail.com>
+Date: Tue, 9 Apr 2013 19:17:16 -0700
+Message-ID: <CAE9FiQXZYrnx1n6Oh33k7DYWPujy9XSxE20JFGAYohcE_EvVhQ@mail.gmail.com>
+Subject: Re: [PATCH v3 26/27] PCI: Make quirk_io_region to use addon_res
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Ram Pai <linuxram@us.ibm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 16, 2013 at 12:24:54PM +0200, Joerg Roedel wrote:
-> On Mon, Apr 15, 2013 at 06:41:17PM -0400, Neil Horman wrote:
-> > +#ifdef CONFIG_IRQ_REMAP
-> > +static void __init intel_remapping_check(int num, int slot, int func)
-> > +{
-> > +	u8 revision;
-> > +
-> > +	revision = read_pci_config_byte(num, slot, func, PCI_REVISION_ID);
-> > +
-> > +	/*
-> > +	 * Revision 0x13 of this chipset supports irq remapping
-> > +	 * but has an erratum that breaks its behavior, flag it as such
-> > +	 */
-> > +	if (revision == 0x13)
-> > +		irq_remap_broken = 1;
-> > +
-> > +}
-> > +#else
-> 
-> Any reason why you don't check this in the Intel IOMMU init code? You
-> would safe the ifdefs and you don't have to include
-> irq-remapping-internal header files somewhere else in the tree.
-> 
-> 
-> 	Joerg
-> 
-> 
-> 
-Actually, hold on that last note, the intel iommu init code doesn't seem to
-create any direct relationship between the set of iommu's and the pci_dev's that
-implement them.  In the intel_irq_remapping_supported path I can loop over each
-dmar_dhrd_unit, and interrogate each of the devices on its **devices list to see
-if the device/vendor and revision ids match, but looking at the dhrd parsing
-code, I'm not sure the iommu pci_dev is always going to be on that list.  That
-seems like its going to be pretty ugly in and of itself.  Do you have a
-suggested way to identify the pci_dev of the device we need in that path without
-having to simply iterate over every device in that scope?
+On Thu, Apr 4, 2013 at 2:35 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> This patch has two changes that need to be separated:
+>
+>   1) Refactoring quirk_io_region() so the pci_read_config_word() is
+> done by quirk_io_region() rather than the caller.
+>   2) Whatever pci_dev resource changes we end up making.
+>
+> I think part 1 can be done at any time and is probably not controversial.
 
-Neil
+ok, will put that separated one to be first one in the next reversion
+of patchset.
 
+Thanks
+
+Yinghai
