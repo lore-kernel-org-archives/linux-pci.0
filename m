@@ -1,44 +1,41 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from avon.wwwdotorg.org ([70.85.31.133]:50389 "EHLO
-	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934699Ab3DHSVw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Apr 2013 14:21:52 -0400
-Message-ID: <51630ABB.1020200@wwwdotorg.org>
-Date: Mon, 08 Apr 2013 12:21:47 -0600
-From: Stephen Warren <swarren@wwwdotorg.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 11 Apr 2013 06:28:31 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Veaceslav Falico <vfalico@redhat.com>
+Cc: Rusty Russell <rusty@rustcorp.com.au>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	bhelgaas@google.com
+Subject: Re: [PATCH] module: add kset_obj_exists() and use it
+Message-ID: <20130411132831.GC2909@kroah.com>
+References: <1365506529-8396-1-git-send-email-vfalico@redhat.com>
+ <87y5cq6ei9.fsf@rustcorp.com.au>
+ <20130411095537.GC21320@redhat.com>
 MIME-Version: 1.0
-To: Jay Agarwal <jagarwal@nvidia.com>
-CC: linux@arm.linux.org.uk, thierry.reding@avionic-design.de,
-	ldewangan@nvidia.com, bhelgaas@google.com, olof@lixom.net,
-	hdoyu@nvidia.com, pgaikwad@nvidia.com, mturquette@linaro.org,
-	pdeschrijver@nvidia.com, linux-arm-kernel@lists.infradead.org,
-	linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, jtukkinen@nvidia.com, kthota@nvidia.com
-Subject: Re: [PATCH 1/3] ARM: tegra: pcie: Add tegra3 support
-References: <1365435688-4179-1-git-send-email-jagarwal@nvidia.com>
-In-Reply-To: <1365435688-4179-1-git-send-email-jagarwal@nvidia.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130411095537.GC21320@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/08/2013 09:41 AM, Jay Agarwal wrote:
-> Signed-off-by: Jay Agarwal <jagarwal@nvidia.com>
+On Thu, Apr 11, 2013 at 11:55:37AM +0200, Veaceslav Falico wrote:
+> However, I think my patch still adds something good, cause now we have 2
+> cases where we basically do:
 > 
-> - Enable pcie root port 2 for cardhu
-> - Make private data structure for each SOC
-> - Add required tegra3 clocks and regulators
-> - Add tegra3 specific code in enable controller
-> - Modify clock tree to get clocks based on device
-> - Based on git://gitorious.org/thierryreding/linux.git
+> k = kset_find_obj();
+> if (!k)
+> 	return;
+> kobject_put(k);
+> 
+> which adds useless overhead (by using kobject_get()/kobject_put(), and
+> kobject_release() - which is called from kobject_put()) - where we should
+> only verify if there exists a kobject with the specified name.
+> 
+> Should I resend it with a properly fixed commit message, or it's really not
+> needed?
 
-A couple more points on this patch:
+I don't think it's really needed, there is no speed/overhead issue here
+and you need to do the kobject_get/put stuff anyway if you are trying to
+look at a kobject.
 
-* You didn't mention that this series is based on Thierry's
-work-in-progress tree, and not something immediately destined for
-upstream. As such, only Thierry is expected to actually apply any of
-these patches.
+thanks,
 
-* Your changes to the Tegra PCIe driver require that device tree include
-extra clocks and regulators. You need to update
-Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt to
-describe these new requirements.
+greg k-h
