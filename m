@@ -1,51 +1,60 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jay Agarwal <jagarwal@nvidia.com>
-To: 'Stephen Warren' <swarren@wwwdotorg.org>
-CC: "linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
-	"thierry.reding@avionic-design.de" <thierry.reding@avionic-design.de>,
-	Laxman Dewangan <ldewangan@nvidia.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"olof@lixom.net" <olof@lixom.net>, Hiroshi Doyu <hdoyu@nvidia.com>,
-	Prashant Gaikwad <pgaikwad@nvidia.com>,
-	"mturquette@linaro.org" <mturquette@linaro.org>,
-	Peter De Schrijver <pdeschrijver@nvidia.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Juha Tukkinen <jtukkinen@nvidia.com>,
-	Krishna Thota <kthota@nvidia.com>
-Date: Fri, 12 Apr 2013 20:28:30 +0530
-Subject: RE: [PATCH 1/3] ARM: tegra: pcie: Add tegra3 support
-Message-ID: <C79B248886DD134989C8FF6B096A91AB91B36FB2FD@BGMAIL01.nvidia.com>
-References: <1365435688-4179-1-git-send-email-jagarwal@nvidia.com>
- <51630852.1000107@wwwdotorg.org>
-In-Reply-To: <51630852.1000107@wwwdotorg.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:58121 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752513Ab3DKLzK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 11 Apr 2013 07:55:10 -0400
+Message-ID: <5166A487.8060704@huawei.com>
+Date: Thu, 11 Apr 2013 19:54:47 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-kernel-owner@vger.kernel.org
+To: Alex Williamson <alex.williamson@redhat.com>
+CC: Yijing Wang <wangyijing@huawei.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>
+Subject: Re: [PATCH -v2] PCI/VFIO: use pcie_flags_reg instead of access PCI-E
+ Capabilities Register
+References: <1364867547-15300-1-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1364867547-15300-1-git-send-email-wangyijing@huawei.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> >  	err = regulator_disable(pcie->pex_clk_supply);
-> >  	if (err < 0)
-> > -		dev_err(pcie->dev, "failed to disable pex-clk regulator:
-> %d\n",
-> > +		dev_warn(pcie->dev, "failed to disable pex-clk regulator:
-> %d\n",
-> >  			err);
-> >
-> >  	err = regulator_disable(pcie->vdd_supply);
-> >  	if (err < 0)
-> > -		dev_err(pcie->dev, "failed to disable VDD regulator: %d\n",
-> > +		dev_warn(pcie->dev, "failed to disable VDD regulator:
-> %d\n",
-> >  			err);
+ping?
+
+On 2013/4/2 9:52, Yijing Wang wrote:
+> Currently, we use pcie_flags_reg to cache PCI-E Capabilities Register,
+> because PCI-E Capabilities Register bits are almost read-only. This patch
+> use pcie_caps_reg() instead of another access PCI-E Capabilities Register.
 > 
-> Please explain why that change is correct. If the regulators only exist on
-> Tegra20, please represent that fact in the SoC data. Regulators must always
-> exist, so enable/disable should never fail due to missing regulators. Actual
-> run-time failures seem like something that really is an error.
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> ---
+>  drivers/vfio/pci/vfio_pci_config.c |    6 +-----
+>  1 files changed, 1 insertions(+), 5 deletions(-)
 > 
-[>] These regulators are needed for both tegra20 & tegra30. Since we are not returning error here, so changed to dev_warn.
+> diff --git a/drivers/vfio/pci/vfio_pci_config.c b/drivers/vfio/pci/vfio_pci_config.c
+> index aeb00fc..12a81f7 100644
+> --- a/drivers/vfio/pci/vfio_pci_config.c
+> +++ b/drivers/vfio/pci/vfio_pci_config.c
+> @@ -1017,13 +1017,9 @@ static int vfio_cap_len(struct vfio_pci_device *vdev, u8 cap, u8 pos)
+>  		return byte;
+>  	case PCI_CAP_ID_EXP:
+>  		/* length based on version */
+> -		ret = pci_read_config_word(pdev, pos + PCI_EXP_FLAGS, &word);
+> -		if (ret)
+> -			return pcibios_err_to_errno(ret);
+> -
+>  		vdev->extended_caps = true;
+>  
+> -		if ((word & PCI_EXP_FLAGS_VERS) == 1)
+> +		if ((pcie_caps_reg(pdev) & PCI_EXP_FLAGS_VERS) == 1)
+>  			return PCI_CAP_EXP_ENDPOINT_SIZEOF_V1;
+>  		else
+>  			return PCI_CAP_EXP_ENDPOINT_SIZEOF_V2;
+> 
+
+
+-- 
+Thanks!
+Yijing
 
