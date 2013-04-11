@@ -1,67 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 8bytes.org ([85.214.48.195]:49017 "EHLO mail.8bytes.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S966791Ab3DRPCo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 18 Apr 2013 11:02:44 -0400
-Received: from localhost (localhost [127.0.0.1])
-	by mail.8bytes.org (Postfix) with SMTP id 17F7B12B0FB
-	for <linux-pci@vger.kernel.org>; Thu, 18 Apr 2013 17:02:43 +0200 (CEST)
-Date: Thu, 18 Apr 2013 17:02:39 +0200
-From: Joerg Roedel <joro@8bytes.org>
-To: Neil Horman <nhorman@tuxdriver.com>
-Cc: linux-kernel@vger.kernel.org, Prarit Bhargava <prarit@redhat.com>,
-	Don Zickus <dzickus@redhat.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Asit Mallick <asit.k.mallick@intel.com>,
-	David Woodhouse <dwmw2@infradead.org>,
-	linux-pci@vger.kernel.org,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Arkadiusz =?utf-8?Q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
-Subject: Re: [PATCH v10] irq: add quirk for broken interrupt remapping on
- 55XX chipsets
-Message-ID: <20130418150222.GB2558@8bytes.org>
-References: <1362158276-4901-1-git-send-email-nhorman@tuxdriver.com>
- <1366144712-23460-1-git-send-email-nhorman@tuxdriver.com>
+Received: from mail-ia0-f180.google.com ([209.85.210.180]:65049 "EHLO
+	mail-ia0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750742Ab3DKXoa (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 11 Apr 2013 19:44:30 -0400
+Received: by mail-ia0-f180.google.com with SMTP id l29so1891418iag.39
+        for <linux-pci@vger.kernel.org>; Thu, 11 Apr 2013 16:44:29 -0700 (PDT)
+Date: Thu, 11 Apr 2013 17:44:26 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Andrew Murray <Andrew.Murray@arm.com>
+Cc: linux-pci@vger.kernel.org,
+	"thierry.reding@avionic-design.de" <thierry.reding@avionic-design.de>,
+	"thomas.petazzoni@free-electrons.com"
+	<thomas.petazzoni@free-electrons.com>,
+	"jbarnes@virtuousgeek.org" <jbarnes@virtuousgeek.org>,
+	linux-acpi@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: [PATCH] pci: Remove unnecessary dependency between PME and ACPI.
+Message-ID: <20130411234426.GA10196@google.com>
+References: <20130221155329.GA26729@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1366144712-23460-1-git-send-email-nhorman@tuxdriver.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130221155329.GA26729@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 16, 2013 at 04:38:32PM -0400, Neil Horman wrote:
-> A few years back intel published a spec update:
-> http://www.intel.com/content/dam/doc/specification-update/5520-and-5500-chipset-ioh-specification-update.pdf
+On Thu, Feb 21, 2013 at 03:53:29PM +0000, Andrew Murray wrote:
+> Signed-off-by: Andrew Murray <Andrew.Murray@arm.com>
+> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+> ---
+>  drivers/pci/pcie/Kconfig |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
 > 
-> For the 5520 and 5500 chipsets which contained an errata (specificially errata
-> 53), which noted that these chipsets can't properly do interrupt remapping, and
-> as a result the recommend that interrupt remapping be disabled in bios.  While
-> many vendors have a bios update to do exactly that, not all do, and of course
-> not all users update their bios to a level that corrects the problem.  As a
-> result, occasionally interrupts can arrive at a cpu even after affinity for that
-> interrupt has be moved, leading to lost or spurrious interrupts (usually
-> characterized by the message:
-> kernel: do_IRQ: 7.71 No irq handler for vector (irq -1)
-> 
-> There have been several incidents recently of people seeing this error, and
-> investigation has shown that they have system for which their BIOS level is such
-> that this feature was not properly turned off.  As such, it would be good to
-> give them a reminder that their systems are vulnurable to this problem.  For
-> details of those that reported the problem, please see:
-> https://bugzilla.redhat.com/show_bug.cgi?id=887006
-> 
-> Signed-off-by: Neil Horman <nhorman@tuxdriver.com>
-> CC: Prarit Bhargava <prarit@redhat.com>
-> CC: Don Zickus <dzickus@redhat.com>
-> CC: Don Dutile <ddutile@redhat.com>
-> CC: Bjorn Helgaas <bhelgaas@google.com>
-> CC: Asit Mallick <asit.k.mallick@intel.com>
-> CC: David Woodhouse <dwmw2@infradead.org>
-> CC: linux-pci@vger.kernel.org
-> CC: Joerg Roedel <joro@8bytes.org>
-> CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-> CC: Arkadiusz Miśkiewicz <arekm@maven.pl>
+> diff --git a/drivers/pci/pcie/Kconfig b/drivers/pci/pcie/Kconfig
+> index 6c8bc58..4cccd8c 100644
+> --- a/drivers/pci/pcie/Kconfig
+> +++ b/drivers/pci/pcie/Kconfig
+> @@ -82,4 +82,4 @@ endchoice
+>  
+>  config PCIE_PME
+>  	def_bool y
+> -	depends on PCIEPORTBUS && PM_RUNTIME && EXPERIMENTAL && ACPI
+> +	depends on PCIEPORTBUS && PM_RUNTIME && EXPERIMENTAL
 
-Applied with some small changes to my x86/vt-d branch, thanks Neil.
+I think we can go even further and remove the ACPI-related #includes
+as in the patch below.  Any objections to this?
 
 
+commit 8bde83b5f5519b630e7630fb735f76c184c74289
+Author: Bjorn Helgaas <bhelgaas@google.com>
+Date:   Thu Apr 11 17:36:50 2013 -0600
+
+    PCI: Remove unnecessary dependencies between PME and ACPI
+    
+    PCIe PME doesn't depend on ACPI, so remove the #includes and
+    Kconfig dependency.
+    
+    Based-on-patch-by: Andrew Murray <Andrew.Murray@arm.com>
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+
+diff --git a/drivers/pci/pcie/Kconfig b/drivers/pci/pcie/Kconfig
+index fde4a32..569f82f 100644
+--- a/drivers/pci/pcie/Kconfig
++++ b/drivers/pci/pcie/Kconfig
+@@ -82,4 +82,4 @@ endchoice
+ 
+ config PCIE_PME
+ 	def_bool y
+-	depends on PCIEPORTBUS && PM_RUNTIME && ACPI
++	depends on PCIEPORTBUS && PM_RUNTIME
+diff --git a/drivers/pci/pcie/pme.c b/drivers/pci/pcie/pme.c
+index 9ca0dc9..795db1f 100644
+--- a/drivers/pci/pcie/pme.c
++++ b/drivers/pci/pcie/pme.c
+@@ -19,8 +19,6 @@
+ #include <linux/interrupt.h>
+ #include <linux/device.h>
+ #include <linux/pcieport_if.h>
+-#include <linux/acpi.h>
+-#include <linux/pci-acpi.h>
+ #include <linux/pm_runtime.h>
+ 
+ #include "../pci.h"
