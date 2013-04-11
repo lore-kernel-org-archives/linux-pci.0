@@ -1,53 +1,108 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e32.co.us.ibm.com ([32.97.110.150]:34047 "EHLO
-	e32.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760606Ab3DDV6T (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Apr 2013 17:58:19 -0400
-Received: from /spool/local
-	by e32.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <brking@linux.vnet.ibm.com>;
-	Thu, 4 Apr 2013 15:58:18 -0600
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by d03dlp03.boulder.ibm.com (Postfix) with ESMTP id 1CB8619D8042
-	for <linux-pci@vger.kernel.org>; Thu,  4 Apr 2013 15:58:13 -0600 (MDT)
-Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id r34LwHPL368230
-	for <linux-pci@vger.kernel.org>; Thu, 4 Apr 2013 15:58:17 -0600
-Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id r34LwGAi010682
-	for <linux-pci@vger.kernel.org>; Thu, 4 Apr 2013 15:58:16 -0600
-Message-Id: <201304042158.r34LwEOV010607@d03av02.boulder.ibm.com>
-Subject: [PATCH 2/3] powerpc: Enable boot_vga sysfs attribute for graphics adapters on Power
-To: linux-pci@vger.kernel.org
-Cc: bhelgaas@google.com, linuxppc-dev@lists.ozlabs.org,
-	benh@kernel.crashing.org, lucaskt@linux.vnet.ibm.com,
-	klebers@linux.vnet.ibm.com, brking@linux.vnet.ibm.com
-From: Brian King <brking@linux.vnet.ibm.com>
-Date: Thu, 04 Apr 2013 16:58:15 -0500
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Andrew Murray <Andrew.Murray@arm.com>
+To: rob.herring@calxeda.com
+Cc: jgunthorpe@obsidianresearch.com, linux@arm.linux.org.uk,
+	siva.kallam@samsung.com, linux-pci@vger.kernel.org,
+	devicetree-discuss@lists.ozlabs.org, jg1.han@samsung.com,
+	Liviu.Dudau@arm.com, linux-kernel@vger.kernel.org,
+	linux-samsung-soc@vger.kernel.org, kgene.kim@samsung.com,
+	bhelgaas@google.com, suren.reddy@samsung.com,
+	linux-arm-kernel@lists.infradead.org, monstr@monstr.eu,
+	benh@kernel.crashing.org, paulus@samba.org,
+	grant.likely@secretlab.ca, thomas.petazzoni@free-electrons.com,
+	thierry.reding@avionic-design.de, thomas.abraham@linaro.org,
+	arnd@arndb.de, linus.walleij@linaro.org,
+	Andrew Murray <Andrew.Murray@arm.com>
+Subject: [PATCH v6 0/3] of/pci: Provide common support for PCI DT parsing
+Date: Thu, 11 Apr 2013 16:26:06 +0100
+Message-Id: <1365693969-23907-1-git-send-email-Andrew.Murray@arm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+This patchset factors out duplicated code associated with parsing PCI
+DT "ranges" properties across the architectures and introduces a
+"ranges" parser. This parser "of_pci_range_parser" can be used directly
+by ARM host bridge drivers enabling them to obtain ranges from device
+trees.
 
-Initialize dev->dev.type such that the PCI group attributes for boot_vga
-and SR-IOV can be displayed if appropriate. This fixes an issue seen on
-Power preventing X from auto initializing a graphics adapter when using KMS.
+I've included the Reviewed-by and Tested-by's received from v5 in this
+patchset, earlier versions of this patchset (v3) have been tested-by:
 
-Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
----
+Thierry Reding <thierry.reding@avionic-design.de>
+Jingoo Han <jg1.han@samsung.com>
 
- arch/powerpc/kernel/pci_of_scan.c |    1 +
- 1 file changed, 1 insertion(+)
+I believe a version of this patchset has also been tested through its
+inclusion in Thomas Petazzoni's Armada 370 and Armada XP SoCs PCIe support by:
 
-diff -puN arch/powerpc/kernel/pci_of_scan.c~powerpc_set_pci_dev_type arch/powerpc/kernel/pci_of_scan.c
---- linux/arch/powerpc/kernel/pci_of_scan.c~powerpc_set_pci_dev_type	2013-04-03 09:43:19.000000000 -0500
-+++ linux-bjking1/arch/powerpc/kernel/pci_of_scan.c	2013-04-03 09:43:19.000000000 -0500
-@@ -141,6 +141,7 @@ struct pci_dev *of_create_pci_dev(struct
- 	dev->dev.of_node = of_node_get(node);
- 	dev->dev.parent = bus->bridge;
- 	dev->dev.bus = &pci_bus_type;
-+	dev->dev.type = &pci_dev_type;
- 	dev->devfn = devfn;
- 	dev->multifunction = 0;		/* maybe a lie? */
- 	dev->needs_freset = 0;		/* pcie fundamental reset required */
-_
+Linus Walleij <linus.walleij@linaro.org>
+
+I've tested that this patchset builds and runs on ARM and that it builds on
+PowerPC.
+
+Compared to the v5 sent by Andrew Murray, the following changes have
+been made:
+
+ * Use of CONFIG_64BIT instead of CONFIG_[a32bitarch] as suggested by
+   Rob Herring in drivers/of/of_pci.c
+
+ * Added forward declaration of struct pci_controller in linux/of_pci.h
+   to prevent compiler warning as suggested by Thomas Petazzoni
+
+ * Improved error checking (!range check), removal of unnecessary be32_to_cpup
+   call, improved formatting of struct of_pci_range_parser layout and
+   replacement of macro with a static inline. All suggested by Rob Herring.
+
+Compared to the v4 (incorrectly labelled v3) sent by Andrew Murray,
+the following changes have been made:
+
+ * Split the patch as suggested by Rob Herring
+
+Compared to the v3 sent by Andrew Murray, the following changes have
+been made:
+
+ * Unify and move duplicate pci_process_bridge_OF_ranges functions to
+   drivers/of/of_pci.c as suggested by Rob Herring
+
+ * Fix potential build errors with Microblaze/MIPS
+
+Compared to "[PATCH v5 01/17] of/pci: Provide support for parsing PCI DT
+ranges property", the following changes have been made:
+
+ * Correct use of IORESOURCE_* as suggested by Russell King
+
+ * Improved interface and naming as suggested by Thierry Reding
+
+Compared to the v2 sent by Andrew Murray, Thomas Petazzoni did:
+
+ * Add a memset() on the struct of_pci_range_iter when starting the
+   for loop in for_each_pci_range(). Otherwise, with an uninitialized
+   of_pci_range_iter, of_pci_process_ranges() may crash.
+
+ * Add parenthesis around 'res', 'np' and 'iter' in the
+   for_each_of_pci_range macro definitions. Otherwise, passing
+   something like &foobar as 'res' didn't work.
+
+ * Rebased on top of 3.9-rc2, which required fixing a few conflicts in
+   the Microblaze code.
+
+v2:
+  This follows on from suggestions made by Grant Likely
+  (marc.info/?l=linux-kernel&m=136079602806328)
+
+Andrew Murray (3):
+  of/pci: Unify pci_process_bridge_OF_ranges from Microblaze and
+    PowerPC
+  of/pci: Provide support for parsing PCI DT ranges property
+  of/pci: mips: convert to common of_pci_range_parser
+
+ arch/microblaze/include/asm/pci-bridge.h |    5 +-
+ arch/microblaze/pci/pci-common.c         |  192 ------------------------------
+ arch/mips/pci/pci.c                      |   50 +++------
+ arch/powerpc/include/asm/pci-bridge.h    |    5 +-
+ arch/powerpc/kernel/pci-common.c         |  192 ------------------------------
+ drivers/of/address.c                     |   66 ++++++++++
+ drivers/of/of_pci.c                      |  168 ++++++++++++++++++++++++++
+ include/linux/of_address.h               |   46 +++++++
+ include/linux/of_pci.h                   |    4 +
+ 9 files changed, 302 insertions(+), 426 deletions(-)
 
