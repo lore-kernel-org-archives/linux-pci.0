@@ -1,129 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ia0-f174.google.com ([209.85.210.174]:44207 "EHLO
-	mail-ia0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762887Ab3DDQQ4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Apr 2013 12:16:56 -0400
+Received: from ozlabs.org ([203.10.76.45]:60794 "EHLO ozlabs.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933295Ab3DKCCQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 10 Apr 2013 22:02:16 -0400
+From: Rusty Russell <rusty@rustcorp.com.au>
+To: Greg KH <gregkh@linuxfoundation.org>,
+	Veaceslav Falico <vfalico@redhat.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	bhelgaas@google.com
+Subject: Re: [PATCH] module: add kset_obj_exists() and use it
+In-Reply-To: <20130410172713.GB1881@kroah.com>
+References: <1365506529-8396-1-git-send-email-vfalico@redhat.com> <20130410172713.GB1881@kroah.com>
+Date: Thu, 11 Apr 2013 11:28:06 +0930
+Message-ID: <87vc7t4ymp.fsf@rustcorp.com.au>
 MIME-Version: 1.0
-In-Reply-To: <1365088091-10862-1-git-send-email-nhorman@tuxdriver.com>
-References: <1362158276-4901-1-git-send-email-nhorman@tuxdriver.com>
-	<1365088091-10862-1-git-send-email-nhorman@tuxdriver.com>
-Date: Thu, 4 Apr 2013 09:16:55 -0700
-Message-ID: <CAE9FiQUq8m_2fpyRrLweCZwR7cqFBfbZrt9ZeK-PVL3Puxjp0g@mail.gmail.com>
-Subject: Re: [PATCH v4] irq: add quirk for broken interrupt remapping on 55XX chipsets
-From: Yinghai Lu <yinghai@kernel.org>
-To: Neil Horman <nhorman@tuxdriver.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Prarit Bhargava <prarit@redhat.com>,
-	Don Zickus <dzickus@redhat.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Asit Mallick <asit.k.mallick@intel.com>,
-	David Woodhouse <dwmw2@infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 4, 2013 at 8:08 AM, Neil Horman <nhorman@tuxdriver.com> wrote:
-> A few years back intel published a spec update:
-> http://www.intel.com/content/dam/doc/specification-update/5520-and-5500-chipset-ioh-specification-update.pdf
->
-> For the 5520 and 5500 chipsets which contained an errata (specificially errata
-> 53), which noted that these chipsets can't properly do interrupt remapping, and
-> as a result the recommend that interrupt remapping be disabled in bios.  While
-> many vendors have a bios update to do exactly that, not all do, and of course
-> not all users update their bios to a level that corrects the problem.  As a
-> result, occasionally interrupts can arrive at a cpu even after affinity for that
-> interrupt has be moved, leading to lost or spurrious interrupts (usually
-> characterized by the message:
-> kernel: do_IRQ: 7.71 No irq handler for vector (irq -1)
->
-> There have been several incidents recently of people seeing this error, and
-> investigation has shown that they have system for which their BIOS level is such
-> that this feature was not properly turned off.  As such, it would be good to
-> give them a reminder that their systems are vulnurable to this problem.
->
-> Signed-off-by: Neil Horman <nhorman@tuxdriver.com>
-> CC: Prarit Bhargava <prarit@redhat.com>
-> CC: Don Zickus <dzickus@redhat.com>
-> CC: Don Dutile <ddutile@redhat.com>
-> CC: Bjorn Helgaas <bhelgaas@google.com>
-> CC: Asit Mallick <asit.k.mallick@intel.com>
-> CC: David Woodhouse <dwmw2@infradead.org>
-> CC: linux-pci@vger.kernel.org
-> ---
->
-> Change notes:
->
-> v2)
->
-> * Moved the quirk to the x86 arch, since consensus seems to be that the 55XX
-> chipset series is x86 only.  I decided however to keep the quirk as a regular
-> quirk, not an early_quirk.  Early quirks have no way currently to determine if
-> BIOS has properly disabled the feature in the iommu, at least not without
-> significant hacking, and since its quite possible this will be a short lived
-> quirk, should Don Z's workaround code prove successful (and it looks like it may
-> well), I don't think that necessecary.
->
-> * Removed the WARNING banner from the quirk, and added the HW_ERR token to the
-> string, I opted to leave the newlines in place however, as I really couldnt
-> find a way to keep the text on a single line is still legible from a code
-> perspective.  I think theres enough language in there that using cscope on just
-> about any substring however will turn it up, and again, this may be a short
-> lived quirk.
->
-> v3)
->
-> * Removed defines from pci_ids.h, and used direct id values as per request from
-> Bjorn.
->
-> v4)
->
-> * Converted pr_warn to WARN_TAINT(TAINT_FIRMWARE_WORKAROUND) as per David
-> Woodhouse
-> ---
->  arch/x86/kernel/quirks.c | 18 ++++++++++++++++++
->  1 file changed, 18 insertions(+)
->
-> diff --git a/arch/x86/kernel/quirks.c b/arch/x86/kernel/quirks.c
-> index 26ee48a..eb0785d 100644
-> --- a/arch/x86/kernel/quirks.c
-> +++ b/arch/x86/kernel/quirks.c
-> @@ -5,6 +5,7 @@
->  #include <linux/irq.h>
->
->  #include <asm/hpet.h>
-> +#include "../../../drivers/iommu/irq_remapping.h"
->
->  #if defined(CONFIG_X86_IO_APIC) && defined(CONFIG_SMP) && defined(CONFIG_PCI)
->
-> @@ -567,3 +568,20 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_NB_F5,
->                         quirk_amd_nb_node);
->
->  #endif
-> +
-> +static void intel_remapping_check(struct pci_dev *dev)
-> +{
-> +       u8 revision;
-> +
-> +       pci_read_config_byte(dev, PCI_REVISION_ID, &revision);
-> +
-> +       WARN_TAINT(((revision == 0x13) && irq_remapping_enabled),
-> +                  TAINT_FIRMWARE_WORKAROUND,
-> +                   "This system BIOS has enabled interrupt remapping\n"
-> +                   "on a chipset that contains an erratum making that\n"
-> +                   "feature unstable.  Please reboot with nointremap\n"
-> +                   "added to the kernel command line and contact\n"
-> +                   "your BIOS vendor for an update");
-> +}
-> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x3406, intel_remapping_check);
-> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x3403, intel_remapping_check);
+Greg KH <gregkh@linuxfoundation.org> writes:
 
-No, you only address my one request, move to arch/x86 directory.
+> On Tue, Apr 09, 2013 at 01:22:09PM +0200, Veaceslav Falico wrote:
+>> Add a new function, kset_obj_exists(), which is identical to
+>> kset_find_obj() but doesn't take a reference to the kobject
+>> found and only returns bool if found/not found.
+>> 
+>> The main purpose would be to avoid the possible race scenario,
+>> when we could get the reference in between the kref_put() and
+>> kobject_release() functions (i.e. kref_put() already ran,
+>> refcount became 0, but the kobject_release() function still
+>> didn't run, and we try to get via kobject_get() and thus ending
+>> up with a released kobject). It can be triggered, for example,
+>> by running insmod/rmmod bonding in parallel, which ends up in
+>> a race between kset_obj_find() in mod_sysfs_init() and rmmod's
+>> mod_sysfs_fini()/kobject_put().
+>
+> As Rusty points out, this isn't a kobject issue that can be solved with
+> a new api call, but rather, the user of the kobject code needs to be
+> fixed, with something like his proposed patch instead.
+>
+> So, because of this, I can't take this patch, sorry.
 
-You need to move the quirk to early_quirk to append nointremap to
-avoid extra rebooting.
+Greg, I'm shocked!  Surely you've been doing this long enough to know
+that we don't use that kind of language on lkml?
 
-Thanks
+To restore the list's reputation as a hostile pressure cooker powered by
+the smouldering remains of flame-roasted newcomers, allow me to correct
+your reply:
 
-Yinghai
+        "NAK.  And you smell."
+
+Crisis averted,
+Rusty.
+PS.  Thanks :)
