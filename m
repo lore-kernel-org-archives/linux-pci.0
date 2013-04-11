@@ -1,62 +1,98 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jay Agarwal <jagarwal@nvidia.com>
-To: <linux@arm.linux.org.uk>, <swarren@wwwdotorg.org>,
-	<thierry.reding@avionic-design.de>, <ldewangan@nvidia.com>,
-	<bhelgaas@google.com>, <olof@lixom.net>, <hdoyu@nvidia.com>,
-	<pgaikwad@nvidia.com>, <mturquette@linaro.org>,
-	<pdeschrijver@nvidia.com>, <linux-arm-kernel@lists.infradead.org>,
-	<linux-tegra@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>
-CC: <jtukkinen@nvidia.com>, <kthota@nvidia.com>, <jagarwal@nvidia.com>
-Subject: [PATCH 2/3] ARM: dts: tegra: Correct PCIe entry
-Date: Mon, 8 Apr 2013 21:11:27 +0530
-Message-ID: <1365435688-4179-2-git-send-email-jagarwal@nvidia.com>
-In-Reply-To: <1365435688-4179-1-git-send-email-jagarwal@nvidia.com>
-References: <1365435688-4179-1-git-send-email-jagarwal@nvidia.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:57350 "EHLO
+	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1761977Ab3DKMEP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 11 Apr 2013 08:04:15 -0400
+Date: Thu, 11 Apr 2013 13:03:22 +0100
+From: Andrew Murray <andrew.murray@arm.com>
+To: Rob Herring <robherring2@gmail.com>
+Cc: "rob.herring@calxeda.com" <rob.herring@calxeda.com>,
+	"siva.kallam@samsung.com" <siva.kallam@samsung.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	"paulus@samba.org" <paulus@samba.org>,
+	"linux-samsung-soc@vger.kernel.org"
+	<linux-samsung-soc@vger.kernel.org>,
+	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
+	"jg1.han@samsung.com" <jg1.han@samsung.com>,
+	"jgunthorpe@obsidianresearch.com" <jgunthorpe@obsidianresearch.com>,
+	"devicetree-discuss@lists.ozlabs.org"
+	<devicetree-discuss@lists.ozlabs.org>,
+	"kgene.kim@samsung.com" <kgene.kim@samsung.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"suren.reddy@samsung.com" <suren.reddy@samsung.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Michal Simek <monstr@monstr.eu>
+Subject: Re: [PATCH v5 1/3] of/pci: Unify pci_process_bridge_OF_ranges from
+ Microblaze and PowerPC
+Message-ID: <20130411120322.GA28981@arm.com>
+References: <1365578969-30966-1-git-send-email-Andrew.Murray@arm.com>
+ <1365578969-30966-2-git-send-email-Andrew.Murray@arm.com>
+ <51656592.7070806@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <51656592.7070806@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Jay Agarwal <jagarwal@nvidia.com>
+On Wed, Apr 10, 2013 at 02:13:54PM +0100, Rob Herring wrote:
+> Adding Ben H and Michal...
+> 
+> On 04/10/2013 02:29 AM, Andrew Murray wrote:
+> > The pci_process_bridge_OF_ranges function, used to parse the "ranges"
+> > property of a PCI host device, is found in both Microblaze and PowerPC
+> > architectures. These implementations are nearly identical. This patch
+> > moves this common code to a common place.
+> > 
+> > Signed-off-by: Andrew Murray <Andrew.Murray@arm.com>
+> > Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+> 
+> One comment below. Otherwise,
+> 
+> Reviewed-by: Rob Herring <rob.herring@calxeda.com>
+> 
+> You need also need acks from Ben and Michal.
+> 
+> [...]
+> 
+> > +		/* Act based on address space type */
+> > +		res = NULL;
+> > +		switch ((pci_space >> 24) & 0x3) {
+> > +		case 1:		/* PCI IO space */
+> > +			pr_info("  IO 0x%016llx..0x%016llx -> 0x%016llx\n",
+> > +			       cpu_addr, cpu_addr + size - 1, pci_addr);
+> > +
+> > +			/* We support only one IO range */
+> > +			if (hose->pci_io_size) {
+> > +				pr_info(" \\--> Skipped (too many) !\n");
+> > +				continue;
+> > +			}
+> > +#if defined(CONFIG_PPC32) || defined(CONFIG_MICROBLAZE)
+> 
+> How about "if (!IS_ENABLED(CONFIG_64BIT))" instead.
 
-- Add interrupt-names property
-- Correct downstream I/O size
-- Correct cml clock name for tegra30
-- Based on git://gitorious.org/thierryreding/linux.git
+OK I'll add in my next re-spin. Would "#ifndef CONFIG_64BIT" suffice?
 
- arch/arm/boot/dts/tegra30.dtsi |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/arch/arm/boot/dts/tegra30.dtsi b/arch/arm/boot/dts/tegra30.dtsi
-index 5a270ff..289ef93 100644
---- a/arch/arm/boot/dts/tegra30.dtsi
-+++ b/arch/arm/boot/dts/tegra30.dtsi
-@@ -124,7 +124,7 @@
- 		reg-names = "pads", "afi", "cs";
- 		interrupts = <0 98 0x04   /* controller interrupt */
- 		              0 99 0x04>; /* MSI interrupt */
--
-+		interrupt-names = "intr", "msi";
- 		bus-range = <0x00 0xff>;
- 		#address-cells = <3>;
- 		#size-cells = <2>;
-@@ -132,13 +132,13 @@
- 		ranges = <0x82000000 0 0x00000000 0x00000000 0 0x00001000   /* port 0 configuration space */
- 			  0x82000000 0 0x00001000 0x00001000 0 0x00001000   /* port 1 configuration space */
- 			  0x82000000 0 0x00004000 0x00004000 0 0x00001000   /* port 2 configuration space */
--			  0x81000000 0 0          0x02000000 0 0x00010000   /* downstream I/O */
-+			  0x81000000 0 0          0x02000000 0 0x00100000   /* downstream I/O */
- 			  0x82000000 0 0x20000000 0x20000000 0 0x10000000   /* non-prefetchable memory */
- 			  0xc2000000 0 0x30000000 0x30000000 0 0x10000000>; /* prefetchable memory */
- 
- 		clocks = <&tegra_car 70>, <&tegra_car 72>, <&tegra_car 74>,
- 			 <&tegra_car 118>, <&tegra_car 215>;
--		clock-names = "pex", "afi", "pcie_xclk", "pll_e", "cml";
-+		clock-names = "pex", "afi", "pcie_xclk", "pll_e", "cml0";
- 		status = "disabled";
- 
- 		pci@1,0 {
--- 
-1.7.0.4
-
+> 
+> > +			/* On 32 bits, limit I/O space to 16MB */
+> > +			if (size > 0x01000000)
+> > +				size = 0x01000000;
+> > +
+> > +			/* 32 bits needs to map IOs here */
+> > +			hose->io_base_virt = ioremap(cpu_addr, size);
+> > +
+> > +			/* Expect trouble if pci_addr is not 0 */
+> > +			if (primary)
+> > +				isa_io_base =
+> > +					(unsigned long)hose->io_base_virt;
+> > +#endif /* CONFIG_PPC32 || CONFIG_MICROBLAZE */
+> > +			/* pci_io_size and io_base_phys always represent IO
+> > +			 * space starting at 0 so we factor in pci_addr
+> > +			 */
+> > +			hose->pci_io_size = pci_addr + size;
+> > +			hose->io_base_phys = cpu_addr - pci_addr;
+> 
+> 
