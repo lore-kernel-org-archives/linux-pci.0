@@ -1,74 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:52304 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753708Ab3DPLbp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Apr 2013 07:31:45 -0400
-Date: Tue, 16 Apr 2013 13:31:40 +0200
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Jason Cooper <jason@lakedaemon.net>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Andrew Murray <Andrew.Murray@arm.com>,
-	Rob Herring <rob.herring@calxeda.com>, siva.kallam@samsung.com,
-	linux-pci@vger.kernel.org,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Liviu.Dudau@arm.com, Grant Likely <grant.likely@secretlab.ca>,
-	Paul Mackerras <paulus@samba.org>,
-	linux-samsung-soc <linux-samsung-soc@vger.kernel.org>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	Jingoo Han <jg1.han@samsung.com>,
+Received: from mail-ie0-f171.google.com ([209.85.223.171]:60768 "EHLO
+	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934468Ab3DKQz1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 11 Apr 2013 12:55:27 -0400
+Received: by mail-ie0-f171.google.com with SMTP id e14so2317153iej.30
+        for <linux-pci@vger.kernel.org>; Thu, 11 Apr 2013 09:55:26 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1365693969-23907-1-git-send-email-Andrew.Murray@arm.com>
+References: <1365693969-23907-1-git-send-email-Andrew.Murray@arm.com>
+Date: Thu, 11 Apr 2013 18:55:26 +0200
+Message-ID: <CACRpkda_LxhoS5eciuC7F3_zmfYLyNO2fALi=ABeqGJDpSpKWw@mail.gmail.com>
+Subject: Re: [PATCH v6 0/3] of/pci: Provide common support for PCI DT parsing
+From: Linus Walleij <linus.walleij@linaro.org>
+To: Andrew Murray <Andrew.Murray@arm.com>
+Cc: Rob Herring <rob.herring@calxeda.com>,
 	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Thomas Abraham <thomas.abraham@linaro.org>,
-	Arnd Bergmann <arnd@arndb.de>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	siva.kallam@samsung.com, linux-pci@vger.kernel.org,
 	"devicetree-discuss@lists.ozlabs.org"
 	<devicetree-discuss@lists.ozlabs.org>,
+	Jingoo Han <jg1.han@samsung.com>, Liviu.Dudau@arm.com,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux-samsung-soc <linux-samsung-soc@vger.kernel.org>,
 	Kukjin Kim <kgene.kim@samsung.com>,
 	"bhelgaas@google.com" <bhelgaas@google.com>,
+	suren.reddy@samsung.com,
 	"linux-arm-kernel@lists.infradead.org"
 	<linux-arm-kernel@lists.infradead.org>,
 	Michal Simek <monstr@monstr.eu>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	suren.reddy@samsung.com
-Subject: Re: [PATCH v6 0/3] of/pci: Provide common support for PCI DT
- parsing
-Message-ID: <20130416133140.7de24c89@skate>
-In-Reply-To: <20130416112951.GZ28693@titan.lakedaemon.net>
-References: <1365693969-23907-1-git-send-email-Andrew.Murray@arm.com>
-	<20130415175641.GM28693@titan.lakedaemon.net>
-	<CACRpkdbSd8pRG5pUS0ymqXDSp=ZhoQa2ctVuRA0cCmUcX5qFAA@mail.gmail.com>
-	<1366096361.24994.49.camel@pasglop>
-	<20130416112951.GZ28693@titan.lakedaemon.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Paul Mackerras <paulus@samba.org>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Thomas Abraham <thomas.abraham@linaro.org>,
+	Arnd Bergmann <arnd@arndb.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Jason Cooper,
+On Thu, Apr 11, 2013 at 5:26 PM, Andrew Murray <Andrew.Murray@arm.com> wrote:
 
-On Tue, 16 Apr 2013 07:29:51 -0400, Jason Cooper wrote:
+> This patchset factors out duplicated code associated with parsing PCI
+> DT "ranges" properties across the architectures and introduces a
+> "ranges" parser. This parser "of_pci_range_parser" can be used directly
+> by ARM host bridge drivers enabling them to obtain ranges from device
+> trees.
+>
+> I've included the Reviewed-by and Tested-by's received from v5 in this
+> patchset, earlier versions of this patchset (v3) have been tested-by:
+>
+> Thierry Reding <thierry.reding@avionic-design.de>
+> Jingoo Han <jg1.han@samsung.com>
+>
+> I believe a version of this patchset has also been tested through its
+> inclusion in Thomas Petazzoni's Armada 370 and Armada XP SoCs PCIe support by:
+>
+> Linus Walleij <linus.walleij@linaro.org>
 
-> > Do not send this series upstream (or even in -next) until it has been at
-> > least build-tested and acked by the affected architectures. AFAIK it
-> > breaks microblaze build (simple missing #include) and isn't yet tested
-> > on powerpc (I'm on vacation, maybe somebody else on linuxppc-dev can do
-> > it though).
-> 
-> I added the missing include reference by Michal Simek for the branch at
-> mvebu/drivers.
+Yes you can add my Tested-by tag.
 
-Some other build issues were reported on x86 during the night (thanks
-to automated build tests), and Andrew Murray has just sent a new
-version v7 of the patch set addressing those issues, as well as the
-missing include.
-
-Also, please note that Andrew's patch set contains three patches, but
-the Marvell PCIe driver only requires PATCH 1/3 and PATCH 2/3.
-
-Best regards,
-
-Thomas
--- 
-Thomas Petazzoni, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
+Yours,
+Linus Walleij
