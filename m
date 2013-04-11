@@ -1,75 +1,75 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-oa0-f52.google.com ([209.85.219.52]:52562 "EHLO
+	mail-oa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751711Ab3DKTwW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 11 Apr 2013 15:52:22 -0400
+Received: by mail-oa0-f52.google.com with SMTP id k14so1829966oag.39
+        for <linux-pci@vger.kernel.org>; Thu, 11 Apr 2013 12:52:22 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20130430072147.GA37866@bingao-desk1.fm.intel.com>
-References: <20130430072147.GA37866@bingao-desk1.fm.intel.com>
+In-Reply-To: <1362579278-6534-1-git-send-email-abbotti@mev.co.uk>
+References: <1362579278-6534-1-git-send-email-abbotti@mev.co.uk>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 30 Apr 2013 11:32:03 -0600
-Message-ID: <CAErSpo6sY_BejDqgO1Qsko7qH+oKn+wAbu5MnhE8zQeQCc7Qng@mail.gmail.com>
-Subject: Re: x86/pci/mrst: force all pci config toward 0:0:0, 0:2:0 and 0:3:0
- to type 1
-To: Bin Gao <bin.gao@linux.intel.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"x86@kernel.org" <x86@kernel.org>,
-	Jacob Pan <jacob.jun.pan@linux.intel.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Date: Thu, 11 Apr 2013 13:52:01 -0600
+Message-ID: <CAErSpo7JLdjpbAG6Qs+wEimNzqeaM3i4evzEHY1xjpQNNfgRHQ@mail.gmail.com>
+Subject: Re: [PATCH] pci_ids.h: add PCI_VENDOR_ID_AMCC
+To: Ian Abbott <abbotti@mev.co.uk>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 30, 2013 at 1:21 AM, Bin Gao <bin.gao@linux.intel.com> wrote:
-> x86/pci/mrst: force all pci config access toward 0:0:0, 0:2:0 and 0:3:0 to type 1
+On Wed, Mar 6, 2013 at 7:14 AM, Ian Abbott <abbotti@mev.co.uk> wrote:
+> Vendor ID 0x10e8 is assigned to Applied Micro Circuits Corporation
+> (recently AppliedMicro, but AMCC on NASDAQ).  The ID currently appears
+> as PCI_VENDOR_ID_ADDIDATA_OLD in pci_ids.h, which is wrong.  Some older
+> PCI boards made by ADDI-DATA used PCI interface chips made by AMCC and
+> used device IDs assigned by AMCC.
 >
-> For real pci devices 0:0:0, 0:2:0 and 0:3:0, there is either no pci shim, or
-> no guarantee of data correctness of offset 256-4k. So for whatever reason,
-> Linux kernel should not do MMCFG pci config access to those devices. Instead,
-> always use type 1 for those devices.
+> Add PCI_VENDOR_ID_AMCC and mark PCI_VENDOR_ID_ADDIDATA_OLD as a
+> duplicate.
 >
-> Signed-off-by: Bin Gao <bin.gao@linux.intel.com>
-
-I applied this to my for-linus branch and will try to put this in v3.10.
-
+> Note that PCI_VENDOR_ID_AMCC is defined identically in
+> "drivers/staging/comedi/comedidev.h" for use by the adl_pci9118 comedi
+> driver.  Various other comedi drivers currently use
+> PCI_VENDOR_ID_ADDIDATA_OLD, but these can be changed to use
+> PCI_VENDOR_ID_AMCC easily enough.  The only other user of
+> PCI_VENDOR_ID_ADDIDATA_OLD is "drivers/tty/serial/8250_pci.c" which
+> could also be changed to use AMCC easily enough.  Once all that is done,
+> PCI_VENDOR_ID_ADDIDATA_OLD can be removed.
+>
+> Signed-off-by: Ian Abbott <abbotti@mev.co.uk>
 > ---
->  arch/x86/pci/mrst.c |   10 ++++++----
->  1 files changed, 6 insertions(+), 4 deletions(-)
+>  include/linux/pci_ids.h | 4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
+
+This should be posted along with the patches that actually use
+PCI_VENDOR_ID_AMCC.  I'll drop this for now and watch for those.
+
+Bjorn
+
+> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+> index f11c1c2..902e41a 100644
+> --- a/include/linux/pci_ids.h
+> +++ b/include/linux/pci_ids.h
+> @@ -1309,6 +1309,8 @@
+>  #define PCI_DEVICE_ID_IMS_TT128                0x9128
+>  #define PCI_DEVICE_ID_IMS_TT3D         0x9135
 >
-> diff --git a/arch/x86/pci/mrst.c b/arch/x86/pci/mrst.c
-> index 6eb18c4..0e0fabf 100644
-> --- a/arch/x86/pci/mrst.c
-> +++ b/arch/x86/pci/mrst.c
-> @@ -141,6 +141,11 @@ static int pci_device_update_fixed(struct pci_bus *bus, unsigned int devfn,
+> +#define PCI_VENDOR_ID_AMCC             0x10e8
+> +
+>  #define PCI_VENDOR_ID_INTERG           0x10ea
+>  #define PCI_DEVICE_ID_INTERG_1682      0x1682
+>  #define PCI_DEVICE_ID_INTERG_2000      0x2000
+> @@ -2249,7 +2251,7 @@
+>  /*
+>   * ADDI-DATA GmbH communication cards <info@addi-data.com>
 >   */
->  static bool type1_access_ok(unsigned int bus, unsigned int devfn, int reg)
->  {
-> +       if (bus == 0 && (devfn == PCI_DEVFN(2, 0)
-> +                               || devfn == PCI_DEVFN(0, 0)
-> +                               || devfn == PCI_DEVFN(3, 0)))
-> +               return 1;
-> +
->         /* This is a workaround for A0 LNC bug where PCI status register does
->          * not have new CAP bit set. can not be written by SW either.
->          *
-> @@ -150,10 +155,7 @@ static bool type1_access_ok(unsigned int bus, unsigned int devfn, int reg)
->          */
->         if (reg >= 0x100 || reg == PCI_STATUS || reg == PCI_HEADER_TYPE)
->                 return 0;
-> -       if (bus == 0 && (devfn == PCI_DEVFN(2, 0)
-> -                               || devfn == PCI_DEVFN(0, 0)
-> -                               || devfn == PCI_DEVFN(3, 0)))
-> -               return 1;
-> +
->         return 0; /* langwell on others */
->  }
->
+> -#define PCI_VENDOR_ID_ADDIDATA_OLD             0x10E8
+> +#define PCI_VENDOR_ID_ADDIDATA_OLD             0x10E8  /* actually AMCC */
+>  #define PCI_VENDOR_ID_ADDIDATA                 0x15B8
+>  #define PCI_DEVICE_ID_ADDIDATA_APCI7500        0x7000
+>  #define PCI_DEVICE_ID_ADDIDATA_APCI7420        0x7001
 > --
-> 1.7.4.4
+> 1.8.1.2
 >
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
