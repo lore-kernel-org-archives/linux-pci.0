@@ -1,123 +1,120 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f179.google.com ([209.85.223.179]:65163 "EHLO
-	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758268Ab3DXXsk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Apr 2013 19:48:40 -0400
-Received: by mail-ie0-f179.google.com with SMTP id 16so2901543iea.10
-        for <linux-pci@vger.kernel.org>; Wed, 24 Apr 2013 16:48:40 -0700 (PDT)
+Received: from mail-qe0-f46.google.com ([209.85.128.46]:36751 "EHLO
+	mail-qe0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753130Ab3DKVwq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 11 Apr 2013 17:52:46 -0400
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQVY2wNoTxnmbRCNf0rQpUXdStFaaPC4idTfjh2+zzp_vw@mail.gmail.com>
-References: <516FB479.1060601@cn.fujitsu.com>
-	<CAE9FiQWtC4S52BUeDQvAJS2L=q6i_R6eZeEoAPPohg60NcY0UA@mail.gmail.com>
-	<5177A782.5050603@cn.fujitsu.com>
-	<CAE9FiQVY2wNoTxnmbRCNf0rQpUXdStFaaPC4idTfjh2+zzp_vw@mail.gmail.com>
-Date: Wed, 24 Apr 2013 16:48:40 -0700
-Message-ID: <CAE9FiQWai_7yc9R-=rqUhK7BTaGzMcBX8kHm6NW4ppUETmnzHQ@mail.gmail.com>
-Subject: Re: [PATCH 0/3] PCI: fix the object lifetime issue of parallel device
- removal on different pci hierarchy
-From: Yinghai Lu <yinghai@kernel.org>
-To: Gu Zheng <guz.fnst@cn.fujitsu.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	tangchen <tangchen@cn.fujitsu.com>,
-	Lin Feng <linfeng@cn.fujitsu.com>
-Content-Type: multipart/mixed; boundary=089e0149476efb186104db23f0f4
+In-Reply-To: <20130411204104.GC11956@mtj.dyndns.org>
+References: <20130411153030.GA22743@redhat.com>
+	<20130411180517.GJ17641@mtj.dyndns.org>
+	<20130411185853.GE23301@redhat.com>
+	<20130411190408.GM17641@mtj.dyndns.org>
+	<20130411191717.GB25515@redhat.com>
+	<20130411192005.GN17641@mtj.dyndns.org>
+	<20130411203053.GC25515@redhat.com>
+	<20130411204104.GC11956@mtj.dyndns.org>
+Date: Fri, 12 Apr 2013 00:52:45 +0300
+Message-ID: <CAJZOPZJnRF2qw4w0uv1h9wQ7sP3asH-42B+a0mwm+GCHSrm16Q@mail.gmail.com>
+Subject: Re: [PATCH repost for-3.9] pci: avoid work_on_cpu for nested SRIOV probes
+From: Or Gerlitz <or.gerlitz@gmail.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: "Michael S. Tsirkin" <mst@redhat.com>,
+	Or Gerlitz <ogerlitz@mellanox.com>,
+	Ming Lei <ming.lei@canonical.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	David Miller <davem@davemloft.net>,
+	Roland Dreier <roland@kernel.org>,
+	netdev <netdev@vger.kernel.org>, Yan Burman <yanb@mellanox.com>,
+	Jack Morgenstein <jackm@dev.mellanox.co.il>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---089e0149476efb186104db23f0f4
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
-
-On Wed, Apr 24, 2013 at 10:11 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Wed, Apr 24, 2013 at 2:36 AM, Gu Zheng <guz.fnst@cn.fujitsu.com> wrote=
-:
->> On 04/19/2013 03:43 AM, Yinghai Lu wrote:
-> [...]
->>> I can not find where that reference count get reduced!
->>> in the my test patches that I sent, it does have have that in remove pa=
-th.
->>>
->>> What is reason for you to remove that line?
->>>
->>> After put the line back, your test still can pass?
->>
->> Hi Yinghai,
->>         The remove test script still can pass if we reduce the reference=
- of pci_bus when destroying
->> the pci_dev, so does your patch, but a list_del corruption warning occur=
-s in the bottom half routine:
+On Thu, Apr 11, 2013 at 11:41 PM, Tejun Heo <tj@kernel.org> wrote:
+> Hello,
 >
-> That is not clear.
+> On Thu, Apr 11, 2013 at 11:30:53PM +0300, Michael S. Tsirkin wrote:
+>> Okay, so you are saying it's a false-positive?
 >
-> your patchset does not have list_del corruption warning?
+> Yeah, I think so.  It didn't actually lock up, right?  It it did,
+> our analysis upto this point is likely to be completely wrong.
 >
->> ------------[ cut here ]------------
->> WARNING: at lib/list_debug.c:53 __list_del_entry+0x63/0xd0()
->> Hardware name: PRIMEQUEST 1800E
->> list_del corruption, ffff8807d1b6c000->next is LIST_POISON1 (dead0000001=
-00100)
->> Modules linked in: shpchp ebtable_nat ebtables xt_CHECKSUM iptable_mangl=
-e bridge stp llc autofs4 sunrpc cpufreq_ondemand ipt_REJECT nf_conntrack_ip=
-v4 nf_defrag_ipv4 iptable_filter ip_tables ip6t_REJECT nf_conntrack_ipv6 nf=
-_defrag_ipv6 xt_state nf_conntrack ip6table_filter ip6_tables ipv6 vfat fat=
- dm_mirror dm_region_hash dm_log dm_mod vhost_net macvtap macvlan tun uinpu=
-t iTCO_wdt iTCO_vendor_support acpi_cpufreq freq_table mperf coretemp kvm_i=
-ntel kvm crc32c_intel microcode pcspkr sg i2c_i801 lpc_ich mfd_core i7core_=
-edac edac_core ioatdma e1000e igb dca i2c_algo_bit i2c_core ptp pps_core ex=
-t4(F) mbcache(F) jbd2(F) sd_mod(F) crc_t10dif(F) megaraid_sas(F) mptsas(F) =
-mptscsih(F) mptbase(F) scsi_transport_sas(F)
->> Pid: 6, comm: kworker/u:0 Tainted: GF       W    3.9.0-rc7-pci-remove-te=
-st+ #59
->> Call Trace:
->>  [<ffffffff81056d4f>] warn_slowpath_common+0x7f/0xc0
->>  [<ffffffff81056e46>] warn_slowpath_fmt+0x46/0x50
->>  [<ffffffff81280b13>] __list_del_entry+0x63/0xd0
->>  [<ffffffff81280b91>] list_del+0x11/0x40
->>  [<ffffffff81298331>] pci_destroy_dev+0x31/0xc0
->>  [<ffffffff812985bb>] pci_remove_bus_device+0x5b/0x70
->>  [<ffffffff812985ee>] pci_stop_and_remove_bus_device+0x1e/0x30
->>  [<ffffffff8129fc89>] remove_callback+0x29/0x40
->>  [<ffffffff811f3b84>] sysfs_schedule_callback_work+0x24/0x70
->>  [<ffffffff81073d85>] process_one_work+0x185/0x3f0
->>  [<ffffffff810763e9>] worker_thread+0x119/0x380
->>  [<ffffffff810762d0>] ? manage_workers+0x180/0x180
->>  [<ffffffff8107b6ae>] kthread+0xce/0xe0
->>  [<ffffffff8107b5e0>] ? kthread_freezable_should_stop+0x70/0x70
->>  [<ffffffff815724ac>] ret_from_fork+0x7c/0xb0
->>  [<ffffffff8107b5e0>] ? kthread_freezable_should_stop+0x70/0x70
->> ---[ end trace 9c05e382f933a515 ]---
+>> Want to send a patch so Or can try it out?
 
-Attached patch on top of current linus tree should fix the racing problem.
 
-We don't need to bother to add get bus ref. etc.
-
-Let us know your test result.
-
-Yinghai
-
---089e0149476efb186104db23f0f4
-Content-Type: application/octet-stream; name="fix_racing_removing.patch"
-Content-Disposition: attachment; filename="fix_racing_removing.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_hfx5i6go0
-
-LS0tCiBkcml2ZXJzL3BjaS9wY2ktc3lzZnMuYyB8ICAgIDkgKysrKysrKystCiAxIGZpbGUgY2hh
-bmdlZCwgOCBpbnNlcnRpb25zKCspLCAxIGRlbGV0aW9uKC0pCgpJbmRleDogbGludXgtMi42L2Ry
-aXZlcnMvcGNpL3BjaS1zeXNmcy5jCj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0KLS0tIGxpbnV4LTIuNi5vcmlnL2RyaXZl
-cnMvcGNpL3BjaS1zeXNmcy5jCisrKyBsaW51eC0yLjYvZHJpdmVycy9wY2kvcGNpLXN5c2ZzLmMK
-QEAgLTMxMCw5ICszMTAsMTYgQEAgZGV2X3Jlc2Nhbl9zdG9yZShzdHJ1Y3QgZGV2aWNlICpkZXYs
-IHN0cgogc3RhdGljIHZvaWQgcmVtb3ZlX2NhbGxiYWNrKHN0cnVjdCBkZXZpY2UgKmRldikKIHsK
-IAlzdHJ1Y3QgcGNpX2RldiAqcGRldiA9IHRvX3BjaV9kZXYoZGV2KTsKKwlpbnQgZG9tYWluID0g
-cGNpX2RvbWFpbl9ucihwZGV2LT5idXMpOworCXU4IGJ1cyA9IHBkZXYtPmJ1cy0+bnVtYmVyOwor
-CXU4IGRldmZuID0gcGRldi0+ZGV2Zm47CiAKIAltdXRleF9sb2NrKCZwY2lfcmVtb3ZlX3Jlc2Nh
-bl9tdXRleCk7Ci0JcGNpX3N0b3BfYW5kX3JlbW92ZV9idXNfZGV2aWNlKHBkZXYpOworCXBkZXYg
-PSBwY2lfZ2V0X2RvbWFpbl9idXNfYW5kX3Nsb3QoZG9tYWluLCBidXMsIGRldmZuKTsKKwlpZiAo
-cGRldikgeworCQlwY2lfZGV2X3B1dChwZGV2KTsKKwkJcGNpX3N0b3BfYW5kX3JlbW92ZV9idXNf
-ZGV2aWNlKHBkZXYpOworCX0KIAltdXRleF91bmxvY2soJnBjaV9yZW1vdmVfcmVzY2FuX211dGV4
-KTsKIH0KIAo=
---089e0149476efb186104db23f0f4--
+I can test that Sunday
+>
+> Hmmm... something like the following on the workqueue side (completely
+> untested).
+>
+> diff --git a/include/linux/workqueue.h b/include/linux/workqueue.h
+> index 8afab27..899d470 100644
+> --- a/include/linux/workqueue.h
+> +++ b/include/linux/workqueue.h
+> @@ -466,14 +466,21 @@ static inline bool __deprecated flush_delayed_work_sync(struct delayed_work *dwo
+>  }
+>
+>  #ifndef CONFIG_SMP
+> -static inline long work_on_cpu(unsigned int cpu, long (*fn)(void *), void *arg)
+> +static inline long work_on_cpu_nested(unsigned int cpu, long (*fn)(void *),
+> +                                     void *arg, int subclass)
+>  {
+>         return fn(arg);
+>  }
+>  #else
+> -long work_on_cpu(unsigned int cpu, long (*fn)(void *), void *arg);
+> +long work_on_cpu_nested(unsigned int cpu, long (*fn)(void *), void *arg,
+> +                       int subclass);
+>  #endif /* CONFIG_SMP */
+>
+> +static inline long work_on_cpu(unsigned int cpu, long (*fn)(void *), void *arg)
+> +{
+> +       return work_on_cpu_nested(cpu, fn, arg, 0);
+> +}
+> +
+>  #ifdef CONFIG_FREEZER
+>  extern void freeze_workqueues_begin(void);
+>  extern bool freeze_workqueues_busy(void);
+> diff --git a/kernel/workqueue.c b/kernel/workqueue.c
+> index 81f2457..c2be670 100644
+> --- a/kernel/workqueue.c
+> +++ b/kernel/workqueue.c
+> @@ -3555,25 +3555,30 @@ static void work_for_cpu_fn(struct work_struct *work)
+>  }
+>
+>  /**
+> - * work_on_cpu - run a function in user context on a particular cpu
+> + * work_on_cpu_nested - run a function in user context on a particular cpu
+>   * @cpu: the cpu to run on
+>   * @fn: the function to run
+>   * @arg: the function arg
+> + * @subclass: lockdep subclass
+>   *
+>   * This will return the value @fn returns.
+>   * It is up to the caller to ensure that the cpu doesn't go offline.
+>   * The caller must not hold any locks which would prevent @fn from completing.
+> + *
+> + * XXX: explain @subclass
+>   */
+> -long work_on_cpu(unsigned int cpu, long (*fn)(void *), void *arg)
+> +long work_on_cpu_nested(unsigned int cpu, long (*fn)(void *), void *arg,
+> +                       int subclass)
+>  {
+>         struct work_for_cpu wfc = { .fn = fn, .arg = arg };
+>
+>         INIT_WORK_ONSTACK(&wfc.work, work_for_cpu_fn);
+> +       lock_set_subclass(&wfc.work.lockdep_map, subclass, _RET_IP_);
+>         schedule_work_on(cpu, &wfc.work);
+>         flush_work(&wfc.work);
+>         return wfc.ret;
+>  }
+> -EXPORT_SYMBOL_GPL(work_on_cpu);
+> +EXPORT_SYMBOL_GPL(work_on_cpu_nested);
+>  #endif /* CONFIG_SMP */
+>
+>  #ifdef CONFIG_FREEZER
+> --
+> To unsubscribe from this list: send the line "unsubscribe netdev" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
