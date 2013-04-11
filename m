@@ -1,91 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e7.ny.us.ibm.com ([32.97.182.137]:36806 "EHLO e7.ny.us.ibm.com"
+Received: from mx1.redhat.com ([209.132.183.28]:18037 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755627Ab3DEPi5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 5 Apr 2013 11:38:57 -0400
-Received: from /spool/local
-	by e7.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <brking@linux.vnet.ibm.com>;
-	Fri, 5 Apr 2013 11:38:56 -0400
-Received: from d01relay05.pok.ibm.com (d01relay05.pok.ibm.com [9.56.227.237])
-	by d01dlp03.pok.ibm.com (Postfix) with ESMTP id 20F28C90050
-	for <linux-pci@vger.kernel.org>; Fri,  5 Apr 2013 11:38:47 -0400 (EDT)
-Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
-	by d01relay05.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id r35Fck3i323638
-	for <linux-pci@vger.kernel.org>; Fri, 5 Apr 2013 11:38:46 -0400
-Received: from d01av01.pok.ibm.com (loopback [127.0.0.1])
-	by d01av01.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id r35FcjtW013011
-	for <linux-pci@vger.kernel.org>; Fri, 5 Apr 2013 11:38:46 -0400
-Message-ID: <515EEFFE.6050206@linux.vnet.ibm.com>
-Date: Fri, 05 Apr 2013 10:38:38 -0500
-From: Brian King <brking@linux.vnet.ibm.com>
-MIME-Version: 1.0
-To: Michael Ellerman <michael@ellerman.id.au>
-CC: linux-pci@vger.kernel.org, klebers@linux.vnet.ibm.com,
-	lucaskt@linux.vnet.ibm.com, bhelgaas@google.com,
-	linuxppc-dev@lists.ozlabs.org
-Subject: Re: [PATCH 3/3] powerpc: Set default VGA device
-References: <201304042158.r34LwGPg010714@d03av02.boulder.ibm.com> <20130405065238.GC5082@concordia>
-In-Reply-To: <20130405065238.GC5082@concordia>
-Content-Type: text/plain; charset=ISO-8859-1
+	id S1161156Ab3DKR5a (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 11 Apr 2013 13:57:30 -0400
+Message-ID: <1365703048.26525.8.camel@ul30vt.home>
+Subject: Re: [Question] Failed to access the BAR MMIO space of PCI device
+From: Alex Williamson <alex.williamson@redhat.com>
+To: zhengfei <zhef2000@gmail.com>
+Cc: linux-pci@vger.kernel.org
+Date: Thu, 11 Apr 2013 11:57:28 -0600
+In-Reply-To: <loom.20130411T190021-709@post.gmane.org>
+References: <loom.20130407T204756-980@post.gmane.org>
+	 <1365431000.16420.11.camel@bling.home>
+	 <loom.20130411T190021-709@post.gmane.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/05/2013 01:52 AM, Michael Ellerman wrote:
-> Hi Brian,
+On Thu, 2013-04-11 at 17:15 +0000, zhengfei wrote:
+> Alex Williamson <alex.williamson <at> redhat.com> writes:
 > 
+> > 
+> > On Sun, 2013-04-07 at 19:19 +0000, zhengfei wrote:
+> > > Hi,
+> > > 
+> > > I'm writing a driver for a SR-IOV device on the PCI bus. My architecture 
+> is 
+> > > a 64-bit X86 of intel Sandy bridge.
+> > > 
+> > > In my device driver, I want to configure the device to transfer data 
+> to/from 
+> > > X86.I get the the device BAR MMIO base address with the command "lspci -
+> s 
+> > > 04:00.03 -xxx" in the guest os(kvm).
+> > > But after I ioremap() that MMIO base address,I failed to access the BAR 
+> MMIO 
+> > > space in the guest os(kvm).
+> > > 
+> > > Is there a function which show mapping between the real PCI address 
+> stored in 
+> > > the BAR and the emulated address stored in the BAR?
+> > 
+> > Is this a userspace driver or a kernel driver?  I can't figure out why
+> > you would use lspci to get a static BAR address, then use ioremap() to
+> > map it.  If it's a kernel driver, the sequence you want is something
+> > like:
+> > 
+> > pci_enable_device
+> > pci_request_selected_regions
+> > pci_iomap
+> > 
+> > Thanks,
+> > Alex
+> > 
+> > 
 > 
-> On Thu, Apr 04, 2013 at 04:58:17PM -0500, Brian King wrote:
->>
->> Add a PCI quirk for VGA devices on Power to set the default VGA device.
->> Ensures a default VGA is always set if a graphics adapter is present,
->> even if firmware did not initialize it. If more than one graphics
->> adapter is present, ensure the one initialized by firmware is set
->> as the default VGA device. This ensures that X autoconfiguration
->> will work.
-> 
-> So a few things:
-> 
->  - You are doing this on all power systems, not just pseries which is I
->    assume what you're testing on - that seems OK to me, but just
->    checking.
+> It is a userspace driver on guest os.To be simply,I got the BAR0 
+> address(gpa) on guest os,but I failed to access real BAR0 MMIO address space 
+> of the device with the gpa.So what can I do next? and in which source code 
+> file,could I find the procedure of mapping the real BAR address space（hpa) 
+> to gpa?
 
-Correct. I've only tested on pseries, but figured it would make sense for
-this to be more generic. I'm happy to make this pseries specific if that
-is preferred.
+The guest doesn't have access to the hpa, nor should it need it.  To map
+BAR0 from guest userspace
+mmap /sys/bus/pci/devices/xxxx:xx:xx.x/resource0.  Thanks,
 
->  - What is the "initialized by firmware" test? Just that IO & MEM are
->    enabled?
-
-Correct. This is what the x86 code does. Alternatively, its possible
-there is a chosen attribute in the device tree we could look at.
-
->  - You potentially override an existing default, is that a problem? Can
->    the user set the default? (no AFAICS).
-
-I couldn't find anywhere that this could be set by the user and wanted to
-be able to handle both the case of a single adapter that wasn't initialized
-by firmware as well as the multi adapter case where only one of the adapters was
-initialized by firmware. I could have made this smarter so that we only
-override the default if the previous default was not initialized by firmware,
-but opted for the simpler patch.
-
->  - The x86 code is slightly different, they don't override an existing
->    default, why do we?
-
-I wanted to be able to handle the case of a single graphics adapter installed in a system
-that has not been initialized by firmware, since I have a system like this. This generally
-isn't something that x86 would need to do since all graphics adapters should have x86 boot
-code in them, but very few current graphics adapters have fcode in them today.
-
-Thanks,
-
-Brian
-
-
--- 
-Brian King
-Power Linux I/O
-IBM Linux Technology Center
+Alex
 
 
