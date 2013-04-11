@@ -1,83 +1,56 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Thierry Reding <thierry.reding@avionic-design.de>
-To: Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Russell King <linux@arm.linux.org.uk>,
-	Andrew Murray <andrew.murray@arm.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-tegra@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH v3 06/12] ARM: tegra: Move pmc.h to include/linux/tegra-pmc.h
-Date: Wed,  3 Apr 2013 16:45:12 +0200
-Message-Id: <1365000318-28256-7-git-send-email-thierry.reding@avionic-design.de>
-In-Reply-To: <1365000318-28256-1-git-send-email-thierry.reding@avionic-design.de>
-References: <1365000318-28256-1-git-send-email-thierry.reding@avionic-design.de>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:44451 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750806Ab3DKS7Q (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 11 Apr 2013 14:59:16 -0400
+Date: Thu, 11 Apr 2013 21:58:54 +0300
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: Or Gerlitz <ogerlitz@mellanox.com>,
+	Ming Lei <ming.lei@canonical.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	David Miller <davem@davemloft.net>,
+	Roland Dreier <roland@kernel.org>,
+	netdev <netdev@vger.kernel.org>, Yan Burman <yanb@mellanox.com>,
+	Jack Morgenstein <jackm@dev.mellanox.co.il>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH repost for-3.9] pci: avoid work_on_cpu for nested SRIOV
+ probes
+Message-ID: <20130411185853.GE23301@redhat.com>
+References: <20130411153030.GA22743@redhat.com>
+ <20130411180517.GJ17641@mtj.dyndns.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130411180517.GJ17641@mtj.dyndns.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In preparation for moving the PCIe driver into the drivers/pci/host
-directory, this header, which contains prototypes that are required by
-the PCIe driver, needs to be moved to a globally visible location.
+On Thu, Apr 11, 2013 at 11:05:17AM -0700, Tejun Heo wrote:
+> Hello,
+> 
+> On Thu, Apr 11, 2013 at 06:30:30PM +0300, Michael S. Tsirkin wrote:
+> > The issue is that a driver, in it's probe function, calls
+> > pci_sriov_enable so a PF device probe causes VF probe (AKA nested
+> > probe).  Each probe in pci_device_probe is (normally) run through
+> > work_on_cpu (this is to get the right numa node for memory allocated by
+> > the driver).  In turn work_on_cpu does this internally:
+> > 
+> >         schedule_work_on(cpu, &wfc.work);
+> >         flush_work(&wfc.work);
+> > 
+> > So if you are running probe on CPU1, and cause another
+> > probe on the same CPU, this will try to flush
+> > workqueue from inside same workqueue which of course
+> > deadlocks.
+> > 
+> > Nested probing might be tricky to get right generally.
+> 
+> Hmm... how about adding a work_on_cpu_nested() which takes @subclass
+> argument?  Wouldn't that be much cleaner?
+> 
+> Thanks.
 
-Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
----
-Changes in v2:
-- keep tegra_pmc_init() prototype in arch/arm/mach-tegra/pmc.h
-- move pmc.h to includex/linux/tegra-pmc.h
+Is that 3.9 material though?
 
-Changes in v3:
-- update subject to match new location
-
- arch/arm/mach-tegra/pmc.h |  1 -
- include/linux/tegra-pmc.h | 23 +++++++++++++++++++++++
- 2 files changed, 23 insertions(+), 1 deletion(-)
- create mode 100644 include/linux/tegra-pmc.h
-
-diff --git a/arch/arm/mach-tegra/pmc.h b/arch/arm/mach-tegra/pmc.h
-index c778451..7d44710 100644
---- a/arch/arm/mach-tegra/pmc.h
-+++ b/arch/arm/mach-tegra/pmc.h
-@@ -23,6 +23,5 @@ int tegra_pmc_cpu_power_on(int cpuid);
- int tegra_pmc_cpu_remove_clamping(int cpuid);
- 
- void tegra_pmc_init(void);
--void tegra_pmc_pcie_xclk_clamp(bool clamp);
- 
- #endif
-diff --git a/include/linux/tegra-pmc.h b/include/linux/tegra-pmc.h
-new file mode 100644
-index 0000000..b6296bf
---- /dev/null
-+++ b/include/linux/tegra-pmc.h
-@@ -0,0 +1,23 @@
-+/*
-+ * Copyright (C) 2012 NVIDIA CORPORATION. All rights reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms and conditions of the GNU General Public License,
-+ * version 2, as published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope it will be useful, but WITHOUT
-+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-+ * more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-+ *
-+ */
-+
-+#ifndef __LINUX_TEGRA_PMC_H
-+#define __LINUX_TEGRA_PMC_H
-+
-+void tegra_pmc_pcie_xclk_clamp(bool clamp);
-+
-+#endif
--- 
-1.8.2
-
+> -- 
+> tejun
