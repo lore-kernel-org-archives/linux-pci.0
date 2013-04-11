@@ -1,72 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:4559 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753495Ab3DPGoU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Apr 2013 02:44:20 -0400
-Message-ID: <516CF325.40604@huawei.com>
-Date: Tue, 16 Apr 2013 14:43:49 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from mx1.redhat.com ([209.132.183.28]:33226 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932875Ab3DKUbN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 11 Apr 2013 16:31:13 -0400
+Date: Thu, 11 Apr 2013 23:30:53 +0300
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: Or Gerlitz <ogerlitz@mellanox.com>,
+	Ming Lei <ming.lei@canonical.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	David Miller <davem@davemloft.net>,
+	Roland Dreier <roland@kernel.org>,
+	netdev <netdev@vger.kernel.org>, Yan Burman <yanb@mellanox.com>,
+	Jack Morgenstein <jackm@dev.mellanox.co.il>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH repost for-3.9] pci: avoid work_on_cpu for nested SRIOV
+ probes
+Message-ID: <20130411203053.GC25515@redhat.com>
+References: <20130411153030.GA22743@redhat.com>
+ <20130411180517.GJ17641@mtj.dyndns.org>
+ <20130411185853.GE23301@redhat.com>
+ <20130411190408.GM17641@mtj.dyndns.org>
+ <20130411191717.GB25515@redhat.com>
+ <20130411192005.GN17641@mtj.dyndns.org>
 MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Rafael <rjw@sisk.pl>, Hanjun Guo <guohanjun@huawei.com>,
-	Jiang Liu <jiang.liu@huawei.com>
-Subject: Re: [PATCH 1/3] PCI,acpiphp: use generic pci_hp_add_bridge()
-References: <1364808128-12792-1-git-send-email-wangyijing@huawei.com> <516CAE35.7090204@huawei.com> <CAE9FiQUACgSPffKQrKvb3zbrm-pg3gxkWxahNFFHofkW33sHwA@mail.gmail.com>
-In-Reply-To: <CAE9FiQUACgSPffKQrKvb3zbrm-pg3gxkWxahNFFHofkW33sHwA@mail.gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130411192005.GN17641@mtj.dyndns.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> On Mon, Apr 15, 2013 at 6:49 PM, Yijing Wang <wangyijing@huawei.com> wrote:
->> Hi Yinghai,
->>    Any comments about this patch? I searched the code history and found
->> you introduced pci_hp_add_bridge() function at commit a8e4b9c10. In your
->> patchset use pci_hp_add_bridge() for all pci hotplug drivers except acpiphp.
->> So I use pci_hp_add_bridge() in acpiphp instead of using pci_scan_bridge()
->> directly. I would appreciate if you can give some suggestions.
+On Thu, Apr 11, 2013 at 12:20:05PM -0700, Tejun Heo wrote:
+> On Thu, Apr 11, 2013 at 10:17:17PM +0300, Michael S. Tsirkin wrote:
+> > Hmm no, there's a real deadlock here: you are
+> > trying to flush from work1 from within work2 running
+> > on same workqueue. work2 can't event start running.
+> > The problem is not annotation.
+> 
+> No, that has changed years ago with introduction of cmwq.  System
+> workqueues are now expected to have high enough maximum concurrency to
+> not cause deadlock as long as memory for worker creation is available,
+> so as long as your work item doesn't directly sit in the memory
+> reclaim path, it's safe to flush a different work item running on the
+> same workqueue with sufficiently high max_active.
+> 
+> Thanks.
 
-Hi Yinghai,
-   Thanks for your review and comments very much!
+Okay, so you are saying it's a false-positive?
+Want to send a patch so Or can try it out?
 
-> 
-> There is one problem in your patch.
-> max start value get change. before your patch max is the maximum value
-> of bus all children...
->    now it is change bus  start value.
-
-Thank you for reminding. Now I noticed this detail.(:
-I will drop these pathes.
-
-Thanks!
-Yijing.
-
-> 
-> looks like old code try to handle the case that we already some
-> children on that bus.
-> 
-> Last time i did not change it, because i think it only is ready after
-> busn_res alloc patchset
-> is merged.
-> 
-> in pci-mini summit of last year, Bjorn asked Linus about that
-> patchset, and Linus said it is
-> risky and it is not worthy to merge it .
-> 
-> so assume we should hold your patch as it could cause some regression.
-> 
-> Thanks
-> 
-> Yinghai
-> 
-> .
-> 
-
-
--- 
-Thanks!
-Yijing
-
+> -- 
+> tejun
