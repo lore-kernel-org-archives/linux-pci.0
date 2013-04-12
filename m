@@ -1,84 +1,76 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from avon.wwwdotorg.org ([70.85.31.133]:60079 "EHLO
+	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751406Ab3DLS3L (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 12 Apr 2013 14:29:11 -0400
+Message-ID: <51685272.8010304@wwwdotorg.org>
+Date: Fri, 12 Apr 2013 12:29:06 -0600
+From: Stephen Warren <swarren@wwwdotorg.org>
 MIME-Version: 1.0
-In-Reply-To: <5166F39C.1050907@openwrt.org>
-References: <1365098483-26821-1-git-send-email-juhosg@openwrt.org>
- <1365098483-26821-2-git-send-email-juhosg@openwrt.org> <CAErSpo4ih-Kgp4LxX1MDodac-eoPo=Mu1d6ex8oNnaEEc_GQnw@mail.gmail.com>
- <5166F39C.1050907@openwrt.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 11 Apr 2013 11:35:14 -0600
-Message-ID: <CAErSpo454_bkXa1Uy70_dv9SSnofxYNPyxR=W7X-QmaxxGNO5g@mail.gmail.com>
-Subject: Re: [PATCH 2/2] MIPS: implement pcibios_get_phb_of_node
-To: Gabor Juhos <juhosg@openwrt.org>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ralf Baechle <ralf@linux-mips.org>,
+To: Jay Agarwal <jagarwal@nvidia.com>
+CC: Prashant Gaikwad <pgaikwad@nvidia.com>,
+	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
+	Krishna Thota <kthota@nvidia.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Peter De Schrijver <pdeschrijver@nvidia.com>,
+	"thierry.reding@avionic-design.de" <thierry.reding@avionic-design.de>,
+	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-mips@linux-mips.org" <linux-mips@linux-mips.org>
+	"olof@lixom.net" <olof@lixom.net>,
+	Laxman Dewangan <ldewangan@nvidia.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"mturquette@linaro.org" <mturquette@linaro.org>,
+	Juha Tukkinen <jtukkinen@nvidia.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Hiroshi Doyu <hdoyu@nvidia.com>
+Subject: Re: [PATCH 1/3] ARM: tegra: pcie: Add tegra3 support
+References: <1365435688-4179-1-git-send-email-jagarwal@nvidia.com> <51630ABB.1020200@wwwdotorg.org> <C79B248886DD134989C8FF6B096A91AB91B36FB300@BGMAIL01.nvidia.com> <51683E00.4020506@wwwdotorg.org> <C79B248886DD134989C8FF6B096A91AB91B36FB302@BGMAIL01.nvidia.com>
+In-Reply-To: <C79B248886DD134989C8FF6B096A91AB91B36FB302@BGMAIL01.nvidia.com>
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 11, 2013 at 11:32 AM, Gabor Juhos <juhosg@openwrt.org> wrote:
-> 2013.04.10. 18:31 keltezéssel, Bjorn Helgaas írta:
->> On Thu, Apr 4, 2013 at 12:01 PM, Gabor Juhos <juhosg@openwrt.org> wrote:
->>> The of_node field of the device assigned to a
->>> PCI bus is used during scanning of the PCI bus.
->>> However on MIPS, the of_node field is assigned
->>> only after the bus has been scanned.
->>>
->>> Implement the architecture specific version of
->>> 'pcibios_get_phb_of_node'. Which ensures that the
->>> PCI driver core will initialize the of_node field
->>> before starting the scan.
->>>
->>> Also remove the local assignment of bus->dev.of_node,
->>> it is not needed after the patch.
->>>
->>> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+On 04/12/2013 11:06 AM, Jay Agarwal wrote:
+>> On 04/12/2013 10:43 AM, Jay Agarwal wrote:
+>>>> On 04/08/2013 09:41 AM, Jay Agarwal wrote:
+>>>>> Signed-off-by: Jay Agarwal <jagarwal@nvidia.com>
+>>>>>
+>>>>> - Enable pcie root port 2 for cardhu
+>>>>> - Make private data structure for each SOC
+>>>>> - Add required tegra3 clocks and regulators
+>>>>> - Add tegra3 specific code in enable controller
+>>>>> - Modify clock tree to get clocks based on device
+>>>>> - Based on git://gitorious.org/thierryreding/linux.git
+>>>>
+>>>> A couple more points on this patch:
+>>>>
+>>>> * You didn't mention that this series is based on Thierry's
+>>>> work-in-progress tree, and not something immediately destined for
+>>>> upstream. As such, only Thierry is expected to actually apply any of these
+>> patches.
+>>>>
+>>> [>] Stephen, I have mentioned it in comment description as Based on
+>> git://gitorious.org/thierryreding/linux.git, is this not enough?
 >>
->> I removed the __weak annotation from include/linux/pci.h and applied
->> this patch to my pci/gabor-get-of-node.
->
-> Thank you!
->
->> Give it a try and make sure
->> it solves your problem.  If so, and Ralph approves, I can push both
->> for v3.10.  It should appear at
->> http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/gabor-get-of-node
->> soon.
->
-> I have tried your patch on top of 3.9-rc6. The resulting kernel uses the
-> architecture specific implementation, and it runs fine.
->
->   $ mipsel-openwrt-linux-readelf -s arch/mips/pci/built-in.o \
->     drivers/pci/built-in.o vmlinux.o | grep pcibios_get_phb_of_node
->       93: 0000046c    12 FUNC    GLOBAL DEFAULT    2 pcibios_get_phb_of_node
->     1433: 00012a2c   104 FUNC    WEAK   DEFAULT    2 pcibios_get_phb_of_node
->    31863: 001d4dbc    12 FUNC    GLOBAL DEFAULT    2 pcibios_get_phb_of_node
->   $
->
-> For completeness, I have compiled it for X64 and for powerpc as well. I did not
-> try to run these kernels, but the output of readelf seems to be ok:
->
->   $ readelf -s arch/x86/kernel/built-in.o drivers/pci/built-in.o vmlinux.o | \
->     grep pcibios_get_phb_of_node
->     2761: 000273a0    86 FUNC    GLOBAL DEFAULT    1 pcibios_get_phb_of_node
->     1705: 00018770    77 FUNC    WEAK   DEFAULT    1 pcibios_get_phb_of_node
->    60364: 000278a0    86 FUNC    GLOBAL DEFAULT    1 pcibios_get_phb_of_node
->   $
->
->   $ powerpc-openwrt-linux-readelf -s arch/powerpc/kernel/built-in.o \
->     drivers/pci/built-in.o  vmlinux.o | grep pcibios_get_phb_of_node
->     1002: 0000ca28    12 FUNC    GLOBAL DEFAULT    1 pcibios_get_phb_of_node
->     1485: 0001453c    88 FUNC    WEAK   DEFAULT    1 pcibios_get_phb_of_node
->    28959: 0000d598    12 FUNC    GLOBAL DEFAULT    1 pcibios_get_phb_of_node
->   $
->
->> Or if you prefer, you can take them through the MIPS tree.
->
-> Either is fine.
+>> Well, first off, there are many branches there, and secondly the branch that
+>> a series is based on doesn't necessarily imply much about what you expect
+>> people to do with it.
+>>
+> I am not clear, What should I mention then?
 
-Thanks for checking these out!  I put them in my "next" branch and
-pushed it, so they should appear in v3.10.
+The branch name. Thierry's branch has the following:
 
-Bjorn
+  remotes/gitorious_thierryreding_linux/drm/hdmi-for-3.9
+  remotes/gitorious_thierryreding_linux/drm/tegra-for-3.9
+  remotes/gitorious_thierryreding_linux/tegra/drm/for-3.8
+  remotes/gitorious_thierryreding_linux/tegra/drm/next
+  remotes/gitorious_thierryreding_linux/tegra/next
+  remotes/gitorious_thierryreding_linux/tegra/next-20130122
+
+which of those was it based on?
+
+Also, you simply said it was based on that repo. If you intend Thierry
+to apply the patches to his repo/branch, rather than the usual
+maintainers of the files you're editing, who you also CC'd, you should
+specify that.
