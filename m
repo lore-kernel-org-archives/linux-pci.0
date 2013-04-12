@@ -1,73 +1,90 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:53198 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S936486Ab3DIVHS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Apr 2013 17:07:18 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Russell King <linux@arm.linux.org.uk>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	devicetree-discuss@lists.ozlabs.org,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Maen Suleiman <maen@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Olof Johansson <olof@lixom.net>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Mitch Bradley <wmb@firmworks.com>,
-	Andrew Murray <andrew.murray@arm.com>
-Subject: [PATCHv8 18/19] arm: mvebu: PCIe Device Tree informations for Armada XP GP
-Date: Tue,  9 Apr 2013 23:06:39 +0200
-Message-Id: <1365541601-14095-19-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1365541601-14095-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1365541601-14095-1-git-send-email-thomas.petazzoni@free-electrons.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>, Ram Pai <linuxram@us.ibm.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v4 09/29] PCI: Use for_each_pci_resource() with IOV releated functions
+Date: Fri, 12 Apr 2013 15:44:23 -0700
+Message-Id: <1365806683-26717-10-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1365806683-26717-1-git-send-email-yinghai@kernel.org>
+References: <1365806683-26717-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The Marvell Armada XP GP board has 3 physical full-size PCIe slots, so
-we enable the corresponding PCIe interfaces in the Device Tree.
-
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- arch/arm/boot/dts/armada-xp-gp.dts |   21 +++++++++++++++++++++
- 1 file changed, 21 insertions(+)
+ drivers/pci/iov.c | 31 +++++++++++++++----------------
+ 1 file changed, 15 insertions(+), 16 deletions(-)
 
-diff --git a/arch/arm/boot/dts/armada-xp-gp.dts b/arch/arm/boot/dts/armada-xp-gp.dts
-index 1c8afe2..e2bf6b4 100644
---- a/arch/arm/boot/dts/armada-xp-gp.dts
-+++ b/arch/arm/boot/dts/armada-xp-gp.dts
-@@ -109,5 +109,26 @@
- 				spi-max-frequency = <108000000>;
- 			};
- 		};
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index ee599f2..baf6c80 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -93,17 +93,20 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
+ 	pci_setup_device(virtfn);
+ 	virtfn->dev.parent = dev->dev.parent;
+ 
+-	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
+-		res = dev->resource + PCI_IOV_RESOURCES + i;
++	for_each_pci_resource(dev, res, i, PCI_IOV_RES) {
++		struct resource *virtfn_res;
 +
-+		pcie-controller {
-+			status = "okay";
+ 		if (!res->parent)
+ 			continue;
+-		virtfn->resource[i].name = pci_name(virtfn);
+-		virtfn->resource[i].flags = res->flags;
 +
-+			/*
-+			 * The 3 slots are physically present as
-+			 * standard PCIe slots on the board.
-+			 */
-+			pcie@1,0 {
-+				/* Port 0, Lane 0 */
-+				status = "okay";
-+			};
-+			pcie@9,0 {
-+				/* Port 2, Lane 0 */
-+				status = "okay";
-+			};
-+			pcie@10,0 {
-+				/* Port 3, Lane 0 */
-+				status = "okay";
-+			};
-+		};
- 	};
- };
++		virtfn_res = pci_dev_resource_n(virtfn, i - PCI_IOV_RESOURCES);
++		virtfn_res->name = pci_name(virtfn);
++		virtfn_res->flags = res->flags;
+ 		size = resource_size(res);
+ 		do_div(size, iov->total_VFs);
+-		virtfn->resource[i].start = res->start + size * id;
+-		virtfn->resource[i].end = virtfn->resource[i].start + size - 1;
+-		rc = request_resource(res, &virtfn->resource[i]);
++		virtfn_res->start = res->start + size * id;
++		virtfn_res->end = virtfn_res->start + size - 1;
++		rc = request_resource(res, virtfn_res);
+ 		BUG_ON(rc);
+ 	}
+ 
+@@ -305,9 +308,8 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+ 		return -EIO;
+ 
+ 	nres = 0;
+-	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
+-		bars |= (1 << (i + PCI_IOV_RESOURCES));
+-		res = dev->resource + PCI_IOV_RESOURCES + i;
++	for_each_pci_resource(dev, res, i, PCI_IOV_RES) {
++		bars |= 1 << i;
+ 		if (res->parent)
+ 			nres++;
+ 	}
+@@ -465,10 +467,9 @@ found:
+ 	pci_write_config_dword(dev, pos + PCI_SRIOV_SYS_PGSIZE, pgsz);
+ 
+ 	nres = 0;
+-	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
+-		res = dev->resource + PCI_IOV_RESOURCES + i;
++	for_each_pci_resource(dev, res, i, PCI_IOV_RES) {
+ 		i += __pci_read_base(dev, pci_bar_unknown, res,
+-				     pos + PCI_SRIOV_BAR + i * 4);
++			     pos + PCI_SRIOV_BAR + (i - PCI_IOV_RESOURCES) * 4);
+ 		if (!res->flags)
+ 			continue;
+ 		if (resource_size(res) & (PAGE_SIZE - 1)) {
+@@ -511,10 +512,8 @@ found:
+ 	return 0;
+ 
+ failed:
+-	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
+-		res = dev->resource + PCI_IOV_RESOURCES + i;
++	for_each_pci_resource(dev, res, i, PCI_IOV_RES)
+ 		res->flags = 0;
+-	}
+ 
+ 	return rc;
+ }
 -- 
-1.7.9.5
+1.8.1.4
 
