@@ -1,110 +1,114 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f173.google.com ([209.85.223.173]:47102 "EHLO
-	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752262Ab3DZVBm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 26 Apr 2013 17:01:42 -0400
-MIME-Version: 1.0
-In-Reply-To: <CAErSpo7DUDQ_XgVKAfWxqYJA=q85ps46bffV-4a7b0vOzAP5DA@mail.gmail.com>
-References: <1366940841-15370-1-git-send-email-yinghai@kernel.org>
-	<CAErSpo5zfHR-agNBdgqfVjCU+-KcTZV+1bvML5Uw-+icDqzzEA@mail.gmail.com>
-	<CAE9FiQVEQO-dLJRjn9Z7JgwGWAn1M8S1Tn2_V0Fq+6kB0rG=Bg@mail.gmail.com>
-	<CAErSpo7DUDQ_XgVKAfWxqYJA=q85ps46bffV-4a7b0vOzAP5DA@mail.gmail.com>
-Date: Fri, 26 Apr 2013 14:01:41 -0700
-Message-ID: <CAE9FiQWv-bN2XzHiQ0WU+Y678zcqs_Owua6vXXijdMO6=0OWpg@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Fix racing for pci device removing via sysfs
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: multipart/mixed; boundary=047d7b10cd2984ae0904db49d742
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>
+Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Tony Luck <tony.luck@intel.com>,
+	Fenghua Yu <fenghua.yu@intel.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, linux-ia64@vger.kernel.org,
+	x86@kernel.org
+Subject: [PATCH v9 07/16] PCI, ACPI: prepare stub functions to handle ACPI PCI (hotplug) slots
+Date: Fri, 12 Apr 2013 23:44:21 +0800
+Message-Id: <1365781470-32379-8-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1365781470-32379-1-git-send-email-jiang.liu@huawei.com>
+References: <1365781470-32379-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---047d7b10cd2984ae0904db49d742
-Content-Type: text/plain; charset=ISO-8859-1
+Prepare two stub functions to handle ACPI PCI slots and ACPI PCI hotplug
+slots, which will be invoked by the PCI core when creating/destroying
+PCI buses.
 
-On Fri, Apr 26, 2013 at 1:53 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+It will be used to get rid of ACPI PCI subdrivers for pci_slot and
+acpiphp, and eventually remove the ACPI PCI subdriver mechanism.
 
->
-> You can't be serious.  This is a disgusting mess.  Checking a list
-> pointer for LIST_POISON1?  As far as I'm concerned, this is a waste of
-> my time.
+And it will also be used to handle ACPI PCI (hotplug) slots in a unified
+way, both at boot time and for PCI hotplug operations.
 
-Well, then need to hold the bus ref, and check bus->devices list instead.
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Cc: Toshi Kani <toshi.kani@hp.com>
+Cc: Tony Luck <tony.luck@intel.com>
+Cc: Fenghua Yu <fenghua.yu@intel.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Cc: Ingo Molnar <mingo@redhat.com>
+Cc: "H. Peter Anvin" <hpa@zytor.com>
+Cc: Myron Stowe <myron.stowe@redhat.com>
+Cc: linux-pci@vger.kernel.org
+Cc: linux-ia64@vger.kernel.org
+Cc: x86@kernel.org
+Cc: linux-kernel@vger.kernel.org
+---
+ drivers/pci/pci-acpi.c   |   24 ++++++++++++++++++++++++
+ include/linux/pci-acpi.h |    8 +++++++-
+ 2 files changed, 31 insertions(+), 1 deletion(-)
 
---047d7b10cd2984ae0904db49d742
-Content-Type: application/octet-stream; name="fix_racing_removing_3.patch"
-Content-Disposition: attachment; filename="fix_racing_removing_3.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_hfzuig8l0
+diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+index dee5ddd..b8b8437 100644
+--- a/drivers/pci/pci-acpi.c
++++ b/drivers/pci/pci-acpi.c
+@@ -287,6 +287,30 @@ static struct pci_platform_pm_ops acpi_pci_platform_pm = {
+ 	.run_wake = acpi_pci_run_wake,
+ };
+ 
++void acpi_pci_add_bus(struct pci_bus *bus)
++{
++	acpi_handle handle = NULL;
++
++	if (bus->bridge)
++		handle = ACPI_HANDLE(bus->bridge);
++	if (acpi_pci_disabled || handle == NULL)
++		return;
++
++	/* TODO: add PCI slots and acpiphp hotplug slots */
++}
++
++void acpi_pci_remove_bus(struct pci_bus *bus)
++{
++	/*
++	 * bus->bridge->acpi_node.handle has already been reset to NULL
++	 * when acpi_pci_remove_bus() is called, so don't check ACPI handle.
++	 */
++	if (acpi_pci_disabled)
++		return;
++
++	/* TODO: remove PCI slots and acpiphp hotplug slots */
++}
++
+ /* ACPI bus type */
+ static int acpi_pci_find_device(struct device *dev, acpi_handle *handle)
+ {
+diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
+index 9a22b5e..2b1743c 100644
+--- a/include/linux/pci-acpi.h
++++ b/include/linux/pci-acpi.h
+@@ -41,7 +41,13 @@ static inline acpi_handle acpi_pci_get_bridge_handle(struct pci_bus *pbus)
+ 
+ 	return DEVICE_ACPI_HANDLE(dev);
+ }
+-#endif
++
++void acpi_pci_add_bus(struct pci_bus *bus);
++void acpi_pci_remove_bus(struct pci_bus *bus);
++#else	/* CONFIG_ACPI */
++static inline void acpi_pci_add_bus(struct pci_bus *bus) { }
++static inline void acpi_pci_remove_bus(struct pci_bus *bus) { }
++#endif	/* CONFIG_ACPI */
+ 
+ #ifdef CONFIG_ACPI_APEI
+ extern bool aer_acpi_firmware_first(void);
+-- 
+1.7.9.5
 
-U3ViamVjdDogW1BBVENIIC12M10gUENJOiBGaXggcmFjaW5nIGZvciBwY2kgZGV2aWNlIHJlbW92
-aW5nIHZpYSBzeXNmcwpGcm9tOiBZaW5naGFpIEx1IDx5aW5naGFpQGtlcm5lbC5vcmc+CgpHdSBm
-b3VuZCBuZXN0ZWQgcmVtb3ZpbmcgdGhyb3VnaAoJZWNobyAtbiAxID4gL3N5cy9idXMvcGNpL2Rl
-dmljZXMvMDAwMFw6MTBcOjAwLjAvcmVtb3ZlIDsgZWNobyAtbiAxID4KL3N5cy9idXMvcGNpL2Rl
-dmljZXMvMDAwMFw6MWFcOjAxLjAvcmVtb3ZlCgp3aWxsIGNhdXNlIGtlcm5lbCBjcmFzaCBhcyBi
-dXMgZ2V0IGZyZWVkLgoKWyAgNDE4Ljk0NjQ2Ml0gQ1BVIDQKWyAgNDE4Ljk2ODM3N10gUGlkOiA1
-MTIsIGNvbW06IGt3b3JrZXIvdToyIFRhaW50ZWQ6IEcgICAgICAgIFcgICAgMy44LjAgIzIKRlVK
-SVRTVS1TViBQUklNRVFVRVNUIDE4MDBFL1NCClsgIDQxOS4wODE3NjNdIFJJUDogMDAxMDpbPGZm
-ZmZmZmZmODEzNzk3MmU+XSAgWzxmZmZmZmZmZjgxMzc5NzJlPl0KcGNpX2J1c19yZWFkX2NvbmZp
-Z193b3JkKzB4NWUvMHg5MApbICA0MjAuNDk0MTM3XSBDYWxsIFRyYWNlOgpbICA0MjAuNTIzMzI2
-XSAgWzxmZmZmZmZmZjgxMzg1MWVmPl0gPyByZW1vdmVfY2FsbGJhY2srMHgxZi8weDQwClsgIDQy
-MC41OTE5ODRdICBbPGZmZmZmZmZmODEzODA0NGI+XSBwY2lfcG1lX2FjdGl2ZSsweDRiLzB4MWMw
-ClsgIDQyMC42NTg1NDVdICBbPGZmZmZmZmZmODEzN2Q4ZTc+XSBwY2lfc3RvcF9idXNfZGV2aWNl
-KzB4NTcvMHhiMApbICA0MjAuNzI5MjU5XSAgWzxmZmZmZmZmZjgxMzdkYWI2Pl0gcGNpX3N0b3Bf
-YW5kX3JlbW92ZV9idXNfZGV2aWNlKzB4MTYvMHgzMApbICA0MjAuODExMzkyXSAgWzxmZmZmZmZm
-ZjgxMzg1MWZiPl0gcmVtb3ZlX2NhbGxiYWNrKzB4MmIvMHg0MApbICA0MjAuODc3OTU1XSAgWzxm
-ZmZmZmZmZjgxMjU3YTU2Pl0gc3lzZnNfc2NoZWR1bGVfY2FsbGJhY2tfd29yaysweDI2LzB4NzAK
-Cmh0dHBzOi8vYnVnemlsbGEua2VybmVsLm9yZy9zaG93X2J1Zy5jZ2k/aWQ9NTQ0MTEKCldlIGhh
-dmUgb25lIHBhdGNoIHRoYXQgd2lsbCBsZXQgZGV2aWNlIGhvbGQgYnVzIHJlZiB0byBwcmV2ZW50
-IGl0IGZyb20KYmVpbmcgZnJlZWQsIGJ1dCB0aGF0IHdpbGwgc3RpbGwgZ2VuZXJhdGUgd2Fybmlu
-Zy4KCi0tLS0tLS0tLS0tLVsgY3V0IGhlcmUgXS0tLS0tLS0tLS0tLQpXQVJOSU5HOiBhdCBsaWIv
-bGlzdF9kZWJ1Zy5jOjUzIF9fbGlzdF9kZWxfZW50cnkrMHg2My8weGQwKCkKSGFyZHdhcmUgbmFt
-ZTogUFJJTUVRVUVTVCAxODAwRQpsaXN0X2RlbCBjb3JydXB0aW9uLCBmZmZmODgwN2QxYjZjMDAw
-LT5uZXh0IGlzIExJU1RfUE9JU09OMSAoZGVhZDAwMDAwMDEwMDEwMCkKQ2FsbCBUcmFjZToKIFs8
-ZmZmZmZmZmY4MTA1NmQ0Zj5dIHdhcm5fc2xvd3BhdGhfY29tbW9uKzB4N2YvMHhjMAogWzxmZmZm
-ZmZmZjgxMDU2ZTQ2Pl0gd2Fybl9zbG93cGF0aF9mbXQrMHg0Ni8weDUwCiBbPGZmZmZmZmZmODEy
-ODBiMTM+XSBfX2xpc3RfZGVsX2VudHJ5KzB4NjMvMHhkMAogWzxmZmZmZmZmZjgxMjgwYjkxPl0g
-bGlzdF9kZWwrMHgxMS8weDQwCiBbPGZmZmZmZmZmODEyOTgzMzE+XSBwY2lfZGVzdHJveV9kZXYr
-MHgzMS8weGMwCiBbPGZmZmZmZmZmODEyOTg1YmI+XSBwY2lfcmVtb3ZlX2J1c19kZXZpY2UrMHg1
-Yi8weDcwCiBbPGZmZmZmZmZmODEyOTg1ZWU+XSBwY2lfc3RvcF9hbmRfcmVtb3ZlX2J1c19kZXZp
-Y2UrMHgxZS8weDMwCiBbPGZmZmZmZmZmODEyOWZjODk+XSByZW1vdmVfY2FsbGJhY2srMHgyOS8w
-eDQwCiBbPGZmZmZmZmZmODExZjNiODQ+XSBzeXNmc19zY2hlZHVsZV9jYWxsYmFja193b3JrKzB4
-MjQvMHg3MAoKV2UgY2FuIGp1c3QgY2hlY2sgaWYgdGhlIGRldmljZSBnZXQgcmVtb3ZlZCBmcm9t
-IHBjaSB0cmVlCmFscmVhZHkgaW4gdGhlIHByb3RlY3Rpb24gdW5kZXIgcGNpX3JlbW92ZV9yZXNj
-YW5fbXV0ZXguCgotdjI6IGNoZWNrIGlmIHRoZSBkZXYtPmJ1c19saXN0IGlzIHBvaXNvbmVkIGlu
-c3RlYWQgdG8KICAgICBmaW5kIG91dCBpZiBpdCBpcyByZW1vdmVkIGFscmVhZHkuCiAgICAgQWxz
-byBhZGQgb25lIGV4dHJhIHJlZiB0byBkZXYgdG8gbWFrZSBzdXJlIGRldiBpcyBub3QKICAgICBn
-ZXQgZnJlZWQgdG9vIGVhcmx5LgoKLXYzOiBob2xkIGJ1cyByZWYgYW5kIGRldiByZWYgaW5zdGVh
-ZC4KClJlcG9ydGVkLWJ5OiBHdSBaaGVuZyA8Z3V6LmZuc3RAY24uZnVqaXRzdS5jb20+ClRlc3Rl
-ZC1ieTogR3UgWmhlbmcgPGd1ei5mbnN0QGNuLmZ1aml0c3UuY29tPgpTaWduZWQtb2ZmLWJ5OiBZ
-aW5naGFpIEx1IDx5aW5naGFpQGtlcm5lbC5vcmc+CgotLS0KIGRyaXZlcnMvcGNpL3BjaS1zeXNm
-cy5jIHwgICAyMyArKysrKysrKysrKysrKysrKysrKy0tLQogMSBmaWxlIGNoYW5nZWQsIDIwIGlu
-c2VydGlvbnMoKyksIDMgZGVsZXRpb25zKC0pCgpJbmRleDogbGludXgtMi42L2RyaXZlcnMvcGNp
-L3BjaS1zeXNmcy5jCj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT0KLS0tIGxpbnV4LTIuNi5vcmlnL2RyaXZlcnMvcGNpL3Bj
-aS1zeXNmcy5jCisrKyBsaW51eC0yLjYvZHJpdmVycy9wY2kvcGNpLXN5c2ZzLmMKQEAgLTMyOCwx
-MCArMzI4LDIxIEBAIGRldl9yZXNjYW5fc3RvcmUoc3RydWN0IGRldmljZSAqZGV2LCBzdHIKIAog
-c3RhdGljIHZvaWQgcmVtb3ZlX2NhbGxiYWNrKHN0cnVjdCBkZXZpY2UgKmRldikKIHsKLQlzdHJ1
-Y3QgcGNpX2RldiAqcGRldiA9IHRvX3BjaV9kZXYoZGV2KTsKKwlzdHJ1Y3QgcGNpX2RldiAqcGRl
-diA9IHRvX3BjaV9kZXYoZGV2KSwgKnRtcDsKKwlzdHJ1Y3QgcGNpX2J1cyAqYnVzID0gcGRldi0+
-YnVzOworCWJvb2wgZm91bmQgPSBmYWxzZTsKIAogCW11dGV4X2xvY2soJnBjaV9yZW1vdmVfcmVz
-Y2FuX211dGV4KTsKLQlwY2lfc3RvcF9hbmRfcmVtb3ZlX2J1c19kZXZpY2UocGRldik7CisJbGlz
-dF9mb3JfZWFjaF9lbnRyeSh0bXAsICZidXMtPmRldmljZXMsIGJ1c19saXN0KQorCQlpZiAodG1w
-ID09IHBkZXYpIHsKKwkJCWZvdW5kID0gdHJ1ZTsKKwkJCWJyZWFrOworCQl9CisKKwlwdXRfZGV2
-aWNlKCZwZGV2LT5idXMtPmRldik7CisJcGNpX2Rldl9wdXQocGRldik7CisJaWYgKGZvdW5kKQor
-CQlwY2lfc3RvcF9hbmRfcmVtb3ZlX2J1c19kZXZpY2UocGRldik7CiAJbXV0ZXhfdW5sb2NrKCZw
-Y2lfcmVtb3ZlX3Jlc2Nhbl9tdXRleCk7CiB9CiAKQEAgLTM0MSw2ICszNTIsNyBAQCByZW1vdmVf
-c3RvcmUoc3RydWN0IGRldmljZSAqZGV2LCBzdHJ1Y3QKIHsKIAlpbnQgZXJyOwogCXVuc2lnbmVk
-IGxvbmcgdmFsOworCXN0cnVjdCBwY2lfZGV2ICpwZGV2OwogCiAJaWYgKHN0cmljdF9zdHJ0b3Vs
-KGJ1ZiwgMCwgJnZhbCkgPCAwKQogCQlyZXR1cm4gLUVJTlZBTDsKQEAgLTM1MSw5ICszNjMsMTQg
-QEAgcmVtb3ZlX3N0b3JlKHN0cnVjdCBkZXZpY2UgKmRldiwgc3RydWN0CiAJLyogQW4gYXR0cmli
-dXRlIGNhbm5vdCBiZSB1bnJlZ2lzdGVyZWQgYnkgb25lIG9mIGl0cyBvd24gbWV0aG9kcywKIAkg
-KiBzbyB3ZSBoYXZlIHRvIHVzZSB0aGlzIHJvdW5kYWJvdXQgYXBwcm9hY2guCiAJICovCisJcGRl
-diA9IHBjaV9kZXZfZ2V0KHRvX3BjaV9kZXYoZGV2KSk7CisJZ2V0X2RldmljZSgmcGRldi0+YnVz
-LT5kZXYpOwogCWVyciA9IGRldmljZV9zY2hlZHVsZV9jYWxsYmFjayhkZXYsIHJlbW92ZV9jYWxs
-YmFjayk7Ci0JaWYgKGVycikKKwlpZiAoZXJyKSB7CisJCXB1dF9kZXZpY2UoJnBkZXYtPmJ1cy0+
-ZGV2KTsKKwkJcGNpX2Rldl9wdXQocGRldik7CiAJCXJldHVybiBlcnI7CisJfQogCiAJcmV0dXJu
-IGNvdW50OwogfQo=
---047d7b10cd2984ae0904db49d742--
