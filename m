@@ -1,76 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:41707 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758085Ab3DXVkj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 24 Apr 2013 17:40:39 -0400
-Message-ID: <1366839636.2871.7.camel@jtkirshe-mobl>
-Subject: Re: [net-next 08/14] pci: Add SRIOV helper function to determine if
- VFs are assigned to guest
-From: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-Reply-To: jeffrey.t.kirsher@intel.com
-To: David Miller <davem@davemloft.net>
-Cc: bhelgaas@google.com, gregory.v.rose@intel.com,
-	alexander.h.duyck@intel.com, netdev@vger.kernel.org,
-	gospo@redhat.com, sassmann@redhat.com, linux-pci@vger.kernel.org
-Date: Wed, 24 Apr 2013 14:40:36 -0700
-In-Reply-To: <20130424.161825.1007847105309092978.davem@davemloft.net>
-References: <5175B0A9.7070100@intel.com> <20130423125101.00005bb7@unknown>
-	 <CAErSpo58vRW+QoHMTzo4vNi4n8Z2RhG43rBesTUJS-4HRwfd1w@mail.gmail.com>
-	 <20130424.161825.1007847105309092978.davem@davemloft.net>
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-gRC6EHne2fs6BlVQCyfv"
-Mime-Version: 1.0
+Received: from avon.wwwdotorg.org ([70.85.31.133]:58601 "EHLO
+	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751367Ab3DLPeS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 12 Apr 2013 11:34:18 -0400
+Message-ID: <51682975.1080302@wwwdotorg.org>
+Date: Fri, 12 Apr 2013 09:34:13 -0600
+From: Stephen Warren <swarren@wwwdotorg.org>
+MIME-Version: 1.0
+To: Jay Agarwal <jagarwal@nvidia.com>
+CC: Prashant Gaikwad <pgaikwad@nvidia.com>,
+	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
+	Krishna Thota <kthota@nvidia.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Peter De Schrijver <pdeschrijver@nvidia.com>,
+	"thierry.reding@avionic-design.de" <thierry.reding@avionic-design.de>,
+	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"olof@lixom.net" <olof@lixom.net>,
+	Laxman Dewangan <ldewangan@nvidia.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"mturquette@linaro.org" <mturquette@linaro.org>,
+	Juha Tukkinen <jtukkinen@nvidia.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Hiroshi Doyu <hdoyu@nvidia.com>
+Subject: Re: [PATCH 1/3] ARM: tegra: pcie: Add tegra3 support
+References: <1365435688-4179-1-git-send-email-jagarwal@nvidia.com> <51630852.1000107@wwwdotorg.org> <C79B248886DD134989C8FF6B096A91AB91B36FB2FD@BGMAIL01.nvidia.com>
+In-Reply-To: <C79B248886DD134989C8FF6B096A91AB91B36FB2FD@BGMAIL01.nvidia.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On 04/12/2013 08:58 AM, Jay Agarwal wrote:
+>>>  	err = regulator_disable(pcie->pex_clk_supply);
+>>>  	if (err < 0)
+>>> -		dev_err(pcie->dev, "failed to disable pex-clk regulator:
+>> %d\n",
+>>> +		dev_warn(pcie->dev, "failed to disable pex-clk regulator:
+>> %d\n",
+>>>  			err);
+>>>
+>>>  	err = regulator_disable(pcie->vdd_supply);
+>>>  	if (err < 0)
+>>> -		dev_err(pcie->dev, "failed to disable VDD regulator: %d\n",
+>>> +		dev_warn(pcie->dev, "failed to disable VDD regulator:
+>> %d\n",
+>>>  			err);
+>>
+>> Please explain why that change is correct. If the regulators only exist on
+>> Tegra20, please represent that fact in the SoC data. Regulators must always
+>> exist, so enable/disable should never fail due to missing regulators. Actual
+>> run-time failures seem like something that really is an error.
+>>
+> [>] These regulators are needed for both tegra20 & tegra30. Since we are not returning error here, so changed to dev_warn.
 
---=-gRC6EHne2fs6BlVQCyfv
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+If the regulators are required, then any failure to operate them should
+be an error, hence dev_err() seems correct.
 
-On Wed, 2013-04-24 at 16:18 -0400, David Miller wrote:
-> From: Bjorn Helgaas <bhelgaas@google.com>
-> Date: Wed, 24 Apr 2013 14:10:38 -0600
->=20
-> > But this is no worse in either respect than the code it replaces, and
-> > it's certainly better to have it all in one place, so:
-> >=20
-> > Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-> >=20
-> > If you have a chance, you could remove the "extern" from the
-> > declaration in include/linux/pci.h.  There's a mix there right now,
-> > and I have a patch in the queue that removes them all.
->=20
-> Jeff please respin your pull request with Bjorn's ACK as well as
-> the "extern" removal he's asking for.
->=20
-> Thanks.
-
-Working on it, I will have a updated patch (and series) submitted later
-tonight.
-
---=-gRC6EHne2fs6BlVQCyfv
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.13 (GNU/Linux)
-
-iQIcBAABCgAGBQJReFFUAAoJEOVv75VaS+3OFksP/1ozYm21/iukoXZg6B3RMsGk
-1DyQRUl9TWrJFGuCATE17E3784HRbeurm6Y3iRdKz3jeBRRCz6VAHUDlemKb2oPJ
-WUHBSQRocHFXs9VxSaTwcEV7qI+Rf6P4B1N9H+PCVKY3Vfn9HkzpiS4q3bz6oqi8
-rOmRlkrjqZ4MJwOKjePRcyy+UYb4stJgYkUbI/hGdFBWBeFevGUf+qK/W2w4SWJw
-BFCufMQujr8YUG/zYZTOK0FU81329WLFRfNupt630YpzQJzyEVQisyMLbhjfe6wD
-4WWrFlDHtRoILCBRkDcO7WgktUUdIYxBjl5aLJvHIWoyM3x6Ktics+TunL7hi7qd
-79ZeGnEG0Q7bbu8aWdZ7UOO0ACLhbCyIzGWF3B8owxV0MVVlA222YOpdSMSKG4cY
-3QwzV5JQ32GysOPLhhg3Z5MA+xIMaBZ0hwH3ycdIoodsA4JY6ilPaGnEzz3d9Xvk
-LY0+XSDTQPrWx211oQieh1dYCfMPcpSVcBtgTVj4EpXi1buZQhCLCwtzloklJR2n
-hK08PBjiOy4KcJTAuHJmgIundiTQ04FIEGgRxv4xvEYaO4olZxqDOkfKFa2enZdL
-OtyDs7z73cSmXfX9iNdrJm7kdRzNeK6LyDtHFPf273YG1ZZbleZ+eA5XNqWtDdlA
-8VWFnZHwvNDKOnG8+8+D
-=uUBG
------END PGP SIGNATURE-----
-
---=-gRC6EHne2fs6BlVQCyfv--
-
+As to why the code doesn't actually return an error? I'm not sure.
+Perhaps that should be fixed with a separate patch, although I don't
+recall exactly where in the code the above excerpt is; if it's in
+remove(), then continuing on without returning an error would be
+appropriate.
