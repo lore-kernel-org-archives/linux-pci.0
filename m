@@ -1,31 +1,113 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:48065 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754772Ab3DVIGc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 22 Apr 2013 04:06:32 -0400
-Message-ID: <1366617867.2723.23.camel@pasglop>
-Subject: Re: [PATCH] PowerNV/PCI: Fix NULL PCI controller
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Mike Qiu <qiudayu@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org, tglx@linutronix.de
-Date: Mon, 22 Apr 2013 18:04:27 +1000
-In-Reply-To: <5174E9C3.6080203@linux.vnet.ibm.com>
-References: <1366611236-1811-1-git-send-email-qiudayu@linux.vnet.ibm.com>
-	 <1366612577.2723.21.camel@pasglop> <5174E9C3.6080203@linux.vnet.ibm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-oa0-f51.google.com ([209.85.219.51]:42949 "EHLO
+	mail-oa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751998Ab3DLWR4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 12 Apr 2013 18:17:56 -0400
+Received: by mail-oa0-f51.google.com with SMTP id g12so3006274oah.10
+        for <linux-pci@vger.kernel.org>; Fri, 12 Apr 2013 15:17:55 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1365781470-32379-1-git-send-email-jiang.liu@huawei.com>
+References: <1365781470-32379-1-git-send-email-jiang.liu@huawei.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 12 Apr 2013 16:17:35 -0600
+Message-ID: <CAErSpo6uVRvuaOusRi=d8g52gwOR1RzEaAep0OxSwjgZ1qk6BQ@mail.gmail.com>
+Subject: Re: [PATCH v9 00/16] Get rid of the ACPI PCI subdriver mechanism
+To: Jiang Liu <liuj97@gmail.com>
+Cc: "Rafael J . Wysocki" <rjw@sisk.pl>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 2013-04-22 at 15:41 +0800, Mike Qiu wrote:
-> Anyway, I think it's better to remove the check code as it is useless,
-> as it
-> will shows that this "NULL" pci_controller pointer may happen...
+On Fri, Apr 12, 2013 at 9:44 AM, Jiang Liu <liuj97@gmail.com> wrote:
+> PCI, ACPI: remove ACPI PCI subdriver mechanism
+>
+> This patch set is directly derived from two sources:
+> 1) '[PATCH 00/15] PCI/ACPI: Remove "pci_root" sub-driver support' at
+> https://lkml.org/lkml/2012/12/7/11 from Myron Stowe
+> The major goal is to resolve any potential sequencing inter-dependencies
+> by converting sub-driver functionality to being only supported as
+> statically built-in to the kernel as part of the "pci_root" driver
+> itself.
+>
+> 2) 'introduce PCI bus notifier chain to get rid of the ACPI PCI subdriver'
+> at http://lwn.net/Articles/533547/
+> The major goal is to update PCI slots(pci_slot), ACPI based PCI hotplug
+> slots(acpiphp), PCIe AER(aer) etc when hot-plugging PCI devices and P2P
+> bridges, and eventually get rid of the ACPI PCI subdriver interfaces.
+>
+> This patchset applies to Bjorn's pci-next branch. Patch 1-4 are minor
+> fixups for 3.9-rc1. Patch 5-8 introduce two hooks into PCI core which
+> will be called when creating/destroying PCI buses. Patch 9-12 replace
+> ACPI PCI subdriver interfaces with the new hook mechanism for pci_slot
+> and acpiphp. Patch 13 removes the ACPI PCI subdriver interfaces.
+>
+> v7->v8:
+>         Hook directly into the PCI core to replace pci_bus notification
+>         Remove ACPI PCI subdriver related code
+>
+> v8->v9:
+>         Introduce kernel boot option "acpiphp.disable" to disable the
+>         acpiphp driver.
+>
+> Jiang Liu (13):
+>   PCI: do not check is_added flag in pci_remove_bus()
+>   pci: clean up usages of pci_bus->is_added
+>   PCI/acpiphp: don't rely on function 0 in disable_device()
+>   ACPI/acpiphp: replace local macros with standard ACPI macros
+>   PCI: introduce platform dependent hooks for creating/destroying PCI
+>     busses
+>   PCI, ACPI: prepare stub functions to handle ACPI PCI (hotplug) slots
+>   PCI, IA64: implement pcibios_{add|remove}_bus() hooks
+>   PCI, x86: implement pcibios_{add|remove}_bus() hooks
+>   PCI, ACPI: handle PCI slot devices when creating/destroying PCI
+>     busses
+>   PCI/acpiphp: convert acpiphp as a builtin driver
+>   PCI/acpiphp: do not use ACPI PCI subdriver mechanism
+>   PCI/acpiphp: protect acpiphp data structures from concurrent updating
+>   PCI/acpiphp: introduce a kernel option to disable the acpiphp driver
+>
+> Myron Stowe (1):
+>   PCI, ACPI: remove support of ACPI PCI subdrivers
+>
+> Yijing Wang (2):
+>   PCI/acpiphp: use list_for_each_entry_safe() in acpiphp_sanitize_bus()
+>   PCI/acpiphp: use normal list to simplify implementation
+>
+>  Documentation/kernel-parameters.txt |    3 +
+>  arch/ia64/pci/pci.c                 |   11 +
+>  arch/x86/pci/common.c               |   11 +
+>  drivers/acpi/pci_root.c             |   48 +---
+>  drivers/acpi/pci_slot.c             |  170 ++------------
+>  drivers/acpi/scan.c                 |    1 -
+>  drivers/pci/bus.c                   |   11 +-
+>  drivers/pci/hotplug/Kconfig         |    7 +-
+>  drivers/pci/hotplug/acpiphp.h       |   13 +-
+>  drivers/pci/hotplug/acpiphp_core.c  |   29 +--
+>  drivers/pci/hotplug/acpiphp_glue.c  |  415 ++++++++++++-----------------------
+>  drivers/pci/pci-acpi.c              |   30 +++
+>  drivers/pci/probe.c                 |   15 +-
+>  drivers/pci/remove.c                |    4 +-
+>  include/linux/acpi.h                |    9 -
+>  include/linux/pci-acpi.h            |   26 +++
+>  include/linux/pci.h                 |    2 +
+>  17 files changed, 280 insertions(+), 525 deletions(-)
 
-Ok. It *might* still be worth adding a BUG_ON then in pci_bus_to_host()
-itself ... no big deal either way.
+I applied these to my pci/jiang-subdrivers branch with minor tweaks.
+The most significant is that I folded in the acpiphp.disable option to
+the patch that makes the driver builtin-only.  That way there's no
+window between removing the "edit modules.conf" workaround and adding
+the kernel parameter.
 
-Cheers,
-Ben.
+Take a look and make sure it's what you want:
+http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/jiang-subdrivers
 
-
+Bjorn
