@@ -1,79 +1,58 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ia0-f173.google.com ([209.85.210.173]:34868 "EHLO
-	mail-ia0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753742Ab3DVXLQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Apr 2013 19:11:16 -0400
-Received: by mail-ia0-f173.google.com with SMTP id j5so8991iaf.32
-        for <linux-pci@vger.kernel.org>; Mon, 22 Apr 2013 16:11:15 -0700 (PDT)
-Subject: [PATCH v4 09/22] PCI: Drop msi_control_reg() macro and use
- PCI_MSI_FLAGS directly
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Gavin Shan <shangw@linux.vnet.ibm.com>
-Date: Mon, 22 Apr 2013 17:11:14 -0600
-Message-ID: <20130422231113.32621.60385.stgit@bhelgaas-glaptop>
-In-Reply-To: <20130422230012.32621.15224.stgit@bhelgaas-glaptop>
-References: <20130422230012.32621.15224.stgit@bhelgaas-glaptop>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>, Ram Pai <linuxram@us.ibm.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v4 05/29] PCI: Add is_pci_*_resource_idx() helpers
+Date: Fri, 12 Apr 2013 15:44:19 -0700
+Message-Id: <1365806683-26717-6-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1365806683-26717-1-git-send-email-yinghai@kernel.org>
+References: <1365806683-26717-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Note the error in pci_msix_table_size() -- we used PCI_MSI_FLAGS to
-locate the PCI_MSIX_FLAGS word.  No actual breakage because PCI_MSI_FLAGS
-and PCI_MSIX_FLAGS happen to be the same.
+According to resource pointer find out if the resource is some type resource
+like bridge, sriov, or std.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/msi.c |    8 ++++----
- drivers/pci/msi.h |    1 -
- 2 files changed, 4 insertions(+), 5 deletions(-)
+ include/linux/pci.h | 23 +++++++++++++++++++++++
+ 1 file changed, 23 insertions(+)
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 631249e..b1a60e0 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -299,10 +299,10 @@ void __write_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
- 		int pos = dev->msi_cap;
- 		u16 msgctl;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index f4da78d..14b7de4 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -107,6 +107,29 @@ enum {
+ 	DEVICE_COUNT_RESOURCE = PCI_NUM_RESOURCES,
+ };
  
--		pci_read_config_word(dev, msi_control_reg(pos), &msgctl);
-+		pci_read_config_word(dev, pos + PCI_MSI_FLAGS, &msgctl);
- 		msgctl &= ~PCI_MSI_FLAGS_QSIZE;
- 		msgctl |= entry->msi_attrib.multiple << 4;
--		pci_write_config_word(dev, msi_control_reg(pos), msgctl);
-+		pci_write_config_word(dev, pos + PCI_MSI_FLAGS, msgctl);
++static inline bool is_pci_std_resource_idx(int i)
++{
++	return i >= PCI_STD_RESOURCES && i <= PCI_STD_RESOURCE_END;
++}
++
++static inline bool is_pci_rom_resource_idx(int i)
++{
++	return i == PCI_ROM_RESOURCE;
++}
++
++static inline bool is_pci_iov_resource_idx(int i)
++{
++#ifdef CONFIG_PCI_IOV
++	return i >= PCI_IOV_RESOURCES && i <= PCI_IOV_RESOURCE_END;
++#endif
++	return false;
++}
++
++static inline bool is_pci_bridge_resource_idx(int i)
++{
++	return i >= PCI_BRIDGE_RESOURCES && i <= PCI_BRIDGE_RESOURCE_END;
++}
++
+ typedef int __bitwise pci_power_t;
  
- 		pci_write_config_dword(dev, msi_lower_address_reg(pos),
- 					msg->address_lo);
-@@ -548,7 +548,7 @@ static int msi_capability_init(struct pci_dev *dev, int nvec)
- 
- 	msi_set_enable(dev, 0);	/* Disable MSI during set up */
- 
--	pci_read_config_word(dev, msi_control_reg(dev->msi_cap), &control);
-+	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &control);
- 	/* MSI Entry Initialization */
- 	entry = alloc_msi_entry(dev);
- 	if (!entry)
-@@ -903,7 +903,7 @@ int pci_msix_table_size(struct pci_dev *dev)
- 	if (!dev->msix_cap)
- 		return 0;
- 
--	pci_read_config_word(dev, msi_control_reg(dev->msix_cap), &control);
-+	pci_read_config_word(dev, dev->msix_cap + PCI_MSIX_FLAGS, &control);
- 	return multi_msix_capable(control);
- }
- 
-diff --git a/drivers/pci/msi.h b/drivers/pci/msi.h
-index 65c42f8..6aa7b19 100644
---- a/drivers/pci/msi.h
-+++ b/drivers/pci/msi.h
-@@ -6,7 +6,6 @@
- #ifndef MSI_H
- #define MSI_H
- 
--#define msi_control_reg(base)		(base + PCI_MSI_FLAGS)
- #define msi_lower_address_reg(base)	(base + PCI_MSI_ADDRESS_LO)
- #define msi_upper_address_reg(base)	(base + PCI_MSI_ADDRESS_HI)
- #define msi_data_reg(base, is64bit)	\
+ #define PCI_D0		((pci_power_t __force) 0)
+-- 
+1.8.1.4
 
