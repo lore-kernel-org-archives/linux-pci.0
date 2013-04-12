@@ -1,50 +1,114 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:24834 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753269Ab3DOG75 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 15 Apr 2013 02:59:57 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, Tony Luck <tony.luck@intel.com>,
-	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>
+Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
 	Yijing Wang <wangyijing@huawei.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Shengzhou Liu <Shengzhou.Liu@freescale.com>
-Subject: [PATCH -v2 1/2] PCI: decrease pci_dev->enable_cnt when no pcie capability found
-Date: Mon, 15 Apr 2013 14:58:54 +0800
-Message-ID: <1366009135-19088-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+	Jiang Liu <liuj97@gmail.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>
+Subject: [PATCH v9 15/16] PCI/acpiphp: introduce a kernel option to disable the acpiphp driver
+Date: Fri, 12 Apr 2013 23:44:29 +0800
+Message-Id: <1365781470-32379-16-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1365781470-32379-1-git-send-email-jiang.liu@huawei.com>
+References: <1365781470-32379-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We should decrease dev->enable_cnt when no pcie port capability
-found for balance.
+Now the acpiphp driver has been converted as builtin, so introduce
+a kernel boot option "acpiphp.disable" to disable the acpiphp driver
+on boot.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>
-Cc: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
-Cc: Shengzhou Liu <Shengzhou.Liu@freescale.com>
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
 ---
- drivers/pci/pcie/portdrv_core.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ Documentation/kernel-parameters.txt |    3 +++
+ drivers/pci/hotplug/acpiphp.h       |    1 +
+ drivers/pci/hotplug/acpiphp_core.c  |    6 +++++-
+ drivers/pci/hotplug/acpiphp_glue.c  |    6 ++++++
+ 4 files changed, 15 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-index 31063ac..aef3fac 100644
---- a/drivers/pci/pcie/portdrv_core.c
-+++ b/drivers/pci/pcie/portdrv_core.c
-@@ -369,8 +369,8 @@ int pcie_port_device_register(struct pci_dev *dev)
+diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
+index 4609e81..38baa0d 100644
+--- a/Documentation/kernel-parameters.txt
++++ b/Documentation/kernel-parameters.txt
+@@ -290,6 +290,9 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
+ 			no: ACPI OperationRegions are not marked as reserved,
+ 			no further checks are performed.
  
- 	/* Get and check PCI Express port services */
- 	capabilities = get_port_device_capability(dev);
--	if (!capabilities)
--		return 0;
-+	if (!capabilities)
-+		goto error_disable;
++	acpiphp.disable
++			Disable the PCI acpiphp hotplug driver.
++
+ 	add_efi_memmap	[EFI; X86] Include EFI memory map in
+ 			kernel's map of available physical RAM.
  
- 	pci_set_master(dev);
- 	/*
+diff --git a/drivers/pci/hotplug/acpiphp.h b/drivers/pci/hotplug/acpiphp.h
+index 7577bb3..6a319f4 100644
+--- a/drivers/pci/hotplug/acpiphp.h
++++ b/drivers/pci/hotplug/acpiphp.h
+@@ -188,5 +188,6 @@ extern u8 acpiphp_get_adapter_status (struct acpiphp_slot *slot);
+ 
+ /* variables */
+ extern bool acpiphp_debug;
++extern bool acpiphp_disabled;
+ 
+ #endif /* _ACPIPHP_H */
+diff --git a/drivers/pci/hotplug/acpiphp_core.c b/drivers/pci/hotplug/acpiphp_core.c
+index 80d777c..cdbd983 100644
+--- a/drivers/pci/hotplug/acpiphp_core.c
++++ b/drivers/pci/hotplug/acpiphp_core.c
+@@ -49,6 +49,7 @@
+ #define SLOT_NAME_SIZE  21              /* {_SUN} */
+ 
+ bool acpiphp_debug;
++bool acpiphp_disabled;
+ 
+ /* local variables */
+ static struct acpiphp_attention_info *attention_info;
+@@ -61,7 +62,9 @@ MODULE_AUTHOR(DRIVER_AUTHOR);
+ MODULE_DESCRIPTION(DRIVER_DESC);
+ MODULE_LICENSE("GPL");
+ MODULE_PARM_DESC(debug, "Debugging mode enabled or not");
++MODULE_PARM_DESC(disable, "disable acpiphp driver");
+ module_param_named(debug, acpiphp_debug, bool, 0644);
++module_param_named(disable, acpiphp_disabled, bool, 0444);
+ 
+ /* export the attention callback registration methods */
+ EXPORT_SYMBOL_GPL(acpiphp_register_attention);
+@@ -354,5 +357,6 @@ void acpiphp_unregister_hotplug_slot(struct acpiphp_slot *acpiphp_slot)
+ 
+ void __init acpiphp_init(void)
+ {
+-	info(DRIVER_DESC " version: " DRIVER_VERSION "\n");
++	info(DRIVER_DESC " version: " DRIVER_VERSION "%s\n",
++	     acpiphp_disabled ? ", disabled by user" : "");
+ }
+diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+index 896d680..96fed19 100644
+--- a/drivers/pci/hotplug/acpiphp_glue.c
++++ b/drivers/pci/hotplug/acpiphp_glue.c
+@@ -1139,6 +1139,9 @@ void acpiphp_enumerate_slots(struct pci_bus *bus, acpi_handle handle)
+ 	acpi_handle dummy_handle;
+ 	struct acpiphp_bridge *bridge;
+ 
++	if (acpiphp_disabled)
++		return;
++
+ 	if (detect_ejectable_slots(handle) <= 0)
+ 		return;
+ 
+@@ -1177,6 +1180,9 @@ void acpiphp_remove_slots(struct pci_bus *bus)
+ {
+ 	struct acpiphp_bridge *bridge, *tmp;
+ 
++	if (acpiphp_disabled)
++		return;
++
+ 	list_for_each_entry_safe(bridge, tmp, &bridge_list, list)
+ 		if (bridge->pci_bus == bus) {
+ 			cleanup_bridge(bridge);
 -- 
-1.7.1
-
+1.7.9.5
 
