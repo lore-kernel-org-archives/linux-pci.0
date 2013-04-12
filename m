@@ -1,51 +1,144 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:41028 "EHLO hydra.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753530Ab3DVXYe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 22 Apr 2013 19:24:34 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Gavin Shan <shangw@linux.vnet.ibm.com>
-Subject: Re: [PATCH v4 02/22] PCI: Use u8, not int, for PM capability offset
-Date: Tue, 23 Apr 2013 01:32:37 +0200
-Message-ID: <3048768.cqCDjiVfL5@vostro.rjw.lan>
-In-Reply-To: <20130422231026.32621.14207.stgit@bhelgaas-glaptop>
-References: <20130422230012.32621.15224.stgit@bhelgaas-glaptop> <20130422231026.32621.14207.stgit@bhelgaas-glaptop>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1364805775-12396-2-git-send-email-wangyijing@huawei.com>
+References: <1364805775-12396-1-git-send-email-wangyijing@huawei.com> <1364805775-12396-2-git-send-email-wangyijing@huawei.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 12 Apr 2013 17:23:07 -0600
+Message-ID: <CAErSpo7g7dG=FB69-w1UniO_fpBVO39P82rqgdQstdfG=p-bkQ@mail.gmail.com>
+Subject: Re: [PATCH 2/2] PCI/IA64: fix pci_dev->enable_cnt balance when doing
+ pci hotplug
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Tony Luck <tony.luck@intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Hanjun Guo <guohanjun@huawei.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Fenghua Yu <fenghua.yu@intel.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, April 22, 2013 05:10:26 PM Bjorn Helgaas wrote:
-> The Power Management Capability (PCI_CAP_ID_PM == 0x01) is defined by PCI
-> and must appear in the 256-byte PCI Configuration Space from 0-0xff.  It
-> cannot be in the PCIe Extended Configuration space from 0x100-0xfff, so
-> we only need a u8 to hold its offset.
-> 
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> CC: "Rafael J. Wysocki" <rjw@sisk.pl>
-
-Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-
+On Mon, Apr 1, 2013 at 2:42 AM, Yijing Wang <wangyijing@huawei.com> wrote:
+> In IA64 platform, we don't call pci_enable_bridges()
+> when scan all pci buses during system boot up. But in
+> X86 we do it in
+>
+> pcibios_assign_resources()
+>    pci_assign_unassigned_resources()
+>        ...........
+>        pci_enable_bridges()
+>
+> Then when we doing hot remove
+>
+> acpiphp_disable_slot()
+>    pci_stop_and_remove_bus_device()
+>        pci_stop_bus_device()
+>           .............
+>           pcie_portdrv_remove()
+>                           pcie_port_device_remove()
+>                   pci_disable_device()   first decrease enable_cnt  here
+>                           pci_disable_device()     second decrease enable_cnt
+> So pci_dev->enable_cnt is unbalanced in IA64.
+>
+> Following Warning info found under IA64 when doing pci hotplug.
+>
+> ------------[ cut here ]------------
+> WARNING: at drivers/pci/pci.c:1397 pci_disable_device+0x1c0/0x220()
+> Hardware name: MH8900
+> Device pcieport
+> disabling already-disabled device
+> Modules linked in: acpiphp ipv6 ipmi_si(+) ipmi_devintf ipmi_msghandler fuse vfaa
+> t fat dm_mod iTCO_wdt iTCO_vendor_support lpc_ich i2c_i801 mfd_core i2c_core sg
+> sd_mod crc_t10dif ext3 mbcache jbd ata_piix
+>
+> Call Trace:
+>  [<a000000100015c00>] show_stack+0x80/0xa0
+>                                 sp=e000000fd629fc00 bsp=e000000fd62996e0
+>  [<a000000100a9ca20>] dump_stack+0x30/0x50
+>                                 sp=e000000fd629fdd0 bsp=e000000fd62996c8
+>  [<a000000100061960>] warn_slowpath_common+0xc0/0x100
+>                                 sp=e000000fd629fdd0 bsp=e000000fd6299688
+>  [<a000000100061b50>] warn_slowpath_fmt+0x90/0xc0
+>                                 sp=e000000fd629fdd0 bsp=e000000fd6299628
+>  [<a000000100495be0>] pci_disable_device+0x1c0/0x220
+>                                 sp=e000000fd629fe10 bsp=e000000fd62995e8
+>  [<a0000001004b3ba0>] pcie_portdrv_remove+0xc0/0xe0
+>                                 sp=e000000fd629fe10 bsp=e000000fd62995c8
+>  [<a000000100499670>] pci_device_remove+0x90/0x1e0
+>                                 sp=e000000fd629fe10 bsp=e000000fd6299598
+>  [<a000000100636490>] __device_release_driver+0x150/0x280
+>                                 sp=e000000fd629fe10 bsp=e000000fd6299560
+>  [<a000000100636830>] device_release_driver+0x30/0x60
+>                                 sp=e000000fd629fe10 bsp=e000000fd6299538
+>  [<a000000100634a40>] bus_remove_device+0x2c0/0x3c0
+>                                 sp=e000000fd629fe10 bsp=e000000fd62994f0
+>  [<a0000001006306d0>] device_del+0x290/0x440
+>                                 sp=e000000fd629fe10 bsp=e000000fd62994a8
+>  [<a00000010048d550>] pci_stop_bus_device+0x150/0x200
+>                                 sp=e000000fd629fe10 bsp=e000000fd6299478
+>  [<a00000010048d470>] pci_stop_bus_device+0x70/0x200
+>                                 sp=e000000fd629fe10 bsp=e000000fd6299448
+>  [<a00000010048d470>] pci_stop_bus_device+0x70/0x200
+>                                 sp=e000000fd629fe10 bsp=e000000fd6299418
+>  [<a00000010048d9a0>] pci_stop_and_remove_bus_device+0x20/0x60
+>                                 sp=e000000fd629fe10 bsp=e000000fd62993f0
+>  [<a0000002089aa100>] acpiphp_disable_slot+0x240/0x4e0 [acpiphp]
+>                                 sp=e000000fd629fe10 bsp=e000000fd62993a0
+>  [<a0000002089a8a30>] disable_slot+0x50/0x160 [acpiphp]
+>                                 sp=e000000fd629fe20 bsp=e000000fd6299378
+>  [<a0000001004ba080>] power_write_file+0x140/0x2a0
+>                                 sp=e000000fd629fe20 bsp=e000000fd6299348
+>  [<a0000001004a6320>] pci_slot_attr_store+0x60/0xa0
+>                                 sp=e000000fd629fe20 bsp=e000000fd6299310
+>  [<a00000010032a100>] sysfs_write_file+0x240/0x340
+>                                 sp=e000000fd629fe20 bsp=e000000fd62992b8
+>  [<a00000010023c910>] vfs_write+0x1b0/0x3a0
+>                                 sp=e000000fd629fe20 bsp=e000000fd6299270
+>  [<a00000010023cc90>] sys_write+0x90/0xe0
+>                                 sp=e000000fd629fe20 bsp=e000000fd62991f0
+>  [<a00000010000bce0>] ia64_ret_from_syscall+0x0/0x20
+>                                 sp=e000000fd629fe30 bsp=e000000fd62991f0
+>  [<a000000000040720>] __kernel_syscall_via_break+0x0/0x20
+>                                 sp=e000000fd62a0000 bsp=e000000fd62991f0
+> ---[ end trace 34d87c78dbff78ce ]---
+> GSI 37 (level, low) -> CPU 15 (0x01e0) vector 68 unregistered
+> pcie_pme 0000:00:07.0:pcie01: unloading service driver pcie_pme
+> aer 0000:00:07.0:pcie02: unloading service driver aer
+>
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> Cc: Fenghua Yu <fenghua.yu@intel.com>
+> Cc: Yinghai Lu <yinghai@kernel.org>
+> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> Cc: Thierry Reding <thierry.reding@avionic-design.de>
+> Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
 > ---
->  include/linux/pci.h |    3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
-> 
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 2461033a..9587d4d 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -249,8 +249,7 @@ struct pci_dev {
->  	pci_power_t     current_state;  /* Current operating state. In ACPI-speak,
->  					   this is D0-D3, D0 being fully functional,
->  					   and D3 being off. */
-> -	int		pm_cap;		/* PM capability offset in the
-> -					   configuration space */
-> +	u8		pm_cap;		/* PM capability offset */
->  	unsigned int	pme_support:5;	/* Bitmask of states from which PME#
->  					   can be generated */
->  	unsigned int	pme_interrupt:1;
-> 
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+>  arch/ia64/pci/pci.c |    1 +
+>  1 files changed, 1 insertions(+), 0 deletions(-)
+>
+> diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
+> index 60532ab..a557096 100644
+> --- a/arch/ia64/pci/pci.c
+> +++ b/arch/ia64/pci/pci.c
+> @@ -383,6 +383,7 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+>         }
+>
+>         pci_scan_child_bus(pbus);
+> +       pci_enable_bridges(pbus);
+>         return pbus;
+>
+>  out3:
+
+I think that with this patch, if you hot-add a PCI host bridge, you
+will call pci_enable_bridges() twice (once in pci_acpi_scan_root() and
+again in acpi_pci_root_add()), so there will be an enable_cnt error in
+the opposite direction.
+
+I'd like to see the pci_enable_bridges() calls pushed up into the
+generic code because I don't think there's anything arch-specific
+about it.
+
+Bjorn
