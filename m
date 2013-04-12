@@ -1,122 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:53021 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934864Ab3DIVHA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Apr 2013 17:07:00 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Russell King <linux@arm.linux.org.uk>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	devicetree-discuss@lists.ozlabs.org,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Maen Suleiman <maen@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Olof Johansson <olof@lixom.net>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Mitch Bradley <wmb@firmworks.com>,
-	Andrew Murray <andrew.murray@arm.com>
-Subject: [PATCHv8 07/19] arm: pci: add a align_resource hook
-Date: Tue,  9 Apr 2013 23:06:28 +0200
-Message-Id: <1365541601-14095-8-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1365541601-14095-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1365541601-14095-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from mail-ob0-f180.google.com ([209.85.214.180]:40868 "EHLO
+	mail-ob0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755470Ab3DLUyz convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 12 Apr 2013 16:54:55 -0400
+Received: by mail-ob0-f180.google.com with SMTP id un3so2672046obb.25
+        for <linux-pci@vger.kernel.org>; Fri, 12 Apr 2013 13:54:54 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1362993428-14823-5-git-send-email-andriy.shevchenko@linux.intel.com>
+References: <1362993428-14823-1-git-send-email-andriy.shevchenko@linux.intel.com>
+ <1362993428-14823-5-git-send-email-andriy.shevchenko@linux.intel.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 12 Apr 2013 14:54:34 -0600
+Message-ID: <CAErSpo7b6CvQgo44oRi+iREq1zduHMLTvw0r_7McroLc38r97A@mail.gmail.com>
+Subject: Re: [PATCHv2 5/5] ACPI / pcie: suppress compiler warning in portdrv_acpi.c
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The PCI specifications says that an I/O region must be aligned on a 4
-KB boundary, and a memory region aligned on a 1 MB boundary.
+On Mon, Mar 11, 2013 at 3:17 AM, Andy Shevchenko
+<andriy.shevchenko@linux.intel.com> wrote:
+> This patch fixes following compiler warning when build via make W=1:
+>
+> drivers/pci/pcie/portdrv_acpi.c:34:5: warning: no previous prototype for ‘pcie_port_acpi_setup’ [-Wmissing-prototypes]
+>
+> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: linux-pci@vger.kernel.org
 
-However, the Marvell PCIe interfaces rely on address decoding windows
-(which allow to associate a range of physical addresses with a given
-device). For PCIe memory windows, those windows are defined with a 1
-MB granularity (which matches the PCI specs), but PCIe I/O windows can
-only be defined with a 64 KB granularity, so they have to be 64 KB
-aligned. We therefore need to tell the PCI core about this special
-alignement requirement.
+I applied this and several similar patches to my pci/cleanup branch
+for v3.10.  Thanks!
 
-The PCI core already calls pcibios_align_resource() in the ARM PCI
-core, specifically for such purposes. So this patch extends the ARM
-PCI core so that it calls a ->align_resource() hook registered by the
-PCI driver, exactly like the existing ->map_irq() and ->swizzle()
-hooks.
+http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/cleanup
 
-A particular PCI driver can register a align_resource() hook, and do
-its own specific alignement, depending on the specific constraints of
-the underlying hardware.
+Bjorn
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Russell King <linux@arm.linux.org.uk>
----
- arch/arm/include/asm/mach/pci.h |   11 +++++++++++
- arch/arm/kernel/bios32.c        |    6 ++++++
- 2 files changed, 17 insertions(+)
-
-diff --git a/arch/arm/include/asm/mach/pci.h b/arch/arm/include/asm/mach/pci.h
-index 5cf2e97..7d2c3c8 100644
---- a/arch/arm/include/asm/mach/pci.h
-+++ b/arch/arm/include/asm/mach/pci.h
-@@ -30,6 +30,11 @@ struct hw_pci {
- 	void		(*postinit)(void);
- 	u8		(*swizzle)(struct pci_dev *dev, u8 *pin);
- 	int		(*map_irq)(const struct pci_dev *dev, u8 slot, u8 pin);
-+	resource_size_t (*align_resource)(struct pci_dev *dev,
-+					  const struct resource *res,
-+					  resource_size_t start,
-+					  resource_size_t size,
-+					  resource_size_t align);
- };
- 
- /*
-@@ -51,6 +56,12 @@ struct pci_sys_data {
- 	u8		(*swizzle)(struct pci_dev *, u8 *);
- 					/* IRQ mapping				*/
- 	int		(*map_irq)(const struct pci_dev *, u8, u8);
-+					/* Resource alignement requirements	*/
-+	resource_size_t (*align_resource)(struct pci_dev *dev,
-+					  const struct resource *res,
-+					  resource_size_t start,
-+					  resource_size_t size,
-+					  resource_size_t align);
- 	void		*private_data;	/* platform controller private data	*/
- };
- 
-diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
-index a1f73b5..b2ed73c 100644
---- a/arch/arm/kernel/bios32.c
-+++ b/arch/arm/kernel/bios32.c
-@@ -462,6 +462,7 @@ static void pcibios_init_hw(struct hw_pci *hw, struct list_head *head)
- 		sys->busnr   = busnr;
- 		sys->swizzle = hw->swizzle;
- 		sys->map_irq = hw->map_irq;
-+		sys->align_resource = hw->align_resource;
- 		INIT_LIST_HEAD(&sys->resources);
- 
- 		if (hw->private_data)
-@@ -574,6 +575,8 @@ char * __init pcibios_setup(char *str)
- resource_size_t pcibios_align_resource(void *data, const struct resource *res,
- 				resource_size_t size, resource_size_t align)
- {
-+	struct pci_dev *dev = data;
-+	struct pci_sys_data *sys = dev->sysdata;
- 	resource_size_t start = res->start;
- 
- 	if (res->flags & IORESOURCE_IO && start & 0x300)
-@@ -581,6 +584,9 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
- 
- 	start = (start + align - 1) & ~(align - 1);
- 
-+	if (sys->align_resource)
-+		return sys->align_resource(dev, res, start, size, align);
-+
- 	return start;
- }
- 
--- 
-1.7.9.5
-
+> ---
+>  drivers/pci/pcie/portdrv_acpi.c | 1 +
+>  1 file changed, 1 insertion(+)
+>
+> diff --git a/drivers/pci/pcie/portdrv_acpi.c b/drivers/pci/pcie/portdrv_acpi.c
+> index a86b56e..b4d2894 100644
+> --- a/drivers/pci/pcie/portdrv_acpi.c
+> +++ b/drivers/pci/pcie/portdrv_acpi.c
+> @@ -17,6 +17,7 @@
+>
+>  #include "aer/aerdrv.h"
+>  #include "../pci.h"
+> +#include "portdrv.h"
+>
+>  /**
+>   * pcie_port_acpi_setup - Request the BIOS to release control of PCIe services.
+> --
+> 1.8.2.rc0.22.gb3600c3
+>
