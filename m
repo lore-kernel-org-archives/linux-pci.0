@@ -1,59 +1,119 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f48.google.com ([209.85.160.48]:34425 "EHLO
-	mail-pb0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754747Ab3DQHBU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 17 Apr 2013 03:01:20 -0400
-Received: by mail-pb0-f48.google.com with SMTP id xb4so726119pbc.35
-        for <linux-pci@vger.kernel.org>; Wed, 17 Apr 2013 00:01:20 -0700 (PDT)
-Date: Wed, 17 Apr 2013 00:01:18 -0700 (PDT)
-From: David Rientjes <rientjes@google.com>
-To: Libin <huawei.libin@huawei.com>
-cc: Arnd Bergmann <arnd@arndb.de>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	David Airlie <airlied@linux.ie>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Hans J. Koch" <hjk@hansjkoch.de>,
-	Petr Vandrovec <petr@vandrovec.name>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Konstantin Khlebnikov <khlebnikov@openvz.org>,
-	Thomas Hellstrom <thellstrom@vmware.com>,
-	Dave Airlie <airlied@redhat.com>,
-	Nadia Yvette Chambers <nyc@holomorphy.com>,
-	Jiri Kosina <jkosina@suse.cz>,
-	Al Viro <viro@zeniv.linux.org.uk>,
-	Mel Gorman <mgorman@suse.de>, Hugh Dickins <hughd@google.com>,
-	Rik van Riel <riel@redhat.com>,
-	Michel Lespinasse <walken@google.com>,
-	linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org,
-	linux-pci@vger.kernel.org, linux-mm@kvack.org,
-	guohanjun@huawei.com, wangyijing@huawei.com
-Subject: Re: [PATCH 4/6] char: use vma_pages() to replace (vm_end - vm_start)
- >> PAGE_SHIFT
-In-Reply-To: <1366030138-71292-4-git-send-email-huawei.libin@huawei.com>
-Message-ID: <alpine.DEB.2.02.1304162359560.5220@chino.kir.corp.google.com>
-References: <1366030138-71292-1-git-send-email-huawei.libin@huawei.com> <1366030138-71292-4-git-send-email-huawei.libin@huawei.com>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>, Ram Pai <linuxram@us.ibm.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v4 14/29] PCI: Use for_each_pci_resource() with pci bar reassign funcs
+Date: Fri, 12 Apr 2013 15:44:28 -0700
+Message-Id: <1365806683-26717-15-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1365806683-26717-1-git-send-email-yinghai@kernel.org>
+References: <1365806683-26717-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 15 Apr 2013, Libin wrote:
+Replace those open code, and make code more readable.
 
-> diff --git a/drivers/char/mspec.c b/drivers/char/mspec.c
-> index e1f60f9..ed0703f 100644
-> --- a/drivers/char/mspec.c
-> +++ b/drivers/char/mspec.c
-> @@ -168,7 +168,7 @@ mspec_close(struct vm_area_struct *vma)
->  	if (!atomic_dec_and_test(&vdata->refcnt))
->  		return;
->  
-> -	last_index = (vdata->vm_end - vdata->vm_start) >> PAGE_SHIFT;
-> +	last_index = vma_pages(vdata);
->  	for (index = 0; index < last_index; index++) {
->  		if (vdata->maddr[index] == 0)
->  			continue;
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 28 ++++++++++++----------------
+ 1 file changed, 12 insertions(+), 16 deletions(-)
 
-vdata is of type struct vma_data * and vma_pages() takes a formal of type 
-struct vm_area_struct *, so these are incompatible.  Hopefully you tested 
-the other changes and simply lack an ia64 cross compiler for this one, 
-because it will emit a warning.
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 7e8739e..b23ef4c 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -106,7 +106,7 @@ static resource_size_t get_res_add_size(struct list_head *head,
+ 
+ 	list_for_each_entry(dev_res, head, list) {
+ 		if (dev_res->res == res) {
+-			int idx = res - &dev_res->dev->resource[0];
++			int idx = pci_dev_resource_idx(dev_res->dev, res);
+ 
+ 			dev_printk(KERN_DEBUG, &dev_res->dev->dev,
+ 				 "res[%d]=%pR get_res_add_size add_size %llx\n",
+@@ -124,15 +124,13 @@ static resource_size_t get_res_add_size(struct list_head *head,
+ static void pdev_sort_resources(struct pci_dev *dev, struct list_head *head)
+ {
+ 	int i;
++	struct resource *r;
+ 
+-	for (i = 0; i < PCI_NUM_RESOURCES; i++) {
+-		struct resource *r;
++	for_each_pci_resource(dev, r, i, PCI_ALL_RES) {
+ 		struct pci_dev_resource *dev_res, *tmp;
+ 		resource_size_t r_align;
+ 		struct list_head *n;
+ 
+-		r = &dev->resource[i];
+-
+ 		if (r->flags & IORESOURCE_PCI_FIXED)
+ 			continue;
+ 
+@@ -237,7 +235,7 @@ static void reassign_resources_sorted(struct list_head *realloc_head,
+ 		if (!found_match)/* just skip */
+ 			continue;
+ 
+-		idx = res - &add_res->dev->resource[0];
++		idx = pci_dev_resource_idx(add_res->dev, res);
+ 		add_size = add_res->add_size;
+ 		if (!resource_size(res)) {
+ 			res->start = add_res->start;
+@@ -280,7 +278,7 @@ static void assign_requested_resources_sorted(struct list_head *head,
+ 
+ 	list_for_each_entry(dev_res, head, list) {
+ 		res = dev_res->res;
+-		idx = res - &dev_res->dev->resource[0];
++		idx = pci_dev_resource_idx(dev_res->dev, res);
+ 		if (resource_size(res) &&
+ 		    pci_assign_resource(dev_res->dev, idx)) {
+ 			if (fail_head) {
+@@ -757,9 +755,9 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ 	io_align = min_align = window_alignment(bus, IORESOURCE_IO);
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		int i;
++		struct resource *r;
+ 
+-		for (i = 0; i < PCI_NUM_RESOURCES; i++) {
+-			struct resource *r = &dev->resource[i];
++		for_each_pci_resource(dev, r, i, PCI_ALL_RES) {
+ 			unsigned long r_size;
+ 
+ 			if (r->parent || !(r->flags & IORESOURCE_IO))
+@@ -870,9 +868,9 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		int i;
++		struct resource *r;
+ 
+-		for (i = 0; i < PCI_NUM_RESOURCES; i++) {
+-			struct resource *r = &dev->resource[i];
++		for_each_pci_resource(dev, r, i, PCI_ALL_RES) {
+ 			resource_size_t r_size;
+ 
+ 			if (r->parent || (r->flags & mask) != type)
+@@ -1196,9 +1194,7 @@ static void pci_bridge_release_resources(struct pci_bus *bus,
+ 				  IORESOURCE_PREFETCH;
+ 
+ 	dev = bus->self;
+-	for (idx = PCI_BRIDGE_RESOURCES; idx <= PCI_BRIDGE_RESOURCE_END;
+-	     idx++) {
+-		r = &dev->resource[idx];
++	for_each_pci_resource(dev, r, idx, PCI_BRIDGE_RES) {
+ 		if ((r->flags & type_mask) != type)
+ 			continue;
+ 		if (!r->parent)
+@@ -1369,9 +1365,9 @@ static void __init pci_realloc_detect(void)
+ 
+ 	for_each_pci_dev(dev) {
+ 		int i;
++		struct resource *r;
+ 
+-		for (i = PCI_IOV_RESOURCES; i <= PCI_IOV_RESOURCE_END; i++) {
+-			struct resource *r = &dev->resource[i];
++		for_each_pci_resource(dev, r, i, PCI_IOV_RES) {
+ 
+ 			/* Not assigned, or rejected by kernel ? */
+ 			if (r->flags && !r->start) {
+-- 
+1.8.1.4
+
