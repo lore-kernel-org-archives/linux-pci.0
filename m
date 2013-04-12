@@ -1,39 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:35775 "EHLO hydra.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S966109Ab3DQShb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 17 Apr 2013 14:37:31 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: Changes for v3.10 merge window
-Date: Wed, 17 Apr 2013 20:45:23 +0200
-Message-ID: <170788625.1RAzAFj9Rt@vostro.rjw.lan>
-In-Reply-To: <CAErSpo44LzWjne=0G+4tMiFmHd0x=b6Rfd7K_PWZo+yZmFihsg@mail.gmail.com>
-References: <20130416171732.GA6356@google.com> <1825980.1C7UKqDGj6@vostro.rjw.lan> <CAErSpo44LzWjne=0G+4tMiFmHd0x=b6Rfd7K_PWZo+yZmFihsg@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from aserp1040.oracle.com ([141.146.126.69]:46557 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754135Ab3DLWo6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 12 Apr 2013 18:44:58 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>, Ram Pai <linuxram@us.ibm.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v4 13/29] PCI: Use for_each_pci_resource() in pci_reassigndev
+Date: Fri, 12 Apr 2013 15:44:27 -0700
+Message-Id: <1365806683-26717-14-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1365806683-26717-1-git-send-email-yinghai@kernel.org>
+References: <1365806683-26717-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, April 17, 2013 10:47:51 AM Bjorn Helgaas wrote:
-> On Wed, Apr 17, 2013 at 10:25 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> > On Tuesday, April 16, 2013 11:17:32 AM Bjorn Helgaas wrote:
-> >> Below are the patches currently in my "next" branch, planned for
-> >> release in v3.10.  If I'm missing something important, let me know.
-> >
-> > Well, you said you took the "PCI / PM: Make pci_pme_active() ignore devices
-> > without PME support" patch for v3.10, but it is not listed below.
-> 
-> Yep, I just merged it 30 seconds ago :)  I was waiting to make sure
-> you didn't want the "Fix fallback to PCI_D0"  patch in v3.9.  Thanks
-> for the reminder.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/pci.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-No problem and thanks!
-
-Rafael
-
-
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index c29f062..d6203e9 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3782,7 +3782,7 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
+ 	command &= ~PCI_COMMAND_MEMORY;
+ 	pci_write_config_word(dev, PCI_COMMAND, command);
+ 
+-	for (i = 0; i < PCI_BRIDGE_RESOURCES; i++) {
++	for_each_pci_resource(dev, r, i, PCI_STD_ROM_IOV_RES) {
+ 		r = &dev->resource[i];
+ 		if (!(r->flags & IORESOURCE_MEM))
+ 			continue;
+@@ -3802,8 +3802,7 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
+ 	 */
+ 	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE &&
+ 	    (dev->class >> 8) == PCI_CLASS_BRIDGE_PCI) {
+-		for (i = PCI_BRIDGE_RESOURCES; i < PCI_NUM_RESOURCES; i++) {
+-			r = &dev->resource[i];
++		for_each_pci_resource(dev, r, i, PCI_BRIDGE_RES) {
+ 			if (!(r->flags & IORESOURCE_MEM))
+ 				continue;
+ 			r->end = resource_size(r) - 1;
 -- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+1.8.1.4
+
