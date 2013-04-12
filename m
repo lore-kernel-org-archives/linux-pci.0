@@ -1,264 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vb0-f54.google.com ([209.85.212.54]:54233 "EHLO
-	mail-vb0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759122Ab3DYTJJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Apr 2013 15:09:09 -0400
-Received: by mail-vb0-f54.google.com with SMTP id w16so2980593vbf.27
-        for <linux-pci@vger.kernel.org>; Thu, 25 Apr 2013 12:09:08 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1366883360-14061-2-git-send-email-Andrew.Murray@arm.com>
-References: <1366883360-14061-1-git-send-email-Andrew.Murray@arm.com> <1366883360-14061-2-git-send-email-Andrew.Murray@arm.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 25 Apr 2013 13:08:48 -0600
-Message-ID: <CAErSpo6+v_xAdEw+4Qg--QLXzG8B8UPK=eBLsoT8-dZi6xatGA@mail.gmail.com>
-Subject: Re: [RFC PATCH 1/3] powerpc: Move struct pci_controller to asm-generic
-To: Andrew Murray <Andrew.Murray@arm.com>
+Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:54094 "EHLO
+	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752954Ab3DLHm6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 12 Apr 2013 03:42:58 -0400
+Date: Fri, 12 Apr 2013 08:42:48 +0100
+From: Andrew Murray <andrew.murray@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
 Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	microblaze-uclinux@itee.uq.edu.au,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Michal Simek <monstr@monstr.eu>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Grant Likely <grant.likely@secretlab.ca>
-Content-Type: text/plain; charset=ISO-8859-1
+	"thierry.reding@avionic-design.de" <thierry.reding@avionic-design.de>,
+	"thomas.petazzoni@free-electrons.com"
+	<thomas.petazzoni@free-electrons.com>,
+	"jbarnes@virtuousgeek.org" <jbarnes@virtuousgeek.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: [PATCH] pci: Remove unnecessary dependency between PME and
+ ACPI.
+Message-ID: <20130412074248.GA30537@arm.com>
+References: <20130221155329.GA26729@arm.com>
+ <20130411234426.GA10196@google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20130411234426.GA10196@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 25, 2013 at 3:49 AM, Andrew Murray <Andrew.Murray@arm.com> wrote:
-> This patch moves struct pci_controller into asm-generic to allow
-> for use by other architectures thus reducing code duplication in
-> the kernel.
->
-> Signed-off-by: Andrew Murray <Andrew.Murray@arm.com>
-> ---
->  arch/powerpc/include/asm/pci-bridge.h |   87 +++++---------------------------
->  include/asm-generic/pci-bridge.h      |   68 +++++++++++++++++++++++++
->  2 files changed, 82 insertions(+), 73 deletions(-)
->
-> diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
-> index 205bfba..163bd40 100644
-> --- a/arch/powerpc/include/asm/pci-bridge.h
-> +++ b/arch/powerpc/include/asm/pci-bridge.h
-> @@ -8,7 +8,6 @@
->   * 2 of the License, or (at your option) any later version.
->   */
->  #include <linux/pci.h>
-> -#include <linux/list.h>
->  #include <linux/ioport.h>
->  #include <linux/of_pci.h>
->  #include <asm-generic/pci-bridge.h>
-> @@ -16,85 +15,27 @@
->  struct device_node;
->
->  /*
-> - * Structure of a PCI controller (host bridge)
-> + * Used for variants of PCI indirect handling and possible quirks:
-> + *  SET_CFG_TYPE - used on 4xx or any PHB that does explicit type0/1
-> + *  EXT_REG - provides access to PCI-e extended registers
-> + *  SURPRESS_PRIMARY_BUS - we suppress the setting of PCI_PRIMARY_BUS
-
-s/SURPRESS/SUPRESS/ throughout.
-
-I'm not sure how generic these flags will end up being.  If they wind
-up in a shared header file, it seems like we might want a PCI_ prefix
-to anchor them.
-
-> + *   on Freescale PCI-e controllers since they used the PCI_PRIMARY_BUS
-> + *   to determine which bus number to match on when generating type0
-> + *   config cycles
-> + *  NO_PCIE_LINK - the Freescale PCI-e controllers have issues with
-> + *   hanging if we don't have link and try to do config cycles to
-> + *   anything but the PHB.  Only allow talking to the PHB if this is
-> + *   set.
-> + *  BIG_ENDIAN - cfg_addr is a big endian register
-> + *  BROKEN_MRM - the 440EPx/GRx chips have an errata that causes hangs on
-> + *   the PLB4.  Effectively disable MRM commands by setting this.
->   */
-> -struct pci_controller {
-> -       struct pci_bus *bus;
-> -       char is_dynamic;
-> -#ifdef CONFIG_PPC64
-> -       int node;
-> -#endif
-> -       struct device_node *dn;
-> -       struct list_head list_node;
-> -       struct device *parent;
-> -
-> -       int first_busno;
-> -       int last_busno;
-> -       int self_busno;
-> -       struct resource busn;
-> -
-> -       void __iomem *io_base_virt;
-> -#ifdef CONFIG_PPC64
-> -       void *io_base_alloc;
-> -#endif
-> -       resource_size_t io_base_phys;
-> -       resource_size_t pci_io_size;
-> -
-> -       /* Some machines (PReP) have a non 1:1 mapping of
-> -        * the PCI memory space in the CPU bus space
-> -        */
-> -       resource_size_t pci_mem_offset;
-> -
-> -       /* Some machines have a special region to forward the ISA
-> -        * "memory" cycles such as VGA memory regions. Left to 0
-> -        * if unsupported
-> -        */
-> -       resource_size_t isa_mem_phys;
-> -       resource_size_t isa_mem_size;
-> -
-> -       struct pci_ops *ops;
-> -       unsigned int __iomem *cfg_addr;
-> -       void __iomem *cfg_data;
-> -
-> -       /*
-> -        * Used for variants of PCI indirect handling and possible quirks:
-> -        *  SET_CFG_TYPE - used on 4xx or any PHB that does explicit type0/1
-> -        *  EXT_REG - provides access to PCI-e extended registers
-> -        *  SURPRESS_PRIMARY_BUS - we suppress the setting of PCI_PRIMARY_BUS
-> -        *   on Freescale PCI-e controllers since they used the PCI_PRIMARY_BUS
-> -        *   to determine which bus number to match on when generating type0
-> -        *   config cycles
-> -        *  NO_PCIE_LINK - the Freescale PCI-e controllers have issues with
-> -        *   hanging if we don't have link and try to do config cycles to
-> -        *   anything but the PHB.  Only allow talking to the PHB if this is
-> -        *   set.
-> -        *  BIG_ENDIAN - cfg_addr is a big endian register
-> -        *  BROKEN_MRM - the 440EPx/GRx chips have an errata that causes hangs on
-> -        *   the PLB4.  Effectively disable MRM commands by setting this.
-> -        */
->  #define PPC_INDIRECT_TYPE_SET_CFG_TYPE         0x00000001
->  #define PPC_INDIRECT_TYPE_EXT_REG              0x00000002
->  #define PPC_INDIRECT_TYPE_SURPRESS_PRIMARY_BUS 0x00000004
->  #define PPC_INDIRECT_TYPE_NO_PCIE_LINK         0x00000008
->  #define PPC_INDIRECT_TYPE_BIG_ENDIAN           0x00000010
->  #define PPC_INDIRECT_TYPE_BROKEN_MRM           0x00000020
-> -       u32 indirect_type;
-> -       /* Currently, we limit ourselves to 1 IO range and 3 mem
-> -        * ranges since the common pci_bus structure can't handle more
-> -        */
-> -       struct resource io_resource;
-> -       struct resource mem_resources[3];
-> -       int global_number;              /* PCI domain number */
-> -
-> -       resource_size_t dma_window_base_cur;
-> -       resource_size_t dma_window_size;
-> -
-> -#ifdef CONFIG_PPC64
-> -       unsigned long buid;
-> -
-> -       void *private_data;
-> -#endif /* CONFIG_PPC64 */
-> -};
->
->  /* These are used for config access before all the PCI probing
->     has been done. */
-> diff --git a/include/asm-generic/pci-bridge.h b/include/asm-generic/pci-bridge.h
-> index 20db2e5..e58830e 100644
-> --- a/include/asm-generic/pci-bridge.h
-> +++ b/include/asm-generic/pci-bridge.h
-> @@ -9,6 +9,9 @@
->
->  #ifdef __KERNEL__
->
-> +#include <linux/pci.h>
-> +#include <linux/list.h>
-> +
->  enum {
->         /* Force re-assigning all resources (ignore firmware
->          * setup completely)
-> @@ -38,6 +41,71 @@ enum {
->         PCI_SCAN_ALL_PCIE_DEVS  = 0x00000040,
->  };
->
-> +struct device_node;
-> +
-> +/*
-> + * Structure of a PCI controller (host bridge)
-> + */
-> +#if defined(CONFIG_PPC32) || defined(CONFIG_PPC64)
-> +struct pci_controller {
-> +       struct pci_bus *bus;
-
-A lot of the information here (struct pci_bus *bus, first_/last_busno,
-busn, window information) is already in the struct pci_host_bridge,
-and I'm not sure it makes sense to duplicate it here.  I'd like to use
-that structure when it makes sense, and use the sysdata pointer, i.e.,
-the pointer to "struct pci_controller" here, for things that are truly
-arch-specific.
-
-> +       char is_dynamic;
-> +#ifdef CONFIG_PPC64
-> +       int node;
-> +#endif
-> +       struct device_node *dn;
-> +       struct list_head list_node;
-> +       struct device *parent;
-> +
-> +       int first_busno;
-> +       int last_busno;
-> +       int self_busno;
-> +#if defined(CONFIG_PPC64) || defined(CONFIG_PPC32)
-> +       struct resource busn;
-> +#endif
-> +
-> +       void __iomem *io_base_virt;
-> +#ifdef CONFIG_PPC64
-> +       void *io_base_alloc;
-> +#endif
-> +       resource_size_t io_base_phys;
-> +       resource_size_t pci_io_size;
-> +
-> +       /* Some machines (PReP) have a non 1:1 mapping of
-> +        * the PCI memory space in the CPU bus space
-> +        */
-> +       resource_size_t pci_mem_offset;
-> +
-> +       /* Some machines have a special region to forward the ISA
-> +        * "memory" cycles such as VGA memory regions. Left to 0
-> +        * if unsupported
-> +        */
-> +       resource_size_t isa_mem_phys;
-> +       resource_size_t isa_mem_size;
-> +
-> +       struct pci_ops *ops;
-> +       unsigned int __iomem *cfg_addr;
-> +       void __iomem *cfg_data;
-> +
-> +       u32 indirect_type;
-> +       /* Currently, we limit ourselves to 1 IO range and 3 mem
-> +        * ranges since the common pci_bus structure can't handle more
-> +        */
-> +       struct resource io_resource;
-> +       struct resource mem_resources[3];
-
-pci_host_bridge has a list for apertures, which contains this
-information (and the offset between CPU and PCI bus addresses).
-
-> +       int global_number;              /* PCI domain number */
-
-The domain is a good candidate for going in the pci_host_bridge
-structure.  I'm not sure how to plumb it in there, but it is something
-that's pretty generic and I'd like to get rid of all the arch-specific
-pci_domain_nr() implementations that are really the same.
-
-> +
-> +       resource_size_t dma_window_base_cur;
-> +       resource_size_t dma_window_size;
-> +
-> +#ifdef CONFIG_PPC64
-> +       unsigned long buid;
-> +
-> +       void *private_data;
-> +#endif /* CONFIG_PPC64 */
-> +};
-> +#endif
-> +
->  #ifdef CONFIG_PCI
->  extern unsigned int pci_flags;
->
+On Fri, Apr 12, 2013 at 12:44:26AM +0100, Bjorn Helgaas wrote:
+> On Thu, Feb 21, 2013 at 03:53:29PM +0000, Andrew Murray wrote:
+> > Signed-off-by: Andrew Murray <Andrew.Murray@arm.com>
+> > Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+> > ---
+> >  drivers/pci/pcie/Kconfig |    2 +-
+> >  1 files changed, 1 insertions(+), 1 deletions(-)
+> > 
+> > diff --git a/drivers/pci/pcie/Kconfig b/drivers/pci/pcie/Kconfig
+> > index 6c8bc58..4cccd8c 100644
+> > --- a/drivers/pci/pcie/Kconfig
+> > +++ b/drivers/pci/pcie/Kconfig
+> > @@ -82,4 +82,4 @@ endchoice
+> >  
+> >  config PCIE_PME
+> >  	def_bool y
+> > -	depends on PCIEPORTBUS && PM_RUNTIME && EXPERIMENTAL && ACPI
+> > +	depends on PCIEPORTBUS && PM_RUNTIME && EXPERIMENTAL
+> 
+> I think we can go even further and remove the ACPI-related #includes
+> as in the patch below.  Any objections to this?
+> 
+> 
+> commit 8bde83b5f5519b630e7630fb735f76c184c74289
+> Author: Bjorn Helgaas <bhelgaas@google.com>
+> Date:   Thu Apr 11 17:36:50 2013 -0600
+> 
+>     PCI: Remove unnecessary dependencies between PME and ACPI
+>     
+>     PCIe PME doesn't depend on ACPI, so remove the #includes and
+>     Kconfig dependency.
+>     
+>     Based-on-patch-by: Andrew Murray <Andrew.Murray@arm.com>
+>     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> 
+> diff --git a/drivers/pci/pcie/Kconfig b/drivers/pci/pcie/Kconfig
+> index fde4a32..569f82f 100644
+> --- a/drivers/pci/pcie/Kconfig
+> +++ b/drivers/pci/pcie/Kconfig
+> @@ -82,4 +82,4 @@ endchoice
+>  
+>  config PCIE_PME
+>  	def_bool y
+> -	depends on PCIEPORTBUS && PM_RUNTIME && ACPI
+> +	depends on PCIEPORTBUS && PM_RUNTIME
+> diff --git a/drivers/pci/pcie/pme.c b/drivers/pci/pcie/pme.c
+> index 9ca0dc9..795db1f 100644
+> --- a/drivers/pci/pcie/pme.c
+> +++ b/drivers/pci/pcie/pme.c
+> @@ -19,8 +19,6 @@
+>  #include <linux/interrupt.h>
+>  #include <linux/device.h>
+>  #include <linux/pcieport_if.h>
+> -#include <linux/acpi.h>
+> -#include <linux/pci-acpi.h>
+>  #include <linux/pm_runtime.h>
+>  
+>  #include "../pci.h"
 > --
-> 1.7.0.4
->
+
+Looks good to me.
+
+Andrew Murray
+
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
