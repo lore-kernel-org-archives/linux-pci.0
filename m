@@ -1,61 +1,98 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f45.google.com ([209.85.219.45]:53541 "EHLO
-	mail-oa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753531Ab3DQQme (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 17 Apr 2013 12:42:34 -0400
-Received: by mail-oa0-f45.google.com with SMTP id o17so1703483oag.32
-        for <linux-pci@vger.kernel.org>; Wed, 17 Apr 2013 09:42:33 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAErSpo6uAbiJ5GtvOmoABvwSnWj3DRRrXB6K1PzQSnReFqbqxA@mail.gmail.com>
-References: <1366196798-15929-1-git-send-email-artem.savkov@gmail.com> <CAErSpo6uAbiJ5GtvOmoABvwSnWj3DRRrXB6K1PzQSnReFqbqxA@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 17 Apr 2013 10:42:12 -0600
-Message-ID: <CAErSpo7nj3DQ-RB0UJdkzfN0L891xiTH8yzzcv7pW4AZ6waJ2A@mail.gmail.com>
-Subject: Re: [PATCH] PCI: pci_bus_add_device() should succeed even if creating
- sysfs files fails
-To: Artem Savkov <artem.savkov@gmail.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Li Zhong <zhong@linux.vnet.ibm.com>,
-	linux-next list <linux-next@vger.kernel.org>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>, Ram Pai <linuxram@us.ibm.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
 	Yinghai Lu <yinghai@kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Subject: [PATCH v4 23/29] PCI: Treat addon res as std resources
+Date: Fri, 12 Apr 2013 15:44:37 -0700
+Message-Id: <1365806683-26717-24-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1365806683-26717-1-git-send-email-yinghai@kernel.org>
+References: <1365806683-26717-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 17, 2013 at 9:54 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Wed, Apr 17, 2013 at 5:06 AM, Artem Savkov <artem.savkov@gmail.com> wrote:
->> Introduced in cc8f7f9e4e79a0940af6b4b6fdfbcf18a03aa9f4
->> ("PCI: Fix __must_check annotation on pci_create_sysfs_dev_files()")
->>
->> pci_bus_add_device() should not fail to add device if
->> pci_create_sysfs_dev_files() call fails, as sysfs files are not critical.
->>
->> pci_sysfs_init() is a "late_initcall" and is called after acpi_init, so
->> pci_bus_add_device() fails to create devices during boot resulting in a
->> bug during acpi_init. It is safe not to create sysfs_dev_files in
->> pci_bus_add_device() as they are later created in pci_sysfs_ini().
->> ...
+Replace PCI_STD_... with PCI_STD..._ADDON_... in the loop
+of for_each_pci_resource.
 
-> Sorry for the breakage.  Thanks for the report, analysis, and fix.
-> I'll fix this up
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ arch/x86/pci/i386.c                | 2 +-
+ drivers/pci/hotplug/acpiphp_glue.c | 2 +-
+ drivers/pci/pci-driver.c           | 3 ++-
+ drivers/pci/pci.c                  | 6 +++---
+ 4 files changed, 7 insertions(+), 6 deletions(-)
 
-It's not clear to me what the best fix is, so I just dropped my original patch.
+diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
+index 4dafa08..a3a7e89 100644
+--- a/arch/x86/pci/i386.c
++++ b/arch/x86/pci/i386.c
+@@ -240,7 +240,7 @@ static void pcibios_allocate_dev_resources(struct pci_dev *dev, int pass)
+ 	struct resource *r;
+ 
+ 	pci_read_config_word(dev, PCI_COMMAND, &command);
+-	for_each_pci_resource(dev, r, idx, PCI_STD_IOV_RES) {
++	for_each_pci_resource(dev, r, idx, PCI_STD_IOV_ADDON_RES) {
+ 		if (r->parent)	/* Already allocated */
+ 			continue;
+ 		if (!r->start)	/* Address not assigned at all */
+diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+index c35b2b1..702871c 100644
+--- a/drivers/pci/hotplug/acpiphp_glue.c
++++ b/drivers/pci/hotplug/acpiphp_glue.c
+@@ -1088,7 +1088,7 @@ static void acpiphp_sanitize_bus(struct pci_bus *bus)
+ 	struct resource *res;
+ 
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+-		for_each_pci_resource(dev, res, i, PCI_STD_ROM_IOV_RES) {
++		for_each_pci_resource(dev, res, i, PCI_STD_ROM_IOV_ADDON_RES) {
+ 			if ((res->flags & type_mask) && !res->start &&
+ 					res->end) {
+ 				/* Could not assign a required resources
+diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+index 009f6c2..73238a8 100644
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -1173,7 +1173,8 @@ pci_dev_driver(const struct pci_dev *dev)
+ 		struct resource *res;
+ 		int i;
+ 
+-		for_each_pci_resource((struct pci_dev *)dev, res, i, PCI_STD_ROM_RES)
++		for_each_pci_resource((struct pci_dev *)dev, res, i,
++					 PCI_STD_ROM_ADDON_RES)
+ 			if (res->flags & IORESOURCE_BUSY)
+ 				return &pci_compat_driver;
+ 	}
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index d6203e9..c1010be 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -442,7 +442,7 @@ pci_restore_bars(struct pci_dev *dev)
+ 	int i;
+ 	struct resource *res;
+ 
+-	for_each_pci_resource(dev, res, i, PCI_STD_ROM_IOV_RES)
++	for_each_pci_resource(dev, res, i, PCI_STD_ROM_IOV_ADDON_RES)
+ 		pci_update_resource(dev, i);
+ }
+ 
+@@ -1172,7 +1172,7 @@ static int pci_enable_device_flags(struct pci_dev *dev, unsigned long flags)
+ 		return 0;		/* already enabled */
+ 
+ 	/* only skip sriov related */
+-	for_each_pci_resource(dev, res, i, PCI_STD_ROM_BRIDGE_RES) {
++	for_each_pci_resource(dev, res, i, PCI_STD_ROM_BRIDGE_ADDON_RES) {
+ 		/* TODO: check i with bits of bars */
+ 		if (res->flags & flags)
+ 			bars |= (1 << i);
+@@ -3782,7 +3782,7 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
+ 	command &= ~PCI_COMMAND_MEMORY;
+ 	pci_write_config_word(dev, PCI_COMMAND, command);
+ 
+-	for_each_pci_resource(dev, r, i, PCI_STD_ROM_IOV_RES) {
++	for_each_pci_resource(dev, r, i, PCI_STD_ROM_IOV_ADDON_RES) {
+ 		r = &dev->resource[i];
+ 		if (!(r->flags & IORESOURCE_MEM))
+ 			continue;
+-- 
+1.8.1.4
 
-It's clearly wrong to have __must_check on the
-pci_create_sysfs_dev_files() definition, because it doesn't do
-anything there.
-
-We could simply drop the __must_check altogether, as you suggest, but
-I'd rather structure things to avoid the failure in the first place
-rather than ignoring an error.
-
-It would be ideal if we could get rid of the pci_sysfs_init()
-late_initcall and just make the pci_create_sysfs_dev_files() from
-pci_bus_add_device() work all the time, even at boot-time.  I didn't
-look hard enough to figure out why this needs to be a late_initcall.
-
-In any case, we can figure this out later, after we merge the current
-stuff for v3.10.
-
-Bjorn
