@@ -1,177 +1,125 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40367 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030594Ab3DSPfF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 19 Apr 2013 11:35:05 -0400
-Date: Fri, 19 Apr 2013 17:36:10 +0300
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Or Gerlitz <ogerlitz@mellanox.com>,
-	Ming Lei <ming.lei@canonical.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	David Miller <davem@davemloft.net>,
-	Roland Dreier <roland@kernel.org>,
-	netdev <netdev@vger.kernel.org>, Yan Burman <yanb@mellanox.com>,
-	Jack Morgenstein <jackm@dev.mellanox.co.il>,
-	Tejun Heo <tj@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCHv2 for-3.9] pci: avoid work_on_cpu for nested SRIOV probes
-Message-ID: <20130419143610.GB1926@redhat.com>
-References: <51360D7C.3060209@mellanox.com>
- <20130418200855.GA24086@redhat.com>
- <CAErSpo65Q0+UT3sS6LcyXohkCMfjweoS_j+okiYq4bdjFKjdHw@mail.gmail.com>
- <CAErSpo7jf-ytJPhuphzLFH80c9YMM6UzxWAVEnD-25nQgXmARQ@mail.gmail.com>
+Received: from mail-ia0-f176.google.com ([209.85.210.176]:35723 "EHLO
+	mail-ia0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753848Ab3DLUrz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 12 Apr 2013 16:47:55 -0400
+Received: by mail-ia0-f176.google.com with SMTP id i9so472491iad.35
+        for <linux-pci@vger.kernel.org>; Fri, 12 Apr 2013 13:47:55 -0700 (PDT)
+Subject: [PATCH 2/6] PCI: Remove unused variables
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Date: Fri, 12 Apr 2013 14:47:51 -0600
+Message-ID: <20130412204751.5237.1749.stgit@bhelgaas-glaptop>
+In-Reply-To: <20130412204510.5237.25443.stgit@bhelgaas-glaptop>
+References: <20130412204510.5237.25443.stgit@bhelgaas-glaptop>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo7jf-ytJPhuphzLFH80c9YMM6UzxWAVEnD-25nQgXmARQ@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 18, 2013 at 03:57:36PM -0600, Bjorn Helgaas wrote:
-> On Thu, Apr 18, 2013 at 3:40 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> > On Thu, Apr 18, 2013 at 2:08 PM, Michael S. Tsirkin <mst@redhat.com> wrote:
-> >> The following lockdep report triggers since 3.9-rc1:
-> >>
-> >> =============================================
-> >> [ INFO: possible recursive locking detected ]
-> >> 3.9.0-rc1 #96 Not tainted
-> >> ---------------------------------------------
-> >> kworker/0:1/734 is trying to acquire lock:
-> >>  ((&wfc.work)){+.+.+.}, at: [<ffffffff81066cb0>] flush_work+0x0/0x250
-> >>
-> >> but task is already holding lock:
-> >>  ((&wfc.work)){+.+.+.}, at: [<ffffffff81064352>]
-> >> process_one_work+0x162/0x4c0
-> >>
-> >> other info that might help us debug this:
-> >>  Possible unsafe locking scenario:
-> >>
-> >>        CPU0
-> >>        ----
-> >>   lock((&wfc.work));
-> >>   lock((&wfc.work));
-> >>
-> >>  *** DEADLOCK ***
-> >>
-> >>  May be due to missing lock nesting notation
-> >>
-> >> 3 locks held by kworker/0:1/734:
-> >>  #0:  (events){.+.+.+}, at: [<ffffffff81064352>]
-> >> process_one_work+0x162/0x4c0
-> >>  #1:  ((&wfc.work)){+.+.+.}, at: [<ffffffff81064352>]
-> >> process_one_work+0x162/0x4c0
-> >>  #2:  (&__lockdep_no_validate__){......}, at: [<ffffffff812db225>]
-> >> device_attach+0x25/0xb0
-> >>
-> >> stack backtrace:
-> >> Pid: 734, comm: kworker/0:1 Not tainted 3.9.0-rc1 #96
-> >> Call Trace:
-> >>  [<ffffffff810948ec>] validate_chain+0xdcc/0x11f0
-> >>  [<ffffffff81095150>] __lock_acquire+0x440/0xc70
-> >>  [<ffffffff81095150>] ? __lock_acquire+0x440/0xc70
-> >>  [<ffffffff810959da>] lock_acquire+0x5a/0x70
-> >>  [<ffffffff81066cb0>] ? wq_worker_waking_up+0x60/0x60
-> >>  [<ffffffff81066cf5>] flush_work+0x45/0x250
-> >>  [<ffffffff81066cb0>] ? wq_worker_waking_up+0x60/0x60
-> >>  [<ffffffff810922be>] ? mark_held_locks+0x9e/0x130
-> >>  [<ffffffff81066a96>] ? queue_work_on+0x46/0x90
-> >>  [<ffffffff810925dd>] ? trace_hardirqs_on_caller+0xfd/0x190
-> >>  [<ffffffff8109267d>] ? trace_hardirqs_on+0xd/0x10
-> >>  [<ffffffff81066f74>] work_on_cpu+0x74/0x90
-> >>  [<ffffffff81063820>] ? keventd_up+0x20/0x20
-> >>  [<ffffffff8121fd30>] ? pci_pm_prepare+0x60/0x60
-> >>  [<ffffffff811f9293>] ? cpumask_next_and+0x23/0x40
-> >>  [<ffffffff81220a1a>] pci_device_probe+0xba/0x110
-> >>  [<ffffffff812dadca>] ? driver_sysfs_add+0x7a/0xb0
-> >>  [<ffffffff812daf1f>] driver_probe_device+0x8f/0x230
-> >>  [<ffffffff812db170>] ? __driver_attach+0xb0/0xb0
-> >>  [<ffffffff812db1bb>] __device_attach+0x4b/0x60
-> >>  [<ffffffff812d9314>] bus_for_each_drv+0x64/0x90
-> >>  [<ffffffff812db298>] device_attach+0x98/0xb0
-> >>  [<ffffffff81218474>] pci_bus_add_device+0x24/0x50
-> >>  [<ffffffff81232e80>] virtfn_add+0x240/0x3e0
-> >>  [<ffffffff8146ce3d>] ? _raw_spin_unlock_irqrestore+0x3d/0x80
-> >>  [<ffffffff812333be>] pci_enable_sriov+0x23e/0x500
-> >>  [<ffffffffa011fa1a>] __mlx4_init_one+0x5da/0xce0 [mlx4_core]
-> >>  [<ffffffffa012016d>] mlx4_init_one+0x2d/0x60 [mlx4_core]
-> >>  [<ffffffff8121fd79>] local_pci_probe+0x49/0x80
-> >>  [<ffffffff81063833>] work_for_cpu_fn+0x13/0x20
-> >>  [<ffffffff810643b8>] process_one_work+0x1c8/0x4c0
-> >>  [<ffffffff81064352>] ? process_one_work+0x162/0x4c0
-> >>  [<ffffffff81064cfb>] worker_thread+0x30b/0x430
-> >>  [<ffffffff810649f0>] ? manage_workers+0x340/0x340
-> >>  [<ffffffff8106cea6>] kthread+0xd6/0xe0
-> >>  [<ffffffff8106cdd0>] ? __init_kthread_worker+0x70/0x70
-> >>  [<ffffffff8146daac>] ret_from_fork+0x7c/0xb0
-> >>  [<ffffffff8106cdd0>] ? __init_kthread_worker+0x70/0x70
-> >>
-> >> The issue is that a driver, in it's probe function, calls
-> >> pci_sriov_enable so a PF device probe causes VF probe (AKA nested
-> >> probe).  Each probe in pci_device_probe which is (normally) run through
-> >> work_on_cpu (this is to get the right numa node for memory allocated by
-> >> the driver).  In turn work_on_cpu does this internally:
-> >>
-> >>         schedule_work_on(cpu, &wfc.work);
-> >>         flush_work(&wfc.work);
-> >>
-> >> So if you are running probe on CPU1, and cause another
-> >> probe on the same CPU, this will try to flush
-> >> workqueue from inside same workqueue which causes
-> >> a lockep warning.
-> >>
-> >> Nested probing might be tricky to get right generally.
-> >>
-> >> But for pci_sriov_enable, the situation is actually very simple: all VFs
-> >> naturally have same affinity as the PF, and cpumask_any_and is actually
-> >> same as cpumask_first_and, so it always gives us the same CPU.
-> >> So let's just detect that, and run the probing for VFs locally without a
-> >> workqueue.
-> >>
-> >> This is hardly elegant, but looks to me like an appropriate quick fix
-> >> for 3.9.
-> >>
-> >> Tested-by: Or Gerlitz <ogerlitz@mellanox.com>
-> >> Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
-> >> Acked-by: Tejun Heo <tj@kernel.org>
-> >
-> > Thanks, Michael.  I put this in my for-linus branch:
-> >
-> > http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=for-linus
-> >
-> > I'll send a pull request to Linus today.
-> 
-> Actually, let me make sure I understand this correctly:  This patch
-> fixes the lockdep warning, but it does not fix an actual deadlock or
-> make any functional change.  Is that right?
+This fixes "set but not used" warnings found via "make W=1".
 
-Tejun said that this warning is a false positive, so yes.
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/hotplug/pci_hotplug_core.c |    2 --
+ drivers/pci/pcie/portdrv_pci.c         |   17 +++++------------
+ drivers/pci/setup-res.c                |    2 --
+ 3 files changed, 5 insertions(+), 16 deletions(-)
 
-> If that's true, how much pain would it cause to just hold this for
-> v3.9.1?  I'm nervous about doing a warning fix when we're only a day
-> or two before releasing v3.9.
-> 
-> Bjorn
+diff --git a/drivers/pci/hotplug/pci_hotplug_core.c b/drivers/pci/hotplug/pci_hotplug_core.c
+index 202f4a9..d9a528f 100644
+--- a/drivers/pci/hotplug/pci_hotplug_core.c
++++ b/drivers/pci/hotplug/pci_hotplug_core.c
+@@ -527,10 +527,8 @@ int pci_hp_deregister(struct hotplug_slot *hotplug)
+ int __must_check pci_hp_change_slot_info(struct hotplug_slot *hotplug,
+ 					 struct hotplug_slot_info *info)
+ {
+-	struct pci_slot *slot;
+ 	if (!hotplug || !info)
+ 		return -ENODEV;
+-	slot = hotplug->pci_slot;
+ 
+ 	memcpy(hotplug->info, info, sizeof(struct hotplug_slot_info));
+ 
+diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
+index 08c243a..0efba05 100644
+--- a/drivers/pci/pcie/portdrv_pci.c
++++ b/drivers/pci/pcie/portdrv_pci.c
+@@ -272,11 +272,9 @@ static pci_ers_result_t pcie_portdrv_error_detected(struct pci_dev *dev,
+ 					enum pci_channel_state error)
+ {
+ 	struct aer_broadcast_data data = {error, PCI_ERS_RESULT_CAN_RECOVER};
+-	int ret;
+-
+-	/* can not fail */
+-	ret = device_for_each_child(&dev->dev, &data, error_detected_iter);
+ 
++	/* get true return value from &data */
++	device_for_each_child(&dev->dev, &data, error_detected_iter);
+ 	return data.result;
+ }
+ 
+@@ -308,10 +306,9 @@ static int mmio_enabled_iter(struct device *device, void *data)
+ static pci_ers_result_t pcie_portdrv_mmio_enabled(struct pci_dev *dev)
+ {
+ 	pci_ers_result_t status = PCI_ERS_RESULT_RECOVERED;
+-	int retval;
+ 
+ 	/* get true return value from &status */
+-	retval = device_for_each_child(&dev->dev, &status, mmio_enabled_iter);
++	device_for_each_child(&dev->dev, &status, mmio_enabled_iter);
+ 	return status;
+ }
+ 
+@@ -343,7 +340,6 @@ static int slot_reset_iter(struct device *device, void *data)
+ static pci_ers_result_t pcie_portdrv_slot_reset(struct pci_dev *dev)
+ {
+ 	pci_ers_result_t status = PCI_ERS_RESULT_RECOVERED;
+-	int retval;
+ 
+ 	/* If fatal, restore cfg space for possible link reset at upstream */
+ 	if (dev->error_state == pci_channel_io_frozen) {
+@@ -354,8 +350,7 @@ static pci_ers_result_t pcie_portdrv_slot_reset(struct pci_dev *dev)
+ 	}
+ 
+ 	/* get true return value from &status */
+-	retval = device_for_each_child(&dev->dev, &status, slot_reset_iter);
+-
++	device_for_each_child(&dev->dev, &status, slot_reset_iter);
+ 	return status;
+ }
+ 
+@@ -381,9 +376,7 @@ static int resume_iter(struct device *device, void *data)
+ 
+ static void pcie_portdrv_err_resume(struct pci_dev *dev)
+ {
+-	int retval;
+-	/* nothing to do with error value, if it ever happens */
+-	retval = device_for_each_child(&dev->dev, NULL, resume_iter);
++	device_for_each_child(&dev->dev, NULL, resume_iter);
+ }
+ 
+ /*
+diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
+index 81b88bd..07f2edd 100644
+--- a/drivers/pci/setup-res.c
++++ b/drivers/pci/setup-res.c
+@@ -261,7 +261,6 @@ int pci_assign_resource(struct pci_dev *dev, int resno)
+ {
+ 	struct resource *res = dev->resource + resno;
+ 	resource_size_t align, size;
+-	struct pci_bus *bus;
+ 	int ret;
+ 
+ 	align = pci_resource_alignment(dev, res);
+@@ -271,7 +270,6 @@ int pci_assign_resource(struct pci_dev *dev, int resno)
+ 		return -EINVAL;
+ 	}
+ 
+-	bus = dev->bus;
+ 	size = resource_size(res);
+ 	ret = _pci_assign_resource(dev, resno, size, align);
+ 
 
-I don't have this hardware, so I don't know. It was apparently reported
-by real users ...
-
-> >> ---
-> >>
-> >> Changes from v1:
-> >>     - clarified commit log and added Ack by Tejun Heo
-> >>       patch is unchanged.
-> >>
-> >> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-> >> index 1fa1e48..6eeb5ec 100644
-> >> --- a/drivers/pci/pci-driver.c
-> >> +++ b/drivers/pci/pci-driver.c
-> >> @@ -286,8 +286,8 @@ static int pci_call_probe(struct pci_driver *drv, struct pci_dev *dev,
-> >>                 int cpu;
-> >>
-> >>                 get_online_cpus();
-> >>                 cpu = cpumask_any_and(cpumask_of_node(node), cpu_online_mask);
-> >> -               if (cpu < nr_cpu_ids)
-> >> +               if (cpu != raw_smp_processor_id() && cpu < nr_cpu_ids)
-> >>                         error = work_on_cpu(cpu, local_pci_probe, &ddi);
-> >>                 else
-> >>                         error = local_pci_probe(&ddi);
