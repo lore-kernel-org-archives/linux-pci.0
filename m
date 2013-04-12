@@ -1,60 +1,75 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.187]:57475 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965229Ab3DHVer (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Apr 2013 17:34:47 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: Re: [PATCHv7 08/17] pci: PCIe driver for Marvell Armada 370/XP systems
-Date: Mon, 8 Apr 2013 23:34:12 +0200
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Russell King <linux@arm.linux.org.uk>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm" <linux-arm-kernel@lists.infradead.org>,
-	"devicetree-discuss@lists.ozlabs.org"
-	<devicetree-discuss@lists.ozlabs.org>,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Maen Suleiman <maen@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Olof Johansson <olof@lixom.net>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Mitch Bradley <wmb@firmworks.com>,
-	Andrew Murray <andrew.murray@arm.com>
-References: <1364395234-11195-1-git-send-email-thomas.petazzoni@free-electrons.com> <CAErSpo7fGPe3wFha36kNMxeRP4gBpBWgfw85aTLey-DSz2ZYew@mail.gmail.com> <20130408225741.74fc383c@skate>
-In-Reply-To: <20130408225741.74fc383c@skate>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201304082334.13186.arnd@arndb.de>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>
+Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>
+Subject: [PATCH v9 11/16] PCI/acpiphp: convert acpiphp as a builtin driver
+Date: Fri, 12 Apr 2013 23:44:25 +0800
+Message-Id: <1365781470-32379-12-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1365781470-32379-1-git-send-email-jiang.liu@huawei.com>
+References: <1365781470-32379-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday 08 April 2013, Thomas Petazzoni wrote:
-> > > +                       pcie->io.name = "I/O";
-> > > +                       pcie->realio.start = PCIBIOS_MIN_IO;
-> > > +                       pcie->realio.end =
-> > > min(resource_size(&pcie->io),
-> > > +                                              IO_SPACE_LIMIT);
-> > 
-> > Using "resource_size(&pcie->io)" here seems strange -- are you
-> > assuming that pcie->io starts at address zero?
-> 
-> No, I'm assuming PCIBIOS_MIN_IO is always 0. So presumarly, this should
-> be something like:
-> 
->         pcie->realio.end = min(PCIBIOS_MIN_IO +
->                                 resource_size(&pcie->io),
->                                 IO_SPACE_LIMIT);
-> 
+Prepare for coming bugfixes by converting acpiphp as a builtin driver.
+This change has a drawback that user has no way to disable the acpiphp
+driver anymore once it becomes a builtin driver. We may introduce a
+kernel option to disable the acpiphp driver if needed.
 
-Normally PCIBIOS_MIN_IO is 0x1000, since the first 4096 ports are reserved
-for ISA and PCMCIA compatible drivers and should not be assigned to
-PCI devices. So the first port should get ports 0x1000 to 0xffff, later
-ones can used the entire 65536 ports e.g. 0x10000 to 0x1ffff.
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+---
+ drivers/pci/hotplug/Kconfig        |    7 ++-----
+ drivers/pci/hotplug/acpiphp_core.c |   10 ----------
+ 2 files changed, 2 insertions(+), 15 deletions(-)
 
-	Arnd
+diff --git a/drivers/pci/hotplug/Kconfig b/drivers/pci/hotplug/Kconfig
+index 13e9e63..9fcb87f 100644
+--- a/drivers/pci/hotplug/Kconfig
++++ b/drivers/pci/hotplug/Kconfig
+@@ -52,15 +52,12 @@ config HOTPLUG_PCI_IBM
+ 	  When in doubt, say N.
+ 
+ config HOTPLUG_PCI_ACPI
+-	tristate "ACPI PCI Hotplug driver"
+-	depends on (!ACPI_DOCK && ACPI) || (ACPI_DOCK)
++	bool "ACPI PCI Hotplug driver"
++	depends on HOTPLUG_PCI=y && ((!ACPI_DOCK && ACPI) || (ACPI_DOCK))
+ 	help
+ 	  Say Y here if you have a system that supports PCI Hotplug using
+ 	  ACPI.
+ 
+-	  To compile this driver as a module, choose M here: the
+-	  module will be called acpiphp.
+-
+ 	  When in doubt, say N.
+ 
+ config HOTPLUG_PCI_ACPI_IBM
+diff --git a/drivers/pci/hotplug/acpiphp_core.c b/drivers/pci/hotplug/acpiphp_core.c
+index c2fd309..45312e5 100644
+--- a/drivers/pci/hotplug/acpiphp_core.c
++++ b/drivers/pci/hotplug/acpiphp_core.c
+@@ -364,14 +364,4 @@ static int __init acpiphp_init(void)
+ }
+ 
+ 
+-static void __exit acpiphp_exit(void)
+-{
+-	if (acpi_pci_disabled)
+-		return;
+-
+-	/* deallocate internal data structures etc. */
+-	acpiphp_glue_exit();
+-}
+-
+ module_init(acpiphp_init);
+-module_exit(acpiphp_exit);
+-- 
+1.7.9.5
+
