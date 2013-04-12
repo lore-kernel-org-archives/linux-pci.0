@@ -1,67 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:53211 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S936446Ab3DIVHU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Apr 2013 17:07:20 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Received: from mail-pb0-f47.google.com ([209.85.160.47]:38187 "EHLO
+	mail-pb0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755931Ab3DLPql (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 12 Apr 2013 11:46:41 -0400
+From: Jiang Liu <liuj97@gmail.com>
 To: Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Russell King <linux@arm.linux.org.uk>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	devicetree-discuss@lists.ozlabs.org,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Maen Suleiman <maen@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Olof Johansson <olof@lixom.net>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Mitch Bradley <wmb@firmworks.com>,
-	Andrew Murray <andrew.murray@arm.com>
-Subject: [PATCHv8 19/19] arm: mvebu: update defconfig with PCI and USB support
-Date: Tue,  9 Apr 2013 23:06:40 +0200
-Message-Id: <1365541601-14095-20-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1365541601-14095-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1365541601-14095-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	"Rafael J . Wysocki" <rjw@sisk.pl>
+Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Subject: [PATCH v9 05/16] ACPI/acpiphp: replace local macros with standard ACPI macros
+Date: Fri, 12 Apr 2013 23:44:19 +0800
+Message-Id: <1365781470-32379-6-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1365781470-32379-1-git-send-email-jiang.liu@huawei.com>
+References: <1365781470-32379-1-git-send-email-jiang.liu@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now that we have the necessary drivers and Device Tree informations to
-support PCIe on Armada 370 and Armada XP, enable the CONFIG_PCI
-option.
+Replace local defined macros (ACPI_STA_xxx) with standard ACPI macros
+(ACPI_STA_DEVICE_xxx).
 
-Also, since the Armada 370 Mirabox has a built-in USB XHCI controller
-connected on the PCIe bus, enable the corresponding options as well.
-
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Cc: Toshi Kani <toshi.kani@hp.com>
+Cc: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 ---
- arch/arm/configs/mvebu_defconfig |    3 +++
- 1 file changed, 3 insertions(+)
+ drivers/pci/hotplug/acpiphp.h      |    4 ----
+ drivers/pci/hotplug/acpiphp_glue.c |    4 ++--
+ 2 files changed, 2 insertions(+), 6 deletions(-)
 
-diff --git a/arch/arm/configs/mvebu_defconfig b/arch/arm/configs/mvebu_defconfig
-index 2ec8119..071a5b1 100644
---- a/arch/arm/configs/mvebu_defconfig
-+++ b/arch/arm/configs/mvebu_defconfig
-@@ -13,6 +13,8 @@ CONFIG_MACH_ARMADA_370=y
- CONFIG_MACH_ARMADA_XP=y
- # CONFIG_CACHE_L2X0 is not set
- # CONFIG_SWP_EMULATE is not set
-+CONFIG_PCI=y
-+CONFIG_PCI_MVEBU=y
- CONFIG_SMP=y
- CONFIG_AEABI=y
- CONFIG_HIGHMEM=y
-@@ -53,6 +55,7 @@ CONFIG_USB_SUPPORT=y
- CONFIG_USB=y
- CONFIG_USB_EHCI_HCD=y
- CONFIG_USB_EHCI_ROOT_HUB_TT=y
-+CONFIG_USB_XHCI_HCD=y
- CONFIG_MMC=y
- CONFIG_MMC_MVSDIO=y
- CONFIG_NEW_LEDS=y
+diff --git a/drivers/pci/hotplug/acpiphp.h b/drivers/pci/hotplug/acpiphp.h
+index b70ac00..1b311f9 100644
+--- a/drivers/pci/hotplug/acpiphp.h
++++ b/drivers/pci/hotplug/acpiphp.h
+@@ -146,10 +146,6 @@ struct acpiphp_attention_info
+ #define ACPI_PCI_HOST_HID		"PNP0A03"
+ 
+ /* ACPI _STA method value (ignore bit 4; battery present) */
+-#define ACPI_STA_PRESENT		(0x00000001)
+-#define ACPI_STA_ENABLED		(0x00000002)
+-#define ACPI_STA_SHOW_IN_UI		(0x00000004)
+-#define ACPI_STA_FUNCTIONING		(0x00000008)
+ #define ACPI_STA_ALL			(0x0000000f)
+ 
+ /* bridge flags */
+diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+index a1c8dd6..718464f 100644
+--- a/drivers/pci/hotplug/acpiphp_glue.c
++++ b/drivers/pci/hotplug/acpiphp_glue.c
+@@ -487,7 +487,7 @@ static int add_bridge(struct acpi_pci_root *root)
+ 			dbg("%s: _STA evaluation failure\n", __func__);
+ 			return 0;
+ 		}
+-		if ((tmp & ACPI_STA_FUNCTIONING) == 0)
++		if ((tmp & ACPI_STA_DEVICE_FUNCTIONING) == 0)
+ 			/* don't register this object */
+ 			return 0;
+ 	}
+@@ -1389,7 +1389,7 @@ u8 acpiphp_get_latch_status(struct acpiphp_slot *slot)
+ 
+ 	sta = get_slot_status(slot);
+ 
+-	return (sta & ACPI_STA_SHOW_IN_UI) ? 0 : 1;
++	return (sta & ACPI_STA_DEVICE_UI) ? 0 : 1;
+ }
+ 
+ 
 -- 
 1.7.9.5
 
