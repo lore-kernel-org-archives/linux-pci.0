@@ -1,37 +1,59 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:46901 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753346Ab3DWBtc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 22 Apr 2013 21:49:32 -0400
-Message-ID: <1366681750.2886.10.camel@pasglop>
-Subject: Re: [PATCH] PowerNV/PCI: Fix NULL PCI controller
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Mike Qiu <qiudayu@linux.vnet.ibm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>
-Date: Tue, 23 Apr 2013 11:49:10 +1000
-In-Reply-To: <1366681602.1654.8.camel@localhost.localdomain>
-References: <1366611236-1811-1-git-send-email-qiudayu@linux.vnet.ibm.com>
-	 <1366612577.2723.21.camel@pasglop> <5174E9C3.6080203@linux.vnet.ibm.com>
-	 <1366617867.2723.23.camel@pasglop> <5175067F.3030307@linux.vnet.ibm.com>
-	 <CAErSpo4Y0zkWDsyJi47awtz67oWO4Qj+J4mDA3B0cfaYx_v_VQ@mail.gmail.com>
-	 <1366681602.1654.8.camel@localhost.localdomain>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>
+Cc: Yijing Wang <wangyijing@huawei.com>,
+	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Subject: [PATCH v9 03/16] PCI/acpiphp: use list_for_each_entry_safe() in acpiphp_sanitize_bus()
+Date: Fri, 12 Apr 2013 23:44:17 +0800
+Message-Id: <1365781470-32379-4-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1365781470-32379-1-git-send-email-jiang.liu@huawei.com>
+References: <1365781470-32379-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 2013-04-22 at 21:46 -0400, Mike Qiu wrote:
-> 
-> So I suggest either use my patch or remove that check code.
-> If the second case, I will write v2 patch to remove that check code.
-> I don't know what's to go for next step, it depends on the
-> maintainer :)
+From: Yijing Wang <wangyijing@huawei.com>
 
-Please do.
+Function acpiphp_sanitize_bus() may call pci_stop_and_remove_bus_device(),
+which in turn may remove device from bus->devices list. So walk the
+bus->devices list with list_for_each_entry_safe().
 
-Cheers,
-Ben.
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Cc: Toshi Kani <toshi.kani@hp.com>
+Cc: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+---
+ drivers/pci/hotplug/acpiphp_glue.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+index 270fdba..7948bc9 100644
+--- a/drivers/pci/hotplug/acpiphp_glue.c
++++ b/drivers/pci/hotplug/acpiphp_glue.c
+@@ -1082,11 +1082,11 @@ static void acpiphp_set_hpp_values(struct pci_bus *bus)
+  */
+ static void acpiphp_sanitize_bus(struct pci_bus *bus)
+ {
+-	struct pci_dev *dev;
++	struct pci_dev *dev, *tmp;
+ 	int i;
+ 	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM;
+ 
+-	list_for_each_entry(dev, &bus->devices, bus_list) {
++	list_for_each_entry_safe(dev, tmp, &bus->devices, bus_list) {
+ 		for (i=0; i<PCI_BRIDGE_RESOURCES; i++) {
+ 			struct resource *res = &dev->resource[i];
+ 			if ((res->flags & type_mask) && !res->start &&
+-- 
+1.7.9.5
 
