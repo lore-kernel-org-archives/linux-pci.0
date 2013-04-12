@@ -1,196 +1,110 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:47356 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1162546Ab3DET0T (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Apr 2013 15:26:19 -0400
-From: Neil Horman <nhorman@tuxdriver.com>
-To: linux-kernel@vger.kernel.org
-Cc: Neil Horman <nhorman@tuxdriver.com>,
-	Prarit Bhargava <prarit@redhat.com>,
-	Don Zickus <dzickus@redhat.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Asit Mallick <asit.k.mallick@intel.com>,
-	David Woodhouse <dwmw2@infradead.org>,
-	linux-pci@vger.kernel.org
-Subject: [PATCH v5] irq: add quirk for broken interrupt remapping on 55XX chipsets
-Date: Fri,  5 Apr 2013 15:25:54 -0400
-Message-Id: <1365189954-8896-1-git-send-email-nhorman@tuxdriver.com>
-In-Reply-To: <1362158276-4901-1-git-send-email-nhorman@tuxdriver.com>
-References: <1362158276-4901-1-git-send-email-nhorman@tuxdriver.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:47006 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753193Ab3DLWov (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 12 Apr 2013 18:44:51 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>, Ram Pai <linuxram@us.ibm.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v4 00/29] PCI: Add for_each_pci_resource and addon_res support
+Date: Fri, 12 Apr 2013 15:44:14 -0700
+Message-Id: <1365806683-26717-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-A few years back intel published a spec update:
-http://www.intel.com/content/dam/doc/specification-update/5520-and-5500-chipset-ioh-specification-update.pdf
+First part is for_each_pci_resource support:
+Now pci device resource iteration is done via "for (i=0...)" open code.
+That make code hard to read esp when only bridge or sriov resources
+are involved.
 
-For the 5520 and 5500 chipsets which contained an errata (specificially errata
-53), which noted that these chipsets can't properly do interrupt remapping, and
-as a result the recommend that interrupt remapping be disabled in bios.  While
-many vendors have a bios update to do exactly that, not all do, and of course
-not all users update their bios to a level that corrects the problem.  As a
-result, occasionally interrupts can arrive at a cpu even after affinity for that
-interrupt has be moved, leading to lost or spurrious interrupts (usually
-characterized by the message:
-kernel: do_IRQ: 7.71 No irq handler for vector (irq -1)
+We want to replace those open code with for_each_pci_resource() to make
+the code more readable.
+Also will add addon_resource handling, and need to make addon resource
+to be treated as normal PCI resources during iteration, add
+for_each_pci_resource will make that support transition more simple.
 
-There have been several incidents recently of people seeing this error, and
-investigation has shown that they have system for which their BIOS level is such
-that this feature was not properly turned off.  As such, it would be good to
-give them a reminder that their systems are vulnurable to this problem.
+To make for_each_pci_resource more efficient. We will use preset bitmap
+of different type for searching next idx.
 
-Signed-off-by: Neil Horman <nhorman@tuxdriver.com>
-CC: Prarit Bhargava <prarit@redhat.com>
-CC: Don Zickus <dzickus@redhat.com>
-CC: Don Dutile <ddutile@redhat.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>
-CC: Asit Mallick <asit.k.mallick@intel.com>
-CC: David Woodhouse <dwmw2@infradead.org>
-CC: linux-pci@vger.kernel.org
----
+Second part is addon_res support:
+Now there is some non normal pci resources other than standard,rom,
+sriov, bridges.
+Some could be same as standard reg, but using different position.
+Some could have own way to read/write to them.
+Kernel are using different way to hack those resources like abusing
+pci bridge resource spot on non bridge pci device.
 
-Change notes:
+Add addon_resources list in pci_dev for those non-standard resources.
+With this patch, will treat addon-resource like standard resources with
+special ops.
 
-v2)
+At last replace some quirk_io with addon_res.
 
-* Moved the quirk to the x86 arch, since consensus seems to be that the 55XX
-chipset series is x86 only.  I decided however to keep the quirk as a regular
-quirk, not an early_quirk.  Early quirks have no way currently to determine if
-BIOS has properly disabled the feature in the iommu, at least not without
-significant hacking, and since its quite possible this will be a short lived
-quirk, should Don Z's workaround code prove successful (and it looks like it may
-well), I don't think that necessecary.
+could get from
+        git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-for-each-res-addon
 
-* Removed the WARNING banner from the quirk, and added the HW_ERR token to the
-string, I opted to leave the newlines in place however, as I really couldnt
-find a way to keep the text on a single line is still legible from a code
-perspective.  I think theres enough language in there that using cscope on just
-about any substring however will turn it up, and again, this may be a short
-lived quirk.
+-v4: split one patch out, and remove PCI_NO_....
 
-v3)
+Notes: We still need to keep _idx as we use it all the time, and drivers still
+use them to get resource.
 
-* Removed defines from pci_ids.h, and used direct id values as per request from
-Bjorn.
+Thanks
 
-v4)
+Yinghai Lu
 
-* Converted pr_warn to WARN_TAINT(TAINT_FIRMWARE_WORKAROUND) as per David
-Woodhouse
 
-v5)
+Ram Pai (1):
+  PCI: pci resource iterator
 
-* Moved check to an early quirk, and flagged the broken chip, so we could
-reasonably disable irq remapping during bootup.
----
- arch/x86/kernel/early-quirks.c | 25 +++++++++++++++++++++++++
- arch/x86/kernel/quirks.c       |  2 ++
- drivers/iommu/irq_remapping.c  | 12 ++++++++++++
- drivers/iommu/irq_remapping.h  |  1 +
- 4 files changed, 40 insertions(+)
+Yinghai Lu (28):
+  PCI: Clean up quirk_io_region
+  PCI: Add pci_dev_resource_n()
+  PCI: Update pci_resource_start etc to use pci_dev_resource_n()
+  PCI: Add pci_dev_resource_idx() helper
+  PCI: Add is_pci_*_resource_idx() helpers
+  PCI, x86: Use for_each_pci_resource() with
+    pci_allocate_bridge_resources
+  PCI, x86: Use for_each_pci_resource() with pci_allocate_dev_resources
+  PCI: Use for_each_pci_resource() with IOV releated functions
+  PCI, acpiphp: Use for_each_pci_resource() helper
+  PCI, pciehp: Use for_each_pci_resource() helper
+  PCI: Use for_each_pci_resource() in pci_enable_dev
+  PCI: Use for_each_pci_resource() in pci_reassigndev
+  PCI: Use for_each_pci_resource() with pci bar reassign funcs
+  PCI: Use for_each_pci_resource() in pci_assign_resource
+  PCI, x86: Use for_each_pci_resource() with noassign_bars
+  PCI: Use for_each_pci_resource() in pci_dev_driver()
+  PCI: Use for_each_pci_resource() in pci resource release
+  PCI: Use for_each_pci_resource() in pci bases reading
+  PCI, x86: Use for_each_pci_resource() with mrst
+  PCI, xen: Use for_each_pci_resource() with xen pci
+  PCI: Add addon_resource support for pci devices
+  PCI: Treat addon res as std resources
+  PCI: Add helpers to add addon_resource
+  PCI: Update pci_resource_bar() to support addon_resource
+  PCI: Assign/update resource to addon_res
+  PCI: Make piix4 quirk to use addon_res
+  PCI: Make quirk_io_region to use addon_res
+  PCI: Use addon_fixed_resource with ati fixed resource
 
-diff --git a/arch/x86/kernel/early-quirks.c b/arch/x86/kernel/early-quirks.c
-index 3755ef4..bfa3139 100644
---- a/arch/x86/kernel/early-quirks.c
-+++ b/arch/x86/kernel/early-quirks.c
-@@ -192,6 +192,27 @@ static void __init ati_bugs_contd(int num, int slot, int func)
- }
- #endif
- 
-+#ifdef CONFIG_IRQ_REMAP
-+static void __init intel_remapping_check(int num, int slot, int func)
-+{
-+	u8 revision;
-+
-+	revision = pci_read_config_byte(num, slot, func , PCI_REVISION_ID);
-+
-+	/*
-+	 * Revision 0x13 of this chipset supports irq remapping
-+	 * but has an erratum that breaks its behavior, flag it as such
-+	 */
-+	if (revision == 0x13)
-+		irq_remap_broken = 1;
-+
-+}
-+#else
-+static void __init intel_remapping_check(int num, int slot, int func)
-+{
-+}
-+#endif
-+
- #define QFLAG_APPLY_ONCE 	0x1
- #define QFLAG_APPLIED		0x2
- #define QFLAG_DONE		(QFLAG_APPLY_ONCE|QFLAG_APPLIED)
-@@ -221,6 +242,10 @@ static struct chipset early_qrk[] __initdata = {
- 	  PCI_CLASS_SERIAL_SMBUS, PCI_ANY_ID, 0, ati_bugs },
- 	{ PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_SBX00_SMBUS,
- 	  PCI_CLASS_SERIAL_SMBUS, PCI_ANY_ID, 0, ati_bugs_contd },
-+	{ PCI_VENDOR_ID_INTEL, 0x3403, PCI_CLASS_BRIDGE_HOST,
-+	  PCI_BASE_CLASS_BRIDGE, 0, intel_remapping_check },
-+	{ PCI_VENDOR_ID_INTEL, 0x3406, PCI_CLASS_BRIDGE_HOST,
-+	  PCI_BASE_CLASS_BRIDGE, 0, intel_remapping_check },
- 	{}
- };
- 
-diff --git a/arch/x86/kernel/quirks.c b/arch/x86/kernel/quirks.c
-index 26ee48a..2136844 100644
---- a/arch/x86/kernel/quirks.c
-+++ b/arch/x86/kernel/quirks.c
-@@ -5,6 +5,7 @@
- #include <linux/irq.h>
- 
- #include <asm/hpet.h>
-+#include "../../../drivers/iommu/irq_remapping.h"
- 
- #if defined(CONFIG_X86_IO_APIC) && defined(CONFIG_SMP) && defined(CONFIG_PCI)
- 
-@@ -567,3 +568,4 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_NB_F5,
- 			quirk_amd_nb_node);
- 
- #endif
-+
-diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
-index d56f8c1..2b56e92 100644
---- a/drivers/iommu/irq_remapping.c
-+++ b/drivers/iommu/irq_remapping.c
-@@ -19,6 +19,7 @@
- int irq_remapping_enabled;
- 
- int disable_irq_remap;
-+int irq_remap_broken;
- int disable_sourceid_checking;
- int no_x2apic_optout;
- 
-@@ -216,6 +217,17 @@ int irq_remapping_supported(void)
- 	if (disable_irq_remap)
- 		return 0;
- 
-+	if (irq_remap_broken) {
-+		WARN_TAINT(1, TAIN_FIRMWARE_WORKAROUND,
-+			   "This system BIOS has enabled interrupt remapping\n"
-+			   "on a chipset that contains an erratum making that\n"
-+			   "feature unstable.  Please reboot with nointremap\n"
-+			   "added to the kernel command line and contact\n"
-+			   "your BIOS vendor for an update");
-+		disable_irq_remap = 1;
-+		return 0;
-+	}
-+
- 	if (!remap_ops || !remap_ops->supported)
- 		return 0;
- 
-diff --git a/drivers/iommu/irq_remapping.h b/drivers/iommu/irq_remapping.h
-index ecb6376..d7537e4 100644
---- a/drivers/iommu/irq_remapping.h
-+++ b/drivers/iommu/irq_remapping.h
-@@ -32,6 +32,7 @@ struct pci_dev;
- struct msi_msg;
- 
- extern int disable_irq_remap;
-+extern int irq_remap_broken;
- extern int disable_sourceid_checking;
- extern int no_x2apic_optout;
- extern int irq_remapping_enabled;
+ arch/x86/pci/common.c              |   3 +-
+ arch/x86/pci/i386.c                |  58 +++------
+ arch/x86/pci/mrst.c                |   7 +-
+ drivers/pci/hotplug/acpiphp_glue.c |   4 +-
+ drivers/pci/hotplug/pciehp_hpc.c   |   5 +-
+ drivers/pci/iov.c                  |  31 +++--
+ drivers/pci/pci-driver.c           |   7 +-
+ drivers/pci/pci.c                  |  27 ++--
+ drivers/pci/probe.c                | 176 ++++++++++++++++++++++++-
+ drivers/pci/quirks.c               | 258 ++++++++++++++++++++++---------------
+ drivers/pci/remove.c               |   5 +-
+ drivers/pci/setup-bus.c            |  28 ++--
+ drivers/pci/setup-res.c            |  38 ++++--
+ drivers/pci/xen-pcifront.c         |   4 +-
+ include/linux/pci.h                | 116 +++++++++++++++--
+ 15 files changed, 541 insertions(+), 226 deletions(-)
+
 -- 
 1.8.1.4
 
