@@ -1,37 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f180.google.com ([209.85.223.180]:59814 "EHLO
-	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751300Ab3DJCRR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Apr 2013 22:17:17 -0400
+Received: from avon.wwwdotorg.org ([70.85.31.133]:35180 "EHLO
+	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751183Ab3DLRB4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 12 Apr 2013 13:01:56 -0400
+Message-ID: <51683E00.4020506@wwwdotorg.org>
+Date: Fri, 12 Apr 2013 11:01:52 -0600
+From: Stephen Warren <swarren@wwwdotorg.org>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo7DhyVwNng=uBR=YMC3ZMFUtV-MDuukjMMGFxMmgHZR=w@mail.gmail.com>
-References: <1363217302-14383-1-git-send-email-yinghai@kernel.org>
-	<1363217302-14383-27-git-send-email-yinghai@kernel.org>
-	<CAErSpo7DhyVwNng=uBR=YMC3ZMFUtV-MDuukjMMGFxMmgHZR=w@mail.gmail.com>
-Date: Tue, 9 Apr 2013 19:17:16 -0700
-Message-ID: <CAE9FiQXZYrnx1n6Oh33k7DYWPujy9XSxE20JFGAYohcE_EvVhQ@mail.gmail.com>
-Subject: Re: [PATCH v3 26/27] PCI: Make quirk_io_region to use addon_res
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Ram Pai <linuxram@us.ibm.com>,
+To: Jay Agarwal <jagarwal@nvidia.com>
+CC: Prashant Gaikwad <pgaikwad@nvidia.com>,
+	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
+	Krishna Thota <kthota@nvidia.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+	Peter De Schrijver <pdeschrijver@nvidia.com>,
+	"thierry.reding@avionic-design.de" <thierry.reding@avionic-design.de>,
+	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"olof@lixom.net" <olof@lixom.net>,
+	Laxman Dewangan <ldewangan@nvidia.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"mturquette@linaro.org" <mturquette@linaro.org>,
+	Juha Tukkinen <jtukkinen@nvidia.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Hiroshi Doyu <hdoyu@nvidia.com>
+Subject: Re: [PATCH 1/3] ARM: tegra: pcie: Add tegra3 support
+References: <1365435688-4179-1-git-send-email-jagarwal@nvidia.com> <51630ABB.1020200@wwwdotorg.org> <C79B248886DD134989C8FF6B096A91AB91B36FB300@BGMAIL01.nvidia.com>
+In-Reply-To: <C79B248886DD134989C8FF6B096A91AB91B36FB300@BGMAIL01.nvidia.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 4, 2013 at 2:35 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> This patch has two changes that need to be separated:
+On 04/12/2013 10:43 AM, Jay Agarwal wrote:
+>> On 04/08/2013 09:41 AM, Jay Agarwal wrote:
+>>> Signed-off-by: Jay Agarwal <jagarwal@nvidia.com>
+>>>
+>>> - Enable pcie root port 2 for cardhu
+>>> - Make private data structure for each SOC
+>>> - Add required tegra3 clocks and regulators
+>>> - Add tegra3 specific code in enable controller
+>>> - Modify clock tree to get clocks based on device
+>>> - Based on git://gitorious.org/thierryreding/linux.git
+>> 	
+>> A couple more points on this patch:
+>>
+>> * You didn't mention that this series is based on Thierry's work-in-progress
+>> tree, and not something immediately destined for upstream. As such, only
+>> Thierry is expected to actually apply any of these patches.
+>>
+> [>] Stephen, I have mentioned it in comment description as Based on git://gitorious.org/thierryreding/linux.git, is this not enough?
+
+Well, first off, there are many branches there, and secondly the branch
+that a series is based on doesn't necessarily imply much about what you
+expect people to do with it.
+
+> 
+>> * Your changes to the Tegra PCIe driver require that device tree include
+>> extra clocks and regulators. You need to update
+>> Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt to describe
+>> these new requirements.
 >
->   1) Refactoring quirk_io_region() so the pci_read_config_word() is
-> done by quirk_io_region() rather than the caller.
->   2) Whatever pci_dev resource changes we end up making.
->
-> I think part 1 can be done at any time and is probably not controversial.
+> [>] Should I create tegra30-pcie.txt? or made changes in tegra20-pcie.txt itself?
 
-ok, will put that separated one to be first one in the next reversion
-of patchset.
+(What is "[>]"?)
 
-Thanks
-
-Yinghai
+It'd probably be simplest to edit tegra20-pcie.txt, and just mention the
+extra requirements for Tegra30.
