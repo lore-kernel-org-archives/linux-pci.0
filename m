@@ -1,48 +1,44 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vc0-f182.google.com ([209.85.220.182]:61812 "EHLO
-	mail-vc0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754787Ab3DZVZZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 26 Apr 2013 17:25:25 -0400
-Received: by mail-vc0-f182.google.com with SMTP id ht10so524006vcb.13
-        for <linux-pci@vger.kernel.org>; Fri, 26 Apr 2013 14:25:25 -0700 (PDT)
-MIME-Version: 1.0
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 26 Apr 2013 15:25:04 -0600
-Message-ID: <CAErSpo5_4HfGP_-4jzQCBHok6tFvAmCg+6G4_b9fYX=vuA00hg@mail.gmail.com>
-Subject: device_unregister() for PCI host bridge removal
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>, Ram Pai <linuxram@us.ibm.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Toshi Kani <toshi.kani@hp.com>,
 	Jiang Liu <jiang.liu@huawei.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Subject: [PATCH v4 10/29] PCI, acpiphp: Use for_each_pci_resource() helper
+Date: Fri, 12 Apr 2013 15:44:24 -0700
+Message-Id: <1365806683-26717-11-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1365806683-26717-1-git-send-email-yinghai@kernel.org>
+References: <1365806683-26717-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I'm trying to figure out where we call device_unregister() when
-removing a PCI host bridge.  I see the device_register() in the
-following path:
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Cc: Toshi Kani <toshi.kani@hp.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>
+---
+ drivers/pci/hotplug/acpiphp_glue.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-    acpi_pci_root_add
-      pci_acpi_scan_root
-        pci_create_root_bus
-          bridge = pci_alloc_host_bridge
-          bridge->dev.release = pci_release_bus_bridge_dev
-          device_register(&bridge->dev)
-        pci_set_host_bridge_release(..., release_pci_root_info, ...)
+diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+index 270fdba..c35b2b1 100644
+--- a/drivers/pci/hotplug/acpiphp_glue.c
++++ b/drivers/pci/hotplug/acpiphp_glue.c
+@@ -1085,10 +1085,10 @@ static void acpiphp_sanitize_bus(struct pci_bus *bus)
+ 	struct pci_dev *dev;
+ 	int i;
+ 	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM;
++	struct resource *res;
+ 
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+-		for (i=0; i<PCI_BRIDGE_RESOURCES; i++) {
+-			struct resource *res = &dev->resource[i];
++		for_each_pci_resource(dev, res, i, PCI_STD_ROM_IOV_RES) {
+ 			if ((res->flags & type_mask) && !res->start &&
+ 					res->end) {
+ 				/* Could not assign a required resources
+-- 
+1.8.1.4
 
-But I don't see any device_unregister() in the remove path:
-
-    acpi_pci_root_remove
-      pci_remove_root_bus
-        put_device(&host_bridge->dev)
-
-    pci_release_bus_bridge_dev
-      bridge->release_fn        # e.g., release_pci_root_info
-        release_pci_root_info
-          __release_pci_root_info
-            release_resource
-            free_pci_root_info_res
-            teardown_mcfg_map
-
-What am I missing?
-
-Bjorn
