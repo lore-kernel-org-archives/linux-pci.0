@@ -2,125 +2,152 @@ Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Jiang Liu <liuj97@gmail.com>
 To: Bjorn Helgaas <bhelgaas@google.com>,
 	"Rafael J . Wysocki" <rjw@sisk.pl>
-Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
+Cc: Myron Stowe <myron.stowe@redhat.com>,
+	Yinghai Lu <yinghai@kernel.org>,
 	Yijing Wang <wangyijing@huawei.com>,
 	Jiang Liu <liuj97@gmail.com>, linux-kernel@vger.kernel.org,
 	linux-pci@vger.kernel.org,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
 	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Tony Luck <tony.luck@intel.com>,
-	Fenghua Yu <fenghua.yu@intel.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, linux-ia64@vger.kernel.org,
-	x86@kernel.org
-Subject: [PATCH v9 06/16] PCI: introduce platform dependent hooks for creating/destroying PCI busses
-Date: Fri, 12 Apr 2013 23:44:20 +0800
-Message-Id: <1365781470-32379-7-git-send-email-jiang.liu@huawei.com>
+	Jiang Liu <jiang.liu@huawei.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Subject: [PATCH v9 16/16] PCI, ACPI: remove support of ACPI PCI subdrivers
+Date: Fri, 12 Apr 2013 23:44:30 +0800
+Message-Id: <1365781470-32379-17-git-send-email-jiang.liu@huawei.com>
 In-Reply-To: <1365781470-32379-1-git-send-email-jiang.liu@huawei.com>
 References: <1365781470-32379-1-git-send-email-jiang.liu@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On ACPI based platforms, the pci_slot driver creates PCI slot devices
-according to information from ACPI tables by registering an ACPI PCI
-subdriver. The ACPI PCI subdriver will only be called when creating/
-destroying PCI root buses, and it won't be called when hot-plugging
-P2P bridges. It may cause stale PCI slot devices after hot-removing
-a P2P bridge if that bridge has associated PCI slots. And the acpiphp
-driver has the same issue too.
+From: Myron Stowe <myron.stowe@redhat.com>
 
-This patch introduces two hook points into the PCI core, which will
-be invoked when creating/destroying PCI busses for PCI host and P2P
-bridges. They could be used to setup/destroy platform dependent staffs
-in a unified way, both at boot time and for PCI hotplug operations.
+Both sub-drivers of the "PCI Root Bridge ("pci_bridge")" driver, "acpiphp"
+and "pci_slot", have been converted to hook directly into the PCI core.
 
+With the conversions there are no remaining usages of the 'struct
+acpi_pci_driver' list based infrastructure.  This patch removes it.
+
+Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
 Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 Cc: Yinghai Lu <yinghai@kernel.org>
 Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
 Cc: Toshi Kani <toshi.kani@hp.com>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Fenghua Yu <fenghua.yu@intel.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>
-Cc: Ingo Molnar <mingo@redhat.com>
-Cc: "H. Peter Anvin" <hpa@zytor.com>
-Cc: Myron Stowe <myron.stowe@redhat.com>
 Cc: linux-pci@vger.kernel.org
-Cc: linux-ia64@vger.kernel.org
-Cc: x86@kernel.org
 Cc: linux-kernel@vger.kernel.org
 ---
- drivers/pci/probe.c  |   12 ++++++++++++
- drivers/pci/remove.c |    1 +
- include/linux/pci.h  |    2 ++
- 3 files changed, 15 insertions(+)
+ drivers/acpi/pci_root.c |   48 +----------------------------------------------
+ include/linux/acpi.h    |    9 ---------
+ 2 files changed, 1 insertion(+), 56 deletions(-)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 45c93b3..43ece5d 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -673,6 +673,8 @@ add_dev:
- 	ret = device_register(&child->dev);
- 	WARN_ON(ret < 0);
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index 0ac546d..b80e06e 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -65,44 +65,12 @@ static struct acpi_scan_handler pci_root_handler = {
+ 	.detach = acpi_pci_root_remove,
+ };
  
-+	pcibios_add_bus(child);
-+
- 	/* Create legacy_io and legacy_mem files for this bus */
- 	pci_create_legacy_files(child);
+-/* Lock to protect both acpi_pci_roots and acpi_pci_drivers lists */
++/* Lock to protect both acpi_pci_roots lists */
+ static DEFINE_MUTEX(acpi_pci_root_lock);
+ static LIST_HEAD(acpi_pci_roots);
+-static LIST_HEAD(acpi_pci_drivers);
  
-@@ -1660,6 +1662,14 @@ int __weak pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
- 	return 0;
- }
+ static DEFINE_MUTEX(osc_lock);
  
-+void __weak pcibios_add_bus(struct pci_bus *bus)
-+{
-+}
-+
-+void __weak pcibios_remove_bus(struct pci_bus *bus)
-+{
-+}
-+
- struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 		struct pci_ops *ops, void *sysdata, struct list_head *resources)
+-int acpi_pci_register_driver(struct acpi_pci_driver *driver)
+-{
+-	int n = 0;
+-	struct acpi_pci_root *root;
+-
+-	mutex_lock(&acpi_pci_root_lock);
+-	list_add_tail(&driver->node, &acpi_pci_drivers);
+-	if (driver->add)
+-		list_for_each_entry(root, &acpi_pci_roots, node) {
+-			driver->add(root);
+-			n++;
+-		}
+-	mutex_unlock(&acpi_pci_root_lock);
+-
+-	return n;
+-}
+-EXPORT_SYMBOL(acpi_pci_register_driver);
+-
+-void acpi_pci_unregister_driver(struct acpi_pci_driver *driver)
+-{
+-	struct acpi_pci_root *root;
+-
+-	mutex_lock(&acpi_pci_root_lock);
+-	list_del(&driver->node);
+-	if (driver->remove)
+-		list_for_each_entry(root, &acpi_pci_roots, node)
+-			driver->remove(root);
+-	mutex_unlock(&acpi_pci_root_lock);
+-}
+-EXPORT_SYMBOL(acpi_pci_unregister_driver);
+-
+ /**
+  * acpi_is_root_bridge - determine whether an ACPI CA node is a PCI root bridge
+  * @handle - the ACPI CA node in question.
+@@ -413,7 +381,6 @@ static int acpi_pci_root_add(struct acpi_device *device,
+ 	acpi_status status;
+ 	int result;
+ 	struct acpi_pci_root *root;
+-	struct acpi_pci_driver *driver;
+ 	u32 flags, base_flags;
+ 	bool is_osc_granted = false;
+ 
+@@ -573,12 +540,6 @@ static int acpi_pci_root_add(struct acpi_device *device,
+ 		pci_assign_unassigned_bus_resources(root->bus);
+ 	}
+ 
+-	mutex_lock(&acpi_pci_root_lock);
+-	list_for_each_entry(driver, &acpi_pci_drivers, node)
+-		if (driver->add)
+-			driver->add(root);
+-	mutex_unlock(&acpi_pci_root_lock);
+-
+ 	/* need to after hot-added ioapic is registered */
+ 	if (system_state != SYSTEM_BOOTING)
+ 		pci_enable_bridges(root->bus);
+@@ -599,16 +560,9 @@ end:
+ static void acpi_pci_root_remove(struct acpi_device *device)
  {
-@@ -1714,6 +1724,8 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 	if (error)
- 		goto class_dev_reg_err;
+ 	struct acpi_pci_root *root = acpi_driver_data(device);
+-	struct acpi_pci_driver *driver;
  
-+	pcibios_add_bus(b);
-+
- 	/* Create legacy_io and legacy_mem files for this bus */
- 	pci_create_legacy_files(b);
+ 	pci_stop_root_bus(root->bus);
  
-diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-index a831880..8fc54b7 100644
---- a/drivers/pci/remove.c
-+++ b/drivers/pci/remove.c
-@@ -51,6 +51,7 @@ void pci_remove_bus(struct pci_bus *bus)
- 	pci_bus_release_busn_res(bus);
- 	up_write(&pci_bus_sem);
- 	pci_remove_legacy_files(bus);
-+	pcibios_remove_bus(bus);
- 	device_unregister(&bus->dev);
- }
- EXPORT_SYMBOL(pci_remove_bus);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 849a336..7eb6023 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -693,6 +693,8 @@ extern struct list_head pci_root_buses;	/* list of all known PCI buses */
- extern int no_pci_devices(void);
+-	mutex_lock(&acpi_pci_root_lock);
+-	list_for_each_entry_reverse(driver, &acpi_pci_drivers, node)
+-		if (driver->remove)
+-			driver->remove(root);
+-	mutex_unlock(&acpi_pci_root_lock);
+-
+ 	device_set_run_wake(root->bus->bridge, false);
+ 	pci_acpi_remove_bus_pm_notifier(device);
  
- void pcibios_resource_survey_bus(struct pci_bus *bus);
-+void pcibios_add_bus(struct pci_bus *bus);
-+void pcibios_remove_bus(struct pci_bus *bus);
- void pcibios_fixup_bus(struct pci_bus *);
- int __must_check pcibios_enable_device(struct pci_dev *, int mask);
- /* Architecture specific versions may override this (weak) */
+diff --git a/include/linux/acpi.h b/include/linux/acpi.h
+index bcbdd74..03053ac 100644
+--- a/include/linux/acpi.h
++++ b/include/linux/acpi.h
+@@ -152,15 +152,6 @@ void acpi_penalize_isa_irq(int irq, int active);
+ 
+ void acpi_pci_irq_disable (struct pci_dev *dev);
+ 
+-struct acpi_pci_driver {
+-	struct list_head node;
+-	int (*add)(struct acpi_pci_root *root);
+-	void (*remove)(struct acpi_pci_root *root);
+-};
+-
+-int acpi_pci_register_driver(struct acpi_pci_driver *driver);
+-void acpi_pci_unregister_driver(struct acpi_pci_driver *driver);
+-
+ extern int ec_read(u8 addr, u8 *val);
+ extern int ec_write(u8 addr, u8 val);
+ extern int ec_transaction(u8 command,
 -- 
 1.7.9.5
 
