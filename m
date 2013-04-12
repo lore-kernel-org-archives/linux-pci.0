@@ -1,46 +1,39 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f170.google.com ([209.85.216.170]:38595 "EHLO
-	mail-qc0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750731Ab3DKTEO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 11 Apr 2013 15:04:14 -0400
-Date: Thu, 11 Apr 2013 12:04:08 -0700
-From: Tejun Heo <tj@kernel.org>
-To: "Michael S. Tsirkin" <mst@redhat.com>
-Cc: Or Gerlitz <ogerlitz@mellanox.com>,
-	Ming Lei <ming.lei@canonical.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	David Miller <davem@davemloft.net>,
-	Roland Dreier <roland@kernel.org>,
-	netdev <netdev@vger.kernel.org>, Yan Burman <yanb@mellanox.com>,
-	Jack Morgenstein <jackm@dev.mellanox.co.il>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH repost for-3.9] pci: avoid work_on_cpu for nested SRIOV
- probes
-Message-ID: <20130411190408.GM17641@mtj.dyndns.org>
-References: <20130411153030.GA22743@redhat.com>
- <20130411180517.GJ17641@mtj.dyndns.org>
- <20130411185853.GE23301@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130411185853.GE23301@redhat.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:47196 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754943Ab3DLWpJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 12 Apr 2013 18:45:09 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>, Ram Pai <linuxram@us.ibm.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v4 07/29] PCI, x86: Use for_each_pci_resource() with pci_allocate_bridge_resources
+Date: Fri, 12 Apr 2013 15:44:21 -0700
+Message-Id: <1365806683-26717-8-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1365806683-26717-1-git-send-email-yinghai@kernel.org>
+References: <1365806683-26717-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hey,
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ arch/x86/pci/i386.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-On Thu, Apr 11, 2013 at 09:58:54PM +0300, Michael S. Tsirkin wrote:
-> > Hmm... how about adding a work_on_cpu_nested() which takes @subclass
-> > argument?  Wouldn't that be much cleaner?
-> > 
-> > Thanks.
-> 
-> Is that 3.9 material though?
-
-Why wouldn't it be?  It's actually safer as it doesn't change any
-logic.  It's just updating lockdep annotation, which is what's needed
-here anyway.
-
-Thanks.
-
+diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
+index 94919e3..7c3395a 100644
+--- a/arch/x86/pci/i386.c
++++ b/arch/x86/pci/i386.c
+@@ -206,8 +206,7 @@ static void pcibios_allocate_bridge_resources(struct pci_dev *dev)
+ 	int idx;
+ 	struct resource *r;
+ 
+-	for (idx = PCI_BRIDGE_RESOURCES; idx < PCI_NUM_RESOURCES; idx++) {
+-		r = &dev->resource[idx];
++	for_each_pci_resource(dev, r, idx, PCI_BRIDGE_RES) {
+ 		if (!r->flags)
+ 			continue;
+ 		if (!r->start || pci_claim_resource(dev, idx) < 0) {
 -- 
-tejun
+1.8.1.4
+
