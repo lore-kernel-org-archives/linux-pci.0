@@ -1,51 +1,51 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f52.google.com ([209.85.219.52]:52162 "EHLO
-	mail-oa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753713Ab3DQX5m (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 17 Apr 2013 19:57:42 -0400
-Received: by mail-oa0-f52.google.com with SMTP id k18so2231577oag.11
-        for <linux-pci@vger.kernel.org>; Wed, 17 Apr 2013 16:57:42 -0700 (PDT)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jay Agarwal <jagarwal@nvidia.com>
+To: 'Stephen Warren' <swarren@wwwdotorg.org>
+CC: "linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
+	"thierry.reding@avionic-design.de" <thierry.reding@avionic-design.de>,
+	Laxman Dewangan <ldewangan@nvidia.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"olof@lixom.net" <olof@lixom.net>, Hiroshi Doyu <hdoyu@nvidia.com>,
+	Prashant Gaikwad <pgaikwad@nvidia.com>,
+	"mturquette@linaro.org" <mturquette@linaro.org>,
+	Peter De Schrijver <pdeschrijver@nvidia.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Juha Tukkinen <jtukkinen@nvidia.com>,
+	Krishna Thota <kthota@nvidia.com>
+Date: Fri, 12 Apr 2013 20:28:30 +0530
+Subject: RE: [PATCH 1/3] ARM: tegra: pcie: Add tegra3 support
+Message-ID: <C79B248886DD134989C8FF6B096A91AB91B36FB2FD@BGMAIL01.nvidia.com>
+References: <1365435688-4179-1-git-send-email-jagarwal@nvidia.com>
+ <51630852.1000107@wwwdotorg.org>
+In-Reply-To: <51630852.1000107@wwwdotorg.org>
 MIME-Version: 1.0
-In-Reply-To: <20130418092444.a4d64d8a9b5f700ba2aae779@canb.auug.org.au>
-References: <20130418092444.a4d64d8a9b5f700ba2aae779@canb.auug.org.au>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 17 Apr 2013 17:57:21 -0600
-Message-ID: <CAErSpo4B0sQpozB9Zco892_wtykMQ9-P2iF4QR+HXdte1YpMzg@mail.gmail.com>
-Subject: Re: PCI: Remove "extern" from function declarations
-To: Stephen Rothwell <sfr@canb.auug.org.au>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 17, 2013 at 5:24 PM, Stephen Rothwell <sfr@canb.auug.org.au> wrote:
-> Hi Bjorn,
->
-> I just noticed this commit (f39d5b72913e "PCI: Remove "extern" from
-> function declarations") in the pci next branch.  Just wondering why you
-> would do such a thing.  It is a lot of churn in quite a few header files
-> and (in my opinion) goes the wrong way anyway.
->
-> It may not actually make any difference to the compiler for functions, but
-> for variables, it does.   A variable declared in a header file without
-> "extern" will effectively define it in every compilation that includes
-> the header file, one with "extern" will only produce references.
->
-> So, since, the global variables really should have the "extern", the
-> functions are now inconsistent with that.
->
-> It also means that when someone copies a function declaration to make a
-> "static inline" stub, the "extern" is a big hint for them to remember to
-> make the stub "static" - I have seen several occasions when this was not
-> done and that causes compilation failures (but usually only in the
-> configuration that the author did not bother to test).
+> >  	err = regulator_disable(pcie->pex_clk_supply);
+> >  	if (err < 0)
+> > -		dev_err(pcie->dev, "failed to disable pex-clk regulator:
+> %d\n",
+> > +		dev_warn(pcie->dev, "failed to disable pex-clk regulator:
+> %d\n",
+> >  			err);
+> >
+> >  	err = regulator_disable(pcie->vdd_supply);
+> >  	if (err < 0)
+> > -		dev_err(pcie->dev, "failed to disable VDD regulator: %d\n",
+> > +		dev_warn(pcie->dev, "failed to disable VDD regulator:
+> %d\n",
+> >  			err);
+> 
+> Please explain why that change is correct. If the regulators only exist on
+> Tegra20, please represent that fact in the SoC data. Regulators must always
+> exist, so enable/disable should never fail due to missing regulators. Actual
+> run-time failures seem like something that really is an error.
+> 
+[>] These regulators are needed for both tegra20 & tegra30. Since we are not returning error here, so changed to dev_warn.
 
-Good points.  The fact that some function declarations use "extern"
-and some don't is just an annoying inconsistency.  I prefer fewer
-words to read, so I removed them, but that's just a personal
-preference, and I'd be OK it were always present, too.  I suppose if
-anybody but me actually cared very much, we'd have checkpatch complain
-about one way or the other, but I don't think it does.
-
-Bjorn
