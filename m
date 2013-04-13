@@ -1,105 +1,90 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:58123 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754019Ab3D0JOc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 27 Apr 2013 05:14:32 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, Hanjun Guo <guohanjun@huawei.com>,
-	<jiang.liu@huawei.com>, Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	Fenghua Yu <fenghua.yu@intel.com>, <linux-ia64@vger.kernel.org>
-Subject: [PATCH 2/7] PCI/IA64: SN: remove sn_pci_window_fixup()
-Date: Sat, 27 Apr 2013 17:12:24 +0800
-Message-ID: <1367053949-38424-3-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1367053949-38424-1-git-send-email-wangyijing@huawei.com>
-References: <1367053949-38424-1-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <48795235.crcTAaJqPb@vostro.rjw.lan>
+References: <48795235.crcTAaJqPb@vostro.rjw.lan>
+Date: Fri, 12 Apr 2013 22:50:38 -0700
+Message-ID: <CAE9FiQVEWy2MVfVmv4oL9D24OcF83dQv+OcFd5K6v8ZHeGumJA@mail.gmail.com>
+Subject: Re: [PATCH] PCI / PM: Fix fallback to PCI_D0 in pci_platform_power_transition()
+From: Yinghai Lu <yinghai@kernel.org>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PM list <linux-pm@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	"Benenati, Chris J" <chris.j.benenati@intel.com>,
+	Ajaykumar Hotchandani <ajaykumar.hotchandani@oracle.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently, pcibios_bus_to_resource() and pcibios_resource_to_bus()
-functions use pci_host_bridge_window in pci_host_bridge to translate
-bus side to/from cpu side addresses. Pci_window in pci_controller
-under IA64 is no used again, so remove this function.
+On Fri, Apr 12, 2013 at 4:58 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+>
+> Commit b51306c (PCI: Set device power state to PCI_D0 for device
+> without native PM support) modified pci_platform_power_transition()
+> by adding code causing dev->current_state for devices that don't
+> support native PCI PM but are power-manageable by the platform to be
+> changed to PCI_D0 regardless of the value returned by the preceding
+> platform_pci_set_power_state().  In particular, that also is done
+> if the platform_pci_set_power_state() has been successful, which
+> causes the correct power state of the device set by
+> pci_update_current_state() in that case to be overwritten by PCI_D0.
+>
+> Fix that mistake by making the fallback to PCI_D0 only happen if
+> the platform_pci_set_power_state() has returned an error.
+>
+> Reported-by: Chris J. Benenati <chris.j.benenati@intel.com>
+> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> Cc: <stable@vger.kernel.org>
+> ---
+>  drivers/pci/pci.c |    3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
+>
+> Index: linux-pm/drivers/pci/pci.c
+> ===================================================================
+> --- linux-pm.orig/drivers/pci/pci.c
+> +++ linux-pm/drivers/pci/pci.c
+> @@ -646,8 +646,7 @@ static int pci_platform_power_transition
+>                 error = platform_pci_set_power_state(dev, state);
+>                 if (!error)
+>                         pci_update_current_state(dev, state);
+> -               /* Fall back to PCI_D0 if native PM is not supported */
+> -               if (!dev->pm_cap)
+> +               else if (!dev->pm_cap) /* Fall back to PCI_D0 */
+>                         dev->current_state = PCI_D0;
+>         } else {
+>                 error = -ENODEV;
+>
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Fenghua Yu <fenghua.yu@intel.com>
-Cc: linux-ia64@vger.kernel.org
+Acked-by: Yinghai Lu <yinghai@kernel.org>
+
+also could simplify it further.
+
 ---
- arch/ia64/sn/kernel/io_init.c |   49 +----------------------------------------
- 1 files changed, 1 insertions(+), 48 deletions(-)
+ drivers/pci/pci.c |   12 ++++--------
+ 1 file changed, 4 insertions(+), 8 deletions(-)
 
-diff --git a/arch/ia64/sn/kernel/io_init.c b/arch/ia64/sn/kernel/io_init.c
-index 238e2c5..99710f5 100644
---- a/arch/ia64/sn/kernel/io_init.c
-+++ b/arch/ia64/sn/kernel/io_init.c
-@@ -149,48 +149,6 @@ sn_legacy_pci_window_fixup(struct pci_controller *controller,
- }
- 
- /*
-- * sn_pci_window_fixup() - Create a pci_window for each device resource.
-- *			   It will setup pci_windows for use by
-- *			   pcibios_bus_to_resource(), pcibios_resource_to_bus(),
-- *			   etc.
-- */
--static void
--sn_pci_window_fixup(struct pci_dev *dev, unsigned int count,
--		    s64 * pci_addrs)
--{
--	struct pci_controller *controller = PCI_CONTROLLER(dev->bus);
--	unsigned int i;
--	unsigned int idx;
--	unsigned int new_count;
--	struct pci_window *new_window;
--
--	if (count == 0)
--		return;
--	idx = controller->windows;
--	new_count = controller->windows + count;
--	new_window = kcalloc(new_count, sizeof(struct pci_window), GFP_KERNEL);
--	BUG_ON(new_window == NULL);
--	if (controller->window) {
--		memcpy(new_window, controller->window,
--		       sizeof(struct pci_window) * controller->windows);
--		kfree(controller->window);
--	}
--
--	/* Setup a pci_window for each device resource. */
--	for (i = 0; i <= PCI_ROM_RESOURCE; i++) {
--		if (pci_addrs[i] == -1)
--			continue;
--
--		new_window[idx].offset = dev->resource[i].start - pci_addrs[i];
--		new_window[idx].resource = dev->resource[i];
--		idx++;
--	}
--
--	controller->windows = new_count;
--	controller->window = new_window;
--}
--
--/*
-  * sn_io_slot_fixup() -   We are not running with an ACPI capable PROM,
-  *			  and need to convert the pci_dev->resource
-  *			  'start' and 'end' addresses to mapped addresses,
-@@ -276,12 +234,7 @@ sn_io_slot_fixup(struct pci_dev *dev)
- 						 IORESOURCE_ROM_BIOS_COPY;
- 		}
- 	}
--	/* Create a pci_window in the pci_controller struct for
--	 * each device resource.
--	 */
--	if (count > 0)
--		sn_pci_window_fixup(dev, count, pci_addrs);
--
+Index: linux-2.6/drivers/pci/pci.c
+===================================================================
+--- linux-2.6.orig/drivers/pci/pci.c
++++ linux-2.6/drivers/pci/pci.c
+@@ -646,15 +646,11 @@ static int pci_platform_power_transition
+         error = platform_pci_set_power_state(dev, state);
+         if (!error)
+             pci_update_current_state(dev, state);
+-        /* Fall back to PCI_D0 if native PM is not supported */
+-        if (!dev->pm_cap)
+-            dev->current_state = PCI_D0;
+-    } else {
++    } else
+         error = -ENODEV;
+-        /* Fall back to PCI_D0 if native PM is not supported */
+-        if (!dev->pm_cap)
+-            dev->current_state = PCI_D0;
+-    }
 +
- 	sn_pci_fixup_slot(dev, pcidev_info, sn_irq_info);
++    if (error && !dev->pm_cap) /* Fall back to PCI_D0 */
++        dev->current_state = PCI_D0;
+
+     return error;
  }
- 
--- 
-1.7.1
-
-
