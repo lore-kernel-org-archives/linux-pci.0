@@ -1,57 +1,45 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Libin <huawei.libin@huawei.com>
-To: Arnd Bergmann <arnd@arndb.de>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	David Airlie <airlied@linux.ie>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Hans J. Koch" <hjk@hansjkoch.de>,
-	Petr Vandrovec <petr@vandrovec.name>,
-	Andrew Morton <akpm@linux-foundation.org>
-CC: Konstantin Khlebnikov <khlebnikov@openvz.org>,
-	Thomas Hellstrom <thellstrom@vmware.com>,
-	Dave Airlie <airlied@redhat.com>,
-	Nadia Yvette Chambers <nyc@holomorphy.com>,
-	Jiri Kosina <jkosina@suse.cz>,
-	Al Viro <viro@zeniv.linux.org.uk>,
-	Mel Gorman <mgorman@suse.de>, Hugh Dickins <hughd@google.com>,
-	Rik van Riel <riel@redhat.com>,
-	David Rientjes <rientjes@google.com>,
-	Michel Lespinasse <walken@google.com>,
-	<linux-kernel@vger.kernel.org>, <dri-devel@lists.freedesktop.org>,
-	<linux-pci@vger.kernel.org>, <linux-mm@kvack.org>,
-	<guohanjun@huawei.com>, <wangyijing@huawei.com>
-Subject: [PATCH 2/6] PCI: use vma_pages() to replace (vm_end - vm_start) >> PAGE_SHIFT
-Date: Mon, 15 Apr 2013 20:48:54 +0800
-Message-ID: <1366030138-71292-2-git-send-email-huawei.libin@huawei.com>
-In-Reply-To: <1366030138-71292-1-git-send-email-huawei.libin@huawei.com>
-References: <1366030138-71292-1-git-send-email-huawei.libin@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pb0-f44.google.com ([209.85.160.44]:57981 "EHLO
+	mail-pb0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750755Ab3DMEDs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 13 Apr 2013 00:03:48 -0400
+Message-ID: <5168D91B.7080606@gmail.com>
+Date: Sat, 13 Apr 2013 12:03:39 +0800
+From: Jiang Liu <liuj97@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: "Rafael J . Wysocki" <rjw@sisk.pl>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>
+Subject: Re: [PATCH v9 00/16] Get rid of the ACPI PCI subdriver mechanism
+References: <1365781470-32379-1-git-send-email-jiang.liu@huawei.com> <CAErSpo6uVRvuaOusRi=d8g52gwOR1RzEaAep0OxSwjgZ1qk6BQ@mail.gmail.com>
+In-Reply-To: <CAErSpo6uVRvuaOusRi=d8g52gwOR1RzEaAep0OxSwjgZ1qk6BQ@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-(*->vm_end - *->vm_start) >> PAGE_SHIFT operation is implemented
-as a inline funcion vma_pages() in linux/mm.h, so using it.
-
-Signed-off-by: Libin <huawei.libin@huawei.com>
----
- drivers/pci/pci-sysfs.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 9c6e9bb..5b4a9d9 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -897,7 +897,7 @@ int pci_mmap_fits(struct pci_dev *pdev, int resno, struct vm_area_struct *vma,
- 
- 	if (pci_resource_len(pdev, resno) == 0)
- 		return 0;
--	nr = (vma->vm_end - vma->vm_start) >> PAGE_SHIFT;
-+	nr = vma_pages(vma);
- 	start = vma->vm_pgoff;
- 	size = ((pci_resource_len(pdev, resno) - 1) >> PAGE_SHIFT) + 1;
- 	pci_start = (mmap_api == PCI_MMAP_PROCFS) ?
--- 
-1.8.2.1
-
+On 04/13/2013 06:17 AM, Bjorn Helgaas wrote:
+> On Fri, Apr 12, 2013 at 9:44 AM, Jiang Liu <liuj97@gmail.com> wrote:
+> 
+> I applied these to my pci/jiang-subdrivers branch with minor tweaks.
+> The most significant is that I folded in the acpiphp.disable option to
+> the patch that makes the driver builtin-only.  That way there's no
+> window between removing the "edit modules.conf" workaround and adding
+> the kernel parameter.
+> 
+> Take a look and make sure it's what you want:
+> http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/jiang-subdrivers
+> 
+> Bjorn
+Hi Bjorn,
+	Thanks for your support, it seems OK to me.
+	Regards!
+	Gerry
 
