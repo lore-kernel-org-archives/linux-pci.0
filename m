@@ -1,75 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f51.google.com ([209.85.220.51]:34600 "EHLO
-	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932574Ab3D2VcS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 29 Apr 2013 17:32:18 -0400
-Received: by mail-pa0-f51.google.com with SMTP id lj1so1182478pab.38
-        for <linux-pci@vger.kernel.org>; Mon, 29 Apr 2013 14:32:18 -0700 (PDT)
-Date: Mon, 29 Apr 2013 14:32:15 -0700
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+Received: from mail.free-electrons.com ([94.23.35.102]:49446 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753848Ab3DOQlB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 15 Apr 2013 12:41:01 -0400
+Date: Mon, 15 Apr 2013 18:40:57 +0200
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Jason Cooper <jason@lakedaemon.net>
 Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] PCI: Fix racing for pci device removing via sysfs
-Message-ID: <20130429213215.GA31064@kroah.com>
-References: <1366940841-15370-1-git-send-email-yinghai@kernel.org>
- <CAErSpo5zfHR-agNBdgqfVjCU+-KcTZV+1bvML5Uw-+icDqzzEA@mail.gmail.com>
- <CAE9FiQVEQO-dLJRjn9Z7JgwGWAn1M8S1Tn2_V0Fq+6kB0rG=Bg@mail.gmail.com>
- <CAErSpo7DUDQ_XgVKAfWxqYJA=q85ps46bffV-4a7b0vOzAP5DA@mail.gmail.com>
- <CAE9FiQWv-bN2XzHiQ0WU+Y678zcqs_Owua6vXXijdMO6=0OWpg@mail.gmail.com>
- <517E45C8.4060407@cn.fujitsu.com>
- <CAE9FiQUXxCH0xjFPk1S7e_JRsBPosqQ=N5Kpcrjp3RNWDh9yZQ@mail.gmail.com>
- <20130429181550.GA17343@google.com>
- <20130429182142.GA3385@kroah.com>
- <20130429212350.GA14978@xanatos>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130429212350.GA14978@xanatos>
+	Grant Likely <grant.likely@secretlab.ca>,
+	Russell King <linux@arm.linux.org.uk>,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Arnd Bergmann <arnd@arndb.de>, Olof Johansson <olof@lixom.net>,
+	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Andrew Murray <andrew.murray@arm.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Mitch Bradley <wmb@firmworks.com>
+Subject: Re: [PATCHv8 00/19] PCIe support for the Armada 370 and Armada XP
+ SoCs
+Message-ID: <20130415184057.7783c272@skate>
+In-Reply-To: <20130415163845.GK28693@titan.lakedaemon.net>
+References: <1365541601-14095-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	<20130415154620.GE28693@titan.lakedaemon.net>
+	<20130415183623.04797912@skate>
+	<20130415163845.GK28693@titan.lakedaemon.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 29, 2013 at 02:23:50PM -0700, Sarah Sharp wrote:
-> On Mon, Apr 29, 2013 at 11:21:42AM -0700, Greg Kroah-Hartman wrote:
-> > On Mon, Apr 29, 2013 at 11:15:50AM -0700, Bjorn Helgaas wrote:
-> > > On Mon, Apr 29, 2013 at 08:19:10AM -0700, Yinghai Lu wrote:
-> > > > On Mon, Apr 29, 2013 at 3:04 AM, Gu Zheng <guz.fnst@cn.fujitsu.com> wrote:
-> > > > > On 04/27/2013 05:01 AM, Yinghai Lu wrote:
-> > > > >> On Fri, Apr 26, 2013 at 1:53 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> > > > >>>
-> > > > >>> You can't be serious.  This is a disgusting mess.  Checking a list
-> > > > >>> pointer for LIST_POISON1?  As far as I'm concerned, this is a waste of
-> > > > >>> my time.
-> > > > 
-> > > > looks like xhci is using that LIST_POISON1 ...
-> > > > 
-> > > Maybe my allergic reaction to your use of LIST_POISON1 is unjustified,
-> > > but I am dubious about the idea that xhci was the only place that needed
-> > > it before now, and we just happened to find one more place in PCI that
-> > > needs it.  That doesn't make sense because good design patterns are used
-> > > many times, not just once or twice.
-> > > 
-> > > I thought the whole point of the get/put scheme was that if we had a
-> > > pointer to a correctly reference-counted object, we didn't need to check
-> > > whether the object was still valid because the object remains valid until
-> > > all the references are released.
-> > 
-> > You are correct, you shouldn't have to worry about that.  If you have to
-> > do something like the LIST_POISON test, something is really wrong.
+Dear Jason Cooper,
+
+On Mon, 15 Apr 2013 12:38:45 -0400, Jason Cooper wrote:
+
+> > This ones are more recent than the v5 I originally used as a base for
+> > my PCIe v8. I can resend a v9 of my PCIe patch set based on the v6 of
+> > Andrew, or you can directly use PATCH 1,2,3 from Andrew series to
+> > replace PATCH 1,2,3 from my series. Andrew v6 has quite a number of
+> > changes compared to v5, so I really recommend using those ones.
 > 
-> All right, I'll take a look at the xHCI code.  From a brief glance, both
-> places that use LIST_POISON are handling a timed-out command.  The
-> command handling in xHCI needs to get completely reworked anyway, due to
-> other race conditions.
-> 
-> Were you suggesting I use the get/put scheme in the xHCI driver, or was
-> that for Yinghai?
+> No need to mess with v9, I'll pull AndrewM's v6.
 
-I thought for Yinghai, but really, no code should have to check that
-type of thing, so if the xhci driver is, it shouldn't :)
+Excellent, thanks.
 
-thanks,
-
-greg k-h
+Thomas
+-- 
+Thomas Petazzoni, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
