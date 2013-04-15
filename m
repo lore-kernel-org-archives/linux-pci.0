@@ -1,82 +1,57 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.8]:63043 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758844Ab3DCOpy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 3 Apr 2013 10:45:54 -0400
-From: Thierry Reding <thierry.reding@avionic-design.de>
-To: Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Russell King <linux@arm.linux.org.uk>,
-	Andrew Murray <andrew.murray@arm.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-tegra@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH v3 03/12] of/pci: Add of_pci_parse_bus_range() function
-Date: Wed,  3 Apr 2013 16:45:09 +0200
-Message-Id: <1365000318-28256-4-git-send-email-thierry.reding@avionic-design.de>
-In-Reply-To: <1365000318-28256-1-git-send-email-thierry.reding@avionic-design.de>
-References: <1365000318-28256-1-git-send-email-thierry.reding@avionic-design.de>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Libin <huawei.libin@huawei.com>
+To: Arnd Bergmann <arnd@arndb.de>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	David Airlie <airlied@linux.ie>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Hans J. Koch" <hjk@hansjkoch.de>,
+	Petr Vandrovec <petr@vandrovec.name>,
+	Andrew Morton <akpm@linux-foundation.org>
+CC: Konstantin Khlebnikov <khlebnikov@openvz.org>,
+	Thomas Hellstrom <thellstrom@vmware.com>,
+	Dave Airlie <airlied@redhat.com>,
+	Nadia Yvette Chambers <nyc@holomorphy.com>,
+	Jiri Kosina <jkosina@suse.cz>,
+	Al Viro <viro@zeniv.linux.org.uk>,
+	Mel Gorman <mgorman@suse.de>, Hugh Dickins <hughd@google.com>,
+	Rik van Riel <riel@redhat.com>,
+	David Rientjes <rientjes@google.com>,
+	Michel Lespinasse <walken@google.com>,
+	<linux-kernel@vger.kernel.org>, <dri-devel@lists.freedesktop.org>,
+	<linux-pci@vger.kernel.org>, <linux-mm@kvack.org>,
+	<guohanjun@huawei.com>, <wangyijing@huawei.com>
+Subject: [PATCH 3/6] ncpfs: use vma_pages() to replace (vm_end - vm_start) >> PAGE_SHIFT
+Date: Mon, 15 Apr 2013 20:48:55 +0800
+Message-ID: <1366030138-71292-3-git-send-email-huawei.libin@huawei.com>
+In-Reply-To: <1366030138-71292-1-git-send-email-huawei.libin@huawei.com>
+References: <1366030138-71292-1-git-send-email-huawei.libin@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This function can be used to parse a bus-range property as specified by
-device nodes representing PCI bridges.
+(*->vm_end - *->vm_start) >> PAGE_SHIFT operation is implemented
+as a inline funcion vma_pages() in linux/mm.h, so using it.
 
-Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
+Signed-off-by: Libin <huawei.libin@huawei.com>
 ---
- drivers/of/of_pci.c    | 25 +++++++++++++++++++++++++
- include/linux/of_pci.h |  1 +
- 2 files changed, 26 insertions(+)
+ fs/ncpfs/mmap.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
-index 4dd7b9b..42c687a 100644
---- a/drivers/of/of_pci.c
-+++ b/drivers/of/of_pci.c
-@@ -64,3 +64,28 @@ int of_pci_get_devfn(struct device_node *np)
- 	return (be32_to_cpup(reg) >> 8) & 0xff;
- }
- EXPORT_SYMBOL_GPL(of_pci_get_devfn);
-+
-+/**
-+ * of_pci_parse_bus_range() - parse the bus-range property of a PCI device
-+ * @node: device node
-+ * @res: address to a struct resource to return the bus-range
-+ *
-+ * Returns 0 on success or a negative error-code on failure.
-+ */
-+int of_pci_parse_bus_range(struct device_node *node, struct resource *res)
-+{
-+	const __be32 *values;
-+	int len;
-+
-+	values = of_get_property(node, "bus-range", &len);
-+	if (!values || len < sizeof(*values) * 2)
-+		return -EINVAL;
-+
-+	res->name = node->name;
-+	res->start = be32_to_cpup(values++);
-+	res->end = be32_to_cpup(values);
-+	res->flags = IORESOURCE_BUS;
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(of_pci_parse_bus_range);
-diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
-index 91ec484..7a04826 100644
---- a/include/linux/of_pci.h
-+++ b/include/linux/of_pci.h
-@@ -11,5 +11,6 @@ struct device_node;
- struct device_node *of_pci_find_child_device(struct device_node *parent,
- 					     unsigned int devfn);
- int of_pci_get_devfn(struct device_node *np);
-+int of_pci_parse_bus_range(struct device_node *node, struct resource *res);
+diff --git a/fs/ncpfs/mmap.c b/fs/ncpfs/mmap.c
+index ee24df5..3c5dd55 100644
+--- a/fs/ncpfs/mmap.c
++++ b/fs/ncpfs/mmap.c
+@@ -117,7 +117,7 @@ int ncp_mmap(struct file *file, struct vm_area_struct *vma)
+ 		return -EINVAL;
+ 	/* we do not support files bigger than 4GB... We eventually 
+ 	   supports just 4GB... */
+-	if (((vma->vm_end - vma->vm_start) >> PAGE_SHIFT) + vma->vm_pgoff 
++	if (vma_pages(vma) + vma->vm_pgoff
+ 	   > (1U << (32 - PAGE_SHIFT)))
+ 		return -EFBIG;
  
- #endif
 -- 
-1.8.2
+1.8.2.1
+
 
