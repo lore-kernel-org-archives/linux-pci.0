@@ -1,65 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e39.co.us.ibm.com ([32.97.110.160]:36545 "EHLO
-	e39.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161461Ab3DECyl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Apr 2013 22:54:41 -0400
-Received: from /spool/local
-	by e39.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <shangw@linux.vnet.ibm.com>;
-	Thu, 4 Apr 2013 20:54:41 -0600
-Received: from d03relay05.boulder.ibm.com (d03relay05.boulder.ibm.com [9.17.195.107])
-	by d03dlp02.boulder.ibm.com (Postfix) with ESMTP id E7B1C3E4003F
-	for <linux-pci@vger.kernel.org>; Thu,  4 Apr 2013 20:54:25 -0600 (MDT)
-Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
-	by d03relay05.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id r352sbRk140116
-	for <linux-pci@vger.kernel.org>; Thu, 4 Apr 2013 20:54:37 -0600
-Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av04.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id r352sbYw032569
-	for <linux-pci@vger.kernel.org>; Thu, 4 Apr 2013 20:54:37 -0600
-From: Gavin Shan <shangw@linux.vnet.ibm.com>
-To: linux-pci@vger.kernel.org
-Cc: bhelgaas@google.com, Gavin Shan <shangw@linux.vnet.ibm.com>
-Subject: [PATCH 2/4] PCI: Remove MSI/MSI-X cap check in pci_msi_check_device()
-Date: Fri,  5 Apr 2013 10:54:31 +0800
-Message-Id: <1365130473-7413-3-git-send-email-shangw@linux.vnet.ibm.com>
-In-Reply-To: <1365130473-7413-1-git-send-email-shangw@linux.vnet.ibm.com>
-References: <1365130473-7413-1-git-send-email-shangw@linux.vnet.ibm.com>
+Received: from mail-ie0-f170.google.com ([209.85.223.170]:34431 "EHLO
+	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751361Ab3DOUlU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 15 Apr 2013 16:41:20 -0400
+MIME-Version: 1.0
+In-Reply-To: <20130415182614.GB9224@xanatos>
+References: <5AA430FFE4486C448003201AC83BC85E01F83F0D@EXHQ.corp.stratus.com>
+	<20130415182614.GB9224@xanatos>
+Date: Mon, 15 Apr 2013 13:41:20 -0700
+Message-ID: <CAE9FiQVe95hT2mv4G+v_FMk5_qQDSg0e0fPdZdoe8Cgam70EnA@mail.gmail.com>
+Subject: Re: USB PCI quirk issue
+From: Yinghai Lu <yinghai@kernel.org>
+To: Sarah Sharp <sarah.a.sharp@linux.intel.com>,
+	"Bulkow, David" <David.Bulkow@stratus.com>
+Cc: "Lawrence, Joe" <Joe.Lawrence@stratus.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Content-Type: multipart/mixed; boundary=20cf300e528f7464c804da6c46ae
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The function pci_msi_check_device() is called while enabling MSI
-or MSI-X interrupts to make sure the PCI device can support MSI
-or MSI-X capability. The patch removes the check on MSI or MSI-X
-capability in the function and lets the caller does the check.
+--20cf300e528f7464c804da6c46ae
+Content-Type: text/plain; charset=ISO-8859-1
 
-Signed-off-by: Gavin Shan <shangw@linux.vnet.ibm.com>
----
- drivers/pci/msi.c |    5 +----
- 1 files changed, 1 insertions(+), 4 deletions(-)
+On Mon, Apr 15, 2013 at 11:26 AM, Sarah Sharp
+<sarah.a.sharp@linux.intel.com> wrote:
+> Cc-ing the public Linux PCI and USB mailing lists.
+>
+> On Fri, Apr 12, 2013 at 02:59:29PM -0400, Bulkow, David wrote:
+>> Susan,
+>
+> I'm Sarah. :)
+>
+>> While testing Linux 3.9 we ran into an issue which I believe is a
+>> conflict between a couple of PCI changes.  Stratus has hardware that
+>> can hot add/remove chunks of its PCI hierarchy which has tickled some
+>> of the newer code.  I am mailing you because I believe the second
+>> change I list below holds the key.
+>>
+>> I believe we are experiencing a collision between two changes.  The
+>> first:
+>>
+>> PCI: Put pci_dev in device tree as early as possible
+>> https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=4f535093cf8f6da8cfda7c36c2c1ecd2e9586ee4
+>>
+>> is causing device_add to be called during pci_scan_slot.  The second:
+>>
+>> USB: Fix handoff when BIOS disables host PCI device
+>> https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=cab928ee1f221c9cc48d6615070fefe2e444384a
+>>
+>> is getting activated by device_add.
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 5fdc5d9..1ec1ba9 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -789,9 +789,6 @@ static int pci_msi_check_device(struct pci_dev *dev, int nvec, int type)
- 	if (ret)
- 		return ret;
- 
--	if (!pci_find_capability(dev, type))
--		return -EINVAL;
--
- 	return 0;
- }
- 
-@@ -942,7 +939,7 @@ int pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries, int nvec)
- 	int status, nr_entries;
- 	int i, j;
- 
--	if (!entries)
-+	if (!entries || !dev->msix_cap)
- 		return -EINVAL;
- 
- 	status = pci_msi_check_device(dev, nvec, PCI_CAP_ID_MSIX);
--- 
-1.7.5.4
+looks like we call quirk_final too early for hotadd path.
 
+Please check if attached can workaround the problem.
+
+Thanks
+
+Yinghai
+
+--20cf300e528f7464c804da6c46ae
+Content-Type: application/octet-stream; name="fix_qurik_final_hotadd.patch"
+Content-Disposition: attachment; filename="fix_qurik_final_hotadd.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_hfk3xmj60
+
+ZGlmZiAtLWdpdCBhL2RyaXZlcnMvcGNpL2J1cy5jIGIvZHJpdmVycy9wY2kvYnVzLmMKaW5kZXgg
+YmRjMWU4Yi4uMWVkZmZiNyAxMDA2NDQKLS0tIGEvZHJpdmVycy9wY2kvYnVzLmMKKysrIGIvZHJp
+dmVycy9wY2kvYnVzLmMKQEAgLTIwMSw2ICsyMDEsNyBAQCB2b2lkIHBjaV9idXNfYWRkX2Rldmlj
+ZXMoY29uc3Qgc3RydWN0IHBjaV9idXMgKmJ1cykKIAkJLyogU2tpcCBhbHJlYWR5LWFkZGVkIGRl
+dmljZXMgKi8KIAkJaWYgKGRldi0+aXNfYWRkZWQpCiAJCQljb250aW51ZTsKKwkJcGNpX2ZpeHVw
+X2RldmljZShwY2lfZml4dXBfZmluYWwsIGRldik7CiAJCXJldHZhbCA9IHBjaV9idXNfYWRkX2Rl
+dmljZShkZXYpOwogCX0KIApkaWZmIC0tZ2l0IGEvZHJpdmVycy9wY2kvcHJvYmUuYyBiL2RyaXZl
+cnMvcGNpL3Byb2JlLmMKaW5kZXggNDNlY2U1ZC4uNjdjZDA0NSAxMDA2NDQKLS0tIGEvZHJpdmVy
+cy9wY2kvcHJvYmUuYworKysgYi9kcml2ZXJzL3BjaS9wcm9iZS5jCkBAIC0xMzQxLDcgKzEzNDEs
+NiBAQCB2b2lkIHBjaV9kZXZpY2VfYWRkKHN0cnVjdCBwY2lfZGV2ICpkZXYsIHN0cnVjdCBwY2lf
+YnVzICpidXMpCiAJbGlzdF9hZGRfdGFpbCgmZGV2LT5idXNfbGlzdCwgJmJ1cy0+ZGV2aWNlcyk7
+CiAJdXBfd3JpdGUoJnBjaV9idXNfc2VtKTsKIAotCXBjaV9maXh1cF9kZXZpY2UocGNpX2ZpeHVw
+X2ZpbmFsLCBkZXYpOwogCXJldCA9IHBjaWJpb3NfYWRkX2RldmljZShkZXYpOwogCVdBUk5fT04o
+cmV0IDwgMCk7CiAK
+--20cf300e528f7464c804da6c46ae--
