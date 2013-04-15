@@ -1,220 +1,223 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:45493 "EHLO hydra.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756855Ab3DZUVV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 26 Apr 2013 16:21:21 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Yinghai Lu <yinghai@kernel.org>, Ram Pai <linuxram@us.ibm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
-Subject: Re: [PATCH v4 27/29] PCI: Make piix4 quirk to use addon_res
-Date: Fri, 26 Apr 2013 22:29:29 +0200
-Message-ID: <1614149.2EDsY9ltHk@vostro.rjw.lan>
-In-Reply-To: <CAErSpo42D-jyY+7f66fYUprDgh-3E0qV1O1cpXjWK2+iBZ_bBQ@mail.gmail.com>
-References: <1365806683-26717-1-git-send-email-yinghai@kernel.org> <CAErSpo6W-GtTHe+84XQMfie1K39ChGKmHNYSuru0veXxqxqhAA@mail.gmail.com> <CAErSpo42D-jyY+7f66fYUprDgh-3E0qV1O1cpXjWK2+iBZ_bBQ@mail.gmail.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1366024734-12011-1-git-send-email-nhorman@tuxdriver.com>
+References: <1362158276-4901-1-git-send-email-nhorman@tuxdriver.com> <1366024734-12011-1-git-send-email-nhorman@tuxdriver.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 15 Apr 2013 09:30:36 -0600
+Message-ID: <CAErSpo5-EeAZbTyyoEfqGjS_SXN4P_APjdU7k+oPC3XKbgbwtw@mail.gmail.com>
+Subject: Re: [PATCH v7] irq: add quirk for broken interrupt remapping on 55XX chipsets
+To: Neil Horman <nhorman@tuxdriver.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Prarit Bhargava <prarit@redhat.com>,
+	Don Zickus <dzickus@redhat.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Asit Mallick <asit.k.mallick@intel.com>,
+	David Woodhouse <dwmw2@infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, April 26, 2013 09:22:47 AM Bjorn Helgaas wrote:
-> [+cc Rafael, linux-acpi]
-> 
-> On Thu, Apr 25, 2013 at 2:39 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> > On Fri, Apr 12, 2013 at 4:44 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> >> After they are put in add-on resources, they will be safely claimed later.
-> >
-> > It took me a while to understand what's going on here, but this is
-> > actually a pretty cool idea.  It would be nice to explain a little
-> > about what the patch is doing and how these "pseudo-BARs" work, though
-> > :)
-> 
-> After thinking about this overnight, I'm not so sure about this.  I
-> think the point of this is to manage resources that are consumed by
-> the device but don't conform to the PCI spec.  Most resources don't
-> need quirks because they're either described by standard BAR registers
-> or by the exceptions for "legacy I/O devices," e.g., IDE or VGA.
-> 
-> I would expect that the "architected" way to deal with non-standard
-> resources like this is to describe them via a PNP0C02 or similar ACPI
-> device.  That way, the OS would not need device-specific quirks like
-> this.
-> 
-> If we do add something like this patch, we're also adding a way for
-> Linux to *write* these non-standard BARs, which means they can become
-> out-of-sync with the ACPI description of them.  I think the BIOS is
-> entitled to assume that if it describes a resource via _CRS and it
-> doesn't provide a corresponding _SRS, the resource will remain
-> unchanged by the OS.
+On Mon, Apr 15, 2013 at 5:18 AM, Neil Horman <nhorman@tuxdriver.com> wrote:
+> A few years back intel published a spec update:
+> http://www.intel.com/content/dam/doc/specification-update/5520-and-5500-chipset-ioh-specification-update.pdf
+>
+> For the 5520 and 5500 chipsets which contained an errata (specificially errata
+> 53), which noted that these chipsets can't properly do interrupt remapping, and
+> as a result the recommend that interrupt remapping be disabled in bios.  While
+> many vendors have a bios update to do exactly that, not all do, and of course
+> not all users update their bios to a level that corrects the problem.  As a
+> result, occasionally interrupts can arrive at a cpu even after affinity for that
+> interrupt has be moved, leading to lost or spurrious interrupts (usually
+> characterized by the message:
+> kernel: do_IRQ: 7.71 No irq handler for vector (irq -1)
+>
+> There have been several incidents recently of people seeing this error, and
+> investigation has shown that they have system for which their BIOS level is such
+> that this feature was not properly turned off.  As such, it would be good to
+> give them a reminder that their systems are vulnurable to this problem.  For
+> details of those that reported the problem, please see:
+> https://bugzilla.redhat.com/show_bug.cgi?id=887006
+>
+> Signed-off-by: Neil Horman <nhorman@tuxdriver.com>
+> CC: Prarit Bhargava <prarit@redhat.com>
+> CC: Don Zickus <dzickus@redhat.com>
+> CC: Don Dutile <ddutile@redhat.com>
+> CC: Bjorn Helgaas <bhelgaas@google.com>
+> CC: Asit Mallick <asit.k.mallick@intel.com>
+> CC: David Woodhouse <dwmw2@infradead.org>
+> CC: linux-pci@vger.kernel.org
+> CC: Joerg Roedel <joro@8bytes.org>
+> CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+> ---
+>
+> Change notes:
+>
+> v2)
+>
+> * Moved the quirk to the x86 arch, since consensus seems to be that the 55XX
+> chipset series is x86 only.  I decided however to keep the quirk as a regular
+> quirk, not an early_quirk.  Early quirks have no way currently to determine if
+> BIOS has properly disabled the feature in the iommu, at least not without
+> significant hacking, and since its quite possible this will be a short lived
+> quirk, should Don Z's workaround code prove successful (and it looks like it may
+> well), I don't think that necessecary.
+>
+> * Removed the WARNING banner from the quirk, and added the HW_ERR token to the
+> string, I opted to leave the newlines in place however, as I really couldnt
+> find a way to keep the text on a single line is still legible from a code
+> perspective.  I think theres enough language in there that using cscope on just
+> about any substring however will turn it up, and again, this may be a short
+> lived quirk.
+>
+> v3)
+>
+> * Removed defines from pci_ids.h, and used direct id values as per request from
+> Bjorn.
+>
+> v4)
+>
+> * Converted pr_warn to WARN_TAINT(TAINT_FIRMWARE_WORKAROUND) as per David
+> Woodhouse
+>
+> v5)
+>
+> * Moved check to an early quirk, and flagged the broken chip, so we could
+> reasonably disable irq remapping during bootup.
+>
+> v6)
+>
+> * Clean up of stupid extra thrash in quirks.c
+>
+> v7)
+>
+> * Move broken check to intel_irq_remapping.c
+> * Fixed another typo
+> * Finally made the reference bugzilla public
+> ---
+>  arch/x86/kernel/early-quirks.c      | 25 +++++++++++++++++++++++++
+>  drivers/iommu/intel_irq_remapping.c | 10 ++++++++++
+>  drivers/iommu/irq_remapping.c       | 12 ++++++++++++
+>  drivers/iommu/irq_remapping.h       |  1 +
+>  4 files changed, 48 insertions(+)
+>
+> diff --git a/arch/x86/kernel/early-quirks.c b/arch/x86/kernel/early-quirks.c
+> index 3755ef4..bfa3139 100644
+> --- a/arch/x86/kernel/early-quirks.c
+> +++ b/arch/x86/kernel/early-quirks.c
+> @@ -192,6 +192,27 @@ static void __init ati_bugs_contd(int num, int slot, int func)
+>  }
+>  #endif
+>
+> +#ifdef CONFIG_IRQ_REMAP
+> +static void __init intel_remapping_check(int num, int slot, int func)
+> +{
+> +       u8 revision;
+> +
+> +       revision = pci_read_config_byte(num, slot, func , PCI_REVISION_ID);
+> +
+> +       /*
+> +        * Revision 0x13 of this chipset supports irq remapping
+> +        * but has an erratum that breaks its behavior, flag it as such
+> +        */
+> +       if (revision == 0x13)
+> +               irq_remap_broken = 1;
+> +
+> +}
+> +#else
+> +static void __init intel_remapping_check(int num, int slot, int func)
+> +{
+> +}
+> +#endif
+> +
+>  #define QFLAG_APPLY_ONCE       0x1
+>  #define QFLAG_APPLIED          0x2
+>  #define QFLAG_DONE             (QFLAG_APPLY_ONCE|QFLAG_APPLIED)
+> @@ -221,6 +242,10 @@ static struct chipset early_qrk[] __initdata = {
+>           PCI_CLASS_SERIAL_SMBUS, PCI_ANY_ID, 0, ati_bugs },
+>         { PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_SBX00_SMBUS,
+>           PCI_CLASS_SERIAL_SMBUS, PCI_ANY_ID, 0, ati_bugs_contd },
+> +       { PCI_VENDOR_ID_INTEL, 0x3403, PCI_CLASS_BRIDGE_HOST,
+> +         PCI_BASE_CLASS_BRIDGE, 0, intel_remapping_check },
+> +       { PCI_VENDOR_ID_INTEL, 0x3406, PCI_CLASS_BRIDGE_HOST,
+> +         PCI_BASE_CLASS_BRIDGE, 0, intel_remapping_check },
+>         {}
+>  };
+>
+> diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
+> index f3b8f23..5b19b2d 100644
+> --- a/drivers/iommu/intel_irq_remapping.c
+> +++ b/drivers/iommu/intel_irq_remapping.c
+> @@ -524,6 +524,16 @@ static int __init intel_irq_remapping_supported(void)
+>
+>         if (disable_irq_remap)
+>                 return 0;
+> +       if (irq_remap_broken) {
+> +               WARN_TAINT(1, TAINT_FIRMWARE_WORKAROUND,
+> +                          "This system BIOS has enabled interrupt remapping\n"
+> +                          "on a chipset that contains an erratum making that\n"
+> +                          "feature unstable.  To maintain system stability\n"
+> +                          "interrupt remapping is being disabled.  Please\n"
+> +                          "contact your BIOS vendor for an update\n");
+> +               disable_irq_remap = 1;
+> +               return 0;
+> +       }
+>
+>         if (!dmar_ir_support())
+>                 return 0;
+> diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
+> index d56f8c1..2b56e92 100644
+> --- a/drivers/iommu/irq_remapping.c
+> +++ b/drivers/iommu/irq_remapping.c
+> @@ -19,6 +19,7 @@
+>  int irq_remapping_enabled;
+>
+>  int disable_irq_remap;
+> +int irq_remap_broken;
+>  int disable_sourceid_checking;
+>  int no_x2apic_optout;
+>
+> @@ -216,6 +217,17 @@ int irq_remapping_supported(void)
+>         if (disable_irq_remap)
+>                 return 0;
+>
+> +       if (irq_remap_broken) {
+> +               WARN_TAINT(1, TAIN_FIRMWARE_WORKAROUND,
+> +                          "This system BIOS has enabled interrupt remapping\n"
+> +                          "on a chipset that contains an erratum making that\n"
+> +                          "feature unstable.  Please reboot with nointremap\n"
+> +                          "added to the kernel command line and contact\n"
+> +                          "your BIOS vendor for an update");
+> +               disable_irq_remap = 1;
+> +               return 0;
+> +       }
+> +
 
-Agreed.
+I think you probably intended to drop the change to this file, since
+you moved it to intel_irq_remapping.c.  If you did intend to keep it,
+s/TAIN_/TAINT_/.
 
-Thanks,
-Rafael
-
-
-> >> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> >> ---
-> >>  drivers/pci/quirks.c | 95 +++++++++++++++++++++++++++++++++++++++++++---------
-> >>  1 file changed, 79 insertions(+), 16 deletions(-)
-> >>
-> >> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> >> index 2dac170..6706182 100644
-> >> --- a/drivers/pci/quirks.c
-> >> +++ b/drivers/pci/quirks.c
-> >> @@ -382,14 +382,14 @@ static void quirk_ali7101_acpi(struct pci_dev *dev)
-> >>  }
-> >>  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_AL,     PCI_DEVICE_ID_AL_M7101,         quirk_ali7101_acpi);
-> >>
-> >> -static void piix4_io_quirk(struct pci_dev *dev, const char *name, unsigned int port, unsigned int enable)
-> >> +static int piix4_read_io(struct pci_dev *dev, struct resource *res, int port)
-> >
-> > We're reading from "port," which is really the address of a dword in
-> > config space, not a port, so I would have called it "pos" like
-> > __pci_read_base() did.  If I understand correctly, we're reading a
-> > BAR-like register that contains the base address of an I/O port
-> > region.
-> >
-> > "piix4_read_io_base(struct pci_dev *dev, struct resource *res, int
-> > pos)" would make more sense to me.
-> >
-> >>  {
-> >>         u32 devres;
-> >>         u32 mask, size, base;
-> >> +       struct pci_bus_region bus_region;
-> >>
-> >>         pci_read_config_dword(dev, port, &devres);
-> >> -       if ((devres & enable) != enable)
-> >> -               return;
-> >> +
-> >>         mask = (devres >> 16) & 15;
-> >>         base = devres & 0xffff;
-> >>         size = 16;
-> >> @@ -399,23 +399,54 @@ static void piix4_io_quirk(struct pci_dev *dev, const char *name, unsigned int p
-> >>                         break;
-> >>                 size = bit;
-> >>         }
-> >> -       /*
-> >> -        * For now we only print it out. Eventually we'll want to
-> >> -        * reserve it (at least if it's in the 0x1000+ range), but
-> >> -        * let's get enough confirmation reports first.
-> >> -        */
-> >>         base &= -size;
-> >> -       dev_info(&dev->dev, "%s PIO at %04x-%04x\n", name, base, base + size - 1);
-> >> +
-> >> +       bus_region.start = base;
-> >> +       bus_region.end = base + size - 1;
-> >> +       res->flags |= IORESOURCE_IO;
-> >> +       pcibios_bus_to_resource(dev, res, &bus_region);
-> >> +       dev_info(&dev->dev, "PIO at %pR\n", res);
-> >> +
-> >> +       return 0;
-> >>  }
-> >> +static int piix4_write_io(struct pci_dev *dev, struct resource *res, int port)
-> >> +{
-> >> +       u32 devres;
-> >> +       struct pci_bus_region bus_region;
-> >> +       unsigned size = to_pci_dev_addon_resource(res)->size;
-> >>
-> >> -static void piix4_mem_quirk(struct pci_dev *dev, const char *name, unsigned int port, unsigned int enable)
-> >> +       pcibios_resource_to_bus(dev, &bus_region, res);
-> >> +
-> >> +       pci_read_config_dword(dev, port, &devres);
-> >> +       devres &= 0xffff0000 | (size - 1);
-> >> +       devres |= bus_region.start & 0xffff & (~(size - 1));
-> >> +       pci_write_config_dword(dev, port, devres);
-> >> +
-> >> +       return 0;
-> >> +}
-> >> +static struct resource_ops piix4_io_ops = {
-> >> +       .read = piix4_read_io,
-> >> +       .write = piix4_write_io,
-> >> +};
-> >> +static void piix4_io_quirk(struct pci_dev *dev, char *name, unsigned int port,
-> >> +                               unsigned int enable)
-> >
-> > I think these (piix4_io_quirk() and piix4_mem_quirk()) would read
-> > better if they were something like:
-> >
-> >     piix4_add_io_bar(struct pci_dev *dev, unsigned int pos, u32
-> > enable, char *name);
-> >
-> >>  {
-> >>         u32 devres;
-> >> -       u32 mask, size, base;
-> >>
-> >>         pci_read_config_dword(dev, port, &devres);
-> >>         if ((devres & enable) != enable)
-> >>                 return;
-> >> +
-> >> +       pci_add_dev_addon_resource(dev, port, 0, &piix4_io_ops, name);
-> >> +}
-> >> +
-> >> +static int piix4_read_mem(struct pci_dev *dev, struct resource *res, int port)
-> >> +{
-> >> +       u32 devres;
-> >> +       u32 mask, size, base;
-> >> +       struct pci_bus_region bus_region;
-> >> +
-> >> +       pci_read_config_dword(dev, port, &devres);
-> >>         base = devres & 0xffff0000;
-> >>         mask = (devres & 0x3f) << 16;
-> >>         size = 128 << 16;
-> >> @@ -425,12 +456,44 @@ static void piix4_mem_quirk(struct pci_dev *dev, const char *name, unsigned int
-> >>                         break;
-> >>                 size = bit;
-> >>         }
-> >> -       /*
-> >> -        * For now we only print it out. Eventually we'll want to
-> >> -        * reserve it, but let's get enough confirmation reports first.
-> >> -        */
-> >>         base &= -size;
-> >> -       dev_info(&dev->dev, "%s MMIO at %04x-%04x\n", name, base, base + size - 1);
-> >> +       bus_region.start = base;
-> >> +       bus_region.end = base + size - 1;
-> >> +       res->flags |= IORESOURCE_MEM;
-> >> +       pcibios_bus_to_resource(dev, res, &bus_region);
-> >> +       dev_info(&dev->dev, "MMIO at %pR\n", res);
-> >> +
-> >> +       return 0;
-> >> +}
-> >> +static int piix4_write_mem(struct pci_dev *dev, struct resource *res, int port)
-> >> +{
-> >> +       u32 devres;
-> >> +       struct pci_bus_region bus_region;
-> >> +       unsigned size = to_pci_dev_addon_resource(res)->size;
-> >> +
-> >> +       pcibios_resource_to_bus(dev, &bus_region, res);
-> >> +
-> >> +       pci_read_config_dword(dev, port, &devres);
-> >> +       devres &= 0x0000ffff | ((size - 1) & 0xffff0000);
-> >> +       devres |= bus_region.start & 0xffff0000 & (~(size - 1));
-> >> +       pci_write_config_dword(dev, port, devres);
-> >> +
-> >> +       return 0;
-> >> +}
-> >> +static struct resource_ops piix4_mem_ops = {
-> >> +       .read = piix4_read_mem,
-> >> +       .write = piix4_write_mem,
-> >> +};
-> >> +static void piix4_mem_quirk(struct pci_dev *dev, char *name, unsigned int port,
-> >> +                               unsigned int enable)
-> >> +{
-> >> +       u32 devres;
-> >> +
-> >> +       pci_read_config_dword(dev, port, &devres);
-> >> +       if ((devres & enable) != enable)
-> >> +               return;
-> >> +
-> >> +       pci_add_dev_addon_resource(dev, port, 0, &piix4_mem_ops, name);
-> >>  }
-> >>
-> >>  /*
-> >> --
-> >> 1.8.1.4
-> >>
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+>         if (!remap_ops || !remap_ops->supported)
+>                 return 0;
+>
+> diff --git a/drivers/iommu/irq_remapping.h b/drivers/iommu/irq_remapping.h
+> index ecb6376..d7537e4 100644
+> --- a/drivers/iommu/irq_remapping.h
+> +++ b/drivers/iommu/irq_remapping.h
+> @@ -32,6 +32,7 @@ struct pci_dev;
+>  struct msi_msg;
+>
+>  extern int disable_irq_remap;
+> +extern int irq_remap_broken;
+>  extern int disable_sourceid_checking;
+>  extern int no_x2apic_optout;
+>  extern int irq_remapping_enabled;
+> --
+> 1.8.1.4
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
