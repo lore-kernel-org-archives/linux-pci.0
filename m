@@ -1,77 +1,85 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f173.google.com ([209.85.214.173]:59735 "EHLO
-	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752262Ab3DZWBE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 26 Apr 2013 18:01:04 -0400
-Received: by mail-ob0-f173.google.com with SMTP id xn12so3913586obc.4
-        for <linux-pci@vger.kernel.org>; Fri, 26 Apr 2013 15:01:04 -0700 (PDT)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <516C4E14.1080708@amd.com>
+Date: Mon, 15 Apr 2013 13:59:32 -0500
+From: Aravind <aravind.gopalakrishnan@amd.com>
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQVKkfGMAy3vVALjaSTXK-n1ZiaLwPm7GEgNQXiOhe9bMA@mail.gmail.com>
-References: <CAErSpo5_4HfGP_-4jzQCBHok6tFvAmCg+6G4_b9fYX=vuA00hg@mail.gmail.com>
- <CAE9FiQVKkfGMAy3vVALjaSTXK-n1ZiaLwPm7GEgNQXiOhe9bMA@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 26 Apr 2013 16:00:43 -0600
-Message-ID: <CAErSpo4SKVeCYwP6n+ra03=wCUyKeAwK2F1_ZWsU3Anidmf2_A@mail.gmail.com>
-Subject: Re: device_unregister() for PCI host bridge removal
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Jiang Liu <jiang.liu@huawei.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+To: Borislav Petkov <bp@alien8.de>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Doug Thompson <dougthompson@xmission.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	<linux-edac@vger.kernel.org>
+Subject: Re: [PATCH] edac: Handle EDAC ECC errors for Family 16h
+References: <1366039059-15772-1-git-send-email-Aravind.Gopalakrishnan@amd.com> <CAErSpo6cD4WtPhTbcBEyfOLNASJzr+cU2Lch=fVyqn-gh15drQ@mail.gmail.com> <20130415161121.GA18440@pd.tnic> <516C2EA2.1050806@amd.com>
+In-Reply-To: <516C2EA2.1050806@amd.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 26, 2013 at 3:41 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Fri, Apr 26, 2013 at 2:25 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> I'm trying to figure out where we call device_unregister() when
->> removing a PCI host bridge.  I see the device_register() in the
->> following path:
+On 04/15/2013 11:45 AM, Aravind wrote:
+> On 04/15/2013 11:11 AM, Borislav Petkov wrote:
+>> On Mon, Apr 15, 2013 at 09:56:08AM -0600, Bjorn Helgaas wrote:
+>>> On Mon, Apr 15, 2013 at 9:17 AM, Aravind Gopalakrishnan
+>>>> @@ -172,7 +176,12 @@
+>>>>    */
+>>>>   #define PCI_DEVICE_ID_AMD_15H_NB_F1    0x1601
+>>>>   #define PCI_DEVICE_ID_AMD_15H_NB_F2    0x1602
+>>>> -
+>>>> +#define PCI_DEVICE_ID_AMD_16H_NB_F0    0x1530
+>>>> +#define PCI_DEVICE_ID_AMD_16H_NB_F1    0x1531
+>>>> +#define PCI_DEVICE_ID_AMD_16H_NB_F2    0x1532
+>>>> +#define PCI_DEVICE_ID_AMD_16H_NB_F3    0x1533
+>>>> +#define PCI_DEVICE_ID_AMD_16H_NB_F4    0x1534
+>>>> +#define PCI_DEVICE_ID_AMD_16H_NB_F5    0x1535
+>>>>
+>>>>   /*
+>>>>    * Function 1 - Address Map
+>>>> @@ -300,6 +309,7 @@ enum amd_families {
+>>>>          K8_CPUS = 0,
+>>>>          F10_CPUS,
+>>>>          F15_CPUS,
+>>>> +       F16_CPUS,
+>>>>          NUM_FAMILIES,
+>>>>   };
+>>>>
+>>>> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+>>>> index 1679ff6..59f732f 100644
+>>>> --- a/include/linux/pci_ids.h
+>>>> +++ b/include/linux/pci_ids.h
+>>>> @@ -519,6 +519,8 @@
+>>>>   #define PCI_DEVICE_ID_AMD_11H_NB_LINK  0x1304
+>>>>   #define PCI_DEVICE_ID_AMD_15H_NB_F3    0x1603
+>>>>   #define PCI_DEVICE_ID_AMD_15H_NB_F4    0x1604
+>>>> +#define PCI_DEVICE_ID_AMD_16H_NB_F3    0x1533
+>>>> +#define PCI_DEVICE_ID_AMD_16H_NB_F4    0x1534
+>>> What is the point of adding identical #defines both here and in
+>>> amd64_edac.h?  Also, read the note at the top of
+>>> include/linux/pci_ids.h.
+>> Yeah, they should be in pci_ids.h since they're used in amd_nb.c and
+>> amd64_edac.c.
 >>
->>     acpi_pci_root_add
->>       pci_acpi_scan_root
->>         pci_create_root_bus
->>           bridge = pci_alloc_host_bridge
->>           bridge->dev.release = pci_release_bus_bridge_dev
->>           device_register(&bridge->dev)
->>         pci_set_host_bridge_release(..., release_pci_root_info, ...)
->>
->> But I don't see any device_unregister() in the remove path:
->>
->>     acpi_pci_root_remove
->>       pci_remove_root_bus
->>         put_device(&host_bridge->dev)
->>
->>     pci_release_bus_bridge_dev
->>       bridge->release_fn        # e.g., release_pci_root_info
->>         release_pci_root_info
->>           __release_pci_root_info
->>             release_resource
->>             free_pci_root_info_res
->>             teardown_mcfg_map
->>
->> What am I missing?
+>> But, what shouldn't be is adding unused defines (*_F0 and *_F5).
+>> Aravind, please drop them.
 >
-> pci_stop_root_bus
->          /* stop the host bridge */
->         device_del(&host_bridge->dev);
+>     Yes, I have made the changes and sent it out as version 2 of the 
+> PATCH.
+>     Do have a look and let me know if I need to make any changes.
+>
+>
+>> I'll review the rest of the patch when I get around to it this week.
+>>
+>
 
-Hmm...  OK, thanks for the pointer.  So we don't actually call
-device_unregister() itself, but since device_unregister() consists of
-nothing more than "device_del(dev); put_device(dev);" I guess we're
-doing the equivalent in two pieces:
+      Correction: Fam16 does not support GART. I had mistakenly included 
+it in amd_nb.c (Apologies)
+      I have fixed it up and made few other cosmetic changes to the 
+patch. I have tested it once again to
+      make certain it works fine and it does..
+      Sending it out as V3 of the patch..
 
-    acpi_pci_root_remove
-      pci_stop_root_bus
-        device_del(&host_bridge->dev)
-      pci_remove_root_bus
-        put_device(&host_bridge->dev)
 
-This seems unnecessarily difficult to analyze.  It would be better if
-we had symmetric device_register()/device_unregister() paths, or if
-that can't be done, symmetric device_add()/device_del() paths.
 
-Don't bother to generate a quick patch to just replace
-device_register() with explicit calls to device_initialize() and
-device_add(), though.  Maybe someday we can clean up that and more.
-Anyway, thanks for fixing my confusion.
-
-Bjorn
