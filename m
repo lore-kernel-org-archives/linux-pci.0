@@ -1,90 +1,85 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f49.google.com ([209.85.219.49]:38626 "EHLO
-	mail-oa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1763682Ab3DDRRK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Apr 2013 13:17:10 -0400
-Received: by mail-oa0-f49.google.com with SMTP id j6so3005849oag.22
-        for <linux-pci@vger.kernel.org>; Thu, 04 Apr 2013 10:17:10 -0700 (PDT)
+Received: from mho-03-ewr.mailhop.org ([204.13.248.66]:60690 "EHLO
+	mho-01-ewr.mailhop.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752437Ab3DOPrQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 15 Apr 2013 11:47:16 -0400
+Date: Mon, 15 Apr 2013 11:46:20 -0400
+From: Jason Cooper <jason@lakedaemon.net>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Russell King <linux@arm.linux.org.uk>,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Arnd Bergmann <arnd@arndb.de>, Olof Johansson <olof@lixom.net>,
+	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Andrew Murray <andrew.murray@arm.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Mitch Bradley <wmb@firmworks.com>
+Subject: Re: [PATCHv8 00/19] PCIe support for the Armada 370 and Armada XP
+ SoCs
+Message-ID: <20130415154620.GE28693@titan.lakedaemon.net>
+References: <1365541601-14095-1-git-send-email-thomas.petazzoni@free-electrons.com>
 MIME-Version: 1.0
-In-Reply-To: <1365075572-20763-4-git-send-email-shangw@linux.vnet.ibm.com>
-References: <1365075572-20763-1-git-send-email-shangw@linux.vnet.ibm.com> <1365075572-20763-4-git-send-email-shangw@linux.vnet.ibm.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 4 Apr 2013 11:16:49 -0600
-Message-ID: <CAErSpo73=V5eHF4uWtc0FsEaFygGG7uDTsqCWzQsTEeiyH9gCA@mail.gmail.com>
-Subject: Re: [PATCH 3/5] PCI: Use cached MSI cap while enabling MSI interrupts
-To: Gavin Shan <shangw@linux.vnet.ibm.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1365541601-14095-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 4, 2013 at 5:39 AM, Gavin Shan <shangw@linux.vnet.ibm.com> wrote:
-> The patch intends to use the cached MSI capability offset in
-> pci_dev instead of polling that from config space when enabling
-> MSI interrupts.
->
-> Signed-off-by: Gavin Shan <shangw@linux.vnet.ibm.com>
-> ---
->  drivers/pci/msi.c |   19 +++++++++----------
->  1 files changed, 9 insertions(+), 10 deletions(-)
->
-> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> index 5f51e10..182474d 100644
-> --- a/drivers/pci/msi.c
-> +++ b/drivers/pci/msi.c
-> @@ -552,14 +552,14 @@ out_unroll:
->  static int msi_capability_init(struct pci_dev *dev, int nvec)
->  {
->         struct msi_desc *entry;
-> -       int pos, ret;
-> +       int ret;
->         u16 control;
->         unsigned mask;
->
-> -       pos = pci_find_capability(dev, PCI_CAP_ID_MSI);
-> -       msi_set_enable(dev, 0); /* Disable MSI during set up */
-> +       /* Disable MSI during set up */
-> +       msi_set_enable(dev, 0);
->
-> -       pci_read_config_word(dev, msi_control_reg(pos), &control);
-> +       pci_read_config_word(dev, msi_control_reg(dev->msi_cap), &control);
+Thomas,
 
-While you're at at, can you get rid of msi_control_reg() and friends?
-They are needlessly different from the common style in this file,
-e.g., "pos + PCI_MSI_FLAGS".
+On Tue, Apr 09, 2013 at 11:06:21PM +0200, Thomas Petazzoni wrote:
+> Hello,
+> 
+> This series of patches introduces PCIe support for the Marvell Armada
+> 370 and Armada XP. In the future, we plan to extend the driver to
+> cover Kirkwood platforms, and possibly other Marvell EBU platforms as
+> well.
+> 
+> Here is the current status of the different patches:
+> 
+>  * Patches 1-5 are awaiting a formal Acked-by from the Device Tree
+>    maintainers. Patches 1-3 are the new version of the OF PCI range
+>    parsing functions from Andrew Murray, which he worked on after the
+>    comments from Rob Herring. Patches 4 and 5 are much more trivial
+>    and have been around since many versions of this series.
 
->         /* MSI Entry Initialization */
->         entry = alloc_msi_entry(dev);
->         if (!entry)
-> @@ -570,9 +570,9 @@ static int msi_capability_init(struct pci_dev *dev, int nvec)
->         entry->msi_attrib.entry_nr      = 0;
->         entry->msi_attrib.maskbit       = is_mask_bit_support(control);
->         entry->msi_attrib.default_irq   = dev->irq;     /* Save IOAPIC IRQ */
-> -       entry->msi_attrib.pos           = pos;
-> +       entry->msi_attrib.pos           = dev->msi_cap;
->
-> -       entry->mask_pos = msi_mask_reg(pos, entry->msi_attrib.is_64);
-> +       entry->mask_pos = msi_mask_reg(dev->msi_cap, entry->msi_attrib.is_64);
->         /* All MSIs are unmasked by default, Mask them all */
->         if (entry->msi_attrib.maskbit)
->                 pci_read_config_dword(dev, entry->mask_pos, &entry->masked);
-> @@ -818,13 +818,12 @@ static int pci_msi_check_device(struct pci_dev *dev, int nvec, int type)
->   */
->  int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec)
->  {
-> -       int status, pos, maxvec;
-> +       int status, maxvec;
->         u16 msgctl;
->
-> -       pos = pci_find_capability(dev, PCI_CAP_ID_MSI);
-> -       if (!pos)
-> +       if (!dev->msi_cap)
->                 return -EINVAL;
-> -       pci_read_config_word(dev, pos + PCI_MSI_FLAGS, &msgctl);
-> +       pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &msgctl);
->         maxvec = 1 << ((msgctl & PCI_MSI_FLAGS_QMASK) >> 1);
->         if (nvec > maxvec)
->                 return maxvec;
-> --
-> 1.7.5.4
->
+Applied to mvebu/drivers
+
+
+>  * Patch 6 and 10, that are touching drivers/pci/ have been formally
+>    Acked-by Bjorn Helgaas, the PCI maintainer.
+
+Applied to mvebu/drivers
+
+>  * Patch 7, which is touching arch/arm/kernel, has been merged by
+>    Russell King already, see
+>    http://www.arm.linux.org.uk/developer/patches/viewpatch.php?id=7683/1.
+
+Added remote branch dependency on rmk/for-next in mvebu/soc
+
+>  * Patches 8 and 9 are touching drivers/clk, and are awaiting an
+>    Acked-by from Mike Turquette. However, they are fairly trivial
+>    patches, so they shouldn't cause too much problem.
+
+Applied to mvebu/drivers
+
+> 
+>  * All the other patches touch mvebu-specific things, either
+>    mach-mvebu or the related Device Tree files or defconfig, so it's
+>    up to the Marvell maintainers to pick them up.
+
+Patches 10,11,19 applied to mvebu/soc with dep on rmk/for-next, and
+mvebu/drivers (in /soc to catch mvebu-mbus dependency).
+
+I'm going to flag a separate PR for this marked "late" so that it goes
+in *after* rmk/for-next.
+
+thx,
+
+Jason.
