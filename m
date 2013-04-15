@@ -1,44 +1,57 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from jabberwock.ucw.cz ([46.255.230.98]:50815 "EHLO
-	jabberwock.ucw.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758222Ab3DALzu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 1 Apr 2013 07:55:50 -0400
-Received: from albireo.burrow.ucw.cz (albireo.ucw.cz [89.239.2.32])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(Client CN "albireo.ucw.cz", Issuer "ucw.cz" (verified OK))
-	by jabberwock.ucw.cz (Postfix) with ESMTPS id 7C68E1C009A
-	for <linux-pci@vger.kernel.org>; Mon,  1 Apr 2013 13:45:07 +0200 (CEST)
-Date: Mon, 1 Apr 2013 13:45:05 +0200
-From: Martin Mares <mj@ucw.cz>
-To: Kay Sievers <kay@vrfy.org>
-Cc: Lucas De Marchi <lucas.demarchi@profusion.mobi>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Libin <huawei.libin@huawei.com>
+To: Arnd Bergmann <arnd@arndb.de>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	David Airlie <airlied@linux.ie>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Samuli Suominen <ssuominen@gentoo.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: lspci -k is broken with depmod from kmod since it doesn't
- generate modules.pcimap anymore
-Message-ID: <mj+md-20130401.114439.12968.albireo@ucw.cz>
-References: <515213CF.7000804@gentoo.org>
- <CAErSpo5wG8FUyomySdze56-e9Jr+3DevoCGGAnhLM8vpOBvQ5w@mail.gmail.com>
- <CAMOw1v4jZXqT5Zm2ssSM8A2-ztQr1ovRi1BhQkbiCMoO3ss9Qg@mail.gmail.com>
- <CAPXgP13z3aoL+9zRpYnSkxYTdO6GFNgGRwaHbCAwFSRhnXtyjQ@mail.gmail.com>
+	"Hans J. Koch" <hjk@hansjkoch.de>,
+	Petr Vandrovec <petr@vandrovec.name>,
+	Andrew Morton <akpm@linux-foundation.org>
+CC: Konstantin Khlebnikov <khlebnikov@openvz.org>,
+	Thomas Hellstrom <thellstrom@vmware.com>,
+	Dave Airlie <airlied@redhat.com>,
+	Nadia Yvette Chambers <nyc@holomorphy.com>,
+	Jiri Kosina <jkosina@suse.cz>,
+	Al Viro <viro@zeniv.linux.org.uk>,
+	Mel Gorman <mgorman@suse.de>, Hugh Dickins <hughd@google.com>,
+	Rik van Riel <riel@redhat.com>,
+	David Rientjes <rientjes@google.com>,
+	Michel Lespinasse <walken@google.com>,
+	<linux-kernel@vger.kernel.org>, <dri-devel@lists.freedesktop.org>,
+	<linux-pci@vger.kernel.org>, <linux-mm@kvack.org>,
+	<guohanjun@huawei.com>, <wangyijing@huawei.com>
+Subject: [PATCH 6/6] uio: use vma_pages() to replace (vm_end - vm_start) >> PAGE_SHIFT
+Date: Mon, 15 Apr 2013 20:48:58 +0800
+Message-ID: <1366030138-71292-6-git-send-email-huawei.libin@huawei.com>
+In-Reply-To: <1366030138-71292-1-git-send-email-huawei.libin@huawei.com>
+References: <1366030138-71292-1-git-send-email-huawei.libin@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAPXgP13z3aoL+9zRpYnSkxYTdO6GFNgGRwaHbCAwFSRhnXtyjQ@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello!
+(*->vm_end - *->vm_start) >> PAGE_SHIFT operation is implemented
+as a inline funcion vma_pages() in linux/mm.h, so using it.
 
-> Yes, that needs to be converted to use modaliases, if that feature is
-> desired in lspci. The information is available in /sys and modprobe
-> can be used to resolve that to module names. The old hotplug maps
-> files are gone.
+Signed-off-by: Libin <huawei.libin@huawei.com>
+---
+ drivers/uio/uio.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-I'm looking into that. Expect a pciutils patch soon.
-
-				Have a nice fortnight
+diff --git a/drivers/uio/uio.c b/drivers/uio/uio.c
+index c8b9262..ba5447f 100644
+--- a/drivers/uio/uio.c
++++ b/drivers/uio/uio.c
+@@ -676,7 +676,7 @@ static int uio_mmap(struct file *filep, struct vm_area_struct *vma)
+ 	if (mi < 0)
+ 		return -EINVAL;
+ 
+-	requested_pages = (vma->vm_end - vma->vm_start) >> PAGE_SHIFT;
++	requested_pages = vma_pages(vma);
+ 	actual_pages = ((idev->info->mem[mi].addr & ~PAGE_MASK)
+ 			+ idev->info->mem[mi].size + PAGE_SIZE -1) >> PAGE_SHIFT;
+ 	if (requested_pages > actual_pages)
 -- 
-Martin `MJ' Mares                          <mj@ucw.cz>   http://mj.ucw.cz/
-Faculty of Math and Physics, Charles University, Prague, Czech Rep., Earth
-The computer is mightier than the pen, the sword, and usually, the programmer.
+1.8.2.1
+
+
