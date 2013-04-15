@@ -1,73 +1,57 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40698 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752119Ab3D2Eb7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 29 Apr 2013 00:31:59 -0400
-Date: Mon, 29 Apr 2013 06:33:11 +0200
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: x86@kernel.org, linux-pci@vger.kernel.org,
-	Suresh Siddha <suresh.b.siddha@intel.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	Jan Beulich <JBeulich@suse.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH -tip/apic 2/2] x86/MSI: Allocate as many multiple-MSIs as
- requested
-Message-ID: <eb84d5e5d4af81aa38832c21e49d3276f780a048.1367160713.git.agordeev@redhat.com>
-References: <cover.1367160713.git.agordeev@redhat.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Libin <huawei.libin@huawei.com>
+To: Arnd Bergmann <arnd@arndb.de>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	David Airlie <airlied@linux.ie>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Hans J. Koch" <hjk@hansjkoch.de>,
+	Petr Vandrovec <petr@vandrovec.name>,
+	Andrew Morton <akpm@linux-foundation.org>
+CC: Konstantin Khlebnikov <khlebnikov@openvz.org>,
+	Thomas Hellstrom <thellstrom@vmware.com>,
+	Dave Airlie <airlied@redhat.com>,
+	Nadia Yvette Chambers <nyc@holomorphy.com>,
+	Jiri Kosina <jkosina@suse.cz>,
+	Al Viro <viro@zeniv.linux.org.uk>,
+	Mel Gorman <mgorman@suse.de>, Hugh Dickins <hughd@google.com>,
+	Rik van Riel <riel@redhat.com>,
+	David Rientjes <rientjes@google.com>,
+	Michel Lespinasse <walken@google.com>,
+	<linux-kernel@vger.kernel.org>, <dri-devel@lists.freedesktop.org>,
+	<linux-pci@vger.kernel.org>, <linux-mm@kvack.org>,
+	<guohanjun@huawei.com>, <wangyijing@huawei.com>
+Subject: [PATCH 4/6] char: use vma_pages() to replace (vm_end - vm_start) >> PAGE_SHIFT
+Date: Mon, 15 Apr 2013 20:48:56 +0800
+Message-ID: <1366030138-71292-4-git-send-email-huawei.libin@huawei.com>
+In-Reply-To: <1366030138-71292-1-git-send-email-huawei.libin@huawei.com>
+References: <1366030138-71292-1-git-send-email-huawei.libin@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <cover.1367160713.git.agordeev@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+(*->vm_end - *->vm_start) >> PAGE_SHIFT operation is implemented
+as a inline funcion vma_pages() in linux/mm.h, so using it.
+
+Signed-off-by: Libin <huawei.libin@huawei.com>
 ---
- drivers/iommu/irq_remapping.c |    7 ++++---
- 1 files changed, 4 insertions(+), 3 deletions(-)
+ drivers/char/mspec.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
-index d56f8c1..315c563 100644
---- a/drivers/iommu/irq_remapping.c
-+++ b/drivers/iommu/irq_remapping.c
-@@ -55,19 +55,19 @@ static int do_setup_msi_irqs(struct pci_dev *dev, int nvec)
- 	unsigned int irq;
- 	struct msi_desc *msidesc;
+diff --git a/drivers/char/mspec.c b/drivers/char/mspec.c
+index e1f60f9..ed0703f 100644
+--- a/drivers/char/mspec.c
++++ b/drivers/char/mspec.c
+@@ -168,7 +168,7 @@ mspec_close(struct vm_area_struct *vma)
+ 	if (!atomic_dec_and_test(&vdata->refcnt))
+ 		return;
  
--	nvec = __roundup_pow_of_two(nvec);
--
- 	WARN_ON(!list_is_singular(&dev->msi_list));
- 	msidesc = list_entry(dev->msi_list.next, struct msi_desc, list);
- 	WARN_ON(msidesc->irq);
- 	WARN_ON(msidesc->msi_attrib.multiple);
-+	WARN_ON(msidesc->nvec);
- 
- 	node = dev_to_node(&dev->dev);
- 	irq = __create_irqs(get_nr_irqs_gsi(), nvec, node);
- 	if (irq == 0)
- 		return -ENOSPC;
- 
--	msidesc->msi_attrib.multiple = ilog2(nvec);
-+	msidesc->nvec = nvec;
-+	msidesc->msi_attrib.multiple = ilog2(__roundup_pow_of_two(nvec));
- 	for (sub_handle = 0; sub_handle < nvec; sub_handle++) {
- 		if (!sub_handle) {
- 			index = msi_alloc_remapped_irq(dev, irq, nvec);
-@@ -95,6 +95,7 @@ error:
- 	 * IRQs from tearing down again in default_teardown_msi_irqs()
- 	 */
- 	msidesc->irq = 0;
-+	msidesc->nvec = 0;
- 	msidesc->msi_attrib.multiple = 0;
- 
- 	return ret;
+-	last_index = (vdata->vm_end - vdata->vm_start) >> PAGE_SHIFT;
++	last_index = vma_pages(vdata);
+ 	for (index = 0; index < last_index; index++) {
+ 		if (vdata->maddr[index] == 0)
+ 			continue;
 -- 
-1.7.7.6
+1.8.2.1
 
 
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
