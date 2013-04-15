@@ -1,103 +1,264 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:21458 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751882Ab3D2EbR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 29 Apr 2013 00:31:17 -0400
-Date: Mon, 29 Apr 2013 06:32:34 +0200
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: x86@kernel.org, linux-pci@vger.kernel.org,
-	Suresh Siddha <suresh.b.siddha@intel.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	Jan Beulich <JBeulich@suse.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH -tip/apic 1/2] PCI/MSI: Allocate as many multiple-MSIs as
- requested
-Message-ID: <8575dc590b819892f366852fe50835efaf579f4f.1367160713.git.agordeev@redhat.com>
-References: <cover.1367160713.git.agordeev@redhat.com>
+Received: from mail-oa0-f51.google.com ([209.85.219.51]:48572 "EHLO
+	mail-oa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933210Ab3DOSXy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 15 Apr 2013 14:23:54 -0400
+Received: by mail-oa0-f51.google.com with SMTP id g12so4700401oah.38
+        for <linux-pci@vger.kernel.org>; Mon, 15 Apr 2013 11:23:52 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <cover.1367160713.git.agordeev@redhat.com>
+In-Reply-To: <1365806683-26717-2-git-send-email-yinghai@kernel.org>
+References: <1365806683-26717-1-git-send-email-yinghai@kernel.org> <1365806683-26717-2-git-send-email-yinghai@kernel.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 15 Apr 2013 12:23:32 -0600
+Message-ID: <CAErSpo4-_x5ZvMtOTg9_OpikngpHZePjtTj3mhew1TXsmZ6fuw@mail.gmail.com>
+Subject: Re: [PATCH v4 01/29] PCI: Clean up quirk_io_region
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Ram Pai <linuxram@us.ibm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When multiple MSIs are enabled with pci_enable_msi_block(), the
-requested number of interrupts 'nvec' is rounded up to the nearest
-power-of-two value. The result is then used for setting up the
-number of MSI messages in the PCI device and allocation of
-interrupt resources in the operating system (i.e. vector numbers).
-Thus, in cases when a device driver requests some number of MSIs
-and this number is not a power-of-two value, the extra operating
-system resources (allocated as the result of rounding) are wasted.
+On Fri, Apr 12, 2013 at 4:44 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> Before every quirk_io_region calling, pci_read_config_word is called.
+> We can fold that calling into quirk_io_region() to make
+> code more readable.
+>
+> According to Bjorn, split this one as separated patch from
+> addon resource patch.
+>
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 
-This fix introduces 'msi_desc::nvec' field to address the above
-issue. When non-zero, it will report the actual number of MSIs the
-device will send, as requested by the device driver. This value
-should be used by architectures to properly set up and tear down
-associated interrupt resources.
+I applied this to my pci/misc branch for v3.10.  Nice cleanup, thanks.
 
-Note, although the existing 'msi_desc::multiple' field might seem
-redundant, in fact in does not. In general case the number of MSIs a
-PCI device is initialized with is not necessarily the closest power-
-of-two value of the number of MSIs the device will send. Thus, in
-theory it would not be always possible to derive the former from the
-latter and we need to keep them both, to stress this corner case.
-Besides, since 'msi_desc::multiple' is a bitfield, throwing it out
-would not save us any space.
+I changed quirk_io_region() so that instead of filling in
+res->start/end with bus addresses, then copying those into bus_region,
+and finally converting bus-to-region, we just fill in bus_region
+directly.  That is a couple lines short and res never contains a bus
+address.  There's no reason to keep bad examples of putting bus
+addresses into a struct resource.
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
----
- drivers/pci/msi.c   |   10 ++++++++--
- include/linux/msi.h |    1 +
- 2 files changed, 9 insertions(+), 2 deletions(-)
+Bjorn
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 00cc78c..014b9d5 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -79,7 +79,10 @@ void default_teardown_msi_irqs(struct pci_dev *dev)
- 		int i, nvec;
- 		if (entry->irq == 0)
- 			continue;
--		nvec = 1 << entry->msi_attrib.multiple;
-+		if (entry->nvec)
-+			nvec = entry->nvec;
-+		else
-+			nvec = 1 << entry->msi_attrib.multiple;
- 		for (i = 0; i < nvec; i++)
- 			arch_teardown_msi_irq(entry->irq + i);
- 	}
-@@ -340,7 +343,10 @@ static void free_msi_irqs(struct pci_dev *dev)
- 		int i, nvec;
- 		if (!entry->irq)
- 			continue;
--		nvec = 1 << entry->msi_attrib.multiple;
-+		if (entry->nvec)
-+			nvec = entry->nvec;
-+		else
-+			nvec = 1 << entry->msi_attrib.multiple;
- #ifdef CONFIG_GENERIC_HARDIRQS
- 		for (i = 0; i < nvec; i++)
- 			BUG_ON(irq_has_action(entry->irq + i));
-diff --git a/include/linux/msi.h b/include/linux/msi.h
-index ce93a34..0e20dfc 100644
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -35,6 +35,7 @@ struct msi_desc {
- 
- 	u32 masked;			/* mask bits */
- 	unsigned int irq;
-+	unsigned int nvec;		/* number of messages */
- 	struct list_head list;
- 
- 	union {
--- 
-1.7.7.6
-
-
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+> ---
+>  drivers/pci/quirks.c | 132 ++++++++++++++++++---------------------------------
+>  1 file changed, 47 insertions(+), 85 deletions(-)
+>
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index 4273a2d..2dac170 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -324,29 +324,32 @@ static void quirk_cs5536_vsa(struct pci_dev *dev)
+>  }
+>  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_CS5536_ISA, quirk_cs5536_vsa);
+>
+> -static void quirk_io_region(struct pci_dev *dev, unsigned region,
+> -       unsigned size, int nr, const char *name)
+> +static void quirk_io_region(struct pci_dev *dev, int port,
+> +                               unsigned size, int nr, const char *name)
+>  {
+> -       region &= ~(size-1);
+> -       if (region) {
+> -               struct pci_bus_region bus_region;
+> -               struct resource *res = dev->resource + nr;
+> +       u16 region;
+> +       struct pci_bus_region bus_region;
+> +       struct resource *res = dev->resource + nr;
+>
+> -               res->name = pci_name(dev);
+> -               res->start = region;
+> -               res->end = region + size - 1;
+> -               res->flags = IORESOURCE_IO;
+> +       pci_read_config_word(dev, port, &region);
+> +       region &= ~(size - 1);
+>
+> -               /* Convert from PCI bus to resource space.  */
+> -               bus_region.start = res->start;
+> -               bus_region.end = res->end;
+> -               pcibios_bus_to_resource(dev, res, &bus_region);
+> +       if (!region)
+> +               return;
+>
+> -               if (pci_claim_resource(dev, nr) == 0)
+> -                       dev_info(&dev->dev, "quirk: %pR claimed by %s\n",
+> -                                res, name);
+> -       }
+> -}
+> +       res->name = pci_name(dev);
+> +       res->start = region;
+> +       res->end = region + size - 1;
+> +       res->flags = IORESOURCE_IO;
+> +
+> +       /* Convert from PCI bus to resource space.  */
+> +       bus_region.start = res->start;
+> +       bus_region.end = res->end;
+> +       pcibios_bus_to_resource(dev, res, &bus_region);
+> +
+> +       if (!pci_claim_resource(dev, nr))
+> +               dev_info(&dev->dev, "quirk: %pR claimed by %s\n", res, name);
+> +}
+>
+>  /*
+>   *     ATI Northbridge setups MCE the processor if you even
+> @@ -374,12 +377,8 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_RS100,   quirk_ati_
+>   */
+>  static void quirk_ali7101_acpi(struct pci_dev *dev)
+>  {
+> -       u16 region;
+> -
+> -       pci_read_config_word(dev, 0xE0, &region);
+> -       quirk_io_region(dev, region, 64, PCI_BRIDGE_RESOURCES, "ali7101 ACPI");
+> -       pci_read_config_word(dev, 0xE2, &region);
+> -       quirk_io_region(dev, region, 32, PCI_BRIDGE_RESOURCES+1, "ali7101 SMB");
+> +       quirk_io_region(dev, 0xE0, 64, PCI_BRIDGE_RESOURCES, "ali7101 ACPI");
+> +       quirk_io_region(dev, 0xE2, 32, PCI_BRIDGE_RESOURCES+1, "ali7101 SMB");
+>  }
+>  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_AL,     PCI_DEVICE_ID_AL_M7101,         quirk_ali7101_acpi);
+>
+> @@ -442,12 +441,10 @@ static void piix4_mem_quirk(struct pci_dev *dev, const char *name, unsigned int
+>   */
+>  static void quirk_piix4_acpi(struct pci_dev *dev)
+>  {
+> -       u32 region, res_a;
+> +       u32 res_a;
+>
+> -       pci_read_config_dword(dev, 0x40, &region);
+> -       quirk_io_region(dev, region, 64, PCI_BRIDGE_RESOURCES, "PIIX4 ACPI");
+> -       pci_read_config_dword(dev, 0x90, &region);
+> -       quirk_io_region(dev, region, 16, PCI_BRIDGE_RESOURCES+1, "PIIX4 SMB");
+> +       quirk_io_region(dev, 0x40, 64, PCI_BRIDGE_RESOURCES, "PIIX4 ACPI");
+> +       quirk_io_region(dev, 0x90, 16, PCI_BRIDGE_RESOURCES+1, "PIIX4 SMB");
+>
+>         /* Device resource A has enables for some of the other ones */
+>         pci_read_config_dword(dev, 0x5c, &res_a);
+> @@ -491,7 +488,6 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL,       PCI_DEVICE_ID_INTEL_82443MX_3,  qui
+>   */
+>  static void quirk_ich4_lpc_acpi(struct pci_dev *dev)
+>  {
+> -       u32 region;
+>         u8 enable;
+>
+>         /*
+> @@ -503,22 +499,14 @@ static void quirk_ich4_lpc_acpi(struct pci_dev *dev)
+>         */
+>
+>         pci_read_config_byte(dev, ICH_ACPI_CNTL, &enable);
+> -       if (enable & ICH4_ACPI_EN) {
+> -               pci_read_config_dword(dev, ICH_PMBASE, &region);
+> -               region &= PCI_BASE_ADDRESS_IO_MASK;
+> -               if (region >= PCIBIOS_MIN_IO)
+> -                       quirk_io_region(dev, region, 128, PCI_BRIDGE_RESOURCES,
+> -                                       "ICH4 ACPI/GPIO/TCO");
+> -       }
+> +       if (enable & ICH4_ACPI_EN)
+> +               quirk_io_region(dev, ICH_PMBASE, 128, PCI_BRIDGE_RESOURCES,
+> +                                "ICH4 ACPI/GPIO/TCO");
+>
+>         pci_read_config_byte(dev, ICH4_GPIO_CNTL, &enable);
+> -       if (enable & ICH4_GPIO_EN) {
+> -               pci_read_config_dword(dev, ICH4_GPIOBASE, &region);
+> -               region &= PCI_BASE_ADDRESS_IO_MASK;
+> -               if (region >= PCIBIOS_MIN_IO)
+> -                       quirk_io_region(dev, region, 64,
+> -                                       PCI_BRIDGE_RESOURCES + 1, "ICH4 GPIO");
+> -       }
+> +       if (enable & ICH4_GPIO_EN)
+> +               quirk_io_region(dev, ICH4_GPIOBASE, 64, PCI_BRIDGE_RESOURCES+1,
+> +                               "ICH4 GPIO");
+>  }
+>  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL,    PCI_DEVICE_ID_INTEL_82801AA_0,                quirk_ich4_lpc_acpi);
+>  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL,    PCI_DEVICE_ID_INTEL_82801AB_0,                quirk_ich4_lpc_acpi);
+> @@ -533,26 +521,17 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL,    PCI_DEVICE_ID_INTEL_ESB_1,               qui
+>
+>  static void ich6_lpc_acpi_gpio(struct pci_dev *dev)
+>  {
+> -       u32 region;
+>         u8 enable;
+>
+>         pci_read_config_byte(dev, ICH_ACPI_CNTL, &enable);
+> -       if (enable & ICH6_ACPI_EN) {
+> -               pci_read_config_dword(dev, ICH_PMBASE, &region);
+> -               region &= PCI_BASE_ADDRESS_IO_MASK;
+> -               if (region >= PCIBIOS_MIN_IO)
+> -                       quirk_io_region(dev, region, 128, PCI_BRIDGE_RESOURCES,
+> -                                       "ICH6 ACPI/GPIO/TCO");
+> -       }
+> +       if (enable & ICH6_ACPI_EN)
+> +               quirk_io_region(dev, ICH_PMBASE, 128, PCI_BRIDGE_RESOURCES,
+> +                                "ICH6 ACPI/GPIO/TCO");
+>
+>         pci_read_config_byte(dev, ICH6_GPIO_CNTL, &enable);
+> -       if (enable & ICH6_GPIO_EN) {
+> -               pci_read_config_dword(dev, ICH6_GPIOBASE, &region);
+> -               region &= PCI_BASE_ADDRESS_IO_MASK;
+> -               if (region >= PCIBIOS_MIN_IO)
+> -                       quirk_io_region(dev, region, 64,
+> -                                       PCI_BRIDGE_RESOURCES + 1, "ICH6 GPIO");
+> -       }
+> +       if (enable & ICH6_GPIO_EN)
+> +               quirk_io_region(dev, ICH6_GPIOBASE, 64, PCI_BRIDGE_RESOURCES+1,
+> +                               "ICH6 GPIO");
+>  }
+>
+>  static void ich6_lpc_generic_decode(struct pci_dev *dev, unsigned reg, const char *name, int dynsize)
+> @@ -650,13 +629,9 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL,   PCI_DEVICE_ID_INTEL_ICH10_1, qui
+>   */
+>  static void quirk_vt82c586_acpi(struct pci_dev *dev)
+>  {
+> -       u32 region;
+> -
+> -       if (dev->revision & 0x10) {
+> -               pci_read_config_dword(dev, 0x48, &region);
+> -               region &= PCI_BASE_ADDRESS_IO_MASK;
+> -               quirk_io_region(dev, region, 256, PCI_BRIDGE_RESOURCES, "vt82c586 ACPI");
+> -       }
+> +       if (dev->revision & 0x10)
+> +               quirk_io_region(dev, 0x48, 256, PCI_BRIDGE_RESOURCES,
+> +                               "vt82c586 ACPI");
+>  }
+>  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_VIA,    PCI_DEVICE_ID_VIA_82C586_3,     quirk_vt82c586_acpi);
+>
+> @@ -668,18 +643,12 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_VIA,       PCI_DEVICE_ID_VIA_82C586_3,     quirk_vt
+>   */
+>  static void quirk_vt82c686_acpi(struct pci_dev *dev)
+>  {
+> -       u16 hm;
+> -       u32 smb;
+> -
+>         quirk_vt82c586_acpi(dev);
+>
+> -       pci_read_config_word(dev, 0x70, &hm);
+> -       hm &= PCI_BASE_ADDRESS_IO_MASK;
+> -       quirk_io_region(dev, hm, 128, PCI_BRIDGE_RESOURCES + 1, "vt82c686 HW-mon");
+> +       quirk_io_region(dev, 0x70, 128, PCI_BRIDGE_RESOURCES+1,
+> +                                "vt82c686 HW-mon");
+>
+> -       pci_read_config_dword(dev, 0x90, &smb);
+> -       smb &= PCI_BASE_ADDRESS_IO_MASK;
+> -       quirk_io_region(dev, smb, 16, PCI_BRIDGE_RESOURCES + 2, "vt82c686 SMB");
+> +       quirk_io_region(dev, 0x90, 16, PCI_BRIDGE_RESOURCES+2, "vt82c686 SMB");
+>  }
+>  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_VIA,    PCI_DEVICE_ID_VIA_82C686_4,     quirk_vt82c686_acpi);
+>
+> @@ -690,15 +659,8 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_VIA,        PCI_DEVICE_ID_VIA_82C686_4,     quirk_vt
+>   */
+>  static void quirk_vt8235_acpi(struct pci_dev *dev)
+>  {
+> -       u16 pm, smb;
+> -
+> -       pci_read_config_word(dev, 0x88, &pm);
+> -       pm &= PCI_BASE_ADDRESS_IO_MASK;
+> -       quirk_io_region(dev, pm, 128, PCI_BRIDGE_RESOURCES, "vt8235 PM");
+> -
+> -       pci_read_config_word(dev, 0xd0, &smb);
+> -       smb &= PCI_BASE_ADDRESS_IO_MASK;
+> -       quirk_io_region(dev, smb, 16, PCI_BRIDGE_RESOURCES + 1, "vt8235 SMB");
+> +       quirk_io_region(dev, 0x88, 128, PCI_BRIDGE_RESOURCES, "vt8235 PM");
+> +       quirk_io_region(dev, 0xd0, 16, PCI_BRIDGE_RESOURCES+1, "vt8235 SMB");
+>  }
+>  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_VIA,    PCI_DEVICE_ID_VIA_8235, quirk_vt8235_acpi);
+>
+> --
+> 1.8.1.4
+>
