@@ -1,52 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33226 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932875Ab3DKUbN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 11 Apr 2013 16:31:13 -0400
-Date: Thu, 11 Apr 2013 23:30:53 +0300
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: Tejun Heo <tj@kernel.org>
-Cc: Or Gerlitz <ogerlitz@mellanox.com>,
-	Ming Lei <ming.lei@canonical.com>,
+Received: from szxga01-in.huawei.com ([119.145.14.64]:31304 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934150Ab3DOMvs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 15 Apr 2013 08:51:48 -0400
+From: Libin <huawei.libin@huawei.com>
+To: Arnd Bergmann <arnd@arndb.de>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	David Miller <davem@davemloft.net>,
-	Roland Dreier <roland@kernel.org>,
-	netdev <netdev@vger.kernel.org>, Yan Burman <yanb@mellanox.com>,
-	Jack Morgenstein <jackm@dev.mellanox.co.il>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH repost for-3.9] pci: avoid work_on_cpu for nested SRIOV
- probes
-Message-ID: <20130411203053.GC25515@redhat.com>
-References: <20130411153030.GA22743@redhat.com>
- <20130411180517.GJ17641@mtj.dyndns.org>
- <20130411185853.GE23301@redhat.com>
- <20130411190408.GM17641@mtj.dyndns.org>
- <20130411191717.GB25515@redhat.com>
- <20130411192005.GN17641@mtj.dyndns.org>
+	David Airlie <airlied@linux.ie>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Hans J. Koch" <hjk@hansjkoch.de>,
+	Petr Vandrovec <petr@vandrovec.name>,
+	Andrew Morton <akpm@linux-foundation.org>
+CC: Konstantin Khlebnikov <khlebnikov@openvz.org>,
+	Thomas Hellstrom <thellstrom@vmware.com>,
+	Dave Airlie <airlied@redhat.com>,
+	Nadia Yvette Chambers <nyc@holomorphy.com>,
+	Jiri Kosina <jkosina@suse.cz>,
+	Al Viro <viro@zeniv.linux.org.uk>,
+	Mel Gorman <mgorman@suse.de>, Hugh Dickins <hughd@google.com>,
+	Rik van Riel <riel@redhat.com>,
+	David Rientjes <rientjes@google.com>,
+	Michel Lespinasse <walken@google.com>,
+	<linux-kernel@vger.kernel.org>, <dri-devel@lists.freedesktop.org>,
+	<linux-pci@vger.kernel.org>, <linux-mm@kvack.org>,
+	<guohanjun@huawei.com>, <wangyijing@huawei.com>
+Subject: [PATCH 5/6] drm: use vma_pages() to replace (vm_end - vm_start) >> PAGE_SHIFT
+Date: Mon, 15 Apr 2013 20:48:57 +0800
+Message-ID: <1366030138-71292-5-git-send-email-huawei.libin@huawei.com>
+In-Reply-To: <1366030138-71292-1-git-send-email-huawei.libin@huawei.com>
+References: <1366030138-71292-1-git-send-email-huawei.libin@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130411192005.GN17641@mtj.dyndns.org>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 11, 2013 at 12:20:05PM -0700, Tejun Heo wrote:
-> On Thu, Apr 11, 2013 at 10:17:17PM +0300, Michael S. Tsirkin wrote:
-> > Hmm no, there's a real deadlock here: you are
-> > trying to flush from work1 from within work2 running
-> > on same workqueue. work2 can't event start running.
-> > The problem is not annotation.
-> 
-> No, that has changed years ago with introduction of cmwq.  System
-> workqueues are now expected to have high enough maximum concurrency to
-> not cause deadlock as long as memory for worker creation is available,
-> so as long as your work item doesn't directly sit in the memory
-> reclaim path, it's safe to flush a different work item running on the
-> same workqueue with sufficiently high max_active.
-> 
-> Thanks.
+(*->vm_end - *->vm_start) >> PAGE_SHIFT operation is implemented
+as a inline funcion vma_pages() in linux/mm.h, so using it.
 
-Okay, so you are saying it's a false-positive?
-Want to send a patch so Or can try it out?
+Signed-off-by: Libin <huawei.libin@huawei.com>
+---
+ drivers/gpu/drm/ttm/ttm_bo_vm.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-> -- 
-> tejun
+diff --git a/drivers/gpu/drm/ttm/ttm_bo_vm.c b/drivers/gpu/drm/ttm/ttm_bo_vm.c
+index 74705f3..3df9f16 100644
+--- a/drivers/gpu/drm/ttm/ttm_bo_vm.c
++++ b/drivers/gpu/drm/ttm/ttm_bo_vm.c
+@@ -147,7 +147,7 @@ static int ttm_bo_vm_fault(struct vm_area_struct *vma, struct vm_fault *vmf)
+ 
+ 	page_offset = ((address - vma->vm_start) >> PAGE_SHIFT) +
+ 	    bo->vm_node->start - vma->vm_pgoff;
+-	page_last = ((vma->vm_end - vma->vm_start) >> PAGE_SHIFT) +
++	page_last = vma_pages(vma) +
+ 	    bo->vm_node->start - vma->vm_pgoff;
+ 
+ 	if (unlikely(page_offset >= bo->num_pages)) {
+@@ -258,7 +258,7 @@ int ttm_bo_mmap(struct file *filp, struct vm_area_struct *vma,
+ 
+ 	read_lock(&bdev->vm_lock);
+ 	bo = ttm_bo_vm_lookup_rb(bdev, vma->vm_pgoff,
+-				 (vma->vm_end - vma->vm_start) >> PAGE_SHIFT);
++				 vma_pages(vma));
+ 	if (likely(bo != NULL) && !kref_get_unless_zero(&bo->kref))
+ 		bo = NULL;
+ 	read_unlock(&bdev->vm_lock);
+-- 
+1.8.2.1
+
+
