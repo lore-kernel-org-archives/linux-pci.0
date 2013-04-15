@@ -1,229 +1,811 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	Roman Yepishev <roman.yepishev@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Matthew Garrett <matthew.garrett@nebula.com>,
-	"e1000-devel@lists.sourceforge.net"
-	<e1000-devel@lists.sourceforge.net>
-Subject: Re: [PATCH] PCI: Remove not needed check in disable aspm link
-Date: Tue, 02 Apr 2013 02:10:31 +0200
-Message-ID: <5234966.ATVbmBSVeS@vostro.rjw.lan>
-In-Reply-To: <20130401235256.GA31966@google.com>
-References: <CAErSpo6v0mj9=Q13d=G4hho0mb9XTcsmefzke9fROYmZ7oBWxQ@mail.gmail.com> <CAE9FiQU5c=ztzbskNnYFFKF9V5zO+jnRcMBCivLxA1F3fSfX5w@mail.gmail.com> <20130401235256.GA31966@google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ee0-f42.google.com ([74.125.83.42]:55915 "EHLO
+	mail-ee0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754144Ab3DOQvL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 15 Apr 2013 12:51:11 -0400
+Received: by mail-ee0-f42.google.com with SMTP id d4so2419193eek.29
+        for <linux-pci@vger.kernel.org>; Mon, 15 Apr 2013 09:50:59 -0700 (PDT)
+Message-ID: <516C2FEF.7080006@monstr.eu>
+Date: Mon, 15 Apr 2013 18:50:55 +0200
+From: Michal Simek <monstr@monstr.eu>
+Reply-To: monstr@monstr.eu
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+CC: benh@kernel.crashing.org, Andrew Murray <Andrew.Murray@arm.com>,
+	rob.herring@calxeda.com, jgunthorpe@obsidianresearch.com,
+	linux@arm.linux.org.uk, siva.kallam@samsung.com,
+	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
+	jg1.han@samsung.com, Liviu.Dudau@arm.com,
+	linux-kernel@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
+	kgene.kim@samsung.com, bhelgaas@google.com,
+	suren.reddy@samsung.com, linux-arm-kernel@lists.infradead.org,
+	paulus@samba.org, grant.likely@secretlab.ca,
+	thierry.reding@avionic-design.de, thomas.abraham@linaro.org,
+	arnd@arndb.de, linus.walleij@linaro.org
+Subject: Re: [PATCH v6 1/3] of/pci: Unify pci_process_bridge_OF_ranges from
+ Microblaze and PowerPC
+References: <1365693969-23907-1-git-send-email-Andrew.Murray@arm.com> <1365693969-23907-2-git-send-email-Andrew.Murray@arm.com> <20130415145741.4e4c362b@skate>
+In-Reply-To: <20130415145741.4e4c362b@skate>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, April 01, 2013 05:52:56 PM Bjorn Helgaas wrote:
-> On Fri, Mar 29, 2013 at 11:04:48AM -0700, Yinghai Lu wrote:
-> > attatched -v3 again
-> > 
-> > On Fri, Mar 29, 2013 at 11:02 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> > > On Fri, Mar 29, 2013 at 5:24 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> > >>
-> > >> Half of your v1 patch (removing the pcie_aspm_sanity_check() test)
-> > >> *might* be the right thing, but only if you can clearly explain why
-> > >> that will not reintroduce the bug Matthew fixed with c9651e70.
-> > >>
-> > >> I think we also need to fix the PCI_FIXUP_FINAL quirk regression, but
-> > >> that's a separate issue and should be a separate patch.
-> > >
-> > >
-> > > First commit from Matthew
-> > >  0ae5eaf10     PCI: ignore pre-1.1 ASPM quirking when ASPM is disabled
-> > >     Right now we won't touch ASPM state if ASPM is disabled, except in the case
-> > >     where we find a device that appears to be too old to reliably support ASPM.
-> > >     Right now we'll clear it in that case, which is almost certainly the wrong
-> > >     thing to do
-> > >
-> > > Try to not touch pre-1.1 ASPM for all, and it causes lots of regression.
-> > >
-> > > So second commit
-> > >
-> > > cdb0f9a1ad2e ASPM: Fix pcie devices with non-pcie children
-> > >     Since 3.2.12 and 3.3, some systems are failing to boot with a BUG_ON.
-> > >     Some other systems using the pata_jmicron driver fail to boot because no
-> > >     disks are detected.  Passing pcie_aspm=force on the kernel command line
-> > >     works around it.
-> > >
-> > > move the check aspm_disabled down.
-> > >
-> > > but ath5 and etc (pre-1.1) really need to aspm_disable to change their
-> > > hw setting.
-> > >
-> > > So the right solution would be dropping pcie_aspm_sanity_check()
-> > > change -in v2 should make all both happy, as quirk and disable that in
-> > > driver for ath5 are calling
-> > > pcie_disable_aspm_state explicitly.
-> > >
-> > > In v2, we already removed pcie_clear_aspm() that is calling
-> > > pcie_disable_aspm_state.
-> > >
-> > >
-> > > Please check attached -v3.
-> 
-> It's getting late in the v3.9 cycle already, and while your v3 patch
-> probably fixes Roman's problem, I can't convince myself that it is
-> safe in general.
-> 
-> I think the safest thing to do at this point is to revert 8c33f51df
-> ("PCI/ACPI: Request _OSC control before scanning PCI root bus") with a
-> patch like the one below.
-> 
-> That does mean the booting path and hotplug paths will be different (we set
-> aspm_disabled after boot but before hotplug), but it was that way for a
-> long time before 8c33f51df.  I think it's more important to fix this recent
-> ath5k regression than to fix a long-standing hotplug bug that nobody ever
-> complained about.
-> 
-> Obviously, I think we should fix the hotplug bug and clean up the ASPM
-> mess, too.  But we need to do that when we have more time to do it right
-> and test it.
-> 
-> Bjorn
-> 
-> 
-> commit 96e5d01cd536458435ef0678d9fa3dc542afb41f
-> Author: Bjorn Helgaas <bhelgaas@google.com>
-> Date:   Mon Apr 1 15:47:39 2013 -0600
-> 
->     Revert "PCI/ACPI: Request _OSC control before scanning PCI root bus"
->     
->     This reverts commit 8c33f51df406e1a1f7fa4e9b244845b7ebd61fa6.
->     
->     Conflicts:
->     	drivers/acpi/pci_root.c
->     
->     Reference: https://bugzilla.kernel.org/show_bug.cgi?id=55211
->     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Hi Thomas and Andrew,
 
-Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+First of all I would recommend you to add your tree to 0-day testing
+system where you can easily catch up compilation failures for
+microblaze and others.
 
-> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-> index 0ac546d..c740364 100644
-> --- a/drivers/acpi/pci_root.c
-> +++ b/drivers/acpi/pci_root.c
-> @@ -415,7 +415,6 @@ static int acpi_pci_root_add(struct acpi_device *device,
->  	struct acpi_pci_root *root;
->  	struct acpi_pci_driver *driver;
->  	u32 flags, base_flags;
-> -	bool is_osc_granted = false;
->  
->  	root = kzalloc(sizeof(struct acpi_pci_root), GFP_KERNEL);
->  	if (!root)
-> @@ -476,6 +475,30 @@ static int acpi_pci_root_add(struct acpi_device *device,
->  	flags = base_flags = OSC_PCI_SEGMENT_GROUPS_SUPPORT;
->  	acpi_pci_osc_support(root, flags);
->  
-> +	/*
-> +	 * TBD: Need PCI interface for enumeration/configuration of roots.
-> +	 */
-> +
-> +	mutex_lock(&acpi_pci_root_lock);
-> +	list_add_tail(&root->node, &acpi_pci_roots);
-> +	mutex_unlock(&acpi_pci_root_lock);
-> +
-> +	/*
-> +	 * Scan the Root Bridge
-> +	 * --------------------
-> +	 * Must do this prior to any attempt to bind the root device, as the
-> +	 * PCI namespace does not get created until this call is made (and
-> +	 * thus the root bridge's pci_dev does not exist).
-> +	 */
-> +	root->bus = pci_acpi_scan_root(root);
-> +	if (!root->bus) {
-> +		printk(KERN_ERR PREFIX
-> +			    "Bus %04x:%02x not present in PCI namespace\n",
-> +			    root->segment, (unsigned int)root->secondary.start);
-> +		result = -ENODEV;
-> +		goto out_del_root;
-> +	}
-> +
->  	/* Indicate support for various _OSC capabilities. */
->  	if (pci_ext_cfg_avail())
->  		flags |= OSC_EXT_PCI_CONFIG_SUPPORT;
-> @@ -494,6 +517,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
->  			flags = base_flags;
->  		}
->  	}
-> +
->  	if (!pcie_ports_disabled
->  	    && (flags & ACPI_PCIE_REQ_SUPPORT) == ACPI_PCIE_REQ_SUPPORT) {
->  		flags = OSC_PCI_EXPRESS_CAP_STRUCTURE_CONTROL
-> @@ -514,54 +538,28 @@ static int acpi_pci_root_add(struct acpi_device *device,
->  		status = acpi_pci_osc_control_set(device->handle, &flags,
->  				       OSC_PCI_EXPRESS_CAP_STRUCTURE_CONTROL);
->  		if (ACPI_SUCCESS(status)) {
-> -			is_osc_granted = true;
->  			dev_info(&device->dev,
->  				"ACPI _OSC control (0x%02x) granted\n", flags);
-> +			if (acpi_gbl_FADT.boot_flags & ACPI_FADT_NO_ASPM) {
-> +				/*
-> +				 * We have ASPM control, but the FADT indicates
-> +				 * that it's unsupported. Clear it.
-> +				 */
-> +				pcie_clear_aspm(root->bus);
-> +			}
->  		} else {
-> -			is_osc_granted = false;
->  			dev_info(&device->dev,
->  				"ACPI _OSC request failed (%s), "
->  				"returned control mask: 0x%02x\n",
->  				acpi_format_exception(status), flags);
-> +			pr_info("ACPI _OSC control for PCIe not granted, "
-> +				"disabling ASPM\n");
-> +			pcie_no_aspm();
->  		}
->  	} else {
->  		dev_info(&device->dev,
-> -			"Unable to request _OSC control "
-> -			"(_OSC support mask: 0x%02x)\n", flags);
-> -	}
-> -
-> -	/*
-> -	 * TBD: Need PCI interface for enumeration/configuration of roots.
-> -	 */
-> -
-> -	mutex_lock(&acpi_pci_root_lock);
-> -	list_add_tail(&root->node, &acpi_pci_roots);
-> -	mutex_unlock(&acpi_pci_root_lock);
-> -
-> -	/*
-> -	 * Scan the Root Bridge
-> -	 * --------------------
-> -	 * Must do this prior to any attempt to bind the root device, as the
-> -	 * PCI namespace does not get created until this call is made (and 
-> -	 * thus the root bridge's pci_dev does not exist).
-> -	 */
-> -	root->bus = pci_acpi_scan_root(root);
-> -	if (!root->bus) {
-> -		printk(KERN_ERR PREFIX
-> -			    "Bus %04x:%02x not present in PCI namespace\n",
-> -			    root->segment, (unsigned int)root->secondary.start);
-> -		result = -ENODEV;
-> -		goto out_del_root;
-> -	}
-> -
-> -	/* ASPM setting */
-> -	if (is_osc_granted) {
-> -		if (acpi_gbl_FADT.boot_flags & ACPI_FADT_NO_ASPM)
-> -			pcie_clear_aspm(root->bus);
-> -	} else {
-> -		pr_info("ACPI _OSC control for PCIe not granted, "
-> -			"disabling ASPM\n");
-> -		pcie_no_aspm();
-> +			 "Unable to request _OSC control "
-> +			 "(_OSC support mask: 0x%02x)\n", flags);
->  	}
->  
->  	pci_acpi_add_bus_pm_notifier(device, root->bus);
+Getting this compilation failure:
+drivers/of/of_pci.c: In function 'pci_process_bridge_OF_ranges':
+drivers/of/of_pci.c:88:22: error: storage size of 'range' isn't known
+drivers/of/of_pci.c:89:29: error: storage size of 'parser' isn't known
+drivers/of/of_pci.c:96:2: error: implicit declaration of function 'of_pci_range_parser' [-Werror=implicit-function-declaration]
+drivers/of/of_pci.c:100:2: error: implicit declaration of function 'for_each_of_pci_range' [-Werror=implicit-function-declaration]
+drivers/of/of_pci.c:100:41: error: expected ';' before '{' token
+drivers/of/of_pci.c:90:6: warning: unused variable 'res_type' [-Wunused-variable]
+drivers/of/of_pci.c:89:29: warning: unused variable 'parser' [-Wunused-variable]
+drivers/of/of_pci.c:88:22: warning: unused variable 'range' [-Wunused-variable]
+drivers/of/of_pci.c:87:19: warning: unused variable 'res' [-Wunused-variable]
+drivers/of/of_pci.c:86:21: warning: unused variable 'isa_mb' [-Wunused-variable]
+drivers/of/of_pci.c:85:17: warning: unused variable 'isa_hole' [-Wunused-variable]
+drivers/of/of_pci.c:85:6: warning: unused variable 'memno' [-Wunused-variable]
+
+which is caused missing linux/of_addresss.h in of_pci.c.
+PowerPC probably won't have this problem because you have this header in asm/prom.h
+but based on the same comment it is better to add it directly to the files.
+
+That's why please add this header to this patch.
+
+diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
+index 3e428a1..f30887e 100644
+--- a/drivers/of/of_pci.c
++++ b/drivers/of/of_pci.c
+@@ -1,6 +1,7 @@
+ #include <linux/kernel.h>
+ #include <linux/export.h>
+ #include <linux/of.h>
++#include <linux/of_address.h>
+ #include <linux/of_pci.h>
+ #include <asm/prom.h>
+
+
+When you fix it:
+Acked-by: Michal Simek <monstr@monstr.eu>
+
+Thanks,
+Michal
+
+
+
+On 04/15/2013 02:57 PM, Thomas Petazzoni wrote:
+> Michal, Ben,
+> 
+> Would you have some time to look at this patch and give your comments
+> and/or ACK ? Since it touches the PowerPC and Microblaze core code, we
+> need your agreement to merge this code, and quite a bit of code pending
+> for 3.10 depends on this patch.
+> 
+> Rob, alternatively, could we imagine doing a different version of the
+> 'of/pci: Provide support for parsing PCI DT ranges property' that
+> introduces the new API only, leaving the PowerPC and Microblaze rework
+> as follow-up efforts, so that all the PCIe drivers that depend on this
+> patch can get in for 3.10 ? I'd find it pretty sad if the Marvell PCIe
+> driver that has been worked on since 4+ months does not get into 3.10
+> just because this patch cannot be merged.
+> 
+> Thanks!
+> 
+> Thomas
+> 
+> On Thu, 11 Apr 2013 16:26:07 +0100, Andrew Murray wrote:
+>> The pci_process_bridge_OF_ranges function, used to parse the "ranges"
+>> property of a PCI host device, is found in both Microblaze and PowerPC
+>> architectures. These implementations are nearly identical. This patch
+>> moves this common code to a common place.
+>>
+>> Signed-off-by: Andrew Murray <Andrew.Murray@arm.com>
+>> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+>> Reviewed-by: Rob Herring <rob.herring@calxeda.com>
+>> Tested-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+>> ---
+>>  arch/microblaze/include/asm/pci-bridge.h |    5 +-
+>>  arch/microblaze/pci/pci-common.c         |  192 ----------------------------
+>>  arch/powerpc/include/asm/pci-bridge.h    |    5 +-
+>>  arch/powerpc/kernel/pci-common.c         |  192 ----------------------------
+>>  drivers/of/of_pci.c                      |  200 ++++++++++++++++++++++++++++++
+>>  include/linux/of_pci.h                   |    4 +
+>>  6 files changed, 206 insertions(+), 392 deletions(-)
+>>
+>> diff --git a/arch/microblaze/include/asm/pci-bridge.h b/arch/microblaze/include/asm/pci-bridge.h
+>> index cb5d397..5783cd6 100644
+>> --- a/arch/microblaze/include/asm/pci-bridge.h
+>> +++ b/arch/microblaze/include/asm/pci-bridge.h
+>> @@ -10,6 +10,7 @@
+>>  #include <linux/pci.h>
+>>  #include <linux/list.h>
+>>  #include <linux/ioport.h>
+>> +#include <linux/of_pci.h>
+>>  
+>>  struct device_node;
+>>  
+>> @@ -132,10 +133,6 @@ extern void setup_indirect_pci(struct pci_controller *hose,
+>>  extern struct pci_controller *pci_find_hose_for_OF_device(
+>>  			struct device_node *node);
+>>  
+>> -/* Fill up host controller resources from the OF node */
+>> -extern void pci_process_bridge_OF_ranges(struct pci_controller *hose,
+>> -			struct device_node *dev, int primary);
+>> -
+>>  /* Allocate & free a PCI host bridge structure */
+>>  extern struct pci_controller *pcibios_alloc_controller(struct device_node *dev);
+>>  extern void pcibios_free_controller(struct pci_controller *phb);
+>> diff --git a/arch/microblaze/pci/pci-common.c b/arch/microblaze/pci/pci-common.c
+>> index 9ea521e..2735ad9 100644
+>> --- a/arch/microblaze/pci/pci-common.c
+>> +++ b/arch/microblaze/pci/pci-common.c
+>> @@ -622,198 +622,6 @@ void pci_resource_to_user(const struct pci_dev *dev, int bar,
+>>  	*end = rsrc->end - offset;
+>>  }
+>>  
+>> -/**
+>> - * pci_process_bridge_OF_ranges - Parse PCI bridge resources from device tree
+>> - * @hose: newly allocated pci_controller to be setup
+>> - * @dev: device node of the host bridge
+>> - * @primary: set if primary bus (32 bits only, soon to be deprecated)
+>> - *
+>> - * This function will parse the "ranges" property of a PCI host bridge device
+>> - * node and setup the resource mapping of a pci controller based on its
+>> - * content.
+>> - *
+>> - * Life would be boring if it wasn't for a few issues that we have to deal
+>> - * with here:
+>> - *
+>> - *   - We can only cope with one IO space range and up to 3 Memory space
+>> - *     ranges. However, some machines (thanks Apple !) tend to split their
+>> - *     space into lots of small contiguous ranges. So we have to coalesce.
+>> - *
+>> - *   - We can only cope with all memory ranges having the same offset
+>> - *     between CPU addresses and PCI addresses. Unfortunately, some bridges
+>> - *     are setup for a large 1:1 mapping along with a small "window" which
+>> - *     maps PCI address 0 to some arbitrary high address of the CPU space in
+>> - *     order to give access to the ISA memory hole.
+>> - *     The way out of here that I've chosen for now is to always set the
+>> - *     offset based on the first resource found, then override it if we
+>> - *     have a different offset and the previous was set by an ISA hole.
+>> - *
+>> - *   - Some busses have IO space not starting at 0, which causes trouble with
+>> - *     the way we do our IO resource renumbering. The code somewhat deals with
+>> - *     it for 64 bits but I would expect problems on 32 bits.
+>> - *
+>> - *   - Some 32 bits platforms such as 4xx can have physical space larger than
+>> - *     32 bits so we need to use 64 bits values for the parsing
+>> - */
+>> -void pci_process_bridge_OF_ranges(struct pci_controller *hose,
+>> -				  struct device_node *dev, int primary)
+>> -{
+>> -	const u32 *ranges;
+>> -	int rlen;
+>> -	int pna = of_n_addr_cells(dev);
+>> -	int np = pna + 5;
+>> -	int memno = 0, isa_hole = -1;
+>> -	u32 pci_space;
+>> -	unsigned long long pci_addr, cpu_addr, pci_next, cpu_next, size;
+>> -	unsigned long long isa_mb = 0;
+>> -	struct resource *res;
+>> -
+>> -	pr_info("PCI host bridge %s %s ranges:\n",
+>> -	       dev->full_name, primary ? "(primary)" : "");
+>> -
+>> -	/* Get ranges property */
+>> -	ranges = of_get_property(dev, "ranges", &rlen);
+>> -	if (ranges == NULL)
+>> -		return;
+>> -
+>> -	/* Parse it */
+>> -	pr_debug("Parsing ranges property...\n");
+>> -	while ((rlen -= np * 4) >= 0) {
+>> -		/* Read next ranges element */
+>> -		pci_space = ranges[0];
+>> -		pci_addr = of_read_number(ranges + 1, 2);
+>> -		cpu_addr = of_translate_address(dev, ranges + 3);
+>> -		size = of_read_number(ranges + pna + 3, 2);
+>> -
+>> -		pr_debug("pci_space: 0x%08x pci_addr:0x%016llx ",
+>> -				pci_space, pci_addr);
+>> -		pr_debug("cpu_addr:0x%016llx size:0x%016llx\n",
+>> -					cpu_addr, size);
+>> -
+>> -		ranges += np;
+>> -
+>> -		/* If we failed translation or got a zero-sized region
+>> -		 * (some FW try to feed us with non sensical zero sized regions
+>> -		 * such as power3 which look like some kind of attempt
+>> -		 * at exposing the VGA memory hole)
+>> -		 */
+>> -		if (cpu_addr == OF_BAD_ADDR || size == 0)
+>> -			continue;
+>> -
+>> -		/* Now consume following elements while they are contiguous */
+>> -		for (; rlen >= np * sizeof(u32);
+>> -		     ranges += np, rlen -= np * 4) {
+>> -			if (ranges[0] != pci_space)
+>> -				break;
+>> -			pci_next = of_read_number(ranges + 1, 2);
+>> -			cpu_next = of_translate_address(dev, ranges + 3);
+>> -			if (pci_next != pci_addr + size ||
+>> -			    cpu_next != cpu_addr + size)
+>> -				break;
+>> -			size += of_read_number(ranges + pna + 3, 2);
+>> -		}
+>> -
+>> -		/* Act based on address space type */
+>> -		res = NULL;
+>> -		switch ((pci_space >> 24) & 0x3) {
+>> -		case 1:		/* PCI IO space */
+>> -			pr_info("  IO 0x%016llx..0x%016llx -> 0x%016llx\n",
+>> -			       cpu_addr, cpu_addr + size - 1, pci_addr);
+>> -
+>> -			/* We support only one IO range */
+>> -			if (hose->pci_io_size) {
+>> -				pr_info(" \\--> Skipped (too many) !\n");
+>> -				continue;
+>> -			}
+>> -			/* On 32 bits, limit I/O space to 16MB */
+>> -			if (size > 0x01000000)
+>> -				size = 0x01000000;
+>> -
+>> -			/* 32 bits needs to map IOs here */
+>> -			hose->io_base_virt = ioremap(cpu_addr, size);
+>> -
+>> -			/* Expect trouble if pci_addr is not 0 */
+>> -			if (primary)
+>> -				isa_io_base =
+>> -					(unsigned long)hose->io_base_virt;
+>> -			/* pci_io_size and io_base_phys always represent IO
+>> -			 * space starting at 0 so we factor in pci_addr
+>> -			 */
+>> -			hose->pci_io_size = pci_addr + size;
+>> -			hose->io_base_phys = cpu_addr - pci_addr;
+>> -
+>> -			/* Build resource */
+>> -			res = &hose->io_resource;
+>> -			res->flags = IORESOURCE_IO;
+>> -			res->start = pci_addr;
+>> -			break;
+>> -		case 2:		/* PCI Memory space */
+>> -		case 3:		/* PCI 64 bits Memory space */
+>> -			pr_info(" MEM 0x%016llx..0x%016llx -> 0x%016llx %s\n",
+>> -			       cpu_addr, cpu_addr + size - 1, pci_addr,
+>> -			       (pci_space & 0x40000000) ? "Prefetch" : "");
+>> -
+>> -			/* We support only 3 memory ranges */
+>> -			if (memno >= 3) {
+>> -				pr_info(" \\--> Skipped (too many) !\n");
+>> -				continue;
+>> -			}
+>> -			/* Handles ISA memory hole space here */
+>> -			if (pci_addr == 0) {
+>> -				isa_mb = cpu_addr;
+>> -				isa_hole = memno;
+>> -				if (primary || isa_mem_base == 0)
+>> -					isa_mem_base = cpu_addr;
+>> -				hose->isa_mem_phys = cpu_addr;
+>> -				hose->isa_mem_size = size;
+>> -			}
+>> -
+>> -			/* We get the PCI/Mem offset from the first range or
+>> -			 * the, current one if the offset came from an ISA
+>> -			 * hole. If they don't match, bugger.
+>> -			 */
+>> -			if (memno == 0 ||
+>> -			    (isa_hole >= 0 && pci_addr != 0 &&
+>> -			     hose->pci_mem_offset == isa_mb))
+>> -				hose->pci_mem_offset = cpu_addr - pci_addr;
+>> -			else if (pci_addr != 0 &&
+>> -				 hose->pci_mem_offset != cpu_addr - pci_addr) {
+>> -				pr_info(" \\--> Skipped (offset mismatch) !\n");
+>> -				continue;
+>> -			}
+>> -
+>> -			/* Build resource */
+>> -			res = &hose->mem_resources[memno++];
+>> -			res->flags = IORESOURCE_MEM;
+>> -			if (pci_space & 0x40000000)
+>> -				res->flags |= IORESOURCE_PREFETCH;
+>> -			res->start = cpu_addr;
+>> -			break;
+>> -		}
+>> -		if (res != NULL) {
+>> -			res->name = dev->full_name;
+>> -			res->end = res->start + size - 1;
+>> -			res->parent = NULL;
+>> -			res->sibling = NULL;
+>> -			res->child = NULL;
+>> -		}
+>> -	}
+>> -
+>> -	/* If there's an ISA hole and the pci_mem_offset is -not- matching
+>> -	 * the ISA hole offset, then we need to remove the ISA hole from
+>> -	 * the resource list for that brige
+>> -	 */
+>> -	if (isa_hole >= 0 && hose->pci_mem_offset != isa_mb) {
+>> -		unsigned int next = isa_hole + 1;
+>> -		pr_info(" Removing ISA hole at 0x%016llx\n", isa_mb);
+>> -		if (next < memno)
+>> -			memmove(&hose->mem_resources[isa_hole],
+>> -				&hose->mem_resources[next],
+>> -				sizeof(struct resource) * (memno - next));
+>> -		hose->mem_resources[--memno].flags = 0;
+>> -	}
+>> -}
+>> -
+>>  /* Decide whether to display the domain number in /proc */
+>>  int pci_proc_domain(struct pci_bus *bus)
+>>  {
+>> diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+>> index 025a130..205bfba 100644
+>> --- a/arch/powerpc/include/asm/pci-bridge.h
+>> +++ b/arch/powerpc/include/asm/pci-bridge.h
+>> @@ -10,6 +10,7 @@
+>>  #include <linux/pci.h>
+>>  #include <linux/list.h>
+>>  #include <linux/ioport.h>
+>> +#include <linux/of_pci.h>
+>>  #include <asm-generic/pci-bridge.h>
+>>  
+>>  struct device_node;
+>> @@ -231,10 +232,6 @@ extern int pcibios_map_io_space(struct pci_bus *bus);
+>>  extern struct pci_controller *pci_find_hose_for_OF_device(
+>>  			struct device_node* node);
+>>  
+>> -/* Fill up host controller resources from the OF node */
+>> -extern void pci_process_bridge_OF_ranges(struct pci_controller *hose,
+>> -			struct device_node *dev, int primary);
+>> -
+>>  /* Allocate & free a PCI host bridge structure */
+>>  extern struct pci_controller *pcibios_alloc_controller(struct device_node *dev);
+>>  extern void pcibios_free_controller(struct pci_controller *phb);
+>> diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+>> index fa12ae4..6edf396 100644
+>> --- a/arch/powerpc/kernel/pci-common.c
+>> +++ b/arch/powerpc/kernel/pci-common.c
+>> @@ -640,198 +640,6 @@ void pci_resource_to_user(const struct pci_dev *dev, int bar,
+>>  	*end = rsrc->end - offset;
+>>  }
+>>  
+>> -/**
+>> - * pci_process_bridge_OF_ranges - Parse PCI bridge resources from device tree
+>> - * @hose: newly allocated pci_controller to be setup
+>> - * @dev: device node of the host bridge
+>> - * @primary: set if primary bus (32 bits only, soon to be deprecated)
+>> - *
+>> - * This function will parse the "ranges" property of a PCI host bridge device
+>> - * node and setup the resource mapping of a pci controller based on its
+>> - * content.
+>> - *
+>> - * Life would be boring if it wasn't for a few issues that we have to deal
+>> - * with here:
+>> - *
+>> - *   - We can only cope with one IO space range and up to 3 Memory space
+>> - *     ranges. However, some machines (thanks Apple !) tend to split their
+>> - *     space into lots of small contiguous ranges. So we have to coalesce.
+>> - *
+>> - *   - We can only cope with all memory ranges having the same offset
+>> - *     between CPU addresses and PCI addresses. Unfortunately, some bridges
+>> - *     are setup for a large 1:1 mapping along with a small "window" which
+>> - *     maps PCI address 0 to some arbitrary high address of the CPU space in
+>> - *     order to give access to the ISA memory hole.
+>> - *     The way out of here that I've chosen for now is to always set the
+>> - *     offset based on the first resource found, then override it if we
+>> - *     have a different offset and the previous was set by an ISA hole.
+>> - *
+>> - *   - Some busses have IO space not starting at 0, which causes trouble with
+>> - *     the way we do our IO resource renumbering. The code somewhat deals with
+>> - *     it for 64 bits but I would expect problems on 32 bits.
+>> - *
+>> - *   - Some 32 bits platforms such as 4xx can have physical space larger than
+>> - *     32 bits so we need to use 64 bits values for the parsing
+>> - */
+>> -void pci_process_bridge_OF_ranges(struct pci_controller *hose,
+>> -				  struct device_node *dev, int primary)
+>> -{
+>> -	const u32 *ranges;
+>> -	int rlen;
+>> -	int pna = of_n_addr_cells(dev);
+>> -	int np = pna + 5;
+>> -	int memno = 0, isa_hole = -1;
+>> -	u32 pci_space;
+>> -	unsigned long long pci_addr, cpu_addr, pci_next, cpu_next, size;
+>> -	unsigned long long isa_mb = 0;
+>> -	struct resource *res;
+>> -
+>> -	printk(KERN_INFO "PCI host bridge %s %s ranges:\n",
+>> -	       dev->full_name, primary ? "(primary)" : "");
+>> -
+>> -	/* Get ranges property */
+>> -	ranges = of_get_property(dev, "ranges", &rlen);
+>> -	if (ranges == NULL)
+>> -		return;
+>> -
+>> -	/* Parse it */
+>> -	while ((rlen -= np * 4) >= 0) {
+>> -		/* Read next ranges element */
+>> -		pci_space = ranges[0];
+>> -		pci_addr = of_read_number(ranges + 1, 2);
+>> -		cpu_addr = of_translate_address(dev, ranges + 3);
+>> -		size = of_read_number(ranges + pna + 3, 2);
+>> -		ranges += np;
+>> -
+>> -		/* If we failed translation or got a zero-sized region
+>> -		 * (some FW try to feed us with non sensical zero sized regions
+>> -		 * such as power3 which look like some kind of attempt at exposing
+>> -		 * the VGA memory hole)
+>> -		 */
+>> -		if (cpu_addr == OF_BAD_ADDR || size == 0)
+>> -			continue;
+>> -
+>> -		/* Now consume following elements while they are contiguous */
+>> -		for (; rlen >= np * sizeof(u32);
+>> -		     ranges += np, rlen -= np * 4) {
+>> -			if (ranges[0] != pci_space)
+>> -				break;
+>> -			pci_next = of_read_number(ranges + 1, 2);
+>> -			cpu_next = of_translate_address(dev, ranges + 3);
+>> -			if (pci_next != pci_addr + size ||
+>> -			    cpu_next != cpu_addr + size)
+>> -				break;
+>> -			size += of_read_number(ranges + pna + 3, 2);
+>> -		}
+>> -
+>> -		/* Act based on address space type */
+>> -		res = NULL;
+>> -		switch ((pci_space >> 24) & 0x3) {
+>> -		case 1:		/* PCI IO space */
+>> -			printk(KERN_INFO
+>> -			       "  IO 0x%016llx..0x%016llx -> 0x%016llx\n",
+>> -			       cpu_addr, cpu_addr + size - 1, pci_addr);
+>> -
+>> -			/* We support only one IO range */
+>> -			if (hose->pci_io_size) {
+>> -				printk(KERN_INFO
+>> -				       " \\--> Skipped (too many) !\n");
+>> -				continue;
+>> -			}
+>> -#ifdef CONFIG_PPC32
+>> -			/* On 32 bits, limit I/O space to 16MB */
+>> -			if (size > 0x01000000)
+>> -				size = 0x01000000;
+>> -
+>> -			/* 32 bits needs to map IOs here */
+>> -			hose->io_base_virt = ioremap(cpu_addr, size);
+>> -
+>> -			/* Expect trouble if pci_addr is not 0 */
+>> -			if (primary)
+>> -				isa_io_base =
+>> -					(unsigned long)hose->io_base_virt;
+>> -#endif /* CONFIG_PPC32 */
+>> -			/* pci_io_size and io_base_phys always represent IO
+>> -			 * space starting at 0 so we factor in pci_addr
+>> -			 */
+>> -			hose->pci_io_size = pci_addr + size;
+>> -			hose->io_base_phys = cpu_addr - pci_addr;
+>> -
+>> -			/* Build resource */
+>> -			res = &hose->io_resource;
+>> -			res->flags = IORESOURCE_IO;
+>> -			res->start = pci_addr;
+>> -			break;
+>> -		case 2:		/* PCI Memory space */
+>> -		case 3:		/* PCI 64 bits Memory space */
+>> -			printk(KERN_INFO
+>> -			       " MEM 0x%016llx..0x%016llx -> 0x%016llx %s\n",
+>> -			       cpu_addr, cpu_addr + size - 1, pci_addr,
+>> -			       (pci_space & 0x40000000) ? "Prefetch" : "");
+>> -
+>> -			/* We support only 3 memory ranges */
+>> -			if (memno >= 3) {
+>> -				printk(KERN_INFO
+>> -				       " \\--> Skipped (too many) !\n");
+>> -				continue;
+>> -			}
+>> -			/* Handles ISA memory hole space here */
+>> -			if (pci_addr == 0) {
+>> -				isa_mb = cpu_addr;
+>> -				isa_hole = memno;
+>> -				if (primary || isa_mem_base == 0)
+>> -					isa_mem_base = cpu_addr;
+>> -				hose->isa_mem_phys = cpu_addr;
+>> -				hose->isa_mem_size = size;
+>> -			}
+>> -
+>> -			/* We get the PCI/Mem offset from the first range or
+>> -			 * the, current one if the offset came from an ISA
+>> -			 * hole. If they don't match, bugger.
+>> -			 */
+>> -			if (memno == 0 ||
+>> -			    (isa_hole >= 0 && pci_addr != 0 &&
+>> -			     hose->pci_mem_offset == isa_mb))
+>> -				hose->pci_mem_offset = cpu_addr - pci_addr;
+>> -			else if (pci_addr != 0 &&
+>> -				 hose->pci_mem_offset != cpu_addr - pci_addr) {
+>> -				printk(KERN_INFO
+>> -				       " \\--> Skipped (offset mismatch) !\n");
+>> -				continue;
+>> -			}
+>> -
+>> -			/* Build resource */
+>> -			res = &hose->mem_resources[memno++];
+>> -			res->flags = IORESOURCE_MEM;
+>> -			if (pci_space & 0x40000000)
+>> -				res->flags |= IORESOURCE_PREFETCH;
+>> -			res->start = cpu_addr;
+>> -			break;
+>> -		}
+>> -		if (res != NULL) {
+>> -			res->name = dev->full_name;
+>> -			res->end = res->start + size - 1;
+>> -			res->parent = NULL;
+>> -			res->sibling = NULL;
+>> -			res->child = NULL;
+>> -		}
+>> -	}
+>> -
+>> -	/* If there's an ISA hole and the pci_mem_offset is -not- matching
+>> -	 * the ISA hole offset, then we need to remove the ISA hole from
+>> -	 * the resource list for that brige
+>> -	 */
+>> -	if (isa_hole >= 0 && hose->pci_mem_offset != isa_mb) {
+>> -		unsigned int next = isa_hole + 1;
+>> -		printk(KERN_INFO " Removing ISA hole at 0x%016llx\n", isa_mb);
+>> -		if (next < memno)
+>> -			memmove(&hose->mem_resources[isa_hole],
+>> -				&hose->mem_resources[next],
+>> -				sizeof(struct resource) * (memno - next));
+>> -		hose->mem_resources[--memno].flags = 0;
+>> -	}
+>> -}
+>> -
+>>  /* Decide whether to display the domain number in /proc */
+>>  int pci_proc_domain(struct pci_bus *bus)
+>>  {
+>> diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
+>> index 13e37e2..1626172 100644
+>> --- a/drivers/of/of_pci.c
+>> +++ b/drivers/of/of_pci.c
+>> @@ -4,6 +4,10 @@
+>>  #include <linux/of_pci.h>
+>>  #include <asm/prom.h>
+>>  
+>> +#if defined(CONFIG_PPC32) || defined(CONFIG_PPC64) || defined(CONFIG_MICROBLAZE)
+>> +#include <asm/pci-bridge.h>
+>> +#endif
+>> +
+>>  static inline int __of_pci_pci_compare(struct device_node *node,
+>>  				       unsigned int devfn)
+>>  {
+>> @@ -40,3 +44,199 @@ struct device_node *of_pci_find_child_device(struct device_node *parent,
+>>  	return NULL;
+>>  }
+>>  EXPORT_SYMBOL_GPL(of_pci_find_child_device);
+>> +
+>> +/**
+>> + * pci_process_bridge_OF_ranges - Parse PCI bridge resources from device tree
+>> + * @hose: newly allocated pci_controller to be setup
+>> + * @dev: device node of the host bridge
+>> + * @primary: set if primary bus (32 bits only, soon to be deprecated)
+>> + *
+>> + * This function will parse the "ranges" property of a PCI host bridge device
+>> + * node and setup the resource mapping of a pci controller based on its
+>> + * content.
+>> + *
+>> + * Life would be boring if it wasn't for a few issues that we have to deal
+>> + * with here:
+>> + *
+>> + *   - We can only cope with one IO space range and up to 3 Memory space
+>> + *     ranges. However, some machines (thanks Apple !) tend to split their
+>> + *     space into lots of small contiguous ranges. So we have to coalesce.
+>> + *
+>> + *   - We can only cope with all memory ranges having the same offset
+>> + *     between CPU addresses and PCI addresses. Unfortunately, some bridges
+>> + *     are setup for a large 1:1 mapping along with a small "window" which
+>> + *     maps PCI address 0 to some arbitrary high address of the CPU space in
+>> + *     order to give access to the ISA memory hole.
+>> + *     The way out of here that I've chosen for now is to always set the
+>> + *     offset based on the first resource found, then override it if we
+>> + *     have a different offset and the previous was set by an ISA hole.
+>> + *
+>> + *   - Some busses have IO space not starting at 0, which causes trouble with
+>> + *     the way we do our IO resource renumbering. The code somewhat deals with
+>> + *     it for 64 bits but I would expect problems on 32 bits.
+>> + *
+>> + *   - Some 32 bits platforms such as 4xx can have physical space larger than
+>> + *     32 bits so we need to use 64 bits values for the parsing
+>> + */
+>> +#if defined(CONFIG_PPC32) || defined(CONFIG_PPC64) || defined(CONFIG_MICROBLAZE)
+>> +void pci_process_bridge_OF_ranges(struct pci_controller *hose,
+>> +				  struct device_node *dev, int primary)
+>> +{
+>> +	const u32 *ranges;
+>> +	int rlen;
+>> +	int pna = of_n_addr_cells(dev);
+>> +	int np = pna + 5;
+>> +	int memno = 0, isa_hole = -1;
+>> +	u32 pci_space;
+>> +	unsigned long long pci_addr, cpu_addr, pci_next, cpu_next, size;
+>> +	unsigned long long isa_mb = 0;
+>> +	struct resource *res;
+>> +
+>> +	pr_info("PCI host bridge %s %s ranges:\n",
+>> +	       dev->full_name, primary ? "(primary)" : "");
+>> +
+>> +	/* Get ranges property */
+>> +	ranges = of_get_property(dev, "ranges", &rlen);
+>> +	if (ranges == NULL)
+>> +		return;
+>> +
+>> +	/* Parse it */
+>> +	pr_debug("Parsing ranges property...\n");
+>> +	while ((rlen -= np * 4) >= 0) {
+>> +		/* Read next ranges element */
+>> +		pci_space = ranges[0];
+>> +		pci_addr = of_read_number(ranges + 1, 2);
+>> +		cpu_addr = of_translate_address(dev, ranges + 3);
+>> +		size = of_read_number(ranges + pna + 3, 2);
+>> +
+>> +		pr_debug("pci_space: 0x%08x pci_addr:0x%016llx ",
+>> +				pci_space, pci_addr);
+>> +		pr_debug("cpu_addr:0x%016llx size:0x%016llx\n",
+>> +					cpu_addr, size);
+>> +
+>> +		ranges += np;
+>> +
+>> +		/* If we failed translation or got a zero-sized region
+>> +		 * (some FW try to feed us with non sensical zero sized regions
+>> +		 * such as power3 which look like some kind of attempt
+>> +		 * at exposing the VGA memory hole)
+>> +		 */
+>> +		if (cpu_addr == OF_BAD_ADDR || size == 0)
+>> +			continue;
+>> +
+>> +		/* Now consume following elements while they are contiguous */
+>> +		for (; rlen >= np * sizeof(u32);
+>> +		     ranges += np, rlen -= np * 4) {
+>> +			if (ranges[0] != pci_space)
+>> +				break;
+>> +			pci_next = of_read_number(ranges + 1, 2);
+>> +			cpu_next = of_translate_address(dev, ranges + 3);
+>> +			if (pci_next != pci_addr + size ||
+>> +			    cpu_next != cpu_addr + size)
+>> +				break;
+>> +			size += of_read_number(ranges + pna + 3, 2);
+>> +		}
+>> +
+>> +		/* Act based on address space type */
+>> +		res = NULL;
+>> +		switch ((pci_space >> 24) & 0x3) {
+>> +		case 1:		/* PCI IO space */
+>> +			pr_info("  IO 0x%016llx..0x%016llx -> 0x%016llx\n",
+>> +			       cpu_addr, cpu_addr + size - 1, pci_addr);
+>> +
+>> +			/* We support only one IO range */
+>> +			if (hose->pci_io_size) {
+>> +				pr_info(" \\--> Skipped (too many) !\n");
+>> +				continue;
+>> +			}
+>> +#if (!IS_ENABLED(CONFIG_64BIT))
+>> +			/* On 32 bits, limit I/O space to 16MB */
+>> +			if (size > 0x01000000)
+>> +				size = 0x01000000;
+>> +
+>> +			/* 32 bits needs to map IOs here */
+>> +			hose->io_base_virt = ioremap(cpu_addr, size);
+>> +
+>> +			/* Expect trouble if pci_addr is not 0 */
+>> +			if (primary)
+>> +				isa_io_base =
+>> +					(unsigned long)hose->io_base_virt;
+>> +#endif /* !CONFIG_64BIT */
+>> +			/* pci_io_size and io_base_phys always represent IO
+>> +			 * space starting at 0 so we factor in pci_addr
+>> +			 */
+>> +			hose->pci_io_size = pci_addr + size;
+>> +			hose->io_base_phys = cpu_addr - pci_addr;
+>> +
+>> +			/* Build resource */
+>> +			res = &hose->io_resource;
+>> +			res->flags = IORESOURCE_IO;
+>> +			res->start = pci_addr;
+>> +			break;
+>> +		case 2:		/* PCI Memory space */
+>> +		case 3:		/* PCI 64 bits Memory space */
+>> +			pr_info(" MEM 0x%016llx..0x%016llx -> 0x%016llx %s\n",
+>> +			       cpu_addr, cpu_addr + size - 1, pci_addr,
+>> +			       (pci_space & 0x40000000) ? "Prefetch" : "");
+>> +
+>> +			/* We support only 3 memory ranges */
+>> +			if (memno >= 3) {
+>> +				pr_info(" \\--> Skipped (too many) !\n");
+>> +				continue;
+>> +			}
+>> +			/* Handles ISA memory hole space here */
+>> +			if (pci_addr == 0) {
+>> +				isa_mb = cpu_addr;
+>> +				isa_hole = memno;
+>> +				if (primary || isa_mem_base == 0)
+>> +					isa_mem_base = cpu_addr;
+>> +				hose->isa_mem_phys = cpu_addr;
+>> +				hose->isa_mem_size = size;
+>> +			}
+>> +
+>> +			/* We get the PCI/Mem offset from the first range or
+>> +			 * the, current one if the offset came from an ISA
+>> +			 * hole. If they don't match, bugger.
+>> +			 */
+>> +			if (memno == 0 ||
+>> +			    (isa_hole >= 0 && pci_addr != 0 &&
+>> +			     hose->pci_mem_offset == isa_mb))
+>> +				hose->pci_mem_offset = cpu_addr - pci_addr;
+>> +			else if (pci_addr != 0 &&
+>> +				 hose->pci_mem_offset != cpu_addr - pci_addr) {
+>> +				pr_info(" \\--> Skipped (offset mismatch) !\n");
+>> +				continue;
+>> +			}
+>> +
+>> +			/* Build resource */
+>> +			res = &hose->mem_resources[memno++];
+>> +			res->flags = IORESOURCE_MEM;
+>> +			if (pci_space & 0x40000000)
+>> +				res->flags |= IORESOURCE_PREFETCH;
+>> +			res->start = cpu_addr;
+>> +			break;
+>> +		}
+>> +		if (res != NULL) {
+>> +			res->name = dev->full_name;
+>> +			res->end = res->start + size - 1;
+>> +			res->parent = NULL;
+>> +			res->sibling = NULL;
+>> +			res->child = NULL;
+>> +		}
+>> +	}
+>> +
+>> +	/* If there's an ISA hole and the pci_mem_offset is -not- matching
+>> +	 * the ISA hole offset, then we need to remove the ISA hole from
+>> +	 * the resource list for that brige
+>> +	 */
+>> +	if (isa_hole >= 0 && hose->pci_mem_offset != isa_mb) {
+>> +		unsigned int next = isa_hole + 1;
+>> +		pr_info(" Removing ISA hole at 0x%016llx\n", isa_mb);
+>> +		if (next < memno)
+>> +			memmove(&hose->mem_resources[isa_hole],
+>> +				&hose->mem_resources[next],
+>> +				sizeof(struct resource) * (memno - next));
+>> +		hose->mem_resources[--memno].flags = 0;
+>> +	}
+>> +}
+>> +#endif
+>> diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
+>> index bb115de..33e8ead 100644
+>> --- a/include/linux/of_pci.h
+>> +++ b/include/linux/of_pci.h
+>> @@ -11,4 +11,8 @@ struct device_node;
+>>  struct device_node *of_pci_find_child_device(struct device_node *parent,
+>>  					     unsigned int devfn);
+>>  
+>> +struct pci_controller;
+>> +void pci_process_bridge_OF_ranges(struct pci_controller *hose,
+>> +			struct device_node *dev, int primary);
+>> +
+>>  #endif
+> 
+> 
+> 
+
+
 -- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+Michal Simek, Ing. (M.Eng), OpenPGP -> KeyID:
+w: www.monstr.eu p: +42-0-721842854
+Maintainer of Linux kernel - Microblaze cpu - http://www.monstr.eu/fdt/
+Maintainer of Linux kernel - Xilinx Zynq ARM architecture
+Microblaze U-BOOT custodian and responsible for u-boot arm zynq platform
+
