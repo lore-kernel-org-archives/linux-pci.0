@@ -1,51 +1,114 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f182.google.com ([209.85.223.182]:41779 "EHLO
-	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S966504Ab3DRH6t (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 18 Apr 2013 03:58:49 -0400
-Received: by mail-ie0-f182.google.com with SMTP id bn7so848840ieb.27
-        for <linux-pci@vger.kernel.org>; Thu, 18 Apr 2013 00:58:49 -0700 (PDT)
+Received: from ozlabs.org ([203.10.76.45]:59181 "EHLO ozlabs.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754933Ab3DODuX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 14 Apr 2013 23:50:23 -0400
+From: Rusty Russell <rusty@rustcorp.com.au>
+To: Veaceslav Falico <vfalico@redhat.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	gregkh@linuxfoundation.org, bhelgaas@google.com
+Subject: Re: [PATCH] module: add kset_obj_exists() and use it
+In-Reply-To: <20130411095537.GC21320@redhat.com>
+References: <1365506529-8396-1-git-send-email-vfalico@redhat.com> <87y5cq6ei9.fsf@rustcorp.com.au> <20130411095537.GC21320@redhat.com>
+Date: Mon, 15 Apr 2013 11:56:03 +0930
+Message-ID: <87vc7o8r7o.fsf@rustcorp.com.au>
 MIME-Version: 1.0
-In-Reply-To: <1366030138-71292-1-git-send-email-huawei.libin@huawei.com>
-References: <1366030138-71292-1-git-send-email-huawei.libin@huawei.com>
-Date: Thu, 18 Apr 2013 00:58:48 -0700
-Message-ID: <CANN689FaU+1x8txgiDEhjTKV+QEBXRhA9J6hTRHu0+jJjsEyDQ@mail.gmail.com>
-Subject: Re: [PATCH 1/6] mm: use vma_pages() to replace (vm_end - vm_start) >> PAGE_SHIFT
-From: Michel Lespinasse <walken@google.com>
-To: Libin <huawei.libin@huawei.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	David Airlie <airlied@linux.ie>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Hans J. Koch" <hjk@hansjkoch.de>,
-	Petr Vandrovec <petr@vandrovec.name>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Konstantin Khlebnikov <khlebnikov@openvz.org>,
-	Thomas Hellstrom <thellstrom@vmware.com>,
-	Dave Airlie <airlied@redhat.com>,
-	Nadia Yvette Chambers <nyc@holomorphy.com>,
-	Jiri Kosina <jkosina@suse.cz>,
-	Al Viro <viro@zeniv.linux.org.uk>,
-	Mel Gorman <mgorman@suse.de>, Hugh Dickins <hughd@google.com>,
-	Rik van Riel <riel@redhat.com>,
-	David Rientjes <rientjes@google.com>,
-	linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org,
-	linux-pci@vger.kernel.org, linux-mm@kvack.org,
-	guohanjun@huawei.com, wangyijing@huawei.com
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 15, 2013 at 5:48 AM, Libin <huawei.libin@huawei.com> wrote:
-> (*->vm_end - *->vm_start) >> PAGE_SHIFT operation is implemented
-> as a inline funcion vma_pages() in linux/mm.h, so using it.
+Veaceslav Falico <vfalico@redhat.com> writes:
+> On Wed, Apr 10, 2013 at 04:47:34PM +0930, Rusty Russell wrote:
+>>That's a bug.  We should be cleaning up sysfs before we unlike the
+>>removed module from the list.
+>>
+>>Because the same thing applies to ddebug info, which is also keyed by
+>>module name.
+>>
+>>Something like this (untested!):
 >
-> Signed-off-by: Libin <huawei.libin@huawei.com>
+> Sorry for the late response - I wanted to test it for a longer time.
+>
+> Your patch works flawlessly and fixes this race, with just a small
+> addition, cause otherwise we could BUG() in show_initstate().
+>
+> Can you apply this patch or should I (re-)send it somehow?
+>
+> Thank you!
+>
+> diff --git a/kernel/module.c b/kernel/module.c
+> index d0afe23..8be6e97 100644
+> --- a/kernel/module.c
+> +++ b/kernel/module.c
+> @@ -1063,6 +1063,9 @@ static ssize_t show_initstate(struct module_attribute *mattr,
+>   	case MODULE_STATE_GOING:
+>   		state = "going";
+>   		break;
+> +	case MODULE_STATE_UNFORMED:
+> +		state = "unformed";
+> +		break;
+>   	default:
+>   		BUG();
+>   	}
 
-Looks good to me.
+Prefer to remove from sysfs before marking it unformed, like so:
 
-Reviewed-by: Michel Lespinasse <walken@google.com>
+diff --git a/kernel/module.c b/kernel/module.c
+index 2468fda..2e7189f 100644
+--- a/kernel/module.c
++++ b/kernel/module.c
+@@ -1862,12 +1862,12 @@ static void free_module(struct module *mod)
+ {
+ 	trace_module_free(mod);
+ 
+-	/* We leave it in list to prevent duplicate loads while we clean
+-	 * up sysfs, ddebug and any other external exposure. */
+-	mod->state = MODULE_STATE_UNFORMED;
+-
+ 	mod_sysfs_teardown(mod);
+ 
++	/* We leave it in list to prevent duplicate loads, but make sure
++	 * that noone uses it while it's being deconstructed. */
++	mod->state = MODULE_STATE_UNFORMED;
++
+ 	/* Remove dynamic debug info */
+ 	ddebug_remove_module(mod->name);
+ 
+Here's the updated total patch:
 
--- 
-Michel "Walken" Lespinasse
-A program is never fully debugged until the last user dies.
+diff --git a/kernel/module.c b/kernel/module.c
+index 69d2600..2e7189f 100644
+--- a/kernel/module.c
++++ b/kernel/module.c
+@@ -1862,12 +1862,12 @@ static void free_module(struct module *mod)
+ {
+ 	trace_module_free(mod);
+ 
+-	/* Delete from various lists */
+-	mutex_lock(&module_mutex);
+-	stop_machine(__unlink_module, mod, NULL);
+-	mutex_unlock(&module_mutex);
+ 	mod_sysfs_teardown(mod);
+ 
++	/* We leave it in list to prevent duplicate loads, but make sure
++	 * that noone uses it while it's being deconstructed. */
++	mod->state = MODULE_STATE_UNFORMED;
++
+ 	/* Remove dynamic debug info */
+ 	ddebug_remove_module(mod->name);
+ 
+@@ -1880,6 +1880,11 @@ static void free_module(struct module *mod)
+ 	/* Free any allocated parameters. */
+ 	destroy_params(mod->kp, mod->num_kp);
+ 
++	/* Now we can delete it from the lists */
++	mutex_lock(&module_mutex);
++	stop_machine(__unlink_module, mod, NULL);
++	mutex_unlock(&module_mutex);
++
+ 	/* This may be NULL, but that's OK */
+ 	unset_module_init_ro_nx(mod);
+ 	module_free(mod, mod->module_init);
+
+Thanks,
+Rusty.
