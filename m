@@ -1,135 +1,179 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:56230 "EHLO
-	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751895Ab3DVKnH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Apr 2013 06:43:07 -0400
-From: Andrew Murray <Andrew.Murray@arm.com>
-To: linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org
-Cc: rob.herring@calxeda.com, jgunthorpe@obsidianresearch.com,
-	linux@arm.linux.org.uk, siva.kallam@samsung.com,
-	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
-	jg1.han@samsung.com, Liviu.Dudau@arm.com,
-	linux-kernel@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
-	kgene.kim@samsung.com, bhelgaas@google.com,
-	suren.reddy@samsung.com, linux-arm-kernel@lists.infradead.org,
-	monstr@monstr.eu, benh@kernel.crashing.org, paulus@samba.org,
-	grant.likely@secretlab.ca, thomas.petazzoni@free-electrons.com,
-	thierry.reding@avionic-design.de, thomas.abraham@linaro.org,
-	arnd@arndb.de, linus.walleij@linaro.org, juhosg@openwrt.org,
-	Andrew Murray <Andrew.Murray@arm.com>
-Subject: [PATCH v8 0/3] of/pci: Provide common support for PCI DT parsing
-Date: Mon, 22 Apr 2013 11:41:32 +0100
-Message-Id: <1366627295-16964-1-git-send-email-Andrew.Murray@arm.com>
+Received: from mx1.redhat.com ([209.132.183.28]:62919 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753319Ab3DPM11 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 16 Apr 2013 08:27:27 -0400
+Date: Tue, 16 Apr 2013 14:26:53 +0200
+From: Veaceslav Falico <vfalico@redhat.com>
+To: Rusty Russell <rusty@rustcorp.com.au>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	gregkh@linuxfoundation.org, bhelgaas@google.com
+Subject: Re: [PATCH] module: add kset_obj_exists() and use it
+Message-ID: <20130416122653.GB31290@redhat.com>
+References: <1365506529-8396-1-git-send-email-vfalico@redhat.com>
+ <87y5cq6ei9.fsf@rustcorp.com.au>
+ <20130411095537.GC21320@redhat.com>
+ <87vc7o8r7o.fsf@rustcorp.com.au>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii; format=flowed
+In-Reply-To: <87vc7o8r7o.fsf@rustcorp.com.au>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patchset factors out duplicated code associated with parsing PCI
-DT "ranges" properties across the architectures and introduces a
-"ranges" parser. This parser "of_pci_range_parser" can be used directly
-by ARM host bridge drivers enabling them to obtain ranges from device
-trees.
+On Mon, Apr 15, 2013 at 11:56:03AM +0930, Rusty Russell wrote:
+>Veaceslav Falico <vfalico@redhat.com> writes:
+>> On Wed, Apr 10, 2013 at 04:47:34PM +0930, Rusty Russell wrote:
+>>>That's a bug.  We should be cleaning up sysfs before we unlike the
+>>>removed module from the list.
+>>>
+>>>Because the same thing applies to ddebug info, which is also keyed by
+>>>module name.
+>>>
+>>>Something like this (untested!):
+>>
+>> Sorry for the late response - I wanted to test it for a longer time.
+>>
+>> Your patch works flawlessly and fixes this race, with just a small
+>> addition, cause otherwise we could BUG() in show_initstate().
+>>
+>> Can you apply this patch or should I (re-)send it somehow?
+>>
+>> Thank you!
+>>
+>> diff --git a/kernel/module.c b/kernel/module.c
+>> index d0afe23..8be6e97 100644
+>> --- a/kernel/module.c
+>> +++ b/kernel/module.c
+>> @@ -1063,6 +1063,9 @@ static ssize_t show_initstate(struct module_attribute *mattr,
+>>   	case MODULE_STATE_GOING:
+>>   		state = "going";
+>>   		break;
+>> +	case MODULE_STATE_UNFORMED:
+>> +		state = "unformed";
+>> +		break;
+>>   	default:
+>>   		BUG();
+>>   	}
+>
+>Prefer to remove from sysfs before marking it unformed, like so:
+>
+>diff --git a/kernel/module.c b/kernel/module.c
+>index 2468fda..2e7189f 100644
+>--- a/kernel/module.c
+>+++ b/kernel/module.c
+>@@ -1862,12 +1862,12 @@ static void free_module(struct module *mod)
+> {
+> 	trace_module_free(mod);
+>
+>-	/* We leave it in list to prevent duplicate loads while we clean
+>-	 * up sysfs, ddebug and any other external exposure. */
+>-	mod->state = MODULE_STATE_UNFORMED;
+>-
+> 	mod_sysfs_teardown(mod);
+>
+>+	/* We leave it in list to prevent duplicate loads, but make sure
+>+	 * that noone uses it while it's being deconstructed. */
+>+	mod->state = MODULE_STATE_UNFORMED;
+>+
+> 	/* Remove dynamic debug info */
+> 	ddebug_remove_module(mod->name);
+>
+>Here's the updated total patch:
 
-I've included the Reviewed-by, Tested-by and Acked-by's received from v5/v6/v7
-in this patchset, earlier versions of this patchset (v3) have been tested-by:
+Tested for a day on two reproducers on the latest upstream kernel, with the
+recent kobject fix a49b7e82 ("kobject: fix kset_find_obj() race with
+concurrent last kobject_put()") - it fixes the issue, no regressions met.
 
-Thierry Reding <thierry.reding@avionic-design.de>
-Jingoo Han <jg1.han@samsung.com>
+Without the patch (but with that kobject fix) it gives the following, for
+parallel modprobe/rmmod of pch_gbe module (it's easier to reproduce on less
+powerful boxes, like this one):
 
-I've tested that this patchset builds and runs on ARM and that it builds on
-PowerPC, x86_64 and MIPS.
+[  103.981925] ------------[ cut here ]------------
+[  103.986902] WARNING: at fs/sysfs/dir.c:536 sysfs_add_one+0xab/0xd0()
+[  103.993606] Hardware name: CrownBay Platform
+[  103.998075] sysfs: cannot create duplicate filename '/module/pch_gbe'
+[  104.004784] Modules linked in: pch_gbe(+) [last unloaded: pch_gbe]
+[  104.011362] Pid: 3021, comm: modprobe Tainted: G        W    3.9.0-rc5+ #5
+[  104.018662] Call Trace:
+[  104.021286]  [<c103599d>] warn_slowpath_common+0x6d/0xa0
+[  104.026933]  [<c1168c8b>] ? sysfs_add_one+0xab/0xd0
+[  104.031986]  [<c1168c8b>] ? sysfs_add_one+0xab/0xd0
+[  104.037000]  [<c1035a4e>] warn_slowpath_fmt+0x2e/0x30
+[  104.042188]  [<c1168c8b>] sysfs_add_one+0xab/0xd0
+[  104.046982]  [<c1168dbe>] create_dir+0x5e/0xa0
+[  104.051633]  [<c1168e78>] sysfs_create_dir+0x78/0xd0
+[  104.056774]  [<c1262bc3>] kobject_add_internal+0x83/0x1f0
+[  104.062351]  [<c126daf6>] ? kvasprintf+0x46/0x60
+[  104.067231]  [<c1262ebd>] kobject_add_varg+0x2d/0x50
+[  104.072450]  [<c1262f07>] kobject_init_and_add+0x27/0x30
+[  104.078075]  [<c1089240>] mod_sysfs_setup+0x80/0x540
+[  104.083207]  [<c1260851>] ? module_bug_finalize+0x51/0xc0
+[  104.088720]  [<c108ab29>] load_module+0x1429/0x18b0
+[  104.093712]  [<c1088510>] ? free_notes_attrs+0x40/0x40
+[  104.098973]  [<c126c588>] ? _copy_from_user+0x38/0x130
+[  104.104225]  [<c108b0c3>] sys_init_module+0x93/0xb0
+[  104.109211]  [<c16f22fa>] sysenter_do_call+0x12/0x22
+[  104.114272] ---[ end trace aa239ae9897b5680 ]---
+[  104.119029] ------------[ cut here ]------------
+[  104.123901] WARNING: at lib/kobject.c:196 kobject_add_internal+0x1da/0x1f0()
+[  104.131254] Hardware name: CrownBay Platform
+[  104.135792] kobject_add_internal failed for pch_gbe with -EEXIST, don't try to register things with the same name in the same directory.
+[  104.148539] Modules linked in: pch_gbe(+) [last unloaded: pch_gbe]
+[  104.155256] Pid: 3021, comm: modprobe Tainted: G        W    3.9.0-rc5+ #5
+[  104.162437] Call Trace:
+[  104.165057]  [<c103599d>] warn_slowpath_common+0x6d/0xa0
+[  104.170715]  [<c1262d1a>] ? kobject_add_internal+0x1da/0x1f0
+[  104.176683]  [<c1262d1a>] ? kobject_add_internal+0x1da/0x1f0
+[  104.182644]  [<c1035a4e>] warn_slowpath_fmt+0x2e/0x30
+[  104.187937]  [<c1262d1a>] kobject_add_internal+0x1da/0x1f0
+[  104.193750]  [<c1262ebd>] kobject_add_varg+0x2d/0x50
+[  104.198891]  [<c1262f07>] kobject_init_and_add+0x27/0x30
+[  104.204489]  [<c1089240>] mod_sysfs_setup+0x80/0x540
+[  104.209706]  [<c1260851>] ? module_bug_finalize+0x51/0xc0
+[  104.215362]  [<c108ab29>] load_module+0x1429/0x18b0
+[  104.220530]  [<c1088510>] ? free_notes_attrs+0x40/0x40
+[  104.226001]  [<c126c588>] ? _copy_from_user+0x38/0x130
+[  104.231442]  [<c108b0c3>] sys_init_module+0x93/0xb0
+[  104.236629]  [<c16f22fa>] sysenter_do_call+0x12/0x22
+[  104.241855] ---[ end trace aa239ae9897b5681 ]---
 
-Compared to the v7 sent by Andrew Murray, the following changes have been made
-(please note that the first patch is unchanged from v7):
 
- * Rename of_pci_range_parser to of_pci_range_parser_init and
-   of_pci_process_ranges to of_pci_range_parser_one as suggested by Grant
-   Likely.
+With the patch it worked flawlessly for a day.
 
- * Reverted back to using a switch statement instead of if/else in
-   pci_process_bridge_OF_ranges. Grant Likely highlighted this change from
-   the original code which was unnecessary.
-
- * Squashed in a patch provided by Gabor Juhos which fixes build errors on
-   MIPS found in the last patchset.
-
-Compared to the v6 sent by Andrew Murray, the following changes have
-been made in response to build errors/warnings:
-
- * Inclusion of linux/of_address.h in of_pci.c as suggested by Michal
-   Simek to prevent compilation failures on Microblaze (and others) and his
-   ack.
-
- * Use of externs, static inlines and a typo in linux/of_address.h in response
-   to linker errors (multiple defination) on x86_64 as spotted by a kbuild test
-   robot on (jcooper/linux.git mvebu/drivers)
-
- * Add EXPORT_SYMBOL_GPL to of_pci_range_parser function to be consistent
-   with of_pci_process_ranges function
-
-Compared to the v5 sent by Andrew Murray, the following changes have
-been made:
-
- * Use of CONFIG_64BIT instead of CONFIG_[a32bitarch] as suggested by
-   Rob Herring in drivers/of/of_pci.c
-
- * Added forward declaration of struct pci_controller in linux/of_pci.h
-   to prevent compiler warning as suggested by Thomas Petazzoni
-
- * Improved error checking (!range check), removal of unnecessary be32_to_cpup
-   call, improved formatting of struct of_pci_range_parser layout and
-   replacement of macro with a static inline. All suggested by Rob Herring.
-
-Compared to the v4 (incorrectly labelled v3) sent by Andrew Murray,
-the following changes have been made:
-
- * Split the patch as suggested by Rob Herring
-
-Compared to the v3 sent by Andrew Murray, the following changes have
-been made:
-
- * Unify and move duplicate pci_process_bridge_OF_ranges functions to
-   drivers/of/of_pci.c as suggested by Rob Herring
-
- * Fix potential build errors with Microblaze/MIPS
-
-Compared to "[PATCH v5 01/17] of/pci: Provide support for parsing PCI DT
-ranges property", the following changes have been made:
-
- * Correct use of IORESOURCE_* as suggested by Russell King
-
- * Improved interface and naming as suggested by Thierry Reding
-
-Compared to the v2 sent by Andrew Murray, Thomas Petazzoni did:
-
- * Add a memset() on the struct of_pci_range_iter when starting the
-   for loop in for_each_pci_range(). Otherwise, with an uninitialized
-   of_pci_range_iter, of_pci_process_ranges() may crash.
-
- * Add parenthesis around 'res', 'np' and 'iter' in the
-   for_each_of_pci_range macro definitions. Otherwise, passing
-   something like &foobar as 'res' didn't work.
-
- * Rebased on top of 3.9-rc2, which required fixing a few conflicts in
-   the Microblaze code.
-
-v2:
-  This follows on from suggestions made by Grant Likely
-  (marc.info/?l=linux-kernel&m=136079602806328)
-
-Andrew Murray (3):
-  of/pci: Unify pci_process_bridge_OF_ranges from Microblaze and
-    PowerPC
-  of/pci: Provide support for parsing PCI DT ranges property
-  of/pci: mips: convert to common of_pci_range_parser
-
- arch/microblaze/include/asm/pci-bridge.h |    5 +-
- arch/microblaze/pci/pci-common.c         |  192 ------------------------------
- arch/mips/pci/pci.c                      |   51 +++-----
- arch/powerpc/include/asm/pci-bridge.h    |    5 +-
- arch/powerpc/kernel/pci-common.c         |  192 ------------------------------
- drivers/of/address.c                     |   67 +++++++++++
- drivers/of/of_pci.c                      |  173 +++++++++++++++++++++++++++
- include/linux/of_address.h               |   48 ++++++++
- include/linux/of_pci.h                   |    4 +
- 9 files changed, 313 insertions(+), 424 deletions(-)
-
+>
+>diff --git a/kernel/module.c b/kernel/module.c
+>index 69d2600..2e7189f 100644
+>--- a/kernel/module.c
+>+++ b/kernel/module.c
+>@@ -1862,12 +1862,12 @@ static void free_module(struct module *mod)
+> {
+> 	trace_module_free(mod);
+>
+>-	/* Delete from various lists */
+>-	mutex_lock(&module_mutex);
+>-	stop_machine(__unlink_module, mod, NULL);
+>-	mutex_unlock(&module_mutex);
+> 	mod_sysfs_teardown(mod);
+>
+>+	/* We leave it in list to prevent duplicate loads, but make sure
+>+	 * that noone uses it while it's being deconstructed. */
+>+	mod->state = MODULE_STATE_UNFORMED;
+>+
+> 	/* Remove dynamic debug info */
+> 	ddebug_remove_module(mod->name);
+>
+>@@ -1880,6 +1880,11 @@ static void free_module(struct module *mod)
+> 	/* Free any allocated parameters. */
+> 	destroy_params(mod->kp, mod->num_kp);
+>
+>+	/* Now we can delete it from the lists */
+>+	mutex_lock(&module_mutex);
+>+	stop_machine(__unlink_module, mod, NULL);
+>+	mutex_unlock(&module_mutex);
+>+
+> 	/* This may be NULL, but that's OK */
+> 	unset_module_init_ro_nx(mod);
+> 	module_free(mod, mod->module_init);
+>
+>Thanks,
+>Rusty.
