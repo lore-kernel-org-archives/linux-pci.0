@@ -1,58 +1,112 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>, Ram Pai <linuxram@us.ibm.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v4 05/29] PCI: Add is_pci_*_resource_idx() helpers
-Date: Fri, 12 Apr 2013 15:44:19 -0700
-Message-Id: <1365806683-26717-6-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1365806683-26717-1-git-send-email-yinghai@kernel.org>
-References: <1365806683-26717-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:48698 "EHLO
+	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754503Ab3DPKTy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Apr 2013 06:19:54 -0400
+From: Andrew Murray <Andrew.Murray@arm.com>
+To: linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org
+Cc: rob.herring@calxeda.com, jgunthorpe@obsidianresearch.com,
+	linux@arm.linux.org.uk, siva.kallam@samsung.com,
+	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
+	jg1.han@samsung.com, Liviu.Dudau@arm.com,
+	linux-kernel@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
+	kgene.kim@samsung.com, bhelgaas@google.com,
+	suren.reddy@samsung.com, linux-arm-kernel@lists.infradead.org,
+	monstr@monstr.eu, benh@kernel.crashing.org, paulus@samba.org,
+	grant.likely@secretlab.ca, thomas.petazzoni@free-electrons.com,
+	thierry.reding@avionic-design.de, thomas.abraham@linaro.org,
+	arnd@arndb.de, linus.walleij@linaro.org,
+	Andrew Murray <Andrew.Murray@arm.com>
+Subject: [PATCH v7 3/3] of/pci: mips: convert to common of_pci_range_parser
+Date: Tue, 16 Apr 2013 11:18:28 +0100
+Message-Id: <1366107508-12672-4-git-send-email-Andrew.Murray@arm.com>
+In-Reply-To: <1366107508-12672-1-git-send-email-Andrew.Murray@arm.com>
+References: <1366107508-12672-1-git-send-email-Andrew.Murray@arm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-According to resource pointer find out if the resource is some type resource
-like bridge, sriov, or std.
+This patch converts the pci_load_of_ranges function to use the new common
+of_pci_range_parser.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Andrew Murray <Andrew.Murray@arm.com>
+Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+Reviewed-by: Rob Herring <rob.herring@calxeda.com>
 ---
- include/linux/pci.h | 23 +++++++++++++++++++++++
- 1 file changed, 23 insertions(+)
+ arch/mips/pci/pci.c |   50 ++++++++++++++++----------------------------------
+ 1 files changed, 16 insertions(+), 34 deletions(-)
 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index f4da78d..14b7de4 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -107,6 +107,29 @@ enum {
- 	DEVICE_COUNT_RESOURCE = PCI_NUM_RESOURCES,
- };
+diff --git a/arch/mips/pci/pci.c b/arch/mips/pci/pci.c
+index 0872f12..bee49a4 100644
+--- a/arch/mips/pci/pci.c
++++ b/arch/mips/pci/pci.c
+@@ -122,51 +122,33 @@ static void pcibios_scanbus(struct pci_controller *hose)
+ #ifdef CONFIG_OF
+ void pci_load_of_ranges(struct pci_controller *hose, struct device_node *node)
+ {
+-	const __be32 *ranges;
+-	int rlen;
+-	int pna = of_n_addr_cells(node);
+-	int np = pna + 5;
++	struct of_pci_range_range range;
++	struct of_pci_range_parser parser;
++	u32 res_type;
  
-+static inline bool is_pci_std_resource_idx(int i)
-+{
-+	return i >= PCI_STD_RESOURCES && i <= PCI_STD_RESOURCE_END;
-+}
-+
-+static inline bool is_pci_rom_resource_idx(int i)
-+{
-+	return i == PCI_ROM_RESOURCE;
-+}
-+
-+static inline bool is_pci_iov_resource_idx(int i)
-+{
-+#ifdef CONFIG_PCI_IOV
-+	return i >= PCI_IOV_RESOURCES && i <= PCI_IOV_RESOURCE_END;
-+#endif
-+	return false;
-+}
-+
-+static inline bool is_pci_bridge_resource_idx(int i)
-+{
-+	return i >= PCI_BRIDGE_RESOURCES && i <= PCI_BRIDGE_RESOURCE_END;
-+}
-+
- typedef int __bitwise pci_power_t;
+ 	pr_info("PCI host bridge %s ranges:\n", node->full_name);
+-	ranges = of_get_property(node, "ranges", &rlen);
+-	if (ranges == NULL)
+-		return;
+ 	hose->of_node = node;
  
- #define PCI_D0		((pci_power_t __force) 0)
+-	while ((rlen -= np * 4) >= 0) {
+-		u32 pci_space;
++	if (of_pci_range_parser(&parser, node))
++		return;
++
++	for_each_of_pci_range(&parser, &range) {
+ 		struct resource *res = NULL;
+-		u64 addr, size;
+-
+-		pci_space = be32_to_cpup(&ranges[0]);
+-		addr = of_translate_address(node, ranges + 3);
+-		size = of_read_number(ranges + pna + 3, 2);
+-		ranges += np;
+-		switch ((pci_space >> 24) & 0x3) {
+-		case 1:		/* PCI IO space */
++
++		res_type = range.flags & IORESOURCE_TYPE_BITS;
++		if (res_type == IORESOURCE_IO) {
+ 			pr_info("  IO 0x%016llx..0x%016llx\n",
+-					addr, addr + size - 1);
++				range.addr, range.addr + range.size - 1);
+ 			hose->io_map_base =
+-				(unsigned long)ioremap(addr, size);
++				(unsigned long)ioremap(range.addr, range.size);
+ 			res = hose->io_resource;
+-			res->flags = IORESOURCE_IO;
+-			break;
+-		case 2:		/* PCI Memory space */
+-		case 3:		/* PCI 64 bits Memory space */
++		} else if (res_type == IORESOURCE_MEM) {
+ 			pr_info(" MEM 0x%016llx..0x%016llx\n",
+-					addr, addr + size - 1);
++				range.addr, range.addr + range.size - 1);
+ 			res = hose->mem_resource;
+-			res->flags = IORESOURCE_MEM;
+-			break;
+-		}
+-		if (res != NULL) {
+-			res->start = addr;
+-			res->name = node->full_name;
+-			res->end = res->start + size - 1;
+-			res->parent = NULL;
+-			res->sibling = NULL;
+-			res->child = NULL;
+ 		}
++		if (res != NULL)
++			of_pci_range_to_resource(&range, node, res);
+ 	}
+ }
+ #endif
 -- 
-1.8.1.4
+1.7.0.4
 
