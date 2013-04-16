@@ -1,114 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qe0-f43.google.com ([209.85.128.43]:47358 "EHLO
-	mail-qe0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751655Ab3DJSdk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Apr 2013 14:33:40 -0400
-Received: by mail-qe0-f43.google.com with SMTP id f6so437035qej.2
-        for <linux-pci@vger.kernel.org>; Wed, 10 Apr 2013 11:33:39 -0700 (PDT)
-Message-ID: <5165B081.1030105@gmail.com>
-Date: Wed, 10 Apr 2013 13:33:37 -0500
-From: Rob Herring <robherring2@gmail.com>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:4559 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753495Ab3DPGoU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Apr 2013 02:44:20 -0400
+Message-ID: <516CF325.40604@huawei.com>
+Date: Tue, 16 Apr 2013 14:43:49 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Yinghai Lu <yinghai@kernel.org>
 CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Russell King <linux@arm.linux.org.uk>,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Jason Cooper <jason@lakedaemon.net>, linux-pci@vger.kernel.org,
-	devicetree-discuss@lists.ozlabs.org,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Andrew Murray <andrew.murray@arm.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Mitch Bradley <wmb@firmworks.com>
-Subject: Re: [PATCHv8 04/19] of/pci: Add of_pci_get_devfn() function
-References: <1365541601-14095-1-git-send-email-thomas.petazzoni@free-electrons.com> <1365541601-14095-5-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1365541601-14095-5-git-send-email-thomas.petazzoni@free-electrons.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Rafael <rjw@sisk.pl>, Hanjun Guo <guohanjun@huawei.com>,
+	Jiang Liu <jiang.liu@huawei.com>
+Subject: Re: [PATCH 1/3] PCI,acpiphp: use generic pci_hp_add_bridge()
+References: <1364808128-12792-1-git-send-email-wangyijing@huawei.com> <516CAE35.7090204@huawei.com> <CAE9FiQUACgSPffKQrKvb3zbrm-pg3gxkWxahNFFHofkW33sHwA@mail.gmail.com>
+In-Reply-To: <CAE9FiQUACgSPffKQrKvb3zbrm-pg3gxkWxahNFFHofkW33sHwA@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/09/2013 04:06 PM, Thomas Petazzoni wrote:
-> From: Thierry Reding <thierry.reding@avionic-design.de>
-> 
-> This function can be used to parse the device and function number from a
-> standard 5-cell PCI resource. PCI_SLOT() and PCI_FUNC() can be used on
-> the returned value obtain the device and function numbers respectively.
-> 
-> Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
-> Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+> On Mon, Apr 15, 2013 at 6:49 PM, Yijing Wang <wangyijing@huawei.com> wrote:
+>> Hi Yinghai,
+>>    Any comments about this patch? I searched the code history and found
+>> you introduced pci_hp_add_bridge() function at commit a8e4b9c10. In your
+>> patchset use pci_hp_add_bridge() for all pci hotplug drivers except acpiphp.
+>> So I use pci_hp_add_bridge() in acpiphp instead of using pci_scan_bridge()
+>> directly. I would appreciate if you can give some suggestions.
 
-Reviewed-by: Rob Herring <rob.herring@calxeda.com>
+Hi Yinghai,
+   Thanks for your review and comments very much!
 
-> ---
->  drivers/of/of_pci.c    |   34 +++++++++++++++++++++++++++++-----
->  include/linux/of_pci.h |    1 +
->  2 files changed, 30 insertions(+), 5 deletions(-)
 > 
-> diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
-> index ebb408b..b77e8d8 100644
-> --- a/drivers/of/of_pci.c
-> +++ b/drivers/of/of_pci.c
-> @@ -9,14 +9,15 @@
->  #endif
->  
->  static inline int __of_pci_pci_compare(struct device_node *node,
-> -				       unsigned int devfn)
-> +				       unsigned int data)
->  {
-> -	unsigned int size;
-> -	const __be32 *reg = of_get_property(node, "reg", &size);
-> +	int devfn;
->  
-> -	if (!reg || size < 5 * sizeof(__be32))
-> +	devfn = of_pci_get_devfn(node);
-> +	if (devfn < 0)
->  		return 0;
-> -	return ((be32_to_cpup(&reg[0]) >> 8) & 0xff) == devfn;
-> +
-> +	return devfn == data;
->  }
->  
->  struct device_node *of_pci_find_child_device(struct device_node *parent,
-> @@ -208,3 +209,26 @@ void pci_process_bridge_OF_ranges(struct pci_controller *hose,
->  	}
->  }
->  #endif
-> +
-> +/**
-> + * of_pci_get_devfn() - Get device and function numbers for a device node
-> + * @np: device node
-> + *
-> + * Parses a standard 5-cell PCI resource and returns an 8-bit value that can
-> + * be passed to the PCI_SLOT() and PCI_FUNC() macros to extract the device
-> + * and function numbers respectively. On error a negative error code is
-> + * returned.
-> + */
-> +int of_pci_get_devfn(struct device_node *np)
-> +{
-> +	unsigned int size;
-> +	const __be32 *reg;
-> +
-> +	reg = of_get_property(np, "reg", &size);
-> +
-> +	if (!reg || size < 5 * sizeof(__be32))
-> +		return -EINVAL;
-> +
-> +	return (be32_to_cpup(reg) >> 8) & 0xff;
-> +}
-> +EXPORT_SYMBOL_GPL(of_pci_get_devfn);
-> diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
-> index e56182f..302aca0 100644
-> --- a/include/linux/of_pci.h
-> +++ b/include/linux/of_pci.h
-> @@ -11,6 +11,7 @@ int of_irq_map_pci(const struct pci_dev *pdev, struct of_irq *out_irq);
->  struct device_node;
->  struct device_node *of_pci_find_child_device(struct device_node *parent,
->  					     unsigned int devfn);
-> +int of_pci_get_devfn(struct device_node *np);
->  
->  void pci_process_bridge_OF_ranges(struct pci_controller *hose,
->  			struct device_node *dev, int primary);
+> There is one problem in your patch.
+> max start value get change. before your patch max is the maximum value
+> of bus all children...
+>    now it is change bus  start value.
+
+Thank you for reminding. Now I noticed this detail.(:
+I will drop these pathes.
+
+Thanks!
+Yijing.
+
 > 
+> looks like old code try to handle the case that we already some
+> children on that bus.
+> 
+> Last time i did not change it, because i think it only is ready after
+> busn_res alloc patchset
+> is merged.
+> 
+> in pci-mini summit of last year, Bjorn asked Linus about that
+> patchset, and Linus said it is
+> risky and it is not worthy to merge it .
+> 
+> so assume we should hold your patch as it could cause some regression.
+> 
+> Thanks
+> 
+> Yinghai
+> 
+> .
+> 
+
+
+-- 
+Thanks!
+Yijing
 
