@@ -1,68 +1,49 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ozlabs.org ([203.10.76.45]:42340 "EHLO ozlabs.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1161557Ab3DEGzf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 5 Apr 2013 02:55:35 -0400
-Date: Fri, 5 Apr 2013 17:55:33 +1100
-From: Michael Ellerman <michael@ellerman.id.au>
-To: Brian King <brking@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org, klebers@linux.vnet.ibm.com,
-	lucaskt@linux.vnet.ibm.com, bhelgaas@google.com,
-	linuxppc-dev@lists.ozlabs.org
-Subject: Re: [PATCH 1/3] pci: Export pci_dev_type
-Message-ID: <20130405065533.GD5082@concordia>
-References: <201304042158.r34LwDHx010466@d03av02.boulder.ibm.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 16 Apr 2013 18:37:05 +0200
+From: Joerg Roedel <joro@8bytes.org>
+To: Neil Horman <nhorman@tuxdriver.com>
+Cc: linux-kernel@vger.kernel.org, Prarit Bhargava <prarit@redhat.com>,
+	Don Zickus <dzickus@redhat.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Asit Mallick <asit.k.mallick@intel.com>,
+	David Woodhouse <dwmw2@infradead.org>,
+	linux-pci@vger.kernel.org,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Arkadiusz =?utf-8?Q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
+Subject: Re: [PATCH v9] irq: add quirk for broken interrupt remapping on 55XX
+ chipsets
+Message-ID: <20130416163705.GT6858@8bytes.org>
+References: <1362158276-4901-1-git-send-email-nhorman@tuxdriver.com>
+ <1366065677-3431-1-git-send-email-nhorman@tuxdriver.com>
+ <20130416102454.GS6858@8bytes.org>
+ <20130416133555.GB9241@hmsreliant.think-freely.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201304042158.r34LwDHx010466@d03av02.boulder.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20130416133555.GB9241@hmsreliant.think-freely.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+On Tue, Apr 16, 2013 at 09:35:56AM -0400, Neil Horman wrote:
+> Actually, hold on that last note, the intel iommu init code doesn't seem to
+> create any direct relationship between the set of iommu's and the pci_dev's that
+> implement them.  In the intel_irq_remapping_supported path I can loop over each
+> dmar_dhrd_unit, and interrogate each of the devices on its **devices list to see
+> if the device/vendor and revision ids match, but looking at the dhrd parsing
+> code, I'm not sure the iommu pci_dev is always going to be on that list.  That
+> seems like its going to be pretty ugly in and of itself.  Do you have a
+> suggested way to identify the pci_dev of the device we need in that path without
+> having to simply iterate over every device in that scope?
 
-Should we take this series via the powerpc tree, assuming you're OK with
-this patch?
+Hmkay, looks like this is a non-trivial problem. Here is what I suggest:
+Keep the early-quirk as in your current patch. But add a function to
+drivers/iommu/irq_remapping.c to disable irq-remapping and export that
+function via the header-file arch/x86/include/asm/irq_remapping.h. Use
+that function in the quirk instead of setting the disable-flag directly.
+This way you don't have to include any private header file from iommu
+code.
 
-cheers
 
-On Thu, Apr 04, 2013 at 04:58:13PM -0500, Brian King wrote:
-> 
-> Export pci_dev_type so that arch specific PCI probing code can
-> initialize a new PCI device struct.
-> 
-> Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
-> ---
-> 
->  drivers/pci/pci.h   |    1 -
->  include/linux/pci.h |    1 +
->  2 files changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff -puN drivers/pci/pci.h~pci_export_pci_dev_type drivers/pci/pci.h
-> --- linux/drivers/pci/pci.h~pci_export_pci_dev_type	2013-04-02 17:01:25.000000000 -0500
-> +++ linux-bjking1/drivers/pci/pci.h	2013-04-02 17:02:31.000000000 -0500
-> @@ -153,7 +153,6 @@ static inline int pci_no_d1d2(struct pci
->  }
->  extern struct device_attribute pci_dev_attrs[];
->  extern struct device_attribute pcibus_dev_attrs[];
-> -extern struct device_type pci_dev_type;
->  extern struct bus_attribute pci_bus_attrs[];
->  
->  
-> diff -puN include/linux/pci.h~pci_export_pci_dev_type include/linux/pci.h
-> --- linux/include/linux/pci.h~pci_export_pci_dev_type	2013-04-02 17:01:59.000000000 -0500
-> +++ linux-bjking1/include/linux/pci.h	2013-04-02 17:02:29.000000000 -0500
-> @@ -670,6 +670,7 @@ enum pcie_bus_config_types {
->  extern enum pcie_bus_config_types pcie_bus_config;
->  
->  extern struct bus_type pci_bus_type;
-> +extern struct device_type pci_dev_type;
->  
->  /* Do NOT directly access these two variables, unless you are arch specific pci
->   * code, or pci core code. */
-> _
-> 
-> _______________________________________________
-> Linuxppc-dev mailing list
-> Linuxppc-dev@lists.ozlabs.org
-> https://lists.ozlabs.org/listinfo/linuxppc-dev
-> 
+	Joerg
+
+
