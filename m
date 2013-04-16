@@ -1,79 +1,100 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from avon.wwwdotorg.org ([70.85.31.133]:57238 "EHLO
-	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964846Ab3DJRXR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Apr 2013 13:23:17 -0400
-Message-ID: <5165A001.9030408@wwwdotorg.org>
-Date: Wed, 10 Apr 2013 11:23:13 -0600
-From: Stephen Warren <swarren@wwwdotorg.org>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:29615 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751253Ab3DPI4a (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Apr 2013 04:56:30 -0400
+Message-ID: <516D120E.3030907@huawei.com>
+Date: Tue, 16 Apr 2013 16:55:42 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-To: Jay Agarwal <jagarwal@nvidia.com>
-CC: linux@arm.linux.org.uk, thierry.reding@avionic-design.de,
-	ldewangan@nvidia.com, bhelgaas@google.com, olof@lixom.net,
-	hdoyu@nvidia.com, pgaikwad@nvidia.com, mturquette@linaro.org,
-	pdeschrijver@nvidia.com, linux-arm-kernel@lists.infradead.org,
-	linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, jtukkinen@nvidia.com, kthota@nvidia.com
-Subject: Re: [PATCH 1/3] ARM: tegra: pcie: Add tegra3 support
-References: <1365435688-4179-1-git-send-email-jagarwal@nvidia.com>
-In-Reply-To: <1365435688-4179-1-git-send-email-jagarwal@nvidia.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: huang ying <huang.ying.caritas@gmail.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Hanjun Guo <guohanjun@huawei.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Shengzhou Liu <Shengzhou.Liu@freescale.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Huang Ying <ying.huang@intel.com>
+Subject: Re: [PATCH -v2 1/2] PCI: decrease pci_dev->enable_cnt when no pcie
+ capability found
+References: <1366009135-19088-1-git-send-email-wangyijing@huawei.com> <CAErSpo7dgFR8a7Wee4CE7Rj+nZg_-+8uNOFq__d8EzY+gHQHGQ@mail.gmail.com> <CAC=cRTOPg+Db8AkA6sWMe9ggESY=vO7W1zWzr5E-JWLxoxg=7Q@mail.gmail.com>
+In-Reply-To: <CAC=cRTOPg+Db8AkA6sWMe9ggESY=vO7W1zWzr5E-JWLxoxg=7Q@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/08/2013 09:41 AM, Jay Agarwal wrote:
-> Signed-off-by: Jay Agarwal <jagarwal@nvidia.com>
+On 2013/4/16 16:22, huang ying wrote:
+> On Mon, Apr 15, 2013 at 11:27 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> [+cc Rafael, Huang]
+>>
+>> On Mon, Apr 15, 2013 at 12:58 AM, Yijing Wang <wangyijing@huawei.com> wrote:
+>>> We should decrease dev->enable_cnt when no pcie port capability
+>>> found for balance.
+>>>
+>>> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+>>> Cc: Jiang Liu <jiang.liu@huawei.com>
+>>> Cc: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+>>> Cc: Shengzhou Liu <Shengzhou.Liu@freescale.com>
+>>> ---
+>>>  drivers/pci/pcie/portdrv_core.c |    4 ++--
+>>>  1 files changed, 2 insertions(+), 2 deletions(-)
+>>>
+>>> diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
+>>> index 31063ac..aef3fac 100644
+>>> --- a/drivers/pci/pcie/portdrv_core.c
+>>> +++ b/drivers/pci/pcie/portdrv_core.c
+>>> @@ -369,8 +369,8 @@ int pcie_port_device_register(struct pci_dev *dev)
+>>>
+>>>         /* Get and check PCI Express port services */
+>>>         capabilities = get_port_device_capability(dev);
+>>> -       if (!capabilities)
+>>> -               return 0;
+>>> +       if (!capabilities)
+>>> +               goto error_disable;
+>>>
+>>>         pci_set_master(dev);
+>>>         /*
+>>
+>> Does this fix a problem you observed?  If so, please refer to it in
+>> your changelog.
+>>
+>> I think this patch is incorrect because pcie_portdrv_probe() will
+>> return 0 (success) with the device disabled.  When we call
+>> pcie_portdrv_remove(), we will attempt to disable the device again,
+>> even though it's already disabled.
+>>
+>> I don't know whether it is desirable for pcie_portdrv_probe() to
+>> succeed when no capabilities are available or not.  Maybe somebody
+>> else has an opinion.
 > 
-> - Enable pcie root port 2 for cardhu
-> - Make private data structure for each SOC
-> - Add required tegra3 clocks and regulators
-> - Add tegra3 specific code in enable controller
-> - Modify clock tree to get clocks based on device
-> - Based on git://gitorious.org/thierryreding/linux.git
+> I think this patchset is incorrect too.  Even if there is no PCIe
+> services for the PCIe port.  We still need the PCIe drivers, at least
+> for runtime power management.  Although runtime power management is
+> disabled for the PCIe port now, I think we will enable it again after
+> we fixed the corresponding issues.
 
-Did you test these patches? They don't work for me on my Cardhu A04.
+Hi Huang Ying,
+   Thanks for your comments! I will drop this patch, because as you said pcie port
+device need pcie port driver regardless any pcie capabilities found.
 
-First off, I had to change the num-lanes properties to match Cardhu's
-actual configuration:
+But there is still a problem about two pci_disable_device() called in pcie_portdrv_remove().
+In this case, If we unbind pcie port driver, the pcie port device will be disabled. The child devices
+under it cannot use anymore. I send this patch in another reply.
 
-> diff --git a/arch/arm/boot/dts/tegra30-cardhu.dtsi b/arch/arm/boot/dts/tegra30-cardhu.dtsi
-> index d64d12c..6426226 100644
-> --- a/arch/arm/boot/dts/tegra30-cardhu.dtsi
-> +++ b/arch/arm/boot/dts/tegra30-cardhu.dtsi
-> @@ -143,8 +143,17 @@
->                 vdd-supply = <&ldo1_reg>;
->                 avdd-supply = <&ldo2_reg>;
->  
-> +               pci@1,0 {
-> +                       nvidia,num-lanes = <4>;
-> +               };
-> +
-> +               pci@2,0 {
-> +                       nvidia,num-lanes = <1>;
-> +               };
-> +
->                 pci@3,0 {
->                         status = "okay";
-> +                       nvidia,num-lanes = <1>;
->                 };
->         };
->  
+Thanks!
+Yijing
 
-However, even after doing that, the driver doesn't detect anything
-attached to port@3,0, even though I have the board plugged into the
-docking station, and hence the PCI Ethernet should be detected:
+> 
+> Best Regards,
+> Huang Ying
+> 
+> .
+> 
 
-> [    3.103860] tegra-pcie 3000.pcie-controller: 4x1, 1x2 configuration
-> [    3.113755] tegra-pcie 3000.pcie-controller: probing port 2, using 1 lanes
-> [    3.324364] tegra-pcie 3000.pcie-controller: link 2 down, retrying
-> [    3.534249] tegra-pcie 3000.pcie-controller: link 2 down, retrying
-> [    3.744160] tegra-pcie 3000.pcie-controller: link 2 down, retrying
-> [    3.751359] tegra-pcie 3000.pcie-controller: link 2 down, ignoring
 
-(I see the same messages even without fixing the lane configuration,
-exception for the first configuration message obviously prints something
-different).
+-- 
+Thanks!
+Yijing
 
-Are you testing with U-Boot, or using our binary bootloader? Upstream
-code must be tested with U-Boot, to make sure it doesn't rely on any HW
-programming performed by the bootloader.
