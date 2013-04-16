@@ -1,73 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f49.google.com ([209.85.219.49]:39135 "EHLO
-	mail-oa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762626Ab3DDWYM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Apr 2013 18:24:12 -0400
-Received: by mail-oa0-f49.google.com with SMTP id j6so3439129oag.36
-        for <linux-pci@vger.kernel.org>; Thu, 04 Apr 2013 15:24:11 -0700 (PDT)
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:34486 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754826Ab3DPNgE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Apr 2013 09:36:04 -0400
+Date: Tue, 16 Apr 2013 09:35:56 -0400
+From: Neil Horman <nhorman@tuxdriver.com>
+To: Joerg Roedel <joro@8bytes.org>
+Cc: linux-kernel@vger.kernel.org, Prarit Bhargava <prarit@redhat.com>,
+	Don Zickus <dzickus@redhat.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Asit Mallick <asit.k.mallick@intel.com>,
+	David Woodhouse <dwmw2@infradead.org>,
+	linux-pci@vger.kernel.org,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Arkadiusz =?utf-8?Q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
+Subject: Re: [PATCH v9] irq: add quirk for broken interrupt remapping on 55XX
+ chipsets
+Message-ID: <20130416133555.GB9241@hmsreliant.think-freely.org>
+References: <1362158276-4901-1-git-send-email-nhorman@tuxdriver.com>
+ <1366065677-3431-1-git-send-email-nhorman@tuxdriver.com>
+ <20130416102454.GS6858@8bytes.org>
 MIME-Version: 1.0
-In-Reply-To: <1363217302-14383-5-git-send-email-yinghai@kernel.org>
-References: <1363217302-14383-1-git-send-email-yinghai@kernel.org> <1363217302-14383-5-git-send-email-yinghai@kernel.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 4 Apr 2013 16:23:50 -0600
-Message-ID: <CAErSpo7S3cu_OB0Hz9XtH6UN+4JssvOO9D_kykzemQ30PB7L-w@mail.gmail.com>
-Subject: Re: [PATCH v3 04/27] PCI: Add is_pci_*_resource_idx() helpers
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Ram Pai <linuxram@us.ibm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130416102454.GS6858@8bytes.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 13, 2013 at 5:27 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> According to resource pointer find out if the resource is some type resource
-> like bridge, sriov, or std.
->
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> ---
->  include/linux/pci.h |   23 +++++++++++++++++++++++
->  1 file changed, 23 insertions(+)
->
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 127a856..efb348b 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -92,6 +92,29 @@ enum {
->         DEVICE_COUNT_RESOURCE = PCI_NUM_RESOURCES,
->  };
->
-> +static inline bool is_pci_std_resource_idx(int i)
-> +{
-> +       return i >= PCI_STD_RESOURCES && i <= PCI_STD_RESOURCE_END;
-> +}
-> +
-> +static inline bool is_pci_rom_resource_idx(int i)
-> +{
-> +       return i == PCI_ROM_RESOURCE;
-> +}
-> +
-> +static inline bool is_pci_iov_resource_idx(int i)
-> +{
-> +#ifdef CONFIG_PCI_IOV
-> +       return i >= PCI_IOV_RESOURCES && i <= PCI_IOV_RESOURCE_END;
-> +#endif
-> +       return false;
-> +}
-> +
-> +static inline bool is_pci_bridge_resource_idx(int i)
-> +{
-> +       return i >= PCI_BRIDGE_RESOURCES && i <= PCI_BRIDGE_RESOURCE_END;
-> +}
-> +
->  typedef int __bitwise pci_power_t;
->
->  #define PCI_D0         ((pci_power_t __force) 0)
+On Tue, Apr 16, 2013 at 12:24:54PM +0200, Joerg Roedel wrote:
+> On Mon, Apr 15, 2013 at 06:41:17PM -0400, Neil Horman wrote:
+> > +#ifdef CONFIG_IRQ_REMAP
+> > +static void __init intel_remapping_check(int num, int slot, int func)
+> > +{
+> > +	u8 revision;
+> > +
+> > +	revision = read_pci_config_byte(num, slot, func, PCI_REVISION_ID);
+> > +
+> > +	/*
+> > +	 * Revision 0x13 of this chipset supports irq remapping
+> > +	 * but has an erratum that breaks its behavior, flag it as such
+> > +	 */
+> > +	if (revision == 0x13)
+> > +		irq_remap_broken = 1;
+> > +
+> > +}
+> > +#else
+> 
+> Any reason why you don't check this in the Intel IOMMU init code? You
+> would safe the ifdefs and you don't have to include
+> irq-remapping-internal header files somewhere else in the tree.
+> 
+> 
+> 	Joerg
+> 
+> 
+> 
+Actually, hold on that last note, the intel iommu init code doesn't seem to
+create any direct relationship between the set of iommu's and the pci_dev's that
+implement them.  In the intel_irq_remapping_supported path I can loop over each
+dmar_dhrd_unit, and interrogate each of the devices on its **devices list to see
+if the device/vendor and revision ids match, but looking at the dhrd parsing
+code, I'm not sure the iommu pci_dev is always going to be on that list.  That
+seems like its going to be pretty ugly in and of itself.  Do you have a
+suggested way to identify the pci_dev of the device we need in that path without
+having to simply iterate over every device in that scope?
 
-1) I don't like adding more "_idx()" interfaces.
+Neil
 
-2) The only one of these that's even used is "is_pci_bridge_resource_idx()"
-
-3) I think adding a wrapper struct with a "type" or "flags" field
-would make this trivial, e.g., "pres->flags & PCI_RESOURCE_WINDOW" or
-something.
