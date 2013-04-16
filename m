@@ -1,142 +1,256 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ve0-f171.google.com ([209.85.128.171]:48888 "EHLO
-	mail-ve0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752492Ab3DZTtz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 26 Apr 2013 15:49:55 -0400
-Received: by mail-ve0-f171.google.com with SMTP id oy12so549941veb.30
-        for <linux-pci@vger.kernel.org>; Fri, 26 Apr 2013 12:49:54 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1366839204.2918.726.camel@bling.home>
-References: <20130214183640.16220.33060.stgit@bling.home> <CAErSpo4uopqKwXY-6HrSZ9mk08tgY9L-iUG2ykmKcMK077tDrQ@mail.gmail.com>
- <1360900439.3248.310.camel@bling.home> <1366839204.2918.726.camel@bling.home>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 26 Apr 2013 13:49:34 -0600
-Message-ID: <CAErSpo4yrmtvBx1_vW4QVFFgz2r_41bUP3CFEBGuRwLjUF-miA@mail.gmail.com>
-Subject: Re: [PATCH] pci: Disable slot presence detection around bus reset
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:41586 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965164Ab3DPUis (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Apr 2013 16:38:48 -0400
+From: Neil Horman <nhorman@tuxdriver.com>
+To: linux-kernel@vger.kernel.org
+Cc: Neil Horman <nhorman@tuxdriver.com>,
+	Prarit Bhargava <prarit@redhat.com>,
+	Don Zickus <dzickus@redhat.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Asit Mallick <asit.k.mallick@intel.com>,
+	David Woodhouse <dwmw2@infradead.org>,
+	linux-pci@vger.kernel.org, Joerg Roedel <joro@8bytes.org>,
 	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Sheng Yang <sheng@linux.intel.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	=?UTF-8?q?Arkadiusz=20Mi=C5=9Bkiewicz?= <arekm@maven.pl>
+Subject: [PATCH v10] irq: add quirk for broken interrupt remapping on 55XX chipsets
+Date: Tue, 16 Apr 2013 16:38:32 -0400
+Message-Id: <1366144712-23460-1-git-send-email-nhorman@tuxdriver.com>
+In-Reply-To: <1362158276-4901-1-git-send-email-nhorman@tuxdriver.com>
+References: <1362158276-4901-1-git-send-email-nhorman@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 24, 2013 at 3:33 PM, Alex Williamson
-<alex.williamson@redhat.com> wrote:
-> On Thu, 2013-02-14 at 20:53 -0700, Alex Williamson wrote:
->> On Thu, 2013-02-14 at 16:47 -0700, Bjorn Helgaas wrote:
->> > On Thu, Feb 14, 2013 at 11:37 AM, Alex Williamson
->> > <alex.williamson@redhat.com> wrote:
->> > > A bus reset can trigger a presence detection change and result in a
->> > > suprise hotplug.  This is generally not what we want to happen when
->> > > trying to reset a device.  Disable the presence detection control on
->> > > on bridges around bus reset.
->> >
->> > This is a really interesting situation, and I'm not quite ready to
->> > sign up to the idea that this is really a problem and that if it is,
->> > this is the way we want to fix it.
->> >
->> > What would happen if we *did* handle this as a hotplug event, with a
->> > removal followed by an add?
->> >
->> > The scheme where pci_reset_function() does "pci_save_state(dev);
->> > pci_dev_reset(dev); pci_restore_state(dev);" makes me nervous.
->> >
->> > We're saving and restoring some of PCI config space around the reset,
->> > but there's no guarantee that we're preserving *all* the important
->> > state in config space because I think devices can have non-architected
->> > device-specific things in config space that we don't know how to
->> > save/restore.
->> >
->> > Devices also have internal state not exposed via config space.  That
->> > state is lost during the reset but can't be restored by
->> > pci_restore_state().  So it seems like pci_reset_function() is
->> > pretending to do something it can't really do reliably.
->> >
->> > If we make it so a reset is always handled as a remove+add, then we'll
->> > use a more generic path, and we'll get all the stuff you expect when
->> > initializing a new device -- resource assignment, IRQ setup, quirks,
->> > etc.  Quirks in particular seem like something we want, but don't
->> > currently get with pci_reset_function().
->> >
->> > Oh, and the "disable presence detect" approach below only works for
->> > things below a PCIe bridge with native hotplug, right?  I wonder what
->> > happens if we reset devices below a bridge using SHPC or acpiphp.
->>
->> Triggering a remove+add is not useful for the way we use it today.  The
->> users I'm aware of are KVM device assignment and VFIO, where we trigger
->> it in an attempt to get the device to a known state so that we have some
->> hope of repeatability.  In those scenarios the reset is initiated by the
->> driver.  The interface isn't meant to guarantee the device is returned
->> to an identical state as it was before reset.  If it did, why would we
->> call it?  We want to get to a state as near to power on, but still with
->> config programming, as we can.
+A few years back intel published a spec update:
+http://www.intel.com/content/dam/doc/specification-update/5520-and-5500-chipset-ioh-specification-update.pdf
 
-I know you don't want the identical state before the reset.  But it
-would be good if it were the same state as when the PCI core first
-called the .probe() method.
+For the 5520 and 5500 chipsets which contained an errata (specificially errata
+53), which noted that these chipsets can't properly do interrupt remapping, and
+as a result the recommend that interrupt remapping be disabled in bios.  While
+many vendors have a bios update to do exactly that, not all do, and of course
+not all users update their bios to a level that corrects the problem.  As a
+result, occasionally interrupts can arrive at a cpu even after affinity for that
+interrupt has be moved, leading to lost or spurrious interrupts (usually
+characterized by the message:
+kernel: do_IRQ: 7.71 No irq handler for vector (irq -1)
 
-What we have right now is the reset path doing *part* of the device
-initialization but not all of it.  The exception I can think of is
-that we don't apply any quirks in the reset path.  Maybe running those
-would be enough to get to the same state as when the PCI core first
-gave it to the driver.  But it's going to be hard to really confirm
-that and to keep these paths in sync in the future.  And quirks are
-currently entitled to assume that they run *before* a driver gets its
-mitts on the device, so there could be issues there.
+There have been several incidents recently of people seeing this error, and
+investigation has shown that they have system for which their BIOS level is such
+that this feature was not properly turned off.  As such, it would be good to
+give them a reminder that their systems are vulnurable to this problem.  For
+details of those that reported the problem, please see:
+https://bugzilla.redhat.com/show_bug.cgi?id=887006
 
-There probably aren't any quirks for the devices you're interested in,
-so my concerns seem sort of academic.  But it would still be nice if
-the scheme didn't depend on the absence of quirks.
+Signed-off-by: Neil Horman <nhorman@tuxdriver.com>
+CC: Prarit Bhargava <prarit@redhat.com>
+CC: Don Zickus <dzickus@redhat.com>
+CC: Don Dutile <ddutile@redhat.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>
+CC: Asit Mallick <asit.k.mallick@intel.com>
+CC: David Woodhouse <dwmw2@infradead.org>
+CC: linux-pci@vger.kernel.org
+CC: Joerg Roedel <joro@8bytes.org>
+CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+CC: Arkadiusz Miśkiewicz <arekm@maven.pl>
+---
 
->> Being driver directed, having the reset initiate a remove is pretty near
->> the last thing we want.  That limits the scope of calling it to only
->> when the driver can readily release the device.  If we have the device
->> attached to a guest or userspace driver, that's potentially a lot of
->> setup and teardown and effectively extending a surprise removal all the
->> way up the stack.
->>
->> Obviously a bus reset is a big hammer and we do exhaust all the little
->> hammers of flr and pm reset before we try it, but in this case, we know
->> the device that's going away and with all likelihood, it's coming right
->> back at the same location.  If we take the path of forcing a remove+add,
->> let's just remove it from the reset_function call path and we'll do
->> without reset for those devices.  Thanks,
->
-> Time to revisit this bug.  Clearly when a driver or userspace calls
-> pci_reset_function the intention is not to have the device be
-> hot-unplugged and re-plugged.  So I think we either need to prevent that
-> from happening or politely decline the reset.
->
-> I don't really know how to do this on acpiphp or shpc or whatever other
-> hotplug controllers we support.  So, what if we add a reset_slot
-> callback to hotplug_slot_ops?  We could then make pci_parent_bus_reset
-> do something like:
->
-> if (dev->slot && dev->slot->hotplug_slot) {
->     if (!dev->slot->hotplug_slot->reset_slot)
->         return -ENOTTY;
->
->     return dev->slot->hotplug_slot->reset_slot(dev->slot->hotplug_slot);
-> } else {
->     ... standard secondary bus reset...
-> }
+Change notes:
 
-If we end up masking the hotplug notification, I do like the idea of
-putting the controller-specific knowledge in hotplug_slot_ops rather
-than directly in pci_parent_bus_reset().
+v2)
 
-> I'd actually also like to add a pci_reset_bus interface because we do
-> have cases where the pci_reset_function is not sufficient (device
-> doesn't do any useful reset of it's own and pci_parent_bus_reset won't
-> because there are other devices on the bus).  Graphics cards in
-> particular are biting us here.  When all of the devices on the bus are
-> owned by a driver, this would provide a less device dependent reset.  It
-> would use same logic and code as enabled with reset_slot.  Thoughts?
+* Moved the quirk to the x86 arch, since consensus seems to be that the 55XX
+chipset series is x86 only.  I decided however to keep the quirk as a regular
+quirk, not an early_quirk.  Early quirks have no way currently to determine if
+BIOS has properly disabled the feature in the iommu, at least not without
+significant hacking, and since its quite possible this will be a short lived
+quirk, should Don Z's workaround code prove successful (and it looks like it may
+well), I don't think that necessecary.
 
-You're thinking that pci_reset_bus() would do a secondary bus reset,
-but only if every device on the bus is owned by the same driver?
+* Removed the WARNING banner from the quirk, and added the HW_ERR token to the
+string, I opted to leave the newlines in place however, as I really couldnt
+find a way to keep the text on a single line is still legible from a code
+perspective.  I think theres enough language in there that using cscope on just
+about any substring however will turn it up, and again, this may be a short
+lived quirk.
 
-Bjorn
+v3)
+
+* Removed defines from pci_ids.h, and used direct id values as per request from
+Bjorn.
+
+v4)
+
+* Converted pr_warn to WARN_TAINT(TAINT_FIRMWARE_WORKAROUND) as per David
+Woodhouse
+
+v5)
+
+* Moved check to an early quirk, and flagged the broken chip, so we could
+reasonably disable irq remapping during bootup.
+
+v6)
+
+* Clean up of stupid extra thrash in quirks.c
+
+v7)
+
+* Move broken check to intel_irq_remapping.c
+* Fixed another typo
+* Finally made the reference bugzilla public
+
+v8)
+
+* Removed extraneous code from irq_remapping_enabled
+
+v9)
+
+* Fix stupid build break from rushing to shuffle simmilar header files about
+  Thanks to Arkadiusz Miśkiewicz  for pointing it out
+
+v10)
+
+* Rewrite to hide the irq_remap_broken variable so we don't need to pull in a
+  private header file
+---
+ arch/x86/include/asm/irq_remapping.h |  1 +
+ arch/x86/kernel/early-quirks.c       | 26 ++++++++++++++++++++++++++
+ drivers/iommu/intel_irq_remapping.c  | 10 ++++++++++
+ drivers/iommu/irq_remapping.c        |  6 ++++++
+ drivers/iommu/irq_remapping.h        |  2 ++
+ 5 files changed, 45 insertions(+)
+
+diff --git a/arch/x86/include/asm/irq_remapping.h b/arch/x86/include/asm/irq_remapping.h
+index 95fd352..d740cb4 100644
+--- a/arch/x86/include/asm/irq_remapping.h
++++ b/arch/x86/include/asm/irq_remapping.h
+@@ -28,6 +28,7 @@
+ 
+ extern void setup_irq_remapping_ops(void);
+ extern int irq_remapping_supported(void);
++extern void set_irq_remapping_broken(void);
+ extern int irq_remapping_prepare(void);
+ extern int irq_remapping_enable(void);
+ extern void irq_remapping_disable(void);
+diff --git a/arch/x86/kernel/early-quirks.c b/arch/x86/kernel/early-quirks.c
+index 3755ef4..589092d 100644
+--- a/arch/x86/kernel/early-quirks.c
++++ b/arch/x86/kernel/early-quirks.c
+@@ -18,6 +18,7 @@
+ #include <asm/apic.h>
+ #include <asm/iommu.h>
+ #include <asm/gart.h>
++#include <asm/irq_remapping.h>
+ 
+ static void __init fix_hypertransport_config(int num, int slot, int func)
+ {
+@@ -192,6 +193,27 @@ static void __init ati_bugs_contd(int num, int slot, int func)
+ }
+ #endif
+ 
++#ifdef CONFIG_IRQ_REMAP
++static void __init intel_remapping_check(int num, int slot, int func)
++{
++	u8 revision;
++
++	revision = read_pci_config_byte(num, slot, func, PCI_REVISION_ID);
++
++	/*
++	 * Revision 0x13 of this chipset supports irq remapping
++	 * but has an erratum that breaks its behavior, flag it as such
++	 */
++	if (revision == 0x13)
++		set_irq_remapping_broken();
++
++}
++#else
++static void __init intel_remapping_check(int num, int slot, int func)
++{
++}
++#endif
++
+ #define QFLAG_APPLY_ONCE 	0x1
+ #define QFLAG_APPLIED		0x2
+ #define QFLAG_DONE		(QFLAG_APPLY_ONCE|QFLAG_APPLIED)
+@@ -221,6 +243,10 @@ static struct chipset early_qrk[] __initdata = {
+ 	  PCI_CLASS_SERIAL_SMBUS, PCI_ANY_ID, 0, ati_bugs },
+ 	{ PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_SBX00_SMBUS,
+ 	  PCI_CLASS_SERIAL_SMBUS, PCI_ANY_ID, 0, ati_bugs_contd },
++	{ PCI_VENDOR_ID_INTEL, 0x3403, PCI_CLASS_BRIDGE_HOST,
++	  PCI_BASE_CLASS_BRIDGE, 0, intel_remapping_check },
++	{ PCI_VENDOR_ID_INTEL, 0x3406, PCI_CLASS_BRIDGE_HOST,
++	  PCI_BASE_CLASS_BRIDGE, 0, intel_remapping_check },
+ 	{}
+ };
+ 
+diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
+index f3b8f23..5b19b2d 100644
+--- a/drivers/iommu/intel_irq_remapping.c
++++ b/drivers/iommu/intel_irq_remapping.c
+@@ -524,6 +524,16 @@ static int __init intel_irq_remapping_supported(void)
+ 
+ 	if (disable_irq_remap)
+ 		return 0;
++	if (irq_remap_broken) {
++		WARN_TAINT(1, TAINT_FIRMWARE_WORKAROUND,
++			   "This system BIOS has enabled interrupt remapping\n"
++			   "on a chipset that contains an erratum making that\n"
++			   "feature unstable.  To maintain system stability\n"
++			   "interrupt remapping is being disabled.  Please\n"
++			   "contact your BIOS vendor for an update\n");
++		disable_irq_remap = 1;
++		return 0;
++	}
+ 
+ 	if (!dmar_ir_support())
+ 		return 0;
+diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
+index d56f8c1..3c11043 100644
+--- a/drivers/iommu/irq_remapping.c
++++ b/drivers/iommu/irq_remapping.c
+@@ -19,6 +19,7 @@
+ int irq_remapping_enabled;
+ 
+ int disable_irq_remap;
++int irq_remap_broken;
+ int disable_sourceid_checking;
+ int no_x2apic_optout;
+ 
+@@ -211,6 +212,11 @@ void __init setup_irq_remapping_ops(void)
+ #endif
+ }
+ 
++void set_irq_remapping_broken(void)
++{
++	irq_remap_broken = 1;
++}
++
+ int irq_remapping_supported(void)
+ {
+ 	if (disable_irq_remap)
+diff --git a/drivers/iommu/irq_remapping.h b/drivers/iommu/irq_remapping.h
+index ecb6376..90c4dae 100644
+--- a/drivers/iommu/irq_remapping.h
++++ b/drivers/iommu/irq_remapping.h
+@@ -32,6 +32,7 @@ struct pci_dev;
+ struct msi_msg;
+ 
+ extern int disable_irq_remap;
++extern int irq_remap_broken;
+ extern int disable_sourceid_checking;
+ extern int no_x2apic_optout;
+ extern int irq_remapping_enabled;
+@@ -89,6 +90,7 @@ extern struct irq_remap_ops amd_iommu_irq_ops;
+ 
+ #define irq_remapping_enabled 0
+ #define disable_irq_remap     1
++#define irq_remap_broken      0
+ 
+ #endif /* CONFIG_IRQ_REMAP */
+ 
+-- 
+1.8.1.4
+
