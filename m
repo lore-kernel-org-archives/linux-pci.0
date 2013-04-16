@@ -1,78 +1,84 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from va3ehsobe003.messaging.microsoft.com ([216.32.180.13]:33931
-	"EHLO va3outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751361Ab3DOQnP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 15 Apr 2013 12:43:15 -0400
-Message-ID: <516C2EA2.1050806@amd.com>
-Date: Mon, 15 Apr 2013 11:45:22 -0500
-From: Aravind <aravind.gopalakrishnan@amd.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-To: Borislav Petkov <bp@alien8.de>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Doug Thompson <dougthompson@xmission.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
+In-Reply-To: <alpine.DEB.2.02.1304161324500.30779@chino.kir.corp.google.com>
+References: <1365781470-32379-1-git-send-email-jiang.liu@huawei.com>
+ <1365781470-32379-10-git-send-email-jiang.liu@huawei.com> <alpine.DEB.2.02.1304161324500.30779@chino.kir.corp.google.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 16 Apr 2013 16:35:04 -0600
+Message-ID: <CAErSpo7A3paLJ8u5FxPZpy=9yT_ZkXvEbcHbKLd7iMutdDaBUA@mail.gmail.com>
+Subject: Re: [PATCH v9 09/16] PCI, x86: implement pcibios_{add|remove}_bus() hooks
+To: David Rientjes <rientjes@google.com>
+Cc: Jiang Liu <liuj97@gmail.com>, "Rafael J . Wysocki" <rjw@sisk.pl>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	<linux-edac@vger.kernel.org>
-Subject: Re: [PATCH] edac: Handle EDAC ECC errors for Family 16h
-References: <1366039059-15772-1-git-send-email-Aravind.Gopalakrishnan@amd.com> <CAErSpo6cD4WtPhTbcBEyfOLNASJzr+cU2Lch=fVyqn-gh15drQ@mail.gmail.com> <20130415161121.GA18440@pd.tnic>
-In-Reply-To: <20130415161121.GA18440@pd.tnic>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, "x86@kernel.org" <x86@kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/15/2013 11:11 AM, Borislav Petkov wrote:
-> On Mon, Apr 15, 2013 at 09:56:08AM -0600, Bjorn Helgaas wrote:
->> On Mon, Apr 15, 2013 at 9:17 AM, Aravind Gopalakrishnan
->>> @@ -172,7 +176,12 @@
->>>    */
->>>   #define PCI_DEVICE_ID_AMD_15H_NB_F1    0x1601
->>>   #define PCI_DEVICE_ID_AMD_15H_NB_F2    0x1602
->>> -
->>> +#define PCI_DEVICE_ID_AMD_16H_NB_F0    0x1530
->>> +#define PCI_DEVICE_ID_AMD_16H_NB_F1    0x1531
->>> +#define PCI_DEVICE_ID_AMD_16H_NB_F2    0x1532
->>> +#define PCI_DEVICE_ID_AMD_16H_NB_F3    0x1533
->>> +#define PCI_DEVICE_ID_AMD_16H_NB_F4    0x1534
->>> +#define PCI_DEVICE_ID_AMD_16H_NB_F5    0x1535
->>>
->>>   /*
->>>    * Function 1 - Address Map
->>> @@ -300,6 +309,7 @@ enum amd_families {
->>>          K8_CPUS = 0,
->>>          F10_CPUS,
->>>          F15_CPUS,
->>> +       F16_CPUS,
->>>          NUM_FAMILIES,
->>>   };
->>>
->>> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
->>> index 1679ff6..59f732f 100644
->>> --- a/include/linux/pci_ids.h
->>> +++ b/include/linux/pci_ids.h
->>> @@ -519,6 +519,8 @@
->>>   #define PCI_DEVICE_ID_AMD_11H_NB_LINK  0x1304
->>>   #define PCI_DEVICE_ID_AMD_15H_NB_F3    0x1603
->>>   #define PCI_DEVICE_ID_AMD_15H_NB_F4    0x1604
->>> +#define PCI_DEVICE_ID_AMD_16H_NB_F3    0x1533
->>> +#define PCI_DEVICE_ID_AMD_16H_NB_F4    0x1534
->> What is the point of adding identical #defines both here and in
->> amd64_edac.h?  Also, read the note at the top of
->> include/linux/pci_ids.h.
-> Yeah, they should be in pci_ids.h since they're used in amd_nb.c and
-> amd64_edac.c.
+On Tue, Apr 16, 2013 at 2:27 PM, David Rientjes <rientjes@google.com> wrote:
+> On Fri, 12 Apr 2013, Jiang Liu wrote:
 >
-> But, what shouldn't be is adding unused defines (*_F0 and *_F5).
-> Aravind, please drop them.
-
-     Yes, I have made the changes and sent it out as version 2 of the PATCH.
-     Do have a look and let me know if I need to make any changes.
-
-
-> I'll review the rest of the patch when I get around to it this week.
+>> diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+>> index 901177d..305c68b 100644
+>> --- a/arch/x86/pci/common.c
+>> +++ b/arch/x86/pci/common.c
+>> @@ -6,6 +6,7 @@
+>>
+>>  #include <linux/sched.h>
+>>  #include <linux/pci.h>
+>> +#include <linux/pci-acpi.h>
+>>  #include <linux/ioport.h>
+>>  #include <linux/init.h>
+>>  #include <linux/dmi.h>
+>> @@ -170,6 +171,16 @@ void pcibios_fixup_bus(struct pci_bus *b)
+>>               pcibios_fixup_device_resources(dev);
+>>  }
+>>
+>> +void pcibios_add_bus(struct pci_bus *bus)
+>> +{
+>> +     acpi_pci_add_bus(bus);
+>> +}
+>> +
+>> +void pcibios_remove_bus(struct pci_bus *bus)
+>> +{
+>> +     acpi_pci_remove_bus(bus);
+>> +}
+>> +
+>>  /*
+>>   * Only use DMI information to set this if nothing was passed
+>>   * on the kernel command line (which was parsed earlier).
 >
+> This causes build errors when CONFIG_ACPI isn't enabled since both
+> acpi_pci_{add,remove}_bus() aren't defined in such a configuration:
+>
+> arch/x86/pci/common.c: In function 'pcibios_add_bus':
+> arch/x86/pci/common.c:176:2: error: implicit declaration of function 'acpi_pci_add_bus'
+> arch/x86/pci/common.c: In function 'pcibios_remove_bus':
+> arch/x86/pci/common.c:181:2: error: implicit declaration of function 'acpi_pci_remove_bus'
 
+Thanks for the report!
 
+I'm pretty sure I fixed this:
+http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/commit/?h=pci/jiang-subdrivers&id=3b63aaa70e1ccc4b66d60acc78da09700706a703
+
+The acpi_pci_add_bus()/acpi_pci_remove_bus() stubs for CONFIG_ACPI=n
+were added early in the series (patch 07/16: "PCI/ACPI: Prepare stub
+functions to handle ACPI PCI (hotplug) slots") but were mistakenly
+removed in patch 12/16: "PCI: acpiphp: Do not use ACPI PCI subdriver
+mechanism".
+
+I updated my "next" branch with the fixed version of patch 12/16, so
+the 20130417 linux-next tree should have the fix.
+
+Bjorn
