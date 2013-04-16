@@ -1,255 +1,121 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:51385 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965122Ab3DHU5s (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Apr 2013 16:57:48 -0400
-Date: Mon, 8 Apr 2013 22:57:41 +0200
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Received: from hydra.sisk.pl ([212.160.235.94]:34471 "EHLO hydra.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S935536Ab3DPRxm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 16 Apr 2013 13:53:42 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Grant Likely <grant.likely@secretlab.ca>,
-	Russell King <linux@arm.linux.org.uk>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>,
-	"devicetree-discuss@lists.ozlabs.org"
-	<devicetree-discuss@lists.ozlabs.org>,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Maen Suleiman <maen@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Olof Johansson <olof@lixom.net>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Mitch Bradley <wmb@firmworks.com>,
-	Andrew Murray <andrew.murray@arm.com>
-Subject: Re: [PATCHv7 08/17] pci: PCIe driver for Marvell Armada 370/XP
- systems
-Message-ID: <20130408225741.74fc383c@skate>
-In-Reply-To: <CAErSpo7fGPe3wFha36kNMxeRP4gBpBWgfw85aTLey-DSz2ZYew@mail.gmail.com>
-References: <1364395234-11195-1-git-send-email-thomas.petazzoni@free-electrons.com>
-	<1364395234-11195-9-git-send-email-thomas.petazzoni@free-electrons.com>
-	<CAErSpo7fGPe3wFha36kNMxeRP4gBpBWgfw85aTLey-DSz2ZYew@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PM list <linux-pm@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	"Benenati, Chris J" <chris.j.benenati@intel.com>,
+	Ajaykumar Hotchandani <ajaykumar.hotchandani@oracle.com>
+Subject: Re: [PATCH] PCI / PM: Fix fallback to PCI_D0 in pci_platform_power_transition()
+Date: Tue, 16 Apr 2013 20:01:33 +0200
+Message-ID: <2880576.TkeK8oBDas@vostro.rjw.lan>
+In-Reply-To: <CAErSpo7vUWSoav+rJgGK15xA7f0W+a0_16tZLFGCz5HO-HVZ2g@mail.gmail.com>
+References: <48795235.crcTAaJqPb@vostro.rjw.lan> <CAE9FiQVEWy2MVfVmv4oL9D24OcF83dQv+OcFd5K6v8ZHeGumJA@mail.gmail.com> <CAErSpo7vUWSoav+rJgGK15xA7f0W+a0_16tZLFGCz5HO-HVZ2g@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Bjorn Helgaas,
-
-On Mon, 8 Apr 2013 14:29:59 -0600, Bjorn Helgaas wrote:
-
-> > Signed-off-by: Thomas Petazzoni
-> > <thomas.petazzoni@free-electrons.com>
+On Monday, April 15, 2013 02:18:18 PM Bjorn Helgaas wrote:
+> On Fri, Apr 12, 2013 at 11:50 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> > On Fri, Apr 12, 2013 at 4:58 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> >> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> >>
+> >> Commit b51306c (PCI: Set device power state to PCI_D0 for device
+> >> without native PM support) modified pci_platform_power_transition()
+> >> by adding code causing dev->current_state for devices that don't
+> >> support native PCI PM but are power-manageable by the platform to be
+> >> changed to PCI_D0 regardless of the value returned by the preceding
+> >> platform_pci_set_power_state().  In particular, that also is done
+> >> if the platform_pci_set_power_state() has been successful, which
+> >> causes the correct power state of the device set by
+> >> pci_update_current_state() in that case to be overwritten by PCI_D0.
+> >>
+> >> Fix that mistake by making the fallback to PCI_D0 only happen if
+> >> the platform_pci_set_power_state() has returned an error.
+> >>
+> >> Reported-by: Chris J. Benenati <chris.j.benenati@intel.com>
+> >> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> >> Cc: <stable@vger.kernel.org>
 > 
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+> I folded in Yinghai's simplification and added a URL to Chris's report
+> and applied to my pci/rafael-pm branch:
+> http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/rafael-pm
 > 
-> A few trivial comments below; it's up to you whether you do anything
-> with them or not.  It's OK with me if you ignore them :)
-> 
-> The only thing I saw that might be a bug is the resource_size()
-> question in mvebu_pcie_probe().
+> If it still looks good to you, Rafael, I'll merge it to next for v3.10.
 
-Thanks for the review!
+Well, the simplification adds an extra check for error into both code paths,
+so I'm not sure if it's really worth it (that's why I didn't do it originally
+in the first place), but I suppose that's not a big deal.  It looks good as far
+as the correctness is concerned anyway.
 
-> > diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
-> > new file mode 100644
-> > index 0000000..3ad563f
-> > --- /dev/null
-> > +++ b/drivers/pci/host/Makefile
-> > @@ -0,0 +1,4 @@
-> > +obj-$(CONFIG_PCI_MVEBU) += pci-mvebu.o
-> > +CFLAGS_pci-mvebu.o += \
-> > +       -I$(srctree)/arch/arm/plat-orion/include \
-> > +       -I$(srctree)/arch/arm/mach-mvebu/include
-> 
-> Too bad to have to adjust CFLAGS here.  Seems like I remember earlier
-> discussion, but I didn't pay much attention, and if this is the best
-> we can do, I guess it's OK.
+> I don't know what the user-visible effect of this is, and it's been
+> around for a long time, but if you think this should go in v3.9
+> instead, let me know.
 
-Ah, indeed! This is now longer needed. The plat-orion include was
-needed to get access to some PCIe functions, which are now part of the
-driver, and the mach-mvebu header was needed to access some address
-decoding window related functions, that are now part of the mvebu-mbus
-driver.
+I think v3.9+stable should be sufficient.
 
-> > +#define PCIE_BAR_CTRL_OFF(n)   (0x1804 + ((n - 1) * 4))
-> 
-> Strictly speaking, I suppose you should have "(((n) - 1) ..." here.
+Thanks,
+Rafael
 
-Correct, thanks.
 
-> > +#define PCIE_STAT_OFF          0x1a04
-> > +#define  PCIE_STAT_DEV_OFFS            20
-> > +#define  PCIE_STAT_DEV_MASK            0x1f
-> > +#define  PCIE_STAT_BUS_OFFS            8
-> > +#define  PCIE_STAT_BUS_MASK            0xff
-> > +#define  PCIE_STAT_LINK_DOWN           1
-> 
-> Whoever wrote pci_regs.h came up with a style I kind of like: the bit
-> masks are already shifted so you can see where they are in the value,
-> and there are no #defines for the shifts, e.g.,
-> 
-> #define PCI_EXP_FLAGS_TYPE      0x00f0  /* Device/Port type */
-> 
-> The users of PCI_EXP_FLAGS_TYPE just have a bare ">> 4" where
-> necessary.  It seems like a good compromise that uses only one symbol
-> (good for grepping), gives good visual indication in the header file
-> of how the value is laid out, allows clearing bits without shifts, and
-> clearly shows what's happening at the uses.
-> 
-> But what you have is OK, too :)
-
-Hum, ok, I'll try to think of it. Maybe too much of a 'big' change at
-this point, but I'll see.
-
-> > +static int mvebu_pcie_link_up(void __iomem *base)
-> 
-> This could return bool, I guess.
-
-Indeed.
-
-> I think I would make
-> 
->   mvebu_pcie_link_up()
->   mvebu_pcie_set_local_bus_nr()
->   mvebu_pcie_setup_wins()
->   mvebu_pcie_setup_hw()
->   mvebu_pcie_hw_rd_conf()
->   mvebu_pcie_hw_wr_conf()
-> 
-> all take a "struct mvebu_pcie_port *port" directly rather than having
-> the caller pass in "port->base", but maybe you have a reason for doing
-> otherwise.
-
-I'll review this, I think your suggestion makes sense.
-
-> > +       /*
-> > +        * First, disable and clear BARs and windows.
-> > +        */
-> 
-> Typically single-line comments would be "/* ... */" all on one line.
-
-Correct.
-
-> > +       for (i = 1; i <= 2; i++) {
-> 
-> Interesting use of "i <= 2" rather than the typical "i < 3".
-
-I must confess this code comes from plat-orion/pcie.c, and I just
-copy/pasted it (note: we intentionally don't use plat-orion/pcie.c to
-avoid having to have to include a header in plat-orion/include, and
-this plat-orion/pcie.c should ultimately go away once all Marvell EBU
-platforms are migrated to use the new PCIe driver).
-
-> > +       /*
-> > +        * Enable interrupt lines A-D.
-> > +        */
-> > +       mask = readl(base + PCIE_MASK_OFF);
-> > +       mask |= 0x0f000000;
-> 
-> No #defines for these bits?
-
-Good point.
-
-> > +       writel(mask, base + PCIE_MASK_OFF);
-> > +}
+> >> ---
+> >>  drivers/pci/pci.c |    3 +--
+> >>  1 file changed, 1 insertion(+), 2 deletions(-)
+> >>
+> >> Index: linux-pm/drivers/pci/pci.c
+> >> ===================================================================
+> >> --- linux-pm.orig/drivers/pci/pci.c
+> >> +++ linux-pm/drivers/pci/pci.c
+> >> @@ -646,8 +646,7 @@ static int pci_platform_power_transition
+> >>                 error = platform_pci_set_power_state(dev, state);
+> >>                 if (!error)
+> >>                         pci_update_current_state(dev, state);
+> >> -               /* Fall back to PCI_D0 if native PM is not supported */
+> >> -               if (!dev->pm_cap)
+> >> +               else if (!dev->pm_cap) /* Fall back to PCI_D0 */
+> >>                         dev->current_state = PCI_D0;
+> >>         } else {
+> >>                 error = -ENODEV;
+> >>
+> >
+> > Acked-by: Yinghai Lu <yinghai@kernel.org>
+> >
+> > also could simplify it further.
+> >
+> > ---
+> >  drivers/pci/pci.c |   12 ++++--------
+> >  1 file changed, 4 insertions(+), 8 deletions(-)
+> >
+> > Index: linux-2.6/drivers/pci/pci.c
+> > ===================================================================
+> > --- linux-2.6.orig/drivers/pci/pci.c
+> > +++ linux-2.6/drivers/pci/pci.c
+> > @@ -646,15 +646,11 @@ static int pci_platform_power_transition
+> >          error = platform_pci_set_power_state(dev, state);
+> >          if (!error)
+> >              pci_update_current_state(dev, state);
+> > -        /* Fall back to PCI_D0 if native PM is not supported */
+> > -        if (!dev->pm_cap)
+> > -            dev->current_state = PCI_D0;
+> > -    } else {
+> > +    } else
+> >          error = -ENODEV;
+> > -        /* Fall back to PCI_D0 if native PM is not supported */
+> > -        if (!dev->pm_cap)
+> > -            dev->current_state = PCI_D0;
+> > -    }
 > > +
-> > +static int mvebu_pcie_hw_rd_conf(void __iomem *base, struct
-> > pci_bus *bus,
-> > +                                u32 devfn, int where, int size,
-> > u32 *val) +{
-> > +       writel(PCIE_CONF_BUS(bus->number) |
-> > +               PCIE_CONF_DEV(PCI_SLOT(devfn)) |
-> > +               PCIE_CONF_FUNC(PCI_FUNC(devfn)) |
-> > +               PCIE_CONF_REG(where) | PCIE_CONF_ADDR_EN,
-> 
-> A "PCIE_CONF_ADDR(busnr, devfn, where)" macro would be nice here.
-
-Right.
-
-> > +static void mvebu_pcie_handle_iobase_change(struct mvebu_pcie_port
-> > *port) +{
-> > +       phys_addr_t iobase;
-> > +
-> > +       /* Are the current iobase/iolimit values invalid? */
-> 
-> I first thought "current ... values" meant "the values before the
-> change."  If you used "new values" it might be clearer that this is
-> used to handle *writes* to the window base/size registers, and that
-> we're looking at the values being written.
-
-Ok, makes sense indeed.
-
-> > +               return mvebu_sw_pci_bridge_write(port, where, size,
-> > val);
-> > +       }
-> > +
-> > +       return PCIBIOS_SUCCESSFUL;
-> 
-> This last "return" is unreachable (I see you omitted it from the
-> rd_conf() path already :)).  This would be slightly simpler as:
-> 
->   static struct mvebu_pcie_port *mvebu_find_port(struct mvebu_pcie
-> *pcie, struct pci_bus *bus, int devfn)
->   {
->     int i;
-> 
->     for (i = 0; i < pcie->nports; i++) {
->       if ((bus->number == 0 && pcie->ports[i].devfn == devfn) ||
->           (pcie->ports[porti].bridge.secondary_bus == bus->number))
->         return &pcie->ports[i];
->     }
->     return NULL;
->   }
-> 
->   static int mvebu_pcie_wr_conf(struct pci_bus *bus, ...)
->   {
->     port = mvebu_find_port(pcie, bus, devfn);
->     if (!port)
->       return PCIBIOS_DEVICE_NOT_FOUND;
-> 
->     if (bus->number == 0)
->       return mvebu_sw_pci_bridge_write(port, where, size, val);
-> 
->     if (!port->haslink || PCI_SLOT(devfn) != 0)
->       return PCIBIOS_DEVICE_NOT_FOUND;
-> 
->     ...
->     return ret;
->   }
-
-Ok, I'll have a look at this.
-
-> > IORESOURCE_TYPE_BITS;
-> > +               if (restype == IORESOURCE_IO) {
-> > +                       of_pci_range_to_resource(&range, np,
-> > &pcie->io);
-> > +                       of_pci_range_to_resource(&range, np,
-> > &pcie->realio);
-> > +                       pcie->io.name = "I/O";
-> > +                       pcie->realio.start = PCIBIOS_MIN_IO;
-> > +                       pcie->realio.end =
-> > min(resource_size(&pcie->io),
-> > +                                              IO_SPACE_LIMIT);
-> 
-> Using "resource_size(&pcie->io)" here seems strange -- are you
-> assuming that pcie->io starts at address zero?
-
-No, I'm assuming PCIBIOS_MIN_IO is always 0. So presumarly, this should
-be something like:
-
-	pcie->realio.end = min(PCIBIOS_MIN_IO +
-				resource_size(&pcie->io),
-				IO_SPACE_LIMIT);
-
-
-Thanks for all your valuable comments!
-
-Thomas
+> > +    if (error && !dev->pm_cap) /* Fall back to PCI_D0 */
+> > +        dev->current_state = PCI_D0;
+> >
+> >      return error;
+> >  }
 -- 
-Thomas Petazzoni, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
