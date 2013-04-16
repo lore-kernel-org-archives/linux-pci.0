@@ -1,44 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from jabberwock.ucw.cz ([46.255.230.98]:52005 "EHLO
-	jabberwock.ucw.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757743Ab3DANqg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 1 Apr 2013 09:46:36 -0400
-Received: from albireo.burrow.ucw.cz (albireo.ucw.cz [89.239.2.32])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(Client CN "albireo.ucw.cz", Issuer "ucw.cz" (verified OK))
-	by jabberwock.ucw.cz (Postfix) with ESMTPS id C378B1C009A
-	for <linux-pci@vger.kernel.org>; Mon,  1 Apr 2013 15:46:34 +0200 (CEST)
-Date: Mon, 1 Apr 2013 15:46:33 +0200
-From: Martin Mares <mj@ucw.cz>
-To: Kay Sievers <kay@vrfy.org>
-Cc: Lucas De Marchi <lucas.demarchi@profusion.mobi>,
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:38548 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965045Ab3DPR0N (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Apr 2013 13:26:13 -0400
+Date: Tue, 16 Apr 2013 13:25:58 -0400
+From: Neil Horman <nhorman@tuxdriver.com>
+To: Joerg Roedel <joro@8bytes.org>
+Cc: linux-kernel@vger.kernel.org, Prarit Bhargava <prarit@redhat.com>,
+	Don Zickus <dzickus@redhat.com>,
+	Don Dutile <ddutile@redhat.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Samuli Suominen <ssuominen@gentoo.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: lspci -k is broken with depmod from kmod since it doesn't
- generate modules.pcimap anymore
-Message-ID: <mj+md-20130401.134601.23475.albireo@ucw.cz>
-References: <515213CF.7000804@gentoo.org>
- <CAErSpo5wG8FUyomySdze56-e9Jr+3DevoCGGAnhLM8vpOBvQ5w@mail.gmail.com>
- <CAMOw1v4jZXqT5Zm2ssSM8A2-ztQr1ovRi1BhQkbiCMoO3ss9Qg@mail.gmail.com>
- <CAPXgP13z3aoL+9zRpYnSkxYTdO6GFNgGRwaHbCAwFSRhnXtyjQ@mail.gmail.com>
- <mj+md-20130401.114439.12968.albireo@ucw.cz>
+	Asit Mallick <asit.k.mallick@intel.com>,
+	David Woodhouse <dwmw2@infradead.org>,
+	linux-pci@vger.kernel.org,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Arkadiusz =?utf-8?Q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
+Subject: Re: [PATCH v9] irq: add quirk for broken interrupt remapping on 55XX
+ chipsets
+Message-ID: <20130416172558.GD9241@hmsreliant.think-freely.org>
+References: <1362158276-4901-1-git-send-email-nhorman@tuxdriver.com>
+ <1366065677-3431-1-git-send-email-nhorman@tuxdriver.com>
+ <20130416102454.GS6858@8bytes.org>
+ <20130416133555.GB9241@hmsreliant.think-freely.org>
+ <20130416163705.GT6858@8bytes.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <mj+md-20130401.114439.12968.albireo@ucw.cz>
+In-Reply-To: <20130416163705.GT6858@8bytes.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello!
+On Tue, Apr 16, 2013 at 06:37:05PM +0200, Joerg Roedel wrote:
+> On Tue, Apr 16, 2013 at 09:35:56AM -0400, Neil Horman wrote:
+> > Actually, hold on that last note, the intel iommu init code doesn't seem to
+> > create any direct relationship between the set of iommu's and the pci_dev's that
+> > implement them.  In the intel_irq_remapping_supported path I can loop over each
+> > dmar_dhrd_unit, and interrogate each of the devices on its **devices list to see
+> > if the device/vendor and revision ids match, but looking at the dhrd parsing
+> > code, I'm not sure the iommu pci_dev is always going to be on that list.  That
+> > seems like its going to be pretty ugly in and of itself.  Do you have a
+> > suggested way to identify the pci_dev of the device we need in that path without
+> > having to simply iterate over every device in that scope?
+> 
+> Hmkay, looks like this is a non-trivial problem. Here is what I suggest:
+> Keep the early-quirk as in your current patch. But add a function to
+> drivers/iommu/irq_remapping.c to disable irq-remapping and export that
+> function via the header-file arch/x86/include/asm/irq_remapping.h. Use
+> that function in the quirk instead of setting the disable-flag directly.
+> This way you don't have to include any private header file from iommu
+> code.
+> 
+Ok, that seems reasonable. I'll have a new patch in a day or so.
 
-> I'm looking into that. Expect a pciutils patch soon.
+Thanks!
+Neil
 
-Please check the current version in git://git.kernel.org/pub/scm/utils/pciutils/pciutils.git
-
-Looking up modules using libkmod should be fully supported.
-
-				Have a nice fortnight
--- 
-Martin `MJ' Mares                          <mj@ucw.cz>   http://mj.ucw.cz/
-Faculty of Math and Physics, Charles University, Prague, Czech Rep., Earth
-Who is General Failure and why is he reading my disk?
