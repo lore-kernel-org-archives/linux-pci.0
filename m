@@ -1,95 +1,418 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f43.google.com ([209.85.219.43]:35623 "EHLO
-	mail-oa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932233Ab3DRQgG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 18 Apr 2013 12:36:06 -0400
-Received: by mail-oa0-f43.google.com with SMTP id l10so2945856oag.2
-        for <linux-pci@vger.kernel.org>; Thu, 18 Apr 2013 09:36:05 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20130418152747.GA19258@arm.com>
-References: <20130418152747.GA19258@arm.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 18 Apr 2013 10:35:45 -0600
-Message-ID: <CAErSpo5PnUC4h2Eg7BPUOvUUPQmpUPwZGO89PVJu4qw5ysGX6A@mail.gmail.com>
-Subject: Re: I/O and multiple PCI buses
-To: Andrew Murray <andrew.murray@arm.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:48721 "EHLO
+	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1755378Ab3DPKTz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Apr 2013 06:19:55 -0400
+From: Andrew Murray <Andrew.Murray@arm.com>
+To: linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org
+Cc: rob.herring@calxeda.com, jgunthorpe@obsidianresearch.com,
+	linux@arm.linux.org.uk, siva.kallam@samsung.com,
+	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
+	jg1.han@samsung.com, Liviu.Dudau@arm.com,
+	linux-kernel@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
+	kgene.kim@samsung.com, bhelgaas@google.com,
+	suren.reddy@samsung.com, linux-arm-kernel@lists.infradead.org,
+	monstr@monstr.eu, benh@kernel.crashing.org, paulus@samba.org,
+	grant.likely@secretlab.ca, thomas.petazzoni@free-electrons.com,
+	thierry.reding@avionic-design.de, thomas.abraham@linaro.org,
+	arnd@arndb.de, linus.walleij@linaro.org,
+	Andrew Murray <Andrew.Murray@arm.com>
+Subject: [PATCH v7 2/3] of/pci: Provide support for parsing PCI DT ranges property
+Date: Tue, 16 Apr 2013 11:18:27 +0100
+Message-Id: <1366107508-12672-3-git-send-email-Andrew.Murray@arm.com>
+In-Reply-To: <1366107508-12672-1-git-send-email-Andrew.Murray@arm.com>
+References: <1366107508-12672-1-git-send-email-Andrew.Murray@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 18, 2013 at 9:27 AM, Andrew Murray <andrew.murray@arm.com> wrote:
-> I'm trying to understand PCI I/O addressing in the kernel... (again)
->
-> I understand that ideally you want to give PCI bus addresses to PCI devices in
-> the range of 0K to 64K. This seems to be achieved in pcibios_init_resources in
-> arm's kernel/bios32.c implementation.
->
-> What happens if you want to add another root bus? In this implementation the
-> start address of the io_res is now 64K and as sys->io_offset is set to 0 the
-> bus addresses under this second root bus will be 64K-128K - which I assume may
-> break some things.
->
-> Am I correct that for ARM there are no implementations where subsequent root
-> buses allocate I/O starting from 0?
->
-> And to allow subsequent busses to use I/O starting from 0, you'd have to set
-> sys->io_offset to 64K*nr and adapt functions such as pci_iomap to use the
-> offset?
->
-> Are there any other archiectures that do give I/O ranges starting from 0 in
-> subsequent root busses? Or am I missing something here?
+This patch factors out common implementation patterns to reduce overall kernel
+code and provide a means for host bridge drivers to directly obtain struct
+resources from the DT's ranges property without relying on architecture specific
+DT handling. This will make it easier to write archiecture independent host bridge
+drivers and mitigate against further duplication of DT parsing code.
 
-I don't know the details about ARM, but there are ia64 systems with
-many host bridges, and often they're set up so the I/O port addresses
-on the PCI bus are always between 0-64K, e.g.,
+This patch can be used in the following way:
 
-pci_root HWP0002:00: host bridge window [io  0x0000-0x0fff]
-pci_root HWP0002:01: host bridge window [io  0x1000-0x1fff]
-pci_root HWP0002:02: host bridge window [io  0x2000-0x3fff]
-pci_root HWP0002:03: host bridge window [io  0x4000-0x5fff]
-pci_root HWP0002:04: host bridge window [io  0x6000-0x7fff]
-pci_root HWP0002:05: host bridge window [io  0x8000-0x9fff]
-pci_root HWP0002:06: host bridge window [io  0xa000-0xbfff]
-pci_root HWP0002:07: host bridge window [io  0xc000-0xdfff]
-pci_root HWP0002:08: host bridge window [io  0xe000-0xffff]
-pci_root HWP0002:09: host bridge window [io  0x1000000-0x1000fff] (PCI
-address [0x0-0xfff])
-pci_root HWP0002:0a: host bridge window [io  0x1001000-0x1001fff] (PCI
-address [0x1000-0x1fff])
-pci_root HWP0002:0b: host bridge window [io  0x1002000-0x1003fff] (PCI
-address [0x2000-0x3fff])
-pci_root HWP0002:0c: host bridge window [io  0x1004000-0x1005fff] (PCI
-address [0x4000-0x5fff])
-pci_root HWP0002:0d: host bridge window [io  0x1006000-0x1007fff] (PCI
-address [0x6000-0x7fff])
-pci_root HWP0002:0e: host bridge window [io  0x1008000-0x1009fff] (PCI
-address [0x8000-0x9fff])
-pci_root HWP0002:0f: host bridge window [io  0x100a000-0x100bfff] (PCI
-address [0xa000-0xbfff])
-pci_root HWP0002:10: host bridge window [io  0x100c000-0x100dfff] (PCI
-address [0xc000-0xdfff])
-pci_root HWP0002:11: host bridge window [io  0x100e000-0x100ffff] (PCI
-address [0xe000-0xffff])
+	struct of_pci_range_parser parser;
+	struct of_pci_range range;
 
-In this case, host bridges HWP0002:00 - HWP0002:08 all share one 64K
-I/O port space, and HWP0002:09 - HWP0002:11 share a separate one.
-There's no requirement that they share any space -- each host bridge
-*could* have its own 64K I/O port space, but we just use the
-configuration done by the firmware.
+	if (of_pci_range_parser(&parser, np))
+		; //no ranges property
 
-Note that for HWP0002:00 and HWP0002:09, for example, the addresses on
-PCI are the same (0x0-0xfff), but the CPU addresses in the struct
-resource are different.  The CPU addresses are what drivers see, and
-what they pass to inb(), etc., and it's possible there are drivers
-that assume these port addresses fit in a u16, and those drivers would
-break.  But as far as the hardware PCI device is concerned, it should
-be fine because it sees only bus addresses in the 0-64K range.
+	for_each_of_pci_range(&parser, &range) {
 
-There's some gunk in arch/ia64/include/asm/io.h to make
-"inb(0x1000000)" work and generate a bus access to I/O port 0 on the
-correct root bus.
+		/*
+			directly access properties of the address range, e.g.:
+			range.pci_space, range.pci_addr, range.cpu_addr,
+			range.size, range.flags
 
-Bjorn
+			alternatively obtain a struct resource, e.g.:
+			struct resource res;
+			of_pci_range_to_resource(&range, np, &res);
+		*/
+	}
+
+Additionally the implementation takes care of adjacent ranges and merges them
+into a single range (as was the case with powerpc and microblaze).
+
+Signed-off-by: Andrew Murray <Andrew.Murray@arm.com>
+Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Reviewed-by: Rob Herring <rob.herring@calxeda.com>
+Tested-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Tested-by: Linus Walleij <linus.walleij@linaro.org>
+---
+ drivers/of/address.c       |   67 ++++++++++++++++++++++++++
+ drivers/of/of_pci.c        |  113 ++++++++++++++++----------------------------
+ include/linux/of_address.h |   46 ++++++++++++++++++
+ 3 files changed, 154 insertions(+), 72 deletions(-)
+
+diff --git a/drivers/of/address.c b/drivers/of/address.c
+index 04da786..6eec70c 100644
+--- a/drivers/of/address.c
++++ b/drivers/of/address.c
+@@ -227,6 +227,73 @@ int of_pci_address_to_resource(struct device_node *dev, int bar,
+ 	return __of_address_to_resource(dev, addrp, size, flags, NULL, r);
+ }
+ EXPORT_SYMBOL_GPL(of_pci_address_to_resource);
++
++int of_pci_range_parser(struct of_pci_range_parser *parser,
++			struct device_node *node)
++{
++	const int na = 3, ns = 2;
++	int rlen;
++
++	parser->node = node;
++	parser->pna = of_n_addr_cells(node);
++	parser->np = parser->pna + na + ns;
++
++	parser->range = of_get_property(node, "ranges", &rlen);
++	if (parser->range == NULL)
++		return -ENOENT;
++
++	parser->end = parser->range + rlen / sizeof(__be32);
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(of_pci_range_parser);
++
++struct of_pci_range *of_pci_process_ranges(struct of_pci_range_parser *parser,
++						struct of_pci_range *range)
++{
++	const int na = 3, ns = 2;
++
++	if (!range)
++		return NULL;
++
++	if (!parser->range || parser->range + parser->np > parser->end)
++		return NULL;
++
++	range->pci_space = parser->range[0];
++	range->flags = of_bus_pci_get_flags(parser->range);
++	range->pci_addr = of_read_number(parser->range + 1, ns);
++	range->cpu_addr = of_translate_address(parser->node,
++				parser->range + na);
++	range->size = of_read_number(parser->range + parser->pna + na, ns);
++
++	parser->range += parser->np;
++
++	/* Now consume following elements while they are contiguous */
++	while (parser->range + parser->np <= parser->end) {
++		u32 flags, pci_space;
++		u64 pci_addr, cpu_addr, size;
++
++		pci_space = be32_to_cpup(parser->range);
++		flags = of_bus_pci_get_flags(parser->range);
++		pci_addr = of_read_number(parser->range + 1, ns);
++		cpu_addr = of_translate_address(parser->node,
++				parser->range + na);
++		size = of_read_number(parser->range + parser->pna + na, ns);
++
++		if (flags != range->flags)
++			break;
++		if (pci_addr != range->pci_addr + range->size ||
++		    cpu_addr != range->cpu_addr + range->size)
++			break;
++
++		range->size += size;
++		parser->range += parser->np;
++	}
++
++	return range;
++}
++EXPORT_SYMBOL_GPL(of_pci_process_ranges);
++
+ #endif /* CONFIG_PCI */
+ 
+ /*
+diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
+index 1626172..e5ab604 100644
+--- a/drivers/of/of_pci.c
++++ b/drivers/of/of_pci.c
+@@ -2,6 +2,7 @@
+ #include <linux/export.h>
+ #include <linux/of.h>
+ #include <linux/of_pci.h>
++#include <linux/of_address.h>
+ #include <asm/prom.h>
+ 
+ #if defined(CONFIG_PPC32) || defined(CONFIG_PPC64) || defined(CONFIG_MICROBLAZE)
+@@ -82,67 +83,43 @@ EXPORT_SYMBOL_GPL(of_pci_find_child_device);
+ void pci_process_bridge_OF_ranges(struct pci_controller *hose,
+ 				  struct device_node *dev, int primary)
+ {
+-	const u32 *ranges;
+-	int rlen;
+-	int pna = of_n_addr_cells(dev);
+-	int np = pna + 5;
+ 	int memno = 0, isa_hole = -1;
+-	u32 pci_space;
+-	unsigned long long pci_addr, cpu_addr, pci_next, cpu_next, size;
+ 	unsigned long long isa_mb = 0;
+ 	struct resource *res;
++	struct of_pci_range range;
++	struct of_pci_range_parser parser;
++	u32 res_type;
+ 
+ 	pr_info("PCI host bridge %s %s ranges:\n",
+ 	       dev->full_name, primary ? "(primary)" : "");
+ 
+-	/* Get ranges property */
+-	ranges = of_get_property(dev, "ranges", &rlen);
+-	if (ranges == NULL)
++	/* Check for ranges property */
++	if (of_pci_range_parser(&parser, dev))
+ 		return;
+ 
+-	/* Parse it */
+ 	pr_debug("Parsing ranges property...\n");
+-	while ((rlen -= np * 4) >= 0) {
++	for_each_of_pci_range(&parser, &range) {
+ 		/* Read next ranges element */
+-		pci_space = ranges[0];
+-		pci_addr = of_read_number(ranges + 1, 2);
+-		cpu_addr = of_translate_address(dev, ranges + 3);
+-		size = of_read_number(ranges + pna + 3, 2);
+-
+-		pr_debug("pci_space: 0x%08x pci_addr:0x%016llx ",
+-				pci_space, pci_addr);
+-		pr_debug("cpu_addr:0x%016llx size:0x%016llx\n",
+-					cpu_addr, size);
+-
+-		ranges += np;
++		pr_debug("pci_space: 0x%08x pci_addr: 0x%016llx ",
++				range.pci_space, range.pci_addr);
++		pr_debug("cpu_addr: 0x%016llx size: 0x%016llx\n",
++				range.cpu_addr, range.size);
+ 
+ 		/* If we failed translation or got a zero-sized region
+ 		 * (some FW try to feed us with non sensical zero sized regions
+ 		 * such as power3 which look like some kind of attempt
+ 		 * at exposing the VGA memory hole)
+ 		 */
+-		if (cpu_addr == OF_BAD_ADDR || size == 0)
++		if (range.cpu_addr == OF_BAD_ADDR || range.size == 0)
+ 			continue;
+ 
+-		/* Now consume following elements while they are contiguous */
+-		for (; rlen >= np * sizeof(u32);
+-		     ranges += np, rlen -= np * 4) {
+-			if (ranges[0] != pci_space)
+-				break;
+-			pci_next = of_read_number(ranges + 1, 2);
+-			cpu_next = of_translate_address(dev, ranges + 3);
+-			if (pci_next != pci_addr + size ||
+-			    cpu_next != cpu_addr + size)
+-				break;
+-			size += of_read_number(ranges + pna + 3, 2);
+-		}
+-
+ 		/* Act based on address space type */
+ 		res = NULL;
+-		switch ((pci_space >> 24) & 0x3) {
+-		case 1:		/* PCI IO space */
++		res_type = range.flags & IORESOURCE_TYPE_BITS;
++		if (res_type == IORESOURCE_IO) {
+ 			pr_info("  IO 0x%016llx..0x%016llx -> 0x%016llx\n",
+-			       cpu_addr, cpu_addr + size - 1, pci_addr);
++				range.cpu_addr, range.cpu_addr + range.size - 1,
++				range.pci_addr);
+ 
+ 			/* We support only one IO range */
+ 			if (hose->pci_io_size) {
+@@ -151,11 +128,12 @@ void pci_process_bridge_OF_ranges(struct pci_controller *hose,
+ 			}
+ #if (!IS_ENABLED(CONFIG_64BIT))
+ 			/* On 32 bits, limit I/O space to 16MB */
+-			if (size > 0x01000000)
+-				size = 0x01000000;
++			if (range.size > 0x01000000)
++				range.size = 0x01000000;
+ 
+ 			/* 32 bits needs to map IOs here */
+-			hose->io_base_virt = ioremap(cpu_addr, size);
++			hose->io_base_virt = ioremap(range.cpu_addr,
++						range.size);
+ 
+ 			/* Expect trouble if pci_addr is not 0 */
+ 			if (primary)
+@@ -165,19 +143,18 @@ void pci_process_bridge_OF_ranges(struct pci_controller *hose,
+ 			/* pci_io_size and io_base_phys always represent IO
+ 			 * space starting at 0 so we factor in pci_addr
+ 			 */
+-			hose->pci_io_size = pci_addr + size;
+-			hose->io_base_phys = cpu_addr - pci_addr;
++			hose->pci_io_size = range.pci_addr + range.size;
++			hose->io_base_phys = range.cpu_addr - range.pci_addr;
+ 
+ 			/* Build resource */
+ 			res = &hose->io_resource;
+-			res->flags = IORESOURCE_IO;
+-			res->start = pci_addr;
+-			break;
+-		case 2:		/* PCI Memory space */
+-		case 3:		/* PCI 64 bits Memory space */
++			range.cpu_addr = range.pci_addr;
++		} else if (res_type == IORESOURCE_MEM) {
+ 			pr_info(" MEM 0x%016llx..0x%016llx -> 0x%016llx %s\n",
+-			       cpu_addr, cpu_addr + size - 1, pci_addr,
+-			       (pci_space & 0x40000000) ? "Prefetch" : "");
++				range.cpu_addr, range.cpu_addr + range.size - 1,
++				range.pci_addr,
++				(range.pci_space & 0x40000000) ?
++				"Prefetch" : "");
+ 
+ 			/* We support only 3 memory ranges */
+ 			if (memno >= 3) {
+@@ -185,13 +162,13 @@ void pci_process_bridge_OF_ranges(struct pci_controller *hose,
+ 				continue;
+ 			}
+ 			/* Handles ISA memory hole space here */
+-			if (pci_addr == 0) {
+-				isa_mb = cpu_addr;
++			if (range.pci_addr == 0) {
++				isa_mb = range.cpu_addr;
+ 				isa_hole = memno;
+ 				if (primary || isa_mem_base == 0)
+-					isa_mem_base = cpu_addr;
+-				hose->isa_mem_phys = cpu_addr;
+-				hose->isa_mem_size = size;
++					isa_mem_base = range.cpu_addr;
++				hose->isa_mem_phys = range.cpu_addr;
++				hose->isa_mem_size = range.size;
+ 			}
+ 
+ 			/* We get the PCI/Mem offset from the first range or
+@@ -199,30 +176,22 @@ void pci_process_bridge_OF_ranges(struct pci_controller *hose,
+ 			 * hole. If they don't match, bugger.
+ 			 */
+ 			if (memno == 0 ||
+-			    (isa_hole >= 0 && pci_addr != 0 &&
++			(isa_hole >= 0 && range.pci_addr != 0 &&
+ 			     hose->pci_mem_offset == isa_mb))
+-				hose->pci_mem_offset = cpu_addr - pci_addr;
+-			else if (pci_addr != 0 &&
+-				 hose->pci_mem_offset != cpu_addr - pci_addr) {
++				hose->pci_mem_offset = range.cpu_addr -
++							range.pci_addr;
++			else if (range.pci_addr != 0 &&
++				hose->pci_mem_offset != range.cpu_addr -
++							range.pci_addr) {
+ 				pr_info(" \\--> Skipped (offset mismatch) !\n");
+ 				continue;
+ 			}
+ 
+ 			/* Build resource */
+ 			res = &hose->mem_resources[memno++];
+-			res->flags = IORESOURCE_MEM;
+-			if (pci_space & 0x40000000)
+-				res->flags |= IORESOURCE_PREFETCH;
+-			res->start = cpu_addr;
+-			break;
+-		}
+-		if (res != NULL) {
+-			res->name = dev->full_name;
+-			res->end = res->start + size - 1;
+-			res->parent = NULL;
+-			res->sibling = NULL;
+-			res->child = NULL;
+ 		}
++		if (res != NULL)
++			of_pci_range_to_resource(&range, dev, res);
+ 	}
+ 
+ 	/* If there's an ISA hole and the pci_mem_offset is -not- matching
+diff --git a/include/linux/of_address.h b/include/linux/of_address.h
+index 0506eb5..1cfb779 100644
+--- a/include/linux/of_address.h
++++ b/include/linux/of_address.h
+@@ -4,6 +4,36 @@
+ #include <linux/errno.h>
+ #include <linux/of.h>
+ 
++struct of_pci_range_parser {
++	struct device_node *node;
++	const __be32 *range;
++	const __be32 *end;
++	int np;
++	int pna;
++};
++
++struct of_pci_range {
++	u32 pci_space;
++	u64 pci_addr;
++	u64 cpu_addr;
++	u64 size;
++	u32 flags;
++};
++
++#define for_each_of_pci_range(parser, range) \
++	for (; of_pci_process_ranges(parser, range);)
++
++static inline void of_pci_range_to_resource(struct of_pci_range *range,
++					    struct device_node *np,
++					    struct resource *res)
++{
++	res->flags = range->flags;
++	res->start = range->cpu_addr;
++	res->end = range->cpu_addr + range->size - 1;
++	res->parent = res->child = res->sibling = NULL;
++	res->name = np->full_name;
++}
++
+ #ifdef CONFIG_OF_ADDRESS
+ extern u64 of_translate_address(struct device_node *np, const __be32 *addr);
+ extern bool of_can_translate_address(struct device_node *dev);
+@@ -27,6 +57,10 @@ static inline unsigned long pci_address_to_pio(phys_addr_t addr) { return -1; }
+ #define pci_address_to_pio pci_address_to_pio
+ #endif
+ 
++extern int of_pci_range_parser(struct of_pci_range_parser *parser,
++			struct device_node *node);
++extern struct of_pci_range *of_pci_process_ranges(struct of_pci_range_parser *parser,
++						struct of_pci_range *range);
+ #else /* CONFIG_OF_ADDRESS */
+ #ifndef of_address_to_resource
+ static inline int of_address_to_resource(struct device_node *dev, int index,
+@@ -53,6 +87,18 @@ static inline const __be32 *of_get_address(struct device_node *dev, int index,
+ {
+ 	return NULL;
+ }
++
++static inline int of_pci_range_parser(struct of_pci_range_parser *parser,
++			struct device_node *node)
++{
++	return -1;
++}
++
++static inline struct of_pci_range *of_pci_process_ranges(struct of_pci_range_parser *parser,
++						struct of_pci_range *range)
++{
++	return NULL;
++}
+ #endif /* CONFIG_OF_ADDRESS */
+ 
+ 
+-- 
+1.7.0.4
+
