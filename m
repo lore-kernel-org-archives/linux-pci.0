@@ -1,105 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:11474 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S967288Ab3DRJcq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 18 Apr 2013 05:32:46 -0400
-Date: Thu, 18 Apr 2013 11:33:47 +0300
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: Tejun Heo <tj@kernel.org>
-Cc: Or Gerlitz <ogerlitz@mellanox.com>,
-	Ming Lei <ming.lei@canonical.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	David Miller <davem@davemloft.net>,
-	Roland Dreier <roland@kernel.org>,
-	netdev <netdev@vger.kernel.org>, Yan Burman <yanb@mellanox.com>,
-	Jack Morgenstein <jackm@dev.mellanox.co.il>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH repost for-3.9] pci: avoid work_on_cpu for nested SRIOV
- probes
-Message-ID: <20130418083347.GA16526@redhat.com>
-References: <20130411153030.GA22743@redhat.com>
- <20130411180517.GJ17641@mtj.dyndns.org>
- <20130411185853.GE23301@redhat.com>
- <20130411190408.GM17641@mtj.dyndns.org>
- <20130411191717.GB25515@redhat.com>
- <20130411192005.GN17641@mtj.dyndns.org>
- <20130411203053.GC25515@redhat.com>
- <20130411204104.GC11956@mtj.dyndns.org>
- <516AA80F.7040505@mellanox.com>
- <20130414134339.GA3050@htj.dyndns.org>
+Received: from mail-bk0-f41.google.com ([209.85.214.41]:54032 "EHLO
+	mail-bk0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932147Ab3DPIWR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Apr 2013 04:22:17 -0400
+Received: by mail-bk0-f41.google.com with SMTP id i18so110821bkv.28
+        for <linux-pci@vger.kernel.org>; Tue, 16 Apr 2013 01:22:16 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130414134339.GA3050@htj.dyndns.org>
+In-Reply-To: <CAErSpo7dgFR8a7Wee4CE7Rj+nZg_-+8uNOFq__d8EzY+gHQHGQ@mail.gmail.com>
+References: <1366009135-19088-1-git-send-email-wangyijing@huawei.com>
+	<CAErSpo7dgFR8a7Wee4CE7Rj+nZg_-+8uNOFq__d8EzY+gHQHGQ@mail.gmail.com>
+Date: Tue, 16 Apr 2013 16:22:15 +0800
+Message-ID: <CAC=cRTOPg+Db8AkA6sWMe9ggESY=vO7W1zWzr5E-JWLxoxg=7Q@mail.gmail.com>
+Subject: Re: [PATCH -v2 1/2] PCI: decrease pci_dev->enable_cnt when no pcie
+ capability found
+From: huang ying <huang.ying.caritas@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Yijing Wang <wangyijing@huawei.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Hanjun Guo <guohanjun@huawei.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Shengzhou Liu <Shengzhou.Liu@freescale.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Huang Ying <ying.huang@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Apr 14, 2013 at 06:43:39AM -0700, Tejun Heo wrote:
-> On Sun, Apr 14, 2013 at 03:58:55PM +0300, Or Gerlitz wrote:
-> > So the patch eliminated the lockdep warning for mlx4 nested probing
-> > sequence, but introduced lockdep warning for
-> > 00:13.0 PIC: Intel Corporation 7500/5520/5500/X58 I/O Hub I/OxAPIC
-> > Interrupt Controller (rev 22)
-> 
-> Oops, the patch in itself doesn't really change anything.  The caller
-> should use a different subclass for the nested invocation, just like
-> spin_lock_nested() and friends.  Sorry about not being clear.
-> Michael, can you please help?
-> 
-> Thanks.
-> 
-> -- 
-> tejun
+On Mon, Apr 15, 2013 at 11:27 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> [+cc Rafael, Huang]
+>
+> On Mon, Apr 15, 2013 at 12:58 AM, Yijing Wang <wangyijing@huawei.com> wrote:
+>> We should decrease dev->enable_cnt when no pcie port capability
+>> found for balance.
+>>
+>> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+>> Cc: Jiang Liu <jiang.liu@huawei.com>
+>> Cc: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+>> Cc: Shengzhou Liu <Shengzhou.Liu@freescale.com>
+>> ---
+>>  drivers/pci/pcie/portdrv_core.c |    4 ++--
+>>  1 files changed, 2 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
+>> index 31063ac..aef3fac 100644
+>> --- a/drivers/pci/pcie/portdrv_core.c
+>> +++ b/drivers/pci/pcie/portdrv_core.c
+>> @@ -369,8 +369,8 @@ int pcie_port_device_register(struct pci_dev *dev)
+>>
+>>         /* Get and check PCI Express port services */
+>>         capabilities = get_port_device_capability(dev);
+>> -       if (!capabilities)
+>> -               return 0;
+>> +       if (!capabilities)
+>> +               goto error_disable;
+>>
+>>         pci_set_master(dev);
+>>         /*
+>
+> Does this fix a problem you observed?  If so, please refer to it in
+> your changelog.
+>
+> I think this patch is incorrect because pcie_portdrv_probe() will
+> return 0 (success) with the device disabled.  When we call
+> pcie_portdrv_remove(), we will attempt to disable the device again,
+> even though it's already disabled.
+>
+> I don't know whether it is desirable for pcie_portdrv_probe() to
+> succeed when no capabilities are available or not.  Maybe somebody
+> else has an opinion.
 
-So like this on top. Tejun, you didn't add your S.O.B and patch
-description, if this helps as we expect they will be needed.
+I think this patchset is incorrect too.  Even if there is no PCIe
+services for the PCIe port.  We still need the PCIe drivers, at least
+for runtime power management.  Although runtime power management is
+disabled for the PCIe port now, I think we will enable it again after
+we fixed the corresponding issues.
 
----->
-
-pci: use work_on_cpu_nested for nested SRIOV
-
-Snce 3.9-rc1 mlx driver started triggering a lockdep warning.
-
-The issue is that a driver, in it's probe function, calls
-pci_sriov_enable so a PF device probe causes VF probe (AKA nested
-probe).  Each probe in pci_device_probe which is (normally) run through
-work_on_cpu (this is to get the right numa node for memory allocated by
-the driver).  In turn work_on_cpu does this internally:
-
-        schedule_work_on(cpu, &wfc.work);
-        flush_work(&wfc.work);
-
-So if you are running probe on CPU1, and cause another
-probe on the same CPU, this will try to flush
-workqueue from inside same workqueue which triggers
-a lockdep warning.
-
-Nested probing might be tricky to get right generally.
-
-But for pci_sriov_enable, the situation is actually very simple:
-VFs almost never use the same driver as the PF so the warning
-is bogus there.
-
-This is hardly elegant as it might shut up some real warnings if a buggy
-driver actually probes itself in a nested way, but looks to me like an
-appropriate quick fix for 3.9.
-
-Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
-
----
-diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-index 1fa1e48..9c836ef 100644
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -286,9 +286,9 @@ static int pci_call_probe(struct pci_driver *drv, struct pci_dev *dev,
- 		int cpu;
- 
- 		get_online_cpus();
--		cpu = cpumask_any_and(cpumask_of_node(node), cpu_online_mask);
--		if (cpu < nr_cpu_ids)
--			error = work_on_cpu(cpu, local_pci_probe, &ddi);
-+		cpu = cpumask_first_and(cpumask_of_node(node), cpu_online_mask);
-+		if (cpu != raw_smp_processor_id() && cpu < nr_cpu_ids)
-+			error = work_on_cpu_nested(cpu, local_pci_probe, &ddi);
- 		else
- 			error = local_pci_probe(&ddi);
- 		put_online_cpus();
+Best Regards,
+Huang Ying
