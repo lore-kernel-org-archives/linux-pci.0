@@ -1,125 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from co1ehsobe002.messaging.microsoft.com ([216.32.180.185]:29710
-	"EHLO co1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755328Ab3DBL0o (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 2 Apr 2013 07:26:44 -0400
-From: Yuanquan Chen <Yuanquan.Chen@freescale.com>
-To: <linuxppc-dev@lists.ozlabs.org>, <linux-pci@vger.kernel.org>,
-	<bhelgaas@google.com>
-CC: Yuanquan Chen <Yuanquan.Chen@freescale.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Hiroo Matsumoto <matsumoto.hiroo@jp.fujitsu.com>
-Subject: [PATCH] powerpc/pci: fix PCI-e devices rescan issue on powerpc platform
-Date: Tue, 2 Apr 2013 19:26:54 +0800
-Message-ID: <1364902014-943-1-git-send-email-Yuanquan.Chen@freescale.com>
+Received: from mail-pb0-f51.google.com ([209.85.160.51]:52259 "EHLO
+	mail-pb0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S936137Ab3DPU1Z (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Apr 2013 16:27:25 -0400
+Received: by mail-pb0-f51.google.com with SMTP id rr4so481200pbb.24
+        for <linux-pci@vger.kernel.org>; Tue, 16 Apr 2013 13:27:24 -0700 (PDT)
+Date: Tue, 16 Apr 2013 13:27:22 -0700 (PDT)
+From: David Rientjes <rientjes@google.com>
+To: Jiang Liu <liuj97@gmail.com>
+cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org
+Subject: Re: [PATCH v9 09/16] PCI, x86: implement pcibios_{add|remove}_bus()
+ hooks
+In-Reply-To: <1365781470-32379-10-git-send-email-jiang.liu@huawei.com>
+Message-ID: <alpine.DEB.2.02.1304161324500.30779@chino.kir.corp.google.com>
+References: <1365781470-32379-1-git-send-email-jiang.liu@huawei.com> <1365781470-32379-10-git-send-email-jiang.liu@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Powerpc initializes the DMA and IRQ information in pci_scan_child_bus()->
-pcibios_fixup_bus()->pcibios_setup_bus_devices(). But for the devices
-which are hotpluged, bus->is added has been set for the first scan of the
-PCI-e bus, so the initialization code won't be called. Then the hotpluged
-devices' driver will fail to load.
+On Fri, 12 Apr 2013, Jiang Liu wrote:
 
-For example :
-The PCI-e device 0001:03:00.0 is the Intel PCI-e e1000e network card, remove
-it from the system:
+> diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+> index 901177d..305c68b 100644
+> --- a/arch/x86/pci/common.c
+> +++ b/arch/x86/pci/common.c
+> @@ -6,6 +6,7 @@
+>  
+>  #include <linux/sched.h>
+>  #include <linux/pci.h>
+> +#include <linux/pci-acpi.h>
+>  #include <linux/ioport.h>
+>  #include <linux/init.h>
+>  #include <linux/dmi.h>
+> @@ -170,6 +171,16 @@ void pcibios_fixup_bus(struct pci_bus *b)
+>  		pcibios_fixup_device_resources(dev);
+>  }
+>  
+> +void pcibios_add_bus(struct pci_bus *bus)
+> +{
+> +	acpi_pci_add_bus(bus);
+> +}
+> +
+> +void pcibios_remove_bus(struct pci_bus *bus)
+> +{
+> +	acpi_pci_remove_bus(bus);
+> +}
+> +
+>  /*
+>   * Only use DMI information to set this if nothing was passed
+>   * on the kernel command line (which was parsed earlier).
 
-    # echo 1 > /sys/bus/pci/devices/0001\:03\:00.0/remove
-    # e1000e 0001:03:00.0 eth0: removed PHC
+This causes build errors when CONFIG_ACPI isn't enabled since both 
+acpi_pci_{add,remove}_bus() aren't defined in such a configuration:
 
-Rescan it from it's bus:
-
-    # echo 1 > /sys/bus/pci/devices/0001\:02\:00.0/rescan
-    ...
-    e1000e 0001:03:00.0: Disabling ASPM L0s L1
-    e1000e 0001:03:00.0: No usable DMA configuration, aborting
-    e1000e: probe of 0001:03:00.0 failed with error -5
-
-So we move the DMA & IRQ initialization code from pcibios_setup_devices() and
-construct a new function pcibios_enable_device. We call this function in
-pcibios_enable_device, which will be called by PCI-e rescan code. At the
-meanwhile, we avoid the the impact on cardbus. I also validate this patch with
-silicon's PCIe-sata which encounters the IRQ issue.
-
-Signed-off-by: Yuanquan Chen <Yuanquan.Chen@freescale.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Hiroo Matsumoto <matsumoto.hiroo@jp.fujitsu.com>
----
- arch/powerpc/kernel/pci-common.c |   43 +++++++++++++++++++++++---------------
- 1 file changed, 26 insertions(+), 17 deletions(-)
-
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index fa12ae4..0324758 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -1023,6 +1023,27 @@ void pcibios_setup_bus_self(struct pci_bus *bus)
- 		ppc_md.pci_dma_bus_setup(bus);
- }
- 
-+void pcibios_setup_device(struct pci_dev *dev)
-+{
-+	/* Fixup NUMA node as it may not be setup yet by the generic
-+	 * code and is needed by the DMA init
-+	 */
-+	set_dev_node(&dev->dev, pcibus_to_node(dev->bus));
-+
-+	/* Hook up default DMA ops */
-+	set_dma_ops(&dev->dev, pci_dma_ops);
-+	set_dma_offset(&dev->dev, PCI_DRAM_OFFSET);
-+
-+	/* Additional platform DMA/iommu setup */
-+	if (ppc_md.pci_dma_dev_setup)
-+		ppc_md.pci_dma_dev_setup(dev);
-+
-+	/* Read default IRQs and fixup if necessary */
-+	pci_read_irq_line(dev);
-+	if (ppc_md.pci_irq_fixup)
-+		ppc_md.pci_irq_fixup(dev);
-+}
-+
- void pcibios_setup_bus_devices(struct pci_bus *bus)
- {
- 	struct pci_dev *dev;
-@@ -1037,23 +1058,7 @@ void pcibios_setup_bus_devices(struct pci_bus *bus)
- 		if (dev->is_added)
- 			continue;
- 
--		/* Fixup NUMA node as it may not be setup yet by the generic
--		 * code and is needed by the DMA init
--		 */
--		set_dev_node(&dev->dev, pcibus_to_node(dev->bus));
--
--		/* Hook up default DMA ops */
--		set_dma_ops(&dev->dev, pci_dma_ops);
--		set_dma_offset(&dev->dev, PCI_DRAM_OFFSET);
--
--		/* Additional platform DMA/iommu setup */
--		if (ppc_md.pci_dma_dev_setup)
--			ppc_md.pci_dma_dev_setup(dev);
--
--		/* Read default IRQs and fixup if necessary */
--		pci_read_irq_line(dev);
--		if (ppc_md.pci_irq_fixup)
--			ppc_md.pci_irq_fixup(dev);
-+		pcibios_setup_device(dev);
- 	}
- }
- 
-@@ -1494,6 +1499,10 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
- 		if (ppc_md.pcibios_enable_device_hook(dev))
- 			return -EINVAL;
- 
-+	/* avoid pcie irq fix up impact on cardbus */
-+	if (dev->hdr_type != PCI_HEADER_TYPE_CARDBUS)
-+		pcibios_setup_device(dev);
-+
- 	return pci_enable_resources(dev, mask);
- }
- 
--- 
-1.7.9.5
-
-
+arch/x86/pci/common.c: In function 'pcibios_add_bus':
+arch/x86/pci/common.c:176:2: error: implicit declaration of function 'acpi_pci_add_bus'
+arch/x86/pci/common.c: In function 'pcibios_remove_bus':
+arch/x86/pci/common.c:181:2: error: implicit declaration of function 'acpi_pci_remove_bus'
