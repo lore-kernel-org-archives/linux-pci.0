@@ -1,41 +1,47 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>, Ram Pai <linuxram@us.ibm.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v4 25/29] PCI: Update pci_resource_bar() to support addon_resource
-Date: Fri, 12 Apr 2013 15:44:39 -0700
-Message-Id: <1365806683-26717-26-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1365806683-26717-1-git-send-email-yinghai@kernel.org>
-References: <1365806683-26717-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Wed, 17 Apr 2013 13:49:10 -0700 (PDT)
+From: David Rientjes <rientjes@google.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+cc: Jiang Liu <liuj97@gmail.com>, "Rafael J . Wysocki" <rjw@sisk.pl>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, "x86@kernel.org" <x86@kernel.org>
+Subject: Re: [PATCH v9 09/16] PCI, x86: implement pcibios_{add|remove}_bus()
+ hooks
+In-Reply-To: <CAErSpo7A3paLJ8u5FxPZpy=9yT_ZkXvEbcHbKLd7iMutdDaBUA@mail.gmail.com>
+Message-ID: <alpine.DEB.2.02.1304171348420.31235@chino.kir.corp.google.com>
+References: <1365781470-32379-1-git-send-email-jiang.liu@huawei.com> <1365781470-32379-10-git-send-email-jiang.liu@huawei.com> <alpine.DEB.2.02.1304161324500.30779@chino.kir.corp.google.com>
+ <CAErSpo7A3paLJ8u5FxPZpy=9yT_ZkXvEbcHbKLd7iMutdDaBUA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Need to loop addon resource list to retrieve reg_addr in it.
+On Tue, 16 Apr 2013, Bjorn Helgaas wrote:
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/pci.c | 7 +++++++
- 1 file changed, 7 insertions(+)
+> Thanks for the report!
+> 
+> I'm pretty sure I fixed this:
+> http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/commit/?h=pci/jiang-subdrivers&id=3b63aaa70e1ccc4b66d60acc78da09700706a703
+> 
+> The acpi_pci_add_bus()/acpi_pci_remove_bus() stubs for CONFIG_ACPI=n
+> were added early in the series (patch 07/16: "PCI/ACPI: Prepare stub
+> functions to handle ACPI PCI (hotplug) slots") but were mistakenly
+> removed in patch 12/16: "PCI: acpiphp: Do not use ACPI PCI subdriver
+> mechanism".
+> 
+> I updated my "next" branch with the fixed version of patch 12/16, so
+> the 20130417 linux-next tree should have the fix.
+> 
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index c1010be..7677c6b 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3613,6 +3613,13 @@ int pci_resource_bar(struct pci_dev *dev, int resno, enum pci_bar_type *type)
- 		reg = pci_iov_resource_bar(dev, resno, type);
- 		if (reg)
- 			return reg;
-+	} else if (resno >= PCI_NUM_RESOURCES) {
-+		struct resource *res = pci_dev_resource_n(dev, resno);
-+
-+		if (res) {
-+			*type = pci_bar_unknown;
-+			return to_pci_dev_addon_resource(res)->reg_addr;
-+		}
- 	}
- 
- 	dev_err(&dev->dev, "BAR %d: invalid resource\n", resno);
--- 
-1.8.1.4
-
+Confirmed it's fixed, thanks.
