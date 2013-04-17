@@ -1,90 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f45.google.com ([209.85.219.45]:55545 "EHLO
-	mail-oa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1763761Ab3DDROw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Apr 2013 13:14:52 -0400
-Received: by mail-oa0-f45.google.com with SMTP id o6so3070963oag.18
-        for <linux-pci@vger.kernel.org>; Thu, 04 Apr 2013 10:14:51 -0700 (PDT)
+Received: from mail-oa0-f52.google.com ([209.85.219.52]:52162 "EHLO
+	mail-oa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753713Ab3DQX5m (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 17 Apr 2013 19:57:42 -0400
+Received: by mail-oa0-f52.google.com with SMTP id k18so2231577oag.11
+        for <linux-pci@vger.kernel.org>; Wed, 17 Apr 2013 16:57:42 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20130404153905.GB3403@neilslaptop.think-freely.org>
-References: <1362158276-4901-1-git-send-email-nhorman@tuxdriver.com>
- <1362423859-18516-1-git-send-email-nhorman@tuxdriver.com> <CAErSpo4=L9q+q5hqP2Avw6uceQwZiPuOzadhsqGpu6aP53PMbQ@mail.gmail.com>
- <1365085649.28127.66.camel@i7.infradead.org> <20130404145012.GA3403@neilslaptop.think-freely.org>
- <CAErSpo6x5rokg8np7xEKO6y6Qke5X7=r7J7VB2LVrAGGzDC1sA@mail.gmail.com> <20130404153905.GB3403@neilslaptop.think-freely.org>
+In-Reply-To: <20130418092444.a4d64d8a9b5f700ba2aae779@canb.auug.org.au>
+References: <20130418092444.a4d64d8a9b5f700ba2aae779@canb.auug.org.au>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 4 Apr 2013 11:14:30 -0600
-Message-ID: <CAErSpo7Mup+k7UmZsH1ZidCM1dJw-rNfdtCC6dSF+cZe1d+aBg@mail.gmail.com>
-Subject: Re: [PATCH v2] irq: add quirk for broken interrupt remapping on 55XX chipsets
-To: Neil Horman <nhorman@tuxdriver.com>
-Cc: David Woodhouse <dwmw2@infradead.org>,
-	Prarit Bhargava <prarit@redhat.com>,
-	Don Zickus <dzickus@redhat.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Asit Mallick <asit.k.mallick@intel.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	iommu@lists.linux-foundation.org, Yinghai Lu <yinghai@kernel.org>
+Date: Wed, 17 Apr 2013 17:57:21 -0600
+Message-ID: <CAErSpo4B0sQpozB9Zco892_wtykMQ9-P2iF4QR+HXdte1YpMzg@mail.gmail.com>
+Subject: Re: PCI: Remove "extern" from function declarations
+To: Stephen Rothwell <sfr@canb.auug.org.au>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 4, 2013 at 9:39 AM, Neil Horman <nhorman@tuxdriver.com> wrote:
-> On Thu, Apr 04, 2013 at 08:57:06AM -0600, Bjorn Helgaas wrote:
->> On Thu, Apr 4, 2013 at 8:50 AM, Neil Horman <nhorman@tuxdriver.com> wrote:
->> > On Thu, Apr 04, 2013 at 03:27:29PM +0100, David Woodhouse wrote:
->> >> On Wed, 2013-04-03 at 17:53 -0600, Bjorn Helgaas wrote:
->> >> > );
->> >> > > +
->> >> > > +       if ((revision == 0x13) && irq_remapping_enabled) {
->> >> > > +                pr_warn(HW_ERR "This system BIOS has enabled interrupt remapping\n"
->> >> > > +                        "on a chipset that contains an errata making that\n"
->> >> > > +                        "feature unstable.  Please reboot with nointremap\n"
->> >> > > +                        "added to the kernel command line and contact\n"
->> >> > > +                        "your BIOS vendor for an update");
->> >>
->> >> This should be WARN_TAINT(TAINT_FIRMWARE_WORKAROUND). And 'an erratum'.
->> >>
->> > Ok, copy that. I'll repost shortly
->>
->> When you do, please include URLs for any problem reports or bugzillas you have.
->>
-> Well, those are going to be vendor specific, so I'm not sure we can really do
-> that, at least not in any meaningful way.
+On Wed, Apr 17, 2013 at 5:24 PM, Stephen Rothwell <sfr@canb.auug.org.au> wrote:
+> Hi Bjorn,
+>
+> I just noticed this commit (f39d5b72913e "PCI: Remove "extern" from
+> function declarations") in the pci next branch.  Just wondering why you
+> would do such a thing.  It is a lot of churn in quite a few header files
+> and (in my opinion) goes the wrong way anyway.
+>
+> It may not actually make any difference to the compiler for functions, but
+> for variables, it does.   A variable declared in a header file without
+> "extern" will effectively define it in every compilation that includes
+> the header file, one with "extern" will only produce references.
+>
+> So, since, the global variables really should have the "extern", the
+> functions are now inconsistent with that.
+>
+> It also means that when someone copies a function declaration to make a
+> "static inline" stub, the "extern" is a big hint for them to remember to
+> make the stub "static" - I have seen several occasions when this was not
+> done and that causes compilation failures (but usually only in the
+> configuration that the author did not bother to test).
 
-Sorry, I don't understand your point.  It's useful to know who
-reported it (e.g., for future testers) and what happened and what
-bugzillas it solved.  Of course it applies only to machines with this
-chipset and certain BIOS revisions.
-
->> I assume Windows "just works" in this situation?
-> No more or less than linux does in this case.  The Intel provided errata
-> indicates that the only acceptable workaround is to disable remapping in the
-> BIOS, so I would presume that if a windows system has a BIOS that doesn't
-> implement this fix, its just as exposed as we are.
-
-It sounds like the effect of this bug is that on Linux, devices may
-not work at all because of lost interrupts.  Either Windows must never
-enable remapping (so it never sees the bug), or it must be designed in
-a way that tolerates the problem.  I can't believe these machines
-shipped with Windows certification if devices didn't work correctly.
-
-Either way, I don't understand why we can't make the quirk just fix
-this.  Booting with "nointremap" only sets disable_irq_remap, which is
-only used by irq_remapping_supported().  Early quirks are run before
-irq_remapping_supported () is ever called, so an early quirk ought to
-be just as effective as the command line option.  Here's the relevant
-call tree I see:
-
-  start_kernel
-    setup_arch
-      parse_early_param
-      early_quirks
-    rest_init
-      ...
-        <first use of disable_irq_remap>
-
-The x86 setup_arch() does call generic_apic_probe(), but as far as I
-can tell, none of the APIC .probe() methods reference
-disable_irq_remap, so that doesn't look like a problem.
+Good points.  The fact that some function declarations use "extern"
+and some don't is just an annoying inconsistency.  I prefer fewer
+words to read, so I removed them, but that's just a personal
+preference, and I'd be OK it were always present, too.  I suppose if
+anybody but me actually cared very much, we'd have checkpatch complain
+about one way or the other, but I don't think it does.
 
 Bjorn
