@@ -1,44 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:47297 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S967885Ab3DSD2x (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 18 Apr 2013 23:28:53 -0400
-Message-ID: <5170B9BD.6040408@huawei.com>
-Date: Fri, 19 Apr 2013 11:27:57 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from mail-oa0-f45.google.com ([209.85.219.45]:53541 "EHLO
+	mail-oa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753531Ab3DQQme (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 17 Apr 2013 12:42:34 -0400
+Received: by mail-oa0-f45.google.com with SMTP id o17so1703483oag.32
+        for <linux-pci@vger.kernel.org>; Wed, 17 Apr 2013 09:42:33 -0700 (PDT)
 MIME-Version: 1.0
-To: Frank Rizzo <thefrankrizzo@hotmail.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: Rescan PCIE bus to find recently powered on device.
-References: <SNT136-W425B9A4DBEA719E570080DB2C80@phx.gbl>
-In-Reply-To: <SNT136-W425B9A4DBEA719E570080DB2C80@phx.gbl>
-Content-Type: text/plain; charset="ISO-8859-1"
+In-Reply-To: <CAErSpo6uAbiJ5GtvOmoABvwSnWj3DRRrXB6K1PzQSnReFqbqxA@mail.gmail.com>
+References: <1366196798-15929-1-git-send-email-artem.savkov@gmail.com> <CAErSpo6uAbiJ5GtvOmoABvwSnWj3DRRrXB6K1PzQSnReFqbqxA@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 17 Apr 2013 10:42:12 -0600
+Message-ID: <CAErSpo7nj3DQ-RB0UJdkzfN0L891xiTH8yzzcv7pW4AZ6waJ2A@mail.gmail.com>
+Subject: Re: [PATCH] PCI: pci_bus_add_device() should succeed even if creating
+ sysfs files fails
+To: Artem Savkov <artem.savkov@gmail.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Li Zhong <zhong@linux.vnet.ibm.com>,
+	linux-next list <linux-next@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2013/4/19 10:59, Frank Rizzo wrote:
-> Hey list.
-> 
-> I'm working on a driver for a device that's external from the PC.  It's connected to the PC via a weird cable that connects to a PCIE card inside the case that appears to be nothing other than glue logic to allow the signals from the cable to be tossed onto the bus.
-> 
-> When the external device is powered off during boot, nothing is found.  hwinfo doesn't find it, lspci doesn't find it, etc.  If you power on the device BEFORE booting, everything is found, and it works fine.  And lastly, if you power it on AFTER Linux has booted, you still can't find it.  I've tried echoing "1" to rescan, and everything else that I could find via Google search.
-> 
-> So, what are my options here?  I'm not allergic to adding code to the driver to scan for the device periodically, if I knew HOW to find it.  And, once found, how do I get it registered?
-> 
+On Wed, Apr 17, 2013 at 9:54 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Wed, Apr 17, 2013 at 5:06 AM, Artem Savkov <artem.savkov@gmail.com> wrote:
+>> Introduced in cc8f7f9e4e79a0940af6b4b6fdfbcf18a03aa9f4
+>> ("PCI: Fix __must_check annotation on pci_create_sysfs_dev_files()")
+>>
+>> pci_bus_add_device() should not fail to add device if
+>> pci_create_sysfs_dev_files() call fails, as sysfs files are not critical.
+>>
+>> pci_sysfs_init() is a "late_initcall" and is called after acpi_init, so
+>> pci_bus_add_device() fails to create devices during boot resulting in a
+>> bug during acpi_init. It is safe not to create sysfs_dev_files in
+>> pci_bus_add_device() as they are later created in pci_sysfs_ini().
+>> ...
 
-When your device power off during boot, system maybe will not reserve resource like bus res for your device. So when you power on your device after system boot,
-system cannot scan your device by rescan interface, I guess.
+> Sorry for the breakage.  Thanks for the report, analysis, and fix.
+> I'll fix this up
 
-> 
-> Thanks! 		 	   		  --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> 
+It's not clear to me what the best fix is, so I just dropped my original patch.
 
+It's clearly wrong to have __must_check on the
+pci_create_sysfs_dev_files() definition, because it doesn't do
+anything there.
 
--- 
-Thanks!
-Yijing
+We could simply drop the __must_check altogether, as you suggest, but
+I'd rather structure things to avoid the failure in the first place
+rather than ignoring an error.
 
+It would be ideal if we could get rid of the pci_sysfs_init()
+late_initcall and just make the pci_create_sysfs_dev_files() from
+pci_bus_add_device() work all the time, even at boot-time.  I didn't
+look hard enough to figure out why this needs to be a late_initcall.
+
+In any case, we can figure this out later, after we merge the current
+stuff for v3.10.
+
+Bjorn
