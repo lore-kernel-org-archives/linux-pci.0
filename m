@@ -1,68 +1,39 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:60794 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756897Ab3DDJUY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Apr 2013 05:20:24 -0400
-Date: Thu, 4 Apr 2013 06:16:40 -0300
-From: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	devicetree-discuss@lists.ozlabs.org,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Maen Suleiman <maen@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Olof Johansson <olof@lixom.net>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Mitch Bradley <wmb@firmworks.com>,
-	Andrew Murray <andrew.murray@arm.com>
-Subject: Re: [RFCv1 00/11] MSI support for Marvell EBU PCIe driver
-Message-ID: <20130404091639.GA2245@localhost>
-References: <1364316746-8702-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from hydra.sisk.pl ([212.160.235.94]:35775 "EHLO hydra.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S966109Ab3DQShb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 17 Apr 2013 14:37:31 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: Changes for v3.10 merge window
+Date: Wed, 17 Apr 2013 20:45:23 +0200
+Message-ID: <170788625.1RAzAFj9Rt@vostro.rjw.lan>
+In-Reply-To: <CAErSpo44LzWjne=0G+4tMiFmHd0x=b6Rfd7K_PWZo+yZmFihsg@mail.gmail.com>
+References: <20130416171732.GA6356@google.com> <1825980.1C7UKqDGj6@vostro.rjw.lan> <CAErSpo44LzWjne=0G+4tMiFmHd0x=b6Rfd7K_PWZo+yZmFihsg@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1364316746-8702-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Thomas,
+On Wednesday, April 17, 2013 10:47:51 AM Bjorn Helgaas wrote:
+> On Wed, Apr 17, 2013 at 10:25 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> > On Tuesday, April 16, 2013 11:17:32 AM Bjorn Helgaas wrote:
+> >> Below are the patches currently in my "next" branch, planned for
+> >> release in v3.10.  If I'm missing something important, let me know.
+> >
+> > Well, you said you took the "PCI / PM: Make pci_pme_active() ignore devices
+> > without PME support" patch for v3.10, but it is not listed below.
+> 
+> Yep, I just merged it 30 seconds ago :)  I was waiting to make sure
+> you didn't want the "Fix fallback to PCI_D0"  patch in v3.9.  Thanks
+> for the reminder.
 
-On Tue, Mar 26, 2013 at 05:52:15PM +0100, Thomas Petazzoni wrote:
-> 
-> This set of patches introduces Message Signaled Interrupt support in
-> the Marvell EBU PCIe driver. It has been successfully tested on the
-> Armada XP GP platform and the Armada 370 DB platform with an Intel
-> e1000e PCIe network card that supports MSI.
-> 
-> This is based on work done by Lior Amsalem <alior@marvell.com>.
-> 
-> The patches do the following:
-> 
->  * Patches 1, 2 and 3 move the IRQ controller driver of Armada 370/XP
->    platforms from arch/arm/mach-mvebu/ into drivers/irqchip/ and use
->    the proper irqchip infrastructure. Those changes are not strictly
->    needed to add MSI interrupts support, but since we will be touching
->    the IRQ controller driver anyway, it sounded like the right time to
->    do this move.
-> 
+No problem and thanks!
 
-Given the IRQ controller move to drivers/irqchip is independent of MSI
-work, and that we've already agreed this move is fine (Arnd has acked
-patch 2), may I suggest that you resend these three first patches
-(and perhaps the fourth?) as a separate patchset to be included in v3.10.
+Rafael
 
-This has the advantage that further development on IRQ controller can be
-done directly on its proper place, and also the MSI patchset can be
-simplified.
 
-What do you think?
 -- 
-Ezequiel García, Free Electrons
-Embedded Linux, Kernel and Android Engineering
-http://free-electrons.com
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
