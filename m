@@ -1,107 +1,160 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Thierry Reding <thierry.reding@avionic-design.de>
-To: Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Russell King <linux@arm.linux.org.uk>,
-	Andrew Murray <andrew.murray@arm.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Arnd Bergmann <arnd@arndb.de>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mho-03-ewr.mailhop.org ([204.13.248.66]:12585 "EHLO
+	mho-01-ewr.mailhop.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S966336Ab3DQOIq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 17 Apr 2013 10:08:46 -0400
+Date: Wed, 17 Apr 2013 10:08:17 -0400
+From: Jason Cooper <jason@lakedaemon.net>
+To: Russell King <linux@arm.linux.org.uk>,
 	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-tegra@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH v3 00/12] Rewrite Tegra PCIe driver
-Date: Wed,  3 Apr 2013 16:45:06 +0200
-Message-Id: <1365000318-28256-1-git-send-email-thierry.reding@avionic-design.de>
-Sender: linux-kernel-owner@vger.kernel.org
+	Olof Johansson <olof@lixom.net>, Arnd Bergmann <arnd@arndb.de>
+Cc: Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Maen Suleiman <maen@marvell.com>, linux-pci@vger.kernel.org,
+	devicetree-discuss@lists.ozlabs.org,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Andrew Murray <andrew.murray@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Mitch Bradley <wmb@firmworks.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Subject: Re: [PATCHv8 07/19] arm: pci: add a align_resource hook
+Message-ID: <20130417140817.GE28693@titan.lakedaemon.net>
+References: <1365541601-14095-1-git-send-email-thomas.petazzoni@free-electrons.com>
+ <1365541601-14095-8-git-send-email-thomas.petazzoni@free-electrons.com>
+ <20130415163609.GJ28693@titan.lakedaemon.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130415163609.GJ28693@titan.lakedaemon.net>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch series contains an almost complete rewrite of the Tegra PCIe
-driver. The code is moved to the drivers/pci/host directory and turned
-into a proper platform driver, adding MSI and DT support while at it.
-Other PCI host controller drivers can be added to that directory in an
-attempt to make it easier to factor out common code.
+Russell,
 
-Patches 1 to 3 add generic OF helpers to parse a PCI node's ranges
-property as well as obtain the device and function numbers from a node's
-reg property.
+I saw you were back online this morning, could you please consider the
+following request?
 
-Patch 4 introduces a new MSI chip infrastructure which is required to
-make multiple platform-specific implementations of the MSI support
-functions coexist peacefully.
+On Mon, Apr 15, 2013 at 12:36:09PM -0400, Jason Cooper wrote:
+> Russell,
+> 
+> Thanks for applying this patch (7683/1) to your tree.  I see it's in
+> your for-next, which I understand *isn't* stable.
+> 
+>   029baf1 ARM: 7683/1: pci: add a align_resource hook
+> 
+> Is there a stable branch I could depend on for the rest of this series
+> (particularly, patch 10)?  It looks like you applied it to your misc
+> branch, but that's not currently available.
 
-Patches 5 and 6 move some of the Tegra specific code around to allow it
-to be used from outside the arch/arm/mach-tegra directory.
+I'd really like to get this in for v3.10.  As Thomas has mentioned
+before, the series has had plenty of review on the list.
 
-Patch 7 moves the Tegra PCIe controller driver to the drivers/pci/host
-directory and turns it into a proper platform driver. It also adds MSI
-(based on patches by NVIDIA) and DT support.
+thx,
 
-Patches 8 to 11 add device tree based probing for the TEC, Harmony and
-TrimSlice boards. Finally the default configuration for Tegra is updated
-in patch 12.
+Jason.
 
-Thierry
-
-Andrew Murray (1):
-  of/pci: Provide support for parsing PCI DT ranges property
-
-Thierry Reding (11):
-  of/pci: Add of_pci_get_devfn() function
-  of/pci: Add of_pci_parse_bus_range() function
-  PCI: Introduce new MSI chip infrastructure
-  ARM: tegra: Move tegra_pcie_xclk_clamp() to PMC
-  ARM: tegra: Move pmc.h to include/linux/tegra-pmc.h
-  PCI: tegra: Move PCIe driver to drivers/pci/host
-  ARM: tegra: tamonten: Add PCIe support
-  ARM: tegra: tec: Add PCIe support
-  ARM: tegra: harmony: Initialize PCIe from DT
-  ARM: tegra: trimslice: Initialize PCIe from DT
-  ARM: tegra: Update default configuration (PCIe)
-
- .../bindings/pci/nvidia,tegra20-pcie.txt           |  123 ++
- arch/arm/boot/dts/tegra20-harmony.dts              |   20 +-
- arch/arm/boot/dts/tegra20-tamonten.dtsi            |   17 +-
- arch/arm/boot/dts/tegra20-tec.dts                  |    8 +
- arch/arm/boot/dts/tegra20-trimslice.dts            |   28 +
- arch/arm/boot/dts/tegra20.dtsi                     |   53 +
- arch/arm/configs/tegra_defconfig                   |    4 +-
- arch/arm/mach-tegra/Kconfig                        |    7 +-
- arch/arm/mach-tegra/Makefile                       |    3 -
- arch/arm/mach-tegra/board-harmony-pcie.c           |   89 --
- arch/arm/mach-tegra/board.h                        |    8 -
- arch/arm/mach-tegra/iomap.h                        |    3 -
- arch/arm/mach-tegra/pcie.c                         |  886 -----------
- arch/arm/mach-tegra/pmc.c                          |   16 +
- arch/arm/mach-tegra/tegra.c                        |   24 -
- arch/microblaze/pci/pci-common.c                   |  110 +-
- arch/mips/pci/pci.c                                |   50 +-
- arch/powerpc/kernel/pci-common.c                   |   99 +-
- drivers/of/address.c                               |   63 +
- drivers/of/of_pci.c                                |   59 +-
- drivers/pci/Kconfig                                |    2 +
- drivers/pci/Makefile                               |    3 +
- drivers/pci/host/Kconfig                           |    8 +
- drivers/pci/host/Makefile                          |    1 +
- drivers/pci/host/pci-tegra.c                       | 1560 ++++++++++++++++++++
- drivers/pci/msi.c                                  |   35 +-
- drivers/pci/probe.c                                |    1 +
- include/linux/msi.h                                |   10 +
- include/linux/of_address.h                         |   42 +
- include/linux/of_pci.h                             |    2 +
- include/linux/pci.h                                |    1 +
- include/linux/tegra-pmc.h                          |   23 +
- 32 files changed, 2155 insertions(+), 1203 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
- delete mode 100644 arch/arm/mach-tegra/board-harmony-pcie.c
- delete mode 100644 arch/arm/mach-tegra/pcie.c
- create mode 100644 drivers/pci/host/Kconfig
- create mode 100644 drivers/pci/host/Makefile
- create mode 100644 drivers/pci/host/pci-tegra.c
- create mode 100644 include/linux/tegra-pmc.h
-
--- 
-1.8.2
-
+> On Tue, Apr 09, 2013 at 11:06:28PM +0200, Thomas Petazzoni wrote:
+> > The PCI specifications says that an I/O region must be aligned on a 4
+> > KB boundary, and a memory region aligned on a 1 MB boundary.
+> > 
+> > However, the Marvell PCIe interfaces rely on address decoding windows
+> > (which allow to associate a range of physical addresses with a given
+> > device). For PCIe memory windows, those windows are defined with a 1
+> > MB granularity (which matches the PCI specs), but PCIe I/O windows can
+> > only be defined with a 64 KB granularity, so they have to be 64 KB
+> > aligned. We therefore need to tell the PCI core about this special
+> > alignement requirement.
+> > 
+> > The PCI core already calls pcibios_align_resource() in the ARM PCI
+> > core, specifically for such purposes. So this patch extends the ARM
+> > PCI core so that it calls a ->align_resource() hook registered by the
+> > PCI driver, exactly like the existing ->map_irq() and ->swizzle()
+> > hooks.
+> > 
+> > A particular PCI driver can register a align_resource() hook, and do
+> > its own specific alignement, depending on the specific constraints of
+> > the underlying hardware.
+> > 
+> > Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+> > Cc: Russell King <linux@arm.linux.org.uk>
+> > ---
+> >  arch/arm/include/asm/mach/pci.h |   11 +++++++++++
+> >  arch/arm/kernel/bios32.c        |    6 ++++++
+> >  2 files changed, 17 insertions(+)
+> > 
+> > diff --git a/arch/arm/include/asm/mach/pci.h b/arch/arm/include/asm/mach/pci.h
+> > index 5cf2e97..7d2c3c8 100644
+> > --- a/arch/arm/include/asm/mach/pci.h
+> > +++ b/arch/arm/include/asm/mach/pci.h
+> > @@ -30,6 +30,11 @@ struct hw_pci {
+> >  	void		(*postinit)(void);
+> >  	u8		(*swizzle)(struct pci_dev *dev, u8 *pin);
+> >  	int		(*map_irq)(const struct pci_dev *dev, u8 slot, u8 pin);
+> > +	resource_size_t (*align_resource)(struct pci_dev *dev,
+> > +					  const struct resource *res,
+> > +					  resource_size_t start,
+> > +					  resource_size_t size,
+> > +					  resource_size_t align);
+> >  };
+> >  
+> >  /*
+> > @@ -51,6 +56,12 @@ struct pci_sys_data {
+> >  	u8		(*swizzle)(struct pci_dev *, u8 *);
+> >  					/* IRQ mapping				*/
+> >  	int		(*map_irq)(const struct pci_dev *, u8, u8);
+> > +					/* Resource alignement requirements	*/
+> > +	resource_size_t (*align_resource)(struct pci_dev *dev,
+> > +					  const struct resource *res,
+> > +					  resource_size_t start,
+> > +					  resource_size_t size,
+> > +					  resource_size_t align);
+> >  	void		*private_data;	/* platform controller private data	*/
+> >  };
+> >  
+> > diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
+> > index a1f73b5..b2ed73c 100644
+> > --- a/arch/arm/kernel/bios32.c
+> > +++ b/arch/arm/kernel/bios32.c
+> > @@ -462,6 +462,7 @@ static void pcibios_init_hw(struct hw_pci *hw, struct list_head *head)
+> >  		sys->busnr   = busnr;
+> >  		sys->swizzle = hw->swizzle;
+> >  		sys->map_irq = hw->map_irq;
+> > +		sys->align_resource = hw->align_resource;
+> >  		INIT_LIST_HEAD(&sys->resources);
+> >  
+> >  		if (hw->private_data)
+> > @@ -574,6 +575,8 @@ char * __init pcibios_setup(char *str)
+> >  resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+> >  				resource_size_t size, resource_size_t align)
+> >  {
+> > +	struct pci_dev *dev = data;
+> > +	struct pci_sys_data *sys = dev->sysdata;
+> >  	resource_size_t start = res->start;
+> >  
+> >  	if (res->flags & IORESOURCE_IO && start & 0x300)
+> > @@ -581,6 +584,9 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+> >  
+> >  	start = (start + align - 1) & ~(align - 1);
+> >  
+> > +	if (sys->align_resource)
+> > +		return sys->align_resource(dev, res, start, size, align);
+> > +
+> >  	return start;
+> >  }
+> >  
+> > -- 
+> > 1.7.9.5
+> > 
+> > 
+> > _______________________________________________
+> > linux-arm-kernel mailing list
+> > linux-arm-kernel@lists.infradead.org
+> > http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> 
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
