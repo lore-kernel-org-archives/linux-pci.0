@@ -1,210 +1,102 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f177.google.com ([209.85.214.177]:43327 "EHLO
-	mail-ob0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762484Ab3DHRRn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Apr 2013 13:17:43 -0400
-Received: by mail-ob0-f177.google.com with SMTP id uz6so5906375obc.8
-        for <linux-pci@vger.kernel.org>; Mon, 08 Apr 2013 10:17:43 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <5162E266.6080002@redhat.com>
-References: <1362158276-4901-1-git-send-email-nhorman@tuxdriver.com>
- <1365190294-9061-1-git-send-email-nhorman@tuxdriver.com> <CAErSpo6z8oqiaUBCieUMsS_c5xvVFUDbHqVO_eBBde3uv2=zcg@mail.gmail.com>
- <5162E266.6080002@redhat.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 8 Apr 2013 11:17:23 -0600
-Message-ID: <CAErSpo5DNe-x6Fi3i6K=9xnd47d-T-q4_bH0tiud_8Ak2eL=TQ@mail.gmail.com>
-Subject: Re: [PATCH v6] irq: add quirk for broken interrupt remapping on 55XX chipsets
-To: Don Dutile <ddutile@redhat.com>
-Cc: Neil Horman <nhorman@tuxdriver.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Prarit Bhargava <prarit@redhat.com>,
-	Don Zickus <dzickus@redhat.com>,
-	Asit Mallick <asit.k.mallick@intel.com>,
-	David Woodhouse <dwmw2@infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Artem Savkov <artem.savkov@gmail.com>
+To: linux-pci@vger.kernel.org
+Cc: bhelgaas@google.com, linux-kernel@vger.kernel.org,
+	Artem Savkov <artem.savkov@gmail.com>
+Subject: [PATCH] PCI: pci_bus_add_device() should succeed even if creating sysfs files fails
+Date: Wed, 17 Apr 2013 11:06:38 +0000
+Message-Id: <1366196798-15929-1-git-send-email-artem.savkov@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Joerg, Konrad]
+Introduced in cc8f7f9e4e79a0940af6b4b6fdfbcf18a03aa9f4
+("PCI: Fix __must_check annotation on pci_create_sysfs_dev_files()")
 
-On Mon, Apr 8, 2013 at 9:29 AM, Don Dutile <ddutile@redhat.com> wrote:
-> On 04/05/2013 09:55 PM, Bjorn Helgaas wrote:
->>
->> On Fri, Apr 5, 2013 at 1:31 PM, Neil Horman<nhorman@tuxdriver.com>  wrote:
->>>
->>> A few years back intel published a spec update:
->>>
->>> http://www.intel.com/content/dam/doc/specification-update/5520-and-5500-chipset-ioh-specification-update.pdf
->>>
->>> For the 5520 and 5500 chipsets which contained an errata (specificially
->>> errata
->>> 53), which noted that these chipsets can't properly do interrupt
->>> remapping, and
->>> as a result the recommend that interrupt remapping be disabled in bios.
->>> While
->>> many vendors have a bios update to do exactly that, not all do, and of
->>> course
->>> not all users update their bios to a level that corrects the problem.  As
->>> a
->>> result, occasionally interrupts can arrive at a cpu even after affinity
->>> for that
->>> interrupt has be moved, leading to lost or spurrious interrupts (usually
->>> characterized by the message:
->>> kernel: do_IRQ: 7.71 No irq handler for vector (irq -1)
->>>
->>> There have been several incidents recently of people seeing this error,
->>> and
->>> investigation has shown that they have system for which their BIOS level
->>> is such
->>> that this feature was not properly turned off.  As such, it would be good
->>> to
->>> give them a reminder that their systems are vulnurable to this problem.
->>
->>
->> I'd still like to mention the bugzilla URL in the changelog
->> (https://bugzilla.redhat.com/show_bug.cgi?id=887006) if it can be made
->> public.
->>
->>> ...
->>
->>
->>> diff --git a/arch/x86/kernel/early-quirks.c
->>> b/arch/x86/kernel/early-quirks.c
->>> index 3755ef4..bfa3139 100644
->>> --- a/arch/x86/kernel/early-quirks.c
->>> +++ b/arch/x86/kernel/early-quirks.c
->>> @@ -192,6 +192,27 @@ static void __init ati_bugs_contd(int num, int slot,
->>> int func)
->>>   }
->>>   #endif
->>>
->>> +#ifdef CONFIG_IRQ_REMAP
->>> +static void __init intel_remapping_check(int num, int slot, int func)
->>> +{
->>> +       u8 revision;
->>> +
->>> +       revision = pci_read_config_byte(num, slot, func ,
->>> PCI_REVISION_ID);
->>> +
->>> +       /*
->>> +        * Revision 0x13 of this chipset supports irq remapping
->>> +        * but has an erratum that breaks its behavior, flag it as such
->>> +        */
->>> +       if (revision == 0x13)
->>> +               irq_remap_broken = 1;
->>> +
->>> +}
->>> +#else
->>> +static void __init intel_remapping_check(int num, int slot, int func)
->>> +{
->>> +}
->>> +#endif
->>> +
->>>   #define QFLAG_APPLY_ONCE       0x1
->>>   #define QFLAG_APPLIED          0x2
->>>   #define QFLAG_DONE             (QFLAG_APPLY_ONCE|QFLAG_APPLIED)
->>> @@ -221,6 +242,10 @@ static struct chipset early_qrk[] __initdata = {
->>>            PCI_CLASS_SERIAL_SMBUS, PCI_ANY_ID, 0, ati_bugs },
->>>          { PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_SBX00_SMBUS,
->>>            PCI_CLASS_SERIAL_SMBUS, PCI_ANY_ID, 0, ati_bugs_contd },
->>> +       { PCI_VENDOR_ID_INTEL, 0x3403, PCI_CLASS_BRIDGE_HOST,
->>> +         PCI_BASE_CLASS_BRIDGE, 0, intel_remapping_check },
->>> +       { PCI_VENDOR_ID_INTEL, 0x3406, PCI_CLASS_BRIDGE_HOST,
->>> +         PCI_BASE_CLASS_BRIDGE, 0, intel_remapping_check },
->>>          {}
->>>   };
->>>
->>> diff --git a/drivers/iommu/irq_remapping.c
->>> b/drivers/iommu/irq_remapping.c
->>> index d56f8c1..2b56e92 100644
->>> --- a/drivers/iommu/irq_remapping.c
->>> +++ b/drivers/iommu/irq_remapping.c
->>> @@ -19,6 +19,7 @@
->>>   int irq_remapping_enabled;
->>>
->>>   int disable_irq_remap;
->>> +int irq_remap_broken;
->>>   int disable_sourceid_checking;
->>>   int no_x2apic_optout;
->>>
->>> @@ -216,6 +217,17 @@ int irq_remapping_supported(void)
->>>          if (disable_irq_remap)
->>>                  return 0;
->>>
->>> +       if (irq_remap_broken) {
->>> +               WARN_TAINT(1, TAIN_FIRMWARE_WORKAROUND,
->>
->>
->> This looks like a typo (s/TAIN/TAINT/).
->>
->>> +                          "This system BIOS has enabled interrupt
->>> remapping\n"
->>> +                          "on a chipset that contains an erratum making
->>> that\n"
->>> +                          "feature unstable.  Please reboot with
->>> nointremap\n"
->>> +                          "added to the kernel command line and
->>> contact\n"
->>> +                          "your BIOS vendor for an update");
->>
->>
->> I suspect your updated message won't mention "nointremap", but if it
->> does, Documentation/kernel-parameters.txt says that option is
->> deprecated and "intremap=off" should be used instead.
->>
->>> +               disable_irq_remap = 1;
->>
->>AMD
->> Tell me if I have this correct:
->>
->> Before this patch, we had interrupt remapping enabled and
->> virtualization enabled.  This is safe, but devices might need resets
->> to deal with lost or spurious interrupts.
->>
-> Bigger then that -- system reboots are often necessary, and for
-> virtualization,
-> that means not just the lost of the device, but all guests running on that
-> host.
->
->
->> After this patch, these same machines will by default have interrupt
->> remapping disabled and virtualization enabled.  The lost or spurious
->> interrupt problem should be gone, but we now have the IRQ injection
->> security bug.
->>
-> IRQ injection security bug *if* device-assignment of a PCI(e) device
-> to a KVM guest is done.  To do so, requires kvm to be loaded with
-> a parameter to allow device-assignment w/o intr-remapping (b/c certain
-> chipsets
-> didn't have intr-remap support complete until this past summer).
-> So, a sysadmin would have to consciously enable this security vulnerability,
-> and is only a vulnerability if (a) the guest is not well known/behaved or
-> (b) the assigned device goes-bonkers/breaks.
-> This vulnerability has been known and in existence since the beginning of
-> device-assignment; intr-remap is the way to isolate it.
-> The end result on this (rev of this) chip set is the equivalent of running
-> device-assignment on a (2009 era) Q35 chipset -- a VT-d1 (IOMMU-only,
-> no-intr-remap) capable chipset.
+pci_bus_add_device() should not fail to add device if
+pci_create_sysfs_dev_files() call fails, as sysfs files are not critical.
 
-Thanks for the details, Don.  It makes sense to me to disable
-intr-remap on this chipset and handle it like an older machine that's
-not capable of intr-remap at all.  The IRQ injection issue should be
-no worse than on those older machines.
+pci_sysfs_init() is a "late_initcall" and is called after acpi_init, so
+pci_bus_add_device() fails to create devices during boot resulting in a
+bug during acpi_init. It is safe not to create sysfs_dev_files in
+pci_bus_add_device() as they are later created in pci_sysfs_ini().
 
-I don't care whether the "if (irq_remap_broken)" test is in
-irq_remapping.c or intel_irq_remapping.c.  The quirk itself, where we
-actually look at config space, is clearly Intel-specific, but there
-could easily be similar AMD quirks that could also set
-irq_remap_broken.  In that case, it would make sense to have the test
-in the common code.
+[    0.316603] ------------[ cut here ]------------
+[    0.317000] kernel BUG at drivers/pci/bus.c:210!
+[    0.317000] invalid opcode: 0000 [#1] SMP
+[    0.317000] Modules linked in:
+[    0.317000] Pid: 1, comm: swapper/0 Not tainted 3.9.0-rc2+ #357 Bochs Bochs
+[    0.317000] EIP: 0060:[<c12d2d7e>] EFLAGS: 00010246 CPU: 0
+[    0.317000] EIP is at pci_bus_add_devices+0x7e/0x80
+[    0.317000] EAX: fffffff3 EBX: df207000 ECX: 00000000 EDX: 00000001
+[    0.317000] ESI: df228000 EDI: df228014 EBP: df0a1dec ESP: df0a1de0
+[    0.317000]  DS: 007b ES: 007b FS: 00d8 GS: 0000 SS: 0068
+[    0.317000] CR0: 8005003b CR2: ffe16000 CR3: 01c32000 CR4: 00000690
+[    0.317000] DR0: 00000000 DR1: 00000000 DR2: 00000000 DR3: 00000000
+[    0.317000] DR6: ffff0ff0 DR7: 00000400
+[    0.317000] Process swapper/0 (pid: 1, ti=df0a0000 task=df098000 task.ti=df0a0000)
+[    0.317000] Stack:
+[    0.317000]  df1702c0 c19f2294 00000000 df0a1e2c c13102d9 c18fec3e c18febce 00000008
+[    0.317000]  00000000 df1702d4 df056044 00000008 00000000 00000000 c130d023 00000006
+[    0.317000]  c19f22fc c173ec9c df17c590 df0a1e5c c130d0f4 df056000 df05603c df02f9c0
+[    0.317000] Call Trace:
+[    0.317000]  [<c13102d9>] acpi_pci_root_add+0x3af/0x3ea
+[    0.317000]  [<c130d023>] ? acpi_bus_type_and_status+0x3d/0x88
+[    0.317000]  [<c130d0f4>] acpi_bus_device_attach+0x86/0xe4
+[    0.317000]  [<c1334d05>] acpi_ns_walk_namespace+0xf5/0x240
+[    0.317000]  [<c1335567>] acpi_walk_namespace+0xdd/0x11c
+[    0.317000]  [<c130d06e>] ? acpi_bus_type_and_status+0x88/0x88
+[    0.317000]  [<c130e021>] acpi_bus_scan+0x95/0xa8
+[    0.317000]  [<c130d06e>] ? acpi_bus_type_and_status+0x88/0x88
+[    0.317000]  [<c1a5dae6>] acpi_scan_init+0x59/0x152
+[    0.317000]  [<c1a5d90d>] acpi_init+0x243/0x28b
+[    0.317000]  [<c1a5d6ca>] ? acpi_sleep_proc_init+0x2e/0x2e
+[    0.317000]  [<c10011f2>] do_one_initcall+0x102/0x150
+[    0.317000]  [<c1a36b40>] kernel_init_freeable+0x135/0x1c7
+[    0.317000]  [<c1a364c8>] ? do_early_param+0x78/0x78
+[    0.317000]  [<c16daae0>] kernel_init+0x10/0x140
+[    0.317000]  [<c16fa4b7>] ret_from_kernel_thread+0x1b/0x28
+[    0.317000]  [<c16daad0>] ? rest_init+0xd0/0xd0
+[    0.317000] Code: 0c 85 f6 74 1b 89 f0 e8 a1 ff ff ff 0f b6 86 18 03 00 00 a8 01 75 09 83 c8 01 88 86 18 03 00 00 8b 1b 39 fb 75 cf 5b 5e 5f 5d c3 <0f> 0b 55 89 e5 53 3e 8d 74 26 00 83 fa 03 7e 32 8b 48 38 8d 58
+[    0.317000] EIP: [<c12d2d7e>] pci_bus_add_devices+0x7e/0x80 SS:ESP 0068:df0a1de0
+[    0.318013] ---[ end trace 9e4164edb7144ba6 ]---
+[    0.319015] swapper/0 (1) used greatest stack depth: 5720 bytes left
+[    0.320011] Kernel panic - not syncing: Attempted to kill init! exitcode=0x0000000b
+[    0.320011]
 
-Other than the fact that the quirk looks at PCI config space to find
-the revision, this really isn't a PCI patch, so I hope somebody else
-will take care of this.  From MAINTAINERS, it looks like nobody else
-wants irq_remapping.c either :)  I cc'd Joerg and Konrad, who have
-made many of the recent changes.
+Signed-off-by: Artem Savkov <artem.savkov@gmail.com>
+---
+ drivers/pci/bus.c |    4 +---
+ drivers/pci/pci.h |    2 +-
+ 2 files changed, 2 insertions(+), 4 deletions(-)
 
-Bjorn
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index 445a99d..748f8f3 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -174,9 +174,7 @@ int pci_bus_add_device(struct pci_dev *dev)
+ 	 * Can not put in pci_device_add yet because resources
+ 	 * are not assigned yet for some devices.
+ 	 */
+-	retval = pci_create_sysfs_dev_files(dev);
+-	if (retval)
+-		return retval;
++	pci_create_sysfs_dev_files(dev);
+ 
+ 	dev->match_driver = true;
+ 	retval = device_attach(&dev->dev);
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 0f1b306..68678ed 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -8,7 +8,7 @@
+ 
+ /* Functions internal to the PCI core code */
+ 
+-int __must_check pci_create_sysfs_dev_files(struct pci_dev *pdev);
++int pci_create_sysfs_dev_files(struct pci_dev *pdev);
+ void pci_remove_sysfs_dev_files(struct pci_dev *pdev);
+ #if !defined(CONFIG_DMI) && !defined(CONFIG_ACPI)
+ static inline void pci_create_firmware_label_files(struct pci_dev *pdev)
+-- 
+1.7.0.4
+
