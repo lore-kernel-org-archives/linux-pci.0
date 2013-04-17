@@ -1,282 +1,260 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f41.google.com ([209.85.219.41]:45441 "EHLO
-	mail-oa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1764365Ab3DDSRD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Apr 2013 14:17:03 -0400
-Received: by mail-oa0-f41.google.com with SMTP id f4so3168171oah.14
-        for <linux-pci@vger.kernel.org>; Thu, 04 Apr 2013 11:17:01 -0700 (PDT)
+Received: from co9ehsobe002.messaging.microsoft.com ([207.46.163.25]:32972
+	"EHLO co9outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1759256Ab3DQT5W (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 17 Apr 2013 15:57:22 -0400
+From: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
+To: <tglx@linutronix.de>, <mingo@redhat.com>, <hpa@zytor.com>,
+	<dougthompson@xmission.com>, <bp@alien8.de>,
+	<jbarnes@virtuousgeek.org>
+CC: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-edac@vger.kernel.org>,
+	Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
+Subject: [PATCH V4] edac: Handle EDAC ECC errors for Family 16h
+Date: Wed, 17 Apr 2013 14:57:13 -0500
+Message-ID: <1366228633-3159-1-git-send-email-Aravind.Gopalakrishnan@amd.com>
 MIME-Version: 1.0
-In-Reply-To: <1362710133-25168-1-git-send-email-acooks@gmail.com>
-References: <1362710133-25168-1-git-send-email-acooks@gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 4 Apr 2013 12:16:41 -0600
-Message-ID: <CAErSpo6S7xmDTz8zHssRNAEzjq+09QNSmkLNkndsT+3aBMrMfg@mail.gmail.com>
-Subject: Re: [PATCH v4] Quirk for buggy dma source tags with Intel IOMMU.
-To: Andrew Cooks <acooks@gmail.com>
-Cc: "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
-	gaudenz@soziologie.ch, Justin Piszcz <jpiszcz@lucidpixels.com>,
-	David Woodhouse <dwmw2@infradead.org>,
-	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
-	open list <linux-kernel@vger.kernel.org>,
-	"open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 7, 2013 at 7:35 PM, Andrew Cooks <acooks@gmail.com> wrote:
-> This patch creates a quirk to allow the Intel IOMMU to be enabled for devices
-> that use incorrect tags during DMA. It is similar to the quirk for Ricoh
-> devices, but allows mapping multiple functions and mapping of 'ghost'
-> functions that do not correspond to real devices. Devices that need this
-> include a variety of Marvell 88SE91xx based SATA controllers. [1][2]
->
-> Changelog:
-> v4: Process feedback received from Alex Williamson.
->  * don't assume function 0 is a real device.
->  * exit early if no ghost functions are known, or all known functions have
->    been mapped.
->  * cleanup failure case so mapping succeeds or fails for all ghost functions
->    per device.
->  * improve comments.
->
-> v3:
->  * Adopt David Woodhouse's terminology by referring to the quirky functions as
->  'ghost' functions.
->  * Unmap ghost functions when device is detached from IOMMU.
->  * Stub function for when CONFIG_PCI_QUIRKS is not enabled.
->
->
->  This patch was generated against 3.9-rc1, but will also apply to 3.7.10.
->
->  Bug reports:
->  1. https://bugzilla.redhat.com/show_bug.cgi?id=757166
->  2. https://bugzilla.kernel.org/show_bug.cgi?id=42679
->
-> Signed-off-by: Andrew Cooks <acooks@gmail.com>
-> ---
->  drivers/iommu/intel-iommu.c |   69 +++++++++++++++++++++++++++++++++++++++++++
->  drivers/pci/quirks.c        |   67 +++++++++++++++++++++++++++++++++++++++++-
->  include/linux/pci.h         |    5 +++
->  include/linux/pci_ids.h     |    1 +
->  4 files changed, 141 insertions(+), 1 deletions(-)
+Add code to handle ECC decoding for fam16h. Support exists for
+previous families already, so code has been reused werever applicable
+and some code has been added to handle fam16h specific operations.
 
-I'm OK with the pci/quirks.c part of this, but the bulk of the
-interesting code is in intel-iommu.c, so I assume the IOMMU folks will
-take care of this.
+The patch was tested on Fam16h with ECC turned on
+using the mce_amd_inj facility and works fine.
 
-Bjorn
+update: corrections to code from previous versions involve few cosmetic
+changes, reusing f10_read_dct_pci_cfg and basing off tip/master
 
-> diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-> index 0099667..f53f3e3 100644
-> --- a/drivers/iommu/intel-iommu.c
-> +++ b/drivers/iommu/intel-iommu.c
-> @@ -1674,6 +1674,69 @@ static int domain_context_mapping_one(struct dmar_domain *domain, int segment,
->         return 0;
->  }
->
-> +static void iommu_detach_dev(struct intel_iommu *iommu, u8 bus, u8 devfn);
-> +
-> +static void unmap_ghost_dma_fn(struct pci_dev *pdev, u8 fn_map)
-> +{
-> +       u8 fn;
-> +       struct intel_iommu *iommu;
-> +
-> +       iommu = device_to_iommu(pci_domain_nr(pdev->bus), pdev->bus->number,
-> +                               pdev->devfn);
-> +
-> +       /* something must be seriously fubar if we can't lookup the iommu. */
-> +       BUG_ON(!iommu);
-> +
-> +       for (fn = 0; fn <= 7 && fn_map << fn; fn++) {
-> +               if (fn == PCI_FUNC(pdev->devfn))
-> +                       continue;
-> +               if (fn_map & (1<<fn)) {
-> +                       iommu_detach_dev(iommu,
-> +                                       pdev->bus->number,
-> +                                       PCI_DEVFN(PCI_SLOT(pdev->devfn), fn));
-> +                       dev_dbg(&pdev->dev, "quirk; ghost func %d unmapped",
-> +                               fn);
-> +               }
-> +       }
-> +}
-> +
-> +/* For quirky devices like Marvell 88SE91xx chips that use ghost functions. */
-> +static int map_ghost_dma_fn(struct dmar_domain *domain,
-> +               struct pci_dev *pdev,
-> +               int translation)
-> +{
-> +       u8 fn, fn_map;
-> +       u8 fn_mapped = 0;
-> +       int err = 0;
-> +
-> +       fn_map = pci_get_dma_source_map(pdev);
-> +
-> +       /* this is the common, non-quirky case. */
-> +       if (!fn_map)
-> +               return 0;
-> +
-> +       for (fn = 0; fn <= 7 && fn_map << fn; fn++) {
-> +               if (fn == PCI_FUNC(pdev->devfn))
-> +                       continue;
-> +               if (fn_map & (1<<fn)) {
-> +                       err = domain_context_mapping_one(domain,
-> +                                       pci_domain_nr(pdev->bus),
-> +                                       pdev->bus->number,
-> +                                       PCI_DEVFN(PCI_SLOT(pdev->devfn), fn),
-> +                                       translation);
-> +                       if (err) {
-> +                               dev_err(&pdev->dev,
-> +                                       "mapping ghost func %d failed", fn);
-> +                               unmap_ghost_dma_fn(pdev, fn_mapped);
-> +                               return err;
-> +                       }
-> +                       dev_dbg(&pdev->dev, "quirk; ghost func %d mapped", fn);
-> +                       fn_mapped |= (1<<fn);
-> +               }
-> +       }
-> +       return 0;
-> +}
-> +
->  static int
->  domain_context_mapping(struct dmar_domain *domain, struct pci_dev *pdev,
->                         int translation)
-> @@ -1687,6 +1750,11 @@ domain_context_mapping(struct dmar_domain *domain, struct pci_dev *pdev,
->         if (ret)
->                 return ret;
->
-> +       /* quirk for undeclared/ghost pci functions */
-> +       ret = map_ghost_dma_fn(domain, pdev, translation);
-> +       if (ret)
-> +               return ret;
-> +
->         /* dependent device mapping */
->         tmp = pci_find_upstream_pcie_bridge(pdev);
->         if (!tmp)
-> @@ -3786,6 +3854,7 @@ static void domain_remove_one_dev_info(struct dmar_domain *domain,
->                         iommu_disable_dev_iotlb(info);
->                         iommu_detach_dev(iommu, info->bus, info->devfn);
->                         iommu_detach_dependent_devices(iommu, pdev);
-> +                       unmap_ghost_dma_fn(pdev, pci_get_dma_source_map(pdev));
->                         free_devinfo_mem(info);
->
->                         spin_lock_irqsave(&device_domain_lock, flags);
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 0369fb6..cf00acb 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -3249,6 +3249,10 @@ static struct pci_dev *pci_func_0_dma_source(struct pci_dev *dev)
->         return pci_get_slot(dev->bus, PCI_DEVFN(PCI_SLOT(dev->devfn), 0));
->  }
->
-> +/* Table of source functions for real devices. The DMA requests for the
-> + * device are tagged with a different real function as source. This is
-> + * relevant to multifunction devices.
-> + */
->  static const struct pci_dev_dma_source {
->         u16 vendor;
->         u16 device;
-> @@ -3275,7 +3279,8 @@ static const struct pci_dev_dma_source {
->   * the device doing the DMA, but sometimes hardware is broken and will
->   * tag the DMA as being sourced from a different device.  This function
->   * allows that translation.  Note that the reference count of the
-> - * returned device is incremented on all paths.
-> + * returned device is incremented on all paths. Translation is done when
-> + * the device is added to an IOMMU group.
->   */
->  struct pci_dev *pci_get_dma_source(struct pci_dev *dev)
->  {
-> @@ -3292,6 +3297,66 @@ struct pci_dev *pci_get_dma_source(struct pci_dev *dev)
->         return pci_dev_get(dev);
->  }
->
-> +/* Table of multiple (ghost) source functions. This is similar to the
-> + * translated sources above, but with the following differences:
-> + * 1. the device may use multiple functions as DMA sources,
-> + * 2. these functions cannot be assumed to be actual devices, they're simply
-> + * incorrect DMA tags.
-> + * 3. the specific ghost function for a request can not always be predicted.
-> + * For example, the actual device could be xx:yy.1 and it could use
-> + * both 0 and 1 for different requests, with no obvious way to tell when
-> + * DMA will be tagged as comming from xx.yy.0 and and when it will be tagged
-> + * as comming from xx.yy.1.
-> + * The bitmap contains all of the functions used in DMA tags, including the
-> + * actual device.
-> + * See  https://bugzilla.redhat.com/show_bug.cgi?id=757166,
-> + * https://bugzilla.kernel.org/show_bug.cgi?id=42679
-> + * https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1089768
-> + */
-> +static const struct pci_dev_dma_multi_func_sources {
-> +       u16 vendor;
-> +       u16 device;
-> +       u8 func_map;    /* bit map. lsb is fn 0. */
-> +} pci_dev_dma_multi_func_sources[] = {
-> +       { PCI_VENDOR_ID_MARVELL_2, 0x9123, (1<<0)|(1<<1)},
-> +       { PCI_VENDOR_ID_MARVELL_2, 0x9125, (1<<0)|(1<<1)},
-> +       { PCI_VENDOR_ID_MARVELL_2, 0x9128, (1<<0)|(1<<1)},
-> +       { PCI_VENDOR_ID_MARVELL_2, 0x9130, (1<<0)|(1<<1)},
-> +       { PCI_VENDOR_ID_MARVELL_2, 0x9143, (1<<0)|(1<<1)},
-> +       { PCI_VENDOR_ID_MARVELL_2, 0x9172, (1<<0)|(1<<1)},
-> +       { 0 }
-> +};
-> +
-> +/*
-> + * The mapping of fake/ghost functions is used when the real device is
-> + * attached to an IOMMU domain. IOMMU groups are not aware of these
-> + * functions, because they're not real devices.
-> + */
-> +u8 pci_get_dma_source_map(struct pci_dev *dev)
-> +{
-> +       const struct pci_dev_dma_multi_func_sources *i;
-> +
-> +       for (i = pci_dev_dma_multi_func_sources; i->func_map; i++) {
-> +               if ((i->vendor == dev->vendor ||
-> +                    i->vendor == (u16)PCI_ANY_ID) &&
-> +                   (i->device == dev->device ||
-> +                    i->device == (u16)PCI_ANY_ID)) {
-> +                       return i->func_map;
-> +               }
-> +       }
-> +       return 0;
-> +}
-> +
-> static const struct pci_dev_acs_enabled {
->         u16 vendor;
->         u16 device;
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 2461033..5ad3822 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1578,6 +1578,7 @@ enum pci_fixup_pass {
->  #ifdef CONFIG_PCI_QUIRKS
->  void pci_fixup_device(enum pci_fixup_pass pass, struct pci_dev *dev);
->  struct pci_dev *pci_get_dma_source(struct pci_dev *dev);
-> +u8 pci_get_dma_source_map(struct pci_dev *dev);
->  int pci_dev_specific_acs_enabled(struct pci_dev *dev, u16 acs_flags);
->  #else
->  static inline void pci_fixup_device(enum pci_fixup_pass pass,
-> @@ -1586,6 +1587,10 @@ static inline struct pci_dev *pci_get_dma_source(struct pci_dev *dev)
->  {
->         return pci_dev_get(dev);
->  }
-> +u8 pci_get_dma_source_map(struct pci_dev *dev)
-> +{
-> +       return 0;
-> +}
->  static inline int pci_dev_specific_acs_enabled(struct pci_dev *dev,
->                                                u16 acs_flags)
->  {
-> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-> index f11c1c2..df57496 100644
-> --- a/include/linux/pci_ids.h
-> +++ b/include/linux/pci_ids.h
-> @@ -1604,6 +1604,7 @@
->  #define PCI_SUBDEVICE_ID_KEYSPAN_SX2   0x5334
->
->  #define PCI_VENDOR_ID_MARVELL          0x11ab
-> +#define PCI_VENDOR_ID_MARVELL_2        0x1b4b
->  #define PCI_DEVICE_ID_MARVELL_GT64111  0x4146
->  #define PCI_DEVICE_ID_MARVELL_GT64260  0x6430
->  #define PCI_DEVICE_ID_MARVELL_MV64360  0x6460
-> --
-> 1.7.1
->
+Signed-off-by: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
+---
+ arch/x86/kernel/amd_nb.c  |    4 +-
+ drivers/edac/amd64_edac.c |  100 ++++++++++++++++++++++++++++++++++++++++++++-
+ drivers/edac/amd64_edac.h |    4 +-
+ include/linux/pci_ids.h   |    2 +
+ 4 files changed, 106 insertions(+), 4 deletions(-)
+
+diff --git a/arch/x86/kernel/amd_nb.c b/arch/x86/kernel/amd_nb.c
+index 3684129..7fa8cc8 100644
+--- a/arch/x86/kernel/amd_nb.c
++++ b/arch/x86/kernel/amd_nb.c
+@@ -19,6 +19,7 @@ const struct pci_device_id amd_nb_misc_ids[] = {
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_K8_NB_MISC) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_10H_NB_MISC) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_NB_F3) },
++	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_16H_NB_F3) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_M10H_F3) },
+ 	{}
+ };
+@@ -26,6 +27,7 @@ EXPORT_SYMBOL(amd_nb_misc_ids);
+ 
+ static const struct pci_device_id amd_nb_link_ids[] = {
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_NB_F4) },
++	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_16H_NB_F4) },
+ 	{}
+ };
+ 
+@@ -81,7 +83,7 @@ int amd_cache_northbridges(void)
+ 			next_northbridge(link, amd_nb_link_ids);
+         }
+ 
+-	/* some CPU families (e.g. family 0x11) do not support GART */
++	/* some CPU families (e.g. family 0x11, 0x16) do not support GART */
+ 	if (boot_cpu_data.x86 == 0xf || boot_cpu_data.x86 == 0x10 ||
+ 	    boot_cpu_data.x86 == 0x15)
+ 		amd_northbridges.flags |= AMD_NB_GART;
+diff --git a/drivers/edac/amd64_edac.c b/drivers/edac/amd64_edac.c
+index e1d13c4..0c092c5 100644
+--- a/drivers/edac/amd64_edac.c
++++ b/drivers/edac/amd64_edac.c
+@@ -98,6 +98,8 @@ int __amd64_write_pci_cfg_dword(struct pci_dev *pdev, int offset,
+  *
+  * F15h: we select which DCT we access using F1x10C[DctCfgSel]
+  *
++ * F16h: has only 1 DCT and extended PCI cfg, we can reuse
++ * f10_read_dct_pci_cfg
+  */
+ static int k8_read_dct_pci_cfg(struct amd64_pvt *pvt, int addr, u32 *val,
+ 			       const char *func)
+@@ -340,7 +342,57 @@ static void get_cs_base_and_mask(struct amd64_pvt *pvt, int csrow, u8 dct,
+ 		base_bits	= GENMASK(21, 31) | GENMASK(9, 15);
+ 		mask_bits	= GENMASK(21, 29) | GENMASK(9, 15);
+ 		addr_shift	= 4;
+-	} else {
++	}
++
++	/*
++	* f16h: There are two addr_shift values for high and low
++	* bits.addr_shift of 8 for high bits and addr_shift of 6
++	* for low bits. So handle it differently..
++	*/
++	else if (boot_cpu_data.x86 == 0x16) {
++		csbase          = pvt->csels[dct].csbases[csrow];
++		csmask          = pvt->csels[dct].csmasks[csrow >> 1];
++
++		/* D18F2x[5C:40]_dct[0] DRAM CS Base Address
++		* register definitions in the F16h BKDG is:
++		* Bits	   Description
++		* --------------------
++		* 30:19	   BaseAddr[38:27]:
++		*	   normalized physical base address bits [38:27]
++		* 15:5     BaseAddr[21:11]:
++		*	   normalized physical base address bits [21:11]
++		*
++		* Hence, we first mask low bits, shift them by 6
++		* and then OR it with high bits shifted by 8.
++		*/
++		*base = (csbase & GENMASK(5 , 15)) << 6;
++		*base |= (csbase & GENMASK(19 , 30)) << 8;
++
++		/* D18F2x[6C:60]_dct[0] DRAM CS Mask
++		* register definitions in the F16h BKDG is:
++		* Bits	   Description
++		* --------------------
++		* 30:19	   BaseAddr[38:27]:
++		*	   normalized physical address mask bits [38:27]
++		* 15:5     BaseAddr[21:11]:
++		*	   normalized physical address mask bits [21:11]
++		*
++		* First, poke holes for the csmask;
++		* Then- mask low bits, shift them by 6
++		* and then OR it with high bits shifted by 8.
++		*/
++
++		*mask = ~0ULL;
++		/* holes for the csmask */
++		*mask &= ~((GENMASK(19 , 30) << 8) |
++			   (GENMASK(5 , 15) << 6));
++		*mask |= (csmask & GENMASK(5 , 15)) << 6;
++		*mask |= (csmask & GENMASK(19 , 30)) << 8;
++
++		return;
++	}
++
++	 else {
+ 		csbase		= pvt->csels[dct].csbases[csrow];
+ 		csmask		= pvt->csels[dct].csmasks[csrow >> 1];
+ 		addr_shift	= 8;
+@@ -1150,6 +1202,22 @@ static int f15_dbam_to_chip_select(struct amd64_pvt *pvt, u8 dct,
+ 	return ddr3_cs_size(cs_mode, false);
+ }
+ 
++/*
++ * F16h supports 64 bit DCT interfaces
++ * and has only limited cs_modes
++ */
++static int f16_dbam_to_chip_select(struct amd64_pvt *pvt, u8 dct,
++				unsigned cs_mode)
++{
++	WARN_ON(cs_mode > 12);
++
++	if (cs_mode == 6 || cs_mode == 8 || cs_mode == 9
++	    || cs_mode == 12)
++		return -1;
++	else
++		return ddr3_cs_size(cs_mode, false);
++}
++
+ static void read_dram_ctl_register(struct amd64_pvt *pvt)
+ {
+ 
+@@ -1587,6 +1655,17 @@ static struct amd64_family_type amd64_family_types[] = {
+ 			.read_dct_pci_cfg	= f15_read_dct_pci_cfg,
+ 		}
+ 	},
++	[F16_CPUS] = {
++		.ctl_name = "F16h",
++		.f1_id = PCI_DEVICE_ID_AMD_16H_NB_F1,
++		.f3_id = PCI_DEVICE_ID_AMD_16H_NB_F3,
++		.ops = {
++			.early_channel_count	= f1x_early_channel_count,
++			.map_sysaddr_to_csrow	= f1x_map_sysaddr_to_csrow,
++			.dbam_to_cs		= f16_dbam_to_chip_select,
++			.read_dct_pci_cfg	= f10_read_dct_pci_cfg,
++		}
++	},
+ };
+ 
+ /*
+@@ -1938,8 +2017,12 @@ static void read_mc_regs(struct amd64_pvt *pvt)
+ 	pvt->ecc_sym_sz = 4;
+ 
+ 	if (c->x86 >= 0x10) {
++		/* F16h has only one DCT, hence cannot read DCT1 reg.
++		 * and it can only do x4 ECC */
++
+ 		amd64_read_pci_cfg(pvt->F3, EXT_NB_MCA_CFG, &tmp);
+-		amd64_read_dct_pci_cfg(pvt, DBAM1, &pvt->dbam1);
++		if (c->x86 != 0x16)
++			amd64_read_dct_pci_cfg(pvt, DBAM1, &pvt->dbam1);
+ 
+ 		/* F10h, revD and later can do x8 ECC too */
+ 		if ((c->x86 > 0x10 || c->x86_model > 7) && tmp & BIT(25))
+@@ -2356,6 +2439,11 @@ static struct amd64_family_type *amd64_per_family_init(struct amd64_pvt *pvt)
+ 		pvt->ops		= &amd64_family_types[F15_CPUS].ops;
+ 		break;
+ 
++	case 0x16:
++		fam_type		= &amd64_family_types[F16_CPUS];
++		pvt->ops		= &amd64_family_types[F16_CPUS].ops;
++		break;
++
+ 	default:
+ 		amd64_err("Unsupported family!\n");
+ 		return NULL;
+@@ -2581,6 +2669,14 @@ static DEFINE_PCI_DEVICE_TABLE(amd64_pci_table) = {
+ 		.class		= 0,
+ 		.class_mask	= 0,
+ 	},
++	{
++		.vendor		= PCI_VENDOR_ID_AMD,
++		.device		= PCI_DEVICE_ID_AMD_16H_NB_F2,
++		.subvendor	= PCI_ANY_ID,
++		.subdevice	= PCI_ANY_ID,
++		.class		= 0,
++		.class_mask	= 0,
++	},
+ 
+ 	{0, }
+ };
+diff --git a/drivers/edac/amd64_edac.h b/drivers/edac/amd64_edac.h
+index 35637d8..2c6f113 100644
+--- a/drivers/edac/amd64_edac.h
++++ b/drivers/edac/amd64_edac.h
+@@ -172,7 +172,8 @@
+  */
+ #define PCI_DEVICE_ID_AMD_15H_NB_F1	0x1601
+ #define PCI_DEVICE_ID_AMD_15H_NB_F2	0x1602
+-
++#define PCI_DEVICE_ID_AMD_16H_NB_F1	0x1531
++#define PCI_DEVICE_ID_AMD_16H_NB_F2	0x1532
+ 
+ /*
+  * Function 1 - Address Map
+@@ -296,6 +297,7 @@ enum amd_families {
+ 	K8_CPUS = 0,
+ 	F10_CPUS,
+ 	F15_CPUS,
++	F16_CPUS,
+ 	NUM_FAMILIES,
+ };
+ 
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index f11c1c2..9b3b858 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -524,6 +524,8 @@
+ #define PCI_DEVICE_ID_AMD_15H_NB_F3	0x1603
+ #define PCI_DEVICE_ID_AMD_15H_NB_F4	0x1604
+ #define PCI_DEVICE_ID_AMD_15H_NB_F5	0x1605
++#define PCI_DEVICE_ID_AMD_16H_NB_F3	0x1533
++#define PCI_DEVICE_ID_AMD_16H_NB_F4	0x1534
+ #define PCI_DEVICE_ID_AMD_CNB17H_F3	0x1703
+ #define PCI_DEVICE_ID_AMD_LANCE		0x2000
+ #define PCI_DEVICE_ID_AMD_LANCE_HOME	0x2001
+-- 
+1.7.10.4
+
+
