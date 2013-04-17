@@ -1,118 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f52.google.com ([209.85.160.52]:61755 "EHLO
-	mail-pb0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758487Ab3D2SVp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 29 Apr 2013 14:21:45 -0400
-Received: by mail-pb0-f52.google.com with SMTP id mc17so1883999pbc.11
-        for <linux-pci@vger.kernel.org>; Mon, 29 Apr 2013 11:21:45 -0700 (PDT)
-Date: Mon, 29 Apr 2013 11:21:42 -0700
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Received: from haggis.pcug.org.au ([203.10.76.10]:52947 "EHLO
+	members.tip.net.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751455Ab3DQXY4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 17 Apr 2013 19:24:56 -0400
+Date: Thu, 18 Apr 2013 09:24:44 +1000
+From: Stephen Rothwell <sfr@canb.auug.org.au>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Sarah Sharp <sarah.a.sharp@linux.intel.com>
-Subject: Re: [PATCH] PCI: Fix racing for pci device removing via sysfs
-Message-ID: <20130429182142.GA3385@kroah.com>
-References: <1366940841-15370-1-git-send-email-yinghai@kernel.org>
- <CAErSpo5zfHR-agNBdgqfVjCU+-KcTZV+1bvML5Uw-+icDqzzEA@mail.gmail.com>
- <CAE9FiQVEQO-dLJRjn9Z7JgwGWAn1M8S1Tn2_V0Fq+6kB0rG=Bg@mail.gmail.com>
- <CAErSpo7DUDQ_XgVKAfWxqYJA=q85ps46bffV-4a7b0vOzAP5DA@mail.gmail.com>
- <CAE9FiQWv-bN2XzHiQ0WU+Y678zcqs_Owua6vXXijdMO6=0OWpg@mail.gmail.com>
- <517E45C8.4060407@cn.fujitsu.com>
- <CAE9FiQUXxCH0xjFPk1S7e_JRsBPosqQ=N5Kpcrjp3RNWDh9yZQ@mail.gmail.com>
- <20130429181550.GA17343@google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130429181550.GA17343@google.com>
+Cc: linux-pci@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+Subject: Re: PCI: Remove "extern" from function declarations
+Message-Id: <20130418092444.a4d64d8a9b5f700ba2aae779@canb.auug.org.au>
+Mime-Version: 1.0
+Content-Type: multipart/signed; protocol="application/pgp-signature";
+ micalg="PGP-SHA256";
+ boundary="Signature=_Thu__18_Apr_2013_09_24_44_+1000_HoRVY3qf2Dd2WFx."
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 29, 2013 at 11:15:50AM -0700, Bjorn Helgaas wrote:
-> On Mon, Apr 29, 2013 at 08:19:10AM -0700, Yinghai Lu wrote:
-> > On Mon, Apr 29, 2013 at 3:04 AM, Gu Zheng <guz.fnst@cn.fujitsu.com> wrote:
-> > > On 04/27/2013 05:01 AM, Yinghai Lu wrote:
-> > >> On Fri, Apr 26, 2013 at 1:53 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> > >>>
-> > >>> You can't be serious.  This is a disgusting mess.  Checking a list
-> > >>> pointer for LIST_POISON1?  As far as I'm concerned, this is a waste of
-> > >>> my time.
-> > 
-> > looks like xhci is using that LIST_POISON1 ...
-> > 
-> > >> Well, then need to hold the bus ref, and check bus->devices list instead.
-> > >
-> > > @@ -341,6 +352,7 @@ remove_store(struct device *dev, struct
-> > >  {
-> > >         int err;
-> > >         unsigned long val;
-> > > +       struct pci_dev *pdev;
-> > >
-> > >         if (strict_strtoul(buf, 0, &val) < 0)
-> > >                 return -EINVAL;
-> > > @@ -351,9 +363,14 @@ remove_store(struct device *dev, struct
-> > >         /* An attribute cannot be unregistered by one of its own methods,
-> > >          * so we have to use this roundabout approach.
-> > >          */
-> > > +       pdev = pci_dev_get(to_pci_dev(dev));
-> > >
-> > > There is no need to increase pci_dev's ref here, because we'll increase it
-> > > in sysfs_schedule_callback.
-> > 
-> > ok, i missed that. if we can use LIST_POISON, then could be more simple.
-> > like -v4.
-> 
-> I inlined your v4 patch below for convenience.
-> 
-> Maybe my allergic reaction to your use of LIST_POISON1 is unjustified,
-> but I am dubious about the idea that xhci was the only place that needed
-> it before now, and we just happened to find one more place in PCI that
-> needs it.  That doesn't make sense because good design patterns are used
-> many times, not just once or twice.
-> 
-> I thought the whole point of the get/put scheme was that if we had a
-> pointer to a correctly reference-counted object, we didn't need to check
-> whether the object was still valid because the object remains valid until
-> all the references are released.
+--Signature=_Thu__18_Apr_2013_09_24_44_+1000_HoRVY3qf2Dd2WFx.
+Content-Type: text/plain; charset=US-ASCII
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-You are correct, you shouldn't have to worry about that.  If you have to
-do something like the LIST_POISON test, something is really wrong.
+Hi Bjorn,
 
-> Gu's "[v2 2/2] PCI: Convert alloc_pci_dev(void) to pci_alloc_dev(bus)"
-> patch essentially did this:
-> 
->     pci_destroy_dev(struct pci_dev *dev) {
->       ...
-> +     pci_bus_put(dev->bus)
->       pci_free_resources(dev)
->       put_device(&dev->dev)
->     }
-> 
-> I think this is the wrong place to do the pci_bus_put() because the
-> pci_dev is reference-counted, and there may be other users that still
-> have valid references to it.
+I just noticed this commit (f39d5b72913e "PCI: Remove "extern" from
+function declarations") in the pci next branch.  Just wondering why you
+would do such a thing.  It is a lot of churn in quite a few header files
+and (in my opinion) goes the wrong way anyway.
 
-It should happen in the release function for the pci device, which will
-handle other users of the device.
+It may not actually make any difference to the compiler for functions, but
+for variables, it does.   A variable declared in a header file without
+"extern" will effectively define it in every compilation that includes
+the header file, one with "extern" will only produce references.
 
-> In this case, 10:00.0 is a bridge leading to [bus 11-1e], and 1a:01.0 is
-> part of that subtree.  The user removed both 10:00.0 and 1a:01.0 almost
-> simultaneously via sysfs and we scheduled a callback for each.
-> 
-> Each callback acquires a pci_dev reference, and removal of 10:00.0 and the
-> subtree below it, including pci_destroy_dev(1a:01.0), is done first.  The
-> callback to remove 1a:01.0 is still pending and has a valid reference to
-> the 1a:01.0 pci_dev.
-> 
-> Since the 1a:01.0 callback is still pending, the put_device in that first
-> pci_destroy_dev(1a:01.0) call decrements the ref count but doesn't release
-> the pci_dev.
-> 
-> I think the 1a:01.0 pci_dev should retain its reference to the pci_bus
-> for as long as the pci_dev exists, so the pci_bus_put() should go in
-> pci_release_dev() instead.
+So, since, the global variables really should have the "extern", the
+functions are now inconsistent with that.
 
-I agree, that should be the correct fix for this.
+It also means that when someone copies a function declaration to make a
+"static inline" stub, the "extern" is a big hint for them to remember to
+make the stub "static" - I have seen several occasions when this was not
+done and that causes compilation failures (but usually only in the
+configuration that the author did not bother to test).
+--=20
+Cheers,
+Stephen Rothwell                    sfr@canb.auug.org.au
 
-greg k-h
+--Signature=_Thu__18_Apr_2013_09_24_44_+1000_HoRVY3qf2Dd2WFx.
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQIcBAEBCAAGBQJRby88AAoJEECxmPOUX5FENoEP/1f+udRQ8Edap+MUyWWdrHXd
+yTOOgcSFOgHPpTXnMiPPm31JmMHE6HppsFSps2ITJJ6687S2tvgW6i5BvEzDDY6g
+mtg+1NOCkLwCPqW5oWV2Bp92B3q3YRzYKYGX3rBICjYQ4LvoMS9CdmBqDU1Ubu9O
+r0Uvol1WrUHkOo3FVjz12Gs/kR9Han2m5gqvi0MTV7jwx5ijKyXtjHW3D5UYQHfi
+jDvMNiLLFxLLD9I4le0FKSzM2Dktvjjj55s5o3lMeJmrLSUVdqTO4Ab5Olr3ypFu
+qwk3W8VY1IHYYLnj0CmYttiJP5QCTmQBBhRdwoVImiEVfnNu+KsnStj9yI+fYitt
+cn3QqQ7FkTmpTCI/wkuhM6dDaf3ac4LCQMTm+vrwioRaHEXq74DuSqTh3kGegaD/
+W+J91S/r8KFFOxvXCLdj5cJUqB/cHwR28Ve8TW1MI7Z5vT6JH1X3YfQSnmByTH4w
+zkor/bfnLDEyxcDexPCgAHNU1+P3LvmRShUsqRX8doyzHGH6poqteEGoKGoVcKzp
+QWzeHRL6w0vT6zvWIn/c12+30h7PLfY4Q01VurYiOnjJfnrgPoUm8luHVvrpQdhv
+Lo4UWPFaKHt63QMGW3YlJ/X2twEX4rz7zT5LXFYUoPXaaXtYizYBe1OePozPyzkd
+xm7QT/t8eFGJq7F+w5S5
+=iHpk
+-----END PGP SIGNATURE-----
+
+--Signature=_Thu__18_Apr_2013_09_24_44_+1000_HoRVY3qf2Dd2WFx.--
