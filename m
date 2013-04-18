@@ -1,90 +1,67 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from 8bytes.org ([85.214.48.195]:49017 "EHLO mail.8bytes.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S966791Ab3DRPCo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 18 Apr 2013 11:02:44 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by mail.8bytes.org (Postfix) with SMTP id 17F7B12B0FB
+	for <linux-pci@vger.kernel.org>; Thu, 18 Apr 2013 17:02:43 +0200 (CEST)
+Date: Thu, 18 Apr 2013 17:02:39 +0200
+From: Joerg Roedel <joro@8bytes.org>
+To: Neil Horman <nhorman@tuxdriver.com>
+Cc: linux-kernel@vger.kernel.org, Prarit Bhargava <prarit@redhat.com>,
+	Don Zickus <dzickus@redhat.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Asit Mallick <asit.k.mallick@intel.com>,
+	David Woodhouse <dwmw2@infradead.org>,
+	linux-pci@vger.kernel.org,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Arkadiusz =?utf-8?Q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
+Subject: Re: [PATCH v10] irq: add quirk for broken interrupt remapping on
+ 55XX chipsets
+Message-ID: <20130418150222.GB2558@8bytes.org>
+References: <1362158276-4901-1-git-send-email-nhorman@tuxdriver.com>
+ <1366144712-23460-1-git-send-email-nhorman@tuxdriver.com>
 MIME-Version: 1.0
-In-Reply-To: <48795235.crcTAaJqPb@vostro.rjw.lan>
-References: <48795235.crcTAaJqPb@vostro.rjw.lan>
-Date: Fri, 12 Apr 2013 22:50:38 -0700
-Message-ID: <CAE9FiQVEWy2MVfVmv4oL9D24OcF83dQv+OcFd5K6v8ZHeGumJA@mail.gmail.com>
-Subject: Re: [PATCH] PCI / PM: Fix fallback to PCI_D0 in pci_platform_power_transition()
-From: Yinghai Lu <yinghai@kernel.org>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	"Benenati, Chris J" <chris.j.benenati@intel.com>,
-	Ajaykumar Hotchandani <ajaykumar.hotchandani@oracle.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1366144712-23460-1-git-send-email-nhorman@tuxdriver.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 12, 2013 at 4:58 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->
-> Commit b51306c (PCI: Set device power state to PCI_D0 for device
-> without native PM support) modified pci_platform_power_transition()
-> by adding code causing dev->current_state for devices that don't
-> support native PCI PM but are power-manageable by the platform to be
-> changed to PCI_D0 regardless of the value returned by the preceding
-> platform_pci_set_power_state().  In particular, that also is done
-> if the platform_pci_set_power_state() has been successful, which
-> causes the correct power state of the device set by
-> pci_update_current_state() in that case to be overwritten by PCI_D0.
->
-> Fix that mistake by making the fallback to PCI_D0 only happen if
-> the platform_pci_set_power_state() has returned an error.
->
-> Reported-by: Chris J. Benenati <chris.j.benenati@intel.com>
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> Cc: <stable@vger.kernel.org>
-> ---
->  drivers/pci/pci.c |    3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
->
-> Index: linux-pm/drivers/pci/pci.c
-> ===================================================================
-> --- linux-pm.orig/drivers/pci/pci.c
-> +++ linux-pm/drivers/pci/pci.c
-> @@ -646,8 +646,7 @@ static int pci_platform_power_transition
->                 error = platform_pci_set_power_state(dev, state);
->                 if (!error)
->                         pci_update_current_state(dev, state);
-> -               /* Fall back to PCI_D0 if native PM is not supported */
-> -               if (!dev->pm_cap)
-> +               else if (!dev->pm_cap) /* Fall back to PCI_D0 */
->                         dev->current_state = PCI_D0;
->         } else {
->                 error = -ENODEV;
->
+On Tue, Apr 16, 2013 at 04:38:32PM -0400, Neil Horman wrote:
+> A few years back intel published a spec update:
+> http://www.intel.com/content/dam/doc/specification-update/5520-and-5500-chipset-ioh-specification-update.pdf
+> 
+> For the 5520 and 5500 chipsets which contained an errata (specificially errata
+> 53), which noted that these chipsets can't properly do interrupt remapping, and
+> as a result the recommend that interrupt remapping be disabled in bios.  While
+> many vendors have a bios update to do exactly that, not all do, and of course
+> not all users update their bios to a level that corrects the problem.  As a
+> result, occasionally interrupts can arrive at a cpu even after affinity for that
+> interrupt has be moved, leading to lost or spurrious interrupts (usually
+> characterized by the message:
+> kernel: do_IRQ: 7.71 No irq handler for vector (irq -1)
+> 
+> There have been several incidents recently of people seeing this error, and
+> investigation has shown that they have system for which their BIOS level is such
+> that this feature was not properly turned off.  As such, it would be good to
+> give them a reminder that their systems are vulnurable to this problem.  For
+> details of those that reported the problem, please see:
+> https://bugzilla.redhat.com/show_bug.cgi?id=887006
+> 
+> Signed-off-by: Neil Horman <nhorman@tuxdriver.com>
+> CC: Prarit Bhargava <prarit@redhat.com>
+> CC: Don Zickus <dzickus@redhat.com>
+> CC: Don Dutile <ddutile@redhat.com>
+> CC: Bjorn Helgaas <bhelgaas@google.com>
+> CC: Asit Mallick <asit.k.mallick@intel.com>
+> CC: David Woodhouse <dwmw2@infradead.org>
+> CC: linux-pci@vger.kernel.org
+> CC: Joerg Roedel <joro@8bytes.org>
+> CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+> CC: Arkadiusz Miśkiewicz <arekm@maven.pl>
 
-Acked-by: Yinghai Lu <yinghai@kernel.org>
+Applied with some small changes to my x86/vt-d branch, thanks Neil.
 
-also could simplify it further.
 
----
- drivers/pci/pci.c |   12 ++++--------
- 1 file changed, 4 insertions(+), 8 deletions(-)
-
-Index: linux-2.6/drivers/pci/pci.c
-===================================================================
---- linux-2.6.orig/drivers/pci/pci.c
-+++ linux-2.6/drivers/pci/pci.c
-@@ -646,15 +646,11 @@ static int pci_platform_power_transition
-         error = platform_pci_set_power_state(dev, state);
-         if (!error)
-             pci_update_current_state(dev, state);
--        /* Fall back to PCI_D0 if native PM is not supported */
--        if (!dev->pm_cap)
--            dev->current_state = PCI_D0;
--    } else {
-+    } else
-         error = -ENODEV;
--        /* Fall back to PCI_D0 if native PM is not supported */
--        if (!dev->pm_cap)
--            dev->current_state = PCI_D0;
--    }
-+
-+    if (error && !dev->pm_cap) /* Fall back to PCI_D0 */
-+        dev->current_state = PCI_D0;
-
-     return error;
- }
