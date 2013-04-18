@@ -1,66 +1,59 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 18 Apr 2013 13:00:30 -0400
-From: Neil Horman <nhorman@tuxdriver.com>
-To: Joerg Roedel <joro@8bytes.org>
-Cc: linux-kernel@vger.kernel.org, Prarit Bhargava <prarit@redhat.com>,
-	Don Zickus <dzickus@redhat.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Asit Mallick <asit.k.mallick@intel.com>,
-	David Woodhouse <dwmw2@infradead.org>,
-	linux-pci@vger.kernel.org,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Arkadiusz =?utf-8?Q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
-Subject: Re: [PATCH v10] irq: add quirk for broken interrupt remapping on
- 55XX chipsets
-Message-ID: <20130418170030.GB3788@neilslaptop.think-freely.org>
-References: <1362158276-4901-1-git-send-email-nhorman@tuxdriver.com>
- <1366144712-23460-1-git-send-email-nhorman@tuxdriver.com>
- <20130418150222.GB2558@8bytes.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:43166 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751823Ab3DRVKY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 18 Apr 2013 17:10:24 -0400
+Date: Thu, 18 Apr 2013 23:11:25 +0300
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Tejun Heo <tj@kernel.org>, Or Gerlitz <ogerlitz@mellanox.com>,
+	Ming Lei <ming.lei@canonical.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	David Miller <davem@davemloft.net>,
+	Roland Dreier <roland@kernel.org>,
+	netdev <netdev@vger.kernel.org>, Yan Burman <yanb@mellanox.com>,
+	Jack Morgenstein <jackm@dev.mellanox.co.il>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH repost for-3.9] pci: avoid work_on_cpu for nested SRIOV
+ probes
+Message-ID: <20130418201125.GA24094@redhat.com>
+References: <20130411192005.GN17641@mtj.dyndns.org>
+ <20130411203053.GC25515@redhat.com>
+ <20130411204104.GC11956@mtj.dyndns.org>
+ <516AA80F.7040505@mellanox.com>
+ <20130414134339.GA3050@htj.dyndns.org>
+ <20130418083347.GA16526@redhat.com>
+ <517007F0.4060000@mellanox.com>
+ <20130418135458.GC20862@redhat.com>
+ <20130418181930.GF9897@mtj.dyndns.org>
+ <CAErSpo71mvwwW2LheUcZ3giXke_qNWP_NeV=2Fhy147Z=pYOZQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20130418150222.GB2558@8bytes.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo71mvwwW2LheUcZ3giXke_qNWP_NeV=2Fhy147Z=pYOZQ@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 18, 2013 at 05:02:39PM +0200, Joerg Roedel wrote:
-> On Tue, Apr 16, 2013 at 04:38:32PM -0400, Neil Horman wrote:
-> > A few years back intel published a spec update:
-> > http://www.intel.com/content/dam/doc/specification-update/5520-and-5500-chipset-ioh-specification-update.pdf
-> > 
-> > For the 5520 and 5500 chipsets which contained an errata (specificially errata
-> > 53), which noted that these chipsets can't properly do interrupt remapping, and
-> > as a result the recommend that interrupt remapping be disabled in bios.  While
-> > many vendors have a bios update to do exactly that, not all do, and of course
-> > not all users update their bios to a level that corrects the problem.  As a
-> > result, occasionally interrupts can arrive at a cpu even after affinity for that
-> > interrupt has be moved, leading to lost or spurrious interrupts (usually
-> > characterized by the message:
-> > kernel: do_IRQ: 7.71 No irq handler for vector (irq -1)
-> > 
-> > There have been several incidents recently of people seeing this error, and
-> > investigation has shown that they have system for which their BIOS level is such
-> > that this feature was not properly turned off.  As such, it would be good to
-> > give them a reminder that their systems are vulnurable to this problem.  For
-> > details of those that reported the problem, please see:
-> > https://bugzilla.redhat.com/show_bug.cgi?id=887006
-> > 
-> > Signed-off-by: Neil Horman <nhorman@tuxdriver.com>
-> > CC: Prarit Bhargava <prarit@redhat.com>
-> > CC: Don Zickus <dzickus@redhat.com>
-> > CC: Don Dutile <ddutile@redhat.com>
-> > CC: Bjorn Helgaas <bhelgaas@google.com>
-> > CC: Asit Mallick <asit.k.mallick@intel.com>
-> > CC: David Woodhouse <dwmw2@infradead.org>
-> > CC: linux-pci@vger.kernel.org
-> > CC: Joerg Roedel <joro@8bytes.org>
-> > CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-> > CC: Arkadiusz Miśkiewicz <arekm@maven.pl>
+On Thu, Apr 18, 2013 at 12:25:59PM -0600, Bjorn Helgaas wrote:
+> On Thu, Apr 18, 2013 at 12:19 PM, Tejun Heo <tj@kernel.org> wrote:
+> > On Thu, Apr 18, 2013 at 04:54:58PM +0300, Michael S. Tsirkin wrote:
+> >> Tejun, what do you say my patch is used for 3.9,
+> >> and we can revisit for 3.10.
+> >> The release is almost here.
+> >> If yes please send your Ack.
+> >
+> > Yeap, let's do that.
+> >
+> > Acked-by: Tejun Heo <tj@kernel.org>
 > 
-> Applied with some small changes to my x86/vt-d branch, thanks Neil.
+> Michael, can you post a new version with Tejun's ack?  IIRC, this was
+> in drivers/pci, but I haven't been following this and am not sure
+> exactly what you want applied.  Thanks.
 > 
-> 
-> 
-Thanks!
-Neil
+> Bjorn
+
+Done. Subject is:
+[PATCHv2 for-3.9] pci: avoid work_on_cpu for nested SRIOV
+it's the same patch with Tejun's ack and a minor
+correction in the commit message.
+
 
