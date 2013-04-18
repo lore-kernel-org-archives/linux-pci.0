@@ -1,110 +1,161 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:47006 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753193Ab3DLWov (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 12 Apr 2013 18:44:51 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>, Ram Pai <linuxram@us.ibm.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v4 00/29] PCI: Add for_each_pci_resource and addon_res support
-Date: Fri, 12 Apr 2013 15:44:14 -0700
-Message-Id: <1365806683-26717-1-git-send-email-yinghai@kernel.org>
+Received: from mail-oa0-f46.google.com ([209.85.219.46]:35253 "EHLO
+	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S936303Ab3DRVkW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 18 Apr 2013 17:40:22 -0400
+Received: by mail-oa0-f46.google.com with SMTP id k3so576584oag.19
+        for <linux-pci@vger.kernel.org>; Thu, 18 Apr 2013 14:40:22 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20130418200855.GA24086@redhat.com>
+References: <51360D7C.3060209@mellanox.com> <20130418200855.GA24086@redhat.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 18 Apr 2013 15:40:01 -0600
+Message-ID: <CAErSpo65Q0+UT3sS6LcyXohkCMfjweoS_j+okiYq4bdjFKjdHw@mail.gmail.com>
+Subject: Re: [PATCHv2 for-3.9] pci: avoid work_on_cpu for nested SRIOV probes
+To: "Michael S. Tsirkin" <mst@redhat.com>
+Cc: Or Gerlitz <ogerlitz@mellanox.com>,
+	Ming Lei <ming.lei@canonical.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	David Miller <davem@davemloft.net>,
+	Roland Dreier <roland@kernel.org>,
+	netdev <netdev@vger.kernel.org>, Yan Burman <yanb@mellanox.com>,
+	Jack Morgenstein <jackm@dev.mellanox.co.il>,
+	Tejun Heo <tj@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-First part is for_each_pci_resource support:
-Now pci device resource iteration is done via "for (i=0...)" open code.
-That make code hard to read esp when only bridge or sriov resources
-are involved.
+On Thu, Apr 18, 2013 at 2:08 PM, Michael S. Tsirkin <mst@redhat.com> wrote:
+> The following lockdep report triggers since 3.9-rc1:
+>
+> =============================================
+> [ INFO: possible recursive locking detected ]
+> 3.9.0-rc1 #96 Not tainted
+> ---------------------------------------------
+> kworker/0:1/734 is trying to acquire lock:
+>  ((&wfc.work)){+.+.+.}, at: [<ffffffff81066cb0>] flush_work+0x0/0x250
+>
+> but task is already holding lock:
+>  ((&wfc.work)){+.+.+.}, at: [<ffffffff81064352>]
+> process_one_work+0x162/0x4c0
+>
+> other info that might help us debug this:
+>  Possible unsafe locking scenario:
+>
+>        CPU0
+>        ----
+>   lock((&wfc.work));
+>   lock((&wfc.work));
+>
+>  *** DEADLOCK ***
+>
+>  May be due to missing lock nesting notation
+>
+> 3 locks held by kworker/0:1/734:
+>  #0:  (events){.+.+.+}, at: [<ffffffff81064352>]
+> process_one_work+0x162/0x4c0
+>  #1:  ((&wfc.work)){+.+.+.}, at: [<ffffffff81064352>]
+> process_one_work+0x162/0x4c0
+>  #2:  (&__lockdep_no_validate__){......}, at: [<ffffffff812db225>]
+> device_attach+0x25/0xb0
+>
+> stack backtrace:
+> Pid: 734, comm: kworker/0:1 Not tainted 3.9.0-rc1 #96
+> Call Trace:
+>  [<ffffffff810948ec>] validate_chain+0xdcc/0x11f0
+>  [<ffffffff81095150>] __lock_acquire+0x440/0xc70
+>  [<ffffffff81095150>] ? __lock_acquire+0x440/0xc70
+>  [<ffffffff810959da>] lock_acquire+0x5a/0x70
+>  [<ffffffff81066cb0>] ? wq_worker_waking_up+0x60/0x60
+>  [<ffffffff81066cf5>] flush_work+0x45/0x250
+>  [<ffffffff81066cb0>] ? wq_worker_waking_up+0x60/0x60
+>  [<ffffffff810922be>] ? mark_held_locks+0x9e/0x130
+>  [<ffffffff81066a96>] ? queue_work_on+0x46/0x90
+>  [<ffffffff810925dd>] ? trace_hardirqs_on_caller+0xfd/0x190
+>  [<ffffffff8109267d>] ? trace_hardirqs_on+0xd/0x10
+>  [<ffffffff81066f74>] work_on_cpu+0x74/0x90
+>  [<ffffffff81063820>] ? keventd_up+0x20/0x20
+>  [<ffffffff8121fd30>] ? pci_pm_prepare+0x60/0x60
+>  [<ffffffff811f9293>] ? cpumask_next_and+0x23/0x40
+>  [<ffffffff81220a1a>] pci_device_probe+0xba/0x110
+>  [<ffffffff812dadca>] ? driver_sysfs_add+0x7a/0xb0
+>  [<ffffffff812daf1f>] driver_probe_device+0x8f/0x230
+>  [<ffffffff812db170>] ? __driver_attach+0xb0/0xb0
+>  [<ffffffff812db1bb>] __device_attach+0x4b/0x60
+>  [<ffffffff812d9314>] bus_for_each_drv+0x64/0x90
+>  [<ffffffff812db298>] device_attach+0x98/0xb0
+>  [<ffffffff81218474>] pci_bus_add_device+0x24/0x50
+>  [<ffffffff81232e80>] virtfn_add+0x240/0x3e0
+>  [<ffffffff8146ce3d>] ? _raw_spin_unlock_irqrestore+0x3d/0x80
+>  [<ffffffff812333be>] pci_enable_sriov+0x23e/0x500
+>  [<ffffffffa011fa1a>] __mlx4_init_one+0x5da/0xce0 [mlx4_core]
+>  [<ffffffffa012016d>] mlx4_init_one+0x2d/0x60 [mlx4_core]
+>  [<ffffffff8121fd79>] local_pci_probe+0x49/0x80
+>  [<ffffffff81063833>] work_for_cpu_fn+0x13/0x20
+>  [<ffffffff810643b8>] process_one_work+0x1c8/0x4c0
+>  [<ffffffff81064352>] ? process_one_work+0x162/0x4c0
+>  [<ffffffff81064cfb>] worker_thread+0x30b/0x430
+>  [<ffffffff810649f0>] ? manage_workers+0x340/0x340
+>  [<ffffffff8106cea6>] kthread+0xd6/0xe0
+>  [<ffffffff8106cdd0>] ? __init_kthread_worker+0x70/0x70
+>  [<ffffffff8146daac>] ret_from_fork+0x7c/0xb0
+>  [<ffffffff8106cdd0>] ? __init_kthread_worker+0x70/0x70
+>
+> The issue is that a driver, in it's probe function, calls
+> pci_sriov_enable so a PF device probe causes VF probe (AKA nested
+> probe).  Each probe in pci_device_probe which is (normally) run through
+> work_on_cpu (this is to get the right numa node for memory allocated by
+> the driver).  In turn work_on_cpu does this internally:
+>
+>         schedule_work_on(cpu, &wfc.work);
+>         flush_work(&wfc.work);
+>
+> So if you are running probe on CPU1, and cause another
+> probe on the same CPU, this will try to flush
+> workqueue from inside same workqueue which causes
+> a lockep warning.
+>
+> Nested probing might be tricky to get right generally.
+>
+> But for pci_sriov_enable, the situation is actually very simple: all VFs
+> naturally have same affinity as the PF, and cpumask_any_and is actually
+> same as cpumask_first_and, so it always gives us the same CPU.
+> So let's just detect that, and run the probing for VFs locally without a
+> workqueue.
+>
+> This is hardly elegant, but looks to me like an appropriate quick fix
+> for 3.9.
+>
+> Tested-by: Or Gerlitz <ogerlitz@mellanox.com>
+> Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+> Acked-by: Tejun Heo <tj@kernel.org>
 
-We want to replace those open code with for_each_pci_resource() to make
-the code more readable.
-Also will add addon_resource handling, and need to make addon resource
-to be treated as normal PCI resources during iteration, add
-for_each_pci_resource will make that support transition more simple.
+Thanks, Michael.  I put this in my for-linus branch:
 
-To make for_each_pci_resource more efficient. We will use preset bitmap
-of different type for searching next idx.
+http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=for-linus
 
-Second part is addon_res support:
-Now there is some non normal pci resources other than standard,rom,
-sriov, bridges.
-Some could be same as standard reg, but using different position.
-Some could have own way to read/write to them.
-Kernel are using different way to hack those resources like abusing
-pci bridge resource spot on non bridge pci device.
+I'll send a pull request to Linus today.
 
-Add addon_resources list in pci_dev for those non-standard resources.
-With this patch, will treat addon-resource like standard resources with
-special ops.
+Bjorn
 
-At last replace some quirk_io with addon_res.
-
-could get from
-        git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-for-each-res-addon
-
--v4: split one patch out, and remove PCI_NO_....
-
-Notes: We still need to keep _idx as we use it all the time, and drivers still
-use them to get resource.
-
-Thanks
-
-Yinghai Lu
-
-
-Ram Pai (1):
-  PCI: pci resource iterator
-
-Yinghai Lu (28):
-  PCI: Clean up quirk_io_region
-  PCI: Add pci_dev_resource_n()
-  PCI: Update pci_resource_start etc to use pci_dev_resource_n()
-  PCI: Add pci_dev_resource_idx() helper
-  PCI: Add is_pci_*_resource_idx() helpers
-  PCI, x86: Use for_each_pci_resource() with
-    pci_allocate_bridge_resources
-  PCI, x86: Use for_each_pci_resource() with pci_allocate_dev_resources
-  PCI: Use for_each_pci_resource() with IOV releated functions
-  PCI, acpiphp: Use for_each_pci_resource() helper
-  PCI, pciehp: Use for_each_pci_resource() helper
-  PCI: Use for_each_pci_resource() in pci_enable_dev
-  PCI: Use for_each_pci_resource() in pci_reassigndev
-  PCI: Use for_each_pci_resource() with pci bar reassign funcs
-  PCI: Use for_each_pci_resource() in pci_assign_resource
-  PCI, x86: Use for_each_pci_resource() with noassign_bars
-  PCI: Use for_each_pci_resource() in pci_dev_driver()
-  PCI: Use for_each_pci_resource() in pci resource release
-  PCI: Use for_each_pci_resource() in pci bases reading
-  PCI, x86: Use for_each_pci_resource() with mrst
-  PCI, xen: Use for_each_pci_resource() with xen pci
-  PCI: Add addon_resource support for pci devices
-  PCI: Treat addon res as std resources
-  PCI: Add helpers to add addon_resource
-  PCI: Update pci_resource_bar() to support addon_resource
-  PCI: Assign/update resource to addon_res
-  PCI: Make piix4 quirk to use addon_res
-  PCI: Make quirk_io_region to use addon_res
-  PCI: Use addon_fixed_resource with ati fixed resource
-
- arch/x86/pci/common.c              |   3 +-
- arch/x86/pci/i386.c                |  58 +++------
- arch/x86/pci/mrst.c                |   7 +-
- drivers/pci/hotplug/acpiphp_glue.c |   4 +-
- drivers/pci/hotplug/pciehp_hpc.c   |   5 +-
- drivers/pci/iov.c                  |  31 +++--
- drivers/pci/pci-driver.c           |   7 +-
- drivers/pci/pci.c                  |  27 ++--
- drivers/pci/probe.c                | 176 ++++++++++++++++++++++++-
- drivers/pci/quirks.c               | 258 ++++++++++++++++++++++---------------
- drivers/pci/remove.c               |   5 +-
- drivers/pci/setup-bus.c            |  28 ++--
- drivers/pci/setup-res.c            |  38 ++++--
- drivers/pci/xen-pcifront.c         |   4 +-
- include/linux/pci.h                | 116 +++++++++++++++--
- 15 files changed, 541 insertions(+), 226 deletions(-)
-
--- 
-1.8.1.4
-
+> ---
+>
+> Changes from v1:
+>     - clarified commit log and added Ack by Tejun Heo
+>       patch is unchanged.
+>
+> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+> index 1fa1e48..6eeb5ec 100644
+> --- a/drivers/pci/pci-driver.c
+> +++ b/drivers/pci/pci-driver.c
+> @@ -286,8 +286,8 @@ static int pci_call_probe(struct pci_driver *drv, struct pci_dev *dev,
+>                 int cpu;
+>
+>                 get_online_cpus();
+>                 cpu = cpumask_any_and(cpumask_of_node(node), cpu_online_mask);
+> -               if (cpu < nr_cpu_ids)
+> +               if (cpu != raw_smp_processor_id() && cpu < nr_cpu_ids)
+>                         error = work_on_cpu(cpu, local_pci_probe, &ddi);
+>                 else
+>                         error = local_pci_probe(&ddi);
