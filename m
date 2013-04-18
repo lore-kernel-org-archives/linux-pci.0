@@ -1,45 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:46636 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754719Ab3DLWpE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 12 Apr 2013 18:45:04 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>, Ram Pai <linuxram@us.ibm.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	virtualization@lists.linux-foundation.org
-Subject: [PATCH v4 21/29] PCI, xen: Use for_each_pci_resource() with xen pci
-Date: Fri, 12 Apr 2013 15:44:35 -0700
-Message-Id: <1365806683-26717-22-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1365806683-26717-1-git-send-email-yinghai@kernel.org>
-References: <1365806683-26717-1-git-send-email-yinghai@kernel.org>
+Received: from mail-ie0-f182.google.com ([209.85.223.182]:41779 "EHLO
+	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S966504Ab3DRH6t (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 18 Apr 2013 03:58:49 -0400
+Received: by mail-ie0-f182.google.com with SMTP id bn7so848840ieb.27
+        for <linux-pci@vger.kernel.org>; Thu, 18 Apr 2013 00:58:49 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1366030138-71292-1-git-send-email-huawei.libin@huawei.com>
+References: <1366030138-71292-1-git-send-email-huawei.libin@huawei.com>
+Date: Thu, 18 Apr 2013 00:58:48 -0700
+Message-ID: <CANN689FaU+1x8txgiDEhjTKV+QEBXRhA9J6hTRHu0+jJjsEyDQ@mail.gmail.com>
+Subject: Re: [PATCH 1/6] mm: use vma_pages() to replace (vm_end - vm_start) >> PAGE_SHIFT
+From: Michel Lespinasse <walken@google.com>
+To: Libin <huawei.libin@huawei.com>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	David Airlie <airlied@linux.ie>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Hans J. Koch" <hjk@hansjkoch.de>,
+	Petr Vandrovec <petr@vandrovec.name>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Konstantin Khlebnikov <khlebnikov@openvz.org>,
+	Thomas Hellstrom <thellstrom@vmware.com>,
+	Dave Airlie <airlied@redhat.com>,
+	Nadia Yvette Chambers <nyc@holomorphy.com>,
+	Jiri Kosina <jkosina@suse.cz>,
+	Al Viro <viro@zeniv.linux.org.uk>,
+	Mel Gorman <mgorman@suse.de>, Hugh Dickins <hughd@google.com>,
+	Rik van Riel <riel@redhat.com>,
+	David Rientjes <rientjes@google.com>,
+	linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org,
+	linux-pci@vger.kernel.org, linux-mm@kvack.org,
+	guohanjun@huawei.com, wangyijing@huawei.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: virtualization@lists.linux-foundation.org
-Reviewed-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
----
- drivers/pci/xen-pcifront.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+On Mon, Apr 15, 2013 at 5:48 AM, Libin <huawei.libin@huawei.com> wrote:
+> (*->vm_end - *->vm_start) >> PAGE_SHIFT operation is implemented
+> as a inline funcion vma_pages() in linux/mm.h, so using it.
+>
+> Signed-off-by: Libin <huawei.libin@huawei.com>
 
-diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
-index 966abc6..c90835f 100644
---- a/drivers/pci/xen-pcifront.c
-+++ b/drivers/pci/xen-pcifront.c
-@@ -395,9 +395,7 @@ static int pcifront_claim_resource(struct pci_dev *dev, void *data)
- 	int i;
- 	struct resource *r;
- 
--	for (i = 0; i < PCI_NUM_RESOURCES; i++) {
--		r = &dev->resource[i];
--
-+	for_each_pci_resource(dev, r, i, PCI_ALL_RES) {
- 		if (!r->parent && r->start && r->flags) {
- 			dev_info(&pdev->xdev->dev, "claiming resource %s/%d\n",
- 				pci_name(dev), i);
+Looks good to me.
+
+Reviewed-by: Michel Lespinasse <walken@google.com>
+
 -- 
-1.8.1.4
-
+Michel "Walken" Lespinasse
+A program is never fully debugged until the last user dies.
