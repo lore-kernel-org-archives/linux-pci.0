@@ -1,212 +1,134 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 8 Apr 2013 13:42:57 -0400
-From: Neil Horman <nhorman@tuxdriver.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Don Dutile <ddutile@redhat.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Prarit Bhargava <prarit@redhat.com>,
-	Don Zickus <dzickus@redhat.com>,
-	Asit Mallick <asit.k.mallick@intel.com>,
-	David Woodhouse <dwmw2@infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Subject: Re: [PATCH v6] irq: add quirk for broken interrupt remapping on 55XX
- chipsets
-Message-ID: <20130408174257.GA13960@hmsreliant.think-freely.org>
-References: <1362158276-4901-1-git-send-email-nhorman@tuxdriver.com>
- <1365190294-9061-1-git-send-email-nhorman@tuxdriver.com>
- <CAErSpo6z8oqiaUBCieUMsS_c5xvVFUDbHqVO_eBBde3uv2=zcg@mail.gmail.com>
- <5162E266.6080002@redhat.com>
- <CAErSpo5DNe-x6Fi3i6K=9xnd47d-T-q4_bH0tiud_8Ak2eL=TQ@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from cn.fujitsu.com ([222.73.24.84]:36577 "EHLO song.cn.fujitsu.com"
+	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S1754422Ab3DRI7H (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 18 Apr 2013 04:59:07 -0400
+Message-ID: <516FB578.7090802@cn.fujitsu.com>
+Date: Thu, 18 Apr 2013 16:57:28 +0800
+From: Gu Zheng <guz.fnst@cn.fujitsu.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo5DNe-x6Fi3i6K=9xnd47d-T-q4_bH0tiud_8Ak2eL=TQ@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+To: linux-pci@vger.kernel.org
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	tangchen <tangchen@cn.fujitsu.com>,
+	"'Lin Feng'" <linfeng@cn.fujitsu.com>,
+	li guang <lig.fnst@cn.fujitsu.com>
+Subject: [PATCH 1/3] PCI: take a reference on the bus object when we capture
+ the struct pci_bus pointer
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 08, 2013 at 11:17:23AM -0600, Bjorn Helgaas wrote:
-> [+cc Joerg, Konrad]
-> 
-> On Mon, Apr 8, 2013 at 9:29 AM, Don Dutile <ddutile@redhat.com> wrote:
-> > On 04/05/2013 09:55 PM, Bjorn Helgaas wrote:
-> >>
-> >> On Fri, Apr 5, 2013 at 1:31 PM, Neil Horman<nhorman@tuxdriver.com>  wrote:
-> >>>
-> >>> A few years back intel published a spec update:
-> >>>
-> >>> http://www.intel.com/content/dam/doc/specification-update/5520-and-5500-chipset-ioh-specification-update.pdf
-> >>>
-> >>> For the 5520 and 5500 chipsets which contained an errata (specificially
-> >>> errata
-> >>> 53), which noted that these chipsets can't properly do interrupt
-> >>> remapping, and
-> >>> as a result the recommend that interrupt remapping be disabled in bios.
-> >>> While
-> >>> many vendors have a bios update to do exactly that, not all do, and of
-> >>> course
-> >>> not all users update their bios to a level that corrects the problem.  As
-> >>> a
-> >>> result, occasionally interrupts can arrive at a cpu even after affinity
-> >>> for that
-> >>> interrupt has be moved, leading to lost or spurrious interrupts (usually
-> >>> characterized by the message:
-> >>> kernel: do_IRQ: 7.71 No irq handler for vector (irq -1)
-> >>>
-> >>> There have been several incidents recently of people seeing this error,
-> >>> and
-> >>> investigation has shown that they have system for which their BIOS level
-> >>> is such
-> >>> that this feature was not properly turned off.  As such, it would be good
-> >>> to
-> >>> give them a reminder that their systems are vulnurable to this problem.
-> >>
-> >>
-> >> I'd still like to mention the bugzilla URL in the changelog
-> >> (https://bugzilla.redhat.com/show_bug.cgi?id=887006) if it can be made
-> >> public.
-> >>
-> >>> ...
-> >>
-> >>
-> >>> diff --git a/arch/x86/kernel/early-quirks.c
-> >>> b/arch/x86/kernel/early-quirks.c
-> >>> index 3755ef4..bfa3139 100644
-> >>> --- a/arch/x86/kernel/early-quirks.c
-> >>> +++ b/arch/x86/kernel/early-quirks.c
-> >>> @@ -192,6 +192,27 @@ static void __init ati_bugs_contd(int num, int slot,
-> >>> int func)
-> >>>   }
-> >>>   #endif
-> >>>
-> >>> +#ifdef CONFIG_IRQ_REMAP
-> >>> +static void __init intel_remapping_check(int num, int slot, int func)
-> >>> +{
-> >>> +       u8 revision;
-> >>> +
-> >>> +       revision = pci_read_config_byte(num, slot, func ,
-> >>> PCI_REVISION_ID);
-> >>> +
-> >>> +       /*
-> >>> +        * Revision 0x13 of this chipset supports irq remapping
-> >>> +        * but has an erratum that breaks its behavior, flag it as such
-> >>> +        */
-> >>> +       if (revision == 0x13)
-> >>> +               irq_remap_broken = 1;
-> >>> +
-> >>> +}
-> >>> +#else
-> >>> +static void __init intel_remapping_check(int num, int slot, int func)
-> >>> +{
-> >>> +}
-> >>> +#endif
-> >>> +
-> >>>   #define QFLAG_APPLY_ONCE       0x1
-> >>>   #define QFLAG_APPLIED          0x2
-> >>>   #define QFLAG_DONE             (QFLAG_APPLY_ONCE|QFLAG_APPLIED)
-> >>> @@ -221,6 +242,10 @@ static struct chipset early_qrk[] __initdata = {
-> >>>            PCI_CLASS_SERIAL_SMBUS, PCI_ANY_ID, 0, ati_bugs },
-> >>>          { PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_SBX00_SMBUS,
-> >>>            PCI_CLASS_SERIAL_SMBUS, PCI_ANY_ID, 0, ati_bugs_contd },
-> >>> +       { PCI_VENDOR_ID_INTEL, 0x3403, PCI_CLASS_BRIDGE_HOST,
-> >>> +         PCI_BASE_CLASS_BRIDGE, 0, intel_remapping_check },
-> >>> +       { PCI_VENDOR_ID_INTEL, 0x3406, PCI_CLASS_BRIDGE_HOST,
-> >>> +         PCI_BASE_CLASS_BRIDGE, 0, intel_remapping_check },
-> >>>          {}
-> >>>   };
-> >>>
-> >>> diff --git a/drivers/iommu/irq_remapping.c
-> >>> b/drivers/iommu/irq_remapping.c
-> >>> index d56f8c1..2b56e92 100644
-> >>> --- a/drivers/iommu/irq_remapping.c
-> >>> +++ b/drivers/iommu/irq_remapping.c
-> >>> @@ -19,6 +19,7 @@
-> >>>   int irq_remapping_enabled;
-> >>>
-> >>>   int disable_irq_remap;
-> >>> +int irq_remap_broken;
-> >>>   int disable_sourceid_checking;
-> >>>   int no_x2apic_optout;
-> >>>
-> >>> @@ -216,6 +217,17 @@ int irq_remapping_supported(void)
-> >>>          if (disable_irq_remap)
-> >>>                  return 0;
-> >>>
-> >>> +       if (irq_remap_broken) {
-> >>> +               WARN_TAINT(1, TAIN_FIRMWARE_WORKAROUND,
-> >>
-> >>
-> >> This looks like a typo (s/TAIN/TAINT/).
-> >>
-> >>> +                          "This system BIOS has enabled interrupt
-> >>> remapping\n"
-> >>> +                          "on a chipset that contains an erratum making
-> >>> that\n"
-> >>> +                          "feature unstable.  Please reboot with
-> >>> nointremap\n"
-> >>> +                          "added to the kernel command line and
-> >>> contact\n"
-> >>> +                          "your BIOS vendor for an update");
-> >>
-> >>
-> >> I suspect your updated message won't mention "nointremap", but if it
-> >> does, Documentation/kernel-parameters.txt says that option is
-> >> deprecated and "intremap=off" should be used instead.
-> >>
-> >>> +               disable_irq_remap = 1;
-> >>
-> >>AMD
-> >> Tell me if I have this correct:
-> >>
-> >> Before this patch, we had interrupt remapping enabled and
-> >> virtualization enabled.  This is safe, but devices might need resets
-> >> to deal with lost or spurious interrupts.
-> >>
-> > Bigger then that -- system reboots are often necessary, and for
-> > virtualization,
-> > that means not just the lost of the device, but all guests running on that
-> > host.
-> >
-> >
-> >> After this patch, these same machines will by default have interrupt
-> >> remapping disabled and virtualization enabled.  The lost or spurious
-> >> interrupt problem should be gone, but we now have the IRQ injection
-> >> security bug.
-> >>
-> > IRQ injection security bug *if* device-assignment of a PCI(e) device
-> > to a KVM guest is done.  To do so, requires kvm to be loaded with
-> > a parameter to allow device-assignment w/o intr-remapping (b/c certain
-> > chipsets
-> > didn't have intr-remap support complete until this past summer).
-> > So, a sysadmin would have to consciously enable this security vulnerability,
-> > and is only a vulnerability if (a) the guest is not well known/behaved or
-> > (b) the assigned device goes-bonkers/breaks.
-> > This vulnerability has been known and in existence since the beginning of
-> > device-assignment; intr-remap is the way to isolate it.
-> > The end result on this (rev of this) chip set is the equivalent of running
-> > device-assignment on a (2009 era) Q35 chipset -- a VT-d1 (IOMMU-only,
-> > no-intr-remap) capable chipset.
-> 
-> Thanks for the details, Don.  It makes sense to me to disable
-> intr-remap on this chipset and handle it like an older machine that's
-> not capable of intr-remap at all.  The IRQ injection issue should be
-> no worse than on those older machines.
-> 
-> I don't care whether the "if (irq_remap_broken)" test is in
-> irq_remapping.c or intel_irq_remapping.c.  The quirk itself, where we
-> actually look at config space, is clearly Intel-specific, but there
-> could easily be similar AMD quirks that could also set
-> irq_remap_broken.  In that case, it would make sense to have the test
-> in the common code.
-> 
-I've moved it to intel specific code for the time being, since it currently is
-intel specific, its an easy move to put it in a common location if other vendors
-have a need for it.
+>From 067ec31ba1cb52c78c24196d5dea5ab0cb86dd9b Mon Sep 17 00:00:00 2001
+From: Gu Zheng <guz.fnst@cn.fujitsu.com>
+Date: Thu, 18 Apr 2013 16:51:48 +0900
+Subject: [PATCH 1/3] PCI: take a reference on the bus object when we capture the struct pci_bus pointer
 
-I'm currently waiting on aproval to make the bz public, so that its inclusion in
-the changelog is more than just an irritation when following the link results in
-a 403 error.  As soon as thats square, I'll post this again, CC-ing Jeorg and
-Konrad.
+Take a reference on the bus object when we alloc a pci device on a target pci bus, in order to keep
+the pci bus valid during the lifetime of devices downstream from it. And introduce pci_bus_get()/pci_bus_put()
+to hide pci_bus' reference management.
 
-Thanks
-Neil
+Signed-off-by: Gu Zheng <guz.fnst@cn.fujitsu.com>
+Reviewed-by: Tang Chen <tangchen@cn.fujitsu.com>
+Reviewed-by: Li Guang <lig.fnst@cn.fujitsu.com>
+---
+ arch/powerpc/kernel/pci_of_scan.c |    2 +-
+ drivers/pci/bus.c                 |   14 ++++++++++++++
+ drivers/pci/iov.c                 |    4 +++-
+ drivers/pci/probe.c               |    2 +-
+ include/linux/pci.h               |    3 +++
+ 5 files changed, 22 insertions(+), 3 deletions(-)
+
+diff --git a/arch/powerpc/kernel/pci_of_scan.c b/arch/powerpc/kernel/pci_of_scan.c
+index 2a67e9b..9e0f6fd 100644
+--- a/arch/powerpc/kernel/pci_of_scan.c
++++ b/arch/powerpc/kernel/pci_of_scan.c
+@@ -137,7 +137,7 @@ struct pci_dev *of_create_pci_dev(struct device_node *node,
+ 
+ 	pr_debug("    create device, devfn: %x, type: %s\n", devfn, type);
+ 
+-	dev->bus = bus;
++	dev->bus = pci_bus_get(bus);
+ 	dev->dev.of_node = of_node_get(node);
+ 	dev->dev.parent = bus->bridge;
+ 	dev->dev.bus = &pci_bus_type;
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index 8647dc6..8e812bb 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -17,6 +17,20 @@
+ #include <linux/slab.h>
+ 
+ #include "pci.h"
++struct pci_bus *pci_bus_get(struct pci_bus *bus)
++{
++	if (bus)
++		get_device(&bus->dev);
++	return bus;
++}
++EXPORT_SYMBOL(pci_bus_get);
++
++void pci_bus_put(struct pci_bus *bus)
++{
++	if (bus)
++		put_device(&bus->dev);
++}
++EXPORT_SYMBOL(pci_bus_put);
+ 
+ void pci_add_resource_offset(struct list_head *resources, struct resource *res,
+ 			     resource_size_t offset)
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index ee599f2..18798a7 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -73,6 +73,7 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
+ 	u64 size;
+ 	char buf[VIRTFN_ID_LEN];
+ 	struct pci_dev *virtfn;
++	struct pci_bus *bus;
+ 	struct resource *res;
+ 	struct pci_sriov *iov = dev->sriov;
+ 
+@@ -81,7 +82,8 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
+ 		return -ENOMEM;
+ 
+ 	mutex_lock(&iov->dev->sriov->lock);
+-	virtfn->bus = virtfn_add_bus(dev->bus, virtfn_bus(dev, id));
++	bus = virtfn_add_bus(dev->bus, virtfn_bus(dev, id));
++	virtfn->bus = pci_bus_get(bus);
+ 	if (!virtfn->bus) {
+ 		kfree(virtfn);
+ 		mutex_unlock(&iov->dev->sriov->lock);
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index b494066..44a6f7d 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1265,7 +1265,7 @@ static struct pci_dev *pci_scan_device(struct pci_bus *bus, int devfn)
+ 	if (!dev)
+ 		return NULL;
+ 
+-	dev->bus = bus;
++	dev->bus = pci_bus_get(bus);
+ 	dev->devfn = devfn;
+ 	dev->vendor = l & 0xffff;
+ 	dev->device = (l >> 16) & 0xffff;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 710067f..c4d064d 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1000,6 +1000,9 @@ int pci_request_selected_regions_exclusive(struct pci_dev *, int, const char *);
+ void pci_release_selected_regions(struct pci_dev *, int);
+ 
+ /* drivers/pci/bus.c */
++extern struct pci_bus *pci_bus_get(struct pci_bus *);
++extern void pci_bus_put(struct pci_bus *);
++
+ void pci_add_resource(struct list_head *resources, struct resource *res);
+ void pci_add_resource_offset(struct list_head *resources, struct resource *res,
+ 			     resource_size_t offset);
+-- 
+1.7.1
+
