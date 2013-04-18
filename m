@@ -1,93 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:39563 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934544Ab3DPAqN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 15 Apr 2013 20:46:13 -0400
-Message-ID: <516C9F00.9020009@huawei.com>
-Date: Tue, 16 Apr 2013 08:44:48 +0800
-From: Xie XiuQi <xiexiuqi@huawei.com>
-MIME-Version: 1.0
-To: Libin <huawei.libin@huawei.com>
-CC: Arnd Bergmann <arnd@arndb.de>,
+Received: from mail-pa0-f44.google.com ([209.85.220.44]:53203 "EHLO
+	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932077Ab3DRSTe (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 18 Apr 2013 14:19:34 -0400
+Date: Thu, 18 Apr 2013 11:19:30 -0700
+From: Tejun Heo <tj@kernel.org>
+To: "Michael S. Tsirkin" <mst@redhat.com>
+Cc: Or Gerlitz <ogerlitz@mellanox.com>,
+	Ming Lei <ming.lei@canonical.com>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	David Airlie <airlied@linux.ie>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Hans J. Koch" <hjk@hansjkoch.de>,
-	Petr Vandrovec <petr@vandrovec.name>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Konstantin Khlebnikov <khlebnikov@openvz.org>,
-	Thomas Hellstrom <thellstrom@vmware.com>,
-	Dave Airlie <airlied@redhat.com>,
-	Nadia Yvette Chambers <nyc@holomorphy.com>,
-	Jiri Kosina <jkosina@suse.cz>,
-	Al Viro <viro@zeniv.linux.org.uk>,
-	Mel Gorman <mgorman@suse.de>, Hugh Dickins <hughd@google.com>,
-	Rik van Riel <riel@redhat.com>,
-	David Rientjes <rientjes@google.com>,
-	Michel Lespinasse <walken@google.com>,
-	<linux-kernel@vger.kernel.org>, <dri-devel@lists.freedesktop.org>,
-	<linux-pci@vger.kernel.org>, <linux-mm@kvack.org>,
-	<guohanjun@huawei.com>, <wangyijing@huawei.com>
-Subject: Re: [PATCH 4/6] char: use vma_pages() to replace (vm_end - vm_start)
- >> PAGE_SHIFT
-References: <1366030138-71292-1-git-send-email-huawei.libin@huawei.com> <1366030138-71292-4-git-send-email-huawei.libin@huawei.com>
-In-Reply-To: <1366030138-71292-4-git-send-email-huawei.libin@huawei.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+	David Miller <davem@davemloft.net>,
+	Roland Dreier <roland@kernel.org>,
+	netdev <netdev@vger.kernel.org>, Yan Burman <yanb@mellanox.com>,
+	Jack Morgenstein <jackm@dev.mellanox.co.il>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH repost for-3.9] pci: avoid work_on_cpu for nested SRIOV
+ probes
+Message-ID: <20130418181930.GF9897@mtj.dyndns.org>
+References: <20130411190408.GM17641@mtj.dyndns.org>
+ <20130411191717.GB25515@redhat.com>
+ <20130411192005.GN17641@mtj.dyndns.org>
+ <20130411203053.GC25515@redhat.com>
+ <20130411204104.GC11956@mtj.dyndns.org>
+ <516AA80F.7040505@mellanox.com>
+ <20130414134339.GA3050@htj.dyndns.org>
+ <20130418083347.GA16526@redhat.com>
+ <517007F0.4060000@mellanox.com>
+ <20130418135458.GC20862@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130418135458.GC20862@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2013/4/15 20:48, Libin wrote:
-> (*->vm_end - *->vm_start) >> PAGE_SHIFT operation is implemented
-> as a inline funcion vma_pages() in linux/mm.h, so using it.
-> 
-> Signed-off-by: Libin <huawei.libin@huawei.com>
-> ---
->  drivers/char/mspec.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/char/mspec.c b/drivers/char/mspec.c
-> index e1f60f9..ed0703f 100644
-> --- a/drivers/char/mspec.c
-> +++ b/drivers/char/mspec.c
-> @@ -168,7 +168,7 @@ mspec_close(struct vm_area_struct *vma)
->  	if (!atomic_dec_and_test(&vdata->refcnt))
->  		return;
->  
-> -	last_index = (vdata->vm_end - vdata->vm_start) >> PAGE_SHIFT;
-> +	last_index = vma_pages(vdata);
->  	for (index = 0; index < last_index; index++) {
->  		if (vdata->maddr[index] == 0)
->  			continue;
-> 
+On Thu, Apr 18, 2013 at 04:54:58PM +0300, Michael S. Tsirkin wrote:
+> Tejun, what do you say my patch is used for 3.9,
+> and we can revisit for 3.10.
+> The release is almost here.
+> If yes please send your Ack.
 
-This function mspec_mmap also need modification...
-And you can change int to unsigned long.
+Yeap, let's do that.
 
-static int
-mspec_mmap(struct file *file, struct vm_area_struct *vma,
-					enum mspec_page_type type)
-{
-	struct vma_data *vdata;
-	int pages, vdata_size, flags = 0;
+Acked-by: Tejun Heo <tj@kernel.org>
 
-	if (vma->vm_pgoff != 0)
-		return -EINVAL;
+Thanks.
 
-	if ((vma->vm_flags & VM_SHARED) == 0)
-		return -EINVAL;
-
-	if ((vma->vm_flags & VM_WRITE) == 0)
-		return -EPERM;
-
-	pages = (vma->vm_end - vma->vm_start) >> PAGE_SHIFT;
-	vdata_size = sizeof(struct vma_data) + pages * sizeof(long);
-	if (vdata_size <= PAGE_SIZE)
-		vdata = kzalloc(vdata_size, GFP_KERNEL);
-	else {
-		vdata = vzalloc(vdata_size);
-		flags = VMD_VMALLOCED;
-	}
-	if (!vdata)
-		return -ENOMEM;
-
-
+-- 
+tejun
