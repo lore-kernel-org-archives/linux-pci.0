@@ -1,67 +1,52 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:6160 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751008Ab3DRVCG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 18 Apr 2013 17:02:06 -0400
+Date: Thu, 18 Apr 2013 23:03:06 +0300
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: Or Gerlitz <or.gerlitz@gmail.com>
+Cc: Or Gerlitz <ogerlitz@mellanox.com>, Tejun Heo <tj@kernel.org>,
+	Ming Lei <ming.lei@canonical.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	David Miller <davem@davemloft.net>,
+	Roland Dreier <roland@kernel.org>,
+	netdev <netdev@vger.kernel.org>, Yan Burman <yanb@mellanox.com>,
+	Jack Morgenstein <jackm@dev.mellanox.co.il>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH repost for-3.9] pci: avoid work_on_cpu for nested SRIOV
+ probes
+Message-ID: <20130418200306.GA22435@redhat.com>
+References: <20130411191717.GB25515@redhat.com>
+ <20130411192005.GN17641@mtj.dyndns.org>
+ <20130411203053.GC25515@redhat.com>
+ <20130411204104.GC11956@mtj.dyndns.org>
+ <516AA80F.7040505@mellanox.com>
+ <20130414134339.GA3050@htj.dyndns.org>
+ <20130418083347.GA16526@redhat.com>
+ <517007F0.4060000@mellanox.com>
+ <20130418135458.GC20862@redhat.com>
+ <CAJZOPZLuT7jcUJi_EEQ1_fgVCuFHk1Xzbb6kQtPSS4LfL=ArVg@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo5iyziiGDKiy-416UQ2xr+2hvcHz6do+ueMmnPM5oy6Cw@mail.gmail.com>
-References: <2282655.IicBMMa6jN@vostro.rjw.lan>
-	<1378320.ernsY1JWPv@vostro.rjw.lan>
-	<CAErSpo7kGBNEkLOftJ1J7ivaxZL-yVWyAwmoiQ1=NADpmJ67XA@mail.gmail.com>
-	<3943547.m5K1tfygWn@vostro.rjw.lan>
-	<CAErSpo5iyziiGDKiy-416UQ2xr+2hvcHz6do+ueMmnPM5oy6Cw@mail.gmail.com>
-Date: Tue, 2 Apr 2013 13:34:35 +0800
-Message-ID: <CAC=cRTNfUkgYzC-+tOw8hyP8k3qRd6jRU67NA7PwXpHNL+2c2A@mail.gmail.com>
-Subject: Re: [Update][PATCH] PCI / PM: Disable runtime PM of PCIe ports
-From: huang ying <huang.ying.caritas@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Len Brown <lenb@kernel.org>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Zheng Yan <zheng.z.yan@intel.com>,
-	Huang Ying <ying.huang@intel.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAJZOPZLuT7jcUJi_EEQ1_fgVCuFHk1Xzbb6kQtPSS4LfL=ArVg@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi, Bjorn,
+On Thu, Apr 18, 2013 at 09:41:31PM +0300, Or Gerlitz wrote:
+> On Thu, Apr 18, 2013 at 4:54 PM, Michael S. Tsirkin <mst@redhat.com> wrote:
+> [...]
+> > Tejun, what do you say my patch is used for 3.9, and we can revisit for 3.10.
+> > The release is almost here. If yes please send your Ack.
+> 
+> Michael,
+> 
+> I assume you mean pull to 3.9 both Tejun's and your patch, correct? I
+> wasn't sure what does this really buys us... we got read from the
+> false-positive lockdep warning which takes place during nested probe
+> and got another lockdep warning during the probe of Interrupt
+> controller
+> 
+> Or.
 
-On Tue, Apr 2, 2013 at 4:53 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Mon, Apr 1, 2013 at 2:51 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
->> On Monday, April 01, 2013 11:34:46 AM Bjorn Helgaas wrote:
->>> [+cc Zheng, who added this with 71a83bd727]
->>>
->>> On Sat, Mar 30, 2013 at 4:38 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
->>> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->>> >
->>> > The runtime PM of PCIe ports turns out to be quite fragile, as in
->>> > some cases things work while in some other cases they don't and we
->>> > don't seem to have a good way to determine whether or not they are
->>> > going to work in advance.
->>>
->>> Do you have any references to problems encountered when enabling
->>> runtime PM for PCIe ports?  That information will be useful to anybody
->>> who wants to take another crack at getting this working.
->>
->> Well, bug 53811 is one example and problems recently reported by
->> Martin are another.  Do you want me to dig deeper?
->
-> OK, I got this one:
->
->   https://bugzilla.kernel.org/show_bug.cgi?id=53811
->
-> Martin has reported a lot of problems lately, and I don't know which
-> are related to runtime PM for PCIe ports.  I was hoping for a couple
-> URLs to put in the changelog so that when somebody gets the itch to
-> make this work, they have some useful info to start from.  If you
-> point me at a specific message, I'll dig up an archive URL for it.
->
-> Otherwise, I'm afraid we'll just oscillate between "enable PM, find
-> bug, disable PM, enable PM, find same bug, disable PM, etc..."
-
-Sorry for late!  I am trying to fix a way to fix 53811 and Martin's
-bug without disable PM for port totally.
-
-Best Regards,
-Huang Ying
+No I mean my original patch.
