@@ -1,201 +1,423 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cn.fujitsu.com ([222.73.24.84]:62525 "EHLO song.cn.fujitsu.com"
-	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1756154Ab3DXJhs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 24 Apr 2013 05:37:48 -0400
-Message-ID: <5177A782.5050603@cn.fujitsu.com>
-Date: Wed, 24 Apr 2013 17:36:02 +0800
-From: Gu Zheng <guz.fnst@cn.fujitsu.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	tangchen <tangchen@cn.fujitsu.com>,
-	Lin Feng <linfeng@cn.fujitsu.com>
-Subject: Re: [PATCH 0/3] PCI: fix the object lifetime issue of parallel device
- removal on different pci hierarchy
-References: <516FB479.1060601@cn.fujitsu.com> <CAE9FiQWtC4S52BUeDQvAJS2L=q6i_R6eZeEoAPPohg60NcY0UA@mail.gmail.com>
-In-Reply-To: <CAE9FiQWtC4S52BUeDQvAJS2L=q6i_R6eZeEoAPPohg60NcY0UA@mail.gmail.com>
+In-Reply-To: <20130416182734.27773.47452.stgit@warthog.procyon.org.uk>
+References: <20130416182550.27773.89310.stgit@warthog.procyon.org.uk> <20130416182734.27773.47452.stgit@warthog.procyon.org.uk>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 18 Apr 2013 10:41:40 -0600
+Message-ID: <CAErSpo6UrUWZt1zNq=kmkTk4F6g4uAOs8VPKepdfeuKKxb7pXQ@mail.gmail.com>
+Subject: Re: [PATCH 26/28] proc: Supply a function to remove a proc entry by
+ PDE [RFC]
+To: David Howells <dhowells@redhat.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	alsa-devel@alsa-project.org,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"devicetree-discuss@lists.ozlabs.org"
+	<devicetree-discuss@lists.ozlabs.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	netfilter-devel@vger.kernel.org, Al Viro <viro@zeniv.linux.org.uk>,
+	netdev <netdev@vger.kernel.org>, linux-fsdevel@vger.kernel.org,
+	openipmi-developer@lists.sourceforge.net
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/19/2013 03:43 AM, Yinghai Lu wrote:
+On Tue, Apr 16, 2013 at 12:27 PM, David Howells <dhowells@redhat.com> wrote:
+> Supply a function (proc_remove()) to remove a proc entry (and any subtree
+> rooted there) by proc_dir_entry pointer rather than by name and (optionally)
+> root dir entry pointer.  This allows us to eliminate all remaining pde->name
+> accesses outside of procfs.
+>
+> Signed-off-by: David Howells <dhowells@redhat.com>
+> cc: linux-acpi@vger.kernel.org
+> cc: openipmi-developer@lists.sourceforge.net
+> cc: devicetree-discuss@lists.ozlabs.org
+> cc: linux-pci@vger.kernel.org
+> cc: netdev@vger.kernel.org
+> cc: netfilter-devel@vger.kernel.org
+> cc: alsa-devel@alsa-project.org
+> ---
+>
+>  drivers/acpi/sbs.c                  |   21 ++++-----------------
+>  drivers/char/ipmi/ipmi_msghandler.c |    2 +-
+>  drivers/misc/sgi-gru/gruprocfs.c    |    2 +-
+>  drivers/of/base.c                   |   11 +----------
+>  drivers/pci/proc.c                  |   12 +++---------
 
-> On Thu, Apr 18, 2013 at 1:53 AM, Gu Zheng <guz.fnst@cn.fujitsu.com> wrote:
->> From 0c45a7fca2276123d0b926a22ea69158dad8ab9c Mon Sep 17 00:00:00 2001
->> From: Gu Zheng <guz.fnst@cn.fujitsu.com>
->> Date: Thu, 18 Apr 2013 17:43:53 +0900
->> Subject: [PATCH 0/3] PCI: fix the object lifetime issue of parallel device removal on different pci hierarchy
->>
->> This patch is used to fix the panic issue of parallel device removal on different pci hierarchy,
->> refer to https://bugzilla.kernel.org/show_bug.cgi?id=54411.
->>
->> [  418.775140]  ioatdma i7core_edac edac_core sg e1000e igb dca ptp pps_core
->> sd_mod crc_t10dif megaraid_sas mptsas mptscsih mptbase scsi_transport_sas
->> scsi_mod
->> [  418.946462] CPU 4
->> [  418.968377] Pid: 512, comm: kworker/u:2 Tainted: G        W    3.8.0 #2
->> FUJITSU-SV PRIMEQUEST 1800E/SB
->> [  419.081763] RIP: 0010:[<ffffffff8137972e>]  [<ffffffff8137972e>]
->> pci_bus_read_config_word+0x5e/0x90
->> [  419.189965] RSP: 0018:ffff8807b0a37c08  EFLAGS: 00010046
->> [  419.253409] RAX: 6b6b6b6b6b6b6b6b RBX: ffff8807bb4a1290 RCX:
->> 0000000000000002
->> [  419.338658] RDX: 00000000000000c4 RSI: 0000000000000008 RDI:
->> ffff8807bb4a1290
->> [  419.423925] RBP: ffff8807b0a37c48 R08: ffff8807b0a37c24 R09:
->> 6db5c22da55960d0
->> [  419.509175] R10: 0000000000000000 R11: 000000000003ecd0 R12:
->> ffff8807b0a37c66
->> [  419.594425] R13: 0000000000000282 R14: ffffffff82126d40 R15:
->> 0000000000000000
->> [  419.679675] FS:  0000000000000000(0000) GS:ffff8807c2200000(0000)
->> knlGS:0000000000000000
->> [  419.776343] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
->> [  419.844981] CR2: 00007ffa898a54f8 CR3: 0000000001c0c000 CR4:
->> 00000000000007e0
->> [  419.930236] DR0: 0000000000000000 DR1: 0000000000000000 DR2:
->> 0000000000000000
->> [  420.015484] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7:
->> 0000000000000400
->> [  420.100736] Process kworker/u:2 (pid: 512, threadinfo ffff8807b0a36000, task
->> ffff8807b30bcd00)
->> [  420.203632] Stack:
->> [  420.227623]  ffff8807000000c4 ffffffff00000008 ffffffff813851ef
->> 0000000000992000
->> [  420.316421]  ffff8807b0a37c98 ffff8807bb49b3d8 0000000000000000
->> 0000000000000000
->> [  420.405233]  ffff8807b0a37c88 ffffffff8138044b ffff8807b0a37c88
->> 0000000000000246
->> [  420.494137] Call Trace:
->> [  420.523326]  [<ffffffff813851ef>] ? remove_callback+0x1f/0x40
->> [  420.591984]  [<ffffffff8138044b>] pci_pme_active+0x4b/0x1c0
->> [  420.658545]  [<ffffffff8137d8e7>] pci_stop_bus_device+0x57/0xb0
->> [  420.729259]  [<ffffffff8137dab6>] pci_stop_and_remove_bus_device+0x16/0x30
->> [  420.811392]  [<ffffffff813851fb>] remove_callback+0x2b/0x40
->> [  420.877955]  [<ffffffff81257a56>] sysfs_schedule_callback_work+0x26/0x70
->> [  420.958017]  [<ffffffff810919ae>] process_one_work+0x20e/0x5c0
->> [  421.027691]  [<ffffffff8109193f>] ? process_one_work+0x19f/0x5c0
->> [  421.099441]  [<ffffffff81257a30>] ? sysfs_schedule_callback+0x210/0x210
->> [  421.178461]  [<ffffffff81093a4e>] worker_thread+0x12e/0x370
->> [  421.245020]  [<ffffffff81093920>] ? manage_workers+0x180/0x180
->> [  421.314697]  [<ffffffff81099b8e>] kthread+0xee/0x100
->> [  421.373992]  [<ffffffff810e0f09>] ? __lock_release+0x129/0x190
->> [  421.443671]  [<ffffffff81099aa0>] ? __init_kthread_worker+0x70/0x70
->> [  421.518544]  [<ffffffff816b2dac>] ret_from_fork+0x7c/0xb0
->> [  421.583031]  [<ffffffff81099aa0>] ? __init_kthread_worker+0x70/0x70
->> [  421.657894] Code: 89 75 c8 c7 45 dc 00 00 00 00 e8 4e ef 32 00 49 89 c5 48
->> 8b 83 b8 00 00 00 4c 8d 45 dc b9 02 00 00 00 8b 55 c0 8b 75 c8 48 89 df <ff> 10
->> 8b 55 dc 4c 89 ee 48 c7 c7 c0 67 cb 81 89 45 c8 66 41 89
->> [  421.890306] RIP  [<ffffffff8137972e>] pci_bus_read_config_word+0x5e/0x90
->> [  421.970475]  RSP <ffff8807b0a37c08>
->> [  422.012121] ---[ end trace 403f76cf31f1bcb1 ]---
->>
->> It is easy to reproduce with the following script:
->> echo -n 1 > /sys/bus/pci/devices/0000\:10\:00.0/remove ; echo -n 1 >
->> /sys/bus/pci/devices/0000\:1a\:01.0/remove
->>
->> The 1a:01.0 device is downstream from the 10:00.0 bridge.
->>
->> The sysfs interface remove_store() uses device_schedule_callback() to schedule
->> the remove for later. What's happening is that we schedule
->> remove_callback() for both devices before 10:00.0 has been removed,
->> like this:
->>
->>     # echo -n 1 > /sys/bus/pci/devices/0000\:10\:00.0/remove
->>     remove_store  # for 10:00.0
->>       device_schedule_callback(10:00.0, remove_callback)
->>         sysfs_schedule_callback
->>           kobject_get
->>           queue_work
->>     # echo -n 1 >  /sys/bus/pci/devices/0000\:1a\:01.0/remove
->>     remove_store  # for 1a:01.0
->>       device_schedule_callback(1a:01.0, remove_callback)
->>         sysfs_schedule_callback
->>           kobject_get
->>           queue_work
->>
->> Later, we run the callbacks, starting with 10:00.0.  This calls
->> remove_callback() to perform the remove:
->>
->>     remove_callback(10:00.0)
->>       mutex_lock(&pci_remove_rescan_mutex)
->>       pci_stop_and_remove_bus_device(pdev)
->>       mutex_unlock(&pci_remove_rescan_mutex)
->>
->> This will stop and remove the subtree below 10:00.0, but it does not
->> actually free the pci_dev for 1a:01.0 because we increased its ref
->> count in sysfs_schedule_callback.  So after completing
->> remove_callback(10:00.0), we run the second callback for 1a:01.0.
->>
->> But the PCI core did this removal wrong. It deallocated the struct pci_bus
->> for bus 0000:1a too soon.
->>
->> So we take a reference on the bus object when capturing the struct pci_bus pointer,
->> in order to keep it valid before its downstream devices' removal routines complete.
->>
->> Gu Zheng (3):
->>   PCI: take a reference on the bus object when we capture the struct
->>     pci_bus pointer
->>   PCI: rename alloc_pci_dev() to pci_alloc_dev()
->>   PCI: Move the acquiring the reference of pci bus inside
->>     pci_alloc_bus()
->>
->>  arch/powerpc/kernel/pci_of_scan.c |    3 +--
->>  drivers/char/agp/alpha-agp.c      |    2 +-
->>  drivers/char/agp/parisc-agp.c     |    2 +-
->>  drivers/pci/bus.c                 |   14 ++++++++++++++
->>  drivers/pci/iov.c                 |    6 ++++--
->>  drivers/pci/probe.c               |   10 ++++++----
->>  drivers/scsi/megaraid.c           |    2 +-
->>  include/linux/pci.h               |    5 ++++-
->>  8 files changed, 32 insertions(+), 12 deletions(-)
-> 
-> No. that is wrong.
-> 
-> I can not find where that reference count get reduced!
-> in the my test patches that I sent, it does have have that in remove path.
-> 
-> What is reason for you to remove that line?
-> 
-> After put the line back, your test still can pass?
+For the drivers/pci part:
 
-Hi Yinghai,
-	The remove test script still can pass if we reduce the reference of pci_bus when destroying
-the pci_dev, so does your patch, but a list_del corruption warning occurs in the bottom half routine:
-------------[ cut here ]------------
-WARNING: at lib/list_debug.c:53 __list_del_entry+0x63/0xd0()
-Hardware name: PRIMEQUEST 1800E
-list_del corruption, ffff8807d1b6c000->next is LIST_POISON1 (dead000000100100)
-Modules linked in: shpchp ebtable_nat ebtables xt_CHECKSUM iptable_mangle bridge stp llc autofs4 sunrpc cpufreq_ondemand ipt_REJECT nf_conntrack_ipv4 nf_defrag_ipv4 iptable_filter ip_tables ip6t_REJECT nf_conntrack_ipv6 nf_defrag_ipv6 xt_state nf_conntrack ip6table_filter ip6_tables ipv6 vfat fat dm_mirror dm_region_hash dm_log dm_mod vhost_net macvtap macvlan tun uinput iTCO_wdt iTCO_vendor_support acpi_cpufreq freq_table mperf coretemp kvm_intel kvm crc32c_intel microcode pcspkr sg i2c_i801 lpc_ich mfd_core i7core_edac edac_core ioatdma e1000e igb dca i2c_algo_bit i2c_core ptp pps_core ext4(F) mbcache(F) jbd2(F) sd_mod(F) crc_t10dif(F) megaraid_sas(F) mptsas(F) mptscsih(F) mptbase(F) scsi_transport_sas(F)
-Pid: 6, comm: kworker/u:0 Tainted: GF       W    3.9.0-rc7-pci-remove-test+ #59
-Call Trace:
- [<ffffffff81056d4f>] warn_slowpath_common+0x7f/0xc0
- [<ffffffff81056e46>] warn_slowpath_fmt+0x46/0x50
- [<ffffffff81280b13>] __list_del_entry+0x63/0xd0
- [<ffffffff81280b91>] list_del+0x11/0x40
- [<ffffffff81298331>] pci_destroy_dev+0x31/0xc0
- [<ffffffff812985bb>] pci_remove_bus_device+0x5b/0x70
- [<ffffffff812985ee>] pci_stop_and_remove_bus_device+0x1e/0x30
- [<ffffffff8129fc89>] remove_callback+0x29/0x40
- [<ffffffff811f3b84>] sysfs_schedule_callback_work+0x24/0x70
- [<ffffffff81073d85>] process_one_work+0x185/0x3f0
- [<ffffffff810763e9>] worker_thread+0x119/0x380
- [<ffffffff810762d0>] ? manage_workers+0x180/0x180
- [<ffffffff8107b6ae>] kthread+0xce/0xe0
- [<ffffffff8107b5e0>] ? kthread_freezable_should_stop+0x70/0x70
- [<ffffffff815724ac>] ret_from_fork+0x7c/0xb0
- [<ffffffff8107b5e0>] ? kthread_freezable_should_stop+0x70/0x70
----[ end trace 9c05e382f933a515 ]---
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-Thanks,
-Gu
+I assume you'll merge this via something other than my tree.
 
-> 
-> Yinghai
-
-
+>  fs/proc/generic.c                   |    7 +++++++
+>  fs/proc/vmcore.c                    |    2 +-
+>  include/linux/proc_fs.h             |    2 ++
+>  kernel/irq/proc.c                   |    6 +-----
+>  net/8021q/vlanproc.c                |    9 ++-------
+>  net/core/pktgen.c                   |    6 ++----
+>  net/ipv4/netfilter/ipt_CLUSTERIP.c  |    4 ++--
+>  net/ipv6/proc.c                     |    3 +--
+>  net/netfilter/xt_hashlimit.c        |    4 ++--
+>  sound/core/info.c                   |   19 +++++--------------
+>  15 files changed, 35 insertions(+), 75 deletions(-)
+>
+> diff --git a/drivers/acpi/sbs.c b/drivers/acpi/sbs.c
+> index a296e08..b6241ee 100644
+> --- a/drivers/acpi/sbs.c
+> +++ b/drivers/acpi/sbs.c
+> @@ -521,19 +521,6 @@ acpi_sbs_add_fs(struct proc_dir_entry **dir,
+>         return 0;
+>  }
+>
+> -static void
+> -acpi_sbs_remove_fs(struct proc_dir_entry **dir,
+> -                          struct proc_dir_entry *parent_dir)
+> -{
+> -       if (*dir) {
+> -               remove_proc_entry(ACPI_SBS_FILE_INFO, *dir);
+> -               remove_proc_entry(ACPI_SBS_FILE_STATE, *dir);
+> -               remove_proc_entry(ACPI_SBS_FILE_ALARM, *dir);
+> -               remove_proc_entry((*dir)->name, parent_dir);
+> -               *dir = NULL;
+> -       }
+> -}
+> -
+>  /* Smart Battery Interface */
+>  static struct proc_dir_entry *acpi_battery_dir = NULL;
+>
+> @@ -836,8 +823,8 @@ static void acpi_battery_remove(struct acpi_sbs *sbs, int id)
+>                 power_supply_unregister(&battery->bat);
+>         }
+>  #ifdef CONFIG_ACPI_PROCFS_POWER
+> -       if (battery->proc_entry)
+> -               acpi_sbs_remove_fs(&battery->proc_entry, acpi_battery_dir);
+> +       proc_remove(battery->proc_entry);
+> +       battery->proc_entry = NULL;
+>  #endif
+>  }
+>
+> @@ -873,8 +860,8 @@ static void acpi_charger_remove(struct acpi_sbs *sbs)
+>         if (sbs->charger.dev)
+>                 power_supply_unregister(&sbs->charger);
+>  #ifdef CONFIG_ACPI_PROCFS_POWER
+> -       if (sbs->charger_entry)
+> -               acpi_sbs_remove_fs(&sbs->charger_entry, acpi_ac_dir);
+> +       proc_remove(sbs->charger_entry);
+> +       sbs->charger_entry = NULL;
+>  #endif
+>  }
+>
+> diff --git a/drivers/char/ipmi/ipmi_msghandler.c b/drivers/char/ipmi/ipmi_msghandler.c
+> index 1420bbb..4d439d2 100644
+> --- a/drivers/char/ipmi/ipmi_msghandler.c
+> +++ b/drivers/char/ipmi/ipmi_msghandler.c
+> @@ -4541,7 +4541,7 @@ static void __exit cleanup_ipmi(void)
+>         del_timer_sync(&ipmi_timer);
+>
+>  #ifdef CONFIG_PROC_FS
+> -       remove_proc_entry(proc_ipmi_root->name, NULL);
+> +       proc_remove(proc_ipmi_root);
+>  #endif /* CONFIG_PROC_FS */
+>
+>         driver_unregister(&ipmidriver.driver);
+> diff --git a/drivers/misc/sgi-gru/gruprocfs.c b/drivers/misc/sgi-gru/gruprocfs.c
+> index 950dbe9..797d796 100644
+> --- a/drivers/misc/sgi-gru/gruprocfs.c
+> +++ b/drivers/misc/sgi-gru/gruprocfs.c
+> @@ -355,7 +355,7 @@ static void delete_proc_files(void)
+>                 for (p = proc_files; p->name; p++)
+>                         if (p->entry)
+>                                 remove_proc_entry(p->name, proc_gru);
+> -               remove_proc_entry("gru", proc_gru->parent);
+> +               proc_remove(proc_gru);
+>         }
+>  }
+>
+> diff --git a/drivers/of/base.c b/drivers/of/base.c
+> index 321d3ef..9c70436 100644
+> --- a/drivers/of/base.c
+> +++ b/drivers/of/base.c
+> @@ -1452,16 +1452,7 @@ int of_attach_node(struct device_node *np)
+>  #ifdef CONFIG_PROC_DEVICETREE
+>  static void of_remove_proc_dt_entry(struct device_node *dn)
+>  {
+> -       struct device_node *parent = dn->parent;
+> -       struct property *prop = dn->properties;
+> -
+> -       while (prop) {
+> -               remove_proc_entry(prop->name, dn->pde);
+> -               prop = prop->next;
+> -       }
+> -
+> -       if (dn->pde)
+> -               remove_proc_entry(dn->pde->name, parent->pde);
+> +       proc_remove(dn->pde);
+>  }
+>  #else
+>  static void of_remove_proc_dt_entry(struct device_node *dn)
+> diff --git a/drivers/pci/proc.c b/drivers/pci/proc.c
+> index 7cde7c1..0812608 100644
+> --- a/drivers/pci/proc.c
+> +++ b/drivers/pci/proc.c
+> @@ -427,20 +427,14 @@ int pci_proc_attach_device(struct pci_dev *dev)
+>
+>  int pci_proc_detach_device(struct pci_dev *dev)
+>  {
+> -       struct proc_dir_entry *e;
+> -
+> -       if ((e = dev->procent)) {
+> -               remove_proc_entry(e->name, dev->bus->procdir);
+> -               dev->procent = NULL;
+> -       }
+> +       proc_remove(dev->procent);
+> +       dev->procent = NULL;
+>         return 0;
+>  }
+>
+>  int pci_proc_detach_bus(struct pci_bus* bus)
+>  {
+> -       struct proc_dir_entry *de = bus->procdir;
+> -       if (de)
+> -               remove_proc_entry(de->name, proc_bus_pci_dir);
+> +       proc_remove(bus->procdir);
+>         return 0;
+>  }
+>
+> diff --git a/fs/proc/generic.c b/fs/proc/generic.c
+> index 2c6d6be..4b48033 100644
+> --- a/fs/proc/generic.c
+> +++ b/fs/proc/generic.c
+> @@ -630,3 +630,10 @@ const char *get_proc_name(const struct proc_dir_entry *de)
+>         return de->name;
+>  }
+>  EXPORT_SYMBOL_GPL(get_proc_name);
+> +
+> +void proc_remove(struct proc_dir_entry *de)
+> +{
+> +       if (de)
+> +               remove_proc_subtree(de->name, de->parent);
+> +}
+> +EXPORT_SYMBOL(proc_remove);
+> diff --git a/fs/proc/vmcore.c b/fs/proc/vmcore.c
+> index 38edddc..17f7e08 100644
+> --- a/fs/proc/vmcore.c
+> +++ b/fs/proc/vmcore.c
+> @@ -699,7 +699,7 @@ void vmcore_cleanup(void)
+>         struct list_head *pos, *next;
+>
+>         if (proc_vmcore) {
+> -               remove_proc_entry(proc_vmcore->name, proc_vmcore->parent);
+> +               proc_remove(proc_vmcore);
+>                 proc_vmcore = NULL;
+>         }
+>
+> diff --git a/include/linux/proc_fs.h b/include/linux/proc_fs.h
+> index 7abc72a..b8949b1 100644
+> --- a/include/linux/proc_fs.h
+> +++ b/include/linux/proc_fs.h
+> @@ -67,6 +67,7 @@ struct proc_dir_entry *proc_create_data(const char *name, umode_t mode,
+>                                 struct proc_dir_entry *parent,
+>                                 const struct file_operations *proc_fops,
+>                                 void *data);
+> +extern void proc_remove(struct proc_dir_entry *);
+>  extern void remove_proc_entry(const char *name, struct proc_dir_entry *parent);
+>  extern int remove_proc_subtree(const char *name, struct proc_dir_entry *parent);
+>
+> @@ -103,6 +104,7 @@ static inline struct proc_dir_entry *proc_create_data(const char *name,
+>  {
+>         return NULL;
+>  }
+> +static inline void proc_remove(struct proc_dir_entry *de) {}
+>  #define remove_proc_entry(name, parent) do {} while (0)
+>  #define remove_proc_subtree(name, parent) do {} while (0)
+>
+> diff --git a/kernel/irq/proc.c b/kernel/irq/proc.c
+> index d59ae37..19ed5c4 100644
+> --- a/kernel/irq/proc.c
+> +++ b/kernel/irq/proc.c
+> @@ -366,11 +366,7 @@ void unregister_irq_proc(unsigned int irq, struct irq_desc *desc)
+>
+>  void unregister_handler_proc(unsigned int irq, struct irqaction *action)
+>  {
+> -       if (action->dir) {
+> -               struct irq_desc *desc = irq_to_desc(irq);
+> -
+> -               remove_proc_entry(action->dir->name, desc->dir);
+> -       }
+> +       proc_remove(action->dir);
+>  }
+>
+>  static void register_default_affinity_proc(void)
+> diff --git a/net/8021q/vlanproc.c b/net/8021q/vlanproc.c
+> index 959ddbb..1d0e8921 100644
+> --- a/net/8021q/vlanproc.c
+> +++ b/net/8021q/vlanproc.c
+> @@ -184,14 +184,9 @@ int vlan_proc_add_dev(struct net_device *vlandev)
+>   */
+>  int vlan_proc_rem_dev(struct net_device *vlandev)
+>  {
+> -       struct vlan_net *vn = net_generic(dev_net(vlandev), vlan_net_id);
+> -
+>         /** NOTE:  This will consume the memory pointed to by dent, it seems. */
+> -       if (vlan_dev_priv(vlandev)->dent) {
+> -               remove_proc_entry(vlan_dev_priv(vlandev)->dent->name,
+> -                                 vn->proc_vlan_dir);
+> -               vlan_dev_priv(vlandev)->dent = NULL;
+> -       }
+> +       proc_remove(vlan_dev_priv(vlandev)->dent);
+> +       vlan_dev_priv(vlandev)->dent = NULL;
+>         return 0;
+>  }
+>
+> diff --git a/net/core/pktgen.c b/net/core/pktgen.c
+> index f6af4fe..6c41e97 100644
+> --- a/net/core/pktgen.c
+> +++ b/net/core/pktgen.c
+> @@ -1904,7 +1904,7 @@ static void pktgen_change_name(const struct pktgen_net *pn, struct net_device *d
+>                         if (pkt_dev->odev != dev)
+>                                 continue;
+>
+> -                       remove_proc_entry(pkt_dev->entry->name, pn->proc_dir);
+> +                       proc_remove(pkt_dev->entry);
+>
+>                         pkt_dev->entry = proc_create_data(dev->name, 0600,
+>                                                           pn->proc_dir,
+> @@ -3576,8 +3576,6 @@ static void _rem_dev_from_if_list(struct pktgen_thread *t,
+>  static int pktgen_remove_device(struct pktgen_thread *t,
+>                                 struct pktgen_dev *pkt_dev)
+>  {
+> -       struct pktgen_net *pn = t->net;
+> -
+>         pr_debug("remove_device pkt_dev=%p\n", pkt_dev);
+>
+>         if (pkt_dev->running) {
+> @@ -3597,7 +3595,7 @@ static int pktgen_remove_device(struct pktgen_thread *t,
+>         _rem_dev_from_if_list(t, pkt_dev);
+>
+>         if (pkt_dev->entry)
+> -               remove_proc_entry(pkt_dev->entry->name, pn->proc_dir);
+> +               proc_remove(pkt_dev->entry);
+>
+>  #ifdef CONFIG_XFRM
+>         free_SAs(pkt_dev);
+> diff --git a/net/ipv4/netfilter/ipt_CLUSTERIP.c b/net/ipv4/netfilter/ipt_CLUSTERIP.c
+> index e4738fe..0b732ef 100644
+> --- a/net/ipv4/netfilter/ipt_CLUSTERIP.c
+> +++ b/net/ipv4/netfilter/ipt_CLUSTERIP.c
+> @@ -105,7 +105,7 @@ clusterip_config_entry_put(struct clusterip_config *c)
+>                  * functions are also incrementing the refcount on their own,
+>                  * so it's safe to remove the entry even if it's in use. */
+>  #ifdef CONFIG_PROC_FS
+> -               remove_proc_entry(c->pde->name, c->pde->parent);
+> +               proc_remove(c->pde);
+>  #endif
+>                 return;
+>         }
+> @@ -736,7 +736,7 @@ static void __exit clusterip_tg_exit(void)
+>  {
+>         pr_info("ClusterIP Version %s unloading\n", CLUSTERIP_VERSION);
+>  #ifdef CONFIG_PROC_FS
+> -       remove_proc_entry(clusterip_procdir->name, clusterip_procdir->parent);
+> +       proc_remove(clusterip_procdir);
+>  #endif
+>         nf_unregister_hook(&cip_arp_ops);
+>         xt_unregister_target(&clusterip_tg_reg);
+> diff --git a/net/ipv6/proc.c b/net/ipv6/proc.c
+> index 7ea6e18..537d9ee 100644
+> --- a/net/ipv6/proc.c
+> +++ b/net/ipv6/proc.c
+> @@ -287,8 +287,7 @@ int snmp6_unregister_dev(struct inet6_dev *idev)
+>                 return -ENOENT;
+>         if (!idev->stats.proc_dir_entry)
+>                 return -EINVAL;
+> -       remove_proc_entry(idev->stats.proc_dir_entry->name,
+> -                         net->mib.proc_net_devsnmp6);
+> +       proc_remove(idev->stats.proc_dir_entry);
+>         idev->stats.proc_dir_entry = NULL;
+>         return 0;
+>  }
+> diff --git a/net/netfilter/xt_hashlimit.c b/net/netfilter/xt_hashlimit.c
+> index d2fd53b..40002ef 100644
+> --- a/net/netfilter/xt_hashlimit.c
+> +++ b/net/netfilter/xt_hashlimit.c
+> @@ -330,7 +330,7 @@ static void htable_destroy(struct xt_hashlimit_htable *hinfo)
+>                 parent = hashlimit_net->ip6t_hashlimit;
+>
+>         if(parent != NULL)
+> -               remove_proc_entry(hinfo->pde->name, parent);
+> +               proc_remove(hinfo->pde);
+>
+>         htable_selective_cleanup(hinfo, select_all);
+>         vfree(hinfo);
+> @@ -887,7 +887,7 @@ static void __net_exit hashlimit_proc_net_exit(struct net *net)
+>                 pde = hashlimit_net->ip6t_hashlimit;
+>
+>         hlist_for_each_entry(hinfo, &hashlimit_net->htables, node)
+> -               remove_proc_entry(hinfo->pde->name, pde);
+> +               proc_remove(hinfo->pde);
+>
+>         hashlimit_net->ipt_hashlimit = NULL;
+>         hashlimit_net->ip6t_hashlimit = NULL;
+> diff --git a/sound/core/info.c b/sound/core/info.c
+> index c7f41c3..3c9bd6b 100644
+> --- a/sound/core/info.c
+> +++ b/sound/core/info.c
+> @@ -153,13 +153,6 @@ EXPORT_SYMBOL(snd_seq_root);
+>  struct snd_info_entry *snd_oss_root;
+>  #endif
+>
+> -static void snd_remove_proc_entry(struct proc_dir_entry *parent,
+> -                                 struct proc_dir_entry *de)
+> -{
+> -       if (de)
+> -               remove_proc_entry(de->name, parent);
+> -}
+> -
+>  static loff_t snd_info_entry_llseek(struct file *file, loff_t offset, int orig)
+>  {
+>         struct snd_info_private_data *data;
+> @@ -580,7 +573,7 @@ int __exit snd_info_done(void)
+>  #ifdef CONFIG_SND_OSSEMUL
+>                 snd_info_free_entry(snd_oss_root);
+>  #endif
+> -               snd_remove_proc_entry(NULL, snd_proc_root);
+> +               proc_remove(snd_proc_root);
+>         }
+>         return 0;
+>  }
+> @@ -642,7 +635,7 @@ void snd_info_card_id_change(struct snd_card *card)
+>  {
+>         mutex_lock(&info_mutex);
+>         if (card->proc_root_link) {
+> -               snd_remove_proc_entry(snd_proc_root, card->proc_root_link);
+> +               proc_remove(card->proc_root_link);
+>                 card->proc_root_link = NULL;
+>         }
+>         if (strcmp(card->id, card->proc_root->name))
+> @@ -661,10 +654,8 @@ void snd_info_card_disconnect(struct snd_card *card)
+>         if (!card)
+>                 return;
+>         mutex_lock(&info_mutex);
+> -       if (card->proc_root_link) {
+> -               snd_remove_proc_entry(snd_proc_root, card->proc_root_link);
+> -               card->proc_root_link = NULL;
+> -       }
+> +       proc_remove(card->proc_root_link);
+> +       card->proc_root_link = NULL;
+>         if (card->proc_root)
+>                 snd_info_disconnect(card->proc_root);
+>         mutex_unlock(&info_mutex);
+> @@ -856,7 +847,7 @@ static void snd_info_disconnect(struct snd_info_entry *entry)
+>         list_del_init(&entry->list);
+>         root = entry->parent == NULL ? snd_proc_root : entry->parent->p;
+>         snd_BUG_ON(!root);
+> -       snd_remove_proc_entry(root, entry->p);
+> +       proc_remove(entry->p);
+>         entry->p = NULL;
+>  }
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
