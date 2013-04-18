@@ -1,94 +1,56 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-oa0-f44.google.com ([209.85.219.44]:55404 "EHLO
+	mail-oa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965906Ab3DRPCA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 18 Apr 2013 11:02:00 -0400
+Received: by mail-oa0-f44.google.com with SMTP id h1so2864277oag.3
+        for <linux-pci@vger.kernel.org>; Thu, 18 Apr 2013 08:01:59 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo5w=uJ2sXzXhyS0AyPFTbxPM44djdEMb6bR2SQu1O+u2A@mail.gmail.com>
-References: <CAErSpo5w=uJ2sXzXhyS0AyPFTbxPM44djdEMb6bR2SQu1O+u2A@mail.gmail.com>
+In-Reply-To: <CAAh6nkmbKR3HTqm5ommevsBwhL_u0N8Rk7Wsms_LfP=nBgKNew@mail.gmail.com>
+References: <CAAh6nkmbKR3HTqm5ommevsBwhL_u0N8Rk7Wsms_LfP=nBgKNew@mail.gmail.com>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 5 Apr 2013 19:59:13 -0600
-Message-ID: <CAErSpo68qt+5oJ2u96z5TQsGpnvm5wmA+=CVzkwnYKZMNf0+mg@mail.gmail.com>
-Subject: Re: [GIT PULL] PCI updates for v3.9
-To: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Thu, 18 Apr 2013 09:01:39 -0600
+Message-ID: <CAErSpo6uu-=j7Ro_HuXT6t6E-cQRx+=SfeASfeKNDt-+7WE2UA@mail.gmail.com>
+Subject: Re: About dynamically loading the acpiphp.ko
+To: Gavin Guo <tuffkidtt@gmail.com>
 Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Konstantin Khlebnikov <khlebnikov@openvz.org>,
-	Matthew Garrett <matthew.garrett@nebula.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, Yinghai Lu <yinghai@kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	t-kochi@bq.jp.nec.com, Jiang Liu <jiang.liu@huawei.com>
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc linux-kernel]
+[+cc Jiang, -cc willy@hp.com (defunct address), -cc t-kochi (I assume
+also defunct)]
 
-On Fri, Apr 5, 2013 at 7:31 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> Hi Linus,
+On Wed, Apr 17, 2013 at 9:27 PM, Gavin Guo <tuffkidtt@gmail.com> wrote:
+> Hi All,
 >
-> Here are some fixes for v3.9.  They include fixes for an ASPM problem
-> that affects pre-1.1 PCIe devices, a kexec problem, the platform ROM
-> image problem, a couple hotplug issues related to PM, and a fix for
-> PCI-EISA bridges that have been broken for a long time.
->
-> Bjorn
->
->
-> The following changes since commit 8bb9660418e05bb1845ac1a2428444d78e322cc7:
->
->   Linux 3.9-rc4 (2013-03-23 16:52:44 -0700)
->
-> are available in the git repository at:
->
->   git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git
-> tags/pci-v3.9-fixes-1
->
-> for you to fetch changes up to de7d5f729c72638f41d7c17487bccb1c570ff144:
->
->   PCI/PM: Disable runtime PM of PCIe ports (2013-04-03 15:54:59 -0600)
->
-> ----------------------------------------------------------------
-> PCI updates for v3.9:
->
->   ASPM
->       Revert "PCI/ACPI: Request _OSC control before scanning PCI root bus"
->   kexec
->       PCI: Don't try to disable Bus Master on disconnected PCI devices
->   Platform ROM images
->       PCI: Add PCI ROM helper for platform-provided ROM images
->       nouveau: Attempt to use platform-provided ROM image
->       radeon: Attempt to use platform-provided ROM image
->   Hotplug
->       PCI/ACPI: Always resume devices on ACPI wakeup notifications
->       PCI/PM: Disable runtime PM of PCIe ports
->   EISA
->       EISA/PCI: Fix bus res reference
->       EISA/PCI: Init EISA early, before PNP
->
-> ----------------------------------------------------------------
-> Bjorn Helgaas (3):
->       Merge branch 'pci/mjg-rom' into for-linus
->       Merge branch 'pci/yinghai-eisa' into for-linus
->       Revert "PCI/ACPI: Request _OSC control before scanning PCI root bus"
->
-> Konstantin Khlebnikov (1):
->       PCI: Don't try to disable Bus Master on disconnected PCI devices
->
-> Matthew Garrett (3):
->       PCI: Add PCI ROM helper for platform-provided ROM images
->       nouveau: Attempt to use platform-provided ROM image
->       radeon: Attempt to use platform-provided ROM image
->
-> Rafael J. Wysocki (2):
->       PCI/ACPI: Always resume devices on ACPI wakeup notifications
->       PCI/PM: Disable runtime PM of PCIe ports
->
-> Yinghai Lu (2):
->       EISA/PCI: Fix bus res reference
->       EISA/PCI: Init EISA early, before PNP
->
->  drivers/acpi/pci_root.c                         | 76 ++++++++++++-------------
->  drivers/eisa/pci_eisa.c                         | 67 +++++++++++++++-------
->  drivers/gpu/drm/nouveau/core/subdev/bios/base.c | 17 ++++++
->  drivers/gpu/drm/radeon/radeon_bios.c            | 26 +++++++++
->  drivers/pci/pci-acpi.c                          | 15 ++---
->  drivers/pci/pci-driver.c                        |  5 +-
->  drivers/pci/pcie/portdrv_pci.c                  | 13 -----
->  drivers/pci/rom.c                               | 67 ++++++++++------------
->  include/linux/pci.h                             |  1 +
->  9 files changed, 169 insertions(+), 118 deletions(-)
+> I've a Dell platform which has PCI-to-USB card and would like to let
+> the module be dynamically insmoded when hotplugging this card.
+> Firstly, I've submitted a patch, which added acpiphp to the
+> /etc/modules, to the init-module-tools package in the Debian system,
+> but maintainer rejected to accept the patch and said it would be done
+> in the kernel side to enable the automatically loading. Then, I've
+> tried to read the code about acpiphp under drivers/pci/hotplug/* and
+> found that acpiphp_ibm.c seems providing a hook to build the
+> dependency with acpiphp.ko, providing a way to construct a empty
+> ibm_handle_events-liked callback function, named dell_handle_events,
+> for acpi_install_notify_handler and the acpiphp_dell.ko could be
+> insmoded by udev through the MODULE_ALIAS("dmi*...") which describe
+> the dell platform information. However, writing a code with fake empty
+> function just to enable the hotplugging PCI is silly in my opinion, I
+> would be appreciated if anyone could provide a method to enable the
+> hotplugging automatically.
+
+Please test linux-next (20130417 or later) with
+CONFIG_HOTPLUG_PCI_ACPI=y and see if that works as you expect.  That
+contains Jiang's patch (that you mentioned in a your subsequent email)
+which removes the option of building acpiphp as a module.
+
+If that doesn't work, please let us know, along with more details,
+such as a complete dmesg log.  There are still known issues with
+acpiphp, e.g., https://bugzilla.kernel.org/show_bug.cgi?id=54981, that
+you might be seeing.
+
+Bjorn
