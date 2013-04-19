@@ -1,114 +1,136 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:52759 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760664Ab3DDNzS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Apr 2013 09:55:18 -0400
-From: Neil Horman <nhorman@tuxdriver.com>
-To: linux-kernel@vger.kernel.org
-Cc: Neil Horman <nhorman@tuxdriver.com>,
-	Prarit Bhargava <prarit@redhat.com>,
-	Don Zickus <dzickus@redhat.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Asit Mallick <asit.k.mallick@intel.com>,
-	David Woodhouse <dwmw2@infradead.org>,
-	linux-pci@vger.kernel.org
-Subject: [PATCH v3] irq: add quirk for broken interrupt remapping on 55XX chipsets
-Date: Thu,  4 Apr 2013 09:54:56 -0400
-Message-Id: <1365083696-5245-1-git-send-email-nhorman@tuxdriver.com>
-In-Reply-To: <1362158276-4901-1-git-send-email-nhorman@tuxdriver.com>
-References: <1362158276-4901-1-git-send-email-nhorman@tuxdriver.com>
+Received: from cn.fujitsu.com ([222.73.24.84]:27325 "EHLO song.cn.fujitsu.com"
+	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S1758536Ab3DSJrF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 19 Apr 2013 05:47:05 -0400
+Message-ID: <51711236.9070305@cn.fujitsu.com>
+Date: Fri, 19 Apr 2013 17:45:26 +0800
+From: Gu Zheng <guz.fnst@cn.fujitsu.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	tangchen <tangchen@cn.fujitsu.com>,
+	Lin Feng <linfeng@cn.fujitsu.com>,
+	li guang <lig.fnst@cn.fujitsu.com>
+Subject: [PATCH 2/2] PCI: Convert alloc_pci_dev(void) to pci_alloc_dev(bus)
+ instead
+References: <516FB647.5030203@cn.fujitsu.com> <CAErSpo65ARR_fZwsGCZDJqbPWktHYUkufgPt-2mWwur=nPR1Qg@mail.gmail.com>
+In-Reply-To: <CAErSpo65ARR_fZwsGCZDJqbPWktHYUkufgPt-2mWwur=nPR1Qg@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-A few years back intel published a spec update:
-http://www.intel.com/content/dam/doc/specification-update/5520-and-5500-chipset-ioh-specification-update.pdf
+>From 2535fb1a2502b3d9bebc31f7c7205f42392ea5f9 Mon Sep 17 00:00:00 2001
+From: Gu Zheng <guz.fnst@cn.fujitsu.com>
+Date: Fri, 19 Apr 2013 17:46:36 +0900
+Subject: [PATCH 2/2] PCI: Convert alloc_pci_dev(void) to pci_alloc_dev(bus) instead
 
-For the 5520 and 5500 chipsets which contained an errata (specificially errata
-53), which noted that these chipsets can't properly do interrupt remapping, and
-as a result the recommend that interrupt remapping be disabled in bios.  While
-many vendors have a bios update to do exactly that, not all do, and of course
-not all users update their bios to a level that corrects the problem.  As a
-result, occasionally interrupts can arrive at a cpu even after affinity for that
-interrupt has be moved, leading to lost or spurrious interrupts (usually
-characterized by the message:
-kernel: do_IRQ: 7.71 No irq handler for vector (irq -1)
+Use the new pci_alloc_dev(bus) to replace the existing using of alloc_pci_dev(void).
 
-There have been several incidents recently of people seeing this error, and
-investigation has shown that they have system for which their BIOS level is such
-that this feature was not properly turned off.  As such, it would be good to
-give them a reminder that their systems are vulnurable to this problem.
-
-Signed-off-by: Neil Horman <nhorman@tuxdriver.com>
-CC: Prarit Bhargava <prarit@redhat.com>
-CC: Don Zickus <dzickus@redhat.com>
-CC: Don Dutile <ddutile@redhat.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>
-CC: Asit Mallick <asit.k.mallick@intel.com>
-CC: David Woodhouse <dwmw2@infradead.org>
-CC: linux-pci@vger.kernel.org
+Signed-off-by: Gu Zheng <guz.fnst@cn.fujitsu.com>
 ---
+ arch/powerpc/kernel/pci_of_scan.c |    3 +--
+ drivers/char/agp/alpha-agp.c      |    2 +-
+ drivers/char/agp/parisc-agp.c     |    2 +-
+ drivers/pci/iov.c                 |    2 +-
+ drivers/pci/probe.c               |    3 +--
+ drivers/scsi/megaraid.c           |    2 +-
+ 6 files changed, 6 insertions(+), 8 deletions(-)
 
-Change notes:
-
-v2)
-
-* Moved the quirk to the x86 arch, since consensus seems to be that the 55XX
-chipset series is x86 only.  I decided however to keep the quirk as a regular
-quirk, not an early_quirk.  Early quirks have no way currently to determine if
-BIOS has properly disabled the feature in the iommu, at least not without
-significant hacking, and since its quite possible this will be a short lived
-quirk, should Don Z's workaround code prove successful (and it looks like it may
-well), I don't think that necessecary.
-
-* Removed the WARNING banner from the quirk, and added the HW_ERR token to the
-string, I opted to leave the newlines in place however, as I really couldnt
-find a way to keep the text on a single line is still legible from a code
-perspective.  I think theres enough language in there that using cscope on just
-about any substring however will turn it up, and again, this may be a short
-lived quirk.
-
-v3)
-
-* removed defines from pci_ids.h, and used direct id values as per request from
-Bjorn.
----
- arch/x86/kernel/quirks.c | 18 ++++++++++++++++++
- 1 file changed, 18 insertions(+)
-
-diff --git a/arch/x86/kernel/quirks.c b/arch/x86/kernel/quirks.c
-index 26ee48a..7c99675 100644
---- a/arch/x86/kernel/quirks.c
-+++ b/arch/x86/kernel/quirks.c
-@@ -5,6 +5,7 @@
- #include <linux/irq.h>
+diff --git a/arch/powerpc/kernel/pci_of_scan.c b/arch/powerpc/kernel/pci_of_scan.c
+index 2a67e9b..24d01c4 100644
+--- a/arch/powerpc/kernel/pci_of_scan.c
++++ b/arch/powerpc/kernel/pci_of_scan.c
+@@ -128,7 +128,7 @@ struct pci_dev *of_create_pci_dev(struct device_node *node,
+ 	const char *type;
+ 	struct pci_slot *slot;
  
- #include <asm/hpet.h>
-+#include "../../../drivers/iommu/irq_remapping.h"
+-	dev = alloc_pci_dev();
++	dev = pci_alloc_dev(bus);
+ 	if (!dev)
+ 		return NULL;
+ 	type = of_get_property(node, "device_type", NULL);
+@@ -137,7 +137,6 @@ struct pci_dev *of_create_pci_dev(struct device_node *node,
  
- #if defined(CONFIG_X86_IO_APIC) && defined(CONFIG_SMP) && defined(CONFIG_PCI)
+ 	pr_debug("    create device, devfn: %x, type: %s\n", devfn, type);
  
-@@ -567,3 +568,20 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_NB_F5,
- 			quirk_amd_nb_node);
+-	dev->bus = bus;
+ 	dev->dev.of_node = of_node_get(node);
+ 	dev->dev.parent = bus->bridge;
+ 	dev->dev.bus = &pci_bus_type;
+diff --git a/drivers/char/agp/alpha-agp.c b/drivers/char/agp/alpha-agp.c
+index dd84af4..199b8e9 100644
+--- a/drivers/char/agp/alpha-agp.c
++++ b/drivers/char/agp/alpha-agp.c
+@@ -174,7 +174,7 @@ alpha_core_agp_setup(void)
+ 	/*
+ 	 * Build a fake pci_dev struct
+ 	 */
+-	pdev = alloc_pci_dev();
++	pdev = pci_alloc_dev(NULL);
+ 	if (!pdev)
+ 		return -ENOMEM;
+ 	pdev->vendor = 0xffff;
+diff --git a/drivers/char/agp/parisc-agp.c b/drivers/char/agp/parisc-agp.c
+index 94821ab..bf5d247 100644
+--- a/drivers/char/agp/parisc-agp.c
++++ b/drivers/char/agp/parisc-agp.c
+@@ -333,7 +333,7 @@ parisc_agp_setup(void __iomem *ioc_hpa, void __iomem *lba_hpa)
+ 	struct agp_bridge_data *bridge;
+ 	int error = 0;
  
- #endif
-+
-+static void intel_remapping_check(struct pci_dev *dev)
-+{
-+	u8 revision;
-+
-+	pci_read_config_byte(dev, PCI_REVISION_ID, &revision);
-+
-+	if ((revision == 0x13) && irq_remapping_enabled) {
-+                pr_warn(HW_ERR "This system BIOS has enabled interrupt remapping\n"
-+                        "on a chipset that contains an errata making that\n"
-+                        "feature unstable.  Please reboot with nointremap\n"
-+                        "added to the kernel command line and contact\n"
-+                        "your BIOS vendor for an update");
-+	}
-+}
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x3406, intel_remapping_check);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x3403, intel_remapping_check);
+-	fake_bridge_dev = alloc_pci_dev();
++	fake_bridge_dev = pci_alloc_dev(NULL);
+ 	if (!fake_bridge_dev) {
+ 		error = -ENOMEM;
+ 		goto fail;
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index ee599f2..dba2031 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -76,7 +76,7 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
+ 	struct resource *res;
+ 	struct pci_sriov *iov = dev->sriov;
+ 
+-	virtfn = alloc_pci_dev();
++	virtfn = pci_alloc_dev(NULL);
+ 	if (!virtfn)
+ 		return -ENOMEM;
+ 
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 5233fb6..59637a6 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1280,11 +1280,10 @@ static struct pci_dev *pci_scan_device(struct pci_bus *bus, int devfn)
+ 	if (!pci_bus_read_dev_vendor_id(bus, devfn, &l, 60*1000))
+ 		return NULL;
+ 
+-	dev = alloc_pci_dev();
++	dev = pci_alloc_dev(bus);
+ 	if (!dev)
+ 		return NULL;
+ 
+-	dev->bus = bus;
+ 	dev->devfn = devfn;
+ 	dev->vendor = l & 0xffff;
+ 	dev->device = (l >> 16) & 0xffff;
+diff --git a/drivers/scsi/megaraid.c b/drivers/scsi/megaraid.c
+index 9504ec0..e1660ca 100644
+--- a/drivers/scsi/megaraid.c
++++ b/drivers/scsi/megaraid.c
+@@ -2025,7 +2025,7 @@ megaraid_abort_and_reset(adapter_t *adapter, Scsi_Cmnd *cmd, int aor)
+ static inline int
+ make_local_pdev(adapter_t *adapter, struct pci_dev **pdev)
+ {
+-	*pdev = alloc_pci_dev();
++	*pdev = pci_alloc_dev(NULL);
+ 
+ 	if( *pdev == NULL ) return -1;
+ 
 -- 
-1.8.1.4
+1.7.1
 
