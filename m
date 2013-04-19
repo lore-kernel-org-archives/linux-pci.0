@@ -1,58 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f50.google.com ([209.85.219.50]:34047 "EHLO
-	mail-oa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756980Ab3DXQeV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Apr 2013 12:34:21 -0400
-Received: by mail-oa0-f50.google.com with SMTP id j6so1875894oag.23
-        for <linux-pci@vger.kernel.org>; Wed, 24 Apr 2013 09:34:20 -0700 (PDT)
+Received: from caramon.arm.linux.org.uk ([78.32.30.218]:34873 "EHLO
+	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030552Ab3DSOeG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 19 Apr 2013 10:34:06 -0400
+Date: Fri, 19 Apr 2013 15:33:31 +0100
+From: Russell King - ARM Linux <linux@arm.linux.org.uk>
+To: Jason Cooper <jason@lakedaemon.net>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Olof Johansson <olof@lixom.net>, Arnd Bergmann <arnd@arndb.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Andrew Murray <andrew.murray@arm.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Mitch Bradley <wmb@firmworks.com>
+Subject: Re: [PATCHv8 07/19] arm: pci: add a align_resource hook
+Message-ID: <20130419143331.GV14496@n2100.arm.linux.org.uk>
+References: <1365541601-14095-1-git-send-email-thomas.petazzoni@free-electrons.com> <1365541601-14095-8-git-send-email-thomas.petazzoni@free-electrons.com> <20130415163609.GJ28693@titan.lakedaemon.net>
 MIME-Version: 1.0
-In-Reply-To: <20130422231214.32621.37394.stgit@bhelgaas-glaptop>
-References: <20130422230012.32621.15224.stgit@bhelgaas-glaptop> <20130422231214.32621.37394.stgit@bhelgaas-glaptop>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 24 Apr 2013 10:34:00 -0600
-Message-ID: <CAErSpo6BF0Uvf=7LwYYT2Qn6kf5uk+rVqY-cKOe2qnVwcj4-+w@mail.gmail.com>
-Subject: Re: [PATCH v4 18/22] xen/pci: Pay attention to PCI_MSIX_TABLE_OFFSET
-To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Cc: Gavin Shan <shangw@linux.vnet.ibm.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Jeremy Fitzhardinge <jeremy@goop.org>,
-	xen-devel@lists.xensource.com
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130415163609.GJ28693@titan.lakedaemon.net>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Jeremy, xen-devel]
+On Mon, Apr 15, 2013 at 12:36:09PM -0400, Jason Cooper wrote:
+> Russell,
+> 
+> Thanks for applying this patch (7683/1) to your tree.  I see it's in
+> your for-next, which I understand *isn't* stable.
 
-Full series at https://lkml.kernel.org/r/20130422230012.32621.15224.stgit@bhelgaas-glaptop
-(email archive) or
-http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/gavin-msi-cleanup
-(git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git branch
-pci/gavin-msi-cleanup).
+That is correct.
 
-On Mon, Apr 22, 2013 at 5:12 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> The MSI-X Table structure may be at a non-zero offset into the
-> device BAR, and we should account for that.
->
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-> ---
->  arch/x86/pci/xen.c |    4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
->
-> diff --git a/arch/x86/pci/xen.c b/arch/x86/pci/xen.c
-> index 94e7662..0e8a196 100644
-> --- a/arch/x86/pci/xen.c
-> +++ b/arch/x86/pci/xen.c
-> @@ -300,8 +300,10 @@ static int xen_initdom_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
->                         pci_read_config_dword(dev, pos + PCI_MSIX_TABLE,
->                                               &table_offset);
->                         bir = (u8)(table_offset & PCI_MSIX_FLAGS_BIRMASK);
-> +                       table_offset &= PCI_MSIX_TABLE_OFFSET;
->
-> -                       map_irq.table_base = pci_resource_start(dev, bir);
-> +                       map_irq.table_base = pci_resource_start(dev, bir) +
-> +                               table_offset;
->                         map_irq.entry_nr = msidesc->msi_attrib.entry_nr;
->                 }
->
->
+>   029baf1 ARM: 7683/1: pci: add a align_resource hook
+> 
+> Is there a stable branch I could depend on for the rest of this series
+> (particularly, patch 10)?  It looks like you applied it to your misc
+> branch, but that's not currently available.
+
+I will have to look at that; as I'm still catching up with mail three
+days after having returned and there's still quite an amount outstanding,
+it's going to be a while before I can look at this.  Given that we're at
+-rc7 and the amount of outstanding mail, it's likely that may happen
+after the merge window has opened.
+
