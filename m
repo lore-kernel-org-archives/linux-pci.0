@@ -1,272 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cn.fujitsu.com ([222.73.24.84]:24571 "EHLO song.cn.fujitsu.com"
-	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1756223Ab3DXDSB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 23 Apr 2013 23:18:01 -0400
-Message-ID: <51774E78.3050400@cn.fujitsu.com>
-Date: Wed, 24 Apr 2013 11:16:08 +0800
-From: Gu Zheng <guz.fnst@cn.fujitsu.com>
+Received: from mail-vc0-f179.google.com ([209.85.220.179]:43356 "EHLO
+	mail-vc0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030945Ab3DSQkV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 19 Apr 2013 12:40:21 -0400
+Received: by mail-vc0-f179.google.com with SMTP id hz11so3972129vcb.24
+        for <linux-pci@vger.kernel.org>; Fri, 19 Apr 2013 09:40:20 -0700 (PDT)
 MIME-Version: 1.0
-To: Jiang Liu <liuj97@gmail.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	tangchen <tangchen@cn.fujitsu.com>,
-	Lin Feng <linfeng@cn.fujitsu.com>,
-	li guang <lig.fnst@cn.fujitsu.com>,
-	Mike Qiu <qiudayu@linux.vnet.ibm.com>
-Subject: Re: [PATCH v2 2/2] PCI: Convert alloc_pci_dev(void) to pci_alloc_dev(bus)
- instead
-References: <516FB647.5030203@cn.fujitsu.com> <CAErSpo65ARR_fZwsGCZDJqbPWktHYUkufgPt-2mWwur=nPR1Qg@mail.gmail.com> <51763847.8090808@cn.fujitsu.com> <5176BA7F.7050800@gmail.com>
-In-Reply-To: <5176BA7F.7050800@gmail.com>
+In-Reply-To: <CAOS58YO+uV5KkS=sTP9Y3BPPh1nVnQ06yRyNU8GvEbym7R+X+Q@mail.gmail.com>
+References: <51360D7C.3060209@mellanox.com> <20130418200855.GA24086@redhat.com>
+ <CAErSpo65Q0+UT3sS6LcyXohkCMfjweoS_j+okiYq4bdjFKjdHw@mail.gmail.com>
+ <CAErSpo7jf-ytJPhuphzLFH80c9YMM6UzxWAVEnD-25nQgXmARQ@mail.gmail.com> <CAOS58YO+uV5KkS=sTP9Y3BPPh1nVnQ06yRyNU8GvEbym7R+X+Q@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 19 Apr 2013 10:39:59 -0600
+Message-ID: <CAErSpo4PM9OhjK83OCQNrS-P6Xx8A3DzTVbDiRLn4dToa9aovA@mail.gmail.com>
+Subject: Re: [PATCHv2 for-3.9] pci: avoid work_on_cpu for nested SRIOV probes
+To: Tejun Heo <tj@kernel.org>
+Cc: "Michael S. Tsirkin" <mst@redhat.com>,
+	Or Gerlitz <ogerlitz@mellanox.com>,
+	Ming Lei <ming.lei@canonical.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	David Miller <davem@davemloft.net>,
+	Roland Dreier <roland@kernel.org>,
+	netdev <netdev@vger.kernel.org>, Yan Burman <yanb@mellanox.com>,
+	Jack Morgenstein <jackm@dev.mellanox.co.il>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/24/2013 12:44 AM, Jiang Liu wrote:
+On Thu, Apr 18, 2013 at 9:04 PM, Tejun Heo <tj@kernel.org> wrote:
+> So, the thing is there is no actual deadlock. If you're okay with releasing
+> w/ spurious lockdep warning, leaving things alone should be fine. An issue
+> with mst's patch is that it actually changes the behavior to avoid a
+> spurious warning. An alternative course would be leaving it alone now and
+> remove the spurious warning during the coming devel cycle and mark it w/
+> -stable.
 
-> On 04/23/2013 03:29 PM, Gu Zheng wrote:
->> From b01e61759f894b651ed3bb39c9fc18e0b66d7cb3 Mon Sep 17 00:00:00 2001
->> From: GuZheng <guz.fnst@cn.fujitsu.com>
->> Date: Tue, 23 Apr 2013 14:01:39 +0800
->> Subject: [PATCH v2 2/2] PCI: Convert alloc_pci_dev(void) to pci_alloc_dev(bus)
->>  instead
->>
->> Use the new pci_alloc_dev(bus) to replace the existing using of alloc_pci_dev(void).
->> And new functions pci_bus_get/put() are introdued to hide pci_bus' reference management.
->>
->> v2:
->>   Follow Yinghai's suggestions to reduce pci_bus' ref when destroying pci device.
->>   Add new functions pci_bus_get/put() to hide pci_bus' reference management.
->>
->> Signed-off-by: Gu Zheng <guz.fnst@cn.fujitsu.com>
->> ---
->>  arch/powerpc/kernel/pci_of_scan.c |    3 +--
->>  arch/sparc/kernel/pci.c           |    3 +--
->>  drivers/char/agp/alpha-agp.c      |    2 +-
->>  drivers/char/agp/parisc-agp.c     |    2 +-
->>  drivers/pci/bus.c                 |   15 +++++++++++++++
->>  drivers/pci/iov.c                 |    8 +++++---
->>  drivers/pci/probe.c               |    9 +++------
->>  drivers/pci/remove.c              |    2 ++
->>  drivers/scsi/megaraid.c           |    2 +-
->>  include/linux/pci.h               |    3 +++
->>  10 files changed, 33 insertions(+), 16 deletions(-)
->>
->> diff --git a/arch/powerpc/kernel/pci_of_scan.c b/arch/powerpc/kernel/pci_of_scan.c
->> index 2a67e9b..24d01c4 100644
->> --- a/arch/powerpc/kernel/pci_of_scan.c
->> +++ b/arch/powerpc/kernel/pci_of_scan.c
->> @@ -128,7 +128,7 @@ struct pci_dev *of_create_pci_dev(struct device_node *node,
->>  	const char *type;
->>  	struct pci_slot *slot;
->>  
->> -	dev = alloc_pci_dev();
->> +	dev = pci_alloc_dev(bus);
->>  	if (!dev)
->>  		return NULL;
->>  	type = of_get_property(node, "device_type", NULL);
->> @@ -137,7 +137,6 @@ struct pci_dev *of_create_pci_dev(struct device_node *node,
->>  
->>  	pr_debug("    create device, devfn: %x, type: %s\n", devfn, type);
->>  
->> -	dev->bus = bus;
->>  	dev->dev.of_node = of_node_get(node);
->>  	dev->dev.parent = bus->bridge;
->>  	dev->dev.bus = &pci_bus_type;
->> diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
->> index baf4366..e5871fb 100644
->> --- a/arch/sparc/kernel/pci.c
->> +++ b/arch/sparc/kernel/pci.c
->> @@ -254,7 +254,7 @@ static struct pci_dev *of_create_pci_dev(struct pci_pbm_info *pbm,
->>  	const char *type;
->>  	u32 class;
->>  
->> -	dev = alloc_pci_dev();
->> +	dev = pci_alloc_dev(bus);
->>  	if (!dev)
->>  		return NULL;
->>  
->> @@ -281,7 +281,6 @@ static struct pci_dev *of_create_pci_dev(struct pci_pbm_info *pbm,
->>  		printk("    create device, devfn: %x, type: %s\n",
->>  		       devfn, type);
->>  
->> -	dev->bus = bus;
->>  	dev->sysdata = node;
->>  	dev->dev.parent = bus->bridge;
->>  	dev->dev.bus = &pci_bus_type;
->> diff --git a/drivers/char/agp/alpha-agp.c b/drivers/char/agp/alpha-agp.c
->> index dd84af4..199b8e9 100644
->> --- a/drivers/char/agp/alpha-agp.c
->> +++ b/drivers/char/agp/alpha-agp.c
->> @@ -174,7 +174,7 @@ alpha_core_agp_setup(void)
->>  	/*
->>  	 * Build a fake pci_dev struct
->>  	 */
->> -	pdev = alloc_pci_dev();
->> +	pdev = pci_alloc_dev(NULL);
->>  	if (!pdev)
->>  		return -ENOMEM;
->>  	pdev->vendor = 0xffff;
->> diff --git a/drivers/char/agp/parisc-agp.c b/drivers/char/agp/parisc-agp.c
->> index 94821ab..bf5d247 100644
->> --- a/drivers/char/agp/parisc-agp.c
->> +++ b/drivers/char/agp/parisc-agp.c
->> @@ -333,7 +333,7 @@ parisc_agp_setup(void __iomem *ioc_hpa, void __iomem *lba_hpa)
->>  	struct agp_bridge_data *bridge;
->>  	int error = 0;
->>  
->> -	fake_bridge_dev = alloc_pci_dev();
->> +	fake_bridge_dev = pci_alloc_dev(NULL);
->>  	if (!fake_bridge_dev) {
->>  		error = -ENOMEM;
->>  		goto fail;
->> diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
->> index 8647dc6..5eacf78 100644
->> --- a/drivers/pci/bus.c
->> +++ b/drivers/pci/bus.c
->> @@ -18,6 +18,21 @@
->>  
->>  #include "pci.h"
->>  
->> +struct pci_bus *pci_bus_get(struct pci_bus *bus)
->> +{
->> +	if (bus)
->> +		get_device(&bus->dev);
->> +	return bus;
->> +}
->> +EXPORT_SYMBOL(pci_bus_get);
->> +
->> +void pci_bus_put(struct pci_bus *bus)
->> +{
->> +	if (bus)
->> +		put_device(&bus->dev);
->> +}
->> +EXPORT_SYMBOL(pci_bus_put);
->> +
->>  void pci_add_resource_offset(struct list_head *resources, struct resource *res,
->>  			     resource_size_t offset)
->>  {
-> Hi Zheng,
-> 	Could you please help to split addition of pci_bus_get() and pci_bus_put()
-> into a separate patch? I'm working on some patches which depends on this.
+If I understand correctly, you need v3.9-rc1 or later,
+CONFIG_PROVE_LOCKING=y, and an SR-IOV device to see the warning.
 
-Sure, a glad thing that it is also useful to you!:)
+I like the idea of fixing the spurious warning for v3.10 and
+backporting to -stable.  It sounds like there's a cleaner fix in the
+works that needs a bit more polishing.  If we need a quick fix sooner,
+we'll still have this one in our back       pocket.
 
-> 
->> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
->> index ee599f2..24134cd 100644
->> --- a/drivers/pci/iov.c
->> +++ b/drivers/pci/iov.c
->> @@ -75,18 +75,20 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
->>  	struct pci_dev *virtfn;
->>  	struct resource *res;
->>  	struct pci_sriov *iov = dev->sriov;
->> +	struct pci_bus *bus;
->>  
->> -	virtfn = alloc_pci_dev();
->> +	virtfn = pci_alloc_dev(NULL);
->>  	if (!virtfn)
->>  		return -ENOMEM;
->>  
->>  	mutex_lock(&iov->dev->sriov->lock);
->> -	virtfn->bus = virtfn_add_bus(dev->bus, virtfn_bus(dev, id));
->> -	if (!virtfn->bus) {
->> +	bus = virtfn_add_bus(dev->bus, virtfn_bus(dev, id));
->> +	if (!bus) {
->>  		kfree(virtfn);
->>  		mutex_unlock(&iov->dev->sriov->lock);
->>  		return -ENOMEM;
->>  	}
->> +	virtfn->bus = pci_bus_get(bus);
->>  	virtfn->devfn = virtfn_devfn(dev, id);
->>  	virtfn->vendor = dev->vendor;
->>  	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_DID, &virtfn->device);
->> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
->> index 0bb92e4..9d37d46 100644
->> --- a/drivers/pci/probe.c
->> +++ b/drivers/pci/probe.c
->> @@ -1209,10 +1209,8 @@ struct pci_dev *pci_alloc_dev(struct pci_bus *bus)
->>  
->>  	INIT_LIST_HEAD(&dev->bus_list);
->>  
->> -	if (bus) {
->> -		get_device(&bus->dev);
->> -		dev->bus = bus;
->> -	}
->> +	if (bus)
-> How about remove above redundant check?
-
-Thanks for your review.
-Yeah, the pre-check seems redundant, but I think it can avoid the meaningless calling
-pci_bus_get() and setting dev->bus.
-
-Best regards,
-Gu
-
-> 
->> +		dev->bus = pci_bus_get(bus);
->>  
->>  	return dev;
->>  }
->> @@ -1272,11 +1270,10 @@ static struct pci_dev *pci_scan_device(struct pci_bus *bus, int devfn)
->>  	if (!pci_bus_read_dev_vendor_id(bus, devfn, &l, 60*1000))
->>  		return NULL;
->>  
->> -	dev = alloc_pci_dev();
->> +	dev = pci_alloc_dev(bus);
->>  	if (!dev)
->>  		return NULL;
->>  
->> -	dev->bus = bus;
->>  	dev->devfn = devfn;
->>  	dev->vendor = l & 0xffff;
->>  	dev->device = (l >> 16) & 0xffff;
->> diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
->> index cc875e6..fffdee8 100644
->> --- a/drivers/pci/remove.c
->> +++ b/drivers/pci/remove.c
->> @@ -38,6 +38,8 @@ static void pci_destroy_dev(struct pci_dev *dev)
->>  	list_del(&dev->bus_list);
->>  	up_write(&pci_bus_sem);
->>  
->> +	pci_bus_put(dev->bus);
->> +
->>  	pci_free_resources(dev);
->>  	put_device(&dev->dev);
->>  }
->> diff --git a/drivers/scsi/megaraid.c b/drivers/scsi/megaraid.c
->> index 9504ec0..e1660ca 100644
->> --- a/drivers/scsi/megaraid.c
->> +++ b/drivers/scsi/megaraid.c
->> @@ -2025,7 +2025,7 @@ megaraid_abort_and_reset(adapter_t *adapter, Scsi_Cmnd *cmd, int aor)
->>  static inline int
->>  make_local_pdev(adapter_t *adapter, struct pci_dev **pdev)
->>  {
->> -	*pdev = alloc_pci_dev();
->> +	*pdev = pci_alloc_dev(NULL);
->>  
->>  	if( *pdev == NULL ) return -1;
->>  
->> diff --git a/include/linux/pci.h b/include/linux/pci.h
->> index 682de2b..c5f245d 100644
->> --- a/include/linux/pci.h
->> +++ b/include/linux/pci.h
->> @@ -1002,6 +1002,9 @@ int pci_request_selected_regions_exclusive(struct pci_dev *, int, const char *);
->>  void pci_release_selected_regions(struct pci_dev *, int);
->>  
->>  /* drivers/pci/bus.c */
->> +extern struct pci_bus *pci_bus_get(struct pci_bus *bus);
->> +extern void pci_bus_put(struct pci_bus *bus);
->> +
->>  void pci_add_resource(struct list_head *resources, struct resource *res);
->>  void pci_add_resource_offset(struct list_head *resources, struct resource *res,
->>  			     resource_size_t offset);
->>
-> 
-> 
-
-
+Bjorn
