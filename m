@@ -1,98 +1,26 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52482 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934557Ab3DKNyJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 11 Apr 2013 09:54:09 -0400
-Date: Thu, 11 Apr 2013 15:53:40 +0200
-From: Veaceslav Falico <vfalico@redhat.com>
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: Rusty Russell <rusty@rustcorp.com.au>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	bhelgaas@google.com
-Subject: Re: [PATCH] module: add kset_obj_exists() and use it
-Message-ID: <20130411135340.GF21320@redhat.com>
-References: <1365506529-8396-1-git-send-email-vfalico@redhat.com>
- <87y5cq6ei9.fsf@rustcorp.com.au>
- <20130411095537.GC21320@redhat.com>
- <20130411132831.GC2909@kroah.com>
+Received: from snt0-omc4-s31.snt0.hotmail.com ([65.55.90.234]:34046 "EHLO
+	snt0-omc4-s31.snt0.hotmail.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S967698Ab3DSDFU convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 18 Apr 2013 23:05:20 -0400
+Message-ID: <SNT136-W425B9A4DBEA719E570080DB2C80@phx.gbl>
+From: Frank Rizzo <thefrankrizzo@hotmail.com>
+To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Rescan PCIE bus to find recently powered on device.
+Date: Thu, 18 Apr 2013 19:59:11 -0700
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-In-Reply-To: <20130411132831.GC2909@kroah.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 11, 2013 at 06:28:31AM -0700, Greg KH wrote:
->On Thu, Apr 11, 2013 at 11:55:37AM +0200, Veaceslav Falico wrote:
->> However, I think my patch still adds something good, cause now we have 2
->> cases where we basically do:
->>
->> k = kset_find_obj();
->> if (!k)
->> 	return;
->> kobject_put(k);
->>
->> which adds useless overhead (by using kobject_get()/kobject_put(), and
->> kobject_release() - which is called from kobject_put()) - where we should
->> only verify if there exists a kobject with the specified name.
->>
->> Should I resend it with a properly fixed commit message, or it's really not
->> needed?
->
->I don't think it's really needed, there is no speed/overhead issue here
->and you need to do the kobject_get/put stuff anyway if you are trying to
->look at a kobject.
+Hey list.
 
-This is the point, actually, that we don't need to look at a kobject. We
-only need to know if it existed that time or not, here are those two
-examples of code:
+I'm working on a driver for a device that's external from the PC.  It's connected to the PC via a weird cable that connects to a PCIE card inside the case that appears to be nothing other than glue logic to allow the signals from the cable to be tossed onto the bus.
 
-static int mod_sysfs_init(struct module *mod)
-{
-         int err;
-         struct kobject *kobj;
+When the external device is powered off during boot, nothing is found.  hwinfo doesn't find it, lspci doesn't find it, etc.  If you power on the device BEFORE booting, everything is found, and it works fine.  And lastly, if you power it on AFTER Linux has booted, you still can't find it.  I've tried echoing "1" to rescan, and everything else that I could find via Google search.
 
-	...
+So, what are my options here?  I'm not allergic to adding code to the driver to scan for the device periodically, if I knew HOW to find it.  And, once found, how do I get it registered?
 
-         kobj = kset_find_obj(module_kset, mod->name);
-         if (kobj) {
-                 printk(KERN_ERR "%s: module is already loaded\n", mod->name);
-                 kobject_put(kobj);
-                 err = -EINVAL;
-                 goto out;
-         }
 
-	...
-
-So we just verify if there's a kobject with mod->name, and if it exists -
-_put() it back and return, otherwise do nothing (with it).
-
-Same here:
-
-static char *make_slot_name(const char *name)
-{
-	...
-
-         for (;;) {
-                 struct kobject *dup_slot;
-                 dup_slot = kset_find_obj(pci_slots_kset, new_name);
-                 if (!dup_slot)
-                         break;
-                 kobject_put(dup_slot);
-
-	...
-
-We look if there exists a kobject named new_name in pci_slots_kset, if yes
-- free it and try another name, if not - then we're good to go.
-
-In both examples we don't look at that kobject, and only uselessly
-_get()/_put() it. And it looks a bit ugly. After the patch, in both cases,
-it takes only one call to kset_obj_exists() to find out if the object
-exists at that time.
-
-However, I have absolutely no knowledge/experience in this domain and might
-for sure be missing something. Sorry if it's the case.
-
->
->thanks,
->
->greg k-h
+Thanks! 		 	   		  
