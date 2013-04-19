@@ -1,119 +1,60 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <2880576.TkeK8oBDas@vostro.rjw.lan>
-References: <48795235.crcTAaJqPb@vostro.rjw.lan> <CAE9FiQVEWy2MVfVmv4oL9D24OcF83dQv+OcFd5K6v8ZHeGumJA@mail.gmail.com>
- <CAErSpo7vUWSoav+rJgGK15xA7f0W+a0_16tZLFGCz5HO-HVZ2g@mail.gmail.com> <2880576.TkeK8oBDas@vostro.rjw.lan>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 16 Apr 2013 12:31:55 -0600
-Message-ID: <CAErSpo69sjvPRX5kXcb4kN14HxVBXMVWnG-nGDVaFZd2pUY3YQ@mail.gmail.com>
-Subject: Re: [PATCH] PCI / PM: Fix fallback to PCI_D0 in pci_platform_power_transition()
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	"Benenati, Chris J" <chris.j.benenati@intel.com>,
-	Ajaykumar Hotchandani <ajaykumar.hotchandani@oracle.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:18175 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754208Ab3DSVF7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 19 Apr 2013 17:05:59 -0400
+Message-ID: <1366405557.9609.122.camel@gandalf.local.home>
+Subject: Re: "unsigned expression < 0" always false warning
+From: Steven Rostedt <rostedt@goodmis.org>
+To: Gary Hade <garyhade@us.ibm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Frederic Weisbecker <fweisbec@gmail.com>,
+	Ingo Molnar <mingo@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Lance Ortiz <lance.ortiz@hp.com>
+Date: Fri, 19 Apr 2013 17:05:57 -0400
+In-Reply-To: <20130419204304.GA28603@us.ibm.com>
+References: <CAErSpo4YXcY9fuOKWYGDkddJwk68kmZTohsmVB6QvrhjboOh1Q@mail.gmail.com>
+	 <20130419204304.GA28603@us.ibm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 16, 2013 at 12:01 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> On Monday, April 15, 2013 02:18:18 PM Bjorn Helgaas wrote:
->> On Fri, Apr 12, 2013 at 11:50 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->> > On Fri, Apr 12, 2013 at 4:58 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
->> >> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->> >>
->> >> Commit b51306c (PCI: Set device power state to PCI_D0 for device
->> >> without native PM support) modified pci_platform_power_transition()
->> >> by adding code causing dev->current_state for devices that don't
->> >> support native PCI PM but are power-manageable by the platform to be
->> >> changed to PCI_D0 regardless of the value returned by the preceding
->> >> platform_pci_set_power_state().  In particular, that also is done
->> >> if the platform_pci_set_power_state() has been successful, which
->> >> causes the correct power state of the device set by
->> >> pci_update_current_state() in that case to be overwritten by PCI_D0.
->> >>
->> >> Fix that mistake by making the fallback to PCI_D0 only happen if
->> >> the platform_pci_set_power_state() has returned an error.
->> >>
->> >> Reported-by: Chris J. Benenati <chris.j.benenati@intel.com>
->> >> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->> >> Cc: <stable@vger.kernel.org>
->>
->> I folded in Yinghai's simplification and added a URL to Chris's report
->> and applied to my pci/rafael-pm branch:
->> http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/rafael-pm
->>
->> If it still looks good to you, Rafael, I'll merge it to next for v3.10.
->
-> Well, the simplification adds an extra check for error into both code paths,
-> so I'm not sure if it's really worth it (that's why I didn't do it originally
-> in the first place), but I suppose that's not a big deal.  It looks good as far
-> as the correctness is concerned anyway.
->
->> I don't know what the user-visible effect of this is, and it's been
->> around for a long time, but if you think this should go in v3.9
->> instead, let me know.
->
-> I think v3.9+stable should be sufficient.
+On Fri, 2013-04-19 at 13:43 -0700, Gary Hade wrote:
 
-It sounds like you meant to say "v3.10+stable should be sufficient".
-Is that right, or do you want me to push this to Linus before v3.9 is
-released?
+> The above
+>   "__field(        u32,            status          )"
+> gets expanded to
+>   "ret = trace_define_field(event_call, "u32", "status", __builtin_offsetof(typeof(field),status), sizeof(field.status), (((u32)(-1)) < (u32)0), FILTER_OTHER); if (ret) return ret;"
+> 
+> The warning is triggered by:
+>   "(((u32)(-1)) < (u32)0)"
+> which was put there by is_signed_type.
+> 
+> It appears that is_signed_type is simply taking advantage of the same
+> action that the compiler is warning about to perform it's function.
 
->> >> ---
->> >>  drivers/pci/pci.c |    3 +--
->> >>  1 file changed, 1 insertion(+), 2 deletions(-)
->> >>
->> >> Index: linux-pm/drivers/pci/pci.c
->> >> ===================================================================
->> >> --- linux-pm.orig/drivers/pci/pci.c
->> >> +++ linux-pm/drivers/pci/pci.c
->> >> @@ -646,8 +646,7 @@ static int pci_platform_power_transition
->> >>                 error = platform_pci_set_power_state(dev, state);
->> >>                 if (!error)
->> >>                         pci_update_current_state(dev, state);
->> >> -               /* Fall back to PCI_D0 if native PM is not supported */
->> >> -               if (!dev->pm_cap)
->> >> +               else if (!dev->pm_cap) /* Fall back to PCI_D0 */
->> >>                         dev->current_state = PCI_D0;
->> >>         } else {
->> >>                 error = -ENODEV;
->> >>
->> >
->> > Acked-by: Yinghai Lu <yinghai@kernel.org>
->> >
->> > also could simplify it further.
->> >
->> > ---
->> >  drivers/pci/pci.c |   12 ++++--------
->> >  1 file changed, 4 insertions(+), 8 deletions(-)
->> >
->> > Index: linux-2.6/drivers/pci/pci.c
->> > ===================================================================
->> > --- linux-2.6.orig/drivers/pci/pci.c
->> > +++ linux-2.6/drivers/pci/pci.c
->> > @@ -646,15 +646,11 @@ static int pci_platform_power_transition
->> >          error = platform_pci_set_power_state(dev, state);
->> >          if (!error)
->> >              pci_update_current_state(dev, state);
->> > -        /* Fall back to PCI_D0 if native PM is not supported */
->> > -        if (!dev->pm_cap)
->> > -            dev->current_state = PCI_D0;
->> > -    } else {
->> > +    } else
->> >          error = -ENODEV;
->> > -        /* Fall back to PCI_D0 if native PM is not supported */
->> > -        if (!dev->pm_cap)
->> > -            dev->current_state = PCI_D0;
->> > -    }
->> > +
->> > +    if (error && !dev->pm_cap) /* Fall back to PCI_D0 */
->> > +        dev->current_state = PCI_D0;
->> >
->> >      return error;
->> >  }
-> --
-> I speak only for myself.
-> Rafael J. Wysocki, Intel Open Source Technology Center.
+Yeah, that's the point of the macro.
+
+> 
+> Not sure how to make is_signed_type warningless although
+> it does create a significant amount of noise during a full
+> `make W=1` kernel build.  With 3.9-rc7 it appears to be
+> responsible for 1401 of 1476 occurrences of "warning: comparison
+> of unsigned expression < 0 is always false".
+
+Since it is complaining about being less than zero, I just checked, the
+following also works.
+
+#define is_signed_type(type) ((type)-1 < (type)1)
+
+And doesn't give the warning.
+
+I'll go make a patch.
+
+Thanks!
+
+-- Steve
+
+
