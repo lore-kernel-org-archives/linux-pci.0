@@ -1,128 +1,119 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35319 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755293Ab3DWVQs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 23 Apr 2013 17:16:48 -0400
-Message-ID: <5176FA3B.8040003@redhat.com>
-Date: Tue, 23 Apr 2013 17:16:43 -0400
-From: Don Dutile <ddutile@redhat.com>
+Received: from mail-vc0-f180.google.com ([209.85.220.180]:35132 "EHLO
+	mail-vc0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751450Ab3DSRcs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 19 Apr 2013 13:32:48 -0400
+Received: by mail-vc0-f180.google.com with SMTP id m16so4063187vca.39
+        for <linux-pci@vger.kernel.org>; Fri, 19 Apr 2013 10:32:47 -0700 (PDT)
 MIME-Version: 1.0
-To: Greg Rose <gregory.v.rose@intel.com>
-CC: Alexander Duyck <alexander.h.duyck@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Kirsher, Jeffrey T" <jeffrey.t.kirsher@intel.com>,
-	David Miller <davem@davemloft.net>,
-	netdev <netdev@vger.kernel.org>, gospo@redhat.com,
-	sassmann@redhat.com,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Chris Wright <chrisw@redhat.com>
-Subject: Re: [net-next 08/14] pci: Add SRIOV helper function to determine
- if VFs are assigned to guest
-References: <1366451353-24714-1-git-send-email-jeffrey.t.kirsher@intel.com> <1366451353-24714-9-git-send-email-jeffrey.t.kirsher@intel.com> <1366515088.2209.15.camel@jtkirshe-mobl> <CAErSpo4D4rn4G56+YT4Ja-S4cjnJ6svBaH3v+_n=cmS5CooC+g@mail.gmail.com> <5175B0A9.7070100@intel.com> <20130423125101.00005bb7@unknown>
-In-Reply-To: <20130423125101.00005bb7@unknown>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <51711214.8050606@cn.fujitsu.com>
+References: <516FB647.5030203@cn.fujitsu.com> <CAErSpo65ARR_fZwsGCZDJqbPWktHYUkufgPt-2mWwur=nPR1Qg@mail.gmail.com>
+ <51711214.8050606@cn.fujitsu.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 19 Apr 2013 11:32:27 -0600
+Message-ID: <CAErSpo7yPUTOPYsPkhKTpe2yxbo_XN4Y4iBesVLudAmbuRsJ+A@mail.gmail.com>
+Subject: Re: [PATCH 1/2] PCI: Introduce pci_alloc_dev(struct pci_bus*) to
+ replace alloc_pci_dev()
+To: Gu Zheng <guz.fnst@cn.fujitsu.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	tangchen <tangchen@cn.fujitsu.com>,
+	Lin Feng <linfeng@cn.fujitsu.com>,
+	li guang <lig.fnst@cn.fujitsu.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/23/2013 03:51 PM, Greg Rose wrote:
-> On Mon, 22 Apr 2013 14:50:33 -0700
-> Alexander Duyck<alexander.h.duyck@intel.com>  wrote:
+On Fri, Apr 19, 2013 at 3:44 AM, Gu Zheng <guz.fnst@cn.fujitsu.com> wrote:
+> From 906167d9a09babbe189f62944ecb8c0b198a0f64 Mon Sep 17 00:00:00 2001
+> From: Gu Zheng <guz.fnst@cn.fujitsu.com>
+> Date: Fri, 19 Apr 2013 18:12:32 +0900
+> Subject: [PATCH 1/2] PCI: Introduce  pci_alloc_dev(struct pci_bus*) to replace alloc_pci_dev()
 >
->> On 04/22/2013 01:09 PM, Bjorn Helgaas wrote:
->>> On Sat, Apr 20, 2013 at 9:31 PM, Jeff Kirsher
->>> <jeffrey.t.kirsher@intel.com>  wrote:
->>>> On Sat, 2013-04-20 at 02:49 -0700, Jeff Kirsher wrote:
->>>>> From: Alexander Duyck<alexander.h.duyck@intel.com>
->>>>>
->>>>> This function is meant to add a helper function that will
->>>>> determine if a PF has any VFs that are currently assigned to a
->>>>> guest.  We currently have been implementing this function per
->>>>> driver, and going forward I would like to avoid that by making
->>>>> this function generic and using this helper.
->>>>>
->>>>> Signed-off-by: Alexander Duyck<alexander.h.duyck@intel.com>
->>>>> Signed-off-by: Jeff Kirsher<jeffrey.t.kirsher@intel.com>
->>>> Adding linux-pci mailing list and Bjorn to the CC.
->>>>
->>>> Bjorn- David Miller needs a signoff by PCI maintainer.
->>>>
->>>>> ---
->>>>>   drivers/pci/iov.c   | 41
->>>>> +++++++++++++++++++++++++++++++++++++++++ include/linux/pci.h |
->>>>> 5 +++++ 2 files changed, 46 insertions(+)
->>>>>
->>>>> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
->>>>> index ee599f2..fd99720 100644
->>>>> --- a/drivers/pci/iov.c
->>>>> +++ b/drivers/pci/iov.c
->>>>> @@ -729,6 +729,47 @@ int pci_num_vf(struct pci_dev *dev)
->>>>>   EXPORT_SYMBOL_GPL(pci_num_vf);
->>>>>
->>>>>   /**
->>>>> + * pci_vfs_assigned - returns number of VFs are assigned to a
->>>>> guest
->>>>> + * @dev: the PCI device
->>>>> + *
->>>>> + * Returns number of VFs belonging to this device that are
->>>>> assigned to a guest.
->>>>> + * If device is not a physical function returns -ENODEV.
->>>>> + */
->>>>> +int pci_vfs_assigned(struct pci_dev *dev)
->>> I guess the idea here is to replace be_find_vfs(),
->>> igb_vfs_are_assigned(), ixgbe_vfs_are_assigned(), etc.  It does seem
->>> good to reduce duplicated code.
->>
->> The general idea was just to remove duplicate code.  As is we have a
->> couple more drivers on the way that would end up needing a similar
->> function.
->>
->>> I'm trying to figure out why this is safe -- there's no explicit
->>> synchronization between the iteration through PCI devices looking
->>> for matching VFs and the device assignment/deassignment paths that
->>> set or clear PCI_DEV_FLAGS_ASSIGNED, so on the face of it, it looks
->>> like things could change between calling pci_vfs_assigned() and
->>> using the result to make a decision.
->>>
->>> Most of the calls would be in .remove() functions, so maybe there's
->>> some sort of synchronization in that path that  makes this safe.
->>>
->>> Bjorn
->>
->> I'm assuming this will be used in regions that are somehow protected
->> since the main spots where this might be called would be probe,
->> remove, or when updating the number of VFs.  From what I can tell in
->> the Xen case there is a driver stub that is loaded that sets the flag
->> so that is covered by probe/remove.  I don't know about the KVM case.
+> Now here we introduce a new struct pci_dev *pci_alloc_dev(struct pci_bus *bus) to replace alloc_pci_dev().
+> It take a "struct pci_bus *" argument, so we can alloc a pci device on a target pci bus, and it acquire
+> the reference of the pci_bus.
+> Since the old alloc_pci_dev() is exported, so we still keep it for a while but mark it as __deprecated.
 >
-> KVM should be fine.  Setting/clearing the flag occurs while a device is
-> being assigned to or removed from a VM - presumably device assignment
-> is already safe against race conditions.  I'd find it hard to believe
-> that it's not.  Code is in ../virt/assigned_dev.c and ../virt/iommu.c.
+> Signed-off-by: Gu Zheng <guz.fnst@cn.fujitsu.com>
+> ---
+>  drivers/pci/probe.c |   21 ++++++++++++++++++++-
+>  include/linux/pci.h |    4 +++-
+>  2 files changed, 23 insertions(+), 2 deletions(-)
 >
-> - Greg
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index b494066..5233fb6 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1199,7 +1199,7 @@ static void pci_release_bus_bridge_dev(struct device *dev)
+>         kfree(bridge);
+>  }
 >
-Added Chris to this thread since he has history here...
+> -struct pci_dev *alloc_pci_dev(void)
+> +struct pci_dev *pci_alloc_dev(struct pci_bus *bus)
+>  {
+>         struct pci_dev *dev;
+>
+> @@ -1209,6 +1209,25 @@ struct pci_dev *alloc_pci_dev(void)
+>
+>         INIT_LIST_HEAD(&dev->bus_list);
+>
+> +       if (bus) {
+> +               get_device(&bus->dev);
+> +               dev->bus = bus;
+> +       }
+> +
+> +       return dev;
+> +}
+> +EXPORT_SYMBOL(pci_alloc_dev);
+> +
+> +__deprecated struct pci_dev *alloc_pci_dev(void)
 
-Q: Why not link-list the VF pci-dev's off the PF's pci-dev when they are created?
-    (yes, voices in my head have asked me this question in the past! ;-) )
-    -- that way, finding them is easy, and locked down when doing a get on the PF pci-dev.
-    a backptr of the VF's pci-dev to it's PF pci-dev would be handy too!
-    --> it'd also simplify that rmmod PF driver while VF drivers loaded (& assigned)
-        case as well.
+I don't think there's any point in marking the function *definition*
+as deprecated; it only makes sense for the declaration in the header
+file, so callers of the function will generate warnings.
 
+> +{
+> +       struct pci_dev *dev;
+> +       printk(KERN_DEBUG "alloc_pci_dev is deprecated, please use pci_alloc_dev(struct pci_bus *) instead!\n");
 
->>
->> Thanks,
->>
->> Alex
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe netdev" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I don't want to print a message at run-time, because users will see
+the message and complain about it, but they can't do anything about
+it.  And neither can we, because it will only be out-of-tree modules
+that call alloc_pci_dev().  The build-time warning is all we can do.
+
+> +       dev = kzalloc(sizeof(struct pci_dev), GFP_KERNEL);
+> +       if (!dev)
+> +               return NULL;
+> +
+> +       INIT_LIST_HEAD(&dev->bus_list);
+
+Can't you implement this as simply:
+
+    return pci_alloc_dev(NULL);
+
+> +
+>         return dev;
+>  }
+>  EXPORT_SYMBOL(alloc_pci_dev);
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 710067f..682de2b 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -348,7 +348,9 @@ static inline struct pci_dev *pci_physfn(struct pci_dev *dev)
+>         return dev;
+>  }
 >
+> -extern struct pci_dev *alloc_pci_dev(void);
+> +extern struct pci_dev *pci_alloc_dev(struct pci_bus *bus);
+> +
+> +extern __deprecated struct pci_dev *alloc_pci_dev(void);
+>
+>  #define        to_pci_dev(n) container_of(n, struct pci_dev, dev)
+>  #define for_each_pci_dev(d) while ((d = pci_get_device(PCI_ANY_ID, PCI_ANY_ID, d)) != NULL)
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+> 1.7.1
+>
