@@ -1,62 +1,148 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e8.ny.us.ibm.com ([32.97.182.138]:41043 "EHLO e8.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759352Ab3DDLjo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 4 Apr 2013 07:39:44 -0400
-Received: from /spool/local
-	by e8.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <shangw@linux.vnet.ibm.com>;
-	Thu, 4 Apr 2013 07:39:43 -0400
-Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by d01dlp02.pok.ibm.com (Postfix) with ESMTP id 672686E8040
-	for <linux-pci@vger.kernel.org>; Thu,  4 Apr 2013 07:39:38 -0400 (EDT)
-Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
-	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id r34BdeKe293578
-	for <linux-pci@vger.kernel.org>; Thu, 4 Apr 2013 07:39:40 -0400
-Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
-	by d01av02.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id r34Bdex7023814
-	for <linux-pci@vger.kernel.org>; Thu, 4 Apr 2013 08:39:40 -0300
-From: Gavin Shan <shangw@linux.vnet.ibm.com>
-To: linux-pci@vger.kernel.org
-Cc: bhelgaas@google.com, Gavin Shan <shangw@linux.vnet.ibm.com>
-Subject: [PATCH 4/5] PCI: Use cached MSI cap in pci_enable_msi_block_auto()
-Date: Thu,  4 Apr 2013 19:39:31 +0800
-Message-Id: <1365075572-20763-5-git-send-email-shangw@linux.vnet.ibm.com>
-In-Reply-To: <1365075572-20763-1-git-send-email-shangw@linux.vnet.ibm.com>
-References: <1365075572-20763-1-git-send-email-shangw@linux.vnet.ibm.com>
+Received: from mail-vb0-f42.google.com ([209.85.212.42]:48650 "EHLO
+	mail-vb0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752575Ab3DSRfl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 19 Apr 2013 13:35:41 -0400
+Received: by mail-vb0-f42.google.com with SMTP id p12so3931106vbe.15
+        for <linux-pci@vger.kernel.org>; Fri, 19 Apr 2013 10:35:41 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <51711236.9070305@cn.fujitsu.com>
+References: <516FB647.5030203@cn.fujitsu.com> <CAErSpo65ARR_fZwsGCZDJqbPWktHYUkufgPt-2mWwur=nPR1Qg@mail.gmail.com>
+ <51711236.9070305@cn.fujitsu.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 19 Apr 2013 11:35:20 -0600
+Message-ID: <CAErSpo5ywSx-ZR=Z3+v8_QfBGTrDF__SQ09fU-6qsU=ZdqFEMQ@mail.gmail.com>
+Subject: Re: [PATCH 2/2] PCI: Convert alloc_pci_dev(void) to
+ pci_alloc_dev(bus) instead
+To: Gu Zheng <guz.fnst@cn.fujitsu.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	tangchen <tangchen@cn.fujitsu.com>,
+	Lin Feng <linfeng@cn.fujitsu.com>,
+	li guang <lig.fnst@cn.fujitsu.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The patch intends to use cached MSI capability offset instead of
-polling that from config space in pci_enable_msi_block_auto().
+On Fri, Apr 19, 2013 at 3:45 AM, Gu Zheng <guz.fnst@cn.fujitsu.com> wrote:
+> From 2535fb1a2502b3d9bebc31f7c7205f42392ea5f9 Mon Sep 17 00:00:00 2001
+> From: Gu Zheng <guz.fnst@cn.fujitsu.com>
+> Date: Fri, 19 Apr 2013 17:46:36 +0900
+> Subject: [PATCH 2/2] PCI: Convert alloc_pci_dev(void) to pci_alloc_dev(bus) instead
+>
+> Use the new pci_alloc_dev(bus) to replace the existing using of alloc_pci_dev(void).
 
-Signed-off-by: Gavin Shan <shangw@linux.vnet.ibm.com>
----
- drivers/pci/msi.c |    7 +++----
- 1 files changed, 3 insertions(+), 4 deletions(-)
+You didn't do anything with Yinghai's comment.  He's 100% correct: you
+have to add the put_device() that corresponds to the new get_device()
+calls you're adding.  Both have to be in the same patch.
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 182474d..0b6b254 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -848,14 +848,13 @@ EXPORT_SYMBOL(pci_enable_msi_block);
- 
- int pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *maxvec)
- {
--	int ret, pos, nvec;
-+	int ret, nvec;
- 	u16 msgctl;
- 
--	pos = pci_find_capability(dev, PCI_CAP_ID_MSI);
--	if (!pos)
-+	if (!dev->msi_cap)
- 		return -EINVAL;
- 
--	pci_read_config_word(dev, pos + PCI_MSI_FLAGS, &msgctl);
-+	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &msgctl);
- 	ret = 1 << ((msgctl & PCI_MSI_FLAGS_QMASK) >> 1);
- 
- 	if (maxvec)
--- 
-1.7.5.4
-
+> Signed-off-by: Gu Zheng <guz.fnst@cn.fujitsu.com>
+> ---
+>  arch/powerpc/kernel/pci_of_scan.c |    3 +--
+>  drivers/char/agp/alpha-agp.c      |    2 +-
+>  drivers/char/agp/parisc-agp.c     |    2 +-
+>  drivers/pci/iov.c                 |    2 +-
+>  drivers/pci/probe.c               |    3 +--
+>  drivers/scsi/megaraid.c           |    2 +-
+>  6 files changed, 6 insertions(+), 8 deletions(-)
+>
+> diff --git a/arch/powerpc/kernel/pci_of_scan.c b/arch/powerpc/kernel/pci_of_scan.c
+> index 2a67e9b..24d01c4 100644
+> --- a/arch/powerpc/kernel/pci_of_scan.c
+> +++ b/arch/powerpc/kernel/pci_of_scan.c
+> @@ -128,7 +128,7 @@ struct pci_dev *of_create_pci_dev(struct device_node *node,
+>         const char *type;
+>         struct pci_slot *slot;
+>
+> -       dev = alloc_pci_dev();
+> +       dev = pci_alloc_dev(bus);
+>         if (!dev)
+>                 return NULL;
+>         type = of_get_property(node, "device_type", NULL);
+> @@ -137,7 +137,6 @@ struct pci_dev *of_create_pci_dev(struct device_node *node,
+>
+>         pr_debug("    create device, devfn: %x, type: %s\n", devfn, type);
+>
+> -       dev->bus = bus;
+>         dev->dev.of_node = of_node_get(node);
+>         dev->dev.parent = bus->bridge;
+>         dev->dev.bus = &pci_bus_type;
+> diff --git a/drivers/char/agp/alpha-agp.c b/drivers/char/agp/alpha-agp.c
+> index dd84af4..199b8e9 100644
+> --- a/drivers/char/agp/alpha-agp.c
+> +++ b/drivers/char/agp/alpha-agp.c
+> @@ -174,7 +174,7 @@ alpha_core_agp_setup(void)
+>         /*
+>          * Build a fake pci_dev struct
+>          */
+> -       pdev = alloc_pci_dev();
+> +       pdev = pci_alloc_dev(NULL);
+>         if (!pdev)
+>                 return -ENOMEM;
+>         pdev->vendor = 0xffff;
+> diff --git a/drivers/char/agp/parisc-agp.c b/drivers/char/agp/parisc-agp.c
+> index 94821ab..bf5d247 100644
+> --- a/drivers/char/agp/parisc-agp.c
+> +++ b/drivers/char/agp/parisc-agp.c
+> @@ -333,7 +333,7 @@ parisc_agp_setup(void __iomem *ioc_hpa, void __iomem *lba_hpa)
+>         struct agp_bridge_data *bridge;
+>         int error = 0;
+>
+> -       fake_bridge_dev = alloc_pci_dev();
+> +       fake_bridge_dev = pci_alloc_dev(NULL);
+>         if (!fake_bridge_dev) {
+>                 error = -ENOMEM;
+>                 goto fail;
+> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+> index ee599f2..dba2031 100644
+> --- a/drivers/pci/iov.c
+> +++ b/drivers/pci/iov.c
+> @@ -76,7 +76,7 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
+>         struct resource *res;
+>         struct pci_sriov *iov = dev->sriov;
+>
+> -       virtfn = alloc_pci_dev();
+> +       virtfn = pci_alloc_dev(NULL);
+>         if (!virtfn)
+>                 return -ENOMEM;
+>
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 5233fb6..59637a6 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1280,11 +1280,10 @@ static struct pci_dev *pci_scan_device(struct pci_bus *bus, int devfn)
+>         if (!pci_bus_read_dev_vendor_id(bus, devfn, &l, 60*1000))
+>                 return NULL;
+>
+> -       dev = alloc_pci_dev();
+> +       dev = pci_alloc_dev(bus);
+>         if (!dev)
+>                 return NULL;
+>
+> -       dev->bus = bus;
+>         dev->devfn = devfn;
+>         dev->vendor = l & 0xffff;
+>         dev->device = (l >> 16) & 0xffff;
+> diff --git a/drivers/scsi/megaraid.c b/drivers/scsi/megaraid.c
+> index 9504ec0..e1660ca 100644
+> --- a/drivers/scsi/megaraid.c
+> +++ b/drivers/scsi/megaraid.c
+> @@ -2025,7 +2025,7 @@ megaraid_abort_and_reset(adapter_t *adapter, Scsi_Cmnd *cmd, int aor)
+>  static inline int
+>  make_local_pdev(adapter_t *adapter, struct pci_dev **pdev)
+>  {
+> -       *pdev = alloc_pci_dev();
+> +       *pdev = pci_alloc_dev(NULL);
+>
+>         if( *pdev == NULL ) return -1;
+>
+> --
+> 1.7.1
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
