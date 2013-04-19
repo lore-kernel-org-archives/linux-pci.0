@@ -1,76 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from avon.wwwdotorg.org ([70.85.31.133]:60079 "EHLO
-	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751406Ab3DLS3L (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 12 Apr 2013 14:29:11 -0400
-Message-ID: <51685272.8010304@wwwdotorg.org>
-Date: Fri, 12 Apr 2013 12:29:06 -0600
-From: Stephen Warren <swarren@wwwdotorg.org>
+Received: from mail-oa0-f53.google.com ([209.85.219.53]:60289 "EHLO
+	mail-oa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751498Ab3DSPtp convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 19 Apr 2013 11:49:45 -0400
+Received: by mail-oa0-f53.google.com with SMTP id m6so3979322oag.26
+        for <linux-pci@vger.kernel.org>; Fri, 19 Apr 2013 08:49:44 -0700 (PDT)
 MIME-Version: 1.0
-To: Jay Agarwal <jagarwal@nvidia.com>
-CC: Prashant Gaikwad <pgaikwad@nvidia.com>,
-	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
-	Krishna Thota <kthota@nvidia.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Peter De Schrijver <pdeschrijver@nvidia.com>,
-	"thierry.reding@avionic-design.de" <thierry.reding@avionic-design.de>,
-	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"olof@lixom.net" <olof@lixom.net>,
-	Laxman Dewangan <ldewangan@nvidia.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"mturquette@linaro.org" <mturquette@linaro.org>,
-	Juha Tukkinen <jtukkinen@nvidia.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Hiroshi Doyu <hdoyu@nvidia.com>
-Subject: Re: [PATCH 1/3] ARM: tegra: pcie: Add tegra3 support
-References: <1365435688-4179-1-git-send-email-jagarwal@nvidia.com> <51630ABB.1020200@wwwdotorg.org> <C79B248886DD134989C8FF6B096A91AB91B36FB300@BGMAIL01.nvidia.com> <51683E00.4020506@wwwdotorg.org> <C79B248886DD134989C8FF6B096A91AB91B36FB302@BGMAIL01.nvidia.com>
-In-Reply-To: <C79B248886DD134989C8FF6B096A91AB91B36FB302@BGMAIL01.nvidia.com>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <5170B9BD.6040408@huawei.com>
+References: <SNT136-W425B9A4DBEA719E570080DB2C80@phx.gbl> <5170B9BD.6040408@huawei.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 19 Apr 2013 09:49:23 -0600
+Message-ID: <CAErSpo43xWdYE8MT9Y4Hdi0bkNh3D4Su6zThAVs72+nYiUD5qg@mail.gmail.com>
+Subject: Re: Rescan PCIE bus to find recently powered on device.
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Frank Rizzo <thefrankrizzo@hotmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/12/2013 11:06 AM, Jay Agarwal wrote:
->> On 04/12/2013 10:43 AM, Jay Agarwal wrote:
->>>> On 04/08/2013 09:41 AM, Jay Agarwal wrote:
->>>>> Signed-off-by: Jay Agarwal <jagarwal@nvidia.com>
->>>>>
->>>>> - Enable pcie root port 2 for cardhu
->>>>> - Make private data structure for each SOC
->>>>> - Add required tegra3 clocks and regulators
->>>>> - Add tegra3 specific code in enable controller
->>>>> - Modify clock tree to get clocks based on device
->>>>> - Based on git://gitorious.org/thierryreding/linux.git
->>>>
->>>> A couple more points on this patch:
->>>>
->>>> * You didn't mention that this series is based on Thierry's
->>>> work-in-progress tree, and not something immediately destined for
->>>> upstream. As such, only Thierry is expected to actually apply any of these
->> patches.
->>>>
->>> [>] Stephen, I have mentioned it in comment description as Based on
->> git://gitorious.org/thierryreding/linux.git, is this not enough?
+On Thu, Apr 18, 2013 at 9:27 PM, Yijing Wang <wangyijing@huawei.com> wrote:
+> On 2013/4/19 10:59, Frank Rizzo wrote:
+>> Hey list.
 >>
->> Well, first off, there are many branches there, and secondly the branch that
->> a series is based on doesn't necessarily imply much about what you expect
->> people to do with it.
+>> I'm working on a driver for a device that's external from the PC.  It's connected to the PC via a weird cable that connects to a PCIE card inside the case that appears to be nothing other than glue logic to allow the signals from the cable to be tossed onto the bus.
+
+The card probably contains a PCIe switch with the downstream link
+being routed on the cable.
+
 >>
-> I am not clear, What should I mention then?
+>> When the external device is powered off during boot, nothing is found.  hwinfo doesn't find it, lspci doesn't find it, etc.
 
-The branch name. Thierry's branch has the following:
+That's completely normal, of course.  When the device is powered off,
+it doesn't respond, so we can't find it.
 
-  remotes/gitorious_thierryreding_linux/drm/hdmi-for-3.9
-  remotes/gitorious_thierryreding_linux/drm/tegra-for-3.9
-  remotes/gitorious_thierryreding_linux/tegra/drm/for-3.8
-  remotes/gitorious_thierryreding_linux/tegra/drm/next
-  remotes/gitorious_thierryreding_linux/tegra/next
-  remotes/gitorious_thierryreding_linux/tegra/next-20130122
+>> If you power on the device BEFORE booting, everything is found, and it works fine.
 
-which of those was it based on?
+Also normal.
 
-Also, you simply said it was based on that repo. If you intend Thierry
-to apply the patches to his repo/branch, rather than the usual
-maintainers of the files you're editing, who you also CC'd, you should
-specify that.
+>> And lastly, if you power it on AFTER Linux has booted, you still can't find it.  I've tried echoing "1" to rescan, and everything else that I could find via Google search.
+>>
+>> So, what are my options here?  I'm not allergic to adding code to the driver to scan for the device periodically, if I knew HOW to find it.  And, once found, how do I get it registered?
+>>
+>
+> When your device power off during boot, system maybe will not reserve resource like bus res for your device. So when you power on your device after system boot,
+> system cannot scan your device by rescan interface, I guess.
+
+I think Yijing is right; this is probably a resource allocation
+problem.  Linux isn't smart enough to reassign bus numbers, MMIO
+address space, or I/O port numbers at run-time, so if we didn't leave
+space at boot-time to accommodate the new device, we won't be able to
+use it.
+
+I think your best option is to reserve space at boot-time.  The
+"pci=hpmemsize=..." and "pci=hpiosize=..." parameters might be useful,
+but since it sounds like we can't find the device at all, it's more
+likely that bus number space is the problem, and we don't have a
+parameter to reserve that.
+
+If you collect "lspci -vv" output (when device was powered on before
+boot) and complete dmesg logs (both from when device was powered on
+before boot and when it was powered off at boot), we should be able to
+figure out exactly what the problem is.
+
+Bjorn
