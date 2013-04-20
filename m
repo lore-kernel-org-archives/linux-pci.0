@@ -1,65 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:15212 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752827Ab3DLWMe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 12 Apr 2013 18:12:34 -0400
-From: "Benenati, Chris J" <chris.j.benenati@intel.com>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
-	"Wysocki, Rafael J" <rafael.j.wysocki@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: RE: Apparent bug in pci_platform_power_transition()
- [drivers/pci/pci.c]
-Date: Fri, 12 Apr 2013 22:12:32 +0000
-Message-ID: <27806FC4E5928A408B78E88BBC67A2306F4675A3@ORSMSX101.amr.corp.intel.com>
-References: <27806FC4E5928A408B78E88BBC67A2306F466BBA@ORSMSX101.amr.corp.intel.com>
- <4137609.B6PHIUpiDT@vostro.rjw.lan>
-In-Reply-To: <4137609.B6PHIUpiDT@vostro.rjw.lan>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-pd0-f179.google.com ([209.85.192.179]:61145 "EHLO
+	mail-pd0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932187Ab3DTQKr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 20 Apr 2013 12:10:47 -0400
+Received: by mail-pd0-f179.google.com with SMTP id x11so2758474pdj.38
+        for <linux-pci@vger.kernel.org>; Sat, 20 Apr 2013 09:10:47 -0700 (PDT)
+Message-ID: <5172BE02.2060701@gmail.com>
+Date: Sun, 21 Apr 2013 00:10:42 +0800
+From: Jiang Liu <liuj97@gmail.com>
 MIME-Version: 1.0
+To: Frank Rizzo <thefrankrizzo@hotmail.com>
+CC: Yijing Wang <wangyijing@huawei.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: Rescan PCIE bus to find recently powered on device.
+References: <SNT136-W425B9A4DBEA719E570080DB2C80@phx.gbl> <5170B9BD.6040408@huawei.com> <CAErSpo43xWdYE8MT9Y4Hdi0bkNh3D4Su6zThAVs72+nYiUD5qg@mail.gmail.com> <BLU0-SMTP305A7D1308063E03F4C5CE9B2C90@phx.gbl> <5171F610.80001@huawei.com> <BLU0-SMTP185893DF37F0C811FA0BCB7B2C90@phx.gbl> <517204AE.9030907@huawei.com> <BLU0-SMTP106EAAAE910BEDD2F047B19B2C90@phx.gbl>
+In-Reply-To: <BLU0-SMTP106EAAAE910BEDD2F047B19B2C90@phx.gbl>
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Pk9uIFRodXJzZGF5LCBBcHJpbCAxMSwgMjAxMyAxMToxMzo0OSBQTSBCZW5lbmF0aSwgQ2hyaXMg
-SiB3cm90ZToNCj4+IEluIDMuMiwgdGhlIG1hcmtlZCBsaW5lcyAoKioqKSBiZWxvdyB3ZXJlIGFk
-ZGVkOg0KPj4gDQo+PiBzdGF0aWMgaW50IHBjaV9wbGF0Zm9ybV9wb3dlcl90cmFuc2l0aW9uKHN0
-cnVjdCBwY2lfZGV2ICpkZXYsIHBjaV9wb3dlcl90IHN0YXRlKQ0KPj4geyAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICANCj4+ICAgICAgICAgaW50IGVycm9yOw0KPj4gDQo+PiAgICAgICAg
-IGlmIChwbGF0Zm9ybV9wY2lfcG93ZXJfbWFuYWdlYWJsZShkZXYpKSB7DQo+PiAgICAgICAgICAg
-ICAgICBlcnJvciA9IHBsYXRmb3JtX3BjaV9zZXRfcG93ZXJfc3RhdGUoZGV2LCBzdGF0ZSk7DQo+
-PiAgICAgICAgICAgICAgICBpZiAoIWVycm9yKSAgICAgICAgICAgIA0KPj4gICAgICAgICAgICAg
-ICAgICAgICAgICBwY2lfdXBkYXRlX2N1cnJlbnRfc3RhdGUoZGV2LCBzdGF0ZSk7DQo+PiAgKioq
-ICAgICAgICAgICAvKiBGYWxsIGJhY2sgdG8gUENJX0QwIGlmIG5hdGl2ZSBQTSBpcyBub3Qgc3Vw
-cG9ydGVkICovDQo+PiAgKioqICAgICAgICAgICBpZiAoIWRldi0+cG1fY2FwKQ0KPj4gICoqKiAg
-ICAgICAgICAgICAgICAgICBkZXYtPmN1cnJlbnRfc3RhdGUgPSBQQ0lfRDA7DQo+PiAgICAgICAg
-IH0gZWxzZSB7DQo+PiAgICAgICAgICAgICAgICBlcnJvciA9IC1FTk9ERVY7DQo+PiAgICAgICAg
-ICAgICAgICAvKiBGYWxsIGJhY2sgdG8gUENJX0QwIGlmIG5hdGl2ZSBQTSBpcyBub3Qgc3VwcG9y
-dGVkICovDQo+PiAgICAgICAgICAgICAgICBpZiAoIWRldi0+cG1fY2FwKQ0KPj4gICAgICAgICAg
-ICAgICAgICAgICAgICBkZXYtPmN1cnJlbnRfc3RhdGUgPSBQQ0lfRDA7DQo+PiAgICAgICAgIH0N
-Cj4+IA0KPj4gICAgICAgICByZXR1cm4gZXJyb3I7DQo+PiB9DQo+PiANCj4+IElmIHRoZSB0YXJn
-ZXQgc3RhdGUgaXMgUENJX0QzLCB0aGUgbmV3IGNvZGUgc2VydmVzIHRvICp1bmRvKiB0aGUgbWFy
-a2VkIGNvZGUgYmVsb3cgZXhlY3V0ZWQgYnkgdGhlIHByZWNlZGluZyBjYWxsIHRvIHBjaV91cGRh
-dGVfY3VycmVudF9zdGF0ZSgpIHdoZW4gUENJIFBNIHJlZ2lzdGVycyBhcmUgbm90IHByZXNlbnQ6
-DQo+PiANCj4+IHZvaWQgcGNpX3VwZGF0ZV9jdXJyZW50X3N0YXRlKHN0cnVjdCBwY2lfZGV2ICpk
-ZXYsIHBjaV9wb3dlcl90IHN0YXRlKSANCj4+IHsNCj4+ICAgICBpZiAoZGV2LT5wbV9jYXApIHsN
-Cj4+ICAgICAgICAgdTE2IHBtY3NyOw0KPj4gDQo+PiAgICAgICAgIHBjaV9yZWFkX2NvbmZpZ193
-b3JkKGRldiwgZGV2LT5wbV9jYXAgKyBQQ0lfUE1fQ1RSTCwgJnBtY3NyKTsNCj4+ICAgICAgICAg
-ZGV2LT5jdXJyZW50X3N0YXRlID0gKHBtY3NyICYgUENJX1BNX0NUUkxfU1RBVEVfTUFTSyk7DQo+
-PiAgICAgfSBlbHNlIHsNCj4+ICoqKiAgICAgZGV2LT5jdXJyZW50X3N0YXRlID0gc3RhdGU7DQo+
-PiAgICAgfQ0KPj4gfQ0KPj4gDQo+PiBUaGlzIGlzIGRlc3BpdGUgdGhlIGZhY3QgdGhhdCBwbGF0
-Zm9ybV9wY2lfcG93ZXJfbWFuYWdlYWJsZSgpIGluZGljYXRlZCB0aGF0IHRoZSBwbGF0Zm9ybSBG
-VyBjb3VsZCBoYW5kbGUgaXQgYW5kIHRoZSBzdWNjZWVkaW5nIGNhbGwgdG8gcGxhdGZvcm1fcGNp
-X3NldF9wb3dlcl9zdGF0ZSgpIHN1Y2NlZWRlZC4gVGhhdCBtZWFucyB0aGF0IGRldmljZXMgd2l0
-aCBGVyBzdXBwb3J0IGJ1dCBubyBQQ0kgUE0gc3VwcG9ydCB3aWxsIGJlIGxlZnQgaW4gdGhlIHdy
-b25nIHN0YXRlLg0KPj4gDQo+PiBJdCBhcHBlYXJzIHRoZSBuZXcgImlmIiBzdGF0ZW1lbnQgc2hv
-dWxkIGJlICJlbHNlIGlmIjoNCj4+IA0KPj4gICAgICAgIGlmICghZXJyb3IpICAgICAgICAgICAg
-DQo+PiAgICAgICAgICAgICAgICBwY2lfdXBkYXRlX2N1cnJlbnRfc3RhdGUoZGV2LCBzdGF0ZSk7
-DQo+PiAgKioqICAgZWxzZSBpZiAoIWRldi0+cG1fY2FwKSAvKiBGYWxsIGJhY2sgdG8gUENJX0Qw
-IGlmIG5hdGl2ZSBQTSBpcyBub3Qgc3VwcG9ydGVkICovDQo+PiAgKioqICAgICAgICAgICBkZXYt
-PmN1cnJlbnRfc3RhdGUgPSBQQ0lfRDA7DQo+PiANCj4+IFJhZmFlbCBjb25jdXJzIHdpdGggbWUu
-DQo+DQo+WWVzLCBJIGRvLg0KPg0KPkFyZSB5b3Ugd2lsbGluZyB0byBzdWJtaXQgYSBwYXRjaCBm
-aXhpbmcgdGhlIHByb2JsZW0gKGVzc2VudGlhbGx5IHRoZSBjaGFuZ2UgeW91J3ZlIHByb3Bvc2Vk
-IGFib3ZlKSwgb3IgZG8geW91IHdhbnQgbWUgdG8gZG8gdGhhdD8NCj4NCj5SYWZhZWwNCg0KSSBo
-YXZlIG5ldmVyIHN1Ym1pdHRlZCBhIHBhdGNoIGFuZCBkbyBub3Qga25vdyB0aGUgcHJvY2VkdXJl
-LCBzbyB3b3VsZCBhcHByZWNpYXRlIGl0IGlmIHlvdSB3b3VsZCBkbyBpdC4gIFRoYW5rcy4NCg==
+On 04/20/2013 11:26 AM, Frank Rizzo wrote:
+> On Fri, 19 Apr 2013 19:59:58 -0700, Yijing Wang <wangyijing@huawei.com> wrote:
+> 
+>> On 2013/4/20 10:22, Frank Rizzo wrote:
+>>> (with device powered on AFTER boot)
+>>>
+>>> root@frank-System-Product-Name:~# echo 1 > /sys/bus/pci/rescan
+>>
+>> Hi Frank,
+>>    When you do rescan here, any new message info will print in dmesg?
+>> Compare the two lspci info, it seems like your external device is
+>> 02.0-[02]----00.0  Device 1a39:0004, which include a pci bridge and a pci endpoint device.
+>> But let me confused is that after you rescan (with device powered on AFTER boot),
+>> there is no any new device found, normally, at least we should found the bridge device.
+>> Maybe the link between host bridge and your external device got some problems? I am not sure.
+> 
+> 
+> Yijing, when powered on, the device works fine.  I can talk to all the registers, and do everything that I need to do.  This "late power-on issue" is the only thing holding me back.
+> 
+> This is what I get in dmesg.  (Cleared first)
+> 
+> root@frank-System-Product-Name:~# dmesg -c
+> (SNIP!)
+> root@frank-System-Product-Name:~# echo 1 > /sys/bus/pci/rescan
+> root@frank-System-Product-Name:~# dmesg
+> [ 1180.917841] fglrx_pci 0000:01:05.0: BAR 6: [??? 0x00000000 flags 0x2] has bogus alignment
+> root@frank-System-Product-Name:~#
+> -- 
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Hi Frank,
+	I have a feeling that BIOS has done something bad here.
+	According to a googled message as below,
+00:00.0 Host bridge: Advanced Micro Devices [AMD] RS780 Host Bridge Alternate
+00:01.0 PCI bridge: Advanced Micro Devices [AMD] RS780 PCI to PCI bridge (int gfx)
+00:02.0 PCI bridge: Advanced Micro Devices [AMD] RS780 PCI to PCI bridge (ext gfx port 0)
+00:05.0 PCI bridge: Advanced Micro Devices [AMD] RS780 PCI to PCI bridge (PCIE port 1)
+00:06.0 PCI bridge: Advanced Micro Devices [AMD] RS780 PCI to PCI bridge (PCIE port 2)
+00:11.0 SATA controller: ATI Technologies Inc SB700/SB800 SATA Controller [AHCI mode]
+00:12.0 USB Controller: ATI Technologies Inc SB700/SB800 USB OHCI0 Controller
+00:12.2 USB Controller: ATI Technologies Inc SB700/SB800 USB EHCI Controller
+00:13.0 USB Controller: ATI Technologies Inc SB700/SB800 USB OHCI0 Controller
+00:13.2 USB Controller: ATI Technologies Inc SB700/SB800 USB EHCI Controller
+
+Device 00:02.0 on AMD RS780 chipset should  be a PCIe root port. But note here, 
+seems it's specially designed for external graphics(ext gfx port 0). BIOS may disable 
+this root port on boot if there's no device connected to this PCIe root port because
+it's for graphics. This explains why 00:02.0 even doesn't show up in the "with device
+powered on AFTER boot" case.
+
+You may try to plug the special adapter into another PCIe slot. It may also help to
+send out "lspci -v" messages with the device powered on boot.
+
+Thanks!
+Gerry
+
+
