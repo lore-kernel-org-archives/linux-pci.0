@@ -1,85 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ia0-f179.google.com ([209.85.210.179]:62601 "EHLO
-	mail-ia0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758766Ab3D2WRw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 29 Apr 2013 18:17:52 -0400
+Received: from [65.55.111.171] ([65.55.111.171]:41077 "EHLO
+	blu0-omc4-s32.blu0.hotmail.com" rhost-flags-FAIL-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S965593Ab3DTD0w (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 19 Apr 2013 23:26:52 -0400
+Message-ID: <BLU0-SMTP106EAAAE910BEDD2F047B19B2C90@phx.gbl>
+Content-Type: text/plain; charset="iso-8859-15"; format=flowed; delsp=yes
+To: "Yijing Wang" <wangyijing@huawei.com>
+CC: "Bjorn Helgaas" <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: Rescan PCIE bus to find recently powered on device.
+References: <SNT136-W425B9A4DBEA719E570080DB2C80@phx.gbl>
+ <5170B9BD.6040408@huawei.com>
+ <CAErSpo43xWdYE8MT9Y4Hdi0bkNh3D4Su6zThAVs72+nYiUD5qg@mail.gmail.com>
+ <BLU0-SMTP305A7D1308063E03F4C5CE9B2C90@phx.gbl> <5171F610.80001@huawei.com>
+ <BLU0-SMTP185893DF37F0C811FA0BCB7B2C90@phx.gbl> <517204AE.9030907@huawei.com>
+Date: Fri, 19 Apr 2013 20:26:07 -0700
 MIME-Version: 1.0
-In-Reply-To: <20130429181550.GA17343@google.com>
-References: <1366940841-15370-1-git-send-email-yinghai@kernel.org>
-	<CAErSpo5zfHR-agNBdgqfVjCU+-KcTZV+1bvML5Uw-+icDqzzEA@mail.gmail.com>
-	<CAE9FiQVEQO-dLJRjn9Z7JgwGWAn1M8S1Tn2_V0Fq+6kB0rG=Bg@mail.gmail.com>
-	<CAErSpo7DUDQ_XgVKAfWxqYJA=q85ps46bffV-4a7b0vOzAP5DA@mail.gmail.com>
-	<CAE9FiQWv-bN2XzHiQ0WU+Y678zcqs_Owua6vXXijdMO6=0OWpg@mail.gmail.com>
-	<517E45C8.4060407@cn.fujitsu.com>
-	<CAE9FiQUXxCH0xjFPk1S7e_JRsBPosqQ=N5Kpcrjp3RNWDh9yZQ@mail.gmail.com>
-	<20130429181550.GA17343@google.com>
-Date: Mon, 29 Apr 2013 15:17:51 -0700
-Message-ID: <CAE9FiQURZTOEWn64AE4y6agoJhRLSW8983ZJ9RBs8Td9d9tpGA@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Fix racing for pci device removing via sysfs
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Sarah Sharp <sarah.a.sharp@linux.intel.com>
-Content-Type: text/plain; charset=ISO-8859-1
+From: Frank Rizzo <thefrankrizzo@hotmail.com>
+In-Reply-To: <517204AE.9030907@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 29, 2013 at 11:15 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Mon, Apr 29, 2013 at 08:19:10AM -0700, Yinghai Lu wrote:
->> ok, i missed that. if we can use LIST_POISON, then could be more simple.
->> like -v4.
->
-> I inlined your v4 patch below for convenience.
->
-> Maybe my allergic reaction to your use of LIST_POISON1 is unjustified,
-> but I am dubious about the idea that xhci was the only place that needed
-> it before now, and we just happened to find one more place in PCI that
-> needs it.  That doesn't make sense because good design patterns are used
-> many times, not just once or twice.
->
-> I thought the whole point of the get/put scheme was that if we had a
-> pointer to a correctly reference-counted object, we didn't need to check
-> whether the object was still valid because the object remains valid until
-> all the references are released.
->
-> Gu's "[v2 2/2] PCI: Convert alloc_pci_dev(void) to pci_alloc_dev(bus)"
-> patch essentially did this:
->
->     pci_destroy_dev(struct pci_dev *dev) {
->       ...
-> +     pci_bus_put(dev->bus)
->       pci_free_resources(dev)
->       put_device(&dev->dev)
->     }
->
-> I think this is the wrong place to do the pci_bus_put() because the
-> pci_dev is reference-counted, and there may be other users that still
-> have valid references to it.
->
-> In this case, 10:00.0 is a bridge leading to [bus 11-1e], and 1a:01.0 is
-> part of that subtree.  The user removed both 10:00.0 and 1a:01.0 almost
-> simultaneously via sysfs and we scheduled a callback for each.
->
-> Each callback acquires a pci_dev reference, and removal of 10:00.0 and the
-> subtree below it, including pci_destroy_dev(1a:01.0), is done first.  The
-> callback to remove 1a:01.0 is still pending and has a valid reference to
-> the 1a:01.0 pci_dev.
->
-> Since the 1a:01.0 callback is still pending, the put_device in that first
-> pci_destroy_dev(1a:01.0) call decrements the ref count but doesn't release
-> the pci_dev.
->
-> I think the 1a:01.0 pci_dev should retain its reference to the pci_bus
-> for as long as the pci_dev exists, so the pci_bus_put() should go in
-> pci_release_dev() instead.
+On Fri, 19 Apr 2013 19:59:58 -0700, Yijing Wang <wangyijing@huawei.com>  
+wrote:
 
-Good point.
+> On 2013/4/20 10:22, Frank Rizzo wrote:
+>> (with device powered on AFTER boot)
+>>
+>> root@frank-System-Product-Name:~# echo 1 > /sys/bus/pci/rescan
+>
+> Hi Frank,
+>    When you do rescan here, any new message info will print in dmesg?
+> Compare the two lspci info, it seems like your external device is
+> 02.0-[02]----00.0  Device 1a39:0004, which include a pci bridge and a  
+> pci endpoint device.
+> But let me confused is that after you rescan (with device powered on  
+> AFTER boot),
+> there is no any new device found, normally, at least we should found the  
+> bridge device.
+> Maybe the link between host bridge and your external device got some  
+> problems? I am not sure.
 
-will rework pci remove sequence.
 
-Thanks
+Yijing, when powered on, the device works fine.  I can talk to all the  
+registers, and do everything that I need to do.  This "late power-on  
+issue" is the only thing holding me back.
 
-Yinghai
+This is what I get in dmesg.  (Cleared first)
+
+root@frank-System-Product-Name:~# dmesg -c
+(SNIP!)
+root@frank-System-Product-Name:~# echo 1 > /sys/bus/pci/rescan
+root@frank-System-Product-Name:~# dmesg
+[ 1180.917841] fglrx_pci 0000:01:05.0: BAR 6: [??? 0x00000000 flags 0x2]  
+has bogus alignment
+root@frank-System-Product-Name:~#
