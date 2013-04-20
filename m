@@ -1,69 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f179.google.com ([209.85.223.179]:64187 "EHLO
-	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753063Ab3DVXMK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Apr 2013 19:12:10 -0400
-Received: by mail-ie0-f179.google.com with SMTP id 16so16143iea.10
-        for <linux-pci@vger.kernel.org>; Mon, 22 Apr 2013 16:12:09 -0700 (PDT)
-Subject: [PATCH v4 17/22] PCI: Remove "extern" from function declarations
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Gavin Shan <shangw@linux.vnet.ibm.com>
-Date: Mon, 22 Apr 2013 17:12:08 -0600
-Message-ID: <20130422231208.32621.16719.stgit@bhelgaas-glaptop>
-In-Reply-To: <20130422230012.32621.15224.stgit@bhelgaas-glaptop>
-References: <20130422230012.32621.15224.stgit@bhelgaas-glaptop>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:16291 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965593Ab3DTDAQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 19 Apr 2013 23:00:16 -0400
+Message-ID: <517204AE.9030907@huawei.com>
+Date: Sat, 20 Apr 2013 10:59:58 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Frank Rizzo <thefrankrizzo@hotmail.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: Rescan PCIE bus to find recently powered on device.
+References: <SNT136-W425B9A4DBEA719E570080DB2C80@phx.gbl> <5170B9BD.6040408@huawei.com> <CAErSpo43xWdYE8MT9Y4Hdi0bkNh3D4Su6zThAVs72+nYiUD5qg@mail.gmail.com> <BLU0-SMTP305A7D1308063E03F4C5CE9B2C90@phx.gbl> <5171F610.80001@huawei.com> <BLU0-SMTP185893DF37F0C811FA0BCB7B2C90@phx.gbl>
+In-Reply-To: <BLU0-SMTP185893DF37F0C811FA0BCB7B2C90@phx.gbl>
+Content-Type: text/plain; charset="ISO-8859-15"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We had an inconsistent mix of using and omitting the "extern" keyword
-on function declarations in header files.  This removes them all.
+On 2013/4/20 10:22, Frank Rizzo wrote:
+> (with device powered on AFTER boot)
+> 
+> root@frank-System-Product-Name:~# echo 1 > /sys/bus/pci/rescan
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- include/linux/msi.h |   23 +++++++++++------------
- 1 file changed, 11 insertions(+), 12 deletions(-)
+Hi Frank,
+   When you do rescan here, any new message info will print in dmesg?
+Compare the two lspci info, it seems like your external device is
+02.0-[02]----00.0  Device 1a39:0004, which include a pci bridge and a pci endpoint device.
+But let me confused is that after you rescan (with device powered on AFTER boot),
+there is no any new device found, normally, at least we should found the bridge device.
+Maybe the link between host bridge and your external device got some problems? I am not sure.
 
-diff --git a/include/linux/msi.h b/include/linux/msi.h
-index ce93a34..20c2d6d 100644
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -13,14 +13,14 @@ struct msi_msg {
- /* Helper functions */
- struct irq_data;
- struct msi_desc;
--extern void mask_msi_irq(struct irq_data *data);
--extern void unmask_msi_irq(struct irq_data *data);
--extern void __read_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
--extern void __get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
--extern void __write_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
--extern void read_msi_msg(unsigned int irq, struct msi_msg *msg);
--extern void get_cached_msi_msg(unsigned int irq, struct msi_msg *msg);
--extern void write_msi_msg(unsigned int irq, struct msi_msg *msg);
-+void mask_msi_irq(struct irq_data *data);
-+void unmask_msi_irq(struct irq_data *data);
-+void __read_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
-+void __get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
-+void __write_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
-+void read_msi_msg(unsigned int irq, struct msi_msg *msg);
-+void get_cached_msi_msg(unsigned int irq, struct msi_msg *msg);
-+void write_msi_msg(unsigned int irq, struct msi_msg *msg);
- 
- struct msi_desc {
- 	struct {
-@@ -54,9 +54,8 @@ struct msi_desc {
-  */
- int arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc);
- void arch_teardown_msi_irq(unsigned int irq);
--extern int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type);
--extern void arch_teardown_msi_irqs(struct pci_dev *dev);
--extern int arch_msi_check_device(struct pci_dev* dev, int nvec, int type);
--
-+int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type);
-+void arch_teardown_msi_irqs(struct pci_dev *dev);
-+int arch_msi_check_device(struct pci_dev* dev, int nvec, int type);
- 
- #endif /* LINUX_MSI_H */
+> root@frank-System-Product-Name:~# lspci -tv
+> -[0000:00]-+-00.0  Advanced Micro Devices [AMD] RS780 Host Bridge
+>            +-01.0-[01]--+-05.0  Advanced Micro Devices [AMD] nee ATI RS780 [Radeon HD 3200]
+>            |            \-05.1  Advanced Micro Devices [AMD] nee ATI RS780 HDMI Audio [Radeon HD 3000-3300 Series]
+>            +-05.0-[02]----00.0  JMicron Technology Corp. IEEE 1394 Host Controller
+>            +-06.0-[03]----00.0  Realtek Semiconductor Co., Ltd. RTL8111/8168B PCI Express Gigabit Ethernet controller
+>            +-11.0  Advanced Micro Devices [AMD] nee ATI SB7x0/SB8x0/SB9x0 SATA Controller [IDE mode]
+>            +-12.0  Advanced Micro Devices [AMD] nee ATI SB7x0/SB8x0/SB9x0 USB OHCI0 Controller
+>            +-12.1  Advanced Micro Devices [AMD] nee ATI SB7x0 USB OHCI1 Controller
+>            +-12.2  Advanced Micro Devices [AMD] nee ATI SB7x0/SB8x0/SB9x0 USB EHCI Controller
+>            +-13.0  Advanced Micro Devices [AMD] nee ATI SB7x0/SB8x0/SB9x0 USB OHCI0 Controller
+>            +-13.1  Advanced Micro Devices [AMD] nee ATI SB7x0 USB OHCI1 Controller
+>            +-13.2  Advanced Micro Devices [AMD] nee ATI SB7x0/SB8x0/SB9x0 USB EHCI Controller
+>            +-14.0  Advanced Micro Devices [AMD] nee ATI SBx00 SMBus Controller
+>            +-14.1  Advanced Micro Devices [AMD] nee ATI SB7x0/SB8x0/SB9x0 IDE Controller
+>            +-14.2  Advanced Micro Devices [AMD] nee ATI SBx00 Azalia (Intel HDA)
+>            +-14.3  Advanced Micro Devices [AMD] nee ATI SB7x0/SB8x0/SB9x0 LPC host controller
+>            +-14.4-[04]--
+>            +-14.5  Advanced Micro Devices [AMD] nee ATI SB7x0/SB8x0/SB9x0 USB OHCI2 Controller
+>            +-18.0  Advanced Micro Devices [AMD] Family 10h Processor HyperTransport Configuration
+>            +-18.1  Advanced Micro Devices [AMD] Family 10h Processor Address Map
+>            +-18.2  Advanced Micro Devices [AMD] Family 10h Processor DRAM Controller
+>            +-18.3  Advanced Micro Devices [AMD] Family 10h Processor Miscellaneous Control
+>            \-18.4  Advanced Micro Devices [AMD] Family 10h Processor Link Control
+> 
+> 
+
+
+> 
+> (with device powered on BEFORE boot)
+> 
+> root@frank-System-Product-Name:~# lspci -tv
+> -[0000:00]-+-00.0  Advanced Micro Devices [AMD] RS780 Host Bridge
+>            +-01.0-[01]--+-05.0  Advanced Micro Devices [AMD] nee ATI RS780 [Radeon HD 3200]
+>            |            \-05.1  Advanced Micro Devices [AMD] nee ATI RS780 HDMI Audio [Radeon HD 3000-3300 Series]
+>            +-02.0-[02]----00.0  Device 1a39:0004
+>            +-05.0-[03]----00.0  JMicron Technology Corp. IEEE 1394 Host Controller
+>            +-06.0-[04]----00.0  Realtek Semiconductor Co., Ltd. RTL8111/8168B PCI Express Gigabit Ethernet controller
+>            +-11.0  Advanced Micro Devices [AMD] nee ATI SB7x0/SB8x0/SB9x0 SATA Controller [IDE mode]
+>            +-12.0  Advanced Micro Devices [AMD] nee ATI SB7x0/SB8x0/SB9x0 USB OHCI0 Controller
+>            +-12.1  Advanced Micro Devices [AMD] nee ATI SB7x0 USB OHCI1 Controller
+>            +-12.2  Advanced Micro Devices [AMD] nee ATI SB7x0/SB8x0/SB9x0 USB EHCI Controller
+>            +-13.0  Advanced Micro Devices [AMD] nee ATI SB7x0/SB8x0/SB9x0 USB OHCI0 Controller
+>            +-13.1  Advanced Micro Devices [AMD] nee ATI SB7x0 USB OHCI1 Controller
+>            +-13.2  Advanced Micro Devices [AMD] nee ATI SB7x0/SB8x0/SB9x0 USB EHCI Controller
+>            +-14.0  Advanced Micro Devices [AMD] nee ATI SBx00 SMBus Controller
+>            +-14.1  Advanced Micro Devices [AMD] nee ATI SB7x0/SB8x0/SB9x0 IDE Controller
+>            +-14.2  Advanced Micro Devices [AMD] nee ATI SBx00 Azalia (Intel HDA)
+>            +-14.3  Advanced Micro Devices [AMD] nee ATI SB7x0/SB8x0/SB9x0 LPC host controller
+>            +-14.4-[05]--
+>            +-14.5  Advanced Micro Devices [AMD] nee ATI SB7x0/SB8x0/SB9x0 USB OHCI2 Controller
+>            +-18.0  Advanced Micro Devices [AMD] Family 10h Processor HyperTransport Configuration
+>            +-18.1  Advanced Micro Devices [AMD] Family 10h Processor Address Map
+>            +-18.2  Advanced Micro Devices [AMD] Family 10h Processor DRAM Controller
+>            +-18.3  Advanced Micro Devices [AMD] Family 10h Processor Miscellaneous Control
+>            \-18.4  Advanced Micro Devices [AMD] Family 10h Processor Link Control
+> 
+> .
+> 
+
+
+-- 
+Thanks!
+Yijing
 
