@@ -1,176 +1,145 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <20130409045113.GA7251@ram.oc3035372033.ibm.com>
-References: <1363217302-14383-1-git-send-email-yinghai@kernel.org>
- <1363217302-14383-4-git-send-email-yinghai@kernel.org> <CAErSpo4VzBZ=fAzPm1yWEs4+09_D1=rysMf6tGgnqpVEKytSzQ@mail.gmail.com>
- <20130409045113.GA7251@ram.oc3035372033.ibm.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 10 Apr 2013 09:22:48 -0600
-Message-ID: <CAErSpo7TReTzz289EMuh5gGKjskCLmACNT99o1s-QCzRHLGaXg@mail.gmail.com>
-Subject: Re: [PATCH v3 03/27] PCI: pci resource iterator
-To: Ram Pai <linuxram@us.ibm.com>
-Cc: Yinghai Lu <yinghai@kernel.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e28smtp08.in.ibm.com ([122.248.162.8]:56071 "EHLO
+	e28smtp08.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965587Ab3DTC6h (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 19 Apr 2013 22:58:37 -0400
+Received: from /spool/local
+	by e28smtp08.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <qiudayu@linux.vnet.ibm.com>;
+	Sat, 20 Apr 2013 08:22:41 +0530
+Received: from d28relay02.in.ibm.com (d28relay02.in.ibm.com [9.184.220.59])
+	by d28dlp02.in.ibm.com (Postfix) with ESMTP id 92F13394004F
+	for <linux-pci@vger.kernel.org>; Sat, 20 Apr 2013 08:28:31 +0530 (IST)
+Received: from d28av03.in.ibm.com (d28av03.in.ibm.com [9.184.220.65])
+	by d28relay02.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id r3K2wR565177634
+	for <linux-pci@vger.kernel.org>; Sat, 20 Apr 2013 08:28:27 +0530
+Received: from d28av03.in.ibm.com (loopback [127.0.0.1])
+	by d28av03.in.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id r3K2wUW8014516
+	for <linux-pci@vger.kernel.org>; Sat, 20 Apr 2013 12:58:31 +1000
+Message-ID: <1366426691.12260.10.camel@localhost.localdomain>
+Subject: Re: [PATCH 1/2] PCI: Introduce pci_alloc_dev(struct pci_bus*) to
+ replace alloc_pci_dev()
+From: Mike Qiu <qiudayu@linux.vnet.ibm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	tangchen <tangchen@cn.fujitsu.com>,
+	Lin Feng <linfeng@cn.fujitsu.com>,
+	li guang <lig.fnst@cn.fujitsu.com>
+Date: Fri, 19 Apr 2013 22:58:11 -0400
+In-Reply-To: <CAErSpo7yPUTOPYsPkhKTpe2yxbo_XN4Y4iBesVLudAmbuRsJ+A@mail.gmail.com>
+References: <516FB647.5030203@cn.fujitsu.com>
+	 <CAErSpo65ARR_fZwsGCZDJqbPWktHYUkufgPt-2mWwur=nPR1Qg@mail.gmail.com>
+	 <51711214.8050606@cn.fujitsu.com>
+	 <CAErSpo7yPUTOPYsPkhKTpe2yxbo_XN4Y4iBesVLudAmbuRsJ+A@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 8, 2013 at 10:51 PM, Ram Pai <linuxram@us.ibm.com> wrote:
-> On Thu, Apr 04, 2013 at 04:18:01PM -0600, Bjorn Helgaas wrote:
->> On Wed, Mar 13, 2013 at 5:27 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->> > From: Ram Pai <linuxram@us.ibm.com>
->> >
->> > Currently pci_dev structure holds an array of 17 PCI resources; six base
->> > BARs, one ROM BAR, four BRIDGE BARs, six sriov BARs.  This is wasteful.
->> > A bridge device just needs the 4 bridge resources. A non-bridge device
->> > just needs the six base resources and one ROM resource. The sriov
->> > resources are needed only if the device has SRIOV capability.
->> >
->> > The pci_dev structure needs to be re-organized to avoid unnecessary
->> > bloating.  However too much code outside the pci-bus driver, assumes the
->> > internal details of the pci_dev structure, thus making it hard to
->> > re-organize the datastructure.
->> >
->> > As a first step this patch provides generic methods to access the
->> > resource structure of the pci_dev.
->> >
->> > Finally we can re-organize the resource structure in the pci_dev
->> > structure and correspondingly update the methods.
->> >
->> > -v2: Consolidated iterator interface as per Bjorn's suggestion.
->> > -v3: Add the idx back - Yinghai Lu
->> > -v7: Change to use bitmap for searching - Yinghai Lu
->> > -v8: Fix acpiphp module compiling error that is found by
->> >         Steven Newbury <steve@snewbury.org.uk> - Yinghai Lu
->> >
->> > Signed-off-by: Ram Pai <linuxram@us.ibm.com>
->> > Signed-off-by: Yinghai Lu <yinghai@kernel.org>
->> > ---
->> >  drivers/pci/probe.c |   48 ++++++++++++++++++++++++++++++++++++++++++++++++
->> >  include/linux/pci.h |   24 ++++++++++++++++++++++++
->> >  2 files changed, 72 insertions(+)
->> >
->> > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
->> > index 1df75f7..ac751a6 100644
->> > --- a/drivers/pci/probe.c
->> > +++ b/drivers/pci/probe.c
->> > @@ -123,6 +123,54 @@ int pci_dev_resource_idx(struct pci_dev *dev, struct resource *res)
->> >         return -1;
->> >  }
->> >
->> > +static void __init_res_idx_mask(unsigned long *mask, int flag)
->> > +{
->> > +       bitmap_zero(mask, PCI_NUM_RESOURCES);
->> > +       if (flag & PCI_STD_RES)
->> > +               bitmap_set(mask, PCI_STD_RESOURCES,
->> > +                       PCI_STD_RESOURCE_END - PCI_STD_RESOURCES + 1);
->> > +       if (flag & PCI_ROM_RES)
->> > +               bitmap_set(mask, PCI_ROM_RESOURCE, 1);
->> > +#ifdef CONFIG_PCI_IOV
->> > +       if (flag & PCI_IOV_RES)
->> > +               bitmap_set(mask, PCI_IOV_RESOURCES,
->> > +                       PCI_IOV_RESOURCE_END - PCI_IOV_RESOURCES + 1);
->> > +#endif
->> > +       if (flag & PCI_BRIDGE_RES)
->> > +               bitmap_set(mask, PCI_BRIDGE_RESOURCES,
->> > +                       PCI_BRIDGE_RESOURCE_END - PCI_BRIDGE_RESOURCES + 1);
->> > +}
->> > +
->> > +static DECLARE_BITMAP(res_idx_mask[1 << PCI_RES_BLOCK_NUM], PCI_NUM_RESOURCES);
->> > +static int __init pci_res_idx_mask_init(void)
->> > +{
->> > +       int i;
->> > +
->> > +       for (i = 0; i < (1 << PCI_RES_BLOCK_NUM); i++)
->> > +               __init_res_idx_mask(res_idx_mask[i], i);
->> > +
->> > +       return 0;
->> > +}
->> > +postcore_initcall(pci_res_idx_mask_init);
->> > +
->> > +static inline unsigned long *get_res_idx_mask(int flag)
->> > +{
->> > +       return res_idx_mask[flag & ((1 << PCI_RES_BLOCK_NUM) - 1)];
->> > +}
->> > +
->> > +int pci_next_resource_idx(int i, int flag)
->> > +{
->> > +       i++;
->> > +       if (i < PCI_NUM_RESOURCES)
->> > +               i = find_next_bit(get_res_idx_mask(flag), PCI_NUM_RESOURCES, i);
->> > +
->> > +       if (i < PCI_NUM_RESOURCES)
->> > +               return i;
->> > +
->> > +       return -1;
->> > +}
->> > +EXPORT_SYMBOL(pci_next_resource_idx);
->> > +
->> >  static u64 pci_size(u64 base, u64 maxbase, u64 mask)
->> >  {
->> >         u64 size = mask & maxbase;      /* Find the significant bits */
->> > diff --git a/include/linux/pci.h b/include/linux/pci.h
->> > index aefff8b..127a856 100644
->> > --- a/include/linux/pci.h
->> > +++ b/include/linux/pci.h
->> > @@ -341,6 +341,30 @@ struct pci_dev {
->> >  struct resource *pci_dev_resource_n(struct pci_dev *dev, int n);
->> >  int pci_dev_resource_idx(struct pci_dev *dev, struct resource *res);
->> >
->> > +#define PCI_STD_RES            (1<<0)
->> > +#define PCI_ROM_RES            (1<<1)
->> > +#define PCI_IOV_RES            (1<<2)
->> > +#define PCI_BRIDGE_RES         (1<<3)
->> > +#define PCI_RES_BLOCK_NUM      4
->> > +
->> > +#define PCI_ALL_RES            (PCI_STD_RES | PCI_ROM_RES | PCI_BRIDGE_RES | PCI_IOV_RES)
->> > +#define PCI_NOSTD_RES          (PCI_ALL_RES & ~PCI_STD_RES)
->> > +#define PCI_NOIOV_RES          (PCI_ALL_RES & ~PCI_IOV_RES)
->> > +#define PCI_NOROM_RES          (PCI_ALL_RES & ~PCI_ROM_RES)
->> > +#define PCI_NOBRIDGE_RES       (PCI_ALL_RES & ~PCI_BRIDGE_RES)
->> > +#define PCI_STD_ROM_RES                (PCI_STD_RES | PCI_ROM_RES)
->> > +#define PCI_STD_IOV_RES                (PCI_STD_RES | PCI_IOV_RES)
->> > +#define PCI_STD_ROM_IOV_RES    (PCI_STD_RES | PCI_ROM_RES | PCI_IOV_RES)
->> > +
->> > +int pci_next_resource_idx(int i, int flag);
->> > +
->> > +#define for_each_pci_resource(dev, res, i, flag)       \
->> > +       for (i = pci_next_resource_idx(-1, flag),       \
->> > +               res = pci_dev_resource_n(dev, i);       \
->> > +            res;                                       \
->> > +            i = pci_next_resource_idx(i, flag),        \
->> > +               res = pci_dev_resource_n(dev, i))
->> > +
->> >  static inline struct pci_dev *pci_physfn(struct pci_dev *dev)
->> >  {
->> >  #ifdef CONFIG_PCI_IOV
->>
->> I think this turned out to be a disaster, with all the bitmaps and
->> helper functions.  Filtering in the bodies of the
->> for_each_pci_resource() users has *got* to be better.  That probably
->> requires a wrapper struct around the struct resource.  Or possibly
->> having a wrapper struct with a "type" or "flags" field would make
->> filtering in for_each_pci_resources() itself cleaner to implement.
->
-> I agree. There are two cleanups needed.
->
-> a) pci drivers should not assume the internal organization of the
->         resources in the struct pci_dev.
+On Fri, 2013-04-19 at 11:32 -0600, Bjorn Helgaas wrote:
+> On Fri, Apr 19, 2013 at 3:44 AM, Gu Zheng <guz.fnst@cn.fujitsu.com> wrote:
+> > From 906167d9a09babbe189f62944ecb8c0b198a0f64 Mon Sep 17 00:00:00 2001
+> > From: Gu Zheng <guz.fnst@cn.fujitsu.com>
+> > Date: Fri, 19 Apr 2013 18:12:32 +0900
+> > Subject: [PATCH 1/2] PCI: Introduce  pci_alloc_dev(struct pci_bus*) to replace alloc_pci_dev()
+> >
+> > Now here we introduce a new struct pci_dev *pci_alloc_dev(struct pci_bus *bus) to replace alloc_pci_dev().
+> > It take a "struct pci_bus *" argument, so we can alloc a pci device on a target pci bus, and it acquire
+> > the reference of the pci_bus.
+> > Since the old alloc_pci_dev() is exported, so we still keep it for a while but mark it as __deprecated.
+> >
+> > Signed-off-by: Gu Zheng <guz.fnst@cn.fujitsu.com>
+> > ---
+> >  drivers/pci/probe.c |   21 ++++++++++++++++++++-
+> >  include/linux/pci.h |    4 +++-
+> >  2 files changed, 23 insertions(+), 2 deletions(-)
+> >
+> > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> > index b494066..5233fb6 100644
+> > --- a/drivers/pci/probe.c
+> > +++ b/drivers/pci/probe.c
+> > @@ -1199,7 +1199,7 @@ static void pci_release_bus_bridge_dev(struct device *dev)
+> >         kfree(bridge);
+> >  }
+> >
+> > -struct pci_dev *alloc_pci_dev(void)
+> > +struct pci_dev *pci_alloc_dev(struct pci_bus *bus)
+> >  {
+> >         struct pci_dev *dev;
+> >
+> > @@ -1209,6 +1209,25 @@ struct pci_dev *alloc_pci_dev(void)
+> >
+> >         INIT_LIST_HEAD(&dev->bus_list);
+> >
+> > +       if (bus) {
+> > +               get_device(&bus->dev);
+> > +               dev->bus = bus;
+> > +       }
+> > +
+> > +       return dev;
+> > +}
+> > +EXPORT_SYMBOL(pci_alloc_dev);
+> > +
+> > +__deprecated struct pci_dev *alloc_pci_dev(void)
+> 
+> I don't think there's any point in marking the function *definition*
+> as deprecated; it only makes sense for the declaration in the header
+> file, so callers of the function will generate warnings.
+> 
+> > +{
+> > +       struct pci_dev *dev;
+> > +       printk(KERN_DEBUG "alloc_pci_dev is deprecated, please use pci_alloc_dev(struct pci_bus *) instead!\n");
+> 
+> I don't want to print a message at run-time, because users will see
+> the message and complain about it, but they can't do anything about
+> it.  And neither can we, because it will only be out-of-tree modules
+> that call alloc_pci_dev().  The build-time warning is all we can do.
+Yes, totally agree .
+> 
+> > +       dev = kzalloc(sizeof(struct pci_dev), GFP_KERNEL);
+> > +       if (!dev)
+> > +               return NULL;
+> > +
+> > +       INIT_LIST_HEAD(&dev->bus_list);
+> 
+> Can't you implement this as simply:
+> 
+>     return pci_alloc_dev(NULL);
+Yes, I think it's better to keep the old API, and modify it to call the
+new one, this makes the modules which call the old fashion API feel
+smoothly. and the new modules can use the new API.
+> 
+> > +
+> >         return dev;
+> >  }
+> >  EXPORT_SYMBOL(alloc_pci_dev);
+> > diff --git a/include/linux/pci.h b/include/linux/pci.h
+> > index 710067f..682de2b 100644
+> > --- a/include/linux/pci.h
+> > +++ b/include/linux/pci.h
+> > @@ -348,7 +348,9 @@ static inline struct pci_dev *pci_physfn(struct pci_dev *dev)
+> >         return dev;
+> >  }
+> >
+> > -extern struct pci_dev *alloc_pci_dev(void);
+> > +extern struct pci_dev *pci_alloc_dev(struct pci_bus *bus);
+> > +
+> > +extern __deprecated struct pci_dev *alloc_pci_dev(void);
+> >
+> >  #define        to_pci_dev(n) container_of(n, struct pci_dev, dev)
+> >  #define for_each_pci_dev(d) while ((d = pci_get_device(PCI_ANY_ID, PCI_ANY_ID, d)) != NULL)
+> > --
+> > 1.7.1
+> >
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
-Do you mean that drivers should not use "pci_dev->resource[i]"?  If
-so, I agree that it would be great if we had an accessor for BARs, but
-it seems impractical to change all the drivers that use the current
-style.
 
-The number of places that actually look at *non-BAR* pci_dev
-resources, e.g., the places that look at bridge windows and SR-IOV
-BARs, should be pretty small, and it seems reasonable to change them.
-
-> b) The type of a resource has to be determined based on some
->    information internal to the resource; possibly a flag,
->    instead of the relative position of the resource in some array.
-
-Yes, I agree.
-
-Bjorn
