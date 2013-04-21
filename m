@@ -1,52 +1,110 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	"Benenati, Chris J" <chris.j.benenati@intel.com>
-Subject: [PATCH] PCI / PM: Fix fallback to PCI_D0 in pci_platform_power_transition()
-Date: Sat, 13 Apr 2013 01:58:17 +0200
-Message-ID: <48795235.crcTAaJqPb@vostro.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pd0-f173.google.com ([209.85.192.173]:32795 "EHLO
+	mail-pd0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751360Ab3DUCVr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 20 Apr 2013 22:21:47 -0400
+Received: by mail-pd0-f173.google.com with SMTP id v10so92836pde.18
+        for <linux-pci@vger.kernel.org>; Sat, 20 Apr 2013 19:21:46 -0700 (PDT)
+Message-ID: <51734D36.4000802@gmail.com>
+Date: Sun, 21 Apr 2013 10:21:42 +0800
+From: Jiang Liu <liuj97@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+To: Frank Rizzo <thefrankrizzo@hotmail.com>
+CC: Yijing Wang <wangyijing@huawei.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: Rescan PCIE bus to find recently powered on device.
+References: <SNT136-W425B9A4DBEA719E570080DB2C80@phx.gbl> <5170B9BD.6040408@huawei.com> <CAErSpo43xWdYE8MT9Y4Hdi0bkNh3D4Su6zThAVs72+nYiUD5qg@mail.gmail.com> <BLU0-SMTP305A7D1308063E03F4C5CE9B2C90@phx.gbl> <5171F610.80001@huawei.com> <BLU0-SMTP185893DF37F0C811FA0BCB7B2C90@phx.gbl> <517204AE.9030907@huawei.com> <BLU0-SMTP106EAAAE910BEDD2F047B19B2C90@phx.gbl> <5172BF84.9090307@gmail.com> <BLU0-SMTP461505AE1FB450731CCD2B2B2C90@phx.gbl>
+In-Reply-To: <BLU0-SMTP461505AE1FB450731CCD2B2B2C90@phx.gbl>
+Content-Type: text/plain; charset=ISO-8859-15
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-
-Commit b51306c (PCI: Set device power state to PCI_D0 for device
-without native PM support) modified pci_platform_power_transition()
-by adding code causing dev->current_state for devices that don't
-support native PCI PM but are power-manageable by the platform to be
-changed to PCI_D0 regardless of the value returned by the preceding
-platform_pci_set_power_state().  In particular, that also is done
-if the platform_pci_set_power_state() has been successful, which
-causes the correct power state of the device set by
-pci_update_current_state() in that case to be overwritten by PCI_D0.
-
-Fix that mistake by making the fallback to PCI_D0 only happen if
-the platform_pci_set_power_state() has returned an error.
-
-Reported-by: Chris J. Benenati <chris.j.benenati@intel.com>
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Cc: <stable@vger.kernel.org>
----
- drivers/pci/pci.c |    3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
-
-Index: linux-pm/drivers/pci/pci.c
-===================================================================
---- linux-pm.orig/drivers/pci/pci.c
-+++ linux-pm/drivers/pci/pci.c
-@@ -646,8 +646,7 @@ static int pci_platform_power_transition
- 		error = platform_pci_set_power_state(dev, state);
- 		if (!error)
- 			pci_update_current_state(dev, state);
--		/* Fall back to PCI_D0 if native PM is not supported */
--		if (!dev->pm_cap)
-+		else if (!dev->pm_cap) /* Fall back to PCI_D0 */
- 			dev->current_state = PCI_D0;
- 	} else {
- 		error = -ENODEV;
+On 04/21/2013 04:52 AM, Frank Rizzo wrote:
+>> Hi Frank,
+>>     Message from "sudo lspci -vvv" gives more information, including PCIe capabilities,
+>> so please help to send out "sudo lspci -vvv" instead of "lspci -v".
+>>     Thanks!
+> 
+> Here's the info:
+> 
+> root@frank-System-Product-Name:~# lspci -vvv
+> 00:00.0 Host bridge: Advanced Micro Devices [AMD] RS780 Host Bridge
+>         Subsystem: ASUSTeK Computer Inc. M3A78-EH Motherboard
+>         Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+>         Status: Cap+ 66MHz+ UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort+ >SERR- <PERR- INTx-
+>         Latency: 0
+>         Capabilities: [c4] HyperTransport: Slave or Primary Interface
+>                 Command: BaseUnitID=0 UnitCnt=12 MastHost- DefDir- DUL-
+>                 Link Control 0: CFlE- CST- CFE- <LkFail- Init+ EOC- TXO- <CRCErr=0 IsocEn- LSEn- ExtCTL- 64b-
+>                 Link Config 0: MLWI=16bit DwFcIn- MLWO=16bit DwFcOut- LWI=16bit DwFcInEn- LWO=16bit DwFcOutEn-
+>                 Link Control 1: CFlE- CST- CFE- <LkFail+ Init- EOC+ TXO+ <CRCErr=0 IsocEn- LSEn- ExtCTL- 64b-
+>                 Link Config 1: MLWI=8bit DwFcIn- MLWO=8bit DwFcOut- LWI=8bit DwFcInEn- LWO=8bit DwFcOutEn-
+>                 Revision ID: 3.00
+>                 Link Frequency 0: [b]
+>                 Link Error 0: <Prot- <Ovfl- <EOC- CTLTm-
+>                 Link Frequency Capability 0: 200MHz+ 300MHz- 400MHz+ 500MHz- 600MHz+ 800MHz+ 1.0GHz+ 1.2GHz- 1.4GHz- 1.6GHz- Vend-
+>                 Feature Capability: IsocFC- LDTSTOP+ CRCTM- ECTLT- 64bA- UIDRD-
+>                 Link Frequency 1: 200MHz
+>                 Link Error 1: <Prot- <Ovfl- <EOC- CTLTm-
+>                 Link Frequency Capability 1: 200MHz- 300MHz- 400MHz- 500MHz- 600MHz- 800MHz- 1.0GHz- 1.2GHz- 1.4GHz- 1.6GHz- Vend-
+>                 Error Handling: PFlE- OFlE- PFE- OFE- EOCFE- RFE- CRCFE- SERRFE- CF- RE+ PNFE- ONFE- EOCNFE- RNFE- CRCNFE- SERRNFE-
+>                 Prefetchable memory behind bridge Upper: 00-00
+>                 Bus Number: 00
+>         Capabilities: [54] HyperTransport: UnitID Clumping
+>         Capabilities: [40] HyperTransport: Retry Mode
+>         Capabilities: [9c] HyperTransport: #1a
+>         Capabilities: [f8] HyperTransport: #1c
+> 
+> 00:01.0 PCI bridge: ASUSTeK Computer Inc. RS880 PCI to PCI bridge (int gfx) (prog-if 00 [Normal decode])
+>         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx-
+>         Status: Cap+ 66MHz+ UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+>         Latency: 64
+>         Bus: primary=00, secondary=01, subordinate=01, sec-latency=64
+>         I/O behind bridge: 0000d000-0000dfff
+>         Memory behind bridge: fb900000-fbafffff
+>         Prefetchable memory behind bridge: 00000000d0000000-00000000dfffffff
+>         Secondary status: 66MHz+ FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- <SERR- <PERR-
+>         BridgeCtl: Parity- SERR+ NoISA- VGA+ MAbort- >Reset- FastB2B-
+>                 PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
+>         Capabilities: [44] HyperTransport: MSI Mapping Enable+ Fixed+
+>         Capabilities: [b0] Subsystem: ASUSTeK Computer Inc. Device 82f1
+>         Kernel modules: shpchp
+> 
+> 00:02.0 PCI bridge: Advanced Micro Devices [AMD] RS780 PCI to PCI bridge (ext gfx port 0) (prog-if 00 [Normal decode])
+>         Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx+
+>         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+>         Latency: 0, Cache Line Size: 64 bytes
+>         Bus: primary=00, secondary=02, subordinate=02, sec-latency=0
+>         I/O behind bridge: 0000f000-00000fff
+>         Memory behind bridge: fbb00000-fbdfffff
+>         Prefetchable memory behind bridge: 00000000fff00000-00000000000fffff
+>         Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort+ <SERR- <PERR-
+>         BridgeCtl: Parity+ SERR+ NoISA- VGA- MAbort- >Reset- FastB2B-
+>                 PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
+>         Capabilities: [50] Power Management version 3
+>                 Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
+>                 Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
+>         Capabilities: [58] Express (v2) Root Port (Slot+), MSI 00
+>                 DevCap: MaxPayload 128 bytes, PhantFunc 0, Latency L0s <64ns, L1 <1us
+>                         ExtTag+ RBE+ FLReset-
+>                 DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
+>                         RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+
+>                         MaxPayload 128 bytes, MaxReadReq 128 bytes
+>                 DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr- TransPend-
+>                 LnkCap: Port #0, Speed 5GT/s, Width x16, ASPM L0s L1, Latency L0 <64ns, L1 <1us
+>                         ClockPM- Surprise- LLActRep+ BwNot+
+>                 LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk+
+>                         ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+>                 LnkSta: Speed 2.5GT/s, Width x4, TrErr- Train- SlotClk+ DLActive+ BWMgmt+ ABWMgmt-
+>                 SltCap: AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug- Surprise-
+>                         Slot #2, PowerLimit 75.000W; Interlock- NoCompl+
+Hi Frank,
+	According to "Hotplug-" flag above, the slot for 00:02.0 doesn't support hotplug.
+Actually no slot in this system supports PCI devic hotplug at all. So simply powering on
+the device connected to the adapter after booting won't work. Please find another system
+with PCIe device hotplug capability for your tests. You may confirm PCIe hotplug capability
+by scanning "hotplug+" flag and also insmod pciehp.
+	Regards!
+	Gerry
 
