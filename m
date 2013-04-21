@@ -1,189 +1,158 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <516C46BC.2040707@wwwdotorg.org>
-Date: Mon, 15 Apr 2013 12:28:12 -0600
-From: Stephen Warren <swarren@wwwdotorg.org>
-MIME-Version: 1.0
-To: Thierry Reding <thierry.reding@avionic-design.de>
-CC: Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Andrew Murray <andrew.murray@arm.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-tegra@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v3 07/12] PCI: tegra: Move PCIe driver to drivers/pci/host
-References: <1365000318-28256-1-git-send-email-thierry.reding@avionic-design.de> <1365000318-28256-8-git-send-email-thierry.reding@avionic-design.de>
-In-Reply-To: <1365000318-28256-8-git-send-email-thierry.reding@avionic-design.de>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga09.intel.com ([134.134.136.24]:49586 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751557Ab3DUDbb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 20 Apr 2013 23:31:31 -0400
+Message-ID: <1366515088.2209.15.camel@jtkirshe-mobl>
+Subject: Re: [net-next 08/14] pci: Add SRIOV helper function to determine if
+ VFs are assigned to guest
+From: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+Reply-To: jeffrey.t.kirsher@intel.com
+To: davem@davemloft.net, Bjorn Helgaas <bhelgaas@google.com>
+Cc: Alexander Duyck <alexander.h.duyck@intel.com>,
+	netdev@vger.kernel.org, gospo@redhat.com, sassmann@redhat.com,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Date: Sat, 20 Apr 2013 20:31:28 -0700
+In-Reply-To: <1366451353-24714-9-git-send-email-jeffrey.t.kirsher@intel.com>
+References: <1366451353-24714-1-git-send-email-jeffrey.t.kirsher@intel.com>
+	 <1366451353-24714-9-git-send-email-jeffrey.t.kirsher@intel.com>
+Content-Type: multipart/signed; micalg="pgp-sha512";
+	protocol="application/pgp-signature"; boundary="=-OmQNSJlrm3Jm29a/Kjmo"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/03/2013 08:45 AM, Thierry Reding wrote:
-> Move the PCIe driver from arch/arm/mach-tegra into the drivers/pci/host
-> directory. The motivation is to collect various host controller drivers
-> in the same location in order to facilitate refactoring.
-> 
-> The Tegra PCIe driver has been largely rewritten, both in order to turn
-> it into a proper platform driver and to add MSI (based on code by
-> Krishna Kishore <kthota@nvidia.com>) as well as device tree support.
 
-> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+--=-OmQNSJlrm3Jm29a/Kjmo
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-> +struct tegra_msi {
-> +	DECLARE_BITMAP(used, INT_PCI_MSI_NR);
-> +	struct irq_domain *domain;
-> +	struct msi_chip chip;
+On Sat, 2013-04-20 at 02:49 -0700, Jeff Kirsher wrote:
+> From: Alexander Duyck <alexander.h.duyck@intel.com>
+>=20
+> This function is meant to add a helper function that will determine if a =
+PF
+> has any VFs that are currently assigned to a guest.  We currently have be=
+en
+> implementing this function per driver, and going forward I would like to =
+avoid
+> that by making this function generic and using this helper.
+>=20
+> Signed-off-by: Alexander Duyck <alexander.h.duyck@intel.com>
+> Signed-off-by: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
 
-Nit: You could move that to be the first field in the struct, then
-to_tegra_msi() would end up being a no-op, which might save a byte or two.
+Adding linux-pci mailing list and Bjorn to the CC.
 
-> +static int tegra_pcie_write_conf(struct pci_bus *bus, unsigned int devfn,
-> +				 int where, int size, u32 value)
-...
-> +	if (bus->number == 0) {
-> +		unsigned int slot = PCI_SLOT(devfn);
-> +		struct tegra_pcie_port *port;
-> +
-> +		list_for_each_entry(port, &pcie->ports, list) {
-> +			if (port->index + 1 == slot) {
-> +				addr = port->base + (where & ~3);
-> +				break;
-> +			}
-> +		}
-> +	} else {
-> +		addr = tegra_pcie_bus_map(pcie, bus->number);
-> +		if (!addr) {
-> +			dev_err(pcie->dev,
-> +				"failed to map cfg. space for bus %u\n",
-> +				bus->number);
-> +			return PCIBIOS_DEVICE_NOT_FOUND;
-> +		}
-> +
-> +		addr += tegra_pcie_conf_offset(devfn, where);
-> +	}
+Bjorn- David Miller needs a signoff by PCI maintainer.=20
 
-It seems like that chunk of code could be shared between
-tegra_pcie_read_conf() and tegra_pcie_write_conf().
-
-Also, tegra_pcie_read_conf() checks again for addr == NULL and returns
-if so. read and write should be consistent.
-
-> +static void tegra_pcie_port_free(struct tegra_pcie_port *port)
+> ---
+>  drivers/pci/iov.c   | 41 +++++++++++++++++++++++++++++++++++++++++
+>  include/linux/pci.h |  5 +++++
+>  2 files changed, 46 insertions(+)
+>=20
+> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+> index ee599f2..fd99720 100644
+> --- a/drivers/pci/iov.c
+> +++ b/drivers/pci/iov.c
+> @@ -729,6 +729,47 @@ int pci_num_vf(struct pci_dev *dev)
+>  EXPORT_SYMBOL_GPL(pci_num_vf);
+> =20
+>  /**
+> + * pci_vfs_assigned - returns number of VFs are assigned to a guest
+> + * @dev: the PCI device
+> + *
+> + * Returns number of VFs belonging to this device that are assigned to a=
+ guest.
+> + * If device is not a physical function returns -ENODEV.
+> + */
+> +int pci_vfs_assigned(struct pci_dev *dev)
 > +{
-> +	struct tegra_pcie *pcie = port->pcie;
+> +	struct pci_dev *vfdev;
+> +	unsigned int vfs_assigned =3D 0;
+> +	unsigned short dev_id;
 > +
-> +	devm_iounmap(pcie->dev, port->base);
-> +	devm_release_mem_region(pcie->dev, port->regs.start,
-> +				resource_size(&port->regs));
-> +	list_del(&port->list);
-> +	devm_kfree(pcie->dev, port);
+> +	/* only search if we are a PF */
+> +	if (!dev->is_physfn)
+> +		return -ENODEV;
+> +
+> +	/*
+> +	 * determine the device ID for the VFs, the vendor ID will be the
+> +	 * same as the PF so there is no need to check for that one
+> +	 */
+> +	pci_read_config_word(dev, dev->sriov->pos + PCI_SRIOV_VF_DID, &dev_id);
+> +
+> +	/* loop through all the VFs to see if we own any that are assigned */
+> +	vfdev =3D pci_get_device(dev->vendor, dev_id, NULL);
+> +	while (vfdev) {
+> +		/*
+> +		 * It is considered assigned if it is a virtual function with
+> +		 * our dev as the physical function and the assigned bit is set
+> +		 */
+> +		if (vfdev->is_virtfn && (vfdev->physfn =3D=3D dev) &&
+> +		    (vfdev->dev_flags & PCI_DEV_FLAGS_ASSIGNED))
+> +			vfs_assigned++;
+> +
+> +		vfdev =3D pci_get_device(dev->vendor, dev_id, vfdev);
+> +	}
+> +
+> +	return vfs_assigned;
 > +}
-
-Do ports get allocated and freed separately from the host controller,
-such that it's actually worth manually calling the
-devm_iounmap/release/free functions?
-
-> +static int tegra_pcie_enable_controller(struct tegra_pcie *pcie)
-...
-> +	/* disable all exceptions */
-> +	afi_writel(pcie, 0, AFI_FPCI_ERROR_MASKS);
-
-Is that a good idea?
-
-> +static int tegra_pcie_get_resources(struct tegra_pcie *pcie)
-
-> +	err = devm_request_irq(&pdev->dev, pcie->irq, tegra_pcie_isr,
-> +			       IRQF_SHARED, "PCIE", pcie);
-
-devm_request_irq and IRQF_SHARED sounds like a bad combination; what if
-the IRQ goes off after this driver's remove() is called, but before the
-driver core devm cleanup runs?
-
-> +static irqreturn_t tegra_pcie_msi_irq(int irq, void *data)
-...
-> +	return IRQ_HANDLED;
-
-Shouldn't this function return IRQ_NONE if no MSI status bits were found
-set?
-
-> +static int tegra_pcie_enable_msi(struct tegra_pcie *pcie)
-
-> +	/* setup AFI/FPCI range */
-> +	msi->pages = __get_free_pages(GFP_KERNEL, 3);
-
-If tegra_msi_setup_irq() hard-codes the MSI address as msi->pages, then
-I expect you can get away with a single page here. Of course, perhaps
-tegra_msi_setup_irq() is supposed to give a different address to every
-MSI client? Even so, 256 clients * 4 bytes is still less than 1 page.
-
-> +static u32 tegra_pcie_get_xbar_config(struct tegra_pcie *pcie, u32 lanes)
+> +EXPORT_SYMBOL_GPL(pci_vfs_assigned);
+> +
+> +/**
+>   * pci_sriov_set_totalvfs -- reduce the TotalVFs available
+>   * @dev: the PCI PF device
+>   * @numvfs: number that should be used for TotalVFs supported
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 2461033a..03b4d3c 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -1643,6 +1643,7 @@ extern int pci_enable_sriov(struct pci_dev *dev, in=
+t nr_virtfn);
+>  extern void pci_disable_sriov(struct pci_dev *dev);
+>  extern irqreturn_t pci_sriov_migration(struct pci_dev *dev);
+>  extern int pci_num_vf(struct pci_dev *dev);
+> +extern int pci_vfs_assigned(struct pci_dev *dev);
+>  extern int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
+>  extern int pci_sriov_get_totalvfs(struct pci_dev *dev);
+>  #else
+> @@ -1661,6 +1662,10 @@ static inline int pci_num_vf(struct pci_dev *dev)
+>  {
+>  	return 0;
+>  }
+> +static inline int pci_vfs_assigned(struct pci_dev *dev)
 > +{
-> +	struct device_node *np = pcie->dev->of_node;
-> +
-> +	switch (lanes) {
-> +	case 0x00000004:
-> +		dev_info(pcie->dev, "single-mode configuration\n");
-> +		return AFI_PCIE_CONFIG_SM2TMS0_XBAR_CONFIG_SINGLE;
-> +
-> +	case 0x00000202:
-> +		dev_info(pcie->dev, "dual-mode configuration\n");
-> +		return AFI_PCIE_CONFIG_SM2TMS0_XBAR_CONFIG_DUAL;
-> +	}
-> +
 > +	return 0;
+> +}
+>  static inline int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs=
+)
+>  {
+>  	return 0;
 
-Shouldn't that return an error, and dev_err() about it? If not, then I
-think using one of the #defines for the default would make the result a
-lot more obvious.
 
-> +static int tegra_pcie_parse_dt(struct tegra_pcie *pcie)
 
-> +	pcie->xbar_config = tegra_pcie_get_xbar_config(pcie, lanes);
-> +	if (!pcie->xbar_config) {
-> +		dev_err(pcie->dev, "invalid lane configuration\n");
-> +		return -EINVAL;
-> +	}
+--=-OmQNSJlrm3Jm29a/Kjmo
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
 
-Oh, but AFI_PCIE_CONFIG_SM2TMS0_XBAR_CONFIG_SINGLE==0, which is valid...
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.13 (GNU/Linux)
 
-> +static bool tegra_pcie_port_check_link(struct tegra_pcie_port *port)
-...
-> +			if (value & 0x20000000)
-> +				return true;
+iQIcBAABCgAGBQJRc12RAAoJEOVv75VaS+3OYnUP/AigVZEVP2H4UTntmGVWtaKq
+SQU58LgwSmRGmZE/I4bl4tnjW8wKRjb0lMVhQmix9rFLZLgDa43SY+j+ub7XjS07
+4XxuzJsu2KOrFKw/NHj/Ee/96sQskpNl8zD1oC23YvRRrY5owcB5S9bIUlsPcAfV
+QxiEdcNj27T7zQk79XYPLkyDvB0FJyn5Y0jVUspMOSwAQGZizC0pV15wsGUF2klN
+54RceycuaMbeQ+R73ZHMNAmYPFXXtOjmmgZNqrWdLvL4452iClRAzvUUrbfHJ07V
+9lKz0fMEAS+Wv+3t28bs9i8OP5jVjp920FpvMDOwtLmJTvsehVCNdExq1RD08mhP
+cqytKi8GtFby5DpmOjIoZLpKy09tlDHZ6fh2ceIljNhh1ow+zL7F9sqsafLKIIVn
+21c5MB2IYx08zfPnFMKAg6K/oWMLliwmI7lOnxmL1gKdrmL424wR9FhQaDbxJYeq
+fujnO36h4I3GeOfjk/OCKTFCBRUMkk1s493x7VnHS5TzFlbZap3LqIwzBWdnuL1e
+VSPc5i5eR5yO+HqBM6TZ3vayJjddIDcLMuh1sDW0FbVDkj3Wpk9Rq/JZ3sTrtCYD
+QyJBFfZf260RZTVSfAVKto/WCkiiUo0viH0Sky+yrqheRFJ7TvBR60QoALQ8HrKP
+h/+6L1DQYriWs6qXtiIT
+=Lqvj
+-----END PGP SIGNATURE-----
 
-Can we use a #define for 0x20000000?
+--=-OmQNSJlrm3Jm29a/Kjmo--
 
-> +static int tegra_pcie_enable(struct tegra_pcie *pcie)
-> +{
-> +	struct tegra_pcie_port *port, *tmp;
-> +	struct hw_pci hw;
-> +
-> +	list_for_each_entry_safe(port, tmp, &pcie->ports, list) {
-> +		dev_info(pcie->dev, "probing port %u, using %u lanes\n",
-> +			 port->index, port->lanes);
-> +
-> +		tegra_pcie_port_enable(port);
-> +
-> +		if (tegra_pcie_port_check_link(port))
-> +			continue;
-> +
-> +		dev_info(pcie->dev, "link %u down, ignoring\n", port->index);
-> +
-> +		tegra_pcie_port_disable(port);
-> +		tegra_pcie_port_free(port);
-> +	}
-
-Why is that needed; when would a port get enabled if it was already
-enabled, and if it was already enabled, wouldn't you want this function
-to be a no-op rather than destroying everything and starting again?
-
-> +static int tegra_pcie_probe(struct platform_device *pdev)
-...
-> +	pcibios_min_mem = 0;
-
-What does that mean/do? I wonder if that should be set to 0x80000000 by
-the Tegra30 patches?
