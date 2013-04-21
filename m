@@ -1,33 +1,112 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f173.google.com ([209.85.214.173]:62665 "EHLO
-	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965114Ab3DQQsN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 17 Apr 2013 12:48:13 -0400
-Received: by mail-ob0-f173.google.com with SMTP id wn14so1604056obc.4
-        for <linux-pci@vger.kernel.org>; Wed, 17 Apr 2013 09:48:12 -0700 (PDT)
+Received: from hydra.sisk.pl ([212.160.235.94]:40148 "EHLO hydra.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752084Ab3DUVx4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 21 Apr 2013 17:53:56 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: David Howells <dhowells@redhat.com>
+Cc: linux-kernel@vger.kernel.org, alsa-devel@alsa-project.org,
+	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
+	linux-acpi@vger.kernel.org, netfilter-devel@vger.kernel.org,
+	viro@zeniv.linux.org.uk, netdev@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org,
+	openipmi-developer@lists.sourceforge.net
+Subject: Re: [PATCH 26/28] proc: Supply a function to remove a proc entry by PDE [RFC]
+Date: Mon, 22 Apr 2013 00:01:56 +0200
+Message-ID: <13676870.MCxoVzgcmR@vostro.rjw.lan>
+In-Reply-To: <20130416182734.27773.47452.stgit@warthog.procyon.org.uk>
+References: <20130416182550.27773.89310.stgit@warthog.procyon.org.uk> <20130416182734.27773.47452.stgit@warthog.procyon.org.uk>
 MIME-Version: 1.0
-In-Reply-To: <1825980.1C7UKqDGj6@vostro.rjw.lan>
-References: <20130416171732.GA6356@google.com> <1825980.1C7UKqDGj6@vostro.rjw.lan>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 17 Apr 2013 10:47:51 -0600
-Message-ID: <CAErSpo44LzWjne=0G+4tMiFmHd0x=b6Rfd7K_PWZo+yZmFihsg@mail.gmail.com>
-Subject: Re: Changes for v3.10 merge window
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 17, 2013 at 10:25 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> On Tuesday, April 16, 2013 11:17:32 AM Bjorn Helgaas wrote:
->> Below are the patches currently in my "next" branch, planned for
->> release in v3.10.  If I'm missing something important, let me know.
->
-> Well, you said you took the "PCI / PM: Make pci_pme_active() ignore devices
-> without PME support" patch for v3.10, but it is not listed below.
+On Tuesday, April 16, 2013 07:27:34 PM David Howells wrote:
+> Supply a function (proc_remove()) to remove a proc entry (and any subtree
+> rooted there) by proc_dir_entry pointer rather than by name and (optionally)
+> root dir entry pointer.  This allows us to eliminate all remaining pde->name
+> accesses outside of procfs.
+> 
+> Signed-off-by: David Howells <dhowells@redhat.com>
+> cc: linux-acpi@vger.kernel.org
+> cc: openipmi-developer@lists.sourceforge.net
+> cc: devicetree-discuss@lists.ozlabs.org
+> cc: linux-pci@vger.kernel.org
+> cc: netdev@vger.kernel.org
+> cc: netfilter-devel@vger.kernel.org
+> cc: alsa-devel@alsa-project.org
 
-Yep, I just merged it 30 seconds ago :)  I was waiting to make sure
-you didn't want the "Fix fallback to PCI_D0"  patch in v3.9.  Thanks
-for the reminder.
+The ACPI changes look good to me.
 
-Bjorn
+Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+
+> ---
+> 
+>  drivers/acpi/sbs.c                  |   21 ++++-----------------
+>  drivers/char/ipmi/ipmi_msghandler.c |    2 +-
+>  drivers/misc/sgi-gru/gruprocfs.c    |    2 +-
+>  drivers/of/base.c                   |   11 +----------
+>  drivers/pci/proc.c                  |   12 +++---------
+>  fs/proc/generic.c                   |    7 +++++++
+>  fs/proc/vmcore.c                    |    2 +-
+>  include/linux/proc_fs.h             |    2 ++
+>  kernel/irq/proc.c                   |    6 +-----
+>  net/8021q/vlanproc.c                |    9 ++-------
+>  net/core/pktgen.c                   |    6 ++----
+>  net/ipv4/netfilter/ipt_CLUSTERIP.c  |    4 ++--
+>  net/ipv6/proc.c                     |    3 +--
+>  net/netfilter/xt_hashlimit.c        |    4 ++--
+>  sound/core/info.c                   |   19 +++++--------------
+>  15 files changed, 35 insertions(+), 75 deletions(-)
+> 
+> diff --git a/drivers/acpi/sbs.c b/drivers/acpi/sbs.c
+> index a296e08..b6241ee 100644
+> --- a/drivers/acpi/sbs.c
+> +++ b/drivers/acpi/sbs.c
+> @@ -521,19 +521,6 @@ acpi_sbs_add_fs(struct proc_dir_entry **dir,
+>  	return 0;
+>  }
+>  
+> -static void
+> -acpi_sbs_remove_fs(struct proc_dir_entry **dir,
+> -			   struct proc_dir_entry *parent_dir)
+> -{
+> -	if (*dir) {
+> -		remove_proc_entry(ACPI_SBS_FILE_INFO, *dir);
+> -		remove_proc_entry(ACPI_SBS_FILE_STATE, *dir);
+> -		remove_proc_entry(ACPI_SBS_FILE_ALARM, *dir);
+> -		remove_proc_entry((*dir)->name, parent_dir);
+> -		*dir = NULL;
+> -	}
+> -}
+> -
+>  /* Smart Battery Interface */
+>  static struct proc_dir_entry *acpi_battery_dir = NULL;
+>  
+> @@ -836,8 +823,8 @@ static void acpi_battery_remove(struct acpi_sbs *sbs, int id)
+>  		power_supply_unregister(&battery->bat);
+>  	}
+>  #ifdef CONFIG_ACPI_PROCFS_POWER
+> -	if (battery->proc_entry)
+> -		acpi_sbs_remove_fs(&battery->proc_entry, acpi_battery_dir);
+> +	proc_remove(battery->proc_entry);
+> +	battery->proc_entry = NULL;
+>  #endif
+>  }
+>  
+> @@ -873,8 +860,8 @@ static void acpi_charger_remove(struct acpi_sbs *sbs)
+>  	if (sbs->charger.dev)
+>  		power_supply_unregister(&sbs->charger);
+>  #ifdef CONFIG_ACPI_PROCFS_POWER
+> -	if (sbs->charger_entry)
+> -		acpi_sbs_remove_fs(&sbs->charger_entry, acpi_ac_dir);
+> +	proc_remove(sbs->charger_entry);
+> +	sbs->charger_entry = NULL;
+>  #endif
+>  }
+>  
+
+
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
