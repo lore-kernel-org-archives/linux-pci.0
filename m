@@ -1,83 +1,102 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f169.google.com ([209.85.223.169]:33283 "EHLO
-	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753636Ab3DVXLD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Apr 2013 19:11:03 -0400
-Received: by mail-ie0-f169.google.com with SMTP id ar20so13179iec.28
-        for <linux-pci@vger.kernel.org>; Mon, 22 Apr 2013 16:11:02 -0700 (PDT)
-Subject: [PATCH v4 07/22] PCI: Clean up MSI/MSI-X capability #defines
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Gavin Shan <shangw@linux.vnet.ibm.com>
-Date: Mon, 22 Apr 2013 17:11:00 -0600
-Message-ID: <20130422231100.32621.52374.stgit@bhelgaas-glaptop>
-In-Reply-To: <20130422230012.32621.15224.stgit@bhelgaas-glaptop>
-References: <20130422230012.32621.15224.stgit@bhelgaas-glaptop>
+Received: from e23smtp08.au.ibm.com ([202.81.31.141]:33198 "EHLO
+	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754256Ab3DVHmW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Apr 2013 03:42:22 -0400
+Received: from /spool/local
+	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <qiudayu@linux.vnet.ibm.com>;
+	Mon, 22 Apr 2013 17:40:02 +1000
+Received: from d23relay03.au.ibm.com (d23relay03.au.ibm.com [9.190.235.21])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 66BF32BB0059
+	for <linux-pci@vger.kernel.org>; Mon, 22 Apr 2013 17:42:16 +1000 (EST)
+Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
+	by d23relay03.au.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id r3M7g97n33358036
+	for <linux-pci@vger.kernel.org>; Mon, 22 Apr 2013 17:42:10 +1000
+Received: from d23av04.au.ibm.com (loopback [127.0.0.1])
+	by d23av04.au.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id r3M7gErT024728
+	for <linux-pci@vger.kernel.org>; Mon, 22 Apr 2013 17:42:15 +1000
+Message-ID: <5174E9C3.6080203@linux.vnet.ibm.com>
+Date: Mon, 22 Apr 2013 15:41:55 +0800
+From: Mike Qiu <qiudayu@linux.vnet.ibm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+CC: linux-pci@vger.kernel.org, tglx@linutronix.de
+Subject: Re: [PATCH] PowerNV/PCI: Fix NULL PCI controller
+References: <1366611236-1811-1-git-send-email-qiudayu@linux.vnet.ibm.com> <1366612577.2723.21.camel@pasglop>
+In-Reply-To: <1366612577.2723.21.camel@pasglop>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This doesn't change any existing symbols, but it puts them in logical
-order and uses explicit masks instead of shifts, like the rest of the
-file.
+于 2013/4/22 14:36, Benjamin Herrenschmidt 写道:
+> On Mon, 2013-04-22 at 02:13 -0400, Mike Qiu wrote:
+>> In pnv_pci_read_config() or pnv_pci_write_config(), we never check if
+>> the PCI controller is valid before converting that into platform
+>> dependent one, this is very dangerous.
+>>
+>> To avoid this potential risks, the patch check PCI controller first
+>> before use it.
+> I don't think there's any remote possibility of that happening, is
+> there ?
+Yes, I agree, I don't exactly mean that it maybe happen, but the code
+try to check the pci_controller pointer and the way it try is useless,
+because if this happens, the system will crash before check: try to access
+the "NULL" pointer.
 
-It also adds new symbols for PCI_MSIX_TABLE_BIR,
-PCI_MSIX_TABLE_OFFSET, PCI_MSIX_PBA_BIR, and PCI_MSIX_PBA_OFFSET to
-replace the mis-named PCI_MSIX_FLAGS_BIRMASK (the BAR index fields
-are part of the Table and PBA registers, not the flags register).
+My patch just makes the code more stable and robust.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- include/uapi/linux/pci_regs.h |   30 +++++++++++++++++-------------
- 1 file changed, 17 insertions(+), 13 deletions(-)
+Anyway, I think it's better to remove the check code as it is useless, as it
+will shows that this "NULL" pci_controller pointer may happen...
 
-diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-index ebfadc5..864e324 100644
---- a/include/uapi/linux/pci_regs.h
-+++ b/include/uapi/linux/pci_regs.h
-@@ -292,12 +292,12 @@
- 
- /* Message Signalled Interrupts registers */
- 
--#define PCI_MSI_FLAGS		2	/* Various flags */
--#define  PCI_MSI_FLAGS_64BIT	0x80	/* 64-bit addresses allowed */
--#define  PCI_MSI_FLAGS_QSIZE	0x70	/* Message queue size configured */
--#define  PCI_MSI_FLAGS_QMASK	0x0e	/* Maximum queue size available */
--#define  PCI_MSI_FLAGS_ENABLE	0x01	/* MSI feature enabled */
--#define  PCI_MSI_FLAGS_MASKBIT	0x100	/* 64-bit mask bits allowed */
-+#define PCI_MSI_FLAGS		2	/* Message Control */
-+#define  PCI_MSI_FLAGS_ENABLE	0x0001	/* MSI feature enabled */
-+#define  PCI_MSI_FLAGS_QMASK	0x000e	/* Maximum queue size available */
-+#define  PCI_MSI_FLAGS_QSIZE	0x0070	/* Message queue size configured */
-+#define  PCI_MSI_FLAGS_64BIT	0x0080	/* 64-bit addresses allowed */
-+#define  PCI_MSI_FLAGS_MASKBIT	0x0100	/* Per-vector masking capable */
- #define PCI_MSI_RFU		3	/* Rest of capability flags */
- #define PCI_MSI_ADDRESS_LO	4	/* Lower 32 bits */
- #define PCI_MSI_ADDRESS_HI	8	/* Upper 32 bits (if PCI_MSI_FLAGS_64BIT set) */
-@@ -309,13 +309,17 @@
- #define PCI_MSI_PENDING_64	20	/* Pending intrs for 64-bit devices */
- 
- /* MSI-X registers */
--#define PCI_MSIX_FLAGS		2
--#define  PCI_MSIX_FLAGS_QSIZE	0x7FF
--#define  PCI_MSIX_FLAGS_ENABLE	(1 << 15)
--#define  PCI_MSIX_FLAGS_MASKALL	(1 << 14)
--#define PCI_MSIX_TABLE		4
--#define PCI_MSIX_PBA		8
--#define  PCI_MSIX_FLAGS_BIRMASK	(7 << 0)
-+#define PCI_MSIX_FLAGS		2	/* Message Control */
-+#define  PCI_MSIX_FLAGS_QSIZE	0x07FF	/* Table size */
-+#define  PCI_MSIX_FLAGS_MASKALL	0x4000	/* Mask all vectors for this function */
-+#define  PCI_MSIX_FLAGS_ENABLE	0x8000	/* MSI-X enable */
-+#define PCI_MSIX_TABLE		4	/* Table offset */
-+#define  PCI_MSIX_TABLE_BIR	0x00000007 /* BAR index */
-+#define  PCI_MSIX_TABLE_OFFSET	0xfffffff8 /* Offset into specified BAR */
-+#define PCI_MSIX_PBA		8	/* Pending Bit Array offset */
-+#define  PCI_MSIX_PBA_BIR	0x00000007 /* BAR index */
-+#define  PCI_MSIX_PBA_OFFSET	0xfffffff8 /* Offset into specified BAR */
-+#define  PCI_MSIX_FLAGS_BIRMASK	(7 << 0)   /* deprecated */
- #define PCI_CAP_MSIX_SIZEOF	12	/* size of MSIX registers */
- 
- /* MSI-X entry's format */
+Thanks
+Mike
+> If it does, maybe it warrants a WARN_ON...
+>
+> Ben.
+>
+>> Signed-off-by: Mike Qiu <qiudayu@linux.vnet.ibm.com>
+>> ---
+>>   arch/powerpc/platforms/powernv/pci.c |    8 ++++----
+>>   1 file changed, 4 insertions(+), 4 deletions(-)
+>>
+>> diff --git a/arch/powerpc/platforms/powernv/pci.c b/arch/powerpc/platforms/powernv/pci.c
+>> index b8b8e0b..e7b7f1a 100644
+>> --- a/arch/powerpc/platforms/powernv/pci.c
+>> +++ b/arch/powerpc/platforms/powernv/pci.c
+>> @@ -286,11 +286,11 @@ static int pnv_pci_read_config(struct pci_bus *bus,
+>>   			       int where, int size, u32 *val)
+>>   {
+>>   	struct pci_controller *hose = pci_bus_to_host(bus);
+>> -	struct pnv_phb *phb = hose->private_data;
+>> +	struct pnv_phb *phb = hose ? hose->private_data : NULL;
+>>   	u32 bdfn = (((uint64_t)bus->number) << 8) | devfn;
+>>   	s64 rc;
+>>   
+>> -	if (hose == NULL)
+>> +	if (!phb)
+>>   		return PCIBIOS_DEVICE_NOT_FOUND;
+>>   
+>>   	switch (size) {
+>> @@ -330,10 +330,10 @@ static int pnv_pci_write_config(struct pci_bus *bus,
+>>   				int where, int size, u32 val)
+>>   {
+>>   	struct pci_controller *hose = pci_bus_to_host(bus);
+>> -	struct pnv_phb *phb = hose->private_data;
+>> +	struct pnv_phb *phb = hose ? hose->private_data : NULL;
+>>   	u32 bdfn = (((uint64_t)bus->number) << 8) | devfn;
+>>   
+>> -	if (hose == NULL)
+>> +	if (!phb)
+>>   		return PCIBIOS_DEVICE_NOT_FOUND;
+>>   
+>>   	cfg_dbg("pnv_pci_write_config bus: %x devfn: %x +%x/%x -> %08x\n",
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>
+>
 
