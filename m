@@ -1,48 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f177.google.com ([209.85.223.177]:39354 "EHLO
-	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752874Ab3DVXMh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Apr 2013 19:12:37 -0400
-Received: by mail-ie0-f177.google.com with SMTP id 9so16171iec.8
-        for <linux-pci@vger.kernel.org>; Mon, 22 Apr 2013 16:12:37 -0700 (PDT)
-Subject: [PATCH v4 21/22] vfio-pci: Use PCI_MSIX_TABLE_BIR,
- not PCI_MSIX_FLAGS_BIRMASK
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Alex Williamson <alex.williamson@redhat.com>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>
-Date: Mon, 22 Apr 2013 17:12:35 -0600
-Message-ID: <20130422231235.32621.48799.stgit@bhelgaas-glaptop>
-In-Reply-To: <20130422230012.32621.15224.stgit@bhelgaas-glaptop>
-References: <20130422230012.32621.15224.stgit@bhelgaas-glaptop>
+Received: from e28smtp05.in.ibm.com ([122.248.162.5]:53520 "EHLO
+	e28smtp05.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755058Ab3DVJo4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Apr 2013 05:44:56 -0400
+Received: from /spool/local
+	by e28smtp05.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <qiudayu@linux.vnet.ibm.com>;
+	Mon, 22 Apr 2013 15:11:22 +0530
+Received: from d28relay01.in.ibm.com (d28relay01.in.ibm.com [9.184.220.58])
+	by d28dlp02.in.ibm.com (Postfix) with ESMTP id 84941394002D
+	for <linux-pci@vger.kernel.org>; Mon, 22 Apr 2013 15:14:50 +0530 (IST)
+Received: from d28av05.in.ibm.com (d28av05.in.ibm.com [9.184.220.67])
+	by d28relay01.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id r3M9ihEM524586
+	for <linux-pci@vger.kernel.org>; Mon, 22 Apr 2013 15:14:44 +0530
+Received: from d28av05.in.ibm.com (loopback [127.0.0.1])
+	by d28av05.in.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id r3M9inZg022209
+	for <linux-pci@vger.kernel.org>; Mon, 22 Apr 2013 19:44:49 +1000
+Message-ID: <5175067F.3030307@linux.vnet.ibm.com>
+Date: Mon, 22 Apr 2013 17:44:31 +0800
+From: Mike Qiu <qiudayu@linux.vnet.ibm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+CC: linux-pci@vger.kernel.org, tglx@linutronix.de
+Subject: Re: [PATCH] PowerNV/PCI: Fix NULL PCI controller
+References: <1366611236-1811-1-git-send-email-qiudayu@linux.vnet.ibm.com> <1366612577.2723.21.camel@pasglop> <5174E9C3.6080203@linux.vnet.ibm.com> <1366617867.2723.23.camel@pasglop>
+In-Reply-To: <1366617867.2723.23.camel@pasglop>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCI_MSIX_FLAGS_BIRMASK is mis-named because the BIR mask is in the
-Table Offset register, not the flags ("Message Control" per spec)
-register.
+于 2013/4/22 16:04, Benjamin Herrenschmidt 写道:
+> On Mon, 2013-04-22 at 15:41 +0800, Mike Qiu wrote:
+>> Anyway, I think it's better to remove the check code as it is useless,
+>> as it
+>> will shows that this "NULL" pci_controller pointer may happen...
+> Ok. It *might* still be worth adding a BUG_ON then in pci_bus_to_host()
+> itself ... no big deal either way.
+OK, you mean the code will remain the same and my patch is worthless?
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-CC: Alex Williamson <alex.williamson@redhat.com>
----
- drivers/vfio/pci/vfio_pci.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Anyway, it will be OK for me. But I hope it can be accept for more stable
+reason.
 
-diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
-index 8189cb6..10626e8 100644
---- a/drivers/vfio/pci/vfio_pci.c
-+++ b/drivers/vfio/pci/vfio_pci.c
-@@ -78,8 +78,8 @@ static int vfio_pci_enable(struct vfio_pci_device *vdev)
- 		pci_read_config_word(pdev, msix_pos + PCI_MSIX_FLAGS, &flags);
- 		pci_read_config_dword(pdev, msix_pos + PCI_MSIX_TABLE, &table);
- 
--		vdev->msix_bar = table & PCI_MSIX_FLAGS_BIRMASK;
--		vdev->msix_offset = table & ~PCI_MSIX_FLAGS_BIRMASK;
-+		vdev->msix_bar = table & PCI_MSIX_TABLE_BIR;
-+		vdev->msix_offset = table & PCI_MSIX_TABLE_OFFSET;
- 		vdev->msix_size = ((flags & PCI_MSIX_FLAGS_QSIZE) + 1) * 16;
- 	} else
- 		vdev->msix_bar = 0xFF;
+Thanks
+Mike
+> Cheers,
+> Ben.
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>
+>
 
