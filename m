@@ -1,111 +1,142 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:52978 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934864Ab3DIVG4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Apr 2013 17:06:56 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Russell King <linux@arm.linux.org.uk>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	devicetree-discuss@lists.ozlabs.org,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Maen Suleiman <maen@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Olof Johansson <olof@lixom.net>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Mitch Bradley <wmb@firmworks.com>,
-	Andrew Murray <andrew.murray@arm.com>
-Subject: [PATCHv8 04/19] of/pci: Add of_pci_get_devfn() function
-Date: Tue,  9 Apr 2013 23:06:25 +0200
-Message-Id: <1365541601-14095-5-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1365541601-14095-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1365541601-14095-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from mail-vb0-f52.google.com ([209.85.212.52]:53581 "EHLO
+	mail-vb0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754895Ab3DVUJZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Apr 2013 16:09:25 -0400
+Received: by mail-vb0-f52.google.com with SMTP id w8so6211387vbf.39
+        for <linux-pci@vger.kernel.org>; Mon, 22 Apr 2013 13:09:25 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1366515088.2209.15.camel@jtkirshe-mobl>
+References: <1366451353-24714-1-git-send-email-jeffrey.t.kirsher@intel.com>
+ <1366451353-24714-9-git-send-email-jeffrey.t.kirsher@intel.com> <1366515088.2209.15.camel@jtkirshe-mobl>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 22 Apr 2013 14:09:04 -0600
+Message-ID: <CAErSpo4D4rn4G56+YT4Ja-S4cjnJ6svBaH3v+_n=cmS5CooC+g@mail.gmail.com>
+Subject: Re: [net-next 08/14] pci: Add SRIOV helper function to determine if
+ VFs are assigned to guest
+To: "Kirsher, Jeffrey T" <jeffrey.t.kirsher@intel.com>
+Cc: David Miller <davem@davemloft.net>,
+	Alexander Duyck <alexander.h.duyck@intel.com>,
+	netdev <netdev@vger.kernel.org>, gospo@redhat.com,
+	sassmann@redhat.com,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Thierry Reding <thierry.reding@avionic-design.de>
+On Sat, Apr 20, 2013 at 9:31 PM, Jeff Kirsher
+<jeffrey.t.kirsher@intel.com> wrote:
+> On Sat, 2013-04-20 at 02:49 -0700, Jeff Kirsher wrote:
+>> From: Alexander Duyck <alexander.h.duyck@intel.com>
+>>
+>> This function is meant to add a helper function that will determine if a PF
+>> has any VFs that are currently assigned to a guest.  We currently have been
+>> implementing this function per driver, and going forward I would like to avoid
+>> that by making this function generic and using this helper.
+>>
+>> Signed-off-by: Alexander Duyck <alexander.h.duyck@intel.com>
+>> Signed-off-by: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+>
+> Adding linux-pci mailing list and Bjorn to the CC.
+>
+> Bjorn- David Miller needs a signoff by PCI maintainer.
+>
+>> ---
+>>  drivers/pci/iov.c   | 41 +++++++++++++++++++++++++++++++++++++++++
+>>  include/linux/pci.h |  5 +++++
+>>  2 files changed, 46 insertions(+)
+>>
+>> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+>> index ee599f2..fd99720 100644
+>> --- a/drivers/pci/iov.c
+>> +++ b/drivers/pci/iov.c
+>> @@ -729,6 +729,47 @@ int pci_num_vf(struct pci_dev *dev)
+>>  EXPORT_SYMBOL_GPL(pci_num_vf);
+>>
+>>  /**
+>> + * pci_vfs_assigned - returns number of VFs are assigned to a guest
+>> + * @dev: the PCI device
+>> + *
+>> + * Returns number of VFs belonging to this device that are assigned to a guest.
+>> + * If device is not a physical function returns -ENODEV.
+>> + */
+>> +int pci_vfs_assigned(struct pci_dev *dev)
 
-This function can be used to parse the device and function number from a
-standard 5-cell PCI resource. PCI_SLOT() and PCI_FUNC() can be used on
-the returned value obtain the device and function numbers respectively.
+I guess the idea here is to replace be_find_vfs(),
+igb_vfs_are_assigned(), ixgbe_vfs_are_assigned(), etc.  It does seem
+good to reduce duplicated code.
 
-Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
----
- drivers/of/of_pci.c    |   34 +++++++++++++++++++++++++++++-----
- include/linux/of_pci.h |    1 +
- 2 files changed, 30 insertions(+), 5 deletions(-)
+I'm trying to figure out why this is safe -- there's no explicit
+synchronization between the iteration through PCI devices looking for
+matching VFs and the device assignment/deassignment paths that set or
+clear PCI_DEV_FLAGS_ASSIGNED, so on the face of it, it looks like
+things could change between calling pci_vfs_assigned() and using the
+result to make a decision.
 
-diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
-index ebb408b..b77e8d8 100644
---- a/drivers/of/of_pci.c
-+++ b/drivers/of/of_pci.c
-@@ -9,14 +9,15 @@
- #endif
- 
- static inline int __of_pci_pci_compare(struct device_node *node,
--				       unsigned int devfn)
-+				       unsigned int data)
- {
--	unsigned int size;
--	const __be32 *reg = of_get_property(node, "reg", &size);
-+	int devfn;
- 
--	if (!reg || size < 5 * sizeof(__be32))
-+	devfn = of_pci_get_devfn(node);
-+	if (devfn < 0)
- 		return 0;
--	return ((be32_to_cpup(&reg[0]) >> 8) & 0xff) == devfn;
-+
-+	return devfn == data;
- }
- 
- struct device_node *of_pci_find_child_device(struct device_node *parent,
-@@ -208,3 +209,26 @@ void pci_process_bridge_OF_ranges(struct pci_controller *hose,
- 	}
- }
- #endif
-+
-+/**
-+ * of_pci_get_devfn() - Get device and function numbers for a device node
-+ * @np: device node
-+ *
-+ * Parses a standard 5-cell PCI resource and returns an 8-bit value that can
-+ * be passed to the PCI_SLOT() and PCI_FUNC() macros to extract the device
-+ * and function numbers respectively. On error a negative error code is
-+ * returned.
-+ */
-+int of_pci_get_devfn(struct device_node *np)
-+{
-+	unsigned int size;
-+	const __be32 *reg;
-+
-+	reg = of_get_property(np, "reg", &size);
-+
-+	if (!reg || size < 5 * sizeof(__be32))
-+		return -EINVAL;
-+
-+	return (be32_to_cpup(reg) >> 8) & 0xff;
-+}
-+EXPORT_SYMBOL_GPL(of_pci_get_devfn);
-diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
-index e56182f..302aca0 100644
---- a/include/linux/of_pci.h
-+++ b/include/linux/of_pci.h
-@@ -11,6 +11,7 @@ int of_irq_map_pci(const struct pci_dev *pdev, struct of_irq *out_irq);
- struct device_node;
- struct device_node *of_pci_find_child_device(struct device_node *parent,
- 					     unsigned int devfn);
-+int of_pci_get_devfn(struct device_node *np);
- 
- void pci_process_bridge_OF_ranges(struct pci_controller *hose,
- 			struct device_node *dev, int primary);
--- 
-1.7.9.5
+Most of the calls would be in .remove() functions, so maybe there's
+some sort of synchronization in that path that  makes this safe.
 
+Bjorn
+
+>> +{
+>> +     struct pci_dev *vfdev;
+>> +     unsigned int vfs_assigned = 0;
+>> +     unsigned short dev_id;
+>> +
+>> +     /* only search if we are a PF */
+>> +     if (!dev->is_physfn)
+>> +             return -ENODEV;
+>> +
+>> +     /*
+>> +      * determine the device ID for the VFs, the vendor ID will be the
+>> +      * same as the PF so there is no need to check for that one
+>> +      */
+>> +     pci_read_config_word(dev, dev->sriov->pos + PCI_SRIOV_VF_DID, &dev_id);
+>> +
+>> +     /* loop through all the VFs to see if we own any that are assigned */
+>> +     vfdev = pci_get_device(dev->vendor, dev_id, NULL);
+>> +     while (vfdev) {
+>> +             /*
+>> +              * It is considered assigned if it is a virtual function with
+>> +              * our dev as the physical function and the assigned bit is set
+>> +              */
+>> +             if (vfdev->is_virtfn && (vfdev->physfn == dev) &&
+>> +                 (vfdev->dev_flags & PCI_DEV_FLAGS_ASSIGNED))
+>> +                     vfs_assigned++;
+>> +
+>> +             vfdev = pci_get_device(dev->vendor, dev_id, vfdev);
+>> +     }
+>> +
+>> +     return vfs_assigned;
+>> +}
+>> +EXPORT_SYMBOL_GPL(pci_vfs_assigned);
+>> +
+>> +/**
+>>   * pci_sriov_set_totalvfs -- reduce the TotalVFs available
+>>   * @dev: the PCI PF device
+>>   * @numvfs: number that should be used for TotalVFs supported
+>> diff --git a/include/linux/pci.h b/include/linux/pci.h
+>> index 2461033a..03b4d3c 100644
+>> --- a/include/linux/pci.h
+>> +++ b/include/linux/pci.h
+>> @@ -1643,6 +1643,7 @@ extern int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn);
+>>  extern void pci_disable_sriov(struct pci_dev *dev);
+>>  extern irqreturn_t pci_sriov_migration(struct pci_dev *dev);
+>>  extern int pci_num_vf(struct pci_dev *dev);
+>> +extern int pci_vfs_assigned(struct pci_dev *dev);
+>>  extern int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
+>>  extern int pci_sriov_get_totalvfs(struct pci_dev *dev);
+>>  #else
+>> @@ -1661,6 +1662,10 @@ static inline int pci_num_vf(struct pci_dev *dev)
+>>  {
+>>       return 0;
+>>  }
+>> +static inline int pci_vfs_assigned(struct pci_dev *dev)
+>> +{
+>> +     return 0;
+>> +}
+>>  static inline int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs)
+>>  {
+>>       return 0;
+>
+>
