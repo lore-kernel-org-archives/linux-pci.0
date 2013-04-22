@@ -1,75 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ia0-f169.google.com ([209.85.210.169]:43766 "EHLO
-	mail-ia0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753778Ab3DVXL3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Apr 2013 19:11:29 -0400
-Received: by mail-ia0-f169.google.com with SMTP id l29so12321iag.0
-        for <linux-pci@vger.kernel.org>; Mon, 22 Apr 2013 16:11:29 -0700 (PDT)
-Subject: [PATCH v4 11/22] PCI: Drop msi_data_reg() macro
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Gavin Shan <shangw@linux.vnet.ibm.com>
-Date: Mon, 22 Apr 2013 17:11:27 -0600
-Message-ID: <20130422231127.32621.11313.stgit@bhelgaas-glaptop>
-In-Reply-To: <20130422230012.32621.15224.stgit@bhelgaas-glaptop>
-References: <20130422230012.32621.15224.stgit@bhelgaas-glaptop>
+Received: from mho-02-ewr.mailhop.org ([204.13.248.72]:45109 "EHLO
+	mho-02-ewr.mailhop.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752674Ab3DVXD3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Apr 2013 19:03:29 -0400
+Date: Mon, 22 Apr 2013 19:02:51 -0400
+From: Jason Cooper <jason@lakedaemon.net>
+To: Andrew Murray <Andrew.Murray@arm.com>
+Cc: linux-mips@linux-mips.org, siva.kallam@samsung.com,
+	linux-pci@vger.kernel.org, linus.walleij@linaro.org,
+	thierry.reding@avionic-design.de, Liviu.Dudau@arm.com,
+	grant.likely@secretlab.ca, juhosg@openwrt.org, paulus@samba.org,
+	linux-samsung-soc@vger.kernel.org, linux@arm.linux.org.uk,
+	jg1.han@samsung.com, jgunthorpe@obsidianresearch.com,
+	thomas.abraham@linaro.org, benh@kernel.crashing.org, arnd@arndb.de,
+	devicetree-discuss@lists.ozlabs.org, rob.herring@calxeda.com,
+	kgene.kim@samsung.com, bhelgaas@google.com,
+	linux-arm-kernel@lists.infradead.org,
+	thomas.petazzoni@free-electrons.com, monstr@monstr.eu,
+	linux-kernel@vger.kernel.org, suren.reddy@samsung.com,
+	linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH v8 0/3] of/pci: Provide common support for PCI DT
+ parsing
+Message-ID: <20130422230251.GL25724@titan.lakedaemon.net>
+References: <1366627295-16964-1-git-send-email-Andrew.Murray@arm.com>
+ <20130422165343.GE25724@titan.lakedaemon.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130422165343.GE25724@titan.lakedaemon.net>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-msi_data_reg() doesn't provide any useful abstraction, so drop it.
+On Mon, Apr 22, 2013 at 12:53:43PM -0400, Jason Cooper wrote:
+> On Mon, Apr 22, 2013 at 11:41:32AM +0100, Andrew Murray wrote:
+> > This patchset factors out duplicated code associated with parsing PCI
+> > DT "ranges" properties across the architectures and introduces a
+> > "ranges" parser. This parser "of_pci_range_parser" can be used directly
+> > by ARM host bridge drivers enabling them to obtain ranges from device
+> > trees.
+> > 
+> > I've included the Reviewed-by, Tested-by and Acked-by's received from v5/v6/v7
+> > in this patchset, earlier versions of this patchset (v3) have been tested-by:
+> > 
+> > Thierry Reding <thierry.reding@avionic-design.de>
+> > Jingoo Han <jg1.han@samsung.com>
+> > 
+> > I've tested that this patchset builds and runs on ARM and that it builds on
+> > PowerPC, x86_64 and MIPS.
+> 
+> Andrew,
+> 
+> Unfortunately, the mvebu/drivers branch containing your series had to be
+> dropped from arm-soc for v3.10.  This was not due to your series, but
+> since arm-soc's granularity is branches, your series was caught in the
+> drop.
+> 
+> As the mvebu-pcie driver is now v3.11 material, I have taken the
+> opportunity to upgrade from your v7 patchset to v8.  You can find the
+> whole branch at mvebu-next/pcie.
+> 
+> mvebu-next/pcie *will* be rebased onto v3.9 once it drops.  Several
+> dependencies will be removed (since they will have been merged into
+> v3.9).
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/msi.c |   12 ++++++------
- drivers/pci/msi.h |    2 --
- 2 files changed, 6 insertions(+), 8 deletions(-)
+s/v3.9/v3.10-rc1/g  :)
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 7011c5d..1688c26 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -249,10 +249,10 @@ void __read_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
- 		if (entry->msi_attrib.is_64) {
- 			pci_read_config_dword(dev, pos + PCI_MSI_ADDRESS_HI,
- 					      &msg->address_hi);
--			pci_read_config_word(dev, msi_data_reg(pos, 1), &data);
-+			pci_read_config_word(dev, pos + PCI_MSI_DATA_64, &data);
- 		} else {
- 			msg->address_hi = 0;
--			pci_read_config_word(dev, msi_data_reg(pos, 0), &data);
-+			pci_read_config_word(dev, pos + PCI_MSI_DATA_32, &data);
- 		}
- 		msg->data = data;
- 	}
-@@ -309,11 +309,11 @@ void __write_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
- 		if (entry->msi_attrib.is_64) {
- 			pci_write_config_dword(dev, pos + PCI_MSI_ADDRESS_HI,
- 					       msg->address_hi);
--			pci_write_config_word(dev, msi_data_reg(pos, 1),
--						msg->data);
-+			pci_write_config_word(dev, pos + PCI_MSI_DATA_64,
-+					      msg->data);
- 		} else {
--			pci_write_config_word(dev, msi_data_reg(pos, 0),
--						msg->data);
-+			pci_write_config_word(dev, pos + PCI_MSI_DATA_32,
-+					      msg->data);
- 		}
- 	}
- 	entry->msg = *msg;
-diff --git a/drivers/pci/msi.h b/drivers/pci/msi.h
-index e5b87d6..d2c6cd9 100644
---- a/drivers/pci/msi.h
-+++ b/drivers/pci/msi.h
-@@ -6,8 +6,6 @@
- #ifndef MSI_H
- #define MSI_H
- 
--#define msi_data_reg(base, is64bit)	\
--	(base + ((is64bit == 1) ? PCI_MSI_DATA_64 : PCI_MSI_DATA_32))
- #define msi_mask_reg(base, is64bit)	\
- 	(base + ((is64bit == 1) ? PCI_MSI_MASK_64 : PCI_MSI_MASK_32))
- #define is_64bit_address(control)	(!!(control & PCI_MSI_FLAGS_64BIT))
+> Once the rebase is done, I'll send a pull request to Arnd and Olof so we
+> can get as many cycles on -next as possible.
 
+thx,
+
+Jason.
