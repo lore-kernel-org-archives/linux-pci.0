@@ -1,256 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:41586 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965164Ab3DPUis (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Apr 2013 16:38:48 -0400
-From: Neil Horman <nhorman@tuxdriver.com>
-To: linux-kernel@vger.kernel.org
-Cc: Neil Horman <nhorman@tuxdriver.com>,
-	Prarit Bhargava <prarit@redhat.com>,
-	Don Zickus <dzickus@redhat.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Asit Mallick <asit.k.mallick@intel.com>,
-	David Woodhouse <dwmw2@infradead.org>,
-	linux-pci@vger.kernel.org, Joerg Roedel <joro@8bytes.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	=?UTF-8?q?Arkadiusz=20Mi=C5=9Bkiewicz?= <arekm@maven.pl>
-Subject: [PATCH v10] irq: add quirk for broken interrupt remapping on 55XX chipsets
-Date: Tue, 16 Apr 2013 16:38:32 -0400
-Message-Id: <1366144712-23460-1-git-send-email-nhorman@tuxdriver.com>
-In-Reply-To: <1362158276-4901-1-git-send-email-nhorman@tuxdriver.com>
-References: <1362158276-4901-1-git-send-email-nhorman@tuxdriver.com>
+Received: from mail-ia0-f177.google.com ([209.85.210.177]:33949 "EHLO
+	mail-ia0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753507Ab3DVXLW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Apr 2013 19:11:22 -0400
+Received: by mail-ia0-f177.google.com with SMTP id y26so8828iab.36
+        for <linux-pci@vger.kernel.org>; Mon, 22 Apr 2013 16:11:22 -0700 (PDT)
+Subject: [PATCH v4 10/22] PCI: Drop msi_lower_address_reg() and
+ msi_upper_address_reg() macros
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Gavin Shan <shangw@linux.vnet.ibm.com>
+Date: Mon, 22 Apr 2013 17:11:20 -0600
+Message-ID: <20130422231120.32621.81415.stgit@bhelgaas-glaptop>
+In-Reply-To: <20130422230012.32621.15224.stgit@bhelgaas-glaptop>
+References: <20130422230012.32621.15224.stgit@bhelgaas-glaptop>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-A few years back intel published a spec update:
-http://www.intel.com/content/dam/doc/specification-update/5520-and-5500-chipset-ioh-specification-update.pdf
+msi_lower_address_reg() and msi_upper_address_reg() don't provide any
+useful abstraction, so drop them.
 
-For the 5520 and 5500 chipsets which contained an errata (specificially errata
-53), which noted that these chipsets can't properly do interrupt remapping, and
-as a result the recommend that interrupt remapping be disabled in bios.  While
-many vendors have a bios update to do exactly that, not all do, and of course
-not all users update their bios to a level that corrects the problem.  As a
-result, occasionally interrupts can arrive at a cpu even after affinity for that
-interrupt has be moved, leading to lost or spurrious interrupts (usually
-characterized by the message:
-kernel: do_IRQ: 7.71 No irq handler for vector (irq -1)
-
-There have been several incidents recently of people seeing this error, and
-investigation has shown that they have system for which their BIOS level is such
-that this feature was not properly turned off.  As such, it would be good to
-give them a reminder that their systems are vulnurable to this problem.  For
-details of those that reported the problem, please see:
-https://bugzilla.redhat.com/show_bug.cgi?id=887006
-
-Signed-off-by: Neil Horman <nhorman@tuxdriver.com>
-CC: Prarit Bhargava <prarit@redhat.com>
-CC: Don Zickus <dzickus@redhat.com>
-CC: Don Dutile <ddutile@redhat.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>
-CC: Asit Mallick <asit.k.mallick@intel.com>
-CC: David Woodhouse <dwmw2@infradead.org>
-CC: linux-pci@vger.kernel.org
-CC: Joerg Roedel <joro@8bytes.org>
-CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-CC: Arkadiusz Miśkiewicz <arekm@maven.pl>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
+ drivers/pci/msi.c |   16 ++++++++--------
+ drivers/pci/msi.h |    2 --
+ 2 files changed, 8 insertions(+), 10 deletions(-)
 
-Change notes:
-
-v2)
-
-* Moved the quirk to the x86 arch, since consensus seems to be that the 55XX
-chipset series is x86 only.  I decided however to keep the quirk as a regular
-quirk, not an early_quirk.  Early quirks have no way currently to determine if
-BIOS has properly disabled the feature in the iommu, at least not without
-significant hacking, and since its quite possible this will be a short lived
-quirk, should Don Z's workaround code prove successful (and it looks like it may
-well), I don't think that necessecary.
-
-* Removed the WARNING banner from the quirk, and added the HW_ERR token to the
-string, I opted to leave the newlines in place however, as I really couldnt
-find a way to keep the text on a single line is still legible from a code
-perspective.  I think theres enough language in there that using cscope on just
-about any substring however will turn it up, and again, this may be a short
-lived quirk.
-
-v3)
-
-* Removed defines from pci_ids.h, and used direct id values as per request from
-Bjorn.
-
-v4)
-
-* Converted pr_warn to WARN_TAINT(TAINT_FIRMWARE_WORKAROUND) as per David
-Woodhouse
-
-v5)
-
-* Moved check to an early quirk, and flagged the broken chip, so we could
-reasonably disable irq remapping during bootup.
-
-v6)
-
-* Clean up of stupid extra thrash in quirks.c
-
-v7)
-
-* Move broken check to intel_irq_remapping.c
-* Fixed another typo
-* Finally made the reference bugzilla public
-
-v8)
-
-* Removed extraneous code from irq_remapping_enabled
-
-v9)
-
-* Fix stupid build break from rushing to shuffle simmilar header files about
-  Thanks to Arkadiusz Miśkiewicz  for pointing it out
-
-v10)
-
-* Rewrite to hide the irq_remap_broken variable so we don't need to pull in a
-  private header file
----
- arch/x86/include/asm/irq_remapping.h |  1 +
- arch/x86/kernel/early-quirks.c       | 26 ++++++++++++++++++++++++++
- drivers/iommu/intel_irq_remapping.c  | 10 ++++++++++
- drivers/iommu/irq_remapping.c        |  6 ++++++
- drivers/iommu/irq_remapping.h        |  2 ++
- 5 files changed, 45 insertions(+)
-
-diff --git a/arch/x86/include/asm/irq_remapping.h b/arch/x86/include/asm/irq_remapping.h
-index 95fd352..d740cb4 100644
---- a/arch/x86/include/asm/irq_remapping.h
-+++ b/arch/x86/include/asm/irq_remapping.h
-@@ -28,6 +28,7 @@
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index b1a60e0..7011c5d 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -244,11 +244,11 @@ void __read_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
+ 		int pos = dev->msi_cap;
+ 		u16 data;
  
- extern void setup_irq_remapping_ops(void);
- extern int irq_remapping_supported(void);
-+extern void set_irq_remapping_broken(void);
- extern int irq_remapping_prepare(void);
- extern int irq_remapping_enable(void);
- extern void irq_remapping_disable(void);
-diff --git a/arch/x86/kernel/early-quirks.c b/arch/x86/kernel/early-quirks.c
-index 3755ef4..589092d 100644
---- a/arch/x86/kernel/early-quirks.c
-+++ b/arch/x86/kernel/early-quirks.c
-@@ -18,6 +18,7 @@
- #include <asm/apic.h>
- #include <asm/iommu.h>
- #include <asm/gart.h>
-+#include <asm/irq_remapping.h>
+-		pci_read_config_dword(dev, msi_lower_address_reg(pos),
+-					&msg->address_lo);
++		pci_read_config_dword(dev, pos + PCI_MSI_ADDRESS_LO,
++				      &msg->address_lo);
+ 		if (entry->msi_attrib.is_64) {
+-			pci_read_config_dword(dev, msi_upper_address_reg(pos),
+-						&msg->address_hi);
++			pci_read_config_dword(dev, pos + PCI_MSI_ADDRESS_HI,
++					      &msg->address_hi);
+ 			pci_read_config_word(dev, msi_data_reg(pos, 1), &data);
+ 		} else {
+ 			msg->address_hi = 0;
+@@ -304,11 +304,11 @@ void __write_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
+ 		msgctl |= entry->msi_attrib.multiple << 4;
+ 		pci_write_config_word(dev, pos + PCI_MSI_FLAGS, msgctl);
  
- static void __init fix_hypertransport_config(int num, int slot, int func)
- {
-@@ -192,6 +193,27 @@ static void __init ati_bugs_contd(int num, int slot, int func)
- }
- #endif
+-		pci_write_config_dword(dev, msi_lower_address_reg(pos),
+-					msg->address_lo);
++		pci_write_config_dword(dev, pos + PCI_MSI_ADDRESS_LO,
++				       msg->address_lo);
+ 		if (entry->msi_attrib.is_64) {
+-			pci_write_config_dword(dev, msi_upper_address_reg(pos),
+-						msg->address_hi);
++			pci_write_config_dword(dev, pos + PCI_MSI_ADDRESS_HI,
++					       msg->address_hi);
+ 			pci_write_config_word(dev, msi_data_reg(pos, 1),
+ 						msg->data);
+ 		} else {
+diff --git a/drivers/pci/msi.h b/drivers/pci/msi.h
+index 6aa7b19..e5b87d6 100644
+--- a/drivers/pci/msi.h
++++ b/drivers/pci/msi.h
+@@ -6,8 +6,6 @@
+ #ifndef MSI_H
+ #define MSI_H
  
-+#ifdef CONFIG_IRQ_REMAP
-+static void __init intel_remapping_check(int num, int slot, int func)
-+{
-+	u8 revision;
-+
-+	revision = read_pci_config_byte(num, slot, func, PCI_REVISION_ID);
-+
-+	/*
-+	 * Revision 0x13 of this chipset supports irq remapping
-+	 * but has an erratum that breaks its behavior, flag it as such
-+	 */
-+	if (revision == 0x13)
-+		set_irq_remapping_broken();
-+
-+}
-+#else
-+static void __init intel_remapping_check(int num, int slot, int func)
-+{
-+}
-+#endif
-+
- #define QFLAG_APPLY_ONCE 	0x1
- #define QFLAG_APPLIED		0x2
- #define QFLAG_DONE		(QFLAG_APPLY_ONCE|QFLAG_APPLIED)
-@@ -221,6 +243,10 @@ static struct chipset early_qrk[] __initdata = {
- 	  PCI_CLASS_SERIAL_SMBUS, PCI_ANY_ID, 0, ati_bugs },
- 	{ PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_SBX00_SMBUS,
- 	  PCI_CLASS_SERIAL_SMBUS, PCI_ANY_ID, 0, ati_bugs_contd },
-+	{ PCI_VENDOR_ID_INTEL, 0x3403, PCI_CLASS_BRIDGE_HOST,
-+	  PCI_BASE_CLASS_BRIDGE, 0, intel_remapping_check },
-+	{ PCI_VENDOR_ID_INTEL, 0x3406, PCI_CLASS_BRIDGE_HOST,
-+	  PCI_BASE_CLASS_BRIDGE, 0, intel_remapping_check },
- 	{}
- };
- 
-diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
-index f3b8f23..5b19b2d 100644
---- a/drivers/iommu/intel_irq_remapping.c
-+++ b/drivers/iommu/intel_irq_remapping.c
-@@ -524,6 +524,16 @@ static int __init intel_irq_remapping_supported(void)
- 
- 	if (disable_irq_remap)
- 		return 0;
-+	if (irq_remap_broken) {
-+		WARN_TAINT(1, TAINT_FIRMWARE_WORKAROUND,
-+			   "This system BIOS has enabled interrupt remapping\n"
-+			   "on a chipset that contains an erratum making that\n"
-+			   "feature unstable.  To maintain system stability\n"
-+			   "interrupt remapping is being disabled.  Please\n"
-+			   "contact your BIOS vendor for an update\n");
-+		disable_irq_remap = 1;
-+		return 0;
-+	}
- 
- 	if (!dmar_ir_support())
- 		return 0;
-diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
-index d56f8c1..3c11043 100644
---- a/drivers/iommu/irq_remapping.c
-+++ b/drivers/iommu/irq_remapping.c
-@@ -19,6 +19,7 @@
- int irq_remapping_enabled;
- 
- int disable_irq_remap;
-+int irq_remap_broken;
- int disable_sourceid_checking;
- int no_x2apic_optout;
- 
-@@ -211,6 +212,11 @@ void __init setup_irq_remapping_ops(void)
- #endif
- }
- 
-+void set_irq_remapping_broken(void)
-+{
-+	irq_remap_broken = 1;
-+}
-+
- int irq_remapping_supported(void)
- {
- 	if (disable_irq_remap)
-diff --git a/drivers/iommu/irq_remapping.h b/drivers/iommu/irq_remapping.h
-index ecb6376..90c4dae 100644
---- a/drivers/iommu/irq_remapping.h
-+++ b/drivers/iommu/irq_remapping.h
-@@ -32,6 +32,7 @@ struct pci_dev;
- struct msi_msg;
- 
- extern int disable_irq_remap;
-+extern int irq_remap_broken;
- extern int disable_sourceid_checking;
- extern int no_x2apic_optout;
- extern int irq_remapping_enabled;
-@@ -89,6 +90,7 @@ extern struct irq_remap_ops amd_iommu_irq_ops;
- 
- #define irq_remapping_enabled 0
- #define disable_irq_remap     1
-+#define irq_remap_broken      0
- 
- #endif /* CONFIG_IRQ_REMAP */
- 
--- 
-1.8.1.4
+-#define msi_lower_address_reg(base)	(base + PCI_MSI_ADDRESS_LO)
+-#define msi_upper_address_reg(base)	(base + PCI_MSI_ADDRESS_HI)
+ #define msi_data_reg(base, is64bit)	\
+ 	(base + ((is64bit == 1) ? PCI_MSI_DATA_64 : PCI_MSI_DATA_32))
+ #define msi_mask_reg(base, is64bit)	\
 
