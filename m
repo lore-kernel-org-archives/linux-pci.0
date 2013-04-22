@@ -1,159 +1,170 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>
-Cc: Yijing Wang <wangyijing@huawei.com>,
-	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Subject: [PATCH v9 13/16] PCI/acpiphp: use normal list to simplify implementation
-Date: Fri, 12 Apr 2013 23:44:27 +0800
-Message-Id: <1365781470-32379-14-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1365781470-32379-1-git-send-email-jiang.liu@huawei.com>
-References: <1365781470-32379-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mho-02-ewr.mailhop.org ([204.13.248.72]:17533 "EHLO
+	mho-02-ewr.mailhop.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753642Ab3DVQy3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Apr 2013 12:54:29 -0400
+Date: Mon, 22 Apr 2013 12:53:43 -0400
+From: Jason Cooper <jason@lakedaemon.net>
+To: Andrew Murray <Andrew.Murray@arm.com>
+Cc: linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org,
+	siva.kallam@samsung.com, linux-pci@vger.kernel.org,
+	linus.walleij@linaro.org, thierry.reding@avionic-design.de,
+	Liviu.Dudau@arm.com, grant.likely@secretlab.ca, juhosg@openwrt.org,
+	paulus@samba.org, linux-samsung-soc@vger.kernel.org,
+	linux@arm.linux.org.uk, jg1.han@samsung.com,
+	jgunthorpe@obsidianresearch.com, thomas.abraham@linaro.org,
+	benh@kernel.crashing.org, arnd@arndb.de,
+	devicetree-discuss@lists.ozlabs.org, rob.herring@calxeda.com,
+	kgene.kim@samsung.com, bhelgaas@google.com,
+	linux-arm-kernel@lists.infradead.org,
+	thomas.petazzoni@free-electrons.com, monstr@monstr.eu,
+	linux-kernel@vger.kernel.org, suren.reddy@samsung.com
+Subject: Re: [PATCH v8 0/3] of/pci: Provide common support for PCI DT
+ parsing
+Message-ID: <20130422165343.GE25724@titan.lakedaemon.net>
+References: <1366627295-16964-1-git-send-email-Andrew.Murray@arm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1366627295-16964-1-git-send-email-Andrew.Murray@arm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Yijing Wang <wangyijing@huawei.com>
+On Mon, Apr 22, 2013 at 11:41:32AM +0100, Andrew Murray wrote:
+> This patchset factors out duplicated code associated with parsing PCI
+> DT "ranges" properties across the architectures and introduces a
+> "ranges" parser. This parser "of_pci_range_parser" can be used directly
+> by ARM host bridge drivers enabling them to obtain ranges from device
+> trees.
+> 
+> I've included the Reviewed-by, Tested-by and Acked-by's received from v5/v6/v7
+> in this patchset, earlier versions of this patchset (v3) have been tested-by:
+> 
+> Thierry Reding <thierry.reding@avionic-design.de>
+> Jingoo Han <jg1.han@samsung.com>
+> 
+> I've tested that this patchset builds and runs on ARM and that it builds on
+> PowerPC, x86_64 and MIPS.
 
-Use normal list for struct acpiphp_slot to simplify implementation.
+Andrew,
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Toshi Kani <toshi.kani@hp.com>
-Cc: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
----
- drivers/pci/hotplug/acpiphp.h      |    4 ++--
- drivers/pci/hotplug/acpiphp_glue.c |   23 ++++++++++-------------
- 2 files changed, 12 insertions(+), 15 deletions(-)
+Unfortunately, the mvebu/drivers branch containing your series had to be
+dropped from arm-soc for v3.10.  This was not due to your series, but
+since arm-soc's granularity is branches, your series was caught in the
+drop.
 
-diff --git a/drivers/pci/hotplug/acpiphp.h b/drivers/pci/hotplug/acpiphp.h
-index 69b4aac..0b30045 100644
---- a/drivers/pci/hotplug/acpiphp.h
-+++ b/drivers/pci/hotplug/acpiphp.h
-@@ -73,8 +73,8 @@ static inline const char *slot_name(struct slot *slot)
-  */
- struct acpiphp_bridge {
- 	struct list_head list;
-+	struct list_head slots;
- 	acpi_handle handle;
--	struct acpiphp_slot *slots;
- 
- 	/* Ejectable PCI-to-PCI bridge (PCI bridge and PCI function) */
- 	struct acpiphp_func *func;
-@@ -97,7 +97,7 @@ struct acpiphp_bridge {
-  * PCI slot information for each *physical* PCI slot
-  */
- struct acpiphp_slot {
--	struct acpiphp_slot *next;
-+	struct list_head node;
- 	struct acpiphp_bridge *bridge;	/* parent */
- 	struct list_head funcs;		/* one slot may have different
- 					   objects (i.e. for each function) */
-diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-index 372c030..6bfd5a0 100644
---- a/drivers/pci/hotplug/acpiphp_glue.c
-+++ b/drivers/pci/hotplug/acpiphp_glue.c
-@@ -154,7 +154,7 @@ register_slot(acpi_handle handle, u32 lvl, void *context, void **rv)
- 	acpi_handle tmp;
- 	acpi_status status = AE_OK;
- 	unsigned long long adr, sun;
--	int device, function, retval;
-+	int device, function, retval, found = 0;
- 	struct pci_bus *pbus = bridge->pci_bus;
- 	struct pci_dev *pdev;
- 	u32 val;
-@@ -208,14 +208,15 @@ register_slot(acpi_handle handle, u32 lvl, void *context, void **rv)
- 	}
- 
- 	/* search for objects that share the same slot */
--	for (slot = bridge->slots; slot; slot = slot->next)
-+	list_for_each_entry(slot, &bridge->slots, node)
- 		if (slot->device == device) {
- 			if (slot->sun != sun)
- 				warn("sibling found, but _SUN doesn't match!\n");
-+			found = 1;
- 			break;
- 		}
- 
--	if (!slot) {
-+	if (!found) {
- 		slot = kzalloc(sizeof(struct acpiphp_slot), GFP_KERNEL);
- 		if (!slot) {
- 			kfree(newfunc);
-@@ -228,9 +229,7 @@ register_slot(acpi_handle handle, u32 lvl, void *context, void **rv)
- 		INIT_LIST_HEAD(&slot->funcs);
- 		mutex_init(&slot->crit_sect);
- 
--		slot->next = bridge->slots;
--		bridge->slots = slot;
--
-+		list_add_tail(&slot->node, &bridge->slots);
- 		bridge->nr_slots++;
- 
- 		dbg("found ACPI PCI Hotplug slot %llu at PCI %04x:%02x:%02x\n",
-@@ -289,7 +288,7 @@ register_slot(acpi_handle handle, u32 lvl, void *context, void **rv)
- 
-  err_exit:
- 	bridge->nr_slots--;
--	bridge->slots = slot->next;
-+	list_del(&slot->node);
- 	kfree(slot);
- 	kfree(newfunc);
- 
-@@ -353,7 +352,7 @@ static struct acpiphp_func *acpiphp_bridge_handle_to_function(acpi_handle handle
- 	struct acpiphp_func *func;
- 
- 	list_for_each_entry(bridge, &bridge_list, list) {
--		for (slot = bridge->slots; slot; slot = slot->next) {
-+		list_for_each_entry(slot, &bridge->slots, node) {
- 			list_for_each_entry(func, &slot->funcs, sibling) {
- 				if (func->handle == handle)
- 					return func;
-@@ -400,9 +399,7 @@ static void cleanup_bridge(struct acpiphp_bridge *bridge)
- 			err("failed to install interrupt notify handler\n");
- 	}
- 
--	slot = bridge->slots;
--	while (slot) {
--		next = slot->next;
-+	list_for_each_entry_safe(slot, next, &bridge->slots, node) {
- 		list_for_each_entry_safe(func, tmp, &slot->funcs, sibling) {
- 			if (is_dock_device(func->handle)) {
- 				unregister_hotplug_dock_device(func->handle);
-@@ -421,7 +418,6 @@ static void cleanup_bridge(struct acpiphp_bridge *bridge)
- 		acpiphp_unregister_hotplug_slot(slot);
- 		list_del(&slot->funcs);
- 		kfree(slot);
--		slot = next;
- 	}
- 
- 	put_device(&bridge->pci_bus->dev);
-@@ -820,7 +816,7 @@ static int acpiphp_check_bridge(struct acpiphp_bridge *bridge)
- 
- 	enabled = disabled = 0;
- 
--	for (slot = bridge->slots; slot; slot = slot->next) {
-+	list_for_each_entry(slot, &bridge->slots, node) {
- 		unsigned int status = get_slot_status(slot);
- 		if (slot->flags & SLOT_ENABLED) {
- 			if (status == ACPI_STA_ALL)
-@@ -1095,6 +1091,7 @@ void acpiphp_enumerate_slots(struct pci_bus *bus, acpi_handle handle)
- 		return;
- 	}
- 
-+	INIT_LIST_HEAD(&bridge->slots);
- 	bridge->handle = handle;
- 	bridge->pci_dev = pci_dev_get(bus->self);
- 	bridge->pci_bus = bus;
--- 
-1.7.9.5
+As the mvebu-pcie driver is now v3.11 material, I have taken the
+opportunity to upgrade from your v7 patchset to v8.  You can find the
+whole branch at mvebu-next/pcie.
 
+mvebu-next/pcie *will* be rebased onto v3.9 once it drops.  Several
+dependencies will be removed (since they will have been merged into
+v3.9).
+
+Once the rebase is done, I'll send a pull request to Arnd and Olof so we
+can get as many cycles on -next as possible.
+
+thx,
+
+Jason.
+
+> 
+> Compared to the v7 sent by Andrew Murray, the following changes have been made
+> (please note that the first patch is unchanged from v7):
+> 
+>  * Rename of_pci_range_parser to of_pci_range_parser_init and
+>    of_pci_process_ranges to of_pci_range_parser_one as suggested by Grant
+>    Likely.
+> 
+>  * Reverted back to using a switch statement instead of if/else in
+>    pci_process_bridge_OF_ranges. Grant Likely highlighted this change from
+>    the original code which was unnecessary.
+> 
+>  * Squashed in a patch provided by Gabor Juhos which fixes build errors on
+>    MIPS found in the last patchset.
+> 
+> Compared to the v6 sent by Andrew Murray, the following changes have
+> been made in response to build errors/warnings:
+> 
+>  * Inclusion of linux/of_address.h in of_pci.c as suggested by Michal
+>    Simek to prevent compilation failures on Microblaze (and others) and his
+>    ack.
+> 
+>  * Use of externs, static inlines and a typo in linux/of_address.h in response
+>    to linker errors (multiple defination) on x86_64 as spotted by a kbuild test
+>    robot on (jcooper/linux.git mvebu/drivers)
+> 
+>  * Add EXPORT_SYMBOL_GPL to of_pci_range_parser function to be consistent
+>    with of_pci_process_ranges function
+> 
+> Compared to the v5 sent by Andrew Murray, the following changes have
+> been made:
+> 
+>  * Use of CONFIG_64BIT instead of CONFIG_[a32bitarch] as suggested by
+>    Rob Herring in drivers/of/of_pci.c
+> 
+>  * Added forward declaration of struct pci_controller in linux/of_pci.h
+>    to prevent compiler warning as suggested by Thomas Petazzoni
+> 
+>  * Improved error checking (!range check), removal of unnecessary be32_to_cpup
+>    call, improved formatting of struct of_pci_range_parser layout and
+>    replacement of macro with a static inline. All suggested by Rob Herring.
+> 
+> Compared to the v4 (incorrectly labelled v3) sent by Andrew Murray,
+> the following changes have been made:
+> 
+>  * Split the patch as suggested by Rob Herring
+> 
+> Compared to the v3 sent by Andrew Murray, the following changes have
+> been made:
+> 
+>  * Unify and move duplicate pci_process_bridge_OF_ranges functions to
+>    drivers/of/of_pci.c as suggested by Rob Herring
+> 
+>  * Fix potential build errors with Microblaze/MIPS
+> 
+> Compared to "[PATCH v5 01/17] of/pci: Provide support for parsing PCI DT
+> ranges property", the following changes have been made:
+> 
+>  * Correct use of IORESOURCE_* as suggested by Russell King
+> 
+>  * Improved interface and naming as suggested by Thierry Reding
+> 
+> Compared to the v2 sent by Andrew Murray, Thomas Petazzoni did:
+> 
+>  * Add a memset() on the struct of_pci_range_iter when starting the
+>    for loop in for_each_pci_range(). Otherwise, with an uninitialized
+>    of_pci_range_iter, of_pci_process_ranges() may crash.
+> 
+>  * Add parenthesis around 'res', 'np' and 'iter' in the
+>    for_each_of_pci_range macro definitions. Otherwise, passing
+>    something like &foobar as 'res' didn't work.
+> 
+>  * Rebased on top of 3.9-rc2, which required fixing a few conflicts in
+>    the Microblaze code.
+> 
+> v2:
+>   This follows on from suggestions made by Grant Likely
+>   (marc.info/?l=linux-kernel&m=136079602806328)
+> 
+> Andrew Murray (3):
+>   of/pci: Unify pci_process_bridge_OF_ranges from Microblaze and
+>     PowerPC
+>   of/pci: Provide support for parsing PCI DT ranges property
+>   of/pci: mips: convert to common of_pci_range_parser
+> 
+>  arch/microblaze/include/asm/pci-bridge.h |    5 +-
+>  arch/microblaze/pci/pci-common.c         |  192 ------------------------------
+>  arch/mips/pci/pci.c                      |   51 +++-----
+>  arch/powerpc/include/asm/pci-bridge.h    |    5 +-
+>  arch/powerpc/kernel/pci-common.c         |  192 ------------------------------
+>  drivers/of/address.c                     |   67 +++++++++++
+>  drivers/of/of_pci.c                      |  173 +++++++++++++++++++++++++++
+>  include/linux/of_address.h               |   48 ++++++++
+>  include/linux/of_pci.h                   |    4 +
+>  9 files changed, 313 insertions(+), 424 deletions(-)
+> 
+> 
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
