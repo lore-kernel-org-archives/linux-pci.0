@@ -1,197 +1,158 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fold.natur.cuni.cz ([195.113.57.32]:34863 "EHLO
-	fold.natur.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932561Ab3D3VJQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 30 Apr 2013 17:09:16 -0400
-Message-ID: <518032F3.3040706@fold.natur.cuni.cz>
-Date: Tue, 30 Apr 2013 23:09:07 +0200
-From: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
+Received: from cn.fujitsu.com ([222.73.24.84]:19198 "EHLO song.cn.fujitsu.com"
+	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S1754137Ab3DVDQS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 21 Apr 2013 23:16:18 -0400
+Message-ID: <5174AB1B.9060300@cn.fujitsu.com>
+Date: Mon, 22 Apr 2013 11:14:35 +0800
+From: Gu Zheng <guz.fnst@cn.fujitsu.com>
 MIME-Version: 1.0
-To: Huang Ying <ying.huang@intel.com>
-CC: Yijing Wang <wangyijing@huawei.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, Yinghai Lu <yinghai@kernel.org>
-Subject: Re: 3.9-rc1: pciehp and eSATA card SiI 3132, no XHCI
-References: <513E7E1E.80508@fold.natur.cuni.cz>     <513FE7AD.2020408@huawei.com> <5141145E.4020300@fold.natur.cuni.cz>     <51417C28.40402@huawei.com> <5141C9D7.9040706@fold.natur.cuni.cz>     <51428A72.2060602@huawei.com> <51548E13.8030308@fold.natur.cuni.cz>    <1364545211.1817.228.camel@yhuang-dev>    <5155A101.2090705@fold.natur.cuni.cz>   <1364640886.5773.5.camel@yhuang-mobile.sh.intel.com>   <51581170.30708@fold.natur.cuni.cz>  <1364739160.5947.5.camel@yhuang-mobile.sh.intel.com>  <51585071.3090600@fold.natur.cuni.cz> <1364801587.6298.8.camel@yhuang-dev> <5159C293.4030009@fold.natur.cuni.cz>
-In-Reply-To: <5159C293.4030009@fold.natur.cuni.cz>
-Content-Type: text/plain; charset=UTF-8
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	tangchen <tangchen@cn.fujitsu.com>,
+	Lin Feng <linfeng@cn.fujitsu.com>,
+	li guang <lig.fnst@cn.fujitsu.com>
+Subject: Re: [PATCH 2/2] PCI: Convert alloc_pci_dev(void) to pci_alloc_dev(bus)
+ instead
+References: <516FB647.5030203@cn.fujitsu.com> <CAErSpo65ARR_fZwsGCZDJqbPWktHYUkufgPt-2mWwur=nPR1Qg@mail.gmail.com> <51711236.9070305@cn.fujitsu.com> <CAErSpo5ywSx-ZR=Z3+v8_QfBGTrDF__SQ09fU-6qsU=ZdqFEMQ@mail.gmail.com>
+In-Reply-To: <CAErSpo5ywSx-ZR=Z3+v8_QfBGTrDF__SQ09fU-6qsU=ZdqFEMQ@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
-  I went to test final 3.9 kernel and was almost ready to report no difference
-in pciehp and *no hotplug functionality of either of my 3 express cards*. But ...
-I also tested change from pcie_aspm=off to pcie_aspm=native and hot events started
-to work!
-So, I would like to ask you to review the code affected by both values aiming
-to find an explanation. You have the collected data available and email archives
-so I believe this should be easy now for you.
+On 04/20/2013 01:35 AM, Bjorn Helgaas wrote:
 
-  If you want to compare with 3.9 kernel then I uploaded collected with pciehp
-under 3.9 kernel to http://195.113.57.32/~mmokrejs/tmp/20130430.tar.bz2 .
-The 3.8.8 data is acpiphp testing, so ignore it for this thread.
+> On Fri, Apr 19, 2013 at 3:45 AM, Gu Zheng <guz.fnst@cn.fujitsu.com> wrote:
+>> From 2535fb1a2502b3d9bebc31f7c7205f42392ea5f9 Mon Sep 17 00:00:00 2001
+>> From: Gu Zheng <guz.fnst@cn.fujitsu.com>
+>> Date: Fri, 19 Apr 2013 17:46:36 +0900
+>> Subject: [PATCH 2/2] PCI: Convert alloc_pci_dev(void) to pci_alloc_dev(bus) instead
+>>
+>> Use the new pci_alloc_dev(bus) to replace the existing using of alloc_pci_dev(void).
+> 
+> You didn't do anything with Yinghai's comment.  He's 100% correct: you
+> have to add the put_device() that corresponds to the new get_device()
+> calls you're adding.  Both have to be in the same patch.
 
-Thank you,
-Martin
+Hi Bjorn,
+	Thanks for your reminder, Yinghai's comment is completely right, the get_device()/put_device() should come in pairs.
+I'll add the put_device() in the next version.
 
-Martin Mokrejs wrote:
-> Huang Ying wrote:
->> On Sun, 2013-03-31 at 17:04 +0200, Martin Mokrejs wrote:
->>> Hi Ying,
->>>   
->>> Huang Ying wrote:
->>>> Hi, Martin,
->>>>
->>>> Thanks for your testing!
->>>>
->>>> On Sun, 2013-03-31 at 12:35 +0200, Martin Mokrejs wrote:
->>>>> Hi Ying,
->>>>>   I have tested 4x your last patch. Somehow nothing gets logged to "dmesg"
->>>>> when I hotremove or hotinsert the coldbooted eSATA card. Logging works so
->>>>> enabling wifi via Fn+F2 is being logged. Also, eventual stacktraces
->>>>> and kmemleaks.
->>>>>   I removed the coldbooted card, inserted it and ejected it.
->>>>>
->>>>>
->>>>>   In brief, lspci reports changes but there are no changes in /proc/interrupts
->>>>> related to
->>>>>
->>>>>   19:          0          0   IO-APIC-fasteoi   sata_sil24
->>>>>
->>>>>
->>>>> and no changes at all in /proc/iomem which I expected to happen during
->>>>> hotremoval and hotinsert (something broken in 3.9-rc1 with your patch).
->>>>>
->>>>> All the runtime_status data were same after every tested step, so again,
->>>>> no diffs to show but here are the values confirming laptop-mode-tools
->>>>> enabled powersaving:
->>>>>
->>>>> /sys/bus/pci/devices/0000:00:00.0/power/runtime_status:suspended
->>>>> /sys/bus/pci/devices/0000:00:02.0/power/runtime_status:active
->>>>> /sys/bus/pci/devices/0000:00:16.0/power/runtime_status:suspended
->>>>> /sys/bus/pci/devices/0000:00:1a.0/power/runtime_status:suspended
->>>>> /sys/bus/pci/devices/0000:00:1b.0/power/runtime_status:active
->>>>> /sys/bus/pci/devices/0000:00:1c.0/power/runtime_status:suspended
->>>>> /sys/bus/pci/devices/0000:00:1c.1/power/runtime_status:active
->>>>> /sys/bus/pci/devices/0000:00:1c.3/power/runtime_status:active
->>>>> /sys/bus/pci/devices/0000:00:1c.4/power/runtime_status:active
->>>>> /sys/bus/pci/devices/0000:00:1c.7/power/runtime_status:active
->>>>
->>>> It appears that 1c.7 is identified successfully as an hotplug-able PCIe
->>>> port, and never put into suspended state.
->>>
->>> Yes. Truly said, after I now went to test your previous two patches
->>> on the 3.9-rc1 I confirm that the syslog logging is broken with all your
->>> three patches. I fear we are hitting here, with the pciehp problems
->>> not a powersaving issue but an upstream /proc or /sys files being outdated.
->>> Otherwise I can't figure out why disabling in runtime laptop-mode-tools
->>> and doing the "find /sys .... | while ... echo "on" > $f" trickery
->>> does not help to get pciehp working. This would have fixed the acpiphp
->>> at least on 3.8 kernel. I see that sata_sil24 is not loaded by itself
->>> during hotinsert. It seems lspci reports at such times 0xff for the 11:00
->>> eSATA card, /etc/iomem reports stale memory regions used by 11:00 while
->>> /proc/interrupts says no IRQ is assigned to sata_sil24 (well, sata_sil24
->>> is not loaded per lsmod, lspci would should report sata_sil24 also but
->>> provided the 11:00 entry is broken and shows the 0xff it maybe cannot
->>> report is sata_sil24 is loaded).
->>>
->>> I will post a little more details as a proper answer to your other patch
->>> where I managed to get yet another stacktrace, about the eSATA thought to
->>> be D3 state. Physically the card was ejected and just a modprobe sata_sil24
->>> caused the sata_sil24 to use some outdated data. I will dive now into
->>> that. 
->>>
->>>
->>>
->>>>
->>>> And from your description below, it appears that hot-add and hot-remove
->>>> of the eSATA card works for you, doesn't it?
->>>
->>> The PresDet works fine I think, yes. Sometimes I see in the lspci -vvv diffs:
->>>
->>> -Control: I/O+ ... BusMaster+
->>> +Control: I/O- ... BusMaster-
+Best regards,
+Gu
+
+> 
+>> Signed-off-by: Gu Zheng <guz.fnst@cn.fujitsu.com>
+>> ---
+>>  arch/powerpc/kernel/pci_of_scan.c |    3 +--
+>>  drivers/char/agp/alpha-agp.c      |    2 +-
+>>  drivers/char/agp/parisc-agp.c     |    2 +-
+>>  drivers/pci/iov.c                 |    2 +-
+>>  drivers/pci/probe.c               |    3 +--
+>>  drivers/scsi/megaraid.c           |    2 +-
+>>  6 files changed, 6 insertions(+), 8 deletions(-)
 >>
->> But after hot-insert, can you use your eSATA card?  It appears that it
->> is detected properly.
-> 
-> Can't say about the above two. But under pciehp what is broken is the hotremoval.
-> I think the rest is just a downstream consequence.
-> 
+>> diff --git a/arch/powerpc/kernel/pci_of_scan.c b/arch/powerpc/kernel/pci_of_scan.c
+>> index 2a67e9b..24d01c4 100644
+>> --- a/arch/powerpc/kernel/pci_of_scan.c
+>> +++ b/arch/powerpc/kernel/pci_of_scan.c
+>> @@ -128,7 +128,7 @@ struct pci_dev *of_create_pci_dev(struct device_node *node,
+>>         const char *type;
+>>         struct pci_slot *slot;
 >>
->>> and sometimes 
->>>
->>> -        Latency: 0, Cache Line Size: 64 bytes
->>> +        Latency: 0
-> 
-> It seems to me that bridges in lspci output have 'Latency: 0' while end devices have
-> the Cache Line Size as well.
-> 
-> When the card is hot inserted after a previous hot removal and seems "dead" then
-> lspci says:
-> Control: I/O- Mem- BusMaster-
-> Interrupt: pin A routed to IRQ 19
-> and no 'Latency:' and no 'Cache Line Size:' are the output of the 11:00  device.
-> 
-> But please realize this is likely screwed because a previous eject of the card did not
-> fully release resources. When the slot was empty lspci reported 0xff and when it is
-> loaded it likely reports some crap. Unless the bug causing 'stale' data to be reported
-> (the 'Re: 3.8.2: stale pci device info for a previously inserted express card' thread)
-> I wonder what can we trust in this output.
-> 
->>>
->>> or even the Latency: line being gone completely from lspci -vvv output. Why is that?
->>> I think debug checks and prints in kernel are necessary.
->>>
->>>
->>> How do these related to /proc/interrupts not showing an IRQ for the 11:00 device?
->>> Does that prevent automated sata_sil24 loading once the card is inserted? Would
->>> you please add some extra debug prints and checks into the kernel?
->>>
->>> Take also into consideration the "3.8.2: stale pci device info for a previously inserted express card"
->>> for a list of chimeric entries reported by lspci. That could tell you which values
->>> are being cached and invalid. Hopefully some checks could be done between values
->>> read by lspci and those in /proc and /sys.
->>>
->>>
->>>
->>> Do you already know why almost nothing is logged by kernel wen either of your
->>> three patches (v1 sent on 03/29/13 08:41, v2 sent on 03/29/13 09:20, v3 sent on
->>> 03/30/13 11:54)?
+>> -       dev = alloc_pci_dev();
+>> +       dev = pci_alloc_dev(bus);
+>>         if (!dev)
+>>                 return NULL;
+>>         type = of_get_property(node, "device_type", NULL);
+>> @@ -137,7 +137,6 @@ struct pci_dev *of_create_pci_dev(struct device_node *node,
 >>
->> No.  Don't know why.  unpatched upstream kernel can produce kernel log?
-> 
-> OK, vanilla 3.9-rc1 also prints nothing to syslog relevant to hotplug (only pciehp
-> tested). Logging itself works, as I said, rmmod sata_sil24 is logged. So, sorry,
-> your patches did NOT break logging.
-> 
-> Martin
-> 
-> 
+>>         pr_debug("    create device, devfn: %x, type: %s\n", devfn, type);
 >>
->> Best Regards,
->> Huang Ying
+>> -       dev->bus = bus;
+>>         dev->dev.of_node = of_node_get(node);
+>>         dev->dev.parent = bus->bridge;
+>>         dev->dev.bus = &pci_bus_type;
+>> diff --git a/drivers/char/agp/alpha-agp.c b/drivers/char/agp/alpha-agp.c
+>> index dd84af4..199b8e9 100644
+>> --- a/drivers/char/agp/alpha-agp.c
+>> +++ b/drivers/char/agp/alpha-agp.c
+>> @@ -174,7 +174,7 @@ alpha_core_agp_setup(void)
+>>         /*
+>>          * Build a fake pci_dev struct
+>>          */
+>> -       pdev = alloc_pci_dev();
+>> +       pdev = pci_alloc_dev(NULL);
+>>         if (!pdev)
+>>                 return -ENOMEM;
+>>         pdev->vendor = 0xffff;
+>> diff --git a/drivers/char/agp/parisc-agp.c b/drivers/char/agp/parisc-agp.c
+>> index 94821ab..bf5d247 100644
+>> --- a/drivers/char/agp/parisc-agp.c
+>> +++ b/drivers/char/agp/parisc-agp.c
+>> @@ -333,7 +333,7 @@ parisc_agp_setup(void __iomem *ioc_hpa, void __iomem *lba_hpa)
+>>         struct agp_bridge_data *bridge;
+>>         int error = 0;
 >>
->>> I did not test the xHCI port behavior with any of your three patches because I have
->>> disabled USB support in this kernel altogether for 3.9-rc1 tests. And I would like to stick
->>> with that until we fix the pciehp issue. I stepped rather late into the big testing game,
->>> I believe the pciehp bug we are facing was not working since 3.5/3.6, I don't think
->>> the 3.9-rc1-based tests be much different from earlier kernels.
->>>
->>> For a broader view, on the 3.8 series we will meanwhile hopefully get to a fix of the
->>> PME# stuff. I think I reported quite a good number of potential problems yesterday.
->>> After that, I will check how xHCI behaves on 3.9 but I believe the PME#-related fix from
->>> 3.8 will be also applicable to fixing 3.9 so the xHCI won't have problems there anymore.
->>>
->>>
->>> Martin
+>> -       fake_bridge_dev = alloc_pci_dev();
+>> +       fake_bridge_dev = pci_alloc_dev(NULL);
+>>         if (!fake_bridge_dev) {
+>>                 error = -ENOMEM;
+>>                 goto fail;
+>> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+>> index ee599f2..dba2031 100644
+>> --- a/drivers/pci/iov.c
+>> +++ b/drivers/pci/iov.c
+>> @@ -76,7 +76,7 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
+>>         struct resource *res;
+>>         struct pci_sriov *iov = dev->sriov;
 >>
+>> -       virtfn = alloc_pci_dev();
+>> +       virtfn = pci_alloc_dev(NULL);
+>>         if (!virtfn)
+>>                 return -ENOMEM;
 >>
+>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+>> index 5233fb6..59637a6 100644
+>> --- a/drivers/pci/probe.c
+>> +++ b/drivers/pci/probe.c
+>> @@ -1280,11 +1280,10 @@ static struct pci_dev *pci_scan_device(struct pci_bus *bus, int devfn)
+>>         if (!pci_bus_read_dev_vendor_id(bus, devfn, &l, 60*1000))
+>>                 return NULL;
 >>
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> -       dev = alloc_pci_dev();
+>> +       dev = pci_alloc_dev(bus);
+>>         if (!dev)
+>>                 return NULL;
+>>
+>> -       dev->bus = bus;
+>>         dev->devfn = devfn;
+>>         dev->vendor = l & 0xffff;
+>>         dev->device = (l >> 16) & 0xffff;
+>> diff --git a/drivers/scsi/megaraid.c b/drivers/scsi/megaraid.c
+>> index 9504ec0..e1660ca 100644
+>> --- a/drivers/scsi/megaraid.c
+>> +++ b/drivers/scsi/megaraid.c
+>> @@ -2025,7 +2025,7 @@ megaraid_abort_and_reset(adapter_t *adapter, Scsi_Cmnd *cmd, int aor)
+>>  static inline int
+>>  make_local_pdev(adapter_t *adapter, struct pci_dev **pdev)
+>>  {
+>> -       *pdev = alloc_pci_dev();
+>> +       *pdev = pci_alloc_dev(NULL);
+>>
+>>         if( *pdev == NULL ) return -1;
+>>
+>> --
+>> 1.7.1
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > 
-> 
+
+
