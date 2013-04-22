@@ -1,73 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f51.google.com ([209.85.160.51]:52259 "EHLO
-	mail-pb0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S936137Ab3DPU1Z (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Apr 2013 16:27:25 -0400
-Received: by mail-pb0-f51.google.com with SMTP id rr4so481200pbb.24
-        for <linux-pci@vger.kernel.org>; Tue, 16 Apr 2013 13:27:24 -0700 (PDT)
-Date: Tue, 16 Apr 2013 13:27:22 -0700 (PDT)
-From: David Rientjes <rientjes@google.com>
-To: Jiang Liu <liuj97@gmail.com>
-cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org
-Subject: Re: [PATCH v9 09/16] PCI, x86: implement pcibios_{add|remove}_bus()
- hooks
-In-Reply-To: <1365781470-32379-10-git-send-email-jiang.liu@huawei.com>
-Message-ID: <alpine.DEB.2.02.1304161324500.30779@chino.kir.corp.google.com>
-References: <1365781470-32379-1-git-send-email-jiang.liu@huawei.com> <1365781470-32379-10-git-send-email-jiang.liu@huawei.com>
+Received: from hydra.sisk.pl ([212.160.235.94]:41028 "EHLO hydra.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753530Ab3DVXYe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 22 Apr 2013 19:24:34 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Gavin Shan <shangw@linux.vnet.ibm.com>
+Subject: Re: [PATCH v4 02/22] PCI: Use u8, not int, for PM capability offset
+Date: Tue, 23 Apr 2013 01:32:37 +0200
+Message-ID: <3048768.cqCDjiVfL5@vostro.rjw.lan>
+In-Reply-To: <20130422231026.32621.14207.stgit@bhelgaas-glaptop>
+References: <20130422230012.32621.15224.stgit@bhelgaas-glaptop> <20130422231026.32621.14207.stgit@bhelgaas-glaptop>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 12 Apr 2013, Jiang Liu wrote:
+On Monday, April 22, 2013 05:10:26 PM Bjorn Helgaas wrote:
+> The Power Management Capability (PCI_CAP_ID_PM == 0x01) is defined by PCI
+> and must appear in the 256-byte PCI Configuration Space from 0-0xff.  It
+> cannot be in the PCIe Extended Configuration space from 0x100-0xfff, so
+> we only need a u8 to hold its offset.
+> 
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> CC: "Rafael J. Wysocki" <rjw@sisk.pl>
 
-> diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-> index 901177d..305c68b 100644
-> --- a/arch/x86/pci/common.c
-> +++ b/arch/x86/pci/common.c
-> @@ -6,6 +6,7 @@
->  
->  #include <linux/sched.h>
->  #include <linux/pci.h>
-> +#include <linux/pci-acpi.h>
->  #include <linux/ioport.h>
->  #include <linux/init.h>
->  #include <linux/dmi.h>
-> @@ -170,6 +171,16 @@ void pcibios_fixup_bus(struct pci_bus *b)
->  		pcibios_fixup_device_resources(dev);
->  }
->  
-> +void pcibios_add_bus(struct pci_bus *bus)
-> +{
-> +	acpi_pci_add_bus(bus);
-> +}
-> +
-> +void pcibios_remove_bus(struct pci_bus *bus)
-> +{
-> +	acpi_pci_remove_bus(bus);
-> +}
-> +
->  /*
->   * Only use DMI information to set this if nothing was passed
->   * on the kernel command line (which was parsed earlier).
+Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-This causes build errors when CONFIG_ACPI isn't enabled since both 
-acpi_pci_{add,remove}_bus() aren't defined in such a configuration:
-
-arch/x86/pci/common.c: In function 'pcibios_add_bus':
-arch/x86/pci/common.c:176:2: error: implicit declaration of function 'acpi_pci_add_bus'
-arch/x86/pci/common.c: In function 'pcibios_remove_bus':
-arch/x86/pci/common.c:181:2: error: implicit declaration of function 'acpi_pci_remove_bus'
+> ---
+>  include/linux/pci.h |    3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
+> 
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 2461033a..9587d4d 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -249,8 +249,7 @@ struct pci_dev {
+>  	pci_power_t     current_state;  /* Current operating state. In ACPI-speak,
+>  					   this is D0-D3, D0 being fully functional,
+>  					   and D3 being off. */
+> -	int		pm_cap;		/* PM capability offset in the
+> -					   configuration space */
+> +	u8		pm_cap;		/* PM capability offset */
+>  	unsigned int	pme_support:5;	/* Bitmask of states from which PME#
+>  					   can be generated */
+>  	unsigned int	pme_interrupt:1;
+> 
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
