@@ -1,48 +1,135 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:20315 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752872Ab3D0CDV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 26 Apr 2013 22:03:21 -0400
-Message-ID: <517B31D4.9020909@huawei.com>
-Date: Sat, 27 Apr 2013 10:03:00 +0800
-From: Yijing Wang <wangyijing@huawei.com>
-MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: [RFC PATCH] PCI: Enable pci bridge when it is needed
-References: <1367024974-6063-1-git-send-email-yinghai@kernel.org> <517B2F1B.6000704@huawei.com> <CAE9FiQWLfdgR8VoqeVOpCdHa3TpK26Bgs7mZ7Ed+Zq60S=g8Vg@mail.gmail.com>
-In-Reply-To: <CAE9FiQWLfdgR8VoqeVOpCdHa3TpK26Bgs7mZ7Ed+Zq60S=g8Vg@mail.gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:56230 "EHLO
+	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751895Ab3DVKnH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Apr 2013 06:43:07 -0400
+From: Andrew Murray <Andrew.Murray@arm.com>
+To: linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org
+Cc: rob.herring@calxeda.com, jgunthorpe@obsidianresearch.com,
+	linux@arm.linux.org.uk, siva.kallam@samsung.com,
+	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
+	jg1.han@samsung.com, Liviu.Dudau@arm.com,
+	linux-kernel@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
+	kgene.kim@samsung.com, bhelgaas@google.com,
+	suren.reddy@samsung.com, linux-arm-kernel@lists.infradead.org,
+	monstr@monstr.eu, benh@kernel.crashing.org, paulus@samba.org,
+	grant.likely@secretlab.ca, thomas.petazzoni@free-electrons.com,
+	thierry.reding@avionic-design.de, thomas.abraham@linaro.org,
+	arnd@arndb.de, linus.walleij@linaro.org, juhosg@openwrt.org,
+	Andrew Murray <Andrew.Murray@arm.com>
+Subject: [PATCH v8 0/3] of/pci: Provide common support for PCI DT parsing
+Date: Mon, 22 Apr 2013 11:41:32 +0100
+Message-Id: <1366627295-16964-1-git-send-email-Andrew.Murray@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2013/4/27 9:57, Yinghai Lu wrote:
-> On Fri, Apr 26, 2013 at 6:51 PM, Yijing Wang <wangyijing@huawei.com> wrote:
->> I think it's cool! Now we enable bridge in various places, this is a headache.
->>
->> hi, yinghai, in this patch, enable bridges depend on the driver call pci_enable_device() explicitly.
->> I was a little worried If there has some devices don't have some drivers bound, but used by system.
->> like ioapic, these devices maybe implemented as pci device, but no pci drivers bind, also, maybe they
->> won't call pci_enable_device() explicity. So if they are under the pci bridge, no one will enable the bridge
->> for them.
-> 
-> If there is really that case, we could call pci_enable_device in
-> pci_final quirk for
-> them.
+This patchset factors out duplicated code associated with parsing PCI
+DT "ranges" properties across the architectures and introduces a
+"ranges" parser. This parser "of_pci_range_parser" can be used directly
+by ARM host bridge drivers enabling them to obtain ranges from device
+trees.
 
-Hmm, ok, and I tested this patch in my hotplug machine, it looks good.
+I've included the Reviewed-by, Tested-by and Acked-by's received from v5/v6/v7
+in this patchset, earlier versions of this patchset (v3) have been tested-by:
 
+Thierry Reding <thierry.reding@avionic-design.de>
+Jingoo Han <jg1.han@samsung.com>
 
-> 
-> Yinghai
-> 
-> 
+I've tested that this patchset builds and runs on ARM and that it builds on
+PowerPC, x86_64 and MIPS.
 
+Compared to the v7 sent by Andrew Murray, the following changes have been made
+(please note that the first patch is unchanged from v7):
 
--- 
-Thanks!
-Yijing
+ * Rename of_pci_range_parser to of_pci_range_parser_init and
+   of_pci_process_ranges to of_pci_range_parser_one as suggested by Grant
+   Likely.
+
+ * Reverted back to using a switch statement instead of if/else in
+   pci_process_bridge_OF_ranges. Grant Likely highlighted this change from
+   the original code which was unnecessary.
+
+ * Squashed in a patch provided by Gabor Juhos which fixes build errors on
+   MIPS found in the last patchset.
+
+Compared to the v6 sent by Andrew Murray, the following changes have
+been made in response to build errors/warnings:
+
+ * Inclusion of linux/of_address.h in of_pci.c as suggested by Michal
+   Simek to prevent compilation failures on Microblaze (and others) and his
+   ack.
+
+ * Use of externs, static inlines and a typo in linux/of_address.h in response
+   to linker errors (multiple defination) on x86_64 as spotted by a kbuild test
+   robot on (jcooper/linux.git mvebu/drivers)
+
+ * Add EXPORT_SYMBOL_GPL to of_pci_range_parser function to be consistent
+   with of_pci_process_ranges function
+
+Compared to the v5 sent by Andrew Murray, the following changes have
+been made:
+
+ * Use of CONFIG_64BIT instead of CONFIG_[a32bitarch] as suggested by
+   Rob Herring in drivers/of/of_pci.c
+
+ * Added forward declaration of struct pci_controller in linux/of_pci.h
+   to prevent compiler warning as suggested by Thomas Petazzoni
+
+ * Improved error checking (!range check), removal of unnecessary be32_to_cpup
+   call, improved formatting of struct of_pci_range_parser layout and
+   replacement of macro with a static inline. All suggested by Rob Herring.
+
+Compared to the v4 (incorrectly labelled v3) sent by Andrew Murray,
+the following changes have been made:
+
+ * Split the patch as suggested by Rob Herring
+
+Compared to the v3 sent by Andrew Murray, the following changes have
+been made:
+
+ * Unify and move duplicate pci_process_bridge_OF_ranges functions to
+   drivers/of/of_pci.c as suggested by Rob Herring
+
+ * Fix potential build errors with Microblaze/MIPS
+
+Compared to "[PATCH v5 01/17] of/pci: Provide support for parsing PCI DT
+ranges property", the following changes have been made:
+
+ * Correct use of IORESOURCE_* as suggested by Russell King
+
+ * Improved interface and naming as suggested by Thierry Reding
+
+Compared to the v2 sent by Andrew Murray, Thomas Petazzoni did:
+
+ * Add a memset() on the struct of_pci_range_iter when starting the
+   for loop in for_each_pci_range(). Otherwise, with an uninitialized
+   of_pci_range_iter, of_pci_process_ranges() may crash.
+
+ * Add parenthesis around 'res', 'np' and 'iter' in the
+   for_each_of_pci_range macro definitions. Otherwise, passing
+   something like &foobar as 'res' didn't work.
+
+ * Rebased on top of 3.9-rc2, which required fixing a few conflicts in
+   the Microblaze code.
+
+v2:
+  This follows on from suggestions made by Grant Likely
+  (marc.info/?l=linux-kernel&m=136079602806328)
+
+Andrew Murray (3):
+  of/pci: Unify pci_process_bridge_OF_ranges from Microblaze and
+    PowerPC
+  of/pci: Provide support for parsing PCI DT ranges property
+  of/pci: mips: convert to common of_pci_range_parser
+
+ arch/microblaze/include/asm/pci-bridge.h |    5 +-
+ arch/microblaze/pci/pci-common.c         |  192 ------------------------------
+ arch/mips/pci/pci.c                      |   51 +++-----
+ arch/powerpc/include/asm/pci-bridge.h    |    5 +-
+ arch/powerpc/kernel/pci-common.c         |  192 ------------------------------
+ drivers/of/address.c                     |   67 +++++++++++
+ drivers/of/of_pci.c                      |  173 +++++++++++++++++++++++++++
+ include/linux/of_address.h               |   48 ++++++++
+ include/linux/of_pci.h                   |    4 +
+ 9 files changed, 313 insertions(+), 424 deletions(-)
 
