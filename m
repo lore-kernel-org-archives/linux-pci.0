@@ -1,91 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from tx2ehsobe002.messaging.microsoft.com ([65.55.88.12]:21419 "EHLO
-	tx2outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753176Ab3DJJI2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Apr 2013 05:08:28 -0400
-Message-ID: <51652C20.2060105@freescale.com>
-Date: Wed, 10 Apr 2013 17:08:48 +0800
-From: Chen Yuanquan-B41889 <B41889@freescale.com>
+Received: from mga03.intel.com ([143.182.124.21]:22689 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752645Ab3DVQNb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 22 Apr 2013 12:13:31 -0400
+Message-ID: <517561A6.6030506@intel.com>
+Date: Mon, 22 Apr 2013 09:13:26 -0700
+From: Alexander Duyck <alexander.h.duyck@intel.com>
 MIME-Version: 1.0
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-CC: Yuanquan Chen <Yuanquan.Chen@freescale.com>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-pci@vger.kernel.org>,
-	<bhelgaas@google.com>,
-	Hiroo Matsumoto <matsumoto.hiroo@jp.fujitsu.com>
-Subject: Re: [PATCH] powerpc/pci: fix PCI-e devices rescan issue on powerpc
- platform
-References: <1364902014-943-1-git-send-email-Yuanquan.Chen@freescale.com> <1364915422.16520.8.camel@pasglop> <515BAB44.9070001@freescale.com>
-In-Reply-To: <515BAB44.9070001@freescale.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+To: Gavin Shan <shangw@linux.vnet.ibm.com>
+CC: Jeff Kirsher <jeffrey.t.kirsher@intel.com>, davem@davemloft.net,
+	Bjorn Helgaas <bhelgaas@google.com>, netdev@vger.kernel.org,
+	gospo@redhat.com, sassmann@redhat.com,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [net-next 08/14] pci: Add SRIOV helper function to determine
+ if VFs are assigned to guest
+References: <1366451353-24714-1-git-send-email-jeffrey.t.kirsher@intel.com> <1366451353-24714-9-git-send-email-jeffrey.t.kirsher@intel.com> <1366515088.2209.15.camel@jtkirshe-mobl> <20130421051423.GA4052@shangw.(null)>
+In-Reply-To: <20130421051423.GA4052@shangw.(null)>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/03/2013 12:08 PM, Chen Yuanquan-B41889 wrote:
-> On 04/02/2013 11:10 PM, Benjamin Herrenschmidt wrote:
->> On Tue, 2013-04-02 at 19:26 +0800, Yuanquan Chen wrote:
->>> So we move the DMA & IRQ initialization code from 
->>> pcibios_setup_devices() and
->>> construct a new function pcibios_enable_device. We call this 
->>> function in
->>> pcibios_enable_device, which will be called by PCI-e rescan code. At 
->>> the
->>> meanwhile, we avoid the the impact on cardbus. I also validate this 
->>> patch with
->>> silicon's PCIe-sata which encounters the IRQ issue.
->> My worry is that this delays the setup of the IRQ and DMA to very 
->> late in
->> the process, possibly after the quirks have been run, which can be
->> problematic. We have platform hooks that might try to "fixup" specific
->> IRQ issues on some platforms (especially macs) which I worry might fail
->> if delayed that way (I may be wrong, I don't have a specific case in 
->> mind,
->> but I would feel better if we kept setting up these things earlier).
+On 04/20/2013 10:14 PM, Gavin Shan wrote:
+> On Sat, Apr 20, 2013 at 08:31:28PM -0700, Jeff Kirsher wrote:
+>> On Sat, 2013-04-20 at 02:49 -0700, Jeff Kirsher wrote:
+>>> From: Alexander Duyck <alexander.h.duyck@intel.com>
+>>>
+>>> This function is meant to add a helper function that will determine if a PF
+>>> has any VFs that are currently assigned to a guest.  We currently have been
+>>> implementing this function per driver, and going forward I would like to avoid
+>>> that by making this function generic and using this helper.
+>>>
+>>> Signed-off-by: Alexander Duyck <alexander.h.duyck@intel.com>
+>>> Signed-off-by: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+>> Adding linux-pci mailing list and Bjorn to the CC.
 >>
->> Cheers,
->> Ben.
+>> Bjorn- David Miller needs a signoff by PCI maintainer. 
 >>
->
-> Hi Ben,
->
-> I have checked all the quirk functions which are declared in kernel 
-> arch/powerpc
-> with command :
-> grep DECLARE_PCI_FIXUP_ `find arch/powerpc/ *.[hc]`
->
-> All the quirk function are defined as DECLARE_PCI_FIXUP_EARLY , 
-> DECLARE_PCI_FIXUP_HEADER
-> and DECLARE_PCI_FIXUP_FINAL, except quirk_uli5229() in 
-> arch/powerpc/platforms/fsl_uli1575.c, which is
-> defined both as DECLARE_PCI_FIXUP_HEADER and DECLARE_PCI_FIXUP_RESUME. 
-> So the quirk_uli5229()
-> will also be called with PCI pm module. The quirk functions defined as 
-> xxx_FINAL, HEADER and EARLY,
-> will be called in the path:
->
-> pci_scan_child_bus()->pci_scan_slot()->pci_scan_single_device()->pci_scan_device()->pci_setup_device() 
->
-> ->pci_device_add()
->
-> the pci_scan_slot() is called earlier than pcibios_fixup_bus() even 
-> for the first scan of PCI-e bus, so the quirk
-> functions on powerpc platform is called before the DMA & IRQ fixup. So 
-> in reality, the delay of DMA & IRQ fixup
-> won't affect anything.
->
-> Regards,
-> Yuanquan
->
+>>> ---
+>>>  drivers/pci/iov.c   | 41 +++++++++++++++++++++++++++++++++++++++++
+>>>  include/linux/pci.h |  5 +++++
+>>>  2 files changed, 46 insertions(+)
+>>>
+>>> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+>>> index ee599f2..fd99720 100644
+>>> --- a/drivers/pci/iov.c
+>>> +++ b/drivers/pci/iov.c
+>>> @@ -729,6 +729,47 @@ int pci_num_vf(struct pci_dev *dev)
+>>>  EXPORT_SYMBOL_GPL(pci_num_vf);
+>>>  
+>>>  /**
+>>> + * pci_vfs_assigned - returns number of VFs are assigned to a guest
+>>> + * @dev: the PCI device
+>>> + *
+>>> + * Returns number of VFs belonging to this device that are assigned to a guest.
+>>> + * If device is not a physical function returns -ENODEV.
+>>> + */
+>>> +int pci_vfs_assigned(struct pci_dev *dev)
+>>> +{
+>>> +	struct pci_dev *vfdev;
+>>> +	unsigned int vfs_assigned = 0;
+>>> +	unsigned short dev_id;
+>>> +
+>>> +	/* only search if we are a PF */
+>>> +	if (!dev->is_physfn)
+>>> +		return -ENODEV;
+> I think it's more reasonable to return zero here?
 
-Hi Ben,
-
-How do you think about this? Do you have any comment?
+I suppose that is true, it would be more in keeping with how pci_num_vf
+works so I will make that change.
 
 Thanks,
-Yuanquan
 
->>
->>
->>
->
-
-
+Alex
