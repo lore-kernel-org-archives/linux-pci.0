@@ -1,52 +1,50 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jay Agarwal <jagarwal@nvidia.com>
-To: 'Stephen Warren' <swarren@wwwdotorg.org>
-CC: "linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
-	"thierry.reding@avionic-design.de" <thierry.reding@avionic-design.de>,
-	Laxman Dewangan <ldewangan@nvidia.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"olof@lixom.net" <olof@lixom.net>, Hiroshi Doyu <hdoyu@nvidia.com>,
-	Prashant Gaikwad <pgaikwad@nvidia.com>,
-	"mturquette@linaro.org" <mturquette@linaro.org>,
-	Peter De Schrijver <pdeschrijver@nvidia.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Juha Tukkinen <jtukkinen@nvidia.com>,
-	Krishna Thota <kthota@nvidia.com>
-Date: Fri, 12 Apr 2013 22:13:35 +0530
-Subject: RE: [PATCH 1/3] ARM: tegra: pcie: Add tegra3 support
-Message-ID: <C79B248886DD134989C8FF6B096A91AB91B36FB300@BGMAIL01.nvidia.com>
-References: <1365435688-4179-1-git-send-email-jagarwal@nvidia.com>
- <51630ABB.1020200@wwwdotorg.org>
-In-Reply-To: <51630ABB.1020200@wwwdotorg.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ia0-f171.google.com ([209.85.210.171]:32802 "EHLO
+	mail-ia0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756762Ab3DWReK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 23 Apr 2013 13:34:10 -0400
+Received: by mail-ia0-f171.google.com with SMTP id r13so673146iar.2
+        for <linux-pci@vger.kernel.org>; Tue, 23 Apr 2013 10:34:10 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <51763847.8090808@cn.fujitsu.com>
+References: <516FB647.5030203@cn.fujitsu.com>
+	<CAErSpo65ARR_fZwsGCZDJqbPWktHYUkufgPt-2mWwur=nPR1Qg@mail.gmail.com>
+	<51763847.8090808@cn.fujitsu.com>
+Date: Tue, 23 Apr 2013 10:34:09 -0700
+Message-ID: <CAE9FiQV3e7tiUwg5qtw0=1ncRykJ5Pkog2C9cYG3VkfkKAgZnA@mail.gmail.com>
+Subject: Re: [PATCH v2 2/2] PCI: Convert alloc_pci_dev(void) to
+ pci_alloc_dev(bus) instead
+From: Yinghai Lu <yinghai@kernel.org>
+To: Gu Zheng <guz.fnst@cn.fujitsu.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	tangchen <tangchen@cn.fujitsu.com>,
+	Lin Feng <linfeng@cn.fujitsu.com>,
+	li guang <lig.fnst@cn.fujitsu.com>,
+	Mike Qiu <qiudayu@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> On 04/08/2013 09:41 AM, Jay Agarwal wrote:
-> > Signed-off-by: Jay Agarwal <jagarwal@nvidia.com>
-> >
-> > - Enable pcie root port 2 for cardhu
-> > - Make private data structure for each SOC
-> > - Add required tegra3 clocks and regulators
-> > - Add tegra3 specific code in enable controller
-> > - Modify clock tree to get clocks based on device
-> > - Based on git://gitorious.org/thierryreding/linux.git
-> 	
-> A couple more points on this patch:
-> 
-> * You didn't mention that this series is based on Thierry's work-in-progress
-> tree, and not something immediately destined for upstream. As such, only
-> Thierry is expected to actually apply any of these patches.
-> 
-[>] Stephen, I have mentioned it in comment description as Based on git://gitorious.org/thierryreding/linux.git, is this not enough?
+On Tue, Apr 23, 2013 at 12:29 AM, Gu Zheng <guz.fnst@cn.fujitsu.com> wrote:
+> From b01e61759f894b651ed3bb39c9fc18e0b66d7cb3 Mon Sep 17 00:00:00 2001
+> From: GuZheng <guz.fnst@cn.fujitsu.com>
+> Date: Tue, 23 Apr 2013 14:01:39 +0800
+> Subject: [PATCH v2 2/2] PCI: Convert alloc_pci_dev(void) to pci_alloc_dev(bus)
+>  instead
+>
+> Use the new pci_alloc_dev(bus) to replace the existing using of alloc_pci_dev(void).
+> And new functions pci_bus_get/put() are introdued to hide pci_bus' reference management.
+>
+> v2:
+>   Follow Yinghai's suggestions to reduce pci_bus' ref when destroying pci device.
+>   Add new functions pci_bus_get/put() to hide pci_bus' reference management.
 
-> * Your changes to the Tegra PCIe driver require that device tree include
-> extra clocks and regulators. You need to update
-> Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt to describe
-> these new requirements.
-[>] Should I create tegra30-pcie.txt? or made changes in tegra20-pcie.txt itself?
+You did not tell us if the remove test scripts works after put the line back.
+
+If it does not work, what is the point of this patch?
+
+Yinghai
