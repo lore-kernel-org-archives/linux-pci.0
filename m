@@ -1,65 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:51677 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964970Ab3DHVfC (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Apr 2013 17:35:02 -0400
-Date: Mon, 8 Apr 2013 23:34:57 +0200
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Russell King <linux@arm.linux.org.uk>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm" <linux-arm-kernel@lists.infradead.org>,
-	"devicetree-discuss@lists.ozlabs.org"
-	<devicetree-discuss@lists.ozlabs.org>,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Maen Suleiman <maen@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Olof Johansson <olof@lixom.net>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Mitch Bradley <wmb@firmworks.com>,
-	Andrew Murray <andrew.murray@arm.com>
-Subject: Re: [PATCHv7 08/17] pci: PCIe driver for Marvell Armada 370/XP
- systems
-Message-ID: <20130408233457.7127eab2@skate>
-In-Reply-To: <201304082331.30809.arnd@arndb.de>
-References: <1364395234-11195-1-git-send-email-thomas.petazzoni@free-electrons.com>
-	<1364395234-11195-9-git-send-email-thomas.petazzoni@free-electrons.com>
-	<CAErSpo7fGPe3wFha36kNMxeRP4gBpBWgfw85aTLey-DSz2ZYew@mail.gmail.com>
-	<201304082331.30809.arnd@arndb.de>
+Received: from mx1.redhat.com ([209.132.183.28]:1931 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753053Ab3DWUN7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 23 Apr 2013 16:13:59 -0400
+Message-ID: <1366748035.2918.652.camel@bling.home>
+Subject: Re: [PATCH v4 22/22] vfio-pci: Use cached MSI/MSI-X capabilities
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Gavin Shan <shangw@linux.vnet.ibm.com>
+Date: Tue, 23 Apr 2013 14:13:55 -0600
+In-Reply-To: <20130422231242.32621.38158.stgit@bhelgaas-glaptop>
+References: <20130422230012.32621.15224.stgit@bhelgaas-glaptop>
+	 <20130422231242.32621.38158.stgit@bhelgaas-glaptop>
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Arnd Bergmann,
-
-On Mon, 8 Apr 2013 23:31:30 +0200, Arnd Bergmann wrote:
-
-> > Too bad to have to adjust CFLAGS here.  Seems like I remember earlier
-> > discussion, but I didn't pay much attention, and if this is the best
-> > we can do, I guess it's OK.
+On Mon, 2013-04-22 at 17:12 -0600, Bjorn Helgaas wrote:
+> We now cache the MSI/MSI-X capability offsets in the struct pci_dev,
+> so no need to find the capabilities again.
 > 
-> I'm pretty sure I NAK'ed this part. I'm surprised it's still there.
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> CC: Alex Williamson <alex.williamson@redhat.com>
+> ---
+>  drivers/vfio/pci/vfio_pci.c |    6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
+> index 10626e8..05afe88 100644
+> --- a/drivers/vfio/pci/vfio_pci.c
+> +++ b/drivers/vfio/pci/vfio_pci.c
+> @@ -70,7 +70,7 @@ static int vfio_pci_enable(struct vfio_pci_device *vdev)
+>  		pci_write_config_word(pdev, PCI_COMMAND, cmd);
+>  	}
+>  
+> -	msix_pos = pci_find_capability(pdev, PCI_CAP_ID_MSIX);
+> +	msix_pos = pdev->msix_cap;
+>  	if (msix_pos) {
+>  		u16 flags;
+>  		u32 table;
+> @@ -183,7 +183,7 @@ static int vfio_pci_get_irq_count(struct vfio_pci_device *vdev, int irq_type)
+>  		u8 pos;
+>  		u16 flags;
+>  
+> -		pos = pci_find_capability(vdev->pdev, PCI_CAP_ID_MSI);
+> +		pos = vdev->pdev->msi_cap;
+>  		if (pos) {
+>  			pci_read_config_word(vdev->pdev,
+>  					     pos + PCI_MSI_FLAGS, &flags);
+> @@ -194,7 +194,7 @@ static int vfio_pci_get_irq_count(struct vfio_pci_device *vdev, int irq_type)
+>  		u8 pos;
+>  		u16 flags;
+>  
+> -		pos = pci_find_capability(vdev->pdev, PCI_CAP_ID_MSIX);
+> +		pos = vdev->pdev->msix_cap;
+>  		if (pos) {
+>  			pci_read_config_word(vdev->pdev,
+>  					     pos + PCI_MSIX_FLAGS, &flags);
+> 
 
-As I said in my reply to Bjorn, it's a mistake. I did so much efforts
-to get rid of the mach-mvebu and plat-orion dependencies, that in the
-end, I forgot that the original reason was to get rid of those special
-cflags.
+Acked-by: Alex Williamson <alex.williamson@redhat.com>
 
-For sure, I'll send a v8 that has those cflags removed, they are
-unneeded.
-
-Sorry for this.
-
-Thomas
--- 
-Thomas Petazzoni, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
