@@ -1,138 +1,105 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gg0-f172.google.com ([209.85.161.172]:39948 "EHLO
-	mail-gg0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758982Ab3DYQmm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Apr 2013 12:42:42 -0400
-Received: by mail-gg0-f172.google.com with SMTP id f1so419890ggn.31
-        for <linux-pci@vger.kernel.org>; Thu, 25 Apr 2013 09:42:41 -0700 (PDT)
-Date: Thu, 25 Apr 2013 10:42:38 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Jan Beulich <JBeulich@suse.com>
-Cc: Jeremy Fitzhardinge <jeremy@goop.org>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>,
-	xen-devel@lists.xensource.com,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [Xen-devel] [PATCH v4 18/22] xen/pci: Pay attention to
- PCI_MSIX_TABLE_OFFSET
-Message-ID: <20130425164238.GA3052@google.com>
-References: <20130422230012.32621.15224.stgit@bhelgaas-glaptop>
- <20130422231214.32621.37394.stgit@bhelgaas-glaptop>
- <CAErSpo6BF0Uvf=7LwYYT2Qn6kf5uk+rVqY-cKOe2qnVwcj4-+w@mail.gmail.com>
- <5179164902000078000D0A26@nat28.tlf.novell.com>
+Received: from co1ehsobe006.messaging.microsoft.com ([216.32.180.189]:8743
+	"EHLO co1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755729Ab3DWJ1n (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 23 Apr 2013 05:27:43 -0400
+Message-ID: <517653D8.8000205@freescale.com>
+Date: Tue, 23 Apr 2013 17:26:48 +0800
+From: Chen Yuanquan-B41889 <B41889@freescale.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5179164902000078000D0A26@nat28.tlf.novell.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Yuanquan Chen <Yuanquan.Chen@freescale.com>,
+	<linuxppc-dev@lists.ozlabs.org>, <linux-pci@vger.kernel.org>,
+	<bhelgaas@google.com>,
+	Hiroo Matsumoto <matsumoto.hiroo@jp.fujitsu.com>
+Subject: Re: [PATCH] powerpc/pci: fix PCI-e devices rescan issue on powerpc
+ platform
+References: <1364902014-943-1-git-send-email-Yuanquan.Chen@freescale.com> <1364915422.16520.8.camel@pasglop> <515BAB44.9070001@freescale.com> <51652C20.2060105@freescale.com>
+In-Reply-To: <51652C20.2060105@freescale.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 25, 2013 at 10:40:57AM +0100, Jan Beulich wrote:
-> >>> On 24.04.13 at 18:34, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> > On Mon, Apr 22, 2013 at 5:12 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> >> The MSI-X Table structure may be at a non-zero offset into the
-> >> device BAR, and we should account for that.
-> 
-> NAK: The base is just being use to pass to the hypervisor, which
-> then takes care to add the offset.
+On 04/10/2013 05:08 PM, Chen Yuanquan-B41889 wrote:
+> On 04/03/2013 12:08 PM, Chen Yuanquan-B41889 wrote:
+>> On 04/02/2013 11:10 PM, Benjamin Herrenschmidt wrote:
+>>> On Tue, 2013-04-02 at 19:26 +0800, Yuanquan Chen wrote:
+>>>> So we move the DMA & IRQ initialization code from 
+>>>> pcibios_setup_devices() and
+>>>> construct a new function pcibios_enable_device. We call this 
+>>>> function in
+>>>> pcibios_enable_device, which will be called by PCI-e rescan code. 
+>>>> At the
+>>>> meanwhile, we avoid the the impact on cardbus. I also validate this 
+>>>> patch with
+>>>> silicon's PCIe-sata which encounters the IRQ issue.
+>>> My worry is that this delays the setup of the IRQ and DMA to very 
+>>> late in
+>>> the process, possibly after the quirks have been run, which can be
+>>> problematic. We have platform hooks that might try to "fixup" specific
+>>> IRQ issues on some platforms (especially macs) which I worry might fail
+>>> if delayed that way (I may be wrong, I don't have a specific case in 
+>>> mind,
+>>> but I would feel better if we kept setting up these things earlier).
+>>>
+>>> Cheers,
+>>> Ben.
+>>>
+>>
+>> Hi Ben,
+>>
+>> I have checked all the quirk functions which are declared in kernel 
+>> arch/powerpc
+>> with command :
+>> grep DECLARE_PCI_FIXUP_ `find arch/powerpc/ *.[hc]`
+>>
+>> All the quirk function are defined as DECLARE_PCI_FIXUP_EARLY , 
+>> DECLARE_PCI_FIXUP_HEADER
+>> and DECLARE_PCI_FIXUP_FINAL, except quirk_uli5229() in 
+>> arch/powerpc/platforms/fsl_uli1575.c, which is
+>> defined both as DECLARE_PCI_FIXUP_HEADER and 
+>> DECLARE_PCI_FIXUP_RESUME. So the quirk_uli5229()
+>> will also be called with PCI pm module. The quirk functions defined 
+>> as xxx_FINAL, HEADER and EARLY,
+>> will be called in the path:
+>>
+>> pci_scan_child_bus()->pci_scan_slot()->pci_scan_single_device()->pci_scan_device()->pci_setup_device() 
+>>
+>> ->pci_device_add()
+>>
+>> the pci_scan_slot() is called earlier than pcibios_fixup_bus() even 
+>> for the first scan of PCI-e bus, so the quirk
+>> functions on powerpc platform is called before the DMA & IRQ fixup. 
+>> So in reality, the delay of DMA & IRQ fixup
+>> won't affect anything.
+>>
+>> Regards,
+>> Yuanquan
+>>
+>
+> Hi Ben,
+>
+> How do you think about this? Do you have any comment?
+>
+> Thanks,
+> Yuanquan
+>
 
-Thanks for noticing this.  I updated the patch to just add a comment to
-avert future confusion, and refreshed the subsequent xen patches as below.
+Hi Bjorn,
 
-> Recent hypervisors will actually
-> only consume this to issue a warning if not matching what gets
-> read from the corresponding BAR. Earlier hypervisors used this
-> instead of reading the BAR.
+There's no response from Ben. How do you think about this patch? What's 
+your advice?
 
-Note that pci_resource_start() gives you a CPU address, and what you
-read from the BAR is a PCI bus address.  These are not in the same
-address space and can't be directly compared.  I assume the
-hypervisors take that into account and do the appropriate
-conversions?
+Thanks,
+Yuanquan
 
-Bjorn
+>>>
+>>>
+>>>
+>>
+>
+>
+>
 
 
-commit 34f394aad6706a42fb69922ed184c918ec9f9f81
-Author: Bjorn Helgaas <bhelgaas@google.com>
-Date:   Thu Apr 18 15:02:34 2013 -0600
-
-    xen/pci: Comment on unusual PCI_MSIX_TABLE usage
-    
-    To find the MSI-X Table structure, you look at the BAR specified
-    by PCI_MSIX_FLAGS_BIRMASK, then apply the PCI_MSIX_TABLE_OFFSET to
-    the address from the BAR.  So most readers of PCI_MSIX_TABLE use
-    PCI_MSIX_TABLE_OFFSET, but in xen's case, the hypervisor takes
-    care of applying the offset, so we don't need to do it here.
-    
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-    CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-    CC: Jan Beulich <JBeulich@suse.com>
-
-diff --git a/arch/x86/pci/xen.c b/arch/x86/pci/xen.c
-index 94e7662..96e44fc 100644
---- a/arch/x86/pci/xen.c
-+++ b/arch/x86/pci/xen.c
-@@ -301,6 +301,7 @@ static int xen_initdom_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
- 					      &table_offset);
- 			bir = (u8)(table_offset & PCI_MSIX_FLAGS_BIRMASK);
- 
-+			/* Hypervisor takes care of PCI_MSIX_TABLE_OFFSET */
- 			map_irq.table_base = pci_resource_start(dev, bir);
- 			map_irq.entry_nr = msidesc->msi_attrib.entry_nr;
- 		}
-
-commit 311d82d74afa19cb0ea03c516e290457f9aab63d
-Author: Bjorn Helgaas <bhelgaas@google.com>
-Date:   Thu Apr 18 12:40:33 2013 -0600
-
-    xen/pci: Use PCI_MSIX_TABLE_BIR, not PCI_MSIX_FLAGS_BIRMASK
-    
-    PCI_MSIX_FLAGS_BIRMASK is mis-named because the BIR mask is in the
-    Table Offset register, not the flags ("Message Control" per spec)
-    register.
-    
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-    CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-    CC: Jan Beulich <JBeulich@suse.com>
-
-diff --git a/arch/x86/pci/xen.c b/arch/x86/pci/xen.c
-index 96e44fc..bec03d4 100644
---- a/arch/x86/pci/xen.c
-+++ b/arch/x86/pci/xen.c
-@@ -299,7 +299,7 @@ static int xen_initdom_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
- 
- 			pci_read_config_dword(dev, pos + PCI_MSIX_TABLE,
- 					      &table_offset);
--			bir = (u8)(table_offset & PCI_MSIX_FLAGS_BIRMASK);
-+			bir = (u8)(table_offset & PCI_MSIX_TABLE_BIR);
- 
- 			/* Hypervisor takes care of PCI_MSIX_TABLE_OFFSET */
- 			map_irq.table_base = pci_resource_start(dev, bir);
-
-commit 4a5b938fe2ed3e5f5c51f4906c0d1c1486f37e49
-Author: Bjorn Helgaas <bhelgaas@google.com>
-Date:   Thu Apr 18 15:10:58 2013 -0600
-
-    xen/pci: Used cached MSI-X capability offset
-    
-    We now cache the MSI-X capability offset in the struct pci_dev, so no
-    need to find the capability again.
-    
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-    CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-    CC: Jan Beulich <JBeulich@suse.com>
-
-diff --git a/arch/x86/pci/xen.c b/arch/x86/pci/xen.c
-index bec03d4..a151b02 100644
---- a/arch/x86/pci/xen.c
-+++ b/arch/x86/pci/xen.c
-@@ -295,8 +295,7 @@ static int xen_initdom_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
- 			int pos;
- 			u32 table_offset, bir;
- 
--			pos = pci_find_capability(dev, PCI_CAP_ID_MSIX);
--
-+			pos = dev->msix_cap;
- 			pci_read_config_dword(dev, pos + PCI_MSIX_TABLE,
- 					      &table_offset);
- 			bir = (u8)(table_offset & PCI_MSIX_TABLE_BIR);
