@@ -1,258 +1,258 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ch1ehsobe005.messaging.microsoft.com ([216.32.181.185]:50503
-	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754837Ab3DOS4W (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 15 Apr 2013 14:56:22 -0400
-From: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
-To: <tglx@linutronix.de>, <mingo@redhat.com>, <hpa@zytor.com>,
-	<dougthompson@xmission.com>, <bp@alien8.de>,
-	<jbarnes@virtuousgeek.org>
-CC: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-edac@vger.kernel.org>,
-	Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
-Subject: [PATCH v3] edac: Handle EDAC ECC errors for Family 16h
-Date: Mon, 15 Apr 2013 13:56:00 -0500
-Message-ID: <1366052160-3091-1-git-send-email-Aravind.Gopalakrishnan@amd.com>
+Received: from mail-da0-f50.google.com ([209.85.210.50]:52577 "EHLO
+	mail-da0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756602Ab3DWQpC (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 23 Apr 2013 12:45:02 -0400
+Received: by mail-da0-f50.google.com with SMTP id a4so425712dad.37
+        for <linux-pci@vger.kernel.org>; Tue, 23 Apr 2013 09:45:01 -0700 (PDT)
+Message-ID: <5176BA7F.7050800@gmail.com>
+Date: Wed, 24 Apr 2013 00:44:47 +0800
+From: Jiang Liu <liuj97@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Gu Zheng <guz.fnst@cn.fujitsu.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	tangchen <tangchen@cn.fujitsu.com>,
+	Lin Feng <linfeng@cn.fujitsu.com>,
+	li guang <lig.fnst@cn.fujitsu.com>,
+	Mike Qiu <qiudayu@linux.vnet.ibm.com>
+Subject: Re: [PATCH v2 2/2] PCI: Convert alloc_pci_dev(void) to pci_alloc_dev(bus)
+ instead
+References: <516FB647.5030203@cn.fujitsu.com> <CAErSpo65ARR_fZwsGCZDJqbPWktHYUkufgPt-2mWwur=nPR1Qg@mail.gmail.com> <51763847.8090808@cn.fujitsu.com>
+In-Reply-To: <51763847.8090808@cn.fujitsu.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add code to handle ECC decoding for fam16h. Support exists for
-previous families already, so code has been reused werever applicable
-and some code has been added to handle fam16h specific operations.
+On 04/23/2013 03:29 PM, Gu Zheng wrote:
+> From b01e61759f894b651ed3bb39c9fc18e0b66d7cb3 Mon Sep 17 00:00:00 2001
+> From: GuZheng <guz.fnst@cn.fujitsu.com>
+> Date: Tue, 23 Apr 2013 14:01:39 +0800
+> Subject: [PATCH v2 2/2] PCI: Convert alloc_pci_dev(void) to pci_alloc_dev(bus)
+>  instead
+> 
+> Use the new pci_alloc_dev(bus) to replace the existing using of alloc_pci_dev(void).
+> And new functions pci_bus_get/put() are introdued to hide pci_bus' reference management.
+> 
+> v2:
+>   Follow Yinghai's suggestions to reduce pci_bus' ref when destroying pci device.
+>   Add new functions pci_bus_get/put() to hide pci_bus' reference management.
+> 
+> Signed-off-by: Gu Zheng <guz.fnst@cn.fujitsu.com>
+> ---
+>  arch/powerpc/kernel/pci_of_scan.c |    3 +--
+>  arch/sparc/kernel/pci.c           |    3 +--
+>  drivers/char/agp/alpha-agp.c      |    2 +-
+>  drivers/char/agp/parisc-agp.c     |    2 +-
+>  drivers/pci/bus.c                 |   15 +++++++++++++++
+>  drivers/pci/iov.c                 |    8 +++++---
+>  drivers/pci/probe.c               |    9 +++------
+>  drivers/pci/remove.c              |    2 ++
+>  drivers/scsi/megaraid.c           |    2 +-
+>  include/linux/pci.h               |    3 +++
+>  10 files changed, 33 insertions(+), 16 deletions(-)
+> 
+> diff --git a/arch/powerpc/kernel/pci_of_scan.c b/arch/powerpc/kernel/pci_of_scan.c
+> index 2a67e9b..24d01c4 100644
+> --- a/arch/powerpc/kernel/pci_of_scan.c
+> +++ b/arch/powerpc/kernel/pci_of_scan.c
+> @@ -128,7 +128,7 @@ struct pci_dev *of_create_pci_dev(struct device_node *node,
+>  	const char *type;
+>  	struct pci_slot *slot;
+>  
+> -	dev = alloc_pci_dev();
+> +	dev = pci_alloc_dev(bus);
+>  	if (!dev)
+>  		return NULL;
+>  	type = of_get_property(node, "device_type", NULL);
+> @@ -137,7 +137,6 @@ struct pci_dev *of_create_pci_dev(struct device_node *node,
+>  
+>  	pr_debug("    create device, devfn: %x, type: %s\n", devfn, type);
+>  
+> -	dev->bus = bus;
+>  	dev->dev.of_node = of_node_get(node);
+>  	dev->dev.parent = bus->bridge;
+>  	dev->dev.bus = &pci_bus_type;
+> diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
+> index baf4366..e5871fb 100644
+> --- a/arch/sparc/kernel/pci.c
+> +++ b/arch/sparc/kernel/pci.c
+> @@ -254,7 +254,7 @@ static struct pci_dev *of_create_pci_dev(struct pci_pbm_info *pbm,
+>  	const char *type;
+>  	u32 class;
+>  
+> -	dev = alloc_pci_dev();
+> +	dev = pci_alloc_dev(bus);
+>  	if (!dev)
+>  		return NULL;
+>  
+> @@ -281,7 +281,6 @@ static struct pci_dev *of_create_pci_dev(struct pci_pbm_info *pbm,
+>  		printk("    create device, devfn: %x, type: %s\n",
+>  		       devfn, type);
+>  
+> -	dev->bus = bus;
+>  	dev->sysdata = node;
+>  	dev->dev.parent = bus->bridge;
+>  	dev->dev.bus = &pci_bus_type;
+> diff --git a/drivers/char/agp/alpha-agp.c b/drivers/char/agp/alpha-agp.c
+> index dd84af4..199b8e9 100644
+> --- a/drivers/char/agp/alpha-agp.c
+> +++ b/drivers/char/agp/alpha-agp.c
+> @@ -174,7 +174,7 @@ alpha_core_agp_setup(void)
+>  	/*
+>  	 * Build a fake pci_dev struct
+>  	 */
+> -	pdev = alloc_pci_dev();
+> +	pdev = pci_alloc_dev(NULL);
+>  	if (!pdev)
+>  		return -ENOMEM;
+>  	pdev->vendor = 0xffff;
+> diff --git a/drivers/char/agp/parisc-agp.c b/drivers/char/agp/parisc-agp.c
+> index 94821ab..bf5d247 100644
+> --- a/drivers/char/agp/parisc-agp.c
+> +++ b/drivers/char/agp/parisc-agp.c
+> @@ -333,7 +333,7 @@ parisc_agp_setup(void __iomem *ioc_hpa, void __iomem *lba_hpa)
+>  	struct agp_bridge_data *bridge;
+>  	int error = 0;
+>  
+> -	fake_bridge_dev = alloc_pci_dev();
+> +	fake_bridge_dev = pci_alloc_dev(NULL);
+>  	if (!fake_bridge_dev) {
+>  		error = -ENOMEM;
+>  		goto fail;
+> diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+> index 8647dc6..5eacf78 100644
+> --- a/drivers/pci/bus.c
+> +++ b/drivers/pci/bus.c
+> @@ -18,6 +18,21 @@
+>  
+>  #include "pci.h"
+>  
+> +struct pci_bus *pci_bus_get(struct pci_bus *bus)
+> +{
+> +	if (bus)
+> +		get_device(&bus->dev);
+> +	return bus;
+> +}
+> +EXPORT_SYMBOL(pci_bus_get);
+> +
+> +void pci_bus_put(struct pci_bus *bus)
+> +{
+> +	if (bus)
+> +		put_device(&bus->dev);
+> +}
+> +EXPORT_SYMBOL(pci_bus_put);
+> +
+>  void pci_add_resource_offset(struct list_head *resources, struct resource *res,
+>  			     resource_size_t offset)
+>  {
+Hi Zheng,
+	Could you please help to split addition of pci_bus_get() and pci_bus_put()
+into a separate patch? I'm working on some patches which depends on this.
 
-The patch was tested on Fam16h with ECC turned on
-using the mce_amd_inj facility and works fine.
+> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+> index ee599f2..24134cd 100644
+> --- a/drivers/pci/iov.c
+> +++ b/drivers/pci/iov.c
+> @@ -75,18 +75,20 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
+>  	struct pci_dev *virtfn;
+>  	struct resource *res;
+>  	struct pci_sriov *iov = dev->sriov;
+> +	struct pci_bus *bus;
+>  
+> -	virtfn = alloc_pci_dev();
+> +	virtfn = pci_alloc_dev(NULL);
+>  	if (!virtfn)
+>  		return -ENOMEM;
+>  
+>  	mutex_lock(&iov->dev->sriov->lock);
+> -	virtfn->bus = virtfn_add_bus(dev->bus, virtfn_bus(dev, id));
+> -	if (!virtfn->bus) {
+> +	bus = virtfn_add_bus(dev->bus, virtfn_bus(dev, id));
+> +	if (!bus) {
+>  		kfree(virtfn);
+>  		mutex_unlock(&iov->dev->sriov->lock);
+>  		return -ENOMEM;
+>  	}
+> +	virtfn->bus = pci_bus_get(bus);
+>  	virtfn->devfn = virtfn_devfn(dev, id);
+>  	virtfn->vendor = dev->vendor;
+>  	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_DID, &virtfn->device);
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 0bb92e4..9d37d46 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1209,10 +1209,8 @@ struct pci_dev *pci_alloc_dev(struct pci_bus *bus)
+>  
+>  	INIT_LIST_HEAD(&dev->bus_list);
+>  
+> -	if (bus) {
+> -		get_device(&bus->dev);
+> -		dev->bus = bus;
+> -	}
+> +	if (bus)
+How about remove above redundant check?
 
-Signed-off-by: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
----
- arch/x86/kernel/amd_nb.c  |    4 +-
- drivers/edac/amd64_edac.c |   96 +++++++++++++++++++++++++++++++++++++++++++--
- drivers/edac/amd64_edac.h |    4 +-
- include/linux/pci_ids.h   |    2 +
- 4 files changed, 101 insertions(+), 5 deletions(-)
-
-diff --git a/arch/x86/kernel/amd_nb.c b/arch/x86/kernel/amd_nb.c
-index 4c39baa..a8bbcf6 100644
---- a/arch/x86/kernel/amd_nb.c
-+++ b/arch/x86/kernel/amd_nb.c
-@@ -16,12 +16,14 @@ const struct pci_device_id amd_nb_misc_ids[] = {
- 	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_K8_NB_MISC) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_10H_NB_MISC) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_NB_F3) },
-+	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_16H_NB_F3) },
- 	{}
- };
- EXPORT_SYMBOL(amd_nb_misc_ids);
- 
- static struct pci_device_id amd_nb_link_ids[] = {
- 	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_15H_NB_F4) },
-+	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_16H_NB_F4) },
- 	{}
- };
- 
-@@ -77,7 +79,7 @@ int amd_cache_northbridges(void)
- 			next_northbridge(link, amd_nb_link_ids);
-         }
- 
--	/* some CPU families (e.g. family 0x11) do not support GART */
-+	/* some CPU families (e.g. family 0x11, 0x16) do not support GART */
- 	if (boot_cpu_data.x86 == 0xf || boot_cpu_data.x86 == 0x10 ||
- 	    boot_cpu_data.x86 == 0x15)
- 		amd_northbridges.flags |= AMD_NB_GART;
-diff --git a/drivers/edac/amd64_edac.c b/drivers/edac/amd64_edac.c
-index 9a8bebc..9173173 100644
---- a/drivers/edac/amd64_edac.c
-+++ b/drivers/edac/amd64_edac.c
-@@ -98,6 +98,7 @@ int __amd64_write_pci_cfg_dword(struct pci_dev *pdev, int offset,
-  *
-  * F15h: we select which DCT we access using F1x10C[DctCfgSel]
-  *
-+ * F16h has only 1 DCT
-  */
- static int k8_read_dct_pci_cfg(struct amd64_pvt *pvt, int addr, u32 *val,
- 			       const char *func)
-@@ -133,6 +134,15 @@ static int f15_read_dct_pci_cfg(struct amd64_pvt *pvt, int addr, u32 *val,
- 	return __amd64_read_pci_cfg_dword(pvt->F2, addr, val, func);
- }
- 
-+static int f16_read_dct_pci_cfg(struct amd64_pvt *pvt, int addr, u32 *val,
-+				const char *func)
-+{
-+	if (addr >= 0x100)
-+		return -EINVAL;
-+
-+	return __amd64_read_pci_cfg_dword(pvt->F2, addr, val, func);
-+}
-+
- /*
-  * Memory scrubber control interface. For K8, memory scrubbing is handled by
-  * hardware and can involve L2 cache, dcache as well as the main memory. With
-@@ -326,7 +336,42 @@ static void get_cs_base_and_mask(struct amd64_pvt *pvt, int csrow, u8 dct,
- 		base_bits	= GENMASK(21, 31) | GENMASK(9, 15);
- 		mask_bits	= GENMASK(21, 29) | GENMASK(9, 15);
- 		addr_shift	= 4;
--	} else {
-+	}
-+
-+	/*
-+	* there are two addr_shift values for F16h.
-+	* addr_shift of 8 for high bits and addr_shift of 6
-+	* for low bits. So handle it differently.
-+	*/
-+	else if (boot_cpu_data.x86 == 0x16) {
-+		/* variables specific to F16h */
-+		u64 base_bits_low, base_bits_high;
-+		u64 mask_bits_low, mask_bits_high;
-+		u8 addr_shift_low, addr_shift_high;
-+
-+		csbase          = pvt->csels[dct].csbases[csrow];
-+		csmask          = pvt->csels[dct].csmasks[csrow >> 1];
-+		base_bits_low = mask_bits_low = GENMASK(5 , 15);
-+		base_bits_high = mask_bits_high = GENMASK(19 , 30);
-+		addr_shift_low = 6;
-+		addr_shift_high = 8;
-+		*base = (((csbase & base_bits_high)
-+				<< addr_shift_high) |
-+			((csbase & base_bits_low)
-+				<< addr_shift_low));
-+		*mask = ~0ULL;
-+		*mask &= ~((mask_bits_high
-+				<< addr_shift_high) |
-+				(mask_bits_low
-+				<< addr_shift_low));
-+		*mask |= (((csmask & mask_bits_high)
-+				<< addr_shift_high) |
-+			 ((csmask & mask_bits_low)
-+				<< addr_shift_low));
-+		return;
-+	}
-+
-+	 else {
- 		csbase		= pvt->csels[dct].csbases[csrow];
- 		csmask		= pvt->csels[dct].csmasks[csrow >> 1];
- 		addr_shift	= 8;
-@@ -1224,6 +1269,23 @@ static int f15_dbam_to_chip_select(struct amd64_pvt *pvt, u8 dct,
- 	return ddr3_cs_size(cs_mode, false);
- }
- 
-+/*
-+ * F16h supports 64 bit DCT interfaces
-+ * and has only limited cs_modes
-+ */
-+static int f16_dbam_to_chip_select(struct amd64_pvt *pvt, u8 dct,
-+				unsigned cs_mode)
-+{
-+	WARN_ON(cs_mode > 12);
-+
-+	if (cs_mode == 0 || cs_mode == 3 || cs_mode == 4
-+		|| cs_mode == 6 || cs_mode == 8 || cs_mode == 9
-+		|| cs_mode == 12)
-+		return -1;
-+	else
-+		return ddr3_cs_size(cs_mode, false);
-+}
-+
- static void read_dram_ctl_register(struct amd64_pvt *pvt)
- {
- 
-@@ -1681,6 +1743,17 @@ static struct amd64_family_type amd64_family_types[] = {
- 			.read_dct_pci_cfg	= f15_read_dct_pci_cfg,
- 		}
- 	},
-+	[F16_CPUS] = {
-+		.ctl_name = "F16h",
-+		.f1_id = PCI_DEVICE_ID_AMD_16H_NB_F1,
-+		.f3_id = PCI_DEVICE_ID_AMD_16H_NB_F3,
-+		.ops = {
-+			.early_channel_count	= f1x_early_channel_count,
-+			.map_sysaddr_to_csrow	= f1x_map_sysaddr_to_csrow,
-+			.dbam_to_cs		= f16_dbam_to_chip_select,
-+			.read_dct_pci_cfg	= f16_read_dct_pci_cfg,
-+		}
-+	},
- };
- 
- static struct pci_dev *pci_get_related_function(unsigned int vendor,
-@@ -2071,8 +2144,12 @@ static void read_mc_regs(struct amd64_pvt *pvt)
- 	pvt->ecc_sym_sz = 4;
- 
- 	if (c->x86 >= 0x10) {
--		amd64_read_pci_cfg(pvt->F3, EXT_NB_MCA_CFG, &tmp);
--		amd64_read_dct_pci_cfg(pvt, DBAM1, &pvt->dbam1);
-+
-+		/* F16h has only one DCT, hence cannot read DCT1 reg. */
-+		if (c->x86 != 0x16) {
-+			amd64_read_pci_cfg(pvt->F3, EXT_NB_MCA_CFG, &tmp);
-+			amd64_read_dct_pci_cfg(pvt, DBAM1, &pvt->dbam1);
-+		}
- 
- 		/* F10h, revD and later can do x8 ECC too */
- 		if ((c->x86 > 0x10 || c->x86_model > 7) && tmp & BIT(25))
-@@ -2483,6 +2560,11 @@ static struct amd64_family_type *amd64_per_family_init(struct amd64_pvt *pvt)
- 		pvt->ops		= &amd64_family_types[F15_CPUS].ops;
- 		break;
- 
-+	case 0x16:
-+		fam_type		= &amd64_family_types[F16_CPUS];
-+		pvt->ops		= &amd64_family_types[F16_CPUS].ops;
-+		break;
-+
- 	default:
- 		amd64_err("Unsupported family!\n");
- 		return NULL;
-@@ -2695,6 +2777,14 @@ static const struct pci_device_id amd64_pci_table[] __devinitdata = {
- 		.class		= 0,
- 		.class_mask	= 0,
- 	},
-+	{
-+		.vendor		= PCI_VENDOR_ID_AMD,
-+		.device		= PCI_DEVICE_ID_AMD_16H_NB_F2,
-+		.subvendor	= PCI_ANY_ID,
-+		.subdevice	= PCI_ANY_ID,
-+		.class		= 0,
-+		.class_mask	= 0,
-+	},
- 
- 	{0, }
- };
-diff --git a/drivers/edac/amd64_edac.h b/drivers/edac/amd64_edac.h
-index 9a666cb..7b1d3f7 100644
---- a/drivers/edac/amd64_edac.h
-+++ b/drivers/edac/amd64_edac.h
-@@ -172,7 +172,8 @@
-  */
- #define PCI_DEVICE_ID_AMD_15H_NB_F1	0x1601
- #define PCI_DEVICE_ID_AMD_15H_NB_F2	0x1602
--
-+#define PCI_DEVICE_ID_AMD_16H_NB_F1	0x1531
-+#define PCI_DEVICE_ID_AMD_16H_NB_F2	0x1532
- 
- /*
-  * Function 1 - Address Map
-@@ -300,6 +301,7 @@ enum amd_families {
- 	K8_CPUS = 0,
- 	F10_CPUS,
- 	F15_CPUS,
-+	F16_CPUS,
- 	NUM_FAMILIES,
- };
- 
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index 1679ff6..59f732f 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -519,6 +519,8 @@
- #define PCI_DEVICE_ID_AMD_11H_NB_LINK	0x1304
- #define PCI_DEVICE_ID_AMD_15H_NB_F3	0x1603
- #define PCI_DEVICE_ID_AMD_15H_NB_F4	0x1604
-+#define PCI_DEVICE_ID_AMD_16H_NB_F3	0x1533
-+#define PCI_DEVICE_ID_AMD_16H_NB_F4	0x1534
- #define PCI_DEVICE_ID_AMD_CNB17H_F3	0x1703
- #define PCI_DEVICE_ID_AMD_LANCE		0x2000
- #define PCI_DEVICE_ID_AMD_LANCE_HOME	0x2001
--- 
-1.7.10.4
-
+> +		dev->bus = pci_bus_get(bus);
+>  
+>  	return dev;
+>  }
+> @@ -1272,11 +1270,10 @@ static struct pci_dev *pci_scan_device(struct pci_bus *bus, int devfn)
+>  	if (!pci_bus_read_dev_vendor_id(bus, devfn, &l, 60*1000))
+>  		return NULL;
+>  
+> -	dev = alloc_pci_dev();
+> +	dev = pci_alloc_dev(bus);
+>  	if (!dev)
+>  		return NULL;
+>  
+> -	dev->bus = bus;
+>  	dev->devfn = devfn;
+>  	dev->vendor = l & 0xffff;
+>  	dev->device = (l >> 16) & 0xffff;
+> diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+> index cc875e6..fffdee8 100644
+> --- a/drivers/pci/remove.c
+> +++ b/drivers/pci/remove.c
+> @@ -38,6 +38,8 @@ static void pci_destroy_dev(struct pci_dev *dev)
+>  	list_del(&dev->bus_list);
+>  	up_write(&pci_bus_sem);
+>  
+> +	pci_bus_put(dev->bus);
+> +
+>  	pci_free_resources(dev);
+>  	put_device(&dev->dev);
+>  }
+> diff --git a/drivers/scsi/megaraid.c b/drivers/scsi/megaraid.c
+> index 9504ec0..e1660ca 100644
+> --- a/drivers/scsi/megaraid.c
+> +++ b/drivers/scsi/megaraid.c
+> @@ -2025,7 +2025,7 @@ megaraid_abort_and_reset(adapter_t *adapter, Scsi_Cmnd *cmd, int aor)
+>  static inline int
+>  make_local_pdev(adapter_t *adapter, struct pci_dev **pdev)
+>  {
+> -	*pdev = alloc_pci_dev();
+> +	*pdev = pci_alloc_dev(NULL);
+>  
+>  	if( *pdev == NULL ) return -1;
+>  
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 682de2b..c5f245d 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -1002,6 +1002,9 @@ int pci_request_selected_regions_exclusive(struct pci_dev *, int, const char *);
+>  void pci_release_selected_regions(struct pci_dev *, int);
+>  
+>  /* drivers/pci/bus.c */
+> +extern struct pci_bus *pci_bus_get(struct pci_bus *bus);
+> +extern void pci_bus_put(struct pci_bus *bus);
+> +
+>  void pci_add_resource(struct list_head *resources, struct resource *res);
+>  void pci_add_resource_offset(struct list_head *resources, struct resource *res,
+>  			     resource_size_t offset);
+> 
 
