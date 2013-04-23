@@ -1,48 +1,37 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:53728 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761988Ab3DDOum (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Apr 2013 10:50:42 -0400
-Date: Thu, 4 Apr 2013 10:50:12 -0400
-From: Neil Horman <nhorman@tuxdriver.com>
-To: David Woodhouse <dwmw2@infradead.org>
+Received: from gate.crashing.org ([63.228.1.57]:46901 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753346Ab3DWBtc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 22 Apr 2013 21:49:32 -0400
+Message-ID: <1366681750.2886.10.camel@pasglop>
+Subject: Re: [PATCH] PowerNV/PCI: Fix NULL PCI controller
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Mike Qiu <qiudayu@linux.vnet.ibm.com>
 Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Prarit Bhargava <prarit@redhat.com>,
-	Don Zickus <dzickus@redhat.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Asit Mallick <asit.k.mallick@intel.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	iommu@lists.linux-foundation.org, Yinghai Lu <yinghai@kernel.org>
-Subject: Re: [PATCH v2] irq: add quirk for broken interrupt remapping on 55XX
- chipsets
-Message-ID: <20130404145012.GA3403@neilslaptop.think-freely.org>
-References: <1362158276-4901-1-git-send-email-nhorman@tuxdriver.com>
- <1362423859-18516-1-git-send-email-nhorman@tuxdriver.com>
- <CAErSpo4=L9q+q5hqP2Avw6uceQwZiPuOzadhsqGpu6aP53PMbQ@mail.gmail.com>
- <1365085649.28127.66.camel@i7.infradead.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1365085649.28127.66.camel@i7.infradead.org>
+	Thomas Gleixner <tglx@linutronix.de>
+Date: Tue, 23 Apr 2013 11:49:10 +1000
+In-Reply-To: <1366681602.1654.8.camel@localhost.localdomain>
+References: <1366611236-1811-1-git-send-email-qiudayu@linux.vnet.ibm.com>
+	 <1366612577.2723.21.camel@pasglop> <5174E9C3.6080203@linux.vnet.ibm.com>
+	 <1366617867.2723.23.camel@pasglop> <5175067F.3030307@linux.vnet.ibm.com>
+	 <CAErSpo4Y0zkWDsyJi47awtz67oWO4Qj+J4mDA3B0cfaYx_v_VQ@mail.gmail.com>
+	 <1366681602.1654.8.camel@localhost.localdomain>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 04, 2013 at 03:27:29PM +0100, David Woodhouse wrote:
-> On Wed, 2013-04-03 at 17:53 -0600, Bjorn Helgaas wrote:
-> > );
-> > > +
-> > > +       if ((revision == 0x13) && irq_remapping_enabled) {
-> > > +                pr_warn(HW_ERR "This system BIOS has enabled interrupt remapping\n"
-> > > +                        "on a chipset that contains an errata making that\n"
-> > > +                        "feature unstable.  Please reboot with nointremap\n"
-> > > +                        "added to the kernel command line and contact\n"
-> > > +                        "your BIOS vendor for an update");
+On Mon, 2013-04-22 at 21:46 -0400, Mike Qiu wrote:
 > 
-> This should be WARN_TAINT(TAINT_FIRMWARE_WORKAROUND). And 'an erratum'.
-> 
-Ok, copy that. I'll repost shortly
+> So I suggest either use my patch or remove that check code.
+> If the second case, I will write v2 patch to remove that check code.
+> I don't know what's to go for next step, it depends on the
+> maintainer :)
 
-> -- 
-> dwmw2
+Please do.
+
+Cheers,
+Ben.
 
 
