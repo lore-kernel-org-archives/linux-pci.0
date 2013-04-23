@@ -1,46 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from avon.wwwdotorg.org ([70.85.31.133]:52669 "EHLO
-	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1764789Ab3DDVaF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Apr 2013 17:30:05 -0400
-Message-ID: <515DF0D9.40007@wwwdotorg.org>
-Date: Thu, 04 Apr 2013 15:30:01 -0600
-From: Stephen Warren <swarren@wwwdotorg.org>
+Received: from cn.fujitsu.com ([222.73.24.84]:42283 "EHLO song.cn.fujitsu.com"
+	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S1755287Ab3DWHaz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 23 Apr 2013 03:30:55 -0400
+Message-ID: <51763841.9070808@cn.fujitsu.com>
+Date: Tue, 23 Apr 2013 15:29:05 +0800
+From: Gu Zheng <guz.fnst@cn.fujitsu.com>
 MIME-Version: 1.0
-To: Thierry Reding <thierry.reding@avionic-design.de>
-CC: Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Andrew Murray <andrew.murray@arm.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-tegra@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v3 07/12] PCI: tegra: Move PCIe driver to drivers/pci/host
-References: <1365000318-28256-1-git-send-email-thierry.reding@avionic-design.de> <1365000318-28256-8-git-send-email-thierry.reding@avionic-design.de> <515DF096.2000703@wwwdotorg.org>
-In-Reply-To: <515DF096.2000703@wwwdotorg.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	tangchen <tangchen@cn.fujitsu.com>,
+	Lin Feng <linfeng@cn.fujitsu.com>,
+	li guang <lig.fnst@cn.fujitsu.com>,
+	Mike Qiu <qiudayu@linux.vnet.ibm.com>, guz.fnst@cn.fujitsu.com
+Subject: [PATCH v2 1/2] PCI: Introduce pci_alloc_dev(struct pci_bus*) to replace
+ alloc_pci_dev()
+References: <516FB647.5030203@cn.fujitsu.com> <CAErSpo65ARR_fZwsGCZDJqbPWktHYUkufgPt-2mWwur=nPR1Qg@mail.gmail.com>
+In-Reply-To: <CAErSpo65ARR_fZwsGCZDJqbPWktHYUkufgPt-2mWwur=nPR1Qg@mail.gmail.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/04/2013 03:28 PM, Stephen Warren wrote:
-> On 04/03/2013 08:45 AM, Thierry Reding wrote:
->> Move the PCIe driver from arch/arm/mach-tegra into the drivers/pci/host
->> directory. The motivation is to collect various host controller drivers
->> in the same location in order to facilitate refactoring.
->>
->> The Tegra PCIe driver has been largely rewritten, both in order to turn
->> it into a proper platform driver and to add MSI (based on code by
->> Krishna Kishore <kthota@nvidia.com>) as well as device tree support.
-> 
->>  arch/arm/boot/dts/tegra20.dtsi                     |   53 +
-> 
-> I guess this has to touch both the driver and the dtsi file so that
-> bisectabilty isn't broken? I guess that's OK.
+>From d66f5b255abeedfbeff212b1e4bc3d8f4ae908e3 Mon Sep 17 00:00:00 2001
+From: Gu Zheng <guz.fnst@cn.fujitsu.com>
+Date: Mon, 22 Apr 2013 19:04:07 +0900
+Subject: [PATCH v2 1/2] PCI: Introduce pci_alloc_dev(struct pci_bus*) to replace alloc_pci_dev()
 
-Actually, can't you move all the *.dts/*.dtsi changes to the start of
-the series, then put the driver conversion patch last, to avoid any
-bisectability issues and still keep code and DT changes separate?
+Now here we introduce a new struct pci_dev *pci_alloc_dev(struct pci_bus *bus) to replace alloc_pci_dev().
+It take a "struct pci_bus *" argument, so we can alloc a pci device on a target pci bus, and it acquire
+the reference of the pci_bus.
+Since the old alloc_pci_dev() is exported, so we still keep it for a while but mark it as __deprecated.
+
+v2:
+  Updated per code reviews from Bjorn Helgaas and Mike Qiu.
+
+Signed-off-by: Gu Zheng <guz.fnst@cn.fujitsu.com>
+---
+ drivers/pci/probe.c |   13 ++++++++++++-
+ include/linux/pci.h |    4 +++-
+ 2 files changed, 15 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index b494066..0bb92e4 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1199,7 +1199,7 @@ static void pci_release_bus_bridge_dev(struct device *dev)
+ 	kfree(bridge);
+ }
+ 
+-struct pci_dev *alloc_pci_dev(void)
++struct pci_dev *pci_alloc_dev(struct pci_bus *bus)
+ {
+ 	struct pci_dev *dev;
+ 
+@@ -1209,8 +1209,19 @@ struct pci_dev *alloc_pci_dev(void)
+ 
+ 	INIT_LIST_HEAD(&dev->bus_list);
+ 
++	if (bus) {
++		get_device(&bus->dev);
++		dev->bus = bus;
++	}
++
+ 	return dev;
+ }
++EXPORT_SYMBOL(pci_alloc_dev);
++
++struct pci_dev *alloc_pci_dev(void)
++{
++	return pci_alloc_dev(NULL);
++}
+ EXPORT_SYMBOL(alloc_pci_dev);
+ 
+ bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 710067f..682de2b 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -348,7 +348,9 @@ static inline struct pci_dev *pci_physfn(struct pci_dev *dev)
+ 	return dev;
+ }
+ 
+-extern struct pci_dev *alloc_pci_dev(void);
++extern struct pci_dev *pci_alloc_dev(struct pci_bus *bus);
++
++extern __deprecated struct pci_dev *alloc_pci_dev(void);
+ 
+ #define	to_pci_dev(n) container_of(n, struct pci_dev, dev)
+ #define for_each_pci_dev(d) while ((d = pci_get_device(PCI_ANY_ID, PCI_ANY_ID, d)) != NULL)
+-- 
+1.7.7
+
