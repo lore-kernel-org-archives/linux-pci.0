@@ -1,101 +1,272 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:11524 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757225Ab3DZJmS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 26 Apr 2013 05:42:18 -0400
-Message-ID: <517A4BB0.30608@huawei.com>
-Date: Fri, 26 Apr 2013 17:41:04 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from cn.fujitsu.com ([222.73.24.84]:24571 "EHLO song.cn.fujitsu.com"
+	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S1756223Ab3DXDSB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 23 Apr 2013 23:18:01 -0400
+Message-ID: <51774E78.3050400@cn.fujitsu.com>
+Date: Wed, 24 Apr 2013 11:16:08 +0800
+From: Gu Zheng <guz.fnst@cn.fujitsu.com>
 MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>
+To: Jiang Liu <liuj97@gmail.com>
 CC: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Huang Ying <ying.huang@intel.com>,
-	David Bulkow <David.Bulkow@stratus.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Jiang Liu <jiang.liu@huawei.com>
-Subject: Re: [PATCH] PCI: Remove duplicate pci_disable_device for pcie port
-References: <1366940820-15302-1-git-send-email-yinghai@kernel.org> <5179FC4A.4080000@huawei.com> <CAE9FiQXOQJRxqAW4q8G1OsiHAgFqz8=oD6-f-gvizSL0fR60hQ@mail.gmail.com>
-In-Reply-To: <CAE9FiQXOQJRxqAW4q8G1OsiHAgFqz8=oD6-f-gvizSL0fR60hQ@mail.gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	tangchen <tangchen@cn.fujitsu.com>,
+	Lin Feng <linfeng@cn.fujitsu.com>,
+	li guang <lig.fnst@cn.fujitsu.com>,
+	Mike Qiu <qiudayu@linux.vnet.ibm.com>
+Subject: Re: [PATCH v2 2/2] PCI: Convert alloc_pci_dev(void) to pci_alloc_dev(bus)
+ instead
+References: <516FB647.5030203@cn.fujitsu.com> <CAErSpo65ARR_fZwsGCZDJqbPWktHYUkufgPt-2mWwur=nPR1Qg@mail.gmail.com> <51763847.8090808@cn.fujitsu.com> <5176BA7F.7050800@gmail.com>
+In-Reply-To: <5176BA7F.7050800@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2013/4/26 14:20, Yinghai Lu wrote:
-> On Thu, Apr 25, 2013 at 9:02 PM, Yijing Wang <wangyijing@huawei.com> wrote:
->> Hi Yinghai,
->>    We should not remove this additional pci_disable_device().
->> Because we enable pcie port device twice before. The first is pci_enable_brides(),
->> in x86, it was called in pci_assign_unassigned_resources(). The second in pcie_port_device_register().
->> So we should call pci_disable_device() twice for pci_dev->enable_cnt balance.
+On 04/24/2013 12:44 AM, Jiang Liu wrote:
+
+> On 04/23/2013 03:29 PM, Gu Zheng wrote:
+>> From b01e61759f894b651ed3bb39c9fc18e0b66d7cb3 Mon Sep 17 00:00:00 2001
+>> From: GuZheng <guz.fnst@cn.fujitsu.com>
+>> Date: Tue, 23 Apr 2013 14:01:39 +0800
+>> Subject: [PATCH v2 2/2] PCI: Convert alloc_pci_dev(void) to pci_alloc_dev(bus)
+>>  instead
 >>
->> But there is still a problem here. If we unbind a pcie port device pcie port driver, we can not
->> use its child devices again, because this pcie port device was disabled absolutely.
+>> Use the new pci_alloc_dev(bus) to replace the existing using of alloc_pci_dev(void).
+>> And new functions pci_bus_get/put() are introdued to hide pci_bus' reference management.
 >>
->> So I think we should move the second pci_disable_device() to remove.c.
+>> v2:
+>>   Follow Yinghai's suggestions to reduce pci_bus' ref when destroying pci device.
+>>   Add new functions pci_bus_get/put() to hide pci_bus' reference management.
 >>
->> I sent this patch to Bjorn and following is Bjorn reply
->> "And it's not clear to me whether unbinding the
->> pcie port driver should disable the bridge at all.  I think one could
->> argue that the bridge should remain functional even if the driver is
->> unloaded, because the PCI core *enables* the bridge even if the driver
->> is never loaded."
+>> Signed-off-by: Gu Zheng <guz.fnst@cn.fujitsu.com>
+>> ---
+>>  arch/powerpc/kernel/pci_of_scan.c |    3 +--
+>>  arch/sparc/kernel/pci.c           |    3 +--
+>>  drivers/char/agp/alpha-agp.c      |    2 +-
+>>  drivers/char/agp/parisc-agp.c     |    2 +-
+>>  drivers/pci/bus.c                 |   15 +++++++++++++++
+>>  drivers/pci/iov.c                 |    8 +++++---
+>>  drivers/pci/probe.c               |    9 +++------
+>>  drivers/pci/remove.c              |    2 ++
+>>  drivers/scsi/megaraid.c           |    2 +-
+>>  include/linux/pci.h               |    3 +++
+>>  10 files changed, 33 insertions(+), 16 deletions(-)
 >>
->> Yinghai, how do you think about this issue?
+>> diff --git a/arch/powerpc/kernel/pci_of_scan.c b/arch/powerpc/kernel/pci_of_scan.c
+>> index 2a67e9b..24d01c4 100644
+>> --- a/arch/powerpc/kernel/pci_of_scan.c
+>> +++ b/arch/powerpc/kernel/pci_of_scan.c
+>> @@ -128,7 +128,7 @@ struct pci_dev *of_create_pci_dev(struct device_node *node,
+>>  	const char *type;
+>>  	struct pci_slot *slot;
+>>  
+>> -	dev = alloc_pci_dev();
+>> +	dev = pci_alloc_dev(bus);
+>>  	if (!dev)
+>>  		return NULL;
+>>  	type = of_get_property(node, "device_type", NULL);
+>> @@ -137,7 +137,6 @@ struct pci_dev *of_create_pci_dev(struct device_node *node,
+>>  
+>>  	pr_debug("    create device, devfn: %x, type: %s\n", devfn, type);
+>>  
+>> -	dev->bus = bus;
+>>  	dev->dev.of_node = of_node_get(node);
+>>  	dev->dev.parent = bus->bridge;
+>>  	dev->dev.bus = &pci_bus_type;
+>> diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
+>> index baf4366..e5871fb 100644
+>> --- a/arch/sparc/kernel/pci.c
+>> +++ b/arch/sparc/kernel/pci.c
+>> @@ -254,7 +254,7 @@ static struct pci_dev *of_create_pci_dev(struct pci_pbm_info *pbm,
+>>  	const char *type;
+>>  	u32 class;
+>>  
+>> -	dev = alloc_pci_dev();
+>> +	dev = pci_alloc_dev(bus);
+>>  	if (!dev)
+>>  		return NULL;
+>>  
+>> @@ -281,7 +281,6 @@ static struct pci_dev *of_create_pci_dev(struct pci_pbm_info *pbm,
+>>  		printk("    create device, devfn: %x, type: %s\n",
+>>  		       devfn, type);
+>>  
+>> -	dev->bus = bus;
+>>  	dev->sysdata = node;
+>>  	dev->dev.parent = bus->bridge;
+>>  	dev->dev.bus = &pci_bus_type;
+>> diff --git a/drivers/char/agp/alpha-agp.c b/drivers/char/agp/alpha-agp.c
+>> index dd84af4..199b8e9 100644
+>> --- a/drivers/char/agp/alpha-agp.c
+>> +++ b/drivers/char/agp/alpha-agp.c
+>> @@ -174,7 +174,7 @@ alpha_core_agp_setup(void)
+>>  	/*
+>>  	 * Build a fake pci_dev struct
+>>  	 */
+>> -	pdev = alloc_pci_dev();
+>> +	pdev = pci_alloc_dev(NULL);
+>>  	if (!pdev)
+>>  		return -ENOMEM;
+>>  	pdev->vendor = 0xffff;
+>> diff --git a/drivers/char/agp/parisc-agp.c b/drivers/char/agp/parisc-agp.c
+>> index 94821ab..bf5d247 100644
+>> --- a/drivers/char/agp/parisc-agp.c
+>> +++ b/drivers/char/agp/parisc-agp.c
+>> @@ -333,7 +333,7 @@ parisc_agp_setup(void __iomem *ioc_hpa, void __iomem *lba_hpa)
+>>  	struct agp_bridge_data *bridge;
+>>  	int error = 0;
+>>  
+>> -	fake_bridge_dev = alloc_pci_dev();
+>> +	fake_bridge_dev = pci_alloc_dev(NULL);
+>>  	if (!fake_bridge_dev) {
+>>  		error = -ENOMEM;
+>>  		goto fail;
+>> diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+>> index 8647dc6..5eacf78 100644
+>> --- a/drivers/pci/bus.c
+>> +++ b/drivers/pci/bus.c
+>> @@ -18,6 +18,21 @@
+>>  
+>>  #include "pci.h"
+>>  
+>> +struct pci_bus *pci_bus_get(struct pci_bus *bus)
+>> +{
+>> +	if (bus)
+>> +		get_device(&bus->dev);
+>> +	return bus;
+>> +}
+>> +EXPORT_SYMBOL(pci_bus_get);
+>> +
+>> +void pci_bus_put(struct pci_bus *bus)
+>> +{
+>> +	if (bus)
+>> +		put_device(&bus->dev);
+>> +}
+>> +EXPORT_SYMBOL(pci_bus_put);
+>> +
+>>  void pci_add_resource_offset(struct list_head *resources, struct resource *res,
+>>  			     resource_size_t offset)
+>>  {
+> Hi Zheng,
+> 	Could you please help to split addition of pci_bus_get() and pci_bus_put()
+> into a separate patch? I'm working on some patches which depends on this.
+
+Sure, a glad thing that it is also useful to you!:)
+
+> 
+>> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+>> index ee599f2..24134cd 100644
+>> --- a/drivers/pci/iov.c
+>> +++ b/drivers/pci/iov.c
+>> @@ -75,18 +75,20 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
+>>  	struct pci_dev *virtfn;
+>>  	struct resource *res;
+>>  	struct pci_sriov *iov = dev->sriov;
+>> +	struct pci_bus *bus;
+>>  
+>> -	virtfn = alloc_pci_dev();
+>> +	virtfn = pci_alloc_dev(NULL);
+>>  	if (!virtfn)
+>>  		return -ENOMEM;
+>>  
+>>  	mutex_lock(&iov->dev->sriov->lock);
+>> -	virtfn->bus = virtfn_add_bus(dev->bus, virtfn_bus(dev, id));
+>> -	if (!virtfn->bus) {
+>> +	bus = virtfn_add_bus(dev->bus, virtfn_bus(dev, id));
+>> +	if (!bus) {
+>>  		kfree(virtfn);
+>>  		mutex_unlock(&iov->dev->sriov->lock);
+>>  		return -ENOMEM;
+>>  	}
+>> +	virtfn->bus = pci_bus_get(bus);
+>>  	virtfn->devfn = virtfn_devfn(dev, id);
+>>  	virtfn->vendor = dev->vendor;
+>>  	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_DID, &virtfn->device);
+>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+>> index 0bb92e4..9d37d46 100644
+>> --- a/drivers/pci/probe.c
+>> +++ b/drivers/pci/probe.c
+>> @@ -1209,10 +1209,8 @@ struct pci_dev *pci_alloc_dev(struct pci_bus *bus)
+>>  
+>>  	INIT_LIST_HEAD(&dev->bus_list);
+>>  
+>> -	if (bus) {
+>> -		get_device(&bus->dev);
+>> -		dev->bus = bus;
+>> -	}
+>> +	if (bus)
+> How about remove above redundant check?
+
+Thanks for your review.
+Yeah, the pre-check seems redundant, but I think it can avoid the meaningless calling
+pci_bus_get() and setting dev->bus.
+
+Best regards,
+Gu
+
+> 
+>> +		dev->bus = pci_bus_get(bus);
+>>  
+>>  	return dev;
+>>  }
+>> @@ -1272,11 +1270,10 @@ static struct pci_dev *pci_scan_device(struct pci_bus *bus, int devfn)
+>>  	if (!pci_bus_read_dev_vendor_id(bus, devfn, &l, 60*1000))
+>>  		return NULL;
+>>  
+>> -	dev = alloc_pci_dev();
+>> +	dev = pci_alloc_dev(bus);
+>>  	if (!dev)
+>>  		return NULL;
+>>  
+>> -	dev->bus = bus;
+>>  	dev->devfn = devfn;
+>>  	dev->vendor = l & 0xffff;
+>>  	dev->device = (l >> 16) & 0xffff;
+>> diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+>> index cc875e6..fffdee8 100644
+>> --- a/drivers/pci/remove.c
+>> +++ b/drivers/pci/remove.c
+>> @@ -38,6 +38,8 @@ static void pci_destroy_dev(struct pci_dev *dev)
+>>  	list_del(&dev->bus_list);
+>>  	up_write(&pci_bus_sem);
+>>  
+>> +	pci_bus_put(dev->bus);
+>> +
+>>  	pci_free_resources(dev);
+>>  	put_device(&dev->dev);
+>>  }
+>> diff --git a/drivers/scsi/megaraid.c b/drivers/scsi/megaraid.c
+>> index 9504ec0..e1660ca 100644
+>> --- a/drivers/scsi/megaraid.c
+>> +++ b/drivers/scsi/megaraid.c
+>> @@ -2025,7 +2025,7 @@ megaraid_abort_and_reset(adapter_t *adapter, Scsi_Cmnd *cmd, int aor)
+>>  static inline int
+>>  make_local_pdev(adapter_t *adapter, struct pci_dev **pdev)
+>>  {
+>> -	*pdev = alloc_pci_dev();
+>> +	*pdev = pci_alloc_dev(NULL);
+>>  
+>>  	if( *pdev == NULL ) return -1;
+>>  
+>> diff --git a/include/linux/pci.h b/include/linux/pci.h
+>> index 682de2b..c5f245d 100644
+>> --- a/include/linux/pci.h
+>> +++ b/include/linux/pci.h
+>> @@ -1002,6 +1002,9 @@ int pci_request_selected_regions_exclusive(struct pci_dev *, int, const char *);
+>>  void pci_release_selected_regions(struct pci_dev *, int);
+>>  
+>>  /* drivers/pci/bus.c */
+>> +extern struct pci_bus *pci_bus_get(struct pci_bus *bus);
+>> +extern void pci_bus_put(struct pci_bus *bus);
+>> +
+>>  void pci_add_resource(struct list_head *resources, struct resource *res);
+>>  void pci_add_resource_offset(struct list_head *resources, struct resource *res,
+>>  			     resource_size_t offset);
+>>
+> 
 > 
 
-Hi Yinghai,
-   Thanks for your comment!
-We enable_bridges in PCI core code, so I think we should disable device in remove.c(PCI core level),
-another reason is call second pci_disable_device() in pci_stop_bus_device() is safe, because all child device
-has been stopped(unbind driver already).
-
-> 1. we always enable bridges after assign unassigned resource for boot path
-> and hotplug path.
-> we should never call disable for that.
-
-I agree "we should never call second disable" unless we stop this sub pci-tree().
-
-Maybe the attached patch last letter is not safe enough, should wait pci bridge complete
-to stop itself, then call the second pci_disable_device().
-
-> 
-> 2. driver should be keep enable/disable during probe/remove
-
-I agree, use enable/disable balance is better.
-
-> 
-> looks like we need to rethink pci enable bridge.
-> 
-> if we want to enable one pci device, we should go up  to enable all bridges till
-> root.
-
-Yes, now we enable pci bridges from root to end. like in pci_assign_unassigned_resources().
-
-> 
-> let if we disable one pci device, we need to go up to disable bridge if its all
-> pci device children get disabled.
-
-Yes, This is what I think too. It seems like we only can do this in remove.c
-
-> 
-> if there is pci driver is bound with bridge device, those
-> disable/enable bridge should be skipped.
-
-Hmm, currently system achieve this by checking pci_dev->enable_cnt.
-
-> 
-> Thanks
-> 
-> Yinghai
-> 
-> .
-> 
-
-
--- 
-Thanks!
-Yijing
 
