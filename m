@@ -1,72 +1,85 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.gentoo.org ([140.211.166.183]:54546 "EHLO smtp.gentoo.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752969Ab3DAUUq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 1 Apr 2013 16:20:46 -0400
-From: Mike Frysinger <vapier@gentoo.org>
-To: Martin Mares <mj@ucw.cz>
-Subject: Re: [PCIUTILS] Re: [PATCH] update-pciids: fix PCI_COMPRESSED_IDS value when zlib is disabled
-Date: Mon, 1 Apr 2013 16:20:55 -0400
-Cc: linux-pci@vger.kernel.org
-References: <1328025411-8281-1-git-send-email-vapier@gentoo.org> <mj+md-20130401.195202.10741.albireo@ucw.cz>
-In-Reply-To: <mj+md-20130401.195202.10741.albireo@ucw.cz>
+Received: from mail-oa0-f43.google.com ([209.85.219.43]:49053 "EHLO
+	mail-oa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756527Ab3DXRs0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Apr 2013 13:48:26 -0400
+Received: by mail-oa0-f43.google.com with SMTP id k7so1993731oag.2
+        for <linux-pci@vger.kernel.org>; Wed, 24 Apr 2013 10:48:25 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1665534.WG5yYqqhdG";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <201304011620.56252.vapier@gentoo.org>
+In-Reply-To: <20130422230012.32621.15224.stgit@bhelgaas-glaptop>
+References: <20130422230012.32621.15224.stgit@bhelgaas-glaptop>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 24 Apr 2013 11:48:05 -0600
+Message-ID: <CAErSpo7L97WSh_0QdJ6x5eR-+Z6CC=KbcL4UhE6mZD_y0ofM2g@mail.gmail.com>
+Subject: Re: [PATCH v4 00/22] PCI: Cache MSI/MSI-X capability offsets, other cleanup
+To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Cc: Gavin Shan <shangw@linux.vnet.ibm.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Jeremy Fitzhardinge <jeremy@goop.org>,
+	xen-devel <xen-devel@lists.xensource.com>,
+	Adam Radford <aradford@gmail.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---nextPart1665534.WG5yYqqhdG
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+On Mon, Apr 22, 2013 at 5:10 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> This supercedes Gavin's "[PATCH v3 0/5] Retrieve MSI/MSIX cap struct for
+> once on setup" series from Apr 4, 2013.
+>
+> It includes Gavin's patches (there were actually only 4 in v3, not 5),
+> together with more MSI-related cleanup that I did.
+>
+> There's also a possible bug-fix in xen_initdom_setup_msi_irqs(): previously
+> it ignored the "Table Offset" bits in the MSI-X capability.  I don't know
+> enough about Xen to know how it uses struct physdev_map_pirq, but it seems
+> possible that we should pay attention to those bits.
+>
+> ---
+>
+> Bjorn Helgaas (18):
+>       [SCSI] megaraid_sas: Use correct #define for MSI-X capability
+>       PCI: Use u8, not int, for PM capability offset
+>       PCI: Clean up MSI/MSI-X capability #defines
+>       PCI: Use cached MSI/MSI-X offsets from dev, not from msi_desc
+>       PCI: Drop msi_control_reg() macro and use PCI_MSI_FLAGS directly
+>       PCI: Drop msi_lower_address_reg() and msi_upper_address_reg() macros
+>       PCI: Drop msi_data_reg() macro
+>       PCI: Drop is_64bit_address() and is_mask_bit_support() macros
+>       PCI: Drop msix_table_offset_reg() and msix_pba_offset_reg() macros
+>       PCI: Use msix_table_size() directly, drop multi_msix_capable()
+>       PCI: Drop msi_mask_reg() and remove drivers/pci/msi.h
+>       PCI: Use PCI_MSIX_TABLE_BIR, not PCI_MSIX_FLAGS_BIRMASK
+>       PCI: Remove "extern" from function declarations
+>       xen/pci: Pay attention to PCI_MSIX_TABLE_OFFSET
+>       xen/pci: Use PCI_MSIX_TABLE_BIR, not PCI_MSIX_FLAGS_BIRMASK
+>       xen/pci: Used cached MSI-X capability offset
+>       vfio-pci: Use PCI_MSIX_TABLE_BIR, not PCI_MSIX_FLAGS_BIRMASK
+>       vfio-pci: Use cached MSI/MSI-X capabilities
+>
+> Gavin Shan (4):
+>       PCI: Cache MSI/MSI-X capability offsets in struct pci_dev
+>       PCI: Remove MSI/MSI-X cap check in pci_msi_check_device()
+>       PCI: Use cached MSI cap while enabling MSI interrupts
+>       PCI: Use cached MSI-X cap while enabling MSI-X
+>
+>
+>  arch/x86/pci/xen.c                        |    9 +
+>  drivers/pci/msi.c                         |  176 +++++++++++++----------------
+>  drivers/pci/msi.h                         |   24 ----
+>  drivers/scsi/megaraid/megaraid_sas.h      |    3
+>  drivers/scsi/megaraid/megaraid_sas_base.c |    4 -
+>  drivers/vfio/pci/vfio_pci.c               |   10 +-
+>  include/linux/msi.h                       |   23 ++--
+>  include/linux/pci.h                       |    5 -
+>  include/uapi/linux/pci_regs.h             |   30 +++--
+>  9 files changed, 123 insertions(+), 161 deletions(-)
+>  delete mode 100644 drivers/pci/msi.h
 
-On Monday 01 April 2013 15:52:28 Martin Mares wrote:
-> > If you build with zlib disabled, then PCI_COMPRESSED_IDS is not defined,
-> >=20
-> > which generates the line in the update script:
-> > 	PCI_COMPRESSED_IDS=3D
-> >=20
-> > which in turn causes the update script to warn:
-> > 	bash: [: : integer expression expected
-> >=20
-> > So default it to 0 to avoid that logic.
->=20
-> I hope that this is already fixed in the current tree, could you please
-> check?
+With the exception of the xen/pci patches, I merged these to my "next"
+branch for v3.10.  Let me know if you see any issues.
 
-yeah, i think this commit addressed this in a different way:
+I can merge the xen patches too, if somebody acks them.
 
-commit 4339115006b225c8e33b7427cf5dba6b3831a625
-Author: Ville Skytt=E4 <ville.skytta@iki.fi>
-Date:   Mon May 21 00:35:19 2012 +0300
-
-    Fix syntax error when PCI_COMPRESSED_IDS is empty.
-=2Dmike
-
---nextPart1665534.WG5yYqqhdG
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.17 (GNU/Linux)
-
-iQIcBAABAgAGBQJRWewoAAoJEEFjO5/oN/WB4FYP/2JrAo+xzKGpjZw9VY3fkOok
-i7g1eKxex1saqntyAg4FZgh1xxLyEd1THlKOLLqpjGgE5BII1vnWcXgnCGgLkM7E
-X8bxWLW2ir1JgS/ab/s8GB+eNQSuWYIpBFH6ZMrnJG+yHw+nlS9Blr+3yK3xLwRC
-wczai3lX2I8gSXGG+r7Ro9wArrkP4+bUDWfDiL99VQPFD0K3CU65+s9WZS3dCtiO
-yLez9ZCXeMHxHjmFk8sSOcpes2lBGi3GqJ1cM7DMHr3dY8b+Zb/PkmVNjRal+BVv
-iEt1r9Qp7KXkhs2aNVndqHjfaZSUMSh/WN9bokumm8uO8MbSVzIe9rBD9Dns4rGk
-1yTCT8zyXYYg5YUTDoWmdkcAvAUVQ3ILjcyy3WF5YOo6ThPPqEhgIfaEXMbv7KtL
-SLlCefmUYmF9+g/eUBEgpOmD91kJXzEkbOCcGb58mfT7zrOfJhaXFqMjx6ugXaHU
-rAtPj+9O1cN4ijhh52CL6fzRtSD3cohcFGeuVQHTMXBoWZhE0V2w1lgiZIMvHnSD
-jxmyTuYdKpxLTYvJmP+c48bz3DWJsV2NMqr+9ABLVkHqzqCQG3QochPwtn/kLfFk
-SesADPXO2uo6qPGCLnLqUwFaBPE3p1fUoOCevVzCQ3zmmrqdH/kZfeuhQHfT9Ape
-Hd8d0SavWsTLdQZBZukU
-=HG2o
------END PGP SIGNATURE-----
-
---nextPart1665534.WG5yYqqhdG--
+Bjorn
