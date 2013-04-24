@@ -1,71 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f177.google.com ([209.85.214.177]:61636 "EHLO
-	mail-ob0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753547Ab3DOP1m (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 15 Apr 2013 11:27:42 -0400
-Received: by mail-ob0-f177.google.com with SMTP id 16so2126305obc.22
-        for <linux-pci@vger.kernel.org>; Mon, 15 Apr 2013 08:27:41 -0700 (PDT)
+Received: from relay3.sgi.com ([192.48.152.1]:49617 "EHLO relay.sgi.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1756574Ab3DXQ5A (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 24 Apr 2013 12:57:00 -0400
+Message-ID: <51780EDA.3000003@sgi.com>
+Date: Wed, 24 Apr 2013 09:56:58 -0700
+From: Mike Travis <travis@sgi.com>
 MIME-Version: 1.0
-In-Reply-To: <1366009135-19088-1-git-send-email-wangyijing@huawei.com>
-References: <1366009135-19088-1-git-send-email-wangyijing@huawei.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 15 Apr 2013 09:27:21 -0600
-Message-ID: <CAErSpo7dgFR8a7Wee4CE7Rj+nZg_-+8uNOFq__d8EzY+gHQHGQ@mail.gmail.com>
-Subject: Re: [PATCH -v2 1/2] PCI: decrease pci_dev->enable_cnt when no pcie
- capability found
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Hanjun Guo <guohanjun@huawei.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Shengzhou Liu <Shengzhou.Liu@freescale.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Huang Ying <ying.huang@intel.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Bian LuLu <helianthus.lu@gmail.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [RFC] The meaning of local_cpulist and local_cpus
+References: <CAG82n_ni9ZAThGbMfqqObnz7QyQpH18G4hYBLt+BdeRHPE6EBg@mail.gmail.com> <CAErSpo5VaiuH+WT4RdM9yU9AHMkUKzATMiNzhixRU04_aZusBg@mail.gmail.com>
+In-Reply-To: <CAErSpo5VaiuH+WT4RdM9yU9AHMkUKzATMiNzhixRU04_aZusBg@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Rafael, Huang]
 
-On Mon, Apr 15, 2013 at 12:58 AM, Yijing Wang <wangyijing@huawei.com> wrote:
-> We should decrease dev->enable_cnt when no pcie port capability
-> found for balance.
->
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> Cc: Jiang Liu <jiang.liu@huawei.com>
-> Cc: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
-> Cc: Shengzhou Liu <Shengzhou.Liu@freescale.com>
-> ---
->  drivers/pci/pcie/portdrv_core.c |    4 ++--
->  1 files changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-> index 31063ac..aef3fac 100644
-> --- a/drivers/pci/pcie/portdrv_core.c
-> +++ b/drivers/pci/pcie/portdrv_core.c
-> @@ -369,8 +369,8 @@ int pcie_port_device_register(struct pci_dev *dev)
->
->         /* Get and check PCI Express port services */
->         capabilities = get_port_device_capability(dev);
-> -       if (!capabilities)
-> -               return 0;
-> +       if (!capabilities)
-> +               goto error_disable;
->
->         pci_set_master(dev);
->         /*
 
-Does this fix a problem you observed?  If so, please refer to it in
-your changelog.
+On 4/24/2013 9:48 AM, Bjorn Helgaas wrote:
+> [+cc linux-pci, Mike]
+> 
+> On Wed, Apr 24, 2013 at 4:06 AM, Bian LuLu <helianthus.lu@gmail.com> wrote:
+>> Hi all,
+>>
+>> Recently, i read some codes of PCI portions. I think
+>> local_cpulist is a list about one kind of CPU and
+>> local_cpus is a mask of CPU. But i am not sure when
+>> and how i should use these two parameters.
+>>
+>> See http://lxr.linux.no/linux+v3.5.4/drivers/pci/pci-sysfs.c#L390 for
+>> details.
+>>
+>> Would anyone please give me some suggestions?
+>> Thanks in advance ;-)
+> 
+> I don't know off-hand, but maybe Mike or somebody on linux-pci does.
+> It looks like Mike added local_cpulist with 39106dcf85.
+> 
 
-I think this patch is incorrect because pcie_portdrv_probe() will
-return 0 (success) with the device disabled.  When we call
-pcie_portdrv_remove(), we will attempt to disable the device again,
-even though it's already disabled.
+It primarily comes into play when you have a large # of cpus.
+Here's the difference on a system that has 1024 cpu threads:
 
-I don't know whether it is desirable for pcie_portdrv_probe() to
-succeed when no capabilities are available or not.  Maybe somebody
-else has an opinion.
+harp31-sys:/sys/devices/system/node/node20 # cat cpulist
+160-167,672-679
+harp31-sys:/sys/devices/system/node/node20 # cat cpumap
+00000000,00000000,00000000,00000000,00000000,00000000,00000000,
+00000000,00000000,00000000,000000ff,00000000,00000000,00000000,
+00000000,00000000,00000000,00000000,00000000,00000000,00000000,
+00000000,00000000,00000000,00000000,00000000,000000ff,00000000,
+00000000,00000000,00000000,00000000
 
-Bjorn
+Which is easier to interpret?  :)
+
+But there are some older user side utilities that still
+use the mask format.
