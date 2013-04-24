@@ -1,114 +1,93 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ozlabs.org ([203.10.76.45]:59181 "EHLO ozlabs.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754933Ab3DODuX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 14 Apr 2013 23:50:23 -0400
-From: Rusty Russell <rusty@rustcorp.com.au>
-To: Veaceslav Falico <vfalico@redhat.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	gregkh@linuxfoundation.org, bhelgaas@google.com
-Subject: Re: [PATCH] module: add kset_obj_exists() and use it
-In-Reply-To: <20130411095537.GC21320@redhat.com>
-References: <1365506529-8396-1-git-send-email-vfalico@redhat.com> <87y5cq6ei9.fsf@rustcorp.com.au> <20130411095537.GC21320@redhat.com>
-Date: Mon, 15 Apr 2013 11:56:03 +0930
-Message-ID: <87vc7o8r7o.fsf@rustcorp.com.au>
+Received: from mail-ia0-f180.google.com ([209.85.210.180]:54700 "EHLO
+	mail-ia0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752975Ab3DXRIB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Apr 2013 13:08:01 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5AA430FFE4486C448003201AC83BC85E01F83F13@EXHQ.corp.stratus.com>
+References: <CAE9FiQVe95hT2mv4G+v_FMk5_qQDSg0e0fPdZdoe8Cgam70EnA@mail.gmail.com>
+	<5AA430FFE4486C448003201AC83BC85E03DEA379@EXHQ.corp.stratus.com>
+	<5AA430FFE4486C448003201AC83BC85E01F83F13@EXHQ.corp.stratus.com>
+Date: Wed, 24 Apr 2013 10:08:00 -0700
+Message-ID: <CAE9FiQUdGZYonHqoh=2D3N=hJVKgyWB9XpgZ0+71-8JyfHZD8g@mail.gmail.com>
+Subject: Re: USB PCI quirk issue
+From: Yinghai Lu <yinghai@kernel.org>
+To: "Bulkow, David" <David.Bulkow@stratus.com>
+Cc: Sarah Sharp <sarah.a.sharp@linux.intel.com>,
+	"Lawrence, Joe" <Joe.Lawrence@stratus.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Veaceslav Falico <vfalico@redhat.com> writes:
-> On Wed, Apr 10, 2013 at 04:47:34PM +0930, Rusty Russell wrote:
->>That's a bug.  We should be cleaning up sysfs before we unlike the
->>removed module from the list.
->>
->>Because the same thing applies to ddebug info, which is also keyed by
->>module name.
->>
->>Something like this (untested!):
->
-> Sorry for the late response - I wanted to test it for a longer time.
->
-> Your patch works flawlessly and fixes this race, with just a small
-> addition, cause otherwise we could BUG() in show_initstate().
->
-> Can you apply this patch or should I (re-)send it somehow?
->
-> Thank you!
->
-> diff --git a/kernel/module.c b/kernel/module.c
-> index d0afe23..8be6e97 100644
-> --- a/kernel/module.c
-> +++ b/kernel/module.c
-> @@ -1063,6 +1063,9 @@ static ssize_t show_initstate(struct module_attribute *mattr,
->   	case MODULE_STATE_GOING:
->   		state = "going";
->   		break;
-> +	case MODULE_STATE_UNFORMED:
-> +		state = "unformed";
-> +		break;
->   	default:
->   		BUG();
->   	}
+[Adding Kenji]
 
-Prefer to remove from sysfs before marking it unformed, like so:
+On Wed, Apr 24, 2013 at 6:25 AM, Bulkow, David <David.Bulkow@stratus.com> wrote:
+> By relocating the call to the quirk code, the resource problem is gone.
+> Can we move forward on this change?
 
-diff --git a/kernel/module.c b/kernel/module.c
-index 2468fda..2e7189f 100644
---- a/kernel/module.c
-+++ b/kernel/module.c
-@@ -1862,12 +1862,12 @@ static void free_module(struct module *mod)
- {
- 	trace_module_free(mod);
- 
--	/* We leave it in list to prevent duplicate loads while we clean
--	 * up sysfs, ddebug and any other external exposure. */
--	mod->state = MODULE_STATE_UNFORMED;
--
- 	mod_sysfs_teardown(mod);
- 
-+	/* We leave it in list to prevent duplicate loads, but make sure
-+	 * that noone uses it while it's being deconstructed. */
-+	mod->state = MODULE_STATE_UNFORMED;
-+
- 	/* Remove dynamic debug info */
- 	ddebug_remove_module(mod->name);
- 
-Here's the updated total patch:
+ok, will prepare one complete patch for that.
 
-diff --git a/kernel/module.c b/kernel/module.c
-index 69d2600..2e7189f 100644
---- a/kernel/module.c
-+++ b/kernel/module.c
-@@ -1862,12 +1862,12 @@ static void free_module(struct module *mod)
- {
- 	trace_module_free(mod);
- 
--	/* Delete from various lists */
--	mutex_lock(&module_mutex);
--	stop_machine(__unlink_module, mod, NULL);
--	mutex_unlock(&module_mutex);
- 	mod_sysfs_teardown(mod);
- 
-+	/* We leave it in list to prevent duplicate loads, but make sure
-+	 * that noone uses it while it's being deconstructed. */
-+	mod->state = MODULE_STATE_UNFORMED;
-+
- 	/* Remove dynamic debug info */
- 	ddebug_remove_module(mod->name);
- 
-@@ -1880,6 +1880,11 @@ static void free_module(struct module *mod)
- 	/* Free any allocated parameters. */
- 	destroy_params(mod->kp, mod->num_kp);
- 
-+	/* Now we can delete it from the lists */
-+	mutex_lock(&module_mutex);
-+	stop_machine(__unlink_module, mod, NULL);
-+	mutex_unlock(&module_mutex);
-+
- 	/* This may be NULL, but that's OK */
- 	unset_module_init_ro_nx(mod);
- 	module_free(mod, mod->module_init);
+>
+> The enable_cnt issue is now only associated with bridges managed by
+> pcieport.
+> For each bridge pci_disable_device() is getting called twice during
+> hot-remove.
+> This is happening because both pcie_portdrv_remove() and
+> pcie_port_device_remove()
+> call pci_disable_device().
+>
+> static void pcie_portdrv_remove(struct pci_dev *dev)
+> {
+>         pcie_port_device_remove(dev);
+>         pci_disable_device(dev);
+> }
+>
+> and
+>
+> void pcie_port_device_remove(struct pci_dev *dev)
+> {
+>         device_for_each_child(&dev->dev, NULL, remove_iter);
+>         cleanup_service_irqs(dev);
+>         pci_disable_device(dev);
+> }
+>
+> There are no ill effects from this so far but the warnings are
+> not likely to be received well by customers.
 
-Thanks,
-Rusty.
+Thanks for digging that out.
+
+that extra pci_disable_device in pcie_port_device_remove() was added by
+---
+commit dc5351784eb36f1fec4efa88e01581be72c0b711
+Author: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+Date:   Wed Nov 25 21:04:00 2009 +0900
+
+    PCI: portdrv: cleanup service irqs initialization
+
+    This patch cleans up the service irqs initialization as follows:
+
+     - Remove 'irq_mode' field in pcie_port_data and related definitions,
+       which is not needed because we can get the same information from
+       'is_msix', 'is_msi' and 'pin' fields in struct pci_dev.
+
+     - Change the name of 'vectors' argument of assign_interrupt_mode() to
+       'irqs' because it holds irq numbers actually. People might confuse
+       it with CPU vector or MSI/MSI-X vector.
+
+     - Change function name assign_interrupt_mode() to init_service_irqs()
+       becasuse we no longer have 'irq_mode' data structure, and new name
+       is more straightforward (IMO).
+---
+
+We should remove extra one in pcie_portdrv_remove.
+
+Can you please prepare patch that delete that line in pcie_portdrv_remove() ?
+
+Thanks
+
+Yinghai
