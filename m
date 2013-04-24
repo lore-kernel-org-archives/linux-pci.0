@@ -1,68 +1,125 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mho-03-ewr.mailhop.org ([204.13.248.66]:33757 "EHLO
-	mho-01-ewr.mailhop.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753521Ab3DOQi7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 15 Apr 2013 12:38:59 -0400
-Date: Mon, 15 Apr 2013 12:38:45 -0400
-From: Jason Cooper <jason@lakedaemon.net>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Russell King <linux@arm.linux.org.uk>,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Arnd Bergmann <arnd@arndb.de>, Olof Johansson <olof@lixom.net>,
-	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Andrew Murray <andrew.murray@arm.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Mitch Bradley <wmb@firmworks.com>
-Subject: Re: [PATCHv8 00/19] PCIe support for the Armada 370 and Armada XP
- SoCs
-Message-ID: <20130415163845.GK28693@titan.lakedaemon.net>
-References: <1365541601-14095-1-git-send-email-thomas.petazzoni@free-electrons.com>
- <20130415154620.GE28693@titan.lakedaemon.net>
- <20130415183623.04797912@skate>
+Received: from mga02.intel.com ([134.134.136.20]:59192 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758403Ab3DXVfT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 24 Apr 2013 17:35:19 -0400
+Date: Wed, 24 Apr 2013 14:35:04 -0700
+From: Greg Rose <gregory.v.rose@intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Alexander Duyck <alexander.h.duyck@intel.com>,
+	"Kirsher, Jeffrey T" <jeffrey.t.kirsher@intel.com>,
+	David Miller <davem@davemloft.net>,
+	netdev <netdev@vger.kernel.org>, <gospo@redhat.com>,
+	<sassmann@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [net-next 08/14] pci: Add SRIOV helper function to determine if
+ VFs are assigned to guest
+Message-ID: <20130424143504.00007cd3@unknown>
+In-Reply-To: <CAErSpo58vRW+QoHMTzo4vNi4n8Z2RhG43rBesTUJS-4HRwfd1w@mail.gmail.com>
+References: <1366451353-24714-1-git-send-email-jeffrey.t.kirsher@intel.com>
+	<1366451353-24714-9-git-send-email-jeffrey.t.kirsher@intel.com>
+	<1366515088.2209.15.camel@jtkirshe-mobl>
+	<CAErSpo4D4rn4G56+YT4Ja-S4cjnJ6svBaH3v+_n=cmS5CooC+g@mail.gmail.com>
+	<5175B0A9.7070100@intel.com>
+	<20130423125101.00005bb7@unknown>
+	<CAErSpo58vRW+QoHMTzo4vNi4n8Z2RhG43rBesTUJS-4HRwfd1w@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130415183623.04797912@skate>
+Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 15, 2013 at 06:36:23PM +0200, Thomas Petazzoni wrote:
-> Dear Jason Cooper,
-> 
-> On Mon, 15 Apr 2013 11:46:20 -0400, Jason Cooper wrote:
-> 
-> > >  * Patches 1-5 are awaiting a formal Acked-by from the Device Tree
-> > >    maintainers. Patches 1-3 are the new version of the OF PCI range
-> > >    parsing functions from Andrew Murray, which he worked on after the
-> > >    comments from Rob Herring. Patches 4 and 5 are much more trivial
-> > >    and have been around since many versions of this series.
-> > 
-> > Applied to mvebu/drivers
-> 
-> Patches 1-3 have a newer version that has been posted by Andrew Murray
-> recently, see:
-> 
-> Subject: [PATCH v6 0/3] of/pci: Provide common support for PCI DT
-> parsing Date: Thu, 11 Apr 2013 16:26:06 +0100
-> Message-Id: <1365693969-23907-1-git-send-email-Andrew.Murray@arm.com>
-> 
-> http://lists.infradead.org/pipermail/linux-arm-kernel/2013-April/162558.html
-> 
-> This ones are more recent than the v5 I originally used as a base for
-> my PCIe v8. I can resend a v9 of my PCIe patch set based on the v6 of
-> Andrew, or you can directly use PATCH 1,2,3 from Andrew series to
-> replace PATCH 1,2,3 from my series. Andrew v6 has quite a number of
-> changes compared to v5, so I really recommend using those ones.
+On Wed, 24 Apr 2013 14:10:38 -0600
+Bjorn Helgaas <bhelgaas@google.com> wrote:
 
-No need to mess with v9, I'll pull AndrewM's v6.
+> On Tue, Apr 23, 2013 at 1:51 PM, Greg Rose <gregory.v.rose@intel.com>
+> wrote:
+> > On Mon, 22 Apr 2013 14:50:33 -0700
+> > Alexander Duyck <alexander.h.duyck@intel.com> wrote:
+> >
+> >> On 04/22/2013 01:09 PM, Bjorn Helgaas wrote:
+> >> > On Sat, Apr 20, 2013 at 9:31 PM, Jeff Kirsher
+> >> > <jeffrey.t.kirsher@intel.com> wrote:
+> >> >> On Sat, 2013-04-20 at 02:49 -0700, Jeff Kirsher wrote:
+> >> >>> From: Alexander Duyck <alexander.h.duyck@intel.com>
+> >> >>>
+> >> >>> This function is meant to add a helper function that will
+> >> >>> determine if a PF has any VFs that are currently assigned to a
+> >> >>> guest.  We currently have been implementing this function per
+> >> >>> driver, and going forward I would like to avoid that by making
+> >> >>> this function generic and using this helper.
+> >> >>>
+> >> >>> Signed-off-by: Alexander Duyck <alexander.h.duyck@intel.com>
+> >> >>> Signed-off-by: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+> >> >> Adding linux-pci mailing list and Bjorn to the CC.
+> >> >>
+> >> >> Bjorn- David Miller needs a signoff by PCI maintainer.
+> >> >>
+> >> >>> ---
+> >> >>>  drivers/pci/iov.c   | 41
+> >> >>> +++++++++++++++++++++++++++++++++++++++++ include/linux/pci.h |
+> >> >>> 5 +++++ 2 files changed, 46 insertions(+)
+> >> >>>
+> >> >>> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+> >> >>> index ee599f2..fd99720 100644
+> >> >>> --- a/drivers/pci/iov.c
+> >> >>> +++ b/drivers/pci/iov.c
+> >> >>> @@ -729,6 +729,47 @@ int pci_num_vf(struct pci_dev *dev)
+> >> >>>  EXPORT_SYMBOL_GPL(pci_num_vf);
+> >> >>>
+> >> >>>  /**
+> >> >>> + * pci_vfs_assigned - returns number of VFs are assigned to a
+> >> >>> guest
+> >> >>> + * @dev: the PCI device
+> >> >>> + *
+> >> >>> + * Returns number of VFs belonging to this device that are
+> >> >>> assigned to a guest.
+> >> >>> + * If device is not a physical function returns -ENODEV.
+> >> >>> + */
+> >> >>> +int pci_vfs_assigned(struct pci_dev *dev)
+> >> > I guess the idea here is to replace be_find_vfs(),
+> >> > igb_vfs_are_assigned(), ixgbe_vfs_are_assigned(), etc.  It does
+> >> > seem good to reduce duplicated code.
+> >>
+> >> The general idea was just to remove duplicate code.  As is we have
+> >> a couple more drivers on the way that would end up needing a
+> >> similar function.
+> >>
+> >> > I'm trying to figure out why this is safe -- there's no explicit
+> >> > synchronization between the iteration through PCI devices looking
+> >> > for matching VFs and the device assignment/deassignment paths
+> >> > that set or clear PCI_DEV_FLAGS_ASSIGNED, so on the face of it,
+> >> > it looks like things could change between calling
+> >> > pci_vfs_assigned() and using the result to make a decision.
+> >> >
+> >> > Most of the calls would be in .remove() functions, so maybe
+> >> > there's some sort of synchronization in that path that  makes
+> >> > this safe.
+> >> >
+> >> > Bjorn
+> >>
+> >> I'm assuming this will be used in regions that are somehow
+> >> protected since the main spots where this might be called would be
+> >> probe, remove, or when updating the number of VFs.  From what I
+> >> can tell in the Xen case there is a driver stub that is loaded
+> >> that sets the flag so that is covered by probe/remove.  I don't
+> >> know about the KVM case.
+> >
+> > KVM should be fine.  Setting/clearing the flag occurs while a
+> > device is being assigned to or removed from a VM - presumably
+> > device assignment is already safe against race conditions.  I'd
+> > find it hard to believe that it's not.  Code is
+> > in ../virt/assigned_dev.c and ../virt/iommu.c.
+> 
+> That's not a very convincing argument :)
 
-thx,
+It's been a long time since I worked on that code.  Sorry, it's the
+best I've got, my memory gets real hazy on code that I haven't touched
+in a year or two.  But then that's part of my argument - if it were
+subject to race conditions it seems like someone would have run into it
+in the last couple of years.
 
-Jason.
+But my apologies for the less than convincing argument!
+
+:)
+
+- Greg
