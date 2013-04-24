@@ -1,83 +1,117 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:20487 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760149Ab3D3LJ5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 30 Apr 2013 07:09:57 -0400
-Date: Tue, 30 Apr 2013 13:11:11 +0200
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: x86@kernel.org, linux-pci@vger.kernel.org,
-	Suresh Siddha <suresh.b.siddha@intel.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	Jan Beulich <JBeulich@suse.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH v2 -tip/apic 2/2] x86/MSI: Allocate as many multiple-MSIs as
- requested
-Message-ID: <096b258a86c1cb46e4f3084f1fbcf37c7859bb15.1367319112.git.agordeev@redhat.com>
-References: <cover.1367319112.git.agordeev@redhat.com>
+Received: from mail-oa0-f44.google.com ([209.85.219.44]:61640 "EHLO
+	mail-oa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757749Ab3DXUK7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Apr 2013 16:10:59 -0400
+Received: by mail-oa0-f44.google.com with SMTP id h1so2161970oag.17
+        for <linux-pci@vger.kernel.org>; Wed, 24 Apr 2013 13:10:59 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <517E3BC102000078000D1793@nat28.tlf.novell.com>
+In-Reply-To: <20130423125101.00005bb7@unknown>
+References: <1366451353-24714-1-git-send-email-jeffrey.t.kirsher@intel.com>
+ <1366451353-24714-9-git-send-email-jeffrey.t.kirsher@intel.com>
+ <1366515088.2209.15.camel@jtkirshe-mobl> <CAErSpo4D4rn4G56+YT4Ja-S4cjnJ6svBaH3v+_n=cmS5CooC+g@mail.gmail.com>
+ <5175B0A9.7070100@intel.com> <20130423125101.00005bb7@unknown>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 24 Apr 2013 14:10:38 -0600
+Message-ID: <CAErSpo58vRW+QoHMTzo4vNi4n8Z2RhG43rBesTUJS-4HRwfd1w@mail.gmail.com>
+Subject: Re: [net-next 08/14] pci: Add SRIOV helper function to determine if
+ VFs are assigned to guest
+To: Greg Rose <gregory.v.rose@intel.com>
+Cc: Alexander Duyck <alexander.h.duyck@intel.com>,
+	"Kirsher, Jeffrey T" <jeffrey.t.kirsher@intel.com>,
+	David Miller <davem@davemloft.net>,
+	netdev <netdev@vger.kernel.org>, gospo@redhat.com,
+	sassmann@redhat.com,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
----
- drivers/iommu/irq_remapping.c |   12 +++++++-----
- 1 files changed, 7 insertions(+), 5 deletions(-)
+On Tue, Apr 23, 2013 at 1:51 PM, Greg Rose <gregory.v.rose@intel.com> wrote:
+> On Mon, 22 Apr 2013 14:50:33 -0700
+> Alexander Duyck <alexander.h.duyck@intel.com> wrote:
+>
+>> On 04/22/2013 01:09 PM, Bjorn Helgaas wrote:
+>> > On Sat, Apr 20, 2013 at 9:31 PM, Jeff Kirsher
+>> > <jeffrey.t.kirsher@intel.com> wrote:
+>> >> On Sat, 2013-04-20 at 02:49 -0700, Jeff Kirsher wrote:
+>> >>> From: Alexander Duyck <alexander.h.duyck@intel.com>
+>> >>>
+>> >>> This function is meant to add a helper function that will
+>> >>> determine if a PF has any VFs that are currently assigned to a
+>> >>> guest.  We currently have been implementing this function per
+>> >>> driver, and going forward I would like to avoid that by making
+>> >>> this function generic and using this helper.
+>> >>>
+>> >>> Signed-off-by: Alexander Duyck <alexander.h.duyck@intel.com>
+>> >>> Signed-off-by: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+>> >> Adding linux-pci mailing list and Bjorn to the CC.
+>> >>
+>> >> Bjorn- David Miller needs a signoff by PCI maintainer.
+>> >>
+>> >>> ---
+>> >>>  drivers/pci/iov.c   | 41
+>> >>> +++++++++++++++++++++++++++++++++++++++++ include/linux/pci.h |
+>> >>> 5 +++++ 2 files changed, 46 insertions(+)
+>> >>>
+>> >>> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+>> >>> index ee599f2..fd99720 100644
+>> >>> --- a/drivers/pci/iov.c
+>> >>> +++ b/drivers/pci/iov.c
+>> >>> @@ -729,6 +729,47 @@ int pci_num_vf(struct pci_dev *dev)
+>> >>>  EXPORT_SYMBOL_GPL(pci_num_vf);
+>> >>>
+>> >>>  /**
+>> >>> + * pci_vfs_assigned - returns number of VFs are assigned to a
+>> >>> guest
+>> >>> + * @dev: the PCI device
+>> >>> + *
+>> >>> + * Returns number of VFs belonging to this device that are
+>> >>> assigned to a guest.
+>> >>> + * If device is not a physical function returns -ENODEV.
+>> >>> + */
+>> >>> +int pci_vfs_assigned(struct pci_dev *dev)
+>> > I guess the idea here is to replace be_find_vfs(),
+>> > igb_vfs_are_assigned(), ixgbe_vfs_are_assigned(), etc.  It does seem
+>> > good to reduce duplicated code.
+>>
+>> The general idea was just to remove duplicate code.  As is we have a
+>> couple more drivers on the way that would end up needing a similar
+>> function.
+>>
+>> > I'm trying to figure out why this is safe -- there's no explicit
+>> > synchronization between the iteration through PCI devices looking
+>> > for matching VFs and the device assignment/deassignment paths that
+>> > set or clear PCI_DEV_FLAGS_ASSIGNED, so on the face of it, it looks
+>> > like things could change between calling pci_vfs_assigned() and
+>> > using the result to make a decision.
+>> >
+>> > Most of the calls would be in .remove() functions, so maybe there's
+>> > some sort of synchronization in that path that  makes this safe.
+>> >
+>> > Bjorn
+>>
+>> I'm assuming this will be used in regions that are somehow protected
+>> since the main spots where this might be called would be probe,
+>> remove, or when updating the number of VFs.  From what I can tell in
+>> the Xen case there is a driver stub that is loaded that sets the flag
+>> so that is covered by probe/remove.  I don't know about the KVM case.
+>
+> KVM should be fine.  Setting/clearing the flag occurs while a device is
+> being assigned to or removed from a VM - presumably device assignment
+> is already safe against race conditions.  I'd find it hard to believe
+> that it's not.  Code is in ../virt/assigned_dev.c and ../virt/iommu.c.
 
-diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
-index d56f8c1..9eeb6cf 100644
---- a/drivers/iommu/irq_remapping.c
-+++ b/drivers/iommu/irq_remapping.c
-@@ -51,26 +51,27 @@ static void irq_remapping_disable_io_apic(void)
- 
- static int do_setup_msi_irqs(struct pci_dev *dev, int nvec)
- {
--	int node, ret, sub_handle, index = 0;
-+	int node, ret, sub_handle, nvec_pow2, index = 0;
- 	unsigned int irq;
- 	struct msi_desc *msidesc;
- 
--	nvec = __roundup_pow_of_two(nvec);
--
- 	WARN_ON(!list_is_singular(&dev->msi_list));
- 	msidesc = list_entry(dev->msi_list.next, struct msi_desc, list);
- 	WARN_ON(msidesc->irq);
- 	WARN_ON(msidesc->msi_attrib.multiple);
-+	WARN_ON(msidesc->nvec);
- 
- 	node = dev_to_node(&dev->dev);
- 	irq = __create_irqs(get_nr_irqs_gsi(), nvec, node);
- 	if (irq == 0)
- 		return -ENOSPC;
- 
--	msidesc->msi_attrib.multiple = ilog2(nvec);
-+	nvec_pow2 = __roundup_pow_of_two(nvec);
-+	msidesc->nvec = nvec;
-+	msidesc->msi_attrib.multiple = ilog2(nvec_pow2);
- 	for (sub_handle = 0; sub_handle < nvec; sub_handle++) {
- 		if (!sub_handle) {
--			index = msi_alloc_remapped_irq(dev, irq, nvec);
-+			index = msi_alloc_remapped_irq(dev, irq, nvec_pow2);
- 			if (index < 0) {
- 				ret = index;
- 				goto error;
-@@ -95,6 +96,7 @@ error:
- 	 * IRQs from tearing down again in default_teardown_msi_irqs()
- 	 */
- 	msidesc->irq = 0;
-+	msidesc->nvec = 0;
- 	msidesc->msi_attrib.multiple = 0;
- 
- 	return ret;
--- 
-1.7.7.6
+That's not a very convincing argument :)
 
+And I don't like having to iterate through all PCI devs in the system
+to figure this out.
 
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+But this is no worse in either respect than the code it replaces, and
+it's certainly better to have it all in one place, so:
+
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+
+If you have a chance, you could remove the "extern" from the
+declaration in include/linux/pci.h.  There's a mix there right now,
+and I have a patch in the queue that removes them all.
