@@ -1,61 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e9.ny.us.ibm.com ([32.97.182.139]:40403 "EHLO e9.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S935366Ab3DHNFU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 8 Apr 2013 09:05:20 -0400
-Received: from /spool/local
-	by e9.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <brking@linux.vnet.ibm.com>;
-	Mon, 8 Apr 2013 09:05:19 -0400
-Received: from d01relay01.pok.ibm.com (d01relay01.pok.ibm.com [9.56.227.233])
-	by d01dlp01.pok.ibm.com (Postfix) with ESMTP id DBBCB38C801C
-	for <linux-pci@vger.kernel.org>; Mon,  8 Apr 2013 09:05:09 -0400 (EDT)
-Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
-	by d01relay01.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id r38D59gD300790
-	for <linux-pci@vger.kernel.org>; Mon, 8 Apr 2013 09:05:09 -0400
-Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
-	by d01av04.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id r38D58Ca000508
-	for <linux-pci@vger.kernel.org>; Mon, 8 Apr 2013 09:05:09 -0400
-Message-Id: <201304081305.r38D5765032748@d01av04.pok.ibm.com>
-Subject: [PATCH 1/2] pci: Set dev->dev.type in alloc_pci_dev
-To: linux-pci@vger.kernel.org
-Cc: bhelgaas@google.com, linuxppc-dev@lists.ozlabs.org,
-	benh@kernel.crashing.org, lucaskt@linux.vnet.ibm.com,
-	klebers@linux.vnet.ibm.com, brking@linux.vnet.ibm.com
-From: Brian King <brking@linux.vnet.ibm.com>
-Date: Mon, 08 Apr 2013 08:05:07 -0500
+Received: from cn.fujitsu.com ([222.73.24.84]:45661 "EHLO song.cn.fujitsu.com"
+	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S1750765Ab3DXEJH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 24 Apr 2013 00:09:07 -0400
+Message-ID: <51775A32.5030803@cn.fujitsu.com>
+Date: Wed, 24 Apr 2013 12:06:10 +0800
+From: Gu Zheng <guz.fnst@cn.fujitsu.com>
+MIME-Version: 1.0
+To: Yinghai Lu <yinghai@kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	tangchen <tangchen@cn.fujitsu.com>,
+	Lin Feng <linfeng@cn.fujitsu.com>,
+	li guang <lig.fnst@cn.fujitsu.com>,
+	Mike Qiu <qiudayu@linux.vnet.ibm.com>
+Subject: Re: [PATCH v2 2/2] PCI: Convert alloc_pci_dev(void) to pci_alloc_dev(bus)
+ instead
+References: <516FB647.5030203@cn.fujitsu.com> <CAErSpo65ARR_fZwsGCZDJqbPWktHYUkufgPt-2mWwur=nPR1Qg@mail.gmail.com> <51763847.8090808@cn.fujitsu.com> <CAE9FiQV3e7tiUwg5qtw0=1ncRykJ5Pkog2C9cYG3VkfkKAgZnA@mail.gmail.com>
+In-Reply-To: <CAE9FiQV3e7tiUwg5qtw0=1ncRykJ5Pkog2C9cYG3VkfkKAgZnA@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On 04/24/2013 01:34 AM, Yinghai Lu wrote:
 
-Set dev->dev.type in alloc_pci_dev so that archs that have their own
-versions of pci_setup_device get this set properly in order to ensure
-things like the boot_vga sysfs parameter get created as expected.
+> On Tue, Apr 23, 2013 at 12:29 AM, Gu Zheng <guz.fnst@cn.fujitsu.com> wrote:
+>> From b01e61759f894b651ed3bb39c9fc18e0b66d7cb3 Mon Sep 17 00:00:00 2001
+>> From: GuZheng <guz.fnst@cn.fujitsu.com>
+>> Date: Tue, 23 Apr 2013 14:01:39 +0800
+>> Subject: [PATCH v2 2/2] PCI: Convert alloc_pci_dev(void) to pci_alloc_dev(bus)
+>>  instead
+>>
+>> Use the new pci_alloc_dev(bus) to replace the existing using of alloc_pci_dev(void).
+>> And new functions pci_bus_get/put() are introdued to hide pci_bus' reference management.
+>>
+>> v2:
+>>   Follow Yinghai's suggestions to reduce pci_bus' ref when destroying pci device.
+>>   Add new functions pci_bus_get/put() to hide pci_bus' reference management.
+> 
+> You did not tell us if the remove test scripts works after put the line back.
 
-Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
----
+Hi Yinghai,
+    As you know, I split this patch from the original bug-fix one, and this one is
+not used to fix the bug we discussed. My test box is on the duty of other tests, I'll do the
+test and send out the result as soon as it is ready for me.
 
- drivers/pci/probe.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+BTW, Could please split a while to answer the two questions I asked you yesterday?
+> 
 
-diff -puN drivers/pci/probe.c~pci_set_dev_type_early drivers/pci/probe.c
---- linux/drivers/pci/probe.c~pci_set_dev_type_early	2013-04-08 06:12:51.000000000 -0500
-+++ linux-bjking1/drivers/pci/probe.c	2013-04-08 06:14:33.000000000 -0500
-@@ -988,7 +988,6 @@ int pci_setup_device(struct pci_dev *dev
- 	dev->sysdata = dev->bus->sysdata;
- 	dev->dev.parent = dev->bus->bridge;
- 	dev->dev.bus = &pci_bus_type;
--	dev->dev.type = &pci_dev_type;
- 	dev->hdr_type = hdr_type & 0x7f;
- 	dev->multifunction = !!(hdr_type & 0x80);
- 	dev->error_state = pci_channel_io_normal;
-@@ -1208,6 +1207,7 @@ struct pci_dev *alloc_pci_dev(void)
- 		return NULL;
- 
- 	INIT_LIST_HEAD(&dev->bus_list);
-+	dev->dev.type = &pci_dev_type;
- 
- 	return dev;
- }
-_
+> If it does not work, what is the point of this patch?
+
+I think the patch title and the change log can explain all. It introduce a new pci_alloc_dev(bus)
+to replace the alloc_pci_dev(), and add the pci_bus' reference management when we deal with its downstream
+pci devices.
+
+Thanks,
+Gu
+
+> 
+> Yinghai
+> 
+
 
