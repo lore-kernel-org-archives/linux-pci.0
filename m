@@ -1,86 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailhub.stratus.com ([134.111.1.18]:37894 "EHLO
-	mailhub5.stratus.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934781Ab3DPUSX convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Apr 2013 16:18:23 -0400
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
-Subject: RE: USB PCI quirk issue
-Date: Tue, 16 Apr 2013 16:17:18 -0400
-Message-ID: <5AA430FFE4486C448003201AC83BC85E03DEA379@EXHQ.corp.stratus.com>
-In-Reply-To: <CAE9FiQVe95hT2mv4G+v_FMk5_qQDSg0e0fPdZdoe8Cgam70EnA@mail.gmail.com>
-References: <5AA430FFE4486C448003201AC83BC85E01F83F0D@EXHQ.corp.stratus.com><20130415182614.GB9224@xanatos> <CAE9FiQVe95hT2mv4G+v_FMk5_qQDSg0e0fPdZdoe8Cgam70EnA@mail.gmail.com>
-From: "Bulkow, David" <David.Bulkow@stratus.com>
-To: "Yinghai Lu" <yinghai@kernel.org>,
-	"Sarah Sharp" <sarah.a.sharp@linux.intel.com>
-Cc: "Lawrence, Joe" <Joe.Lawrence@stratus.com>,
-	<linux-pci@vger.kernel.org>, <linux-usb@vger.kernel.org>,
-	"Bjorn Helgaas" <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	"Bulkow, David" <David.Bulkow@stratus.com>
+Received: from mga02.intel.com ([134.134.136.20]:41707 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758085Ab3DXVkj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 24 Apr 2013 17:40:39 -0400
+Message-ID: <1366839636.2871.7.camel@jtkirshe-mobl>
+Subject: Re: [net-next 08/14] pci: Add SRIOV helper function to determine if
+ VFs are assigned to guest
+From: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+Reply-To: jeffrey.t.kirsher@intel.com
+To: David Miller <davem@davemloft.net>
+Cc: bhelgaas@google.com, gregory.v.rose@intel.com,
+	alexander.h.duyck@intel.com, netdev@vger.kernel.org,
+	gospo@redhat.com, sassmann@redhat.com, linux-pci@vger.kernel.org
+Date: Wed, 24 Apr 2013 14:40:36 -0700
+In-Reply-To: <20130424.161825.1007847105309092978.davem@davemloft.net>
+References: <5175B0A9.7070100@intel.com> <20130423125101.00005bb7@unknown>
+	 <CAErSpo58vRW+QoHMTzo4vNi4n8Z2RhG43rBesTUJS-4HRwfd1w@mail.gmail.com>
+	 <20130424.161825.1007847105309092978.davem@davemloft.net>
+Content-Type: multipart/signed; micalg="pgp-sha512";
+	protocol="application/pgp-signature"; boundary="=-gRC6EHne2fs6BlVQCyfv"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Excellent.  The quirk is no longer triggering resource issues.
 
-This leaves an issue with dev->enable_cnt in pci_disable_device.  We
-still get the message 'disabling already-disabled device'.  I was hoping
-by not having the resource errors, enable_cnt would be more accurate.
-This occurs after:
+--=-gRC6EHne2fs6BlVQCyfv
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-- clean boot
-- hot remove devices (effectively half of machine's PCI devices)
-- hot add devices (returned to service as described in original mail)
-- hot remove devices *** this is where we get 'disabling
-already-disabled device'
+On Wed, 2013-04-24 at 16:18 -0400, David Miller wrote:
+> From: Bjorn Helgaas <bhelgaas@google.com>
+> Date: Wed, 24 Apr 2013 14:10:38 -0600
+>=20
+> > But this is no worse in either respect than the code it replaces, and
+> > it's certainly better to have it all in one place, so:
+> >=20
+> > Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+> >=20
+> > If you have a chance, you could remove the "extern" from the
+> > declaration in include/linux/pci.h.  There's a mix there right now,
+> > and I have a patch in the queue that removes them all.
+>=20
+> Jeff please respin your pull request with Bjorn's ACK as well as
+> the "extern" removal he's asking for.
+>=20
+> Thanks.
 
-I'll dig into this tomorrow.  Thank you for this first step.
+Working on it, I will have a updated patch (and series) submitted later
+tonight.
 
------Original Message-----
-From: yhlu.kernel@gmail.com [mailto:yhlu.kernel@gmail.com] On Behalf Of
-Yinghai Lu
-Sent: Monday, April 15, 2013 4:41 PM
-To: Sarah Sharp; Bulkow, David
-Cc: Lawrence, Joe; linux-pci@vger.kernel.org; linux-usb@vger.kernel.org;
-Bjorn Helgaas; Rafael J. Wysocki
-Subject: Re: USB PCI quirk issue
+--=-gRC6EHne2fs6BlVQCyfv
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
 
-On Mon, Apr 15, 2013 at 11:26 AM, Sarah Sharp
-<sarah.a.sharp@linux.intel.com> wrote:
-> Cc-ing the public Linux PCI and USB mailing lists.
->
-> On Fri, Apr 12, 2013 at 02:59:29PM -0400, Bulkow, David wrote:
->> Susan,
->
-> I'm Sarah. :)
->
->> While testing Linux 3.9 we ran into an issue which I believe is a 
->> conflict between a couple of PCI changes.  Stratus has hardware that 
->> can hot add/remove chunks of its PCI hierarchy which has tickled some
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.13 (GNU/Linux)
 
->> of the newer code.  I am mailing you because I believe the second 
->> change I list below holds the key.
->>
->> I believe we are experiencing a collision between two changes.  The
->> first:
->>
->> PCI: Put pci_dev in device tree as early as possible
->> https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commi
->> t/?id=4f535093cf8f6da8cfda7c36c2c1ecd2e9586ee4
->>
->> is causing device_add to be called during pci_scan_slot.  The second:
->>
->> USB: Fix handoff when BIOS disables host PCI device 
->> https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commi
->> t/?id=cab928ee1f221c9cc48d6615070fefe2e444384a
->>
->> is getting activated by device_add.
+iQIcBAABCgAGBQJReFFUAAoJEOVv75VaS+3OFksP/1ozYm21/iukoXZg6B3RMsGk
+1DyQRUl9TWrJFGuCATE17E3784HRbeurm6Y3iRdKz3jeBRRCz6VAHUDlemKb2oPJ
+WUHBSQRocHFXs9VxSaTwcEV7qI+Rf6P4B1N9H+PCVKY3Vfn9HkzpiS4q3bz6oqi8
+rOmRlkrjqZ4MJwOKjePRcyy+UYb4stJgYkUbI/hGdFBWBeFevGUf+qK/W2w4SWJw
+BFCufMQujr8YUG/zYZTOK0FU81329WLFRfNupt630YpzQJzyEVQisyMLbhjfe6wD
+4WWrFlDHtRoILCBRkDcO7WgktUUdIYxBjl5aLJvHIWoyM3x6Ktics+TunL7hi7qd
+79ZeGnEG0Q7bbu8aWdZ7UOO0ACLhbCyIzGWF3B8owxV0MVVlA222YOpdSMSKG4cY
+3QwzV5JQ32GysOPLhhg3Z5MA+xIMaBZ0hwH3ycdIoodsA4JY6ilPaGnEzz3d9Xvk
+LY0+XSDTQPrWx211oQieh1dYCfMPcpSVcBtgTVj4EpXi1buZQhCLCwtzloklJR2n
+hK08PBjiOy4KcJTAuHJmgIundiTQ04FIEGgRxv4xvEYaO4olZxqDOkfKFa2enZdL
+OtyDs7z73cSmXfX9iNdrJm7kdRzNeK6LyDtHFPf273YG1ZZbleZ+eA5XNqWtDdlA
+8VWFnZHwvNDKOnG8+8+D
+=uUBG
+-----END PGP SIGNATURE-----
 
-looks like we call quirk_final too early for hotadd path.
+--=-gRC6EHne2fs6BlVQCyfv--
 
-Please check if attached can workaround the problem.
-
-Thanks
-
-Yinghai
