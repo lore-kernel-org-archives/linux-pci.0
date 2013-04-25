@@ -1,134 +1,138 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cn.fujitsu.com ([222.73.24.84]:25015 "EHLO song.cn.fujitsu.com"
-	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1753656Ab3DVCku (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 21 Apr 2013 22:40:50 -0400
-Message-ID: <5174A2CB.4090606@cn.fujitsu.com>
-Date: Mon, 22 Apr 2013 10:39:07 +0800
-From: Gu Zheng <guz.fnst@cn.fujitsu.com>
+Received: from mail-gg0-f172.google.com ([209.85.161.172]:39948 "EHLO
+	mail-gg0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758982Ab3DYQmm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Apr 2013 12:42:42 -0400
+Received: by mail-gg0-f172.google.com with SMTP id f1so419890ggn.31
+        for <linux-pci@vger.kernel.org>; Thu, 25 Apr 2013 09:42:41 -0700 (PDT)
+Date: Thu, 25 Apr 2013 10:42:38 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Jan Beulich <JBeulich@suse.com>
+Cc: Jeremy Fitzhardinge <jeremy@goop.org>,
+	Gavin Shan <shangw@linux.vnet.ibm.com>,
+	xen-devel@lists.xensource.com,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [Xen-devel] [PATCH v4 18/22] xen/pci: Pay attention to
+ PCI_MSIX_TABLE_OFFSET
+Message-ID: <20130425164238.GA3052@google.com>
+References: <20130422230012.32621.15224.stgit@bhelgaas-glaptop>
+ <20130422231214.32621.37394.stgit@bhelgaas-glaptop>
+ <CAErSpo6BF0Uvf=7LwYYT2Qn6kf5uk+rVqY-cKOe2qnVwcj4-+w@mail.gmail.com>
+ <5179164902000078000D0A26@nat28.tlf.novell.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	tangchen <tangchen@cn.fujitsu.com>,
-	Lin Feng <linfeng@cn.fujitsu.com>,
-	li guang <lig.fnst@cn.fujitsu.com>
-Subject: Re: [PATCH 1/2] PCI: Introduce pci_alloc_dev(struct pci_bus*) to
- replace alloc_pci_dev()
-References: <516FB647.5030203@cn.fujitsu.com> <CAErSpo65ARR_fZwsGCZDJqbPWktHYUkufgPt-2mWwur=nPR1Qg@mail.gmail.com> <51711214.8050606@cn.fujitsu.com> <CAErSpo7yPUTOPYsPkhKTpe2yxbo_XN4Y4iBesVLudAmbuRsJ+A@mail.gmail.com>
-In-Reply-To: <CAErSpo7yPUTOPYsPkhKTpe2yxbo_XN4Y4iBesVLudAmbuRsJ+A@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5179164902000078000D0A26@nat28.tlf.novell.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
-   Sorry for the later reply!
-
-On 04/20/2013 01:32 AM, Bjorn Helgaas wrote:
-
-> On Fri, Apr 19, 2013 at 3:44 AM, Gu Zheng <guz.fnst@cn.fujitsu.com> wrote:
->> From 906167d9a09babbe189f62944ecb8c0b198a0f64 Mon Sep 17 00:00:00 2001
->> From: Gu Zheng <guz.fnst@cn.fujitsu.com>
->> Date: Fri, 19 Apr 2013 18:12:32 +0900
->> Subject: [PATCH 1/2] PCI: Introduce  pci_alloc_dev(struct pci_bus*) to replace alloc_pci_dev()
->>
->> Now here we introduce a new struct pci_dev *pci_alloc_dev(struct pci_bus *bus) to replace alloc_pci_dev().
->> It take a "struct pci_bus *" argument, so we can alloc a pci device on a target pci bus, and it acquire
->> the reference of the pci_bus.
->> Since the old alloc_pci_dev() is exported, so we still keep it for a while but mark it as __deprecated.
->>
->> Signed-off-by: Gu Zheng <guz.fnst@cn.fujitsu.com>
->> ---
->>  drivers/pci/probe.c |   21 ++++++++++++++++++++-
->>  include/linux/pci.h |    4 +++-
->>  2 files changed, 23 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
->> index b494066..5233fb6 100644
->> --- a/drivers/pci/probe.c
->> +++ b/drivers/pci/probe.c
->> @@ -1199,7 +1199,7 @@ static void pci_release_bus_bridge_dev(struct device *dev)
->>         kfree(bridge);
->>  }
->>
->> -struct pci_dev *alloc_pci_dev(void)
->> +struct pci_dev *pci_alloc_dev(struct pci_bus *bus)
->>  {
->>         struct pci_dev *dev;
->>
->> @@ -1209,6 +1209,25 @@ struct pci_dev *alloc_pci_dev(void)
->>
->>         INIT_LIST_HEAD(&dev->bus_list);
->>
->> +       if (bus) {
->> +               get_device(&bus->dev);
->> +               dev->bus = bus;
->> +       }
->> +
->> +       return dev;
->> +}
->> +EXPORT_SYMBOL(pci_alloc_dev);
->> +
->> +__deprecated struct pci_dev *alloc_pci_dev(void)
+On Thu, Apr 25, 2013 at 10:40:57AM +0100, Jan Beulich wrote:
+> >>> On 24.04.13 at 18:34, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> > On Mon, Apr 22, 2013 at 5:12 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> >> The MSI-X Table structure may be at a non-zero offset into the
+> >> device BAR, and we should account for that.
 > 
-> I don't think there's any point in marking the function *definition*
-> as deprecated; it only makes sense for the declaration in the header
-> file, so callers of the function will generate warnings.
+> NAK: The base is just being use to pass to the hypervisor, which
+> then takes care to add the offset.
 
-Thanks for your explaining, I'll fix it in the right way.
+Thanks for noticing this.  I updated the patch to just add a comment to
+avert future confusion, and refreshed the subsequent xen patches as below.
 
-> 
->> +{
->> +       struct pci_dev *dev;
->> +       printk(KERN_DEBUG "alloc_pci_dev is deprecated, please use pci_alloc_dev(struct pci_bus *) instead!\n");
-> 
-> I don't want to print a message at run-time, because users will see
-> the message and complain about it, but they can't do anything about
-> it.  And neither can we, because it will only be out-of-tree modules
-> that call alloc_pci_dev().  The build-time warning is all we can do.
+> Recent hypervisors will actually
+> only consume this to issue a warning if not matching what gets
+> read from the corresponding BAR. Earlier hypervisors used this
+> instead of reading the BAR.
 
-Yeah, it seems useless here. I'll remove it. 
+Note that pci_resource_start() gives you a CPU address, and what you
+read from the BAR is a PCI bus address.  These are not in the same
+address space and can't be directly compared.  I assume the
+hypervisors take that into account and do the appropriate
+conversions?
+
+Bjorn
+
+
+commit 34f394aad6706a42fb69922ed184c918ec9f9f81
+Author: Bjorn Helgaas <bhelgaas@google.com>
+Date:   Thu Apr 18 15:02:34 2013 -0600
+
+    xen/pci: Comment on unusual PCI_MSIX_TABLE usage
+    
+    To find the MSI-X Table structure, you look at the BAR specified
+    by PCI_MSIX_FLAGS_BIRMASK, then apply the PCI_MSIX_TABLE_OFFSET to
+    the address from the BAR.  So most readers of PCI_MSIX_TABLE use
+    PCI_MSIX_TABLE_OFFSET, but in xen's case, the hypervisor takes
+    care of applying the offset, so we don't need to do it here.
+    
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+    CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+    CC: Jan Beulich <JBeulich@suse.com>
+
+diff --git a/arch/x86/pci/xen.c b/arch/x86/pci/xen.c
+index 94e7662..96e44fc 100644
+--- a/arch/x86/pci/xen.c
++++ b/arch/x86/pci/xen.c
+@@ -301,6 +301,7 @@ static int xen_initdom_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+ 					      &table_offset);
+ 			bir = (u8)(table_offset & PCI_MSIX_FLAGS_BIRMASK);
  
++			/* Hypervisor takes care of PCI_MSIX_TABLE_OFFSET */
+ 			map_irq.table_base = pci_resource_start(dev, bir);
+ 			map_irq.entry_nr = msidesc->msi_attrib.entry_nr;
+ 		}
 
-> 
->> +       dev = kzalloc(sizeof(struct pci_dev), GFP_KERNEL);
->> +       if (!dev)
->> +               return NULL;
->> +
->> +       INIT_LIST_HEAD(&dev->bus_list);
-> 
-> Can't you implement this as simply:
-> 
->     return pci_alloc_dev(NULL);
+commit 311d82d74afa19cb0ea03c516e290457f9aab63d
+Author: Bjorn Helgaas <bhelgaas@google.com>
+Date:   Thu Apr 18 12:40:33 2013 -0600
 
-Agree, it can simplify the code, and make the later removal of the old alloc_pci_dev() smoothly.
+    xen/pci: Use PCI_MSIX_TABLE_BIR, not PCI_MSIX_FLAGS_BIRMASK
+    
+    PCI_MSIX_FLAGS_BIRMASK is mis-named because the BIR mask is in the
+    Table Offset register, not the flags ("Message Control" per spec)
+    register.
+    
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+    CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+    CC: Jan Beulich <JBeulich@suse.com>
 
-> 
->> +
->>         return dev;
->>  }
->>  EXPORT_SYMBOL(alloc_pci_dev);
->> diff --git a/include/linux/pci.h b/include/linux/pci.h
->> index 710067f..682de2b 100644
->> --- a/include/linux/pci.h
->> +++ b/include/linux/pci.h
->> @@ -348,7 +348,9 @@ static inline struct pci_dev *pci_physfn(struct pci_dev *dev)
->>         return dev;
->>  }
->>
->> -extern struct pci_dev *alloc_pci_dev(void);
->> +extern struct pci_dev *pci_alloc_dev(struct pci_bus *bus);
->> +
->> +extern __deprecated struct pci_dev *alloc_pci_dev(void);
->>
->>  #define        to_pci_dev(n) container_of(n, struct pci_dev, dev)
->>  #define for_each_pci_dev(d) while ((d = pci_get_device(PCI_ANY_ID, PCI_ANY_ID, d)) != NULL)
->> --
->> 1.7.1
->>
-> 
+diff --git a/arch/x86/pci/xen.c b/arch/x86/pci/xen.c
+index 96e44fc..bec03d4 100644
+--- a/arch/x86/pci/xen.c
++++ b/arch/x86/pci/xen.c
+@@ -299,7 +299,7 @@ static int xen_initdom_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+ 
+ 			pci_read_config_dword(dev, pos + PCI_MSIX_TABLE,
+ 					      &table_offset);
+-			bir = (u8)(table_offset & PCI_MSIX_FLAGS_BIRMASK);
++			bir = (u8)(table_offset & PCI_MSIX_TABLE_BIR);
+ 
+ 			/* Hypervisor takes care of PCI_MSIX_TABLE_OFFSET */
+ 			map_irq.table_base = pci_resource_start(dev, bir);
 
+commit 4a5b938fe2ed3e5f5c51f4906c0d1c1486f37e49
+Author: Bjorn Helgaas <bhelgaas@google.com>
+Date:   Thu Apr 18 15:10:58 2013 -0600
 
+    xen/pci: Used cached MSI-X capability offset
+    
+    We now cache the MSI-X capability offset in the struct pci_dev, so no
+    need to find the capability again.
+    
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+    CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+    CC: Jan Beulich <JBeulich@suse.com>
+
+diff --git a/arch/x86/pci/xen.c b/arch/x86/pci/xen.c
+index bec03d4..a151b02 100644
+--- a/arch/x86/pci/xen.c
++++ b/arch/x86/pci/xen.c
+@@ -295,8 +295,7 @@ static int xen_initdom_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+ 			int pos;
+ 			u32 table_offset, bir;
+ 
+-			pos = pci_find_capability(dev, PCI_CAP_ID_MSIX);
+-
++			pos = dev->msix_cap;
+ 			pci_read_config_dword(dev, pos + PCI_MSIX_TABLE,
+ 					      &table_offset);
+ 			bir = (u8)(table_offset & PCI_MSIX_TABLE_BIR);
