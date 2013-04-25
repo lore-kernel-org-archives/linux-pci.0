@@ -1,117 +1,264 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:57185 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1764161Ab3DDRvp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Apr 2013 13:51:45 -0400
-Date: Thu, 4 Apr 2013 13:51:17 -0400
-From: Neil Horman <nhorman@tuxdriver.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: David Woodhouse <dwmw2@infradead.org>,
-	Prarit Bhargava <prarit@redhat.com>,
-	Don Zickus <dzickus@redhat.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Asit Mallick <asit.k.mallick@intel.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	iommu@lists.linux-foundation.org, Yinghai Lu <yinghai@kernel.org>
-Subject: Re: [PATCH v2] irq: add quirk for broken interrupt remapping on 55XX
- chipsets
-Message-ID: <20130404175117.GC3403@neilslaptop.think-freely.org>
-References: <1362158276-4901-1-git-send-email-nhorman@tuxdriver.com>
- <1362423859-18516-1-git-send-email-nhorman@tuxdriver.com>
- <CAErSpo4=L9q+q5hqP2Avw6uceQwZiPuOzadhsqGpu6aP53PMbQ@mail.gmail.com>
- <1365085649.28127.66.camel@i7.infradead.org>
- <20130404145012.GA3403@neilslaptop.think-freely.org>
- <CAErSpo6x5rokg8np7xEKO6y6Qke5X7=r7J7VB2LVrAGGzDC1sA@mail.gmail.com>
- <20130404153905.GB3403@neilslaptop.think-freely.org>
- <CAErSpo7Mup+k7UmZsH1ZidCM1dJw-rNfdtCC6dSF+cZe1d+aBg@mail.gmail.com>
+Received: from mail-vb0-f54.google.com ([209.85.212.54]:54233 "EHLO
+	mail-vb0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759122Ab3DYTJJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Apr 2013 15:09:09 -0400
+Received: by mail-vb0-f54.google.com with SMTP id w16so2980593vbf.27
+        for <linux-pci@vger.kernel.org>; Thu, 25 Apr 2013 12:09:08 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo7Mup+k7UmZsH1ZidCM1dJw-rNfdtCC6dSF+cZe1d+aBg@mail.gmail.com>
+In-Reply-To: <1366883360-14061-2-git-send-email-Andrew.Murray@arm.com>
+References: <1366883360-14061-1-git-send-email-Andrew.Murray@arm.com> <1366883360-14061-2-git-send-email-Andrew.Murray@arm.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 25 Apr 2013 13:08:48 -0600
+Message-ID: <CAErSpo6+v_xAdEw+4Qg--QLXzG8B8UPK=eBLsoT8-dZi6xatGA@mail.gmail.com>
+Subject: Re: [RFC PATCH 1/3] powerpc: Move struct pci_controller to asm-generic
+To: Andrew Murray <Andrew.Murray@arm.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	microblaze-uclinux@itee.uq.edu.au,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Michal Simek <monstr@monstr.eu>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Grant Likely <grant.likely@secretlab.ca>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 04, 2013 at 11:14:30AM -0600, Bjorn Helgaas wrote:
-> On Thu, Apr 4, 2013 at 9:39 AM, Neil Horman <nhorman@tuxdriver.com> wrote:
-> > On Thu, Apr 04, 2013 at 08:57:06AM -0600, Bjorn Helgaas wrote:
-> >> On Thu, Apr 4, 2013 at 8:50 AM, Neil Horman <nhorman@tuxdriver.com> wrote:
-> >> > On Thu, Apr 04, 2013 at 03:27:29PM +0100, David Woodhouse wrote:
-> >> >> On Wed, 2013-04-03 at 17:53 -0600, Bjorn Helgaas wrote:
-> >> >> > );
-> >> >> > > +
-> >> >> > > +       if ((revision == 0x13) && irq_remapping_enabled) {
-> >> >> > > +                pr_warn(HW_ERR "This system BIOS has enabled interrupt remapping\n"
-> >> >> > > +                        "on a chipset that contains an errata making that\n"
-> >> >> > > +                        "feature unstable.  Please reboot with nointremap\n"
-> >> >> > > +                        "added to the kernel command line and contact\n"
-> >> >> > > +                        "your BIOS vendor for an update");
-> >> >>
-> >> >> This should be WARN_TAINT(TAINT_FIRMWARE_WORKAROUND). And 'an erratum'.
-> >> >>
-> >> > Ok, copy that. I'll repost shortly
-> >>
-> >> When you do, please include URLs for any problem reports or bugzillas you have.
-> >>
-> > Well, those are going to be vendor specific, so I'm not sure we can really do
-> > that, at least not in any meaningful way.
-> 
-> Sorry, I don't understand your point.  It's useful to know who
-> reported it (e.g., for future testers) and what happened and what
-> bugzillas it solved.  Of course it applies only to machines with this
-> chipset and certain BIOS revisions.
-> 
-Oh, you want the bug report that I'm fixing this against?  Sure, I can do that.
-I thought you wanted me to include a url in the WARN_TAINT, with which user
-could report occurances of this bug.  Yeah, the bug that this is reported in is:
-https://bugzilla.redhat.com/show_bug.cgi?id=887006
+On Thu, Apr 25, 2013 at 3:49 AM, Andrew Murray <Andrew.Murray@arm.com> wrote:
+> This patch moves struct pci_controller into asm-generic to allow
+> for use by other architectures thus reducing code duplication in
+> the kernel.
+>
+> Signed-off-by: Andrew Murray <Andrew.Murray@arm.com>
+> ---
+>  arch/powerpc/include/asm/pci-bridge.h |   87 +++++---------------------------
+>  include/asm-generic/pci-bridge.h      |   68 +++++++++++++++++++++++++
+>  2 files changed, 82 insertions(+), 73 deletions(-)
+>
+> diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+> index 205bfba..163bd40 100644
+> --- a/arch/powerpc/include/asm/pci-bridge.h
+> +++ b/arch/powerpc/include/asm/pci-bridge.h
+> @@ -8,7 +8,6 @@
+>   * 2 of the License, or (at your option) any later version.
+>   */
+>  #include <linux/pci.h>
+> -#include <linux/list.h>
+>  #include <linux/ioport.h>
+>  #include <linux/of_pci.h>
+>  #include <asm-generic/pci-bridge.h>
+> @@ -16,85 +15,27 @@
+>  struct device_node;
+>
+>  /*
+> - * Structure of a PCI controller (host bridge)
+> + * Used for variants of PCI indirect handling and possible quirks:
+> + *  SET_CFG_TYPE - used on 4xx or any PHB that does explicit type0/1
+> + *  EXT_REG - provides access to PCI-e extended registers
+> + *  SURPRESS_PRIMARY_BUS - we suppress the setting of PCI_PRIMARY_BUS
 
-Its standing in for about a dozen or so variants of this issue we've seen
+s/SURPRESS/SUPRESS/ throughout.
 
-> >> I assume Windows "just works" in this situation?
-> > No more or less than linux does in this case.  The Intel provided errata
-> > indicates that the only acceptable workaround is to disable remapping in the
-> > BIOS, so I would presume that if a windows system has a BIOS that doesn't
-> > implement this fix, its just as exposed as we are.
-> 
-> It sounds like the effect of this bug is that on Linux, devices may
-> not work at all because of lost interrupts.  Either Windows must never
-> enable remapping (so it never sees the bug), or it must be designed in
-> a way that tolerates the problem.  I can't believe these machines
-> shipped with Windows certification if devices didn't work correctly.
-> 
-I don't know what to tell you here.  We explicitly asked intel about this, and
-there was an effort to recode the interrupt migration code to properly manage
-this situation, and intels response was "No, just disable it in BIOS", so we're
-telling people to disable it in BIOS.  You'd have to ask somebody at Microsoft
-what Windows did or did not do about this problem.
+I'm not sure how generic these flags will end up being.  If they wind
+up in a shared header file, it seems like we might want a PCI_ prefix
+to anchor them.
 
-> Either way, I don't understand why we can't make the quirk just fix
-> this.  Booting with "nointremap" only sets disable_irq_remap, which is
-> only used by irq_remapping_supported().  Early quirks are run before
-> irq_remapping_supported () is ever called, so an early quirk ought to
-> be just as effective as the command line option.  Here's the relevant
-> call tree I see:
-> 
->   start_kernel
->     setup_arch
->       parse_early_param
->       early_quirks
->     rest_init
->       ...
->         <first use of disable_irq_remap>
-> 
-> The x86 setup_arch() does call generic_apic_probe(), but as far as I
-> can tell, none of the APIC .probe() methods reference
-> disable_irq_remap, so that doesn't look like a problem.
-> 
-Well, I can give it a try, but I'm sure something went wrong last time I did.
-Regardless, theres also the security issue to consider here - namely that
-disabling irq remapping opens up users of virt to a possible security bug
-(potential irq injection).  Some users may wish to live with the remapping
-error, given that error typically leads to devices that need to be
-restarted/reset to start working again, rather than live with the security hole.
-I rather like the warning, that gives users a choice, but I'll spin up a version
-that just disables it if you would rather.
+> + *   on Freescale PCI-e controllers since they used the PCI_PRIMARY_BUS
+> + *   to determine which bus number to match on when generating type0
+> + *   config cycles
+> + *  NO_PCIE_LINK - the Freescale PCI-e controllers have issues with
+> + *   hanging if we don't have link and try to do config cycles to
+> + *   anything but the PHB.  Only allow talking to the PHB if this is
+> + *   set.
+> + *  BIG_ENDIAN - cfg_addr is a big endian register
+> + *  BROKEN_MRM - the 440EPx/GRx chips have an errata that causes hangs on
+> + *   the PLB4.  Effectively disable MRM commands by setting this.
+>   */
+> -struct pci_controller {
+> -       struct pci_bus *bus;
+> -       char is_dynamic;
+> -#ifdef CONFIG_PPC64
+> -       int node;
+> -#endif
+> -       struct device_node *dn;
+> -       struct list_head list_node;
+> -       struct device *parent;
+> -
+> -       int first_busno;
+> -       int last_busno;
+> -       int self_busno;
+> -       struct resource busn;
+> -
+> -       void __iomem *io_base_virt;
+> -#ifdef CONFIG_PPC64
+> -       void *io_base_alloc;
+> -#endif
+> -       resource_size_t io_base_phys;
+> -       resource_size_t pci_io_size;
+> -
+> -       /* Some machines (PReP) have a non 1:1 mapping of
+> -        * the PCI memory space in the CPU bus space
+> -        */
+> -       resource_size_t pci_mem_offset;
+> -
+> -       /* Some machines have a special region to forward the ISA
+> -        * "memory" cycles such as VGA memory regions. Left to 0
+> -        * if unsupported
+> -        */
+> -       resource_size_t isa_mem_phys;
+> -       resource_size_t isa_mem_size;
+> -
+> -       struct pci_ops *ops;
+> -       unsigned int __iomem *cfg_addr;
+> -       void __iomem *cfg_data;
+> -
+> -       /*
+> -        * Used for variants of PCI indirect handling and possible quirks:
+> -        *  SET_CFG_TYPE - used on 4xx or any PHB that does explicit type0/1
+> -        *  EXT_REG - provides access to PCI-e extended registers
+> -        *  SURPRESS_PRIMARY_BUS - we suppress the setting of PCI_PRIMARY_BUS
+> -        *   on Freescale PCI-e controllers since they used the PCI_PRIMARY_BUS
+> -        *   to determine which bus number to match on when generating type0
+> -        *   config cycles
+> -        *  NO_PCIE_LINK - the Freescale PCI-e controllers have issues with
+> -        *   hanging if we don't have link and try to do config cycles to
+> -        *   anything but the PHB.  Only allow talking to the PHB if this is
+> -        *   set.
+> -        *  BIG_ENDIAN - cfg_addr is a big endian register
+> -        *  BROKEN_MRM - the 440EPx/GRx chips have an errata that causes hangs on
+> -        *   the PLB4.  Effectively disable MRM commands by setting this.
+> -        */
+>  #define PPC_INDIRECT_TYPE_SET_CFG_TYPE         0x00000001
+>  #define PPC_INDIRECT_TYPE_EXT_REG              0x00000002
+>  #define PPC_INDIRECT_TYPE_SURPRESS_PRIMARY_BUS 0x00000004
+>  #define PPC_INDIRECT_TYPE_NO_PCIE_LINK         0x00000008
+>  #define PPC_INDIRECT_TYPE_BIG_ENDIAN           0x00000010
+>  #define PPC_INDIRECT_TYPE_BROKEN_MRM           0x00000020
+> -       u32 indirect_type;
+> -       /* Currently, we limit ourselves to 1 IO range and 3 mem
+> -        * ranges since the common pci_bus structure can't handle more
+> -        */
+> -       struct resource io_resource;
+> -       struct resource mem_resources[3];
+> -       int global_number;              /* PCI domain number */
+> -
+> -       resource_size_t dma_window_base_cur;
+> -       resource_size_t dma_window_size;
+> -
+> -#ifdef CONFIG_PPC64
+> -       unsigned long buid;
+> -
+> -       void *private_data;
+> -#endif /* CONFIG_PPC64 */
+> -};
+>
+>  /* These are used for config access before all the PCI probing
+>     has been done. */
+> diff --git a/include/asm-generic/pci-bridge.h b/include/asm-generic/pci-bridge.h
+> index 20db2e5..e58830e 100644
+> --- a/include/asm-generic/pci-bridge.h
+> +++ b/include/asm-generic/pci-bridge.h
+> @@ -9,6 +9,9 @@
+>
+>  #ifdef __KERNEL__
+>
+> +#include <linux/pci.h>
+> +#include <linux/list.h>
+> +
+>  enum {
+>         /* Force re-assigning all resources (ignore firmware
+>          * setup completely)
+> @@ -38,6 +41,71 @@ enum {
+>         PCI_SCAN_ALL_PCIE_DEVS  = 0x00000040,
+>  };
+>
+> +struct device_node;
+> +
+> +/*
+> + * Structure of a PCI controller (host bridge)
+> + */
+> +#if defined(CONFIG_PPC32) || defined(CONFIG_PPC64)
+> +struct pci_controller {
+> +       struct pci_bus *bus;
 
-Neil
+A lot of the information here (struct pci_bus *bus, first_/last_busno,
+busn, window information) is already in the struct pci_host_bridge,
+and I'm not sure it makes sense to duplicate it here.  I'd like to use
+that structure when it makes sense, and use the sysdata pointer, i.e.,
+the pointer to "struct pci_controller" here, for things that are truly
+arch-specific.
 
+> +       char is_dynamic;
+> +#ifdef CONFIG_PPC64
+> +       int node;
+> +#endif
+> +       struct device_node *dn;
+> +       struct list_head list_node;
+> +       struct device *parent;
+> +
+> +       int first_busno;
+> +       int last_busno;
+> +       int self_busno;
+> +#if defined(CONFIG_PPC64) || defined(CONFIG_PPC32)
+> +       struct resource busn;
+> +#endif
+> +
+> +       void __iomem *io_base_virt;
+> +#ifdef CONFIG_PPC64
+> +       void *io_base_alloc;
+> +#endif
+> +       resource_size_t io_base_phys;
+> +       resource_size_t pci_io_size;
+> +
+> +       /* Some machines (PReP) have a non 1:1 mapping of
+> +        * the PCI memory space in the CPU bus space
+> +        */
+> +       resource_size_t pci_mem_offset;
+> +
+> +       /* Some machines have a special region to forward the ISA
+> +        * "memory" cycles such as VGA memory regions. Left to 0
+> +        * if unsupported
+> +        */
+> +       resource_size_t isa_mem_phys;
+> +       resource_size_t isa_mem_size;
+> +
+> +       struct pci_ops *ops;
+> +       unsigned int __iomem *cfg_addr;
+> +       void __iomem *cfg_data;
+> +
+> +       u32 indirect_type;
+> +       /* Currently, we limit ourselves to 1 IO range and 3 mem
+> +        * ranges since the common pci_bus structure can't handle more
+> +        */
+> +       struct resource io_resource;
+> +       struct resource mem_resources[3];
+
+pci_host_bridge has a list for apertures, which contains this
+information (and the offset between CPU and PCI bus addresses).
+
+> +       int global_number;              /* PCI domain number */
+
+The domain is a good candidate for going in the pci_host_bridge
+structure.  I'm not sure how to plumb it in there, but it is something
+that's pretty generic and I'd like to get rid of all the arch-specific
+pci_domain_nr() implementations that are really the same.
+
+> +
+> +       resource_size_t dma_window_base_cur;
+> +       resource_size_t dma_window_size;
+> +
+> +#ifdef CONFIG_PPC64
+> +       unsigned long buid;
+> +
+> +       void *private_data;
+> +#endif /* CONFIG_PPC64 */
+> +};
+> +#endif
+> +
+>  #ifdef CONFIG_PCI
+>  extern unsigned int pci_flags;
+>
+> --
+> 1.7.0.4
+>
