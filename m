@@ -1,94 +1,315 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 5 Apr 2013 08:03:51 +0200
-From: Thierry Reding <thierry.reding@avionic-design.de>
-To: Stephen Warren <swarren@wwwdotorg.org>
-Cc: Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Andrew Murray <andrew.murray@arm.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-tegra@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v3 07/12] PCI: tegra: Move PCIe driver to drivers/pci/host
-Message-ID: <20130405060351.GA15848@avionic-0098.mockup.avionic-design.de>
-References: <1365000318-28256-1-git-send-email-thierry.reding@avionic-design.de>
- <1365000318-28256-8-git-send-email-thierry.reding@avionic-design.de>
- <515DF096.2000703@wwwdotorg.org>
- <515DF0D9.40007@wwwdotorg.org>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="HcAYCG3uE/tztfnV"
-In-Reply-To: <515DF0D9.40007@wwwdotorg.org>
+From: Andrew Murray <Andrew.Murray@arm.com>
+To: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	microblaze-uclinux@itee.uq.edu.au
+Cc: benh@kernel.crashing.org, monstr@monstr.eu, bhelgaas@google.com,
+	linux-kernel@vger.kernel.org, arnd@arndb.de,
+	grant.likely@secretlab.ca, Andrew Murray <Andrew.Murray@arm.com>
+Subject: [RFC PATCH 3/3] pci: Use common definations of INDIRECT_TYPE_*
+Date: Thu, 25 Apr 2013 10:49:20 +0100
+Message-Id: <1366883360-14061-4-git-send-email-Andrew.Murray@arm.com>
+In-Reply-To: <1366883360-14061-1-git-send-email-Andrew.Murray@arm.com>
+References: <1366883360-14061-1-git-send-email-Andrew.Murray@arm.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+This patch unifies similar definations of INDIRECT_TYPE_* between
+PowerPC and Microblaze.
 
---HcAYCG3uE/tztfnV
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Andrew Murray <Andrew.Murray@arm.com>
+---
+ arch/microblaze/include/asm/pci-bridge.h |   23 -----------------------
+ arch/powerpc/include/asm/pci-bridge.h    |   23 -----------------------
+ arch/powerpc/sysdev/fsl_pci.c            |   16 ++++++++--------
+ arch/powerpc/sysdev/indirect_pci.c       |   20 ++++++++++----------
+ arch/powerpc/sysdev/ppc4xx_pci.c         |    4 ++--
+ arch/powerpc/sysdev/xilinx_pci.c         |    2 +-
+ include/asm-generic/pci-bridge.h         |   22 ++++++++++++++++++++++
+ 7 files changed, 43 insertions(+), 67 deletions(-)
 
-On Thu, Apr 04, 2013 at 03:30:01PM -0600, Stephen Warren wrote:
-> On 04/04/2013 03:28 PM, Stephen Warren wrote:
-> > On 04/03/2013 08:45 AM, Thierry Reding wrote:
-> >> Move the PCIe driver from arch/arm/mach-tegra into the drivers/pci/host
-> >> directory. The motivation is to collect various host controller drivers
-> >> in the same location in order to facilitate refactoring.
-> >>
-> >> The Tegra PCIe driver has been largely rewritten, both in order to turn
-> >> it into a proper platform driver and to add MSI (based on code by
-> >> Krishna Kishore <kthota@nvidia.com>) as well as device tree support.
-> >=20
-> >>  arch/arm/boot/dts/tegra20.dtsi                     |   53 +
-> >=20
-> > I guess this has to touch both the driver and the dtsi file so that
-> > bisectabilty isn't broken? I guess that's OK.
->=20
-> Actually, can't you move all the *.dts/*.dtsi changes to the start of
-> the series, then put the driver conversion patch last, to avoid any
-> bisectability issues and still keep code and DT changes separate?
+diff --git a/arch/microblaze/include/asm/pci-bridge.h b/arch/microblaze/include/asm/pci-bridge.h
+index 0ee75dc..acf8252 100644
+--- a/arch/microblaze/include/asm/pci-bridge.h
++++ b/arch/microblaze/include/asm/pci-bridge.h
+@@ -24,29 +24,6 @@ static inline int pcibios_vaddr_is_ioport(void __iomem *address)
+ }
+ #endif
+ 
+-/*
+- * Used for variants of PCI indirect handling and possible quirks:
+- *  SET_CFG_TYPE - used on 4xx or any PHB that does explicit type0/1
+- *  EXT_REG - provides access to PCI-e extended registers
+- *  SURPRESS_PRIMARY_BUS - we suppress the setting of PCI_PRIMARY_BUS
+- *   on Freescale PCI-e controllers since they used the PCI_PRIMARY_BUS
+- *   to determine which bus number to match on when generating type0
+- *   config cycles
+- *  NO_PCIE_LINK - the Freescale PCI-e controllers have issues with
+- *   hanging if we don't have link and try to do config cycles to
+- *   anything but the PHB.  Only allow talking to the PHB if this is
+- *   set.
+- *  BIG_ENDIAN - cfg_addr is a big endian register
+- *  BROKEN_MRM - the 440EPx/GRx chips have an errata that causes hangs
+- *   on the PLB4.  Effectively disable MRM commands by setting this.
+- */
+-#define INDIRECT_TYPE_SET_CFG_TYPE		0x00000001
+-#define INDIRECT_TYPE_EXT_REG		0x00000002
+-#define INDIRECT_TYPE_SURPRESS_PRIMARY_BUS	0x00000004
+-#define INDIRECT_TYPE_NO_PCIE_LINK		0x00000008
+-#define INDIRECT_TYPE_BIG_ENDIAN		0x00000010
+-#define INDIRECT_TYPE_BROKEN_MRM		0x00000020
+-
+ #ifdef CONFIG_PCI
+ static inline struct pci_controller *pci_bus_to_host(const struct pci_bus *bus)
+ {
+diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+index 163bd40..b2bbf05 100644
+--- a/arch/powerpc/include/asm/pci-bridge.h
++++ b/arch/powerpc/include/asm/pci-bridge.h
+@@ -14,29 +14,6 @@
+ 
+ struct device_node;
+ 
+-/*
+- * Used for variants of PCI indirect handling and possible quirks:
+- *  SET_CFG_TYPE - used on 4xx or any PHB that does explicit type0/1
+- *  EXT_REG - provides access to PCI-e extended registers
+- *  SURPRESS_PRIMARY_BUS - we suppress the setting of PCI_PRIMARY_BUS
+- *   on Freescale PCI-e controllers since they used the PCI_PRIMARY_BUS
+- *   to determine which bus number to match on when generating type0
+- *   config cycles
+- *  NO_PCIE_LINK - the Freescale PCI-e controllers have issues with
+- *   hanging if we don't have link and try to do config cycles to
+- *   anything but the PHB.  Only allow talking to the PHB if this is
+- *   set.
+- *  BIG_ENDIAN - cfg_addr is a big endian register
+- *  BROKEN_MRM - the 440EPx/GRx chips have an errata that causes hangs on
+- *   the PLB4.  Effectively disable MRM commands by setting this.
+- */
+-#define PPC_INDIRECT_TYPE_SET_CFG_TYPE		0x00000001
+-#define PPC_INDIRECT_TYPE_EXT_REG		0x00000002
+-#define PPC_INDIRECT_TYPE_SURPRESS_PRIMARY_BUS	0x00000004
+-#define PPC_INDIRECT_TYPE_NO_PCIE_LINK		0x00000008
+-#define PPC_INDIRECT_TYPE_BIG_ENDIAN		0x00000010
+-#define PPC_INDIRECT_TYPE_BROKEN_MRM		0x00000020
+-
+ /* These are used for config access before all the PCI probing
+    has been done. */
+ extern int early_read_config_byte(struct pci_controller *hose, int bus,
+diff --git a/arch/powerpc/sysdev/fsl_pci.c b/arch/powerpc/sysdev/fsl_pci.c
+index 682084d..d73f94a 100644
+--- a/arch/powerpc/sysdev/fsl_pci.c
++++ b/arch/powerpc/sysdev/fsl_pci.c
+@@ -399,7 +399,7 @@ void fsl_pcibios_fixup_bus(struct pci_bus *bus)
+ 
+ 	if (fsl_pcie_bus_fixup)
+ 		is_pcie = early_find_capability(hose, 0, 0, PCI_CAP_ID_EXP);
+-	no_link = !!(hose->indirect_type & PPC_INDIRECT_TYPE_NO_PCIE_LINK);
++	no_link = !!(hose->indirect_type & INDIRECT_TYPE_NO_PCIE_LINK);
+ 
+ 	if (bus->parent == hose->bus && (is_pcie || no_link)) {
+ 		for (i = 0; i < PCI_BRIDGE_RESOURCE_NUM; ++i) {
+@@ -462,7 +462,7 @@ int __init fsl_add_bridge(struct platform_device *pdev, int is_primary)
+ 	hose->last_busno = bus_range ? bus_range[1] : 0xff;
+ 
+ 	setup_indirect_pci(hose, rsrc.start, rsrc.start + 0x4,
+-		PPC_INDIRECT_TYPE_BIG_ENDIAN);
++		INDIRECT_TYPE_BIG_ENDIAN);
+ 
+ 	if (early_find_capability(hose, 0, 0, PCI_CAP_ID_EXP)) {
+ 		/* For PCIE read HEADER_TYPE to identify controler mode */
+@@ -481,10 +481,10 @@ int __init fsl_add_bridge(struct platform_device *pdev, int is_primary)
+ 
+ 	/* check PCI express link status */
+ 	if (early_find_capability(hose, 0, 0, PCI_CAP_ID_EXP)) {
+-		hose->indirect_type |= PPC_INDIRECT_TYPE_EXT_REG |
+-			PPC_INDIRECT_TYPE_SURPRESS_PRIMARY_BUS;
++		hose->indirect_type |= INDIRECT_TYPE_EXT_REG |
++			INDIRECT_TYPE_SURPRESS_PRIMARY_BUS;
+ 		if (fsl_pcie_check_link(hose))
+-			hose->indirect_type |= PPC_INDIRECT_TYPE_NO_PCIE_LINK;
++			hose->indirect_type |= INDIRECT_TYPE_NO_PCIE_LINK;
+ 	}
+ 
+ 	printk(KERN_INFO "Found FSL PCI host bridge at 0x%016llx. "
+@@ -545,7 +545,7 @@ static int mpc83xx_pcie_exclude_device(struct pci_bus *bus, unsigned int devfn)
+ {
+ 	struct pci_controller *hose = pci_bus_to_host(bus);
+ 
+-	if (hose->indirect_type & PPC_INDIRECT_TYPE_NO_PCIE_LINK)
++	if (hose->indirect_type & INDIRECT_TYPE_NO_PCIE_LINK)
+ 		return PCIBIOS_DEVICE_NOT_FOUND;
+ 	/*
+ 	 * Workaround for the HW bug: for Type 0 configure transactions the
+@@ -628,7 +628,7 @@ static int mpc83xx_pcie_write_config(struct pci_bus *bus, unsigned int devfn,
+ 	if (!cfg_addr)
+ 		return PCIBIOS_DEVICE_NOT_FOUND;
+ 
+-	/* PPC_INDIRECT_TYPE_SURPRESS_PRIMARY_BUS */
++	/* INDIRECT_TYPE_SURPRESS_PRIMARY_BUS */
+ 	if (offset == PCI_PRIMARY_BUS && bus->number == hose->first_busno)
+ 		val &= 0xffffff00;
+ 
+@@ -686,7 +686,7 @@ static int __init mpc83xx_pcie_setup(struct pci_controller *hose,
+ 	out_le32(pcie->cfg_type0 + PEX_OUTWIN0_TAL, 0);
+ 
+ 	if (fsl_pcie_check_link(hose))
+-		hose->indirect_type |= PPC_INDIRECT_TYPE_NO_PCIE_LINK;
++		hose->indirect_type |= INDIRECT_TYPE_NO_PCIE_LINK;
+ 
+ 	return 0;
+ err1:
+diff --git a/arch/powerpc/sysdev/indirect_pci.c b/arch/powerpc/sysdev/indirect_pci.c
+index 82fdad8..aa9dd5d 100644
+--- a/arch/powerpc/sysdev/indirect_pci.c
++++ b/arch/powerpc/sysdev/indirect_pci.c
+@@ -29,7 +29,7 @@ indirect_read_config(struct pci_bus *bus, unsigned int devfn, int offset,
+ 	u8 cfg_type = 0;
+ 	u32 bus_no, reg;
+ 
+-	if (hose->indirect_type & PPC_INDIRECT_TYPE_NO_PCIE_LINK) {
++	if (hose->indirect_type & INDIRECT_TYPE_NO_PCIE_LINK) {
+ 		if (bus->number != hose->first_busno)
+ 			return PCIBIOS_DEVICE_NOT_FOUND;
+ 		if (devfn != 0)
+@@ -40,19 +40,19 @@ indirect_read_config(struct pci_bus *bus, unsigned int devfn, int offset,
+ 		if (ppc_md.pci_exclude_device(hose, bus->number, devfn))
+ 			return PCIBIOS_DEVICE_NOT_FOUND;
+ 
+-	if (hose->indirect_type & PPC_INDIRECT_TYPE_SET_CFG_TYPE)
++	if (hose->indirect_type & INDIRECT_TYPE_SET_CFG_TYPE)
+ 		if (bus->number != hose->first_busno)
+ 			cfg_type = 1;
+ 
+ 	bus_no = (bus->number == hose->first_busno) ?
+ 			hose->self_busno : bus->number;
+ 
+-	if (hose->indirect_type & PPC_INDIRECT_TYPE_EXT_REG)
++	if (hose->indirect_type & INDIRECT_TYPE_EXT_REG)
+ 		reg = ((offset & 0xf00) << 16) | (offset & 0xfc);
+ 	else
+ 		reg = offset & 0xfc;
+ 
+-	if (hose->indirect_type & PPC_INDIRECT_TYPE_BIG_ENDIAN)
++	if (hose->indirect_type & INDIRECT_TYPE_BIG_ENDIAN)
+ 		out_be32(hose->cfg_addr, (0x80000000 | (bus_no << 16) |
+ 			 (devfn << 8) | reg | cfg_type));
+ 	else
+@@ -87,7 +87,7 @@ indirect_write_config(struct pci_bus *bus, unsigned int devfn, int offset,
+ 	u8 cfg_type = 0;
+ 	u32 bus_no, reg;
+ 
+-	if (hose->indirect_type & PPC_INDIRECT_TYPE_NO_PCIE_LINK) {
++	if (hose->indirect_type & INDIRECT_TYPE_NO_PCIE_LINK) {
+ 		if (bus->number != hose->first_busno)
+ 			return PCIBIOS_DEVICE_NOT_FOUND;
+ 		if (devfn != 0)
+@@ -98,19 +98,19 @@ indirect_write_config(struct pci_bus *bus, unsigned int devfn, int offset,
+ 		if (ppc_md.pci_exclude_device(hose, bus->number, devfn))
+ 			return PCIBIOS_DEVICE_NOT_FOUND;
+ 
+-	if (hose->indirect_type & PPC_INDIRECT_TYPE_SET_CFG_TYPE)
++	if (hose->indirect_type & INDIRECT_TYPE_SET_CFG_TYPE)
+ 		if (bus->number != hose->first_busno)
+ 			cfg_type = 1;
+ 
+ 	bus_no = (bus->number == hose->first_busno) ?
+ 			hose->self_busno : bus->number;
+ 
+-	if (hose->indirect_type & PPC_INDIRECT_TYPE_EXT_REG)
++	if (hose->indirect_type & INDIRECT_TYPE_EXT_REG)
+ 		reg = ((offset & 0xf00) << 16) | (offset & 0xfc);
+ 	else
+ 		reg = offset & 0xfc;
+ 
+-	if (hose->indirect_type & PPC_INDIRECT_TYPE_BIG_ENDIAN)
++	if (hose->indirect_type & INDIRECT_TYPE_BIG_ENDIAN)
+ 		out_be32(hose->cfg_addr, (0x80000000 | (bus_no << 16) |
+ 			 (devfn << 8) | reg | cfg_type));
+ 	else
+@@ -118,13 +118,13 @@ indirect_write_config(struct pci_bus *bus, unsigned int devfn, int offset,
+ 			 (devfn << 8) | reg | cfg_type));
+ 
+ 	/* suppress setting of PCI_PRIMARY_BUS */
+-	if (hose->indirect_type & PPC_INDIRECT_TYPE_SURPRESS_PRIMARY_BUS)
++	if (hose->indirect_type & INDIRECT_TYPE_SURPRESS_PRIMARY_BUS)
+ 		if ((offset == PCI_PRIMARY_BUS) &&
+ 			(bus->number == hose->first_busno))
+ 		val &= 0xffffff00;
+ 
+ 	/* Workaround for PCI_28 Errata in 440EPx/GRx */
+-	if ((hose->indirect_type & PPC_INDIRECT_TYPE_BROKEN_MRM) &&
++	if ((hose->indirect_type & INDIRECT_TYPE_BROKEN_MRM) &&
+ 			offset == PCI_CACHE_LINE_SIZE) {
+ 		val = 0;
+ 	}
+diff --git a/arch/powerpc/sysdev/ppc4xx_pci.c b/arch/powerpc/sysdev/ppc4xx_pci.c
+index 56e8b3c..745cd7a 100644
+--- a/arch/powerpc/sysdev/ppc4xx_pci.c
++++ b/arch/powerpc/sysdev/ppc4xx_pci.c
+@@ -73,7 +73,7 @@ static void fixup_ppc4xx_pci_bridge(struct pci_dev *dev)
+ 
+ 	if (of_device_is_compatible(hose->dn, "ibm,plb440epx-pci") ||
+ 		of_device_is_compatible(hose->dn, "ibm,plb440grx-pci")) {
+-		hose->indirect_type |= PPC_INDIRECT_TYPE_BROKEN_MRM;
++		hose->indirect_type |= INDIRECT_TYPE_BROKEN_MRM;
+ 	}
+ 
+ 	/* Hide the PCI host BARs from the kernel as their content doesn't
+@@ -577,7 +577,7 @@ static void __init ppc4xx_probe_pcix_bridge(struct device_node *np)
+ 
+ 	/* Setup config space */
+ 	setup_indirect_pci(hose, rsrc_cfg.start, rsrc_cfg.start + 0x4,
+-					PPC_INDIRECT_TYPE_SET_CFG_TYPE);
++					INDIRECT_TYPE_SET_CFG_TYPE);
+ 
+ 	/* Disable all windows */
+ 	writel(0, reg + PCIX0_POM0SA);
+diff --git a/arch/powerpc/sysdev/xilinx_pci.c b/arch/powerpc/sysdev/xilinx_pci.c
+index 1453b0e..67d4858 100644
+--- a/arch/powerpc/sysdev/xilinx_pci.c
++++ b/arch/powerpc/sysdev/xilinx_pci.c
+@@ -104,7 +104,7 @@ void __init xilinx_pci_init(void)
+ 	/* Setup config space */
+ 	setup_indirect_pci(hose, r.start + XPLB_PCI_ADDR,
+ 			   r.start + XPLB_PCI_DATA,
+-			   PPC_INDIRECT_TYPE_SET_CFG_TYPE);
++			   INDIRECT_TYPE_SET_CFG_TYPE);
+ 
+ 	/* According to the xilinx plbv46_pci documentation the soft-core starts
+ 	 * a self-init when the bus master enable bit is set. Without this bit
+diff --git a/include/asm-generic/pci-bridge.h b/include/asm-generic/pci-bridge.h
+index 1a7f96d..c627c59 100644
+--- a/include/asm-generic/pci-bridge.h
++++ b/include/asm-generic/pci-bridge.h
+@@ -87,6 +87,28 @@ struct pci_controller {
+ 	unsigned int __iomem *cfg_addr;
+ 	void __iomem *cfg_data;
+ 
++	/*
++	 * Used for variants of PCI indirect handling and possible quirks:
++	 *  SET_CFG_TYPE - used on 4xx or any PHB that does explicit type0/1
++	 *  EXT_REG - provides access to PCI-e extended registers
++	 *  SURPRESS_PRIMARY_BUS - we suppress the setting of PCI_PRIMARY_BUS
++	 *   on PCI-e controllers since they used the PCI_PRIMARY_BUS
++	 *   to determine which bus number to match on when generating type0
++	 *   config cycles
++	 *  NO_PCIE_LINK - some PCI-e controllers have issues with
++	 *   hanging if we don't have link and try to do config cycles to
++	 *   anything but the PHB.  Only allow talking to the PHB if this is
++	 *   set.
++	 *  BIG_ENDIAN - cfg_addr is a big endian register
++	 *  BROKEN_MRM - the 440EPx/GRx chips have an errata that causes hangs
++	 *   on the PLB4.  Effectively disable MRM commands by setting this.
++	 */
++#define INDIRECT_TYPE_SET_CFG_TYPE		0x00000001
++#define INDIRECT_TYPE_EXT_REG			0x00000002
++#define INDIRECT_TYPE_SURPRESS_PRIMARY_BUS	0x00000004
++#define INDIRECT_TYPE_NO_PCIE_LINK		0x00000008
++#define INDIRECT_TYPE_BIG_ENDIAN		0x00000010
++#define INDIRECT_TYPE_BROKEN_MRM		0x00000020
+ 	u32 indirect_type;
+ 	/* Currently, we limit ourselves to 1 IO range and 3 mem
+ 	 * ranges since the common pci_bus structure can't handle more
+-- 
+1.7.0.4
 
-I'm not sure if that'll work. There's this oddity in the Harmony DTS
-where the regulator@3 is disabled with a comment that this is a hack
-required until board-harmony-pcie.c is removed. If we change the DTS
-before the driver rewrite I think that would break requesting the GPIO
-in the board file.
-
-A possible workaround I can think of is accessing the regulator from
-board-harmony-pcie.c instead of the GPIO directly. But perhaps such an
-attempt already failed (deferred probing getting in the way?).
-
-Since it looks like this series will not make it into 3.10, maybe we
-should try and at least get these things ironed out so that the merge
-can be done more easily in 3.11. One big step in that direction would
-obviously be if we could get the DTS changes merged already which, as
-you point out, should be independent of the driver rewrite itself.
-
-Thierry
-
---HcAYCG3uE/tztfnV
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQIcBAEBAgAGBQJRXmlHAAoJEN0jrNd/PrOhm0EP/jaE+4AqxS3UniRXtEt5ooLB
-HnAII6XrN3WWhIthBQHNPWZeWI0uRSAa7THfE+/x38TiG16pkm1l1RWUgY/dM+ma
-6pty8WeO+wjx0CavfjBslDk0+yEZKdpKiNBnSvRlFkfqSw45cuszCz9JuV/ua3gK
-akR44L1SnbroifdvJ4gJYo1RDl6eoV88njApi8BtnhssVgRW3TSPYjTD3OK1qB93
-BPoEY3mGExBgRZi6wDXcddqP+pT2WUdKq5362zFHIiyNJl5rc7Bvhlv4vLu+KZFl
-mql/B5RzYPFAwnw73eyEa+ak6v6m7uXETF3m0r4EySqG+1FDLv6C2if1GSqKk7HM
-dJelC8wJLDSmZ5Yzo758HTvwlFAmGjHjmjYRUSfBHWL2C+kmBCGXdrJgS//6SEkx
-d8F0JJGX1yvsyvOr0xNOcqbYhMzmaiwLaphCD9DMKKJGxzUW/i5i6LpFsOmdq14a
-mh3ARP1YjjxelhAgh3kz0iBtBeeRy4/wdC7mO6X3hI33WRZazyIIa60T3zPAHFnW
-UOG+zN15NJBJ//YyaLjqD2eEuMQlEHsHwyzJ+n+dX5RCR1D1wlAoFIedUSXFPYsS
-z6+M9+qPofYovv1iDE/LYqR480vZ+kljGF+2s75qNMcJ45GwQZtxY/QJ0v9JUpVx
-0dJFSH5J5yDNUin3HsNa
-=Akm0
------END PGP SIGNATURE-----
-
---HcAYCG3uE/tztfnV--
