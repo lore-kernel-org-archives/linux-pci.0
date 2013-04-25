@@ -1,80 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ia0-f177.google.com ([209.85.210.177]:33949 "EHLO
-	mail-ia0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753507Ab3DVXLW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Apr 2013 19:11:22 -0400
-Received: by mail-ia0-f177.google.com with SMTP id y26so8828iab.36
-        for <linux-pci@vger.kernel.org>; Mon, 22 Apr 2013 16:11:22 -0700 (PDT)
-Subject: [PATCH v4 10/22] PCI: Drop msi_lower_address_reg() and
- msi_upper_address_reg() macros
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Gavin Shan <shangw@linux.vnet.ibm.com>
-Date: Mon, 22 Apr 2013 17:11:20 -0600
-Message-ID: <20130422231120.32621.81415.stgit@bhelgaas-glaptop>
-In-Reply-To: <20130422230012.32621.15224.stgit@bhelgaas-glaptop>
+Received: from nat28.tlf.novell.com ([130.57.49.28]:41965 "EHLO
+	nat28.tlf.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756710Ab3DYJkW convert rfc822-to-8bit (ORCPT
+	<rfc822;groupwise-linux-pci@vger.kernel.org:6:1>);
+	Thu, 25 Apr 2013 05:40:22 -0400
+Message-Id: <5179164902000078000D0A26@nat28.tlf.novell.com>
+Date: Thu, 25 Apr 2013 10:40:57 +0100
+From: "Jan Beulich" <JBeulich@suse.com>
+To: "Bjorn Helgaas" <bhelgaas@google.com>
+Cc: "Jeremy Fitzhardinge" <jeremy@goop.org>,
+	"Gavin Shan" <shangw@linux.vnet.ibm.com>,
+	<xen-devel@lists.xensource.com>,
+	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [Xen-devel] [PATCH v4 18/22] xen/pci: Pay attention to
+ PCI_MSIX_TABLE_OFFSET
 References: <20130422230012.32621.15224.stgit@bhelgaas-glaptop>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+ <20130422231214.32621.37394.stgit@bhelgaas-glaptop>
+ <CAErSpo6BF0Uvf=7LwYYT2Qn6kf5uk+rVqY-cKOe2qnVwcj4-+w@mail.gmail.com>
+In-Reply-To: <CAErSpo6BF0Uvf=7LwYYT2Qn6kf5uk+rVqY-cKOe2qnVwcj4-+w@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-msi_lower_address_reg() and msi_upper_address_reg() don't provide any
-useful abstraction, so drop them.
+>>> On 24.04.13 at 18:34, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Mon, Apr 22, 2013 at 5:12 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> The MSI-X Table structure may be at a non-zero offset into the
+>> device BAR, and we should account for that.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/msi.c |   16 ++++++++--------
- drivers/pci/msi.h |    2 --
- 2 files changed, 8 insertions(+), 10 deletions(-)
+NAK: The base is just being use to pass to the hypervisor, which
+then takes care to add the offset. Recent hypervisors will actually
+only consume this to issue a warning if not matching what gets
+read from the corresponding BAR. Earlier hypervisors used this
+instead of reading the BAR.
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index b1a60e0..7011c5d 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -244,11 +244,11 @@ void __read_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
- 		int pos = dev->msi_cap;
- 		u16 data;
- 
--		pci_read_config_dword(dev, msi_lower_address_reg(pos),
--					&msg->address_lo);
-+		pci_read_config_dword(dev, pos + PCI_MSI_ADDRESS_LO,
-+				      &msg->address_lo);
- 		if (entry->msi_attrib.is_64) {
--			pci_read_config_dword(dev, msi_upper_address_reg(pos),
--						&msg->address_hi);
-+			pci_read_config_dword(dev, pos + PCI_MSI_ADDRESS_HI,
-+					      &msg->address_hi);
- 			pci_read_config_word(dev, msi_data_reg(pos, 1), &data);
- 		} else {
- 			msg->address_hi = 0;
-@@ -304,11 +304,11 @@ void __write_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
- 		msgctl |= entry->msi_attrib.multiple << 4;
- 		pci_write_config_word(dev, pos + PCI_MSI_FLAGS, msgctl);
- 
--		pci_write_config_dword(dev, msi_lower_address_reg(pos),
--					msg->address_lo);
-+		pci_write_config_dword(dev, pos + PCI_MSI_ADDRESS_LO,
-+				       msg->address_lo);
- 		if (entry->msi_attrib.is_64) {
--			pci_write_config_dword(dev, msi_upper_address_reg(pos),
--						msg->address_hi);
-+			pci_write_config_dword(dev, pos + PCI_MSI_ADDRESS_HI,
-+					       msg->address_hi);
- 			pci_write_config_word(dev, msi_data_reg(pos, 1),
- 						msg->data);
- 		} else {
-diff --git a/drivers/pci/msi.h b/drivers/pci/msi.h
-index 6aa7b19..e5b87d6 100644
---- a/drivers/pci/msi.h
-+++ b/drivers/pci/msi.h
-@@ -6,8 +6,6 @@
- #ifndef MSI_H
- #define MSI_H
- 
--#define msi_lower_address_reg(base)	(base + PCI_MSI_ADDRESS_LO)
--#define msi_upper_address_reg(base)	(base + PCI_MSI_ADDRESS_HI)
- #define msi_data_reg(base, is64bit)	\
- 	(base + ((is64bit == 1) ? PCI_MSI_DATA_64 : PCI_MSI_DATA_32))
- #define msi_mask_reg(base, is64bit)	\
+Jan
+
+>> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>> CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+>> ---
+>>  arch/x86/pci/xen.c |    4 +++-
+>>  1 file changed, 3 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/arch/x86/pci/xen.c b/arch/x86/pci/xen.c
+>> index 94e7662..0e8a196 100644
+>> --- a/arch/x86/pci/xen.c
+>> +++ b/arch/x86/pci/xen.c
+>> @@ -300,8 +300,10 @@ static int xen_initdom_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+>>                         pci_read_config_dword(dev, pos + PCI_MSIX_TABLE,
+>>                                               &table_offset);
+>>                         bir = (u8)(table_offset & PCI_MSIX_FLAGS_BIRMASK);
+>> +                       table_offset &= PCI_MSIX_TABLE_OFFSET;
+>>
+>> -                       map_irq.table_base = pci_resource_start(dev, bir);
+>> +                       map_irq.table_base = pci_resource_start(dev, bir) +
+>> +                               table_offset;
+>>                         map_irq.entry_nr = msidesc->msi_attrib.entry_nr;
+>>                 }
+>>
+>>
+
 
