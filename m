@@ -1,71 +1,45 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.187]:60487 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759954Ab3DHWOV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Apr 2013 18:14:21 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: Re: [PATCHv7 08/17] pci: PCIe driver for Marvell Armada 370/XP systems
-Date: Tue, 9 Apr 2013 00:14:06 +0200
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Russell King <linux@arm.linux.org.uk>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm" <linux-arm-kernel@lists.infradead.org>,
-	"devicetree-discuss@lists.ozlabs.org"
-	<devicetree-discuss@lists.ozlabs.org>,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Maen Suleiman <maen@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Olof Johansson <olof@lixom.net>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Mitch Bradley <wmb@firmworks.com>,
-	Andrew Murray <andrew.murray@arm.com>
-References: <1364395234-11195-1-git-send-email-thomas.petazzoni@free-electrons.com> <201304082334.13186.arnd@arndb.de> <20130408235341.7012b791@skate>
-In-Reply-To: <20130408235341.7012b791@skate>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201304090014.06959.arnd@arndb.de>
+Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:58533 "EHLO
+	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1755292Ab3DYJuG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Apr 2013 05:50:06 -0400
+From: Andrew Murray <Andrew.Murray@arm.com>
+To: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	microblaze-uclinux@itee.uq.edu.au
+Cc: benh@kernel.crashing.org, monstr@monstr.eu, bhelgaas@google.com,
+	linux-kernel@vger.kernel.org, arnd@arndb.de,
+	grant.likely@secretlab.ca, Andrew Murray <Andrew.Murray@arm.com>
+Subject: [RFC PATCH 0/3] Unify definations of struct pci_controller
+Date: Thu, 25 Apr 2013 10:49:17 +0100
+Message-Id: <1366883360-14061-1-git-send-email-Andrew.Murray@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday 08 April 2013, Thomas Petazzoni wrote:
-> Dear Arnd Bergmann,
-> 
-> On Mon, 8 Apr 2013 23:34:12 +0200, Arnd Bergmann wrote:
-> 
-> > > No, I'm assuming PCIBIOS_MIN_IO is always 0. So presumarly, this should
-> > > be something like:
-> > > 
-> > >         pcie->realio.end = min(PCIBIOS_MIN_IO +
-> > >                                 resource_size(&pcie->io),
-> > >                                 IO_SPACE_LIMIT);
-> > > 
-> > 
-> > Normally PCIBIOS_MIN_IO is 0x1000, since the first 4096 ports are reserved
-> > for ISA and PCMCIA compatible drivers and should not be assigned to
-> > PCI devices. So the first port should get ports 0x1000 to 0xffff, later
-> > ones can used the entire 65536 ports e.g. 0x10000 to 0x1ffff.
-> 
-> Then I guess it should work with the code I'm proposing here, no?
-> 
-> Note: this pcie->realio region is global: it will be shared by all PCIe
-> interfaces.
+PowerPC and Microblaze have nearly identical definations of struct
+pci_controller - this patch unifies them in asm-generic to reduce
+code duplication and to allow new architectures to reuse.
 
-I think it's still wrong, unless you guarantee that
-resource_start(&pcie->io) is the same as PCIBIOS_MIN_IO.
+This patchset follows and depends on "of/pci: Provide common
+support for PCI DT parsing" which provided common 'ranges' parsing
+code which uses an architecture defined struct pci_controller. This
+patch is currently in Jason Coopers mvebu-next/pcie branch.
 
-Why don't you just read the start and end values from the ranges
-property? I assume you want to run with io_offset=0, so you really
-need
+It is hoped this will pave the way for providing common
+implementations of commonly duplicated functions found across the
+architectures such as pcibios_alloc|free_controller and
+pcibios_setup_phb_resources type functions.
 
-	pcie->realio.type = IORESOURCE_IO;
-	pcie->realio.start = max(PCIBIOS_MIN_IO, range->pci_addr);
-	pcie->realio.end = max(IO_SPACE_LIMIT, range->pci_addr + range->size);
+Andrew Murray (3):
+  powerpc: Move struct pci_controller to asm-generic
+  microblaze: Use asm-generic version of pci_controller
+  pci: Use common definations of INDIRECT_TYPE_*
 
-	Arnd
+ arch/microblaze/include/asm/pci-bridge.h |   70 +-----------------------
+ arch/powerpc/include/asm/pci-bridge.h    |   82 ---------------------------
+ arch/powerpc/sysdev/fsl_pci.c            |   16 +++---
+ arch/powerpc/sysdev/indirect_pci.c       |   20 +++---
+ arch/powerpc/sysdev/ppc4xx_pci.c         |    4 +-
+ arch/powerpc/sysdev/xilinx_pci.c         |    2 +-
+ include/asm-generic/pci-bridge.h         |   90 ++++++++++++++++++++++++++++++
+ 7 files changed, 112 insertions(+), 172 deletions(-)
+
