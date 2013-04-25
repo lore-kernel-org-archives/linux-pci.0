@@ -1,64 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from avon.wwwdotorg.org ([70.85.31.133]:58601 "EHLO
-	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751367Ab3DLPeS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 12 Apr 2013 11:34:18 -0400
-Message-ID: <51682975.1080302@wwwdotorg.org>
-Date: Fri, 12 Apr 2013 09:34:13 -0600
-From: Stephen Warren <swarren@wwwdotorg.org>
+Received: from relay3.sgi.com ([192.48.152.1]:54610 "EHLO relay.sgi.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S932324Ab3DYORy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 25 Apr 2013 10:17:54 -0400
+Message-ID: <51793B10.7060603@sgi.com>
+Date: Thu, 25 Apr 2013 07:17:52 -0700
+From: Mike Travis <travis@sgi.com>
 MIME-Version: 1.0
-To: Jay Agarwal <jagarwal@nvidia.com>
-CC: Prashant Gaikwad <pgaikwad@nvidia.com>,
-	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
-	Krishna Thota <kthota@nvidia.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Peter De Schrijver <pdeschrijver@nvidia.com>,
-	"thierry.reding@avionic-design.de" <thierry.reding@avionic-design.de>,
-	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
+To: Bian LuLu <helianthus.lu@gmail.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"olof@lixom.net" <olof@lixom.net>,
-	Laxman Dewangan <ldewangan@nvidia.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"mturquette@linaro.org" <mturquette@linaro.org>,
-	Juha Tukkinen <jtukkinen@nvidia.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Hiroshi Doyu <hdoyu@nvidia.com>
-Subject: Re: [PATCH 1/3] ARM: tegra: pcie: Add tegra3 support
-References: <1365435688-4179-1-git-send-email-jagarwal@nvidia.com> <51630852.1000107@wwwdotorg.org> <C79B248886DD134989C8FF6B096A91AB91B36FB2FD@BGMAIL01.nvidia.com>
-In-Reply-To: <C79B248886DD134989C8FF6B096A91AB91B36FB2FD@BGMAIL01.nvidia.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [RFC] The meaning of local_cpulist and local_cpus
+References: <CAG82n_ni9ZAThGbMfqqObnz7QyQpH18G4hYBLt+BdeRHPE6EBg@mail.gmail.com> <CAErSpo5VaiuH+WT4RdM9yU9AHMkUKzATMiNzhixRU04_aZusBg@mail.gmail.com> <51780EDA.3000003@sgi.com> <CAG82n_kBYQpCRDmY7ghivXY60hBMF_5HHZUAT1d-xWD9OZvdrg@mail.gmail.com>
+In-Reply-To: <CAG82n_kBYQpCRDmY7ghivXY60hBMF_5HHZUAT1d-xWD9OZvdrg@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/12/2013 08:58 AM, Jay Agarwal wrote:
->>>  	err = regulator_disable(pcie->pex_clk_supply);
->>>  	if (err < 0)
->>> -		dev_err(pcie->dev, "failed to disable pex-clk regulator:
->> %d\n",
->>> +		dev_warn(pcie->dev, "failed to disable pex-clk regulator:
->> %d\n",
->>>  			err);
+
+
+On 4/25/2013 6:57 AM, Bian LuLu wrote:
+> Thankyou .
+> But I still can not understand what is the meaning of cuplist.
+> my linux version is ubuntu 12.04, and
+> my system:/$ cat /sys/devices/pci0000:00/0000:00:1a.0/local_cpulist
+>  the result is '0-7',
+
+Ahh, sorry, I misinterpreted what you are asking.  On NUMA systems,
+I/O can be spread over many nodes and DMA/interrupts are faster from the
+device to memory and cpus local to that node.  The numa_node shows
+which node the device is on, and the cpulist shows which cpus are local
+to that same node.  In general you also want the IRQ affinity to be
+the local cpus as well.
+
+> 
+> I just don't konw what are they represent .Could  you give me more
+> detailed information about local_cpulist and local_cpus,and their
+> relations.
+> thanks in advance :)
+> 
+> On Thu, Apr 25, 2013 at 12:56 AM, Mike Travis <travis@sgi.com> wrote:
+>>
+>>
+>> On 4/24/2013 9:48 AM, Bjorn Helgaas wrote:
+>>> [+cc linux-pci, Mike]
 >>>
->>>  	err = regulator_disable(pcie->vdd_supply);
->>>  	if (err < 0)
->>> -		dev_err(pcie->dev, "failed to disable VDD regulator: %d\n",
->>> +		dev_warn(pcie->dev, "failed to disable VDD regulator:
->> %d\n",
->>>  			err);
+>>> On Wed, Apr 24, 2013 at 4:06 AM, Bian LuLu <helianthus.lu@gmail.com> wrote:
+>>>> Hi all,
+>>>>
+>>>> Recently, i read some codes of PCI portions. I think
+>>>> local_cpulist is a list about one kind of CPU and
+>>>> local_cpus is a mask of CPU. But i am not sure when
+>>>> and how i should use these two parameters.
+>>>>
+>>>> See http://lxr.linux.no/linux+v3.5.4/drivers/pci/pci-sysfs.c#L390 for
+>>>> details.
+>>>>
+>>>> Would anyone please give me some suggestions?
+>>>> Thanks in advance ;-)
+>>>
+>>> I don't know off-hand, but maybe Mike or somebody on linux-pci does.
+>>> It looks like Mike added local_cpulist with 39106dcf85.
+>>>
 >>
->> Please explain why that change is correct. If the regulators only exist on
->> Tegra20, please represent that fact in the SoC data. Regulators must always
->> exist, so enable/disable should never fail due to missing regulators. Actual
->> run-time failures seem like something that really is an error.
+>> It primarily comes into play when you have a large # of cpus.
+> I can not understand the symbol of '#' ,what is the meaning of it?
+>> Here's the difference on a system that has 1024 cpu threads:
 >>
-> [>] These regulators are needed for both tegra20 & tegra30. Since we are not returning error here, so changed to dev_warn.
-
-If the regulators are required, then any failure to operate them should
-be an error, hence dev_err() seems correct.
-
-As to why the code doesn't actually return an error? I'm not sure.
-Perhaps that should be fixed with a separate patch, although I don't
-recall exactly where in the code the above excerpt is; if it's in
-remove(), then continuing on without returning an error would be
-appropriate.
+>> harp31-sys:/sys/devices/system/node/node20 # cat cpulist
+>> 160-167,672-679
+>> harp31-sys:/sys/devices/system/node/node20 # cat cpumap
+>> 00000000,00000000,00000000,00000000,00000000,00000000,00000000,
+>> 00000000,00000000,00000000,000000ff,00000000,00000000,00000000,
+>> 00000000,00000000,00000000,00000000,00000000,00000000,00000000,
+>> 00000000,00000000,00000000,00000000,00000000,000000ff,00000000,
+>> 00000000,00000000,00000000,00000000
+>>
+>> Which is easier to interpret?  :)
+>>
+>> But there are some older user side utilities that still
+>> use the mask format.
