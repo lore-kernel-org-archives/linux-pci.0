@@ -1,85 +1,129 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:54149 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753805Ab3DLP2o (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 12 Apr 2013 11:28:44 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glp-linux-pci@m.gmane.org>)
-	id 1UQfu2-0004be-6u
-	for linux-pci@vger.kernel.org; Fri, 12 Apr 2013 17:28:38 +0200
-Received: from 183.12.184.59 ([183.12.184.59])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-pci@vger.kernel.org>; Fri, 12 Apr 2013 17:28:38 +0200
-Received: from zhef2000 by 183.12.184.59 with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-pci@vger.kernel.org>; Fri, 12 Apr 2013 17:28:38 +0200
-To: linux-pci@vger.kernel.org
-From: zhengfei <zhef2000@gmail.com>
-Subject: Re: [Question] Failed to access the BAR MMIO space of PCI device
-Date: Fri, 12 Apr 2013 15:28:23 +0000 (UTC)
-Message-ID: <loom.20130412T171707-312@post.gmane.org>
-References: <loom.20130407T204756-980@post.gmane.org>  <1365431000.16420.11.camel@bling.home>  <loom.20130411T190021-709@post.gmane.org> <1365703048.26525.8.camel@ul30vt.home>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from mail-vb0-f45.google.com ([209.85.212.45]:56887 "EHLO
+	mail-vb0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758263Ab3DYTyR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Apr 2013 15:54:17 -0400
+Received: by mail-vb0-f45.google.com with SMTP id p14so2997729vbm.18
+        for <linux-pci@vger.kernel.org>; Thu, 25 Apr 2013 12:54:16 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1365806683-26717-1-git-send-email-yinghai@kernel.org>
+References: <1365806683-26717-1-git-send-email-yinghai@kernel.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 25 Apr 2013 13:53:56 -0600
+Message-ID: <CAErSpo7_Qt8G=cG56koefsoHO=uN3amCgA7FYJv8amZtxWKc=w@mail.gmail.com>
+Subject: Re: [PATCH v4 00/29] PCI: Add for_each_pci_resource and addon_res support
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Ram Pai <linuxram@us.ibm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Alex Williamson <alex.williamson <at> redhat.com> writes:
+On Fri, Apr 12, 2013 at 4:44 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> First part is for_each_pci_resource support:
+> Now pci device resource iteration is done via "for (i=0...)" open code.
+> That make code hard to read esp when only bridge or sriov resources
+> are involved.
 
-> 
-> On Thu, 2013-04-11 at 17:15 +0000, zhengfei wrote:
-> > Alex Williamson <alex.williamson <at> redhat.com> writes:
-> > 
-> > > 
-> > > On Sun, 2013-04-07 at 19:19 +0000, zhengfei wrote:
-> > > > Hi,
-> > > > 
-> > > > I'm writing a driver for a SR-IOV device on the PCI bus. My 
-architecture 
-> > is 
-> > > > a 64-bit X86 of intel Sandy bridge.
-> > > > 
-> > > > In my device driver, I want to configure the device to transfer data 
-> > to/from 
-> > > > X86.I get the the device BAR MMIO base address with the command 
-"lspci -
-> > s 
-> > > > 04:00.03 -xxx" in the guest os(kvm).
-> > > > But after I ioremap() that MMIO base address,I failed to access the 
-BAR 
-> > MMIO 
-> > > > space in the guest os(kvm).
-> > > > 
-> > > > Is there a function which show mapping between the real PCI address 
-> > stored in 
-> > > > the BAR and the emulated address stored in the BAR?
-> > > 
-> > 
-> > It is a userspace driver on guest os.To be simply,I got the BAR0 
-> > address(gpa) on guest os,but I failed to access real BAR0 MMIO address 
-space 
-> > of the device with the gpa.So what can I do next? and in which source 
-code 
-> > file,could I find the procedure of mapping the real BAR address 
-space（hpa) 
-> > to gpa?
-> 
-> The guest doesn't have access to the hpa, nor should it need it.  To map
-> BAR0 from guest userspace
-> mmap /sys/bus/pci/devices/xxxx:xx:xx.x/resource0.  Thanks,
-> 
-> Alex
-> 
-> 
+The "for (i = 0; ...)" code *is* a bit ugly with the various constants
+for different types of resources, but it does have the advantage that
+it is very simple and easy to understand.  The new code improves the
+callers, but the implementation of for_each_pci_resource() is not very
+straightforward.
 
-Yes,I have followed your advice above,but the problem still exists.I doubt 
-the address may not be correct gotten by "mmap 
-/sys/bus/pci/devices/xxxx:xx:xx.x/resource0",what can I do next to debug? so 
-I want to learn ,how do the guest userspace mapping to host BAR0 address 
-space.
+The diffstat (541 insertions(+), 226 deletions(-)) doesn't really
+indicate that this is an overall simplification.  I know this also
+adds some functionality, but even without the addon stuff, this adds
+110 more lines than it removes.
 
-zhengfei,
-Thanks
-
-
+> We want to replace those open code with for_each_pci_resource() to make
+> the code more readable.
+> Also will add addon_resource handling, and need to make addon resource
+> to be treated as normal PCI resources during iteration, add
+> for_each_pci_resource will make that support transition more simple.
+>
+> To make for_each_pci_resource more efficient. We will use preset bitmap
+> of different type for searching next idx.
+>
+> Second part is addon_res support:
+> Now there is some non normal pci resources other than standard,rom,
+> sriov, bridges.
+> Some could be same as standard reg, but using different position.
+> Some could have own way to read/write to them.
+> Kernel are using different way to hack those resources like abusing
+> pci bridge resource spot on non bridge pci device.
+>
+> Add addon_resources list in pci_dev for those non-standard resources.
+> With this patch, will treat addon-resource like standard resources with
+> special ops.
+>
+> At last replace some quirk_io with addon_res.
+>
+> could get from
+>         git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-for-each-res-addon
+>
+> -v4: split one patch out, and remove PCI_NO_....
+>
+> Notes: We still need to keep _idx as we use it all the time, and drivers still
+> use them to get resource.
+>
+> Thanks
+>
+> Yinghai Lu
+>
+>
+> Ram Pai (1):
+>   PCI: pci resource iterator
+>
+> Yinghai Lu (28):
+>   PCI: Clean up quirk_io_region
+>   PCI: Add pci_dev_resource_n()
+>   PCI: Update pci_resource_start etc to use pci_dev_resource_n()
+>   PCI: Add pci_dev_resource_idx() helper
+>   PCI: Add is_pci_*_resource_idx() helpers
+>   PCI, x86: Use for_each_pci_resource() with
+>     pci_allocate_bridge_resources
+>   PCI, x86: Use for_each_pci_resource() with pci_allocate_dev_resources
+>   PCI: Use for_each_pci_resource() with IOV releated functions
+>   PCI, acpiphp: Use for_each_pci_resource() helper
+>   PCI, pciehp: Use for_each_pci_resource() helper
+>   PCI: Use for_each_pci_resource() in pci_enable_dev
+>   PCI: Use for_each_pci_resource() in pci_reassigndev
+>   PCI: Use for_each_pci_resource() with pci bar reassign funcs
+>   PCI: Use for_each_pci_resource() in pci_assign_resource
+>   PCI, x86: Use for_each_pci_resource() with noassign_bars
+>   PCI: Use for_each_pci_resource() in pci_dev_driver()
+>   PCI: Use for_each_pci_resource() in pci resource release
+>   PCI: Use for_each_pci_resource() in pci bases reading
+>   PCI, x86: Use for_each_pci_resource() with mrst
+>   PCI, xen: Use for_each_pci_resource() with xen pci
+>   PCI: Add addon_resource support for pci devices
+>   PCI: Treat addon res as std resources
+>   PCI: Add helpers to add addon_resource
+>   PCI: Update pci_resource_bar() to support addon_resource
+>   PCI: Assign/update resource to addon_res
+>   PCI: Make piix4 quirk to use addon_res
+>   PCI: Make quirk_io_region to use addon_res
+>   PCI: Use addon_fixed_resource with ati fixed resource
+>
+>  arch/x86/pci/common.c              |   3 +-
+>  arch/x86/pci/i386.c                |  58 +++------
+>  arch/x86/pci/mrst.c                |   7 +-
+>  drivers/pci/hotplug/acpiphp_glue.c |   4 +-
+>  drivers/pci/hotplug/pciehp_hpc.c   |   5 +-
+>  drivers/pci/iov.c                  |  31 +++--
+>  drivers/pci/pci-driver.c           |   7 +-
+>  drivers/pci/pci.c                  |  27 ++--
+>  drivers/pci/probe.c                | 176 ++++++++++++++++++++++++-
+>  drivers/pci/quirks.c               | 258 ++++++++++++++++++++++---------------
+>  drivers/pci/remove.c               |   5 +-
+>  drivers/pci/setup-bus.c            |  28 ++--
+>  drivers/pci/setup-res.c            |  38 ++++--
+>  drivers/pci/xen-pcifront.c         |   4 +-
+>  include/linux/pci.h                | 116 +++++++++++++++--
+>  15 files changed, 541 insertions(+), 226 deletions(-)
+>
+> --
+> 1.8.1.4
+>
