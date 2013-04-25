@@ -1,93 +1,230 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e9.ny.us.ibm.com ([32.97.182.139]:42890 "EHLO e9.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758672Ab3DDLjo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 4 Apr 2013 07:39:44 -0400
-Received: from /spool/local
-	by e9.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <shangw@linux.vnet.ibm.com>;
-	Thu, 4 Apr 2013 07:39:43 -0400
-Received: from d01relay01.pok.ibm.com (d01relay01.pok.ibm.com [9.56.227.233])
-	by d01dlp02.pok.ibm.com (Postfix) with ESMTP id 666256E8044
-	for <linux-pci@vger.kernel.org>; Thu,  4 Apr 2013 07:39:37 -0400 (EDT)
-Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
-	by d01relay01.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id r34BddPh306112
-	for <linux-pci@vger.kernel.org>; Thu, 4 Apr 2013 07:39:39 -0400
-Received: from d01av01.pok.ibm.com (loopback [127.0.0.1])
-	by d01av01.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id r34BddCn009897
-	for <linux-pci@vger.kernel.org>; Thu, 4 Apr 2013 07:39:39 -0400
-From: Gavin Shan <shangw@linux.vnet.ibm.com>
-To: linux-pci@vger.kernel.org
-Cc: bhelgaas@google.com, Gavin Shan <shangw@linux.vnet.ibm.com>
-Subject: [PATCH 3/5] PCI: Use cached MSI cap while enabling MSI interrupts
-Date: Thu,  4 Apr 2013 19:39:30 +0800
-Message-Id: <1365075572-20763-4-git-send-email-shangw@linux.vnet.ibm.com>
-In-Reply-To: <1365075572-20763-1-git-send-email-shangw@linux.vnet.ibm.com>
-References: <1365075572-20763-1-git-send-email-shangw@linux.vnet.ibm.com>
+Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:58643 "EHLO
+	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1755292Ab3DYJuI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Apr 2013 05:50:08 -0400
+From: Andrew Murray <Andrew.Murray@arm.com>
+To: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	microblaze-uclinux@itee.uq.edu.au
+Cc: benh@kernel.crashing.org, monstr@monstr.eu, bhelgaas@google.com,
+	linux-kernel@vger.kernel.org, arnd@arndb.de,
+	grant.likely@secretlab.ca, Andrew Murray <Andrew.Murray@arm.com>
+Subject: [RFC PATCH 1/3] powerpc: Move struct pci_controller to asm-generic
+Date: Thu, 25 Apr 2013 10:49:18 +0100
+Message-Id: <1366883360-14061-2-git-send-email-Andrew.Murray@arm.com>
+In-Reply-To: <1366883360-14061-1-git-send-email-Andrew.Murray@arm.com>
+References: <1366883360-14061-1-git-send-email-Andrew.Murray@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The patch intends to use the cached MSI capability offset in
-pci_dev instead of polling that from config space when enabling
-MSI interrupts.
+This patch moves struct pci_controller into asm-generic to allow
+for use by other architectures thus reducing code duplication in
+the kernel.
 
-Signed-off-by: Gavin Shan <shangw@linux.vnet.ibm.com>
+Signed-off-by: Andrew Murray <Andrew.Murray@arm.com>
 ---
- drivers/pci/msi.c |   19 +++++++++----------
- 1 files changed, 9 insertions(+), 10 deletions(-)
+ arch/powerpc/include/asm/pci-bridge.h |   87 +++++---------------------------
+ include/asm-generic/pci-bridge.h      |   68 +++++++++++++++++++++++++
+ 2 files changed, 82 insertions(+), 73 deletions(-)
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 5f51e10..182474d 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -552,14 +552,14 @@ out_unroll:
- static int msi_capability_init(struct pci_dev *dev, int nvec)
- {
- 	struct msi_desc *entry;
--	int pos, ret;
-+	int ret;
- 	u16 control;
- 	unsigned mask;
- 
--	pos = pci_find_capability(dev, PCI_CAP_ID_MSI);
--	msi_set_enable(dev, 0);	/* Disable MSI during set up */
-+	/* Disable MSI during set up */
-+	msi_set_enable(dev, 0);
- 
--	pci_read_config_word(dev, msi_control_reg(pos), &control);
-+	pci_read_config_word(dev, msi_control_reg(dev->msi_cap), &control);
- 	/* MSI Entry Initialization */
- 	entry = alloc_msi_entry(dev);
- 	if (!entry)
-@@ -570,9 +570,9 @@ static int msi_capability_init(struct pci_dev *dev, int nvec)
- 	entry->msi_attrib.entry_nr	= 0;
- 	entry->msi_attrib.maskbit	= is_mask_bit_support(control);
- 	entry->msi_attrib.default_irq	= dev->irq;	/* Save IOAPIC IRQ */
--	entry->msi_attrib.pos		= pos;
-+	entry->msi_attrib.pos		= dev->msi_cap;
- 
--	entry->mask_pos = msi_mask_reg(pos, entry->msi_attrib.is_64);
-+	entry->mask_pos = msi_mask_reg(dev->msi_cap, entry->msi_attrib.is_64);
- 	/* All MSIs are unmasked by default, Mask them all */
- 	if (entry->msi_attrib.maskbit)
- 		pci_read_config_dword(dev, entry->mask_pos, &entry->masked);
-@@ -818,13 +818,12 @@ static int pci_msi_check_device(struct pci_dev *dev, int nvec, int type)
+diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+index 205bfba..163bd40 100644
+--- a/arch/powerpc/include/asm/pci-bridge.h
++++ b/arch/powerpc/include/asm/pci-bridge.h
+@@ -8,7 +8,6 @@
+  * 2 of the License, or (at your option) any later version.
   */
- int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec)
- {
--	int status, pos, maxvec;
-+	int status, maxvec;
- 	u16 msgctl;
+ #include <linux/pci.h>
+-#include <linux/list.h>
+ #include <linux/ioport.h>
+ #include <linux/of_pci.h>
+ #include <asm-generic/pci-bridge.h>
+@@ -16,85 +15,27 @@
+ struct device_node;
  
--	pos = pci_find_capability(dev, PCI_CAP_ID_MSI);
--	if (!pos)
-+	if (!dev->msi_cap)
- 		return -EINVAL;
--	pci_read_config_word(dev, pos + PCI_MSI_FLAGS, &msgctl);
-+	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &msgctl);
- 	maxvec = 1 << ((msgctl & PCI_MSI_FLAGS_QMASK) >> 1);
- 	if (nvec > maxvec)
- 		return maxvec;
+ /*
+- * Structure of a PCI controller (host bridge)
++ * Used for variants of PCI indirect handling and possible quirks:
++ *  SET_CFG_TYPE - used on 4xx or any PHB that does explicit type0/1
++ *  EXT_REG - provides access to PCI-e extended registers
++ *  SURPRESS_PRIMARY_BUS - we suppress the setting of PCI_PRIMARY_BUS
++ *   on Freescale PCI-e controllers since they used the PCI_PRIMARY_BUS
++ *   to determine which bus number to match on when generating type0
++ *   config cycles
++ *  NO_PCIE_LINK - the Freescale PCI-e controllers have issues with
++ *   hanging if we don't have link and try to do config cycles to
++ *   anything but the PHB.  Only allow talking to the PHB if this is
++ *   set.
++ *  BIG_ENDIAN - cfg_addr is a big endian register
++ *  BROKEN_MRM - the 440EPx/GRx chips have an errata that causes hangs on
++ *   the PLB4.  Effectively disable MRM commands by setting this.
+  */
+-struct pci_controller {
+-	struct pci_bus *bus;
+-	char is_dynamic;
+-#ifdef CONFIG_PPC64
+-	int node;
+-#endif
+-	struct device_node *dn;
+-	struct list_head list_node;
+-	struct device *parent;
+-
+-	int first_busno;
+-	int last_busno;
+-	int self_busno;
+-	struct resource busn;
+-
+-	void __iomem *io_base_virt;
+-#ifdef CONFIG_PPC64
+-	void *io_base_alloc;
+-#endif
+-	resource_size_t io_base_phys;
+-	resource_size_t pci_io_size;
+-
+-	/* Some machines (PReP) have a non 1:1 mapping of
+-	 * the PCI memory space in the CPU bus space
+-	 */
+-	resource_size_t pci_mem_offset;
+-
+-	/* Some machines have a special region to forward the ISA
+-	 * "memory" cycles such as VGA memory regions. Left to 0
+-	 * if unsupported
+-	 */
+-	resource_size_t	isa_mem_phys;
+-	resource_size_t	isa_mem_size;
+-
+-	struct pci_ops *ops;
+-	unsigned int __iomem *cfg_addr;
+-	void __iomem *cfg_data;
+-
+-	/*
+-	 * Used for variants of PCI indirect handling and possible quirks:
+-	 *  SET_CFG_TYPE - used on 4xx or any PHB that does explicit type0/1
+-	 *  EXT_REG - provides access to PCI-e extended registers
+-	 *  SURPRESS_PRIMARY_BUS - we suppress the setting of PCI_PRIMARY_BUS
+-	 *   on Freescale PCI-e controllers since they used the PCI_PRIMARY_BUS
+-	 *   to determine which bus number to match on when generating type0
+-	 *   config cycles
+-	 *  NO_PCIE_LINK - the Freescale PCI-e controllers have issues with
+-	 *   hanging if we don't have link and try to do config cycles to
+-	 *   anything but the PHB.  Only allow talking to the PHB if this is
+-	 *   set.
+-	 *  BIG_ENDIAN - cfg_addr is a big endian register
+-	 *  BROKEN_MRM - the 440EPx/GRx chips have an errata that causes hangs on
+-	 *   the PLB4.  Effectively disable MRM commands by setting this.
+-	 */
+ #define PPC_INDIRECT_TYPE_SET_CFG_TYPE		0x00000001
+ #define PPC_INDIRECT_TYPE_EXT_REG		0x00000002
+ #define PPC_INDIRECT_TYPE_SURPRESS_PRIMARY_BUS	0x00000004
+ #define PPC_INDIRECT_TYPE_NO_PCIE_LINK		0x00000008
+ #define PPC_INDIRECT_TYPE_BIG_ENDIAN		0x00000010
+ #define PPC_INDIRECT_TYPE_BROKEN_MRM		0x00000020
+-	u32 indirect_type;
+-	/* Currently, we limit ourselves to 1 IO range and 3 mem
+-	 * ranges since the common pci_bus structure can't handle more
+-	 */
+-	struct resource	io_resource;
+-	struct resource mem_resources[3];
+-	int global_number;		/* PCI domain number */
+-
+-	resource_size_t dma_window_base_cur;
+-	resource_size_t dma_window_size;
+-
+-#ifdef CONFIG_PPC64
+-	unsigned long buid;
+-
+-	void *private_data;
+-#endif	/* CONFIG_PPC64 */
+-};
+ 
+ /* These are used for config access before all the PCI probing
+    has been done. */
+diff --git a/include/asm-generic/pci-bridge.h b/include/asm-generic/pci-bridge.h
+index 20db2e5..e58830e 100644
+--- a/include/asm-generic/pci-bridge.h
++++ b/include/asm-generic/pci-bridge.h
+@@ -9,6 +9,9 @@
+ 
+ #ifdef __KERNEL__
+ 
++#include <linux/pci.h>
++#include <linux/list.h>
++
+ enum {
+ 	/* Force re-assigning all resources (ignore firmware
+ 	 * setup completely)
+@@ -38,6 +41,71 @@ enum {
+ 	PCI_SCAN_ALL_PCIE_DEVS	= 0x00000040,
+ };
+ 
++struct device_node;
++
++/*
++ * Structure of a PCI controller (host bridge)
++ */
++#if defined(CONFIG_PPC32) || defined(CONFIG_PPC64)
++struct pci_controller {
++	struct pci_bus *bus;
++	char is_dynamic;
++#ifdef CONFIG_PPC64
++	int node;
++#endif
++	struct device_node *dn;
++	struct list_head list_node;
++	struct device *parent;
++
++	int first_busno;
++	int last_busno;
++	int self_busno;
++#if defined(CONFIG_PPC64) || defined(CONFIG_PPC32)
++	struct resource busn;
++#endif
++
++	void __iomem *io_base_virt;
++#ifdef CONFIG_PPC64
++	void *io_base_alloc;
++#endif
++	resource_size_t io_base_phys;
++	resource_size_t pci_io_size;
++
++	/* Some machines (PReP) have a non 1:1 mapping of
++	 * the PCI memory space in the CPU bus space
++	 */
++	resource_size_t pci_mem_offset;
++
++	/* Some machines have a special region to forward the ISA
++	 * "memory" cycles such as VGA memory regions. Left to 0
++	 * if unsupported
++	 */
++	resource_size_t	isa_mem_phys;
++	resource_size_t	isa_mem_size;
++
++	struct pci_ops *ops;
++	unsigned int __iomem *cfg_addr;
++	void __iomem *cfg_data;
++
++	u32 indirect_type;
++	/* Currently, we limit ourselves to 1 IO range and 3 mem
++	 * ranges since the common pci_bus structure can't handle more
++	 */
++	struct resource	io_resource;
++	struct resource mem_resources[3];
++	int global_number;		/* PCI domain number */
++
++	resource_size_t dma_window_base_cur;
++	resource_size_t dma_window_size;
++
++#ifdef CONFIG_PPC64
++	unsigned long buid;
++
++	void *private_data;
++#endif	/* CONFIG_PPC64 */
++};
++#endif
++
+ #ifdef CONFIG_PCI
+ extern unsigned int pci_flags;
+ 
 -- 
-1.7.5.4
+1.7.0.4
 
