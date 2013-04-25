@@ -1,76 +1,73 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 15 Apr 2013 18:11:21 +0200
-From: Borislav Petkov <bp@alien8.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Doug Thompson <dougthompson@xmission.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-edac@vger.kernel.org
-Subject: Re: [PATCH] edac: Handle EDAC ECC errors for Family 16h
-Message-ID: <20130415161121.GA18440@pd.tnic>
-References: <1366039059-15772-1-git-send-email-Aravind.Gopalakrishnan@amd.com>
- <CAErSpo6cD4WtPhTbcBEyfOLNASJzr+cU2Lch=fVyqn-gh15drQ@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-we0-f172.google.com ([74.125.82.172]:41041 "EHLO
+	mail-we0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756519Ab3DYN6I (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Apr 2013 09:58:08 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <CAErSpo6cD4WtPhTbcBEyfOLNASJzr+cU2Lch=fVyqn-gh15drQ@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <51780EDA.3000003@sgi.com>
+References: <CAG82n_ni9ZAThGbMfqqObnz7QyQpH18G4hYBLt+BdeRHPE6EBg@mail.gmail.com>
+ <CAErSpo5VaiuH+WT4RdM9yU9AHMkUKzATMiNzhixRU04_aZusBg@mail.gmail.com> <51780EDA.3000003@sgi.com>
+From: Bian LuLu <helianthus.lu@gmail.com>
+Date: Thu, 25 Apr 2013 21:57:44 +0800
+Message-ID: <CAG82n_kBYQpCRDmY7ghivXY60hBMF_5HHZUAT1d-xWD9OZvdrg@mail.gmail.com>
+Subject: Re: [RFC] The meaning of local_cpulist and local_cpus
+To: Mike Travis <travis@sgi.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 15, 2013 at 09:56:08AM -0600, Bjorn Helgaas wrote:
-> On Mon, Apr 15, 2013 at 9:17 AM, Aravind Gopalakrishnan
-> > @@ -172,7 +176,12 @@
-> >   */
-> >  #define PCI_DEVICE_ID_AMD_15H_NB_F1    0x1601
-> >  #define PCI_DEVICE_ID_AMD_15H_NB_F2    0x1602
-> > -
-> > +#define PCI_DEVICE_ID_AMD_16H_NB_F0    0x1530
-> > +#define PCI_DEVICE_ID_AMD_16H_NB_F1    0x1531
-> > +#define PCI_DEVICE_ID_AMD_16H_NB_F2    0x1532
-> > +#define PCI_DEVICE_ID_AMD_16H_NB_F3    0x1533
-> > +#define PCI_DEVICE_ID_AMD_16H_NB_F4    0x1534
-> > +#define PCI_DEVICE_ID_AMD_16H_NB_F5    0x1535
-> >
-> >  /*
-> >   * Function 1 - Address Map
-> > @@ -300,6 +309,7 @@ enum amd_families {
-> >         K8_CPUS = 0,
-> >         F10_CPUS,
-> >         F15_CPUS,
-> > +       F16_CPUS,
-> >         NUM_FAMILIES,
-> >  };
-> >
-> > diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-> > index 1679ff6..59f732f 100644
-> > --- a/include/linux/pci_ids.h
-> > +++ b/include/linux/pci_ids.h
-> > @@ -519,6 +519,8 @@
-> >  #define PCI_DEVICE_ID_AMD_11H_NB_LINK  0x1304
-> >  #define PCI_DEVICE_ID_AMD_15H_NB_F3    0x1603
-> >  #define PCI_DEVICE_ID_AMD_15H_NB_F4    0x1604
-> > +#define PCI_DEVICE_ID_AMD_16H_NB_F3    0x1533
-> > +#define PCI_DEVICE_ID_AMD_16H_NB_F4    0x1534
-> 
-> What is the point of adding identical #defines both here and in
-> amd64_edac.h?  Also, read the note at the top of
-> include/linux/pci_ids.h.
+Thankyou .
+But I still can not understand what is the meaning of cuplist.
+my linux version is ubuntu 12.04, and
+my system:/$ cat /sys/devices/pci0000:00/0000:00:1a.0/local_cpulist
+ the result is '0-7',
 
-Yeah, they should be in pci_ids.h since they're used in amd_nb.c and
-amd64_edac.c.
+I just don't konw what are they represent .Could  you give me more
+detailed information about local_cpulist and local_cpus,and their
+relations.
+thanks in advance :)
 
-But, what shouldn't be is adding unused defines (*_F0 and *_F5).
-Aravind, please drop them.
-
-I'll review the rest of the patch when I get around to it this week.
-
--- 
-Regards/Gruss,
-    Boris.
-
-Sent from a fat crate under my desk. Formatting is fine.
---
+On Thu, Apr 25, 2013 at 12:56 AM, Mike Travis <travis@sgi.com> wrote:
+>
+>
+> On 4/24/2013 9:48 AM, Bjorn Helgaas wrote:
+>> [+cc linux-pci, Mike]
+>>
+>> On Wed, Apr 24, 2013 at 4:06 AM, Bian LuLu <helianthus.lu@gmail.com> wrote:
+>>> Hi all,
+>>>
+>>> Recently, i read some codes of PCI portions. I think
+>>> local_cpulist is a list about one kind of CPU and
+>>> local_cpus is a mask of CPU. But i am not sure when
+>>> and how i should use these two parameters.
+>>>
+>>> See http://lxr.linux.no/linux+v3.5.4/drivers/pci/pci-sysfs.c#L390 for
+>>> details.
+>>>
+>>> Would anyone please give me some suggestions?
+>>> Thanks in advance ;-)
+>>
+>> I don't know off-hand, but maybe Mike or somebody on linux-pci does.
+>> It looks like Mike added local_cpulist with 39106dcf85.
+>>
+>
+> It primarily comes into play when you have a large # of cpus.
+I can not understand the symbol of '#' ,what is the meaning of it?
+> Here's the difference on a system that has 1024 cpu threads:
+>
+> harp31-sys:/sys/devices/system/node/node20 # cat cpulist
+> 160-167,672-679
+> harp31-sys:/sys/devices/system/node/node20 # cat cpumap
+> 00000000,00000000,00000000,00000000,00000000,00000000,00000000,
+> 00000000,00000000,00000000,000000ff,00000000,00000000,00000000,
+> 00000000,00000000,00000000,00000000,00000000,00000000,00000000,
+> 00000000,00000000,00000000,00000000,00000000,000000ff,00000000,
+> 00000000,00000000,00000000,00000000
+>
+> Which is easier to interpret?  :)
+>
+> But there are some older user side utilities that still
+> use the mask format.
