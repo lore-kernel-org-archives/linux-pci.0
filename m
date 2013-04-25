@@ -1,164 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:58136 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754071Ab3D0JOc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 27 Apr 2013 05:14:32 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, Hanjun Guo <guohanjun@huawei.com>,
-	<jiang.liu@huawei.com>, Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH 7/7] PCI/IA64: introduce probe_pci_root_info() to manage  _CRS resource
-Date: Sat, 27 Apr 2013 17:12:29 +0800
-Message-ID: <1367053949-38424-8-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1367053949-38424-1-git-send-email-wangyijing@huawei.com>
-References: <1367053949-38424-1-git-send-email-wangyijing@huawei.com>
+Received: from mail-ie0-f177.google.com ([209.85.223.177]:34995 "EHLO
+	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1749667Ab3DYEQT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Apr 2013 00:16:19 -0400
+Received: by mail-ie0-f177.google.com with SMTP id 9so2997925iec.8
+        for <linux-pci@vger.kernel.org>; Wed, 24 Apr 2013 21:16:19 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CAE9FiQWFiOebCdGrzooMdhBfAHs7FUXX6piNi0p6J422Zs9ODw@mail.gmail.com>
+References: <CAAh6nkmbKR3HTqm5ommevsBwhL_u0N8Rk7Wsms_LfP=nBgKNew@mail.gmail.com>
+	<CAAh6nkmkbKh7FjEZea4GmEbZvH4qvnfOJ2Og8xHYm5othsWLwQ@mail.gmail.com>
+	<CAErSpo6zf34MOLNh5t_PifYhA87vFLRRx-g0WG5N=8+oUcWukQ@mail.gmail.com>
+	<3400627.YcEmgrxv5I@vostro.rjw.lan>
+	<CAE9FiQX7zyaZVm7QsZnOXtRD9qcCGCFpi2DLve863juL1ZxcWQ@mail.gmail.com>
+	<5E18B0C6DCFE1D46967DE5C51CD1AF9866346957@nkgeml506-mbx.china.huawei.com>
+	<CAE9FiQWFiOebCdGrzooMdhBfAHs7FUXX6piNi0p6J422Zs9ODw@mail.gmail.com>
+Date: Wed, 24 Apr 2013 21:16:17 -0700
+Message-ID: <CAE9FiQVbU2s6aOD_RbrxNDmONgxZ+aNP86T249=_cdL3=FoyjQ@mail.gmail.com>
+Subject: =?UTF-8?Q?Re=3A_=E7=AD=94=E5=A4=8D=3A_About_dynamically_loading_the_acpiphp=2Eko?=
+From: Yinghai Lu <yinghai@kernel.org>
+To: "Liujiang (Gerry, Euler)" <jiang.liu@huawei.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Gavin Guo <tuffkidtt@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently, initialize _CRS resource code in IA64 make pci_acpi_scan_root()
-some lengthiness. Introduce probe_pci_root_info() to manage it like in X86,
+On Wed, Apr 24, 2013 at 8:16 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Wed, Apr 24, 2013 at 7:08 PM, Liujiang (Gerry, Euler)
+> <jiang.liu@huawei.com> wrote:
+>> Hi Yinghai,
+>>         I have worked out a similar patch last night. Please refer to attachment.
+>> I think following code may not work because acpiphp_handle_to_bridge()
+>> will return NULL.
+>
+> for root bus we have
+> pcibios_add_bus. ==> acpi_pci_add_bus==>call acpiphp_enumerate_slots.
+> so if there is hotplug slot on root bus directly, it will allocate the
+> acpiphp_bridge and register the slots.
+>
+> then acpiphp_handle_to_bridge will return the right acpiphp_bridge with
+> slots list.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- arch/ia64/pci/pci.c |   91 +++++++++++++++++++++++++++-----------------------
- 1 files changed, 49 insertions(+), 42 deletions(-)
+even there is not slot directly on root bus, but have slot in following bridge,
+acpiphp_bridge for root bus still get created, just no direct slots under it.
 
-diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
-index 2857a83..8076225 100644
---- a/arch/ia64/pci/pci.c
-+++ b/arch/ia64/pci/pci.c
-@@ -365,6 +365,48 @@ static void release_pci_root_info(struct pci_host_bridge *bridge)
- 	__release_pci_root_info(info);
- }
- 
-+static void
-+probe_pci_root_info(struct pci_root_info *info, struct acpi_device *device,
-+		int busnum, int domain)
-+{
-+	char *name;
-+
-+	name = kmalloc(16, GFP_KERNEL);
-+	if (!name)
-+		return;
-+
-+	sprintf(name, "PCI Bus %04x:%02x", domain, busnum);
-+	info->bridge = device;
-+	info->name = name;
-+
-+	acpi_walk_resources(device->handle, METHOD_NAME__CRS, count_window,
-+			&info->res_num);
-+	if (info->res_num) {
-+		info->res =
-+			kzalloc_node(sizeof(*info->res) * info->res_num,
-+				     GFP_KERNEL, info->controller->node);
-+		if (!info->res) {
-+			kfree(name);
-+			return;
-+		}
-+
-+		info->res_offset =
-+			kzalloc_node(sizeof(*info->res_offset) * info->res_num,
-+					GFP_KERNEL, info->controller->node);
-+		if (!info->res_offset) {
-+			kfree(name);
-+			kfree(info->res);
-+			info->res = NULL;
-+			return;
-+		}
-+
-+		info->res_num = 0;
-+		acpi_walk_resources(device->handle, METHOD_NAME__CRS,
-+			add_window, info);
-+	} else
-+		kfree(name);
-+}
-+
- struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- {
- 	struct acpi_device *device = root->device;
-@@ -374,12 +416,11 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 	struct pci_root_info *info = NULL;
- 	int busnum = root->secondary.start;
- 	struct pci_bus *pbus;
--	char *name;
- 	int pxm;
- 
- 	controller = alloc_pci_controller(domain);
- 	if (!controller)
--		goto out1;
-+		return NULL;
- 
- 	controller->acpi_handle = device->handle;
- 
-@@ -392,41 +433,18 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 	info = kzalloc(sizeof(*info), GFP_KERNEL);
- 	if (!info) {
- 		printk(KERN_WARNING "pci_bus %04x:%02x: "
--				"ignored (out of memory)\n", root->segment, busnum);
--		goto out2;
-+				"ignored (out of memory)\n", domain, busnum);
-+		kfree(controller);
-+		return NULL;
- 	}
- 	
-+	info->controller = controller;
- 	INIT_LIST_HEAD(&info->io_resources);
- 	INIT_LIST_HEAD(&info->resources);
-+	probe_pci_root_info(info, device, busnum, domain);
-+
- 	/* insert busn resource at first */
- 	pci_add_resource(&info->resources, &root->secondary);
--	acpi_walk_resources(device->handle, METHOD_NAME__CRS, count_window,
--			&info->res_num);
--	if (info->res_num) {
--		info->res =
--			kzalloc_node(sizeof(*info->res) * info->res_num,
--				     GFP_KERNEL, controller->node);
--		if (!info->res)
--			goto out3;
--		
--		info->res_offset = 
--			kzalloc_node(sizeof(*info->res_offset) * info->res_num, 
--					GFP_KERNEL, controller->node);
--		if (!info->res_offset)
--			goto out4;
--
--		name = kmalloc(16, GFP_KERNEL);
--		if (!name)
--			goto out5;
--
--		sprintf(name, "PCI Bus %04x:%02x", domain, bus);
--		info->bridge = device;
--		info->controller = controller;
--		info->name = name;
--		info->res_num = 0;
--		acpi_walk_resources(device->handle, METHOD_NAME__CRS,
--			add_window, info);
--	}
- 	/*
- 	 * See arch/x86/pci/acpi.c.
- 	 * The desired pci bus might already be scanned in a quirk. We
-@@ -445,17 +463,6 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 			release_pci_root_info, info);
- 	pci_scan_child_bus(pbus);
- 	return pbus;
--
--out5:
--	kfree(info->res_offset);
--out4:
--	kfree(info->res);
--out3:
--	kfree(info);
--out2:
--	kfree(controller);
--out1:
--	return NULL;
- }
- 
- int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
--- 
-1.7.1
-
-
+>
+>
+>> Could you please help to review my version?
+>>         (Due to work environment limitations, sorry for sending out without
+>> attachment and outlook).
+>
+> looks the same to my patch, except you missed the acpiphp_check_bridge
+> calling.
+>
+> Thanks
+>
+> Yinghai
