@@ -1,90 +1,141 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f181.google.com ([209.85.214.181]:59780 "EHLO
-	mail-ob0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758711Ab3DCWiY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 3 Apr 2013 18:38:24 -0400
-Received: by mail-ob0-f181.google.com with SMTP id ni5so1940707obc.26
-        for <linux-pci@vger.kernel.org>; Wed, 03 Apr 2013 15:38:23 -0700 (PDT)
+Received: from hydra.sisk.pl ([212.160.235.94]:44893 "EHLO hydra.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759932Ab3DZKuF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 26 Apr 2013 06:50:05 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Gavin Guo <tuffkidtt@gmail.com>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH -v3] PCI, ACPI, hotplug: Fix BUS_CHECK event handle on root bridge
+Date: Fri, 26 Apr 2013 12:58:12 +0200
+Message-ID: <4942906.jTIhNoktzo@vostro.rjw.lan>
+In-Reply-To: <1366940798-15268-1-git-send-email-yinghai@kernel.org>
+References: <1366940798-15268-1-git-send-email-yinghai@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <2699206.HmPyNvCpNR@vostro.rjw.lan>
-References: <2282655.IicBMMa6jN@vostro.rjw.lan> <1396732.fV788D0xgr@vostro.rjw.lan>
- <2699206.HmPyNvCpNR@vostro.rjw.lan>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 3 Apr 2013 16:38:03 -0600
-Message-ID: <CAErSpo4DLswMWVRXUhXx6VcVk27YXpqjbNsnTF4jGv7eunv5hg@mail.gmail.com>
-Subject: Re: [Update][PATCH] PCI / ACPI: Always resume devices on ACPI wakeup notifications
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	Len Brown <lenb@kernel.org>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
-	"Accardi, Kristen C" <kristen.c.accardi@intel.com>,
-	"Huang, Ying" <ying.huang@intel.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 28, 2013 at 3:07 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> Subject: PCI / ACPI: Always resume devices on ACPI wakeup notifications
->
-> It turns out that the _Lxx control methods provided by some BIOSes
-> clear the PME Status bit of PCI devices they handle, which means that
-> pci_acpi_wake_dev() cannot really use that bit to check whether or
-> not the device has signalled wakeup.
->
-> One symptom of the problem is, for example, that when an affected PCI
-> USB controller is runtime-suspended, then plugging in a new USB device
-> into one of the controller's ports will not wake up the controller,
-> which should happen.
->
-> For this reason, make pci_acpi_wake_dev() always attempt to resume
-> the device it is called for regardless of the device's PME Status bit
-> value (that bit still has to be cleared if set at this point,
-> though).
->
-> Reported-by: Sarah Sharp <sarah.a.sharp@linux.intel.com>
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> Acked-by: Matthew Garrett <mjg59@srcf.ucam.org>
-> Cc: 3.7+ <stable@vger.kernel.org>
-> ---
->
-> The changelog in this version is slightly better than in the previous one, IMHO.
+On Thursday, April 25, 2013 06:46:38 PM Yinghai Lu wrote:
+> Gavin found that acpiphp does not handle hotplug anymore even after
+> now we have acpiphp built-in preparing for v3.10.
+> 
+> Bjorn analyzed bootlog, he found that 
+>     acpiphp: ACPI Hot Plug PCI Controller Driver version: 0.5
+>     ACPI: PCI Root Bridge [PCI0] (domain 0000 [bus 00-3e])
+>     \_SB_.PCI0:_OSC invalid UUID
+>     acpiphp: Slot [1] registered
+>     acpiphp: Slot [1-1] registered
+>    acpi root: \_SB_.PCI0 notify handler is installed
+>     _handle_hotplug_event_root: Bus check notify on \_SB_.PCI0
+>     _handle_hotplug_event_root: Bus check notify on \_SB_.PCI0
+> And that means:
+>    So we should be using acpiphp, which you do have built in statically,
+>    and it found a couple slots.  And we did get two bus check notifies on
+>    \_SB_.PCI0, so we *should* be re-enumerating PCI bus 0000:00.  But it
+>    looks like we're handling this as a host bridge hotplug event instead
+>    of a PCI device hotplug.  My guess is that
+>    handle_root_bridge_insertion() does nothing because the PCI0 ACPI
+>    device already exists, though I would expect to see the "acpi device
+>    exists..." in your dmesg log if this were the case.
+> 
+> Also according to Rafael and Bjorn, it is perfect fine that we
+> should enumerate bus by sending event to root bridge after hotadd
+> device to slots under that root bridge or children bridges.
+> 
+> It turns out that it is regression caused by
+> | commit 668192b678201d2fff27c6cc76bb003c1ec4a52a
+> | Author: Yinghai Lu <yinghai@kernel.org>
+> | Date:   Mon Jan 21 13:20:48 2013 -0800
+> |
+> |    PCI: acpiphp: Move host bridge hotplug to pci_root.c
+> 
+> We should check slots when BUS_CHECK is sent to root bridge acpi handle.
+> 
+> Restore the old behavoir by calling acpi_check_bridge and check_sub_bridge
+> in acpiphp.
+> 
+> Jiang Liu acctually have simimar patch but it forgets calling
+> acpi_check_bridge() for system that have slots on root bus directly.
+> That is still valid, as in QEMU we still have that slots on bus 0 at
+> least. But my first version patch wrongly check if root bridge exists
+> before check_sub_bridge for children bridges. 
+> 
+> -v2: Don't check bridge for acpi_walk_namespace with check_sub_bridges.
+>      also put back bridge reference.
+> -v3: More changelog and etc.
+> 
+> Reported-by: Gavin Guo <tuffkidtt@gmail.com>
+> Tested-by: Gavin Guo <tuffkidtt@gmail.com>
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 
-I applied this to for-linus for v3.9.  Thanks!
+Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
 > ---
->  drivers/pci/pci-acpi.c |   15 ++++++++-------
->  1 file changed, 8 insertions(+), 7 deletions(-)
->
-> Index: linux-pm/drivers/pci/pci-acpi.c
+>  drivers/acpi/pci_root.c            |    2 ++
+>  drivers/pci/hotplug/acpiphp_glue.c |   14 ++++++++++++++
+>  include/linux/pci-acpi.h           |    2 ++
+>  3 files changed, 18 insertions(+)
+> 
+> Index: linux-2.6/drivers/acpi/pci_root.c
 > ===================================================================
-> --- linux-pm.orig/drivers/pci/pci-acpi.c
-> +++ linux-pm/drivers/pci/pci-acpi.c
-> @@ -53,14 +53,15 @@ static void pci_acpi_wake_dev(acpi_handl
->                 return;
->         }
->
-> -       if (!pci_dev->pm_cap || !pci_dev->pme_support
-> -            || pci_check_pme_status(pci_dev)) {
-> -               if (pci_dev->pme_poll)
-> -                       pci_dev->pme_poll = false;
-> +       /* Clear PME Status if set. */
-> +       if (pci_dev->pme_support)
-> +               pci_check_pme_status(pci_dev);
->
-> -               pci_wakeup_event(pci_dev);
-> -               pm_runtime_resume(&pci_dev->dev);
-> -       }
-> +       if (pci_dev->pme_poll)
-> +               pci_dev->pme_poll = false;
+> --- linux-2.6.orig/drivers/acpi/pci_root.c
+> +++ linux-2.6/drivers/acpi/pci_root.c
+> @@ -643,6 +643,8 @@ static void _handle_hotplug_event_root(s
+>  				 (char *)buffer.pointer);
+>  		if (!root)
+>  			handle_root_bridge_insertion(handle);
+> +		else
+> +			acpiphp_check_host_bridge(handle);
+>  
+>  		break;
+>  
+> Index: linux-2.6/drivers/pci/hotplug/acpiphp_glue.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/pci/hotplug/acpiphp_glue.c
+> +++ linux-2.6/drivers/pci/hotplug/acpiphp_glue.c
+> @@ -950,6 +950,20 @@ check_sub_bridges(acpi_handle handle, u3
+>  	return AE_OK ;
+>  }
+>  
+> +void acpiphp_check_host_bridge(acpi_handle handle)
+> +{
+> +	struct acpiphp_bridge *bridge;
 > +
-> +       pci_wakeup_event(pci_dev);
-> +       pm_runtime_resume(&pci_dev->dev);
->
->         if (pci_dev->subordinate)
->                 pci_pme_wakeup_bus(pci_dev->subordinate);
->
+> +	bridge = acpiphp_handle_to_bridge(handle);
+> +	if (bridge) {
+> +		acpiphp_check_bridge(bridge);
+> +		put_bridge(bridge);
+> +	}
+> +
+> +	acpi_walk_namespace(ACPI_TYPE_DEVICE, handle,
+> +		ACPI_UINT32_MAX, check_sub_bridges, NULL, NULL, NULL);
+> +}
+> +
+>  static void _handle_hotplug_event_bridge(struct work_struct *work)
+>  {
+>  	struct acpiphp_bridge *bridge;
+> Index: linux-2.6/include/linux/pci-acpi.h
+> ===================================================================
+> --- linux-2.6.orig/include/linux/pci-acpi.h
+> +++ linux-2.6/include/linux/pci-acpi.h
+> @@ -60,11 +60,13 @@ static inline void acpi_pci_slot_remove(
+>  void acpiphp_init(void);
+>  void acpiphp_enumerate_slots(struct pci_bus *bus, acpi_handle handle);
+>  void acpiphp_remove_slots(struct pci_bus *bus);
+> +void acpiphp_check_host_bridge(acpi_handle handle);
+>  #else
+>  static inline void acpiphp_init(void) { }
+>  static inline void acpiphp_enumerate_slots(struct pci_bus *bus,
+>  					   acpi_handle handle) { }
+>  static inline void acpiphp_remove_slots(struct pci_bus *bus) { }
+> +static inline void acpiphp_check_host_bridge(acpi_handle handle) { }
+>  #endif
+>  
+>  #else	/* CONFIG_ACPI */
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
