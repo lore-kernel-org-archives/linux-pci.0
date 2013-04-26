@@ -1,88 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f42.google.com ([209.85.219.42]:64542 "EHLO
-	mail-oa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1162823Ab3DEUYc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Apr 2013 16:24:32 -0400
-Received: by mail-oa0-f42.google.com with SMTP id i18so4478610oag.29
-        for <linux-pci@vger.kernel.org>; Fri, 05 Apr 2013 13:24:30 -0700 (PDT)
+Received: from mail-oa0-f44.google.com ([209.85.219.44]:50513 "EHLO
+	mail-oa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753639Ab3DZOur (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 26 Apr 2013 10:50:47 -0400
+Received: by mail-oa0-f44.google.com with SMTP id h1so4091061oag.31
+        for <linux-pci@vger.kernel.org>; Fri, 26 Apr 2013 07:50:47 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <201304042158.r34LwGPg010714@d03av02.boulder.ibm.com>
-References: <201304042158.r34LwGPg010714@d03av02.boulder.ibm.com>
+In-Reply-To: <517A45E602000078000D0F78@nat28.tlf.novell.com>
+References: <20130422230012.32621.15224.stgit@bhelgaas-glaptop>
+ <20130422231214.32621.37394.stgit@bhelgaas-glaptop> <CAErSpo6BF0Uvf=7LwYYT2Qn6kf5uk+rVqY-cKOe2qnVwcj4-+w@mail.gmail.com>
+ <5179164902000078000D0A26@nat28.tlf.novell.com> <20130425164238.GA3052@google.com>
+ <517A45E602000078000D0F78@nat28.tlf.novell.com>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 5 Apr 2013 14:24:09 -0600
-Message-ID: <CAErSpo4LsJjRkw6UektwqW8m1NXdU6BTjhTDA9eORM3z3qDcdA@mail.gmail.com>
-Subject: Re: [PATCH 3/3] powerpc: Set default VGA device
-To: Brian King <brking@linux.vnet.ibm.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Lucas Kannebley Tavares <lucaskt@linux.vnet.ibm.com>,
-	klebers <klebers@linux.vnet.ibm.com>,
-	Michael Ellerman <michael@ellerman.id.au>,
-	sparclinux@vger.kernel.org
+Date: Fri, 26 Apr 2013 08:50:27 -0600
+Message-ID: <CAErSpo73yJcBU7Affd1qHhS_VVLnOS4msNfwrt-RaKhJce5Ngw@mail.gmail.com>
+Subject: Re: [Xen-devel] [PATCH v4 18/22] xen/pci: Pay attention to PCI_MSIX_TABLE_OFFSET
+To: Jan Beulich <JBeulich@suse.com>
+Cc: Jeremy Fitzhardinge <jeremy@goop.org>,
+	Gavin Shan <shangw@linux.vnet.ibm.com>,
+	xen-devel <xen-devel@lists.xensource.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 4, 2013 at 3:58 PM, Brian King <brking@linux.vnet.ibm.com> wrote:
+On Fri, Apr 26, 2013 at 1:16 AM, Jan Beulich <JBeulich@suse.com> wrote:
+>>>> On 25.04.13 at 18:42, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> On Thu, Apr 25, 2013 at 10:40:57AM +0100, Jan Beulich wrote:
+>>> Recent hypervisors will actually
+>>> only consume this to issue a warning if not matching what gets
+>>> read from the corresponding BAR. Earlier hypervisors used this
+>>> instead of reading the BAR.
+>>
+>> Note that pci_resource_start() gives you a CPU address, and what you
+>> read from the BAR is a PCI bus address.  These are not in the same
+>> address space and can't be directly compared.  I assume the
+>> hypervisors take that into account and do the appropriate
+>> conversions?
 >
-> Add a PCI quirk for VGA devices on Power to set the default VGA device.
-> Ensures a default VGA is always set if a graphics adapter is present,
-> even if firmware did not initialize it. If more than one graphics
-> adapter is present, ensure the one initialized by firmware is set
-> as the default VGA device. This ensures that X autoconfiguration
-> will work.
->
-> Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
-> ---
->
->  arch/powerpc/kernel/pci-common.c |   13 +++++++++++++
->  1 file changed, 13 insertions(+)
->
-> diff -puN arch/powerpc/kernel/pci-common.c~powerpc_vga_default_device arch/powerpc/kernel/pci-common.c
-> --- linux/arch/powerpc/kernel/pci-common.c~powerpc_vga_default_device   2013-04-03 09:50:33.000000000 -0500
-> +++ linux-bjking1/arch/powerpc/kernel/pci-common.c      2013-04-03 09:50:33.000000000 -0500
-> @@ -30,6 +30,7 @@
->  #include <linux/irq.h>
->  #include <linux/vmalloc.h>
->  #include <linux/slab.h>
-> +#include <linux/vgaarb.h>
->
->  #include <asm/processor.h>
->  #include <asm/io.h>
-> @@ -1725,3 +1726,15 @@ static void fixup_hide_host_resource_fsl
->  }
->  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MOTOROLA, PCI_ANY_ID, fixup_hide_host_resource_fsl);
->  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_FREESCALE, PCI_ANY_ID, fixup_hide_host_resource_fsl);
-> +
-> +static void fixup_vga(struct pci_dev *pdev)
-> +{
-> +       u16 cmd;
-> +
-> +       pci_read_config_word(pdev, PCI_COMMAND, &cmd);
-> +       if ((cmd & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) || !vga_default_device())
-> +               vga_set_default_device(pdev);
-> +
-> +}
-> +DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_ANY_ID, PCI_ANY_ID,
-> +                             PCI_CLASS_DISPLAY_VGA, 8, fixup_vga);
+> I suppose Xen has never been run on a system where the two
+> would differ, and it's quite likely that it would break on such
+> systems. Question is - are there any x86-based systems where
+> this is the case?
 
-This not really an arch-specific issue, so it's a shame to add another
-arch-specific quirk for it (in addition to the x86 and ia64 ones we
-already have).
+I haven't personally seen one, but it looks like they're coming, based
+on this patch we merged last year:
 
-In b5e4efe7e0, Eiichiro Oiwa <eiichiro.oiwa.nm@hitachi.com> tried to
-make this quirk generic, but the implementation was naive and it
-didn't work for sparc64.  There's a good thread about the sparc issue
-at https://lkml.org/lkml/2006/10/19/17
+commit b4873931cc8c934a9893d5962bde97aca23be983
+Author: Mike Yoknis <mike.yoknis@hp.com>
+Date:   Wed Nov 7 15:52:20 2012 -0700
 
-The outcome was to basically revert back to arch-specific quirks with
-6b5c76b8e2, but I think the generic version probably could have been
-made to work, possibly with a pcibios hook or something for anything
-that really is arch-dependent, like the shadowed ROM image.
+    x86/PCI: Allow x86 platforms to use translation offsets
 
-This particular patch is arch-specific, and I'm not going to try to
-nack it because I'm not the powerpc maintainer, but I will certainly
-try to help you if you want to push on making a generic version.
+    The memory range descriptors in the _CRS control method contain an address
+    translation offset for host bridges.  This value is used to translate
+    addresses across the bridge.  The support to use _TRA values is present for
+    other architectures but not for X86 platforms.
 
-Bjorn
+    For existing X86 platforms the _TRA value is zero.  Non-zero _TRA values
+    are expected on future X86 platforms.  This change will register that value
+    with the resource.
+
+    Signed-off-by: Mike Yoknis <mike.yoknis@hp.com>
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
