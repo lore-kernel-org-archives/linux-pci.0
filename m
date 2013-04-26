@@ -1,98 +1,91 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f169.google.com ([209.85.192.169]:36768 "EHLO
-	mail-pd0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753881Ab3DLPqF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 12 Apr 2013 11:46:05 -0400
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>
-Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>
-Subject: [PATCH v9 00/16] Get rid of the ACPI PCI subdriver mechanism
-Date: Fri, 12 Apr 2013 23:44:14 +0800
-Message-Id: <1365781470-32379-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <CAErSpo6UkVhSf+nFW4zwJLBQw_0RQ5H9Bv-UuQRb6zdwsFPw4g@mail.gmail.com>
+References: <CAErSpo7qj2SNR7BfuBsfF-saZXvgcqqLtgoP5Hyb5u99qR4Ncg@mail.gmail.com>
+ <Pine.LNX.4.44L0.1302191119270.2215-100000@iolanthe.rowland.org>
+ <CAErSpo7NZoOQZyW76HEoOTVgdqL2CgbVScAeF6HGLAVaNCq0=w@mail.gmail.com>
+ <337833384.57445.1361860509194.JavaMail.mail@webmail08> <CAErSpo6CbO5KYXiErv6J_Dnm1u694C5fQPP2_cZL8VKDEnZa9A@mail.gmail.com>
+ <569718148.80620.1361906088301.JavaMail.mail@webmail13> <CAErSpo6UkVhSf+nFW4zwJLBQw_0RQ5H9Bv-UuQRb6zdwsFPw4g@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 26 Apr 2013 15:36:37 -0600
+Message-ID: <CAErSpo4X+XXKvWDfqh2CKZAtJ9WMQk91OcsWwdxwYv2MfEM_zQ@mail.gmail.com>
+Subject: Re: Abysmal HDD/USB write speed after sleep on a UEFI system
+To: "Artem S. Tashkinov" <t.artem@lycos.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCI, ACPI: remove ACPI PCI subdriver mechanism
+On Wed, Mar 6, 2013 at 5:17 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Tue, Feb 26, 2013 at 12:14 PM, Artem S. Tashkinov <t.artem@lycos.com> wrote:
+>> Feb 27, 2013 12:47:01 AM, Bjorn Helgaas wrote:
+>> On Mon, Feb 25, 2013 at 11:35 PM, Artem S. Tashkinov wrote:
+>>>> Feb 26, 2013 03:57:52 AM, Bjorn Helgaas wrote:
+>>>>>
+>>>>>Where are we at with this, Artem?  I assume it's still a problem.
+>>>>>
+>>>>
+>>>> Yes, it is, Bjorn.
+>>>>
+>>>> In order to eliminate this problem I switched back to MBR yesterday, because
+>>>> so far I haven't received any instructions or guidance as to how I can debug
+>>>> it further. I'm absolutely sure USB write speed is just another manifestation of
+>>>> it so I decided not to debug USB specifically (it just doesn't make too much
+>>>> sense).
+>>>>
+>>>> What I see is that something terribly wrong is going on but if Linus has no ideas
+>>>> I, as an average Joe, don't have a slightest clue as to what I can do.
+>>>>
+>>>> The bug report with necessary, but seemingly useless information, can be
+>>>> found here: https://bugzilla.kernel.org/show_bug.cgi?id=53551
+>>>>
+>>>> If anyone comes up with new ideas I can quickly try UEFI again now that I
+>>>> have two HDDs at my disposal (the old one is formatted as GPT, the new one is
+>>>> MBR).
+>>>
+>>>The ideas I saw are:
+>>>
+>>>1) Figure out whether it ever worked.  If an older kernel worked
+>>>correctly and a newer one is broken, bisection is at least a
+>>>possibility.  You mentioned that it did work before (Feb 12), but in
+>>>the past you never suspended twice in one boot session, whereas maybe
+>>>you did when seeing the problem?
+>>
+>> This is difficult to say since the first kernel I tried to run in EUFI mode was
+>> 3.7.x, so I've no idea if any previous ones ever worked.
+>>
+>>>
+>>>2) Try the "setpci" to set the MSI address back to the original value
+>>>to see if it makes a difference (see my Feb 12 message).
+>>
+>> I will try it soon and report back to you.
+>>
+>>>
+>>>3) Collect "lspci -vvv -xxxx" output to investigate the XHCI
+>>>Unsupported Request errors.
+>>>
+>>>4) Use usbmon to collect traces before and after the suspend.
+>>
+>> Likewise. Still I don't quite understand why you are persistent in your
+>> desire to investigate USB controllers specifically - my problem affects
+>> all storage devices that I have.
+>
+> Well, in the absence of good ideas about what's going on, I guess we
+> have to pursue even the bad ideas that don't seem like they'd be
+> related :)  Speaking of bad ideas, any news on 2) and 3) above?
+>
+> You mentioned in the bugzilla that Windows complains about MTRRs being
+> changed across the S4 sleep state transition.  I don't think Linux
+> looks for such a change.  You could try looking at /proc/mtrr before
+> and after the suspend/resume to see if anything changed there.  It
+> looks like there's even support for *writing* the MTRRs via
+> /proc/mtrr, so if anything did change, you could also try changing it
+> back.
 
-This patch set is directly derived from two sources:
-1) '[PATCH 00/15] PCI/ACPI: Remove "pci_root" sub-driver support' at
-https://lkml.org/lkml/2012/12/7/11 from Myron Stowe
-The major goal is to resolve any potential sequencing inter-dependencies
-by converting sub-driver functionality to being only supported as
-statically built-in to the kernel as part of the "pci_root" driver
-itself.
+Did this problem ever get resolved?
 
-2) 'introduce PCI bus notifier chain to get rid of the ACPI PCI subdriver'
-at http://lwn.net/Articles/533547/
-The major goal is to update PCI slots(pci_slot), ACPI based PCI hotplug
-slots(acpiphp), PCIe AER(aer) etc when hot-plugging PCI devices and P2P
-bridges, and eventually get rid of the ACPI PCI subdriver interfaces.
-
-This patchset applies to Bjorn's pci-next branch. Patch 1-4 are minor
-fixups for 3.9-rc1. Patch 5-8 introduce two hooks into PCI core which
-will be called when creating/destroying PCI buses. Patch 9-12 replace
-ACPI PCI subdriver interfaces with the new hook mechanism for pci_slot
-and acpiphp. Patch 13 removes the ACPI PCI subdriver interfaces.
-
-v7->v8:
-	Hook directly into the PCI core to replace pci_bus notification
-	Remove ACPI PCI subdriver related code
-
-v8->v9:
-	Introduce kernel boot option "acpiphp.disable" to disable the
-	acpiphp driver.
-
-Jiang Liu (13):
-  PCI: do not check is_added flag in pci_remove_bus()
-  pci: clean up usages of pci_bus->is_added
-  PCI/acpiphp: don't rely on function 0 in disable_device()
-  ACPI/acpiphp: replace local macros with standard ACPI macros
-  PCI: introduce platform dependent hooks for creating/destroying PCI
-    busses
-  PCI, ACPI: prepare stub functions to handle ACPI PCI (hotplug) slots
-  PCI, IA64: implement pcibios_{add|remove}_bus() hooks
-  PCI, x86: implement pcibios_{add|remove}_bus() hooks
-  PCI, ACPI: handle PCI slot devices when creating/destroying PCI
-    busses
-  PCI/acpiphp: convert acpiphp as a builtin driver
-  PCI/acpiphp: do not use ACPI PCI subdriver mechanism
-  PCI/acpiphp: protect acpiphp data structures from concurrent updating
-  PCI/acpiphp: introduce a kernel option to disable the acpiphp driver
-
-Myron Stowe (1):
-  PCI, ACPI: remove support of ACPI PCI subdrivers
-
-Yijing Wang (2):
-  PCI/acpiphp: use list_for_each_entry_safe() in acpiphp_sanitize_bus()
-  PCI/acpiphp: use normal list to simplify implementation
-
- Documentation/kernel-parameters.txt |    3 +
- arch/ia64/pci/pci.c                 |   11 +
- arch/x86/pci/common.c               |   11 +
- drivers/acpi/pci_root.c             |   48 +---
- drivers/acpi/pci_slot.c             |  170 ++------------
- drivers/acpi/scan.c                 |    1 -
- drivers/pci/bus.c                   |   11 +-
- drivers/pci/hotplug/Kconfig         |    7 +-
- drivers/pci/hotplug/acpiphp.h       |   13 +-
- drivers/pci/hotplug/acpiphp_core.c  |   29 +--
- drivers/pci/hotplug/acpiphp_glue.c  |  415 ++++++++++++-----------------------
- drivers/pci/pci-acpi.c              |   30 +++
- drivers/pci/probe.c                 |   15 +-
- drivers/pci/remove.c                |    4 +-
- include/linux/acpi.h                |    9 -
- include/linux/pci-acpi.h            |   26 +++
- include/linux/pci.h                 |    2 +
- 17 files changed, 280 insertions(+), 525 deletions(-)
-
--- 
-1.7.9.5
-
+Bjorn
