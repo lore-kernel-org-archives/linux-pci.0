@@ -1,132 +1,220 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 05 Apr 2013 21:25:47 -0400
-Subject: Re: [PATCH v6] irq: add quirk for broken interrupt remapping on
- 55XX chipsets
-Message-ID: <7u61w2ppuct79kmjwclqv15y.1365211547178@email.android.com>
-From: Neil Horman <nhorman@tuxdriver.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Prarit Bhargava <prarit@redhat.com>,
-	Don Zickus <dzickus@redhat.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Asit Mallick <asit.k.mallick@intel.com>,
-	David Woodhouse <dwmw2@infradead.org>,
-	" linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hydra.sisk.pl ([212.160.235.94]:45493 "EHLO hydra.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756855Ab3DZUVV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 26 Apr 2013 16:21:21 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Yinghai Lu <yinghai@kernel.org>, Ram Pai <linuxram@us.ibm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
+Subject: Re: [PATCH v4 27/29] PCI: Make piix4 quirk to use addon_res
+Date: Fri, 26 Apr 2013 22:29:29 +0200
+Message-ID: <1614149.2EDsY9ltHk@vostro.rjw.lan>
+In-Reply-To: <CAErSpo42D-jyY+7f66fYUprDgh-3E0qV1O1cpXjWK2+iBZ_bBQ@mail.gmail.com>
+References: <1365806683-26717-1-git-send-email-yinghai@kernel.org> <CAErSpo6W-GtTHe+84XQMfie1K39ChGKmHNYSuru0veXxqxqhAA@mail.gmail.com> <CAErSpo42D-jyY+7f66fYUprDgh-3E0qV1O1cpXjWK2+iBZ_bBQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SSdtIHNvcnJ5LiAgRm9yZ290IHRvIGNoYW5nZSB0aGUgd29yZGluZyBvZiB0aGUgZXJyb3IgZm9y
-IHRoZSBuZXcgbW9kZWwgdGhhdCBJJ20gZm9sbG93aW5nIGhlcmUuICBBbHRob3VnaCB0aGUgbWVz
-c2FnZSBpcyBtb3N0bHkgcmlnaHQgYXMgYmlvcyBpcyByZXNwb25zaWJsZSBmb3Igc2V0dGluZyBh
-bmQgY2xlYXJpbmcgdGhlIElSUSByZW1hcHBpbmcgZmVhdHVyZSBiaXQgaW4gdGhlIGNoaXBzIGNh
-cGFiaWxpdGllcyByZWdpc3Rlci4KCkknbGwgZml4IGFuZCByZXBvc3QgTW9uZGF5CgpOZWlsCgpZ
-aW5naGFpIEx1IDx5aW5naGFpQGtlcm5lbC5vcmc+IHdyb3RlOgoKPk9uIEZyaSwgQXByIDUsIDIw
-MTMgYXQgMTI6MzEgUE0sIE5laWwgSG9ybWFuIDxuaG9ybWFuQHR1eGRyaXZlci5jb20+IHdyb3Rl
-Ogo+PiBBIGZldyB5ZWFycyBiYWNrIGludGVsIHB1Ymxpc2hlZCBhIHNwZWMgdXBkYXRlOgo+PiBo
-dHRwOi8vd3d3LmludGVsLmNvbS9jb250ZW50L2RhbS9kb2Mvc3BlY2lmaWNhdGlvbi11cGRhdGUv
-NTUyMC1hbmQtNTUwMC1jaGlwc2V0LWlvaC1zcGVjaWZpY2F0aW9uLXVwZGF0ZS5wZGYKPj4KPj4g
-Rm9yIHRoZSA1NTIwIGFuZCA1NTAwIGNoaXBzZXRzIHdoaWNoIGNvbnRhaW5lZCBhbiBlcnJhdGEg
-KHNwZWNpZmljaWFsbHkgZXJyYXRhCj4+IDUzKSwgd2hpY2ggbm90ZWQgdGhhdCB0aGVzZSBjaGlw
-c2V0cyBjYW4ndCBwcm9wZXJseSBkbyBpbnRlcnJ1cHQgcmVtYXBwaW5nLCBhbmQKPj4gYXMgYSBy
-ZXN1bHQgdGhlIHJlY29tbWVuZCB0aGF0IGludGVycnVwdCByZW1hcHBpbmcgYmUgZGlzYWJsZWQg
-aW4gYmlvcy4gIFdoaWxlCj4+IG1hbnkgdmVuZG9ycyBoYXZlIGEgYmlvcyB1cGRhdGUgdG8gZG8g
-ZXhhY3RseSB0aGF0LCBub3QgYWxsIGRvLCBhbmQgb2YgY291cnNlCj4+IG5vdCBhbGwgdXNlcnMg
-dXBkYXRlIHRoZWlyIGJpb3MgdG8gYSBsZXZlbCB0aGF0IGNvcnJlY3RzIHRoZSBwcm9ibGVtLiAg
-QXMgYQo+PiByZXN1bHQsIG9jY2FzaW9uYWxseSBpbnRlcnJ1cHRzIGNhbiBhcnJpdmUgYXQgYSBj
-cHUgZXZlbiBhZnRlciBhZmZpbml0eSBmb3IgdGhhdAo+PiBpbnRlcnJ1cHQgaGFzIGJlIG1vdmVk
-LCBsZWFkaW5nIHRvIGxvc3Qgb3Igc3B1cnJpb3VzIGludGVycnVwdHMgKHVzdWFsbHkKPj4gY2hh
-cmFjdGVyaXplZCBieSB0aGUgbWVzc2FnZToKPj4ga2VybmVsOiBkb19JUlE6IDcuNzEgTm8gaXJx
-IGhhbmRsZXIgZm9yIHZlY3RvciAoaXJxIC0xKQo+Pgo+PiBUaGVyZSBoYXZlIGJlZW4gc2V2ZXJh
-bCBpbmNpZGVudHMgcmVjZW50bHkgb2YgcGVvcGxlIHNlZWluZyB0aGlzIGVycm9yLCBhbmQKPj4g
-aW52ZXN0aWdhdGlvbiBoYXMgc2hvd24gdGhhdCB0aGV5IGhhdmUgc3lzdGVtIGZvciB3aGljaCB0
-aGVpciBCSU9TIGxldmVsIGlzIHN1Y2gKPj4gdGhhdCB0aGlzIGZlYXR1cmUgd2FzIG5vdCBwcm9w
-ZXJseSB0dXJuZWQgb2ZmLiAgQXMgc3VjaCwgaXQgd291bGQgYmUgZ29vZCB0bwo+PiBnaXZlIHRo
-ZW0gYSByZW1pbmRlciB0aGF0IHRoZWlyIHN5c3RlbXMgYXJlIHZ1bG51cmFibGUgdG8gdGhpcyBw
-cm9ibGVtLgo+Pgo+PiBTaWduZWQtb2ZmLWJ5OiBOZWlsIEhvcm1hbiA8bmhvcm1hbkB0dXhkcml2
-ZXIuY29tPgo+PiBDQzogUHJhcml0IEJoYXJnYXZhIDxwcmFyaXRAcmVkaGF0LmNvbT4KPj4gQ0M6
-IERvbiBaaWNrdXMgPGR6aWNrdXNAcmVkaGF0LmNvbT4KPj4gQ0M6IERvbiBEdXRpbGUgPGRkdXRp
-bGVAcmVkaGF0LmNvbT4KPj4gQ0M6IEJqb3JuIEhlbGdhYXMgPGJoZWxnYWFzQGdvb2dsZS5jb20+
-Cj4+IENDOiBBc2l0IE1hbGxpY2sgPGFzaXQuay5tYWxsaWNrQGludGVsLmNvbT4KPj4gQ0M6IERh
-dmlkIFdvb2Rob3VzZSA8ZHdtdzJAaW5mcmFkZWFkLm9yZz4KPj4gQ0M6IGxpbnV4LXBjaUB2Z2Vy
-Lmtlcm5lbC5vcmcKPj4gLS0tCj4+Cj4+IENoYW5nZSBub3RlczoKPj4KPj4gdjIpCj4+Cj4+ICog
-TW92ZWQgdGhlIHF1aXJrIHRvIHRoZSB4ODYgYXJjaCwgc2luY2UgY29uc2Vuc3VzIHNlZW1zIHRv
-IGJlIHRoYXQgdGhlIDU1WFgKPj4gY2hpcHNldCBzZXJpZXMgaXMgeDg2IG9ubHkuICBJIGRlY2lk
-ZWQgaG93ZXZlciB0byBrZWVwIHRoZSBxdWlyayBhcyBhIHJlZ3VsYXIKPj4gcXVpcmssIG5vdCBh
-biBlYXJseV9xdWlyay4gIEVhcmx5IHF1aXJrcyBoYXZlIG5vIHdheSBjdXJyZW50bHkgdG8gZGV0
-ZXJtaW5lIGlmCj4+IEJJT1MgaGFzIHByb3Blcmx5IGRpc2FibGVkIHRoZSBmZWF0dXJlIGluIHRo
-ZSBpb21tdSwgYXQgbGVhc3Qgbm90IHdpdGhvdXQKPj4gc2lnbmlmaWNhbnQgaGFja2luZywgYW5k
-IHNpbmNlIGl0cyBxdWl0ZSBwb3NzaWJsZSB0aGlzIHdpbGwgYmUgYSBzaG9ydCBsaXZlZAo+PiBx
-dWlyaywgc2hvdWxkIERvbiBaJ3Mgd29ya2Fyb3VuZCBjb2RlIHByb3ZlIHN1Y2Nlc3NmdWwgKGFu
-ZCBpdCBsb29rcyBsaWtlIGl0IG1heQo+PiB3ZWxsKSwgSSBkb24ndCB0aGluayB0aGF0IG5lY2Vz
-c2VjYXJ5Lgo+Pgo+PiAqIFJlbW92ZWQgdGhlIFdBUk5JTkcgYmFubmVyIGZyb20gdGhlIHF1aXJr
-LCBhbmQgYWRkZWQgdGhlIEhXX0VSUiB0b2tlbiB0byB0aGUKPj4gc3RyaW5nLCBJIG9wdGVkIHRv
-IGxlYXZlIHRoZSBuZXdsaW5lcyBpbiBwbGFjZSBob3dldmVyLCBhcyBJIHJlYWxseSBjb3VsZG50
-Cj4+IGZpbmQgYSB3YXkgdG8ga2VlcCB0aGUgdGV4dCBvbiBhIHNpbmdsZSBsaW5lIGlzIHN0aWxs
-IGxlZ2libGUgZnJvbSBhIGNvZGUKPj4gcGVyc3BlY3RpdmUuICBJIHRoaW5rIHRoZXJlcyBlbm91
-Z2ggbGFuZ3VhZ2UgaW4gdGhlcmUgdGhhdCB1c2luZyBjc2NvcGUgb24ganVzdAo+PiBhYm91dCBh
-bnkgc3Vic3RyaW5nIGhvd2V2ZXIgd2lsbCB0dXJuIGl0IHVwLCBhbmQgYWdhaW4sIHRoaXMgbWF5
-IGJlIGEgc2hvcnQKPj4gbGl2ZWQgcXVpcmsuCj4+Cj4+IHYzKQo+Pgo+PiAqIFJlbW92ZWQgZGVm
-aW5lcyBmcm9tIHBjaV9pZHMuaCwgYW5kIHVzZWQgZGlyZWN0IGlkIHZhbHVlcyBhcyBwZXIgcmVx
-dWVzdCBmcm9tCj4+IEJqb3JuLgo+Pgo+PiB2NCkKPj4KPj4gKiBDb252ZXJ0ZWQgcHJfd2FybiB0
-byBXQVJOX1RBSU5UKFRBSU5UX0ZJUk1XQVJFX1dPUktBUk9VTkQpIGFzIHBlciBEYXZpZAo+PiBX
-b29kaG91c2UKPj4KPj4gdjUpCj4+Cj4+ICogTW92ZWQgY2hlY2sgdG8gYW4gZWFybHkgcXVpcmss
-IGFuZCBmbGFnZ2VkIHRoZSBicm9rZW4gY2hpcCwgc28gd2UgY291bGQKPj4gcmVhc29uYWJseSBk
-aXNhYmxlIGlycSByZW1hcHBpbmcgZHVyaW5nIGJvb3R1cC4KPj4KPj4gdjYpCj4+ICogQ2xlYW4g
-dXAgb2Ygc3R1cGlkIGV4dHJhIHRocmFzaCBpbiBxdWlya3MuYwo+PiAtLS0KPj4gIGFyY2gveDg2
-L2tlcm5lbC9lYXJseS1xdWlya3MuYyB8IDI1ICsrKysrKysrKysrKysrKysrKysrKysrKysKPj4g
-IGRyaXZlcnMvaW9tbXUvaXJxX3JlbWFwcGluZy5jICB8IDEyICsrKysrKysrKysrKwo+PiAgZHJp
-dmVycy9pb21tdS9pcnFfcmVtYXBwaW5nLmggIHwgIDEgKwo+PiAgMyBmaWxlcyBjaGFuZ2VkLCAz
-OCBpbnNlcnRpb25zKCspCj4+Cj4+IGRpZmYgLS1naXQgYS9hcmNoL3g4Ni9rZXJuZWwvZWFybHkt
-cXVpcmtzLmMgYi9hcmNoL3g4Ni9rZXJuZWwvZWFybHktcXVpcmtzLmMKPj4gaW5kZXggMzc1NWVm
-NC4uYmZhMzEzOSAxMDA2NDQKPj4gLS0tIGEvYXJjaC94ODYva2VybmVsL2Vhcmx5LXF1aXJrcy5j
-Cj4+ICsrKyBiL2FyY2gveDg2L2tlcm5lbC9lYXJseS1xdWlya3MuYwo+PiBAQCAtMTkyLDYgKzE5
-MiwyNyBAQCBzdGF0aWMgdm9pZCBfX2luaXQgYXRpX2J1Z3NfY29udGQoaW50IG51bSwgaW50IHNs
-b3QsIGludCBmdW5jKQo+PiAgfQo+PiAgI2VuZGlmCj4+Cj4+ICsjaWZkZWYgQ09ORklHX0lSUV9S
-RU1BUAo+PiArc3RhdGljIHZvaWQgX19pbml0IGludGVsX3JlbWFwcGluZ19jaGVjayhpbnQgbnVt
-LCBpbnQgc2xvdCwgaW50IGZ1bmMpCj4+ICt7Cj4+ICsgICAgICAgdTggcmV2aXNpb247Cj4+ICsK
-Pj4gKyAgICAgICByZXZpc2lvbiA9IHBjaV9yZWFkX2NvbmZpZ19ieXRlKG51bSwgc2xvdCwgZnVu
-YyAsIFBDSV9SRVZJU0lPTl9JRCk7Cj4+ICsKPj4gKyAgICAgICAvKgo+PiArICAgICAgICAqIFJl
-dmlzaW9uIDB4MTMgb2YgdGhpcyBjaGlwc2V0IHN1cHBvcnRzIGlycSByZW1hcHBpbmcKPj4gKyAg
-ICAgICAgKiBidXQgaGFzIGFuIGVycmF0dW0gdGhhdCBicmVha3MgaXRzIGJlaGF2aW9yLCBmbGFn
-IGl0IGFzIHN1Y2gKPj4gKyAgICAgICAgKi8KPj4gKyAgICAgICBpZiAocmV2aXNpb24gPT0gMHgx
-MykKPj4gKyAgICAgICAgICAgICAgIGlycV9yZW1hcF9icm9rZW4gPSAxOwo+PiArCj4+ICt9Cj4+
-ICsjZWxzZQo+PiArc3RhdGljIHZvaWQgX19pbml0IGludGVsX3JlbWFwcGluZ19jaGVjayhpbnQg
-bnVtLCBpbnQgc2xvdCwgaW50IGZ1bmMpCj4+ICt7Cj4+ICt9Cj4+ICsjZW5kaWYKPj4gKwo+PiAg
-I2RlZmluZSBRRkxBR19BUFBMWV9PTkNFICAgICAgIDB4MQo+PiAgI2RlZmluZSBRRkxBR19BUFBM
-SUVEICAgICAgICAgIDB4Mgo+PiAgI2RlZmluZSBRRkxBR19ET05FICAgICAgICAgICAgIChRRkxB
-R19BUFBMWV9PTkNFfFFGTEFHX0FQUExJRUQpCj4+IEBAIC0yMjEsNiArMjQyLDEwIEBAIHN0YXRp
-YyBzdHJ1Y3QgY2hpcHNldCBlYXJseV9xcmtbXSBfX2luaXRkYXRhID0gewo+PiAgICAgICAgICAg
-UENJX0NMQVNTX1NFUklBTF9TTUJVUywgUENJX0FOWV9JRCwgMCwgYXRpX2J1Z3MgfSwKPj4gICAg
-ICAgICB7IFBDSV9WRU5ET1JfSURfQVRJLCBQQ0lfREVWSUNFX0lEX0FUSV9TQlgwMF9TTUJVUywK
-Pj4gICAgICAgICAgIFBDSV9DTEFTU19TRVJJQUxfU01CVVMsIFBDSV9BTllfSUQsIDAsIGF0aV9i
-dWdzX2NvbnRkIH0sCj4+ICsgICAgICAgeyBQQ0lfVkVORE9SX0lEX0lOVEVMLCAweDM0MDMsIFBD
-SV9DTEFTU19CUklER0VfSE9TVCwKPj4gKyAgICAgICAgIFBDSV9CQVNFX0NMQVNTX0JSSURHRSwg
-MCwgaW50ZWxfcmVtYXBwaW5nX2NoZWNrIH0sCj4+ICsgICAgICAgeyBQQ0lfVkVORE9SX0lEX0lO
-VEVMLCAweDM0MDYsIFBDSV9DTEFTU19CUklER0VfSE9TVCwKPj4gKyAgICAgICAgIFBDSV9CQVNF
-X0NMQVNTX0JSSURHRSwgMCwgaW50ZWxfcmVtYXBwaW5nX2NoZWNrIH0sCj4+ICAgICAgICAge30K
-Pj4gIH07Cj4+Cj4+IGRpZmYgLS1naXQgYS9kcml2ZXJzL2lvbW11L2lycV9yZW1hcHBpbmcuYyBi
-L2RyaXZlcnMvaW9tbXUvaXJxX3JlbWFwcGluZy5jCj4+IGluZGV4IGQ1NmY4YzEuLjJiNTZlOTIg
-MTAwNjQ0Cj4+IC0tLSBhL2RyaXZlcnMvaW9tbXUvaXJxX3JlbWFwcGluZy5jCj4+ICsrKyBiL2Ry
-aXZlcnMvaW9tbXUvaXJxX3JlbWFwcGluZy5jCj4+IEBAIC0xOSw2ICsxOSw3IEBACj4+ICBpbnQg
-aXJxX3JlbWFwcGluZ19lbmFibGVkOwo+Pgo+PiAgaW50IGRpc2FibGVfaXJxX3JlbWFwOwo+PiAr
-aW50IGlycV9yZW1hcF9icm9rZW47Cj4+ICBpbnQgZGlzYWJsZV9zb3VyY2VpZF9jaGVja2luZzsK
-Pj4gIGludCBub194MmFwaWNfb3B0b3V0Owo+Pgo+PiBAQCAtMjE2LDYgKzIxNywxNyBAQCBpbnQg
-aXJxX3JlbWFwcGluZ19zdXBwb3J0ZWQodm9pZCkKPj4gICAgICAgICBpZiAoZGlzYWJsZV9pcnFf
-cmVtYXApCj4+ICAgICAgICAgICAgICAgICByZXR1cm4gMDsKPj4KPj4gKyAgICAgICBpZiAoaXJx
-X3JlbWFwX2Jyb2tlbikgewo+PiArICAgICAgICAgICAgICAgV0FSTl9UQUlOVCgxLCBUQUlOX0ZJ
-Uk1XQVJFX1dPUktBUk9VTkQsCj4+ICsgICAgICAgICAgICAgICAgICAgICAgICAgICJUaGlzIHN5
-c3RlbSBCSU9TIGhhcyBlbmFibGVkIGludGVycnVwdCByZW1hcHBpbmdcbiIKPj4gKyAgICAgICAg
-ICAgICAgICAgICAgICAgICAgIm9uIGEgY2hpcHNldCB0aGF0IGNvbnRhaW5zIGFuIGVycmF0dW0g
-bWFraW5nIHRoYXRcbiIKPj4gKyAgICAgICAgICAgICAgICAgICAgICAgICAgImZlYXR1cmUgdW5z
-dGFibGUuICBQbGVhc2UgcmVib290IHdpdGggbm9pbnRyZW1hcFxuIgo+PiArICAgICAgICAgICAg
-ICAgICAgICAgICAgICAiYWRkZWQgdG8gdGhlIGtlcm5lbCBjb21tYW5kIGxpbmUgYW5kIGNvbnRh
-Y3RcbiIKPj4gKyAgICAgICAgICAgICAgICAgICAgICAgICAgInlvdXIgQklPUyB2ZW5kb3IgZm9y
-IGFuIHVwZGF0ZSIpOwo+Cj5XaGF0IGRvIHlvdSBtZWFuICJUaGlzIHN5c3RlbSBCSU9TIGhhcyBl
-bmFibGVkIGludGVycnVwdCByZW1hcHBpbmciID8KPkJJT1MgaGF2ZSBpbnRlcnJ1cHQgcHJlLWVu
-YWJsZWQgb3IgQklPUyBqdXN0IHByb3ZpZGUgRE1BUiB0YWJsZSA/Cj4KPldoeSBkbyB5b3UgbmVl
-ZCAiUGxlYXNlIHJlYm9vdCB3aXRoIG5vaW50cmVtYXAiID8KPgo+VGhhbmtzCj4KPllpbmdoYWkK
-Pgo=
+On Friday, April 26, 2013 09:22:47 AM Bjorn Helgaas wrote:
+> [+cc Rafael, linux-acpi]
+> 
+> On Thu, Apr 25, 2013 at 2:39 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> > On Fri, Apr 12, 2013 at 4:44 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> >> After they are put in add-on resources, they will be safely claimed later.
+> >
+> > It took me a while to understand what's going on here, but this is
+> > actually a pretty cool idea.  It would be nice to explain a little
+> > about what the patch is doing and how these "pseudo-BARs" work, though
+> > :)
+> 
+> After thinking about this overnight, I'm not so sure about this.  I
+> think the point of this is to manage resources that are consumed by
+> the device but don't conform to the PCI spec.  Most resources don't
+> need quirks because they're either described by standard BAR registers
+> or by the exceptions for "legacy I/O devices," e.g., IDE or VGA.
+> 
+> I would expect that the "architected" way to deal with non-standard
+> resources like this is to describe them via a PNP0C02 or similar ACPI
+> device.  That way, the OS would not need device-specific quirks like
+> this.
+> 
+> If we do add something like this patch, we're also adding a way for
+> Linux to *write* these non-standard BARs, which means they can become
+> out-of-sync with the ACPI description of them.  I think the BIOS is
+> entitled to assume that if it describes a resource via _CRS and it
+> doesn't provide a corresponding _SRS, the resource will remain
+> unchanged by the OS.
 
+Agreed.
+
+Thanks,
+Rafael
+
+
+> >> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> >> ---
+> >>  drivers/pci/quirks.c | 95 +++++++++++++++++++++++++++++++++++++++++++---------
+> >>  1 file changed, 79 insertions(+), 16 deletions(-)
+> >>
+> >> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> >> index 2dac170..6706182 100644
+> >> --- a/drivers/pci/quirks.c
+> >> +++ b/drivers/pci/quirks.c
+> >> @@ -382,14 +382,14 @@ static void quirk_ali7101_acpi(struct pci_dev *dev)
+> >>  }
+> >>  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_AL,     PCI_DEVICE_ID_AL_M7101,         quirk_ali7101_acpi);
+> >>
+> >> -static void piix4_io_quirk(struct pci_dev *dev, const char *name, unsigned int port, unsigned int enable)
+> >> +static int piix4_read_io(struct pci_dev *dev, struct resource *res, int port)
+> >
+> > We're reading from "port," which is really the address of a dword in
+> > config space, not a port, so I would have called it "pos" like
+> > __pci_read_base() did.  If I understand correctly, we're reading a
+> > BAR-like register that contains the base address of an I/O port
+> > region.
+> >
+> > "piix4_read_io_base(struct pci_dev *dev, struct resource *res, int
+> > pos)" would make more sense to me.
+> >
+> >>  {
+> >>         u32 devres;
+> >>         u32 mask, size, base;
+> >> +       struct pci_bus_region bus_region;
+> >>
+> >>         pci_read_config_dword(dev, port, &devres);
+> >> -       if ((devres & enable) != enable)
+> >> -               return;
+> >> +
+> >>         mask = (devres >> 16) & 15;
+> >>         base = devres & 0xffff;
+> >>         size = 16;
+> >> @@ -399,23 +399,54 @@ static void piix4_io_quirk(struct pci_dev *dev, const char *name, unsigned int p
+> >>                         break;
+> >>                 size = bit;
+> >>         }
+> >> -       /*
+> >> -        * For now we only print it out. Eventually we'll want to
+> >> -        * reserve it (at least if it's in the 0x1000+ range), but
+> >> -        * let's get enough confirmation reports first.
+> >> -        */
+> >>         base &= -size;
+> >> -       dev_info(&dev->dev, "%s PIO at %04x-%04x\n", name, base, base + size - 1);
+> >> +
+> >> +       bus_region.start = base;
+> >> +       bus_region.end = base + size - 1;
+> >> +       res->flags |= IORESOURCE_IO;
+> >> +       pcibios_bus_to_resource(dev, res, &bus_region);
+> >> +       dev_info(&dev->dev, "PIO at %pR\n", res);
+> >> +
+> >> +       return 0;
+> >>  }
+> >> +static int piix4_write_io(struct pci_dev *dev, struct resource *res, int port)
+> >> +{
+> >> +       u32 devres;
+> >> +       struct pci_bus_region bus_region;
+> >> +       unsigned size = to_pci_dev_addon_resource(res)->size;
+> >>
+> >> -static void piix4_mem_quirk(struct pci_dev *dev, const char *name, unsigned int port, unsigned int enable)
+> >> +       pcibios_resource_to_bus(dev, &bus_region, res);
+> >> +
+> >> +       pci_read_config_dword(dev, port, &devres);
+> >> +       devres &= 0xffff0000 | (size - 1);
+> >> +       devres |= bus_region.start & 0xffff & (~(size - 1));
+> >> +       pci_write_config_dword(dev, port, devres);
+> >> +
+> >> +       return 0;
+> >> +}
+> >> +static struct resource_ops piix4_io_ops = {
+> >> +       .read = piix4_read_io,
+> >> +       .write = piix4_write_io,
+> >> +};
+> >> +static void piix4_io_quirk(struct pci_dev *dev, char *name, unsigned int port,
+> >> +                               unsigned int enable)
+> >
+> > I think these (piix4_io_quirk() and piix4_mem_quirk()) would read
+> > better if they were something like:
+> >
+> >     piix4_add_io_bar(struct pci_dev *dev, unsigned int pos, u32
+> > enable, char *name);
+> >
+> >>  {
+> >>         u32 devres;
+> >> -       u32 mask, size, base;
+> >>
+> >>         pci_read_config_dword(dev, port, &devres);
+> >>         if ((devres & enable) != enable)
+> >>                 return;
+> >> +
+> >> +       pci_add_dev_addon_resource(dev, port, 0, &piix4_io_ops, name);
+> >> +}
+> >> +
+> >> +static int piix4_read_mem(struct pci_dev *dev, struct resource *res, int port)
+> >> +{
+> >> +       u32 devres;
+> >> +       u32 mask, size, base;
+> >> +       struct pci_bus_region bus_region;
+> >> +
+> >> +       pci_read_config_dword(dev, port, &devres);
+> >>         base = devres & 0xffff0000;
+> >>         mask = (devres & 0x3f) << 16;
+> >>         size = 128 << 16;
+> >> @@ -425,12 +456,44 @@ static void piix4_mem_quirk(struct pci_dev *dev, const char *name, unsigned int
+> >>                         break;
+> >>                 size = bit;
+> >>         }
+> >> -       /*
+> >> -        * For now we only print it out. Eventually we'll want to
+> >> -        * reserve it, but let's get enough confirmation reports first.
+> >> -        */
+> >>         base &= -size;
+> >> -       dev_info(&dev->dev, "%s MMIO at %04x-%04x\n", name, base, base + size - 1);
+> >> +       bus_region.start = base;
+> >> +       bus_region.end = base + size - 1;
+> >> +       res->flags |= IORESOURCE_MEM;
+> >> +       pcibios_bus_to_resource(dev, res, &bus_region);
+> >> +       dev_info(&dev->dev, "MMIO at %pR\n", res);
+> >> +
+> >> +       return 0;
+> >> +}
+> >> +static int piix4_write_mem(struct pci_dev *dev, struct resource *res, int port)
+> >> +{
+> >> +       u32 devres;
+> >> +       struct pci_bus_region bus_region;
+> >> +       unsigned size = to_pci_dev_addon_resource(res)->size;
+> >> +
+> >> +       pcibios_resource_to_bus(dev, &bus_region, res);
+> >> +
+> >> +       pci_read_config_dword(dev, port, &devres);
+> >> +       devres &= 0x0000ffff | ((size - 1) & 0xffff0000);
+> >> +       devres |= bus_region.start & 0xffff0000 & (~(size - 1));
+> >> +       pci_write_config_dword(dev, port, devres);
+> >> +
+> >> +       return 0;
+> >> +}
+> >> +static struct resource_ops piix4_mem_ops = {
+> >> +       .read = piix4_read_mem,
+> >> +       .write = piix4_write_mem,
+> >> +};
+> >> +static void piix4_mem_quirk(struct pci_dev *dev, char *name, unsigned int port,
+> >> +                               unsigned int enable)
+> >> +{
+> >> +       u32 devres;
+> >> +
+> >> +       pci_read_config_dword(dev, port, &devres);
+> >> +       if ((devres & enable) != enable)
+> >> +               return;
+> >> +
+> >> +       pci_add_dev_addon_resource(dev, port, 0, &piix4_mem_ops, name);
+> >>  }
+> >>
+> >>  /*
+> >> --
+> >> 1.8.1.4
+> >>
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
