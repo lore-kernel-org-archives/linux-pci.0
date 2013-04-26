@@ -1,194 +1,135 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ia0-f171.google.com ([209.85.210.171]:35595 "EHLO
-	mail-ia0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S936351Ab3DRTnT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 18 Apr 2013 15:43:19 -0400
-Received: by mail-ia0-f171.google.com with SMTP id f27so2801975iae.2
-        for <linux-pci@vger.kernel.org>; Thu, 18 Apr 2013 12:43:19 -0700 (PDT)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <516FB479.1060601@cn.fujitsu.com>
-References: <516FB479.1060601@cn.fujitsu.com>
-Date: Thu, 18 Apr 2013 12:43:19 -0700
-Message-ID: <CAE9FiQWtC4S52BUeDQvAJS2L=q6i_R6eZeEoAPPohg60NcY0UA@mail.gmail.com>
-Subject: Re: [PATCH 0/3] PCI: fix the object lifetime issue of parallel device
- removal on different pci hierarchy
+In-Reply-To: <CAErSpo5zfHR-agNBdgqfVjCU+-KcTZV+1bvML5Uw-+icDqzzEA@mail.gmail.com>
+References: <1366940841-15370-1-git-send-email-yinghai@kernel.org>
+	<CAErSpo5zfHR-agNBdgqfVjCU+-KcTZV+1bvML5Uw-+icDqzzEA@mail.gmail.com>
+Date: Fri, 26 Apr 2013 13:20:51 -0700
+Message-ID: <CAE9FiQVEQO-dLJRjn9Z7JgwGWAn1M8S1Tn2_V0Fq+6kB0rG=Bg@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Fix racing for pci device removing via sysfs
 From: Yinghai Lu <yinghai@kernel.org>
-To: Gu Zheng <guz.fnst@cn.fujitsu.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	tangchen <tangchen@cn.fujitsu.com>,
-	Lin Feng <linfeng@cn.fujitsu.com>
-Content-Type: multipart/mixed; boundary=90e6ba1efc7081b8ad04daa7d0c2
-Sender: linux-pci-owner@vger.kernel.org
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: multipart/mixed; boundary=e89a8f642e40784da104db494563
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---90e6ba1efc7081b8ad04daa7d0c2
+--e89a8f642e40784da104db494563
 Content-Type: text/plain; charset=ISO-8859-1
 
-On Thu, Apr 18, 2013 at 1:53 AM, Gu Zheng <guz.fnst@cn.fujitsu.com> wrote:
-> From 0c45a7fca2276123d0b926a22ea69158dad8ab9c Mon Sep 17 00:00:00 2001
-> From: Gu Zheng <guz.fnst@cn.fujitsu.com>
-> Date: Thu, 18 Apr 2013 17:43:53 +0900
-> Subject: [PATCH 0/3] PCI: fix the object lifetime issue of parallel device removal on different pci hierarchy
+On Fri, Apr 26, 2013 at 9:28 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> This is a gross hack.  Iterating through all known pci_devs to see if
+> this one still exists?
 >
-> This patch is used to fix the panic issue of parallel device removal on different pci hierarchy,
-> refer to https://bugzilla.kernel.org/show_bug.cgi?id=54411.
+> I reproduced the original problem, applied this patch, and verified
+> that it avoids the original crash.
 >
-> [  418.775140]  ioatdma i7core_edac edac_core sg e1000e igb dca ptp pps_core
-> sd_mod crc_t10dif megaraid_sas mptsas mptscsih mptbase scsi_transport_sas
-> scsi_mod
-> [  418.946462] CPU 4
-> [  418.968377] Pid: 512, comm: kworker/u:2 Tainted: G        W    3.8.0 #2
-> FUJITSU-SV PRIMEQUEST 1800E/SB
-> [  419.081763] RIP: 0010:[<ffffffff8137972e>]  [<ffffffff8137972e>]
-> pci_bus_read_config_word+0x5e/0x90
-> [  419.189965] RSP: 0018:ffff8807b0a37c08  EFLAGS: 00010046
-> [  419.253409] RAX: 6b6b6b6b6b6b6b6b RBX: ffff8807bb4a1290 RCX:
-> 0000000000000002
-> [  419.338658] RDX: 00000000000000c4 RSI: 0000000000000008 RDI:
-> ffff8807bb4a1290
-> [  419.423925] RBP: ffff8807b0a37c48 R08: ffff8807b0a37c24 R09:
-> 6db5c22da55960d0
-> [  419.509175] R10: 0000000000000000 R11: 000000000003ecd0 R12:
-> ffff8807b0a37c66
-> [  419.594425] R13: 0000000000000282 R14: ffffffff82126d40 R15:
-> 0000000000000000
-> [  419.679675] FS:  0000000000000000(0000) GS:ffff8807c2200000(0000)
-> knlGS:0000000000000000
-> [  419.776343] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
-> [  419.844981] CR2: 00007ffa898a54f8 CR3: 0000000001c0c000 CR4:
-> 00000000000007e0
-> [  419.930236] DR0: 0000000000000000 DR1: 0000000000000000 DR2:
-> 0000000000000000
-> [  420.015484] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7:
-> 0000000000000400
-> [  420.100736] Process kworker/u:2 (pid: 512, threadinfo ffff8807b0a36000, task
-> ffff8807b30bcd00)
-> [  420.203632] Stack:
-> [  420.227623]  ffff8807000000c4 ffffffff00000008 ffffffff813851ef
-> 0000000000992000
-> [  420.316421]  ffff8807b0a37c98 ffff8807bb49b3d8 0000000000000000
-> 0000000000000000
-> [  420.405233]  ffff8807b0a37c88 ffffffff8138044b ffff8807b0a37c88
-> 0000000000000246
-> [  420.494137] Call Trace:
-> [  420.523326]  [<ffffffff813851ef>] ? remove_callback+0x1f/0x40
-> [  420.591984]  [<ffffffff8138044b>] pci_pme_active+0x4b/0x1c0
-> [  420.658545]  [<ffffffff8137d8e7>] pci_stop_bus_device+0x57/0xb0
-> [  420.729259]  [<ffffffff8137dab6>] pci_stop_and_remove_bus_device+0x16/0x30
-> [  420.811392]  [<ffffffff813851fb>] remove_callback+0x2b/0x40
-> [  420.877955]  [<ffffffff81257a56>] sysfs_schedule_callback_work+0x26/0x70
-> [  420.958017]  [<ffffffff810919ae>] process_one_work+0x20e/0x5c0
-> [  421.027691]  [<ffffffff8109193f>] ? process_one_work+0x19f/0x5c0
-> [  421.099441]  [<ffffffff81257a30>] ? sysfs_schedule_callback+0x210/0x210
-> [  421.178461]  [<ffffffff81093a4e>] worker_thread+0x12e/0x370
-> [  421.245020]  [<ffffffff81093920>] ? manage_workers+0x180/0x180
-> [  421.314697]  [<ffffffff81099b8e>] kthread+0xee/0x100
-> [  421.373992]  [<ffffffff810e0f09>] ? __lock_release+0x129/0x190
-> [  421.443671]  [<ffffffff81099aa0>] ? __init_kthread_worker+0x70/0x70
-> [  421.518544]  [<ffffffff816b2dac>] ret_from_fork+0x7c/0xb0
-> [  421.583031]  [<ffffffff81099aa0>] ? __init_kthread_worker+0x70/0x70
-> [  421.657894] Code: 89 75 c8 c7 45 dc 00 00 00 00 e8 4e ef 32 00 49 89 c5 48
-> 8b 83 b8 00 00 00 4c 8d 45 dc b9 02 00 00 00 8b 55 c0 8b 75 c8 48 89 df <ff> 10
-> 8b 55 dc 4c 89 ee 48 c7 c7 c0 67 cb 81 89 45 c8 66 41 89
-> [  421.890306] RIP  [<ffffffff8137972e>] pci_bus_read_config_word+0x5e/0x90
-> [  421.970475]  RSP <ffff8807b0a37c08>
-> [  422.012121] ---[ end trace 403f76cf31f1bcb1 ]---
+> However, it's still incorrect because now you're looking at pdev after
+> it's been freed. With CONFIG_SLUB_DEBUG_ON=y, the removal still causes
+> a crash in remove_callback().
 >
-> It is easy to reproduce with the following script:
-> echo -n 1 > /sys/bus/pci/devices/0000\:10\:00.0/remove ; echo -n 1 >
-> /sys/bus/pci/devices/0000\:1a\:01.0/remove
->
-> The 1a:01.0 device is downstream from the 10:00.0 bridge.
->
-> The sysfs interface remove_store() uses device_schedule_callback() to schedule
-> the remove for later. What's happening is that we schedule
-> remove_callback() for both devices before 10:00.0 has been removed,
-> like this:
->
->     # echo -n 1 > /sys/bus/pci/devices/0000\:10\:00.0/remove
->     remove_store  # for 10:00.0
->       device_schedule_callback(10:00.0, remove_callback)
->         sysfs_schedule_callback
->           kobject_get
->           queue_work
->     # echo -n 1 >  /sys/bus/pci/devices/0000\:1a\:01.0/remove
->     remove_store  # for 1a:01.0
->       device_schedule_callback(1a:01.0, remove_callback)
->         sysfs_schedule_callback
->           kobject_get
->           queue_work
->
-> Later, we run the callbacks, starting with 10:00.0.  This calls
-> remove_callback() to perform the remove:
->
->     remove_callback(10:00.0)
->       mutex_lock(&pci_remove_rescan_mutex)
->       pci_stop_and_remove_bus_device(pdev)
->       mutex_unlock(&pci_remove_rescan_mutex)
->
-> This will stop and remove the subtree below 10:00.0, but it does not
-> actually free the pci_dev for 1a:01.0 because we increased its ref
-> count in sysfs_schedule_callback.  So after completing
-> remove_callback(10:00.0), we run the second callback for 1a:01.0.
->
-> But the PCI core did this removal wrong. It deallocated the struct pci_bus
-> for bus 0000:1a too soon.
->
-> So we take a reference on the bus object when capturing the struct pci_bus pointer,
-> in order to keep it valid before its downstream devices' removal routines complete.
->
-> Gu Zheng (3):
->   PCI: take a reference on the bus object when we capture the struct
->     pci_bus pointer
->   PCI: rename alloc_pci_dev() to pci_alloc_dev()
->   PCI: Move the acquiring the reference of pci bus inside
->     pci_alloc_bus()
->
->  arch/powerpc/kernel/pci_of_scan.c |    3 +--
->  drivers/char/agp/alpha-agp.c      |    2 +-
->  drivers/char/agp/parisc-agp.c     |    2 +-
->  drivers/pci/bus.c                 |   14 ++++++++++++++
->  drivers/pci/iov.c                 |    6 ++++--
->  drivers/pci/probe.c               |   10 ++++++----
->  drivers/scsi/megaraid.c           |    2 +-
->  include/linux/pci.h               |    5 ++++-
->  8 files changed, 32 insertions(+), 12 deletions(-)
 
-No. that is wrong.
+Yes, there is small window, that could have bus and dev get freed...
 
-I can not find where that reference count get reduced!
-in the my test patches that I sent, it does have have that in remove path.
+Please check attached that should address your concerns.
 
-What is reason for you to remove that line?
-
-After put the line back, your test still can pass?
+Thanks
 
 Yinghai
 
---90e6ba1efc7081b8ad04daa7d0c2
-Content-Type: application/octet-stream; name="pci_dev_bus_ref.patch"
-Content-Disposition: attachment; filename="pci_dev_bus_ref.patch"
+--e89a8f642e40784da104db494563
+Content-Type: application/octet-stream; name="remove_callback_clean.patch"
+Content-Disposition: attachment; filename="remove_callback_clean.patch"
 Content-Transfer-Encoding: base64
-X-Attachment-Id: f_hfoc4wzg0
+X-Attachment-Id: f_hfzt0u3n0
 
-LS0tCiBkcml2ZXJzL3BjaS9wcm9iZS5jICB8ICAgIDEgKwogZHJpdmVycy9wY2kvcmVtb3ZlLmMg
-fCAgICAxICsKIDIgZmlsZXMgY2hhbmdlZCwgMiBpbnNlcnRpb25zKCspCgpJbmRleDogbGludXgt
-Mi42L2RyaXZlcnMvcGNpL3Byb2JlLmMKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQotLS0gbGludXgtMi42Lm9yaWcvZHJp
-dmVycy9wY2kvcHJvYmUuYworKysgbGludXgtMi42L2RyaXZlcnMvcGNpL3Byb2JlLmMKQEAgLTEz
-MzcsNiArMTMzNyw3IEBAIHZvaWQgcGNpX2RldmljZV9hZGQoc3RydWN0IHBjaV9kZXYgKmRldiwK
-IAkgKi8KIAlkb3duX3dyaXRlKCZwY2lfYnVzX3NlbSk7CiAJbGlzdF9hZGRfdGFpbCgmZGV2LT5i
-dXNfbGlzdCwgJmJ1cy0+ZGV2aWNlcyk7CisJZ2V0X2RldmljZSgmYnVzLT5kZXYpOwogCXVwX3dy
-aXRlKCZwY2lfYnVzX3NlbSk7CiAKIAlwY2lfZml4dXBfZGV2aWNlKHBjaV9maXh1cF9maW5hbCwg
-ZGV2KTsKSW5kZXg6IGxpbnV4LTIuNi9kcml2ZXJzL3BjaS9yZW1vdmUuYwo9PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09Ci0t
-LSBsaW51eC0yLjYub3JpZy9kcml2ZXJzL3BjaS9yZW1vdmUuYworKysgbGludXgtMi42L2RyaXZl
-cnMvcGNpL3JlbW92ZS5jCkBAIC0zNiw2ICszNiw3IEBAIHN0YXRpYyB2b2lkIHBjaV9kZXN0cm95
-X2RldihzdHJ1Y3QgcGNpX2QKIHsKIAlkb3duX3dyaXRlKCZwY2lfYnVzX3NlbSk7CiAJbGlzdF9k
-ZWwoJmRldi0+YnVzX2xpc3QpOworCXB1dF9kZXZpY2UoJmRldi0+YnVzLT5kZXYpOwogCXVwX3dy
-aXRlKCZwY2lfYnVzX3NlbSk7CiAKIAlwY2lfZnJlZV9yZXNvdXJjZXMoZGV2KTsK
---90e6ba1efc7081b8ad04daa7d0c2--
+U3ViamVjdDogW1BBVENIXSBQQ0ksIHN5c2ZzOiBDbGVhbiB1cCByZXNjYW4gd2l0aCBzY2hlZHVs
+ZV9jYWxsYmFjawoKQ2hhbmdlIHRvIHVzZSB0aHJlZSByZXR1cm4gYWNjb3JkaW5nIHRvIEJqb3Ju
+LgoKU3VnZ2VzdGVkLWJ5OiBCam9ybiBIZWxnYWFzIDxiaGVsZ2Fhc0Bnb29nbGUuY29tPgpTaWdu
+ZWQtb2ZmLWJ5OiBZaW5naGFpIEx1IDx5aW5naGFpQGtlcm5lbC5vcmc+CgotLS0KIGRyaXZlcnMv
+cGNpL3BjaS1zeXNmcy5jIHwgICAxMyArKysrKysrKy0tLS0tCiAxIGZpbGUgY2hhbmdlZCwgOCBp
+bnNlcnRpb25zKCspLCA1IGRlbGV0aW9ucygtKQoKSW5kZXg6IGxpbnV4LTIuNi9kcml2ZXJzL3Bj
+aS9wY2ktc3lzZnMuYwo9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09Ci0tLSBsaW51eC0yLjYub3JpZy9kcml2ZXJzL3BjaS9w
+Y2ktc3lzZnMuYworKysgbGludXgtMi42L2RyaXZlcnMvcGNpL3BjaS1zeXNmcy5jCkBAIC0zMzks
+MTkgKzMzOSwyMiBAQCBzdGF0aWMgc3NpemVfdAogcmVtb3ZlX3N0b3JlKHN0cnVjdCBkZXZpY2Ug
+KmRldiwgc3RydWN0IGRldmljZV9hdHRyaWJ1dGUgKmR1bW15LAogCSAgICAgY29uc3QgY2hhciAq
+YnVmLCBzaXplX3QgY291bnQpCiB7Ci0JaW50IHJldCA9IDA7CisJaW50IGVycjsKIAl1bnNpZ25l
+ZCBsb25nIHZhbDsKIAogCWlmIChzdHJpY3Rfc3RydG91bChidWYsIDAsICZ2YWwpIDwgMCkKIAkJ
+cmV0dXJuIC1FSU5WQUw7CiAKKwlpZiAoIXZhbCkKKwkJcmV0dXJuIGNvdW50OworCiAJLyogQW4g
+YXR0cmlidXRlIGNhbm5vdCBiZSB1bnJlZ2lzdGVyZWQgYnkgb25lIG9mIGl0cyBvd24gbWV0aG9k
+cywKIAkgKiBzbyB3ZSBoYXZlIHRvIHVzZSB0aGlzIHJvdW5kYWJvdXQgYXBwcm9hY2guCiAJICov
+Ci0JaWYgKHZhbCkKLQkJcmV0ID0gZGV2aWNlX3NjaGVkdWxlX2NhbGxiYWNrKGRldiwgcmVtb3Zl
+X2NhbGxiYWNrKTsKLQlpZiAocmV0KQotCQljb3VudCA9IHJldDsKKwllcnIgPSBkZXZpY2Vfc2No
+ZWR1bGVfY2FsbGJhY2soZGV2LCByZW1vdmVfY2FsbGJhY2spOworCWlmIChlcnIpCisJCXJldHVy
+biBlcnI7CisKIAlyZXR1cm4gY291bnQ7CiB9CiAK
+--e89a8f642e40784da104db494563
+Content-Type: application/octet-stream; name="fix_racing_removing_2.patch"
+Content-Disposition: attachment; filename="fix_racing_removing_2.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_hfzt1si61
+
+U3ViamVjdDogW1BBVENIIC12Ml0gUENJOiBGaXggcmFjaW5nIGZvciBwY2kgZGV2aWNlIHJlbW92
+aW5nIHZpYSBzeXNmcwpGcm9tOiBZaW5naGFpIEx1IDx5aW5naGFpQGtlcm5lbC5vcmc+CgpHdSBm
+b3VuZCBuZXN0ZWQgcmVtb3ZpbmcgdGhyb3VnaAoJZWNobyAtbiAxID4gL3N5cy9idXMvcGNpL2Rl
+dmljZXMvMDAwMFw6MTBcOjAwLjAvcmVtb3ZlIDsgZWNobyAtbiAxID4KL3N5cy9idXMvcGNpL2Rl
+dmljZXMvMDAwMFw6MWFcOjAxLjAvcmVtb3ZlCgp3aWxsIGNhdXNlIGtlcm5lbCBjcmFzaCBhcyBi
+dXMgZ2V0IGZyZWVkLgoKWyAgNDE4Ljk0NjQ2Ml0gQ1BVIDQKWyAgNDE4Ljk2ODM3N10gUGlkOiA1
+MTIsIGNvbW06IGt3b3JrZXIvdToyIFRhaW50ZWQ6IEcgICAgICAgIFcgICAgMy44LjAgIzIKRlVK
+SVRTVS1TViBQUklNRVFVRVNUIDE4MDBFL1NCClsgIDQxOS4wODE3NjNdIFJJUDogMDAxMDpbPGZm
+ZmZmZmZmODEzNzk3MmU+XSAgWzxmZmZmZmZmZjgxMzc5NzJlPl0KcGNpX2J1c19yZWFkX2NvbmZp
+Z193b3JkKzB4NWUvMHg5MApbICA0MjAuNDk0MTM3XSBDYWxsIFRyYWNlOgpbICA0MjAuNTIzMzI2
+XSAgWzxmZmZmZmZmZjgxMzg1MWVmPl0gPyByZW1vdmVfY2FsbGJhY2srMHgxZi8weDQwClsgIDQy
+MC41OTE5ODRdICBbPGZmZmZmZmZmODEzODA0NGI+XSBwY2lfcG1lX2FjdGl2ZSsweDRiLzB4MWMw
+ClsgIDQyMC42NTg1NDVdICBbPGZmZmZmZmZmODEzN2Q4ZTc+XSBwY2lfc3RvcF9idXNfZGV2aWNl
+KzB4NTcvMHhiMApbICA0MjAuNzI5MjU5XSAgWzxmZmZmZmZmZjgxMzdkYWI2Pl0gcGNpX3N0b3Bf
+YW5kX3JlbW92ZV9idXNfZGV2aWNlKzB4MTYvMHgzMApbICA0MjAuODExMzkyXSAgWzxmZmZmZmZm
+ZjgxMzg1MWZiPl0gcmVtb3ZlX2NhbGxiYWNrKzB4MmIvMHg0MApbICA0MjAuODc3OTU1XSAgWzxm
+ZmZmZmZmZjgxMjU3YTU2Pl0gc3lzZnNfc2NoZWR1bGVfY2FsbGJhY2tfd29yaysweDI2LzB4NzAK
+Cmh0dHBzOi8vYnVnemlsbGEua2VybmVsLm9yZy9zaG93X2J1Zy5jZ2k/aWQ9NTQ0MTEKCldlIGhh
+dmUgb25lIHBhdGNoIHRoYXQgd2lsbCBsZXQgZGV2aWNlIGhvbGQgYnVzIHJlZiB0byBwcmV2ZW50
+IGl0IGZyb20KYmVpbmcgZnJlZWQsIGJ1dCB0aGF0IHdpbGwgc3RpbGwgZ2VuZXJhdGUgd2Fybmlu
+Zy4KCi0tLS0tLS0tLS0tLVsgY3V0IGhlcmUgXS0tLS0tLS0tLS0tLQpXQVJOSU5HOiBhdCBsaWIv
+bGlzdF9kZWJ1Zy5jOjUzIF9fbGlzdF9kZWxfZW50cnkrMHg2My8weGQwKCkKSGFyZHdhcmUgbmFt
+ZTogUFJJTUVRVUVTVCAxODAwRQpsaXN0X2RlbCBjb3JydXB0aW9uLCBmZmZmODgwN2QxYjZjMDAw
+LT5uZXh0IGlzIExJU1RfUE9JU09OMSAoZGVhZDAwMDAwMDEwMDEwMCkKQ2FsbCBUcmFjZToKIFs8
+ZmZmZmZmZmY4MTA1NmQ0Zj5dIHdhcm5fc2xvd3BhdGhfY29tbW9uKzB4N2YvMHhjMAogWzxmZmZm
+ZmZmZjgxMDU2ZTQ2Pl0gd2Fybl9zbG93cGF0aF9mbXQrMHg0Ni8weDUwCiBbPGZmZmZmZmZmODEy
+ODBiMTM+XSBfX2xpc3RfZGVsX2VudHJ5KzB4NjMvMHhkMAogWzxmZmZmZmZmZjgxMjgwYjkxPl0g
+bGlzdF9kZWwrMHgxMS8weDQwCiBbPGZmZmZmZmZmODEyOTgzMzE+XSBwY2lfZGVzdHJveV9kZXYr
+MHgzMS8weGMwCiBbPGZmZmZmZmZmODEyOTg1YmI+XSBwY2lfcmVtb3ZlX2J1c19kZXZpY2UrMHg1
+Yi8weDcwCiBbPGZmZmZmZmZmODEyOTg1ZWU+XSBwY2lfc3RvcF9hbmRfcmVtb3ZlX2J1c19kZXZp
+Y2UrMHgxZS8weDMwCiBbPGZmZmZmZmZmODEyOWZjODk+XSByZW1vdmVfY2FsbGJhY2srMHgyOS8w
+eDQwCiBbPGZmZmZmZmZmODExZjNiODQ+XSBzeXNmc19zY2hlZHVsZV9jYWxsYmFja193b3JrKzB4
+MjQvMHg3MAoKV2UgY2FuIGp1c3QgY2hlY2sgaWYgdGhlIGRldmljZSBnZXQgcmVtb3ZlZCBmcm9t
+IHBjaSB0cmVlCmFscmVhZHkgaW4gdGhlIHByb3RlY3Rpb24gdW5kZXIgcGNpX3JlbW92ZV9yZXNj
+YW5fbXV0ZXguCgotdjI6IGNoZWNrIGlmIHRoZSBkZXYtPmJ1c19saXN0IGlzIHBvaXNvbmVkIGlu
+c3RlYWQgdG8KICAgICBmaW5kIG91dCBpZiBpdCBpcyByZW1vdmVkIGFscmVhZHkuCiAgICAgQWxz
+byBhZGQgb25lIGV4dHJhIHJlZiB0byBkZXYgdG8gbWFrZSBzdXJlIGRldiBpcyBub3QKICAgICBn
+ZXQgZnJlZWQgdG9vIGVhcmx5LgoKUmVwb3J0ZWQtYnk6IEd1IFpoZW5nIDxndXouZm5zdEBjbi5m
+dWppdHN1LmNvbT4KVGVzdGVkLWJ5OiBHdSBaaGVuZyA8Z3V6LmZuc3RAY24uZnVqaXRzdS5jb20+
+ClNpZ25lZC1vZmYtYnk6IFlpbmdoYWkgTHUgPHlpbmdoYWlAa2VybmVsLm9yZz4KCi0tLQogZHJp
+dmVycy9wY2kvcGNpLXN5c2ZzLmMgfCAgIDEyICsrKysrKysrKystLQogMSBmaWxlIGNoYW5nZWQs
+IDEwIGluc2VydGlvbnMoKyksIDIgZGVsZXRpb25zKC0pCgpJbmRleDogbGludXgtMi42L2RyaXZl
+cnMvcGNpL3BjaS1zeXNmcy5jCj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0KLS0tIGxpbnV4LTIuNi5vcmlnL2RyaXZlcnMv
+cGNpL3BjaS1zeXNmcy5jCisrKyBsaW51eC0yLjYvZHJpdmVycy9wY2kvcGNpLXN5c2ZzLmMKQEAg
+LTMyOSw5ICszMjksMTMgQEAgZGV2X3Jlc2Nhbl9zdG9yZShzdHJ1Y3QgZGV2aWNlICpkZXYsIHN0
+cgogc3RhdGljIHZvaWQgcmVtb3ZlX2NhbGxiYWNrKHN0cnVjdCBkZXZpY2UgKmRldikKIHsKIAlz
+dHJ1Y3QgcGNpX2RldiAqcGRldiA9IHRvX3BjaV9kZXYoZGV2KTsKKwlib29sIGZvdW5kOwogCiAJ
+bXV0ZXhfbG9jaygmcGNpX3JlbW92ZV9yZXNjYW5fbXV0ZXgpOwotCXBjaV9zdG9wX2FuZF9yZW1v
+dmVfYnVzX2RldmljZShwZGV2KTsKKwlmb3VuZCA9IHBkZXYtPmJ1c19saXN0Lm5leHQgIT0gTElT
+VF9QT0lTT04xOworCXBjaV9kZXZfcHV0KHBkZXYpOworCWlmIChmb3VuZCkKKwkJcGNpX3N0b3Bf
+YW5kX3JlbW92ZV9idXNfZGV2aWNlKHBkZXYpOwogCW11dGV4X3VubG9jaygmcGNpX3JlbW92ZV9y
+ZXNjYW5fbXV0ZXgpOwogfQogCkBAIC0zNDEsNiArMzQ1LDcgQEAgcmVtb3ZlX3N0b3JlKHN0cnVj
+dCBkZXZpY2UgKmRldiwgc3RydWN0CiB7CiAJaW50IGVycjsKIAl1bnNpZ25lZCBsb25nIHZhbDsK
+KwlzdHJ1Y3QgcGNpX2RldiAqcGRldjsKIAogCWlmIChzdHJpY3Rfc3RydG91bChidWYsIDAsICZ2
+YWwpIDwgMCkKIAkJcmV0dXJuIC1FSU5WQUw7CkBAIC0zNTEsOSArMzU2LDEyIEBAIHJlbW92ZV9z
+dG9yZShzdHJ1Y3QgZGV2aWNlICpkZXYsIHN0cnVjdAogCS8qIEFuIGF0dHJpYnV0ZSBjYW5ub3Qg
+YmUgdW5yZWdpc3RlcmVkIGJ5IG9uZSBvZiBpdHMgb3duIG1ldGhvZHMsCiAJICogc28gd2UgaGF2
+ZSB0byB1c2UgdGhpcyByb3VuZGFib3V0IGFwcHJvYWNoLgogCSAqLworCXBkZXYgPSBwY2lfZGV2
+X2dldCh0b19wY2lfZGV2KGRldikpOwogCWVyciA9IGRldmljZV9zY2hlZHVsZV9jYWxsYmFjayhk
+ZXYsIHJlbW92ZV9jYWxsYmFjayk7Ci0JaWYgKGVycikKKwlpZiAoZXJyKSB7CisJCXBjaV9kZXZf
+cHV0KHBkZXYpOwogCQlyZXR1cm4gZXJyOworCX0KIAogCXJldHVybiBjb3VudDsKIH0K
+--e89a8f642e40784da104db494563--
