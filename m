@@ -1,60 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:58121 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752513Ab3DKLzK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 11 Apr 2013 07:55:10 -0400
-Message-ID: <5166A487.8060704@huawei.com>
-Date: Thu, 11 Apr 2013 19:54:47 +0800
-From: Yijing Wang <wangyijing@huawei.com>
-MIME-Version: 1.0
-To: Alex Williamson <alex.williamson@redhat.com>
-CC: Yijing Wang <wangyijing@huawei.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>
-Subject: Re: [PATCH -v2] PCI/VFIO: use pcie_flags_reg instead of access PCI-E
- Capabilities Register
-References: <1364867547-15300-1-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1364867547-15300-1-git-send-email-wangyijing@huawei.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Received: from aserp1040.oracle.com ([141.146.126.69]:46885 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758931Ab3DZBrG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Apr 2013 21:47:06 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Huang Ying <ying.huang@intel.com>
+Cc: David Bulkow <David.Bulkow@stratus.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH] PCI: Remove duplicate pci_disable_device for pcie port
+Date: Thu, 25 Apr 2013 18:47:00 -0700
+Message-Id: <1366940820-15302-1-git-send-email-yinghai@kernel.org>
+In-Reply-To: <5AA430FFE4486C448003201AC83BC85E03DEA483@EXHQ.corp.stratus.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-ping?
+During chasing one PCI xHCI hotplug problem, David Bulkow found
 
-On 2013/4/2 9:52, Yijing Wang wrote:
-> Currently, we use pcie_flags_reg to cache PCI-E Capabilities Register,
-> because PCI-E Capabilities Register bits are almost read-only. This patch
-> use pcie_caps_reg() instead of another access PCI-E Capabilities Register.
-> 
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> ---
->  drivers/vfio/pci/vfio_pci_config.c |    6 +-----
->  1 files changed, 1 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/vfio/pci/vfio_pci_config.c b/drivers/vfio/pci/vfio_pci_config.c
-> index aeb00fc..12a81f7 100644
-> --- a/drivers/vfio/pci/vfio_pci_config.c
-> +++ b/drivers/vfio/pci/vfio_pci_config.c
-> @@ -1017,13 +1017,9 @@ static int vfio_cap_len(struct vfio_pci_device *vdev, u8 cap, u8 pos)
->  		return byte;
->  	case PCI_CAP_ID_EXP:
->  		/* length based on version */
-> -		ret = pci_read_config_word(pdev, pos + PCI_EXP_FLAGS, &word);
-> -		if (ret)
-> -			return pcibios_err_to_errno(ret);
-> -
->  		vdev->extended_caps = true;
->  
-> -		if ((word & PCI_EXP_FLAGS_VERS) == 1)
-> +		if ((pcie_caps_reg(pdev) & PCI_EXP_FLAGS_VERS) == 1)
->  			return PCI_CAP_EXP_ENDPOINT_SIZEOF_V1;
->  		else
->  			return PCI_CAP_EXP_ENDPOINT_SIZEOF_V2;
-> 
+	static void pcie_portdrv_remove(struct pci_dev *dev)
+	{
+        	pcie_port_device_remove(dev);
+	        pci_disable_device(dev);
+	}
+and
+	void pcie_port_device_remove(struct pci_dev *dev)
+	{
+        	device_for_each_child(&dev->dev, NULL, remove_iter);
+	        cleanup_service_irqs(dev);
+	        pci_disable_device(dev);
+	}
 
+that extra pci_disable_device in pcie_port_device_remove() was added by
+| commit dc5351784eb36f1fec4efa88e01581be72c0b711
+| Author: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+| Date:   Wed Nov 25 21:04:00 2009 +0900
+|
+|    PCI: portdrv: cleanup service irqs initialization
 
--- 
-Thanks!
-Yijing
+so pci_dsiable_device is called two times.
 
+We should remove extra one in pcie_portdrv_remove.
+
+Reported-by: David Bulkow <David.Bulkow@stratus.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+
+---
+ drivers/pci/pcie/portdrv_pci.c |    1 -
+ 1 file changed, 1 deletion(-)
+
+Index: linux-2.6/drivers/pci/pcie/portdrv_pci.c
+===================================================================
+--- linux-2.6.orig/drivers/pci/pcie/portdrv_pci.c
++++ linux-2.6/drivers/pci/pcie/portdrv_pci.c
+@@ -223,7 +223,6 @@ static int pcie_portdrv_probe(struct pci
+ static void pcie_portdrv_remove(struct pci_dev *dev)
+ {
+ 	pcie_port_device_remove(dev);
+-	pci_disable_device(dev);
+ }
+ 
+ static int error_detected_iter(struct device *device, void *data)
