@@ -1,165 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e8.ny.us.ibm.com ([32.97.182.138]:50393 "EHLO e8.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1161463Ab3DECyq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 4 Apr 2013 22:54:46 -0400
-Received: from /spool/local
-	by e8.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <shangw@linux.vnet.ibm.com>;
-	Thu, 4 Apr 2013 22:54:45 -0400
-Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by d01dlp01.pok.ibm.com (Postfix) with ESMTP id 1677E38C801A
-	for <linux-pci@vger.kernel.org>; Thu,  4 Apr 2013 22:54:38 -0400 (EDT)
-Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
-	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id r352sbej347492
-	for <linux-pci@vger.kernel.org>; Thu, 4 Apr 2013 22:54:38 -0400
-Received: from d03av01.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av01.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id r352sbfM009593
-	for <linux-pci@vger.kernel.org>; Thu, 4 Apr 2013 20:54:37 -0600
-From: Gavin Shan <shangw@linux.vnet.ibm.com>
-To: linux-pci@vger.kernel.org
-Cc: bhelgaas@google.com, Gavin Shan <shangw@linux.vnet.ibm.com>
-Subject: [PATCH 1/4] PCI: Cache MSI/MSI-X cap in PCI device
-Date: Fri,  5 Apr 2013 10:54:30 +0800
-Message-Id: <1365130473-7413-2-git-send-email-shangw@linux.vnet.ibm.com>
-In-Reply-To: <1365130473-7413-1-git-send-email-shangw@linux.vnet.ibm.com>
-References: <1365130473-7413-1-git-send-email-shangw@linux.vnet.ibm.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:46951 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759843Ab3DZBrQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Apr 2013 21:47:16 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH] PCI: Fix racing for pci device removing via sysfs
+Date: Thu, 25 Apr 2013 18:47:21 -0700
+Message-Id: <1366940841-15370-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The patch caches the MSI and MSI-X capability offset in PCI device
-(struct pci_dev) so that we needn't poll it from the config space
-upon enabling or disabling MSI or MSI-X interrupts. Besides, the
-data type of cached PM capability (pm_cap), which is PCI stuff
-intead of PCIe stuff, in pci_dev has been changed to "u8" according
-to Bjorn's suggestion.
+Gu found nested removing through
+	echo -n 1 > /sys/bus/pci/devices/0000\:10\:00.0/remove ; echo -n 1 >
+/sys/bus/pci/devices/0000\:1a\:01.0/remove
 
-Signed-off-by: Gavin Shan <shangw@linux.vnet.ibm.com>
+will cause kernel crash as bus get freed.
+
+[  418.946462] CPU 4
+[  418.968377] Pid: 512, comm: kworker/u:2 Tainted: G        W    3.8.0 #2
+FUJITSU-SV PRIMEQUEST 1800E/SB
+[  419.081763] RIP: 0010:[<ffffffff8137972e>]  [<ffffffff8137972e>]
+pci_bus_read_config_word+0x5e/0x90
+[  420.494137] Call Trace:
+[  420.523326]  [<ffffffff813851ef>] ? remove_callback+0x1f/0x40
+[  420.591984]  [<ffffffff8138044b>] pci_pme_active+0x4b/0x1c0
+[  420.658545]  [<ffffffff8137d8e7>] pci_stop_bus_device+0x57/0xb0
+[  420.729259]  [<ffffffff8137dab6>] pci_stop_and_remove_bus_device+0x16/0x30
+[  420.811392]  [<ffffffff813851fb>] remove_callback+0x2b/0x40
+[  420.877955]  [<ffffffff81257a56>] sysfs_schedule_callback_work+0x26/0x70
+
+https://bugzilla.kernel.org/show_bug.cgi?id=54411
+
+We have one patch that will let device hold bus ref to prevent it from
+being freed, but that will still generate warning.
+
+------------[ cut here ]------------
+WARNING: at lib/list_debug.c:53 __list_del_entry+0x63/0xd0()
+Hardware name: PRIMEQUEST 1800E
+list_del corruption, ffff8807d1b6c000->next is LIST_POISON1 (dead000000100100)
+Call Trace:
+ [<ffffffff81056d4f>] warn_slowpath_common+0x7f/0xc0
+ [<ffffffff81056e46>] warn_slowpath_fmt+0x46/0x50
+ [<ffffffff81280b13>] __list_del_entry+0x63/0xd0
+ [<ffffffff81280b91>] list_del+0x11/0x40
+ [<ffffffff81298331>] pci_destroy_dev+0x31/0xc0
+ [<ffffffff812985bb>] pci_remove_bus_device+0x5b/0x70
+ [<ffffffff812985ee>] pci_stop_and_remove_bus_device+0x1e/0x30
+ [<ffffffff8129fc89>] remove_callback+0x29/0x40
+ [<ffffffff811f3b84>] sysfs_schedule_callback_work+0x24/0x70
+
+We can just check if the device get removed from pci tree
+already in the protection under pci_remove_rescan_mutex.
+
+Reported-by: Gu Zheng <guz.fnst@cn.fujitsu.com>
+Tested-by: Gu Zheng <guz.fnst@cn.fujitsu.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+
 ---
- drivers/pci/msi.c   |   43 ++++++++++++++++++++-----------------------
- include/linux/pci.h |    4 +++-
- 2 files changed, 23 insertions(+), 24 deletions(-)
+ drivers/pci/pci-sysfs.c |    9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 00cc78c..5fdc5d9 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -111,32 +111,26 @@ void default_restore_msi_irqs(struct pci_dev *dev, int irq)
- }
- #endif
- 
--static void msi_set_enable(struct pci_dev *dev, int pos, int enable)
-+static void msi_set_enable(struct pci_dev *dev, int enable)
+Index: linux-2.6/drivers/pci/pci-sysfs.c
+===================================================================
+--- linux-2.6.orig/drivers/pci/pci-sysfs.c
++++ linux-2.6/drivers/pci/pci-sysfs.c
+@@ -329,9 +329,16 @@ dev_rescan_store(struct device *dev, str
+ static void remove_callback(struct device *dev)
  {
- 	u16 control;
+ 	struct pci_dev *pdev = to_pci_dev(dev);
++	int domain = pci_domain_nr(pdev->bus);
++	u8 bus = pdev->bus->number;
++	u8 devfn = pdev->devfn;
  
--	BUG_ON(!pos);
--
--	pci_read_config_word(dev, pos + PCI_MSI_FLAGS, &control);
-+	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &control);
- 	control &= ~PCI_MSI_FLAGS_ENABLE;
- 	if (enable)
- 		control |= PCI_MSI_FLAGS_ENABLE;
--	pci_write_config_word(dev, pos + PCI_MSI_FLAGS, control);
-+	pci_write_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, control);
+ 	mutex_lock(&pci_remove_rescan_mutex);
+-	pci_stop_and_remove_bus_device(pdev);
++	pdev = pci_get_domain_bus_and_slot(domain, bus, devfn);
++	if (pdev) {
++		pci_dev_put(pdev);
++		pci_stop_and_remove_bus_device(pdev);
++	}
+ 	mutex_unlock(&pci_remove_rescan_mutex);
  }
  
- static void msix_set_enable(struct pci_dev *dev, int enable)
- {
--	int pos;
- 	u16 control;
- 
--	pos = pci_find_capability(dev, PCI_CAP_ID_MSIX);
--	if (pos) {
--		pci_read_config_word(dev, pos + PCI_MSIX_FLAGS, &control);
--		control &= ~PCI_MSIX_FLAGS_ENABLE;
--		if (enable)
--			control |= PCI_MSIX_FLAGS_ENABLE;
--		pci_write_config_word(dev, pos + PCI_MSIX_FLAGS, control);
--	}
-+	pci_read_config_word(dev, dev->msix_cap + PCI_MSIX_FLAGS, &control);
-+	control &= ~PCI_MSIX_FLAGS_ENABLE;
-+	if (enable)
-+		control |= PCI_MSIX_FLAGS_ENABLE;
-+	pci_write_config_word(dev, dev->msix_cap + PCI_MSIX_FLAGS, control);
- }
- 
- static inline __attribute_const__ u32 msi_mask(unsigned x)
-@@ -402,7 +396,7 @@ static void __pci_restore_msi_state(struct pci_dev *dev)
- 	pos = entry->msi_attrib.pos;
- 
- 	pci_intx_for_msi(dev, 0);
--	msi_set_enable(dev, pos, 0);
-+	msi_set_enable(dev, 0);
- 	arch_restore_msi_irqs(dev, dev->irq);
- 
- 	pci_read_config_word(dev, pos + PCI_MSI_FLAGS, &control);
-@@ -557,7 +551,7 @@ static int msi_capability_init(struct pci_dev *dev, int nvec)
- 	unsigned mask;
- 
- 	pos = pci_find_capability(dev, PCI_CAP_ID_MSI);
--	msi_set_enable(dev, pos, 0);	/* Disable MSI during set up */
-+	msi_set_enable(dev, 0);	/* Disable MSI during set up */
- 
- 	pci_read_config_word(dev, msi_control_reg(pos), &control);
- 	/* MSI Entry Initialization */
-@@ -598,7 +592,7 @@ static int msi_capability_init(struct pci_dev *dev, int nvec)
- 
- 	/* Set MSI enabled bits	 */
- 	pci_intx_for_msi(dev, 0);
--	msi_set_enable(dev, pos, 1);
-+	msi_set_enable(dev, 1);
- 	dev->msi_enabled = 1;
- 
- 	dev->irq = entry->irq;
-@@ -885,7 +879,7 @@ void pci_msi_shutdown(struct pci_dev *dev)
- 	desc = list_first_entry(&dev->msi_list, struct msi_desc, list);
- 	pos = desc->msi_attrib.pos;
- 
--	msi_set_enable(dev, pos, 0);
-+	msi_set_enable(dev, 0);
- 	pci_intx_for_msi(dev, 1);
- 	dev->msi_enabled = 0;
- 
-@@ -1048,15 +1042,18 @@ EXPORT_SYMBOL(pci_msi_enabled);
- 
- void pci_msi_init_pci_dev(struct pci_dev *dev)
- {
--	int pos;
- 	INIT_LIST_HEAD(&dev->msi_list);
- 
- 	/* Disable the msi hardware to avoid screaming interrupts
- 	 * during boot.  This is the power on reset default so
- 	 * usually this should be a noop.
- 	 */
--	pos = pci_find_capability(dev, PCI_CAP_ID_MSI);
--	if (pos)
--		msi_set_enable(dev, pos, 0);
--	msix_set_enable(dev, 0);
-+	dev->msi_cap = pci_find_capability(dev, PCI_CAP_ID_MSI);
-+	if (dev->msi_cap)
-+		msi_set_enable(dev, 0);
-+
-+	/* We needn't check if we have valid MSI-X capability here */
-+	dev->msix_cap = pci_find_capability(dev, PCI_CAP_ID_MSIX);
-+	if (dev->msix_cap)
-+		msix_set_enable(dev, 0);
- }
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 2461033a..3e23895 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -249,7 +249,9 @@ struct pci_dev {
- 	pci_power_t     current_state;  /* Current operating state. In ACPI-speak,
- 					   this is D0-D3, D0 being fully functional,
- 					   and D3 being off. */
--	int		pm_cap;		/* PM capability offset in the
-+	u8		msi_cap;	/* MSI capability offset */
-+	u8		msix_cap;	/* MSI-X capability offset */
-+	u8		pm_cap;		/* PM capability offset in the
- 					   configuration space */
- 	unsigned int	pme_support:5;	/* Bitmask of states from which PME#
- 					   can be generated */
--- 
-1.7.5.4
-
