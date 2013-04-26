@@ -1,72 +1,80 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:47569 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756636Ab3DLWqe (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 12 Apr 2013 18:46:34 -0400
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>, Ram Pai <linuxram@us.ibm.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v4 02/29] PCI: Add pci_dev_resource_n()
-Date: Fri, 12 Apr 2013 15:44:16 -0700
-Message-Id: <1365806683-26717-3-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1365806683-26717-1-git-send-email-yinghai@kernel.org>
-References: <1365806683-26717-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: David Bulkow <David.Bulkow@stratus.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH] PCI: move down pci_fixup_final for hotplug path
+Date: Thu, 25 Apr 2013 18:47:07 -0700
+Message-Id: <1366940827-15336-1-git-send-email-yinghai@kernel.org>
+In-Reply-To: <5AA430FFE4486C448003201AC83BC85E03DEA379@EXHQ.corp.stratus.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now pci device resource iteration is done via "for (i=0...)" open code.
-That make code hard to read esp when only bridge or sriov resources
-are involved.
+David found some resource conflict issue after
+| PCI: Put pci_dev in device tree as early as possible
+| commit 4f535093cf8f6da8cfda7c36c2c1ecd2e9586ee4
 
-We want to replace those open code with for_each_pci_resource().
-Also want to add addon_resource handling, and need to make addon resource
-to be treated as normal PCI resources during iteration.
+and
+| USB: Fix handoff when BIOS disables host PCI device
+| commit: cab928ee1f221c9cc48d6615070fefe2e444384a
 
-Add pci_device_resource_n() instead of using dev->resources[n].
-Use it with for_each_pci_resource macro and addon_resource support.
+for usb qirks for hotplug path.
 
--v2: Add EXPORT_SYMBOL to find building error found by Gary Hade
+After checking pci_fixup_device() with pci_fixup_final,
+now we have different path for boot path and hotadd path.
 
+Boot path: because pci_apply_fix_final_quirks is not set yet,
+	so pci_fixup_device(pci_fixup_final) will be skipped
+	from pci_device_add().
+        And later pci_apply_final_quirks will be called for all
+	pci devices via fs_initcall.
+	That is after pci_assign_unassign resource.
+	In that case quirk could use bars with problem.
+
+Hotadd path: pci_fixup_device(pci_fixup_final) will be executed
+	via pci_device_add(), and that is too early for hotplug
+	path, as pci bar for hot add devices is not assigned yet
+	after commit 4f535093.
+
+So we need to move down that for hotplug path, call that in
+pci_bus_add_devices instead, as at that time just before
+drivers get attached. 
+And that is simliar calling place for pci_device_add before
+commit 4f535093 is applied.
+
+We should apply this fix for v3.9, but is too late now.
+so get it into v3.10 and could get into v3.9 stable instead.
+
+Reported-by: David Bulkow <David.Bulkow@stratus.com>
+Tested-by: David Bulkow <David.Bulkow@stratus.com>
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+
 ---
- drivers/pci/probe.c | 9 +++++++++
- include/linux/pci.h | 2 ++
- 2 files changed, 11 insertions(+)
+ drivers/pci/bus.c   |    1 +
+ drivers/pci/probe.c |    1 -
+ 2 files changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index b494066..9cb3eb3 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -105,6 +105,15 @@ static int __init pcibus_class_init(void)
- }
- postcore_initcall(pcibus_class_init);
+Index: linux-2.6/drivers/pci/bus.c
+===================================================================
+--- linux-2.6.orig/drivers/pci/bus.c
++++ linux-2.6/drivers/pci/bus.c
+@@ -201,6 +201,7 @@ void pci_bus_add_devices(const struct pc
+ 		/* Skip already-added devices */
+ 		if (dev->is_added)
+ 			continue;
++		pci_fixup_device(pci_fixup_final, dev);
+ 		retval = pci_bus_add_device(dev);
+ 		if (retval)
+ 			dev_err(&dev->dev, "Error adding device (%d)\n",
+Index: linux-2.6/drivers/pci/probe.c
+===================================================================
+--- linux-2.6.orig/drivers/pci/probe.c
++++ linux-2.6/drivers/pci/probe.c
+@@ -1341,7 +1341,6 @@ void pci_device_add(struct pci_dev *dev,
+ 	list_add_tail(&dev->bus_list, &bus->devices);
+ 	up_write(&pci_bus_sem);
  
-+struct resource *pci_dev_resource_n(struct pci_dev *dev, int n)
-+{
-+	if (n >= 0 && n < PCI_NUM_RESOURCES)
-+		return &dev->resource[n];
-+
-+	return NULL;
-+}
-+EXPORT_SYMBOL(pci_dev_resource_n);
-+
- static u64 pci_size(u64 base, u64 maxbase, u64 mask)
- {
- 	u64 size = mask & maxbase;	/* Find the significant bits */
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index bcd9769..ffff013 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -353,6 +353,8 @@ struct pci_dev {
- 	size_t romlen; /* Length of ROM if it's not from the BAR */
- };
+-	pci_fixup_device(pci_fixup_final, dev);
+ 	ret = pcibios_add_device(dev);
+ 	WARN_ON(ret < 0);
  
-+struct resource *pci_dev_resource_n(struct pci_dev *dev, int n);
-+
- static inline struct pci_dev *pci_physfn(struct pci_dev *dev)
- {
- #ifdef CONFIG_PCI_IOV
--- 
-1.8.1.4
-
