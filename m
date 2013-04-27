@@ -1,54 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f44.google.com ([209.85.219.44]:64808 "EHLO
-	mail-oa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932361Ab3DORRx convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 15 Apr 2013 13:17:53 -0400
-Received: by mail-oa0-f44.google.com with SMTP id h1so4695777oag.3
-        for <linux-pci@vger.kernel.org>; Mon, 15 Apr 2013 10:17:53 -0700 (PDT)
+Received: from szxga01-in.huawei.com ([119.145.14.64]:59336 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754356Ab3D0JQJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 27 Apr 2013 05:16:09 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, Hanjun Guo <guohanjun@huawei.com>,
+	<jiang.liu@huawei.com>, Yijing Wang <wangyijing@huawei.com>,
+	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Feng Tang <feng.tang@intel.com>
+Subject: [PATCH 1/7] PCI/X86: fix always use info->res[0] to store _CRS resource when pci=nocrs set
+Date: Sat, 27 Apr 2013 17:12:23 +0800
+Message-ID: <1367053949-38424-2-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1367053949-38424-1-git-send-email-wangyijing@huawei.com>
+References: <1367053949-38424-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 15 Apr 2013 11:17:31 -0600
-Message-ID: <CAErSpo4YXcY9fuOKWYGDkddJwk68kmZTohsmVB6QvrhjboOh1Q@mail.gmail.com>
-Subject: "unsigned expression < 0" always false warning
-To: Steven Rostedt <rostedt@goodmis.org>,
-	Frederic Weisbecker <fweisbec@gmail.com>,
-	Ingo Molnar <mingo@redhat.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Lance Ortiz <lance.ortiz@hp.com>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Can somebody help me resolve the following warning, please?
+We should increase info->res_num before checking pci_use_crs return, otherwise
+only the res[0] of pci_root_info will be used during setup_resource() when
+pci=nocrs set. And the old resource value will be overwritten by new resource item.
 
-$ make W=1 drivers/pci/pcie/aer/aerdrv_errprint.o
-...
-  CC      drivers/pci/pcie/aer/aerdrv_errprint.o
-In file included from include/trace/ftrace.h:356:0,
-                 from include/trace/define_trace.h:86,
-                 from include/trace/events/ras.h:77,
-                 from drivers/pci/pcie/aer/aerdrv_errprint.c:27:
-include/trace/events/ras.h: In function ‘ftrace_define_fields_aer_event’:
-include/trace/events/ras.h:72:1: warning: comparison of unsigned
-expression < 0 is always false [-Wtype-limits]
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: Jiang Liu <liuj97@gmail.com>
+Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Cc: Feng Tang <feng.tang@intel.com>
+---
+ arch/x86/pci/acpi.c |    7 ++-----
+ 1 files changed, 2 insertions(+), 5 deletions(-)
 
-I think it's related to "status" being a u32 below (this is from
-include/trace/events/ras.h), but I don't know whether that's incorrect
-or how to fix it:
+diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+index 3e72425..662dfdf 100644
+--- a/arch/x86/pci/acpi.c
++++ b/arch/x86/pci/acpi.c
+@@ -324,14 +324,11 @@ setup_resource(struct acpi_resource *acpi_res, void *data)
+ 	res->start = start;
+ 	res->end = end;
+ 	info->res_offset[info->res_num] = addr.translation_offset;
++	info->res_num++;
+ 
+-	if (!pci_use_crs) {
++	if (!pci_use_crs)
+ 		dev_printk(KERN_DEBUG, &info->bridge->dev,
+ 			   "host bridge window %pR (ignored)\n", res);
+-		return AE_OK;
+-	}
+-
+-	info->res_num++;
+ 
+ 	return AE_OK;
+ }
+-- 
+1.7.1
 
-TRACE_EVENT(aer_event,
-        TP_PROTO(const char *dev_name,
-                 const u32 status,
-                 const u8 severity),
 
-        TP_ARGS(dev_name, status, severity),
-
-        TP_STRUCT__entry(
-                __string(       dev_name,       dev_name        )
-                __field(        u32,            status          )
-                __field(        u8,             severity        )
-        ),
-        ...
-
-Thanks,
-  Bjorn
