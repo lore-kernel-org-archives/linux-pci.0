@@ -1,70 +1,32 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>
-Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Tony Luck <tony.luck@intel.com>,
-	Fenghua Yu <fenghua.yu@intel.com>, linux-ia64@vger.kernel.org
-Subject: [PATCH v9 08/16] PCI, IA64: implement pcibios_{add|remove}_bus() hooks
-Date: Fri, 12 Apr 2013 23:44:22 +0800
-Message-Id: <1365781470-32379-9-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1365781470-32379-1-git-send-email-jiang.liu@huawei.com>
-References: <1365781470-32379-1-git-send-email-jiang.liu@huawei.com>
+MIME-Version: 1.0
+In-Reply-To: <517B2F1B.6000704@huawei.com>
+References: <1367024974-6063-1-git-send-email-yinghai@kernel.org>
+	<517B2F1B.6000704@huawei.com>
+Date: Fri, 26 Apr 2013 18:57:04 -0700
+Message-ID: <CAE9FiQWLfdgR8VoqeVOpCdHa3TpK26Bgs7mZ7Ed+Zq60S=g8Vg@mail.gmail.com>
+Subject: Re: [RFC PATCH] PCI: Enable pci bridge when it is needed
+From: Yinghai Lu <yinghai@kernel.org>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Implement pcibios_{add|remove}_bus() hooks for IA64 platforms.
+On Fri, Apr 26, 2013 at 6:51 PM, Yijing Wang <wangyijing@huawei.com> wrote:
+> I think it's cool! Now we enable bridge in various places, this is a headache.
+>
+> hi, yinghai, in this patch, enable bridges depend on the driver call pci_enable_device() explicitly.
+> I was a little worried If there has some devices don't have some drivers bound, but used by system.
+> like ioapic, these devices maybe implemented as pci device, but no pci drivers bind, also, maybe they
+> won't call pci_enable_device() explicity. So if they are under the pci bridge, no one will enable the bridge
+> for them.
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Toshi Kani <toshi.kani@hp.com>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Fenghua Yu <fenghua.yu@intel.com>
-Cc: linux-ia64@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
----
- arch/ia64/pci/pci.c |   11 +++++++++++
- 1 file changed, 11 insertions(+)
+If there is really that case, we could call pci_enable_device in
+pci_final quirk for
+them.
 
-diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
-index 60532ab..de1474f 100644
---- a/arch/ia64/pci/pci.c
-+++ b/arch/ia64/pci/pci.c
-@@ -15,6 +15,7 @@
- #include <linux/types.h>
- #include <linux/kernel.h>
- #include <linux/pci.h>
-+#include <linux/pci-acpi.h>
- #include <linux/init.h>
- #include <linux/ioport.h>
- #include <linux/slab.h>
-@@ -458,6 +459,16 @@ void pcibios_fixup_bus(struct pci_bus *b)
- 	platform_pci_fixup_bus(b);
- }
- 
-+void pcibios_add_bus(struct pci_bus *bus)
-+{
-+	acpi_pci_add_bus(bus);
-+}
-+
-+void pcibios_remove_bus(struct pci_bus *bus)
-+{
-+	acpi_pci_remove_bus(bus);
-+}
-+
- void pcibios_set_master (struct pci_dev *dev)
- {
- 	/* No special bus mastering setup handling */
--- 
-1.7.9.5
-
+Yinghai
