@@ -1,82 +1,105 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Sat, 27 Apr 2013 10:10:39 +0000 (UTC)
-From: "Artem S. Tashkinov" <t.artem@lycos.com>
-To: bhelgaas@google.com
-Cc: stern@rowland.harvard.edu, torvalds@linux-foundation.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	rjw@sisk.pl
-Message-ID: <771333906.75854.1367057440028.JavaMail.mail@webmail08>
-References: <CAErSpo7qj2SNR7BfuBsfF-saZXvgcqqLtgoP5Hyb5u99qR4Ncg@mail.gmail.com>
- <Pine.LNX.4.44L0.1302191119270.2215-100000@iolanthe.rowland.org>
- <CAErSpo7NZoOQZyW76HEoOTVgdqL2CgbVScAeF6HGLAVaNCq0=w@mail.gmail.com>
- <337833384.57445.1361860509194.JavaMail.mail@webmail08>
- <CAErSpo6CbO5KYXiErv6J_Dnm1u694C5fQPP2_cZL8VKDEnZa9A@mail.gmail.com>
- <569718148.80620.1361906088301.JavaMail.mail@webmail13>
- <CAErSpo6UkVhSf+nFW4zwJLBQw_0RQ5H9Bv-UuQRb6zdwsFPw4g@mail.gmail.com><CAErSpo4X+XXKvWDfqh2CKZAtJ9WMQk91OcsWwdxwYv2MfEM_zQ@mail.gmail.com>
-Subject: Re: Abysmal HDD/USB write speed after sleep on a UEFI system
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:58123 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754019Ab3D0JOc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 27 Apr 2013 05:14:32 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, Hanjun Guo <guohanjun@huawei.com>,
+	<jiang.liu@huawei.com>, Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	Fenghua Yu <fenghua.yu@intel.com>, <linux-ia64@vger.kernel.org>
+Subject: [PATCH 2/7] PCI/IA64: SN: remove sn_pci_window_fixup()
+Date: Sat, 27 Apr 2013 17:12:24 +0800
+Message-ID: <1367053949-38424-3-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1367053949-38424-1-git-send-email-wangyijing@huawei.com>
+References: <1367053949-38424-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->
->Did this problem ever get resolved?
->
+Currently, pcibios_bus_to_resource() and pcibios_resource_to_bus()
+functions use pci_host_bridge_window in pci_host_bridge to translate
+bus side to/from cpu side addresses. Pci_window in pci_controller
+under IA64 is no used again, so remove this function.
 
-Hello,
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Cc: Tony Luck <tony.luck@intel.com>
+Cc: Fenghua Yu <fenghua.yu@intel.com>
+Cc: linux-ia64@vger.kernel.org
+---
+ arch/ia64/sn/kernel/io_init.c |   49 +----------------------------------------
+ 1 files changed, 1 insertions(+), 48 deletions(-)
 
-Unfortunately, no. Out of curiosity I've tried booting kernel
-3.9-rc8 in EUFI mode but it exhibits the same problem. 
+diff --git a/arch/ia64/sn/kernel/io_init.c b/arch/ia64/sn/kernel/io_init.c
+index 238e2c5..99710f5 100644
+--- a/arch/ia64/sn/kernel/io_init.c
++++ b/arch/ia64/sn/kernel/io_init.c
+@@ -149,48 +149,6 @@ sn_legacy_pci_window_fixup(struct pci_controller *controller,
+ }
+ 
+ /*
+- * sn_pci_window_fixup() - Create a pci_window for each device resource.
+- *			   It will setup pci_windows for use by
+- *			   pcibios_bus_to_resource(), pcibios_resource_to_bus(),
+- *			   etc.
+- */
+-static void
+-sn_pci_window_fixup(struct pci_dev *dev, unsigned int count,
+-		    s64 * pci_addrs)
+-{
+-	struct pci_controller *controller = PCI_CONTROLLER(dev->bus);
+-	unsigned int i;
+-	unsigned int idx;
+-	unsigned int new_count;
+-	struct pci_window *new_window;
+-
+-	if (count == 0)
+-		return;
+-	idx = controller->windows;
+-	new_count = controller->windows + count;
+-	new_window = kcalloc(new_count, sizeof(struct pci_window), GFP_KERNEL);
+-	BUG_ON(new_window == NULL);
+-	if (controller->window) {
+-		memcpy(new_window, controller->window,
+-		       sizeof(struct pci_window) * controller->windows);
+-		kfree(controller->window);
+-	}
+-
+-	/* Setup a pci_window for each device resource. */
+-	for (i = 0; i <= PCI_ROM_RESOURCE; i++) {
+-		if (pci_addrs[i] == -1)
+-			continue;
+-
+-		new_window[idx].offset = dev->resource[i].start - pci_addrs[i];
+-		new_window[idx].resource = dev->resource[i];
+-		idx++;
+-	}
+-
+-	controller->windows = new_count;
+-	controller->window = new_window;
+-}
+-
+-/*
+  * sn_io_slot_fixup() -   We are not running with an ACPI capable PROM,
+  *			  and need to convert the pci_dev->resource
+  *			  'start' and 'end' addresses to mapped addresses,
+@@ -276,12 +234,7 @@ sn_io_slot_fixup(struct pci_dev *dev)
+ 						 IORESOURCE_ROM_BIOS_COPY;
+ 		}
+ 	}
+-	/* Create a pci_window in the pci_controller struct for
+-	 * each device resource.
+-	 */
+-	if (count > 0)
+-		sn_pci_window_fixup(dev, count, pci_addrs);
+-
++
+ 	sn_pci_fixup_slot(dev, pcidev_info, sn_irq_info);
+ }
+ 
+-- 
+1.7.1
 
-Right after the boot:
 
-[root@localhost ~]# dd if=/dev/zero of=test bs=64M count=3
-3+0 records in
-3+0 records out
-201326592 bytes (201 MB) copied, 1.08544 s, 185 MB/s
-
-After suspend/resume:
-
-# dd if=/dev/zero of=test bs=64M count=3
-3+0 records in
-3+0 records out
-201326592 bytes (201 MB) copied, 66.5392 s, 3.0 MB/s
-
-That's for my primary SATA-3 HDD.
-
-Forgive me my impudence but I believe debugging the USB stack is
-tangential to this problem. Something far deeper than USB support
-breaks, but so far no one has come even with the slightest clue of
-what that might be.
-
-And like I mentioned before this problem doesn't affect Windows - once
-I suspended it seven times in a row and it kept on chugging happily.
-
-According to hdparm nothing changes after suspend/resume:
-
-Capabilities:
-        LBA, IORDY(can be disabled)
-        Queue depth: 32
-        Standby timer values: spec'd by Standard, no device specific minimum
-        R/W multiple sector transfer: Max = 16  Current = ?
-        Advanced power management level: disabled
-        Recommended acoustic management value: 208, current value: 0
-        DMA: mdma0 mdma1 mdma2 udma0 udma1 udma2 udma3 udma4 udma5 *udma6
-             Cycle time: min=120ns recommended=120ns
-        PIO: pio0 pio1 pio2 pio3 pio4
-             Cycle time: no flow control=120ns  IORDY flow control=120ns
-
-3MB/sec matches PIO mode 0 which is ridiculous and implausible given
-than this HDD is attached via SATA.
-
-Besides hdparm says that:
-
-# hdparm -tT --direct /dev/sda
-
-/dev/sda:
- Timing O_DIRECT cached reads:   862 MB in  2.00 seconds = 430.77 MB/sec
- Timing O_DIRECT disk reads:  520 MB in  3.01 seconds = 173.03 MB/sec
-
-So, only writes are affected.
-
-My dmesg is here: http://ompldr.org/vaThpcA/dmesg
