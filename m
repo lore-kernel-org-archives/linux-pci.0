@@ -1,130 +1,207 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:65068 "EHLO
+Received: from szxga01-in.huawei.com ([119.145.14.64]:57312 "EHLO
 	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932227Ab3DYCIw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Apr 2013 22:08:52 -0400
-From: "Liujiang (Gerry, Euler)" <jiang.liu@huawei.com>
-To: Yinghai Lu <yinghai@kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Gavin Guo <tuffkidtt@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: =?big5?B?tarOYDogQWJvdXQgZHluYW1pY2FsbHkgbG9hZGluZyB0aGUgYWNwaXBocC5rbw==?=
-Date: Thu, 25 Apr 2013 02:08:39 +0000
-Message-ID: <5E18B0C6DCFE1D46967DE5C51CD1AF9866346957@nkgeml506-mbx.china.huawei.com>
-References: <CAAh6nkmbKR3HTqm5ommevsBwhL_u0N8Rk7Wsms_LfP=nBgKNew@mail.gmail.com>
-	<CAAh6nkmkbKh7FjEZea4GmEbZvH4qvnfOJ2Og8xHYm5othsWLwQ@mail.gmail.com>
-	<CAErSpo6zf34MOLNh5t_PifYhA87vFLRRx-g0WG5N=8+oUcWukQ@mail.gmail.com>
-	<3400627.YcEmgrxv5I@vostro.rjw.lan>
- <CAE9FiQX7zyaZVm7QsZnOXtRD9qcCGCFpi2DLve863juL1ZxcWQ@mail.gmail.com>
-In-Reply-To: <CAE9FiQX7zyaZVm7QsZnOXtRD9qcCGCFpi2DLve863juL1ZxcWQ@mail.gmail.com>
-Content-Type: multipart/mixed;
-	boundary="_002_5E18B0C6DCFE1D46967DE5C51CD1AF9866346957nkgeml506mbxchi_"
+	with ESMTP id S1754071Ab3D0JNg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 27 Apr 2013 05:13:36 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, Hanjun Guo <guohanjun@huawei.com>,
+	<jiang.liu@huawei.com>, Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	Fenghua Yu <fenghua.yu@intel.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	<linux-ia64@vger.kernel.org>
+Subject: [PATCH 5/7] PCI/IA64: fix memleak for create pci root bus fail
+Date: Sat, 27 Apr 2013 17:12:27 +0800
+Message-ID: <1367053949-38424-6-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1367053949-38424-1-git-send-email-wangyijing@huawei.com>
+References: <1367053949-38424-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---_002_5E18B0C6DCFE1D46967DE5C51CD1AF9866346957nkgeml506mbxchi_
-Content-Type: text/plain; charset="big5"
-Content-Transfer-Encoding: base64
+From: Jiang Liu <jiang.liu@huawei.com>
 
-SGkgWWluZ2hhaSwNCglJIGhhdmUgd29ya2VkIG91dCBhIHNpbWlsYXIgcGF0Y2ggbGFzdCBuaWdo
-dC4gUGxlYXNlIHJlZmVyIHRvIGF0dGFjaG1lbnQuDQpJIHRoaW5rIGZvbGxvd2luZyBjb2RlIG1h
-eSBub3Qgd29yayBiZWNhdXNlIGFjcGlwaHBfaGFuZGxlX3RvX2JyaWRnZSgpDQp3aWxsIHJldHVy
-biBOVUxMLiBDb3VsZCB5b3UgcGxlYXNlIGhlbHAgdG8gcmV2aWV3IG15IHZlcnNpb24/DQoJKER1
-ZSB0byB3b3JrIGVudmlyb25tZW50IGxpbWl0YXRpb25zLCBzb3JyeSBmb3Igc2VuZGluZyBvdXQg
-d2l0aG91dA0KYXR0YWNobWVudCBhbmQgb3V0bG9vaykuDQoJUmVnYXJkcyENCglHZXJyeQ0KDQor
-dm9pZCBhY3BpcGhwX2NoZWNrX2hvc3RfYnJpZGdlKGFjcGlfaGFuZGxlIGhhbmRsZSkNCit7DQor
-CXN0cnVjdCBhY3BpcGhwX2JyaWRnZSAqYnJpZGdlOw0KKw0KKwlicmlkZ2UgPSBhY3BpcGhwX2hh
-bmRsZV90b19icmlkZ2UoaGFuZGxlKTsNCisJaWYgKCFicmlkZ2UpDQorCQlyZXR1cm47DQorDQor
-CWFjcGlwaHBfY2hlY2tfYnJpZGdlKGJyaWRnZSk7DQorCWFjcGlfd2Fsa19uYW1lc3BhY2UoQUNQ
-SV9UWVBFX0RFVklDRSwgaGFuZGxlLA0KKwkJQUNQSV9VSU5UMzJfTUFYLCBjaGVja19zdWJfYnJp
-ZGdlcywgTlVMTCwgTlVMTCwgTlVMTCk7DQorfQ0KKw0KDQo+IE9uIFdlZCwgQXByIDI0LCAyMDEz
-IGF0IDM6NTUgUE0sIFJhZmFlbCBKLiBXeXNvY2tpIDxyandAc2lzay5wbD4gd3JvdGU6DQo+ID4g
-T24gV2VkbmVzZGF5LCBBcHJpbCAyNCwgMjAxMyAwMjowMzowNCBQTSBCam9ybiBIZWxnYWFzIHdy
-b3RlOg0KPiA+Pg0KPiA+PiBXZSBpbnN0YWxsIGEgbm90aWZ5IGhhbmRsZXIgb24gUENJMCBpbiBm
-aW5kX3Jvb3RfYnJpZGdlcygpLCBhbmQgdGhhdA0KPiA+PiBub3RpZnkgaGFuZGxlciBsZWFkcyB0
-byBfaGFuZGxlX2hvdHBsdWdfZXZlbnRfcm9vdCgpLCB3aGljaCBhc3N1bWVzDQo+ID4+IHRoaXMg
-aXMgYSBob3N0IGJyaWRnZSBob3RwbHVnIGV2ZW50LiAgQnV0IEkgd291bGQgZXhwZWN0IHRoZSBu
-b3RpZnkNCj4gPj4gZm9yIGEgaG9zdCBicmlkZ2UgaG90LWFkZCB3b3VsZCBnbyB0byB0aGUgKnBh
-cmVudCogb2YgdGhlIGhvc3QgYnJpZGdlLA0KPiA+PiBub3QgdG8gdGhlIGhvc3QgYnJpZGdlIGl0
-c2VsZiwgc28gc29tZXRoaW5nIHNlZW1zIHdyb25nIGhlcmUuDQo+ID4+DQo+ID4+IE1heWJlIHRo
-ZSBBQ1BJICYgaG90cGx1ZyBleHBlcnRzIGNhbiBjb21tZW50IG9uIHRoaXMuDQo+ID4NCj4gPiBJ
-IHRoaW5rIGl0IG1heSAoaWUuIHdvbid0IGJlIGFnYWluc3QgdGhlIHNwZWMpIGdvIGJvdGggd2F5
-cywgc28gaXQgbWF5IGdvDQo+ID4gdG8gdGhlIHBhcmVudCBvciB0aGUgaG9zdCBicmlkZ2Ugb2Jq
-ZWN0IGl0c2VsZi4gIFdlIHNob3VsZCBiZSBoYW5kbGluZyBib3RoDQo+ID4gY2FzZXMgSU1PLg0K
-PiANCj4gWWVzLCB3ZSBtaXNzZWQgdGhhdCBwYXRoLg0KPiANCj4gQXR0YWNoZWQgcGF0Y2ggc2hv
-dWxkIGZpeCB0aGUgcHJvYmxlbS4NCj4gDQo+IEdhdmluLA0KPiANCj4gQ2FuIHlvdSBwbGVhc2Ug
-Y2hlY2sgdGhhdCBvbiB0b3Agb2YgcGNpL25leHQ/DQo+IA0KPiBUaGFua3MNCj4gDQo+IFlpbmdo
-YWkNCg==
+If pci_create_root_bus() return fail, we should release
+pci root info, pci controller etc.
 
---_002_5E18B0C6DCFE1D46967DE5C51CD1AF9866346957nkgeml506mbxchi_
-Content-Type: application/octet-stream;
-	name="0001-PCI-ACPI-correctly-handle-ACPI_NOTIFY_BUS_CHECK-even.patch"
-Content-Description: 0001-PCI-ACPI-correctly-handle-ACPI_NOTIFY_BUS_CHECK-even.patch
-Content-Disposition: attachment;
-	filename="0001-PCI-ACPI-correctly-handle-ACPI_NOTIFY_BUS_CHECK-even.patch";
-	size=3301; creation-date="Wed, 24 Apr 2013 16:53:23 GMT";
-	modification-date="Wed, 24 Apr 2013 16:53:23 GMT"
-Content-Transfer-Encoding: base64
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Cc: Tony Luck <tony.luck@intel.com>
+Cc: Fenghua Yu <fenghua.yu@intel.com>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linux-ia64@vger.kernel.org
+---
+ arch/ia64/include/asm/pci.h |    6 +++
+ arch/ia64/pci/pci.c         |   74 ++++++++++++++++++++++++++++++++++---------
+ 2 files changed, 65 insertions(+), 15 deletions(-)
 
-RnJvbSBmNDhmNjQ3ZTQwOTJiMGEwMjE4M2E3YzA4NmE2ZmM4ODk5MDllNDE1IE1vbiBTZXAgMTcg
-MDA6MDA6MDAgMjAwMQ0KRnJvbTogSmlhbmcgTGl1IDxqaWFuZy5saXVAaHVhd2VpLmNvbT4NCkRh
-dGU6IFdlZCwgMjQgQXByIDIwMTMgMjI6NTA6MDMgKzA4MDANClN1YmplY3Q6IFtQQVRDSCAxLzRd
-IFBDSSwgQUNQSTogY29ycmVjdGx5IGhhbmRsZSBBQ1BJX05PVElGWV9CVVNfQ0hFQ0sgZXZlbnRz
-DQogZm9yIFBDSSBob3N0IGJyaWRnZXMNCg0KVGhlIGNvZGUgdG8gaGFuZGxlIFBDSSBob3N0IGJy
-aWRnZSBob3RwbHVnIGhhcyBiZWVuIG1vdmVkIGZyb20gdGhlIHRoZQ0KYWNwaXBocCBkcml2ZXIg
-aW50byB0aGUgcGNpX3Jvb3QgZHJpdmVyLCB3aGljaCBjYXVzZXMgcmVncmVzaW9ucyBmb3INCnNv
-bWUgcGxhdGZvcm1zLg0KDQpBY2NvcmRpbmcgdG8gQUNQSSA1LjAgc2VjdGlvbiA1LjYuNiAiRGV2
-aWNlIE9iamVjdCBOb3RpZmljYXRpb25zIiwNCmEgQlVTX0NIRUNLIGV2ZW50IG1heSBiZSBnZW5l
-cmF0ZWQgb24gYSBQQ0kgaG9zdCBicmlkZ2Ugb2JqZWN0IGZvcg0KYSBQQ0kgZGV2aWNlIGhvdHBs
-dWcgb3BlcmF0aW9uLiBTb21lIEJJT1NlcyBkbyBleGliaXQgc3VjbiBhIGJlaGF2aW9yLg0KQnV0
-IG5vdyB0aGUgaG90cGx1ZyBoYW5kbGVyIGluIHRoZSBwY2lfcm9vdCBkcml2ZXIgb25seSB2ZXJp
-Znkgc3RhdGUNCm9mIGl0c2VsZiB3aGVuIGhhbmRsaW5nIEFDUEkgQlVTX0NIRUNLIGV2ZW50cywg
-YW5kIGl0IHdpbGwgZHJvcA0KQlVTX0NIRUNLIGV2ZW50IGZvciBQQ0kgZGV2aWNlIGhvdHBsdWcg
-b3BlcmF0aW9ucy4gU28gY2FsbCBhY3BpcGhwDQp0byBoYW5kbGUgQlVTX0NIRUNLIGV2ZW50IGZv
-ciBQQ0kgZGV2aWNlIGhvdHBsdWcgaW4gYWRkaXRpb24gdG8gUENJDQpob3N0IGJyaWRnZSBob3Rw
-bHVnLg0KDQpTaWduZWQtb2ZmLWJ5OiBKaWFuZyBMaXUgPGppYW5nLmxpdUBodWF3ZWkuY29tPg0K
-UmVwb3J0ZWQtYnk6DQotLS0NCiBkcml2ZXJzL2FjcGkvcGNpX3Jvb3QuYyAgICAgICAgICAgIHwg
-ICAgOSArKysrKysrKy0NCiBkcml2ZXJzL3BjaS9ob3RwbHVnL2FjcGlwaHBfZ2x1ZS5jIHwgICAg
-NiArKysrKysNCiBpbmNsdWRlL2xpbnV4L3BjaS1hY3BpLmggICAgICAgICAgIHwgICAgMiArKw0K
-IDMgZmlsZXMgY2hhbmdlZCwgMTYgaW5zZXJ0aW9ucygrKSwgMSBkZWxldGlvbigtKQ0KDQpkaWZm
-IC0tZ2l0IGEvZHJpdmVycy9hY3BpL3BjaV9yb290LmMgYi9kcml2ZXJzL2FjcGkvcGNpX3Jvb3Qu
-Yw0KaW5kZXggYjgwZTA2ZS4uYjc4ODFiNyAxMDA2NDQNCi0tLSBhL2RyaXZlcnMvYWNwaS9wY2lf
-cm9vdC5jDQorKysgYi9kcml2ZXJzL2FjcGkvcGNpX3Jvb3QuYw0KQEAgLTY0MSw3ICs2NDEsMTQg
-QEAgc3RhdGljIHZvaWQgX2hhbmRsZV9ob3RwbHVnX2V2ZW50X3Jvb3Qoc3RydWN0IHdvcmtfc3Ry
-dWN0ICp3b3JrKQ0KIAkJCQkgKGNoYXIgKilidWZmZXIucG9pbnRlcik7DQogCQlpZiAoIXJvb3Qp
-DQogCQkJaGFuZGxlX3Jvb3RfYnJpZGdlX2luc2VydGlvbihoYW5kbGUpOw0KLQ0KKwkJZWxzZSB7
-DQorCQkJLyoNCisJCQkgKiBBQ1BJIG1heSBnZW5lcmF0ZSBhIEJVU19DSEVDSyBldmVudCBvbiB0
-aGUgaG9zdA0KKwkJCSAqIGJyaWRnZSBmb3IgYSBQQ0kgZGV2aWNlIGhvdHBsdWcsIHNvIGNhbGwg
-dGhlDQorCQkJICogYWNwaXBocCBoYW5kbGVyIHRvIGhhbmRsZSBQQ0kgZGV2aWNlIGhvdHBsdWcg
-Y2FzZXMuDQorCQkJICovDQorCQkJYWNwaXBocF9oYW5kbGVfYnVzX2NoZWNrX2V2ZW50KGhhbmRs
-ZSk7DQorCQl9DQogCQlicmVhazsNCiANCiAJY2FzZSBBQ1BJX05PVElGWV9ERVZJQ0VfQ0hFQ0s6
-DQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9wY2kvaG90cGx1Zy9hY3BpcGhwX2dsdWUuYyBiL2RyaXZl
-cnMvcGNpL2hvdHBsdWcvYWNwaXBocF9nbHVlLmMNCmluZGV4IDk2ZmVkMTkuLmZlOTU3ZjQgMTAw
-NjQ0DQotLS0gYS9kcml2ZXJzL3BjaS9ob3RwbHVnL2FjcGlwaHBfZ2x1ZS5jDQorKysgYi9kcml2
-ZXJzL3BjaS9ob3RwbHVnL2FjcGlwaHBfZ2x1ZS5jDQpAQCAtMTEzMCw2ICsxMTMwLDEyIEBAIHN0
-YXRpYyB2b2lkIGhhbmRsZV9ob3RwbHVnX2V2ZW50X2Z1bmMoYWNwaV9oYW5kbGUgaGFuZGxlLCB1
-MzIgdHlwZSwNCiAJYWxsb2NfYWNwaV9ocF93b3JrKGhhbmRsZSwgdHlwZSwgY29udGV4dCwgX2hh
-bmRsZV9ob3RwbHVnX2V2ZW50X2Z1bmMpOw0KIH0NCiANCit2b2lkIGFjcGlwaHBfaGFuZGxlX2J1
-c19jaGVja19ldmVudChhY3BpX2hhbmRsZSBoYW5kbGUpDQorew0KKwlhY3BpX3dhbGtfbmFtZXNw
-YWNlKEFDUElfVFlQRV9ERVZJQ0UsIGhhbmRsZSwNCisJCUFDUElfVUlOVDMyX01BWCwgY2hlY2tf
-c3ViX2JyaWRnZXMsIE5VTEwsIE5VTEwsIE5VTEwpOw0KK30NCisNCiAvKg0KICAqIENyZWF0ZSBo
-b3RwbHVnIHNsb3RzIGZvciB0aGUgUENJIGJ1cy4NCiAgKiBJdCBzaG91bGQgYWx3YXlzIHJldHVy
-biAwIHRvIGF2b2lkIHNraXBwaW5nIGZvbGxvd2luZyBub3RpZmllcnMuDQpkaWZmIC0tZ2l0IGEv
-aW5jbHVkZS9saW51eC9wY2ktYWNwaS5oIGIvaW5jbHVkZS9saW51eC9wY2ktYWNwaS5oDQppbmRl
-eCA1OTZkNzA1Li40ZDUzN2IyIDEwMDY0NA0KLS0tIGEvaW5jbHVkZS9saW51eC9wY2ktYWNwaS5o
-DQorKysgYi9pbmNsdWRlL2xpbnV4L3BjaS1hY3BpLmgNCkBAIC02MCwxMSArNjAsMTMgQEAgc3Rh
-dGljIGlubGluZSB2b2lkIGFjcGlfcGNpX3Nsb3RfcmVtb3ZlKHN0cnVjdCBwY2lfYnVzICpidXMp
-IHsgfQ0KIHZvaWQgYWNwaXBocF9pbml0KHZvaWQpOw0KIHZvaWQgYWNwaXBocF9lbnVtZXJhdGVf
-c2xvdHMoc3RydWN0IHBjaV9idXMgKmJ1cywgYWNwaV9oYW5kbGUgaGFuZGxlKTsNCiB2b2lkIGFj
-cGlwaHBfcmVtb3ZlX3Nsb3RzKHN0cnVjdCBwY2lfYnVzICpidXMpOw0KK3ZvaWQgYWNwaXBocF9o
-YW5kbGVfYnVzX2NoZWNrX2V2ZW50KGFjcGlfaGFuZGxlIGhhbmRsZSk7DQogI2Vsc2UNCiBzdGF0
-aWMgaW5saW5lIHZvaWQgYWNwaXBocF9pbml0KHZvaWQpIHsgfQ0KIHN0YXRpYyBpbmxpbmUgdm9p
-ZCBhY3BpcGhwX2VudW1lcmF0ZV9zbG90cyhzdHJ1Y3QgcGNpX2J1cyAqYnVzLA0KIAkJCQkJICAg
-YWNwaV9oYW5kbGUgaGFuZGxlKSB7IH0NCiBzdGF0aWMgaW5saW5lIHZvaWQgYWNwaXBocF9yZW1v
-dmVfc2xvdHMoc3RydWN0IHBjaV9idXMgKmJ1cykgeyB9DQorc3RhdGljIGlubGluZSB2b2lkIGFj
-cGlwaHBfaGFuZGxlX2J1c19jaGVja19ldmVudChhY3BpX2hhbmRsZSBoYW5kbGUpIHsgfQ0KICNl
-bmRpZg0KIA0KICNlbmRpZgkvKiBDT05GSUdfQUNQSSAqLw0KLS0gDQoxLjcuOS41DQoNCg==
+diff --git a/arch/ia64/include/asm/pci.h b/arch/ia64/include/asm/pci.h
+index 82a236c..fe813c2 100644
+--- a/arch/ia64/include/asm/pci.h
++++ b/arch/ia64/include/asm/pci.h
+@@ -89,6 +89,11 @@ extern int pci_mmap_legacy_page_range(struct pci_bus *bus,
+ #define pci_legacy_read platform_pci_legacy_read
+ #define pci_legacy_write platform_pci_legacy_write
+ 
++struct iospace_resource {
++	struct list_head list;
++	struct resource res;
++};
++
+ struct pci_controller {
+ 	void *acpi_handle;
+ 	void *iommu;
+@@ -105,6 +110,7 @@ struct pci_root_info {
+ 	struct resource *res;
+ 	resource_size_t *res_offset;
+ 	unsigned int res_num;
++	struct list_head io_resources;
+ 	char *name;
+ };
+ 
+diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
+index 1f2779d..658030f 100644
+--- a/arch/ia64/pci/pci.c
++++ b/arch/ia64/pci/pci.c
+@@ -162,25 +162,21 @@ new_space (u64 phys_base, int sparse)
+ static u64 add_io_space(struct pci_root_info *info,
+ 			struct acpi_resource_address64 *addr)
+ {
++	struct iospace_resource *iospace;
+ 	struct resource *resource;
+ 	char *name;
+ 	unsigned long base, min, max, base_port;
+ 	unsigned int sparse = 0, space_nr, len;
+ 
+-	resource = kzalloc(sizeof(*resource), GFP_KERNEL);
+-	if (!resource) {
++	len = strlen(info->name) + 32;
++	iospace = kzalloc(sizeof(*iospace) + len, GFP_KERNEL);
++	if (!iospace) {
+ 		printk(KERN_ERR "PCI: No memory for %s I/O port space\n",
+ 			info->name);
+ 		goto out;
+ 	}
+ 
+-	len = strlen(info->name) + 32;
+-	name = kzalloc(len, GFP_KERNEL);
+-	if (!name) {
+-		printk(KERN_ERR "PCI: No memory for %s I/O port space name\n",
+-			info->name);
+-		goto free_resource;
+-	}
++	name = (char *)(iospace + 1);
+ 
+ 	min = addr->minimum;
+ 	max = min + addr->address_length - 1;
+@@ -189,7 +185,7 @@ static u64 add_io_space(struct pci_root_info *info,
+ 
+ 	space_nr = new_space(addr->translation_offset, sparse);
+ 	if (space_nr == ~0)
+-		goto free_name;
++		goto free_resource;
+ 
+ 	base = __pa(io_space[space_nr].mmio_base);
+ 	base_port = IO_SPACE_BASE(space_nr);
+@@ -204,18 +200,23 @@ static u64 add_io_space(struct pci_root_info *info,
+ 	if (space_nr == 0)
+ 		sparse = 1;
+ 
++	resource = &iospace->res;
+ 	resource->name  = name;
+ 	resource->flags = IORESOURCE_MEM;
+ 	resource->start = base + (sparse ? IO_SPACE_SPARSE_ENCODING(min) : min);
+ 	resource->end   = base + (sparse ? IO_SPACE_SPARSE_ENCODING(max) : max);
+-	insert_resource(&iomem_resource, resource);
++	if (insert_resource(&iomem_resource, resource)) {
++		dev_err(&info->bridge->dev,
++				"can't allocate host bridge io space resource  %pR\n",
++				resource);
++		goto free_resource;
++	}
+ 
++	list_add_tail(&iospace->list, &info->io_resources);
+ 	return base_port;
+ 
+-free_name:
+-	kfree(name);
+ free_resource:
+-	kfree(resource);
++	kfree(iospace);
+ out:
+ 	return ~0;
+ }
+@@ -316,6 +317,47 @@ static acpi_status add_window(struct acpi_resource *res, void *data)
+ 	return AE_OK;
+ }
+ 
++static void free_pci_root_info_res(struct pci_root_info *info)
++{
++	struct iospace_resource *iospace, *tmp;
++
++	list_for_each_entry_safe(iospace, tmp, &info->io_resources, list)
++		kfree(iospace);
++
++	kfree(info->res);
++	info->res = NULL;
++	kfree(info->res_offset);
++	info->res_offset = NULL;
++	info->res_num = 0;
++	kfree(info->controller);
++	info->controller = NULL;
++}
++
++static void __release_pci_root_info(struct pci_root_info *info)
++{
++	int i;
++	struct resource *res;
++	struct iospace_resource *iospace;
++
++	list_for_each_entry(iospace, &info->io_resources, list)
++		release_resource(&iospace->res);
++
++	for (i = 0; i < info->res_num; i++) {
++		res = &info->res[i];
++
++		if (!res->parent)
++			continue;
++
++		if (!(res->flags & (IORESOURCE_MEM | IORESOURCE_IO)))
++			continue;
++
++		release_resource(res);
++	}
++
++	free_pci_root_info_res(info);
++	kfree(info);
++}
++
+ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ {
+ 	struct acpi_device *device = root->device;
+@@ -346,7 +388,8 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 				"ignored (out of memory)\n", root->segment, busnum);
+ 		goto out2;
+ 	}
+-
++
++	INIT_LIST_HEAD(&info->io_resources);
+ 	INIT_LIST_HEAD(&info->resources);
+ 	/* insert busn resource at first */
+ 	pci_add_resource(&info->resources, &root->secondary);
+@@ -387,6 +430,7 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 				   &info->resources);
+ 	if (!pbus) {
+ 		pci_free_resource_list(&info->resources);
++		__release_pci_root_info(info);
+ 		return NULL;
+ 	}
+ 
+-- 
+1.7.1
 
---_002_5E18B0C6DCFE1D46967DE5C51CD1AF9866346957nkgeml506mbxchi_--
+
