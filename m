@@ -1,281 +1,82 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f179.google.com ([209.85.214.179]:40181 "EHLO
-	mail-ob0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762266Ab3DHW32 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Apr 2013 18:29:28 -0400
-Received: by mail-ob0-f179.google.com with SMTP id tb18so2536989obb.10
-        for <linux-pci@vger.kernel.org>; Mon, 08 Apr 2013 15:29:28 -0700 (PDT)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Sat, 27 Apr 2013 10:10:39 +0000 (UTC)
+From: "Artem S. Tashkinov" <t.artem@lycos.com>
+To: bhelgaas@google.com
+Cc: stern@rowland.harvard.edu, torvalds@linux-foundation.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	rjw@sisk.pl
+Message-ID: <771333906.75854.1367057440028.JavaMail.mail@webmail08>
+References: <CAErSpo7qj2SNR7BfuBsfF-saZXvgcqqLtgoP5Hyb5u99qR4Ncg@mail.gmail.com>
+ <Pine.LNX.4.44L0.1302191119270.2215-100000@iolanthe.rowland.org>
+ <CAErSpo7NZoOQZyW76HEoOTVgdqL2CgbVScAeF6HGLAVaNCq0=w@mail.gmail.com>
+ <337833384.57445.1361860509194.JavaMail.mail@webmail08>
+ <CAErSpo6CbO5KYXiErv6J_Dnm1u694C5fQPP2_cZL8VKDEnZa9A@mail.gmail.com>
+ <569718148.80620.1361906088301.JavaMail.mail@webmail13>
+ <CAErSpo6UkVhSf+nFW4zwJLBQw_0RQ5H9Bv-UuQRb6zdwsFPw4g@mail.gmail.com><CAErSpo4X+XXKvWDfqh2CKZAtJ9WMQk91OcsWwdxwYv2MfEM_zQ@mail.gmail.com>
+Subject: Re: Abysmal HDD/USB write speed after sleep on a UEFI system
 MIME-Version: 1.0
-In-Reply-To: <1364316746-8702-10-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1364316746-8702-1-git-send-email-thomas.petazzoni@free-electrons.com>
- <1364316746-8702-10-git-send-email-thomas.petazzoni@free-electrons.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 8 Apr 2013 16:29:07 -0600
-Message-ID: <CAErSpo7yC_97Vg-zuype-jyfqiY+77OE97cxYoEO9ZZnXjQ95A@mail.gmail.com>
-Subject: Re: [RFCv1 09/11] pci: mvebu: add MSI support
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Grant Likely <grant.likely@secretlab.ca>,
-	Russell King <linux@arm.linux.org.uk>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>,
-	"devicetree-discuss@lists.ozlabs.org"
-	<devicetree-discuss@lists.ozlabs.org>,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Maen Suleiman <maen@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Olof Johansson <olof@lixom.net>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Mitch Bradley <wmb@firmworks.com>,
-	Andrew Murray <andrew.murray@arm.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 26, 2013 at 10:52 AM, Thomas Petazzoni
-<thomas.petazzoni@free-electrons.com> wrote:
-> This commit adds the MSI support for the Marvell EBU PCIe driver. The
-> driver now looks at the 'msi-parent' property of the PCIe controller
-> DT node, and if it exists, it gets the associated IRQ domain, which
-> should be the MSI interrupt controller registered by the IRQ
-> controller driver.
 >
-> Using this, the PCIe driver registers the ->setup_irq() and
-> ->teardown_irq() callbacks using the newly introduced msi_chip
-> infrastructure, which allows the kernel PCI core to use the MSI
-> functionality.
+>Did this problem ever get resolved?
 >
-> Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-> ---
->  .../devicetree/bindings/pci/mvebu-pci.txt          |    5 +
->  drivers/pci/host/pci-mvebu.c                       |  128 ++++++++++++++++++++
->  2 files changed, 133 insertions(+)
->
-> diff --git a/Documentation/devicetree/bindings/pci/mvebu-pci.txt b/Documentation/devicetree/bindings/pci/mvebu-pci.txt
-> index 192bdfb..53cc437 100644
-> --- a/Documentation/devicetree/bindings/pci/mvebu-pci.txt
-> +++ b/Documentation/devicetree/bindings/pci/mvebu-pci.txt
-> @@ -14,6 +14,10 @@ Mandatory properties:
->    corresponding registers
->  - ranges: ranges for the PCI memory and I/O regions
->
-> +Optional properties:
-> +- msi-parent: a phandle pointing to the interrupt controller that
-> +  handles the MSI interrupts.
-> +
->  In addition, the Device Tree node must have sub-nodes describing each
->  PCIe interface, having the following mandatory properties:
->  - reg: used only for interrupt mapping, so only the first four bytes
-> @@ -43,6 +47,7 @@ pcie-controller {
->         #address-cells = <3>;
->         #size-cells = <2>;
->
-> +       msi-parent = <&msi>;
->         bus-range = <0x00 0xff>;
->
->         reg = <0xd0040000 0x2000>, <0xd0042000 0x2000>,
-> diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-> index 9e6b137..b46fab8 100644
-> --- a/drivers/pci/host/pci-mvebu.c
-> +++ b/drivers/pci/host/pci-mvebu.c
-> @@ -7,17 +7,23 @@
->   */
->
->  #include <linux/kernel.h>
-> +#include <linux/irq.h>
-> +#include <linux/irqdomain.h>
->  #include <linux/pci.h>
-> +#include <linux/msi.h>
->  #include <linux/clk.h>
->  #include <linux/module.h>
->  #include <linux/mbus.h>
->  #include <linux/slab.h>
->  #include <linux/platform_device.h>
-> +#include <linux/interrupt.h>
->  #include <linux/of_address.h>
->  #include <linux/of_pci.h>
->  #include <linux/of_irq.h>
->  #include <linux/of_platform.h>
->
-> +#define INT_PCI_MSI_NR (16)
-> +
->  /*
->   * PCIe unit register offsets.
->   */
-> @@ -101,10 +107,19 @@ struct mvebu_sw_pci_bridge {
->
->  struct mvebu_pcie_port;
->
-> +struct mvebu_pcie_msi {
-> +       DECLARE_BITMAP(used, INT_PCI_MSI_NR);
-> +       struct irq_domain *domain;
-> +       struct mutex lock;
-> +       struct msi_chip chip;
-> +       phys_addr_t doorbell;
-> +};
-> +
->  /* Structure representing all PCIe interfaces */
->  struct mvebu_pcie {
->         struct platform_device *pdev;
->         struct mvebu_pcie_port *ports;
-> +       struct mvebu_pcie_msi msi;
->         struct resource io;
->         struct resource realio;
->         struct resource mem;
-> @@ -546,6 +561,11 @@ static inline struct mvebu_pcie *sys_to_pcie(struct pci_sys_data *sys)
->         return sys->private_data;
->  }
->
-> +static inline struct mvebu_pcie_msi *to_mvebu_msi(struct msi_chip *chip)
-> +{
-> +       return container_of(chip, struct mvebu_pcie_msi, chip);
-> +}
-> +
->  /* Find the PCIe interface that corresponds to the given bus */
->  static struct mvebu_pcie_port *mvebu_find_port_from_bus(struct mvebu_pcie *pcie,
->                                                         int bus)
-> @@ -710,6 +730,8 @@ static struct pci_bus *mvebu_pcie_scan_bus(int nr, struct pci_sys_data *sys)
->         if (!bus)
->                 return NULL;
->
-> +       bus->msi = &pcie->msi.chip;
 
-As I mentioned in the 08/11 patch, I'd like to keep arch-specific
-stuff out of the PCI scanning path to preserve the ability to move
-toward pci_scan_root_bus() eventually.
+Hello,
 
->         pci_scan_child_bus(bus);
->
->         return bus;
-> @@ -786,6 +808,105 @@ static void __iomem *mvebu_pcie_map_registers(struct platform_device *pdev,
->         return devm_request_and_ioremap(&pdev->dev, &regs);
->  }
->
-> +#if defined(CONFIG_PCI_MSI)
-> +static int mvebu_pcie_msi_alloc(struct mvebu_pcie_msi *chip)
-> +{
-> +       int msi;
-> +
-> +       mutex_lock(&chip->lock);
-> +
-> +       msi = find_first_zero_bit(chip->used, INT_PCI_MSI_NR);
-> +
-> +       if (msi < INT_PCI_MSI_NR)
-> +               set_bit(msi, chip->used);
-> +       else
-> +               msi = -ENOSPC;
-> +
-> +       mutex_unlock(&chip->lock);
-> +
-> +       return msi;
-> +}
-> +
-> +static void mvebu_pcie_msi_free(struct mvebu_pcie_msi *chip, unsigned long irq)
-> +{
-> +       struct device *dev = chip->chip.dev;
-> +
-> +       mutex_lock(&chip->lock);
-> +
-> +       if (!test_bit(irq, chip->used))
-> +               dev_err(dev, "trying to free unused MSI#%lu\n", irq);
-> +       else
-> +               clear_bit(irq, chip->used);
-> +
-> +       mutex_unlock(&chip->lock);
-> +}
-> +
-> +static int mvebu_pcie_setup_msi_irq(struct msi_chip *chip,
-> +                                   struct pci_dev *pdev,
-> +                                   struct msi_desc *desc)
-> +{
-> +       struct mvebu_pcie_msi *msi = to_mvebu_msi(chip);
+Unfortunately, no. Out of curiosity I've tried booting kernel
+3.9-rc8 in EUFI mode but it exhibits the same problem. 
 
-If this took only the pci_dev (not the msi_chip), I think you could do this:
+Right after the boot:
 
-  struct mvebu_pcie_msi *msi = &pdev->bus->sysdata->msi;
+[root@localhost ~]# dd if=/dev/zero of=test bs=64M count=3
+3+0 records in
+3+0 records out
+201326592 bytes (201 MB) copied, 1.08544 s, 185 MB/s
 
-> +       struct msi_msg msg;
-> +       unsigned int irq;
-> +       int hwirq;
-> +
-> +       hwirq = mvebu_pcie_msi_alloc(msi);
-> +       if (hwirq < 0)
-> +               return hwirq;
-> +
-> +       irq = irq_create_mapping(msi->domain, hwirq);
-> +       if (!irq)
-> +               return -EINVAL;
-> +
-> +       irq_set_msi_desc(irq, desc);
-> +
-> +       msg.address_lo = msi->doorbell;
-> +       msg.address_hi = 0;
-> +       msg.data = 0xf00 | (hwirq + 16);
-> +
-> +       write_msi_msg(irq, &msg);
-> +
-> +       return 0;
-> +}
-> +
-> +static void mvebu_pcie_teardown_msi_irq(struct msi_chip *chip,
-> +                                       unsigned int irq)
-> +{
-> +       struct mvebu_pcie_msi *msi = to_mvebu_msi(chip);
-> +       struct irq_data *d = irq_get_irq_data(irq);
-> +
-> +       mvebu_pcie_msi_free(msi, d->hwirq);
-> +}
-> +
-> +static int mvebu_pcie_enable_msi(struct mvebu_pcie *pcie)
-> +{
-> +       struct device_node *msi_node;
-> +       struct mvebu_pcie_msi *msi;
-> +
-> +       msi = &pcie->msi;
-> +
-> +       mutex_init(&msi->lock);
-> +
-> +       msi_node = of_parse_phandle(pcie->pdev->dev.of_node,
-> +                                   "msi-parent", 0);
-> +       if (!msi_node)
-> +               return -EINVAL;
-> +
-> +       msi->domain = irq_find_host(msi_node);
-> +       if (!msi->domain)
-> +               return -EINVAL;
-> +
-> +       if (of_property_read_u32(msi_node, "marvell,doorbell", &msi->doorbell))
-> +               return -EINVAL;
-> +
-> +       msi->chip.dev = &pcie->pdev->dev;
-> +       msi->chip.setup_irq = mvebu_pcie_setup_msi_irq;
-> +       msi->chip.teardown_irq = mvebu_pcie_teardown_msi_irq;
-> +
-> +       return 0;
-> +}
-> +#endif /* CONFIG_PCI_MSI */
-> +
->  static int __init mvebu_pcie_probe(struct platform_device *pdev)
->  {
->         struct mvebu_pcie *pcie;
-> @@ -903,6 +1024,13 @@ static int __init mvebu_pcie_probe(struct platform_device *pdev)
->
->         mvebu_pcie_enable(pcie);
->
-> +#ifdef CONFIG_PCI_MSI
-> +       ret = mvebu_pcie_enable_msi(pcie);
-> +       if (ret)
-> +               dev_warn(&pdev->dev, "could not enable MSI support: %d\n",
-> +                        ret);
-> +#endif
-> +
->         return 0;
->  }
->
-> --
-> 1.7.9.5
->
+After suspend/resume:
+
+# dd if=/dev/zero of=test bs=64M count=3
+3+0 records in
+3+0 records out
+201326592 bytes (201 MB) copied, 66.5392 s, 3.0 MB/s
+
+That's for my primary SATA-3 HDD.
+
+Forgive me my impudence but I believe debugging the USB stack is
+tangential to this problem. Something far deeper than USB support
+breaks, but so far no one has come even with the slightest clue of
+what that might be.
+
+And like I mentioned before this problem doesn't affect Windows - once
+I suspended it seven times in a row and it kept on chugging happily.
+
+According to hdparm nothing changes after suspend/resume:
+
+Capabilities:
+        LBA, IORDY(can be disabled)
+        Queue depth: 32
+        Standby timer values: spec'd by Standard, no device specific minimum
+        R/W multiple sector transfer: Max = 16  Current = ?
+        Advanced power management level: disabled
+        Recommended acoustic management value: 208, current value: 0
+        DMA: mdma0 mdma1 mdma2 udma0 udma1 udma2 udma3 udma4 udma5 *udma6
+             Cycle time: min=120ns recommended=120ns
+        PIO: pio0 pio1 pio2 pio3 pio4
+             Cycle time: no flow control=120ns  IORDY flow control=120ns
+
+3MB/sec matches PIO mode 0 which is ridiculous and implausible given
+than this HDD is attached via SATA.
+
+Besides hdparm says that:
+
+# hdparm -tT --direct /dev/sda
+
+/dev/sda:
+ Timing O_DIRECT cached reads:   862 MB in  2.00 seconds = 430.77 MB/sec
+ Timing O_DIRECT disk reads:  520 MB in  3.01 seconds = 173.03 MB/sec
+
+So, only writes are affected.
+
+My dmesg is here: http://ompldr.org/vaThpcA/dmesg
