@@ -1,166 +1,164 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:59917 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1764208Ab3DDSBL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 4 Apr 2013 14:01:11 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:58136 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754071Ab3D0JOc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 27 Apr 2013 05:14:32 -0400
+From: Yijing Wang <wangyijing@huawei.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ralf Baechle <ralf@linux-mips.org>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-mips@linux-mips.org,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 1/2] pci/of: remove weak annotation of pcibios_get_phb_of_node
-Date: Thu,  4 Apr 2013 20:01:22 +0200
-Message-Id: <1365098483-26821-1-git-send-email-juhosg@openwrt.org>
+CC: <linux-pci@vger.kernel.org>, Hanjun Guo <guohanjun@huawei.com>,
+	<jiang.liu@huawei.com>, Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH 7/7] PCI/IA64: introduce probe_pci_root_info() to manage  _CRS resource
+Date: Sat, 27 Apr 2013 17:12:29 +0800
+Message-ID: <1367053949-38424-8-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1367053949-38424-1-git-send-email-wangyijing@huawei.com>
+References: <1367053949-38424-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Due to the __weak annotation in the forward declaration
-of the 'pcibios_get_phb_of_node' function GCC will emit
-a weak symbol for this functions even if the actual
-implementation does not use the weak attribute.
+Currently, initialize _CRS resource code in IA64 make pci_acpi_scan_root()
+some lengthiness. Introduce probe_pci_root_info() to manage it like in X86,
 
-If an architecture tries to override the function
-by providing its own implementation there will be
-multiple weak symbols with the same name in the
-object files. When the kernel is linked from the
-object files the linking order determines which
-implementation will be used in the final image.
-
-On x86 and on powerpc the architecture specific
-version gets used:
-
-  $ readelf -s  arch/x86/kernel/built-in.o drivers/pci/built-in.o \
-    vmlinux.o | grep pcibios_get_phb_of_node
-    3338: 00029b80    86 FUNC    WEAK   DEFAULT    1 pcibios_get_phb_of_node
-    1701: 00012710    77 FUNC    WEAK   DEFAULT    1 pcibios_get_phb_of_node
-   52072: 0002a170    86 FUNC    WEAK   DEFAULT    1 pcibios_get_phb_of_node
-  $
-
-  $ powerpc-openwrt-linux-uclibc-readelf -s arch/powerpc/kernel/built-in.o \
-    drivers/pci/built-in.o vmlinux.o | grep pcibios_get_phb_of_node
-    1001: 0000cbb8    12 FUNC    WEAK   DEFAULT    1 pcibios_get_phb_of_node
-    1484: 0001471c    88 FUNC    WEAK   DEFAULT    1 pcibios_get_phb_of_node
-   28652: 0000d6f8    12 FUNC    WEAK   DEFAULT    1 pcibios_get_phb_of_node
-  $
-
-However on MIPS, the linker puts the default
-implementation into the final image:
-
-  $ mipsel-openwrt-linux-readelf -s arch/mips/pci/built-in.o \
-    drivers/pci/built-in.o vmlinux.o | grep pcibios_get_phb_of_node
-      86: 0000046c    12 FUNC    WEAK   DEFAULT    2 pcibios_get_phb_of_node
-    1430: 00012e2c   104 FUNC    WEAK   DEFAULT    2 pcibios_get_phb_of_node
-   31898: 0017e4ec   104 FUNC    WEAK   DEFAULT    2 pcibios_get_phb_of_node
-  $
-
-Rename the default implementation and remove the
-__weak annotation of that. This ensures that there
-will be no multiple weak symbols with the same name
-in the object files. In order to keep the expected
-behaviour, call the architecture specific function
-if the weak symbol is resolved.
-
-Also move the renamed function to the top instead
-of adding a new forward declaration for that.
-
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 ---
-Notes:
+ arch/ia64/pci/pci.c |   91 +++++++++++++++++++++++++++-----------------------
+ 1 files changed, 49 insertions(+), 42 deletions(-)
 
-Unfortunately I'm not a binutils/gcc expert, so
-I don't know if this is the expected behaviour
-of those or not.
-
-Removing the __weak annotation from the forward
-declaration of 'pcibios_get_phb_of_node' in
-'include/linux/pci.h' also fixes the problem.
-
-The microblaze architecture also provides its own
-implementation. The behaviour of that is not tested
-but I assume that the linker chooses the arch specific
-implementation on that as well similarly to the
-x86/powerpc.
-
-The MIPS version is implemented in the followup
-patch.
-
-Removing the __weak annotation from the forward
-declaration of 'pcibios_get_phb_of_node' in
-'include/linux/pci.h' also fixes the problem.
-
--Gabor
----
- drivers/pci/of.c |   41 +++++++++++++++++++++++------------------
- 1 file changed, 23 insertions(+), 18 deletions(-)
-
-diff --git a/drivers/pci/of.c b/drivers/pci/of.c
-index f092993..5794840 100644
---- a/drivers/pci/of.c
-+++ b/drivers/pci/of.c
-@@ -15,10 +15,32 @@
- #include <linux/of_pci.h>
- #include "pci.h"
+diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
+index 2857a83..8076225 100644
+--- a/arch/ia64/pci/pci.c
++++ b/arch/ia64/pci/pci.c
+@@ -365,6 +365,48 @@ static void release_pci_root_info(struct pci_host_bridge *bridge)
+ 	__release_pci_root_info(info);
+ }
  
-+static struct device_node *__pcibios_get_phb_of_node(struct pci_bus *bus)
++static void
++probe_pci_root_info(struct pci_root_info *info, struct acpi_device *device,
++		int busnum, int domain)
 +{
-+	/* This should only be called for PHBs */
-+	if (WARN_ON(bus->self || bus->parent))
-+		return NULL;
++	char *name;
 +
-+	if (pcibios_get_phb_of_node)
-+		return pcibios_get_phb_of_node(bus);
++	name = kmalloc(16, GFP_KERNEL);
++	if (!name)
++		return;
 +
-+	/* Look for a node pointer in either the intermediary device we
-+	 * create above the root bus or it's own parent. Normally only
-+	 * the later is populated.
-+	 */
-+	if (bus->bridge->of_node)
-+		return of_node_get(bus->bridge->of_node);
-+	if (bus->bridge->parent && bus->bridge->parent->of_node)
-+		return of_node_get(bus->bridge->parent->of_node);
++	sprintf(name, "PCI Bus %04x:%02x", domain, busnum);
++	info->bridge = device;
++	info->name = name;
 +
-+	return NULL;
++	acpi_walk_resources(device->handle, METHOD_NAME__CRS, count_window,
++			&info->res_num);
++	if (info->res_num) {
++		info->res =
++			kzalloc_node(sizeof(*info->res) * info->res_num,
++				     GFP_KERNEL, info->controller->node);
++		if (!info->res) {
++			kfree(name);
++			return;
++		}
++
++		info->res_offset =
++			kzalloc_node(sizeof(*info->res_offset) * info->res_num,
++					GFP_KERNEL, info->controller->node);
++		if (!info->res_offset) {
++			kfree(name);
++			kfree(info->res);
++			info->res = NULL;
++			return;
++		}
++
++		info->res_num = 0;
++		acpi_walk_resources(device->handle, METHOD_NAME__CRS,
++			add_window, info);
++	} else
++		kfree(name);
 +}
 +
- void pci_set_of_node(struct pci_dev *dev)
+ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
  {
- 	if (!dev->bus->dev.of_node)
- 		return;
+ 	struct acpi_device *device = root->device;
+@@ -374,12 +416,11 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 	struct pci_root_info *info = NULL;
+ 	int busnum = root->secondary.start;
+ 	struct pci_bus *pbus;
+-	char *name;
+ 	int pxm;
+ 
+ 	controller = alloc_pci_controller(domain);
+ 	if (!controller)
+-		goto out1;
++		return NULL;
+ 
+ 	controller->acpi_handle = device->handle;
+ 
+@@ -392,41 +433,18 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 	info = kzalloc(sizeof(*info), GFP_KERNEL);
+ 	if (!info) {
+ 		printk(KERN_WARNING "pci_bus %04x:%02x: "
+-				"ignored (out of memory)\n", root->segment, busnum);
+-		goto out2;
++				"ignored (out of memory)\n", domain, busnum);
++		kfree(controller);
++		return NULL;
+ 	}
+ 	
++	info->controller = controller;
+ 	INIT_LIST_HEAD(&info->io_resources);
+ 	INIT_LIST_HEAD(&info->resources);
++	probe_pci_root_info(info, device, busnum, domain);
 +
- 	dev->dev.of_node = of_pci_find_child_device(dev->bus->dev.of_node,
- 						    dev->devfn);
- }
-@@ -32,7 +54,7 @@ void pci_release_of_node(struct pci_dev *dev)
- void pci_set_bus_of_node(struct pci_bus *bus)
- {
- 	if (bus->self == NULL)
--		bus->dev.of_node = pcibios_get_phb_of_node(bus);
-+		bus->dev.of_node = __pcibios_get_phb_of_node(bus);
- 	else
- 		bus->dev.of_node = of_node_get(bus->self->dev.of_node);
- }
-@@ -42,20 +64,3 @@ void pci_release_bus_of_node(struct pci_bus *bus)
- 	of_node_put(bus->dev.of_node);
- 	bus->dev.of_node = NULL;
- }
+ 	/* insert busn resource at first */
+ 	pci_add_resource(&info->resources, &root->secondary);
+-	acpi_walk_resources(device->handle, METHOD_NAME__CRS, count_window,
+-			&info->res_num);
+-	if (info->res_num) {
+-		info->res =
+-			kzalloc_node(sizeof(*info->res) * info->res_num,
+-				     GFP_KERNEL, controller->node);
+-		if (!info->res)
+-			goto out3;
+-		
+-		info->res_offset = 
+-			kzalloc_node(sizeof(*info->res_offset) * info->res_num, 
+-					GFP_KERNEL, controller->node);
+-		if (!info->res_offset)
+-			goto out4;
 -
--struct device_node * __weak pcibios_get_phb_of_node(struct pci_bus *bus)
--{
--	/* This should only be called for PHBs */
--	if (WARN_ON(bus->self || bus->parent))
--		return NULL;
+-		name = kmalloc(16, GFP_KERNEL);
+-		if (!name)
+-			goto out5;
 -
--	/* Look for a node pointer in either the intermediary device we
--	 * create above the root bus or it's own parent. Normally only
--	 * the later is populated.
--	 */
--	if (bus->bridge->of_node)
--		return of_node_get(bus->bridge->of_node);
--	if (bus->bridge->parent && bus->bridge->parent->of_node)
--		return of_node_get(bus->bridge->parent->of_node);
+-		sprintf(name, "PCI Bus %04x:%02x", domain, bus);
+-		info->bridge = device;
+-		info->controller = controller;
+-		info->name = name;
+-		info->res_num = 0;
+-		acpi_walk_resources(device->handle, METHOD_NAME__CRS,
+-			add_window, info);
+-	}
+ 	/*
+ 	 * See arch/x86/pci/acpi.c.
+ 	 * The desired pci bus might already be scanned in a quirk. We
+@@ -445,17 +463,6 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 			release_pci_root_info, info);
+ 	pci_scan_child_bus(pbus);
+ 	return pbus;
+-
+-out5:
+-	kfree(info->res_offset);
+-out4:
+-	kfree(info->res);
+-out3:
+-	kfree(info);
+-out2:
+-	kfree(controller);
+-out1:
 -	return NULL;
--}
+ }
+ 
+ int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
 -- 
-1.7.10
+1.7.1
+
 
