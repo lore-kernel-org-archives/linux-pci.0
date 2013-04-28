@@ -1,32 +1,131 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ia0-f170.google.com ([209.85.210.170]:63323 "EHLO
-	mail-ia0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S935915Ab3DQRaO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 17 Apr 2013 13:30:14 -0400
-MIME-Version: 1.0
-In-Reply-To: <CAErSpo7nj3DQ-RB0UJdkzfN0L891xiTH8yzzcv7pW4AZ6waJ2A@mail.gmail.com>
-References: <1366196798-15929-1-git-send-email-artem.savkov@gmail.com>
-	<CAErSpo6uAbiJ5GtvOmoABvwSnWj3DRRrXB6K1PzQSnReFqbqxA@mail.gmail.com>
-	<CAErSpo7nj3DQ-RB0UJdkzfN0L891xiTH8yzzcv7pW4AZ6waJ2A@mail.gmail.com>
-Date: Wed, 17 Apr 2013 10:30:12 -0700
-Message-ID: <CAE9FiQWBXHgz-gWCmpWLaBOfQQJwtRZemV6Ut9GVw_KJ-dTGTA@mail.gmail.com>
-Subject: Re: [PATCH] PCI: pci_bus_add_device() should succeed even if creating
- sysfs files fails
-From: Yinghai Lu <yinghai@kernel.org>
+Received: from e33.co.us.ibm.com ([32.97.110.151]:57491 "EHLO
+	e33.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751244Ab3D1GJ2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 28 Apr 2013 02:09:28 -0400
+Received: from /spool/local
+	by e33.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <linuxram@us.ibm.com>;
+	Sun, 28 Apr 2013 00:09:27 -0600
+Date: Sun, 28 Apr 2013 14:08:55 +0800
+From: Ram Pai <linuxram@us.ibm.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Artem Savkov <artem.savkov@gmail.com>,
+Cc: Yinghai Lu <yinghai@kernel.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Li Zhong <zhong@linux.vnet.ibm.com>,
-	linux-next list <linux-next@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v3 03/27] PCI: pci resource iterator
+Message-ID: <20130428060855.GA2700@ram.oc3035372033.ibm.com>
+Reply-To: Ram Pai <linuxram@us.ibm.com>
+References: <1363217302-14383-1-git-send-email-yinghai@kernel.org>
+ <1363217302-14383-4-git-send-email-yinghai@kernel.org>
+ <CAErSpo4VzBZ=fAzPm1yWEs4+09_D1=rysMf6tGgnqpVEKytSzQ@mail.gmail.com>
+ <20130409045113.GA7251@ram.oc3035372033.ibm.com>
+ <CAErSpo7TReTzz289EMuh5gGKjskCLmACNT99o1s-QCzRHLGaXg@mail.gmail.com>
+ <20130425035503.GA15749@ram.oc3035372033.ibm.com>
+ <CAErSpo704b0OhSdeRWK+cZ++6RCDvoL7vzqZVEM1WOPp9f7MRQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo704b0OhSdeRWK+cZ++6RCDvoL7vzqZVEM1WOPp9f7MRQ@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 17, 2013 at 9:42 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> It would be ideal if we could get rid of the pci_sysfs_init()
-> late_initcall and just make the pci_create_sysfs_dev_files() from
-> pci_bus_add_device() work all the time, even at boot-time.  I didn't
-> look hard enough to figure out why this needs to be a late_initcall.
+On Thu, Apr 25, 2013 at 11:22:59AM -0600, Bjorn Helgaas wrote:
+> On Wed, Apr 24, 2013 at 9:55 PM, Ram Pai <linuxram@us.ibm.com> wrote:
+> > On Wed, Apr 10, 2013 at 09:22:48AM -0600, Bjorn Helgaas wrote:
+> >> On Mon, Apr 8, 2013 at 10:51 PM, Ram Pai <linuxram@us.ibm.com> wrote:
+> >> > On Thu, Apr 04, 2013 at 04:18:01PM -0600, Bjorn Helgaas wrote:
+> >> >> On Wed, Mar 13, 2013 at 5:27 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> >> >> > From: Ram Pai <linuxram@us.ibm.com>
+> >> >> >
+> >> >> > Currently pci_dev structure holds an array of 17 PCI resources; six base
+> >> >> > BARs, one ROM BAR, four BRIDGE BARs, six sriov BARs.  This is wasteful.
+> >> >> > A bridge device just needs the 4 bridge resources. A non-bridge device
+> >> >> > just needs the six base resources and one ROM resource. The sriov
+> >> >> > resources are needed only if the device has SRIOV capability.
+> >> >> >
+> ...
+> >> > I agree. There are two cleanups needed.
+> >> >
+> >> > a) pci drivers should not assume the internal organization of the
+> >> >         resources in the struct pci_dev.
+> >>
+> >> Do you mean that drivers should not use "pci_dev->resource[i]"?  If
+> >> so, I agree that it would be great if we had an accessor for BARs, but
+> >> it seems impractical to change all the drivers that use the current
+> >> style.
+> >
+> > Sorry for the delay. Was vacationing.  I mean, we cannot let drivers
+> > assume anything about the how the resources are organized.
+> >
+> > The only thing the drivers should know is that there are 6 normal
+> > resources, 4 bridge resources, 1 ROM resource and 6 iov resources.
+> >
+> > Currently the drivers assume that ROM resource follows normal resources
+> > followed by IOV followed by bridge. These assumptions are making it hard
+> > to re-organize the layout of resources in struct pci_dev.
+> >
+> > I think we need to expose the following interfaces to drivers.
+> >
+> > a) return the nth normal resource
+> 
+> I think this needs to remain "pci_dev->resource[n]", because so many
+> drivers do this that it would be impractical to change them all.
 
-have to call that after pci assign unassigned resource.
+Scanning through the entire kernel tree, I did find about 40 different
+drivers that are accessing pci_dev->resource[n]. These drivers can
+be changed to use the newer interface. Out-of-tree drivers can continue
+to access it directly, but they will break, when the
+datastructure is eventually re-organized.
+
+I was thinking of a interface something like
+
+pci_get_std_resource(dev,i) which is implemented internally as
+
+#define pci_get_std_resource(dev,i) dev->resource[i]
+
+> 
+> > b) return the nth iov resource
+> 
+> I could imagine a new interface for this, given that I only see a
+> dozen SR-IOV drivers in the tree.  There might be a few out-of-tree,
+> but there probably aren't many.
+> 
+> > c) return the rom resource
+> 
+> There are only about 30 drivers in the tree that reference
+> PCI_ROM_RESOURCE.  Fewer than I expected, but I'd still be hesitant
+> about make "pci_dev->resource[PCI_ROM_RESOURCE]" stop working.
+
+It will work till someday when the datastructure is re-organized.
+
+Again the interface will be something like
+
+pci_get_rom_resource(dev) which is implemented internally as
+
+#define pci_get_std_resource(dev)  pci_dev->resource[PCI_ROM_RESOURCE]
+
+> 
+> > d) return the nth bridge resource
+> 
+> I think it's reasonable to have a new interface for this because
+> bridges are handled almost entirely in the PCI core and architecture
+> code, and I doubt there are many, if any, drivers that care.
+> 
+> > e) return the type and index of a given resource, where 'index' is
+> >         the index w.r.t to that resource type; not w.r.t to all
+> >         the resources of the device.
+> > f) ability to loop through all resources of the given type/types.
+> 
+> We do loop through resources in the core when we're assigning, fixing
+> up, etc., and that makes some sense to me.  But I actually don't see
+> the use case for *drivers* to loop through resources.  All a driver
+> knows is "BAR X means Y", and it generally doesn't need to iterate and
+> do something generic to all of them.
+
+Yes mostly true. However I have seen a couple of drivers looping through
+the resources. An examples is ..
+
+yenta_free_resources()
+
+RP
+
