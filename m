@@ -1,47 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:52112 "EHLO hydra.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1162674Ab3DETu3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 5 Apr 2013 15:50:29 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: bugzilla-daemon@bugzilla.kernel.org,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [Bug 53811] acpiphp broken on Lenovo X220 from 3.6 onwards
-Date: Fri, 05 Apr 2013 21:58:08 +0200
-Message-ID: <2420501.lbdILrGNKL@vostro.rjw.lan>
-In-Reply-To: <CAErSpo5n3svysQ71vStCfAOikTZBo89gmwOwHOXLTB4KSXk0zw@mail.gmail.com>
-References: <bug-53811-41252@https.bugzilla.kernel.org/> <20130405101227.2AC9511FB82@bugzilla.kernel.org> <CAErSpo5n3svysQ71vStCfAOikTZBo89gmwOwHOXLTB4KSXk0zw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from nat28.tlf.novell.com ([130.57.49.28]:59316 "EHLO
+	nat28.tlf.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750970Ab3D2HVe convert rfc822-to-8bit (ORCPT
+	<rfc822;groupwise-linux-pci@vger.kernel.org:6:2>);
+	Mon, 29 Apr 2013 03:21:34 -0400
+Message-Id: <517E3BC102000078000D1793@nat28.tlf.novell.com>
+Date: Mon, 29 Apr 2013 08:22:09 +0100
+From: "Jan Beulich" <JBeulich@suse.com>
+To: "Alexander Gordeev" <agordeev@redhat.com>
+Cc: "Joerg Roedel" <joro@8bytes.org>,
+	"Bjorn Helgaas" <bhelgaas@google.com>,
+	"Suresh Siddha" <suresh.b.siddha@intel.com>, <x86@kernel.org>,
+	"Yinghai Lu" <yinghai@kernel.org>,
+	"Ingo Molnar" <mingo@redhat.com>, <linux-kernel@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>
+Subject: Re: [PATCH -tip/apic 2/2] x86/MSI: Allocate as many
+ multiple-MSIs as requested
+References: <cover.1367160713.git.agordeev@redhat.com>
+ <eb84d5e5d4af81aa38832c21e49d3276f780a048.1367160713.git.agordeev@redhat.com>
+In-Reply-To: <eb84d5e5d4af81aa38832c21e49d3276f780a048.1367160713.git.agordeev@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, April 05, 2013 10:56:30 AM Bjorn Helgaas wrote:
-> >> If the problem is with config space access, not with the SCI, why
-> >> can't you just put the root port back in D0 before scanning its
-> >> secondary bus?  That seems like a more direct fix.
-> >
-> > comment #4 patch does exactly like that.  ALLurGroceries tried that patch and
-> > it works for him in comment #7.  But in comment #14, ALLurGroceries reported
-> > that it does not work reliably enough.  So I write comment #26 patch to fix the
-> > issue in a more conservative way, and it works reliable for ALLurGroceries.
-> 
-> The comment #4 patch adds "pm_runtime_get_sync(&bridge->pci_dev->dev)"
-> before re-enumerating.  If that is supposed to keep the bridge in D0
-> but doesn't, we need to figure out why.  I don't know how PM works,
-> but maybe Rafael will chime in.
+>>> On 29.04.13 at 06:33, Alexander Gordeev <agordeev@redhat.com> wrote:
+> --- a/drivers/iommu/irq_remapping.c
+> +++ b/drivers/iommu/irq_remapping.c
+> @@ -55,19 +55,19 @@ static int do_setup_msi_irqs(struct pci_dev *dev, int nvec)
+>  	unsigned int irq;
+>  	struct msi_desc *msidesc;
+>  
+> -	nvec = __roundup_pow_of_two(nvec);
+> -
+>  	WARN_ON(!list_is_singular(&dev->msi_list));
+>  	msidesc = list_entry(dev->msi_list.next, struct msi_desc, list);
+>  	WARN_ON(msidesc->irq);
+>  	WARN_ON(msidesc->msi_attrib.multiple);
+> +	WARN_ON(msidesc->nvec);
+>  
+>  	node = dev_to_node(&dev->dev);
+>  	irq = __create_irqs(get_nr_irqs_gsi(), nvec, node);
+>  	if (irq == 0)
+>  		return -ENOSPC;
+>  
+> -	msidesc->msi_attrib.multiple = ilog2(nvec);
+> +	msidesc->nvec = nvec;
+> +	msidesc->msi_attrib.multiple = ilog2(__roundup_pow_of_two(nvec));
+>  	for (sub_handle = 0; sub_handle < nvec; sub_handle++) {
+>  		if (!sub_handle) {
+>  			index = msi_alloc_remapped_irq(dev, irq, nvec);
 
-Quite frankly, this looks like unreliable hardware to me in the face of
-comment #14.  It looks like with that patch applied the problem is randomly
-reproducible, which suggests that we probably don't wait for a sufficiently
-long time during the PCIe port resume.  Or there's a race I'm not seeing at
-the moment.
+This breaks the interface to IOMMU-specific code: While Intel's
+implementation does bump the number of allocated IRTEs to a
+power of 2, AMD's doesn't, and hence the tail entries in the block
+that don't get allocated here can get used for another device,
+thus creating a security hole when both devices aren't owned by
+the same guest (with the host being considered a special kind of
+guest for this purpose).
 
-So it might be a good idea to repeat the experiment with a similar patch,
-but with increased timeouts (and the "put" part need not be "sync").
+IOW, while you can conserve on the number of vectors allocated,
+you can't on the IRTEs, and I think this should be taken care of in
+the generic IOMMU code, not in the individual vendor
+implementations.
 
+Jan
 
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
