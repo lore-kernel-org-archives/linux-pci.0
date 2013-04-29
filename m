@@ -1,207 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:57312 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754071Ab3D0JNg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 27 Apr 2013 05:13:36 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, Hanjun Guo <guohanjun@huawei.com>,
-	<jiang.liu@huawei.com>, Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	Fenghua Yu <fenghua.yu@intel.com>,
+Received: from mail-pa0-f51.google.com ([209.85.220.51]:34600 "EHLO
+	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932574Ab3D2VcS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 29 Apr 2013 17:32:18 -0400
+Received: by mail-pa0-f51.google.com with SMTP id lj1so1182478pab.38
+        for <linux-pci@vger.kernel.org>; Mon, 29 Apr 2013 14:32:18 -0700 (PDT)
+Date: Mon, 29 Apr 2013 14:32:15 -0700
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	Yinghai Lu <yinghai@kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	<linux-ia64@vger.kernel.org>
-Subject: [PATCH 5/7] PCI/IA64: fix memleak for create pci root bus fail
-Date: Sat, 27 Apr 2013 17:12:27 +0800
-Message-ID: <1367053949-38424-6-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1367053949-38424-1-git-send-email-wangyijing@huawei.com>
-References: <1367053949-38424-1-git-send-email-wangyijing@huawei.com>
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] PCI: Fix racing for pci device removing via sysfs
+Message-ID: <20130429213215.GA31064@kroah.com>
+References: <1366940841-15370-1-git-send-email-yinghai@kernel.org>
+ <CAErSpo5zfHR-agNBdgqfVjCU+-KcTZV+1bvML5Uw-+icDqzzEA@mail.gmail.com>
+ <CAE9FiQVEQO-dLJRjn9Z7JgwGWAn1M8S1Tn2_V0Fq+6kB0rG=Bg@mail.gmail.com>
+ <CAErSpo7DUDQ_XgVKAfWxqYJA=q85ps46bffV-4a7b0vOzAP5DA@mail.gmail.com>
+ <CAE9FiQWv-bN2XzHiQ0WU+Y678zcqs_Owua6vXXijdMO6=0OWpg@mail.gmail.com>
+ <517E45C8.4060407@cn.fujitsu.com>
+ <CAE9FiQUXxCH0xjFPk1S7e_JRsBPosqQ=N5Kpcrjp3RNWDh9yZQ@mail.gmail.com>
+ <20130429181550.GA17343@google.com>
+ <20130429182142.GA3385@kroah.com>
+ <20130429212350.GA14978@xanatos>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130429212350.GA14978@xanatos>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <jiang.liu@huawei.com>
+On Mon, Apr 29, 2013 at 02:23:50PM -0700, Sarah Sharp wrote:
+> On Mon, Apr 29, 2013 at 11:21:42AM -0700, Greg Kroah-Hartman wrote:
+> > On Mon, Apr 29, 2013 at 11:15:50AM -0700, Bjorn Helgaas wrote:
+> > > On Mon, Apr 29, 2013 at 08:19:10AM -0700, Yinghai Lu wrote:
+> > > > On Mon, Apr 29, 2013 at 3:04 AM, Gu Zheng <guz.fnst@cn.fujitsu.com> wrote:
+> > > > > On 04/27/2013 05:01 AM, Yinghai Lu wrote:
+> > > > >> On Fri, Apr 26, 2013 at 1:53 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> > > > >>>
+> > > > >>> You can't be serious.  This is a disgusting mess.  Checking a list
+> > > > >>> pointer for LIST_POISON1?  As far as I'm concerned, this is a waste of
+> > > > >>> my time.
+> > > > 
+> > > > looks like xhci is using that LIST_POISON1 ...
+> > > > 
+> > > Maybe my allergic reaction to your use of LIST_POISON1 is unjustified,
+> > > but I am dubious about the idea that xhci was the only place that needed
+> > > it before now, and we just happened to find one more place in PCI that
+> > > needs it.  That doesn't make sense because good design patterns are used
+> > > many times, not just once or twice.
+> > > 
+> > > I thought the whole point of the get/put scheme was that if we had a
+> > > pointer to a correctly reference-counted object, we didn't need to check
+> > > whether the object was still valid because the object remains valid until
+> > > all the references are released.
+> > 
+> > You are correct, you shouldn't have to worry about that.  If you have to
+> > do something like the LIST_POISON test, something is really wrong.
+> 
+> All right, I'll take a look at the xHCI code.  From a brief glance, both
+> places that use LIST_POISON are handling a timed-out command.  The
+> command handling in xHCI needs to get completely reworked anyway, due to
+> other race conditions.
+> 
+> Were you suggesting I use the get/put scheme in the xHCI driver, or was
+> that for Yinghai?
 
-If pci_create_root_bus() return fail, we should release
-pci root info, pci controller etc.
+I thought for Yinghai, but really, no code should have to check that
+type of thing, so if the xhci driver is, it shouldn't :)
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Fenghua Yu <fenghua.yu@intel.com>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-ia64@vger.kernel.org
----
- arch/ia64/include/asm/pci.h |    6 +++
- arch/ia64/pci/pci.c         |   74 ++++++++++++++++++++++++++++++++++---------
- 2 files changed, 65 insertions(+), 15 deletions(-)
+thanks,
 
-diff --git a/arch/ia64/include/asm/pci.h b/arch/ia64/include/asm/pci.h
-index 82a236c..fe813c2 100644
---- a/arch/ia64/include/asm/pci.h
-+++ b/arch/ia64/include/asm/pci.h
-@@ -89,6 +89,11 @@ extern int pci_mmap_legacy_page_range(struct pci_bus *bus,
- #define pci_legacy_read platform_pci_legacy_read
- #define pci_legacy_write platform_pci_legacy_write
- 
-+struct iospace_resource {
-+	struct list_head list;
-+	struct resource res;
-+};
-+
- struct pci_controller {
- 	void *acpi_handle;
- 	void *iommu;
-@@ -105,6 +110,7 @@ struct pci_root_info {
- 	struct resource *res;
- 	resource_size_t *res_offset;
- 	unsigned int res_num;
-+	struct list_head io_resources;
- 	char *name;
- };
- 
-diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
-index 1f2779d..658030f 100644
---- a/arch/ia64/pci/pci.c
-+++ b/arch/ia64/pci/pci.c
-@@ -162,25 +162,21 @@ new_space (u64 phys_base, int sparse)
- static u64 add_io_space(struct pci_root_info *info,
- 			struct acpi_resource_address64 *addr)
- {
-+	struct iospace_resource *iospace;
- 	struct resource *resource;
- 	char *name;
- 	unsigned long base, min, max, base_port;
- 	unsigned int sparse = 0, space_nr, len;
- 
--	resource = kzalloc(sizeof(*resource), GFP_KERNEL);
--	if (!resource) {
-+	len = strlen(info->name) + 32;
-+	iospace = kzalloc(sizeof(*iospace) + len, GFP_KERNEL);
-+	if (!iospace) {
- 		printk(KERN_ERR "PCI: No memory for %s I/O port space\n",
- 			info->name);
- 		goto out;
- 	}
- 
--	len = strlen(info->name) + 32;
--	name = kzalloc(len, GFP_KERNEL);
--	if (!name) {
--		printk(KERN_ERR "PCI: No memory for %s I/O port space name\n",
--			info->name);
--		goto free_resource;
--	}
-+	name = (char *)(iospace + 1);
- 
- 	min = addr->minimum;
- 	max = min + addr->address_length - 1;
-@@ -189,7 +185,7 @@ static u64 add_io_space(struct pci_root_info *info,
- 
- 	space_nr = new_space(addr->translation_offset, sparse);
- 	if (space_nr == ~0)
--		goto free_name;
-+		goto free_resource;
- 
- 	base = __pa(io_space[space_nr].mmio_base);
- 	base_port = IO_SPACE_BASE(space_nr);
-@@ -204,18 +200,23 @@ static u64 add_io_space(struct pci_root_info *info,
- 	if (space_nr == 0)
- 		sparse = 1;
- 
-+	resource = &iospace->res;
- 	resource->name  = name;
- 	resource->flags = IORESOURCE_MEM;
- 	resource->start = base + (sparse ? IO_SPACE_SPARSE_ENCODING(min) : min);
- 	resource->end   = base + (sparse ? IO_SPACE_SPARSE_ENCODING(max) : max);
--	insert_resource(&iomem_resource, resource);
-+	if (insert_resource(&iomem_resource, resource)) {
-+		dev_err(&info->bridge->dev,
-+				"can't allocate host bridge io space resource  %pR\n",
-+				resource);
-+		goto free_resource;
-+	}
- 
-+	list_add_tail(&iospace->list, &info->io_resources);
- 	return base_port;
- 
--free_name:
--	kfree(name);
- free_resource:
--	kfree(resource);
-+	kfree(iospace);
- out:
- 	return ~0;
- }
-@@ -316,6 +317,47 @@ static acpi_status add_window(struct acpi_resource *res, void *data)
- 	return AE_OK;
- }
- 
-+static void free_pci_root_info_res(struct pci_root_info *info)
-+{
-+	struct iospace_resource *iospace, *tmp;
-+
-+	list_for_each_entry_safe(iospace, tmp, &info->io_resources, list)
-+		kfree(iospace);
-+
-+	kfree(info->res);
-+	info->res = NULL;
-+	kfree(info->res_offset);
-+	info->res_offset = NULL;
-+	info->res_num = 0;
-+	kfree(info->controller);
-+	info->controller = NULL;
-+}
-+
-+static void __release_pci_root_info(struct pci_root_info *info)
-+{
-+	int i;
-+	struct resource *res;
-+	struct iospace_resource *iospace;
-+
-+	list_for_each_entry(iospace, &info->io_resources, list)
-+		release_resource(&iospace->res);
-+
-+	for (i = 0; i < info->res_num; i++) {
-+		res = &info->res[i];
-+
-+		if (!res->parent)
-+			continue;
-+
-+		if (!(res->flags & (IORESOURCE_MEM | IORESOURCE_IO)))
-+			continue;
-+
-+		release_resource(res);
-+	}
-+
-+	free_pci_root_info_res(info);
-+	kfree(info);
-+}
-+
- struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- {
- 	struct acpi_device *device = root->device;
-@@ -346,7 +388,8 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 				"ignored (out of memory)\n", root->segment, busnum);
- 		goto out2;
- 	}
--
-+
-+	INIT_LIST_HEAD(&info->io_resources);
- 	INIT_LIST_HEAD(&info->resources);
- 	/* insert busn resource at first */
- 	pci_add_resource(&info->resources, &root->secondary);
-@@ -387,6 +430,7 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 				   &info->resources);
- 	if (!pbus) {
- 		pci_free_resource_list(&info->resources);
-+		__release_pci_root_info(info);
- 		return NULL;
- 	}
- 
--- 
-1.7.1
-
-
+greg k-h
