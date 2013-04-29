@@ -1,58 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f172.google.com ([209.85.223.172]:36921 "EHLO
-	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753039Ab3DVXKm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Apr 2013 19:10:42 -0400
-Received: by mail-ie0-f172.google.com with SMTP id c12so12287ieb.31
-        for <linux-pci@vger.kernel.org>; Mon, 22 Apr 2013 16:10:41 -0700 (PDT)
-Subject: [PATCH v4 04/22] PCI: Remove MSI/MSI-X cap check in
- pci_msi_check_device()
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Gavin Shan <shangw@linux.vnet.ibm.com>
-Date: Mon, 22 Apr 2013 17:10:40 -0600
-Message-ID: <20130422231039.32621.1576.stgit@bhelgaas-glaptop>
-In-Reply-To: <20130422230012.32621.15224.stgit@bhelgaas-glaptop>
-References: <20130422230012.32621.15224.stgit@bhelgaas-glaptop>
+Received: from cn.fujitsu.com ([222.73.24.84]:48859 "EHLO song.cn.fujitsu.com"
+	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S1753818Ab3D2LMM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 29 Apr 2013 07:12:12 -0400
+Message-ID: <517E45C8.4060407@cn.fujitsu.com>
+Date: Mon, 29 Apr 2013 18:04:56 +0800
+From: Gu Zheng <guz.fnst@cn.fujitsu.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Yinghai Lu <yinghai@kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] PCI: Fix racing for pci device removing via sysfs
+References: <1366940841-15370-1-git-send-email-yinghai@kernel.org> <CAErSpo5zfHR-agNBdgqfVjCU+-KcTZV+1bvML5Uw-+icDqzzEA@mail.gmail.com> <CAE9FiQVEQO-dLJRjn9Z7JgwGWAn1M8S1Tn2_V0Fq+6kB0rG=Bg@mail.gmail.com> <CAErSpo7DUDQ_XgVKAfWxqYJA=q85ps46bffV-4a7b0vOzAP5DA@mail.gmail.com> <CAE9FiQWv-bN2XzHiQ0WU+Y678zcqs_Owua6vXXijdMO6=0OWpg@mail.gmail.com>
+In-Reply-To: <CAE9FiQWv-bN2XzHiQ0WU+Y678zcqs_Owua6vXXijdMO6=0OWpg@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Gavin Shan <shangw@linux.vnet.ibm.com>
+Hi Yinghai,
 
-The function pci_msi_check_device() is called while enabling MSI
-or MSI-X interrupts to make sure the PCI device can support MSI
-or MSI-X capability.  This patch removes the check on MSI or MSI-X
-capability in the function and lets the caller do the check.
+On 04/27/2013 05:01 AM, Yinghai Lu wrote:
 
-Signed-off-by: Gavin Shan <shangw@linux.vnet.ibm.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/msi.c |    5 +----
- 1 file changed, 1 insertion(+), 4 deletions(-)
+> On Fri, Apr 26, 2013 at 1:53 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> 
+>>
+>> You can't be serious.  This is a disgusting mess.  Checking a list
+>> pointer for LIST_POISON1?  As far as I'm concerned, this is a waste of
+>> my time.
+> 
+> Well, then need to hold the bus ref, and check bus->devices list instead.
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 99befbd..60a4b10 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -789,9 +789,6 @@ static int pci_msi_check_device(struct pci_dev *dev, int nvec, int type)
- 	if (ret)
- 		return ret;
+@@ -341,6 +352,7 @@ remove_store(struct device *dev, struct
+ {
+ 	int err;
+ 	unsigned long val;
++	struct pci_dev *pdev;
  
--	if (!pci_find_capability(dev, type))
--		return -EINVAL;
--
- 	return 0;
- }
- 
-@@ -942,7 +939,7 @@ int pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries, int nvec)
- 	int status, nr_entries;
- 	int i, j;
- 
--	if (!entries)
-+	if (!entries || !dev->msix_cap)
+ 	if (strict_strtoul(buf, 0, &val) < 0)
  		return -EINVAL;
+@@ -351,9 +363,14 @@ remove_store(struct device *dev, struct
+ 	/* An attribute cannot be unregistered by one of its own methods,
+ 	 * so we have to use this roundabout approach.
+ 	 */
++	pdev = pci_dev_get(to_pci_dev(dev));
+
+There is no need to increase pci_dev's ref here, because we'll increase it 
+in sysfs_schedule_callback.
+
++	get_device(&pdev->bus->dev);
+
+So the pci_bus' ref management is still needed.
  
- 	status = pci_msi_check_device(dev, nvec, PCI_CAP_ID_MSIX);
+ 	err = device_schedule_callback(dev, remove_callback);
+-	if (err)
++	if (err) {
++		put_device(&pdev->bus->dev);
++		pci_dev_put(pdev);
+ 		return err;
++	}
+ 
+ 	return count;
+ }
 
