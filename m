@@ -1,50 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f178.google.com ([209.85.214.178]:35874 "EHLO
-	mail-ob0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757045Ab3DXQfq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Apr 2013 12:35:46 -0400
-Received: by mail-ob0-f178.google.com with SMTP id 16so1712021obc.9
-        for <linux-pci@vger.kernel.org>; Wed, 24 Apr 2013 09:35:46 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:20487 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760149Ab3D3LJ5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 30 Apr 2013 07:09:57 -0400
+Date: Tue, 30 Apr 2013 13:11:11 +0200
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: x86@kernel.org, linux-pci@vger.kernel.org,
+	Suresh Siddha <suresh.b.siddha@intel.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	Jan Beulich <JBeulich@suse.com>,
+	Ingo Molnar <mingo@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH v2 -tip/apic 2/2] x86/MSI: Allocate as many multiple-MSIs as
+ requested
+Message-ID: <096b258a86c1cb46e4f3084f1fbcf37c7859bb15.1367319112.git.agordeev@redhat.com>
+References: <cover.1367319112.git.agordeev@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <20130422231228.32621.88310.stgit@bhelgaas-glaptop>
-References: <20130422230012.32621.15224.stgit@bhelgaas-glaptop> <20130422231228.32621.88310.stgit@bhelgaas-glaptop>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 24 Apr 2013 10:35:24 -0600
-Message-ID: <CAErSpo7BU6xHaWFY9zK+fiKZbkXhTutqAcC6Nn1q-5X8vkw7KA@mail.gmail.com>
-Subject: Re: [PATCH v4 20/22] xen/pci: Used cached MSI-X capability offset
-To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Cc: Gavin Shan <shangw@linux.vnet.ibm.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Jeremy Fitzhardinge <jeremy@goop.org>,
-	xen-devel@lists.xensource.com
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <517E3BC102000078000D1793@nat28.tlf.novell.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Jeremy, xen-devel]
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ drivers/iommu/irq_remapping.c |   12 +++++++-----
+ 1 files changed, 7 insertions(+), 5 deletions(-)
 
-On Mon, Apr 22, 2013 at 5:12 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> We now cache the MSI-X capability offset in the struct pci_dev, so no
-> need to find the capability again.
->
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-> ---
->  arch/x86/pci/xen.c |    3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
->
-> diff --git a/arch/x86/pci/xen.c b/arch/x86/pci/xen.c
-> index b9d1ff2..7b521ef 100644
-> --- a/arch/x86/pci/xen.c
-> +++ b/arch/x86/pci/xen.c
-> @@ -295,8 +295,7 @@ static int xen_initdom_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
->                         int pos;
->                         u32 table_offset, bir;
->
-> -                       pos = pci_find_capability(dev, PCI_CAP_ID_MSIX);
-> -
-> +                       pos = dev->msix_cap;
->                         pci_read_config_dword(dev, pos + PCI_MSIX_TABLE,
->                                               &table_offset);
->                         bir = (u8)(table_offset & PCI_MSIX_TABLE_BIR);
->
+diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
+index d56f8c1..9eeb6cf 100644
+--- a/drivers/iommu/irq_remapping.c
++++ b/drivers/iommu/irq_remapping.c
+@@ -51,26 +51,27 @@ static void irq_remapping_disable_io_apic(void)
+ 
+ static int do_setup_msi_irqs(struct pci_dev *dev, int nvec)
+ {
+-	int node, ret, sub_handle, index = 0;
++	int node, ret, sub_handle, nvec_pow2, index = 0;
+ 	unsigned int irq;
+ 	struct msi_desc *msidesc;
+ 
+-	nvec = __roundup_pow_of_two(nvec);
+-
+ 	WARN_ON(!list_is_singular(&dev->msi_list));
+ 	msidesc = list_entry(dev->msi_list.next, struct msi_desc, list);
+ 	WARN_ON(msidesc->irq);
+ 	WARN_ON(msidesc->msi_attrib.multiple);
++	WARN_ON(msidesc->nvec);
+ 
+ 	node = dev_to_node(&dev->dev);
+ 	irq = __create_irqs(get_nr_irqs_gsi(), nvec, node);
+ 	if (irq == 0)
+ 		return -ENOSPC;
+ 
+-	msidesc->msi_attrib.multiple = ilog2(nvec);
++	nvec_pow2 = __roundup_pow_of_two(nvec);
++	msidesc->nvec = nvec;
++	msidesc->msi_attrib.multiple = ilog2(nvec_pow2);
+ 	for (sub_handle = 0; sub_handle < nvec; sub_handle++) {
+ 		if (!sub_handle) {
+-			index = msi_alloc_remapped_irq(dev, irq, nvec);
++			index = msi_alloc_remapped_irq(dev, irq, nvec_pow2);
+ 			if (index < 0) {
+ 				ret = index;
+ 				goto error;
+@@ -95,6 +96,7 @@ error:
+ 	 * IRQs from tearing down again in default_teardown_msi_irqs()
+ 	 */
+ 	msidesc->irq = 0;
++	msidesc->nvec = 0;
+ 	msidesc->msi_attrib.multiple = 0;
+ 
+ 	return ret;
+-- 
+1.7.7.6
+
+
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
