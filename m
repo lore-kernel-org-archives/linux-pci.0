@@ -1,46 +1,78 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f173.google.com ([209.85.223.173]:35641 "EHLO
-	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753063Ab3DVXMD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Apr 2013 19:12:03 -0400
-Received: by mail-ie0-f173.google.com with SMTP id k5so15080iea.18
-        for <linux-pci@vger.kernel.org>; Mon, 22 Apr 2013 16:12:03 -0700 (PDT)
-Subject: [PATCH v4 16/22] PCI: Use PCI_MSIX_TABLE_BIR,
- not PCI_MSIX_FLAGS_BIRMASK
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Gavin Shan <shangw@linux.vnet.ibm.com>
-Date: Mon, 22 Apr 2013 17:12:01 -0600
-Message-ID: <20130422231201.32621.97345.stgit@bhelgaas-glaptop>
-In-Reply-To: <20130422230012.32621.15224.stgit@bhelgaas-glaptop>
-References: <20130422230012.32621.15224.stgit@bhelgaas-glaptop>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <517FAB8D.2060702@cn.fujitsu.com>
+Date: Tue, 30 Apr 2013 19:31:25 +0800
+From: Gu Zheng <guz.fnst@cn.fujitsu.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	tangchen <tangchen@cn.fujitsu.com>,
+	Lin Feng <linfeng@cn.fujitsu.com>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	guz.fnst@cn.fujitsu.com
+Subject: [PATCH v2 2/4] PCI: introduce pci_bus_get()/pci_bus_put() to hide
+ pci_bus' reference management
+References: <516FB647.5030203@cn.fujitsu.com> <CAErSpo65ARR_fZwsGCZDJqbPWktHYUkufgPt-2mWwur=nPR1Qg@mail.gmail.com>
+In-Reply-To: <CAErSpo65ARR_fZwsGCZDJqbPWktHYUkufgPt-2mWwur=nPR1Qg@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCI_MSIX_FLAGS_BIRMASK is mis-named because the BIR mask is in the
-Table Offset register, not the flags ("Message Control" per spec)
-register.
+>From ff785e84afd2558dd52de8e73c4f75b7563a595b Mon Sep 17 00:00:00 2001
+From: Gu Zheng <guz.fnst@cn.fujitsu.com>
+Date: Tue, 30 Apr 2013 17:22:02 +0900
+Subject: [PATCH v2 2/4] PCI: introduce pci_bus_get()/pci_bus_put() to hide
+ pci_bus' reference management
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Gu Zheng <guz.fnst@cn.fujitsu.com>
 ---
- drivers/pci/msi.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/pci/bus.c   |   15 +++++++++++++++
+ include/linux/pci.h |    3 +++
+ 2 files changed, 18 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index afdc388..f8a1f39 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -605,8 +605,8 @@ static void __iomem *msix_map_region(struct pci_dev *dev, unsigned nr_entries)
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index 748f8f3..93f4dc0 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -18,6 +18,21 @@
  
- 	pci_read_config_dword(dev, dev->msix_cap + PCI_MSIX_TABLE,
- 			      &table_offset);
--	bir = (u8)(table_offset & PCI_MSIX_FLAGS_BIRMASK);
--	table_offset &= ~PCI_MSIX_FLAGS_BIRMASK;
-+	bir = (u8)(table_offset & PCI_MSIX_TABLE_BIR);
-+	table_offset &= PCI_MSIX_TABLE_OFFSET;
- 	phys_addr = pci_resource_start(dev, bir) + table_offset;
+ #include "pci.h"
  
- 	return ioremap_nocache(phys_addr, nr_entries * PCI_MSIX_ENTRY_SIZE);
++struct pci_bus *pci_bus_get(struct pci_bus *bus)
++{
++	if (bus)
++		get_device(&bus->dev);
++	return bus;
++}
++EXPORT_SYMBOL(pci_bus_get);
++
++void pci_bus_put(struct pci_bus *bus)
++{
++	if (bus)
++		put_device(&bus->dev);
++}
++EXPORT_SYMBOL(pci_bus_put);
++
+ void pci_add_resource_offset(struct list_head *resources, struct resource *res,
+ 			     resource_size_t offset)
+ {
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 6c09949..2581e53 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1020,6 +1020,9 @@ int pci_request_selected_regions_exclusive(struct pci_dev *, int, const char *);
+ void pci_release_selected_regions(struct pci_dev *, int);
+ 
+ /* drivers/pci/bus.c */
++extern struct pci_bus *pci_bus_get(struct pci_bus *bus);
++extern void pci_bus_put(struct pci_bus *bus);
++
+ void pci_add_resource(struct list_head *resources, struct resource *res);
+ void pci_add_resource_offset(struct list_head *resources, struct resource *res,
+ 			     resource_size_t offset);
+-- 
+1.7.7
 
