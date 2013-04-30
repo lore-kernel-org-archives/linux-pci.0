@@ -1,119 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vc0-f180.google.com ([209.85.220.180]:35132 "EHLO
-	mail-vc0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751450Ab3DSRcs (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 19 Apr 2013 13:32:48 -0400
-Received: by mail-vc0-f180.google.com with SMTP id m16so4063187vca.39
-        for <linux-pci@vger.kernel.org>; Fri, 19 Apr 2013 10:32:47 -0700 (PDT)
+Received: from mail-oa0-f47.google.com ([209.85.219.47]:46400 "EHLO
+	mail-oa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761191Ab3D3Qp5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 30 Apr 2013 12:45:57 -0400
+Received: by mail-oa0-f47.google.com with SMTP id n9so687901oag.6
+        for <linux-pci@vger.kernel.org>; Tue, 30 Apr 2013 09:45:57 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <51711214.8050606@cn.fujitsu.com>
-References: <516FB647.5030203@cn.fujitsu.com> <CAErSpo65ARR_fZwsGCZDJqbPWktHYUkufgPt-2mWwur=nPR1Qg@mail.gmail.com>
- <51711214.8050606@cn.fujitsu.com>
+In-Reply-To: <20130430074454.GF7237@elgon.mountain>
+References: <20130430074454.GF7237@elgon.mountain>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 19 Apr 2013 11:32:27 -0600
-Message-ID: <CAErSpo7yPUTOPYsPkhKTpe2yxbo_XN4Y4iBesVLudAmbuRsJ+A@mail.gmail.com>
-Subject: Re: [PATCH 1/2] PCI: Introduce pci_alloc_dev(struct pci_bus*) to
- replace alloc_pci_dev()
-To: Gu Zheng <guz.fnst@cn.fujitsu.com>
+Date: Tue, 30 Apr 2013 10:45:35 -0600
+Message-ID: <CAErSpo64WyM=4c3WC8hy-xy2gNgWtkJVTqzawRU6d6=t6nxnoQ@mail.gmail.com>
+Subject: Re: [patch] PCI: set ->mask_pos correctly
+To: Dan Carpenter <dan.carpenter@oracle.com>
 Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	tangchen <tangchen@cn.fujitsu.com>,
-	Lin Feng <linfeng@cn.fujitsu.com>,
-	li guang <lig.fnst@cn.fujitsu.com>
+	kernel-janitors@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 19, 2013 at 3:44 AM, Gu Zheng <guz.fnst@cn.fujitsu.com> wrote:
-> From 906167d9a09babbe189f62944ecb8c0b198a0f64 Mon Sep 17 00:00:00 2001
-> From: Gu Zheng <guz.fnst@cn.fujitsu.com>
-> Date: Fri, 19 Apr 2013 18:12:32 +0900
-> Subject: [PATCH 1/2] PCI: Introduce  pci_alloc_dev(struct pci_bus*) to replace alloc_pci_dev()
+On Tue, Apr 30, 2013 at 1:44 AM, Dan Carpenter <dan.carpenter@oracle.com> wrote:
+> The "+" operation has higher precedence than "?:" and ->msi_cap is
+> always non-zero here so the original statement is equivalent to:
 >
-> Now here we introduce a new struct pci_dev *pci_alloc_dev(struct pci_bus *bus) to replace alloc_pci_dev().
-> It take a "struct pci_bus *" argument, so we can alloc a pci device on a target pci bus, and it acquire
-> the reference of the pci_bus.
-> Since the old alloc_pci_dev() is exported, so we still keep it for a while but mark it as __deprecated.
+>         entry->mask_pos = PCI_MSI_MASK_64;
 >
-> Signed-off-by: Gu Zheng <guz.fnst@cn.fujitsu.com>
-> ---
->  drivers/pci/probe.c |   21 ++++++++++++++++++++-
->  include/linux/pci.h |    4 +++-
->  2 files changed, 23 insertions(+), 2 deletions(-)
+> Which wasn't the intent.
 >
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index b494066..5233fb6 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1199,7 +1199,7 @@ static void pci_release_bus_bridge_dev(struct device *dev)
->         kfree(bridge);
->  }
->
-> -struct pci_dev *alloc_pci_dev(void)
-> +struct pci_dev *pci_alloc_dev(struct pci_bus *bus)
->  {
->         struct pci_dev *dev;
->
-> @@ -1209,6 +1209,25 @@ struct pci_dev *alloc_pci_dev(void)
->
->         INIT_LIST_HEAD(&dev->bus_list);
->
-> +       if (bus) {
-> +               get_device(&bus->dev);
-> +               dev->bus = bus;
-> +       }
-> +
-> +       return dev;
-> +}
-> +EXPORT_SYMBOL(pci_alloc_dev);
-> +
-> +__deprecated struct pci_dev *alloc_pci_dev(void)
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-I don't think there's any point in marking the function *definition*
-as deprecated; it only makes sense for the declaration in the header
-file, so callers of the function will generate warnings.
+Ouch, my fault, sorry about that.  Thanks for finding this.  I put
+this in my for-linus branch and will try to get this in before
+v3.10-rc1.
 
-> +{
-> +       struct pci_dev *dev;
-> +       printk(KERN_DEBUG "alloc_pci_dev is deprecated, please use pci_alloc_dev(struct pci_bus *) instead!\n");
+How did you find this?  I guess MSI didn't work right on a device with
+32-bit message address and per-vector masking?
 
-I don't want to print a message at run-time, because users will see
-the message and complain about it, but they can't do anything about
-it.  And neither can we, because it will only be out-of-tree modules
-that call alloc_pci_dev().  The build-time warning is all we can do.
+Bjorn
 
-> +       dev = kzalloc(sizeof(struct pci_dev), GFP_KERNEL);
-> +       if (!dev)
-> +               return NULL;
-> +
-> +       INIT_LIST_HEAD(&dev->bus_list);
-
-Can't you implement this as simply:
-
-    return pci_alloc_dev(NULL);
-
-> +
->         return dev;
->  }
->  EXPORT_SYMBOL(alloc_pci_dev);
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 710067f..682de2b 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -348,7 +348,9 @@ static inline struct pci_dev *pci_physfn(struct pci_dev *dev)
->         return dev;
->  }
+> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> index d40bed7..2c10752 100644
+> --- a/drivers/pci/msi.c
+> +++ b/drivers/pci/msi.c
+> @@ -563,8 +563,10 @@ static int msi_capability_init(struct pci_dev *dev, int nvec)
+>         entry->msi_attrib.default_irq   = dev->irq;     /* Save IOAPIC IRQ */
+>         entry->msi_attrib.pos           = dev->msi_cap;
 >
-> -extern struct pci_dev *alloc_pci_dev(void);
-> +extern struct pci_dev *pci_alloc_dev(struct pci_bus *bus);
-> +
-> +extern __deprecated struct pci_dev *alloc_pci_dev(void);
->
->  #define        to_pci_dev(n) container_of(n, struct pci_dev, dev)
->  #define for_each_pci_dev(d) while ((d = pci_get_device(PCI_ANY_ID, PCI_ANY_ID, d)) != NULL)
-> --
-> 1.7.1
->
+> -       entry->mask_pos = dev->msi_cap + (control & PCI_MSI_FLAGS_64BIT) ?
+> -               PCI_MSI_MASK_64 : PCI_MSI_MASK_32;
+> +       if (control & PCI_MSI_FLAGS_64BIT)
+> +               entry->mask_pos = dev->msi_cap + PCI_MSI_MASK_64;
+> +       else
+> +               entry->mask_pos = dev->msi_cap + PCI_MSI_MASK_32;
+>         /* All MSIs are unmasked by default, Mask them all */
+>         if (entry->msi_attrib.maskbit)
+>                 pci_read_config_dword(dev, entry->mask_pos, &entry->masked);
