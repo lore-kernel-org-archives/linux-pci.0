@@ -1,52 +1,75 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from caramon.arm.linux.org.uk ([78.32.30.218]:34873 "EHLO
-	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030552Ab3DSOeG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 19 Apr 2013 10:34:06 -0400
-Date: Fri, 19 Apr 2013 15:33:31 +0100
-From: Russell King - ARM Linux <linux@arm.linux.org.uk>
-To: Jason Cooper <jason@lakedaemon.net>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Olof Johansson <olof@lixom.net>, Arnd Bergmann <arnd@arndb.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Andrew Murray <andrew.murray@arm.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Mitch Bradley <wmb@firmworks.com>
-Subject: Re: [PATCHv8 07/19] arm: pci: add a align_resource hook
-Message-ID: <20130419143331.GV14496@n2100.arm.linux.org.uk>
-References: <1365541601-14095-1-git-send-email-thomas.petazzoni@free-electrons.com> <1365541601-14095-8-git-send-email-thomas.petazzoni@free-electrons.com> <20130415163609.GJ28693@titan.lakedaemon.net>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130415163609.GJ28693@titan.lakedaemon.net>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20130430072147.GA37866@bingao-desk1.fm.intel.com>
+References: <20130430072147.GA37866@bingao-desk1.fm.intel.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 30 Apr 2013 11:32:03 -0600
+Message-ID: <CAErSpo6sY_BejDqgO1Qsko7qH+oKn+wAbu5MnhE8zQeQCc7Qng@mail.gmail.com>
+Subject: Re: x86/pci/mrst: force all pci config toward 0:0:0, 0:2:0 and 0:3:0
+ to type 1
+To: Bin Gao <bin.gao@linux.intel.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"x86@kernel.org" <x86@kernel.org>,
+	Jacob Pan <jacob.jun.pan@linux.intel.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 15, 2013 at 12:36:09PM -0400, Jason Cooper wrote:
-> Russell,
-> 
-> Thanks for applying this patch (7683/1) to your tree.  I see it's in
-> your for-next, which I understand *isn't* stable.
+On Tue, Apr 30, 2013 at 1:21 AM, Bin Gao <bin.gao@linux.intel.com> wrote:
+> x86/pci/mrst: force all pci config access toward 0:0:0, 0:2:0 and 0:3:0 to type 1
+>
+> For real pci devices 0:0:0, 0:2:0 and 0:3:0, there is either no pci shim, or
+> no guarantee of data correctness of offset 256-4k. So for whatever reason,
+> Linux kernel should not do MMCFG pci config access to those devices. Instead,
+> always use type 1 for those devices.
+>
+> Signed-off-by: Bin Gao <bin.gao@linux.intel.com>
 
-That is correct.
+I applied this to my for-linus branch and will try to put this in v3.10.
 
->   029baf1 ARM: 7683/1: pci: add a align_resource hook
-> 
-> Is there a stable branch I could depend on for the rest of this series
-> (particularly, patch 10)?  It looks like you applied it to your misc
-> branch, but that's not currently available.
-
-I will have to look at that; as I'm still catching up with mail three
-days after having returned and there's still quite an amount outstanding,
-it's going to be a while before I can look at this.  Given that we're at
--rc7 and the amount of outstanding mail, it's likely that may happen
-after the merge window has opened.
-
+> ---
+>  arch/x86/pci/mrst.c |   10 ++++++----
+>  1 files changed, 6 insertions(+), 4 deletions(-)
+>
+> diff --git a/arch/x86/pci/mrst.c b/arch/x86/pci/mrst.c
+> index 6eb18c4..0e0fabf 100644
+> --- a/arch/x86/pci/mrst.c
+> +++ b/arch/x86/pci/mrst.c
+> @@ -141,6 +141,11 @@ static int pci_device_update_fixed(struct pci_bus *bus, unsigned int devfn,
+>   */
+>  static bool type1_access_ok(unsigned int bus, unsigned int devfn, int reg)
+>  {
+> +       if (bus == 0 && (devfn == PCI_DEVFN(2, 0)
+> +                               || devfn == PCI_DEVFN(0, 0)
+> +                               || devfn == PCI_DEVFN(3, 0)))
+> +               return 1;
+> +
+>         /* This is a workaround for A0 LNC bug where PCI status register does
+>          * not have new CAP bit set. can not be written by SW either.
+>          *
+> @@ -150,10 +155,7 @@ static bool type1_access_ok(unsigned int bus, unsigned int devfn, int reg)
+>          */
+>         if (reg >= 0x100 || reg == PCI_STATUS || reg == PCI_HEADER_TYPE)
+>                 return 0;
+> -       if (bus == 0 && (devfn == PCI_DEVFN(2, 0)
+> -                               || devfn == PCI_DEVFN(0, 0)
+> -                               || devfn == PCI_DEVFN(3, 0)))
+> -               return 1;
+> +
+>         return 0; /* langwell on others */
+>  }
+>
+> --
+> 1.7.4.4
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
