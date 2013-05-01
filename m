@@ -1,111 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qe0-f54.google.com ([209.85.128.54]:61919 "EHLO
-	mail-qe0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933891Ab3DKUlM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 11 Apr 2013 16:41:12 -0400
-Date: Thu, 11 Apr 2013 13:41:04 -0700
-From: Tejun Heo <tj@kernel.org>
-To: "Michael S. Tsirkin" <mst@redhat.com>
-Cc: Or Gerlitz <ogerlitz@mellanox.com>,
-	Ming Lei <ming.lei@canonical.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	David Miller <davem@davemloft.net>,
-	Roland Dreier <roland@kernel.org>,
-	netdev <netdev@vger.kernel.org>, Yan Burman <yanb@mellanox.com>,
-	Jack Morgenstein <jackm@dev.mellanox.co.il>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH repost for-3.9] pci: avoid work_on_cpu for nested SRIOV
- probes
-Message-ID: <20130411204104.GC11956@mtj.dyndns.org>
-References: <20130411153030.GA22743@redhat.com>
- <20130411180517.GJ17641@mtj.dyndns.org>
- <20130411185853.GE23301@redhat.com>
- <20130411190408.GM17641@mtj.dyndns.org>
- <20130411191717.GB25515@redhat.com>
- <20130411192005.GN17641@mtj.dyndns.org>
- <20130411203053.GC25515@redhat.com>
+Received: from mail-ie0-f181.google.com ([209.85.223.181]:61926 "EHLO
+	mail-ie0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750940Ab3EAETI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 1 May 2013 00:19:08 -0400
+Message-ID: <518097B8.4020402@gmail.com>
+Date: Tue, 30 Apr 2013 22:19:04 -0600
+From: Robert Hancock <hancockrwd@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130411203053.GC25515@redhat.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: "Artem S. Tashkinov" <t.artem@lycos.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: Abysmal HDD/USB write speed after sleep on a UEFI system
+References: <CAErSpo7qj2SNR7BfuBsfF-saZXvgcqqLtgoP5Hyb5u99qR4Ncg@mail.gmail.com> <Pine.LNX.4.44L0.1302191119270.2215-100000@iolanthe.rowland.org> <CAErSpo7NZoOQZyW76HEoOTVgdqL2CgbVScAeF6HGLAVaNCq0=w@mail.gmail.com> <337833384.57445.1361860509194.JavaMail.mail@webmail08> <CAErSpo6CbO5KYXiErv6J_Dnm1u694C5fQPP2_cZL8VKDEnZa9A@mail.gmail.com> <569718148.80620.1361906088301.JavaMail.mail@webmail13> <CAErSpo6UkVhSf+nFW4zwJLBQw_0RQ5H9Bv-UuQRb6zdwsFPw4g@mail.gmail.com> <CAErSpo4X+XXKvWDfqh2CKZAtJ9WMQk91OcsWwdxwYv2MfEM_zQ@mail.gmail.com> <771333906.75854.1367057440028.JavaMail.mail@webmail08> <CAErSpo4B4sRco-nuqgXiYtGQxBcbEB6ArQjHD0A9cj4TRE+qQw@mail.gmail.com>
+In-Reply-To: <CAErSpo4B4sRco-nuqgXiYtGQxBcbEB6ArQjHD0A9cj4TRE+qQw@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
+On 04/29/2013 10:47 PM, Bjorn Helgaas wrote:
+> On Sat, Apr 27, 2013 at 4:10 AM, Artem S. Tashkinov <t.artem@lycos.com> wrote:
+>>>
+>>> Did this problem ever get resolved?
+>>>
+>>
+>> Hello,
+>>
+>> Unfortunately, no. Out of curiosity I've tried booting kernel
+>> 3.9-rc8 in EUFI mode but it exhibits the same problem.
+>>
+>> Right after the boot:
+>>
+>> [root@localhost ~]# dd if=/dev/zero of=test bs=64M count=3
+>> 3+0 records in
+>> 3+0 records out
+>> 201326592 bytes (201 MB) copied, 1.08544 s, 185 MB/s
+>>
+>> After suspend/resume:
+>>
+>> # dd if=/dev/zero of=test bs=64M count=3
+>> 3+0 records in
+>> 3+0 records out
+>> 201326592 bytes (201 MB) copied, 66.5392 s, 3.0 MB/s
+>>
+>> That's for my primary SATA-3 HDD.
+>>
+>> Forgive me my impudence but I believe debugging the USB stack is
+>> tangential to this problem. Something far deeper than USB support
+>> breaks, but so far no one has come even with the slightest clue of
+>> what that might be.
+>
+> I tend to agree that it sounds like something deeper than USB is
+> broken.  I admit I'm just grasping at straws because I don't have any
+> good ideas yet.
+>
+> Here are three easy things you can try:
+>
+> 1) Collect "lspci -vvv -xxxx" output before and after the
+> suspend/resume to investigate the XHCI Unsupported Request errors.
+>
+> 2) Collect the contents of /proc/mtrr before and after the suspend/resume.
+>
+> 3) After the suspend/resume, try the "setpci" to set the MSI address
+> back to the original value to see if it makes a difference (see my Feb
+> 12 message).
 
-On Thu, Apr 11, 2013 at 11:30:53PM +0300, Michael S. Tsirkin wrote:
-> Okay, so you are saying it's a false-positive?
+I would suspect that Windows' complaint about the BIOS mucking up the 
+MTRRs is likely the best hint. Likely Windows is detecting the problem 
+and fixing it up on resume, thus it only complains about "reduced resume 
+performance". If the MTRRs are messed up, then quite likely parts of RAM 
+have become uncacheable, causing performance to get randomly slaughtered 
+in various ways.
 
-Yeah, I think so.  It didn't actually lock up, right?  It it did,
-our analysis upto this point is likely to be completely wrong.
-
-> Want to send a patch so Or can try it out?
-
-Hmmm... something like the following on the workqueue side (completely
-untested).
-
-diff --git a/include/linux/workqueue.h b/include/linux/workqueue.h
-index 8afab27..899d470 100644
---- a/include/linux/workqueue.h
-+++ b/include/linux/workqueue.h
-@@ -466,14 +466,21 @@ static inline bool __deprecated flush_delayed_work_sync(struct delayed_work *dwo
- }
- 
- #ifndef CONFIG_SMP
--static inline long work_on_cpu(unsigned int cpu, long (*fn)(void *), void *arg)
-+static inline long work_on_cpu_nested(unsigned int cpu, long (*fn)(void *),
-+				      void *arg, int subclass)
- {
- 	return fn(arg);
- }
- #else
--long work_on_cpu(unsigned int cpu, long (*fn)(void *), void *arg);
-+long work_on_cpu_nested(unsigned int cpu, long (*fn)(void *), void *arg,
-+			int subclass);
- #endif /* CONFIG_SMP */
- 
-+static inline long work_on_cpu(unsigned int cpu, long (*fn)(void *), void *arg)
-+{
-+	return work_on_cpu_nested(cpu, fn, arg, 0);
-+}
-+
- #ifdef CONFIG_FREEZER
- extern void freeze_workqueues_begin(void);
- extern bool freeze_workqueues_busy(void);
-diff --git a/kernel/workqueue.c b/kernel/workqueue.c
-index 81f2457..c2be670 100644
---- a/kernel/workqueue.c
-+++ b/kernel/workqueue.c
-@@ -3555,25 +3555,30 @@ static void work_for_cpu_fn(struct work_struct *work)
- }
- 
- /**
-- * work_on_cpu - run a function in user context on a particular cpu
-+ * work_on_cpu_nested - run a function in user context on a particular cpu
-  * @cpu: the cpu to run on
-  * @fn: the function to run
-  * @arg: the function arg
-+ * @subclass: lockdep subclass
-  *
-  * This will return the value @fn returns.
-  * It is up to the caller to ensure that the cpu doesn't go offline.
-  * The caller must not hold any locks which would prevent @fn from completing.
-+ *
-+ * XXX: explain @subclass
-  */
--long work_on_cpu(unsigned int cpu, long (*fn)(void *), void *arg)
-+long work_on_cpu_nested(unsigned int cpu, long (*fn)(void *), void *arg,
-+			int subclass)
- {
- 	struct work_for_cpu wfc = { .fn = fn, .arg = arg };
- 
- 	INIT_WORK_ONSTACK(&wfc.work, work_for_cpu_fn);
-+	lock_set_subclass(&wfc.work.lockdep_map, subclass, _RET_IP_);
- 	schedule_work_on(cpu, &wfc.work);
- 	flush_work(&wfc.work);
- 	return wfc.ret;
- }
--EXPORT_SYMBOL_GPL(work_on_cpu);
-+EXPORT_SYMBOL_GPL(work_on_cpu_nested);
- #endif /* CONFIG_SMP */
- 
- #ifdef CONFIG_FREEZER
+ From looking at the code it's not clear if we are checking/restoring 
+the MTRR contents after resume. If not, maybe we should be.
