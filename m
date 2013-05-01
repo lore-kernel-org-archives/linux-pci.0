@@ -1,107 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:45257 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758002Ab3EWOdU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 May 2013 10:33:20 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>
-Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Lior Amsalem <alior@marvell.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Maen Suleiman <maen@marvell.com>
-Subject: [PATCH v2 3/3] pci: mvebu: fix the emulation of the status register
-Date: Thu, 23 May 2013 16:32:53 +0200
-Message-Id: <1369319573-19927-4-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1369319573-19927-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1369319573-19927-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from mail-lb0-f177.google.com ([209.85.217.177]:44782 "EHLO
+	mail-lb0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751219Ab3EAIb0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 1 May 2013 04:31:26 -0400
+MIME-Version: 1.0
+In-Reply-To: <1367362536.9976.9.camel@x230>
+References: <CANUX_P3F5YhbZX3WGU-j1AGpbXb_T9Bis2ErhvKkFMtDvzatVQ@mail.gmail.com>
+	<20130304134949.GB3021@redhat.com>
+	<CANUX_P0JhuVWcQjTckYzG8eBb2MtT_=prKqV38mCpVjfLmGtCA@mail.gmail.com>
+	<20130304154832.GD3021@redhat.com>
+	<CANUX_P22AkqeOROP1QHzp20wGWgDbRzy+9FZy2KvHLXCQ5AVnA@mail.gmail.com>
+	<CAErSpo5gVsUxB6ebQGAN-7jsZiRYZ+SyJn5gKZrSuOzzkJ-QjQ@mail.gmail.com>
+	<CANUX_P2-V0-=sfofxYwAYCRvqPPf5Z2wy6CUNQmGQQ2NqjZJ_A@mail.gmail.com>
+	<CAErSpo4xmDU2O35ge342nMuiVyDkzSGNRaz2O7-w6jDz_eBgyg@mail.gmail.com>
+	<CANUX_P2Hy02SnyYS24dyUGLv3wB3L5xkXt8Y1s+8_RG9d5ReAw@mail.gmail.com>
+	<CANUX_P3znXgMN5aBZbEVx_zKpTQ98my1C_cBG5+mERFWrrrLEw@mail.gmail.com>
+	<CANUX_P3Mt3X8JXq5siSijrWGkjeWbTCcdmJ-Fuv6U8jUqrFouQ@mail.gmail.com>
+	<CAErSpo66=UngrHNcEDeh4gXnt5c0qJHwbxum0mBz-rSWGduLhg@mail.gmail.com>
+	<CANUX_P0hpx8NNvX6cJXfOZMNYN8hrEF-gzf9hBN2Uz=k0WiwgA@mail.gmail.com>
+	<CANUX_P1JnFk7yovC7kXBMDWiErGhvzDQrNCm8te39m41SonCNg@mail.gmail.com>
+	<CAErSpo5WbdCx0iyt14bJxCiNBtUWjT2rMeg5YwNQaRt=M+_v8Q@mail.gmail.com>
+	<1367362536.9976.9.camel@x230>
+Date: Wed, 1 May 2013 11:31:25 +0300
+Message-ID: <CANUX_P1sS8+3s-8-TyovHEwpa5qgQDj4W8P_hvfQjE2MKcTNEA@mail.gmail.com>
+Subject: Re: is L1 really disabled in iwlwifi
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Matthew Garrett <matthew.garrett@nebula.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	John Linville <linville@tuxdriver.com>,
+	Roman Yepishev <roman.yepishev@gmail.com>,
+	"Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The status register of the PCI configuration space of PCI-to-PCI
-bridges contain some read-only bits, and so write-1-to-clear bits. So,
-the Linux PCI core sometimes writes 0xffff to this status register,
-and in the current PCI-to-PCI bridge emulation code of the Marvell
-driver, we do take all those 1s being written. Even the read-only bits
-are being overwritten.
+[from Bjorn's mail]
+> In Emmanuel's case, we don't get _OSC control, so
+> pci_disable_link_state() does nothing.
 
-For now, all the read-only bits should be emulated to have the zero
-value.
+Right, but this is true with the specific log I sent to you. Is it
+possible that another platform  / BIOS, we *will* get _OSC control and
+that pci_disable_link_state() will actually do something? In that case
+I would prefer not to remove the call to pcie_disable_link_state().
+Also - in the log I sent you, we don't get _OSC control, but I can see
+'disabling PCIe ASPM" ... and it *is* enabled (since L1 works). So I
+am kinda scratching my head here...
 
-The other bits, that are write-1-to-clear bits are used to report
-various kind of errors, and are never set by the emulated bridge, so
-there is no need to support this write-1-to-clear bits mechanism.
+>
+>> I'm not convinced iwlwifi really needs to disable the link power
+>> management states in the first place -- the 1a7123cdd9 changelog isn't
+>> very convincing, and I'm not aware of any reported issues even though
+>> we're actually leaving them enabled in many cases.
+>>
+>> More generally, I don't think the pci_disable_link_state() interface
+>> is very useful because it often doesn't do what it claims, and the
+>> caller has no indication.
+>
+> The general issue here is that Windows will (as far as we've been able
+> to determine) never touch ASPM registers unless given PCIe control via
+> _OSC. Drivers are presumably able to override this by hitting
+> configuration registers themselves. The pci_disable_link_state()
+> functions are currently broadly equivalent to the helper functions
+> provided in the Windows .inf files, and if drivers really want to
+> disable the control themselves then they can do so. Renaming the
+> functions to make that clearer, and possibly adding some additional
+> functions to force the case, may be worthwhile.
+>
+> The only time this should be relevant is if (a) the BIOS has enabled L1
+> on iwlwifi, (b) the BIOS has disabled ASPM control, and (c) the hardware
+> doesn't work with L1 enabled. Are there really cases where that's true?
+>
 
-As a conclusion, the easiest solution is to simply emulate this status
-register by returning zero when read, and ignore the writes to it.
+After having read (a bit) about _OSC I can say the following:
+L1 is a must for the Windows driver - so that it doesn't sounds
+reasonable that the .inf of the Windows driver for Intel Wireless NICs
+disables ASPM through _OSC or through any other mechanism.
+(a) - this is really platform / BIOS dependent, and I can't test all
+the platform out there
+(b) - ditto
+(c) - the HW *should* work with L1 enabled but we may very well have a
+bug in the driver. I have tried to check the way we initialize the HW
+and it seems fine, but one never knows.
 
-This has two visible effects:
 
- * The devsel is no longer 'unknown' in, i.e
-
-   Flags: bus master, 66MHz, user-definable features, ?? devsel, latency 0
-
-   becomes:
-
-   Flags: bus master, 66MHz, user-definable features, fast devsel, latency 0
-
-   in lspci -v.
-
-   This was caused by a value of 11b being read for devsel, which is
-   an invalid value. This 11b value being read was due to a previous
-   write of 0xffff into the status register.
-
- * The capability list is no longer broken, because we indicate to the
-   Linux PCI core that we don't have a Capabilities Pointer in the PCI
-   configuration space of this bridge. The following message is
-   therefore no longer visible in lspci -v:
-
-   Capabilities: [fc] <chain broken>
-
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
----
- drivers/pci/host/pci-mvebu.c |    5 +----
- 1 file changed, 1 insertion(+), 4 deletions(-)
-
-diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-index a3c4638..481e44a 100644
---- a/drivers/pci/host/pci-mvebu.c
-+++ b/drivers/pci/host/pci-mvebu.c
-@@ -69,7 +69,6 @@ struct mvebu_sw_pci_bridge {
- 	u16 vendor;
- 	u16 device;
- 	u16 command;
--	u16 status;
- 	u16 class;
- 	u8 interface;
- 	u8 revision;
-@@ -359,7 +358,6 @@ static void mvebu_sw_pci_bridge_init(struct mvebu_pcie_port *port)
- 
- 	memset(bridge, 0, sizeof(struct mvebu_sw_pci_bridge));
- 
--	bridge->status = PCI_STATUS_CAP_LIST;
- 	bridge->class = PCI_CLASS_BRIDGE_PCI;
- 	bridge->vendor = PCI_VENDOR_ID_MARVELL;
- 	bridge->device = MARVELL_EMULATED_PCI_PCI_BRIDGE_ID;
-@@ -386,7 +384,7 @@ static int mvebu_sw_pci_bridge_read(struct mvebu_pcie_port *port,
- 		break;
- 
- 	case PCI_COMMAND:
--		*value = bridge->status << 16 | bridge->command;
-+		*value = bridge->command;
- 		break;
- 
- 	case PCI_CLASS_REVISION:
-@@ -479,7 +477,6 @@ static int mvebu_sw_pci_bridge_write(struct mvebu_pcie_port *port,
- 	switch (where & ~3) {
- 	case PCI_COMMAND:
- 		bridge->command = value & 0xffff;
--		bridge->status = value >> 16;
- 		break;
- 
- 	case PCI_BASE_ADDRESS_0 ... PCI_BASE_ADDRESS_1:
--- 
-1.7.9.5
-
+thanks for your time!
