@@ -1,85 +1,102 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f49.google.com ([209.85.160.49]:37848 "EHLO
-	mail-pb0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751262Ab3ETRwk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 20 May 2013 13:52:40 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:21113 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752404Ab3ECHLq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 3 May 2013 03:11:46 -0400
+Date: Fri, 3 May 2013 09:12:59 +0200
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Joerg Roedel <joro@8bytes.org>
+Cc: linux-kernel@vger.kernel.org, x86@kernel.org,
+	linux-pci@vger.kernel.org,
+	Suresh Siddha <suresh.b.siddha@intel.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Jan Beulich <JBeulich@suse.com>,
+	Ingo Molnar <mingo@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH v3 -tip/apic 2/2] x86/MSI: Conserve interrupt resources when
+ using multiple-MSIs
+Message-ID: <20130503071259.GA12749@dhcp-26-207.brq.redhat.com>
+References: <cover.1367319112.git.agordeev@redhat.com>
+ <096b258a86c1cb46e4f3084f1fbcf37c7859bb15.1367319112.git.agordeev@redhat.com>
+ <20130502123631.GB24440@8bytes.org>
 MIME-Version: 1.0
-Reply-To: linasvepstas@gmail.com
-In-Reply-To: <CAErSpo7TvCfQLkMD+zL1W6dNEqMpHYbLtAAHqXf==zbxhE2tcQ@mail.gmail.com>
-References: <F7B8FD780A346D46A0042F5C63B06AE785E3B2@SHSMSX102.ccr.corp.intel.com>
- <CAErSpo7+AbHi_TwxwHTJunpFb=CMhwMdCni6+NjbhdA=35XhvA@mail.gmail.com>
- <5683193.Vsmy0DmceS@vostro.rjw.lan> <CAErSpo7TvCfQLkMD+zL1W6dNEqMpHYbLtAAHqXf==zbxhE2tcQ@mail.gmail.com>
-From: Linas Vepstas <linasvepstas@gmail.com>
-Date: Mon, 20 May 2013 12:52:19 -0500
-Message-ID: <CAHrUA34CoQziRYgLyYJc5TtGw_nGL+QFLzrktDjcZ6gxsxEZ8A@mail.gmail.com>
-Subject: Re: Subject : [ PATCH ] pci-reset-error_state-to-pci_channel_io_normal-at-report_slot_reset
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	"Zhang, LongX" <longx.zhang@intel.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"yanmin_zhang@linux.intel.com" <yanmin_zhang@linux.intel.com>,
-	"Joseph.Liu@Emulex.Com" <Joseph.Liu@emulex.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130502123631.GB24440@8bytes.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 20 May 2013 12:21, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Fri, May 17, 2013 at 5:56 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
->> On Friday, May 17, 2013 05:43:33 PM Bjorn Helgaas wrote:
->>> On Fri, Apr 26, 2013 at 12:28 AM, Zhang, LongX <longx.zhang@intel.com> wrote:
->
->>> > +       /* restore cfg space for possible link reset at upstream */
->>> > +       dev->state_saved = true;
->>>
->>> "dev->state_saved == true" means that the dev->saved_config_space
->>> contains valid data.  Why do we know that's the case here?  I see that
->>> pcie_portdrv_probe() calls pci_save_state() when we first claim the
->>> port, and I guess we're assuming the state saved then is still valid.
+Current multiple-MSI implementation does not take into account
+actual number of requested MSIs and always rounds that number
+to a closest power-of-two value. Yet, a number of MSIs a PCI
+device could send (and therefore a number of messages a device
+driver could request) may be a lesser power-of-two. As result,
+resources allocated for extra MSIs just wasted.
 
-Yes, see below.
+This update takes advantage of 'msi_desc::nvec' field introduced
+with generic MSI code to track number of requested and used MSIs.
+As result, resources associated with interrupts are conserved.
+Of those resources most noticeable are x86 interrupt vectors.
 
->>> But why do we need to actually set dev->state_saved here?  Shouldn't
->>> it be already set to true anyway?
->>
->> This is a dirty trick to make pci_restore_state(dev) always work here
->> (because it checks dev->state_saved and does nothing if it isn't set).
->> I suppose.
->
-> Yes, I did investigate enough to see that this is a dirty trick.  My
-> question is how we know it's safe to do this dirty trick.
->
->>> > +       pci_restore_state(dev);
->>> > +       pcie_portdrv_restore_config(dev);
+The initial version of this fix also consumed on IRTEs, but Jan
+noticed that a malfunctioning PCI device might send a message
+number it did not claim and thus refer an IRTE it does not own.
+To avoid this security hole the old-way approach preserved and
+as many IRTEs are reserved as the device could possibly send.
 
-Lets review what is supposed to happen:
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ drivers/iommu/irq_remapping.c |   12 +++++++-----
+ 1 files changed, 7 insertions(+), 5 deletions(-)
 
--- poweron
--- BIOS/firmware/bootloader maybe fiddles with PCI config space
--- kernel fiddles with PCI config space during boot
--- device driver sets up PCI config space correctly for normal i/o
--- PCI error occurs
--- PCI port/link is reset
+diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
+index d56f8c1..9eeb6cf 100644
+--- a/drivers/iommu/irq_remapping.c
++++ b/drivers/iommu/irq_remapping.c
+@@ -51,26 +51,27 @@ static void irq_remapping_disable_io_apic(void)
+ 
+ static int do_setup_msi_irqs(struct pci_dev *dev, int nvec)
+ {
+-	int node, ret, sub_handle, index = 0;
++	int node, ret, sub_handle, nvec_pow2, index = 0;
+ 	unsigned int irq;
+ 	struct msi_desc *msidesc;
+ 
+-	nvec = __roundup_pow_of_two(nvec);
+-
+ 	WARN_ON(!list_is_singular(&dev->msi_list));
+ 	msidesc = list_entry(dev->msi_list.next, struct msi_desc, list);
+ 	WARN_ON(msidesc->irq);
+ 	WARN_ON(msidesc->msi_attrib.multiple);
++	WARN_ON(msidesc->nvec);
+ 
+ 	node = dev_to_node(&dev->dev);
+ 	irq = __create_irqs(get_nr_irqs_gsi(), nvec, node);
+ 	if (irq == 0)
+ 		return -ENOSPC;
+ 
+-	msidesc->msi_attrib.multiple = ilog2(nvec);
++	nvec_pow2 = __roundup_pow_of_two(nvec);
++	msidesc->nvec = nvec;
++	msidesc->msi_attrib.multiple = ilog2(nvec_pow2);
+ 	for (sub_handle = 0; sub_handle < nvec; sub_handle++) {
+ 		if (!sub_handle) {
+-			index = msi_alloc_remapped_irq(dev, irq, nvec);
++			index = msi_alloc_remapped_irq(dev, irq, nvec_pow2);
+ 			if (index < 0) {
+ 				ret = index;
+ 				goto error;
+@@ -95,6 +96,7 @@ error:
+ 	 * IRQs from tearing down again in default_teardown_msi_irqs()
+ 	 */
+ 	msidesc->irq = 0;
++	msidesc->nvec = 0;
+ 	msidesc->msi_attrib.multiple = 0;
+ 
+ 	return ret;
+-- 
+1.7.7.6
 
-At this point, we want to set the PCI config space to something
-resembling what it was just before the device driver first touched it
-after poweron.  Why?  Because the device driver will typically set up
-DMA segments, and tweak other settings as it initializes the card.  It
-needs to do almost exactly the same things again, when re-initializing
-the device after the error reset.  Thus, the PCI config needs to be
-appropriate for a fresh initialization of the card.
-
-If  some other variant of PCI config was loaded here, it might contain
-incorrect DMA mappings or other settings.  In particular, while the
-driver is initializing the card, you risk having the card run away and
-start doing things based on these incorrect settings -- provoking
-another error or maybe just silently corrupting data.   The config
-that you want to load should be more-or-less the same one that was
-there during kernel boot, before the device-driver started touching
-things.
-
-The "dirty hack" is weird:  either there's valid data, and the flag is
-set, or the data is garbage and the flag isn't set ... how could it be
-otherwise?
-
--- Linas
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
