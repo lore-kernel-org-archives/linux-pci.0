@@ -1,62 +1,110 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:15800 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758537Ab3ENW3Y (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 14 May 2013 18:29:24 -0400
-Subject: [PATCH] pci: Avoid reentrant calls to work_on_cpu
-To: bhelgaas@google.com, yinghai@kernel.org
-From: Alexander Duyck <alexander.h.duyck@intel.com>
-Cc: guz.fnst@cn.fujitsu.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, netdev@vger.kernel.org
-Date: Tue, 14 May 2013 15:26:53 -0700
-Message-ID: <20130514221748.6180.30597.stgit@ahduyck-cp1.jf.intel.com>
+Received: from mail-wg0-f41.google.com ([74.125.82.41]:53779 "EHLO
+	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934019Ab3ECSBI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 3 May 2013 14:01:08 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Reply-To: linasvepstas@gmail.com
+In-Reply-To: <1367550808.2093.14.camel@ymzhang.sh.intel.com>
+References: <F7B8FD780A346D46A0042F5C63B06AE785E3B2@SHSMSX102.ccr.corp.intel.com>
+ <1367454625.2093.6.camel@ymzhang.sh.intel.com> <CAHrUA34H_B-ffebx6ueHgV1ax-PL_3hLZr1JGaP2NJZ7bYgvtw@mail.gmail.com>
+ <1367541180.2093.10.camel@ymzhang.sh.intel.com> <20130503020039.GA29087@kroah.com>
+ <1367550808.2093.14.camel@ymzhang.sh.intel.com>
+From: Linas Vepstas <linasvepstas@gmail.com>
+Date: Fri, 3 May 2013 13:00:46 -0500
+Message-ID: <CAHrUA34O=JEbmMSCmycNSXa1L6KXAWBCM5TfBOvzj_zSRMubHQ@mail.gmail.com>
+Subject: Re: Subject : [ PATCH ] pci-reset-error_state-to-pci_channel_io_normal-at-report_slot_reset
+To: yanmin_zhang <yanmin_zhang@linux.intel.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Zhang, LongX" <longx.zhang@intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"Joseph.Liu@Emulex.Com" <Joseph.Liu@emulex.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This change is meant to fix a deadlock seen when pci_enable_sriov was
-called from within a driver's probe routine.  The issue was that
-work_on_cpu calls flush_work which attempts to flush a work queue for a
-cpu that we are currently working in.  In order to avoid the reentrant
-path we just skip the call to work_on_cpu in the case that the device
-node matches our current node.
+Greg,
 
-Reported-by: Yinghai Lu <yinghai@kernel.org>
-Signed-off-by: Alexander Duyck <alexander.h.duyck@intel.com>
----
+I've been receiving (and reading!) these messages; I replied that I am
+not maintaining a tree, and have no way of testing these patches (no
+access to hardware.)  I believe it unlikely that my situation will
+change, and so I should probably be removed from the maintainers file.
 
-This patch is meant to address the issue pointed out in an earlier patch
-sent by Yinghai Lu titled:
-  [PATCH 6/7] PCI: Make sure VF's driver get attached after PF's
+No acked-by or anything; the patches are not "obviously correct" by
+visual inspection; they may be right, but would require deeper
+thinking about what is actually happening than I'm capable of at this
+time; I'm a bit rusty with this code base, and might miss something
+important.
 
- drivers/pci/pci-driver.c |   14 +++++++++-----
- 1 files changed, 9 insertions(+), 5 deletions(-)
+-- Linas
 
-diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-index 79277fb..caeb1c0 100644
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -277,12 +277,16 @@ static int pci_call_probe(struct pci_driver *drv, struct pci_dev *dev,
- 	int error, node;
- 	struct drv_dev_and_id ddi = { drv, dev, id };
- 
--	/* Execute driver initialization on node where the device's
--	   bus is attached to.  This way the driver likely allocates
--	   its local memory on the right node without any need to
--	   change it. */
-+	/*
-+	 * Execute driver initialization on the node where the device's
-+	 * bus is attached.  This way the driver likely allocates
-+	 * its local memory on the right node without any need to
-+	 * change it.  If the node is the current node just call
-+	 * local_pci_probe and avoid the possibility of reentrant
-+	 * calls to work_on_cpu.
-+	 */
- 	node = dev_to_node(&dev->dev);
--	if (node >= 0) {
-+	if ((node >= 0) && (node != numa_node_id())) {
- 		int cpu;
- 
- 		get_online_cpus();
+p.s. you didn't see my earlier reply because I forgot to hit 'plain text reply'
 
+
+On 2 May 2013 22:13, Yanmin Zhang <yanmin_zhang@linux.intel.com> wrote:
+>
+> On Thu, 2013-05-02 at 19:00 -0700, Greg Kroah-Hartman wrote:
+> > On Fri, May 03, 2013 at 08:33:00AM +0800, Yanmin Zhang wrote:
+> > > On Wed, 2013-05-01 at 20:20 -0500, Linas Vepstas wrote:
+> > > > Hi,
+> > > >
+> > > > On 1 May 2013 19:30, Yanmin Zhang <yanmin_zhang@linux.intel.com>
+> > > > wrote:
+> > > >         On Fri, 2013-04-26 at 06:28 +0000, Zhang, LongX wrote:
+> > > >         > From: Zhang Long <longx.zhang@intel.com>
+> > > >         >
+> > > >         > Specific pci device drivers might have many functions to
+> > > >         call
+> > > >         > pci_channel_offline to check device states. When slot_reset
+> > > >         happens,
+> > > >         > drivers' slot_reset callback might call such functions and
+> > > >         eventually
+> > > >         > abort the reset.
+> > > >         >
+> > > >         > The patch resets pdev->error_state to pci_channel_io_normal
+> > > >         at
+> > > >         > the begining of report_slot_reset.
+> > > >         >
+> > > >         > Thank Liu Joseph for pointing it out.
+> > > >
+> > > >         Linas, Bjorn,
+> > > >
+> > > >         Would you like to merge the patch to your testing tree?
+> > > >         The patch resolves one issue pointed out by Joseph.
+> > > >
+> > > >
+> > > > I'm not maintaining a tree at this time, and am not able to test.
+> > > > Sorry.
+> > > Thanks Linas.
+> > >
+> > > Greg,
+> > >
+> > > Would you like to merge it into your testing tree? Joseph Liu tested
+> > > the patch and it does work.
+> >
+> > You do know about the scripts/get_maintainer.pl script, right?
+> >
+> > Hint, try it out :)
+> Greg,
+>
+> Thanks. We did send to the right people, Linas and Bjorn.
+>
+> scripts/get_maintainer.pl 0001-pci-reset-error_state-to-pci_channel_io_normal-at-re.patch
+> Bjorn Helgaas <bhelgaas@google.com> (supporter:PCI SUBSYSTEM,commit_signer:7/8=88%,commit_signer:10/11=91%)
+> Linas Vepstas <linasvepstas@gmail.com> (commit_signer:2/8=25%)
+> Yijing Wang <wangyijing@huawei.com> (commit_signer:2/8=25%,commit_signer:2/11=18%)
+> Jiang Liu <jiang.liu@huawei.com> (commit_signer:2/8=25%,commit_signer:2/11=18%)
+> Stephen Hemminger <shemminger@vyatta.com> (commit_signer:1/8=12%)
+> "Rafael J. Wysocki" <rafael.j.wysocki@intel.com> (commit_signer:6/11=55%)
+> Huang Ying <ying.huang@intel.com> (commit_signer:5/11=45%)
+> linux-pci@vger.kernel.org (open list:PCI SUBSYSTEM)
+> linux-kernel@vger.kernel.org (open list)
+>
+>
+> I remember Jesse was maintaining PCI subsystem and he responded quickly.
+>
+> Yanmin
+>
+>
