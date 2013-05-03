@@ -1,112 +1,63 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f54.google.com ([209.85.160.54]:41753 "EHLO
-	mail-pb0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750874Ab3EaEW3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 31 May 2013 00:22:29 -0400
-Received: by mail-pb0-f54.google.com with SMTP id ro12so1521005pbb.41
-        for <linux-pci@vger.kernel.org>; Thu, 30 May 2013 21:22:29 -0700 (PDT)
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Xudong Hao <xudong.hao@intel.com>
-Cc: Jiang Liu <liuj97@gmail.com>, Yijing Wang <wangyijing@huawei.com>,
-	linux-pci@vger.kernel.org, Jiang Liu <jiang.liu@huawei.com>
-Subject: [PATCH 3/3] PCI: Hide remove and rescan sysfs interfaces for SR-IOV virtual functions
-Date: Fri, 31 May 2013 12:21:31 +0800
-Message-Id: <1369974092-11450-3-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1369974092-11450-1-git-send-email-jiang.liu@huawei.com>
-References: <1369974092-11450-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 2 May 2013 19:00:39 -0700
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Yanmin Zhang <yanmin_zhang@linux.intel.com>
+Cc: linasvepstas@gmail.com, "Zhang, LongX" <longx.zhang@intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"Joseph.Liu@Emulex.Com" <Joseph.Liu@emulex.com>
+Subject: Re: Subject : [ PATCH ]
+ pci-reset-error_state-to-pci_channel_io_normal-at-report_slot_reset
+Message-ID: <20130503020039.GA29087@kroah.com>
+References: <F7B8FD780A346D46A0042F5C63B06AE785E3B2@SHSMSX102.ccr.corp.intel.com>
+ <1367454625.2093.6.camel@ymzhang.sh.intel.com>
+ <CAHrUA34H_B-ffebx6ueHgV1ax-PL_3hLZr1JGaP2NJZ7bYgvtw@mail.gmail.com>
+ <1367541180.2093.10.camel@ymzhang.sh.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1367541180.2093.10.camel@ymzhang.sh.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <liuj97@gmail.com>
+On Fri, May 03, 2013 at 08:33:00AM +0800, Yanmin Zhang wrote:
+> On Wed, 2013-05-01 at 20:20 -0500, Linas Vepstas wrote:
+> > Hi,
+> > 
+> > On 1 May 2013 19:30, Yanmin Zhang <yanmin_zhang@linux.intel.com>
+> > wrote:
+> >         On Fri, 2013-04-26 at 06:28 +0000, Zhang, LongX wrote:
+> >         > From: Zhang Long <longx.zhang@intel.com>
+> >         >
+> >         > Specific pci device drivers might have many functions to
+> >         call
+> >         > pci_channel_offline to check device states. When slot_reset
+> >         happens,
+> >         > drivers' slot_reset callback might call such functions and
+> >         eventually
+> >         > abort the reset.
+> >         >
+> >         > The patch resets pdev->error_state to pci_channel_io_normal
+> >         at
+> >         > the begining of report_slot_reset.
+> >         >
+> >         > Thank Liu Joseph for pointing it out.
+> >         
+> >         Linas, Bjorn,
+> >         
+> >         Would you like to merge the patch to your testing tree?
+> >         The patch resolves one issue pointed out by Joseph.
+> > 
+> > 
+> > I'm not maintaining a tree at this time, and am not able to test.
+> > Sorry.
+> Thanks Linas.
+> 
+> Greg,
+> 
+> Would you like to merge it into your testing tree? Joseph Liu tested
+> the patch and it does work.
 
-PCI devices for SR-IOV virtual functions should only be created/
-destroyed by pci_enable_sriov()/pci_disable_sriov() because special
-data structures are associated with SR-IOV virtual functions.
-So hide hotplug related sysfs interfaces "remove" and "rescan" for
-SR-IOV virtual functions, otherwise it may causes memory leakage
-and other issues.
+You do know about the scripts/get_maintainer.pl script, right?
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Donald Dutile <ddutile@redhat.com>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: Ram Pai <linuxram@us.ibm.com>
----
- drivers/pci/pci-sysfs.c | 30 ++++++++++++++++++++++++++++--
- 1 file changed, 28 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 5b4a9d9..403da60 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -325,6 +325,8 @@ dev_rescan_store(struct device *dev, struct device_attribute *attr,
- 	}
- 	return count;
- }
-+struct device_attribute dev_rescan_attr = __ATTR(rescan, (S_IWUSR|S_IWGRP),
-+						 NULL, dev_rescan_store);
- 
- static void remove_callback(struct device *dev)
- {
-@@ -354,6 +356,8 @@ remove_store(struct device *dev, struct device_attribute *dummy,
- 		count = ret;
- 	return count;
- }
-+struct device_attribute dev_remove_attr = __ATTR(remove, (S_IWUSR|S_IWGRP),
-+						 NULL, remove_store);
- 
- static ssize_t
- dev_bus_rescan_store(struct device *dev, struct device_attribute *attr,
-@@ -504,8 +508,6 @@ struct device_attribute pci_dev_attrs[] = {
- 	__ATTR(broken_parity_status,(S_IRUGO|S_IWUSR),
- 		broken_parity_status_show,broken_parity_status_store),
- 	__ATTR(msi_bus, 0644, msi_bus_show, msi_bus_store),
--	__ATTR(remove, (S_IWUSR|S_IWGRP), NULL, remove_store),
--	__ATTR(rescan, (S_IWUSR|S_IWGRP), NULL, dev_rescan_store),
- #if defined(CONFIG_PM_RUNTIME) && defined(CONFIG_ACPI)
- 	__ATTR(d3cold_allowed, 0644, d3cold_allowed_show, d3cold_allowed_store),
- #endif
-@@ -1463,6 +1465,29 @@ static umode_t pci_dev_attrs_are_visible(struct kobject *kobj,
- 	return a->mode;
- }
- 
-+static struct attribute *pci_dev_hp_attrs[] = {
-+	&dev_remove_attr.attr,
-+	&dev_rescan_attr.attr,
-+	NULL,
-+};
-+
-+static umode_t pci_dev_hp_attrs_are_visible(struct kobject *kobj,
-+						struct attribute *a, int n)
-+{
-+	struct device *dev = container_of(kobj, struct device, kobj);
-+	struct pci_dev *pdev = to_pci_dev(dev);
-+
-+	if (pdev->is_virtfn)
-+		return 0;
-+
-+	return a->mode;
-+}
-+
-+static struct attribute_group pci_dev_hp_attr_group = {
-+	.attrs = pci_dev_hp_attrs,
-+	.is_visible = pci_dev_hp_attrs_are_visible,
-+};
-+
- #ifdef CONFIG_PCI_IOV
- static struct attribute *sriov_dev_attrs[] = {
- 	&sriov_totalvfs_attr.attr,
-@@ -1494,6 +1519,7 @@ static struct attribute_group pci_dev_attr_group = {
- 
- static const struct attribute_group *pci_dev_attr_groups[] = {
- 	&pci_dev_attr_group,
-+	&pci_dev_hp_attr_group,
- #ifdef CONFIG_PCI_IOV
- 	&sriov_dev_attr_group,
- #endif
--- 
-1.8.1.2
-
+Hint, try it out :)
