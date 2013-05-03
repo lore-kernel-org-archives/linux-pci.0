@@ -1,70 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail1.windriver.com ([147.11.146.13]:57347 "EHLO
-	mail1.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751846Ab3ENNIB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 May 2013 09:08:01 -0400
-From: Kevin Hao <haokexin@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>
-Subject: [PATCH 2/2] PCI: unset the resource if we can't get the correct CPU address
-Date: Tue, 14 May 2013 21:07:56 +0800
-Message-ID: <1368536876-27307-3-git-send-email-haokexin@gmail.com>
-In-Reply-To: <1368536876-27307-1-git-send-email-haokexin@gmail.com>
-References: <1368536876-27307-1-git-send-email-haokexin@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga03.intel.com ([143.182.124.21]:27058 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753131Ab3ECAbP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 2 May 2013 20:31:15 -0400
+Message-ID: <1367541180.2093.10.camel@ymzhang.sh.intel.com>
+Subject: Re: Subject : [ PATCH ]
+ pci-reset-error_state-to-pci_channel_io_normal-at-report_slot_reset
+From: Yanmin Zhang <yanmin_zhang@linux.intel.com>
+Reply-To: yanmin_zhang@linux.intel.com
+To: linasvepstas@gmail.com,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: "Zhang, LongX" <longx.zhang@intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"Joseph.Liu@Emulex.Com" <Joseph.Liu@emulex.com>
+Date: Fri, 03 May 2013 08:33:00 +0800
+In-Reply-To: <CAHrUA34H_B-ffebx6ueHgV1ax-PL_3hLZr1JGaP2NJZ7bYgvtw@mail.gmail.com>
+References: <F7B8FD780A346D46A0042F5C63B06AE785E3B2@SHSMSX102.ccr.corp.intel.com>
+	 <1367454625.2093.6.camel@ymzhang.sh.intel.com>
+	 <CAHrUA34H_B-ffebx6ueHgV1ax-PL_3hLZr1JGaP2NJZ7bYgvtw@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In the current kernel, we just set the CPU address to the bus address
-if we can't find the match region for one specific bus address. If BAR
-of one pci device is set to address which happens to be a legitimate
-CPU address by firmware, the kernel will think this resource is legal
-and will not try to reassign later. In cases the CPU address and bus
-address isn't equal, the device will not work. So we should check
-if we can translate the bus address to CPU address correctly. If not,
-we should unset this resource and wish the kernel will reassign it
-later.
+On Wed, 2013-05-01 at 20:20 -0500, Linas Vepstas wrote:
+> Hi,
+> 
+> On 1 May 2013 19:30, Yanmin Zhang <yanmin_zhang@linux.intel.com>
+> wrote:
+>         On Fri, 2013-04-26 at 06:28 +0000, Zhang, LongX wrote:
+>         > From: Zhang Long <longx.zhang@intel.com>
+>         >
+>         > Specific pci device drivers might have many functions to
+>         call
+>         > pci_channel_offline to check device states. When slot_reset
+>         happens,
+>         > drivers' slot_reset callback might call such functions and
+>         eventually
+>         > abort the reset.
+>         >
+>         > The patch resets pdev->error_state to pci_channel_io_normal
+>         at
+>         > the begining of report_slot_reset.
+>         >
+>         > Thank Liu Joseph for pointing it out.
+>         
+>         Linas, Bjorn,
+>         
+>         Would you like to merge the patch to your testing tree?
+>         The patch resolves one issue pointed out by Joseph.
+> 
+> 
+> I'm not maintaining a tree at this time, and am not able to test.
+> Sorry.
+Thanks Linas.
 
-Since we will invoke pcibios_bus_to_resource unconditionally if we
-don't goto fail, move it out of if/else wrap.
+Greg,
 
-Signed-off-by: Kevin Hao <haokexin@gmail.com>
----
- drivers/pci/probe.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+Would you like to merge it into your testing tree? Joseph Liu tested
+the patch and it does work.
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 70f10fa..c96772f 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -250,12 +250,10 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
- 			pci_write_config_dword(dev, pos + 4, 0);
- 			region.start = 0;
- 			region.end = sz64;
--			pcibios_bus_to_resource(dev, res, &region);
- 			bar_disabled = true;
- 		} else {
- 			region.start = l64;
- 			region.end = l64 + sz64;
--			pcibios_bus_to_resource(dev, res, &region);
- 		}
- 	} else {
- 		sz = pci_size(l, sz, mask);
-@@ -265,7 +263,12 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
- 
- 		region.start = l;
- 		region.end = l + sz;
--		pcibios_bus_to_resource(dev, res, &region);
-+	}
-+
-+	if (!pcibios_bus_to_resource(dev, res, &region)) {
-+		res->flags |= IORESOURCE_UNSET;
-+		res->end -= res->start;
-+		res->start = 0;
- 	}
- 
- 	goto out;
--- 
-1.8.1.4
+Thanks,
+Yanmin
+
+
 
