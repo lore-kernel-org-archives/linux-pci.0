@@ -1,53 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f178.google.com ([209.85.214.178]:55575 "EHLO
-	mail-ob0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755574Ab3EJRrw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 May 2013 13:47:52 -0400
-Received: by mail-ob0-f178.google.com with SMTP id v19so757594obq.9
-        for <linux-pci@vger.kernel.org>; Fri, 10 May 2013 10:47:52 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <513E002C.40805@fold.natur.cuni.cz>
-References: <513E002C.40805@fold.natur.cuni.cz>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 10 May 2013 11:47:31 -0600
-Message-ID: <CAErSpo5594KNtZz9Gpdw_j5NZX_sGpzKB9CT2-SCB2bCASfrSQ@mail.gmail.com>
-Subject: Re: 3.8.2: stale pci device info for a previously inserted express card
-To: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
-Cc: Yinghai Lu <yinghai@kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
-	Alan Stern <stern@rowland.harvard.edu>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from gate.crashing.org ([63.228.1.57]:35358 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751417Ab3EEHw3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 5 May 2013 03:52:29 -0400
+Message-ID: <1367740336.11982.41.camel@pasglop>
+Subject: Re: Resource assignment oddities
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Gavin Shan <shangw@linux.vnet.ibm.com>
+Date: Sun, 05 May 2013 17:52:16 +1000
+In-Reply-To: <CAE9FiQUN3qqVmdw_EdOC-JZGc219M3tu=roOX98xns+77LJhMw@mail.gmail.com>
+References: <1367712653.11982.19.camel@pasglop>
+	 <1367712932.11982.20.camel@pasglop>
+	 <CAE9FiQX=h4H1gcbW=EfQo_ZtAgHGOZ2GxVxLG59C1iMH+qgH2g@mail.gmail.com>
+	 <1367732090.11982.38.camel@pasglop>
+	 <CAE9FiQUN3qqVmdw_EdOC-JZGc219M3tu=roOX98xns+77LJhMw@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc linux-pci, Sarah, Alan]
+On Sun, 2013-05-05 at 00:09 -0700, Yinghai Lu wrote:
+> Yes, there is something wrong
+> 
+> pci 0001:01:00.0: BAR 8: can't assign mem (size 0x800000)
+> 
+> as bridge only can support 32bit mmio non-pref.
 
-On Mon, Mar 11, 2013 at 10:02 AM, Martin Mokrejs
-<mmokrejs@fold.natur.cuni.cz> wrote:
-> [re-sending to you all three directly, looks the original email did not make it into linux-pci
-> through some filters]
->
->   I use for my daily work acpiphp to manage express cards in Dell Vostro 3550.
-> I have never seen something like this before and believe this is some new regression
-> in 3.8 series. I had in teh a USB3 card and ejected it. Then I inserted a
-> SATA Sil3132 card but it is not detected and dmesg still ends with last lines
-> added when the USB card was being removed. The funny thing is that lspci reports
-> a mixture of USB-card properties with NEC chips along with Silicon Image eSATA card.
+Right, that looks wrong, why can't it assign it ? That's what I haven't
+figured out yet. There should be plenty of space still available.
 
-I don't know anything about the kmemleaks mentioned elsewhere in this
-thread, but the idea of "stale PCI device info" seems possibly related
-to some acpiphp issues we've been working on recently.
+> There is one bug for arch other than x86, but it should not be related.
+> 
+> in pci_bus_alloc_resource()
+> 
+> |        /* don't allocate too high if the pref mem doesn't support 64bit*/
+> |        if (!(res->flags & IORESOURCE_MEM_64))
+> |                max = PCIBIOS_MAX_MEM_32;
+> 
+> we should call pcibios_resource_to_bus ... to make
+> sure that actual bus addr is still 32bit
 
-Starting with v3.9, we don't handle ACPI Bus Check notifications to
-host bridges correctly, and the result is that when we're using
-acpiphp, we don't notice when PCI devices are added or removed. There
-are more details in https://bugzilla.kernel.org/show_bug.cgi?id=57961
+Or the other way around but yes, I see your point however ...
 
-It looks like your Vostro 3550 uses acpiphp, so maybe there's a
-connection.  Can you try a current Linus upstream kernel (v3.10-rc1
-should be released in the next day or two) and apply the v3.10 patch
-from the bugzilla, and collect a complete dmesg log after you try a
-couple hotplug events?
+> But i'm confused, Did you happen to define your own
+>     PCIBIOS_MAX_MEM_32 ?
+> as default one should be -1 other than x86.
 
-Bjorn
+Right, it is -1. Oh well, I'll sprinkle some printk's around tomorrow (or
+ask Gavin to do it :-)
+
+Thanks !
+
+Cheers,
+Ben.
+
+
