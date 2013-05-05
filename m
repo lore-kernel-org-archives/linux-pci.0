@@ -1,187 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:58246 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750926Ab3EPJdW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 May 2013 05:33:22 -0400
-Date: Thu, 16 May 2013 06:33:14 -0300
-From: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Arnd Bergmann <arnd@arndb.de>, Olof Johansson <olof@lixom.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Lior Amsalem <alior@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	linux-pci@vger.kernel.org,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Rob Herring <rob.herring@calxeda.com>,
-	devicetree-discuss@lists.ozlabs.org
-Subject: Re: [PATCHv9 7/9] pci: PCIe driver for Marvell Armada 370/XP systems
-Message-ID: <20130516093312.GB2459@localhost>
-References: <1368624323-24311-1-git-send-email-thomas.petazzoni@free-electrons.com>
- <1368624323-24311-8-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from mail-ob0-f179.google.com ([209.85.214.179]:41953 "EHLO
+	mail-ob0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751374Ab3EEHJF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 5 May 2013 03:09:05 -0400
+Received: by mail-ob0-f179.google.com with SMTP id xn12so2391695obc.10
+        for <linux-pci@vger.kernel.org>; Sun, 05 May 2013 00:09:04 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1368624323-24311-8-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1367732090.11982.38.camel@pasglop>
+References: <1367712653.11982.19.camel@pasglop>
+	<1367712932.11982.20.camel@pasglop>
+	<CAE9FiQX=h4H1gcbW=EfQo_ZtAgHGOZ2GxVxLG59C1iMH+qgH2g@mail.gmail.com>
+	<1367732090.11982.38.camel@pasglop>
+Date: Sun, 5 May 2013 00:09:04 -0700
+Message-ID: <CAE9FiQUN3qqVmdw_EdOC-JZGc219M3tu=roOX98xns+77LJhMw@mail.gmail.com>
+Subject: Re: Resource assignment oddities
+From: Yinghai Lu <yinghai@kernel.org>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Gavin Shan <shangw@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 15, 2013 at 03:25:21PM +0200, Thomas Petazzoni wrote:
-[..]
-> +
-> +static int __init mvebu_pcie_probe(struct platform_device *pdev)
-> +{
-> +	struct mvebu_pcie *pcie;
-> +	struct device_node *np = pdev->dev.of_node;
-> +	struct of_pci_range range;
-> +	struct of_pci_range_parser parser;
-> +	struct device_node *child;
-> +	int i, ret;
-> +
-> +	pcie = devm_kzalloc(&pdev->dev, sizeof(struct mvebu_pcie),
-> +			    GFP_KERNEL);
-> +	if (!pcie)
-> +		return -ENOMEM;
-> +
-> +	pcie->pdev = pdev;
-> +
-> +	if (of_pci_range_parser_init(&parser, np))
-> +		return -EINVAL;
-> +
-> +	/* Get the I/O and memory ranges from DT */
-> +	for_each_of_pci_range(&parser, &range) {
-> +		unsigned long restype = range.flags & IORESOURCE_TYPE_BITS;
-> +		if (restype == IORESOURCE_IO) {
-> +			of_pci_range_to_resource(&range, np, &pcie->io);
-> +			of_pci_range_to_resource(&range, np, &pcie->realio);
-> +			pcie->io.name = "I/O";
-> +			pcie->realio.start = max_t(resource_size_t,
-> +						   PCIBIOS_MIN_IO,
-> +						   range.pci_addr);
-> +			pcie->realio.end = min_t(resource_size_t,
-> +						 IO_SPACE_LIMIT,
-> +						 range.pci_addr + range.size);
-> +		}
-> +		if (restype == IORESOURCE_MEM) {
-> +			of_pci_range_to_resource(&range, np, &pcie->mem);
-> +			pcie->mem.name = "MEM";
-> +		}
-> +	}
-> +
-> +	/* Get the bus range */
-> +	ret = of_pci_parse_bus_range(np, &pcie->busn);
-> +	if (ret) {
-> +		dev_err(&pdev->dev, "failed to parse bus-range property: %d\n",
-> +			ret);
-> +		return ret;
-> +	}
-> +
-> +	for_each_child_of_node(pdev->dev.of_node, child) {
-> +		if (!of_device_is_available(child))
-> +			continue;
-> +		pcie->nports++;
-> +	}
-> +
-> +	pcie->ports = devm_kzalloc(&pdev->dev, pcie->nports *
-> +				   sizeof(struct mvebu_pcie_port),
-> +				   GFP_KERNEL);
-> +	if (!pcie->ports)
-> +		return -ENOMEM;
-> +
-> +	i = 0;
-> +	for_each_child_of_node(pdev->dev.of_node, child) {
-> +		struct mvebu_pcie_port *port = &pcie->ports[i];
-> +
-> +		if (!of_device_is_available(child))
-> +			continue;
-> +
-> +		port->pcie = pcie;
-> +
-> +		if (of_property_read_u32(child, "marvell,pcie-port",
-> +					 &port->port)) {
-> +			dev_warn(&pdev->dev,
-> +				 "ignoring PCIe DT node, missing pcie-port property\n");
-> +			continue;
-> +		}
-> +
-> +		if (of_property_read_u32(child, "marvell,pcie-lane",
-> +					 &port->lane))
-> +			port->lane = 0;
-> +
-> +		port->name = kasprintf(GFP_KERNEL, "pcie%d.%d",
-> +				       port->port, port->lane);
-> +
-> +		port->devfn = of_pci_get_devfn(child);
-> +		if (port->devfn < 0)
-> +			continue;
-> +
-> +		port->base = mvebu_pcie_map_registers(pdev, child, port);
-> +		if (!port->base) {
-> +			dev_err(&pdev->dev, "PCIe%d.%d: cannot map registers\n",
-> +				port->port, port->lane);
-> +			continue;
-> +		}
-> +
-> +		if (mvebu_pcie_link_up(port)) {
-> +			port->haslink = 1;
-> +			dev_info(&pdev->dev, "PCIe%d.%d: link up\n",
-> +				 port->port, port->lane);
-> +		} else {
-> +			port->haslink = 0;
-> +			dev_info(&pdev->dev, "PCIe%d.%d: link down\n",
-> +				 port->port, port->lane);
-> +		}
-> +
-> +		port->clk = of_clk_get_by_name(child, NULL);
-> +		if (!port->clk) {
-> +			dev_err(&pdev->dev, "PCIe%d.%d: cannot get clock\n",
-> +			       port->port, port->lane);
-> +			iounmap(port->base);
-> +			port->haslink = 0;
-> +			continue;
-> +		}
-> +
-> +		port->dn = child;
-> +
-> +		clk_prepare_enable(port->clk);
-> +		spin_lock_init(&port->conf_lock);
-> +
-> +		mvebu_sw_pci_bridge_init(port);
-> +
-> +		i++;
-> +	}
-> +
-> +	mvebu_pcie_enable(pcie);
-> +
-> +	return 0;
-> +}
-> +
-> +static const struct of_device_id mvebu_pcie_of_match_table[] = {
-> +	{ .compatible = "marvell,armada-xp-pcie", },
-> +	{ .compatible = "marvell,armada-370-pcie", },
-> +	{},
-> +};
-> +MODULE_DEVICE_TABLE(of, mvebu_pcie_of_match_table);
-> +
-> +static struct platform_driver mvebu_pcie_driver = {
-> +	.driver = {
-> +		.owner = THIS_MODULE,
-> +		.name = "mvebu-pcie",
-> +		.of_match_table =
-> +		   of_match_ptr(mvebu_pcie_of_match_table),
-> +	},
-> +};
-> +
-> +static int mvebu_pcie_init(void)
+On Sat, May 4, 2013 at 10:34 PM, Benjamin Herrenschmidt
+<benh@kernel.crashing.org> wrote:
+> On Sat, 2013-05-04 at 22:18 -0700, Yinghai Lu wrote:
+>> we intend to assign unassigned resources in two try,
+>> first one will try to allocate must_have and optional ones the same
+>> time.
+>>
+>> if it fails to do that, will only allocate must_have again.
+>>
+>> now optional one only include SRIOV related.
+>
+> Hrm... ok. We'll eventually need some kind of hook here for power as
+> the way we deal with SR-IOV will have to be somewhat "special", but
+> I'll explain that some other time.
+>
+> Anything shows up from my log about what you think might be the cause
+> of those assignment failures ?
 
-Building this showed a warning here. It seems you forgot
-to mark this one as __init.
+Yes, there is something wrong
 
--- 
-Ezequiel García, Free Electrons
-Embedded Linux, Kernel and Android Engineering
-http://free-electrons.com
+pci 0001:01:00.0: BAR 8: can't assign mem (size 0x800000)
+
+as bridge only can support 32bit mmio non-pref.
+
+There is one bug for arch other than x86, but it should not be related.
+
+in pci_bus_alloc_resource()
+
+|        /* don't allocate too high if the pref mem doesn't support 64bit*/
+|        if (!(res->flags & IORESOURCE_MEM_64))
+|                max = PCIBIOS_MAX_MEM_32;
+
+we should call pcibios_resource_to_bus ... to make
+sure that actual bus addr is still 32bit
+
+But i'm confused, Did you happen to define your own
+    PCIBIOS_MAX_MEM_32 ?
+as default one should be -1 other than x86.
+
+Thanks
+
+Yinghai
