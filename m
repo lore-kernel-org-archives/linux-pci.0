@@ -1,78 +1,41 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2372 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932812Ab3E2XWm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 29 May 2013 19:22:42 -0400
-Subject: Re: [PATCH] tg3: remove redundant pm init code
-From: "Michael Chan" <mchan@broadcom.com>
-To: "Yijing Wang" <wangyijing@huawei.com>
-cc: "Nithin Nayak Sujir" <nsujir@broadcom.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	netdev@vger.kernel.org, "Hanjun Guo" <guohanjun@huawei.com>,
-	"Jiang Liu" <liuj97@gmail.com>
-In-Reply-To: <1369818032-36272-1-git-send-email-wangyijing@huawei.com>
-References: <1369818032-36272-1-git-send-email-wangyijing@huawei.com>
-Date: Wed, 29 May 2013 23:22:38 +0000
-Message-ID: <1369869759.8868.52.camel@LTIRV-MCHAN1.corp.ad.broadcom.com>
+Received: from mail-ie0-f173.google.com ([209.85.223.173]:43576 "EHLO
+	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751233Ab3EEFSq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 5 May 2013 01:18:46 -0400
+Received: by mail-ie0-f173.google.com with SMTP id k5so3109416iea.32
+        for <linux-pci@vger.kernel.org>; Sat, 04 May 2013 22:18:45 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain;
- charset=cp1252
+In-Reply-To: <1367712932.11982.20.camel@pasglop>
+References: <1367712653.11982.19.camel@pasglop>
+	<1367712932.11982.20.camel@pasglop>
+Date: Sat, 4 May 2013 22:18:45 -0700
+Message-ID: <CAE9FiQX=h4H1gcbW=EfQo_ZtAgHGOZ2GxVxLG59C1iMH+qgH2g@mail.gmail.com>
+Subject: Re: Resource assignment oddities
+From: Yinghai Lu <yinghai@kernel.org>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Gavin Shan <shangw@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2013-05-29 at 17:00 +0800, Yijing Wang wrote: 
-> Pci_enable_device() will set device pm state to D0, so
-> it's no need to do it again in tg3_init_one().
-> 
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+On Sat, May 4, 2013 at 5:15 PM, Benjamin Herrenschmidt
+<benh@kernel.crashing.org> wrote:
+> On Sun, 2013-05-05 at 10:10 +1000, Benjamin Herrenschmidt wrote:
+>> Once upon a time, our PCI resource assignment code use to be reasonably
+>> straightforward... right now I'm having a hard time making any sense
+>> of it.
+>
+> Note that the devices so far seem to be working and here's the resulting
+> layout:
 
-Acked-by: Michael Chan <mchan@broadcom.com>
+we intend to assign unassigned resources in two try,
+first one will try to allocate must_have and optional ones the same time.
 
-> ---
->  drivers/net/ethernet/broadcom/tg3.c |   20 +-------------------
->  1 files changed, 1 insertions(+), 19 deletions(-)
-> 
-> diff --git a/drivers/net/ethernet/broadcom/tg3.c b/drivers/net/ethernet/broadcom/tg3.c
-> index 728d42a..1396ab3 100644
-> --- a/drivers/net/ethernet/broadcom/tg3.c
-> +++ b/drivers/net/ethernet/broadcom/tg3.c
-> @@ -17042,25 +17042,10 @@ static int tg3_init_one(struct pci_dev *pdev,
->  
->  	pci_set_master(pdev);
->  
-> -	/* Find power-management capability. */
-> -	pm_cap = pci_find_capability(pdev, PCI_CAP_ID_PM);
-> -	if (pm_cap == 0) {
-> -		dev_err(&pdev->dev,
-> -			"Cannot find Power Management capability, aborting\n");
-> -		err = -EIO;
-> -		goto err_out_free_res;
-> -	}
-> -
-> -	err = pci_set_power_state(pdev, PCI_D0);
-> -	if (err) {
-> -		dev_err(&pdev->dev, "Transition to D0 failed, aborting\n");
-> -		goto err_out_free_res;
-> -	}
-> -
->  	dev = alloc_etherdev_mq(sizeof(*tp), TG3_IRQ_MAX_VECS);
->  	if (!dev) {
->  		err = -ENOMEM;
-> -		goto err_out_power_down;
-> +		goto err_out_free_res;
->  	}
->  
->  	SET_NETDEV_DEV(dev, &pdev->dev);
-> @@ -17406,9 +17391,6 @@ err_out_iounmap:
->  err_out_free_dev:
->  	free_netdev(dev);
->  
-> -err_out_power_down:
-> -	pci_set_power_state(pdev, PCI_D3hot);
-> -
->  err_out_free_res:
->  	pci_release_regions(pdev);
->  
+if it fails to do that, will only allocate must_have again.
 
+now optional one only include SRIOV related.
 
-
+Yinghai
