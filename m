@@ -1,230 +1,56 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:53838 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756685Ab3EONZc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 May 2013 09:25:32 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>
-Cc: linux-arm-kernel@lists.infradead.org,
-	Arnd Bergmann <arnd@arndb.de>, Olof Johansson <olof@lixom.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Lior Amsalem <alior@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	linux-pci@vger.kernel.org,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	devicetree-discuss@lists.ozlabs.org,
-	Andrew Murray <Andrew.Murray@arm.com>,
-	Liviu Dudau <Liviu.Dudau@arm.com>
-Subject: [PATCHv9 2/9] of/pci: Provide support for parsing PCI DT ranges property
-Date: Wed, 15 May 2013 15:25:16 +0200
-Message-Id: <1368624323-24311-3-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1368624323-24311-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1368624323-24311-1-git-send-email-thomas.petazzoni@free-electrons.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: aik@ozlabs.ru
+To: linuxppc-dev@lists.ozlabs.org
+Cc: Alexey Kardashevskiy <aik@ozlabs.ru>,
+	David Gibson <david@gibson.dropbear.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Paul Mackerras <paulus@samba.org>,
+	Alexander Graf <agraf@suse.de>, kvm@vger.kernel.org,
+	linux-kernel@vger.kernel.org, kvm-ppc@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH 1/5] iommu: Move initialization earlier
+Date: Mon,  6 May 2013 17:21:57 +1000
+Message-Id: <51875a31.25ac440a.50d9.ffffe8fd@mx.google.com>
+In-Reply-To: <1367824921-27151-1-git-send-email-y>
+References: <1367824921-27151-1-git-send-email-y>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Andrew Murray <Andrew.Murray@arm.com>
+From: Alexey Kardashevskiy <aik@ozlabs.ru>
 
-This patch factors out common implementation patterns to reduce overall kernel
-code and provide a means for host bridge drivers to directly obtain struct
-resources from the DT's ranges property without relying on architecture specific
-DT handling. This will make it easier to write archiecture independent host bridge
-drivers and mitigate against further duplication of DT parsing code.
+The iommu_init() call initializes IOMMU internal structures and data
+required for the API to function such as iommu_group_alloc().
+It is registered as a subsys_initcall.
 
-This patch can be used in the following way:
+One of the IOMMU users is a PCI subsystem on POWER which discovers new
+IOMMU tables during the PCI scan so the most logical place to call
+iommu_group_alloc() is when a new group is just discovered. However
+PCI scan is done from subsys_initcall hook as well, which makes
+use of the IOMMU API impossible.
 
-	struct of_pci_range_parser parser;
-	struct of_pci_range range;
+This moves IOMMU subsystem initialization one step earlier.
 
-	if (of_pci_range_parser_init(&parser, np))
-		; //no ranges property
-
-	for_each_of_pci_range(&parser, &range) {
-
-		/*
-			directly access properties of the address range, e.g.:
-			range.pci_space, range.pci_addr, range.cpu_addr,
-			range.size, range.flags
-
-			alternatively obtain a struct resource, e.g.:
-			struct resource res;
-			of_pci_range_to_resource(&range, np, &res);
-		*/
-	}
-
-Additionally the implementation takes care of adjacent ranges and merges them
-into a single range (as was the case with powerpc and microblaze).
-
-Signed-off-by: Andrew Murray <Andrew.Murray@arm.com>
-Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Reviewed-by: Rob Herring <rob.herring@calxeda.com>
-Tested-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Tested-by: Linus Walleij <linus.walleij@linaro.org>
-Tested-by: Jingoo Han <jg1.han@samsung.com>
-Acked-by: Grant Likely <grant.likely@secretlab.ca>
+Signed-off-by: Alexey Kardashevskiy <aik@ozlabs.ru>
+Cc: David Gibson <david@gibson.dropbear.id.au>
+Signed-off-by: Paul Mackerras <paulus@samba.org>
 ---
- drivers/of/address.c       |   67 ++++++++++++++++++++++++++++++++++++++++++++
- include/linux/of_address.h |   48 +++++++++++++++++++++++++++++++
- 2 files changed, 115 insertions(+)
+ drivers/iommu/iommu.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/of/address.c b/drivers/of/address.c
-index 04da786..fdd0636 100644
---- a/drivers/of/address.c
-+++ b/drivers/of/address.c
-@@ -227,6 +227,73 @@ int of_pci_address_to_resource(struct device_node *dev, int bar,
- 	return __of_address_to_resource(dev, addrp, size, flags, NULL, r);
+diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
+index 5514dfa..0de83eb 100644
+--- a/drivers/iommu/iommu.c
++++ b/drivers/iommu/iommu.c
+@@ -890,7 +890,7 @@ static int __init iommu_init(void)
+ 
+ 	return 0;
  }
- EXPORT_SYMBOL_GPL(of_pci_address_to_resource);
-+
-+int of_pci_range_parser_init(struct of_pci_range_parser *parser,
-+				struct device_node *node)
-+{
-+	const int na = 3, ns = 2;
-+	int rlen;
-+
-+	parser->node = node;
-+	parser->pna = of_n_addr_cells(node);
-+	parser->np = parser->pna + na + ns;
-+
-+	parser->range = of_get_property(node, "ranges", &rlen);
-+	if (parser->range == NULL)
-+		return -ENOENT;
-+
-+	parser->end = parser->range + rlen / sizeof(__be32);
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(of_pci_range_parser_init);
-+
-+struct of_pci_range *of_pci_range_parser_one(struct of_pci_range_parser *parser,
-+						struct of_pci_range *range)
-+{
-+	const int na = 3, ns = 2;
-+
-+	if (!range)
-+		return NULL;
-+
-+	if (!parser->range || parser->range + parser->np > parser->end)
-+		return NULL;
-+
-+	range->pci_space = parser->range[0];
-+	range->flags = of_bus_pci_get_flags(parser->range);
-+	range->pci_addr = of_read_number(parser->range + 1, ns);
-+	range->cpu_addr = of_translate_address(parser->node,
-+				parser->range + na);
-+	range->size = of_read_number(parser->range + parser->pna + na, ns);
-+
-+	parser->range += parser->np;
-+
-+	/* Now consume following elements while they are contiguous */
-+	while (parser->range + parser->np <= parser->end) {
-+		u32 flags, pci_space;
-+		u64 pci_addr, cpu_addr, size;
-+
-+		pci_space = be32_to_cpup(parser->range);
-+		flags = of_bus_pci_get_flags(parser->range);
-+		pci_addr = of_read_number(parser->range + 1, ns);
-+		cpu_addr = of_translate_address(parser->node,
-+				parser->range + na);
-+		size = of_read_number(parser->range + parser->pna + na, ns);
-+
-+		if (flags != range->flags)
-+			break;
-+		if (pci_addr != range->pci_addr + range->size ||
-+		    cpu_addr != range->cpu_addr + range->size)
-+			break;
-+
-+		range->size += size;
-+		parser->range += parser->np;
-+	}
-+
-+	return range;
-+}
-+EXPORT_SYMBOL_GPL(of_pci_range_parser_one);
-+
- #endif /* CONFIG_PCI */
+-subsys_initcall(iommu_init);
++arch_initcall(iommu_init);
  
- /*
-diff --git a/include/linux/of_address.h b/include/linux/of_address.h
-index 0506eb5..4c2e6f2 100644
---- a/include/linux/of_address.h
-+++ b/include/linux/of_address.h
-@@ -4,6 +4,36 @@
- #include <linux/errno.h>
- #include <linux/of.h>
- 
-+struct of_pci_range_parser {
-+	struct device_node *node;
-+	const __be32 *range;
-+	const __be32 *end;
-+	int np;
-+	int pna;
-+};
-+
-+struct of_pci_range {
-+	u32 pci_space;
-+	u64 pci_addr;
-+	u64 cpu_addr;
-+	u64 size;
-+	u32 flags;
-+};
-+
-+#define for_each_of_pci_range(parser, range) \
-+	for (; of_pci_range_parser_one(parser, range);)
-+
-+static inline void of_pci_range_to_resource(struct of_pci_range *range,
-+					    struct device_node *np,
-+					    struct resource *res)
-+{
-+	res->flags = range->flags;
-+	res->start = range->cpu_addr;
-+	res->end = range->cpu_addr + range->size - 1;
-+	res->parent = res->child = res->sibling = NULL;
-+	res->name = np->full_name;
-+}
-+
- #ifdef CONFIG_OF_ADDRESS
- extern u64 of_translate_address(struct device_node *np, const __be32 *addr);
- extern bool of_can_translate_address(struct device_node *dev);
-@@ -27,6 +57,11 @@ static inline unsigned long pci_address_to_pio(phys_addr_t addr) { return -1; }
- #define pci_address_to_pio pci_address_to_pio
- #endif
- 
-+extern int of_pci_range_parser_init(struct of_pci_range_parser *parser,
-+			struct device_node *node);
-+extern struct of_pci_range *of_pci_range_parser_one(
-+					struct of_pci_range_parser *parser,
-+					struct of_pci_range *range);
- #else /* CONFIG_OF_ADDRESS */
- #ifndef of_address_to_resource
- static inline int of_address_to_resource(struct device_node *dev, int index,
-@@ -53,6 +88,19 @@ static inline const __be32 *of_get_address(struct device_node *dev, int index,
- {
- 	return NULL;
- }
-+
-+static inline int of_pci_range_parser_init(struct of_pci_range_parser *parser,
-+			struct device_node *node)
-+{
-+	return -1;
-+}
-+
-+static inline struct of_pci_range *of_pci_range_parser_one(
-+					struct of_pci_range_parser *parser,
-+					struct of_pci_range *range)
-+{
-+	return NULL;
-+}
- #endif /* CONFIG_OF_ADDRESS */
- 
- 
+ int iommu_domain_get_attr(struct iommu_domain *domain,
+ 			  enum iommu_attr attr, void *data)
 -- 
-1.7.9.5
+1.7.10.4
 
