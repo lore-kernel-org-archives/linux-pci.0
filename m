@@ -1,95 +1,42 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.missinglinkelectronics.com ([5.9.45.205]:59102 "EHLO
-	smtp.missinglinkelectronics.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755013Ab3EaXdZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 31 May 2013 19:33:25 -0400
-Message-ID: <51A9333C.60902@missinglinkelectronics.com>
-Date: Sat, 01 Jun 2013 01:33:16 +0200
-From: David Epping <david.epping@missinglinkelectronics.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: MSI-X capability display of pciutils
-References: <51A920C5.40209@missinglinkelectronics.com> <CAErSpo7CrajY0__m91yRMi0oo0CjrGdqWPYWxQx+rx5zz4F-qg@mail.gmail.com>
-In-Reply-To: <CAErSpo7CrajY0__m91yRMi0oo0CjrGdqWPYWxQx+rx5zz4F-qg@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from gate.crashing.org ([63.228.1.57]:52707 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752127Ab3EFKsp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 6 May 2013 06:48:45 -0400
+Message-ID: <1367837311.15842.31.camel@pasglop>
+Subject: Re: Resource assignment oddities
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Gavin Shan <shangw@linux.vnet.ibm.com>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 06 May 2013 20:48:31 +1000
+In-Reply-To: <20130506103159.GA16927@shangw.(null)>
+References: <1367712653.11982.19.camel@pasglop>
+	 <1367712932.11982.20.camel@pasglop>
+	 <CAE9FiQX=h4H1gcbW=EfQo_ZtAgHGOZ2GxVxLG59C1iMH+qgH2g@mail.gmail.com>
+	 <1367732090.11982.38.camel@pasglop>
+	 <CAE9FiQUN3qqVmdw_EdOC-JZGc219M3tu=roOX98xns+77LJhMw@mail.gmail.com>
+	 <1367740336.11982.41.camel@pasglop>
+	 <51871088.4594420a.0ccc.7300SMTPIN_ADDED_BROKEN@mx.google.com>
+	 <CAE9FiQXGUOM_h_X5tdGbkiuZGZkiFigSLbbftx3YXybFBg6trg@mail.gmail.com>
+	 <20130506103159.GA16927@shangw.(null)>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 01.06.2013 00:48, Bjorn Helgaas wrote:
-> On Fri, May 31, 2013 at 4:14 PM, David Epping
-> <david.epping@missinglinkelectronics.com>  wrote:
->> Hello,
->>
->> I am inspecting the MSI-X setup of some PCIe devices and have questions
->> about the output of lspci.
->>
->> It looks something like this:
->> Capabilities: [50] MSI-X: Enable+ Count=32 Masked-
->>      Vector table: BAR=0 offset=00002000
->>      PBA: BAR=0 offset=00003000
->>
->> As far as I understand the PCI 3.0 specification MSI-X capabilities define a
->> 32 bit register for the upper address portion of the MSI target addresses
->> (at capability offset 4) and another 32 bit register pointing to the BAR and
->> inter-BAR offset for the table of lower address portions of the MSI target
->> addresses (at capability offset 8).
->> Why are there two lines in the lspci output indicating some BAR and offset?
->> What do they mean?
-> My understanding is that there are three data structures here:
->    1) The MSI-X Capability (Figure 6-10) in config space
->    2) The "MSI-X Table" (Figure 6-11) in PCI memory space
->    3) The "MSI-X PBA" (Pending Bit Array, Figure 6-12) in PCI memory space
->
-> The "Vector table" line tells you how to find the "MSI-X Table," and
-> the "PBA" line tells you how to find the "MSI-X PBA" table.
->
-> In MSI (not MSI-X), there is only one MSI target address, and it is in
-> the MSI capability.
->
-> In MSI-X, each MSI-X vector can have its own target address, and those
-> addresses are not in the capability itself; they are stored in the
-> memory decoded by a BAR.
->
-> In your case, you would read the bus address from BAR 0, and the
-> vector table should be at offsets 0x2000-0x21ff (32 16-byte entries)
-> from that address.  The PBA should be at offsets 0x3000-0x30ff (32
-> 8-byte entries).
->
-> lspci will show you the BAR values, but it doesn't dump PCI memory
-> space, so you'd have to use /dev/mem or a tool like
-> http://cmp.felk.cvut.cz/~pisa/linux/rdwrmem.c to actually look at the
-> tables.
->
-> Bjorn
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On Mon, 2013-05-06 at 18:31 +0800, Gavin Shan wrote:
+> The possible (temporary) fix would be checking "local_fail_head" in function
+> __assign_resources_sorted() and don't do reassignment if all the element in
+> the list is IO related. In the future, we might introduce specific flag to
+> indicate the PCI host can't support IO and skip all IO assignment accordingly.
 
-Bjorn,
+Yinghai, what's the best we can do for 3.10 ? This kernel will go to enterprise
+distros I'm told and that's a pretty nasty problem for some of our machines
+that don't do IO.
 
-thank you for your quick reply.
+Cheers,
+Ben.
 
-So far the concepts of MSI and MSI-X are clear. I did not have the 
-meaning of the PBA acronym, but now I know what it stands for.
-I do however not see that reflected in the spec. As your figure 
-references are off by one and I do not have the PBA figure, we should 
-clarify the document used. I'm looking at PCI Local Bus Specification 
-Revision 3.0 from August 2002.
-
-According to this document (and in case I'm reading it correctly) the 
-pending bit is part of each MSI-X Vector Table entry (lowest bit in the 
-address portion - section 6.8.2.6). The lspci source code and its output 
-(and your explanation) however suggest that the pending bits are stored 
-in a separate table.
-In addition this specification document has the common upper address 
-portion of each MSI target address at capability offset 4 and the BAR 
-and intra-BAR offset at capability offset 8. The pciutils source code 
-defines the later to be at 4 and uses offset 8 to derive the PBA.
-
-I wonder where our disconnect is. What is the title and revision of the 
-document you are referring to?
-Thanks again,
-David
 
