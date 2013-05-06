@@ -1,46 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f182.google.com ([209.85.223.182]:39075 "EHLO
-	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750718Ab3ETQB7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 20 May 2013 12:01:59 -0400
-MIME-Version: 1.0
-In-Reply-To: <519A1DFD.5080809@linux.intel.com>
-References: <1368586102-17661-1-git-send-email-yinghai@kernel.org>
-	<20130515091248.00002fe3@unknown>
-	<CAJZOPZ+L1QJdHePd_x9RAoqZKyJAKHo+hA8T1UZoe8=ozT98RA@mail.gmail.com>
-	<519A1DFD.5080809@linux.intel.com>
-Date: Mon, 20 May 2013 09:01:58 -0700
-Message-ID: <CAE9FiQWXQhbWObM=8wq+D84sbDakChyvuze9SS0SJxuxOUeQBQ@mail.gmail.com>
-Subject: Re: [PATCH v2 6/7] PCI: Make sure VF's driver get attached after PF's
-From: Yinghai Lu <yinghai@kernel.org>
-To: Eliezer Tamir <eliezer.tamir@linux.intel.com>
-Cc: Or Gerlitz <or.gerlitz@gmail.com>,
-	Greg Rose <gregory.v.rose@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Alexander Duyck <alexander.h.duyck@intel.com>,
-	Yan Burman <yanb@mellanox.com>,
-	Sathya Perla <Sathya.Perla@emulex.com>,
-	NetDev <netdev@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga02.intel.com ([134.134.136.20]:44184 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753417Ab3EFSDf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 6 May 2013 14:03:35 -0400
+From: Jon Mason <jon.mason@intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Subject: [PATCH] PCI: Workaround for NTB BAR size issue
+Date: Mon,  6 May 2013 11:03:33 -0700
+Message-Id: <1367863413-30087-1-git-send-email-jon.mason@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, May 20, 2013 at 5:58 AM, Eliezer Tamir
-<eliezer.tamir@linux.intel.com> wrote:
->>
-> Maybe do the following:
-> 1. split the VF PCI IDs into a separate PCI_ID device table.
-> 2. have two pci_driver structs, one for all of the PF IDS and one with the
-> VF IDS.
-> 3. only register the first pci_driver struct from mlx4_init().
-> 4. register the one for the VFs once your PFs are all up and ready.
+Certain NTB devices have a hardware errata where, regardless of
+pre-configured value, reading the BAR size returns 4096.  To work around
+this issue, add a PCI quirk to read the appropriate values from an
+alternative register in PCI config space and move the resource endpoints
+to the appropriate location.
 
-that may help booting path that have driver built-in, or first time
-load driver path.
+Signed-off-by: Jon Mason <jon.mason@intel.com>
+---
+ drivers/pci/quirks.c |   24 ++++++++++++++++++++++++
+ 1 file changed, 24 insertions(+)
 
-For driver already loaded, and hotadd path, the problem is still there.
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 7d68aee..a57a93b 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -2865,6 +2865,30 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x65f9, quirk_intel_mc_errata);
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x65fa, quirk_intel_mc_errata);
+ 
+ 
++/* Ivytown NTB BAR sizes are misreported by the hardware due to an errata.  To
++ * work around this, query the size it should be configured to by the device and
++ * modify the resource end to correspond to this new size.
++ */
++static void quirk_intel_ntb(struct pci_dev *dev)
++{
++	int rc;
++	u8 val;
++
++	rc = pci_read_config_byte(dev, 0x00D0, &val);
++	if (rc)
++		return;
++
++	dev->resource[2].end = dev->resource[2].start + ((u64) 1 << val) - 1;
++
++	rc = pci_read_config_byte(dev, 0x00D1, &val);
++	if (rc)
++		return;
++
++	dev->resource[4].end = dev->resource[4].start + ((u64) 1 << val) - 1;
++}
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x0e08, quirk_intel_ntb);
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x0e0d, quirk_intel_ntb);
++
+ static ktime_t fixup_debug_start(struct pci_dev *dev,
+ 				 void (*fn)(struct pci_dev *dev))
+ {
+-- 
+1.7.9.5
 
-Yinghai
