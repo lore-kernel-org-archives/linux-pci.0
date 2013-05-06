@@ -1,223 +1,250 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Andrew Murray <Andrew.Murray@arm.com>
-To: robherring2@gmail.com
-Cc: benh@kernel.crashing.org, linux-mips@linux-mips.org,
-	linuxppc-dev@lists.ozlabs.org, jgunthorpe@obsidianresearch.com,
-	linux@arm.linux.org.uk, siva.kallam@samsung.com,
-	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
-	jg1.han@samsung.com, Liviu.Dudau@arm.com,
-	linux-kernel@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
-	kgene.kim@samsung.com, bhelgaas@google.com,
-	suren.reddy@samsung.com, linux-arm-kernel@lists.infradead.org,
-	monstr@monstr.eu, paulus@samba.org,
-	thomas.petazzoni@free-electrons.com,
-	thierry.reding@avionic-design.de, thomas.abraham@linaro.org,
-	arnd@arndb.de, linus.walleij@linaro.org, juhosg@openwrt.org,
-	grant.likely@linaro.org, Andrew Murray <Andrew.Murray@arm.com>
-Subject: [PATCH v9 3/3] of/pci: microblaze: convert to common of_pci_range_parser
-Date: Tue,  7 May 2013 16:31:14 +0100
-Message-Id: <1367940674-11987-4-git-send-email-Andrew.Murray@arm.com>
-In-Reply-To: <1367940674-11987-1-git-send-email-Andrew.Murray@arm.com>
-References: <1367940674-11987-1-git-send-email-Andrew.Murray@arm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:40871 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756261Ab3EFXP4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 6 May 2013 19:15:56 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Gavin Shan <shangw@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 1/2] PCI: Split pci_assign_unassigned_resources to per root bus
+Date: Mon,  6 May 2013 16:15:29 -0700
+Message-Id: <1367882130-19452-1-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1367837311.15842.31.camel@pasglop>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch converts the pci_load_of_ranges function to use the new common
-of_pci_range_parser.
+BenH reported that there is some assign unassigned resource problem
+in powerpc.
 
-Signed-off-by: Andrew Murray <Andrew.Murray@arm.com>
-Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+It turns out after
+| commit 0c5be0cb0edfe3b5c4b62eac68aa2aa15ec681af
+| Date:   Thu Feb 23 19:23:29 2012 -0800
+|
+|    PCI: Retry on IORESOURCE_IO type allocations
+
+even the root bus does not have io port range, it will keep retrying
+to realloc with mmio.
+
+Current retry logic is : try with must+optional at first, and if
+it fails will try must then try to extend must with optional.
+That will fail as mmio-non-pref and mmio-pref for bridge will
+be next to each other. So we have no chance to extend mmio-non-pref.
+
+We should not fall into retry in this case, as root bus does
+not io port range.
+
+Before we do that we need to split pci_assign_unassiged_resource
+to every root bus, so we can stop early for root bus without ioport
+range, and still continue to retry on buses that do have ioport range.
+
+This will be become more often when we have x86 8 sockets or 32 sockets
+system, and those system will have one root bus per socket.
+They will have some root buses do not have ioport range.
+
+For the retry failing, we could allocate mmio-non-pref bottom-up
+and mmio-pref will be top-down, but that could not be material for v3.10.
+
+Reported-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+
 ---
- arch/microblaze/pci/pci-common.c |  106 ++++++++++++++------------------------
- 1 files changed, 38 insertions(+), 68 deletions(-)
+ drivers/pci/setup-bus.c |  101 +++++++++++++++++++++++-------------------------
+ 1 file changed, 49 insertions(+), 52 deletions(-)
 
-diff --git a/arch/microblaze/pci/pci-common.c b/arch/microblaze/pci/pci-common.c
-index 9ea521e..ba9e4a1 100644
---- a/arch/microblaze/pci/pci-common.c
-+++ b/arch/microblaze/pci/pci-common.c
-@@ -658,67 +658,42 @@ void pci_resource_to_user(const struct pci_dev *dev, int bar,
- void pci_process_bridge_OF_ranges(struct pci_controller *hose,
- 				  struct device_node *dev, int primary)
+Index: linux-2.6/drivers/pci/setup-bus.c
+===================================================================
+--- linux-2.6.orig/drivers/pci/setup-bus.c
++++ linux-2.6/drivers/pci/setup-bus.c
+@@ -1315,21 +1315,6 @@ static int __init pci_bus_get_depth(stru
+ 
+ 	return depth;
+ }
+-static int __init pci_get_max_depth(void)
+-{
+-	int depth = 0;
+-	struct pci_bus *bus;
+-
+-	list_for_each_entry(bus, &pci_root_buses, node) {
+-		int ret;
+-
+-		ret = pci_bus_get_depth(bus);
+-		if (ret > depth)
+-			depth = ret;
+-	}
+-
+-	return depth;
+-}
+ 
+ /*
+  * -1: undefined, will auto detect later
+@@ -1354,34 +1339,41 @@ void __init pci_realloc_get_opt(char *st
+ 	else if (!strncmp(str, "on", 2))
+ 		pci_realloc_enable = user_enabled;
+ }
+-static bool __init pci_realloc_enabled(void)
++static bool __init pci_realloc_enabled(enum enable_type enable)
  {
--	const u32 *ranges;
--	int rlen;
--	int pna = of_n_addr_cells(dev);
--	int np = pna + 5;
- 	int memno = 0, isa_hole = -1;
--	u32 pci_space;
--	unsigned long long pci_addr, cpu_addr, pci_next, cpu_next, size;
- 	unsigned long long isa_mb = 0;
- 	struct resource *res;
-+	struct of_pci_range range;
-+	struct of_pci_range_parser parser;
+-	return pci_realloc_enable >= user_enabled;
++	return enable >= user_enabled;
+ }
  
- 	pr_info("PCI host bridge %s %s ranges:\n",
- 	       dev->full_name, primary ? "(primary)" : "");
+-static void __init pci_realloc_detect(void)
++static enum enable_type __init pci_realloc_detect(struct pci_bus *bus,
++			 enum enable_type enable_local)
+ {
+ #if defined(CONFIG_PCI_IOV) && defined(CONFIG_PCI_REALLOC_ENABLE_AUTO)
+-	struct pci_dev *dev = NULL;
++	struct pci_dev *dev;
  
--	/* Get ranges property */
--	ranges = of_get_property(dev, "ranges", &rlen);
--	if (ranges == NULL)
-+	/* Check for ranges property */
-+	if (of_pci_range_parser_init(&parser, dev))
- 		return;
+-	if (pci_realloc_enable != undefined)
+-		return;
++	if (enable_local != undefined)
++		return enable_local;
  
--	/* Parse it */
- 	pr_debug("Parsing ranges property...\n");
--	while ((rlen -= np * 4) >= 0) {
-+	for_each_of_pci_range(&parser, &range) {
- 		/* Read next ranges element */
--		pci_space = ranges[0];
--		pci_addr = of_read_number(ranges + 1, 2);
--		cpu_addr = of_translate_address(dev, ranges + 3);
--		size = of_read_number(ranges + pna + 3, 2);
+-	for_each_pci_dev(dev) {
++	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		int i;
+ 
+ 		for (i = PCI_IOV_RESOURCES; i <= PCI_IOV_RESOURCE_END; i++) {
+ 			struct resource *r = &dev->resource[i];
+ 
+ 			/* Not assigned, or rejected by kernel ? */
+-			if (r->flags && !r->start) {
+-				pci_realloc_enable = auto_enabled;
 -
- 		pr_debug("pci_space: 0x%08x pci_addr:0x%016llx ",
--				pci_space, pci_addr);
-+				range.pci_space, range.pci_addr);
- 		pr_debug("cpu_addr:0x%016llx size:0x%016llx\n",
--					cpu_addr, size);
--
--		ranges += np;
-+					range.cpu_addr, range.size);
- 
- 		/* If we failed translation or got a zero-sized region
- 		 * (some FW try to feed us with non sensical zero sized regions
- 		 * such as power3 which look like some kind of attempt
- 		 * at exposing the VGA memory hole)
- 		 */
--		if (cpu_addr == OF_BAD_ADDR || size == 0)
-+		if (range.cpu_addr == OF_BAD_ADDR || range.size == 0)
- 			continue;
- 
--		/* Now consume following elements while they are contiguous */
--		for (; rlen >= np * sizeof(u32);
--		     ranges += np, rlen -= np * 4) {
--			if (ranges[0] != pci_space)
--				break;
--			pci_next = of_read_number(ranges + 1, 2);
--			cpu_next = of_translate_address(dev, ranges + 3);
--			if (pci_next != pci_addr + size ||
--			    cpu_next != cpu_addr + size)
--				break;
--			size += of_read_number(ranges + pna + 3, 2);
--		}
--
- 		/* Act based on address space type */
- 		res = NULL;
--		switch ((pci_space >> 24) & 0x3) {
--		case 1:		/* PCI IO space */
-+		switch (range.flags & IORESOURCE_TYPE_BITS) {
-+		case IORESOURCE_IO:
- 			pr_info("  IO 0x%016llx..0x%016llx -> 0x%016llx\n",
--			       cpu_addr, cpu_addr + size - 1, pci_addr);
-+				range.cpu_addr, range.cpu_addr + range.size - 1,
-+				range.pci_addr);
- 
- 			/* We support only one IO range */
- 			if (hose->pci_io_size) {
-@@ -726,11 +701,12 @@ void pci_process_bridge_OF_ranges(struct pci_controller *hose,
- 				continue;
- 			}
- 			/* On 32 bits, limit I/O space to 16MB */
--			if (size > 0x01000000)
--				size = 0x01000000;
-+			if (range.size > 0x01000000)
-+				range.size = 0x01000000;
- 
- 			/* 32 bits needs to map IOs here */
--			hose->io_base_virt = ioremap(cpu_addr, size);
-+			hose->io_base_virt = ioremap(range.cpu_addr,
-+						range.size);
- 
- 			/* Expect trouble if pci_addr is not 0 */
- 			if (primary)
-@@ -739,19 +715,20 @@ void pci_process_bridge_OF_ranges(struct pci_controller *hose,
- 			/* pci_io_size and io_base_phys always represent IO
- 			 * space starting at 0 so we factor in pci_addr
- 			 */
--			hose->pci_io_size = pci_addr + size;
--			hose->io_base_phys = cpu_addr - pci_addr;
-+			hose->pci_io_size = range.pci_addr + range.size;
-+			hose->io_base_phys = range.cpu_addr - range.pci_addr;
- 
- 			/* Build resource */
- 			res = &hose->io_resource;
--			res->flags = IORESOURCE_IO;
--			res->start = pci_addr;
-+			range.cpu_addr = range.pci_addr;
-+
- 			break;
--		case 2:		/* PCI Memory space */
--		case 3:		/* PCI 64 bits Memory space */
-+		case IORESOURCE_MEM:
- 			pr_info(" MEM 0x%016llx..0x%016llx -> 0x%016llx %s\n",
--			       cpu_addr, cpu_addr + size - 1, pci_addr,
--			       (pci_space & 0x40000000) ? "Prefetch" : "");
-+				range.cpu_addr, range.cpu_addr + range.size - 1,
-+				range.pci_addr,
-+				(range.pci_space & 0x40000000) ?
-+				"Prefetch" : "");
- 
- 			/* We support only 3 memory ranges */
- 			if (memno >= 3) {
-@@ -759,13 +736,13 @@ void pci_process_bridge_OF_ranges(struct pci_controller *hose,
- 				continue;
- 			}
- 			/* Handles ISA memory hole space here */
--			if (pci_addr == 0) {
--				isa_mb = cpu_addr;
-+			if (range.pci_addr == 0) {
-+				isa_mb = range.cpu_addr;
- 				isa_hole = memno;
- 				if (primary || isa_mem_base == 0)
--					isa_mem_base = cpu_addr;
--				hose->isa_mem_phys = cpu_addr;
--				hose->isa_mem_size = size;
-+					isa_mem_base = range.cpu_addr;
-+				hose->isa_mem_phys = range.cpu_addr;
-+				hose->isa_mem_size = range.size;
- 			}
- 
- 			/* We get the PCI/Mem offset from the first range or
-@@ -773,30 +750,23 @@ void pci_process_bridge_OF_ranges(struct pci_controller *hose,
- 			 * hole. If they don't match, bugger.
- 			 */
- 			if (memno == 0 ||
--			    (isa_hole >= 0 && pci_addr != 0 &&
-+			    (isa_hole >= 0 && range.pci_addr != 0 &&
- 			     hose->pci_mem_offset == isa_mb))
--				hose->pci_mem_offset = cpu_addr - pci_addr;
--			else if (pci_addr != 0 &&
--				 hose->pci_mem_offset != cpu_addr - pci_addr) {
-+				hose->pci_mem_offset = range.cpu_addr -
-+							range.pci_addr;
-+			else if (range.pci_addr != 0 &&
-+				 hose->pci_mem_offset != range.cpu_addr -
-+							range.pci_addr) {
- 				pr_info(" \\--> Skipped (offset mismatch) !\n");
- 				continue;
- 			}
- 
- 			/* Build resource */
- 			res = &hose->mem_resources[memno++];
--			res->flags = IORESOURCE_MEM;
--			if (pci_space & 0x40000000)
--				res->flags |= IORESOURCE_PREFETCH;
--			res->start = cpu_addr;
- 			break;
+-				return;
+-			}
++			if (r->flags && !r->start)
++				return auto_enabled;
  		}
--		if (res != NULL) {
--			res->name = dev->full_name;
--			res->end = res->start + size - 1;
--			res->parent = NULL;
--			res->sibling = NULL;
--			res->child = NULL;
--		}
-+		if (res != NULL)
-+			of_pci_range_to_resource(&range, dev, res);
+ 	}
++
++	list_for_each_entry(dev, &bus->devices, bus_list) {
++		struct pci_bus *child = dev->subordinate;
++
++		if (child &&
++		    pci_realloc_detect(child, enable_local) == auto_enabled)
++			return auto_enabled;
++	}
+ #endif
++	return enable_local;
+ }
+ 
+ /*
+@@ -1389,10 +1381,9 @@ static void __init pci_realloc_detect(vo
+  * second  and later try will clear small leaf bridge res
+  * will stop till to the max  deepth if can not find good one
+  */
+-void __init
+-pci_assign_unassigned_resources(void)
++static void __init
++pci_assign_unassigned_root_bus_resources(struct pci_bus *bus)
+ {
+-	struct pci_bus *bus;
+ 	LIST_HEAD(realloc_head); /* list of resources that
+ 					want additional resources */
+ 	struct list_head *add_list = NULL;
+@@ -1403,15 +1394,17 @@ pci_assign_unassigned_resources(void)
+ 	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
+ 				  IORESOURCE_PREFETCH;
+ 	int pci_try_num = 1;
++	enum enable_type enable_local;
+ 
+ 	/* don't realloc if asked to do so */
+-	pci_realloc_detect();
+-	if (pci_realloc_enabled()) {
+-		int max_depth = pci_get_max_depth();
++	enable_local = pci_realloc_detect(bus, pci_realloc_enable);
++	if (pci_realloc_enabled(enable_local)) {
++		int max_depth = pci_bus_get_depth(bus);
+ 
+ 		pci_try_num = max_depth + 1;
+-		printk(KERN_DEBUG "PCI: max bus depth: %d pci_try_num: %d\n",
+-			 max_depth, pci_try_num);
++		dev_printk(KERN_DEBUG, &bus->dev,
++			   "max bus depth: %d pci_try_num: %d\n",
++			   max_depth, pci_try_num);
  	}
  
- 	/* If there's an ISA hole and the pci_mem_offset is -not- matching
--- 
-1.7.0.4
-
+ again:
+@@ -1423,12 +1416,10 @@ again:
+ 		add_list = &realloc_head;
+ 	/* Depth first, calculate sizes and alignments of all
+ 	   subordinate buses. */
+-	list_for_each_entry(bus, &pci_root_buses, node)
+-		__pci_bus_size_bridges(bus, add_list);
++	__pci_bus_size_bridges(bus, add_list);
+ 
+ 	/* Depth last, allocate resources and update the hardware. */
+-	list_for_each_entry(bus, &pci_root_buses, node)
+-		__pci_bus_assign_resources(bus, add_list, &fail_head);
++	__pci_bus_assign_resources(bus, add_list, &fail_head);
+ 	if (add_list)
+ 		BUG_ON(!list_empty(add_list));
+ 	tried_times++;
+@@ -1438,17 +1429,17 @@ again:
+ 		goto enable_and_dump;
+ 
+ 	if (tried_times >= pci_try_num) {
+-		if (pci_realloc_enable == undefined)
+-			printk(KERN_INFO "Some PCI device resources are unassigned, try booting with pci=realloc\n");
+-		else if (pci_realloc_enable == auto_enabled)
+-			printk(KERN_INFO "Automatically enabled pci realloc, if you have problem, try booting with pci=realloc=off\n");
++		if (enable_local == undefined)
++			dev_info(&bus->dev, "Some PCI device resources are unassigned, try booting with pci=realloc\n");
++		else if (enable_local == auto_enabled)
++			dev_info(&bus->dev, "Automatically enabled pci realloc, if you have problem, try booting with pci=realloc=off\n");
+ 
+ 		free_list(&fail_head);
+ 		goto enable_and_dump;
+ 	}
+ 
+-	printk(KERN_DEBUG "PCI: No. %d try to assign unassigned res\n",
+-			 tried_times + 1);
++	dev_printk(KERN_DEBUG, &bus->dev,
++		   "No. %d try to assign unassigned res\n", tried_times + 1);
+ 
+ 	/* third times and later will not check if it is leaf */
+ 	if ((tried_times + 1) > 2)
+@@ -1458,12 +1449,11 @@ again:
+ 	 * Try to release leaf bridge's resources that doesn't fit resource of
+ 	 * child device under that bridge
+ 	 */
+-	list_for_each_entry(fail_res, &fail_head, list) {
+-		bus = fail_res->dev->bus;
+-		pci_bus_release_bridge_resources(bus,
++	list_for_each_entry(fail_res, &fail_head, list)
++		pci_bus_release_bridge_resources(fail_res->dev->bus,
+ 						 fail_res->flags & type_mask,
+ 						 rel_type);
+-	}
++
+ 	/* restore size and flags */
+ 	list_for_each_entry(fail_res, &fail_head, list) {
+ 		struct resource *res = fail_res->res;
+@@ -1480,12 +1470,19 @@ again:
+ 
+ enable_and_dump:
+ 	/* Depth last, update the hardware. */
+-	list_for_each_entry(bus, &pci_root_buses, node)
+-		pci_enable_bridges(bus);
++	pci_enable_bridges(bus);
+ 
+ 	/* dump the resource on buses */
++	pci_bus_dump_resources(bus);
++}
++
++void __init
++pci_assign_unassigned_resources(void)
++{
++	struct pci_bus *bus;
++
+ 	list_for_each_entry(bus, &pci_root_buses, node)
+-		pci_bus_dump_resources(bus);
++		pci_assign_unassigned_root_bus_resources(bus);
+ }
+ 
+ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
