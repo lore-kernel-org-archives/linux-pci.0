@@ -1,74 +1,56 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <518A9114.1040201@wwwdotorg.org>
-Date: Wed, 08 May 2013 11:53:24 -0600
-From: Stephen Warren <swarren@wwwdotorg.org>
-MIME-Version: 1.0
-To: Jay Agarwal <jagarwal@nvidia.com>
-CC: linux@arm.linux.org.uk, thierry.reding@avionic-design.de,
-	ldewangan@nvidia.com, bhelgaas@google.com, olof@lixom.net,
-	hdoyu@nvidia.com, pgaikwad@nvidia.com, mturquette@linaro.org,
-	pdeschrijver@nvidia.com, linux-arm-kernel@lists.infradead.org,
-	linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, jtukkinen@nvidia.com, kthota@nvidia.com
-Subject: Re: [PATCH 4/4] ARM: tegra: pcie: Enable PCIe controller on Cardhu
-References: <1368010660-31465-1-git-send-email-jagarwal@nvidia.com> <1368010660-31465-4-git-send-email-jagarwal@nvidia.com> <518A8596.7070702@wwwdotorg.org>
-In-Reply-To: <518A8596.7070702@wwwdotorg.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e38.co.us.ibm.com ([32.97.110.159]:41375 "EHLO
+	e38.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753753Ab3EFNpd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 6 May 2013 09:45:33 -0400
+Received: from /spool/local
+	by e38.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <shangw@linux.vnet.ibm.com>;
+	Mon, 6 May 2013 07:45:32 -0600
+Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
+	by d03dlp02.boulder.ibm.com (Postfix) with ESMTP id 592613E40052
+	for <linux-pci@vger.kernel.org>; Mon,  6 May 2013 07:44:28 -0600 (MDT)
+Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
+	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id r46DiZgN117414
+	for <linux-pci@vger.kernel.org>; Mon, 6 May 2013 07:44:35 -0600
+Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av04.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id r46DiWvX012346
+	for <linux-pci@vger.kernel.org>; Mon, 6 May 2013 07:44:35 -0600
+From: Gavin Shan <shangw@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
+Cc: benh@kernel.crashing.org, yinghai@kernel.org, bhelgaas@google.com,
+	Gavin Shan <shangw@linux.vnet.ibm.com>
+Subject: [PATCH 3/3] powerpc/powernv: Don't configure IO window on PHB3
+Date: Mon,  6 May 2013 21:44:18 +0800
+Message-Id: <1367847858-6506-3-git-send-email-shangw@linux.vnet.ibm.com>
+In-Reply-To: <1367847858-6506-1-git-send-email-shangw@linux.vnet.ibm.com>
+References: <1367847858-6506-1-git-send-email-shangw@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/08/2013 11:04 AM, Stephen Warren wrote:
-> On 05/08/2013 04:57 AM, Jay Agarwal wrote:
->> - Enable PCIe controller on Cardhu
->> - Only port 2 is connected on this board
->> - Add regulators required for Tegra30
->> - Patch is based on remotes/gitorious_thierryreding_linux/tegra/next
->> - and should be applied on top of this.
-> 
->> diff --git a/arch/arm/boot/dts/tegra30-cardhu.dtsi b/arch/arm/boot/dts/tegra30-cardhu.dtsi
-> 
->> +	pcie-controller {
->> +		status = "okay";
->> +		pex-clk-supply = <&pex_hvdd_3v3_reg>;
->> +		vdd-supply = <&ldo1_reg>;
->> +		avdd-supply = <&ldo2_reg>;
->> +
->> +		pci@3,0 {
->> +			status = "okay";
->> +		};
->> +	};
-...
-> According to the Cardhu schematics, the PCIe link to the dock is a
-> single lane. Hence, I believe that the Cardhu DT should describe a 411
-> port configuration. However, the Cardhu DT doesn't describe any
-> particular link configuration, but just inherits the default from
-> tegra30.dtsi, which describes a 222 link configuration. I would have
-> expected the following in the Cardhu DT:
-> 
-> 		pci@1,0 {
-> 			nvidia,num-lanes = <4>;
-> 		};
-> 
-> 		pci@2,0 {
-> 			nvidia,num-lanes = <1>;
-> 		};
-> 
-> 		pci@3,0 {
-> 			status = "okay";
-> 			nvidia,num-lanes = <1>;
-> 		};
-> 
-> However, if I put that there, no PCIe links are detected at all. Why
-> does the driver work with the wrong link configuration, but fail with
-> the correct one?
+We needn't configure IO windows for the corresponding PEs on PHB3
+since that doesn't support IO.
 
-I take this back. Fixing the DT as shown above to represent the correct
-4/1/1 configuration does still yield a working system. Please
-incorporate this into a future patch revision.
+Signed-off-by: Gavin Shan <shangw@linux.vnet.ibm.com>
+---
+ arch/powerpc/platforms/powernv/pci-ioda.c |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletions(-)
 
-The issue is more that PCIe enumeration is only reliable after a cold
-power cycle of the dock (the dock appears to be powered solely by its
-power cable and never the battery in Cardhu, and hence isn't affected by
-the main tablet PMIC's power on/off state like most of the board is). Is
-there some reset signal to the dock that the bootloader or kernel should
-be driving to solve this?
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index 0c3fa29..b4f3edb 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -894,7 +894,9 @@ static void pnv_ioda_setup_pe_seg(struct pci_controller *hose,
+ 		    res->start > res->end)
+ 			continue;
+ 
+-		if (res->flags & IORESOURCE_IO) {
++		/* We needn't setup IO windows for PHB3 */
++		if (!(pe->pbus->bus_flags & PCI_BUS_FLAGS_NO_IO) &&
++		    res->flags & IORESOURCE_IO) {
+ 			region.start = res->start - phb->ioda.io_pci_base;
+ 			region.end   = res->end - phb->ioda.io_pci_base;
+ 			index = region.start / phb->ioda.io_segsize;
+-- 
+1.7.5.4
+
