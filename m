@@ -1,53 +1,56 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, David Airlie <airlied@linux.ie>,
-	dri-devel@lists.freedesktop.org
-Subject: [RFC PATCH v2, part 2 13/18] PCI, DRM: use hotplug-safe iterators to walk PCI buses
-Date: Wed, 15 May 2013 00:51:57 +0800
-Message-Id: <1368550322-1045-13-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1368550322-1045-1-git-send-email-jiang.liu@huawei.com>
-References: <1368550322-1045-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from gate.crashing.org ([63.228.1.57]:32865 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757189Ab3EFVem (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 6 May 2013 17:34:42 -0400
+Message-ID: <1367876070.15842.60.camel@pasglop>
+Subject: Re: [PATCH 3/3] powerpc/powernv: Don't configure IO window on PHB3
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Gavin Shan <shangw@linux.vnet.ibm.com>
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	yinghai@kernel.org, bhelgaas@google.com
+Date: Tue, 07 May 2013 07:34:30 +1000
+In-Reply-To: <1367847858-6506-3-git-send-email-shangw@linux.vnet.ibm.com>
+References: <1367847858-6506-1-git-send-email-shangw@linux.vnet.ibm.com>
+	 <1367847858-6506-3-git-send-email-shangw@linux.vnet.ibm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Enhance DRM drvier to use hotplug-safe iterators to walk PCI buses.
+On Mon, 2013-05-06 at 21:44 +0800, Gavin Shan wrote:
+> We needn't configure IO windows for the corresponding PEs on PHB3
+> since that doesn't support IO.
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Cc: David Airlie <airlied@linux.ie>
-Cc: dri-devel@lists.freedesktop.org
-Cc: linux-kernel@vger.kernel.org
----
- drivers/gpu/drm/drm_fops.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+Here too, no need for such a flag, just check that
+pci_controller->io_resource.flags is 0.
 
-diff --git a/drivers/gpu/drm/drm_fops.c b/drivers/gpu/drm/drm_fops.c
-index 13fdcd1..04f3bcd 100644
---- a/drivers/gpu/drm/drm_fops.c
-+++ b/drivers/gpu/drm/drm_fops.c
-@@ -357,9 +357,11 @@ static int drm_open_helper(struct inode *inode, struct file *filp,
- 			pci_dev_put(pci_dev);
- 		}
- 		if (!dev->hose) {
--			struct pci_bus *b = pci_bus_b(pci_root_buses.next);
--			if (b)
-+			struct pci_bus *b = pci_get_next_root_bus(NULL);
-+			if (b) {
- 				dev->hose = b->sysdata;
-+				pci_bus_put(b);
-+			}
- 		}
- 	}
- #endif
--- 
-1.8.1.2
+BTW. Please work on top of the patch I sent already that avoids adding
+bogus resources to pci_host_bridge when their flags are 0. I'll send
+it to Linus today.
+
+Cheers,
+Ben.
+
+> Signed-off-by: Gavin Shan <shangw@linux.vnet.ibm.com>
+> ---
+>  arch/powerpc/platforms/powernv/pci-ioda.c |    4 +++-
+>  1 files changed, 3 insertions(+), 1 deletions(-)
+> 
+> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+> index 0c3fa29..b4f3edb 100644
+> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
+> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+> @@ -894,7 +894,9 @@ static void pnv_ioda_setup_pe_seg(struct pci_controller *hose,
+>  		    res->start > res->end)
+>  			continue;
+>  
+> -		if (res->flags & IORESOURCE_IO) {
+> +		/* We needn't setup IO windows for PHB3 */
+> +		if (!(pe->pbus->bus_flags & PCI_BUS_FLAGS_NO_IO) &&
+> +		    res->flags & IORESOURCE_IO) {
+>  			region.start = res->start - phb->ioda.io_pci_base;
+>  			region.end   = res->end - phb->ioda.io_pci_base;
+>  			index = region.start / phb->ioda.io_segsize;
+
 
