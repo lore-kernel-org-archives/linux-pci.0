@@ -1,48 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:55420 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S967488Ab3E3FqB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 30 May 2013 01:46:01 -0400
-From: Xudong Hao <xudong.hao@intel.com>
-To: bhelgaas@google.com
-Cc: yinghai@kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Xudong Hao <xudong.hao@intel.com>
-Subject: [PATCH] PCI: set correct value for iov device before device
-Date: Thu, 30 May 2013 13:45:34 +0800
-Message-Id: <1369892734-26244-1-git-send-email-xudong.hao@intel.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:21166 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751650Ab3EGWSF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 May 2013 18:18:05 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Gavin Shan <shangw@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v3 3/5] PCI: Skip IORESOURCE_MMIO allocation for root bus without MMIO range
+Date: Tue,  7 May 2013 15:17:32 -0700
+Message-Id: <1367965054-9013-4-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1367965054-9013-1-git-send-email-yinghai@kernel.org>
+References: <1367965054-9013-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Since device registering is put into pci_device_add(), it must set value of
-Virtual Function device's member before the pci_dev is put to device tree. Or
-some relevant subsystem of driver model such as xen will report a incorrect
-IOV device to Xen hypervior.
+For x86 8 sockets or 32 sockets system that will have one root bus per socket,
+They may have some root buses do not have mmio non-pref range.
 
-Signed-off-by: Xudong Hao <xudong.hao@intel.com>
+We should not fall into retry in this case, as root bus does
+not mmio non-pref range.
+
+We check if the root bus has mmio-nonpref range, and set bus_res_type_mask,
+and pass it to assign_resources and don't add mmio-nonpref res to failed list
+for root bus that does not have mmio-nonpref range.
+So even BIOS set wrong value to pci devices and bridges will still
+get cleared.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+
 ---
- drivers/pci/iov.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/pci/setup-bus.c |   32 ++++++++++++++++++++++++++------
+ 1 file changed, 26 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index c93071d..43d3de9 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -110,12 +110,12 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
- 	if (reset)
- 		__pci_reset_function(virtfn);
+Index: linux-2.6/drivers/pci/setup-bus.c
+===================================================================
+--- linux-2.6.orig/drivers/pci/setup-bus.c
++++ linux-2.6/drivers/pci/setup-bus.c
+@@ -299,9 +299,17 @@ static void assign_requested_resources_s
+ 				bool is_ioport_res_without_bus_support =
+ 					 (!(bus_res_type_mask & IORESOURCE_IO)) &&
+ 					 (res->flags & IORESOURCE_IO);
++				/*
++				 * if the failed res is mmio, but bus does
++				 * not have io port support, don't add it
++				 */
++				bool is_mmio_nonpref_res_without_bus_support =
++					 (!(bus_res_type_mask & IORESOURCE_MEM)) &&
++					 ((res->flags & (IORESOURCE_MEM | IORESOURCE_PREFETCH)) == IORESOURCE_MEM);
  
--	pci_device_add(virtfn, virtfn->bus);
--	mutex_unlock(&iov->dev->sriov->lock);
--
- 	virtfn->physfn = pci_dev_get(dev);
- 	virtfn->is_virtfn = 1;
+ 				if (!is_rom_res_not_enabled &&
+-				    !is_ioport_res_without_bus_support)
++				    !is_ioport_res_without_bus_support &&
++				    !is_mmio_nonpref_res_without_bus_support)
+ 					add_to_list(fail_head,
+ 						    dev_res->dev, res,
+ 						    0 /* dont care */,
+@@ -1407,12 +1415,24 @@ static unsigned long pci_bus_res_type_ma
+ 	int i;
+ 	struct resource *r;
+ 	unsigned long mask = 0;
+-	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
+-				  IORESOURCE_PREFETCH;
  
-+	pci_device_add(virtfn, virtfn->bus);
-+	mutex_unlock(&iov->dev->sriov->lock);
+-	pci_bus_for_each_resource(bus, r, i)
+-		if (r)
+-			mask |= r->flags & type_mask;
++	pci_bus_for_each_resource(bus, r, i) {
++		if (!r)
++			continue;
 +
- 	rc = pci_bus_add_device(virtfn);
- 	sprintf(buf, "virtfn%u", id);
- 	rc = sysfs_create_link(&dev->dev.kobj, &virtfn->dev.kobj, buf);
--- 
-1.7.12.1
-
++		if (r->flags & IORESOURCE_IO) {
++			mask |= IORESOURCE_IO;
++			continue;
++		}
++		if (r->flags & IORESOURCE_PREFETCH) {
++			mask |= IORESOURCE_PREFETCH;
++			continue;
++		}
++		if ((r->flags & (IORESOURCE_MEM | IORESOURCE_PREFETCH)) == IORESOURCE_MEM) {
++			mask |= IORESOURCE_MEM; /* nonpref only */
++			continue;
++		}
++	}
+ 
+ 	return mask;
+ }
