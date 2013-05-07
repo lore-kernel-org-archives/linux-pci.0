@@ -1,141 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f53.google.com ([209.85.160.53]:53113 "EHLO
-	mail-pb0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755071Ab3EYLRl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 25 May 2013 07:17:41 -0400
-Received: by mail-pb0-f53.google.com with SMTP id un4so5131338pbc.26
-        for <linux-pci@vger.kernel.org>; Sat, 25 May 2013 04:17:40 -0700 (PDT)
-Date: Sat, 25 May 2013 19:17:31 +0800
-From: Kevin Hao <haokexin@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Liu Jiang <liuj97@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 2/2] PCI: unset the resource if we can't get the correct
- CPU address
-Message-ID: <20130525111731.GA20718@pek-khao-d1.corp.ad.wrs.com>
-References: <1368536876-27307-1-git-send-email-haokexin@gmail.com>
- <1368536876-27307-3-git-send-email-haokexin@gmail.com>
- <519506BF.3010400@gmail.com>
- <20130517021128.GB13975@pek-khao-d1.corp.ad.wrs.com>
- <519643E8.3020102@gmail.com>
- <20130519022445.GA25698@pek-khao-d1.corp.ad.wrs.com>
- <CAErSpo6vTqgN3MFZ9TmAzHHhnzP5bUip=G=djd80RE-7upJ+gA@mail.gmail.com>
- <20130524025424.GC23166@pek-khao-d1.corp.ad.wrs.com>
- <CAErSpo5Wzy5wHn4CAfD2HjRZ3dv3To+u=pRAvjC8DaMpR03LFg@mail.gmail.com>
+Received: from mail-oa0-f51.google.com ([209.85.219.51]:62303 "EHLO
+	mail-oa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750796Ab3EGWDS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 May 2013 18:03:18 -0400
+Received: by mail-oa0-f51.google.com with SMTP id f4so1316190oah.10
+        for <linux-pci@vger.kernel.org>; Tue, 07 May 2013 15:03:17 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="oyUTqETQ0mS9luUI"
-In-Reply-To: <CAErSpo5Wzy5wHn4CAfD2HjRZ3dv3To+u=pRAvjC8DaMpR03LFg@mail.gmail.com>
+In-Reply-To: <CAMeQTsZEpRE_bv6o9mBpqNrbf36SZVscxy+JS72=BOzA1ey-XQ@mail.gmail.com>
+References: <CAErSpo7qj2SNR7BfuBsfF-saZXvgcqqLtgoP5Hyb5u99qR4Ncg@mail.gmail.com>
+ <Pine.LNX.4.44L0.1302191119270.2215-100000@iolanthe.rowland.org>
+ <CAErSpo7NZoOQZyW76HEoOTVgdqL2CgbVScAeF6HGLAVaNCq0=w@mail.gmail.com>
+ <337833384.57445.1361860509194.JavaMail.mail@webmail08> <CAErSpo6CbO5KYXiErv6J_Dnm1u694C5fQPP2_cZL8VKDEnZa9A@mail.gmail.com>
+ <569718148.80620.1361906088301.JavaMail.mail@webmail13> <CAErSpo6UkVhSf+nFW4zwJLBQw_0RQ5H9Bv-UuQRb6zdwsFPw4g@mail.gmail.com>
+ <CAErSpo4X+XXKvWDfqh2CKZAtJ9WMQk91OcsWwdxwYv2MfEM_zQ@mail.gmail.com>
+ <771333906.75854.1367057440028.JavaMail.mail@webmail08> <CAErSpo4B4sRco-nuqgXiYtGQxBcbEB6ArQjHD0A9cj4TRE+qQw@mail.gmail.com>
+ <518097B8.4020402@gmail.com> <CAErSpo7KWPRVEnw+n068pUZz+=WSTwno6m6t7N6dunuhnFC8EA@mail.gmail.com>
+ <384171828.66802.1367942365492.JavaMail.mail@webmail05> <CADLC3L3bdTP8-X3ftMq1qxnL=LVDf7d5gbu2ZMH0pXg2AU8xjw@mail.gmail.com>
+ <CAErSpo50iyEbCer+-K8uXUdnsG_EzFe_ZjKnrtfq5x0Zw3Yd6w@mail.gmail.com> <CAMeQTsZEpRE_bv6o9mBpqNrbf36SZVscxy+JS72=BOzA1ey-XQ@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 7 May 2013 15:02:57 -0700
+Message-ID: <CAErSpo75SETEe-OKhY2-NW3csaxt=f09JcheHx95bzkCcGO6yg@mail.gmail.com>
+Subject: Re: Abysmal HDD/USB write speed after sleep on a UEFI system
+To: Patrik Jakobsson <patrik.r.jakobsson@gmail.com>
+Cc: Robert Hancock <hancockrwd@gmail.com>,
+	"Artem S. Tashkinov" <t.artem@lycos.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, Phillip Susi <psusi@ubuntu.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Tue, May 7, 2013 at 2:48 PM, Patrik Jakobsson
+<patrik.r.jakobsson@gmail.com> wrote:
+> On Tue, May 7, 2013 at 10:20 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>> I'm not sure if reading /proc/mtrr actually reads the registers out of
+>>> the CPU each time, or whether we just return the cached values we read
+>>> out during initial boot-up. If the latter, then this output isn't
+>>> really useful as there's no guarantee the values are still intact.
+>>
+>> Good point.  From what I can tell, on Artem's system with "CPU0:
+>> Intel(R) Core(TM) i5-2500 CPU @ 3.30GHz," we would be using
+>> generic_mtrr_ops, and generic_get_mtrr() appears to read from the
+>> MSRs, so I think it should be useful.
+>
+> FWIW, that motherboard suffers from a PCI to PCIE bridge problem. It might
+> have been fixed by bios upgrades by now but not sure.
+>
+> It might also suffer (depending on the revision) from the Sandy bridge SATA
+> issue. So if affected, SATA controller is a ticking bomb.
+>
+> I have a P8H67-V motherboard but I haven't seen any suspend related issues.
+>
+> If this is totally unrelated I'm sorry for wasting your time. Just thought it
+> might be good to know.
 
---oyUTqETQ0mS9luUI
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Thanks for chiming in.  I'm not familiar with either of the issues you
+mentioned.  Do you have any references where I could read up on them?
 
-On Fri, May 24, 2013 at 11:13:41AM -0600, Bjorn Helgaas wrote:
-> On Thu, May 23, 2013 at 8:54 PM, Kevin Hao <haokexin@gmail.com> wrote:
-> > On Thu, May 23, 2013 at 02:22:58PM -0600, Bjorn Helgaas wrote:
-> >> On Sat, May 18, 2013 at 8:24 PM, Kevin Hao <haokexin@gmail.com> wrote:
-> >> > On Fri, May 17, 2013 at 10:51:20PM +0800, Liu Jiang wrote:
+Artem's system has a PCIe-to-PCI bridge (not a PCI-to-PCIe bridge) at
+05:00.0, but it leads to [bus 06] and there's nothing on bus 06, so I
+don't think that's the problem.
 
-<snip>
+And the issue affects both USB and a hard drive, so I suspect it's
+more than just SATA.  Artem, did you identify the PCI devices leading
+to your USB and hard drive?  I can't remember if I've actually seen
+that.
 
-> >         Region 0: bus address at a0000000 (64-bit, non-prefetchable) [s=
-ize=3D128]
->=20
-> Your dmesg log show this:
->=20
-> pci_bus 0000:00: root bus resource [mem 0xa0000000-0xbfffffff] (bus
-> address [0xe0000000-0xffffffff])
-> pci 0000:01:00.0: reg 10: [mem 0xa0000000-0xa000007f 64bit]
->=20
-> There are two ways this could happen:
->=20
->   1) The BAR contained 0xe0000000 and we translated it to a legal
-> resource value of 0xa0000000, or
->   2) The BAR contained 0xa0000000, we found no matching host bridge
-> window, and we assumed an offset of zero and again translated it to a
-> resource value of 0xa0000000.
->=20
-> There's no information to distinguish these (lspci shows resource
-> values, not bus addresses, by default), but in your case, it must be
-> 2), based on the fact that the device doesn't work unless we reassign
-> the BAR.  When we reassign it, we apply the translation and compute a
-> BAR value in the [0xe0000000-0xffffffff] range, which *does* work.
-
-You are absolutely right. :-)
-
->=20
-> We should be able to detect this problem even without assuming we know
-> about all the host bridge windows.  The bus-to-resource conversion
-> should be invertible.  In case 2), bus_to_resource(0xa0000000) gave us
-> 0xa0000000, but resource_to_bus(0xa0000000) will give us 0xe0000000,
-> so we won't get back what we started with.
->=20
-> I think I'd rather use this strategy than changing
-> pcibios_bus_to_resource().
-
-Sounds reasonable. I will respin a patch to use this method.
-
->  I would also put a note in dmesg about the
-> fact that we're throwing away the BAR value put there by firmware (and
-> why), just for future debugging efforts.
-
-Will add.
-
->  Would you mind also
-> splitting the "move the pcibios_bus_to_resource() call out of the
-> if/else wrap" change into its own tiny patch since it's a separate
-> logical change?
-
-Sure.
-
-Thanks,
-Kevin
-
->=20
-> Bjorn
->=20
-> > In the current kernel, the pci host bridge use the following address re=
-gions:
-> >   pci_bus 0000:00: root bus resource [mem 0xa0000000-0xbfffffff] (bus a=
-ddress [0xe0000000-0xffffffff])
-> >
-> > And no reassign for device 0000:01:00.0.
-> >
-> > With my fix, the device 0000:01:00.0 is reassigned with the correct bus=
- address:
-> >   pci_bus 0000:00: root bus resource [mem 0xa0000000-0xbfffffff] (bus a=
-ddress [0xe0000000-0xffffffff])
-> >   pci 0000:01:00.0: BAR 6: assigned [mem 0xa0000000-0xa007ffff pref]
-> >   pci 0000:01:00.0: BAR 2: assigned [mem 0xa0080000-0xa0083fff 64bit]
-> >   pci 0000:01:00.0: BAR 0: assigned [mem 0xa0084000-0xa008407f 64bit]
-> >
-> > As you can see in the current kernel the pci subsystem doesn't detect
-> > this wrong bus address and don't try a reassign what it should do.
-> > My patches is trying to fix this issue.
-> >
-> > Thanks,
-> > Kevin
-> >>
-> >> Bjorn
-
---oyUTqETQ0mS9luUI
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQEcBAEBAgAGBQJRoJ3LAAoJEJNY7TDerrFxlgcH/1pGrsq9Z53uouueKKHsgBSn
-e+a3+kqbmfAu8dABPc/XZZ1L1okIleLscM7doLDGvz1xmrY8SCminbvX/smh/kQj
-6M2atUGbP/AlEQbCU6+NpPC061u3gKvGCvbKSh6a6RVzixSxB5NLOb/yaohKms6A
-ru0R86c6CuuQqy43tbkatXYtFBCDgeReB7rEcJoqENAfxp6xAwvEMCzmKaj++X6H
-302iLb72z8LT4ZJtP3kk0OZmF5LbGuXg1Y+ggZe5RSoYvZBjsgBNcoTsHNZr1UBa
-lUGCFqYZ+6tXIEDtmEuScffN86GetC9Q2vxHvX4m0IhFM3l0238MrKq4YcF0Klk=
-=SXVg
------END PGP SIGNATURE-----
-
---oyUTqETQ0mS9luUI--
+Bjorn
