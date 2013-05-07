@@ -1,60 +1,114 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f44.google.com ([209.85.219.44]:46958 "EHLO
-	mail-oa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752201Ab3E0XHG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 May 2013 19:07:06 -0400
-Received: by mail-oa0-f44.google.com with SMTP id n12so9292408oag.3
-        for <linux-pci@vger.kernel.org>; Mon, 27 May 2013 16:07:06 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1369621733-20048-1-git-send-email-libo.chen@huawei.com>
-References: <1369621733-20048-1-git-send-email-libo.chen@huawei.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 27 May 2013 17:06:46 -0600
-Message-ID: <CAErSpo6MYJ6+5jy8AoDB6v_ZkxmjymsyrP6JgFRt9O-GeFf=Gg@mail.gmail.com>
-Subject: Re: [PATCH 09/24] drivers/pci/ioapic: Convert to module_pci_driver
-To: Libo Chen <libo.chen@huawei.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Li Zefan <lizefan@huawei.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Andrew Murray <Andrew.Murray@arm.com>
+To: robherring2@gmail.com
+Cc: benh@kernel.crashing.org, linux-mips@linux-mips.org,
+	linuxppc-dev@lists.ozlabs.org, jgunthorpe@obsidianresearch.com,
+	linux@arm.linux.org.uk, siva.kallam@samsung.com,
+	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
+	jg1.han@samsung.com, Liviu.Dudau@arm.com,
+	linux-kernel@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
+	kgene.kim@samsung.com, bhelgaas@google.com,
+	suren.reddy@samsung.com, linux-arm-kernel@lists.infradead.org,
+	monstr@monstr.eu, paulus@samba.org,
+	thomas.petazzoni@free-electrons.com,
+	thierry.reding@avionic-design.de, thomas.abraham@linaro.org,
+	arnd@arndb.de, linus.walleij@linaro.org, juhosg@openwrt.org,
+	grant.likely@linaro.org, Andrew Murray <Andrew.Murray@arm.com>
+Subject: [PATCH v9 2/3] of/pci: mips: convert to common of_pci_range_parser
+Date: Tue,  7 May 2013 16:31:13 +0100
+Message-Id: <1367940674-11987-3-git-send-email-Andrew.Murray@arm.com>
+In-Reply-To: <1367940674-11987-1-git-send-email-Andrew.Murray@arm.com>
+References: <1367940674-11987-1-git-send-email-Andrew.Murray@arm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, May 26, 2013 at 8:28 PM, Libo Chen <libo.chen@huawei.com> wrote:
-> use module_pci_driver instead of init/exit, make code clean.
->
-> Signed-off-by: Libo Chen <libo.chen@huawei.com>
-> ---
->  drivers/pci/ioapic.c |   13 +------------
->  1 files changed, 1 insertions(+), 12 deletions(-)
+This patch converts the pci_load_of_ranges function to use the new common
+of_pci_range_parser.
 
-Applied to my pci/misc branch for v3.11, thanks!
+Signed-off-by: Andrew Murray <Andrew.Murray@arm.com>
+Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Reviewed-by: Rob Herring <rob.herring@calxeda.com>
+Reviewed-by: Grant Likely <grant.likely@secretlab.ca>
+Tested-by: Linus Walleij <linus.walleij@linaro.org>
+---
+ arch/mips/pci/pci.c |   50 ++++++++++++++++++--------------------------------
+ 1 files changed, 18 insertions(+), 32 deletions(-)
 
-> diff --git a/drivers/pci/ioapic.c b/drivers/pci/ioapic.c
-> index 3c6bbdd..1b90579 100644
-> --- a/drivers/pci/ioapic.c
-> +++ b/drivers/pci/ioapic.c
-> @@ -113,17 +113,6 @@ static struct pci_driver ioapic_driver = {
->         .remove         = ioapic_remove,
->  };
->
-> -static int __init ioapic_init(void)
-> -{
-> -       return pci_register_driver(&ioapic_driver);
-> -}
-> -
-> -static void __exit ioapic_exit(void)
-> -{
-> -       pci_unregister_driver(&ioapic_driver);
-> -}
-> -
-> -module_init(ioapic_init);
-> -module_exit(ioapic_exit);
-> +module_pci_driver(ioapic_driver);
->
->  MODULE_LICENSE("GPL");
-> --
-> 1.7.1
->
->
+diff --git a/arch/mips/pci/pci.c b/arch/mips/pci/pci.c
+index 0872f12..0d291e9 100644
+--- a/arch/mips/pci/pci.c
++++ b/arch/mips/pci/pci.c
+@@ -122,51 +122,37 @@ static void pcibios_scanbus(struct pci_controller *hose)
+ #ifdef CONFIG_OF
+ void pci_load_of_ranges(struct pci_controller *hose, struct device_node *node)
+ {
+-	const __be32 *ranges;
+-	int rlen;
+-	int pna = of_n_addr_cells(node);
+-	int np = pna + 5;
++	struct of_pci_range range;
++	struct of_pci_range_parser parser;
+ 
+ 	pr_info("PCI host bridge %s ranges:\n", node->full_name);
+-	ranges = of_get_property(node, "ranges", &rlen);
+-	if (ranges == NULL)
+-		return;
+ 	hose->of_node = node;
+ 
+-	while ((rlen -= np * 4) >= 0) {
+-		u32 pci_space;
++	if (of_pci_range_parser_init(&parser, node))
++		return;
++
++	for_each_of_pci_range(&parser, &range) {
+ 		struct resource *res = NULL;
+-		u64 addr, size;
+-
+-		pci_space = be32_to_cpup(&ranges[0]);
+-		addr = of_translate_address(node, ranges + 3);
+-		size = of_read_number(ranges + pna + 3, 2);
+-		ranges += np;
+-		switch ((pci_space >> 24) & 0x3) {
+-		case 1:		/* PCI IO space */
++
++		switch (range.flags & IORESOURCE_TYPE_BITS) {
++		case IORESOURCE_IO:
+ 			pr_info("  IO 0x%016llx..0x%016llx\n",
+-					addr, addr + size - 1);
++				range.cpu_addr,
++				range.cpu_addr + range.size - 1);
+ 			hose->io_map_base =
+-				(unsigned long)ioremap(addr, size);
++				(unsigned long)ioremap(range.cpu_addr,
++						       range.size);
+ 			res = hose->io_resource;
+-			res->flags = IORESOURCE_IO;
+ 			break;
+-		case 2:		/* PCI Memory space */
+-		case 3:		/* PCI 64 bits Memory space */
++		case IORESOURCE_MEM:
+ 			pr_info(" MEM 0x%016llx..0x%016llx\n",
+-					addr, addr + size - 1);
++				range.cpu_addr,
++				range.cpu_addr + range.size - 1);
+ 			res = hose->mem_resource;
+-			res->flags = IORESOURCE_MEM;
+ 			break;
+ 		}
+-		if (res != NULL) {
+-			res->start = addr;
+-			res->name = node->full_name;
+-			res->end = res->start + size - 1;
+-			res->parent = NULL;
+-			res->sibling = NULL;
+-			res->child = NULL;
+-		}
++		if (res != NULL)
++			of_pci_range_to_resource(&range, node, res);
+ 	}
+ }
+ #endif
+-- 
+1.7.0.4
+
