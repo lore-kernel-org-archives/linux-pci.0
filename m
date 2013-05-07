@@ -1,44 +1,78 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f175.google.com ([209.85.214.175]:43746 "EHLO
-	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756457Ab3EaTZS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 31 May 2013 15:25:18 -0400
-Received: by mail-ob0-f175.google.com with SMTP id xn12so3805542obc.34
-        for <linux-pci@vger.kernel.org>; Fri, 31 May 2013 12:25:18 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20130531081623.GB17241@mtj.dyndns.org>
-References: <1369987950-2894-1-git-send-email-shane.huang@amd.com> <20130531081623.GB17241@mtj.dyndns.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 31 May 2013 13:24:57 -0600
-Message-ID: <CAErSpo4A_tuhsyErPOae5QgBdnUFK4f9kMitH0xUSnV6mYWYrA@mail.gmail.com>
-Subject: Re: [PATCH v2 3/3] i2c-piix4: add AMD CZ SMBus device ID
-To: Tejun Heo <tj@kernel.org>
-Cc: Shane Huang <shane.huang@amd.com>,
-	Jean Delvare <khali@linux-fr.org>,
-	linux-i2c <linux-i2c@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-ide@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <1367890979.2868.93.camel@ul30vt.home>
+Subject: Re: [PATCH 2/5] KVM: PPC: iommu: Add missing
+ kvm_iommu_map_pages/kvm_iommu_unmap_pages
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Alexey Kardashevskiy <aik@ozlabs.ru>
+Cc: linuxppc-dev@lists.ozlabs.org,
+	David Gibson <david@gibson.dropbear.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Paul Mackerras <paulus@samba.org>,
+	Alexander Graf <agraf@suse.de>, kvm@vger.kernel.org,
+	linux-kernel@vger.kernel.org, kvm-ppc@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Date: Mon, 06 May 2013 19:42:59 -0600
+In-Reply-To: <51884FA8.6010400@ozlabs.ru>
+References: <1367824921-27151-1-git-send-email-y>
+	  <51875a36.25ac440a.50d9.ffffe90d@mx.google.com>
+	 <1367874436.2868.90.camel@ul30vt.home> <51884FA8.6010400@ozlabs.ru>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 31, 2013 at 2:16 AM, Tejun Heo <tj@kernel.org> wrote:
-> On Fri, May 31, 2013 at 04:12:30PM +0800, Shane Huang wrote:
->> To add AMD CZ SMBus controller device ID.
->>
->> Signed-off-by: Shane Huang <shane.huang@amd.com>
->
-> All three patches look good to me.
->
->  Reviewed-by: Tejun Heo <tj@kernel.org>
->
-> Both 2 and 3 are dependent on the first patch, so it probably would be
-> a good idea to route them together (probably w/ stable cc'd).  Who
-> wants these?  Bjorn?
+On Tue, 2013-05-07 at 10:49 +1000, Alexey Kardashevskiy wrote:
+> On 05/07/2013 07:07 AM, Alex Williamson wrote:
+> > On Mon, 2013-05-06 at 17:21 +1000, aik@ozlabs.ru wrote:
+> >> From: Alexey Kardashevskiy <aik@ozlabs.ru>
+> >>
+> >> The IOMMU API implements groups creating/deletion, device binding
+> >> and IOMMU map/unmap operations.
+> >>
+> >> The PowerPC implementation uses most of the API except map/unmap
+> >> operations, which are implemented on POWER using hypercalls.
+> >>
+> >> However, in order to link a kernel with the CONFIG_IOMMU_API enabled,
+> >> the empty kvm_iommu_map_pages/kvm_iommu_unmap_pages have to be
+> >> defined, so this defines them.
+> >>
+> >> Signed-off-by: Alexey Kardashevskiy <aik@ozlabs.ru>
+> >> Cc: David Gibson <david@gibson.dropbear.id.au>
+> >> Signed-off-by: Paul Mackerras <paulus@samba.org>
+> >> ---
+> >>  arch/powerpc/include/asm/kvm_host.h |   14 ++++++++++++++
+> >>  1 file changed, 14 insertions(+)
+> >>
+> >> diff --git a/arch/powerpc/include/asm/kvm_host.h b/arch/powerpc/include/asm/kvm_host.h
+> >> index b6a047e..c025d91 100644
+> >> --- a/arch/powerpc/include/asm/kvm_host.h
+> >> +++ b/arch/powerpc/include/asm/kvm_host.h
+> >> @@ -603,4 +603,18 @@ struct kvm_vcpu_arch {
+> >>  
+> >>  #define __KVM_HAVE_ARCH_WQP
+> >>  
+> >> +#ifdef CONFIG_IOMMU_API
+> >> +/* POWERPC does not use IOMMU API for mapping/unmapping */
+> >> +static inline int kvm_iommu_map_pages(struct kvm *kvm,
+> >> +		struct kvm_memory_slot *slot)
+> >> +{
+> >> +	return 0;
+> >> +}
+> >> +
+> >> +static inline void kvm_iommu_unmap_pages(struct kvm *kvm,
+> >> +		struct kvm_memory_slot *slot)
+> >> +{
+> >> +}
+> >> +#endif /* CONFIG_IOMMU_API */
+> >> +
+> >>  #endif /* __POWERPC_KVM_HOST_H__ */
+> > 
+> > This is no longer needed, Gleb applied my patch for 3.10 that make all
+> > of KVM device assignment dependent on a build config option and the top
+> > level kvm_host.h now includes this when that is not set.  Thanks,
+> 
+> Cannot find it, could you point me please where it is on github or
+> git.kernel.org? Thanks.
 
-The pci_ids.h change is fine with me.  I don't care how they're
-routed.  If you want me to pick them up, maybe Shane could collect up
-the acks & reviewed-bys and add the appropriate stable tags and resend
-the series to me.
+http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=2a5bab1004729f3302c776e53ee7c895b98bb1ce
 
-Bjorn
