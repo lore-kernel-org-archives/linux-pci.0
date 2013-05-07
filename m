@@ -1,78 +1,135 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f172.google.com ([209.85.214.172]:45440 "EHLO
-	mail-ob0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965072Ab3E3Qrd (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 May 2013 12:47:33 -0400
-Received: by mail-ob0-f172.google.com with SMTP id wo10so1067454obc.3
-        for <linux-pci@vger.kernel.org>; Thu, 30 May 2013 09:47:33 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAH9N0t_4uxJ21wasRSNKBt+5X-cQGwqStakRccfggm1TAbOAqQ@mail.gmail.com>
-References: <CAH9N0t-DOC0iOMjtHUTznCzk=C7RpbdBOhYR=mK1zaAmeH-Rqw@mail.gmail.com>
- <CAE9FiQXCf-h84sXqGPKbdd66oNbzWOtfea+PcHFiJPLPBc6oGQ@mail.gmail.com> <CAH9N0t_4uxJ21wasRSNKBt+5X-cQGwqStakRccfggm1TAbOAqQ@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 30 May 2013 10:47:13 -0600
-Message-ID: <CAErSpo7m=m89ixrHA9KaqQKJOfZ_vozHSwnUwy_FHZszXLMgLw@mail.gmail.com>
-Subject: Re: Pcie Linux HotPlug Driver
-To: Paulo Ricardo Carvalho <pricardofc@ipfn.ist.utl.pt>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Andrew Murray <Andrew.Murray@arm.com>
+To: robherring2@gmail.com
+Cc: benh@kernel.crashing.org, linux-mips@linux-mips.org,
+	linuxppc-dev@lists.ozlabs.org, jgunthorpe@obsidianresearch.com,
+	linux@arm.linux.org.uk, siva.kallam@samsung.com,
+	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
+	jg1.han@samsung.com, Liviu.Dudau@arm.com,
+	linux-kernel@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
+	kgene.kim@samsung.com, bhelgaas@google.com,
+	suren.reddy@samsung.com, linux-arm-kernel@lists.infradead.org,
+	monstr@monstr.eu, paulus@samba.org,
+	thomas.petazzoni@free-electrons.com,
+	thierry.reding@avionic-design.de, thomas.abraham@linaro.org,
+	arnd@arndb.de, linus.walleij@linaro.org, juhosg@openwrt.org,
+	grant.likely@linaro.org, Andrew Murray <Andrew.Murray@arm.com>
+Subject: [PATCH v9 0/3] of/pci: Provide common support for PCI DT parsing
+Date: Tue,  7 May 2013 16:31:11 +0100
+Message-Id: <1367940674-11987-1-git-send-email-Andrew.Murray@arm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 30, 2013 at 2:49 AM, Paulo Fortuna Carvalho
-<pricardofc@ipfn.ist.utl.pt> wrote:
-> Hello Yinghai,
-> Im sending you the boot.log file in attach with the grub.conf changed
-> to add debug ignore_loglevel.
-> Also I could manage to load pciehp.ko (not fakephp.ko) module at boot time.
+This patchset factors out duplicated code associated with parsing PCI
+DT "ranges" properties across the architectures and introduces a
+"ranges" parser. This parser "of_pci_range_parser" can be used directly
+by ARM host bridge drivers enabling them to obtain ranges from device
+trees.
 
-The log of interest would be the *dmesg* log, i.e., the output of the
-"dmesg" command.
+I've included the Reviewed-by, Tested-by and Acked-by's received from
+v5/v6/v7/v8 in this patchset, earlier versions of this patchset (v3) have been
+tested-by:
 
-Is there any remaining problem, or is everything working as you expect?
+Thierry Reding <thierry.reding@avionic-design.de>
+Jingoo Han <jg1.han@samsung.com>
 
-> 2013/5/29, Yinghai Lu <yinghai@kernel.org>:
->> On Wed, May 29, 2013 at 10:30 AM, Paulo Fortuna Carvalho
->> <pricardofc@ipfn.ist.utl.pt> wrote:
->>> Hello Yinghai and Bjorn,
->>> Issue solved.
->>> You were correct. The module fakephp.ko was not loaded.
->>
->> No, you should not use fackephp.ko. As it was removed already
->> in recent kernel.
->> It is replaced by pci slot driver.
->>
->> In your case you should pciehp.ko
->>
->> Please post boot log with "debug ignore_loglevel"
->>
->>
->>> Now everything works ok and device driver need not to be changed.
->>> As you said is a normal PCI Device Driver.
->>>
->>> Now I want that that when ATCA card is without energy ( 11:00.0 DPIO
->>> module: PLD APPLICATIONS Device 6014 (rev ff) )
->>>
->>> the command:
->>> echo 0 > /sys/bus/pci/slots/0000*/power is automatically executed.
->>>
->>> At the moment i'm doing it manually and after that my atca card driver
->>> is removed.
->>>
->>> And when i give energy to the ATCA card i have to manually perform pci
->>> bus re-enumeration
->>> with command:
->>> echo 1 > /sys/bus/pci/rescan
->>>
->>> and the ATCA card driver is automatically inserted. How can
->>> re-enumeration be done automatically?
->>
->> If you can enable pciehp.ko for 04:08.0, then you can use
->> echo 0 > /sys/bus/pci/slots/48/power
->> echo 1 > /sys/bus/pci/slots/48/power
->>
->> that should probe devices and load driver automatically.
->>
->> Yinghai
->>
+I've tested that this patchset builds and runs on ARM and that it builds on
+PowerPC, x86_64, MIPS and Microblaze.
+
+Compared to the v8 sent by Andrew Murray, the following changes have been made
+(please note that the MIPS patch is unchanged from v8):
+
+ * Remove the unification of pci_process_bridge_OF_ranges between PowerPC and
+   Microblaze. Feedback from Bjorn and Benjamin (along with a NAK) suggested
+   that this goes against their future direction (using more of struct
+   pci_host_bridge and less of arch specific struct pci_controller).
+
+Compared to the v7 sent by Andrew Murray, the following changes have been made
+(please note that the first patch is unchanged from v7):
+
+ * Rename of_pci_range_parser to of_pci_range_parser_init and
+   of_pci_process_ranges to of_pci_range_parser_one as suggested by Grant
+   Likely.
+
+ * Reverted back to using a switch statement instead of if/else in
+   pci_process_bridge_OF_ranges. Grant Likely highlighted this change from
+   the original code which was unnecessary.
+
+ * Squashed in a patch provided by Gabor Juhos which fixes build errors on
+   MIPS found in the last patchset.
+
+Compared to the v6 sent by Andrew Murray, the following changes have
+been made in response to build errors/warnings:
+
+ * Inclusion of linux/of_address.h in of_pci.c as suggested by Michal
+   Simek to prevent compilation failures on Microblaze (and others) and his
+   ack.
+
+ * Use of externs, static inlines and a typo in linux/of_address.h in response
+   to linker errors (multiple defination) on x86_64 as spotted by a kbuild test
+   robot on (jcooper/linux.git mvebu/drivers)
+
+ * Add EXPORT_SYMBOL_GPL to of_pci_range_parser function to be consistent
+   with of_pci_process_ranges function
+
+Compared to the v5 sent by Andrew Murray, the following changes have
+been made:
+
+ * Use of CONFIG_64BIT instead of CONFIG_[a32bitarch] as suggested by
+   Rob Herring in drivers/of/of_pci.c
+
+ * Added forward declaration of struct pci_controller in linux/of_pci.h
+   to prevent compiler warning as suggested by Thomas Petazzoni
+
+ * Improved error checking (!range check), removal of unnecessary be32_to_cpup
+   call, improved formatting of struct of_pci_range_parser layout and
+   replacement of macro with a static inline. All suggested by Rob Herring.
+
+Compared to the v4 (incorrectly labelled v3) sent by Andrew Murray,
+the following changes have been made:
+
+ * Split the patch as suggested by Rob Herring
+
+Compared to the v3 sent by Andrew Murray, the following changes have
+been made:
+
+ * Unify and move duplicate pci_process_bridge_OF_ranges functions to
+   drivers/of/of_pci.c as suggested by Rob Herring
+
+ * Fix potential build errors with Microblaze/MIPS
+
+Compared to "[PATCH v5 01/17] of/pci: Provide support for parsing PCI DT
+ranges property", the following changes have been made:
+
+ * Correct use of IORESOURCE_* as suggested by Russell King
+
+ * Improved interface and naming as suggested by Thierry Reding
+
+Compared to the v2 sent by Andrew Murray, Thomas Petazzoni did:
+
+ * Add a memset() on the struct of_pci_range_iter when starting the
+   for loop in for_each_pci_range(). Otherwise, with an uninitialized
+   of_pci_range_iter, of_pci_process_ranges() may crash.
+
+ * Add parenthesis around 'res', 'np' and 'iter' in the
+   for_each_of_pci_range macro definitions. Otherwise, passing
+   something like &foobar as 'res' didn't work.
+
+ * Rebased on top of 3.9-rc2, which required fixing a few conflicts in
+   the Microblaze code.
+
+v2:
+  This follows on from suggestions made by Grant Likely
+  (marc.info/?l=linux-kernel&m=136079602806328)
+
+Andrew Murray (3):
+  of/pci: Provide support for parsing PCI DT ranges property
+  of/pci: mips: convert to common of_pci_range_parser
+  of/pci: microblaze: convert to common of_pci_range_parser
+
+ arch/microblaze/pci/pci-common.c |  106 ++++++++++++++------------------------
+ arch/mips/pci/pci.c              |   50 ++++++-----------
+ drivers/of/address.c             |   67 ++++++++++++++++++++++++
+ include/linux/of_address.h       |   48 +++++++++++++++++
+ 4 files changed, 171 insertions(+), 100 deletions(-)
+
