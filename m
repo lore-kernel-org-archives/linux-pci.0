@@ -1,166 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f52.google.com ([209.85.160.52]:39737 "EHLO
-	mail-pb0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756827Ab3EYNwG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 25 May 2013 09:52:06 -0400
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Donald Dutile <ddutile@redhat.com>,
-	Ram Pai <linuxram@us.ibm.com>
-Subject: [PATCH v3, part1 09/10] PCI, IOV: simplify IOV implementation
-Date: Sat, 25 May 2013 21:48:37 +0800
-Message-Id: <1369489718-25869-10-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1369489718-25869-1-git-send-email-jiang.liu@huawei.com>
-References: <1369489718-25869-1-git-send-email-jiang.liu@huawei.com>
+Received: from mail-pb0-f44.google.com ([209.85.160.44]:45258 "EHLO
+	mail-pb0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758838Ab3EGD3A (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 6 May 2013 23:29:00 -0400
+Received: by mail-pb0-f44.google.com with SMTP id wz17so82206pbc.17
+        for <linux-pci@vger.kernel.org>; Mon, 06 May 2013 20:28:59 -0700 (PDT)
+Message-ID: <518874F3.50807@ozlabs.ru>
+Date: Tue, 07 May 2013 13:28:51 +1000
+From: Alexey Kardashevskiy <aik@ozlabs.ru>
+MIME-Version: 1.0
+To: Alex Williamson <alex.williamson@redhat.com>
+CC: linuxppc-dev@lists.ozlabs.org,
+	David Gibson <david@gibson.dropbear.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Paul Mackerras <paulus@samba.org>,
+	Alexander Graf <agraf@suse.de>, kvm@vger.kernel.org,
+	linux-kernel@vger.kernel.org, kvm-ppc@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH 2/5] KVM: PPC: iommu: Add missing kvm_iommu_map_pages/kvm_iommu_unmap_pages
+References: <1367824921-27151-1-git-send-email-y>   <51875a36.25ac440a.50d9.ffffe90d@mx.google.com>  <1367874436.2868.90.camel@ul30vt.home> <51884FA8.6010400@ozlabs.ru> <1367890979.2868.93.camel@ul30vt.home>
+In-Reply-To: <1367890979.2868.93.camel@ul30vt.home>
+Content-Type: text/plain; charset=KOI8-R
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Trivial changes to IOV:
-1) use new PCI interfaces to simplify IOV implementation
-2) fix some reference count related race windows
+On 05/07/2013 11:42 AM, Alex Williamson wrote:
+> On Tue, 2013-05-07 at 10:49 +1000, Alexey Kardashevskiy wrote:
+>> On 05/07/2013 07:07 AM, Alex Williamson wrote:
+>>> On Mon, 2013-05-06 at 17:21 +1000, aik@ozlabs.ru wrote:
+>>>> From: Alexey Kardashevskiy <aik@ozlabs.ru>
+>>>>
+>>>> The IOMMU API implements groups creating/deletion, device binding
+>>>> and IOMMU map/unmap operations.
+>>>>
+>>>> The PowerPC implementation uses most of the API except map/unmap
+>>>> operations, which are implemented on POWER using hypercalls.
+>>>>
+>>>> However, in order to link a kernel with the CONFIG_IOMMU_API enabled,
+>>>> the empty kvm_iommu_map_pages/kvm_iommu_unmap_pages have to be
+>>>> defined, so this defines them.
+>>>>
+>>>> Signed-off-by: Alexey Kardashevskiy <aik@ozlabs.ru>
+>>>> Cc: David Gibson <david@gibson.dropbear.id.au>
+>>>> Signed-off-by: Paul Mackerras <paulus@samba.org>
+>>>> ---
+>>>>  arch/powerpc/include/asm/kvm_host.h |   14 ++++++++++++++
+>>>>  1 file changed, 14 insertions(+)
+>>>>
+>>>> diff --git a/arch/powerpc/include/asm/kvm_host.h b/arch/powerpc/include/asm/kvm_host.h
+>>>> index b6a047e..c025d91 100644
+>>>> --- a/arch/powerpc/include/asm/kvm_host.h
+>>>> +++ b/arch/powerpc/include/asm/kvm_host.h
+>>>> @@ -603,4 +603,18 @@ struct kvm_vcpu_arch {
+>>>>  
+>>>>  #define __KVM_HAVE_ARCH_WQP
+>>>>  
+>>>> +#ifdef CONFIG_IOMMU_API
+>>>> +/* POWERPC does not use IOMMU API for mapping/unmapping */
+>>>> +static inline int kvm_iommu_map_pages(struct kvm *kvm,
+>>>> +		struct kvm_memory_slot *slot)
+>>>> +{
+>>>> +	return 0;
+>>>> +}
+>>>> +
+>>>> +static inline void kvm_iommu_unmap_pages(struct kvm *kvm,
+>>>> +		struct kvm_memory_slot *slot)
+>>>> +{
+>>>> +}
+>>>> +#endif /* CONFIG_IOMMU_API */
+>>>> +
+>>>>  #endif /* __POWERPC_KVM_HOST_H__ */
+>>>
+>>> This is no longer needed, Gleb applied my patch for 3.10 that make all
+>>> of KVM device assignment dependent on a build config option and the top
+>>> level kvm_host.h now includes this when that is not set.  Thanks,
+>>
+>> Cannot find it, could you point me please where it is on github or
+>> git.kernel.org? Thanks.
+> 
+> http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=2a5bab1004729f3302c776e53ee7c895b98bb1ce
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Cc: Donald Dutile <ddutile@redhat.com>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: Ram Pai <linuxram@us.ibm.com>
-Cc: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
----
- drivers/pci/iov.c | 58 +++++++++++++++++++++----------------------------------
- 1 file changed, 22 insertions(+), 36 deletions(-)
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index 8f1e117..3e33499 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -51,43 +51,30 @@ static struct pci_bus *virtfn_add_bus(struct pci_bus *bus, int busnr)
- 	return child;
- }
- 
--static void virtfn_remove_bus(struct pci_bus *bus, int busnr)
-+static void virtfn_remove_bus(struct pci_bus *physbus, struct pci_bus *virtbus)
- {
--	struct pci_bus *child;
--
--	if (bus->number == busnr)
--		return;
--
--	child = pci_find_bus(pci_domain_nr(bus), busnr);
--	BUG_ON(!child);
--
--	if (list_empty(&child->devices))
--		pci_remove_bus(child);
-+	if (physbus != virtbus && list_empty(&virtbus->devices))
-+		pci_remove_bus(virtbus);
- }
- 
- static int virtfn_add(struct pci_dev *dev, int id, int reset)
- {
- 	int i;
--	int rc;
-+	int rc = -ENOMEM;
- 	u64 size;
- 	char buf[VIRTFN_ID_LEN];
--	struct pci_dev *virtfn;
-+	struct pci_dev *virtfn = NULL;
- 	struct resource *res;
- 	struct pci_sriov *iov = dev->sriov;
- 	struct pci_bus *bus;
- 
--	virtfn = pci_alloc_dev(NULL);
--	if (!virtfn)
--		return -ENOMEM;
--
- 	mutex_lock(&iov->dev->sriov->lock);
- 	bus = virtfn_add_bus(dev->bus, virtfn_bus(dev, id));
--	if (!bus) {
--		kfree(virtfn);
--		mutex_unlock(&iov->dev->sriov->lock);
--		return -ENOMEM;
--	}
--	virtfn->bus = pci_bus_get(bus);
-+	if (bus)
-+		virtfn = pci_alloc_dev(bus);
-+	if (!virtfn)
-+		goto failed0;
-+
- 	virtfn->devfn = virtfn_devfn(dev, id);
- 	virtfn->vendor = dev->vendor;
- 	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_DID, &virtfn->device);
-@@ -136,7 +123,8 @@ failed1:
- 	pci_dev_put(dev);
- 	mutex_lock(&iov->dev->sriov->lock);
- 	pci_stop_and_remove_bus_device(virtfn);
--	virtfn_remove_bus(dev->bus, virtfn_bus(dev, id));
-+	virtfn_remove_bus(dev->bus, bus);
-+failed0:
- 	mutex_unlock(&iov->dev->sriov->lock);
- 
- 	return rc;
-@@ -145,20 +133,15 @@ failed1:
- static void virtfn_remove(struct pci_dev *dev, int id, int reset)
- {
- 	char buf[VIRTFN_ID_LEN];
--	struct pci_bus *bus;
- 	struct pci_dev *virtfn;
- 	struct pci_sriov *iov = dev->sriov;
- 
--	bus = pci_find_bus(pci_domain_nr(dev->bus), virtfn_bus(dev, id));
--	if (!bus)
--		return;
--
--	virtfn = pci_get_slot(bus, virtfn_devfn(dev, id));
-+	virtfn = pci_get_domain_bus_and_slot(pci_domain_nr(dev->bus),
-+					     virtfn_bus(dev, id),
-+					     virtfn_devfn(dev, id));
- 	if (!virtfn)
- 		return;
- 
--	pci_dev_put(virtfn);
--
- 	if (reset) {
- 		device_release_driver(&virtfn->dev);
- 		__pci_reset_function(virtfn);
-@@ -176,9 +159,11 @@ static void virtfn_remove(struct pci_dev *dev, int id, int reset)
- 
- 	mutex_lock(&iov->dev->sriov->lock);
- 	pci_stop_and_remove_bus_device(virtfn);
--	virtfn_remove_bus(dev->bus, virtfn_bus(dev, id));
-+	virtfn_remove_bus(dev->bus, virtfn->bus);
- 	mutex_unlock(&iov->dev->sriov->lock);
- 
-+	/* balance pci_get_domain_bus_and_slot() */
-+	pci_dev_put(virtfn);
- 	pci_dev_put(dev);
- }
- 
-@@ -335,13 +320,14 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- 		if (!pdev)
- 			return -ENODEV;
- 
--		pci_dev_put(pdev);
--
--		if (!pdev->is_physfn)
-+		if (!pdev->is_physfn) {
-+			pci_dev_put(pdev);
- 			return -ENODEV;
-+		}
- 
- 		rc = sysfs_create_link(&dev->dev.kobj,
- 					&pdev->dev.kobj, "dep_link");
-+		pci_dev_put(pdev);
- 		if (rc)
- 			return rc;
- 	}
+Yes, I confirm, this is patch is not need any more. Thanks!
+
+
+
 -- 
-1.8.1.2
-
+Alexey
