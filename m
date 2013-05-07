@@ -1,63 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f51.google.com ([209.85.160.51]:64549 "EHLO
-	mail-pb0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756674Ab3EYNvo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 25 May 2013 09:51:44 -0400
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Tony Luck <tony.luck@intel.com>,
-	Fenghua Yu <fenghua.yu@intel.com>, linux-ia64@vger.kernel.org
-Subject: [PATCH v3, part1 05/10] PCI, IA64: minor code clean up
-Date: Sat, 25 May 2013 21:48:33 +0800
-Message-Id: <1369489718-25869-6-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1369489718-25869-1-git-send-email-jiang.liu@huawei.com>
-References: <1369489718-25869-1-git-send-email-jiang.liu@huawei.com>
+Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:44683 "EHLO
+	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758406Ab3EGQMx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 May 2013 12:12:53 -0400
+Message-ID: <51892802.6090707@ubuntu.com>
+Date: Tue, 07 May 2013 12:12:50 -0400
+From: Phillip Susi <psusi@ubuntu.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Robert Hancock <hancockrwd@gmail.com>,
+	"Artem S. Tashkinov" <t.artem@lycos.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: Abysmal HDD/USB write speed after sleep on a UEFI system
+References: <CAErSpo7qj2SNR7BfuBsfF-saZXvgcqqLtgoP5Hyb5u99qR4Ncg@mail.gmail.com> <Pine.LNX.4.44L0.1302191119270.2215-100000@iolanthe.rowland.org> <CAErSpo7NZoOQZyW76HEoOTVgdqL2CgbVScAeF6HGLAVaNCq0=w@mail.gmail.com> <337833384.57445.1361860509194.JavaMail.mail@webmail08> <CAErSpo6CbO5KYXiErv6J_Dnm1u694C5fQPP2_cZL8VKDEnZa9A@mail.gmail.com> <569718148.80620.1361906088301.JavaMail.mail@webmail13> <CAErSpo6UkVhSf+nFW4zwJLBQw_0RQ5H9Bv-UuQRb6zdwsFPw4g@mail.gmail.com> <CAErSpo4X+XXKvWDfqh2CKZAtJ9WMQk91OcsWwdxwYv2MfEM_zQ@mail.gmail.com> <771333906.75854.1367057440028.JavaMail.mail@webmail08> <CAErSpo4B4sRco-nuqgXiYtGQxBcbEB6ArQjHD0A9cj4TRE+qQw@mail.gmail.com> <518097B8.4020402@gmail.com> <CAErSpo7KWPRVEnw+n068pUZz+=WSTwno6m6t7N6dunuhnFC8EA@mail.gmail.com>
+In-Reply-To: <CAErSpo7KWPRVEnw+n068pUZz+=WSTwno6m6t7N6dunuhnFC8EA@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_scan_root_bus() already set bus->sysdata, so no need to explicitly
-set it again in function sn_pci_controller_fixup();
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Fenghua Yu <fenghua.yu@intel.com>
-Cc: linux-ia64@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
----
- arch/ia64/sn/kernel/io_init.c | 11 +----------
- 1 file changed, 1 insertion(+), 10 deletions(-)
+On 5/7/2013 11:25 AM, Bjorn Helgaas wrote:
+> Phillip, I cc'd you because you have similar hardware and your 
+> https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1131468 report
+> is slightly similar.  Have you seen anything like this "reduced 
+> performance after resume" issue?  If so, can you collect
+> /proc/mtrr contents before and after suspending?
 
-diff --git a/arch/ia64/sn/kernel/io_init.c b/arch/ia64/sn/kernel/io_init.c
-index 238e2c5..e2c7733 100644
---- a/arch/ia64/sn/kernel/io_init.c
-+++ b/arch/ia64/sn/kernel/io_init.c
-@@ -326,16 +326,7 @@ sn_pci_controller_fixup(int segment, int busnum, struct pci_bus *bus)
- 	bus = pci_scan_root_bus(NULL, busnum, &pci_root_ops, controller,
- 				&resources);
-  	if (bus == NULL)
-- 		goto error_return; /* error, or bus already scanned */
--
--	bus->sysdata = controller;
--
--	return;
--
--error_return:
--
--	kfree(controller);
--	return;
-+		kfree(controller);
- }
- 
- /*
--- 
-1.8.1.2
+Nope, not seen that issue.
 
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.17 (MingW32)
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+
+iQEcBAEBAgAGBQJRiSgCAAoJEJrBOlT6nu75e0IH/1tqoTRyAMfVgcWTfhdcSAVi
+kBnvTpfGqlwD1ThxF3AZ+kHFPykI7TNUEvPR+syBFIi6BLHDoCZJMyCnKWwrY3jW
+62lpgBZPZNejK+Yms3wjt6bZs81g38FKhWqm/IGruo7u79j/CS6puUypQMZ7WkC4
+8y3SjBfiVy3ncQAOr7akCJzCv4fgqY+vtpIOHOXknfUxwgHqVOo3Pa0rMeat2TrN
+8KHLkzYjML7Z+vN9DvPnqnRYFwFmkRZl01wRITo3OaFFJFhH70uqnwZ3ES+H0oh5
+OpAJqEZ1PqiSAn+P7nI8RJ8lt7c5bta6Mvv0ev4+aDOQxnL3AmipOMNGfI37Ubk=
+=fiiM
+-----END PGP SIGNATURE-----
