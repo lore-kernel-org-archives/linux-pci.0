@@ -1,105 +1,75 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:49002 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752506Ab3EQJ5A (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 May 2013 05:57:00 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, Hanjun Guo <guohanjun@huawei.com>,
-	<jiang.liu@huawei.com>, Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	Fenghua Yu <fenghua.yu@intel.com>, <linux-ia64@vger.kernel.org>
-Subject: [PATCH -v2 2/7] PCI/IA64: SN: remove sn_pci_window_fixup()
-Date: Fri, 17 May 2013 17:55:45 +0800
-Message-ID: <1368784550-18332-3-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1368784550-18332-1-git-send-email-wangyijing@huawei.com>
-References: <1368784550-18332-1-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <51884FA8.6010400@ozlabs.ru>
+Date: Tue, 07 May 2013 10:49:44 +1000
+From: Alexey Kardashevskiy <aik@ozlabs.ru>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+To: Alex Williamson <alex.williamson@redhat.com>
+CC: linuxppc-dev@lists.ozlabs.org,
+	David Gibson <david@gibson.dropbear.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Paul Mackerras <paulus@samba.org>,
+	Alexander Graf <agraf@suse.de>, kvm@vger.kernel.org,
+	linux-kernel@vger.kernel.org, kvm-ppc@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH 2/5] KVM: PPC: iommu: Add missing kvm_iommu_map_pages/kvm_iommu_unmap_pages
+References: <1367824921-27151-1-git-send-email-y>  <51875a36.25ac440a.50d9.ffffe90d@mx.google.com> <1367874436.2868.90.camel@ul30vt.home>
+In-Reply-To: <1367874436.2868.90.camel@ul30vt.home>
+Content-Type: text/plain; charset=KOI8-R
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently, pcibios_bus_to_resource() and pcibios_resource_to_bus()
-functions use pci_host_bridge_window in pci_host_bridge to translate
-bus side to/from cpu side addresses. Pci_window in pci_controller
-under IA64 is no used again, so remove this function.
+On 05/07/2013 07:07 AM, Alex Williamson wrote:
+> On Mon, 2013-05-06 at 17:21 +1000, aik@ozlabs.ru wrote:
+>> From: Alexey Kardashevskiy <aik@ozlabs.ru>
+>>
+>> The IOMMU API implements groups creating/deletion, device binding
+>> and IOMMU map/unmap operations.
+>>
+>> The PowerPC implementation uses most of the API except map/unmap
+>> operations, which are implemented on POWER using hypercalls.
+>>
+>> However, in order to link a kernel with the CONFIG_IOMMU_API enabled,
+>> the empty kvm_iommu_map_pages/kvm_iommu_unmap_pages have to be
+>> defined, so this defines them.
+>>
+>> Signed-off-by: Alexey Kardashevskiy <aik@ozlabs.ru>
+>> Cc: David Gibson <david@gibson.dropbear.id.au>
+>> Signed-off-by: Paul Mackerras <paulus@samba.org>
+>> ---
+>>  arch/powerpc/include/asm/kvm_host.h |   14 ++++++++++++++
+>>  1 file changed, 14 insertions(+)
+>>
+>> diff --git a/arch/powerpc/include/asm/kvm_host.h b/arch/powerpc/include/asm/kvm_host.h
+>> index b6a047e..c025d91 100644
+>> --- a/arch/powerpc/include/asm/kvm_host.h
+>> +++ b/arch/powerpc/include/asm/kvm_host.h
+>> @@ -603,4 +603,18 @@ struct kvm_vcpu_arch {
+>>  
+>>  #define __KVM_HAVE_ARCH_WQP
+>>  
+>> +#ifdef CONFIG_IOMMU_API
+>> +/* POWERPC does not use IOMMU API for mapping/unmapping */
+>> +static inline int kvm_iommu_map_pages(struct kvm *kvm,
+>> +		struct kvm_memory_slot *slot)
+>> +{
+>> +	return 0;
+>> +}
+>> +
+>> +static inline void kvm_iommu_unmap_pages(struct kvm *kvm,
+>> +		struct kvm_memory_slot *slot)
+>> +{
+>> +}
+>> +#endif /* CONFIG_IOMMU_API */
+>> +
+>>  #endif /* __POWERPC_KVM_HOST_H__ */
+> 
+> This is no longer needed, Gleb applied my patch for 3.10 that make all
+> of KVM device assignment dependent on a build config option and the top
+> level kvm_host.h now includes this when that is not set.  Thanks,
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Fenghua Yu <fenghua.yu@intel.com>
-Cc: linux-ia64@vger.kernel.org
----
- arch/ia64/sn/kernel/io_init.c |   49 +----------------------------------------
- 1 files changed, 1 insertions(+), 48 deletions(-)
+Cannot find it, could you point me please where it is on github or
+git.kernel.org? Thanks.
 
-diff --git a/arch/ia64/sn/kernel/io_init.c b/arch/ia64/sn/kernel/io_init.c
-index 238e2c5..99710f5 100644
---- a/arch/ia64/sn/kernel/io_init.c
-+++ b/arch/ia64/sn/kernel/io_init.c
-@@ -149,48 +149,6 @@ sn_legacy_pci_window_fixup(struct pci_controller *controller,
- }
- 
- /*
-- * sn_pci_window_fixup() - Create a pci_window for each device resource.
-- *			   It will setup pci_windows for use by
-- *			   pcibios_bus_to_resource(), pcibios_resource_to_bus(),
-- *			   etc.
-- */
--static void
--sn_pci_window_fixup(struct pci_dev *dev, unsigned int count,
--		    s64 * pci_addrs)
--{
--	struct pci_controller *controller = PCI_CONTROLLER(dev->bus);
--	unsigned int i;
--	unsigned int idx;
--	unsigned int new_count;
--	struct pci_window *new_window;
--
--	if (count == 0)
--		return;
--	idx = controller->windows;
--	new_count = controller->windows + count;
--	new_window = kcalloc(new_count, sizeof(struct pci_window), GFP_KERNEL);
--	BUG_ON(new_window == NULL);
--	if (controller->window) {
--		memcpy(new_window, controller->window,
--		       sizeof(struct pci_window) * controller->windows);
--		kfree(controller->window);
--	}
--
--	/* Setup a pci_window for each device resource. */
--	for (i = 0; i <= PCI_ROM_RESOURCE; i++) {
--		if (pci_addrs[i] == -1)
--			continue;
--
--		new_window[idx].offset = dev->resource[i].start - pci_addrs[i];
--		new_window[idx].resource = dev->resource[i];
--		idx++;
--	}
--
--	controller->windows = new_count;
--	controller->window = new_window;
--}
--
--/*
-  * sn_io_slot_fixup() -   We are not running with an ACPI capable PROM,
-  *			  and need to convert the pci_dev->resource
-  *			  'start' and 'end' addresses to mapped addresses,
-@@ -276,12 +234,7 @@ sn_io_slot_fixup(struct pci_dev *dev)
- 						 IORESOURCE_ROM_BIOS_COPY;
- 		}
- 	}
--	/* Create a pci_window in the pci_controller struct for
--	 * each device resource.
--	 */
--	if (count > 0)
--		sn_pci_window_fixup(dev, count, pci_addrs);
--
-+
- 	sn_pci_fixup_slot(dev, pcidev_info, sn_irq_info);
- }
- 
+
 -- 
-1.7.1
-
-
+Alexey
