@@ -1,98 +1,127 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f170.google.com ([209.85.223.170]:42772 "EHLO
-	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757365Ab3ETWs2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 20 May 2013 18:48:28 -0400
-Received: by mail-ie0-f170.google.com with SMTP id aq17so15266307iec.1
-        for <linux-pci@vger.kernel.org>; Mon, 20 May 2013 15:48:27 -0700 (PDT)
-Date: Mon, 20 May 2013 16:48:24 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: "Zhang, LongX" <longx.zhang@intel.com>
-Cc: "linasvepstas@gmail.com" <linasvepstas@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"yanmin_zhang@linux.intel.com" <yanmin_zhang@linux.intel.com>,
-	"Joseph.Liu@Emulex.Com" <Joseph.Liu@Emulex.Com>
-Subject: Re: Subject : [ PATCH ]
- pci-reset-error_state-to-pci_channel_io_normal-at-report_slot_reset
-Message-ID: <20130520224824.GA31740@google.com>
-References: <F7B8FD780A346D46A0042F5C63B06AE785E3B2@SHSMSX102.ccr.corp.intel.com>
+Received: from mail-oa0-f52.google.com ([209.85.219.52]:36095 "EHLO
+	mail-oa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752615Ab3EGVjL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 May 2013 17:39:11 -0400
+Received: by mail-oa0-f52.google.com with SMTP id h1so1261536oag.25
+        for <linux-pci@vger.kernel.org>; Tue, 07 May 2013 14:39:10 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <F7B8FD780A346D46A0042F5C63B06AE785E3B2@SHSMSX102.ccr.corp.intel.com>
+In-Reply-To: <20130507213250.GA22773@google.com>
+References: <5AA430FFE4486C448003201AC83BC85E03DEA379@EXHQ.corp.stratus.com>
+ <1366940827-15336-1-git-send-email-yinghai@kernel.org> <20130507213250.GA22773@google.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 7 May 2013 14:38:50 -0700
+Message-ID: <CAErSpo635J8+p-0-CtxxTJdTRB70zKVYwOF+fmt3kcj6tpz_0Q@mail.gmail.com>
+Subject: Re: [PATCH] PCI: move down pci_fixup_final for hotplug path
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: David Bulkow <David.Bulkow@stratus.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 26, 2013 at 06:28:59AM +0000, Zhang, LongX wrote:
-> From: Zhang Long <longx.zhang@intel.com>
-> 
-> Specific pci device drivers might have many functions to call
-> pci_channel_offline to check device states. When slot_reset happens,
-> drivers' slot_reset callback might call such functions and eventually
-> abort the reset.
-> 
-> The patch resets pdev->error_state to pci_channel_io_normal at
-> the begining of report_slot_reset.
-> 
-> Thank Liu Joseph for pointing it out.
-> 
-> Signed-off-by: Zhang Yanmin <yanmin_zhang@linux.intel.com>
-> Signed-off-by: Zhang Long <longx.zhang@intel.com>
-> ---
->  drivers/pci/pcie/aer/aerdrv_core.c |    1 +
->  drivers/pci/pcie/portdrv_pci.c     |   12 +++++-------
->  2 files changed, 6 insertions(+), 7 deletions(-)
-> 
-> diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
-> index 564d97f..c61fd44 100644
-> --- a/drivers/pci/pcie/aer/aerdrv_core.c
-> +++ b/drivers/pci/pcie/aer/aerdrv_core.c
-> @@ -286,6 +286,7 @@ static int report_slot_reset(struct pci_dev *dev, void *data)
->  	result_data = (struct aer_broadcast_data *) data;
->  
->  	device_lock(&dev->dev);
-> +	dev->error_state = pci_channel_io_normal;
->  	if (!dev->driver ||
->  		!dev->driver->err_handler ||
->  		!dev->driver->err_handler->slot_reset)
-> diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
-> index ed4d094..7abefd9 100644
-> --- a/drivers/pci/pcie/portdrv_pci.c
-> +++ b/drivers/pci/pcie/portdrv_pci.c
-> @@ -332,13 +332,11 @@ static pci_ers_result_t pcie_portdrv_slot_reset(struct pci_dev *dev)
->  	pci_ers_result_t status = PCI_ERS_RESULT_RECOVERED;
->  	int retval;
->  
-> -	/* If fatal, restore cfg space for possible link reset at upstream */
-> -	if (dev->error_state == pci_channel_io_frozen) {
-> -		dev->state_saved = true;
-> -		pci_restore_state(dev);
-> -		pcie_portdrv_restore_config(dev);
-> -		pci_enable_pcie_error_reporting(dev);
-> -	}
-> +	/* restore cfg space for possible link reset at upstream */
-> +	dev->state_saved = true;
-> +	pci_restore_state(dev);
-> +	pcie_portdrv_restore_config(dev);
-> +	pci_enable_pcie_error_reporting(dev);
->  
->  	/* get true return value from &status */
->  	retval = device_for_each_child(&dev->dev, &status, slot_reset_iter);
+On Tue, May 7, 2013 at 2:32 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Thu, Apr 25, 2013 at 06:47:07PM -0700, Yinghai Lu wrote:
+>> David found some resource conflict issue after
+>> | PCI: Put pci_dev in device tree as early as possible
+>> | commit 4f535093cf8f6da8cfda7c36c2c1ecd2e9586ee4
+>>
+>> and
+>> | USB: Fix handoff when BIOS disables host PCI device
+>> | commit: cab928ee1f221c9cc48d6615070fefe2e444384a
+>>
+>> for usb qirks for hotplug path.
+>>
+>> After checking pci_fixup_device() with pci_fixup_final,
+>> now we have different path for boot path and hotadd path.
+>>
+>> Boot path: because pci_apply_fix_final_quirks is not set yet,
+>>       so pci_fixup_device(pci_fixup_final) will be skipped
+>>       from pci_device_add().
+>>         And later pci_apply_final_quirks will be called for all
+>>       pci devices via fs_initcall.
+>>       That is after pci_assign_unassign resource.
+>>       In that case quirk could use bars with problem.
+>>
+>> Hotadd path: pci_fixup_device(pci_fixup_final) will be executed
+>>       via pci_device_add(), and that is too early for hotplug
+>>       path, as pci bar for hot add devices is not assigned yet
+>>       after commit 4f535093.
+>>
+>> So we need to move down that for hotplug path, call that in
+>> pci_bus_add_devices instead, as at that time just before
+>> drivers get attached.
+>> And that is simliar calling place for pci_device_add before
+>> commit 4f535093 is applied.
+>>
+>> We should apply this fix for v3.9, but is too late now.
+>> so get it into v3.10 and could get into v3.9 stable instead.
+>>
+>> Reported-by: David Bulkow <David.Bulkow@stratus.com>
+>> Tested-by: David Bulkow <David.Bulkow@stratus.com>
+>> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+>
+> I applied the following slightly tweaked patch to for-linus and will
+> ask Linus to pull it for v3.10.  Let me know if it looks OK.
+>
+> Bjorn
+>
+> commit a939563f3fd9cd6226c7fb7135d0b93507c53888
+> Author: Bjorn Helgaas <bhelgaas@google.com>
 
-I think this patch changes the behavior in the case of a non-fatal error
-where one of the .error_detected() methods returned
-PCI_ERS_RESULT_NEED_RESET.  In that case, pcie_portdrv_slot_reset()
-previously did not restore config space, but after your patch, it *will*
-restore it.  We need an explanation of why this is safe.
+(I did already fix the Author: to be Yinghai, sorry about that)
 
-I think you should split this into two patches: the first would remove the
-"if (dev->error_state == pci_channel_io_frozen)" test from portdrv_pci.c
-and explain the reason, and the second would make the aerdrv_core.c change.
-
-I'm also concerned that in that same case (a non-fatal error where one of
-the .error_detected() methods returned PCI_ERS_RESULT_NEED_RESET), I don't
-think we actually *do* any kind of device reset.  This isn't related to
-your patch, of course, so if you resolve the config space restore question,
-we can deal with the reset question later.
-
-Bjorn
+> Date:   Tue May 7 14:35:44 2013 -0600
+>
+>     PCI: Delay final fixups until resources are assigned
+>
+>     Commit 4f535093cf "PCI: Put pci_dev in device tree as early as possible"
+>     moved final fixups from pci_bus_add_device() to pci_device_add().  But
+>     pci_device_add() happens before resource assignment, so BARs may not be
+>     valid yet.
+>
+>     Typical flow for hot-add:
+>
+>         pciehp_configure_device
+>           pci_scan_slot
+>             pci_scan_single_device
+>               pci_device_add
+>                 pci_fixup_device(pci_fixup_final, dev)  # previous location
+>           # resource assignment happens here
+>           pci_bus_add_devices
+>             pci_bus_add_device
+>               pci_fixup_device(pci_fixup_final, dev)    # new location
+>
+>     [bhelgaas: changelog, move fixups to pci_bus_add_device()]
+>     Reference: https://lkml.kernel.org/r/20130415182614.GB9224@xanatos
+>     Reported-by: David Bulkow <David.Bulkow@stratus.com>
+>     Tested-by: David Bulkow <David.Bulkow@stratus.com>
+>     Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+>     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>     CC: stable@vger.kernel.org  # v3.9+
+>
+> diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+> index 748f8f3..32e66a6 100644
+> --- a/drivers/pci/bus.c
+> +++ b/drivers/pci/bus.c
+> @@ -174,6 +174,7 @@ int pci_bus_add_device(struct pci_dev *dev)
+>          * Can not put in pci_device_add yet because resources
+>          * are not assigned yet for some devices.
+>          */
+> +       pci_fixup_device(pci_fixup_final, dev);
+>         pci_create_sysfs_dev_files(dev);
+>
+>         dev->match_driver = true;
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 43ece5d..67cd045 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1341,7 +1341,6 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+>         list_add_tail(&dev->bus_list, &bus->devices);
+>         up_write(&pci_bus_sem);
+>
+> -       pci_fixup_device(pci_fixup_final, dev);
+>         ret = pcibios_add_device(dev);
+>         WARN_ON(ret < 0);
+>
