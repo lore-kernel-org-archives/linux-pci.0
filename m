@@ -1,73 +1,225 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f54.google.com ([209.85.220.54]:39174 "EHLO
-	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756140Ab3EYNvB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 25 May 2013 09:51:01 -0400
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH v3, part1 00/10] Prepare for introducing PCI bus lock interfaces
-Date: Sat, 25 May 2013 21:48:28 +0800
-Message-Id: <1369489718-25869-1-git-send-email-jiang.liu@huawei.com>
+Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:57080 "EHLO
+	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752781Ab3EGPc0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 May 2013 11:32:26 -0400
+From: Andrew Murray <Andrew.Murray@arm.com>
+To: robherring2@gmail.com
+Cc: benh@kernel.crashing.org, linux-mips@linux-mips.org,
+	linuxppc-dev@lists.ozlabs.org, jgunthorpe@obsidianresearch.com,
+	linux@arm.linux.org.uk, siva.kallam@samsung.com,
+	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
+	jg1.han@samsung.com, Liviu.Dudau@arm.com,
+	linux-kernel@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
+	kgene.kim@samsung.com, bhelgaas@google.com,
+	suren.reddy@samsung.com, linux-arm-kernel@lists.infradead.org,
+	monstr@monstr.eu, paulus@samba.org,
+	thomas.petazzoni@free-electrons.com,
+	thierry.reding@avionic-design.de, thomas.abraham@linaro.org,
+	arnd@arndb.de, linus.walleij@linaro.org, juhosg@openwrt.org,
+	grant.likely@linaro.org, Andrew Murray <Andrew.Murray@arm.com>
+Subject: [PATCH v9 1/3] of/pci: Provide support for parsing PCI DT ranges property
+Date: Tue,  7 May 2013 16:31:12 +0100
+Message-Id: <1367940674-11987-2-git-send-email-Andrew.Murray@arm.com>
+In-Reply-To: <1367940674-11987-1-git-send-email-Andrew.Murray@arm.com>
+References: <1367940674-11987-1-git-send-email-Andrew.Murray@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is a preparation patchset for introducing PCI bus lock mechanisms
-to protect PCI subsystem from concurrent hotplug operations.
+This patch factors out common implementation patterns to reduce overall kernel
+code and provide a means for host bridge drivers to directly obtain struct
+resources from the DT's ranges property without relying on architecture specific
+DT handling. This will make it easier to write archiecture independent host bridge
+drivers and mitigate against further duplication of DT parsing code.
 
-Patch 1:
-	Introduce pci_bus_{get|put}() to manage PCI bus reference count
-Patch 2-3:
-	pci_alloc_dev() patchset from Gu Zheng
-Patch 6:
-	Make PCI bus creating/destroying logic symmetric
-Patch 8-10:
-	Cleanup and bugfix for IOV
-Other:
-	Minor code improvements/cleanups
+This patch can be used in the following way:
 
-Gu Zheng (2):
-  PCI: Introduce pci_alloc_dev(struct pci_bus*) to replace
-    alloc_pci_dev()
-  PCI: Convert alloc_pci_dev(void) to pci_alloc_dev(bus) instead
+	struct of_pci_range_parser parser;
+	struct of_pci_range range;
 
-Jiang Liu (8):
-  PCI: introduce pci_bus_{get|put}() to manage PCI bus reference count
-  PCI: mark pci_scan_bus_parented() as __deprecated
-  PCI, IA64: minor code clean up
-  PCI: make PCI host bridge/bus creating and destroying logic symmetric
-  PCI, unicore, m68k: remove redundant call of pci_bus_add_devices()
-  PCI, IOV: don't touch bus->is_added flag
-  PCI, IOV: simplify IOV implementation
-  PCI, IOV: hide remove and rescan sysfs interfaces for SR-IOV virtual
-    functions
+	if (of_pci_range_parser_init(&parser, np))
+		; //no ranges property
 
- arch/ia64/sn/kernel/io_init.c     |  11 +---
- arch/m68k/platform/coldfire/pci.c |   2 +-
- arch/powerpc/kernel/pci_of_scan.c |   3 +-
- arch/sparc/kernel/pci.c           |   3 +-
- arch/tile/kernel/pci.c            |   3 --
- arch/unicore32/kernel/pci.c       |   5 --
- drivers/char/agp/alpha-agp.c      |   2 +-
- drivers/char/agp/parisc-agp.c     |   2 +-
- drivers/pci/bus.c                 |  15 ++++++
- drivers/pci/iov.c                 |  64 +++++++++--------------
- drivers/pci/pci-sysfs.c           |  30 ++++++++++-
- drivers/pci/probe.c               | 105 ++++++++++++++++++--------------------
- drivers/pci/remove.c              |   3 +-
- drivers/scsi/megaraid.c           |   2 +-
- include/linux/pci.h               |   9 ++--
- 15 files changed, 134 insertions(+), 125 deletions(-)
+	for_each_of_pci_range(&parser, &range) {
 
+		/*
+			directly access properties of the address range, e.g.:
+			range.pci_space, range.pci_addr, range.cpu_addr,
+			range.size, range.flags
+
+			alternatively obtain a struct resource, e.g.:
+			struct resource res;
+			of_pci_range_to_resource(&range, np, &res);
+		*/
+	}
+
+Additionally the implementation takes care of adjacent ranges and merges them
+into a single range (as was the case with powerpc and microblaze).
+
+Signed-off-by: Andrew Murray <Andrew.Murray@arm.com>
+Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Reviewed-by: Rob Herring <rob.herring@calxeda.com>
+Tested-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Tested-by: Linus Walleij <linus.walleij@linaro.org>
+Tested-by: Jingoo Han <jg1.han@samsung.com>
+Acked-by: Grant Likely <grant.likely@secretlab.ca>
+---
+ drivers/of/address.c       |   67 ++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/of_address.h |   48 +++++++++++++++++++++++++++++++
+ 2 files changed, 115 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/of/address.c b/drivers/of/address.c
+index 04da786..fdd0636 100644
+--- a/drivers/of/address.c
++++ b/drivers/of/address.c
+@@ -227,6 +227,73 @@ int of_pci_address_to_resource(struct device_node *dev, int bar,
+ 	return __of_address_to_resource(dev, addrp, size, flags, NULL, r);
+ }
+ EXPORT_SYMBOL_GPL(of_pci_address_to_resource);
++
++int of_pci_range_parser_init(struct of_pci_range_parser *parser,
++				struct device_node *node)
++{
++	const int na = 3, ns = 2;
++	int rlen;
++
++	parser->node = node;
++	parser->pna = of_n_addr_cells(node);
++	parser->np = parser->pna + na + ns;
++
++	parser->range = of_get_property(node, "ranges", &rlen);
++	if (parser->range == NULL)
++		return -ENOENT;
++
++	parser->end = parser->range + rlen / sizeof(__be32);
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(of_pci_range_parser_init);
++
++struct of_pci_range *of_pci_range_parser_one(struct of_pci_range_parser *parser,
++						struct of_pci_range *range)
++{
++	const int na = 3, ns = 2;
++
++	if (!range)
++		return NULL;
++
++	if (!parser->range || parser->range + parser->np > parser->end)
++		return NULL;
++
++	range->pci_space = parser->range[0];
++	range->flags = of_bus_pci_get_flags(parser->range);
++	range->pci_addr = of_read_number(parser->range + 1, ns);
++	range->cpu_addr = of_translate_address(parser->node,
++				parser->range + na);
++	range->size = of_read_number(parser->range + parser->pna + na, ns);
++
++	parser->range += parser->np;
++
++	/* Now consume following elements while they are contiguous */
++	while (parser->range + parser->np <= parser->end) {
++		u32 flags, pci_space;
++		u64 pci_addr, cpu_addr, size;
++
++		pci_space = be32_to_cpup(parser->range);
++		flags = of_bus_pci_get_flags(parser->range);
++		pci_addr = of_read_number(parser->range + 1, ns);
++		cpu_addr = of_translate_address(parser->node,
++				parser->range + na);
++		size = of_read_number(parser->range + parser->pna + na, ns);
++
++		if (flags != range->flags)
++			break;
++		if (pci_addr != range->pci_addr + range->size ||
++		    cpu_addr != range->cpu_addr + range->size)
++			break;
++
++		range->size += size;
++		parser->range += parser->np;
++	}
++
++	return range;
++}
++EXPORT_SYMBOL_GPL(of_pci_range_parser_one);
++
+ #endif /* CONFIG_PCI */
+ 
+ /*
+diff --git a/include/linux/of_address.h b/include/linux/of_address.h
+index 0506eb5..4c2e6f2 100644
+--- a/include/linux/of_address.h
++++ b/include/linux/of_address.h
+@@ -4,6 +4,36 @@
+ #include <linux/errno.h>
+ #include <linux/of.h>
+ 
++struct of_pci_range_parser {
++	struct device_node *node;
++	const __be32 *range;
++	const __be32 *end;
++	int np;
++	int pna;
++};
++
++struct of_pci_range {
++	u32 pci_space;
++	u64 pci_addr;
++	u64 cpu_addr;
++	u64 size;
++	u32 flags;
++};
++
++#define for_each_of_pci_range(parser, range) \
++	for (; of_pci_range_parser_one(parser, range);)
++
++static inline void of_pci_range_to_resource(struct of_pci_range *range,
++					    struct device_node *np,
++					    struct resource *res)
++{
++	res->flags = range->flags;
++	res->start = range->cpu_addr;
++	res->end = range->cpu_addr + range->size - 1;
++	res->parent = res->child = res->sibling = NULL;
++	res->name = np->full_name;
++}
++
+ #ifdef CONFIG_OF_ADDRESS
+ extern u64 of_translate_address(struct device_node *np, const __be32 *addr);
+ extern bool of_can_translate_address(struct device_node *dev);
+@@ -27,6 +57,11 @@ static inline unsigned long pci_address_to_pio(phys_addr_t addr) { return -1; }
+ #define pci_address_to_pio pci_address_to_pio
+ #endif
+ 
++extern int of_pci_range_parser_init(struct of_pci_range_parser *parser,
++			struct device_node *node);
++extern struct of_pci_range *of_pci_range_parser_one(
++					struct of_pci_range_parser *parser,
++					struct of_pci_range *range);
+ #else /* CONFIG_OF_ADDRESS */
+ #ifndef of_address_to_resource
+ static inline int of_address_to_resource(struct device_node *dev, int index,
+@@ -53,6 +88,19 @@ static inline const __be32 *of_get_address(struct device_node *dev, int index,
+ {
+ 	return NULL;
+ }
++
++static inline int of_pci_range_parser_init(struct of_pci_range_parser *parser,
++			struct device_node *node)
++{
++	return -1;
++}
++
++static inline struct of_pci_range *of_pci_range_parser_one(
++					struct of_pci_range_parser *parser,
++					struct of_pci_range *range)
++{
++	return NULL;
++}
+ #endif /* CONFIG_OF_ADDRESS */
+ 
+ 
 -- 
-1.8.1.2
+1.7.0.4
 
