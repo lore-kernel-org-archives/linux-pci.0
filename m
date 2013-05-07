@@ -1,81 +1,123 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:33370 "EHLO mga14.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:16295 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964992Ab3E2IZ4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 29 May 2013 04:25:56 -0400
-Date: Wed, 29 May 2013 11:29:59 +0300
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Linux PM list <linux-pm@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Kevin Hilman <khilman@linaro.org>
-Subject: Re: [PATCH RFC] PM / Runtime: Rework the "runtime idle" helper
- routine
-Message-ID: <20130529082959.GW11878@intel.com>
-References: <1463685.qFyr66vqF2@vostro.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1463685.qFyr66vqF2@vostro.rjw.lan>
+	id S1751258Ab3EGF7d (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 7 May 2013 01:59:33 -0400
+Message-ID: <1367906476.2260.2.camel@ymzhang.sh.intel.com>
+Subject: Re: Subject : [ PATCH ]
+ pci-reset-error_state-to-pci_channel_io_normal-at-report_slot_reset
+From: Yanmin Zhang <yanmin_zhang@linux.intel.com>
+Reply-To: yanmin_zhang@linux.intel.com
+To: linasvepstas@gmail.com
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Zhang, LongX" <longx.zhang@intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"Joseph.Liu@Emulex.Com" <Joseph.Liu@emulex.com>
+Date: Tue, 07 May 2013 14:01:16 +0800
+In-Reply-To: <CAHrUA34O=JEbmMSCmycNSXa1L6KXAWBCM5TfBOvzj_zSRMubHQ@mail.gmail.com>
+References: <F7B8FD780A346D46A0042F5C63B06AE785E3B2@SHSMSX102.ccr.corp.intel.com>
+	 <1367454625.2093.6.camel@ymzhang.sh.intel.com>
+	 <CAHrUA34H_B-ffebx6ueHgV1ax-PL_3hLZr1JGaP2NJZ7bYgvtw@mail.gmail.com>
+	 <1367541180.2093.10.camel@ymzhang.sh.intel.com>
+	 <20130503020039.GA29087@kroah.com>
+	 <1367550808.2093.14.camel@ymzhang.sh.intel.com>
+	 <CAHrUA34O=JEbmMSCmycNSXa1L6KXAWBCM5TfBOvzj_zSRMubHQ@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 29, 2013 at 01:29:06AM +0200, Rafael J. Wysocki wrote:
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Fri, 2013-05-03 at 13:00 -0500, Linas Vepstas wrote:
+> Greg,
 > 
-> The "runtime idle" helper routine, rpm_idle(), currently ignores
-> return values from .runtime_idle() callbacks executed by it.
+> I've been receiving (and reading!) these messages; I replied that I am
+> not maintaining a tree, and have no way of testing these patches (no
+> access to hardware.)  I believe it unlikely that my situation will
+> change, and so I should probably be removed from the maintainers file.
 > 
-> However, it turns out that many subsystems use the generic idle
-> callback routine pm_generic_runtime_idle() which checks the return
-> value of the driver's callback and executes pm_runtime_suspend() for
-> the device unless that value is different from 0.  If that logic is
-> moved to rpm_idle() instead, pm_generic_runtime_idle() can be dropped
-> and its users will not need any .runtime_idle() callbacks any more.
-> 
-> Moreover, the PCI subsystem's .runtime_idle() routine,
-> pci_pm_runtime_idle(), works in analogy with the generic one and if
-> rpm_idle() calls rpm_suspend() after 0 has been returned by the
-> .runtime_idle() callback executed by it, that routine will not be
-> necessary any more and may be dropped.
-> 
-> To reduce overall code duplication make the changes described above.
-> 
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> ---
-> 
-> The patch doesn't break compilation for me, but it hasn't been tested
-> otherwise.  It applies on top of the linux-pm.git tree's linux-next branch.
-> 
-> Thanks,
-> Rafael
-> 
-> ---
->  Documentation/power/runtime_pm.txt |    5 -----
->  arch/arm/mach-omap2/omap_device.c  |    7 +------
->  drivers/acpi/device_pm.c           |    1 -
->  drivers/amba/bus.c                 |    2 +-
->  drivers/base/platform.c            |    1 -
->  drivers/base/power/domain.c        |    1 -
->  drivers/base/power/generic_ops.c   |   23 -----------------------
->  drivers/base/power/runtime.c       |   12 +++++-------
->  drivers/i2c/i2c-core.c             |    2 +-
+> No acked-by or anything; the patches are not "obviously correct" by
+> visual inspection; they may be right, but would require deeper
+> thinking about what is actually happening than I'm capable of at this
+> time; I'm a bit rusty with this code base, and might miss something
+> important
+powerpc uses the similar method. See function eeh_report_reset.
+We worked out the patch after checking powerpc codes.
 
-i2c-core runtime PM idle still works with this patch :-)
+Joseph Liu helped test the patch and the patch does work well.
 
-You can add my
+> .
+> 
+> -- Linas
+> 
+> p.s. you didn't see my earlier reply because I forgot to hit 'plain text reply'
+> 
+> 
+> On 2 May 2013 22:13, Yanmin Zhang <yanmin_zhang@linux.intel.com> wrote:
+> >
+> > On Thu, 2013-05-02 at 19:00 -0700, Greg Kroah-Hartman wrote:
+> > > On Fri, May 03, 2013 at 08:33:00AM +0800, Yanmin Zhang wrote:
+> > > > On Wed, 2013-05-01 at 20:20 -0500, Linas Vepstas wrote:
+> > > > > Hi,
+> > > > >
+> > > > > On 1 May 2013 19:30, Yanmin Zhang <yanmin_zhang@linux.intel.com>
+> > > > > wrote:
+> > > > >         On Fri, 2013-04-26 at 06:28 +0000, Zhang, LongX wrote:
+> > > > >         > From: Zhang Long <longx.zhang@intel.com>
+> > > > >         >
+> > > > >         > Specific pci device drivers might have many functions to
+> > > > >         call
+> > > > >         > pci_channel_offline to check device states. When slot_reset
+> > > > >         happens,
+> > > > >         > drivers' slot_reset callback might call such functions and
+> > > > >         eventually
+> > > > >         > abort the reset.
+> > > > >         >
+> > > > >         > The patch resets pdev->error_state to pci_channel_io_normal
+> > > > >         at
+> > > > >         > the begining of report_slot_reset.
+> > > > >         >
+> > > > >         > Thank Liu Joseph for pointing it out.
+> > > > >
+> > > > >         Linas, Bjorn,
+> > > > >
+> > > > >         Would you like to merge the patch to your testing tree?
+> > > > >         The patch resolves one issue pointed out by Joseph.
+> > > > >
+> > > > >
+> > > > > I'm not maintaining a tree at this time, and am not able to test.
+> > > > > Sorry.
+> > > > Thanks Linas.
+> > > >
+> > > > Greg,
+> > > >
+> > > > Would you like to merge it into your testing tree? Joseph Liu tested
+> > > > the patch and it does work.
+> > >
+> > > You do know about the scripts/get_maintainer.pl script, right?
+> > >
+> > > Hint, try it out :)
+> > Greg,
+> >
+> > Thanks. We did send to the right people, Linas and Bjorn.
+> >
+> > scripts/get_maintainer.pl 0001-pci-reset-error_state-to-pci_channel_io_normal-at-re.patch
+> > Bjorn Helgaas <bhelgaas@google.com> (supporter:PCI SUBSYSTEM,commit_signer:7/8=88%,commit_signer:10/11=91%)
+> > Linas Vepstas <linasvepstas@gmail.com> (commit_signer:2/8=25%)
+> > Yijing Wang <wangyijing@huawei.com> (commit_signer:2/8=25%,commit_signer:2/11=18%)
+> > Jiang Liu <jiang.liu@huawei.com> (commit_signer:2/8=25%,commit_signer:2/11=18%)
+> > Stephen Hemminger <shemminger@vyatta.com> (commit_signer:1/8=12%)
+> > "Rafael J. Wysocki" <rafael.j.wysocki@intel.com> (commit_signer:6/11=55%)
+> > Huang Ying <ying.huang@intel.com> (commit_signer:5/11=45%)
+> > linux-pci@vger.kernel.org (open list:PCI SUBSYSTEM)
+> > linux-kernel@vger.kernel.org (open list)
+> >
+> >
+> > I remember Jesse was maintaining PCI subsystem and he responded quickly.
+> >
+> > Yanmin
+> >
+> >
 
-Tested-by: Mika Westerberg <mika.westerberg@linux.intel.com>
 
-for the i2c parts if you like.
-
->  drivers/mmc/core/sdio_bus.c        |    2 +-
->  drivers/pci/pci-driver.c           |   27 ---------------------------
->  drivers/spi/spi.c                  |    2 +-
->  drivers/usb/core/port.c            |    1 -
->  include/linux/pm_runtime.h         |    2 --
->  14 files changed, 10 insertions(+), 78 deletions(-)
