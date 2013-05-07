@@ -1,143 +1,246 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:49193 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753181Ab3EQJ5N (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 May 2013 05:57:13 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, Hanjun Guo <guohanjun@huawei.com>,
-	<jiang.liu@huawei.com>, Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	Fenghua Yu <fenghua.yu@intel.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	<linux-ia64@vger.kernel.org>
-Subject: [PATCH -v2 4/7] PCI/IA64: Allocate pci_root_info instead of using stack
-Date: Fri, 17 May 2013 17:55:47 +0800
-Message-ID: <1368784550-18332-5-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1368784550-18332-1-git-send-email-wangyijing@huawei.com>
-References: <1368784550-18332-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Gavin Shan <shangw@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v3 1/5] PCI: Split pci_assign_unassigned_resources to per root bus
+Date: Tue,  7 May 2013 15:17:30 -0700
+Message-Id: <1367965054-9013-2-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1367965054-9013-1-git-send-email-yinghai@kernel.org>
+References: <1367965054-9013-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We need to pass around info for release function.
+BenH reported that there is some assign unassigned resource problem
+in powerpc.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Fenghua Yu <fenghua.yu@intel.com>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-ia64@vger.kernel.org
+It turns out after
+| commit 0c5be0cb0edfe3b5c4b62eac68aa2aa15ec681af
+| Date:   Thu Feb 23 19:23:29 2012 -0800
+|
+|    PCI: Retry on IORESOURCE_IO type allocations
+
+even the root bus does not have io port range, it will keep retrying
+to realloc with mmio.
+
+Current retry logic is : try with must+optional at first, and if
+it fails will try must then try to extend must with optional.
+That will fail as mmio-non-pref and mmio-pref for bridge will
+be next to each other. So we have no chance to extend mmio-non-pref.
+
+This will be become more often when we have x86 8 sockets or 32 sockets
+system, and those system will have one root bus per socket.
+They will have some root buses do not have ioport range.
+
+We should not fall into retry in this case, as root bus does
+not io port range.
+
+Before that we need to split pci_assign_unassiged_resource
+to every root bus, so we can stop early for root bus without ioport
+range, and still continue to retry on buses that do have ioport range.
+
+Also later we could let root bus hot add and booting path use same code.
+
+Reported-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+
 ---
- arch/ia64/pci/pci.c |   59 ++++++++++++++++++++++++++++++--------------------
- 1 files changed, 35 insertions(+), 24 deletions(-)
+ drivers/pci/setup-bus.c |  101 +++++++++++++++++++++++-------------------------
+ 1 file changed, 49 insertions(+), 52 deletions(-)
 
-diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
-index d7681c6..1f2779d 100644
---- a/arch/ia64/pci/pci.c
-+++ b/arch/ia64/pci/pci.c
-@@ -322,7 +322,8 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 	int domain = root->segment;
- 	int bus = root->secondary.start;
- 	struct pci_controller *controller;
--	struct pci_root_info info;
-+	struct pci_root_info *info = NULL;
-+	int busnum = root->secondary.start;
- 	struct pci_bus *pbus;
- 	char *name;
- 	int pxm;
-@@ -339,35 +340,42 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 		controller->node = pxm_to_node(pxm);
- #endif
+Index: linux-2.6/drivers/pci/setup-bus.c
+===================================================================
+--- linux-2.6.orig/drivers/pci/setup-bus.c
++++ linux-2.6/drivers/pci/setup-bus.c
+@@ -1315,21 +1315,6 @@ static int __init pci_bus_get_depth(stru
  
--	INIT_LIST_HEAD(&info.resources);
-+	info = kzalloc(sizeof(*info), GFP_KERNEL);
-+	if (!info) {
-+		printk(KERN_WARNING "pci_bus %04x:%02x: "
-+				"ignored (out of memory)\n", root->segment, busnum);
-+		goto out2;
+ 	return depth;
+ }
+-static int __init pci_get_max_depth(void)
+-{
+-	int depth = 0;
+-	struct pci_bus *bus;
+-
+-	list_for_each_entry(bus, &pci_root_buses, node) {
+-		int ret;
+-
+-		ret = pci_bus_get_depth(bus);
+-		if (ret > depth)
+-			depth = ret;
+-	}
+-
+-	return depth;
+-}
+ 
+ /*
+  * -1: undefined, will auto detect later
+@@ -1354,34 +1339,41 @@ void __init pci_realloc_get_opt(char *st
+ 	else if (!strncmp(str, "on", 2))
+ 		pci_realloc_enable = user_enabled;
+ }
+-static bool __init pci_realloc_enabled(void)
++static bool __init pci_realloc_enabled(enum enable_type enable)
+ {
+-	return pci_realloc_enable >= user_enabled;
++	return enable >= user_enabled;
+ }
+ 
+-static void __init pci_realloc_detect(void)
++static enum enable_type __init pci_realloc_detect(struct pci_bus *bus,
++			 enum enable_type enable_local)
+ {
+ #if defined(CONFIG_PCI_IOV) && defined(CONFIG_PCI_REALLOC_ENABLE_AUTO)
+-	struct pci_dev *dev = NULL;
++	struct pci_dev *dev;
+ 
+-	if (pci_realloc_enable != undefined)
+-		return;
++	if (enable_local != undefined)
++		return enable_local;
+ 
+-	for_each_pci_dev(dev) {
++	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		int i;
+ 
+ 		for (i = PCI_IOV_RESOURCES; i <= PCI_IOV_RESOURCE_END; i++) {
+ 			struct resource *r = &dev->resource[i];
+ 
+ 			/* Not assigned, or rejected by kernel ? */
+-			if (r->flags && !r->start) {
+-				pci_realloc_enable = auto_enabled;
+-
+-				return;
+-			}
++			if (r->flags && !r->start)
++				return auto_enabled;
+ 		}
+ 	}
++
++	list_for_each_entry(dev, &bus->devices, bus_list) {
++		struct pci_bus *child = dev->subordinate;
++
++		if (child &&
++		    pci_realloc_detect(child, enable_local) == auto_enabled)
++			return auto_enabled;
 +	}
-+
-+	INIT_LIST_HEAD(&info->resources);
- 	/* insert busn resource at first */
--	pci_add_resource(&info.resources, &root->secondary);
-+	pci_add_resource(&info->resources, &root->secondary);
- 	acpi_walk_resources(device->handle, METHOD_NAME__CRS, count_window,
--			&info.res_num);
--	if (info.res_num) {
--		info.res =
--			kzalloc_node(sizeof(*info.res) * info.res_num,
-+			&info->res_num);
-+	if (info->res_num) {
-+		info->res =
-+			kzalloc_node(sizeof(*info->res) * info->res_num,
- 				     GFP_KERNEL, controller->node);
--		if (!info.res)
--			goto out2;
--		
--		info.res_offset = 
--			kzalloc_node(sizeof(*info.res_offset) * info.res_num,
--				GFP_KERNEL, controller->node);
--		if (!info.res_offset)
-+		if (!info->res)
- 			goto out3;
-+
-+		info->res_offset =
-+			kzalloc_node(sizeof(*info->res_offset) * info->res_num,
-+					GFP_KERNEL, controller->node);
-+		if (!info->res_offset)
-+			goto out4;
+ #endif
++	return enable_local;
+ }
  
- 		name = kmalloc(16, GFP_KERNEL);
- 		if (!name)
--			goto out4;
-+			goto out5;
+ /*
+@@ -1389,10 +1381,9 @@ static void __init pci_realloc_detect(vo
+  * second  and later try will clear small leaf bridge res
+  * will stop till to the max  deepth if can not find good one
+  */
+-void __init
+-pci_assign_unassigned_resources(void)
++static void __init
++pci_assign_unassigned_root_bus_resources(struct pci_bus *bus)
+ {
+-	struct pci_bus *bus;
+ 	LIST_HEAD(realloc_head); /* list of resources that
+ 					want additional resources */
+ 	struct list_head *add_list = NULL;
+@@ -1403,15 +1394,17 @@ pci_assign_unassigned_resources(void)
+ 	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
+ 				  IORESOURCE_PREFETCH;
+ 	int pci_try_num = 1;
++	enum enable_type enable_local;
  
- 		sprintf(name, "PCI Bus %04x:%02x", domain, bus);
--		info.bridge = device;
--		info.controller = controller;
--		info.name = name;
--		info.res_num = 0;
-+		info->bridge = device;
-+		info->controller = controller;
-+		info->name = name;
-+		info->res_num = 0;
- 		acpi_walk_resources(device->handle, METHOD_NAME__CRS,
--			add_window, &info);
-+			add_window, info);
+ 	/* don't realloc if asked to do so */
+-	pci_realloc_detect();
+-	if (pci_realloc_enabled()) {
+-		int max_depth = pci_get_max_depth();
++	enable_local = pci_realloc_detect(bus, pci_realloc_enable);
++	if (pci_realloc_enabled(enable_local)) {
++		int max_depth = pci_bus_get_depth(bus);
+ 
+ 		pci_try_num = max_depth + 1;
+-		printk(KERN_DEBUG "PCI: max bus depth: %d pci_try_num: %d\n",
+-			 max_depth, pci_try_num);
++		dev_printk(KERN_DEBUG, &bus->dev,
++			   "max bus depth: %d pci_try_num: %d\n",
++			   max_depth, pci_try_num);
  	}
- 	/*
- 	 * See arch/x86/pci/acpi.c.
-@@ -376,18 +384,21 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 	 * such quirk. So we just ignore the case now.
+ 
+ again:
+@@ -1423,12 +1416,10 @@ again:
+ 		add_list = &realloc_head;
+ 	/* Depth first, calculate sizes and alignments of all
+ 	   subordinate buses. */
+-	list_for_each_entry(bus, &pci_root_buses, node)
+-		__pci_bus_size_bridges(bus, add_list);
++	__pci_bus_size_bridges(bus, add_list);
+ 
+ 	/* Depth last, allocate resources and update the hardware. */
+-	list_for_each_entry(bus, &pci_root_buses, node)
+-		__pci_bus_assign_resources(bus, add_list, &fail_head);
++	__pci_bus_assign_resources(bus, add_list, &fail_head);
+ 	if (add_list)
+ 		BUG_ON(!list_empty(add_list));
+ 	tried_times++;
+@@ -1438,17 +1429,17 @@ again:
+ 		goto enable_and_dump;
+ 
+ 	if (tried_times >= pci_try_num) {
+-		if (pci_realloc_enable == undefined)
+-			printk(KERN_INFO "Some PCI device resources are unassigned, try booting with pci=realloc\n");
+-		else if (pci_realloc_enable == auto_enabled)
+-			printk(KERN_INFO "Automatically enabled pci realloc, if you have problem, try booting with pci=realloc=off\n");
++		if (enable_local == undefined)
++			dev_info(&bus->dev, "Some PCI device resources are unassigned, try booting with pci=realloc\n");
++		else if (enable_local == auto_enabled)
++			dev_info(&bus->dev, "Automatically enabled pci realloc, if you have problem, try booting with pci=realloc=off\n");
+ 
+ 		free_list(&fail_head);
+ 		goto enable_and_dump;
+ 	}
+ 
+-	printk(KERN_DEBUG "PCI: No. %d try to assign unassigned res\n",
+-			 tried_times + 1);
++	dev_printk(KERN_DEBUG, &bus->dev,
++		   "No. %d try to assign unassigned res\n", tried_times + 1);
+ 
+ 	/* third times and later will not check if it is leaf */
+ 	if ((tried_times + 1) > 2)
+@@ -1458,12 +1449,11 @@ again:
+ 	 * Try to release leaf bridge's resources that doesn't fit resource of
+ 	 * child device under that bridge
  	 */
- 	pbus = pci_create_root_bus(NULL, bus, &pci_root_ops, controller,
--				   &info.resources);
-+				   &info->resources);
- 	if (!pbus) {
--		pci_free_resource_list(&info.resources);
-+		pci_free_resource_list(&info->resources);
- 		return NULL;
- 	}
- 
- 	pci_scan_child_bus(pbus);
- 	return pbus;
+-	list_for_each_entry(fail_res, &fail_head, list) {
+-		bus = fail_res->dev->bus;
+-		pci_bus_release_bridge_resources(bus,
++	list_for_each_entry(fail_res, &fail_head, list)
++		pci_bus_release_bridge_resources(fail_res->dev->bus,
+ 						 fail_res->flags & type_mask,
+ 						 rel_type);
+-	}
 +
-+out5:
-+	kfree(info->res_offset);
- out4:
--	kfree(info.res_offset);
-+	kfree(info->res);
- out3:
--	kfree(info.res);
-+	kfree(info);
- out2:
- 	kfree(controller);
- out1:
--- 
-1.7.1
-
-
+ 	/* restore size and flags */
+ 	list_for_each_entry(fail_res, &fail_head, list) {
+ 		struct resource *res = fail_res->res;
+@@ -1480,12 +1470,19 @@ again:
+ 
+ enable_and_dump:
+ 	/* Depth last, update the hardware. */
+-	list_for_each_entry(bus, &pci_root_buses, node)
+-		pci_enable_bridges(bus);
++	pci_enable_bridges(bus);
+ 
+ 	/* dump the resource on buses */
++	pci_bus_dump_resources(bus);
++}
++
++void __init
++pci_assign_unassigned_resources(void)
++{
++	struct pci_bus *bus;
++
+ 	list_for_each_entry(bus, &pci_root_buses, node)
+-		pci_bus_dump_resources(bus);
++		pci_assign_unassigned_root_bus_resources(bus);
+ }
+ 
+ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
