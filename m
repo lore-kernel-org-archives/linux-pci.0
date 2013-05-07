@@ -1,275 +1,103 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53821 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752548Ab3E1Skw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 28 May 2013 14:40:52 -0400
-Subject: [PATCH v2 2/2] intel-iommu: Convert to iommu_pci_find_upstream +
- iommu_pci_is_pcie_bridge
-To: iommu@lists.linux-foundation.org, dwmw2@infradead.org,
-	joro@8bytes.org
-From: Alex Williamson <alex.williamson@redhat.com>
-Cc: stephen@networkplumber.org, linux-pci@vger.kernel.org,
-	ddutile@redhat.com
-Date: Tue, 28 May 2013 12:40:26 -0600
-Message-ID: <20130528184026.3318.52167.stgit@bling.home>
-In-Reply-To: <20130528183527.3318.5365.stgit@bling.home>
-References: <20130528183527.3318.5365.stgit@bling.home>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from userp1040.oracle.com ([156.151.31.81]:21147 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750772Ab3EGWSD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 May 2013 18:18:03 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Gavin Shan <shangw@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v3 5/5] PCI: Retry assign unassigned resources for hotadd root bus
+Date: Tue,  7 May 2013 15:17:34 -0700
+Message-Id: <1367965054-9013-6-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1367965054-9013-1-git-send-email-yinghai@kernel.org>
+References: <1367965054-9013-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_find_upstream_pcie_bridge() attempts to return the PCIe-to-PCI
-bridge upstream from the provided device.  It currently returns NULL
-if 1) the provided device is PCIe (ie. it does not have such an
-upstream bridge), 2) the device is on the root bus (a subtle case of
-its claim to return the parent device when not connected to a PCIe
-bridge), or 3) when it gets lost walking the bus and finds itself on
-a PCIe device that is not a PCIe-to-PCI bridge.  This latter case not
-only generates a WARN, but treats the provided device the same as if
-it were PCIe.
+Let root bus hotadd path use same code for booting path.
+As driver is not loaded yet, we could retry to make sure
+all pci devices get resources allocated.
 
-We can replace 1) and 2) with explicit tests in the IOMMU code as this
-is the code that knows the visibility of devices at the root bus.
-That leaves the bus walk case 3), where the NULL return is actually an
-error.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 
-We hit this error because some PCIe-to-PCI bridge vendors ignore the
-PCIe spec requirement that all PCIe devices must include a PCIe
-capability, which is all that pci_is_pcie() actually tests.  When
-PCI quirks are enabled, iommu_pci_is_pcie_bridge() adds one more test
-by looking at the next upstream device to test whether it is PCIe with
-a type code of a PCIe-to-PCI/PCI-X bridge.  If it does not have this
-type code, then by deduction, the current bridge must be a PCIe-to-PCI
-bridge and thus be a PCIe bridge.
-
-Therefore, pci_find_upstream_pcie_bridge() is replaced by an
-explicit call to (pci_is_pcie() || pci_is_root_bus()) plus
-iommu_pci_find_upstream() with the iommu_pci_is_pcie_bridge() match
-function.  This either returns the first PCIe bridge, which must
-be a PCIe-to-PCI bridge or NULL if not found.  In the NULL case, we
-know the original device is not on the root bus (already tested for
-that), so we can safely walk from the provided device to the last
-device and fall into the legacy PCI bridge code.
-
-Fixes https://bugzilla.kernel.org/show_bug.cgi?id=44881
-
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
 ---
- drivers/iommu/Kconfig               |    2 +
- drivers/iommu/intel-iommu.c         |   77 ++++++++++++++++++++++-------------
- drivers/iommu/intel_irq_remapping.c |   15 +++++--
- 3 files changed, 61 insertions(+), 33 deletions(-)
+ drivers/acpi/pci_root.c |    2 +-
+ drivers/pci/setup-bus.c |   11 +++++------
+ include/linux/pci.h     |    1 +
+ 3 files changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/iommu/Kconfig b/drivers/iommu/Kconfig
-index a591794..71ec2d5 100644
---- a/drivers/iommu/Kconfig
-+++ b/drivers/iommu/Kconfig
-@@ -85,6 +85,7 @@ config INTEL_IOMMU
- 	depends on PCI_MSI && ACPI && (X86 || IA64_GENERIC)
- 	select IOMMU_API
- 	select DMAR_TABLE
-+	select IOMMU_PCI
- 	help
- 	  DMA remapping (DMAR) devices support enables independent address
- 	  translations for Direct Memory Access (DMA) from devices.
-@@ -125,6 +126,7 @@ config IRQ_REMAP
- 	bool "Support for Interrupt Remapping"
- 	depends on X86_64 && X86_IO_APIC && PCI_MSI && ACPI
- 	select DMAR_TABLE
-+	select IOMMU_PCI
- 	---help---
- 	  Supports Interrupt remapping for IO-APIC and MSI devices.
- 	  To use x2apic mode in the CPU's which support x2APIC enhancements or
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index b4f0e28..3748187 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -1689,9 +1689,13 @@ domain_context_mapping(struct dmar_domain *domain, struct pci_dev *pdev,
- 		return ret;
- 
- 	/* dependent device mapping */
--	tmp = pci_find_upstream_pcie_bridge(pdev);
--	if (!tmp)
-+	if (pci_is_pcie(pdev) || pci_is_root_bus(pdev->bus))
- 		return 0;
-+
-+	tmp = iommu_pci_find_upstream(pdev, iommu_pci_is_pcie_bridge, &parent);
-+	if (!tmp)
-+		tmp = parent;
-+
- 	/* Secondary interface's bus number and devfn 0 */
- 	parent = pdev->bus->self;
- 	while (parent != tmp) {
-@@ -1703,7 +1707,7 @@ domain_context_mapping(struct dmar_domain *domain, struct pci_dev *pdev,
- 			return ret;
- 		parent = parent->bus->self;
+Index: linux-2.6/drivers/pci/setup-bus.c
+===================================================================
+--- linux-2.6.orig/drivers/pci/setup-bus.c
++++ linux-2.6/drivers/pci/setup-bus.c
+@@ -1331,7 +1331,7 @@ static void pci_bus_dump_resources(struc
  	}
--	if (pci_is_pcie(tmp)) /* this is a PCIe-to-PCI bridge */
-+	if (iommu_pci_is_pcie_bridge(tmp)) /* this is a PCIe-to-PCI bridge */
- 		return domain_context_mapping_one(domain,
- 					pci_domain_nr(tmp->subordinate),
- 					tmp->subordinate->number, 0,
-@@ -1731,9 +1735,13 @@ static int domain_context_mapped(struct pci_dev *pdev)
- 	if (!ret)
- 		return ret;
- 	/* dependent device mapping */
--	tmp = pci_find_upstream_pcie_bridge(pdev);
-+	if (pci_is_pcie(pdev) || pci_is_root_bus(pdev->bus))
-+		return 0;
-+
-+	tmp = iommu_pci_find_upstream(pdev, iommu_pci_is_pcie_bridge, &parent);
- 	if (!tmp)
--		return ret;
-+		tmp = parent;
-+
- 	/* Secondary interface's bus number and devfn 0 */
- 	parent = pdev->bus->self;
- 	while (parent != tmp) {
-@@ -1743,7 +1751,7 @@ static int domain_context_mapped(struct pci_dev *pdev)
- 			return ret;
- 		parent = parent->bus->self;
- 	}
--	if (pci_is_pcie(tmp))
-+	if (iommu_pci_is_pcie_bridge(tmp))
- 		return device_context_mapped(iommu, tmp->subordinate->number,
- 					     0);
- 	else
-@@ -1974,7 +1982,7 @@ static struct dmar_domain *get_domain_for_dev(struct pci_dev *pdev, int gaw)
- 	struct intel_iommu *iommu;
- 	struct dmar_drhd_unit *drhd;
- 	struct device_domain_info *info, *tmp;
--	struct pci_dev *dev_tmp;
-+	struct pci_dev *dev_tmp = NULL;
- 	unsigned long flags;
- 	int bus = 0, devfn = 0;
- 	int segment;
-@@ -1986,9 +1994,16 @@ static struct dmar_domain *get_domain_for_dev(struct pci_dev *pdev, int gaw)
- 
- 	segment = pci_domain_nr(pdev->bus);
- 
--	dev_tmp = pci_find_upstream_pcie_bridge(pdev);
--	if (dev_tmp) {
--		if (pci_is_pcie(dev_tmp)) {
-+	if (!pci_is_pcie(pdev) && !pci_is_root_bus(pdev->bus)) {
-+		struct pci_dev *last;
-+
-+		dev_tmp = iommu_pci_find_upstream(pdev,
-+						  iommu_pci_is_pcie_bridge,
-+						  &last);
-+		if (!dev_tmp)
-+			dev_tmp = last;
-+
-+		if (iommu_pci_is_pcie_bridge(dev_tmp)) {
- 			bus = dev_tmp->subordinate->number;
- 			devfn = 0;
- 		} else {
-@@ -3754,26 +3769,24 @@ static void iommu_detach_dependent_devices(struct intel_iommu *iommu,
- {
- 	struct pci_dev *tmp, *parent;
- 
--	if (!iommu || !pdev)
-+	if (!iommu || !pdev || pci_is_pcie(pdev) || pci_is_root_bus(pdev->bus))
- 		return;
- 
- 	/* dependent device detach */
--	tmp = pci_find_upstream_pcie_bridge(pdev);
-+	tmp = iommu_pci_find_upstream(pdev, iommu_pci_is_pcie_bridge, &parent);
-+	if (!tmp)
-+		tmp = parent;
-+
- 	/* Secondary interface's bus number and devfn 0 */
--	if (tmp) {
--		parent = pdev->bus->self;
--		while (parent != tmp) {
--			iommu_detach_dev(iommu, parent->bus->number,
--					 parent->devfn);
--			parent = parent->bus->self;
--		}
--		if (pci_is_pcie(tmp)) /* this is a PCIe-to-PCI bridge */
--			iommu_detach_dev(iommu,
--				tmp->subordinate->number, 0);
--		else /* this is a legacy PCI bridge */
--			iommu_detach_dev(iommu, tmp->bus->number,
--					 tmp->devfn);
-+	parent = pdev->bus->self;
-+	while (parent != tmp) {
-+		iommu_detach_dev(iommu, parent->bus->number, parent->devfn);
-+		parent = parent->bus->self;
- 	}
-+	if (iommu_pci_is_pcie_bridge(tmp)) /* this is a PCIe-to-PCI bridge */
-+		iommu_detach_dev(iommu, tmp->subordinate->number, 0);
-+	else /* this is a legacy PCI bridge */
-+		iommu_detach_dev(iommu, tmp->bus->number, tmp->devfn);
  }
  
- static void domain_remove_one_dev_info(struct dmar_domain *domain,
-@@ -4158,7 +4171,7 @@ static int intel_iommu_domain_has_cap(struct iommu_domain *domain,
- static int intel_iommu_add_device(struct device *dev)
+-static int __init pci_bus_get_depth(struct pci_bus *bus)
++static int pci_bus_get_depth(struct pci_bus *bus)
  {
- 	struct pci_dev *pdev = to_pci_dev(dev);
--	struct pci_dev *bridge, *dma_pdev = NULL;
-+	struct pci_dev *dma_pdev = NULL;
- 	struct iommu_group *group;
- 	int ret;
+ 	int depth = 0;
+ 	struct pci_dev *dev;
+@@ -1365,7 +1365,7 @@ enum enable_type {
+ 	auto_enabled,
+ };
  
-@@ -4166,9 +4179,15 @@ static int intel_iommu_add_device(struct device *dev)
- 			     pdev->bus->number, pdev->devfn))
- 		return -ENODEV;
- 
--	bridge = pci_find_upstream_pcie_bridge(pdev);
--	if (bridge) {
--		if (pci_is_pcie(bridge))
-+	if (!pci_is_pcie(pdev) && !pci_is_root_bus(pdev->bus)) {
-+		struct pci_dev *bridge, *last;
-+
-+		bridge = iommu_pci_find_upstream(pdev,iommu_pci_is_pcie_bridge,
-+						 &last);
-+		if (!bridge)
-+			bridge = last;
-+
-+		if (iommu_pci_is_pcie_bridge(bridge))
- 			dma_pdev = pci_get_domain_bus_and_slot(
- 						pci_domain_nr(pdev->bus),
- 						bridge->subordinate->number, 0);
-diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
-index 5b19b2d..2a6d27f 100644
---- a/drivers/iommu/intel_irq_remapping.c
-+++ b/drivers/iommu/intel_irq_remapping.c
-@@ -16,6 +16,7 @@
- #include <asm/msidef.h>
- 
- #include "irq_remapping.h"
-+#include "pci.h"
- 
- struct ioapic_scope {
- 	struct intel_iommu *iommu;
-@@ -373,7 +374,6 @@ static int set_hpet_sid(struct irte *irte, u8 id)
- 
- static int set_msi_sid(struct irte *irte, struct pci_dev *dev)
+-static enum enable_type pci_realloc_enable __initdata = undefined;
++static enum enable_type pci_realloc_enable = undefined;
+ void __init pci_realloc_get_opt(char *str)
  {
--	struct pci_dev *bridge;
+ 	if (!strncmp(str, "off", 3))
+@@ -1373,12 +1373,12 @@ void __init pci_realloc_get_opt(char *st
+ 	else if (!strncmp(str, "on", 2))
+ 		pci_realloc_enable = user_enabled;
+ }
+-static bool __init pci_realloc_enabled(enum enable_type enable)
++static bool pci_realloc_enabled(enum enable_type enable)
+ {
+ 	return enable >= user_enabled;
+ }
  
- 	if (!irte || !dev)
- 		return -1;
-@@ -385,9 +385,16 @@ static int set_msi_sid(struct irte *irte, struct pci_dev *dev)
- 		return 0;
+-static enum enable_type __init pci_realloc_detect(struct pci_bus *bus,
++static enum enable_type pci_realloc_detect(struct pci_bus *bus,
+ 			 enum enable_type enable_local)
+ {
+ #if defined(CONFIG_PCI_IOV) && defined(CONFIG_PCI_REALLOC_ENABLE_AUTO)
+@@ -1442,8 +1442,7 @@ static unsigned long pci_bus_res_type_ma
+  * second  and later try will clear small leaf bridge res
+  * will stop till to the max  deepth if can not find good one
+  */
+-static void __init
+-pci_assign_unassigned_root_bus_resources(struct pci_bus *bus)
++void pci_assign_unassigned_root_bus_resources(struct pci_bus *bus)
+ {
+ 	LIST_HEAD(realloc_head); /* list of resources that
+ 					want additional resources */
+Index: linux-2.6/drivers/acpi/pci_root.c
+===================================================================
+--- linux-2.6.orig/drivers/acpi/pci_root.c
++++ linux-2.6/drivers/acpi/pci_root.c
+@@ -535,7 +535,7 @@ static int acpi_pci_root_add(struct acpi
+ 
+ 	if (system_state != SYSTEM_BOOTING) {
+ 		pcibios_resource_survey_bus(root->bus);
+-		pci_assign_unassigned_bus_resources(root->bus);
++		pci_assign_unassigned_root_bus_resources(root->bus);
  	}
  
--	bridge = pci_find_upstream_pcie_bridge(dev);
--	if (bridge) {
--		if (pci_is_pcie(bridge))/* this is a PCIe-to-PCI/PCIX bridge */
-+	if (!pci_is_pcie(dev) && !pci_is_root_bus(dev->bus)) {
-+		struct pci_dev *bridge, *last;
-+
-+		bridge = iommu_pci_find_upstream(dev, iommu_pci_is_pcie_bridge,
-+						 &last);
-+		if (!bridge)
-+			bridge = last;
-+
-+		/* PCIe-to-PCI/PCIX bridge */
-+		if (iommu_pci_is_pcie_bridge(bridge))
- 			set_irte_sid(irte, SVT_VERIFY_BUS, SQ_ALL_16,
- 				(bridge->bus->number << 8) | dev->bus->number);
- 		else /* this is a legacy PCI bridge */
-
+ 	pci_bus_add_devices(root->bus);
+Index: linux-2.6/include/linux/pci.h
+===================================================================
+--- linux-2.6.orig/include/linux/pci.h
++++ linux-2.6/include/linux/pci.h
+@@ -1002,6 +1002,7 @@ int pci_claim_resource(struct pci_dev *,
+ void pci_assign_unassigned_resources(void);
+ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge);
+ void pci_assign_unassigned_bus_resources(struct pci_bus *bus);
++void pci_assign_unassigned_root_bus_resources(struct pci_bus *bus);
+ void pdev_enable_device(struct pci_dev *);
+ int pci_enable_resources(struct pci_dev *, int mask);
+ void pci_fixup_irqs(u8 (*)(struct pci_dev *, u8 *),
