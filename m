@@ -1,58 +1,108 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:32973 "EHLO gate.crashing.org"
+Received: from gate.crashing.org ([63.228.1.57]:57885 "EHLO gate.crashing.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751020Ab3EOVbb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 15 May 2013 17:31:31 -0400
-Message-ID: <1368653371.9603.18.camel@pasglop>
-Subject: Re: [PATCH v2, part 1 3/9] PCI: Convert alloc_pci_dev(void) to
- pci_alloc_dev(bus) instead
+	id S1751297Ab3EGW2Q (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 7 May 2013 18:28:16 -0400
+Message-ID: <1367965682.25488.26.camel@pasglop>
+Subject: Re: [PATCH v3 3/5] PCI: Skip IORESOURCE_MMIO allocation for root
+ bus without MMIO range
 From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Liu Jiang <liuj97@gmail.com>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Paul Mackerras <paulus@samba.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	David Airlie <airlied@linux.ie>,
-	Neela Syam Kolli <megaraidlinux@lsi.com>,
-	"James E.J. Bottomley" <jbottomley@parallels.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linuxppc-dev@lists.ozlabs.org,
-	"sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
-	Linux-Scsi <linux-scsi@vger.kernel.org>,
-	Jiang Liu <jiang.liu@huawei.com>
-Date: Thu, 16 May 2013 07:29:31 +1000
-In-Reply-To: <51939FB1.20203@gmail.com>
-References: <1368461313-4371-1-git-send-email-jiang.liu@huawei.com>
-	 <1368461313-4371-4-git-send-email-jiang.liu@huawei.com>
-	 <CAE9FiQVKKKmZRQ8CcKCzU8Gqzwb5SjWYagVB2OZiRqbSWXVpiw@mail.gmail.com>
-	 <5191F53E.4000305@cn.fujitsu.com> <51925136.5050302@gmail.com>
-	 <CAE9FiQWO-jR5y35kKiW0m6gVR54ZyRsBsdhP4BmFLSsDzCS3rA@mail.gmail.com>
-	 <51926CF6.1050706@gmail.com>
-	 <CAE9FiQWXN_ETRFPb5oFx-6LXyuHviX3h3NXCQKjcxtv2Uma-JA@mail.gmail.com>
-	 <51939E16.9090105@gmail.com>
-	 <CAE9FiQUXrOmN0rkvOwE1G_acEGY3-gouzaXjBMT7EE6uAqvuZA@mail.gmail.com>
-	 <51939FB1.20203@gmail.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Gavin Shan <shangw@linux.vnet.ibm.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Wed, 08 May 2013 08:28:02 +1000
+In-Reply-To: <1367965054-9013-4-git-send-email-yinghai@kernel.org>
+References: <1367965054-9013-1-git-send-email-yinghai@kernel.org>
+	 <1367965054-9013-4-git-send-email-yinghai@kernel.org>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2013-05-15 at 22:46 +0800, Liu Jiang wrote:
->        I don't know any OF exports, could you please help to CC
-> some OF experts?
+On Tue, 2013-05-07 at 15:17 -0700, Yinghai Lu wrote:
+> For x86 8 sockets or 32 sockets system that will have one root bus per socket,
+> They may have some root buses do not have mmio non-pref range.
 
-I wrote that code I think. Sorry, I've missed the beginning of the
-thread, what is the problem ?
+That seems very odd. Most device registers are non-prefetchable. I know
+of no adapter today that would work in a prefetchable-only environment.
+
+Are you sure that isn't the other way around ?
+
+Regarding your 3.10 patches, me and Gavin will test your v3 later today
+(ASAP) and will give you an Ack if they work, in which case they should
+hit Linus as soon as Bjorn is comfortable with :-)
 
 Cheers,
 Ben.
+
+> We should not fall into retry in this case, as root bus does
+> not mmio non-pref range.
+> 
+> We check if the root bus has mmio-nonpref range, and set bus_res_type_mask,
+> and pass it to assign_resources and don't add mmio-nonpref res to failed list
+> for root bus that does not have mmio-nonpref range.
+> So even BIOS set wrong value to pci devices and bridges will still
+> get cleared.
+> 
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> 
+> ---
+>  drivers/pci/setup-bus.c |   32 ++++++++++++++++++++++++++------
+>  1 file changed, 26 insertions(+), 6 deletions(-)
+> 
+> Index: linux-2.6/drivers/pci/setup-bus.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/pci/setup-bus.c
+> +++ linux-2.6/drivers/pci/setup-bus.c
+> @@ -299,9 +299,17 @@ static void assign_requested_resources_s
+>  				bool is_ioport_res_without_bus_support =
+>  					 (!(bus_res_type_mask & IORESOURCE_IO)) &&
+>  					 (res->flags & IORESOURCE_IO);
+> +				/*
+> +				 * if the failed res is mmio, but bus does
+> +				 * not have io port support, don't add it
+> +				 */
+> +				bool is_mmio_nonpref_res_without_bus_support =
+> +					 (!(bus_res_type_mask & IORESOURCE_MEM)) &&
+> +					 ((res->flags & (IORESOURCE_MEM | IORESOURCE_PREFETCH)) == IORESOURCE_MEM);
+>  
+>  				if (!is_rom_res_not_enabled &&
+> -				    !is_ioport_res_without_bus_support)
+> +				    !is_ioport_res_without_bus_support &&
+> +				    !is_mmio_nonpref_res_without_bus_support)
+>  					add_to_list(fail_head,
+>  						    dev_res->dev, res,
+>  						    0 /* dont care */,
+> @@ -1407,12 +1415,24 @@ static unsigned long pci_bus_res_type_ma
+>  	int i;
+>  	struct resource *r;
+>  	unsigned long mask = 0;
+> -	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
+> -				  IORESOURCE_PREFETCH;
+>  
+> -	pci_bus_for_each_resource(bus, r, i)
+> -		if (r)
+> -			mask |= r->flags & type_mask;
+> +	pci_bus_for_each_resource(bus, r, i) {
+> +		if (!r)
+> +			continue;
+> +
+> +		if (r->flags & IORESOURCE_IO) {
+> +			mask |= IORESOURCE_IO;
+> +			continue;
+> +		}
+> +		if (r->flags & IORESOURCE_PREFETCH) {
+> +			mask |= IORESOURCE_PREFETCH;
+> +			continue;
+> +		}
+> +		if ((r->flags & (IORESOURCE_MEM | IORESOURCE_PREFETCH)) == IORESOURCE_MEM) {
+> +			mask |= IORESOURCE_MEM; /* nonpref only */
+> +			continue;
+> +		}
+> +	}
+>  
+>  	return mask;
+>  }
 
 
