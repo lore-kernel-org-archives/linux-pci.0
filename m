@@ -1,82 +1,122 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:63405 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S966921Ab3E3G1D convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 May 2013 02:27:03 -0400
-From: "Hao, Xudong" <xudong.hao@intel.com>
-To: Yinghai Lu <yinghai@kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH] PCI: set correct value for iov device before device
-Date: Thu, 30 May 2013 06:26:55 +0000
-Message-ID: <403610A45A2B5242BD291EDAE8B37D3010E40DB8@SHSMSX152.ccr.corp.intel.com>
-References: <1369892734-26244-1-git-send-email-xudong.hao@intel.com>
- <CAE9FiQUCOJ5FFwRWpVy59RqEwGC2KMNXvKe5HUAKLSES5fAR+Q@mail.gmail.com>
-In-Reply-To: <CAE9FiQUCOJ5FFwRWpVy59RqEwGC2KMNXvKe5HUAKLSES5fAR+Q@mail.gmail.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-ia0-f180.google.com ([209.85.210.180]:36992 "EHLO
+	mail-ia0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757507Ab3EGVcy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 May 2013 17:32:54 -0400
+Received: by mail-ia0-f180.google.com with SMTP id 21so1197564iay.39
+        for <linux-pci@vger.kernel.org>; Tue, 07 May 2013 14:32:54 -0700 (PDT)
+Date: Tue, 7 May 2013 15:32:50 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: David Bulkow <David.Bulkow@stratus.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: move down pci_fixup_final for hotplug path
+Message-ID: <20130507213250.GA22773@google.com>
+References: <5AA430FFE4486C448003201AC83BC85E03DEA379@EXHQ.corp.stratus.com>
+ <1366940827-15336-1-git-send-email-yinghai@kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1366940827-15336-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Okay, I saw patch in PCI tree two days ago by Jiang Liu.
+On Thu, Apr 25, 2013 at 06:47:07PM -0700, Yinghai Lu wrote:
+> David found some resource conflict issue after
+> | PCI: Put pci_dev in device tree as early as possible
+> | commit 4f535093cf8f6da8cfda7c36c2c1ecd2e9586ee4
+> 
+> and
+> | USB: Fix handoff when BIOS disables host PCI device
+> | commit: cab928ee1f221c9cc48d6615070fefe2e444384a
+> 
+> for usb qirks for hotplug path.
+> 
+> After checking pci_fixup_device() with pci_fixup_final,
+> now we have different path for boot path and hotadd path.
+> 
+> Boot path: because pci_apply_fix_final_quirks is not set yet,
+> 	so pci_fixup_device(pci_fixup_final) will be skipped
+> 	from pci_device_add().
+>         And later pci_apply_final_quirks will be called for all
+> 	pci devices via fs_initcall.
+> 	That is after pci_assign_unassign resource.
+> 	In that case quirk could use bars with problem.
+> 
+> Hotadd path: pci_fixup_device(pci_fixup_final) will be executed
+> 	via pci_device_add(), and that is too early for hotplug
+> 	path, as pci bar for hot add devices is not assigned yet
+> 	after commit 4f535093.
+> 
+> So we need to move down that for hotplug path, call that in
+> pci_bus_add_devices instead, as at that time just before
+> drivers get attached. 
+> And that is simliar calling place for pci_device_add before
+> commit 4f535093 is applied.
+> 
+> We should apply this fix for v3.9, but is too late now.
+> so get it into v3.10 and could get into v3.9 stable instead.
+> 
+> Reported-by: David Bulkow <David.Bulkow@stratus.com>
+> Tested-by: David Bulkow <David.Bulkow@stratus.com>
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 
-Thanks,
--Xudong
+I applied the following slightly tweaked patch to for-linus and will
+ask Linus to pull it for v3.10.  Let me know if it looks OK.
 
+Bjorn
 
-> -----Original Message-----
-> From: yhlu.kernel@gmail.com [mailto:yhlu.kernel@gmail.com] On Behalf Of
-> Yinghai Lu
-> Sent: Thursday, May 30, 2013 2:05 PM
-> To: Hao, Xudong
-> Cc: Bjorn Helgaas; linux-pci@vger.kernel.org; Linux Kernel Mailing List
-> Subject: Re: [PATCH] PCI: set correct value for iov device before device
-> 
-> On Wed, May 29, 2013 at 10:45 PM, Xudong Hao <xudong.hao@intel.com>
-> wrote:
-> > Since device registering is put into pci_device_add(), it must set value of
-> > Virtual Function device's member before the pci_dev is put to device tree. Or
-> > some relevant subsystem of driver model such as xen will report a incorrect
-> > IOV device to Xen hypervior.
-> >
-> > Signed-off-by: Xudong Hao <xudong.hao@intel.com>
-> > ---
-> >  drivers/pci/iov.c | 6 +++---
-> >  1 file changed, 3 insertions(+), 3 deletions(-)
-> >
-> > diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-> > index c93071d..43d3de9 100644
-> > --- a/drivers/pci/iov.c
-> > +++ b/drivers/pci/iov.c
-> > @@ -110,12 +110,12 @@ static int virtfn_add(struct pci_dev *dev, int id, int
-> reset)
-> >         if (reset)
-> >                 __pci_reset_function(virtfn);
-> >
-> > -       pci_device_add(virtfn, virtfn->bus);
-> > -       mutex_unlock(&iov->dev->sriov->lock);
-> > -
-> >         virtfn->physfn = pci_dev_get(dev);
-> >         virtfn->is_virtfn = 1;
-> >
-> > +       pci_device_add(virtfn, virtfn->bus);
-> > +       mutex_unlock(&iov->dev->sriov->lock);
-> > +
-> >         rc = pci_bus_add_device(virtfn);
-> >         sprintf(buf, "virtfn%u", id);
-> >         rc = sysfs_create_link(&dev->dev.kobj, &virtfn->dev.kobj, buf);
-> 
-> I have similar patch at
-> https://patchwork.kernel.org/patch/2562551/
->    [5/7] PCI, ACPI: Don't glue ACPI dev with pci VFs
-> 
-> and Jiang has another one
-> https://patchwork.kernel.org/patch/2613481/
->    [v3,part1,10/10] PCI, IOV: hide remove and rescan sysfs interfaces
-> for SR-IOV virtual functions
-> 
-> Thanks
-> 
-> Yinghai
+commit a939563f3fd9cd6226c7fb7135d0b93507c53888
+Author: Bjorn Helgaas <bhelgaas@google.com>
+Date:   Tue May 7 14:35:44 2013 -0600
+
+    PCI: Delay final fixups until resources are assigned
+    
+    Commit 4f535093cf "PCI: Put pci_dev in device tree as early as possible"
+    moved final fixups from pci_bus_add_device() to pci_device_add().  But
+    pci_device_add() happens before resource assignment, so BARs may not be
+    valid yet.
+    
+    Typical flow for hot-add:
+    
+        pciehp_configure_device
+          pci_scan_slot
+            pci_scan_single_device
+              pci_device_add
+                pci_fixup_device(pci_fixup_final, dev)  # previous location
+          # resource assignment happens here
+          pci_bus_add_devices
+            pci_bus_add_device
+              pci_fixup_device(pci_fixup_final, dev)    # new location
+    
+    [bhelgaas: changelog, move fixups to pci_bus_add_device()]
+    Reference: https://lkml.kernel.org/r/20130415182614.GB9224@xanatos
+    Reported-by: David Bulkow <David.Bulkow@stratus.com>
+    Tested-by: David Bulkow <David.Bulkow@stratus.com>
+    Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+    CC: stable@vger.kernel.org	# v3.9+
+
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index 748f8f3..32e66a6 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -174,6 +174,7 @@ int pci_bus_add_device(struct pci_dev *dev)
+ 	 * Can not put in pci_device_add yet because resources
+ 	 * are not assigned yet for some devices.
+ 	 */
++	pci_fixup_device(pci_fixup_final, dev);
+ 	pci_create_sysfs_dev_files(dev);
+ 
+ 	dev->match_driver = true;
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 43ece5d..67cd045 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1341,7 +1341,6 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+ 	list_add_tail(&dev->bus_list, &bus->devices);
+ 	up_write(&pci_bus_sem);
+ 
+-	pci_fixup_device(pci_fixup_final, dev);
+ 	ret = pcibios_add_device(dev);
+ 	WARN_ON(ret < 0);
+ 
