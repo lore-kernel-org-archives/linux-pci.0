@@ -1,108 +1,49 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Russell King <linux@arm.linux.org.uk>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Rob Herring <rob.herring@calxeda.com>,
-	linux-arm-kernel@lists.infradead.org
-Subject: [PATCH v3, part2 20/20] PCI, ARM: use hotplug-safe PCI bus iterators to walk PCI buses
-Date: Sun, 26 May 2013 23:53:17 +0800
-Message-Id: <1369583597-3801-21-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1369583597-3801-1-git-send-email-jiang.liu@huawei.com>
-References: <1369583597-3801-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:64993 "EHLO
+	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755544Ab3EHNnW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 May 2013 09:43:22 -0400
+Message-ID: <518A5677.60203@ubuntu.com>
+Date: Wed, 08 May 2013 09:43:19 -0400
+From: Phillip Susi <psusi@ubuntu.com>
+MIME-Version: 1.0
+To: "Artem S. Tashkinov" <t.artem@lycos.com>
+CC: patrik.r.jakobsson@gmail.com, bhelgaas@google.com,
+	hancockrwd@gmail.com, stern@rowland.harvard.edu,
+	torvalds@linux-foundation.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, rjw@sisk.pl
+Subject: Re: Abysmal HDD/USB write speed after sleep on a UEFI system
+References: <CAErSpo7qj2SNR7BfuBsfF-saZXvgcqqLtgoP5Hyb5u99qR4Ncg@mail.gmail.com> <569718148.80620.1361906088301.JavaMail.mail@webmail13> <CAErSpo6UkVhSf+nFW4zwJLBQw_0RQ5H9Bv-UuQRb6zdwsFPw4g@mail.gmail.com> <CAErSpo4X+XXKvWDfqh2CKZAtJ9WMQk91OcsWwdxwYv2MfEM_zQ@mail.gmail.com> <771333906.75854.1367057440028.JavaMail.mail@webmail08> <CAErSpo4B4sRco-nuqgXiYtGQxBcbEB6ArQjHD0A9cj4TRE+qQw@mail.gmail.com> <518097B8.4020402@gmail.com> <CAErSpo7KWPRVEnw+n068pUZz+=WSTwno6m6t7N6dunuhnFC8EA@mail.gmail.com> <384171828.66802.1367942365492.JavaMail.mail@webmail05> <CADLC3L3bdTP8-X3ftMq1qxnL=LVDf7d5gbu2ZMH0pXg2AU8xjw@mail.gmail.com> <CAErSpo50iyEbCer+-K8uXUdnsG_EzFe_ZjKnrtfq5x0Zw3Yd6w@mail.gmail.com> <CAMeQTsZEpRE_bv6o9mBpqNrbf36SZVscxy+JS72=BOzA1ey-XQ@mail.gmail.com> <CAErSpo75SETEe-OKhY2-NW3csaxt=f09JcheHx95bzkCcGO6yg@mail.gmail.com><CAMeQTsY1jc99boFC_KDTL=-Pt-W1q5ZiS+r89QkPE+vAk386UQ@mail.gmail.com> <1786821921.88859.1368002273356.JavaMail.mail@webmail05>
+In-Reply-To: <1786821921.88859.1368002273356.JavaMail.mail@webmail05>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Enhance ARM architecture specific code to use new hotplug-safe PCI
-bus iterators to walk PCI buses.
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-Change pcibios_report_status implementation so that it doesn't access
-pci_root_buses global list. The pci_root_buses list will be scheduled
-to be removed.
+On 5/8/2013 4:37 AM, Artem S. Tashkinov wrote:
+> Have you tried suspending more than three times? In the absence of
+> UEFI boot this bug emerges only on a third or even fourth resume
+> attempt. UEFI boot triggers it immediately on a first resume
+> though.
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Cc: Russell King <linux@arm.linux.org.uk>
-Cc: Thierry Reding <thierry.reding@avionic-design.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Rob Herring <rob.herring@calxeda.com>
-Cc: linux-arm-kernel@lists.infradead.org
-Cc: linux-kernel@vger.kernel.org
----
- arch/arm/kernel/bios32.c           | 13 +------------
- arch/arm/mach-footbridge/dc21285.c | 12 +++++++++++-
- 2 files changed, 12 insertions(+), 13 deletions(-)
+I suspend my P8P67 every night.  One thing that does come to mind now
+though, is that when I first built it, there was a problem involving
+suspend and the firewire driver, but IIRC, it manifested as a failure
+to suspend with an error in dmesg, so I disabled the firewire
+controller since I have no use for it.
 
-diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
-index b2ed73c..50ebbe8 100644
---- a/arch/arm/kernel/bios32.c
-+++ b/arch/arm/kernel/bios32.c
-@@ -22,7 +22,7 @@ static int debug_pci;
-  * We can't use pci_find_device() here since we are
-  * called from interrupt context.
-  */
--static void pcibios_bus_report_status(struct pci_bus *bus, u_int status_mask, int warn)
-+void pcibios_bus_report_status(struct pci_bus *bus, u_int status_mask, int warn)
- {
- 	struct pci_dev *dev;
- 
-@@ -55,17 +55,6 @@ static void pcibios_bus_report_status(struct pci_bus *bus, u_int status_mask, in
- 			pcibios_bus_report_status(dev->subordinate, status_mask, warn);
- }
- 
--void pcibios_report_status(u_int status_mask, int warn)
--{
--	struct list_head *l;
--
--	list_for_each(l, &pci_root_buses) {
--		struct pci_bus *bus = pci_bus_b(l);
--
--		pcibios_bus_report_status(bus, status_mask, warn);
--	}
--}
--
- /*
-  * We don't use this to fix the device, but initialisation of it.
-  * It's not the correct use for this, but it works.
-diff --git a/arch/arm/mach-footbridge/dc21285.c b/arch/arm/mach-footbridge/dc21285.c
-index a7cd2cf..a0f1d01 100644
---- a/arch/arm/mach-footbridge/dc21285.c
-+++ b/arch/arm/mach-footbridge/dc21285.c
-@@ -35,7 +35,16 @@
- 				  PCI_STATUS_PARITY) << 16)
- 
- extern int setup_arm_irq(int, struct irqaction *);
--extern void pcibios_report_status(u_int status_mask, int warn);
-+extern void pcibios_report_bus_status(struct pci_bus *bus, u_int status_mask,
-+				      int warn);
-+
-+static struct pci_bus *dc21285_root_bus;
-+
-+static void pcibios_report_status(u_int status_mask, int warn)
-+{
-+	if (dc21285_root_bus)
-+		pcibios_report_bus_status(dc21285_root_bus, status_mask, warn);
-+}
- 
- static unsigned long
- dc21285_base_address(struct pci_bus *bus, unsigned int devfn)
-@@ -376,5 +385,6 @@ void __init dc21285_preinit(void)
- 
- void __init dc21285_postinit(void)
- {
-+	dc21285_root_bus = pci_get_next_root_bus(NULL);
- 	register_isa_ports(DC21285_PCI_MEM, DC21285_PCI_IO, 0);
- }
--- 
-1.8.1.2
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.17 (MingW32)
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+
+iQEcBAEBAgAGBQJRilZ2AAoJEJrBOlT6nu75IbkH/RdaAwGoBbJbkTxh4vhR3l/+
+nILa2X83WwEYADozNL7zi2w8AExTBHzfKZeE7uzXLPzsryPxJxAQY+LtXwRdCHQy
+GXVKZL2TpxPsNQTv1uhdCRiSTgIm9U1Y/INPZ2ugn+WbiH9iXzhRzLRgKH3kALO4
+OvReW/XQeZ77RP6IaffnoLbStpORAXH+Ttnt5nMdLvm/rGuBlUsyDvT9TAAcF3W1
+1muRJnzpDdMj+Ibwn/IW5smp9RBm2EJb2aP2N+KOV7WgiwPC+8T7omWV6Fjl+NI7
+xrc8BQTGVfbZJXpeg2KH7v5Ty+M4xFYfdCJjLocL3rFJCYR+3WCDqpRB+I55Yvo=
+=eIDL
+-----END PGP SIGNATURE-----
