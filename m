@@ -1,48 +1,88 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [PATCH v2 1/8] pci: Create pci_reset_bridge_secondary_bus()
+To: bhelgaas@google.com, linux-pci@vger.kernel.org
+From: Alex Williamson <alex.williamson@redhat.com>
+Cc: linux-kernel@vger.kernel.org
+Date: Tue, 07 May 2013 20:57:40 -0600
+Message-ID: <20130508025740.30771.50033.stgit@bling.home>
+In-Reply-To: <20130508025339.30771.61937.stgit@bling.home>
+References: <20130508025339.30771.61937.stgit@bling.home>
 MIME-Version: 1.0
-In-Reply-To: <CAHp75Vdf6gFZChS47=grUygHBDWcoOWDYPzw+Zj5bdVCWj85Jw@mail.gmail.com>
-References: <CAHp75Vdf6gFZChS47=grUygHBDWcoOWDYPzw+Zj5bdVCWj85Jw@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 20 May 2013 10:36:30 -0600
-Message-ID: <CAErSpo64ASrw=Kryi946cPjmyUWOjeaRf24xD69gbjYVzKanbg@mail.gmail.com>
-Subject: Re: The dd72be99 breaks some of Intel Medfield based devices
-To: Andy Shevchenko <andy.shevchenko@gmail.com>
-Cc: Bin Gao <bin.gao@linux.intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"x86@kernel.org" <x86@kernel.org>,
-	Jacob Pan <jacob.jun.pan@linux.intel.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc linux-pci and cc list of Bin's original posting]
+Move the secondary bus reset code from pci_parent_bus_reset() into its own
+function.  Export it as we'll later be calling it from hotplug controllers.
 
-On Mon, May 20, 2013 at 9:09 AM, Andy Shevchenko
-<andy.shevchenko@gmail.com> wrote:
-> Hi!
->
-> I don't know what you trying to fix, but your patch dd72be99
-> "x86/pci/mrst: Use configuration mechanism 1 for 00:00.0, 00:02.0,
-> 00:03.0" breaks Intel Medfield devices.
->
-> After it was applied (sorry, was on vacation, didn't noticed sooner)
-> lspci shows only 18 out of 34 devices. That means the so called fake
-> PCI devices are gone.
->
-> This is a bad approach and patch should be reverted. Bin, please,
-> explain what you are trying to fix and on what device. We will find
-> better solution.
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+---
+ drivers/pci/pci.c   |   32 +++++++++++++++++++++++---------
+ include/linux/pci.h |    1 +
+ 2 files changed, 24 insertions(+), 9 deletions(-)
 
-I reverted dd72be99 in my for-linus branch.  I guess I should have let
-that sit in -next for a cycle before asking Linus to pull it.  Sorry
-about jumping the gun.
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index b099e00..d0f313f 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3210,9 +3210,30 @@ static int pci_pm_reset(struct pci_dev *dev, int probe)
+ 	return 0;
+ }
+ 
+-static int pci_parent_bus_reset(struct pci_dev *dev, int probe)
++/**
++ * pci_reset_bridge_secondary_bus - Reset the secondary bus on a PCI bridge.
++ * @dev: Bridge device
++ *
++ * Use the bridge control register to assert reset on the secondary bus.
++ * Devices on the secondary bus are left in power-on state.
++ */
++void pci_reset_bridge_secondary_bus(struct pci_dev *dev)
+ {
+ 	u16 ctrl;
++
++	pci_read_config_word(dev, PCI_BRIDGE_CONTROL, &ctrl);
++	ctrl |= PCI_BRIDGE_CTL_BUS_RESET;
++	pci_write_config_word(dev, PCI_BRIDGE_CONTROL, ctrl);
++	msleep(100);
++
++	ctrl &= ~PCI_BRIDGE_CTL_BUS_RESET;
++	pci_write_config_word(dev, PCI_BRIDGE_CONTROL, ctrl);
++	msleep(100);
++}
++EXPORT_SYMBOL_GPL(pci_reset_bridge_secondary_bus);
++
++static int pci_parent_bus_reset(struct pci_dev *dev, int probe)
++{
+ 	struct pci_dev *pdev;
+ 
+ 	if (pci_is_root_bus(dev->bus) || dev->subordinate || !dev->bus->self)
+@@ -3225,14 +3246,7 @@ static int pci_parent_bus_reset(struct pci_dev *dev, int probe)
+ 	if (probe)
+ 		return 0;
+ 
+-	pci_read_config_word(dev->bus->self, PCI_BRIDGE_CONTROL, &ctrl);
+-	ctrl |= PCI_BRIDGE_CTL_BUS_RESET;
+-	pci_write_config_word(dev->bus->self, PCI_BRIDGE_CONTROL, ctrl);
+-	msleep(100);
+-
+-	ctrl &= ~PCI_BRIDGE_CTL_BUS_RESET;
+-	pci_write_config_word(dev->bus->self, PCI_BRIDGE_CONTROL, ctrl);
+-	msleep(100);
++	pci_reset_bridge_secondary_bus(dev->bus->self);
+ 
+ 	return 0;
+ }
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 710067f..695620c 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -905,6 +905,7 @@ int pcie_set_mps(struct pci_dev *dev, int mps);
+ int __pci_reset_function(struct pci_dev *dev);
+ int __pci_reset_function_locked(struct pci_dev *dev);
+ int pci_reset_function(struct pci_dev *dev);
++void pci_reset_bridge_secondary_bus(struct pci_dev *dev);
+ void pci_update_resource(struct pci_dev *dev, int resno);
+ int __must_check pci_assign_resource(struct pci_dev *dev, int i);
+ int __must_check pci_reassign_resource(struct pci_dev *dev, int i, resource_size_t add_size, resource_size_t align);
 
-I'll wait for a patch tested by both Bin and Andy.
-
-Bjorn
