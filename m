@@ -1,74 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:1907 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751764Ab3EUHsI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 21 May 2013 03:48:08 -0400
-Message-ID: <1369122596.4432.22.camel@ymzhang.sh.intel.com>
-Subject: Re: Subject : [ PATCH ]
- pci-reset-error_state-to-pci_channel_io_normal-at-report_slot_reset
-From: Yanmin Zhang <yanmin_zhang@linux.intel.com>
-Reply-To: yanmin_zhang@linux.intel.com
-To: linasvepstas@gmail.com
-Cc: "Liu, Joseph" <Joseph.Liu@emulex.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Zhang, LongX" <longx.zhang@intel.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-Date: Tue, 21 May 2013 15:49:56 +0800
-In-Reply-To: <CAHrUA36OxKn1ucaA4-1jHU=4P+hCWOTVa2ECAwpxEoBWSRAv8A@mail.gmail.com>
-References: <F7B8FD780A346D46A0042F5C63B06AE785E3B2@SHSMSX102.ccr.corp.intel.com>
-	 <CAErSpo7+AbHi_TwxwHTJunpFb=CMhwMdCni6+NjbhdA=35XhvA@mail.gmail.com>
-	 <CF6E51640088844D9CADE5541A7C2FEB33EBC11D@CMEXMB1.ad.emulex.com>
-	 <CAHrUA36OxKn1ucaA4-1jHU=4P+hCWOTVa2ECAwpxEoBWSRAv8A@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtprelay0012.b.hostedemail.com ([64.98.42.12]:57306 "EHLO
+	smtprelay.b.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751439Ab3EHIbd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 May 2013 04:31:33 -0400
+Date: Wed, 8 May 2013 08:31:31 +0000 (UTC)
+From: "Artem S. Tashkinov" <t.artem@lycos.com>
+To: bhelgaas@google.com
+Cc: patrik.r.jakobsson@gmail.com, hancockrwd@gmail.com,
+	stern@rowland.harvard.edu, torvalds@linux-foundation.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	rjw@sisk.pl, psusi@ubuntu.com
+Message-ID: <1286745947.88808.1368001891472.JavaMail.mail@webmail05>
+References: <CAErSpo7qj2SNR7BfuBsfF-saZXvgcqqLtgoP5Hyb5u99qR4Ncg@mail.gmail.com>
+ <Pine.LNX.4.44L0.1302191119270.2215-100000@iolanthe.rowland.org>
+ <CAErSpo7NZoOQZyW76HEoOTVgdqL2CgbVScAeF6HGLAVaNCq0=w@mail.gmail.com>
+ <337833384.57445.1361860509194.JavaMail.mail@webmail08>
+ <CAErSpo6CbO5KYXiErv6J_Dnm1u694C5fQPP2_cZL8VKDEnZa9A@mail.gmail.com>
+ <569718148.80620.1361906088301.JavaMail.mail@webmail13>
+ <CAErSpo6UkVhSf+nFW4zwJLBQw_0RQ5H9Bv-UuQRb6zdwsFPw4g@mail.gmail.com>
+ <CAErSpo4X+XXKvWDfqh2CKZAtJ9WMQk91OcsWwdxwYv2MfEM_zQ@mail.gmail.com>
+ <771333906.75854.1367057440028.JavaMail.mail@webmail08>
+ <CAErSpo4B4sRco-nuqgXiYtGQxBcbEB6ArQjHD0A9cj4TRE+qQw@mail.gmail.com>
+ <518097B8.4020402@gmail.com>
+ <CAErSpo7KWPRVEnw+n068pUZz+=WSTwno6m6t7N6dunuhnFC8EA@mail.gmail.com>
+ <384171828.66802.1367942365492.JavaMail.mail@webmail05>
+ <CADLC3L3bdTP8-X3ftMq1qxnL=LVDf7d5gbu2ZMH0pXg2AU8xjw@mail.gmail.com>
+ <CAErSpo50iyEbCer+-K8uXUdnsG_EzFe_ZjKnrtfq5x0Zw3Yd6w@mail.gmail.com>
+ <CAMeQTsZEpRE_bv6o9mBpqNrbf36SZVscxy+JS72=BOzA1ey-XQ@mail.gmail.com><CAErSpo75SETEe-OKhY2-NW3csaxt=f09JcheHx95bzkCcGO6yg@mail.gmail.com>
+Subject: Re: Abysmal HDD/USB write speed after sleep on a UEFI system
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 2013-05-20 at 10:37 -0500, Linas Vepstas wrote:
-> I think Joe Liu has it right.  I'm going to top-post because things
-> are a bit tangled below.  I urge a review of
-> /Documentation/PCI/pci-error-recovery.txt, as that gives the details.
-> 
-> The intended sequence is that, after an error, the device driver gets
-> a shot at running some diagnostics & dumps, and then the pci
-> bridges/controllers/ports/links are reset (by platform code, viz. aer
-> in this case) to a state resembling a fresh power-on.  Then the
-> .slot_reset() callback is called on the device driver, to tell the
-> driver "hey everything upstream is now working, go set yourself up for
-> normal ops."  Thus, in particular, one should have pdev->error_state =
-> pci_channel_io_normal; before .slot_reset() is called, and the PCI
-> config space contents should resemble a fresh power-on state (and
-> **NOT** some other saved state!)
-> 
-> If the device driver wanted to leave the card in a dead state, it had
-> several opportunities to say so, earlier in the callback sequence.  If
-> the driver wanted to fiddle with the card with the old PCI config
-> space, it already had a chance to do that too, before the
-> bridges/controllers/ports/links were fully reset by the platform.   By
-> the time that .slot_reset() is being called, both the platform and the
-> device driver are expecting smooth sailing ahead.
-Yes. It's flexible for drivers to do that in many callbacks. AER framework
-provides such flexibility.
+May 8, 2013 04:03:18 AM, Bjorn Helgaas wrote:
+On Tue, May 7, 2013 at 2:48 PM, Patrik Jakobsson
+> wrote:
+>> On Tue, May 7, 2013 at 10:20 PM, Bjorn Helgaas 
+ wrote:
+>>>> I'm not sure if reading /proc/mtrr actually reads the registers out of
+>>>> the CPU each time, or whether we just return the cached values we read
+>>>> out during initial boot-up. If the latter, then this output isn't
+>>>> really useful as there's no guarantee the values are still intact.
+>>>
+>>> Good point.  From what I can tell, on Artem's system with "CPU0:
+>>> Intel(R) Core(TM) i5-2500 CPU @ 3.30GHz," we would be using
+>>> generic_mtrr_ops, and generic_get_mtrr() appears to read from the
+>>> MSRs, so I think it should be useful.
+>>
+>> FWIW, that motherboard suffers from a PCI to PCIE bridge problem. It might
+>> have been fixed by bios upgrades by now but not sure.
+>>
+>> It might also suffer (depending on the revision) from the Sandy bridge SATA
+>> issue. So if affected, SATA controller is a ticking bomb.
+>>
+>> I have a P8H67-V motherboard but I haven't seen any suspend related issues.
+>>
+>> If this is totally unrelated I'm sorry for wasting your time. Just thought it
+>> might be good to know.
+>
+>Thanks for chiming in.  I'm not familiar with either of the issues you
+>mentioned.  Do you have any references where I could read up on them?
+>
+>Artem's system has a PCIe-to-PCI bridge (not a PCI-to-PCIe bridge) at
+>05:00.0, but it leads to [bus 06] and there's nothing on bus 06, so I
+>don't think that's the problem.
+>
+>And the issue affects both USB and a hard drive, so I suspect it's
+>more than just SATA.  Artem, did you identify the PCI devices leading
+>to your USB and hard drive?  I can't remember if I've actually seen
+>that.
 
-> 
-> So, looking at the original patch, it seems reasonable. 
-I agree.
+I posted my lspci information here https://bugzilla.kernel.org/show_bug.cgi?id=53551
 
->  My impression
-> is that maybe the AER driver had been doing not quite the right thing
-> for a long time.
-Pls. provide evidence/facts. The new patch is to facilitate device driver
-implementation. It doesn't mean current AER driver is incorrect. We need
-a tradeoff.
+If that's not enough, please tell how can I collect this information.
 
-Just like what Bjoin says, we shouldn't change error_state to pci_channel_io_normal
-before we really recover the hardware. The patch changes it just because
-drivers might call some functions to recover the devices, while such functions
-need (error_state==pci_channel_io_normal).
+The SATA issue is discussed here: https://bugzilla.kernel.org/show_bug.cgi?id=43229
 
-> 
-> -- Linas Vepstas
+According to Intel and Linux kernel developers it poses no threat.
 
+Best regards,
 
+Artem
