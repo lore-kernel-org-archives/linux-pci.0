@@ -1,58 +1,74 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	"David S. Miller" <davem@davemloft.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	sparclinux@vger.kernel.org
-Subject: [RFC PATCH v2, part 2 10/18] PCI, SPARC: use hotplug-safe iterators to walk PCI buses
-Date: Wed, 15 May 2013 00:51:54 +0800
-Message-Id: <1368550322-1045-10-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1368550322-1045-1-git-send-email-jiang.liu@huawei.com>
-References: <1368550322-1045-1-git-send-email-jiang.liu@huawei.com>
+Message-ID: <518A9114.1040201@wwwdotorg.org>
+Date: Wed, 08 May 2013 11:53:24 -0600
+From: Stephen Warren <swarren@wwwdotorg.org>
+MIME-Version: 1.0
+To: Jay Agarwal <jagarwal@nvidia.com>
+CC: linux@arm.linux.org.uk, thierry.reding@avionic-design.de,
+	ldewangan@nvidia.com, bhelgaas@google.com, olof@lixom.net,
+	hdoyu@nvidia.com, pgaikwad@nvidia.com, mturquette@linaro.org,
+	pdeschrijver@nvidia.com, linux-arm-kernel@lists.infradead.org,
+	linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, jtukkinen@nvidia.com, kthota@nvidia.com
+Subject: Re: [PATCH 4/4] ARM: tegra: pcie: Enable PCIe controller on Cardhu
+References: <1368010660-31465-1-git-send-email-jagarwal@nvidia.com> <1368010660-31465-4-git-send-email-jagarwal@nvidia.com> <518A8596.7070702@wwwdotorg.org>
+In-Reply-To: <518A8596.7070702@wwwdotorg.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Enhance SPARC architecture specific code to use hotplug-safe iterators
-to walk PCI buses.
+On 05/08/2013 11:04 AM, Stephen Warren wrote:
+> On 05/08/2013 04:57 AM, Jay Agarwal wrote:
+>> - Enable PCIe controller on Cardhu
+>> - Only port 2 is connected on this board
+>> - Add regulators required for Tegra30
+>> - Patch is based on remotes/gitorious_thierryreding_linux/tegra/next
+>> - and should be applied on top of this.
+> 
+>> diff --git a/arch/arm/boot/dts/tegra30-cardhu.dtsi b/arch/arm/boot/dts/tegra30-cardhu.dtsi
+> 
+>> +	pcie-controller {
+>> +		status = "okay";
+>> +		pex-clk-supply = <&pex_hvdd_3v3_reg>;
+>> +		vdd-supply = <&ldo1_reg>;
+>> +		avdd-supply = <&ldo2_reg>;
+>> +
+>> +		pci@3,0 {
+>> +			status = "okay";
+>> +		};
+>> +	};
+...
+> According to the Cardhu schematics, the PCIe link to the dock is a
+> single lane. Hence, I believe that the Cardhu DT should describe a 411
+> port configuration. However, the Cardhu DT doesn't describe any
+> particular link configuration, but just inherits the default from
+> tegra30.dtsi, which describes a 222 link configuration. I would have
+> expected the following in the Cardhu DT:
+> 
+> 		pci@1,0 {
+> 			nvidia,num-lanes = <4>;
+> 		};
+> 
+> 		pci@2,0 {
+> 			nvidia,num-lanes = <1>;
+> 		};
+> 
+> 		pci@3,0 {
+> 			status = "okay";
+> 			nvidia,num-lanes = <1>;
+> 		};
+> 
+> However, if I put that there, no PCIe links are detected at all. Why
+> does the driver work with the wrong link configuration, but fail with
+> the correct one?
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Cc: "David S. Miller" <davem@davemloft.net>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: sparclinux@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
----
- arch/sparc/kernel/pci.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+I take this back. Fixing the DT as shown above to represent the correct
+4/1/1 configuration does still yield a working system. Please
+incorporate this into a future patch revision.
 
-diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
-index e5871fb..235208d8 100644
---- a/arch/sparc/kernel/pci.c
-+++ b/arch/sparc/kernel/pci.c
-@@ -995,9 +995,9 @@ static void pci_bus_slot_names(struct device_node *node, struct pci_bus *bus)
- 
- static int __init of_pci_slot_init(void)
- {
--	struct pci_bus *pbus = NULL;
-+	struct pci_bus *pbus;
- 
--	while ((pbus = pci_find_next_bus(pbus)) != NULL) {
-+	for_each_pci_root_bus(pbus) {
- 		struct device_node *node;
- 
- 		if (pbus->self) {
--- 
-1.8.1.2
-
+The issue is more that PCIe enumeration is only reliable after a cold
+power cycle of the dock (the dock appears to be powered solely by its
+power cable and never the battery in Cardhu, and hence isn't affected by
+the main tablet PMIC's power on/off state like most of the board is). Is
+there some reset signal to the dock that the bootloader or kernel should
+be driving to solve this?
