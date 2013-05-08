@@ -1,63 +1,51 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Betty Dall <betty.dall@hp.com>
-To: rjw@sisk.pl, bhelgaas@google.com
-Cc: ying.huang@intel.com, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Betty Dall <betty.dall@hp.com>
-Subject: [PATCH v2 2/3] ACPI/APEI: Force fatal AER severity when bus has been reset
-Date: Thu, 30 May 2013 08:39:28 -0600
-Message-Id: <1369924769-17183-3-git-send-email-betty.dall@hp.com>
-In-Reply-To: <1369924769-17183-1-git-send-email-betty.dall@hp.com>
-References: <1369924769-17183-1-git-send-email-betty.dall@hp.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:49890 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757108Ab3EHC6b (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 7 May 2013 22:58:31 -0400
+Subject: [PATCH v2 8/8] pci: Wake-up devices before save for reset
+To: bhelgaas@google.com, linux-pci@vger.kernel.org
+From: Alex Williamson <alex.williamson@redhat.com>
+Cc: linux-kernel@vger.kernel.org
+Date: Tue, 07 May 2013 20:58:27 -0600
+Message-ID: <20130508025827.30771.78449.stgit@bling.home>
+In-Reply-To: <20130508025339.30771.61937.stgit@bling.home>
+References: <20130508025339.30771.61937.stgit@bling.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The CPER error record has a reset bit that indicates that the platform
-has reset the bus. The reset bit can be set for any severity error
-including recoverable.  From the AER code path's perspective,
-any error is fatal if the bus has been reset. This patch upgrades the
-severity of the AER recovery to AER_FATAL whenever the CPER error record
-indicates that the bus has been reset.
+Devices come out of reset in D0.  Restoring a device to a different
+post-reset state takes more smarts than our simple config space
+restore, which can leave devices in an inconsistent state.  For
+example, if a device is reset in D3, but the restore doesn't
+successfully return the device to D3, then the actual state of the
+device and dev->current_state are contradictory.  Put everything
+in D0 going into the reset, then we don't need to do anything
+special on the way out.
 
-Changes since v1:
-Fixed a typo in comment.
-
-Signed-off-by: Betty Dall <betty.dall@hp.com>
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
 ---
+ drivers/pci/pci.c |    7 +++++++
+ 1 file changed, 7 insertions(+)
 
- drivers/acpi/apei/ghes.c |   21 ++++++++++++++++++++-
- 1 files changed, 20 insertions(+), 1 deletions(-)
-
-
-diff --git a/drivers/acpi/apei/ghes.c b/drivers/acpi/apei/ghes.c
-index d668a8a..1c67d5a 100644
---- a/drivers/acpi/apei/ghes.c
-+++ b/drivers/acpi/apei/ghes.c
-@@ -451,7 +451,26 @@ static void ghes_do_proc(struct ghes *ghes,
- 				int aer_severity;
- 				devfn = PCI_DEVFN(pcie_err->device_id.device,
- 						  pcie_err->device_id.function);
--				aer_severity = cper_severity_to_aer(sev);
-+				/*
-+				 * Some Firmware First implementations
-+				 * put the device in SBR to contain
-+				 * the error. This is indicated by the
-+				 * CPER Section Descriptor Flags reset
-+				 * bit which means the component must
-+				 * be re-initialized or re-enabled
-+				 * prior to use. Promoting the AER
-+				 * serverity to FATAL will cause the
-+				 * AER code to link_reset and allow
-+				 * drivers to reprogram their cards.
-+				 */
-+				if (gdata->flags & CPER_SEC_RESET)
-+					aer_severity = cper_severity_to_aer(
-+							CPER_SEV_FATAL);
-+				else
-+					aer_severity =
-+						cper_severity_to_aer(sev);
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 8647998..98372ec 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3312,6 +3312,13 @@ static void pci_dev_unlock(struct pci_dev *dev)
+ 
+ static void pci_dev_save(struct pci_dev *dev)
+ {
++	/*
++	 * Wake-up device prior to save.  PM registers default to D0 after
++	 * reset and a simple register restore doesn't reliably return
++	 * to a non-D0 state anyway.
++	 */
++	pci_set_power_state(dev, PCI_D0);
 +
-+
- 				aer_recover_queue(pcie_err->device_id.segment,
- 						  pcie_err->device_id.bus,
- 						  devfn, aer_severity);
+ 	pci_save_state(dev);
+ 	/*
+ 	 * both INTx and MSI are disabled after the Interrupt Disable bit
+
