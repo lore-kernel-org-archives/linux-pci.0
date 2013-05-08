@@ -1,143 +1,120 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f175.google.com ([209.85.214.175]:59095 "EHLO
-	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756273Ab3E1WhY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 May 2013 18:37:24 -0400
-Received: by mail-ob0-f175.google.com with SMTP id xn12so6388203obc.6
-        for <linux-pci@vger.kernel.org>; Tue, 28 May 2013 15:37:23 -0700 (PDT)
+Received: from mail-ob0-f180.google.com ([209.85.214.180]:36156 "EHLO
+	mail-ob0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751875Ab3EHWcw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 May 2013 18:32:52 -0400
+Received: by mail-ob0-f180.google.com with SMTP id xk17so138266obc.25
+        for <linux-pci@vger.kernel.org>; Wed, 08 May 2013 15:32:52 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1368536439-19421-1-git-send-email-jiang.liu@huawei.com>
-References: <1368536439-19421-1-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <517FAB9B.6010005@cn.fujitsu.com>
+References: <516FB647.5030203@cn.fujitsu.com> <CAErSpo65ARR_fZwsGCZDJqbPWktHYUkufgPt-2mWwur=nPR1Qg@mail.gmail.com>
+ <517FAB9B.6010005@cn.fujitsu.com>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 28 May 2013 16:37:03 -0600
-Message-ID: <CAErSpo6-xtrNgPYxu_4QRtZs76P9B6b4JXQPENhX6hyNPpKx+g@mail.gmail.com>
-Subject: Re: [PATCH v1 1/2] ACPI, PCI: remove unused global list
- acpi_pci_roots in pci_root.c
-To: Jiang Liu <liuj97@gmail.com>
-Cc: "Rafael J . Wysocki" <rjw@sisk.pl>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
+Date: Wed, 8 May 2013 15:32:31 -0700
+Message-ID: <CAErSpo6fWtH3uUtyF+DedZH-SB6k5+2_=NwqMW_0kZ4vTxDC-Q@mail.gmail.com>
+Subject: Re: [PATCH v2 4/4] PCI: Check if the pci device get removed from pci
+ tree already in remove_callback()
+To: Gu Zheng <guz.fnst@cn.fujitsu.com>
+Cc: Yinghai Lu <yinghai@kernel.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Len Brown <lenb@kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	tangchen <tangchen@cn.fujitsu.com>,
+	Lin Feng <linfeng@cn.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 14, 2013 at 7:00 AM, Jiang Liu <liuj97@gmail.com> wrote:
-> Now the global list acpi_pci_roots pci_root.c is useless, remove it.
+On Tue, Apr 30, 2013 at 4:31 AM, Gu Zheng <guz.fnst@cn.fujitsu.com> wrote:
+> From a870da3615988f53a8949e5f8c907b079162067b Mon Sep 17 00:00:00 2001
+> From: Gu Zheng <guz.fnst@cn.fujitsu.com>
+> Date: Tue, 30 Apr 2013 18:45:12 +0800
+> Subject: [PATCH v2 4/4] PCI: Check if the pci device get removed from pci tree already in remove_callback
+> We found nested removing through:
+>         echo -n 1 > /sys/bus/pci/devices/0000\:10\:00.0/remove ; echo -n 1 >
+> /sys/bus/pci/devices/0000\:1a\:01.0/remove
 >
-> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-> Cc: Len Brown <lenb@kernel.org>
-> Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
-> Cc: linux-acpi@vger.kernel.org
-> Cc: linux-kernel@vger.kernel.org
+> will cause kernel crash as bus get freed.
+>
+> [  418.946462] CPU 4
+> [  418.968377] Pid: 512, comm: kworker/u:2 Tainted: G        W    3.8.0 #2
+> FUJITSU-SV PRIMEQUEST 1800E/SB
+> [  419.081763] RIP: 0010:[<ffffffff8137972e>]  [<ffffffff8137972e>]
+> pci_bus_read_config_word+0x5e/0x90
+> [  420.494137] Call Trace:
+> [  420.523326]  [<ffffffff813851ef>] ? remove_callback+0x1f/0x40
+> [  420.591984]  [<ffffffff8138044b>] pci_pme_active+0x4b/0x1c0
+> [  420.658545]  [<ffffffff8137d8e7>] pci_stop_bus_device+0x57/0xb0
+> [  420.729259]  [<ffffffff8137dab6>] pci_stop_and_remove_bus_device+0x16/0x30
+> [  420.811392]  [<ffffffff813851fb>] remove_callback+0x2b/0x40
+> [  420.877955]  [<ffffffff81257a56>] sysfs_schedule_callback_work+0x26/0x70
+>
+> https://bugzilla.kernel.org/show_bug.cgi?id=54411
+>
+> We have one patch that will let device hold bus ref to prevent it from
+> being freed, but that will still generate warning.
+>
+> ------------[ cut here ]------------
+> WARNING: at lib/list_debug.c:53 __list_del_entry+0x63/0xd0()
+> Hardware name: PRIMEQUEST 1800E
+> list_del corruption, ffff8807d1b6c000->next is LIST_POISON1 (dead000000100100)
+> Call Trace:
+>  [<ffffffff81056d4f>] warn_slowpath_common+0x7f/0xc0
+>  [<ffffffff81056e46>] warn_slowpath_fmt+0x46/0x50
+>  [<ffffffff81280b13>] __list_del_entry+0x63/0xd0
+>  [<ffffffff81280b91>] list_del+0x11/0x40
+>  [<ffffffff81298331>] pci_destroy_dev+0x31/0xc0
+>  [<ffffffff812985bb>] pci_remove_bus_device+0x5b/0x70
+>  [<ffffffff812985ee>] pci_stop_and_remove_bus_device+0x1e/0x30
+>  [<ffffffff8129fc89>] remove_callback+0x29/0x40
+>  [<ffffffff811f3b84>] sysfs_schedule_callback_work+0x24/0x70
+>
+> We can just check if the device get removed from pci tree
+> already in the protection under pci_remove_rescan_mutex.
+>
+>
+> Signed-off-by: Gu Zheng <guz.fnst@cn.fujitsu.com>
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 > ---
->  drivers/acpi/pci_root.c | 25 +++----------------------
->  include/acpi/acpi_bus.h |  1 -
->  2 files changed, 3 insertions(+), 23 deletions(-)
+>  drivers/pci/pci-sysfs.c |   13 ++++++++++---
+>  1 files changed, 10 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> index 5b4a9d9..18590c1 100644
+> --- a/drivers/pci/pci-sysfs.c
+> +++ b/drivers/pci/pci-sysfs.c
+> @@ -328,10 +328,17 @@ dev_rescan_store(struct device *dev, struct device_attribute *attr,
+>
+>  static void remove_callback(struct device *dev)
+>  {
+> -       struct pci_dev *pdev = to_pci_dev(dev);
+> -
+> +       struct pci_dev *pdev = to_pci_dev(dev), *tmp;
+> +       bool found = false;
+> +       struct pci_bus *bus = pdev->bus;
+>         mutex_lock(&pci_remove_rescan_mutex);
+> -       pci_stop_and_remove_bus_device(pdev);
+> +       list_for_each_entry(tmp, &bus->devices, bus_list)
+> +               if (tmp == pdev) {
+> +                       found = true;
+> +                       break;
+> +               }
+> +       if (found)
+> +               pci_stop_and_remove_bus_device(pdev);
 
-This and the "use acpi_handle_print()" patch look fine to me.
-
-Rafael, I can take them, or if you want to take them yourself, you can add
-
-  Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+I assume this series won't be needed when we eventually get the
+reference counting sorted out, because we shouldn't have to check
+whether the device still exists.  Yinghai posted a
+"fix_racing_removing_5.patch", which currently doesn't apply cleanly,
+but I assume he'll refresh it after v3.10-rc1 is out.
 
 Bjorn
 
-> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-> index b80e06e..91ddfd6 100644
-> --- a/drivers/acpi/pci_root.c
-> +++ b/drivers/acpi/pci_root.c
-> @@ -65,10 +65,6 @@ static struct acpi_scan_handler pci_root_handler = {
->         .detach = acpi_pci_root_remove,
->  };
->
-> -/* Lock to protect both acpi_pci_roots lists */
-> -static DEFINE_MUTEX(acpi_pci_root_lock);
-> -static LIST_HEAD(acpi_pci_roots);
-> -
->  static DEFINE_MUTEX(osc_lock);
->
->  /**
-> @@ -423,7 +419,6 @@ static int acpi_pci_root_add(struct acpi_device *device,
->                 }
->         }
->
-> -       INIT_LIST_HEAD(&root->node);
->         root->device = device;
->         root->segment = segment & 0xFFFF;
->         strcpy(acpi_device_name(device), ACPI_PCI_ROOT_DEVICE_NAME);
-> @@ -501,10 +496,6 @@ static int acpi_pci_root_add(struct acpi_device *device,
->          * TBD: Need PCI interface for enumeration/configuration of roots.
->          */
->
-> -       mutex_lock(&acpi_pci_root_lock);
-> -       list_add_tail(&root->node, &acpi_pci_roots);
-> -       mutex_unlock(&acpi_pci_root_lock);
-> -
->         /*
->          * Scan the Root Bridge
->          * --------------------
-> @@ -518,7 +509,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
->                             "Bus %04x:%02x not present in PCI namespace\n",
->                             root->segment, (unsigned int)root->secondary.start);
->                 result = -ENODEV;
-> -               goto out_del_root;
-> +               goto end;
->         }
->
->         /* ASPM setting */
-> @@ -538,20 +529,13 @@ static int acpi_pci_root_add(struct acpi_device *device,
->         if (system_state != SYSTEM_BOOTING) {
->                 pcibios_resource_survey_bus(root->bus);
->                 pci_assign_unassigned_bus_resources(root->bus);
-> -       }
-> -
-> -       /* need to after hot-added ioapic is registered */
-> -       if (system_state != SYSTEM_BOOTING)
-> +               /* need to after hot-added ioapic is registered */
->                 pci_enable_bridges(root->bus);
-> +       }
->
->         pci_bus_add_devices(root->bus);
->         return 1;
->
-> -out_del_root:
-> -       mutex_lock(&acpi_pci_root_lock);
-> -       list_del(&root->node);
-> -       mutex_unlock(&acpi_pci_root_lock);
-> -
->  end:
->         kfree(root);
->         return result;
-> @@ -568,9 +552,6 @@ static void acpi_pci_root_remove(struct acpi_device *device)
->
->         pci_remove_root_bus(root->bus);
->
-> -       mutex_lock(&acpi_pci_root_lock);
-> -       list_del(&root->node);
-> -       mutex_unlock(&acpi_pci_root_lock);
->         kfree(root);
+>         mutex_unlock(&pci_remove_rescan_mutex);
 >  }
 >
-> diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
-> index 22ba56e..4eb9a88 100644
-> --- a/include/acpi/acpi_bus.h
-> +++ b/include/acpi/acpi_bus.h
-> @@ -447,7 +447,6 @@ int register_acpi_bus_type(struct acpi_bus_type *);
->  int unregister_acpi_bus_type(struct acpi_bus_type *);
->
->  struct acpi_pci_root {
-> -       struct list_head node;
->         struct acpi_device * device;
->         struct pci_bus *bus;
->         u16 segment;
 > --
-> 1.8.1.2
+> 1.7.7
 >
