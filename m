@@ -1,107 +1,38 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f50.google.com ([209.85.220.50]:45554 "EHLO
-	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756140Ab3EYNvZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 25 May 2013 09:51:25 -0400
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Jiang Liu <jiang.liu@huawei.com>
-Subject: [PATCH v3, part1 02/10] PCI: Introduce pci_alloc_dev(struct pci_bus*) to replace alloc_pci_dev()
-Date: Sat, 25 May 2013 21:48:30 +0800
-Message-Id: <1369489718-25869-3-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1369489718-25869-1-git-send-email-jiang.liu@huawei.com>
-References: <1369489718-25869-1-git-send-email-jiang.liu@huawei.com>
+Received: from gate.crashing.org ([63.228.1.57]:51229 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752697Ab3EHBQc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 7 May 2013 21:16:32 -0400
+Message-ID: <1367975778.25488.108.camel@pasglop>
+Subject: Re: [PATCH v3 3/5] PCI: Skip IORESOURCE_MMIO allocation for root
+ bus without MMIO range
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Gavin Shan <shangw@linux.vnet.ibm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Date: Wed, 08 May 2013 11:16:18 +1000
+In-Reply-To: <CAE9FiQUC74+jp0JcfpqZu=BZc+rWnnuFS5UZGKL=w_GOXeLavw@mail.gmail.com>
+References: <1367965054-9013-1-git-send-email-yinghai@kernel.org>
+	 <1367965054-9013-4-git-send-email-yinghai@kernel.org>
+	 <1367965682.25488.26.camel@pasglop>
+	 <CAE9FiQUC74+jp0JcfpqZu=BZc+rWnnuFS5UZGKL=w_GOXeLavw@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Gu Zheng <guz.fnst@cn.fujitsu.com>
+On Tue, 2013-05-07 at 15:44 -0700, Yinghai Lu wrote:
+> x86 32 socket system, we may need to leave more mmiol for only several
+> sockets to make them work with cards that does not support mmio 64 bit
+> pref.
 
-Now here we introduce a new interface to replace alloc_pci_dev():
-	struct pci_dev *pci_alloc_dev(struct pci_bus *bus)
+Ok, while on POWER each root bridge has its own distinct 32-bit space
+(mapped elsewhere in CPU space). So at least we don't have *that*
+specific problem :-)
 
-It take a "struct pci_bus *" argument, so we can alloc a pci device
-on a target pci bus, and it acquire the reference of the pci_bus.
-We use pci_alloc_dev(NULL) to simplify the old alloc_pci_dev(),
-and keep it for a while but mark it as __deprecated.
+Cheers,
+Ben.
 
-Jiang Liu <jiang.liu@huawei.com>
-This also makes it safe to reference pci_dev->bus when holding a
-reference on a pci_dev.
-
-Also change
-__deprecated struct pci_dev * alloc_pci_dev(void);
-to
-struct pci_dev * __deprecated alloc_pci_dev(void);
-to follow common coding style.
-
-Signed-off-by: Gu Zheng <guz.fnst@cn.fujitsu.com>
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
----
- drivers/pci/probe.c | 18 ++++++++++++------
- include/linux/pci.h |  3 ++-
- 2 files changed, 14 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 70f10fa..26df9c8 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1200,19 +1200,25 @@ static void pci_release_bus_bridge_dev(struct device *dev)
- 	kfree(bridge);
- }
- 
--struct pci_dev *alloc_pci_dev(void)
-+struct pci_dev *pci_alloc_dev(struct pci_bus *bus)
- {
- 	struct pci_dev *dev;
- 
- 	dev = kzalloc(sizeof(struct pci_dev), GFP_KERNEL);
--	if (!dev)
--		return NULL;
--
--	INIT_LIST_HEAD(&dev->bus_list);
--	dev->dev.type = &pci_dev_type;
-+	if (dev) {
-+		INIT_LIST_HEAD(&dev->bus_list);
-+		dev->dev.type = &pci_dev_type;
-+		dev->bus = pci_bus_get(bus);
-+	}
- 
- 	return dev;
- }
-+EXPORT_SYMBOL(pci_alloc_dev);
-+
-+struct pci_dev *alloc_pci_dev(void)
-+{
-+	return pci_alloc_dev(NULL);
-+}
- EXPORT_SYMBOL(alloc_pci_dev);
- 
- bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 7556c59..b0f4a82 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -364,7 +364,8 @@ static inline struct pci_dev *pci_physfn(struct pci_dev *dev)
- 	return dev;
- }
- 
--struct pci_dev *alloc_pci_dev(void);
-+struct pci_dev *pci_alloc_dev(struct pci_bus *bus);
-+struct pci_dev * __deprecated alloc_pci_dev(void);
- 
- #define	to_pci_dev(n) container_of(n, struct pci_dev, dev)
- #define for_each_pci_dev(d) while ((d = pci_get_device(PCI_ANY_ID, PCI_ANY_ID, d)) != NULL)
--- 
-1.8.1.2
 
