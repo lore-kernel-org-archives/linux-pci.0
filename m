@@ -1,127 +1,67 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:57803 "EHLO hydra.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754804Ab3EQXr4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 17 May 2013 19:47:56 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "Zhang, LongX" <longx.zhang@intel.com>,
-	"linasvepstas@gmail.com" <linasvepstas@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"yanmin_zhang@linux.intel.com" <yanmin_zhang@linux.intel.com>,
-	"Joseph.Liu@Emulex.Com" <Joseph.Liu@emulex.com>
-Subject: Re: Subject : [ PATCH ] pci-reset-error_state-to-pci_channel_io_normal-at-report_slot_reset
-Date: Sat, 18 May 2013 01:56:34 +0200
-Message-ID: <5683193.Vsmy0DmceS@vostro.rjw.lan>
-In-Reply-To: <CAErSpo7+AbHi_TwxwHTJunpFb=CMhwMdCni6+NjbhdA=35XhvA@mail.gmail.com>
-References: <F7B8FD780A346D46A0042F5C63B06AE785E3B2@SHSMSX102.ccr.corp.intel.com> <CAErSpo7+AbHi_TwxwHTJunpFb=CMhwMdCni6+NjbhdA=35XhvA@mail.gmail.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Thu, 9 May 2013 00:28:45 +0200
+From: Borislav Petkov <bp@alien8.de>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Lance Ortiz <lance.ortiz@hp.com>, bhelgaas@google.com,
+	lance_ortiz@hotmail.com, jiang.liu@huawei.com, tony.luck@intel.com,
+	rostedt@goodmis.org, mchehab@redhat.com,
+	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] aerdrv: Move cper_print_pcie() out of interrupt context
+Message-ID: <20130508222845.GL30955@pd.tnic>
+References: <20130508171519.26724.63307.stgit@grignak.americas.hpqcorp.net>
+ <2598827.AVAqMcfGuF@vostro.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <2598827.AVAqMcfGuF@vostro.rjw.lan>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, May 17, 2013 05:43:33 PM Bjorn Helgaas wrote:
-> [+cc Rafael because he knows about dev->state_saved]
+On Thu, May 09, 2013 at 12:01:21AM +0200, Rafael J. Wysocki wrote:
+> On Wednesday, May 08, 2013 11:15:19 AM Lance Ortiz wrote:
+> > The following warning was seen on 3.9 when a corrected PCIe error was being
+> > handled by the AER subsystem.
+> > 
+> > WARNING: at .../drivers/pci/search.c:214 pci_get_dev_by_id+0x8a/0x90()
+> > 
+> > This occurred because code was added to the function cper_print_pcie() that
+> > calls the pci_get_domain_bus_and_slot() function.
 > 
-> Sorry, I'm not very familiar with AER, so please excuse some naive
-> questions below.
-> 
-> On Fri, Apr 26, 2013 at 12:28 AM, Zhang, LongX <longx.zhang@intel.com> wrote:
-> > From: Zhang Long <longx.zhang@intel.com>
-> >
-> > Specific pci device drivers might have many functions to call
-> > pci_channel_offline to check device states. When slot_reset happens,
-> > drivers' slot_reset callback might call such functions and eventually
-> > abort the reset.
-> 
-> Where does this happen?  I looked at all the references to
-> dev->error_state and all the callers of pci_channel_offline(), and I
-> didn't see any in .slot_reset() methods.
-> 
-> (There are *assignments* to dev->error_state in qlcnic_attach_func(),
-> qlge_io_slot_reset(), and qla2xxx_pci_slot_reset().  You might be able
-> to remove those assignments after this patch, but this patch wouldn't
-> really change anything for those paths.)
-> 
-> > The patch resets pdev->error_state to pci_channel_io_normal at
-> > the begining of report_slot_reset.
-> 
-> > Signed-off-by: Zhang Yanmin <yanmin_zhang@linux.intel.com>
-> > Signed-off-by: Zhang Long <longx.zhang@intel.com>
-> > ---
-> >  drivers/pci/pcie/aer/aerdrv_core.c |    1 +
-> >  drivers/pci/pcie/portdrv_pci.c     |   12 +++++-------
-> >  2 files changed, 6 insertions(+), 7 deletions(-)
-> >
-> > diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
-> > index 564d97f..c61fd44 100644
-> > --- a/drivers/pci/pcie/aer/aerdrv_core.c
-> > +++ b/drivers/pci/pcie/aer/aerdrv_core.c
-> > @@ -286,6 +286,7 @@ static int report_slot_reset(struct pci_dev *dev, void *data)
-> >         result_data = (struct aer_broadcast_data *) data;
-> >
-> >         device_lock(&dev->dev);
-> > +       dev->error_state = pci_channel_io_normal;
-> 
-> The device's error_state might be pci_channel_io_frozen when we get
-> here.  We haven't touched anything in the hardware yet.  What makes
-> the device unfrozen now?  Did anything actually change as far as the
-> hardware device is concerned?
-> 
-> I agree it looks like report_slot_reset() should be made more like
-> eeh_report_reset().  I'm just wondering if the error_state should be
-> changed *after* calling the .slot_reset() method instead of before.
-> 
-> >         if (!dev->driver ||
-> >                 !dev->driver->err_handler ||
-> >                 !dev->driver->err_handler->slot_reset)
-> > diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
-> > index ed4d094..7abefd9 100644
-> > --- a/drivers/pci/pcie/portdrv_pci.c
-> > +++ b/drivers/pci/pcie/portdrv_pci.c
-> > @@ -332,13 +332,11 @@ static pci_ers_result_t pcie_portdrv_slot_reset(struct pci_dev *dev)
-> >         pci_ers_result_t status = PCI_ERS_RESULT_RECOVERED;
-> >         int retval;
-> >
-> > -       /* If fatal, restore cfg space for possible link reset at upstream */
-> > -       if (dev->error_state == pci_channel_io_frozen) {
-> > -               dev->state_saved = true;
-> > -               pci_restore_state(dev);
-> > -               pcie_portdrv_restore_config(dev);
-> > -               pci_enable_pcie_error_reporting(dev);
-> > -       }
-> 
-> Previously we only restored state for the pci_channel_io_frozen state,
-> i.e., when handling an AER_FATAL error.  Now we restore it always.
-> Why?
-> 
-> > +       /* restore cfg space for possible link reset at upstream */
-> > +       dev->state_saved = true;
-> 
-> "dev->state_saved == true" means that the dev->saved_config_space
-> contains valid data.  Why do we know that's the case here?  I see that
-> pcie_portdrv_probe() calls pci_save_state() when we first claim the
-> port, and I guess we're assuming the state saved then is still valid.
-> But why do we need to actually set dev->state_saved here?  Shouldn't
-> it be already set to true anyway?
+> Do you know which commit added that code?
 
-This is a dirty trick to make pci_restore_state(dev) always work here
-(because it checks dev->state_saved and does nothing if it isn't set).
-I suppose.
+1d5210008bd3a26daf4b06aed9d6c330dd4c83e2
 
-> > +       pci_restore_state(dev);
-> > +       pcie_portdrv_restore_config(dev);
-> > +       pci_enable_pcie_error_reporting(dev);
-> >
-> >         /* get true return value from &status */
-> >         retval = device_for_each_child(&dev->dev, &status, slot_reset_iter);
-> > --
+> > cper_print_pcie() is called
+> > in an interrupt context and pci_get* functions are not supposed to be called
+> > in that context hence the warning.
+> > 
+> > The solution is to move the call to cper_print_aer() out of the interrupt
+> > context and into aer_recover_queue() to avoid any warnings when calling
+> > pci_get* functions.
+> 
+> The way the changes are described here isn't particularly clear to me.  I'd say
+> something like
+> 
+>   If cper_print_aer() is called by aer_recover_work_func(), there won't be any
+>   reason to call it from cper_print_pcie() any more, in which case all of the
+>   problematic code needed only to prepare for the cper_print_aer() call,
+>   including the invocation of pci_get_domain_bus_and_slot() causing the warning
+>   to be printed, may be removed from there.  Make that happen."
+> 
+> Also, since aer_recover_work_func() is going to be the only existing caller of
+> cper_print_aer() after this change, as far as I can say, and it doesn't use the
+> function's first argument, that argument should be dropped entirely.
 
-Thanks,
-Rafael
+Hmm, that needs more diddling: AFAICT __ghes_print_estatus() figures out
+what the prefix is depending on the ->error_severity coming from the
+acpi_hest_generic_status thing so it probably needs to be handed down or
+similar...
 
+Fun.
 
 -- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+Regards/Gruss,
+    Boris.
+
+Sent from a fat crate under my desk. Formatting is fine.
+--
