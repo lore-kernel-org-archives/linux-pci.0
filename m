@@ -1,62 +1,85 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f180.google.com ([209.85.212.180]:58245 "EHLO
-	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752324Ab3E1Ju5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 May 2013 05:50:57 -0400
-Date: Tue, 28 May 2013 11:50:52 +0200
-From: Ingo Molnar <mingo@kernel.org>
-To: Alexander Gordeev <agordeev@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org, x86@kernel.org,
-	linux-pci@vger.kernel.org,
-	Suresh Siddha <suresh.b.siddha@intel.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	Jan Beulich <JBeulich@suse.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH v3 -tip x86/apic 1/2] PCI/MSI: Allocate as many
- multiple-MSIs as requested
-Message-ID: <20130528095052.GA6764@gmail.com>
-References: <cover.1368431413.git.agordeev@redhat.com>
- <8575dc590b819892f366852fe50835efaf579f4f.1368431413.git.agordeev@redhat.com>
+Received: from avon.wwwdotorg.org ([70.85.31.133]:54666 "EHLO
+	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754558Ab3EHQg7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 May 2013 12:36:59 -0400
+Message-ID: <518A7F26.3030605@wwwdotorg.org>
+Date: Wed, 08 May 2013 10:36:54 -0600
+From: Stephen Warren <swarren@wwwdotorg.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <8575dc590b819892f366852fe50835efaf579f4f.1368431413.git.agordeev@redhat.com>
+To: Jay Agarwal <jagarwal@nvidia.com>
+CC: linux@arm.linux.org.uk, thierry.reding@avionic-design.de,
+	ldewangan@nvidia.com, bhelgaas@google.com, olof@lixom.net,
+	hdoyu@nvidia.com, pgaikwad@nvidia.com, mturquette@linaro.org,
+	pdeschrijver@nvidia.com, linux-arm-kernel@lists.infradead.org,
+	linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, jtukkinen@nvidia.com, kthota@nvidia.com
+Subject: Re: [PATCH 1/4] ARM: tegra30: clocks: Fix pciex clock registration
+References: <1368010660-31465-1-git-send-email-jagarwal@nvidia.com>
+In-Reply-To: <1368010660-31465-1-git-send-email-jagarwal@nvidia.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On 05/08/2013 04:57 AM, Jay Agarwal wrote:
+> Registering pciex as peripheral clock instead of fixed clock
+> as tegra_perih_reset_assert(deassert) api of this clock api 
+> gives warning and ultimately does not succeed to assert(deassert).
 
-* Alexander Gordeev <agordeev@redhat.com> wrote:
+A few procedural comments: I believe this is at least the second version
+of these patches that have been posted. As such, the email subject
+should say e.e. "PATCH V2" not just "PATCH". You can pass
+--subject-prefix='PATCH V2' to git format-patch to achieve this.
 
-> When multiple MSIs are enabled with pci_enable_msi_block(), the
-> requested number of interrupts 'nvec' is rounded up to the nearest
-> power-of-two value. The result is then used for setting up the
-> number of MSI messages in the PCI device and allocation of
-> interrupt resources in the operating system (i.e. vector numbers).
-> Thus, in cases when a device driver requests some number of MSIs
-> and this number is not a power-of-two value, the extra operating
-> system resources (allocated as the result of rounding) are wasted.
-> 
-> This fix introduces 'msi_desc::nvec' field to address the above
-> issue. When non-zero, it will report the actual number of MSIs the
-> device will send, as requested by the device driver. This value
-> should be used by architectures to properly set up and tear down
-> associated interrupt resources.
-> 
-> Note, although the existing 'msi_desc::multiple' field might seem
-> redundant, in fact in does not. In general case the number of MSIs a
-> PCI device is initialized with is not necessarily the closest power-
-> of-two value of the number of MSIs the device will send. Thus, in
-> theory it would not be always possible to derive the former from the
-> latter and we need to keep them both, to stress this corner case.
-> Besides, since 'msi_desc::multiple' is a bitfield, throwing it out
-> would not save us any space.
-> 
-> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Since this is an updated version of the patches, each patch should
+describe what changed in the patch, so that people know what issues
+you've fixed in this version. Most people believe that the description
+of changes should be below the --- line, so that it doesn't get included
+in the commit description when the patch is applied.
 
-Would be nice to have an Acked-by from Bjorn for this patch.
+> Patch is based on remotes/gitorious_thierryreding_linux/tegra/next
+> and should be applied on top of this.
 
-Thanks,
+Those two lines should be below the --- line so that they don't get
+included in the commit description when the patch is applied. git
+metadata will provide clues re: who applied the patch and to which
+branch, so there's no need to duplicate this information in the commit
+description itself, but rather include it below --- so that it's still
+present and people can see it.
 
-	Ingo
+Some comments on the patch and series below...
+
+> diff --git a/drivers/clk/tegra/clk-tegra30.c b/drivers/clk/tegra/clk-tegra30.c
+
+> +	/* pciex */
+> +	clk = tegra_clk_register_periph_gate("pciex", "pll_e", 0, clk_base, 0,
+> +				    74, &periph_u_regs, periph_clk_enb_refcnt);
+> +	clk_register_clkdev(clk, "pciex", NULL);
+> +	clks[pciex] = clk;
+
+Hmmm. This change perhaps isn't technically correct, but is the best we
+can do for now, so it's fine. It's also consistent with how the Tegra20
+clock driver is written.
+
+This clock has a "reset" bit in the CLK_RST_* registers, but not an
+"enable" bit in the CLK_ENB_* registers. Hence, representing this as a
+gated clock isn't correct, since there is not gate control in HW. The
+correct way to handle this would be to implement the new reset
+controller API for Tegra, and expose the reset control only, and not
+touch the clock registration at all. However, we do this exact same
+thing for a number of Tegra clocks right now, hence I think this change
+is fine for now; we'll clean this up, along with some other instances of
+the same issue, once the reset API is implemented for Tegra. Of course,
+if that happens before the PCI code is checked in, then my opinion will
+change.
+
+> @@ -1930,7 +1931,6 @@ static struct tegra_clk_duplicate tegra_clk_duplicates[] = {
+>  	TEGRA_CLK_DUPLICATE(bsea, "nvavp", "bsea"),
+>  	TEGRA_CLK_DUPLICATE(cml1, "tegra_sata_cml", NULL),
+>  	TEGRA_CLK_DUPLICATE(cml0, "tegra_pcie", "cml"),
+> -	TEGRA_CLK_DUPLICATE(pciex, "tegra_pcie", "pciex"),
+
+That seems like an unrelated change, and isn't mentioned in the commit
+description. Is the change strictly necessary? Is it cleanup that can
+happen as a separate patch later in the series? Aren't you able to
+remove the CLK_DUPLICATE() entries for other PCIe-related clocks too?
