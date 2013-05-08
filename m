@@ -1,120 +1,110 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f44.google.com ([209.85.160.44]:35441 "EHLO
-	mail-pb0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751502Ab3EQCLh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 May 2013 22:11:37 -0400
-Received: by mail-pb0-f44.google.com with SMTP id wz17so2871235pbc.17
-        for <linux-pci@vger.kernel.org>; Thu, 16 May 2013 19:11:37 -0700 (PDT)
-Date: Fri, 17 May 2013 10:11:29 +0800
-From: Kevin Hao <haokexin@gmail.com>
-To: Liu Jiang <liuj97@gmail.com>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH 2/2] PCI: unset the resource if we can't get the correct
- CPU address
-Message-ID: <20130517021128.GB13975@pek-khao-d1.corp.ad.wrs.com>
-References: <1368536876-27307-1-git-send-email-haokexin@gmail.com>
- <1368536876-27307-3-git-send-email-haokexin@gmail.com>
- <519506BF.3010400@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:15112 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753251Ab3EHTOm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 8 May 2013 15:14:42 -0400
+Message-ID: <518AA420.5020900@redhat.com>
+Date: Wed, 08 May 2013 15:14:40 -0400
+From: Don Dutile <ddutile@redhat.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="kXdP64Ggrk/fb43R"
-In-Reply-To: <519506BF.3010400@gmail.com>
+To: Alex Williamson <alex.williamson@redhat.com>
+CC: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 1/8] pci: Create pci_reset_bridge_secondary_bus()
+References: <20130508025339.30771.61937.stgit@bling.home> <20130508025740.30771.50033.stgit@bling.home>
+In-Reply-To: <20130508025740.30771.50033.stgit@bling.home>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On 05/07/2013 10:57 PM, Alex Williamson wrote:
+> Move the secondary bus reset code from pci_parent_bus_reset() into its own
+> function.  Export it as we'll later be calling it from hotplug controllers.
+>
+> Signed-off-by: Alex Williamson<alex.williamson@redhat.com>
+> ---
+>   drivers/pci/pci.c   |   32 +++++++++++++++++++++++---------
+>   include/linux/pci.h |    1 +
+>   2 files changed, 24 insertions(+), 9 deletions(-)
+>
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index b099e00..d0f313f 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -3210,9 +3210,30 @@ static int pci_pm_reset(struct pci_dev *dev, int probe)
+>   	return 0;
+>   }
+>
+> -static int pci_parent_bus_reset(struct pci_dev *dev, int probe)
+> +/**
+> + * pci_reset_bridge_secondary_bus - Reset the secondary bus on a PCI bridge.
+> + * @dev: Bridge device
+> + *
+> + * Use the bridge control register to assert reset on the secondary bus.
+> + * Devices on the secondary bus are left in power-on state.
+> + */
+> +void pci_reset_bridge_secondary_bus(struct pci_dev *dev)
+see recommended api change below...
 
---kXdP64Ggrk/fb43R
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+>   {
+>   	u16 ctrl;
+> +
+> +	pci_read_config_word(dev, PCI_BRIDGE_CONTROL,&ctrl);
+> +	ctrl |= PCI_BRIDGE_CTL_BUS_RESET;
+> +	pci_write_config_word(dev, PCI_BRIDGE_CONTROL, ctrl);
+> +	msleep(100);
+> +
+> +	ctrl&= ~PCI_BRIDGE_CTL_BUS_RESET;
+> +	pci_write_config_word(dev, PCI_BRIDGE_CONTROL, ctrl);
+> +	msleep(100);
+> +}
+> +EXPORT_SYMBOL_GPL(pci_reset_bridge_secondary_bus);
+> +
+> +static int pci_parent_bus_reset(struct pci_dev *dev, int probe)
+> +{
+>   	struct pci_dev *pdev;
+>
+>   	if (pci_is_root_bus(dev->bus) || dev->subordinate || !dev->bus->self)
+> @@ -3225,14 +3246,7 @@ static int pci_parent_bus_reset(struct pci_dev *dev, int probe)
+>   	if (probe)
+>   		return 0;
+>
+> -	pci_read_config_word(dev->bus->self, PCI_BRIDGE_CONTROL,&ctrl);
+> -	ctrl |= PCI_BRIDGE_CTL_BUS_RESET;
+> -	pci_write_config_word(dev->bus->self, PCI_BRIDGE_CONTROL, ctrl);
+> -	msleep(100);
+> -
+> -	ctrl&= ~PCI_BRIDGE_CTL_BUS_RESET;
+> -	pci_write_config_word(dev->bus->self, PCI_BRIDGE_CONTROL, ctrl);
+> -	msleep(100);
+> +	pci_reset_bridge_secondary_bus(dev->bus->self);
+>
+It makes more sense to pass the pci-bus struct of the bus you want to reset,
+instead of the pdev of the bridge that bus is sourced by.
+i.e, dev->bus,  and above, extract the pdev from the bus-struct.
+That way, devices asking for bus-reset, don't have to know the bus-struct details
+to make the call right... just their own pdev->bus reference.
+(more object-like/clean).
 
-On Fri, May 17, 2013 at 12:18:07AM +0800, Liu Jiang wrote:
-> On Tue 14 May 2013 09:07:56 PM CST, Kevin Hao wrote:
-> >In the current kernel, we just set the CPU address to the bus address
-> >if we can't find the match region for one specific bus address. If BAR
-> >of one pci device is set to address which happens to be a legitimate
-> >CPU address by firmware, the kernel will think this resource is legal
-> >and will not try to reassign later. In cases the CPU address and bus
-> >address isn't equal, the device will not work. So we should check
-> >if we can translate the bus address to CPU address correctly. If not,
-> >we should unset this resource and wish the kernel will reassign it
-> >later.
-> >
-> >Since we will invoke pcibios_bus_to_resource unconditionally if we
-> >don't goto fail, move it out of if/else wrap.
-> >
-> >Signed-off-by: Kevin Hao <haokexin@gmail.com>
-> >---
-> >  drivers/pci/probe.c | 9 ++++++---
-> >  1 file changed, 6 insertions(+), 3 deletions(-)
-> >
-> >diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> >index 70f10fa..c96772f 100644
-> >--- a/drivers/pci/probe.c
-> >+++ b/drivers/pci/probe.c
-> >@@ -250,12 +250,10 @@ int __pci_read_base(struct pci_dev *dev, enum pci_=
-bar_type type,
-> >  			pci_write_config_dword(dev, pos + 4, 0);
-> >  			region.start =3D 0;
-> >  			region.end =3D sz64;
-> >-			pcibios_bus_to_resource(dev, res, &region);
-> >  			bar_disabled =3D true;
-> >  		} else {
-> >  			region.start =3D l64;
-> >  			region.end =3D l64 + sz64;
-> >-			pcibios_bus_to_resource(dev, res, &region);
-> >  		}
-> >  	} else {
-> >  		sz =3D pci_size(l, sz, mask);
-> >@@ -265,7 +263,12 @@ int __pci_read_base(struct pci_dev *dev, enum pci_b=
-ar_type type,
-> >
-> >  		region.start =3D l;
-> >  		region.end =3D l + sz;
-> >-		pcibios_bus_to_resource(dev, res, &region);
-> >+	}
-> >+
-> >+	if (!pcibios_bus_to_resource(dev, res, &region)) {
-> >+		res->flags |=3D IORESOURCE_UNSET;
-> >+		res->end -=3D res->start;
-> >+		res->start =3D 0;
-> >  	}
-> >
-> >  	goto out;
->=20
-> Hi Kevin,
->      Will this break subtractive decode PCI bridges and devices?
+>   	return 0;
+>   }
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 710067f..695620c 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -905,6 +905,7 @@ int pcie_set_mps(struct pci_dev *dev, int mps);
+>   int __pci_reset_function(struct pci_dev *dev);
+>   int __pci_reset_function_locked(struct pci_dev *dev);
+>   int pci_reset_function(struct pci_dev *dev);
+> +void pci_reset_bridge_secondary_bus(struct pci_dev *dev);
+and final tweak.
 
-No. A subtractive decode occurs only when no other pci bridge or device
-claim the transactions. As you can see that when we are trying to translate
-a bus address to cpu address we search the address regions of pci host
-bridge instead of a pci bridge. The pci host bridge address regions should
-cover all the bus address we can use for the pci device or bridge under this
-pci controller. This definitely also include the bus address regions used by
-the expansion bus for subtractive decode. So if a pci device use a bus addr=
-ess
-that is unknown to this pci host bridge, there is definitely something wrong
-here. This is the case we are trying to fix.
+>   void pci_update_resource(struct pci_dev *dev, int resno);
+>   int __must_check pci_assign_resource(struct pci_dev *dev, int i);
+>   int __must_check pci_reassign_resource(struct pci_dev *dev, int i, resource_size_t add_size, resource_size_t align);
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Thanks,
-Kevin
-
-> Regards!
-> Gerry
-
---kXdP64Ggrk/fb43R
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQEcBAEBAgAGBQJRlZHQAAoJEJNY7TDerrFxTKkIAKWJceDpkAunw2AVgcPnQLeV
-BEZM7tnW26Rpv5OQaerElehQqjA4I5ym1u2ZNxv2fscCTQrH/Z5f14O5ne+oJHWZ
-/YUgzj4h2VjnbTF84Y0RNIMIfnkdfbrfn/vF20QJfIjQKmww5M29sipTFNnwmBMf
-0EixgW35MwX55buN2+XVl2xoPJ5MZZj9WFUY9QELgiFBhqf9uNrm/02TqYeqvvQ8
-WWyKHwNz7B1URy+osGEy8svJzW0Kok4DXoss8t+cFy6CA4WerHS9HREfXw9VuYI0
-uPDZsEzovn2o1zHkIId0E+n6icm1gwkLc2imuwfnC1YsWFSYqXdTo9RvyfQw3tI=
-=atCe
------END PGP SIGNATURE-----
-
---kXdP64Ggrk/fb43R--
