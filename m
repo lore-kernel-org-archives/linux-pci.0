@@ -1,38 +1,40 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from zoneX.GCU-Squad.org ([194.213.125.0]:21038 "EHLO
-	services.gcu-squad.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751799Ab3EaH24 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 31 May 2013 03:28:56 -0400
-Date: Fri, 31 May 2013 09:28:46 +0200
-From: Jean Delvare <khali@linux-fr.org>
-To: "Huang, Shane" <Shane.Huang@amd.com>
-Cc: Tejun Heo <tj@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, linux-ide@vger.kernel.org,
-	linux-i2c@vger.kernel.org
-Subject: Re: [PATCH 3/3] i2c-piix4: add AMD CZ SMBus device ID
-Message-ID: <20130531092846.51f2e202@endymion.delvare>
-In-Reply-To: <43EB3AB3EEFE8D43B525F4D2EAF507E1085B8CC5@SCYBEXDAG04.amd.com>
-References: <1369999333-2073-1-git-send-email-shane.huang@amd.com>
-	<20130531080336.04481330@endymion.delvare>
-	<43EB3AB3EEFE8D43B525F4D2EAF507E1085B8CC5@SCYBEXDAG04.amd.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-ia0-f180.google.com ([209.85.210.180]:33237 "EHLO
+	mail-ia0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752065Ab3EHD5p (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 May 2013 23:57:45 -0400
+MIME-Version: 1.0
+In-Reply-To: <1367975778.25488.108.camel@pasglop>
+References: <1367965054-9013-1-git-send-email-yinghai@kernel.org>
+	<1367965054-9013-4-git-send-email-yinghai@kernel.org>
+	<1367965682.25488.26.camel@pasglop>
+	<CAE9FiQUC74+jp0JcfpqZu=BZc+rWnnuFS5UZGKL=w_GOXeLavw@mail.gmail.com>
+	<1367975778.25488.108.camel@pasglop>
+Date: Tue, 7 May 2013 20:57:44 -0700
+Message-ID: <CAE9FiQU4gqpFOLTGV8FLhdNW-EVOOtXHQqpOOY85yUemmb-3iQ@mail.gmail.com>
+Subject: Re: [PATCH v3 3/5] PCI: Skip IORESOURCE_MMIO allocation for root bus
+ without MMIO range
+From: Yinghai Lu <yinghai@kernel.org>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Gavin Shan <shangw@linux.vnet.ibm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 31 May 2013 06:42:54 +0000, Huang, Shane wrote:
-> Hi Jean,
-> 
-> > Please don't change the case. This makes your patch larger and
-> > increases the risk of conflict with other patches, for no good reason.
-> > 
-> > Other than that, the patch looks OK.
-> 
-> I didn't want to change it but checkpatch.pl warns due to
-> "Hudson-2" in i2c-piix4.c
+On Tue, May 7, 2013 at 6:16 PM, Benjamin Herrenschmidt
+<benh@kernel.crashing.org> wrote:
+> On Tue, 2013-05-07 at 15:44 -0700, Yinghai Lu wrote:
+>> x86 32 socket system, we may need to leave more mmiol for only several
+>> sockets to make them work with cards that does not support mmio 64 bit
+>> pref.
+>
+> Ok, while on POWER each root bridge has its own distinct 32-bit space
+> (mapped elsewhere in CPU space). So at least we don't have *that*
+> specific problem :-)
 
-Can you show the exact message? checkpatch doesn't complain here, and I
-can't think of any reason why it would care about that.
+Hope x86 could support that.
 
--- 
-Jean Delvare
+Yinghai
