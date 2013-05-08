@@ -1,38 +1,85 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f52.google.com ([209.85.160.52]:48946 "EHLO
-	mail-pb0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759290Ab3EOOnE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 May 2013 10:43:04 -0400
-Message-ID: <51939EF2.1070904@gmail.com>
-Date: Wed, 15 May 2013 22:42:58 +0800
-From: Liu Jiang <liuj97@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:64886 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756421Ab3EHC5z (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 7 May 2013 22:57:55 -0400
+Subject: [PATCH v2 3/8] pci: Add pci_hp_reset_slot
+To: bhelgaas@google.com, linux-pci@vger.kernel.org
+From: Alex Williamson <alex.williamson@redhat.com>
+Cc: linux-kernel@vger.kernel.org
+Date: Tue, 07 May 2013 20:57:53 -0600
+Message-ID: <20130508025753.30771.43656.stgit@bling.home>
+In-Reply-To: <20130508025339.30771.61937.stgit@bling.home>
+References: <20130508025339.30771.61937.stgit@bling.home>
 MIME-Version: 1.0
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [RFC PATCH v2, part 2 01/18] PCI: introduce hotplug-safe PCI
- bus iterators
-References: <1368550322-1045-1-git-send-email-jiang.liu@huawei.com> <20130514170528.GA4030@kroah.com>
-In-Reply-To: <20130514170528.GA4030@kroah.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/15/2013 01:05 AM, Greg Kroah-Hartman wrote:
-> On Wed, May 15, 2013 at 12:51:45AM +0800, Jiang Liu wrote:
->> +EXPORT_SYMBOL(pci_bus_exists);
-> EXPORT_SYMBOL_GPL()?  Same for the other new exports?
->
-> thanks,
->
-> greg k-h
-Sure, will change to EXPORT_SYMBOL_GPL in next version.
-Thanks for review!
-Gerry
+Provide an interface to get to hotplug controller reset_slot callback
+
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+---
+ drivers/pci/hotplug/pci_hotplug_core.c |   24 ++++++++++++++++++++++++
+ include/linux/pci_hotplug.h            |    8 ++++++++
+ 2 files changed, 32 insertions(+)
+
+diff --git a/drivers/pci/hotplug/pci_hotplug_core.c b/drivers/pci/hotplug/pci_hotplug_core.c
+index 202f4a9..1d0fee4 100644
+--- a/drivers/pci/hotplug/pci_hotplug_core.c
++++ b/drivers/pci/hotplug/pci_hotplug_core.c
+@@ -537,6 +537,29 @@ int __must_check pci_hp_change_slot_info(struct hotplug_slot *hotplug,
+ 	return 0;
+ }
+ 
++/**
++ * pci_hp_reset_slot - reset slot
++ *
++ * @hotplug: pointer to hotplug slot to reset
++ * @probe: reset slot (0) or just probe
++ *
++ * Returns 0 if successful, anything else for an error.
++ */
++int pci_hp_reset_slot(struct hotplug_slot *hotplug, int probe)
++{
++	int result = -ENOTTY;
++
++	if (!hotplug || !try_module_get(hotplug->ops->owner))
++		return result;
++
++	if (hotplug->ops->reset_slot)
++		result = hotplug->ops->reset_slot(hotplug, probe);
++
++	module_put(hotplug->ops->owner);
++
++	return result;
++}
++
+ static int __init pci_hotplug_init (void)
+ {
+ 	int result;
+@@ -570,3 +593,4 @@ MODULE_PARM_DESC(debug, "Debugging mode enabled or not");
+ EXPORT_SYMBOL_GPL(__pci_hp_register);
+ EXPORT_SYMBOL_GPL(pci_hp_deregister);
+ EXPORT_SYMBOL_GPL(pci_hp_change_slot_info);
++EXPORT_SYMBOL_GPL(pci_hp_reset_slot);
+diff --git a/include/linux/pci_hotplug.h b/include/linux/pci_hotplug.h
+index 0d3a604..d771cee 100644
+--- a/include/linux/pci_hotplug.h
++++ b/include/linux/pci_hotplug.h
+@@ -135,6 +135,14 @@ extern int __pci_hp_register(struct hotplug_slot *slot, struct pci_bus *pbus,
+ extern int pci_hp_deregister(struct hotplug_slot *slot);
+ extern int __must_check pci_hp_change_slot_info	(struct hotplug_slot *slot,
+ 						 struct hotplug_slot_info *info);
++#ifdef CONFIG_HOTPLUG_PCI
++int pci_hp_reset_slot(struct hotplug_slot *slot, int probe);
++#else
++static inline int pci_hp_reset_slot(struct hotplug_slot *slot, int probe)
++{
++	return -ENOTTY;
++}
++#endif
+ 
+ /* use a define to avoid include chaining to get THIS_MODULE & friends */
+ #define pci_hp_register(slot, pbus, devnr, name) \
+
