@@ -1,91 +1,47 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Subject: [RFC PATCH v2, part3 09/11] PCI, acpiphp: use PCI bus lock to protect PCI device hotplug
-Date: Thu, 16 May 2013 23:50:57 +0800
-Message-Id: <1368719459-24800-10-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1368719459-24800-1-git-send-email-jiang.liu@huawei.com>
-References: <1368719459-24800-1-git-send-email-jiang.liu@huawei.com>
+Subject: [PATCH v2 2/8] pci: Add hotplug_slot_ops.reset_slot()
+To: bhelgaas@google.com, linux-pci@vger.kernel.org
+From: Alex Williamson <alex.williamson@redhat.com>
+Cc: linux-kernel@vger.kernel.org
+Date: Tue, 07 May 2013 20:57:47 -0600
+Message-ID: <20130508025747.30771.89956.stgit@bling.home>
+In-Reply-To: <20130508025339.30771.61937.stgit@bling.home>
+References: <20130508025339.30771.61937.stgit@bling.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use PCI bus lock to protect concurrent PCI device hotplug operations.
+This optional callback allows htoplug controllers to perform slot
+specific resets.  These may be necessary in cases where a normal
+secondary bus reset can interact with controller logic and expose
+spurious hotplugs.
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Yijing Wang <wangyijing@huawei.com>
-Cc: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
 ---
- drivers/pci/hotplug/acpiphp_glue.c | 14 +++++++++++---
- 1 file changed, 11 insertions(+), 3 deletions(-)
+ include/linux/pci_hotplug.h |    4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-index e330331..d105dcd 100644
---- a/drivers/pci/hotplug/acpiphp_glue.c
-+++ b/drivers/pci/hotplug/acpiphp_glue.c
-@@ -674,6 +674,9 @@ static int __ref enable_device(struct acpiphp_slot *slot)
- 	if (slot->flags & SLOT_ENABLED)
- 		goto err_exit;
+diff --git a/include/linux/pci_hotplug.h b/include/linux/pci_hotplug.h
+index 45fc162..0d3a604 100644
+--- a/include/linux/pci_hotplug.h
++++ b/include/linux/pci_hotplug.h
+@@ -63,6 +63,9 @@ enum pcie_link_width {
+  * @get_adapter_status: Called to get see if an adapter is present in the slot or not.
+  *	If this field is NULL, the value passed in the struct hotplug_slot_info
+  *	will be used when this value is requested by a user.
++ * @reset_slot: Optional interface to allow override of a bus reset for the
++ *	slot for cases where a secondary bus reset can result in spurious
++ *	hotplug events or where a slot can be reset independent of the bus.
+  *
+  * The table of function pointers that is passed to the hotplug pci core by a
+  * hotplug pci driver.  These functions are called by the hotplug pci core when
+@@ -80,6 +83,7 @@ struct hotplug_slot_ops {
+ 	int (*get_attention_status)	(struct hotplug_slot *slot, u8 *value);
+ 	int (*get_latch_status)		(struct hotplug_slot *slot, u8 *value);
+ 	int (*get_adapter_status)	(struct hotplug_slot *slot, u8 *value);
++	int (*reset_slot)		(struct hotplug_slot *slot, int probe);
+ };
  
-+	if (pci_bus_lock(bus, PCI_BUS_STATE_STOPPING - 1, true) < 0)
-+		goto err_exit;
-+
- 	list_for_each_entry(func, &slot->funcs, sibling)
- 		acpiphp_bus_add(func);
- 
-@@ -681,7 +684,7 @@ static int __ref enable_device(struct acpiphp_slot *slot)
- 	if (num == 0) {
- 		/* Maybe only part of funcs are added. */
- 		dbg("No new device found\n");
--		goto err_exit;
-+		goto out_unlock;
- 	}
- 
- 	max = acpiphp_max_busnr(bus);
-@@ -726,8 +729,9 @@ static int __ref enable_device(struct acpiphp_slot *slot)
- 		}
- 	}
- 
--
-- err_exit:
-+out_unlock:
-+	pci_bus_unlock(bus, true);
-+err_exit:
- 	return 0;
- }
- 
-@@ -757,7 +761,10 @@ static int disable_device(struct acpiphp_slot *slot)
- {
- 	struct acpiphp_func *func;
- 	struct pci_dev *pdev;
-+	struct pci_bus *bus = slot->bridge->pci_bus;
- 
-+	if (pci_bus_lock(bus, PCI_BUS_STATE_STOPPING - 1, true) < 0)
-+		return -EBUSY;
- 	/*
- 	 * enable_device() enumerates all functions in this device via
- 	 * pci_scan_slot(), whether they have associated ACPI hotplug
-@@ -768,6 +775,7 @@ static int disable_device(struct acpiphp_slot *slot)
- 		pci_stop_and_remove_bus_device(pdev);
- 		pci_dev_put(pdev);
- 	}
-+	pci_bus_unlock(bus, true);
- 
- 	list_for_each_entry(func, &slot->funcs, sibling) {
- 		acpiphp_bus_trim(func->handle);
--- 
-1.8.1.2
+ /**
 
