@@ -1,63 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:60025 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754565Ab3EPPtp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 May 2013 11:49:45 -0400
-Date: Thu, 16 May 2013 17:49:03 +0200
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Jason Cooper <jason@lakedaemon.net>
-Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Maen Suleiman <maen@marvell.com>, linux-pci@vger.kernel.org,
-	devicetree-discuss@lists.ozlabs.org,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Olof Johansson <olof@lixom.net>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Subject: Re: [PATCHv9 7/9] pci: PCIe driver for Marvell Armada 370/XP
- systems
-Message-ID: <20130516174903.3a7a07ef@skate>
-In-Reply-To: <20130516154031.GF6563@titan.lakedaemon.net>
-References: <1368624323-24311-1-git-send-email-thomas.petazzoni@free-electrons.com>
-	<1368624323-24311-8-git-send-email-thomas.petazzoni@free-electrons.com>
-	<20130516093312.GB2459@localhost>
-	<20130516154031.GF6563@titan.lakedaemon.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-ia0-f179.google.com ([209.85.210.179]:47653 "EHLO
+	mail-ia0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751925Ab3EHDmn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 May 2013 23:42:43 -0400
+Received: by mail-ia0-f179.google.com with SMTP id g4so1468673iae.38
+        for <linux-pci@vger.kernel.org>; Tue, 07 May 2013 20:42:43 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <5189c22b.45f7440a.0a88.6b75SMTPIN_ADDED_BROKEN@mx.google.com>
+References: <1367732090.11982.38.camel@pasglop>
+	<CAE9FiQUN3qqVmdw_EdOC-JZGc219M3tu=roOX98xns+77LJhMw@mail.gmail.com>
+	<1367740336.11982.41.camel@pasglop>
+	<51871088.4594420a.0ccc.7300SMTPIN_ADDED_BROKEN@mx.google.com>
+	<CAE9FiQXGUOM_h_X5tdGbkiuZGZkiFigSLbbftx3YXybFBg6trg@mail.gmail.com>
+	<1367837311.15842.31.camel@pasglop>
+	<CAE9FiQU=ZEfvVKeQgVOa0jeG5smJrKRaeLTOckR=v2vzTyTvLw@mail.gmail.com>
+	<5188b791.a110420a.0bea.077eSMTPIN_ADDED_BROKEN@mx.google.com>
+	<CAE9FiQUc2q0GfVumVrp3_ba0q6N_a_WxjKhMWbyqbLfO=WGaFQ@mail.gmail.com>
+	<5189c22b.45f7440a.0a88.6b75SMTPIN_ADDED_BROKEN@mx.google.com>
+Date: Tue, 7 May 2013 20:42:42 -0700
+Message-ID: <CAE9FiQXok7_0x9hSVBxK7w1s=w6k72vVT5ST46Lqamr0DToT6g@mail.gmail.com>
+Subject: Re: Resource assignment oddities
+From: Yinghai Lu <yinghai@kernel.org>
+To: Gavin Shan <shangw@linux.vnet.ibm.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Jason Cooper,
+On Tue, May 7, 2013 at 8:10 PM, Gavin Shan <shangw@linux.vnet.ibm.com> wrote:
+> On Wed, May 08, 2013 at 10:38:00AM +0800, Gavin Shan wrote:
+>>On Tue, May 07, 2013 at 03:21:42PM -0700, Yinghai Lu wrote:
+>>>On Tue, May 7, 2013 at 1:11 AM, Gavin Shan <shangw@linux.vnet.ibm.com> wrote:
+>>>> Yinghai, thanks for the updated patch. It's working well with (v1 #1 and v2 #2), which
+>>>> was applied on top of Ben's patch sent for review. The kernel log is attached in case
+>>>> you want double-check.
+>>>>
+>>>Yes, that works.
+>>>
+>>>I just sent v3, please test that.
+>>>
+>>>That should be less invasive for v3.10. As it will skip adding failed
+>>>resource to failed list when the resource is IORESOURCE_IO, and bus
+>>>does not have IORESOURCE_IO.
+>>>
+>>
+>>Yinghai, with all patches (5) applied on top of Ben's patchset for PowerPC.
+>>I still see failure to assign IO ports, which shouldn't be seen. Please
+>>check the attached kernel log.
+>>
+>
+> After digging for more, here's what happened: pci_bridge_check_ranges() checks
+> the specific bridge supports IO ports and set IORESOURCE_IO explicitly if that's
+> the case. Then in pbus_size_io(), we always have valid IO window from that specific
+> PCI bus and the corresponding resource of the P2P bridge will be added to "realloc_head".
+> That eventually cause assignment of IO ports and it's to failure because the root
+> PCI bus doesn't have IO port range.
 
-On Thu, 16 May 2013 11:40:31 -0400, Jason Cooper wrote:
+that is intentionally,
 
-> > > +static int mvebu_pcie_init(void)
-> > 
-> > Building this showed a warning here. It seems you forgot
-> > to mark this one as __init.
-> 
-> Thomas, I'll fix this up when I pull this in, no need to resend. :)
+pci 0001:02:01.0: BAR 7: can't assign io (size 0x1000)
+pci 0001:02:08.0: BAR 7: can't assign io (size 0x1000)
+pci 0001:02:09.0: BAR 7: can't assign io (size 0x1000)
 
-I'll resend, because beyond this function pointed by Ezequiel, there
-are two other functions that can be marked __init. The one pointed by
-Ezequiel is important because it causes a section mismatch
-when !CONFIG_MODULES, because in this case platform_driver_probe() is
-__init (and this explains what I wasn't seeing the warning, since I'm
-building CONFIG_MODULES=y). The two other functions are more cosmetic,
-but good to have as well.
+those are just print out, and then those does not get inserted to failed list.
+so it will not affect mmio-nonpref/mmio-pref allocation.
 
-It would already been sent if git hadn't decided to do a 'git gc' right
-after my rebase. It's been gc-ing for quite some time now...
+that will make sure all related bridge io port BAR get disabled for sure.
 
-Thomas
--- 
-Thomas Petazzoni, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
+except those print out, do you find any function that does not work?
+
+Thanks
+
+Yinghai
