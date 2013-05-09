@@ -1,90 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:21166 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751650Ab3EGWSF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 May 2013 18:18:05 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v3 3/5] PCI: Skip IORESOURCE_MMIO allocation for root bus without MMIO range
-Date: Tue,  7 May 2013 15:17:32 -0700
-Message-Id: <1367965054-9013-4-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1367965054-9013-1-git-send-email-yinghai@kernel.org>
-References: <1367965054-9013-1-git-send-email-yinghai@kernel.org>
+Received: from mga14.intel.com ([143.182.124.37]:59809 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753258Ab3EIVwW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 9 May 2013 17:52:22 -0400
+Date: Thu, 9 May 2013 14:52:19 -0700
+From: Jon Mason <jon.mason@intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH] PCI: Workaround for NTB BAR size issue
+Message-ID: <20130509215219.GB13221@jonmason-lab>
+References: <1367863413-30087-1-git-send-email-jon.mason@intel.com>
+ <CAErSpo5aWc-jFbYZnEwiiihQ7nXj16tL8++oqjeypXO6GQzbEw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo5aWc-jFbYZnEwiiihQ7nXj16tL8++oqjeypXO6GQzbEw@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For x86 8 sockets or 32 sockets system that will have one root bus per socket,
-They may have some root buses do not have mmio non-pref range.
+On Wed, May 08, 2013 at 03:51:56PM -0700, Bjorn Helgaas wrote:
+> On Mon, May 6, 2013 at 11:03 AM, Jon Mason <jon.mason@intel.com> wrote:
+> > Certain NTB devices have a hardware errata where, regardless of
+> > pre-configured value, reading the BAR size returns 4096.  To work around
+> > this issue, add a PCI quirk to read the appropriate values from an
+> > alternative register in PCI config space and move the resource endpoints
+> > to the appropriate location.
+> 
+> Is there a documentation pointer we could add to the changelog?
 
-We should not fall into retry in this case, as root bus does
-not mmio non-pref range.
+Processor not released yet, but the errata won't be fixed :(
 
-We check if the root bus has mmio-nonpref range, and set bus_res_type_mask,
-and pass it to assign_resources and don't add mmio-nonpref res to failed list
-for root bus that does not have mmio-nonpref range.
-So even BIOS set wrong value to pci devices and bridges will still
-get cleared.
+> I applied this to my pci/misc branch.  As soon as v3.10-rc1 is out,
+> I'll rebase to that and incorporate it into -next.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Great!
 
----
- drivers/pci/setup-bus.c |   32 ++++++++++++++++++++++++++------
- 1 file changed, 26 insertions(+), 6 deletions(-)
+Thanks,
+Jon
 
-Index: linux-2.6/drivers/pci/setup-bus.c
-===================================================================
---- linux-2.6.orig/drivers/pci/setup-bus.c
-+++ linux-2.6/drivers/pci/setup-bus.c
-@@ -299,9 +299,17 @@ static void assign_requested_resources_s
- 				bool is_ioport_res_without_bus_support =
- 					 (!(bus_res_type_mask & IORESOURCE_IO)) &&
- 					 (res->flags & IORESOURCE_IO);
-+				/*
-+				 * if the failed res is mmio, but bus does
-+				 * not have io port support, don't add it
-+				 */
-+				bool is_mmio_nonpref_res_without_bus_support =
-+					 (!(bus_res_type_mask & IORESOURCE_MEM)) &&
-+					 ((res->flags & (IORESOURCE_MEM | IORESOURCE_PREFETCH)) == IORESOURCE_MEM);
- 
- 				if (!is_rom_res_not_enabled &&
--				    !is_ioport_res_without_bus_support)
-+				    !is_ioport_res_without_bus_support &&
-+				    !is_mmio_nonpref_res_without_bus_support)
- 					add_to_list(fail_head,
- 						    dev_res->dev, res,
- 						    0 /* dont care */,
-@@ -1407,12 +1415,24 @@ static unsigned long pci_bus_res_type_ma
- 	int i;
- 	struct resource *r;
- 	unsigned long mask = 0;
--	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
--				  IORESOURCE_PREFETCH;
- 
--	pci_bus_for_each_resource(bus, r, i)
--		if (r)
--			mask |= r->flags & type_mask;
-+	pci_bus_for_each_resource(bus, r, i) {
-+		if (!r)
-+			continue;
-+
-+		if (r->flags & IORESOURCE_IO) {
-+			mask |= IORESOURCE_IO;
-+			continue;
-+		}
-+		if (r->flags & IORESOURCE_PREFETCH) {
-+			mask |= IORESOURCE_PREFETCH;
-+			continue;
-+		}
-+		if ((r->flags & (IORESOURCE_MEM | IORESOURCE_PREFETCH)) == IORESOURCE_MEM) {
-+			mask |= IORESOURCE_MEM; /* nonpref only */
-+			continue;
-+		}
-+	}
- 
- 	return mask;
- }
+> 
+> > Signed-off-by: Jon Mason <jon.mason@intel.com>
+> > ---
+> >  drivers/pci/quirks.c |   24 ++++++++++++++++++++++++
+> >  1 file changed, 24 insertions(+)
+> >
+> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> > index 7d68aee..a57a93b 100644
+> > --- a/drivers/pci/quirks.c
+> > +++ b/drivers/pci/quirks.c
+> > @@ -2865,6 +2865,30 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x65f9, quirk_intel_mc_errata);
+> >  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x65fa, quirk_intel_mc_errata);
+> >
+> >
+> > +/* Ivytown NTB BAR sizes are misreported by the hardware due to an errata.  To
+> > + * work around this, query the size it should be configured to by the device and
+> > + * modify the resource end to correspond to this new size.
+> > + */
+> > +static void quirk_intel_ntb(struct pci_dev *dev)
+> > +{
+> > +       int rc;
+> > +       u8 val;
+> > +
+> > +       rc = pci_read_config_byte(dev, 0x00D0, &val);
+> > +       if (rc)
+> > +               return;
+> > +
+> > +       dev->resource[2].end = dev->resource[2].start + ((u64) 1 << val) - 1;
+> > +
+> > +       rc = pci_read_config_byte(dev, 0x00D1, &val);
+> > +       if (rc)
+> > +               return;
+> > +
+> > +       dev->resource[4].end = dev->resource[4].start + ((u64) 1 << val) - 1;
+> > +}
+> > +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x0e08, quirk_intel_ntb);
+> > +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x0e0d, quirk_intel_ntb);
+> > +
+> >  static ktime_t fixup_debug_start(struct pci_dev *dev,
+> >                                  void (*fn)(struct pci_dev *dev))
+> >  {
+> > --
+> > 1.7.9.5
+> >
