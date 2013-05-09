@@ -1,123 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52196 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751724Ab3EUWJY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 21 May 2013 18:09:24 -0400
-Message-ID: <519BF082.2040309@redhat.com>
-Date: Tue, 21 May 2013 18:09:06 -0400
-From: Don Dutile <ddutile@redhat.com>
-MIME-Version: 1.0
-To: Alexander Duyck <alexander.duyck@gmail.com>
-CC: Alexander Duyck <alexander.h.duyck@intel.com>,
-	Yinghai Lu <yinghai@kernel.org>,
+Received: from [216.32.181.184] ([216.32.181.184]:33432 "EHLO
+	ch1outboundpool.messaging.microsoft.com" rhost-flags-FAIL-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1754767Ab3EINsn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 9 May 2013 09:48:43 -0400
+From: Sethi Varun-B16395 <B16395@freescale.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
+CC: Kumar Gala <galak@kernel.crashing.org>,
+	Wood Scott-B07421 <B07421@freescale.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Andrew Murray <Andrew.Murray@arm.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	NetDev <netdev@vger.kernel.org>,
-	"Michael S. Tsirkin" <mst@redhat.com>
-Subject: Re: [PATCH 6/7] PCI: Make sure VF's driver get attached after PF's
-References: <1368498506-25857-1-git-send-email-yinghai@kernel.org> <1368498506-25857-7-git-send-email-yinghai@kernel.org> <51925FB0.4080504@intel.com> <CAE9FiQXYQEAZ=0sG6+2OdffBqfLS9MpoN1xviRR9aDbxPxcKxQ@mail.gmail.com> <5192946F.1050700@intel.com> <CAE9FiQVGGHB_amKw0-DfDifpTnRGPbxA+q3WY5F-O3x-sx386A@mail.gmail.com> <5192AEF4.1070905@intel.com> <519BE778.9040800@redhat.com> <519BE7C4.3050306@redhat.com> <519BEE22.3080806@gmail.com>
-In-Reply-To: <519BEE22.3080806@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: RE: [PATCH] powerpc/pci: Support per-aperture memory offset
+Date: Thu, 9 May 2013 13:47:38 +0000
+Message-ID: <C5ECD7A89D1DC44195F34B25E172658D4F01D0@039-SN2MPN1-013.039d.mgd.msft.net>
+References: <1367823016.15842.22.camel@pasglop>
+In-Reply-To: <1367823016.15842.22.camel@pasglop>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/21/2013 05:58 PM, Alexander Duyck wrote:
-> On 05/21/2013 02:31 PM, Don Dutile wrote:
->> On 05/21/2013 05:30 PM, Don Dutile wrote:
->>> On 05/14/2013 05:39 PM, Alexander Duyck wrote:
->>>> On 05/14/2013 12:59 PM, Yinghai Lu wrote:
->>>>> On Tue, May 14, 2013 at 12:45 PM, Alexander Duyck
->>>>> <alexander.h.duyck@intel.com>  wrote:
->>>>>> On 05/14/2013 11:44 AM, Yinghai Lu wrote:
->>>>>>> On Tue, May 14, 2013 at 9:00 AM, Alexander Duyck
->>>>>>> <alexander.h.duyck@intel.com>  wrote:
->>>>>>>> I'm sorry, but what is the point of this patch? With device
->>>>>>>> assignment
->>>>>>>> it is always possible to have VFs loaded and the PF driver unloaded
->>>>>>>> since you cannot remove the VFs if they are assigned to a VM.
->>>>>>> unload PF driver will not call pci_disable_sriov?
->>>>>> You cannot call pci_disable_sriov because you will panic all of the
->>>>>> guests that have devices assigned.
->>>>> ixgbe_remove did call pci_disable_sriov...
->>>>>
->>>>> for guest panic, that is another problem.
->>>>> just like you pci passthrough with real pci device and hotremove the
->>>>> card in host.
->>>>>
->>>>> ...
->>>>
->>>> I suggest you take another look. In ixgbe_disable_sriov, which is the
->>>> function that is called we do a check for assigned VFs. If they are
->>>> assigned then we do not call pci_disable_sriov.
->>>>
->>>>>
->>>>>> So how does your patch actually fix this problem? It seems like it is
->>>>>> just avoiding it.
->>>>> yes, until the first one is done.
->>>>
->>>> Avoiding the issue doesn't fix the underlying problem and instead you
->>>> are likely just introducing more bugs as a result.
->>>>
->>>>>>  From what I can tell your problem is originating in pci_call_probe. I
->>>>>> believe it is calling work_on_cpu and that doesn't seem correct since
->>>>>> the work should be taking place on a CPU already local to the PF. You
->>>>>> might want to look there to see why you are trying to schedule work
->>>>>> on a
->>>>>> CPU which should be perfectly fine for you to already be doing your
->>>>>> work on.
->>>>> it always try to go with local cpu with same pxm.
->>>>
->>>> The problem is we really shouldn't be calling work_for_cpu in this case
->>>> since we are already on the correct CPU. What probably should be
->>>> happening is that pci_call_probe should be doing a check to see if the
->>>> current CPU is already contained within the device node map and if so
->>>> just call local_pci_probe directly. That way you can avoid deadlocking
->>>> the system by trying to flush the CPU queue of the CPU you are
->>>> currently on.
->>>>
->>> That's the patch that Michael Tsirkin posted for a fix,
->>> but it was noted that if you have the case where the _same_ driver is
->>> used for vf&  pf,
->>> other deadlocks may occur.
->>> It would work in the case of ixgbe/ixgbevf, but not for something like
->>> the Mellanox pf/vf driver (which is the same).
->>>
->> apologies; here's the thread the discussed the issue:
->> https://patchwork.kernel.org/patch/2458681/
->>
->
-> I found out about that patch after I submitted one that was similar.
-> The only real complaint I had about his patch was that it was only
-> looking at the CPU and he could save himself some trouble by just doing
-> the work locally if we were on the correct NUMA node.  For example if
-> the system only has one node in it what is the point in scheduling all
-> of the work on CPU 0?  My alternative patch can be found at:
-> https://patchwork.kernel.org/patch/2568881/
->
-> As far as the inter-driver locking issues for same driver I don't think
-> that is really any kind if issue.  Most drivers shouldn't be holding any
-> big locks when they call pci_enable_sriov.  If I am not mistaken the
-> follow on patch I submitted which was similar to Michaels was reported
-> to have resolved the issue.
->
-You mean the above patchwork patch, or another one?
-
-> As far as the Mellanox PF/VF the bigger issue is that when they call
-> pci_enable_sriov they are not ready to handle VFs.  There have been
-> several suggestions on how to resolve it including -EPROBE_DEFER or the
-> igbvf/ixgbevf approach of just brining up the device in a "link down" state.
->
-thanks for summary.  i was backlogged on email, and responding as i read them;
-I should have read through the whole thread before chiming in.
-
-> Thanks,
->
-> Alex
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogQmVuamFtaW4gSGVycmVu
+c2NobWlkdCBbbWFpbHRvOmJlbmhAa2VybmVsLmNyYXNoaW5nLm9yZ10NCj4gU2VudDogTW9uZGF5
+LCBNYXkgMDYsIDIwMTMgMTI6MjAgUE0NCj4gVG86IGxpbnV4cHBjLWRldg0KPiBDYzogS3VtYXIg
+R2FsYTsgV29vZCBTY290dC1CMDc0MjE7IFNldGhpIFZhcnVuLUIxNjM5NTsgVGhvbWFzIFBldGF6
+em9uaTsNCj4gQW5kcmV3IE11cnJheTsgQmpvcm4gSGVsZ2FhczsgbGludXgtcGNpQHZnZXIua2Vy
+bmVsLm9yZw0KPiBTdWJqZWN0OiBbUEFUQ0hdIHBvd2VycGMvcGNpOiBTdXBwb3J0IHBlci1hcGVy
+dHVyZSBtZW1vcnkgb2Zmc2V0DQo+IA0KPiBUaGUgUENJIGNvcmUgc3VwcG9ydHMgYW4gb2Zmc2V0
+IHBlciBhcGVydHVyZSBub3dhZGF5cyBidXQgb3VyIGFyY2ggY29kZQ0KPiBzdGlsbCBoYXMgYSBz
+aW5nbGUgb2Zmc2V0IHBlciBob3N0IGJyaWRnZSByZXByZXNlbnRpbmcgdGhlIGRpZmZlcmVuY2UN
+Cj4gYmV0d2VuIENQVSBtZW1vcnkgYWRkcmVzc2VzIGFuZCBQQ0kgTU1JTyBhZGRyZXNzZXMuDQo+
+IA0KPiBUaGlzIGlzIGEgcHJvYmxlbSBhcyBuZXcgbWFjaGluZXMgYW5kIGh5cGVydmlzb3IgdmVy
+c2lvbnMgYXJlIGNvbWluZyBvdXQNCj4gd2hlcmUgdGhlIDY0LWJpdCB3aW5kb3dzIHdpbGwgaGF2
+ZSBhIGRpZmZlcmVudCBvZmZzZXQgKGJhc2ljYWxseSBtYXBwZWQNCj4gMToxKSBmcm9tIHRoZSAz
+Mi1iaXQgd2luZG93cy4NCj4gDQo+IFRoaXMgZml4ZXMgaXQgYnkgdXNpbmcgc2VwYXJhdGUgb2Zm
+c2V0cy4gSW4gdGhlIGxvbmcgcnVuLCB3ZSBwcm9iYWJseQ0KPiB3YW50IHRvIGdldCByaWQgb2Yg
+dGhhdCBpbnRlcm1lZGlhcnkgc3RydWN0IHBjaV9jb250cm9sbGVyIGFuZCBoYXZlIHRob3NlDQo+
+IGRpcmVjdGx5IHN0b3JlZCBpbnRvIHRoZSBwY2lfaG9zdF9icmlkZ2UgYXMgdGhleSBhcmUgcGFy
+c2VkIGJ1dCB0aGlzIHdpbGwNCj4gYmUgYSBtb3JlIGludmFzaXZlIGNoYW5nZS4NCj4gDQo+IFNp
+Z25lZC1vZmYtYnk6IEJlbmphbWluIEhlcnJlbnNjaG1pZHQgPGJlbmhAa2VybmVsLmNyYXNoaW5n
+Lm9yZz4NCj4gLS0tDQo+IA0KPiBOb3csIHRoaXMgaXMgYSBiaWcgb25lIGJ1dCBJJ2QgbGlrZSB0
+byBzdGlsbCBtZXJnZSBpdCBmb3IgMy4xMCBiZWNhdXNlDQo+IHdlJ3JlIGhhdmluZyBuZXcgbWFj
+aGluZSBjb21pbmcgdXAgKGFuZCBuZXcgdmVyc2lvbnMgb2YgcEh5cCBvbiBleGlzdGluZw0KPiBt
+YWNoaW5lcykgdGhhdCBhcmUgZ29pbmcgdG8gZXhwb3NlIE1NSU8gd2luZG93cyB3aXRoIGRpZmZl
+cmVudCBvZmZzZXRzDQo+IChiYXNpY2FsbHkgb3VyIDY0LWJpdCB3aW5kb3dzIGFyZSAxOjEgYW5k
+IG91ciAzMi1iaXQgd2luZG93cyByZW1hcHBlZCkuDQo+IA0KPiBJJ20gbm90IGV4cGVjdGluZyBh
+bnkgbWFqb3IgaXNzdWUgd2l0aCB0aGUgcGF0Y2gsIEkndmUgdGVzdGVkIGl0IG9uIHNvbWUNCj4g
+b2Ygb3VyIG1hY2hpbmVzIGhlcmUgYW5kIHdpbGwgdGVzdCBpdCBtb3JlIGR1cmluZyB0aGUgbmV4
+dCBjb3VwbGUgb2YgZGF5cw0KPiB0aGUgbm90YWJsZSB0aGluZyBpcyB0aGUgcmVtb3ZhbCBvZiBh
+ICJ3b3JrYXJvdW5kIiAvIGZhbGxiYWNrIG9uIDMyLWJpdA0KPiB0aGF0IEkgc3VzcGVjdCBvbmx5
+IGV2ZXIgbWF0dGVyZWQgZm9yIG1hY2hpbmVzIGxvbmcgdW5zdXBwb3J0ZWQgKFBSZVAgPykNCj4g
+YXMgSSBkb24ndCB0aGluayB3ZSBoYXZlIGFueXRoaW5nIHRoYXQgZG9lc24ndCBwb3B1bGF0ZSB0
+aGUgYnJpZGdlDQo+IHJlc291cmNlcyBhbmQgZXhwZWN0cyB0byB3b3JrIG5vd2FkYXlzIChvdGhl
+ciBzdHVmZiB3b3VsZCBicmVhayBhbnl3YXkpLg0KPiANCj4gVGhpcyBpcyBhbHNvIHdoeSBJJ20g
+TkFLJ2luZyB0aGUgcGF0Y2ggbWFraW5nDQo+IHBjaV9wcm9jZXNzX2JyaWRnZV9PRl9yYW5nZXMo
+KSBnZW5lcmljIHNpbmNlIEkgbmVlZCB0byBjaGFuZ2UgaXQgZm9yDQo+IHBvd2VycGMgYW5kIHRo
+aXMgaXNuJ3QgdGhlIHJpZ2h0IGxvbmcgdGVybSBhcHByb2FjaCAod2Ugc2hvdWxkICJtZXJnZSIN
+Cj4gcGNpX2NvbnRyb2xsZXIgJiBwY2lfaG9zdF9icmlkZ2UgaW5zdGVhZCBhbmQgZGlyZWN0bHkg
+cG9wdWxhdGUgdGhlDQo+IHBjaV9ob3N0X2JyaWRnZSBhcGVydHVyZXMpLg0KPiANCj4gSWYgSSBz
+ZWUgbm8gbWFqb3IgaXNzdWUgd2l0aCB0aGUgcGF0Y2ggZHVyaW5nIHRoZSBuZXh0IGZldyBkYXlz
+LCBJJ2xsDQo+IHNlbmQgaXQgdG8gTGludXMgd2l0aCBteSBuZXh0IHB1bGwgcmVxdWVzdCwgcHJv
+YmFibHkgYXQgLXJjMS4NCj4gDQo+IEt1bWFyLCBTY290dCwgU2V0aGksIHBsZWFzZSB0ZXN0IG9u
+IEZTTCBIVy4gSSdsbCB0YWtlIGNhcmUgb2YgbWFjcyBhbmQNCj4gNHh4IGluIGFkZGl0aW9uIHRv
+IHRoZSB2YXJpb3VzIElCTSBwcGM2NCBwbGF0Zm9ybXMuDQo+IA0KW1NldGhpIFZhcnVuLUIxNjM5
+NV0gVGVzdGVkIHBhdGNoIG9uIEZTTCBUNDI0MCwgUDQwODAsIFA1MDQwIGFuZCBQMTAyMCBib2Fy
+ZHMuDQoNCi1WYXJ1bg0K
 
