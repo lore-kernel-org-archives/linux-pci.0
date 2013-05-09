@@ -1,54 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mho-02-ewr.mailhop.org ([204.13.248.72]:63883 "EHLO
-	mho-02-ewr.mailhop.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752898Ab3ETRI6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 20 May 2013 13:08:58 -0400
-Date: Mon, 20 May 2013 13:08:16 -0400
-From: Jason Cooper <jason@lakedaemon.net>
-To: Linus Walleij <linus.walleij@linaro.org>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Andrew Lunn <andrew@lunn.ch>, linux-pci@vger.kernel.org,
-	"devicetree-discuss@lists.ozlabs.org"
-	<devicetree-discuss@lists.ozlabs.org>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Murray <Andrew.Murray@arm.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCHv10 2/9] of/pci: Provide support for parsing PCI DT
- ranges property
-Message-ID: <20130520170816.GU31290@titan.lakedaemon.net>
-References: <1368719725-21265-1-git-send-email-thomas.petazzoni@free-electrons.com>
- <1368719725-21265-3-git-send-email-thomas.petazzoni@free-electrons.com>
- <20130519203156.GO11137@titan.lakedaemon.net>
- <CACRpkdamm9vh_bXenJigwTYmN=n_SsEp+GQqAe9rdm8PRxPsqw@mail.gmail.com>
+Received: from hydra.sisk.pl ([212.160.235.94]:41525 "EHLO hydra.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751761Ab3EITge (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 9 May 2013 15:36:34 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: Re: [PATCH] PCI/ACPI: Check acpi_resource_to_address64() return value
+Date: Thu, 09 May 2013 21:45 +0200
+Message-ID: <1880556.qeccPcvTkd@vostro.rjw.lan>
+In-Reply-To: <20130509192913.17473.94947.stgit@bhelgaas-glaptop>
+References: <20130509192913.17473.94947.stgit@bhelgaas-glaptop>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CACRpkdamm9vh_bXenJigwTYmN=n_SsEp+GQqAe9rdm8PRxPsqw@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, May 20, 2013 at 09:03:00AM +0200, Linus Walleij wrote:
-> On Sun, May 19, 2013 at 10:31 PM, Jason Cooper <jason@lakedaemon.net> wrote:
+On Thursday, May 09, 2013 01:29:13 PM Bjorn Helgaas wrote:
+> We should check the acpi_resource_to_address64() return value, which
+> also removes the need to validate the resource type beforehand.
+> No functional change.
 > 
-> > patches 2, 3, and 4 applied to mvebu/of_pci to facilitate others
-> > (LinusW) basing their work off of it.
+> Found by Coverity (CID 113815).
 > 
-> Thanks, is this going to be pulled into ARM SoC soon-ish?
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+
+Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+
+> ---
+>  drivers/acpi/pci_root.c |    7 +++----
+>  1 file changed, 3 insertions(+), 4 deletions(-)
 > 
-> I think Arnd may need this for some PCI work too.
-
-I was half expecting -rc2 to drop yesterday.  Since it didn't, I'll go
-ahead and send another round of PRs, including this one.  Probably today
-or tomorrow.
-
-thx,
-
-Jason.
+> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+> index ac8688b..c956434 100644
+> --- a/drivers/acpi/pci_root.c
+> +++ b/drivers/acpi/pci_root.c
+> @@ -100,13 +100,12 @@ get_root_bridge_busnr_callback(struct acpi_resource *resource, void *data)
+>  {
+>  	struct resource *res = data;
+>  	struct acpi_resource_address64 address;
+> +	acpi_status status;
+>  
+> -	if (resource->type != ACPI_RESOURCE_TYPE_ADDRESS16 &&
+> -	    resource->type != ACPI_RESOURCE_TYPE_ADDRESS32 &&
+> -	    resource->type != ACPI_RESOURCE_TYPE_ADDRESS64)
+> +	status = acpi_resource_to_address64(resource, &address);
+> +	if (ACPI_FAILURE(status))
+>  		return AE_OK;
+>  
+> -	acpi_resource_to_address64(resource, &address);
+>  	if ((address.address_length > 0) &&
+>  	    (address.resource_type == ACPI_BUS_NUMBER_RANGE)) {
+>  		res->start = address.minimum;
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
