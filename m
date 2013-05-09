@@ -1,117 +1,323 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:38792 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753397Ab3EVNMo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 May 2013 09:12:44 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>
-Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	linux-arm-kernel@lists.infradead.org
-Subject: [PATCH 1/4] pci: mvebu: no longer fake the slot location of downstream devices
-Date: Wed, 22 May 2013 15:12:35 +0200
-Message-Id: <1369228358-32580-2-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1369228358-32580-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1369228358-32580-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from cn.fujitsu.com ([222.73.24.84]:18518 "EHLO song.cn.fujitsu.com"
+	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S1752528Ab3EIKnp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 9 May 2013 06:43:45 -0400
+Message-ID: <518B7D65.9090408@cn.fujitsu.com>
+Date: Thu, 09 May 2013 18:41:41 +0800
+From: Gu Zheng <guz.fnst@cn.fujitsu.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: linux-pci@vger.kernel.org,
+	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	tangchen <tangchen@cn.fujitsu.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: Re: pci-sysfs: queue sysfs rescan routine into workqueue to avoid
+ potential deadlock situation
+References: <51122D9A.6040002@cn.fujitsu.com>
+In-Reply-To: <51122D9A.6040002@cn.fujitsu.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-By default, the Marvell hardware, for each PCIe interface, exhibits
-the following devices:
+Hi Bjorn,
+	Very sorry to disturb you. This patch was sent a long time ago, but we have not get
+any feedback until now.
+It is used to fix a potential deadlock situation when doing pci-hotplug via pci-sysfs.
+In the first version we sent:
+https://patchwork.kernel.org/patch/1912351/
+replaced mutex_lock with mutex_trylock to avoid potential deadlock situation, but you suggested
+that using a workqueue to queue these routines seems a good way to avoid the deadlock situation,
+and this patch was followed your suggestion, can your split a while to review it? Or is there any
+better way to fix this issue? Any comments is welcome! :)
 
- * On slot 0, a "Marvell Memory controller", identical on all PCIe
-   interfaces, and which isn't useful when the Marvell SoC is the PCIe
-   root complex (i.e, the normal case when we run Linux on the Marvell
-   SoC).
+Best regards,
+Gu
 
- * On slot 1, the real PCIe card connected into the PCIe slot of the
-   board.
+On 02/06/2013 06:16 PM, Gu Zheng wrote:
 
-So, what the Marvell PCIe driver was doing in its PCI-to-PCI bridge
-emulation is that when the Linux PCI core was trying to access the
-device in slot 0, we were in fact forwarding the configuration
-transaction to the device in slot 1. For all other slots, we were
-telling the Linux PCI core that there was no device connected.
+> There is a potential deadlock situation when we manipulate the pci-sysfs user
+> interfaces from different bus hierarchy simultaneously, described as following:
+> 
+> path1: sysfs remove device:             | path2: sysfs rescan device:
+> sysfs_schedule_callback_work()          | sysfs_write_file()
+>   remove_callback()                     |   flush_write_buffer()
+> *1* mutex_lock(&pci_remove_rescan_mutex)|*2*  sysfs_get_active(attr_sd)
+>       ...                               |     dev_attr_store()
+>         device_remove_file()            |       dev_rescan_store()
+>           ...                           |*4*
+> mutex_lock(&pci_remove_rescan_mutex)
+> *3*       sysfs_deactivate(sd)          |     ...
+>             wait_for_completion()       |*5*  sysfs_put_active(attr_sd)
+> *6* mutex_unlock(&pci_remove_rescan_mutex)
+> 
+> If path1 first holds the pci_remove_rescan_mutex at *1*, then another path
+> called path2 actived and runs to *2* before path1 runs to *3*, we now runs
+> to a deadlock situation:
+> Path1 holds the mutex waiting path2 to decrease sysfs_dirent's s_active
+> counter at *5*, but path2 is blocked at *4* when trying to get the
+> pci_remove_rescan_mutex. The mutex won't be put by path1 until it reach
+> *6*, but it's now blocked at *3*.
+> 
+> Under the suggestion of Bjorn, and base on Yinghai Lu's patch:
+> http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=commitdiff;h=277df390baeab7ba6aa136356b677a096c890c0c
+> 
+> The circumvent approach is queuing the sysfs rescan routine into workqueue just
+> like removal to avoid manipulating(remove/scan) the pci-tree at the same time.
+> 
+> 
+> *dmesg ifno*:
+> (snip)
+> 1000e 0000:1c:00.0: eth9: Intel(R) PRO/1000 Network Connection
+> sd 13:2:0:0: [sdb] Attached SCSI disk
+> e1000e 0000:1c:00.0: eth9: MAC: 0, PHY: 4, PBA No: D50228-005
+> e1000e 0000:1c:00.1: Disabling ASPM  L1
+> e1000e 0000:1c:00.1: Interrupt Throttling Rate (ints/sec) set to dynamic
+> conservative mode
+> e1000e 0000:1c:00.1: irq 143 for MSI/MSI-X
+> e1000e 0000:1c:00.1: eth10: (PCI Express:2.5GT/s:Width x4) 00:15:17:cd:96:bf
+> e1000e 0000:1c:00.1: eth10: Intel(R) PRO/1000 Network Connection
+> e1000e 0000:1c:00.1: eth10: MAC: 0, PHY: 4, PBA No: D50228-005
+> INFO: task bash:62982 blocked for more than 120 seconds.
+> "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+> bash            D 0000000000000000     0 62982  62978 0x00000080
+>  ffff88038b277db8 0000000000000082 ffff88038b277fd8 0000000000013940
+>  ffff88038b276010 0000000000013940 0000000000013940 0000000000013940
+>  ffff88038b277fd8 0000000000013940 ffff880377449e30 ffff8806e822c670
+> Call Trace:
+>  [<ffffffff8151ba79>] schedule+0x29/0x70
+>  [<ffffffff8151bd6e>] schedule_preempt_disabled+0xe/0x10
+>  [<ffffffff8151a4e3>] __mutex_lock_slowpath+0xd3/0x150
+>  [<ffffffff8151a3eb>] mutex_lock+0x2b/0x50
+>  [<ffffffff812821dc>] dev_rescan_store+0x5c/0x80
+>  [<ffffffff81341800>] dev_attr_store+0x20/0x30
+>  [<ffffffff811e3eef>] sysfs_write_file+0xef/0x170
+>  [<ffffffff81173d08>] vfs_write+0xc8/0x190
+>  [<ffffffff81173ed1>] sys_write+0x51/0x90
+>  [<ffffffff81524b29>] system_call_fastpath+0x16/0x1b
+> INFO: task bash:64141 blocked for more than 120 seconds.
+> "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+> bash            D ffffffff81610460     0 64141  64136 0x00000080
+>  ffff8803540e9db8 0000000000000086 ffff8803540e9fd8 0000000000013940
+>  ffff8803540e8010 0000000000013940 0000000000013940 0000000000013940
+>  ffff8803540e9fd8 0000000000013940 ffff8807db338a10 ffff8806f09abc60
+> Call Trace:
+>  [<ffffffff8151ba79>] schedule+0x29/0x70
+>  [<ffffffff8151bd6e>] schedule_preempt_disabled+0xe/0x10
+>  [<ffffffff8151a4e3>] __mutex_lock_slowpath+0xd3/0x150
+>  [<ffffffff8151a3eb>] mutex_lock+0x2b/0x50
+>  [<ffffffff812821dc>] dev_rescan_store+0x5c/0x80
+>  [<ffffffff81341800>] dev_attr_store+0x20/0x30
+>  [<ffffffff811e3eef>] sysfs_write_file+0xef/0x170
+>  [<ffffffff81173d08>] vfs_write+0xc8/0x190
+>  [<ffffffff81173ed1>] sys_write+0x51/0x90
+>  [<ffffffff81524b29>] system_call_fastpath+0x16/0x1b
+> INFO: task kworker/u:3:64451 blocked for more than 120 seconds.
+> "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+> kworker/u:3     D ffffffff81610460     0 64451      2 0x00000080
+>  ffff8807d51b7a30 0000000000000046 ffff8807d51b7fd8 0000000000013940
+>  ffff8807d51b6010 0000000000013940 0000000000013940 0000000000013940
+>  ffff8807d51b7fd8 0000000000013940 ffff8807db339420 ffff88037744b250
+> Call Trace:
+>  [<ffffffff8151ba79>] schedule+0x29/0x70
+>  [<ffffffff81519ded>] schedule_timeout+0x19d/0x220
+>  [<ffffffff81165f92>] ? __slab_free+0x1f2/0x2f0
+>  [<ffffffff8151b8fe>] wait_for_common+0x11e/0x190
+>  [<ffffffff8108a6e0>] ? try_to_wake_up+0x2c0/0x2c0
+>  [<ffffffff8151ba4d>] wait_for_completion+0x1d/0x20
+>  [<ffffffff811e53e8>] sysfs_addrm_finish+0xb8/0xd0
+>  [<ffffffff811e4320>] ? sysfs_schedule_callback+0x1e0/0x1e0
+>  [<ffffffff811e33f0>] sysfs_hash_and_remove+0x60/0xb0
+>  [<ffffffff811e43c9>] sysfs_remove_file+0x39/0x50
+>  [<ffffffff81342cb7>] device_remove_file+0x17/0x20
+>  [<ffffffff8134505c>] bus_remove_device+0xdc/0x180
+>  [<ffffffff81342eb0>] device_del+0x120/0x1d0
+>  [<ffffffff81342f82>] device_unregister+0x22/0x60
+>  [<ffffffff8127ade4>] pci_stop_bus_device+0x94/0xa0
+>  [<ffffffff8127ad90>] pci_stop_bus_device+0x40/0xa0
+>  [<ffffffff8127ad90>] pci_stop_bus_device+0x40/0xa0
+>  [<ffffffff8127ad90>] pci_stop_bus_device+0x40/0xa0
+>  [<ffffffff8127af66>] pci_stop_and_remove_bus_device+0x16/0x30
+>  [<ffffffff81282359>] remove_callback+0x29/0x40
+>  [<ffffffff811e4344>] sysfs_schedule_callback_work+0x24/0x70
+>  [<ffffffff81070009>] process_one_work+0x179/0x4b0
+>  [<ffffffff8107210e>] worker_thread+0x12e/0x330
+>  [<ffffffff81071fe0>] ? manage_workers+0x110/0x110
+>  [<ffffffff8107705e>] kthread+0x9e/0xb0
+>  [<ffffffff81525bc4>] kernel_thread_helper+0x4/0x10
+>  [<ffffffff81076fc0>] ? kthread_freezable_should_stop+0x70/0x70
+>  [<ffffffff81525bc0>] ? gs_change+0x13/0x13
+> 
+> 
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> Signed-off-by: Gu Zheng <guz.fnst@cn.fujitsu.com>
+> Signed-off-by: Lin Feng <linfeng@cn.fujitsu.com>
+> ---
+>  drivers/pci/pci-sysfs.c |   92 +++++++++++++++++++++++++++++++++--------------
+>  1 files changed, 65 insertions(+), 27 deletions(-)
+> 
+> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> index 9c6e9bb..e66b498 100644
+> --- a/drivers/pci/pci-sysfs.c
+> +++ b/drivers/pci/pci-sysfs.c
+> @@ -285,21 +285,34 @@ msi_bus_store(struct device *dev, struct device_attribute
+> *attr,
+>  }
+> 
+>  static DEFINE_MUTEX(pci_remove_rescan_mutex);
+> +
+> +static void bus_rescan_callback(struct device *dev)
+> +{
+> +	struct pci_bus *b = NULL;
+> +
+> +	mutex_lock(&pci_remove_rescan_mutex);
+> +	while ((b = pci_find_next_bus(b)) != NULL)
+> +		pci_rescan_bus(b);
+> +	mutex_unlock(&pci_remove_rescan_mutex);
+> +}
+> +
+>  static ssize_t bus_rescan_store(struct bus_type *bus, const char *buf,
+>  				size_t count)
+>  {
+> +	int err;
+>  	unsigned long val;
+> -	struct pci_bus *b = NULL;
+> +	struct device *dev = bus->dev_root;
+> 
+>  	if (strict_strtoul(buf, 0, &val) < 0)
+>  		return -EINVAL;
+> 
+> -	if (val) {
+> -		mutex_lock(&pci_remove_rescan_mutex);
+> -		while ((b = pci_find_next_bus(b)) != NULL)
+> -			pci_rescan_bus(b);
+> -		mutex_unlock(&pci_remove_rescan_mutex);
+> -	}
+> +	if (!val)
+> +		return count;
+> +
+> +	err = device_schedule_callback(dev, bus_rescan_callback);
+> +	if (err)
+> +		return err;
+> +
+>  	return count;
+>  }
+> 
+> @@ -308,21 +321,32 @@ struct bus_attribute pci_bus_attrs[] = {
+>  	__ATTR_NULL
+>  };
+> 
+> +static void dev_rescan_callback(struct device *dev)
+> +{
+> +	struct pci_dev *pdev = to_pci_dev(dev);
+> +
+> +	if (pdev->is_added) {
+> +		mutex_lock(&pci_remove_rescan_mutex);
+> +		pci_rescan_bus(pdev->bus);
+> +		mutex_unlock(&pci_remove_rescan_mutex);
+> +	}
+> +}
+> +
+>  static ssize_t
+>  dev_rescan_store(struct device *dev, struct device_attribute *attr,
+>  		 const char *buf, size_t count)
+>  {
+> +	int err;
+>  	unsigned long val;
+> -	struct pci_dev *pdev = to_pci_dev(dev);
+> 
+>  	if (strict_strtoul(buf, 0, &val) < 0)
+>  		return -EINVAL;
+> 
+> -	if (val) {
+> -		mutex_lock(&pci_remove_rescan_mutex);
+> -		pci_rescan_bus(pdev->bus);
+> -		mutex_unlock(&pci_remove_rescan_mutex);
+> -	}
+> +	if (!val)
+> +		return count;
+> +	err = device_schedule_callback(dev, dev_rescan_callback);
+> +	if (err)
+> +		return err;
+>  	return count;
+>  }
+> 
+> @@ -339,7 +363,7 @@ static ssize_t
+>  remove_store(struct device *dev, struct device_attribute *dummy,
+>  	     const char *buf, size_t count)
+>  {
+> -	int ret = 0;
+> +	int err;
+>  	unsigned long val;
+> 
+>  	if (strict_strtoul(buf, 0, &val) < 0)
+> @@ -348,31 +372,45 @@ remove_store(struct device *dev, struct device_attribute
+> *dummy,
+>  	/* An attribute cannot be unregistered by one of its own methods,
+>  	 * so we have to use this roundabout approach.
+>  	 */
+> -	if (val)
+> -		ret = device_schedule_callback(dev, remove_callback);
+> -	if (ret)
+> -		count = ret;
+> +	if (!val)
+> +		return count;
+> +
+> +	err = device_schedule_callback(dev, remove_callback);
+> +	if (err)
+> +		return err;
+> +
+>  	return count;
+>  }
+> 
+> +static void dev_bus_rescan_callback(struct device *dev)
+> +{
+> +	struct pci_bus *bus = to_pci_bus(dev);
+> +
+> +	mutex_lock(&pci_remove_rescan_mutex);
+> +	if (!pci_is_root_bus(bus) && list_empty(&bus->devices))
+> +		pci_rescan_bus_bridge_resize(bus->self);
+> +	else
+> +		pci_rescan_bus(bus);
+> +	mutex_unlock(&pci_remove_rescan_mutex);
+> +}
+> +
+>  static ssize_t
+>  dev_bus_rescan_store(struct device *dev, struct device_attribute *attr,
+>  		 const char *buf, size_t count)
+>  {
+> +	int err;
+>  	unsigned long val;
+> -	struct pci_bus *bus = to_pci_bus(dev);
+> 
+>  	if (strict_strtoul(buf, 0, &val) < 0)
+>  		return -EINVAL;
+> 
+> -	if (val) {
+> -		mutex_lock(&pci_remove_rescan_mutex);
+> -		if (!pci_is_root_bus(bus) && list_empty(&bus->devices))
+> -			pci_rescan_bus_bridge_resize(bus->self);
+> -		else
+> -			pci_rescan_bus(bus);
+> -		mutex_unlock(&pci_remove_rescan_mutex);
+> -	}
+> +	if (!val)
+> +		return count;
+> +
+> +	err = device_schedule_callback(dev, dev_bus_rescan_callback);
+> +	if (err)
+> +		return err;
+> +
+>  	return count;
+>  }
+> 
+> -- 1.7.7
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
-However, new versions of bootloaders from Marvell change the default
-PCIe configuration, and make the real device appear in slot 0, and the
-"Marvell Memory controller" in slot 1.
-
-Therefore, this commit modifies the Marvell PCIe driver to adjust the
-PCIe hardware configuration to make sure that this behavior (real
-device in slot 0, "Marvell Memory controller" in slot 1) is the one
-we'll see regardless of what the bootloader has done. It allows to
-remove the little hack that was forwarding configuration transactions
-on slot 0 to slot 1, which is nice.
-
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
----
- drivers/pci/host/pci-mvebu.c |   19 +++++++++++++++----
- 1 file changed, 15 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-index ad1c46b..0bc21b0 100644
---- a/drivers/pci/host/pci-mvebu.c
-+++ b/drivers/pci/host/pci-mvebu.c
-@@ -51,6 +51,7 @@
- #define  PCIE_CTRL_X1_MODE		0x0001
- #define PCIE_STAT_OFF		0x1a04
- #define  PCIE_STAT_BUS                  0xff00
-+#define  PCIE_STAT_DEV                  0x1f0000
- #define  PCIE_STAT_LINK_DOWN		BIT(0)
- #define PCIE_DEBUG_CTRL         0x1a60
- #define  PCIE_DEBUG_SOFT_RESET		BIT(20)
-@@ -148,6 +149,16 @@ static void mvebu_pcie_set_local_bus_nr(struct mvebu_pcie_port *port, int nr)
- 	writel(stat, port->base + PCIE_STAT_OFF);
- }
- 
-+static void mvebu_pcie_set_local_dev_nr(struct mvebu_pcie_port *port, int nr)
-+{
-+	u32 stat;
-+
-+	stat = readl(port->base + PCIE_STAT_OFF);
-+	stat &= ~PCIE_STAT_DEV;
-+	stat |= nr << 16;
-+	writel(stat, port->base + PCIE_STAT_OFF);
-+}
-+
- /*
-  * Setup PCIE BARs and Address Decode Wins:
-  * BAR[0,2] -> disabled, BAR[1] -> covers all DRAM banks
-@@ -572,8 +583,7 @@ static int mvebu_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
- 
- 	/* Access the real PCIe interface */
- 	spin_lock_irqsave(&port->conf_lock, flags);
--	ret = mvebu_pcie_hw_wr_conf(port, bus,
--				    PCI_DEVFN(1, PCI_FUNC(devfn)),
-+	ret = mvebu_pcie_hw_wr_conf(port, bus, devfn,
- 				    where, size, val);
- 	spin_unlock_irqrestore(&port->conf_lock, flags);
- 
-@@ -606,8 +616,7 @@ static int mvebu_pcie_rd_conf(struct pci_bus *bus, u32 devfn, int where,
- 
- 	/* Access the real PCIe interface */
- 	spin_lock_irqsave(&port->conf_lock, flags);
--	ret = mvebu_pcie_hw_rd_conf(port, bus,
--				    PCI_DEVFN(1, PCI_FUNC(devfn)),
-+	ret = mvebu_pcie_hw_rd_conf(port, bus, devfn,
- 				    where, size, val);
- 	spin_unlock_irqrestore(&port->conf_lock, flags);
- 
-@@ -817,6 +826,8 @@ static int __init mvebu_pcie_probe(struct platform_device *pdev)
- 			continue;
- 		}
- 
-+		mvebu_pcie_set_local_dev_nr(port, 1);
-+
- 		if (mvebu_pcie_link_up(port)) {
- 			port->haslink = 1;
- 			dev_info(&pdev->dev, "PCIe%d.%d: link up\n",
--- 
-1.7.9.5
 
