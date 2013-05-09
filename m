@@ -1,113 +1,182 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e7.ny.us.ibm.com ([32.97.182.137]:54463 "EHLO e7.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753417Ab3EFNoc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 6 May 2013 09:44:32 -0400
-Received: from /spool/local
-	by e7.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <shangw@linux.vnet.ibm.com>;
-	Mon, 6 May 2013 09:44:31 -0400
-Received: from d01relay05.pok.ibm.com (d01relay05.pok.ibm.com [9.56.227.237])
-	by d01dlp02.pok.ibm.com (Postfix) with ESMTP id 143F36E8059
-	for <linux-pci@vger.kernel.org>; Mon,  6 May 2013 09:44:26 -0400 (EDT)
-Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
-	by d01relay05.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id r46DiTrJ333810
-	for <linux-pci@vger.kernel.org>; Mon, 6 May 2013 09:44:29 -0400
-Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
-	by d01av04.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id r46DiN6g018077
-	for <linux-pci@vger.kernel.org>; Mon, 6 May 2013 09:44:28 -0400
-From: Gavin Shan <shangw@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
-Cc: benh@kernel.crashing.org, yinghai@kernel.org, bhelgaas@google.com,
-	Gavin Shan <shangw@linux.vnet.ibm.com>
-Subject: [PATCH 1/3] PCI: PCI_BUS_FLAGS_NO_IO flag for PCI bus
-Date: Mon,  6 May 2013 21:44:16 +0800
-Message-Id: <1367847858-6506-1-git-send-email-shangw@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Lance Ortiz <lance.ortiz@hp.com>
+Subject: [PATCH v2] aerdrv: Move cper_print_aer() call out of interrupt context
+To: bhelgaas@google.com, lance_ortiz@hotmail.com, jiang.liu@huawei.com,
+	tony.luck@intel.com, bp@alien8.de, rostedt@goodmis.org,
+	mchehab@redhat.com, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Thu, 09 May 2013 13:51:35 -0600
+Message-ID: <20130509195135.16108.70845.stgit@grignak.americas.hpqcorp.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There has some PCI hosts (e.g. PHB3) that don't support IO. So the
-patch intends to introduce the flag to indicate the special case.
-In turn, we won't do IO resource assignment and enable that.
+The following warning was seen on 3.9 when a corrected PCIe error was being
+handled by the AER subsystem.
 
-Signed-off-by: Gavin Shan <shangw@linux.vnet.ibm.com>
+WARNING: at .../drivers/pci/search.c:214 pci_get_dev_by_id+0x8a/0x90()
+
+This occurred because a call to pci_get_domain_bus_and_slot() was added to
+cper_print_pcie() to setup for the call to cper_print_aer().  The warning
+showed up because cper_print_pcie() is called in an interrupt context and
+pci_get* functions are not supposed to be called in that context.
+
+The solution is to move the cper_print_aer() call out of the interrupt
+context and into aer_recover_work_func() to avoid any warnings when calling
+pci_get* functions.
+
+v2 - Re-worded header text.  Removed prefix arg from cper_print_aer().
+     Added TODO message in cper_print_aer().
+
+Signed-off-by: Lance Ortiz <lance.ortiz@hp.com>
+Acked-by: Borislav Petkov <bp@suse.de>
 ---
- drivers/pci/pci.c       |    3 +++
- drivers/pci/setup-bus.c |   25 ++++++++++++++++---------
- include/linux/pci.h     |    1 +
- 3 files changed, 20 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index a899d8b..2548bad 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -1218,6 +1218,9 @@ int pci_enable_device_mem(struct pci_dev *dev)
-  */
- int pci_enable_device(struct pci_dev *dev)
+ drivers/acpi/apei/cper.c               |   18 ------------------
+ drivers/acpi/apei/ghes.c               |    3 ++-
+ drivers/pci/pcie/aer/aerdrv_core.c     |    6 +++++-
+ drivers/pci/pcie/aer/aerdrv_errprint.c |   10 ++++++++--
+ include/linux/aer.h                    |    4 ++--
+ 5 files changed, 17 insertions(+), 24 deletions(-)
+
+diff --git a/drivers/acpi/apei/cper.c b/drivers/acpi/apei/cper.c
+index 1e5d8a4..8713229 100644
+--- a/drivers/acpi/apei/cper.c
++++ b/drivers/acpi/apei/cper.c
+@@ -250,10 +250,6 @@ static const char *cper_pcie_port_type_strs[] = {
+ static void cper_print_pcie(const char *pfx, const struct cper_sec_pcie *pcie,
+ 			    const struct acpi_hest_generic_data *gdata)
  {
-+	if (dev->bus->bus_flags & PCI_BUS_FLAGS_NO_IO)
-+		return pci_enable_device_flags(dev, IORESOURCE_MEM);
-+
- 	return pci_enable_device_flags(dev, IORESOURCE_MEM | IORESOURCE_IO);
+-#ifdef CONFIG_ACPI_APEI_PCIEAER
+-	struct pci_dev *dev;
+-#endif
+-
+ 	if (pcie->validation_bits & CPER_PCIE_VALID_PORT_TYPE)
+ 		printk("%s""port_type: %d, %s\n", pfx, pcie->port_type,
+ 		       pcie->port_type < ARRAY_SIZE(cper_pcie_port_type_strs) ?
+@@ -285,20 +281,6 @@ static void cper_print_pcie(const char *pfx, const struct cper_sec_pcie *pcie,
+ 		printk(
+ 	"%s""bridge: secondary_status: 0x%04x, control: 0x%04x\n",
+ 	pfx, pcie->bridge.secondary_status, pcie->bridge.control);
+-#ifdef CONFIG_ACPI_APEI_PCIEAER
+-	dev = pci_get_domain_bus_and_slot(pcie->device_id.segment,
+-			pcie->device_id.bus, pcie->device_id.function);
+-	if (!dev) {
+-		pr_err("PCI AER Cannot get PCI device %04x:%02x:%02x.%d\n",
+-			pcie->device_id.segment, pcie->device_id.bus,
+-			pcie->device_id.slot, pcie->device_id.function);
+-		return;
+-	}
+-	if (pcie->validation_bits & CPER_PCIE_VALID_AER_INFO)
+-		cper_print_aer(pfx, dev, gdata->error_severity,
+-				(struct aer_capability_regs *) pcie->aer_info);
+-	pci_dev_put(dev);
+-#endif
  }
  
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 16abaaa..c8293e90 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -133,6 +133,10 @@ static void pdev_sort_resources(struct pci_dev *dev, struct list_head *head)
+ static const char *apei_estatus_section_flag_strs[] = {
+diff --git a/drivers/acpi/apei/ghes.c b/drivers/acpi/apei/ghes.c
+index d668a8a..f2084b5 100644
+--- a/drivers/acpi/apei/ghes.c
++++ b/drivers/acpi/apei/ghes.c
+@@ -454,7 +454,8 @@ static void ghes_do_proc(struct ghes *ghes,
+ 				aer_severity = cper_severity_to_aer(sev);
+ 				aer_recover_queue(pcie_err->device_id.segment,
+ 						  pcie_err->device_id.bus,
+-						  devfn, aer_severity);
++						  devfn, aer_severity,
++						  pcie_err->aer_info);
+ 			}
  
- 		r = &dev->resource[i];
- 
-+		if ((dev->bus->bus_flags & PCI_BUS_FLAGS_NO_IO) &&
-+		    (r->flags & IORESOURCE_IO))
-+			continue;
-+
- 		if (r->flags & IORESOURCE_PCI_FIXED)
- 			continue;
- 
-@@ -1083,17 +1087,20 @@ static void __ref __pci_bus_size_bridges(struct pci_bus *bus,
- 			additional_io_size  = pci_hotplug_io_size;
- 			additional_mem_size = pci_hotplug_mem_size;
  		}
-+
-+		/* Follow thru */
-+	default:
-+		if (!(bus->bus_flags & PCI_BUS_FLAGS_NO_IO))
-+			pbus_size_io(bus,
-+				     realloc_head ? 0 : additional_io_size,
-+				     additional_io_size, realloc_head);
- 		/*
--		 * Follow thru
-+		 * If the bridge supports prefetchable range, size it
-+		 * separately. If it doesn't, or its prefetchable window
-+		 * has already been allocated by arch code, try
-+		 * non-prefetchable range for both types of PCI memory
-+		 * resources.
- 		 */
--	default:
--		pbus_size_io(bus, realloc_head ? 0 : additional_io_size,
--			     additional_io_size, realloc_head);
--		/* If the bridge supports prefetchable range, size it
--		   separately. If it doesn't, or its prefetchable window
--		   has already been allocated by arch code, try
--		   non-prefetchable range for both types of PCI memory
--		   resources. */
- 		mask = IORESOURCE_MEM;
- 		prefmask = IORESOURCE_MEM | IORESOURCE_PREFETCH;
- 		if (pbus_size_mem(bus, prefmask, prefmask,
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 3a24e4f..53b595a 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -181,6 +181,7 @@ typedef unsigned short __bitwise pci_bus_flags_t;
- enum pci_bus_flags {
- 	PCI_BUS_FLAGS_NO_MSI   = (__force pci_bus_flags_t) 1,
- 	PCI_BUS_FLAGS_NO_MMRBC = (__force pci_bus_flags_t) 2,
-+	PCI_BUS_FLAGS_NO_IO    = (__force pci_bus_flags_t) 4
+diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
+index 564d97f..ceba124 100644
+--- a/drivers/pci/pcie/aer/aerdrv_core.c
++++ b/drivers/pci/pcie/aer/aerdrv_core.c
+@@ -582,6 +582,7 @@ struct aer_recover_entry
+ 	u8	devfn;
+ 	u16	domain;
+ 	int	severity;
++	u8	*regs;
  };
  
- /* Based on the PCI Hotplug Spec, but some values are made up by us */
--- 
-1.7.5.4
+ static DEFINE_KFIFO(aer_recover_ring, struct aer_recover_entry,
+@@ -595,7 +596,7 @@ static DEFINE_SPINLOCK(aer_recover_ring_lock);
+ static DECLARE_WORK(aer_recover_work, aer_recover_work_func);
+ 
+ void aer_recover_queue(int domain, unsigned int bus, unsigned int devfn,
+-		       int severity)
++		       int severity, u8 *aer_regs)
+ {
+ 	unsigned long flags;
+ 	struct aer_recover_entry entry = {
+@@ -603,6 +604,7 @@ void aer_recover_queue(int domain, unsigned int bus, unsigned int devfn,
+ 		.devfn		= devfn,
+ 		.domain		= domain,
+ 		.severity	= severity,
++		.regs		= aer_regs,
+ 	};
+ 
+ 	spin_lock_irqsave(&aer_recover_ring_lock, flags);
+@@ -629,6 +631,8 @@ static void aer_recover_work_func(struct work_struct *work)
+ 			       PCI_SLOT(entry.devfn), PCI_FUNC(entry.devfn));
+ 			continue;
+ 		}
++		cper_print_aer(pdev, entry.severity,
++				(struct aer_capability_regs *)entry.regs);
+ 		do_recovery(pdev, entry.severity);
+ 		pci_dev_put(pdev);
+ 	}
+diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c b/drivers/pci/pcie/aer/aerdrv_errprint.c
+index 5ab1425..f277dc3 100644
+--- a/drivers/pci/pcie/aer/aerdrv_errprint.c
++++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
+@@ -220,13 +220,19 @@ int cper_severity_to_aer(int cper_severity)
+ }
+ EXPORT_SYMBOL_GPL(cper_severity_to_aer);
+ 
+-void cper_print_aer(const char *prefix, struct pci_dev *dev, int cper_severity,
++void cper_print_aer(struct pci_dev *dev, int cper_severity,
+ 		    struct aer_capability_regs *aer)
+ {
+ 	int aer_severity, layer, agent, status_strs_size, tlp_header_valid = 0;
+ 	u32 status, mask;
+ 	const char **status_strs;
+ 
++	/*
++	 * TODO: This function needs to be re-written so that it's output
++	 * matches the output of aer_print_error().  Right now, the output
++	 * is formatted very differently.
++	 */
++
+ 	aer_severity = cper_severity_to_aer(cper_severity);
+ 	if (aer_severity == AER_CORRECTABLE) {
+ 		status = aer->cor_status;
+@@ -244,7 +250,7 @@ void cper_print_aer(const char *prefix, struct pci_dev *dev, int cper_severity,
+ 	agent = AER_GET_AGENT(aer_severity, status);
+ 	dev_err(&dev->dev, "aer_status: 0x%08x, aer_mask: 0x%08x\n",
+ 	       status, mask);
+-	cper_print_bits(prefix, status, status_strs, status_strs_size);
++	cper_print_bits("", status, status_strs, status_strs_size);
+ 	dev_err(&dev->dev, "aer_layer=%s, aer_agent=%s\n",
+ 	       aer_error_layer[layer], aer_agent_string[agent]);
+ 	if (aer_severity != AER_CORRECTABLE)
+diff --git a/include/linux/aer.h b/include/linux/aer.h
+index ec10e1b..d8cf12b 100644
+--- a/include/linux/aer.h
++++ b/include/linux/aer.h
+@@ -49,10 +49,10 @@ static inline int pci_cleanup_aer_uncorrect_error_status(struct pci_dev *dev)
+ }
+ #endif
+ 
+-extern void cper_print_aer(const char *prefix, struct pci_dev *dev,
++extern void cper_print_aer(struct pci_dev *dev,
+ 			   int cper_severity, struct aer_capability_regs *aer);
+ extern int cper_severity_to_aer(int cper_severity);
+ extern void aer_recover_queue(int domain, unsigned int bus, unsigned int devfn,
+-			      int severity);
++			      int severity,  u8 *aer_regs);
+ #endif //_AER_H_
+ 
 
