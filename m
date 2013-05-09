@@ -1,167 +1,335 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-la0-f48.google.com ([209.85.215.48]:54847 "EHLO
-	mail-la0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S967252Ab3E3Itk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 May 2013 04:49:40 -0400
-Received: by mail-la0-f48.google.com with SMTP id fs12so9432663lab.7
-        for <linux-pci@vger.kernel.org>; Thu, 30 May 2013 01:49:39 -0700 (PDT)
+Received: from mail-oa0-f42.google.com ([209.85.219.42]:42970 "EHLO
+	mail-oa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751081Ab3EIQxZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 9 May 2013 12:53:25 -0400
+Received: by mail-oa0-f42.google.com with SMTP id i10so3746407oag.15
+        for <linux-pci@vger.kernel.org>; Thu, 09 May 2013 09:53:24 -0700 (PDT)
 MIME-Version: 1.0
-Reply-To: pricardofc@ipfn.ist.utl.pt
-In-Reply-To: <CAE9FiQXCf-h84sXqGPKbdd66oNbzWOtfea+PcHFiJPLPBc6oGQ@mail.gmail.com>
-References: <CAH9N0t-DOC0iOMjtHUTznCzk=C7RpbdBOhYR=mK1zaAmeH-Rqw@mail.gmail.com>
-	<CAE9FiQXCf-h84sXqGPKbdd66oNbzWOtfea+PcHFiJPLPBc6oGQ@mail.gmail.com>
-Date: Thu, 30 May 2013 09:49:38 +0100
-Message-ID: <CAH9N0t_4uxJ21wasRSNKBt+5X-cQGwqStakRccfggm1TAbOAqQ@mail.gmail.com>
-Subject: Re: Pcie Linux HotPlug Driver
-From: Paulo Fortuna Carvalho <pricardofc@ipfn.ist.utl.pt>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: multipart/mixed; boundary=089e0160baae20d77004ddeb9421
+In-Reply-To: <518B7D65.9090408@cn.fujitsu.com>
+References: <51122D9A.6040002@cn.fujitsu.com> <518B7D65.9090408@cn.fujitsu.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 9 May 2013 09:53:04 -0700
+Message-ID: <CAErSpo5B1eDxwZ+Uu=M5tWaunYEZj_en81RdXj1rdpanYqMcxw@mail.gmail.com>
+Subject: Re: pci-sysfs: queue sysfs rescan routine into workqueue to avoid
+ potential deadlock situation
+To: Gu Zheng <guz.fnst@cn.fujitsu.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	tangchen <tangchen@cn.fujitsu.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---089e0160baae20d77004ddeb9421
-Content-Type: text/plain; charset=ISO-8859-1
+On Thu, May 9, 2013 at 3:41 AM, Gu Zheng <guz.fnst@cn.fujitsu.com> wrote:
+> Hi Bjorn,
+>         Very sorry to disturb you. This patch was sent a long time ago, but we have not get
+> any feedback until now.
+> It is used to fix a potential deadlock situation when doing pci-hotplug via pci-sysfs.
+> In the first version we sent:
+> https://patchwork.kernel.org/patch/1912351/
+> replaced mutex_lock with mutex_trylock to avoid potential deadlock situation, but you suggested
+> that using a workqueue to queue these routines seems a good way to avoid the deadlock situation,
+> and this patch was followed your suggestion, can your split a while to review it? Or is there any
+> better way to fix this issue? Any comments is welcome! :)
 
-Hello Yinghai,
-Im sending you the boot.log file in attach with the grub.conf changed
-to add debug ignore_loglevel.
-Also I could manage to load pciehp.ko (not fakephp.ko) module at boot time.
-Paulo.
+No problem, thanks for reminding me about this.  I hadn't actually
+forgotten about this patch, but it does seem like it's tangled up with
+the whole pci_bus and pci_dev reference counting situation, so I was
+hoping that if we could figure out a clean resolution to that, it
+would make it more obvious what to do here.
 
+Bjorn
 
-
-2013/5/29, Yinghai Lu <yinghai@kernel.org>:
-> On Wed, May 29, 2013 at 10:30 AM, Paulo Fortuna Carvalho
-> <pricardofc@ipfn.ist.utl.pt> wrote:
->> Hello Yinghai and Bjorn,
->> Issue solved.
->> You were correct. The module fakephp.ko was not loaded.
+> On 02/06/2013 06:16 PM, Gu Zheng wrote:
 >
-> No, you should not use fackephp.ko. As it was removed already
-> in recent kernel.
-> It is replaced by pci slot driver.
->
-> In your case you should pciehp.ko
->
-> Please post boot log with "debug ignore_loglevel"
->
->
->> Now everything works ok and device driver need not to be changed.
->> As you said is a normal PCI Device Driver.
+>> There is a potential deadlock situation when we manipulate the pci-sysfs user
+>> interfaces from different bus hierarchy simultaneously, described as following:
 >>
->> Now I want that that when ATCA card is without energy ( 11:00.0 DPIO
->> module: PLD APPLICATIONS Device 6014 (rev ff) )
+>> path1: sysfs remove device:             | path2: sysfs rescan device:
+>> sysfs_schedule_callback_work()          | sysfs_write_file()
+>>   remove_callback()                     |   flush_write_buffer()
+>> *1* mutex_lock(&pci_remove_rescan_mutex)|*2*  sysfs_get_active(attr_sd)
+>>       ...                               |     dev_attr_store()
+>>         device_remove_file()            |       dev_rescan_store()
+>>           ...                           |*4*
+>> mutex_lock(&pci_remove_rescan_mutex)
+>> *3*       sysfs_deactivate(sd)          |     ...
+>>             wait_for_completion()       |*5*  sysfs_put_active(attr_sd)
+>> *6* mutex_unlock(&pci_remove_rescan_mutex)
 >>
->> the command:
->> echo 0 > /sys/bus/pci/slots/0000*/power is automatically executed.
+>> If path1 first holds the pci_remove_rescan_mutex at *1*, then another path
+>> called path2 actived and runs to *2* before path1 runs to *3*, we now runs
+>> to a deadlock situation:
+>> Path1 holds the mutex waiting path2 to decrease sysfs_dirent's s_active
+>> counter at *5*, but path2 is blocked at *4* when trying to get the
+>> pci_remove_rescan_mutex. The mutex won't be put by path1 until it reach
+>> *6*, but it's now blocked at *3*.
 >>
->> At the moment i'm doing it manually and after that my atca card driver
->> is removed.
+>> Under the suggestion of Bjorn, and base on Yinghai Lu's patch:
+>> http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=commitdiff;h=277df390baeab7ba6aa136356b677a096c890c0c
 >>
->> And when i give energy to the ATCA card i have to manually perform pci
->> bus re-enumeration
->> with command:
->> echo 1 > /sys/bus/pci/rescan
+>> The circumvent approach is queuing the sysfs rescan routine into workqueue just
+>> like removal to avoid manipulating(remove/scan) the pci-tree at the same time.
 >>
->> and the ATCA card driver is automatically inserted. How can
->> re-enumeration be done automatically?
+>>
+>> *dmesg ifno*:
+>> (snip)
+>> 1000e 0000:1c:00.0: eth9: Intel(R) PRO/1000 Network Connection
+>> sd 13:2:0:0: [sdb] Attached SCSI disk
+>> e1000e 0000:1c:00.0: eth9: MAC: 0, PHY: 4, PBA No: D50228-005
+>> e1000e 0000:1c:00.1: Disabling ASPM  L1
+>> e1000e 0000:1c:00.1: Interrupt Throttling Rate (ints/sec) set to dynamic
+>> conservative mode
+>> e1000e 0000:1c:00.1: irq 143 for MSI/MSI-X
+>> e1000e 0000:1c:00.1: eth10: (PCI Express:2.5GT/s:Width x4) 00:15:17:cd:96:bf
+>> e1000e 0000:1c:00.1: eth10: Intel(R) PRO/1000 Network Connection
+>> e1000e 0000:1c:00.1: eth10: MAC: 0, PHY: 4, PBA No: D50228-005
+>> INFO: task bash:62982 blocked for more than 120 seconds.
+>> "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+>> bash            D 0000000000000000     0 62982  62978 0x00000080
+>>  ffff88038b277db8 0000000000000082 ffff88038b277fd8 0000000000013940
+>>  ffff88038b276010 0000000000013940 0000000000013940 0000000000013940
+>>  ffff88038b277fd8 0000000000013940 ffff880377449e30 ffff8806e822c670
+>> Call Trace:
+>>  [<ffffffff8151ba79>] schedule+0x29/0x70
+>>  [<ffffffff8151bd6e>] schedule_preempt_disabled+0xe/0x10
+>>  [<ffffffff8151a4e3>] __mutex_lock_slowpath+0xd3/0x150
+>>  [<ffffffff8151a3eb>] mutex_lock+0x2b/0x50
+>>  [<ffffffff812821dc>] dev_rescan_store+0x5c/0x80
+>>  [<ffffffff81341800>] dev_attr_store+0x20/0x30
+>>  [<ffffffff811e3eef>] sysfs_write_file+0xef/0x170
+>>  [<ffffffff81173d08>] vfs_write+0xc8/0x190
+>>  [<ffffffff81173ed1>] sys_write+0x51/0x90
+>>  [<ffffffff81524b29>] system_call_fastpath+0x16/0x1b
+>> INFO: task bash:64141 blocked for more than 120 seconds.
+>> "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+>> bash            D ffffffff81610460     0 64141  64136 0x00000080
+>>  ffff8803540e9db8 0000000000000086 ffff8803540e9fd8 0000000000013940
+>>  ffff8803540e8010 0000000000013940 0000000000013940 0000000000013940
+>>  ffff8803540e9fd8 0000000000013940 ffff8807db338a10 ffff8806f09abc60
+>> Call Trace:
+>>  [<ffffffff8151ba79>] schedule+0x29/0x70
+>>  [<ffffffff8151bd6e>] schedule_preempt_disabled+0xe/0x10
+>>  [<ffffffff8151a4e3>] __mutex_lock_slowpath+0xd3/0x150
+>>  [<ffffffff8151a3eb>] mutex_lock+0x2b/0x50
+>>  [<ffffffff812821dc>] dev_rescan_store+0x5c/0x80
+>>  [<ffffffff81341800>] dev_attr_store+0x20/0x30
+>>  [<ffffffff811e3eef>] sysfs_write_file+0xef/0x170
+>>  [<ffffffff81173d08>] vfs_write+0xc8/0x190
+>>  [<ffffffff81173ed1>] sys_write+0x51/0x90
+>>  [<ffffffff81524b29>] system_call_fastpath+0x16/0x1b
+>> INFO: task kworker/u:3:64451 blocked for more than 120 seconds.
+>> "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+>> kworker/u:3     D ffffffff81610460     0 64451      2 0x00000080
+>>  ffff8807d51b7a30 0000000000000046 ffff8807d51b7fd8 0000000000013940
+>>  ffff8807d51b6010 0000000000013940 0000000000013940 0000000000013940
+>>  ffff8807d51b7fd8 0000000000013940 ffff8807db339420 ffff88037744b250
+>> Call Trace:
+>>  [<ffffffff8151ba79>] schedule+0x29/0x70
+>>  [<ffffffff81519ded>] schedule_timeout+0x19d/0x220
+>>  [<ffffffff81165f92>] ? __slab_free+0x1f2/0x2f0
+>>  [<ffffffff8151b8fe>] wait_for_common+0x11e/0x190
+>>  [<ffffffff8108a6e0>] ? try_to_wake_up+0x2c0/0x2c0
+>>  [<ffffffff8151ba4d>] wait_for_completion+0x1d/0x20
+>>  [<ffffffff811e53e8>] sysfs_addrm_finish+0xb8/0xd0
+>>  [<ffffffff811e4320>] ? sysfs_schedule_callback+0x1e0/0x1e0
+>>  [<ffffffff811e33f0>] sysfs_hash_and_remove+0x60/0xb0
+>>  [<ffffffff811e43c9>] sysfs_remove_file+0x39/0x50
+>>  [<ffffffff81342cb7>] device_remove_file+0x17/0x20
+>>  [<ffffffff8134505c>] bus_remove_device+0xdc/0x180
+>>  [<ffffffff81342eb0>] device_del+0x120/0x1d0
+>>  [<ffffffff81342f82>] device_unregister+0x22/0x60
+>>  [<ffffffff8127ade4>] pci_stop_bus_device+0x94/0xa0
+>>  [<ffffffff8127ad90>] pci_stop_bus_device+0x40/0xa0
+>>  [<ffffffff8127ad90>] pci_stop_bus_device+0x40/0xa0
+>>  [<ffffffff8127ad90>] pci_stop_bus_device+0x40/0xa0
+>>  [<ffffffff8127af66>] pci_stop_and_remove_bus_device+0x16/0x30
+>>  [<ffffffff81282359>] remove_callback+0x29/0x40
+>>  [<ffffffff811e4344>] sysfs_schedule_callback_work+0x24/0x70
+>>  [<ffffffff81070009>] process_one_work+0x179/0x4b0
+>>  [<ffffffff8107210e>] worker_thread+0x12e/0x330
+>>  [<ffffffff81071fe0>] ? manage_workers+0x110/0x110
+>>  [<ffffffff8107705e>] kthread+0x9e/0xb0
+>>  [<ffffffff81525bc4>] kernel_thread_helper+0x4/0x10
+>>  [<ffffffff81076fc0>] ? kthread_freezable_should_stop+0x70/0x70
+>>  [<ffffffff81525bc0>] ? gs_change+0x13/0x13
+>>
+>>
+>> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+>> Signed-off-by: Gu Zheng <guz.fnst@cn.fujitsu.com>
+>> Signed-off-by: Lin Feng <linfeng@cn.fujitsu.com>
+>> ---
+>>  drivers/pci/pci-sysfs.c |   92 +++++++++++++++++++++++++++++++++--------------
+>>  1 files changed, 65 insertions(+), 27 deletions(-)
+>>
+>> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+>> index 9c6e9bb..e66b498 100644
+>> --- a/drivers/pci/pci-sysfs.c
+>> +++ b/drivers/pci/pci-sysfs.c
+>> @@ -285,21 +285,34 @@ msi_bus_store(struct device *dev, struct device_attribute
+>> *attr,
+>>  }
+>>
+>>  static DEFINE_MUTEX(pci_remove_rescan_mutex);
+>> +
+>> +static void bus_rescan_callback(struct device *dev)
+>> +{
+>> +     struct pci_bus *b = NULL;
+>> +
+>> +     mutex_lock(&pci_remove_rescan_mutex);
+>> +     while ((b = pci_find_next_bus(b)) != NULL)
+>> +             pci_rescan_bus(b);
+>> +     mutex_unlock(&pci_remove_rescan_mutex);
+>> +}
+>> +
+>>  static ssize_t bus_rescan_store(struct bus_type *bus, const char *buf,
+>>                               size_t count)
+>>  {
+>> +     int err;
+>>       unsigned long val;
+>> -     struct pci_bus *b = NULL;
+>> +     struct device *dev = bus->dev_root;
+>>
+>>       if (strict_strtoul(buf, 0, &val) < 0)
+>>               return -EINVAL;
+>>
+>> -     if (val) {
+>> -             mutex_lock(&pci_remove_rescan_mutex);
+>> -             while ((b = pci_find_next_bus(b)) != NULL)
+>> -                     pci_rescan_bus(b);
+>> -             mutex_unlock(&pci_remove_rescan_mutex);
+>> -     }
+>> +     if (!val)
+>> +             return count;
+>> +
+>> +     err = device_schedule_callback(dev, bus_rescan_callback);
+>> +     if (err)
+>> +             return err;
+>> +
+>>       return count;
+>>  }
+>>
+>> @@ -308,21 +321,32 @@ struct bus_attribute pci_bus_attrs[] = {
+>>       __ATTR_NULL
+>>  };
+>>
+>> +static void dev_rescan_callback(struct device *dev)
+>> +{
+>> +     struct pci_dev *pdev = to_pci_dev(dev);
+>> +
+>> +     if (pdev->is_added) {
+>> +             mutex_lock(&pci_remove_rescan_mutex);
+>> +             pci_rescan_bus(pdev->bus);
+>> +             mutex_unlock(&pci_remove_rescan_mutex);
+>> +     }
+>> +}
+>> +
+>>  static ssize_t
+>>  dev_rescan_store(struct device *dev, struct device_attribute *attr,
+>>                const char *buf, size_t count)
+>>  {
+>> +     int err;
+>>       unsigned long val;
+>> -     struct pci_dev *pdev = to_pci_dev(dev);
+>>
+>>       if (strict_strtoul(buf, 0, &val) < 0)
+>>               return -EINVAL;
+>>
+>> -     if (val) {
+>> -             mutex_lock(&pci_remove_rescan_mutex);
+>> -             pci_rescan_bus(pdev->bus);
+>> -             mutex_unlock(&pci_remove_rescan_mutex);
+>> -     }
+>> +     if (!val)
+>> +             return count;
+>> +     err = device_schedule_callback(dev, dev_rescan_callback);
+>> +     if (err)
+>> +             return err;
+>>       return count;
+>>  }
+>>
+>> @@ -339,7 +363,7 @@ static ssize_t
+>>  remove_store(struct device *dev, struct device_attribute *dummy,
+>>            const char *buf, size_t count)
+>>  {
+>> -     int ret = 0;
+>> +     int err;
+>>       unsigned long val;
+>>
+>>       if (strict_strtoul(buf, 0, &val) < 0)
+>> @@ -348,31 +372,45 @@ remove_store(struct device *dev, struct device_attribute
+>> *dummy,
+>>       /* An attribute cannot be unregistered by one of its own methods,
+>>        * so we have to use this roundabout approach.
+>>        */
+>> -     if (val)
+>> -             ret = device_schedule_callback(dev, remove_callback);
+>> -     if (ret)
+>> -             count = ret;
+>> +     if (!val)
+>> +             return count;
+>> +
+>> +     err = device_schedule_callback(dev, remove_callback);
+>> +     if (err)
+>> +             return err;
+>> +
+>>       return count;
+>>  }
+>>
+>> +static void dev_bus_rescan_callback(struct device *dev)
+>> +{
+>> +     struct pci_bus *bus = to_pci_bus(dev);
+>> +
+>> +     mutex_lock(&pci_remove_rescan_mutex);
+>> +     if (!pci_is_root_bus(bus) && list_empty(&bus->devices))
+>> +             pci_rescan_bus_bridge_resize(bus->self);
+>> +     else
+>> +             pci_rescan_bus(bus);
+>> +     mutex_unlock(&pci_remove_rescan_mutex);
+>> +}
+>> +
+>>  static ssize_t
+>>  dev_bus_rescan_store(struct device *dev, struct device_attribute *attr,
+>>                const char *buf, size_t count)
+>>  {
+>> +     int err;
+>>       unsigned long val;
+>> -     struct pci_bus *bus = to_pci_bus(dev);
+>>
+>>       if (strict_strtoul(buf, 0, &val) < 0)
+>>               return -EINVAL;
+>>
+>> -     if (val) {
+>> -             mutex_lock(&pci_remove_rescan_mutex);
+>> -             if (!pci_is_root_bus(bus) && list_empty(&bus->devices))
+>> -                     pci_rescan_bus_bridge_resize(bus->self);
+>> -             else
+>> -                     pci_rescan_bus(bus);
+>> -             mutex_unlock(&pci_remove_rescan_mutex);
+>> -     }
+>> +     if (!val)
+>> +             return count;
+>> +
+>> +     err = device_schedule_callback(dev, dev_bus_rescan_callback);
+>> +     if (err)
+>> +             return err;
+>> +
+>>       return count;
+>>  }
+>>
+>> -- 1.7.7
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
 >
-> If you can enable pciehp.ko for 04:08.0, then you can use
-> echo 0 > /sys/bus/pci/slots/48/power
-> echo 1 > /sys/bus/pci/slots/48/power
 >
-> that should probe devices and load driver automatically.
->
-> Yinghai
->
-
---089e0160baae20d77004ddeb9421
-Content-Type: application/octet-stream; name="boot.log"
-Content-Disposition: attachment; filename="boot.log"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: file0
-
-GyVHCQlXZWxjb21lIHRvIBtbMDszMW1SZWQgSGF0G1swOzM5bSBFbnRlcnByaXNlIExpbnV4IFNl
-cnZlcg0KU3RhcnRpbmcgdWRldjogGyVHG1s2MEdbG1swOzMybSAgT0sgIBtbMDszOW1dDQ0KU2V0
-dGluZyBob3N0bmFtZSBmcHNjLXBjZi10ZXN0OiAgG1s2MEdbG1swOzMybSAgT0sgIBtbMDszOW1d
-DQ0KU2V0dGluZyB1cCBMb2dpY2FsIFZvbHVtZSBNYW5hZ2VtZW50OiAgIDIgbG9naWNhbCB2b2x1
-bWUocykgaW4gdm9sdW1lIGdyb3VwICJyb290dmciIG5vdyBhY3RpdmUNChtbNjBHWxtbMDszMm0g
-IE9LICAbWzA7MzltXQ0NCkNoZWNraW5nIGZpbGVzeXN0ZW1zDQovZGV2L21hcHBlci9yb290dmct
-cm9vdHZvbDogY2xlYW4sIDI1NTQxOS82MDg5MTEzNiBmaWxlcywgNzY3MTg3Ni8yNDM1NjQ1NDQg
-YmxvY2tzDQovZGV2L3NkYTE6IGNsZWFuLCA0NS8xMDI0MDAgZmlsZXMsIDY5OTU2LzQwOTYwMCBi
-bG9ja3MNChtbNjBHWxtbMDszMm0gIE9LICAbWzA7MzltXQ0NClJlbW91bnRpbmcgcm9vdCBmaWxl
-c3lzdGVtIGluIHJlYWQtd3JpdGUgbW9kZTogIBtbNjBHWxtbMDszMm0gIE9LICAbWzA7MzltXQ0N
-Ck1vdW50aW5nIGxvY2FsIGZpbGVzeXN0ZW1zOiAgG1s2MEdbG1swOzMybSAgT0sgIBtbMDszOW1d
-DQ0KRW5hYmxpbmcgbG9jYWwgZmlsZXN5c3RlbSBxdW90YXM6ICAbWzYwR1sbWzA7MzJtICBPSyAg
-G1swOzM5bV0NDQpFbmFibGluZyAvZXRjL2ZzdGFiIHN3YXBzOiAgG1s2MEdbG1swOzMybSAgT0sg
-IBtbMDszOW1dDQ0KRW50ZXJpbmcgbm9uLWludGVyYWN0aXZlIHN0YXJ0dXANCkNhbGxpbmcgdGhl
-IHN5c3RlbSBhY3Rpdml0eSBkYXRhIGNvbGxlY3RvciAoc2FkYyk6IA0KU3RhcnRpbmcgbW9uaXRv
-cmluZyBmb3IgVkcgcm9vdHZnOiAgIDIgbG9naWNhbCB2b2x1bWUocykgaW4gdm9sdW1lIGdyb3Vw
-ICJyb290dmciIG1vbml0b3JlZA0KG1s2MEdbG1swOzMybSAgT0sgIBtbMDszOW1dDQ0KQnJpbmdp
-bmcgdXAgbG9vcGJhY2sgaW50ZXJmYWNlOiAgG1s2MEdbG1swOzMybSAgT0sgIBtbMDszOW1dDQ0K
-QnJpbmdpbmcgdXAgaW50ZXJmYWNlIGV0aDA6ICAbWzYwR1sbWzA7MzJtICBPSyAgG1swOzM5bV0N
-DQpTdGFydGluZyBwcHBvZS1zZXJ2ZXI6IBtbNjBHWxtbMDszMm0gIE9LICAbWzA7MzltXQ0NClN0
-YXJ0aW5nIGF1ZGl0ZDogG1s2MEdbG1swOzMybSAgT0sgIBtbMDszOW1dDQ0KU3RhcnRpbmcgcG9y
-dHJlc2VydmU6IBtbNjBHWxtbMDszMm0gIE9LICAbWzA7MzltXQ0NClN0YXJ0aW5nIHN5c3RlbSBs
-b2dnZXI6IBtbNjBHWxtbMDszMm0gIE9LICAbWzA7MzltXQ0NClN0YXJ0aW5nIHJwY2JpbmQ6IBtb
-NjBHWxtbMDszMm0gIE9LICAbWzA7MzltXQ0NClN0YXJ0aW5nIGtkdW1wOhtbNjBHWxtbMDszMW1G
-QUlMRUQbWzA7MzltXQ0NClN0YXJ0aW5nIHN5c3RlbSBtZXNzYWdlIGJ1czogG1s2MEdbG1swOzMy
-bSAgT0sgIBtbMDszOW1dDQ0KU2V0dGluZyBuZXR3b3JrIHBhcmFtZXRlcnMuLi4gG1s2MEdbG1sw
-OzMybSAgT0sgIBtbMDszOW1dDQ0KU3RhcnRpbmcgTmV0d29ya01hbmFnZXIgZGFlbW9uOiAbWzYw
-R1sbWzA7MzJtICBPSyAgG1swOzM5bV0NDQpTdGFydGluZyBBdmFoaSBkYWVtb24uLi4gG1s2MEdb
-G1swOzMybSAgT0sgIBtbMDszOW1dDQ0KU3RhcnRpbmcgTkZTIHN0YXRkOiAbWzYwR1sbWzA7MzJt
-ICBPSyAgG1swOzM5bV0NDQpTdGFydGluZyBSUEMgaWRtYXBkOiBycGMuaWRtYXBkOiBjb25mX3Bh
-cnNlOiBsYXN0IGxpbmUgbm9uLXRlcm1pbmF0ZWQsIGlnbm9yZWQuDQpycGMuaWRtYXBkOiBjb25m
-X3BhcnNlOiBsYXN0IGxpbmUgbm9uLXRlcm1pbmF0ZWQsIGlnbm9yZWQuDQobWzYwR1sbWzA7MzJt
-ICBPSyAgG1swOzM5bV0NDQpTdGFydGluZyBjdXBzOiAbWzYwR1sbWzA7MzJtICBPSyAgG1swOzM5
-bV0NDQpNb3VudGluZyBvdGhlciBmaWxlc3lzdGVtczogIBtbNjBHWxtbMDszMm0gIE9LICAbWzA7
-MzltXQ0NClN0YXJ0aW5nIGFjcGkgZGFlbW9uOiAbWzYwR1sbWzA7MzJtICBPSyAgG1swOzM5bV0N
-DQpTdGFydGluZyBIQUwgZGFlbW9uOiAbWzYwR1sbWzA7MzJtICBPSyAgG1swOzM5bV0NDQpSZXRy
-aWdnZXIgZmFpbGVkIHVkZXYgZXZlbnRzG1s2MEdbG1swOzMybSAgT0sgIBtbMDszOW1dDQ0KU3Rh
-cnRpbmcgUEMvU0Mgc21hcnQgY2FyZCBkYWVtb24gKHBjc2NkKTogG1s2MEdbG1swOzMybSAgT0sg
-IBtbMDszOW1dDQ0KU3RhcnRpbmcgc2xhcGQ6IBtbNjBHWxtbMDszMm0gIE9LICAbWzA7MzltXQ0N
-CkxvYWRpbmcgYXV0b2ZzNDogG1s2MEdbG1swOzMybSAgT0sgIBtbMDszOW1dDQ0KU3RhcnRpbmcg
-YXV0b21vdW50OiAbWzYwR1sbWzA7MzJtICBPSyAgG1swOzM5bV0NDQobWzA7MzNtTkkgU1lOQyBQ
-VFAgRGFlbW9uIGNhbm5vdCBiZSB1c2VkIGR1ZSB0byBhYnNlbmNlIG9mIGhhcmR3YXJlIG9yIGRy
-aXZlciEbWzBtDQpFbmFibGluZyBCbHVldG9vdGggZGV2aWNlczoNClN0YXJ0aW5nIG1jZWxvZyBk
-YWVtb24NChtbNjBHWxtbMDszMm0gIE9LICAbWzA7MzltXQ1TdGFydGluZyBzc2hkOiAbWzYwR1sb
-WzA7MzJtICBPSyAgG1swOzM5bV0NDQpTdGFydGluZyB4aW5ldGQ6IBtbNjBHWxtbMDszMm0gIE9L
-ICAbWzA7MzltXQ0NClN0YXJ0aW5nIG50cGQ6IBtbNjBHWxtbMDszMm0gIE9LICAbWzA7MzltXQ0N
-ClN0YXJ0aW5nIEVQSUNTIENBIFJlcGVhdGVyIBtbNjBHWxtbMDszMm0gIE9LICAbWzA7MzltXQ0N
-ClN0YXJ0aW5nIEVQSUNTIElPQyBMb2cgU2VydmVyIBtbNjBHWxtbMDszMm0gIE9LICAbWzA7Mzlt
-XQ0NClN0YXJ0aW5nIFRvbWNhdCAbWzYwR1sbWzA7MzJtICBPSyAgG1swOzM5bV0NDQpTdGFydGlu
-ZyBwb3N0Z3Jlc3FsLTkuMiBzZXJ2aWNlOiAbWzYwR1sbWzA7MzJtICBPSyAgG1swOzM5bV0NDQpT
-dGFydGluZyBzZW5kbWFpbDogG1s2MEdbG1swOzMybSAgT0sgIBtbMDszOW1dDQ0KU3RhcnRpbmcg
-c20tY2xpZW50OiAbWzYwR1sbWzA7MzJtICBPSyAgG1swOzM5bV0NDQpTdGFydGluZyBhYnJ0IGRh
-ZW1vbjogG1s2MEdbG1swOzMybSAgT0sgIBtbMDszOW1dDQ0KU3RhcnRpbmcgY29uc29sZSBtb3Vz
-ZSBzZXJ2aWNlczogG1s2MEdbG1swOzMybSAgT0sgIBtbMDszOW1dDQ0KU3RhcnRpbmcgY3JvbmQ6
-IBtbNjBHWxtbMDszMm0gIE9LICAbWzA7MzltXQ0NClN0YXJ0aW5nIEFwYWNoZSBBY3RpdmVNUSBm
-b3IgQ1NTIBtbNjBHWxtbMDszMm0gIE9LICAbWzA7MzltXQ0NClN0YXJ0aW5nIENTUyBBbGFybSBT
-ZXJ2ZXIgG1s2MEdbG1swOzMybSAgT0sgIBtbMDszOW1dDQ0KU3RhcnRpbmcgQ1NTIEFsYXJtIE5v
-dGlmaWVyIBtbNjBHWxtbMDszMm0gIE9LICAbWzA7MzltXQ0NClN0YXJ0aW5nIENTUyBBbGFybSBB
-bm51bmNpYXRvciAbWzYwR1sbWzA7MzJtICBPSyAgG1swOzM5bV0NDQpTdGFydGluZyBDU1MgQXJj
-aGl2ZSBFbmdpbmUgG1s2MEdbG1swOzMybSAgT0sgIBtbMDszOW1dDQ0KU3RhcnRpbmcgQ1NTIEpN
-UzJSREIgG1s2MEdbG1swOzMybSAgT0sgIBtbMDszOW1dDQ0KU3RhcnRpbmcgVk5DIHNlcnZlcjog
-MTpjb2RhYy1kZXYgDQpOZXcgJ2Zwc2MtcGNmLXRlc3Q6MSAoY29kYWMtZGV2KScgZGVza3RvcCBp
-cyBmcHNjLXBjZi10ZXN0OjENCg0KU3RhcnRpbmcgYXBwbGljYXRpb25zIHNwZWNpZmllZCBpbiAv
-aG9tZS9jb2RhYy1kZXYvLnZuYy94c3RhcnR1cA0KTG9nIGZpbGUgaXMgL2hvbWUvY29kYWMtZGV2
-Ly52bmMvZnBzYy1wY2YtdGVzdDoxLmxvZw0KDQoyOmJzYW50b3MgDQpOZXcgJ2Zwc2MtcGNmLXRl
-c3Q6MiAoYnNhbnRvcyknIGRlc2t0b3AgaXMgZnBzYy1wY2YtdGVzdDoyDQoNClN0YXJ0aW5nIGFw
-cGxpY2F0aW9ucyBzcGVjaWZpZWQgaW4gL2hvbWUvYnNhbnRvcy8udm5jL3hzdGFydHVwDQpMb2cg
-ZmlsZSBpcyAvaG9tZS9ic2FudG9zLy52bmMvZnBzYy1wY2YtdGVzdDoyLmxvZw0KDQozOnByaWNh
-cmRvZmMgDQpOZXcgJ2Zwc2MtcGNmLXRlc3Q6MyAocHJpY2FyZG9mYyknIGRlc2t0b3AgaXMgZnBz
-Yy1wY2YtdGVzdDozDQoNClN0YXJ0aW5nIGFwcGxpY2F0aW9ucyBzcGVjaWZpZWQgaW4gL2hvbWUv
-cHJpY2FyZG9mYy8udm5jL3hzdGFydHVwDQpMb2cgZmlsZSBpcyAvaG9tZS9wcmljYXJkb2ZjLy52
-bmMvZnBzYy1wY2YtdGVzdDozLmxvZw0KDQo0OmFuYW0gDQpOZXcgJ2Zwc2MtcGNmLXRlc3Q6NCAo
-YW5hbSknIGRlc2t0b3AgaXMgZnBzYy1wY2YtdGVzdDo0DQoNClN0YXJ0aW5nIGFwcGxpY2F0aW9u
-cyBzcGVjaWZpZWQgaW4gL2hvbWUvYW5hbS8udm5jL3hzdGFydHVwDQpMb2cgZmlsZSBpcyAvaG9t
-ZS9hbmFtLy52bmMvZnBzYy1wY2YtdGVzdDo0LmxvZw0KDQobWzYwR1sbWzA7MzJtICBPSyAgG1sw
-OzM5bV0NDQpTdGFydGluZyBDU1MgQXJjaGl2ZSBFbmdpbmUgZm9yIFBMQyBTYW1wbGUgG1s2MEdb
-G1swOzMybSAgT0sgIBtbMDszOW1dDQ0KU3RhcnRpbmcgYXRkOiAbWzYwR1sbWzA7MzJtICBPSyAg
-G1swOzM5bV0NDQpTdGFydGluZyBSZWQgSGF0IE5ldHdvcmsgRGFlbW9uOiAbWzYwR1sbWzA7MzJt
-ICBPSyAgG1swOzM5bV0NDQpTdGFydGluZyByaHNtY2VydGQgMjQwIDE0NDAbWzYwR1sbWzA7MzJt
-ICBPSyAgG1swOzM5bV0NDQpTZXR0aW5nIGtlcm5lbCB0aHJlYWQgcHJpb3JpdGllczogG1s2MEdb
-G1swOzMybSAgT0sgIBtbMDszOW1dDQ0K
---089e0160baae20d77004ddeb9421--
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
