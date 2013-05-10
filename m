@@ -1,59 +1,89 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:60199 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754754Ab3EPP5x (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 May 2013 11:57:53 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>
-Cc: linux-arm-kernel@lists.infradead.org,
-	Arnd Bergmann <arnd@arndb.de>, Olof Johansson <olof@lixom.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Lior Amsalem <alior@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	linux-pci@vger.kernel.org,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	devicetree-discuss@lists.ozlabs.org,
-	Mike Turquette <mturquette@linaro.org>
-Subject: [PATCHv10 5/9] clk: mvebu: create parent-child relation for PCIe clocks on Armada 370
-Date: Thu, 16 May 2013 17:55:20 +0200
-Message-Id: <1368719725-21265-6-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1368719725-21265-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1368719725-21265-1-git-send-email-thomas.petazzoni@free-electrons.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <1368222408.3334.29.camel@ul30vt.home>
+Subject: Re: [PATCH v2 3/8] pci: Add pci_hp_reset_slot
+From: Alex Williamson <alex.williamson@redhat.com>
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Fri, 10 May 2013 15:46:48 -0600
+In-Reply-To: <20130508025753.30771.43656.stgit@bling.home>
+References: <20130508025339.30771.61937.stgit@bling.home>
+	 <20130508025753.30771.43656.stgit@bling.home>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The Armada 370 has two gatable clocks for each PCIe interface, and we
-want both of them to be enabled. We therefore make one of the two
-clocks a child of the other, as we did for the sataX and sataXlnk
-clocks on Armada XP.
+On Tue, 2013-05-07 at 20:57 -0600, Alex Williamson wrote:
+> Provide an interface to get to hotplug controller reset_slot callback
+> 
+> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+> ---
+>  drivers/pci/hotplug/pci_hotplug_core.c |   24 ++++++++++++++++++++++++
+>  include/linux/pci_hotplug.h            |    8 ++++++++
+>  2 files changed, 32 insertions(+)
+> 
+> diff --git a/drivers/pci/hotplug/pci_hotplug_core.c b/drivers/pci/hotplug/pci_hotplug_core.c
+> index 202f4a9..1d0fee4 100644
+> --- a/drivers/pci/hotplug/pci_hotplug_core.c
+> +++ b/drivers/pci/hotplug/pci_hotplug_core.c
+> @@ -537,6 +537,29 @@ int __must_check pci_hp_change_slot_info(struct hotplug_slot *hotplug,
+>  	return 0;
+>  }
+>  
+> +/**
+> + * pci_hp_reset_slot - reset slot
+> + *
+> + * @hotplug: pointer to hotplug slot to reset
+> + * @probe: reset slot (0) or just probe
+> + *
+> + * Returns 0 if successful, anything else for an error.
+> + */
+> +int pci_hp_reset_slot(struct hotplug_slot *hotplug, int probe)
+> +{
+> +	int result = -ENOTTY;
+> +
+> +	if (!hotplug || !try_module_get(hotplug->ops->owner))
+> +		return result;
+> +
+> +	if (hotplug->ops->reset_slot)
+> +		result = hotplug->ops->reset_slot(hotplug, probe);
+> +
+> +	module_put(hotplug->ops->owner);
+> +
+> +	return result;
+> +}
+> +
+>  static int __init pci_hotplug_init (void)
+>  {
+>  	int result;
+> @@ -570,3 +593,4 @@ MODULE_PARM_DESC(debug, "Debugging mode enabled or not");
+>  EXPORT_SYMBOL_GPL(__pci_hp_register);
+>  EXPORT_SYMBOL_GPL(pci_hp_deregister);
+>  EXPORT_SYMBOL_GPL(pci_hp_change_slot_info);
+> +EXPORT_SYMBOL_GPL(pci_hp_reset_slot);
+> diff --git a/include/linux/pci_hotplug.h b/include/linux/pci_hotplug.h
+> index 0d3a604..d771cee 100644
+> --- a/include/linux/pci_hotplug.h
+> +++ b/include/linux/pci_hotplug.h
+> @@ -135,6 +135,14 @@ extern int __pci_hp_register(struct hotplug_slot *slot, struct pci_bus *pbus,
+>  extern int pci_hp_deregister(struct hotplug_slot *slot);
+>  extern int __must_check pci_hp_change_slot_info	(struct hotplug_slot *slot,
+>  						 struct hotplug_slot_info *info);
+> +#ifdef CONFIG_HOTPLUG_PCI
+> +int pci_hp_reset_slot(struct hotplug_slot *slot, int probe);
+> +#else
+> +static inline int pci_hp_reset_slot(struct hotplug_slot *slot, int probe)
+> +{
+> +	return -ENOTTY;
+> +}
+> +#endif
+>  
+>  /* use a define to avoid include chaining to get THIS_MODULE & friends */
+>  #define pci_hp_register(slot, pbus, devnr, name) \
+> 
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Mike Turquette <mturquette@linaro.org>
----
- drivers/clk/mvebu/clk-gating-ctrl.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+There's a bug here when CONFIG_HOTPLUG_PCI=m.  I'll fix and repost.
+self NAK.  Thanks,
 
-diff --git a/drivers/clk/mvebu/clk-gating-ctrl.c b/drivers/clk/mvebu/clk-gating-ctrl.c
-index ebf141d..b35785a 100644
---- a/drivers/clk/mvebu/clk-gating-ctrl.c
-+++ b/drivers/clk/mvebu/clk-gating-ctrl.c
-@@ -119,8 +119,8 @@ static const struct mvebu_soc_descr __initconst armada_370_gating_descr[] = {
- 	{ "pex1_en", NULL,  2 },
- 	{ "ge1", NULL, 3 },
- 	{ "ge0", NULL, 4 },
--	{ "pex0", NULL, 5 },
--	{ "pex1", NULL, 9 },
-+	{ "pex0", "pex0_en", 5 },
-+	{ "pex1", "pex1_en", 9 },
- 	{ "sata0", NULL, 15 },
- 	{ "sdio", NULL, 17 },
- 	{ "tdm", NULL, 25 },
--- 
-1.7.9.5
+Alex
 
