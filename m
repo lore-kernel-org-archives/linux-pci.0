@@ -1,108 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:57885 "EHLO gate.crashing.org"
+Received: from mx1.redhat.com ([209.132.183.28]:24696 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751297Ab3EGW2Q (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 7 May 2013 18:28:16 -0400
-Message-ID: <1367965682.25488.26.camel@pasglop>
-Subject: Re: [PATCH v3 3/5] PCI: Skip IORESOURCE_MMIO allocation for root
- bus without MMIO range
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Wed, 08 May 2013 08:28:02 +1000
-In-Reply-To: <1367965054-9013-4-git-send-email-yinghai@kernel.org>
-References: <1367965054-9013-1-git-send-email-yinghai@kernel.org>
-	 <1367965054-9013-4-git-send-email-yinghai@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1754670Ab3EJVTU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 10 May 2013 17:19:20 -0400
+Subject: [PATCH 3/3] pci: Remove pci_find_pcie_upstream_bridge
+To: bhelgaas@google.com, stephen@networkplumber.org
+From: Alex Williamson <alex.williamson@redhat.com>
+Cc: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org,
+	dwmw2@infradead.org, ddutile@redhat.com
+Date: Fri, 10 May 2013 15:18:58 -0600
+Message-ID: <20130510211858.32592.20890.stgit@bling.home>
+In-Reply-To: <20130510210937.32592.21950.stgit@bling.home>
+References: <20130510210937.32592.21950.stgit@bling.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2013-05-07 at 15:17 -0700, Yinghai Lu wrote:
-> For x86 8 sockets or 32 sockets system that will have one root bus per socket,
-> They may have some root buses do not have mmio non-pref range.
+This function no longer has any users.
 
-That seems very odd. Most device registers are non-prefetchable. I know
-of no adapter today that would work in a prefetchable-only environment.
+Signed-off-by: Alex williamson <alex.williamson@redhat.com>
+---
+ drivers/pci/search.c |   35 -----------------------------------
+ include/linux/pci.h  |   11 -----------
+ 2 files changed, 46 deletions(-)
 
-Are you sure that isn't the other way around ?
-
-Regarding your 3.10 patches, me and Gavin will test your v3 later today
-(ASAP) and will give you an Ack if they work, in which case they should
-hit Linus as soon as Bjorn is comfortable with :-)
-
-Cheers,
-Ben.
-
-> We should not fall into retry in this case, as root bus does
-> not mmio non-pref range.
-> 
-> We check if the root bus has mmio-nonpref range, and set bus_res_type_mask,
-> and pass it to assign_resources and don't add mmio-nonpref res to failed list
-> for root bus that does not have mmio-nonpref range.
-> So even BIOS set wrong value to pci devices and bridges will still
-> get cleared.
-> 
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> 
-> ---
->  drivers/pci/setup-bus.c |   32 ++++++++++++++++++++++++++------
->  1 file changed, 26 insertions(+), 6 deletions(-)
-> 
-> Index: linux-2.6/drivers/pci/setup-bus.c
-> ===================================================================
-> --- linux-2.6.orig/drivers/pci/setup-bus.c
-> +++ linux-2.6/drivers/pci/setup-bus.c
-> @@ -299,9 +299,17 @@ static void assign_requested_resources_s
->  				bool is_ioport_res_without_bus_support =
->  					 (!(bus_res_type_mask & IORESOURCE_IO)) &&
->  					 (res->flags & IORESOURCE_IO);
-> +				/*
-> +				 * if the failed res is mmio, but bus does
-> +				 * not have io port support, don't add it
-> +				 */
-> +				bool is_mmio_nonpref_res_without_bus_support =
-> +					 (!(bus_res_type_mask & IORESOURCE_MEM)) &&
-> +					 ((res->flags & (IORESOURCE_MEM | IORESOURCE_PREFETCH)) == IORESOURCE_MEM);
->  
->  				if (!is_rom_res_not_enabled &&
-> -				    !is_ioport_res_without_bus_support)
-> +				    !is_ioport_res_without_bus_support &&
-> +				    !is_mmio_nonpref_res_without_bus_support)
->  					add_to_list(fail_head,
->  						    dev_res->dev, res,
->  						    0 /* dont care */,
-> @@ -1407,12 +1415,24 @@ static unsigned long pci_bus_res_type_ma
->  	int i;
->  	struct resource *r;
->  	unsigned long mask = 0;
-> -	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
-> -				  IORESOURCE_PREFETCH;
->  
-> -	pci_bus_for_each_resource(bus, r, i)
-> -		if (r)
-> -			mask |= r->flags & type_mask;
-> +	pci_bus_for_each_resource(bus, r, i) {
-> +		if (!r)
-> +			continue;
-> +
-> +		if (r->flags & IORESOURCE_IO) {
-> +			mask |= IORESOURCE_IO;
-> +			continue;
-> +		}
-> +		if (r->flags & IORESOURCE_PREFETCH) {
-> +			mask |= IORESOURCE_PREFETCH;
-> +			continue;
-> +		}
-> +		if ((r->flags & (IORESOURCE_MEM | IORESOURCE_PREFETCH)) == IORESOURCE_MEM) {
-> +			mask |= IORESOURCE_MEM; /* nonpref only */
-> +			continue;
-> +		}
-> +	}
->  
->  	return mask;
->  }
-
+diff --git a/drivers/pci/search.c b/drivers/pci/search.c
+index 0357f74..bdbff05 100644
+--- a/drivers/pci/search.c
++++ b/drivers/pci/search.c
+@@ -74,41 +74,6 @@ struct pci_dev *pci_walk_up_to_first_match(struct pci_dev *pdev,
+ 	return NULL;
+ }
+ 
+-/*
+- * find the upstream PCIe-to-PCI bridge of a PCI device
+- * if the device is PCIE, return NULL
+- * if the device isn't connected to a PCIe bridge (that is its parent is a
+- * legacy PCI bridge and the bridge is directly connected to bus 0), return its
+- * parent
+- */
+-struct pci_dev *
+-pci_find_upstream_pcie_bridge(struct pci_dev *pdev)
+-{
+-	struct pci_dev *tmp = NULL;
+-
+-	if (pci_is_pcie(pdev))
+-		return NULL;
+-	while (1) {
+-		if (pci_is_root_bus(pdev->bus))
+-			break;
+-		pdev = pdev->bus->self;
+-		/* a p2p bridge */
+-		if (!pci_is_pcie(pdev)) {
+-			tmp = pdev;
+-			continue;
+-		}
+-		/* PCI device should connect to a PCIe bridge */
+-		if (pci_pcie_type(pdev) != PCI_EXP_TYPE_PCI_BRIDGE) {
+-			/* Busted hardware? */
+-			WARN_ON_ONCE(1);
+-			return NULL;
+-		}
+-		return pdev;
+-	}
+-
+-	return tmp;
+-}
+-
+ static struct pci_bus *pci_do_find_bus(struct pci_bus *bus, unsigned char busnr)
+ {
+ 	struct pci_bus* child;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index e87423a..9d9dcf5 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1877,15 +1877,4 @@ struct pci_dev *pci_walk_up_to_first_match(struct pci_dev *pdev,
+  */
+ bool pci_is_pcie_bridge(struct pci_dev *pdev);
+ 
+-/**
+- * pci_find_upstream_pcie_bridge - find upstream PCIe-to-PCI bridge of a device
+- * @pdev: the PCI device
+- *
+- * if the device is PCIE, return NULL
+- * if the device isn't connected to a PCIe bridge (that is its parent is a
+- * legacy PCI bridge and the bridge is directly connected to bus 0), return its
+- * parent
+- */
+-struct pci_dev *pci_find_upstream_pcie_bridge(struct pci_dev *pdev);
+-
+ #endif /* LINUX_PCI_H */
 
