@@ -1,107 +1,145 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-da0-f46.google.com ([209.85.210.46]:50090 "EHLO
-	mail-da0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755087Ab3EMQJB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 13 May 2013 12:09:01 -0400
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Jiang Liu <jiang.liu@huawei.com>
-Subject: [PATCH v2, part 1 2/9] PCI: Introduce pci_alloc_dev(struct pci_bus*) to replace alloc_pci_dev()
-Date: Tue, 14 May 2013 00:08:26 +0800
-Message-Id: <1368461313-4371-3-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1368461313-4371-1-git-send-email-jiang.liu@huawei.com>
-References: <1368461313-4371-1-git-send-email-jiang.liu@huawei.com>
+Received: from mail-ie0-f173.google.com ([209.85.223.173]:62971 "EHLO
+	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754842Ab3EJWxB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 May 2013 18:53:01 -0400
+Received: by mail-ie0-f173.google.com with SMTP id k5so9123030iea.4
+        for <linux-pci@vger.kernel.org>; Fri, 10 May 2013 15:53:01 -0700 (PDT)
+Date: Fri, 10 May 2013 16:52:57 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: Matthew Garrett <matthew.garrett@nebula.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	John Linville <linville@tuxdriver.com>,
+	Roman Yepishev <roman.yepishev@gmail.com>,
+	"Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
+	Mike Miller <mike.miller@hp.com>, iss_storagedev@hp.com,
+	Guo-Fu Tseng <cooldavid@cooldavid.org>, netdev@vger.kernel.org,
+	Francois Romieu <romieu@fr.zoreil.com>, nic_swsd@realtek.com,
+	aacraid@adaptec.com, "Rafael J. Wysocki" <rjw@sisk.pl>,
+	linux-kernel@vger.kernel.org
+Subject: Re: is L1 really disabled in iwlwifi
+Message-ID: <20130510225257.GA10847@google.com>
+References: <CANUX_P2Hy02SnyYS24dyUGLv3wB3L5xkXt8Y1s+8_RG9d5ReAw@mail.gmail.com>
+ <CANUX_P3znXgMN5aBZbEVx_zKpTQ98my1C_cBG5+mERFWrrrLEw@mail.gmail.com>
+ <CANUX_P3Mt3X8JXq5siSijrWGkjeWbTCcdmJ-Fuv6U8jUqrFouQ@mail.gmail.com>
+ <CAErSpo66=UngrHNcEDeh4gXnt5c0qJHwbxum0mBz-rSWGduLhg@mail.gmail.com>
+ <CANUX_P0hpx8NNvX6cJXfOZMNYN8hrEF-gzf9hBN2Uz=k0WiwgA@mail.gmail.com>
+ <CANUX_P1JnFk7yovC7kXBMDWiErGhvzDQrNCm8te39m41SonCNg@mail.gmail.com>
+ <CAErSpo5WbdCx0iyt14bJxCiNBtUWjT2rMeg5YwNQaRt=M+_v8Q@mail.gmail.com>
+ <1367362536.9976.9.camel@x230>
+ <CANUX_P1sS8+3s-8-TyovHEwpa5qgQDj4W8P_hvfQjE2MKcTNEA@mail.gmail.com>
+ <CAErSpo6OCyTy19u6Xaf=xr0TSDriwCD3n-oMc7eJyLzuJ9d60g@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo6OCyTy19u6Xaf=xr0TSDriwCD3n-oMc7eJyLzuJ9d60g@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Gu Zheng <guz.fnst@cn.fujitsu.com>
+[+cc Rafael, other pci_disable_link_state() users]
 
-<marker to prevent gmail from removing below "From:">
-From: Gu Zheng <guz.fnst@cn.fujitsu.com>
+On Wed, May 01, 2013 at 11:13:15AM -0600, Bjorn Helgaas wrote:
+> On Wed, May 1, 2013 at 2:31 AM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
+> > [from Bjorn's mail]
+> >> In Emmanuel's case, we don't get _OSC control, so
+> >> pci_disable_link_state() does nothing.
+> >
+> > Right, but this is true with the specific log I sent to you. Is it
+> > possible that another platform  / BIOS, we *will* get _OSC control and
+> > that pci_disable_link_state() will actually do something?  In that case
+> > I would prefer not to remove the call to pcie_disable_link_state().
+> 
+> Yes, absolutely, on many platforms we will get _OSC control, and
+> pci_disable_link_state() will work as expected.  The problem is that
+> the driver doesn't have a good way to know whether pci_disable_link()
+> did anything or not.
+> 
+> Today I think we have:
+> 
+> 1) If the BIOS grants the OS permission to control PCIe services via
+> _OSC, pci_disable_link_state() works and L1 will be disabled.
+> 
+> 2) If the BIOS does not grant permission, pci_disable_link_state()
+> does nothing and L1 may be enabled or not depending on what
+> configuration the BIOS did.
+> 
+> If the device really doesn't work reliably when L1 is enabled, we're
+> currently at the mercy of the BIOS -- if the BIOS enables L1 but
+> doesn't grant us permission via _OSC, L1 will remain enabled (as it is
+> on your system).
 
-Now here we introduce a new interface to replace alloc_pci_dev():
-	struct pci_dev *pci_alloc_dev(struct pci_bus *bus)
+I propose the following patch.  Any comments?
 
-It take a "struct pci_bus *" argument, so we can alloc a pci device
-on a target pci bus, and it acquire the reference of the pci_bus.
-We use pci_alloc_dev(NULL) to simplify the old alloc_pci_dev(),
-and keep it for a while but mark it as __deprecated.
 
-Jiang Liu <jiang.liu@huawei.com>
-Minor code tweaks and change
-__deprecated struct pci_dev * alloc_pci_dev(void);
-to
-struct pci_dev * __deprecated alloc_pci_dev(void);
+commit cd11e3f87c4d2777cf8921c0454500c9baa54b46
+Author: Bjorn Helgaas <bhelgaas@google.com>
+Date:   Fri May 10 15:54:35 2013 -0600
 
-This enhancement makes it safe to reference pci_dev->bus when holding
-a reference on a pci_dev.
+    PCI/ASPM: Allow drivers to disable ASPM unconditionally
+    
+    Some devices have hardware problems related to using ASPM.  Drivers for
+    these devices use pci_disable_link_state() to prevent their device from
+    entering L0s or L1.  But on platforms where the OS doesn't have permission
+    to manage ASPM, pci_disable_link_state() does nothing, and the driver has
+    no way to know this.
+    
+    Therefore, if the BIOS enables ASPM but declines (either via the FADT
+    ACPI_FADT_NO_ASPM bit or the _OSC method) to allow the OS to manage it,
+    the device can still use ASPM and trip over the hardware issue.
+    
+    This patch makes pci_disable_link_state() disable ASPM unconditionally,
+    regardless of whether the OS has permission to manage ASPM in general.
+    
+    Reported-by: Emmanuel Grumbach <egrumbach@gmail.com>
+    Reference: https://lkml.kernel.org/r/CANUX_P3F5YhbZX3WGU-j1AGpbXb_T9Bis2ErhvKkFMtDvzatVQ@mail.gmail.com
+    Reference: https://bugzilla.kernel.org/show_bug.cgi?id=57331
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 
-Signed-off-by: Gu Zheng <guz.fnst@cn.fujitsu.com>
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
----
- drivers/pci/probe.c | 16 +++++++++++-----
- include/linux/pci.h |  3 ++-
- 2 files changed, 13 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 43ece5d..4f0bc0a 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1201,18 +1201,24 @@ static void pci_release_bus_bridge_dev(struct device *dev)
- 	kfree(bridge);
- }
- 
--struct pci_dev *alloc_pci_dev(void)
-+struct pci_dev *pci_alloc_dev(struct pci_bus *bus)
+diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+index d320df6..9ef4ab8 100644
+--- a/drivers/pci/pcie/aspm.c
++++ b/drivers/pci/pcie/aspm.c
+@@ -718,15 +718,11 @@ void pcie_aspm_powersave_config_link(struct pci_dev *pdev)
+  * pci_disable_link_state - disable pci device's link state, so the link will
+  * never enter specific states
+  */
+-static void __pci_disable_link_state(struct pci_dev *pdev, int state, bool sem,
+-				     bool force)
++static void __pci_disable_link_state(struct pci_dev *pdev, int state, bool sem)
  {
- 	struct pci_dev *dev;
+ 	struct pci_dev *parent = pdev->bus->self;
+ 	struct pcie_link_state *link;
  
- 	dev = kzalloc(sizeof(struct pci_dev), GFP_KERNEL);
--	if (!dev)
--		return NULL;
+-	if (aspm_disabled && !force)
+-		return;
 -
--	INIT_LIST_HEAD(&dev->bus_list);
-+	if (dev) {
-+		INIT_LIST_HEAD(&dev->bus_list);
-+		dev->bus = pci_bus_get(bus);
-+	}
+ 	if (!pci_is_pcie(pdev))
+ 		return;
  
- 	return dev;
+@@ -757,13 +753,13 @@ static void __pci_disable_link_state(struct pci_dev *pdev, int state, bool sem,
+ 
+ void pci_disable_link_state_locked(struct pci_dev *pdev, int state)
+ {
+-	__pci_disable_link_state(pdev, state, false, false);
++	__pci_disable_link_state(pdev, state, false);
  }
-+EXPORT_SYMBOL(pci_alloc_dev);
-+
-+struct pci_dev *alloc_pci_dev(void)
-+{
-+	return pci_alloc_dev(NULL);
-+}
- EXPORT_SYMBOL(alloc_pci_dev);
+ EXPORT_SYMBOL(pci_disable_link_state_locked);
  
- bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index f5e13f0..68beb11 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -364,7 +364,8 @@ static inline struct pci_dev *pci_physfn(struct pci_dev *dev)
- 	return dev;
+ void pci_disable_link_state(struct pci_dev *pdev, int state)
+ {
+-	__pci_disable_link_state(pdev, state, true, false);
++	__pci_disable_link_state(pdev, state, true);
+ }
+ EXPORT_SYMBOL(pci_disable_link_state);
+ 
+@@ -781,7 +777,7 @@ void pcie_clear_aspm(struct pci_bus *bus)
+ 		__pci_disable_link_state(child, PCIE_LINK_STATE_L0S |
+ 					 PCIE_LINK_STATE_L1 |
+ 					 PCIE_LINK_STATE_CLKPM,
+-					 false, true);
++					 false);
+ 	}
  }
  
--struct pci_dev *alloc_pci_dev(void);
-+struct pci_dev *pci_alloc_dev(struct pci_bus *bus);
-+struct pci_dev * __deprecated alloc_pci_dev(void);
- 
- #define	to_pci_dev(n) container_of(n, struct pci_dev, dev)
- #define for_each_pci_dev(d) while ((d = pci_get_device(PCI_ANY_ID, PCI_ANY_ID, d)) != NULL)
--- 
-1.8.1.2
-
