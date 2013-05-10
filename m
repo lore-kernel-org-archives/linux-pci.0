@@ -1,63 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-da0-f44.google.com ([209.85.210.44]:45865 "EHLO
-	mail-da0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755219Ab3EMQJZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 13 May 2013 12:09:25 -0400
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Tony Luck <tony.luck@intel.com>,
-	Fenghua Yu <fenghua.yu@intel.com>, linux-ia64@vger.kernel.org
-Subject: [PATCH v2, part 1 7/9] PCI, IA64: minor code clean up
-Date: Tue, 14 May 2013 00:08:31 +0800
-Message-Id: <1368461313-4371-8-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1368461313-4371-1-git-send-email-jiang.liu@huawei.com>
-References: <1368461313-4371-1-git-send-email-jiang.liu@huawei.com>
+Received: from mail-ob0-f178.google.com ([209.85.214.178]:55575 "EHLO
+	mail-ob0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755574Ab3EJRrw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 May 2013 13:47:52 -0400
+Received: by mail-ob0-f178.google.com with SMTP id v19so757594obq.9
+        for <linux-pci@vger.kernel.org>; Fri, 10 May 2013 10:47:52 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <513E002C.40805@fold.natur.cuni.cz>
+References: <513E002C.40805@fold.natur.cuni.cz>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 10 May 2013 11:47:31 -0600
+Message-ID: <CAErSpo5594KNtZz9Gpdw_j5NZX_sGpzKB9CT2-SCB2bCASfrSQ@mail.gmail.com>
+Subject: Re: 3.8.2: stale pci device info for a previously inserted express card
+To: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
+Cc: Yinghai Lu <yinghai@kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
+	Alan Stern <stern@rowland.harvard.edu>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_scan_root_bus() already set bus->sysdata, so no need to explicitly
-set it again in function sn_pci_controller_fixup();
+[+cc linux-pci, Sarah, Alan]
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Fenghua Yu <fenghua.yu@intel.com>
-Cc: linux-ia64@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
----
- arch/ia64/sn/kernel/io_init.c | 11 +----------
- 1 file changed, 1 insertion(+), 10 deletions(-)
+On Mon, Mar 11, 2013 at 10:02 AM, Martin Mokrejs
+<mmokrejs@fold.natur.cuni.cz> wrote:
+> [re-sending to you all three directly, looks the original email did not make it into linux-pci
+> through some filters]
+>
+>   I use for my daily work acpiphp to manage express cards in Dell Vostro 3550.
+> I have never seen something like this before and believe this is some new regression
+> in 3.8 series. I had in teh a USB3 card and ejected it. Then I inserted a
+> SATA Sil3132 card but it is not detected and dmesg still ends with last lines
+> added when the USB card was being removed. The funny thing is that lspci reports
+> a mixture of USB-card properties with NEC chips along with Silicon Image eSATA card.
 
-diff --git a/arch/ia64/sn/kernel/io_init.c b/arch/ia64/sn/kernel/io_init.c
-index 238e2c5..e2c7733 100644
---- a/arch/ia64/sn/kernel/io_init.c
-+++ b/arch/ia64/sn/kernel/io_init.c
-@@ -326,16 +326,7 @@ sn_pci_controller_fixup(int segment, int busnum, struct pci_bus *bus)
- 	bus = pci_scan_root_bus(NULL, busnum, &pci_root_ops, controller,
- 				&resources);
-  	if (bus == NULL)
-- 		goto error_return; /* error, or bus already scanned */
--
--	bus->sysdata = controller;
--
--	return;
--
--error_return:
--
--	kfree(controller);
--	return;
-+		kfree(controller);
- }
- 
- /*
--- 
-1.8.1.2
+I don't know anything about the kmemleaks mentioned elsewhere in this
+thread, but the idea of "stale PCI device info" seems possibly related
+to some acpiphp issues we've been working on recently.
 
+Starting with v3.9, we don't handle ACPI Bus Check notifications to
+host bridges correctly, and the result is that when we're using
+acpiphp, we don't notice when PCI devices are added or removed. There
+are more details in https://bugzilla.kernel.org/show_bug.cgi?id=57961
+
+It looks like your Vostro 3550 uses acpiphp, so maybe there's a
+connection.  Can you try a current Linus upstream kernel (v3.10-rc1
+should be released in the next day or two) and apply the v3.10 patch
+from the bugzilla, and collect a complete dmesg log after you try a
+couple hotplug events?
+
+Bjorn
