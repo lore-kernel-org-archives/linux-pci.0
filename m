@@ -1,317 +1,255 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 21 May 2013 14:41:00 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/2] PCI: Split pci_assign_unassigned_resources to per
- root bus
-Message-ID: <20130521204100.GA12440@google.com>
-References: <1367837311.15842.31.camel@pasglop>
- <1367882130-19452-1-git-send-email-yinghai@kernel.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Jiang Liu <liuj97@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Len Brown <lenb@kernel.org>,
+	linux-acpi@vger.kernel.org
+Subject: Re: [PATCH v2, part 1 6/9] ACPI, pci_root: use acpi_handle_print() and pr_xxx() to print messages
+Date: Tue, 14 May 2013 01:27:26 +0200
+Message-ID: <5034672.tljvClO7po@vostro.rjw.lan>
+In-Reply-To: <1368461313-4371-7-git-send-email-jiang.liu@huawei.com>
+References: <1368461313-4371-1-git-send-email-jiang.liu@huawei.com> <1368461313-4371-7-git-send-email-jiang.liu@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1367882130-19452-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, May 06, 2013 at 04:15:29PM -0700, Yinghai Lu wrote:
-> BenH reported that there is some assign unassigned resource problem
-> in powerpc.
+On Tuesday, May 14, 2013 12:08:30 AM Jiang Liu wrote:
+> Use acpi_handle_print() and pr_xxx() to print messages in pci_root.c.
 > 
-> It turns out after
-> | commit 0c5be0cb0edfe3b5c4b62eac68aa2aa15ec681af
-> | Date:   Thu Feb 23 19:23:29 2012 -0800
-> |
-> |    PCI: Retry on IORESOURCE_IO type allocations
-> 
-> even the root bus does not have io port range, it will keep retrying
-> to realloc with mmio.
-> 
-> Current retry logic is : try with must+optional at first, and if
-> it fails will try must then try to extend must with optional.
-> That will fail as mmio-non-pref and mmio-pref for bridge will
-> be next to each other. So we have no chance to extend mmio-non-pref.
-> 
-> We should not fall into retry in this case, as root bus does
-> not io port range.
-> 
-> Before we do that we need to split pci_assign_unassiged_resource
-> to every root bus, so we can stop early for root bus without ioport
-> range, and still continue to retry on buses that do have ioport range.
-> 
-> This will be become more often when we have x86 8 sockets or 32 sockets
-> system, and those system will have one root bus per socket.
-> They will have some root buses do not have ioport range.
-> 
-> For the retry failing, we could allocate mmio-non-pref bottom-up
-> and mmio-pref will be top-down, but that could not be material for v3.10.
-
-If I understand correctly, this particular patch makes no functional
-changes, so the changelog above should be saved for the patches that *do*
-actually fix problems.
-
-> 
-> Reported-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> 
+> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+> Cc: Len Brown <lenb@kernel.org>
+> Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
+> Cc: linux-acpi@vger.kernel.org
+> Cc: linux-kernel@vger.kernel.org
 > ---
->  drivers/pci/setup-bus.c |  101 +++++++++++++++++++++++-------------------------
->  1 file changed, 49 insertions(+), 52 deletions(-)
+>  drivers/acpi/pci_root.c | 71 ++++++++++++++++++++++---------------------------
+>  1 file changed, 32 insertions(+), 39 deletions(-)
 > 
-> Index: linux-2.6/drivers/pci/setup-bus.c
-> ===================================================================
-> --- linux-2.6.orig/drivers/pci/setup-bus.c
-> +++ linux-2.6/drivers/pci/setup-bus.c
-> @@ -1315,21 +1315,6 @@ static int __init pci_bus_get_depth(stru
+> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+> index 91ddfd6..9ced5c3 100644
+> --- a/drivers/acpi/pci_root.c
+> +++ b/drivers/acpi/pci_root.c
+> @@ -379,23 +379,23 @@ static int acpi_pci_root_add(struct acpi_device *device,
+>  	struct acpi_pci_root *root;
+>  	u32 flags, base_flags;
+>  	bool is_osc_granted = false;
+> +	acpi_handle hdl = device->handle;
+
+The usual way is to call it 'handle'.  Any reason why not to do it here too?
+
+>  	root = kzalloc(sizeof(struct acpi_pci_root), GFP_KERNEL);
+>  	if (!root)
+>  		return -ENOMEM;
 >  
->  	return depth;
->  }
-> -static int __init pci_get_max_depth(void)
-> -{
-> -	int depth = 0;
-> -	struct pci_bus *bus;
-> -
-> -	list_for_each_entry(bus, &pci_root_buses, node) {
-> -		int ret;
-> -
-> -		ret = pci_bus_get_depth(bus);
-> -		if (ret > depth)
-> -			depth = ret;
-> -	}
-> -
-> -	return depth;
-> -}
+>  	segment = 0;
+> -	status = acpi_evaluate_integer(device->handle, METHOD_NAME__SEG, NULL,
+> -				       &segment);
+> +	status = acpi_evaluate_integer(hdl, METHOD_NAME__SEG, NULL, &segment);
+>  	if (ACPI_FAILURE(status) && status != AE_NOT_FOUND) {
+> -		printk(KERN_ERR PREFIX "can't evaluate _SEG\n");
+> +		acpi_handle_err(hdl, "can't evaluate _SEG\n");
+>  		result = -ENODEV;
+>  		goto end;
+>  	}
 >  
->  /*
->   * -1: undefined, will auto detect later
-> @@ -1354,34 +1339,41 @@ void __init pci_realloc_get_opt(char *st
->  	else if (!strncmp(str, "on", 2))
->  		pci_realloc_enable = user_enabled;
->  }
-> -static bool __init pci_realloc_enabled(void)
-> +static bool __init pci_realloc_enabled(enum enable_type enable)
->  {
-> -	return pci_realloc_enable >= user_enabled;
-> +	return enable >= user_enabled;
->  }
->  
-> -static void __init pci_realloc_detect(void)
-> +static enum enable_type __init pci_realloc_detect(struct pci_bus *bus,
-> +			 enum enable_type enable_local)
->  {
->  #if defined(CONFIG_PCI_IOV) && defined(CONFIG_PCI_REALLOC_ENABLE_AUTO)
-> -	struct pci_dev *dev = NULL;
-> +	struct pci_dev *dev;
->  
-> -	if (pci_realloc_enable != undefined)
-> -		return;
-> +	if (enable_local != undefined)
-> +		return enable_local;
->  
-> -	for_each_pci_dev(dev) {
-> +	list_for_each_entry(dev, &bus->devices, bus_list) {
->  		int i;
->  
->  		for (i = PCI_IOV_RESOURCES; i <= PCI_IOV_RESOURCE_END; i++) {
->  			struct resource *r = &dev->resource[i];
->  
->  			/* Not assigned, or rejected by kernel ? */
-> -			if (r->flags && !r->start) {
-> -				pci_realloc_enable = auto_enabled;
-> -
-> -				return;
-> -			}
-> +			if (r->flags && !r->start)
-> +				return auto_enabled;
+>  	/* Check _CRS first, then _BBN.  If no _BBN, default to zero. */
+>  	root->secondary.flags = IORESOURCE_BUS;
+> -	status = try_get_root_bridge_busnr(device->handle, &root->secondary);
+> +	status = try_get_root_bridge_busnr(hdl, &root->secondary);
+>  	if (ACPI_FAILURE(status)) {
+>  		/*
+>  		 * We need both the start and end of the downstream bus range
+> @@ -404,16 +404,16 @@ static int acpi_pci_root_add(struct acpi_device *device,
+>  		 * can do is assume [_BBN-0xFF] or [0-0xFF].
+>  		 */
+>  		root->secondary.end = 0xFF;
+> -		printk(KERN_WARNING FW_BUG PREFIX
+> -		       "no secondary bus range in _CRS\n");
+> -		status = acpi_evaluate_integer(device->handle, METHOD_NAME__BBN,
+> +		acpi_handle_warn(hdl,
+> +				 FW_BUG "no secondary bus range in _CRS\n");
+> +		status = acpi_evaluate_integer(hdl, METHOD_NAME__BBN,
+>  					       NULL, &bus);
+>  		if (ACPI_SUCCESS(status))
+>  			root->secondary.start = bus;
+>  		else if (status == AE_NOT_FOUND)
+>  			root->secondary.start = 0;
+>  		else {
+> -			printk(KERN_ERR PREFIX "can't evaluate _BBN\n");
+> +			acpi_handle_err(hdl, "can't evaluate _BBN\n");
+>  			result = -ENODEV;
+>  			goto end;
 >  		}
->  	}
-> +
-> +	list_for_each_entry(dev, &bus->devices, bus_list) {
-> +		struct pci_bus *child = dev->subordinate;
-> +
-> +		if (child &&
-> +		    pci_realloc_detect(child, enable_local) == auto_enabled)
-> +			return auto_enabled;
-> +	}
-
-This uses recursion and basically does the same thing as pci_walk_bus().
-I think it will be clearer if you make it look something like this:
-
-        static int count_unassigned_resources(struct pci_dev *dev, void *data)
-        {
-          int *count = data;
-
-          for (i = PCI_IOV_RESOURCES; ...)
-            if (r->flags && !r->start)
-              *count++;
-
-          return 0;
-        }
-
-        static pci_realloc_detect(struct pci_bus *bus, ...  enable_local)
-        {
-	  int unassigned;
-
-          if (enable_local != undefined)
-            return enable_local;
-
-	  unassigned = 0;
-	  pci_walk_bus(bus, count_unassigned_resources, &unassigned);
-	  if (unassigned)
-	    return auto_enabled;
-
-          return enable_local;
-        }
-
-
->  #endif
-> +	return enable_local;
->  }
+> @@ -425,11 +425,11 @@ static int acpi_pci_root_add(struct acpi_device *device,
+>  	strcpy(acpi_device_class(device), ACPI_PCI_ROOT_CLASS);
+>  	device->driver_data = root;
 >  
->  /*
-> @@ -1389,10 +1381,9 @@ static void __init pci_realloc_detect(vo
->   * second  and later try will clear small leaf bridge res
->   * will stop till to the max  deepth if can not find good one
->   */
-> -void __init
-> -pci_assign_unassigned_resources(void)
-> +static void __init
-> +pci_assign_unassigned_root_bus_resources(struct pci_bus *bus)
->  {
-> -	struct pci_bus *bus;
->  	LIST_HEAD(realloc_head); /* list of resources that
->  					want additional resources */
->  	struct list_head *add_list = NULL;
-> @@ -1403,15 +1394,17 @@ pci_assign_unassigned_resources(void)
->  	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
->  				  IORESOURCE_PREFETCH;
->  	int pci_try_num = 1;
-> +	enum enable_type enable_local;
+> -	printk(KERN_INFO PREFIX "%s [%s] (domain %04x %pR)\n",
+> +	pr_info(PREFIX "%s [%s] (domain %04x %pR)\n",
+>  	       acpi_device_name(device), acpi_device_bid(device),
+>  	       root->segment, &root->secondary);
 >  
->  	/* don't realloc if asked to do so */
-> -	pci_realloc_detect();
-> -	if (pci_realloc_enabled()) {
-> -		int max_depth = pci_get_max_depth();
-> +	enable_local = pci_realloc_detect(bus, pci_realloc_enable);
-> +	if (pci_realloc_enabled(enable_local)) {
-> +		int max_depth = pci_bus_get_depth(bus);
+> -	root->mcfg_addr = acpi_pci_root_get_mcfg_addr(device->handle);
+> +	root->mcfg_addr = acpi_pci_root_get_mcfg_addr(hdl);
 >  
->  		pci_try_num = max_depth + 1;
-> -		printk(KERN_DEBUG "PCI: max bus depth: %d pci_try_num: %d\n",
-> -			 max_depth, pci_try_num);
-> +		dev_printk(KERN_DEBUG, &bus->dev,
-> +			   "max bus depth: %d pci_try_num: %d\n",
-> +			   max_depth, pci_try_num);
->  	}
+>  	/*
+>  	 * All supported architectures that use ACPI have support for
+> @@ -473,7 +473,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
+>  		dev_info(&device->dev,
+>  			"Requesting ACPI _OSC control (0x%02x)\n", flags);
 >  
->  again:
-> @@ -1423,12 +1416,10 @@ again:
->  		add_list = &realloc_head;
->  	/* Depth first, calculate sizes and alignments of all
->  	   subordinate buses. */
-> -	list_for_each_entry(bus, &pci_root_buses, node)
-> -		__pci_bus_size_bridges(bus, add_list);
-> +	__pci_bus_size_bridges(bus, add_list);
->  
->  	/* Depth last, allocate resources and update the hardware. */
-> -	list_for_each_entry(bus, &pci_root_buses, node)
-> -		__pci_bus_assign_resources(bus, add_list, &fail_head);
-> +	__pci_bus_assign_resources(bus, add_list, &fail_head);
->  	if (add_list)
->  		BUG_ON(!list_empty(add_list));
->  	tried_times++;
-> @@ -1438,17 +1429,17 @@ again:
->  		goto enable_and_dump;
->  
->  	if (tried_times >= pci_try_num) {
-> -		if (pci_realloc_enable == undefined)
-> -			printk(KERN_INFO "Some PCI device resources are unassigned, try booting with pci=realloc\n");
-> -		else if (pci_realloc_enable == auto_enabled)
-> -			printk(KERN_INFO "Automatically enabled pci realloc, if you have problem, try booting with pci=realloc=off\n");
-> +		if (enable_local == undefined)
-> +			dev_info(&bus->dev, "Some PCI device resources are unassigned, try booting with pci=realloc\n");
-> +		else if (enable_local == auto_enabled)
-> +			dev_info(&bus->dev, "Automatically enabled pci realloc, if you have problem, try booting with pci=realloc=off\n");
-
-I think you can add enable_local and the pci_realloc_enabled() parameter
-in a separate patch.  That will remove distractions from the main patch.
-
->  
->  		free_list(&fail_head);
->  		goto enable_and_dump;
->  	}
->  
-> -	printk(KERN_DEBUG "PCI: No. %d try to assign unassigned res\n",
-> -			 tried_times + 1);
-> +	dev_printk(KERN_DEBUG, &bus->dev,
-> +		   "No. %d try to assign unassigned res\n", tried_times + 1);
->  
->  	/* third times and later will not check if it is leaf */
->  	if ((tried_times + 1) > 2)
-> @@ -1458,12 +1449,11 @@ again:
->  	 * Try to release leaf bridge's resources that doesn't fit resource of
->  	 * child device under that bridge
+> -		status = acpi_pci_osc_control_set(device->handle, &flags,
+> +		status = acpi_pci_osc_control_set(hdl, &flags,
+>  				       OSC_PCI_EXPRESS_CAP_STRUCTURE_CONTROL);
+>  		if (ACPI_SUCCESS(status)) {
+>  			is_osc_granted = true;
+> @@ -505,9 +505,9 @@ static int acpi_pci_root_add(struct acpi_device *device,
 >  	 */
-> -	list_for_each_entry(fail_res, &fail_head, list) {
-> -		bus = fail_res->dev->bus;
-> -		pci_bus_release_bridge_resources(bus,
-> +	list_for_each_entry(fail_res, &fail_head, list)
-> +		pci_bus_release_bridge_resources(fail_res->dev->bus,
-
-This change is gratuitous and distracting.  Please move it to a
-separate patch.
-
->  						 fail_res->flags & type_mask,
->  						 rel_type);
-> -	}
-> +
->  	/* restore size and flags */
->  	list_for_each_entry(fail_res, &fail_head, list) {
->  		struct resource *res = fail_res->res;
-> @@ -1480,12 +1470,19 @@ again:
+>  	root->bus = pci_acpi_scan_root(root);
+>  	if (!root->bus) {
+> -		printk(KERN_ERR PREFIX
+> -			    "Bus %04x:%02x not present in PCI namespace\n",
+> -			    root->segment, (unsigned int)root->secondary.start);
+> +		acpi_handle_err(hdl,
+> +			"Bus %04x:%02x not present in PCI namespace\n",
+> +			root->segment, (unsigned int)root->secondary.start);
+>  		result = -ENODEV;
+>  		goto end;
+>  	}
+> @@ -517,8 +517,8 @@ static int acpi_pci_root_add(struct acpi_device *device,
+>  		if (acpi_gbl_FADT.boot_flags & ACPI_FADT_NO_ASPM)
+>  			pcie_clear_aspm(root->bus);
+>  	} else {
+> -		pr_info("ACPI _OSC control for PCIe not granted, "
+> -			"disabling ASPM\n");
+> +		acpi_handle_info(hdl,
+> +			"ACPI _OSC control for PCIe not granted, disabling ASPM\n");
+>  		pcie_no_aspm();
+>  	}
 >  
->  enable_and_dump:
->  	/* Depth last, update the hardware. */
-> -	list_for_each_entry(bus, &pci_root_buses, node)
-> -		pci_enable_bridges(bus);
-> +	pci_enable_bridges(bus);
+> @@ -571,12 +571,13 @@ static void handle_root_bridge_insertion(acpi_handle handle)
+>  	struct acpi_device *device;
 >  
->  	/* dump the resource on buses */
-> +	pci_bus_dump_resources(bus);
-> +}
-> +
-> +void __init
-> +pci_assign_unassigned_resources(void)
-> +{
-> +	struct pci_bus *bus;
-> +
->  	list_for_each_entry(bus, &pci_root_buses, node)
-> -		pci_bus_dump_resources(bus);
-> +		pci_assign_unassigned_root_bus_resources(bus);
+>  	if (!acpi_bus_get_device(handle, &device)) {
+> -		printk(KERN_DEBUG "acpi device exists...\n");
+> +		acpi_handle_printk(KERN_DEBUG, handle,
+> +				   "acpi device exists...\n");
+
+Do we have acpi_handle_dbg()?  If so, why don't you use it here? (And below.)
+If not, why don't you add it and use it here (and below)?
+
+>  		return;
+>  	}
+>  
+>  	if (acpi_bus_scan(handle))
+> -		printk(KERN_ERR "cannot add bridge to acpi list\n");
+> +		acpi_handle_err(handle, "cannot add bridge to acpi list\n");
 >  }
 >  
->  void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
+>  static void handle_root_bridge_removal(struct acpi_device *device)
+> @@ -602,7 +603,6 @@ static void handle_root_bridge_removal(struct acpi_device *device)
+>  static void _handle_hotplug_event_root(struct work_struct *work)
+>  {
+>  	struct acpi_pci_root *root;
+> -	struct acpi_buffer buffer = { ACPI_ALLOCATE_BUFFER };
+>  	struct acpi_hp_work *hp_work;
+>  	acpi_handle handle;
+>  	u32 type;
+> @@ -613,13 +613,11 @@ static void _handle_hotplug_event_root(struct work_struct *work)
+>  
+>  	root = acpi_pci_find_root(handle);
+>  
+> -	acpi_get_name(handle, ACPI_FULL_PATHNAME, &buffer);
+> -
+>  	switch (type) {
+>  	case ACPI_NOTIFY_BUS_CHECK:
+>  		/* bus enumerate */
+> -		printk(KERN_DEBUG "%s: Bus check notify on %s\n", __func__,
+> -				 (char *)buffer.pointer);
+> +		acpi_handle_printk(KERN_DEBUG, handle,
+> +				   "Bus check notify on %s\n", __func__);
+>  		if (!root)
+>  			handle_root_bridge_insertion(handle);
+>  
+> @@ -627,27 +625,26 @@ static void _handle_hotplug_event_root(struct work_struct *work)
+>  
+>  	case ACPI_NOTIFY_DEVICE_CHECK:
+>  		/* device check */
+> -		printk(KERN_DEBUG "%s: Device check notify on %s\n", __func__,
+> -				 (char *)buffer.pointer);
+> +		acpi_handle_printk(KERN_DEBUG, handle,
+> +				   "Device check notify on %s\n", __func__);
+>  		if (!root)
+>  			handle_root_bridge_insertion(handle);
+>  		break;
+>  
+>  	case ACPI_NOTIFY_EJECT_REQUEST:
+>  		/* request device eject */
+> -		printk(KERN_DEBUG "%s: Device eject notify on %s\n", __func__,
+> -				 (char *)buffer.pointer);
+> +		acpi_handle_printk(KERN_DEBUG, handle,
+> +				   "Device eject notify on %s\n", __func__);
+>  		if (root)
+>  			handle_root_bridge_removal(root->device);
+>  		break;
+>  	default:
+> -		printk(KERN_WARNING "notify_handler: unknown event type 0x%x for %s\n",
+> -				 type, (char *)buffer.pointer);
+> +		acpi_handle_warn(handle,
+> +			 "notify_handler: unknown event type 0x%xn", type);
+>  		break;
+>  	}
+>  
+>  	kfree(hp_work); /* allocated in handle_hotplug_event_bridge */
+> -	kfree(buffer.pointer);
+>  }
+>  
+>  static void handle_hotplug_event_root(acpi_handle handle, u32 type,
+> @@ -661,9 +658,6 @@ static acpi_status __init
+>  find_root_bridges(acpi_handle handle, u32 lvl, void *context, void **rv)
+>  {
+>  	acpi_status status;
+> -	char objname[64];
+> -	struct acpi_buffer buffer = { .length = sizeof(objname),
+> -				      .pointer = objname };
+>  	int *count = (int *)context;
+>  
+>  	if (!acpi_is_root_bridge(handle))
+> @@ -671,16 +665,15 @@ find_root_bridges(acpi_handle handle, u32 lvl, void *context, void **rv)
+>  
+>  	(*count)++;
+>  
+> -	acpi_get_name(handle, ACPI_FULL_PATHNAME, &buffer);
+> -
+>  	status = acpi_install_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
+>  					handle_hotplug_event_root, NULL);
+>  	if (ACPI_FAILURE(status))
+> -		printk(KERN_DEBUG "acpi root: %s notify handler is not installed, exit status: %u\n",
+> -				  objname, (unsigned int)status);
+> +		acpi_handle_printk(KERN_DEBUG, handle,
+> +			"notify handler is not installed, exit status: %u\n",
+> +			 (unsigned int)status);
+>  	else
+> -		printk(KERN_DEBUG "acpi root: %s notify handler is installed\n",
+> -				 objname);
+> +		acpi_handle_printk(KERN_DEBUG, handle,
+> +				   "notify handler is installed\n");
+>  
+>  	return AE_OK;
+>  }
 
-I think this should be split up into something like the following patches
-so we can see what's going on here:
+Thanks,
+Rafael
 
-    - Remove "bus" temporary when calling pci_bus_release_bridge_resources()
 
-    - Add pci_realloc_enabled() parameter and enable_local
-
-    - Add pci_realloc_detect() parameters.  The "bus" parameter is 
-      ignored for now.
-
-    - Change pci_realloc_detect() to iterate over pci_root_buses and
-      call pci_walk_bus() to find any unassigned resources instead of
-      using for_each_pci_dev().
-
-    - Split pci_assign_unassigned_resources() into iterating over
-      pci_root_buses and calling pci_assign_unassigned_root_bus_resources(bus).
-      Change pci_realloc_detect() to only walk the supplied bus instead
-      of everything in pci_root_buses.  This will be basically just removing
-      list_for_each_entry(bus, &pci_root_buses, node) loops.
-
-Bjorn
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
