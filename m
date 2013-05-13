@@ -1,73 +1,101 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qa0-f48.google.com ([209.85.216.48]:62390 "EHLO
-	mail-qa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758715Ab3EOAdD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 May 2013 20:33:03 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:63289 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750704Ab3EMJFB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 13 May 2013 05:05:01 -0400
+Date: Mon, 13 May 2013 11:06:17 +0200
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: x86@kernel.org, linux-pci@vger.kernel.org,
+	Suresh Siddha <suresh.b.siddha@intel.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	Jan Beulich <JBeulich@suse.com>,
+	Ingo Molnar <mingo@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH v3 -tip x86/apic 2/2] x86/MSI: Conserve interrupt resources
+ when using multiple-MSIs
+Message-ID: <924d05fe41fb93fdc2013680fb220d4b171de303.1368431413.git.agordeev@redhat.com>
+References: <cover.1368431413.git.agordeev@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <20130514221748.6180.30597.stgit@ahduyck-cp1.jf.intel.com>
-References: <20130514221748.6180.30597.stgit@ahduyck-cp1.jf.intel.com>
-Date: Tue, 14 May 2013 20:32:59 -0400
-Message-ID: <CAJZOPZL06sG__MdTzp6FF6BuB+Tv+CC_US35eHY0EDP6vQVzMw@mail.gmail.com>
-Subject: Re: [PATCH] pci: Avoid reentrant calls to work_on_cpu
-From: Or Gerlitz <or.gerlitz@gmail.com>
-To: Alexander Duyck <alexander.h.duyck@intel.com>
-Cc: bhelgaas@google.com, yinghai@kernel.org, guz.fnst@cn.fujitsu.com,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	netdev@vger.kernel.org, "Michael S. Tsirkin" <mst@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <cover.1368431413.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 14, 2013 at 6:26 PM, Alexander Duyck
-<alexander.h.duyck@intel.com> wrote:
->
-> This change is meant to fix a deadlock seen when pci_enable_sriov was
-> called from within a driver's probe routine.  The issue was that
-> work_on_cpu calls flush_work which attempts to flush a work queue for a
-> cpu that we are currently working in.  In order to avoid the reentrant
-> path we just skip the call to work_on_cpu in the case that the device
-> node matches our current node.
->
-> Reported-by: Yinghai Lu <yinghai@kernel.org>
-> Signed-off-by: Alexander Duyck <alexander.h.duyck@intel.com>
-> ---
->
-> This patch is meant to address the issue pointed out in an earlier patch
-> sent by Yinghai Lu titled:
->   [PATCH 6/7] PCI: Make sure VF's driver get attached after PF's
->
->  drivers/pci/pci-driver.c |   14 +++++++++-----
->  1 files changed, 9 insertions(+), 5 deletions(-)
->
-> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-> index 79277fb..caeb1c0 100644
-> --- a/drivers/pci/pci-driver.c
-> +++ b/drivers/pci/pci-driver.c
-> @@ -277,12 +277,16 @@ static int pci_call_probe(struct pci_driver *drv,
-> struct pci_dev *dev,
->         int error, node;
->         struct drv_dev_and_id ddi = { drv, dev, id };
->
-> -       /* Execute driver initialization on node where the device's
-> -          bus is attached to.  This way the driver likely allocates
-> -          its local memory on the right node without any need to
-> -          change it. */
-> +       /*
-> +        * Execute driver initialization on the node where the device's
-> +        * bus is attached.  This way the driver likely allocates
-> +        * its local memory on the right node without any need to
-> +        * change it.  If the node is the current node just call
-> +        * local_pci_probe and avoid the possibility of reentrant
-> +        * calls to work_on_cpu.
-> +        */
->         node = dev_to_node(&dev->dev);
-> -       if (node >= 0) {
-> +       if ((node >= 0) && (node != numa_node_id())) {
->                 int cpu;
->
->                 get_online_cpus();
+Current multiple-MSI implementation does not take into account
+actual number of requested MSIs and always rounds that number
+to a closest power-of-two value. Yet, a number of MSIs a PCI
+device could send (and therefore a number of messages a device
+driver could request) may be a lesser power-of-two. As result,
+resources allocated for extra MSIs just wasted.
+
+This update takes advantage of 'msi_desc::nvec' field introduced
+with generic MSI code to track number of requested and used MSIs.
+As result, resources associated with interrupts are conserved.
+Of those resources most noticeable are x86 interrupt vectors.
+
+The initial version of this fix also consumed on IRTEs, but Jan
+noticed that a malfunctioning PCI device might send a message
+number it did not claim and thus refer an IRTE it does not own.
+To avoid this security hole the old-way approach preserved and
+as many IRTEs are reserved as the device could possibly send.
+
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ drivers/iommu/irq_remapping.c |   12 +++++++-----
+ 1 files changed, 7 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
+index d56f8c1..9eeb6cf 100644
+--- a/drivers/iommu/irq_remapping.c
++++ b/drivers/iommu/irq_remapping.c
+@@ -51,26 +51,27 @@ static void irq_remapping_disable_io_apic(void)
+ 
+ static int do_setup_msi_irqs(struct pci_dev *dev, int nvec)
+ {
+-	int node, ret, sub_handle, index = 0;
++	int node, ret, sub_handle, nvec_pow2, index = 0;
+ 	unsigned int irq;
+ 	struct msi_desc *msidesc;
+ 
+-	nvec = __roundup_pow_of_two(nvec);
+-
+ 	WARN_ON(!list_is_singular(&dev->msi_list));
+ 	msidesc = list_entry(dev->msi_list.next, struct msi_desc, list);
+ 	WARN_ON(msidesc->irq);
+ 	WARN_ON(msidesc->msi_attrib.multiple);
++	WARN_ON(msidesc->nvec);
+ 
+ 	node = dev_to_node(&dev->dev);
+ 	irq = __create_irqs(get_nr_irqs_gsi(), nvec, node);
+ 	if (irq == 0)
+ 		return -ENOSPC;
+ 
+-	msidesc->msi_attrib.multiple = ilog2(nvec);
++	nvec_pow2 = __roundup_pow_of_two(nvec);
++	msidesc->nvec = nvec;
++	msidesc->msi_attrib.multiple = ilog2(nvec_pow2);
+ 	for (sub_handle = 0; sub_handle < nvec; sub_handle++) {
+ 		if (!sub_handle) {
+-			index = msi_alloc_remapped_irq(dev, irq, nvec);
++			index = msi_alloc_remapped_irq(dev, irq, nvec_pow2);
+ 			if (index < 0) {
+ 				ret = index;
+ 				goto error;
+@@ -95,6 +96,7 @@ error:
+ 	 * IRQs from tearing down again in default_teardown_msi_irqs()
+ 	 */
+ 	msidesc->irq = 0;
++	msidesc->nvec = 0;
+ 	msidesc->msi_attrib.multiple = 0;
+ 
+ 	return ret;
+-- 
+1.7.7.6
 
 
-Alex, FWIW a similar patch was posted by Michael during the last rc
-cycles of 3.9 see
-http://marc.info/?l=linux-netdev&m=136569426119644&w=2
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
