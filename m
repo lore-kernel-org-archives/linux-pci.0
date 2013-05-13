@@ -1,111 +1,129 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vb0-f52.google.com ([209.85.212.52]:54061 "EHLO
-	mail-vb0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757185Ab3EXR0G (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 24 May 2013 13:26:06 -0400
-Received: by mail-vb0-f52.google.com with SMTP id p12so2353911vbe.39
-        for <linux-pci@vger.kernel.org>; Fri, 24 May 2013 10:26:05 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1369329099-8501-1-git-send-email-yinghai@kernel.org>
-References: <519dcfbe.89e9420a.4934.488bSMTPIN_ADDED_BROKEN@mx.google.com> <1369329099-8501-1-git-send-email-yinghai@kernel.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 24 May 2013 11:25:45 -0600
-Message-ID: <CAErSpo6pT2iTMx6U50AeScCjmPu53MOj6-TCnATRj_+EUNz46w@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Don't let mmio fallback to must-only, if ioport
- fails with must+optional
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail-pb0-f50.google.com ([209.85.160.50]:54634 "EHLO
+	mail-pb0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751652Ab3EMQJQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 13 May 2013 12:09:16 -0400
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Len Brown <lenb@kernel.org>,
+	linux-acpi@vger.kernel.org
+Subject: [PATCH v2, part 1 5/9] ACPI, PCI: remove unused global list acpi_pci_roots in pci_root.c
+Date: Tue, 14 May 2013 00:08:29 +0800
+Message-Id: <1368461313-4371-6-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1368461313-4371-1-git-send-email-jiang.liu@huawei.com>
+References: <1368461313-4371-1-git-send-email-jiang.liu@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 23, 2013 at 11:11 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> BenH reported that there is some assign unassigned resource problem
-> in powerpc.
->
-> It turns out after
-> | commit 0c5be0cb0edfe3b5c4b62eac68aa2aa15ec681af
-> | Date:   Thu Feb 23 19:23:29 2012 -0800
-> |
-> |    PCI: Retry on IORESOURCE_IO type allocations
->
-> even the root bus does not have io port range, it will keep retrying
-> to realloc with mmio.
->
-> Current retry logic is : try with must+optional at first, and if
-> it fails with any ioport or mmio, it will try must then try to extend
-> must with optional.
-> That will fail as mmio-non-pref and mmio-pref for bridge will
-> be next to each other. So we have no chance to extend mmio-non-pref.
->
-> We can check fail type and only fall back for io port only, that will
-> keep mmio type still have must+optional.
->
-> This will be become more often when we have x86 8 sockets or 32 sockets
-> system, and those system will have one root bus per socket.
-> They will have some root buses do not have ioport range.
->
-> -v2: need to remove assigned entries from optional list too.
->
-> Reported-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-> Tested-by: Gavin Shan <shangw@linux.vnet.ibm.com>
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
->
-> ---
->  drivers/pci/setup-bus.c |   23 +++++++++++++++++++++++
->  1 file changed, 23 insertions(+)
->
-> Index: linux-2.6/drivers/pci/setup-bus.c
-> ===================================================================
-> --- linux-2.6.orig/drivers/pci/setup-bus.c
-> +++ linux-2.6/drivers/pci/setup-bus.c
-> @@ -317,6 +317,10 @@ static void __assign_resources_sorted(st
->         LIST_HEAD(local_fail_head);
->         struct pci_dev_resource *save_res;
->         struct pci_dev_resource *dev_res;
-> +       unsigned long fail_type = 0;
-> +       struct pci_dev_resource *fail_res;
-> +       unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
-> +                                 IORESOURCE_PREFETCH;
->
->         /* Check if optional add_size is there */
->         if (!realloc_head || list_empty(realloc_head))
-> @@ -348,6 +352,25 @@ static void __assign_resources_sorted(st
->                 return;
->         }
->
-> +       /* check failed type */
-> +       list_for_each_entry(fail_res, &local_fail_head, list)
-> +               fail_type |= fail_res->flags & type_mask;
-> +       /* only io port fails */
-> +       if ((fail_type & type_mask) == IORESOURCE_IO) {
-> +               struct pci_dev_resource *tmp_res;
-> +
-> +               /* remove assigned non ioport from head list etc */
-> +               list_for_each_entry_safe(dev_res, tmp_res, head, list)
-> +                       if (dev_res->res->parent &&
-> +                           !(dev_res->res->flags & IORESOURCE_IO)) {
-> +                               /* remove it from realloc_head list */
-> +                               remove_from_list(realloc_head, dev_res->res);
-> +                               remove_from_list(&save_head, dev_res->res);
-> +                               list_del(&dev_res->list);
-> +                               kfree(dev_res);
-> +                       }
-> +       }
+Now the global list acpi_pci_roots pci_root.c is useless, remove it.
 
-The problem we're trying to solve is that when allocation for type X
-fails, we retry allocation for type Y.
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Cc: Len Brown <lenb@kernel.org>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-acpi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+---
+ drivers/acpi/pci_root.c | 25 +++----------------------
+ include/acpi/acpi_bus.h |  1 -
+ 2 files changed, 3 insertions(+), 23 deletions(-)
 
-This patch handles IO specially.  I think it basically says, "if we
-only have IO allocation failures, don't retry MEM allocation."  But a
-clean strategy would also avoid retrying IO allocation if we only had
-MEM allocation failures.
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index b80e06e..91ddfd6 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -65,10 +65,6 @@ static struct acpi_scan_handler pci_root_handler = {
+ 	.detach = acpi_pci_root_remove,
+ };
+ 
+-/* Lock to protect both acpi_pci_roots lists */
+-static DEFINE_MUTEX(acpi_pci_root_lock);
+-static LIST_HEAD(acpi_pci_roots);
+-
+ static DEFINE_MUTEX(osc_lock);
+ 
+ /**
+@@ -423,7 +419,6 @@ static int acpi_pci_root_add(struct acpi_device *device,
+ 		}
+ 	}
+ 
+-	INIT_LIST_HEAD(&root->node);
+ 	root->device = device;
+ 	root->segment = segment & 0xFFFF;
+ 	strcpy(acpi_device_name(device), ACPI_PCI_ROOT_DEVICE_NAME);
+@@ -501,10 +496,6 @@ static int acpi_pci_root_add(struct acpi_device *device,
+ 	 * TBD: Need PCI interface for enumeration/configuration of roots.
+ 	 */
+ 
+-	mutex_lock(&acpi_pci_root_lock);
+-	list_add_tail(&root->node, &acpi_pci_roots);
+-	mutex_unlock(&acpi_pci_root_lock);
+-
+ 	/*
+ 	 * Scan the Root Bridge
+ 	 * --------------------
+@@ -518,7 +509,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
+ 			    "Bus %04x:%02x not present in PCI namespace\n",
+ 			    root->segment, (unsigned int)root->secondary.start);
+ 		result = -ENODEV;
+-		goto out_del_root;
++		goto end;
+ 	}
+ 
+ 	/* ASPM setting */
+@@ -538,20 +529,13 @@ static int acpi_pci_root_add(struct acpi_device *device,
+ 	if (system_state != SYSTEM_BOOTING) {
+ 		pcibios_resource_survey_bus(root->bus);
+ 		pci_assign_unassigned_bus_resources(root->bus);
+-	}
+-
+-	/* need to after hot-added ioapic is registered */
+-	if (system_state != SYSTEM_BOOTING)
++		/* need to after hot-added ioapic is registered */
+ 		pci_enable_bridges(root->bus);
++	}
+ 
+ 	pci_bus_add_devices(root->bus);
+ 	return 1;
+ 
+-out_del_root:
+-	mutex_lock(&acpi_pci_root_lock);
+-	list_del(&root->node);
+-	mutex_unlock(&acpi_pci_root_lock);
+-
+ end:
+ 	kfree(root);
+ 	return result;
+@@ -568,9 +552,6 @@ static void acpi_pci_root_remove(struct acpi_device *device)
+ 
+ 	pci_remove_root_bus(root->bus);
+ 
+-	mutex_lock(&acpi_pci_root_lock);
+-	list_del(&root->node);
+-	mutex_unlock(&acpi_pci_root_lock);
+ 	kfree(root);
+ }
+ 
+diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
+index 22ba56e..4eb9a88 100644
+--- a/include/acpi/acpi_bus.h
++++ b/include/acpi/acpi_bus.h
+@@ -447,7 +447,6 @@ int register_acpi_bus_type(struct acpi_bus_type *);
+ int unregister_acpi_bus_type(struct acpi_bus_type *);
+ 
+ struct acpi_pci_root {
+-	struct list_head node;
+ 	struct acpi_device * device;
+ 	struct pci_bus *bus;
+ 	u16 segment;
+-- 
+1.8.1.2
 
-Bjorn
-
->         free_list(&local_fail_head);
->         /* Release assigned resource */
->         list_for_each_entry(dev_res, head, list)
