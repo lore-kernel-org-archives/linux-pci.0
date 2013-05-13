@@ -1,145 +1,133 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Jiang Liu <liuj97@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Jiang Liu <jiang.liu@huawei.com>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	Gu Zheng <guz.fnst@cn.fujitsu.com>,
 	Toshi Kani <toshi.kani@hp.com>,
 	Myron Stowe <myron.stowe@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [RFC PATCH v2, part3 05/11] PCI: enhance PCI core logic to support PCI bus lock
-Date: Thu, 16 May 2013 23:50:53 +0800
-Message-Id: <1368719459-24800-6-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1368719459-24800-1-git-send-email-jiang.liu@huawei.com>
-References: <1368719459-24800-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Len Brown <lenb@kernel.org>,
+	linux-acpi@vger.kernel.org
+Subject: Re: [PATCH v2, part 1 5/9] ACPI, PCI: remove unused global list acpi_pci_roots in pci_root.c
+Date: Tue, 14 May 2013 01:28:45 +0200
+Message-ID: <1598495.v92I2Ljz9W@vostro.rjw.lan>
+In-Reply-To: <1368461313-4371-6-git-send-email-jiang.liu@huawei.com>
+References: <1368461313-4371-1-git-send-email-jiang.liu@huawei.com> <1368461313-4371-6-git-send-email-jiang.liu@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Every new PCI bus will be created with the PCI_BUS_STATE_LOCK bit set,
-so a typical PCI device hot-add flow is:
-	pci_bus_lock(parent, PCI_BUS_STATE_STARTED, true);
-	pci_scan_slot(parent, PCI_DEVFN(0, 0));
-	pci_bus_add_devices(parent);
-	pci_bus_unlock(parent, true);	// recursively unlock all PCI
-					// buses, including new PCI buses
+On Tuesday, May 14, 2013 12:08:29 AM Jiang Liu wrote:
+> Now the global list acpi_pci_roots pci_root.c is useless, remove it.
 
-This patch also changes behaviors of interfaces to create PCI root buses:
-	pci_create_root_bus(): return with new PCI root bus locked
-	pci_scan_bus_parented(): return with new PCI root bus locked
-	pci_scan_root_bus(): return with new PCI root bus unlocked
-	pci_scan_bus(): return with new PCI root bus unlocked
+Well, are patches [1-4/9] needed for that or does it apply without them?
 
-pci_scan_bus_parented() has already been marked as __deprecated and
-all in-tree callers have been converted to use other interfaces.
-So following-on patches will enhance callers of pci_create_root_bus()
-to unlock returned root buses.
+Rafael
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
----
- drivers/pci/hotplug-pci.c |  4 ++++
- drivers/pci/probe.c       | 18 ++++++++++++++++++
- 2 files changed, 22 insertions(+)
 
-diff --git a/drivers/pci/hotplug-pci.c b/drivers/pci/hotplug-pci.c
-index 18533ed..8faa3c2 100644
---- a/drivers/pci/hotplug-pci.c
-+++ b/drivers/pci/hotplug-pci.c
-@@ -10,6 +10,10 @@ int __ref pci_hp_add_bridge(struct pci_dev *dev)
- 	int pass, busnr, start = parent->busn_res.start;
- 	int end = parent->busn_res.end;
- 
-+	BUG_ON(!pci_bus_is_locked(parent));
-+	if (pci_bus_get_state(parent) > PCI_BUS_STATE_STARTED)
-+		return 0;
-+
- 	for (busnr = start; busnr <= end; busnr++) {
- 		if (!pci_bus_exists(pci_domain_nr(parent), busnr))
- 			break;
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 9fcf3a3..0ddf5b8 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -745,6 +745,10 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
- 	u8 primary, secondary, subordinate;
- 	int broken = 0;
- 
-+	BUG_ON(!pci_bus_is_locked(bus));
-+	if (pci_bus_get_state(bus) > PCI_BUS_STATE_STARTED)
-+		return max;
-+
- 	pci_read_config_dword(dev, PCI_PRIMARY_BUS, &buses);
- 	primary = buses & 0xFF;
- 	secondary = (buses >> 8) & 0xFF;
-@@ -799,6 +803,8 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
- 			pci_bus_insert_busn_res(child, secondary, subordinate);
- 			child->bridge_ctl = bctl;
- 			pci_bus_get(child);
-+		} else {
-+			BUG_ON(!pci_bus_is_locked(child));
- 		}
- 
- 		cmax = pci_scan_child_bus(child);
-@@ -837,6 +843,8 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
- 				goto out;
- 			pci_bus_insert_busn_res(child, max, 0xff);
- 			pci_bus_get(child);
-+		} else {
-+			BUG_ON(!pci_bus_is_locked(child));
- 		}
- 		buses = (buses & 0xff000000)
- 		      | ((unsigned int)(child->primary)     <<  0)
-@@ -1322,6 +1330,7 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
- {
- 	int ret;
- 
-+	BUG_ON(!pci_bus_is_locked(bus));
- 	device_initialize(&dev->dev);
- 	dev->dev.release = pci_release_dev;
- 
-@@ -1369,6 +1378,10 @@ struct pci_dev *__ref pci_scan_single_device(struct pci_bus *bus, int devfn)
- {
- 	struct pci_dev *dev;
- 
-+	BUG_ON(!pci_bus_is_locked(bus));
-+	if (pci_bus_get_state(bus) > PCI_BUS_STATE_STARTED)
-+		return NULL;
-+
- 	dev = pci_get_slot(bus, devfn);
- 	if (dev) {
- 		pci_dev_put(dev);
-@@ -1624,6 +1637,8 @@ unsigned int pci_scan_child_bus(struct pci_bus *bus)
- 	unsigned int devfn, pass, max = bus->busn_res.start;
- 	struct pci_dev *dev;
- 
-+	BUG_ON(!pci_bus_is_locked(bus));
-+	BUG_ON(pci_bus_get_state(bus) > PCI_BUS_STATE_STARTED);
- 	dev_dbg(&bus->dev, "scanning bus\n");
- 
- 	/* Go find them, Rover! */
-@@ -1872,6 +1887,8 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
- 		pci_bus_update_busn_res_end(b, max);
- 
- 	pci_bus_add_devices(b);
-+	pci_bus_unlock(b, true);
-+
- 	return b;
- }
- EXPORT_SYMBOL(pci_scan_root_bus);
-@@ -1908,6 +1925,7 @@ struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops,
- 	if (b) {
- 		pci_scan_child_bus(b);
- 		pci_bus_add_devices(b);
-+		pci_bus_unlock(b, true);
- 	} else {
- 		pci_free_resource_list(&resources);
- 	}
+> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+> Cc: Len Brown <lenb@kernel.org>
+> Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
+> Cc: linux-acpi@vger.kernel.org
+> Cc: linux-kernel@vger.kernel.org
+> ---
+>  drivers/acpi/pci_root.c | 25 +++----------------------
+>  include/acpi/acpi_bus.h |  1 -
+>  2 files changed, 3 insertions(+), 23 deletions(-)
+> 
+> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+> index b80e06e..91ddfd6 100644
+> --- a/drivers/acpi/pci_root.c
+> +++ b/drivers/acpi/pci_root.c
+> @@ -65,10 +65,6 @@ static struct acpi_scan_handler pci_root_handler = {
+>  	.detach = acpi_pci_root_remove,
+>  };
+>  
+> -/* Lock to protect both acpi_pci_roots lists */
+> -static DEFINE_MUTEX(acpi_pci_root_lock);
+> -static LIST_HEAD(acpi_pci_roots);
+> -
+>  static DEFINE_MUTEX(osc_lock);
+>  
+>  /**
+> @@ -423,7 +419,6 @@ static int acpi_pci_root_add(struct acpi_device *device,
+>  		}
+>  	}
+>  
+> -	INIT_LIST_HEAD(&root->node);
+>  	root->device = device;
+>  	root->segment = segment & 0xFFFF;
+>  	strcpy(acpi_device_name(device), ACPI_PCI_ROOT_DEVICE_NAME);
+> @@ -501,10 +496,6 @@ static int acpi_pci_root_add(struct acpi_device *device,
+>  	 * TBD: Need PCI interface for enumeration/configuration of roots.
+>  	 */
+>  
+> -	mutex_lock(&acpi_pci_root_lock);
+> -	list_add_tail(&root->node, &acpi_pci_roots);
+> -	mutex_unlock(&acpi_pci_root_lock);
+> -
+>  	/*
+>  	 * Scan the Root Bridge
+>  	 * --------------------
+> @@ -518,7 +509,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
+>  			    "Bus %04x:%02x not present in PCI namespace\n",
+>  			    root->segment, (unsigned int)root->secondary.start);
+>  		result = -ENODEV;
+> -		goto out_del_root;
+> +		goto end;
+>  	}
+>  
+>  	/* ASPM setting */
+> @@ -538,20 +529,13 @@ static int acpi_pci_root_add(struct acpi_device *device,
+>  	if (system_state != SYSTEM_BOOTING) {
+>  		pcibios_resource_survey_bus(root->bus);
+>  		pci_assign_unassigned_bus_resources(root->bus);
+> -	}
+> -
+> -	/* need to after hot-added ioapic is registered */
+> -	if (system_state != SYSTEM_BOOTING)
+> +		/* need to after hot-added ioapic is registered */
+>  		pci_enable_bridges(root->bus);
+> +	}
+>  
+>  	pci_bus_add_devices(root->bus);
+>  	return 1;
+>  
+> -out_del_root:
+> -	mutex_lock(&acpi_pci_root_lock);
+> -	list_del(&root->node);
+> -	mutex_unlock(&acpi_pci_root_lock);
+> -
+>  end:
+>  	kfree(root);
+>  	return result;
+> @@ -568,9 +552,6 @@ static void acpi_pci_root_remove(struct acpi_device *device)
+>  
+>  	pci_remove_root_bus(root->bus);
+>  
+> -	mutex_lock(&acpi_pci_root_lock);
+> -	list_del(&root->node);
+> -	mutex_unlock(&acpi_pci_root_lock);
+>  	kfree(root);
+>  }
+>  
+> diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
+> index 22ba56e..4eb9a88 100644
+> --- a/include/acpi/acpi_bus.h
+> +++ b/include/acpi/acpi_bus.h
+> @@ -447,7 +447,6 @@ int register_acpi_bus_type(struct acpi_bus_type *);
+>  int unregister_acpi_bus_type(struct acpi_bus_type *);
+>  
+>  struct acpi_pci_root {
+> -	struct list_head node;
+>  	struct acpi_device * device;
+>  	struct pci_bus *bus;
+>  	u16 segment;
+> 
 -- 
-1.8.1.2
-
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
