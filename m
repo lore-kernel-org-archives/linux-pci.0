@@ -1,86 +1,63 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-da0-f44.google.com ([209.85.210.44]:45865 "EHLO
+	mail-da0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755219Ab3EMQJZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 13 May 2013 12:09:25 -0400
+From: Jiang Liu <liuj97@gmail.com>
 To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
 	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v4 6/8] PCI: Skip IORESOURCE_MMIO allocation for root bus without MMIO range
-Date: Tue, 21 May 2013 23:38:46 -0700
-Message-Id: <1369204728-11165-7-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1369204728-11165-1-git-send-email-yinghai@kernel.org>
-References: <1369204728-11165-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Tony Luck <tony.luck@intel.com>,
+	Fenghua Yu <fenghua.yu@intel.com>, linux-ia64@vger.kernel.org
+Subject: [PATCH v2, part 1 7/9] PCI, IA64: minor code clean up
+Date: Tue, 14 May 2013 00:08:31 +0800
+Message-Id: <1368461313-4371-8-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1368461313-4371-1-git-send-email-jiang.liu@huawei.com>
+References: <1368461313-4371-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For x86 8 sockets or 32 sockets system that will have one root bus per socket,
-They may have some root buses do not have mmio non-pref range.
+pci_scan_root_bus() already set bus->sysdata, so no need to explicitly
+set it again in function sn_pci_controller_fixup();
 
-We should not fall into retry in this case, as root bus does
-not mmio non-pref range.
-
-We check if the root bus has mmio-nonpref range, and set bus_res_type_mask,
-and pass it to assign_resources and don't add mmio-nonpref res to failed list
-for root bus that does not have mmio-nonpref range.
-So even BIOS set wrong value to pci devices and bridges will still
-get cleared.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Cc: Tony Luck <tony.luck@intel.com>
+Cc: Fenghua Yu <fenghua.yu@intel.com>
+Cc: linux-ia64@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 ---
- drivers/pci/setup-bus.c |   32 ++++++++++++++++++++++++++------
- 1 file changed, 26 insertions(+), 6 deletions(-)
+ arch/ia64/sn/kernel/io_init.c | 11 +----------
+ 1 file changed, 1 insertion(+), 10 deletions(-)
 
-Index: linux-2.6/drivers/pci/setup-bus.c
-===================================================================
---- linux-2.6.orig/drivers/pci/setup-bus.c
-+++ linux-2.6/drivers/pci/setup-bus.c
-@@ -299,9 +299,17 @@ static void assign_requested_resources_s
- 				bool is_ioport_res_without_bus_support =
- 					 (!(bus_res_type_mask & IORESOURCE_IO)) &&
- 					 (res->flags & IORESOURCE_IO);
-+				/*
-+				 * if the failed res is mmio, but bus does
-+				 * not have io port support, don't add it
-+				 */
-+				bool is_mmio_nonpref_res_without_bus_support =
-+					 (!(bus_res_type_mask & IORESOURCE_MEM)) &&
-+					 ((res->flags & (IORESOURCE_MEM | IORESOURCE_PREFETCH)) == IORESOURCE_MEM);
- 
- 				if (!is_rom_res_not_enabled &&
--				    !is_ioport_res_without_bus_support)
-+				    !is_ioport_res_without_bus_support &&
-+				    !is_mmio_nonpref_res_without_bus_support)
- 					add_to_list(fail_head,
- 						    dev_res->dev, res,
- 						    0 /* dont care */,
-@@ -1416,12 +1424,24 @@ static unsigned long pci_bus_res_type_ma
- 	int i;
- 	struct resource *r;
- 	unsigned long mask = 0;
--	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
--				  IORESOURCE_PREFETCH;
- 
--	pci_bus_for_each_resource(bus, r, i)
--		if (r)
--			mask |= r->flags & type_mask;
-+	pci_bus_for_each_resource(bus, r, i) {
-+		if (!r)
-+			continue;
-+
-+		if (r->flags & IORESOURCE_IO) {
-+			mask |= IORESOURCE_IO;
-+			continue;
-+		}
-+		if (r->flags & IORESOURCE_PREFETCH) {
-+			mask |= IORESOURCE_PREFETCH;
-+			continue;
-+		}
-+		if ((r->flags & (IORESOURCE_MEM | IORESOURCE_PREFETCH)) == IORESOURCE_MEM) {
-+			mask |= IORESOURCE_MEM; /* nonpref only */
-+			continue;
-+		}
-+	}
- 
- 	return mask;
+diff --git a/arch/ia64/sn/kernel/io_init.c b/arch/ia64/sn/kernel/io_init.c
+index 238e2c5..e2c7733 100644
+--- a/arch/ia64/sn/kernel/io_init.c
++++ b/arch/ia64/sn/kernel/io_init.c
+@@ -326,16 +326,7 @@ sn_pci_controller_fixup(int segment, int busnum, struct pci_bus *bus)
+ 	bus = pci_scan_root_bus(NULL, busnum, &pci_root_ops, controller,
+ 				&resources);
+  	if (bus == NULL)
+- 		goto error_return; /* error, or bus already scanned */
+-
+-	bus->sysdata = controller;
+-
+-	return;
+-
+-error_return:
+-
+-	kfree(controller);
+-	return;
++		kfree(controller);
  }
+ 
+ /*
+-- 
+1.8.1.2
+
