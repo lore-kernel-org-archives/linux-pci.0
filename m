@@ -1,38 +1,68 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:51229 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752697Ab3EHBQc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 7 May 2013 21:16:32 -0400
-Message-ID: <1367975778.25488.108.camel@pasglop>
-Subject: Re: [PATCH v3 3/5] PCI: Skip IORESOURCE_MMIO allocation for root
- bus without MMIO range
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Date: Wed, 08 May 2013 11:16:18 +1000
-In-Reply-To: <CAE9FiQUC74+jp0JcfpqZu=BZc+rWnnuFS5UZGKL=w_GOXeLavw@mail.gmail.com>
-References: <1367965054-9013-1-git-send-email-yinghai@kernel.org>
-	 <1367965054-9013-4-git-send-email-yinghai@kernel.org>
-	 <1367965682.25488.26.camel@pasglop>
-	 <CAE9FiQUC74+jp0JcfpqZu=BZc+rWnnuFS5UZGKL=w_GOXeLavw@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Chris Metcalf <cmetcalf@tilera.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>
+Subject: [PATCH v2, part 1 4/9] PCI: mark pci_scan_bus_parented() as __deprecated
+Date: Tue, 14 May 2013 00:08:28 +0800
+Message-Id: <1368461313-4371-5-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1368461313-4371-1-git-send-email-jiang.liu@huawei.com>
+References: <1368461313-4371-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2013-05-07 at 15:44 -0700, Yinghai Lu wrote:
-> x86 32 socket system, we may need to leave more mmiol for only several
-> sockets to make them work with cards that does not support mmio 64 bit
-> pref.
+Mark pci_scan_bus_parented() as __deprecated and clean up outdated
+comments.
 
-Ok, while on POWER each root bridge has its own distinct 32-bit space
-(mapped elsewhere in CPU space). So at least we don't have *that*
-specific problem :-)
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Cc: Chris Metcalf <cmetcalf@tilera.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Thierry Reding <thierry.reding@avionic-design.de>
+Cc: linux-kernel@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+---
+ arch/tile/kernel/pci.c | 3 ---
+ include/linux/pci.h    | 4 ++--
+ 2 files changed, 2 insertions(+), 5 deletions(-)
 
-Cheers,
-Ben.
-
+diff --git a/arch/tile/kernel/pci.c b/arch/tile/kernel/pci.c
+index 67237d3..936e087 100644
+--- a/arch/tile/kernel/pci.c
++++ b/arch/tile/kernel/pci.c
+@@ -309,9 +309,6 @@ int __init pcibios_init(void)
+ 			 *
+ 			 * It reads the PCI tree for this bus into the Linux
+ 			 * data structures.
+-			 *
+-			 * This is inlined in linux/pci.h and calls into
+-			 * pci_scan_bus_parented() in probe.c.
+ 			 */
+ 			pci_add_resource(&resources, &ioport_resource);
+ 			pci_add_resource(&resources, &iomem_resource);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 68beb11..cc4ce27 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -720,8 +720,8 @@ void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
+ void pcibios_scan_specific_bus(int busn);
+ struct pci_bus *pci_find_bus(int domain, int busnr);
+ void pci_bus_add_devices(const struct pci_bus *bus);
+-struct pci_bus *pci_scan_bus_parented(struct device *parent, int bus,
+-				      struct pci_ops *ops, void *sysdata);
++struct pci_bus * __deprecated pci_scan_bus_parented(struct device *parent,
++			int bus, struct pci_ops *ops, void *sysdata);
+ struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops, void *sysdata);
+ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 				    struct pci_ops *ops, void *sysdata,
+-- 
+1.8.1.2
 
