@@ -1,94 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from zoneX.GCU-Squad.org ([194.213.125.0]:40038 "EHLO
-	services.gcu-squad.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750791Ab3EaIaz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 31 May 2013 04:30:55 -0400
-Date: Fri, 31 May 2013 10:30:43 +0200
-From: Jean Delvare <khali@linux-fr.org>
-To: Shane Huang <shane.huang@amd.com>
-Cc: Tejun Heo <tj@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-i2c@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-ide@vger.kernel.org>
-Subject: Re: [PATCH v2 3/3] i2c-piix4: add AMD CZ SMBus device ID
-Message-ID: <20130531103043.253a0664@endymion.delvare>
-In-Reply-To: <1369987950-2894-1-git-send-email-shane.huang@amd.com>
-References: <1369987950-2894-1-git-send-email-shane.huang@amd.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-da0-f43.google.com ([209.85.210.43]:57670 "EHLO
+	mail-da0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758305Ab3ENQxy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 May 2013 12:53:54 -0400
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Corentin Chary <corentin.chary@gmail.com>,
+	Matthew Garrett <matthew.garrett@nebula.com>,
+	acpi4asus-user@lists.sourceforge.net,
+	platform-driver-x86@vger.kernel.org
+Subject: [RFC PATCH v2, part 2 17/18] PCI, eeepc-laptop: use hotplug-safe iterators to walk PCI buses
+Date: Wed, 15 May 2013 00:52:01 +0800
+Message-Id: <1368550322-1045-17-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1368550322-1045-1-git-send-email-jiang.liu@huawei.com>
+References: <1368550322-1045-1-git-send-email-jiang.liu@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 31 May 2013 16:12:30 +0800, Shane Huang wrote:
-> To add AMD CZ SMBus controller device ID.
-> 
-> Signed-off-by: Shane Huang <shane.huang@amd.com>
-> ---
->  Documentation/i2c/busses/i2c-piix4 | 2 +-
->  drivers/i2c/busses/Kconfig         | 1 +
->  drivers/i2c/busses/i2c-piix4.c     | 3 ++-
->  include/linux/pci_ids.h            | 1 +
->  4 files changed, 5 insertions(+), 2 deletions(-)
-> 
-> diff --git a/Documentation/i2c/busses/i2c-piix4 b/Documentation/i2c/busses/i2c-piix4
-> index 1e6634f..a370b20 100644
-> --- a/Documentation/i2c/busses/i2c-piix4
-> +++ b/Documentation/i2c/busses/i2c-piix4
-> @@ -13,7 +13,7 @@ Supported adapters:
->    * AMD SP5100 (SB700 derivative found on some server mainboards)
->      Datasheet: Publicly available at the AMD website
->      http://support.amd.com/us/Embedded_TechDocs/44413.pdf
-> -  * AMD Hudson-2
-> +  * AMD Hudson-2, CZ
->      Datasheet: Not publicly available
->    * Standard Microsystems (SMSC) SLC90E66 (Victory66) southbridge
->      Datasheet: Publicly available at the SMSC website http://www.smsc.com
-> diff --git a/drivers/i2c/busses/Kconfig b/drivers/i2c/busses/Kconfig
-> index 631736e..4faf02b 100644
-> --- a/drivers/i2c/busses/Kconfig
-> +++ b/drivers/i2c/busses/Kconfig
-> @@ -150,6 +150,7 @@ config I2C_PIIX4
->  	    ATI SB700/SP5100
->  	    ATI SB800
->  	    AMD Hudson-2
-> +	    AMD CZ
->  	    Serverworks OSB4
->  	    Serverworks CSB5
->  	    Serverworks CSB6
-> diff --git a/drivers/i2c/busses/i2c-piix4.c b/drivers/i2c/busses/i2c-piix4.c
-> index 39ab78c..43c2e11 100644
-> --- a/drivers/i2c/busses/i2c-piix4.c
-> +++ b/drivers/i2c/busses/i2c-piix4.c
-> @@ -22,7 +22,7 @@
->  	Intel PIIX4, 440MX
->  	Serverworks OSB4, CSB5, CSB6, HT-1000, HT-1100
->  	ATI IXP200, IXP300, IXP400, SB600, SB700/SP5100, SB800
-> -	AMD Hudson-2
-> +	AMD Hudson-2, CZ
->  	SMSC Victory66
->  
->     Note: we assume there can only be one device, with one or more
-> @@ -522,6 +522,7 @@ static DEFINE_PCI_DEVICE_TABLE(piix4_ids) = {
->  	{ PCI_DEVICE(PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_IXP400_SMBUS) },
->  	{ PCI_DEVICE(PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_SBX00_SMBUS) },
->  	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_HUDSON2_SMBUS) },
-> +	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_CZ_SMBUS) },
->  	{ PCI_DEVICE(PCI_VENDOR_ID_SERVERWORKS,
->  		     PCI_DEVICE_ID_SERVERWORKS_OSB4) },
->  	{ PCI_DEVICE(PCI_VENDOR_ID_SERVERWORKS,
-> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-> index 22449c1..b10a5b4 100644
-> --- a/include/linux/pci_ids.h
-> +++ b/include/linux/pci_ids.h
-> @@ -571,6 +571,7 @@
->  #define PCI_DEVICE_ID_AMD_HUDSON2_SATA_IDE	0x7800
->  #define PCI_DEVICE_ID_AMD_HUDSON2_SMBUS		0x780b
->  #define PCI_DEVICE_ID_AMD_CZ_SATA_IDE	0x7900
-> +#define PCI_DEVICE_ID_AMD_CZ_SMBUS	0x790b
->  
->  #define PCI_VENDOR_ID_TRIDENT		0x1023
->  #define PCI_DEVICE_ID_TRIDENT_4DWAVE_DX	0x2000
+Enhance eeepc-laptop drvier to use hotplug-safe iterators to walk
+PCI buses.
 
-Reviewed-by: Jean Delvare <khali@linux-fr.org>
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Cc: Corentin Chary <corentin.chary@gmail.com>
+Cc: Matthew Garrett <matthew.garrett@nebula.com>
+Cc: acpi4asus-user@lists.sourceforge.net
+Cc: platform-driver-x86@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+---
+ drivers/platform/x86/eeepc-laptop.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
+diff --git a/drivers/platform/x86/eeepc-laptop.c b/drivers/platform/x86/eeepc-laptop.c
+index 5d26e70..6291b4f 100644
+--- a/drivers/platform/x86/eeepc-laptop.c
++++ b/drivers/platform/x86/eeepc-laptop.c
+@@ -759,7 +759,7 @@ static struct hotplug_slot_ops eeepc_hotplug_slot_ops = {
+ static int eeepc_setup_pci_hotplug(struct eeepc_laptop *eeepc)
+ {
+ 	int ret = -ENOMEM;
+-	struct pci_bus *bus = pci_find_bus(0, 1);
++	struct pci_bus *bus = pci_get_bus(0, 1);
+ 
+ 	if (!bus) {
+ 		pr_err("Unable to find wifi PCI bus\n");
+@@ -787,6 +787,8 @@ static int eeepc_setup_pci_hotplug(struct eeepc_laptop *eeepc)
+ 		goto error_register;
+ 	}
+ 
++	pci_bus_put(bus);
++
+ 	return 0;
+ 
+ error_register:
+@@ -795,6 +797,7 @@ error_info:
+ 	kfree(eeepc->hotplug_slot);
+ 	eeepc->hotplug_slot = NULL;
+ error_slot:
++	pci_bus_put(bus);
+ 	return ret;
+ }
+ 
 -- 
-Jean Delvare
+1.8.1.2
+
