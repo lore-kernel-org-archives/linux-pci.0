@@ -1,61 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f53.google.com ([209.85.160.53]:39819 "EHLO
-	mail-pb0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758170Ab3ENQxZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 May 2013 12:53:25 -0400
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Len Brown <lenb@kernel.org>,
-	linux-acpi@vger.kernel.org
-Subject: [RFC PATCH v2, part 2 12/18] PCI, ACPI: use hotplug-safe iterators to walk PCI buses
-Date: Wed, 15 May 2013 00:51:56 +0800
-Message-Id: <1368550322-1045-12-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1368550322-1045-1-git-send-email-jiang.liu@huawei.com>
-References: <1368550322-1045-1-git-send-email-jiang.liu@huawei.com>
+Received: from cmexedge1.ext.emulex.com ([138.239.224.99]:6262 "EHLO
+	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756579Ab3ENJqd convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 May 2013 05:46:33 -0400
+From: "Perla, Sathya" <Sathya.Perla@Emulex.Com>
+To: Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+CC: Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Subject: RE: [PATCH 6/7] PCI: Make sure VF's driver get attached after PF's
+Date: Tue, 14 May 2013 09:46:32 +0000
+Message-ID: <CF9D1877D81D214CB0CA0669EFAE020C25AB3277@CMEXMB1.ad.emulex.com>
+References: <1368498506-25857-1-git-send-email-yinghai@kernel.org>
+ <1368498506-25857-7-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1368498506-25857-7-git-send-email-yinghai@kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Enhance ACPI reset drvier to use hotplug-safe iterators to walk PCI buses.
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Cc: Len Brown <lenb@kernel.org>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: linux-acpi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
----
- drivers/acpi/reboot.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+> -----Original Message-----
+> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-
+> owner@vger.kernel.org] On Behalf Of Yinghai Lu
+> 
+> Found kernel try to load mlx4 drivers for VFs before PF's is really loaded
+> when the drivers are built-in, and kernel command line include
+> probe_vfs=63, num_vfs=63.
+> 
+> It turns that it also happen for hotadd path even drivers are compiled as
+> modules and if they loaded. Esp some VF share the same driver with PF.
+> 
+> calling path:
+> 	device driver probe
+> 		==> pci_enable_sriov
+> 			==> virtfn_add
+> 				==> pci_dev_add
+> 				==> pci_bus_device_add
+> when pci_bus_device_add is called, the VF's driver will be attached.
+> and at that time PF's driver does not finish yet.
+> 
+> Need to move out pci_bus_device_add from virtfn_add and call it later. Fix
+> the problem for two path, 1. hotadd path: use device_schedule_callback.
+> 2. for booting path, use initcall to call that for all VF's.
+> 
 
-diff --git a/drivers/acpi/reboot.c b/drivers/acpi/reboot.c
-index a6c77e8b..532dd6d 100644
---- a/drivers/acpi/reboot.c
-+++ b/drivers/acpi/reboot.c
-@@ -33,7 +33,7 @@ void acpi_reboot(void)
- 	switch (rr->space_id) {
- 	case ACPI_ADR_SPACE_PCI_CONFIG:
- 		/* The reset register can only live on bus 0. */
--		bus0 = pci_find_bus(0, 0);
-+		bus0 = pci_get_bus(0, 0);
- 		if (!bus0)
- 			return;
- 		/* Form PCI device/function pair. */
-@@ -43,6 +43,7 @@ void acpi_reboot(void)
- 		/* Write the value that resets us. */
- 		pci_bus_write_config_byte(bus0, devfn,
- 				(rr->address & 0xffff), reset_value);
-+		pci_bus_put(bus0);
- 		break;
- 
- 	case ACPI_ADR_SPACE_SYSTEM_MEMORY:
--- 
-1.8.1.2
+...
+> 
+> Index: linux-2.6/drivers/net/ethernet/emulex/benet/be_main.c
+> ==========================================================
+> =========
+> --- linux-2.6.orig/drivers/net/ethernet/emulex/benet/be_main.c
+> +++ linux-2.6/drivers/net/ethernet/emulex/benet/be_main.c
+> @@ -4119,6 +4119,7 @@ static int lancer_recover_func(struct be
+>  	if (status)
+>  		goto err;
+> 
+> +	pci_bus_add_device_vfs(adapter->pdev);
+>  	if (netif_running(adapter->netdev)) {
+>  		status = be_open(adapter->netdev);
+>  		if (status)
+> @@ -4335,6 +4336,8 @@ static int be_probe(struct pci_dev *pdev
+>  	dev_info(&pdev->dev, "%s: %s %s port %c\n", nic_name(pdev),
+>  		 func_name(adapter), mc_name(adapter), port_name);
+> 
+> +	pci_bus_add_device_vfs(pdev);
+> +
+>  	return 0;
+> 
+>  unsetup:
+> @@ -4406,6 +4409,7 @@ static int be_resume(struct pci_dev *pde
+>  		rtnl_unlock();
+>  	}
+> 
+> +	pci_bus_add_device_vfs(adapter->pdev);
+>  	schedule_delayed_work(&adapter->func_recovery_work,
+>  			      msecs_to_jiffies(1000));
+>  	netif_device_attach(netdev);
 
+I fixed this issue in be2net with the following patch (commit b4c1df93)
+http://marc.info/?l=linux-netdev&m=136801459808765&w=2
+
+-Sathya
