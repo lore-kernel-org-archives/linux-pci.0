@@ -1,91 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:19454 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756174Ab3ENC2x (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 13 May 2013 22:28:53 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 4/7] PCI: Fix racing for pci device removing via sysfs
-Date: Mon, 13 May 2013 19:28:23 -0700
-Message-Id: <1368498506-25857-5-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1368498506-25857-1-git-send-email-yinghai@kernel.org>
-References: <1368498506-25857-1-git-send-email-yinghai@kernel.org>
+Received: from mga03.intel.com ([143.182.124.21]:25114 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752342Ab3ENQAu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 14 May 2013 12:00:50 -0400
+Message-ID: <51925FB0.4080504@intel.com>
+Date: Tue, 14 May 2013 09:00:48 -0700
+From: Alexander Duyck <alexander.h.duyck@intel.com>
+MIME-Version: 1.0
+To: Yinghai Lu <yinghai@kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH 6/7] PCI: Make sure VF's driver get attached after PF's
+References: <1368498506-25857-1-git-send-email-yinghai@kernel.org> <1368498506-25857-7-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1368498506-25857-7-git-send-email-yinghai@kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Gu found nested removing through
-	echo -n 1 > /sys/bus/pci/devices/0000\:10\:00.0/remove ; echo -n 1 >
-/sys/bus/pci/devices/0000\:1a\:01.0/remove
+On 05/13/2013 07:28 PM, Yinghai Lu wrote:
+> Found kernel try to load mlx4 drivers for VFs before
+> PF's is really loaded when the drivers are built-in, and kernel
+> command line include probe_vfs=63, num_vfs=63.
+>
+> It turns that it also happen for hotadd path even drivers are
+> compiled as modules and if they loaded. Esp some VF share the
+> same driver with PF.
+>
+> calling path:
+> 	device driver probe
+> 		==> pci_enable_sriov
+> 			==> virtfn_add
+> 				==> pci_dev_add
+> 				==> pci_bus_device_add
+> when pci_bus_device_add is called, the VF's driver will be attached.
+> and at that time PF's driver does not finish yet.
+>
+> Need to move out pci_bus_device_add from virtfn_add and call it
+> later. Fix the problem for two path,
+> 1. hotadd path: use device_schedule_callback.
+> 2. for booting path, use initcall to call that for all VF's.
+>
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> Cc: netdev@vger.kernel.org
+>
 
-will cause kernel crash as bus get freed.
+I'm sorry, but what is the point of this patch?  With device assignment
+it is always possible to have VFs loaded and the PF driver unloaded
+since you cannot remove the VFs if they are assigned to a VM.
 
-[  418.946462] CPU 4
-[  418.968377] Pid: 512, comm: kworker/u:2 Tainted: G        W    3.8.0 #2
-FUJITSU-SV PRIMEQUEST 1800E/SB
-[  419.081763] RIP: 0010:[<ffffffff8137972e>]  [<ffffffff8137972e>]
-pci_bus_read_config_word+0x5e/0x90
-[  420.494137] Call Trace:
-[  420.523326]  [<ffffffff813851ef>] ? remove_callback+0x1f/0x40
-[  420.591984]  [<ffffffff8138044b>] pci_pme_active+0x4b/0x1c0
-[  420.658545]  [<ffffffff8137d8e7>] pci_stop_bus_device+0x57/0xb0
-[  420.729259]  [<ffffffff8137dab6>] pci_stop_and_remove_bus_device+0x16/0x30
-[  420.811392]  [<ffffffff813851fb>] remove_callback+0x2b/0x40
-[  420.877955]  [<ffffffff81257a56>] sysfs_schedule_callback_work+0x26/0x70
+If there is a driver that has to have the PF driver fully loaded before
+it instantiates the VFs then it sounds like a buggy driver to me.  The
+VF driver should be able to be loaded when the PF driver is not
+present.  We handle it in igb and ixgbe last I checked, and I don't see
+any reason why it cannot be handled in all other VF drivers.  I'm not
+saying the VF has to be able to fully functional, but it should be able
+to detect the PF becoming enabled and then bring itself to a fully
+functional state.  To not handle that case is a bug.
 
-https://bugzilla.kernel.org/show_bug.cgi?id=54411
+Thanks,
 
-We have one patch that will let device hold bus ref to prevent it from
-being freed, but that will still generate warning.
-
-------------[ cut here ]------------
-WARNING: at lib/list_debug.c:53 __list_del_entry+0x63/0xd0()
-Hardware name: PRIMEQUEST 1800E
-list_del corruption, ffff8807d1b6c000->next is LIST_POISON1 (dead000000100100)
-Call Trace:
- [<ffffffff81056d4f>] warn_slowpath_common+0x7f/0xc0
- [<ffffffff81056e46>] warn_slowpath_fmt+0x46/0x50
- [<ffffffff81280b13>] __list_del_entry+0x63/0xd0
- [<ffffffff81280b91>] list_del+0x11/0x40
- [<ffffffff81298331>] pci_destroy_dev+0x31/0xc0
- [<ffffffff812985bb>] pci_remove_bus_device+0x5b/0x70
- [<ffffffff812985ee>] pci_stop_and_remove_bus_device+0x1e/0x30
- [<ffffffff8129fc89>] remove_callback+0x29/0x40
- [<ffffffff811f3b84>] sysfs_schedule_callback_work+0x24/0x70
-
-Bjorn pointed out that pci_dev should retain its reference to the pci_bus
-for as long as the pci_dev exists, so the release reference should go in
-pci_release_dev() instead.
-
-At last we will not need to touch pci-sysfs bits.
-
--v6: split other changes to other patches.
-
-Reported-by: Gu Zheng <guz.fnst@cn.fujitsu.com>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-
----
- drivers/pci/probe.c |    2 ++
- 1 file changed, 2 insertions(+)
-
-Index: linux-2.6/drivers/pci/probe.c
-===================================================================
---- linux-2.6.orig/drivers/pci/probe.c
-+++ linux-2.6/drivers/pci/probe.c
-@@ -1149,6 +1149,7 @@ static void pci_release_dev(struct devic
- 	list_del(&pci_dev->bus_list);
- 	up_write(&pci_bus_sem);
- 	pci_free_resources(pci_dev);
-+	put_device(&pci_dev->bus->dev);
- 
- 	pci_release_capabilities(pci_dev);
- 	pci_release_of_node(pci_dev);
-@@ -1360,6 +1361,7 @@ void pci_device_add(struct pci_dev *dev,
- 	down_write(&pci_bus_sem);
- 	list_add_tail(&dev->bus_list, &bus->devices);
- 	up_write(&pci_bus_sem);
-+	get_device(&bus->dev);
- 
- 	ret = pcibios_add_device(dev);
- 	WARN_ON(ret < 0);
+Alex
