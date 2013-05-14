@@ -1,120 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f180.google.com ([209.85.214.180]:36156 "EHLO
-	mail-ob0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751875Ab3EHWcw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 May 2013 18:32:52 -0400
-Received: by mail-ob0-f180.google.com with SMTP id xk17so138266obc.25
-        for <linux-pci@vger.kernel.org>; Wed, 08 May 2013 15:32:52 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <517FAB9B.6010005@cn.fujitsu.com>
-References: <516FB647.5030203@cn.fujitsu.com> <CAErSpo65ARR_fZwsGCZDJqbPWktHYUkufgPt-2mWwur=nPR1Qg@mail.gmail.com>
- <517FAB9B.6010005@cn.fujitsu.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 8 May 2013 15:32:31 -0700
-Message-ID: <CAErSpo6fWtH3uUtyF+DedZH-SB6k5+2_=NwqMW_0kZ4vTxDC-Q@mail.gmail.com>
-Subject: Re: [PATCH v2 4/4] PCI: Check if the pci device get removed from pci
- tree already in remove_callback()
-To: Gu Zheng <guz.fnst@cn.fujitsu.com>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	tangchen <tangchen@cn.fujitsu.com>,
-	Lin Feng <linfeng@cn.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail-pa0-f54.google.com ([209.85.220.54]:64456 "EHLO
+	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757610Ab3ENQw7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 May 2013 12:52:59 -0400
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Michal Simek <monstr@monstr.eu>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Hiroo MATSUMOTO <matsumoto.hiroo@jp.fujitsu.com>,
+	microblaze-uclinux@itee.uq.edu.au
+Subject: [RFC PATCH v2, part 2 07/18] PCI, Microblaze: use hotplug-safe iterators to walk PCI buses
+Date: Wed, 15 May 2013 00:51:51 +0800
+Message-Id: <1368550322-1045-7-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1368550322-1045-1-git-send-email-jiang.liu@huawei.com>
+References: <1368550322-1045-1-git-send-email-jiang.liu@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 30, 2013 at 4:31 AM, Gu Zheng <guz.fnst@cn.fujitsu.com> wrote:
-> From a870da3615988f53a8949e5f8c907b079162067b Mon Sep 17 00:00:00 2001
-> From: Gu Zheng <guz.fnst@cn.fujitsu.com>
-> Date: Tue, 30 Apr 2013 18:45:12 +0800
-> Subject: [PATCH v2 4/4] PCI: Check if the pci device get removed from pci tree already in remove_callback
-> We found nested removing through:
->         echo -n 1 > /sys/bus/pci/devices/0000\:10\:00.0/remove ; echo -n 1 >
-> /sys/bus/pci/devices/0000\:1a\:01.0/remove
->
-> will cause kernel crash as bus get freed.
->
-> [  418.946462] CPU 4
-> [  418.968377] Pid: 512, comm: kworker/u:2 Tainted: G        W    3.8.0 #2
-> FUJITSU-SV PRIMEQUEST 1800E/SB
-> [  419.081763] RIP: 0010:[<ffffffff8137972e>]  [<ffffffff8137972e>]
-> pci_bus_read_config_word+0x5e/0x90
-> [  420.494137] Call Trace:
-> [  420.523326]  [<ffffffff813851ef>] ? remove_callback+0x1f/0x40
-> [  420.591984]  [<ffffffff8138044b>] pci_pme_active+0x4b/0x1c0
-> [  420.658545]  [<ffffffff8137d8e7>] pci_stop_bus_device+0x57/0xb0
-> [  420.729259]  [<ffffffff8137dab6>] pci_stop_and_remove_bus_device+0x16/0x30
-> [  420.811392]  [<ffffffff813851fb>] remove_callback+0x2b/0x40
-> [  420.877955]  [<ffffffff81257a56>] sysfs_schedule_callback_work+0x26/0x70
->
-> https://bugzilla.kernel.org/show_bug.cgi?id=54411
->
-> We have one patch that will let device hold bus ref to prevent it from
-> being freed, but that will still generate warning.
->
-> ------------[ cut here ]------------
-> WARNING: at lib/list_debug.c:53 __list_del_entry+0x63/0xd0()
-> Hardware name: PRIMEQUEST 1800E
-> list_del corruption, ffff8807d1b6c000->next is LIST_POISON1 (dead000000100100)
-> Call Trace:
->  [<ffffffff81056d4f>] warn_slowpath_common+0x7f/0xc0
->  [<ffffffff81056e46>] warn_slowpath_fmt+0x46/0x50
->  [<ffffffff81280b13>] __list_del_entry+0x63/0xd0
->  [<ffffffff81280b91>] list_del+0x11/0x40
->  [<ffffffff81298331>] pci_destroy_dev+0x31/0xc0
->  [<ffffffff812985bb>] pci_remove_bus_device+0x5b/0x70
->  [<ffffffff812985ee>] pci_stop_and_remove_bus_device+0x1e/0x30
->  [<ffffffff8129fc89>] remove_callback+0x29/0x40
->  [<ffffffff811f3b84>] sysfs_schedule_callback_work+0x24/0x70
->
-> We can just check if the device get removed from pci tree
-> already in the protection under pci_remove_rescan_mutex.
->
->
-> Signed-off-by: Gu Zheng <guz.fnst@cn.fujitsu.com>
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> ---
->  drivers/pci/pci-sysfs.c |   13 ++++++++++---
->  1 files changed, 10 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-> index 5b4a9d9..18590c1 100644
-> --- a/drivers/pci/pci-sysfs.c
-> +++ b/drivers/pci/pci-sysfs.c
-> @@ -328,10 +328,17 @@ dev_rescan_store(struct device *dev, struct device_attribute *attr,
->
->  static void remove_callback(struct device *dev)
->  {
-> -       struct pci_dev *pdev = to_pci_dev(dev);
-> -
-> +       struct pci_dev *pdev = to_pci_dev(dev), *tmp;
-> +       bool found = false;
-> +       struct pci_bus *bus = pdev->bus;
->         mutex_lock(&pci_remove_rescan_mutex);
-> -       pci_stop_and_remove_bus_device(pdev);
-> +       list_for_each_entry(tmp, &bus->devices, bus_list)
-> +               if (tmp == pdev) {
-> +                       found = true;
-> +                       break;
-> +               }
-> +       if (found)
-> +               pci_stop_and_remove_bus_device(pdev);
+Enhance Microblaze architecture specific code to use hotplug-safe
+iterators to walk PCI buses.
 
-I assume this series won't be needed when we eventually get the
-reference counting sorted out, because we shouldn't have to check
-whether the device still exists.  Yinghai posted a
-"fix_racing_removing_5.patch", which currently doesn't apply cleanly,
-but I assume he'll refresh it after v3.10-rc1 is out.
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Cc: Michal Simek <monstr@monstr.eu>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Grant Likely <grant.likely@secretlab.ca>
+Cc: Hiroo MATSUMOTO <matsumoto.hiroo@jp.fujitsu.com>
+Cc: microblaze-uclinux@itee.uq.edu.au
+Cc: linux-kernel@vger.kernel.org
+---
+ arch/microblaze/pci/pci-common.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Bjorn
+diff --git a/arch/microblaze/pci/pci-common.c b/arch/microblaze/pci/pci-common.c
+index 9ea521e..14bd8e1 100644
+--- a/arch/microblaze/pci/pci-common.c
++++ b/arch/microblaze/pci/pci-common.c
+@@ -1318,7 +1318,7 @@ void __init pcibios_resource_survey(void)
+ 	/* Allocate and assign resources. If we re-assign everything, then
+ 	 * we skip the allocate phase
+ 	 */
+-	list_for_each_entry(b, &pci_root_buses, node)
++	for_each_pci_root_bus(b)
+ 		pcibios_allocate_bus_resources(b);
+ 
+ 	pcibios_allocate_resources(0);
+@@ -1328,7 +1328,7 @@ void __init pcibios_resource_survey(void)
+ 	 * the low IO area and the VGA memory area if they intersect the
+ 	 * bus available resources to avoid allocating things on top of them
+ 	 */
+-	list_for_each_entry(b, &pci_root_buses, node)
++	for_each_pci_root_bus(b)
+ 		pcibios_reserve_legacy_regions(b);
+ 
+ 	/* Now proceed to assigning things that were left unassigned */
+-- 
+1.8.1.2
 
->         mutex_unlock(&pci_remove_rescan_mutex);
->  }
->
-> --
-> 1.7.7
->
