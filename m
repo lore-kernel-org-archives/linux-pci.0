@@ -1,47 +1,131 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qa0-f48.google.com ([209.85.216.48]:56039 "EHLO
-	mail-qa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752673Ab3ETM2k (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 20 May 2013 08:28:40 -0400
+Received: from szxga01-in.huawei.com ([119.145.14.64]:13038 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751788Ab3ENDVA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 13 May 2013 23:21:00 -0400
+Message-ID: <5191AD65.7090105@huawei.com>
+Date: Tue, 14 May 2013 11:20:05 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <20130515091248.00002fe3@unknown>
-References: <1368586102-17661-1-git-send-email-yinghai@kernel.org>
-	<20130515091248.00002fe3@unknown>
-Date: Mon, 20 May 2013 15:28:39 +0300
-Message-ID: <CAJZOPZ+L1QJdHePd_x9RAoqZKyJAKHo+hA8T1UZoe8=ozT98RA@mail.gmail.com>
-Subject: Re: [PATCH v2 6/7] PCI: Make sure VF's driver get attached after PF's
-From: Or Gerlitz <or.gerlitz@gmail.com>
-To: Greg Rose <gregory.v.rose@intel.com>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Alexander Duyck <alexander.h.duyck@intel.com>,
-	Yan Burman <yanb@mellanox.com>,
-	Sathya Perla <Sathya.Perla@emulex.com>, netdev@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: Yinghai Lu <yinghai@kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 2/7] PCI: move resources and bus_list releasing to pci_release_dev
+References: <1368498506-25857-1-git-send-email-yinghai@kernel.org> <1368498506-25857-3-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1368498506-25857-3-git-send-email-yinghai@kernel.org>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 15, 2013 at 7:12 PM, Greg Rose <gregory.v.rose@intel.com> wrote:
+On 2013/5/14 10:28, Yinghai Lu wrote:
+> We should not release resource in pci_destroy that is too early
+
+Hi Yinghai,
+   "too early" means that after pci_stop_dev(), if someone else
+hold the device reference, it still care the device resource ? e.g.?
+
+Thanks!
+Yijing.
+
+> as there could be still other use hold reference.
+> 
+> release them or remove it from bus devices list at last
+> in pci_release_dev instead.
+> 
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> 
+> ---
+>  drivers/pci/probe.c  |   20 ++++++++++++++++++++
+>  drivers/pci/remove.c |   19 -------------------
+>  2 files changed, 20 insertions(+), 19 deletions(-)
+> 
+> Index: linux-2.6/drivers/pci/probe.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/pci/probe.c
+> +++ linux-2.6/drivers/pci/probe.c
+> @@ -1118,6 +1118,20 @@ static void pci_release_capabilities(str
+>  	pci_free_cap_save_buffers(dev);
+>  }
+>  
+> +static void pci_free_resources(struct pci_dev *dev)
+> +{
+> +	int i;
+> +
+> +	msi_remove_pci_irq_vectors(dev);
+> +
+> +	pci_cleanup_rom(dev);
+> +	for (i = 0; i < PCI_NUM_RESOURCES; i++) {
+> +		struct resource *res = dev->resource + i;
+> +		if (res->parent)
+> +			release_resource(res);
+> +	}
+> +}
+> +
+>  /**
+>   * pci_release_dev - free a pci device structure when all users of it are finished.
+>   * @dev: device that's been disconnected
+> @@ -1130,6 +1144,12 @@ static void pci_release_dev(struct devic
+>  	struct pci_dev *pci_dev;
+>  
+>  	pci_dev = to_pci_dev(dev);
+> +
+> +	down_write(&pci_bus_sem);
+> +	list_del(&pci_dev->bus_list);
+> +	up_write(&pci_bus_sem);
+> +	pci_free_resources(pci_dev);
+> +
+>  	pci_release_capabilities(pci_dev);
+>  	pci_release_of_node(pci_dev);
+>  	kfree(pci_dev);
+> Index: linux-2.6/drivers/pci/remove.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/pci/remove.c
+> +++ linux-2.6/drivers/pci/remove.c
+> @@ -3,20 +3,6 @@
+>  #include <linux/pci-aspm.h>
+>  #include "pci.h"
+>  
+> -static void pci_free_resources(struct pci_dev *dev)
+> -{
+> -	int i;
+> -
+> - 	msi_remove_pci_irq_vectors(dev);
+> -
+> -	pci_cleanup_rom(dev);
+> -	for (i = 0; i < PCI_NUM_RESOURCES; i++) {
+> -		struct resource *res = dev->resource + i;
+> -		if (res->parent)
+> -			release_resource(res);
+> -	}
+> -}
+> -
+>  static void pci_stop_dev(struct pci_dev *dev)
+>  {
+>  	pci_pme_active(dev, false);
+> @@ -34,11 +20,6 @@ static void pci_stop_dev(struct pci_dev
+>  
+>  static void pci_destroy_dev(struct pci_dev *dev)
+>  {
+> -	down_write(&pci_bus_sem);
+> -	list_del(&dev->bus_list);
+> -	up_write(&pci_bus_sem);
+> -
+> -	pci_free_resources(dev);
+>  	put_device(&dev->dev);
+>  }
+>  
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+> 
+> .
+> 
 
 
-> I'm really not a fan of this.  Seems to me the tail is wagging the dog
-> here.  Fix the driver to work without a PF driver being present.
+-- 
+Thanks!
+Yijing
 
-Greg, Alex,
-
-As I wrote over the V1 thread, currently we can't go and patch mlx4 to
-use the sysfs API nor defer the call from within our probe function to
-enable sriov since  this requires some firmware change to allow
-enabling SRIOV after some  resources are initialized/provisioned.
-Hence the patch suggested here or any other patch we can agree on
-which will make sure that VF probing is done only once the PF is ready
-is preferred, I think.
-
-I wasn't sure to totally follow on the argument that things need to
-work when the PF is absent in the sense there's no driver instance
-around over which the PF is probed, if you can explain little better,
-that would help.
-
-Or.
