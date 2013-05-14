@@ -1,46 +1,79 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:49959 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753852Ab3E0HMx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 May 2013 03:12:53 -0400
-Date: Mon, 27 May 2013 09:12:49 +0200
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Wei Yongjun <weiyj.lk@gmail.com>
-Cc: bhelgaas@google.com, grant.likely@linaro.org,
-	rob.herring@calxeda.com, jason@lakedaemon.net,
-	yongjun_wei@trendmicro.com.cn, linux-pci@vger.kernel.org,
-	devicetree-discuss@lists.ozlabs.org
-Subject: Re: [PATCH -next] pci: mvebu: fix return value check in
- mvebu_pcie_probe()
-Message-ID: <20130527091249.52902073@skate>
-In-Reply-To: <CAPgLHd_B-RBGTcQPeeWeJb9QVkf-RjO1WtBC0JK2KOEoBaus_Q@mail.gmail.com>
-References: <CAPgLHd_B-RBGTcQPeeWeJb9QVkf-RjO1WtBC0JK2KOEoBaus_Q@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <51926CF6.1050706@gmail.com>
+References: <1368461313-4371-1-git-send-email-jiang.liu@huawei.com>
+	<1368461313-4371-4-git-send-email-jiang.liu@huawei.com>
+	<CAE9FiQVKKKmZRQ8CcKCzU8Gqzwb5SjWYagVB2OZiRqbSWXVpiw@mail.gmail.com>
+	<5191F53E.4000305@cn.fujitsu.com>
+	<51925136.5050302@gmail.com>
+	<CAE9FiQWO-jR5y35kKiW0m6gVR54ZyRsBsdhP4BmFLSsDzCS3rA@mail.gmail.com>
+	<51926CF6.1050706@gmail.com>
+Date: Tue, 14 May 2013 11:52:51 -0700
+Message-ID: <CAE9FiQWXN_ETRFPb5oFx-6LXyuHviX3h3NXCQKjcxtv2Uma-JA@mail.gmail.com>
+Subject: Re: [PATCH v2, part 1 3/9] PCI: Convert alloc_pci_dev(void) to
+ pci_alloc_dev(bus) instead
+From: Yinghai Lu <yinghai@kernel.org>
+To: Liu Jiang <liuj97@gmail.com>
+Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Paul Mackerras <paulus@samba.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	David Airlie <airlied@linux.ie>,
+	Neela Syam Kolli <megaraidlinux@lsi.com>,
+	"James E.J. Bottomley" <jbottomley@parallels.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linuxppc-dev@lists.ozlabs.org,
+	"sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
+	Linux-Scsi <linux-scsi@vger.kernel.org>,
+	Jiang Liu <jiang.liu@huawei.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Wei Yongjun,
+On Tue, May 14, 2013 at 9:57 AM, Liu Jiang <liuj97@gmail.com> wrote:
+> On Tue 14 May 2013 11:10:33 PM CST, Yinghai Lu wrote:
+>>
+>> On Tue, May 14, 2013 at 7:59 AM, Liu Jiang <liuj97@gmail.com> wrote:
+>>>
+>>> On 05/14/2013 04:26 PM, Gu Zheng wrote:
+>>>      I suggest to use pci_release_dev() instead because it also needs to
+>>> release OF related resources.
+>>> I will update it in next version.
+>>>
+>>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+>>> index bc075a3..2ac6338 100644
+>>> --- a/drivers/pci/probe.c
+>>> +++ b/drivers/pci/probe.c
+>>> @@ -1281,7 +1281,7 @@ static struct pci_dev *pci_scan_device(struct
+>>> pci_bus
+>>> *bus
+>>>          pci_set_of_node(dev);
+>>>
+>>>          if (pci_setup_device(dev)) {
+>>> -               kfree(dev);
+>>> +               pci_release_dev(&dev->dev);
+>>>                  return NULL;
+>>
+>>
+>> no, should move pci_set_of_node calling into pci_setup_device.
+>>
+>> Yinghai
+>
+>
+> I'm not sure whether we should call pci_set_of_node() for SR-IOV devices
+> too,
+> any suggestions here?
 
-On Mon, 27 May 2013 11:38:41 +0800, Wei Yongjun wrote:
-> From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
-> 
-> In case of error, function of_clk_get_by_name() returns
-> ERR_PTR() never returns NULL. The NULL test in the return
-> value check should be replaced with IS_ERR().
-> 
-> Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+or just move down pci_set_of_node after pci_setup_device?
 
-Acked-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+anyway that is another bug.
 
-Jason, this needs to be in the mvebu/pcie branch, so I'll guess you
-would have to rebase mvebu/pcie_bridge on top of it.
-
-Thanks!
-
-Thomas
--- 
-Thomas Petazzoni, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
+Yinghai
