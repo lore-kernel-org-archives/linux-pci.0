@@ -1,63 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f46.google.com ([209.85.219.46]:56096 "EHLO
-	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757953Ab3EWRNF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 May 2013 13:13:05 -0400
-Received: by mail-oa0-f46.google.com with SMTP id h2so4757838oag.5
-        for <linux-pci@vger.kernel.org>; Thu, 23 May 2013 10:13:04 -0700 (PDT)
+Received: from szxga02-in.huawei.com ([119.145.14.65]:30044 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752548Ab3ENGDg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 May 2013 02:03:36 -0400
+Message-ID: <5191D378.8060600@huawei.com>
+Date: Tue, 14 May 2013 14:02:32 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQW==Zvwv976-xjtRFj70JWoZW94yQyM0NMTvMpR-yDG9Q@mail.gmail.com>
-References: <CAE9FiQX=h4H1gcbW=EfQo_ZtAgHGOZ2GxVxLG59C1iMH+qgH2g@mail.gmail.com>
- <1367732090.11982.38.camel@pasglop> <CAE9FiQUN3qqVmdw_EdOC-JZGc219M3tu=roOX98xns+77LJhMw@mail.gmail.com>
- <1367740336.11982.41.camel@pasglop> <51871088.4594420a.0ccc.7300SMTPIN_ADDED_BROKEN@mx.google.com>
- <CAE9FiQXGUOM_h_X5tdGbkiuZGZkiFigSLbbftx3YXybFBg6trg@mail.gmail.com>
- <518786a7.64bbec0a.58a0.1f6bSMTPIN_ADDED_BROKEN@mx.google.com>
- <CAErSpo5MJCoaof=heFM4vLxuWz8pFqsyXAC356jZ7rbRvSOt9g@mail.gmail.com>
- <CAE9FiQWsZXfkSSVFzee4-J4bUDP8DdG=y9-k2du+ek90StDvNA@mail.gmail.com>
- <CAE9FiQXw=Q9hDWMS3kx8=G0eSqo2keKh-VP3=LWZ31PfXmrAmg@mail.gmail.com>
- <519dcfbe.89e9420a.4934.488bSMTPIN_ADDED_BROKEN@mx.google.com> <CAE9FiQW==Zvwv976-xjtRFj70JWoZW94yQyM0NMTvMpR-yDG9Q@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 23 May 2013 11:12:44 -0600
-Message-ID: <CAErSpo5ASyYvRJgA3TDt7A5xtxL0sqopfAxbnJwDL=z_2hDJag@mail.gmail.com>
-Subject: Re: Resource assignment oddities
 To: Yinghai Lu <yinghai@kernel.org>
-Cc: Gavin Shan <shangw@linux.vnet.ibm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 2/7] PCI: move resources and bus_list releasing to pci_release_dev
+References: <1368498506-25857-1-git-send-email-yinghai@kernel.org> <1368498506-25857-3-git-send-email-yinghai@kernel.org> <5191AD65.7090105@huawei.com> <CAE9FiQWty+iSv3RdfesoyDZ3q15QeX4fJGFcXS8PxTCese-XzQ@mail.gmail.com>
+In-Reply-To: <CAE9FiQWty+iSv3RdfesoyDZ3q15QeX4fJGFcXS8PxTCese-XzQ@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 23, 2013 at 11:08 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Thu, May 23, 2013 at 1:13 AM, Gavin Shan <shangw@linux.vnet.ibm.com> wrote:
->> On Wed, May 22, 2013 at 01:50:35PM -0700, Yinghai Lu wrote:
->>>On Wed, May 22, 2013 at 9:59 AM, Yinghai Lu <yinghai@kernel.org> wrote:
->>>> We try must+optional as first, then if there is any ioport or mmio fail
->>>> we will stick to must only then extend must to meet optional.
->>>> but mmio range and mmio-pref could be connected each other,
->>>> so extend will fail...
->>>>
->>>> problem here, some root bus will not have ioport range, so it will always have
->>>> ioport allocation fail.
->>>>
->>>> looks like right fix for v3.9 should be as attached patch.
->>>> it will keep must+optional for mmio, if only ioport fails....
->>>
->>>looks like i missed change to realloc_head list.
->>>
->>>Ben/Shan, can you check attached v2?
->>>
+On 2013/5/14 11:56, Yinghai Lu wrote:
+> On Mon, May 13, 2013 at 8:20 PM, Yijing Wang <wangyijing@huawei.com> wrote:
+>> On 2013/5/14 10:28, Yinghai Lu wrote:
+>>> We should not release resource in pci_destroy that is too early
 >>
->> Sorry for late response. I spend lots of time to get the simulator working
->> with PCI stuff. I had a try with your patch on top of mainline (3.10.RC2).
->> Things look good except that we still see the intended the failure message
->> of failure to assign I/O ports as the attached kernel log indicates :-)
+>> Hi Yinghai,
+>>    "too early" means that after pci_stop_dev(), if someone else
+>> hold the device reference, it still care the device resource ? e.g.?
+> 
+> I don't mean that.
+> 
 >>
->
-> Good, will resend this as complete form to Bjorn for v3.10.
+>>> as there could be still other use hold reference.
+> 
+> purpose is:
+> move res releasing as late as possible. so pci_stop_and_remove_bus_device
+> could be called several times for nested removing via sys.
 
-I haven't seen anything this actually fixes yet, except that maybe it
-removes some "can't assign" messages.  That doesn't sound like v3.10
-material.
+OK, thanks for explanation.
 
-Bjorn
+Thanks!
+Yijing.
+
+> 
+> Yinghai
+> 
+> 
+
+
+-- 
+Thanks!
+Yijing
+
