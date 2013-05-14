@@ -1,48 +1,70 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Libo Chen <libo.chen@huawei.com>
-To: <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<lizefan@huawei.com>, <libo.chen@huawei.com>,
-	<gregkh@linuxfoundation.org>
-Subject: [PATCH 09/24] drivers/pci/ioapic: Convert to module_pci_driver
-Date: Mon, 27 May 2013 10:28:53 +0800
-Message-ID: <1369621733-20048-1-git-send-email-libo.chen@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:50351 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756175Ab3ENC2y (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 13 May 2013 22:28:54 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 5/7] PCI, ACPI: Don't glue ACPI dev with pci VFs
+Date: Mon, 13 May 2013 19:28:24 -0700
+Message-Id: <1368498506-25857-6-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1368498506-25857-1-git-send-email-yinghai@kernel.org>
+References: <1368498506-25857-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-use module_pci_driver instead of init/exit, make code clean.
+When sriov is enabled, VF could just start after PF in pci tree.
+like c1:00.0 will be PF, and c1:00.1 and after will be VF.
 
-Signed-off-by: Libo Chen <libo.chen@huawei.com>
+acpi do have dev with same ADR. that will make them get glued
+wrongly.
+
+Skip that if it is virtfn.
+
+Also need to set is_virtfn before pci_device_add(), as
+gluing is triggered by device_add().
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+
 ---
- drivers/pci/ioapic.c |   13 +------------
- 1 files changed, 1 insertions(+), 12 deletions(-)
+ drivers/pci/iov.c      |    6 +++---
+ drivers/pci/pci-acpi.c |    4 ++++
+ 2 files changed, 7 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/ioapic.c b/drivers/pci/ioapic.c
-index 3c6bbdd..1b90579 100644
---- a/drivers/pci/ioapic.c
-+++ b/drivers/pci/ioapic.c
-@@ -113,17 +113,6 @@ static struct pci_driver ioapic_driver = {
- 	.remove		= ioapic_remove,
- };
+Index: linux-2.6/drivers/pci/iov.c
+===================================================================
+--- linux-2.6.orig/drivers/pci/iov.c
++++ linux-2.6/drivers/pci/iov.c
+@@ -110,12 +110,12 @@ static int virtfn_add(struct pci_dev *de
+ 	if (reset)
+ 		__pci_reset_function(virtfn);
  
--static int __init ioapic_init(void)
--{
--	return pci_register_driver(&ioapic_driver);
--}
+-	pci_device_add(virtfn, virtfn->bus);
+-	mutex_unlock(&iov->dev->sriov->lock);
 -
--static void __exit ioapic_exit(void)
--{
--	pci_unregister_driver(&ioapic_driver);
--}
--
--module_init(ioapic_init);
--module_exit(ioapic_exit);
-+module_pci_driver(ioapic_driver);
+ 	virtfn->physfn = pci_dev_get(dev);
+ 	virtfn->is_virtfn = 1;
  
- MODULE_LICENSE("GPL");
--- 
-1.7.1
-
-
++	pci_device_add(virtfn, virtfn->bus);
++	mutex_unlock(&iov->dev->sriov->lock);
++
+ 	rc = pci_bus_add_device(virtfn);
+ 	sprintf(buf, "virtfn%u", id);
+ 	rc = sysfs_create_link(&dev->dev.kobj, &virtfn->dev.kobj, buf);
+Index: linux-2.6/drivers/pci/pci-acpi.c
+===================================================================
+--- linux-2.6.orig/drivers/pci/pci-acpi.c
++++ linux-2.6/drivers/pci/pci-acpi.c
+@@ -321,6 +321,10 @@ static int acpi_pci_find_device(struct d
+ 	u64	addr;
+ 
+ 	pci_dev = to_pci_dev(dev);
++	/* don't mix vf with real pci device */
++	if (pci_dev->is_virtfn)
++		return -ENODEV;
++
+ 	/* Please ref to ACPI spec for the syntax of _ADR */
+ 	addr = (PCI_SLOT(pci_dev->devfn) << 16) | PCI_FUNC(pci_dev->devfn);
+ 	*handle = acpi_get_child(DEVICE_ACPI_HANDLE(dev->parent), addr);
