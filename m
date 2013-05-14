@@ -1,38 +1,40 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Ortiz, Lance E" <lance.oritz@hp.com>
-To: Borislav Petkov <bp@alien8.de>
-CC: "Luck, Tony" <tony.luck@intel.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"lance_ortiz@hotmail.com" <lance_ortiz@hotmail.com>,
-	"jiang.liu@huawei.com" <jiang.liu@huawei.com>,
-	"rostedt@goodmis.org" <rostedt@goodmis.org>,
-	"mchehab@redhat.com" <mchehab@redhat.com>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH v3] aerdrv: Move cper_print_aer() call out of interrupt
- context
-Date: Thu, 30 May 2013 13:58:08 +0000
-Message-ID: <A961433CDFF2F640A2866803152E61F95D13A750@G9W0715.americas.hpqcorp.net>
-References: <20130529190326.24171.86905.stgit@grignak.americas.hpqcorp.net>
- <30463843.EmBn1xaq3I@vostro.rjw.lan>
- <3908561D78D1C84285E8C5FCA982C28F2DA70112@ORSMSX106.amr.corp.intel.com>
- <A961433CDFF2F640A2866803152E61F95D13A6F2@G9W0715.americas.hpqcorp.net>
- <20130530072849.GA20793@pd.tnic>
-In-Reply-To: <20130530072849.GA20793@pd.tnic>
-Content-Type: text/plain; charset="utf-8"
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Liu Jiang <liuj97@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Len Brown <lenb@kernel.org>,
+	linux-acpi@vger.kernel.org
+Subject: Re: [PATCH v2, part 1 5/9] ACPI, PCI: remove unused global list acpi_pci_roots in pci_root.c
+Date: Tue, 14 May 2013 15:01:38 +0200
+Message-ID: <6812228.aa0vVeiYvi@vostro.rjw.lan>
+In-Reply-To: <51923114.2070701@gmail.com>
+References: <1368461313-4371-1-git-send-email-jiang.liu@huawei.com> <1598495.v92I2Ljz9W@vostro.rjw.lan> <51923114.2070701@gmail.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PiBPbiBUaHUsIE1heSAzMCwgMjAxMyBhdCAwNDo1NToyMEFNICswMDAwLCBPcnRpeiwgTGFuY2Ug
-RSB3cm90ZToNCj4gPiBUaGlzIFRPRE8gaXMgYSBub3RlIGZvciBmdXR1cmUgY2xlYW4tdXAgYW5k
-IGlzIG5vdCBkaXJlY3RseSByZWxhdGVkDQo+IHRvDQo+ID50aGUgYnVnIGJlaW5nIGZpeGVkIHdp
-dGggdGhpcyBwYXRjaC4gV2hpY2ggbGVuZHMgdG8gdGhlIGFyZ3VtZW50IG9mDQo+IHdoeQ0KPiA+
-cHV0IHRoZSBUT0RPIGluIHRoaXMgcGF0Y2g/IE9wcG9ydHVuaXN0aWMuIEkgZG9u4oCZdCB0aGlu
-ayB3ZSB3YW50IHRvDQo+ID5jcmVhdGUgYSBzZXBhcmF0ZSBwYXRjaCBqdXN0IGZvciBhIFRPRE8g
-bm90ZS4NCj4gDQo+IFNvdW5kcyB0byBtZSwgdGhpcyBUT0RPIGl0ZW0gc2hvdWxkIGJlIG9uIHlv
-dXIgVE9ETyBsaXN0IC0gbm90IGluDQo+IGtlcm5lbA0KPiBzb3VyY2VzIDotKQ0KPiAtLQ0KTWFr
-ZXMgc2Vuc2UuICBJIHdpbGwgeWFuayB0aGUgVE9ETyBhbmQgcmVzdWJtaXQgdGhlIHBhdGNoLiAg
-DQoNCkxhbmNlDQoNCg==
+On Tuesday, May 14, 2013 08:41:56 PM Liu Jiang wrote:
+> On Tue 14 May 2013 07:28:45 AM CST, Rafael J. Wysocki wrote:
+> > On Tuesday, May 14, 2013 12:08:29 AM Jiang Liu wrote:
+> >> Now the global list acpi_pci_roots pci_root.c is useless, remove it.
+> >
+> > Well, are patches [1-4/9] needed for that or does it apply without them?
+> Hi Rafael,
+>        This two patches have no dependency on others.
+
+Can you please submit them separately, then?
+
+Rafael
+
+
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
