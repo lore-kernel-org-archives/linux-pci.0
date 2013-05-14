@@ -1,70 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:50351 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756175Ab3ENC2y (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 13 May 2013 22:28:54 -0400
+Received: from mail-ie0-f177.google.com ([209.85.223.177]:59264 "EHLO
+	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758152Ab3ENS7V (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 May 2013 14:59:21 -0400
+MIME-Version: 1.0
+In-Reply-To: <1368550322-1045-11-git-send-email-jiang.liu@huawei.com>
+References: <1368550322-1045-1-git-send-email-jiang.liu@huawei.com>
+	<1368550322-1045-11-git-send-email-jiang.liu@huawei.com>
+Date: Tue, 14 May 2013 11:59:20 -0700
+Message-ID: <CAE9FiQWmZ8k88LJeXHVs+G+HPK_PbFE4ADoB=uKv_fVV34vLWg@mail.gmail.com>
+Subject: Re: [RFC PATCH v2, part 2 11/18] PCI, x86: use hotplug-safe iterators
+ to walk PCI buses
 From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 5/7] PCI, ACPI: Don't glue ACPI dev with pci VFs
-Date: Mon, 13 May 2013 19:28:24 -0700
-Message-Id: <1368498506-25857-6-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1368498506-25857-1-git-send-email-yinghai@kernel.org>
-References: <1368498506-25857-1-git-send-email-yinghai@kernel.org>
+To: Jiang Liu <liuj97@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"the arch/x86 maintainers" <x86@kernel.org>,
+	Matthew Garrett <mjg@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When sriov is enabled, VF could just start after PF in pci tree.
-like c1:00.0 will be PF, and c1:00.1 and after will be VF.
+On Tue, May 14, 2013 at 9:51 AM, Jiang Liu <liuj97@gmail.com> wrote:
+> Enhance x86 architecture specific code to use hotplug-safe iterators
+> to walk PCI buses.
+>
+> In other words, replace pci_find_bus(), pci_find_next_bus() and
+> pci_root_buses with pci_bus_exists(), pci_get_bus(), pci_get_next_bus()
+> and pci_get_next_root_bus() etc.
+>
+> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+> Cc: Thomas Gleixner <tglx@linutronix.de>
+> Cc: Ingo Molnar <mingo@redhat.com>
+> Cc: "H. Peter Anvin" <hpa@zytor.com>
+> Cc: x86@kernel.org
+> Cc: Myron Stowe <myron.stowe@redhat.com>
+> Cc: Yijing Wang <wangyijing@huawei.com>
+> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> Cc: Matthew Garrett <mjg@redhat.com>
+> Cc: Yinghai Lu <yinghai@kernel.org>
+> Cc: linux-kernel@vger.kernel.org
+> ---
+>  arch/x86/pci/acpi.c   | 3 ++-
+>  arch/x86/pci/common.c | 3 ++-
+>  arch/x86/pci/i386.c   | 9 ++++-----
+>  arch/x86/pci/irq.c    | 2 +-
+>  arch/x86/pci/legacy.c | 2 +-
+>  5 files changed, 10 insertions(+), 9 deletions(-)
 
-acpi do have dev with same ADR. that will make them get glued
-wrongly.
-
-Skip that if it is virtfn.
-
-Also need to set is_virtfn before pci_device_add(), as
-gluing is triggered by device_add().
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-
----
- drivers/pci/iov.c      |    6 +++---
- drivers/pci/pci-acpi.c |    4 ++++
- 2 files changed, 7 insertions(+), 3 deletions(-)
-
-Index: linux-2.6/drivers/pci/iov.c
-===================================================================
---- linux-2.6.orig/drivers/pci/iov.c
-+++ linux-2.6/drivers/pci/iov.c
-@@ -110,12 +110,12 @@ static int virtfn_add(struct pci_dev *de
- 	if (reset)
- 		__pci_reset_function(virtfn);
- 
--	pci_device_add(virtfn, virtfn->bus);
--	mutex_unlock(&iov->dev->sriov->lock);
--
- 	virtfn->physfn = pci_dev_get(dev);
- 	virtfn->is_virtfn = 1;
- 
-+	pci_device_add(virtfn, virtfn->bus);
-+	mutex_unlock(&iov->dev->sriov->lock);
-+
- 	rc = pci_bus_add_device(virtfn);
- 	sprintf(buf, "virtfn%u", id);
- 	rc = sysfs_create_link(&dev->dev.kobj, &virtfn->dev.kobj, buf);
-Index: linux-2.6/drivers/pci/pci-acpi.c
-===================================================================
---- linux-2.6.orig/drivers/pci/pci-acpi.c
-+++ linux-2.6/drivers/pci/pci-acpi.c
-@@ -321,6 +321,10 @@ static int acpi_pci_find_device(struct d
- 	u64	addr;
- 
- 	pci_dev = to_pci_dev(dev);
-+	/* don't mix vf with real pci device */
-+	if (pci_dev->is_virtfn)
-+		return -ENODEV;
-+
- 	/* Please ref to ACPI spec for the syntax of _ADR */
- 	addr = (PCI_SLOT(pci_dev->devfn) << 16) | PCI_FUNC(pci_dev->devfn);
- 	*handle = acpi_get_child(DEVICE_ACPI_HANDLE(dev->parent), addr);
+Acked-by: Yinghai Lu <yinghai@kernel.org>
