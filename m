@@ -1,68 +1,68 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f54.google.com ([209.85.220.54]:48330 "EHLO
-	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755879Ab3E1U2X (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 May 2013 16:28:23 -0400
-Received: by mail-pa0-f54.google.com with SMTP id kx1so8410220pab.13
-        for <linux-pci@vger.kernel.org>; Tue, 28 May 2013 13:28:23 -0700 (PDT)
-Date: Tue, 28 May 2013 13:28:19 -0700
-From: Stephen Hemminger <stephen@networkplumber.org>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: iommu@lists.linux-foundation.org, dwmw2@infradead.org,
-	joro@8bytes.org, linux-pci@vger.kernel.org, ddutile@redhat.com
-Subject: Re: [PATCH v2 1/2] iommu: Quirked PCIe bridge test and search
- function
-Message-ID: <20130528132819.2f1bc333@nehalam.linuxnetplumber.net>
-In-Reply-To: <1369772124.2646.288.camel@ul30vt.home>
-References: <20130528183527.3318.5365.stgit@bling.home>
-	<20130528184020.3318.7800.stgit@bling.home>
-	<20130528123827.2507c34e@nehalam.linuxnetplumber.net>
-	<1369770790.2646.272.camel@ul30vt.home>
-	<20130528125650.5ca5b419@nehalam.linuxnetplumber.net>
-	<1369772124.2646.288.camel@ul30vt.home>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	iommu@lists.linux-foundation.org
+Subject: [PATCH 7/7] PCI: use pf as dma_dev for vf that does not have func0 sibling
+Date: Mon, 13 May 2013 19:28:26 -0700
+Message-Id: <1368498506-25857-8-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1368498506-25857-1-git-send-email-yinghai@kernel.org>
+References: <1368498506-25857-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 28 May 2013 14:15:24 -0600
-Alex Williamson <alex.williamson@redhat.com> wrote:
+Fix crash:
+[  122.181002] pci 0000:c4:00.4: [10df:e228] type 00 class 0x020000
+[  122.188541] BUG: unable to handle kernel NULL pointer dereference at 0000000000000010
+[  122.197324] IP: [<ffffffff81f58f78>] intel_iommu_add_device+0x108/0x1e0
+[  122.204753] PGD 0 
+[  122.207019] Oops: 0000 [#1] SMP 
+[  122.210655] Modules linked in:
+[  122.214084] CPU: 49 PID: 1 Comm: swapper/0 Tainted: G          I  3.9.0-yh-09240-g8a69c01-dirty #1571
+...
+[  122.365363] Call Trace:
+[  122.368112]  [<ffffffff81f4ee2e>] iommu_bus_notifier+0x3e/0xd0
+[  122.374645]  [<ffffffff820b702e>] notifier_call_chain+0x6e/0xb0
+[  122.381277]  [<ffffffff810b912e>] __blocking_notifier_call_chain+0x5e/0x90
+[  122.388963]  [<ffffffff810b9176>] blocking_notifier_call_chain+0x16/0x20
+[  122.396471]  [<ffffffff81762fc5>] device_add+0x475/0x6f0
 
-> On Tue, 2013-05-28 at 12:56 -0700, Stephen Hemminger wrote:
-> > On Tue, 28 May 2013 13:53:10 -0600
-> > Alex Williamson <alex.williamson@redhat.com> wrote:
-> > 
-> > > On Tue, 2013-05-28 at 12:38 -0700, Stephen Hemminger wrote:
-> > > > On Tue, 28 May 2013 12:40:20 -0600
-> > > > Alex Williamson <alex.williamson@redhat.com> wrote:
-> > > > 
-> > > > > Some PCIe-to-PCI bridges are not fully compliant with the PCIe spec
-> > > > > and do not include a PCIe capability.  pci_is_pcie() is not useful on
-> > > > > these devices, making it difficult to determine where we transition
-> > > > > from a legacy PCI bus to a PCIe link.  PCI-core doesn't want a quirked
-> > > > > bridge test for fear of confusion that a PCIe capability would be
-> > > > > expected, so implement it in IOMMU code.
-> > > > > 
-> > > > > Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-> > > > 
-> > > > This won't work for me because I run without IOMMU.
-> > > > The overhead of IOMMU setup per-packet significantly impacts network performance.
-> > > 
-> > > You were one of the reporters of this issue:
-> > > 
-> > > http://www.spinics.net/lists/linux-pci/msg19579.html
-> > > 
-> > > Does this not work for you or are you saying this is not relevant to you
-> > > because you no longer attempt to enable the IOMMU?  Thanks,
-> > > 
-> > 
-> > For most usage, I gave up on using IOMMU/SR-IOV.
-> 
-> Ok, let's call that a "don't care" rather than "won't work" for the
-> purposes of these patches.  I'll take you off the CC if there's another
-> version.  Thanks,
-> 
-> Alex
-> 
+pv is c3:00.0, and vf is from c4:00.4 and there is no c4:00.0,
+as we have
+     Initial VFs: 64, Total VFs: 64, Number of VFs: 63, Function Dependency Link: 00
+     VF offset: 260, stride: 1
 
-Yes, it is a don't care. but leave me on cc, because I may still need it.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: David Woodhouse <dwmw2@infradead.org>
+Cc: iommu@lists.linux-foundation.org
+
+---
+ drivers/iommu/intel-iommu.c |   12 ++++++++----
+ 1 file changed, 8 insertions(+), 4 deletions(-)
+
+Index: linux-2.6/drivers/iommu/intel-iommu.c
+===================================================================
+--- linux-2.6.orig/drivers/iommu/intel-iommu.c
++++ linux-2.6/drivers/iommu/intel-iommu.c
+@@ -4185,11 +4185,15 @@ static int intel_iommu_add_device(struct
+ 	 * required ACS flags, add to the same group as function 0.
+ 	 */
+ 	if (dma_pdev->multifunction &&
+-	    !pci_acs_enabled(dma_pdev, REQ_ACS_FLAGS))
+-		swap_pci_ref(&dma_pdev,
+-			     pci_get_slot(dma_pdev->bus,
++	    !pci_acs_enabled(dma_pdev, REQ_ACS_FLAGS)) {
++		struct pci_dev *dev_tmp = pci_get_slot(dma_pdev->bus,
+ 					  PCI_DEVFN(PCI_SLOT(dma_pdev->devfn),
+-					  0)));
++					  0));
++
++		if (!dev_tmp && dma_pdev->is_virtfn)
++			dev_tmp = pci_dev_get(dma_pdev->physfn);
++		swap_pci_ref(&dma_pdev, dev_tmp);
++	}
+ 
+ 	/*
+ 	 * Devices on the root bus go through the iommu.  If that's not us,
