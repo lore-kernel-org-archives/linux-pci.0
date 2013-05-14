@@ -1,63 +1,45 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f53.google.com ([209.85.219.53]:36496 "EHLO
-	mail-oa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934735Ab3E1RZ2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 May 2013 13:25:28 -0400
-Received: by mail-oa0-f53.google.com with SMTP id g12so10271617oah.26
-        for <linux-pci@vger.kernel.org>; Tue, 28 May 2013 10:25:27 -0700 (PDT)
+Received: from mail-ie0-f182.google.com ([209.85.223.182]:46901 "EHLO
+	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753674Ab3ENSzR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 May 2013 14:55:17 -0400
 MIME-Version: 1.0
-In-Reply-To: <1369728202-31188-1-git-send-email-wangyijing@huawei.com>
-References: <1369728202-31188-1-git-send-email-wangyijing@huawei.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 28 May 2013 11:25:06 -0600
-Message-ID: <CAErSpo4Gw7aH0uDcnfgCGRPTvsUxerUDux84turNMYwns=F=ow@mail.gmail.com>
-Subject: Re: [PATCH] PCI: fix trivial comment for __pci_disable_link_state
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Hanjun Guo <guohanjun@huawei.com>, Jiang Liu <liuj97@gmail.com>
+In-Reply-To: <1368550322-1045-2-git-send-email-jiang.liu@huawei.com>
+References: <1368550322-1045-1-git-send-email-jiang.liu@huawei.com>
+	<1368550322-1045-2-git-send-email-jiang.liu@huawei.com>
+Date: Tue, 14 May 2013 11:55:16 -0700
+Message-ID: <CAE9FiQWoi3J=oZ6Y2DqAeorMgknBZ+LwbFXLz+hYo=GwavqU6w@mail.gmail.com>
+Subject: Re: [RFC PATCH v2, part 2 02/18] PCI, core: use hotplug-safe
+ iterators to walk PCI buses
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jiang Liu <liuj97@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Jeremy Fitzhardinge <jeremy@goop.org>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Xen Devel <xen-devel@lists.xensource.com>,
+	"virtualization@lists.linux-foundation.org"
+	<virtualization@lists.linux-foundation.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 28, 2013 at 2:03 AM, Yijing Wang <wangyijing@huawei.com> wrote:
-> Fix trivial comments for __pci_disble_link_state
+On Tue, May 14, 2013 at 9:51 AM, Jiang Liu <liuj97@gmail.com> wrote:
+> Enhance PCI core to use hotplug-safe iterators to walk PCI buses.
 >
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> ---
->  drivers/pci/pcie/aspm.c |   10 ++++++----
->  1 files changed, 6 insertions(+), 4 deletions(-)
+> In other words, replace pci_find_bus(), pci_find_next_bus() and
+> pci_root_buses with pci_bus_exists(), pci_get_bus(), pci_get_next_bus()
+> and pci_get_next_root_bus() etc.
 
-Applied (with typo fixes and expanded comment) to pci/misc for v3.11, thanks.
+good changes.
 
-> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-> index faa83b6..c7fd56b 100644
-> --- a/drivers/pci/pcie/aspm.c
-> +++ b/drivers/pci/pcie/aspm.c
-> @@ -714,10 +714,6 @@ void pcie_aspm_powersave_config_link(struct pci_dev *pdev)
->         up_read(&pci_bus_sem);
->  }
->
-> -/*
-> - * pci_disable_link_state - disable pci device's link state, so the link will
-> - * never enter specific states
-> - */
->  static void __pci_disable_link_state(struct pci_dev *pdev, int state, bool sem,
->                                      bool force)
->  {
-> @@ -771,6 +767,12 @@ void pci_disable_link_state_locked(struct pci_dev *pdev, int state)
->  }
->  EXPORT_SYMBOL(pci_disable_link_state_locked);
->
-> +/**
-> + * pci_disable_link_state - disable pci device's link state, so the link will
-> + * never enter specific states
-> + * @pdev: PCI device on the link.
-> + * @state: ASPM link state to disable
-> + */
->  void pci_disable_link_state(struct pci_dev *pdev, int state)
->  {
->         __pci_disable_link_state(pdev, state, true, false);
-> --
-> 1.7.1
->
->
+Acked-by:  Yinghai Lu <yinghai@kernel.org>
