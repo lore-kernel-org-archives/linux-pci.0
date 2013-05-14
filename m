@@ -1,37 +1,241 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Betty Dall <betty.dall@hp.com>
-To: rjw@sisk.pl, bhelgaas@google.com
-Cc: ying.huang@intel.com, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Betty Dall <betty.dall@hp.com>
-Subject: [PATCH 0/3] PCI/ACPI: Fix firmware first error recovery with root port in reset
-Date: Tue, 28 May 2013 12:48:46 -0600
-Message-Id: <1369766929-4386-1-git-send-email-betty.dall@hp.com>
+From: Jiang Liu <liuj97@gmail.com>
+To: "Rafael J . Wysocki" <rjw@sisk.pl>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Len Brown <lenb@kernel.org>,
+	linux-acpi@vger.kernel.org
+Subject: [PATCH v1 2/2] ACPI, pci_root: use acpi_handle_print() and pr_xxx() to print messages
+Date: Tue, 14 May 2013 21:00:39 +0800
+Message-Id: <1368536439-19421-2-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1368536439-19421-1-git-send-email-jiang.liu@huawei.com>
+References: <1368536439-19421-1-git-send-email-jiang.liu@huawei.com>
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch set fixes a bug on platforms that use firmware first AER.
-Firmware can leave the root port in Secondary Bus Reset (SBR) and
-communicate this to the OS through the "reset" bit in the flags field
-of the HEST table and associated CPER records. Firmware wants to do this
-so that the error is contained and the hardware is in a known state.
+Use acpi_handle_print() and pr_xxx() to print messages in pci_root.c.
 
-Without these patches, the root port stays in SBR and the device drivers
-cannot recover. These patches recognize when the firmware first root port
-is in SBR and bring the root port out of SBR so the devices under the root
-port can recover.
-
-The changes have been tested on systems with firmware first that set the
-"reset" bit by injecting various hardware errors. The errors successfully
-recover.
-
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Cc: Len Brown <lenb@kernel.org>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-acpi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 ---
-Betty Dall (3):
-  PCI/AER: Fix incorrect return from aer_hest_parse()
-  ACPI/APEI: Force fatal AER severity when bus has been reset
-  PCI/AER: Provide reset_link for firmware first root port
----
- drivers/acpi/apei/ghes.c           |   21 ++++++++++++++++++-
- drivers/pci/pcie/aer/aerdrv_acpi.c |    3 ++
- drivers/pci/pcie/aer/aerdrv_core.c |   38 ++++++++++++++++++++++++++++++++++++
- 3 files changed, 61 insertions(+), 1 deletions(-)
+ drivers/acpi/pci_root.c | 70 ++++++++++++++++++++++---------------------------
+ 1 file changed, 32 insertions(+), 38 deletions(-)
+
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index 91ddfd6..21dda5a 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -379,23 +379,24 @@ static int acpi_pci_root_add(struct acpi_device *device,
+ 	struct acpi_pci_root *root;
+ 	u32 flags, base_flags;
+ 	bool is_osc_granted = false;
++	acpi_handle handle = device->handle;
+ 
+ 	root = kzalloc(sizeof(struct acpi_pci_root), GFP_KERNEL);
+ 	if (!root)
+ 		return -ENOMEM;
+ 
+ 	segment = 0;
+-	status = acpi_evaluate_integer(device->handle, METHOD_NAME__SEG, NULL,
++	status = acpi_evaluate_integer(handle, METHOD_NAME__SEG, NULL,
+ 				       &segment);
+ 	if (ACPI_FAILURE(status) && status != AE_NOT_FOUND) {
+-		printk(KERN_ERR PREFIX "can't evaluate _SEG\n");
++		acpi_handle_err(handle, "can't evaluate _SEG\n");
+ 		result = -ENODEV;
+ 		goto end;
+ 	}
+ 
+ 	/* Check _CRS first, then _BBN.  If no _BBN, default to zero. */
+ 	root->secondary.flags = IORESOURCE_BUS;
+-	status = try_get_root_bridge_busnr(device->handle, &root->secondary);
++	status = try_get_root_bridge_busnr(handle, &root->secondary);
+ 	if (ACPI_FAILURE(status)) {
+ 		/*
+ 		 * We need both the start and end of the downstream bus range
+@@ -404,16 +405,16 @@ static int acpi_pci_root_add(struct acpi_device *device,
+ 		 * can do is assume [_BBN-0xFF] or [0-0xFF].
+ 		 */
+ 		root->secondary.end = 0xFF;
+-		printk(KERN_WARNING FW_BUG PREFIX
+-		       "no secondary bus range in _CRS\n");
+-		status = acpi_evaluate_integer(device->handle, METHOD_NAME__BBN,
++		acpi_handle_warn(handle,
++				 FW_BUG "no secondary bus range in _CRS\n");
++		status = acpi_evaluate_integer(handle, METHOD_NAME__BBN,
+ 					       NULL, &bus);
+ 		if (ACPI_SUCCESS(status))
+ 			root->secondary.start = bus;
+ 		else if (status == AE_NOT_FOUND)
+ 			root->secondary.start = 0;
+ 		else {
+-			printk(KERN_ERR PREFIX "can't evaluate _BBN\n");
++			acpi_handle_err(handle, "can't evaluate _BBN\n");
+ 			result = -ENODEV;
+ 			goto end;
+ 		}
+@@ -425,11 +426,11 @@ static int acpi_pci_root_add(struct acpi_device *device,
+ 	strcpy(acpi_device_class(device), ACPI_PCI_ROOT_CLASS);
+ 	device->driver_data = root;
+ 
+-	printk(KERN_INFO PREFIX "%s [%s] (domain %04x %pR)\n",
++	pr_info(PREFIX "%s [%s] (domain %04x %pR)\n",
+ 	       acpi_device_name(device), acpi_device_bid(device),
+ 	       root->segment, &root->secondary);
+ 
+-	root->mcfg_addr = acpi_pci_root_get_mcfg_addr(device->handle);
++	root->mcfg_addr = acpi_pci_root_get_mcfg_addr(handle);
+ 
+ 	/*
+ 	 * All supported architectures that use ACPI have support for
+@@ -473,7 +474,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
+ 		dev_info(&device->dev,
+ 			"Requesting ACPI _OSC control (0x%02x)\n", flags);
+ 
+-		status = acpi_pci_osc_control_set(device->handle, &flags,
++		status = acpi_pci_osc_control_set(handle, &flags,
+ 				       OSC_PCI_EXPRESS_CAP_STRUCTURE_CONTROL);
+ 		if (ACPI_SUCCESS(status)) {
+ 			is_osc_granted = true;
+@@ -505,9 +506,9 @@ static int acpi_pci_root_add(struct acpi_device *device,
+ 	 */
+ 	root->bus = pci_acpi_scan_root(root);
+ 	if (!root->bus) {
+-		printk(KERN_ERR PREFIX
+-			    "Bus %04x:%02x not present in PCI namespace\n",
+-			    root->segment, (unsigned int)root->secondary.start);
++		acpi_handle_err(handle,
++			"Bus %04x:%02x not present in PCI namespace\n",
++			root->segment, (unsigned int)root->secondary.start);
+ 		result = -ENODEV;
+ 		goto end;
+ 	}
+@@ -517,8 +518,8 @@ static int acpi_pci_root_add(struct acpi_device *device,
+ 		if (acpi_gbl_FADT.boot_flags & ACPI_FADT_NO_ASPM)
+ 			pcie_clear_aspm(root->bus);
+ 	} else {
+-		pr_info("ACPI _OSC control for PCIe not granted, "
+-			"disabling ASPM\n");
++		acpi_handle_info(handle,
++			"ACPI _OSC control for PCIe not granted, disabling ASPM\n");
+ 		pcie_no_aspm();
+ 	}
+ 
+@@ -571,12 +572,13 @@ static void handle_root_bridge_insertion(acpi_handle handle)
+ 	struct acpi_device *device;
+ 
+ 	if (!acpi_bus_get_device(handle, &device)) {
+-		printk(KERN_DEBUG "acpi device exists...\n");
++		acpi_handle_printk(KERN_DEBUG, handle,
++				   "acpi device exists...\n");
+ 		return;
+ 	}
+ 
+ 	if (acpi_bus_scan(handle))
+-		printk(KERN_ERR "cannot add bridge to acpi list\n");
++		acpi_handle_err(handle, "cannot add bridge to acpi list\n");
+ }
+ 
+ static void handle_root_bridge_removal(struct acpi_device *device)
+@@ -602,7 +604,6 @@ static void handle_root_bridge_removal(struct acpi_device *device)
+ static void _handle_hotplug_event_root(struct work_struct *work)
+ {
+ 	struct acpi_pci_root *root;
+-	struct acpi_buffer buffer = { ACPI_ALLOCATE_BUFFER };
+ 	struct acpi_hp_work *hp_work;
+ 	acpi_handle handle;
+ 	u32 type;
+@@ -613,13 +614,11 @@ static void _handle_hotplug_event_root(struct work_struct *work)
+ 
+ 	root = acpi_pci_find_root(handle);
+ 
+-	acpi_get_name(handle, ACPI_FULL_PATHNAME, &buffer);
+-
+ 	switch (type) {
+ 	case ACPI_NOTIFY_BUS_CHECK:
+ 		/* bus enumerate */
+-		printk(KERN_DEBUG "%s: Bus check notify on %s\n", __func__,
+-				 (char *)buffer.pointer);
++		acpi_handle_printk(KERN_DEBUG, handle,
++				   "Bus check notify on %s\n", __func__);
+ 		if (!root)
+ 			handle_root_bridge_insertion(handle);
+ 
+@@ -627,27 +626,26 @@ static void _handle_hotplug_event_root(struct work_struct *work)
+ 
+ 	case ACPI_NOTIFY_DEVICE_CHECK:
+ 		/* device check */
+-		printk(KERN_DEBUG "%s: Device check notify on %s\n", __func__,
+-				 (char *)buffer.pointer);
++		acpi_handle_printk(KERN_DEBUG, handle,
++				   "Device check notify on %s\n", __func__);
+ 		if (!root)
+ 			handle_root_bridge_insertion(handle);
+ 		break;
+ 
+ 	case ACPI_NOTIFY_EJECT_REQUEST:
+ 		/* request device eject */
+-		printk(KERN_DEBUG "%s: Device eject notify on %s\n", __func__,
+-				 (char *)buffer.pointer);
++		acpi_handle_printk(KERN_DEBUG, handle,
++				   "Device eject notify on %s\n", __func__);
+ 		if (root)
+ 			handle_root_bridge_removal(root->device);
+ 		break;
+ 	default:
+-		printk(KERN_WARNING "notify_handler: unknown event type 0x%x for %s\n",
+-				 type, (char *)buffer.pointer);
++		acpi_handle_warn(handle,
++			 "notify_handler: unknown event type 0x%x\n", type);
+ 		break;
+ 	}
+ 
+ 	kfree(hp_work); /* allocated in handle_hotplug_event_bridge */
+-	kfree(buffer.pointer);
+ }
+ 
+ static void handle_hotplug_event_root(acpi_handle handle, u32 type,
+@@ -661,9 +659,6 @@ static acpi_status __init
+ find_root_bridges(acpi_handle handle, u32 lvl, void *context, void **rv)
+ {
+ 	acpi_status status;
+-	char objname[64];
+-	struct acpi_buffer buffer = { .length = sizeof(objname),
+-				      .pointer = objname };
+ 	int *count = (int *)context;
+ 
+ 	if (!acpi_is_root_bridge(handle))
+@@ -671,16 +666,15 @@ find_root_bridges(acpi_handle handle, u32 lvl, void *context, void **rv)
+ 
+ 	(*count)++;
+ 
+-	acpi_get_name(handle, ACPI_FULL_PATHNAME, &buffer);
+-
+ 	status = acpi_install_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
+ 					handle_hotplug_event_root, NULL);
+ 	if (ACPI_FAILURE(status))
+-		printk(KERN_DEBUG "acpi root: %s notify handler is not installed, exit status: %u\n",
+-				  objname, (unsigned int)status);
++		acpi_handle_printk(KERN_DEBUG, handle,
++			"notify handler is not installed, exit status: %u\n",
++			 (unsigned int)status);
+ 	else
+-		printk(KERN_DEBUG "acpi root: %s notify handler is installed\n",
+-				 objname);
++		acpi_handle_printk(KERN_DEBUG, handle,
++				   "notify handler is installed\n");
+ 
+ 	return AE_OK;
+ }
+-- 
+1.8.1.2
+
