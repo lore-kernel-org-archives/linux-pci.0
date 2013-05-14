@@ -1,76 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ia0-f179.google.com ([209.85.210.179]:47653 "EHLO
-	mail-ia0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751925Ab3EHDmn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 May 2013 23:42:43 -0400
-Received: by mail-ia0-f179.google.com with SMTP id g4so1468673iae.38
-        for <linux-pci@vger.kernel.org>; Tue, 07 May 2013 20:42:43 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <5189c22b.45f7440a.0a88.6b75SMTPIN_ADDED_BROKEN@mx.google.com>
-References: <1367732090.11982.38.camel@pasglop>
-	<CAE9FiQUN3qqVmdw_EdOC-JZGc219M3tu=roOX98xns+77LJhMw@mail.gmail.com>
-	<1367740336.11982.41.camel@pasglop>
-	<51871088.4594420a.0ccc.7300SMTPIN_ADDED_BROKEN@mx.google.com>
-	<CAE9FiQXGUOM_h_X5tdGbkiuZGZkiFigSLbbftx3YXybFBg6trg@mail.gmail.com>
-	<1367837311.15842.31.camel@pasglop>
-	<CAE9FiQU=ZEfvVKeQgVOa0jeG5smJrKRaeLTOckR=v2vzTyTvLw@mail.gmail.com>
-	<5188b791.a110420a.0bea.077eSMTPIN_ADDED_BROKEN@mx.google.com>
-	<CAE9FiQUc2q0GfVumVrp3_ba0q6N_a_WxjKhMWbyqbLfO=WGaFQ@mail.gmail.com>
-	<5189c22b.45f7440a.0a88.6b75SMTPIN_ADDED_BROKEN@mx.google.com>
-Date: Tue, 7 May 2013 20:42:42 -0700
-Message-ID: <CAE9FiQXok7_0x9hSVBxK7w1s=w6k72vVT5ST46Lqamr0DToT6g@mail.gmail.com>
-Subject: Re: Resource assignment oddities
+Received: from userp1040.oracle.com ([156.151.31.81]:50332 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756148Ab3ENC2v (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 13 May 2013 22:28:51 -0400
 From: Yinghai Lu <yinghai@kernel.org>
-To: Gavin Shan <shangw@linux.vnet.ibm.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 0/7] PCI: fix pci dev add and remove sequence
+Date: Mon, 13 May 2013 19:28:19 -0700
+Message-Id: <1368498506-25857-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 7, 2013 at 8:10 PM, Gavin Shan <shangw@linux.vnet.ibm.com> wrote:
-> On Wed, May 08, 2013 at 10:38:00AM +0800, Gavin Shan wrote:
->>On Tue, May 07, 2013 at 03:21:42PM -0700, Yinghai Lu wrote:
->>>On Tue, May 7, 2013 at 1:11 AM, Gavin Shan <shangw@linux.vnet.ibm.com> wrote:
->>>> Yinghai, thanks for the updated patch. It's working well with (v1 #1 and v2 #2), which
->>>> was applied on top of Ben's patch sent for review. The kernel log is attached in case
->>>> you want double-check.
->>>>
->>>Yes, that works.
->>>
->>>I just sent v3, please test that.
->>>
->>>That should be less invasive for v3.10. As it will skip adding failed
->>>resource to failed list when the resource is IORESOURCE_IO, and bus
->>>does not have IORESOURCE_IO.
->>>
->>
->>Yinghai, with all patches (5) applied on top of Ben's patchset for PowerPC.
->>I still see failure to assign IO ports, which shouldn't be seen. Please
->>check the attached kernel log.
->>
->
-> After digging for more, here's what happened: pci_bridge_check_ranges() checks
-> the specific bridge supports IO ports and set IORESOURCE_IO explicitly if that's
-> the case. Then in pbus_size_io(), we always have valid IO window from that specific
-> PCI bus and the corresponding resource of the P2P bridge will be added to "realloc_head".
-> That eventually cause assignment of IO ports and it's to failure because the root
-> PCI bus doesn't have IO port range.
+The patchset is started while we try to address double remove pci
+devices via sysfs that is found by Gu.
 
-that is intentionally,
+main point is from Bjorn that add reference for bus, and he also
+pointed out that release should be done in pci_release_device.
 
-pci 0001:02:01.0: BAR 7: can't assign io (size 0x1000)
-pci 0001:02:08.0: BAR 7: can't assign io (size 0x1000)
-pci 0001:02:09.0: BAR 7: can't assign io (size 0x1000)
+After reviewing the add and remove path, found more problem that
+need to be addressed, like
+1. proc attach/detach is not balanced
+2. stop_and_remove device is not multiple calling safe.
 
-those are just print out, and then those does not get inserted to failed list.
-so it will not affect mmio-nonpref/mmio-pref allocation.
+Also found sriov VFs add path has problem, it call pci_bus_add_device
+to early, and it will make VF's driver get probed before PF's driver
+probing is done. That will also have nested lock problem.
 
-that will make sure all related bridge io port BAR get disabled for sure.
-
-except those print out, do you find any function that does not work?
+Please consider those patches to be 3.10 materials.
 
 Thanks
 
 Yinghai
+
+  PCI: move back pci_proc_attach_devices calling
+  PCI: move resources and bus_list releasing to pci_release_dev
+  PCI: Detach driver in pci_stop_device
+  PCI: Fix racing for pci device removing via sysfs
+  PCI, ACPI: Don't glue ACPI dev with pci VFs
+  PCI: Make sure VF's driver get attached after PF's
+  PCI: use pf as dma_dev for vf that does not have func0 sibling
