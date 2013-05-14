@@ -1,42 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:45665 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965039Ab3E2JDI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 May 2013 05:03:08 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, Hanjun Guo <guohanjun@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH] PCI: fix trivial typo for PCI_EXP_LNKCAP_CLKPM
-Date: Wed, 29 May 2013 17:01:52 +0800
-Message-ID: <1369818112-33136-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-da0-f51.google.com ([209.85.210.51]:56151 "EHLO
+	mail-da0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758213Ab3ENQxg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 May 2013 12:53:36 -0400
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Mauro Carvalho Chehab <mchehab@redhat.com>,
+	Doug Thompson <dougthompson@xmission.com>,
+	linux-edac@vger.kernel.org
+Subject: [RFC PATCH v2, part 2 14/18] PCI, EDAC: use hotplug-safe PCI bus iterators to walk PCI buses
+Date: Wed, 15 May 2013 00:51:58 +0800
+Message-Id: <1368550322-1045-14-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1368550322-1045-1-git-send-email-jiang.liu@huawei.com>
+References: <1368550322-1045-1-git-send-email-jiang.liu@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Fix trivial typo for PCI_EXP_LNKCAP_CLKPM comment.
+Enhance EDAC drviers to use hotplug-safe iterators to walk PCI buses.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Cc: Mauro Carvalho Chehab <mchehab@redhat.com>
+Cc: Doug Thompson <dougthompson@xmission.com>
+Cc: linux-edac@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 ---
- include/uapi/linux/pci_regs.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/edac/i7core_edac.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-index 864e324..c3cc01d 100644
---- a/include/uapi/linux/pci_regs.h
-+++ b/include/uapi/linux/pci_regs.h
-@@ -468,7 +468,7 @@
- #define  PCI_EXP_LNKCAP_ASPMS	0x00000c00 /* ASPM Support */
- #define  PCI_EXP_LNKCAP_L0SEL	0x00007000 /* L0s Exit Latency */
- #define  PCI_EXP_LNKCAP_L1EL	0x00038000 /* L1 Exit Latency */
--#define  PCI_EXP_LNKCAP_CLKPM	0x00040000 /* L1 Clock Power Management */
-+#define  PCI_EXP_LNKCAP_CLKPM	0x00040000 /* Clock Power Management */
- #define  PCI_EXP_LNKCAP_SDERC	0x00080000 /* Surprise Down Error Reporting Capable */
- #define  PCI_EXP_LNKCAP_DLLLARC	0x00100000 /* Data Link Layer Link Active Reporting Capable */
- #define  PCI_EXP_LNKCAP_LBNC	0x00200000 /* Link Bandwidth Notification Capability */
+diff --git a/drivers/edac/i7core_edac.c b/drivers/edac/i7core_edac.c
+index 0ec3e95..39d5823 100644
+--- a/drivers/edac/i7core_edac.c
++++ b/drivers/edac/i7core_edac.c
+@@ -1296,7 +1296,7 @@ static unsigned i7core_pci_lastbus(void)
+ 	int last_bus = 0, bus;
+ 	struct pci_bus *b = NULL;
+ 
+-	while ((b = pci_find_next_bus(b)) != NULL) {
++	for_each_pci_root_bus(b)
+ 		bus = b->number;
+ 		edac_dbg(0, "Found bus %d\n", bus);
+ 		if (bus > last_bus)
 -- 
-1.7.1
-
+1.8.1.2
 
