@@ -1,73 +1,105 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate03.nvidia.com ([216.228.121.140]:17659 "EHLO
-	hqemgate03.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753519Ab3EHK72 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 May 2013 06:59:28 -0400
-From: Jay Agarwal <jagarwal@nvidia.com>
-To: <linux@arm.linux.org.uk>, <swarren@wwwdotorg.org>,
-	<thierry.reding@avionic-design.de>, <ldewangan@nvidia.com>,
-	<bhelgaas@google.com>, <olof@lixom.net>, <hdoyu@nvidia.com>,
-	<pgaikwad@nvidia.com>, <mturquette@linaro.org>,
-	<pdeschrijver@nvidia.com>, <linux-arm-kernel@lists.infradead.org>,
-	<linux-tegra@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>
-CC: <jtukkinen@nvidia.com>, <kthota@nvidia.com>, <jagarwal@nvidia.com>
-Subject: [PATCH 1/4] ARM: tegra30: clocks: Fix pciex clock registration
-Date: Wed, 8 May 2013 16:27:37 +0530
-Message-ID: <1368010660-31465-1-git-send-email-jagarwal@nvidia.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from aserp1040.oracle.com ([141.146.126.69]:19427 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755829Ab3ENC2t (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 13 May 2013 22:28:49 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 2/7] PCI: move resources and bus_list releasing to pci_release_dev
+Date: Mon, 13 May 2013 19:28:21 -0700
+Message-Id: <1368498506-25857-3-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1368498506-25857-1-git-send-email-yinghai@kernel.org>
+References: <1368498506-25857-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Registering pciex as peripheral clock instead of fixed clock
-as tegra_perih_reset_assert(deassert) api of this clock api 
-gives warning and ultimately does not succeed to assert(deassert).
-Patch is based on remotes/gitorious_thierryreding_linux/tegra/next
-and should be applied on top of this.
+We should not release resource in pci_destroy that is too early
+as there could be still other use hold reference.
 
-Signed-off-by: Jay Agarwal <jagarwal@nvidia.com>
+release them or remove it from bus devices list at last
+in pci_release_dev instead.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+
 ---
- drivers/clk/tegra/clk-tegra30.c |   12 ++++++------
- 1 files changed, 6 insertions(+), 6 deletions(-)
+ drivers/pci/probe.c  |   20 ++++++++++++++++++++
+ drivers/pci/remove.c |   19 -------------------
+ 2 files changed, 20 insertions(+), 19 deletions(-)
 
-diff --git a/drivers/clk/tegra/clk-tegra30.c b/drivers/clk/tegra/clk-tegra30.c
-index ba6f51b..6a80b40 100644
---- a/drivers/clk/tegra/clk-tegra30.c
-+++ b/drivers/clk/tegra/clk-tegra30.c
-@@ -1592,6 +1592,12 @@ static void __init tegra30_periph_clk_init(void)
- 	clk_register_clkdev(clk, "afi", "tegra-pcie");
- 	clks[afi] = clk;
- 
-+	/* pciex */
-+	clk = tegra_clk_register_periph_gate("pciex", "pll_e", 0, clk_base, 0,
-+				    74, &periph_u_regs, periph_clk_enb_refcnt);
-+	clk_register_clkdev(clk, "pciex", NULL);
-+	clks[pciex] = clk;
-+
- 	/* kfuse */
- 	clk = tegra_clk_register_periph_gate("kfuse", "clk_m",
- 				    TEGRA_PERIPH_ON_APB,
-@@ -1710,11 +1716,6 @@ static void __init tegra30_fixed_clk_init(void)
- 				1, 0, &cml_lock);
- 	clk_register_clkdev(clk, "cml1", NULL);
- 	clks[cml1] = clk;
--
--	/* pciex */
--	clk = clk_register_fixed_rate(NULL, "pciex", "pll_e", 0, 100000000);
--	clk_register_clkdev(clk, "pciex", NULL);
--	clks[pciex] = clk;
+Index: linux-2.6/drivers/pci/probe.c
+===================================================================
+--- linux-2.6.orig/drivers/pci/probe.c
++++ linux-2.6/drivers/pci/probe.c
+@@ -1118,6 +1118,20 @@ static void pci_release_capabilities(str
+ 	pci_free_cap_save_buffers(dev);
  }
  
- static void __init tegra30_osc_clk_init(void)
-@@ -1930,7 +1931,6 @@ static struct tegra_clk_duplicate tegra_clk_duplicates[] = {
- 	TEGRA_CLK_DUPLICATE(bsea, "nvavp", "bsea"),
- 	TEGRA_CLK_DUPLICATE(cml1, "tegra_sata_cml", NULL),
- 	TEGRA_CLK_DUPLICATE(cml0, "tegra_pcie", "cml"),
--	TEGRA_CLK_DUPLICATE(pciex, "tegra_pcie", "pciex"),
- 	TEGRA_CLK_DUPLICATE(vcp, "nvavp", "vcp"),
- 	TEGRA_CLK_DUPLICATE(clk_max, NULL, NULL), /* MUST be the last entry */
- };
--- 
-1.7.0.4
-
++static void pci_free_resources(struct pci_dev *dev)
++{
++	int i;
++
++	msi_remove_pci_irq_vectors(dev);
++
++	pci_cleanup_rom(dev);
++	for (i = 0; i < PCI_NUM_RESOURCES; i++) {
++		struct resource *res = dev->resource + i;
++		if (res->parent)
++			release_resource(res);
++	}
++}
++
+ /**
+  * pci_release_dev - free a pci device structure when all users of it are finished.
+  * @dev: device that's been disconnected
+@@ -1130,6 +1144,12 @@ static void pci_release_dev(struct devic
+ 	struct pci_dev *pci_dev;
+ 
+ 	pci_dev = to_pci_dev(dev);
++
++	down_write(&pci_bus_sem);
++	list_del(&pci_dev->bus_list);
++	up_write(&pci_bus_sem);
++	pci_free_resources(pci_dev);
++
+ 	pci_release_capabilities(pci_dev);
+ 	pci_release_of_node(pci_dev);
+ 	kfree(pci_dev);
+Index: linux-2.6/drivers/pci/remove.c
+===================================================================
+--- linux-2.6.orig/drivers/pci/remove.c
++++ linux-2.6/drivers/pci/remove.c
+@@ -3,20 +3,6 @@
+ #include <linux/pci-aspm.h>
+ #include "pci.h"
+ 
+-static void pci_free_resources(struct pci_dev *dev)
+-{
+-	int i;
+-
+- 	msi_remove_pci_irq_vectors(dev);
+-
+-	pci_cleanup_rom(dev);
+-	for (i = 0; i < PCI_NUM_RESOURCES; i++) {
+-		struct resource *res = dev->resource + i;
+-		if (res->parent)
+-			release_resource(res);
+-	}
+-}
+-
+ static void pci_stop_dev(struct pci_dev *dev)
+ {
+ 	pci_pme_active(dev, false);
+@@ -34,11 +20,6 @@ static void pci_stop_dev(struct pci_dev
+ 
+ static void pci_destroy_dev(struct pci_dev *dev)
+ {
+-	down_write(&pci_bus_sem);
+-	list_del(&dev->bus_list);
+-	up_write(&pci_bus_sem);
+-
+-	pci_free_resources(dev);
+ 	put_device(&dev->dev);
+ }
+ 
