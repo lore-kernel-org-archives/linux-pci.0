@@ -1,46 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ia0-f170.google.com ([209.85.210.170]:51528 "EHLO
-	mail-ia0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756026Ab3ETXTS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 20 May 2013 19:19:18 -0400
-Received: by mail-ia0-f170.google.com with SMTP id l29so8248659iag.15
-        for <linux-pci@vger.kernel.org>; Mon, 20 May 2013 16:19:18 -0700 (PDT)
-Subject: [PATCH 2/2] sparc/PCI: Use PCI_UNKNOWN for unknown power state
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Paul Mackerras <paulus@samba.org>,
-	"David S. Miller" <davem@davemloft.net>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: sparclinux@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
-Date: Mon, 20 May 2013 17:19:16 -0600
-Message-ID: <20130520231916.32416.7318.stgit@bhelgaas-glaptop>
-In-Reply-To: <20130520231909.32416.81752.stgit@bhelgaas-glaptop>
-References: <20130520231909.32416.81752.stgit@bhelgaas-glaptop>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from aserp1040.oracle.com ([141.146.126.69]:19443 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756159Ab3ENC2v (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 13 May 2013 22:28:51 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 3/7] PCI: Detach driver in pci_stop_device
+Date: Mon, 13 May 2013 19:28:22 -0700
+Message-Id: <1368498506-25857-4-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1368498506-25857-1-git-send-email-yinghai@kernel.org>
+References: <1368498506-25857-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Previously we initialized dev->current_state to 4 (PCI_D3cold), but I think
-we wanted PCI_UNKNOWN (5) here based on the comment and the fact that the
-generic version of this code, pci_setup_device(), uses PCI_UNKNOWN.
+Make pci_stop_dev actually detach driver only, and pci_remove_dev
+device will do device_del instead. Then also could make hostbridge
+to use device_unregister to be pair with device_register before.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Add is_removed to record if device_del is called already.
+
+So mutliple calling will not cause false removing,
+only right put_device will get device removed at last.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+
 ---
- arch/sparc/kernel/pci.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/pci/remove.c |   12 ++++++++----
+ include/linux/pci.h  |    3 ++-
+ 2 files changed, 10 insertions(+), 5 deletions(-)
 
-diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
-index baf4366..972892a 100644
---- a/arch/sparc/kernel/pci.c
-+++ b/arch/sparc/kernel/pci.c
-@@ -327,7 +327,7 @@ static struct pci_dev *of_create_pci_dev(struct pci_pbm_info *pbm,
- 	if ((dev->class >> 8) == PCI_CLASS_STORAGE_IDE)
- 		pci_set_master(dev);
+Index: linux-2.6/drivers/pci/remove.c
+===================================================================
+--- linux-2.6.orig/drivers/pci/remove.c
++++ linux-2.6/drivers/pci/remove.c
+@@ -10,7 +10,7 @@ static void pci_stop_dev(struct pci_dev
+ 	if (dev->is_added) {
+ 		pci_proc_detach_device(dev);
+ 		pci_remove_sysfs_dev_files(dev);
+-		device_del(&dev->dev);
++		device_release_driver(&dev->dev);
+ 		dev->is_added = 0;
+ 	}
  
--	dev->current_state = 4;		/* unknown power state */
-+	dev->current_state = PCI_UNKNOWN;	/* unknown power state */
- 	dev->error_state = pci_channel_io_normal;
- 	dev->dma_mask = 0xffffffff;
+@@ -20,7 +20,11 @@ static void pci_stop_dev(struct pci_dev
  
-
+ static void pci_destroy_dev(struct pci_dev *dev)
+ {
+-	put_device(&dev->dev);
++	if (!dev->is_removed) {
++		device_del(&dev->dev);
++		dev->is_removed = 1;
++		put_device(&dev->dev);
++	}
+ }
+ 
+ void pci_remove_bus(struct pci_bus *bus)
+@@ -107,7 +111,7 @@ void pci_stop_root_bus(struct pci_bus *b
+ 		pci_stop_bus_device(child);
+ 
+ 	/* stop the host bridge */
+-	device_del(&host_bridge->dev);
++	device_release_driver(&host_bridge->dev);
+ }
+ 
+ void pci_remove_root_bus(struct pci_bus *bus)
+@@ -126,5 +130,5 @@ void pci_remove_root_bus(struct pci_bus
+ 	host_bridge->bus = NULL;
+ 
+ 	/* remove the host bridge */
+-	put_device(&host_bridge->dev);
++	device_unregister(&host_bridge->dev);
+ }
+Index: linux-2.6/include/linux/pci.h
+===================================================================
+--- linux-2.6.orig/include/linux/pci.h
++++ linux-2.6/include/linux/pci.h
+@@ -307,7 +307,8 @@ struct pci_dev {
+ 	unsigned int	transparent:1;	/* Transparent PCI bridge */
+ 	unsigned int	multifunction:1;/* Part of multi-function device */
+ 	/* keep track of device state */
+-	unsigned int	is_added:1;
++	unsigned int	is_added:1;	/* driver is attached */
++	unsigned int	is_removed:1;	/* device_del is called */
+ 	unsigned int	is_busmaster:1; /* device is busmaster */
+ 	unsigned int	no_msi:1;	/* device may not use msi */
+ 	unsigned int	block_cfg_access:1;	/* config space access is blocked */
