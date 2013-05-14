@@ -1,215 +1,331 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vb0-f54.google.com ([209.85.212.54]:50724 "EHLO
-	mail-vb0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755292Ab3EXTgf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 24 May 2013 15:36:35 -0400
-Received: by mail-vb0-f54.google.com with SMTP id f13so3393501vbg.27
-        for <linux-pci@vger.kernel.org>; Fri, 24 May 2013 12:36:34 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20130509195135.16108.70845.stgit@grignak.americas.hpqcorp.net>
-References: <20130509195135.16108.70845.stgit@grignak.americas.hpqcorp.net>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 24 May 2013 13:36:14 -0600
-Message-ID: <CAErSpo4_h+yrjGTEpJ-Q=nwfcd3xi0qa0z6NQad1EQDZom8kUQ@mail.gmail.com>
-Subject: Re: [PATCH v2] aerdrv: Move cper_print_aer() call out of interrupt context
-To: Lance Ortiz <lance.ortiz@hp.com>
-Cc: "lance_ortiz@hotmail.com" <lance_ortiz@hotmail.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	Borislav Petkov <bp@alien8.de>,
-	Steven Rostedt <rostedt@goodmis.org>,
-	Mauro Carvalho Chehab <mchehab@redhat.com>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail-pa0-f49.google.com ([209.85.220.49]:46077 "EHLO
+	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751797Ab3ENQwP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 May 2013 12:52:15 -0400
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [RFC PATCH v2, part 2 01/18] PCI: introduce hotplug-safe PCI bus iterators
+Date: Wed, 15 May 2013 00:51:45 +0800
+Message-Id: <1368550322-1045-1-git-send-email-jiang.liu@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 9, 2013 at 1:51 PM, Lance Ortiz <lance.ortiz@hp.com> wrote:
-> The following warning was seen on 3.9 when a corrected PCIe error was being
-> handled by the AER subsystem.
->
-> WARNING: at .../drivers/pci/search.c:214 pci_get_dev_by_id+0x8a/0x90()
->
-> This occurred because a call to pci_get_domain_bus_and_slot() was added to
-> cper_print_pcie() to setup for the call to cper_print_aer().  The warning
-> showed up because cper_print_pcie() is called in an interrupt context and
-> pci_get* functions are not supposed to be called in that context.
->
-> The solution is to move the cper_print_aer() call out of the interrupt
-> context and into aer_recover_work_func() to avoid any warnings when calling
-> pci_get* functions.
->
-> v2 - Re-worded header text.  Removed prefix arg from cper_print_aer().
->      Added TODO message in cper_print_aer().
->
-> Signed-off-by: Lance Ortiz <lance.ortiz@hp.com>
-> Acked-by: Borislav Petkov <bp@suse.de>
-> ---
->
->  drivers/acpi/apei/cper.c               |   18 ------------------
->  drivers/acpi/apei/ghes.c               |    3 ++-
->  drivers/pci/pcie/aer/aerdrv_core.c     |    6 +++++-
->  drivers/pci/pcie/aer/aerdrv_errprint.c |   10 ++++++++--
->  include/linux/aer.h                    |    4 ++--
->  5 files changed, 17 insertions(+), 24 deletions(-)
->
-> diff --git a/drivers/acpi/apei/cper.c b/drivers/acpi/apei/cper.c
-> index 1e5d8a4..8713229 100644
-> --- a/drivers/acpi/apei/cper.c
-> +++ b/drivers/acpi/apei/cper.c
-> @@ -250,10 +250,6 @@ static const char *cper_pcie_port_type_strs[] = {
->  static void cper_print_pcie(const char *pfx, const struct cper_sec_pcie *pcie,
->                             const struct acpi_hest_generic_data *gdata)
->  {
-> -#ifdef CONFIG_ACPI_APEI_PCIEAER
-> -       struct pci_dev *dev;
-> -#endif
-> -
->         if (pcie->validation_bits & CPER_PCIE_VALID_PORT_TYPE)
->                 printk("%s""port_type: %d, %s\n", pfx, pcie->port_type,
->                        pcie->port_type < ARRAY_SIZE(cper_pcie_port_type_strs) ?
-> @@ -285,20 +281,6 @@ static void cper_print_pcie(const char *pfx, const struct cper_sec_pcie *pcie,
->                 printk(
->         "%s""bridge: secondary_status: 0x%04x, control: 0x%04x\n",
->         pfx, pcie->bridge.secondary_status, pcie->bridge.control);
-> -#ifdef CONFIG_ACPI_APEI_PCIEAER
-> -       dev = pci_get_domain_bus_and_slot(pcie->device_id.segment,
-> -                       pcie->device_id.bus, pcie->device_id.function);
-> -       if (!dev) {
-> -               pr_err("PCI AER Cannot get PCI device %04x:%02x:%02x.%d\n",
-> -                       pcie->device_id.segment, pcie->device_id.bus,
-> -                       pcie->device_id.slot, pcie->device_id.function);
-> -               return;
-> -       }
-> -       if (pcie->validation_bits & CPER_PCIE_VALID_AER_INFO)
-> -               cper_print_aer(pfx, dev, gdata->error_severity,
-> -                               (struct aer_capability_regs *) pcie->aer_info);
-> -       pci_dev_put(dev);
-> -#endif
->  }
->
->  static const char *apei_estatus_section_flag_strs[] = {
-> diff --git a/drivers/acpi/apei/ghes.c b/drivers/acpi/apei/ghes.c
-> index d668a8a..f2084b5 100644
-> --- a/drivers/acpi/apei/ghes.c
-> +++ b/drivers/acpi/apei/ghes.c
-> @@ -454,7 +454,8 @@ static void ghes_do_proc(struct ghes *ghes,
->                                 aer_severity = cper_severity_to_aer(sev);
->                                 aer_recover_queue(pcie_err->device_id.segment,
->                                                   pcie_err->device_id.bus,
-> -                                                 devfn, aer_severity);
-> +                                                 devfn, aer_severity,
-> +                                                 pcie_err->aer_info);
->                         }
->
->                 }
-> diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
-> index 564d97f..ceba124 100644
-> --- a/drivers/pci/pcie/aer/aerdrv_core.c
-> +++ b/drivers/pci/pcie/aer/aerdrv_core.c
-> @@ -582,6 +582,7 @@ struct aer_recover_entry
->         u8      devfn;
->         u16     domain;
->         int     severity;
-> +       u8      *regs;
->  };
->
->  static DEFINE_KFIFO(aer_recover_ring, struct aer_recover_entry,
-> @@ -595,7 +596,7 @@ static DEFINE_SPINLOCK(aer_recover_ring_lock);
->  static DECLARE_WORK(aer_recover_work, aer_recover_work_func);
->
->  void aer_recover_queue(int domain, unsigned int bus, unsigned int devfn,
-> -                      int severity)
-> +                      int severity, u8 *aer_regs)
->  {
->         unsigned long flags;
->         struct aer_recover_entry entry = {
-> @@ -603,6 +604,7 @@ void aer_recover_queue(int domain, unsigned int bus, unsigned int devfn,
->                 .devfn          = devfn,
->                 .domain         = domain,
->                 .severity       = severity,
-> +               .regs           = aer_regs,
->         };
->
->         spin_lock_irqsave(&aer_recover_ring_lock, flags);
-> @@ -629,6 +631,8 @@ static void aer_recover_work_func(struct work_struct *work)
->                                PCI_SLOT(entry.devfn), PCI_FUNC(entry.devfn));
->                         continue;
->                 }
-> +               cper_print_aer(pdev, entry.severity,
-> +                               (struct aer_capability_regs *)entry.regs);
+Introduce hotplug-safe PCI bus iterators as below, which hold a
+reference on the returned PCI bus object.
+bool pci_bus_exists(int domain, int busnr);
+struct pci_bus *pci_get_bus(int domain, int busnr);
+struct pci_bus *pci_get_next_bus(struct pci_bus *from);
+struct pci_bus *pci_get_next_root_bus(struct pci_bus *from);
+#define for_each_pci_bus(b) for (b = NULL; (b = pci_get_next_bus(b)); )
+#define for_each_pci_root_bus(b)  \
+		for (b = NULL; (b = pci_get_next_root_bus(b)); )
 
-I like this change a lot because pci_get_domain_bus_and_slot() is sort
-of a dubious interface to begin with, and we were using it twice in
-this path -- once in cper_print_pcie() and then again (for the exact
-same device) here in aer_recover_work_func() -- and this patch gets
-rid of the first one.
+The long-term goal is to remove hotplug-unsafe pci_find_bus(),
+pci_find_next_bus() and the global pci_root_buses list.
 
-Normally we shouldn't have to look up a pci_dev from a bus
-number/device number.  This is an exception because there's no
-connection between the life of a pci_dev in the kernel and the
-information from firmware, so there's not really a better way to do
-it.
+These new interfaces may be a littler slower than existing interfaces,
+but it should be acceptable because they are not used on hot paths.
 
->                 do_recovery(pdev, entry.severity);
->                 pci_dev_put(pdev);
->         }
-> diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c b/drivers/pci/pcie/aer/aerdrv_errprint.c
-> index 5ab1425..f277dc3 100644
-> --- a/drivers/pci/pcie/aer/aerdrv_errprint.c
-> +++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
-> @@ -220,13 +220,19 @@ int cper_severity_to_aer(int cper_severity)
->  }
->  EXPORT_SYMBOL_GPL(cper_severity_to_aer);
->
-> -void cper_print_aer(const char *prefix, struct pci_dev *dev, int cper_severity,
-> +void cper_print_aer(struct pci_dev *dev, int cper_severity,
->                     struct aer_capability_regs *aer)
->  {
->         int aer_severity, layer, agent, status_strs_size, tlp_header_valid = 0;
->         u32 status, mask;
->         const char **status_strs;
->
-> +       /*
-> +        * TODO: This function needs to be re-written so that it's output
-> +        * matches the output of aer_print_error().  Right now, the output
-> +        * is formatted very differently.
-> +        */
-> +
->         aer_severity = cper_severity_to_aer(cper_severity);
->         if (aer_severity == AER_CORRECTABLE) {
->                 status = aer->cor_status;
-> @@ -244,7 +250,7 @@ void cper_print_aer(const char *prefix, struct pci_dev *dev, int cper_severity,
->         agent = AER_GET_AGENT(aer_severity, status);
->         dev_err(&dev->dev, "aer_status: 0x%08x, aer_mask: 0x%08x\n",
->                status, mask);
-> -       cper_print_bits(prefix, status, status_strs, status_strs_size);
-> +       cper_print_bits("", status, status_strs, status_strs_size);
->         dev_err(&dev->dev, "aer_layer=%s, aer_agent=%s\n",
->                aer_error_layer[layer], aer_agent_string[agent]);
->         if (aer_severity != AER_CORRECTABLE)
-> diff --git a/include/linux/aer.h b/include/linux/aer.h
-> index ec10e1b..d8cf12b 100644
-> --- a/include/linux/aer.h
-> +++ b/include/linux/aer.h
-> @@ -49,10 +49,10 @@ static inline int pci_cleanup_aer_uncorrect_error_status(struct pci_dev *dev)
->  }
->  #endif
->
-> -extern void cper_print_aer(const char *prefix, struct pci_dev *dev,
-> +extern void cper_print_aer(struct pci_dev *dev,
->                            int cper_severity, struct aer_capability_regs *aer);
->  extern int cper_severity_to_aer(int cper_severity);
->  extern void aer_recover_queue(int domain, unsigned int bus, unsigned int devfn,
-> -                             int severity);
-> +                             int severity,  u8 *aer_regs);
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Cc: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+---
+ drivers/pci/pci.h    |   1 +
+ drivers/pci/probe.c  |   2 +-
+ drivers/pci/search.c | 159 +++++++++++++++++++++++++++++++++++++++++----------
+ include/linux/pci.h  |  23 +++++++-
+ 4 files changed, 153 insertions(+), 32 deletions(-)
 
-Can the aer_regs type be made "struct aer_capability_regs *"?  It'd be
-nice if we could avoid the casting when passing the pointer around.
-We might still need a cast in ghes_do_proc() when calling
-aer_recover_queue(), but I *think* everyplace else would be OK with
-keeping the exact type.
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 68678ed..8fe15f6 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -126,6 +126,7 @@ static inline void pci_remove_legacy_files(struct pci_bus *bus) { return; }
+ 
+ /* Lock for read/write access to pci device and bus lists */
+ extern struct rw_semaphore pci_bus_sem;
++extern struct class pcibus_class;
+ 
+ extern raw_spinlock_t pci_lock;
+ 
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index e59433a..6b77333 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -93,7 +93,7 @@ static void release_pcibus_dev(struct device *dev)
+ 	kfree(pci_bus);
+ }
+ 
+-static struct class pcibus_class = {
++struct class pcibus_class = {
+ 	.name		= "pci_bus",
+ 	.dev_release	= &release_pcibus_dev,
+ 	.dev_attrs	= pcibus_dev_attrs,
+diff --git a/drivers/pci/search.c b/drivers/pci/search.c
+index d0627fa..16ccaf8 100644
+--- a/drivers/pci/search.c
++++ b/drivers/pci/search.c
+@@ -52,20 +52,27 @@ pci_find_upstream_pcie_bridge(struct pci_dev *pdev)
+ 	return tmp;
+ }
+ 
+-static struct pci_bus *pci_do_find_bus(struct pci_bus *bus, unsigned char busnr)
++struct pci_bus_match_arg {
++	int domain;
++	int bus;
++};
++
++static int pci_match_bus(struct device *dev, const void *data)
+ {
+-	struct pci_bus* child;
+-	struct list_head *tmp;
++	struct pci_bus *bus = to_pci_bus(dev);
++	const struct pci_bus_match_arg *arg = data;
+ 
+-	if(bus->number == busnr)
+-		return bus;
++	return (pci_domain_nr(bus) == arg->domain && bus->number == arg->bus);
++}
+ 
+-	list_for_each(tmp, &bus->children) {
+-		child = pci_do_find_bus(pci_bus_b(tmp), busnr);
+-		if(child)
+-			return child;
+-	}
+-	return NULL;
++static int pci_match_next_bus(struct device *dev, const void *data)
++{
++	return 1;
++}
++
++static int pci_match_next_root_bus(struct device *dev, const void *data)
++{
++	return pci_is_root_bus(to_pci_bus(dev));
+ }
+ 
+ /**
+@@ -76,20 +83,19 @@ static struct pci_bus *pci_do_find_bus(struct pci_bus *bus, unsigned char busnr)
+  * Given a PCI bus number and domain number, the desired PCI bus is located
+  * in the global list of PCI buses.  If the bus is found, a pointer to its
+  * data structure is returned.  If no bus is found, %NULL is returned.
++ *
++ * Note: it's not hotplug safe, the returned bus may be destroyed at any time.
++ * Please use pci_get_bus() instead which holds a reference on the returned
++ * PCI bus.
+  */
+-struct pci_bus * pci_find_bus(int domain, int busnr)
++struct pci_bus *pci_find_bus(int domain, int busnr)
+ {
+-	struct pci_bus *bus = NULL;
+-	struct pci_bus *tmp_bus;
++	struct pci_bus *bus;
+ 
+-	while ((bus = pci_find_next_bus(bus)) != NULL)  {
+-		if (pci_domain_nr(bus) != domain)
+-			continue;
+-		tmp_bus = pci_do_find_bus(bus, busnr);
+-		if (tmp_bus)
+-			return tmp_bus;
+-	}
+-	return NULL;
++	bus = pci_get_bus(domain, busnr);
++	pci_bus_put(bus);
++
++	return bus;
+ }
+ 
+ /**
+@@ -100,21 +106,114 @@ struct pci_bus * pci_find_bus(int domain, int busnr)
+  * initiated by passing %NULL as the @from argument.  Otherwise if
+  * @from is not %NULL, searches continue from next device on the
+  * global list.
++ *
++ * Note: it's not hotplug safe, the returned bus may be destroyed at any time.
++ * Please use pci_get_next_root_bus() instead which holds a reference
++ * on the returned PCI root bus.
+  */
+ struct pci_bus * 
+ pci_find_next_bus(const struct pci_bus *from)
+ {
+-	struct list_head *n;
+-	struct pci_bus *b = NULL;
++	struct device *dev = from ? (struct device *)&from->dev : NULL;
++
++	dev = class_find_device(&pcibus_class, dev, NULL,
++				&pci_match_next_root_bus);
++	if (dev) {
++		put_device(dev);
++		return to_pci_bus(dev);
++	}
++
++	return NULL;
++}
++
++bool pci_bus_exists(int domain, int busnr)
++{
++	struct device *dev;
++	struct pci_bus_match_arg arg = { domain, busnr };
+ 
+ 	WARN_ON(in_interrupt());
+-	down_read(&pci_bus_sem);
+-	n = from ? from->node.next : pci_root_buses.next;
+-	if (n != &pci_root_buses)
+-		b = pci_bus_b(n);
+-	up_read(&pci_bus_sem);
+-	return b;
++	dev = class_find_device(&pcibus_class, NULL, &arg, &pci_match_bus);
++	if (dev)
++		put_device(dev);
++
++	return dev != NULL;
++}
++EXPORT_SYMBOL(pci_bus_exists);
++
++/**
++ * pci_get_bus - locate PCI bus from a given domain and bus number
++ * @domain: number of PCI domain to search
++ * @busnr: number of desired PCI bus
++ *
++ * Given a PCI bus number and domain number, the desired PCI bus is located.
++ * If the bus is found, a pointer to its data structure is returned.
++ * If no bus is found, %NULL is returned.
++ * Caller needs to release the returned bus by calling pci_bus_put().
++ */
++struct pci_bus *pci_get_bus(int domain, int busnr)
++{
++	struct device *dev;
++	struct pci_bus_match_arg arg = { domain, busnr };
++
++	WARN_ON(in_interrupt());
++	dev = class_find_device(&pcibus_class, NULL, &arg, &pci_match_bus);
++	if (dev)
++		return to_pci_bus(dev);
++
++	return NULL;
++}
++EXPORT_SYMBOL(pci_get_bus);
++
++/**
++ * pci_get_next_bus - begin or continue searching for a PCI bus
++ * @from: Previous PCI bus found, or %NULL for new search.
++ *
++ * Iterates through the list of known PCI busses. If a PCI bus is found,
++ * the reference count to the bus is incremented and a pointer to it is
++ * returned. Otherwise, %NULL is returned. A new search is initiated by
++ * passing %NULL as the @from argument. Otherwise if @from is not %NULL,
++ * searches continue from next bus on the global list. The reference count
++ * for @from is always decremented if it is not %NULL.
++ */
++struct pci_bus *pci_get_next_bus(struct pci_bus *from)
++{
++	struct device *dev = from ? &from->dev : NULL;
++
++	WARN_ON(in_interrupt());
++	dev = class_find_device(&pcibus_class, dev, NULL, &pci_match_next_bus);
++	pci_bus_put(from);
++	if (dev)
++		return to_pci_bus(dev);
++
++	return NULL;
++}
++EXPORT_SYMBOL(pci_get_next_bus);
++
++/**
++ * pci_find_next_root_bus - begin or continue searching for a PCI root bus
++ * @from: Previous PCI bus found, or %NULL for new search.
++ *
++ * Iterates through the list of known PCI root busses. If a PCI bus is found,
++ * the reference count to the root bus is incremented and a pointer to it is
++ * returned. Otherwise, %NULL is returned. A new search is initiated by
++ * passing %NULL as the @from argument. Otherwise if @from is not %NULL,
++ * searches continue from next root bus on the global list. The reference
++ * count for @from is always decremented if it is not %NULL.
++ */
++struct pci_bus *pci_get_next_root_bus(struct pci_bus *from)
++{
++	struct device *dev = from ? &from->dev : NULL;
++
++	WARN_ON(in_interrupt());
++	dev = class_find_device(&pcibus_class, dev, NULL,
++				&pci_match_next_root_bus);
++	pci_bus_put(from);
++	if (dev)
++		return to_pci_bus(dev);
++
++	return NULL;
+ }
++EXPORT_SYMBOL(pci_get_next_root_bus);
+ 
+ /**
+  * pci_get_slot - locate PCI device for a given PCI slot
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index cc4ce27..c88d4e6 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -454,6 +454,9 @@ struct pci_bus {
+ 
+ #define pci_bus_b(n)	list_entry(n, struct pci_bus, node)
+ #define to_pci_bus(n)	container_of(n, struct pci_bus, dev)
++#define for_each_pci_bus(b)	for (b = NULL; (b = pci_get_next_bus(b)); )
++#define for_each_pci_root_bus(b) \
++			for (b = NULL; (b = pci_get_next_root_bus(b)); )
+ 
+ /*
+  * Returns true if the pci bus is root (behind host-pci bridge),
+@@ -718,7 +721,6 @@ void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
+ void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
+ 			     struct pci_bus_region *region);
+ void pcibios_scan_specific_bus(int busn);
+-struct pci_bus *pci_find_bus(int domain, int busnr);
+ void pci_bus_add_devices(const struct pci_bus *bus);
+ struct pci_bus * __deprecated pci_scan_bus_parented(struct device *parent,
+ 			int bus, struct pci_ops *ops, void *sysdata);
+@@ -778,8 +780,15 @@ int pci_find_ext_capability(struct pci_dev *dev, int cap);
+ int pci_find_next_ext_capability(struct pci_dev *dev, int pos, int cap);
+ int pci_find_ht_capability(struct pci_dev *dev, int ht_cap);
+ int pci_find_next_ht_capability(struct pci_dev *dev, int pos, int ht_cap);
++
++struct pci_bus *pci_find_bus(int domain, int busnr);
+ struct pci_bus *pci_find_next_bus(const struct pci_bus *from);
+ 
++bool pci_bus_exists(int domain, int busnr);
++struct pci_bus *pci_get_bus(int domain, int busnr);
++struct pci_bus *pci_get_next_bus(struct pci_bus *from);
++struct pci_bus *pci_get_next_root_bus(struct pci_bus *from);
++
+ struct pci_dev *pci_get_device(unsigned int vendor, unsigned int device,
+ 				struct pci_dev *from);
+ struct pci_dev *pci_get_subsys(unsigned int vendor, unsigned int device,
+@@ -1429,6 +1438,18 @@ static inline void pci_unblock_cfg_access(struct pci_dev *dev)
+ static inline struct pci_bus *pci_find_next_bus(const struct pci_bus *from)
+ { return NULL; }
+ 
++static inline bool pci_bus_exists(int domain, int busnr)
++{ return false; }
++
++static inline struct pci_bus *pci_get_bus(int domain, int busnr)
++{ return NULL; }
++
++static inline struct pci_bus *pci_get_next_bus(struct pci_bus *from)
++{ return NULL; }
++
++static inline struct pci_bus *pci_get_next_root_bus(struct pci_bus *from)
++{ return NULL; }
++
+ static inline struct pci_dev *pci_get_slot(struct pci_bus *bus,
+ 						unsigned int devfn)
+ { return NULL; }
+-- 
+1.8.1.2
 
-Bjorn
