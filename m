@@ -1,246 +1,265 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cn.fujitsu.com ([222.73.24.84]:59175 "EHLO song.cn.fujitsu.com"
+Received: from cn.fujitsu.com ([222.73.24.84]:42466 "EHLO song.cn.fujitsu.com"
 	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1751362Ab3ETGht (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 20 May 2013 02:37:49 -0400
-Message-ID: <5199C433.5030902@cn.fujitsu.com>
-Date: Mon, 20 May 2013 14:35:31 +0800
+	id S1756577Ab3ENI3N (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 14 May 2013 04:29:13 -0400
+Message-ID: <5191F53E.4000305@cn.fujitsu.com>
+Date: Tue, 14 May 2013 16:26:38 +0800
 From: Gu Zheng <guz.fnst@cn.fujitsu.com>
 MIME-Version: 1.0
-To: Jiang Liu <liuj97@gmail.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Jiang Liu <jiang.liu@huawei.com>,
+To: Yinghai Lu <yinghai@kernel.org>
+CC: Jiang Liu <liuj97@gmail.com>, Bjorn Helgaas <bhelgaas@google.com>,
 	"Rafael J . Wysocki" <rjw@sisk.pl>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	Toshi Kani <toshi.kani@hp.com>,
 	Myron Stowe <myron.stowe@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2, part 1 8/9] PCI: make PCI host bridge/bus creating
- and destroying logic symmetric
-References: <1368461313-4371-1-git-send-email-jiang.liu@huawei.com> <1368461313-4371-9-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1368461313-4371-9-git-send-email-jiang.liu@huawei.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Yijing Wang <wangyijing@huawei.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Paul Mackerras <paulus@samba.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	David Airlie <airlied@linux.ie>,
+	Neela Syam Kolli <megaraidlinux@lsi.com>,
+	"James E.J. Bottomley" <JBottomley@parallels.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linuxppc-dev@lists.ozlabs.org,
+	"sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
+	Linux-Scsi <linux-scsi@vger.kernel.org>,
+	Jiang Liu <jiang.liu@huawei.com>
+Subject: Re: [PATCH v2, part 1 3/9] PCI: Convert alloc_pci_dev(void) to pci_alloc_dev(bus)
+ instead
+References: <1368461313-4371-1-git-send-email-jiang.liu@huawei.com> <1368461313-4371-4-git-send-email-jiang.liu@huawei.com> <CAE9FiQVKKKmZRQ8CcKCzU8Gqzwb5SjWYagVB2OZiRqbSWXVpiw@mail.gmail.com>
+In-Reply-To: <CAE9FiQVKKKmZRQ8CcKCzU8Gqzwb5SjWYagVB2OZiRqbSWXVpiw@mail.gmail.com>
+Content-Type: multipart/mixed;
+ boundary="------------070509020701090400080103"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+This is a multi-part message in MIME format.
+--------------070509020701090400080103
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 
-On 05/14/2013 12:08 AM, Jiang Liu wrote:
+On 05/14/2013 01:23 AM, Yinghai Lu wrote:
 
-> This patch makes PCI host bridge/bus creating and destroying logic
-> symmetric by using device_initialize()/device_add()/device_del()/put_device()
-> pairs as discussed in thread at:
-> http://comments.gmane.org/gmane.linux.kernel.pci/22073
+> On Mon, May 13, 2013 at 9:08 AM, Jiang Liu <liuj97@gmail.com> wrote:
+>> From: Gu Zheng <guz.fnst@cn.fujitsu.com>
+>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+>> index 4f0bc0a..bc075a3 100644
+>> --- a/drivers/pci/probe.c
+>> +++ b/drivers/pci/probe.c
+>> @@ -1131,6 +1131,7 @@ static void pci_release_dev(struct device *dev)
+>>         struct pci_dev *pci_dev;
+>>
+>>         pci_dev = to_pci_dev(dev);
+>> +       pci_bus_put(pci_dev->bus);
+>>         pci_release_capabilities(pci_dev);
+>>         pci_release_of_node(pci_dev);
+>>         kfree(pci_dev);
+>> @@ -1269,11 +1270,10 @@ static struct pci_dev *pci_scan_device(struct pci_bus *bus, int devfn)
+>>         if (!pci_bus_read_dev_vendor_id(bus, devfn, &l, 60*1000))
+>>                 return NULL;
+>>
+>> -       dev = alloc_pci_dev();
+>> +       dev = pci_alloc_dev(bus);
+>>         if (!dev)
+>>                 return NULL;
+>>
+>> -       dev->bus = bus;
+>>         dev->devfn = devfn;
+>>         dev->vendor = l & 0xffff;
+>>         dev->device = (l >> 16) & 0xffff;
 > 
-> It also fixes a bug in error recovery path in pci_create_root_bus()
-> which may kfree() an in-use host bridge object.
-> 
-> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-> Cc: Yinghai Lu <yinghai@kernel.org>
-> ---
->  drivers/pci/probe.c  | 84 +++++++++++++++++++++++-----------------------------
->  drivers/pci/remove.c |  3 +-
->  2 files changed, 39 insertions(+), 48 deletions(-)
-> 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index bc075a3..a2617c2 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -451,7 +451,7 @@ void pci_read_bridge_bases(struct pci_bus *child)
->  	}
->  }
->  
-> -static struct pci_bus * pci_alloc_bus(void)
-> +static struct pci_bus *pci_alloc_bus(struct pci_ops *ops, void *sd, int bus)
->  {
->  	struct pci_bus *b;
->  
-> @@ -464,10 +464,32 @@ static struct pci_bus * pci_alloc_bus(void)
->  		INIT_LIST_HEAD(&b->resources);
->  		b->max_bus_speed = PCI_SPEED_UNKNOWN;
->  		b->cur_bus_speed = PCI_SPEED_UNKNOWN;
-> +		b->sysdata = sd;
-> +		b->ops = ops;
-> +		b->number = bus;
-> +		b->busn_res.start = bus;
-> +		b->busn_res.end = 0xff;
-> +		b->busn_res.flags = IORESOURCE_BUS;
-> +		b->dev.class = &pcibus_class;
-> +		dev_set_name(&b->dev, "%04x:%02x", pci_domain_nr(b), bus);
-> +		device_initialize(&b->dev);
->  	}
-> +
->  	return b;
->  }
->  
-> +static void pci_release_host_bridge_dev(struct device *dev)
-> +{
-> +	struct pci_host_bridge *bridge = to_pci_host_bridge(dev);
-> +
-> +	if (bridge->release_fn)
-> +		bridge->release_fn(bridge);
-> +
-> +	pci_free_resource_list(&bridge->windows);
-> +
-> +	kfree(bridge);
-> +}
-> +
->  static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
->  {
->  	struct pci_host_bridge *bridge;
-> @@ -476,6 +498,10 @@ static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
->  	if (bridge) {
->  		INIT_LIST_HEAD(&bridge->windows);
->  		bridge->bus = b;
-> +		bridge->dev.release = pci_release_host_bridge_dev;
-> +		dev_set_name(&bridge->dev, "pci%04x:%02x",
-> +			     pci_domain_nr(b), b->number);
-> +		device_initialize(&bridge->dev);
->  	}
->  
->  	return bridge;
-> @@ -628,28 +654,13 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
->  	/*
->  	 * Allocate a new bus, and inherit stuff from the parent..
->  	 */
-> -	child = pci_alloc_bus();
-> +	child = pci_alloc_bus(parent->ops, parent->sysdata, busnr);
->  	if (!child)
->  		return NULL;
->  
->  	child->parent = parent;
-> -	child->ops = parent->ops;
-> -	child->sysdata = parent->sysdata;
->  	child->bus_flags = parent->bus_flags;
-> -
-> -	/* initialize some portions of the bus device, but don't register it
-> -	 * now as the parent is not properly set up yet.
-> -	 */
-> -	child->dev.class = &pcibus_class;
-> -	dev_set_name(&child->dev, "%04x:%02x", pci_domain_nr(child), busnr);
-> -
-> -	/*
-> -	 * Set up the primary, secondary and subordinate
-> -	 * bus numbers.
-> -	 */
-> -	child->number = child->busn_res.start = busnr;
->  	child->primary = parent->busn_res.start;
-> -	child->busn_res.end = 0xff;
->  
->  	if (!bridge) {
->  		child->dev.parent = parent->bridge;
-> @@ -670,7 +681,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
->  	bridge->subordinate = child;
->  
->  add_dev:
-> -	ret = device_register(&child->dev);
-> +	ret = device_add(&child->dev);
->  	WARN_ON(ret < 0);
->  
->  	pcibios_add_bus(child);
-> @@ -1190,18 +1201,6 @@ int pci_cfg_space_size(struct pci_dev *dev)
->  	return PCI_CFG_SPACE_SIZE;
->  }
->  
-> -static void pci_release_bus_bridge_dev(struct device *dev)
-> -{
-> -	struct pci_host_bridge *bridge = to_pci_host_bridge(dev);
-> -
-> -	if (bridge->release_fn)
-> -		bridge->release_fn(bridge);
-> -
-> -	pci_free_resource_list(&bridge->windows);
-> -
-> -	kfree(bridge);
-> -}
-> -
->  struct pci_dev *pci_alloc_dev(struct pci_bus *bus)
->  {
->  	struct pci_dev *dev;
-> @@ -1688,13 +1687,10 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
->  	char bus_addr[64];
->  	char *fmt;
->  
-> -	b = pci_alloc_bus();
-> +	b = pci_alloc_bus(ops, sysdata, bus);
->  	if (!b)
->  		return NULL;
->  
-> -	b->sysdata = sysdata;
-> -	b->ops = ops;
-> -	b->number = b->busn_res.start = bus;
->  	b2 = pci_find_bus(pci_domain_nr(b), bus);
->  	if (b2) {
->  		/* If we already got to this bus through a different bridge, ignore it */
-> @@ -1706,27 +1702,22 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
->  	if (!bridge)
->  		goto err_out;
->  
-> -	bridge->dev.parent = parent;
-> -	bridge->dev.release = pci_release_bus_bridge_dev;
-> -	dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
->  	error = pcibios_root_bridge_prepare(bridge);
->  	if (error)
->  		goto bridge_dev_reg_err;
->  
-> -	error = device_register(&bridge->dev);
-> +	bridge->dev.parent = parent;
-> +	error = device_add(&bridge->dev);
->  	if (error)
->  		goto bridge_dev_reg_err;
-> +
->  	b->bridge = get_device(&bridge->dev);
->  	device_enable_async_suspend(b->bridge);
->  	pci_set_bus_of_node(b);
-> -
->  	if (!parent)
->  		set_dev_node(b->bridge, pcibus_to_node(b));
-> -
-> -	b->dev.class = &pcibus_class;
->  	b->dev.parent = b->bridge;
-> -	dev_set_name(&b->dev, "%04x:%02x", pci_domain_nr(b), bus);
-> -	error = device_register(&b->dev);
-> +	error = device_add(&b->dev);
->  	if (error)
->  		goto class_dev_reg_err;
->  
-> @@ -1769,12 +1760,11 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
->  	return b;
->  
->  class_dev_reg_err:
-> -	put_device(&bridge->dev);
-> -	device_unregister(&bridge->dev);
-> +	device_del(&bridge->dev);
->  bridge_dev_reg_err:
-> -	kfree(bridge);
-> +	put_device(&bridge->dev);
->  err_out:
-> -	kfree(b);
-> +	put_device(&b->dev);
->  	return NULL;
->  }
+> in pci_setup_device() fail path, it release the ref to that bus.
 
-Hi Jiang,
-	I think the changes here may lead to memleak, doesn't it?
+Yes, you're right, we need to release the bus' ref if pci_setup_device() failed.
+Thanks for your correction.:)
 
 Best regards,
 Gu
 
->  
-> diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-> index 8fc54b7..b0ce875 100644
-> --- a/drivers/pci/remove.c
-> +++ b/drivers/pci/remove.c
-> @@ -52,7 +52,8 @@ void pci_remove_bus(struct pci_bus *bus)
->  	up_write(&pci_bus_sem);
->  	pci_remove_legacy_files(bus);
->  	pcibios_remove_bus(bus);
-> -	device_unregister(&bus->dev);
-> +	device_del(&bus->dev);
-> +	put_device(&bus->dev);
->  }
->  EXPORT_SYMBOL(pci_remove_bus);
->  
+> 
+> Yinghai
+> 
 
 
+
+--------------070509020701090400080103
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+ name="Convert-alloc_pci_dev-void-to-pci_alloc_dev-v3.patch"
+Content-Disposition: attachment;
+ filename*0="Convert-alloc_pci_dev-void-to-pci_alloc_dev-v3.patch"
+
+>From 7add6d9e70919b95be2debde2f58fc31d26c75bf Mon Sep 17 00:00:00 2001
+From: Gu Zheng <guz.fnst@cn.fujitsu.com>
+Date: Tue, 14 May 2013 16:11:07 +0800
+Subject: [PATCH v3] PCI: Convert alloc_pci_dev(void) to pci_alloc_dev(bus) instead
+
+v3:
+  Follow Yinghai's correction to release the bus' ref
+  in pci_setup_device() fail path.
+
+v2:
+  Follow Bjorn's correction to move pci_bus_put() to
+  pci_release_dev() instead.
+
+Signed-off-by: Gu Zheng <guz.fnst@cn.fujitsu.com>
+---
+ arch/powerpc/kernel/pci_of_scan.c |    3 +--
+ arch/sparc/kernel/pci.c           |    3 +--
+ drivers/char/agp/alpha-agp.c      |    2 +-
+ drivers/char/agp/parisc-agp.c     |    2 +-
+ drivers/pci/iov.c                 |    8 +++++---
+ drivers/pci/probe.c               |    5 +++--
+ drivers/scsi/megaraid.c           |    2 +-
+ 7 files changed, 13 insertions(+), 12 deletions(-)
+
+diff --git a/arch/powerpc/kernel/pci_of_scan.c b/arch/powerpc/kernel/pci_of_scan.c
+index 2a67e9b..24d01c4 100644
+--- a/arch/powerpc/kernel/pci_of_scan.c
++++ b/arch/powerpc/kernel/pci_of_scan.c
+@@ -128,7 +128,7 @@ struct pci_dev *of_create_pci_dev(struct device_node *node,
+ 	const char *type;
+ 	struct pci_slot *slot;
+ 
+-	dev = alloc_pci_dev();
++	dev = pci_alloc_dev(bus);
+ 	if (!dev)
+ 		return NULL;
+ 	type = of_get_property(node, "device_type", NULL);
+@@ -137,7 +137,6 @@ struct pci_dev *of_create_pci_dev(struct device_node *node,
+ 
+ 	pr_debug("    create device, devfn: %x, type: %s\n", devfn, type);
+ 
+-	dev->bus = bus;
+ 	dev->dev.of_node = of_node_get(node);
+ 	dev->dev.parent = bus->bridge;
+ 	dev->dev.bus = &pci_bus_type;
+diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
+index baf4366..e5871fb 100644
+--- a/arch/sparc/kernel/pci.c
++++ b/arch/sparc/kernel/pci.c
+@@ -254,7 +254,7 @@ static struct pci_dev *of_create_pci_dev(struct pci_pbm_info *pbm,
+ 	const char *type;
+ 	u32 class;
+ 
+-	dev = alloc_pci_dev();
++	dev = pci_alloc_dev(bus);
+ 	if (!dev)
+ 		return NULL;
+ 
+@@ -281,7 +281,6 @@ static struct pci_dev *of_create_pci_dev(struct pci_pbm_info *pbm,
+ 		printk("    create device, devfn: %x, type: %s\n",
+ 		       devfn, type);
+ 
+-	dev->bus = bus;
+ 	dev->sysdata = node;
+ 	dev->dev.parent = bus->bridge;
+ 	dev->dev.bus = &pci_bus_type;
+diff --git a/drivers/char/agp/alpha-agp.c b/drivers/char/agp/alpha-agp.c
+index dd84af4..199b8e9 100644
+--- a/drivers/char/agp/alpha-agp.c
++++ b/drivers/char/agp/alpha-agp.c
+@@ -174,7 +174,7 @@ alpha_core_agp_setup(void)
+ 	/*
+ 	 * Build a fake pci_dev struct
+ 	 */
+-	pdev = alloc_pci_dev();
++	pdev = pci_alloc_dev(NULL);
+ 	if (!pdev)
+ 		return -ENOMEM;
+ 	pdev->vendor = 0xffff;
+diff --git a/drivers/char/agp/parisc-agp.c b/drivers/char/agp/parisc-agp.c
+index 94821ab..bf5d247 100644
+--- a/drivers/char/agp/parisc-agp.c
++++ b/drivers/char/agp/parisc-agp.c
+@@ -333,7 +333,7 @@ parisc_agp_setup(void __iomem *ioc_hpa, void __iomem *lba_hpa)
+ 	struct agp_bridge_data *bridge;
+ 	int error = 0;
+ 
+-	fake_bridge_dev = alloc_pci_dev();
++	fake_bridge_dev = pci_alloc_dev(NULL);
+ 	if (!fake_bridge_dev) {
+ 		error = -ENOMEM;
+ 		goto fail;
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index c93071d..2652ca0 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -75,18 +75,20 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
+ 	struct pci_dev *virtfn;
+ 	struct resource *res;
+ 	struct pci_sriov *iov = dev->sriov;
++	struct pci_bus *bus;
+ 
+-	virtfn = alloc_pci_dev();
++	virtfn = pci_alloc_dev(NULL);
+ 	if (!virtfn)
+ 		return -ENOMEM;
+ 
+ 	mutex_lock(&iov->dev->sriov->lock);
+-	virtfn->bus = virtfn_add_bus(dev->bus, virtfn_bus(dev, id));
+-	if (!virtfn->bus) {
++	bus = virtfn_add_bus(dev->bus, virtfn_bus(dev, id));
++	if (!bus) {
+ 		kfree(virtfn);
+ 		mutex_unlock(&iov->dev->sriov->lock);
+ 		return -ENOMEM;
+ 	}
++	virtfn->bus = pci_bus_get(bus);
+ 	virtfn->devfn = virtfn_devfn(dev, id);
+ 	virtfn->vendor = dev->vendor;
+ 	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_DID, &virtfn->device);
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 70f10fa..db8dadc 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1130,6 +1130,7 @@ static void pci_release_dev(struct device *dev)
+ 	struct pci_dev *pci_dev;
+ 
+ 	pci_dev = to_pci_dev(dev);
++	pci_bus_put(pci_dev->bus);
+ 	pci_release_capabilities(pci_dev);
+ 	pci_release_of_node(pci_dev);
+ 	kfree(pci_dev);
+@@ -1263,11 +1264,10 @@ static struct pci_dev *pci_scan_device(struct pci_bus *bus, int devfn)
+ 	if (!pci_bus_read_dev_vendor_id(bus, devfn, &l, 60*1000))
+ 		return NULL;
+ 
+-	dev = alloc_pci_dev();
++	dev = pci_alloc_dev(bus);
+ 	if (!dev)
+ 		return NULL;
+ 
+-	dev->bus = bus;
+ 	dev->devfn = devfn;
+ 	dev->vendor = l & 0xffff;
+ 	dev->device = (l >> 16) & 0xffff;
+@@ -1275,6 +1275,7 @@ static struct pci_dev *pci_scan_device(struct pci_bus *bus, int devfn)
+ 	pci_set_of_node(dev);
+ 
+ 	if (pci_setup_device(dev)) {
++		pci_bus_put(bus);
+ 		kfree(dev);
+ 		return NULL;
+ 	}
+diff --git a/drivers/scsi/megaraid.c b/drivers/scsi/megaraid.c
+index 846f475f..90c95a3 100644
+--- a/drivers/scsi/megaraid.c
++++ b/drivers/scsi/megaraid.c
+@@ -2026,7 +2026,7 @@ megaraid_abort_and_reset(adapter_t *adapter, Scsi_Cmnd *cmd, int aor)
+ static inline int
+ make_local_pdev(adapter_t *adapter, struct pci_dev **pdev)
+ {
+-	*pdev = alloc_pci_dev();
++	*pdev = pci_alloc_dev(NULL);
+ 
+ 	if( *pdev == NULL ) return -1;
+ 
+-- 
+1.7.7
+
+
+--------------070509020701090400080103--
