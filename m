@@ -1,48 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:39010 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755651Ab3EVUpY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 22 May 2013 16:45:24 -0400
-Message-ID: <1369255489.3870.19.camel@pasglop>
-Subject: Re: Resource assignment oddities
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Date: Thu, 23 May 2013 06:44:49 +1000
-In-Reply-To: <CAErSpo45wXjnDiXiZ1qs+Z7fsEoVmAxbjhGVvtZGEUkbd4bNKg@mail.gmail.com>
-References: <1367712653.11982.19.camel@pasglop>
-	 <1367712932.11982.20.camel@pasglop>
-	 <CAE9FiQX=h4H1gcbW=EfQo_ZtAgHGOZ2GxVxLG59C1iMH+qgH2g@mail.gmail.com>
-	 <1367732090.11982.38.camel@pasglop>
-	 <CAE9FiQUN3qqVmdw_EdOC-JZGc219M3tu=roOX98xns+77LJhMw@mail.gmail.com>
-	 <1367740336.11982.41.camel@pasglop>
-	 <51871088.4594420a.0ccc.7300SMTPIN_ADDED_BROKEN@mx.google.com>
-	 <CAE9FiQXGUOM_h_X5tdGbkiuZGZkiFigSLbbftx3YXybFBg6trg@mail.gmail.com>
-	 <518786a7.64bbec0a.58a0.1f6bSMTPIN_ADDED_BROKEN@mx.google.com>
-	 <CAErSpo5MJCoaof=heFM4vLxuWz8pFqsyXAC356jZ7rbRvSOt9g@mail.gmail.com>
-	 <CAE9FiQWsZXfkSSVFzee4-J4bUDP8DdG=y9-k2du+ek90StDvNA@mail.gmail.com>
-	 <CAErSpo45wXjnDiXiZ1qs+Z7fsEoVmAxbjhGVvtZGEUkbd4bNKg@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-ia0-f171.google.com ([209.85.210.171]:36459 "EHLO
+	mail-ia0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753674Ab3ENS5Z (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 May 2013 14:57:25 -0400
+MIME-Version: 1.0
+In-Reply-To: <1368550322-1045-3-git-send-email-jiang.liu@huawei.com>
+References: <1368550322-1045-1-git-send-email-jiang.liu@huawei.com>
+	<1368550322-1045-3-git-send-email-jiang.liu@huawei.com>
+Date: Tue, 14 May 2013 11:57:24 -0700
+Message-ID: <CAE9FiQXZ+3FLfRJQUr+oRGtOoczeNS2+MZvazC77F_TxpdpHBg@mail.gmail.com>
+Subject: Re: [RFC PATCH v2, part 2 03/18] PCI, hotplug: use hotplug-safe
+ iterators to walk PCI buses
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jiang Liu <liuj97@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Jiri Kosina <jkosina@suse.cz>,
+	Masanari Iida <standby24x7@gmail.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2013-05-22 at 11:21 -0600, Bjorn Helgaas wrote:
-> > looks like right fix for v3.9 should be as attached patch.
-> > it will keep must+optional for mmio, if only ioport fails....
-> 
-> I read all that before, but it didn't answer my questions.  I assume
-> we're trying to fix a device that doesn't work.  Which device is it?
+On Tue, May 14, 2013 at 9:51 AM, Jiang Liu <liuj97@gmail.com> wrote:
+> Enhance PCI hotplug drivers to use hotplug-safe iterators to walk
+> PCI buses.
+>
+> In other words, replace pci_find_bus(), pci_find_next_bus() and
+> pci_root_buses with pci_bus_exists(), pci_get_bus(), pci_get_next_bus()
+> and pci_get_next_root_bus() etc.
+>
+> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+> Cc: Yinghai Lu <yinghai@kernel.org>
+> Cc: Jiri Kosina <jkosina@suse.cz>
+> Cc: Masanari Iida <standby24x7@gmail.com>
+> Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+> Cc: Toshi Kani <toshi.kani@hp.com>
+> Cc: linux-pci@vger.kernel.org
+> Cc: linux-kernel@vger.kernel.org
+> ---
+>  drivers/pci/hotplug-pci.c          | 2 +-
+>  drivers/pci/hotplug/ibmphp_core.c  | 8 +++++---
+>  drivers/pci/hotplug/ibmphp_ebda.c  | 8 ++++++--
+>  drivers/pci/hotplug/sgi_hotplug.c  | 3 ++-
+>  drivers/pci/hotplug/shpchp_sysfs.c | 2 +-
+>  5 files changed, 15 insertions(+), 8 deletions(-)
 
-We have MMIO assignment failures due to the "retry" but so far it hasn't
-prevented the devices I have tested from working. It does make me very
-nervous however.
-
-Gavin, do you have more details about what actually happens ?
-
-Cheers,
-Ben.
-
-
+Acked-by: Yinghai Lu <yinghai@kernel.org>
