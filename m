@@ -1,110 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wg0-f41.google.com ([74.125.82.41]:53779 "EHLO
-	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934019Ab3ECSBI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 3 May 2013 14:01:08 -0400
+Received: from mail-ie0-f178.google.com ([209.85.223.178]:34574 "EHLO
+	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755008Ab3ENT7e (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 May 2013 15:59:34 -0400
 MIME-Version: 1.0
-Reply-To: linasvepstas@gmail.com
-In-Reply-To: <1367550808.2093.14.camel@ymzhang.sh.intel.com>
-References: <F7B8FD780A346D46A0042F5C63B06AE785E3B2@SHSMSX102.ccr.corp.intel.com>
- <1367454625.2093.6.camel@ymzhang.sh.intel.com> <CAHrUA34H_B-ffebx6ueHgV1ax-PL_3hLZr1JGaP2NJZ7bYgvtw@mail.gmail.com>
- <1367541180.2093.10.camel@ymzhang.sh.intel.com> <20130503020039.GA29087@kroah.com>
- <1367550808.2093.14.camel@ymzhang.sh.intel.com>
-From: Linas Vepstas <linasvepstas@gmail.com>
-Date: Fri, 3 May 2013 13:00:46 -0500
-Message-ID: <CAHrUA34O=JEbmMSCmycNSXa1L6KXAWBCM5TfBOvzj_zSRMubHQ@mail.gmail.com>
-Subject: Re: Subject : [ PATCH ] pci-reset-error_state-to-pci_channel_io_normal-at-report_slot_reset
-To: yanmin_zhang <yanmin_zhang@linux.intel.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Zhang, LongX" <longx.zhang@intel.com>,
+In-Reply-To: <5192946F.1050700@intel.com>
+References: <1368498506-25857-1-git-send-email-yinghai@kernel.org>
+	<1368498506-25857-7-git-send-email-yinghai@kernel.org>
+	<51925FB0.4080504@intel.com>
+	<CAE9FiQXYQEAZ=0sG6+2OdffBqfLS9MpoN1xviRR9aDbxPxcKxQ@mail.gmail.com>
+	<5192946F.1050700@intel.com>
+Date: Tue, 14 May 2013 12:59:33 -0700
+Message-ID: <CAE9FiQVGGHB_amKw0-DfDifpTnRGPbxA+q3WY5F-O3x-sx386A@mail.gmail.com>
+Subject: Re: [PATCH 6/7] PCI: Make sure VF's driver get attached after PF's
+From: Yinghai Lu <yinghai@kernel.org>
+To: Alexander Duyck <alexander.h.duyck@intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Joseph.Liu@Emulex.Com" <Joseph.Liu@emulex.com>
-Content-Type: text/plain; charset=UTF-8
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	NetDev <netdev@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Greg,
+On Tue, May 14, 2013 at 12:45 PM, Alexander Duyck
+<alexander.h.duyck@intel.com> wrote:
+> On 05/14/2013 11:44 AM, Yinghai Lu wrote:
+>> On Tue, May 14, 2013 at 9:00 AM, Alexander Duyck
+>> <alexander.h.duyck@intel.com> wrote:
 
-I've been receiving (and reading!) these messages; I replied that I am
-not maintaining a tree, and have no way of testing these patches (no
-access to hardware.)  I believe it unlikely that my situation will
-change, and so I should probably be removed from the maintainers file.
+>>> I'm sorry, but what is the point of this patch?  With device assignment
+>>> it is always possible to have VFs loaded and the PF driver unloaded
+>>> since you cannot remove the VFs if they are assigned to a VM.
+>> unload PF driver will not call pci_disable_sriov?
+>
+> You cannot call pci_disable_sriov because you will panic all of the
+> guests that have devices assigned.
 
-No acked-by or anything; the patches are not "obviously correct" by
-visual inspection; they may be right, but would require deeper
-thinking about what is actually happening than I'm capable of at this
-time; I'm a bit rusty with this code base, and might miss something
-important.
+ixgbe_remove did call pci_disable_sriov...
 
--- Linas
+for guest panic, that is another problem.
+just like you pci passthrough with real pci device and hotremove the
+card in host.
 
-p.s. you didn't see my earlier reply because I forgot to hit 'plain text reply'
+...
 
+> So how does your patch actually fix this problem?  It seems like it is
+> just avoiding it.
 
-On 2 May 2013 22:13, Yanmin Zhang <yanmin_zhang@linux.intel.com> wrote:
+yes, until the first one is done.
+
 >
-> On Thu, 2013-05-02 at 19:00 -0700, Greg Kroah-Hartman wrote:
-> > On Fri, May 03, 2013 at 08:33:00AM +0800, Yanmin Zhang wrote:
-> > > On Wed, 2013-05-01 at 20:20 -0500, Linas Vepstas wrote:
-> > > > Hi,
-> > > >
-> > > > On 1 May 2013 19:30, Yanmin Zhang <yanmin_zhang@linux.intel.com>
-> > > > wrote:
-> > > >         On Fri, 2013-04-26 at 06:28 +0000, Zhang, LongX wrote:
-> > > >         > From: Zhang Long <longx.zhang@intel.com>
-> > > >         >
-> > > >         > Specific pci device drivers might have many functions to
-> > > >         call
-> > > >         > pci_channel_offline to check device states. When slot_reset
-> > > >         happens,
-> > > >         > drivers' slot_reset callback might call such functions and
-> > > >         eventually
-> > > >         > abort the reset.
-> > > >         >
-> > > >         > The patch resets pdev->error_state to pci_channel_io_normal
-> > > >         at
-> > > >         > the begining of report_slot_reset.
-> > > >         >
-> > > >         > Thank Liu Joseph for pointing it out.
-> > > >
-> > > >         Linas, Bjorn,
-> > > >
-> > > >         Would you like to merge the patch to your testing tree?
-> > > >         The patch resolves one issue pointed out by Joseph.
-> > > >
-> > > >
-> > > > I'm not maintaining a tree at this time, and am not able to test.
-> > > > Sorry.
-> > > Thanks Linas.
-> > >
-> > > Greg,
-> > >
-> > > Would you like to merge it into your testing tree? Joseph Liu tested
-> > > the patch and it does work.
-> >
-> > You do know about the scripts/get_maintainer.pl script, right?
-> >
-> > Hint, try it out :)
-> Greg,
->
-> Thanks. We did send to the right people, Linas and Bjorn.
->
-> scripts/get_maintainer.pl 0001-pci-reset-error_state-to-pci_channel_io_normal-at-re.patch
-> Bjorn Helgaas <bhelgaas@google.com> (supporter:PCI SUBSYSTEM,commit_signer:7/8=88%,commit_signer:10/11=91%)
-> Linas Vepstas <linasvepstas@gmail.com> (commit_signer:2/8=25%)
-> Yijing Wang <wangyijing@huawei.com> (commit_signer:2/8=25%,commit_signer:2/11=18%)
-> Jiang Liu <jiang.liu@huawei.com> (commit_signer:2/8=25%,commit_signer:2/11=18%)
-> Stephen Hemminger <shemminger@vyatta.com> (commit_signer:1/8=12%)
-> "Rafael J. Wysocki" <rafael.j.wysocki@intel.com> (commit_signer:6/11=55%)
-> Huang Ying <ying.huang@intel.com> (commit_signer:5/11=45%)
-> linux-pci@vger.kernel.org (open list:PCI SUBSYSTEM)
-> linux-kernel@vger.kernel.org (open list)
->
->
-> I remember Jesse was maintaining PCI subsystem and he responded quickly.
->
-> Yanmin
->
->
+> From what I can tell your problem is originating in pci_call_probe.  I
+> believe it is calling work_on_cpu and that doesn't seem correct since
+> the work should be taking place on a CPU already local to the PF. You
+> might want to look there to see why you are trying to schedule work on a
+> CPU which should be perfectly fine for you to already be doing your work on.
+
+it always try to go with local cpu with same pxm.
