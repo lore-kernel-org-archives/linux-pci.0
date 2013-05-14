@@ -1,67 +1,76 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Thu, 9 May 2013 00:28:45 +0200
-From: Borislav Petkov <bp@alien8.de>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Lance Ortiz <lance.ortiz@hp.com>, bhelgaas@google.com,
-	lance_ortiz@hotmail.com, jiang.liu@huawei.com, tony.luck@intel.com,
-	rostedt@goodmis.org, mchehab@redhat.com,
-	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] aerdrv: Move cper_print_pcie() out of interrupt context
-Message-ID: <20130508222845.GL30955@pd.tnic>
-References: <20130508171519.26724.63307.stgit@grignak.americas.hpqcorp.net>
- <2598827.AVAqMcfGuF@vostro.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.windriver.com ([147.11.1.11]:50289 "EHLO
+	mail.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751846Ab3ENNIA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 May 2013 09:08:00 -0400
+From: Kevin Hao <haokexin@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>
+Subject: [PATCH 1/2] PCI: make pcibios_bus_to_resource return either success or failure
+Date: Tue, 14 May 2013 21:07:55 +0800
+Message-ID: <1368536876-27307-2-git-send-email-haokexin@gmail.com>
+In-Reply-To: <1368536876-27307-1-git-send-email-haokexin@gmail.com>
+References: <1368536876-27307-1-git-send-email-haokexin@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <2598827.AVAqMcfGuF@vostro.rjw.lan>
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 09, 2013 at 12:01:21AM +0200, Rafael J. Wysocki wrote:
-> On Wednesday, May 08, 2013 11:15:19 AM Lance Ortiz wrote:
-> > The following warning was seen on 3.9 when a corrected PCIe error was being
-> > handled by the AER subsystem.
-> > 
-> > WARNING: at .../drivers/pci/search.c:214 pci_get_dev_by_id+0x8a/0x90()
-> > 
-> > This occurred because code was added to the function cper_print_pcie() that
-> > calls the pci_get_domain_bus_and_slot() function.
-> 
-> Do you know which commit added that code?
+In some cases we need to make sure whether the address translation is
+success or failure. So add a bool return value for this function.
 
-1d5210008bd3a26daf4b06aed9d6c330dd4c83e2
+Signed-off-by: Kevin Hao <haokexin@gmail.com>
+---
+ drivers/pci/host-bridge.c | 5 ++++-
+ include/linux/pci.h       | 2 +-
+ 2 files changed, 5 insertions(+), 2 deletions(-)
 
-> > cper_print_pcie() is called
-> > in an interrupt context and pci_get* functions are not supposed to be called
-> > in that context hence the warning.
-> > 
-> > The solution is to move the call to cper_print_aer() out of the interrupt
-> > context and into aer_recover_queue() to avoid any warnings when calling
-> > pci_get* functions.
-> 
-> The way the changes are described here isn't particularly clear to me.  I'd say
-> something like
-> 
->   If cper_print_aer() is called by aer_recover_work_func(), there won't be any
->   reason to call it from cper_print_pcie() any more, in which case all of the
->   problematic code needed only to prepare for the cper_print_aer() call,
->   including the invocation of pci_get_domain_bus_and_slot() causing the warning
->   to be printed, may be removed from there.  Make that happen."
-> 
-> Also, since aer_recover_work_func() is going to be the only existing caller of
-> cper_print_aer() after this change, as far as I can say, and it doesn't use the
-> function's first argument, that argument should be dropped entirely.
-
-Hmm, that needs more diddling: AFAICT __ghes_print_estatus() figures out
-what the prefix is depending on the ->error_severity coming from the
-acpi_hest_generic_status thing so it probably needs to be handed down or
-similar...
-
-Fun.
-
+diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+index a68dc61..a31885f 100644
+--- a/drivers/pci/host-bridge.c
++++ b/drivers/pci/host-bridge.c
+@@ -68,12 +68,13 @@ static bool region_contains(struct pci_bus_region *region1,
+ 	return region1->start <= region2->start && region1->end >= region2->end;
+ }
+ 
+-void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
++bool pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
+ 			     struct pci_bus_region *region)
+ {
+ 	struct pci_host_bridge *bridge = find_pci_host_bridge(dev);
+ 	struct pci_host_bridge_window *window;
+ 	resource_size_t offset = 0;
++	bool ret = false;
+ 
+ 	list_for_each_entry(window, &bridge->windows, list) {
+ 		struct pci_bus_region bus_region;
+@@ -86,11 +87,13 @@ void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
+ 
+ 		if (region_contains(&bus_region, region)) {
+ 			offset = window->offset;
++			ret = true;
+ 			break;
+ 		}
+ 	}
+ 
+ 	res->start = region->start + offset;
+ 	res->end = region->end + offset;
++	return ret;
+ }
+ EXPORT_SYMBOL(pcibios_bus_to_resource);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 3a24e4f..ea5fb61 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -714,7 +714,7 @@ void pci_fixup_cardbus(struct pci_bus *);
+ 
+ void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
+ 			     struct resource *res);
+-void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
++bool pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
+ 			     struct pci_bus_region *region);
+ void pcibios_scan_specific_bus(int busn);
+ struct pci_bus *pci_find_bus(int domain, int busnr);
 -- 
-Regards/Gruss,
-    Boris.
+1.8.1.4
 
-Sent from a fat crate under my desk. Formatting is fine.
---
