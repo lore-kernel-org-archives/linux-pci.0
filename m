@@ -1,67 +1,91 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: aik@ozlabs.ru
-To: linuxppc-dev@lists.ozlabs.org
-Cc: Alexey Kardashevskiy <aik@ozlabs.ru>,
-	David Gibson <david@gibson.dropbear.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Paul Mackerras <paulus@samba.org>,
-	Alexander Graf <agraf@suse.de>, kvm@vger.kernel.org,
-	linux-kernel@vger.kernel.org, kvm-ppc@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH 0/5] VFIO PPC64: add VFIO support on POWERPC64
-Date: Mon,  6 May 2013 17:21:56 +1000
-Message-Id: <51875a2c.25ac440a.50d9.ffffe8eb@mx.google.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pa0-f54.google.com ([209.85.220.54]:65510 "EHLO
+	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757829Ab3ENQwx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 May 2013 12:52:53 -0400
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Tony Luck <tony.luck@intel.com>,
+	Fenghua Yu <fenghua.yu@intel.com>, linux-ia64@vger.kernel.org
+Subject: [RFC PATCH v2, part 2 06/18] PCI, IA64: use hotplug-safe iterators to walk PCI buses
+Date: Wed, 15 May 2013 00:51:50 +0800
+Message-Id: <1368550322-1045-6-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1368550322-1045-1-git-send-email-jiang.liu@huawei.com>
+References: <1368550322-1045-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
+Enhance IA64 architecture specific code to use hotplug-safe iterators
+to walk PCI buses.
 
-The series adds support for VFIO on POWERPC in user space (such as QEMU).
-The in-kernel real mode IOMMU support is added by another series posted
-separately.
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Cc: Tony Luck <tony.luck@intel.com>
+Cc: Fenghua Yu <fenghua.yu@intel.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linux-ia64@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+---
+ arch/ia64/hp/common/sba_iommu.c   | 2 +-
+ arch/ia64/sn/kernel/io_common.c   | 2 +-
+ arch/ia64/sn/pci/tioca_provider.c | 3 ++-
+ 3 files changed, 4 insertions(+), 3 deletions(-)
 
-As the first and main aim of this series is the POWERNV platform support,
-the "Enable on POWERNV platform" patch goes first and introduces an API
-to be used by the VFIO IOMMU driver. The "Enable on pSeries platform" patch
-simply registers PHBs in the IOMMU subsystem and expects the API to be present,
-it enables VFIO support in fully emulated QEMU guests.
-
-These patches were tested against 3.8 and the "iommu: Move initialization earlier"
-patch is already in 3.9 so I am including it here only for the reference.
-
-Change log:
-* cleanups and minor fixes
-* added support for pSeries
-* separated from in-kernel IOMMU handling series (should make it easier to get sob'ed)
-* signed-off-by Paul Mackerras
-
-Alexey Kardashevskiy (5):
-  iommu: Move initialization earlier
-  KVM: PPC: iommu: Add missing
-    kvm_iommu_map_pages/kvm_iommu_unmap_pages
-  powerpc/vfio: Enable on POWERNV platform
-  powerpc/vfio: Implement IOMMU driver for VFIO
-  powerpc/vfio: Enable on pSeries platform
-
- Documentation/vfio.txt                      |   63 +++++
- arch/powerpc/include/asm/iommu.h            |   26 ++
- arch/powerpc/include/asm/kvm_host.h         |   14 +
- arch/powerpc/kernel/iommu.c                 |  319 +++++++++++++++++++++++
- arch/powerpc/platforms/powernv/pci-ioda.c   |    1 +
- arch/powerpc/platforms/powernv/pci-p5ioc2.c |    5 +-
- arch/powerpc/platforms/powernv/pci.c        |    2 +
- arch/powerpc/platforms/pseries/iommu.c      |    4 +
- drivers/iommu/Kconfig                       |    8 +
- drivers/iommu/iommu.c                       |    2 +-
- drivers/vfio/Kconfig                        |    6 +
- drivers/vfio/Makefile                       |    1 +
- drivers/vfio/vfio.c                         |    1 +
- drivers/vfio/vfio_iommu_spapr_tce.c         |  377 +++++++++++++++++++++++++++
- include/uapi/linux/vfio.h                   |   34 +++
- 15 files changed, 861 insertions(+), 2 deletions(-)
- create mode 100644 drivers/vfio/vfio_iommu_spapr_tce.c
-
+diff --git a/arch/ia64/hp/common/sba_iommu.c b/arch/ia64/hp/common/sba_iommu.c
+index bcda5b2..6faf241 100644
+--- a/arch/ia64/hp/common/sba_iommu.c
++++ b/arch/ia64/hp/common/sba_iommu.c
+@@ -2156,7 +2156,7 @@ sba_init(void)
+ #ifdef CONFIG_PCI
+ 	{
+ 		struct pci_bus *b = NULL;
+-		while ((b = pci_find_next_bus(b)) != NULL)
++		for_each_pci_root_bus(b)
+ 			sba_connect_bus(b);
+ 	}
+ #endif
+diff --git a/arch/ia64/sn/kernel/io_common.c b/arch/ia64/sn/kernel/io_common.c
+index 11f2275..87d8d8f 100644
+--- a/arch/ia64/sn/kernel/io_common.c
++++ b/arch/ia64/sn/kernel/io_common.c
+@@ -530,7 +530,7 @@ sn_io_late_init(void)
+ 	 * info from the PROM).
+ 	 */
+ 	bus = NULL;
+-	while ((bus = pci_find_next_bus(bus)) != NULL) {
++	for_each_pci_root_bus(bus) {
+ 		bussoft = SN_PCIBUS_BUSSOFT(bus);
+ 		nasid = NASID_GET(bussoft->bs_base);
+ 		cnode = nasid_to_cnodeid(nasid);
+diff --git a/arch/ia64/sn/pci/tioca_provider.c b/arch/ia64/sn/pci/tioca_provider.c
+index a70b11f..cd8c0fb 100644
+--- a/arch/ia64/sn/pci/tioca_provider.c
++++ b/arch/ia64/sn/pci/tioca_provider.c
+@@ -624,7 +624,7 @@ tioca_bus_fixup(struct pcibus_bussoft *prom_bussoft, struct pci_controller *cont
+ 	    nasid_to_cnodeid(tioca_common->ca_closest_nasid);
+ 	tioca_common->ca_kernel_private = (u64) tioca_kern;
+ 
+-	bus = pci_find_bus(tioca_common->ca_common.bs_persist_segment,
++	bus = pci_get_bus(tioca_common->ca_common.bs_persist_segment,
+ 		tioca_common->ca_common.bs_persist_busnum);
+ 	BUG_ON(!bus);
+ 	tioca_kern->ca_devices = &bus->devices;
+@@ -632,6 +632,7 @@ tioca_bus_fixup(struct pcibus_bussoft *prom_bussoft, struct pci_controller *cont
+ 	/* init GART */
+ 
+ 	if (tioca_gart_init(tioca_kern) < 0) {
++		pci_bus_put(bus);
+ 		kfree(tioca_kern);
+ 		kfree(tioca_common);
+ 		return NULL;
 -- 
-1.7.10.4
+1.8.1.2
 
