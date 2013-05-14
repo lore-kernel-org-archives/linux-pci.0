@@ -1,54 +1,41 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:33587 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756487Ab3ETXmX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 20 May 2013 19:42:23 -0400
-Message-ID: <1369093321.6387.24.camel@pasglop>
-Subject: Re: [PATCH 1/2] powerpc/PCI: Use PCI_UNKNOWN for unknown power state
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Paul Mackerras <paulus@samba.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	sparclinux@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
-Date: Tue, 21 May 2013 09:42:01 +1000
-In-Reply-To: <20130520231909.32416.81752.stgit@bhelgaas-glaptop>
-References: <20130520231909.32416.81752.stgit@bhelgaas-glaptop>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-ie0-f177.google.com ([209.85.223.177]:55977 "EHLO
+	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755606Ab3END4x (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 13 May 2013 23:56:53 -0400
+MIME-Version: 1.0
+In-Reply-To: <5191AD65.7090105@huawei.com>
+References: <1368498506-25857-1-git-send-email-yinghai@kernel.org>
+	<1368498506-25857-3-git-send-email-yinghai@kernel.org>
+	<5191AD65.7090105@huawei.com>
+Date: Mon, 13 May 2013 20:56:53 -0700
+Message-ID: <CAE9FiQWty+iSv3RdfesoyDZ3q15QeX4fJGFcXS8PxTCese-XzQ@mail.gmail.com>
+Subject: Re: [PATCH 2/7] PCI: move resources and bus_list releasing to pci_release_dev
+From: Yinghai Lu <yinghai@kernel.org>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 2013-05-20 at 17:19 -0600, Bjorn Helgaas wrote:
-> Previously we initialized dev->current_state to 4 (PCI_D3cold), but I think
-> we wanted PCI_UNKNOWN (5) here based on the comment and the fact that the
-> generic version of this code, pci_setup_device(), uses PCI_UNKNOWN.
-> 
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> ---
+On Mon, May 13, 2013 at 8:20 PM, Yijing Wang <wangyijing@huawei.com> wrote:
+> On 2013/5/14 10:28, Yinghai Lu wrote:
+>> We should not release resource in pci_destroy that is too early
+>
+> Hi Yinghai,
+>    "too early" means that after pci_stop_dev(), if someone else
+> hold the device reference, it still care the device resource ? e.g.?
 
-Ack. Do you send to Linus or should I ?
+I don't mean that.
 
-Thanks.
+>
+>> as there could be still other use hold reference.
 
-Cheers,
-Ben.
+purpose is:
+move res releasing as late as possible. so pci_stop_and_remove_bus_device
+could be called several times for nested removing via sys.
 
->  arch/powerpc/kernel/pci_of_scan.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/arch/powerpc/kernel/pci_of_scan.c b/arch/powerpc/kernel/pci_of_scan.c
-> index 2a67e9b..d2d407d 100644
-> --- a/arch/powerpc/kernel/pci_of_scan.c
-> +++ b/arch/powerpc/kernel/pci_of_scan.c
-> @@ -165,7 +165,7 @@ struct pci_dev *of_create_pci_dev(struct device_node *node,
->  	pr_debug("    class: 0x%x\n", dev->class);
->  	pr_debug("    revision: 0x%x\n", dev->revision);
->  
-> -	dev->current_state = 4;		/* unknown power state */
-> +	dev->current_state = PCI_UNKNOWN;	/* unknown power state */
->  	dev->error_state = pci_channel_io_normal;
->  	dev->dma_mask = 0xffffffff;
->  
-
-
+Yinghai
