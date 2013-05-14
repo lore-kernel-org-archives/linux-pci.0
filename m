@@ -1,90 +1,111 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:33290 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751896Ab3E1EvF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 May 2013 00:51:05 -0400
-Message-ID: <51A437A8.7090104@huawei.com>
-Date: Tue, 28 May 2013 12:50:48 +0800
-From: Yijing Wang <wangyijing@huawei.com>
-MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Hanjun Guo <guohanjun@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Feng Tang <feng.tang@intel.com>
-Subject: Re: [PATCH] PCI/X86: increase info->res_num before checking pci_use_crs
- return
-References: <1369709709-14504-1-git-send-email-wangyijing@huawei.com> <CAE9FiQXkwoRfFbcEn15MRGv6fVeOM5WC1Gh2NAhWj7yTda3G+g@mail.gmail.com>
-In-Reply-To: <CAE9FiQXkwoRfFbcEn15MRGv6fVeOM5WC1Gh2NAhWj7yTda3G+g@mail.gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Received: from mail-da0-f48.google.com ([209.85.210.48]:39434 "EHLO
+	mail-da0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757610Ab3ENQxJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 May 2013 12:53:09 -0400
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Paul Mackerras <paulus@samba.org>,
+	Gavin Shan <shangw@linux.vnet.ibm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Bill Pemberton <wfp5p@virginia.edu>,
+	linuxppc-dev@lists.ozlabs.org
+Subject: [RFC PATCH v2, part 2 09/18] PCI, PPC: use hotplug-safe iterators to walk PCI buses
+Date: Wed, 15 May 2013 00:51:53 +0800
+Message-Id: <1368550322-1045-9-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1368550322-1045-1-git-send-email-jiang.liu@huawei.com>
+References: <1368550322-1045-1-git-send-email-jiang.liu@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2013/5/28 12:35, Yinghai Lu wrote:
-> On Mon, May 27, 2013 at 7:55 PM, Yijing Wang <wangyijing@huawei.com> wrote:
->> I separate this patch from patchset "Add hostbridge resource release to
->> support root bus hotplug in IA64", because it's a Separate issue.
->>
->> We should increase info->res_num before we checking pci_use_crs return
->> when pci=nocrs set.
-> 
-> there is no function change or issue here.
+Enhance PPC architecture specific code to use hotplug-safe iterators
+to walk PCI buses.
 
-Hi Yinghai,
-   Thanks for review and comments!
-Yes, this patch is no functional change. I just sent this patch for make code flow more clearly.
-Because free_pci_root_info_res() will free all info->res and info->res_offset. So I think move info->res_num++
-before pci_use_crs check is better, better readability.
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Paul Mackerras <paulus@samba.org>
+Bjorn Helgaas <bhelgaas@google.com>
+Cc: Gavin Shan <shangw@linux.vnet.ibm.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Grant Likely <grant.likely@secretlab.ca>
+Cc: Bill Pemberton <wfp5p@virginia.edu>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: linuxppc-dev@lists.ozlabs.org
+Cc: linux-kernel@vger.kernel.org
+---
+ arch/powerpc/kernel/pci-common.c |  4 ++--
+ arch/powerpc/kernel/pci_64.c     | 13 +++++--------
+ 2 files changed, 7 insertions(+), 10 deletions(-)
 
-> 
->>
->> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
->> Cc: Yinghai Lu <yinghai@kernel.org>
->> Cc: Jiang Liu <liuj97@gmail.com>
->> Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
->> Cc: Feng Tang <feng.tang@intel.com>
->> ---
->>  arch/x86/pci/acpi.c |    7 ++-----
->>  1 files changed, 2 insertions(+), 5 deletions(-)
->>
->> diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
->> index 3e72425..662dfdf 100644
->> --- a/arch/x86/pci/acpi.c
->> +++ b/arch/x86/pci/acpi.c
->> @@ -324,14 +324,11 @@ setup_resource(struct acpi_resource *acpi_res, void *data)
->>         res->start = start;
->>         res->end = end;
->>         info->res_offset[info->res_num] = addr.translation_offset;
->> +       info->res_num++;
->>
->> -       if (!pci_use_crs) {
->> +       if (!pci_use_crs)
->>                 dev_printk(KERN_DEBUG, &info->bridge->dev,
->>                            "host bridge window %pR (ignored)\n", res);
->> -               return AE_OK;
->> -       }
->> -
->> -       info->res_num++;
->>
->>         return AE_OK;
->>  }
-> 
-> info->res_num is not used after probe_pci_root_info for pci_nocrs case.
-> 
-> Thanks
-> 
-> Yinghai
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> 
-
-
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index fa12ae4..26fca09 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -1400,7 +1400,7 @@ void __init pcibios_resource_survey(void)
+ 	struct pci_bus *b;
+ 
+ 	/* Allocate and assign resources */
+-	list_for_each_entry(b, &pci_root_buses, node)
++	for_each_pci_root_bus(b)
+ 		pcibios_allocate_bus_resources(b);
+ 	pcibios_allocate_resources(0);
+ 	pcibios_allocate_resources(1);
+@@ -1410,7 +1410,7 @@ void __init pcibios_resource_survey(void)
+ 	 * bus available resources to avoid allocating things on top of them
+ 	 */
+ 	if (!pci_has_flag(PCI_PROBE_ONLY)) {
+-		list_for_each_entry(b, &pci_root_buses, node)
++		for_each_pci_root_bus(b)
+ 			pcibios_reserve_legacy_regions(b);
+ 	}
+ 
+diff --git a/arch/powerpc/kernel/pci_64.c b/arch/powerpc/kernel/pci_64.c
+index 51a133a..a41c6dd 100644
+--- a/arch/powerpc/kernel/pci_64.c
++++ b/arch/powerpc/kernel/pci_64.c
+@@ -208,7 +208,6 @@ long sys_pciconfig_iobase(long which, unsigned long in_bus,
+ 			  unsigned long in_devfn)
+ {
+ 	struct pci_controller* hose;
+-	struct list_head *ln;
+ 	struct pci_bus *bus = NULL;
+ 	struct device_node *hose_node;
+ 
+@@ -229,18 +228,16 @@ long sys_pciconfig_iobase(long which, unsigned long in_bus,
+ 	/* That syscall isn't quite compatible with PCI domains, but it's
+ 	 * used on pre-domains setup. We return the first match
+ 	 */
+-
+-	for (ln = pci_root_buses.next; ln != &pci_root_buses; ln = ln->next) {
+-		bus = pci_bus_b(ln);
+-		if (in_bus >= bus->number && in_bus <= bus->busn_res.end)
++	for_each_pci_root_bus(bus)
++		if (in_bus >= bus->number && in_bus <= bus->busn_res.end &&
++		    bus->dev.of_node)
+ 			break;
+-		bus = NULL;
+-	}
+-	if (bus == NULL || bus->dev.of_node == NULL)
++	if (bus == NULL)
+ 		return -ENODEV;
+ 
+ 	hose_node = bus->dev.of_node;
+ 	hose = PCI_DN(hose_node)->phb;
++	pci_bus_put(bus);
+ 
+ 	switch (which) {
+ 	case IOBASE_BRIDGE_NUMBER:
 -- 
-Thanks!
-Yijing
+1.8.1.2
 
