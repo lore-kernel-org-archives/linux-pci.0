@@ -1,105 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-da0-f44.google.com ([209.85.210.44]:61649 "EHLO
-	mail-da0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758283Ab3ENQxs (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 May 2013 12:53:48 -0400
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Joerg Roedel <joro@8bytes.org>,
-	Ingo Molnar <mingo@kernel.org>,
-	Donald Dutile <ddutile@redhat.com>,
-	Hannes Reinecke <hare@suse.de>,
-	"Li, Zhen-Hua" <zhen-hual@hp.com>, iommu@lists.linux-foundation.org
-Subject: [RFC PATCH v2, part 2 16/18] PCI, iommu: use hotplug-safe iterators to walk PCI buses
-Date: Wed, 15 May 2013 00:52:00 +0800
-Message-Id: <1368550322-1045-16-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1368550322-1045-1-git-send-email-jiang.liu@huawei.com>
-References: <1368550322-1045-1-git-send-email-jiang.liu@huawei.com>
+Received: from mga14.intel.com ([143.182.124.37]:15800 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758537Ab3ENW3Y (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 14 May 2013 18:29:24 -0400
+Subject: [PATCH] pci: Avoid reentrant calls to work_on_cpu
+To: bhelgaas@google.com, yinghai@kernel.org
+From: Alexander Duyck <alexander.h.duyck@intel.com>
+Cc: guz.fnst@cn.fujitsu.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, netdev@vger.kernel.org
+Date: Tue, 14 May 2013 15:26:53 -0700
+Message-ID: <20130514221748.6180.30597.stgit@ahduyck-cp1.jf.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Enhance iommu drviers to use hotplug-safe iterators to walk
-PCI buses.
+This change is meant to fix a deadlock seen when pci_enable_sriov was
+called from within a driver's probe routine.  The issue was that
+work_on_cpu calls flush_work which attempts to flush a work queue for a
+cpu that we are currently working in.  In order to avoid the reentrant
+path we just skip the call to work_on_cpu in the case that the device
+node matches our current node.
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Ingo Molnar <mingo@kernel.org>
-Cc: Donald Dutile <ddutile@redhat.com>
-Cc: Hannes Reinecke <hare@suse.de>
-Cc: "Li, Zhen-Hua" <zhen-hual@hp.com>
-Cc: iommu@lists.linux-foundation.org
-Cc: linux-kernel@vger.kernel.org
+Reported-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Alexander Duyck <alexander.h.duyck@intel.com>
 ---
- drivers/iommu/amd_iommu.c | 4 +++-
- drivers/iommu/dmar.c      | 6 ++++--
- 2 files changed, 7 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
-index e046d7a..d6fdf94 100644
---- a/drivers/iommu/amd_iommu.c
-+++ b/drivers/iommu/amd_iommu.c
-@@ -357,6 +357,7 @@ static int init_iommu_group(struct device *dev)
- 	struct iommu_dev_data *dev_data;
- 	struct iommu_group *group;
- 	struct pci_dev *dma_pdev;
-+	struct pci_bus *b = NULL;
- 	int ret;
+This patch is meant to address the issue pointed out in an earlier patch
+sent by Yinghai Lu titled:
+  [PATCH 6/7] PCI: Make sure VF's driver get attached after PF's
+
+ drivers/pci/pci-driver.c |   14 +++++++++-----
+ 1 files changed, 9 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+index 79277fb..caeb1c0 100644
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -277,12 +277,16 @@ static int pci_call_probe(struct pci_driver *drv, struct pci_dev *dev,
+ 	int error, node;
+ 	struct drv_dev_and_id ddi = { drv, dev, id };
  
- 	group = iommu_group_get(dev);
-@@ -393,7 +394,7 @@ static int init_iommu_group(struct device *dev)
- 		 * the alias.  Be careful to also test the parent device if
- 		 * we think the alias is the root of the group.
- 		 */
--		bus = pci_find_bus(0, alias >> 8);
-+		b = bus = pci_find_bus(0, alias >> 8);
- 		if (!bus)
- 			goto use_group;
+-	/* Execute driver initialization on node where the device's
+-	   bus is attached to.  This way the driver likely allocates
+-	   its local memory on the right node without any need to
+-	   change it. */
++	/*
++	 * Execute driver initialization on the node where the device's
++	 * bus is attached.  This way the driver likely allocates
++	 * its local memory on the right node without any need to
++	 * change it.  If the node is the current node just call
++	 * local_pci_probe and avoid the possibility of reentrant
++	 * calls to work_on_cpu.
++	 */
+ 	node = dev_to_node(&dev->dev);
+-	if (node >= 0) {
++	if ((node >= 0) && (node != numa_node_id())) {
+ 		int cpu;
  
-@@ -413,6 +414,7 @@ static int init_iommu_group(struct device *dev)
- 	dma_pdev = get_isolation_root(pci_dev_get(to_pci_dev(dev)));
- use_pdev:
- 	ret = use_pdev_iommu_group(dma_pdev, dev);
-+	pci_bus_put(b);
- 	pci_dev_put(dma_pdev);
- 	return ret;
- use_group:
-diff --git a/drivers/iommu/dmar.c b/drivers/iommu/dmar.c
-index e5cdaf8..5bb3cdc 100644
---- a/drivers/iommu/dmar.c
-+++ b/drivers/iommu/dmar.c
-@@ -67,12 +67,12 @@ static void __init dmar_register_drhd_unit(struct dmar_drhd_unit *drhd)
- static int __init dmar_parse_one_dev_scope(struct acpi_dmar_device_scope *scope,
- 					   struct pci_dev **dev, u16 segment)
- {
--	struct pci_bus *bus;
-+	struct pci_bus *b, *bus;
- 	struct pci_dev *pdev = NULL;
- 	struct acpi_dmar_pci_path *path;
- 	int count;
- 
--	bus = pci_find_bus(segment, scope->bus);
-+	b = bus = pci_find_bus(segment, scope->bus);
- 	path = (struct acpi_dmar_pci_path *)(scope + 1);
- 	count = (scope->length - sizeof(struct acpi_dmar_device_scope))
- 		/ sizeof(struct acpi_dmar_pci_path);
-@@ -97,6 +97,8 @@ static int __init dmar_parse_one_dev_scope(struct acpi_dmar_device_scope *scope,
- 		count --;
- 		bus = pdev->subordinate;
- 	}
-+	pci_bus_put(b);
-+
- 	if (!pdev) {
- 		pr_warn("Device scope device [%04x:%02x:%02x.%02x] not found\n",
- 			segment, scope->bus, path->dev, path->fn);
--- 
-1.8.1.2
+ 		get_online_cpus();
 
