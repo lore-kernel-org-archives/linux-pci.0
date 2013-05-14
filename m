@@ -1,57 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f171.google.com ([209.85.192.171]:43391 "EHLO
-	mail-pd0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757610Ab3ENQxE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 May 2013 12:53:04 -0400
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+Received: from mga09.intel.com ([134.134.136.24]:65293 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758059Ab3ENVjB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 14 May 2013 17:39:01 -0400
+Message-ID: <5192AEF4.1070905@intel.com>
+Date: Tue, 14 May 2013 14:39:00 -0700
+From: Alexander Duyck <alexander.h.duyck@intel.com>
+MIME-Version: 1.0
+To: Yinghai Lu <yinghai@kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
 	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, David Howells <dhowells@redhat.com>,
-	Koichi Yasutake <yasutake.koichi@jp.panasonic.com>
-Subject: [RFC PATCH v2, part 2 08/18] PCI, mn10300: use hotplug-safe iterators to walk PCI buses
-Date: Wed, 15 May 2013 00:51:52 +0800
-Message-Id: <1368550322-1045-8-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1368550322-1045-1-git-send-email-jiang.liu@huawei.com>
-References: <1368550322-1045-1-git-send-email-jiang.liu@huawei.com>
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	NetDev <netdev@vger.kernel.org>
+Subject: Re: [PATCH 6/7] PCI: Make sure VF's driver get attached after PF's
+References: <1368498506-25857-1-git-send-email-yinghai@kernel.org> <1368498506-25857-7-git-send-email-yinghai@kernel.org> <51925FB0.4080504@intel.com> <CAE9FiQXYQEAZ=0sG6+2OdffBqfLS9MpoN1xviRR9aDbxPxcKxQ@mail.gmail.com> <5192946F.1050700@intel.com> <CAE9FiQVGGHB_amKw0-DfDifpTnRGPbxA+q3WY5F-O3x-sx386A@mail.gmail.com>
+In-Reply-To: <CAE9FiQVGGHB_amKw0-DfDifpTnRGPbxA+q3WY5F-O3x-sx386A@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Enhance mn10300 architecture specific code to use hotplug-safe
-iterators to walk PCI buses.
+On 05/14/2013 12:59 PM, Yinghai Lu wrote:
+> On Tue, May 14, 2013 at 12:45 PM, Alexander Duyck
+> <alexander.h.duyck@intel.com> wrote:
+>> On 05/14/2013 11:44 AM, Yinghai Lu wrote:
+>>> On Tue, May 14, 2013 at 9:00 AM, Alexander Duyck
+>>> <alexander.h.duyck@intel.com> wrote:
+>>>> I'm sorry, but what is the point of this patch?  With device assignment
+>>>> it is always possible to have VFs loaded and the PF driver unloaded
+>>>> since you cannot remove the VFs if they are assigned to a VM.
+>>> unload PF driver will not call pci_disable_sriov?
+>> You cannot call pci_disable_sriov because you will panic all of the
+>> guests that have devices assigned.
+> ixgbe_remove did call pci_disable_sriov...
+>
+> for guest panic, that is another problem.
+> just like you pci passthrough with real pci device and hotremove the
+> card in host.
+>
+> ...
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Cc: David Howells <dhowells@redhat.com>
-Cc: Koichi Yasutake <yasutake.koichi@jp.panasonic.com>
-Cc: linux-kernel@vger.kernel.org
----
- arch/mn10300/unit-asb2305/pci-asb2305.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+I suggest you take another look.  In ixgbe_disable_sriov, which is the
+function that is called we do a check for assigned VFs.  If they are
+assigned then we do not call pci_disable_sriov.
 
-diff --git a/arch/mn10300/unit-asb2305/pci-asb2305.c b/arch/mn10300/unit-asb2305/pci-asb2305.c
-index c4e2e79..88c0c52 100644
---- a/arch/mn10300/unit-asb2305/pci-asb2305.c
-+++ b/arch/mn10300/unit-asb2305/pci-asb2305.c
-@@ -207,8 +207,11 @@ fs_initcall(pcibios_assign_resources);
- 
- void __init pcibios_resource_survey(void)
- {
-+	struct pci_bus *bus;
-+
- 	DBG("PCI: Allocating resources\n");
--	pcibios_allocate_bus_resources(&pci_root_buses);
-+	for_each_pci_root_bus(bus)
-+		pcibios_allocate_bus_resources(&bus->children);
- 	pcibios_allocate_resources(0);
- 	pcibios_allocate_resources(1);
- }
--- 
-1.8.1.2
+>
+>> So how does your patch actually fix this problem?  It seems like it is
+>> just avoiding it.
+> yes, until the first one is done.
 
+Avoiding the issue doesn't fix the underlying problem and instead you
+are likely just introducing more bugs as a result.
+
+>> From what I can tell your problem is originating in pci_call_probe.  I
+>> believe it is calling work_on_cpu and that doesn't seem correct since
+>> the work should be taking place on a CPU already local to the PF. You
+>> might want to look there to see why you are trying to schedule work on a
+>> CPU which should be perfectly fine for you to already be doing your work on.
+> it always try to go with local cpu with same pxm.
+
+The problem is we really shouldn't be calling work_for_cpu in this case
+since we are already on the correct CPU.  What probably should be
+happening is that pci_call_probe should be doing a check to see if the
+current CPU is already contained within the device node map and if so
+just call local_pci_probe directly.  That way you can avoid deadlocking
+the system by trying to flush the CPU queue of the CPU you are currently on.
+
+Thanks,
+
+Alex
