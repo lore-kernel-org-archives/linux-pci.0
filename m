@@ -1,65 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:38818 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752705Ab3EVNMr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 May 2013 09:12:47 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>
-Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	linux-arm-kernel@lists.infradead.org
-Subject: [PATCH 4/4] pci: mvebu: fix the emulation of the status register
-Date: Wed, 22 May 2013 15:12:38 +0200
-Message-Id: <1369228358-32580-5-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1369228358-32580-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1369228358-32580-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from mail-da0-f50.google.com ([209.85.210.50]:37635 "EHLO
+	mail-da0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755811Ab3EOOj0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 May 2013 10:39:26 -0400
+Message-ID: <51939E16.9090105@gmail.com>
+Date: Wed, 15 May 2013 22:39:18 +0800
+From: Liu Jiang <liuj97@gmail.com>
+MIME-Version: 1.0
+To: Yinghai Lu <yinghai@kernel.org>
+CC: Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Paul Mackerras <paulus@samba.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	David Airlie <airlied@linux.ie>,
+	Neela Syam Kolli <megaraidlinux@lsi.com>,
+	"James E.J. Bottomley" <jbottomley@parallels.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linuxppc-dev@lists.ozlabs.org,
+	"sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
+	Linux-Scsi <linux-scsi@vger.kernel.org>,
+	Jiang Liu <jiang.liu@huawei.com>
+Subject: Re: [PATCH v2, part 1 3/9] PCI: Convert alloc_pci_dev(void) to pci_alloc_dev(bus)
+ instead
+References: <1368461313-4371-1-git-send-email-jiang.liu@huawei.com> <1368461313-4371-4-git-send-email-jiang.liu@huawei.com> <CAE9FiQVKKKmZRQ8CcKCzU8Gqzwb5SjWYagVB2OZiRqbSWXVpiw@mail.gmail.com> <5191F53E.4000305@cn.fujitsu.com> <51925136.5050302@gmail.com> <CAE9FiQWO-jR5y35kKiW0m6gVR54ZyRsBsdhP4BmFLSsDzCS3rA@mail.gmail.com> <51926CF6.1050706@gmail.com> <CAE9FiQWXN_ETRFPb5oFx-6LXyuHviX3h3NXCQKjcxtv2Uma-JA@mail.gmail.com>
+In-Reply-To: <CAE9FiQWXN_ETRFPb5oFx-6LXyuHviX3h3NXCQKjcxtv2Uma-JA@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In a PCI configuration header, the 'devsel' bits of the status
-register are read-only, and indicate the timing of the secondary
-interface. Currently, we implement them as read/write, so when the
-Linux PCI core writes all 1's to this register, it gets 11b as the
-'devsel' value, which is reserved.
-
-This commit fixes the PCI-to-PCI bridge emulation of the Marvell PCIe
-driver to ensure those bits remain set to 00b, which indicate a fast
-devsel decoding.
-
-This allows to fix the lspci -v output from:
-
-  Flags: bus master, 66MHz, user-definable features, ?? devsel, latency 0
-
-to:
-
-  Flags: bus master, 66MHz, user-definable features, fast devsel, latency 0
-
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
----
- drivers/pci/host/pci-mvebu.c |    5 +++++
- 1 file changed, 5 insertions(+)
-
-diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-index c887598..d730bf4 100644
---- a/drivers/pci/host/pci-mvebu.c
-+++ b/drivers/pci/host/pci-mvebu.c
-@@ -490,6 +490,11 @@ static int mvebu_sw_pci_bridge_write(struct mvebu_pcie_port *port,
- 	case PCI_COMMAND:
- 		bridge->command = value & 0xffff;
- 		bridge->status = value >> 16;
-+		/*
-+		 * The devsel bits are read-only, and we want to keep
-+		 * them set to 0
-+		 */
-+		bridge->status &= ~PCI_STATUS_DEVSEL_MASK;
- 		break;
- 
- 	case PCI_BASE_ADDRESS_0 ... PCI_BASE_ADDRESS_1:
--- 
-1.7.9.5
-
+On Wed 15 May 2013 02:52:51 AM CST, Yinghai Lu wrote:
+> On Tue, May 14, 2013 at 9:57 AM, Liu Jiang <liuj97@gmail.com> wrote:
+>> On Tue 14 May 2013 11:10:33 PM CST, Yinghai Lu wrote:
+>>>
+>>> On Tue, May 14, 2013 at 7:59 AM, Liu Jiang <liuj97@gmail.com> wrote:
+>>>>
+>>>> On 05/14/2013 04:26 PM, Gu Zheng wrote:
+>>>>       I suggest to use pci_release_dev() instead because it also needs to
+>>>> release OF related resources.
+>>>> I will update it in next version.
+>>>>
+>>>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+>>>> index bc075a3..2ac6338 100644
+>>>> --- a/drivers/pci/probe.c
+>>>> +++ b/drivers/pci/probe.c
+>>>> @@ -1281,7 +1281,7 @@ static struct pci_dev *pci_scan_device(struct
+>>>> pci_bus
+>>>> *bus
+>>>>           pci_set_of_node(dev);
+>>>>
+>>>>           if (pci_setup_device(dev)) {
+>>>> -               kfree(dev);
+>>>> +               pci_release_dev(&dev->dev);
+>>>>                   return NULL;
+>>>
+>>>
+>>> no, should move pci_set_of_node calling into pci_setup_device.
+>>>
+>>> Yinghai
+>>
+>>
+>> I'm not sure whether we should call pci_set_of_node() for SR-IOV devices
+>> too,
+>> any suggestions here?
+>
+> or just move down pci_set_of_node after pci_setup_device?
+>
+> anyway that is another bug.
+>
+> Yinghai
+I'm not familiar with the OF logic and can't make sure whether 
+pci_setup_device()
+has dependency on dev->of_node. Feel it's more safe to call 
+pci_release_of_node()
+on failing path instead of tuning call-site of pci_set_of_node().
