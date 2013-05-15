@@ -1,52 +1,184 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mho-02-ewr.mailhop.org ([204.13.248.72]:62306 "EHLO
-	mho-02-ewr.mailhop.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754237Ab3ESUuk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 19 May 2013 16:50:40 -0400
-Date: Sun, 19 May 2013 16:49:57 -0400
-From: Jason Cooper <jason@lakedaemon.net>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Maen Suleiman <maen@marvell.com>, linux-pci@vger.kernel.org,
-	devicetree-discuss@lists.ozlabs.org,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Olof Johansson <olof@lixom.net>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCHv10 9/9] arm: mvebu: update defconfig with PCI and USB
- support
-Message-ID: <20130519204957.GQ11137@titan.lakedaemon.net>
-References: <1368719725-21265-1-git-send-email-thomas.petazzoni@free-electrons.com>
- <1368719725-21265-10-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from hqemgate03.nvidia.com ([216.228.121.140]:12199 "EHLO
+	hqemgate03.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757264Ab3EON5I (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 May 2013 09:57:08 -0400
+From: Jay Agarwal <jagarwal@nvidia.com>
+To: <swarren@wwwdotorg.org>, <thierry.reding@avionic-design.de>,
+	<ldewangan@nvidia.com>, <pgaikwad@nvidia.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-tegra@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>
+CC: <jtukkinen@nvidia.com>, <kthota@nvidia.com>, <jagarwal@nvidia.com>
+Subject: [PATCH] Move PCIe node to correct place
+Date: Wed, 15 May 2013 19:25:50 +0530
+Message-ID: <1368626150-25395-1-git-send-email-jagarwal@nvidia.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1368719725-21265-10-git-send-email-thomas.petazzoni@free-electrons.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 16, 2013 at 05:55:24PM +0200, Thomas Petazzoni wrote:
-> Now that we have the necessary drivers and Device Tree informations to
-> support PCIe on Armada 370 and Armada XP, enable the CONFIG_PCI
-> option.
-> 
-> Also, since the Armada 370 Mirabox has a built-in USB XHCI controller
-> connected on the PCIe bus, enable the corresponding options as well.
-> 
-> Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-> ---
->  arch/arm/configs/mvebu_defconfig |    3 +++
->  1 file changed, 3 insertions(+)
+Moving PCIe controller node to correct place so
+that it is sorted by register address in .dtsi file
 
-Applied to mvebu/defconfig
+Signed-off-by: Jay Agarwal <jagarwal@nvidia.com>
+---
+This patch is based on remotes/gitorious_thierryreding_linux/tegra/next
+and should be applied on top of this.
 
-thx,
+ arch/arm/boot/dts/tegra30.dtsi |  132 ++++++++++++++++++++--------------------
+ 1 files changed, 66 insertions(+), 66 deletions(-)
 
-Jason.
+diff --git a/arch/arm/boot/dts/tegra30.dtsi b/arch/arm/boot/dts/tegra30.dtsi
+index 5c1f7c0..a242b2e 100644
+--- a/arch/arm/boot/dts/tegra30.dtsi
++++ b/arch/arm/boot/dts/tegra30.dtsi
+@@ -12,6 +12,72 @@
+ 		serial4 = &uarte;
+ 	};
+ 
++	pcie-controller {
++		compatible = "nvidia,tegra30-pcie";
++		device_type = "pci";
++		reg = <0x00003000 0x00000800   /* PADS registers */
++		       0x00003800 0x00000200   /* AFI registers */
++		       0x10000000 0x10000000>; /* configuration space */
++		reg-names = "pads", "afi", "cs";
++		interrupts = <0 98 0x04   /* controller interrupt */
++		              0 99 0x04>; /* MSI interrupt */
++
++		bus-range = <0x00 0xff>;
++		#address-cells = <3>;
++		#size-cells = <2>;
++
++		ranges = <0x82000000 0 0x00000000 0x00000000 0 0x00001000   /* port 0 configuration space */
++			  0x82000000 0 0x00001000 0x00001000 0 0x00001000   /* port 1 configuration space */
++			  0x82000000 0 0x00004000 0x00004000 0 0x00001000   /* port 2 configuration space */
++			  0x81000000 0 0          0x02000000 0 0x00010000   /* downstream I/O */
++			  0x82000000 0 0x20000000 0x20000000 0 0x10000000   /* non-prefetchable memory */
++			  0xc2000000 0 0x30000000 0x30000000 0 0x10000000>; /* prefetchable memory */
++
++		clocks = <&tegra_car 70>, <&tegra_car 72>, <&tegra_car 74>,
++			 <&tegra_car 118>, <&tegra_car 215>;
++		clock-names = "pex", "afi", "pcie_xclk", "pll_e", "cml";
++		status = "disabled";
++
++		pci@1,0 {
++			device_type = "pci";
++			assigned-addresses = <0x82000800 0 0x00000000 0 0x1000>;
++			reg = <0x000800 0 0 0 0>;
++			status = "disabled";
++
++			#address-cells = <3>;
++			#size-cells = <2>;
++			ranges;
++
++			nvidia,num-lanes = <2>;
++		};
++
++		pci@2,0 {
++			device_type = "pci";
++			assigned-addresses = <0x82001000 0 0x00001000 0 0x1000>;
++			reg = <0x001000 0 0 0 0>;
++			status = "disabled";
++
++			#address-cells = <3>;
++			#size-cells = <2>;
++			ranges;
++
++			nvidia,num-lanes = <2>;
++		};
++
++		pci@3,0 {
++			device_type = "pci";
++			assigned-addresses = <0x82001800 0 0x00004000 0 0x1000>;
++			reg = <0x001800 0 0 0 0>;
++			status = "disabled";
++
++			#address-cells = <3>;
++			#size-cells = <2>;
++			ranges;
++
++			nvidia,num-lanes = <2>;
++		};
++	};
++
+ 	host1x {
+ 		compatible = "nvidia,tegra30-host1x", "simple-bus";
+ 		reg = <0x50000000 0x00024000>;
+@@ -115,72 +181,6 @@
+ 		};
+ 	};
+ 
+-	pcie-controller {
+-		compatible = "nvidia,tegra30-pcie";
+-		device_type = "pci";
+-		reg = <0x00003000 0x00000800   /* PADS registers */
+-		       0x00003800 0x00000200   /* AFI registers */
+-		       0x10000000 0x10000000>; /* configuration space */
+-		reg-names = "pads", "afi", "cs";
+-		interrupts = <0 98 0x04   /* controller interrupt */
+-		              0 99 0x04>; /* MSI interrupt */
+-
+-		bus-range = <0x00 0xff>;
+-		#address-cells = <3>;
+-		#size-cells = <2>;
+-
+-		ranges = <0x82000000 0 0x00000000 0x00000000 0 0x00001000   /* port 0 configuration space */
+-			  0x82000000 0 0x00001000 0x00001000 0 0x00001000   /* port 1 configuration space */
+-			  0x82000000 0 0x00004000 0x00004000 0 0x00001000   /* port 2 configuration space */
+-			  0x81000000 0 0          0x02000000 0 0x00010000   /* downstream I/O */
+-			  0x82000000 0 0x20000000 0x20000000 0 0x10000000   /* non-prefetchable memory */
+-			  0xc2000000 0 0x30000000 0x30000000 0 0x10000000>; /* prefetchable memory */
+-
+-		clocks = <&tegra_car 70>, <&tegra_car 72>, <&tegra_car 74>,
+-			 <&tegra_car 118>, <&tegra_car 215>;
+-		clock-names = "pex", "afi", "pcie_xclk", "pll_e", "cml";
+-		status = "disabled";
+-
+-		pci@1,0 {
+-			device_type = "pci";
+-			assigned-addresses = <0x82000800 0 0x00000000 0 0x1000>;
+-			reg = <0x000800 0 0 0 0>;
+-			status = "disabled";
+-
+-			#address-cells = <3>;
+-			#size-cells = <2>;
+-			ranges;
+-
+-			nvidia,num-lanes = <2>;
+-		};
+-
+-		pci@2,0 {
+-			device_type = "pci";
+-			assigned-addresses = <0x82001000 0 0x00001000 0 0x1000>;
+-			reg = <0x001000 0 0 0 0>;
+-			status = "disabled";
+-
+-			#address-cells = <3>;
+-			#size-cells = <2>;
+-			ranges;
+-
+-			nvidia,num-lanes = <2>;
+-		};
+-
+-		pci@3,0 {
+-			device_type = "pci";
+-			assigned-addresses = <0x82001800 0 0x00004000 0 0x1000>;
+-			reg = <0x001800 0 0 0 0>;
+-			status = "disabled";
+-
+-			#address-cells = <3>;
+-			#size-cells = <2>;
+-			ranges;
+-
+-			nvidia,num-lanes = <2>;
+-		};
+-	};
+-
+ 	timer@50004600 {
+ 		compatible = "arm,cortex-a9-twd-timer";
+ 		reg = <0x50040600 0x20>;
+-- 
+1.7.0.4
+
