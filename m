@@ -1,115 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:55372 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934544Ab3DPAoL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 15 Apr 2013 20:44:11 -0400
-Date: Mon, 15 Apr 2013 20:43:52 -0400
-From: Neil Horman <nhorman@tuxdriver.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Prarit Bhargava <prarit@redhat.com>,
-	Don Zickus <dzickus@redhat.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Asit Mallick <asit.k.mallick@intel.com>,
-	David Woodhouse <dwmw2@infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Arkadiusz =?utf-8?Q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
-Subject: Re: [PATCH v9] irq: add quirk for broken interrupt remapping on 55XX
- chipsets
-Message-ID: <20130416004352.GA10615@neilslaptop.think-freely.org>
-References: <1362158276-4901-1-git-send-email-nhorman@tuxdriver.com>
- <1366065677-3431-1-git-send-email-nhorman@tuxdriver.com>
- <CAE9FiQU_4ix-mc3aL6nrZD6fexm_52jV-=W-But=eTfx6=U0uA@mail.gmail.com>
+Received: from iolanthe.rowland.org ([192.131.102.54]:39416 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1757201Ab3EOOhB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 May 2013 10:37:01 -0400
+Date: Wed, 15 May 2013 10:37:00 -0400 (EDT)
+From: Alan Stern <stern@rowland.harvard.edu>
+To: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+cc: Xenia Ragiadakou <burzalodowa@gmail.com>,
+	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>
+Subject: Re: [OPW kernel] dma_set_coherent_mask
+In-Reply-To: <20130515053911.GD17398@xanatos>
+Message-ID: <Pine.LNX.4.44L0.1305151030100.1711-100000@iolanthe.rowland.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAE9FiQU_4ix-mc3aL6nrZD6fexm_52jV-=W-But=eTfx6=U0uA@mail.gmail.com>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 15, 2013 at 04:02:56PM -0700, Yinghai Lu wrote:
-> On Mon, Apr 15, 2013 at 3:41 PM, Neil Horman <nhorman@tuxdriver.com> wrote:
-> > A few years back intel published a spec update:
-> > http://www.intel.com/content/dam/doc/specification-update/5520-and-5500-chipset-ioh-specification-update.pdf
-> >
-><snip>
-> > diff --git a/arch/x86/kernel/early-quirks.c b/arch/x86/kernel/early-quirks.c
-> > index 3755ef4..ef4ac6c 100644
-> > --- a/arch/x86/kernel/early-quirks.c
-> > +++ b/arch/x86/kernel/early-quirks.c
-> > @@ -18,6 +18,7 @@
-> >  #include <asm/apic.h>
-> >  #include <asm/iommu.h>
-> >  #include <asm/gart.h>
-> > +#include "../drivers/iommu/irq_remapping.h"
-> 
-> looks ugly.
-> 
-Yes, but I think its acceptible given that it makes sense to me to define the
-irq_remap_broken flag in the common driver code.  We can certainly move the
-header around, but I'd much rather do that in a separate patch.
+On Tue, 14 May 2013, Sarah Sharp wrote:
 
-> >
-> >  static void __init fix_hypertransport_config(int num, int slot, int func)
-> >  {
-> > @@ -192,6 +193,27 @@ static void __init ati_bugs_contd(int num, int slot, int func)
-> >  }
-> >  #endif
-> >
-> > +#ifdef CONFIG_IRQ_REMAP
-> > +static void __init intel_remapping_check(int num, int slot, int func)
-> > +{
-> > +       u8 revision;
-> > +
-> > +       revision = read_pci_config_byte(num, slot, func, PCI_REVISION_ID);
-> > +
-> > +       /*
-> > +        * Revision 0x13 of this chipset supports irq remapping
-> > +        * but has an erratum that breaks its behavior, flag it as such
-> > +        */
-> > +       if (revision == 0x13)
-> > +               irq_remap_broken = 1;
+> On Wed, May 15, 2013 at 05:41:12AM +0300, Xenia Ragiadakou wrote:
+> > Hi Sarah, (again)
+> > 
+> > Also I noticed that  dma_set_coherent_mask() is not called somewhere,
+> > which according to DMA-API-HOWTO.txt, means the even if the DMA mask
+> > is set to 64 bits by dma_set_mask, dma_alloc_coherent and
+> > dma_pool_alloc wont return 64 bit addresses (32 MSbits wont be
+> > addressed).
 > 
-> change to more specific like:
-> 
-> intel_55xx_rev13_found?
-> 
-No.  This was discussed previously, and the consensus was that we
-can use a generic name, should other chips have simmilarly broken functionality.
+> Another good question for Alan, and the USB and PCI list.
 
-><snip>
-> >
-> >  int disable_irq_remap;
-> > +int irq_remap_broken;
-> >  int disable_sourceid_checking;
-> >  int no_x2apic_optout;
-> >
-> > diff --git a/drivers/iommu/irq_remapping.h b/drivers/iommu/irq_remapping.h
-> > index ecb6376..90c4dae 100644
-> > --- a/drivers/iommu/irq_remapping.h
-> > +++ b/drivers/iommu/irq_remapping.h
-> > @@ -32,6 +32,7 @@ struct pci_dev;
-> >  struct msi_msg;
-> >
-> >  extern int disable_irq_remap;
-> > +extern int irq_remap_broken;
-> >  extern int disable_sourceid_checking;
-> >  extern int no_x2apic_optout;
-> >  extern int irq_remapping_enabled;
-> > @@ -89,6 +90,7 @@ extern struct irq_remap_ops amd_iommu_irq_ops;
-> >
-> >  #define irq_remapping_enabled 0
-> >  #define disable_irq_remap     1
-> > +#define irq_remap_broken      0
-> 
-> this one is needed
-> 
-Um, yes?  I think you mean to say its not needed, since all the users of this
-check are only in code thats compiled conditionally with CONFIG_IRQ_REMAP.
-You're correct, but I like to have it there for completness, should that change
-in the future.
+This does sound like a bug.  The PCI core initializes all devices by
+default with 32-bit masks for DMA and coherent DMA.  (PCI-E, PCI-X, or
+other extensions may have more liberal policies.)  If a larger mask can
+work, the driver is responsible for setting it up.
 
-Neil
+> (Alan, Ksenia is one of the applicants for the FOSS Outreach Program for
+> Women that I've been coordinating: http://kernelnewbies.org/OPWIntro)
+> 
+> We do allocate memory using DMA pools, and we do want 64-bit context
+> addresses if the xHCI host controller can handle it.
+> 
+> The xHCI driver calls dma_set_mask, but not dma_set_coherent_mask():
+> 
+>                 temp = xhci_readl(xhci, &xhci->cap_regs->hcc_params);
+>                 if (HCC_64BIT_ADDR(temp)) {
+>                         xhci_dbg(xhci, "Enabling 64-bit DMA addresses.\n");
+>                         dma_set_mask(hcd->self.controller, DMA_BIT_MASK(64));
+>                 } else {
+>                         dma_set_mask(hcd->self.controller, DMA_BIT_MASK(32));
+>                 }
+> 
+> Alan, should it be calling dma_set_coherent_mask()?  I think I may have
+> noticed the context addresses were never 64-bit addresses, but I didn't
+> think to look whether the host supported 64-bit addresses.  I just
+> assumed it could only handle 32-bit addresses.
+
+If you're using 64-bit DMA then you almost certainly do want to call
+dma_set_coherent_mask().  On the plus side, it is guaranteed that if
+dma_set_mask() succeeds with a particular mask value then
+dma_set_coherent_mask() for the same mask value will also succeed.
+
+Ala Stern
 
