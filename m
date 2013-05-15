@@ -1,55 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qe0-f52.google.com ([209.85.128.52]:61514 "EHLO
-	mail-qe0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752796Ab3ETMXW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 20 May 2013 08:23:22 -0400
+Received: from mail-qa0-f48.google.com ([209.85.216.48]:62390 "EHLO
+	mail-qa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758715Ab3EOAdD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 May 2013 20:33:03 -0400
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQWPNt42gsRwYqQwJM6VpZ-UF2+r-64p_aS3X7GdeVbXCA@mail.gmail.com>
-References: <1368498506-25857-1-git-send-email-yinghai@kernel.org>
-	<1368498506-25857-7-git-send-email-yinghai@kernel.org>
-	<0EE9A1CDC8D6434DB00095CD7DB873462CFB0E4E@MTLDAG01.mtl.com>
-	<CAE9FiQVn4F+dTrQn0xsg-6QY9+HwbnJR=1CrjdoZkmF_LMrgpg@mail.gmail.com>
-	<CAJZOPZLjdALP4jkLo6p787jaPx=dkKj7+AmCr9+mgJN3z_xBxQ@mail.gmail.com>
-	<CAE9FiQWvYQRCZjDx-Kh16nKfjfS=pyu8foJR+wWYS-x8DUZteg@mail.gmail.com>
-	<CAJZOPZLVc=V-ac8_A2JB_r17TRyCMoDpe1MXN6WcjMR4SO6n1Q@mail.gmail.com>
-	<20130516175350.GB7171@mtj.dyndns.org>
-	<CAE9FiQWPNt42gsRwYqQwJM6VpZ-UF2+r-64p_aS3X7GdeVbXCA@mail.gmail.com>
-Date: Mon, 20 May 2013 15:23:21 +0300
-Message-ID: <CAJZOPZKN02BV_3+_yJSimmLXCckgmHObYNw3z8t0vtWRz-Nf-w@mail.gmail.com>
-Subject: Re: [PATCH 6/7] PCI: Make sure VF's driver get attached after PF's
+In-Reply-To: <20130514221748.6180.30597.stgit@ahduyck-cp1.jf.intel.com>
+References: <20130514221748.6180.30597.stgit@ahduyck-cp1.jf.intel.com>
+Date: Tue, 14 May 2013 20:32:59 -0400
+Message-ID: <CAJZOPZL06sG__MdTzp6FF6BuB+Tv+CC_US35eHY0EDP6vQVzMw@mail.gmail.com>
+Subject: Re: [PATCH] pci: Avoid reentrant calls to work_on_cpu
 From: Or Gerlitz <or.gerlitz@gmail.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Tejun Heo <tj@kernel.org>, "Michael S. Tsirkin" <mst@redhat.com>,
-	Yan Burman <yanb@mellanox.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	Jack Morgenstein <jackm@mellanox.com>,
-	Or Gerlitz <ogerlitz@mellanox.com>,
-	Yevgeny Petrilin <yevgenyp@mellanox.com>
+To: Alexander Duyck <alexander.h.duyck@intel.com>
+Cc: bhelgaas@google.com, yinghai@kernel.org, guz.fnst@cn.fujitsu.com,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	netdev@vger.kernel.org, "Michael S. Tsirkin" <mst@redhat.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 16, 2013 at 9:36 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Thu, May 16, 2013 at 10:53 AM, Tejun Heo <tj@kernel.org> wrote:
->> On Thu, May 16, 2013 at 12:56:42AM -0400, Or Gerlitz wrote:
+On Tue, May 14, 2013 at 6:26 PM, Alexander Duyck
+<alexander.h.duyck@intel.com> wrote:
+>
+> This change is meant to fix a deadlock seen when pci_enable_sriov was
+> called from within a driver's probe routine.  The issue was that
+> work_on_cpu calls flush_work which attempts to flush a work queue for a
+> cpu that we are currently working in.  In order to avoid the reentrant
+> path we just skip the call to work_on_cpu in the case that the device
+> node matches our current node.
+>
+> Reported-by: Yinghai Lu <yinghai@kernel.org>
+> Signed-off-by: Alexander Duyck <alexander.h.duyck@intel.com>
+> ---
+>
+> This patch is meant to address the issue pointed out in an earlier patch
+> sent by Yinghai Lu titled:
+>   [PATCH 6/7] PCI: Make sure VF's driver get attached after PF's
+>
+>  drivers/pci/pci-driver.c |   14 +++++++++-----
+>  1 files changed, 9 insertions(+), 5 deletions(-)
+>
+> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+> index 79277fb..caeb1c0 100644
+> --- a/drivers/pci/pci-driver.c
+> +++ b/drivers/pci/pci-driver.c
+> @@ -277,12 +277,16 @@ static int pci_call_probe(struct pci_driver *drv,
+> struct pci_dev *dev,
+>         int error, node;
+>         struct drv_dev_and_id ddi = { drv, dev, id };
+>
+> -       /* Execute driver initialization on node where the device's
+> -          bus is attached to.  This way the driver likely allocates
+> -          its local memory on the right node without any need to
+> -          change it. */
+> +       /*
+> +        * Execute driver initialization on the node where the device's
+> +        * bus is attached.  This way the driver likely allocates
+> +        * its local memory on the right node without any need to
+> +        * change it.  If the node is the current node just call
+> +        * local_pci_probe and avoid the possibility of reentrant
+> +        * calls to work_on_cpu.
+> +        */
+>         node = dev_to_node(&dev->dev);
+> -       if (node >= 0) {
+> +       if ((node >= 0) && (node != numa_node_id())) {
+>                 int cpu;
+>
+>                 get_online_cpus();
 
->>>>> Please note that this whole lockdep warning was identified as false
->>>>> positive by Tejun http://www.spinics.net/lists/linux-pci/msg21568.html
 
->>>> No, at least one time, I noticed there is one real hang happens.
-
->>> Tejun, so what your thinking here?
-
->> Can't really tell much without more details.  Yinghai, do you have any
->> logs from such hang?  Are you sure it's from this?
-
-> I did not keep that log.
-> Will remove AlexD patch, try several times to see if I can duplicate it again.
-
-Any news here?
-
-Or.
+Alex, FWIW a similar patch was posted by Michael during the last rc
+cycles of 3.9 see
+http://marc.info/?l=linux-netdev&m=136569426119644&w=2
