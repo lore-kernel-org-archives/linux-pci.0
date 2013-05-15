@@ -1,8 +1,8 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:60137 "EHLO
+Received: from mail.free-electrons.com ([94.23.35.102]:53899 "EHLO
 	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754733Ab3EPP5m (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 May 2013 11:57:42 -0400
+	with ESMTP id S1758125Ab3EONZh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 May 2013 09:25:37 -0400
 From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
 To: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
 	Gregory Clement <gregory.clement@free-electrons.com>
@@ -18,63 +18,63 @@ Cc: linux-arm-kernel@lists.infradead.org,
 	Thierry Reding <thierry.reding@avionic-design.de>,
 	Rob Herring <rob.herring@calxeda.com>,
 	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	devicetree-discuss@lists.ozlabs.org
-Subject: [PATCHv10 1/9] arm: mvebu: fix the 'ranges' property to handle PCIe
-Date: Thu, 16 May 2013 17:55:16 +0200
-Message-Id: <1368719725-21265-2-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1368719725-21265-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1368719725-21265-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	devicetree-discuss@lists.ozlabs.org,
+	Mike Turquette <mturquette@linaro.org>
+Subject: [PATCHv9 6/9] clk: mvebu: add more PCIe clocks for Armada XP
+Date: Wed, 15 May 2013 15:25:20 +0200
+Message-Id: <1368624323-24311-7-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1368624323-24311-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1368624323-24311-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Since 82a682676 ('ARM: dts: mvebu: Convert all the mvebu files to use
-the range property') all the device nodes of Armada 370/XP are under a
-common 'ranges' property that translates the device register addresses
-into their absolute address, thanks to the base address of the
-internal register space.
+The current revision of the datasheet only mentions the gatable clocks
+for the PCIe 0.0, 0.1, 0.2 and 0.3 interfaces, and forgot to mention
+the ones for the PCIe 1.0, 1.1, 1.2, 1.3, 2.0 and 3.0
+interfaces. After confirmation with Marvell engineers, this patch adds
+the missing gatable clocks for those PCIe interfaces.
 
-However, beyond just the register areas, there are also PCIe I/O and
-memory regions, whose addresses should be properly translated. This
-patch fixes the Armada 370 and XP ranges property to take PCIe into
-account properly.
+It also changes the name of the previously existing PCIe gatable
+clocks, in order to match the naming using the datasheets.
 
 Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Mike Turquette <mturquette@linaro.org>
 ---
-Since the PCIe Device Tree description has been merged in 3.10-rc1,
-this commit should go in 3.10-rc as well.
----
- arch/arm/boot/dts/armada-370-xp.dtsi |    3 ++-
- arch/arm/boot/dts/armada-370.dtsi    |    3 ++-
- 2 files changed, 4 insertions(+), 2 deletions(-)
+ drivers/clk/mvebu/clk-gating-ctrl.c |   14 ++++++++++----
+ 1 file changed, 10 insertions(+), 4 deletions(-)
 
-diff --git a/arch/arm/boot/dts/armada-370-xp.dtsi b/arch/arm/boot/dts/armada-370-xp.dtsi
-index 272bbc6..550eb77 100644
---- a/arch/arm/boot/dts/armada-370-xp.dtsi
-+++ b/arch/arm/boot/dts/armada-370-xp.dtsi
-@@ -33,7 +33,8 @@
- 		#size-cells = <1>;
- 		compatible = "simple-bus";
- 		interrupt-parent = <&mpic>;
--		ranges = <0 0 0xd0000000 0x100000>;
-+		ranges = <0          0 0xd0000000 0x0100000 /* internal registers */
-+			  0xe0000000 0 0xe0000000 0x8100000 /* PCIe */>;
- 
- 		internal-regs {
- 			compatible = "simple-bus";
-diff --git a/arch/arm/boot/dts/armada-370.dtsi b/arch/arm/boot/dts/armada-370.dtsi
-index b2c1b5a..834c9be 100644
---- a/arch/arm/boot/dts/armada-370.dtsi
-+++ b/arch/arm/boot/dts/armada-370.dtsi
-@@ -29,7 +29,8 @@
- 	};
- 
- 	soc {
--		ranges = <0 0xd0000000 0x100000>;
-+		ranges = <0          0xd0000000 0x0100000 /* internal registers */
-+			  0xe0000000 0xe0000000 0x8100000 /* PCIe */>;
- 		internal-regs {
- 			system-controller@18200 {
- 				compatible = "marvell,armada-370-xp-system-controller";
+diff --git a/drivers/clk/mvebu/clk-gating-ctrl.c b/drivers/clk/mvebu/clk-gating-ctrl.c
+index b35785a..2f03723 100644
+--- a/drivers/clk/mvebu/clk-gating-ctrl.c
++++ b/drivers/clk/mvebu/clk-gating-ctrl.c
+@@ -137,10 +137,14 @@ static const struct mvebu_soc_descr __initconst armada_xp_gating_descr[] = {
+ 	{ "ge2", NULL,  2 },
+ 	{ "ge1", NULL, 3 },
+ 	{ "ge0", NULL, 4 },
+-	{ "pex0", NULL, 5 },
+-	{ "pex1", NULL, 6 },
+-	{ "pex2", NULL, 7 },
+-	{ "pex3", NULL, 8 },
++	{ "pex00", NULL, 5 },
++	{ "pex01", NULL, 6 },
++	{ "pex02", NULL, 7 },
++	{ "pex03", NULL, 8 },
++	{ "pex10", NULL, 9 },
++	{ "pex11", NULL, 10 },
++	{ "pex12", NULL, 11 },
++	{ "pex13", NULL, 12 },
+ 	{ "bp", NULL, 13 },
+ 	{ "sata0lnk", NULL, 14 },
+ 	{ "sata0", "sata0lnk", 15 },
+@@ -152,6 +156,8 @@ static const struct mvebu_soc_descr __initconst armada_xp_gating_descr[] = {
+ 	{ "xor0", NULL, 22 },
+ 	{ "crypto", NULL, 23 },
+ 	{ "tdm", NULL, 25 },
++	{ "pex20", NULL, 26 },
++	{ "pex30", NULL, 27 },
+ 	{ "xor1", NULL, 28 },
+ 	{ "sata1lnk", NULL, 29 },
+ 	{ "sata1", "sata1lnk", 30 },
 -- 
 1.7.9.5
 
