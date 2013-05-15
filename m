@@ -1,62 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:38613 "EHLO gate.crashing.org"
+Received: from mga09.intel.com ([134.134.136.24]:65380 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753223Ab3EUWEL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 21 May 2013 18:04:11 -0400
-Message-ID: <1369173711.6387.67.camel@pasglop>
-Subject: Re: Resource assignment oddities
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Date: Wed, 22 May 2013 08:01:51 +1000
-In-Reply-To: <CAErSpo4jW3v5CTDAoqNqr-q9BNFPPFjHuy3BcrgjQumQ8HGVNg@mail.gmail.com>
-References: <1367712653.11982.19.camel@pasglop>
-	 <1367712932.11982.20.camel@pasglop>
-	 <CAE9FiQX=h4H1gcbW=EfQo_ZtAgHGOZ2GxVxLG59C1iMH+qgH2g@mail.gmail.com>
-	 <1367732090.11982.38.camel@pasglop>
-	 <CAE9FiQUN3qqVmdw_EdOC-JZGc219M3tu=roOX98xns+77LJhMw@mail.gmail.com>
-	 <1367740336.11982.41.camel@pasglop>
-	 <51871088.4594420a.0ccc.7300SMTPIN_ADDED_BROKEN@mx.google.com>
-	 <CAE9FiQXGUOM_h_X5tdGbkiuZGZkiFigSLbbftx3YXybFBg6trg@mail.gmail.com>
-	 <1367837311.15842.31.camel@pasglop>
-	 <CAE9FiQU=ZEfvVKeQgVOa0jeG5smJrKRaeLTOckR=v2vzTyTvLw@mail.gmail.com>
-	 <5188b791.a110420a.0bea.077eSMTPIN_ADDED_BROKEN@mx.google.com>
-	 <CAE9FiQUc2q0GfVumVrp3_ba0q6N_a_WxjKhMWbyqbLfO=WGaFQ@mail.gmail.com>
-	 <1368768974.20726.1.camel@pasglop>
-	 <CAErSpo4jW3v5CTDAoqNqr-q9BNFPPFjHuy3BcrgjQumQ8HGVNg@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1751757Ab3EOWmJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 15 May 2013 18:42:09 -0400
+Date: Wed, 15 May 2013 15:42:06 -0700
+From: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Xenia Ragiadakou <burzalodowa@gmail.com>,
+	linux-usb@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [OPW kernel] dma_set_coherent_mask
+Message-ID: <20130515224206.GF17398@xanatos>
+References: <20130515053911.GD17398@xanatos>
+ <Pine.LNX.4.44L0.1305151030100.1711-100000@iolanthe.rowland.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <Pine.LNX.4.44L0.1305151030100.1711-100000@iolanthe.rowland.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2013-05-21 at 11:28 -0600, Bjorn Helgaas wrote:
-> On Thu, May 16, 2013 at 11:36 PM, Benjamin Herrenschmidt
-> <benh@kernel.crashing.org> wrote:
-> > On Tue, 2013-05-07 at 15:21 -0700, Yinghai Lu wrote:
-> >> I just sent v3, please test that.
-> >>
-> >> That should be less invasive for v3.10. As it will skip adding faile
-> >> resource to failed list when the resource is IORESOURCE_IO, and bus
-> >> does not have IORESOURCE_IO.
-> >
-> > Any news about merging this ?
+On Wed, May 15, 2013 at 10:37:00AM -0400, Alan Stern wrote:
+> On Tue, 14 May 2013, Sarah Sharp wrote:
+> > We do allocate memory using DMA pools, and we do want 64-bit context
+> > addresses if the xHCI host controller can handle it.
+> > 
+> > The xHCI driver calls dma_set_mask, but not dma_set_coherent_mask():
+> > 
+> >                 temp = xhci_readl(xhci, &xhci->cap_regs->hcc_params);
+> >                 if (HCC_64BIT_ADDR(temp)) {
+> >                         xhci_dbg(xhci, "Enabling 64-bit DMA addresses.\n");
+> >                         dma_set_mask(hcd->self.controller, DMA_BIT_MASK(64));
+> >                 } else {
+> >                         dma_set_mask(hcd->self.controller, DMA_BIT_MASK(32));
+> >                 }
+> > 
+> > Alan, should it be calling dma_set_coherent_mask()?  I think I may have
+> > noticed the context addresses were never 64-bit addresses, but I didn't
+> > think to look whether the host supported 64-bit addresses.  I just
+> > assumed it could only handle 32-bit addresses.
 > 
-> I'm starting to look at this.  Do you think this is v3.10 material?
-> My first impression is that it seems pretty large for that.
+> If you're using 64-bit DMA then you almost certainly do want to call
+> dma_set_coherent_mask().  On the plus side, it is guaranteed that if
+> dma_set_mask() succeeds with a particular mask value then
+> dma_set_coherent_mask() for the same mask value will also succeed.
 
-Well, it's problematic for us, the assignment fails here or there on
-some of our new systems with the new code multi-pass code for memory due
-to the lack of IO which is nasty at best.
+So we need to call both dma_set_coherent_mask() and dma_set_mask()?  Or
+just dma_set_coherent_mask()?
 
-We were hoping we could get 3.10 to support those machines since that's
-apparently what a well known enterprise distro will pickup (and trying
-to get them to pickup backport can be complete hell).
+Ksenia, thanks for catching this!  You should send a patch to fix it
+once Alan clarifies this.
 
-Cheers,
-Ben.
-
-
-
-
+Sarah Sharp
