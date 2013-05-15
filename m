@@ -1,97 +1,38 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <518A8321.6020401@wwwdotorg.org>
-Date: Wed, 08 May 2013 10:53:53 -0600
-From: Stephen Warren <swarren@wwwdotorg.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pb0-f52.google.com ([209.85.160.52]:48946 "EHLO
+	mail-pb0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759290Ab3EOOnE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 May 2013 10:43:04 -0400
+Message-ID: <51939EF2.1070904@gmail.com>
+Date: Wed, 15 May 2013 22:42:58 +0800
+From: Liu Jiang <liuj97@gmail.com>
 MIME-Version: 1.0
-To: Jay Agarwal <jagarwal@nvidia.com>
-CC: linux@arm.linux.org.uk, thierry.reding@avionic-design.de,
-	ldewangan@nvidia.com, bhelgaas@google.com, olof@lixom.net,
-	hdoyu@nvidia.com, pgaikwad@nvidia.com, mturquette@linaro.org,
-	pdeschrijver@nvidia.com, linux-arm-kernel@lists.infradead.org,
-	linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, jtukkinen@nvidia.com, kthota@nvidia.com
-Subject: Re: [PATCH 2/4] ARM: tegra: pcie: Add tegra3 support
-References: <1368010660-31465-1-git-send-email-jagarwal@nvidia.com> <1368010660-31465-2-git-send-email-jagarwal@nvidia.com>
-In-Reply-To: <1368010660-31465-2-git-send-email-jagarwal@nvidia.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [RFC PATCH v2, part 2 01/18] PCI: introduce hotplug-safe PCI
+ bus iterators
+References: <1368550322-1045-1-git-send-email-jiang.liu@huawei.com> <20130514170528.GA4030@kroah.com>
+In-Reply-To: <20130514170528.GA4030@kroah.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/08/2013 04:57 AM, Jay Agarwal wrote:
-> - Enable PCIe root port 2 for Cardhu
-> - Make private data structure for each SoC
-> - Add required Tegra30 clocks and regulators
-> - Add Tegra30 specific code in enable controller
-
-> - Patch is based on remotes/gitorious_thierryreding_linux/tegra/next
-> - and should be applied on top of this.
-
-Again, those two lines would go below the ---. And since that's all one
-bullet point, why is the second line indented with a "-"?
-
-> diff --git a/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt b/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
-
->  	pcie-controller {
->  		vdd-supply = <&pci_vdd_reg>;
->  		pex-clk-supply = <&pci_clk_reg>;
-> +		avdd-supply = <&ldo2_reg>; /* required for tegra30 */
-
-I would simply drop that comment, and perhaps even the whole line; this
-is just an example after all, and doesn't need to cover the latest SoC.
-Equally, the example SoC DTSI section is an example for Tegra20, so
-making the example board DTS section contain a Tegra30 example would be
-inconsistent. Tegra30 should be capitalized; it's a name.
-
-Why is there no change to the "Required Properties" section of this
-document? It should list the set of clocks and regulators that are
-required. That section is the definitive reference, whereas the example
-is just than; an example.
-
-> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-
-> +/* used to differentiate tegra chips code */
-> +struct tegra_pcie_soc_data {
-> +	unsigned int num_max_ports;
-
-> +	unsigned int pads_pll_ctl;
-> +	unsigned int tx_ref_sel;
-
-Perhaps those 2 values should be u32 to match the readl/writel
-parameters? They're HW register values after all.
-
-> @@ -220,6 +240,7 @@ struct tegra_pcie {
->  	struct clk *afi_clk;
->  	struct clk *pcie_xclk;
->  	struct clk *pll_e;
-> +	struct clk *cml0_clk;
-
-I think this clock should be called "cml" not "cml0". The clocks within
-the driver and DT binding should be named from the perspective of the
-PCI HW unit, and not from the perspective of the system that surrounds
-it and provides those clocks.
-
-The only exception would be if some future Tegra version might end up
-with multiple cml clocks to a single PCIe unit, and we need to number
-them to identify them. However, that seems quite unlikely since the PCIe
-unit already supports multiple ports, and multiple port support would be
-about the only reason that I could think of to have multiple clock
-instances.
-
-I think I mentioned this when I reviewed the previous version of the
-patch, but you didn't respond to the suggestion.
-
-> @@ -749,6 +778,11 @@ static int tegra_pcie_enable_controller(struct tegra_pcie *pcie)
->  	struct tegra_pcie_port *port;
->  	unsigned int timeout;
->  	unsigned long value;
-> +	struct tegra_pcie_soc_data *soc = pcie->soc_data;
-> +
-> +	/* power down to PCIe slot clock bias pad */
-> +	if (soc->pex_bias_ctrl)
-> +		afi_writel(pcie, 0, AFI_PEXBIAS_CTRL_0);
-
-Renaming pex_bias_ctrl to has_pex_bias_ctrl might make it more obvious
-what that variable means.
-
-A similar comment might apply to soc->pex_clkreq_en and
-soc->intr_prsnt_sense.
+On 05/15/2013 01:05 AM, Greg Kroah-Hartman wrote:
+> On Wed, May 15, 2013 at 12:51:45AM +0800, Jiang Liu wrote:
+>> +EXPORT_SYMBOL(pci_bus_exists);
+> EXPORT_SYMBOL_GPL()?  Same for the other new exports?
+>
+> thanks,
+>
+> greg k-h
+Sure, will change to EXPORT_SYMBOL_GPL in next version.
+Thanks for review!
+Gerry
