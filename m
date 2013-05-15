@@ -1,70 +1,112 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f49.google.com ([209.85.160.49]:37977 "EHLO
-	mail-pb0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751652Ab3EMQIw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 13 May 2013 12:08:52 -0400
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH v2, part 1 0/9] Prepare for introducing PCI bus lock interfaces
-Date: Tue, 14 May 2013 00:08:24 +0800
-Message-Id: <1368461313-4371-1-git-send-email-jiang.liu@huawei.com>
+Received: from mail-pa0-f43.google.com ([209.85.220.43]:37022 "EHLO
+	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751870Ab3EOEjx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 May 2013 00:39:53 -0400
+Message-ID: <51931196.2030903@gmail.com>
+Date: Tue, 14 May 2013 21:39:50 -0700
+From: Alexander Duyck <alexander.duyck@gmail.com>
+MIME-Version: 1.0
+To: Yinghai Lu <yinghai@kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Alexander Duyck <alexander.h.duyck@intel.com>,
+	Yan Burman <yanb@mellanox.com>,
+	Sathya Perla <Sathya.Perla@Emulex.Com>, netdev@vger.kernel.org
+Subject: Re: [PATCH v2 6/7] PCI: Make sure VF's driver get attached after
+ PF's
+References: <1368586102-17661-1-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1368586102-17661-1-git-send-email-yinghai@kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is a preparation patchset for introducing PCI bus lock mechanisms
-to protect PCI subsystem from concurrent hotplug operations.
+On 05/14/2013 07:48 PM, Yinghai Lu wrote:
+> Found kernel try to load mlx4 drivers for VFs before
+> PF's is loaded when the drivers are built-in, and kernel
+> command line include probe_vfs=63, num_vfs=63.
+> 
+> [  169.581682] calling  mlx4_init+0x0/0x119 @ 1
+> [  169.595681] mlx4_core: Mellanox ConnectX core driver v1.1 (Dec, 2011)
+> [  169.600194] mlx4_core: Initializing 0000:02:00.0
+> [  169.616322] mlx4_core 0000:02:00.0: Enabling SR-IOV with 63 VFs
+> [  169.724084] pci 0000:02:00.1: [15b3:1002] type 00 class 0x0c0600
+> [  169.732442] mlx4_core: Initializing 0000:02:00.1
+> [  169.734345] mlx4_core 0000:02:00.1: enabling device (0000 -> 0002)
+> [  169.747060] mlx4_core 0000:02:00.1: enabling bus mastering
+> [  169.764283] mlx4_core 0000:02:00.1: Detected virtual function - running in slave mode
+> [  169.767409] mlx4_core 0000:02:00.1: with iommu 3 : domain 11
+> [  169.785589] mlx4_core 0000:02:00.1: Sending reset
+> [  179.790131] mlx4_core 0000:02:00.1: Got slave FLRed from Communication channel (ret:0x1)
+> [  181.798661] mlx4_core 0000:02:00.1: slave is currently in themiddle of FLR. retrying...(try num:1)
+> [  181.803336] mlx4_core 0000:02:00.1: Communication channel is not idle.my toggle is 1 (cmd:0x0)
+> ...
+> [  182.078710] mlx4_core 0000:02:00.1: slave is currently in themiddle of FLR. retrying...(try num:10)
+> [  182.096657] mlx4_core 0000:02:00.1: Communication channel is not idle.my toggle is 1 (cmd:0x0)
+> [  182.104935] mlx4_core 0000:02:00.1: slave driver version is not supported by the master
+> [  182.118570] mlx4_core 0000:02:00.1: Communication channel is not idle.my toggle is 1 (cmd:0x0)
+> [  182.138190] mlx4_core 0000:02:00.1: Failed to initialize slave
+> [  182.141728] mlx4_core: probe of 0000:02:00.1 failed with error -5
+> 
+> It turns that this also happen for hotadd path even drivers are
+> compiled as modules and if they are loaded. Esp some VF share the
+> same driver with PF.
+> 
+> calling path:
+> 	device driver probe
+> 		==> pci_enable_sriov
+> 			==> virtfn_add
+> 				==> pci_dev_add
+> 				==> pci_bus_device_add
+> when pci_bus_device_add is called, the VF's driver will be attached.
+> and at that time PF's driver does not finish yet.
+> 
+> Need to move out pci_bus_device_add from virtfn_add and call it
+> later.
+> 
+> bnx2x and qlcnic are ok, because it does not modules command line
+> to enable sriov. They must use sysfs to enable it.
+> 
+> be2net is ok, according to Sathya Perla,
+> he fixed this issue in be2net with the following patch (commit b4c1df93)
+>   http://marc.info/?l=linux-netdev&m=136801459808765&w=2
+> 
+> For igb and ixgbe is ok, as Alex Duyck said:
+> | The VF driver should be able to be loaded when the PF driver is not
+> | present.  We handle it in igb and ixgbe last I checked, and I don't see
+> | any reason why it cannot be handled in all other VF drivers.  I'm not
+> | saying the VF has to be able to fully functional, but it should be able
+> | to detect the PF becoming enabled and then bring itself to a fully
+> | functional state.  To not handle that case is a bug.
+> 
+> Looks like the patch will help enic, mlx4, efx, vxge and lpfc now.
+> 
+> -v2: don't use schedule_callback, and initcall after Alex's patch.
+> 	pci: Avoid reentrant calls to work_on_cpu
+> 
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> Cc: Alexander Duyck <alexander.h.duyck@intel.com>
+> Cc: Yan Burman <yanb@mellanox.com>
+> Cc: Sathya Perla <Sathya.Perla@Emulex.Com>
+> Cc: netdev@vger.kernel.org
+> 
 
-Patch 1:
-	Introduce pci_bus_{get|put}() to manage PCI bus reference count
-Patch 2-3:
-	pci_alloc_dev() patchset from Gu Zheng
-Patch 8:
-	Make PCI bus creating/destroying logic symmetric
-Other:
-	Minor code improvements/cleanups
+This is a driver bug in mlx4 and possibly a few others, not a bug in the
+SR-IOV code.  My concern is your patch may introduce issues in all of
+the drivers, especially the ones that don't need this workaround.
+Fixing the kernel to make this work is just encouraging a poor design model.
 
-Gu Zheng (2):
-  PCI: Introduce pci_alloc_dev(struct pci_bus*) to replace
-    alloc_pci_dev()
-  PCI: Convert alloc_pci_dev(void) to pci_alloc_dev(bus) instead
+The problem is the mlx4 driver is enabling SR-IOV before it is ready to
+support VFs.  The mlx4 driver should probably be fixed by either,
+changing over to sysfs, provisioning the resources before enabling
+SR-IOV like be2net, or via the igb/ixgbe approach where the VF
+gracefully handles the PF not being present.
 
-Jiang Liu (7):
-  PCI: introduce pci_bus_{get|put}() to manage PCI bus reference count
-  PCI: mark pci_scan_bus_parented() as __deprecated
-  ACPI, PCI: remove unused global list acpi_pci_roots in pci_root.c
-  ACPI, pci_root: use acpi_handle_print() and pr_xxx() to print messages
-  PCI, IA64: minor code clean up
-  PCI: make PCI host bridge/bus creating and destroying logic symmetric
-  PCI, unicore, m68k: remove redundant call of pci_bus_add_devices()
+Thanks,
 
- arch/ia64/sn/kernel/io_init.c     |  11 +---
- arch/m68k/platform/coldfire/pci.c |   2 +-
- arch/powerpc/kernel/pci_of_scan.c |   3 +-
- arch/sparc/kernel/pci.c           |   3 +-
- arch/tile/kernel/pci.c            |   3 --
- arch/unicore32/kernel/pci.c       |   5 --
- drivers/acpi/pci_root.c           |  96 +++++++++++++----------------------
- drivers/char/agp/alpha-agp.c      |   2 +-
- drivers/char/agp/parisc-agp.c     |   2 +-
- drivers/pci/bus.c                 |  15 ++++++
- drivers/pci/iov.c                 |   8 +--
- drivers/pci/probe.c               | 102 ++++++++++++++++++--------------------
- drivers/pci/remove.c              |   3 +-
- drivers/scsi/megaraid.c           |   2 +-
- include/acpi/acpi_bus.h           |   1 -
- include/linux/pci.h               |   9 ++--
- 16 files changed, 119 insertions(+), 148 deletions(-)
+Alex
 
--- 
-1.8.1.2
+
+
 
