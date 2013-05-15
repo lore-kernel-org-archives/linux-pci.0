@@ -1,131 +1,103 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:13038 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751788Ab3ENDVA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 13 May 2013 23:21:00 -0400
-Message-ID: <5191AD65.7090105@huawei.com>
-Date: Tue, 14 May 2013 11:20:05 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from mail-ie0-f176.google.com ([209.85.223.176]:48421 "EHLO
+	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758991Ab3EOOnD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 May 2013 10:43:03 -0400
 MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 2/7] PCI: move resources and bus_list releasing to pci_release_dev
-References: <1368498506-25857-1-git-send-email-yinghai@kernel.org> <1368498506-25857-3-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1368498506-25857-3-git-send-email-yinghai@kernel.org>
-Content-Type: text/plain; charset="ISO-8859-1"
+In-Reply-To: <51939E16.9090105@gmail.com>
+References: <1368461313-4371-1-git-send-email-jiang.liu@huawei.com>
+	<1368461313-4371-4-git-send-email-jiang.liu@huawei.com>
+	<CAE9FiQVKKKmZRQ8CcKCzU8Gqzwb5SjWYagVB2OZiRqbSWXVpiw@mail.gmail.com>
+	<5191F53E.4000305@cn.fujitsu.com>
+	<51925136.5050302@gmail.com>
+	<CAE9FiQWO-jR5y35kKiW0m6gVR54ZyRsBsdhP4BmFLSsDzCS3rA@mail.gmail.com>
+	<51926CF6.1050706@gmail.com>
+	<CAE9FiQWXN_ETRFPb5oFx-6LXyuHviX3h3NXCQKjcxtv2Uma-JA@mail.gmail.com>
+	<51939E16.9090105@gmail.com>
+Date: Wed, 15 May 2013 07:43:02 -0700
+Message-ID: <CAE9FiQUXrOmN0rkvOwE1G_acEGY3-gouzaXjBMT7EE6uAqvuZA@mail.gmail.com>
+Subject: Re: [PATCH v2, part 1 3/9] PCI: Convert alloc_pci_dev(void) to
+ pci_alloc_dev(bus) instead
+From: Yinghai Lu <yinghai@kernel.org>
+To: Liu Jiang <liuj97@gmail.com>
+Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Paul Mackerras <paulus@samba.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	David Airlie <airlied@linux.ie>,
+	Neela Syam Kolli <megaraidlinux@lsi.com>,
+	"James E.J. Bottomley" <jbottomley@parallels.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linuxppc-dev@lists.ozlabs.org,
+	"sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
+	Linux-Scsi <linux-scsi@vger.kernel.org>,
+	Jiang Liu <jiang.liu@huawei.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2013/5/14 10:28, Yinghai Lu wrote:
-> We should not release resource in pci_destroy that is too early
+On Wed, May 15, 2013 at 7:39 AM, Liu Jiang <liuj97@gmail.com> wrote:
+> On Wed 15 May 2013 02:52:51 AM CST, Yinghai Lu wrote:
+>>
+>> On Tue, May 14, 2013 at 9:57 AM, Liu Jiang <liuj97@gmail.com> wrote:
+>>>
+>>> On Tue 14 May 2013 11:10:33 PM CST, Yinghai Lu wrote:
+>>>>
+>>>>
+>>>> On Tue, May 14, 2013 at 7:59 AM, Liu Jiang <liuj97@gmail.com> wrote:
+>>>>>
+>>>>>
+>>>>> On 05/14/2013 04:26 PM, Gu Zheng wrote:
+>>>>>       I suggest to use pci_release_dev() instead because it also needs
+>>>>> to
+>>>>> release OF related resources.
+>>>>> I will update it in next version.
+>>>>>
+>>>>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+>>>>> index bc075a3..2ac6338 100644
+>>>>> --- a/drivers/pci/probe.c
+>>>>> +++ b/drivers/pci/probe.c
+>>>>> @@ -1281,7 +1281,7 @@ static struct pci_dev *pci_scan_device(struct
+>>>>> pci_bus
+>>>>> *bus
+>>>>>           pci_set_of_node(dev);
+>>>>>
+>>>>>           if (pci_setup_device(dev)) {
+>>>>> -               kfree(dev);
+>>>>> +               pci_release_dev(&dev->dev);
+>>>>>                   return NULL;
+>>>>
+>>>>
+>>>>
+>>>> no, should move pci_set_of_node calling into pci_setup_device.
+>>>>
+>>>> Yinghai
+>>>
+>>>
+>>>
+>>> I'm not sure whether we should call pci_set_of_node() for SR-IOV devices
+>>> too,
+>>> any suggestions here?
+>>
+>>
+>> or just move down pci_set_of_node after pci_setup_device?
+>>
+>> anyway that is another bug.
 
-Hi Yinghai,
-   "too early" means that after pci_stop_dev(), if someone else
-hold the device reference, it still care the device resource ? e.g.?
+> I'm not familiar with the OF logic and can't make sure whether
+> pci_setup_device()
+> has dependency on dev->of_node. Feel it's more safe to call
+> pci_release_of_node()
+> on failing path instead of tuning call-site of pci_set_of_node().
 
-Thanks!
-Yijing.
+that is another bug, let of guy handle it.
 
-> as there could be still other use hold reference.
-> 
-> release them or remove it from bus devices list at last
-> in pci_release_dev instead.
-> 
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> 
-> ---
->  drivers/pci/probe.c  |   20 ++++++++++++++++++++
->  drivers/pci/remove.c |   19 -------------------
->  2 files changed, 20 insertions(+), 19 deletions(-)
-> 
-> Index: linux-2.6/drivers/pci/probe.c
-> ===================================================================
-> --- linux-2.6.orig/drivers/pci/probe.c
-> +++ linux-2.6/drivers/pci/probe.c
-> @@ -1118,6 +1118,20 @@ static void pci_release_capabilities(str
->  	pci_free_cap_save_buffers(dev);
->  }
->  
-> +static void pci_free_resources(struct pci_dev *dev)
-> +{
-> +	int i;
-> +
-> +	msi_remove_pci_irq_vectors(dev);
-> +
-> +	pci_cleanup_rom(dev);
-> +	for (i = 0; i < PCI_NUM_RESOURCES; i++) {
-> +		struct resource *res = dev->resource + i;
-> +		if (res->parent)
-> +			release_resource(res);
-> +	}
-> +}
-> +
->  /**
->   * pci_release_dev - free a pci device structure when all users of it are finished.
->   * @dev: device that's been disconnected
-> @@ -1130,6 +1144,12 @@ static void pci_release_dev(struct devic
->  	struct pci_dev *pci_dev;
->  
->  	pci_dev = to_pci_dev(dev);
-> +
-> +	down_write(&pci_bus_sem);
-> +	list_del(&pci_dev->bus_list);
-> +	up_write(&pci_bus_sem);
-> +	pci_free_resources(pci_dev);
-> +
->  	pci_release_capabilities(pci_dev);
->  	pci_release_of_node(pci_dev);
->  	kfree(pci_dev);
-> Index: linux-2.6/drivers/pci/remove.c
-> ===================================================================
-> --- linux-2.6.orig/drivers/pci/remove.c
-> +++ linux-2.6/drivers/pci/remove.c
-> @@ -3,20 +3,6 @@
->  #include <linux/pci-aspm.h>
->  #include "pci.h"
->  
-> -static void pci_free_resources(struct pci_dev *dev)
-> -{
-> -	int i;
-> -
-> - 	msi_remove_pci_irq_vectors(dev);
-> -
-> -	pci_cleanup_rom(dev);
-> -	for (i = 0; i < PCI_NUM_RESOURCES; i++) {
-> -		struct resource *res = dev->resource + i;
-> -		if (res->parent)
-> -			release_resource(res);
-> -	}
-> -}
-> -
->  static void pci_stop_dev(struct pci_dev *dev)
->  {
->  	pci_pme_active(dev, false);
-> @@ -34,11 +20,6 @@ static void pci_stop_dev(struct pci_dev
->  
->  static void pci_destroy_dev(struct pci_dev *dev)
->  {
-> -	down_write(&pci_bus_sem);
-> -	list_del(&dev->bus_list);
-> -	up_write(&pci_bus_sem);
-> -
-> -	pci_free_resources(dev);
->  	put_device(&dev->dev);
->  }
->  
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
-> 
-> .
-> 
-
-
--- 
-Thanks!
-Yijing
-
+Yinghai
