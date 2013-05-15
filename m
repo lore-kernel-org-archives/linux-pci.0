@@ -1,168 +1,108 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:16240 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752645Ab3EMOti (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 13 May 2013 10:49:38 -0400
-Message-ID: <1368456548.5520.1.camel@ul30vt.home>
-Subject: Re: [PATCH 1/3] pci: Add PCI walk function and PCIe bridge test
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Sethi Varun-B16395 <B16395@freescale.com>
-Cc: "bhelgaas@google.com" <bhelgaas@google.com>,
-	"stephen@networkplumber.org" <stephen@networkplumber.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-	"dwmw2@infradead.org" <dwmw2@infradead.org>
-Date: Mon, 13 May 2013 08:49:08 -0600
-In-Reply-To: <C5ECD7A89D1DC44195F34B25E172658D50609A@039-SN2MPN1-011.039d.mgd.msft.net>
-References: <20130510210937.32592.21950.stgit@bling.home>
-	 <20130510211845.32592.77464.stgit@bling.home>
-	 <C5ECD7A89D1DC44195F34B25E172658D50609A@039-SN2MPN1-011.039d.mgd.msft.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail.free-electrons.com ([94.23.35.102]:53857 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758029Ab3EONZd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 May 2013 09:25:33 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>
+Cc: linux-arm-kernel@lists.infradead.org,
+	Arnd Bergmann <arnd@arndb.de>, Olof Johansson <olof@lixom.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Lior Amsalem <alior@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	linux-pci@vger.kernel.org,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	devicetree-discuss@lists.ozlabs.org
+Subject: [PATCHv9 3/9] of/pci: Add of_pci_get_devfn() function
+Date: Wed, 15 May 2013 15:25:17 +0200
+Message-Id: <1368624323-24311-4-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1368624323-24311-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1368624323-24311-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 2013-05-13 at 13:51 +0000, Sethi Varun-B16395 wrote:
-> Would these functions be used outside drivers/iommu? We recently added pci.h under drivers/iommu, maybe we can add a new file for these functions as well.
+From: Thierry Reding <thierry.reding@avionic-design.de>
 
-The intention is to make them generic enough for pci-core, unlike
-pci_find_upstream_pcie_bridge, which was rather specific to iommu usage.
-Thanks,
+This function can be used to parse the device and function number from a
+standard 5-cell PCI resource. PCI_SLOT() and PCI_FUNC() can be used on
+the returned value obtain the device and function numbers respectively.
 
-Alex
+Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+---
+ drivers/of/of_pci.c    |   34 +++++++++++++++++++++++++++++-----
+ include/linux/of_pci.h |    1 +
+ 2 files changed, 30 insertions(+), 5 deletions(-)
 
-> > -----Original Message-----
-> > From: iommu-bounces@lists.linux-foundation.org [mailto:iommu-
-> > bounces@lists.linux-foundation.org] On Behalf Of Alex Williamson
-> > Sent: Saturday, May 11, 2013 2:49 AM
-> > To: bhelgaas@google.com; stephen@networkplumber.org
-> > Cc: linux-pci@vger.kernel.org; iommu@lists.linux-foundation.org;
-> > dwmw2@infradead.org
-> > Subject: [PATCH 1/3] pci: Add PCI walk function and PCIe bridge test
-> > 
-> > These will replace pci_find_upstream_pcie_bridge, which is difficult to
-> > use and rather specific to intel-iommu usage.  A quirked
-> > pci_is_pcie_bridge function is provided to work around non-compliant
-> > PCIe-to-PCI bridges such as those found in
-> > https://bugzilla.kernel.org/show_bug.cgi?id=44881
-> > 
-> > Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-> > ---
-> >  drivers/pci/search.c |   57
-> > ++++++++++++++++++++++++++++++++++++++++++++++++++
-> >  include/linux/pci.h  |   23 ++++++++++++++++++++
-> >  2 files changed, 80 insertions(+)
-> > 
-> > diff --git a/drivers/pci/search.c b/drivers/pci/search.c index
-> > d0627fa..0357f74 100644
-> > --- a/drivers/pci/search.c
-> > +++ b/drivers/pci/search.c
-> > @@ -17,6 +17,63 @@
-> >  DECLARE_RWSEM(pci_bus_sem);
-> >  EXPORT_SYMBOL_GPL(pci_bus_sem);
-> > 
-> > +/* Test for PCIe bridges. */
-> > +bool pci_is_pcie_bridge(struct pci_dev *pdev) {
-> > +	if (!pci_is_bridge(pdev))
-> > +		return false;
-> > +
-> > +	if (pci_is_pcie(pdev))
-> > +		return true;
-> > +
-> > +#ifdef CONFIG_PCI_QUIRKS
-> > +	/*
-> > +	 * If we're not on the root bus, look one device upstream of the
-> > +	 * current device.  If that device is PCIe and is not a PCIe-to-PCI
-> > +	 * bridge, then the current device is effectively PCIe as it must
-> > +	 * be the PCIe-to-PCI bridge.  This handles several bridges that
-> > +	 * violate the PCIe spec by not exposing a PCIe capability:
-> > +	 * https://bugzilla.kernel.org/show_bug.cgi?id=44881
-> > +	 */
-> > +	if (!pci_is_root_bus(pdev->bus)) {
-> > +		struct pci_dev *parent = pdev->bus->self;
-> > +
-> > +		if (pci_is_pcie(parent) &&
-> > +		    pci_pcie_type(parent) != PCI_EXP_TYPE_PCI_BRIDGE)
-> > +
-> > +			return true;
-> > +	}
-> > +#endif
-> > +	return false;
-> > +}
-> > +
-> > +/*
-> > + * Walk upstream from the given pdev for the first device returning
-> > + * true for the provided match function.  If no match is found, return
-> > + * NULL.  *last records the previous step in the walk.
-> > + */
-> > +struct pci_dev *pci_walk_up_to_first_match(struct pci_dev *pdev,
-> > +					   bool (*match)(struct pci_dev *),
-> > +					   struct pci_dev **last)
-> > +{
-> > +	*last = NULL;
-> > +
-> > +	if (match(pdev))
-> > +		return pdev;
-> > +
-> > +	*last = pdev;
-> > +
-> > +	while (!pci_is_root_bus(pdev->bus)) {
-> > +		*last = pdev;
-> > +		pdev = pdev->bus->self;
-> > +
-> > +		if (match(pdev))
-> > +			return pdev;
-> > +	}
-> > +
-> > +	return NULL;
-> > +}
-> > +
-> >  /*
-> >   * find the upstream PCIe-to-PCI bridge of a PCI device
-> >   * if the device is PCIE, return NULL
-> > diff --git a/include/linux/pci.h b/include/linux/pci.h index
-> > bd8ec30..e87423a 100644
-> > --- a/include/linux/pci.h
-> > +++ b/include/linux/pci.h
-> > @@ -1855,6 +1855,29 @@ static inline struct eeh_dev
-> > *pci_dev_to_eeh_dev(struct pci_dev *pdev)  #endif
-> > 
-> >  /**
-> > + * pci_walk_up_to_first_match - Generic upstream search function
-> > + * @pdev: starting PCI device to search
-> > + * @match: match function to call on each device (true = match)
-> > + * @last: last device examined prior to returned device
-> > + *
-> > + * Walk upstream from the given device, calling match() at each device.
-> > + * Returns the first device matching match().  If the root bus is
-> > +reached
-> > + * without finding a match, return NULL.  last returns the N-1 step in
-> > + * the search path.
-> > + */
-> > +struct pci_dev *pci_walk_up_to_first_match(struct pci_dev *pdev,
-> > +					   bool (*match)(struct pci_dev *),
-> > +					   struct pci_dev **last);
-> > +
-> > +/**
-> > + * pci_is_pcie_bridge - Match a PCIe bridge device
-> > + * @pdev: device to test
-> > + *
-> > + * Return true if the given device is a PCIe bridge, false otherwise.
-> > + */
-> > +bool pci_is_pcie_bridge(struct pci_dev *pdev);
-> > +
-> > +/**
-> >   * pci_find_upstream_pcie_bridge - find upstream PCIe-to-PCI bridge of a
-> > device
-> >   * @pdev: the PCI device
-> >   *
-> > 
-> > _______________________________________________
-> > iommu mailing list
-> > iommu@lists.linux-foundation.org
-> > https://lists.linuxfoundation.org/mailman/listinfo/iommu
-> 
-> 
-
-
+diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
+index 13e37e2..4dd7b9b 100644
+--- a/drivers/of/of_pci.c
++++ b/drivers/of/of_pci.c
+@@ -5,14 +5,15 @@
+ #include <asm/prom.h>
+ 
+ static inline int __of_pci_pci_compare(struct device_node *node,
+-				       unsigned int devfn)
++				       unsigned int data)
+ {
+-	unsigned int size;
+-	const __be32 *reg = of_get_property(node, "reg", &size);
++	int devfn;
+ 
+-	if (!reg || size < 5 * sizeof(__be32))
++	devfn = of_pci_get_devfn(node);
++	if (devfn < 0)
+ 		return 0;
+-	return ((be32_to_cpup(&reg[0]) >> 8) & 0xff) == devfn;
++
++	return devfn == data;
+ }
+ 
+ struct device_node *of_pci_find_child_device(struct device_node *parent,
+@@ -40,3 +41,26 @@ struct device_node *of_pci_find_child_device(struct device_node *parent,
+ 	return NULL;
+ }
+ EXPORT_SYMBOL_GPL(of_pci_find_child_device);
++
++/**
++ * of_pci_get_devfn() - Get device and function numbers for a device node
++ * @np: device node
++ *
++ * Parses a standard 5-cell PCI resource and returns an 8-bit value that can
++ * be passed to the PCI_SLOT() and PCI_FUNC() macros to extract the device
++ * and function numbers respectively. On error a negative error code is
++ * returned.
++ */
++int of_pci_get_devfn(struct device_node *np)
++{
++	unsigned int size;
++	const __be32 *reg;
++
++	reg = of_get_property(np, "reg", &size);
++
++	if (!reg || size < 5 * sizeof(__be32))
++		return -EINVAL;
++
++	return (be32_to_cpup(reg) >> 8) & 0xff;
++}
++EXPORT_SYMBOL_GPL(of_pci_get_devfn);
+diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
+index bb115de..91ec484 100644
+--- a/include/linux/of_pci.h
++++ b/include/linux/of_pci.h
+@@ -10,5 +10,6 @@ int of_irq_map_pci(const struct pci_dev *pdev, struct of_irq *out_irq);
+ struct device_node;
+ struct device_node *of_pci_find_child_device(struct device_node *parent,
+ 					     unsigned int devfn);
++int of_pci_get_devfn(struct device_node *np);
+ 
+ #endif
+-- 
+1.7.9.5
 
