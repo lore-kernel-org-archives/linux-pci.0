@@ -1,170 +1,89 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pb0-f43.google.com ([209.85.160.43]:42545 "EHLO
+	mail-pb0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751722Ab3EOB6G (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 May 2013 21:58:06 -0400
+Message-ID: <5192EBAB.7030203@gmail.com>
+Date: Tue, 14 May 2013 18:58:03 -0700
+From: Alexander Duyck <alexander.duyck@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1369489718-25869-10-git-send-email-jiang.liu@huawei.com>
-References: <1369489718-25869-1-git-send-email-jiang.liu@huawei.com>
-	<1369489718-25869-10-git-send-email-jiang.liu@huawei.com>
-Date: Mon, 27 May 2013 19:00:26 -0700
-Message-ID: <CAE9FiQX-3=U7YpEnRsL46Kn0Dyvk_+A1NC7UYijHe91KWjrKDA@mail.gmail.com>
-Subject: Re: [PATCH v3, part1 09/10] PCI, IOV: simplify IOV implementation
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jiang Liu <liuj97@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Donald Dutile <ddutile@redhat.com>,
-	Ram Pai <linuxram@us.ibm.com>
+To: Or Gerlitz <or.gerlitz@gmail.com>
+CC: Alexander Duyck <alexander.h.duyck@intel.com>, bhelgaas@google.com,
+	yinghai@kernel.org, guz.fnst@cn.fujitsu.com,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	netdev@vger.kernel.org, "Michael S. Tsirkin" <mst@redhat.com>
+Subject: Re: [PATCH] pci: Avoid reentrant calls to work_on_cpu
+References: <20130514221748.6180.30597.stgit@ahduyck-cp1.jf.intel.com> <CAJZOPZL06sG__MdTzp6FF6BuB+Tv+CC_US35eHY0EDP6vQVzMw@mail.gmail.com>
+In-Reply-To: <CAJZOPZL06sG__MdTzp6FF6BuB+Tv+CC_US35eHY0EDP6vQVzMw@mail.gmail.com>
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, May 25, 2013 at 6:48 AM, Jiang Liu <liuj97@gmail.com> wrote:
-> Trivial changes to IOV:
-> 1) use new PCI interfaces to simplify IOV implementation
-> 2) fix some reference count related race windows
->
-> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-> Cc: Donald Dutile <ddutile@redhat.com>
-> Cc: Yinghai Lu <yinghai@kernel.org>
-> Cc: Ram Pai <linuxram@us.ibm.com>
-> Cc: linux-pci@vger.kernel.org
-> Cc: linux-kernel@vger.kernel.org
-> ---
->  drivers/pci/iov.c | 58 +++++++++++++++++++++----------------------------------
->  1 file changed, 22 insertions(+), 36 deletions(-)
->
-> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-> index 8f1e117..3e33499 100644
-> --- a/drivers/pci/iov.c
-> +++ b/drivers/pci/iov.c
-> @@ -51,43 +51,30 @@ static struct pci_bus *virtfn_add_bus(struct pci_bus *bus, int busnr)
->         return child;
->  }
->
-> -static void virtfn_remove_bus(struct pci_bus *bus, int busnr)
-> +static void virtfn_remove_bus(struct pci_bus *physbus, struct pci_bus *virtbus)
->  {
-> -       struct pci_bus *child;
-> -
-> -       if (bus->number == busnr)
-> -               return;
-> -
-> -       child = pci_find_bus(pci_domain_nr(bus), busnr);
-> -       BUG_ON(!child);
-> -
-> -       if (list_empty(&child->devices))
-> -               pci_remove_bus(child);
-> +       if (physbus != virtbus && list_empty(&virtbus->devices))
-> +               pci_remove_bus(virtbus);
->  }
->
->  static int virtfn_add(struct pci_dev *dev, int id, int reset)
->  {
->         int i;
-> -       int rc;
-> +       int rc = -ENOMEM;
->         u64 size;
->         char buf[VIRTFN_ID_LEN];
-> -       struct pci_dev *virtfn;
-> +       struct pci_dev *virtfn = NULL;
->         struct resource *res;
->         struct pci_sriov *iov = dev->sriov;
->         struct pci_bus *bus;
->
-> -       virtfn = pci_alloc_dev(NULL);
-> -       if (!virtfn)
-> -               return -ENOMEM;
-> -
->         mutex_lock(&iov->dev->sriov->lock);
->         bus = virtfn_add_bus(dev->bus, virtfn_bus(dev, id));
-> -       if (!bus) {
-> -               kfree(virtfn);
-> -               mutex_unlock(&iov->dev->sriov->lock);
-> -               return -ENOMEM;
-> -       }
-> -       virtfn->bus = pci_bus_get(bus);
-> +       if (bus)
-> +               virtfn = pci_alloc_dev(bus);
-> +       if (!virtfn)
-> +               goto failed0;
-> +
->         virtfn->devfn = virtfn_devfn(dev, id);
->         virtfn->vendor = dev->vendor;
->         pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_DID, &virtfn->device);
-> @@ -136,7 +123,8 @@ failed1:
->         pci_dev_put(dev);
->         mutex_lock(&iov->dev->sriov->lock);
->         pci_stop_and_remove_bus_device(virtfn);
-> -       virtfn_remove_bus(dev->bus, virtfn_bus(dev, id));
-> +       virtfn_remove_bus(dev->bus, bus);
-> +failed0:
+On 05/14/2013 05:32 PM, Or Gerlitz wrote:
+> On Tue, May 14, 2013 at 6:26 PM, Alexander Duyck
+> <alexander.h.duyck@intel.com> wrote:
+>>
+>> This change is meant to fix a deadlock seen when pci_enable_sriov was
+>> called from within a driver's probe routine.  The issue was that
+>> work_on_cpu calls flush_work which attempts to flush a work queue for a
+>> cpu that we are currently working in.  In order to avoid the reentrant
+>> path we just skip the call to work_on_cpu in the case that the device
+>> node matches our current node.
+>>
+>> Reported-by: Yinghai Lu <yinghai@kernel.org>
+>> Signed-off-by: Alexander Duyck <alexander.h.duyck@intel.com>
+>> ---
+>>
+>> This patch is meant to address the issue pointed out in an earlier patch
+>> sent by Yinghai Lu titled:
+>>   [PATCH 6/7] PCI: Make sure VF's driver get attached after PF's
+>>
+>>  drivers/pci/pci-driver.c |   14 +++++++++-----
+>>  1 files changed, 9 insertions(+), 5 deletions(-)
+>>
+>> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+>> index 79277fb..caeb1c0 100644
+>> --- a/drivers/pci/pci-driver.c
+>> +++ b/drivers/pci/pci-driver.c
+>> @@ -277,12 +277,16 @@ static int pci_call_probe(struct pci_driver *drv,
+>> struct pci_dev *dev,
+>>         int error, node;
+>>         struct drv_dev_and_id ddi = { drv, dev, id };
+>>
+>> -       /* Execute driver initialization on node where the device's
+>> -          bus is attached to.  This way the driver likely allocates
+>> -          its local memory on the right node without any need to
+>> -          change it. */
+>> +       /*
+>> +        * Execute driver initialization on the node where the device's
+>> +        * bus is attached.  This way the driver likely allocates
+>> +        * its local memory on the right node without any need to
+>> +        * change it.  If the node is the current node just call
+>> +        * local_pci_probe and avoid the possibility of reentrant
+>> +        * calls to work_on_cpu.
+>> +        */
+>>         node = dev_to_node(&dev->dev);
+>> -       if (node >= 0) {
+>> +       if ((node >= 0) && (node != numa_node_id())) {
+>>                 int cpu;
+>>
+>>                 get_online_cpus();
+> 
+> 
+> Alex, FWIW a similar patch was posted by Michael during the last rc
+> cycles of 3.9 see
+> http://marc.info/?l=linux-netdev&m=136569426119644&w=2
 
-need to swap above two lines. otherwise virtual bus could not be removed.
+Did his patch ever get applied anywhere?  I don't see it in any of the
+trees.
 
->         mutex_unlock(&iov->dev->sriov->lock);
->
->         return rc;
-> @@ -145,20 +133,15 @@ failed1:
->  static void virtfn_remove(struct pci_dev *dev, int id, int reset)
->  {
->         char buf[VIRTFN_ID_LEN];
-> -       struct pci_bus *bus;
->         struct pci_dev *virtfn;
->         struct pci_sriov *iov = dev->sriov;
->
-> -       bus = pci_find_bus(pci_domain_nr(dev->bus), virtfn_bus(dev, id));
-> -       if (!bus)
-> -               return;
-> -
-> -       virtfn = pci_get_slot(bus, virtfn_devfn(dev, id));
-> +       virtfn = pci_get_domain_bus_and_slot(pci_domain_nr(dev->bus),
-> +                                            virtfn_bus(dev, id),
-> +                                            virtfn_devfn(dev, id));
->         if (!virtfn)
->                 return;
->
-> -       pci_dev_put(virtfn);
-> -
->         if (reset) {
->                 device_release_driver(&virtfn->dev);
->                 __pci_reset_function(virtfn);
-> @@ -176,9 +159,11 @@ static void virtfn_remove(struct pci_dev *dev, int id, int reset)
->
->         mutex_lock(&iov->dev->sriov->lock);
->         pci_stop_and_remove_bus_device(virtfn);
-> -       virtfn_remove_bus(dev->bus, virtfn_bus(dev, id));
-> +       virtfn_remove_bus(dev->bus, virtfn->bus);
->         mutex_unlock(&iov->dev->sriov->lock);
->
-> +       /* balance pci_get_domain_bus_and_slot() */
-> +       pci_dev_put(virtfn);
->         pci_dev_put(dev);
->  }
->
-> @@ -335,13 +320,14 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
->                 if (!pdev)
->                         return -ENODEV;
->
-> -               pci_dev_put(pdev);
-> -
-> -               if (!pdev->is_physfn)
-> +               if (!pdev->is_physfn) {
-> +                       pci_dev_put(pdev);
->                         return -ENODEV;
-> +               }
->
->                 rc = sysfs_create_link(&dev->dev.kobj,
->                                         &pdev->dev.kobj, "dep_link");
-> +               pci_dev_put(pdev);
->                 if (rc)
->                         return rc;
->         }
-> --
-> 1.8.1.2
->
+The advantage this approach has over the one in the similar patch is
+that this covers a broader set of CPUs since anything on the same node
+is local versus just the first CPU in a given NUMA node.
+
+Thanks,
+
+Alex
+
+
+
