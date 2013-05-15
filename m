@@ -1,62 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate04.nvidia.com ([216.228.121.35]:6982 "EHLO
-	hqemgate04.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756698Ab3EOR2w convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 May 2013 13:28:52 -0400
-From: Jay Agarwal <jagarwal@nvidia.com>
-To: 'Stephen Warren' <swarren@wwwdotorg.org>
-CC: "linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
-	"thierry.reding@avionic-design.de" <thierry.reding@avionic-design.de>,
-	Laxman Dewangan <ldewangan@nvidia.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"olof@lixom.net" <olof@lixom.net>, Hiroshi Doyu <hdoyu@nvidia.com>,
-	Prashant Gaikwad <pgaikwad@nvidia.com>,
-	"mturquette@linaro.org" <mturquette@linaro.org>,
-	Peter De Schrijver <pdeschrijver@nvidia.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Juha Tukkinen <jtukkinen@nvidia.com>,
-	Krishna Thota <kthota@nvidia.com>
-Date: Wed, 15 May 2013 22:58:22 +0530
-Subject: RE: [PATCH 4/4] ARM: tegra: pcie: Enable PCIe controller on Cardhu
-Message-ID: <C79B248886DD134989C8FF6B096A91AB91B4886B5D@BGMAIL01.nvidia.com>
-References: <1368010660-31465-1-git-send-email-jagarwal@nvidia.com>
- <1368010660-31465-4-git-send-email-jagarwal@nvidia.com>
- <518A8596.7070702@wwwdotorg.org>
-In-Reply-To: <518A8596.7070702@wwwdotorg.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail.free-electrons.com ([94.23.35.102]:53880 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758125Ab3EONZg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 May 2013 09:25:36 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>
+Cc: linux-arm-kernel@lists.infradead.org,
+	Arnd Bergmann <arnd@arndb.de>, Olof Johansson <olof@lixom.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Lior Amsalem <alior@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	linux-pci@vger.kernel.org,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	devicetree-discuss@lists.ozlabs.org,
+	Mike Turquette <mturquette@linaro.org>
+Subject: [PATCHv9 5/9] clk: mvebu: create parent-child relation for PCIe clocks on Armada 370
+Date: Wed, 15 May 2013 15:25:19 +0200
+Message-Id: <1368624323-24311-6-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1368624323-24311-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1368624323-24311-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+The Armada 370 has two gatable clocks for each PCIe interface, and we
+want both of them to be enabled. We therefore make one of the two
+clocks a child of the other, as we did for the sataX and sataXlnk
+clocks on Armada XP.
 
-> On 05/08/2013 04:57 AM, Jay Agarwal wrote:
-> > - Enable PCIe controller on Cardhu
-> > - Only port 2 is connected on this board
-> > - Add regulators required for Tegra30
-> > - Patch is based on remotes/gitorious_thierryreding_linux/tegra/next
-> > - and should be applied on top of this.
-> 
-> > diff --git a/arch/arm/boot/dts/tegra30-cardhu.dtsi
-> > b/arch/arm/boot/dts/tegra30-cardhu.dtsi
-> 
-> > +	pcie-controller {
-> > +		status = "okay";
-> > +		pex-clk-supply = <&pex_hvdd_3v3_reg>;
-> > +		vdd-supply = <&ldo1_reg>;
-> > +		avdd-supply = <&ldo2_reg>;
-> > +
-> > +		pci@3,0 {
-> > +			status = "okay";
-> > +		};
-> > +	};
-> 
-> So, if I apply this series, I do see the PCIe bridge and Ethernet device get
-> enumerated, but I don't see the USB3 controller get enumerated. I believe
-> that is a PCIe device behind the same bridge on the same Tegra PCIe port.
-> Shouldn't this device show up?
-[>]  I have also reproduced this problem. I see somehow no non-prefetchable memory is assigned to any of pcie devices.
-Probably that is the reason for USB3 (pci 0000:04:00.0) not getting enumerated since it uses only non-prefetchable memory.
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Mike Turquette <mturquette@linaro.org>
+---
+ drivers/clk/mvebu/clk-gating-ctrl.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/clk/mvebu/clk-gating-ctrl.c b/drivers/clk/mvebu/clk-gating-ctrl.c
+index ebf141d..b35785a 100644
+--- a/drivers/clk/mvebu/clk-gating-ctrl.c
++++ b/drivers/clk/mvebu/clk-gating-ctrl.c
+@@ -119,8 +119,8 @@ static const struct mvebu_soc_descr __initconst armada_370_gating_descr[] = {
+ 	{ "pex1_en", NULL,  2 },
+ 	{ "ge1", NULL, 3 },
+ 	{ "ge0", NULL, 4 },
+-	{ "pex0", NULL, 5 },
+-	{ "pex1", NULL, 9 },
++	{ "pex0", "pex0_en", 5 },
++	{ "pex1", "pex1_en", 9 },
+ 	{ "sata0", NULL, 15 },
+ 	{ "sdio", NULL, 17 },
+ 	{ "tdm", NULL, 25 },
+-- 
+1.7.9.5
+
