@@ -1,76 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailhub5.stratus.com ([134.111.1.18]:46202 "EHLO
-	mailhub5.stratus.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757613Ab3EQVrK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 May 2013 17:47:10 -0400
-Date: Fri, 17 May 2013 17:42:37 -0400
-From: Joe Lawrence <joe.lawrence@stratus.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-	"James E.J. Bottomley" <JBottomley@parallels.com>,
-	Sreekanth Reddy <Sreekanth.Reddy@lsi.com>,
-	"Desai, Kashyap" <Kashyap.Desai@lsi.com>,
-	Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: mpt2sas,mpt3sas watchdog device removal
-Message-ID: <20130517174237.3b4a431a@jlaw-desktop.mno.stratus.com>
-In-Reply-To: <CAErSpo4OU2LRdmBLNBMbw79fYiR4yqYVJ++2ecju0qBNhAp-vA@mail.gmail.com>
-References: <20130515132401.6a8ff7fb@jlaw-desktop.mno.stratus.com>
-	<20130515132948.7dc4c551@jlaw-desktop.mno.stratus.com>
-	<CAErSpo4OU2LRdmBLNBMbw79fYiR4yqYVJ++2ecju0qBNhAp-vA@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-ie0-f179.google.com ([209.85.223.179]:40594 "EHLO
+	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758866Ab3EOO6p (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 May 2013 10:58:45 -0400
+MIME-Version: 1.0
+In-Reply-To: <51939FB1.20203@gmail.com>
+References: <1368461313-4371-1-git-send-email-jiang.liu@huawei.com>
+	<1368461313-4371-4-git-send-email-jiang.liu@huawei.com>
+	<CAE9FiQVKKKmZRQ8CcKCzU8Gqzwb5SjWYagVB2OZiRqbSWXVpiw@mail.gmail.com>
+	<5191F53E.4000305@cn.fujitsu.com>
+	<51925136.5050302@gmail.com>
+	<CAE9FiQWO-jR5y35kKiW0m6gVR54ZyRsBsdhP4BmFLSsDzCS3rA@mail.gmail.com>
+	<51926CF6.1050706@gmail.com>
+	<CAE9FiQWXN_ETRFPb5oFx-6LXyuHviX3h3NXCQKjcxtv2Uma-JA@mail.gmail.com>
+	<51939E16.9090105@gmail.com>
+	<CAE9FiQUXrOmN0rkvOwE1G_acEGY3-gouzaXjBMT7EE6uAqvuZA@mail.gmail.com>
+	<51939FB1.20203@gmail.com>
+Date: Wed, 15 May 2013 07:58:44 -0700
+Message-ID: <CAE9FiQVCSm14S0A1sVWewc7UX-dyOmu9aq1UwqdPZK6qSmbFxQ@mail.gmail.com>
+Subject: Re: [PATCH v2, part 1 3/9] PCI: Convert alloc_pci_dev(void) to
+ pci_alloc_dev(bus) instead
+From: Yinghai Lu <yinghai@kernel.org>
+To: Liu Jiang <liuj97@gmail.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>, linuxppc-dev@lists.ozlabs.org,
+	"sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>
+Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Paul Mackerras <paulus@samba.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 17 May 2013 09:29:06 -0600
-Bjorn Helgaas <bhelgaas@google.com> wrote:
+On Wed, May 15, 2013 at 7:46 AM, Liu Jiang <liuj97@gmail.com> wrote:
+> On Wed 15 May 2013 10:43:02 PM CST, Yinghai Lu wrote:
+>>
+>
+>> that is another bug, let of guy handle it.
+>>
+>> Yinghai
+>
+> Hi Yinghai,
+>       I don't know any OF exports, could you please help to CC
+> some OF experts?
 
-> [+cc linux-pci]
-> 
-> On Wed, May 15, 2013 at 11:29 AM, Joe Lawrence
-> <joe.lawrence@stratus.com> wrote:
-> > From 84ac7a35ebd61e84d4254eae78bb967de17254c2 Mon Sep 17 00:00:00
-> > 2001 From: Joe Lawrence <joe.lawrence@stratus.com>
-> > Date: Wed, 15 May 2013 12:52:31 -0400
-> > Subject: [PATCH] mpt2sas,mpt3sas: make watchdog instantiated device
-> > removal safe
-> >
-> > Calling pci_stop_and_remove_bus_device from a SCSI LLD may introduce
-> > device removal races with PCI callback functions.
-> >
-> > Simplify the mpt2sas watchdog mechanism by separating PCI device
-> > removal from SCSI midlayer detachment. When the watchdog wishes to
-> > remove a SCSI device from the topology, detach from the SCSI
-> > midlayer, leaving the PCI device alone. Adjust various pci_driver
-> > callbacks to account for a potentially SCSI detached PCI device.
-> 
-> I don't know the details of the SCSI detachment, but this approach
-> looks much cleaner to me.
+powerpc and sparc are using that.
 
-Thanks for commenting, Bjorn.  I think this approach more closely
-represents what this watchdog is trying to accomplish.  
+Ben,
 
-Off list, Sreekanth from LSI tested and noticed a few issues with this
-patch:
+in drivers/pci/probe.c::pci_scan_device() there is
 
- - mpt2sas_base_stop_watchdog is called twice: The call from
-   mpt2sas_base_detach is safe, but now unnecessary (as a call was
-   added earlier up in the PCI driver callbacks to ensure that the
-   watchdog was out of the way.) This second invocation can be removed.
+        pci_set_of_node(dev);
 
- - If the watchdog detects a bad IOC, the watchdog remains running:
-   The watchdog workqueue isn't cleaned up until
-   mpt2sas_base_stop_watchdog is called, so in the case that the
-   watchdog removes the device from SCSI topo, the workqueue will
-   remain unused until PCI .remove/.shutdown cleans it up. Perhaps a
-   single watchdog that iterates over all adapters would be simpler?
+        if (pci_setup_device(dev)) {
+                kfree(dev);
+                return NULL;
+        }
 
-Finally, if SCSI topo detachment is all that is interesting here, would
-it make more sense to move the watchdog into the MPT "scsi" code?  I
-haven't looked at the code yet, but this might make an MPT fusion patch
-easier (due to dependencies between its "scsi" and "base" modules).
+so if pci_setup_device fails, there is one dev reference is not release.
 
-Regards,
+please check you can just move down pci_set_of_node down after that
+failing path, like
 
--- Joe
+
+        if (pci_setup_device(dev)) {
+                kfree(dev);
+                return NULL;
+        }
+
+        pci_set_of_node(dev);
+
+Yinghai
