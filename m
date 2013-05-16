@@ -1,49 +1,63 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Kevin Hilman <khilman@linaro.org>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Linux PM list <linux-pm@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.free-electrons.com ([94.23.35.102]:60025 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754565Ab3EPPtp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 May 2013 11:49:45 -0400
+Date: Thu, 16 May 2013 17:49:03 +0200
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Jason Cooper <jason@lakedaemon.net>
+Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Maen Suleiman <maen@marvell.com>, linux-pci@vger.kernel.org,
+	devicetree-discuss@lists.ozlabs.org,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Olof Johansson <olof@lixom.net>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: Re: [PATCH RFC] PM / Runtime: Rework the "runtime idle" helper routine
-References: <1463685.qFyr66vqF2@vostro.rjw.lan>
-Date: Fri, 31 May 2013 12:55:56 -0700
-In-Reply-To: <1463685.qFyr66vqF2@vostro.rjw.lan> (Rafael J. Wysocki's message
-	of "Wed, 29 May 2013 01:29:06 +0200")
-Message-ID: <87r4gmyldf.fsf@linaro.org>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-acpi-owner@vger.kernel.org
+	linux-arm-kernel@lists.infradead.org,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Subject: Re: [PATCHv9 7/9] pci: PCIe driver for Marvell Armada 370/XP
+ systems
+Message-ID: <20130516174903.3a7a07ef@skate>
+In-Reply-To: <20130516154031.GF6563@titan.lakedaemon.net>
+References: <1368624323-24311-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	<1368624323-24311-8-git-send-email-thomas.petazzoni@free-electrons.com>
+	<20130516093312.GB2459@localhost>
+	<20130516154031.GF6563@titan.lakedaemon.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-"Rafael J. Wysocki" <rjw@sisk.pl> writes:
+Dear Jason Cooper,
 
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->
-> The "runtime idle" helper routine, rpm_idle(), currently ignores
-> return values from .runtime_idle() callbacks executed by it.
->
-> However, it turns out that many subsystems use the generic idle
-> callback routine pm_generic_runtime_idle() which checks the return
-> value of the driver's callback and executes pm_runtime_suspend() for
-> the device unless that value is different from 0.  If that logic is
-> moved to rpm_idle() instead, pm_generic_runtime_idle() can be dropped
-> and its users will not need any .runtime_idle() callbacks any more.
->
-> Moreover, the PCI subsystem's .runtime_idle() routine,
-> pci_pm_runtime_idle(), works in analogy with the generic one and if
-> rpm_idle() calls rpm_suspend() after 0 has been returned by the
-> .runtime_idle() callback executed by it, that routine will not be
-> necessary any more and may be dropped.
->
-> To reduce overall code duplication make the changes described above.
->
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Thu, 16 May 2013 11:40:31 -0400, Jason Cooper wrote:
 
-Acked-by: Kevin Hilman <khilman@linaro.org>
-Tested-by: Kevin Hilman <khilman@linaro.org> # for OMAP PM domain change
+> > > +static int mvebu_pcie_init(void)
+> > 
+> > Building this showed a warning here. It seems you forgot
+> > to mark this one as __init.
+> 
+> Thomas, I'll fix this up when I pull this in, no need to resend. :)
 
+I'll resend, because beyond this function pointed by Ezequiel, there
+are two other functions that can be marked __init. The one pointed by
+Ezequiel is important because it causes a section mismatch
+when !CONFIG_MODULES, because in this case platform_driver_probe() is
+__init (and this explains what I wasn't seeing the warning, since I'm
+building CONFIG_MODULES=y). The two other functions are more cosmetic,
+but good to have as well.
+
+It would already been sent if git hadn't decided to do a 'git gc' right
+after my rebase. It's been gc-ing for quite some time now...
+
+Thomas
+-- 
+Thomas Petazzoni, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
