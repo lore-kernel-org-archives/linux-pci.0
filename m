@@ -1,54 +1,131 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:43791 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758563Ab3EWVXc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 23 May 2013 17:23:32 -0400
-Message-ID: <1369344196.3870.35.camel@pasglop>
-Subject: Re: Resource assignment oddities
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Yinghai Lu <yinghai@kernel.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Jiang Liu <liuj97@gmail.com>
 Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Date: Fri, 24 May 2013 07:23:16 +1000
-In-Reply-To: <CAE9FiQWyEhdQGjC+hiGxOHdHwZoajfwfcgp26wivqL0s62NPkA@mail.gmail.com>
-References: <CAE9FiQX=h4H1gcbW=EfQo_ZtAgHGOZ2GxVxLG59C1iMH+qgH2g@mail.gmail.com>
-	 <1367732090.11982.38.camel@pasglop>
-	 <CAE9FiQUN3qqVmdw_EdOC-JZGc219M3tu=roOX98xns+77LJhMw@mail.gmail.com>
-	 <1367740336.11982.41.camel@pasglop>
-	 <51871088.4594420a.0ccc.7300SMTPIN_ADDED_BROKEN@mx.google.com>
-	 <CAE9FiQXGUOM_h_X5tdGbkiuZGZkiFigSLbbftx3YXybFBg6trg@mail.gmail.com>
-	 <518786a7.64bbec0a.58a0.1f6bSMTPIN_ADDED_BROKEN@mx.google.com>
-	 <CAErSpo5MJCoaof=heFM4vLxuWz8pFqsyXAC356jZ7rbRvSOt9g@mail.gmail.com>
-	 <CAE9FiQWsZXfkSSVFzee4-J4bUDP8DdG=y9-k2du+ek90StDvNA@mail.gmail.com>
-	 <CAE9FiQXw=Q9hDWMS3kx8=G0eSqo2keKh-VP3=LWZ31PfXmrAmg@mail.gmail.com>
-	 <519dcfbe.89e9420a.4934.488bSMTPIN_ADDED_BROKEN@mx.google.com>
-	 <CAE9FiQW==Zvwv976-xjtRFj70JWoZW94yQyM0NMTvMpR-yDG9Q@mail.gmail.com>
-	 <CAErSpo5ASyYvRJgA3TDt7A5xtxL0sqopfAxbnJwDL=z_2hDJag@mail.gmail.com>
-	 <CAE9FiQX8o97RY-Bd9t1vj+gm_Uri0v_hAUwecaNoF2GwGGTNyA@mail.gmail.com>
-	 <CAErSpo5vY-DY9_bLWbM5UNrSZdO5dyASx1hLGMQg-ypgZHXLLg@mail.gmail.com>
-	 <CAE9FiQWyEhdQGjC+hiGxOHdHwZoajfwfcgp26wivqL0s62NPkA@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+	Yinghai Lu <yinghai@kernel.org>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	Len Brown <lenb@kernel.org>, Feng Tang <feng.tang@intel.com>,
+	linux-acpi@vger.kernel.org
+Subject: Re: [RFC PATCH v2, part3 11/11] PCI, ACPI, pci_root: use PCI bus lock to protect PCI device hotplug
+Date: Thu, 16 May 2013 21:59:27 +0200
+Message-ID: <10972097.JVdfQZJ2zI@vostro.rjw.lan>
+In-Reply-To: <1368719459-24800-12-git-send-email-jiang.liu@huawei.com>
+References: <1368719459-24800-1-git-send-email-jiang.liu@huawei.com> <1368719459-24800-12-git-send-email-jiang.liu@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2013-05-23 at 14:00 -0700, Yinghai Lu wrote:
-> Yes, that is what patch try to do. Keep the mmio allocation from first
-> try, and only retry with io port.
+On Thursday, May 16, 2013 11:50:59 PM Jiang Liu wrote:
+> Use PCI bus lock to protect concurrent PCI device hotplug operations.
+> 
+> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+> Cc: Thomas Gleixner <tglx@linutronix.de>
+> Cc: Ingo Molnar <mingo@redhat.com>
+> Cc: "H. Peter Anvin" <hpa@zytor.com>
+> Cc: x86@kernel.org
+> Cc: Len Brown <lenb@kernel.org>
+> Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
+> Cc: Yinghai Lu <yinghai@kernel.org>
+> Cc: Feng Tang <feng.tang@intel.com>
+> Cc: linux-kernel@vger.kernel.org
+> Cc: linux-acpi@vger.kernel.org
 
-Can you describe more precisely what happens with the *current* code ?
+Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Ie. The first pass allocates my device MMIO regions fine. The second
-pass them spew some error messages about some mem allocation. I can
-still observe *something* being assigned to devices and in the (limited)
-setup I've been able to test with, so far, the devices seemed to still
-work, so I don't have a good grasp of the extent of the risk here.
-
-Is there a chance that this failed "second pass" actually prevents
-proper allocation of resources ?
-
-Cheers,
-Ben.
-
-
+> ---
+>  arch/ia64/pci/pci.c     |  2 +-
+>  arch/x86/pci/acpi.c     |  3 ++-
+>  drivers/acpi/pci_root.c | 14 ++++++++------
+>  drivers/pci/Kconfig     |  2 +-
+>  4 files changed, 12 insertions(+), 9 deletions(-)
+> 
+> diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
+> index de1474f..6e91e87 100644
+> --- a/arch/ia64/pci/pci.c
+> +++ b/arch/ia64/pci/pci.c
+> @@ -384,7 +384,7 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+>  	}
+>  
+>  	pci_scan_child_bus(pbus);
+> -	return pbus;
+> +	return pci_bus_get(pbus);
+>  
+>  out3:
+>  	kfree(controller->window);
+> diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+> index b972f04..6dddc06 100644
+> --- a/arch/x86/pci/acpi.c
+> +++ b/arch/x86/pci/acpi.c
+> @@ -534,7 +534,7 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+>  		 */
+>  		memcpy(bus->sysdata, sd, sizeof(*sd));
+>  		kfree(info);
+> -		pci_bus_put(bus);
+> +		BUG_ON(pci_bus_lock(bus, PCI_BUS_STATE_REMOVED - 1, true) < 0);
+>  	} else {
+>  		probe_pci_root_info(info, device, busnum, domain);
+>  
+> @@ -561,6 +561,7 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+>  			pci_set_host_bridge_release(
+>  				to_pci_host_bridge(bus->bridge),
+>  				release_pci_root_info, info);
+> +			pci_bus_get(bus);
+>  		} else {
+>  			pci_free_resource_list(&resources);
+>  			__release_pci_root_info(info);
+> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+> index 21dda5a..eb01cc7 100644
+> --- a/drivers/acpi/pci_root.c
+> +++ b/drivers/acpi/pci_root.c
+> @@ -535,6 +535,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
+>  	}
+>  
+>  	pci_bus_add_devices(root->bus);
+> +	pci_bus_unlock(root->bus, true);
+>  	return 1;
+>  
+>  end:
+> @@ -546,13 +547,14 @@ static void acpi_pci_root_remove(struct acpi_device *device)
+>  {
+>  	struct acpi_pci_root *root = acpi_driver_data(device);
+>  
+> -	pci_stop_root_bus(root->bus);
+> -
+> -	device_set_run_wake(root->bus->bridge, false);
+> -	pci_acpi_remove_bus_pm_notifier(device);
+> -
+> -	pci_remove_root_bus(root->bus);
+> +	if (pci_bus_lock(root->bus, PCI_BUS_STATE_REMOVED - 1, true) == 0) {
+> +		pci_stop_root_bus(root->bus);
+> +		device_set_run_wake(root->bus->bridge, false);
+> +		pci_acpi_remove_bus_pm_notifier(device);
+> +		pci_remove_root_bus(root->bus);
+> +	}
+>  
+> +	pci_bus_put(root->bus);
+>  	kfree(root);
+>  }
+>  
+> diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+> index 92e69bd..5ae3504 100644
+> --- a/drivers/pci/Kconfig
+> +++ b/drivers/pci/Kconfig
+> @@ -121,4 +121,4 @@ config PCI_LABEL
+>  	select NLS
+>  
+>  config PCI_BUS_LOCK
+> -	def_bool n
+> +	def_bool y if (X86 || IA64)
+> 
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
