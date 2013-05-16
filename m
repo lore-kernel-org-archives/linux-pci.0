@@ -1,37 +1,86 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from jabberwock.ucw.cz ([46.255.230.98]:35471 "EHLO
-	jabberwock.ucw.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754882Ab3ETHNI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 20 May 2013 03:13:08 -0400
-Received: from albireo.burrow.ucw.cz (albireo.ucw.cz [89.239.2.32])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(Client CN "albireo.ucw.cz", Issuer "ucw.cz" (verified OK))
-	by jabberwock.ucw.cz (Postfix) with ESMTPS id 447A21C00D2
-	for <linux-pci@vger.kernel.org>; Mon, 20 May 2013 09:06:31 +0200 (CEST)
-Date: Mon, 20 May 2013 09:06:30 +0200
-From: Martin Mares <mj@ucw.cz>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Phillip Susi <psusi@ubuntu.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] lspci: Fully decode ASPM support from Link Capabilities
-Message-ID: <mj+md-20130520.070616.5436.albireo@ucw.cz>
-References: <20130517194819.20832.31070.stgit@bhelgaas-glaptop>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130517194819.20832.31070.stgit@bhelgaas-glaptop>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [RFC PATCH v2, part3 04/11] PCI: introduce helper function pci_stop_and_remove_device()
+Date: Thu, 16 May 2013 23:50:52 +0800
+Message-Id: <1368719459-24800-5-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1368719459-24800-1-git-send-email-jiang.liu@huawei.com>
+References: <1368719459-24800-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello!
+Introduce a helper function pci_stop_and_remove_device(), which
+removes a PCI device in a safe way by locking parent and all
+affected descendant PCI buses.
 
-> The ASPM Support field in Link Capabilities is two bits, and all four
-> possible encodings are defined as of PCIe spec r3.0.  Previously, lspci
-> only decoded values 1, 2, and 3.  This adds 0, so lspci will show "ASPM
-> not supported" instead of "ASPM unknown".
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+---
+ drivers/pci/remove.c | 19 +++++++++++++++++++
+ include/linux/pci.h  |  1 +
+ 2 files changed, 20 insertions(+)
 
-Thanks, applied.
-
-				Have a nice fortnight
+diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+index 2f01f72..8e9b272 100644
+--- a/drivers/pci/remove.c
++++ b/drivers/pci/remove.c
+@@ -1,6 +1,7 @@
+ #include <linux/pci.h>
+ #include <linux/module.h>
+ #include <linux/pci-aspm.h>
++#include <linux/delay.h>
+ #include "pci.h"
+ 
+ static void pci_stop_bus_device(struct pci_dev *dev);
+@@ -148,6 +149,24 @@ void pci_stop_and_remove_bus_device(struct pci_dev *dev)
+ }
+ EXPORT_SYMBOL(pci_stop_and_remove_bus_device);
+ 
++void pci_stop_and_remove_device(struct pci_dev *pdev)
++{
++	int ret;
++	struct pci_bus *bus = pdev->bus;
++
++	do {
++		ret = pci_bus_lock_timeout(bus, PCI_BUS_STATE_STOPPING - 1,
++					   true, HZ / 10);
++		if (ret == 0) {
++			pci_stop_and_remove_bus_device(pdev);
++			pci_bus_unlock(bus, true);
++			break;
++		}
++	} while (pci_bus_get_state(bus) <= PCI_BUS_STATE_STARTED &&
++		 pci_dev_get_state(pdev) <= PCI_DEV_STATE_STARTED);
++}
++EXPORT_SYMBOL(pci_stop_and_remove_device);
++
+ void pci_stop_root_bus(struct pci_bus *bus)
+ {
+ 	BUG_ON(!pci_bus_is_locked(bus));
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index d3f61f8..45d4aea 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -817,6 +817,7 @@ struct pci_dev *pci_dev_get(struct pci_dev *dev);
+ void pci_dev_put(struct pci_dev *dev);
+ void pci_remove_bus(struct pci_bus *b);
+ void pci_stop_and_remove_bus_device(struct pci_dev *dev);
++void pci_stop_and_remove_device(struct pci_dev *dev);
+ void pci_stop_root_bus(struct pci_bus *bus);
+ void pci_remove_root_bus(struct pci_bus *bus);
+ void pci_setup_cardbus(struct pci_bus *bus);
 -- 
-Martin `MJ' Mares                          <mj@ucw.cz>   http://mj.ucw.cz/
-Faculty of Math and Physics, Charles University, Prague, Czech Rep., Earth
-God is real, unless declared integer.
+1.8.1.2
+
