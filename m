@@ -1,129 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f50.google.com ([209.85.160.50]:54634 "EHLO
-	mail-pb0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751652Ab3EMQJQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 13 May 2013 12:09:16 -0400
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Len Brown <lenb@kernel.org>,
-	linux-acpi@vger.kernel.org
-Subject: [PATCH v2, part 1 5/9] ACPI, PCI: remove unused global list acpi_pci_roots in pci_root.c
-Date: Tue, 14 May 2013 00:08:29 +0800
-Message-Id: <1368461313-4371-6-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1368461313-4371-1-git-send-email-jiang.liu@huawei.com>
-References: <1368461313-4371-1-git-send-email-jiang.liu@huawei.com>
+Received: from mho-03-ewr.mailhop.org ([204.13.248.66]:34724 "EHLO
+	mho-01-ewr.mailhop.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752883Ab3EPP4z (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 May 2013 11:56:55 -0400
+Date: Thu, 16 May 2013 11:56:17 -0400
+From: Jason Cooper <jason@lakedaemon.net>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Maen Suleiman <maen@marvell.com>, linux-pci@vger.kernel.org,
+	devicetree-discuss@lists.ozlabs.org,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Olof Johansson <olof@lixom.net>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Subject: Re: [PATCHv9 7/9] pci: PCIe driver for Marvell Armada 370/XP
+ systems
+Message-ID: <20130516155617.GH6563@titan.lakedaemon.net>
+References: <1368624323-24311-1-git-send-email-thomas.petazzoni@free-electrons.com>
+ <1368624323-24311-8-git-send-email-thomas.petazzoni@free-electrons.com>
+ <20130516093312.GB2459@localhost>
+ <20130516154031.GF6563@titan.lakedaemon.net>
+ <20130516174903.3a7a07ef@skate>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130516174903.3a7a07ef@skate>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now the global list acpi_pci_roots pci_root.c is useless, remove it.
+On Thu, May 16, 2013 at 05:49:03PM +0200, Thomas Petazzoni wrote:
+> Dear Jason Cooper,
+> 
+> On Thu, 16 May 2013 11:40:31 -0400, Jason Cooper wrote:
+> 
+> > > > +static int mvebu_pcie_init(void)
+> > > 
+> > > Building this showed a warning here. It seems you forgot
+> > > to mark this one as __init.
+> > 
+> > Thomas, I'll fix this up when I pull this in, no need to resend. :)
+> 
+> I'll resend, because beyond this function pointed by Ezequiel, there
+> are two other functions that can be marked __init. The one pointed by
+> Ezequiel is important because it causes a section mismatch
+> when !CONFIG_MODULES, because in this case platform_driver_probe() is
+> __init (and this explains what I wasn't seeing the warning, since I'm
+> building CONFIG_MODULES=y). The two other functions are more cosmetic,
+> but good to have as well.
+> 
+> It would already been sent if git hadn't decided to do a 'git gc' right
+> after my rebase. It's been gc-ing for quite some time now...
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Cc: Len Brown <lenb@kernel.org>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: linux-acpi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
----
- drivers/acpi/pci_root.c | 25 +++----------------------
- include/acpi/acpi_bus.h |  1 -
- 2 files changed, 3 insertions(+), 23 deletions(-)
+Dear boss,
 
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index b80e06e..91ddfd6 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -65,10 +65,6 @@ static struct acpi_scan_handler pci_root_handler = {
- 	.detach = acpi_pci_root_remove,
- };
- 
--/* Lock to protect both acpi_pci_roots lists */
--static DEFINE_MUTEX(acpi_pci_root_lock);
--static LIST_HEAD(acpi_pci_roots);
--
- static DEFINE_MUTEX(osc_lock);
- 
- /**
-@@ -423,7 +419,6 @@ static int acpi_pci_root_add(struct acpi_device *device,
- 		}
- 	}
- 
--	INIT_LIST_HEAD(&root->node);
- 	root->device = device;
- 	root->segment = segment & 0xFFFF;
- 	strcpy(acpi_device_name(device), ACPI_PCI_ROOT_DEVICE_NAME);
-@@ -501,10 +496,6 @@ static int acpi_pci_root_add(struct acpi_device *device,
- 	 * TBD: Need PCI interface for enumeration/configuration of roots.
- 	 */
- 
--	mutex_lock(&acpi_pci_root_lock);
--	list_add_tail(&root->node, &acpi_pci_roots);
--	mutex_unlock(&acpi_pci_root_lock);
--
- 	/*
- 	 * Scan the Root Bridge
- 	 * --------------------
-@@ -518,7 +509,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
- 			    "Bus %04x:%02x not present in PCI namespace\n",
- 			    root->segment, (unsigned int)root->secondary.start);
- 		result = -ENODEV;
--		goto out_del_root;
-+		goto end;
- 	}
- 
- 	/* ASPM setting */
-@@ -538,20 +529,13 @@ static int acpi_pci_root_add(struct acpi_device *device,
- 	if (system_state != SYSTEM_BOOTING) {
- 		pcibios_resource_survey_bus(root->bus);
- 		pci_assign_unassigned_bus_resources(root->bus);
--	}
--
--	/* need to after hot-added ioapic is registered */
--	if (system_state != SYSTEM_BOOTING)
-+		/* need to after hot-added ioapic is registered */
- 		pci_enable_bridges(root->bus);
-+	}
- 
- 	pci_bus_add_devices(root->bus);
- 	return 1;
- 
--out_del_root:
--	mutex_lock(&acpi_pci_root_lock);
--	list_del(&root->node);
--	mutex_unlock(&acpi_pci_root_lock);
--
- end:
- 	kfree(root);
- 	return result;
-@@ -568,9 +552,6 @@ static void acpi_pci_root_remove(struct acpi_device *device)
- 
- 	pci_remove_root_bus(root->bus);
- 
--	mutex_lock(&acpi_pci_root_lock);
--	list_del(&root->node);
--	mutex_unlock(&acpi_pci_root_lock);
- 	kfree(root);
- }
- 
-diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
-index 22ba56e..4eb9a88 100644
---- a/include/acpi/acpi_bus.h
-+++ b/include/acpi/acpi_bus.h
-@@ -447,7 +447,6 @@ int register_acpi_bus_type(struct acpi_bus_type *);
- int unregister_acpi_bus_type(struct acpi_bus_type *);
- 
- struct acpi_pci_root {
--	struct list_head node;
- 	struct acpi_device * device;
- 	struct pci_bus *bus;
- 	u16 segment;
--- 
-1.8.1.2
+I am in desperate need of a 500GB SSD on which to do my kernel work.
 
+Thanks,
+
+Kranky Kernel Developer
+
+hehehe...
+
+
+I'll pull in once you send.
+
+thx,
+
+Jason.
