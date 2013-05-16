@@ -1,162 +1,80 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Jiri Kosina <jkosina@suse.cz>,
-	Masanari Iida <standby24x7@gmail.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Subject: [PATCH v3, part2 03/20] PCI, hotplug: use hotplug-safe iterators to walk PCI buses
-Date: Sun, 26 May 2013 23:53:00 +0800
-Message-Id: <1369583597-3801-4-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1369583597-3801-1-git-send-email-jiang.liu@huawei.com>
-References: <1369583597-3801-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.free-electrons.com ([94.23.35.102]:60137 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754733Ab3EPP5m (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 May 2013 11:57:42 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>
+Cc: linux-arm-kernel@lists.infradead.org,
+	Arnd Bergmann <arnd@arndb.de>, Olof Johansson <olof@lixom.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Lior Amsalem <alior@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	linux-pci@vger.kernel.org,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	devicetree-discuss@lists.ozlabs.org
+Subject: [PATCHv10 1/9] arm: mvebu: fix the 'ranges' property to handle PCIe
+Date: Thu, 16 May 2013 17:55:16 +0200
+Message-Id: <1368719725-21265-2-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1368719725-21265-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1368719725-21265-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Enhance PCI hotplug drivers to use hotplug-safe iterators to walk
-PCI buses.
+Since 82a682676 ('ARM: dts: mvebu: Convert all the mvebu files to use
+the range property') all the device nodes of Armada 370/XP are under a
+common 'ranges' property that translates the device register addresses
+into their absolute address, thanks to the base address of the
+internal register space.
 
-In other words, replace pci_find_bus(), pci_find_next_bus() and
-pci_root_buses with pci_bus_exists(), pci_get_bus(), pci_get_next_bus()
-and pci_get_next_root_bus() etc.
+However, beyond just the register areas, there are also PCIe I/O and
+memory regions, whose addresses should be properly translated. This
+patch fixes the Armada 370 and XP ranges property to take PCIe into
+account properly.
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Acked-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Jiri Kosina <jkosina@suse.cz>
-Cc: Masanari Iida <standby24x7@gmail.com>
-Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Toshi Kani <toshi.kani@hp.com>
-Cc: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
 ---
- drivers/pci/hotplug-pci.c          | 2 +-
- drivers/pci/hotplug/ibmphp_core.c  | 8 +++++---
- drivers/pci/hotplug/ibmphp_ebda.c  | 8 ++++++--
- drivers/pci/hotplug/sgi_hotplug.c  | 3 ++-
- drivers/pci/hotplug/shpchp_sysfs.c | 2 +-
- 5 files changed, 15 insertions(+), 8 deletions(-)
+Since the PCIe Device Tree description has been merged in 3.10-rc1,
+this commit should go in 3.10-rc as well.
+---
+ arch/arm/boot/dts/armada-370-xp.dtsi |    3 ++-
+ arch/arm/boot/dts/armada-370.dtsi    |    3 ++-
+ 2 files changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/hotplug-pci.c b/drivers/pci/hotplug-pci.c
-index 6258dc2..18533ed 100644
---- a/drivers/pci/hotplug-pci.c
-+++ b/drivers/pci/hotplug-pci.c
-@@ -11,7 +11,7 @@ int __ref pci_hp_add_bridge(struct pci_dev *dev)
- 	int end = parent->busn_res.end;
+diff --git a/arch/arm/boot/dts/armada-370-xp.dtsi b/arch/arm/boot/dts/armada-370-xp.dtsi
+index 272bbc6..550eb77 100644
+--- a/arch/arm/boot/dts/armada-370-xp.dtsi
++++ b/arch/arm/boot/dts/armada-370-xp.dtsi
+@@ -33,7 +33,8 @@
+ 		#size-cells = <1>;
+ 		compatible = "simple-bus";
+ 		interrupt-parent = <&mpic>;
+-		ranges = <0 0 0xd0000000 0x100000>;
++		ranges = <0          0 0xd0000000 0x0100000 /* internal registers */
++			  0xe0000000 0 0xe0000000 0x8100000 /* PCIe */>;
  
- 	for (busnr = start; busnr <= end; busnr++) {
--		if (!pci_find_bus(pci_domain_nr(parent), busnr))
-+		if (!pci_bus_exists(pci_domain_nr(parent), busnr))
- 			break;
- 	}
- 	if (busnr-- > end) {
-diff --git a/drivers/pci/hotplug/ibmphp_core.c b/drivers/pci/hotplug/ibmphp_core.c
-index cbd72d8..fb47695 100644
---- a/drivers/pci/hotplug/ibmphp_core.c
-+++ b/drivers/pci/hotplug/ibmphp_core.c
-@@ -739,7 +739,7 @@ static u8 bus_structure_fixup(u8 busno)
- 	struct pci_dev *dev;
- 	u16 l;
+ 		internal-regs {
+ 			compatible = "simple-bus";
+diff --git a/arch/arm/boot/dts/armada-370.dtsi b/arch/arm/boot/dts/armada-370.dtsi
+index b2c1b5a..834c9be 100644
+--- a/arch/arm/boot/dts/armada-370.dtsi
++++ b/arch/arm/boot/dts/armada-370.dtsi
+@@ -29,7 +29,8 @@
+ 	};
  
--	if (pci_find_bus(0, busno) || !(ibmphp_find_same_bus_num(busno)))
-+	if (pci_bus_exists(0, busno) || !(ibmphp_find_same_bus_num(busno)))
- 		return 1;
- 
- 	bus = kmalloc(sizeof(*bus), GFP_KERNEL);
-@@ -787,7 +787,7 @@ static int ibm_configure_device(struct pci_func *func)
- 				PCI_DEVFN(func->device, func->function));
- 
- 	if (func->dev == NULL) {
--		struct pci_bus *bus = pci_find_bus(0, func->busno);
-+		struct pci_bus *bus = pci_get_bus(0, func->busno);
- 		if (!bus)
- 			return 0;
- 
-@@ -795,6 +795,7 @@ static int ibm_configure_device(struct pci_func *func)
- 				PCI_DEVFN(func->device, func->function));
- 		if (num)
- 			pci_bus_add_devices(bus);
-+		pci_bus_put(bus);
- 
- 		func->dev = pci_get_bus_and_slot(func->busno,
- 				PCI_DEVFN(func->device, func->function));
-@@ -1315,13 +1316,14 @@ static int __init ibmphp_init(void)
- 		goto exit;
- 	}
- 
--	bus = pci_find_bus(0, 0);
-+	bus = pci_get_bus(0, 0);
- 	if (!bus) {
- 		err("Can't find the root pci bus, can not continue\n");
- 		rc = -ENODEV;
- 		goto error;
- 	}
- 	memcpy(ibmphp_pci_bus, bus, sizeof(*ibmphp_pci_bus));
-+	pci_bus_put(bus);
- 
- 	ibmphp_debug = debug;
- 
-diff --git a/drivers/pci/hotplug/ibmphp_ebda.c b/drivers/pci/hotplug/ibmphp_ebda.c
-index 9df78bc..e17f271 100644
---- a/drivers/pci/hotplug/ibmphp_ebda.c
-+++ b/drivers/pci/hotplug/ibmphp_ebda.c
-@@ -978,9 +978,13 @@ static int __init ebda_rsrc_controller (void)
- 	}			/* each hpc  */
- 
- 	list_for_each_entry(tmp_slot, &ibmphp_slot_head, ibm_slot_list) {
-+		struct pci_bus *bus = pci_get_bus(0, tmp_slot->bus);
-+
-+		BUG_ON(!bus);
- 		snprintf(name, SLOT_NAME_SIZE, "%s", create_file_name(tmp_slot));
--		pci_hp_register(tmp_slot->hotplug_slot,
--			pci_find_bus(0, tmp_slot->bus), tmp_slot->device, name);
-+		pci_hp_register(tmp_slot->hotplug_slot, bus, tmp_slot->device,
-+				name);
-+		pci_bus_put(bus);
- 	}
- 
- 	print_ebda_hpc ();
-diff --git a/drivers/pci/hotplug/sgi_hotplug.c b/drivers/pci/hotplug/sgi_hotplug.c
-index b2781df..5c69bda 100644
---- a/drivers/pci/hotplug/sgi_hotplug.c
-+++ b/drivers/pci/hotplug/sgi_hotplug.c
-@@ -684,7 +684,7 @@ static int __init sn_pci_hotplug_init(void)
- 
- 	INIT_LIST_HEAD(&sn_hp_list);
- 
--	while ((pci_bus = pci_find_next_bus(pci_bus))) {
-+	for_each_pci_root_bus(pci_bus) {
- 		if (!pci_bus->sysdata)
- 			continue;
- 
-@@ -703,6 +703,7 @@ static int __init sn_pci_hotplug_init(void)
- 			break;
- 		}
- 	}
-+	pci_bus_put(pci_bus);
- 
- 	return registered == 1 ? 0 : -ENODEV;
- }
-diff --git a/drivers/pci/hotplug/shpchp_sysfs.c b/drivers/pci/hotplug/shpchp_sysfs.c
-index e8c31fe..e7a5dd2 100644
---- a/drivers/pci/hotplug/shpchp_sysfs.c
-+++ b/drivers/pci/hotplug/shpchp_sysfs.c
-@@ -74,7 +74,7 @@ static ssize_t show_ctrl (struct device *dev, struct device_attribute *attr, cha
- 	}
- 	out += sprintf(out, "Free resources: bus numbers\n");
- 	for (busnr = bus->busn_res.start; busnr <= bus->busn_res.end; busnr++) {
--		if (!pci_find_bus(pci_domain_nr(bus), busnr))
-+		if (!pci_bus_exists(pci_domain_nr(bus), busnr))
- 			break;
- 	}
- 	if (busnr < bus->busn_res.end)
+ 	soc {
+-		ranges = <0 0xd0000000 0x100000>;
++		ranges = <0          0xd0000000 0x0100000 /* internal registers */
++			  0xe0000000 0xe0000000 0x8100000 /* PCIe */>;
+ 		internal-regs {
+ 			system-controller@18200 {
+ 				compatible = "marvell,armada-370-xp-system-controller";
 -- 
-1.8.1.2
+1.7.9.5
 
