@@ -1,51 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:60468 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755796Ab3ETM6m (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 20 May 2013 08:58:42 -0400
-Message-ID: <519A1DFD.5080809@linux.intel.com>
-Date: Mon, 20 May 2013 15:58:37 +0300
-From: Eliezer Tamir <eliezer.tamir@linux.intel.com>
-MIME-Version: 1.0
-To: Or Gerlitz <or.gerlitz@gmail.com>
-CC: Greg Rose <gregory.v.rose@intel.com>,
-	Yinghai Lu <yinghai@kernel.org>,
+Received: from mail.free-electrons.com ([94.23.35.102]:60208 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754785Ab3EPP6A (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 May 2013 11:58:00 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>
+Cc: linux-arm-kernel@lists.infradead.org,
+	Arnd Bergmann <arnd@arndb.de>, Olof Johansson <olof@lixom.net>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Alexander Duyck <alexander.h.duyck@intel.com>,
-	Yan Burman <yanb@mellanox.com>,
-	Sathya Perla <Sathya.Perla@emulex.com>, netdev@vger.kernel.org
-Subject: Re: [PATCH v2 6/7] PCI: Make sure VF's driver get attached after
- PF's
-References: <1368586102-17661-1-git-send-email-yinghai@kernel.org> <20130515091248.00002fe3@unknown> <CAJZOPZ+L1QJdHePd_x9RAoqZKyJAKHo+hA8T1UZoe8=ozT98RA@mail.gmail.com>
-In-Reply-To: <CAJZOPZ+L1QJdHePd_x9RAoqZKyJAKHo+hA8T1UZoe8=ozT98RA@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Grant Likely <grant.likely@secretlab.ca>,
+	Lior Amsalem <alior@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	linux-pci@vger.kernel.org,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	devicetree-discuss@lists.ozlabs.org,
+	Mike Turquette <mturquette@linaro.org>
+Subject: [PATCHv10 6/9] clk: mvebu: add more PCIe clocks for Armada XP
+Date: Thu, 16 May 2013 17:55:21 +0200
+Message-Id: <1368719725-21265-7-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1368719725-21265-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1368719725-21265-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 20/05/2013 15:28, Or Gerlitz wrote:
-> On Wed, May 15, 2013 at 7:12 PM, Greg Rose <gregory.v.rose@intel.com> wrote:
->
->
->> I'm really not a fan of this.  Seems to me the tail is wagging the dog
->> here.  Fix the driver to work without a PF driver being present.
->
-> Greg, Alex,
->
-> As I wrote over the V1 thread, currently we can't go and patch mlx4 to
-> use the sysfs API nor defer the call from within our probe function to
-> enable sriov since  this requires some firmware change to allow
-> enabling SRIOV after some  resources are initialized/provisioned.
-> Hence the patch suggested here or any other patch we can agree on
-> which will make sure that VF probing is done only once the PF is ready
-> is preferred, I think.
->
-Maybe do the following:
-1. split the VF PCI IDs into a separate PCI_ID device table.
-2. have two pci_driver structs, one for all of the PF IDS and one with 
-the VF IDS.
-3. only register the first pci_driver struct from mlx4_init().
-4. register the one for the VFs once your PFs are all up and ready.
+The current revision of the datasheet only mentions the gatable clocks
+for the PCIe 0.0, 0.1, 0.2 and 0.3 interfaces, and forgot to mention
+the ones for the PCIe 1.0, 1.1, 1.2, 1.3, 2.0 and 3.0
+interfaces. After confirmation with Marvell engineers, this patch adds
+the missing gatable clocks for those PCIe interfaces.
 
-Eliezer
+It also changes the name of the previously existing PCIe gatable
+clocks, in order to match the naming using the datasheets.
+
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Mike Turquette <mturquette@linaro.org>
+---
+ drivers/clk/mvebu/clk-gating-ctrl.c |   14 ++++++++++----
+ 1 file changed, 10 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/clk/mvebu/clk-gating-ctrl.c b/drivers/clk/mvebu/clk-gating-ctrl.c
+index b35785a..2f03723 100644
+--- a/drivers/clk/mvebu/clk-gating-ctrl.c
++++ b/drivers/clk/mvebu/clk-gating-ctrl.c
+@@ -137,10 +137,14 @@ static const struct mvebu_soc_descr __initconst armada_xp_gating_descr[] = {
+ 	{ "ge2", NULL,  2 },
+ 	{ "ge1", NULL, 3 },
+ 	{ "ge0", NULL, 4 },
+-	{ "pex0", NULL, 5 },
+-	{ "pex1", NULL, 6 },
+-	{ "pex2", NULL, 7 },
+-	{ "pex3", NULL, 8 },
++	{ "pex00", NULL, 5 },
++	{ "pex01", NULL, 6 },
++	{ "pex02", NULL, 7 },
++	{ "pex03", NULL, 8 },
++	{ "pex10", NULL, 9 },
++	{ "pex11", NULL, 10 },
++	{ "pex12", NULL, 11 },
++	{ "pex13", NULL, 12 },
+ 	{ "bp", NULL, 13 },
+ 	{ "sata0lnk", NULL, 14 },
+ 	{ "sata0", "sata0lnk", 15 },
+@@ -152,6 +156,8 @@ static const struct mvebu_soc_descr __initconst armada_xp_gating_descr[] = {
+ 	{ "xor0", NULL, 22 },
+ 	{ "crypto", NULL, 23 },
+ 	{ "tdm", NULL, 25 },
++	{ "pex20", NULL, 26 },
++	{ "pex30", NULL, 27 },
+ 	{ "xor1", NULL, 28 },
+ 	{ "sata1lnk", NULL, 29 },
+ 	{ "sata1", "sata1lnk", 30 },
+-- 
+1.7.9.5
+
