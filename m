@@ -1,58 +1,157 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f169.google.com ([209.85.214.169]:39800 "EHLO
-	mail-ob0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755974Ab3ETX1P (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 20 May 2013 19:27:15 -0400
-Received: by mail-ob0-f169.google.com with SMTP id vb8so4787obc.14
-        for <linux-pci@vger.kernel.org>; Mon, 20 May 2013 16:27:14 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20130520231909.32416.81752.stgit@bhelgaas-glaptop>
-References: <20130520231909.32416.81752.stgit@bhelgaas-glaptop>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 20 May 2013 17:26:54 -0600
-Message-ID: <CAErSpo7pWpDae2uOJq-F57YRmPEK3q1qD1aawM-NgEXMw-k8og@mail.gmail.com>
-Subject: Re: [PATCH 1/2] powerpc/PCI: Use PCI_UNKNOWN for unknown power state
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Paul Mackerras <paulus@samba.org>,
-	"David S. Miller" <davem@davemloft.net>
-Cc: sparclinux@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [RFC PATCH v2, part3 06/11] PCI, sysfs: use PCI bus lock to serialize hotplug operations triggered by sysfs
+Date: Thu, 16 May 2013 23:50:54 +0800
+Message-Id: <1368719459-24800-7-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1368719459-24800-1-git-send-email-jiang.liu@huawei.com>
+References: <1368719459-24800-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, May 20, 2013 at 5:19 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> Previously we initialized dev->current_state to 4 (PCI_D3cold), but I think
-> we wanted PCI_UNKNOWN (5) here based on the comment and the fact that the
-> generic version of this code, pci_setup_device(), uses PCI_UNKNOWN.
->
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> ---
->  arch/powerpc/kernel/pci_of_scan.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/arch/powerpc/kernel/pci_of_scan.c b/arch/powerpc/kernel/pci_of_scan.c
-> index 2a67e9b..d2d407d 100644
-> --- a/arch/powerpc/kernel/pci_of_scan.c
-> +++ b/arch/powerpc/kernel/pci_of_scan.c
-> @@ -165,7 +165,7 @@ struct pci_dev *of_create_pci_dev(struct device_node *node,
->         pr_debug("    class: 0x%x\n", dev->class);
->         pr_debug("    revision: 0x%x\n", dev->revision);
->
-> -       dev->current_state = 4;         /* unknown power state */
-> +       dev->current_state = PCI_UNKNOWN;       /* unknown power state */
+Use PCI bus lock to serialize hotplug operations triggered by pci-sysfs,
+and remove the redundant local mutex pci_remove_rescan_mutex.
 
-If you're interested in the archaeology of this, I think it was first
-introduced by 4267292b0 in 2005 for powerpc and subsequently copied
-into sparc by a2fb23af1 in 2007.
+This also fixes the bug reported by Gu Zheng as:
+	echo -n 1 > /sys/bus/pci/devices/0000\:10\:00.0/remove ; echo -n 1 >
+/sys/bus/pci/devices/0000\:1a\:01.0/remove
 
-Prior to the addition of PCI_UNKNOWN, pci_setup_device() set
-current_state to 4, so I think 4267292b0 probably just copied that
-code before 3fe9d19f9 added PCI_UNKNOWN and changed the initialization
-in pci_setup_device().
+will cause kernel crash as bus get freed.
 
->         dev->error_state = pci_channel_io_normal;
->         dev->dma_mask = 0xffffffff;
->
->
+[  418.946462] CPU 4
+[  418.968377] Pid: 512, comm: kworker/u:2 Tainted: G        W    3.8.0 #2
+FUJITSU-SV PRIMEQUEST 1800E/SB
+[  419.081763] RIP: 0010:[<ffffffff8137972e>]  [<ffffffff8137972e>]
+pci_bus_read_config_word+0x5e/0x90
+[  420.494137] Call Trace:
+[  420.523326]  [<ffffffff813851ef>] ? remove_callback+0x1f/0x40
+[  420.591984]  [<ffffffff8138044b>] pci_pme_active+0x4b/0x1c0
+[  420.658545]  [<ffffffff8137d8e7>] pci_stop_bus_device+0x57/0xb0
+[  420.729259]  [<ffffffff8137dab6>] pci_stop_and_remove_bus_device+0x16/0x30
+[  420.811392]  [<ffffffff813851fb>] remove_callback+0x2b/0x40
+[  420.877955]  [<ffffffff81257a56>] sysfs_schedule_callback_work+0x26/0x70
+
+https://bugzilla.kernel.org/show_bug.cgi?id=54411
+
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Reported-by: Gu Zheng <guz.fnst@cn.fujitsu.com>
+Cc: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+---
+ drivers/pci/pci-sysfs.c | 52 ++++++++++++++++++++++++++++++++-----------------
+ 1 file changed, 34 insertions(+), 18 deletions(-)
+
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index fcc4bb2..91ff11e 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -284,7 +284,6 @@ msi_bus_store(struct device *dev, struct device_attribute *attr,
+ 	return count;
+ }
+ 
+-static DEFINE_MUTEX(pci_remove_rescan_mutex);
+ static ssize_t bus_rescan_store(struct bus_type *bus, const char *buf,
+ 				size_t count)
+ {
+@@ -293,13 +292,15 @@ static ssize_t bus_rescan_store(struct bus_type *bus, const char *buf,
+ 
+ 	if (strict_strtoul(buf, 0, &val) < 0)
+ 		return -EINVAL;
++	if (!val)
++		return count;
+ 
+-	if (val) {
+-		mutex_lock(&pci_remove_rescan_mutex);
+-		for_each_pci_root_bus(b)
++	for_each_pci_root_bus(b)
++		if (pci_bus_lock(b, PCI_BUS_STATE_STOPPING - 1, true) == 0) {
+ 			pci_rescan_bus(b);
+-		mutex_unlock(&pci_remove_rescan_mutex);
+-	}
++			pci_bus_unlock(b, true);
++		}
++
+ 	return count;
+ }
+ 
+@@ -312,27 +313,41 @@ static ssize_t
+ dev_rescan_store(struct device *dev, struct device_attribute *attr,
+ 		 const char *buf, size_t count)
+ {
++	int ret;
+ 	unsigned long val;
+ 	struct pci_dev *pdev = to_pci_dev(dev);
+ 
+ 	if (strict_strtoul(buf, 0, &val) < 0)
+ 		return -EINVAL;
++	if (!val)
++		return count;
++
++	do {
++		ret = pci_bus_lock_timeout(pdev->bus,
++				PCI_BUS_STATE_STOPPING - 1, true, HZ);
++		if (ret == 0) {
++			pci_rescan_bus(pdev->bus);
++			pci_bus_unlock(pdev->bus, true);
++			break;
++		}
++		/*
++		 * Prevent a deadlock scenario that thread A waits for
++		 * all sysfs files to be released while holding PCI bus
++		 * locks, and Thread B tries to acquire PCI bus locks
++		 * in a sysfs handler. These checks break the deadlock
++		 * condition.
++		 */
++		if (pci_dev_get_state(pdev) >= PCI_DEV_STATE_STOPPING ||
++		    pci_bus_get_state(pdev->bus) >= PCI_BUS_STATE_STOPPING)
++			return -EBUSY;
++	} while (true);
+ 
+-	if (val) {
+-		mutex_lock(&pci_remove_rescan_mutex);
+-		pci_rescan_bus(pdev->bus);
+-		mutex_unlock(&pci_remove_rescan_mutex);
+-	}
+ 	return count;
+ }
+ 
+ static void remove_callback(struct device *dev)
+ {
+-	struct pci_dev *pdev = to_pci_dev(dev);
+-
+-	mutex_lock(&pci_remove_rescan_mutex);
+-	pci_stop_and_remove_bus_device(pdev);
+-	mutex_unlock(&pci_remove_rescan_mutex);
++	pci_stop_and_remove_device(to_pci_dev(dev));
+ }
+ 
+ static ssize_t
+@@ -366,12 +381,13 @@ dev_bus_rescan_store(struct device *dev, struct device_attribute *attr,
+ 		return -EINVAL;
+ 
+ 	if (val) {
+-		mutex_lock(&pci_remove_rescan_mutex);
++		if (pci_bus_lock(bus, PCI_BUS_STATE_STOPPING - 1, true) < 0)
++			return -EBUSY;
+ 		if (!pci_is_root_bus(bus) && list_empty(&bus->devices))
+ 			pci_rescan_bus_bridge_resize(bus->self);
+ 		else
+ 			pci_rescan_bus(bus);
+-		mutex_unlock(&pci_remove_rescan_mutex);
++		pci_bus_unlock(bus, true);
+ 	}
+ 	return count;
+ }
+-- 
+1.8.1.2
+
