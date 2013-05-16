@@ -11,104 +11,259 @@ Cc: Jiang Liu <jiang.liu@huawei.com>,
 	Yijing Wang <wangyijing@huawei.com>,
 	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [RFC PATCH v2, part3 00/11] Introduce PCI bus lock and state machine
-Date: Thu, 16 May 2013 23:50:48 +0800
-Message-Id: <1368719459-24800-1-git-send-email-jiang.liu@huawei.com>
+Subject: [RFC PATCH v2, part3 02/11] PCI: implement state machine for PCI bus
+Date: Thu, 16 May 2013 23:50:50 +0800
+Message-Id: <1368719459-24800-3-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1368719459-24800-1-git-send-email-jiang.liu@huawei.com>
+References: <1368719459-24800-1-git-send-email-jiang.liu@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi all,
-	About one year ago, I started to solve issues triggered by concurrent
-PCI device hotplug operations, and several different solutions have been
-sent to community for comments. Now we have made important changes to the
-solution, so start again with a "v1".
+Enhance the PCI core to implement the state machine for PCI buses.
+It also enhances PCI bus removal logic by using the state machine.
 
-This is the second take to resolve race conditions when hot-plugging PCI
-devices/host bridges. Instead of using a globla lock to serialize all hotplug
-operations as in previous version, now we introduce a state machine and lock
-mechanism for PCI buses to serialize hotplug operations. For discussions
-related to previous version, please refer to:
-http://comments.gmane.org/gmane.linux.kernel.pci/15007
+The state machine will be used to protect PCI buses from concurrent
+hotplug operations.
 
-This patch-set is still in early stages, so sending it out just requesting
-for comments. Any comments are welcomed, especially about whether it's the
-right/suitable way to solve these race condition issues.
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+---
+ drivers/pci/bus.c    |   9 +++++
+ drivers/pci/probe.c  |   8 ++++
+ drivers/pci/remove.c | 101 ++++++++++++++++++++++++++++++---------------------
+ 3 files changed, 76 insertions(+), 42 deletions(-)
 
-There are multiple methods to trigger PCI hotplug requests/operations
-concurrently, such as:
-1. Sysfs interfaces exported by the PCI core subsystem
-	/sys/devices/pcissss:bb/ssss:bb:dd.f/.../remove
-	/sys/devices/pcissss:bb/ssss:bb:dd.f/.../rescan
-	/sys/devices/pcissss:bb/ssss:bb:dd.f/.../pci_bus/ssss:bb/rescan
-	/sys/bus/pci/rescan
-2. Sysfs interfaces exported by the PCI hotplug subsystem
-	/sys/bus/pci/slots/xx/power
-3. PCI hotplug events triggered by PCI Hotplug Controllers
-4. ACPI hotplug events for PCI host bridges
-5. Driver binding/unbinding events
-	binding/unbinding pci drivers with SR-IOV support
-
-With current implementation, the PCI core subsystem doesn't support
-concurrent hotplug operations yet. The existing pci_bus_sem lock only
-protects several lists in struct pci_bus, such as children list,
-devices list, but it doesn't protect the pci_bus or pci_dev structure
-themselves.
-
-Let's take pci_remove_bus_device() as an example, which are used by
-PCI hotplug drivers to hot-remove PCI devices.  Currently all these
-are free running without any protection, so it can't support reentrance.
-pci_remove_bus_device()
-    ->pci_stop_bus_device()
-        ->pci_stop_bus_device()
-            ->pci_stop_bus_devices()
-        ->pci_stop_dev()
-
-Patch 1-4:
-1) Introduce PCI bus lock and state machine
-2) Introduce a state machine for PCI devices to enable reentrance
-
-Patch 5-8:
-1) Enhance PCI core to support new PCI bus lock and state machine
-2) Refine xen-pcifront code with new PCI interfaces
-
-Patch 9-10:
-1) Give example about how to enhance PCI hotplug drivers with PCI bus
-   lcok and state machine
-
-Patch 11:
-1) Give an example about how to enhance arch specific PCI code with PCI
-   bus lock and state machine
-
-Jiang Liu (11):
-  PCI: introduce bus lock and state machine to serialize PCI hotplug
-    operations
-  PCI: implement state machine for PCI bus
-  PCI: introduce a state machine to manage PCI device lifecycle
-  PCI: introduce helper function pci_stop_and_remove_device()
-  PCI: enhance PCI core logic to support PCI bus lock
-  PCI, sysfs: use PCI bus lock to serialize hotplug operations triggered
-    by sysfs
-  PCI, xen-pcifront: use new PCI interfaces to simplify implementation
-  PCI, xen-pcifront: use PCI bus lock to protect PCI device hotplug
-  PCI, acpiphp: use PCI bus lock to protect PCI device hotplug
-  PCI, pciehp: use PCI bus lock to protect PCI device hotplug
-  PCI, ACPI, pci_root: use PCI bus lock to protect PCI device hotplug
-
- arch/ia64/pci/pci.c                |   2 +-
- arch/x86/pci/acpi.c                |   3 +-
- drivers/acpi/pci_root.c            |  14 +-
- drivers/pci/Kconfig                |   3 +
- drivers/pci/bus.c                  | 274 ++++++++++++++++++++++++++++++++++++-
- drivers/pci/hotplug-pci.c          |   4 +
- drivers/pci/hotplug/acpiphp_glue.c |  16 ++-
- drivers/pci/hotplug/pciehp_pci.c   |  15 ++
- drivers/pci/pci-sysfs.c            |  52 ++++---
- drivers/pci/probe.c                |  33 ++++-
- drivers/pci/remove.c               | 151 +++++++++++++-------
- drivers/pci/xen-pcifront.c         |  95 +++++++------
- include/linux/pci.h                |  63 ++++++++-
- 13 files changed, 588 insertions(+), 137 deletions(-)
-
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index b232775..8ea5972 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -200,6 +200,15 @@ void pci_bus_add_devices(const struct pci_bus *bus)
+ 	struct pci_bus *child;
+ 	int retval;
+ 
++	BUG_ON(!pci_bus_is_locked(bus));
++	/* change bus to STARTED state before adding devices */
++	if (pci_bus_get_state(bus) == PCI_BUS_STATE_REGISTERED)
++		pci_bus_change_state((struct pci_bus *)bus,
++			PCI_BUS_STATE_REGISTERED, PCI_BUS_STATE_STARTED, false);
++	/* Return if @bus is going to be removed */
++	if (pci_bus_get_state(bus) != PCI_BUS_STATE_STARTED)
++		return;
++
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		/* Skip already-added devices */
+ 		if (dev->is_added)
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index cc5e432..4e24d93 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -90,6 +90,7 @@ static void release_pcibus_dev(struct device *dev)
+ 		put_device(pci_bus->bridge);
+ 	pci_bus_remove_resources(pci_bus);
+ 	pci_release_bus_of_node(pci_bus);
++	atomic_set(&pci_bus->state, PCI_BUS_STATE_DESTROYED);
+ 	kfree(pci_bus);
+ }
+ 
+@@ -471,6 +472,8 @@ static struct pci_bus *pci_alloc_bus(struct pci_ops *ops, void *sd, int bus)
+ 		b->busn_res.end = 0xff;
+ 		b->busn_res.flags = IORESOURCE_BUS;
+ 		b->dev.class = &pcibus_class;
++		atomic_set(&b->state,
++			   PCI_BUS_STATE_INITIALIZED | PCI_BUS_STATE_LOCK);
+ 		dev_set_name(&b->dev, "%04x:%02x", pci_domain_nr(b), bus);
+ 		device_initialize(&b->dev);
+ 	}
+@@ -688,6 +691,8 @@ add_dev:
+ 
+ 	/* Create legacy_io and legacy_mem files for this bus */
+ 	pci_create_legacy_files(child);
++	pci_bus_change_state(child, PCI_BUS_STATE_INITIALIZED,
++			     PCI_BUS_STATE_REGISTERED, false);
+ 
+ 	return child;
+ }
+@@ -1760,6 +1765,9 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 	list_add_tail(&b->node, &pci_root_buses);
+ 	up_write(&pci_bus_sem);
+ 
++	pci_bus_change_state(b, PCI_BUS_STATE_INITIALIZED,
++			     PCI_BUS_STATE_REGISTERED, false);
++
+ 	return b;
+ 
+ class_dev_reg_err:
+diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+index b0ce875..effe4ff 100644
+--- a/drivers/pci/remove.c
++++ b/drivers/pci/remove.c
+@@ -3,6 +3,9 @@
+ #include <linux/pci-aspm.h>
+ #include "pci.h"
+ 
++static void pci_stop_bus_device(struct pci_dev *dev);
++static void pci_remove_bus_device(struct pci_dev *dev);
++
+ static void pci_free_resources(struct pci_dev *dev)
+ {
+ 	int i;
+@@ -44,53 +47,75 @@ static void pci_destroy_dev(struct pci_dev *dev)
+ 
+ void pci_remove_bus(struct pci_bus *bus)
+ {
+-	pci_proc_detach_bus(bus);
++	int state = pci_bus_get_state(bus);
++
++	BUG_ON(!pci_bus_is_locked(bus) || state == PCI_BUS_STATE_REMOVING);
++	if (state >= PCI_BUS_STATE_REMOVED)
++		return;
++
++	pci_bus_change_state(bus, state, PCI_BUS_STATE_REMOVING, false);
+ 
++	pci_proc_detach_bus(bus);
+ 	down_write(&pci_bus_sem);
+ 	list_del(&bus->node);
+ 	pci_bus_release_busn_res(bus);
+ 	up_write(&pci_bus_sem);
+ 	pci_remove_legacy_files(bus);
+ 	pcibios_remove_bus(bus);
++
+ 	device_del(&bus->dev);
++	pci_bus_change_state(bus, PCI_BUS_STATE_REMOVING,
++			     PCI_BUS_STATE_REMOVED, true);
+ 	put_device(&bus->dev);
+ }
+ EXPORT_SYMBOL(pci_remove_bus);
+ 
+-static void pci_stop_bus_device(struct pci_dev *dev)
++static void pci_bus_stop_devices(struct pci_bus *bus)
+ {
+-	struct pci_bus *bus = dev->subordinate;
+ 	struct pci_dev *child, *tmp;
++	int state = pci_bus_get_state(bus);
++
++	BUG_ON(!pci_bus_is_locked(bus) || state == PCI_BUS_STATE_STOPPING);
++	if (state >= PCI_BUS_STATE_STOPPED)
++		return;
+ 
++	pci_bus_change_state(bus, state, PCI_BUS_STATE_STOPPING, false);
+ 	/*
+ 	 * Stopping an SR-IOV PF device removes all the associated VFs,
+ 	 * which will update the bus->devices list and confuse the
+ 	 * iterator.  Therefore, iterate in reverse so we remove the VFs
+ 	 * first, then the PF.
+ 	 */
+-	if (bus) {
+-		list_for_each_entry_safe_reverse(child, tmp,
+-						 &bus->devices, bus_list)
+-			pci_stop_bus_device(child);
+-	}
+-
+-	pci_stop_dev(dev);
++	list_for_each_entry_safe_reverse(child, tmp, &bus->devices, bus_list)
++		pci_stop_bus_device(child);
++	pci_bus_change_state(bus, PCI_BUS_STATE_STOPPING,
++			     PCI_BUS_STATE_STOPPED, false);
+ }
+ 
+-static void pci_remove_bus_device(struct pci_dev *dev)
++static void pci_bus_remove_bus(struct pci_bus *bus)
+ {
+-	struct pci_bus *bus = dev->subordinate;
+ 	struct pci_dev *child, *tmp;
+ 
+-	if (bus) {
+-		list_for_each_entry_safe(child, tmp,
+-					 &bus->devices, bus_list)
++	if (pci_bus_get_state(bus) < PCI_BUS_STATE_REMOVED) {
++		list_for_each_entry_safe(child, tmp, &bus->devices, bus_list)
+ 			pci_remove_bus_device(child);
+-
+ 		pci_remove_bus(bus);
+-		dev->subordinate = NULL;
+ 	}
++}
+ 
++static void pci_stop_bus_device(struct pci_dev *dev)
++{
++	if (dev->subordinate)
++		pci_bus_stop_devices(dev->subordinate);
++	pci_stop_dev(dev);
++}
++
++static void pci_remove_bus_device(struct pci_dev *dev)
++{
++	if (dev->subordinate) {
++		pci_bus_remove_bus(dev->subordinate);
++		dev->subordinate = NULL;
++	}
+ 	pci_destroy_dev(dev);
+ }
+ 
+@@ -108,6 +133,7 @@ static void pci_remove_bus_device(struct pci_dev *dev)
+  */
+ void pci_stop_and_remove_bus_device(struct pci_dev *dev)
+ {
++	BUG_ON(!pci_bus_is_locked(dev->bus));
+ 	pci_stop_bus_device(dev);
+ 	pci_remove_bus_device(dev);
+ }
+@@ -115,36 +141,27 @@ EXPORT_SYMBOL(pci_stop_and_remove_bus_device);
+ 
+ void pci_stop_root_bus(struct pci_bus *bus)
+ {
+-	struct pci_dev *child, *tmp;
+-	struct pci_host_bridge *host_bridge;
+-
+-	if (!pci_is_root_bus(bus))
+-		return;
+-
+-	host_bridge = to_pci_host_bridge(bus->bridge);
+-	list_for_each_entry_safe_reverse(child, tmp,
+-					 &bus->devices, bus_list)
+-		pci_stop_bus_device(child);
+-
+-	/* stop the host bridge */
+-	device_del(&host_bridge->dev);
++	BUG_ON(!pci_bus_is_locked(bus));
++	if (pci_is_root_bus(bus) &&
++	    pci_bus_get_state(bus) < PCI_BUS_STATE_STOPPED) {
++		pci_bus_stop_devices(bus);
++		/* stop the host bridge */
++		device_del(bus->bridge);
++	}
+ }
+ 
+ void pci_remove_root_bus(struct pci_bus *bus)
+ {
+-	struct pci_dev *child, *tmp;
+ 	struct pci_host_bridge *host_bridge;
+ 
+-	if (!pci_is_root_bus(bus))
+-		return;
+-
+-	host_bridge = to_pci_host_bridge(bus->bridge);
+-	list_for_each_entry_safe(child, tmp,
+-				 &bus->devices, bus_list)
+-		pci_remove_bus_device(child);
+-	pci_remove_bus(bus);
+-	host_bridge->bus = NULL;
++	BUG_ON(!pci_bus_is_locked(bus));
++	if (pci_is_root_bus(bus) &&
++	    pci_bus_get_state(bus) < PCI_BUS_STATE_REMOVED) {
++		host_bridge = to_pci_host_bridge(bus->bridge);
++		pci_bus_remove_bus(bus);
++		host_bridge->bus = NULL;
++		/* remove the host bridge */
++		put_device(&host_bridge->dev);
++	}
+ 
+-	/* remove the host bridge */
+-	put_device(&host_bridge->dev);
+ }
 -- 
 1.8.1.2
 
