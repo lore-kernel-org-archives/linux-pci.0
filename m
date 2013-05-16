@@ -1,49 +1,59 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <51968E9F.1010909@ubuntu.com>
-Date: Fri, 17 May 2013 16:10:07 -0400
-From: Phillip Susi <psusi@ubuntu.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>
-Subject: Re: enabling aspm on ati radeon
-References: <519443A1.8050905@ubuntu.com> <1995989.Fff0uGKnZO@vostro.rjw.lan> <CAErSpo50rX5Pvj=pX5xsdcZ1qq1C7kBqrNyDmY6t26OCVqbxXA@mail.gmail.com> <5195596C.3000406@ubuntu.com> <CAErSpo6wSgquzJc22tFJozp8cfx0vpULnO3KZN2gr2YHt8EHrw@mail.gmail.com> <5196713A.1010102@ubuntu.com> <CAErSpo7zESr5_PEyX=1JWEApCuW+yx+j3RKWh=qC-jReRgSXZw@mail.gmail.com>
-In-Reply-To: <CAErSpo7zESr5_PEyX=1JWEApCuW+yx+j3RKWh=qC-jReRgSXZw@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.free-electrons.com ([94.23.35.102]:60199 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754754Ab3EPP5x (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 May 2013 11:57:53 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>
+Cc: linux-arm-kernel@lists.infradead.org,
+	Arnd Bergmann <arnd@arndb.de>, Olof Johansson <olof@lixom.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Lior Amsalem <alior@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	linux-pci@vger.kernel.org,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	devicetree-discuss@lists.ozlabs.org,
+	Mike Turquette <mturquette@linaro.org>
+Subject: [PATCHv10 5/9] clk: mvebu: create parent-child relation for PCIe clocks on Armada 370
+Date: Thu, 16 May 2013 17:55:20 +0200
+Message-Id: <1368719725-21265-6-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1368719725-21265-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1368719725-21265-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+The Armada 370 has two gatable clocks for each PCIe interface, and we
+want both of them to be enabled. We therefore make one of the two
+clocks a child of the other, as we did for the sataX and sataXlnk
+clocks on Armada XP.
 
-On 5/17/2013 3:52 PM, Bjorn Helgaas wrote:
-> I just sent a patch to make lspci decode all possible values
-> there. In the PCIe r2.1 spec, only 1 ("L0s") and 3 ("L0s and L1")
-> were defined.  The r3 spec added 0 ("not supported") and 2 ("L1"),
-> but lspci hadn't quite kept up.
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Mike Turquette <mturquette@linaro.org>
+---
+ drivers/clk/mvebu/clk-gating-ctrl.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-So do you still want the lspci -xxxs output, or was that just to
-answer the question of why it said unknown instead of not supported?
-Are we then back to no idea?
+diff --git a/drivers/clk/mvebu/clk-gating-ctrl.c b/drivers/clk/mvebu/clk-gating-ctrl.c
+index ebf141d..b35785a 100644
+--- a/drivers/clk/mvebu/clk-gating-ctrl.c
++++ b/drivers/clk/mvebu/clk-gating-ctrl.c
+@@ -119,8 +119,8 @@ static const struct mvebu_soc_descr __initconst armada_370_gating_descr[] = {
+ 	{ "pex1_en", NULL,  2 },
+ 	{ "ge1", NULL, 3 },
+ 	{ "ge0", NULL, 4 },
+-	{ "pex0", NULL, 5 },
+-	{ "pex1", NULL, 9 },
++	{ "pex0", "pex0_en", 5 },
++	{ "pex1", "pex1_en", 9 },
+ 	{ "sata0", NULL, 15 },
+ 	{ "sdio", NULL, 17 },
+ 	{ "tdm", NULL, 25 },
+-- 
+1.7.9.5
 
-I notice a number of functions in drivers/pci/pcie/aspm.c that look
-like they need used to configure aspm.  The radeon driver does not
-appear to call any of them ( grep for aspm came up with nothing ).
-Could that be why?  I can't find anything under Documentation/ about
-what a driver needs to do to enable aspm.
-
-
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.17 (MingW32)
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
-
-iQEcBAEBAgAGBQJRlo6eAAoJEJrBOlT6nu75lxQIAMwrt4oDHt5MKiRfpPWIkPO4
-DLoFtEax1CGy1Gqmhvw8QpzYw+daqWzYw01t2SDd+owLEHVdp8zzqW21TSld83yb
-W9EmZH4NLIO9vsR/UqAHhmbbf9ooAwz+O26Vb7EarPtpNxkRHybDSPYVsv7Cs/R7
-54gJOefq7SroiiSr31I0dQT8j57SBRjekJJMGsEh+Et2Cxz+z8CwynCYCoNjQdOQ
-g89lyifTEdEy2DuXcRfeCcIH1mTNQazjsRu2/P6I+P/klpyS+b9HqMSUUwNUDwc/
-eY1SWrbCt9/2XJ/B6ZxYK3Lmy+25m9fUNkQBsp3BqqXkUICHlE8zTm3DMG1rf6g=
-=vIor
------END PGP SIGNATURE-----
