@@ -1,49 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f175.google.com ([209.85.214.175]:62601 "EHLO
-	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755118Ab3EVRWH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 May 2013 13:22:07 -0400
-Received: by mail-ob0-f175.google.com with SMTP id wo10so2662607obc.6
-        for <linux-pci@vger.kernel.org>; Wed, 22 May 2013 10:22:06 -0700 (PDT)
+Received: from mho-02-ewr.mailhop.org ([204.13.248.72]:38973 "EHLO
+	mho-02-ewr.mailhop.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751423Ab3EPPHB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 May 2013 11:07:01 -0400
+Date: Thu, 16 May 2013 11:06:16 -0400
+From: Jason Cooper <jason@lakedaemon.net>
+To: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Mike Turquette <mturquette@linaro.org>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Arnd Bergmann <arnd@arndb.de>, Olof Johansson <olof@lixom.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Lior Amsalem <alior@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	linux-pci@vger.kernel.org,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	devicetree-discuss@lists.ozlabs.org
+Subject: Re: [PATCHv9 5/9] clk: mvebu: create parent-child relation for
+ PCIe clocks on Armada 370
+Message-ID: <20130516150616.GD6563@titan.lakedaemon.net>
+References: <1368624323-24311-1-git-send-email-thomas.petazzoni@free-electrons.com>
+ <1368624323-24311-6-git-send-email-thomas.petazzoni@free-electrons.com>
+ <20130515214154.12127.73539@quantum>
+ <20130516094417.24b1ca0d@skate>
+ <51949830.70306@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQWsZXfkSSVFzee4-J4bUDP8DdG=y9-k2du+ek90StDvNA@mail.gmail.com>
-References: <1367712653.11982.19.camel@pasglop> <1367712932.11982.20.camel@pasglop>
- <CAE9FiQX=h4H1gcbW=EfQo_ZtAgHGOZ2GxVxLG59C1iMH+qgH2g@mail.gmail.com>
- <1367732090.11982.38.camel@pasglop> <CAE9FiQUN3qqVmdw_EdOC-JZGc219M3tu=roOX98xns+77LJhMw@mail.gmail.com>
- <1367740336.11982.41.camel@pasglop> <51871088.4594420a.0ccc.7300SMTPIN_ADDED_BROKEN@mx.google.com>
- <CAE9FiQXGUOM_h_X5tdGbkiuZGZkiFigSLbbftx3YXybFBg6trg@mail.gmail.com>
- <518786a7.64bbec0a.58a0.1f6bSMTPIN_ADDED_BROKEN@mx.google.com>
- <CAErSpo5MJCoaof=heFM4vLxuWz8pFqsyXAC356jZ7rbRvSOt9g@mail.gmail.com> <CAE9FiQWsZXfkSSVFzee4-J4bUDP8DdG=y9-k2du+ek90StDvNA@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 22 May 2013 11:21:45 -0600
-Message-ID: <CAErSpo45wXjnDiXiZ1qs+Z7fsEoVmAxbjhGVvtZGEUkbd4bNKg@mail.gmail.com>
-Subject: Re: Resource assignment oddities
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Gavin Shan <shangw@linux.vnet.ibm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <51949830.70306@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 22, 2013 at 10:59 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Wed, May 22, 2013 at 7:54 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> What exactly is the problem here?  Is it just that you don't want to
->> see the "can't assign" messages?  Or is there a device with a BAR that
->> *should* be assigned, but isn't?  If so, which device is it?
->
-> We try must+optional as first, then if there is any ioport or mmio fail
-> we will stick to must only then extend must to meet optional.
-> but mmio range and mmio-pref could be connected each other,
-> so extend will fail...
->
-> problem here, some root bus will not have ioport range, so it will always have
-> ioport allocation fail.
->
-> looks like right fix for v3.9 should be as attached patch.
-> it will keep must+optional for mmio, if only ioport fails....
+Mike, Sebastian,
 
-I read all that before, but it didn't answer my questions.  I assume
-we're trying to fix a device that doesn't work.  Which device is it?
+On Thu, May 16, 2013 at 10:26:24AM +0200, Sebastian Hesselbarth wrote:
+> On 05/16/2013 09:44 AM, Thomas Petazzoni wrote:
+> >Dear Mike Turquette,
+> >
+> >On Wed, 15 May 2013 14:41:54 -0700, Mike Turquette wrote:
+> >>Quoting Thomas Petazzoni (2013-05-15 06:25:19)
+> >>>The Armada 370 has two gatable clocks for each PCIe interface, and we
+> >>>want both of them to be enabled. We therefore make one of the two
+> >>>clocks a child of the other, as we did for the sataX and sataXlnk
+> >>>clocks on Armada XP.
+> >>
+> >>Ack for patches #5 and #6.  Do you want me to take them?
 
-Bjorn
+Thanks for the Ack!
+
+> >I don't know, I guess with your Ack, it would be easier to carry them
+> >through the Marvell maintainers and then the arm-soc tree, so that we
+> >can test arm-soc and have all the pieces needed in here.
+> >
+> >That said, Sebastian Hesselbarth has submitted a big rework of the
+> >mvebu clock drivers, which would conflict with this patch, and
+> >Sebastian's rework would most likely go through your tree. If that's
+> >the case, I guess it would be better to let you take #5 and #6 in this
+> >patch series.
+> 
+> I also requested to take the restructure patches through ARM tree. They
+> are only touching files in drivers/clk/mvebu and by taking them through
+> ARM, we can update PCIe clock patches easily. The dependency between
+> Thomas' and my patches basically is that I renamed files that Thomas
+> now commits to. (I switched clk/mvebu from per-function files to per-soc
+> files).
+
+I agree.  My heart jumped into my throat a little there :)  Mike, if
+it's ok with you, I'd prefer to take these through arm-soc.  Any merge
+conflicts should be minimal.  And at any rate, resolving the conflicts
+are *much* easier to handle than having arm-soc depend on an outside
+tree (then Linus has to take care in the order he merges them, no
+rebasing for clk tree, dogs and cats living together, etc ;-) )
+
+thx,
+
+Jason.
