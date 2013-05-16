@@ -1,88 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:34542 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932158Ab3EOAoH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 14 May 2013 20:44:07 -0400
-Message-ID: <1368574202.31689.54.camel@pasglop>
-Subject: Re: [RFC PATCH v2, part 2 09/18] PCI, PPC: use hotplug-safe
- iterators to walk PCI buses
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Jiang Liu <liuj97@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Paul Mackerras <paulus@samba.org>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>,
+Received: from mail.free-electrons.com ([94.23.35.102]:60235 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754785Ab3EPP6D (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 May 2013 11:58:03 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>
+Cc: linux-arm-kernel@lists.infradead.org,
+	Arnd Bergmann <arnd@arndb.de>, Olof Johansson <olof@lixom.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
 	Grant Likely <grant.likely@secretlab.ca>,
-	Bill Pemberton <wfp5p@virginia.edu>,
-	linuxppc-dev@lists.ozlabs.org
-Date: Wed, 15 May 2013 09:30:02 +1000
-In-Reply-To: <1368550322-1045-9-git-send-email-jiang.liu@huawei.com>
-References: <1368550322-1045-1-git-send-email-jiang.liu@huawei.com>
-	 <1368550322-1045-9-git-send-email-jiang.liu@huawei.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Lior Amsalem <alior@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	linux-pci@vger.kernel.org,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	devicetree-discuss@lists.ozlabs.org
+Subject: [PATCHv10 8/9] arm: mvebu: PCIe support is now available on mvebu
+Date: Thu, 16 May 2013 17:55:23 +0200
+Message-Id: <1368719725-21265-9-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1368719725-21265-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1368719725-21265-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2013-05-15 at 00:51 +0800, Jiang Liu wrote:
-> Enhance PPC architecture specific code to use hotplug-safe iterators
-> to walk PCI buses.
+Now that the PCIe driver for mvebu has been integrated and all its
+relevant dependencies, we can mark the ARCH_MVEBU platform has
+MIGHT_HAVE_PCI, which allows to select the PCI bus support if needed.
 
-I was about to ack it but then I saw:
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+---
+ arch/arm/mach-mvebu/Kconfig |    2 ++
+ 1 file changed, 2 insertions(+)
 
-> diff --git a/arch/powerpc/kernel/pci_64.c b/arch/powerpc/kernel/pci_64.c
-> index 51a133a..a41c6dd 100644
-> --- a/arch/powerpc/kernel/pci_64.c
-> +++ b/arch/powerpc/kernel/pci_64.c
-> @@ -208,7 +208,6 @@ long sys_pciconfig_iobase(long which, unsigned long in_bus,
->  			  unsigned long in_devfn)
->  {
->  	struct pci_controller* hose;
-> -	struct list_head *ln;
->  	struct pci_bus *bus = NULL;
->  	struct device_node *hose_node;
->  
-> @@ -229,18 +228,16 @@ long sys_pciconfig_iobase(long which, unsigned long in_bus,
->  	/* That syscall isn't quite compatible with PCI domains, but it's
->  	 * used on pre-domains setup. We return the first match
->  	 */
-> -
-> -	for (ln = pci_root_buses.next; ln != &pci_root_buses; ln = ln->next) {
-> -		bus = pci_bus_b(ln);
-> -		if (in_bus >= bus->number && in_bus <= bus->busn_res.end)
-> +	for_each_pci_root_bus(bus)
-> +		if (in_bus >= bus->number && in_bus <= bus->busn_res.end &&
-> +		    bus->dev.of_node)
->  			break;
-> -		bus = NULL;
-> -	}
-> -	if (bus == NULL || bus->dev.of_node == NULL)
-> +	if (bus == NULL)
->  		return -ENODEV;
-
-You just removed the NULL check for the of_node field...
+diff --git a/arch/arm/mach-mvebu/Kconfig b/arch/arm/mach-mvebu/Kconfig
+index e11acbb..381062d 100644
+--- a/arch/arm/mach-mvebu/Kconfig
++++ b/arch/arm/mach-mvebu/Kconfig
+@@ -15,6 +15,8 @@ config ARCH_MVEBU
+ 	select MVEBU_CLK_GATING
+ 	select MVEBU_MBUS
+ 	select ZONE_DMA if ARM_LPAE
++	select MIGHT_HAVE_PCI
++	select PCI_QUIRKS if PCI
  
->  	hose_node = bus->dev.of_node;
->  	hose = PCI_DN(hose_node)->phb;
-
-Which is dereferrenced here.	
-
-> +	pci_bus_put(bus);
-
-On the other hand, the whole thing can probably be using
-pci_bus_to_host() instead.... the above code is bitrotted.
-
->  	switch (which) {
->  	case IOBASE_BRIDGE_NUMBER:
+ if ARCH_MVEBU
  
-Cheeers,
-Ben.
-
+-- 
+1.7.9.5
 
