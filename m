@@ -1,58 +1,38 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from blu0-omc4-s18.blu0.hotmail.com ([65.55.111.157]:15729 "EHLO
-	blu0-omc4-s18.blu0.hotmail.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751953Ab3ELWOF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 12 May 2013 18:14:05 -0400
-Message-ID: <BLU0-SMTP28241CA91CD69AFF09827B6B2A70@phx.gbl>
-Content-Type: text/plain; charset="iso-8859-15"; format=flowed; delsp=yes
-To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Frank Rizzo" <thefrankrizzo@hotmail.com>
-Subject: Re: Rescan PCIE bus to find recently powered on device.
-References: <SNT136-W425B9A4DBEA719E570080DB2C80@phx.gbl>
-Date: Sun, 12 May 2013 15:13:59 -0700
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-From: Frank Rizzo <thefrankrizzo@hotmail.com>
-In-Reply-To: <SNT136-W425B9A4DBEA719E570080DB2C80@phx.gbl>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1995989.Fff0uGKnZO@vostro.rjw.lan>
+References: <519443A1.8050905@ubuntu.com> <1995989.Fff0uGKnZO@vostro.rjw.lan>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 16 May 2013 10:42:03 -0600
+Message-ID: <CAErSpo50rX5Pvj=pX5xsdcZ1qq1C7kBqrNyDmY6t26OCVqbxXA@mail.gmail.com>
+Subject: Re: enabling aspm on ati radeon
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Phillip Susi <psusi@ubuntu.com>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-OK list, here's an update.  I had my software engineer do some tests on  
-his system, and this is what I get when he powers on the target device:
-
-[ 149.626692] pci 0000:01:00.0: [1a39:0004] type 0 class 0x000000
-[ 149.626721] pci 0000:01:00.0: reg 10: [mem 0x00000000-0x000fffff 64bit]
-[ 149.626741] pci 0000:01:00.0: reg 18: [mem 0x00000000-0x000fffff 64bit]
-[ 149.626761] pci 0000:01:00.0: reg 20: [mem 0x00000000-0x00000fff 64bit]
-[ 149.631745] pcieport 0000:00:01.0: BAR 14: assigned [mem  
-0xc0800000-0xc0afffff]
-[ 149.631837] gn_pcie 0000:01:00.0: device not available (can't reserve  
-[mem 0x00000000-0x000fffff 64bit])
-
-A simple lspci shows the device in the list, but since the driver failed  
-to register the device, it is inaccessible to his applications.
-
-Any ideas?
-
--Frank
-
-
-On Thu, 18 Apr 2013 19:59:11 -0700, Frank Rizzo  
-<thefrankrizzo@hotmail.com> wrote:
-
-> Hey list.
+On Thu, May 16, 2013 at 2:58 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> [Add linux-pci to the CC]
 >
-> I'm working on a driver for a device that's external from the PC.  It's  
-> connected to the PC via a weird cable that connects to a PCIE card  
-> inside the case that appears to be nothing other than glue logic to  
-> allow the signals from the cable to be tossed onto the bus.
->
-> When the external device is powered off during boot, nothing is found.  
->  hwinfo doesn't find it, lspci doesn't find it, etc.  If you power on  
-> the device BEFORE booting, everything is found, and it works fine.  And  
-> lastly, if you power it on AFTER Linux has booted, you still can't find  
-> it.  I've tried echoing "1" to rescan, and everything else that I could  
-> find via Google search.
->
-> So, what are my options here?  I'm not allergic to adding code to the  
-> driver to scan for the device periodically, if I knew HOW to find it.  
->  And, once found, how do I get it registered?
+> On Wednesday, May 15, 2013 10:25:37 PM Phillip Susi wrote:
+>> -----BEGIN PGP SIGNED MESSAGE-----
+>> Hash: SHA1
+>>
+>> I thought that booting with the pcie_aspm=force option should make
+>> sure this was enabled, but passing this to a 3.8.0 kernel, lspci still
+>> shows:
+>>
+>> LnkCap:       Port #0, Speed 5GT/s, Width x16, ASPM L0s L1, Latency L0
+>> <64ns, L1 <1us ClockPM- Surprise- LLActRep- BwNot-
+>> LnkCtl:       ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk+
+>> ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+>>
+>> What could be disabling ASPM?  dmesg confirms: [    0.000000] PCIe
+>> ASPM is forcibly enabled
+
+Can you collect a complete dmesg log and complete "lspci -vv" output, please?
+
+Bjorn
