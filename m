@@ -1,44 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mho-03-ewr.mailhop.org ([204.13.248.66]:43735 "EHLO
-	mho-01-ewr.mailhop.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753388Ab3E0QFf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 May 2013 12:05:35 -0400
-Date: Mon, 27 May 2013 12:05:28 -0400
-From: Jason Cooper <jason@lakedaemon.net>
-To: Wei Yongjun <weiyj.lk@gmail.com>
-Cc: bhelgaas@google.com, grant.likely@linaro.org,
-	rob.herring@calxeda.com, thomas.petazzoni@free-electrons.com,
-	yongjun_wei@trendmicro.com.cn, linux-pci@vger.kernel.org,
-	devicetree-discuss@lists.ozlabs.org
-Subject: Re: [PATCH -next] pci: mvebu: fix return value check in
- mvebu_pcie_probe()
-Message-ID: <20130527160528.GH31290@titan.lakedaemon.net>
-References: <CAPgLHd_B-RBGTcQPeeWeJb9QVkf-RjO1WtBC0JK2KOEoBaus_Q@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAPgLHd_B-RBGTcQPeeWeJb9QVkf-RjO1WtBC0JK2KOEoBaus_Q@mail.gmail.com>
+Received: from mail.free-electrons.com ([94.23.35.102]:57707 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755064Ab3EPHoV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 May 2013 03:44:21 -0400
+Date: Thu, 16 May 2013 09:44:17 +0200
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Mike Turquette <mturquette@linaro.org>
+Cc: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Arnd Bergmann <arnd@arndb.de>, Olof Johansson <olof@lixom.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Lior Amsalem <alior@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	linux-pci@vger.kernel.org,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	devicetree-discuss@lists.ozlabs.org,
+	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+Subject: Re: [PATCHv9 5/9] clk: mvebu: create parent-child relation for PCIe
+ clocks on Armada 370
+Message-ID: <20130516094417.24b1ca0d@skate>
+In-Reply-To: <20130515214154.12127.73539@quantum>
+References: <1368624323-24311-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	<1368624323-24311-6-git-send-email-thomas.petazzoni@free-electrons.com>
+	<20130515214154.12127.73539@quantum>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-All,
+Dear Mike Turquette,
 
-On Mon, May 27, 2013 at 11:38:41AM +0800, Wei Yongjun wrote:
-> From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+On Wed, 15 May 2013 14:41:54 -0700, Mike Turquette wrote:
+> Quoting Thomas Petazzoni (2013-05-15 06:25:19)
+> > The Armada 370 has two gatable clocks for each PCIe interface, and we
+> > want both of them to be enabled. We therefore make one of the two
+> > clocks a child of the other, as we did for the sataX and sataXlnk
+> > clocks on Armada XP.
 > 
-> In case of error, function of_clk_get_by_name() returns
-> ERR_PTR() never returns NULL. The NULL test in the return
-> value check should be replaced with IS_ERR().
-> 
-> Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
-> ---
->  drivers/pci/host/pci-mvebu.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+> Ack for patches #5 and #6.  Do you want me to take them?
 
-Applied to mvebu/pcie.
+I don't know, I guess with your Ack, it would be easier to carry them
+through the Marvell maintainers and then the arm-soc tree, so that we
+can test arm-soc and have all the pieces needed in here.
 
-FYI: mvebu/pcie_bridge, and mvebu/pcie_kirkwood have been rebased on top
-of this change.
+That said, Sebastian Hesselbarth has submitted a big rework of the
+mvebu clock drivers, which would conflict with this patch, and
+Sebastian's rework would most likely go through your tree. If that's
+the case, I guess it would be better to let you take #5 and #6 in this
+patch series.
 
-thx,
+That's something to be discussed with the Marvell maintainers (Jason
+Cooper, Andrew Lunn, Gregory Clement).
 
-Jason.
+Thanks!
+
+Thomas
+-- 
+Thomas Petazzoni, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
