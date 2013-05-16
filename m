@@ -1,112 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:22235 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751368Ab3EUWLf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 21 May 2013 18:11:35 -0400
-Date: Wed, 22 May 2013 01:11:17 +0300
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: Alexander Duyck <alexander.duyck@gmail.com>
-Cc: Don Dutile <ddutile@redhat.com>,
-	Alexander Duyck <alexander.h.duyck@intel.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	NetDev <netdev@vger.kernel.org>,
-	Or Gerlitz <or.gerlitz@gmail.com>
-Subject: Re: [PATCH 6/7] PCI: Make sure VF's driver get attached after PF's
-Message-ID: <20130521221117.GB803@redhat.com>
-References: <1368498506-25857-1-git-send-email-yinghai@kernel.org>
- <1368498506-25857-7-git-send-email-yinghai@kernel.org>
- <51925FB0.4080504@intel.com>
- <CAE9FiQXYQEAZ=0sG6+2OdffBqfLS9MpoN1xviRR9aDbxPxcKxQ@mail.gmail.com>
- <5192946F.1050700@intel.com>
- <CAE9FiQVGGHB_amKw0-DfDifpTnRGPbxA+q3WY5F-O3x-sx386A@mail.gmail.com>
- <5192AEF4.1070905@intel.com>
- <519BE778.9040800@redhat.com>
- <20130521214912.GA21713@redhat.com>
- <519BEEA4.2030804@gmail.com>
+Received: from mail-ea0-f172.google.com ([209.85.215.172]:63714 "EHLO
+	mail-ea0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752911Ab3EPI0b (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 May 2013 04:26:31 -0400
+Received: by mail-ea0-f172.google.com with SMTP id d10so1628646eaj.31
+        for <linux-pci@vger.kernel.org>; Thu, 16 May 2013 01:26:30 -0700 (PDT)
+Message-ID: <51949830.70306@gmail.com>
+Date: Thu, 16 May 2013 10:26:24 +0200
+From: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <519BEEA4.2030804@gmail.com>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+CC: Mike Turquette <mturquette@linaro.org>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Arnd Bergmann <arnd@arndb.de>, Olof Johansson <olof@lixom.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Lior Amsalem <alior@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	linux-pci@vger.kernel.org,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	devicetree-discuss@lists.ozlabs.org
+Subject: Re: [PATCHv9 5/9] clk: mvebu: create parent-child relation for PCIe
+ clocks on Armada 370
+References: <1368624323-24311-1-git-send-email-thomas.petazzoni@free-electrons.com> <1368624323-24311-6-git-send-email-thomas.petazzoni@free-electrons.com> <20130515214154.12127.73539@quantum> <20130516094417.24b1ca0d@skate>
+In-Reply-To: <20130516094417.24b1ca0d@skate>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 21, 2013 at 03:01:08PM -0700, Alexander Duyck wrote:
-> On 05/21/2013 02:49 PM, Michael S. Tsirkin wrote:
-> > On Tue, May 21, 2013 at 05:30:32PM -0400, Don Dutile wrote:
-> >> On 05/14/2013 05:39 PM, Alexander Duyck wrote:
-> >>> On 05/14/2013 12:59 PM, Yinghai Lu wrote:
-> >>>> On Tue, May 14, 2013 at 12:45 PM, Alexander Duyck
-> >>>> <alexander.h.duyck@intel.com>  wrote:
-> >>>>> On 05/14/2013 11:44 AM, Yinghai Lu wrote:
-> >>>>>> On Tue, May 14, 2013 at 9:00 AM, Alexander Duyck
-> >>>>>> <alexander.h.duyck@intel.com>  wrote:
-> >>>>>>> I'm sorry, but what is the point of this patch?  With device assignment
-> >>>>>>> it is always possible to have VFs loaded and the PF driver unloaded
-> >>>>>>> since you cannot remove the VFs if they are assigned to a VM.
-> >>>>>> unload PF driver will not call pci_disable_sriov?
-> >>>>> You cannot call pci_disable_sriov because you will panic all of the
-> >>>>> guests that have devices assigned.
-> >>>> ixgbe_remove did call pci_disable_sriov...
-> >>>>
-> >>>> for guest panic, that is another problem.
-> >>>> just like you pci passthrough with real pci device and hotremove the
-> >>>> card in host.
-> >>>>
-> >>>> ...
-> >>>
-> >>> I suggest you take another look.  In ixgbe_disable_sriov, which is the
-> >>> function that is called we do a check for assigned VFs.  If they are
-> >>> assigned then we do not call pci_disable_sriov.
-> >>>
-> >>>>
-> >>>>> So how does your patch actually fix this problem?  It seems like it is
-> >>>>> just avoiding it.
-> >>>> yes, until the first one is done.
-> >>>
-> >>> Avoiding the issue doesn't fix the underlying problem and instead you
-> >>> are likely just introducing more bugs as a result.
-> >>>
-> >>>>> From what I can tell your problem is originating in pci_call_probe.  I
-> >>>>> believe it is calling work_on_cpu and that doesn't seem correct since
-> >>>>> the work should be taking place on a CPU already local to the PF. You
-> >>>>> might want to look there to see why you are trying to schedule work on a
-> >>>>> CPU which should be perfectly fine for you to already be doing your work on.
-> >>>> it always try to go with local cpu with same pxm.
-> >>>
-> >>> The problem is we really shouldn't be calling work_for_cpu in this case
-> >>> since we are already on the correct CPU.  What probably should be
-> >>> happening is that pci_call_probe should be doing a check to see if the
-> >>> current CPU is already contained within the device node map and if so
-> >>> just call local_pci_probe directly.  That way you can avoid deadlocking
-> >>> the system by trying to flush the CPU queue of the CPU you are currently on.
-> >>>
-> >> That's the patch that Michael Tsirkin posted for a fix,
-> >> but it was noted that if you have the case where the _same_ driver is used for vf & pf,
-> >> other deadlocks may occur.
-> >> It would work in the case of ixgbe/ixgbevf, but not for something like
-> >> the Mellanox pf/vf driver (which is the same).
-> >>
-> > 
-> > I think our conclusion was this is a false positive for Mellanox.
-> > If not, we need to understand what the deadlock is better.
-> > 
-> 
-> As I understand the issue, the problem is not a deadlock for Mellanox
-> (At least with either your patch or mine applied), the issue is that the
-> PF is not ready to handle VFs when pci_enable_sriov is called due to
-> some firmware issues.
-> 
-> Thanks,
-> 
-> Alex
+On 05/16/2013 09:44 AM, Thomas Petazzoni wrote:
+> Dear Mike Turquette,
+>
+> On Wed, 15 May 2013 14:41:54 -0700, Mike Turquette wrote:
+>> Quoting Thomas Petazzoni (2013-05-15 06:25:19)
+>>> The Armada 370 has two gatable clocks for each PCIe interface, and we
+>>> want both of them to be enabled. We therefore make one of the two
+>>> clocks a child of the other, as we did for the sataX and sataXlnk
+>>> clocks on Armada XP.
+>>
+>> Ack for patches #5 and #6.  Do you want me to take them?
+>
+> I don't know, I guess with your Ack, it would be easier to carry them
+> through the Marvell maintainers and then the arm-soc tree, so that we
+> can test arm-soc and have all the pieces needed in here.
+>
+> That said, Sebastian Hesselbarth has submitted a big rework of the
+> mvebu clock drivers, which would conflict with this patch, and
+> Sebastian's rework would most likely go through your tree. If that's
+> the case, I guess it would be better to let you take #5 and #6 in this
+> patch series.
 
-I haven't seen Mellanox guys say anything like this on the list.
-Pointers?
-All I saw is some lockdep warnings and Tejun says they are bogus ...
+I also requested to take the restructure patches through ARM tree. They
+are only touching files in drivers/clk/mvebu and by taking them through
+ARM, we can update PCIe clock patches easily. The dependency between
+Thomas' and my patches basically is that I renamed files that Thomas
+now commits to. (I switched clk/mvebu from per-function files to per-soc
+files).
 
+> That's something to be discussed with the Marvell maintainers (Jason
+> Cooper, Andrew Lunn, Gregory Clement).
 
--- 
-MST
+Sebastian
