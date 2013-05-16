@@ -1,125 +1,49 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qa0-f53.google.com ([209.85.216.53]:33495 "EHLO
+	mail-qa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752108Ab3EPRx5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 May 2013 13:53:57 -0400
+Date: Thu, 16 May 2013 10:53:50 -0700
+From: Tejun Heo <tj@kernel.org>
+To: Or Gerlitz <or.gerlitz@gmail.com>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	Yan Burman <yanb@mellanox.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
 	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	Len Brown <lenb@kernel.org>, Feng Tang <feng.tang@intel.com>,
-	linux-acpi@vger.kernel.org
-Subject: [RFC PATCH v2, part3 11/11] PCI, ACPI, pci_root: use PCI bus lock to protect PCI device hotplug
-Date: Thu, 16 May 2013 23:50:59 +0800
-Message-Id: <1368719459-24800-12-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1368719459-24800-1-git-send-email-jiang.liu@huawei.com>
-References: <1368719459-24800-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	Jack Morgenstein <jackm@mellanox.com>,
+	Or Gerlitz <ogerlitz@mellanox.com>,
+	Yevgeny Petrilin <yevgenyp@mellanox.com>
+Subject: Re: [PATCH 6/7] PCI: Make sure VF's driver get attached after PF's
+Message-ID: <20130516175350.GB7171@mtj.dyndns.org>
+References: <1368498506-25857-1-git-send-email-yinghai@kernel.org>
+ <1368498506-25857-7-git-send-email-yinghai@kernel.org>
+ <0EE9A1CDC8D6434DB00095CD7DB873462CFB0E4E@MTLDAG01.mtl.com>
+ <CAE9FiQVn4F+dTrQn0xsg-6QY9+HwbnJR=1CrjdoZkmF_LMrgpg@mail.gmail.com>
+ <CAJZOPZLjdALP4jkLo6p787jaPx=dkKj7+AmCr9+mgJN3z_xBxQ@mail.gmail.com>
+ <CAE9FiQWvYQRCZjDx-Kh16nKfjfS=pyu8foJR+wWYS-x8DUZteg@mail.gmail.com>
+ <CAJZOPZLVc=V-ac8_A2JB_r17TRyCMoDpe1MXN6WcjMR4SO6n1Q@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAJZOPZLVc=V-ac8_A2JB_r17TRyCMoDpe1MXN6WcjMR4SO6n1Q@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use PCI bus lock to protect concurrent PCI device hotplug operations.
+On Thu, May 16, 2013 at 12:56:42AM -0400, Or Gerlitz wrote:
+> > > Please note that this whole lockdep warning was identified as false
+> > > positive by Tejun http://www.spinics.net/lists/linux-pci/msg21568.html
+> >
+> > No, at least one time, I noticed there is one real hang happens.
+> 
+> Tejun, so what your thinking here?
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>
-Cc: Ingo Molnar <mingo@redhat.com>
-Cc: "H. Peter Anvin" <hpa@zytor.com>
-Cc: x86@kernel.org
-Cc: Len Brown <lenb@kernel.org>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: Feng Tang <feng.tang@intel.com>
-Cc: linux-kernel@vger.kernel.org
-Cc: linux-acpi@vger.kernel.org
----
- arch/ia64/pci/pci.c     |  2 +-
- arch/x86/pci/acpi.c     |  3 ++-
- drivers/acpi/pci_root.c | 14 ++++++++------
- drivers/pci/Kconfig     |  2 +-
- 4 files changed, 12 insertions(+), 9 deletions(-)
+Can't really tell much without more details.  Yinghai, do you have any
+logs from such hang?  Are you sure it's from this?
 
-diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
-index de1474f..6e91e87 100644
---- a/arch/ia64/pci/pci.c
-+++ b/arch/ia64/pci/pci.c
-@@ -384,7 +384,7 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 	}
- 
- 	pci_scan_child_bus(pbus);
--	return pbus;
-+	return pci_bus_get(pbus);
- 
- out3:
- 	kfree(controller->window);
-diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index b972f04..6dddc06 100644
---- a/arch/x86/pci/acpi.c
-+++ b/arch/x86/pci/acpi.c
-@@ -534,7 +534,7 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 		 */
- 		memcpy(bus->sysdata, sd, sizeof(*sd));
- 		kfree(info);
--		pci_bus_put(bus);
-+		BUG_ON(pci_bus_lock(bus, PCI_BUS_STATE_REMOVED - 1, true) < 0);
- 	} else {
- 		probe_pci_root_info(info, device, busnum, domain);
- 
-@@ -561,6 +561,7 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 			pci_set_host_bridge_release(
- 				to_pci_host_bridge(bus->bridge),
- 				release_pci_root_info, info);
-+			pci_bus_get(bus);
- 		} else {
- 			pci_free_resource_list(&resources);
- 			__release_pci_root_info(info);
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index 21dda5a..eb01cc7 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -535,6 +535,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
- 	}
- 
- 	pci_bus_add_devices(root->bus);
-+	pci_bus_unlock(root->bus, true);
- 	return 1;
- 
- end:
-@@ -546,13 +547,14 @@ static void acpi_pci_root_remove(struct acpi_device *device)
- {
- 	struct acpi_pci_root *root = acpi_driver_data(device);
- 
--	pci_stop_root_bus(root->bus);
--
--	device_set_run_wake(root->bus->bridge, false);
--	pci_acpi_remove_bus_pm_notifier(device);
--
--	pci_remove_root_bus(root->bus);
-+	if (pci_bus_lock(root->bus, PCI_BUS_STATE_REMOVED - 1, true) == 0) {
-+		pci_stop_root_bus(root->bus);
-+		device_set_run_wake(root->bus->bridge, false);
-+		pci_acpi_remove_bus_pm_notifier(device);
-+		pci_remove_root_bus(root->bus);
-+	}
- 
-+	pci_bus_put(root->bus);
- 	kfree(root);
- }
- 
-diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
-index 92e69bd..5ae3504 100644
---- a/drivers/pci/Kconfig
-+++ b/drivers/pci/Kconfig
-@@ -121,4 +121,4 @@ config PCI_LABEL
- 	select NLS
- 
- config PCI_BUS_LOCK
--	def_bool n
-+	def_bool y if (X86 || IA64)
+Thanks.
+
 -- 
-1.8.1.2
-
+tejun
