@@ -1,82 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:45242 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758002Ab3EWOdL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 May 2013 10:33:11 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>
+Received: from mho-02-ewr.mailhop.org ([204.13.248.72]:40025 "EHLO
+	mho-02-ewr.mailhop.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752520Ab3EPQMl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 May 2013 12:12:41 -0400
+Date: Thu, 16 May 2013 12:12:02 -0400
+From: Jason Cooper <jason@lakedaemon.net>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
 Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Lior Amsalem <alior@marvell.com>,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Maen Suleiman <maen@marvell.com>, linux-pci@vger.kernel.org,
+	devicetree-discuss@lists.ozlabs.org,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Olof Johansson <olof@lixom.net>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
 	linux-arm-kernel@lists.infradead.org,
-	Maen Suleiman <maen@marvell.com>
-Subject: [PATCH v2 0/3] Marvell PCIe driver improvements
-Date: Thu, 23 May 2013 16:32:50 +0200
-Message-Id: <1369319573-19927-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Michael Opdenacker <michael.opdenacker@free-electrons.com>
+Subject: Re: [PATCHv9 7/9] pci: PCIe driver for Marvell Armada 370/XP
+ systems
+Message-ID: <20130516161201.GI6563@titan.lakedaemon.net>
+References: <1368624323-24311-1-git-send-email-thomas.petazzoni@free-electrons.com>
+ <1368624323-24311-8-git-send-email-thomas.petazzoni@free-electrons.com>
+ <20130516093312.GB2459@localhost>
+ <20130516154031.GF6563@titan.lakedaemon.net>
+ <20130516174903.3a7a07ef@skate>
+ <20130516155617.GH6563@titan.lakedaemon.net>
+ <20130516180850.3622e1a8@skate>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130516180850.3622e1a8@skate>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Bjorn, Jason, Andrew, Gregory,
+On Thu, May 16, 2013 at 06:08:50PM +0200, Thomas Petazzoni wrote:
+> Dear Jason Cooper,
+> 
+> On Thu, 16 May 2013 11:56:17 -0400, Jason Cooper wrote:
+> 
+> > > > > Building this showed a warning here. It seems you forgot
+> > > > > to mark this one as __init.
+> > > > 
+> > > > Thomas, I'll fix this up when I pull this in, no need to resend. :)
+> > > 
+> > > I'll resend, because beyond this function pointed by Ezequiel, there
+> > > are two other functions that can be marked __init. The one pointed by
+> > > Ezequiel is important because it causes a section mismatch
+> > > when !CONFIG_MODULES, because in this case platform_driver_probe() is
+> > > __init (and this explains what I wasn't seeing the warning, since I'm
+> > > building CONFIG_MODULES=y). The two other functions are more cosmetic,
+> > > but good to have as well.
+> > > 
+> > > It would already been sent if git hadn't decided to do a 'git gc' right
+> > > after my rebase. It's been gc-ing for quite some time now...
+> > 
+> > Dear boss,
+> > 
+> > I am in desperate need of a 500GB SSD on which to do my kernel work.
+> > 
+> > Thanks,
+> > 
+> > Kranky Kernel Developer
+> > 
+> > hehehe...
+> 
+> Adding boss in the Cc list :-)
 
-Here is an updated version of the PCIe improvements.
+Hey, whatever works for you.  Good luck!
 
-Changes since v1:
+thx,
 
- * Fix some typos in the comments of PATCH 2, noticed by Bjorn
-   Helgaas.
-
- * Rework the two last patches (first one was fixing the capability
-   list, the other one the emulation of the devsel bits in the status
-   register), after the comments of Bjorn. In fact, it turns out that
-   the status register is composed of read-only bits for which we want
-   to emulate a value of zero, and the other bits are write-1-to-clear
-   bits that expose error conditions that we do not handle in the
-   emulated bridge. So, in summary, emulating a 0 status register on
-   reads, and ignoring writes to the status register is the simplest
-   solution. If we later on implement a capability list, we can use a
-   more clever emulation of the status register, but for the moment,
-   this simple solution is enough. Therefore, the two last patches are
-   now one single, simpler patch.
-
-I'd like those improvements to be kept separated from the original
-PCIe driver itself: while the PCIe driver has been around and reviewed
-for a long time, those improvements are newer. And I clearly do not
-want the PCIe driver to miss 3.11 because of any problem that could be
-found in those additional improvements.
-
-The main improvement being brought here is that the PCI-to-PCI bridge
-logic is fixed/extended to properly support physical PCIe bridges that
-are connected on a PCIe interface of a Marvell board. Without this
-improvement, only the devices connected directly to the PCIe
-interfaces of the board are properly enumerated. Any device that would
-sit beyond a physical bridge is not visible.
-
-Bjorn, with your Acked-by, could the Marvell maintainers include those
-patches in their branch, merged through arm-soc? They already have the
-Marvell PCIe driver itself, so I believe it makes sense to merge those
-improvements through the same path.
-
-Jason, those patches have been prepared on top of my marvell-pcie-v10
-branch, I hope that's ok for you. If you want me to rebase them on
-some other branch in which you have integrated the PCIe driver, don't
-hesitate to tell me to do so. That said, since those patches are only
-touching the driver itself and no other file, they should not cause
-any conflict with other changes.
-
-Thanks,
-
-Thomas
-
-Thomas Petazzoni (3):
-  pci: mvebu: no longer fake the slot location of downstream devices
-  pci: mvebu: allow the enumeration of devices beyond physical bridges
-  pci: mvebu: fix the emulation of the status register
-
- drivers/pci/host/pci-mvebu.c |   55 +++++++++++++++++++++++++++++++++---------
- 1 file changed, 44 insertions(+), 11 deletions(-)
-
--- 
-1.7.9.5
-
+Jason.
