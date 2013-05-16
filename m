@@ -1,70 +1,125 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f180.google.com ([209.85.214.180]:35391 "EHLO
-	mail-ob0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759025Ab3E1WKK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 May 2013 18:10:10 -0400
-Received: by mail-ob0-f180.google.com with SMTP id eh20so1685904obb.25
-        for <linux-pci@vger.kernel.org>; Tue, 28 May 2013 15:10:09 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20130528183527.3318.5365.stgit@bling.home>
-References: <20130528183527.3318.5365.stgit@bling.home>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 28 May 2013 16:09:49 -0600
-Message-ID: <CAErSpo4rjifYfC_4vcs2g-Pb-LR_n2NB6e5en3=CSWgW4iQcJA@mail.gmail.com>
-Subject: Re: [PATCH v2 0/2] iommu/intel: Quirk non-compliant PCIe-to-PCI bridges
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: "open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	Stephen Hemminger <stephen@networkplumber.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Don Dutile <ddutile@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	Len Brown <lenb@kernel.org>, Feng Tang <feng.tang@intel.com>,
+	linux-acpi@vger.kernel.org
+Subject: [RFC PATCH v2, part3 11/11] PCI, ACPI, pci_root: use PCI bus lock to protect PCI device hotplug
+Date: Thu, 16 May 2013 23:50:59 +0800
+Message-Id: <1368719459-24800-12-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1368719459-24800-1-git-send-email-jiang.liu@huawei.com>
+References: <1368719459-24800-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 28, 2013 at 12:40 PM, Alex Williamson
-<alex.williamson@redhat.com> wrote:
-> This series tries to address:
->
-> https://bugzilla.kernel.org/show_bug.cgi?id=44881
->
-> Where pci_find_upstream_pcie_bridge() gets lost trying to find the
-> upstream PCIe-to-PCI bridge for a device because the bridge doesn't
-> expose a PCIe capability.  To do this, we add a iommu_pci_is_pcie_bridge
-> function which includes a quirk to look to the next upstream device
-> as a sanity check.  We can then replace pci_find_upstream_pcie_bridge
-> with a function that's a bit more generic and less tied to intel-iommu
-> eccentricities.
->
-> v2 uses the same logic as v1, but moves the search and match code to
-> IOMMU-core since PCI-core doesn't want it.  v1 has several reports
-> from users that this solves the problem they have in the above bz.
-> Thanks,
->
-> Alex
->
-> ---
->
-> Alex Williamson (2):
->       iommu: Quirked PCIe bridge test and search function
->       intel-iommu: Convert to iommu_pci_find_upstream + iommu_pci_is_pcie_bridge
->
->
->  drivers/iommu/Kconfig               |    5 ++
->  drivers/iommu/Makefile              |    1
->  drivers/iommu/intel-iommu.c         |   77 ++++++++++++++++++++++-------------
->  drivers/iommu/intel_irq_remapping.c |   15 +++++--
->  drivers/iommu/pci.c                 |   69 +++++++++++++++++++++++++++++++
->  drivers/iommu/pci.h                 |   23 ++++++++++
->  6 files changed, 157 insertions(+), 33 deletions(-)
->  create mode 100644 drivers/iommu/pci.c
+Use PCI bus lock to protect concurrent PCI device hotplug operations.
 
-These both look OK to me, for whatever that's worth (since they don't
-touch drivers/pci any more :)).
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Cc: Ingo Molnar <mingo@redhat.com>
+Cc: "H. Peter Anvin" <hpa@zytor.com>
+Cc: x86@kernel.org
+Cc: Len Brown <lenb@kernel.org>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: Feng Tang <feng.tang@intel.com>
+Cc: linux-kernel@vger.kernel.org
+Cc: linux-acpi@vger.kernel.org
+---
+ arch/ia64/pci/pci.c     |  2 +-
+ arch/x86/pci/acpi.c     |  3 ++-
+ drivers/acpi/pci_root.c | 14 ++++++++------
+ drivers/pci/Kconfig     |  2 +-
+ 4 files changed, 12 insertions(+), 9 deletions(-)
 
-I assume you probably removed the only users of
-pci_find_upstream_pcie_bridge(), right?  If so, and you want to remove
-that in this same series, you can add my Acked-by to that.
+diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
+index de1474f..6e91e87 100644
+--- a/arch/ia64/pci/pci.c
++++ b/arch/ia64/pci/pci.c
+@@ -384,7 +384,7 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 	}
+ 
+ 	pci_scan_child_bus(pbus);
+-	return pbus;
++	return pci_bus_get(pbus);
+ 
+ out3:
+ 	kfree(controller->window);
+diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+index b972f04..6dddc06 100644
+--- a/arch/x86/pci/acpi.c
++++ b/arch/x86/pci/acpi.c
+@@ -534,7 +534,7 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 		 */
+ 		memcpy(bus->sysdata, sd, sizeof(*sd));
+ 		kfree(info);
+-		pci_bus_put(bus);
++		BUG_ON(pci_bus_lock(bus, PCI_BUS_STATE_REMOVED - 1, true) < 0);
+ 	} else {
+ 		probe_pci_root_info(info, device, busnum, domain);
+ 
+@@ -561,6 +561,7 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 			pci_set_host_bridge_release(
+ 				to_pci_host_bridge(bus->bridge),
+ 				release_pci_root_info, info);
++			pci_bus_get(bus);
+ 		} else {
+ 			pci_free_resource_list(&resources);
+ 			__release_pci_root_info(info);
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index 21dda5a..eb01cc7 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -535,6 +535,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
+ 	}
+ 
+ 	pci_bus_add_devices(root->bus);
++	pci_bus_unlock(root->bus, true);
+ 	return 1;
+ 
+ end:
+@@ -546,13 +547,14 @@ static void acpi_pci_root_remove(struct acpi_device *device)
+ {
+ 	struct acpi_pci_root *root = acpi_driver_data(device);
+ 
+-	pci_stop_root_bus(root->bus);
+-
+-	device_set_run_wake(root->bus->bridge, false);
+-	pci_acpi_remove_bus_pm_notifier(device);
+-
+-	pci_remove_root_bus(root->bus);
++	if (pci_bus_lock(root->bus, PCI_BUS_STATE_REMOVED - 1, true) == 0) {
++		pci_stop_root_bus(root->bus);
++		device_set_run_wake(root->bus->bridge, false);
++		pci_acpi_remove_bus_pm_notifier(device);
++		pci_remove_root_bus(root->bus);
++	}
+ 
++	pci_bus_put(root->bus);
+ 	kfree(root);
+ }
+ 
+diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+index 92e69bd..5ae3504 100644
+--- a/drivers/pci/Kconfig
++++ b/drivers/pci/Kconfig
+@@ -121,4 +121,4 @@ config PCI_LABEL
+ 	select NLS
+ 
+ config PCI_BUS_LOCK
+-	def_bool n
++	def_bool y if (X86 || IA64)
+-- 
+1.8.1.2
 
-Bjorn
