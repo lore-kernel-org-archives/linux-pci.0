@@ -1,50 +1,42 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:51110 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756925Ab3EVVN1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 22 May 2013 17:13:27 -0400
-Message-ID: <1369257193.3870.23.camel@pasglop>
-Subject: Re: Resource assignment oddities
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Date: Thu, 23 May 2013 07:13:13 +1000
-In-Reply-To: <CAE9FiQU48-t5HP8w29gL7JY0eqa=fS=jhCU7bRU2hvMt0iRy6A@mail.gmail.com>
-References: <1367712653.11982.19.camel@pasglop>
-	 <1367712932.11982.20.camel@pasglop>
-	 <CAE9FiQX=h4H1gcbW=EfQo_ZtAgHGOZ2GxVxLG59C1iMH+qgH2g@mail.gmail.com>
-	 <1367732090.11982.38.camel@pasglop>
-	 <CAE9FiQUN3qqVmdw_EdOC-JZGc219M3tu=roOX98xns+77LJhMw@mail.gmail.com>
-	 <1367740336.11982.41.camel@pasglop>
-	 <51871088.4594420a.0ccc.7300SMTPIN_ADDED_BROKEN@mx.google.com>
-	 <CAE9FiQXGUOM_h_X5tdGbkiuZGZkiFigSLbbftx3YXybFBg6trg@mail.gmail.com>
-	 <518786a7.64bbec0a.58a0.1f6bSMTPIN_ADDED_BROKEN@mx.google.com>
-	 <CAErSpo5MJCoaof=heFM4vLxuWz8pFqsyXAC356jZ7rbRvSOt9g@mail.gmail.com>
-	 <CAE9FiQWsZXfkSSVFzee4-J4bUDP8DdG=y9-k2du+ek90StDvNA@mail.gmail.com>
-	 <1369255424.3870.18.camel@pasglop>
-	 <CAE9FiQU48-t5HP8w29gL7JY0eqa=fS=jhCU7bRU2hvMt0iRy6A@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-ie0-f169.google.com ([209.85.223.169]:63917 "EHLO
+	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751058Ab3EPEjM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 May 2013 00:39:12 -0400
+MIME-Version: 1.0
+In-Reply-To: <CAJZOPZLjdALP4jkLo6p787jaPx=dkKj7+AmCr9+mgJN3z_xBxQ@mail.gmail.com>
+References: <1368498506-25857-1-git-send-email-yinghai@kernel.org>
+	<1368498506-25857-7-git-send-email-yinghai@kernel.org>
+	<0EE9A1CDC8D6434DB00095CD7DB873462CFB0E4E@MTLDAG01.mtl.com>
+	<CAE9FiQVn4F+dTrQn0xsg-6QY9+HwbnJR=1CrjdoZkmF_LMrgpg@mail.gmail.com>
+	<CAJZOPZLjdALP4jkLo6p787jaPx=dkKj7+AmCr9+mgJN3z_xBxQ@mail.gmail.com>
+Date: Wed, 15 May 2013 21:39:11 -0700
+Message-ID: <CAE9FiQWvYQRCZjDx-Kh16nKfjfS=pyu8foJR+wWYS-x8DUZteg@mail.gmail.com>
+Subject: Re: [PATCH 6/7] PCI: Make sure VF's driver get attached after PF's
+From: Yinghai Lu <yinghai@kernel.org>
+To: Or Gerlitz <or.gerlitz@gmail.com>
+Cc: Yan Burman <yanb@mellanox.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	Jack Morgenstein <jackm@mellanox.com>,
+	Or Gerlitz <ogerlitz@mellanox.com>,
+	Yevgeny Petrilin <yevgenyp@mellanox.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2013-05-22 at 14:00 -0700, Yinghai Lu wrote:
-> > The simpler thing to do would have been to do the entire thing in two
-> > separate passes, one for MMIO and one for IO, and skip the second one
-> > entirely if there's no IO at the host bridge level :-)
-> 
-> that will need more changes.
-> 
-> also how about hostbridge only has mmio pref 64bit?
+On Wed, May 15, 2013 at 9:00 PM, Or Gerlitz <or.gerlitz@gmail.com> wrote:
+> On Tue, May 14, 2013 at 11:43 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+>
+>> BTW, do you have any plan to make mlx4 support sriov_configure via sysfs?
+>
+> yes we do, we're waiting for a firmware change that will allow for
+> such a patch to get working.
+>
+> Please note that this whole lockdep warning was identified as false
+> positive by Tejun http://www.spinics.net/lists/linux-pci/msg21568.html
 
-MMIO pref and non-pref are somewhat linked, I'm not saying you should
-separate them or change your design, but IO should have absolutely no
-impact.
-
-Anyway, that's how it should have been... probably too late to change.
-
-Ben.
-
-
+No, at least one time, I noticed there is one real hang happens.
