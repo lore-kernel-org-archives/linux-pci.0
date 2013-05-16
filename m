@@ -1,68 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:41502 "EHLO hydra.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751419Ab3EITPt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 9 May 2013 15:15:49 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: "Ortiz, Lance E" <lance.oritz@hp.com>
-Cc: "bhelgaas@google.com" <bhelgaas@google.com>,
-	"lance_ortiz@hotmail.com" <lance_ortiz@hotmail.com>,
-	"jiang.liu@huawei.com" <jiang.liu@huawei.com>,
-	"tony.luck@intel.com" <tony.luck@intel.com>,
-	"bp@alien8.de" <bp@alien8.de>,
-	"rostedt@goodmis.org" <rostedt@goodmis.org>,
-	"mchehab@redhat.com" <mchehab@redhat.com>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] aerdrv: Move cper_print_pcie() out of interrupt context
-Date: Thu, 09 May 2013 21:24:12 +0200
-Message-ID: <2958841.JugbRneiDu@vostro.rjw.lan>
-In-Reply-To: <A961433CDFF2F640A2866803152E61F95177AFA9@G4W3219.americas.hpqcorp.net>
-References: <20130508171519.26724.63307.stgit@grignak.americas.hpqcorp.net> <2598827.AVAqMcfGuF@vostro.rjw.lan> <A961433CDFF2F640A2866803152E61F95177AFA9@G4W3219.americas.hpqcorp.net>
+Received: from mail-ie0-f178.google.com ([209.85.223.178]:50528 "EHLO
+	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753300Ab3EPSgG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 May 2013 14:36:06 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <20130516175350.GB7171@mtj.dyndns.org>
+References: <1368498506-25857-1-git-send-email-yinghai@kernel.org>
+	<1368498506-25857-7-git-send-email-yinghai@kernel.org>
+	<0EE9A1CDC8D6434DB00095CD7DB873462CFB0E4E@MTLDAG01.mtl.com>
+	<CAE9FiQVn4F+dTrQn0xsg-6QY9+HwbnJR=1CrjdoZkmF_LMrgpg@mail.gmail.com>
+	<CAJZOPZLjdALP4jkLo6p787jaPx=dkKj7+AmCr9+mgJN3z_xBxQ@mail.gmail.com>
+	<CAE9FiQWvYQRCZjDx-Kh16nKfjfS=pyu8foJR+wWYS-x8DUZteg@mail.gmail.com>
+	<CAJZOPZLVc=V-ac8_A2JB_r17TRyCMoDpe1MXN6WcjMR4SO6n1Q@mail.gmail.com>
+	<20130516175350.GB7171@mtj.dyndns.org>
+Date: Thu, 16 May 2013 11:36:05 -0700
+Message-ID: <CAE9FiQWPNt42gsRwYqQwJM6VpZ-UF2+r-64p_aS3X7GdeVbXCA@mail.gmail.com>
+Subject: Re: [PATCH 6/7] PCI: Make sure VF's driver get attached after PF's
+From: Yinghai Lu <yinghai@kernel.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: Or Gerlitz <or.gerlitz@gmail.com>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	Yan Burman <yanb@mellanox.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	Jack Morgenstein <jackm@mellanox.com>,
+	Or Gerlitz <ogerlitz@mellanox.com>,
+	Yevgeny Petrilin <yevgenyp@mellanox.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, May 09, 2013 07:10:36 PM Ortiz, Lance E wrote:
-> Rafael,  
-> 
-> Thanks for your feedback.
-> 
-> > The way the changes are described here isn't particularly clear to me.
-> 
-> I will try to make it a little more clear.
+On Thu, May 16, 2013 at 10:53 AM, Tejun Heo <tj@kernel.org> wrote:
+> On Thu, May 16, 2013 at 12:56:42AM -0400, Or Gerlitz wrote:
+>> > > Please note that this whole lockdep warning was identified as false
+>> > > positive by Tejun http://www.spinics.net/lists/linux-pci/msg21568.html
+>> >
+>> > No, at least one time, I noticed there is one real hang happens.
+>>
+>> Tejun, so what your thinking here?
+>
+> Can't really tell much without more details.  Yinghai, do you have any
+> logs from such hang?  Are you sure it's from this?
 
-Cool, thanks!
+I did not keep that log.
 
-> > Also, since aer_recover_work_func() is going to be the only existing
-> > caller of
-> > cper_print_aer() after this change, as far as I can say, and it doesn't
-> > use the
-> > function's first argument, that argument should be dropped entirely.
-> 
-> The truth is, the function cper_print_aer() really needs to be re-written so
-> it is consistent with aer_print_error() in how it outputs information.
-> Right now, the output is formatted very differently.  I was planning on doing
-> that at a later date, but fix the warning now.  I might add a TODO comment in
-> the code for this.
+Will remove AlexD patch, try several times to see if I can duplicate it again.
 
-Yes, I think that would be OK, depending on the amount of changes actually
-needed to rework it (if that's not too much, I'd just go straight for the
-rework, honestly).
+Thanks
 
-> The reason I did not remove the argument in cper_print_aer() is because
-> 'prefix' is used in the call to cper_print_bits(), and I passed through an
-> empty string to make sure that function worked correctly.  I can try to clean
-> it up.
-
-Please do.
-
-Thanks,
-Rafael
-
-
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+Yinghai
