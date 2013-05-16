@@ -1,135 +1,49 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Andrew Murray <Andrew.Murray@arm.com>
-To: robherring2@gmail.com
-Cc: benh@kernel.crashing.org, linux-mips@linux-mips.org,
-	linuxppc-dev@lists.ozlabs.org, jgunthorpe@obsidianresearch.com,
-	linux@arm.linux.org.uk, siva.kallam@samsung.com,
-	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
-	jg1.han@samsung.com, Liviu.Dudau@arm.com,
-	linux-kernel@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
-	kgene.kim@samsung.com, bhelgaas@google.com,
-	suren.reddy@samsung.com, linux-arm-kernel@lists.infradead.org,
-	monstr@monstr.eu, paulus@samba.org,
-	thomas.petazzoni@free-electrons.com,
-	thierry.reding@avionic-design.de, thomas.abraham@linaro.org,
-	arnd@arndb.de, linus.walleij@linaro.org, juhosg@openwrt.org,
-	grant.likely@linaro.org, Andrew Murray <Andrew.Murray@arm.com>
-Subject: [PATCH v9 0/3] of/pci: Provide common support for PCI DT parsing
-Date: Tue,  7 May 2013 16:31:11 +0100
-Message-Id: <1367940674-11987-1-git-send-email-Andrew.Murray@arm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qc0-f181.google.com ([209.85.216.181]:59676 "EHLO
+	mail-qc0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750767Ab3EPE4n (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 May 2013 00:56:43 -0400
+MIME-Version: 1.0
+In-Reply-To: <CAE9FiQWvYQRCZjDx-Kh16nKfjfS=pyu8foJR+wWYS-x8DUZteg@mail.gmail.com>
+References: <1368498506-25857-1-git-send-email-yinghai@kernel.org>
+	<1368498506-25857-7-git-send-email-yinghai@kernel.org>
+	<0EE9A1CDC8D6434DB00095CD7DB873462CFB0E4E@MTLDAG01.mtl.com>
+	<CAE9FiQVn4F+dTrQn0xsg-6QY9+HwbnJR=1CrjdoZkmF_LMrgpg@mail.gmail.com>
+	<CAJZOPZLjdALP4jkLo6p787jaPx=dkKj7+AmCr9+mgJN3z_xBxQ@mail.gmail.com>
+	<CAE9FiQWvYQRCZjDx-Kh16nKfjfS=pyu8foJR+wWYS-x8DUZteg@mail.gmail.com>
+Date: Thu, 16 May 2013 00:56:42 -0400
+Message-ID: <CAJZOPZLVc=V-ac8_A2JB_r17TRyCMoDpe1MXN6WcjMR4SO6n1Q@mail.gmail.com>
+Subject: Re: [PATCH 6/7] PCI: Make sure VF's driver get attached after PF's
+From: Or Gerlitz <or.gerlitz@gmail.com>
+To: Yinghai Lu <yinghai@kernel.org>, Tejun Heo <tj@kernel.org>,
+	"Michael S. Tsirkin" <mst@redhat.com>
+Cc: Yan Burman <yanb@mellanox.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	Jack Morgenstein <jackm@mellanox.com>,
+	Or Gerlitz <ogerlitz@mellanox.com>,
+	Yevgeny Petrilin <yevgenyp@mellanox.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patchset factors out duplicated code associated with parsing PCI
-DT "ranges" properties across the architectures and introduces a
-"ranges" parser. This parser "of_pci_range_parser" can be used directly
-by ARM host bridge drivers enabling them to obtain ranges from device
-trees.
+On Thu, May 16, 2013 at 12:39 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+>
+> On Wed, May 15, 2013 at 9:00 PM, Or Gerlitz <or.gerlitz@gmail.com> wrote:
+> > On Tue, May 14, 2013 at 11:43 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+> >
+> >> BTW, do you have any plan to make mlx4 support sriov_configure via
+> >> sysfs?
+> >
+> > yes we do, we're waiting for a firmware change that will allow for
+> > such a patch to get working.
+> >
+> > Please note that this whole lockdep warning was identified as false
+> > positive by Tejun http://www.spinics.net/lists/linux-pci/msg21568.html
+>
+> No, at least one time, I noticed there is one real hang happens.
 
-I've included the Reviewed-by, Tested-by and Acked-by's received from
-v5/v6/v7/v8 in this patchset, earlier versions of this patchset (v3) have been
-tested-by:
-
-Thierry Reding <thierry.reding@avionic-design.de>
-Jingoo Han <jg1.han@samsung.com>
-
-I've tested that this patchset builds and runs on ARM and that it builds on
-PowerPC, x86_64, MIPS and Microblaze.
-
-Compared to the v8 sent by Andrew Murray, the following changes have been made
-(please note that the MIPS patch is unchanged from v8):
-
- * Remove the unification of pci_process_bridge_OF_ranges between PowerPC and
-   Microblaze. Feedback from Bjorn and Benjamin (along with a NAK) suggested
-   that this goes against their future direction (using more of struct
-   pci_host_bridge and less of arch specific struct pci_controller).
-
-Compared to the v7 sent by Andrew Murray, the following changes have been made
-(please note that the first patch is unchanged from v7):
-
- * Rename of_pci_range_parser to of_pci_range_parser_init and
-   of_pci_process_ranges to of_pci_range_parser_one as suggested by Grant
-   Likely.
-
- * Reverted back to using a switch statement instead of if/else in
-   pci_process_bridge_OF_ranges. Grant Likely highlighted this change from
-   the original code which was unnecessary.
-
- * Squashed in a patch provided by Gabor Juhos which fixes build errors on
-   MIPS found in the last patchset.
-
-Compared to the v6 sent by Andrew Murray, the following changes have
-been made in response to build errors/warnings:
-
- * Inclusion of linux/of_address.h in of_pci.c as suggested by Michal
-   Simek to prevent compilation failures on Microblaze (and others) and his
-   ack.
-
- * Use of externs, static inlines and a typo in linux/of_address.h in response
-   to linker errors (multiple defination) on x86_64 as spotted by a kbuild test
-   robot on (jcooper/linux.git mvebu/drivers)
-
- * Add EXPORT_SYMBOL_GPL to of_pci_range_parser function to be consistent
-   with of_pci_process_ranges function
-
-Compared to the v5 sent by Andrew Murray, the following changes have
-been made:
-
- * Use of CONFIG_64BIT instead of CONFIG_[a32bitarch] as suggested by
-   Rob Herring in drivers/of/of_pci.c
-
- * Added forward declaration of struct pci_controller in linux/of_pci.h
-   to prevent compiler warning as suggested by Thomas Petazzoni
-
- * Improved error checking (!range check), removal of unnecessary be32_to_cpup
-   call, improved formatting of struct of_pci_range_parser layout and
-   replacement of macro with a static inline. All suggested by Rob Herring.
-
-Compared to the v4 (incorrectly labelled v3) sent by Andrew Murray,
-the following changes have been made:
-
- * Split the patch as suggested by Rob Herring
-
-Compared to the v3 sent by Andrew Murray, the following changes have
-been made:
-
- * Unify and move duplicate pci_process_bridge_OF_ranges functions to
-   drivers/of/of_pci.c as suggested by Rob Herring
-
- * Fix potential build errors with Microblaze/MIPS
-
-Compared to "[PATCH v5 01/17] of/pci: Provide support for parsing PCI DT
-ranges property", the following changes have been made:
-
- * Correct use of IORESOURCE_* as suggested by Russell King
-
- * Improved interface and naming as suggested by Thierry Reding
-
-Compared to the v2 sent by Andrew Murray, Thomas Petazzoni did:
-
- * Add a memset() on the struct of_pci_range_iter when starting the
-   for loop in for_each_pci_range(). Otherwise, with an uninitialized
-   of_pci_range_iter, of_pci_process_ranges() may crash.
-
- * Add parenthesis around 'res', 'np' and 'iter' in the
-   for_each_of_pci_range macro definitions. Otherwise, passing
-   something like &foobar as 'res' didn't work.
-
- * Rebased on top of 3.9-rc2, which required fixing a few conflicts in
-   the Microblaze code.
-
-v2:
-  This follows on from suggestions made by Grant Likely
-  (marc.info/?l=linux-kernel&m=136079602806328)
-
-Andrew Murray (3):
-  of/pci: Provide support for parsing PCI DT ranges property
-  of/pci: mips: convert to common of_pci_range_parser
-  of/pci: microblaze: convert to common of_pci_range_parser
-
- arch/microblaze/pci/pci-common.c |  106 ++++++++++++++------------------------
- arch/mips/pci/pci.c              |   50 ++++++-----------
- drivers/of/address.c             |   67 ++++++++++++++++++++++++
- include/linux/of_address.h       |   48 +++++++++++++++++
- 4 files changed, 171 insertions(+), 100 deletions(-)
-
+Tejun, so what your thinking here?
