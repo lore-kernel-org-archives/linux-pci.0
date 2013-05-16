@@ -1,8 +1,4 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f172.google.com ([209.85.192.172]:53392 "EHLO
-	mail-pd0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756621Ab3EYNvi (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 25 May 2013 09:51:38 -0400
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Jiang Liu <liuj97@gmail.com>
 To: Bjorn Helgaas <bhelgaas@google.com>,
 	Yinghai Lu <yinghai@kernel.org>
@@ -14,59 +10,82 @@ Cc: Jiang Liu <jiang.liu@huawei.com>,
 	Myron Stowe <myron.stowe@redhat.com>,
 	Yijing Wang <wangyijing@huawei.com>,
 	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Chris Metcalf <cmetcalf@tilera.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>
-Subject: [PATCH v3, part1 04/10] PCI: mark pci_scan_bus_parented() as __deprecated
-Date: Sat, 25 May 2013 21:48:32 +0800
-Message-Id: <1369489718-25869-5-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1369489718-25869-1-git-send-email-jiang.liu@huawei.com>
-References: <1369489718-25869-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-pci-owner@vger.kernel.org
+	linux-kernel@vger.kernel.org,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Subject: [RFC PATCH v2, part3 09/11] PCI, acpiphp: use PCI bus lock to protect PCI device hotplug
+Date: Thu, 16 May 2013 23:50:57 +0800
+Message-Id: <1368719459-24800-10-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1368719459-24800-1-git-send-email-jiang.liu@huawei.com>
+References: <1368719459-24800-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Mark pci_scan_bus_parented() as __deprecated and clean up outdated
-comments.
+Use PCI bus lock to protect concurrent PCI device hotplug operations.
 
 Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Cc: Chris Metcalf <cmetcalf@tilera.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Thierry Reding <thierry.reding@avionic-design.de>
-Cc: linux-kernel@vger.kernel.org
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Cc: Yijing Wang <wangyijing@huawei.com>
 Cc: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 ---
- arch/tile/kernel/pci.c | 3 ---
- include/linux/pci.h    | 4 ++--
- 2 files changed, 2 insertions(+), 5 deletions(-)
+ drivers/pci/hotplug/acpiphp_glue.c | 14 +++++++++++---
+ 1 file changed, 11 insertions(+), 3 deletions(-)
 
-diff --git a/arch/tile/kernel/pci.c b/arch/tile/kernel/pci.c
-index 67237d3..936e087 100644
---- a/arch/tile/kernel/pci.c
-+++ b/arch/tile/kernel/pci.c
-@@ -309,9 +309,6 @@ int __init pcibios_init(void)
- 			 *
- 			 * It reads the PCI tree for this bus into the Linux
- 			 * data structures.
--			 *
--			 * This is inlined in linux/pci.h and calls into
--			 * pci_scan_bus_parented() in probe.c.
- 			 */
- 			pci_add_resource(&resources, &ioport_resource);
- 			pci_add_resource(&resources, &iomem_resource);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index b0f4a82..7b23fa0 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -720,8 +720,8 @@ void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
- void pcibios_scan_specific_bus(int busn);
- struct pci_bus *pci_find_bus(int domain, int busnr);
- void pci_bus_add_devices(const struct pci_bus *bus);
--struct pci_bus *pci_scan_bus_parented(struct device *parent, int bus,
--				      struct pci_ops *ops, void *sysdata);
-+struct pci_bus * __deprecated pci_scan_bus_parented(struct device *parent,
-+			int bus, struct pci_ops *ops, void *sysdata);
- struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops, void *sysdata);
- struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 				    struct pci_ops *ops, void *sysdata,
+diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+index e330331..d105dcd 100644
+--- a/drivers/pci/hotplug/acpiphp_glue.c
++++ b/drivers/pci/hotplug/acpiphp_glue.c
+@@ -674,6 +674,9 @@ static int __ref enable_device(struct acpiphp_slot *slot)
+ 	if (slot->flags & SLOT_ENABLED)
+ 		goto err_exit;
+ 
++	if (pci_bus_lock(bus, PCI_BUS_STATE_STOPPING - 1, true) < 0)
++		goto err_exit;
++
+ 	list_for_each_entry(func, &slot->funcs, sibling)
+ 		acpiphp_bus_add(func);
+ 
+@@ -681,7 +684,7 @@ static int __ref enable_device(struct acpiphp_slot *slot)
+ 	if (num == 0) {
+ 		/* Maybe only part of funcs are added. */
+ 		dbg("No new device found\n");
+-		goto err_exit;
++		goto out_unlock;
+ 	}
+ 
+ 	max = acpiphp_max_busnr(bus);
+@@ -726,8 +729,9 @@ static int __ref enable_device(struct acpiphp_slot *slot)
+ 		}
+ 	}
+ 
+-
+- err_exit:
++out_unlock:
++	pci_bus_unlock(bus, true);
++err_exit:
+ 	return 0;
+ }
+ 
+@@ -757,7 +761,10 @@ static int disable_device(struct acpiphp_slot *slot)
+ {
+ 	struct acpiphp_func *func;
+ 	struct pci_dev *pdev;
++	struct pci_bus *bus = slot->bridge->pci_bus;
+ 
++	if (pci_bus_lock(bus, PCI_BUS_STATE_STOPPING - 1, true) < 0)
++		return -EBUSY;
+ 	/*
+ 	 * enable_device() enumerates all functions in this device via
+ 	 * pci_scan_slot(), whether they have associated ACPI hotplug
+@@ -768,6 +775,7 @@ static int disable_device(struct acpiphp_slot *slot)
+ 		pci_stop_and_remove_bus_device(pdev);
+ 		pci_dev_put(pdev);
+ 	}
++	pci_bus_unlock(bus, true);
+ 
+ 	list_for_each_entry(func, &slot->funcs, sibling) {
+ 		acpiphp_bus_trim(func->handle);
 -- 
 1.8.1.2
 
