@@ -1,81 +1,108 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:9472 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754791Ab3EHC5g (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 7 May 2013 22:57:36 -0400
-Subject: [PATCH v2 0/8] pci: bus and slot reset interface
-To: bhelgaas@google.com, linux-pci@vger.kernel.org
-From: Alex Williamson <alex.williamson@redhat.com>
-Cc: linux-kernel@vger.kernel.org
-Date: Tue, 07 May 2013 20:57:34 -0600
-Message-ID: <20130508025339.30771.61937.stgit@bling.home>
+Received: from cn.fujitsu.com ([222.73.24.84]:33394 "EHLO song.cn.fujitsu.com"
+	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S1755603Ab3EPHyb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 16 May 2013 03:54:31 -0400
+Message-ID: <5194902C.5030008@cn.fujitsu.com>
+Date: Thu, 16 May 2013 15:52:12 +0800
+From: Gu Zheng <guz.fnst@cn.fujitsu.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Yinghai Lu <yinghai@kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 4/7] PCI: Fix racing for pci device removing via sysfs
+References: <1368498506-25857-1-git-send-email-yinghai@kernel.org> <1368498506-25857-5-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1368498506-25857-5-git-send-email-yinghai@kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-v2: Sorry, v1 somehow didn't cc linux-pci.  No code change
+Hi Yinghai,
+   It works well. 
 
-We currently support reset of individual functions via the
-pci_reset_function() interface.  If a device supports one of the FLR
-mechanisms, this works great.  If not, things get a little shady.  We
-can do a D3hot->D0 PM reset if the device claims that does a soft
-reset, but the definition of a soft reset seems to be left to
-interpretation.  We can do a secondary bus reset if the device is
-behind a bridge, but this is a function level reset interface, so if
-there's anything else on that bus, we're out of luck.  Speaking of out
-of luck, guess what happens when we do a secondary bus reset on a port
-that supports pciehp surprise removal... we tickle the presence
-detection logic and start a hot remove, but the device is locked, so
-it doesn't get removed, then it gets added again, but it already
-exists... ugh, what a mess.
+Thanks!
+Gu
 
-That seems like an indication that we want to create an interface for
-hotplug controllers to participate in a bus reset and prevent such
-craziness.  But we don't hotplug a bus, we hotplug a slot.  A bus can
-support multiple slots, so depending on the hotplug controller
-capabilities, we can potentially do a reset on a slot granularity and
-we can avoid spurious hotplug events.  Thus, pci_reset_slot.
+On 05/14/2013 10:28 AM, Yinghai Lu wrote:
 
-We're not always going to have a hotplug controller, in fact pciehp is
-the only one I know how to implement a reset_slot interface for (and
-it actually has a 1:1 slot:bus interface), so we can try pci_reset_slot
-and fall through to pci_reset_bus if needed.
+> Gu found nested removing through
+> 	echo -n 1 > /sys/bus/pci/devices/0000\:10\:00.0/remove ; echo -n 1 >
+> /sys/bus/pci/devices/0000\:1a\:01.0/remove
+> 
+> will cause kernel crash as bus get freed.
+> 
+> [  418.946462] CPU 4
+> [  418.968377] Pid: 512, comm: kworker/u:2 Tainted: G        W    3.8.0 #2
+> FUJITSU-SV PRIMEQUEST 1800E/SB
+> [  419.081763] RIP: 0010:[<ffffffff8137972e>]  [<ffffffff8137972e>]
+> pci_bus_read_config_word+0x5e/0x90
+> [  420.494137] Call Trace:
+> [  420.523326]  [<ffffffff813851ef>] ? remove_callback+0x1f/0x40
+> [  420.591984]  [<ffffffff8138044b>] pci_pme_active+0x4b/0x1c0
+> [  420.658545]  [<ffffffff8137d8e7>] pci_stop_bus_device+0x57/0xb0
+> [  420.729259]  [<ffffffff8137dab6>] pci_stop_and_remove_bus_device+0x16/0x30
+> [  420.811392]  [<ffffffff813851fb>] remove_callback+0x2b/0x40
+> [  420.877955]  [<ffffffff81257a56>] sysfs_schedule_callback_work+0x26/0x70
+> 
+> https://bugzilla.kernel.org/show_bug.cgi?id=54411
+> 
+> We have one patch that will let device hold bus ref to prevent it from
+> being freed, but that will still generate warning.
+> 
+> ------------[ cut here ]------------
+> WARNING: at lib/list_debug.c:53 __list_del_entry+0x63/0xd0()
+> Hardware name: PRIMEQUEST 1800E
+> list_del corruption, ffff8807d1b6c000->next is LIST_POISON1 (dead000000100100)
+> Call Trace:
+>  [<ffffffff81056d4f>] warn_slowpath_common+0x7f/0xc0
+>  [<ffffffff81056e46>] warn_slowpath_fmt+0x46/0x50
+>  [<ffffffff81280b13>] __list_del_entry+0x63/0xd0
+>  [<ffffffff81280b91>] list_del+0x11/0x40
+>  [<ffffffff81298331>] pci_destroy_dev+0x31/0xc0
+>  [<ffffffff812985bb>] pci_remove_bus_device+0x5b/0x70
+>  [<ffffffff812985ee>] pci_stop_and_remove_bus_device+0x1e/0x30
+>  [<ffffffff8129fc89>] remove_callback+0x29/0x40
+>  [<ffffffff811f3b84>] sysfs_schedule_callback_work+0x24/0x70
+> 
+> Bjorn pointed out that pci_dev should retain its reference to the pci_bus
+> for as long as the pci_dev exists, so the release reference should go in
+> pci_release_dev() instead.
+> 
+> At last we will not need to touch pci-sysfs bits.
+> 
+> -v6: split other changes to other patches.
+> 
+> Reported-by: Gu Zheng <guz.fnst@cn.fujitsu.com>
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 
-Once we have these we can export them to drivers, because sometimes
-those shady parts of pci_reset_function just aren't good enough and we
-understand that a reset can affect multiple devices.  VFIO is a driver
-that can take advantage of such an interface.  A VFIO user can be in
-control of multiple devices.  If they control all of the devices on a
-bus or a slot, a bus or slot reset mechanism should be available.
-Where we particularly need this is for exposing VGA devices to
-userspace.  These fall into the shady area where they claim to support
-a PM function reset, but it doesn't actually do anything.  They're
-also often not alone on the bus as they support a separate function
-for the audio controller.  With this series we can expose a bus reset
-interface and get repeatability.
 
-Comments welcome.  Thanks,
-Alex
+Tested-by: Gu Zheng <guz.fnst@cn.fujitsu.com>
 
----
+> 
+> ---
+>  drivers/pci/probe.c |    2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> Index: linux-2.6/drivers/pci/probe.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/pci/probe.c
+> +++ linux-2.6/drivers/pci/probe.c
+> @@ -1149,6 +1149,7 @@ static void pci_release_dev(struct devic
+>  	list_del(&pci_dev->bus_list);
+>  	up_write(&pci_bus_sem);
+>  	pci_free_resources(pci_dev);
+> +	put_device(&pci_dev->bus->dev);
+>  
+>  	pci_release_capabilities(pci_dev);
+>  	pci_release_of_node(pci_dev);
+> @@ -1360,6 +1361,7 @@ void pci_device_add(struct pci_dev *dev,
+>  	down_write(&pci_bus_sem);
+>  	list_add_tail(&dev->bus_list, &bus->devices);
+>  	up_write(&pci_bus_sem);
+> +	get_device(&bus->dev);
+>  
+>  	ret = pcibios_add_device(dev);
+>  	WARN_ON(ret < 0);
+> 
 
-Alex Williamson (8):
-      pci: Create pci_reset_bridge_secondary_bus()
-      pci: Add hotplug_slot_ops.reset_slot()
-      pci: Add pci_hp_reset_slot
-      pci: Implement reset_slot for pciehp
-      pci: Add reset_slot option to pci_dev_reset
-      pci: Split out pci_dev lock/unlock and save/restore
-      pci: Add slot and bus reset interfaces
-      pci: Wake-up devices before save for reset
 
-
- drivers/pci/hotplug/pci_hotplug_core.c |   24 ++
- drivers/pci/hotplug/pciehp.h           |    1 
- drivers/pci/hotplug/pciehp_core.c      |   12 +
- drivers/pci/hotplug/pciehp_hpc.c       |   31 +++
- drivers/pci/pci.c                      |  313 +++++++++++++++++++++++++++++---
- include/linux/pci.h                    |    3 
- include/linux/pci_hotplug.h            |   12 +
- 7 files changed, 370 insertions(+), 26 deletions(-)
