@@ -1,117 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:38802 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752705Ab3EVNMp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 May 2013 09:12:45 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>
-Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	linux-arm-kernel@lists.infradead.org
-Subject: [PATCH 2/4] pci: mvebu: allow the enumeration of devices beyond physical bridges
-Date: Wed, 22 May 2013 15:12:36 +0200
-Message-Id: <1369228358-32580-3-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1369228358-32580-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1369228358-32580-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from gate.crashing.org ([63.228.1.57]:33250 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751238Ab3EQFg1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 17 May 2013 01:36:27 -0400
+Message-ID: <1368768974.20726.1.camel@pasglop>
+Subject: Re: Resource assignment oddities
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Gavin Shan <shangw@linux.vnet.ibm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 17 May 2013 15:36:14 +1000
+In-Reply-To: <CAE9FiQUc2q0GfVumVrp3_ba0q6N_a_WxjKhMWbyqbLfO=WGaFQ@mail.gmail.com>
+References: <1367712653.11982.19.camel@pasglop>
+	 <1367712932.11982.20.camel@pasglop>
+	 <CAE9FiQX=h4H1gcbW=EfQo_ZtAgHGOZ2GxVxLG59C1iMH+qgH2g@mail.gmail.com>
+	 <1367732090.11982.38.camel@pasglop>
+	 <CAE9FiQUN3qqVmdw_EdOC-JZGc219M3tu=roOX98xns+77LJhMw@mail.gmail.com>
+	 <1367740336.11982.41.camel@pasglop>
+	 <51871088.4594420a.0ccc.7300SMTPIN_ADDED_BROKEN@mx.google.com>
+	 <CAE9FiQXGUOM_h_X5tdGbkiuZGZkiFigSLbbftx3YXybFBg6trg@mail.gmail.com>
+	 <1367837311.15842.31.camel@pasglop>
+	 <CAE9FiQU=ZEfvVKeQgVOa0jeG5smJrKRaeLTOckR=v2vzTyTvLw@mail.gmail.com>
+	 <5188b791.a110420a.0bea.077eSMTPIN_ADDED_BROKEN@mx.google.com>
+	 <CAE9FiQUc2q0GfVumVrp3_ba0q6N_a_WxjKhMWbyqbLfO=WGaFQ@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Until now, the Marvell PCIe driver was only allowing the enumeration
-of the devices in the secondary bus of the emulated PCI-to-PCI
-bridge. This works fine when a PCIe device is directly connected into
-a PCIe slot of the Marvell board.
+On Tue, 2013-05-07 at 15:21 -0700, Yinghai Lu wrote:
+> I just sent v3, please test that.
+> 
+> That should be less invasive for v3.10. As it will skip adding failed
+> resource to failed list when the resource is IORESOURCE_IO, and bus
+> does not have IORESOURCE_IO.
 
-However, when the device connected in the PCIe slot is a physical PCIe
-bridge, beyond which a real PCIe device is connected, it no longer
-worked, as the driver was preventing the Linux PCI core from seeing
-such devices.
+Any news about merging this ?
 
-This commit fixes that by ensuring that configuration transactions on
-subordinate busses are properly forwarded on the right PCIe interface.
+Thanks !
 
-Thanks to this patch, a PCIe card beyond a PCIe bridge, itself beyond
-the emulated PCI-to-PCI bridge is properly detected, with the
-following layout:
+Cheers,
+Ben.
 
--[0000:00]-+-01.0-[01]----00.0
-           +-09.0-[02-07]----00.0-[03-07]--+-01.0-[04]--
-           |                               +-05.0-[05]--
-           |                               +-07.0-[06]--
-           |                               \-09.0-[07]----00.0
-           \-0a.0-[08]----00.0
-
-Where the PCIe interface that sits beyond the emulated PCI-to-PCI
-bridge at 09.0 allows to access the secondary bus 02, on which there
-is a PCIe bridge that allows to access the 3 to 7 busses, that are
-subordinates to this bridge. And on one of this bus (bus 7), there is
-one real PCIe device connected.
-
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
----
- drivers/pci/host/pci-mvebu.c |   31 ++++++++++++++++++++++++++++---
- 1 file changed, 28 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-index 0bc21b0..c21ca84 100644
---- a/drivers/pci/host/pci-mvebu.c
-+++ b/drivers/pci/host/pci-mvebu.c
-@@ -554,7 +554,8 @@ mvebu_pcie_find_port(struct mvebu_pcie *pcie, struct pci_bus *bus,
- 		if (bus->number == 0 && port->devfn == devfn)
- 			return port;
- 		if (bus->number != 0 &&
--		    port->bridge.secondary_bus == bus->number)
-+		    bus->number >= port->bridge.secondary_bus &&
-+		    bus->number <= port->bridge.subordinate_bus)
- 			return port;
- 	}
- 
-@@ -578,7 +579,18 @@ static int mvebu_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
- 	if (bus->number == 0)
- 		return mvebu_sw_pci_bridge_write(port, where, size, val);
- 
--	if (!port->haslink || PCI_SLOT(devfn) != 0)
-+	if (!port->haslink)
-+		return PCIBIOS_DEVICE_NOT_FOUND;
-+
-+	/*
-+	 * On the secondary bus, we don't want to expose any other
-+	 * device that the device physically connected in the PCIe
-+	 * slot, visible in slot 0. In slot 1, there's a special
-+	 * Marvell device that only makes sense when the Armada is
-+	 * used as a PCIe endpoint.
-+	 */
-+	if (bus->number == port->bridge.secondary_bus &&
-+	    PCI_SLOT(devfn) != 0)
- 		return PCIBIOS_DEVICE_NOT_FOUND;
- 
- 	/* Access the real PCIe interface */
-@@ -609,7 +621,20 @@ static int mvebu_pcie_rd_conf(struct pci_bus *bus, u32 devfn, int where,
- 	if (bus->number == 0)
- 		return mvebu_sw_pci_bridge_read(port, where, size, val);
- 
--	if (!port->haslink || PCI_SLOT(devfn) != 0) {
-+	if (!port->haslink) {
-+		*val = 0xffffffff;
-+		return PCIBIOS_DEVICE_NOT_FOUND;
-+	}
-+
-+	/*
-+	 * On the secondary bus, we don't want to expose any other
-+	 * device that the device physically connected in the PCIe
-+	 * slot, visible in slot 0. In slot 1, there's a special
-+	 * Marvell device that only makes sense when the Armada is
-+	 * used as a PCIe endpoint.
-+	 */
-+	if (bus->number == port->bridge.secondary_bus &&
-+	    PCI_SLOT(devfn) != 0) {
- 		*val = 0xffffffff;
- 		return PCIBIOS_DEVICE_NOT_FOUND;
- 	}
--- 
-1.7.9.5
 
