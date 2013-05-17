@@ -1,49 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from avon.wwwdotorg.org ([70.85.31.133]:42715 "EHLO
-	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751846Ab3EHQ4j (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 May 2013 12:56:39 -0400
-Message-ID: <518A83C2.3070709@wwwdotorg.org>
-Date: Wed, 08 May 2013 10:56:34 -0600
-From: Stephen Warren <swarren@wwwdotorg.org>
+Received: from mail-lb0-f177.google.com ([209.85.217.177]:64395 "EHLO
+	mail-lb0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754048Ab3EQFtE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 May 2013 01:49:04 -0400
 MIME-Version: 1.0
-To: Jay Agarwal <jagarwal@nvidia.com>
-CC: linux@arm.linux.org.uk, thierry.reding@avionic-design.de,
-	ldewangan@nvidia.com, bhelgaas@google.com, olof@lixom.net,
-	hdoyu@nvidia.com, pgaikwad@nvidia.com, mturquette@linaro.org,
-	pdeschrijver@nvidia.com, linux-arm-kernel@lists.infradead.org,
-	linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, jtukkinen@nvidia.com, kthota@nvidia.com
-Subject: Re: [PATCH 3/4] ARM: dts: tegra: Correct PCIe entry
-References: <1368010660-31465-1-git-send-email-jagarwal@nvidia.com> <1368010660-31465-3-git-send-email-jagarwal@nvidia.com>
-In-Reply-To: <1368010660-31465-3-git-send-email-jagarwal@nvidia.com>
+In-Reply-To: <20130516225535.GA27962@google.com>
+References: <CANUX_P2Hy02SnyYS24dyUGLv3wB3L5xkXt8Y1s+8_RG9d5ReAw@mail.gmail.com>
+	<CAErSpo6OCyTy19u6Xaf=xr0TSDriwCD3n-oMc7eJyLzuJ9d60g@mail.gmail.com>
+	<20130510225257.GA10847@google.com>
+	<1725435.3DlCxYF2FV@vostro.rjw.lan>
+	<1368303730.2425.47.camel@x230>
+	<20130516225535.GA27962@google.com>
+Date: Fri, 17 May 2013 08:49:01 +0300
+Message-ID: <CANUX_P2YJC+dULEpa0SJ8Ug+ROZ+RVGNg0FS5b_eYD260mAC=Q@mail.gmail.com>
+Subject: Re: is L1 really disabled in iwlwifi
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Matthew Garrett <matthew.garrett@nebula.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	John Linville <linville@tuxdriver.com>,
+	Roman Yepishev <roman.yepishev@gmail.com>,
+	"Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
+	Mike Miller <mike.miller@hp.com>,
+	"iss_storagedev@hp.com" <iss_storagedev@hp.com>,
+	Guo-Fu Tseng <cooldavid@cooldavid.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	Francois Romieu <romieu@fr.zoreil.com>,
+	"nic_swsd@realtek.com" <nic_swsd@realtek.com>,
+	"aacraid@adaptec.com" <aacraid@adaptec.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/08/2013 04:57 AM, Jay Agarwal wrote:
-> - Add interrupt-names property
-> - Correct downstream I/O size
-> - Correct cml clock name for Tegra30
-> - Patch is based on remotes/gitorious_thierryreding_linux/tegra/next
-> - and should be applied on top of this.
+>
+> I couldn't imagine that silently ignoring the request to disable ASPM
+> would be the right thing, but I spent a long time experimenting with
+> Windows on qemu, and I think you're right.  Windows 7 also seems to
+> ignore the "PciASPMOptOut" directive when we don't have permission
+> to manage ASPM.  All the gory details are at
+> https://bugzilla.kernel.org/show_bug.cgi?id=57331
+>
+> The current behavior is definitely confusing.  I hate to rename or change
+> pci_disable_link_state() because it's exported and we'd have to maintain
+> the old interface for a while anyway.  And I don't really want to return
+> failure to drivers, because I think that would encourage people to fiddle
+> with the Link Control register directly in the driver, which doesn't seem
+> like a good idea.
+>
+> And you're also right that (as far as I know) there's not an actual
+> problem with the current behavior other than the confusion it causes.
+>
+> So, how about something like the following patch, which just prints a
+> warning when we can't do what the driver requested?  I suppose this may
+> also be a nuisance, because users will be worried, but they can't actually
+> *do* anything about it.  Maybe it should be dev_info() instead.
+>
 
-Another change that needs to be made to this file (probably as a
-separate change that Thierry can squash into one of his earlier changes)
-is to move the pcie-controller node; it is currently not in the correct
-place in the .dtsi file; it's not sorted by reg addresss.
-
-> diff --git a/arch/arm/boot/dts/tegra30.dtsi b/arch/arm/boot/dts/tegra30.dtsi
-
->  		clocks = <&tegra_car 70>, <&tegra_car 72>, <&tegra_car 74>,
->  			 <&tegra_car 118>, <&tegra_car 215>;
-> -		clock-names = "pex", "afi", "pcie_xclk", "pll_e", "cml";
-> +		clock-names = "pex", "afi", "pcie_xclk", "pll_e", "cml0";
-
-You could drop that change if the driver named the clock "cml" rather
-than "cml0", which as I explained in my previous email seems like a good
-idea anyway.
-
-Applying the same reasoning, I wonder if for Tegra 20 too, the PCIe
-driver shouldn't expect clock names of just "xclk" and "pll" rather than
-"pcie_xclk" and "pll_e".
+Good for me - now I would be notified that something wrong happened.
