@@ -1,63 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:44184 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753417Ab3EFSDf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 6 May 2013 14:03:35 -0400
-From: Jon Mason <jon.mason@intel.com>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:59846 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753886Ab3EQJ5e (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 May 2013 05:57:34 -0400
+From: Yijing Wang <wangyijing@huawei.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Subject: [PATCH] PCI: Workaround for NTB BAR size issue
-Date: Mon,  6 May 2013 11:03:33 -0700
-Message-Id: <1367863413-30087-1-git-send-email-jon.mason@intel.com>
+CC: <linux-pci@vger.kernel.org>, Hanjun Guo <guohanjun@huawei.com>,
+	<jiang.liu@huawei.com>, Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	Fenghua Yu <fenghua.yu@intel.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	<linux-ia64@vger.kernel.org>
+Subject: [PATCH -v2 6/7] PCI/IA64: add host bridge resource release for _CRS path
+Date: Fri, 17 May 2013 17:55:49 +0800
+Message-ID: <1368784550-18332-7-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1368784550-18332-1-git-send-email-wangyijing@huawei.com>
+References: <1368784550-18332-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Certain NTB devices have a hardware errata where, regardless of
-pre-configured value, reading the BAR size returns 4096.  To work around
-this issue, add a PCI quirk to read the appropriate values from an
-alternative register in PCI config space and move the resource endpoints
-to the appropriate location.
+Set IA64 host bridge release function to make sure root bridge
+related resources get freed during root bus removal.
 
-Signed-off-by: Jon Mason <jon.mason@intel.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Cc: Tony Luck <tony.luck@intel.com>
+Cc: Fenghua Yu <fenghua.yu@intel.com>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linux-ia64@vger.kernel.org
 ---
- drivers/pci/quirks.c |   24 ++++++++++++++++++++++++
- 1 file changed, 24 insertions(+)
+ arch/ia64/pci/pci.c |   11 ++++++++++-
+ 1 files changed, 10 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 7d68aee..a57a93b 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -2865,6 +2865,30 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x65f9, quirk_intel_mc_errata);
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x65fa, quirk_intel_mc_errata);
+diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
+index 658030f..2857a83 100644
+--- a/arch/ia64/pci/pci.c
++++ b/arch/ia64/pci/pci.c
+@@ -358,6 +358,13 @@ static void __release_pci_root_info(struct pci_root_info *info)
+ 	kfree(info);
+ }
  
- 
-+/* Ivytown NTB BAR sizes are misreported by the hardware due to an errata.  To
-+ * work around this, query the size it should be configured to by the device and
-+ * modify the resource end to correspond to this new size.
-+ */
-+static void quirk_intel_ntb(struct pci_dev *dev)
++static void release_pci_root_info(struct pci_host_bridge *bridge)
 +{
-+	int rc;
-+	u8 val;
++	struct pci_root_info *info = bridge->release_data;
 +
-+	rc = pci_read_config_byte(dev, 0x00D0, &val);
-+	if (rc)
-+		return;
-+
-+	dev->resource[2].end = dev->resource[2].start + ((u64) 1 << val) - 1;
-+
-+	rc = pci_read_config_byte(dev, 0x00D1, &val);
-+	if (rc)
-+		return;
-+
-+	dev->resource[4].end = dev->resource[4].start + ((u64) 1 << val) - 1;
++	__release_pci_root_info(info);
 +}
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x0e08, quirk_intel_ntb);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x0e0d, quirk_intel_ntb);
 +
- static ktime_t fixup_debug_start(struct pci_dev *dev,
- 				 void (*fn)(struct pci_dev *dev))
+ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
  {
+ 	struct acpi_device *device = root->device;
+@@ -433,7 +440,9 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 		__release_pci_root_info(info);
+ 		return NULL;
+ 	}
+-
++
++	pci_set_host_bridge_release(to_pci_host_bridge(pbus->bridge),
++			release_pci_root_info, info);
+ 	pci_scan_child_bus(pbus);
+ 	return pbus;
+ 
 -- 
-1.7.9.5
+1.7.1
+
 
