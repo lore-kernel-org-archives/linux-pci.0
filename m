@@ -1,120 +1,70 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <1369122001.4432.14.camel@ymzhang.sh.intel.com>
-References: <F7B8FD780A346D46A0042F5C63B06AE785E3B2@SHSMSX102.ccr.corp.intel.com>
- <20130520224824.GA31740@google.com> <1369122001.4432.14.camel@ymzhang.sh.intel.com>
+In-Reply-To: <5196BF15.3050208@ubuntu.com>
+References: <519443A1.8050905@ubuntu.com> <1995989.Fff0uGKnZO@vostro.rjw.lan>
+ <CAErSpo50rX5Pvj=pX5xsdcZ1qq1C7kBqrNyDmY6t26OCVqbxXA@mail.gmail.com>
+ <5195596C.3000406@ubuntu.com> <CAErSpo6wSgquzJc22tFJozp8cfx0vpULnO3KZN2gr2YHt8EHrw@mail.gmail.com>
+ <5196713A.1010102@ubuntu.com> <CAErSpo7zESr5_PEyX=1JWEApCuW+yx+j3RKWh=qC-jReRgSXZw@mail.gmail.com>
+ <51968E9F.1010909@ubuntu.com> <CAErSpo6ZKB-4PTa_2Cthx_8S2txCbGyatbPmDUPYexCQFg-A=A@mail.gmail.com>
+ <51969D30.1070502@ubuntu.com> <CAErSpo4H-=dnHON3vDvJEme2hGD0z0r_NSsm-Bk9tZ4QqtBTCw@mail.gmail.com>
+ <5196BF15.3050208@ubuntu.com>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 21 May 2013 10:17:01 -0600
-Message-ID: <CAErSpo5Ysg48TJMVRLZpEWuFy1q-Eu5hTJVhtOST9sEFZJoduA@mail.gmail.com>
-Subject: Re: Subject : [ PATCH ] pci-reset-error_state-to-pci_channel_io_normal-at-report_slot_reset
-To: "yanmin_zhang@linux.intel.com" <yanmin_zhang@linux.intel.com>
-Cc: "Zhang, LongX" <longx.zhang@intel.com>,
-	"linasvepstas@gmail.com" <linasvepstas@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Joseph.Liu@Emulex.Com" <Joseph.Liu@emulex.com>
+Date: Fri, 17 May 2013 17:52:02 -0600
+Message-ID: <CAErSpo5W=Zi_2s0ywfO4VPfbUfxhhCRUMn7oRhx_mi7yYpBHmw@mail.gmail.com>
+Subject: Re: enabling aspm on ati radeon
+To: Phillip Susi <psusi@ubuntu.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 21, 2013 at 1:40 AM, Yanmin Zhang
-<yanmin_zhang@linux.intel.com> wrote:
-> On Mon, 2013-05-20 at 16:48 -0600, Bjorn Helgaas wrote:
->> On Fri, Apr 26, 2013 at 06:28:59AM +0000, Zhang, LongX wrote:
->> > From: Zhang Long <longx.zhang@intel.com>
->> >
->> > Specific pci device drivers might have many functions to call
->> > pci_channel_offline to check device states. When slot_reset happens,
->> > drivers' slot_reset callback might call such functions and eventually
->> > abort the reset.
->> >
->> > The patch resets pdev->error_state to pci_channel_io_normal at
->> > the begining of report_slot_reset.
->> >
->> > Thank Liu Joseph for pointing it out.
->> >
->> > Signed-off-by: Zhang Yanmin <yanmin_zhang@linux.intel.com>
->> > Signed-off-by: Zhang Long <longx.zhang@intel.com>
->> > ---
->> >  drivers/pci/pcie/aer/aerdrv_core.c |    1 +
->> >  drivers/pci/pcie/portdrv_pci.c     |   12 +++++-------
->> >  2 files changed, 6 insertions(+), 7 deletions(-)
-> Thank all for the kind comments.
+On Fri, May 17, 2013 at 5:36 PM, Phillip Susi <psusi@ubuntu.com> wrote:
+> -----BEGIN PGP SIGNED MESSAGE-----
+> Hash: SHA1
 >
->> >
->> > diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
->> > index 564d97f..c61fd44 100644
->> > --- a/drivers/pci/pcie/aer/aerdrv_core.c
->> > +++ b/drivers/pci/pcie/aer/aerdrv_core.c
->> > @@ -286,6 +286,7 @@ static int report_slot_reset(struct pci_dev *dev, void *data)
->> >     result_data = (struct aer_broadcast_data *) data;
->> >
->> >     device_lock(&dev->dev);
->> > +   dev->error_state = pci_channel_io_normal;
->> >     if (!dev->driver ||
->> >             !dev->driver->err_handler ||
->> >             !dev->driver->err_handler->slot_reset)
->> > diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
->> > index ed4d094..7abefd9 100644
->> > --- a/drivers/pci/pcie/portdrv_pci.c
->> > +++ b/drivers/pci/pcie/portdrv_pci.c
->> > @@ -332,13 +332,11 @@ static pci_ers_result_t pcie_portdrv_slot_reset(struct pci_dev *dev)
->> >     pci_ers_result_t status = PCI_ERS_RESULT_RECOVERED;
->> >     int retval;
->> >
->> > -   /* If fatal, restore cfg space for possible link reset at upstream */
->> > -   if (dev->error_state == pci_channel_io_frozen) {
->> > -           dev->state_saved = true;
->> > -           pci_restore_state(dev);
->> > -           pcie_portdrv_restore_config(dev);
->> > -           pci_enable_pcie_error_reporting(dev);
->> > -   }
->> > +   /* restore cfg space for possible link reset at upstream */
->> > +   dev->state_saved = true;
-> It's indeed a dirty trick to change it to true. The reason is suspend. The port would
-> suspend/resume at suspend-to-ram. When the port is suspended, PCI power framework calls
-> pci_save_state. When the port is resumed, PCI framework calls pci_restore_state and
-> dev->state_saved is set to false.
-
-I can read the code as well as you can.  The above does nothing to
-explain why dev->saved_config_space is still valid even when
-state_saved is false.
-
-But I want to drop this issue because it was there before your patch,
-and we're clearly not going to resolve it here.
-
-> A better solution is to add double space in pci_dev->saved_config_space/saved_cap_space,
-> which seems consume unnecessary resource.
+> On 05/17/2013 05:28 PM, Bjorn Helgaas wrote:> A link has two ends.
+> Both ends have to support ASPM in order for it
+>> to work.  But ASPM on a particular link has no dependency on
+>> things elsewhere in the hierarchy.
 >
->> > +   pci_restore_state(dev);
->> > +   pcie_portdrv_restore_config(dev);
->> > +   pci_enable_pcie_error_reporting(dev);
->> >
->> >     /* get true return value from &status */
->> >     retval = device_for_each_child(&dev->dev, &status, slot_reset_iter);
->> I think this patch changes the behavior in the case of a non-fatal error
->> where one of the .error_detected() methods returned
->> PCI_ERS_RESULT_NEED_RESET.  In that case, pcie_portdrv_slot_reset()
->> previously did not restore config space, but after your patch, it *will*
->> restore it.  We need an explanation of why this is safe.
-> AER standard doesn't define such behavior like if we need reset a slot.
-> When we implemented the feature in kernel, we assumed at non-fatal error,
-> config space is still good.
+> Got you... I guess I was still thinking regular PCI and the naming
+> "root complex" made me think it was the whole root bridge, when it
+> really is that particular x16 pcie port that goes to the radeon.
 >
-> With the new patch, we change the behavior a little.
+>> The link between 00:01.0 and 01:00.0 apparently only supports ASPM
+>> on one end (the downstream end), so ASPM won't work on it.
 >
->>
->> I think you should split this into two patches: the first would remove the
->> "if (dev->error_state == pci_channel_io_frozen)" test from portdrv_pci.c
-> The first patch would depend on the 2nd patch as 2nd patch resets error_state
-> to pci_channel_io_normal.
+> I'll check the Intel spec sheet again, but I'm pretty sure it really
+> does support ASPM.  The CPU probably allows writes to the register,
+> and my bios must have configured it to say it doesn't support aspm.  I
+> guess I just need to wrangle setpci into trying to enable it despite
+> it not advertising support, or maybe see if I can get grub to poke the
+> capability register to make it say it supports it.
 
-Not true.  The pcie_portdrv_slot_reset() change does not depend on the
-report_slot_reset() change.  If the first patch makes
-pcie_portdrv_slot_reset() do the restore without even looking at
-dev->error_state, there's no dependency on the report_slot_reset()
-change.
+setpci will write whatever you tell it to; it doesn't check any
+constraints like "is ASPM supported?"  But the Link Capabilities
+register is read-only per spec, so likely you won't be able to change
+that field, at least not by writing it directly.
 
->> and explain the reason, and the second would make the aerdrv_core.c change.
+You can always try using setpci to set the ASPM enable bits in the
+Link Control register on both the bridge and the device.  When
+enabling, I think you're supposed to do the upstream end of the link
+first, then the downstream end (and the reverse for disabling).
+
+> One question I have though is how to identify which port device
+> corresponds to which downstream device connected to it.  In other
+> words, how do you know 00:01.0 links to 01:00.0 ( other than seeing
+> that it's the x16 and knowing the radeon is plugged into the x16 slot ).
+
+lspci tells you that:
+
+00:01.0 PCI bridge: Intel Corporation Xeon E3-1200/2nd Generation Core
+Processor Family PCI Express Root Port
+        Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
+
+The "secondary=01" means the bridge leads to bus 01, which is where
+the 01:00.0 device is.
 
 Bjorn
