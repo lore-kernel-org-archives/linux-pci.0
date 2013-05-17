@@ -1,115 +1,49 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Linux PM list <linux-pm@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Kevin Hilman <khilman@linaro.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: Re: [PATCH RFC] PM / Runtime: Rework the "runtime idle" helper routine
-Date: Thu, 30 May 2013 21:55:03 +0200
-Message-ID: <5291416.b4M4MTrzPC@vostro.rjw.lan>
-In-Reply-To: <Pine.LNX.4.44L0.1305301247370.1137-100000@iolanthe.rowland.org>
-References: <Pine.LNX.4.44L0.1305301247370.1137-100000@iolanthe.rowland.org>
+Message-ID: <51968E9F.1010909@ubuntu.com>
+Date: Fri, 17 May 2013 16:10:07 -0400
+From: Phillip Susi <psusi@ubuntu.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Subject: Re: enabling aspm on ati radeon
+References: <519443A1.8050905@ubuntu.com> <1995989.Fff0uGKnZO@vostro.rjw.lan> <CAErSpo50rX5Pvj=pX5xsdcZ1qq1C7kBqrNyDmY6t26OCVqbxXA@mail.gmail.com> <5195596C.3000406@ubuntu.com> <CAErSpo6wSgquzJc22tFJozp8cfx0vpULnO3KZN2gr2YHt8EHrw@mail.gmail.com> <5196713A.1010102@ubuntu.com> <CAErSpo7zESr5_PEyX=1JWEApCuW+yx+j3RKWh=qC-jReRgSXZw@mail.gmail.com>
+In-Reply-To: <CAErSpo7zESr5_PEyX=1JWEApCuW+yx+j3RKWh=qC-jReRgSXZw@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, May 30, 2013 01:08:08 PM Alan Stern wrote:
-> On Thu, 30 May 2013, Rafael J. Wysocki wrote:
-> 
-> > > Since you're making this change, wouldn't it be a good idea to adopt
-> > > Mika's original suggestion and turn on the RPM_AUTO bit in rpmflags
-> > > when the use_autosuspend flag is set?
-> > 
-> > I'm not actually sure.  It can be done, but I'd prefer to do that as a separate
-> > change in any case.
-> 
-> That makes sense.
-> 
-> > > What about cases where the runtime-idle callback does
-> > > rpm_schedule_suspend or rpm_request_suspend?  You'd have to make sure
-> > > that it returns -EBUSY in such cases.  Did you audit for this?
-> > 
-> > As far as I could.
-> > 
-> > I'm not worried about the subsystems modified by this patch, because the
-> > functionality there won't change (except for PCI, that is).
-> 
-> Right.  The subsystems that _aren't_ modified are the ones to worry 
-> about -- like the USB callback.  They are the ones where the behavior 
-> might change.
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-Right.
+On 5/17/2013 3:52 PM, Bjorn Helgaas wrote:
+> I just sent a patch to make lspci decode all possible values
+> there. In the PCIe r2.1 spec, only 1 ("L0s") and 3 ("L0s and L1")
+> were defined.  The r3 spec added 0 ("not supported") and 2 ("L1"),
+> but lspci hadn't quite kept up.
 
-> > > > Index: linux-pm/Documentation/power/runtime_pm.txt
-> > > > ===================================================================
-> > > > --- linux-pm.orig/Documentation/power/runtime_pm.txt
-> > > > +++ linux-pm/Documentation/power/runtime_pm.txt
-> > > > @@ -660,11 +660,6 @@ Subsystems may wish to conserve code spa
-> > > >  management callbacks provided by the PM core, defined in
-> > > >  driver/base/power/generic_ops.c:
-> > > >  
-> > > > -  int pm_generic_runtime_idle(struct device *dev);
-> > > > -    - invoke the ->runtime_idle() callback provided by the driver of this
-> > > > -      device, if defined, and call pm_runtime_suspend() for this device if the
-> > > > -      return value is 0 or the callback is not defined
-> > > > -
-> > > 
-> > > The documentation for the runtime-idle callback needs to be updated too.
-> > 
-> > Well, I actually couldn't find the part of it that would need to be updated. :-)
-> 
-> How about this?
+So do you still want the lspci -xxxs output, or was that just to
+answer the question of why it said unknown instead of not supported?
+Are we then back to no idea?
 
-Looks good! :-)
-
-May I add your sign-off to it?
-
-Rafael
+I notice a number of functions in drivers/pci/pcie/aspm.c that look
+like they need used to configure aspm.  The radeon driver does not
+appear to call any of them ( grep for aspm came up with nothing ).
+Could that be why?  I can't find anything under Documentation/ about
+what a driver needs to do to enable aspm.
 
 
-> Index: usb-3.10/Documentation/power/runtime_pm.txt
-> ===================================================================
-> --- usb-3.10.orig/Documentation/power/runtime_pm.txt
-> +++ usb-3.10/Documentation/power/runtime_pm.txt
-> @@ -144,8 +144,12 @@ The action performed by the idle callbac
->  (or driver) in question, but the expected and recommended action is to check
->  if the device can be suspended (i.e. if all of the conditions necessary for
->  suspending the device are satisfied) and to queue up a suspend request for the
-> -device in that case.  The value returned by this callback is ignored by the PM
-> -core.
-> +device in that case.  If there is no idle callback, or if the callback returns
-> +0, then the PM core will attempt to carry out a runtime suspend of the device;
-> +in essence, it will call pm_runtime_suspend() directly.  To prevent this (for
-> +example, if the callback routine has started a delayed suspend), the routine
-> +should return a non-zero value.  Negative error return codes are ignored by the
-> +PM core.
->  
->  The helper functions provided by the PM core, described in Section 4, guarantee
->  that the following constraints are met with respect to runtime PM callbacks for
-> @@ -301,9 +305,10 @@ drivers/base/power/runtime.c and include
->        removing the device from device hierarchy
->  
->    int pm_runtime_idle(struct device *dev);
-> -    - execute the subsystem-level idle callback for the device; returns 0 on
-> -      success or error code on failure, where -EINPROGRESS means that
-> -      ->runtime_idle() is already being executed
-> +    - execute the subsystem-level idle callback for the device; returns an
-> +      error code on failure, where -EINPROGRESS means that ->runtime_idle() is
-> +      already being executed; if there is no callback or the callback returns 0
-> +      then run pm_runtime_suspend(dev) and return its result
->  
->    int pm_runtime_suspend(struct device *dev);
->      - execute the subsystem-level suspend callback for the device; returns 0 on
-> 
-> 
-> Alan Stern
-> 
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.17 (MingW32)
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+
+iQEcBAEBAgAGBQJRlo6eAAoJEJrBOlT6nu75lxQIAMwrt4oDHt5MKiRfpPWIkPO4
+DLoFtEax1CGy1Gqmhvw8QpzYw+daqWzYw01t2SDd+owLEHVdp8zzqW21TSld83yb
+W9EmZH4NLIO9vsR/UqAHhmbbf9ooAwz+O26Vb7EarPtpNxkRHybDSPYVsv7Cs/R7
+54gJOefq7SroiiSr31I0dQT8j57SBRjekJJMGsEh+Et2Cxz+z8CwynCYCoNjQdOQ
+g89lyifTEdEy2DuXcRfeCcIH1mTNQazjsRu2/P6I+P/klpyS+b9HqMSUUwNUDwc/
+eY1SWrbCt9/2XJ/B6ZxYK3Lmy+25m9fUNkQBsp3BqqXkUICHlE8zTm3DMG1rf6g=
+=vIor
+-----END PGP SIGNATURE-----
