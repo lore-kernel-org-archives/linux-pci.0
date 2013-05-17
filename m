@@ -1,104 +1,91 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-da0-f41.google.com ([209.85.210.41]:47446 "EHLO
-	mail-da0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753907Ab3EQOvZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 May 2013 10:51:25 -0400
-Received: by mail-da0-f41.google.com with SMTP id y19so243454dan.14
-        for <linux-pci@vger.kernel.org>; Fri, 17 May 2013 07:51:24 -0700 (PDT)
-Message-ID: <519643E8.3020102@gmail.com>
-Date: Fri, 17 May 2013 22:51:20 +0800
-From: Liu Jiang <liuj97@gmail.com>
+Received: from mho-03-ewr.mailhop.org ([204.13.248.66]:17446 "EHLO
+	mho-01-ewr.mailhop.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753671Ab3EQM4e (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 May 2013 08:56:34 -0400
+Date: Fri, 17 May 2013 08:55:13 -0400
+From: Jason Cooper <jason@lakedaemon.net>
+To: Mike Turquette <mturquette@linaro.org>
+Cc: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Arnd Bergmann <arnd@arndb.de>, Olof Johansson <olof@lixom.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Lior Amsalem <alior@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	linux-pci@vger.kernel.org,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	devicetree-discuss@lists.ozlabs.org
+Subject: Re: [PATCHv9 5/9] clk: mvebu: create parent-child relation for
+ PCIe clocks on Armada 370
+Message-ID: <20130517125513.GC11137@titan.lakedaemon.net>
+References: <1368624323-24311-1-git-send-email-thomas.petazzoni@free-electrons.com>
+ <1368624323-24311-6-git-send-email-thomas.petazzoni@free-electrons.com>
+ <20130515214154.12127.73539@quantum>
+ <20130516094417.24b1ca0d@skate>
+ <51949830.70306@gmail.com>
+ <20130516150616.GD6563@titan.lakedaemon.net>
+ <20130517070826.12127.41382@quantum>
 MIME-Version: 1.0
-To: Kevin Hao <haokexin@gmail.com>
-CC: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH 2/2] PCI: unset the resource if we can't get the correct
- CPU address
-References: <1368536876-27307-1-git-send-email-haokexin@gmail.com> <1368536876-27307-3-git-send-email-haokexin@gmail.com> <519506BF.3010400@gmail.com> <20130517021128.GB13975@pek-khao-d1.corp.ad.wrs.com>
-In-Reply-To: <20130517021128.GB13975@pek-khao-d1.corp.ad.wrs.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130517070826.12127.41382@quantum>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri 17 May 2013 10:11:29 AM CST, Kevin Hao wrote:
-> On Fri, May 17, 2013 at 12:18:07AM +0800, Liu Jiang wrote:
->> On Tue 14 May 2013 09:07:56 PM CST, Kevin Hao wrote:
->>> In the current kernel, we just set the CPU address to the bus address
->>> if we can't find the match region for one specific bus address. If BAR
->>> of one pci device is set to address which happens to be a legitimate
->>> CPU address by firmware, the kernel will think this resource is legal
->>> and will not try to reassign later. In cases the CPU address and bus
->>> address isn't equal, the device will not work. So we should check
->>> if we can translate the bus address to CPU address correctly. If not,
->>> we should unset this resource and wish the kernel will reassign it
->>> later.
->>>
->>> Since we will invoke pcibios_bus_to_resource unconditionally if we
->>> don't goto fail, move it out of if/else wrap.
->>>
->>> Signed-off-by: Kevin Hao <haokexin@gmail.com>
->>> ---
->>>   drivers/pci/probe.c | 9 ++++++---
->>>   1 file changed, 6 insertions(+), 3 deletions(-)
->>>
->>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
->>> index 70f10fa..c96772f 100644
->>> --- a/drivers/pci/probe.c
->>> +++ b/drivers/pci/probe.c
->>> @@ -250,12 +250,10 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
->>>   			pci_write_config_dword(dev, pos + 4, 0);
->>>   			region.start = 0;
->>>   			region.end = sz64;
->>> -			pcibios_bus_to_resource(dev, res, &region);
->>>   			bar_disabled = true;
->>>   		} else {
->>>   			region.start = l64;
->>>   			region.end = l64 + sz64;
->>> -			pcibios_bus_to_resource(dev, res, &region);
->>>   		}
->>>   	} else {
->>>   		sz = pci_size(l, sz, mask);
->>> @@ -265,7 +263,12 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
->>>
->>>   		region.start = l;
->>>   		region.end = l + sz;
->>> -		pcibios_bus_to_resource(dev, res, &region);
->>> +	}
->>> +
->>> +	if (!pcibios_bus_to_resource(dev, res, &region)) {
->>> +		res->flags |= IORESOURCE_UNSET;
->>> +		res->end -= res->start;
->>> +		res->start = 0;
->>>   	}
->>>
->>>   	goto out;
->>
->> Hi Kevin,
->>       Will this break subtractive decode PCI bridges and devices?
->
-> No. A subtractive decode occurs only when no other pci bridge or device
-> claim the transactions. As you can see that when we are trying to translate
-> a bus address to cpu address we search the address regions of pci host
-> bridge instead of a pci bridge. The pci host bridge address regions should
-> cover all the bus address we can use for the pci device or bridge under this
-> pci controller. This definitely also include the bus address regions used by
-> the expansion bus for subtractive decode. So if a pci device use a bus address
-> that is unknown to this pci host bridge, there is definitely something wrong
-> here. This is the case we are trying to fix.
->
-Hi Kevin,
-       I'm not sure about this assumption "the pci host bridge address 
-regions should cover
-all the bus address we can use for the pci device or bridge under this 
-pci controller".
-I have a fear that it may cause regressions to some legacy x86 
-platforms, such as an AMD
-platform with PCI based IOAPICs, though I have no evidences for it.
-Regards!
-Gerry
-> Thanks,
-> Kevin
->
->> Regards!
->> Gerry
+On Fri, May 17, 2013 at 12:08:26AM -0700, Mike Turquette wrote:
+> Quoting Jason Cooper (2013-05-16 08:06:16)
+> > Mike, Sebastian,
+> > 
+> > On Thu, May 16, 2013 at 10:26:24AM +0200, Sebastian Hesselbarth wrote:
+> > > On 05/16/2013 09:44 AM, Thomas Petazzoni wrote:
+> > > >Dear Mike Turquette,
+> > > >
+> > > >On Wed, 15 May 2013 14:41:54 -0700, Mike Turquette wrote:
+> > > >>Quoting Thomas Petazzoni (2013-05-15 06:25:19)
+> > > >>>The Armada 370 has two gatable clocks for each PCIe interface, and we
+> > > >>>want both of them to be enabled. We therefore make one of the two
+> > > >>>clocks a child of the other, as we did for the sataX and sataXlnk
+> > > >>>clocks on Armada XP.
+> > > >>
+> > > >>Ack for patches #5 and #6.  Do you want me to take them?
+> > 
+> > Thanks for the Ack!
+> > 
+> > > >I don't know, I guess with your Ack, it would be easier to carry them
+> > > >through the Marvell maintainers and then the arm-soc tree, so that we
+> > > >can test arm-soc and have all the pieces needed in here.
+> > > >
+> > > >That said, Sebastian Hesselbarth has submitted a big rework of the
+> > > >mvebu clock drivers, which would conflict with this patch, and
+> > > >Sebastian's rework would most likely go through your tree. If that's
+> > > >the case, I guess it would be better to let you take #5 and #6 in this
+> > > >patch series.
+> > > 
+> > > I also requested to take the restructure patches through ARM tree. They
+> > > are only touching files in drivers/clk/mvebu and by taking them through
+> > > ARM, we can update PCIe clock patches easily. The dependency between
+> > > Thomas' and my patches basically is that I renamed files that Thomas
+> > > now commits to. (I switched clk/mvebu from per-function files to per-soc
+> > > files).
+> > 
+> > I agree.  My heart jumped into my throat a little there :)  Mike, if
+> > it's ok with you, I'd prefer to take these through arm-soc.  Any merge
+> > conflicts should be minimal.  And at any rate, resolving the conflicts
+> > are *much* easier to handle than having arm-soc depend on an outside
+> > tree (then Linus has to take care in the order he merges them, no
+> > rebasing for clk tree, dogs and cats living together, etc ;-) )
+> > 
+> 
+> Yeah that all sounds good to me.  I'll review the restructure patches
+> shortly.
 
+Awesome, thanks.
 
+Jason.
