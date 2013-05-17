@@ -1,72 +1,143 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from blu0-omc4-s31.blu0.hotmail.com ([65.55.111.170]:61261 "EHLO
-	blu0-omc4-s31.blu0.hotmail.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750902Ab3EMFgE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 13 May 2013 01:36:04 -0400
-Message-ID: <BLU0-SMTP1537DF5AB62CBF6B5D74907B2A00@phx.gbl>
-Content-Type: text/plain; charset="iso-8859-15"; format=flowed; delsp=yes
-To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Frank Rizzo" <thefrankrizzo@hotmail.com>
-Subject: Re: Rescan PCIE bus to find recently powered on device.
-References: <SNT136-W425B9A4DBEA719E570080DB2C80@phx.gbl>
- <BLU0-SMTP28241CA91CD69AFF09827B6B2A70@phx.gbl>
-Date: Sun, 12 May 2013 22:35:57 -0700
+Received: from szxga02-in.huawei.com ([119.145.14.65]:49193 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753181Ab3EQJ5N (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 May 2013 05:57:13 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, Hanjun Guo <guohanjun@huawei.com>,
+	<jiang.liu@huawei.com>, Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	Fenghua Yu <fenghua.yu@intel.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	<linux-ia64@vger.kernel.org>
+Subject: [PATCH -v2 4/7] PCI/IA64: Allocate pci_root_info instead of using stack
+Date: Fri, 17 May 2013 17:55:47 +0800
+Message-ID: <1368784550-18332-5-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1368784550-18332-1-git-send-email-wangyijing@huawei.com>
+References: <1368784550-18332-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-From: Frank Rizzo <thefrankrizzo@hotmail.com>
-In-Reply-To: <BLU0-SMTP28241CA91CD69AFF09827B6B2A70@phx.gbl>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Let me be more specific.  Any idea how to fix the "device not available"  
-issue?
+We need to pass around info for release function.
 
--Frank
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Cc: Tony Luck <tony.luck@intel.com>
+Cc: Fenghua Yu <fenghua.yu@intel.com>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linux-ia64@vger.kernel.org
+---
+ arch/ia64/pci/pci.c |   59 ++++++++++++++++++++++++++++++--------------------
+ 1 files changed, 35 insertions(+), 24 deletions(-)
+
+diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
+index d7681c6..1f2779d 100644
+--- a/arch/ia64/pci/pci.c
++++ b/arch/ia64/pci/pci.c
+@@ -322,7 +322,8 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 	int domain = root->segment;
+ 	int bus = root->secondary.start;
+ 	struct pci_controller *controller;
+-	struct pci_root_info info;
++	struct pci_root_info *info = NULL;
++	int busnum = root->secondary.start;
+ 	struct pci_bus *pbus;
+ 	char *name;
+ 	int pxm;
+@@ -339,35 +340,42 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 		controller->node = pxm_to_node(pxm);
+ #endif
+ 
+-	INIT_LIST_HEAD(&info.resources);
++	info = kzalloc(sizeof(*info), GFP_KERNEL);
++	if (!info) {
++		printk(KERN_WARNING "pci_bus %04x:%02x: "
++				"ignored (out of memory)\n", root->segment, busnum);
++		goto out2;
++	}
++
++	INIT_LIST_HEAD(&info->resources);
+ 	/* insert busn resource at first */
+-	pci_add_resource(&info.resources, &root->secondary);
++	pci_add_resource(&info->resources, &root->secondary);
+ 	acpi_walk_resources(device->handle, METHOD_NAME__CRS, count_window,
+-			&info.res_num);
+-	if (info.res_num) {
+-		info.res =
+-			kzalloc_node(sizeof(*info.res) * info.res_num,
++			&info->res_num);
++	if (info->res_num) {
++		info->res =
++			kzalloc_node(sizeof(*info->res) * info->res_num,
+ 				     GFP_KERNEL, controller->node);
+-		if (!info.res)
+-			goto out2;
+-		
+-		info.res_offset = 
+-			kzalloc_node(sizeof(*info.res_offset) * info.res_num,
+-				GFP_KERNEL, controller->node);
+-		if (!info.res_offset)
++		if (!info->res)
+ 			goto out3;
++
++		info->res_offset =
++			kzalloc_node(sizeof(*info->res_offset) * info->res_num,
++					GFP_KERNEL, controller->node);
++		if (!info->res_offset)
++			goto out4;
+ 
+ 		name = kmalloc(16, GFP_KERNEL);
+ 		if (!name)
+-			goto out4;
++			goto out5;
+ 
+ 		sprintf(name, "PCI Bus %04x:%02x", domain, bus);
+-		info.bridge = device;
+-		info.controller = controller;
+-		info.name = name;
+-		info.res_num = 0;
++		info->bridge = device;
++		info->controller = controller;
++		info->name = name;
++		info->res_num = 0;
+ 		acpi_walk_resources(device->handle, METHOD_NAME__CRS,
+-			add_window, &info);
++			add_window, info);
+ 	}
+ 	/*
+ 	 * See arch/x86/pci/acpi.c.
+@@ -376,18 +384,21 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 	 * such quirk. So we just ignore the case now.
+ 	 */
+ 	pbus = pci_create_root_bus(NULL, bus, &pci_root_ops, controller,
+-				   &info.resources);
++				   &info->resources);
+ 	if (!pbus) {
+-		pci_free_resource_list(&info.resources);
++		pci_free_resource_list(&info->resources);
+ 		return NULL;
+ 	}
+ 
+ 	pci_scan_child_bus(pbus);
+ 	return pbus;
++
++out5:
++	kfree(info->res_offset);
+ out4:
+-	kfree(info.res_offset);
++	kfree(info->res);
+ out3:
+-	kfree(info.res);
++	kfree(info);
+ out2:
+ 	kfree(controller);
+ out1:
+-- 
+1.7.1
 
 
-On Sun, 12 May 2013 15:13:59 -0700, Frank Rizzo  
-<thefrankrizzo@hotmail.com> wrote:
-
-> OK list, here's an update.  I had my software engineer do some tests on  
-> his system, and this is what I get when he powers on the target device:
->
-> [ 149.626692] pci 0000:01:00.0: [1a39:0004] type 0 class 0x000000
-> [ 149.626721] pci 0000:01:00.0: reg 10: [mem 0x00000000-0x000fffff 64bit]
-> [ 149.626741] pci 0000:01:00.0: reg 18: [mem 0x00000000-0x000fffff 64bit]
-> [ 149.626761] pci 0000:01:00.0: reg 20: [mem 0x00000000-0x00000fff 64bit]
-> [ 149.631745] pcieport 0000:00:01.0: BAR 14: assigned [mem  
-> 0xc0800000-0xc0afffff]
-> [ 149.631837] gn_pcie 0000:01:00.0: device not available (can't reserve  
-> [mem 0x00000000-0x000fffff 64bit])
->
-> A simple lspci shows the device in the list, but since the driver failed  
-> to register the device, it is inaccessible to his applications.
->
-> Any ideas?
->
-> -Frank
->
->
-> On Thu, 18 Apr 2013 19:59:11 -0700, Frank Rizzo  
-> <thefrankrizzo@hotmail.com> wrote:
->
->> Hey list.
->>
->> I'm working on a driver for a device that's external from the PC.  It's  
->> connected to the PC via a weird cable that connects to a PCIE card  
->> inside the case that appears to be nothing other than glue logic to  
->> allow the signals from the cable to be tossed onto the bus.
->>
->> When the external device is powered off during boot, nothing is found.  
->>  hwinfo doesn't find it, lspci doesn't find it, etc.  If you power on  
->> the device BEFORE booting, everything is found, and it works fine.  And  
->> lastly, if you power it on AFTER Linux has booted, you still can't find  
->> it.  I've tried echoing "1" to rescan, and everything else that I could  
->> find via Google search.
->>
->> So, what are my options here?  I'm not allergic to adding code to the  
->> driver to scan for the device periodically, if I knew HOW to find it.  
->>  And, once found, how do I get it registered?
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
