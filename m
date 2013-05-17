@@ -1,70 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from [216.32.181.184] ([216.32.181.184]:33432 "EHLO
-	ch1outboundpool.messaging.microsoft.com" rhost-flags-FAIL-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1754767Ab3EINsn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 9 May 2013 09:48:43 -0400
-From: Sethi Varun-B16395 <B16395@freescale.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
-CC: Kumar Gala <galak@kernel.crashing.org>,
-	Wood Scott-B07421 <B07421@freescale.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Andrew Murray <Andrew.Murray@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: RE: [PATCH] powerpc/pci: Support per-aperture memory offset
-Date: Thu, 9 May 2013 13:47:38 +0000
-Message-ID: <C5ECD7A89D1DC44195F34B25E172658D4F01D0@039-SN2MPN1-013.039d.mgd.msft.net>
-References: <1367823016.15842.22.camel@pasglop>
-In-Reply-To: <1367823016.15842.22.camel@pasglop>
-Content-Type: text/plain; charset="utf-8"
+Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:39402 "EHLO
+	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756567Ab3EQSEp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 May 2013 14:04:45 -0400
+Message-ID: <5196713A.1010102@ubuntu.com>
+Date: Fri, 17 May 2013 14:04:42 -0400
+From: Phillip Susi <psusi@ubuntu.com>
 MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Subject: Re: enabling aspm on ati radeon
+References: <519443A1.8050905@ubuntu.com> <1995989.Fff0uGKnZO@vostro.rjw.lan> <CAErSpo50rX5Pvj=pX5xsdcZ1qq1C7kBqrNyDmY6t26OCVqbxXA@mail.gmail.com> <5195596C.3000406@ubuntu.com> <CAErSpo6wSgquzJc22tFJozp8cfx0vpULnO3KZN2gr2YHt8EHrw@mail.gmail.com>
+In-Reply-To: <CAErSpo6wSgquzJc22tFJozp8cfx0vpULnO3KZN2gr2YHt8EHrw@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogQmVuamFtaW4gSGVycmVu
-c2NobWlkdCBbbWFpbHRvOmJlbmhAa2VybmVsLmNyYXNoaW5nLm9yZ10NCj4gU2VudDogTW9uZGF5
-LCBNYXkgMDYsIDIwMTMgMTI6MjAgUE0NCj4gVG86IGxpbnV4cHBjLWRldg0KPiBDYzogS3VtYXIg
-R2FsYTsgV29vZCBTY290dC1CMDc0MjE7IFNldGhpIFZhcnVuLUIxNjM5NTsgVGhvbWFzIFBldGF6
-em9uaTsNCj4gQW5kcmV3IE11cnJheTsgQmpvcm4gSGVsZ2FhczsgbGludXgtcGNpQHZnZXIua2Vy
-bmVsLm9yZw0KPiBTdWJqZWN0OiBbUEFUQ0hdIHBvd2VycGMvcGNpOiBTdXBwb3J0IHBlci1hcGVy
-dHVyZSBtZW1vcnkgb2Zmc2V0DQo+IA0KPiBUaGUgUENJIGNvcmUgc3VwcG9ydHMgYW4gb2Zmc2V0
-IHBlciBhcGVydHVyZSBub3dhZGF5cyBidXQgb3VyIGFyY2ggY29kZQ0KPiBzdGlsbCBoYXMgYSBz
-aW5nbGUgb2Zmc2V0IHBlciBob3N0IGJyaWRnZSByZXByZXNlbnRpbmcgdGhlIGRpZmZlcmVuY2UN
-Cj4gYmV0d2VuIENQVSBtZW1vcnkgYWRkcmVzc2VzIGFuZCBQQ0kgTU1JTyBhZGRyZXNzZXMuDQo+
-IA0KPiBUaGlzIGlzIGEgcHJvYmxlbSBhcyBuZXcgbWFjaGluZXMgYW5kIGh5cGVydmlzb3IgdmVy
-c2lvbnMgYXJlIGNvbWluZyBvdXQNCj4gd2hlcmUgdGhlIDY0LWJpdCB3aW5kb3dzIHdpbGwgaGF2
-ZSBhIGRpZmZlcmVudCBvZmZzZXQgKGJhc2ljYWxseSBtYXBwZWQNCj4gMToxKSBmcm9tIHRoZSAz
-Mi1iaXQgd2luZG93cy4NCj4gDQo+IFRoaXMgZml4ZXMgaXQgYnkgdXNpbmcgc2VwYXJhdGUgb2Zm
-c2V0cy4gSW4gdGhlIGxvbmcgcnVuLCB3ZSBwcm9iYWJseQ0KPiB3YW50IHRvIGdldCByaWQgb2Yg
-dGhhdCBpbnRlcm1lZGlhcnkgc3RydWN0IHBjaV9jb250cm9sbGVyIGFuZCBoYXZlIHRob3NlDQo+
-IGRpcmVjdGx5IHN0b3JlZCBpbnRvIHRoZSBwY2lfaG9zdF9icmlkZ2UgYXMgdGhleSBhcmUgcGFy
-c2VkIGJ1dCB0aGlzIHdpbGwNCj4gYmUgYSBtb3JlIGludmFzaXZlIGNoYW5nZS4NCj4gDQo+IFNp
-Z25lZC1vZmYtYnk6IEJlbmphbWluIEhlcnJlbnNjaG1pZHQgPGJlbmhAa2VybmVsLmNyYXNoaW5n
-Lm9yZz4NCj4gLS0tDQo+IA0KPiBOb3csIHRoaXMgaXMgYSBiaWcgb25lIGJ1dCBJJ2QgbGlrZSB0
-byBzdGlsbCBtZXJnZSBpdCBmb3IgMy4xMCBiZWNhdXNlDQo+IHdlJ3JlIGhhdmluZyBuZXcgbWFj
-aGluZSBjb21pbmcgdXAgKGFuZCBuZXcgdmVyc2lvbnMgb2YgcEh5cCBvbiBleGlzdGluZw0KPiBt
-YWNoaW5lcykgdGhhdCBhcmUgZ29pbmcgdG8gZXhwb3NlIE1NSU8gd2luZG93cyB3aXRoIGRpZmZl
-cmVudCBvZmZzZXRzDQo+IChiYXNpY2FsbHkgb3VyIDY0LWJpdCB3aW5kb3dzIGFyZSAxOjEgYW5k
-IG91ciAzMi1iaXQgd2luZG93cyByZW1hcHBlZCkuDQo+IA0KPiBJJ20gbm90IGV4cGVjdGluZyBh
-bnkgbWFqb3IgaXNzdWUgd2l0aCB0aGUgcGF0Y2gsIEkndmUgdGVzdGVkIGl0IG9uIHNvbWUNCj4g
-b2Ygb3VyIG1hY2hpbmVzIGhlcmUgYW5kIHdpbGwgdGVzdCBpdCBtb3JlIGR1cmluZyB0aGUgbmV4
-dCBjb3VwbGUgb2YgZGF5cw0KPiB0aGUgbm90YWJsZSB0aGluZyBpcyB0aGUgcmVtb3ZhbCBvZiBh
-ICJ3b3JrYXJvdW5kIiAvIGZhbGxiYWNrIG9uIDMyLWJpdA0KPiB0aGF0IEkgc3VzcGVjdCBvbmx5
-IGV2ZXIgbWF0dGVyZWQgZm9yIG1hY2hpbmVzIGxvbmcgdW5zdXBwb3J0ZWQgKFBSZVAgPykNCj4g
-YXMgSSBkb24ndCB0aGluayB3ZSBoYXZlIGFueXRoaW5nIHRoYXQgZG9lc24ndCBwb3B1bGF0ZSB0
-aGUgYnJpZGdlDQo+IHJlc291cmNlcyBhbmQgZXhwZWN0cyB0byB3b3JrIG5vd2FkYXlzIChvdGhl
-ciBzdHVmZiB3b3VsZCBicmVhayBhbnl3YXkpLg0KPiANCj4gVGhpcyBpcyBhbHNvIHdoeSBJJ20g
-TkFLJ2luZyB0aGUgcGF0Y2ggbWFraW5nDQo+IHBjaV9wcm9jZXNzX2JyaWRnZV9PRl9yYW5nZXMo
-KSBnZW5lcmljIHNpbmNlIEkgbmVlZCB0byBjaGFuZ2UgaXQgZm9yDQo+IHBvd2VycGMgYW5kIHRo
-aXMgaXNuJ3QgdGhlIHJpZ2h0IGxvbmcgdGVybSBhcHByb2FjaCAod2Ugc2hvdWxkICJtZXJnZSIN
-Cj4gcGNpX2NvbnRyb2xsZXIgJiBwY2lfaG9zdF9icmlkZ2UgaW5zdGVhZCBhbmQgZGlyZWN0bHkg
-cG9wdWxhdGUgdGhlDQo+IHBjaV9ob3N0X2JyaWRnZSBhcGVydHVyZXMpLg0KPiANCj4gSWYgSSBz
-ZWUgbm8gbWFqb3IgaXNzdWUgd2l0aCB0aGUgcGF0Y2ggZHVyaW5nIHRoZSBuZXh0IGZldyBkYXlz
-LCBJJ2xsDQo+IHNlbmQgaXQgdG8gTGludXMgd2l0aCBteSBuZXh0IHB1bGwgcmVxdWVzdCwgcHJv
-YmFibHkgYXQgLXJjMS4NCj4gDQo+IEt1bWFyLCBTY290dCwgU2V0aGksIHBsZWFzZSB0ZXN0IG9u
-IEZTTCBIVy4gSSdsbCB0YWtlIGNhcmUgb2YgbWFjcyBhbmQNCj4gNHh4IGluIGFkZGl0aW9uIHRv
-IHRoZSB2YXJpb3VzIElCTSBwcGM2NCBwbGF0Zm9ybXMuDQo+IA0KW1NldGhpIFZhcnVuLUIxNjM5
-NV0gVGVzdGVkIHBhdGNoIG9uIEZTTCBUNDI0MCwgUDQwODAsIFA1MDQwIGFuZCBQMTAyMCBib2Fy
-ZHMuDQoNCi1WYXJ1bg0K
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
+On 5/17/2013 1:31 PM, Bjorn Helgaas wrote:
+> You also have this bridge where lspci says "ASPM unknown":
+> 
+> 00:01.0 bridge to [bus 01] ASPM unknown
+> 
+> Just out of curiosity, can you collect the output of "lspci -xxxs 
+> 00:01.0"?  There are only two bits in the Link Capabilities ASPM 
+> support field, and all four encodings are defined, so I'm curious 
+> about why lspci says "unknown".
+
+I'll get that as soon as I get home, but why would the ASPM status of
+the root complex have anything to do with the rest of the devices?
+Enabling ASPM on one link doesn't require it to be enabled on all
+upstream links does it?
+
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.17 (MingW32)
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+
+iQEcBAEBAgAGBQJRlnE6AAoJEJrBOlT6nu75nWUIAI7iOcoOklDWhS1FriQJmXTm
+X8OJ4VZB8VVPeIuzrW+I6sppUrxqpnnxvrJT7Trnh5SDwwJjwx3m6BVrZHphrlCN
+armoZ5jLSuBS9mn4mpeAOfUS7uypAuyL4fEo6DYJa9fPZycL1LukjkuwZMRJ+bfw
+sjXQ7soHC52r2wxWhDHZbOl9UEWtYHhBypoI+PpYMO00lQp3gGnJXedm2zHti+a3
+2ZtIieydLw++nXDr18WxDbJ5h1rQi626rVip0IcO6VUhhNxcd8hzGFkRAc7vNodw
+bjW6wp8f+sddfX5uHkh9zYzwaEblLgBkxqw93xzRdh1ujJHet4R/jL1NTLZ8EZY=
+=W4Uc
+-----END PGP SIGNATURE-----
