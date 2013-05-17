@@ -1,131 +1,335 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <519BF15C.9040402@gmail.com>
-Date: Tue, 21 May 2013 15:12:44 -0700
-From: Alexander Duyck <alexander.duyck@gmail.com>
-MIME-Version: 1.0
-To: Don Dutile <ddutile@redhat.com>
-CC: Alexander Duyck <alexander.h.duyck@intel.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:49215 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753886Ab3EQJ5O (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 May 2013 05:57:14 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, Hanjun Guo <guohanjun@huawei.com>,
+	<jiang.liu@huawei.com>, Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	Fenghua Yu <fenghua.yu@intel.com>,
 	Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	NetDev <netdev@vger.kernel.org>,
-	"Michael S. Tsirkin" <mst@redhat.com>
-Subject: Re: [PATCH 6/7] PCI: Make sure VF's driver get attached after PF's
-References: <1368498506-25857-1-git-send-email-yinghai@kernel.org> <1368498506-25857-7-git-send-email-yinghai@kernel.org> <51925FB0.4080504@intel.com> <CAE9FiQXYQEAZ=0sG6+2OdffBqfLS9MpoN1xviRR9aDbxPxcKxQ@mail.gmail.com> <5192946F.1050700@intel.com> <CAE9FiQVGGHB_amKw0-DfDifpTnRGPbxA+q3WY5F-O3x-sx386A@mail.gmail.com> <5192AEF4.1070905@intel.com> <519BE778.9040800@redhat.com> <519BE7C4.3050306@redhat.com> <519BEE22.3080806@gmail.com> <519BF082.2040309@redhat.com>
-In-Reply-To: <519BF082.2040309@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	<linux-ia64@vger.kernel.org>
+Subject: [PATCH -v2 3/7] PCI/IA64: make pci_root_info holds pci hostbridge resources
+Date: Fri, 17 May 2013 17:55:46 +0800
+Message-ID: <1368784550-18332-4-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1368784550-18332-1-git-send-email-wangyijing@huawei.com>
+References: <1368784550-18332-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/21/2013 03:09 PM, Don Dutile wrote:
-> On 05/21/2013 05:58 PM, Alexander Duyck wrote:
->> On 05/21/2013 02:31 PM, Don Dutile wrote:
->>> On 05/21/2013 05:30 PM, Don Dutile wrote:
->>>> On 05/14/2013 05:39 PM, Alexander Duyck wrote:
->>>>> On 05/14/2013 12:59 PM, Yinghai Lu wrote:
->>>>>> On Tue, May 14, 2013 at 12:45 PM, Alexander Duyck
->>>>>> <alexander.h.duyck@intel.com>  wrote:
->>>>>>> On 05/14/2013 11:44 AM, Yinghai Lu wrote:
->>>>>>>> On Tue, May 14, 2013 at 9:00 AM, Alexander Duyck
->>>>>>>> <alexander.h.duyck@intel.com>  wrote:
->>>>>>>>> I'm sorry, but what is the point of this patch? With device
->>>>>>>>> assignment
->>>>>>>>> it is always possible to have VFs loaded and the PF driver
->>>>>>>>> unloaded
->>>>>>>>> since you cannot remove the VFs if they are assigned to a VM.
->>>>>>>> unload PF driver will not call pci_disable_sriov?
->>>>>>> You cannot call pci_disable_sriov because you will panic all of the
->>>>>>> guests that have devices assigned.
->>>>>> ixgbe_remove did call pci_disable_sriov...
->>>>>>
->>>>>> for guest panic, that is another problem.
->>>>>> just like you pci passthrough with real pci device and hotremove the
->>>>>> card in host.
->>>>>>
->>>>>> ...
->>>>>
->>>>> I suggest you take another look. In ixgbe_disable_sriov, which is the
->>>>> function that is called we do a check for assigned VFs. If they are
->>>>> assigned then we do not call pci_disable_sriov.
->>>>>
->>>>>>
->>>>>>> So how does your patch actually fix this problem? It seems like
->>>>>>> it is
->>>>>>> just avoiding it.
->>>>>> yes, until the first one is done.
->>>>>
->>>>> Avoiding the issue doesn't fix the underlying problem and instead you
->>>>> are likely just introducing more bugs as a result.
->>>>>
->>>>>>>  From what I can tell your problem is originating in
->>>>>>> pci_call_probe. I
->>>>>>> believe it is calling work_on_cpu and that doesn't seem correct
->>>>>>> since
->>>>>>> the work should be taking place on a CPU already local to the PF.
->>>>>>> You
->>>>>>> might want to look there to see why you are trying to schedule work
->>>>>>> on a
->>>>>>> CPU which should be perfectly fine for you to already be doing your
->>>>>>> work on.
->>>>>> it always try to go with local cpu with same pxm.
->>>>>
->>>>> The problem is we really shouldn't be calling work_for_cpu in this
->>>>> case
->>>>> since we are already on the correct CPU. What probably should be
->>>>> happening is that pci_call_probe should be doing a check to see if the
->>>>> current CPU is already contained within the device node map and if so
->>>>> just call local_pci_probe directly. That way you can avoid deadlocking
->>>>> the system by trying to flush the CPU queue of the CPU you are
->>>>> currently on.
->>>>>
->>>> That's the patch that Michael Tsirkin posted for a fix,
->>>> but it was noted that if you have the case where the _same_ driver is
->>>> used for vf&  pf,
->>>> other deadlocks may occur.
->>>> It would work in the case of ixgbe/ixgbevf, but not for something like
->>>> the Mellanox pf/vf driver (which is the same).
->>>>
->>> apologies; here's the thread the discussed the issue:
->>> https://patchwork.kernel.org/patch/2458681/
->>>
->>
->> I found out about that patch after I submitted one that was similar.
->> The only real complaint I had about his patch was that it was only
->> looking at the CPU and he could save himself some trouble by just doing
->> the work locally if we were on the correct NUMA node.  For example if
->> the system only has one node in it what is the point in scheduling all
->> of the work on CPU 0?  My alternative patch can be found at:
->> https://patchwork.kernel.org/patch/2568881/
->>
->> As far as the inter-driver locking issues for same driver I don't think
->> that is really any kind if issue.  Most drivers shouldn't be holding any
->> big locks when they call pci_enable_sriov.  If I am not mistaken the
->> follow on patch I submitted which was similar to Michaels was reported
->> to have resolved the issue.
->>
-> You mean the above patchwork patch, or another one?
+Currently, pcibios_resource_to_bus() and pcibios_bus_to_resource()
+functions use pci_host_bridge to translate bus side address from/to
+cpu side address. The pci_window in pci_controller never be used again.
+So we remove pci_window in pci_controller and make pci_root_info hold
+the pci hostbridge resources like in x86.
 
-Well I know the above patchwork patch resolves it, but I am assuming
-Michaels would probably work as well since it resolves the underlying issue.
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Cc: Tony Luck <tony.luck@intel.com>
+Cc: Fenghua Yu <fenghua.yu@intel.com>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Thierry Reding <thierry.reding@avionic-design.de>
+Cc: linux-ia64@vger.kernel.org
+---
+ arch/ia64/include/asm/pci.h   |   18 ++++++-----
+ arch/ia64/pci/pci.c           |   68 ++++++++++++++++++++--------------------
+ arch/ia64/sn/kernel/io_init.c |   67 ++++++++++++++++++++++++---------------
+ 3 files changed, 85 insertions(+), 68 deletions(-)
 
->> As far as the Mellanox PF/VF the bigger issue is that when they call
->> pci_enable_sriov they are not ready to handle VFs.  There have been
->> several suggestions on how to resolve it including -EPROBE_DEFER or the
->> igbvf/ixgbevf approach of just brining up the device in a "link down"
->> state.
->>
-> thanks for summary.  i was backlogged on email, and responding as i read
-> them;
-> I should have read through the whole thread before chiming in.
-> 
+diff --git a/arch/ia64/include/asm/pci.h b/arch/ia64/include/asm/pci.h
+index 5e04b59..82a236c 100644
+--- a/arch/ia64/include/asm/pci.h
++++ b/arch/ia64/include/asm/pci.h
+@@ -89,23 +89,25 @@ extern int pci_mmap_legacy_page_range(struct pci_bus *bus,
+ #define pci_legacy_read platform_pci_legacy_read
+ #define pci_legacy_write platform_pci_legacy_write
+ 
+-struct pci_window {
+-	struct resource resource;
+-	u64 offset;
+-};
+-
+ struct pci_controller {
+ 	void *acpi_handle;
+ 	void *iommu;
+ 	int segment;
+ 	int node;		/* nearest node with memory or -1 for global allocation */
+ 
+-	unsigned int windows;
+-	struct pci_window *window;
+-
+ 	void *platform_data;
+ };
+ 
++struct pci_root_info {
++	struct acpi_device *bridge;
++	struct pci_controller *controller;
++	struct list_head resources;
++	struct resource *res;
++	resource_size_t *res_offset;
++	unsigned int res_num;
++	char *name;
++};
++
+ #define PCI_CONTROLLER(busdev) ((struct pci_controller *) busdev->sysdata)
+ #define pci_domain_nr(busdev)    (PCI_CONTROLLER(busdev)->segment)
+ 
+diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
+index de1474f..d7681c6 100644
+--- a/arch/ia64/pci/pci.c
++++ b/arch/ia64/pci/pci.c
+@@ -130,12 +130,6 @@ static struct pci_controller *alloc_pci_controller(int seg)
+ 	return controller;
+ }
+ 
+-struct pci_root_info {
+-	struct acpi_device *bridge;
+-	struct pci_controller *controller;
+-	struct list_head resources;
+-	char *name;
+-};
+ 
+ static unsigned int
+ new_space (u64 phys_base, int sparse)
+@@ -265,7 +259,7 @@ static acpi_status count_window(struct acpi_resource *resource, void *data)
+ static acpi_status add_window(struct acpi_resource *res, void *data)
+ {
+ 	struct pci_root_info *info = data;
+-	struct pci_window *window;
++	struct resource *resource;
+ 	struct acpi_resource_address64 addr;
+ 	acpi_status status;
+ 	unsigned long flags, offset = 0;
+@@ -289,37 +283,36 @@ static acpi_status add_window(struct acpi_resource *res, void *data)
+ 	} else
+ 		return AE_OK;
+ 
+-	window = &info->controller->window[info->controller->windows++];
+-	window->resource.name = info->name;
+-	window->resource.flags = flags;
+-	window->resource.start = addr.minimum + offset;
+-	window->resource.end = window->resource.start + addr.address_length - 1;
+-	window->offset = offset;
++	resource = &info->res[info->res_num];
++	resource->name = info->name;
++	resource->flags = flags;
++	resource->start = addr.minimum + offset;
++	resource->end = resource->start + addr.address_length - 1;
++	info->res_offset[info->res_num] = offset;
+ 
+-	if (insert_resource(root, &window->resource)) {
++	if (insert_resource(root, resource)) {
+ 		dev_err(&info->bridge->dev,
+ 			"can't allocate host bridge window %pR\n",
+-			&window->resource);
++			resource);
+ 	} else {
+ 		if (offset)
+ 			dev_info(&info->bridge->dev, "host bridge window %pR "
+ 				 "(PCI address [%#llx-%#llx])\n",
+-				 &window->resource,
+-				 window->resource.start - offset,
+-				 window->resource.end - offset);
++				 resource,
++				 resource->start - offset,
++				 resource->end - offset);
+ 		else
+ 			dev_info(&info->bridge->dev,
+-				 "host bridge window %pR\n",
+-				 &window->resource);
++				 "host bridge window %pR\n", resource);
+ 	}
+-
+ 	/* HP's firmware has a hack to work around a Windows bug.
+ 	 * Ignore these tiny memory ranges */
+-	if (!((window->resource.flags & IORESOURCE_MEM) &&
+-	      (window->resource.end - window->resource.start < 16)))
+-		pci_add_resource_offset(&info->resources, &window->resource,
+-					window->offset);
++	if (!((resource->flags & IORESOURCE_MEM) &&
++	      (resource->end - resource->start < 16)))
++		pci_add_resource_offset(&info->resources, resource,
++					info->res_offset[info->res_num]);
+ 
++	info->res_num++;
+ 	return AE_OK;
+ }
+ 
+@@ -329,7 +322,6 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 	int domain = root->segment;
+ 	int bus = root->secondary.start;
+ 	struct pci_controller *controller;
+-	unsigned int windows = 0;
+ 	struct pci_root_info info;
+ 	struct pci_bus *pbus;
+ 	char *name;
+@@ -351,22 +343,29 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 	/* insert busn resource at first */
+ 	pci_add_resource(&info.resources, &root->secondary);
+ 	acpi_walk_resources(device->handle, METHOD_NAME__CRS, count_window,
+-			&windows);
+-	if (windows) {
+-		controller->window =
+-			kzalloc_node(sizeof(*controller->window) * windows,
++			&info.res_num);
++	if (info.res_num) {
++		info.res =
++			kzalloc_node(sizeof(*info.res) * info.res_num,
+ 				     GFP_KERNEL, controller->node);
+-		if (!controller->window)
++		if (!info.res)
+ 			goto out2;
++
++		info.res_offset =
++			kzalloc_node(sizeof(*info.res_offset) * info.res_num,
++				GFP_KERNEL, controller->node);
++		if (!info.res_offset)
++			goto out3;
+ 
+ 		name = kmalloc(16, GFP_KERNEL);
+ 		if (!name)
+-			goto out3;
++			goto out4;
+ 
+ 		sprintf(name, "PCI Bus %04x:%02x", domain, bus);
+ 		info.bridge = device;
+ 		info.controller = controller;
+ 		info.name = name;
++		info.res_num = 0;
+ 		acpi_walk_resources(device->handle, METHOD_NAME__CRS,
+ 			add_window, &info);
+ 	}
+@@ -385,9 +384,10 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 
+ 	pci_scan_child_bus(pbus);
+ 	return pbus;
+-
++out4:
++	kfree(info.res_offset);
+ out3:
+-	kfree(controller->window);
++	kfree(info.res);
+ out2:
+ 	kfree(controller);
+ out1:
+diff --git a/arch/ia64/sn/kernel/io_init.c b/arch/ia64/sn/kernel/io_init.c
+index 99710f5..86c2335 100644
+--- a/arch/ia64/sn/kernel/io_init.c
++++ b/arch/ia64/sn/kernel/io_init.c
+@@ -125,27 +125,39 @@ static void __init sn_fixup_ionodes(void)
+  *				and their resources (_CRS),
+  */
+ static void
+-sn_legacy_pci_window_fixup(struct pci_controller *controller,
++sn_legacy_pci_window_fixup(struct pci_root_info *info,
+ 			   u64 legacy_io, u64 legacy_mem)
+ {
+-		controller->window = kcalloc(2, sizeof(struct pci_window),
+-					     GFP_KERNEL);
+-		BUG_ON(controller->window == NULL);
+-		controller->window[0].offset = legacy_io;
+-		controller->window[0].resource.name = "legacy_io";
+-		controller->window[0].resource.flags = IORESOURCE_IO;
+-		controller->window[0].resource.start = legacy_io;
+-		controller->window[0].resource.end =
+-	    			controller->window[0].resource.start + 0xffff;
+-		controller->window[0].resource.parent = &ioport_resource;
+-		controller->window[1].offset = legacy_mem;
+-		controller->window[1].resource.name = "legacy_mem";
+-		controller->window[1].resource.flags = IORESOURCE_MEM;
+-		controller->window[1].resource.start = legacy_mem;
+-		controller->window[1].resource.end =
+-	    	       controller->window[1].resource.start + (1024 * 1024) - 1;
+-		controller->window[1].resource.parent = &iomem_resource;
+-		controller->windows = 2;
++	info->res_num = 2;
++	info->res = kzalloc(sizeof(*info->res) * info->res_num, GFP_KERNEL);
++	if (!info->res) {
++		info->res_num = 0;
++		return;
++	}
++
++	info->res_offset = kzalloc(sizeof(*info->res_offset) * info->res_num,
++			GFP_KERNEL);
++	if (!info->res_offset) {
++		kfree(info->res);
++		info->res = NULL;
++		info->res_num = 0;
++		return;
++	}
++
++	info->res_offset[0] = legacy_io;
++	info->res[0].name = "legacy_io";
++	info->res[0].flags = IORESOURCE_IO;
++	info->res[0].start = legacy_io;
++	info->res[0].end =
++		info->res[0].start + 0xffff;
++	info->res[0].parent = &ioport_resource;
++	info->res_offset[1] = legacy_mem;
++	info->res[1].name = "legacy_mem";
++	info->res[1].flags = IORESOURCE_MEM;
++	info->res[1].start = legacy_mem;
++	info->res[1].end =
++		info->res[1].start + (1024 * 1024) - 1;
++	info->res[1].parent = &iomem_resource;
+ }
+ 
+ /*
+@@ -248,6 +260,7 @@ static void __init
+ sn_pci_controller_fixup(int segment, int busnum, struct pci_bus *bus)
+ {
+ 	s64 status = 0;
++	struct pci_root_info info;
+ 	struct pci_controller *controller;
+ 	struct pcibus_bussoft *prom_bussoft_ptr;
+ 	LIST_HEAD(resources);
+@@ -262,20 +275,21 @@ sn_pci_controller_fixup(int segment, int busnum, struct pci_bus *bus)
+ 	controller = kzalloc(sizeof(*controller), GFP_KERNEL);
+ 	BUG_ON(!controller);
+ 	controller->segment = segment;
+-
+-	/*
++		/*
+ 	 * Temporarily save the prom_bussoft_ptr for use by sn_bus_fixup().
+ 	 * (platform_data will be overwritten later in sn_common_bus_fixup())
+ 	 */
+ 	controller->platform_data = prom_bussoft_ptr;
++
++	info.controller = controller;
+ 
+-	sn_legacy_pci_window_fixup(controller,
++	sn_legacy_pci_window_fixup(&info,
+ 				   prom_bussoft_ptr->bs_legacy_io,
+ 				   prom_bussoft_ptr->bs_legacy_mem);
+-	for (i = 0; i < controller->windows; i++)
++	for (i = 0; i < info.res_num; i++)
+ 		pci_add_resource_offset(&resources,
+-					&controller->window[i].resource,
+-					controller->window[i].offset);
++					&info.res[i],
++					info.res_offset[i]);
+ 	bus = pci_scan_root_bus(NULL, busnum, &pci_root_ops, controller,
+ 				&resources);
+  	if (bus == NULL)
+@@ -286,8 +300,9 @@ sn_pci_controller_fixup(int segment, int busnum, struct pci_bus *bus)
+ 	return;
+ 
+ error_return:
+-
+ 	kfree(controller);
++	kfree(info.res);
++	kfree(info.res_offset);
+ 	return;
+ }
+ 
+-- 
+1.7.1
 
-No problem.  My main concern at this point is that we should probably
-get either Michaels patch or mine pulled in since the potential for
-deadlock is still there.
-
-Thanks,
-
-Alex
 
