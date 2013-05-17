@@ -1,98 +1,56 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <5196BF15.3050208@ubuntu.com>
+Date: Fri, 17 May 2013 19:36:53 -0400
+From: Phillip Susi <psusi@ubuntu.com>
 MIME-Version: 1.0
-In-Reply-To: <CF6E51640088844D9CADE5541A7C2FEB33EBE413@CMEXMB1.ad.emulex.com>
-References: <F7B8FD780A346D46A0042F5C63B06AE785E3B2@SHSMSX102.ccr.corp.intel.com>
- <20130520224824.GA31740@google.com> <CF6E51640088844D9CADE5541A7C2FEB33EBE413@CMEXMB1.ad.emulex.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 21 May 2013 10:51:51 -0600
-Message-ID: <CAErSpo4kvEkUtYFXnoE8yDnHsUD8Z6EUrKaXaJ=yy4yMcJ0veA@mail.gmail.com>
-Subject: Re: Subject : [ PATCH ] pci-reset-error_state-to-pci_channel_io_normal-at-report_slot_reset
-To: "Liu, Joseph" <Joseph.Liu@emulex.com>
-Cc: "Zhang, LongX" <longx.zhang@intel.com>,
-	"linasvepstas@gmail.com" <linasvepstas@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"yanmin_zhang@linux.intel.com" <yanmin_zhang@linux.intel.com>
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-kernel-owner@vger.kernel.org
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Subject: Re: enabling aspm on ati radeon
+References: <519443A1.8050905@ubuntu.com> <1995989.Fff0uGKnZO@vostro.rjw.lan> <CAErSpo50rX5Pvj=pX5xsdcZ1qq1C7kBqrNyDmY6t26OCVqbxXA@mail.gmail.com> <5195596C.3000406@ubuntu.com> <CAErSpo6wSgquzJc22tFJozp8cfx0vpULnO3KZN2gr2YHt8EHrw@mail.gmail.com> <5196713A.1010102@ubuntu.com> <CAErSpo7zESr5_PEyX=1JWEApCuW+yx+j3RKWh=qC-jReRgSXZw@mail.gmail.com> <51968E9F.1010909@ubuntu.com> <CAErSpo6ZKB-4PTa_2Cthx_8S2txCbGyatbPmDUPYexCQFg-A=A@mail.gmail.com> <51969D30.1070502@ubuntu.com> <CAErSpo4H-=dnHON3vDvJEme2hGD0z0r_NSsm-Bk9tZ4QqtBTCw@mail.gmail.com>
+In-Reply-To: <CAErSpo4H-=dnHON3vDvJEme2hGD0z0r_NSsm-Bk9tZ4QqtBTCw@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 21, 2013 at 9:41 AM, Liu, Joseph <Joseph.Liu@emulex.com> wrote:
-> Bjorn,
->
->>> diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
->>> index ed4d094..7abefd9 100644
->>> --- a/drivers/pci/pcie/portdrv_pci.c
->>> +++ b/drivers/pci/pcie/portdrv_pci.c
->>> @@ -332,13 +332,11 @@ static pci_ers_result_t pcie_portdrv_slot_reset(struct pci_dev *dev)
->>>      pci_ers_result_t status = PCI_ERS_RESULT_RECOVERED;
->>>      int retval;
->>>
->>> -    /* If fatal, restore cfg space for possible link reset at upstream */
->>> -    if (dev->error_state == pci_channel_io_frozen) {
->>> -            dev->state_saved = true;
->>> -            pci_restore_state(dev);
->>> -            pcie_portdrv_restore_config(dev);
->>> -            pci_enable_pcie_error_reporting(dev);
->>> -    }
->>> +    /* restore cfg space for possible link reset at upstream */
->>> +    dev->state_saved = true;
->>> +    pci_restore_state(dev);
->>> +    pcie_portdrv_restore_config(dev);
->>> +    pci_enable_pcie_error_reporting(dev);
->>>
->>>      /* get true return value from &status */
->>>      retval = device_for_each_child(&dev->dev, &status, slot_reset_iter);
->>
->>I think this patch changes the behavior in the case of a non-fatal error
->>where one of the .error_detected() methods returned
->>PCI_ERS_RESULT_NEED_RESET.  In that case, pcie_portdrv_slot_reset()
->>previously did not restore config space, but after your patch, it *will*
->>restore it.  We need an explanation of why this is safe.
->
-> Here is my understanding of this part of the patch:
->
-> I think your concern here should not be an issue. Whether it is a non-fatal error or a fatal error, as long as one of the .error_detected() method from the downstream drivers involved returns a PCI_ERS_RESULT_NEED_RESET, it should trump all others and a slot reset should be performed, even though it was originally due to a non-fatal error reported or only one of the downstream drivers requests it. In the case of AER driver, this should be implemented in the broadcast_error_message() with pci_walk_bus() by passing in the report_error_detected() function, and merging the results into the result_data->result...
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-Yes, I understand all this.  (Though as I pointed out, the current AER
-code does not actually perform a reset based on
-PCI_ERS_RESULT_NEED_RESET being returned.  The only time we currently
-do a reset is for AER_FATAL errors.)
+On 05/17/2013 05:28 PM, Bjorn Helgaas wrote:> A link has two ends.
+Both ends have to support ASPM in order for it
+> to work.  But ASPM on a particular link has no dependency on
+> things elsewhere in the hierarchy.
 
-> In any case, the fact that this pcie_portdrv_slot_reset() being invoked should be considered as a aftermath of a slot reset has been performed, thus the restore of config space should be performed after the reset.
+Got you... I guess I was still thinking regular PCI and the naming
+"root complex" made me think it was the whole root bridge, when it
+really is that particular x16 pcie port that goes to the radeon.
 
-The intention has always been that .slot_reset() would be called to
-inform the driver that a reset has been performed.  That was the case
-even when Yanmin added pcie_portdrv_slot_reset() with commit
-4bf3392e0.  Yet in that commit, pcie_portdrv_slot_reset() only does
-the restore when the channel is frozen, i.e., when we're handling an
-AER_FATAL error.
+> The link between 00:01.0 and 01:00.0 apparently only supports ASPM 
+> on one end (the downstream end), so ASPM won't work on it.
 
-So far, I haven't seen any explanation of what changed to make us want
-to do the restore always, even for non-fatal errors.  Maybe the
-original test for the channel being frozen was just a mistake, but it
-would have been much simpler to omit the test to begin with, so
-obviously Yanmin thought it was necessary at the time.
+I'll check the Intel spec sheet again, but I'm pretty sure it really
+does support ASPM.  The CPU probably allows writes to the register,
+and my bios must have configured it to say it doesn't support aspm.  I
+guess I just need to wrangle setpci into trying to enable it despite
+it not advertising support, or maybe see if I can get grub to poke the
+capability register to make it say it supports it.
 
-Maybe the "error_state == pci_channel_io_frozen" test was a back-door
-way to express "we only want to restore state when we've actually done
-a reset."  That would sort of make sense, although there's no
-documented connection between the frozen state and a device reset, and
-no driver should rely on one.
+One question I have though is how to identify which port device
+corresponds to which downstream device connected to it.  In other
+words, how do you know 00:01.0 links to 01:00.0 ( other than seeing
+that it's the x16 and knowing the radeon is plugged into the x16 slot ).
 
-If the idea of "only do a restore after a reset" is still valid, we
-don't want to make this change to pcie_portdrv_slot_reset() because it
-IS called in some cases when a reset has not been performed, namely
-non-fatal errors when an .error_detected() method returns
-PCI_ERS_RESULT_NEED_RESET.
 
-> I suppose the restore should be to the same state as fresh power-on states, right?
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+Comment: Using GnuPG with undefined - http://www.enigmail.net/
 
-I *think* that in pcie_portdrv_slot_reset(), we're probably restoring
-the state saved by pcie_portdrv_probe(), i.e., the state saved by the
-PCIe port driver after it has claimed and initialized the port.  This
-is not fresh power-on state; a fresh power-on state would have BARs
-and other config registers cleared, and we'd have to assign resources
-to the device just like we do to a hot-added device.
-
-Bjorn
+iQEcBAEBAgAGBQJRlr8VAAoJEJrBOlT6nu75zL8IAImEt+ql6u1pqDSFPuDlLwSE
+fbFWYYxZAzEGnzbAKGMUhueKHAa4rEnH2ztM8CYxdj3GVfSoTpwgcvz21L/fq/6L
+z4OtChaw2cDiCevi95BR2xry2qBLnrHNq1qbD1yb832b5njCSr5SnTvUBUiH/4pN
+twEAJ3HZp7Vblts4UMmn5sOT3cGd1Yr6sJp4Y068vPSGyx5Ixm5ROYEedN5tBnBl
+zkeC+2vYXk0nIbMgJLWt4ZJRxXmX3/DXt8F1VL12NzlHpotuS5rPRpTR/el3sSty
+J6HH/jlgSm+L3zuSPTicVAQBvYGcRhi/NbKDFPnZGGB8E7HsE9SIwNxzjzImyV0=
+=X54u
+-----END PGP SIGNATURE-----
