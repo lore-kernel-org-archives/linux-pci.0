@@ -1,65 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from webmail.solarflare.com ([12.187.104.25]:19088 "EHLO
-	webmail.solarflare.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757492Ab3ETQC4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 20 May 2013 12:02:56 -0400
-Message-ID: <1369065770.4616.3.camel@bwh-desktop.uk.solarflarecom.com>
-Subject: Re: [PATCH v2 6/7] PCI: Make sure VF's driver get attached after
- PF's
-From: Ben Hutchings <bhutchings@solarflare.com>
-To: Eliezer Tamir <eliezer.tamir@linux.intel.com>
-CC: Or Gerlitz <or.gerlitz@gmail.com>,
-	Greg Rose <gregory.v.rose@intel.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Gu Zheng" <guz.fnst@cn.fujitsu.com>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Alexander Duyck <alexander.h.duyck@intel.com>,
-	Yan Burman <yanb@mellanox.com>,
-	Sathya Perla <Sathya.Perla@emulex.com>,
-	<netdev@vger.kernel.org>
-Date: Mon, 20 May 2013 17:02:50 +0100
-In-Reply-To: <519A1DFD.5080809@linux.intel.com>
-References: <1368586102-17661-1-git-send-email-yinghai@kernel.org>
-	 <20130515091248.00002fe3@unknown>
-	 <CAJZOPZ+L1QJdHePd_x9RAoqZKyJAKHo+hA8T1UZoe8=ozT98RA@mail.gmail.com>
-	 <519A1DFD.5080809@linux.intel.com>
-Content-Type: text/plain; charset="UTF-8"
+Received: from avon.wwwdotorg.org ([70.85.31.133]:34047 "EHLO
+	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754852Ab3EQTsj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 May 2013 15:48:39 -0400
+Message-ID: <51968994.5030408@wwwdotorg.org>
+Date: Fri, 17 May 2013 13:48:36 -0600
+From: Stephen Warren <swarren@wwwdotorg.org>
 MIME-Version: 1.0
+To: Jay Agarwal <jagarwal@nvidia.com>
+CC: "'thierry.reding@avionic-design.de'"
+	<thierry.reding@avionic-design.de>,
+	"'linux@arm.linux.org.uk'" <linux@arm.linux.org.uk>,
+	"'bhelgaas@google.com'" <bhelgaas@google.com>,
+	"'olof@lixom.net'" <olof@lixom.net>,
+	"'mturquette@linaro.org'" <mturquette@linaro.org>,
+	"'linux-arm-kernel@lists.infradead.org'"
+	<linux-arm-kernel@lists.infradead.org>,
+	"'linux-tegra@vger.kernel.org'" <linux-tegra@vger.kernel.org>,
+	"'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>,
+	"'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH 4/4] ARM: tegra: pcie: Enable PCIe controller on Cardhu
+References: <1368010660-31465-1-git-send-email-jagarwal@nvidia.com> <1368010660-31465-4-git-send-email-jagarwal@nvidia.com> <518A8596.7070702@wwwdotorg.org> <C79B248886DD134989C8FF6B096A91AB91B4886B5D@BGMAIL01.nvidia.com> <C79B248886DD134989C8FF6B096A91AB91B4886B6C@BGMAIL01.nvidia.com>
+In-Reply-To: <C79B248886DD134989C8FF6B096A91AB91B4886B6C@BGMAIL01.nvidia.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 2013-05-20 at 15:58 +0300, Eliezer Tamir wrote:
-> On 20/05/2013 15:28, Or Gerlitz wrote:
-> > On Wed, May 15, 2013 at 7:12 PM, Greg Rose <gregory.v.rose@intel.com> wrote:
-> >
-> >
-> >> I'm really not a fan of this.  Seems to me the tail is wagging the dog
-> >> here.  Fix the driver to work without a PF driver being present.
-> >
-> > Greg, Alex,
-> >
-> > As I wrote over the V1 thread, currently we can't go and patch mlx4 to
-> > use the sysfs API nor defer the call from within our probe function to
-> > enable sriov since  this requires some firmware change to allow
-> > enabling SRIOV after some  resources are initialized/provisioned.
-> > Hence the patch suggested here or any other patch we can agree on
-> > which will make sure that VF probing is done only once the PF is ready
-> > is preferred, I think.
-> >
-> Maybe do the following:
-> 1. split the VF PCI IDs into a separate PCI_ID device table.
-> 2. have two pci_driver structs, one for all of the PF IDS and one with 
-> the VF IDS.
-> 3. only register the first pci_driver struct from mlx4_init().
-> 4. register the one for the VFs once your PFs are all up and ready.
+On 05/17/2013 10:51 AM, Jay Agarwal wrote:
+>>> On 05/08/2013 04:57 AM, Jay Agarwal wrote:
+>>>> - Enable PCIe controller on Cardhu
+>>>> - Only port 2 is connected on this board
+>>>> - Add regulators required for Tegra30
+>>>> - Patch is based on remotes/gitorious_thierryreding_linux/tegra/next
+>>>> - and should be applied on top of this.
+...
+>>> So, if I apply this series, I do see the PCIe bridge and Ethernet
+>>> device get enumerated, but I don't see the USB3 controller get
+>>> enumerated. I believe that is a PCIe device behind the same bridge on the
+>>> same Tegra PCIe port.
+>>> Shouldn't this device show up?
+>>
+>> I have also reproduced this problem. I see somehow no non-
+>> prefetchable memory is assigned to any of pcie devices.
+>> Probably that is the reason for USB3 (pci 0000:04:00.0) not getting
+>> enumerated since it uses only non-prefetchable memory.
+> 
+> 1. Bus4(on which usb3 device resides) always return 0xffffffff from it's config space. which means device is not present?
+> 2. That's why it is not assigned any resources and hence no usb3 probe happens.
+> 3. But same bus does return valid info like vendor/device id etc from it's config space in downstream kernel and hence usb3 probe does happen.
+> 
+> Thierry, Stephen,
+> 4. Any idea why bus4 should return 0xffffffff values in upstream kernel? Anything missing?
 
-But hotplug.
+Is there some reset/enable GPIO or regulator that needs to be programmed
+to enable the PCIe USB3 controller? Take a look at the schematic. If you
+can make it work by tweaking those GPIOs/... manually, then we can
+ignore this issue and fix it up later, since it's not directly related
+to the PCIe controller driver patches. It's more important to get this
+Ethernet working than USB, I think.
 
-Ben.
+> 5. Also, how config space of all pcie devices are mapped? I mean if I change the config space offset in dts file, then also I find correct vendor/device id etc for bus0/device0/fun0.
+>     So how this mapping happens that even after changing the config space offset in PCIe address space, it always finds correct vendor/device id.
 
--- 
-Ben Hutchings, Staff Engineer, Solarflare
-Not speaking for my employer; that's the marketing department's job.
-They asked us to note that Solarflare product names are trademarked.
+Can you please word-wrap your email less than 80 columns? It's quite
+hard to read.
+
+I don't quite understand your question. The PCIe driver implements the
+functions that access config space. I don't recall that being influenced
+by anything much in the device tree, except for the 3rd entry in the
+top-level PCIe controller's reg property:
+
+        pcie-controller {
+                compatible = "nvidia,tegra30-pcie";
+                device_type = "pci";
+                reg = <0x00003000 0x00000800   /* PADS registers */
+                       0x00003800 0x00000200   /* AFI registers */
+                       0x10000000 0x10000000>; /* configuration space */
 
