@@ -1,60 +1,207 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f177.google.com ([209.85.216.177]:48431 "EHLO
-	mail-qc0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751386Ab3EWGco (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 May 2013 02:32:44 -0400
-MIME-Version: 1.0
-In-Reply-To: <1369266331.2670.40.camel@bwh-desktop.uk.level5networks.com>
-References: <1368498506-25857-1-git-send-email-yinghai@kernel.org>
-	<1368498506-25857-7-git-send-email-yinghai@kernel.org>
-	<51925FB0.4080504@intel.com>
-	<CAE9FiQXYQEAZ=0sG6+2OdffBqfLS9MpoN1xviRR9aDbxPxcKxQ@mail.gmail.com>
-	<5192946F.1050700@intel.com>
-	<CAE9FiQVGGHB_amKw0-DfDifpTnRGPbxA+q3WY5F-O3x-sx386A@mail.gmail.com>
-	<5192AEF4.1070905@intel.com>
-	<519BE778.9040800@redhat.com>
-	<20130521214912.GA21713@redhat.com>
-	<519BEEA4.2030804@gmail.com>
-	<20130521221117.GB803@redhat.com>
-	<519BF594.1020607@gmail.com>
-	<CAJZOPZKsp2_Fr3xY0NZfz5QDLn-=2fn+kL0w55EihuUgDZWEiw@mail.gmail.com>
-	<1369266331.2670.40.camel@bwh-desktop.uk.level5networks.com>
-Date: Thu, 23 May 2013 09:32:43 +0300
-Message-ID: <CAJZOPZK-xYiY__iijF5jhPhqKK81T5QVd5DcGrcxLNAe97j5LQ@mail.gmail.com>
-Subject: Re: [PATCH 6/7] PCI: Make sure VF's driver get attached after PF's
-From: Or Gerlitz <or.gerlitz@gmail.com>
-To: Ben Hutchings <bhutchings@solarflare.com>
-Cc: Alexander Duyck <alexander.duyck@gmail.com>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Alexander Duyck <alexander.h.duyck@intel.com>,
+Received: from szxga02-in.huawei.com ([119.145.14.65]:49192 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752506Ab3EQJ5N (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 May 2013 05:57:13 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, Hanjun Guo <guohanjun@huawei.com>,
+	<jiang.liu@huawei.com>, Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	Fenghua Yu <fenghua.yu@intel.com>,
 	Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	NetDev <netdev@vger.kernel.org>,
-	Jack Morgenstein <jackm@dev.mellanox.co.il>
-Content-Type: text/plain; charset=ISO-8859-1
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	<linux-ia64@vger.kernel.org>
+Subject: [PATCH -v2 5/7] PCI/IA64: fix memleak for create pci root bus fail
+Date: Fri, 17 May 2013 17:55:48 +0800
+Message-ID: <1368784550-18332-6-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1368784550-18332-1-git-send-email-wangyijing@huawei.com>
+References: <1368784550-18332-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 23, 2013 at 2:45 AM, Ben Hutchings
-<bhutchings@solarflare.com> wrote:
-> On Wed, 2013-05-22 at 23:16 +0300, Or Gerlitz wrote:
-> [...]
->> all in all, we will look into returning  -EPROBE_DEFER from the VF
->> when they identify the problematic situation -- so for how much time
->> this is deferred? or if this isn't time based what the logical
->> condition which once met the VF probe is attempted again?
->
-> My reading is that it will be retried as soon as the PF probe returns.
-> But I've never tried using this feature myself.
+From: Jiang Liu <jiang.liu@huawei.com>
 
-Yes, empirically this is what happens, the VF probe detects that the
-PF isn't ready yet, and returns error.
-Few seconds later the VF is probed again and this time it works, today
-we return -EIO, so we  need
-to change that to  -EPROBE_DEFER to make that more robust.
+If pci_create_root_bus() return fail, we should release
+pci root info, pci controller etc.
 
-Or.
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Cc: Tony Luck <tony.luck@intel.com>
+Cc: Fenghua Yu <fenghua.yu@intel.com>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linux-ia64@vger.kernel.org
+---
+ arch/ia64/include/asm/pci.h |    6 +++
+ arch/ia64/pci/pci.c         |   74 ++++++++++++++++++++++++++++++++++---------
+ 2 files changed, 65 insertions(+), 15 deletions(-)
+
+diff --git a/arch/ia64/include/asm/pci.h b/arch/ia64/include/asm/pci.h
+index 82a236c..fe813c2 100644
+--- a/arch/ia64/include/asm/pci.h
++++ b/arch/ia64/include/asm/pci.h
+@@ -89,6 +89,11 @@ extern int pci_mmap_legacy_page_range(struct pci_bus *bus,
+ #define pci_legacy_read platform_pci_legacy_read
+ #define pci_legacy_write platform_pci_legacy_write
+ 
++struct iospace_resource {
++	struct list_head list;
++	struct resource res;
++};
++
+ struct pci_controller {
+ 	void *acpi_handle;
+ 	void *iommu;
+@@ -105,6 +110,7 @@ struct pci_root_info {
+ 	struct resource *res;
+ 	resource_size_t *res_offset;
+ 	unsigned int res_num;
++	struct list_head io_resources;
+ 	char *name;
+ };
+ 
+diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
+index 1f2779d..658030f 100644
+--- a/arch/ia64/pci/pci.c
++++ b/arch/ia64/pci/pci.c
+@@ -162,25 +162,21 @@ new_space (u64 phys_base, int sparse)
+ static u64 add_io_space(struct pci_root_info *info,
+ 			struct acpi_resource_address64 *addr)
+ {
++	struct iospace_resource *iospace;
+ 	struct resource *resource;
+ 	char *name;
+ 	unsigned long base, min, max, base_port;
+ 	unsigned int sparse = 0, space_nr, len;
+ 
+-	resource = kzalloc(sizeof(*resource), GFP_KERNEL);
+-	if (!resource) {
++	len = strlen(info->name) + 32;
++	iospace = kzalloc(sizeof(*iospace) + len, GFP_KERNEL);
++	if (!iospace) {
+ 		printk(KERN_ERR "PCI: No memory for %s I/O port space\n",
+ 			info->name);
+ 		goto out;
+ 	}
+ 
+-	len = strlen(info->name) + 32;
+-	name = kzalloc(len, GFP_KERNEL);
+-	if (!name) {
+-		printk(KERN_ERR "PCI: No memory for %s I/O port space name\n",
+-			info->name);
+-		goto free_resource;
+-	}
++	name = (char *)(iospace + 1);
+ 
+ 	min = addr->minimum;
+ 	max = min + addr->address_length - 1;
+@@ -189,7 +185,7 @@ static u64 add_io_space(struct pci_root_info *info,
+ 
+ 	space_nr = new_space(addr->translation_offset, sparse);
+ 	if (space_nr == ~0)
+-		goto free_name;
++		goto free_resource;
+ 
+ 	base = __pa(io_space[space_nr].mmio_base);
+ 	base_port = IO_SPACE_BASE(space_nr);
+@@ -204,18 +200,23 @@ static u64 add_io_space(struct pci_root_info *info,
+ 	if (space_nr == 0)
+ 		sparse = 1;
+ 
++	resource = &iospace->res;
+ 	resource->name  = name;
+ 	resource->flags = IORESOURCE_MEM;
+ 	resource->start = base + (sparse ? IO_SPACE_SPARSE_ENCODING(min) : min);
+ 	resource->end   = base + (sparse ? IO_SPACE_SPARSE_ENCODING(max) : max);
+-	insert_resource(&iomem_resource, resource);
++	if (insert_resource(&iomem_resource, resource)) {
++		dev_err(&info->bridge->dev,
++				"can't allocate host bridge io space resource  %pR\n",
++				resource);
++		goto free_resource;
++	}
+ 
++	list_add_tail(&iospace->list, &info->io_resources);
+ 	return base_port;
+ 
+-free_name:
+-	kfree(name);
+ free_resource:
+-	kfree(resource);
++	kfree(iospace);
+ out:
+ 	return ~0;
+ }
+@@ -316,6 +317,47 @@ static acpi_status add_window(struct acpi_resource *res, void *data)
+ 	return AE_OK;
+ }
+ 
++static void free_pci_root_info_res(struct pci_root_info *info)
++{
++	struct iospace_resource *iospace, *tmp;
++
++	list_for_each_entry_safe(iospace, tmp, &info->io_resources, list)
++		kfree(iospace);
++
++	kfree(info->res);
++	info->res = NULL;
++	kfree(info->res_offset);
++	info->res_offset = NULL;
++	info->res_num = 0;
++	kfree(info->controller);
++	info->controller = NULL;
++}
++
++static void __release_pci_root_info(struct pci_root_info *info)
++{
++	int i;
++	struct resource *res;
++	struct iospace_resource *iospace;
++
++	list_for_each_entry(iospace, &info->io_resources, list)
++		release_resource(&iospace->res);
++
++	for (i = 0; i < info->res_num; i++) {
++		res = &info->res[i];
++
++		if (!res->parent)
++			continue;
++
++		if (!(res->flags & (IORESOURCE_MEM | IORESOURCE_IO)))
++			continue;
++
++		release_resource(res);
++	}
++
++	free_pci_root_info_res(info);
++	kfree(info);
++}
++
+ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ {
+ 	struct acpi_device *device = root->device;
+@@ -346,7 +388,8 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 				"ignored (out of memory)\n", root->segment, busnum);
+ 		goto out2;
+ 	}
+-
++
++	INIT_LIST_HEAD(&info->io_resources);
+ 	INIT_LIST_HEAD(&info->resources);
+ 	/* insert busn resource at first */
+ 	pci_add_resource(&info->resources, &root->secondary);
+@@ -387,6 +430,7 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 				   &info->resources);
+ 	if (!pbus) {
+ 		pci_free_resource_list(&info->resources);
++		__release_pci_root_info(info);
+ 		return NULL;
+ 	}
+ 
+-- 
+1.7.1
+
+
