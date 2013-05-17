@@ -1,112 +1,127 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36286 "EHLO mx1.redhat.com"
+Received: from hydra.sisk.pl ([212.160.235.94]:57803 "EHLO hydra.sisk.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965196Ab3E2Ifi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 29 May 2013 04:35:38 -0400
-Date: Wed, 29 May 2013 10:36:52 +0200
-From: Alexander Gordeev <agordeev@redhat.com>
+	id S1754804Ab3EQXr4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 17 May 2013 19:47:56 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"x86@kernel.org" <x86@kernel.org>,
+Cc: "Zhang, LongX" <longx.zhang@intel.com>,
+	"linasvepstas@gmail.com" <linasvepstas@gmail.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Suresh Siddha <suresh.b.siddha@intel.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	Jan Beulich <JBeulich@suse.com>, Ingo Molnar <mingo@redhat.com>
-Subject: Re: [PATCH v3 -tip x86/apic 1/2] PCI/MSI: Allocate as many
- multiple-MSIs as requested
-Message-ID: <20130529083652.GA25971@dhcp-26-207.brq.redhat.com>
-References: <CAErSpo7onNaU5mquJ_a7kwGPgzs3Q_7U89__HT9DbJFkUX4fsQ@mail.gmail.com>
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"yanmin_zhang@linux.intel.com" <yanmin_zhang@linux.intel.com>,
+	"Joseph.Liu@Emulex.Com" <Joseph.Liu@emulex.com>
+Subject: Re: Subject : [ PATCH ] pci-reset-error_state-to-pci_channel_io_normal-at-report_slot_reset
+Date: Sat, 18 May 2013 01:56:34 +0200
+Message-ID: <5683193.Vsmy0DmceS@vostro.rjw.lan>
+In-Reply-To: <CAErSpo7+AbHi_TwxwHTJunpFb=CMhwMdCni6+NjbhdA=35XhvA@mail.gmail.com>
+References: <F7B8FD780A346D46A0042F5C63B06AE785E3B2@SHSMSX102.ccr.corp.intel.com> <CAErSpo7+AbHi_TwxwHTJunpFb=CMhwMdCni6+NjbhdA=35XhvA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo7onNaU5mquJ_a7kwGPgzs3Q_7U89__HT9DbJFkUX4fsQ@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 28, 2013 at 03:51:52PM -0600, Bjorn Helgaas wrote:
-> On Mon, May 13, 2013 at 3:05 AM, Alexander Gordeev <agordeev@redhat.com> wrote:
+On Friday, May 17, 2013 05:43:33 PM Bjorn Helgaas wrote:
+> [+cc Rafael because he knows about dev->state_saved]
 > 
-> The subject would make more sense as "Allocate *only* as many MSIs as
-> requested."
-
-1.
-
-> > When multiple MSIs are enabled with pci_enable_msi_block(), the
-> > requested number of interrupts 'nvec' is rounded up to the nearest
-> > power-of-two value.
+> Sorry, I'm not very familiar with AER, so please excuse some naive
+> questions below.
 > 
-> This rounding is just a consequence of the encodings of the Multiple
-> Message Enable field in the Message Control register (PCI spec r3.0,
-> sec 6.8.1.3), isn't it?
-
-Yes, it is.
-
-> > The result is then used for setting up the
-> > number of MSI messages in the PCI device and allocation of
-> > interrupt resources in the operating system (i.e. vector numbers).
-> > Thus, in cases when a device driver requests some number of MSIs
-> > and this number is not a power-of-two value, the extra operating
-> > system resources (allocated as the result of rounding) are wasted.
+> On Fri, Apr 26, 2013 at 12:28 AM, Zhang, LongX <longx.zhang@intel.com> wrote:
+> > From: Zhang Long <longx.zhang@intel.com>
 > >
-> > This fix introduces 'msi_desc::nvec' field to address the above
-> > issue. When non-zero, it will report the actual number of MSIs the
-> > device will send, as requested by the device driver. This value
-> > should be used by architectures to properly set up and tear down
-> > associated interrupt resources.
+> > Specific pci device drivers might have many functions to call
+> > pci_channel_offline to check device states. When slot_reset happens,
+> > drivers' slot_reset callback might call such functions and eventually
+> > abort the reset.
 > 
-> This name needs a little more context, like "nvec_used" or something.
-
-I chose "nvec" to indicate it is what was passed to pci_enable_msi_block().
-I can resend with "nvec_used", along with subject change [1], if you want.
-
-> I think the idea is that the Message Control register can only tell
-> the OS that the device requires 1, 2, 4, 8, 16, or 32 vectors, and
-> similarly the OS can only tell the device that 1, 2, 4, 8, 16, or 32
-> vectors are assigned.  If a device can only make use of 18 vectors, it
-> must advertise the next larger value (32 vectors).  As far as I can
-> tell, a device *could* advertise 32 vectors in Multiple Message
-> Capable even if it can only use 1 vector.
-
-Yes, that is what we have with i.e. ICH AHCI device - it advertises
-16 vectors while makes use of 6 only. I tried to explain this in my
-changelog's last paragraph (below).
-
-> These patches are to avoid allocating resources for the unused
-> vectors, i.e., the ones between the last one the driver requested and
-> the last one advertised in Multiple Message Capable.
-
-Almost :) Rather ...between the last one the driver requested and
-the last one *written* in Multiple Message *Enable*, not Capable.
-IOW, between the last one the driver requested and the closest power
-of two - which will be written to the device.
-
-As of now, neither pci_enable_msi_block(), nor pci_enable_msi_block_auto()
-are able to address the case you described, but if we decide to change
-that then 'msi_desc::nvec' is what would be used. Again, the last paragraph
-(may be too subtly) implies that.
-
-> The driver might
-> request fewer than the maximum either because it knows the device
-> isn't capable of using them all, or because the driver author decided
-> not to use them all.
-
-Exactly. (I assume here "or the driver author decided not to use them all"
-means the author can tell the device how many interrupts to use by means
-other than Multiple Message Enable - otherwise it would be a bug).
-
-> (Sorry, just thinking out loud above, let me know if I'm not
-> understanding this correctly.)
+> Where does this happen?  I looked at all the references to
+> dev->error_state and all the callers of pci_channel_offline(), and I
+> didn't see any in .slot_reset() methods.
 > 
-> > Note, although the existing 'msi_desc::multiple' field might seem
-> > redundant, in fact in does not. In general case the number of MSIs a
-> > PCI device is initialized with is not necessarily the closest power-
-> > of-two value of the number of MSIs the device will send. Thus, in
-> > theory it would not be always possible to derive the former from the
-> > latter and we need to keep them both, to stress this corner case.
-> > Besides, since 'msi_desc::multiple' is a bitfield, throwing it out
-> > would not save us any space.
+> (There are *assignments* to dev->error_state in qlcnic_attach_func(),
+> qlge_io_slot_reset(), and qla2xxx_pci_slot_reset().  You might be able
+> to remove those assignments after this patch, but this patch wouldn't
+> really change anything for those paths.)
+> 
+> > The patch resets pdev->error_state to pci_channel_io_normal at
+> > the begining of report_slot_reset.
+> 
+> > Signed-off-by: Zhang Yanmin <yanmin_zhang@linux.intel.com>
+> > Signed-off-by: Zhang Long <longx.zhang@intel.com>
+> > ---
+> >  drivers/pci/pcie/aer/aerdrv_core.c |    1 +
+> >  drivers/pci/pcie/portdrv_pci.c     |   12 +++++-------
+> >  2 files changed, 6 insertions(+), 7 deletions(-)
+> >
+> > diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
+> > index 564d97f..c61fd44 100644
+> > --- a/drivers/pci/pcie/aer/aerdrv_core.c
+> > +++ b/drivers/pci/pcie/aer/aerdrv_core.c
+> > @@ -286,6 +286,7 @@ static int report_slot_reset(struct pci_dev *dev, void *data)
+> >         result_data = (struct aer_broadcast_data *) data;
+> >
+> >         device_lock(&dev->dev);
+> > +       dev->error_state = pci_channel_io_normal;
+> 
+> The device's error_state might be pci_channel_io_frozen when we get
+> here.  We haven't touched anything in the hardware yet.  What makes
+> the device unfrozen now?  Did anything actually change as far as the
+> hardware device is concerned?
+> 
+> I agree it looks like report_slot_reset() should be made more like
+> eeh_report_reset().  I'm just wondering if the error_state should be
+> changed *after* calling the .slot_reset() method instead of before.
+> 
+> >         if (!dev->driver ||
+> >                 !dev->driver->err_handler ||
+> >                 !dev->driver->err_handler->slot_reset)
+> > diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
+> > index ed4d094..7abefd9 100644
+> > --- a/drivers/pci/pcie/portdrv_pci.c
+> > +++ b/drivers/pci/pcie/portdrv_pci.c
+> > @@ -332,13 +332,11 @@ static pci_ers_result_t pcie_portdrv_slot_reset(struct pci_dev *dev)
+> >         pci_ers_result_t status = PCI_ERS_RESULT_RECOVERED;
+> >         int retval;
+> >
+> > -       /* If fatal, restore cfg space for possible link reset at upstream */
+> > -       if (dev->error_state == pci_channel_io_frozen) {
+> > -               dev->state_saved = true;
+> > -               pci_restore_state(dev);
+> > -               pcie_portdrv_restore_config(dev);
+> > -               pci_enable_pcie_error_reporting(dev);
+> > -       }
+> 
+> Previously we only restored state for the pci_channel_io_frozen state,
+> i.e., when handling an AER_FATAL error.  Now we restore it always.
+> Why?
+> 
+> > +       /* restore cfg space for possible link reset at upstream */
+> > +       dev->state_saved = true;
+> 
+> "dev->state_saved == true" means that the dev->saved_config_space
+> contains valid data.  Why do we know that's the case here?  I see that
+> pcie_portdrv_probe() calls pci_save_state() when we first claim the
+> port, and I guess we're assuming the state saved then is still valid.
+> But why do we need to actually set dev->state_saved here?  Shouldn't
+> it be already set to true anyway?
+
+This is a dirty trick to make pci_restore_state(dev) always work here
+(because it checks dev->state_saved and does nothing if it isn't set).
+I suppose.
+
+> > +       pci_restore_state(dev);
+> > +       pcie_portdrv_restore_config(dev);
+> > +       pci_enable_pcie_error_reporting(dev);
+> >
+> >         /* get true return value from &status */
+> >         retval = device_for_each_child(&dev->dev, &status, slot_reset_iter);
+> > --
+
+Thanks,
+Rafael
+
 
 -- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
