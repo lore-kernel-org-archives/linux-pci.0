@@ -1,86 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mho-03-ewr.mailhop.org ([204.13.248.66]:60890 "EHLO
-	mho-01-ewr.mailhop.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750820Ab3EPUTG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 May 2013 16:19:06 -0400
-Date: Thu, 16 May 2013 16:18:27 -0400
-From: Jason Cooper <jason@lakedaemon.net>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
-	devicetree-discuss@lists.ozlabs.org,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Maen Suleiman <maen@marvell.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Michael Opdenacker <michael.opdenacker@free-electrons.com>,
-	Olof Johansson <olof@lixom.net>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Subject: Re: [PATCHv9 7/9] pci: PCIe driver for Marvell Armada 370/XP
- systems
-Message-ID: <20130516201827.GA11137@titan.lakedaemon.net>
-References: <1368624323-24311-1-git-send-email-thomas.petazzoni@free-electrons.com>
- <1368624323-24311-8-git-send-email-thomas.petazzoni@free-electrons.com>
- <20130516093312.GB2459@localhost>
- <20130516154031.GF6563@titan.lakedaemon.net>
- <20130516174903.3a7a07ef@skate>
- <20130516155617.GH6563@titan.lakedaemon.net>
- <20130516180850.3622e1a8@skate>
- <20130516161201.GI6563@titan.lakedaemon.net>
+Received: from mail-ob0-f181.google.com ([209.85.214.181]:55332 "EHLO
+	mail-ob0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756777Ab3ERAkd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 May 2013 20:40:33 -0400
+Received: by mail-ob0-f181.google.com with SMTP id dn14so5286260obc.26
+        for <linux-pci@vger.kernel.org>; Fri, 17 May 2013 17:40:32 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130516161201.GI6563@titan.lakedaemon.net>
+In-Reply-To: <5196C81B.8060400@ubuntu.com>
+References: <519443A1.8050905@ubuntu.com> <1995989.Fff0uGKnZO@vostro.rjw.lan>
+ <CAErSpo50rX5Pvj=pX5xsdcZ1qq1C7kBqrNyDmY6t26OCVqbxXA@mail.gmail.com>
+ <5195596C.3000406@ubuntu.com> <CAErSpo6wSgquzJc22tFJozp8cfx0vpULnO3KZN2gr2YHt8EHrw@mail.gmail.com>
+ <5196713A.1010102@ubuntu.com> <CAErSpo7zESr5_PEyX=1JWEApCuW+yx+j3RKWh=qC-jReRgSXZw@mail.gmail.com>
+ <51968E9F.1010909@ubuntu.com> <CAErSpo6ZKB-4PTa_2Cthx_8S2txCbGyatbPmDUPYexCQFg-A=A@mail.gmail.com>
+ <51969D30.1070502@ubuntu.com> <CAErSpo4H-=dnHON3vDvJEme2hGD0z0r_NSsm-Bk9tZ4QqtBTCw@mail.gmail.com>
+ <5196BF15.3050208@ubuntu.com> <CAErSpo5W=Zi_2s0ywfO4VPfbUfxhhCRUMn7oRhx_mi7yYpBHmw@mail.gmail.com>
+ <5196C81B.8060400@ubuntu.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 17 May 2013 18:40:12 -0600
+Message-ID: <CAErSpo6i939JR-3psRhXjkxE3sME8AJ3P84BGX9m1HhdzJxhAg@mail.gmail.com>
+Subject: Re: enabling aspm on ati radeon
+To: Phillip Susi <psusi@ubuntu.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 16, 2013 at 12:12:02PM -0400, Jason Cooper wrote:
-> On Thu, May 16, 2013 at 06:08:50PM +0200, Thomas Petazzoni wrote:
-> > Dear Jason Cooper,
-> > 
-> > On Thu, 16 May 2013 11:56:17 -0400, Jason Cooper wrote:
-> > 
-> > > > > > Building this showed a warning here. It seems you forgot
-> > > > > > to mark this one as __init.
-> > > > > 
-> > > > > Thomas, I'll fix this up when I pull this in, no need to resend. :)
-> > > > 
-> > > > I'll resend, because beyond this function pointed by Ezequiel, there
-> > > > are two other functions that can be marked __init. The one pointed by
-> > > > Ezequiel is important because it causes a section mismatch
-> > > > when !CONFIG_MODULES, because in this case platform_driver_probe() is
-> > > > __init (and this explains what I wasn't seeing the warning, since I'm
-> > > > building CONFIG_MODULES=y). The two other functions are more cosmetic,
-> > > > but good to have as well.
-> > > > 
-> > > > It would already been sent if git hadn't decided to do a 'git gc' right
-> > > > after my rebase. It's been gc-ing for quite some time now...
-> > > 
-> > > Dear boss,
-> > > 
-> > > I am in desperate need of a 500GB SSD on which to do my kernel work.
-> > > 
-> > > Thanks,
-> > > 
-> > > Kranky Kernel Developer
-> > > 
-> > > hehehe...
-> > 
-> > Adding boss in the Cc list :-)
-> 
-> Hey, whatever works for you.  Good luck!
+On Fri, May 17, 2013 at 6:15 PM, Phillip Susi <psusi@ubuntu.com> wrote:
+> -----BEGIN PGP SIGNED MESSAGE-----
+> Hash: SHA1
+>
+> On 05/17/2013 07:52 PM, Bjorn Helgaas wrote:
+>> setpci will write whatever you tell it to; it doesn't check any
+>> constraints like "is ASPM supported?"  But the Link Capabilities
+>> register is read-only per spec, so likely you won't be able to
+>> change that field, at least not by writing it directly.
+>
+> I assume it is RO according to the PCIe spec ( buggers seem to only
+> allow members of pcisig to download it ), but I checked the Intel
+> specs for the chip ( Sandybridge ) and it's RW.  It looks like it
+> powers up as 00 and it's up to the bios to change it to advertise the
+> capability, and it seems Asus didn't bother with that.
 
-Ok, you motivated me, I just ordered this one:
+Right; I meant RO per the PCIe spec.  If it's RW on your chip, setpci
+should be able to write it.
 
-http://www.amazon.com/Crucial-512GB-2-5-Inch-9-5mm-CT512M4SSD2/dp/B004W2JL3Y
+>> You can always try using setpci to set the ASPM enable bits in the
+>> Link Control register on both the bridge and the device.  When
+>> enabling, I think you're supposed to do the upstream end of the
+>> link first, then the downstream end (and the reverse for
+>> disabling).
+>
+> One thing I don't see anywhere is a status bit showing whether it
+> actually *is* in L0s or L1 currently, so how to know if it's working?
 
-I'd've gone with Intel, but it ships in 2 to 5 weeks, and it costs 20%
-more with comparable capacity.
+I don't think software can actually tell -- those transitions are
+completely managed by hardware, and whenever the link is active, e.g.,
+when you're accessing config space or transferring data, it would be
+in L0.
 
-thx,
+If you can measure the power consumption, you might be able to see a
+difference there.  I've seen people report that, but don't know how
+they do it.  For example:
+https://lkml.kernel.org/r/CANUX_P3F5YhbZX3WGU-j1AGpbXb_T9Bis2ErhvKkFMtDvzatVQ@mail.gmail.com
 
-Jason.
+Bjorn
