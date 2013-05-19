@@ -1,75 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f182.google.com ([209.85.214.182]:58256 "EHLO
-	mail-ob0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751925Ab3EHWwR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 May 2013 18:52:17 -0400
-Received: by mail-ob0-f182.google.com with SMTP id eh20so2314289obb.13
-        for <linux-pci@vger.kernel.org>; Wed, 08 May 2013 15:52:16 -0700 (PDT)
+Received: from mho-02-ewr.mailhop.org ([204.13.248.72]:43830 "EHLO
+	mho-02-ewr.mailhop.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752000Ab3ESUcd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 19 May 2013 16:32:33 -0400
+Date: Sun, 19 May 2013 16:31:56 -0400
+From: Jason Cooper <jason@lakedaemon.net>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Maen Suleiman <maen@marvell.com>, linux-pci@vger.kernel.org,
+	devicetree-discuss@lists.ozlabs.org,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Olof Johansson <olof@lixom.net>,
+	Andrew Murray <Andrew.Murray@arm.com>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCHv10 2/9] of/pci: Provide support for parsing PCI DT
+ ranges property
+Message-ID: <20130519203156.GO11137@titan.lakedaemon.net>
+References: <1368719725-21265-1-git-send-email-thomas.petazzoni@free-electrons.com>
+ <1368719725-21265-3-git-send-email-thomas.petazzoni@free-electrons.com>
 MIME-Version: 1.0
-In-Reply-To: <1367863413-30087-1-git-send-email-jon.mason@intel.com>
-References: <1367863413-30087-1-git-send-email-jon.mason@intel.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 8 May 2013 15:51:56 -0700
-Message-ID: <CAErSpo5aWc-jFbYZnEwiiihQ7nXj16tL8++oqjeypXO6GQzbEw@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Workaround for NTB BAR size issue
-To: Jon Mason <jon.mason@intel.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1368719725-21265-3-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, May 6, 2013 at 11:03 AM, Jon Mason <jon.mason@intel.com> wrote:
-> Certain NTB devices have a hardware errata where, regardless of
-> pre-configured value, reading the BAR size returns 4096.  To work around
-> this issue, add a PCI quirk to read the appropriate values from an
-> alternative register in PCI config space and move the resource endpoints
-> to the appropriate location.
-
-Is there a documentation pointer we could add to the changelog?
-
-I applied this to my pci/misc branch.  As soon as v3.10-rc1 is out,
-I'll rebase to that and incorporate it into -next.
-
-> Signed-off-by: Jon Mason <jon.mason@intel.com>
+On Thu, May 16, 2013 at 05:55:17PM +0200, Thomas Petazzoni wrote:
+> From: Andrew Murray <Andrew.Murray@arm.com>
+> 
+> This patch factors out common implementation patterns to reduce overall kernel
+> code and provide a means for host bridge drivers to directly obtain struct
+> resources from the DT's ranges property without relying on architecture specific
+> DT handling. This will make it easier to write archiecture independent host bridge
+> drivers and mitigate against further duplication of DT parsing code.
+> 
+> This patch can be used in the following way:
+> 
+> 	struct of_pci_range_parser parser;
+> 	struct of_pci_range range;
+> 
+> 	if (of_pci_range_parser_init(&parser, np))
+> 		; //no ranges property
+> 
+> 	for_each_of_pci_range(&parser, &range) {
+> 
+> 		/*
+> 			directly access properties of the address range, e.g.:
+> 			range.pci_space, range.pci_addr, range.cpu_addr,
+> 			range.size, range.flags
+> 
+> 			alternatively obtain a struct resource, e.g.:
+> 			struct resource res;
+> 			of_pci_range_to_resource(&range, np, &res);
+> 		*/
+> 	}
+> 
+> Additionally the implementation takes care of adjacent ranges and merges them
+> into a single range (as was the case with powerpc and microblaze).
+> 
+> Signed-off-by: Andrew Murray <Andrew.Murray@arm.com>
+> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+> Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+> Reviewed-by: Rob Herring <rob.herring@calxeda.com>
+> Tested-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+> Tested-by: Linus Walleij <linus.walleij@linaro.org>
+> Tested-by: Jingoo Han <jg1.han@samsung.com>
+> Acked-by: Grant Likely <grant.likely@secretlab.ca>
 > ---
->  drivers/pci/quirks.c |   24 ++++++++++++++++++++++++
->  1 file changed, 24 insertions(+)
->
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 7d68aee..a57a93b 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -2865,6 +2865,30 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x65f9, quirk_intel_mc_errata);
->  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x65fa, quirk_intel_mc_errata);
->
->
-> +/* Ivytown NTB BAR sizes are misreported by the hardware due to an errata.  To
-> + * work around this, query the size it should be configured to by the device and
-> + * modify the resource end to correspond to this new size.
-> + */
-> +static void quirk_intel_ntb(struct pci_dev *dev)
-> +{
-> +       int rc;
-> +       u8 val;
-> +
-> +       rc = pci_read_config_byte(dev, 0x00D0, &val);
-> +       if (rc)
-> +               return;
-> +
-> +       dev->resource[2].end = dev->resource[2].start + ((u64) 1 << val) - 1;
-> +
-> +       rc = pci_read_config_byte(dev, 0x00D1, &val);
-> +       if (rc)
-> +               return;
-> +
-> +       dev->resource[4].end = dev->resource[4].start + ((u64) 1 << val) - 1;
-> +}
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x0e08, quirk_intel_ntb);
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x0e0d, quirk_intel_ntb);
-> +
->  static ktime_t fixup_debug_start(struct pci_dev *dev,
->                                  void (*fn)(struct pci_dev *dev))
->  {
-> --
-> 1.7.9.5
->
+>  drivers/of/address.c       |   67 ++++++++++++++++++++++++++++++++++++++++++++
+>  include/linux/of_address.h |   48 +++++++++++++++++++++++++++++++
+>  2 files changed, 115 insertions(+)
+
+patches 2, 3, and 4 applied to mvebu/of_pci to facilitate others
+(LinusW) basing their work off of it.
+
+thx,
+
+Jason.
