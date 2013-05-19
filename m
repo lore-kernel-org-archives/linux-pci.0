@@ -1,36 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate14.nvidia.com ([216.228.121.143]:15220 "EHLO
-	hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S967549Ab3E3GRH convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 May 2013 02:17:07 -0400
-From: Jay Agarwal <jagarwal@nvidia.com>
-To: 'Stephen Warren' <swarren@wwwdotorg.org>
-CC: "thierry.reding@avionic-design.de" <thierry.reding@avionic-design.de>,
-	Laxman Dewangan <ldewangan@nvidia.com>,
-	Prashant Gaikwad <pgaikwad@nvidia.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Juha Tukkinen <jtukkinen@nvidia.com>,
-	Krishna Thota <kthota@nvidia.com>
-Date: Thu, 30 May 2013 11:47:02 +0530
-Subject: RE: [PATCH] Move PCIe node to correct place
-Message-ID: <C79B248886DD134989C8FF6B096A91AB91B616BE9E@BGMAIL01.nvidia.com>
-References: <1368626150-25395-1-git-send-email-jagarwal@nvidia.com>
- <5193B622.9020503@wwwdotorg.org>
-In-Reply-To: <5193B622.9020503@wwwdotorg.org>
+Received: from mho-02-ewr.mailhop.org ([204.13.248.72]:40004 "EHLO
+	mho-02-ewr.mailhop.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754541Ab3ESU3A (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 19 May 2013 16:29:00 -0400
+Date: Sun, 19 May 2013 16:28:24 -0400
+From: Jason Cooper <jason@lakedaemon.net>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Maen Suleiman <maen@marvell.com>, linux-pci@vger.kernel.org,
+	devicetree-discuss@lists.ozlabs.org,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Olof Johansson <olof@lixom.net>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCHv10 1/9] arm: mvebu: fix the 'ranges' property to handle
+ PCIe
+Message-ID: <20130519202824.GN11137@titan.lakedaemon.net>
+References: <1368719725-21265-1-git-send-email-thomas.petazzoni@free-electrons.com>
+ <1368719725-21265-2-git-send-email-thomas.petazzoni@free-electrons.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1368719725-21265-2-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> On 05/15/2013 07:55 AM, Jay Agarwal wrote:
-> > Moving PCIe controller node to correct place so that it is sorted by
-> > register address in .dtsi file
+On Thu, May 16, 2013 at 05:55:16PM +0200, Thomas Petazzoni wrote:
+> Since 82a682676 ('ARM: dts: mvebu: Convert all the mvebu files to use
+> the range property') all the device nodes of Armada 370/XP are under a
+> common 'ranges' property that translates the device register addresses
+> into their absolute address, thanks to the base address of the
+> internal register space.
 > 
-> Reviewed-by: Stephen Warren <swarren@nvidia.com>
-Hi Thierry,
-If reviews are done, Can you please include this into your repository?
+> However, beyond just the register areas, there are also PCIe I/O and
+> memory regions, whose addresses should be properly translated. This
+> patch fixes the Armada 370 and XP ranges property to take PCIe into
+> account properly.
+> 
+> Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+> ---
+> Since the PCIe Device Tree description has been merged in 3.10-rc1,
+> this commit should go in 3.10-rc as well.
+> ---
+>  arch/arm/boot/dts/armada-370-xp.dtsi |    3 ++-
+>  arch/arm/boot/dts/armada-370.dtsi    |    3 ++-
+>  2 files changed, 4 insertions(+), 2 deletions(-)
 
+Applied to mvebu/fixes
+
+thx,
+
+Jason.
