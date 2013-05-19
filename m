@@ -1,110 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:64360 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756386Ab3EVQ7t (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 May 2013 12:59:49 -0400
-Received: by mail-ie0-f174.google.com with SMTP id 10so5742253ied.33
-        for <linux-pci@vger.kernel.org>; Wed, 22 May 2013 09:59:48 -0700 (PDT)
+Received: from mho-02-ewr.mailhop.org ([204.13.248.72]:62306 "EHLO
+	mho-02-ewr.mailhop.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754237Ab3ESUuk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 19 May 2013 16:50:40 -0400
+Date: Sun, 19 May 2013 16:49:57 -0400
+From: Jason Cooper <jason@lakedaemon.net>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Maen Suleiman <maen@marvell.com>, linux-pci@vger.kernel.org,
+	devicetree-discuss@lists.ozlabs.org,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Olof Johansson <olof@lixom.net>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCHv10 9/9] arm: mvebu: update defconfig with PCI and USB
+ support
+Message-ID: <20130519204957.GQ11137@titan.lakedaemon.net>
+References: <1368719725-21265-1-git-send-email-thomas.petazzoni@free-electrons.com>
+ <1368719725-21265-10-git-send-email-thomas.petazzoni@free-electrons.com>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo5MJCoaof=heFM4vLxuWz8pFqsyXAC356jZ7rbRvSOt9g@mail.gmail.com>
-References: <1367712653.11982.19.camel@pasglop>
-	<1367712932.11982.20.camel@pasglop>
-	<CAE9FiQX=h4H1gcbW=EfQo_ZtAgHGOZ2GxVxLG59C1iMH+qgH2g@mail.gmail.com>
-	<1367732090.11982.38.camel@pasglop>
-	<CAE9FiQUN3qqVmdw_EdOC-JZGc219M3tu=roOX98xns+77LJhMw@mail.gmail.com>
-	<1367740336.11982.41.camel@pasglop>
-	<51871088.4594420a.0ccc.7300SMTPIN_ADDED_BROKEN@mx.google.com>
-	<CAE9FiQXGUOM_h_X5tdGbkiuZGZkiFigSLbbftx3YXybFBg6trg@mail.gmail.com>
-	<518786a7.64bbec0a.58a0.1f6bSMTPIN_ADDED_BROKEN@mx.google.com>
-	<CAErSpo5MJCoaof=heFM4vLxuWz8pFqsyXAC356jZ7rbRvSOt9g@mail.gmail.com>
-Date: Wed, 22 May 2013 09:59:48 -0700
-Message-ID: <CAE9FiQWsZXfkSSVFzee4-J4bUDP8DdG=y9-k2du+ek90StDvNA@mail.gmail.com>
-Subject: Re: Resource assignment oddities
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Gavin Shan <shangw@linux.vnet.ibm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: multipart/mixed; boundary=20cf302237e7568c3204dd517e0e
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1368719725-21265-10-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---20cf302237e7568c3204dd517e0e
-Content-Type: text/plain; charset=ISO-8859-1
+On Thu, May 16, 2013 at 05:55:24PM +0200, Thomas Petazzoni wrote:
+> Now that we have the necessary drivers and Device Tree informations to
+> support PCIe on Armada 370 and Armada XP, enable the CONFIG_PCI
+> option.
+> 
+> Also, since the Armada 370 Mirabox has a built-in USB XHCI controller
+> connected on the PCIe bus, enable the corresponding options as well.
+> 
+> Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+> ---
+>  arch/arm/configs/mvebu_defconfig |    3 +++
+>  1 file changed, 3 insertions(+)
 
-On Wed, May 22, 2013 at 7:54 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> What exactly is the problem here?  Is it just that you don't want to
-> see the "can't assign" messages?  Or is there a device with a BAR that
-> *should* be assigned, but isn't?  If so, which device is it?
+Applied to mvebu/defconfig
 
-We try must+optional as first, then if there is any ioport or mmio fail
-we will stick to must only then extend must to meet optional.
-but mmio range and mmio-pref could be connected each other,
-so extend will fail...
+thx,
 
-problem here, some root bus will not have ioport range, so it will always have
-ioport allocation fail.
-
-looks like right fix for v3.9 should be as attached patch.
-it will keep must+optional for mmio, if only ioport fails....
-
-Yinghai
-
---20cf302237e7568c3204dd517e0e
-Content-Type: application/octet-stream; name="root_bus_ioport_skip_9.patch"
-Content-Disposition: attachment; filename="root_bus_ioport_skip_9.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_hh0r577w0
-
-U3ViamVjdDogW1BBVENIXSBQQ0k6IERvbid0IGZhbGwgYmFjayBNTUlPIHRvIG11c3Qtb25seSwg
-aWYgaW8gcG9ydCBmYWlsIHdpdGggb3B0aW9uYWwKRnJvbTogWWluZ2hhaSBMdSA8eWluZ2hhaUBr
-ZXJuZWwub3JnPgoKQmVuSCByZXBvcnRlZCB0aGF0IHRoZXJlIGlzIHNvbWUgYXNzaWduIHVuYXNz
-aWduZWQgcmVzb3VyY2UgcHJvYmxlbQppbiBwb3dlcnBjLgoKSXQgdHVybnMgb3V0IGFmdGVyCnwg
-Y29tbWl0IDBjNWJlMGNiMGVkZmUzYjVjNGI2MmVhYzY4YWEyYWExNWVjNjgxYWYKfCBEYXRlOiAg
-IFRodSBGZWIgMjMgMTk6MjM6MjkgMjAxMiAtMDgwMAp8CnwgICAgUENJOiBSZXRyeSBvbiBJT1JF
-U09VUkNFX0lPIHR5cGUgYWxsb2NhdGlvbnMKCmV2ZW4gdGhlIHJvb3QgYnVzIGRvZXMgbm90IGhh
-dmUgaW8gcG9ydCByYW5nZSwgaXQgd2lsbCBrZWVwIHJldHJ5aW5nCnRvIHJlYWxsb2Mgd2l0aCBt
-bWlvLgoKQ3VycmVudCByZXRyeSBsb2dpYyBpcyA6IHRyeSB3aXRoIG11c3Qrb3B0aW9uYWwgYXQg
-Zmlyc3QsIGFuZCBpZgppdCBmYWlscyB3aXRoIGFueSBpb3BvcnQgb3IgbW1pbywgaXQgd2lsbCB0
-cnkgbXVzdCB0aGVuIHRyeSB0byBleHRlbmQKbXVzdCB3aXRoIG9wdGlvbmFsLgpUaGF0IHdpbGwg
-ZmFpbCBhcyBtbWlvLW5vbi1wcmVmIGFuZCBtbWlvLXByZWYgZm9yIGJyaWRnZSB3aWxsCmJlIG5l
-eHQgdG8gZWFjaCBvdGhlci4gU28gd2UgaGF2ZSBubyBjaGFuY2UgdG8gZXh0ZW5kIG1taW8tbm9u
-LXByZWYuCgpXZSBjYW4gY2hlY2sgZmFpbCB0eXBlIGFuZCBvbmx5IGZhbGwgYmFjayBmb3IgaW8g
-cG9ydCBvbmx5LCB0aGF0IHdpbGwKa2VlcCBtbWlvIHR5cGUgc3RpbGwgaGF2ZSBtdXN0K29wdGlv
-bmFsLgoKVGhpcyB3aWxsIGJlIGJlY29tZSBtb3JlIG9mdGVuIHdoZW4gd2UgaGF2ZSB4ODYgOCBz
-b2NrZXRzIG9yIDMyIHNvY2tldHMKc3lzdGVtLCBhbmQgdGhvc2Ugc3lzdGVtIHdpbGwgaGF2ZSBv
-bmUgcm9vdCBidXMgcGVyIHNvY2tldC4KVGhleSB3aWxsIGhhdmUgc29tZSByb290IGJ1c2VzIGRv
-IG5vdCBoYXZlIGlvcG9ydCByYW5nZS4KClJlcG9ydGVkLWJ5OiBCZW5qYW1pbiBIZXJyZW5zY2ht
-aWR0IDxiZW5oQGtlcm5lbC5jcmFzaGluZy5vcmc+ClNpZ25lZC1vZmYtYnk6IFlpbmdoYWkgTHUg
-PHlpbmdoYWlAa2VybmVsLm9yZz4KCi0tLQogZHJpdmVycy9wY2kvc2V0dXAtYnVzLmMgfCAgIDI3
-ICsrKysrKysrKysrKysrKysrKysrKysrKysrLQogMSBmaWxlIGNoYW5nZWQsIDI2IGluc2VydGlv
-bnMoKyksIDEgZGVsZXRpb24oLSkKCkluZGV4OiBsaW51eC0yLjYvZHJpdmVycy9wY2kvc2V0dXAt
-YnVzLmMKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PQotLS0gbGludXgtMi42Lm9yaWcvZHJpdmVycy9wY2kvc2V0dXAtYnVz
-LmMKKysrIGxpbnV4LTIuNi9kcml2ZXJzL3BjaS9zZXR1cC1idXMuYwpAQCAtMzE2LDcgKzMxNiwx
-MSBAQCBzdGF0aWMgdm9pZCBfX2Fzc2lnbl9yZXNvdXJjZXNfc29ydGVkKHN0CiAJTElTVF9IRUFE
-KHNhdmVfaGVhZCk7CiAJTElTVF9IRUFEKGxvY2FsX2ZhaWxfaGVhZCk7CiAJc3RydWN0IHBjaV9k
-ZXZfcmVzb3VyY2UgKnNhdmVfcmVzOwotCXN0cnVjdCBwY2lfZGV2X3Jlc291cmNlICpkZXZfcmVz
-OworCXN0cnVjdCBwY2lfZGV2X3Jlc291cmNlICpkZXZfcmVzLCAqdG1wX3JlczsKKwl1bnNpZ25l
-ZCBsb25nIGZhaWxfdHlwZSA9IDA7CisJc3RydWN0IHBjaV9kZXZfcmVzb3VyY2UgKmZhaWxfcmVz
-OworCXVuc2lnbmVkIGxvbmcgdHlwZV9tYXNrID0gSU9SRVNPVVJDRV9JTyB8IElPUkVTT1VSQ0Vf
-TUVNIHwKKwkJCQkgIElPUkVTT1VSQ0VfUFJFRkVUQ0g7CiAKIAkvKiBDaGVjayBpZiBvcHRpb25h
-bCBhZGRfc2l6ZSBpcyB0aGVyZSAqLwogCWlmICghcmVhbGxvY19oZWFkIHx8IGxpc3RfZW1wdHko
-cmVhbGxvY19oZWFkKSkKQEAgLTM0OCw2ICszNTIsMjcgQEAgc3RhdGljIHZvaWQgX19hc3NpZ25f
-cmVzb3VyY2VzX3NvcnRlZChzdAogCQlyZXR1cm47CiAJfQogCisJLyogY2hlY2sgZmFpbGVkIHR5
-cGUgKi8KKwlsaXN0X2Zvcl9lYWNoX2VudHJ5KGZhaWxfcmVzLCAmbG9jYWxfZmFpbF9oZWFkLCBs
-aXN0KQorCQlmYWlsX3R5cGUgfD0gZmFpbF9yZXMtPmZsYWdzICYgdHlwZV9tYXNrOworCS8qIG9u
-bHkgaW8gcG9ydCBmYWlscyAqLworCWlmICgoZmFpbF90eXBlICYgdHlwZV9tYXNrKSA9PSBJT1JF
-U09VUkNFX0lPKSB7CisJCS8qIHJlbW92ZSBhc3NpZ25lZCBub24gaW9wb3J0IGZyb20gaGVhZCBs
-aXN0ICovCisJCWxpc3RfZm9yX2VhY2hfZW50cnlfc2FmZShkZXZfcmVzLCB0bXBfcmVzLCBoZWFk
-LCBsaXN0KQorCQkJaWYgKGRldl9yZXMtPnJlcy0+cGFyZW50ICYmCisJCQkgICAgIShkZXZfcmVz
-LT5yZXMtPmZsYWdzICYgSU9SRVNPVVJDRV9JTykpIHsKKwkJCQlsaXN0X2RlbCgmZGV2X3Jlcy0+
-bGlzdCk7CisJCQkJa2ZyZWUoZGV2X3Jlcyk7CisJCQl9CisJCS8qIHJlbW92ZSBhc3NpZ25lZCBu
-b24gaW9wb3J0IGZyb20gc2F2ZWQgbGlzdCAqLworCQlsaXN0X2Zvcl9lYWNoX2VudHJ5X3NhZmUo
-c2F2ZV9yZXMsIHRtcF9yZXMsICZzYXZlX2hlYWQsIGxpc3QpCisJCQlpZiAoc2F2ZV9yZXMtPnJl
-cy0+cGFyZW50ICYmCisJCQkgICAgIShzYXZlX3Jlcy0+cmVzLT5mbGFncyAmIElPUkVTT1VSQ0Vf
-SU8pKSB7CisJCQkJbGlzdF9kZWwoJnNhdmVfcmVzLT5saXN0KTsKKwkJCQlrZnJlZShzYXZlX3Jl
-cyk7CisJCQl9CisJfQorCiAJZnJlZV9saXN0KCZsb2NhbF9mYWlsX2hlYWQpOwogCS8qIFJlbGVh
-c2UgYXNzaWduZWQgcmVzb3VyY2UgKi8KIAlsaXN0X2Zvcl9lYWNoX2VudHJ5KGRldl9yZXMsIGhl
-YWQsIGxpc3QpCg==
---20cf302237e7568c3204dd517e0e--
+Jason.
