@@ -1,127 +1,85 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f52.google.com ([209.85.219.52]:36095 "EHLO
-	mail-oa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752615Ab3EGVjL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 May 2013 17:39:11 -0400
-Received: by mail-oa0-f52.google.com with SMTP id h1so1261536oag.25
-        for <linux-pci@vger.kernel.org>; Tue, 07 May 2013 14:39:10 -0700 (PDT)
+Received: from mail-pb0-f49.google.com ([209.85.160.49]:37848 "EHLO
+	mail-pb0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751262Ab3ETRwk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 20 May 2013 13:52:40 -0400
 MIME-Version: 1.0
-In-Reply-To: <20130507213250.GA22773@google.com>
-References: <5AA430FFE4486C448003201AC83BC85E03DEA379@EXHQ.corp.stratus.com>
- <1366940827-15336-1-git-send-email-yinghai@kernel.org> <20130507213250.GA22773@google.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 7 May 2013 14:38:50 -0700
-Message-ID: <CAErSpo635J8+p-0-CtxxTJdTRB70zKVYwOF+fmt3kcj6tpz_0Q@mail.gmail.com>
-Subject: Re: [PATCH] PCI: move down pci_fixup_final for hotplug path
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: David Bulkow <David.Bulkow@stratus.com>,
+Reply-To: linasvepstas@gmail.com
+In-Reply-To: <CAErSpo7TvCfQLkMD+zL1W6dNEqMpHYbLtAAHqXf==zbxhE2tcQ@mail.gmail.com>
+References: <F7B8FD780A346D46A0042F5C63B06AE785E3B2@SHSMSX102.ccr.corp.intel.com>
+ <CAErSpo7+AbHi_TwxwHTJunpFb=CMhwMdCni6+NjbhdA=35XhvA@mail.gmail.com>
+ <5683193.Vsmy0DmceS@vostro.rjw.lan> <CAErSpo7TvCfQLkMD+zL1W6dNEqMpHYbLtAAHqXf==zbxhE2tcQ@mail.gmail.com>
+From: Linas Vepstas <linasvepstas@gmail.com>
+Date: Mon, 20 May 2013 12:52:19 -0500
+Message-ID: <CAHrUA34CoQziRYgLyYJc5TtGw_nGL+QFLzrktDjcZ6gxsxEZ8A@mail.gmail.com>
+Subject: Re: Subject : [ PATCH ] pci-reset-error_state-to-pci_channel_io_normal-at-report_slot_reset
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	"Zhang, LongX" <longx.zhang@intel.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"yanmin_zhang@linux.intel.com" <yanmin_zhang@linux.intel.com>,
+	"Joseph.Liu@Emulex.Com" <Joseph.Liu@emulex.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 7, 2013 at 2:32 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Thu, Apr 25, 2013 at 06:47:07PM -0700, Yinghai Lu wrote:
->> David found some resource conflict issue after
->> | PCI: Put pci_dev in device tree as early as possible
->> | commit 4f535093cf8f6da8cfda7c36c2c1ecd2e9586ee4
->>
->> and
->> | USB: Fix handoff when BIOS disables host PCI device
->> | commit: cab928ee1f221c9cc48d6615070fefe2e444384a
->>
->> for usb qirks for hotplug path.
->>
->> After checking pci_fixup_device() with pci_fixup_final,
->> now we have different path for boot path and hotadd path.
->>
->> Boot path: because pci_apply_fix_final_quirks is not set yet,
->>       so pci_fixup_device(pci_fixup_final) will be skipped
->>       from pci_device_add().
->>         And later pci_apply_final_quirks will be called for all
->>       pci devices via fs_initcall.
->>       That is after pci_assign_unassign resource.
->>       In that case quirk could use bars with problem.
->>
->> Hotadd path: pci_fixup_device(pci_fixup_final) will be executed
->>       via pci_device_add(), and that is too early for hotplug
->>       path, as pci bar for hot add devices is not assigned yet
->>       after commit 4f535093.
->>
->> So we need to move down that for hotplug path, call that in
->> pci_bus_add_devices instead, as at that time just before
->> drivers get attached.
->> And that is simliar calling place for pci_device_add before
->> commit 4f535093 is applied.
->>
->> We should apply this fix for v3.9, but is too late now.
->> so get it into v3.10 and could get into v3.9 stable instead.
->>
->> Reported-by: David Bulkow <David.Bulkow@stratus.com>
->> Tested-by: David Bulkow <David.Bulkow@stratus.com>
->> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+On 20 May 2013 12:21, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Fri, May 17, 2013 at 5:56 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+>> On Friday, May 17, 2013 05:43:33 PM Bjorn Helgaas wrote:
+>>> On Fri, Apr 26, 2013 at 12:28 AM, Zhang, LongX <longx.zhang@intel.com> wrote:
 >
-> I applied the following slightly tweaked patch to for-linus and will
-> ask Linus to pull it for v3.10.  Let me know if it looks OK.
->
-> Bjorn
->
-> commit a939563f3fd9cd6226c7fb7135d0b93507c53888
-> Author: Bjorn Helgaas <bhelgaas@google.com>
+>>> > +       /* restore cfg space for possible link reset at upstream */
+>>> > +       dev->state_saved = true;
+>>>
+>>> "dev->state_saved == true" means that the dev->saved_config_space
+>>> contains valid data.  Why do we know that's the case here?  I see that
+>>> pcie_portdrv_probe() calls pci_save_state() when we first claim the
+>>> port, and I guess we're assuming the state saved then is still valid.
 
-(I did already fix the Author: to be Yinghai, sorry about that)
+Yes, see below.
 
-> Date:   Tue May 7 14:35:44 2013 -0600
+>>> But why do we need to actually set dev->state_saved here?  Shouldn't
+>>> it be already set to true anyway?
+>>
+>> This is a dirty trick to make pci_restore_state(dev) always work here
+>> (because it checks dev->state_saved and does nothing if it isn't set).
+>> I suppose.
 >
->     PCI: Delay final fixups until resources are assigned
+> Yes, I did investigate enough to see that this is a dirty trick.  My
+> question is how we know it's safe to do this dirty trick.
 >
->     Commit 4f535093cf "PCI: Put pci_dev in device tree as early as possible"
->     moved final fixups from pci_bus_add_device() to pci_device_add().  But
->     pci_device_add() happens before resource assignment, so BARs may not be
->     valid yet.
->
->     Typical flow for hot-add:
->
->         pciehp_configure_device
->           pci_scan_slot
->             pci_scan_single_device
->               pci_device_add
->                 pci_fixup_device(pci_fixup_final, dev)  # previous location
->           # resource assignment happens here
->           pci_bus_add_devices
->             pci_bus_add_device
->               pci_fixup_device(pci_fixup_final, dev)    # new location
->
->     [bhelgaas: changelog, move fixups to pci_bus_add_device()]
->     Reference: https://lkml.kernel.org/r/20130415182614.GB9224@xanatos
->     Reported-by: David Bulkow <David.Bulkow@stratus.com>
->     Tested-by: David Bulkow <David.Bulkow@stratus.com>
->     Signed-off-by: Yinghai Lu <yinghai@kernel.org>
->     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->     CC: stable@vger.kernel.org  # v3.9+
->
-> diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-> index 748f8f3..32e66a6 100644
-> --- a/drivers/pci/bus.c
-> +++ b/drivers/pci/bus.c
-> @@ -174,6 +174,7 @@ int pci_bus_add_device(struct pci_dev *dev)
->          * Can not put in pci_device_add yet because resources
->          * are not assigned yet for some devices.
->          */
-> +       pci_fixup_device(pci_fixup_final, dev);
->         pci_create_sysfs_dev_files(dev);
->
->         dev->match_driver = true;
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 43ece5d..67cd045 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1341,7 +1341,6 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
->         list_add_tail(&dev->bus_list, &bus->devices);
->         up_write(&pci_bus_sem);
->
-> -       pci_fixup_device(pci_fixup_final, dev);
->         ret = pcibios_add_device(dev);
->         WARN_ON(ret < 0);
->
+>>> > +       pci_restore_state(dev);
+>>> > +       pcie_portdrv_restore_config(dev);
+
+Lets review what is supposed to happen:
+
+-- poweron
+-- BIOS/firmware/bootloader maybe fiddles with PCI config space
+-- kernel fiddles with PCI config space during boot
+-- device driver sets up PCI config space correctly for normal i/o
+-- PCI error occurs
+-- PCI port/link is reset
+
+At this point, we want to set the PCI config space to something
+resembling what it was just before the device driver first touched it
+after poweron.  Why?  Because the device driver will typically set up
+DMA segments, and tweak other settings as it initializes the card.  It
+needs to do almost exactly the same things again, when re-initializing
+the device after the error reset.  Thus, the PCI config needs to be
+appropriate for a fresh initialization of the card.
+
+If  some other variant of PCI config was loaded here, it might contain
+incorrect DMA mappings or other settings.  In particular, while the
+driver is initializing the card, you risk having the card run away and
+start doing things based on these incorrect settings -- provoking
+another error or maybe just silently corrupting data.   The config
+that you want to load should be more-or-less the same one that was
+there during kernel boot, before the device-driver started touching
+things.
+
+The "dirty hack" is weird:  either there's valid data, and the flag is
+set, or the data is garbage and the flag isn't set ... how could it be
+otherwise?
+
+-- Linas
