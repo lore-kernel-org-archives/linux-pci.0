@@ -1,76 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f48.google.com ([209.85.160.48]:50780 "EHLO
-	mail-pb0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753519Ab3EPQSO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 May 2013 12:18:14 -0400
-Received: by mail-pb0-f48.google.com with SMTP id md4so2447564pbc.7
-        for <linux-pci@vger.kernel.org>; Thu, 16 May 2013 09:18:13 -0700 (PDT)
-Message-ID: <519506BF.3010400@gmail.com>
-Date: Fri, 17 May 2013 00:18:07 +0800
-From: Liu Jiang <liuj97@gmail.com>
+Received: from mga03.intel.com ([143.182.124.21]:60468 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755796Ab3ETM6m (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 20 May 2013 08:58:42 -0400
+Message-ID: <519A1DFD.5080809@linux.intel.com>
+Date: Mon, 20 May 2013 15:58:37 +0300
+From: Eliezer Tamir <eliezer.tamir@linux.intel.com>
 MIME-Version: 1.0
-To: Kevin Hao <haokexin@gmail.com>
-CC: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH 2/2] PCI: unset the resource if we can't get the correct
- CPU address
-References: <1368536876-27307-1-git-send-email-haokexin@gmail.com> <1368536876-27307-3-git-send-email-haokexin@gmail.com>
-In-Reply-To: <1368536876-27307-3-git-send-email-haokexin@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To: Or Gerlitz <or.gerlitz@gmail.com>
+CC: Greg Rose <gregory.v.rose@intel.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Alexander Duyck <alexander.h.duyck@intel.com>,
+	Yan Burman <yanb@mellanox.com>,
+	Sathya Perla <Sathya.Perla@emulex.com>, netdev@vger.kernel.org
+Subject: Re: [PATCH v2 6/7] PCI: Make sure VF's driver get attached after
+ PF's
+References: <1368586102-17661-1-git-send-email-yinghai@kernel.org> <20130515091248.00002fe3@unknown> <CAJZOPZ+L1QJdHePd_x9RAoqZKyJAKHo+hA8T1UZoe8=ozT98RA@mail.gmail.com>
+In-Reply-To: <CAJZOPZ+L1QJdHePd_x9RAoqZKyJAKHo+hA8T1UZoe8=ozT98RA@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue 14 May 2013 09:07:56 PM CST, Kevin Hao wrote:
-> In the current kernel, we just set the CPU address to the bus address
-> if we can't find the match region for one specific bus address. If BAR
-> of one pci device is set to address which happens to be a legitimate
-> CPU address by firmware, the kernel will think this resource is legal
-> and will not try to reassign later. In cases the CPU address and bus
-> address isn't equal, the device will not work. So we should check
-> if we can translate the bus address to CPU address correctly. If not,
-> we should unset this resource and wish the kernel will reassign it
-> later.
+On 20/05/2013 15:28, Or Gerlitz wrote:
+> On Wed, May 15, 2013 at 7:12 PM, Greg Rose <gregory.v.rose@intel.com> wrote:
 >
-> Since we will invoke pcibios_bus_to_resource unconditionally if we
-> don't goto fail, move it out of if/else wrap.
 >
-> Signed-off-by: Kevin Hao <haokexin@gmail.com>
-> ---
->   drivers/pci/probe.c | 9 ++++++---
->   1 file changed, 6 insertions(+), 3 deletions(-)
+>> I'm really not a fan of this.  Seems to me the tail is wagging the dog
+>> here.  Fix the driver to work without a PF driver being present.
 >
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 70f10fa..c96772f 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -250,12 +250,10 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
->   			pci_write_config_dword(dev, pos + 4, 0);
->   			region.start = 0;
->   			region.end = sz64;
-> -			pcibios_bus_to_resource(dev, res, &region);
->   			bar_disabled = true;
->   		} else {
->   			region.start = l64;
->   			region.end = l64 + sz64;
-> -			pcibios_bus_to_resource(dev, res, &region);
->   		}
->   	} else {
->   		sz = pci_size(l, sz, mask);
-> @@ -265,7 +263,12 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
+> Greg, Alex,
 >
->   		region.start = l;
->   		region.end = l + sz;
-> -		pcibios_bus_to_resource(dev, res, &region);
-> +	}
-> +
-> +	if (!pcibios_bus_to_resource(dev, res, &region)) {
-> +		res->flags |= IORESOURCE_UNSET;
-> +		res->end -= res->start;
-> +		res->start = 0;
->   	}
+> As I wrote over the V1 thread, currently we can't go and patch mlx4 to
+> use the sysfs API nor defer the call from within our probe function to
+> enable sriov since  this requires some firmware change to allow
+> enabling SRIOV after some  resources are initialized/provisioned.
+> Hence the patch suggested here or any other patch we can agree on
+> which will make sure that VF probing is done only once the PF is ready
+> is preferred, I think.
 >
->   	goto out;
+Maybe do the following:
+1. split the VF PCI IDs into a separate PCI_ID device table.
+2. have two pci_driver structs, one for all of the PF IDS and one with 
+the VF IDS.
+3. only register the first pci_driver struct from mlx4_init().
+4. register the one for the VFs once your PFs are all up and ready.
 
-Hi Kevin,
-      Will this break subtractive decode PCI bridges and devices?
-Regards!
-Gerry
+Eliezer
