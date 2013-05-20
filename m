@@ -1,164 +1,57 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:60035 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755704Ab3EQJ5z (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 May 2013 05:57:55 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, Hanjun Guo <guohanjun@huawei.com>,
-	<jiang.liu@huawei.com>, Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH -v2 7/7] PCI/IA64: introduce probe_pci_root_info() to manage  _CRS resource
-Date: Fri, 17 May 2013 17:55:50 +0800
-Message-ID: <1368784550-18332-8-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1368784550-18332-1-git-send-email-wangyijing@huawei.com>
-References: <1368784550-18332-1-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <5196D765.9020600@ubuntu.com>
+References: <519443A1.8050905@ubuntu.com> <1995989.Fff0uGKnZO@vostro.rjw.lan>
+ <CAErSpo50rX5Pvj=pX5xsdcZ1qq1C7kBqrNyDmY6t26OCVqbxXA@mail.gmail.com>
+ <5195596C.3000406@ubuntu.com> <CAErSpo6wSgquzJc22tFJozp8cfx0vpULnO3KZN2gr2YHt8EHrw@mail.gmail.com>
+ <5196713A.1010102@ubuntu.com> <CAErSpo7zESr5_PEyX=1JWEApCuW+yx+j3RKWh=qC-jReRgSXZw@mail.gmail.com>
+ <51968E9F.1010909@ubuntu.com> <CAErSpo6ZKB-4PTa_2Cthx_8S2txCbGyatbPmDUPYexCQFg-A=A@mail.gmail.com>
+ <51969D30.1070502@ubuntu.com> <CAErSpo4H-=dnHON3vDvJEme2hGD0z0r_NSsm-Bk9tZ4QqtBTCw@mail.gmail.com>
+ <5196BF15.3050208@ubuntu.com> <CAErSpo5W=Zi_2s0ywfO4VPfbUfxhhCRUMn7oRhx_mi7yYpBHmw@mail.gmail.com>
+ <5196C81B.8060400@ubuntu.com> <CAErSpo6i939JR-3psRhXjkxE3sME8AJ3P84BGX9m1HhdzJxhAg@mail.gmail.com>
+ <5196D765.9020600@ubuntu.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 20 May 2013 07:34:44 -0600
+Message-ID: <CAErSpo6MGwHLJvis+4=vdQEJN=Qb9aC5e9=3Q6MdTB-HH84YBw@mail.gmail.com>
+Subject: Re: enabling aspm on ati radeon
+To: Phillip Susi <psusi@ubuntu.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently, initialize _CRS resource code in IA64 make pci_acpi_scan_root()
-some lengthiness. Introduce probe_pci_root_info() to manage it like in X86,
+On Fri, May 17, 2013 at 7:20 PM, Phillip Susi <psusi@ubuntu.com> wrote:
+> -----BEGIN PGP SIGNED MESSAGE-----
+> Hash: SHA1
+>
+> On 05/17/2013 08:40 PM, Bjorn Helgaas wrote:
+>> Right; I meant RO per the PCIe spec.  If it's RW on your chip,
+>> setpci should be able to write it.
+>
+> I assume it would do no good to change it at this point; it would need
+> to already be set at the time the kernel reads it and decides whether
+> or not to enable it, so I'd have to have grub set it before loading
+> the kernel.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- arch/ia64/pci/pci.c |   91 +++++++++++++++++++++++++++-----------------------
- 1 files changed, 49 insertions(+), 42 deletions(-)
+Yeah, setting the capability bits after the kernel has booted wouldn't
+change anything except what lspci reports.
 
-diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
-index 2857a83..8076225 100644
---- a/arch/ia64/pci/pci.c
-+++ b/arch/ia64/pci/pci.c
-@@ -365,6 +365,48 @@ static void release_pci_root_info(struct pci_host_bridge *bridge)
- 	__release_pci_root_info(info);
- }
- 
-+static void
-+probe_pci_root_info(struct pci_root_info *info, struct acpi_device *device,
-+		int busnum, int domain)
-+{
-+	char *name;
-+
-+	name = kmalloc(16, GFP_KERNEL);
-+	if (!name)
-+		return;
-+
-+	sprintf(name, "PCI Bus %04x:%02x", domain, busnum);
-+	info->bridge = device;
-+	info->name = name;
-+
-+	acpi_walk_resources(device->handle, METHOD_NAME__CRS, count_window,
-+			&info->res_num);
-+	if (info->res_num) {
-+		info->res =
-+			kzalloc_node(sizeof(*info->res) * info->res_num,
-+				     GFP_KERNEL, info->controller->node);
-+		if (!info->res) {
-+			kfree(name);
-+			return;
-+		}
-+
-+		info->res_offset =
-+			kzalloc_node(sizeof(*info->res_offset) * info->res_num,
-+					GFP_KERNEL, info->controller->node);
-+		if (!info->res_offset) {
-+			kfree(name);
-+			kfree(info->res);
-+			info->res = NULL;
-+			return;
-+		}
-+
-+		info->res_num = 0;
-+		acpi_walk_resources(device->handle, METHOD_NAME__CRS,
-+			add_window, info);
-+	} else
-+		kfree(name);
-+}
-+
- struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- {
- 	struct acpi_device *device = root->device;
-@@ -374,12 +416,11 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 	struct pci_root_info *info = NULL;
- 	int busnum = root->secondary.start;
- 	struct pci_bus *pbus;
--	char *name;
- 	int pxm;
- 
- 	controller = alloc_pci_controller(domain);
- 	if (!controller)
--		goto out1;
-+		return NULL;
- 
- 	controller->acpi_handle = device->handle;
- 
-@@ -392,41 +433,18 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 	info = kzalloc(sizeof(*info), GFP_KERNEL);
- 	if (!info) {
- 		printk(KERN_WARNING "pci_bus %04x:%02x: "
--				"ignored (out of memory)\n", root->segment, busnum);
--		goto out2;
-+				"ignored (out of memory)\n", domain, busnum);
-+		kfree(controller);
-+		return NULL;
- 	}
- 	
-+	info->controller = controller;
- 	INIT_LIST_HEAD(&info->io_resources);
- 	INIT_LIST_HEAD(&info->resources);
-+	probe_pci_root_info(info, device, busnum, domain);
-+
- 	/* insert busn resource at first */
- 	pci_add_resource(&info->resources, &root->secondary);
--	acpi_walk_resources(device->handle, METHOD_NAME__CRS, count_window,
--			&info->res_num);
--	if (info->res_num) {
--		info->res =
--			kzalloc_node(sizeof(*info->res) * info->res_num,
--				     GFP_KERNEL, controller->node);
--		if (!info->res)
--			goto out3;
--		
--		info->res_offset = 
--			kzalloc_node(sizeof(*info->res_offset) * info->res_num, 
--					GFP_KERNEL, controller->node);
--		if (!info->res_offset)
--			goto out4;
--
--		name = kmalloc(16, GFP_KERNEL);
--		if (!name)
--			goto out5;
--
--		sprintf(name, "PCI Bus %04x:%02x", domain, bus);
--		info->bridge = device;
--		info->controller = controller;
--		info->name = name;
--		info->res_num = 0;
--		acpi_walk_resources(device->handle, METHOD_NAME__CRS,
--			add_window, info);
--	}
- 	/*
- 	 * See arch/x86/pci/acpi.c.
- 	 * The desired pci bus might already be scanned in a quirk. We
-@@ -445,17 +463,6 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 			release_pci_root_info, info);
- 	pci_scan_child_bus(pbus);
- 	return pbus;
--
--out5:
--	kfree(info->res_offset);
--out4:
--	kfree(info->res);
--out3:
--	kfree(info);
--out2:
--	kfree(controller);
--out1:
--	return NULL;
- }
- 
- int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
--- 
-1.7.1
+>> If you can measure the power consumption, you might be able to see
+>> a difference there.  I've seen people report that, but don't know
+>> how they do it.  For example:
+>> https://lkml.kernel.org/r/CANUX_P3F5YhbZX3WGU-j1AGpbXb_T9Bis2ErhvKkFMtDvzatVQ@mail.gmail.com
+>
+> After
+>>
+> enabling it on both ends ( despite the root port still claiming
+> it is not supported ) I still see ~121 watts according to the
+> Kill-A-Watt my system is plugged into.  Oh well.
 
+ASPM only saves power when the PCIe link is idle.  I'm not a video
+person, so I don't know how video usage translates into link usage,
+and I don't know how much power it saves.  My guess is that the amount
+is fairly small and might not be measurable with a Kill-A-Watt.
 
+Bjorn
