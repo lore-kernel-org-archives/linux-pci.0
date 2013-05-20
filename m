@@ -1,94 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:24696 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754670Ab3EJVTU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 10 May 2013 17:19:20 -0400
-Subject: [PATCH 3/3] pci: Remove pci_find_pcie_upstream_bridge
-To: bhelgaas@google.com, stephen@networkplumber.org
-From: Alex Williamson <alex.williamson@redhat.com>
-Cc: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org,
-	dwmw2@infradead.org, ddutile@redhat.com
-Date: Fri, 10 May 2013 15:18:58 -0600
-Message-ID: <20130510211858.32592.20890.stgit@bling.home>
-In-Reply-To: <20130510210937.32592.21950.stgit@bling.home>
-References: <20130510210937.32592.21950.stgit@bling.home>
+Received: from mail-ia0-f170.google.com ([209.85.210.170]:51528 "EHLO
+	mail-ia0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756026Ab3ETXTS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 20 May 2013 19:19:18 -0400
+Received: by mail-ia0-f170.google.com with SMTP id l29so8248659iag.15
+        for <linux-pci@vger.kernel.org>; Mon, 20 May 2013 16:19:18 -0700 (PDT)
+Subject: [PATCH 2/2] sparc/PCI: Use PCI_UNKNOWN for unknown power state
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Paul Mackerras <paulus@samba.org>,
+	"David S. Miller" <davem@davemloft.net>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: sparclinux@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
+Date: Mon, 20 May 2013 17:19:16 -0600
+Message-ID: <20130520231916.32416.7318.stgit@bhelgaas-glaptop>
+In-Reply-To: <20130520231909.32416.81752.stgit@bhelgaas-glaptop>
+References: <20130520231909.32416.81752.stgit@bhelgaas-glaptop>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This function no longer has any users.
+Previously we initialized dev->current_state to 4 (PCI_D3cold), but I think
+we wanted PCI_UNKNOWN (5) here based on the comment and the fact that the
+generic version of this code, pci_setup_device(), uses PCI_UNKNOWN.
 
-Signed-off-by: Alex williamson <alex.williamson@redhat.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/search.c |   35 -----------------------------------
- include/linux/pci.h  |   11 -----------
- 2 files changed, 46 deletions(-)
+ arch/sparc/kernel/pci.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/pci/search.c b/drivers/pci/search.c
-index 0357f74..bdbff05 100644
---- a/drivers/pci/search.c
-+++ b/drivers/pci/search.c
-@@ -74,41 +74,6 @@ struct pci_dev *pci_walk_up_to_first_match(struct pci_dev *pdev,
- 	return NULL;
- }
+diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
+index baf4366..972892a 100644
+--- a/arch/sparc/kernel/pci.c
++++ b/arch/sparc/kernel/pci.c
+@@ -327,7 +327,7 @@ static struct pci_dev *of_create_pci_dev(struct pci_pbm_info *pbm,
+ 	if ((dev->class >> 8) == PCI_CLASS_STORAGE_IDE)
+ 		pci_set_master(dev);
  
--/*
-- * find the upstream PCIe-to-PCI bridge of a PCI device
-- * if the device is PCIE, return NULL
-- * if the device isn't connected to a PCIe bridge (that is its parent is a
-- * legacy PCI bridge and the bridge is directly connected to bus 0), return its
-- * parent
-- */
--struct pci_dev *
--pci_find_upstream_pcie_bridge(struct pci_dev *pdev)
--{
--	struct pci_dev *tmp = NULL;
--
--	if (pci_is_pcie(pdev))
--		return NULL;
--	while (1) {
--		if (pci_is_root_bus(pdev->bus))
--			break;
--		pdev = pdev->bus->self;
--		/* a p2p bridge */
--		if (!pci_is_pcie(pdev)) {
--			tmp = pdev;
--			continue;
--		}
--		/* PCI device should connect to a PCIe bridge */
--		if (pci_pcie_type(pdev) != PCI_EXP_TYPE_PCI_BRIDGE) {
--			/* Busted hardware? */
--			WARN_ON_ONCE(1);
--			return NULL;
--		}
--		return pdev;
--	}
--
--	return tmp;
--}
--
- static struct pci_bus *pci_do_find_bus(struct pci_bus *bus, unsigned char busnr)
- {
- 	struct pci_bus* child;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index e87423a..9d9dcf5 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1877,15 +1877,4 @@ struct pci_dev *pci_walk_up_to_first_match(struct pci_dev *pdev,
-  */
- bool pci_is_pcie_bridge(struct pci_dev *pdev);
+-	dev->current_state = 4;		/* unknown power state */
++	dev->current_state = PCI_UNKNOWN;	/* unknown power state */
+ 	dev->error_state = pci_channel_io_normal;
+ 	dev->dma_mask = 0xffffffff;
  
--/**
-- * pci_find_upstream_pcie_bridge - find upstream PCIe-to-PCI bridge of a device
-- * @pdev: the PCI device
-- *
-- * if the device is PCIE, return NULL
-- * if the device isn't connected to a PCIe bridge (that is its parent is a
-- * legacy PCI bridge and the bridge is directly connected to bus 0), return its
-- * parent
-- */
--struct pci_dev *pci_find_upstream_pcie_bridge(struct pci_dev *pdev);
--
- #endif /* LINUX_PCI_H */
 
