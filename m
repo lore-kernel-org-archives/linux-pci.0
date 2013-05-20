@@ -1,246 +1,206 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v3 1/5] PCI: Split pci_assign_unassigned_resources to per root bus
-Date: Tue,  7 May 2013 15:17:30 -0700
-Message-Id: <1367965054-9013-2-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1367965054-9013-1-git-send-email-yinghai@kernel.org>
-References: <1367965054-9013-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pd0-f173.google.com ([209.85.192.173]:42006 "EHLO
+	mail-pd0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755774Ab3ETPhy convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 20 May 2013 11:37:54 -0400
+MIME-Version: 1.0
+Reply-To: linasvepstas@gmail.com
+In-Reply-To: <CF6E51640088844D9CADE5541A7C2FEB33EBC11D@CMEXMB1.ad.emulex.com>
+References: <F7B8FD780A346D46A0042F5C63B06AE785E3B2@SHSMSX102.ccr.corp.intel.com>
+ <CAErSpo7+AbHi_TwxwHTJunpFb=CMhwMdCni6+NjbhdA=35XhvA@mail.gmail.com> <CF6E51640088844D9CADE5541A7C2FEB33EBC11D@CMEXMB1.ad.emulex.com>
+From: Linas Vepstas <linasvepstas@gmail.com>
+Date: Mon, 20 May 2013 10:37:33 -0500
+Message-ID: <CAHrUA36OxKn1ucaA4-1jHU=4P+hCWOTVa2ECAwpxEoBWSRAv8A@mail.gmail.com>
+Subject: Re: Subject : [ PATCH ] pci-reset-error_state-to-pci_channel_io_normal-at-report_slot_reset
+To: "Liu, Joseph" <Joseph.Liu@emulex.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"Zhang, LongX" <longx.zhang@intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"yanmin_zhang@linux.intel.com" <yanmin_zhang@linux.intel.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-BenH reported that there is some assign unassigned resource problem
-in powerpc.
+I think Joe Liu has it right.  I'm going to top-post because things
+are a bit tangled below.  I urge a review of
+/Documentation/PCI/pci-error-recovery.txt, as that gives the details.
 
-It turns out after
-| commit 0c5be0cb0edfe3b5c4b62eac68aa2aa15ec681af
-| Date:   Thu Feb 23 19:23:29 2012 -0800
-|
-|    PCI: Retry on IORESOURCE_IO type allocations
+The intended sequence is that, after an error, the device driver gets
+a shot at running some diagnostics & dumps, and then the pci
+bridges/controllers/ports/links are reset (by platform code, viz. aer
+in this case) to a state resembling a fresh power-on.  Then the
+.slot_reset() callback is called on the device driver, to tell the
+driver "hey everything upstream is now working, go set yourself up for
+normal ops."  Thus, in particular, one should have pdev->error_state =
+pci_channel_io_normal; before .slot_reset() is called, and the PCI
+config space contents should resemble a fresh power-on state (and
+**NOT** some other saved state!)
 
-even the root bus does not have io port range, it will keep retrying
-to realloc with mmio.
+If the device driver wanted to leave the card in a dead state, it had
+several opportunities to say so, earlier in the callback sequence.  If
+the driver wanted to fiddle with the card with the old PCI config
+space, it already had a chance to do that too, before the
+bridges/controllers/ports/links were fully reset by the platform.   By
+the time that .slot_reset() is being called, both the platform and the
+device driver are expecting smooth sailing ahead.
 
-Current retry logic is : try with must+optional at first, and if
-it fails will try must then try to extend must with optional.
-That will fail as mmio-non-pref and mmio-pref for bridge will
-be next to each other. So we have no chance to extend mmio-non-pref.
+So, looking at the original patch, it seems reasonable.  My impression
+is that maybe the AER driver had been doing not quite the right thing
+for a long time.
 
-This will be become more often when we have x86 8 sockets or 32 sockets
-system, and those system will have one root bus per socket.
-They will have some root buses do not have ioport range.
+-- Linas Vepstas
 
-We should not fall into retry in this case, as root bus does
-not io port range.
-
-Before that we need to split pci_assign_unassiged_resource
-to every root bus, so we can stop early for root bus without ioport
-range, and still continue to retry on buses that do have ioport range.
-
-Also later we could let root bus hot add and booting path use same code.
-
-Reported-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-
----
- drivers/pci/setup-bus.c |  101 +++++++++++++++++++++++-------------------------
- 1 file changed, 49 insertions(+), 52 deletions(-)
-
-Index: linux-2.6/drivers/pci/setup-bus.c
-===================================================================
---- linux-2.6.orig/drivers/pci/setup-bus.c
-+++ linux-2.6/drivers/pci/setup-bus.c
-@@ -1315,21 +1315,6 @@ static int __init pci_bus_get_depth(stru
- 
- 	return depth;
- }
--static int __init pci_get_max_depth(void)
--{
--	int depth = 0;
--	struct pci_bus *bus;
--
--	list_for_each_entry(bus, &pci_root_buses, node) {
--		int ret;
--
--		ret = pci_bus_get_depth(bus);
--		if (ret > depth)
--			depth = ret;
--	}
--
--	return depth;
--}
- 
- /*
-  * -1: undefined, will auto detect later
-@@ -1354,34 +1339,41 @@ void __init pci_realloc_get_opt(char *st
- 	else if (!strncmp(str, "on", 2))
- 		pci_realloc_enable = user_enabled;
- }
--static bool __init pci_realloc_enabled(void)
-+static bool __init pci_realloc_enabled(enum enable_type enable)
- {
--	return pci_realloc_enable >= user_enabled;
-+	return enable >= user_enabled;
- }
- 
--static void __init pci_realloc_detect(void)
-+static enum enable_type __init pci_realloc_detect(struct pci_bus *bus,
-+			 enum enable_type enable_local)
- {
- #if defined(CONFIG_PCI_IOV) && defined(CONFIG_PCI_REALLOC_ENABLE_AUTO)
--	struct pci_dev *dev = NULL;
-+	struct pci_dev *dev;
- 
--	if (pci_realloc_enable != undefined)
--		return;
-+	if (enable_local != undefined)
-+		return enable_local;
- 
--	for_each_pci_dev(dev) {
-+	list_for_each_entry(dev, &bus->devices, bus_list) {
- 		int i;
- 
- 		for (i = PCI_IOV_RESOURCES; i <= PCI_IOV_RESOURCE_END; i++) {
- 			struct resource *r = &dev->resource[i];
- 
- 			/* Not assigned, or rejected by kernel ? */
--			if (r->flags && !r->start) {
--				pci_realloc_enable = auto_enabled;
--
--				return;
--			}
-+			if (r->flags && !r->start)
-+				return auto_enabled;
- 		}
- 	}
-+
-+	list_for_each_entry(dev, &bus->devices, bus_list) {
-+		struct pci_bus *child = dev->subordinate;
-+
-+		if (child &&
-+		    pci_realloc_detect(child, enable_local) == auto_enabled)
-+			return auto_enabled;
-+	}
- #endif
-+	return enable_local;
- }
- 
- /*
-@@ -1389,10 +1381,9 @@ static void __init pci_realloc_detect(vo
-  * second  and later try will clear small leaf bridge res
-  * will stop till to the max  deepth if can not find good one
-  */
--void __init
--pci_assign_unassigned_resources(void)
-+static void __init
-+pci_assign_unassigned_root_bus_resources(struct pci_bus *bus)
- {
--	struct pci_bus *bus;
- 	LIST_HEAD(realloc_head); /* list of resources that
- 					want additional resources */
- 	struct list_head *add_list = NULL;
-@@ -1403,15 +1394,17 @@ pci_assign_unassigned_resources(void)
- 	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
- 				  IORESOURCE_PREFETCH;
- 	int pci_try_num = 1;
-+	enum enable_type enable_local;
- 
- 	/* don't realloc if asked to do so */
--	pci_realloc_detect();
--	if (pci_realloc_enabled()) {
--		int max_depth = pci_get_max_depth();
-+	enable_local = pci_realloc_detect(bus, pci_realloc_enable);
-+	if (pci_realloc_enabled(enable_local)) {
-+		int max_depth = pci_bus_get_depth(bus);
- 
- 		pci_try_num = max_depth + 1;
--		printk(KERN_DEBUG "PCI: max bus depth: %d pci_try_num: %d\n",
--			 max_depth, pci_try_num);
-+		dev_printk(KERN_DEBUG, &bus->dev,
-+			   "max bus depth: %d pci_try_num: %d\n",
-+			   max_depth, pci_try_num);
- 	}
- 
- again:
-@@ -1423,12 +1416,10 @@ again:
- 		add_list = &realloc_head;
- 	/* Depth first, calculate sizes and alignments of all
- 	   subordinate buses. */
--	list_for_each_entry(bus, &pci_root_buses, node)
--		__pci_bus_size_bridges(bus, add_list);
-+	__pci_bus_size_bridges(bus, add_list);
- 
- 	/* Depth last, allocate resources and update the hardware. */
--	list_for_each_entry(bus, &pci_root_buses, node)
--		__pci_bus_assign_resources(bus, add_list, &fail_head);
-+	__pci_bus_assign_resources(bus, add_list, &fail_head);
- 	if (add_list)
- 		BUG_ON(!list_empty(add_list));
- 	tried_times++;
-@@ -1438,17 +1429,17 @@ again:
- 		goto enable_and_dump;
- 
- 	if (tried_times >= pci_try_num) {
--		if (pci_realloc_enable == undefined)
--			printk(KERN_INFO "Some PCI device resources are unassigned, try booting with pci=realloc\n");
--		else if (pci_realloc_enable == auto_enabled)
--			printk(KERN_INFO "Automatically enabled pci realloc, if you have problem, try booting with pci=realloc=off\n");
-+		if (enable_local == undefined)
-+			dev_info(&bus->dev, "Some PCI device resources are unassigned, try booting with pci=realloc\n");
-+		else if (enable_local == auto_enabled)
-+			dev_info(&bus->dev, "Automatically enabled pci realloc, if you have problem, try booting with pci=realloc=off\n");
- 
- 		free_list(&fail_head);
- 		goto enable_and_dump;
- 	}
- 
--	printk(KERN_DEBUG "PCI: No. %d try to assign unassigned res\n",
--			 tried_times + 1);
-+	dev_printk(KERN_DEBUG, &bus->dev,
-+		   "No. %d try to assign unassigned res\n", tried_times + 1);
- 
- 	/* third times and later will not check if it is leaf */
- 	if ((tried_times + 1) > 2)
-@@ -1458,12 +1449,11 @@ again:
- 	 * Try to release leaf bridge's resources that doesn't fit resource of
- 	 * child device under that bridge
- 	 */
--	list_for_each_entry(fail_res, &fail_head, list) {
--		bus = fail_res->dev->bus;
--		pci_bus_release_bridge_resources(bus,
-+	list_for_each_entry(fail_res, &fail_head, list)
-+		pci_bus_release_bridge_resources(fail_res->dev->bus,
- 						 fail_res->flags & type_mask,
- 						 rel_type);
--	}
-+
- 	/* restore size and flags */
- 	list_for_each_entry(fail_res, &fail_head, list) {
- 		struct resource *res = fail_res->res;
-@@ -1480,12 +1470,19 @@ again:
- 
- enable_and_dump:
- 	/* Depth last, update the hardware. */
--	list_for_each_entry(bus, &pci_root_buses, node)
--		pci_enable_bridges(bus);
-+	pci_enable_bridges(bus);
- 
- 	/* dump the resource on buses */
-+	pci_bus_dump_resources(bus);
-+}
-+
-+void __init
-+pci_assign_unassigned_resources(void)
-+{
-+	struct pci_bus *bus;
-+
- 	list_for_each_entry(bus, &pci_root_buses, node)
--		pci_bus_dump_resources(bus);
-+		pci_assign_unassigned_root_bus_resources(bus);
- }
- 
- void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
+On 20 May 2013 09:38, Liu, Joseph <Joseph.Liu@emulex.com> wrote:
+> Bjorn,
+>
+> I have been working with the low level device drivers for supporting both EEH and AER and were involved in working with Yanmin for verifying this AER patch. Please see some of my responses to your questions inline, prefixed with [jzl].
+>
+>
+> Thanks,
+> Joe Liu, Ph.D.
+> Senior Principal Engineer
+> Emulex Corporation
+>
+> -----Original Message-----
+> From: Bjorn Helgaas [mailto:bhelgaas@google.com]
+> Sent: Friday, May 17, 2013 7:44 PM
+> To: Zhang, LongX
+> Cc: linasvepstas@gmail.com; linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org; yanmin_zhang@linux.intel.com; Liu, Joseph; Rafael J. Wysocki
+> Subject: Re: Subject : [ PATCH ] pci-reset-error_state-to-pci_channel_io_normal-at-report_slot_reset
+>
+> [+cc Rafael because he knows about dev->state_saved]
+>
+> Sorry, I'm not very familiar with AER, so please excuse some naive
+> questions below.
+>
+> On Fri, Apr 26, 2013 at 12:28 AM, Zhang, LongX <longx.zhang@intel.com> wrote:
+>> From: Zhang Long <longx.zhang@intel.com>
+>>
+>> Specific pci device drivers might have many functions to call
+>> pci_channel_offline to check device states. When slot_reset happens,
+>> drivers' slot_reset callback might call such functions and eventually
+>> abort the reset.
+>
+> |Where does this happen?  I looked at all the references to
+> |dev->error_state and all the callers of pci_channel_offline(), and I
+> |didn't see any in .slot_reset() methods.
+> |
+> |(There are *assignments* to dev->error_state in qlcnic_attach_func(),
+> |qlge_io_slot_reset(), and qla2xxx_pci_slot_reset().  You might be able
+> |to remove those assignments after this patch, but this patch wouldn't
+> |really change anything for those paths.)
+>
+> [jzl] Although low level driver might not call pci_channel_offline() directly in .slot_reset() method itself, it does not mean it will not call it during the device error recovery execution of .slot_reset() method. The .slot_reset() method needs to call some of its bottom layer routines interfacing with device PCI interface for preparing the PCI device from recovery of PCI error (EEH or AER). As a matter of fact, it seems that qla2xxx_pci_slot_reset() routine's assignments to dev->error was an attempt to work around this AER driver issue that this patch is trying to resolve. From upstream kernel 3.9.2's qla2xxx_pci_slot_reset(), it has the assignment and comment below:
+>
+> static pci_ers_result_t
+> qla2xxx_pci_slot_reset(struct pci_dev *pdev)
+> {
+>         pci_ers_result_t ret = PCI_ERS_RESULT_DISCONNECT;
+>         scsi_qla_host_t *base_vha = pci_get_drvdata(pdev);
+>         struct qla_hw_data *ha = base_vha->hw;
+>         struct rsp_que *rsp;
+>         int rc, retries = 10;
+>
+>         ql_dbg(ql_dbg_aer, base_vha, 0x9004,
+>             "Slot Reset.\n");
+>
+>         /* Workaround: qla2xxx driver which access hardware earlier
+>          * needs error state to be pci_channel_io_online.
+>          * Otherwise mailbox command timesout.
+>          */
+>         pdev->error_state = pci_channel_io_normal;
+>
+>
+>
+>> The patch resets pdev->error_state to pci_channel_io_normal at
+>> the begining of report_slot_reset.
+>
+>> Signed-off-by: Zhang Yanmin <yanmin_zhang@linux.intel.com>
+>> Signed-off-by: Zhang Long <longx.zhang@intel.com>
+>> ---
+>>  drivers/pci/pcie/aer/aerdrv_core.c |    1 +
+>>  drivers/pci/pcie/portdrv_pci.c     |   12 +++++-------
+>>  2 files changed, 6 insertions(+), 7 deletions(-)
+>>
+>> diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
+>> index 564d97f..c61fd44 100644
+>> --- a/drivers/pci/pcie/aer/aerdrv_core.c
+>> +++ b/drivers/pci/pcie/aer/aerdrv_core.c
+>> @@ -286,6 +286,7 @@ static int report_slot_reset(struct pci_dev *dev, void *data)
+>>         result_data = (struct aer_broadcast_data *) data;
+>>
+>>         device_lock(&dev->dev);
+>> +       dev->error_state = pci_channel_io_normal;
+>
+> |The device's error_state might be pci_channel_io_frozen when we get
+> |here.  We haven't touched anything in the hardware yet.  What makes
+> |the device unfrozen now?  Did anything actually change as far as the
+> |hardware device is concerned?
+>
+> [jzl] When the AER driver gets to invoking report_slot_reset(), it has already performed PCI slot reset. Currently, with PCIe, it is the PCIe link reset it has been performed. But with proper AER driver implementation, it should be either PCI slot hot reset or even fundamental reset that has already been performed. As such, after platform performing the PCI slot reset, it should move the device's error_state out of pci_channel_io_fronzen before calling report_slot_reset() to low level device drivers allows them to access the corresponding device's PCI function in preparation for recovery.
+>
+>
+> |I agree it looks like report_slot_reset() should be made more like
+> |eeh_report_reset().  I'm just wondering if the error_state should be
+> |changed *after* calling the .slot_reset() method instead of before.
+>
+> [jzl] No, you should not set the error_state after calling the .slot_reset() method because the AER driver calling the low level driver's .slot_reset() method is to "report" that the platform PCI slot reset has been done and "inform" the low level driver to prepare the PCI device for recovering, with which the low level driver might need to, for example, further perform reset on PCI functions with the deivice. The .slot_reset() is call by function, changing the error_state *after* calling the .slot_reset() method will be too late for the low level device to access PCI device from within the  .slot_reset() function call...
+>
+> [jzl] Also, this is not just the eeh_report_reset() behavior, it is PCI error recovery behavior. In the pci-error-recovery.txt, it stated the following under "STEP 4 Slot Reset":
+>
+> "...
+> This call gives drivers the chance to re-initialize the hardware
+> (re-download firmware, etc.).  At this point, the driver may assume
+> that the card is in a fresh state and is fully functional. The slot
+> is unfrozen and the driver has full access to PCI config space,
+> memory mapped I/O space and DMA. Interrupts (Legacy, MSI, or MSI-X)
+> will also be available.
+> ..."
+>
+>
+>>         if (!dev->driver ||
+>>                 !dev->driver->err_handler ||
+>>                 !dev->driver->err_handler->slot_reset)
+>> diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
+>> index ed4d094..7abefd9 100644
+>> --- a/drivers/pci/pcie/portdrv_pci.c
+>> +++ b/drivers/pci/pcie/portdrv_pci.c
+>> @@ -332,13 +332,11 @@ static pci_ers_result_t pcie_portdrv_slot_reset(struct pci_dev *dev)
+>>         pci_ers_result_t status = PCI_ERS_RESULT_RECOVERED;
+>>         int retval;
+>>
+>> -       /* If fatal, restore cfg space for possible link reset at upstream */
+>> -       if (dev->error_state == pci_channel_io_frozen) {
+>> -               dev->state_saved = true;
+>> -               pci_restore_state(dev);
+>> -               pcie_portdrv_restore_config(dev);
+>> -               pci_enable_pcie_error_reporting(dev);
+>> -       }
+>
+> Previously we only restored state for the pci_channel_io_frozen state,
+> i.e., when handling an AER_FATAL error.  Now we restore it always.
+> Why?
+>
+>> +       /* restore cfg space for possible link reset at upstream */
+>> +       dev->state_saved = true;
+>
+> "dev->state_saved == true" means that the dev->saved_config_space
+> contains valid data.  Why do we know that's the case here?  I see that
+> pcie_portdrv_probe() calls pci_save_state() when we first claim the
+> port, and I guess we're assuming the state saved then is still valid.
+> But why do we need to actually set dev->state_saved here?  Shouldn't
+> it be already set to true anyway?
+>
+>> +       pci_restore_state(dev);
+>> +       pcie_portdrv_restore_config(dev);
+>> +       pci_enable_pcie_error_reporting(dev);
+>>
+>>         /* get true return value from &status */
+>>         retval = device_for_each_child(&dev->dev, &status, slot_reset_iter);
+>> --
+>> 1.7.4.1
+>>
+>>
+>>
