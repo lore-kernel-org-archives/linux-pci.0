@@ -1,60 +1,48 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:23870 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758611Ab3E1Czj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 May 2013 22:55:39 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, Hanjun Guo <guohanjun@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Feng Tang <feng.tang@intel.com>
-Subject: [PATCH] PCI/X86: increase info->res_num before checking pci_use_crs return
-Date: Tue, 28 May 2013 10:55:09 +0800
-Message-ID: <1369709709-14504-1-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAHp75Vdf6gFZChS47=grUygHBDWcoOWDYPzw+Zj5bdVCWj85Jw@mail.gmail.com>
+References: <CAHp75Vdf6gFZChS47=grUygHBDWcoOWDYPzw+Zj5bdVCWj85Jw@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 20 May 2013 10:36:30 -0600
+Message-ID: <CAErSpo64ASrw=Kryi946cPjmyUWOjeaRf24xD69gbjYVzKanbg@mail.gmail.com>
+Subject: Re: The dd72be99 breaks some of Intel Medfield based devices
+To: Andy Shevchenko <andy.shevchenko@gmail.com>
+Cc: Bin Gao <bin.gao@linux.intel.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"x86@kernel.org" <x86@kernel.org>,
+	Jacob Pan <jacob.jun.pan@linux.intel.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I separate this patch from patchset "Add hostbridge resource release to
-support root bus hotplug in IA64", because it's a Separate issue.
+[+cc linux-pci and cc list of Bin's original posting]
 
-We should increase info->res_num before we checking pci_use_crs return
-when pci=nocrs set.
+On Mon, May 20, 2013 at 9:09 AM, Andy Shevchenko
+<andy.shevchenko@gmail.com> wrote:
+> Hi!
+>
+> I don't know what you trying to fix, but your patch dd72be99
+> "x86/pci/mrst: Use configuration mechanism 1 for 00:00.0, 00:02.0,
+> 00:03.0" breaks Intel Medfield devices.
+>
+> After it was applied (sorry, was on vacation, didn't noticed sooner)
+> lspci shows only 18 out of 34 devices. That means the so called fake
+> PCI devices are gone.
+>
+> This is a bad approach and patch should be reverted. Bin, please,
+> explain what you are trying to fix and on what device. We will find
+> better solution.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: Jiang Liu <liuj97@gmail.com>
-Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Feng Tang <feng.tang@intel.com>
----
- arch/x86/pci/acpi.c |    7 ++-----
- 1 files changed, 2 insertions(+), 5 deletions(-)
+I reverted dd72be99 in my for-linus branch.  I guess I should have let
+that sit in -next for a cycle before asking Linus to pull it.  Sorry
+about jumping the gun.
 
-diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index 3e72425..662dfdf 100644
---- a/arch/x86/pci/acpi.c
-+++ b/arch/x86/pci/acpi.c
-@@ -324,14 +324,11 @@ setup_resource(struct acpi_resource *acpi_res, void *data)
- 	res->start = start;
- 	res->end = end;
- 	info->res_offset[info->res_num] = addr.translation_offset;
-+	info->res_num++;
- 
--	if (!pci_use_crs) {
-+	if (!pci_use_crs)
- 		dev_printk(KERN_DEBUG, &info->bridge->dev,
- 			   "host bridge window %pR (ignored)\n", res);
--		return AE_OK;
--	}
--
--	info->res_num++;
- 
- 	return AE_OK;
- }
--- 
-1.7.1
+I'll wait for a patch tested by both Bin and Andy.
 
-
+Bjorn
