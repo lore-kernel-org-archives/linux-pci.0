@@ -1,38 +1,98 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail1.windriver.com ([147.11.146.13]:57343 "EHLO
-	mail1.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751846Ab3ENNH7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 May 2013 09:07:59 -0400
-From: Kevin Hao <haokexin@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>
-Subject: [PATCH 0/2] fix the pci device malfunction if a wrong bus address is assigned by firmware
-Date: Tue, 14 May 2013 21:07:54 +0800
-Message-ID: <1368536876-27307-1-git-send-email-haokexin@gmail.com>
+Received: from mail-ie0-f170.google.com ([209.85.223.170]:42772 "EHLO
+	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757365Ab3ETWs2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 20 May 2013 18:48:28 -0400
+Received: by mail-ie0-f170.google.com with SMTP id aq17so15266307iec.1
+        for <linux-pci@vger.kernel.org>; Mon, 20 May 2013 15:48:27 -0700 (PDT)
+Date: Mon, 20 May 2013 16:48:24 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: "Zhang, LongX" <longx.zhang@intel.com>
+Cc: "linasvepstas@gmail.com" <linasvepstas@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"yanmin_zhang@linux.intel.com" <yanmin_zhang@linux.intel.com>,
+	"Joseph.Liu@Emulex.Com" <Joseph.Liu@Emulex.Com>
+Subject: Re: Subject : [ PATCH ]
+ pci-reset-error_state-to-pci_channel_io_normal-at-report_slot_reset
+Message-ID: <20130520224824.GA31740@google.com>
+References: <F7B8FD780A346D46A0042F5C63B06AE785E3B2@SHSMSX102.ccr.corp.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <F7B8FD780A346D46A0042F5C63B06AE785E3B2@SHSMSX102.ccr.corp.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On a fsl p2020rdb-pc board, the onboard pci device is assigned the bus address
-0xa0000000 by firmware. But the kernel allocate the cpu address 0xa0000000 ~ 0xbfffffff
-to this PCIe controller and use 0xe0000000 ~ 0xdfffffff as its bus address.
-In this case the kernel would think that the bus address in this pci device
-is correct and leave it unchanged. Then causes this device not work.
+On Fri, Apr 26, 2013 at 06:28:59AM +0000, Zhang, LongX wrote:
+> From: Zhang Long <longx.zhang@intel.com>
+> 
+> Specific pci device drivers might have many functions to call
+> pci_channel_offline to check device states. When slot_reset happens,
+> drivers' slot_reset callback might call such functions and eventually
+> abort the reset.
+> 
+> The patch resets pdev->error_state to pci_channel_io_normal at
+> the begining of report_slot_reset.
+> 
+> Thank Liu Joseph for pointing it out.
+> 
+> Signed-off-by: Zhang Yanmin <yanmin_zhang@linux.intel.com>
+> Signed-off-by: Zhang Long <longx.zhang@intel.com>
+> ---
+>  drivers/pci/pcie/aer/aerdrv_core.c |    1 +
+>  drivers/pci/pcie/portdrv_pci.c     |   12 +++++-------
+>  2 files changed, 6 insertions(+), 7 deletions(-)
+> 
+> diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
+> index 564d97f..c61fd44 100644
+> --- a/drivers/pci/pcie/aer/aerdrv_core.c
+> +++ b/drivers/pci/pcie/aer/aerdrv_core.c
+> @@ -286,6 +286,7 @@ static int report_slot_reset(struct pci_dev *dev, void *data)
+>  	result_data = (struct aer_broadcast_data *) data;
+>  
+>  	device_lock(&dev->dev);
+> +	dev->error_state = pci_channel_io_normal;
+>  	if (!dev->driver ||
+>  		!dev->driver->err_handler ||
+>  		!dev->driver->err_handler->slot_reset)
+> diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
+> index ed4d094..7abefd9 100644
+> --- a/drivers/pci/pcie/portdrv_pci.c
+> +++ b/drivers/pci/pcie/portdrv_pci.c
+> @@ -332,13 +332,11 @@ static pci_ers_result_t pcie_portdrv_slot_reset(struct pci_dev *dev)
+>  	pci_ers_result_t status = PCI_ERS_RESULT_RECOVERED;
+>  	int retval;
+>  
+> -	/* If fatal, restore cfg space for possible link reset at upstream */
+> -	if (dev->error_state == pci_channel_io_frozen) {
+> -		dev->state_saved = true;
+> -		pci_restore_state(dev);
+> -		pcie_portdrv_restore_config(dev);
+> -		pci_enable_pcie_error_reporting(dev);
+> -	}
+> +	/* restore cfg space for possible link reset at upstream */
+> +	dev->state_saved = true;
+> +	pci_restore_state(dev);
+> +	pcie_portdrv_restore_config(dev);
+> +	pci_enable_pcie_error_reporting(dev);
+>  
+>  	/* get true return value from &status */
+>  	retval = device_for_each_child(&dev->dev, &status, slot_reset_iter);
 
-Even though this looks like a mismatch of the address space between firmware
-and kernel. I think we should detect this kind of error and fix it automatically
-if we don't want just to probe only (PCI_PROBE_ONLY is not set).
+I think this patch changes the behavior in the case of a non-fatal error
+where one of the .error_detected() methods returned
+PCI_ERS_RESULT_NEED_RESET.  In that case, pcie_portdrv_slot_reset()
+previously did not restore config space, but after your patch, it *will*
+restore it.  We need an explanation of why this is safe.
 
-Kevin Hao (2):
-  PCI: make pcibios_bus_to_resource return either success or failure
-  PCI: unset the resource if we can't get the correct CPU address
+I think you should split this into two patches: the first would remove the
+"if (dev->error_state == pci_channel_io_frozen)" test from portdrv_pci.c
+and explain the reason, and the second would make the aerdrv_core.c change.
 
- drivers/pci/host-bridge.c | 5 ++++-
- drivers/pci/probe.c       | 9 ++++++---
- include/linux/pci.h       | 2 +-
- 3 files changed, 11 insertions(+), 5 deletions(-)
+I'm also concerned that in that same case (a non-fatal error where one of
+the .error_detected() methods returned PCI_ERS_RESULT_NEED_RESET), I don't
+think we actually *do* any kind of device reset.  This isn't related to
+your patch, of course, so if you resolve the config space restore question,
+we can deal with the reset question later.
 
--- 
-1.8.1.4
-
+Bjorn
