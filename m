@@ -1,54 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mho-03-ewr.mailhop.org ([204.13.248.66]:61579 "EHLO
-	mho-01-ewr.mailhop.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754237Ab3ESUrp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 19 May 2013 16:47:45 -0400
-Date: Sun, 19 May 2013 16:47:03 -0400
-From: Jason Cooper <jason@lakedaemon.net>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Mike Turquette <mturquette@linaro.org>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Maen Suleiman <maen@marvell.com>, linux-pci@vger.kernel.org,
-	devicetree-discuss@lists.ozlabs.org,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Olof Johansson <olof@lixom.net>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCHv10 5/9] clk: mvebu: create parent-child relation for
- PCIe clocks on Armada 370
-Message-ID: <20130519204703.GP11137@titan.lakedaemon.net>
-References: <1368719725-21265-1-git-send-email-thomas.petazzoni@free-electrons.com>
- <1368719725-21265-6-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from mail-ob0-f169.google.com ([209.85.214.169]:39800 "EHLO
+	mail-ob0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755974Ab3ETX1P (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 20 May 2013 19:27:15 -0400
+Received: by mail-ob0-f169.google.com with SMTP id vb8so4787obc.14
+        for <linux-pci@vger.kernel.org>; Mon, 20 May 2013 16:27:14 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1368719725-21265-6-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <20130520231909.32416.81752.stgit@bhelgaas-glaptop>
+References: <20130520231909.32416.81752.stgit@bhelgaas-glaptop>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 20 May 2013 17:26:54 -0600
+Message-ID: <CAErSpo7pWpDae2uOJq-F57YRmPEK3q1qD1aawM-NgEXMw-k8og@mail.gmail.com>
+Subject: Re: [PATCH 1/2] powerpc/PCI: Use PCI_UNKNOWN for unknown power state
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Paul Mackerras <paulus@samba.org>,
+	"David S. Miller" <davem@davemloft.net>
+Cc: sparclinux@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 16, 2013 at 05:55:20PM +0200, Thomas Petazzoni wrote:
-> The Armada 370 has two gatable clocks for each PCIe interface, and we
-> want both of them to be enabled. We therefore make one of the two
-> clocks a child of the other, as we did for the sataX and sataXlnk
-> clocks on Armada XP.
-> 
-> Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-> Cc: Mike Turquette <mturquette@linaro.org>
+On Mon, May 20, 2013 at 5:19 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> Previously we initialized dev->current_state to 4 (PCI_D3cold), but I think
+> we wanted PCI_UNKNOWN (5) here based on the comment and the fact that the
+> generic version of this code, pci_setup_device(), uses PCI_UNKNOWN.
+>
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 > ---
->  drivers/clk/mvebu/clk-gating-ctrl.c |    4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
+>  arch/powerpc/kernel/pci_of_scan.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/arch/powerpc/kernel/pci_of_scan.c b/arch/powerpc/kernel/pci_of_scan.c
+> index 2a67e9b..d2d407d 100644
+> --- a/arch/powerpc/kernel/pci_of_scan.c
+> +++ b/arch/powerpc/kernel/pci_of_scan.c
+> @@ -165,7 +165,7 @@ struct pci_dev *of_create_pci_dev(struct device_node *node,
+>         pr_debug("    class: 0x%x\n", dev->class);
+>         pr_debug("    revision: 0x%x\n", dev->revision);
+>
+> -       dev->current_state = 4;         /* unknown power state */
+> +       dev->current_state = PCI_UNKNOWN;       /* unknown power state */
 
-Patches 5 - 8 applied to mvebu/pcie, with a dep on Sebastian's clock
-rework and mvebu/of_pci.  Thanks for the head's up on the clk conflict.
-My resolution should match yours.  Please let me know if it doesn't.
+If you're interested in the archaeology of this, I think it was first
+introduced by 4267292b0 in 2005 for powerpc and subsequently copied
+into sparc by a2fb23af1 in 2007.
 
-thx,
+Prior to the addition of PCI_UNKNOWN, pci_setup_device() set
+current_state to 4, so I think 4267292b0 probably just copied that
+code before 3fe9d19f9 added PCI_UNKNOWN and changed the initialization
+in pci_setup_device().
 
-Jason.
+>         dev->error_state = pci_channel_io_normal;
+>         dev->dma_mask = 0xffffffff;
+>
+>
