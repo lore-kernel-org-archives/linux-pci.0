@@ -1,54 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:53924 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758905Ab3EONZl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 May 2013 09:25:41 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>
-Cc: linux-arm-kernel@lists.infradead.org,
-	Arnd Bergmann <arnd@arndb.de>, Olof Johansson <olof@lixom.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Lior Amsalem <alior@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	linux-pci@vger.kernel.org,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	devicetree-discuss@lists.ozlabs.org
-Subject: [PATCHv9 8/9] arm: mvebu: PCIe support is now available on mvebu
-Date: Wed, 15 May 2013 15:25:22 +0200
-Message-Id: <1368624323-24311-9-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1368624323-24311-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1368624323-24311-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from mail-ob0-f172.google.com ([209.85.214.172]:47891 "EHLO
+	mail-ob0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757111Ab3ETXpb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 20 May 2013 19:45:31 -0400
+Received: by mail-ob0-f172.google.com with SMTP id tb18so20041obb.3
+        for <linux-pci@vger.kernel.org>; Mon, 20 May 2013 16:45:31 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1369093321.6387.24.camel@pasglop>
+References: <20130520231909.32416.81752.stgit@bhelgaas-glaptop> <1369093321.6387.24.camel@pasglop>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 20 May 2013 17:45:11 -0600
+Message-ID: <CAErSpo6K05TfsTBFocc99MaXZ3sL5jsMA_AbmNxq1xeT3DGcmA@mail.gmail.com>
+Subject: Re: [PATCH 1/2] powerpc/PCI: Use PCI_UNKNOWN for unknown power state
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Paul Mackerras <paulus@samba.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	sparclinux@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now that the PCIe driver for mvebu has been integrated and all its
-relevant dependencies, we can mark the ARCH_MVEBU platform has
-MIGHT_HAVE_PCI, which allows to select the PCI bus support if needed.
+On Mon, May 20, 2013 at 5:42 PM, Benjamin Herrenschmidt
+<benh@kernel.crashing.org> wrote:
+> On Mon, 2013-05-20 at 17:19 -0600, Bjorn Helgaas wrote:
+>> Previously we initialized dev->current_state to 4 (PCI_D3cold), but I think
+>> we wanted PCI_UNKNOWN (5) here based on the comment and the fact that the
+>> generic version of this code, pci_setup_device(), uses PCI_UNKNOWN.
+>>
+>> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>> ---
+>
+> Ack. Do you send to Linus or should I ?
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
----
- arch/arm/mach-mvebu/Kconfig |    2 ++
- 1 file changed, 2 insertions(+)
+I'll add your ack and take care of it.
 
-diff --git a/arch/arm/mach-mvebu/Kconfig b/arch/arm/mach-mvebu/Kconfig
-index e11acbb..381062d 100644
---- a/arch/arm/mach-mvebu/Kconfig
-+++ b/arch/arm/mach-mvebu/Kconfig
-@@ -15,6 +15,8 @@ config ARCH_MVEBU
- 	select MVEBU_CLK_GATING
- 	select MVEBU_MBUS
- 	select ZONE_DMA if ARM_LPAE
-+	select MIGHT_HAVE_PCI
-+	select PCI_QUIRKS if PCI
- 
- if ARCH_MVEBU
- 
--- 
-1.7.9.5
-
+>>  arch/powerpc/kernel/pci_of_scan.c |    2 +-
+>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/arch/powerpc/kernel/pci_of_scan.c b/arch/powerpc/kernel/pci_of_scan.c
+>> index 2a67e9b..d2d407d 100644
+>> --- a/arch/powerpc/kernel/pci_of_scan.c
+>> +++ b/arch/powerpc/kernel/pci_of_scan.c
+>> @@ -165,7 +165,7 @@ struct pci_dev *of_create_pci_dev(struct device_node *node,
+>>       pr_debug("    class: 0x%x\n", dev->class);
+>>       pr_debug("    revision: 0x%x\n", dev->revision);
+>>
+>> -     dev->current_state = 4;         /* unknown power state */
+>> +     dev->current_state = PCI_UNKNOWN;       /* unknown power state */
+>>       dev->error_state = pci_channel_io_normal;
+>>       dev->dma_mask = 0xffffffff;
+>>
+>
+>
