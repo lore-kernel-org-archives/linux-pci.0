@@ -1,231 +1,91 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH v2, part 1 8/9] PCI: make PCI host bridge/bus creating and destroying logic symmetric
-Date: Tue, 14 May 2013 00:08:32 +0800
-Message-Id: <1368461313-4371-9-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1368461313-4371-1-git-send-email-jiang.liu@huawei.com>
-References: <1368461313-4371-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foo.stuge.se ([212.116.89.98]:56788 "EHLO foo.stuge.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753266Ab3EUKUc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 21 May 2013 06:20:32 -0400
+Message-ID: <20130521101349.30660.qmail@stuge.se>
+Date: Tue, 21 May 2013 12:13:49 +0200
+From: Peter Stuge <peter@stuge.se>
+To: Stephen Rothwell <sfr@canb.auug.org.au>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-arch@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Russell King <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>, linux-pm@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-pcmcia@lists.infradead.org,
+	LKML <linux-kernel@vger.kernel.org>, cluster-devel@redhat.com,
+	linux-mm@kvack.org, Hans Verkuil <hans.verkuil@cisco.com>,
+	Pavel Machek <pavel@ucw.cz>,
+	Doug Thompson <dougthompson@xmission.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Steven Whitehouse <swhiteho@redhat.com>,
+	linux-arm-kernel@lists.infradead.org, linux-edac@vger.kernel.org
+Subject: Re: [PATCH] Finally eradicate CONFIG_HOTPLUG
+References: <20130521134935.d18c3f5c23485fb5ddabc365@canb.auug.org.au>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="ibTvN161/egqYuK8"
+In-Reply-To: <20130521134935.d18c3f5c23485fb5ddabc365@canb.auug.org.au>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch makes PCI host bridge/bus creating and destroying logic
-symmetric by using device_initialize()/device_add()/device_del()/put_device()
-pairs as discussed in thread at:
-http://comments.gmane.org/gmane.linux.kernel.pci/22073
 
-It also fixes a bug in error recovery path in pci_create_root_bus()
-which may kfree() an in-use host bridge object.
+--ibTvN161/egqYuK8
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Cc: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/probe.c  | 84 +++++++++++++++++++++++-----------------------------
- drivers/pci/remove.c |  3 +-
- 2 files changed, 39 insertions(+), 48 deletions(-)
+Are you changing the code to have HOTPLUG always -on- or -off- ?
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index bc075a3..a2617c2 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -451,7 +451,7 @@ void pci_read_bridge_bases(struct pci_bus *child)
- 	}
- }
- 
--static struct pci_bus * pci_alloc_bus(void)
-+static struct pci_bus *pci_alloc_bus(struct pci_ops *ops, void *sd, int bus)
- {
- 	struct pci_bus *b;
- 
-@@ -464,10 +464,32 @@ static struct pci_bus * pci_alloc_bus(void)
- 		INIT_LIST_HEAD(&b->resources);
- 		b->max_bus_speed = PCI_SPEED_UNKNOWN;
- 		b->cur_bus_speed = PCI_SPEED_UNKNOWN;
-+		b->sysdata = sd;
-+		b->ops = ops;
-+		b->number = bus;
-+		b->busn_res.start = bus;
-+		b->busn_res.end = 0xff;
-+		b->busn_res.flags = IORESOURCE_BUS;
-+		b->dev.class = &pcibus_class;
-+		dev_set_name(&b->dev, "%04x:%02x", pci_domain_nr(b), bus);
-+		device_initialize(&b->dev);
- 	}
-+
- 	return b;
- }
- 
-+static void pci_release_host_bridge_dev(struct device *dev)
-+{
-+	struct pci_host_bridge *bridge = to_pci_host_bridge(dev);
-+
-+	if (bridge->release_fn)
-+		bridge->release_fn(bridge);
-+
-+	pci_free_resource_list(&bridge->windows);
-+
-+	kfree(bridge);
-+}
-+
- static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
- {
- 	struct pci_host_bridge *bridge;
-@@ -476,6 +498,10 @@ static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
- 	if (bridge) {
- 		INIT_LIST_HEAD(&bridge->windows);
- 		bridge->bus = b;
-+		bridge->dev.release = pci_release_host_bridge_dev;
-+		dev_set_name(&bridge->dev, "pci%04x:%02x",
-+			     pci_domain_nr(b), b->number);
-+		device_initialize(&bridge->dev);
- 	}
- 
- 	return bridge;
-@@ -628,28 +654,13 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
- 	/*
- 	 * Allocate a new bus, and inherit stuff from the parent..
- 	 */
--	child = pci_alloc_bus();
-+	child = pci_alloc_bus(parent->ops, parent->sysdata, busnr);
- 	if (!child)
- 		return NULL;
- 
- 	child->parent = parent;
--	child->ops = parent->ops;
--	child->sysdata = parent->sysdata;
- 	child->bus_flags = parent->bus_flags;
--
--	/* initialize some portions of the bus device, but don't register it
--	 * now as the parent is not properly set up yet.
--	 */
--	child->dev.class = &pcibus_class;
--	dev_set_name(&child->dev, "%04x:%02x", pci_domain_nr(child), busnr);
--
--	/*
--	 * Set up the primary, secondary and subordinate
--	 * bus numbers.
--	 */
--	child->number = child->busn_res.start = busnr;
- 	child->primary = parent->busn_res.start;
--	child->busn_res.end = 0xff;
- 
- 	if (!bridge) {
- 		child->dev.parent = parent->bridge;
-@@ -670,7 +681,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
- 	bridge->subordinate = child;
- 
- add_dev:
--	ret = device_register(&child->dev);
-+	ret = device_add(&child->dev);
- 	WARN_ON(ret < 0);
- 
- 	pcibios_add_bus(child);
-@@ -1190,18 +1201,6 @@ int pci_cfg_space_size(struct pci_dev *dev)
- 	return PCI_CFG_SPACE_SIZE;
- }
- 
--static void pci_release_bus_bridge_dev(struct device *dev)
--{
--	struct pci_host_bridge *bridge = to_pci_host_bridge(dev);
--
--	if (bridge->release_fn)
--		bridge->release_fn(bridge);
--
--	pci_free_resource_list(&bridge->windows);
--
--	kfree(bridge);
--}
--
- struct pci_dev *pci_alloc_dev(struct pci_bus *bus)
- {
- 	struct pci_dev *dev;
-@@ -1688,13 +1687,10 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 	char bus_addr[64];
- 	char *fmt;
- 
--	b = pci_alloc_bus();
-+	b = pci_alloc_bus(ops, sysdata, bus);
- 	if (!b)
- 		return NULL;
- 
--	b->sysdata = sysdata;
--	b->ops = ops;
--	b->number = b->busn_res.start = bus;
- 	b2 = pci_find_bus(pci_domain_nr(b), bus);
- 	if (b2) {
- 		/* If we already got to this bus through a different bridge, ignore it */
-@@ -1706,27 +1702,22 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 	if (!bridge)
- 		goto err_out;
- 
--	bridge->dev.parent = parent;
--	bridge->dev.release = pci_release_bus_bridge_dev;
--	dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
- 	error = pcibios_root_bridge_prepare(bridge);
- 	if (error)
- 		goto bridge_dev_reg_err;
- 
--	error = device_register(&bridge->dev);
-+	bridge->dev.parent = parent;
-+	error = device_add(&bridge->dev);
- 	if (error)
- 		goto bridge_dev_reg_err;
-+
- 	b->bridge = get_device(&bridge->dev);
- 	device_enable_async_suspend(b->bridge);
- 	pci_set_bus_of_node(b);
--
- 	if (!parent)
- 		set_dev_node(b->bridge, pcibus_to_node(b));
--
--	b->dev.class = &pcibus_class;
- 	b->dev.parent = b->bridge;
--	dev_set_name(&b->dev, "%04x:%02x", pci_domain_nr(b), bus);
--	error = device_register(&b->dev);
-+	error = device_add(&b->dev);
- 	if (error)
- 		goto class_dev_reg_err;
- 
-@@ -1769,12 +1760,11 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 	return b;
- 
- class_dev_reg_err:
--	put_device(&bridge->dev);
--	device_unregister(&bridge->dev);
-+	device_del(&bridge->dev);
- bridge_dev_reg_err:
--	kfree(bridge);
-+	put_device(&bridge->dev);
- err_out:
--	kfree(b);
-+	put_device(&b->dev);
- 	return NULL;
- }
- 
-diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-index 8fc54b7..b0ce875 100644
---- a/drivers/pci/remove.c
-+++ b/drivers/pci/remove.c
-@@ -52,7 +52,8 @@ void pci_remove_bus(struct pci_bus *bus)
- 	up_write(&pci_bus_sem);
- 	pci_remove_legacy_files(bus);
- 	pcibios_remove_bus(bus);
--	device_unregister(&bus->dev);
-+	device_del(&bus->dev);
-+	put_device(&bus->dev);
- }
- EXPORT_SYMBOL(pci_remove_bus);
- 
--- 
-1.8.1.2
+=46rom the commit message I had expected always -on-.
 
+
+Stephen Rothwell wrote:
+> --- a/include/asm-generic/vmlinux.lds.h
+> +++ b/include/asm-generic/vmlinux.lds.h
+> @@ -68,14 +68,6 @@
+>   * are handled as text/data or they can be discarded (which
+>   * often happens at runtime)
+>   */
+> -#ifdef CONFIG_HOTPLUG
+> -#define DEV_KEEP(sec)    *(.dev##sec)
+> -#define DEV_DISCARD(sec)
+> -#else
+> -#define DEV_KEEP(sec)
+> -#define DEV_DISCARD(sec) *(.dev##sec)
+> -#endif
+> -
+>  #ifdef CONFIG_HOTPLUG_CPU
+>  #define CPU_KEEP(sec)    *(.cpu##sec)
+>  #define CPU_DISCARD(sec)
+> @@ -182,8 +174,6 @@
+>  	*(.data)							\
+>  	*(.ref.data)							\
+>  	*(.data..shared_aligned) /* percpu related */			\
+> -	DEV_KEEP(init.data)						\
+> -	DEV_KEEP(exit.data)						\
+=2E.
+> @@ -503,7 +489,6 @@
+>  /* init and exit section handling */
+>  #define INIT_DATA							\
+>  	*(.init.data)							\
+> -	DEV_DISCARD(init.data)						\
+
+Shouldn't the effect of one of the above remain?
+
+
+//Peter
+
+--ibTvN161/egqYuK8
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iD8DBQFRm0jdhR3Q0dhIfEgRAtAtAKDxeofcdUGqWjn2AyXb/CxbZP4X8ACgvEte
+zomgM5roARu65KybTU/PIcM=
+=bMNu
+-----END PGP SIGNATURE-----
+
+--ibTvN161/egqYuK8--
