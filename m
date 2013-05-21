@@ -1,52 +1,56 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:49304 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761683Ab3EDRFH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 4 May 2013 13:05:07 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glp-linux-pci@m.gmane.org>)
-	id 1UYftQ-0001YU-F4
-	for linux-pci@vger.kernel.org; Sat, 04 May 2013 19:05:04 +0200
-Received: from 71.6.120.226.static-ip.telepacific.net ([71.6.120.226.static-ip.telepacific.net])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-pci@vger.kernel.org>; Sat, 04 May 2013 19:05:04 +0200
-Received: from sbh36g by 71.6.120.226.static-ip.telepacific.net with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-pci@vger.kernel.org>; Sat, 04 May 2013 19:05:04 +0200
-To: linux-pci@vger.kernel.org
-From: Charlie <sbh36g@yahoo.com>
-Subject: Re: Request: DOS binaries of recent pciutils
-Date: Sat, 4 May 2013 16:55:53 +0000 (UTC)
-Message-ID: <loom.20130504T185408-835@post.gmane.org>
-References: <AANLkTikpGBMrD6ZOD_P6sp1edxZOpsyTLkGax-NYQODo@mail.gmail.com> <AANLkTikuce_5LQ_qvipObneAYfc3Lz_t4Vj3b_yimw1F@mail.gmail.com> <AANLkTilJ978mq9gaGFTbgCU_YujcIaWDuM_hjY7UoOD9@mail.gmail.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 21 May 2013 07:21:49 -0300
+From: Mauro Carvalho Chehab <mchehab@redhat.com>
+To: Stephen Rothwell <sfr@canb.auug.org.au>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-arch@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	Doug Thompson <dougthompson@xmission.com>,
+	linux-edac@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org, linux-pcmcia@lists.infradead.org,
+	Hans Verkuil <hans.verkuil@cisco.com>,
+	Steven Whitehouse <swhiteho@redhat.com>,
+	cluster-devel@redhat.com, Arnd Bergmann <arnd@arndb.de>,
+	Pavel Machek <pavel@ucw.cz>, "Rafael J. Wysocki" <rjw@sisk.pl>,
+	linux-pm@vger.kernel.org,
+	Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH] Finally eradicate CONFIG_HOTPLUG
+Message-ID: <20130521072149.0dac0d9e@redhat.com>
+In-Reply-To: <20130521134935.d18c3f5c23485fb5ddabc365@canb.auug.org.au>
+References: <20130521134935.d18c3f5c23485fb5ddabc365@canb.auug.org.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Nando <nando4eva <at> gmail.com> writes:
+Em Tue, 21 May 2013 13:49:35 +1000
+Stephen Rothwell <sfr@canb.auug.org.au> escreveu:
 
+> Ever since commit 45f035ab9b8f ("CONFIG_HOTPLUG should be always on"),
+> it has been basically impossible to build a kernel with CONFIG_HOTPLUG
+> turned off.  Remove all the remaining references to it.
 > 
-> Hello linux-pci,
-> 
-> Wondering if someone could make available DOS binaries of the most
-> recent pciutils along with compressed pci.ids support? The last one
-> that I found for DOS is 2.2.3 (pciutils_2.2.3_os2_dos.zip). Version
-> 2.2.3 gives various error messages to stderr that require 'ctty
-> nul/ctty con' to quieten down. Would be great to have a switch to
-> 'quieten' down setpci/lspci.
-> 
-> Nando
-> 
+> Cc: linux-arch@vger.kernel.org
+> Cc: Russell King <linux@arm.linux.org.uk>
+> Cc: linux-arm-kernel@lists.infradead.org
+> Cc: Doug Thompson <dougthompson@xmission.com>
+> Cc: linux-edac@vger.kernel.org
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: linux-pci@vger.kernel.org
+> Cc: linux-pcmcia@lists.infradead.org
+> Cc: Hans Verkuil <hans.verkuil@cisco.com>
+> Cc: Steven Whitehouse <swhiteho@redhat.com>
+> Cc: cluster-devel@redhat.com
+> Cc: Arnd Bergmann <arnd@arndb.de>
+> Cc: Pavel Machek <pavel@ucw.cz>
+> Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
+> Cc: linux-pm@vger.kernel.org
+> Cc: Andrew Morton <akpm@linux-foundation.org>
+> Cc: linux-mm@kvack.org
+> Signed-off-by: Stephen Rothwell <sfr@canb.auug.org.au>
 
+Acked-by: Mauro Carvalho Chehab <mchehab@redhat.com>
 
-Hi Nando,
-
-Did you find a newer ver of pciutils for DOS?
-
-May I know where I can download pciutils_2.2.3_os2_dos.zip from?
-
-Thanks
-Charlie
-
+Cheers,
+Mauro
