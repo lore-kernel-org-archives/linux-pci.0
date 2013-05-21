@@ -1,95 +1,120 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f44.google.com ([209.85.220.44]:45307 "EHLO
-	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751368Ab3EUWBK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 May 2013 18:01:10 -0400
-Message-ID: <519BEEA4.2030804@gmail.com>
-Date: Tue, 21 May 2013 15:01:08 -0700
-From: Alexander Duyck <alexander.duyck@gmail.com>
-MIME-Version: 1.0
-To: "Michael S. Tsirkin" <mst@redhat.com>
-CC: Don Dutile <ddutile@redhat.com>,
-	Alexander Duyck <alexander.h.duyck@intel.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+Received: from mga14.intel.com ([143.182.124.37]:57573 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755231Ab3EUHiQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 21 May 2013 03:38:16 -0400
+Message-ID: <1369122001.4432.14.camel@ymzhang.sh.intel.com>
+Subject: Re: Subject : [ PATCH ]
+ pci-reset-error_state-to-pci_channel_io_normal-at-report_slot_reset
+From: Yanmin Zhang <yanmin_zhang@linux.intel.com>
+Reply-To: yanmin_zhang@linux.intel.com
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "Zhang, LongX" <longx.zhang@intel.com>,
+	"linasvepstas@gmail.com" <linasvepstas@gmail.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	NetDev <netdev@vger.kernel.org>,
-	Or Gerlitz <or.gerlitz@gmail.com>
-Subject: Re: [PATCH 6/7] PCI: Make sure VF's driver get attached after PF's
-References: <1368498506-25857-1-git-send-email-yinghai@kernel.org> <1368498506-25857-7-git-send-email-yinghai@kernel.org> <51925FB0.4080504@intel.com> <CAE9FiQXYQEAZ=0sG6+2OdffBqfLS9MpoN1xviRR9aDbxPxcKxQ@mail.gmail.com> <5192946F.1050700@intel.com> <CAE9FiQVGGHB_amKw0-DfDifpTnRGPbxA+q3WY5F-O3x-sx386A@mail.gmail.com> <5192AEF4.1070905@intel.com> <519BE778.9040800@redhat.com> <20130521214912.GA21713@redhat.com>
-In-Reply-To: <20130521214912.GA21713@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"Joseph.Liu@Emulex.Com" <Joseph.Liu@Emulex.Com>
+Date: Tue, 21 May 2013 15:40:01 +0800
+In-Reply-To: <20130520224824.GA31740@google.com>
+References: <F7B8FD780A346D46A0042F5C63B06AE785E3B2@SHSMSX102.ccr.corp.intel.com>
+	 <20130520224824.GA31740@google.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/21/2013 02:49 PM, Michael S. Tsirkin wrote:
-> On Tue, May 21, 2013 at 05:30:32PM -0400, Don Dutile wrote:
->> On 05/14/2013 05:39 PM, Alexander Duyck wrote:
->>> On 05/14/2013 12:59 PM, Yinghai Lu wrote:
->>>> On Tue, May 14, 2013 at 12:45 PM, Alexander Duyck
->>>> <alexander.h.duyck@intel.com>  wrote:
->>>>> On 05/14/2013 11:44 AM, Yinghai Lu wrote:
->>>>>> On Tue, May 14, 2013 at 9:00 AM, Alexander Duyck
->>>>>> <alexander.h.duyck@intel.com>  wrote:
->>>>>>> I'm sorry, but what is the point of this patch?  With device assignment
->>>>>>> it is always possible to have VFs loaded and the PF driver unloaded
->>>>>>> since you cannot remove the VFs if they are assigned to a VM.
->>>>>> unload PF driver will not call pci_disable_sriov?
->>>>> You cannot call pci_disable_sriov because you will panic all of the
->>>>> guests that have devices assigned.
->>>> ixgbe_remove did call pci_disable_sriov...
->>>>
->>>> for guest panic, that is another problem.
->>>> just like you pci passthrough with real pci device and hotremove the
->>>> card in host.
->>>>
->>>> ...
->>>
->>> I suggest you take another look.  In ixgbe_disable_sriov, which is the
->>> function that is called we do a check for assigned VFs.  If they are
->>> assigned then we do not call pci_disable_sriov.
->>>
->>>>
->>>>> So how does your patch actually fix this problem?  It seems like it is
->>>>> just avoiding it.
->>>> yes, until the first one is done.
->>>
->>> Avoiding the issue doesn't fix the underlying problem and instead you
->>> are likely just introducing more bugs as a result.
->>>
->>>>> From what I can tell your problem is originating in pci_call_probe.  I
->>>>> believe it is calling work_on_cpu and that doesn't seem correct since
->>>>> the work should be taking place on a CPU already local to the PF. You
->>>>> might want to look there to see why you are trying to schedule work on a
->>>>> CPU which should be perfectly fine for you to already be doing your work on.
->>>> it always try to go with local cpu with same pxm.
->>>
->>> The problem is we really shouldn't be calling work_for_cpu in this case
->>> since we are already on the correct CPU.  What probably should be
->>> happening is that pci_call_probe should be doing a check to see if the
->>> current CPU is already contained within the device node map and if so
->>> just call local_pci_probe directly.  That way you can avoid deadlocking
->>> the system by trying to flush the CPU queue of the CPU you are currently on.
->>>
->> That's the patch that Michael Tsirkin posted for a fix,
->> but it was noted that if you have the case where the _same_ driver is used for vf & pf,
->> other deadlocks may occur.
->> It would work in the case of ixgbe/ixgbevf, but not for something like
->> the Mellanox pf/vf driver (which is the same).
->>
+On Mon, 2013-05-20 at 16:48 -0600, Bjorn Helgaas wrote:
+> On Fri, Apr 26, 2013 at 06:28:59AM +0000, Zhang, LongX wrote:
+> > From: Zhang Long <longx.zhang@intel.com>
+> > 
+> > Specific pci device drivers might have many functions to call
+> > pci_channel_offline to check device states. When slot_reset happens,
+> > drivers' slot_reset callback might call such functions and eventually
+> > abort the reset.
+> > 
+> > The patch resets pdev->error_state to pci_channel_io_normal at
+> > the begining of report_slot_reset.
+> > 
+> > Thank Liu Joseph for pointing it out.
+> > 
+> > Signed-off-by: Zhang Yanmin <yanmin_zhang@linux.intel.com>
+> > Signed-off-by: Zhang Long <longx.zhang@intel.com>
+> > ---
+> >  drivers/pci/pcie/aer/aerdrv_core.c |    1 +
+> >  drivers/pci/pcie/portdrv_pci.c     |   12 +++++-------
+> >  2 files changed, 6 insertions(+), 7 deletions(-)
+Thank all for the kind comments.
+
+> > 
+> > diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
+> > index 564d97f..c61fd44 100644
+> > --- a/drivers/pci/pcie/aer/aerdrv_core.c
+> > +++ b/drivers/pci/pcie/aer/aerdrv_core.c
+> > @@ -286,6 +286,7 @@ static int report_slot_reset(struct pci_dev *dev, void *data)
+> >  	result_data = (struct aer_broadcast_data *) data;
+> >  
+> >  	device_lock(&dev->dev);
+> > +	dev->error_state = pci_channel_io_normal;
+> >  	if (!dev->driver ||
+> >  		!dev->driver->err_handler ||
+> >  		!dev->driver->err_handler->slot_reset)
+> > diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
+> > index ed4d094..7abefd9 100644
+> > --- a/drivers/pci/pcie/portdrv_pci.c
+> > +++ b/drivers/pci/pcie/portdrv_pci.c
+> > @@ -332,13 +332,11 @@ static pci_ers_result_t pcie_portdrv_slot_reset(struct pci_dev *dev)
+> >  	pci_ers_result_t status = PCI_ERS_RESULT_RECOVERED;
+> >  	int retval;
+> >  
+> > -	/* If fatal, restore cfg space for possible link reset at upstream */
+> > -	if (dev->error_state == pci_channel_io_frozen) {
+> > -		dev->state_saved = true;
+> > -		pci_restore_state(dev);
+> > -		pcie_portdrv_restore_config(dev);
+> > -		pci_enable_pcie_error_reporting(dev);
+> > -	}
+> > +	/* restore cfg space for possible link reset at upstream */
+> > +	dev->state_saved = true;
+It's indeed a dirty trick to change it to true. The reason is suspend. The port would
+suspend/resume at suspend-to-ram. When the port is suspended, PCI power framework calls
+pci_save_state. When the port is resumed, PCI framework calls pci_restore_state and
+dev->state_saved is set to false.
+A better solution is to add double space in pci_dev->saved_config_space/saved_cap_space,
+which seems consume unnecessary resource.
+
+> > +	pci_restore_state(dev);
+> > +	pcie_portdrv_restore_config(dev);
+> > +	pci_enable_pcie_error_reporting(dev);
+> >  
+> >  	/* get true return value from &status */
+> >  	retval = device_for_each_child(&dev->dev, &status, slot_reset_iter);
+> I think this patch changes the behavior in the case of a non-fatal error
+> where one of the .error_detected() methods returned
+> PCI_ERS_RESULT_NEED_RESET.  In that case, pcie_portdrv_slot_reset()
+> previously did not restore config space, but after your patch, it *will*
+> restore it.  We need an explanation of why this is safe.
+AER standard doesn't define such behavior like if we need reset a slot.
+When we implemented the feature in kernel, we assumed at non-fatal error,
+config space is still good.
+
+With the new patch, we change the behavior a little.
+
 > 
-> I think our conclusion was this is a false positive for Mellanox.
-> If not, we need to understand what the deadlock is better.
+> I think you should split this into two patches: the first would remove the
+> "if (dev->error_state == pci_channel_io_frozen)" test from portdrv_pci.c
+The first patch would depend on the 2nd patch as 2nd patch resets error_state 
+to pci_channel_io_normal.
+
+> and explain the reason, and the second would make the aerdrv_core.c change.
 > 
+> I'm also concerned that in that same case (a non-fatal error where one of
+> the .error_detected() methods returned PCI_ERS_RESULT_NEED_RESET), I don't
+> think we actually *do* any kind of device reset.  This isn't related to
+> your patch, of course, so if you resolve the config space restore question,
+> we can deal with the reset question later.
+It's a good question. At the beginning when we enabled AER feature in kernel,
+we didn't really implement the real device reset. It's in the TODO list.
 
-As I understand the issue, the problem is not a deadlock for Mellanox
-(At least with either your patch or mine applied), the issue is that the
-PF is not ready to handle VFs when pci_enable_sriov is called due to
-some firmware issues.
+Yanmin
 
-Thanks,
-
-Alex
 
