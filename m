@@ -1,66 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:54160 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751192Ab3EED5k (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 4 May 2013 23:57:40 -0400
-Message-ID: <1367721709.11982.37.camel@pasglop>
-Subject: Re: [PATCH v8 1/3] of/pci: Unify pci_process_bridge_OF_ranges from
- Microblaze and PowerPC
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Andrew Murray <Andrew.Murray@arm.com>
-Cc: linux-mips@linux-mips.org,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	jgunthorpe@obsidianresearch.com, linux@arm.linux.org.uk,
-	siva.kallam@samsung.com, linux-pci@vger.kernel.org,
-	devicetree-discuss@lists.ozlabs.org, jg1.han@samsung.com,
-	Liviu.Dudau@arm.com, linux-kernel@vger.kernel.org,
-	linux-samsung-soc@vger.kernel.org, kgene.kim@samsung.com,
-	bhelgaas@google.com, suren.reddy@samsung.com,
-	linux-arm-kernel@lists.infradead.org, monstr@monstr.eu,
-	paulus@samba.org, thomas.petazzoni@free-electrons.com,
-	thierry.reding@avionic-design.de, thomas.abraham@linaro.org,
-	arnd@arndb.de, linus.walleij@linaro.org, juhosg@openwrt.org,
-	grant.likely@linaro.org, Rob Herring <robherring2@gmail.com>
-Date: Sun, 05 May 2013 12:41:49 +1000
-In-Reply-To: <1366627295-16964-2-git-send-email-Andrew.Murray@arm.com>
-References: <1366627295-16964-1-git-send-email-Andrew.Murray@arm.com>
-	 <1366627295-16964-2-git-send-email-Andrew.Murray@arm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from cmexedge1.ext.emulex.com ([138.239.224.99]:50569 "EHLO
+	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752515Ab3EUPlq convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 May 2013 11:41:46 -0400
+From: "Liu, Joseph" <Joseph.Liu@Emulex.Com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	"Zhang, LongX" <longx.zhang@intel.com>
+CC: "linasvepstas@gmail.com" <linasvepstas@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"yanmin_zhang@linux.intel.com" <yanmin_zhang@linux.intel.com>
+Subject: RE: Subject : [ PATCH ]
+ pci-reset-error_state-to-pci_channel_io_normal-at-report_slot_reset
+Date: Tue, 21 May 2013 15:41:44 +0000
+Message-ID: <CF6E51640088844D9CADE5541A7C2FEB33EBE413@CMEXMB1.ad.emulex.com>
+References: <F7B8FD780A346D46A0042F5C63B06AE785E3B2@SHSMSX102.ccr.corp.intel.com>
+ <20130520224824.GA31740@google.com>
+In-Reply-To: <20130520224824.GA31740@google.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 2013-04-22 at 11:41 +0100, Andrew Murray wrote:
-> The pci_process_bridge_OF_ranges function, used to parse the "ranges"
-> property of a PCI host device, is found in both Microblaze and PowerPC
-> architectures. These implementations are nearly identical. This patch
-> moves this common code to a common place.
+Bjorn,
 
-What's happening with this ? I'd like to avoid that patch for now
-as I'm doing some changes to pci_process_bridge_OF_ranges
-which are fairly urgent (I might even stick them in the current
-merge window) to deal with memory windows having separate offsets.
+>> diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
+>> index ed4d094..7abefd9 100644
+>> --- a/drivers/pci/pcie/portdrv_pci.c
+>> +++ b/drivers/pci/pcie/portdrv_pci.c
+>> @@ -332,13 +332,11 @@ static pci_ers_result_t pcie_portdrv_slot_reset(struct pci_dev *dev)
+>>  	pci_ers_result_t status = PCI_ERS_RESULT_RECOVERED;
+>>  	int retval;
+>>  
+>> -	/* If fatal, restore cfg space for possible link reset at upstream */
+>> -	if (dev->error_state == pci_channel_io_frozen) {
+>> -		dev->state_saved = true;
+>> -		pci_restore_state(dev);
+>> -		pcie_portdrv_restore_config(dev);
+>> -		pci_enable_pcie_error_reporting(dev);
+>> -	}
+>> +	/* restore cfg space for possible link reset at upstream */
+>> +	dev->state_saved = true;
+>> +	pci_restore_state(dev);
+>> +	pcie_portdrv_restore_config(dev);
+>> +	pci_enable_pcie_error_reporting(dev);
+>>  
+>>  	/* get true return value from &status */
+>>  	retval = device_for_each_child(&dev->dev, &status, slot_reset_iter);
+>
+>I think this patch changes the behavior in the case of a non-fatal error
+>where one of the .error_detected() methods returned
+>PCI_ERS_RESULT_NEED_RESET.  In that case, pcie_portdrv_slot_reset()
+>previously did not restore config space, but after your patch, it *will*
+>restore it.  We need an explanation of why this is safe. 
 
-There's also a few hacks in there that are really ppc specific...
+Here is my understanding of this part of the patch:
 
-I think the right long term approach is to change the way powerpc
-(and microblaze ?) initializes PCI host bridges. Move it away from
-setup_arch() (which is a PITA anyway since it's way too early) to
-an early init call of some sort, and encapsulate the new struct
-pci_host_bridge.
+I think your concern here should not be an issue. Whether it is a non-fatal error or a fatal error, as long as one of the .error_detected() method from the downstream drivers involved returns a PCI_ERS_RESULT_NEED_RESET, it should trump all others and a slot reset should be performed, even though it was originally due to a non-fatal error reported or only one of the downstream drivers requests it. In the case of AER driver, this should be implemented in the broadcast_error_message() with pci_walk_bus() by passing in the report_error_detected() function, and merging the results into the result_data->result...
 
-We can then directly configure the host bridge windows rather
-than having this "intermediary" set of resources in our pci_controller
-and in fact move most of the fields from pci_controller to
-pci_host_bridge to the point where the former can remain as a
-simple platform specific wrapper if needed.
+In any case, the fact that this pcie_portdrv_slot_reset() being invoked should be considered as a aftermath of a slot reset has been performed, thus the restore of config space should be performed after the reset. I suppose the restore should be to the same state as fresh power-on states, right?
 
-So for new stuff (hint: DT based ARM PCI) or stuff that has to deal with
-a lot less archaic platforms (hint: Microblaze), I'd recommend going
-straight for that approach rather than perpetuating the PowerPC code
-which I'll try to deal with in the next few monthes.
-
-Cheers,
-Ben.
- 
+Thanks,
+Joe Liu, Ph.D.
+Senior Principal Engineer
+Emulex Corporation
 
