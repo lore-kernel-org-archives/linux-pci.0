@@ -1,51 +1,74 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Mauro Carvalho Chehab <mchehab@redhat.com>,
-	Doug Thompson <dougthompson@xmission.com>,
-	linux-edac@vger.kernel.org
-Subject: [PATCH v3, part2 15/20] PCI, EDAC: use hotplug-safe PCI bus iterators to walk PCI buses
-Date: Sun, 26 May 2013 23:53:12 +0800
-Message-Id: <1369583597-3801-16-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1369583597-3801-1-git-send-email-jiang.liu@huawei.com>
-References: <1369583597-3801-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga09.intel.com ([134.134.136.24]:1907 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751764Ab3EUHsI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 21 May 2013 03:48:08 -0400
+Message-ID: <1369122596.4432.22.camel@ymzhang.sh.intel.com>
+Subject: Re: Subject : [ PATCH ]
+ pci-reset-error_state-to-pci_channel_io_normal-at-report_slot_reset
+From: Yanmin Zhang <yanmin_zhang@linux.intel.com>
+Reply-To: yanmin_zhang@linux.intel.com
+To: linasvepstas@gmail.com
+Cc: "Liu, Joseph" <Joseph.Liu@emulex.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Zhang, LongX" <longx.zhang@intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Date: Tue, 21 May 2013 15:49:56 +0800
+In-Reply-To: <CAHrUA36OxKn1ucaA4-1jHU=4P+hCWOTVa2ECAwpxEoBWSRAv8A@mail.gmail.com>
+References: <F7B8FD780A346D46A0042F5C63B06AE785E3B2@SHSMSX102.ccr.corp.intel.com>
+	 <CAErSpo7+AbHi_TwxwHTJunpFb=CMhwMdCni6+NjbhdA=35XhvA@mail.gmail.com>
+	 <CF6E51640088844D9CADE5541A7C2FEB33EBC11D@CMEXMB1.ad.emulex.com>
+	 <CAHrUA36OxKn1ucaA4-1jHU=4P+hCWOTVa2ECAwpxEoBWSRAv8A@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Enhance EDAC drviers to use hotplug-safe iterators to walk PCI buses.
+On Mon, 2013-05-20 at 10:37 -0500, Linas Vepstas wrote:
+> I think Joe Liu has it right.  I'm going to top-post because things
+> are a bit tangled below.  I urge a review of
+> /Documentation/PCI/pci-error-recovery.txt, as that gives the details.
+> 
+> The intended sequence is that, after an error, the device driver gets
+> a shot at running some diagnostics & dumps, and then the pci
+> bridges/controllers/ports/links are reset (by platform code, viz. aer
+> in this case) to a state resembling a fresh power-on.  Then the
+> .slot_reset() callback is called on the device driver, to tell the
+> driver "hey everything upstream is now working, go set yourself up for
+> normal ops."  Thus, in particular, one should have pdev->error_state =
+> pci_channel_io_normal; before .slot_reset() is called, and the PCI
+> config space contents should resemble a fresh power-on state (and
+> **NOT** some other saved state!)
+> 
+> If the device driver wanted to leave the card in a dead state, it had
+> several opportunities to say so, earlier in the callback sequence.  If
+> the driver wanted to fiddle with the card with the old PCI config
+> space, it already had a chance to do that too, before the
+> bridges/controllers/ports/links were fully reset by the platform.   By
+> the time that .slot_reset() is being called, both the platform and the
+> device driver are expecting smooth sailing ahead.
+Yes. It's flexible for drivers to do that in many callbacks. AER framework
+provides such flexibility.
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Cc: Mauro Carvalho Chehab <mchehab@redhat.com>
-Cc: Doug Thompson <dougthompson@xmission.com>
-Cc: linux-edac@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
----
- drivers/edac/i7core_edac.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> So, looking at the original patch, it seems reasonable. 
+I agree.
 
-diff --git a/drivers/edac/i7core_edac.c b/drivers/edac/i7core_edac.c
-index 0ec3e95..7146e10 100644
---- a/drivers/edac/i7core_edac.c
-+++ b/drivers/edac/i7core_edac.c
-@@ -1296,7 +1296,7 @@ static unsigned i7core_pci_lastbus(void)
- 	int last_bus = 0, bus;
- 	struct pci_bus *b = NULL;
- 
--	while ((b = pci_find_next_bus(b)) != NULL) {
-+	for_each_pci_root_bus(b) {
- 		bus = b->number;
- 		edac_dbg(0, "Found bus %d\n", bus);
- 		if (bus > last_bus)
--- 
-1.8.1.2
+>  My impression
+> is that maybe the AER driver had been doing not quite the right thing
+> for a long time.
+Pls. provide evidence/facts. The new patch is to facilitate device driver
+implementation. It doesn't mean current AER driver is incorrect. We need
+a tradeoff.
+
+Just like what Bjoin says, we shouldn't change error_state to pci_channel_io_normal
+before we really recover the hardware. The patch changes it just because
+drivers might call some functions to recover the devices, while such functions
+need (error_state==pci_channel_io_normal).
+
+> 
+> -- Linas Vepstas
+
 
