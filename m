@@ -1,55 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.missinglinkelectronics.com ([5.9.45.205]:59024 "EHLO
-	smtp.missinglinkelectronics.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757372Ab3EaWWB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 31 May 2013 18:22:01 -0400
-Received: from localhost (localhost [127.0.0.1])
-	by smtp.missinglinkelectronics.com (Postfix) with ESMTP id F2A47792007
-	for <linux-pci@vger.kernel.org>; Sat,  1 Jun 2013 00:14:31 +0200 (CEST)
-Received: from smtp.missinglinkelectronics.com ([127.0.0.1])
-	by localhost (smtp.missinglinkelectronics.com [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id rsv7rAwV2NiA for <linux-pci@vger.kernel.org>;
-	Sat,  1 Jun 2013 00:14:29 +0200 (CEST)
-Received: from [192.168.178.26] (unknown [109.235.226.171])
-	(using TLSv1 with cipher AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	(Authenticated sender: david)
-	by smtp.missinglinkelectronics.com (Postfix) with ESMTPSA id 97648792003
-	for <linux-pci@vger.kernel.org>; Sat,  1 Jun 2013 00:14:29 +0200 (CEST)
-Message-ID: <51A920C5.40209@missinglinkelectronics.com>
-Date: Sat, 01 Jun 2013 00:14:29 +0200
-From: David Epping <david.epping@missinglinkelectronics.com>
+Received: from mail-ie0-f180.google.com ([209.85.223.180]:43530 "EHLO
+	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751766Ab3EURjO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 May 2013 13:39:14 -0400
+Received: by mail-ie0-f180.google.com with SMTP id ar20so2523598iec.11
+        for <linux-pci@vger.kernel.org>; Tue, 21 May 2013 10:39:14 -0700 (PDT)
 MIME-Version: 1.0
-To: linux-pci@vger.kernel.org
-Subject: MSI-X capability display of pciutils
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <CAErSpo4jW3v5CTDAoqNqr-q9BNFPPFjHuy3BcrgjQumQ8HGVNg@mail.gmail.com>
+References: <1367712653.11982.19.camel@pasglop>
+	<1367712932.11982.20.camel@pasglop>
+	<CAE9FiQX=h4H1gcbW=EfQo_ZtAgHGOZ2GxVxLG59C1iMH+qgH2g@mail.gmail.com>
+	<1367732090.11982.38.camel@pasglop>
+	<CAE9FiQUN3qqVmdw_EdOC-JZGc219M3tu=roOX98xns+77LJhMw@mail.gmail.com>
+	<1367740336.11982.41.camel@pasglop>
+	<51871088.4594420a.0ccc.7300SMTPIN_ADDED_BROKEN@mx.google.com>
+	<CAE9FiQXGUOM_h_X5tdGbkiuZGZkiFigSLbbftx3YXybFBg6trg@mail.gmail.com>
+	<1367837311.15842.31.camel@pasglop>
+	<CAE9FiQU=ZEfvVKeQgVOa0jeG5smJrKRaeLTOckR=v2vzTyTvLw@mail.gmail.com>
+	<5188b791.a110420a.0bea.077eSMTPIN_ADDED_BROKEN@mx.google.com>
+	<CAE9FiQUc2q0GfVumVrp3_ba0q6N_a_WxjKhMWbyqbLfO=WGaFQ@mail.gmail.com>
+	<1368768974.20726.1.camel@pasglop>
+	<CAErSpo4jW3v5CTDAoqNqr-q9BNFPPFjHuy3BcrgjQumQ8HGVNg@mail.gmail.com>
+Date: Tue, 21 May 2013 10:39:14 -0700
+Message-ID: <CAE9FiQWiQfCrja05fNK5_-WiHPXXt4Dnw6gT=e_gMvtZUxmkNw@mail.gmail.com>
+Subject: Re: Resource assignment oddities
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Gavin Shan <shangw@linux.vnet.ibm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
+On Tue, May 21, 2013 at 10:28 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Thu, May 16, 2013 at 11:36 PM, Benjamin Herrenschmidt
+> <benh@kernel.crashing.org> wrote:
+>> On Tue, 2013-05-07 at 15:21 -0700, Yinghai Lu wrote:
+>>> I just sent v3, please test that.
+>>>
+>>> That should be less invasive for v3.10. As it will skip adding failed
+>>> resource to failed list when the resource is IORESOURCE_IO, and bus
+>>> does not have IORESOURCE_IO.
+>>
+>> Any news about merging this ?
+>
+> I'm starting to look at this.  Do you think this is v3.10 material?
+> My first impression is that it seems pretty large for that.
 
-I am inspecting the MSI-X setup of some PCIe devices and have questions 
-about the output of lspci.
+Maybe could put first two for 3.10, and other three for v3.11.
 
-It looks something like this:
-Capabilities: [50] MSI-X: Enable+ Count=32 Masked-
-     Vector table: BAR=0 offset=00002000
-     PBA: BAR=0 offset=00003000
-
-As far as I understand the PCI 3.0 specification MSI-X capabilities 
-define a 32 bit register for the upper address portion of the MSI target 
-addresses (at capability offset 4) and another 32 bit register pointing 
-to the BAR and inter-BAR offset for the table of lower address portions 
-of the MSI target addresses (at capability offset 8).
-Why are there two lines in the lspci output indicating some BAR and 
-offset? What do they mean?
-
-Looking at the source code of pciutils (ls-caps.c) indicates that the 
-PBA line is the information pointing to the table of MSI-X entries, 
-while the vector table line is actually the upper 32bit of each MSI 
-target address. This should however not be split into BAR and offset in 
-that case, I believe.
-
-What did I miss?
-Thanks for clarifying,
-David
+Yinghai
