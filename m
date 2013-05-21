@@ -1,54 +1,120 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:30044 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752548Ab3ENGDg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 May 2013 02:03:36 -0400
-Message-ID: <5191D378.8060600@huawei.com>
-Date: Tue, 14 May 2013 14:02:32 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+In-Reply-To: <1369122001.4432.14.camel@ymzhang.sh.intel.com>
+References: <F7B8FD780A346D46A0042F5C63B06AE785E3B2@SHSMSX102.ccr.corp.intel.com>
+ <20130520224824.GA31740@google.com> <1369122001.4432.14.camel@ymzhang.sh.intel.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 21 May 2013 10:17:01 -0600
+Message-ID: <CAErSpo5Ysg48TJMVRLZpEWuFy1q-Eu5hTJVhtOST9sEFZJoduA@mail.gmail.com>
+Subject: Re: Subject : [ PATCH ] pci-reset-error_state-to-pci_channel_io_normal-at-report_slot_reset
+To: "yanmin_zhang@linux.intel.com" <yanmin_zhang@linux.intel.com>
+Cc: "Zhang, LongX" <longx.zhang@intel.com>,
+	"linasvepstas@gmail.com" <linasvepstas@gmail.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 2/7] PCI: move resources and bus_list releasing to pci_release_dev
-References: <1368498506-25857-1-git-send-email-yinghai@kernel.org> <1368498506-25857-3-git-send-email-yinghai@kernel.org> <5191AD65.7090105@huawei.com> <CAE9FiQWty+iSv3RdfesoyDZ3q15QeX4fJGFcXS8PxTCese-XzQ@mail.gmail.com>
-In-Reply-To: <CAE9FiQWty+iSv3RdfesoyDZ3q15QeX4fJGFcXS8PxTCese-XzQ@mail.gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Sender: linux-pci-owner@vger.kernel.org
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"Joseph.Liu@Emulex.Com" <Joseph.Liu@emulex.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2013/5/14 11:56, Yinghai Lu wrote:
-> On Mon, May 13, 2013 at 8:20 PM, Yijing Wang <wangyijing@huawei.com> wrote:
->> On 2013/5/14 10:28, Yinghai Lu wrote:
->>> We should not release resource in pci_destroy that is too early
+On Tue, May 21, 2013 at 1:40 AM, Yanmin Zhang
+<yanmin_zhang@linux.intel.com> wrote:
+> On Mon, 2013-05-20 at 16:48 -0600, Bjorn Helgaas wrote:
+>> On Fri, Apr 26, 2013 at 06:28:59AM +0000, Zhang, LongX wrote:
+>> > From: Zhang Long <longx.zhang@intel.com>
+>> >
+>> > Specific pci device drivers might have many functions to call
+>> > pci_channel_offline to check device states. When slot_reset happens,
+>> > drivers' slot_reset callback might call such functions and eventually
+>> > abort the reset.
+>> >
+>> > The patch resets pdev->error_state to pci_channel_io_normal at
+>> > the begining of report_slot_reset.
+>> >
+>> > Thank Liu Joseph for pointing it out.
+>> >
+>> > Signed-off-by: Zhang Yanmin <yanmin_zhang@linux.intel.com>
+>> > Signed-off-by: Zhang Long <longx.zhang@intel.com>
+>> > ---
+>> >  drivers/pci/pcie/aer/aerdrv_core.c |    1 +
+>> >  drivers/pci/pcie/portdrv_pci.c     |   12 +++++-------
+>> >  2 files changed, 6 insertions(+), 7 deletions(-)
+> Thank all for the kind comments.
+>
+>> >
+>> > diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
+>> > index 564d97f..c61fd44 100644
+>> > --- a/drivers/pci/pcie/aer/aerdrv_core.c
+>> > +++ b/drivers/pci/pcie/aer/aerdrv_core.c
+>> > @@ -286,6 +286,7 @@ static int report_slot_reset(struct pci_dev *dev, void *data)
+>> >     result_data = (struct aer_broadcast_data *) data;
+>> >
+>> >     device_lock(&dev->dev);
+>> > +   dev->error_state = pci_channel_io_normal;
+>> >     if (!dev->driver ||
+>> >             !dev->driver->err_handler ||
+>> >             !dev->driver->err_handler->slot_reset)
+>> > diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
+>> > index ed4d094..7abefd9 100644
+>> > --- a/drivers/pci/pcie/portdrv_pci.c
+>> > +++ b/drivers/pci/pcie/portdrv_pci.c
+>> > @@ -332,13 +332,11 @@ static pci_ers_result_t pcie_portdrv_slot_reset(struct pci_dev *dev)
+>> >     pci_ers_result_t status = PCI_ERS_RESULT_RECOVERED;
+>> >     int retval;
+>> >
+>> > -   /* If fatal, restore cfg space for possible link reset at upstream */
+>> > -   if (dev->error_state == pci_channel_io_frozen) {
+>> > -           dev->state_saved = true;
+>> > -           pci_restore_state(dev);
+>> > -           pcie_portdrv_restore_config(dev);
+>> > -           pci_enable_pcie_error_reporting(dev);
+>> > -   }
+>> > +   /* restore cfg space for possible link reset at upstream */
+>> > +   dev->state_saved = true;
+> It's indeed a dirty trick to change it to true. The reason is suspend. The port would
+> suspend/resume at suspend-to-ram. When the port is suspended, PCI power framework calls
+> pci_save_state. When the port is resumed, PCI framework calls pci_restore_state and
+> dev->state_saved is set to false.
+
+I can read the code as well as you can.  The above does nothing to
+explain why dev->saved_config_space is still valid even when
+state_saved is false.
+
+But I want to drop this issue because it was there before your patch,
+and we're clearly not going to resolve it here.
+
+> A better solution is to add double space in pci_dev->saved_config_space/saved_cap_space,
+> which seems consume unnecessary resource.
+>
+>> > +   pci_restore_state(dev);
+>> > +   pcie_portdrv_restore_config(dev);
+>> > +   pci_enable_pcie_error_reporting(dev);
+>> >
+>> >     /* get true return value from &status */
+>> >     retval = device_for_each_child(&dev->dev, &status, slot_reset_iter);
+>> I think this patch changes the behavior in the case of a non-fatal error
+>> where one of the .error_detected() methods returned
+>> PCI_ERS_RESULT_NEED_RESET.  In that case, pcie_portdrv_slot_reset()
+>> previously did not restore config space, but after your patch, it *will*
+>> restore it.  We need an explanation of why this is safe.
+> AER standard doesn't define such behavior like if we need reset a slot.
+> When we implemented the feature in kernel, we assumed at non-fatal error,
+> config space is still good.
+>
+> With the new patch, we change the behavior a little.
+>
 >>
->> Hi Yinghai,
->>    "too early" means that after pci_stop_dev(), if someone else
->> hold the device reference, it still care the device resource ? e.g.?
-> 
-> I don't mean that.
-> 
->>
->>> as there could be still other use hold reference.
-> 
-> purpose is:
-> move res releasing as late as possible. so pci_stop_and_remove_bus_device
-> could be called several times for nested removing via sys.
+>> I think you should split this into two patches: the first would remove the
+>> "if (dev->error_state == pci_channel_io_frozen)" test from portdrv_pci.c
+> The first patch would depend on the 2nd patch as 2nd patch resets error_state
+> to pci_channel_io_normal.
 
-OK, thanks for explanation.
+Not true.  The pcie_portdrv_slot_reset() change does not depend on the
+report_slot_reset() change.  If the first patch makes
+pcie_portdrv_slot_reset() do the restore without even looking at
+dev->error_state, there's no dependency on the report_slot_reset()
+change.
 
-Thanks!
-Yijing.
+>> and explain the reason, and the second would make the aerdrv_core.c change.
 
-> 
-> Yinghai
-> 
-> 
-
-
--- 
-Thanks!
-Yijing
-
+Bjorn
