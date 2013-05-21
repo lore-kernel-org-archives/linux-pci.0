@@ -1,131 +1,65 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Jiang Liu <liuj97@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	Len Brown <lenb@kernel.org>, Feng Tang <feng.tang@intel.com>,
-	linux-acpi@vger.kernel.org
-Subject: Re: [RFC PATCH v2, part3 11/11] PCI, ACPI, pci_root: use PCI bus lock to protect PCI device hotplug
-Date: Thu, 16 May 2013 21:59:27 +0200
-Message-ID: <10972097.JVdfQZJ2zI@vostro.rjw.lan>
-In-Reply-To: <1368719459-24800-12-git-send-email-jiang.liu@huawei.com>
-References: <1368719459-24800-1-git-send-email-jiang.liu@huawei.com> <1368719459-24800-12-git-send-email-jiang.liu@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pb0-f47.google.com ([209.85.160.47]:60201 "EHLO
+	mail-pb0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752400Ab3EUNjI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 May 2013 09:39:08 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Reply-To: linasvepstas@gmail.com
+In-Reply-To: <1369122596.4432.22.camel@ymzhang.sh.intel.com>
+References: <F7B8FD780A346D46A0042F5C63B06AE785E3B2@SHSMSX102.ccr.corp.intel.com>
+ <CAErSpo7+AbHi_TwxwHTJunpFb=CMhwMdCni6+NjbhdA=35XhvA@mail.gmail.com>
+ <CF6E51640088844D9CADE5541A7C2FEB33EBC11D@CMEXMB1.ad.emulex.com>
+ <CAHrUA36OxKn1ucaA4-1jHU=4P+hCWOTVa2ECAwpxEoBWSRAv8A@mail.gmail.com> <1369122596.4432.22.camel@ymzhang.sh.intel.com>
+From: Linas Vepstas <linasvepstas@gmail.com>
+Date: Tue, 21 May 2013 08:38:47 -0500
+Message-ID: <CAHrUA37hh9kZbheBi7oOuiM26wJOwNZX_R4TV8azoOv+Uo=eCA@mail.gmail.com>
+Subject: Re: Subject : [ PATCH ] pci-reset-error_state-to-pci_channel_io_normal-at-report_slot_reset
+To: yanmin_zhang <yanmin_zhang@linux.intel.com>
+Cc: "Liu, Joseph" <Joseph.Liu@emulex.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Zhang, LongX" <longx.zhang@intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, May 16, 2013 11:50:59 PM Jiang Liu wrote:
-> Use PCI bus lock to protect concurrent PCI device hotplug operations.
-> 
-> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-> Cc: Thomas Gleixner <tglx@linutronix.de>
-> Cc: Ingo Molnar <mingo@redhat.com>
-> Cc: "H. Peter Anvin" <hpa@zytor.com>
-> Cc: x86@kernel.org
-> Cc: Len Brown <lenb@kernel.org>
-> Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
-> Cc: Yinghai Lu <yinghai@kernel.org>
-> Cc: Feng Tang <feng.tang@intel.com>
-> Cc: linux-kernel@vger.kernel.org
-> Cc: linux-acpi@vger.kernel.org
+Hi,
 
-Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On 21 May 2013 02:49, Yanmin Zhang <yanmin_zhang@linux.intel.com> wrote:
+> On Mon, 2013-05-20 at 10:37 -0500, Linas Vepstas wrote:
 
-> ---
->  arch/ia64/pci/pci.c     |  2 +-
->  arch/x86/pci/acpi.c     |  3 ++-
->  drivers/acpi/pci_root.c | 14 ++++++++------
->  drivers/pci/Kconfig     |  2 +-
->  4 files changed, 12 insertions(+), 9 deletions(-)
-> 
-> diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
-> index de1474f..6e91e87 100644
-> --- a/arch/ia64/pci/pci.c
-> +++ b/arch/ia64/pci/pci.c
-> @@ -384,7 +384,7 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
->  	}
->  
->  	pci_scan_child_bus(pbus);
-> -	return pbus;
-> +	return pci_bus_get(pbus);
->  
->  out3:
->  	kfree(controller->window);
-> diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-> index b972f04..6dddc06 100644
-> --- a/arch/x86/pci/acpi.c
-> +++ b/arch/x86/pci/acpi.c
-> @@ -534,7 +534,7 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
->  		 */
->  		memcpy(bus->sysdata, sd, sizeof(*sd));
->  		kfree(info);
-> -		pci_bus_put(bus);
-> +		BUG_ON(pci_bus_lock(bus, PCI_BUS_STATE_REMOVED - 1, true) < 0);
->  	} else {
->  		probe_pci_root_info(info, device, busnum, domain);
->  
-> @@ -561,6 +561,7 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
->  			pci_set_host_bridge_release(
->  				to_pci_host_bridge(bus->bridge),
->  				release_pci_root_info, info);
-> +			pci_bus_get(bus);
->  		} else {
->  			pci_free_resource_list(&resources);
->  			__release_pci_root_info(info);
-> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-> index 21dda5a..eb01cc7 100644
-> --- a/drivers/acpi/pci_root.c
-> +++ b/drivers/acpi/pci_root.c
-> @@ -535,6 +535,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
->  	}
->  
->  	pci_bus_add_devices(root->bus);
-> +	pci_bus_unlock(root->bus, true);
->  	return 1;
->  
->  end:
-> @@ -546,13 +547,14 @@ static void acpi_pci_root_remove(struct acpi_device *device)
->  {
->  	struct acpi_pci_root *root = acpi_driver_data(device);
->  
-> -	pci_stop_root_bus(root->bus);
-> -
-> -	device_set_run_wake(root->bus->bridge, false);
-> -	pci_acpi_remove_bus_pm_notifier(device);
-> -
-> -	pci_remove_root_bus(root->bus);
-> +	if (pci_bus_lock(root->bus, PCI_BUS_STATE_REMOVED - 1, true) == 0) {
-> +		pci_stop_root_bus(root->bus);
-> +		device_set_run_wake(root->bus->bridge, false);
-> +		pci_acpi_remove_bus_pm_notifier(device);
-> +		pci_remove_root_bus(root->bus);
-> +	}
->  
-> +	pci_bus_put(root->bus);
->  	kfree(root);
->  }
->  
-> diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
-> index 92e69bd..5ae3504 100644
-> --- a/drivers/pci/Kconfig
-> +++ b/drivers/pci/Kconfig
-> @@ -121,4 +121,4 @@ config PCI_LABEL
->  	select NLS
->  
->  config PCI_BUS_LOCK
-> -	def_bool n
-> +	def_bool y if (X86 || IA64)
-> 
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+>>  My impression
+>> is that maybe the AER driver had been doing not quite the right thing
+>> for a long time.
+> Pls. provide evidence/facts. The new patch is to facilitate device driver
+> implementation. It doesn't mean current AER driver is incorrect. We need
+> a tradeoff.
+>
+> Just like what Bjoin says, we shouldn't change error_state to pci_channel_io_normal
+> before we really recover the hardware. The patch changes it just because
+> drivers might call some functions to recover the devices, while such functions
+> need (error_state==pci_channel_io_normal).
+
+Perhaps we are talking past each other.  One needs to set error_state
+== pci_channel_io_normal before calling slot_reset().  If the aer
+driver wasn't doing this all along, then it seems like an old bug to
+me.   The error_state flag indicates the status of the PCI channel,
+and not the status of the attached device.  Once the channel has been
+reset, the error state is "normal" even if the card itself hasn't yet
+been brought up.
+
+Whatever it is that the aer driver is doing, it should be doing
+something similar to what the eeh driver is doing, in
+arch/powerpc/platforms/pseries/eeh_driver.c  -- This is the "reference
+implementation" -- Its known right, it was and continues to be heavily
+tested, has found its way into sriov, etc.
+
+The one thing that eeh does NOT do is to handle suspend/sleep states.
+The basic design assumption back then was that no one would ever
+suspend/sleep their server.  Since suspend/sleep messes with PCI
+config space, then, yes, one would need to somehow save a second,
+pristine copy of config space for device recovery.
+
+-- Linas
