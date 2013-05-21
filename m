@@ -1,157 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:28783 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755667Ab3EVGkP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 May 2013 02:40:15 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v4 4/8] PCI: Split pci_assign_unassigned_resources to per root bus
-Date: Tue, 21 May 2013 23:38:44 -0700
-Message-Id: <1369204728-11165-5-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1369204728-11165-1-git-send-email-yinghai@kernel.org>
-References: <1369204728-11165-1-git-send-email-yinghai@kernel.org>
+Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:37382 "EHLO
+	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753178Ab3EUNbk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 May 2013 09:31:40 -0400
+Message-ID: <519B7739.1040909@ubuntu.com>
+Date: Tue, 21 May 2013 09:31:37 -0400
+From: Phillip Susi <psusi@ubuntu.com>
+MIME-Version: 1.0
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Subject: Re: enabling aspm on ati radeon
+References: <519443A1.8050905@ubuntu.com> <5196D765.9020600@ubuntu.com> <CAErSpo6MGwHLJvis+4=vdQEJN=Qb9aC5e9=3Q6MdTB-HH84YBw@mail.gmail.com> <11045555.dLhhFPGoSV@vostro.rjw.lan>
+In-Reply-To: <11045555.dLhhFPGoSV@vostro.rjw.lan>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We need to split pci_assign_unassiged_resource to every root bus, so in
-next patch we can stop early for root bus without ioport range, and still
-continue to retry on buses that do have ioport range.
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-Also later we could let root bus hot add and booting path use same code.
+On 5/20/2013 4:01 PM, Rafael J. Wysocki wrote:
+> I'm pretty sure it's measurable, at least in some cases.  Phoronix
+> did quite some fuss about a commit that caused ASPM to not work any
+> more on some systems some time ago, so he had to be able to measure
+> it (and it was called a "major power regression").
 
--v2: separate enable_local and pci_release_bridge_resources to
-     other patches requested by Bjorn.
+That is why I was trying to get it enabled, but the "major regression"
+seems to be caused by Radeons using the ASPM as a cue to enter low
+power mode.  The energy saved by the bus itself going into the lower
+power state I can't imagine is more than a few mW.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 
----
- drivers/pci/setup-bus.c |   62 +++++++++++++++++++-----------------------------
- 1 file changed, 25 insertions(+), 37 deletions(-)
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.17 (MingW32)
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
 
-Index: linux-2.6/drivers/pci/setup-bus.c
-===================================================================
---- linux-2.6.orig/drivers/pci/setup-bus.c
-+++ linux-2.6/drivers/pci/setup-bus.c
-@@ -1315,21 +1315,6 @@ static int __init pci_bus_get_depth(stru
- 
- 	return depth;
- }
--static int __init pci_get_max_depth(void)
--{
--	int depth = 0;
--	struct pci_bus *bus;
--
--	list_for_each_entry(bus, &pci_root_buses, node) {
--		int ret;
--
--		ret = pci_bus_get_depth(bus);
--		if (ret > depth)
--			depth = ret;
--	}
--
--	return depth;
--}
- 
- /*
-  * -1: undefined, will auto detect later
-@@ -1405,10 +1390,9 @@ static enum enable_type __init pci_reall
-  * second  and later try will clear small leaf bridge res
-  * will stop till to the max  deepth if can not find good one
-  */
--void __init
--pci_assign_unassigned_resources(void)
-+static void __init
-+pci_assign_unassigned_root_bus_resources(struct pci_bus *bus)
- {
--	struct pci_bus *bus;
- 	LIST_HEAD(realloc_head); /* list of resources that
- 					want additional resources */
- 	struct list_head *add_list = NULL;
-@@ -1419,17 +1403,17 @@ pci_assign_unassigned_resources(void)
- 	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
- 				  IORESOURCE_PREFETCH;
- 	int pci_try_num = 1;
--	enum enable_type enable_local = pci_realloc_enable;
--
--	list_for_each_entry(bus, &pci_root_buses, node)
--		enable_local = pci_realloc_detect(bus, enable_local);
-+	enum enable_type enable_local;
- 
-+	/* don't realloc if asked to do so */
-+	enable_local = pci_realloc_detect(bus, pci_realloc_enable);
- 	if (pci_realloc_enabled(enable_local)) {
--		int max_depth = pci_get_max_depth();
-+		int max_depth = pci_bus_get_depth(bus);
- 
- 		pci_try_num = max_depth + 1;
--		printk(KERN_DEBUG "PCI: max bus depth: %d pci_try_num: %d\n",
--			 max_depth, pci_try_num);
-+		dev_printk(KERN_DEBUG, &bus->dev,
-+			   "max bus depth: %d pci_try_num: %d\n",
-+			   max_depth, pci_try_num);
- 	}
- 
- again:
-@@ -1441,12 +1425,10 @@ again:
- 		add_list = &realloc_head;
- 	/* Depth first, calculate sizes and alignments of all
- 	   subordinate buses. */
--	list_for_each_entry(bus, &pci_root_buses, node)
--		__pci_bus_size_bridges(bus, add_list);
-+	__pci_bus_size_bridges(bus, add_list);
- 
- 	/* Depth last, allocate resources and update the hardware. */
--	list_for_each_entry(bus, &pci_root_buses, node)
--		__pci_bus_assign_resources(bus, add_list, &fail_head);
-+	__pci_bus_assign_resources(bus, add_list, &fail_head);
- 	if (add_list)
- 		BUG_ON(!list_empty(add_list));
- 	tried_times++;
-@@ -1457,16 +1439,16 @@ again:
- 
- 	if (tried_times >= pci_try_num) {
- 		if (enable_local == undefined)
--			printk(KERN_INFO "Some PCI device resources are unassigned, try booting with pci=realloc\n");
-+			dev_info(&bus->dev, "Some PCI device resources are unassigned, try booting with pci=realloc\n");
- 		else if (enable_local == auto_enabled)
--			printk(KERN_INFO "Automatically enabled pci realloc, if you have problem, try booting with pci=realloc=off\n");
-+			dev_info(&bus->dev, "Automatically enabled pci realloc, if you have problem, try booting with pci=realloc=off\n");
- 
- 		free_list(&fail_head);
- 		goto enable_and_dump;
- 	}
- 
--	printk(KERN_DEBUG "PCI: No. %d try to assign unassigned res\n",
--			 tried_times + 1);
-+	dev_printk(KERN_DEBUG, &bus->dev,
-+		   "No. %d try to assign unassigned res\n", tried_times + 1);
- 
- 	/* third times and later will not check if it is leaf */
- 	if ((tried_times + 1) > 2)
-@@ -1497,12 +1479,18 @@ again:
- 
- enable_and_dump:
- 	/* Depth last, update the hardware. */
--	list_for_each_entry(bus, &pci_root_buses, node)
--		pci_enable_bridges(bus);
-+	pci_enable_bridges(bus);
- 
- 	/* dump the resource on buses */
--	list_for_each_entry(bus, &pci_root_buses, node)
--		pci_bus_dump_resources(bus);
-+	pci_bus_dump_resources(bus);
-+}
-+
-+void __init pci_assign_unassigned_resources(void)
-+{
-+	struct pci_bus *root_bus;
-+
-+	list_for_each_entry(root_bus, &pci_root_buses, node)
-+		pci_assign_unassigned_root_bus_resources(root_bus);
- }
- 
- void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
+iQEcBAEBAgAGBQJRm3c5AAoJEJrBOlT6nu75MkUH/3qGUjM3BmDFjCJ5kJUaMOCg
+Ps3YFcr37JPumLZNLAwAHeL+eZH1v8G1SkDKPFMfPjIMCY4II4xxthFutV6bslQv
+PR5w5jjAg/qk0YXEq8CddhdZkVkJw8nKBZiN6jFFcn/c1UgFN39FHCzUTa3sMG2X
++rEM4RHzrtcIJm46KXkI162Dzcnj7UaGTFYUzwMCxzy3XHn8xKMS1tfsM1TW3sqS
+ptcqbsy1rObJewAhdnQZ0pzRgLC7zKWkGlLo00JdFW7wChjsVbM2db++FlpkCT0W
+sHSSEEYLFqef+fU9FHptJklMx31nF8QHDGh3S277YqTuIaanMufo+gx4vHJC3tM=
+=tcAW
+-----END PGP SIGNATURE-----
