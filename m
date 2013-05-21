@@ -1,112 +1,98 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f180.google.com ([209.85.223.180]:50892 "EHLO
-	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756802Ab3EVUug (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 May 2013 16:50:36 -0400
-Received: by mail-ie0-f180.google.com with SMTP id ar20so6442059iec.11
-        for <linux-pci@vger.kernel.org>; Wed, 22 May 2013 13:50:36 -0700 (PDT)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQWsZXfkSSVFzee4-J4bUDP8DdG=y9-k2du+ek90StDvNA@mail.gmail.com>
-References: <1367712653.11982.19.camel@pasglop>
-	<1367712932.11982.20.camel@pasglop>
-	<CAE9FiQX=h4H1gcbW=EfQo_ZtAgHGOZ2GxVxLG59C1iMH+qgH2g@mail.gmail.com>
-	<1367732090.11982.38.camel@pasglop>
-	<CAE9FiQUN3qqVmdw_EdOC-JZGc219M3tu=roOX98xns+77LJhMw@mail.gmail.com>
-	<1367740336.11982.41.camel@pasglop>
-	<51871088.4594420a.0ccc.7300SMTPIN_ADDED_BROKEN@mx.google.com>
-	<CAE9FiQXGUOM_h_X5tdGbkiuZGZkiFigSLbbftx3YXybFBg6trg@mail.gmail.com>
-	<518786a7.64bbec0a.58a0.1f6bSMTPIN_ADDED_BROKEN@mx.google.com>
-	<CAErSpo5MJCoaof=heFM4vLxuWz8pFqsyXAC356jZ7rbRvSOt9g@mail.gmail.com>
-	<CAE9FiQWsZXfkSSVFzee4-J4bUDP8DdG=y9-k2du+ek90StDvNA@mail.gmail.com>
-Date: Wed, 22 May 2013 13:50:35 -0700
-Message-ID: <CAE9FiQXw=Q9hDWMS3kx8=G0eSqo2keKh-VP3=LWZ31PfXmrAmg@mail.gmail.com>
-Subject: Re: Resource assignment oddities
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Gavin Shan <shangw@linux.vnet.ibm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: multipart/mixed; boundary=089e0122ac44b99abf04dd54b7eb
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CF6E51640088844D9CADE5541A7C2FEB33EBE413@CMEXMB1.ad.emulex.com>
+References: <F7B8FD780A346D46A0042F5C63B06AE785E3B2@SHSMSX102.ccr.corp.intel.com>
+ <20130520224824.GA31740@google.com> <CF6E51640088844D9CADE5541A7C2FEB33EBE413@CMEXMB1.ad.emulex.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 21 May 2013 10:51:51 -0600
+Message-ID: <CAErSpo4kvEkUtYFXnoE8yDnHsUD8Z6EUrKaXaJ=yy4yMcJ0veA@mail.gmail.com>
+Subject: Re: Subject : [ PATCH ] pci-reset-error_state-to-pci_channel_io_normal-at-report_slot_reset
+To: "Liu, Joseph" <Joseph.Liu@emulex.com>
+Cc: "Zhang, LongX" <longx.zhang@intel.com>,
+	"linasvepstas@gmail.com" <linasvepstas@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"yanmin_zhang@linux.intel.com" <yanmin_zhang@linux.intel.com>
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---089e0122ac44b99abf04dd54b7eb
-Content-Type: text/plain; charset=ISO-8859-1
-
-On Wed, May 22, 2013 at 9:59 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> We try must+optional as first, then if there is any ioport or mmio fail
-> we will stick to must only then extend must to meet optional.
-> but mmio range and mmio-pref could be connected each other,
-> so extend will fail...
+On Tue, May 21, 2013 at 9:41 AM, Liu, Joseph <Joseph.Liu@emulex.com> wrote:
+> Bjorn,
 >
-> problem here, some root bus will not have ioport range, so it will always have
-> ioport allocation fail.
+>>> diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
+>>> index ed4d094..7abefd9 100644
+>>> --- a/drivers/pci/pcie/portdrv_pci.c
+>>> +++ b/drivers/pci/pcie/portdrv_pci.c
+>>> @@ -332,13 +332,11 @@ static pci_ers_result_t pcie_portdrv_slot_reset(struct pci_dev *dev)
+>>>      pci_ers_result_t status = PCI_ERS_RESULT_RECOVERED;
+>>>      int retval;
+>>>
+>>> -    /* If fatal, restore cfg space for possible link reset at upstream */
+>>> -    if (dev->error_state == pci_channel_io_frozen) {
+>>> -            dev->state_saved = true;
+>>> -            pci_restore_state(dev);
+>>> -            pcie_portdrv_restore_config(dev);
+>>> -            pci_enable_pcie_error_reporting(dev);
+>>> -    }
+>>> +    /* restore cfg space for possible link reset at upstream */
+>>> +    dev->state_saved = true;
+>>> +    pci_restore_state(dev);
+>>> +    pcie_portdrv_restore_config(dev);
+>>> +    pci_enable_pcie_error_reporting(dev);
+>>>
+>>>      /* get true return value from &status */
+>>>      retval = device_for_each_child(&dev->dev, &status, slot_reset_iter);
+>>
+>>I think this patch changes the behavior in the case of a non-fatal error
+>>where one of the .error_detected() methods returned
+>>PCI_ERS_RESULT_NEED_RESET.  In that case, pcie_portdrv_slot_reset()
+>>previously did not restore config space, but after your patch, it *will*
+>>restore it.  We need an explanation of why this is safe.
 >
-> looks like right fix for v3.9 should be as attached patch.
-> it will keep must+optional for mmio, if only ioport fails....
+> Here is my understanding of this part of the patch:
+>
+> I think your concern here should not be an issue. Whether it is a non-fatal error or a fatal error, as long as one of the .error_detected() method from the downstream drivers involved returns a PCI_ERS_RESULT_NEED_RESET, it should trump all others and a slot reset should be performed, even though it was originally due to a non-fatal error reported or only one of the downstream drivers requests it. In the case of AER driver, this should be implemented in the broadcast_error_message() with pci_walk_bus() by passing in the report_error_detected() function, and merging the results into the result_data->result...
 
-looks like i missed change to realloc_head list.
+Yes, I understand all this.  (Though as I pointed out, the current AER
+code does not actually perform a reset based on
+PCI_ERS_RESULT_NEED_RESET being returned.  The only time we currently
+do a reset is for AER_FATAL errors.)
 
-Ben/Shan, can you check attached v2?
+> In any case, the fact that this pcie_portdrv_slot_reset() being invoked should be considered as a aftermath of a slot reset has been performed, thus the restore of config space should be performed after the reset.
 
-thanks
+The intention has always been that .slot_reset() would be called to
+inform the driver that a reset has been performed.  That was the case
+even when Yanmin added pcie_portdrv_slot_reset() with commit
+4bf3392e0.  Yet in that commit, pcie_portdrv_slot_reset() only does
+the restore when the channel is frozen, i.e., when we're handling an
+AER_FATAL error.
 
-Yinghai
+So far, I haven't seen any explanation of what changed to make us want
+to do the restore always, even for non-fatal errors.  Maybe the
+original test for the channel being frozen was just a mistake, but it
+would have been much simpler to omit the test to begin with, so
+obviously Yanmin thought it was necessary at the time.
 
---089e0122ac44b99abf04dd54b7eb
-Content-Type: application/octet-stream;
-	name="root_bus_ioport_skip_9_v2.patch"
-Content-Disposition: attachment; filename="root_bus_ioport_skip_9_v2.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_hh0zjdh41
+Maybe the "error_state == pci_channel_io_frozen" test was a back-door
+way to express "we only want to restore state when we've actually done
+a reset."  That would sort of make sense, although there's no
+documented connection between the frozen state and a device reset, and
+no driver should rely on one.
 
-U3ViamVjdDogW1BBVENIXSBQQ0k6IERvbid0IGZhbGwgYmFjayBNTUlPIHRvIG11c3Qtb25seSwg
-aWYgaW8gcG9ydCBmYWlsIHdpdGggb3B0aW9uYWwKRnJvbTogWWluZ2hhaSBMdSA8eWluZ2hhaUBr
-ZXJuZWwub3JnPgoKQmVuSCByZXBvcnRlZCB0aGF0IHRoZXJlIGlzIHNvbWUgYXNzaWduIHVuYXNz
-aWduZWQgcmVzb3VyY2UgcHJvYmxlbQppbiBwb3dlcnBjLgoKSXQgdHVybnMgb3V0IGFmdGVyCnwg
-Y29tbWl0IDBjNWJlMGNiMGVkZmUzYjVjNGI2MmVhYzY4YWEyYWExNWVjNjgxYWYKfCBEYXRlOiAg
-IFRodSBGZWIgMjMgMTk6MjM6MjkgMjAxMiAtMDgwMAp8CnwgICAgUENJOiBSZXRyeSBvbiBJT1JF
-U09VUkNFX0lPIHR5cGUgYWxsb2NhdGlvbnMKCmV2ZW4gdGhlIHJvb3QgYnVzIGRvZXMgbm90IGhh
-dmUgaW8gcG9ydCByYW5nZSwgaXQgd2lsbCBrZWVwIHJldHJ5aW5nCnRvIHJlYWxsb2Mgd2l0aCBt
-bWlvLgoKQ3VycmVudCByZXRyeSBsb2dpYyBpcyA6IHRyeSB3aXRoIG11c3Qrb3B0aW9uYWwgYXQg
-Zmlyc3QsIGFuZCBpZgppdCBmYWlscyB3aXRoIGFueSBpb3BvcnQgb3IgbW1pbywgaXQgd2lsbCB0
-cnkgbXVzdCB0aGVuIHRyeSB0byBleHRlbmQKbXVzdCB3aXRoIG9wdGlvbmFsLgpUaGF0IHdpbGwg
-ZmFpbCBhcyBtbWlvLW5vbi1wcmVmIGFuZCBtbWlvLXByZWYgZm9yIGJyaWRnZSB3aWxsCmJlIG5l
-eHQgdG8gZWFjaCBvdGhlci4gU28gd2UgaGF2ZSBubyBjaGFuY2UgdG8gZXh0ZW5kIG1taW8tbm9u
-LXByZWYuCgpXZSBjYW4gY2hlY2sgZmFpbCB0eXBlIGFuZCBvbmx5IGZhbGwgYmFjayBmb3IgaW8g
-cG9ydCBvbmx5LCB0aGF0IHdpbGwKa2VlcCBtbWlvIHR5cGUgc3RpbGwgaGF2ZSBtdXN0K29wdGlv
-bmFsLgoKVGhpcyB3aWxsIGJlIGJlY29tZSBtb3JlIG9mdGVuIHdoZW4gd2UgaGF2ZSB4ODYgOCBz
-b2NrZXRzIG9yIDMyIHNvY2tldHMKc3lzdGVtLCBhbmQgdGhvc2Ugc3lzdGVtIHdpbGwgaGF2ZSBv
-bmUgcm9vdCBidXMgcGVyIHNvY2tldC4KVGhleSB3aWxsIGhhdmUgc29tZSByb290IGJ1c2VzIGRv
-IG5vdCBoYXZlIGlvcG9ydCByYW5nZS4KCi12MjogbmVlZCB0byByZW1vdmUgYXNzaWduZWQgZW50
-cmllcyBmcm9tIG9wdGlvbmFsIGxpc3QgdG9vLgoKUmVwb3J0ZWQtYnk6IEJlbmphbWluIEhlcnJl
-bnNjaG1pZHQgPGJlbmhAa2VybmVsLmNyYXNoaW5nLm9yZz4KU2lnbmVkLW9mZi1ieTogWWluZ2hh
-aSBMdSA8eWluZ2hhaUBrZXJuZWwub3JnPgoKLS0tCiBkcml2ZXJzL3BjaS9zZXR1cC1idXMuYyB8
-ICAgMjMgKysrKysrKysrKysrKysrKysrKysrKysKIDEgZmlsZSBjaGFuZ2VkLCAyMyBpbnNlcnRp
-b25zKCspCgpJbmRleDogbGludXgtMi42L2RyaXZlcnMvcGNpL3NldHVwLWJ1cy5jCj09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT0KLS0tIGxpbnV4LTIuNi5vcmlnL2RyaXZlcnMvcGNpL3NldHVwLWJ1cy5jCisrKyBsaW51eC0y
-LjYvZHJpdmVycy9wY2kvc2V0dXAtYnVzLmMKQEAgLTMxNyw2ICszMTcsMTAgQEAgc3RhdGljIHZv
-aWQgX19hc3NpZ25fcmVzb3VyY2VzX3NvcnRlZChzdAogCUxJU1RfSEVBRChsb2NhbF9mYWlsX2hl
-YWQpOwogCXN0cnVjdCBwY2lfZGV2X3Jlc291cmNlICpzYXZlX3JlczsKIAlzdHJ1Y3QgcGNpX2Rl
-dl9yZXNvdXJjZSAqZGV2X3JlczsKKwl1bnNpZ25lZCBsb25nIGZhaWxfdHlwZSA9IDA7CisJc3Ry
-dWN0IHBjaV9kZXZfcmVzb3VyY2UgKmZhaWxfcmVzOworCXVuc2lnbmVkIGxvbmcgdHlwZV9tYXNr
-ID0gSU9SRVNPVVJDRV9JTyB8IElPUkVTT1VSQ0VfTUVNIHwKKwkJCQkgIElPUkVTT1VSQ0VfUFJF
-RkVUQ0g7CiAKIAkvKiBDaGVjayBpZiBvcHRpb25hbCBhZGRfc2l6ZSBpcyB0aGVyZSAqLwogCWlm
-ICghcmVhbGxvY19oZWFkIHx8IGxpc3RfZW1wdHkocmVhbGxvY19oZWFkKSkKQEAgLTM0OCw2ICsz
-NTIsMjUgQEAgc3RhdGljIHZvaWQgX19hc3NpZ25fcmVzb3VyY2VzX3NvcnRlZChzdAogCQlyZXR1
-cm47CiAJfQogCisJLyogY2hlY2sgZmFpbGVkIHR5cGUgKi8KKwlsaXN0X2Zvcl9lYWNoX2VudHJ5
-KGZhaWxfcmVzLCAmbG9jYWxfZmFpbF9oZWFkLCBsaXN0KQorCQlmYWlsX3R5cGUgfD0gZmFpbF9y
-ZXMtPmZsYWdzICYgdHlwZV9tYXNrOworCS8qIG9ubHkgaW8gcG9ydCBmYWlscyAqLworCWlmICgo
-ZmFpbF90eXBlICYgdHlwZV9tYXNrKSA9PSBJT1JFU09VUkNFX0lPKSB7CisJCXN0cnVjdCBwY2lf
-ZGV2X3Jlc291cmNlICp0bXBfcmVzOworCisJCS8qIHJlbW92ZSBhc3NpZ25lZCBub24gaW9wb3J0
-IGZyb20gaGVhZCBsaXN0IGV0YyAqLworCQlsaXN0X2Zvcl9lYWNoX2VudHJ5X3NhZmUoZGV2X3Jl
-cywgdG1wX3JlcywgaGVhZCwgbGlzdCkKKwkJCWlmIChkZXZfcmVzLT5yZXMtPnBhcmVudCAmJgor
-CQkJICAgICEoZGV2X3Jlcy0+cmVzLT5mbGFncyAmIElPUkVTT1VSQ0VfSU8pKSB7CisJCQkJLyog
-cmVtb3ZlIGl0IGZyb20gcmVhbGxvY19oZWFkIGxpc3QgKi8KKwkJCQlyZW1vdmVfZnJvbV9saXN0
-KHJlYWxsb2NfaGVhZCwgZGV2X3Jlcy0+cmVzKTsKKwkJCQlyZW1vdmVfZnJvbV9saXN0KCZzYXZl
-X2hlYWQsIGRldl9yZXMtPnJlcyk7CisJCQkJbGlzdF9kZWwoJmRldl9yZXMtPmxpc3QpOworCQkJ
-CWtmcmVlKGRldl9yZXMpOworCQkJfQorCX0KKwogCWZyZWVfbGlzdCgmbG9jYWxfZmFpbF9oZWFk
-KTsKIAkvKiBSZWxlYXNlIGFzc2lnbmVkIHJlc291cmNlICovCiAJbGlzdF9mb3JfZWFjaF9lbnRy
-eShkZXZfcmVzLCBoZWFkLCBsaXN0KQo=
---089e0122ac44b99abf04dd54b7eb--
+If the idea of "only do a restore after a reset" is still valid, we
+don't want to make this change to pcie_portdrv_slot_reset() because it
+IS called in some cases when a reset has not been performed, namely
+non-fatal errors when an .error_detected() method returns
+PCI_ERS_RESULT_NEED_RESET.
+
+> I suppose the restore should be to the same state as fresh power-on states, right?
+
+I *think* that in pcie_portdrv_slot_reset(), we're probably restoring
+the state saved by pcie_portdrv_probe(), i.e., the state saved by the
+PCIe port driver after it has claimed and initialized the port.  This
+is not fresh power-on state; a fresh power-on state would have BARs
+and other config registers cleared, and we'd have to assign resources
+to the device just like we do to a hot-added device.
+
+Bjorn
