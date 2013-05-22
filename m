@@ -1,120 +1,86 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:57573 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755231Ab3EUHiQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 21 May 2013 03:38:16 -0400
-Message-ID: <1369122001.4432.14.camel@ymzhang.sh.intel.com>
-Subject: Re: Subject : [ PATCH ]
- pci-reset-error_state-to-pci_channel_io_normal-at-report_slot_reset
-From: Yanmin Zhang <yanmin_zhang@linux.intel.com>
-Reply-To: yanmin_zhang@linux.intel.com
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "Zhang, LongX" <longx.zhang@intel.com>,
-	"linasvepstas@gmail.com" <linasvepstas@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Joseph.Liu@Emulex.Com" <Joseph.Liu@Emulex.Com>
-Date: Tue, 21 May 2013 15:40:01 +0800
-In-Reply-To: <20130520224824.GA31740@google.com>
-References: <F7B8FD780A346D46A0042F5C63B06AE785E3B2@SHSMSX102.ccr.corp.intel.com>
-	 <20130520224824.GA31740@google.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Gavin Shan <shangw@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v4 6/8] PCI: Skip IORESOURCE_MMIO allocation for root bus without MMIO range
+Date: Tue, 21 May 2013 23:38:46 -0700
+Message-Id: <1369204728-11165-7-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1369204728-11165-1-git-send-email-yinghai@kernel.org>
+References: <1369204728-11165-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 2013-05-20 at 16:48 -0600, Bjorn Helgaas wrote:
-> On Fri, Apr 26, 2013 at 06:28:59AM +0000, Zhang, LongX wrote:
-> > From: Zhang Long <longx.zhang@intel.com>
-> > 
-> > Specific pci device drivers might have many functions to call
-> > pci_channel_offline to check device states. When slot_reset happens,
-> > drivers' slot_reset callback might call such functions and eventually
-> > abort the reset.
-> > 
-> > The patch resets pdev->error_state to pci_channel_io_normal at
-> > the begining of report_slot_reset.
-> > 
-> > Thank Liu Joseph for pointing it out.
-> > 
-> > Signed-off-by: Zhang Yanmin <yanmin_zhang@linux.intel.com>
-> > Signed-off-by: Zhang Long <longx.zhang@intel.com>
-> > ---
-> >  drivers/pci/pcie/aer/aerdrv_core.c |    1 +
-> >  drivers/pci/pcie/portdrv_pci.c     |   12 +++++-------
-> >  2 files changed, 6 insertions(+), 7 deletions(-)
-Thank all for the kind comments.
+For x86 8 sockets or 32 sockets system that will have one root bus per socket,
+They may have some root buses do not have mmio non-pref range.
 
-> > 
-> > diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
-> > index 564d97f..c61fd44 100644
-> > --- a/drivers/pci/pcie/aer/aerdrv_core.c
-> > +++ b/drivers/pci/pcie/aer/aerdrv_core.c
-> > @@ -286,6 +286,7 @@ static int report_slot_reset(struct pci_dev *dev, void *data)
-> >  	result_data = (struct aer_broadcast_data *) data;
-> >  
-> >  	device_lock(&dev->dev);
-> > +	dev->error_state = pci_channel_io_normal;
-> >  	if (!dev->driver ||
-> >  		!dev->driver->err_handler ||
-> >  		!dev->driver->err_handler->slot_reset)
-> > diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
-> > index ed4d094..7abefd9 100644
-> > --- a/drivers/pci/pcie/portdrv_pci.c
-> > +++ b/drivers/pci/pcie/portdrv_pci.c
-> > @@ -332,13 +332,11 @@ static pci_ers_result_t pcie_portdrv_slot_reset(struct pci_dev *dev)
-> >  	pci_ers_result_t status = PCI_ERS_RESULT_RECOVERED;
-> >  	int retval;
-> >  
-> > -	/* If fatal, restore cfg space for possible link reset at upstream */
-> > -	if (dev->error_state == pci_channel_io_frozen) {
-> > -		dev->state_saved = true;
-> > -		pci_restore_state(dev);
-> > -		pcie_portdrv_restore_config(dev);
-> > -		pci_enable_pcie_error_reporting(dev);
-> > -	}
-> > +	/* restore cfg space for possible link reset at upstream */
-> > +	dev->state_saved = true;
-It's indeed a dirty trick to change it to true. The reason is suspend. The port would
-suspend/resume at suspend-to-ram. When the port is suspended, PCI power framework calls
-pci_save_state. When the port is resumed, PCI framework calls pci_restore_state and
-dev->state_saved is set to false.
-A better solution is to add double space in pci_dev->saved_config_space/saved_cap_space,
-which seems consume unnecessary resource.
+We should not fall into retry in this case, as root bus does
+not mmio non-pref range.
 
-> > +	pci_restore_state(dev);
-> > +	pcie_portdrv_restore_config(dev);
-> > +	pci_enable_pcie_error_reporting(dev);
-> >  
-> >  	/* get true return value from &status */
-> >  	retval = device_for_each_child(&dev->dev, &status, slot_reset_iter);
-> I think this patch changes the behavior in the case of a non-fatal error
-> where one of the .error_detected() methods returned
-> PCI_ERS_RESULT_NEED_RESET.  In that case, pcie_portdrv_slot_reset()
-> previously did not restore config space, but after your patch, it *will*
-> restore it.  We need an explanation of why this is safe.
-AER standard doesn't define such behavior like if we need reset a slot.
-When we implemented the feature in kernel, we assumed at non-fatal error,
-config space is still good.
+We check if the root bus has mmio-nonpref range, and set bus_res_type_mask,
+and pass it to assign_resources and don't add mmio-nonpref res to failed list
+for root bus that does not have mmio-nonpref range.
+So even BIOS set wrong value to pci devices and bridges will still
+get cleared.
 
-With the new patch, we change the behavior a little.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 
-> 
-> I think you should split this into two patches: the first would remove the
-> "if (dev->error_state == pci_channel_io_frozen)" test from portdrv_pci.c
-The first patch would depend on the 2nd patch as 2nd patch resets error_state 
-to pci_channel_io_normal.
+---
+ drivers/pci/setup-bus.c |   32 ++++++++++++++++++++++++++------
+ 1 file changed, 26 insertions(+), 6 deletions(-)
 
-> and explain the reason, and the second would make the aerdrv_core.c change.
-> 
-> I'm also concerned that in that same case (a non-fatal error where one of
-> the .error_detected() methods returned PCI_ERS_RESULT_NEED_RESET), I don't
-> think we actually *do* any kind of device reset.  This isn't related to
-> your patch, of course, so if you resolve the config space restore question,
-> we can deal with the reset question later.
-It's a good question. At the beginning when we enabled AER feature in kernel,
-we didn't really implement the real device reset. It's in the TODO list.
-
-Yanmin
-
-
+Index: linux-2.6/drivers/pci/setup-bus.c
+===================================================================
+--- linux-2.6.orig/drivers/pci/setup-bus.c
++++ linux-2.6/drivers/pci/setup-bus.c
+@@ -299,9 +299,17 @@ static void assign_requested_resources_s
+ 				bool is_ioport_res_without_bus_support =
+ 					 (!(bus_res_type_mask & IORESOURCE_IO)) &&
+ 					 (res->flags & IORESOURCE_IO);
++				/*
++				 * if the failed res is mmio, but bus does
++				 * not have io port support, don't add it
++				 */
++				bool is_mmio_nonpref_res_without_bus_support =
++					 (!(bus_res_type_mask & IORESOURCE_MEM)) &&
++					 ((res->flags & (IORESOURCE_MEM | IORESOURCE_PREFETCH)) == IORESOURCE_MEM);
+ 
+ 				if (!is_rom_res_not_enabled &&
+-				    !is_ioport_res_without_bus_support)
++				    !is_ioport_res_without_bus_support &&
++				    !is_mmio_nonpref_res_without_bus_support)
+ 					add_to_list(fail_head,
+ 						    dev_res->dev, res,
+ 						    0 /* dont care */,
+@@ -1416,12 +1424,24 @@ static unsigned long pci_bus_res_type_ma
+ 	int i;
+ 	struct resource *r;
+ 	unsigned long mask = 0;
+-	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
+-				  IORESOURCE_PREFETCH;
+ 
+-	pci_bus_for_each_resource(bus, r, i)
+-		if (r)
+-			mask |= r->flags & type_mask;
++	pci_bus_for_each_resource(bus, r, i) {
++		if (!r)
++			continue;
++
++		if (r->flags & IORESOURCE_IO) {
++			mask |= IORESOURCE_IO;
++			continue;
++		}
++		if (r->flags & IORESOURCE_PREFETCH) {
++			mask |= IORESOURCE_PREFETCH;
++			continue;
++		}
++		if ((r->flags & (IORESOURCE_MEM | IORESOURCE_PREFETCH)) == IORESOURCE_MEM) {
++			mask |= IORESOURCE_MEM; /* nonpref only */
++			continue;
++		}
++	}
+ 
+ 	return mask;
+ }
