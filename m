@@ -1,85 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f178.google.com ([209.85.217.178]:33718 "EHLO
-	mail-lb0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750796Ab3EGWZn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 May 2013 18:25:43 -0400
+Received: from mail-ie0-f173.google.com ([209.85.223.173]:60233 "EHLO
+	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753218Ab3EVVBb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 May 2013 17:01:31 -0400
+Received: by mail-ie0-f173.google.com with SMTP id k5so6436111iea.18
+        for <linux-pci@vger.kernel.org>; Wed, 22 May 2013 14:01:30 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo75SETEe-OKhY2-NW3csaxt=f09JcheHx95bzkCcGO6yg@mail.gmail.com>
-References: <CAErSpo7qj2SNR7BfuBsfF-saZXvgcqqLtgoP5Hyb5u99qR4Ncg@mail.gmail.com>
-	<Pine.LNX.4.44L0.1302191119270.2215-100000@iolanthe.rowland.org>
-	<CAErSpo7NZoOQZyW76HEoOTVgdqL2CgbVScAeF6HGLAVaNCq0=w@mail.gmail.com>
-	<337833384.57445.1361860509194.JavaMail.mail@webmail08>
-	<CAErSpo6CbO5KYXiErv6J_Dnm1u694C5fQPP2_cZL8VKDEnZa9A@mail.gmail.com>
-	<569718148.80620.1361906088301.JavaMail.mail@webmail13>
-	<CAErSpo6UkVhSf+nFW4zwJLBQw_0RQ5H9Bv-UuQRb6zdwsFPw4g@mail.gmail.com>
-	<CAErSpo4X+XXKvWDfqh2CKZAtJ9WMQk91OcsWwdxwYv2MfEM_zQ@mail.gmail.com>
-	<771333906.75854.1367057440028.JavaMail.mail@webmail08>
-	<CAErSpo4B4sRco-nuqgXiYtGQxBcbEB6ArQjHD0A9cj4TRE+qQw@mail.gmail.com>
-	<518097B8.4020402@gmail.com>
-	<CAErSpo7KWPRVEnw+n068pUZz+=WSTwno6m6t7N6dunuhnFC8EA@mail.gmail.com>
-	<384171828.66802.1367942365492.JavaMail.mail@webmail05>
-	<CADLC3L3bdTP8-X3ftMq1qxnL=LVDf7d5gbu2ZMH0pXg2AU8xjw@mail.gmail.com>
-	<CAErSpo50iyEbCer+-K8uXUdnsG_EzFe_ZjKnrtfq5x0Zw3Yd6w@mail.gmail.com>
-	<CAMeQTsZEpRE_bv6o9mBpqNrbf36SZVscxy+JS72=BOzA1ey-XQ@mail.gmail.com>
-	<CAErSpo75SETEe-OKhY2-NW3csaxt=f09JcheHx95bzkCcGO6yg@mail.gmail.com>
-Date: Wed, 8 May 2013 00:25:41 +0200
-Message-ID: <CAMeQTsY1jc99boFC_KDTL=-Pt-W1q5ZiS+r89QkPE+vAk386UQ@mail.gmail.com>
-Subject: Re: Abysmal HDD/USB write speed after sleep on a UEFI system
-From: Patrik Jakobsson <patrik.r.jakobsson@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Robert Hancock <hancockrwd@gmail.com>,
-	"Artem S. Tashkinov" <t.artem@lycos.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, Phillip Susi <psusi@ubuntu.com>
+In-Reply-To: <1369255489.3870.19.camel@pasglop>
+References: <1367712653.11982.19.camel@pasglop>
+	<1367712932.11982.20.camel@pasglop>
+	<CAE9FiQX=h4H1gcbW=EfQo_ZtAgHGOZ2GxVxLG59C1iMH+qgH2g@mail.gmail.com>
+	<1367732090.11982.38.camel@pasglop>
+	<CAE9FiQUN3qqVmdw_EdOC-JZGc219M3tu=roOX98xns+77LJhMw@mail.gmail.com>
+	<1367740336.11982.41.camel@pasglop>
+	<51871088.4594420a.0ccc.7300SMTPIN_ADDED_BROKEN@mx.google.com>
+	<CAE9FiQXGUOM_h_X5tdGbkiuZGZkiFigSLbbftx3YXybFBg6trg@mail.gmail.com>
+	<518786a7.64bbec0a.58a0.1f6bSMTPIN_ADDED_BROKEN@mx.google.com>
+	<CAErSpo5MJCoaof=heFM4vLxuWz8pFqsyXAC356jZ7rbRvSOt9g@mail.gmail.com>
+	<CAE9FiQWsZXfkSSVFzee4-J4bUDP8DdG=y9-k2du+ek90StDvNA@mail.gmail.com>
+	<CAErSpo45wXjnDiXiZ1qs+Z7fsEoVmAxbjhGVvtZGEUkbd4bNKg@mail.gmail.com>
+	<1369255489.3870.19.camel@pasglop>
+Date: Wed, 22 May 2013 14:01:30 -0700
+Message-ID: <CAE9FiQX5oLcEoNVPrutdUy+-wT5Vks2VR5BHg_6mB81apfmq1g@mail.gmail.com>
+Subject: Re: Resource assignment oddities
+From: Yinghai Lu <yinghai@kernel.org>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Gavin Shan <shangw@linux.vnet.ibm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 8, 2013 at 12:02 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Tue, May 7, 2013 at 2:48 PM, Patrik Jakobsson
-> <patrik.r.jakobsson@gmail.com> wrote:
->> On Tue, May 7, 2013 at 10:20 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>>> I'm not sure if reading /proc/mtrr actually reads the registers out of
->>>> the CPU each time, or whether we just return the cached values we read
->>>> out during initial boot-up. If the latter, then this output isn't
->>>> really useful as there's no guarantee the values are still intact.
->>>
->>> Good point.  From what I can tell, on Artem's system with "CPU0:
->>> Intel(R) Core(TM) i5-2500 CPU @ 3.30GHz," we would be using
->>> generic_mtrr_ops, and generic_get_mtrr() appears to read from the
->>> MSRs, so I think it should be useful.
+On Wed, May 22, 2013 at 1:44 PM, Benjamin Herrenschmidt
+<benh@kernel.crashing.org> wrote:
+> On Wed, 2013-05-22 at 11:21 -0600, Bjorn Helgaas wrote:
+>> > looks like right fix for v3.9 should be as attached patch.
+>> > it will keep must+optional for mmio, if only ioport fails....
 >>
->> FWIW, that motherboard suffers from a PCI to PCIE bridge problem. It might
->> have been fixed by bios upgrades by now but not sure.
->>
->> It might also suffer (depending on the revision) from the Sandy bridge SATA
->> issue. So if affected, SATA controller is a ticking bomb.
->>
->> I have a P8H67-V motherboard but I haven't seen any suspend related issues.
->>
->> If this is totally unrelated I'm sorry for wasting your time. Just thought it
->> might be good to know.
+>> I read all that before, but it didn't answer my questions.  I assume
+>> we're trying to fix a device that doesn't work.  Which device is it?
 >
-> Thanks for chiming in.  I'm not familiar with either of the issues you
-> mentioned.  Do you have any references where I could read up on them?
+> We have MMIO assignment failures due to the "retry" but so far it hasn't
+> prevented the devices I have tested from working. It does make me very
+> nervous however.
+>
 
-I think this is the official statement from Intel on the SATA issue:
-http://newsroom.intel.com/community/intel_newsroom/blog/2011/01/31/intel-identifies-chipset-design-error-implementing-solution
+yes, io port allocation failure trigger wrong retry with mmio.
 
-And here's a link to a discussion about the PCIe-to-PCI bridge stuff:
-https://lkml.org/lkml/2012/1/30/216
-
-> Artem's system has a PCIe-to-PCI bridge (not a PCI-to-PCIe bridge) at
-> 05:00.0, but it leads to [bus 06] and there's nothing on bus 06, so I
-> don't think that's the problem.
-
-I meant what you said ;) and yes, it seems unrelated. Both my P8H67 and a
-P8P67 I've built behave nicely if nothing is connected.
-
-> And the issue affects both USB and a hard drive, so I suspect it's
-> more than just SATA.  Artem, did you identify the PCI devices leading
-> to your USB and hard drive?  I can't remember if I've actually seen
-> that.
+Yinghai
