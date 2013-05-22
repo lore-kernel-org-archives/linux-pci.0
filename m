@@ -1,87 +1,122 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:53870 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758029Ab3EONZf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 May 2013 09:25:35 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>
-Cc: linux-arm-kernel@lists.infradead.org,
-	Arnd Bergmann <arnd@arndb.de>, Olof Johansson <olof@lixom.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Lior Amsalem <alior@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	linux-pci@vger.kernel.org,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	devicetree-discuss@lists.ozlabs.org
-Subject: [PATCHv9 4/9] of/pci: Add of_pci_parse_bus_range() function
-Date: Wed, 15 May 2013 15:25:18 +0200
-Message-Id: <1368624323-24311-5-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1368624323-24311-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1368624323-24311-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:28803 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755701Ab3EVGkR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 May 2013 02:40:17 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Gavin Shan <shangw@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v4 8/8] PCI: Retry assign unassigned resources for hotadd root bus
+Date: Tue, 21 May 2013 23:38:48 -0700
+Message-Id: <1369204728-11165-9-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1369204728-11165-1-git-send-email-yinghai@kernel.org>
+References: <1369204728-11165-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Thierry Reding <thierry.reding@avionic-design.de>
+Let root bus hotadd path use same code for booting path.
+As driver is not loaded yet, we could retry to make sure
+all pci devices get resources allocated.
 
-This function can be used to parse a bus-range property as specified by
-device nodes representing PCI bridges.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 
-Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
 ---
- drivers/of/of_pci.c    |   25 +++++++++++++++++++++++++
- include/linux/of_pci.h |    1 +
- 2 files changed, 26 insertions(+)
+ drivers/acpi/pci_root.c |    2 +-
+ drivers/pci/setup-bus.c |   15 +++++++--------
+ include/linux/pci.h     |    1 +
+ 3 files changed, 9 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
-index 4dd7b9b..42c687a 100644
---- a/drivers/of/of_pci.c
-+++ b/drivers/of/of_pci.c
-@@ -64,3 +64,28 @@ int of_pci_get_devfn(struct device_node *np)
- 	return (be32_to_cpup(reg) >> 8) & 0xff;
+Index: linux-2.6/drivers/pci/setup-bus.c
+===================================================================
+--- linux-2.6.orig/drivers/pci/setup-bus.c
++++ linux-2.6/drivers/pci/setup-bus.c
+@@ -1331,7 +1331,7 @@ static void pci_bus_dump_resources(struc
+ 	}
  }
- EXPORT_SYMBOL_GPL(of_pci_get_devfn);
-+
-+/**
-+ * of_pci_parse_bus_range() - parse the bus-range property of a PCI device
-+ * @node: device node
-+ * @res: address to a struct resource to return the bus-range
-+ *
-+ * Returns 0 on success or a negative error-code on failure.
-+ */
-+int of_pci_parse_bus_range(struct device_node *node, struct resource *res)
-+{
-+	const __be32 *values;
-+	int len;
-+
-+	values = of_get_property(node, "bus-range", &len);
-+	if (!values || len < sizeof(*values) * 2)
-+		return -EINVAL;
-+
-+	res->name = node->name;
-+	res->start = be32_to_cpup(values++);
-+	res->end = be32_to_cpup(values);
-+	res->flags = IORESOURCE_BUS;
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(of_pci_parse_bus_range);
-diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
-index 91ec484..7a04826 100644
---- a/include/linux/of_pci.h
-+++ b/include/linux/of_pci.h
-@@ -11,5 +11,6 @@ struct device_node;
- struct device_node *of_pci_find_child_device(struct device_node *parent,
- 					     unsigned int devfn);
- int of_pci_get_devfn(struct device_node *np);
-+int of_pci_parse_bus_range(struct device_node *node, struct resource *res);
  
- #endif
--- 
-1.7.9.5
-
+-static int __init pci_bus_get_depth(struct pci_bus *bus)
++static int pci_bus_get_depth(struct pci_bus *bus)
+ {
+ 	int depth = 0;
+ 	struct pci_dev *dev;
+@@ -1365,7 +1365,7 @@ enum enable_type {
+ 	auto_enabled,
+ };
+ 
+-static enum enable_type pci_realloc_enable __initdata = undefined;
++static enum enable_type pci_realloc_enable = undefined;
+ void __init pci_realloc_get_opt(char *str)
+ {
+ 	if (!strncmp(str, "off", 3))
+@@ -1373,13 +1373,13 @@ void __init pci_realloc_get_opt(char *st
+ 	else if (!strncmp(str, "on", 2))
+ 		pci_realloc_enable = user_enabled;
+ }
+-static bool __init pci_realloc_enabled(enum enable_type enable)
++static bool pci_realloc_enabled(enum enable_type enable)
+ {
+ 	return enable >= user_enabled;
+ }
+ 
+ #if defined(CONFIG_PCI_IOV) && defined(CONFIG_PCI_REALLOC_ENABLE_AUTO)
+-static int __init check_unassigned_resources(struct pci_dev *dev, void *data)
++static int check_unassigned_resources(struct pci_dev *dev, void *data)
+ {
+ 	int i;
+ 	int *unassigned = data;
+@@ -1397,7 +1397,7 @@ static int __init check_unassigned_resou
+ 	return 0;
+ }
+ 
+-static enum enable_type __init pci_realloc_detect(struct pci_bus *bus,
++static enum enable_type pci_realloc_detect(struct pci_bus *bus,
+ 			 enum enable_type enable_local)
+ {
+ 	int unassigned = 0;
+@@ -1412,7 +1412,7 @@ static enum enable_type __init pci_reall
+ 	return enable_local;
+ }
+ #else
+-static enum enable_type __init pci_realloc_detect(struct pci_bus *bus,
++static enum enable_type pci_realloc_detect(struct pci_bus *bus,
+ 			 enum enable_type enable_local)
+ {
+ 	return enable_local;
+@@ -1451,8 +1451,7 @@ static unsigned long pci_bus_res_type_ma
+  * second  and later try will clear small leaf bridge res
+  * will stop till to the max  deepth if can not find good one
+  */
+-static void __init
+-pci_assign_unassigned_root_bus_resources(struct pci_bus *bus)
++void pci_assign_unassigned_root_bus_resources(struct pci_bus *bus)
+ {
+ 	LIST_HEAD(realloc_head); /* list of resources that
+ 					want additional resources */
+Index: linux-2.6/drivers/acpi/pci_root.c
+===================================================================
+--- linux-2.6.orig/drivers/acpi/pci_root.c
++++ linux-2.6/drivers/acpi/pci_root.c
+@@ -534,7 +534,7 @@ static int acpi_pci_root_add(struct acpi
+ 
+ 	if (system_state != SYSTEM_BOOTING) {
+ 		pcibios_resource_survey_bus(root->bus);
+-		pci_assign_unassigned_bus_resources(root->bus);
++		pci_assign_unassigned_root_bus_resources(root->bus);
+ 	}
+ 
+ 	pci_bus_add_devices(root->bus);
+Index: linux-2.6/include/linux/pci.h
+===================================================================
+--- linux-2.6.orig/include/linux/pci.h
++++ linux-2.6/include/linux/pci.h
+@@ -1002,6 +1002,7 @@ int pci_claim_resource(struct pci_dev *,
+ void pci_assign_unassigned_resources(void);
+ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge);
+ void pci_assign_unassigned_bus_resources(struct pci_bus *bus);
++void pci_assign_unassigned_root_bus_resources(struct pci_bus *bus);
+ void pdev_enable_device(struct pci_dev *);
+ int pci_enable_resources(struct pci_dev *, int mask);
+ void pci_fixup_irqs(u8 (*)(struct pci_dev *, u8 *),
