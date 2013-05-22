@@ -1,49 +1,108 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f181.google.com ([209.85.216.181]:59676 "EHLO
-	mail-qc0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750767Ab3EPE4n (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 May 2013 00:56:43 -0400
-MIME-Version: 1.0
-In-Reply-To: <CAE9FiQWvYQRCZjDx-Kh16nKfjfS=pyu8foJR+wWYS-x8DUZteg@mail.gmail.com>
-References: <1368498506-25857-1-git-send-email-yinghai@kernel.org>
-	<1368498506-25857-7-git-send-email-yinghai@kernel.org>
-	<0EE9A1CDC8D6434DB00095CD7DB873462CFB0E4E@MTLDAG01.mtl.com>
-	<CAE9FiQVn4F+dTrQn0xsg-6QY9+HwbnJR=1CrjdoZkmF_LMrgpg@mail.gmail.com>
-	<CAJZOPZLjdALP4jkLo6p787jaPx=dkKj7+AmCr9+mgJN3z_xBxQ@mail.gmail.com>
-	<CAE9FiQWvYQRCZjDx-Kh16nKfjfS=pyu8foJR+wWYS-x8DUZteg@mail.gmail.com>
-Date: Thu, 16 May 2013 00:56:42 -0400
-Message-ID: <CAJZOPZLVc=V-ac8_A2JB_r17TRyCMoDpe1MXN6WcjMR4SO6n1Q@mail.gmail.com>
-Subject: Re: [PATCH 6/7] PCI: Make sure VF's driver get attached after PF's
-From: Or Gerlitz <or.gerlitz@gmail.com>
-To: Yinghai Lu <yinghai@kernel.org>, Tejun Heo <tj@kernel.org>,
-	"Michael S. Tsirkin" <mst@redhat.com>
-Cc: Yan Burman <yanb@mellanox.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	Jack Morgenstein <jackm@mellanox.com>,
-	Or Gerlitz <ogerlitz@mellanox.com>,
-	Yevgeny Petrilin <yevgenyp@mellanox.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Gavin Shan <shangw@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v4 3/8] PCI: Introduce enable_local to prepare per root bus handling
+Date: Tue, 21 May 2013 23:38:43 -0700
+Message-Id: <1369204728-11165-4-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1369204728-11165-1-git-send-email-yinghai@kernel.org>
+References: <1369204728-11165-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 16, 2013 at 12:39 AM, Yinghai Lu <yinghai@kernel.org> wrote:
->
-> On Wed, May 15, 2013 at 9:00 PM, Or Gerlitz <or.gerlitz@gmail.com> wrote:
-> > On Tue, May 14, 2013 at 11:43 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> >
-> >> BTW, do you have any plan to make mlx4 support sriov_configure via
-> >> sysfs?
-> >
-> > yes we do, we're waiting for a firmware change that will allow for
-> > such a patch to get working.
-> >
-> > Please note that this whole lockdep warning was identified as false
-> > positive by Tejun http://www.spinics.net/lists/linux-pci/msg21568.html
->
-> No, at least one time, I noticed there is one real hang happens.
+Add enable_local to prepare assign unassigned resource
+for per root bus.
 
-Tejun, so what your thinking here?
+Per Bjorn, separate it to different patch.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+
+---
+ drivers/pci/setup-bus.c |   40 +++++++++++++++++++++-------------------
+ 1 file changed, 21 insertions(+), 19 deletions(-)
+
+Index: linux-2.6/drivers/pci/setup-bus.c
+===================================================================
+--- linux-2.6.orig/drivers/pci/setup-bus.c
++++ linux-2.6/drivers/pci/setup-bus.c
+@@ -1354,9 +1354,9 @@ void __init pci_realloc_get_opt(char *st
+ 	else if (!strncmp(str, "on", 2))
+ 		pci_realloc_enable = user_enabled;
+ }
+-static bool __init pci_realloc_enabled(void)
++static bool __init pci_realloc_enabled(enum enable_type enable)
+ {
+-	return pci_realloc_enable >= user_enabled;
++	return enable >= user_enabled;
+ }
+ 
+ #if defined(CONFIG_PCI_IOV) && defined(CONFIG_PCI_REALLOC_ENABLE_AUTO)
+@@ -1378,25 +1378,25 @@ static int __init check_unassigned_resou
+ 	return 0;
+ }
+ 
+-static void  __init pci_realloc_detect(void)
++static enum enable_type __init pci_realloc_detect(struct pci_bus *bus,
++			 enum enable_type enable_local)
+ {
+ 	int unassigned = 0;
+-	struct pci_bus *bus;
+ 
+-	if (pci_realloc_enable != undefined)
+-		return;
++	if (enable_local != undefined)
++		return enable_local;
+ 
+-	list_for_each_entry(bus, &pci_root_buses, node) {
+-		pci_walk_bus(bus, check_unassigned_resources, &unassigned);
+-		if (unassigned) {
+-			pci_realloc_enable = auto_enabled;
+-			return;
+-		}
+-	}
++	pci_walk_bus(bus, check_unassigned_resources, &unassigned);
++	if (unassigned)
++		return auto_enabled;
++
++	return enable_local;
+ }
+ #else
+-static void __init pci_realloc_detect(void)
++static enum enable_type __init pci_realloc_detect(struct pci_bus *bus,
++			 enum enable_type enable_local)
+ {
++	return enable_local;
+ }
+ #endif
+ 
+@@ -1419,10 +1419,12 @@ pci_assign_unassigned_resources(void)
+ 	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
+ 				  IORESOURCE_PREFETCH;
+ 	int pci_try_num = 1;
++	enum enable_type enable_local = pci_realloc_enable;
++
++	list_for_each_entry(bus, &pci_root_buses, node)
++		enable_local = pci_realloc_detect(bus, enable_local);
+ 
+-	/* don't realloc if asked to do so */
+-	pci_realloc_detect();
+-	if (pci_realloc_enabled()) {
++	if (pci_realloc_enabled(enable_local)) {
+ 		int max_depth = pci_get_max_depth();
+ 
+ 		pci_try_num = max_depth + 1;
+@@ -1454,9 +1456,9 @@ again:
+ 		goto enable_and_dump;
+ 
+ 	if (tried_times >= pci_try_num) {
+-		if (pci_realloc_enable == undefined)
++		if (enable_local == undefined)
+ 			printk(KERN_INFO "Some PCI device resources are unassigned, try booting with pci=realloc\n");
+-		else if (pci_realloc_enable == auto_enabled)
++		else if (enable_local == auto_enabled)
+ 			printk(KERN_INFO "Automatically enabled pci realloc, if you have problem, try booting with pci=realloc=off\n");
+ 
+ 		free_list(&fail_head);
