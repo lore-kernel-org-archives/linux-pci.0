@@ -1,161 +1,294 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f181.google.com ([209.85.214.181]:44087 "EHLO
-	mail-ob0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758979Ab3EWUpT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 May 2013 16:45:19 -0400
-Received: by mail-ob0-f181.google.com with SMTP id dn14so4555672obc.26
-        for <linux-pci@vger.kernel.org>; Thu, 23 May 2013 13:45:18 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20130510211845.32592.77464.stgit@bling.home>
-References: <20130510210937.32592.21950.stgit@bling.home> <20130510211845.32592.77464.stgit@bling.home>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 23 May 2013 14:44:58 -0600
-Message-ID: <CAErSpo5Z_GefXUD+Ts=beVurU9ZnLghN=Qkj7V0ZSjn-=zNsag@mail.gmail.com>
-Subject: Re: [PATCH 1/3] pci: Add PCI walk function and PCIe bridge test
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: Stephen Hemminger <stephen@networkplumber.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Don Dutile <ddutile@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from userp1040.oracle.com ([156.151.31.81]:28419 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755442Ab3EVGjP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 May 2013 02:39:15 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Gavin Shan <shangw@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v4 5/8] PCI: Skip IORESOURCE_IO allocation for root bus without ioport range
+Date: Tue, 21 May 2013 23:38:45 -0700
+Message-Id: <1369204728-11165-6-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1369204728-11165-1-git-send-email-yinghai@kernel.org>
+References: <1369204728-11165-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 10, 2013 at 3:18 PM, Alex Williamson
-<alex.williamson@redhat.com> wrote:
-> These will replace pci_find_upstream_pcie_bridge, which is difficult
-> to use and rather specific to intel-iommu usage.  A quirked
-> pci_is_pcie_bridge function is provided to work around non-compliant
-> PCIe-to-PCI bridges such as those found in
-> https://bugzilla.kernel.org/show_bug.cgi?id=44881
->
-> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-> ---
->  drivers/pci/search.c |   57 ++++++++++++++++++++++++++++++++++++++++++++++++++
->  include/linux/pci.h  |   23 ++++++++++++++++++++
->  2 files changed, 80 insertions(+)
->
-> diff --git a/drivers/pci/search.c b/drivers/pci/search.c
-> index d0627fa..0357f74 100644
-> --- a/drivers/pci/search.c
-> +++ b/drivers/pci/search.c
-> @@ -17,6 +17,63 @@
->  DECLARE_RWSEM(pci_bus_sem);
->  EXPORT_SYMBOL_GPL(pci_bus_sem);
->
-> +/* Test for PCIe bridges. */
-> +bool pci_is_pcie_bridge(struct pci_dev *pdev)
-> +{
-> +       if (!pci_is_bridge(pdev))
-> +               return false;
-> +
-> +       if (pci_is_pcie(pdev))
-> +               return true;
-> +
-> +#ifdef CONFIG_PCI_QUIRKS
-> +       /*
-> +        * If we're not on the root bus, look one device upstream of the
-> +        * current device.  If that device is PCIe and is not a PCIe-to-PCI
-> +        * bridge, then the current device is effectively PCIe as it must
-> +        * be the PCIe-to-PCI bridge.  This handles several bridges that
-> +        * violate the PCIe spec by not exposing a PCIe capability:
-> +        * https://bugzilla.kernel.org/show_bug.cgi?id=44881
-> +        */
-> +       if (!pci_is_root_bus(pdev->bus)) {
-> +               struct pci_dev *parent = pdev->bus->self;
-> +
-> +               if (pci_is_pcie(parent) &&
-> +                   pci_pcie_type(parent) != PCI_EXP_TYPE_PCI_BRIDGE)
-> +
-> +                       return true;
-> +       }
-> +#endif
-> +       return false;
-> +}
+BenH reported that there is some assign unassigned resource problem
+in powerpc.
 
-I like this strategy.  But I'd rather it not be a general-purpose PCI
-interface, because if pci_is_pcie_bridge() is true, people will assume
-they can perform PCIe operations on the device, and they can't.  The
-only use for this is to figure out the source ID the IOMMU will see,
-so I think this should just go in the IOMMU code.
+It turns out after
+| commit 0c5be0cb0edfe3b5c4b62eac68aa2aa15ec681af
+| Date:   Thu Feb 23 19:23:29 2012 -0800
+|
+|    PCI: Retry on IORESOURCE_IO type allocations
 
-> +/*
-> + * Walk upstream from the given pdev for the first device returning
-> + * true for the provided match function.  If no match is found, return
-> + * NULL.  *last records the previous step in the walk.
-> + */
-> +struct pci_dev *pci_walk_up_to_first_match(struct pci_dev *pdev,
-> +                                          bool (*match)(struct pci_dev *),
-> +                                          struct pci_dev **last)
-> +{
-> +       *last = NULL;
-> +
-> +       if (match(pdev))
-> +               return pdev;
-> +
-> +       *last = pdev;
-> +
-> +       while (!pci_is_root_bus(pdev->bus)) {
-> +               *last = pdev;
-> +               pdev = pdev->bus->self;
-> +
-> +               if (match(pdev))
-> +                       return pdev;
-> +       }
-> +
-> +       return NULL;
-> +}
+even the root bus does not have io port range, it will keep retrying
+to realloc with mmio.
 
-Same here.  I don't really see much potential for other uses of this,
-so it seems like you might as well just put this in the IOMMU code and
-make it call pci_is_pcie_bridge() directly.
+Current retry logic is : try with must+optional at first, and if
+it fails will try must then try to extend must with optional.
+That will fail as mmio-non-pref and mmio-pref for bridge will
+be next to each other. So we have no chance to extend mmio-non-pref.
 
-The "source ID == upstream PCIe bridge" mapping is deeply ingrained in
-your skull, but I think it would make the intent of the code clearer
-if the function names mentioned the source ID somehow.  Otherwise new
-readers like me have to come up with that association on our own.  But
-since I'm proposing putting all this in the IOMMU code, it's totally
-up to you :)
+This will be become more often when we have x86 8 sockets or 32 sockets
+system, and those system will have one root bus per socket.
+They will have some root buses do not have ioport range.
 
-Bjorn
+We should not fall into retry in this case, as root bus does
+not io port range.
 
-> +
->  /*
->   * find the upstream PCIe-to-PCI bridge of a PCI device
->   * if the device is PCIE, return NULL
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index bd8ec30..e87423a 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1855,6 +1855,29 @@ static inline struct eeh_dev *pci_dev_to_eeh_dev(struct pci_dev *pdev)
->  #endif
->
->  /**
-> + * pci_walk_up_to_first_match - Generic upstream search function
-> + * @pdev: starting PCI device to search
-> + * @match: match function to call on each device (true = match)
-> + * @last: last device examined prior to returned device
-> + *
-> + * Walk upstream from the given device, calling match() at each device.
-> + * Returns the first device matching match().  If the root bus is reached
-> + * without finding a match, return NULL.  last returns the N-1 step in
-> + * the search path.
-> + */
-> +struct pci_dev *pci_walk_up_to_first_match(struct pci_dev *pdev,
-> +                                          bool (*match)(struct pci_dev *),
-> +                                          struct pci_dev **last);
-> +
-> +/**
-> + * pci_is_pcie_bridge - Match a PCIe bridge device
-> + * @pdev: device to test
-> + *
-> + * Return true if the given device is a PCIe bridge, false otherwise.
-> + */
-> +bool pci_is_pcie_bridge(struct pci_dev *pdev);
-> +
-> +/**
->   * pci_find_upstream_pcie_bridge - find upstream PCIe-to-PCI bridge of a device
->   * @pdev: the PCI device
->   *
->
+We check if the root bus has ioport range, and set bus_res_type_mask,
+and pass it to assign_resources and don't add ioport res to failed list
+for root bus that does not have ioport range.
+So even BIOS set wrong value to pci devices and bridges will still
+get cleared.
+
+For the retry failing, we could allocate mmio-non-pref bottom-up
+and mmio-pref will be top-down, but that is not easy and could not be
+material for v3.10.
+
+-v2: remove wrong __init with pci_bus_res_type_mask()
+     don't check bridge size/flags, and clear bus io resources.
+-v3: change to skip adding to failed_list instead.
+
+Reported-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+
+---
+ drivers/pci/setup-bus.c |   86 ++++++++++++++++++++++++++++++++++++------------
+ 1 file changed, 66 insertions(+), 20 deletions(-)
+
+Index: linux-2.6/drivers/pci/setup-bus.c
+===================================================================
+--- linux-2.6.orig/drivers/pci/setup-bus.c
++++ linux-2.6/drivers/pci/setup-bus.c
+@@ -272,7 +272,8 @@ out:
+  * requests that could not satisfied to the failed_list.
+  */
+ static void assign_requested_resources_sorted(struct list_head *head,
+-				 struct list_head *fail_head)
++				 struct list_head *fail_head,
++				 unsigned long bus_res_type_mask)
+ {
+ 	struct resource *res;
+ 	struct pci_dev_resource *dev_res;
+@@ -288,8 +289,19 @@ static void assign_requested_resources_s
+ 				 * if the failed res is for ROM BAR, and it will
+ 				 * be enabled later, don't add it to the list
+ 				 */
+-				if (!((idx == PCI_ROM_RESOURCE) &&
+-				      (!(res->flags & IORESOURCE_ROM_ENABLE))))
++				bool is_rom_res_not_enabled =
++					 (idx == PCI_ROM_RESOURCE) &&
++					 (!(res->flags & IORESOURCE_ROM_ENABLE));
++				/*
++				 * if the failed res is io port, but bus does
++				 * not have io port support, don't add it
++				 */
++				bool is_ioport_res_without_bus_support =
++					 (!(bus_res_type_mask & IORESOURCE_IO)) &&
++					 (res->flags & IORESOURCE_IO);
++
++				if (!is_rom_res_not_enabled &&
++				    !is_ioport_res_without_bus_support)
+ 					add_to_list(fail_head,
+ 						    dev_res->dev, res,
+ 						    0 /* dont care */,
+@@ -302,7 +314,8 @@ static void assign_requested_resources_s
+ 
+ static void __assign_resources_sorted(struct list_head *head,
+ 				 struct list_head *realloc_head,
+-				 struct list_head *fail_head)
++				 struct list_head *fail_head,
++				 unsigned long bus_res_type_mask)
+ {
+ 	/*
+ 	 * Should not assign requested resources at first.
+@@ -336,7 +349,8 @@ static void __assign_resources_sorted(st
+ 							dev_res->res);
+ 
+ 	/* Try updated head list with add_size added */
+-	assign_requested_resources_sorted(head, &local_fail_head);
++	assign_requested_resources_sorted(head, &local_fail_head,
++					  bus_res_type_mask);
+ 
+ 	/* all assigned with add_size ? */
+ 	if (list_empty(&local_fail_head)) {
+@@ -365,7 +379,8 @@ static void __assign_resources_sorted(st
+ 
+ requested_and_reassign:
+ 	/* Satisfy the must-have resource requests */
+-	assign_requested_resources_sorted(head, fail_head);
++	assign_requested_resources_sorted(head, fail_head,
++					  bus_res_type_mask);
+ 
+ 	/* Try to satisfy any additional optional resource
+ 		requests */
+@@ -376,18 +391,21 @@ requested_and_reassign:
+ 
+ static void pdev_assign_resources_sorted(struct pci_dev *dev,
+ 				 struct list_head *add_head,
+-				 struct list_head *fail_head)
++				 struct list_head *fail_head,
++				 unsigned long bus_res_type_mask)
+ {
+ 	LIST_HEAD(head);
+ 
+ 	__dev_sort_resources(dev, &head);
+-	__assign_resources_sorted(&head, add_head, fail_head);
++	__assign_resources_sorted(&head, add_head, fail_head,
++					bus_res_type_mask);
+ 
+ }
+ 
+ static void pbus_assign_resources_sorted(const struct pci_bus *bus,
+ 					 struct list_head *realloc_head,
+-					 struct list_head *fail_head)
++					 struct list_head *fail_head,
++					 unsigned long bus_res_type_mask)
+ {
+ 	struct pci_dev *dev;
+ 	LIST_HEAD(head);
+@@ -395,7 +413,8 @@ static void pbus_assign_resources_sorted
+ 	list_for_each_entry(dev, &bus->devices, bus_list)
+ 		__dev_sort_resources(dev, &head);
+ 
+-	__assign_resources_sorted(&head, realloc_head, fail_head);
++	__assign_resources_sorted(&head, realloc_head, fail_head,
++					bus_res_type_mask);
+ }
+ 
+ void pci_setup_cardbus(struct pci_bus *bus)
+@@ -1117,19 +1136,22 @@ EXPORT_SYMBOL(pci_bus_size_bridges);
+ 
+ static void __ref __pci_bus_assign_resources(const struct pci_bus *bus,
+ 					 struct list_head *realloc_head,
+-					 struct list_head *fail_head)
++					 struct list_head *fail_head,
++					 unsigned long bus_res_type_mask)
+ {
+ 	struct pci_bus *b;
+ 	struct pci_dev *dev;
+ 
+-	pbus_assign_resources_sorted(bus, realloc_head, fail_head);
++	pbus_assign_resources_sorted(bus, realloc_head, fail_head,
++					bus_res_type_mask);
+ 
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		b = dev->subordinate;
+ 		if (!b)
+ 			continue;
+ 
+-		__pci_bus_assign_resources(b, realloc_head, fail_head);
++		__pci_bus_assign_resources(b, realloc_head, fail_head,
++						 bus_res_type_mask);
+ 
+ 		switch (dev->class >> 8) {
+ 		case PCI_CLASS_BRIDGE_PCI:
+@@ -1151,24 +1173,28 @@ static void __ref __pci_bus_assign_resou
+ 
+ void __ref pci_bus_assign_resources(const struct pci_bus *bus)
+ {
+-	__pci_bus_assign_resources(bus, NULL, NULL);
++	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
++				  IORESOURCE_PREFETCH;
++
++	__pci_bus_assign_resources(bus, NULL, NULL, type_mask);
+ }
+ EXPORT_SYMBOL(pci_bus_assign_resources);
+ 
+ static void __ref __pci_bridge_assign_resources(const struct pci_dev *bridge,
+ 					 struct list_head *add_head,
+-					 struct list_head *fail_head)
++					 struct list_head *fail_head,
++					 unsigned long bus_res_type_mask)
+ {
+ 	struct pci_bus *b;
+ 
+ 	pdev_assign_resources_sorted((struct pci_dev *)bridge,
+-					 add_head, fail_head);
++				     add_head, fail_head, bus_res_type_mask);
+ 
+ 	b = bridge->subordinate;
+ 	if (!b)
+ 		return;
+ 
+-	__pci_bus_assign_resources(b, add_head, fail_head);
++	__pci_bus_assign_resources(b, add_head, fail_head, bus_res_type_mask);
+ 
+ 	switch (bridge->class >> 8) {
+ 	case PCI_CLASS_BRIDGE_PCI:
+@@ -1385,6 +1411,21 @@ static enum enable_type __init pci_reall
+ }
+ #endif
+ 
++static unsigned long pci_bus_res_type_mask(struct pci_bus *bus)
++{
++	int i;
++	struct resource *r;
++	unsigned long mask = 0;
++	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
++				  IORESOURCE_PREFETCH;
++
++	pci_bus_for_each_resource(bus, r, i)
++		if (r)
++			mask |= r->flags & type_mask;
++
++	return mask;
++}
++
+ /*
+  * first try will not touch pci bridge res
+  * second  and later try will clear small leaf bridge res
+@@ -1404,6 +1445,7 @@ pci_assign_unassigned_root_bus_resources
+ 				  IORESOURCE_PREFETCH;
+ 	int pci_try_num = 1;
+ 	enum enable_type enable_local;
++	unsigned long bus_res_type_mask = pci_bus_res_type_mask(bus);
+ 
+ 	/* don't realloc if asked to do so */
+ 	enable_local = pci_realloc_detect(bus, pci_realloc_enable);
+@@ -1428,7 +1470,8 @@ again:
+ 	__pci_bus_size_bridges(bus, add_list);
+ 
+ 	/* Depth last, allocate resources and update the hardware. */
+-	__pci_bus_assign_resources(bus, add_list, &fail_head);
++	__pci_bus_assign_resources(bus, add_list, &fail_head,
++				   bus_res_type_mask);
+ 	if (add_list)
+ 		BUG_ON(!list_empty(add_list));
+ 	tried_times++;
+@@ -1504,10 +1547,12 @@ void pci_assign_unassigned_bridge_resour
+ 	int retval;
+ 	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
+ 				  IORESOURCE_PREFETCH;
++	unsigned long bus_res_type_mask = pci_bus_res_type_mask(bridge->bus);
+ 
+ again:
+ 	__pci_bus_size_bridges(parent, &add_list);
+-	__pci_bridge_assign_resources(bridge, &add_list, &fail_head);
++	__pci_bridge_assign_resources(bridge, &add_list, &fail_head,
++					bus_res_type_mask);
+ 	BUG_ON(!list_empty(&add_list));
+ 	tried_times++;
+ 
+@@ -1562,6 +1607,7 @@ void pci_assign_unassigned_bus_resources
+ 	struct pci_dev *dev;
+ 	LIST_HEAD(add_list); /* list of resources that
+ 					want additional resources */
++	unsigned long bus_res_type_mask = pci_bus_res_type_mask(bus);
+ 
+ 	down_read(&pci_bus_sem);
+ 	list_for_each_entry(dev, &bus->devices, bus_list)
+@@ -1571,6 +1617,6 @@ void pci_assign_unassigned_bus_resources
+ 				__pci_bus_size_bridges(dev->subordinate,
+ 							 &add_list);
+ 	up_read(&pci_bus_sem);
+-	__pci_bus_assign_resources(bus, &add_list, NULL);
++	__pci_bus_assign_resources(bus, &add_list, NULL, bus_res_type_mask);
+ 	BUG_ON(!list_empty(&add_list));
+ }
