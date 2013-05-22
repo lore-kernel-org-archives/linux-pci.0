@@ -1,112 +1,160 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <1369844192.12792.3.camel@ejdallLaptop>
-Subject: Re: [PATCH 3/3] PCI/AER: Provide reset_link for firmware first root
- port
-From: Betty Dall <betty.dall@hp.com>
-To: "Pearson, Greg" <greg.pearson@hp.com>
-Cc: "rjw@sisk.pl" <rjw@sisk.pl>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"ying.huang@intel.com" <ying.huang@intel.com>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Date: Wed, 29 May 2013 10:16:32 -0600
-In-Reply-To: <51A621E2.2050202@hp.com>
-References: <1369766929-4386-1-git-send-email-betty.dall@hp.com>
-	 <1369766929-4386-4-git-send-email-betty.dall@hp.com>
-	 <51A621E2.2050202@hp.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:4901 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755732Ab3EVVlK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 22 May 2013 17:41:10 -0400
+Message-ID: <519D3B61.5030700@redhat.com>
+Date: Wed, 22 May 2013 17:40:49 -0400
+From: Don Dutile <ddutile@redhat.com>
+MIME-Version: 1.0
+To: Or Gerlitz <or.gerlitz@gmail.com>
+CC: Alexander Duyck <alexander.duyck@gmail.com>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	Alexander Duyck <alexander.h.duyck@intel.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	NetDev <netdev@vger.kernel.org>,
+	Jack Morgenstein <jackm@dev.mellanox.co.il>
+Subject: Re: [PATCH 6/7] PCI: Make sure VF's driver get attached after PF's
+References: <1368498506-25857-1-git-send-email-yinghai@kernel.org> <1368498506-25857-7-git-send-email-yinghai@kernel.org> <51925FB0.4080504@intel.com> <CAE9FiQXYQEAZ=0sG6+2OdffBqfLS9MpoN1xviRR9aDbxPxcKxQ@mail.gmail.com> <5192946F.1050700@intel.com> <CAE9FiQVGGHB_amKw0-DfDifpTnRGPbxA+q3WY5F-O3x-sx386A@mail.gmail.com> <5192AEF4.1070905@intel.com> <519BE778.9040800@redhat.com> <20130521214912.GA21713@redhat.com> <519BEEA4.2030804@gmail.com> <20130521221117.GB803@redhat.com> <519BF594.1020607@gmail.com> <CAJZOPZKsp2_Fr3xY0NZfz5QDLn-=2fn+kL0w55EihuUgDZWEiw@mail.gmail.com>
+In-Reply-To: <CAJZOPZKsp2_Fr3xY0NZfz5QDLn-=2fn+kL0w55EihuUgDZWEiw@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2013-05-29 at 09:42 -0600, Pearson, Greg wrote:
-> On 05/28/2013 12:48 PM, Betty Dall wrote:
-> > The firmware first path does not install the aerdrv root port
-> > service driver, so the firmware first root port does not have
-> > a reset_link callback. When a firmware first root port does not have
-> > a reset_link callback, use a new default reset_link similar to what
-> > we already do for the default_downstream_reset_link(). The firmware
-> > first default reset_link brings the root port out of SBR if firmware
-> > left it in SBR.
-> >
-> > Signed-off-by: Betty Dall <betty.dall@hp.com>
-> > ---
-> >
-> >   drivers/pci/pcie/aer/aerdrv_core.c |   37 ++++++++++++++++++++++++++++++++++++
-> >   1 files changed, 37 insertions(+), 0 deletions(-)
-> >
-> >
-> > diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
-> > index 8ec8b4f..6862fe3 100644
-> > --- a/drivers/pci/pcie/aer/aerdrv_core.c
-> > +++ b/drivers/pci/pcie/aer/aerdrv_core.c
-> > @@ -413,6 +413,40 @@ static pci_ers_result_t default_downstream_reset_link(struct pci_dev *dev)
-> >   	return PCI_ERS_RESULT_RECOVERED;
-> >   }
-> >   
-> > +/**
-> > + * default_ff_root_port_reset_link - default reset function for firmware
-> > + *		first Root Port
-> > + * @dev: pointer to root port's pci_dev data structure
-> > + *
-> > + * Invoked when performing link reset at Root Port w/ no aer driver.
-> > + * This happens through the firmware first path. Firmware may leave
-> > + * the Root Port in SBR and it is the OS responsiblity to bring it out
-> > + * of SBR.
-> > + */
-> > +static pci_ers_result_t default_ff_root_port_reset_link(struct pci_dev *dev)
-> > +{
-> > +	u16 p2p_ctrl;
-> > +
-> > +	/* Read Secondary Bus Reset */
-> > +	pci_read_config_word(dev, PCI_BRIDGE_CONTROL, &p2p_ctrl);
-> > +	p2p_ctrl |= PCI_BRIDGE_CTL_BUS_RESET;
-> 
-> Remove "p2p_ctrl |= PCI_BRIDGE_CTL_BUS_RESET;" otherwise the following 
-> conditional is always taken.
-> 
+On 05/22/2013 04:16 PM, Or Gerlitz wrote:
+> On Wed, May 22, 2013 at 1:30 AM, Alexander Duyck
+> <alexander.duyck@gmail.com>  wrote:
+>> On 05/21/2013 03:11 PM, Michael S. Tsirkin wrote:
+>>> On Tue, May 21, 2013 at 03:01:08PM -0700, Alexander Duyck wrote:
+>>>> On 05/21/2013 02:49 PM, Michael S. Tsirkin wrote:
+>>>>> On Tue, May 21, 2013 at 05:30:32PM -0400, Don Dutile wrote:
+>>>>>> On 05/14/2013 05:39 PM, Alexander Duyck wrote:
+>>>>>>> On 05/14/2013 12:59 PM, Yinghai Lu wrote:
+>>>>>>>> On Tue, May 14, 2013 at 12:45 PM, Alexander Duyck
+>>>>>>>> <alexander.h.duyck@intel.com>   wrote:
+>>>>>>>>> On 05/14/2013 11:44 AM, Yinghai Lu wrote:
+>>>>>>>>>> On Tue, May 14, 2013 at 9:00 AM, Alexander Duyck
+>>>>>>>>>> <alexander.h.duyck@intel.com>   wrote:
+>>>>>>>>>>> I'm sorry, but what is the point of this patch?  With device assignment
+>>>>>>>>>>> it is always possible to have VFs loaded and the PF driver unloaded
+>>>>>>>>>>> since you cannot remove the VFs if they are assigned to a VM.
+>>>>>>>>>> unload PF driver will not call pci_disable_sriov?
+>>>>>>>>> You cannot call pci_disable_sriov because you will panic all of the
+>>>>>>>>> guests that have devices assigned.
+>>>>>>>> ixgbe_remove did call pci_disable_sriov...
+>>>>>>>>
+>>>>>>>> for guest panic, that is another problem.
+>>>>>>>> just like you pci passthrough with real pci device and hotremove the
+>>>>>>>> card in host.
+>>>>>>>>
+>>>>>>>> ...
+>>>>>>>
+>>>>>>> I suggest you take another look.  In ixgbe_disable_sriov, which is the
+>>>>>>> function that is called we do a check for assigned VFs.  If they are
+>>>>>>> assigned then we do not call pci_disable_sriov.
+>>>>>>>
+>>>>>>>>
+>>>>>>>>> So how does your patch actually fix this problem?  It seems like it is
+>>>>>>>>> just avoiding it.
+>>>>>>>> yes, until the first one is done.
+>>>>>>>
+>>>>>>> Avoiding the issue doesn't fix the underlying problem and instead you
+>>>>>>> are likely just introducing more bugs as a result.
+>>>>>>>
+>>>>>>>>>  From what I can tell your problem is originating in pci_call_probe.  I
+>>>>>>>>> believe it is calling work_on_cpu and that doesn't seem correct since
+>>>>>>>>> the work should be taking place on a CPU already local to the PF. You
+>>>>>>>>> might want to look there to see why you are trying to schedule work on a
+>>>>>>>>> CPU which should be perfectly fine for you to already be doing your work on.
+>>>>>>>> it always try to go with local cpu with same pxm.
+>>>>>>>
+>>>>>>> The problem is we really shouldn't be calling work_for_cpu in this case
+>>>>>>> since we are already on the correct CPU.  What probably should be
+>>>>>>> happening is that pci_call_probe should be doing a check to see if the
+>>>>>>> current CPU is already contained within the device node map and if so
+>>>>>>> just call local_pci_probe directly.  That way you can avoid deadlocking
+>>>>>>> the system by trying to flush the CPU queue of the CPU you are currently on.
+>>>>>>>
+>>>>>> That's the patch that Michael Tsirkin posted for a fix,
+>>>>>> but it was noted that if you have the case where the _same_ driver is used for vf&  pf,
+>>>>>> other deadlocks may occur.
+>>>>>> It would work in the case of ixgbe/ixgbevf, but not for something like
+>>>>>> the Mellanox pf/vf driver (which is the same).
+>>>>>>
+>>>>>
+>>>>> I think our conclusion was this is a false positive for Mellanox.
+>>>>> If not, we need to understand what the deadlock is better.
+>>>>>
+>>>>
+>>>> As I understand the issue, the problem is not a deadlock for Mellanox
+>>>> (At least with either your patch or mine applied), the issue is that the
+>>>> PF is not ready to handle VFs when pci_enable_sriov is called due to
+>>>> some firmware issues.
+>
+>
+>>> I haven't seen Mellanox guys say anything like this on the list. Pointers?
+>>> All I saw is some lockdep warnings and Tejun says they are bogus ...
+>>
+>> Actually the patch I submitted is at:
+>> https://patchwork.kernel.org/patch/2568881/
+>>
+>> It was in response to:
+>> https://patchwork.kernel.org/patch/2562471/
+>>
+>> Basically the patch I was responding to was supposed to address both the
+>> lockdep issue and a problem with mlx4 not being able to support the VFs
+>> when pci_enable_sriov is called.  Yinghai had specifically called out
+>> the work_on_cpu lockdep issue that you also submitted a patch for.
+>>
+>> As per the feedback from Yinghai it seems like my patch does resolve the
+>> lockdep issue that was seen.  The other half of the issue was what we
+>> have been discussing with Or in regards to delaying VF driver init via
+>> something like -EPROBE_DEFER instead of trying to split up
+>> pci_enable_sriov and VF probe.
+>
+>
+> Hi Alex, all, so to clarify:
+>
+> 1. currently due to current firmware limitation we must call
+> pci_enable_sriov before the
+> PF ends its initialization sequence done in the PCI probe callback, hence
+>
+> 2. we can't move to the new sysfs API for enabling SRIOV
+>
+> 3. as of 3.9-rc1 we see these nested brobes, bisected that to be as of
+> commit 90888ac01d059e38ffe77a2291d44cafa9016fb "driver core: fix
+> possible missing of device probe". But we didn't reach into consensus
+> with the author that this wasn't possible before the commit, nor this
+> is something that needs to be avoided, see
+> http://marc.info/?t=136249697200007&r=1&w=2
+>
+> 4. I am not sure if/how we can modify the PF code to support the case
+> where VFs are probed and start thier initialization sequence before
+> the PF is done with its initialization
+>
+> 5. etc
+>
+> all in all, we will look into returning  -EPROBE_DEFER from the VF
+> when they identify the problematic situation -- so for how much time
+> this is deferred? or if this isn't time based what the logical
+> condition which once met the VF probe is attempted again?
+>
+ah, sounds device specific.... i.e., it goes back to PF probe....
+
+So, I'm assuming some sort of init/info-xchg is done btwn VF & PF
+and has to be done to some level before PF can continue it's pci-probe
+operation.  In that case, has the VF & PF done sufficient init/info-xchg
+on 1st call, that the PF can continue, and then queue up a sriov-enable
+at the end of PF probe ?
+
+>
+> Or.
 > --
-> Greg
-
-Agreed. That was a copy and paste mistake. I will fix and retest.
-
--Betty
-
-> > +
-> > +	/* De-assert Secondary Bus Reset, if it is set */
-> > +	if (p2p_ctrl & PCI_BRIDGE_CTL_BUS_RESET) {
-> > +		p2p_ctrl &= ~PCI_BRIDGE_CTL_BUS_RESET;
-> > +		pci_write_config_word(dev, PCI_BRIDGE_CONTROL, p2p_ctrl);
-> > +
-> > +		/*
-> > +		 * System software must wait for at least 100ms from the end
-> > +		 * of a reset of one or more device before it is permitted
-> > +		 * to issue Configuration Requests to those devices.
-> > +		 */
-> > +		msleep(200);
-> > +		dev_dbg(&dev->dev, "Root Port link has been reset\n");
-> > +	}
-> > +	return PCI_ERS_RESULT_RECOVERED;
-> > +}
-> > +
-> >   static int find_aer_service_iter(struct device *device, void *data)
-> >   {
-> >   	struct pcie_port_service_driver *service_driver, **drv;
-> > @@ -460,6 +494,9 @@ static pci_ers_result_t reset_link(struct pci_dev *dev)
-> >   		status = driver->reset_link(udev);
-> >   	} else if (pci_pcie_type(udev) == PCI_EXP_TYPE_DOWNSTREAM) {
-> >   		status = default_downstream_reset_link(udev);
-> > +	} else if (pci_pcie_type(udev) == PCI_EXP_TYPE_ROOT_PORT &&
-> > +		pcie_aer_get_firmware_first(udev)) {
-> > +		status = default_ff_root_port_reset_link(udev);
-> >   	} else {
-> >   		dev_printk(KERN_DEBUG, &dev->dev,
-> >   			"no link-reset support at upstream device %s\n",
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >
-
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
