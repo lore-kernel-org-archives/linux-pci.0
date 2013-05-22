@@ -1,157 +1,66 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <liuj97@gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:28349 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755277Ab3EVGjH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 May 2013 02:39:07 -0400
+From: Yinghai Lu <yinghai@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Gavin Shan <shangw@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
 	Yinghai Lu <yinghai@kernel.org>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [RFC PATCH v2, part3 06/11] PCI, sysfs: use PCI bus lock to serialize hotplug operations triggered by sysfs
-Date: Thu, 16 May 2013 23:50:54 +0800
-Message-Id: <1368719459-24800-7-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1368719459-24800-1-git-send-email-jiang.liu@huawei.com>
-References: <1368719459-24800-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Subject: [PATCH v4 0/8] PCI: Skip resource allocation for root bus without conresponding type resource
+Date: Tue, 21 May 2013 23:38:40 -0700
+Message-Id: <1369204728-11165-1-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1367837311.15842.31.camel@pasglop>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use PCI bus lock to serialize hotplug operations triggered by pci-sysfs,
-and remove the redundant local mutex pci_remove_rescan_mutex.
+BenH reported that there is some assign unassigned resource problem
+in powerpc.
 
-This also fixes the bug reported by Gu Zheng as:
-	echo -n 1 > /sys/bus/pci/devices/0000\:10\:00.0/remove ; echo -n 1 >
-/sys/bus/pci/devices/0000\:1a\:01.0/remove
+It turns out after
+| commit 0c5be0cb0edfe3b5c4b62eac68aa2aa15ec681af
+| Date:   Thu Feb 23 19:23:29 2012 -0800
+|
+|    PCI: Retry on IORESOURCE_IO type allocations
 
-will cause kernel crash as bus get freed.
+even the root bus does not have io port range, it will keep retrying
+to realloc with mmio.
 
-[  418.946462] CPU 4
-[  418.968377] Pid: 512, comm: kworker/u:2 Tainted: G        W    3.8.0 #2
-FUJITSU-SV PRIMEQUEST 1800E/SB
-[  419.081763] RIP: 0010:[<ffffffff8137972e>]  [<ffffffff8137972e>]
-pci_bus_read_config_word+0x5e/0x90
-[  420.494137] Call Trace:
-[  420.523326]  [<ffffffff813851ef>] ? remove_callback+0x1f/0x40
-[  420.591984]  [<ffffffff8138044b>] pci_pme_active+0x4b/0x1c0
-[  420.658545]  [<ffffffff8137d8e7>] pci_stop_bus_device+0x57/0xb0
-[  420.729259]  [<ffffffff8137dab6>] pci_stop_and_remove_bus_device+0x16/0x30
-[  420.811392]  [<ffffffff813851fb>] remove_callback+0x2b/0x40
-[  420.877955]  [<ffffffff81257a56>] sysfs_schedule_callback_work+0x26/0x70
+Current retry logic is : try with must+optional at first, and if
+it fails will try must then try to extend must with optional.
+That will fail as mmio-non-pref and mmio-pref for bridge will
+be next to each other. So we have no chance to extend mmio-non-pref.
 
-https://bugzilla.kernel.org/show_bug.cgi?id=54411
+This will be become more often when we have x86 8 sockets or 32 sockets
+system, and those system will have one root bus per socket.
+They will have some root buses do not have ioport range.
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Reported-by: Gu Zheng <guz.fnst@cn.fujitsu.com>
-Cc: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
----
- drivers/pci/pci-sysfs.c | 52 ++++++++++++++++++++++++++++++++-----------------
- 1 file changed, 34 insertions(+), 18 deletions(-)
+We should not fall into retry in this case, as root bus does
+not io port range.
 
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index fcc4bb2..91ff11e 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -284,7 +284,6 @@ msi_bus_store(struct device *dev, struct device_attribute *attr,
- 	return count;
- }
- 
--static DEFINE_MUTEX(pci_remove_rescan_mutex);
- static ssize_t bus_rescan_store(struct bus_type *bus, const char *buf,
- 				size_t count)
- {
-@@ -293,13 +292,15 @@ static ssize_t bus_rescan_store(struct bus_type *bus, const char *buf,
- 
- 	if (strict_strtoul(buf, 0, &val) < 0)
- 		return -EINVAL;
-+	if (!val)
-+		return count;
- 
--	if (val) {
--		mutex_lock(&pci_remove_rescan_mutex);
--		for_each_pci_root_bus(b)
-+	for_each_pci_root_bus(b)
-+		if (pci_bus_lock(b, PCI_BUS_STATE_STOPPING - 1, true) == 0) {
- 			pci_rescan_bus(b);
--		mutex_unlock(&pci_remove_rescan_mutex);
--	}
-+			pci_bus_unlock(b, true);
-+		}
-+
- 	return count;
- }
- 
-@@ -312,27 +313,41 @@ static ssize_t
- dev_rescan_store(struct device *dev, struct device_attribute *attr,
- 		 const char *buf, size_t count)
- {
-+	int ret;
- 	unsigned long val;
- 	struct pci_dev *pdev = to_pci_dev(dev);
- 
- 	if (strict_strtoul(buf, 0, &val) < 0)
- 		return -EINVAL;
-+	if (!val)
-+		return count;
-+
-+	do {
-+		ret = pci_bus_lock_timeout(pdev->bus,
-+				PCI_BUS_STATE_STOPPING - 1, true, HZ);
-+		if (ret == 0) {
-+			pci_rescan_bus(pdev->bus);
-+			pci_bus_unlock(pdev->bus, true);
-+			break;
-+		}
-+		/*
-+		 * Prevent a deadlock scenario that thread A waits for
-+		 * all sysfs files to be released while holding PCI bus
-+		 * locks, and Thread B tries to acquire PCI bus locks
-+		 * in a sysfs handler. These checks break the deadlock
-+		 * condition.
-+		 */
-+		if (pci_dev_get_state(pdev) >= PCI_DEV_STATE_STOPPING ||
-+		    pci_bus_get_state(pdev->bus) >= PCI_BUS_STATE_STOPPING)
-+			return -EBUSY;
-+	} while (true);
- 
--	if (val) {
--		mutex_lock(&pci_remove_rescan_mutex);
--		pci_rescan_bus(pdev->bus);
--		mutex_unlock(&pci_remove_rescan_mutex);
--	}
- 	return count;
- }
- 
- static void remove_callback(struct device *dev)
- {
--	struct pci_dev *pdev = to_pci_dev(dev);
--
--	mutex_lock(&pci_remove_rescan_mutex);
--	pci_stop_and_remove_bus_device(pdev);
--	mutex_unlock(&pci_remove_rescan_mutex);
-+	pci_stop_and_remove_device(to_pci_dev(dev));
- }
- 
- static ssize_t
-@@ -366,12 +381,13 @@ dev_bus_rescan_store(struct device *dev, struct device_attribute *attr,
- 		return -EINVAL;
- 
- 	if (val) {
--		mutex_lock(&pci_remove_rescan_mutex);
-+		if (pci_bus_lock(bus, PCI_BUS_STATE_STOPPING - 1, true) < 0)
-+			return -EBUSY;
- 		if (!pci_is_root_bus(bus) && list_empty(&bus->devices))
- 			pci_rescan_bus_bridge_resize(bus->self);
- 		else
- 			pci_rescan_bus(bus);
--		mutex_unlock(&pci_remove_rescan_mutex);
-+		pci_bus_unlock(bus, true);
- 	}
- 	return count;
- }
--- 
-1.8.1.2
+We check if the root bus has ioport range, and set bus_res_type_mask,
+and pass it to assign_resources and don't add ioport res to failed list
+for root bus that does not have ioport range.
+So even BIOS set wrong value to pci devices and bridges will still
+get cleared.
 
+Then also check mmio-nonpref resource for root buses.
+
+First five are for 3.10, and others are targeted to 3.11
+
+-v4: split first patch into 4 patches per Bjorn.
+
+ PCI: Don't use temp bus for pci_bus_release_bridge_resources
+ PCI: Use pci_walk_bus to detect unassigned resources
+ PCI: Introduce enable_local to prepare per root bus handling
+ PCI: Split pci_assign_unassigned_resources to per root bus
+ PCI: Skip IORESOURCE_IO allocation for root bus without ioport range
+ PCI: Skip IORESOURCE_MMIO allocation for root bus without MMIO range
+ PCI: Enable pci bridge when it is needed
+ PCI: Retry assign unassigned resources for hotadd root bus
+
+Thanks
+
+Yinghai
