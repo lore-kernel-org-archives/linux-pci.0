@@ -1,74 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from avon.wwwdotorg.org ([70.85.31.133]:42373 "EHLO
-	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756387Ab3E2Pfe (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 May 2013 11:35:34 -0400
-Message-ID: <51A62042.7070304@wwwdotorg.org>
-Date: Wed, 29 May 2013 09:35:30 -0600
-From: Stephen Warren <swarren@wwwdotorg.org>
-MIME-Version: 1.0
-To: Jay Agarwal <jagarwal@nvidia.com>
-CC: "'thierry.reding@avionic-design.de'"
-	<thierry.reding@avionic-design.de>,
-	"'linux@arm.linux.org.uk'" <linux@arm.linux.org.uk>,
-	"'bhelgaas@google.com'" <bhelgaas@google.com>,
-	"'olof@lixom.net'" <olof@lixom.net>,
-	"'mturquette@linaro.org'" <mturquette@linaro.org>,
-	"'linux-arm-kernel@lists.infradead.org'"
-	<linux-arm-kernel@lists.infradead.org>,
-	"'linux-tegra@vger.kernel.org'" <linux-tegra@vger.kernel.org>,
-	"'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>,
-	"'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 4/4] ARM: tegra: pcie: Enable PCIe controller on Cardhu
-References: <1368010660-31465-1-git-send-email-jagarwal@nvidia.com> <1368010660-31465-4-git-send-email-jagarwal@nvidia.com> <518A8596.7070702@wwwdotorg.org> <C79B248886DD134989C8FF6B096A91AB91B4886B5D@BGMAIL01.nvidia.com> <C79B248886DD134989C8FF6B096A91AB91B4886B6C@BGMAIL01.nvidia.com> <C79B248886DD134989C8FF6B096A91AB91B616BE9B@BGMAIL01.nvidia.com>
-In-Reply-To: <C79B248886DD134989C8FF6B096A91AB91B616BE9B@BGMAIL01.nvidia.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from aserp1040.oracle.com ([141.146.126.69]:47899 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755615Ab3EVGjl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 May 2013 02:39:41 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Gavin Shan <shangw@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v4 1/8] PCI: Don't use temp bus for pci_bus_release_bridge_resources
+Date: Tue, 21 May 2013 23:38:41 -0700
+Message-Id: <1369204728-11165-2-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1369204728-11165-1-git-send-email-yinghai@kernel.org>
+References: <1369204728-11165-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/29/2013 04:10 AM, Jay Agarwal wrote:
->>>> So, if I apply this series, I do see the PCIe bridge and Ethernet
->>>> device get enumerated, but I don't see the USB3 controller get
->>>> enumerated. I believe that is a PCIe device behind the same bridge
->>>> on the
->>> same Tegra PCIe port.
->>>> Shouldn't this device show up?
->>> I have also reproduced this problem. I see somehow no non-
->>> prefetchable memory is assigned to any of pcie devices.
->>> Probably that is the reason for USB3 (pci 0000:04:00.0) not getting
->>> enumerated since it uses only non-prefetchable memory.
->>
->> 1. Bus4(on which usb3 device resides) always return 0xffffffff from it's
->> config space. which means device is not present?
->> 2. That's why it is not assigned any resources and hence no usb3 probe
->> happens.
->> 3. But same bus does return valid info like vendor/device id etc from it's
->> config space in downstream kernel and hence usb3 probe does happen.
->>
->> Thierry, Stephen,
->> 4. Any idea why bus4 should return 0xffffffff values in upstream kernel?
->> Anything missing?
->> 5. Also, how config space of all pcie devices are mapped? I mean if I change
->> the config space offset in dts file, then also I find correct vendor/device id
->> etc for bus0/device0/fun0.
->>     So how this mapping happens that even after changing the config space
->> offset in PCIe address space, it always finds correct vendor/device id.
-> 
->  Any idea on this?
+as later bus can not be used as temp variable after we change to
+per root bus handling with assign unassigned resources.
 
-I did already reply the same day you sent the original email. My
-response was:
+Per Bjorn, separated out different patch.
 
-Is there some reset/enable GPIO or regulator that needs to be programmed
-to enable the PCIe USB3 controller? Take a look at the schematic. If you
-can make it work by tweaking those GPIOs/... manually, then we can
-ignore this issue and fix it up later, since it's not directly related
-to the PCIe controller driver patches. It's more important to get the
-Ethernet working than USB, I think.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 
-To be honest though, I would expect you to be asking around inside
-NVIDIA to determine the answer here. As the PCIe SW expert, I'd expect
-you to drive this process. Try asking the Cardhu board and PCIe HW
-experts within NVIDIA.
+---
+ drivers/pci/setup-bus.c |    7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
 
-Did you make any progress on the issues with the Ethernet device?
+Index: linux-2.6/drivers/pci/setup-bus.c
+===================================================================
+--- linux-2.6.orig/drivers/pci/setup-bus.c
++++ linux-2.6/drivers/pci/setup-bus.c
+@@ -1458,12 +1458,11 @@ again:
+ 	 * Try to release leaf bridge's resources that doesn't fit resource of
+ 	 * child device under that bridge
+ 	 */
+-	list_for_each_entry(fail_res, &fail_head, list) {
+-		bus = fail_res->dev->bus;
+-		pci_bus_release_bridge_resources(bus,
++	list_for_each_entry(fail_res, &fail_head, list)
++		pci_bus_release_bridge_resources(fail_res->dev->bus,
+ 						 fail_res->flags & type_mask,
+ 						 rel_type);
+-	}
++
+ 	/* restore size and flags */
+ 	list_for_each_entry(fail_res, &fail_head, list) {
+ 		struct resource *res = fail_res->res;
