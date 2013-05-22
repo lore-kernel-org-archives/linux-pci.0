@@ -1,108 +1,110 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:53857 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758029Ab3EONZd (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 May 2013 09:25:33 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>
-Cc: linux-arm-kernel@lists.infradead.org,
-	Arnd Bergmann <arnd@arndb.de>, Olof Johansson <olof@lixom.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Lior Amsalem <alior@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	linux-pci@vger.kernel.org,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	devicetree-discuss@lists.ozlabs.org
-Subject: [PATCHv9 3/9] of/pci: Add of_pci_get_devfn() function
-Date: Wed, 15 May 2013 15:25:17 +0200
-Message-Id: <1368624323-24311-4-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1368624323-24311-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1368624323-24311-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:64360 "EHLO
+	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756386Ab3EVQ7t (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 May 2013 12:59:49 -0400
+Received: by mail-ie0-f174.google.com with SMTP id 10so5742253ied.33
+        for <linux-pci@vger.kernel.org>; Wed, 22 May 2013 09:59:48 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAErSpo5MJCoaof=heFM4vLxuWz8pFqsyXAC356jZ7rbRvSOt9g@mail.gmail.com>
+References: <1367712653.11982.19.camel@pasglop>
+	<1367712932.11982.20.camel@pasglop>
+	<CAE9FiQX=h4H1gcbW=EfQo_ZtAgHGOZ2GxVxLG59C1iMH+qgH2g@mail.gmail.com>
+	<1367732090.11982.38.camel@pasglop>
+	<CAE9FiQUN3qqVmdw_EdOC-JZGc219M3tu=roOX98xns+77LJhMw@mail.gmail.com>
+	<1367740336.11982.41.camel@pasglop>
+	<51871088.4594420a.0ccc.7300SMTPIN_ADDED_BROKEN@mx.google.com>
+	<CAE9FiQXGUOM_h_X5tdGbkiuZGZkiFigSLbbftx3YXybFBg6trg@mail.gmail.com>
+	<518786a7.64bbec0a.58a0.1f6bSMTPIN_ADDED_BROKEN@mx.google.com>
+	<CAErSpo5MJCoaof=heFM4vLxuWz8pFqsyXAC356jZ7rbRvSOt9g@mail.gmail.com>
+Date: Wed, 22 May 2013 09:59:48 -0700
+Message-ID: <CAE9FiQWsZXfkSSVFzee4-J4bUDP8DdG=y9-k2du+ek90StDvNA@mail.gmail.com>
+Subject: Re: Resource assignment oddities
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Gavin Shan <shangw@linux.vnet.ibm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: multipart/mixed; boundary=20cf302237e7568c3204dd517e0e
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Thierry Reding <thierry.reding@avionic-design.de>
+--20cf302237e7568c3204dd517e0e
+Content-Type: text/plain; charset=ISO-8859-1
 
-This function can be used to parse the device and function number from a
-standard 5-cell PCI resource. PCI_SLOT() and PCI_FUNC() can be used on
-the returned value obtain the device and function numbers respectively.
+On Wed, May 22, 2013 at 7:54 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> What exactly is the problem here?  Is it just that you don't want to
+> see the "can't assign" messages?  Or is there a device with a BAR that
+> *should* be assigned, but isn't?  If so, which device is it?
 
-Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
----
- drivers/of/of_pci.c    |   34 +++++++++++++++++++++++++++++-----
- include/linux/of_pci.h |    1 +
- 2 files changed, 30 insertions(+), 5 deletions(-)
+We try must+optional as first, then if there is any ioport or mmio fail
+we will stick to must only then extend must to meet optional.
+but mmio range and mmio-pref could be connected each other,
+so extend will fail...
 
-diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
-index 13e37e2..4dd7b9b 100644
---- a/drivers/of/of_pci.c
-+++ b/drivers/of/of_pci.c
-@@ -5,14 +5,15 @@
- #include <asm/prom.h>
- 
- static inline int __of_pci_pci_compare(struct device_node *node,
--				       unsigned int devfn)
-+				       unsigned int data)
- {
--	unsigned int size;
--	const __be32 *reg = of_get_property(node, "reg", &size);
-+	int devfn;
- 
--	if (!reg || size < 5 * sizeof(__be32))
-+	devfn = of_pci_get_devfn(node);
-+	if (devfn < 0)
- 		return 0;
--	return ((be32_to_cpup(&reg[0]) >> 8) & 0xff) == devfn;
-+
-+	return devfn == data;
- }
- 
- struct device_node *of_pci_find_child_device(struct device_node *parent,
-@@ -40,3 +41,26 @@ struct device_node *of_pci_find_child_device(struct device_node *parent,
- 	return NULL;
- }
- EXPORT_SYMBOL_GPL(of_pci_find_child_device);
-+
-+/**
-+ * of_pci_get_devfn() - Get device and function numbers for a device node
-+ * @np: device node
-+ *
-+ * Parses a standard 5-cell PCI resource and returns an 8-bit value that can
-+ * be passed to the PCI_SLOT() and PCI_FUNC() macros to extract the device
-+ * and function numbers respectively. On error a negative error code is
-+ * returned.
-+ */
-+int of_pci_get_devfn(struct device_node *np)
-+{
-+	unsigned int size;
-+	const __be32 *reg;
-+
-+	reg = of_get_property(np, "reg", &size);
-+
-+	if (!reg || size < 5 * sizeof(__be32))
-+		return -EINVAL;
-+
-+	return (be32_to_cpup(reg) >> 8) & 0xff;
-+}
-+EXPORT_SYMBOL_GPL(of_pci_get_devfn);
-diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
-index bb115de..91ec484 100644
---- a/include/linux/of_pci.h
-+++ b/include/linux/of_pci.h
-@@ -10,5 +10,6 @@ int of_irq_map_pci(const struct pci_dev *pdev, struct of_irq *out_irq);
- struct device_node;
- struct device_node *of_pci_find_child_device(struct device_node *parent,
- 					     unsigned int devfn);
-+int of_pci_get_devfn(struct device_node *np);
- 
- #endif
--- 
-1.7.9.5
+problem here, some root bus will not have ioport range, so it will always have
+ioport allocation fail.
 
+looks like right fix for v3.9 should be as attached patch.
+it will keep must+optional for mmio, if only ioport fails....
+
+Yinghai
+
+--20cf302237e7568c3204dd517e0e
+Content-Type: application/octet-stream; name="root_bus_ioport_skip_9.patch"
+Content-Disposition: attachment; filename="root_bus_ioport_skip_9.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_hh0r577w0
+
+U3ViamVjdDogW1BBVENIXSBQQ0k6IERvbid0IGZhbGwgYmFjayBNTUlPIHRvIG11c3Qtb25seSwg
+aWYgaW8gcG9ydCBmYWlsIHdpdGggb3B0aW9uYWwKRnJvbTogWWluZ2hhaSBMdSA8eWluZ2hhaUBr
+ZXJuZWwub3JnPgoKQmVuSCByZXBvcnRlZCB0aGF0IHRoZXJlIGlzIHNvbWUgYXNzaWduIHVuYXNz
+aWduZWQgcmVzb3VyY2UgcHJvYmxlbQppbiBwb3dlcnBjLgoKSXQgdHVybnMgb3V0IGFmdGVyCnwg
+Y29tbWl0IDBjNWJlMGNiMGVkZmUzYjVjNGI2MmVhYzY4YWEyYWExNWVjNjgxYWYKfCBEYXRlOiAg
+IFRodSBGZWIgMjMgMTk6MjM6MjkgMjAxMiAtMDgwMAp8CnwgICAgUENJOiBSZXRyeSBvbiBJT1JF
+U09VUkNFX0lPIHR5cGUgYWxsb2NhdGlvbnMKCmV2ZW4gdGhlIHJvb3QgYnVzIGRvZXMgbm90IGhh
+dmUgaW8gcG9ydCByYW5nZSwgaXQgd2lsbCBrZWVwIHJldHJ5aW5nCnRvIHJlYWxsb2Mgd2l0aCBt
+bWlvLgoKQ3VycmVudCByZXRyeSBsb2dpYyBpcyA6IHRyeSB3aXRoIG11c3Qrb3B0aW9uYWwgYXQg
+Zmlyc3QsIGFuZCBpZgppdCBmYWlscyB3aXRoIGFueSBpb3BvcnQgb3IgbW1pbywgaXQgd2lsbCB0
+cnkgbXVzdCB0aGVuIHRyeSB0byBleHRlbmQKbXVzdCB3aXRoIG9wdGlvbmFsLgpUaGF0IHdpbGwg
+ZmFpbCBhcyBtbWlvLW5vbi1wcmVmIGFuZCBtbWlvLXByZWYgZm9yIGJyaWRnZSB3aWxsCmJlIG5l
+eHQgdG8gZWFjaCBvdGhlci4gU28gd2UgaGF2ZSBubyBjaGFuY2UgdG8gZXh0ZW5kIG1taW8tbm9u
+LXByZWYuCgpXZSBjYW4gY2hlY2sgZmFpbCB0eXBlIGFuZCBvbmx5IGZhbGwgYmFjayBmb3IgaW8g
+cG9ydCBvbmx5LCB0aGF0IHdpbGwKa2VlcCBtbWlvIHR5cGUgc3RpbGwgaGF2ZSBtdXN0K29wdGlv
+bmFsLgoKVGhpcyB3aWxsIGJlIGJlY29tZSBtb3JlIG9mdGVuIHdoZW4gd2UgaGF2ZSB4ODYgOCBz
+b2NrZXRzIG9yIDMyIHNvY2tldHMKc3lzdGVtLCBhbmQgdGhvc2Ugc3lzdGVtIHdpbGwgaGF2ZSBv
+bmUgcm9vdCBidXMgcGVyIHNvY2tldC4KVGhleSB3aWxsIGhhdmUgc29tZSByb290IGJ1c2VzIGRv
+IG5vdCBoYXZlIGlvcG9ydCByYW5nZS4KClJlcG9ydGVkLWJ5OiBCZW5qYW1pbiBIZXJyZW5zY2ht
+aWR0IDxiZW5oQGtlcm5lbC5jcmFzaGluZy5vcmc+ClNpZ25lZC1vZmYtYnk6IFlpbmdoYWkgTHUg
+PHlpbmdoYWlAa2VybmVsLm9yZz4KCi0tLQogZHJpdmVycy9wY2kvc2V0dXAtYnVzLmMgfCAgIDI3
+ICsrKysrKysrKysrKysrKysrKysrKysrKysrLQogMSBmaWxlIGNoYW5nZWQsIDI2IGluc2VydGlv
+bnMoKyksIDEgZGVsZXRpb24oLSkKCkluZGV4OiBsaW51eC0yLjYvZHJpdmVycy9wY2kvc2V0dXAt
+YnVzLmMKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PQotLS0gbGludXgtMi42Lm9yaWcvZHJpdmVycy9wY2kvc2V0dXAtYnVz
+LmMKKysrIGxpbnV4LTIuNi9kcml2ZXJzL3BjaS9zZXR1cC1idXMuYwpAQCAtMzE2LDcgKzMxNiwx
+MSBAQCBzdGF0aWMgdm9pZCBfX2Fzc2lnbl9yZXNvdXJjZXNfc29ydGVkKHN0CiAJTElTVF9IRUFE
+KHNhdmVfaGVhZCk7CiAJTElTVF9IRUFEKGxvY2FsX2ZhaWxfaGVhZCk7CiAJc3RydWN0IHBjaV9k
+ZXZfcmVzb3VyY2UgKnNhdmVfcmVzOwotCXN0cnVjdCBwY2lfZGV2X3Jlc291cmNlICpkZXZfcmVz
+OworCXN0cnVjdCBwY2lfZGV2X3Jlc291cmNlICpkZXZfcmVzLCAqdG1wX3JlczsKKwl1bnNpZ25l
+ZCBsb25nIGZhaWxfdHlwZSA9IDA7CisJc3RydWN0IHBjaV9kZXZfcmVzb3VyY2UgKmZhaWxfcmVz
+OworCXVuc2lnbmVkIGxvbmcgdHlwZV9tYXNrID0gSU9SRVNPVVJDRV9JTyB8IElPUkVTT1VSQ0Vf
+TUVNIHwKKwkJCQkgIElPUkVTT1VSQ0VfUFJFRkVUQ0g7CiAKIAkvKiBDaGVjayBpZiBvcHRpb25h
+bCBhZGRfc2l6ZSBpcyB0aGVyZSAqLwogCWlmICghcmVhbGxvY19oZWFkIHx8IGxpc3RfZW1wdHko
+cmVhbGxvY19oZWFkKSkKQEAgLTM0OCw2ICszNTIsMjcgQEAgc3RhdGljIHZvaWQgX19hc3NpZ25f
+cmVzb3VyY2VzX3NvcnRlZChzdAogCQlyZXR1cm47CiAJfQogCisJLyogY2hlY2sgZmFpbGVkIHR5
+cGUgKi8KKwlsaXN0X2Zvcl9lYWNoX2VudHJ5KGZhaWxfcmVzLCAmbG9jYWxfZmFpbF9oZWFkLCBs
+aXN0KQorCQlmYWlsX3R5cGUgfD0gZmFpbF9yZXMtPmZsYWdzICYgdHlwZV9tYXNrOworCS8qIG9u
+bHkgaW8gcG9ydCBmYWlscyAqLworCWlmICgoZmFpbF90eXBlICYgdHlwZV9tYXNrKSA9PSBJT1JF
+U09VUkNFX0lPKSB7CisJCS8qIHJlbW92ZSBhc3NpZ25lZCBub24gaW9wb3J0IGZyb20gaGVhZCBs
+aXN0ICovCisJCWxpc3RfZm9yX2VhY2hfZW50cnlfc2FmZShkZXZfcmVzLCB0bXBfcmVzLCBoZWFk
+LCBsaXN0KQorCQkJaWYgKGRldl9yZXMtPnJlcy0+cGFyZW50ICYmCisJCQkgICAgIShkZXZfcmVz
+LT5yZXMtPmZsYWdzICYgSU9SRVNPVVJDRV9JTykpIHsKKwkJCQlsaXN0X2RlbCgmZGV2X3Jlcy0+
+bGlzdCk7CisJCQkJa2ZyZWUoZGV2X3Jlcyk7CisJCQl9CisJCS8qIHJlbW92ZSBhc3NpZ25lZCBu
+b24gaW9wb3J0IGZyb20gc2F2ZWQgbGlzdCAqLworCQlsaXN0X2Zvcl9lYWNoX2VudHJ5X3NhZmUo
+c2F2ZV9yZXMsIHRtcF9yZXMsICZzYXZlX2hlYWQsIGxpc3QpCisJCQlpZiAoc2F2ZV9yZXMtPnJl
+cy0+cGFyZW50ICYmCisJCQkgICAgIShzYXZlX3Jlcy0+cmVzLT5mbGFncyAmIElPUkVTT1VSQ0Vf
+SU8pKSB7CisJCQkJbGlzdF9kZWwoJnNhdmVfcmVzLT5saXN0KTsKKwkJCQlrZnJlZShzYXZlX3Jl
+cyk7CisJCQl9CisJfQorCiAJZnJlZV9saXN0KCZsb2NhbF9mYWlsX2hlYWQpOwogCS8qIFJlbGVh
+c2UgYXNzaWduZWQgcmVzb3VyY2UgKi8KIAlsaXN0X2Zvcl9lYWNoX2VudHJ5KGRldl9yZXMsIGhl
+YWQsIGxpc3QpCg==
+--20cf302237e7568c3204dd517e0e--
