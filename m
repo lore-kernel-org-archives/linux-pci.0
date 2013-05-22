@@ -1,65 +1,137 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:40969 "EHLO hydra.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756736Ab3ETTw6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 20 May 2013 15:52:58 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Phillip Susi <psusi@ubuntu.com>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>
-Subject: Re: enabling aspm on ati radeon
-Date: Mon, 20 May 2013 22:01:40 +0200
-Message-ID: <11045555.dLhhFPGoSV@vostro.rjw.lan>
-In-Reply-To: <CAErSpo6MGwHLJvis+4=vdQEJN=Qb9aC5e9=3Q6MdTB-HH84YBw@mail.gmail.com>
-References: <519443A1.8050905@ubuntu.com> <5196D765.9020600@ubuntu.com> <CAErSpo6MGwHLJvis+4=vdQEJN=Qb9aC5e9=3Q6MdTB-HH84YBw@mail.gmail.com>
+Received: from cn.fujitsu.com ([222.73.24.84]:59189 "EHLO song.cn.fujitsu.com"
+	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S1752610Ab3EVJvJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 22 May 2013 05:51:09 -0400
+Message-ID: <519C9482.2050504@cn.fujitsu.com>
+Date: Wed, 22 May 2013 17:48:50 +0800
+From: Gu Zheng <guz.fnst@cn.fujitsu.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Jiang Liu <liuj97@gmail.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [RFC PATCH v2, part3 00/11] Introduce PCI bus lock and state
+ machine
+References: <1368719459-24800-1-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1368719459-24800-1-git-send-email-jiang.liu@huawei.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, May 20, 2013 07:34:44 AM Bjorn Helgaas wrote:
-> On Fri, May 17, 2013 at 7:20 PM, Phillip Susi <psusi@ubuntu.com> wrote:
-> > -----BEGIN PGP SIGNED MESSAGE-----
-> > Hash: SHA1
-> >
-> > On 05/17/2013 08:40 PM, Bjorn Helgaas wrote:
-> >> Right; I meant RO per the PCIe spec.  If it's RW on your chip,
-> >> setpci should be able to write it.
-> >
-> > I assume it would do no good to change it at this point; it would need
-> > to already be set at the time the kernel reads it and decides whether
-> > or not to enable it, so I'd have to have grub set it before loading
-> > the kernel.
-> 
-> Yeah, setting the capability bits after the kernel has booted wouldn't
-> change anything except what lspci reports.
-> 
-> >> If you can measure the power consumption, you might be able to see
-> >> a difference there.  I've seen people report that, but don't know
-> >> how they do it.  For example:
-> >> https://lkml.kernel.org/r/CANUX_P3F5YhbZX3WGU-j1AGpbXb_T9Bis2ErhvKkFMtDvzatVQ@mail.gmail.com
-> >
-> > After
-> >>
-> > enabling it on both ends ( despite the root port still claiming
-> > it is not supported ) I still see ~121 watts according to the
-> > Kill-A-Watt my system is plugged into.  Oh well.
-> 
-> ASPM only saves power when the PCIe link is idle.  I'm not a video
-> person, so I don't know how video usage translates into link usage,
-> and I don't know how much power it saves.  My guess is that the amount
-> is fairly small and might not be measurable with a Kill-A-Watt.
+On 05/16/2013 11:50 PM, Jiang Liu wrote:
 
-I'm pretty sure it's measurable, at least in some cases.  Phoronix did quite
-some fuss about a commit that caused ASPM to not work any more on some systems
-some time ago, so he had to be able to measure it (and it was called a "major
-power regression").
+> Hi all,
+> 	About one year ago, I started to solve issues triggered by concurrent
+> PCI device hotplug operations, and several different solutions have been
+> sent to community for comments. Now we have made important changes to the
+> solution, so start again with a "v1".
+> 
+> This is the second take to resolve race conditions when hot-plugging PCI
+> devices/host bridges. Instead of using a globla lock to serialize all hotplug
+> operations as in previous version, now we introduce a state machine and lock
+> mechanism for PCI buses to serialize hotplug operations. For discussions
+> related to previous version, please refer to:
+> http://comments.gmane.org/gmane.linux.kernel.pci/15007
+> 
+> This patch-set is still in early stages, so sending it out just requesting
+> for comments. Any comments are welcomed, especially about whether it's the
+> right/suitable way to solve these race condition issues.
+> 
+> There are multiple methods to trigger PCI hotplug requests/operations
+> concurrently, such as:
+> 1. Sysfs interfaces exported by the PCI core subsystem
+> 	/sys/devices/pcissss:bb/ssss:bb:dd.f/.../remove
+> 	/sys/devices/pcissss:bb/ssss:bb:dd.f/.../rescan
+> 	/sys/devices/pcissss:bb/ssss:bb:dd.f/.../pci_bus/ssss:bb/rescan
+> 	/sys/bus/pci/rescan
+> 2. Sysfs interfaces exported by the PCI hotplug subsystem
+> 	/sys/bus/pci/slots/xx/power
+> 3. PCI hotplug events triggered by PCI Hotplug Controllers
+> 4. ACPI hotplug events for PCI host bridges
+> 5. Driver binding/unbinding events
+> 	binding/unbinding pci drivers with SR-IOV support
+
+Hi Jiang,
+	We're gladly to see the new patch-set, and I tested all the whole 3 parts
+patch-set on the latest kernel tree. Because of the limitation of our test environment,
+we only use the method *1* to trigger PCI hotplug concurrently, and it works well.
+
+Though I'm not sure whether the way you introduced is the best one to solve these
+race condition issues, but it does fix the concurrent PCI hotplug(via sysfs)
+issues that disturb us.
+Let's wait and see other guys' feedback.:)
 
 Thanks,
-Rafael
+Gu
+
+> 
+> With current implementation, the PCI core subsystem doesn't support
+> concurrent hotplug operations yet. The existing pci_bus_sem lock only
+> protects several lists in struct pci_bus, such as children list,
+> devices list, but it doesn't protect the pci_bus or pci_dev structure
+> themselves.
+> 
+> Let's take pci_remove_bus_device() as an example, which are used by
+> PCI hotplug drivers to hot-remove PCI devices.  Currently all these
+> are free running without any protection, so it can't support reentrance.
+> pci_remove_bus_device()
+>     ->pci_stop_bus_device()
+>         ->pci_stop_bus_device()
+>             ->pci_stop_bus_devices()
+>         ->pci_stop_dev()
+> 
+> Patch 1-4:
+> 1) Introduce PCI bus lock and state machine
+> 2) Introduce a state machine for PCI devices to enable reentrance
+> 
+> Patch 5-8:
+> 1) Enhance PCI core to support new PCI bus lock and state machine
+> 2) Refine xen-pcifront code with new PCI interfaces
+> 
+> Patch 9-10:
+> 1) Give example about how to enhance PCI hotplug drivers with PCI bus
+>    lcok and state machine
+> 
+> Patch 11:
+> 1) Give an example about how to enhance arch specific PCI code with PCI
+>    bus lock and state machine
+> 
+> Jiang Liu (11):
+>   PCI: introduce bus lock and state machine to serialize PCI hotplug
+>     operations
+>   PCI: implement state machine for PCI bus
+>   PCI: introduce a state machine to manage PCI device lifecycle
+>   PCI: introduce helper function pci_stop_and_remove_device()
+>   PCI: enhance PCI core logic to support PCI bus lock
+>   PCI, sysfs: use PCI bus lock to serialize hotplug operations triggered
+>     by sysfs
+>   PCI, xen-pcifront: use new PCI interfaces to simplify implementation
+>   PCI, xen-pcifront: use PCI bus lock to protect PCI device hotplug
+>   PCI, acpiphp: use PCI bus lock to protect PCI device hotplug
+>   PCI, pciehp: use PCI bus lock to protect PCI device hotplug
+>   PCI, ACPI, pci_root: use PCI bus lock to protect PCI device hotplug
+> 
+>  arch/ia64/pci/pci.c                |   2 +-
+>  arch/x86/pci/acpi.c                |   3 +-
+>  drivers/acpi/pci_root.c            |  14 +-
+>  drivers/pci/Kconfig                |   3 +
+>  drivers/pci/bus.c                  | 274 ++++++++++++++++++++++++++++++++++++-
+>  drivers/pci/hotplug-pci.c          |   4 +
+>  drivers/pci/hotplug/acpiphp_glue.c |  16 ++-
+>  drivers/pci/hotplug/pciehp_pci.c   |  15 ++
+>  drivers/pci/pci-sysfs.c            |  52 ++++---
+>  drivers/pci/probe.c                |  33 ++++-
+>  drivers/pci/remove.c               | 151 +++++++++++++-------
+>  drivers/pci/xen-pcifront.c         |  95 +++++++------
+>  include/linux/pci.h                |  63 ++++++++-
+>  13 files changed, 588 insertions(+), 137 deletions(-)
+> 
 
 
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
