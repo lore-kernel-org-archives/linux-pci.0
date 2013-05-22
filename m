@@ -1,40 +1,107 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qe0-f43.google.com ([209.85.128.43]:47656 "EHLO
-	mail-qe0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751197Ab3EPEAM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 May 2013 00:00:12 -0400
-MIME-Version: 1.0
-In-Reply-To: <CAE9FiQVn4F+dTrQn0xsg-6QY9+HwbnJR=1CrjdoZkmF_LMrgpg@mail.gmail.com>
-References: <1368498506-25857-1-git-send-email-yinghai@kernel.org>
-	<1368498506-25857-7-git-send-email-yinghai@kernel.org>
-	<0EE9A1CDC8D6434DB00095CD7DB873462CFB0E4E@MTLDAG01.mtl.com>
-	<CAE9FiQVn4F+dTrQn0xsg-6QY9+HwbnJR=1CrjdoZkmF_LMrgpg@mail.gmail.com>
-Date: Thu, 16 May 2013 00:00:10 -0400
-Message-ID: <CAJZOPZLjdALP4jkLo6p787jaPx=dkKj7+AmCr9+mgJN3z_xBxQ@mail.gmail.com>
-Subject: Re: [PATCH 6/7] PCI: Make sure VF's driver get attached after PF's
-From: Or Gerlitz <or.gerlitz@gmail.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Yan Burman <yanb@mellanox.com>,
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Date: Wed, 22 May 2013 10:04:47 +1000
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+To: Peter Stuge <peter@stuge.se>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-arch@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Russell King <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>, linux-pm@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-pcmcia@lists.infradead.org,
+	LKML <linux-kernel@vger.kernel.org>, cluster-devel@redhat.com,
+	linux-mm@kvack.org, Hans Verkuil <hans.verkuil@cisco.com>,
+	Pavel Machek <pavel@ucw.cz>,
+	Doug Thompson <dougthompson@xmission.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	Jack Morgenstein <jackm@mellanox.com>,
-	Or Gerlitz <ogerlitz@mellanox.com>,
-	Yevgeny Petrilin <yevgenyp@mellanox.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+	Andrew Morton <akpm@linux-foundation.org>,
+	Steven Whitehouse <swhiteho@redhat.com>,
+	linux-arm-kernel@lists.infradead.org, linux-edac@vger.kernel.org
+Subject: Re: [PATCH] Finally eradicate CONFIG_HOTPLUG
+Message-Id: <20130522100447.0f04799ea138a2f391d38850@canb.auug.org.au>
+In-Reply-To: <20130521101349.30660.qmail@stuge.se>
+References: <20130521134935.d18c3f5c23485fb5ddabc365@canb.auug.org.au>
+	<20130521101349.30660.qmail@stuge.se>
+Mime-Version: 1.0
+Content-Type: multipart/signed; protocol="application/pgp-signature";
+ micalg="PGP-SHA256";
+ boundary="Signature=_Wed__22_May_2013_10_04_47_+1000_=wBw7x16m+7LHjz1"
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 14, 2013 at 11:43 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+--Signature=_Wed__22_May_2013_10_04_47_+1000_=wBw7x16m+7LHjz1
+Content-Type: text/plain; charset=US-ASCII
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> BTW, do you have any plan to make mlx4 support sriov_configure via sysfs?
+Hi Peter,
 
-yes we do, we're waiting for a firmware change that will allow for
-such a patch to get working.
+On Tue, 21 May 2013 12:13:49 +0200 Peter Stuge <peter@stuge.se> wrote:
+>
+> Are you changing the code to have HOTPLUG always -on- or -off- ?
+>=20
+> From the commit message I had expected always -on-.
 
-Please note that this whole lockdep warning was identified as false
-positive by Tejun http://www.spinics.net/lists/linux-pci/msg21568.html
+Yes, it has been that way for some time.
 
-Or.
+> Stephen Rothwell wrote:
+> > --- a/include/asm-generic/vmlinux.lds.h
+> > +++ b/include/asm-generic/vmlinux.lds.h
+> > @@ -68,14 +68,6 @@
+> >   * are handled as text/data or they can be discarded (which
+> >   * often happens at runtime)
+> >   */
+> > -#ifdef CONFIG_HOTPLUG
+> > -#define DEV_KEEP(sec)    *(.dev##sec)
+> > -#define DEV_DISCARD(sec)
+> > -#else
+> > -#define DEV_KEEP(sec)
+> > -#define DEV_DISCARD(sec) *(.dev##sec)
+> > -#endif
+> > -
+> >  #ifdef CONFIG_HOTPLUG_CPU
+> >  #define CPU_KEEP(sec)    *(.cpu##sec)
+> >  #define CPU_DISCARD(sec)
+> > @@ -182,8 +174,6 @@
+> >  	*(.data)							\
+> >  	*(.ref.data)							\
+> >  	*(.data..shared_aligned) /* percpu related */			\
+> > -	DEV_KEEP(init.data)						\
+> > -	DEV_KEEP(exit.data)						\
+> ..
+> > @@ -503,7 +489,6 @@
+> >  /* init and exit section handling */
+> >  #define INIT_DATA							\
+> >  	*(.init.data)							\
+> > -	DEV_DISCARD(init.data)						\
+>=20
+> Shouldn't the effect of one of the above remain?
+
+As far as I can tell, all references to devinit and devexit have now been
+removed from the kernel, so nothing will generate code in these sections
+any more, so the linker script no longer needs to deal with them at all.
+
+--=20
+Cheers,
+Stephen Rothwell                    sfr@canb.auug.org.au
+
+--Signature=_Wed__22_May_2013_10_04_47_+1000_=wBw7x16m+7LHjz1
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.20 (GNU/Linux)
+
+iQIcBAEBCAAGBQJRnAujAAoJEECxmPOUX5FE43kP/iMW3Iv5i8CzfoTqtisfnOaO
+/Qc/thrqJ07kJBde5H9oybNG82xHc/YS1TH+fOIIcunxwBB/7S6zwTzsfXB93igr
+x6IenkWyWgQfZRSi70eiXib3l0FYMhDQJE+cL4QAKpzs2TFta29iwjLpIq/UuCg2
+lePFgoYzGCg/ru7zdDRnft6BbhlDXF4XkZoDyUN91fOz4UOUI2JijpKYNT73IbF+
+WR8Nql4qLt6PM5c098ON6ZTgxOqD5RfW78Yrvc6diiEpFkJR7qoK1ZwBspUGjrAL
+WXP5GypWkjr1nptwuGVHs/z5Ys/YA49bnB43DVFkr3Srr5yqioTykgVADeReu743
+jclJU2pAATg8xcAytGChbS7/6oQu/QyzmkbzSVQ2n/ksjNZ1XFYKwm0HRQEMG7tu
+jJ2qyqFiCz235RG4W1wzY/aTnJAttbhU10Z4q/uRukSCNWPU/l5RxsS/Ht3D4TSg
+Wrr/sWV7dyU57HIhWbSdNkTo0vTu9eCOLZxfAHEES7IDyALPlqWiMsbhwjK4Eu2M
+XiXrrJYTlMWzODDpmppZtfZ6ilqXufO7Rf/8A8Tmu8RMlMGC3+7IEsfWnWNARV+2
+6WU6RZZ3xZTWkj6x7/mqFYWCOIEvVt80H+6OP+IdLzHixsgA63wSDyqk8bKbH7hb
+HssnJPfgyuLYX5tQPgac
+=CHuz
+-----END PGP SIGNATURE-----
+
+--Signature=_Wed__22_May_2013_10_04_47_+1000_=wBw7x16m+7LHjz1--
