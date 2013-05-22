@@ -1,68 +1,132 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Chris Metcalf <cmetcalf@tilera.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>
-Subject: [PATCH v2, part 1 4/9] PCI: mark pci_scan_bus_parented() as __deprecated
-Date: Tue, 14 May 2013 00:08:28 +0800
-Message-Id: <1368461313-4371-5-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1368461313-4371-1-git-send-email-jiang.liu@huawei.com>
-References: <1368461313-4371-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ch1ehsobe004.messaging.microsoft.com ([216.32.181.184]:45975
+	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755579Ab3EVOdg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 May 2013 10:33:36 -0400
+From: Sethi Varun-B16395 <B16395@freescale.com>
+To: Alex Williamson <alex.williamson@redhat.com>
+CC: "bhelgaas@google.com" <bhelgaas@google.com>,
+	"stephen@networkplumber.org" <stephen@networkplumber.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+	"dwmw2@infradead.org" <dwmw2@infradead.org>,
+	"joro@8bytes.org" <joro@8bytes.org>
+Subject: RE: [PATCH 1/3] pci: Add PCI walk function and PCIe bridge test
+Date: Wed, 22 May 2013 14:34:09 +0000
+Message-ID: <C5ECD7A89D1DC44195F34B25E172658D544C52@039-SN2MPN1-013.039d.mgd.msft.net>
+References: <20130510210937.32592.21950.stgit@bling.home>
+	 <20130510211845.32592.77464.stgit@bling.home>
+	 <C5ECD7A89D1DC44195F34B25E172658D50609A@039-SN2MPN1-011.039d.mgd.msft.net>
+ <1368456548.5520.1.camel@ul30vt.home>
+In-Reply-To: <1368456548.5520.1.camel@ul30vt.home>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Mark pci_scan_bus_parented() as __deprecated and clean up outdated
-comments.
-
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Cc: Chris Metcalf <cmetcalf@tilera.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Thierry Reding <thierry.reding@avionic-design.de>
-Cc: linux-kernel@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
----
- arch/tile/kernel/pci.c | 3 ---
- include/linux/pci.h    | 4 ++--
- 2 files changed, 2 insertions(+), 5 deletions(-)
-
-diff --git a/arch/tile/kernel/pci.c b/arch/tile/kernel/pci.c
-index 67237d3..936e087 100644
---- a/arch/tile/kernel/pci.c
-+++ b/arch/tile/kernel/pci.c
-@@ -309,9 +309,6 @@ int __init pcibios_init(void)
- 			 *
- 			 * It reads the PCI tree for this bus into the Linux
- 			 * data structures.
--			 *
--			 * This is inlined in linux/pci.h and calls into
--			 * pci_scan_bus_parented() in probe.c.
- 			 */
- 			pci_add_resource(&resources, &ioport_resource);
- 			pci_add_resource(&resources, &iomem_resource);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 68beb11..cc4ce27 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -720,8 +720,8 @@ void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
- void pcibios_scan_specific_bus(int busn);
- struct pci_bus *pci_find_bus(int domain, int busnr);
- void pci_bus_add_devices(const struct pci_bus *bus);
--struct pci_bus *pci_scan_bus_parented(struct device *parent, int bus,
--				      struct pci_ops *ops, void *sysdata);
-+struct pci_bus * __deprecated pci_scan_bus_parented(struct device *parent,
-+			int bus, struct pci_ops *ops, void *sysdata);
- struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops, void *sysdata);
- struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 				    struct pci_ops *ops, void *sysdata,
--- 
-1.8.1.2
+QW55IGlkZWEgd2hlbiB3b3VsZCB0aGlzIHBhdGNoIHNldCBiZSBpbnRlZ3JhdGVkPyBGcmVlc2Nh
+bGUgUEFNVSBkcml2ZXIgZGVwZW5kcyBvbiB0aGlzIHBhdGNoLiBDdXJyZW50bHkgSSBhbSB1c2lu
+ZyB0aGUgcGNpX2ZpbmRfcGNpZV91cHN0cmVhbV9icmlkZ2Ugcm91dGluZSBpbiB0aGUgZGV2aWNl
+IGdyb3VwIGNyZWF0aW9uIHJvdXRpbmUuDQoNCi1WYXJ1bg0KDQo+IC0tLS0tT3JpZ2luYWwgTWVz
+c2FnZS0tLS0tDQo+IEZyb206IEFsZXggV2lsbGlhbXNvbiBbbWFpbHRvOmFsZXgud2lsbGlhbXNv
+bkByZWRoYXQuY29tXQ0KPiBTZW50OiBNb25kYXksIE1heSAxMywgMjAxMyA4OjE5IFBNDQo+IFRv
+OiBTZXRoaSBWYXJ1bi1CMTYzOTUNCj4gQ2M6IGJoZWxnYWFzQGdvb2dsZS5jb207IHN0ZXBoZW5A
+bmV0d29ya3BsdW1iZXIub3JnOyBsaW51eC0NCj4gcGNpQHZnZXIua2VybmVsLm9yZzsgaW9tbXVA
+bGlzdHMubGludXgtZm91bmRhdGlvbi5vcmc7DQo+IGR3bXcyQGluZnJhZGVhZC5vcmcNCj4gU3Vi
+amVjdDogUmU6IFtQQVRDSCAxLzNdIHBjaTogQWRkIFBDSSB3YWxrIGZ1bmN0aW9uIGFuZCBQQ0ll
+IGJyaWRnZSB0ZXN0DQo+IA0KPiBPbiBNb24sIDIwMTMtMDUtMTMgYXQgMTM6NTEgKzAwMDAsIFNl
+dGhpIFZhcnVuLUIxNjM5NSB3cm90ZToNCj4gPiBXb3VsZCB0aGVzZSBmdW5jdGlvbnMgYmUgdXNl
+ZCBvdXRzaWRlIGRyaXZlcnMvaW9tbXU/IFdlIHJlY2VudGx5IGFkZGVkDQo+IHBjaS5oIHVuZGVy
+IGRyaXZlcnMvaW9tbXUsIG1heWJlIHdlIGNhbiBhZGQgYSBuZXcgZmlsZSBmb3IgdGhlc2UNCj4g
+ZnVuY3Rpb25zIGFzIHdlbGwuDQo+IA0KPiBUaGUgaW50ZW50aW9uIGlzIHRvIG1ha2UgdGhlbSBn
+ZW5lcmljIGVub3VnaCBmb3IgcGNpLWNvcmUsIHVubGlrZQ0KPiBwY2lfZmluZF91cHN0cmVhbV9w
+Y2llX2JyaWRnZSwgd2hpY2ggd2FzIHJhdGhlciBzcGVjaWZpYyB0byBpb21tdSB1c2FnZS4NCj4g
+VGhhbmtzLA0KPiANCj4gQWxleA0KPiANCj4gPiA+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0t
+DQo+ID4gPiBGcm9tOiBpb21tdS1ib3VuY2VzQGxpc3RzLmxpbnV4LWZvdW5kYXRpb24ub3JnIFtt
+YWlsdG86aW9tbXUtDQo+ID4gPiBib3VuY2VzQGxpc3RzLmxpbnV4LWZvdW5kYXRpb24ub3JnXSBP
+biBCZWhhbGYgT2YgQWxleCBXaWxsaWFtc29uDQo+ID4gPiBTZW50OiBTYXR1cmRheSwgTWF5IDEx
+LCAyMDEzIDI6NDkgQU0NCj4gPiA+IFRvOiBiaGVsZ2Fhc0Bnb29nbGUuY29tOyBzdGVwaGVuQG5l
+dHdvcmtwbHVtYmVyLm9yZw0KPiA+ID4gQ2M6IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmc7IGlv
+bW11QGxpc3RzLmxpbnV4LWZvdW5kYXRpb24ub3JnOw0KPiA+ID4gZHdtdzJAaW5mcmFkZWFkLm9y
+Zw0KPiA+ID4gU3ViamVjdDogW1BBVENIIDEvM10gcGNpOiBBZGQgUENJIHdhbGsgZnVuY3Rpb24g
+YW5kIFBDSWUgYnJpZGdlIHRlc3QNCj4gPiA+DQo+ID4gPiBUaGVzZSB3aWxsIHJlcGxhY2UgcGNp
+X2ZpbmRfdXBzdHJlYW1fcGNpZV9icmlkZ2UsIHdoaWNoIGlzIGRpZmZpY3VsdA0KPiA+ID4gdG8g
+dXNlIGFuZCByYXRoZXIgc3BlY2lmaWMgdG8gaW50ZWwtaW9tbXUgdXNhZ2UuICBBIHF1aXJrZWQN
+Cj4gPiA+IHBjaV9pc19wY2llX2JyaWRnZSBmdW5jdGlvbiBpcyBwcm92aWRlZCB0byB3b3JrIGFy
+b3VuZCBub24tY29tcGxpYW50DQo+ID4gPiBQQ0llLXRvLVBDSSBicmlkZ2VzIHN1Y2ggYXMgdGhv
+c2UgZm91bmQgaW4NCj4gPiA+IGh0dHBzOi8vYnVnemlsbGEua2VybmVsLm9yZy9zaG93X2J1Zy5j
+Z2k/aWQ9NDQ4ODENCj4gPiA+DQo+ID4gPiBTaWduZWQtb2ZmLWJ5OiBBbGV4IFdpbGxpYW1zb24g
+PGFsZXgud2lsbGlhbXNvbkByZWRoYXQuY29tPg0KPiA+ID4gLS0tDQo+ID4gPiAgZHJpdmVycy9w
+Y2kvc2VhcmNoLmMgfCAgIDU3DQo+ID4gPiArKysrKysrKysrKysrKysrKysrKysrKysrKysrKysr
+KysrKysrKysrKysrKysrKysrKw0KPiA+ID4gIGluY2x1ZGUvbGludXgvcGNpLmggIHwgICAyMyAr
+KysrKysrKysrKysrKysrKysrKw0KPiA+ID4gIDIgZmlsZXMgY2hhbmdlZCwgODAgaW5zZXJ0aW9u
+cygrKQ0KPiA+ID4NCj4gPiA+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3BjaS9zZWFyY2guYyBiL2Ry
+aXZlcnMvcGNpL3NlYXJjaC5jIGluZGV4DQo+ID4gPiBkMDYyN2ZhLi4wMzU3Zjc0IDEwMDY0NA0K
+PiA+ID4gLS0tIGEvZHJpdmVycy9wY2kvc2VhcmNoLmMNCj4gPiA+ICsrKyBiL2RyaXZlcnMvcGNp
+L3NlYXJjaC5jDQo+ID4gPiBAQCAtMTcsNiArMTcsNjMgQEANCj4gPiA+ICBERUNMQVJFX1JXU0VN
+KHBjaV9idXNfc2VtKTsNCj4gPiA+ICBFWFBPUlRfU1lNQk9MX0dQTChwY2lfYnVzX3NlbSk7DQo+
+ID4gPg0KPiA+ID4gKy8qIFRlc3QgZm9yIFBDSWUgYnJpZGdlcy4gKi8NCj4gPiA+ICtib29sIHBj
+aV9pc19wY2llX2JyaWRnZShzdHJ1Y3QgcGNpX2RldiAqcGRldikgew0KPiA+ID4gKwlpZiAoIXBj
+aV9pc19icmlkZ2UocGRldikpDQo+ID4gPiArCQlyZXR1cm4gZmFsc2U7DQo+ID4gPiArDQo+ID4g
+PiArCWlmIChwY2lfaXNfcGNpZShwZGV2KSkNCj4gPiA+ICsJCXJldHVybiB0cnVlOw0KPiA+ID4g
+Kw0KPiA+ID4gKyNpZmRlZiBDT05GSUdfUENJX1FVSVJLUw0KPiA+ID4gKwkvKg0KPiA+ID4gKwkg
+KiBJZiB3ZSdyZSBub3Qgb24gdGhlIHJvb3QgYnVzLCBsb29rIG9uZSBkZXZpY2UgdXBzdHJlYW0g
+b2YgdGhlDQo+ID4gPiArCSAqIGN1cnJlbnQgZGV2aWNlLiAgSWYgdGhhdCBkZXZpY2UgaXMgUENJ
+ZSBhbmQgaXMgbm90IGEgUENJZS10by1QQ0kNCj4gPiA+ICsJICogYnJpZGdlLCB0aGVuIHRoZSBj
+dXJyZW50IGRldmljZSBpcyBlZmZlY3RpdmVseSBQQ0llIGFzIGl0IG11c3QNCj4gPiA+ICsJICog
+YmUgdGhlIFBDSWUtdG8tUENJIGJyaWRnZS4gIFRoaXMgaGFuZGxlcyBzZXZlcmFsIGJyaWRnZXMg
+dGhhdA0KPiA+ID4gKwkgKiB2aW9sYXRlIHRoZSBQQ0llIHNwZWMgYnkgbm90IGV4cG9zaW5nIGEg
+UENJZSBjYXBhYmlsaXR5Og0KPiA+ID4gKwkgKiBodHRwczovL2J1Z3ppbGxhLmtlcm5lbC5vcmcv
+c2hvd19idWcuY2dpP2lkPTQ0ODgxDQo+ID4gPiArCSAqLw0KPiA+ID4gKwlpZiAoIXBjaV9pc19y
+b290X2J1cyhwZGV2LT5idXMpKSB7DQo+ID4gPiArCQlzdHJ1Y3QgcGNpX2RldiAqcGFyZW50ID0g
+cGRldi0+YnVzLT5zZWxmOw0KPiA+ID4gKw0KPiA+ID4gKwkJaWYgKHBjaV9pc19wY2llKHBhcmVu
+dCkgJiYNCj4gPiA+ICsJCSAgICBwY2lfcGNpZV90eXBlKHBhcmVudCkgIT0gUENJX0VYUF9UWVBF
+X1BDSV9CUklER0UpDQo+ID4gPiArDQo+ID4gPiArCQkJcmV0dXJuIHRydWU7DQo+ID4gPiArCX0N
+Cj4gPiA+ICsjZW5kaWYNCj4gPiA+ICsJcmV0dXJuIGZhbHNlOw0KPiA+ID4gK30NCj4gPiA+ICsN
+Cj4gPiA+ICsvKg0KPiA+ID4gKyAqIFdhbGsgdXBzdHJlYW0gZnJvbSB0aGUgZ2l2ZW4gcGRldiBm
+b3IgdGhlIGZpcnN0IGRldmljZSByZXR1cm5pbmcNCj4gPiA+ICsgKiB0cnVlIGZvciB0aGUgcHJv
+dmlkZWQgbWF0Y2ggZnVuY3Rpb24uICBJZiBubyBtYXRjaCBpcyBmb3VuZCwNCj4gPiA+ICtyZXR1
+cm4NCj4gPiA+ICsgKiBOVUxMLiAgKmxhc3QgcmVjb3JkcyB0aGUgcHJldmlvdXMgc3RlcCBpbiB0
+aGUgd2Fsay4NCj4gPiA+ICsgKi8NCj4gPiA+ICtzdHJ1Y3QgcGNpX2RldiAqcGNpX3dhbGtfdXBf
+dG9fZmlyc3RfbWF0Y2goc3RydWN0IHBjaV9kZXYgKnBkZXYsDQo+ID4gPiArCQkJCQkgICBib29s
+ICgqbWF0Y2gpKHN0cnVjdCBwY2lfZGV2ICopLA0KPiA+ID4gKwkJCQkJICAgc3RydWN0IHBjaV9k
+ZXYgKipsYXN0KQ0KPiA+ID4gK3sNCj4gPiA+ICsJKmxhc3QgPSBOVUxMOw0KPiA+ID4gKw0KPiA+
+ID4gKwlpZiAobWF0Y2gocGRldikpDQo+ID4gPiArCQlyZXR1cm4gcGRldjsNCj4gPiA+ICsNCj4g
+PiA+ICsJKmxhc3QgPSBwZGV2Ow0KPiA+ID4gKw0KPiA+ID4gKwl3aGlsZSAoIXBjaV9pc19yb290
+X2J1cyhwZGV2LT5idXMpKSB7DQo+ID4gPiArCQkqbGFzdCA9IHBkZXY7DQo+ID4gPiArCQlwZGV2
+ID0gcGRldi0+YnVzLT5zZWxmOw0KPiA+ID4gKw0KPiA+ID4gKwkJaWYgKG1hdGNoKHBkZXYpKQ0K
+PiA+ID4gKwkJCXJldHVybiBwZGV2Ow0KPiA+ID4gKwl9DQo+ID4gPiArDQo+ID4gPiArCXJldHVy
+biBOVUxMOw0KPiA+ID4gK30NCj4gPiA+ICsNCj4gPiA+ICAvKg0KPiA+ID4gICAqIGZpbmQgdGhl
+IHVwc3RyZWFtIFBDSWUtdG8tUENJIGJyaWRnZSBvZiBhIFBDSSBkZXZpY2UNCj4gPiA+ICAgKiBp
+ZiB0aGUgZGV2aWNlIGlzIFBDSUUsIHJldHVybiBOVUxMIGRpZmYgLS1naXQNCj4gPiA+IGEvaW5j
+bHVkZS9saW51eC9wY2kuaCBiL2luY2x1ZGUvbGludXgvcGNpLmggaW5kZXggYmQ4ZWMzMC4uZTg3
+NDIzYQ0KPiA+ID4gMTAwNjQ0DQo+ID4gPiAtLS0gYS9pbmNsdWRlL2xpbnV4L3BjaS5oDQo+ID4g
+PiArKysgYi9pbmNsdWRlL2xpbnV4L3BjaS5oDQo+ID4gPiBAQCAtMTg1NSw2ICsxODU1LDI5IEBA
+IHN0YXRpYyBpbmxpbmUgc3RydWN0IGVlaF9kZXYNCj4gPiA+ICpwY2lfZGV2X3RvX2VlaF9kZXYo
+c3RydWN0IHBjaV9kZXYgKnBkZXYpICAjZW5kaWYNCj4gPiA+DQo+ID4gPiAgLyoqDQo+ID4gPiAr
+ICogcGNpX3dhbGtfdXBfdG9fZmlyc3RfbWF0Y2ggLSBHZW5lcmljIHVwc3RyZWFtIHNlYXJjaCBm
+dW5jdGlvbg0KPiA+ID4gKyAqIEBwZGV2OiBzdGFydGluZyBQQ0kgZGV2aWNlIHRvIHNlYXJjaA0K
+PiA+ID4gKyAqIEBtYXRjaDogbWF0Y2ggZnVuY3Rpb24gdG8gY2FsbCBvbiBlYWNoIGRldmljZSAo
+dHJ1ZSA9IG1hdGNoKQ0KPiA+ID4gKyAqIEBsYXN0OiBsYXN0IGRldmljZSBleGFtaW5lZCBwcmlv
+ciB0byByZXR1cm5lZCBkZXZpY2UNCj4gPiA+ICsgKg0KPiA+ID4gKyAqIFdhbGsgdXBzdHJlYW0g
+ZnJvbSB0aGUgZ2l2ZW4gZGV2aWNlLCBjYWxsaW5nIG1hdGNoKCkgYXQgZWFjaA0KPiBkZXZpY2Uu
+DQo+ID4gPiArICogUmV0dXJucyB0aGUgZmlyc3QgZGV2aWNlIG1hdGNoaW5nIG1hdGNoKCkuICBJ
+ZiB0aGUgcm9vdCBidXMgaXMNCj4gPiA+ICtyZWFjaGVkDQo+ID4gPiArICogd2l0aG91dCBmaW5k
+aW5nIGEgbWF0Y2gsIHJldHVybiBOVUxMLiAgbGFzdCByZXR1cm5zIHRoZSBOLTEgc3RlcA0KPiA+
+ID4gK2luDQo+ID4gPiArICogdGhlIHNlYXJjaCBwYXRoLg0KPiA+ID4gKyAqLw0KPiA+ID4gK3N0
+cnVjdCBwY2lfZGV2ICpwY2lfd2Fsa191cF90b19maXJzdF9tYXRjaChzdHJ1Y3QgcGNpX2RldiAq
+cGRldiwNCj4gPiA+ICsJCQkJCSAgIGJvb2wgKCptYXRjaCkoc3RydWN0IHBjaV9kZXYgKiksDQo+
+ID4gPiArCQkJCQkgICBzdHJ1Y3QgcGNpX2RldiAqKmxhc3QpOw0KPiA+ID4gKw0KPiA+ID4gKy8q
+Kg0KPiA+ID4gKyAqIHBjaV9pc19wY2llX2JyaWRnZSAtIE1hdGNoIGEgUENJZSBicmlkZ2UgZGV2
+aWNlDQo+ID4gPiArICogQHBkZXY6IGRldmljZSB0byB0ZXN0DQo+ID4gPiArICoNCj4gPiA+ICsg
+KiBSZXR1cm4gdHJ1ZSBpZiB0aGUgZ2l2ZW4gZGV2aWNlIGlzIGEgUENJZSBicmlkZ2UsIGZhbHNl
+DQo+IG90aGVyd2lzZS4NCj4gPiA+ICsgKi8NCj4gPiA+ICtib29sIHBjaV9pc19wY2llX2JyaWRn
+ZShzdHJ1Y3QgcGNpX2RldiAqcGRldik7DQo+ID4gPiArDQo+ID4gPiArLyoqDQo+ID4gPiAgICog
+cGNpX2ZpbmRfdXBzdHJlYW1fcGNpZV9icmlkZ2UgLSBmaW5kIHVwc3RyZWFtIFBDSWUtdG8tUENJ
+IGJyaWRnZQ0KPiA+ID4gb2YgYSBkZXZpY2UNCj4gPiA+ICAgKiBAcGRldjogdGhlIFBDSSBkZXZp
+Y2UNCj4gPiA+ICAgKg0KPiA+ID4NCj4gPiA+IF9fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fDQo+ID4gPiBpb21tdSBtYWlsaW5nIGxpc3QNCj4gPiA+IGlvbW11
+QGxpc3RzLmxpbnV4LWZvdW5kYXRpb24ub3JnDQo+ID4gPiBodHRwczovL2xpc3RzLmxpbnV4Zm91
+bmRhdGlvbi5vcmcvbWFpbG1hbi9saXN0aW5mby9pb21tdQ0KPiA+DQo+ID4NCj4gDQo+IA0KPiAN
+Cg0K
 
