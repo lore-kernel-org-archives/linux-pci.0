@@ -1,80 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:60208 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754785Ab3EPP6A (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 May 2013 11:58:00 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>
-Cc: linux-arm-kernel@lists.infradead.org,
-	Arnd Bergmann <arnd@arndb.de>, Olof Johansson <olof@lixom.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
+Received: from mho-03-ewr.mailhop.org ([204.13.248.66]:41330 "EHLO
+	mho-01-ewr.mailhop.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753956Ab3EVPTF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 May 2013 11:19:05 -0400
+Date: Wed, 22 May 2013 11:18:29 -0400
+From: Jason Cooper <jason@lakedaemon.net>
+To: Gregory CLEMENT <gregory.clement@free-electrons.com>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Andrew Lunn <andrew@lunn.ch>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
 	Lior Amsalem <alior@marvell.com>,
 	Maen Suleiman <maen@marvell.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
 	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	linux-pci@vger.kernel.org,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	devicetree-discuss@lists.ozlabs.org,
-	Mike Turquette <mturquette@linaro.org>
-Subject: [PATCHv10 6/9] clk: mvebu: add more PCIe clocks for Armada XP
-Date: Thu, 16 May 2013 17:55:21 +0200
-Message-Id: <1368719725-21265-7-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1368719725-21265-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1368719725-21265-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH 0/4] Marvell PCIe driver improvements
+Message-ID: <20130522151829.GD31290@titan.lakedaemon.net>
+References: <1369228358-32580-1-git-send-email-thomas.petazzoni@free-electrons.com>
+ <20130522134319.GC31290@titan.lakedaemon.net>
+ <519CDFBA.8010607@free-electrons.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <519CDFBA.8010607@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The current revision of the datasheet only mentions the gatable clocks
-for the PCIe 0.0, 0.1, 0.2 and 0.3 interfaces, and forgot to mention
-the ones for the PCIe 1.0, 1.1, 1.2, 1.3, 2.0 and 3.0
-interfaces. After confirmation with Marvell engineers, this patch adds
-the missing gatable clocks for those PCIe interfaces.
+On Wed, May 22, 2013 at 05:09:46PM +0200, Gregory CLEMENT wrote:
+> On 05/22/2013 03:43 PM, Jason Cooper wrote:
+> > Thomas,
+> > 
+> > On Wed, May 22, 2013 at 03:12:34PM +0200, Thomas Petazzoni wrote:
+> >> Bjorn, Jason, Andrew, Gregory,
+> >>
+> >> You'll find in this patch series 4 small patches that make various
+> >> improvements to the Marvell PCIe driver.
+> >>
+> >> I'd like those improvements to be kept separated from the original
+> >> PCIe driver itself: while the PCIe driver has been around and reviewed
+> >> for a long time, those improvements are newer. And I clearly do not
+> >> want the PCIe driver to miss 3.11 because of any problem that could be
+> >> found in those additional improvements.
+> > 
+> > Agreed.
+> 
+> All the changes are located in one single file drivers/pci/host/pci-mvebu.c.
+> So as soon as they will be acked by Bjron, I think we can make a PR for them.
+> As nothing else depend of it, even if for a reason or another it is dropped,
+> there will be no reason to drop anything else.
 
-It also changes the name of the previously existing PCIe gatable
-clocks, in order to match the naming using the datasheets.
+Right, which is why we'll put it in a separate branch.  Say,
+mvebu/pcie_bridge.  This way if /pcie_bridge has to be dropped (say an
+API that it used is changed), /pcie would remain.  Which is the main
+concern.
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Mike Turquette <mturquette@linaro.org>
----
- drivers/clk/mvebu/clk-gating-ctrl.c |   14 ++++++++++----
- 1 file changed, 10 insertions(+), 4 deletions(-)
+Had I known enough last time around, I would have done the /of_pci |
+/pcie split.  /pcie would have been dropped, and /of_pci would have made
+it in.  As well as LinusW's work which depends upon it (and now Arnd
+might have something using it as well).
 
-diff --git a/drivers/clk/mvebu/clk-gating-ctrl.c b/drivers/clk/mvebu/clk-gating-ctrl.c
-index b35785a..2f03723 100644
---- a/drivers/clk/mvebu/clk-gating-ctrl.c
-+++ b/drivers/clk/mvebu/clk-gating-ctrl.c
-@@ -137,10 +137,14 @@ static const struct mvebu_soc_descr __initconst armada_xp_gating_descr[] = {
- 	{ "ge2", NULL,  2 },
- 	{ "ge1", NULL, 3 },
- 	{ "ge0", NULL, 4 },
--	{ "pex0", NULL, 5 },
--	{ "pex1", NULL, 6 },
--	{ "pex2", NULL, 7 },
--	{ "pex3", NULL, 8 },
-+	{ "pex00", NULL, 5 },
-+	{ "pex01", NULL, 6 },
-+	{ "pex02", NULL, 7 },
-+	{ "pex03", NULL, 8 },
-+	{ "pex10", NULL, 9 },
-+	{ "pex11", NULL, 10 },
-+	{ "pex12", NULL, 11 },
-+	{ "pex13", NULL, 12 },
- 	{ "bp", NULL, 13 },
- 	{ "sata0lnk", NULL, 14 },
- 	{ "sata0", "sata0lnk", 15 },
-@@ -152,6 +156,8 @@ static const struct mvebu_soc_descr __initconst armada_xp_gating_descr[] = {
- 	{ "xor0", NULL, 22 },
- 	{ "crypto", NULL, 23 },
- 	{ "tdm", NULL, 25 },
-+	{ "pex20", NULL, 26 },
-+	{ "pex30", NULL, 27 },
- 	{ "xor1", NULL, 28 },
- 	{ "sata1lnk", NULL, 29 },
- 	{ "sata1", "sata1lnk", 30 },
--- 
-1.7.9.5
+thx,
 
+Jason.
