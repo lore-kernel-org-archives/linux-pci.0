@@ -1,54 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f178.google.com ([209.85.223.178]:50528 "EHLO
-	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753300Ab3EPSgG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 May 2013 14:36:06 -0400
-MIME-Version: 1.0
-In-Reply-To: <20130516175350.GB7171@mtj.dyndns.org>
-References: <1368498506-25857-1-git-send-email-yinghai@kernel.org>
-	<1368498506-25857-7-git-send-email-yinghai@kernel.org>
-	<0EE9A1CDC8D6434DB00095CD7DB873462CFB0E4E@MTLDAG01.mtl.com>
-	<CAE9FiQVn4F+dTrQn0xsg-6QY9+HwbnJR=1CrjdoZkmF_LMrgpg@mail.gmail.com>
-	<CAJZOPZLjdALP4jkLo6p787jaPx=dkKj7+AmCr9+mgJN3z_xBxQ@mail.gmail.com>
-	<CAE9FiQWvYQRCZjDx-Kh16nKfjfS=pyu8foJR+wWYS-x8DUZteg@mail.gmail.com>
-	<CAJZOPZLVc=V-ac8_A2JB_r17TRyCMoDpe1MXN6WcjMR4SO6n1Q@mail.gmail.com>
-	<20130516175350.GB7171@mtj.dyndns.org>
-Date: Thu, 16 May 2013 11:36:05 -0700
-Message-ID: <CAE9FiQWPNt42gsRwYqQwJM6VpZ-UF2+r-64p_aS3X7GdeVbXCA@mail.gmail.com>
-Subject: Re: [PATCH 6/7] PCI: Make sure VF's driver get attached after PF's
-From: Yinghai Lu <yinghai@kernel.org>
-To: Tejun Heo <tj@kernel.org>
-Cc: Or Gerlitz <or.gerlitz@gmail.com>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	Yan Burman <yanb@mellanox.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	Jack Morgenstein <jackm@mellanox.com>,
-	Or Gerlitz <ogerlitz@mellanox.com>,
-	Yevgeny Petrilin <yevgenyp@mellanox.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail.free-electrons.com ([94.23.35.102]:39581 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756425Ab3EVOzf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 May 2013 10:55:35 -0400
+Date: Wed, 22 May 2013 16:55:29 +0200
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH 3/4] pci: mvebu: emulate an empty capability list
+Message-ID: <20130522165529.64174e06@skate>
+In-Reply-To: <CAErSpo6gFf9ou-VtZ=F0+1GqcSoPS_dDMGphhgv=8mD602=BRA@mail.gmail.com>
+References: <1369228358-32580-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	<1369228358-32580-4-git-send-email-thomas.petazzoni@free-electrons.com>
+	<CAErSpo6gFf9ou-VtZ=F0+1GqcSoPS_dDMGphhgv=8mD602=BRA@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 16, 2013 at 10:53 AM, Tejun Heo <tj@kernel.org> wrote:
-> On Thu, May 16, 2013 at 12:56:42AM -0400, Or Gerlitz wrote:
->> > > Please note that this whole lockdep warning was identified as false
->> > > positive by Tejun http://www.spinics.net/lists/linux-pci/msg21568.html
->> >
->> > No, at least one time, I noticed there is one real hang happens.
->>
->> Tejun, so what your thinking here?
->
-> Can't really tell much without more details.  Yinghai, do you have any
-> logs from such hang?  Are you sure it's from this?
+Dear Bjorn Helgaas,
 
-I did not keep that log.
+On Wed, 22 May 2013 08:39:03 -0600, Bjorn Helgaas wrote:
 
-Will remove AlexD patch, try several times to see if I can duplicate it again.
+> > emulation to emulate an empty capability list. It might be later
+> > extended to expose things like the PCI Express Capability header, but
+> > an empty capability list is sufficient for now.
+> >
+> > lspci -v now shows the much nicer:
+> >
+> >   Capabilities: [40] #00 [0000]
+> 
+> It'd be even better if you could make the Capabilities List bit in the
+> Device Status register be zero.  Then lspci wouldn't even try to read
+> the Capabilities Pointer at 0x34, and you wouldn't have to deal with
+> reads of 0x40.
 
-Thanks
+The Device Status register is emulated with an initial value of zero.
+Then, whenever the Linux PCI core writes into it, those writes are
+preserved. So to me, it looks like the Linux PCI core might be setting
+this Capabilities List bit, and later re-reads it and finds it to be
+set to 1.
 
-Yinghai
+Should this bit be emulated as a read-only bit (it's not made explicit
+for this particular bit in the PCI-to-PCI bridge specification that I
+have in front of me) ? Or even the entire Device Status register ?
+
+Thanks for your comments!
+
+Thomas
+-- 
+Thomas Petazzoni, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
