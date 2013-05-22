@@ -1,72 +1,45 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:38791 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752705Ab3EVNMo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 May 2013 09:12:44 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>
-Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	linux-arm-kernel@lists.infradead.org
-Subject: [PATCH 0/4] Marvell PCIe driver improvements
-Date: Wed, 22 May 2013 15:12:34 +0200
-Message-Id: <1369228358-32580-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:52175 "EHLO
+	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756806Ab3EVVAB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 May 2013 17:00:01 -0400
+Received: by mail-ie0-f174.google.com with SMTP id 10so6407593ied.33
+        for <linux-pci@vger.kernel.org>; Wed, 22 May 2013 14:00:00 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1369255424.3870.18.camel@pasglop>
+References: <1367712653.11982.19.camel@pasglop>
+	<1367712932.11982.20.camel@pasglop>
+	<CAE9FiQX=h4H1gcbW=EfQo_ZtAgHGOZ2GxVxLG59C1iMH+qgH2g@mail.gmail.com>
+	<1367732090.11982.38.camel@pasglop>
+	<CAE9FiQUN3qqVmdw_EdOC-JZGc219M3tu=roOX98xns+77LJhMw@mail.gmail.com>
+	<1367740336.11982.41.camel@pasglop>
+	<51871088.4594420a.0ccc.7300SMTPIN_ADDED_BROKEN@mx.google.com>
+	<CAE9FiQXGUOM_h_X5tdGbkiuZGZkiFigSLbbftx3YXybFBg6trg@mail.gmail.com>
+	<518786a7.64bbec0a.58a0.1f6bSMTPIN_ADDED_BROKEN@mx.google.com>
+	<CAErSpo5MJCoaof=heFM4vLxuWz8pFqsyXAC356jZ7rbRvSOt9g@mail.gmail.com>
+	<CAE9FiQWsZXfkSSVFzee4-J4bUDP8DdG=y9-k2du+ek90StDvNA@mail.gmail.com>
+	<1369255424.3870.18.camel@pasglop>
+Date: Wed, 22 May 2013 14:00:00 -0700
+Message-ID: <CAE9FiQU48-t5HP8w29gL7JY0eqa=fS=jhCU7bRU2hvMt0iRy6A@mail.gmail.com>
+Subject: Re: Resource assignment oddities
+From: Yinghai Lu <yinghai@kernel.org>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Gavin Shan <shangw@linux.vnet.ibm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Bjorn, Jason, Andrew, Gregory,
+On Wed, May 22, 2013 at 1:43 PM, Benjamin Herrenschmidt
+<benh@kernel.crashing.org> wrote:
 
-You'll find in this patch series 4 small patches that make various
-improvements to the Marvell PCIe driver.
+> The simpler thing to do would have been to do the entire thing in two
+> separate passes, one for MMIO and one for IO, and skip the second one
+> entirely if there's no IO at the host bridge level :-)
 
-I'd like those improvements to be kept separated from the original
-PCIe driver itself: while the PCIe driver has been around and reviewed
-for a long time, those improvements are newer. And I clearly do not
-want the PCIe driver to miss 3.11 because of any problem that could be
-found in those additional improvements.
+that will need more changes.
 
-The main improvement being brought here is that the PCI-to-PCI bridge
-logic is fixed/extended to properly support physical PCIe bridges that
-are connected on a PCIe interface of a Marvell board. Without this
-improvement, only the devices connected directly to the PCIe
-interfaces of the board are properly enumerated. Any device that would
-sit beyond a physical bridge is not visible.
+also how about hostbridge only has mmio pref 64bit?
 
-The other improvements are more minor, and the patch description
-should be sufficient to understand what's going on.
-
-Those patches have been tested on both Armada 370/XP and Kirkwood.
-
-Bjorn, with your Acked-by, could the Marvell maintainers include those
-patches in their branch, merged through arm-soc? They already have the
-Marvell PCIe driver itself, so I believe it makes sense to merge those
-improvements through the same path.
-
-Jason, those patches have been prepared on top of my marvell-pcie-v10
-branch, I hope that's ok for you. If you want me to rebase them on
-some other branch in which you have integrated the PCIe driver, don't
-hesitate to tell me to do so. That said, since those patches are only
-touching the driver itself and no other file, they should not cause
-any conflict with other changes.
-
-Thanks,
-
-Thomas
-
-Thomas Petazzoni (4):
-  pci: mvebu: no longer fake the slot location of downstream devices
-  pci: mvebu: allow the enumeration of devices beyond physical bridges
-  pci: mvebu: emulate an empty capability list
-  pci: mvebu: fix the emulation of the status register
-
- drivers/pci/host/pci-mvebu.c |   65 +++++++++++++++++++++++++++++++++++++-----
- 1 file changed, 58 insertions(+), 7 deletions(-)
-
--- 
-1.7.9.5
-
+Yinghai
