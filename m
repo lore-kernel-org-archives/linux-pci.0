@@ -1,69 +1,117 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f171.google.com ([209.85.223.171]:34865 "EHLO
-	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752007Ab3EXQer (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 24 May 2013 12:34:47 -0400
-Received: by mail-ie0-f171.google.com with SMTP id e10so35381iej.16
-        for <linux-pci@vger.kernel.org>; Fri, 24 May 2013 09:34:47 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAErSpo40LBfJGHfGiveE-czMgbF=qqziySCPgPAAJT3BYBS__A@mail.gmail.com>
-References: <CAE9FiQX=h4H1gcbW=EfQo_ZtAgHGOZ2GxVxLG59C1iMH+qgH2g@mail.gmail.com>
-	<1367732090.11982.38.camel@pasglop>
-	<CAE9FiQUN3qqVmdw_EdOC-JZGc219M3tu=roOX98xns+77LJhMw@mail.gmail.com>
-	<1367740336.11982.41.camel@pasglop>
-	<51871088.4594420a.0ccc.7300SMTPIN_ADDED_BROKEN@mx.google.com>
-	<CAE9FiQXGUOM_h_X5tdGbkiuZGZkiFigSLbbftx3YXybFBg6trg@mail.gmail.com>
-	<518786a7.64bbec0a.58a0.1f6bSMTPIN_ADDED_BROKEN@mx.google.com>
-	<CAErSpo5MJCoaof=heFM4vLxuWz8pFqsyXAC356jZ7rbRvSOt9g@mail.gmail.com>
-	<CAE9FiQWsZXfkSSVFzee4-J4bUDP8DdG=y9-k2du+ek90StDvNA@mail.gmail.com>
-	<CAE9FiQXw=Q9hDWMS3kx8=G0eSqo2keKh-VP3=LWZ31PfXmrAmg@mail.gmail.com>
-	<519dcfbe.89e9420a.4934.488bSMTPIN_ADDED_BROKEN@mx.google.com>
-	<CAE9FiQW==Zvwv976-xjtRFj70JWoZW94yQyM0NMTvMpR-yDG9Q@mail.gmail.com>
-	<CAErSpo5ASyYvRJgA3TDt7A5xtxL0sqopfAxbnJwDL=z_2hDJag@mail.gmail.com>
-	<CAE9FiQX8o97RY-Bd9t1vj+gm_Uri0v_hAUwecaNoF2GwGGTNyA@mail.gmail.com>
-	<CAErSpo5vY-DY9_bLWbM5UNrSZdO5dyASx1hLGMQg-ypgZHXLLg@mail.gmail.com>
-	<CAE9FiQWyEhdQGjC+hiGxOHdHwZoajfwfcgp26wivqL0s62NPkA@mail.gmail.com>
-	<1369344196.3870.35.camel@pasglop>
-	<CAE9FiQUS9rUfhH=J5pgynO6Xhrnn8Rx4pHeZ=p0dHm0fUoHd3A@mail.gmail.com>
-	<CAErSpo40LBfJGHfGiveE-czMgbF=qqziySCPgPAAJT3BYBS__A@mail.gmail.com>
-Date: Fri, 24 May 2013 09:34:47 -0700
-Message-ID: <CAE9FiQVu7JkTOQdsTPO5Y=rnkx+Xvjr6vgirx+F0xAWLVTAAyw@mail.gmail.com>
-Subject: Re: Resource assignment oddities
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail.free-electrons.com ([94.23.35.102]:38802 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752705Ab3EVNMp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 May 2013 09:12:45 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>
+Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	linux-arm-kernel@lists.infradead.org
+Subject: [PATCH 2/4] pci: mvebu: allow the enumeration of devices beyond physical bridges
+Date: Wed, 22 May 2013 15:12:36 +0200
+Message-Id: <1369228358-32580-3-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1369228358-32580-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1369228358-32580-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 24, 2013 at 8:59 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Thu, May 23, 2013 at 4:16 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> That should not happen, because the only reason we're reassigning is
-> for IO space, and we shouldn't be touching the MEM assignments.  I
-> agree that we should fix that.
+Until now, the Marvell PCIe driver was only allowing the enumeration
+of the devices in the secondary bus of the emulated PCI-to-PCI
+bridge. This works fine when a PCIe device is directly connected into
+a PCIe slot of the Marvell board.
 
-yes, that is
+However, when the device connected in the PCIe slot is a physical PCIe
+bridge, beyond which a real PCIe device is connected, it no longer
+worked, as the driver was preventing the Linux PCI core from seeing
+such devices.
 
-https://patchwork.kernel.org/patch/2608461/
+This commit fixes that by ensuring that configuration transactions on
+subordinate busses are properly forwarded on the right PCIe interface.
 
->
-> I do not agree that your current patches are the right way to fix
-> this.  You are trying to make a relatively small patch that we can
-> wedge into v3.10 in a hurry.  I would prefer that we work out a
-> cleaner solution that simplifies reassignment, *then* figure out the
-> best way to backport it as needed.
+Thanks to this patch, a PCIe card beyond a PCIe bridge, itself beyond
+the emulated PCI-to-PCI bridge is properly detected, with the
+following layout:
 
-ok, we can leave per root bus method to v3.11.
+-[0000:00]-+-01.0-[01]----00.0
+           +-09.0-[02-07]----00.0-[03-07]--+-01.0-[04]--
+           |                               +-05.0-[05]--
+           |                               +-07.0-[06]--
+           |                               \-09.0-[07]----00.0
+           \-0a.0-[08]----00.0
 
-we can put only one patch in v3.10.
+Where the PCIe interface that sits beyond the emulated PCI-to-PCI
+bridge at 09.0 allows to access the secondary bus 02, on which there
+is a PCIe bridge that allows to access the 3 to 7 busses, that are
+subordinates to this bridge. And on one of this bus (bus 7), there is
+one real PCIe device connected.
 
-https://patchwork.kernel.org/patch/2608461/
-PCI: Don't let mmio fallback to must-only, if ioport fails with must+optional
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+---
+ drivers/pci/host/pci-mvebu.c |   31 ++++++++++++++++++++++++++++---
+ 1 file changed, 28 insertions(+), 3 deletions(-)
 
-that should fix the problem that Ben and Shan met.
+diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+index 0bc21b0..c21ca84 100644
+--- a/drivers/pci/host/pci-mvebu.c
++++ b/drivers/pci/host/pci-mvebu.c
+@@ -554,7 +554,8 @@ mvebu_pcie_find_port(struct mvebu_pcie *pcie, struct pci_bus *bus,
+ 		if (bus->number == 0 && port->devfn == devfn)
+ 			return port;
+ 		if (bus->number != 0 &&
+-		    port->bridge.secondary_bus == bus->number)
++		    bus->number >= port->bridge.secondary_bus &&
++		    bus->number <= port->bridge.subordinate_bus)
+ 			return port;
+ 	}
+ 
+@@ -578,7 +579,18 @@ static int mvebu_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
+ 	if (bus->number == 0)
+ 		return mvebu_sw_pci_bridge_write(port, where, size, val);
+ 
+-	if (!port->haslink || PCI_SLOT(devfn) != 0)
++	if (!port->haslink)
++		return PCIBIOS_DEVICE_NOT_FOUND;
++
++	/*
++	 * On the secondary bus, we don't want to expose any other
++	 * device that the device physically connected in the PCIe
++	 * slot, visible in slot 0. In slot 1, there's a special
++	 * Marvell device that only makes sense when the Armada is
++	 * used as a PCIe endpoint.
++	 */
++	if (bus->number == port->bridge.secondary_bus &&
++	    PCI_SLOT(devfn) != 0)
+ 		return PCIBIOS_DEVICE_NOT_FOUND;
+ 
+ 	/* Access the real PCIe interface */
+@@ -609,7 +621,20 @@ static int mvebu_pcie_rd_conf(struct pci_bus *bus, u32 devfn, int where,
+ 	if (bus->number == 0)
+ 		return mvebu_sw_pci_bridge_read(port, where, size, val);
+ 
+-	if (!port->haslink || PCI_SLOT(devfn) != 0) {
++	if (!port->haslink) {
++		*val = 0xffffffff;
++		return PCIBIOS_DEVICE_NOT_FOUND;
++	}
++
++	/*
++	 * On the secondary bus, we don't want to expose any other
++	 * device that the device physically connected in the PCIe
++	 * slot, visible in slot 0. In slot 1, there's a special
++	 * Marvell device that only makes sense when the Armada is
++	 * used as a PCIe endpoint.
++	 */
++	if (bus->number == port->bridge.secondary_bus &&
++	    PCI_SLOT(devfn) != 0) {
+ 		*val = 0xffffffff;
+ 		return PCIBIOS_DEVICE_NOT_FOUND;
+ 	}
+-- 
+1.7.9.5
 
-Thanks
-
-Yinghai
