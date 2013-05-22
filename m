@@ -1,120 +1,75 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <5193AB8C.80300@gmail.com>
-Date: Wed, 15 May 2013 23:36:44 +0800
-From: Liu Jiang <liuj97@gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mho-02-ewr.mailhop.org ([204.13.248.72]:22663 "EHLO
+	mho-02-ewr.mailhop.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753809Ab3EVNn4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 May 2013 09:43:56 -0400
+Date: Wed, 22 May 2013 09:43:19 -0400
+From: Jason Cooper <jason@lakedaemon.net>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH 0/4] Marvell PCIe driver improvements
+Message-ID: <20130522134319.GC31290@titan.lakedaemon.net>
+References: <1369228358-32580-1-git-send-email-thomas.petazzoni@free-electrons.com>
 MIME-Version: 1.0
-To: Don Dutile <ddutile@redhat.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Joerg Roedel <joro@8bytes.org>,
-	Ingo Molnar <mingo@kernel.org>, Hannes Reinecke <hare@suse.de>,
-	"Li, Zhen-Hua" <zhen-hual@hp.com>, iommu@lists.linux-foundation.org
-Subject: Re: [RFC PATCH v2, part 2 16/18] PCI, iommu: use hotplug-safe iterators
- to walk PCI buses
-References: <1368550322-1045-1-git-send-email-jiang.liu@huawei.com> <1368550322-1045-16-git-send-email-jiang.liu@huawei.com> <5192B6F7.8090508@redhat.com>
-In-Reply-To: <5192B6F7.8090508@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1369228358-32580-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/15/2013 06:13 AM, Don Dutile wrote:
-> On 05/14/2013 12:52 PM, Jiang Liu wrote:
->> Enhance iommu drviers to use hotplug-safe iterators to walk
->> PCI buses.
->>
->> Signed-off-by: Jiang Liu<jiang.liu@huawei.com>
->> Cc: Joerg Roedel<joro@8bytes.org>
->> Cc: Ingo Molnar<mingo@kernel.org>
->> Cc: Donald Dutile<ddutile@redhat.com>
->> Cc: Hannes Reinecke<hare@suse.de>
->> Cc: "Li, Zhen-Hua"<zhen-hual@hp.com>
->> Cc: iommu@lists.linux-foundation.org
->> Cc: linux-kernel@vger.kernel.org
->> ---
->>   drivers/iommu/amd_iommu.c | 4 +++-
->>   drivers/iommu/dmar.c      | 6 ++++--
->>   2 files changed, 7 insertions(+), 3 deletions(-)
->>
->> diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
->> index e046d7a..d6fdf94 100644
->> --- a/drivers/iommu/amd_iommu.c
->> +++ b/drivers/iommu/amd_iommu.c
->> @@ -357,6 +357,7 @@ static int init_iommu_group(struct device *dev)
->>       struct iommu_dev_data *dev_data;
->>       struct iommu_group *group;
->>       struct pci_dev *dma_pdev;
->> +    struct pci_bus *b = NULL;
->>       int ret;
->>
->>       group = iommu_group_get(dev);
->> @@ -393,7 +394,7 @@ static int init_iommu_group(struct device *dev)
->>            * the alias.  Be careful to also test the parent device if
->>            * we think the alias is the root of the group.
->>            */
->> -        bus = pci_find_bus(0, alias>>  8);
->> +        b = bus = pci_find_bus(0, alias>>  8);
->>           if (!bus)
->>               goto use_group;
->>
->> @@ -413,6 +414,7 @@ static int init_iommu_group(struct device *dev)
->>       dma_pdev = get_isolation_root(pci_dev_get(to_pci_dev(dev)));
->>   use_pdev:
->>       ret = use_pdev_iommu_group(dma_pdev, dev);
->> +    pci_bus_put(b);
-> pci_find_bus() does a pci_bus_put() after the pci_get_bus();
-> is this needed, or did you mean to make the above patch pci_get_bus() ?
-Hi Don,
-     Thanks for review!
-     My fault, I should use pci_get_bus() instead, will fix it in next 
-version.
-Regards!
-Gerry
+Thomas,
 
+On Wed, May 22, 2013 at 03:12:34PM +0200, Thomas Petazzoni wrote:
+> Bjorn, Jason, Andrew, Gregory,
+> 
+> You'll find in this patch series 4 small patches that make various
+> improvements to the Marvell PCIe driver.
+> 
+> I'd like those improvements to be kept separated from the original
+> PCIe driver itself: while the PCIe driver has been around and reviewed
+> for a long time, those improvements are newer. And I clearly do not
+> want the PCIe driver to miss 3.11 because of any problem that could be
+> found in those additional improvements.
 
->
->>       pci_dev_put(dma_pdev);
->>       return ret;
->>   use_group:
->> diff --git a/drivers/iommu/dmar.c b/drivers/iommu/dmar.c
->> index e5cdaf8..5bb3cdc 100644
->> --- a/drivers/iommu/dmar.c
->> +++ b/drivers/iommu/dmar.c
->> @@ -67,12 +67,12 @@ static void __init dmar_register_drhd_unit(struct 
->> dmar_drhd_unit *drhd)
->>   static int __init dmar_parse_one_dev_scope(struct 
->> acpi_dmar_device_scope *scope,
->>                          struct pci_dev **dev, u16 segment)
->>   {
->> -    struct pci_bus *bus;
->> +    struct pci_bus *b, *bus;
->>       struct pci_dev *pdev = NULL;
->>       struct acpi_dmar_pci_path *path;
->>       int count;
->>
->> -    bus = pci_find_bus(segment, scope->bus);
->> +    b = bus = pci_find_bus(segment, scope->bus);
->>       path = (struct acpi_dmar_pci_path *)(scope + 1);
->>       count = (scope->length - sizeof(struct acpi_dmar_device_scope))
->>           / sizeof(struct acpi_dmar_pci_path);
->> @@ -97,6 +97,8 @@ static int __init dmar_parse_one_dev_scope(struct 
->> acpi_dmar_device_scope *scope,
->>           count --;
->>           bus = pdev->subordinate;
->>       }
->> +    pci_bus_put(b);
-> ditto.
->
->> +
->>       if (!pdev) {
->>           pr_warn("Device scope device [%04x:%02x:%02x.%02x] not 
->> found\n",
->>               segment, scope->bus, path->dev, path->fn);
->
+Agreed.
 
+For Bjorn and others:
+
+The original patch series Thomas is referring to missed the merge window
+for v3.10 due to a build failure.  It is currently sitting in our mvebu
+repo.  The first three patches, "of/pci ..." are in mvebu/of_pci.  The
+rest of the series is on top of that in the branch mvebu/pcie.
+
+I've sent pull requests for both branches to arm-soc.  There are two
+other arm SoC pcie efforts which are depending on mvebu/of_pci.  Hence
+why I did a separate branch.
+
+Both branches are also merged into mvebu/for-next, and have survived
+linux-next for three days or so.  But, it's early, so we'll see how it
+goes. :-)
+
+> Bjorn, with your Acked-by, could the Marvell maintainers include those
+> patches in their branch, merged through arm-soc? They already have the
+> Marvell PCIe driver itself, so I believe it makes sense to merge those
+> improvements through the same path.
+
+I agree, please see above regarding arm-soc dependencies.
+
+> Jason, those patches have been prepared on top of my marvell-pcie-v10
+> branch, I hope that's ok for you. If you want me to rebase them on
+> some other branch in which you have integrated the PCIe driver, don't
+> hesitate to tell me to do so. That said, since those patches are only
+> touching the driver itself and no other file, they should not cause
+> any conflict with other changes.
+
+Should be fine, I'll let you know.
+
+thx,
+
+Jason.
