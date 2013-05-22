@@ -1,56 +1,112 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f172.google.com ([209.85.214.172]:47891 "EHLO
-	mail-ob0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757111Ab3ETXpb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 20 May 2013 19:45:31 -0400
-Received: by mail-ob0-f172.google.com with SMTP id tb18so20041obb.3
-        for <linux-pci@vger.kernel.org>; Mon, 20 May 2013 16:45:31 -0700 (PDT)
+Received: from mail-ie0-f180.google.com ([209.85.223.180]:50892 "EHLO
+	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756802Ab3EVUug (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 May 2013 16:50:36 -0400
+Received: by mail-ie0-f180.google.com with SMTP id ar20so6442059iec.11
+        for <linux-pci@vger.kernel.org>; Wed, 22 May 2013 13:50:36 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1369093321.6387.24.camel@pasglop>
-References: <20130520231909.32416.81752.stgit@bhelgaas-glaptop> <1369093321.6387.24.camel@pasglop>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 20 May 2013 17:45:11 -0600
-Message-ID: <CAErSpo6K05TfsTBFocc99MaXZ3sL5jsMA_AbmNxq1xeT3DGcmA@mail.gmail.com>
-Subject: Re: [PATCH 1/2] powerpc/PCI: Use PCI_UNKNOWN for unknown power state
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Paul Mackerras <paulus@samba.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	sparclinux@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+In-Reply-To: <CAE9FiQWsZXfkSSVFzee4-J4bUDP8DdG=y9-k2du+ek90StDvNA@mail.gmail.com>
+References: <1367712653.11982.19.camel@pasglop>
+	<1367712932.11982.20.camel@pasglop>
+	<CAE9FiQX=h4H1gcbW=EfQo_ZtAgHGOZ2GxVxLG59C1iMH+qgH2g@mail.gmail.com>
+	<1367732090.11982.38.camel@pasglop>
+	<CAE9FiQUN3qqVmdw_EdOC-JZGc219M3tu=roOX98xns+77LJhMw@mail.gmail.com>
+	<1367740336.11982.41.camel@pasglop>
+	<51871088.4594420a.0ccc.7300SMTPIN_ADDED_BROKEN@mx.google.com>
+	<CAE9FiQXGUOM_h_X5tdGbkiuZGZkiFigSLbbftx3YXybFBg6trg@mail.gmail.com>
+	<518786a7.64bbec0a.58a0.1f6bSMTPIN_ADDED_BROKEN@mx.google.com>
+	<CAErSpo5MJCoaof=heFM4vLxuWz8pFqsyXAC356jZ7rbRvSOt9g@mail.gmail.com>
+	<CAE9FiQWsZXfkSSVFzee4-J4bUDP8DdG=y9-k2du+ek90StDvNA@mail.gmail.com>
+Date: Wed, 22 May 2013 13:50:35 -0700
+Message-ID: <CAE9FiQXw=Q9hDWMS3kx8=G0eSqo2keKh-VP3=LWZ31PfXmrAmg@mail.gmail.com>
+Subject: Re: Resource assignment oddities
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Gavin Shan <shangw@linux.vnet.ibm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/mixed; boundary=089e0122ac44b99abf04dd54b7eb
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, May 20, 2013 at 5:42 PM, Benjamin Herrenschmidt
-<benh@kernel.crashing.org> wrote:
-> On Mon, 2013-05-20 at 17:19 -0600, Bjorn Helgaas wrote:
->> Previously we initialized dev->current_state to 4 (PCI_D3cold), but I think
->> we wanted PCI_UNKNOWN (5) here based on the comment and the fact that the
->> generic version of this code, pci_setup_device(), uses PCI_UNKNOWN.
->>
->> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->> ---
->
-> Ack. Do you send to Linus or should I ?
+--089e0122ac44b99abf04dd54b7eb
+Content-Type: text/plain; charset=ISO-8859-1
 
-I'll add your ack and take care of it.
+On Wed, May 22, 2013 at 9:59 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+> We try must+optional as first, then if there is any ioport or mmio fail
+> we will stick to must only then extend must to meet optional.
+> but mmio range and mmio-pref could be connected each other,
+> so extend will fail...
+>
+> problem here, some root bus will not have ioport range, so it will always have
+> ioport allocation fail.
+>
+> looks like right fix for v3.9 should be as attached patch.
+> it will keep must+optional for mmio, if only ioport fails....
 
->>  arch/powerpc/kernel/pci_of_scan.c |    2 +-
->>  1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/arch/powerpc/kernel/pci_of_scan.c b/arch/powerpc/kernel/pci_of_scan.c
->> index 2a67e9b..d2d407d 100644
->> --- a/arch/powerpc/kernel/pci_of_scan.c
->> +++ b/arch/powerpc/kernel/pci_of_scan.c
->> @@ -165,7 +165,7 @@ struct pci_dev *of_create_pci_dev(struct device_node *node,
->>       pr_debug("    class: 0x%x\n", dev->class);
->>       pr_debug("    revision: 0x%x\n", dev->revision);
->>
->> -     dev->current_state = 4;         /* unknown power state */
->> +     dev->current_state = PCI_UNKNOWN;       /* unknown power state */
->>       dev->error_state = pci_channel_io_normal;
->>       dev->dma_mask = 0xffffffff;
->>
->
->
+looks like i missed change to realloc_head list.
+
+Ben/Shan, can you check attached v2?
+
+thanks
+
+Yinghai
+
+--089e0122ac44b99abf04dd54b7eb
+Content-Type: application/octet-stream;
+	name="root_bus_ioport_skip_9_v2.patch"
+Content-Disposition: attachment; filename="root_bus_ioport_skip_9_v2.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_hh0zjdh41
+
+U3ViamVjdDogW1BBVENIXSBQQ0k6IERvbid0IGZhbGwgYmFjayBNTUlPIHRvIG11c3Qtb25seSwg
+aWYgaW8gcG9ydCBmYWlsIHdpdGggb3B0aW9uYWwKRnJvbTogWWluZ2hhaSBMdSA8eWluZ2hhaUBr
+ZXJuZWwub3JnPgoKQmVuSCByZXBvcnRlZCB0aGF0IHRoZXJlIGlzIHNvbWUgYXNzaWduIHVuYXNz
+aWduZWQgcmVzb3VyY2UgcHJvYmxlbQppbiBwb3dlcnBjLgoKSXQgdHVybnMgb3V0IGFmdGVyCnwg
+Y29tbWl0IDBjNWJlMGNiMGVkZmUzYjVjNGI2MmVhYzY4YWEyYWExNWVjNjgxYWYKfCBEYXRlOiAg
+IFRodSBGZWIgMjMgMTk6MjM6MjkgMjAxMiAtMDgwMAp8CnwgICAgUENJOiBSZXRyeSBvbiBJT1JF
+U09VUkNFX0lPIHR5cGUgYWxsb2NhdGlvbnMKCmV2ZW4gdGhlIHJvb3QgYnVzIGRvZXMgbm90IGhh
+dmUgaW8gcG9ydCByYW5nZSwgaXQgd2lsbCBrZWVwIHJldHJ5aW5nCnRvIHJlYWxsb2Mgd2l0aCBt
+bWlvLgoKQ3VycmVudCByZXRyeSBsb2dpYyBpcyA6IHRyeSB3aXRoIG11c3Qrb3B0aW9uYWwgYXQg
+Zmlyc3QsIGFuZCBpZgppdCBmYWlscyB3aXRoIGFueSBpb3BvcnQgb3IgbW1pbywgaXQgd2lsbCB0
+cnkgbXVzdCB0aGVuIHRyeSB0byBleHRlbmQKbXVzdCB3aXRoIG9wdGlvbmFsLgpUaGF0IHdpbGwg
+ZmFpbCBhcyBtbWlvLW5vbi1wcmVmIGFuZCBtbWlvLXByZWYgZm9yIGJyaWRnZSB3aWxsCmJlIG5l
+eHQgdG8gZWFjaCBvdGhlci4gU28gd2UgaGF2ZSBubyBjaGFuY2UgdG8gZXh0ZW5kIG1taW8tbm9u
+LXByZWYuCgpXZSBjYW4gY2hlY2sgZmFpbCB0eXBlIGFuZCBvbmx5IGZhbGwgYmFjayBmb3IgaW8g
+cG9ydCBvbmx5LCB0aGF0IHdpbGwKa2VlcCBtbWlvIHR5cGUgc3RpbGwgaGF2ZSBtdXN0K29wdGlv
+bmFsLgoKVGhpcyB3aWxsIGJlIGJlY29tZSBtb3JlIG9mdGVuIHdoZW4gd2UgaGF2ZSB4ODYgOCBz
+b2NrZXRzIG9yIDMyIHNvY2tldHMKc3lzdGVtLCBhbmQgdGhvc2Ugc3lzdGVtIHdpbGwgaGF2ZSBv
+bmUgcm9vdCBidXMgcGVyIHNvY2tldC4KVGhleSB3aWxsIGhhdmUgc29tZSByb290IGJ1c2VzIGRv
+IG5vdCBoYXZlIGlvcG9ydCByYW5nZS4KCi12MjogbmVlZCB0byByZW1vdmUgYXNzaWduZWQgZW50
+cmllcyBmcm9tIG9wdGlvbmFsIGxpc3QgdG9vLgoKUmVwb3J0ZWQtYnk6IEJlbmphbWluIEhlcnJl
+bnNjaG1pZHQgPGJlbmhAa2VybmVsLmNyYXNoaW5nLm9yZz4KU2lnbmVkLW9mZi1ieTogWWluZ2hh
+aSBMdSA8eWluZ2hhaUBrZXJuZWwub3JnPgoKLS0tCiBkcml2ZXJzL3BjaS9zZXR1cC1idXMuYyB8
+ICAgMjMgKysrKysrKysrKysrKysrKysrKysrKysKIDEgZmlsZSBjaGFuZ2VkLCAyMyBpbnNlcnRp
+b25zKCspCgpJbmRleDogbGludXgtMi42L2RyaXZlcnMvcGNpL3NldHVwLWJ1cy5jCj09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT0KLS0tIGxpbnV4LTIuNi5vcmlnL2RyaXZlcnMvcGNpL3NldHVwLWJ1cy5jCisrKyBsaW51eC0y
+LjYvZHJpdmVycy9wY2kvc2V0dXAtYnVzLmMKQEAgLTMxNyw2ICszMTcsMTAgQEAgc3RhdGljIHZv
+aWQgX19hc3NpZ25fcmVzb3VyY2VzX3NvcnRlZChzdAogCUxJU1RfSEVBRChsb2NhbF9mYWlsX2hl
+YWQpOwogCXN0cnVjdCBwY2lfZGV2X3Jlc291cmNlICpzYXZlX3JlczsKIAlzdHJ1Y3QgcGNpX2Rl
+dl9yZXNvdXJjZSAqZGV2X3JlczsKKwl1bnNpZ25lZCBsb25nIGZhaWxfdHlwZSA9IDA7CisJc3Ry
+dWN0IHBjaV9kZXZfcmVzb3VyY2UgKmZhaWxfcmVzOworCXVuc2lnbmVkIGxvbmcgdHlwZV9tYXNr
+ID0gSU9SRVNPVVJDRV9JTyB8IElPUkVTT1VSQ0VfTUVNIHwKKwkJCQkgIElPUkVTT1VSQ0VfUFJF
+RkVUQ0g7CiAKIAkvKiBDaGVjayBpZiBvcHRpb25hbCBhZGRfc2l6ZSBpcyB0aGVyZSAqLwogCWlm
+ICghcmVhbGxvY19oZWFkIHx8IGxpc3RfZW1wdHkocmVhbGxvY19oZWFkKSkKQEAgLTM0OCw2ICsz
+NTIsMjUgQEAgc3RhdGljIHZvaWQgX19hc3NpZ25fcmVzb3VyY2VzX3NvcnRlZChzdAogCQlyZXR1
+cm47CiAJfQogCisJLyogY2hlY2sgZmFpbGVkIHR5cGUgKi8KKwlsaXN0X2Zvcl9lYWNoX2VudHJ5
+KGZhaWxfcmVzLCAmbG9jYWxfZmFpbF9oZWFkLCBsaXN0KQorCQlmYWlsX3R5cGUgfD0gZmFpbF9y
+ZXMtPmZsYWdzICYgdHlwZV9tYXNrOworCS8qIG9ubHkgaW8gcG9ydCBmYWlscyAqLworCWlmICgo
+ZmFpbF90eXBlICYgdHlwZV9tYXNrKSA9PSBJT1JFU09VUkNFX0lPKSB7CisJCXN0cnVjdCBwY2lf
+ZGV2X3Jlc291cmNlICp0bXBfcmVzOworCisJCS8qIHJlbW92ZSBhc3NpZ25lZCBub24gaW9wb3J0
+IGZyb20gaGVhZCBsaXN0IGV0YyAqLworCQlsaXN0X2Zvcl9lYWNoX2VudHJ5X3NhZmUoZGV2X3Jl
+cywgdG1wX3JlcywgaGVhZCwgbGlzdCkKKwkJCWlmIChkZXZfcmVzLT5yZXMtPnBhcmVudCAmJgor
+CQkJICAgICEoZGV2X3Jlcy0+cmVzLT5mbGFncyAmIElPUkVTT1VSQ0VfSU8pKSB7CisJCQkJLyog
+cmVtb3ZlIGl0IGZyb20gcmVhbGxvY19oZWFkIGxpc3QgKi8KKwkJCQlyZW1vdmVfZnJvbV9saXN0
+KHJlYWxsb2NfaGVhZCwgZGV2X3Jlcy0+cmVzKTsKKwkJCQlyZW1vdmVfZnJvbV9saXN0KCZzYXZl
+X2hlYWQsIGRldl9yZXMtPnJlcyk7CisJCQkJbGlzdF9kZWwoJmRldl9yZXMtPmxpc3QpOworCQkJ
+CWtmcmVlKGRldl9yZXMpOworCQkJfQorCX0KKwogCWZyZWVfbGlzdCgmbG9jYWxfZmFpbF9oZWFk
+KTsKIAkvKiBSZWxlYXNlIGFzc2lnbmVkIHJlc291cmNlICovCiAJbGlzdF9mb3JfZWFjaF9lbnRy
+eShkZXZfcmVzLCBoZWFkLCBsaXN0KQo=
+--089e0122ac44b99abf04dd54b7eb--
