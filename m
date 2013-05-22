@@ -1,105 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:19427 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755829Ab3ENC2t (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 13 May 2013 22:28:49 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 2/7] PCI: move resources and bus_list releasing to pci_release_dev
-Date: Mon, 13 May 2013 19:28:21 -0700
-Message-Id: <1368498506-25857-3-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1368498506-25857-1-git-send-email-yinghai@kernel.org>
-References: <1368498506-25857-1-git-send-email-yinghai@kernel.org>
+Received: from mail-oa0-f46.google.com ([209.85.219.46]:39579 "EHLO
+	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756412Ab3EVOzU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 May 2013 10:55:20 -0400
+Received: by mail-oa0-f46.google.com with SMTP id h2so2750518oag.19
+        for <linux-pci@vger.kernel.org>; Wed, 22 May 2013 07:55:20 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <518786a7.64bbec0a.58a0.1f6bSMTPIN_ADDED_BROKEN@mx.google.com>
+References: <1367712653.11982.19.camel@pasglop> <1367712932.11982.20.camel@pasglop>
+ <CAE9FiQX=h4H1gcbW=EfQo_ZtAgHGOZ2GxVxLG59C1iMH+qgH2g@mail.gmail.com>
+ <1367732090.11982.38.camel@pasglop> <CAE9FiQUN3qqVmdw_EdOC-JZGc219M3tu=roOX98xns+77LJhMw@mail.gmail.com>
+ <1367740336.11982.41.camel@pasglop> <51871088.4594420a.0ccc.7300SMTPIN_ADDED_BROKEN@mx.google.com>
+ <CAE9FiQXGUOM_h_X5tdGbkiuZGZkiFigSLbbftx3YXybFBg6trg@mail.gmail.com> <518786a7.64bbec0a.58a0.1f6bSMTPIN_ADDED_BROKEN@mx.google.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 22 May 2013 08:54:59 -0600
+Message-ID: <CAErSpo5MJCoaof=heFM4vLxuWz8pFqsyXAC356jZ7rbRvSOt9g@mail.gmail.com>
+Subject: Re: Resource assignment oddities
+To: Gavin Shan <shangw@linux.vnet.ibm.com>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We should not release resource in pci_destroy that is too early
-as there could be still other use hold reference.
+On Mon, May 6, 2013 at 4:31 AM, Gavin Shan <shangw@linux.vnet.ibm.com> wrote:
+> On Sun, May 05, 2013 at 08:04:48PM -0700, Yinghai Lu wrote:
+>>On Sun, May 5, 2013 at 7:08 PM, Gavin Shan <shangw@linux.vnet.ibm.com> wrote:
+>>> On Sun, May 05, 2013 at 05:52:16PM +1000, Benjamin Herrenschmidt wrote:
+>>>>On Sun, 2013-05-05 at 00:09 -0700, Yinghai Lu wrote:
+>
+> Hi Ben/Yinghai,
+>
+> Here's what happened for the failure to allocate memory window of P2P
+> bridge 0001:01:00.0.
+>
+> 1. Sizing P2P bridge window.
+> 2. Allocated resources in sorted order for specific PCI bus. Unfortunately,
+>    it should fail since the PCI bus doesn't IO (not MMIO) resource. So in
+>    function __assign_resources_sorted(), those resources that have been allocated
+>    would be released, then allocate the so-called "must-have" resources and
+>    eventually allocate the additional size for the corresponding resource. However,
+>    we have some conflict in the last step (the additional size). Let have one
+>    example here.
+>
+>    [0 24MB] Memory window of bus 0001:01     "ROOT"
+>    [0 8MB]  Meory window#0 of 0001:01:00.0   "WIN#0"   with additional size 8MB
+>    [0 8MB]  Memory window#1 of 0001:01:00.0  "WIN#1"   with additional size 0
+>
+>    If the last step (mentioned as above) fails, the resource would be allocated
+>    in following sequence:
+>
+>    WIN#0  ->  WIN#1       -> WIN#0 with additional size 8MB
+>    [0 8MB]    [8MB 16MB]     No available space for this one (16MB)
+>
+> The possible (temporary) fix would be checking "local_fail_head" in function
+> __assign_resources_sorted() and don't do reassignment if all the element in
+> the list is IO related. In the future, we might introduce specific flag to
+> indicate the PCI host can't support IO and skip all IO assignment accordingly.
 
-release them or remove it from bus devices list at last
-in pci_release_dev instead.
+What exactly is the problem here?  Is it just that you don't want to
+see the "can't assign" messages?  Or is there a device with a BAR that
+*should* be assigned, but isn't?  If so, which device is it?
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-
----
- drivers/pci/probe.c  |   20 ++++++++++++++++++++
- drivers/pci/remove.c |   19 -------------------
- 2 files changed, 20 insertions(+), 19 deletions(-)
-
-Index: linux-2.6/drivers/pci/probe.c
-===================================================================
---- linux-2.6.orig/drivers/pci/probe.c
-+++ linux-2.6/drivers/pci/probe.c
-@@ -1118,6 +1118,20 @@ static void pci_release_capabilities(str
- 	pci_free_cap_save_buffers(dev);
- }
- 
-+static void pci_free_resources(struct pci_dev *dev)
-+{
-+	int i;
-+
-+	msi_remove_pci_irq_vectors(dev);
-+
-+	pci_cleanup_rom(dev);
-+	for (i = 0; i < PCI_NUM_RESOURCES; i++) {
-+		struct resource *res = dev->resource + i;
-+		if (res->parent)
-+			release_resource(res);
-+	}
-+}
-+
- /**
-  * pci_release_dev - free a pci device structure when all users of it are finished.
-  * @dev: device that's been disconnected
-@@ -1130,6 +1144,12 @@ static void pci_release_dev(struct devic
- 	struct pci_dev *pci_dev;
- 
- 	pci_dev = to_pci_dev(dev);
-+
-+	down_write(&pci_bus_sem);
-+	list_del(&pci_dev->bus_list);
-+	up_write(&pci_bus_sem);
-+	pci_free_resources(pci_dev);
-+
- 	pci_release_capabilities(pci_dev);
- 	pci_release_of_node(pci_dev);
- 	kfree(pci_dev);
-Index: linux-2.6/drivers/pci/remove.c
-===================================================================
---- linux-2.6.orig/drivers/pci/remove.c
-+++ linux-2.6/drivers/pci/remove.c
-@@ -3,20 +3,6 @@
- #include <linux/pci-aspm.h>
- #include "pci.h"
- 
--static void pci_free_resources(struct pci_dev *dev)
--{
--	int i;
--
-- 	msi_remove_pci_irq_vectors(dev);
--
--	pci_cleanup_rom(dev);
--	for (i = 0; i < PCI_NUM_RESOURCES; i++) {
--		struct resource *res = dev->resource + i;
--		if (res->parent)
--			release_resource(res);
--	}
--}
--
- static void pci_stop_dev(struct pci_dev *dev)
- {
- 	pci_pme_active(dev, false);
-@@ -34,11 +20,6 @@ static void pci_stop_dev(struct pci_dev
- 
- static void pci_destroy_dev(struct pci_dev *dev)
- {
--	down_write(&pci_bus_sem);
--	list_del(&dev->bus_list);
--	up_write(&pci_bus_sem);
--
--	pci_free_resources(dev);
- 	put_device(&dev->dev);
- }
- 
+Bjorn
