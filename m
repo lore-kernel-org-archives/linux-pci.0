@@ -1,85 +1,157 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from avon.wwwdotorg.org ([70.85.31.133]:54666 "EHLO
-	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754558Ab3EHQg7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 May 2013 12:36:59 -0400
-Message-ID: <518A7F26.3030605@wwwdotorg.org>
-Date: Wed, 08 May 2013 10:36:54 -0600
-From: Stephen Warren <swarren@wwwdotorg.org>
+Received: from mail-qc0-f175.google.com ([209.85.216.175]:56957 "EHLO
+	mail-qc0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752843Ab3EVUQ4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 May 2013 16:16:56 -0400
 MIME-Version: 1.0
-To: Jay Agarwal <jagarwal@nvidia.com>
-CC: linux@arm.linux.org.uk, thierry.reding@avionic-design.de,
-	ldewangan@nvidia.com, bhelgaas@google.com, olof@lixom.net,
-	hdoyu@nvidia.com, pgaikwad@nvidia.com, mturquette@linaro.org,
-	pdeschrijver@nvidia.com, linux-arm-kernel@lists.infradead.org,
-	linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, jtukkinen@nvidia.com, kthota@nvidia.com
-Subject: Re: [PATCH 1/4] ARM: tegra30: clocks: Fix pciex clock registration
-References: <1368010660-31465-1-git-send-email-jagarwal@nvidia.com>
-In-Reply-To: <1368010660-31465-1-git-send-email-jagarwal@nvidia.com>
+In-Reply-To: <519BF594.1020607@gmail.com>
+References: <1368498506-25857-1-git-send-email-yinghai@kernel.org>
+	<1368498506-25857-7-git-send-email-yinghai@kernel.org>
+	<51925FB0.4080504@intel.com>
+	<CAE9FiQXYQEAZ=0sG6+2OdffBqfLS9MpoN1xviRR9aDbxPxcKxQ@mail.gmail.com>
+	<5192946F.1050700@intel.com>
+	<CAE9FiQVGGHB_amKw0-DfDifpTnRGPbxA+q3WY5F-O3x-sx386A@mail.gmail.com>
+	<5192AEF4.1070905@intel.com>
+	<519BE778.9040800@redhat.com>
+	<20130521214912.GA21713@redhat.com>
+	<519BEEA4.2030804@gmail.com>
+	<20130521221117.GB803@redhat.com>
+	<519BF594.1020607@gmail.com>
+Date: Wed, 22 May 2013 23:16:55 +0300
+Message-ID: <CAJZOPZKsp2_Fr3xY0NZfz5QDLn-=2fn+kL0w55EihuUgDZWEiw@mail.gmail.com>
+Subject: Re: [PATCH 6/7] PCI: Make sure VF's driver get attached after PF's
+From: Or Gerlitz <or.gerlitz@gmail.com>
+To: Alexander Duyck <alexander.duyck@gmail.com>
+Cc: "Michael S. Tsirkin" <mst@redhat.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Alexander Duyck <alexander.h.duyck@intel.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	NetDev <netdev@vger.kernel.org>,
+	Jack Morgenstein <jackm@dev.mellanox.co.il>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/08/2013 04:57 AM, Jay Agarwal wrote:
-> Registering pciex as peripheral clock instead of fixed clock
-> as tegra_perih_reset_assert(deassert) api of this clock api 
-> gives warning and ultimately does not succeed to assert(deassert).
+On Wed, May 22, 2013 at 1:30 AM, Alexander Duyck
+<alexander.duyck@gmail.com> wrote:
+> On 05/21/2013 03:11 PM, Michael S. Tsirkin wrote:
+>> On Tue, May 21, 2013 at 03:01:08PM -0700, Alexander Duyck wrote:
+>>> On 05/21/2013 02:49 PM, Michael S. Tsirkin wrote:
+>>>> On Tue, May 21, 2013 at 05:30:32PM -0400, Don Dutile wrote:
+>>>>> On 05/14/2013 05:39 PM, Alexander Duyck wrote:
+>>>>>> On 05/14/2013 12:59 PM, Yinghai Lu wrote:
+>>>>>>> On Tue, May 14, 2013 at 12:45 PM, Alexander Duyck
+>>>>>>> <alexander.h.duyck@intel.com>  wrote:
+>>>>>>>> On 05/14/2013 11:44 AM, Yinghai Lu wrote:
+>>>>>>>>> On Tue, May 14, 2013 at 9:00 AM, Alexander Duyck
+>>>>>>>>> <alexander.h.duyck@intel.com>  wrote:
+>>>>>>>>>> I'm sorry, but what is the point of this patch?  With device assignment
+>>>>>>>>>> it is always possible to have VFs loaded and the PF driver unloaded
+>>>>>>>>>> since you cannot remove the VFs if they are assigned to a VM.
+>>>>>>>>> unload PF driver will not call pci_disable_sriov?
+>>>>>>>> You cannot call pci_disable_sriov because you will panic all of the
+>>>>>>>> guests that have devices assigned.
+>>>>>>> ixgbe_remove did call pci_disable_sriov...
+>>>>>>>
+>>>>>>> for guest panic, that is another problem.
+>>>>>>> just like you pci passthrough with real pci device and hotremove the
+>>>>>>> card in host.
+>>>>>>>
+>>>>>>> ...
+>>>>>>
+>>>>>> I suggest you take another look.  In ixgbe_disable_sriov, which is the
+>>>>>> function that is called we do a check for assigned VFs.  If they are
+>>>>>> assigned then we do not call pci_disable_sriov.
+>>>>>>
+>>>>>>>
+>>>>>>>> So how does your patch actually fix this problem?  It seems like it is
+>>>>>>>> just avoiding it.
+>>>>>>> yes, until the first one is done.
+>>>>>>
+>>>>>> Avoiding the issue doesn't fix the underlying problem and instead you
+>>>>>> are likely just introducing more bugs as a result.
+>>>>>>
+>>>>>>>> From what I can tell your problem is originating in pci_call_probe.  I
+>>>>>>>> believe it is calling work_on_cpu and that doesn't seem correct since
+>>>>>>>> the work should be taking place on a CPU already local to the PF. You
+>>>>>>>> might want to look there to see why you are trying to schedule work on a
+>>>>>>>> CPU which should be perfectly fine for you to already be doing your work on.
+>>>>>>> it always try to go with local cpu with same pxm.
+>>>>>>
+>>>>>> The problem is we really shouldn't be calling work_for_cpu in this case
+>>>>>> since we are already on the correct CPU.  What probably should be
+>>>>>> happening is that pci_call_probe should be doing a check to see if the
+>>>>>> current CPU is already contained within the device node map and if so
+>>>>>> just call local_pci_probe directly.  That way you can avoid deadlocking
+>>>>>> the system by trying to flush the CPU queue of the CPU you are currently on.
+>>>>>>
+>>>>> That's the patch that Michael Tsirkin posted for a fix,
+>>>>> but it was noted that if you have the case where the _same_ driver is used for vf & pf,
+>>>>> other deadlocks may occur.
+>>>>> It would work in the case of ixgbe/ixgbevf, but not for something like
+>>>>> the Mellanox pf/vf driver (which is the same).
+>>>>>
+>>>>
+>>>> I think our conclusion was this is a false positive for Mellanox.
+>>>> If not, we need to understand what the deadlock is better.
+>>>>
+>>>
+>>> As I understand the issue, the problem is not a deadlock for Mellanox
+>>> (At least with either your patch or mine applied), the issue is that the
+>>> PF is not ready to handle VFs when pci_enable_sriov is called due to
+>>> some firmware issues.
 
-A few procedural comments: I believe this is at least the second version
-of these patches that have been posted. As such, the email subject
-should say e.e. "PATCH V2" not just "PATCH". You can pass
---subject-prefix='PATCH V2' to git format-patch to achieve this.
 
-Since this is an updated version of the patches, each patch should
-describe what changed in the patch, so that people know what issues
-you've fixed in this version. Most people believe that the description
-of changes should be below the --- line, so that it doesn't get included
-in the commit description when the patch is applied.
+>> I haven't seen Mellanox guys say anything like this on the list. Pointers?
+>> All I saw is some lockdep warnings and Tejun says they are bogus ...
+>
+> Actually the patch I submitted is at:
+> https://patchwork.kernel.org/patch/2568881/
+>
+> It was in response to:
+> https://patchwork.kernel.org/patch/2562471/
+>
+> Basically the patch I was responding to was supposed to address both the
+> lockdep issue and a problem with mlx4 not being able to support the VFs
+> when pci_enable_sriov is called.  Yinghai had specifically called out
+> the work_on_cpu lockdep issue that you also submitted a patch for.
+>
+> As per the feedback from Yinghai it seems like my patch does resolve the
+> lockdep issue that was seen.  The other half of the issue was what we
+> have been discussing with Or in regards to delaying VF driver init via
+> something like -EPROBE_DEFER instead of trying to split up
+> pci_enable_sriov and VF probe.
 
-> Patch is based on remotes/gitorious_thierryreding_linux/tegra/next
-> and should be applied on top of this.
 
-Those two lines should be below the --- line so that they don't get
-included in the commit description when the patch is applied. git
-metadata will provide clues re: who applied the patch and to which
-branch, so there's no need to duplicate this information in the commit
-description itself, but rather include it below --- so that it's still
-present and people can see it.
+Hi Alex, all, so to clarify:
 
-Some comments on the patch and series below...
+1. currently due to current firmware limitation we must call
+pci_enable_sriov before the
+PF ends its initialization sequence done in the PCI probe callback, hence
 
-> diff --git a/drivers/clk/tegra/clk-tegra30.c b/drivers/clk/tegra/clk-tegra30.c
+2. we can't move to the new sysfs API for enabling SRIOV
 
-> +	/* pciex */
-> +	clk = tegra_clk_register_periph_gate("pciex", "pll_e", 0, clk_base, 0,
-> +				    74, &periph_u_regs, periph_clk_enb_refcnt);
-> +	clk_register_clkdev(clk, "pciex", NULL);
-> +	clks[pciex] = clk;
+3. as of 3.9-rc1 we see these nested brobes, bisected that to be as of
+commit 90888ac01d059e38ffe77a2291d44cafa9016fb "driver core: fix
+possible missing of device probe". But we didn't reach into consensus
+with the author that this wasn't possible before the commit, nor this
+is something that needs to be avoided, see
+http://marc.info/?t=136249697200007&r=1&w=2
 
-Hmmm. This change perhaps isn't technically correct, but is the best we
-can do for now, so it's fine. It's also consistent with how the Tegra20
-clock driver is written.
+4. I am not sure if/how we can modify the PF code to support the case
+where VFs are probed and start thier initialization sequence before
+the PF is done with its initialization
 
-This clock has a "reset" bit in the CLK_RST_* registers, but not an
-"enable" bit in the CLK_ENB_* registers. Hence, representing this as a
-gated clock isn't correct, since there is not gate control in HW. The
-correct way to handle this would be to implement the new reset
-controller API for Tegra, and expose the reset control only, and not
-touch the clock registration at all. However, we do this exact same
-thing for a number of Tegra clocks right now, hence I think this change
-is fine for now; we'll clean this up, along with some other instances of
-the same issue, once the reset API is implemented for Tegra. Of course,
-if that happens before the PCI code is checked in, then my opinion will
-change.
+5. etc
 
-> @@ -1930,7 +1931,6 @@ static struct tegra_clk_duplicate tegra_clk_duplicates[] = {
->  	TEGRA_CLK_DUPLICATE(bsea, "nvavp", "bsea"),
->  	TEGRA_CLK_DUPLICATE(cml1, "tegra_sata_cml", NULL),
->  	TEGRA_CLK_DUPLICATE(cml0, "tegra_pcie", "cml"),
-> -	TEGRA_CLK_DUPLICATE(pciex, "tegra_pcie", "pciex"),
+all in all, we will look into returning  -EPROBE_DEFER from the VF
+when they identify the problematic situation -- so for how much time
+this is deferred? or if this isn't time based what the logical
+condition which once met the VF probe is attempted again?
 
-That seems like an unrelated change, and isn't mentioned in the commit
-description. Is the change strictly necessary? Is it cleanup that can
-happen as a separate patch later in the series? Aren't you able to
-remove the CLK_DUPLICATE() entries for other PCIe-related clocks too?
+
+Or.
