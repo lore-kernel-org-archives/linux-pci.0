@@ -1,74 +1,65 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <CADLC3L3bdTP8-X3ftMq1qxnL=LVDf7d5gbu2ZMH0pXg2AU8xjw@mail.gmail.com>
-References: <CAErSpo7qj2SNR7BfuBsfF-saZXvgcqqLtgoP5Hyb5u99qR4Ncg@mail.gmail.com>
- <Pine.LNX.4.44L0.1302191119270.2215-100000@iolanthe.rowland.org>
- <CAErSpo7NZoOQZyW76HEoOTVgdqL2CgbVScAeF6HGLAVaNCq0=w@mail.gmail.com>
- <337833384.57445.1361860509194.JavaMail.mail@webmail08> <CAErSpo6CbO5KYXiErv6J_Dnm1u694C5fQPP2_cZL8VKDEnZa9A@mail.gmail.com>
- <569718148.80620.1361906088301.JavaMail.mail@webmail13> <CAErSpo6UkVhSf+nFW4zwJLBQw_0RQ5H9Bv-UuQRb6zdwsFPw4g@mail.gmail.com>
- <CAErSpo4X+XXKvWDfqh2CKZAtJ9WMQk91OcsWwdxwYv2MfEM_zQ@mail.gmail.com>
- <771333906.75854.1367057440028.JavaMail.mail@webmail08> <CAErSpo4B4sRco-nuqgXiYtGQxBcbEB6ArQjHD0A9cj4TRE+qQw@mail.gmail.com>
- <518097B8.4020402@gmail.com> <CAErSpo7KWPRVEnw+n068pUZz+=WSTwno6m6t7N6dunuhnFC8EA@mail.gmail.com>
- <384171828.66802.1367942365492.JavaMail.mail@webmail05> <CADLC3L3bdTP8-X3ftMq1qxnL=LVDf7d5gbu2ZMH0pXg2AU8xjw@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 7 May 2013 13:20:32 -0700
-Message-ID: <CAErSpo50iyEbCer+-K8uXUdnsG_EzFe_ZjKnrtfq5x0Zw3Yd6w@mail.gmail.com>
-Subject: Re: Abysmal HDD/USB write speed after sleep on a UEFI system
-To: Robert Hancock <hancockrwd@gmail.com>
-Cc: "Artem S. Tashkinov" <t.artem@lycos.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, Phillip Susi <psusi@ubuntu.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.free-electrons.com ([94.23.35.102]:38818 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752705Ab3EVNMr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 May 2013 09:12:47 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>
+Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	linux-arm-kernel@lists.infradead.org
+Subject: [PATCH 4/4] pci: mvebu: fix the emulation of the status register
+Date: Wed, 22 May 2013 15:12:38 +0200
+Message-Id: <1369228358-32580-5-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1369228358-32580-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1369228358-32580-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 7, 2013 at 12:05 PM, Robert Hancock <hancockrwd@gmail.com> wrote:
-> On Tue, May 7, 2013 at 9:59 AM, Artem S. Tashkinov <t.artem@lycos.com> wrote:
->> May 7, 2013 09:25:40 PM,        Bjorn Helgaas  wrote:
->>> [+cc Phillip]
->>>
->>>> I would suspect that Windows' complaint about the BIOS mucking up the MTRRs
->>>> is likely the best hint. Likely Windows is detecting the problem and fixing
->>>> it up on resume, thus it only complains about "reduced resume performance".
->>>> If the MTRRs are messed up, then quite likely parts of RAM have become
->>>> uncacheable, causing performance to get randomly slaughtered in various
->>>> ways.
->>>>
->>>> From looking at the code it's not clear if we are checking/restoring the
->>>> MTRR contents after resume. If not, maybe we should be.
->>>
->>>I agree; the MTRR warning is a good hint.  Artem?
->>>
->>>Phillip, I cc'd you because you have similar hardware and your
->>>https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1131468 report is
->>>slightly similar.  Have you seen anything like this "reduced
->>>performance after resume" issue?  If so, can you collect /proc/mtrr
->>>contents before and after suspending?
->>>
->>
->> Like Robert Hancock correctly noted the Linux kernel lacks the code to check
->> for MTTR changes after resume - I'm not a kernel hacker to write such a code ;-)
->>
->> Likewise there's no code to see if RAM pages have become uncacheable - i.e
->> I've no idea how to check it either.
->>
->> According to /proc/mttr nothing changes on resume - only Windows detects
->> the discrepancy between MTTR regions on resume. dmesg contains no warnings
->> or errors (aside from usual ACPI SATA warnings - but they happen right on
->> boot - so I highly doubt the ACPI or SATA layers can be the culprit, since USB
->> exhibits a similar performance degradation).
->
-> I'm not sure if reading /proc/mtrr actually reads the registers out of
-> the CPU each time, or whether we just return the cached values we read
-> out during initial boot-up. If the latter, then this output isn't
-> really useful as there's no guarantee the values are still intact.
+In a PCI configuration header, the 'devsel' bits of the status
+register are read-only, and indicate the timing of the secondary
+interface. Currently, we implement them as read/write, so when the
+Linux PCI core writes all 1's to this register, it gets 11b as the
+'devsel' value, which is reserved.
 
-Good point.  From what I can tell, on Artem's system with "CPU0:
-Intel(R) Core(TM) i5-2500 CPU @ 3.30GHz," we would be using
-generic_mtrr_ops, and generic_get_mtrr() appears to read from the
-MSRs, so I think it should be useful.
+This commit fixes the PCI-to-PCI bridge emulation of the Marvell PCIe
+driver to ensure those bits remain set to 00b, which indicate a fast
+devsel decoding.
 
-Bjorn
+This allows to fix the lspci -v output from:
+
+  Flags: bus master, 66MHz, user-definable features, ?? devsel, latency 0
+
+to:
+
+  Flags: bus master, 66MHz, user-definable features, fast devsel, latency 0
+
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+---
+ drivers/pci/host/pci-mvebu.c |    5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+index c887598..d730bf4 100644
+--- a/drivers/pci/host/pci-mvebu.c
++++ b/drivers/pci/host/pci-mvebu.c
+@@ -490,6 +490,11 @@ static int mvebu_sw_pci_bridge_write(struct mvebu_pcie_port *port,
+ 	case PCI_COMMAND:
+ 		bridge->command = value & 0xffff;
+ 		bridge->status = value >> 16;
++		/*
++		 * The devsel bits are read-only, and we want to keep
++		 * them set to 0
++		 */
++		bridge->status &= ~PCI_STATUS_DEVSEL_MASK;
+ 		break;
+ 
+ 	case PCI_BASE_ADDRESS_0 ... PCI_BASE_ADDRESS_1:
+-- 
+1.7.9.5
+
