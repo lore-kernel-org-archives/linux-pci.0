@@ -1,89 +1,51 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <1368222408.3334.29.camel@ul30vt.home>
-Subject: Re: [PATCH v2 3/8] pci: Add pci_hp_reset_slot
-From: Alex Williamson <alex.williamson@redhat.com>
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Fri, 10 May 2013 15:46:48 -0600
-In-Reply-To: <20130508025753.30771.43656.stgit@bling.home>
-References: <20130508025339.30771.61937.stgit@bling.home>
-	 <20130508025753.30771.43656.stgit@bling.home>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from quartz.orcorp.ca ([184.70.90.242]:45192 "EHLO quartz.orcorp.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759760Ab3EWQrD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 23 May 2013 12:47:03 -0400
+Date: Thu, 23 May 2013 10:46:54 -0600
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Willy Tarreau <w@1wt.eu>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Maen Suleiman <maen@marvell.com>, linux-pci@vger.kernel.org,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH 0/4] Marvell PCIe driver improvements
+Message-ID: <20130523164654.GA31281@obsidianresearch.com>
+References: <1369228358-32580-1-git-send-email-thomas.petazzoni@free-electrons.com>
+ <20130523001353.GH31625@1wt.eu>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130523001353.GH31625@1wt.eu>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2013-05-07 at 20:57 -0600, Alex Williamson wrote:
-> Provide an interface to get to hotplug controller reset_slot callback
+On Thu, May 23, 2013 at 02:13:53AM +0200, Willy Tarreau wrote:
+> Hi Thomas,
 > 
-> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-> ---
->  drivers/pci/hotplug/pci_hotplug_core.c |   24 ++++++++++++++++++++++++
->  include/linux/pci_hotplug.h            |    8 ++++++++
->  2 files changed, 32 insertions(+)
+> On Wed, May 22, 2013 at 03:12:34PM +0200, Thomas Petazzoni wrote:
+> > Bjorn, Jason, Andrew, Gregory,
+> > 
+> > You'll find in this patch series 4 small patches that make various
+> > improvements to the Marvell PCIe driver.
+> (...)
 > 
-> diff --git a/drivers/pci/hotplug/pci_hotplug_core.c b/drivers/pci/hotplug/pci_hotplug_core.c
-> index 202f4a9..1d0fee4 100644
-> --- a/drivers/pci/hotplug/pci_hotplug_core.c
-> +++ b/drivers/pci/hotplug/pci_hotplug_core.c
-> @@ -537,6 +537,29 @@ int __must_check pci_hp_change_slot_info(struct hotplug_slot *hotplug,
->  	return 0;
->  }
->  
-> +/**
-> + * pci_hp_reset_slot - reset slot
-> + *
-> + * @hotplug: pointer to hotplug slot to reset
-> + * @probe: reset slot (0) or just probe
-> + *
-> + * Returns 0 if successful, anything else for an error.
-> + */
-> +int pci_hp_reset_slot(struct hotplug_slot *hotplug, int probe)
-> +{
-> +	int result = -ENOTTY;
-> +
-> +	if (!hotplug || !try_module_get(hotplug->ops->owner))
-> +		return result;
-> +
-> +	if (hotplug->ops->reset_slot)
-> +		result = hotplug->ops->reset_slot(hotplug, probe);
-> +
-> +	module_put(hotplug->ops->owner);
-> +
-> +	return result;
-> +}
-> +
->  static int __init pci_hotplug_init (void)
->  {
->  	int result;
-> @@ -570,3 +593,4 @@ MODULE_PARM_DESC(debug, "Debugging mode enabled or not");
->  EXPORT_SYMBOL_GPL(__pci_hp_register);
->  EXPORT_SYMBOL_GPL(pci_hp_deregister);
->  EXPORT_SYMBOL_GPL(pci_hp_change_slot_info);
-> +EXPORT_SYMBOL_GPL(pci_hp_reset_slot);
-> diff --git a/include/linux/pci_hotplug.h b/include/linux/pci_hotplug.h
-> index 0d3a604..d771cee 100644
-> --- a/include/linux/pci_hotplug.h
-> +++ b/include/linux/pci_hotplug.h
-> @@ -135,6 +135,14 @@ extern int __pci_hp_register(struct hotplug_slot *slot, struct pci_bus *pbus,
->  extern int pci_hp_deregister(struct hotplug_slot *slot);
->  extern int __must_check pci_hp_change_slot_info	(struct hotplug_slot *slot,
->  						 struct hotplug_slot_info *info);
-> +#ifdef CONFIG_HOTPLUG_PCI
-> +int pci_hp_reset_slot(struct hotplug_slot *slot, int probe);
-> +#else
-> +static inline int pci_hp_reset_slot(struct hotplug_slot *slot, int probe)
-> +{
-> +	return -ENOTTY;
-> +}
-> +#endif
->  
->  /* use a define to avoid include chaining to get THIS_MODULE & friends */
->  #define pci_hp_register(slot, pbus, devnr, name) \
-> 
+> FWIW, these patches applied on top of your pcie-v10 tree have made
+> my mini-pcie dual-nic appear for the first time on the mirabox. Till
+> now I never knew if it was a hardware or software issue since the NIC
+> does not appear in u-boot nor lspci, whatever the kernel versions,
+> including the original Marvell one's. The NIC has two functions (one
+> per controller) and no bridge, so it may be a side effect of your
+> improvements (or maybe you fixed a bug).
 
-There's a bug here when CONFIG_HOTPLUG_PCI=m.  I'll fix and repost.
-self NAK.  Thanks,
+There was some talk earlier that some buggy chips required their
+device number to be 0. I'm guessing Thomas's change to ensure that
+always happens by moving the device number of the internal device is
+the root fix here?
 
-Alex
-
+Regards,
+Jason
