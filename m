@@ -1,100 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mho-02-ewr.mailhop.org ([204.13.248.72]:42701 "EHLO
-	mho-02-ewr.mailhop.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758034Ab3EWS0s (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 May 2013 14:26:48 -0400
-Date: Thu, 23 May 2013 14:26:22 -0400
-From: Jason Cooper <jason@lakedaemon.net>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+Received: from mail.free-electrons.com ([94.23.35.102]:46627 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758314Ab3EWS5c (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 May 2013 14:57:32 -0400
+Date: Thu, 23 May 2013 20:57:26 +0200
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: Willy Tarreau <w@1wt.eu>, Lior Amsalem <alior@marvell.com>,
 	Andrew Lunn <andrew@lunn.ch>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Maen Suleiman <maen@marvell.com>, linux-pci@vger.kernel.org,
 	Gregory Clement <gregory.clement@free-electrons.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>
-Subject: Re: [PATCH v2 0/3] Marvell PCIe driver improvements
-Message-ID: <20130523182622.GT31290@titan.lakedaemon.net>
-References: <1369319573-19927-1-git-send-email-thomas.petazzoni@free-electrons.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1369319573-19927-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH 0/4] Marvell PCIe driver improvements
+Message-ID: <20130523205726.05ba45bf@skate>
+In-Reply-To: <20130523164654.GA31281@obsidianresearch.com>
+References: <1369228358-32580-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	<20130523001353.GH31625@1wt.eu>
+	<20130523164654.GA31281@obsidianresearch.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 23, 2013 at 04:32:50PM +0200, Thomas Petazzoni wrote:
-> Bjorn, Jason, Andrew, Gregory,
-> 
-> Here is an updated version of the PCIe improvements.
-> 
-> Changes since v1:
-> 
->  * Fix some typos in the comments of PATCH 2, noticed by Bjorn
->    Helgaas.
-> 
->  * Rework the two last patches (first one was fixing the capability
->    list, the other one the emulation of the devsel bits in the status
->    register), after the comments of Bjorn. In fact, it turns out that
->    the status register is composed of read-only bits for which we want
->    to emulate a value of zero, and the other bits are write-1-to-clear
->    bits that expose error conditions that we do not handle in the
->    emulated bridge. So, in summary, emulating a 0 status register on
->    reads, and ignoring writes to the status register is the simplest
->    solution. If we later on implement a capability list, we can use a
->    more clever emulation of the status register, but for the moment,
->    this simple solution is enough. Therefore, the two last patches are
->    now one single, simpler patch.
-> 
-> I'd like those improvements to be kept separated from the original
-> PCIe driver itself: while the PCIe driver has been around and reviewed
-> for a long time, those improvements are newer. And I clearly do not
-> want the PCIe driver to miss 3.11 because of any problem that could be
-> found in those additional improvements.
-> 
-> The main improvement being brought here is that the PCI-to-PCI bridge
-> logic is fixed/extended to properly support physical PCIe bridges that
-> are connected on a PCIe interface of a Marvell board. Without this
-> improvement, only the devices connected directly to the PCIe
-> interfaces of the board are properly enumerated. Any device that would
-> sit beyond a physical bridge is not visible.
-> 
-> Bjorn, with your Acked-by, could the Marvell maintainers include those
-> patches in their branch, merged through arm-soc? They already have the
-> Marvell PCIe driver itself, so I believe it makes sense to merge those
-> improvements through the same path.
-> 
-> Jason, those patches have been prepared on top of my marvell-pcie-v10
-> branch, I hope that's ok for you. If you want me to rebase them on
-> some other branch in which you have integrated the PCIe driver, don't
-> hesitate to tell me to do so. That said, since those patches are only
-> touching the driver itself and no other file, they should not cause
-> any conflict with other changes.
-> 
-> Thanks,
-> 
-> Thomas
-> 
-> Thomas Petazzoni (3):
->   pci: mvebu: no longer fake the slot location of downstream devices
->   pci: mvebu: allow the enumeration of devices beyond physical bridges
->   pci: mvebu: fix the emulation of the status register
-> 
->  drivers/pci/host/pci-mvebu.c |   55 +++++++++++++++++++++++++++++++++---------
->  1 file changed, 44 insertions(+), 11 deletions(-)
+Dear Jason Gunthorpe,
 
-Whole series applied to mvebu/pcie_bridge with Bjorn's Ack.  The whole
-pcie tree now looks like:
+On Thu, 23 May 2013 10:46:54 -0600, Jason Gunthorpe wrote:
 
-        /-mvebu/of_pci  /-mvebu/pcie
-        |               |
-+---+---+---+---+---+---+---+---+---+---+ mvebu/pcie_bridge
-                        |
-                        \---+---+---+---+ mvebu/pcie_kirkwood
-(not to scale :) )
+> > FWIW, these patches applied on top of your pcie-v10 tree have made
+> > my mini-pcie dual-nic appear for the first time on the mirabox. Till
+> > now I never knew if it was a hardware or software issue since the NIC
+> > does not appear in u-boot nor lspci, whatever the kernel versions,
+> > including the original Marvell one's. The NIC has two functions (one
+> > per controller) and no bridge, so it may be a side effect of your
+> > improvements (or maybe you fixed a bug).
+> 
+> There was some talk earlier that some buggy chips required their
+> device number to be 0. I'm guessing Thomas's change to ensure that
+> always happens by moving the device number of the internal device is
+> the root fix here?
 
-This is getting pretty hairy, do you intend on anything else for mvebu
-pcie for this merge window?
+You're correct. Off-list, I've sent to Willy a patch that applies on
+top of those additional "bridge-related" fixes, but that reverts back
+the slot number of the real PCIe device to be 1 instead of 0. And in
+this case, the PCIe device that Willy is using is not detected.
 
-thx,
+So indeed, there are some PCIe devices who really want to receive
+"configuration transactions" as slot 0.
 
-Jason.
+Best regards,
+
+Thomas
+-- 
+Thomas Petazzoni, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
