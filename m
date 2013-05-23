@@ -1,67 +1,100 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ia0-f172.google.com ([209.85.210.172]:63625 "EHLO
-	mail-ia0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751022Ab3EIQql (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 9 May 2013 12:46:41 -0400
-Received: by mail-ia0-f172.google.com with SMTP id i20so3517918ian.3
-        for <linux-pci@vger.kernel.org>; Thu, 09 May 2013 09:46:40 -0700 (PDT)
-Date: Thu, 9 May 2013 10:46:37 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>,
-	Bin Gao <bin.gao@linux.intel.com>,
-	Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [GIT PULL] PCI updates for v3.10
-Message-ID: <20130509164637.GA12508@google.com>
+Received: from mho-02-ewr.mailhop.org ([204.13.248.72]:42701 "EHLO
+	mho-02-ewr.mailhop.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758034Ab3EWS0s (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 May 2013 14:26:48 -0400
+Date: Thu, 23 May 2013 14:26:22 -0400
+From: Jason Cooper <jason@lakedaemon.net>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>
+Subject: Re: [PATCH v2 0/3] Marvell PCIe driver improvements
+Message-ID: <20130523182622.GT31290@titan.lakedaemon.net>
+References: <1369319573-19927-1-git-send-email-thomas.petazzoni@free-electrons.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1369319573-19927-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Linus,
+On Thu, May 23, 2013 at 04:32:50PM +0200, Thomas Petazzoni wrote:
+> Bjorn, Jason, Andrew, Gregory,
+> 
+> Here is an updated version of the PCIe improvements.
+> 
+> Changes since v1:
+> 
+>  * Fix some typos in the comments of PATCH 2, noticed by Bjorn
+>    Helgaas.
+> 
+>  * Rework the two last patches (first one was fixing the capability
+>    list, the other one the emulation of the devsel bits in the status
+>    register), after the comments of Bjorn. In fact, it turns out that
+>    the status register is composed of read-only bits for which we want
+>    to emulate a value of zero, and the other bits are write-1-to-clear
+>    bits that expose error conditions that we do not handle in the
+>    emulated bridge. So, in summary, emulating a 0 status register on
+>    reads, and ignoring writes to the status register is the simplest
+>    solution. If we later on implement a capability list, we can use a
+>    more clever emulation of the status register, but for the moment,
+>    this simple solution is enough. Therefore, the two last patches are
+>    now one single, simpler patch.
+> 
+> I'd like those improvements to be kept separated from the original
+> PCIe driver itself: while the PCIe driver has been around and reviewed
+> for a long time, those improvements are newer. And I clearly do not
+> want the PCIe driver to miss 3.11 because of any problem that could be
+> found in those additional improvements.
+> 
+> The main improvement being brought here is that the PCI-to-PCI bridge
+> logic is fixed/extended to properly support physical PCIe bridges that
+> are connected on a PCIe interface of a Marvell board. Without this
+> improvement, only the devices connected directly to the PCIe
+> interfaces of the board are properly enumerated. Any device that would
+> sit beyond a physical bridge is not visible.
+> 
+> Bjorn, with your Acked-by, could the Marvell maintainers include those
+> patches in their branch, merged through arm-soc? They already have the
+> Marvell PCIe driver itself, so I believe it makes sense to merge those
+> improvements through the same path.
+> 
+> Jason, those patches have been prepared on top of my marvell-pcie-v10
+> branch, I hope that's ok for you. If you want me to rebase them on
+> some other branch in which you have integrated the PCIe driver, don't
+> hesitate to tell me to do so. That said, since those patches are only
+> touching the driver itself and no other file, they should not cause
+> any conflict with other changes.
+> 
+> Thanks,
+> 
+> Thomas
+> 
+> Thomas Petazzoni (3):
+>   pci: mvebu: no longer fake the slot location of downstream devices
+>   pci: mvebu: allow the enumeration of devices beyond physical bridges
+>   pci: mvebu: fix the emulation of the status register
+> 
+>  drivers/pci/host/pci-mvebu.c |   55 +++++++++++++++++++++++++++++++++---------
+>  1 file changed, 44 insertions(+), 11 deletions(-)
 
-Here are some fixes for v3.10.  They're fairly minor but do fix
-user-visible issues.
+Whole series applied to mvebu/pcie_bridge with Bjorn's Ack.  The whole
+pcie tree now looks like:
 
-Bjorn
+        /-mvebu/of_pci  /-mvebu/pcie
+        |               |
++---+---+---+---+---+---+---+---+---+---+ mvebu/pcie_bridge
+                        |
+                        \---+---+---+---+ mvebu/pcie_kirkwood
+(not to scale :) )
 
+This is getting pretty hairy, do you intend on anything else for mvebu
+pcie for this merge window?
 
-The following changes since commit ab86e974f04b1cd827a9c7c35273834ebcd9ab38:
+thx,
 
-  Merge branch 'timers-core-for-linus' of git://git.kernel.org/pub/scm/linux/kernel/git/tip/tip (2013-04-30 08:15:40 -0700)
-
-are available in the git repository at:
-
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/pci-v3.10-fixes-1
-
-for you to fetch changes up to e253aaf0af51c1e4dc7dd3b26ea8e666bf9a2d8d:
-
-  PCI: Delay final fixups until resources are assigned (2013-05-07 14:35:44 -0600)
-
-----------------------------------------------------------------
-PCI updates for v3.10:
-
-  MSI
-      PCI: Set ->mask_pos correctly
-  Hotplug
-      PCI: Delay final fixups until resources are assigned
-  Moorestown
-      x86/pci/mrst: Use configuration mechanism 1 for 00:00.0, 00:02.0, 00:03.0
-
-----------------------------------------------------------------
-Bin Gao (1):
-      x86/pci/mrst: Use configuration mechanism 1 for 00:00.0, 00:02.0, 00:03.0
-
-Dan Carpenter (1):
-      PCI: Set ->mask_pos correctly
-
-Yinghai Lu (1):
-      PCI: Delay final fixups until resources are assigned
-
- arch/x86/pci/mrst.c | 10 ++++++----
- drivers/pci/bus.c   |  1 +
- drivers/pci/msi.c   |  6 ++++--
- drivers/pci/probe.c |  1 -
- 4 files changed, 11 insertions(+), 7 deletions(-)
+Jason.
