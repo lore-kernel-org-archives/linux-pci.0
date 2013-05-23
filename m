@@ -1,56 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f179.google.com ([209.85.217.179]:41088 "EHLO
-	mail-lb0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757341Ab3E0Knq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 May 2013 06:43:46 -0400
-Received: by mail-lb0-f179.google.com with SMTP id r11so6475789lbv.24
-        for <linux-pci@vger.kernel.org>; Mon, 27 May 2013 03:43:42 -0700 (PDT)
+Received: from mail-qc0-f177.google.com ([209.85.216.177]:48431 "EHLO
+	mail-qc0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751386Ab3EWGco (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 May 2013 02:32:44 -0400
 MIME-Version: 1.0
-Reply-To: pricardofc@ipfn.ist.utl.pt
-Date: Mon, 27 May 2013 11:43:42 +0100
-Message-ID: <CAH9N0t_dNJ+u+9BLFTsqRNnbRO4xMaGYqE6_du_u+joZfzBYyA@mail.gmail.com>
-Subject: Pcie Linux HotPlug Driver
-From: Paulo Fortuna Carvalho <pricardofc@ipfn.ist.utl.pt>
-To: linux-pci@vger.kernel.org
+In-Reply-To: <1369266331.2670.40.camel@bwh-desktop.uk.level5networks.com>
+References: <1368498506-25857-1-git-send-email-yinghai@kernel.org>
+	<1368498506-25857-7-git-send-email-yinghai@kernel.org>
+	<51925FB0.4080504@intel.com>
+	<CAE9FiQXYQEAZ=0sG6+2OdffBqfLS9MpoN1xviRR9aDbxPxcKxQ@mail.gmail.com>
+	<5192946F.1050700@intel.com>
+	<CAE9FiQVGGHB_amKw0-DfDifpTnRGPbxA+q3WY5F-O3x-sx386A@mail.gmail.com>
+	<5192AEF4.1070905@intel.com>
+	<519BE778.9040800@redhat.com>
+	<20130521214912.GA21713@redhat.com>
+	<519BEEA4.2030804@gmail.com>
+	<20130521221117.GB803@redhat.com>
+	<519BF594.1020607@gmail.com>
+	<CAJZOPZKsp2_Fr3xY0NZfz5QDLn-=2fn+kL0w55EihuUgDZWEiw@mail.gmail.com>
+	<1369266331.2670.40.camel@bwh-desktop.uk.level5networks.com>
+Date: Thu, 23 May 2013 09:32:43 +0300
+Message-ID: <CAJZOPZK-xYiY__iijF5jhPhqKK81T5QVd5DcGrcxLNAe97j5LQ@mail.gmail.com>
+Subject: Re: [PATCH 6/7] PCI: Make sure VF's driver get attached after PF's
+From: Or Gerlitz <or.gerlitz@gmail.com>
+To: Ben Hutchings <bhutchings@solarflare.com>
+Cc: Alexander Duyck <alexander.duyck@gmail.com>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Alexander Duyck <alexander.h.duyck@intel.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	NetDev <netdev@vger.kernel.org>,
+	Jack Morgenstein <jackm@dev.mellanox.co.il>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I have an PCI Express ATCA card with an FPGA.
-I have a device driver to communicate with the board.
-Now we are trying to implement hot-plug using the PCIe Port Bus Driver Model.
+On Thu, May 23, 2013 at 2:45 AM, Ben Hutchings
+<bhutchings@solarflare.com> wrote:
+> On Wed, 2013-05-22 at 23:16 +0300, Or Gerlitz wrote:
+> [...]
+>> all in all, we will look into returning  -EPROBE_DEFER from the VF
+>> when they identify the problematic situation -- so for how much time
+>> this is deferred? or if this isn't time based what the logical
+>> condition which once met the VF probe is attempted again?
+>
+> My reading is that it will be retried as soon as the PF probe returns.
+> But I've never tried using this feature myself.
 
-Our driver has been modified in order to be compliant to a service
-driver as described in the HowTo Documentation.
+Yes, empirically this is what happens, the VF probe detects that the
+PF isn't ready yet, and returns error.
+Few seconds later the VF is probed again and this time it works, today
+we return -EIO, so we  need
+to change that to  -EPROBE_DEFER to make that more robust.
 
-Using the file pcieport_if.h there were some structs that become
-obsolete namely the pci_port_service_id.
-
-1) How can we provide the board ids with the pci_port_service_id
-struct removed?
-I'm using the old method struct pci_device_id
-
-2) How can we point to the old pci_dev pointer in our functions once
-the arguments for probe(), remove() now are pcie_device struct? I'm using
-the port item in the struct pcie_device.
-
-3) After changes at insmod time my board appears in the /proc/devices
-but my devices and sub-devices never appear in the /dev directory
-making me wonder that something is missing in my class_create() and
-device_create() function...
-
-4) Are functions resume() and suspend() relevant for the hot-plug
-process? At the moment these functions only return -ENOSYS
-
-My Purpose: At the moment i'm only interest in modifying the Linux
-Device Driver for the board using the PCIe HotPlug Port Bus Driver
-Model (porting it to a Service Driver), detect the board and create
-the devices and sub-devices in the /dev directory as it used to do.
-I think there is only something missing but I dont know what.
-
-NOTE: Some aditional information:
-My _init() and _exit() functions are calling
-pcie_port_service_register() and pcie_port_service_unregister(), respectively.
-
-Thanks in Advance,
-Paulo (University PhD Student)
+Or.
