@@ -1,132 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:36833 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933246Ab3E1H7V (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 May 2013 03:59:21 -0400
-Message-ID: <51A463D2.7000400@huawei.com>
-Date: Tue, 28 May 2013 15:59:14 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from mail-oa0-f52.google.com ([209.85.219.52]:40332 "EHLO
+	mail-oa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758310Ab3EWTr5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 May 2013 15:47:57 -0400
+Received: by mail-oa0-f52.google.com with SMTP id h1so5130995oag.11
+        for <linux-pci@vger.kernel.org>; Thu, 23 May 2013 12:47:56 -0700 (PDT)
 MIME-Version: 1.0
-To: Stefan Frings <stefan@stefanfrings.de>
-CC: <linux-pci@vger.kernel.org>, <1178131@bugs.launchpad.net>
-Subject: Re: 14e4:16bc SD card slot not working on Acer Aspire One 756
-References: <da540280c592e7bbe5ab96cbe5e47ddc-EhVcX11DRwJZRxoEDQMJVjBXdh9XVlpBXkJHHFtcNkhYS1oKWUF0BUtdMl5cR0wFXlJcQVw=-webmailer2@server03.webmailer.hosteurope.de>
-In-Reply-To: <da540280c592e7bbe5ab96cbe5e47ddc-EhVcX11DRwJZRxoEDQMJVjBXdh9XVlpBXkJHHFtcNkhYS1oKWUF0BUtdMl5cR0wFXlJcQVw=-webmailer2@server03.webmailer.hosteurope.de>
-Content-Type: multipart/mixed;
-	boundary="------------090708050904040607070806"
+In-Reply-To: <CAE9FiQX8o97RY-Bd9t1vj+gm_Uri0v_hAUwecaNoF2GwGGTNyA@mail.gmail.com>
+References: <CAE9FiQX=h4H1gcbW=EfQo_ZtAgHGOZ2GxVxLG59C1iMH+qgH2g@mail.gmail.com>
+ <1367732090.11982.38.camel@pasglop> <CAE9FiQUN3qqVmdw_EdOC-JZGc219M3tu=roOX98xns+77LJhMw@mail.gmail.com>
+ <1367740336.11982.41.camel@pasglop> <51871088.4594420a.0ccc.7300SMTPIN_ADDED_BROKEN@mx.google.com>
+ <CAE9FiQXGUOM_h_X5tdGbkiuZGZkiFigSLbbftx3YXybFBg6trg@mail.gmail.com>
+ <518786a7.64bbec0a.58a0.1f6bSMTPIN_ADDED_BROKEN@mx.google.com>
+ <CAErSpo5MJCoaof=heFM4vLxuWz8pFqsyXAC356jZ7rbRvSOt9g@mail.gmail.com>
+ <CAE9FiQWsZXfkSSVFzee4-J4bUDP8DdG=y9-k2du+ek90StDvNA@mail.gmail.com>
+ <CAE9FiQXw=Q9hDWMS3kx8=G0eSqo2keKh-VP3=LWZ31PfXmrAmg@mail.gmail.com>
+ <519dcfbe.89e9420a.4934.488bSMTPIN_ADDED_BROKEN@mx.google.com>
+ <CAE9FiQW==Zvwv976-xjtRFj70JWoZW94yQyM0NMTvMpR-yDG9Q@mail.gmail.com>
+ <CAErSpo5ASyYvRJgA3TDt7A5xtxL0sqopfAxbnJwDL=z_2hDJag@mail.gmail.com> <CAE9FiQX8o97RY-Bd9t1vj+gm_Uri0v_hAUwecaNoF2GwGGTNyA@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 23 May 2013 13:47:35 -0600
+Message-ID: <CAErSpo5vY-DY9_bLWbM5UNrSZdO5dyASx1hLGMQg-ypgZHXLLg@mail.gmail.com>
+Subject: Re: Resource assignment oddities
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Gavin Shan <shangw@linux.vnet.ibm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---------------090708050904040607070806
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+On Thu, May 23, 2013 at 11:17 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Thu, May 23, 2013 at 10:12 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> On Thu, May 23, 2013 at 11:08 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+>>>
+>>> Good, will resend this as complete form to Bjorn for v3.10.
+>>
+>> I haven't seen anything this actually fixes yet, except that maybe it
+>> removes some "can't assign" messages.  That doesn't sound like v3.10
+>> material.
+>
+> io port "can't assign" still there.
 
-According to boot dmesg.
-We found "ACPI FADT declares the system doesn't support PCIe ASPM, so disable it", so FADT dictate no aspm support in this platform.
-Matthew pcie_clear_aspm() to acpi_pci_root_add() when acpi_pci_osc_control_set() return success.
-Unfortunately in your machine, acpi_pci_osc_control_set() return failed, so system missing the pcie_clear_aspm();
-So we should move pci_clear_aspm() out of ACPI_SUCCESS() check.
+The "can't assign io" message is harmless.  The host bridge doesn't
+support I/O port space, so we'll *never* be able to assign IO space.
+The best we can do for this part of the problem is to get rid of the
+message, and that's not urgent for v3.10.  Actually, I don't think we
+*should* get rid of the message; if we can't assign IO space to an IO
+BAR, I want to know about it.  Maybe the message should be clearer or
+less alarming, but it should be there.
 
-Stefan, can you help test the attached patch in 3.10-rcx?
+> the problem that it fixed: don't fallback wrongly for mmio when ioport
+> fails with must+optional.
+>
+> because if it fall back to mmio must-only, later extending to cover
+> optional will
+> not find extra space as mmio range and mmio-pref range in the bridge
+> is connected
+> together.
 
-Thanks!
-Yijing.
+I know that we retry when we don't need to.  If the retry results in
+MEM assignments that are *worse* than the original ones, that might be
+a problem we should fix.  But that problem should have nothing to do
+with I/O port space.  Conceptually, if we retry because IO assignment
+failed, the MEM assignments should not change.
 
-On 2013/5/28 13:21, Stefan Frings wrote:
-> 14e4:16bc SD card slot not working on Acer Aspire One 756
-> 
-> The memory card read (Broadcaom BCM57765) does not work on Aver Aspire One 756 because Linux enabled ASPM L1 on the PCIe channel since a related change in Kernel 3.0.20. Please change the code so that only APSN L0s is enabled on that machine on the PCIe channel 00:1c.2.
-> 
-> Until a solution is available, I use the following command as a workaround: sudo setpci -s 00:1c.2 0x50.B=0x41
-> 
-> Description of the change that introduced the problem: https://git.kernel.org/cgit/linux/kernel/git/stable/linux-stable.git/commit/?id=6cac12dfab9c57a4f76821412224b226a9b08dff
-> 
-> The full problem description with log files and result of my bisecting can be found in the Ubuntu Bug L#1178131.
-> 
-> Link to the Ubuntu Bug report: https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1178131
-> 
-> The problem is still present in Kernel 3.10-rc1, rc2 and rc3.
-> Kernels before 3.0.20 are NOT affected by the problem.
-> The first problematic Linux version is 3.0.20.
-> 
-> Steps to reproduce:
-> 
-> - Boot Linux with any Kernel after 3.0.19 (Using Gnome 3 Desktop)
-> - Insert any memory card into the card reader
-> - Problem: nothing happens
-> - Problem: In dmesg, the mmc driver reports communication timeouts for the card reader
-> - Remove the memory card
-> - Enter sudo setpci -s 00:1c.2 0x50.B=0x41 (This disables ASPM L1)
-> - Insert the memory card
-> - Result: It gets detected immediately. Gnome pop-ups a related notification window.
-> - Remove the memory card
-> - Enter sudo setpci -s 00:1c.2 0x50.B=0x43 (this is the value that the Linux Kernel sets during boot)
-> - Insert the memory card
-> - Problem: The card is not detected
-> 
+I could probably grope through your logs and figure out whether this
+is happening, but it's your job to do that legwork and convince me
+that a change is necessary.
 
-
--- 
-Thanks!
-Yijing
-
---------------090708050904040607070806
-Content-Type: text/x-patch;
-	name="0001-PCI-move-pcie_clear_aspm-out-of-ACPI_SUCCESS-checkin.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
-	filename*0="0001-PCI-move-pcie_clear_aspm-out-of-ACPI_SUCCESS-checkin.pa";
-	filename*1="tch"
-
->From deec1ca8eb80cea58beadb1404abb163426956f3 Mon Sep 17 00:00:00 2001
-From: Yijing Wang <wangyijing@huawei.com>
-Date: Tue, 28 May 2013 16:02:55 +0800
-Subject: [PATCH] PCI: move pcie_clear_aspm() out of ACPI_SUCCESS() checking
-
-We should move pcie_clear_aspm() out of ACPI_SUCCESS() checking
-in acpi_pci_root_add(), because if FADT dictate no aspm support,
-and acpi_pci_osc_control_set() get _OSC control fail. We will
-miss aspm clear here.
-
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/acpi/pci_root.c |   14 +++++++-------
- 1 files changed, 7 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index f6c0998..632c6e3 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -506,13 +506,6 @@ static int acpi_pci_root_add(struct acpi_device *device,
- 		if (ACPI_SUCCESS(status)) {
- 			dev_info(&device->dev,
- 				"ACPI _OSC control (0x%02x) granted\n", flags);
--			if (acpi_gbl_FADT.boot_flags & ACPI_FADT_NO_ASPM) {
--				/*
--				 * We have ASPM control, but the FADT indicates
--				 * that it's unsupported. Clear it.
--				 */
--				pcie_clear_aspm(root->bus);
--			}
- 		} else {
- 			dev_info(&device->dev,
- 				"ACPI _OSC request failed (%s), "
-@@ -522,6 +515,13 @@ static int acpi_pci_root_add(struct acpi_device *device,
- 				"disabling ASPM\n");
- 			pcie_no_aspm();
- 		}
-+		if (acpi_gbl_FADT.boot_flags & ACPI_FADT_NO_ASPM) {
-+			/*
-+			 * We have ASPM control, but the FADT indicates
-+			 * that it's unsupported. Clear it.
-+			 */
-+			pcie_clear_aspm(root->bus);
-+		}
- 	} else {
- 		dev_info(&device->dev,
- 			 "Unable to request _OSC control "
--- 
-1.7.1
-
-
---------------090708050904040607070806--
+Bjorn
