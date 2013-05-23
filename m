@@ -1,58 +1,107 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mho-02-ewr.mailhop.org ([204.13.248.72]:19227 "EHLO
-	mho-02-ewr.mailhop.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755457Ab3ETSDe (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 20 May 2013 14:03:34 -0400
-Date: Mon, 20 May 2013 14:02:54 -0400
-From: Jason Cooper <jason@lakedaemon.net>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Mike Turquette <mturquette@linaro.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Olof Johansson <olof@lixom.net>, linux-pci@vger.kernel.org,
-	devicetree-discuss@lists.ozlabs.org,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCHv10 5/9] clk: mvebu: create parent-child relation for
- PCIe clocks on Armada 370
-Message-ID: <20130520180254.GD31290@titan.lakedaemon.net>
-References: <1368719725-21265-1-git-send-email-thomas.petazzoni@free-electrons.com>
- <1368719725-21265-6-git-send-email-thomas.petazzoni@free-electrons.com>
- <20130519204703.GP11137@titan.lakedaemon.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130519204703.GP11137@titan.lakedaemon.net>
+Received: from mail.free-electrons.com ([94.23.35.102]:45257 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758002Ab3EWOdU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 May 2013 10:33:20 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>
+Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Lior Amsalem <alior@marvell.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Maen Suleiman <maen@marvell.com>
+Subject: [PATCH v2 3/3] pci: mvebu: fix the emulation of the status register
+Date: Thu, 23 May 2013 16:32:53 +0200
+Message-Id: <1369319573-19927-4-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1369319573-19927-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1369319573-19927-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, May 19, 2013 at 04:47:03PM -0400, Jason Cooper wrote:
-> On Thu, May 16, 2013 at 05:55:20PM +0200, Thomas Petazzoni wrote:
-> > The Armada 370 has two gatable clocks for each PCIe interface, and we
-> > want both of them to be enabled. We therefore make one of the two
-> > clocks a child of the other, as we did for the sataX and sataXlnk
-> > clocks on Armada XP.
-> > 
-> > Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-> > Cc: Mike Turquette <mturquette@linaro.org>
-> > ---
-> >  drivers/clk/mvebu/clk-gating-ctrl.c |    4 ++--
-> >  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> Patches 5 - 8 applied to mvebu/pcie, with a dep on Sebastian's clock
-> rework and mvebu/of_pci.  Thanks for the head's up on the clk conflict.
-> My resolution should match yours.  Please let me know if it doesn't.
+The status register of the PCI configuration space of PCI-to-PCI
+bridges contain some read-only bits, and so write-1-to-clear bits. So,
+the Linux PCI core sometimes writes 0xffff to this status register,
+and in the current PCI-to-PCI bridge emulation code of the Marvell
+driver, we do take all those 1s being written. Even the read-only bits
+are being overwritten.
 
-As stated in the clk thread, I'm going to re-order this so pcie doesn't
-depend on the clk series.
+For now, all the read-only bits should be emulated to have the zero
+value.
 
-thx,
+The other bits, that are write-1-to-clear bits are used to report
+various kind of errors, and are never set by the emulated bridge, so
+there is no need to support this write-1-to-clear bits mechanism.
 
-Jason.
+As a conclusion, the easiest solution is to simply emulate this status
+register by returning zero when read, and ignore the writes to it.
+
+This has two visible effects:
+
+ * The devsel is no longer 'unknown' in, i.e
+
+   Flags: bus master, 66MHz, user-definable features, ?? devsel, latency 0
+
+   becomes:
+
+   Flags: bus master, 66MHz, user-definable features, fast devsel, latency 0
+
+   in lspci -v.
+
+   This was caused by a value of 11b being read for devsel, which is
+   an invalid value. This 11b value being read was due to a previous
+   write of 0xffff into the status register.
+
+ * The capability list is no longer broken, because we indicate to the
+   Linux PCI core that we don't have a Capabilities Pointer in the PCI
+   configuration space of this bridge. The following message is
+   therefore no longer visible in lspci -v:
+
+   Capabilities: [fc] <chain broken>
+
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+---
+ drivers/pci/host/pci-mvebu.c |    5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
+
+diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+index a3c4638..481e44a 100644
+--- a/drivers/pci/host/pci-mvebu.c
++++ b/drivers/pci/host/pci-mvebu.c
+@@ -69,7 +69,6 @@ struct mvebu_sw_pci_bridge {
+ 	u16 vendor;
+ 	u16 device;
+ 	u16 command;
+-	u16 status;
+ 	u16 class;
+ 	u8 interface;
+ 	u8 revision;
+@@ -359,7 +358,6 @@ static void mvebu_sw_pci_bridge_init(struct mvebu_pcie_port *port)
+ 
+ 	memset(bridge, 0, sizeof(struct mvebu_sw_pci_bridge));
+ 
+-	bridge->status = PCI_STATUS_CAP_LIST;
+ 	bridge->class = PCI_CLASS_BRIDGE_PCI;
+ 	bridge->vendor = PCI_VENDOR_ID_MARVELL;
+ 	bridge->device = MARVELL_EMULATED_PCI_PCI_BRIDGE_ID;
+@@ -386,7 +384,7 @@ static int mvebu_sw_pci_bridge_read(struct mvebu_pcie_port *port,
+ 		break;
+ 
+ 	case PCI_COMMAND:
+-		*value = bridge->status << 16 | bridge->command;
++		*value = bridge->command;
+ 		break;
+ 
+ 	case PCI_CLASS_REVISION:
+@@ -479,7 +477,6 @@ static int mvebu_sw_pci_bridge_write(struct mvebu_pcie_port *port,
+ 	switch (where & ~3) {
+ 	case PCI_COMMAND:
+ 		bridge->command = value & 0xffff;
+-		bridge->status = value >> 16;
+ 		break;
+ 
+ 	case PCI_BASE_ADDRESS_0 ... PCI_BASE_ADDRESS_1:
+-- 
+1.7.9.5
+
