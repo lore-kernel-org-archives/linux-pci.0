@@ -1,380 +1,116 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:52329 "EHLO
-	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753924Ab3EGHK1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 May 2013 03:10:27 -0400
-Message-ID: <5188A8B4.2080503@jp.fujitsu.com>
-Date: Tue, 07 May 2013 16:09:40 +0900
-From: Takao Indoh <indou.takao@jp.fujitsu.com>
+Received: from mail-ie0-f177.google.com ([209.85.223.177]:36724 "EHLO
+	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759719Ab3EWWQ7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 May 2013 18:16:59 -0400
+Received: by mail-ie0-f177.google.com with SMTP id 9so9756606iec.8
+        for <linux-pci@vger.kernel.org>; Thu, 23 May 2013 15:16:59 -0700 (PDT)
 MIME-Version: 1.0
-To: bill.sumner@hp.com
-CC: linux-pci@vger.kernel.org, kexec@lists.infradead.org,
-	linux-kernel@vger.kernel.org, tindoh@gmail.com,
-	iommu@lists.linux-foundation.org, bhelgaas@google.com,
-	ddutile@redhat.com
-Subject: Re: [PATCH] Reset PCIe devices to stop ongoing DMA
-References: <1366779539-3584-1-git-send-email-indou.takao@jp.fujitsu.com> <51783987.2040604@redhat.com> <5178BAFB.9060100@jp.fujitsu.com> <51796F77.1040108@redhat.com> <5179F038.2030706@jp.fujitsu.com> <517A8451.7010202@redhat.com> <875D89B79D1D86448A583A7302C022A054E4DDF3@G9W0337.americas.hpqcorp.net>
-In-Reply-To: <875D89B79D1D86448A583A7302C022A054E4DDF3@G9W0337.americas.hpqcorp.net>
-Content-Type: text/plain; charset=ISO-2022-JP
+In-Reply-To: <1369344196.3870.35.camel@pasglop>
+References: <CAE9FiQX=h4H1gcbW=EfQo_ZtAgHGOZ2GxVxLG59C1iMH+qgH2g@mail.gmail.com>
+	<1367732090.11982.38.camel@pasglop>
+	<CAE9FiQUN3qqVmdw_EdOC-JZGc219M3tu=roOX98xns+77LJhMw@mail.gmail.com>
+	<1367740336.11982.41.camel@pasglop>
+	<51871088.4594420a.0ccc.7300SMTPIN_ADDED_BROKEN@mx.google.com>
+	<CAE9FiQXGUOM_h_X5tdGbkiuZGZkiFigSLbbftx3YXybFBg6trg@mail.gmail.com>
+	<518786a7.64bbec0a.58a0.1f6bSMTPIN_ADDED_BROKEN@mx.google.com>
+	<CAErSpo5MJCoaof=heFM4vLxuWz8pFqsyXAC356jZ7rbRvSOt9g@mail.gmail.com>
+	<CAE9FiQWsZXfkSSVFzee4-J4bUDP8DdG=y9-k2du+ek90StDvNA@mail.gmail.com>
+	<CAE9FiQXw=Q9hDWMS3kx8=G0eSqo2keKh-VP3=LWZ31PfXmrAmg@mail.gmail.com>
+	<519dcfbe.89e9420a.4934.488bSMTPIN_ADDED_BROKEN@mx.google.com>
+	<CAE9FiQW==Zvwv976-xjtRFj70JWoZW94yQyM0NMTvMpR-yDG9Q@mail.gmail.com>
+	<CAErSpo5ASyYvRJgA3TDt7A5xtxL0sqopfAxbnJwDL=z_2hDJag@mail.gmail.com>
+	<CAE9FiQX8o97RY-Bd9t1vj+gm_Uri0v_hAUwecaNoF2GwGGTNyA@mail.gmail.com>
+	<CAErSpo5vY-DY9_bLWbM5UNrSZdO5dyASx1hLGMQg-ypgZHXLLg@mail.gmail.com>
+	<CAE9FiQWyEhdQGjC+hiGxOHdHwZoajfwfcgp26wivqL0s62NPkA@mail.gmail.com>
+	<1369344196.3870.35.camel@pasglop>
+Date: Thu, 23 May 2013 15:16:59 -0700
+Message-ID: <CAE9FiQUS9rUfhH=J5pgynO6Xhrnn8Rx4pHeZ=p0dHm0fUoHd3A@mail.gmail.com>
+Subject: Re: Resource assignment oddities
+From: Yinghai Lu <yinghai@kernel.org>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Gavin Shan <shangw@linux.vnet.ibm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Sorry for the delayed response.
+On Thu, May 23, 2013 at 2:23 PM, Benjamin Herrenschmidt
+<benh@kernel.crashing.org> wrote:
+> On Thu, 2013-05-23 at 14:00 -0700, Yinghai Lu wrote:
+>> Yes, that is what patch try to do. Keep the mmio allocation from first
+>> try, and only retry with io port.
+>
+> Can you describe more precisely what happens with the *current* code ?
+>
+> Ie. The first pass allocates my device MMIO regions fine. The second
+> pass them spew some error messages about some mem allocation. I can
+> still observe *something* being assigned to devices and in the (limited)
+> setup I've been able to test with, so far, the devices seemed to still
+> work, so I don't have a good grasp of the extent of the risk here.
 
-(2013/04/30 23:54), Sumner, William wrote:
-> I have installed your original patch set (from last November) and tested with three platforms, each with a different IO configuration.  On the first platform crashdumps were consistently successful.  On the second and third platforms, the reset of one specific PCI device on each platform (a different device type on each platform) immediately hung the crash kernel. This was consistent across multiple tries.  Temporarily modifying the patch to skip resetting the one problem-device on each platform allowed each platform to create a dump successfully.
-> 
-> I am now working with our IO team to determine the exact nature of the hang and to see if the hang is unique to the specific cards or the specific platforms.
-> 
-> Also I am starting to look at an alternate possibility:
-> 
-> The PCIe spec (my copy is version 2.0) in section 6.6.2 (Function-Level Reset) describes reset use-cases for "a partitioned environment where hardware is migrated from one partition to another" and for "system software is taking down the software stack for a Function and then rebuilding that stack".
-> 
-> These use-cases seem very similar to transitioning into the crash kernel.  The "Implementation Note" at the end of that section describes an algorithm for "Avoiding Data Corruption From Stale Completions" which looks like it might be applicable to stopping ongoing DMA.  I am hopeful that adding some of the steps from this algorithm to one of the already proposed patches would avoid the hang that I saw on two platforms.
+after bus_size_bridge, will have two list
+a. head that is for must-have resource
+b. realloc_head that is for optional size.
 
-It seems that the algorithm you mentioned requires four steps.
+then __assign_resources_sorted:
+in the first try,
+clone head list to saved list,  then update head list with optional size
+from realloc_head list. and try to assign resources, fail resources
+will be added to local_fail_head.
 
-1. Clear Command register
-2. Wait a few milliseconds (Or polling Transactions Pending bit)
-3. Do FLR
-4. Wait 100 ms
+retry:
+if local_fail_head is empty, mean must+optional are all allocated, so done.
 
-My patch does not do step 1 and 2. So, I would appreciate it if you
-could add the following into save_config() in my latest patch and
-confirm if kernel still hangs up or not.
+if local_fail_head is not empty, will restore head list from saved list.
+then try to assign resource, fail resources will be add to global resources.
+then try to extend (reassign) resources with optional size from realloc_size.
 
-        subordinate = dev->subordinate;
-        list_for_each_entry(child, &subordinate->devices, bus_list) {
-                dev_info(&child->dev, "save state\n");
-                pci_save_state(child);
-+               pci_write_config_word(child, PCI_COMMAND, 0);
-+               msleep(1000);
-        }
+>
+> Is there a chance that this failed "second pass" actually prevents
+> proper allocation of resources ?
 
-Thanks,
-Takao Indoh
+failed "second pass", should only fail to extend optional resources
+like resource
+for SRIOV, because fail to allocate resource compactly.
 
+in your case, "second pass" assign must-have, then extend optional way.
 
-> 
-> Bill Sumner
-> 
-> -----Original Message-----
-> From: kexec [mailto:kexec-bounces@lists.infradead.org] On Behalf Of Don Dutile
-> Sent: Friday, April 26, 2013 8:43 AM
-> To: Takao Indoh
-> Cc: linux-pci@vger.kernel.org; kexec@lists.infradead.org; linux-kernel@vger.kernel.org; tindoh@gmail.com; iommu@lists.linux-foundation.org; bhelgaas@google.com
-> Subject: Re: [PATCH] Reset PCIe devices to stop ongoing DMA
-> 
-> On 04/25/2013 11:10 PM, Takao Indoh wrote:
->> (2013/04/26 3:01), Don Dutile wrote:
->>> On 04/25/2013 01:11 AM, Takao Indoh wrote:
->>>> (2013/04/25 4:59), Don Dutile wrote:
->>>>> On 04/24/2013 12:58 AM, Takao Indoh wrote:
->>>>>> This patch resets PCIe devices on boot to stop ongoing DMA. When
->>>>>> "pci=pcie_reset_devices" is specified, a hot reset is triggered on each
->>>>>> PCIe root port and downstream port to reset its downstream endpoint.
->>>>>>
->>>>>> Problem:
->>>>>> This patch solves the problem that kdump can fail when intel_iommu=on is
->>>>>> specified. When intel_iommu=on is specified, many dma-remapping errors
->>>>>> occur in second kernel and it causes problems like driver error or PCI
->>>>>> SERR, at last kdump fails. This problem is caused as follows.
->>>>>> 1) Devices are working on first kernel.
->>>>>> 2) Switch to second kernel(kdump kernel). The devices are still working
->>>>>>         and its DMA continues during this switch.
->>>>>> 3) iommu is initialized during second kernel boot and ongoing DMA causes
->>>>>>         dma-remapping errors.
->>>>>>
->>>>>> Solution:
->>>>>> All DMA transactions have to be stopped before iommu is initialized. By
->>>>>> this patch devices are reset and in-flight DMA is stopped before
->>>>>> pci_iommu_init.
->>>>>>
->>>>>> To invoke hot reset on an endpoint, its upstream link need to be reset.
->>>>>> reset_pcie_devices() is called from fs_initcall_sync, and it finds root
->>>>>> port/downstream port whose child is PCIe endpoint, and then reset link
->>>>>> between them. If the endpoint is VGA device, it is skipped because the
->>>>>> monitor blacks out if VGA controller is reset.
->>>>>>
->>>>> Couple questions wrt VGA device:
->>>>> (1) Many graphics devices are multi-function, one function being VGA;
->>>>>          is the VGA always function 0, so this scan sees it first&   doesn't
->>>>>          do a reset on that PCIe link?  if the VGA is not function 0, won't
->>>>>          this logic break (will reset b/c function 0 is non-VGA graphics) ?
->>>>
->>>> VGA is not reset irrespective of its function number. The logic of this
->>>> patch is:
->>>>
->>>> for_each_pci_dev(dev) {
->>>>         if (dev is not PCIe)
->>>>            continue;
->>>>         if (dev is not root port/downstream port) ---(1)
->>>>            continue;
->>>>         list_for_each_entry(child,&dev->subordinate->devices, bus_list) {
->>>>             if (child is upstream port or bridge or VGA) ---(2)
->>>>                 continue;
->>>>         }
->>>>         do_reset_its_child(dev);
->>>> }
->>>>
->>>> Therefore VGA itself is skipped by (1), and upstream device(root port or
->>>> downstream port) of VGA is also skipped by (2).
->>>>
->>>>
->>>>> (2) I'm hearing VGA will soon not be the a required console; this logic
->>>>>          assumes it is, and why it isn't blanked.
->>>>>          Q: Should the filter be based on a device having a device-class of display ?
->>>>
->>>> I want to avoid the situation that user's monitor blacks out and user
->>>> cannot know what's going on. That's reason why I introduced the logic to
->>>> skip VGA. As far as I tested the logic based on device-class works well,
->>> sorry, I read your description, which said VGA, but your are filtering on display class,
->>> which includes non-VGA as well. So, all set ... but large, (x16) non-VGA display devices
->>> are probably one of the most aggressive DMA engines on a system.... and will grow as
->>> asymmetric processing using GPUs gets architected into a device-agnostic manner.
->>> So, this may work well for servers, which is the primary consumer/user of this feature,
->>> and they typically have built-in graphics that are generally used in simple VGA mode,
->>> so this may be sufficient for now.
->>
->> Ok, understood.
->>
->>
->>>
->>>> but I would appreciate it if there are better ways.
->>>>
->>> You probably don't want to hear it but....
->>> a) only turn off cmd-reg master enable bit
->>> b) only do reset based on a list of devices known not to
->>>       obey their cmd-reg master enable bit, and only do reset to those devices.
->>> But, given the testing you've done so far, this optional (need cmdline) feature,
->>> let's start here.
->>
->> Ok. Either way I think we need more testing.
->>
->>
->>>>>
->>>>>> Actually this is v8 patch but quite different from v7 and it's been so
->>>>>> long since previous post, so I start over again.
->>>>> Thanks for this re-start.  I need to continue reviewing the rest.
->>>>
->>>> Thank you for your review!
->>>>
->>>>>
->>>>> Q: Why not force IOMMU off when re-booting a kexec kernel to perform a crash
->>>>>         dump?  After the crash dump, the system is rebooting to previous (iommu=on) setting.
->>>>>         That logic, along w/your previous patch to disable the IOMMU if iommu=off
->>>>>         is set, would remove this (relatively slow) PCI init sequencing ?
->>>>
->>>> To force iommu off, all ongoing DMA have to be stopped before that since
->>>> they are accessing the device address, not physical address. If we disable
->>>> iommu without stopping in-flihgt DMA, devices access invalid memory area
->>>> and it causes memory corruption or PCI-SERR due to DMA error.
->>> Right, that's a 'duh' on my part.
->>> I thought 'disable iommu' == 'block all dma' and it just turns it off&
->>> let's the ongoing DMA run...
->>> Please ignore this question... sigh.
->>>
->>>>
->>>> So, whether we use iommu or not in second kernel, we have to stop DMA in
->>>> second kernel if iommu is used in first kernel.
->>>>
->>>> Thanks,
->>>> Takao Indoh
->>>>
->>>>
->>>>>
->>>>>> Previous post:
->>>>>> [PATCH v7 0/5] Reset PCIe devices to address DMA problem on kdump
->>>>>> https://lkml.org/lkml/2012/11/26/814
->>>>>>
->>>>>> Signed-off-by: Takao Indoh<indou.takao@jp.fujitsu.com>
->>>>>> ---
->>>>>>       Documentation/kernel-parameters.txt |    2 +
->>>>>>       drivers/pci/pci.c                   |  103 +++++++++++++++++++++++++++++++++++
->>>>>>       2 files changed, 105 insertions(+), 0 deletions(-)
->>>>>>
->>>>>> diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
->>>>>> index 4609e81..2a31ade 100644
->>>>>> --- a/Documentation/kernel-parameters.txt
->>>>>> +++ b/Documentation/kernel-parameters.txt
->>>>>> @@ -2250,6 +2250,8 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
->>>>>>                       any pair of devices, possibly at the cost of
->>>>>>                       reduced performance.  This also guarantees
->>>>>>                       that hot-added devices will work.
->>>>>> +        pcie_reset_devices    Reset PCIe endpoint on boot by hot
->>>>>> +                reset
->>>>>>               cbiosize=nn[KMG]    The fixed amount of bus space which is
->>>>>>                       reserved for the CardBus bridge's IO window.
->>>>>>                       The default value is 256 bytes.
->>>>>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->>>>>> index b099e00..42385c9 100644
->>>>>> --- a/drivers/pci/pci.c
->>>>>> +++ b/drivers/pci/pci.c
->>>>>> @@ -3878,6 +3878,107 @@ void __weak pci_fixup_cardbus(struct pci_bus *bus)
->>>>>>       }
->>>>>>       EXPORT_SYMBOL(pci_fixup_cardbus);
->>>>>>
->>>>>> +/*
->>>>>> + * Return true if dev is PCIe root port or downstream port whose child is PCIe
->>>>>> + * endpoint except VGA device.
->>>>>> + */
->>>>>> +static int __init need_reset(struct pci_dev *dev)
->>>>>> +{
->>>>>> +    struct pci_bus *subordinate;
->>>>>> +    struct pci_dev *child;
->>>>>> +
->>>>>> +    if (!pci_is_pcie(dev) || !dev->subordinate ||
->>>>>> +        list_empty(&dev->subordinate->devices) ||
->>>>>> +        ((pci_pcie_type(dev) != PCI_EXP_TYPE_ROOT_PORT)&&
->>>>>> +         (pci_pcie_type(dev) != PCI_EXP_TYPE_DOWNSTREAM)))
->>>>>> +        return 0;
->>>>>> +
->>>>>> +    subordinate = dev->subordinate;
->>>>>> +    list_for_each_entry(child,&subordinate->devices, bus_list) {
->>>>>> +        if ((pci_pcie_type(child) == PCI_EXP_TYPE_UPSTREAM) ||
->>>>>> +            (pci_pcie_type(child) == PCI_EXP_TYPE_PCI_BRIDGE) ||
->>>>>> +            ((child->class>>    16) == PCI_BASE_CLASS_DISPLAY))
->>>>>> +            /* Don't reset switch, bridge, VGA device */
->>>>>> +            return 0;
->>>>>> +    }
->>>>>> +
->>>>>> +    return 1;
->>>>>> +}
->>>>>> +
->>>>>> +static void __init save_config(struct pci_dev *dev)
->>> This should be renamed.  it implies it is saving the config of the pdev passed in,
->>> when in reality, it is saving the config of all the devices attached to this pdev.
->>> i.e., save_downstream_configs()
->>>
->>>>>> +{
->>>>>> +    struct pci_bus *subordinate;
->>>>>> +    struct pci_dev *child;
->>>>>> +
->>>>>> +    if (!need_reset(dev))
->>>>>> +        return;
->>>>>> +
->>>>>> +    subordinate = dev->subordinate;
->>>>>> +    list_for_each_entry(child,&subordinate->devices, bus_list) {
->>>>>> +        dev_info(&child->dev, "save state\n");
->>>>>> +        pci_save_state(child);
->>>>>> +    }
->>>>>> +}
->>>>>> +
->>>>>> +static void __init restore_config(struct pci_dev *dev)
->>> inverse of above: restore_downstream_configs()
->>>>>> +{
->>>>>> +    struct pci_bus *subordinate;
->>>>>> +    struct pci_dev *child;
->>>>>> +
->>>>>> +    if (!need_reset(dev))
->>>>>> +        return;
->>>>>> +
->>>>>> +    subordinate = dev->subordinate;
->>>>>> +    list_for_each_entry(child,&subordinate->devices, bus_list) {
->>>>>> +        dev_info(&child->dev, "restore state\n");
->>>>>> +        pci_restore_state(child);
->>>>>> +    }
->>>>>> +}
->>>>>> +
->>>>>> +static void __init do_device_reset(struct pci_dev *dev)
->>> do_downstream_device_reset() -- it's not resetting this pdev,
->>> but the pdev's of the devices attached to it.
->>>
->> Right, I'll change them as you said.
->>
->>
->>>>>> +{
->>>>>> +    u16 ctrl;
->>>>>> +
->>>>>> +    if (!need_reset(dev))
->>>>>> +        return;
->>>>>> +
->>>>>> +    dev_info(&dev->dev, "Reset Secondary bus\n");
->>>>>> +
->>>>>> +    /* Assert Secondary Bus Reset */
->>>>>> +    pci_read_config_word(dev, PCI_BRIDGE_CONTROL,&ctrl);
->>>>>> +    ctrl |= PCI_BRIDGE_CTL_BUS_RESET;
->>>>>> +    pci_write_config_word(dev, PCI_BRIDGE_CONTROL, ctrl);
->>>>>> +
->>>>>> +    msleep(2);
->>>>>> +
->>> This works well for x86, which uses ioport registers to access
->>> these<256-offset registers, b/c the write() function can't return
->>> until the write is actually completed, but for a non-x86 system,
->>> with fully mmconf'd PCI space, a write() may still be a write&  run
->>> (sitting in CPU write-merge) buffer, so if you need a full 2ms,
->>> you ought to do another read_config() to the device, to flush the write,
->>> before starting the msleep(2) clock.
->>>
->> I didn't know that... I'll insert something like this before msleep.
->>
->> pci_read_config_word(dev, PCI_BRIDGE_CONTROL,&dummy);
->>
->> BTW, I referred aer_do_secondary_bus_reset() when I wrote this code.
->> Probably need the same fix, right?
->>
-> sounds like it.
-> Interested to hear from someone in non-x86-land how
-> they ensure pci cfg writes aren't buffered in their cpus;
-> maybe handled via special uncached regions on other arches.
-> 
->>
->>>>>> +    /* De-assert Secondary Bus Reset */
->>>>>> +    ctrl&= ~PCI_BRIDGE_CTL_BUS_RESET;
->>>>>> +    pci_write_config_word(dev, PCI_BRIDGE_CONTROL, ctrl);
->>>>>> +}
->>>>>> +
->>>>>> +static int __initdata pcie_reset_devices;
->>>>>> +static int __init reset_pcie_devices(void)
->>> this should be reset_pcie_endpoints() ... it's not resetting all pcie devices
->>>>>> +{
->>>>>> +    struct pci_dev *dev = NULL;
->>>>>> +
->>>>>> +    if (!pcie_reset_devices)
->>>>>> +        return 0;
->>>>>> +
->>>>>> +    for_each_pci_dev(dev)
->>>>>> +        save_config(dev);
->>>>>> +
->>>>>> +    for_each_pci_dev(dev)
->>>>>> +        do_device_reset(dev);
->>>>>> +
->>>>>> +    msleep(1000);
->>>>>> +
->>>>>> +    for_each_pci_dev(dev)
->>>>>> +        restore_config(dev);
->>>>>> +
->>> My apologies if past thread covered this sequence...
->>> Why three loops through all PCIe devices on the system?
->>> why not have the first for-each-pci-dev() loop filter devices
->>> to be reset, and save_config those pdev's,
->>> return a list of saved_pdev's;  feed that list into the do_device_reset();
->>> then mpsleep(), then restore the list.
->>> in fact, once you create a link list of pdev's to reset,
->>> just loop that list doing save, then reset; rtn the list, do msleep(),
->>> then restore the config of pdevs in the list.
->>> Otherwise, doing much more traversing than what's needed.
->>> Doing a great deal more config-saving then needed right now as well
->>> (saving all non-endpt devices that aren't reset).
->>>
->>
->> Creating list is nice idea, thanks. I'll do.
->>
->> I'll have vacation next week, so I'll post v2 patch the week after
->> next.
->>
->> Thanks,
->> Takao Indoh
->>
-> Have a good vacation! Thanks for your willingness
-> to respin again & make this improvement.
-> 
-> 
-> _______________________________________________
-> kexec mailing list
-> kexec@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/kexec
-> 
-> 
+pci 0001:00:00.0: BAR 8: assigned [mem 0x3d01080000000-0x3d01081ffffff]
+pci 0001:00:00.0: BAR 9: assigned [mem 0x3d01082000000-0x3d010837fffff pref]
+pci 0001:00:00.0: BAR 7: can't assign io (size 0x3000)  ==> cause first try fail
+pci 0001:00:00.0: BAR 8: assigned [mem 0x3d01080000000-0x3d010817fffff]
+pci 0001:00:00.0: BAR 9: assigned [mem 0x3d01081800000-0x3d010827fffff pref]
+===> go extend now
+pci 0001:00:00.0: BAR 8: reassigned [mem 0x3d01082800000-0x3d010847fffff]
+pci 0001:00:00.0: BAR 9: reassigned [mem 0x3d01080000000-0x3d010817fffff pref]
+==> luckly it will extend ok, but it will stay in the MIDDLE.
+
+then come the poor 0001:01:00.0
+
+pci 0001:01:00.0: BAR 8: assigned [mem 0x3d01082800000-0x3d01083ffffff]
+pci 0001:01:00.0: BAR 9: assigned [mem 0x3d01080000000-0x3d010817fffff pref]
+pci 0001:01:00.0: BAR 0: assigned [mem 0x3d01084000000-0x3d0108403ffff]
+pci 0001:01:00.0: BAR 7: can't assign io (size 0x3000) ===> cause first try fail
+pci 0001:01:00.0: BAR 8: assigned [mem 0x3d01082800000-0x3d010837fffff]
+pci 0001:01:00.0: BAR 9: assigned [mem 0x3d01080000000-0x3d01080ffffff pref]
+pci 0001:01:00.0: BAR 0: assigned [mem 0x3d01083800000-0x3d0108383ffff]
+===> go extend optional now
+pci 0001:01:00.0: BAR 8: can't assign mem (size 0x1000000)
+pci 0001:01:00.0: failed to add 800000 res[8]=[mem
+0x3d01082800000-0x3d010837fffff]
+pci 0001:01:00.0: BAR 9: reassigned [mem 0x3d01080000000-0x3d010817fffff pref]
+pci 0001:01:00.0: BAR 7: can't assign io (size 0x3000)
+===> so BAR8 can not extend now...because other lay on the middle...
 
 
+So we need to patch that will prevent us to fall into "allocate must
+and extend it"
+trap as it will not allocate resource efficiently.
+
+otherwise in your case, devices pci0001:01:00.0 will have problem to use SRIOV.
+
+Thanks.
+
+Yinghai
