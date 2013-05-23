@@ -1,94 +1,116 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:24984 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758540Ab3EWROT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 May 2013 13:14:19 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH] PCI: Don't let mmio fallback to must-only, if ioport fails with must+optional
-Date: Thu, 23 May 2013 10:11:39 -0700
-Message-Id: <1369329099-8501-1-git-send-email-yinghai@kernel.org>
-In-Reply-To: <519dcfbe.89e9420a.4934.488bSMTPIN_ADDED_BROKEN@mx.google.com>
+Received: from mail.free-electrons.com ([94.23.35.102]:45243 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758174Ab3EWOdL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 May 2013 10:33:11 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>
+Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Lior Amsalem <alior@marvell.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Maen Suleiman <maen@marvell.com>
+Subject: [PATCH v2 1/3] pci: mvebu: no longer fake the slot location of downstream devices
+Date: Thu, 23 May 2013 16:32:51 +0200
+Message-Id: <1369319573-19927-2-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1369319573-19927-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1369319573-19927-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-BenH reported that there is some assign unassigned resource problem
-in powerpc.
+By default, the Marvell hardware, for each PCIe interface, exhibits
+the following devices:
 
-It turns out after
-| commit 0c5be0cb0edfe3b5c4b62eac68aa2aa15ec681af
-| Date:   Thu Feb 23 19:23:29 2012 -0800
-|
-|    PCI: Retry on IORESOURCE_IO type allocations
+ * On slot 0, a "Marvell Memory controller", identical on all PCIe
+   interfaces, and which isn't useful when the Marvell SoC is the PCIe
+   root complex (i.e, the normal case when we run Linux on the Marvell
+   SoC).
 
-even the root bus does not have io port range, it will keep retrying
-to realloc with mmio.
+ * On slot 1, the real PCIe card connected into the PCIe slot of the
+   board.
 
-Current retry logic is : try with must+optional at first, and if
-it fails with any ioport or mmio, it will try must then try to extend
-must with optional.
-That will fail as mmio-non-pref and mmio-pref for bridge will
-be next to each other. So we have no chance to extend mmio-non-pref.
+So, what the Marvell PCIe driver was doing in its PCI-to-PCI bridge
+emulation is that when the Linux PCI core was trying to access the
+device in slot 0, we were in fact forwarding the configuration
+transaction to the device in slot 1. For all other slots, we were
+telling the Linux PCI core that there was no device connected.
 
-We can check fail type and only fall back for io port only, that will
-keep mmio type still have must+optional.
+However, new versions of bootloaders from Marvell change the default
+PCIe configuration, and make the real device appear in slot 0, and the
+"Marvell Memory controller" in slot 1.
 
-This will be become more often when we have x86 8 sockets or 32 sockets
-system, and those system will have one root bus per socket.
-They will have some root buses do not have ioport range.
+Therefore, this commit modifies the Marvell PCIe driver to adjust the
+PCIe hardware configuration to make sure that this behavior (real
+device in slot 0, "Marvell Memory controller" in slot 1) is the one
+we'll see regardless of what the bootloader has done. It allows to
+remove the little hack that was forwarding configuration transactions
+on slot 0 to slot 1, which is nice.
 
--v2: need to remove assigned entries from optional list too.
-
-Reported-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Tested-by: Gavin Shan <shangw@linux.vnet.ibm.com>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
 ---
- drivers/pci/setup-bus.c |   23 +++++++++++++++++++++++
- 1 file changed, 23 insertions(+)
+ drivers/pci/host/pci-mvebu.c |   19 +++++++++++++++----
+ 1 file changed, 15 insertions(+), 4 deletions(-)
 
-Index: linux-2.6/drivers/pci/setup-bus.c
-===================================================================
---- linux-2.6.orig/drivers/pci/setup-bus.c
-+++ linux-2.6/drivers/pci/setup-bus.c
-@@ -317,6 +317,10 @@ static void __assign_resources_sorted(st
- 	LIST_HEAD(local_fail_head);
- 	struct pci_dev_resource *save_res;
- 	struct pci_dev_resource *dev_res;
-+	unsigned long fail_type = 0;
-+	struct pci_dev_resource *fail_res;
-+	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
-+				  IORESOURCE_PREFETCH;
+diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+index ad1c46b..0bc21b0 100644
+--- a/drivers/pci/host/pci-mvebu.c
++++ b/drivers/pci/host/pci-mvebu.c
+@@ -51,6 +51,7 @@
+ #define  PCIE_CTRL_X1_MODE		0x0001
+ #define PCIE_STAT_OFF		0x1a04
+ #define  PCIE_STAT_BUS                  0xff00
++#define  PCIE_STAT_DEV                  0x1f0000
+ #define  PCIE_STAT_LINK_DOWN		BIT(0)
+ #define PCIE_DEBUG_CTRL         0x1a60
+ #define  PCIE_DEBUG_SOFT_RESET		BIT(20)
+@@ -148,6 +149,16 @@ static void mvebu_pcie_set_local_bus_nr(struct mvebu_pcie_port *port, int nr)
+ 	writel(stat, port->base + PCIE_STAT_OFF);
+ }
  
- 	/* Check if optional add_size is there */
- 	if (!realloc_head || list_empty(realloc_head))
-@@ -348,6 +352,25 @@ static void __assign_resources_sorted(st
- 		return;
- 	}
++static void mvebu_pcie_set_local_dev_nr(struct mvebu_pcie_port *port, int nr)
++{
++	u32 stat;
++
++	stat = readl(port->base + PCIE_STAT_OFF);
++	stat &= ~PCIE_STAT_DEV;
++	stat |= nr << 16;
++	writel(stat, port->base + PCIE_STAT_OFF);
++}
++
+ /*
+  * Setup PCIE BARs and Address Decode Wins:
+  * BAR[0,2] -> disabled, BAR[1] -> covers all DRAM banks
+@@ -572,8 +583,7 @@ static int mvebu_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
  
-+	/* check failed type */
-+	list_for_each_entry(fail_res, &local_fail_head, list)
-+		fail_type |= fail_res->flags & type_mask;
-+	/* only io port fails */
-+	if ((fail_type & type_mask) == IORESOURCE_IO) {
-+		struct pci_dev_resource *tmp_res;
+ 	/* Access the real PCIe interface */
+ 	spin_lock_irqsave(&port->conf_lock, flags);
+-	ret = mvebu_pcie_hw_wr_conf(port, bus,
+-				    PCI_DEVFN(1, PCI_FUNC(devfn)),
++	ret = mvebu_pcie_hw_wr_conf(port, bus, devfn,
+ 				    where, size, val);
+ 	spin_unlock_irqrestore(&port->conf_lock, flags);
+ 
+@@ -606,8 +616,7 @@ static int mvebu_pcie_rd_conf(struct pci_bus *bus, u32 devfn, int where,
+ 
+ 	/* Access the real PCIe interface */
+ 	spin_lock_irqsave(&port->conf_lock, flags);
+-	ret = mvebu_pcie_hw_rd_conf(port, bus,
+-				    PCI_DEVFN(1, PCI_FUNC(devfn)),
++	ret = mvebu_pcie_hw_rd_conf(port, bus, devfn,
+ 				    where, size, val);
+ 	spin_unlock_irqrestore(&port->conf_lock, flags);
+ 
+@@ -817,6 +826,8 @@ static int __init mvebu_pcie_probe(struct platform_device *pdev)
+ 			continue;
+ 		}
+ 
++		mvebu_pcie_set_local_dev_nr(port, 1);
 +
-+		/* remove assigned non ioport from head list etc */
-+		list_for_each_entry_safe(dev_res, tmp_res, head, list)
-+			if (dev_res->res->parent &&
-+			    !(dev_res->res->flags & IORESOURCE_IO)) {
-+				/* remove it from realloc_head list */
-+				remove_from_list(realloc_head, dev_res->res);
-+				remove_from_list(&save_head, dev_res->res);
-+				list_del(&dev_res->list);
-+				kfree(dev_res);
-+			}
-+	}
-+
- 	free_list(&local_fail_head);
- 	/* Release assigned resource */
- 	list_for_each_entry(dev_res, head, list)
+ 		if (mvebu_pcie_link_up(port)) {
+ 			port->haslink = 1;
+ 			dev_info(&pdev->dev, "PCIe%d.%d: link up\n",
+-- 
+1.7.9.5
+
