@@ -1,260 +1,116 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cn.fujitsu.com ([222.73.24.84]:11972 "EHLO song.cn.fujitsu.com"
-	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1756730Ab3ENIqI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 14 May 2013 04:46:08 -0400
-Message-ID: <5191F94E.5050201@cn.fujitsu.com>
-Date: Tue, 14 May 2013 16:43:58 +0800
-From: Gu Zheng <guz.fnst@cn.fujitsu.com>
-MIME-Version: 1.0
-To: Jiang Liu <liuj97@gmail.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Len Brown <lenb@kernel.org>,
-	linux-acpi@vger.kernel.org
-Subject: Re: [PATCH v2, part 1 6/9] ACPI, pci_root: use acpi_handle_print()
- and pr_xxx() to print messages
-References: <1368461313-4371-1-git-send-email-jiang.liu@huawei.com> <1368461313-4371-7-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1368461313-4371-7-git-send-email-jiang.liu@huawei.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail.free-electrons.com ([94.23.35.102]:45249 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758807Ab3EWOdM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 May 2013 10:33:12 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>
+Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Lior Amsalem <alior@marvell.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Maen Suleiman <maen@marvell.com>
+Subject: [PATCH v2 2/3] pci: mvebu: allow the enumeration of devices beyond physical bridges
+Date: Thu, 23 May 2013 16:32:52 +0200
+Message-Id: <1369319573-19927-3-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1369319573-19927-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1369319573-19927-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/14/2013 12:08 AM, Jiang Liu wrote:
+Until now, the Marvell PCIe driver was only allowing the enumeration
+of the devices in the secondary bus of the emulated PCI-to-PCI
+bridge. This works fine when a PCIe device is directly connected into
+a PCIe slot of the Marvell board.
 
-> Use acpi_handle_print() and pr_xxx() to print messages in pci_root.c.
-> 
-> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-> Cc: Len Brown <lenb@kernel.org>
-> Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
-> Cc: linux-acpi@vger.kernel.org
-> Cc: linux-kernel@vger.kernel.org
-> ---
->  drivers/acpi/pci_root.c | 71 ++++++++++++++++++++++---------------------------
->  1 file changed, 32 insertions(+), 39 deletions(-)
-> 
-> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-> index 91ddfd6..9ced5c3 100644
-> --- a/drivers/acpi/pci_root.c
-> +++ b/drivers/acpi/pci_root.c
-> @@ -379,23 +379,23 @@ static int acpi_pci_root_add(struct acpi_device *device,
->  	struct acpi_pci_root *root;
->  	u32 flags, base_flags;
->  	bool is_osc_granted = false;
-> +	acpi_handle hdl = device->handle;
->  
->  	root = kzalloc(sizeof(struct acpi_pci_root), GFP_KERNEL);
->  	if (!root)
->  		return -ENOMEM;
->  
->  	segment = 0;
-> -	status = acpi_evaluate_integer(device->handle, METHOD_NAME__SEG, NULL,
-> -				       &segment);
-> +	status = acpi_evaluate_integer(hdl, METHOD_NAME__SEG, NULL, &segment);
->  	if (ACPI_FAILURE(status) && status != AE_NOT_FOUND) {
-> -		printk(KERN_ERR PREFIX "can't evaluate _SEG\n");
-> +		acpi_handle_err(hdl, "can't evaluate _SEG\n");
->  		result = -ENODEV;
->  		goto end;
->  	}
->  
->  	/* Check _CRS first, then _BBN.  If no _BBN, default to zero. */
->  	root->secondary.flags = IORESOURCE_BUS;
-> -	status = try_get_root_bridge_busnr(device->handle, &root->secondary);
-> +	status = try_get_root_bridge_busnr(hdl, &root->secondary);
->  	if (ACPI_FAILURE(status)) {
->  		/*
->  		 * We need both the start and end of the downstream bus range
-> @@ -404,16 +404,16 @@ static int acpi_pci_root_add(struct acpi_device *device,
->  		 * can do is assume [_BBN-0xFF] or [0-0xFF].
->  		 */
->  		root->secondary.end = 0xFF;
-> -		printk(KERN_WARNING FW_BUG PREFIX
-> -		       "no secondary bus range in _CRS\n");
-> -		status = acpi_evaluate_integer(device->handle, METHOD_NAME__BBN,
-> +		acpi_handle_warn(hdl,
-> +				 FW_BUG "no secondary bus range in _CRS\n");
-> +		status = acpi_evaluate_integer(hdl, METHOD_NAME__BBN,
->  					       NULL, &bus);
->  		if (ACPI_SUCCESS(status))
->  			root->secondary.start = bus;
->  		else if (status == AE_NOT_FOUND)
->  			root->secondary.start = 0;
->  		else {
-> -			printk(KERN_ERR PREFIX "can't evaluate _BBN\n");
-> +			acpi_handle_err(hdl, "can't evaluate _BBN\n");
->  			result = -ENODEV;
->  			goto end;
->  		}
-> @@ -425,11 +425,11 @@ static int acpi_pci_root_add(struct acpi_device *device,
->  	strcpy(acpi_device_class(device), ACPI_PCI_ROOT_CLASS);
->  	device->driver_data = root;
->  
-> -	printk(KERN_INFO PREFIX "%s [%s] (domain %04x %pR)\n",
-> +	pr_info(PREFIX "%s [%s] (domain %04x %pR)\n",
->  	       acpi_device_name(device), acpi_device_bid(device),
->  	       root->segment, &root->secondary);
->  
-> -	root->mcfg_addr = acpi_pci_root_get_mcfg_addr(device->handle);
-> +	root->mcfg_addr = acpi_pci_root_get_mcfg_addr(hdl);
->  
->  	/*
->  	 * All supported architectures that use ACPI have support for
-> @@ -473,7 +473,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
->  		dev_info(&device->dev,
->  			"Requesting ACPI _OSC control (0x%02x)\n", flags);
->  
-> -		status = acpi_pci_osc_control_set(device->handle, &flags,
-> +		status = acpi_pci_osc_control_set(hdl, &flags,
->  				       OSC_PCI_EXPRESS_CAP_STRUCTURE_CONTROL);
->  		if (ACPI_SUCCESS(status)) {
->  			is_osc_granted = true;
-> @@ -505,9 +505,9 @@ static int acpi_pci_root_add(struct acpi_device *device,
->  	 */
->  	root->bus = pci_acpi_scan_root(root);
->  	if (!root->bus) {
-> -		printk(KERN_ERR PREFIX
-> -			    "Bus %04x:%02x not present in PCI namespace\n",
-> -			    root->segment, (unsigned int)root->secondary.start);
-> +		acpi_handle_err(hdl,
-> +			"Bus %04x:%02x not present in PCI namespace\n",
-> +			root->segment, (unsigned int)root->secondary.start);
->  		result = -ENODEV;
->  		goto end;
->  	}
-> @@ -517,8 +517,8 @@ static int acpi_pci_root_add(struct acpi_device *device,
->  		if (acpi_gbl_FADT.boot_flags & ACPI_FADT_NO_ASPM)
->  			pcie_clear_aspm(root->bus);
->  	} else {
-> -		pr_info("ACPI _OSC control for PCIe not granted, "
-> -			"disabling ASPM\n");
-> +		acpi_handle_info(hdl,
-> +			"ACPI _OSC control for PCIe not granted, disabling ASPM\n");
->  		pcie_no_aspm();
->  	}
->  
-> @@ -571,12 +571,13 @@ static void handle_root_bridge_insertion(acpi_handle handle)
->  	struct acpi_device *device;
->  
->  	if (!acpi_bus_get_device(handle, &device)) {
-> -		printk(KERN_DEBUG "acpi device exists...\n");
-> +		acpi_handle_printk(KERN_DEBUG, handle,
-> +				   "acpi device exists...\n");
->  		return;
->  	}
->  
->  	if (acpi_bus_scan(handle))
-> -		printk(KERN_ERR "cannot add bridge to acpi list\n");
-> +		acpi_handle_err(handle, "cannot add bridge to acpi list\n");
->  }
->  
->  static void handle_root_bridge_removal(struct acpi_device *device)
-> @@ -602,7 +603,6 @@ static void handle_root_bridge_removal(struct acpi_device *device)
->  static void _handle_hotplug_event_root(struct work_struct *work)
->  {
->  	struct acpi_pci_root *root;
-> -	struct acpi_buffer buffer = { ACPI_ALLOCATE_BUFFER };
->  	struct acpi_hp_work *hp_work;
->  	acpi_handle handle;
->  	u32 type;
-> @@ -613,13 +613,11 @@ static void _handle_hotplug_event_root(struct work_struct *work)
->  
->  	root = acpi_pci_find_root(handle);
->  
-> -	acpi_get_name(handle, ACPI_FULL_PATHNAME, &buffer);
-> -
->  	switch (type) {
->  	case ACPI_NOTIFY_BUS_CHECK:
->  		/* bus enumerate */
-> -		printk(KERN_DEBUG "%s: Bus check notify on %s\n", __func__,
-> -				 (char *)buffer.pointer);
-> +		acpi_handle_printk(KERN_DEBUG, handle,
-> +				   "Bus check notify on %s\n", __func__);
->  		if (!root)
->  			handle_root_bridge_insertion(handle);
->  
-> @@ -627,27 +625,26 @@ static void _handle_hotplug_event_root(struct work_struct *work)
->  
->  	case ACPI_NOTIFY_DEVICE_CHECK:
->  		/* device check */
-> -		printk(KERN_DEBUG "%s: Device check notify on %s\n", __func__,
-> -				 (char *)buffer.pointer);
-> +		acpi_handle_printk(KERN_DEBUG, handle,
-> +				   "Device check notify on %s\n", __func__);
->  		if (!root)
->  			handle_root_bridge_insertion(handle);
->  		break;
->  
->  	case ACPI_NOTIFY_EJECT_REQUEST:
->  		/* request device eject */
-> -		printk(KERN_DEBUG "%s: Device eject notify on %s\n", __func__,
-> -				 (char *)buffer.pointer);
-> +		acpi_handle_printk(KERN_DEBUG, handle,
-> +				   "Device eject notify on %s\n", __func__);
->  		if (root)
->  			handle_root_bridge_removal(root->device);
->  		break;
->  	default:
-> -		printk(KERN_WARNING "notify_handler: unknown event type 0x%x for %s\n",
-> -				 type, (char *)buffer.pointer);
-> +		acpi_handle_warn(handle,
-> +			 "notify_handler: unknown event type 0x%xn", type);
+However, when the device connected in the PCIe slot is a physical PCIe
+bridge, beyond which a real PCIe device is connected, it no longer
+worked, as the driver was preventing the Linux PCI core from seeing
+such devices.
 
-Here may be "0x%x\n".
+This commit fixes that by ensuring that configuration transactions on
+subordinate busses are properly forwarded on the right PCIe interface.
 
-A better way I think is that we can change the format string of printk in acpi_handle_printk()
-from "%sACPI: %s: %pV"  to "%sACPI: %s: %pV \n", so that there is no need to append the '\n' in the
-format string when we call acpi_handle_printk().
+Thanks to this patch, a PCIe card beyond a PCIe bridge, itself beyond
+the emulated PCI-to-PCI bridge is properly detected, with the
+following layout:
 
-Thanks,
-Gu
+-[0000:00]-+-01.0-[01]----00.0
+           +-09.0-[02-07]----00.0-[03-07]--+-01.0-[04]--
+           |                               +-05.0-[05]--
+           |                               +-07.0-[06]--
+           |                               \-09.0-[07]----00.0
+           \-0a.0-[08]----00.0
+
+Where the PCIe interface that sits beyond the emulated PCI-to-PCI
+bridge at 09.0 allows to access the secondary bus 02, on which there
+is a PCIe bridge that allows to access the 3 to 7 busses, that are
+subordinates to this bridge. And on one of this bus (bus 7), there is
+one real PCIe device connected.
+
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+---
+ drivers/pci/host/pci-mvebu.c |   31 ++++++++++++++++++++++++++++---
+ 1 file changed, 28 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+index 0bc21b0..a3c4638 100644
+--- a/drivers/pci/host/pci-mvebu.c
++++ b/drivers/pci/host/pci-mvebu.c
+@@ -554,7 +554,8 @@ mvebu_pcie_find_port(struct mvebu_pcie *pcie, struct pci_bus *bus,
+ 		if (bus->number == 0 && port->devfn == devfn)
+ 			return port;
+ 		if (bus->number != 0 &&
+-		    port->bridge.secondary_bus == bus->number)
++		    bus->number >= port->bridge.secondary_bus &&
++		    bus->number <= port->bridge.subordinate_bus)
+ 			return port;
+ 	}
  
-
->  		break;
->  	}
->  
->  	kfree(hp_work); /* allocated in handle_hotplug_event_bridge */
-> -	kfree(buffer.pointer);
->  }
->  
->  static void handle_hotplug_event_root(acpi_handle handle, u32 type,
-> @@ -661,9 +658,6 @@ static acpi_status __init
->  find_root_bridges(acpi_handle handle, u32 lvl, void *context, void **rv)
->  {
->  	acpi_status status;
-> -	char objname[64];
-> -	struct acpi_buffer buffer = { .length = sizeof(objname),
-> -				      .pointer = objname };
->  	int *count = (int *)context;
->  
->  	if (!acpi_is_root_bridge(handle))
-> @@ -671,16 +665,15 @@ find_root_bridges(acpi_handle handle, u32 lvl, void *context, void **rv)
->  
->  	(*count)++;
->  
-> -	acpi_get_name(handle, ACPI_FULL_PATHNAME, &buffer);
-> -
->  	status = acpi_install_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
->  					handle_hotplug_event_root, NULL);
->  	if (ACPI_FAILURE(status))
-> -		printk(KERN_DEBUG "acpi root: %s notify handler is not installed, exit status: %u\n",
-> -				  objname, (unsigned int)status);
-> +		acpi_handle_printk(KERN_DEBUG, handle,
-> +			"notify handler is not installed, exit status: %u\n",
-> +			 (unsigned int)status);
->  	else
-> -		printk(KERN_DEBUG "acpi root: %s notify handler is installed\n",
-> -				 objname);
-> +		acpi_handle_printk(KERN_DEBUG, handle,
-> +				   "notify handler is installed\n");
->  
->  	return AE_OK;
->  }
-
+@@ -578,7 +579,18 @@ static int mvebu_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
+ 	if (bus->number == 0)
+ 		return mvebu_sw_pci_bridge_write(port, where, size, val);
+ 
+-	if (!port->haslink || PCI_SLOT(devfn) != 0)
++	if (!port->haslink)
++		return PCIBIOS_DEVICE_NOT_FOUND;
++
++	/*
++	 * On the secondary bus, we don't want to expose any other
++	 * device than the device physically connected in the PCIe
++	 * slot, visible in slot 0. In slot 1, there's a special
++	 * Marvell device that only makes sense when the Armada is
++	 * used as a PCIe endpoint.
++	 */
++	if (bus->number == port->bridge.secondary_bus &&
++	    PCI_SLOT(devfn) != 0)
+ 		return PCIBIOS_DEVICE_NOT_FOUND;
+ 
+ 	/* Access the real PCIe interface */
+@@ -609,7 +621,20 @@ static int mvebu_pcie_rd_conf(struct pci_bus *bus, u32 devfn, int where,
+ 	if (bus->number == 0)
+ 		return mvebu_sw_pci_bridge_read(port, where, size, val);
+ 
+-	if (!port->haslink || PCI_SLOT(devfn) != 0) {
++	if (!port->haslink) {
++		*val = 0xffffffff;
++		return PCIBIOS_DEVICE_NOT_FOUND;
++	}
++
++	/*
++	 * On the secondary bus, we don't want to expose any other
++	 * device than the device physically connected in the PCIe
++	 * slot, visible in slot 0. In slot 1, there's a special
++	 * Marvell device that only makes sense when the Armada is
++	 * used as a PCIe endpoint.
++	 */
++	if (bus->number == port->bridge.secondary_bus &&
++	    PCI_SLOT(devfn) != 0) {
+ 		*val = 0xffffffff;
+ 		return PCIBIOS_DEVICE_NOT_FOUND;
+ 	}
+-- 
+1.7.9.5
 
