@@ -1,199 +1,62 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Lance Ortiz <lance.ortiz@hp.com>
-Cc: bhelgaas@google.com, lance_ortiz@hotmail.com, jiang.liu@huawei.com,
-	tony.luck@intel.com, bp@alien8.de, rostedt@goodmis.org,
-	mchehab@redhat.com, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] aerdrv: Move cper_print_aer() call out of interrupt context
-Date: Thu, 09 May 2013 22:24:37 +0200
-Message-ID: <2787560.ZE29Z7LhAi@vostro.rjw.lan>
-In-Reply-To: <20130509195135.16108.70845.stgit@grignak.americas.hpqcorp.net>
-References: <20130509195135.16108.70845.stgit@grignak.americas.hpqcorp.net>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f179.google.com ([209.85.223.179]:45592 "EHLO
+	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758017Ab3EWRIh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 May 2013 13:08:37 -0400
+Received: by mail-ie0-f179.google.com with SMTP id c13so9584866ieb.10
+        for <linux-pci@vger.kernel.org>; Thu, 23 May 2013 10:08:37 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <519dcfbe.89e9420a.4934.488bSMTPIN_ADDED_BROKEN@mx.google.com>
+References: <CAE9FiQX=h4H1gcbW=EfQo_ZtAgHGOZ2GxVxLG59C1iMH+qgH2g@mail.gmail.com>
+	<1367732090.11982.38.camel@pasglop>
+	<CAE9FiQUN3qqVmdw_EdOC-JZGc219M3tu=roOX98xns+77LJhMw@mail.gmail.com>
+	<1367740336.11982.41.camel@pasglop>
+	<51871088.4594420a.0ccc.7300SMTPIN_ADDED_BROKEN@mx.google.com>
+	<CAE9FiQXGUOM_h_X5tdGbkiuZGZkiFigSLbbftx3YXybFBg6trg@mail.gmail.com>
+	<518786a7.64bbec0a.58a0.1f6bSMTPIN_ADDED_BROKEN@mx.google.com>
+	<CAErSpo5MJCoaof=heFM4vLxuWz8pFqsyXAC356jZ7rbRvSOt9g@mail.gmail.com>
+	<CAE9FiQWsZXfkSSVFzee4-J4bUDP8DdG=y9-k2du+ek90StDvNA@mail.gmail.com>
+	<CAE9FiQXw=Q9hDWMS3kx8=G0eSqo2keKh-VP3=LWZ31PfXmrAmg@mail.gmail.com>
+	<519dcfbe.89e9420a.4934.488bSMTPIN_ADDED_BROKEN@mx.google.com>
+Date: Thu, 23 May 2013 10:08:37 -0700
+Message-ID: <CAE9FiQW==Zvwv976-xjtRFj70JWoZW94yQyM0NMTvMpR-yDG9Q@mail.gmail.com>
+Subject: Re: Resource assignment oddities
+From: Yinghai Lu <yinghai@kernel.org>
+To: Gavin Shan <shangw@linux.vnet.ibm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, May 09, 2013 01:51:35 PM Lance Ortiz wrote:
-> The following warning was seen on 3.9 when a corrected PCIe error was being
-> handled by the AER subsystem.
-> 
-> WARNING: at .../drivers/pci/search.c:214 pci_get_dev_by_id+0x8a/0x90()
-> 
-> This occurred because a call to pci_get_domain_bus_and_slot() was added to
-> cper_print_pcie() to setup for the call to cper_print_aer().  The warning
-> showed up because cper_print_pcie() is called in an interrupt context and
-> pci_get* functions are not supposed to be called in that context.
-> 
-> The solution is to move the cper_print_aer() call out of the interrupt
-> context and into aer_recover_work_func() to avoid any warnings when calling
-> pci_get* functions.
-> 
-> v2 - Re-worded header text.  Removed prefix arg from cper_print_aer().
->      Added TODO message in cper_print_aer().
+On Thu, May 23, 2013 at 1:13 AM, Gavin Shan <shangw@linux.vnet.ibm.com> wrote:
+> On Wed, May 22, 2013 at 01:50:35PM -0700, Yinghai Lu wrote:
+>>On Wed, May 22, 2013 at 9:59 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+>>> We try must+optional as first, then if there is any ioport or mmio fail
+>>> we will stick to must only then extend must to meet optional.
+>>> but mmio range and mmio-pref could be connected each other,
+>>> so extend will fail...
+>>>
+>>> problem here, some root bus will not have ioport range, so it will always have
+>>> ioport allocation fail.
+>>>
+>>> looks like right fix for v3.9 should be as attached patch.
+>>> it will keep must+optional for mmio, if only ioport fails....
+>>
+>>looks like i missed change to realloc_head list.
+>>
+>>Ben/Shan, can you check attached v2?
+>>
+>
+> Sorry for late response. I spend lots of time to get the simulator working
+> with PCI stuff. I had a try with your patch on top of mainline (3.10.RC2).
+> Things look good except that we still see the intended the failure message
+> of failure to assign I/O ports as the attached kernel log indicates :-)
+>
 
-That's fine by me.
+Good, will resend this as complete form to Bjorn for v3.10.
 
-Thanks,
-Rafael
+Thanks
 
-
-> Signed-off-by: Lance Ortiz <lance.ortiz@hp.com>
-> Acked-by: Borislav Petkov <bp@suse.de>
-> ---
-> 
->  drivers/acpi/apei/cper.c               |   18 ------------------
->  drivers/acpi/apei/ghes.c               |    3 ++-
->  drivers/pci/pcie/aer/aerdrv_core.c     |    6 +++++-
->  drivers/pci/pcie/aer/aerdrv_errprint.c |   10 ++++++++--
->  include/linux/aer.h                    |    4 ++--
->  5 files changed, 17 insertions(+), 24 deletions(-)
-> 
-> diff --git a/drivers/acpi/apei/cper.c b/drivers/acpi/apei/cper.c
-> index 1e5d8a4..8713229 100644
-> --- a/drivers/acpi/apei/cper.c
-> +++ b/drivers/acpi/apei/cper.c
-> @@ -250,10 +250,6 @@ static const char *cper_pcie_port_type_strs[] = {
->  static void cper_print_pcie(const char *pfx, const struct cper_sec_pcie *pcie,
->  			    const struct acpi_hest_generic_data *gdata)
->  {
-> -#ifdef CONFIG_ACPI_APEI_PCIEAER
-> -	struct pci_dev *dev;
-> -#endif
-> -
->  	if (pcie->validation_bits & CPER_PCIE_VALID_PORT_TYPE)
->  		printk("%s""port_type: %d, %s\n", pfx, pcie->port_type,
->  		       pcie->port_type < ARRAY_SIZE(cper_pcie_port_type_strs) ?
-> @@ -285,20 +281,6 @@ static void cper_print_pcie(const char *pfx, const struct cper_sec_pcie *pcie,
->  		printk(
->  	"%s""bridge: secondary_status: 0x%04x, control: 0x%04x\n",
->  	pfx, pcie->bridge.secondary_status, pcie->bridge.control);
-> -#ifdef CONFIG_ACPI_APEI_PCIEAER
-> -	dev = pci_get_domain_bus_and_slot(pcie->device_id.segment,
-> -			pcie->device_id.bus, pcie->device_id.function);
-> -	if (!dev) {
-> -		pr_err("PCI AER Cannot get PCI device %04x:%02x:%02x.%d\n",
-> -			pcie->device_id.segment, pcie->device_id.bus,
-> -			pcie->device_id.slot, pcie->device_id.function);
-> -		return;
-> -	}
-> -	if (pcie->validation_bits & CPER_PCIE_VALID_AER_INFO)
-> -		cper_print_aer(pfx, dev, gdata->error_severity,
-> -				(struct aer_capability_regs *) pcie->aer_info);
-> -	pci_dev_put(dev);
-> -#endif
->  }
->  
->  static const char *apei_estatus_section_flag_strs[] = {
-> diff --git a/drivers/acpi/apei/ghes.c b/drivers/acpi/apei/ghes.c
-> index d668a8a..f2084b5 100644
-> --- a/drivers/acpi/apei/ghes.c
-> +++ b/drivers/acpi/apei/ghes.c
-> @@ -454,7 +454,8 @@ static void ghes_do_proc(struct ghes *ghes,
->  				aer_severity = cper_severity_to_aer(sev);
->  				aer_recover_queue(pcie_err->device_id.segment,
->  						  pcie_err->device_id.bus,
-> -						  devfn, aer_severity);
-> +						  devfn, aer_severity,
-> +						  pcie_err->aer_info);
->  			}
->  
->  		}
-> diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
-> index 564d97f..ceba124 100644
-> --- a/drivers/pci/pcie/aer/aerdrv_core.c
-> +++ b/drivers/pci/pcie/aer/aerdrv_core.c
-> @@ -582,6 +582,7 @@ struct aer_recover_entry
->  	u8	devfn;
->  	u16	domain;
->  	int	severity;
-> +	u8	*regs;
->  };
->  
->  static DEFINE_KFIFO(aer_recover_ring, struct aer_recover_entry,
-> @@ -595,7 +596,7 @@ static DEFINE_SPINLOCK(aer_recover_ring_lock);
->  static DECLARE_WORK(aer_recover_work, aer_recover_work_func);
->  
->  void aer_recover_queue(int domain, unsigned int bus, unsigned int devfn,
-> -		       int severity)
-> +		       int severity, u8 *aer_regs)
->  {
->  	unsigned long flags;
->  	struct aer_recover_entry entry = {
-> @@ -603,6 +604,7 @@ void aer_recover_queue(int domain, unsigned int bus, unsigned int devfn,
->  		.devfn		= devfn,
->  		.domain		= domain,
->  		.severity	= severity,
-> +		.regs		= aer_regs,
->  	};
->  
->  	spin_lock_irqsave(&aer_recover_ring_lock, flags);
-> @@ -629,6 +631,8 @@ static void aer_recover_work_func(struct work_struct *work)
->  			       PCI_SLOT(entry.devfn), PCI_FUNC(entry.devfn));
->  			continue;
->  		}
-> +		cper_print_aer(pdev, entry.severity,
-> +				(struct aer_capability_regs *)entry.regs);
->  		do_recovery(pdev, entry.severity);
->  		pci_dev_put(pdev);
->  	}
-> diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c b/drivers/pci/pcie/aer/aerdrv_errprint.c
-> index 5ab1425..f277dc3 100644
-> --- a/drivers/pci/pcie/aer/aerdrv_errprint.c
-> +++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
-> @@ -220,13 +220,19 @@ int cper_severity_to_aer(int cper_severity)
->  }
->  EXPORT_SYMBOL_GPL(cper_severity_to_aer);
->  
-> -void cper_print_aer(const char *prefix, struct pci_dev *dev, int cper_severity,
-> +void cper_print_aer(struct pci_dev *dev, int cper_severity,
->  		    struct aer_capability_regs *aer)
->  {
->  	int aer_severity, layer, agent, status_strs_size, tlp_header_valid = 0;
->  	u32 status, mask;
->  	const char **status_strs;
->  
-> +	/*
-> +	 * TODO: This function needs to be re-written so that it's output
-> +	 * matches the output of aer_print_error().  Right now, the output
-> +	 * is formatted very differently.
-> +	 */
-> +
->  	aer_severity = cper_severity_to_aer(cper_severity);
->  	if (aer_severity == AER_CORRECTABLE) {
->  		status = aer->cor_status;
-> @@ -244,7 +250,7 @@ void cper_print_aer(const char *prefix, struct pci_dev *dev, int cper_severity,
->  	agent = AER_GET_AGENT(aer_severity, status);
->  	dev_err(&dev->dev, "aer_status: 0x%08x, aer_mask: 0x%08x\n",
->  	       status, mask);
-> -	cper_print_bits(prefix, status, status_strs, status_strs_size);
-> +	cper_print_bits("", status, status_strs, status_strs_size);
->  	dev_err(&dev->dev, "aer_layer=%s, aer_agent=%s\n",
->  	       aer_error_layer[layer], aer_agent_string[agent]);
->  	if (aer_severity != AER_CORRECTABLE)
-> diff --git a/include/linux/aer.h b/include/linux/aer.h
-> index ec10e1b..d8cf12b 100644
-> --- a/include/linux/aer.h
-> +++ b/include/linux/aer.h
-> @@ -49,10 +49,10 @@ static inline int pci_cleanup_aer_uncorrect_error_status(struct pci_dev *dev)
->  }
->  #endif
->  
-> -extern void cper_print_aer(const char *prefix, struct pci_dev *dev,
-> +extern void cper_print_aer(struct pci_dev *dev,
->  			   int cper_severity, struct aer_capability_regs *aer);
->  extern int cper_severity_to_aer(int cper_severity);
->  extern void aer_recover_queue(int domain, unsigned int bus, unsigned int devfn,
-> -			      int severity);
-> +			      int severity,  u8 *aer_regs);
->  #endif //_AER_H_
->  
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+Yinghai
