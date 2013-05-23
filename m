@@ -1,266 +1,161 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jiang Liu <liuj97@gmail.com>, Yinghai Lu <yinghai@kernel.org>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Len Brown <lenb@kernel.org>,
-	linux-acpi@vger.kernel.org
-Subject: Re: [PATCH v1 2/2] ACPI, pci_root: use acpi_handle_print() and pr_xxx() to print messages
-Date: Thu, 30 May 2013 21:51:51 +0200
-Message-ID: <3828716.JNCrg8I1Kf@vostro.rjw.lan>
-In-Reply-To: <20130530173356.GA26075@google.com>
-References: <1368536439-19421-1-git-send-email-jiang.liu@huawei.com> <1368536439-19421-2-git-send-email-jiang.liu@huawei.com> <20130530173356.GA26075@google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ob0-f181.google.com ([209.85.214.181]:44087 "EHLO
+	mail-ob0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758979Ab3EWUpT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 May 2013 16:45:19 -0400
+Received: by mail-ob0-f181.google.com with SMTP id dn14so4555672obc.26
+        for <linux-pci@vger.kernel.org>; Thu, 23 May 2013 13:45:18 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20130510211845.32592.77464.stgit@bling.home>
+References: <20130510210937.32592.21950.stgit@bling.home> <20130510211845.32592.77464.stgit@bling.home>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 23 May 2013 14:44:58 -0600
+Message-ID: <CAErSpo5Z_GefXUD+Ts=beVurU9ZnLghN=Qkj7V0ZSjn-=zNsag@mail.gmail.com>
+Subject: Re: [PATCH 1/3] pci: Add PCI walk function and PCIe bridge test
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: Stephen Hemminger <stephen@networkplumber.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Don Dutile <ddutile@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, May 30, 2013 11:33:56 AM Bjorn Helgaas wrote:
-> On Tue, May 14, 2013 at 09:00:39PM +0800, Jiang Liu wrote:
-> > Use acpi_handle_print() and pr_xxx() to print messages in pci_root.c.
-> > 
-> > Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-> > Cc: Len Brown <lenb@kernel.org>
-> > Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
-> > Cc: linux-acpi@vger.kernel.org
-> > Cc: linux-kernel@vger.kernel.org
-> > ---
-> >  drivers/acpi/pci_root.c | 70 ++++++++++++++++++++++---------------------------
-> >  1 file changed, 32 insertions(+), 38 deletions(-)
-> > 
-> > diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-> > index 91ddfd6..21dda5a 100644
-> > --- a/drivers/acpi/pci_root.c
-> > +++ b/drivers/acpi/pci_root.c
-> > @@ -379,23 +379,24 @@ static int acpi_pci_root_add(struct acpi_device *device,
-> >  	struct acpi_pci_root *root;
-> >  	u32 flags, base_flags;
-> >  	bool is_osc_granted = false;
-> > +	acpi_handle handle = device->handle;
-> >  
-> >  	root = kzalloc(sizeof(struct acpi_pci_root), GFP_KERNEL);
-> >  	if (!root)
-> >  		return -ENOMEM;
-> >  
-> >  	segment = 0;
-> > -	status = acpi_evaluate_integer(device->handle, METHOD_NAME__SEG, NULL,
-> > +	status = acpi_evaluate_integer(handle, METHOD_NAME__SEG, NULL,
-> >  				       &segment);
-> >  	if (ACPI_FAILURE(status) && status != AE_NOT_FOUND) {
-> > -		printk(KERN_ERR PREFIX "can't evaluate _SEG\n");
-> > +		acpi_handle_err(handle, "can't evaluate _SEG\n");
-> 
-> I previously acked this, but I noticed that we are making a mix of
-> dev_printk() and acpi_handle_printk() here.  The difference is like this:
-> 
->   acpi PNP0A08:00: ACPI _OSC support notification failed, disabling PCIe ASPM
->   ACPI: \_SB_.PCI0: ACPI _OSC support notification failed, disabling PCIe ASPM
-> 
-> I'm not sure which direction we should go here, but I think we should
-> choose one or the other and use it consistently.  Personally, I think the
-> internal DSDT names should be available *somewhere*, but not necessarily
-> used in run-of-the-mill chit-chat.  For that reason, I prefer
-> dev_printk(), though I have the feeling that Rafael is moving toward
-> eliminating the struct acpi_device, so he might prefer
-> acpi_handle_printk().
+On Fri, May 10, 2013 at 3:18 PM, Alex Williamson
+<alex.williamson@redhat.com> wrote:
+> These will replace pci_find_upstream_pcie_bridge, which is difficult
+> to use and rather specific to intel-iommu usage.  A quirked
+> pci_is_pcie_bridge function is provided to work around non-compliant
+> PCIe-to-PCI bridges such as those found in
+> https://bugzilla.kernel.org/show_bug.cgi?id=44881
+>
+> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+> ---
+>  drivers/pci/search.c |   57 ++++++++++++++++++++++++++++++++++++++++++++++++++
+>  include/linux/pci.h  |   23 ++++++++++++++++++++
+>  2 files changed, 80 insertions(+)
+>
+> diff --git a/drivers/pci/search.c b/drivers/pci/search.c
+> index d0627fa..0357f74 100644
+> --- a/drivers/pci/search.c
+> +++ b/drivers/pci/search.c
+> @@ -17,6 +17,63 @@
+>  DECLARE_RWSEM(pci_bus_sem);
+>  EXPORT_SYMBOL_GPL(pci_bus_sem);
+>
+> +/* Test for PCIe bridges. */
+> +bool pci_is_pcie_bridge(struct pci_dev *pdev)
+> +{
+> +       if (!pci_is_bridge(pdev))
+> +               return false;
+> +
+> +       if (pci_is_pcie(pdev))
+> +               return true;
+> +
+> +#ifdef CONFIG_PCI_QUIRKS
+> +       /*
+> +        * If we're not on the root bus, look one device upstream of the
+> +        * current device.  If that device is PCIe and is not a PCIe-to-PCI
+> +        * bridge, then the current device is effectively PCIe as it must
+> +        * be the PCIe-to-PCI bridge.  This handles several bridges that
+> +        * violate the PCIe spec by not exposing a PCIe capability:
+> +        * https://bugzilla.kernel.org/show_bug.cgi?id=44881
+> +        */
+> +       if (!pci_is_root_bus(pdev->bus)) {
+> +               struct pci_dev *parent = pdev->bus->self;
+> +
+> +               if (pci_is_pcie(parent) &&
+> +                   pci_pcie_type(parent) != PCI_EXP_TYPE_PCI_BRIDGE)
+> +
+> +                       return true;
+> +       }
+> +#endif
+> +       return false;
+> +}
 
-I really don't care that much, but I agree that they should be used
-consistently.
+I like this strategy.  But I'd rather it not be a general-purpose PCI
+interface, because if pci_is_pcie_bridge() is true, people will assume
+they can perform PCIe operations on the device, and they can't.  The
+only use for this is to figure out the source ID the IOMMU will see,
+so I think this should just go in the IOMMU code.
 
-Thanks,
-Rafael
+> +/*
+> + * Walk upstream from the given pdev for the first device returning
+> + * true for the provided match function.  If no match is found, return
+> + * NULL.  *last records the previous step in the walk.
+> + */
+> +struct pci_dev *pci_walk_up_to_first_match(struct pci_dev *pdev,
+> +                                          bool (*match)(struct pci_dev *),
+> +                                          struct pci_dev **last)
+> +{
+> +       *last = NULL;
+> +
+> +       if (match(pdev))
+> +               return pdev;
+> +
+> +       *last = pdev;
+> +
+> +       while (!pci_is_root_bus(pdev->bus)) {
+> +               *last = pdev;
+> +               pdev = pdev->bus->self;
+> +
+> +               if (match(pdev))
+> +                       return pdev;
+> +       }
+> +
+> +       return NULL;
+> +}
 
+Same here.  I don't really see much potential for other uses of this,
+so it seems like you might as well just put this in the IOMMU code and
+make it call pci_is_pcie_bridge() directly.
 
-> >  		result = -ENODEV;
-> >  		goto end;
-> >  	}
-> >  
-> >  	/* Check _CRS first, then _BBN.  If no _BBN, default to zero. */
-> >  	root->secondary.flags = IORESOURCE_BUS;
-> > -	status = try_get_root_bridge_busnr(device->handle, &root->secondary);
-> > +	status = try_get_root_bridge_busnr(handle, &root->secondary);
-> >  	if (ACPI_FAILURE(status)) {
-> >  		/*
-> >  		 * We need both the start and end of the downstream bus range
-> > @@ -404,16 +405,16 @@ static int acpi_pci_root_add(struct acpi_device *device,
-> >  		 * can do is assume [_BBN-0xFF] or [0-0xFF].
-> >  		 */
-> >  		root->secondary.end = 0xFF;
-> > -		printk(KERN_WARNING FW_BUG PREFIX
-> > -		       "no secondary bus range in _CRS\n");
-> > -		status = acpi_evaluate_integer(device->handle, METHOD_NAME__BBN,
-> > +		acpi_handle_warn(handle,
-> > +				 FW_BUG "no secondary bus range in _CRS\n");
-> > +		status = acpi_evaluate_integer(handle, METHOD_NAME__BBN,
-> >  					       NULL, &bus);
-> >  		if (ACPI_SUCCESS(status))
-> >  			root->secondary.start = bus;
-> >  		else if (status == AE_NOT_FOUND)
-> >  			root->secondary.start = 0;
-> >  		else {
-> > -			printk(KERN_ERR PREFIX "can't evaluate _BBN\n");
-> > +			acpi_handle_err(handle, "can't evaluate _BBN\n");
-> >  			result = -ENODEV;
-> >  			goto end;
-> >  		}
-> > @@ -425,11 +426,11 @@ static int acpi_pci_root_add(struct acpi_device *device,
-> >  	strcpy(acpi_device_class(device), ACPI_PCI_ROOT_CLASS);
-> >  	device->driver_data = root;
-> >  
-> > -	printk(KERN_INFO PREFIX "%s [%s] (domain %04x %pR)\n",
-> > +	pr_info(PREFIX "%s [%s] (domain %04x %pR)\n",
-> >  	       acpi_device_name(device), acpi_device_bid(device),
-> >  	       root->segment, &root->secondary);
-> >  
-> > -	root->mcfg_addr = acpi_pci_root_get_mcfg_addr(device->handle);
-> > +	root->mcfg_addr = acpi_pci_root_get_mcfg_addr(handle);
-> >  
-> >  	/*
-> >  	 * All supported architectures that use ACPI have support for
-> > @@ -473,7 +474,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
-> >  		dev_info(&device->dev,
-> >  			"Requesting ACPI _OSC control (0x%02x)\n", flags);
-> >  
-> > -		status = acpi_pci_osc_control_set(device->handle, &flags,
-> > +		status = acpi_pci_osc_control_set(handle, &flags,
-> >  				       OSC_PCI_EXPRESS_CAP_STRUCTURE_CONTROL);
-> >  		if (ACPI_SUCCESS(status)) {
-> >  			is_osc_granted = true;
-> > @@ -505,9 +506,9 @@ static int acpi_pci_root_add(struct acpi_device *device,
-> >  	 */
-> >  	root->bus = pci_acpi_scan_root(root);
-> >  	if (!root->bus) {
-> > -		printk(KERN_ERR PREFIX
-> > -			    "Bus %04x:%02x not present in PCI namespace\n",
-> > -			    root->segment, (unsigned int)root->secondary.start);
-> > +		acpi_handle_err(handle,
-> > +			"Bus %04x:%02x not present in PCI namespace\n",
-> > +			root->segment, (unsigned int)root->secondary.start);
-> >  		result = -ENODEV;
-> >  		goto end;
-> >  	}
-> > @@ -517,8 +518,8 @@ static int acpi_pci_root_add(struct acpi_device *device,
-> >  		if (acpi_gbl_FADT.boot_flags & ACPI_FADT_NO_ASPM)
-> >  			pcie_clear_aspm(root->bus);
-> >  	} else {
-> > -		pr_info("ACPI _OSC control for PCIe not granted, "
-> > -			"disabling ASPM\n");
-> > +		acpi_handle_info(handle,
-> > +			"ACPI _OSC control for PCIe not granted, disabling ASPM\n");
-> >  		pcie_no_aspm();
-> >  	}
-> >  
-> > @@ -571,12 +572,13 @@ static void handle_root_bridge_insertion(acpi_handle handle)
-> >  	struct acpi_device *device;
-> >  
-> >  	if (!acpi_bus_get_device(handle, &device)) {
-> > -		printk(KERN_DEBUG "acpi device exists...\n");
-> > +		acpi_handle_printk(KERN_DEBUG, handle,
-> > +				   "acpi device exists...\n");
-> >  		return;
-> >  	}
-> >  
-> >  	if (acpi_bus_scan(handle))
-> > -		printk(KERN_ERR "cannot add bridge to acpi list\n");
-> > +		acpi_handle_err(handle, "cannot add bridge to acpi list\n");
-> >  }
-> >  
-> >  static void handle_root_bridge_removal(struct acpi_device *device)
-> > @@ -602,7 +604,6 @@ static void handle_root_bridge_removal(struct acpi_device *device)
-> >  static void _handle_hotplug_event_root(struct work_struct *work)
-> >  {
-> >  	struct acpi_pci_root *root;
-> > -	struct acpi_buffer buffer = { ACPI_ALLOCATE_BUFFER };
-> >  	struct acpi_hp_work *hp_work;
-> >  	acpi_handle handle;
-> >  	u32 type;
-> > @@ -613,13 +614,11 @@ static void _handle_hotplug_event_root(struct work_struct *work)
-> >  
-> >  	root = acpi_pci_find_root(handle);
-> >  
-> > -	acpi_get_name(handle, ACPI_FULL_PATHNAME, &buffer);
-> > -
-> >  	switch (type) {
-> >  	case ACPI_NOTIFY_BUS_CHECK:
-> >  		/* bus enumerate */
-> > -		printk(KERN_DEBUG "%s: Bus check notify on %s\n", __func__,
-> > -				 (char *)buffer.pointer);
-> > +		acpi_handle_printk(KERN_DEBUG, handle,
-> > +				   "Bus check notify on %s\n", __func__);
-> >  		if (!root)
-> >  			handle_root_bridge_insertion(handle);
-> >  
-> > @@ -627,27 +626,26 @@ static void _handle_hotplug_event_root(struct work_struct *work)
-> >  
-> >  	case ACPI_NOTIFY_DEVICE_CHECK:
-> >  		/* device check */
-> > -		printk(KERN_DEBUG "%s: Device check notify on %s\n", __func__,
-> > -				 (char *)buffer.pointer);
-> > +		acpi_handle_printk(KERN_DEBUG, handle,
-> > +				   "Device check notify on %s\n", __func__);
-> >  		if (!root)
-> >  			handle_root_bridge_insertion(handle);
-> >  		break;
-> >  
-> >  	case ACPI_NOTIFY_EJECT_REQUEST:
-> >  		/* request device eject */
-> > -		printk(KERN_DEBUG "%s: Device eject notify on %s\n", __func__,
-> > -				 (char *)buffer.pointer);
-> > +		acpi_handle_printk(KERN_DEBUG, handle,
-> > +				   "Device eject notify on %s\n", __func__);
-> >  		if (root)
-> >  			handle_root_bridge_removal(root->device);
-> >  		break;
-> >  	default:
-> > -		printk(KERN_WARNING "notify_handler: unknown event type 0x%x for %s\n",
-> > -				 type, (char *)buffer.pointer);
-> > +		acpi_handle_warn(handle,
-> > +			 "notify_handler: unknown event type 0x%x\n", type);
-> >  		break;
-> >  	}
-> >  
-> >  	kfree(hp_work); /* allocated in handle_hotplug_event_bridge */
-> > -	kfree(buffer.pointer);
-> >  }
-> >  
-> >  static void handle_hotplug_event_root(acpi_handle handle, u32 type,
-> > @@ -661,9 +659,6 @@ static acpi_status __init
-> >  find_root_bridges(acpi_handle handle, u32 lvl, void *context, void **rv)
-> >  {
-> >  	acpi_status status;
-> > -	char objname[64];
-> > -	struct acpi_buffer buffer = { .length = sizeof(objname),
-> > -				      .pointer = objname };
-> >  	int *count = (int *)context;
-> >  
-> >  	if (!acpi_is_root_bridge(handle))
-> > @@ -671,16 +666,15 @@ find_root_bridges(acpi_handle handle, u32 lvl, void *context, void **rv)
-> >  
-> >  	(*count)++;
-> >  
-> > -	acpi_get_name(handle, ACPI_FULL_PATHNAME, &buffer);
-> > -
-> >  	status = acpi_install_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
-> >  					handle_hotplug_event_root, NULL);
-> >  	if (ACPI_FAILURE(status))
-> > -		printk(KERN_DEBUG "acpi root: %s notify handler is not installed, exit status: %u\n",
-> > -				  objname, (unsigned int)status);
-> > +		acpi_handle_printk(KERN_DEBUG, handle,
-> > +			"notify handler is not installed, exit status: %u\n",
-> > +			 (unsigned int)status);
-> >  	else
-> > -		printk(KERN_DEBUG "acpi root: %s notify handler is installed\n",
-> > -				 objname);
-> > +		acpi_handle_printk(KERN_DEBUG, handle,
-> > +				   "notify handler is installed\n");
-> >  
-> >  	return AE_OK;
-> >  }
-> 
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+The "source ID == upstream PCIe bridge" mapping is deeply ingrained in
+your skull, but I think it would make the intent of the code clearer
+if the function names mentioned the source ID somehow.  Otherwise new
+readers like me have to come up with that association on our own.  But
+since I'm proposing putting all this in the IOMMU code, it's totally
+up to you :)
+
+Bjorn
+
+> +
+>  /*
+>   * find the upstream PCIe-to-PCI bridge of a PCI device
+>   * if the device is PCIE, return NULL
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index bd8ec30..e87423a 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -1855,6 +1855,29 @@ static inline struct eeh_dev *pci_dev_to_eeh_dev(struct pci_dev *pdev)
+>  #endif
+>
+>  /**
+> + * pci_walk_up_to_first_match - Generic upstream search function
+> + * @pdev: starting PCI device to search
+> + * @match: match function to call on each device (true = match)
+> + * @last: last device examined prior to returned device
+> + *
+> + * Walk upstream from the given device, calling match() at each device.
+> + * Returns the first device matching match().  If the root bus is reached
+> + * without finding a match, return NULL.  last returns the N-1 step in
+> + * the search path.
+> + */
+> +struct pci_dev *pci_walk_up_to_first_match(struct pci_dev *pdev,
+> +                                          bool (*match)(struct pci_dev *),
+> +                                          struct pci_dev **last);
+> +
+> +/**
+> + * pci_is_pcie_bridge - Match a PCIe bridge device
+> + * @pdev: device to test
+> + *
+> + * Return true if the given device is a PCIe bridge, false otherwise.
+> + */
+> +bool pci_is_pcie_bridge(struct pci_dev *pdev);
+> +
+> +/**
+>   * pci_find_upstream_pcie_bridge - find upstream PCIe-to-PCI bridge of a device
+>   * @pdev: the PCI device
+>   *
+>
