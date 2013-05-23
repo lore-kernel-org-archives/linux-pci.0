@@ -1,48 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usmamail.tilera.com ([12.216.194.151]:58740 "EHLO
-	USMAMAIL.TILERA.COM" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751138Ab3EaUMe (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 31 May 2013 16:12:34 -0400
-Message-ID: <51A90430.8010609@tilera.com>
-Date: Fri, 31 May 2013 16:12:32 -0400
-From: Chris Metcalf <cmetcalf@tilera.com>
+Received: from mail-oa0-f46.google.com ([209.85.219.46]:56096 "EHLO
+	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757953Ab3EWRNF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 May 2013 13:13:05 -0400
+Received: by mail-oa0-f46.google.com with SMTP id h2so4757838oag.5
+        for <linux-pci@vger.kernel.org>; Thu, 23 May 2013 10:13:04 -0700 (PDT)
 MIME-Version: 1.0
-To: Jiang Liu <liuj97@gmail.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Thierry Reding <thierry.reding@avionic-design.de>
-Subject: Re: [PATCH v3, part1 04/10] PCI: mark pci_scan_bus_parented() as
- __deprecated
-References: <1369489718-25869-1-git-send-email-jiang.liu@huawei.com> <1369489718-25869-5-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1369489718-25869-5-git-send-email-jiang.liu@huawei.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+In-Reply-To: <CAE9FiQW==Zvwv976-xjtRFj70JWoZW94yQyM0NMTvMpR-yDG9Q@mail.gmail.com>
+References: <CAE9FiQX=h4H1gcbW=EfQo_ZtAgHGOZ2GxVxLG59C1iMH+qgH2g@mail.gmail.com>
+ <1367732090.11982.38.camel@pasglop> <CAE9FiQUN3qqVmdw_EdOC-JZGc219M3tu=roOX98xns+77LJhMw@mail.gmail.com>
+ <1367740336.11982.41.camel@pasglop> <51871088.4594420a.0ccc.7300SMTPIN_ADDED_BROKEN@mx.google.com>
+ <CAE9FiQXGUOM_h_X5tdGbkiuZGZkiFigSLbbftx3YXybFBg6trg@mail.gmail.com>
+ <518786a7.64bbec0a.58a0.1f6bSMTPIN_ADDED_BROKEN@mx.google.com>
+ <CAErSpo5MJCoaof=heFM4vLxuWz8pFqsyXAC356jZ7rbRvSOt9g@mail.gmail.com>
+ <CAE9FiQWsZXfkSSVFzee4-J4bUDP8DdG=y9-k2du+ek90StDvNA@mail.gmail.com>
+ <CAE9FiQXw=Q9hDWMS3kx8=G0eSqo2keKh-VP3=LWZ31PfXmrAmg@mail.gmail.com>
+ <519dcfbe.89e9420a.4934.488bSMTPIN_ADDED_BROKEN@mx.google.com> <CAE9FiQW==Zvwv976-xjtRFj70JWoZW94yQyM0NMTvMpR-yDG9Q@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 23 May 2013 11:12:44 -0600
+Message-ID: <CAErSpo5ASyYvRJgA3TDt7A5xtxL0sqopfAxbnJwDL=z_2hDJag@mail.gmail.com>
+Subject: Re: Resource assignment oddities
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Gavin Shan <shangw@linux.vnet.ibm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 5/25/2013 9:48 AM, Jiang Liu wrote:
-> Mark pci_scan_bus_parented() as __deprecated and clean up outdated
-> comments.
+On Thu, May 23, 2013 at 11:08 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Thu, May 23, 2013 at 1:13 AM, Gavin Shan <shangw@linux.vnet.ibm.com> wrote:
+>> On Wed, May 22, 2013 at 01:50:35PM -0700, Yinghai Lu wrote:
+>>>On Wed, May 22, 2013 at 9:59 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+>>>> We try must+optional as first, then if there is any ioport or mmio fail
+>>>> we will stick to must only then extend must to meet optional.
+>>>> but mmio range and mmio-pref could be connected each other,
+>>>> so extend will fail...
+>>>>
+>>>> problem here, some root bus will not have ioport range, so it will always have
+>>>> ioport allocation fail.
+>>>>
+>>>> looks like right fix for v3.9 should be as attached patch.
+>>>> it will keep must+optional for mmio, if only ioport fails....
+>>>
+>>>looks like i missed change to realloc_head list.
+>>>
+>>>Ben/Shan, can you check attached v2?
+>>>
+>>
+>> Sorry for late response. I spend lots of time to get the simulator working
+>> with PCI stuff. I had a try with your patch on top of mainline (3.10.RC2).
+>> Things look good except that we still see the intended the failure message
+>> of failure to assign I/O ports as the attached kernel log indicates :-)
+>>
 >
-> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-> Cc: Chris Metcalf <cmetcalf@tilera.com>
-> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> Cc: Thierry Reding <thierry.reding@avionic-design.de>
-> Cc: linux-kernel@vger.kernel.org
-> Cc: linux-pci@vger.kernel.org
+> Good, will resend this as complete form to Bjorn for v3.10.
 
-Acked-by: Chris Metcalf <cmetcalf@tilera.com> [for tile]
+I haven't seen anything this actually fixes yet, except that maybe it
+removes some "can't assign" messages.  That doesn't sound like v3.10
+material.
 
-Boy, that's one stale comment - it was put in internally in our tree back in 2008 when we were still on 2.6.18.
-
--- 
-Chris Metcalf, Tilera Corp.
-http://www.tilera.com
-
+Bjorn
