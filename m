@@ -1,51 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:39402 "EHLO
-	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756567Ab3EQSEp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 May 2013 14:04:45 -0400
-Message-ID: <5196713A.1010102@ubuntu.com>
-Date: Fri, 17 May 2013 14:04:42 -0400
-From: Phillip Susi <psusi@ubuntu.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>
-Subject: Re: enabling aspm on ati radeon
-References: <519443A1.8050905@ubuntu.com> <1995989.Fff0uGKnZO@vostro.rjw.lan> <CAErSpo50rX5Pvj=pX5xsdcZ1qq1C7kBqrNyDmY6t26OCVqbxXA@mail.gmail.com> <5195596C.3000406@ubuntu.com> <CAErSpo6wSgquzJc22tFJozp8cfx0vpULnO3KZN2gr2YHt8EHrw@mail.gmail.com>
-In-Reply-To: <CAErSpo6wSgquzJc22tFJozp8cfx0vpULnO3KZN2gr2YHt8EHrw@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from aserp1040.oracle.com ([141.146.126.69]:24984 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758540Ab3EWROT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 May 2013 13:14:19 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Gavin Shan <shangw@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH] PCI: Don't let mmio fallback to must-only, if ioport fails with must+optional
+Date: Thu, 23 May 2013 10:11:39 -0700
+Message-Id: <1369329099-8501-1-git-send-email-yinghai@kernel.org>
+In-Reply-To: <519dcfbe.89e9420a.4934.488bSMTPIN_ADDED_BROKEN@mx.google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+BenH reported that there is some assign unassigned resource problem
+in powerpc.
 
-On 5/17/2013 1:31 PM, Bjorn Helgaas wrote:
-> You also have this bridge where lspci says "ASPM unknown":
-> 
-> 00:01.0 bridge to [bus 01] ASPM unknown
-> 
-> Just out of curiosity, can you collect the output of "lspci -xxxs 
-> 00:01.0"?  There are only two bits in the Link Capabilities ASPM 
-> support field, and all four encodings are defined, so I'm curious 
-> about why lspci says "unknown".
+It turns out after
+| commit 0c5be0cb0edfe3b5c4b62eac68aa2aa15ec681af
+| Date:   Thu Feb 23 19:23:29 2012 -0800
+|
+|    PCI: Retry on IORESOURCE_IO type allocations
 
-I'll get that as soon as I get home, but why would the ASPM status of
-the root complex have anything to do with the rest of the devices?
-Enabling ASPM on one link doesn't require it to be enabled on all
-upstream links does it?
+even the root bus does not have io port range, it will keep retrying
+to realloc with mmio.
 
+Current retry logic is : try with must+optional at first, and if
+it fails with any ioport or mmio, it will try must then try to extend
+must with optional.
+That will fail as mmio-non-pref and mmio-pref for bridge will
+be next to each other. So we have no chance to extend mmio-non-pref.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.17 (MingW32)
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+We can check fail type and only fall back for io port only, that will
+keep mmio type still have must+optional.
 
-iQEcBAEBAgAGBQJRlnE6AAoJEJrBOlT6nu75nWUIAI7iOcoOklDWhS1FriQJmXTm
-X8OJ4VZB8VVPeIuzrW+I6sppUrxqpnnxvrJT7Trnh5SDwwJjwx3m6BVrZHphrlCN
-armoZ5jLSuBS9mn4mpeAOfUS7uypAuyL4fEo6DYJa9fPZycL1LukjkuwZMRJ+bfw
-sjXQ7soHC52r2wxWhDHZbOl9UEWtYHhBypoI+PpYMO00lQp3gGnJXedm2zHti+a3
-2ZtIieydLw++nXDr18WxDbJ5h1rQi626rVip0IcO6VUhhNxcd8hzGFkRAc7vNodw
-bjW6wp8f+sddfX5uHkh9zYzwaEblLgBkxqw93xzRdh1ujJHet4R/jL1NTLZ8EZY=
-=W4Uc
------END PGP SIGNATURE-----
+This will be become more often when we have x86 8 sockets or 32 sockets
+system, and those system will have one root bus per socket.
+They will have some root buses do not have ioport range.
+
+-v2: need to remove assigned entries from optional list too.
+
+Reported-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Tested-by: Gavin Shan <shangw@linux.vnet.ibm.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+
+---
+ drivers/pci/setup-bus.c |   23 +++++++++++++++++++++++
+ 1 file changed, 23 insertions(+)
+
+Index: linux-2.6/drivers/pci/setup-bus.c
+===================================================================
+--- linux-2.6.orig/drivers/pci/setup-bus.c
++++ linux-2.6/drivers/pci/setup-bus.c
+@@ -317,6 +317,10 @@ static void __assign_resources_sorted(st
+ 	LIST_HEAD(local_fail_head);
+ 	struct pci_dev_resource *save_res;
+ 	struct pci_dev_resource *dev_res;
++	unsigned long fail_type = 0;
++	struct pci_dev_resource *fail_res;
++	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
++				  IORESOURCE_PREFETCH;
+ 
+ 	/* Check if optional add_size is there */
+ 	if (!realloc_head || list_empty(realloc_head))
+@@ -348,6 +352,25 @@ static void __assign_resources_sorted(st
+ 		return;
+ 	}
+ 
++	/* check failed type */
++	list_for_each_entry(fail_res, &local_fail_head, list)
++		fail_type |= fail_res->flags & type_mask;
++	/* only io port fails */
++	if ((fail_type & type_mask) == IORESOURCE_IO) {
++		struct pci_dev_resource *tmp_res;
++
++		/* remove assigned non ioport from head list etc */
++		list_for_each_entry_safe(dev_res, tmp_res, head, list)
++			if (dev_res->res->parent &&
++			    !(dev_res->res->flags & IORESOURCE_IO)) {
++				/* remove it from realloc_head list */
++				remove_from_list(realloc_head, dev_res->res);
++				remove_from_list(&save_head, dev_res->res);
++				list_del(&dev_res->list);
++				kfree(dev_res);
++			}
++	}
++
+ 	free_list(&local_fail_head);
+ 	/* Release assigned resource */
+ 	list_for_each_entry(dev_res, head, list)
