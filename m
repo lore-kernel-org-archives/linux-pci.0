@@ -1,72 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-da0-f41.google.com ([209.85.210.41]:46230 "EHLO
-	mail-da0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751358Ab3EOVl6 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 May 2013 17:41:58 -0400
-Received: by mail-da0-f41.google.com with SMTP id y19so1236414dan.14
-        for <linux-pci@vger.kernel.org>; Wed, 15 May 2013 14:41:58 -0700 (PDT)
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-ie0-f172.google.com ([209.85.223.172]:54797 "EHLO
+	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758301Ab3EWVAZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 May 2013 17:00:25 -0400
+Received: by mail-ie0-f172.google.com with SMTP id 16so10009636iea.17
+        for <linux-pci@vger.kernel.org>; Thu, 23 May 2013 14:00:24 -0700 (PDT)
 MIME-Version: 1.0
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>
-From: Mike Turquette <mturquette@linaro.org>
-In-Reply-To: <1368624323-24311-6-git-send-email-thomas.petazzoni@free-electrons.com>
-Cc: linux-arm-kernel@lists.infradead.org,
-	Arnd Bergmann <arnd@arndb.de>, Olof Johansson <olof@lixom.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Lior Amsalem <alior@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	linux-pci@vger.kernel.org,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	devicetree-discuss@lists.ozlabs.org
-References: <1368624323-24311-1-git-send-email-thomas.petazzoni@free-electrons.com>
- <1368624323-24311-6-git-send-email-thomas.petazzoni@free-electrons.com>
-Message-ID: <20130515214154.12127.73539@quantum>
-Subject: Re: [PATCHv9 5/9] clk: mvebu: create parent-child relation for PCIe clocks
- on Armada 370
-Date: Wed, 15 May 2013 14:41:54 -0700
+In-Reply-To: <CAErSpo5vY-DY9_bLWbM5UNrSZdO5dyASx1hLGMQg-ypgZHXLLg@mail.gmail.com>
+References: <CAE9FiQX=h4H1gcbW=EfQo_ZtAgHGOZ2GxVxLG59C1iMH+qgH2g@mail.gmail.com>
+	<1367732090.11982.38.camel@pasglop>
+	<CAE9FiQUN3qqVmdw_EdOC-JZGc219M3tu=roOX98xns+77LJhMw@mail.gmail.com>
+	<1367740336.11982.41.camel@pasglop>
+	<51871088.4594420a.0ccc.7300SMTPIN_ADDED_BROKEN@mx.google.com>
+	<CAE9FiQXGUOM_h_X5tdGbkiuZGZkiFigSLbbftx3YXybFBg6trg@mail.gmail.com>
+	<518786a7.64bbec0a.58a0.1f6bSMTPIN_ADDED_BROKEN@mx.google.com>
+	<CAErSpo5MJCoaof=heFM4vLxuWz8pFqsyXAC356jZ7rbRvSOt9g@mail.gmail.com>
+	<CAE9FiQWsZXfkSSVFzee4-J4bUDP8DdG=y9-k2du+ek90StDvNA@mail.gmail.com>
+	<CAE9FiQXw=Q9hDWMS3kx8=G0eSqo2keKh-VP3=LWZ31PfXmrAmg@mail.gmail.com>
+	<519dcfbe.89e9420a.4934.488bSMTPIN_ADDED_BROKEN@mx.google.com>
+	<CAE9FiQW==Zvwv976-xjtRFj70JWoZW94yQyM0NMTvMpR-yDG9Q@mail.gmail.com>
+	<CAErSpo5ASyYvRJgA3TDt7A5xtxL0sqopfAxbnJwDL=z_2hDJag@mail.gmail.com>
+	<CAE9FiQX8o97RY-Bd9t1vj+gm_Uri0v_hAUwecaNoF2GwGGTNyA@mail.gmail.com>
+	<CAErSpo5vY-DY9_bLWbM5UNrSZdO5dyASx1hLGMQg-ypgZHXLLg@mail.gmail.com>
+Date: Thu, 23 May 2013 14:00:24 -0700
+Message-ID: <CAE9FiQWyEhdQGjC+hiGxOHdHwZoajfwfcgp26wivqL0s62NPkA@mail.gmail.com>
+Subject: Re: Resource assignment oddities
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Gavin Shan <shangw@linux.vnet.ibm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Quoting Thomas Petazzoni (2013-05-15 06:25:19)
-> The Armada 370 has two gatable clocks for each PCIe interface, and we
-> want both of them to be enabled. We therefore make one of the two
-> clocks a child of the other, as we did for the sataX and sataXlnk
-> clocks on Armada XP.
-> 
+On Thu, May 23, 2013 at 12:47 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Thu, May 23, 2013 at 11:17 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> On Thu, May 23, 2013 at 10:12 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>> On Thu, May 23, 2013 at 11:08 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+>>>>
+>>>> Good, will resend this as complete form to Bjorn for v3.10.
+>>>
+>>> I haven't seen anything this actually fixes yet, except that maybe it
+>>> removes some "can't assign" messages.  That doesn't sound like v3.10
+>>> material.
+>>
+>> io port "can't assign" still there.
+>
+> The "can't assign io" message is harmless.  The host bridge doesn't
+> support I/O port space, so we'll *never* be able to assign IO space.
+> The best we can do for this part of the problem is to get rid of the
+> message, and that's not urgent for v3.10.  Actually, I don't think we
+> *should* get rid of the message; if we can't assign IO space to an IO
+> BAR, I want to know about it.  Maybe the message should be clearer or
+> less alarming, but it should be there.
 
-Ack for patches #5 and #6.  Do you want me to take them?
+Agreed, that are only harmless message.
 
-Regards,
-Mike
+>
+>> the problem that it fixed: don't fallback wrongly for mmio when ioport
+>> fails with must+optional.
+>>
+>> because if it fall back to mmio must-only, later extending to cover
+>> optional will
+>> not find extra space as mmio range and mmio-pref range in the bridge
+>> is connected
+>> together.
+>
+> I know that we retry when we don't need to.  If the retry results in
+> MEM assignments that are *worse* than the original ones, that might be
+> a problem we should fix.  But that problem should have nothing to do
+> with I/O port space.  Conceptually, if we retry because IO assignment
+> failed, the MEM assignments should not change.
 
-> Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-> Cc: Mike Turquette <mturquette@linaro.org>
-> ---
->  drivers/clk/mvebu/clk-gating-ctrl.c |    4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/clk/mvebu/clk-gating-ctrl.c b/drivers/clk/mvebu/clk-gating-ctrl.c
-> index ebf141d..b35785a 100644
-> --- a/drivers/clk/mvebu/clk-gating-ctrl.c
-> +++ b/drivers/clk/mvebu/clk-gating-ctrl.c
-> @@ -119,8 +119,8 @@ static const struct mvebu_soc_descr __initconst armada_370_gating_descr[] = {
->         { "pex1_en", NULL,  2 },
->         { "ge1", NULL, 3 },
->         { "ge0", NULL, 4 },
-> -       { "pex0", NULL, 5 },
-> -       { "pex1", NULL, 9 },
-> +       { "pex0", "pex0_en", 5 },
-> +       { "pex1", "pex1_en", 9 },
->         { "sata0", NULL, 15 },
->         { "sdio", NULL, 17 },
->         { "tdm", NULL, 25 },
-> -- 
-> 1.7.9.5
+Yes, that is what patch try to do. Keep the mmio allocation from first try, and
+only retry with io port.
+
+>
+> I could probably grope through your logs and figure out whether this
+> is happening, but it's your job to do that legwork and convince me
+> that a change is necessary.
+
+sure.
+
+Yinghai
