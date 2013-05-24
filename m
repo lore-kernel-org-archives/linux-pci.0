@@ -1,68 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f181.google.com ([209.85.214.181]:55332 "EHLO
-	mail-ob0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756777Ab3ERAkd (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 May 2013 20:40:33 -0400
-Received: by mail-ob0-f181.google.com with SMTP id dn14so5286260obc.26
-        for <linux-pci@vger.kernel.org>; Fri, 17 May 2013 17:40:32 -0700 (PDT)
+Received: from mail-ie0-f171.google.com ([209.85.223.171]:34865 "EHLO
+	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752007Ab3EXQer (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 24 May 2013 12:34:47 -0400
+Received: by mail-ie0-f171.google.com with SMTP id e10so35381iej.16
+        for <linux-pci@vger.kernel.org>; Fri, 24 May 2013 09:34:47 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <5196C81B.8060400@ubuntu.com>
-References: <519443A1.8050905@ubuntu.com> <1995989.Fff0uGKnZO@vostro.rjw.lan>
- <CAErSpo50rX5Pvj=pX5xsdcZ1qq1C7kBqrNyDmY6t26OCVqbxXA@mail.gmail.com>
- <5195596C.3000406@ubuntu.com> <CAErSpo6wSgquzJc22tFJozp8cfx0vpULnO3KZN2gr2YHt8EHrw@mail.gmail.com>
- <5196713A.1010102@ubuntu.com> <CAErSpo7zESr5_PEyX=1JWEApCuW+yx+j3RKWh=qC-jReRgSXZw@mail.gmail.com>
- <51968E9F.1010909@ubuntu.com> <CAErSpo6ZKB-4PTa_2Cthx_8S2txCbGyatbPmDUPYexCQFg-A=A@mail.gmail.com>
- <51969D30.1070502@ubuntu.com> <CAErSpo4H-=dnHON3vDvJEme2hGD0z0r_NSsm-Bk9tZ4QqtBTCw@mail.gmail.com>
- <5196BF15.3050208@ubuntu.com> <CAErSpo5W=Zi_2s0ywfO4VPfbUfxhhCRUMn7oRhx_mi7yYpBHmw@mail.gmail.com>
- <5196C81B.8060400@ubuntu.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 17 May 2013 18:40:12 -0600
-Message-ID: <CAErSpo6i939JR-3psRhXjkxE3sME8AJ3P84BGX9m1HhdzJxhAg@mail.gmail.com>
-Subject: Re: enabling aspm on ati radeon
-To: Phillip Susi <psusi@ubuntu.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>
+In-Reply-To: <CAErSpo40LBfJGHfGiveE-czMgbF=qqziySCPgPAAJT3BYBS__A@mail.gmail.com>
+References: <CAE9FiQX=h4H1gcbW=EfQo_ZtAgHGOZ2GxVxLG59C1iMH+qgH2g@mail.gmail.com>
+	<1367732090.11982.38.camel@pasglop>
+	<CAE9FiQUN3qqVmdw_EdOC-JZGc219M3tu=roOX98xns+77LJhMw@mail.gmail.com>
+	<1367740336.11982.41.camel@pasglop>
+	<51871088.4594420a.0ccc.7300SMTPIN_ADDED_BROKEN@mx.google.com>
+	<CAE9FiQXGUOM_h_X5tdGbkiuZGZkiFigSLbbftx3YXybFBg6trg@mail.gmail.com>
+	<518786a7.64bbec0a.58a0.1f6bSMTPIN_ADDED_BROKEN@mx.google.com>
+	<CAErSpo5MJCoaof=heFM4vLxuWz8pFqsyXAC356jZ7rbRvSOt9g@mail.gmail.com>
+	<CAE9FiQWsZXfkSSVFzee4-J4bUDP8DdG=y9-k2du+ek90StDvNA@mail.gmail.com>
+	<CAE9FiQXw=Q9hDWMS3kx8=G0eSqo2keKh-VP3=LWZ31PfXmrAmg@mail.gmail.com>
+	<519dcfbe.89e9420a.4934.488bSMTPIN_ADDED_BROKEN@mx.google.com>
+	<CAE9FiQW==Zvwv976-xjtRFj70JWoZW94yQyM0NMTvMpR-yDG9Q@mail.gmail.com>
+	<CAErSpo5ASyYvRJgA3TDt7A5xtxL0sqopfAxbnJwDL=z_2hDJag@mail.gmail.com>
+	<CAE9FiQX8o97RY-Bd9t1vj+gm_Uri0v_hAUwecaNoF2GwGGTNyA@mail.gmail.com>
+	<CAErSpo5vY-DY9_bLWbM5UNrSZdO5dyASx1hLGMQg-ypgZHXLLg@mail.gmail.com>
+	<CAE9FiQWyEhdQGjC+hiGxOHdHwZoajfwfcgp26wivqL0s62NPkA@mail.gmail.com>
+	<1369344196.3870.35.camel@pasglop>
+	<CAE9FiQUS9rUfhH=J5pgynO6Xhrnn8Rx4pHeZ=p0dHm0fUoHd3A@mail.gmail.com>
+	<CAErSpo40LBfJGHfGiveE-czMgbF=qqziySCPgPAAJT3BYBS__A@mail.gmail.com>
+Date: Fri, 24 May 2013 09:34:47 -0700
+Message-ID: <CAE9FiQVu7JkTOQdsTPO5Y=rnkx+Xvjr6vgirx+F0xAWLVTAAyw@mail.gmail.com>
+Subject: Re: Resource assignment oddities
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Gavin Shan <shangw@linux.vnet.ibm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 17, 2013 at 6:15 PM, Phillip Susi <psusi@ubuntu.com> wrote:
-> -----BEGIN PGP SIGNED MESSAGE-----
-> Hash: SHA1
+On Fri, May 24, 2013 at 8:59 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Thu, May 23, 2013 at 4:16 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> That should not happen, because the only reason we're reassigning is
+> for IO space, and we shouldn't be touching the MEM assignments.  I
+> agree that we should fix that.
+
+yes, that is
+
+https://patchwork.kernel.org/patch/2608461/
+
 >
-> On 05/17/2013 07:52 PM, Bjorn Helgaas wrote:
->> setpci will write whatever you tell it to; it doesn't check any
->> constraints like "is ASPM supported?"  But the Link Capabilities
->> register is read-only per spec, so likely you won't be able to
->> change that field, at least not by writing it directly.
->
-> I assume it is RO according to the PCIe spec ( buggers seem to only
-> allow members of pcisig to download it ), but I checked the Intel
-> specs for the chip ( Sandybridge ) and it's RW.  It looks like it
-> powers up as 00 and it's up to the bios to change it to advertise the
-> capability, and it seems Asus didn't bother with that.
+> I do not agree that your current patches are the right way to fix
+> this.  You are trying to make a relatively small patch that we can
+> wedge into v3.10 in a hurry.  I would prefer that we work out a
+> cleaner solution that simplifies reassignment, *then* figure out the
+> best way to backport it as needed.
 
-Right; I meant RO per the PCIe spec.  If it's RW on your chip, setpci
-should be able to write it.
+ok, we can leave per root bus method to v3.11.
 
->> You can always try using setpci to set the ASPM enable bits in the
->> Link Control register on both the bridge and the device.  When
->> enabling, I think you're supposed to do the upstream end of the
->> link first, then the downstream end (and the reverse for
->> disabling).
->
-> One thing I don't see anywhere is a status bit showing whether it
-> actually *is* in L0s or L1 currently, so how to know if it's working?
+we can put only one patch in v3.10.
 
-I don't think software can actually tell -- those transitions are
-completely managed by hardware, and whenever the link is active, e.g.,
-when you're accessing config space or transferring data, it would be
-in L0.
+https://patchwork.kernel.org/patch/2608461/
+PCI: Don't let mmio fallback to must-only, if ioport fails with must+optional
 
-If you can measure the power consumption, you might be able to see a
-difference there.  I've seen people report that, but don't know how
-they do it.  For example:
-https://lkml.kernel.org/r/CANUX_P3F5YhbZX3WGU-j1AGpbXb_T9Bis2ErhvKkFMtDvzatVQ@mail.gmail.com
+that should fix the problem that Ben and Shan met.
 
-Bjorn
+Thanks
+
+Yinghai
