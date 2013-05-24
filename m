@@ -1,92 +1,49 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from va3ehsobe004.messaging.microsoft.com ([216.32.180.14]:43680
-	"EHLO va3outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752300Ab3EaDW1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 May 2013 23:22:27 -0400
-From: Shane Huang <shane.huang@amd.com>
-To: Jean Delvare <khali@linux-fr.org>
-CC: Tejun Heo <tj@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>, <linux-ide@vger.kernel.org>,
-	<linux-i2c@vger.kernel.org>, Shane Huang <shane.huang@amd.com>
-Subject: [PATCH 3/3] i2c-piix4: add AMD CZ SMBus device ID
-Date: Fri, 31 May 2013 19:22:13 +0800
-Message-ID: <1369999333-2073-1-git-send-email-shane.huang@amd.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <519FC63F.3060205@ubuntu.com>
+Date: Fri, 24 May 2013 15:57:51 -0400
+From: Phillip Susi <psusi@ubuntu.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Subject: Re: enabling aspm on ati radeon
+References: <519443A1.8050905@ubuntu.com> <5196D765.9020600@ubuntu.com> <CAErSpo6MGwHLJvis+4=vdQEJN=Qb9aC5e9=3Q6MdTB-HH84YBw@mail.gmail.com> <11045555.dLhhFPGoSV@vostro.rjw.lan>
+In-Reply-To: <11045555.dLhhFPGoSV@vostro.rjw.lan>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-To add AMD CZ SMBus controller device ID.
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-Signed-off-by: Shane Huang <shane.huang@amd.com>
----
- Documentation/i2c/busses/i2c-piix4 | 2 +-
- drivers/i2c/busses/Kconfig         | 3 ++-
- drivers/i2c/busses/i2c-piix4.c     | 3 ++-
- include/linux/pci_ids.h            | 1 +
- 4 files changed, 6 insertions(+), 3 deletions(-)
+According to the PCI express standard, the Link Capabilities register
+lies at offset 0xC within the PCI Express root port capabilities
+descriptor.  lspci decoded this and shows Unknown ASPM support,
+because its value is zero, and this is why the kernel did not enable
+ASPM in the Link Control register.  According to the Intel datasheets,
+the offsets AC-AFh ( the structure itself starts at A0h ) are
+reserved.  So astonishingly it seems that Intel does not know about
+the Link Capabilities register!  On the other hand, the contents of
+the register actually do seem to be mostly correct, despite what their
+datasheet claims.  The one thing wrong with it is that it claims no
+ASPM support, despite Intel claiming that it is supported.
 
-diff --git a/Documentation/i2c/busses/i2c-piix4 b/Documentation/i2c/busses/i2c-piix4
-index 1e6634f..c136148 100644
---- a/Documentation/i2c/busses/i2c-piix4
-+++ b/Documentation/i2c/busses/i2c-piix4
-@@ -13,7 +13,7 @@ Supported adapters:
-   * AMD SP5100 (SB700 derivative found on some server mainboards)
-     Datasheet: Publicly available at the AMD website
-     http://support.amd.com/us/Embedded_TechDocs/44413.pdf
--  * AMD Hudson-2
-+  * AMD HUDSON-2, CZ
-     Datasheet: Not publicly available
-   * Standard Microsystems (SMSC) SLC90E66 (Victory66) southbridge
-     Datasheet: Publicly available at the SMSC website http://www.smsc.com
-diff --git a/drivers/i2c/busses/Kconfig b/drivers/i2c/busses/Kconfig
-index 631736e..a43086d 100644
---- a/drivers/i2c/busses/Kconfig
-+++ b/drivers/i2c/busses/Kconfig
-@@ -149,7 +149,8 @@ config I2C_PIIX4
- 	    ATI SB600
- 	    ATI SB700/SP5100
- 	    ATI SB800
--	    AMD Hudson-2
-+	    AMD HUDSON-2
-+	    AMD CZ
- 	    Serverworks OSB4
- 	    Serverworks CSB5
- 	    Serverworks CSB6
-diff --git a/drivers/i2c/busses/i2c-piix4.c b/drivers/i2c/busses/i2c-piix4.c
-index 39ab78c..16a4d89 100644
---- a/drivers/i2c/busses/i2c-piix4.c
-+++ b/drivers/i2c/busses/i2c-piix4.c
-@@ -22,7 +22,7 @@
- 	Intel PIIX4, 440MX
- 	Serverworks OSB4, CSB5, CSB6, HT-1000, HT-1100
- 	ATI IXP200, IXP300, IXP400, SB600, SB700/SP5100, SB800
--	AMD Hudson-2
-+	AMD HUDSON-2, CZ
- 	SMSC Victory66
- 
-    Note: we assume there can only be one device, with one or more
-@@ -522,6 +522,7 @@ static DEFINE_PCI_DEVICE_TABLE(piix4_ids) = {
- 	{ PCI_DEVICE(PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_IXP400_SMBUS) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_SBX00_SMBUS) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_HUDSON2_SMBUS) },
-+	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_CZ_SMBUS) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_SERVERWORKS,
- 		     PCI_DEVICE_ID_SERVERWORKS_OSB4) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_SERVERWORKS,
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index 22449c1..b10a5b4 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -571,6 +571,7 @@
- #define PCI_DEVICE_ID_AMD_HUDSON2_SATA_IDE	0x7800
- #define PCI_DEVICE_ID_AMD_HUDSON2_SMBUS		0x780b
- #define PCI_DEVICE_ID_AMD_CZ_SATA_IDE	0x7900
-+#define PCI_DEVICE_ID_AMD_CZ_SMBUS	0x790b
- 
- #define PCI_VENDOR_ID_TRIDENT		0x1023
- #define PCI_DEVICE_ID_TRIDENT_4DWAVE_DX	0x2000
--- 
-1.8.1.2
+For reference, the Intel datasheet I have been referring to is
+document 324642-003: 2nd Generation Intel® CoreTM Processor Family
+Desktop, Intel® Pentium® Processor Family Desktop, and Intel® Celeron®
+Processor Family Desktop Datasheet, Volume 2, table 2-8 on page 84.
 
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.17 (MingW32)
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+
+iQEcBAEBAgAGBQJRn8Y/AAoJEJrBOlT6nu75P78IAMgL23DGmsBD+TKm3Ootr36E
+5iG7NoPcvjYiP/yeHBvhXy5jw4ORfVFLEli82fFOTWAi1YL5mxRKctIiYzu9080N
+T1YO34qE/QpXfu6PDYMuNQETteO7MElnM7SHpQQ1oG5pAjPjUB1Bjb54qm4fQt77
+11q8W6w3KFegy6cZLqAMHO63gzqUL9G/Akn4BdGvjZyt2ouOZOBU6Siyu0wm+RZY
+NUuoy+5wzaej9/T96XCkfHR1e5s32NdvkT9GUxhA8SONEOy892QvOuMWPWv/VHxr
+YkVGkaGHXuLLyXNWvy1Tz31HqZlbFaDRw7VzfbW5iE7cMi9EsZxSfjSvSqPZ+/A=
+=8hms
+-----END PGP SIGNATURE-----
