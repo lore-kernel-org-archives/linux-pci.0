@@ -1,49 +1,40 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:44683 "EHLO
-	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758406Ab3EGQMx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 May 2013 12:12:53 -0400
-Message-ID: <51892802.6090707@ubuntu.com>
-Date: Tue, 07 May 2013 12:12:50 -0400
-From: Phillip Susi <psusi@ubuntu.com>
+Received: from mail-ie0-f181.google.com ([209.85.223.181]:37250 "EHLO
+	mail-ie0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755204Ab3EXXeh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 24 May 2013 19:34:37 -0400
 MIME-Version: 1.0
+In-Reply-To: <CAErSpo6pT2iTMx6U50AeScCjmPu53MOj6-TCnATRj_+EUNz46w@mail.gmail.com>
+References: <519dcfbe.89e9420a.4934.488bSMTPIN_ADDED_BROKEN@mx.google.com>
+	<1369329099-8501-1-git-send-email-yinghai@kernel.org>
+	<CAErSpo6pT2iTMx6U50AeScCjmPu53MOj6-TCnATRj_+EUNz46w@mail.gmail.com>
+Date: Fri, 24 May 2013 16:34:36 -0700
+Message-ID: <CAE9FiQUV9GtMv7JxLb+r1g9nFw-ydXeaQFUOOzuAFn8xRjTbgA@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Don't let mmio fallback to must-only, if ioport
+ fails with must+optional
+From: Yinghai Lu <yinghai@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Robert Hancock <hancockrwd@gmail.com>,
-	"Artem S. Tashkinov" <t.artem@lycos.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Gavin Shan <shangw@linux.vnet.ibm.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: Abysmal HDD/USB write speed after sleep on a UEFI system
-References: <CAErSpo7qj2SNR7BfuBsfF-saZXvgcqqLtgoP5Hyb5u99qR4Ncg@mail.gmail.com> <Pine.LNX.4.44L0.1302191119270.2215-100000@iolanthe.rowland.org> <CAErSpo7NZoOQZyW76HEoOTVgdqL2CgbVScAeF6HGLAVaNCq0=w@mail.gmail.com> <337833384.57445.1361860509194.JavaMail.mail@webmail08> <CAErSpo6CbO5KYXiErv6J_Dnm1u694C5fQPP2_cZL8VKDEnZa9A@mail.gmail.com> <569718148.80620.1361906088301.JavaMail.mail@webmail13> <CAErSpo6UkVhSf+nFW4zwJLBQw_0RQ5H9Bv-UuQRb6zdwsFPw4g@mail.gmail.com> <CAErSpo4X+XXKvWDfqh2CKZAtJ9WMQk91OcsWwdxwYv2MfEM_zQ@mail.gmail.com> <771333906.75854.1367057440028.JavaMail.mail@webmail08> <CAErSpo4B4sRco-nuqgXiYtGQxBcbEB6ArQjHD0A9cj4TRE+qQw@mail.gmail.com> <518097B8.4020402@gmail.com> <CAErSpo7KWPRVEnw+n068pUZz+=WSTwno6m6t7N6dunuhnFC8EA@mail.gmail.com>
-In-Reply-To: <CAErSpo7KWPRVEnw+n068pUZz+=WSTwno6m6t7N6dunuhnFC8EA@mail.gmail.com>
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+On Fri, May 24, 2013 at 10:25 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>
+> The problem we're trying to solve is that when allocation for type X
+> fails, we retry allocation for type Y.
+>
+> This patch handles IO specially.  I think it basically says, "if we
+> only have IO allocation failures, don't retry MEM allocation."  But a
+> clean strategy would also avoid retrying IO allocation if we only had
+> MEM allocation failures.
 
-On 5/7/2013 11:25 AM, Bjorn Helgaas wrote:
-> Phillip, I cc'd you because you have similar hardware and your 
-> https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1131468 report
-> is slightly similar.  Have you seen anything like this "reduced 
-> performance after resume" issue?  If so, can you collect
-> /proc/mtrr contents before and after suspending?
+Well, that will make it little bit complicated as v3 that is sent in
+another mail.
 
-Nope, not seen that issue.
+Need to separate ioport, mmio, mmio pref three types.
 
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.17 (MingW32)
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
-
-iQEcBAEBAgAGBQJRiSgCAAoJEJrBOlT6nu75e0IH/1tqoTRyAMfVgcWTfhdcSAVi
-kBnvTpfGqlwD1ThxF3AZ+kHFPykI7TNUEvPR+syBFIi6BLHDoCZJMyCnKWwrY3jW
-62lpgBZPZNejK+Yms3wjt6bZs81g38FKhWqm/IGruo7u79j/CS6puUypQMZ7WkC4
-8y3SjBfiVy3ncQAOr7akCJzCv4fgqY+vtpIOHOXknfUxwgHqVOo3Pa0rMeat2TrN
-8KHLkzYjML7Z+vN9DvPnqnRYFwFmkRZl01wRITo3OaFFJFhH70uqnwZ3ES+H0oh5
-OpAJqEZ1PqiSAn+P7nI8RJ8lt7c5bta6Mvv0ev4+aDOQxnL3AmipOMNGfI37Ubk=
-=fiiM
------END PGP SIGNATURE-----
+Yinghai
