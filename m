@@ -1,241 +1,141 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <liuj97@gmail.com>
-To: "Rafael J . Wysocki" <rjw@sisk.pl>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Len Brown <lenb@kernel.org>,
-	linux-acpi@vger.kernel.org
-Subject: [PATCH v1 2/2] ACPI, pci_root: use acpi_handle_print() and pr_xxx() to print messages
-Date: Tue, 14 May 2013 21:00:39 +0800
-Message-Id: <1368536439-19421-2-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1368536439-19421-1-git-send-email-jiang.liu@huawei.com>
-References: <1368536439-19421-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pb0-f53.google.com ([209.85.160.53]:53113 "EHLO
+	mail-pb0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755071Ab3EYLRl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 25 May 2013 07:17:41 -0400
+Received: by mail-pb0-f53.google.com with SMTP id un4so5131338pbc.26
+        for <linux-pci@vger.kernel.org>; Sat, 25 May 2013 04:17:40 -0700 (PDT)
+Date: Sat, 25 May 2013 19:17:31 +0800
+From: Kevin Hao <haokexin@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Liu Jiang <liuj97@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH 2/2] PCI: unset the resource if we can't get the correct
+ CPU address
+Message-ID: <20130525111731.GA20718@pek-khao-d1.corp.ad.wrs.com>
+References: <1368536876-27307-1-git-send-email-haokexin@gmail.com>
+ <1368536876-27307-3-git-send-email-haokexin@gmail.com>
+ <519506BF.3010400@gmail.com>
+ <20130517021128.GB13975@pek-khao-d1.corp.ad.wrs.com>
+ <519643E8.3020102@gmail.com>
+ <20130519022445.GA25698@pek-khao-d1.corp.ad.wrs.com>
+ <CAErSpo6vTqgN3MFZ9TmAzHHhnzP5bUip=G=djd80RE-7upJ+gA@mail.gmail.com>
+ <20130524025424.GC23166@pek-khao-d1.corp.ad.wrs.com>
+ <CAErSpo5Wzy5wHn4CAfD2HjRZ3dv3To+u=pRAvjC8DaMpR03LFg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="oyUTqETQ0mS9luUI"
+In-Reply-To: <CAErSpo5Wzy5wHn4CAfD2HjRZ3dv3To+u=pRAvjC8DaMpR03LFg@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use acpi_handle_print() and pr_xxx() to print messages in pci_root.c.
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Cc: Len Brown <lenb@kernel.org>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: linux-acpi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
----
- drivers/acpi/pci_root.c | 70 ++++++++++++++++++++++---------------------------
- 1 file changed, 32 insertions(+), 38 deletions(-)
+--oyUTqETQ0mS9luUI
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index 91ddfd6..21dda5a 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -379,23 +379,24 @@ static int acpi_pci_root_add(struct acpi_device *device,
- 	struct acpi_pci_root *root;
- 	u32 flags, base_flags;
- 	bool is_osc_granted = false;
-+	acpi_handle handle = device->handle;
- 
- 	root = kzalloc(sizeof(struct acpi_pci_root), GFP_KERNEL);
- 	if (!root)
- 		return -ENOMEM;
- 
- 	segment = 0;
--	status = acpi_evaluate_integer(device->handle, METHOD_NAME__SEG, NULL,
-+	status = acpi_evaluate_integer(handle, METHOD_NAME__SEG, NULL,
- 				       &segment);
- 	if (ACPI_FAILURE(status) && status != AE_NOT_FOUND) {
--		printk(KERN_ERR PREFIX "can't evaluate _SEG\n");
-+		acpi_handle_err(handle, "can't evaluate _SEG\n");
- 		result = -ENODEV;
- 		goto end;
- 	}
- 
- 	/* Check _CRS first, then _BBN.  If no _BBN, default to zero. */
- 	root->secondary.flags = IORESOURCE_BUS;
--	status = try_get_root_bridge_busnr(device->handle, &root->secondary);
-+	status = try_get_root_bridge_busnr(handle, &root->secondary);
- 	if (ACPI_FAILURE(status)) {
- 		/*
- 		 * We need both the start and end of the downstream bus range
-@@ -404,16 +405,16 @@ static int acpi_pci_root_add(struct acpi_device *device,
- 		 * can do is assume [_BBN-0xFF] or [0-0xFF].
- 		 */
- 		root->secondary.end = 0xFF;
--		printk(KERN_WARNING FW_BUG PREFIX
--		       "no secondary bus range in _CRS\n");
--		status = acpi_evaluate_integer(device->handle, METHOD_NAME__BBN,
-+		acpi_handle_warn(handle,
-+				 FW_BUG "no secondary bus range in _CRS\n");
-+		status = acpi_evaluate_integer(handle, METHOD_NAME__BBN,
- 					       NULL, &bus);
- 		if (ACPI_SUCCESS(status))
- 			root->secondary.start = bus;
- 		else if (status == AE_NOT_FOUND)
- 			root->secondary.start = 0;
- 		else {
--			printk(KERN_ERR PREFIX "can't evaluate _BBN\n");
-+			acpi_handle_err(handle, "can't evaluate _BBN\n");
- 			result = -ENODEV;
- 			goto end;
- 		}
-@@ -425,11 +426,11 @@ static int acpi_pci_root_add(struct acpi_device *device,
- 	strcpy(acpi_device_class(device), ACPI_PCI_ROOT_CLASS);
- 	device->driver_data = root;
- 
--	printk(KERN_INFO PREFIX "%s [%s] (domain %04x %pR)\n",
-+	pr_info(PREFIX "%s [%s] (domain %04x %pR)\n",
- 	       acpi_device_name(device), acpi_device_bid(device),
- 	       root->segment, &root->secondary);
- 
--	root->mcfg_addr = acpi_pci_root_get_mcfg_addr(device->handle);
-+	root->mcfg_addr = acpi_pci_root_get_mcfg_addr(handle);
- 
- 	/*
- 	 * All supported architectures that use ACPI have support for
-@@ -473,7 +474,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
- 		dev_info(&device->dev,
- 			"Requesting ACPI _OSC control (0x%02x)\n", flags);
- 
--		status = acpi_pci_osc_control_set(device->handle, &flags,
-+		status = acpi_pci_osc_control_set(handle, &flags,
- 				       OSC_PCI_EXPRESS_CAP_STRUCTURE_CONTROL);
- 		if (ACPI_SUCCESS(status)) {
- 			is_osc_granted = true;
-@@ -505,9 +506,9 @@ static int acpi_pci_root_add(struct acpi_device *device,
- 	 */
- 	root->bus = pci_acpi_scan_root(root);
- 	if (!root->bus) {
--		printk(KERN_ERR PREFIX
--			    "Bus %04x:%02x not present in PCI namespace\n",
--			    root->segment, (unsigned int)root->secondary.start);
-+		acpi_handle_err(handle,
-+			"Bus %04x:%02x not present in PCI namespace\n",
-+			root->segment, (unsigned int)root->secondary.start);
- 		result = -ENODEV;
- 		goto end;
- 	}
-@@ -517,8 +518,8 @@ static int acpi_pci_root_add(struct acpi_device *device,
- 		if (acpi_gbl_FADT.boot_flags & ACPI_FADT_NO_ASPM)
- 			pcie_clear_aspm(root->bus);
- 	} else {
--		pr_info("ACPI _OSC control for PCIe not granted, "
--			"disabling ASPM\n");
-+		acpi_handle_info(handle,
-+			"ACPI _OSC control for PCIe not granted, disabling ASPM\n");
- 		pcie_no_aspm();
- 	}
- 
-@@ -571,12 +572,13 @@ static void handle_root_bridge_insertion(acpi_handle handle)
- 	struct acpi_device *device;
- 
- 	if (!acpi_bus_get_device(handle, &device)) {
--		printk(KERN_DEBUG "acpi device exists...\n");
-+		acpi_handle_printk(KERN_DEBUG, handle,
-+				   "acpi device exists...\n");
- 		return;
- 	}
- 
- 	if (acpi_bus_scan(handle))
--		printk(KERN_ERR "cannot add bridge to acpi list\n");
-+		acpi_handle_err(handle, "cannot add bridge to acpi list\n");
- }
- 
- static void handle_root_bridge_removal(struct acpi_device *device)
-@@ -602,7 +604,6 @@ static void handle_root_bridge_removal(struct acpi_device *device)
- static void _handle_hotplug_event_root(struct work_struct *work)
- {
- 	struct acpi_pci_root *root;
--	struct acpi_buffer buffer = { ACPI_ALLOCATE_BUFFER };
- 	struct acpi_hp_work *hp_work;
- 	acpi_handle handle;
- 	u32 type;
-@@ -613,13 +614,11 @@ static void _handle_hotplug_event_root(struct work_struct *work)
- 
- 	root = acpi_pci_find_root(handle);
- 
--	acpi_get_name(handle, ACPI_FULL_PATHNAME, &buffer);
--
- 	switch (type) {
- 	case ACPI_NOTIFY_BUS_CHECK:
- 		/* bus enumerate */
--		printk(KERN_DEBUG "%s: Bus check notify on %s\n", __func__,
--				 (char *)buffer.pointer);
-+		acpi_handle_printk(KERN_DEBUG, handle,
-+				   "Bus check notify on %s\n", __func__);
- 		if (!root)
- 			handle_root_bridge_insertion(handle);
- 
-@@ -627,27 +626,26 @@ static void _handle_hotplug_event_root(struct work_struct *work)
- 
- 	case ACPI_NOTIFY_DEVICE_CHECK:
- 		/* device check */
--		printk(KERN_DEBUG "%s: Device check notify on %s\n", __func__,
--				 (char *)buffer.pointer);
-+		acpi_handle_printk(KERN_DEBUG, handle,
-+				   "Device check notify on %s\n", __func__);
- 		if (!root)
- 			handle_root_bridge_insertion(handle);
- 		break;
- 
- 	case ACPI_NOTIFY_EJECT_REQUEST:
- 		/* request device eject */
--		printk(KERN_DEBUG "%s: Device eject notify on %s\n", __func__,
--				 (char *)buffer.pointer);
-+		acpi_handle_printk(KERN_DEBUG, handle,
-+				   "Device eject notify on %s\n", __func__);
- 		if (root)
- 			handle_root_bridge_removal(root->device);
- 		break;
- 	default:
--		printk(KERN_WARNING "notify_handler: unknown event type 0x%x for %s\n",
--				 type, (char *)buffer.pointer);
-+		acpi_handle_warn(handle,
-+			 "notify_handler: unknown event type 0x%x\n", type);
- 		break;
- 	}
- 
- 	kfree(hp_work); /* allocated in handle_hotplug_event_bridge */
--	kfree(buffer.pointer);
- }
- 
- static void handle_hotplug_event_root(acpi_handle handle, u32 type,
-@@ -661,9 +659,6 @@ static acpi_status __init
- find_root_bridges(acpi_handle handle, u32 lvl, void *context, void **rv)
- {
- 	acpi_status status;
--	char objname[64];
--	struct acpi_buffer buffer = { .length = sizeof(objname),
--				      .pointer = objname };
- 	int *count = (int *)context;
- 
- 	if (!acpi_is_root_bridge(handle))
-@@ -671,16 +666,15 @@ find_root_bridges(acpi_handle handle, u32 lvl, void *context, void **rv)
- 
- 	(*count)++;
- 
--	acpi_get_name(handle, ACPI_FULL_PATHNAME, &buffer);
--
- 	status = acpi_install_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
- 					handle_hotplug_event_root, NULL);
- 	if (ACPI_FAILURE(status))
--		printk(KERN_DEBUG "acpi root: %s notify handler is not installed, exit status: %u\n",
--				  objname, (unsigned int)status);
-+		acpi_handle_printk(KERN_DEBUG, handle,
-+			"notify handler is not installed, exit status: %u\n",
-+			 (unsigned int)status);
- 	else
--		printk(KERN_DEBUG "acpi root: %s notify handler is installed\n",
--				 objname);
-+		acpi_handle_printk(KERN_DEBUG, handle,
-+				   "notify handler is installed\n");
- 
- 	return AE_OK;
- }
--- 
-1.8.1.2
+On Fri, May 24, 2013 at 11:13:41AM -0600, Bjorn Helgaas wrote:
+> On Thu, May 23, 2013 at 8:54 PM, Kevin Hao <haokexin@gmail.com> wrote:
+> > On Thu, May 23, 2013 at 02:22:58PM -0600, Bjorn Helgaas wrote:
+> >> On Sat, May 18, 2013 at 8:24 PM, Kevin Hao <haokexin@gmail.com> wrote:
+> >> > On Fri, May 17, 2013 at 10:51:20PM +0800, Liu Jiang wrote:
 
+<snip>
+
+> >         Region 0: bus address at a0000000 (64-bit, non-prefetchable) [s=
+ize=3D128]
+>=20
+> Your dmesg log show this:
+>=20
+> pci_bus 0000:00: root bus resource [mem 0xa0000000-0xbfffffff] (bus
+> address [0xe0000000-0xffffffff])
+> pci 0000:01:00.0: reg 10: [mem 0xa0000000-0xa000007f 64bit]
+>=20
+> There are two ways this could happen:
+>=20
+>   1) The BAR contained 0xe0000000 and we translated it to a legal
+> resource value of 0xa0000000, or
+>   2) The BAR contained 0xa0000000, we found no matching host bridge
+> window, and we assumed an offset of zero and again translated it to a
+> resource value of 0xa0000000.
+>=20
+> There's no information to distinguish these (lspci shows resource
+> values, not bus addresses, by default), but in your case, it must be
+> 2), based on the fact that the device doesn't work unless we reassign
+> the BAR.  When we reassign it, we apply the translation and compute a
+> BAR value in the [0xe0000000-0xffffffff] range, which *does* work.
+
+You are absolutely right. :-)
+
+>=20
+> We should be able to detect this problem even without assuming we know
+> about all the host bridge windows.  The bus-to-resource conversion
+> should be invertible.  In case 2), bus_to_resource(0xa0000000) gave us
+> 0xa0000000, but resource_to_bus(0xa0000000) will give us 0xe0000000,
+> so we won't get back what we started with.
+>=20
+> I think I'd rather use this strategy than changing
+> pcibios_bus_to_resource().
+
+Sounds reasonable. I will respin a patch to use this method.
+
+>  I would also put a note in dmesg about the
+> fact that we're throwing away the BAR value put there by firmware (and
+> why), just for future debugging efforts.
+
+Will add.
+
+>  Would you mind also
+> splitting the "move the pcibios_bus_to_resource() call out of the
+> if/else wrap" change into its own tiny patch since it's a separate
+> logical change?
+
+Sure.
+
+Thanks,
+Kevin
+
+>=20
+> Bjorn
+>=20
+> > In the current kernel, the pci host bridge use the following address re=
+gions:
+> >   pci_bus 0000:00: root bus resource [mem 0xa0000000-0xbfffffff] (bus a=
+ddress [0xe0000000-0xffffffff])
+> >
+> > And no reassign for device 0000:01:00.0.
+> >
+> > With my fix, the device 0000:01:00.0 is reassigned with the correct bus=
+ address:
+> >   pci_bus 0000:00: root bus resource [mem 0xa0000000-0xbfffffff] (bus a=
+ddress [0xe0000000-0xffffffff])
+> >   pci 0000:01:00.0: BAR 6: assigned [mem 0xa0000000-0xa007ffff pref]
+> >   pci 0000:01:00.0: BAR 2: assigned [mem 0xa0080000-0xa0083fff 64bit]
+> >   pci 0000:01:00.0: BAR 0: assigned [mem 0xa0084000-0xa008407f 64bit]
+> >
+> > As you can see in the current kernel the pci subsystem doesn't detect
+> > this wrong bus address and don't try a reassign what it should do.
+> > My patches is trying to fix this issue.
+> >
+> > Thanks,
+> > Kevin
+> >>
+> >> Bjorn
+
+--oyUTqETQ0mS9luUI
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQEcBAEBAgAGBQJRoJ3LAAoJEJNY7TDerrFxlgcH/1pGrsq9Z53uouueKKHsgBSn
+e+a3+kqbmfAu8dABPc/XZZ1L1okIleLscM7doLDGvz1xmrY8SCminbvX/smh/kQj
+6M2atUGbP/AlEQbCU6+NpPC061u3gKvGCvbKSh6a6RVzixSxB5NLOb/yaohKms6A
+ru0R86c6CuuQqy43tbkatXYtFBCDgeReB7rEcJoqENAfxp6xAwvEMCzmKaj++X6H
+302iLb72z8LT4ZJtP3kk0OZmF5LbGuXg1Y+ggZe5RSoYvZBjsgBNcoTsHNZr1UBa
+lUGCFqYZ+6tXIEDtmEuScffN86GetC9Q2vxHvX4m0IhFM3l0238MrKq4YcF0Klk=
+=SXVg
+-----END PGP SIGNATURE-----
+
+--oyUTqETQ0mS9luUI--
