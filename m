@@ -1,112 +1,52 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f181.google.com ([209.85.192.181]:43284 "EHLO
-	mail-pd0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751983Ab3EUV7A (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 May 2013 17:59:00 -0400
-Message-ID: <519BEE22.3080806@gmail.com>
-Date: Tue, 21 May 2013 14:58:58 -0700
-From: Alexander Duyck <alexander.duyck@gmail.com>
-MIME-Version: 1.0
-To: Don Dutile <ddutile@redhat.com>
-CC: Alexander Duyck <alexander.h.duyck@intel.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	NetDev <netdev@vger.kernel.org>,
-	"Michael S. Tsirkin" <mst@redhat.com>
-Subject: Re: [PATCH 6/7] PCI: Make sure VF's driver get attached after PF's
-References: <1368498506-25857-1-git-send-email-yinghai@kernel.org> <1368498506-25857-7-git-send-email-yinghai@kernel.org> <51925FB0.4080504@intel.com> <CAE9FiQXYQEAZ=0sG6+2OdffBqfLS9MpoN1xviRR9aDbxPxcKxQ@mail.gmail.com> <5192946F.1050700@intel.com> <CAE9FiQVGGHB_amKw0-DfDifpTnRGPbxA+q3WY5F-O3x-sx386A@mail.gmail.com> <5192AEF4.1070905@intel.com> <519BE778.9040800@redhat.com> <519BE7C4.3050306@redhat.com>
-In-Reply-To: <519BE7C4.3050306@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Donald Dutile <ddutile@redhat.com>,
+	Ram Pai <linuxram@us.ibm.com>
+Subject: [PATCH v3, part1 08/10] PCI, IOV: don't touch bus->is_added flag
+Date: Sat, 25 May 2013 21:48:36 +0800
+Message-Id: <1369489718-25869-9-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1369489718-25869-1-git-send-email-jiang.liu@huawei.com>
+References: <1369489718-25869-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/21/2013 02:31 PM, Don Dutile wrote:
-> On 05/21/2013 05:30 PM, Don Dutile wrote:
->> On 05/14/2013 05:39 PM, Alexander Duyck wrote:
->>> On 05/14/2013 12:59 PM, Yinghai Lu wrote:
->>>> On Tue, May 14, 2013 at 12:45 PM, Alexander Duyck
->>>> <alexander.h.duyck@intel.com> wrote:
->>>>> On 05/14/2013 11:44 AM, Yinghai Lu wrote:
->>>>>> On Tue, May 14, 2013 at 9:00 AM, Alexander Duyck
->>>>>> <alexander.h.duyck@intel.com> wrote:
->>>>>>> I'm sorry, but what is the point of this patch? With device
->>>>>>> assignment
->>>>>>> it is always possible to have VFs loaded and the PF driver unloaded
->>>>>>> since you cannot remove the VFs if they are assigned to a VM.
->>>>>> unload PF driver will not call pci_disable_sriov?
->>>>> You cannot call pci_disable_sriov because you will panic all of the
->>>>> guests that have devices assigned.
->>>> ixgbe_remove did call pci_disable_sriov...
->>>>
->>>> for guest panic, that is another problem.
->>>> just like you pci passthrough with real pci device and hotremove the
->>>> card in host.
->>>>
->>>> ...
->>>
->>> I suggest you take another look. In ixgbe_disable_sriov, which is the
->>> function that is called we do a check for assigned VFs. If they are
->>> assigned then we do not call pci_disable_sriov.
->>>
->>>>
->>>>> So how does your patch actually fix this problem? It seems like it is
->>>>> just avoiding it.
->>>> yes, until the first one is done.
->>>
->>> Avoiding the issue doesn't fix the underlying problem and instead you
->>> are likely just introducing more bugs as a result.
->>>
->>>>> From what I can tell your problem is originating in pci_call_probe. I
->>>>> believe it is calling work_on_cpu and that doesn't seem correct since
->>>>> the work should be taking place on a CPU already local to the PF. You
->>>>> might want to look there to see why you are trying to schedule work
->>>>> on a
->>>>> CPU which should be perfectly fine for you to already be doing your
->>>>> work on.
->>>> it always try to go with local cpu with same pxm.
->>>
->>> The problem is we really shouldn't be calling work_for_cpu in this case
->>> since we are already on the correct CPU. What probably should be
->>> happening is that pci_call_probe should be doing a check to see if the
->>> current CPU is already contained within the device node map and if so
->>> just call local_pci_probe directly. That way you can avoid deadlocking
->>> the system by trying to flush the CPU queue of the CPU you are
->>> currently on.
->>>
->> That's the patch that Michael Tsirkin posted for a fix,
->> but it was noted that if you have the case where the _same_ driver is
->> used for vf & pf,
->> other deadlocks may occur.
->> It would work in the case of ixgbe/ixgbevf, but not for something like
->> the Mellanox pf/vf driver (which is the same).
->>
-> apologies; here's the thread the discussed the issue:
-> https://patchwork.kernel.org/patch/2458681/
-> 
+The flag pci_bus->is_added is used to guard invoke of
+pcibios_fixup_bus(pci_bus). And when virtfn_add_bus() is called,
+pci_bus->is_added flag has already been set, so remove the redandunt
+	bus->is_added = 1;
 
-I found out about that patch after I submitted one that was similar.
-The only real complaint I had about his patch was that it was only
-looking at the CPU and he could save himself some trouble by just doing
-the work locally if we were on the correct NUMA node.  For example if
-the system only has one node in it what is the point in scheduling all
-of the work on CPU 0?  My alternative patch can be found at:
-https://patchwork.kernel.org/patch/2568881/
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Cc: Donald Dutile <ddutile@redhat.com>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: Ram Pai <linuxram@us.ibm.com>
+Cc: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+---
+ drivers/pci/iov.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-As far as the inter-driver locking issues for same driver I don't think
-that is really any kind if issue.  Most drivers shouldn't be holding any
-big locks when they call pci_enable_sriov.  If I am not mistaken the
-follow on patch I submitted which was similar to Michaels was reported
-to have resolved the issue.
-
-As far as the Mellanox PF/VF the bigger issue is that when they call
-pci_enable_sriov they are not ready to handle VFs.  There have been
-several suggestions on how to resolve it including -EPROBE_DEFER or the
-igbvf/ixgbevf approach of just brining up the device in a "link down" state.
-
-Thanks,
-
-Alex
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index 2652ca0..8f1e117 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -47,7 +47,6 @@ static struct pci_bus *virtfn_add_bus(struct pci_bus *bus, int busnr)
+ 		return NULL;
+ 
+ 	pci_bus_insert_busn_res(child, busnr, busnr);
+-	bus->is_added = 1;
+ 
+ 	return child;
+ }
+-- 
+1.8.1.2
 
