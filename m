@@ -1,67 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:46604 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752769Ab3EWSxz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 May 2013 14:53:55 -0400
-Date: Thu, 23 May 2013 20:53:48 +0200
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Jason Cooper <jason@lakedaemon.net>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>
-Subject: Re: [PATCH v2 0/3] Marvell PCIe driver improvements
-Message-ID: <20130523205348.54751fca@skate>
-In-Reply-To: <20130523182622.GT31290@titan.lakedaemon.net>
-References: <1369319573-19927-1-git-send-email-thomas.petazzoni@free-electrons.com>
-	<20130523182622.GT31290@titan.lakedaemon.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail.windriver.com ([147.11.1.11]:36616 "EHLO
+	mail.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754881Ab3EYLhD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 25 May 2013 07:37:03 -0400
+From: Kevin Hao <haokexin@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>
+Subject: [PATCH 1/3] PCI: add 0x prefix when printing the BAR registers position in __pci_read_base
+Date: Sat, 25 May 2013 19:36:25 +0800
+Message-ID: <1369481787-21500-2-git-send-email-haokexin@gmail.com>
+In-Reply-To: <1369481787-21500-1-git-send-email-haokexin@gmail.com>
+References: <1369481787-21500-1-git-send-email-haokexin@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Jason Cooper,
+We print the BAR registers position in hexadecimal format, so it
+is more readable if 0x prefix is added. Also fix the following
+checkpatch warning:
+  WARNING: Prefer dev_dbg(... to dev_printk(KERN_DEBUG, ...
 
-On Thu, 23 May 2013 14:26:22 -0400, Jason Cooper wrote:
+Signed-off-by: Kevin Hao <haokexin@gmail.com>
+---
+v2: A new patch introduced in v2.
 
-> >  drivers/pci/host/pci-mvebu.c |   55 +++++++++++++++++++++++++++++++++---------
-> >  1 file changed, 44 insertions(+), 11 deletions(-)
-> 
-> Whole series applied to mvebu/pcie_bridge with Bjorn's Ack.  The whole
-> pcie tree now looks like:
-> 
->         /-mvebu/of_pci  /-mvebu/pcie
->         |               |
-> +---+---+---+---+---+---+---+---+---+---+ mvebu/pcie_bridge
->                         |
->                         \---+---+---+---+ mvebu/pcie_kirkwood
-> (not to scale :) )
+ drivers/pci/probe.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Nice diagram, I like it :-)
-
-> This is getting pretty hairy, do you intend on anything else for mvebu
-> pcie for this merge window?
-
-No, nothing significant. There might be some minor additional fixes
-that you can just stack into the mvebu/pcie_bridge branch, but I don't
-have any such fixes sitting anywhere in my repo at this point.
-
-I now intend to work on the MSI support, but since it requires a quite
-significant work to properly expose the msi_chip from the IRQ
-controller driver, I don't really think it will be ready in time for
-3.11.
-
-Thanks a lot for the quick merges. I'm really eager to see this PCIe
-code that has been around for a long time finally merged.
-
-Best regards,
-
-Thomas
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 70f10fa..2505d5e 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -278,9 +278,9 @@ out:
+ 		pci_write_config_word(dev, PCI_COMMAND, orig_cmd);
+ 
+ 	if (bar_too_big)
+-		dev_err(&dev->dev, "reg %x: can't handle 64-bit BAR\n", pos);
++		dev_err(&dev->dev, "reg 0x%x: can't handle 64-bit BAR\n", pos);
+ 	if (res->flags && !bar_disabled)
+-		dev_printk(KERN_DEBUG, &dev->dev, "reg %x: %pR\n", pos, res);
++		dev_dbg(&dev->dev, "reg 0x%x: %pR\n", pos, res);
+ 
+ 	return (res->flags & IORESOURCE_MEM_64) ? 1 : 0;
+ }
 -- 
-Thomas Petazzoni, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
+1.8.1.4
+
