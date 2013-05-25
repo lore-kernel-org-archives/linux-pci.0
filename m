@@ -1,61 +1,107 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f178.google.com ([209.85.223.178]:34574 "EHLO
-	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755008Ab3ENT7e (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 May 2013 15:59:34 -0400
-MIME-Version: 1.0
-In-Reply-To: <5192946F.1050700@intel.com>
-References: <1368498506-25857-1-git-send-email-yinghai@kernel.org>
-	<1368498506-25857-7-git-send-email-yinghai@kernel.org>
-	<51925FB0.4080504@intel.com>
-	<CAE9FiQXYQEAZ=0sG6+2OdffBqfLS9MpoN1xviRR9aDbxPxcKxQ@mail.gmail.com>
-	<5192946F.1050700@intel.com>
-Date: Tue, 14 May 2013 12:59:33 -0700
-Message-ID: <CAE9FiQVGGHB_amKw0-DfDifpTnRGPbxA+q3WY5F-O3x-sx386A@mail.gmail.com>
-Subject: Re: [PATCH 6/7] PCI: Make sure VF's driver get attached after PF's
-From: Yinghai Lu <yinghai@kernel.org>
-To: Alexander Duyck <alexander.h.duyck@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	NetDev <netdev@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail-pa0-f50.google.com ([209.85.220.50]:45554 "EHLO
+	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756140Ab3EYNvZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 25 May 2013 09:51:25 -0400
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Jiang Liu <jiang.liu@huawei.com>
+Subject: [PATCH v3, part1 02/10] PCI: Introduce pci_alloc_dev(struct pci_bus*) to replace alloc_pci_dev()
+Date: Sat, 25 May 2013 21:48:30 +0800
+Message-Id: <1369489718-25869-3-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1369489718-25869-1-git-send-email-jiang.liu@huawei.com>
+References: <1369489718-25869-1-git-send-email-jiang.liu@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 14, 2013 at 12:45 PM, Alexander Duyck
-<alexander.h.duyck@intel.com> wrote:
-> On 05/14/2013 11:44 AM, Yinghai Lu wrote:
->> On Tue, May 14, 2013 at 9:00 AM, Alexander Duyck
->> <alexander.h.duyck@intel.com> wrote:
+From: Gu Zheng <guz.fnst@cn.fujitsu.com>
 
->>> I'm sorry, but what is the point of this patch?  With device assignment
->>> it is always possible to have VFs loaded and the PF driver unloaded
->>> since you cannot remove the VFs if they are assigned to a VM.
->> unload PF driver will not call pci_disable_sriov?
->
-> You cannot call pci_disable_sriov because you will panic all of the
-> guests that have devices assigned.
+Now here we introduce a new interface to replace alloc_pci_dev():
+	struct pci_dev *pci_alloc_dev(struct pci_bus *bus)
 
-ixgbe_remove did call pci_disable_sriov...
+It take a "struct pci_bus *" argument, so we can alloc a pci device
+on a target pci bus, and it acquire the reference of the pci_bus.
+We use pci_alloc_dev(NULL) to simplify the old alloc_pci_dev(),
+and keep it for a while but mark it as __deprecated.
 
-for guest panic, that is another problem.
-just like you pci passthrough with real pci device and hotremove the
-card in host.
+Jiang Liu <jiang.liu@huawei.com>
+This also makes it safe to reference pci_dev->bus when holding a
+reference on a pci_dev.
 
-...
+Also change
+__deprecated struct pci_dev * alloc_pci_dev(void);
+to
+struct pci_dev * __deprecated alloc_pci_dev(void);
+to follow common coding style.
 
-> So how does your patch actually fix this problem?  It seems like it is
-> just avoiding it.
+Signed-off-by: Gu Zheng <guz.fnst@cn.fujitsu.com>
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+---
+ drivers/pci/probe.c | 18 ++++++++++++------
+ include/linux/pci.h |  3 ++-
+ 2 files changed, 14 insertions(+), 7 deletions(-)
 
-yes, until the first one is done.
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 70f10fa..26df9c8 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1200,19 +1200,25 @@ static void pci_release_bus_bridge_dev(struct device *dev)
+ 	kfree(bridge);
+ }
+ 
+-struct pci_dev *alloc_pci_dev(void)
++struct pci_dev *pci_alloc_dev(struct pci_bus *bus)
+ {
+ 	struct pci_dev *dev;
+ 
+ 	dev = kzalloc(sizeof(struct pci_dev), GFP_KERNEL);
+-	if (!dev)
+-		return NULL;
+-
+-	INIT_LIST_HEAD(&dev->bus_list);
+-	dev->dev.type = &pci_dev_type;
++	if (dev) {
++		INIT_LIST_HEAD(&dev->bus_list);
++		dev->dev.type = &pci_dev_type;
++		dev->bus = pci_bus_get(bus);
++	}
+ 
+ 	return dev;
+ }
++EXPORT_SYMBOL(pci_alloc_dev);
++
++struct pci_dev *alloc_pci_dev(void)
++{
++	return pci_alloc_dev(NULL);
++}
+ EXPORT_SYMBOL(alloc_pci_dev);
+ 
+ bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 7556c59..b0f4a82 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -364,7 +364,8 @@ static inline struct pci_dev *pci_physfn(struct pci_dev *dev)
+ 	return dev;
+ }
+ 
+-struct pci_dev *alloc_pci_dev(void);
++struct pci_dev *pci_alloc_dev(struct pci_bus *bus);
++struct pci_dev * __deprecated alloc_pci_dev(void);
+ 
+ #define	to_pci_dev(n) container_of(n, struct pci_dev, dev)
+ #define for_each_pci_dev(d) while ((d = pci_get_device(PCI_ANY_ID, PCI_ANY_ID, d)) != NULL)
+-- 
+1.8.1.2
 
->
-> From what I can tell your problem is originating in pci_call_probe.  I
-> believe it is calling work_on_cpu and that doesn't seem correct since
-> the work should be taking place on a CPU already local to the PF. You
-> might want to look there to see why you are trying to schedule work on a
-> CPU which should be perfectly fine for you to already be doing your work on.
-
-it always try to go with local cpu with same pxm.
