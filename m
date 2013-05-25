@@ -1,72 +1,65 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f52.google.com ([209.85.219.52]:40332 "EHLO
-	mail-oa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758310Ab3EWTr5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 May 2013 15:47:57 -0400
-Received: by mail-oa0-f52.google.com with SMTP id h1so5130995oag.11
-        for <linux-pci@vger.kernel.org>; Thu, 23 May 2013 12:47:56 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAE9FiQX8o97RY-Bd9t1vj+gm_Uri0v_hAUwecaNoF2GwGGTNyA@mail.gmail.com>
-References: <CAE9FiQX=h4H1gcbW=EfQo_ZtAgHGOZ2GxVxLG59C1iMH+qgH2g@mail.gmail.com>
- <1367732090.11982.38.camel@pasglop> <CAE9FiQUN3qqVmdw_EdOC-JZGc219M3tu=roOX98xns+77LJhMw@mail.gmail.com>
- <1367740336.11982.41.camel@pasglop> <51871088.4594420a.0ccc.7300SMTPIN_ADDED_BROKEN@mx.google.com>
- <CAE9FiQXGUOM_h_X5tdGbkiuZGZkiFigSLbbftx3YXybFBg6trg@mail.gmail.com>
- <518786a7.64bbec0a.58a0.1f6bSMTPIN_ADDED_BROKEN@mx.google.com>
- <CAErSpo5MJCoaof=heFM4vLxuWz8pFqsyXAC356jZ7rbRvSOt9g@mail.gmail.com>
- <CAE9FiQWsZXfkSSVFzee4-J4bUDP8DdG=y9-k2du+ek90StDvNA@mail.gmail.com>
- <CAE9FiQXw=Q9hDWMS3kx8=G0eSqo2keKh-VP3=LWZ31PfXmrAmg@mail.gmail.com>
- <519dcfbe.89e9420a.4934.488bSMTPIN_ADDED_BROKEN@mx.google.com>
- <CAE9FiQW==Zvwv976-xjtRFj70JWoZW94yQyM0NMTvMpR-yDG9Q@mail.gmail.com>
- <CAErSpo5ASyYvRJgA3TDt7A5xtxL0sqopfAxbnJwDL=z_2hDJag@mail.gmail.com> <CAE9FiQX8o97RY-Bd9t1vj+gm_Uri0v_hAUwecaNoF2GwGGTNyA@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 23 May 2013 13:47:35 -0600
-Message-ID: <CAErSpo5vY-DY9_bLWbM5UNrSZdO5dyASx1hLGMQg-ypgZHXLLg@mail.gmail.com>
-Subject: Re: Resource assignment oddities
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Gavin Shan <shangw@linux.vnet.ibm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v3, part1 07/10] PCI, unicore, m68k: remove redundant call of pci_bus_add_devices()
+Date: Sat, 25 May 2013 21:48:35 +0800
+Message-Id: <1369489718-25869-8-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1369489718-25869-1-git-send-email-jiang.liu@huawei.com>
+References: <1369489718-25869-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 23, 2013 at 11:17 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Thu, May 23, 2013 at 10:12 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> On Thu, May 23, 2013 at 11:08 AM, Yinghai Lu <yinghai@kernel.org> wrote:
->>>
->>> Good, will resend this as complete form to Bjorn for v3.10.
->>
->> I haven't seen anything this actually fixes yet, except that maybe it
->> removes some "can't assign" messages.  That doesn't sound like v3.10
->> material.
->
-> io port "can't assign" still there.
+pci_scan_bus() and pci_scan_root_bus() has called pci_bus_add_devices()
+once, so remove the redundant call of pci_bus_add_devices().
+On the other handle, subsys_init() callbacks will be invoked before
+device_init() callbacks, so it should be safe to remove the redundant
+calls.
 
-The "can't assign io" message is harmless.  The host bridge doesn't
-support I/O port space, so we'll *never* be able to assign IO space.
-The best we can do for this part of the problem is to get rid of the
-message, and that's not urgent for v3.10.  Actually, I don't think we
-*should* get rid of the message; if we can't assign IO space to an IO
-BAR, I want to know about it.  Maybe the message should be clearer or
-less alarming, but it should be there.
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+---
+ arch/m68k/platform/coldfire/pci.c | 2 +-
+ arch/unicore32/kernel/pci.c       | 5 -----
+ 2 files changed, 1 insertion(+), 6 deletions(-)
 
-> the problem that it fixed: don't fallback wrongly for mmio when ioport
-> fails with must+optional.
->
-> because if it fall back to mmio must-only, later extending to cover
-> optional will
-> not find extra space as mmio range and mmio-pref range in the bridge
-> is connected
-> together.
+diff --git a/arch/m68k/platform/coldfire/pci.c b/arch/m68k/platform/coldfire/pci.c
+index 8572246..2345972 100644
+--- a/arch/m68k/platform/coldfire/pci.c
++++ b/arch/m68k/platform/coldfire/pci.c
+@@ -320,7 +320,7 @@ static int __init mcf_pci_init(void)
+ 	pci_bus_size_bridges(rootbus);
+ 	pci_bus_assign_resources(rootbus);
+ 	pci_enable_bridges(rootbus);
+-	pci_bus_add_devices(rootbus);
++
+ 	return 0;
+ }
+ 
+diff --git a/arch/unicore32/kernel/pci.c b/arch/unicore32/kernel/pci.c
+index ef69c0c..374a055 100644
+--- a/arch/unicore32/kernel/pci.c
++++ b/arch/unicore32/kernel/pci.c
+@@ -277,11 +277,6 @@ static int __init pci_common_init(void)
+ 		pci_bus_assign_resources(puv3_bus);
+ 	}
+ 
+-	/*
+-	 * Tell drivers about devices found.
+-	 */
+-	pci_bus_add_devices(puv3_bus);
+-
+ 	return 0;
+ }
+ subsys_initcall(pci_common_init);
+-- 
+1.8.1.2
 
-I know that we retry when we don't need to.  If the retry results in
-MEM assignments that are *worse* than the original ones, that might be
-a problem we should fix.  But that problem should have nothing to do
-with I/O port space.  Conceptually, if we retry because IO assignment
-failed, the MEM assignments should not change.
-
-I could probably grope through your logs and figure out whether this
-is happening, but it's your job to do that legwork and convince me
-that a change is necessary.
-
-Bjorn
