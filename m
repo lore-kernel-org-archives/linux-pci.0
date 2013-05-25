@@ -1,38 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f172.google.com ([209.85.214.172]:61492 "EHLO
-	mail-ob0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934680Ab3E1QcM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 May 2013 12:32:12 -0400
-Received: by mail-ob0-f172.google.com with SMTP id tb18so9344560obb.3
-        for <linux-pci@vger.kernel.org>; Tue, 28 May 2013 09:32:11 -0700 (PDT)
+Received: from mail-pa0-f51.google.com ([209.85.220.51]:51849 "EHLO
+	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756969Ab3EYPT3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 25 May 2013 11:19:29 -0400
+Message-ID: <51A0D663.1030901@gmail.com>
+Date: Sat, 25 May 2013 23:18:59 +0800
+From: Liu Jiang <liuj97@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20130528113617.GR14575@console-pimps.org>
-References: <1369215782-32697-1-git-send-email-matt@console-pimps.org>
- <CAErSpo4id0RFARD6zCxeMo-uasPBnL7KpUFPqhW4zLgCxrF5fw@mail.gmail.com> <20130528113617.GR14575@console-pimps.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 28 May 2013 10:31:51 -0600
-Message-ID: <CAErSpo5DG61wvQEw_9z8vm6Lp=E0urq6LG5SOuWSawkNeDkF+A@mail.gmail.com>
-Subject: Re: [PATCH] x86/PCI: setup data may be in highmem
-To: Matt Fleming <matt@console-pimps.org>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"x86@kernel.org" <x86@kernel.org>,
-	Matt Fleming <matt.fleming@intel.com>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	Seth Forshee <seth.forshee@canonical.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>, stable@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: Gu Zheng <guz.fnst@cn.fujitsu.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Mauro Carvalho Chehab <mchehab@redhat.com>,
+	Doug Thompson <dougthompson@xmission.com>,
+	linux-edac@vger.kernel.org
+Subject: Re: [RFC PATCH v2, part 2 14/18] PCI, EDAC: use hotplug-safe PCI
+ bus iterators to walk PCI buses
+References: <1368550322-1045-1-git-send-email-jiang.liu@huawei.com> <1368550322-1045-14-git-send-email-jiang.liu@huawei.com> <519C45A3.3000005@cn.fujitsu.com>
+In-Reply-To: <519C45A3.3000005@cn.fujitsu.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 28, 2013 at 5:36 AM, Matt Fleming <matt@console-pimps.org> wrote:
-> On Fri, 24 May, at 08:38:10AM, Bjorn Helgaas wrote:
->> pcibios_add_device() is mostly called at boot-time, when
->> early_ioremap() probably works well.  But it's also called when we
->> hot-add devices later, and it looks like early_ioremap() will then
->> generate warnings because "system_state != SYSTEM_BOOTING".
+On Wed 22 May 2013 12:12:19 PM CST, Gu Zheng wrote:
+> On 05/15/2013 12:51 AM, Jiang Liu wrote:
 >
-> Oops. Good point. Is there any reason we can't use ioremap()?
+>> Enhance EDAC drviers to use hotplug-safe iterators to walk PCI buses.
+>>
+>> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+>> Cc: Mauro Carvalho Chehab <mchehab@redhat.com>
+>> Cc: Doug Thompson <dougthompson@xmission.com>
+>> Cc: linux-edac@vger.kernel.org
+>> Cc: linux-kernel@vger.kernel.org
+>> ---
+>>   drivers/edac/i7core_edac.c | 2 +-
+>>   1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/edac/i7core_edac.c b/drivers/edac/i7core_edac.c
+>> index 0ec3e95..39d5823 100644
+>> --- a/drivers/edac/i7core_edac.c
+>> +++ b/drivers/edac/i7core_edac.c
+>> @@ -1296,7 +1296,7 @@ static unsigned i7core_pci_lastbus(void)
+>>   	int last_bus = 0, bus;
+>>   	struct pci_bus *b = NULL;
+>>
+>> -	while ((b = pci_find_next_bus(b)) != NULL) {
+>> +	for_each_pci_root_bus(b)
+>
+> missing the "{":
+> +	for_each_pci_root_bus(b) {
+Hi Zheng,
+             Thanks for review! Will fix it in next version.
+Regards!
+Gerry
 
-I assume Matthew had some reason for avoiding that in the first place,
-so I hope he'll chime in.
+>
+>>   		bus = b->number;
+>>   		edac_dbg(0, "Found bus %d\n", bus);
+>>   		if (bus > last_bus)
+>
+>
+
+
