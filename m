@@ -1,103 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:21147 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750772Ab3EGWSD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 May 2013 18:18:03 -0400
-From: Yinghai Lu <yinghai@kernel.org>
+Received: from mail-pd0-f172.google.com ([209.85.192.172]:53392 "EHLO
+	mail-pd0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756621Ab3EYNvi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 25 May 2013 09:51:38 -0400
+From: Jiang Liu <liuj97@gmail.com>
 To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
 	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v3 5/5] PCI: Retry assign unassigned resources for hotadd root bus
-Date: Tue,  7 May 2013 15:17:34 -0700
-Message-Id: <1367965054-9013-6-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1367965054-9013-1-git-send-email-yinghai@kernel.org>
-References: <1367965054-9013-1-git-send-email-yinghai@kernel.org>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Chris Metcalf <cmetcalf@tilera.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>
+Subject: [PATCH v3, part1 04/10] PCI: mark pci_scan_bus_parented() as __deprecated
+Date: Sat, 25 May 2013 21:48:32 +0800
+Message-Id: <1369489718-25869-5-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1369489718-25869-1-git-send-email-jiang.liu@huawei.com>
+References: <1369489718-25869-1-git-send-email-jiang.liu@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Let root bus hotadd path use same code for booting path.
-As driver is not loaded yet, we could retry to make sure
-all pci devices get resources allocated.
+Mark pci_scan_bus_parented() as __deprecated and clean up outdated
+comments.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Cc: Chris Metcalf <cmetcalf@tilera.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Thierry Reding <thierry.reding@avionic-design.de>
+Cc: linux-kernel@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
 ---
- drivers/acpi/pci_root.c |    2 +-
- drivers/pci/setup-bus.c |   11 +++++------
- include/linux/pci.h     |    1 +
- 3 files changed, 7 insertions(+), 7 deletions(-)
+ arch/tile/kernel/pci.c | 3 ---
+ include/linux/pci.h    | 4 ++--
+ 2 files changed, 2 insertions(+), 5 deletions(-)
 
-Index: linux-2.6/drivers/pci/setup-bus.c
-===================================================================
---- linux-2.6.orig/drivers/pci/setup-bus.c
-+++ linux-2.6/drivers/pci/setup-bus.c
-@@ -1331,7 +1331,7 @@ static void pci_bus_dump_resources(struc
- 	}
- }
- 
--static int __init pci_bus_get_depth(struct pci_bus *bus)
-+static int pci_bus_get_depth(struct pci_bus *bus)
- {
- 	int depth = 0;
- 	struct pci_dev *dev;
-@@ -1365,7 +1365,7 @@ enum enable_type {
- 	auto_enabled,
- };
- 
--static enum enable_type pci_realloc_enable __initdata = undefined;
-+static enum enable_type pci_realloc_enable = undefined;
- void __init pci_realloc_get_opt(char *str)
- {
- 	if (!strncmp(str, "off", 3))
-@@ -1373,12 +1373,12 @@ void __init pci_realloc_get_opt(char *st
- 	else if (!strncmp(str, "on", 2))
- 		pci_realloc_enable = user_enabled;
- }
--static bool __init pci_realloc_enabled(enum enable_type enable)
-+static bool pci_realloc_enabled(enum enable_type enable)
- {
- 	return enable >= user_enabled;
- }
- 
--static enum enable_type __init pci_realloc_detect(struct pci_bus *bus,
-+static enum enable_type pci_realloc_detect(struct pci_bus *bus,
- 			 enum enable_type enable_local)
- {
- #if defined(CONFIG_PCI_IOV) && defined(CONFIG_PCI_REALLOC_ENABLE_AUTO)
-@@ -1442,8 +1442,7 @@ static unsigned long pci_bus_res_type_ma
-  * second  and later try will clear small leaf bridge res
-  * will stop till to the max  deepth if can not find good one
-  */
--static void __init
--pci_assign_unassigned_root_bus_resources(struct pci_bus *bus)
-+void pci_assign_unassigned_root_bus_resources(struct pci_bus *bus)
- {
- 	LIST_HEAD(realloc_head); /* list of resources that
- 					want additional resources */
-Index: linux-2.6/drivers/acpi/pci_root.c
-===================================================================
---- linux-2.6.orig/drivers/acpi/pci_root.c
-+++ linux-2.6/drivers/acpi/pci_root.c
-@@ -535,7 +535,7 @@ static int acpi_pci_root_add(struct acpi
- 
- 	if (system_state != SYSTEM_BOOTING) {
- 		pcibios_resource_survey_bus(root->bus);
--		pci_assign_unassigned_bus_resources(root->bus);
-+		pci_assign_unassigned_root_bus_resources(root->bus);
- 	}
- 
- 	pci_bus_add_devices(root->bus);
-Index: linux-2.6/include/linux/pci.h
-===================================================================
---- linux-2.6.orig/include/linux/pci.h
-+++ linux-2.6/include/linux/pci.h
-@@ -1002,6 +1002,7 @@ int pci_claim_resource(struct pci_dev *,
- void pci_assign_unassigned_resources(void);
- void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge);
- void pci_assign_unassigned_bus_resources(struct pci_bus *bus);
-+void pci_assign_unassigned_root_bus_resources(struct pci_bus *bus);
- void pdev_enable_device(struct pci_dev *);
- int pci_enable_resources(struct pci_dev *, int mask);
- void pci_fixup_irqs(u8 (*)(struct pci_dev *, u8 *),
+diff --git a/arch/tile/kernel/pci.c b/arch/tile/kernel/pci.c
+index 67237d3..936e087 100644
+--- a/arch/tile/kernel/pci.c
++++ b/arch/tile/kernel/pci.c
+@@ -309,9 +309,6 @@ int __init pcibios_init(void)
+ 			 *
+ 			 * It reads the PCI tree for this bus into the Linux
+ 			 * data structures.
+-			 *
+-			 * This is inlined in linux/pci.h and calls into
+-			 * pci_scan_bus_parented() in probe.c.
+ 			 */
+ 			pci_add_resource(&resources, &ioport_resource);
+ 			pci_add_resource(&resources, &iomem_resource);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index b0f4a82..7b23fa0 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -720,8 +720,8 @@ void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
+ void pcibios_scan_specific_bus(int busn);
+ struct pci_bus *pci_find_bus(int domain, int busnr);
+ void pci_bus_add_devices(const struct pci_bus *bus);
+-struct pci_bus *pci_scan_bus_parented(struct device *parent, int bus,
+-				      struct pci_ops *ops, void *sysdata);
++struct pci_bus * __deprecated pci_scan_bus_parented(struct device *parent,
++			int bus, struct pci_ops *ops, void *sysdata);
+ struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops, void *sysdata);
+ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 				    struct pci_ops *ops, void *sysdata,
+-- 
+1.8.1.2
+
