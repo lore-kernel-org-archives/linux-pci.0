@@ -1,148 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f53.google.com ([209.85.220.53]:64498 "EHLO
-	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758136Ab3ENQxU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 May 2013 12:53:20 -0400
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	Matthew Garrett <mjg@redhat.com>
-Subject: [RFC PATCH v2, part 2 11/18] PCI, x86: use hotplug-safe iterators to walk PCI buses
-Date: Wed, 15 May 2013 00:51:55 +0800
-Message-Id: <1368550322-1045-11-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1368550322-1045-1-git-send-email-jiang.liu@huawei.com>
-References: <1368550322-1045-1-git-send-email-jiang.liu@huawei.com>
+Received: from mail1.windriver.com ([147.11.146.13]:51075 "EHLO
+	mail1.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754881Ab3EYLhF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 25 May 2013 07:37:05 -0400
+From: Kevin Hao <haokexin@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>
+Subject: [PATCH 3/3] PCI: unset the resource if a wrong bus address is assigned by firmware
+Date: Sat, 25 May 2013 19:36:27 +0800
+Message-ID: <1369481787-21500-4-git-send-email-haokexin@gmail.com>
+In-Reply-To: <1369481787-21500-1-git-send-email-haokexin@gmail.com>
+References: <1369481787-21500-1-git-send-email-haokexin@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Enhance x86 architecture specific code to use hotplug-safe iterators
-to walk PCI buses.
+In some situations, the bus and memory address used by kernel are
+not equal and the firmware may assign a bus address which happen
+to be a legitimate memory address to a PCI device, then the kernel
+would not find a matching bus region in host bridge and assume an
+offset of zero and translate it to a memory address the same as the
+bus address. This will leave the bus address in the PCI BAR register
+unchanged and this address is definitely not a legal bus address,
+then cause the device malfunction. We try to detect this by doing
+a invert translation. We can make sure that we run into this case
+if the value we get from the invert translation is not equal to the
+original bus address. In this case we would unset this resource and
+wish the kernel would trigger a reassign later.
 
-In other words, replace pci_find_bus(), pci_find_next_bus() and
-pci_root_buses with pci_bus_exists(), pci_get_bus(), pci_get_next_bus()
-and pci_get_next_root_bus() etc.
-
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>
-Cc: Ingo Molnar <mingo@redhat.com>
-Cc: "H. Peter Anvin" <hpa@zytor.com>
-Cc: x86@kernel.org
-Cc: Myron Stowe <myron.stowe@redhat.com>
-Cc: Yijing Wang <wangyijing@huawei.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Matthew Garrett <mjg@redhat.com>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: linux-kernel@vger.kernel.org
+Signed-off-by: Kevin Hao <haokexin@gmail.com>
 ---
- arch/x86/pci/acpi.c   | 3 ++-
- arch/x86/pci/common.c | 3 ++-
- arch/x86/pci/i386.c   | 9 ++++-----
- arch/x86/pci/irq.c    | 2 +-
- arch/x86/pci/legacy.c | 2 +-
- 5 files changed, 10 insertions(+), 9 deletions(-)
+v2:
+Instead of tweak the pcibios_bus_to_resource and assume we know
+about all the host bridge window, we do an invert translation to
+check if we have a wrong bus address set in the PCI BAR register.
 
-diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index 3e72425..b972f04 100644
---- a/arch/x86/pci/acpi.c
-+++ b/arch/x86/pci/acpi.c
-@@ -526,7 +526,7 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 	 * Maybe the desired pci bus has been already scanned. In such case
- 	 * it is unnecessary to scan the pci bus with the given domain,busnum.
- 	 */
--	bus = pci_find_bus(domain, busnum);
-+	bus = pci_get_bus(domain, busnum);
- 	if (bus) {
- 		/*
- 		 * If the desired bus exits, the content of bus->sysdata will
-@@ -534,6 +534,7 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 		 */
- 		memcpy(bus->sysdata, sd, sizeof(*sd));
- 		kfree(info);
-+		pci_bus_put(bus);
- 	} else {
- 		probe_pci_root_info(info, device, busnum, domain);
- 
-diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-index 305c68b..51cc1be 100644
---- a/arch/x86/pci/common.c
-+++ b/arch/x86/pci/common.c
-@@ -460,8 +460,9 @@ struct pci_bus *pcibios_scan_root(int busnum)
+ drivers/pci/probe.c | 25 ++++++++++++++++++++++++-
+ 1 file changed, 24 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index c57eb27..33c2e72 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -170,7 +170,7 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
  {
- 	struct pci_bus *bus = NULL;
+ 	u32 l, sz, mask;
+ 	u16 orig_cmd;
+-	struct pci_bus_region region;
++	struct pci_bus_region region, inverted_region;
+ 	bool bar_too_big = false, bar_disabled = false;
  
--	while ((bus = pci_find_next_bus(bus)) != NULL) {
-+	for_each_pci_root_bus(bus) {
- 		if (bus->number == busnum) {
-+			pci_bus_put(bus);
- 			/* Already scanned */
- 			return bus;
- 		}
-diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
-index 94919e3..6481d25 100644
---- a/arch/x86/pci/i386.c
-+++ b/arch/x86/pci/i386.c
-@@ -343,7 +343,7 @@ static int __init pcibios_assign_resources(void)
- 	struct pci_bus *bus;
+ 	mask = type ? PCI_ROM_ADDRESS_MASK : ~0;
+@@ -267,6 +267,29 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
  
- 	if (!(pci_probe & PCI_ASSIGN_ROMS))
--		list_for_each_entry(bus, &pci_root_buses, node)
-+		for_each_pci_root_bus(bus)
- 			pcibios_allocate_rom_resources(bus);
+ 	pcibios_bus_to_resource(dev, res, &region);
  
- 	pci_assign_unassigned_resources();
-@@ -371,12 +371,11 @@ void __init pcibios_resource_survey(void)
++	/*
++	 * In some situations, the bus and memory address used by kernel are
++	 * not equal and the firmware may assign a bus address which happen
++	 * to be a legitimate memory address to a PCI device, then the kernel
++	 * would not find a matching bus region in host bridge and assume an
++	 * offset of zero and translate it to a memory address the same as the
++	 * bus address. This will leave the bus address in the PCI BAR register
++	 * unchanged and this address is definitely not a legal bus address,
++	 * then cause the device malfunction. We try to detect this by doing
++	 * a invert translation. We can make sure that we run into this case
++	 * if the value we get from the invert translation is not equal to the
++	 * original bus address.
++	 */
++	pcibios_resource_to_bus(dev, &inverted_region, res);
++	if (inverted_region.start != region.start ||
++		 inverted_region.end != region.end) {
++		dev_info(&dev->dev, "reg 0x%x: bus address [%pa - %pa] allocated by firmware is not in any of the address regions of PCI host bridge, we would force to reassign it later\n",
++			pos, &region.start, &region.end);
++		res->flags |= IORESOURCE_UNSET;
++		res->end -= res->start;
++		res->start = 0;
++	}
++
+ 	goto out;
  
- 	DBG("PCI: Allocating resources\n");
  
--	list_for_each_entry(bus, &pci_root_buses, node)
-+	for_each_pci_root_bus(bus)
- 		pcibios_allocate_bus_resources(bus);
--
--	list_for_each_entry(bus, &pci_root_buses, node)
-+	for_each_pci_root_bus(bus)
- 		pcibios_allocate_resources(bus, 0);
--	list_for_each_entry(bus, &pci_root_buses, node)
-+	for_each_pci_root_bus(bus)
- 		pcibios_allocate_resources(bus, 1);
- 
- 	e820_reserve_resources_late();
-diff --git a/arch/x86/pci/irq.c b/arch/x86/pci/irq.c
-index 372e9b8..65898f6 100644
---- a/arch/x86/pci/irq.c
-+++ b/arch/x86/pci/irq.c
-@@ -137,7 +137,7 @@ static void __init pirq_peer_trick(void)
- 	}
- 	for (i = 1; i < 256; i++) {
- 		int node;
--		if (!busmap[i] || pci_find_bus(0, i))
-+		if (!busmap[i] || pci_bus_exists(0, i))
- 			continue;
- 		node = get_mp_bus_to_node(i);
- 		if (pci_scan_bus_on_node(i, &pci_root_ops, node))
-diff --git a/arch/x86/pci/legacy.c b/arch/x86/pci/legacy.c
-index 4db96fb..1fb7922 100644
---- a/arch/x86/pci/legacy.c
-+++ b/arch/x86/pci/legacy.c
-@@ -40,7 +40,7 @@ void pcibios_scan_specific_bus(int busn)
- 	long node;
- 	u32 l;
- 
--	if (pci_find_bus(0, busn))
-+	if (pci_bus_exists(0, busn))
- 		return;
- 
- 	node = get_mp_bus_to_node(busn);
 -- 
-1.8.1.2
+1.8.1.4
 
