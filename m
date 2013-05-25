@@ -1,79 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from avon.wwwdotorg.org ([70.85.31.133]:34047 "EHLO
-	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754852Ab3EQTsj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 May 2013 15:48:39 -0400
-Message-ID: <51968994.5030408@wwwdotorg.org>
-Date: Fri, 17 May 2013 13:48:36 -0600
-From: Stephen Warren <swarren@wwwdotorg.org>
+Received: from mail-pa0-f43.google.com ([209.85.220.43]:38673 "EHLO
+	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757158Ab3EYQaV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 25 May 2013 12:30:21 -0400
+Received: by mail-pa0-f43.google.com with SMTP id hz11so2678458pad.16
+        for <linux-pci@vger.kernel.org>; Sat, 25 May 2013 09:30:20 -0700 (PDT)
+Message-ID: <51A0E716.9050405@gmail.com>
+Date: Sun, 26 May 2013 00:30:14 +0800
+From: Liu Jiang <liuj97@gmail.com>
 MIME-Version: 1.0
-To: Jay Agarwal <jagarwal@nvidia.com>
-CC: "'thierry.reding@avionic-design.de'"
-	<thierry.reding@avionic-design.de>,
-	"'linux@arm.linux.org.uk'" <linux@arm.linux.org.uk>,
-	"'bhelgaas@google.com'" <bhelgaas@google.com>,
-	"'olof@lixom.net'" <olof@lixom.net>,
-	"'mturquette@linaro.org'" <mturquette@linaro.org>,
-	"'linux-arm-kernel@lists.infradead.org'"
-	<linux-arm-kernel@lists.infradead.org>,
-	"'linux-tegra@vger.kernel.org'" <linux-tegra@vger.kernel.org>,
-	"'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>,
-	"'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 4/4] ARM: tegra: pcie: Enable PCIe controller on Cardhu
-References: <1368010660-31465-1-git-send-email-jagarwal@nvidia.com> <1368010660-31465-4-git-send-email-jagarwal@nvidia.com> <518A8596.7070702@wwwdotorg.org> <C79B248886DD134989C8FF6B096A91AB91B4886B5D@BGMAIL01.nvidia.com> <C79B248886DD134989C8FF6B096A91AB91B4886B6C@BGMAIL01.nvidia.com>
-In-Reply-To: <C79B248886DD134989C8FF6B096A91AB91B4886B6C@BGMAIL01.nvidia.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Kevin Hao <haokexin@gmail.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 1/3] PCI: add 0x prefix when printing the BAR registers
+ position in __pci_read_base
+References: <1369481787-21500-1-git-send-email-haokexin@gmail.com> <1369481787-21500-2-git-send-email-haokexin@gmail.com>
+In-Reply-To: <1369481787-21500-2-git-send-email-haokexin@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/17/2013 10:51 AM, Jay Agarwal wrote:
->>> On 05/08/2013 04:57 AM, Jay Agarwal wrote:
->>>> - Enable PCIe controller on Cardhu
->>>> - Only port 2 is connected on this board
->>>> - Add regulators required for Tegra30
->>>> - Patch is based on remotes/gitorious_thierryreding_linux/tegra/next
->>>> - and should be applied on top of this.
-...
->>> So, if I apply this series, I do see the PCIe bridge and Ethernet
->>> device get enumerated, but I don't see the USB3 controller get
->>> enumerated. I believe that is a PCIe device behind the same bridge on the
->>> same Tegra PCIe port.
->>> Shouldn't this device show up?
->>
->> I have also reproduced this problem. I see somehow no non-
->> prefetchable memory is assigned to any of pcie devices.
->> Probably that is the reason for USB3 (pci 0000:04:00.0) not getting
->> enumerated since it uses only non-prefetchable memory.
-> 
-> 1. Bus4(on which usb3 device resides) always return 0xffffffff from it's config space. which means device is not present?
-> 2. That's why it is not assigned any resources and hence no usb3 probe happens.
-> 3. But same bus does return valid info like vendor/device id etc from it's config space in downstream kernel and hence usb3 probe does happen.
-> 
-> Thierry, Stephen,
-> 4. Any idea why bus4 should return 0xffffffff values in upstream kernel? Anything missing?
+On 05/25/2013 07:36 PM, Kevin Hao wrote:
+> We print the BAR registers position in hexadecimal format, so it
+> is more readable if 0x prefix is added. Also fix the following
+> checkpatch warning:
+>    WARNING: Prefer dev_dbg(... to dev_printk(KERN_DEBUG, ...
+>
+> Signed-off-by: Kevin Hao <haokexin@gmail.com>
+> ---
+> v2: A new patch introduced in v2.
+>
+>   drivers/pci/probe.c | 4 ++--
+>   1 file changed, 2 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 70f10fa..2505d5e 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -278,9 +278,9 @@ out:
+>   		pci_write_config_word(dev, PCI_COMMAND, orig_cmd);
+>   
+>   	if (bar_too_big)
+> -		dev_err(&dev->dev, "reg %x: can't handle 64-bit BAR\n", pos);
+> +		dev_err(&dev->dev, "reg 0x%x: can't handle 64-bit BAR\n", pos);
+>   	if (res->flags && !bar_disabled)
+> -		dev_printk(KERN_DEBUG, &dev->dev, "reg %x: %pR\n", pos, res);
+> +		dev_dbg(&dev->dev, "reg 0x%x: %pR\n", pos, res);
+Hi Kevin,
+     dev_printk(KERN_DEBUG) -> dev_dbg() is not an equivalent change, it 
+depends
+on CONFIG_DEBUG and CONFIG_DYNAMIC_DEBUG.
+Regards!
+Gerry
 
-Is there some reset/enable GPIO or regulator that needs to be programmed
-to enable the PCIe USB3 controller? Take a look at the schematic. If you
-can make it work by tweaking those GPIOs/... manually, then we can
-ignore this issue and fix it up later, since it's not directly related
-to the PCIe controller driver patches. It's more important to get this
-Ethernet working than USB, I think.
-
-> 5. Also, how config space of all pcie devices are mapped? I mean if I change the config space offset in dts file, then also I find correct vendor/device id etc for bus0/device0/fun0.
->     So how this mapping happens that even after changing the config space offset in PCIe address space, it always finds correct vendor/device id.
-
-Can you please word-wrap your email less than 80 columns? It's quite
-hard to read.
-
-I don't quite understand your question. The PCIe driver implements the
-functions that access config space. I don't recall that being influenced
-by anything much in the device tree, except for the 3rd entry in the
-top-level PCIe controller's reg property:
-
-        pcie-controller {
-                compatible = "nvidia,tegra30-pcie";
-                device_type = "pci";
-                reg = <0x00003000 0x00000800   /* PADS registers */
-                       0x00003800 0x00000200   /* AFI registers */
-                       0x10000000 0x10000000>; /* configuration space */
+>   
+>   	return (res->flags & IORESOURCE_MEM_64) ? 1 : 0;
+>   }
 
