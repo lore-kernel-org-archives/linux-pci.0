@@ -1,84 +1,216 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:63014 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751742Ab3EUVan (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 21 May 2013 17:30:43 -0400
-Message-ID: <519BE778.9040800@redhat.com>
-Date: Tue, 21 May 2013 17:30:32 -0400
-From: Don Dutile <ddutile@redhat.com>
-MIME-Version: 1.0
-To: Alexander Duyck <alexander.h.duyck@intel.com>
-CC: Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	NetDev <netdev@vger.kernel.org>,
-	"Michael S. Tsirkin" <mst@redhat.com>
-Subject: Re: [PATCH 6/7] PCI: Make sure VF's driver get attached after PF's
-References: <1368498506-25857-1-git-send-email-yinghai@kernel.org> <1368498506-25857-7-git-send-email-yinghai@kernel.org> <51925FB0.4080504@intel.com> <CAE9FiQXYQEAZ=0sG6+2OdffBqfLS9MpoN1xviRR9aDbxPxcKxQ@mail.gmail.com> <5192946F.1050700@intel.com> <CAE9FiQVGGHB_amKw0-DfDifpTnRGPbxA+q3WY5F-O3x-sx386A@mail.gmail.com> <5192AEF4.1070905@intel.com>
-In-Reply-To: <5192AEF4.1070905@intel.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mail-pd0-f181.google.com ([209.85.192.181]:62200 "EHLO
+	mail-pd0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756351Ab3EYNvd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 25 May 2013 09:51:33 -0400
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Jiang Liu <jiang.liu@huawei.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Paul Mackerras <paulus@samba.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	David Airlie <airlied@linux.ie>,
+	Neela Syam Kolli <megaraidlinux@lsi.com>,
+	"James E.J. Bottomley" <JBottomley@parallels.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linuxppc-dev@lists.ozlabs.org, sparclinux@vger.kernel.org,
+	linux-scsi@vger.kernel.org
+Subject: [PATCH v3, part1 03/10] PCI: Convert alloc_pci_dev(void) to pci_alloc_dev(bus) instead
+Date: Sat, 25 May 2013 21:48:31 +0800
+Message-Id: <1369489718-25869-4-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1369489718-25869-1-git-send-email-jiang.liu@huawei.com>
+References: <1369489718-25869-1-git-send-email-jiang.liu@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/14/2013 05:39 PM, Alexander Duyck wrote:
-> On 05/14/2013 12:59 PM, Yinghai Lu wrote:
->> On Tue, May 14, 2013 at 12:45 PM, Alexander Duyck
->> <alexander.h.duyck@intel.com>  wrote:
->>> On 05/14/2013 11:44 AM, Yinghai Lu wrote:
->>>> On Tue, May 14, 2013 at 9:00 AM, Alexander Duyck
->>>> <alexander.h.duyck@intel.com>  wrote:
->>>>> I'm sorry, but what is the point of this patch?  With device assignment
->>>>> it is always possible to have VFs loaded and the PF driver unloaded
->>>>> since you cannot remove the VFs if they are assigned to a VM.
->>>> unload PF driver will not call pci_disable_sriov?
->>> You cannot call pci_disable_sriov because you will panic all of the
->>> guests that have devices assigned.
->> ixgbe_remove did call pci_disable_sriov...
->>
->> for guest panic, that is another problem.
->> just like you pci passthrough with real pci device and hotremove the
->> card in host.
->>
->> ...
->
-> I suggest you take another look.  In ixgbe_disable_sriov, which is the
-> function that is called we do a check for assigned VFs.  If they are
-> assigned then we do not call pci_disable_sriov.
->
->>
->>> So how does your patch actually fix this problem?  It seems like it is
->>> just avoiding it.
->> yes, until the first one is done.
->
-> Avoiding the issue doesn't fix the underlying problem and instead you
-> are likely just introducing more bugs as a result.
->
->>>  From what I can tell your problem is originating in pci_call_probe.  I
->>> believe it is calling work_on_cpu and that doesn't seem correct since
->>> the work should be taking place on a CPU already local to the PF. You
->>> might want to look there to see why you are trying to schedule work on a
->>> CPU which should be perfectly fine for you to already be doing your work on.
->> it always try to go with local cpu with same pxm.
->
-> The problem is we really shouldn't be calling work_for_cpu in this case
-> since we are already on the correct CPU.  What probably should be
-> happening is that pci_call_probe should be doing a check to see if the
-> current CPU is already contained within the device node map and if so
-> just call local_pci_probe directly.  That way you can avoid deadlocking
-> the system by trying to flush the CPU queue of the CPU you are currently on.
->
-That's the patch that Michael Tsirkin posted for a fix,
-but it was noted that if you have the case where the _same_ driver is used for vf & pf,
-other deadlocks may occur.
-It would work in the case of ixgbe/ixgbevf, but not for something like
-the Mellanox pf/vf driver (which is the same).
+From: Gu Zheng <guz.fnst@cn.fujitsu.com>
 
->
-> Alex
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Use the new pci_alloc_dev(bus) to replace the existing using of
+alloc_pci_dev(void).
+
+v2:
+  Follow Bjorn's correction to move pci_bus_put() to
+  pci_release_dev() instead.
+
+v3:
+  release reference to bus on error recovery path
+
+Signed-off-by: Gu Zheng <guz.fnst@cn.fujitsu.com>
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Paul Mackerras <paulus@samba.org>
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: David Airlie <airlied@linux.ie>
+Cc: Neela Syam Kolli <megaraidlinux@lsi.com>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: linuxppc-dev@lists.ozlabs.org
+Cc: linux-kernel@vger.kernel.org
+Cc: sparclinux@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org
+---
+ arch/powerpc/kernel/pci_of_scan.c | 3 +--
+ arch/sparc/kernel/pci.c           | 3 +--
+ drivers/char/agp/alpha-agp.c      | 2 +-
+ drivers/char/agp/parisc-agp.c     | 2 +-
+ drivers/pci/iov.c                 | 8 +++++---
+ drivers/pci/probe.c               | 5 +++--
+ drivers/scsi/megaraid.c           | 2 +-
+ 7 files changed, 13 insertions(+), 12 deletions(-)
+
+diff --git a/arch/powerpc/kernel/pci_of_scan.c b/arch/powerpc/kernel/pci_of_scan.c
+index d2d407d..6b0ba58 100644
+--- a/arch/powerpc/kernel/pci_of_scan.c
++++ b/arch/powerpc/kernel/pci_of_scan.c
+@@ -128,7 +128,7 @@ struct pci_dev *of_create_pci_dev(struct device_node *node,
+ 	const char *type;
+ 	struct pci_slot *slot;
+ 
+-	dev = alloc_pci_dev();
++	dev = pci_alloc_dev(bus);
+ 	if (!dev)
+ 		return NULL;
+ 	type = of_get_property(node, "device_type", NULL);
+@@ -137,7 +137,6 @@ struct pci_dev *of_create_pci_dev(struct device_node *node,
+ 
+ 	pr_debug("    create device, devfn: %x, type: %s\n", devfn, type);
+ 
+-	dev->bus = bus;
+ 	dev->dev.of_node = of_node_get(node);
+ 	dev->dev.parent = bus->bridge;
+ 	dev->dev.bus = &pci_bus_type;
+diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
+index 972892a..b16f624 100644
+--- a/arch/sparc/kernel/pci.c
++++ b/arch/sparc/kernel/pci.c
+@@ -254,7 +254,7 @@ static struct pci_dev *of_create_pci_dev(struct pci_pbm_info *pbm,
+ 	const char *type;
+ 	u32 class;
+ 
+-	dev = alloc_pci_dev();
++	dev = pci_alloc_dev(bus);
+ 	if (!dev)
+ 		return NULL;
+ 
+@@ -281,7 +281,6 @@ static struct pci_dev *of_create_pci_dev(struct pci_pbm_info *pbm,
+ 		printk("    create device, devfn: %x, type: %s\n",
+ 		       devfn, type);
+ 
+-	dev->bus = bus;
+ 	dev->sysdata = node;
+ 	dev->dev.parent = bus->bridge;
+ 	dev->dev.bus = &pci_bus_type;
+diff --git a/drivers/char/agp/alpha-agp.c b/drivers/char/agp/alpha-agp.c
+index dd84af4..199b8e9 100644
+--- a/drivers/char/agp/alpha-agp.c
++++ b/drivers/char/agp/alpha-agp.c
+@@ -174,7 +174,7 @@ alpha_core_agp_setup(void)
+ 	/*
+ 	 * Build a fake pci_dev struct
+ 	 */
+-	pdev = alloc_pci_dev();
++	pdev = pci_alloc_dev(NULL);
+ 	if (!pdev)
+ 		return -ENOMEM;
+ 	pdev->vendor = 0xffff;
+diff --git a/drivers/char/agp/parisc-agp.c b/drivers/char/agp/parisc-agp.c
+index 94821ab..bf5d247 100644
+--- a/drivers/char/agp/parisc-agp.c
++++ b/drivers/char/agp/parisc-agp.c
+@@ -333,7 +333,7 @@ parisc_agp_setup(void __iomem *ioc_hpa, void __iomem *lba_hpa)
+ 	struct agp_bridge_data *bridge;
+ 	int error = 0;
+ 
+-	fake_bridge_dev = alloc_pci_dev();
++	fake_bridge_dev = pci_alloc_dev(NULL);
+ 	if (!fake_bridge_dev) {
+ 		error = -ENOMEM;
+ 		goto fail;
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index c93071d..2652ca0 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -75,18 +75,20 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
+ 	struct pci_dev *virtfn;
+ 	struct resource *res;
+ 	struct pci_sriov *iov = dev->sriov;
++	struct pci_bus *bus;
+ 
+-	virtfn = alloc_pci_dev();
++	virtfn = pci_alloc_dev(NULL);
+ 	if (!virtfn)
+ 		return -ENOMEM;
+ 
+ 	mutex_lock(&iov->dev->sriov->lock);
+-	virtfn->bus = virtfn_add_bus(dev->bus, virtfn_bus(dev, id));
+-	if (!virtfn->bus) {
++	bus = virtfn_add_bus(dev->bus, virtfn_bus(dev, id));
++	if (!bus) {
+ 		kfree(virtfn);
+ 		mutex_unlock(&iov->dev->sriov->lock);
+ 		return -ENOMEM;
+ 	}
++	virtfn->bus = pci_bus_get(bus);
+ 	virtfn->devfn = virtfn_devfn(dev, id);
+ 	virtfn->vendor = dev->vendor;
+ 	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_DID, &virtfn->device);
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 26df9c8..d5d18a0 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1130,6 +1130,7 @@ static void pci_release_dev(struct device *dev)
+ 	struct pci_dev *pci_dev;
+ 
+ 	pci_dev = to_pci_dev(dev);
++	pci_bus_put(pci_dev->bus);
+ 	pci_release_capabilities(pci_dev);
+ 	pci_release_of_node(pci_dev);
+ 	kfree(pci_dev);
+@@ -1269,11 +1270,10 @@ static struct pci_dev *pci_scan_device(struct pci_bus *bus, int devfn)
+ 	if (!pci_bus_read_dev_vendor_id(bus, devfn, &l, 60*1000))
+ 		return NULL;
+ 
+-	dev = alloc_pci_dev();
++	dev = pci_alloc_dev(bus);
+ 	if (!dev)
+ 		return NULL;
+ 
+-	dev->bus = bus;
+ 	dev->devfn = devfn;
+ 	dev->vendor = l & 0xffff;
+ 	dev->device = (l >> 16) & 0xffff;
+@@ -1281,6 +1281,7 @@ static struct pci_dev *pci_scan_device(struct pci_bus *bus, int devfn)
+ 	pci_set_of_node(dev);
+ 
+ 	if (pci_setup_device(dev)) {
++		pci_bus_put(dev->bus);
+ 		kfree(dev);
+ 		return NULL;
+ 	}
+diff --git a/drivers/scsi/megaraid.c b/drivers/scsi/megaraid.c
+index 846f475f..90c95a3 100644
+--- a/drivers/scsi/megaraid.c
++++ b/drivers/scsi/megaraid.c
+@@ -2026,7 +2026,7 @@ megaraid_abort_and_reset(adapter_t *adapter, Scsi_Cmnd *cmd, int aor)
+ static inline int
+ make_local_pdev(adapter_t *adapter, struct pci_dev **pdev)
+ {
+-	*pdev = alloc_pci_dev();
++	*pdev = pci_alloc_dev(NULL);
+ 
+ 	if( *pdev == NULL ) return -1;
+ 
+-- 
+1.8.1.2
 
