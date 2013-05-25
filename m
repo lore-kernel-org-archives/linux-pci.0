@@ -1,114 +1,136 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <F7B8FD780A346D46A0042F5C63B06AE785E3B2@SHSMSX102.ccr.corp.intel.com>
-References: <F7B8FD780A346D46A0042F5C63B06AE785E3B2@SHSMSX102.ccr.corp.intel.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 17 May 2013 17:43:33 -0600
-Message-ID: <CAErSpo7+AbHi_TwxwHTJunpFb=CMhwMdCni6+NjbhdA=35XhvA@mail.gmail.com>
-Subject: Re: Subject : [ PATCH ] pci-reset-error_state-to-pci_channel_io_normal-at-report_slot_reset
-To: "Zhang, LongX" <longx.zhang@intel.com>
-Cc: "linasvepstas@gmail.com" <linasvepstas@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"yanmin_zhang@linux.intel.com" <yanmin_zhang@linux.intel.com>,
-	"Joseph.Liu@Emulex.Com" <Joseph.Liu@emulex.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-Content-Type: text/plain; charset=ISO-8859-1
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Donald Dutile <ddutile@redhat.com>,
+	Ram Pai <linuxram@us.ibm.com>
+Subject: [PATCH v3, part1 10/10] PCI, IOV: hide remove and rescan sysfs interfaces for SR-IOV virtual functions
+Date: Sat, 25 May 2013 21:48:38 +0800
+Message-Id: <1369489718-25869-11-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1369489718-25869-1-git-send-email-jiang.liu@huawei.com>
+References: <1369489718-25869-1-git-send-email-jiang.liu@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Rafael because he knows about dev->state_saved]
+PCI devices for SR-IOV virtual functions should only be created/
+destroyed by pci_enable_sriov()/pci_disable_sriov() because special
+data structures are assoicated with SR-IOV virtual functions.
+So hide hotplug related sysfs interfaces "remove" and "rescan" for
+SR-IOV virtual functions, otherwise it may causes memory leakage
+and other issues.
 
-Sorry, I'm not very familiar with AER, so please excuse some naive
-questions below.
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Cc: Donald Dutile <ddutile@redhat.com>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: Ram Pai <linuxram@us.ibm.com>
+Cc: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+---
+ drivers/pci/iov.c       |  5 ++---
+ drivers/pci/pci-sysfs.c | 30 ++++++++++++++++++++++++++++--
+ 2 files changed, 30 insertions(+), 5 deletions(-)
 
-On Fri, Apr 26, 2013 at 12:28 AM, Zhang, LongX <longx.zhang@intel.com> wrote:
-> From: Zhang Long <longx.zhang@intel.com>
->
-> Specific pci device drivers might have many functions to call
-> pci_channel_offline to check device states. When slot_reset happens,
-> drivers' slot_reset callback might call such functions and eventually
-> abort the reset.
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index 3e33499..5eb8165 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -80,6 +80,8 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
+ 	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_DID, &virtfn->device);
+ 	pci_setup_device(virtfn);
+ 	virtfn->dev.parent = dev->dev.parent;
++	virtfn->physfn = pci_dev_get(dev);
++	virtfn->is_virtfn = 1;
+ 
+ 	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
+ 		res = dev->resource + PCI_IOV_RESOURCES + i;
+@@ -101,9 +103,6 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
+ 	pci_device_add(virtfn, virtfn->bus);
+ 	mutex_unlock(&iov->dev->sriov->lock);
+ 
+-	virtfn->physfn = pci_dev_get(dev);
+-	virtfn->is_virtfn = 1;
+-
+ 	rc = pci_bus_add_device(virtfn);
+ 	sprintf(buf, "virtfn%u", id);
+ 	rc = sysfs_create_link(&dev->dev.kobj, &virtfn->dev.kobj, buf);
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index 5b4a9d9..403da60 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -325,6 +325,8 @@ dev_rescan_store(struct device *dev, struct device_attribute *attr,
+ 	}
+ 	return count;
+ }
++struct device_attribute dev_rescan_attr = __ATTR(rescan, (S_IWUSR|S_IWGRP),
++						 NULL, dev_rescan_store);
+ 
+ static void remove_callback(struct device *dev)
+ {
+@@ -354,6 +356,8 @@ remove_store(struct device *dev, struct device_attribute *dummy,
+ 		count = ret;
+ 	return count;
+ }
++struct device_attribute dev_remove_attr = __ATTR(remove, (S_IWUSR|S_IWGRP),
++						 NULL, remove_store);
+ 
+ static ssize_t
+ dev_bus_rescan_store(struct device *dev, struct device_attribute *attr,
+@@ -504,8 +508,6 @@ struct device_attribute pci_dev_attrs[] = {
+ 	__ATTR(broken_parity_status,(S_IRUGO|S_IWUSR),
+ 		broken_parity_status_show,broken_parity_status_store),
+ 	__ATTR(msi_bus, 0644, msi_bus_show, msi_bus_store),
+-	__ATTR(remove, (S_IWUSR|S_IWGRP), NULL, remove_store),
+-	__ATTR(rescan, (S_IWUSR|S_IWGRP), NULL, dev_rescan_store),
+ #if defined(CONFIG_PM_RUNTIME) && defined(CONFIG_ACPI)
+ 	__ATTR(d3cold_allowed, 0644, d3cold_allowed_show, d3cold_allowed_store),
+ #endif
+@@ -1463,6 +1465,29 @@ static umode_t pci_dev_attrs_are_visible(struct kobject *kobj,
+ 	return a->mode;
+ }
+ 
++static struct attribute *pci_dev_hp_attrs[] = {
++	&dev_remove_attr.attr,
++	&dev_rescan_attr.attr,
++	NULL,
++};
++
++static umode_t pci_dev_hp_attrs_are_visible(struct kobject *kobj,
++						struct attribute *a, int n)
++{
++	struct device *dev = container_of(kobj, struct device, kobj);
++	struct pci_dev *pdev = to_pci_dev(dev);
++
++	if (pdev->is_virtfn)
++		return 0;
++
++	return a->mode;
++}
++
++static struct attribute_group pci_dev_hp_attr_group = {
++	.attrs = pci_dev_hp_attrs,
++	.is_visible = pci_dev_hp_attrs_are_visible,
++};
++
+ #ifdef CONFIG_PCI_IOV
+ static struct attribute *sriov_dev_attrs[] = {
+ 	&sriov_totalvfs_attr.attr,
+@@ -1494,6 +1519,7 @@ static struct attribute_group pci_dev_attr_group = {
+ 
+ static const struct attribute_group *pci_dev_attr_groups[] = {
+ 	&pci_dev_attr_group,
++	&pci_dev_hp_attr_group,
+ #ifdef CONFIG_PCI_IOV
+ 	&sriov_dev_attr_group,
+ #endif
+-- 
+1.8.1.2
 
-Where does this happen?  I looked at all the references to
-dev->error_state and all the callers of pci_channel_offline(), and I
-didn't see any in .slot_reset() methods.
-
-(There are *assignments* to dev->error_state in qlcnic_attach_func(),
-qlge_io_slot_reset(), and qla2xxx_pci_slot_reset().  You might be able
-to remove those assignments after this patch, but this patch wouldn't
-really change anything for those paths.)
-
-> The patch resets pdev->error_state to pci_channel_io_normal at
-> the begining of report_slot_reset.
-
-> Signed-off-by: Zhang Yanmin <yanmin_zhang@linux.intel.com>
-> Signed-off-by: Zhang Long <longx.zhang@intel.com>
-> ---
->  drivers/pci/pcie/aer/aerdrv_core.c |    1 +
->  drivers/pci/pcie/portdrv_pci.c     |   12 +++++-------
->  2 files changed, 6 insertions(+), 7 deletions(-)
->
-> diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
-> index 564d97f..c61fd44 100644
-> --- a/drivers/pci/pcie/aer/aerdrv_core.c
-> +++ b/drivers/pci/pcie/aer/aerdrv_core.c
-> @@ -286,6 +286,7 @@ static int report_slot_reset(struct pci_dev *dev, void *data)
->         result_data = (struct aer_broadcast_data *) data;
->
->         device_lock(&dev->dev);
-> +       dev->error_state = pci_channel_io_normal;
-
-The device's error_state might be pci_channel_io_frozen when we get
-here.  We haven't touched anything in the hardware yet.  What makes
-the device unfrozen now?  Did anything actually change as far as the
-hardware device is concerned?
-
-I agree it looks like report_slot_reset() should be made more like
-eeh_report_reset().  I'm just wondering if the error_state should be
-changed *after* calling the .slot_reset() method instead of before.
-
->         if (!dev->driver ||
->                 !dev->driver->err_handler ||
->                 !dev->driver->err_handler->slot_reset)
-> diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
-> index ed4d094..7abefd9 100644
-> --- a/drivers/pci/pcie/portdrv_pci.c
-> +++ b/drivers/pci/pcie/portdrv_pci.c
-> @@ -332,13 +332,11 @@ static pci_ers_result_t pcie_portdrv_slot_reset(struct pci_dev *dev)
->         pci_ers_result_t status = PCI_ERS_RESULT_RECOVERED;
->         int retval;
->
-> -       /* If fatal, restore cfg space for possible link reset at upstream */
-> -       if (dev->error_state == pci_channel_io_frozen) {
-> -               dev->state_saved = true;
-> -               pci_restore_state(dev);
-> -               pcie_portdrv_restore_config(dev);
-> -               pci_enable_pcie_error_reporting(dev);
-> -       }
-
-Previously we only restored state for the pci_channel_io_frozen state,
-i.e., when handling an AER_FATAL error.  Now we restore it always.
-Why?
-
-> +       /* restore cfg space for possible link reset at upstream */
-> +       dev->state_saved = true;
-
-"dev->state_saved == true" means that the dev->saved_config_space
-contains valid data.  Why do we know that's the case here?  I see that
-pcie_portdrv_probe() calls pci_save_state() when we first claim the
-port, and I guess we're assuming the state saved then is still valid.
-But why do we need to actually set dev->state_saved here?  Shouldn't
-it be already set to true anyway?
-
-> +       pci_restore_state(dev);
-> +       pcie_portdrv_restore_config(dev);
-> +       pci_enable_pcie_error_reporting(dev);
->
->         /* get true return value from &status */
->         retval = device_for_each_child(&dev->dev, &status, slot_reset_iter);
-> --
-> 1.7.4.1
->
->
->
