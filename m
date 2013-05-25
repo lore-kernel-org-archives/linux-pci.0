@@ -1,133 +1,60 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Jiang Liu <liuj97@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Len Brown <lenb@kernel.org>,
-	linux-acpi@vger.kernel.org
-Subject: Re: [PATCH v2, part 1 5/9] ACPI, PCI: remove unused global list acpi_pci_roots in pci_root.c
-Date: Tue, 14 May 2013 01:28:45 +0200
-Message-ID: <1598495.v92I2Ljz9W@vostro.rjw.lan>
-In-Reply-To: <1368461313-4371-6-git-send-email-jiang.liu@huawei.com>
-References: <1368461313-4371-1-git-send-email-jiang.liu@huawei.com> <1368461313-4371-6-git-send-email-jiang.liu@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.windriver.com ([147.11.1.11]:36620 "EHLO
+	mail.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754881Ab3EYLhE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 25 May 2013 07:37:04 -0400
+From: Kevin Hao <haokexin@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>
+Subject: [PATCH 2/3] PCI: converge the unnecessary sprinkling of pcibios_bus_to_resource in __pci_read_base
+Date: Sat, 25 May 2013 19:36:26 +0800
+Message-ID: <1369481787-21500-3-git-send-email-haokexin@gmail.com>
+In-Reply-To: <1369481787-21500-1-git-send-email-haokexin@gmail.com>
+References: <1369481787-21500-1-git-send-email-haokexin@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, May 14, 2013 12:08:29 AM Jiang Liu wrote:
-> Now the global list acpi_pci_roots pci_root.c is useless, remove it.
+Since we will invoke pcibios_bus_to_resource unconditionally if we
+don't goto fail, move it out of if/else wrap. No function change.
 
-Well, are patches [1-4/9] needed for that or does it apply without them?
+Signed-off-by: Kevin Hao <haokexin@gmail.com>
+---
+v2: Split these changed into a new patch compare with the v1 patch.
 
-Rafael
+ drivers/pci/probe.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-
-> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-> Cc: Len Brown <lenb@kernel.org>
-> Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
-> Cc: linux-acpi@vger.kernel.org
-> Cc: linux-kernel@vger.kernel.org
-> ---
->  drivers/acpi/pci_root.c | 25 +++----------------------
->  include/acpi/acpi_bus.h |  1 -
->  2 files changed, 3 insertions(+), 23 deletions(-)
-> 
-> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-> index b80e06e..91ddfd6 100644
-> --- a/drivers/acpi/pci_root.c
-> +++ b/drivers/acpi/pci_root.c
-> @@ -65,10 +65,6 @@ static struct acpi_scan_handler pci_root_handler = {
->  	.detach = acpi_pci_root_remove,
->  };
->  
-> -/* Lock to protect both acpi_pci_roots lists */
-> -static DEFINE_MUTEX(acpi_pci_root_lock);
-> -static LIST_HEAD(acpi_pci_roots);
-> -
->  static DEFINE_MUTEX(osc_lock);
->  
->  /**
-> @@ -423,7 +419,6 @@ static int acpi_pci_root_add(struct acpi_device *device,
->  		}
->  	}
->  
-> -	INIT_LIST_HEAD(&root->node);
->  	root->device = device;
->  	root->segment = segment & 0xFFFF;
->  	strcpy(acpi_device_name(device), ACPI_PCI_ROOT_DEVICE_NAME);
-> @@ -501,10 +496,6 @@ static int acpi_pci_root_add(struct acpi_device *device,
->  	 * TBD: Need PCI interface for enumeration/configuration of roots.
->  	 */
->  
-> -	mutex_lock(&acpi_pci_root_lock);
-> -	list_add_tail(&root->node, &acpi_pci_roots);
-> -	mutex_unlock(&acpi_pci_root_lock);
-> -
->  	/*
->  	 * Scan the Root Bridge
->  	 * --------------------
-> @@ -518,7 +509,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
->  			    "Bus %04x:%02x not present in PCI namespace\n",
->  			    root->segment, (unsigned int)root->secondary.start);
->  		result = -ENODEV;
-> -		goto out_del_root;
-> +		goto end;
->  	}
->  
->  	/* ASPM setting */
-> @@ -538,20 +529,13 @@ static int acpi_pci_root_add(struct acpi_device *device,
->  	if (system_state != SYSTEM_BOOTING) {
->  		pcibios_resource_survey_bus(root->bus);
->  		pci_assign_unassigned_bus_resources(root->bus);
-> -	}
-> -
-> -	/* need to after hot-added ioapic is registered */
-> -	if (system_state != SYSTEM_BOOTING)
-> +		/* need to after hot-added ioapic is registered */
->  		pci_enable_bridges(root->bus);
-> +	}
->  
->  	pci_bus_add_devices(root->bus);
->  	return 1;
->  
-> -out_del_root:
-> -	mutex_lock(&acpi_pci_root_lock);
-> -	list_del(&root->node);
-> -	mutex_unlock(&acpi_pci_root_lock);
-> -
->  end:
->  	kfree(root);
->  	return result;
-> @@ -568,9 +552,6 @@ static void acpi_pci_root_remove(struct acpi_device *device)
->  
->  	pci_remove_root_bus(root->bus);
->  
-> -	mutex_lock(&acpi_pci_root_lock);
-> -	list_del(&root->node);
-> -	mutex_unlock(&acpi_pci_root_lock);
->  	kfree(root);
->  }
->  
-> diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
-> index 22ba56e..4eb9a88 100644
-> --- a/include/acpi/acpi_bus.h
-> +++ b/include/acpi/acpi_bus.h
-> @@ -447,7 +447,6 @@ int register_acpi_bus_type(struct acpi_bus_type *);
->  int unregister_acpi_bus_type(struct acpi_bus_type *);
->  
->  struct acpi_pci_root {
-> -	struct list_head node;
->  	struct acpi_device * device;
->  	struct pci_bus *bus;
->  	u16 segment;
-> 
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 2505d5e..c57eb27 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -250,12 +250,10 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
+ 			pci_write_config_dword(dev, pos + 4, 0);
+ 			region.start = 0;
+ 			region.end = sz64;
+-			pcibios_bus_to_resource(dev, res, &region);
+ 			bar_disabled = true;
+ 		} else {
+ 			region.start = l64;
+ 			region.end = l64 + sz64;
+-			pcibios_bus_to_resource(dev, res, &region);
+ 		}
+ 	} else {
+ 		sz = pci_size(l, sz, mask);
+@@ -265,9 +263,10 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
+ 
+ 		region.start = l;
+ 		region.end = l + sz;
+-		pcibios_bus_to_resource(dev, res, &region);
+ 	}
+ 
++	pcibios_bus_to_resource(dev, res, &region);
++
+ 	goto out;
+ 
+ 
 -- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+1.8.1.4
+
