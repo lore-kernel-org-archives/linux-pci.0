@@ -1,8 +1,4 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f44.google.com ([209.85.220.44]:52743 "EHLO
-	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757811Ab3ENQws (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 May 2013 12:52:48 -0400
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Jiang Liu <liuj97@gmail.com>
 To: Bjorn Helgaas <bhelgaas@google.com>,
 	Yinghai Lu <yinghai@kernel.org>
@@ -14,62 +10,86 @@ Cc: Jiang Liu <jiang.liu@huawei.com>,
 	Myron Stowe <myron.stowe@redhat.com>,
 	Yijing Wang <wangyijing@huawei.com>,
 	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, David Howells <dhowells@redhat.com>,
-	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-Subject: [RFC PATCH v2, part 2 05/18] PCI, FRV: use hotplug-safe iterators to walk PCI buses
-Date: Wed, 15 May 2013 00:51:49 +0800
-Message-Id: <1368550322-1045-5-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1368550322-1045-1-git-send-email-jiang.liu@huawei.com>
-References: <1368550322-1045-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-pci-owner@vger.kernel.org
+	linux-kernel@vger.kernel.org,
+	Corentin Chary <corentin.chary@gmail.com>,
+	Matthew Garrett <matthew.garrett@nebula.com>,
+	acpi4asus-user@lists.sourceforge.net,
+	platform-driver-x86@vger.kernel.org
+Subject: [PATCH v3, part2 19/20] PCI, asus-wmi: use hotplug-safe iterators to walk PCI buses
+Date: Sun, 26 May 2013 23:53:16 +0800
+Message-Id: <1369583597-3801-20-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1369583597-3801-1-git-send-email-jiang.liu@huawei.com>
+References: <1369583597-3801-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Enhance FRV architecture specific code to use hotplug-safe iterators
-to walk PCI buses.
+Enhance asus-wmi drvier to use hotplug-safe iterators to walk PCI buses.
 
 Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Cc: David Howells <dhowells@redhat.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: Corentin Chary <corentin.chary@gmail.com>
+Cc: Matthew Garrett <matthew.garrett@nebula.com>
+Cc: acpi4asus-user@lists.sourceforge.net
+Cc: platform-driver-x86@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org
 ---
- arch/frv/mb93090-mb00/pci-frv.c | 5 ++++-
- arch/frv/mb93090-mb00/pci-vdk.c | 2 +-
- 2 files changed, 5 insertions(+), 2 deletions(-)
+ drivers/platform/x86/asus-wmi.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-diff --git a/arch/frv/mb93090-mb00/pci-frv.c b/arch/frv/mb93090-mb00/pci-frv.c
-index c281217..48ee89a 100644
---- a/arch/frv/mb93090-mb00/pci-frv.c
-+++ b/arch/frv/mb93090-mb00/pci-frv.c
-@@ -188,8 +188,11 @@ static void __init pcibios_assign_resources(void)
- 
- void __init pcibios_resource_survey(void)
+diff --git a/drivers/platform/x86/asus-wmi.c b/drivers/platform/x86/asus-wmi.c
+index c11b242..f92db4c 100644
+--- a/drivers/platform/x86/asus-wmi.c
++++ b/drivers/platform/x86/asus-wmi.c
+@@ -596,7 +596,7 @@ static bool asus_wlan_rfkill_blocked(struct asus_wmi *asus)
+ static void asus_rfkill_hotplug(struct asus_wmi *asus)
  {
-+	struct pci_bus *bus;
-+
- 	DBG("PCI: Allocating resources\n");
--	pcibios_allocate_bus_resources(&pci_root_buses);
-+	for_each_pci_root_bus(bus)
-+		pcibios_allocate_bus_resources(&bus->children);
- 	pcibios_allocate_resources(0);
- 	pcibios_allocate_resources(1);
- 	pcibios_assign_resources();
-diff --git a/arch/frv/mb93090-mb00/pci-vdk.c b/arch/frv/mb93090-mb00/pci-vdk.c
-index 0aa35f0..f1d6c16 100644
---- a/arch/frv/mb93090-mb00/pci-vdk.c
-+++ b/arch/frv/mb93090-mb00/pci-vdk.c
-@@ -234,7 +234,7 @@ static void __init pcibios_fixup_peer_bridges(void)
- 		return;
- 	printk("PCI: Peer bridge fixup\n");
- 	for (n=0; n <= pcibios_last_bus; n++) {
--		if (pci_find_bus(0, n))
-+		if (pci_bus_exists(0, n))
- 			continue;
- 		bus.number = n;
- 		bus.ops = pci_root_ops;
+ 	struct pci_dev *dev;
+-	struct pci_bus *bus;
++	struct pci_bus *bus = NULL;
+ 	bool blocked;
+ 	bool absent;
+ 	u32 l;
+@@ -611,7 +611,7 @@ static void asus_rfkill_hotplug(struct asus_wmi *asus)
+ 		rfkill_set_sw_state(asus->wlan.rfkill, blocked);
+ 
+ 	if (asus->hotplug_slot) {
+-		bus = pci_find_bus(0, 1);
++		bus = pci_get_bus(0, 1);
+ 		if (!bus) {
+ 			pr_warn("Unable to find PCI bus 1?\n");
+ 			goto out_unlock;
+@@ -657,6 +657,7 @@ static void asus_rfkill_hotplug(struct asus_wmi *asus)
+ 
+ out_unlock:
+ 	mutex_unlock(&asus->hotplug_lock);
++	pci_bus_put(bus);
+ }
+ 
+ static void asus_rfkill_notify(acpi_handle handle, u32 event, void *data)
+@@ -748,7 +749,7 @@ static void asus_hotplug_work(struct work_struct *work)
+ static int asus_setup_pci_hotplug(struct asus_wmi *asus)
+ {
+ 	int ret = -ENOMEM;
+-	struct pci_bus *bus = pci_find_bus(0, 1);
++	struct pci_bus *bus = pci_get_bus(0, 1);
+ 
+ 	if (!bus) {
+ 		pr_err("Unable to find wifi PCI bus\n");
+@@ -782,6 +783,7 @@ static int asus_setup_pci_hotplug(struct asus_wmi *asus)
+ 		pr_err("Unable to register hotplug slot - %d\n", ret);
+ 		goto error_register;
+ 	}
++	pci_bus_put(bus);
+ 
+ 	return 0;
+ 
+@@ -793,6 +795,7 @@ error_info:
+ error_slot:
+ 	destroy_workqueue(asus->hotplug_workqueue);
+ error_workqueue:
++	pci_bus_put(bus);
+ 	return ret;
+ }
+ 
 -- 
 1.8.1.2
 
