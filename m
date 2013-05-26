@@ -1,55 +1,162 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f182.google.com ([209.85.214.182]:42371 "EHLO
-	mail-ob0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758177Ab3EYXqk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 25 May 2013 19:46:40 -0400
-Received: by mail-ob0-f182.google.com with SMTP id va2so6749279obc.41
-        for <linux-pci@vger.kernel.org>; Sat, 25 May 2013 16:46:39 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1369481787-21500-1-git-send-email-haokexin@gmail.com>
-References: <1369481787-21500-1-git-send-email-haokexin@gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Sat, 25 May 2013 17:46:19 -0600
-Message-ID: <CAErSpo7abMuK2Xsz6K_JF-guKO9TkZ09cpT9RudFSe_OZJ1U+A@mail.gmail.com>
-Subject: Re: [PATCH v2 0/3] fix the pci device malfunction if a wrong bus
- address is assigned by firmware
-To: Kevin Hao <haokexin@gmail.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Jiri Kosina <jkosina@suse.cz>,
+	Masanari Iida <standby24x7@gmail.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Subject: [PATCH v3, part2 03/20] PCI, hotplug: use hotplug-safe iterators to walk PCI buses
+Date: Sun, 26 May 2013 23:53:00 +0800
+Message-Id: <1369583597-3801-4-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1369583597-3801-1-git-send-email-jiang.liu@huawei.com>
+References: <1369583597-3801-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, May 25, 2013 at 5:36 AM, Kevin Hao <haokexin@gmail.com> wrote:
-> v2:
->  * Use the method suggested by Bjorn to check if we have a wrong bus address
->    set in the PCI BAR register.
->  * Split the "move the pcibios_bus_to_resource() call out of the if/else wrap"
->    change into a new patch.
->  * A minor new patch is introduced to add 0x prefix for the PCI BAR register
->    position.
->
-> v1:
-> On a fsl p2020rdb-pc board, the onboard pci device is assigned the bus address
-> 0xa0000000 by firmware. But the kernel allocate the cpu address 0xa0000000 ~ 0xbfffffff
-> to this PCIe controller and use 0xe0000000 ~ 0xdfffffff as its bus address.
-> In this case the kernel would think that the bus address in this pci device
-> is correct and leave it unchanged. Then causes this device not work.
->
-> Even though this looks like a mismatch of the address space between firmware
-> and kernel. I think we should detect this kind of error and fix it automatically
-> if we don't want just to probe only (PCI_PROBE_ONLY is not set).
->
-> ---
-> Kevin Hao (3):
->   PCI: add 0x prefix when printing the BAR registers position in
->     __pci_read_base
->   PCI: converge the unnecessary sprinkling of pcibios_bus_to_resource in
->         __pci_read_base
->   PCI: unset the resource if a wrong bus address is assigned by firmware
->
->  drivers/pci/probe.c | 34 ++++++++++++++++++++++++++++------
->  1 file changed, 28 insertions(+), 6 deletions(-)
+Enhance PCI hotplug drivers to use hotplug-safe iterators to walk
+PCI buses.
 
-Applied to my "next" branch for v3.11, thanks.
+In other words, replace pci_find_bus(), pci_find_next_bus() and
+pci_root_buses with pci_bus_exists(), pci_get_bus(), pci_get_next_bus()
+and pci_get_next_root_bus() etc.
 
-Bjorn
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Acked-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Jiri Kosina <jkosina@suse.cz>
+Cc: Masanari Iida <standby24x7@gmail.com>
+Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Cc: Toshi Kani <toshi.kani@hp.com>
+Cc: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+---
+ drivers/pci/hotplug-pci.c          | 2 +-
+ drivers/pci/hotplug/ibmphp_core.c  | 8 +++++---
+ drivers/pci/hotplug/ibmphp_ebda.c  | 8 ++++++--
+ drivers/pci/hotplug/sgi_hotplug.c  | 3 ++-
+ drivers/pci/hotplug/shpchp_sysfs.c | 2 +-
+ 5 files changed, 15 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/pci/hotplug-pci.c b/drivers/pci/hotplug-pci.c
+index 6258dc2..18533ed 100644
+--- a/drivers/pci/hotplug-pci.c
++++ b/drivers/pci/hotplug-pci.c
+@@ -11,7 +11,7 @@ int __ref pci_hp_add_bridge(struct pci_dev *dev)
+ 	int end = parent->busn_res.end;
+ 
+ 	for (busnr = start; busnr <= end; busnr++) {
+-		if (!pci_find_bus(pci_domain_nr(parent), busnr))
++		if (!pci_bus_exists(pci_domain_nr(parent), busnr))
+ 			break;
+ 	}
+ 	if (busnr-- > end) {
+diff --git a/drivers/pci/hotplug/ibmphp_core.c b/drivers/pci/hotplug/ibmphp_core.c
+index cbd72d8..fb47695 100644
+--- a/drivers/pci/hotplug/ibmphp_core.c
++++ b/drivers/pci/hotplug/ibmphp_core.c
+@@ -739,7 +739,7 @@ static u8 bus_structure_fixup(u8 busno)
+ 	struct pci_dev *dev;
+ 	u16 l;
+ 
+-	if (pci_find_bus(0, busno) || !(ibmphp_find_same_bus_num(busno)))
++	if (pci_bus_exists(0, busno) || !(ibmphp_find_same_bus_num(busno)))
+ 		return 1;
+ 
+ 	bus = kmalloc(sizeof(*bus), GFP_KERNEL);
+@@ -787,7 +787,7 @@ static int ibm_configure_device(struct pci_func *func)
+ 				PCI_DEVFN(func->device, func->function));
+ 
+ 	if (func->dev == NULL) {
+-		struct pci_bus *bus = pci_find_bus(0, func->busno);
++		struct pci_bus *bus = pci_get_bus(0, func->busno);
+ 		if (!bus)
+ 			return 0;
+ 
+@@ -795,6 +795,7 @@ static int ibm_configure_device(struct pci_func *func)
+ 				PCI_DEVFN(func->device, func->function));
+ 		if (num)
+ 			pci_bus_add_devices(bus);
++		pci_bus_put(bus);
+ 
+ 		func->dev = pci_get_bus_and_slot(func->busno,
+ 				PCI_DEVFN(func->device, func->function));
+@@ -1315,13 +1316,14 @@ static int __init ibmphp_init(void)
+ 		goto exit;
+ 	}
+ 
+-	bus = pci_find_bus(0, 0);
++	bus = pci_get_bus(0, 0);
+ 	if (!bus) {
+ 		err("Can't find the root pci bus, can not continue\n");
+ 		rc = -ENODEV;
+ 		goto error;
+ 	}
+ 	memcpy(ibmphp_pci_bus, bus, sizeof(*ibmphp_pci_bus));
++	pci_bus_put(bus);
+ 
+ 	ibmphp_debug = debug;
+ 
+diff --git a/drivers/pci/hotplug/ibmphp_ebda.c b/drivers/pci/hotplug/ibmphp_ebda.c
+index 9df78bc..e17f271 100644
+--- a/drivers/pci/hotplug/ibmphp_ebda.c
++++ b/drivers/pci/hotplug/ibmphp_ebda.c
+@@ -978,9 +978,13 @@ static int __init ebda_rsrc_controller (void)
+ 	}			/* each hpc  */
+ 
+ 	list_for_each_entry(tmp_slot, &ibmphp_slot_head, ibm_slot_list) {
++		struct pci_bus *bus = pci_get_bus(0, tmp_slot->bus);
++
++		BUG_ON(!bus);
+ 		snprintf(name, SLOT_NAME_SIZE, "%s", create_file_name(tmp_slot));
+-		pci_hp_register(tmp_slot->hotplug_slot,
+-			pci_find_bus(0, tmp_slot->bus), tmp_slot->device, name);
++		pci_hp_register(tmp_slot->hotplug_slot, bus, tmp_slot->device,
++				name);
++		pci_bus_put(bus);
+ 	}
+ 
+ 	print_ebda_hpc ();
+diff --git a/drivers/pci/hotplug/sgi_hotplug.c b/drivers/pci/hotplug/sgi_hotplug.c
+index b2781df..5c69bda 100644
+--- a/drivers/pci/hotplug/sgi_hotplug.c
++++ b/drivers/pci/hotplug/sgi_hotplug.c
+@@ -684,7 +684,7 @@ static int __init sn_pci_hotplug_init(void)
+ 
+ 	INIT_LIST_HEAD(&sn_hp_list);
+ 
+-	while ((pci_bus = pci_find_next_bus(pci_bus))) {
++	for_each_pci_root_bus(pci_bus) {
+ 		if (!pci_bus->sysdata)
+ 			continue;
+ 
+@@ -703,6 +703,7 @@ static int __init sn_pci_hotplug_init(void)
+ 			break;
+ 		}
+ 	}
++	pci_bus_put(pci_bus);
+ 
+ 	return registered == 1 ? 0 : -ENODEV;
+ }
+diff --git a/drivers/pci/hotplug/shpchp_sysfs.c b/drivers/pci/hotplug/shpchp_sysfs.c
+index e8c31fe..e7a5dd2 100644
+--- a/drivers/pci/hotplug/shpchp_sysfs.c
++++ b/drivers/pci/hotplug/shpchp_sysfs.c
+@@ -74,7 +74,7 @@ static ssize_t show_ctrl (struct device *dev, struct device_attribute *attr, cha
+ 	}
+ 	out += sprintf(out, "Free resources: bus numbers\n");
+ 	for (busnr = bus->busn_res.start; busnr <= bus->busn_res.end; busnr++) {
+-		if (!pci_find_bus(pci_domain_nr(bus), busnr))
++		if (!pci_bus_exists(pci_domain_nr(bus), busnr))
+ 			break;
+ 	}
+ 	if (busnr < bus->busn_res.end)
+-- 
+1.8.1.2
+
