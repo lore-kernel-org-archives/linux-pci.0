@@ -1,206 +1,334 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f173.google.com ([209.85.192.173]:42006 "EHLO
-	mail-pd0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755774Ab3ETPhy convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 20 May 2013 11:37:54 -0400
-MIME-Version: 1.0
-Reply-To: linasvepstas@gmail.com
-In-Reply-To: <CF6E51640088844D9CADE5541A7C2FEB33EBC11D@CMEXMB1.ad.emulex.com>
-References: <F7B8FD780A346D46A0042F5C63B06AE785E3B2@SHSMSX102.ccr.corp.intel.com>
- <CAErSpo7+AbHi_TwxwHTJunpFb=CMhwMdCni6+NjbhdA=35XhvA@mail.gmail.com> <CF6E51640088844D9CADE5541A7C2FEB33EBC11D@CMEXMB1.ad.emulex.com>
-From: Linas Vepstas <linasvepstas@gmail.com>
-Date: Mon, 20 May 2013 10:37:33 -0500
-Message-ID: <CAHrUA36OxKn1ucaA4-1jHU=4P+hCWOTVa2ECAwpxEoBWSRAv8A@mail.gmail.com>
-Subject: Re: Subject : [ PATCH ] pci-reset-error_state-to-pci_channel_io_normal-at-report_slot_reset
-To: "Liu, Joseph" <Joseph.Liu@emulex.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"Zhang, LongX" <longx.zhang@intel.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"yanmin_zhang@linux.intel.com" <yanmin_zhang@linux.intel.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-Content-Type: text/plain; charset=UTF-8
+Received: from mail-pb0-f43.google.com ([209.85.160.43]:44000 "EHLO
+	mail-pb0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754056Ab3EZP5K (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 26 May 2013 11:57:10 -0400
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v3, part2 01/20] PCI: introduce hotplug-safe PCI bus iterators
+Date: Sun, 26 May 2013 23:52:58 +0800
+Message-Id: <1369583597-3801-2-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1369583597-3801-1-git-send-email-jiang.liu@huawei.com>
+References: <1369583597-3801-1-git-send-email-jiang.liu@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I think Joe Liu has it right.  I'm going to top-post because things
-are a bit tangled below.  I urge a review of
-/Documentation/PCI/pci-error-recovery.txt, as that gives the details.
+Introduce hotplug-safe PCI bus iterators as below, which hold a
+reference on the returned PCI bus object.
+bool pci_bus_exists(int domain, int busnr);
+struct pci_bus *pci_get_bus(int domain, int busnr);
+struct pci_bus *pci_get_next_bus(struct pci_bus *from);
+struct pci_bus *pci_get_next_root_bus(struct pci_bus *from);
+#define for_each_pci_bus(b) for (b = NULL; (b = pci_get_next_bus(b)); )
+#define for_each_pci_root_bus(b)  \
+		for (b = NULL; (b = pci_get_next_root_bus(b)); )
 
-The intended sequence is that, after an error, the device driver gets
-a shot at running some diagnostics & dumps, and then the pci
-bridges/controllers/ports/links are reset (by platform code, viz. aer
-in this case) to a state resembling a fresh power-on.  Then the
-.slot_reset() callback is called on the device driver, to tell the
-driver "hey everything upstream is now working, go set yourself up for
-normal ops."  Thus, in particular, one should have pdev->error_state =
-pci_channel_io_normal; before .slot_reset() is called, and the PCI
-config space contents should resemble a fresh power-on state (and
-**NOT** some other saved state!)
+The long-term goal is to remove hotplug-unsafe pci_find_bus(),
+pci_find_next_bus() and the global pci_root_buses list.
 
-If the device driver wanted to leave the card in a dead state, it had
-several opportunities to say so, earlier in the callback sequence.  If
-the driver wanted to fiddle with the card with the old PCI config
-space, it already had a chance to do that too, before the
-bridges/controllers/ports/links were fully reset by the platform.   By
-the time that .slot_reset() is being called, both the platform and the
-device driver are expecting smooth sailing ahead.
+These new interfaces may be a littler slower than existing interfaces,
+but it should be acceptable because they are not used on hot paths.
 
-So, looking at the original patch, it seems reasonable.  My impression
-is that maybe the AER driver had been doing not quite the right thing
-for a long time.
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Acked-by: Yinghai Lu <yinghai@kernel.org>
+Cc: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+---
+ drivers/pci/pci.h    |   1 +
+ drivers/pci/probe.c  |   2 +-
+ drivers/pci/search.c | 159 +++++++++++++++++++++++++++++++++++++++++----------
+ include/linux/pci.h  |  23 +++++++-
+ 4 files changed, 153 insertions(+), 32 deletions(-)
 
--- Linas Vepstas
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 68678ed..8fe15f6 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -126,6 +126,7 @@ static inline void pci_remove_legacy_files(struct pci_bus *bus) { return; }
+ 
+ /* Lock for read/write access to pci device and bus lists */
+ extern struct rw_semaphore pci_bus_sem;
++extern struct class pcibus_class;
+ 
+ extern raw_spinlock_t pci_lock;
+ 
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 2830070..1004a05 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -93,7 +93,7 @@ static void release_pcibus_dev(struct device *dev)
+ 	kfree(pci_bus);
+ }
+ 
+-static struct class pcibus_class = {
++struct class pcibus_class = {
+ 	.name		= "pci_bus",
+ 	.dev_release	= &release_pcibus_dev,
+ 	.dev_attrs	= pcibus_dev_attrs,
+diff --git a/drivers/pci/search.c b/drivers/pci/search.c
+index d0627fa..16ccaf8 100644
+--- a/drivers/pci/search.c
++++ b/drivers/pci/search.c
+@@ -52,20 +52,27 @@ pci_find_upstream_pcie_bridge(struct pci_dev *pdev)
+ 	return tmp;
+ }
+ 
+-static struct pci_bus *pci_do_find_bus(struct pci_bus *bus, unsigned char busnr)
++struct pci_bus_match_arg {
++	int domain;
++	int bus;
++};
++
++static int pci_match_bus(struct device *dev, const void *data)
+ {
+-	struct pci_bus* child;
+-	struct list_head *tmp;
++	struct pci_bus *bus = to_pci_bus(dev);
++	const struct pci_bus_match_arg *arg = data;
+ 
+-	if(bus->number == busnr)
+-		return bus;
++	return (pci_domain_nr(bus) == arg->domain && bus->number == arg->bus);
++}
+ 
+-	list_for_each(tmp, &bus->children) {
+-		child = pci_do_find_bus(pci_bus_b(tmp), busnr);
+-		if(child)
+-			return child;
+-	}
+-	return NULL;
++static int pci_match_next_bus(struct device *dev, const void *data)
++{
++	return 1;
++}
++
++static int pci_match_next_root_bus(struct device *dev, const void *data)
++{
++	return pci_is_root_bus(to_pci_bus(dev));
+ }
+ 
+ /**
+@@ -76,20 +83,19 @@ static struct pci_bus *pci_do_find_bus(struct pci_bus *bus, unsigned char busnr)
+  * Given a PCI bus number and domain number, the desired PCI bus is located
+  * in the global list of PCI buses.  If the bus is found, a pointer to its
+  * data structure is returned.  If no bus is found, %NULL is returned.
++ *
++ * Note: it's not hotplug safe, the returned bus may be destroyed at any time.
++ * Please use pci_get_bus() instead which holds a reference on the returned
++ * PCI bus.
+  */
+-struct pci_bus * pci_find_bus(int domain, int busnr)
++struct pci_bus *pci_find_bus(int domain, int busnr)
+ {
+-	struct pci_bus *bus = NULL;
+-	struct pci_bus *tmp_bus;
++	struct pci_bus *bus;
+ 
+-	while ((bus = pci_find_next_bus(bus)) != NULL)  {
+-		if (pci_domain_nr(bus) != domain)
+-			continue;
+-		tmp_bus = pci_do_find_bus(bus, busnr);
+-		if (tmp_bus)
+-			return tmp_bus;
+-	}
+-	return NULL;
++	bus = pci_get_bus(domain, busnr);
++	pci_bus_put(bus);
++
++	return bus;
+ }
+ 
+ /**
+@@ -100,21 +106,114 @@ struct pci_bus * pci_find_bus(int domain, int busnr)
+  * initiated by passing %NULL as the @from argument.  Otherwise if
+  * @from is not %NULL, searches continue from next device on the
+  * global list.
++ *
++ * Note: it's not hotplug safe, the returned bus may be destroyed at any time.
++ * Please use pci_get_next_root_bus() instead which holds a reference
++ * on the returned PCI root bus.
+  */
+ struct pci_bus * 
+ pci_find_next_bus(const struct pci_bus *from)
+ {
+-	struct list_head *n;
+-	struct pci_bus *b = NULL;
++	struct device *dev = from ? (struct device *)&from->dev : NULL;
++
++	dev = class_find_device(&pcibus_class, dev, NULL,
++				&pci_match_next_root_bus);
++	if (dev) {
++		put_device(dev);
++		return to_pci_bus(dev);
++	}
++
++	return NULL;
++}
++
++bool pci_bus_exists(int domain, int busnr)
++{
++	struct device *dev;
++	struct pci_bus_match_arg arg = { domain, busnr };
+ 
+ 	WARN_ON(in_interrupt());
+-	down_read(&pci_bus_sem);
+-	n = from ? from->node.next : pci_root_buses.next;
+-	if (n != &pci_root_buses)
+-		b = pci_bus_b(n);
+-	up_read(&pci_bus_sem);
+-	return b;
++	dev = class_find_device(&pcibus_class, NULL, &arg, &pci_match_bus);
++	if (dev)
++		put_device(dev);
++
++	return dev != NULL;
++}
++EXPORT_SYMBOL(pci_bus_exists);
++
++/**
++ * pci_get_bus - locate PCI bus from a given domain and bus number
++ * @domain: number of PCI domain to search
++ * @busnr: number of desired PCI bus
++ *
++ * Given a PCI bus number and domain number, the desired PCI bus is located.
++ * If the bus is found, a pointer to its data structure is returned.
++ * If no bus is found, %NULL is returned.
++ * Caller needs to release the returned bus by calling pci_bus_put().
++ */
++struct pci_bus *pci_get_bus(int domain, int busnr)
++{
++	struct device *dev;
++	struct pci_bus_match_arg arg = { domain, busnr };
++
++	WARN_ON(in_interrupt());
++	dev = class_find_device(&pcibus_class, NULL, &arg, &pci_match_bus);
++	if (dev)
++		return to_pci_bus(dev);
++
++	return NULL;
++}
++EXPORT_SYMBOL(pci_get_bus);
++
++/**
++ * pci_get_next_bus - begin or continue searching for a PCI bus
++ * @from: Previous PCI bus found, or %NULL for new search.
++ *
++ * Iterates through the list of known PCI busses. If a PCI bus is found,
++ * the reference count to the bus is incremented and a pointer to it is
++ * returned. Otherwise, %NULL is returned. A new search is initiated by
++ * passing %NULL as the @from argument. Otherwise if @from is not %NULL,
++ * searches continue from next bus on the global list. The reference count
++ * for @from is always decremented if it is not %NULL.
++ */
++struct pci_bus *pci_get_next_bus(struct pci_bus *from)
++{
++	struct device *dev = from ? &from->dev : NULL;
++
++	WARN_ON(in_interrupt());
++	dev = class_find_device(&pcibus_class, dev, NULL, &pci_match_next_bus);
++	pci_bus_put(from);
++	if (dev)
++		return to_pci_bus(dev);
++
++	return NULL;
++}
++EXPORT_SYMBOL(pci_get_next_bus);
++
++/**
++ * pci_find_next_root_bus - begin or continue searching for a PCI root bus
++ * @from: Previous PCI bus found, or %NULL for new search.
++ *
++ * Iterates through the list of known PCI root busses. If a PCI bus is found,
++ * the reference count to the root bus is incremented and a pointer to it is
++ * returned. Otherwise, %NULL is returned. A new search is initiated by
++ * passing %NULL as the @from argument. Otherwise if @from is not %NULL,
++ * searches continue from next root bus on the global list. The reference
++ * count for @from is always decremented if it is not %NULL.
++ */
++struct pci_bus *pci_get_next_root_bus(struct pci_bus *from)
++{
++	struct device *dev = from ? &from->dev : NULL;
++
++	WARN_ON(in_interrupt());
++	dev = class_find_device(&pcibus_class, dev, NULL,
++				&pci_match_next_root_bus);
++	pci_bus_put(from);
++	if (dev)
++		return to_pci_bus(dev);
++
++	return NULL;
+ }
++EXPORT_SYMBOL(pci_get_next_root_bus);
+ 
+ /**
+  * pci_get_slot - locate PCI device for a given PCI slot
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 7b23fa0..1e43423 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -454,6 +454,9 @@ struct pci_bus {
+ 
+ #define pci_bus_b(n)	list_entry(n, struct pci_bus, node)
+ #define to_pci_bus(n)	container_of(n, struct pci_bus, dev)
++#define for_each_pci_bus(b)	for (b = NULL; (b = pci_get_next_bus(b)); )
++#define for_each_pci_root_bus(b) \
++			for (b = NULL; (b = pci_get_next_root_bus(b)); )
+ 
+ /*
+  * Returns true if the pci bus is root (behind host-pci bridge),
+@@ -718,7 +721,6 @@ void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
+ void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
+ 			     struct pci_bus_region *region);
+ void pcibios_scan_specific_bus(int busn);
+-struct pci_bus *pci_find_bus(int domain, int busnr);
+ void pci_bus_add_devices(const struct pci_bus *bus);
+ struct pci_bus * __deprecated pci_scan_bus_parented(struct device *parent,
+ 			int bus, struct pci_ops *ops, void *sysdata);
+@@ -778,8 +780,15 @@ int pci_find_ext_capability(struct pci_dev *dev, int cap);
+ int pci_find_next_ext_capability(struct pci_dev *dev, int pos, int cap);
+ int pci_find_ht_capability(struct pci_dev *dev, int ht_cap);
+ int pci_find_next_ht_capability(struct pci_dev *dev, int pos, int ht_cap);
++
++struct pci_bus *pci_find_bus(int domain, int busnr);
+ struct pci_bus *pci_find_next_bus(const struct pci_bus *from);
+ 
++bool pci_bus_exists(int domain, int busnr);
++struct pci_bus *pci_get_bus(int domain, int busnr);
++struct pci_bus *pci_get_next_bus(struct pci_bus *from);
++struct pci_bus *pci_get_next_root_bus(struct pci_bus *from);
++
+ struct pci_dev *pci_get_device(unsigned int vendor, unsigned int device,
+ 				struct pci_dev *from);
+ struct pci_dev *pci_get_subsys(unsigned int vendor, unsigned int device,
+@@ -1430,6 +1439,18 @@ static inline void pci_unblock_cfg_access(struct pci_dev *dev)
+ static inline struct pci_bus *pci_find_next_bus(const struct pci_bus *from)
+ { return NULL; }
+ 
++static inline bool pci_bus_exists(int domain, int busnr)
++{ return false; }
++
++static inline struct pci_bus *pci_get_bus(int domain, int busnr)
++{ return NULL; }
++
++static inline struct pci_bus *pci_get_next_bus(struct pci_bus *from)
++{ return NULL; }
++
++static inline struct pci_bus *pci_get_next_root_bus(struct pci_bus *from)
++{ return NULL; }
++
+ static inline struct pci_dev *pci_get_slot(struct pci_bus *bus,
+ 						unsigned int devfn)
+ { return NULL; }
+-- 
+1.8.1.2
 
-On 20 May 2013 09:38, Liu, Joseph <Joseph.Liu@emulex.com> wrote:
-> Bjorn,
->
-> I have been working with the low level device drivers for supporting both EEH and AER and were involved in working with Yanmin for verifying this AER patch. Please see some of my responses to your questions inline, prefixed with [jzl].
->
->
-> Thanks,
-> Joe Liu, Ph.D.
-> Senior Principal Engineer
-> Emulex Corporation
->
-> -----Original Message-----
-> From: Bjorn Helgaas [mailto:bhelgaas@google.com]
-> Sent: Friday, May 17, 2013 7:44 PM
-> To: Zhang, LongX
-> Cc: linasvepstas@gmail.com; linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org; yanmin_zhang@linux.intel.com; Liu, Joseph; Rafael J. Wysocki
-> Subject: Re: Subject : [ PATCH ] pci-reset-error_state-to-pci_channel_io_normal-at-report_slot_reset
->
-> [+cc Rafael because he knows about dev->state_saved]
->
-> Sorry, I'm not very familiar with AER, so please excuse some naive
-> questions below.
->
-> On Fri, Apr 26, 2013 at 12:28 AM, Zhang, LongX <longx.zhang@intel.com> wrote:
->> From: Zhang Long <longx.zhang@intel.com>
->>
->> Specific pci device drivers might have many functions to call
->> pci_channel_offline to check device states. When slot_reset happens,
->> drivers' slot_reset callback might call such functions and eventually
->> abort the reset.
->
-> |Where does this happen?  I looked at all the references to
-> |dev->error_state and all the callers of pci_channel_offline(), and I
-> |didn't see any in .slot_reset() methods.
-> |
-> |(There are *assignments* to dev->error_state in qlcnic_attach_func(),
-> |qlge_io_slot_reset(), and qla2xxx_pci_slot_reset().  You might be able
-> |to remove those assignments after this patch, but this patch wouldn't
-> |really change anything for those paths.)
->
-> [jzl] Although low level driver might not call pci_channel_offline() directly in .slot_reset() method itself, it does not mean it will not call it during the device error recovery execution of .slot_reset() method. The .slot_reset() method needs to call some of its bottom layer routines interfacing with device PCI interface for preparing the PCI device from recovery of PCI error (EEH or AER). As a matter of fact, it seems that qla2xxx_pci_slot_reset() routine's assignments to dev->error was an attempt to work around this AER driver issue that this patch is trying to resolve. From upstream kernel 3.9.2's qla2xxx_pci_slot_reset(), it has the assignment and comment below:
->
-> static pci_ers_result_t
-> qla2xxx_pci_slot_reset(struct pci_dev *pdev)
-> {
->         pci_ers_result_t ret = PCI_ERS_RESULT_DISCONNECT;
->         scsi_qla_host_t *base_vha = pci_get_drvdata(pdev);
->         struct qla_hw_data *ha = base_vha->hw;
->         struct rsp_que *rsp;
->         int rc, retries = 10;
->
->         ql_dbg(ql_dbg_aer, base_vha, 0x9004,
->             "Slot Reset.\n");
->
->         /* Workaround: qla2xxx driver which access hardware earlier
->          * needs error state to be pci_channel_io_online.
->          * Otherwise mailbox command timesout.
->          */
->         pdev->error_state = pci_channel_io_normal;
->
->
->
->> The patch resets pdev->error_state to pci_channel_io_normal at
->> the begining of report_slot_reset.
->
->> Signed-off-by: Zhang Yanmin <yanmin_zhang@linux.intel.com>
->> Signed-off-by: Zhang Long <longx.zhang@intel.com>
->> ---
->>  drivers/pci/pcie/aer/aerdrv_core.c |    1 +
->>  drivers/pci/pcie/portdrv_pci.c     |   12 +++++-------
->>  2 files changed, 6 insertions(+), 7 deletions(-)
->>
->> diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
->> index 564d97f..c61fd44 100644
->> --- a/drivers/pci/pcie/aer/aerdrv_core.c
->> +++ b/drivers/pci/pcie/aer/aerdrv_core.c
->> @@ -286,6 +286,7 @@ static int report_slot_reset(struct pci_dev *dev, void *data)
->>         result_data = (struct aer_broadcast_data *) data;
->>
->>         device_lock(&dev->dev);
->> +       dev->error_state = pci_channel_io_normal;
->
-> |The device's error_state might be pci_channel_io_frozen when we get
-> |here.  We haven't touched anything in the hardware yet.  What makes
-> |the device unfrozen now?  Did anything actually change as far as the
-> |hardware device is concerned?
->
-> [jzl] When the AER driver gets to invoking report_slot_reset(), it has already performed PCI slot reset. Currently, with PCIe, it is the PCIe link reset it has been performed. But with proper AER driver implementation, it should be either PCI slot hot reset or even fundamental reset that has already been performed. As such, after platform performing the PCI slot reset, it should move the device's error_state out of pci_channel_io_fronzen before calling report_slot_reset() to low level device drivers allows them to access the corresponding device's PCI function in preparation for recovery.
->
->
-> |I agree it looks like report_slot_reset() should be made more like
-> |eeh_report_reset().  I'm just wondering if the error_state should be
-> |changed *after* calling the .slot_reset() method instead of before.
->
-> [jzl] No, you should not set the error_state after calling the .slot_reset() method because the AER driver calling the low level driver's .slot_reset() method is to "report" that the platform PCI slot reset has been done and "inform" the low level driver to prepare the PCI device for recovering, with which the low level driver might need to, for example, further perform reset on PCI functions with the deivice. The .slot_reset() is call by function, changing the error_state *after* calling the .slot_reset() method will be too late for the low level device to access PCI device from within the  .slot_reset() function call...
->
-> [jzl] Also, this is not just the eeh_report_reset() behavior, it is PCI error recovery behavior. In the pci-error-recovery.txt, it stated the following under "STEP 4 Slot Reset":
->
-> "...
-> This call gives drivers the chance to re-initialize the hardware
-> (re-download firmware, etc.).  At this point, the driver may assume
-> that the card is in a fresh state and is fully functional. The slot
-> is unfrozen and the driver has full access to PCI config space,
-> memory mapped I/O space and DMA. Interrupts (Legacy, MSI, or MSI-X)
-> will also be available.
-> ..."
->
->
->>         if (!dev->driver ||
->>                 !dev->driver->err_handler ||
->>                 !dev->driver->err_handler->slot_reset)
->> diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
->> index ed4d094..7abefd9 100644
->> --- a/drivers/pci/pcie/portdrv_pci.c
->> +++ b/drivers/pci/pcie/portdrv_pci.c
->> @@ -332,13 +332,11 @@ static pci_ers_result_t pcie_portdrv_slot_reset(struct pci_dev *dev)
->>         pci_ers_result_t status = PCI_ERS_RESULT_RECOVERED;
->>         int retval;
->>
->> -       /* If fatal, restore cfg space for possible link reset at upstream */
->> -       if (dev->error_state == pci_channel_io_frozen) {
->> -               dev->state_saved = true;
->> -               pci_restore_state(dev);
->> -               pcie_portdrv_restore_config(dev);
->> -               pci_enable_pcie_error_reporting(dev);
->> -       }
->
-> Previously we only restored state for the pci_channel_io_frozen state,
-> i.e., when handling an AER_FATAL error.  Now we restore it always.
-> Why?
->
->> +       /* restore cfg space for possible link reset at upstream */
->> +       dev->state_saved = true;
->
-> "dev->state_saved == true" means that the dev->saved_config_space
-> contains valid data.  Why do we know that's the case here?  I see that
-> pcie_portdrv_probe() calls pci_save_state() when we first claim the
-> port, and I guess we're assuming the state saved then is still valid.
-> But why do we need to actually set dev->state_saved here?  Shouldn't
-> it be already set to true anyway?
->
->> +       pci_restore_state(dev);
->> +       pcie_portdrv_restore_config(dev);
->> +       pci_enable_pcie_error_reporting(dev);
->>
->>         /* get true return value from &status */
->>         retval = device_for_each_child(&dev->dev, &status, slot_reset_iter);
->> --
->> 1.7.4.1
->>
->>
->>
