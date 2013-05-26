@@ -1,58 +1,87 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: Hans Verkuil <hansverk@cisco.com>
-To: Stephen Rothwell <sfr@canb.auug.org.au>
-Subject: Re: [PATCH] Finally eradicate CONFIG_HOTPLUG
-Date: Tue, 21 May 2013 09:38:42 +0200
-Cc: "Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
-	linux-arch@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	"Doug Thompson" <dougthompson@xmission.com>,
-	linux-edac@vger.kernel.org, "Bjorn Helgaas" <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, linux-pcmcia@lists.infradead.org,
-	Hans Verkuil <hans.verkuil@cisco.com>,
-	Steven Whitehouse <swhiteho@redhat.com>,
-	cluster-devel@redhat.com, "Arnd Bergmann" <arnd@arndb.de>,
-	Pavel Machek <pavel@ucw.cz>, "Rafael J. Wysocki" <rjw@sisk.pl>,
-	linux-pm@vger.kernel.org,
-	Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-arm-kernel@lists.infradead.org
-References: <20130521134935.d18c3f5c23485fb5ddabc365@canb.auug.org.au>
-In-Reply-To: <20130521134935.d18c3f5c23485fb5ddabc365@canb.auug.org.au>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201305210938.43064.hansverk@cisco.com>
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Tony Luck <tony.luck@intel.com>,
+	Fenghua Yu <fenghua.yu@intel.com>, linux-ia64@vger.kernel.org
+Subject: [PATCH v3, part2 07/20] PCI, IA64: use hotplug-safe iterators to walk PCI buses
+Date: Sun, 26 May 2013 23:53:04 +0800
+Message-Id: <1369583597-3801-8-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1369583597-3801-1-git-send-email-jiang.liu@huawei.com>
+References: <1369583597-3801-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue 21 May 2013 05:49:35 Stephen Rothwell wrote:
-> Ever since commit 45f035ab9b8f ("CONFIG_HOTPLUG should be always on"),
-> it has been basically impossible to build a kernel with CONFIG_HOTPLUG
-> turned off.  Remove all the remaining references to it.
-> 
-> Cc: linux-arch@vger.kernel.org
-> Cc: Russell King <linux@arm.linux.org.uk>
-> Cc: linux-arm-kernel@lists.infradead.org
-> Cc: Doug Thompson <dougthompson@xmission.com>
-> Cc: linux-edac@vger.kernel.org
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: linux-pci@vger.kernel.org
-> Cc: linux-pcmcia@lists.infradead.org
-> Cc: Hans Verkuil <hans.verkuil@cisco.com>
-> Cc: Steven Whitehouse <swhiteho@redhat.com>
-> Cc: cluster-devel@redhat.com
-> Cc: Arnd Bergmann <arnd@arndb.de>
-> Cc: Pavel Machek <pavel@ucw.cz>
-> Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
-> Cc: linux-pm@vger.kernel.org
-> Cc: Andrew Morton <akpm@linux-foundation.org>
-> Cc: linux-mm@kvack.org
-> Signed-off-by: Stephen Rothwell <sfr@canb.auug.org.au>
+Enhance IA64 architecture specific code to use hotplug-safe iterators
+to walk PCI buses.
 
-For drivers/staging/media/go7007/go7007.txt:
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Cc: Tony Luck <tony.luck@intel.com>
+Cc: Fenghua Yu <fenghua.yu@intel.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linux-ia64@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+---
+ arch/ia64/hp/common/sba_iommu.c   | 2 +-
+ arch/ia64/sn/kernel/io_common.c   | 2 +-
+ arch/ia64/sn/pci/tioca_provider.c | 3 ++-
+ 3 files changed, 4 insertions(+), 3 deletions(-)
 
-Acked-by: Hans Verkuil <hans.verkuil@cisco.com>
+diff --git a/arch/ia64/hp/common/sba_iommu.c b/arch/ia64/hp/common/sba_iommu.c
+index bcda5b2..6faf241 100644
+--- a/arch/ia64/hp/common/sba_iommu.c
++++ b/arch/ia64/hp/common/sba_iommu.c
+@@ -2156,7 +2156,7 @@ sba_init(void)
+ #ifdef CONFIG_PCI
+ 	{
+ 		struct pci_bus *b = NULL;
+-		while ((b = pci_find_next_bus(b)) != NULL)
++		for_each_pci_root_bus(b)
+ 			sba_connect_bus(b);
+ 	}
+ #endif
+diff --git a/arch/ia64/sn/kernel/io_common.c b/arch/ia64/sn/kernel/io_common.c
+index 11f2275..87d8d8f 100644
+--- a/arch/ia64/sn/kernel/io_common.c
++++ b/arch/ia64/sn/kernel/io_common.c
+@@ -530,7 +530,7 @@ sn_io_late_init(void)
+ 	 * info from the PROM).
+ 	 */
+ 	bus = NULL;
+-	while ((bus = pci_find_next_bus(bus)) != NULL) {
++	for_each_pci_root_bus(bus) {
+ 		bussoft = SN_PCIBUS_BUSSOFT(bus);
+ 		nasid = NASID_GET(bussoft->bs_base);
+ 		cnode = nasid_to_cnodeid(nasid);
+diff --git a/arch/ia64/sn/pci/tioca_provider.c b/arch/ia64/sn/pci/tioca_provider.c
+index a70b11f..cd8c0fb 100644
+--- a/arch/ia64/sn/pci/tioca_provider.c
++++ b/arch/ia64/sn/pci/tioca_provider.c
+@@ -624,7 +624,7 @@ tioca_bus_fixup(struct pcibus_bussoft *prom_bussoft, struct pci_controller *cont
+ 	    nasid_to_cnodeid(tioca_common->ca_closest_nasid);
+ 	tioca_common->ca_kernel_private = (u64) tioca_kern;
+ 
+-	bus = pci_find_bus(tioca_common->ca_common.bs_persist_segment,
++	bus = pci_get_bus(tioca_common->ca_common.bs_persist_segment,
+ 		tioca_common->ca_common.bs_persist_busnum);
+ 	BUG_ON(!bus);
+ 	tioca_kern->ca_devices = &bus->devices;
+@@ -632,6 +632,7 @@ tioca_bus_fixup(struct pcibus_bussoft *prom_bussoft, struct pci_controller *cont
+ 	/* init GART */
+ 
+ 	if (tioca_gart_init(tioca_kern) < 0) {
++		pci_bus_put(bus);
+ 		kfree(tioca_kern);
+ 		kfree(tioca_common);
+ 		return NULL;
+-- 
+1.8.1.2
 
-Regards,
-
-	Hans
