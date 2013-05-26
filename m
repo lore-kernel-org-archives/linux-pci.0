@@ -1,59 +1,64 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:53880 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758125Ab3EONZg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 May 2013 09:25:36 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>
-Cc: linux-arm-kernel@lists.infradead.org,
-	Arnd Bergmann <arnd@arndb.de>, Olof Johansson <olof@lixom.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Michal Simek <monstr@monstr.eu>,
 	Grant Likely <grant.likely@secretlab.ca>,
-	Lior Amsalem <alior@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	linux-pci@vger.kernel.org,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	devicetree-discuss@lists.ozlabs.org,
-	Mike Turquette <mturquette@linaro.org>
-Subject: [PATCHv9 5/9] clk: mvebu: create parent-child relation for PCIe clocks on Armada 370
-Date: Wed, 15 May 2013 15:25:19 +0200
-Message-Id: <1368624323-24311-6-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1368624323-24311-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1368624323-24311-1-git-send-email-thomas.petazzoni@free-electrons.com>
-Sender: linux-pci-owner@vger.kernel.org
+	Hiroo MATSUMOTO <matsumoto.hiroo@jp.fujitsu.com>,
+	microblaze-uclinux@itee.uq.edu.au
+Subject: [PATCH v3, part2 08/20] PCI, Microblaze: use hotplug-safe iterators to walk PCI buses
+Date: Sun, 26 May 2013 23:53:05 +0800
+Message-Id: <1369583597-3801-9-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1369583597-3801-1-git-send-email-jiang.liu@huawei.com>
+References: <1369583597-3801-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The Armada 370 has two gatable clocks for each PCIe interface, and we
-want both of them to be enabled. We therefore make one of the two
-clocks a child of the other, as we did for the sataX and sataXlnk
-clocks on Armada XP.
+Enhance Microblaze architecture specific code to use hotplug-safe
+iterators to walk PCI buses.
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Mike Turquette <mturquette@linaro.org>
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Cc: Michal Simek <monstr@monstr.eu>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Grant Likely <grant.likely@secretlab.ca>
+Cc: Hiroo MATSUMOTO <matsumoto.hiroo@jp.fujitsu.com>
+Cc: microblaze-uclinux@itee.uq.edu.au
+Cc: linux-kernel@vger.kernel.org
 ---
- drivers/clk/mvebu/clk-gating-ctrl.c |    4 ++--
+ arch/microblaze/pci/pci-common.c | 4 ++--
  1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/clk/mvebu/clk-gating-ctrl.c b/drivers/clk/mvebu/clk-gating-ctrl.c
-index ebf141d..b35785a 100644
---- a/drivers/clk/mvebu/clk-gating-ctrl.c
-+++ b/drivers/clk/mvebu/clk-gating-ctrl.c
-@@ -119,8 +119,8 @@ static const struct mvebu_soc_descr __initconst armada_370_gating_descr[] = {
- 	{ "pex1_en", NULL,  2 },
- 	{ "ge1", NULL, 3 },
- 	{ "ge0", NULL, 4 },
--	{ "pex0", NULL, 5 },
--	{ "pex1", NULL, 9 },
-+	{ "pex0", "pex0_en", 5 },
-+	{ "pex1", "pex1_en", 9 },
- 	{ "sata0", NULL, 15 },
- 	{ "sdio", NULL, 17 },
- 	{ "tdm", NULL, 25 },
+diff --git a/arch/microblaze/pci/pci-common.c b/arch/microblaze/pci/pci-common.c
+index bdb8ea1..a35caa3 100644
+--- a/arch/microblaze/pci/pci-common.c
++++ b/arch/microblaze/pci/pci-common.c
+@@ -1317,7 +1317,7 @@ void __init pcibios_resource_survey(void)
+ 	/* Allocate and assign resources. If we re-assign everything, then
+ 	 * we skip the allocate phase
+ 	 */
+-	list_for_each_entry(b, &pci_root_buses, node)
++	for_each_pci_root_bus(b)
+ 		pcibios_allocate_bus_resources(b);
+ 
+ 	pcibios_allocate_resources(0);
+@@ -1327,7 +1327,7 @@ void __init pcibios_resource_survey(void)
+ 	 * the low IO area and the VGA memory area if they intersect the
+ 	 * bus available resources to avoid allocating things on top of them
+ 	 */
+-	list_for_each_entry(b, &pci_root_buses, node)
++	for_each_pci_root_bus(b)
+ 		pcibios_reserve_legacy_regions(b);
+ 
+ 	/* Now proceed to assigning things that were left unassigned */
 -- 
-1.7.9.5
+1.8.1.2
 
