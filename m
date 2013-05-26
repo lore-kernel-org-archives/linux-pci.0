@@ -1,49 +1,57 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <519FC63F.3060205@ubuntu.com>
-Date: Fri, 24 May 2013 15:57:51 -0400
-From: Phillip Susi <psusi@ubuntu.com>
-MIME-Version: 1.0
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>
-Subject: Re: enabling aspm on ati radeon
-References: <519443A1.8050905@ubuntu.com> <5196D765.9020600@ubuntu.com> <CAErSpo6MGwHLJvis+4=vdQEJN=Qb9aC5e9=3Q6MdTB-HH84YBw@mail.gmail.com> <11045555.dLhhFPGoSV@vostro.rjw.lan>
-In-Reply-To: <11045555.dLhhFPGoSV@vostro.rjw.lan>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pa0-f42.google.com ([209.85.220.42]:33414 "EHLO
+	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754401Ab3EZP56 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 26 May 2013 11:57:58 -0400
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, David Howells <dhowells@redhat.com>,
+	Koichi Yasutake <yasutake.koichi@jp.panasonic.com>
+Subject: [PATCH v3, part2 09/20] PCI, mn10300: use hotplug-safe iterators to walk PCI buses
+Date: Sun, 26 May 2013 23:53:06 +0800
+Message-Id: <1369583597-3801-10-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1369583597-3801-1-git-send-email-jiang.liu@huawei.com>
+References: <1369583597-3801-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+Enhance mn10300 architecture specific code to use hotplug-safe
+iterators to walk PCI buses.
 
-According to the PCI express standard, the Link Capabilities register
-lies at offset 0xC within the PCI Express root port capabilities
-descriptor.  lspci decoded this and shows Unknown ASPM support,
-because its value is zero, and this is why the kernel did not enable
-ASPM in the Link Control register.  According to the Intel datasheets,
-the offsets AC-AFh ( the structure itself starts at A0h ) are
-reserved.  So astonishingly it seems that Intel does not know about
-the Link Capabilities register!  On the other hand, the contents of
-the register actually do seem to be mostly correct, despite what their
-datasheet claims.  The one thing wrong with it is that it claims no
-ASPM support, despite Intel claiming that it is supported.
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Cc: David Howells <dhowells@redhat.com>
+Cc: Koichi Yasutake <yasutake.koichi@jp.panasonic.com>
+Cc: linux-kernel@vger.kernel.org
+---
+ arch/mn10300/unit-asb2305/pci-asb2305.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-For reference, the Intel datasheet I have been referring to is
-document 324642-003: 2nd Generation Intel® CoreTM Processor Family
-Desktop, Intel® Pentium® Processor Family Desktop, and Intel® Celeron®
-Processor Family Desktop Datasheet, Volume 2, table 2-8 on page 84.
+diff --git a/arch/mn10300/unit-asb2305/pci-asb2305.c b/arch/mn10300/unit-asb2305/pci-asb2305.c
+index c4e2e79..88c0c52 100644
+--- a/arch/mn10300/unit-asb2305/pci-asb2305.c
++++ b/arch/mn10300/unit-asb2305/pci-asb2305.c
+@@ -207,8 +207,11 @@ fs_initcall(pcibios_assign_resources);
+ 
+ void __init pcibios_resource_survey(void)
+ {
++	struct pci_bus *bus;
++
+ 	DBG("PCI: Allocating resources\n");
+-	pcibios_allocate_bus_resources(&pci_root_buses);
++	for_each_pci_root_bus(bus)
++		pcibios_allocate_bus_resources(&bus->children);
+ 	pcibios_allocate_resources(0);
+ 	pcibios_allocate_resources(1);
+ }
+-- 
+1.8.1.2
 
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.17 (MingW32)
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
-
-iQEcBAEBAgAGBQJRn8Y/AAoJEJrBOlT6nu75P78IAMgL23DGmsBD+TKm3Ootr36E
-5iG7NoPcvjYiP/yeHBvhXy5jw4ORfVFLEli82fFOTWAi1YL5mxRKctIiYzu9080N
-T1YO34qE/QpXfu6PDYMuNQETteO7MElnM7SHpQQ1oG5pAjPjUB1Bjb54qm4fQt77
-11q8W6w3KFegy6cZLqAMHO63gzqUL9G/Akn4BdGvjZyt2ouOZOBU6Siyu0wm+RZY
-NUuoy+5wzaej9/T96XCkfHR1e5s32NdvkT9GUxhA8SONEOy892QvOuMWPWv/VHxr
-YkVGkaGHXuLLyXNWvy1Tz31HqZlbFaDRw7VzfbW5iE7cMi9EsZxSfjSvSqPZ+/A=
-=8hms
------END PGP SIGNATURE-----
