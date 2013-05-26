@@ -1,107 +1,108 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:57677 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1758516Ab3E3RIJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 May 2013 13:08:09 -0400
-Date: Thu, 30 May 2013 13:08:08 -0400 (EDT)
-From: Alan Stern <stern@rowland.harvard.edu>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-cc: Linux PM list <linux-pm@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Kevin Hilman <khilman@linaro.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: Re: [PATCH RFC] PM / Runtime: Rework the "runtime idle" helper
- routine
-In-Reply-To: <1645401.1grgttHPMR@vostro.rjw.lan>
-Message-ID: <Pine.LNX.4.44L0.1305301247370.1137-100000@iolanthe.rowland.org>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Russell King <linux@arm.linux.org.uk>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Rob Herring <rob.herring@calxeda.com>,
+	linux-arm-kernel@lists.infradead.org
+Subject: [PATCH v3, part2 20/20] PCI, ARM: use hotplug-safe PCI bus iterators to walk PCI buses
+Date: Sun, 26 May 2013 23:53:17 +0800
+Message-Id: <1369583597-3801-21-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1369583597-3801-1-git-send-email-jiang.liu@huawei.com>
+References: <1369583597-3801-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 30 May 2013, Rafael J. Wysocki wrote:
+Enhance ARM architecture specific code to use new hotplug-safe PCI
+bus iterators to walk PCI buses.
 
-> > Since you're making this change, wouldn't it be a good idea to adopt
-> > Mika's original suggestion and turn on the RPM_AUTO bit in rpmflags
-> > when the use_autosuspend flag is set?
-> 
-> I'm not actually sure.  It can be done, but I'd prefer to do that as a separate
-> change in any case.
+Change pcibios_report_status implementation so that it doesn't access
+pci_root_buses global list. The pci_root_buses list will be scheduled
+to be removed.
 
-That makes sense.
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Cc: Russell King <linux@arm.linux.org.uk>
+Cc: Thierry Reding <thierry.reding@avionic-design.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Rob Herring <rob.herring@calxeda.com>
+Cc: linux-arm-kernel@lists.infradead.org
+Cc: linux-kernel@vger.kernel.org
+---
+ arch/arm/kernel/bios32.c           | 13 +------------
+ arch/arm/mach-footbridge/dc21285.c | 12 +++++++++++-
+ 2 files changed, 12 insertions(+), 13 deletions(-)
 
-> > What about cases where the runtime-idle callback does
-> > rpm_schedule_suspend or rpm_request_suspend?  You'd have to make sure
-> > that it returns -EBUSY in such cases.  Did you audit for this?
-> 
-> As far as I could.
-> 
-> I'm not worried about the subsystems modified by this patch, because the
-> functionality there won't change (except for PCI, that is).
-
-Right.  The subsystems that _aren't_ modified are the ones to worry 
-about -- like the USB callback.  They are the ones where the behavior 
-might change.
-
-> > > Index: linux-pm/Documentation/power/runtime_pm.txt
-> > > ===================================================================
-> > > --- linux-pm.orig/Documentation/power/runtime_pm.txt
-> > > +++ linux-pm/Documentation/power/runtime_pm.txt
-> > > @@ -660,11 +660,6 @@ Subsystems may wish to conserve code spa
-> > >  management callbacks provided by the PM core, defined in
-> > >  driver/base/power/generic_ops.c:
-> > >  
-> > > -  int pm_generic_runtime_idle(struct device *dev);
-> > > -    - invoke the ->runtime_idle() callback provided by the driver of this
-> > > -      device, if defined, and call pm_runtime_suspend() for this device if the
-> > > -      return value is 0 or the callback is not defined
-> > > -
-> > 
-> > The documentation for the runtime-idle callback needs to be updated too.
-> 
-> Well, I actually couldn't find the part of it that would need to be updated. :-)
-
-How about this?
-
-
-Index: usb-3.10/Documentation/power/runtime_pm.txt
-===================================================================
---- usb-3.10.orig/Documentation/power/runtime_pm.txt
-+++ usb-3.10/Documentation/power/runtime_pm.txt
-@@ -144,8 +144,12 @@ The action performed by the idle callbac
- (or driver) in question, but the expected and recommended action is to check
- if the device can be suspended (i.e. if all of the conditions necessary for
- suspending the device are satisfied) and to queue up a suspend request for the
--device in that case.  The value returned by this callback is ignored by the PM
--core.
-+device in that case.  If there is no idle callback, or if the callback returns
-+0, then the PM core will attempt to carry out a runtime suspend of the device;
-+in essence, it will call pm_runtime_suspend() directly.  To prevent this (for
-+example, if the callback routine has started a delayed suspend), the routine
-+should return a non-zero value.  Negative error return codes are ignored by the
-+PM core.
+diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
+index b2ed73c..50ebbe8 100644
+--- a/arch/arm/kernel/bios32.c
++++ b/arch/arm/kernel/bios32.c
+@@ -22,7 +22,7 @@ static int debug_pci;
+  * We can't use pci_find_device() here since we are
+  * called from interrupt context.
+  */
+-static void pcibios_bus_report_status(struct pci_bus *bus, u_int status_mask, int warn)
++void pcibios_bus_report_status(struct pci_bus *bus, u_int status_mask, int warn)
+ {
+ 	struct pci_dev *dev;
  
- The helper functions provided by the PM core, described in Section 4, guarantee
- that the following constraints are met with respect to runtime PM callbacks for
-@@ -301,9 +305,10 @@ drivers/base/power/runtime.c and include
-       removing the device from device hierarchy
+@@ -55,17 +55,6 @@ static void pcibios_bus_report_status(struct pci_bus *bus, u_int status_mask, in
+ 			pcibios_bus_report_status(dev->subordinate, status_mask, warn);
+ }
  
-   int pm_runtime_idle(struct device *dev);
--    - execute the subsystem-level idle callback for the device; returns 0 on
--      success or error code on failure, where -EINPROGRESS means that
--      ->runtime_idle() is already being executed
-+    - execute the subsystem-level idle callback for the device; returns an
-+      error code on failure, where -EINPROGRESS means that ->runtime_idle() is
-+      already being executed; if there is no callback or the callback returns 0
-+      then run pm_runtime_suspend(dev) and return its result
+-void pcibios_report_status(u_int status_mask, int warn)
+-{
+-	struct list_head *l;
+-
+-	list_for_each(l, &pci_root_buses) {
+-		struct pci_bus *bus = pci_bus_b(l);
+-
+-		pcibios_bus_report_status(bus, status_mask, warn);
+-	}
+-}
+-
+ /*
+  * We don't use this to fix the device, but initialisation of it.
+  * It's not the correct use for this, but it works.
+diff --git a/arch/arm/mach-footbridge/dc21285.c b/arch/arm/mach-footbridge/dc21285.c
+index a7cd2cf..a0f1d01 100644
+--- a/arch/arm/mach-footbridge/dc21285.c
++++ b/arch/arm/mach-footbridge/dc21285.c
+@@ -35,7 +35,16 @@
+ 				  PCI_STATUS_PARITY) << 16)
  
-   int pm_runtime_suspend(struct device *dev);
-     - execute the subsystem-level suspend callback for the device; returns 0 on
-
-
-Alan Stern
+ extern int setup_arm_irq(int, struct irqaction *);
+-extern void pcibios_report_status(u_int status_mask, int warn);
++extern void pcibios_report_bus_status(struct pci_bus *bus, u_int status_mask,
++				      int warn);
++
++static struct pci_bus *dc21285_root_bus;
++
++static void pcibios_report_status(u_int status_mask, int warn)
++{
++	if (dc21285_root_bus)
++		pcibios_report_bus_status(dc21285_root_bus, status_mask, warn);
++}
+ 
+ static unsigned long
+ dc21285_base_address(struct pci_bus *bus, unsigned int devfn)
+@@ -376,5 +385,6 @@ void __init dc21285_preinit(void)
+ 
+ void __init dc21285_postinit(void)
+ {
++	dc21285_root_bus = pci_get_next_root_bus(NULL);
+ 	register_isa_ports(DC21285_PCI_MEM, DC21285_PCI_IO, 0);
+ }
+-- 
+1.8.1.2
 
