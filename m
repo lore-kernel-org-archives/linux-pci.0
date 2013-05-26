@@ -1,101 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:63289 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750704Ab3EMJFB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 13 May 2013 05:05:01 -0400
-Date: Mon, 13 May 2013 11:06:17 +0200
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: x86@kernel.org, linux-pci@vger.kernel.org,
-	Suresh Siddha <suresh.b.siddha@intel.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	Jan Beulich <JBeulich@suse.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH v3 -tip x86/apic 2/2] x86/MSI: Conserve interrupt resources
- when using multiple-MSIs
-Message-ID: <924d05fe41fb93fdc2013680fb220d4b171de303.1368431413.git.agordeev@redhat.com>
-References: <cover.1368431413.git.agordeev@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <cover.1368431413.git.agordeev@redhat.com>
+Received: from mail-pa0-f50.google.com ([209.85.220.50]:49111 "EHLO
+	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753824Ab3EZP6S (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 26 May 2013 11:58:18 -0400
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	"David S. Miller" <davem@davemloft.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	sparclinux@vger.kernel.org
+Subject: [PATCH v3, part2 11/20] PCI, SPARC: use hotplug-safe iterators to walk PCI buses
+Date: Sun, 26 May 2013 23:53:08 +0800
+Message-Id: <1369583597-3801-12-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1369583597-3801-1-git-send-email-jiang.liu@huawei.com>
+References: <1369583597-3801-1-git-send-email-jiang.liu@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Current multiple-MSI implementation does not take into account
-actual number of requested MSIs and always rounds that number
-to a closest power-of-two value. Yet, a number of MSIs a PCI
-device could send (and therefore a number of messages a device
-driver could request) may be a lesser power-of-two. As result,
-resources allocated for extra MSIs just wasted.
+Enhance SPARC architecture specific code to use hotplug-safe iterators
+to walk PCI buses.
 
-This update takes advantage of 'msi_desc::nvec' field introduced
-with generic MSI code to track number of requested and used MSIs.
-As result, resources associated with interrupts are conserved.
-Of those resources most noticeable are x86 interrupt vectors.
-
-The initial version of this fix also consumed on IRTEs, but Jan
-noticed that a malfunctioning PCI device might send a message
-number it did not claim and thus refer an IRTE it does not own.
-To avoid this security hole the old-way approach preserved and
-as many IRTEs are reserved as the device could possibly send.
-
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: sparclinux@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 ---
- drivers/iommu/irq_remapping.c |   12 +++++++-----
- 1 files changed, 7 insertions(+), 5 deletions(-)
+ arch/sparc/kernel/pci.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
-index d56f8c1..9eeb6cf 100644
---- a/drivers/iommu/irq_remapping.c
-+++ b/drivers/iommu/irq_remapping.c
-@@ -51,26 +51,27 @@ static void irq_remapping_disable_io_apic(void)
+diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
+index b16f624..ed84a97 100644
+--- a/arch/sparc/kernel/pci.c
++++ b/arch/sparc/kernel/pci.c
+@@ -995,9 +995,9 @@ static void pci_bus_slot_names(struct device_node *node, struct pci_bus *bus)
  
- static int do_setup_msi_irqs(struct pci_dev *dev, int nvec)
+ static int __init of_pci_slot_init(void)
  {
--	int node, ret, sub_handle, index = 0;
-+	int node, ret, sub_handle, nvec_pow2, index = 0;
- 	unsigned int irq;
- 	struct msi_desc *msidesc;
+-	struct pci_bus *pbus = NULL;
++	struct pci_bus *pbus;
  
--	nvec = __roundup_pow_of_two(nvec);
--
- 	WARN_ON(!list_is_singular(&dev->msi_list));
- 	msidesc = list_entry(dev->msi_list.next, struct msi_desc, list);
- 	WARN_ON(msidesc->irq);
- 	WARN_ON(msidesc->msi_attrib.multiple);
-+	WARN_ON(msidesc->nvec);
+-	while ((pbus = pci_find_next_bus(pbus)) != NULL) {
++	for_each_pci_root_bus(pbus) {
+ 		struct device_node *node;
  
- 	node = dev_to_node(&dev->dev);
- 	irq = __create_irqs(get_nr_irqs_gsi(), nvec, node);
- 	if (irq == 0)
- 		return -ENOSPC;
- 
--	msidesc->msi_attrib.multiple = ilog2(nvec);
-+	nvec_pow2 = __roundup_pow_of_two(nvec);
-+	msidesc->nvec = nvec;
-+	msidesc->msi_attrib.multiple = ilog2(nvec_pow2);
- 	for (sub_handle = 0; sub_handle < nvec; sub_handle++) {
- 		if (!sub_handle) {
--			index = msi_alloc_remapped_irq(dev, irq, nvec);
-+			index = msi_alloc_remapped_irq(dev, irq, nvec_pow2);
- 			if (index < 0) {
- 				ret = index;
- 				goto error;
-@@ -95,6 +96,7 @@ error:
- 	 * IRQs from tearing down again in default_teardown_msi_irqs()
- 	 */
- 	msidesc->irq = 0;
-+	msidesc->nvec = 0;
- 	msidesc->msi_attrib.multiple = 0;
- 
- 	return ret;
+ 		if (pbus->self) {
 -- 
-1.7.7.6
+1.8.1.2
 
-
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
