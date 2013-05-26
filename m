@@ -1,114 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56615 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756413Ab3E3Sjs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 30 May 2013 14:39:48 -0400
-Subject: [PATCH] iommu: amd/intel: Remove multifunction assumption around
- grouping
-To: iommu@lists.linux-foundation.org, dwmw2@infradead.org,
-	joro@8bytes.org
-From: Alex Williamson <alex.williamson@redhat.com>
-Cc: linux-pci@vger.kernel.org, ddutile@redhat.com,
-	linux-kernel@vger.kernel.org
-Date: Thu, 30 May 2013 12:39:18 -0600
-Message-ID: <20130530183855.14612.15585.stgit@bling.home>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-pa0-f44.google.com ([209.85.220.44]:62397 "EHLO
+	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754380Ab3EZP6u (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 26 May 2013 11:58:50 -0400
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Len Brown <lenb@kernel.org>,
+	linux-acpi@vger.kernel.org
+Subject: [PATCH v3, part2 13/20] PCI, ACPI: use hotplug-safe iterators to walk PCI buses
+Date: Sun, 26 May 2013 23:53:10 +0800
+Message-Id: <1369583597-3801-14-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1369583597-3801-1-git-send-email-jiang.liu@huawei.com>
+References: <1369583597-3801-1-git-send-email-jiang.liu@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If a device is multifunction and does not have ACS enabled then we
-assume that the entire package lacks ACS and use function 0 as the
-base of the group.  The PCIe spec however states that components are
-permitted to implement ACS on some, none, or all of their applicable
-functions.  It's therefore conceivable that function 0 may be fully
-independent and support ACS while other functions do not.  Instead
-use the lowest function of the slot that does not have ACS enabled
-as the base of the group.  This may be the current device, which is
-intentional.  So long as we use a consistent algorithm, all the
-non-ACS functions will be grouped together and ACS functions will
-get separate groups.
+Enhance ACPI reset drvier to use hotplug-safe iterators to walk PCI buses.
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Cc: Len Brown <lenb@kernel.org>
+Cc: linux-acpi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 ---
- drivers/iommu/amd_iommu.c   |   25 +++++++++++++++++++------
- drivers/iommu/intel-iommu.c |   25 +++++++++++++++++++------
- 2 files changed, 38 insertions(+), 12 deletions(-)
+ drivers/acpi/reboot.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
-index 1d84be1..565c745 100644
---- a/drivers/iommu/amd_iommu.c
-+++ b/drivers/iommu/amd_iommu.c
-@@ -287,14 +287,27 @@ static struct pci_dev *get_isolation_root(struct pci_dev *pdev)
+diff --git a/drivers/acpi/reboot.c b/drivers/acpi/reboot.c
+index a6c77e8b..532dd6d 100644
+--- a/drivers/acpi/reboot.c
++++ b/drivers/acpi/reboot.c
+@@ -33,7 +33,7 @@ void acpi_reboot(void)
+ 	switch (rr->space_id) {
+ 	case ACPI_ADR_SPACE_PCI_CONFIG:
+ 		/* The reset register can only live on bus 0. */
+-		bus0 = pci_find_bus(0, 0);
++		bus0 = pci_get_bus(0, 0);
+ 		if (!bus0)
+ 			return;
+ 		/* Form PCI device/function pair. */
+@@ -43,6 +43,7 @@ void acpi_reboot(void)
+ 		/* Write the value that resets us. */
+ 		pci_bus_write_config_byte(bus0, devfn,
+ 				(rr->address & 0xffff), reset_value);
++		pci_bus_put(bus0);
+ 		break;
  
- 	/*
- 	 * If it's a multifunction device that does not support our
--	 * required ACS flags, add to the same group as function 0.
-+	 * required ACS flags, add to the same group as lowest numbered
-+	 * function that also does not suport the required ACS flags.
- 	 */
- 	if (dma_pdev->multifunction &&
--	    !pci_acs_enabled(dma_pdev, REQ_ACS_FLAGS))
--		swap_pci_ref(&dma_pdev,
--			     pci_get_slot(dma_pdev->bus,
--					  PCI_DEVFN(PCI_SLOT(dma_pdev->devfn),
--					  0)));
-+	    !pci_acs_enabled(dma_pdev, REQ_ACS_FLAGS)) {
-+		u8 i, slot = PCI_SLOT(dma_pdev->devfn);
-+
-+		for (i = 0; i < 8; i++) {
-+			struct pci_dev *tmp;
-+
-+			tmp = pci_get_slot(dma_pdev->bus, PCI_DEVFN(slot, i));
-+			if (!tmp)
-+				continue;
-+
-+			if (!pci_acs_enabled(tmp, REQ_ACS_FLAGS)) {
-+				swap_pci_ref(&dma_pdev, tmp);
-+				break;
-+			}
-+			pci_dev_put(tmp);
-+		}
-+	}
- 
- 	/*
- 	 * Devices on the root bus go through the iommu.  If that's not us,
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index b4f0e28..eec0d3e 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -4182,14 +4182,27 @@ static int intel_iommu_add_device(struct device *dev)
- 
- 	/*
- 	 * If it's a multifunction device that does not support our
--	 * required ACS flags, add to the same group as function 0.
-+	 * required ACS flags, add to the same group as lowest numbered
-+	 * function that also does not suport the required ACS flags.
- 	 */
- 	if (dma_pdev->multifunction &&
--	    !pci_acs_enabled(dma_pdev, REQ_ACS_FLAGS))
--		swap_pci_ref(&dma_pdev,
--			     pci_get_slot(dma_pdev->bus,
--					  PCI_DEVFN(PCI_SLOT(dma_pdev->devfn),
--					  0)));
-+	    !pci_acs_enabled(dma_pdev, REQ_ACS_FLAGS)) {
-+		u8 i, slot = PCI_SLOT(dma_pdev->devfn);
-+
-+		for (i = 0; i < 8; i++) {
-+			struct pci_dev *tmp;
-+
-+			tmp = pci_get_slot(dma_pdev->bus, PCI_DEVFN(slot, i));
-+			if (!tmp)
-+				continue;
-+
-+			if (!pci_acs_enabled(tmp, REQ_ACS_FLAGS)) {
-+				swap_pci_ref(&dma_pdev, tmp);
-+				break;
-+			}
-+			pci_dev_put(tmp);
-+		}
-+	}
- 
- 	/*
- 	 * Devices on the root bus go through the iommu.  If that's not us,
+ 	case ACPI_ADR_SPACE_SYSTEM_MEMORY:
+-- 
+1.8.1.2
 
