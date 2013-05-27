@@ -1,33 +1,39 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:52426 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754423Ab3EZRLw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 26 May 2013 13:11:52 -0400
-Date: Sun, 26 May 2013 10:11:49 -0700 (PDT)
-Message-Id: <20130526.101149.1610187533096408265.davem@davemloft.net>
-To: liuj97@gmail.com
-Cc: bhelgaas@google.com, yinghai@kernel.org, jiang.liu@huawei.com,
-	rjw@sisk.pl, gregkh@linuxfoundation.org, guz.fnst@cn.fujitsu.com,
-	toshi.kani@hp.com, myron.stowe@redhat.com, wangyijing@huawei.com,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	akpm@linux-foundation.org, sparclinux@vger.kernel.org
-Subject: Re: [PATCH v3, part2 11/20] PCI, SPARC: use hotplug-safe iterators
- to walk PCI buses
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1369583597-3801-12-git-send-email-jiang.liu@huawei.com>
-References: <1369583597-3801-1-git-send-email-jiang.liu@huawei.com>
-	<1369583597-3801-12-git-send-email-jiang.liu@huawei.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from mail-ie0-f170.google.com ([209.85.223.170]:35738 "EHLO
+	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753047Ab3E0RiC (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 May 2013 13:38:02 -0400
+Received: by mail-ie0-f170.google.com with SMTP id e14so520955iej.15
+        for <linux-pci@vger.kernel.org>; Mon, 27 May 2013 10:38:01 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAH9N0t8-6CgmhQhiu7zy1r4UnYyjJqkmAnrDRhjt3t71F7SxNA@mail.gmail.com>
+References: <CAH9N0t_dNJ+u+9BLFTsqRNnbRO4xMaGYqE6_du_u+joZfzBYyA@mail.gmail.com>
+	<CAErSpo7TXMOake9=oXwa-JA9qd9FmwNtHqM6RSt12QO=WORshA@mail.gmail.com>
+	<CAH9N0t8-6CgmhQhiu7zy1r4UnYyjJqkmAnrDRhjt3t71F7SxNA@mail.gmail.com>
+Date: Mon, 27 May 2013 10:38:01 -0700
+Message-ID: <CAE9FiQV4Okzz2jomvwzg7_jS5sKS9Br7LtjbMDy5=BHebTvyDA@mail.gmail.com>
+Subject: Re: Pcie Linux HotPlug Driver
+From: Yinghai Lu <yinghai@kernel.org>
+To: pricardofc@ipfn.ist.utl.pt
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <liuj97@gmail.com>
-Date: Sun, 26 May 2013 23:53:08 +0800
+On Mon, May 27, 2013 at 9:45 AM, Paulo Fortuna Carvalho
+<pricardofc@ipfn.ist.utl.pt> wrote:
+> My card includes a PCIe Switch.
+> My coordinators told me that a solution for hotplug (remove/insert
+> board without shutting down the system) could be the PCIe Port Bus
+> Driver Model using also pciehp.ko already installed in Linux System.
 
-> Enhance SPARC architecture specific code to use hotplug-safe iterators
-> to walk PCI buses.
-> 
-> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+can you post
+lspci -vvxxx
+lspci -tv
+with and without your card/fpga working?
 
-Acked-by: David S. Miller <davem@davemloft.net>
+If your card have a pcie switch, then you can make your down port has
+pcie slot cap that support pciehp.
+
+Yinghai
