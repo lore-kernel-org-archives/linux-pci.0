@@ -1,57 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ia0-f171.google.com ([209.85.210.171]:36459 "EHLO
-	mail-ia0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753674Ab3ENS5Z (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 May 2013 14:57:25 -0400
+Received: from mail-la0-f54.google.com ([209.85.215.54]:44994 "EHLO
+	mail-la0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752566Ab3E0QqB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 May 2013 12:46:01 -0400
+Received: by mail-la0-f54.google.com with SMTP id eg20so6684891lab.13
+        for <linux-pci@vger.kernel.org>; Mon, 27 May 2013 09:45:56 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1368550322-1045-3-git-send-email-jiang.liu@huawei.com>
-References: <1368550322-1045-1-git-send-email-jiang.liu@huawei.com>
-	<1368550322-1045-3-git-send-email-jiang.liu@huawei.com>
-Date: Tue, 14 May 2013 11:57:24 -0700
-Message-ID: <CAE9FiQXZ+3FLfRJQUr+oRGtOoczeNS2+MZvazC77F_TxpdpHBg@mail.gmail.com>
-Subject: Re: [RFC PATCH v2, part 2 03/18] PCI, hotplug: use hotplug-safe
- iterators to walk PCI buses
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jiang Liu <liuj97@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Jiri Kosina <jkosina@suse.cz>,
-	Masanari Iida <standby24x7@gmail.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Reply-To: pricardofc@ipfn.ist.utl.pt
+In-Reply-To: <CAErSpo7TXMOake9=oXwa-JA9qd9FmwNtHqM6RSt12QO=WORshA@mail.gmail.com>
+References: <CAH9N0t_dNJ+u+9BLFTsqRNnbRO4xMaGYqE6_du_u+joZfzBYyA@mail.gmail.com>
+	<CAErSpo7TXMOake9=oXwa-JA9qd9FmwNtHqM6RSt12QO=WORshA@mail.gmail.com>
+Date: Mon, 27 May 2013 17:45:56 +0100
+Message-ID: <CAH9N0t8-6CgmhQhiu7zy1r4UnYyjJqkmAnrDRhjt3t71F7SxNA@mail.gmail.com>
+Subject: Re: Pcie Linux HotPlug Driver
+From: Paulo Fortuna Carvalho <pricardofc@ipfn.ist.utl.pt>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 14, 2013 at 9:51 AM, Jiang Liu <liuj97@gmail.com> wrote:
-> Enhance PCI hotplug drivers to use hotplug-safe iterators to walk
-> PCI buses.
->
-> In other words, replace pci_find_bus(), pci_find_next_bus() and
-> pci_root_buses with pci_bus_exists(), pci_get_bus(), pci_get_next_bus()
-> and pci_get_next_root_bus() etc.
->
-> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-> Cc: Yinghai Lu <yinghai@kernel.org>
-> Cc: Jiri Kosina <jkosina@suse.cz>
-> Cc: Masanari Iida <standby24x7@gmail.com>
-> Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-> Cc: Toshi Kani <toshi.kani@hp.com>
-> Cc: linux-pci@vger.kernel.org
-> Cc: linux-kernel@vger.kernel.org
-> ---
->  drivers/pci/hotplug-pci.c          | 2 +-
->  drivers/pci/hotplug/ibmphp_core.c  | 8 +++++---
->  drivers/pci/hotplug/ibmphp_ebda.c  | 8 ++++++--
->  drivers/pci/hotplug/sgi_hotplug.c  | 3 ++-
->  drivers/pci/hotplug/shpchp_sysfs.c | 2 +-
->  5 files changed, 15 insertions(+), 8 deletions(-)
+My card includes a PCIe Switch.
+My coordinators told me that a solution for hotplug (remove/insert
+board without shutting down the system) could be the PCIe Port Bus
+Driver Model using also pciehp.ko already installed in Linux System.
 
-Acked-by: Yinghai Lu <yinghai@kernel.org>
+Paulo.
+
+
+> Why do you want to use the "Port Bus Driver Model"?  That is only
+> intended for the ports in PCIe switches.  Does your card include a
+> switch with non-standard services?
+
+> If your driver is specifically for some new switch functionality, you
+> might want to make it a port service driver.  But if this is a PCIe
+> endpoint device, then you should make it a plain old PCI driver with
+> pci_register_driver().
+
+> Bjorn
+
+
+
+
+
+
+>> Our driver has been modified in order to be compliant to a service
+>> driver as described in the HowTo Documentation.
+>>
+>> Using the file pcieport_if.h there were some structs that become
+>> obsolete namely the pci_port_service_id.
+>>
+>> 1) How can we provide the board ids with the pci_port_service_id
+>> struct removed?
+>> I'm using the old method struct pci_device_id
+>>
+>> 2) How can we point to the old pci_dev pointer in our functions once
+>> the arguments for probe(), remove() now are pcie_device struct? I'm using
+>> the port item in the struct pcie_device.
+>>
+>> 3) After changes at insmod time my board appears in the /proc/devices
+>> but my devices and sub-devices never appear in the /dev directory
+>> making me wonder that something is missing in my class_create() and
+>> device_create() function...
+>>
+>> 4) Are functions resume() and suspend() relevant for the hot-plug
+>> process? At the moment these functions only return -ENOSYS
+>>
+>> My Purpose: At the moment i'm only interest in modifying the Linux
+>> Device Driver for the board using the PCIe HotPlug Port Bus Driver
+>> Model (porting it to a Service Driver), detect the board and create
+>> the devices and sub-devices in the /dev directory as it used to do.
+>> I think there is only something missing but I dont know what.
+>>
+>> NOTE: Some aditional information:
+>> My _init() and _exit() functions are calling
+>> pcie_port_service_register() and pcie_port_service_unregister(),
+>> respectively.
+>>
+>> Thanks in Advance,
+>> Paulo (University PhD Student)
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
