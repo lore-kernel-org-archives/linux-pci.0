@@ -1,216 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from out02.mta.xmission.com ([166.70.13.232]:44309 "EHLO
-	out02.mta.xmission.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758429Ab3ENWEl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 May 2013 18:04:41 -0400
-From: ebiederm@xmission.com (Eric W. Biederman)
-To: Takao Indoh <indou.takao@jp.fujitsu.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	bhelgaas@google.com, kexec@lists.infradead.org,
-	iommu@lists.linux-foundation.org, alex.williamson@redhat.com,
-	ddutile@redhat.com, ishii.hironobu@jp.fujitsu.com,
-	bill.sumner@hp.com
-References: <1368509365-2260-1-git-send-email-indou.takao@jp.fujitsu.com>
-Date: Tue, 14 May 2013 15:04:29 -0700
-In-Reply-To: <1368509365-2260-1-git-send-email-indou.takao@jp.fujitsu.com>
-	(Takao Indoh's message of "Tue, 14 May 2013 14:29:25 +0900")
-Message-ID: <87d2stw74i.fsf@xmission.com>
+Received: from mail-oa0-f51.google.com ([209.85.219.51]:57504 "EHLO
+	mail-oa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752034Ab3E0Pd2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 May 2013 11:33:28 -0400
+Received: by mail-oa0-f51.google.com with SMTP id f4so8791431oah.24
+        for <linux-pci@vger.kernel.org>; Mon, 27 May 2013 08:33:27 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
-Subject: Re: [PATCH v2] PCI: Reset PCIe devices to stop ongoing DMA
+In-Reply-To: <CAH9N0t_dNJ+u+9BLFTsqRNnbRO4xMaGYqE6_du_u+joZfzBYyA@mail.gmail.com>
+References: <CAH9N0t_dNJ+u+9BLFTsqRNnbRO4xMaGYqE6_du_u+joZfzBYyA@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 27 May 2013 09:33:06 -0600
+Message-ID: <CAErSpo7TXMOake9=oXwa-JA9qd9FmwNtHqM6RSt12QO=WORshA@mail.gmail.com>
+Subject: Re: Pcie Linux HotPlug Driver
+To: pricardofc@ipfn.ist.utl.pt
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Takao Indoh <indou.takao@jp.fujitsu.com> writes:
+On Mon, May 27, 2013 at 4:43 AM, Paulo Fortuna Carvalho
+<pricardofc@ipfn.ist.utl.pt> wrote:
+> I have an PCI Express ATCA card with an FPGA.
+> I have a device driver to communicate with the board.
+> Now we are trying to implement hot-plug using the PCIe Port Bus Driver Model.
 
-> This patch resets PCIe devices on boot to stop ongoing DMA. When
-> "pci=pcie_reset_endpoint_devices" is specified, a hot reset is triggered
-> on each PCIe root port and downstream port to reset its downstream
-> endpoint.
->
-> Problem:
-> This patch solves the problem that kdump can fail when intel_iommu=on is
-> specified. When intel_iommu=on is specified, many dma-remapping errors
-> occur in second kernel and it causes problems like driver error or PCI
-> SERR, at last kdump fails. This problem is caused as follows.
-> 1) Devices are working on first kernel.
-> 2) Switch to second kernel(kdump kernel). The devices are still working
->    and its DMA continues during this switch.
-> 3) iommu is initialized during second kernel boot and ongoing DMA causes
->    dma-remapping errors.
->
-> Solution:
-> All DMA transactions have to be stopped before iommu is initialized. By
-> this patch devices are reset and in-flight DMA is stopped before
-> pci_iommu_init.
->
-> To invoke hot reset on an endpoint, its upstream link need to be reset.
-> reset_pcie_endpoints() is called from fs_initcall_sync, and it finds
-> root port/downstream port whose child is PCIe endpoint, and then reset
-> link between them. If the endpoint is VGA device, it is skipped because
-> the monitor blacks out if VGA controller is reset.
+Why do you want to use the "Port Bus Driver Model"?  That is only
+intended for the ports in PCIe switches.  Does your card include a
+switch with non-standard services?
 
-At a quick skim this patch looks reasonable.
+If your driver is specifically for some new switch functionality, you
+might want to make it a port service driver.  But if this is a PCIe
+endpoint device, then you should make it a plain old PCI driver with
+pci_register_driver().
 
-Acked-by: "Eric W. Biederman" <ebiederm@xmission.com>
+Bjorn
 
-> Changelog:
-> v2:
-> - Read pci config before de-assert secondary bus reset to flush previous
->   write
-> - Change function/variable name
-> - Make a list of devices to be reset
+> Our driver has been modified in order to be compliant to a service
+> driver as described in the HowTo Documentation.
 >
-> v1:
-> https://patchwork.kernel.org/patch/2482291/
+> Using the file pcieport_if.h there were some structs that become
+> obsolete namely the pci_port_service_id.
 >
-> Signed-off-by: Takao Indoh <indou.takao@jp.fujitsu.com>
-> ---
->  Documentation/kernel-parameters.txt |    2 +
->  drivers/pci/pci.c                   |  113 +++++++++++++++++++++++++++++++++++
->  2 files changed, 115 insertions(+), 0 deletions(-)
+> 1) How can we provide the board ids with the pci_port_service_id
+> struct removed?
+> I'm using the old method struct pci_device_id
 >
-> diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
-> index c3bfacb..8c9e8e4 100644
-> --- a/Documentation/kernel-parameters.txt
-> +++ b/Documentation/kernel-parameters.txt
-> @@ -2321,6 +2321,8 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
->  				any pair of devices, possibly at the cost of
->  				reduced performance.  This also guarantees
->  				that hot-added devices will work.
-> +		pcie_reset_endpoint_devices	Reset PCIe endpoint on boot by
-> +				hot reset
->  		cbiosize=nn[KMG]	The fixed amount of bus space which is
->  				reserved for the CardBus bridge's IO window.
->  				The default value is 256 bytes.
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index a899d8b..70c1205 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -3873,6 +3873,116 @@ void __weak pci_fixup_cardbus(struct pci_bus *bus)
->  }
->  EXPORT_SYMBOL(pci_fixup_cardbus);
->  
-> +/*
-> + * Return true if dev is PCIe root port or downstream port whose child is PCIe
-> + * endpoint except VGA device.
-> + */
-> +static int __init need_reset(struct pci_dev *dev)
-> +{
-> +	struct pci_bus *subordinate;
-> +	struct pci_dev *child;
-> +
-> +	if (!pci_is_pcie(dev) || !dev->subordinate ||
-> +	    list_empty(&dev->subordinate->devices) ||
-> +	    ((pci_pcie_type(dev) != PCI_EXP_TYPE_ROOT_PORT) &&
-> +	     (pci_pcie_type(dev) != PCI_EXP_TYPE_DOWNSTREAM)))
-> +		return 0;
-> +
-> +	subordinate = dev->subordinate;
-> +	list_for_each_entry(child, &subordinate->devices, bus_list) {
-> +		if ((pci_pcie_type(child) == PCI_EXP_TYPE_UPSTREAM) ||
-> +		    (pci_pcie_type(child) == PCI_EXP_TYPE_PCI_BRIDGE) ||
-> +		    ((child->class >> 16) == PCI_BASE_CLASS_DISPLAY))
-> +			/* Don't reset switch, bridge, VGA device */
-> +			return 0;
-> +	}
-> +
-> +	return 1;
-> +}
-> +
-> +static void __init save_downstream_configs(struct pci_dev *dev)
-> +{
-> +	struct pci_bus *subordinate;
-> +	struct pci_dev *child;
-> +
-> +	subordinate = dev->subordinate;
-> +	list_for_each_entry(child, &subordinate->devices, bus_list) {
-> +		dev_info(&child->dev, "save state\n");
-> +		pci_save_state(child);
-> +	}
-> +}
-> +
-> +static void __init restore_downstream_configs(struct pci_dev *dev)
-> +{
-> +	struct pci_bus *subordinate;
-> +	struct pci_dev *child;
-> +
-> +	subordinate = dev->subordinate;
-> +	list_for_each_entry(child, &subordinate->devices, bus_list) {
-> +		dev_info(&child->dev, "restore state\n");
-> +		pci_restore_state(child);
-> +	}
-> +}
-> +
-> +static void __init do_downstream_device_reset(struct pci_dev *dev)
-> +{
-> +	u16 ctrl;
-> +
-> +	dev_info(&dev->dev, "Reset Secondary bus\n");
-> +
-> +	/* Assert Secondary Bus Reset */
-> +	pci_read_config_word(dev, PCI_BRIDGE_CONTROL, &ctrl);
-> +	ctrl |= PCI_BRIDGE_CTL_BUS_RESET;
-> +	pci_write_config_word(dev, PCI_BRIDGE_CONTROL, ctrl);
-> +
-> +	/* Read config again to flush previous write */
-> +	pci_read_config_word(dev, PCI_BRIDGE_CONTROL, &ctrl);
-> +
-> +	msleep(2);
-> +
-> +	/* De-assert Secondary Bus Reset */
-> +	ctrl &= ~PCI_BRIDGE_CTL_BUS_RESET;
-> +	pci_write_config_word(dev, PCI_BRIDGE_CONTROL, ctrl);
-> +}
-> +
-> +struct pci_dev_entry {
-> +	struct list_head list;
-> +	struct pci_dev *dev;
-> +};
-> +static int __initdata pcie_reset_endpoint_devices;
-> +static int __init reset_pcie_endpoints(void)
-> +{
-> +	struct pci_dev *dev = NULL;
-> +	struct pci_dev_entry *pdev_entry, *tmp;
-> +	LIST_HEAD(pdev_list);
-> +
-> +	if (!pcie_reset_endpoint_devices)
-> +		return 0;
-> +
-> +	for_each_pci_dev(dev)
-> +		if (need_reset(dev)) {
-> +			pdev_entry = kmalloc(sizeof(*pdev_entry), GFP_KERNEL);
-> +			pdev_entry->dev = dev;
-> +			list_add(&pdev_entry->list, &pdev_list);
-> +		}
-> +
-> +	list_for_each_entry(pdev_entry, &pdev_list, list)
-> +		save_downstream_configs(pdev_entry->dev);
-> +
-> +	list_for_each_entry(pdev_entry, &pdev_list, list)
-> +		do_downstream_device_reset(pdev_entry->dev);
-> +
-> +	msleep(1000);
-> +
-> +	list_for_each_entry_safe(pdev_entry, tmp, &pdev_list, list) {
-> +		restore_downstream_configs(pdev_entry->dev);
-> +		kfree(pdev_entry);
-> +	}
-> +
-> +	return 0;
-> +}
-> +fs_initcall_sync(reset_pcie_endpoints);
-> +
->  static int __init pci_setup(char *str)
->  {
->  	while (str) {
-> @@ -3915,6 +4025,9 @@ static int __init pci_setup(char *str)
->  				pcie_bus_config = PCIE_BUS_PEER2PEER;
->  			} else if (!strncmp(str, "pcie_scan_all", 13)) {
->  				pci_add_flags(PCI_SCAN_ALL_PCIE_DEVS);
-> +			} else if (!strncmp(str, "pcie_reset_endpoint_devices",
-> +						27)) {
-> +				pcie_reset_endpoint_devices = 1;
->  			} else {
->  				printk(KERN_ERR "PCI: Unknown option `%s'\n",
->  						str);
+> 2) How can we point to the old pci_dev pointer in our functions once
+> the arguments for probe(), remove() now are pcie_device struct? I'm using
+> the port item in the struct pcie_device.
+>
+> 3) After changes at insmod time my board appears in the /proc/devices
+> but my devices and sub-devices never appear in the /dev directory
+> making me wonder that something is missing in my class_create() and
+> device_create() function...
+>
+> 4) Are functions resume() and suspend() relevant for the hot-plug
+> process? At the moment these functions only return -ENOSYS
+>
+> My Purpose: At the moment i'm only interest in modifying the Linux
+> Device Driver for the board using the PCIe HotPlug Port Bus Driver
+> Model (porting it to a Service Driver), detect the board and create
+> the devices and sub-devices in the /dev directory as it used to do.
+> I think there is only something missing but I dont know what.
+>
+> NOTE: Some aditional information:
+> My _init() and _exit() functions are calling
+> pcie_port_service_register() and pcie_port_service_unregister(), respectively.
+>
+> Thanks in Advance,
+> Paulo (University PhD Student)
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
