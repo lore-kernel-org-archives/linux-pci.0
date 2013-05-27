@@ -1,86 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f47.google.com ([209.85.220.47]:49323 "EHLO
-	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758263Ab3ENQxl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 May 2013 12:53:41 -0400
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Mauro Carvalho Chehab <mchehab@redhat.com>,
-	Daniel Drake <dsd@laptop.org>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Javier Martin <javier.martin@vista-silicon.com>,
-	linux-media@vger.kernel.org
-Subject: [RFC PATCH v2, part 2 15/18] PCI, via-camera: use hotplug-safe iterators to walk PCI buses
-Date: Wed, 15 May 2013 00:51:59 +0800
-Message-Id: <1368550322-1045-15-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1368550322-1045-1-git-send-email-jiang.liu@huawei.com>
-References: <1368550322-1045-1-git-send-email-jiang.liu@huawei.com>
+Received: from mail-oa0-f44.google.com ([209.85.219.44]:46958 "EHLO
+	mail-oa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752201Ab3E0XHG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 May 2013 19:07:06 -0400
+Received: by mail-oa0-f44.google.com with SMTP id n12so9292408oag.3
+        for <linux-pci@vger.kernel.org>; Mon, 27 May 2013 16:07:06 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1369621733-20048-1-git-send-email-libo.chen@huawei.com>
+References: <1369621733-20048-1-git-send-email-libo.chen@huawei.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 27 May 2013 17:06:46 -0600
+Message-ID: <CAErSpo6MYJ6+5jy8AoDB6v_ZkxmjymsyrP6JgFRt9O-GeFf=Gg@mail.gmail.com>
+Subject: Re: [PATCH 09/24] drivers/pci/ioapic: Convert to module_pci_driver
+To: Libo Chen <libo.chen@huawei.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Li Zefan <lizefan@huawei.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Enhance via-camera drviers to use hotplug-safe iterators to walk
-PCI buses.
+On Sun, May 26, 2013 at 8:28 PM, Libo Chen <libo.chen@huawei.com> wrote:
+> use module_pci_driver instead of init/exit, make code clean.
+>
+> Signed-off-by: Libo Chen <libo.chen@huawei.com>
+> ---
+>  drivers/pci/ioapic.c |   13 +------------
+>  1 files changed, 1 insertions(+), 12 deletions(-)
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Cc: Mauro Carvalho Chehab <mchehab@redhat.com>
-Cc: Daniel Drake <dsd@laptop.org>
-Cc: Jonathan Corbet <corbet@lwn.net>
-Cc: Javier Martin <javier.martin@vista-silicon.com>
-Cc: linux-media@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
----
- drivers/media/platform/via-camera.c | 12 ++++++++----
- 1 file changed, 8 insertions(+), 4 deletions(-)
+Applied to my pci/misc branch for v3.11, thanks!
 
-diff --git a/drivers/media/platform/via-camera.c b/drivers/media/platform/via-camera.c
-index b051c4a..ef10136 100644
---- a/drivers/media/platform/via-camera.c
-+++ b/drivers/media/platform/via-camera.c
-@@ -1284,7 +1284,8 @@ static struct video_device viacam_v4l_template = {
- 
- static bool viacam_serial_is_enabled(void)
- {
--	struct pci_bus *pbus = pci_find_bus(0, 0);
-+	struct pci_bus *pbus = pci_get_bus(0, 0);
-+	bool ret = false;
- 	u8 cbyte;
- 
- 	if (!pbus)
-@@ -1292,18 +1293,21 @@ static bool viacam_serial_is_enabled(void)
- 	pci_bus_read_config_byte(pbus, VIACAM_SERIAL_DEVFN,
- 			VIACAM_SERIAL_CREG, &cbyte);
- 	if ((cbyte & VIACAM_SERIAL_BIT) == 0)
--		return false; /* Not enabled */
-+		goto out; /* Not enabled */
- 	if (override_serial == 0) {
- 		printk(KERN_NOTICE "Via camera: serial port is enabled, " \
- 				"refusing to load.\n");
- 		printk(KERN_NOTICE "Specify override_serial=1 to force " \
- 				"module loading.\n");
--		return true;
-+		ret = true;
-+		goto out;
- 	}
- 	printk(KERN_NOTICE "Via camera: overriding serial port\n");
- 	pci_bus_write_config_byte(pbus, VIACAM_SERIAL_DEVFN,
- 			VIACAM_SERIAL_CREG, cbyte & ~VIACAM_SERIAL_BIT);
--	return false;
-+out:
-+	pci_bus_put(pbus);
-+	return ret;
- }
- 
- static struct ov7670_config sensor_cfg = {
--- 
-1.8.1.2
-
+> diff --git a/drivers/pci/ioapic.c b/drivers/pci/ioapic.c
+> index 3c6bbdd..1b90579 100644
+> --- a/drivers/pci/ioapic.c
+> +++ b/drivers/pci/ioapic.c
+> @@ -113,17 +113,6 @@ static struct pci_driver ioapic_driver = {
+>         .remove         = ioapic_remove,
+>  };
+>
+> -static int __init ioapic_init(void)
+> -{
+> -       return pci_register_driver(&ioapic_driver);
+> -}
+> -
+> -static void __exit ioapic_exit(void)
+> -{
+> -       pci_unregister_driver(&ioapic_driver);
+> -}
+> -
+> -module_init(ioapic_init);
+> -module_exit(ioapic_exit);
+> +module_pci_driver(ioapic_driver);
+>
+>  MODULE_LICENSE("GPL");
+> --
+> 1.7.1
+>
+>
