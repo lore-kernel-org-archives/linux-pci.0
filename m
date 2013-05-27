@@ -1,123 +1,48 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:38956 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S966303Ab3E2OvM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 May 2013 10:51:12 -0400
-Date: Wed, 29 May 2013 10:51:11 -0400 (EDT)
-From: Alan Stern <stern@rowland.harvard.edu>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-cc: Linux PM list <linux-pm@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Kevin Hilman <khilman@linaro.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: Re: [PATCH RFC] PM / Runtime: Rework the "runtime idle" helper
- routine
-In-Reply-To: <1463685.qFyr66vqF2@vostro.rjw.lan>
-Message-ID: <Pine.LNX.4.44L0.1305291023170.1473-100000@iolanthe.rowland.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Libo Chen <libo.chen@huawei.com>
+To: <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<lizefan@huawei.com>, <libo.chen@huawei.com>,
+	<gregkh@linuxfoundation.org>
+Subject: [PATCH 09/24] drivers/pci/ioapic: Convert to module_pci_driver
+Date: Mon, 27 May 2013 10:28:53 +0800
+Message-ID: <1369621733-20048-1-git-send-email-libo.chen@huawei.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 29 May 2013, Rafael J. Wysocki wrote:
+use module_pci_driver instead of init/exit, make code clean.
 
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> 
-> The "runtime idle" helper routine, rpm_idle(), currently ignores
-> return values from .runtime_idle() callbacks executed by it.
-> 
-> However, it turns out that many subsystems use the generic idle
-> callback routine pm_generic_runtime_idle() which checks the return
-> value of the driver's callback and executes pm_runtime_suspend() for
-> the device unless that value is different from 0.  If that logic is
-> moved to rpm_idle() instead, pm_generic_runtime_idle() can be dropped
-> and its users will not need any .runtime_idle() callbacks any more.
+Signed-off-by: Libo Chen <libo.chen@huawei.com>
+---
+ drivers/pci/ioapic.c |   13 +------------
+ 1 files changed, 1 insertions(+), 12 deletions(-)
 
-Since you're making this change, wouldn't it be a good idea to adopt
-Mika's original suggestion and turn on the RPM_AUTO bit in rpmflags
-when the use_autosuspend flag is set?
+diff --git a/drivers/pci/ioapic.c b/drivers/pci/ioapic.c
+index 3c6bbdd..1b90579 100644
+--- a/drivers/pci/ioapic.c
++++ b/drivers/pci/ioapic.c
+@@ -113,17 +113,6 @@ static struct pci_driver ioapic_driver = {
+ 	.remove		= ioapic_remove,
+ };
+ 
+-static int __init ioapic_init(void)
+-{
+-	return pci_register_driver(&ioapic_driver);
+-}
+-
+-static void __exit ioapic_exit(void)
+-{
+-	pci_unregister_driver(&ioapic_driver);
+-}
+-
+-module_init(ioapic_init);
+-module_exit(ioapic_exit);
++module_pci_driver(ioapic_driver);
+ 
+ MODULE_LICENSE("GPL");
+-- 
+1.7.1
 
-> Moreover, the PCI subsystem's .runtime_idle() routine,
-> pci_pm_runtime_idle(), works in analogy with the generic one and if
-> rpm_idle() calls rpm_suspend() after 0 has been returned by the
-> .runtime_idle() callback executed by it, that routine will not be
-> necessary any more and may be dropped.
-
-See below.
-
-What about cases where the runtime-idle callback does
-rpm_schedule_suspend or rpm_request_suspend?  You'd have to make sure
-that it returns -EBUSY in such cases.  Did you audit for this?
-
-> Index: linux-pm/Documentation/power/runtime_pm.txt
-> ===================================================================
-> --- linux-pm.orig/Documentation/power/runtime_pm.txt
-> +++ linux-pm/Documentation/power/runtime_pm.txt
-> @@ -660,11 +660,6 @@ Subsystems may wish to conserve code spa
->  management callbacks provided by the PM core, defined in
->  driver/base/power/generic_ops.c:
->  
-> -  int pm_generic_runtime_idle(struct device *dev);
-> -    - invoke the ->runtime_idle() callback provided by the driver of this
-> -      device, if defined, and call pm_runtime_suspend() for this device if the
-> -      return value is 0 or the callback is not defined
-> -
-
-The documentation for the runtime-idle callback needs to be updated too.
-
-> Index: linux-pm/drivers/pci/pci-driver.c
-> ===================================================================
-> --- linux-pm.orig/drivers/pci/pci-driver.c
-> +++ linux-pm/drivers/pci/pci-driver.c
-> @@ -1046,32 +1046,6 @@ static int pci_pm_runtime_resume(struct
->  	return rc;
->  }
->  
-> -static int pci_pm_runtime_idle(struct device *dev)
-> -{
-> -	struct pci_dev *pci_dev = to_pci_dev(dev);
-> -	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
-> -
-> -	/*
-> -	 * If pci_dev->driver is not set (unbound), the device should
-> -	 * always remain in D0 regardless of the runtime PM status
-> -	 */
-> -	if (!pci_dev->driver)
-> -		goto out;
-> -
-> -	if (!pm)
-> -		return -ENOSYS;
-> -
-> -	if (pm->runtime_idle) {
-> -		int ret = pm->runtime_idle(dev);
-> -		if (ret)
-> -			return ret;
-> -	}
-> -
-> -out:
-> -	pm_runtime_suspend(dev);
-> -	return 0;
-> -}
-
-This may not be a safe change, because now the behavior is different
-in the case where dev->driver is set but pci_dev->driver isn't.  The
-difference is that you will now call the driver's runtime-idle
-handler, whereas the existing code doesn't.
-
-In fact, this may turn out to be a more widespread problem.  
-dev->driver gets set before the probe routine is called, and it gets
-cleared after the remove routine is called.  A runtime PM callback to
-the driver during these windows isn't a good idea.  Erasing subsystems'
-runtime_idle handlers, as this patch does, makes it impossible for the
-subsystems to protect against this.
-
-The patch also needs to update
-drivers/usb/core/driver.c:usb_runtime_idle().  If you include Mika's
-suggestion, the routine can be removed entirely.
-
-Alan Stern
 
