@@ -1,83 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-da0-f50.google.com ([209.85.210.50]:37635 "EHLO
-	mail-da0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755811Ab3EOOj0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 May 2013 10:39:26 -0400
-Message-ID: <51939E16.9090105@gmail.com>
-Date: Wed, 15 May 2013 22:39:18 +0800
-From: Liu Jiang <liuj97@gmail.com>
+Received: from mail-bk0-f42.google.com ([209.85.214.42]:61249 "EHLO
+	mail-bk0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756061Ab3E0Din (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 26 May 2013 23:38:43 -0400
+Received: by mail-bk0-f42.google.com with SMTP id jk13so3457124bkc.1
+        for <linux-pci@vger.kernel.org>; Sun, 26 May 2013 20:38:42 -0700 (PDT)
 MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>
-CC: Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Paul Mackerras <paulus@samba.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	David Airlie <airlied@linux.ie>,
-	Neela Syam Kolli <megaraidlinux@lsi.com>,
-	"James E.J. Bottomley" <jbottomley@parallels.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linuxppc-dev@lists.ozlabs.org,
-	"sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
-	Linux-Scsi <linux-scsi@vger.kernel.org>,
-	Jiang Liu <jiang.liu@huawei.com>
-Subject: Re: [PATCH v2, part 1 3/9] PCI: Convert alloc_pci_dev(void) to pci_alloc_dev(bus)
- instead
-References: <1368461313-4371-1-git-send-email-jiang.liu@huawei.com> <1368461313-4371-4-git-send-email-jiang.liu@huawei.com> <CAE9FiQVKKKmZRQ8CcKCzU8Gqzwb5SjWYagVB2OZiRqbSWXVpiw@mail.gmail.com> <5191F53E.4000305@cn.fujitsu.com> <51925136.5050302@gmail.com> <CAE9FiQWO-jR5y35kKiW0m6gVR54ZyRsBsdhP4BmFLSsDzCS3rA@mail.gmail.com> <51926CF6.1050706@gmail.com> <CAE9FiQWXN_ETRFPb5oFx-6LXyuHviX3h3NXCQKjcxtv2Uma-JA@mail.gmail.com>
-In-Reply-To: <CAE9FiQWXN_ETRFPb5oFx-6LXyuHviX3h3NXCQKjcxtv2Uma-JA@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Date: Mon, 27 May 2013 11:38:41 +0800
+Message-ID: <CAPgLHd_B-RBGTcQPeeWeJb9QVkf-RjO1WtBC0JK2KOEoBaus_Q@mail.gmail.com>
+Subject: [PATCH -next] pci: mvebu: fix return value check in mvebu_pcie_probe()
+From: Wei Yongjun <weiyj.lk@gmail.com>
+To: bhelgaas@google.com, grant.likely@linaro.org,
+	rob.herring@calxeda.com, jason@lakedaemon.net,
+	thomas.petazzoni@free-electrons.com
+Cc: yongjun_wei@trendmicro.com.cn, linux-pci@vger.kernel.org,
+	devicetree-discuss@lists.ozlabs.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed 15 May 2013 02:52:51 AM CST, Yinghai Lu wrote:
-> On Tue, May 14, 2013 at 9:57 AM, Liu Jiang <liuj97@gmail.com> wrote:
->> On Tue 14 May 2013 11:10:33 PM CST, Yinghai Lu wrote:
->>>
->>> On Tue, May 14, 2013 at 7:59 AM, Liu Jiang <liuj97@gmail.com> wrote:
->>>>
->>>> On 05/14/2013 04:26 PM, Gu Zheng wrote:
->>>>       I suggest to use pci_release_dev() instead because it also needs to
->>>> release OF related resources.
->>>> I will update it in next version.
->>>>
->>>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
->>>> index bc075a3..2ac6338 100644
->>>> --- a/drivers/pci/probe.c
->>>> +++ b/drivers/pci/probe.c
->>>> @@ -1281,7 +1281,7 @@ static struct pci_dev *pci_scan_device(struct
->>>> pci_bus
->>>> *bus
->>>>           pci_set_of_node(dev);
->>>>
->>>>           if (pci_setup_device(dev)) {
->>>> -               kfree(dev);
->>>> +               pci_release_dev(&dev->dev);
->>>>                   return NULL;
->>>
->>>
->>> no, should move pci_set_of_node calling into pci_setup_device.
->>>
->>> Yinghai
->>
->>
->> I'm not sure whether we should call pci_set_of_node() for SR-IOV devices
->> too,
->> any suggestions here?
->
-> or just move down pci_set_of_node after pci_setup_device?
->
-> anyway that is another bug.
->
-> Yinghai
-I'm not familiar with the OF logic and can't make sure whether 
-pci_setup_device()
-has dependency on dev->of_node. Feel it's more safe to call 
-pci_release_of_node()
-on failing path instead of tuning call-site of pci_set_of_node().
+From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+
+In case of error, function of_clk_get_by_name() returns
+ERR_PTR() never returns NULL. The NULL test in the return
+value check should be replaced with IS_ERR().
+
+Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+---
+ drivers/pci/host/pci-mvebu.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+index 91106df..c8397c4 100644
+--- a/drivers/pci/host/pci-mvebu.c
++++ b/drivers/pci/host/pci-mvebu.c
+@@ -828,7 +828,7 @@ static int __init mvebu_pcie_probe(struct platform_device *pdev)
+ 		}
+ 
+ 		port->clk = of_clk_get_by_name(child, NULL);
+-		if (!port->clk) {
++		if (IS_ERR(port->clk)) {
+ 			dev_err(&pdev->dev, "PCIe%d.%d: cannot get clock\n",
+ 			       port->port, port->lane);
+ 			iounmap(port->base);
+
