@@ -1,40 +1,54 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Liu Jiang <liuj97@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Len Brown <lenb@kernel.org>,
-	linux-acpi@vger.kernel.org
-Subject: Re: [PATCH v2, part 1 5/9] ACPI, PCI: remove unused global list acpi_pci_roots in pci_root.c
-Date: Tue, 14 May 2013 15:01:38 +0200
-Message-ID: <6812228.aa0vVeiYvi@vostro.rjw.lan>
-In-Reply-To: <51923114.2070701@gmail.com>
-References: <1368461313-4371-1-git-send-email-jiang.liu@huawei.com> <1598495.v92I2Ljz9W@vostro.rjw.lan> <51923114.2070701@gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-oa0-f50.google.com ([209.85.219.50]:65459 "EHLO
+	mail-oa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934735Ab3E1RZw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 May 2013 13:25:52 -0400
+Received: by mail-oa0-f50.google.com with SMTP id l20so10317613oag.37
+        for <linux-pci@vger.kernel.org>; Tue, 28 May 2013 10:25:51 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <1369728226-25936-1-git-send-email-wangyijing@huawei.com>
+References: <1369728226-25936-1-git-send-email-wangyijing@huawei.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 28 May 2013 11:25:31 -0600
+Message-ID: <CAErSpo4VU2+vTLBQNtzfJD-GQ1uxJkL61Fanrn8+Bv6pHBminQ@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Replace printks with appropriate pr_*()
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Hanjun Guo <guohanjun@huawei.com>, Jiang Liu <liuj97@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, May 14, 2013 08:41:56 PM Liu Jiang wrote:
-> On Tue 14 May 2013 07:28:45 AM CST, Rafael J. Wysocki wrote:
-> > On Tuesday, May 14, 2013 12:08:29 AM Jiang Liu wrote:
-> >> Now the global list acpi_pci_roots pci_root.c is useless, remove it.
-> >
-> > Well, are patches [1-4/9] needed for that or does it apply without them?
-> Hi Rafael,
->        This two patches have no dependency on others.
+On Tue, May 28, 2013 at 2:03 AM, Yijing Wang <wangyijing@huawei.com> wrote:
+> Replace deprecated printk(KERN_ERR...) with pr_err() in pci-acpi.c
+>
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> ---
+>  drivers/pci/pci-acpi.c |    4 ++--
+>  1 files changed, 2 insertions(+), 2 deletions(-)
 
-Can you please submit them separately, then?
+Applied to pci/misc for v3.11, thanks.
 
-Rafael
-
-
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+> index e4b1fb2..6c15d6a 100644
+> --- a/drivers/pci/pci-acpi.c
+> +++ b/drivers/pci/pci-acpi.c
+> @@ -376,12 +376,12 @@ static int __init acpi_pci_init(void)
+>         int ret;
+>
+>         if (acpi_gbl_FADT.boot_flags & ACPI_FADT_NO_MSI) {
+> -               printk(KERN_INFO"ACPI FADT declares the system doesn't support MSI, so disable it\n");
+> +               pr_info("ACPI FADT declares the system doesn't support MSI, so disable it\n");
+>                 pci_no_msi();
+>         }
+>
+>         if (acpi_gbl_FADT.boot_flags & ACPI_FADT_NO_ASPM) {
+> -               printk(KERN_INFO"ACPI FADT declares the system doesn't support PCIe ASPM, so disable it\n");
+> +               pr_info("ACPI FADT declares the system doesn't support PCIe ASPM, so disable it\n");
+>                 pcie_no_aspm();
+>         }
+>
+> --
+> 1.7.1
+>
+>
