@@ -1,66 +1,84 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <1368461313-4371-4-git-send-email-jiang.liu@huawei.com>
-References: <1368461313-4371-1-git-send-email-jiang.liu@huawei.com>
-	<1368461313-4371-4-git-send-email-jiang.liu@huawei.com>
-Date: Mon, 13 May 2013 10:23:29 -0700
-Message-ID: <CAE9FiQVKKKmZRQ8CcKCzU8Gqzwb5SjWYagVB2OZiRqbSWXVpiw@mail.gmail.com>
-Subject: Re: [PATCH v2, part 1 3/9] PCI: Convert alloc_pci_dev(void) to
- pci_alloc_dev(bus) instead
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jiang Liu <liuj97@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Paul Mackerras <paulus@samba.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	David Airlie <airlied@linux.ie>,
-	Neela Syam Kolli <megaraidlinux@lsi.com>,
-	"James E.J. Bottomley" <JBottomley@parallels.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linuxppc-dev@lists.ozlabs.org,
-	"sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
-	Linux-Scsi <linux-scsi@vger.kernel.org>,
-	Jiang Liu <jiang.liu@huawei.com>
-Content-Type: text/plain; charset=ISO-8859-1
+From: Betty Dall <betty.dall@hp.com>
+To: rjw@sisk.pl, bhelgaas@google.com
+Cc: ying.huang@intel.com, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Betty Dall <betty.dall@hp.com>
+Subject: [PATCH 3/3] PCI/AER: Provide reset_link for firmware first root port
+Date: Tue, 28 May 2013 12:48:49 -0600
+Message-Id: <1369766929-4386-4-git-send-email-betty.dall@hp.com>
+In-Reply-To: <1369766929-4386-1-git-send-email-betty.dall@hp.com>
+References: <1369766929-4386-1-git-send-email-betty.dall@hp.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, May 13, 2013 at 9:08 AM, Jiang Liu <liuj97@gmail.com> wrote:
-> From: Gu Zheng <guz.fnst@cn.fujitsu.com>
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 4f0bc0a..bc075a3 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1131,6 +1131,7 @@ static void pci_release_dev(struct device *dev)
->         struct pci_dev *pci_dev;
->
->         pci_dev = to_pci_dev(dev);
-> +       pci_bus_put(pci_dev->bus);
->         pci_release_capabilities(pci_dev);
->         pci_release_of_node(pci_dev);
->         kfree(pci_dev);
-> @@ -1269,11 +1270,10 @@ static struct pci_dev *pci_scan_device(struct pci_bus *bus, int devfn)
->         if (!pci_bus_read_dev_vendor_id(bus, devfn, &l, 60*1000))
->                 return NULL;
->
-> -       dev = alloc_pci_dev();
-> +       dev = pci_alloc_dev(bus);
->         if (!dev)
->                 return NULL;
->
-> -       dev->bus = bus;
->         dev->devfn = devfn;
->         dev->vendor = l & 0xffff;
->         dev->device = (l >> 16) & 0xffff;
+The firmware first path does not install the aerdrv root port
+service driver, so the firmware first root port does not have
+a reset_link callback. When a firmware first root port does not have
+a reset_link callback, use a new default reset_link similar to what
+we already do for the default_downstream_reset_link(). The firmware
+first default reset_link brings the root port out of SBR if firmware
+left it in SBR.
 
-in pci_setup_device() fail path, it release the ref to that bus.
+Signed-off-by: Betty Dall <betty.dall@hp.com>
+---
 
-Yinghai
+ drivers/pci/pcie/aer/aerdrv_core.c |   37 ++++++++++++++++++++++++++++++++++++
+ 1 files changed, 37 insertions(+), 0 deletions(-)
+
+
+diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
+index 8ec8b4f..6862fe3 100644
+--- a/drivers/pci/pcie/aer/aerdrv_core.c
++++ b/drivers/pci/pcie/aer/aerdrv_core.c
+@@ -413,6 +413,40 @@ static pci_ers_result_t default_downstream_reset_link(struct pci_dev *dev)
+ 	return PCI_ERS_RESULT_RECOVERED;
+ }
+ 
++/**
++ * default_ff_root_port_reset_link - default reset function for firmware
++ *		first Root Port
++ * @dev: pointer to root port's pci_dev data structure
++ *
++ * Invoked when performing link reset at Root Port w/ no aer driver.
++ * This happens through the firmware first path. Firmware may leave
++ * the Root Port in SBR and it is the OS responsiblity to bring it out
++ * of SBR.
++ */
++static pci_ers_result_t default_ff_root_port_reset_link(struct pci_dev *dev)
++{
++	u16 p2p_ctrl;
++
++	/* Read Secondary Bus Reset */
++	pci_read_config_word(dev, PCI_BRIDGE_CONTROL, &p2p_ctrl);
++	p2p_ctrl |= PCI_BRIDGE_CTL_BUS_RESET;
++
++	/* De-assert Secondary Bus Reset, if it is set */
++	if (p2p_ctrl & PCI_BRIDGE_CTL_BUS_RESET) {
++		p2p_ctrl &= ~PCI_BRIDGE_CTL_BUS_RESET;
++		pci_write_config_word(dev, PCI_BRIDGE_CONTROL, p2p_ctrl);
++
++		/*
++		 * System software must wait for at least 100ms from the end
++		 * of a reset of one or more device before it is permitted
++		 * to issue Configuration Requests to those devices.
++		 */
++		msleep(200);
++		dev_dbg(&dev->dev, "Root Port link has been reset\n");
++	}
++	return PCI_ERS_RESULT_RECOVERED;
++}
++
+ static int find_aer_service_iter(struct device *device, void *data)
+ {
+ 	struct pcie_port_service_driver *service_driver, **drv;
+@@ -460,6 +494,9 @@ static pci_ers_result_t reset_link(struct pci_dev *dev)
+ 		status = driver->reset_link(udev);
+ 	} else if (pci_pcie_type(udev) == PCI_EXP_TYPE_DOWNSTREAM) {
+ 		status = default_downstream_reset_link(udev);
++	} else if (pci_pcie_type(udev) == PCI_EXP_TYPE_ROOT_PORT &&
++		pcie_aer_get_firmware_first(udev)) {
++		status = default_ff_root_port_reset_link(udev);
+ 	} else {
+ 		dev_printk(KERN_DEBUG, &dev->dev,
+ 			"no link-reset support at upstream device %s\n",
