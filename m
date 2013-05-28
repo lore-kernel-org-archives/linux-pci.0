@@ -1,61 +1,161 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from webmail.solarflare.com ([12.187.104.25]:19183 "EHLO
-	webmail.solarflare.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755788Ab3ETQHT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 20 May 2013 12:07:19 -0400
-Message-ID: <1369066035.4616.6.camel@bwh-desktop.uk.solarflarecom.com>
-Subject: Re: [PATCH v2 6/7] PCI: Make sure VF's driver get attached after
- PF's
-From: Ben Hutchings <bhutchings@solarflare.com>
-To: Or Gerlitz <or.gerlitz@gmail.com>
-CC: Greg Rose <gregory.v.rose@intel.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Alexander Duyck <alexander.h.duyck@intel.com>,
-	Yan Burman <yanb@mellanox.com>,
-	Sathya Perla <Sathya.Perla@emulex.com>,
-	<netdev@vger.kernel.org>
-Date: Mon, 20 May 2013 17:07:15 +0100
-In-Reply-To: <CAJZOPZ+L1QJdHePd_x9RAoqZKyJAKHo+hA8T1UZoe8=ozT98RA@mail.gmail.com>
-References: <1368586102-17661-1-git-send-email-yinghai@kernel.org>
-	 <20130515091248.00002fe3@unknown>
-	 <CAJZOPZ+L1QJdHePd_x9RAoqZKyJAKHo+hA8T1UZoe8=ozT98RA@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+Received: from mail-pb0-f52.google.com ([209.85.160.52]:48244 "EHLO
+	mail-pb0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934515Ab3E1PG1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 May 2013 11:06:27 -0400
+Message-ID: <51A4C7EE.8060506@gmail.com>
+Date: Tue, 28 May 2013 23:06:22 +0800
+From: Liu Jiang <liuj97@gmail.com>
 MIME-Version: 1.0
+To: Yinghai Lu <yinghai@kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v3, part2 01/20] PCI: introduce hotplug-safe PCI bus iterators
+References: <1369583597-3801-1-git-send-email-jiang.liu@huawei.com> <1369583597-3801-2-git-send-email-jiang.liu@huawei.com> <CAE9FiQUBQRrkiub_EGZ1TZ-iccLts7hDff3kOz70uq=McjpoGg@mail.gmail.com>
+In-Reply-To: <CAE9FiQUBQRrkiub_EGZ1TZ-iccLts7hDff3kOz70uq=McjpoGg@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 2013-05-20 at 15:28 +0300, Or Gerlitz wrote:
-> On Wed, May 15, 2013 at 7:12 PM, Greg Rose <gregory.v.rose@intel.com> wrote:
-> 
-> 
-> > I'm really not a fan of this.  Seems to me the tail is wagging the dog
-> > here.  Fix the driver to work without a PF driver being present.
-> 
-> Greg, Alex,
-> 
-> As I wrote over the V1 thread, currently we can't go and patch mlx4 to
-> use the sysfs API nor defer the call from within our probe function to
-> enable sriov since  this requires some firmware change to allow
-> enabling SRIOV after some  resources are initialized/provisioned.
-> Hence the patch suggested here or any other patch we can agree on
-> which will make sure that VF probing is done only once the PF is ready
-> is preferred, I think.
-> 
-> I wasn't sure to totally follow on the argument that things need to
-> work when the PF is absent in the sense there's no driver instance
-> around over which the PF is probed, if you can explain little better,
-> that would help.
-
-It might be sufficient to return -EPROBE_DEFER from the VF probe
-function when the PF is not yet ready, if you can easily detect that.
-
-Ben.
-
--- 
-Ben Hutchings, Staff Engineer, Solarflare
-Not speaking for my employer; that's the marketing department's job.
-They asked us to note that Solarflare product names are trademarked.
+On Tue 28 May 2013 12:22:29 PM CST, Yinghai Lu wrote:
+> On Sun, May 26, 2013 at 8:52 AM, Jiang Liu <liuj97@gmail.com> wrote:
+>> Introduce hotplug-safe PCI bus iterators as below, which hold a
+>> reference on the returned PCI bus object.
+>> bool pci_bus_exists(int domain, int busnr);
+>> struct pci_bus *pci_get_bus(int domain, int busnr);
+>> struct pci_bus *pci_get_next_bus(struct pci_bus *from);
+>> struct pci_bus *pci_get_next_root_bus(struct pci_bus *from);
+>> #define for_each_pci_bus(b) for (b = NULL; (b = pci_get_next_bus(b)); )
+>> #define for_each_pci_root_bus(b)  \
+>>                 for (b = NULL; (b = pci_get_next_root_bus(b)); )
+>>
+>> The long-term goal is to remove hotplug-unsafe pci_find_bus(),
+>> pci_find_next_bus() and the global pci_root_buses list.
+>>
+>> These new interfaces may be a littler slower than existing interfaces,
+>> but it should be acceptable because they are not used on hot paths.
+>
+> looks like go over all buses to find out several root buses is not good.
+>
+>
+>>
+>> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+>> Acked-by: Yinghai Lu <yinghai@kernel.org>
+>
+> I take that back.
+>
+>> Cc: linux-pci@vger.kernel.org
+>> Cc: linux-kernel@vger.kernel.org
+>> ---
+>>  drivers/pci/pci.h    |   1 +
+>>  drivers/pci/probe.c  |   2 +-
+>>  drivers/pci/search.c | 159 +++++++++++++++++++++++++++++++++++++++++----------
+>>  include/linux/pci.h  |  23 +++++++-
+>>  4 files changed, 153 insertions(+), 32 deletions(-)
+>>
+>> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+>> index 68678ed..8fe15f6 100644
+>> --- a/drivers/pci/pci.h
+>> +++ b/drivers/pci/pci.h
+>> @@ -126,6 +126,7 @@ static inline void pci_remove_legacy_files(struct pci_bus *bus) { return; }
+>>
+>>  /* Lock for read/write access to pci device and bus lists */
+>>  extern struct rw_semaphore pci_bus_sem;
+>> +extern struct class pcibus_class;
+>>
+>>  extern raw_spinlock_t pci_lock;
+>>
+>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+>> index 2830070..1004a05 100644
+>> --- a/drivers/pci/probe.c
+>> +++ b/drivers/pci/probe.c
+>> @@ -93,7 +93,7 @@ static void release_pcibus_dev(struct device *dev)
+>>         kfree(pci_bus);
+>>  }
+>>
+>> -static struct class pcibus_class = {
+>> +struct class pcibus_class = {
+>>         .name           = "pci_bus",
+>>         .dev_release    = &release_pcibus_dev,
+>>         .dev_attrs      = pcibus_dev_attrs,
+> ...
+>> +static int pci_match_next_root_bus(struct device *dev, const void *data)
+>> +{
+>> +       return pci_is_root_bus(to_pci_bus(dev));
+>>  }
+> ...
+>> +
+>> +/**
+>> + * pci_find_next_root_bus - begin or continue searching for a PCI root bus
+>> + * @from: Previous PCI bus found, or %NULL for new search.
+>> + *
+>> + * Iterates through the list of known PCI root busses. If a PCI bus is found,
+>> + * the reference count to the root bus is incremented and a pointer to it is
+>> + * returned. Otherwise, %NULL is returned. A new search is initiated by
+>> + * passing %NULL as the @from argument. Otherwise if @from is not %NULL,
+>> + * searches continue from next root bus on the global list. The reference
+>> + * count for @from is always decremented if it is not %NULL.
+>> + */
+>> +struct pci_bus *pci_get_next_root_bus(struct pci_bus *from)
+>> +{
+>> +       struct device *dev = from ? &from->dev : NULL;
+>> +
+>> +       WARN_ON(in_interrupt());
+>> +       dev = class_find_device(&pcibus_class, dev, NULL,
+>> +                               &pci_match_next_root_bus);
+>> +       pci_bus_put(from);
+>> +       if (dev)
+>> +               return to_pci_bus(dev);
+>> +
+>> +       return NULL;
+>>  }
+>> +EXPORT_SYMBOL(pci_get_next_root_bus);
+>
+> this patchset is most doing same thing like my for_each_host_bridge patchset.
+> that patchset add bus_type for host_bridge and loop with each_...bus
+> to find host_bridge
+> and to its bus.
+>
+> looks like for each host bridge should be right direction.
+>
+> also late we could add per host bridge lock instead of whole pci bus sem etc.
+>
+> Thanks
+>
+> Yinghai
+Hi Yinghai,
+          Thanks for review! Actually this patchset is inspired by your 
+for_each_host_bridge()
+patchset but trying to close some race windows.
+          Currently pci_root_bus holds a reference to pci_host_bridge, 
+so it's always safe to
+reference pci_root_bus->bridge. And pci_host_bridge doesn't hold 
+reference to pci_root_bus,
+so we can't safely reference pci_host_bridge->bus. And it's hard to 
+make pci_host_bridge
+to hold a reference to pci_root_bus because that will cause loop.
+           So we try to achieve the same goal with this patchset, but 
+with some level of inefficiency
+to search all PCI buses for root buses.
+          The third patchset of this series is to introduce a PCI bus 
+lock mechanism to solve
+many risk conditions in PCI host bridge/device hotplug we are facing 
+recently. We have
+done basic tests against the new lock mechanism and seems it has solved 
+all those
+risk conditions found by us and Gu Zheng. But we are still working on 
+improving the
+third patchset.
+          To all, seems we are trying to achieve the same goal with 
+different approaches.
+Regards!
+Gerry
 
