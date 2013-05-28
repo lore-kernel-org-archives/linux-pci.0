@@ -1,147 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:53653 "EHLO hydra.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758461Ab3E1XMR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 28 May 2013 19:12:17 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:4403 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933282Ab3E1IEW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 May 2013 04:04:22 -0400
+From: Yijing Wang <wangyijing@huawei.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jiang Liu <liuj97@gmail.com>, Yinghai Lu <yinghai@kernel.org>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Len Brown <lenb@kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
-Subject: Re: [PATCH v1 1/2] ACPI, PCI: remove unused global list acpi_pci_roots in pci_root.c
-Date: Wed, 29 May 2013 01:21:08 +0200
-Message-ID: <3502693.GdBGlhPugI@vostro.rjw.lan>
-In-Reply-To: <CAErSpo6-xtrNgPYxu_4QRtZs76P9B6b4JXQPENhX6hyNPpKx+g@mail.gmail.com>
-References: <1368536439-19421-1-git-send-email-jiang.liu@huawei.com> <CAErSpo6-xtrNgPYxu_4QRtZs76P9B6b4JXQPENhX6hyNPpKx+g@mail.gmail.com>
+CC: <linux-pci@vger.kernel.org>, Hanjun Guo <guohanjun@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH] PCI: fix trivial comment for __pci_disable_link_state
+Date: Tue, 28 May 2013 16:03:22 +0800
+Message-ID: <1369728202-31188-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, May 28, 2013 04:37:03 PM Bjorn Helgaas wrote:
-> On Tue, May 14, 2013 at 7:00 AM, Jiang Liu <liuj97@gmail.com> wrote:
-> > Now the global list acpi_pci_roots pci_root.c is useless, remove it.
-> >
-> > Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-> > Cc: Len Brown <lenb@kernel.org>
-> > Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
-> > Cc: linux-acpi@vger.kernel.org
-> > Cc: linux-kernel@vger.kernel.org
-> > ---
-> >  drivers/acpi/pci_root.c | 25 +++----------------------
-> >  include/acpi/acpi_bus.h |  1 -
-> >  2 files changed, 3 insertions(+), 23 deletions(-)
-> 
-> This and the "use acpi_handle_print()" patch look fine to me.
-> 
-> Rafael, I can take them, or if you want to take them yourself, you can add
-> 
->   Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Fix trivial comments for __pci_disble_link_state
 
-OK, I'll take them.
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/pci/pcie/aspm.c |   10 ++++++----
+ 1 files changed, 6 insertions(+), 4 deletions(-)
 
-Thanks,
-Rafael
-
-
-> > diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-> > index b80e06e..91ddfd6 100644
-> > --- a/drivers/acpi/pci_root.c
-> > +++ b/drivers/acpi/pci_root.c
-> > @@ -65,10 +65,6 @@ static struct acpi_scan_handler pci_root_handler = {
-> >         .detach = acpi_pci_root_remove,
-> >  };
-> >
-> > -/* Lock to protect both acpi_pci_roots lists */
-> > -static DEFINE_MUTEX(acpi_pci_root_lock);
-> > -static LIST_HEAD(acpi_pci_roots);
-> > -
-> >  static DEFINE_MUTEX(osc_lock);
-> >
-> >  /**
-> > @@ -423,7 +419,6 @@ static int acpi_pci_root_add(struct acpi_device *device,
-> >                 }
-> >         }
-> >
-> > -       INIT_LIST_HEAD(&root->node);
-> >         root->device = device;
-> >         root->segment = segment & 0xFFFF;
-> >         strcpy(acpi_device_name(device), ACPI_PCI_ROOT_DEVICE_NAME);
-> > @@ -501,10 +496,6 @@ static int acpi_pci_root_add(struct acpi_device *device,
-> >          * TBD: Need PCI interface for enumeration/configuration of roots.
-> >          */
-> >
-> > -       mutex_lock(&acpi_pci_root_lock);
-> > -       list_add_tail(&root->node, &acpi_pci_roots);
-> > -       mutex_unlock(&acpi_pci_root_lock);
-> > -
-> >         /*
-> >          * Scan the Root Bridge
-> >          * --------------------
-> > @@ -518,7 +509,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
-> >                             "Bus %04x:%02x not present in PCI namespace\n",
-> >                             root->segment, (unsigned int)root->secondary.start);
-> >                 result = -ENODEV;
-> > -               goto out_del_root;
-> > +               goto end;
-> >         }
-> >
-> >         /* ASPM setting */
-> > @@ -538,20 +529,13 @@ static int acpi_pci_root_add(struct acpi_device *device,
-> >         if (system_state != SYSTEM_BOOTING) {
-> >                 pcibios_resource_survey_bus(root->bus);
-> >                 pci_assign_unassigned_bus_resources(root->bus);
-> > -       }
-> > -
-> > -       /* need to after hot-added ioapic is registered */
-> > -       if (system_state != SYSTEM_BOOTING)
-> > +               /* need to after hot-added ioapic is registered */
-> >                 pci_enable_bridges(root->bus);
-> > +       }
-> >
-> >         pci_bus_add_devices(root->bus);
-> >         return 1;
-> >
-> > -out_del_root:
-> > -       mutex_lock(&acpi_pci_root_lock);
-> > -       list_del(&root->node);
-> > -       mutex_unlock(&acpi_pci_root_lock);
-> > -
-> >  end:
-> >         kfree(root);
-> >         return result;
-> > @@ -568,9 +552,6 @@ static void acpi_pci_root_remove(struct acpi_device *device)
-> >
-> >         pci_remove_root_bus(root->bus);
-> >
-> > -       mutex_lock(&acpi_pci_root_lock);
-> > -       list_del(&root->node);
-> > -       mutex_unlock(&acpi_pci_root_lock);
-> >         kfree(root);
-> >  }
-> >
-> > diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
-> > index 22ba56e..4eb9a88 100644
-> > --- a/include/acpi/acpi_bus.h
-> > +++ b/include/acpi/acpi_bus.h
-> > @@ -447,7 +447,6 @@ int register_acpi_bus_type(struct acpi_bus_type *);
-> >  int unregister_acpi_bus_type(struct acpi_bus_type *);
-> >
-> >  struct acpi_pci_root {
-> > -       struct list_head node;
-> >         struct acpi_device * device;
-> >         struct pci_bus *bus;
-> >         u16 segment;
-> > --
-> > 1.8.1.2
-> >
+diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+index faa83b6..c7fd56b 100644
+--- a/drivers/pci/pcie/aspm.c
++++ b/drivers/pci/pcie/aspm.c
+@@ -714,10 +714,6 @@ void pcie_aspm_powersave_config_link(struct pci_dev *pdev)
+ 	up_read(&pci_bus_sem);
+ }
+ 
+-/*
+- * pci_disable_link_state - disable pci device's link state, so the link will
+- * never enter specific states
+- */
+ static void __pci_disable_link_state(struct pci_dev *pdev, int state, bool sem,
+ 				     bool force)
+ {
+@@ -771,6 +767,12 @@ void pci_disable_link_state_locked(struct pci_dev *pdev, int state)
+ }
+ EXPORT_SYMBOL(pci_disable_link_state_locked);
+ 
++/**
++ * pci_disable_link_state - disable pci device's link state, so the link will
++ * never enter specific states
++ * @pdev: PCI device on the link.
++ * @state: ASPM link state to disable
++ */
+ void pci_disable_link_state(struct pci_dev *pdev, int state)
+ {
+ 	__pci_disable_link_state(pdev, state, true, false);
 -- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+1.7.1
+
+
