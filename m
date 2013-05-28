@@ -1,78 +1,39 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f179.google.com ([209.85.223.179]:40594 "EHLO
-	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758866Ab3EOO6p (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 May 2013 10:58:45 -0400
-MIME-Version: 1.0
-In-Reply-To: <51939FB1.20203@gmail.com>
-References: <1368461313-4371-1-git-send-email-jiang.liu@huawei.com>
-	<1368461313-4371-4-git-send-email-jiang.liu@huawei.com>
-	<CAE9FiQVKKKmZRQ8CcKCzU8Gqzwb5SjWYagVB2OZiRqbSWXVpiw@mail.gmail.com>
-	<5191F53E.4000305@cn.fujitsu.com>
-	<51925136.5050302@gmail.com>
-	<CAE9FiQWO-jR5y35kKiW0m6gVR54ZyRsBsdhP4BmFLSsDzCS3rA@mail.gmail.com>
-	<51926CF6.1050706@gmail.com>
-	<CAE9FiQWXN_ETRFPb5oFx-6LXyuHviX3h3NXCQKjcxtv2Uma-JA@mail.gmail.com>
-	<51939E16.9090105@gmail.com>
-	<CAE9FiQUXrOmN0rkvOwE1G_acEGY3-gouzaXjBMT7EE6uAqvuZA@mail.gmail.com>
-	<51939FB1.20203@gmail.com>
-Date: Wed, 15 May 2013 07:58:44 -0700
-Message-ID: <CAE9FiQVCSm14S0A1sVWewc7UX-dyOmu9aq1UwqdPZK6qSmbFxQ@mail.gmail.com>
-Subject: Re: [PATCH v2, part 1 3/9] PCI: Convert alloc_pci_dev(void) to
- pci_alloc_dev(bus) instead
-From: Yinghai Lu <yinghai@kernel.org>
-To: Liu Jiang <liuj97@gmail.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>, linuxppc-dev@lists.ozlabs.org,
-	"sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>
-Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Paul Mackerras <paulus@samba.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail-pb0-f49.google.com ([209.85.160.49]:55203 "EHLO
+	mail-pb0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752588Ab3E1Tif (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 May 2013 15:38:35 -0400
+Received: by mail-pb0-f49.google.com with SMTP id rp8so8292734pbb.36
+        for <linux-pci@vger.kernel.org>; Tue, 28 May 2013 12:38:35 -0700 (PDT)
+Date: Tue, 28 May 2013 12:38:27 -0700
+From: Stephen Hemminger <stephen@networkplumber.org>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: iommu@lists.linux-foundation.org, dwmw2@infradead.org,
+	joro@8bytes.org, linux-pci@vger.kernel.org, ddutile@redhat.com
+Subject: Re: [PATCH v2 1/2] iommu: Quirked PCIe bridge test and search
+ function
+Message-ID: <20130528123827.2507c34e@nehalam.linuxnetplumber.net>
+In-Reply-To: <20130528184020.3318.7800.stgit@bling.home>
+References: <20130528183527.3318.5365.stgit@bling.home>
+	<20130528184020.3318.7800.stgit@bling.home>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 15, 2013 at 7:46 AM, Liu Jiang <liuj97@gmail.com> wrote:
-> On Wed 15 May 2013 10:43:02 PM CST, Yinghai Lu wrote:
->>
->
->> that is another bug, let of guy handle it.
->>
->> Yinghai
->
-> Hi Yinghai,
->       I don't know any OF exports, could you please help to CC
-> some OF experts?
+On Tue, 28 May 2013 12:40:20 -0600
+Alex Williamson <alex.williamson@redhat.com> wrote:
 
-powerpc and sparc are using that.
+> Some PCIe-to-PCI bridges are not fully compliant with the PCIe spec
+> and do not include a PCIe capability.  pci_is_pcie() is not useful on
+> these devices, making it difficult to determine where we transition
+> from a legacy PCI bus to a PCIe link.  PCI-core doesn't want a quirked
+> bridge test for fear of confusion that a PCIe capability would be
+> expected, so implement it in IOMMU code.
+> 
+> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
 
-Ben,
-
-in drivers/pci/probe.c::pci_scan_device() there is
-
-        pci_set_of_node(dev);
-
-        if (pci_setup_device(dev)) {
-                kfree(dev);
-                return NULL;
-        }
-
-so if pci_setup_device fails, there is one dev reference is not release.
-
-please check you can just move down pci_set_of_node down after that
-failing path, like
+This won't work for me because I run without IOMMU.
+The overhead of IOMMU setup per-packet significantly impacts network performance.
 
 
-        if (pci_setup_device(dev)) {
-                kfree(dev);
-                return NULL;
-        }
-
-        pci_set_of_node(dev);
-
-Yinghai
