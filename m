@@ -1,78 +1,52 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <1367890979.2868.93.camel@ul30vt.home>
-Subject: Re: [PATCH 2/5] KVM: PPC: iommu: Add missing
- kvm_iommu_map_pages/kvm_iommu_unmap_pages
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:52976 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752548Ab3E1Skq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 28 May 2013 14:40:46 -0400
+Subject: [PATCH v2 0/2] iommu/intel: Quirk non-compliant PCIe-to-PCI bridges
+To: iommu@lists.linux-foundation.org, dwmw2@infradead.org,
+	joro@8bytes.org
 From: Alex Williamson <alex.williamson@redhat.com>
-To: Alexey Kardashevskiy <aik@ozlabs.ru>
-Cc: linuxppc-dev@lists.ozlabs.org,
-	David Gibson <david@gibson.dropbear.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Paul Mackerras <paulus@samba.org>,
-	Alexander Graf <agraf@suse.de>, kvm@vger.kernel.org,
-	linux-kernel@vger.kernel.org, kvm-ppc@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Date: Mon, 06 May 2013 19:42:59 -0600
-In-Reply-To: <51884FA8.6010400@ozlabs.ru>
-References: <1367824921-27151-1-git-send-email-y>
-	  <51875a36.25ac440a.50d9.ffffe90d@mx.google.com>
-	 <1367874436.2868.90.camel@ul30vt.home> <51884FA8.6010400@ozlabs.ru>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Cc: stephen@networkplumber.org, linux-pci@vger.kernel.org,
+	ddutile@redhat.com
+Date: Tue, 28 May 2013 12:40:11 -0600
+Message-ID: <20130528183527.3318.5365.stgit@bling.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2013-05-07 at 10:49 +1000, Alexey Kardashevskiy wrote:
-> On 05/07/2013 07:07 AM, Alex Williamson wrote:
-> > On Mon, 2013-05-06 at 17:21 +1000, aik@ozlabs.ru wrote:
-> >> From: Alexey Kardashevskiy <aik@ozlabs.ru>
-> >>
-> >> The IOMMU API implements groups creating/deletion, device binding
-> >> and IOMMU map/unmap operations.
-> >>
-> >> The PowerPC implementation uses most of the API except map/unmap
-> >> operations, which are implemented on POWER using hypercalls.
-> >>
-> >> However, in order to link a kernel with the CONFIG_IOMMU_API enabled,
-> >> the empty kvm_iommu_map_pages/kvm_iommu_unmap_pages have to be
-> >> defined, so this defines them.
-> >>
-> >> Signed-off-by: Alexey Kardashevskiy <aik@ozlabs.ru>
-> >> Cc: David Gibson <david@gibson.dropbear.id.au>
-> >> Signed-off-by: Paul Mackerras <paulus@samba.org>
-> >> ---
-> >>  arch/powerpc/include/asm/kvm_host.h |   14 ++++++++++++++
-> >>  1 file changed, 14 insertions(+)
-> >>
-> >> diff --git a/arch/powerpc/include/asm/kvm_host.h b/arch/powerpc/include/asm/kvm_host.h
-> >> index b6a047e..c025d91 100644
-> >> --- a/arch/powerpc/include/asm/kvm_host.h
-> >> +++ b/arch/powerpc/include/asm/kvm_host.h
-> >> @@ -603,4 +603,18 @@ struct kvm_vcpu_arch {
-> >>  
-> >>  #define __KVM_HAVE_ARCH_WQP
-> >>  
-> >> +#ifdef CONFIG_IOMMU_API
-> >> +/* POWERPC does not use IOMMU API for mapping/unmapping */
-> >> +static inline int kvm_iommu_map_pages(struct kvm *kvm,
-> >> +		struct kvm_memory_slot *slot)
-> >> +{
-> >> +	return 0;
-> >> +}
-> >> +
-> >> +static inline void kvm_iommu_unmap_pages(struct kvm *kvm,
-> >> +		struct kvm_memory_slot *slot)
-> >> +{
-> >> +}
-> >> +#endif /* CONFIG_IOMMU_API */
-> >> +
-> >>  #endif /* __POWERPC_KVM_HOST_H__ */
-> > 
-> > This is no longer needed, Gleb applied my patch for 3.10 that make all
-> > of KVM device assignment dependent on a build config option and the top
-> > level kvm_host.h now includes this when that is not set.  Thanks,
-> 
-> Cannot find it, could you point me please where it is on github or
-> git.kernel.org? Thanks.
+This series tries to address:
 
-http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=2a5bab1004729f3302c776e53ee7c895b98bb1ce
+https://bugzilla.kernel.org/show_bug.cgi?id=44881
 
+Where pci_find_upstream_pcie_bridge() gets lost trying to find the
+upstream PCIe-to-PCI bridge for a device because the bridge doesn't
+expose a PCIe capability.  To do this, we add a iommu_pci_is_pcie_bridge
+function which includes a quirk to look to the next upstream device
+as a sanity check.  We can then replace pci_find_upstream_pcie_bridge
+with a function that's a bit more generic and less tied to intel-iommu
+eccentricities.
+
+v2 uses the same logic as v1, but moves the search and match code to
+IOMMU-core since PCI-core doesn't want it.  v1 has several reports
+from users that this solves the problem they have in the above bz.
+Thanks,
+
+Alex
+
+---
+
+Alex Williamson (2):
+      iommu: Quirked PCIe bridge test and search function
+      intel-iommu: Convert to iommu_pci_find_upstream + iommu_pci_is_pcie_bridge
+
+
+ drivers/iommu/Kconfig               |    5 ++
+ drivers/iommu/Makefile              |    1 
+ drivers/iommu/intel-iommu.c         |   77 ++++++++++++++++++++++-------------
+ drivers/iommu/intel_irq_remapping.c |   15 +++++--
+ drivers/iommu/pci.c                 |   69 +++++++++++++++++++++++++++++++
+ drivers/iommu/pci.h                 |   23 ++++++++++
+ 6 files changed, 157 insertions(+), 33 deletions(-)
+ create mode 100644 drivers/iommu/pci.c
