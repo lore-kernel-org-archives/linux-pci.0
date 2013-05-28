@@ -1,82 +1,60 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:23870 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758611Ab3E1Czj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 May 2013 22:55:39 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, Hanjun Guo <guohanjun@huawei.com>,
 	Yijing Wang <wangyijing@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Mauro Carvalho Chehab <mchehab@redhat.com>,
-	Daniel Drake <dsd@laptop.org>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Javier Martin <javier.martin@vista-silicon.com>,
-	linux-media@vger.kernel.org
-Subject: [PATCH v3, part2 16/20] PCI, via-camera: use hotplug-safe iterators to walk PCI buses
-Date: Sun, 26 May 2013 23:53:13 +0800
-Message-Id: <1369583597-3801-17-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1369583597-3801-1-git-send-email-jiang.liu@huawei.com>
-References: <1369583597-3801-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Feng Tang <feng.tang@intel.com>
+Subject: [PATCH] PCI/X86: increase info->res_num before checking pci_use_crs return
+Date: Tue, 28 May 2013 10:55:09 +0800
+Message-ID: <1369709709-14504-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Enhance via-camera drviers to use hotplug-safe iterators to walk
-PCI buses.
+I separate this patch from patchset "Add hostbridge resource release to
+support root bus hotplug in IA64", because it's a Separate issue.
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Cc: Mauro Carvalho Chehab <mchehab@redhat.com>
-Cc: Daniel Drake <dsd@laptop.org>
-Cc: Jonathan Corbet <corbet@lwn.net>
-Cc: Javier Martin <javier.martin@vista-silicon.com>
-Cc: linux-media@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+We should increase info->res_num before we checking pci_use_crs return
+when pci=nocrs set.
+
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: Jiang Liu <liuj97@gmail.com>
+Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Cc: Feng Tang <feng.tang@intel.com>
 ---
- drivers/media/platform/via-camera.c | 12 ++++++++----
- 1 file changed, 8 insertions(+), 4 deletions(-)
+ arch/x86/pci/acpi.c |    7 ++-----
+ 1 files changed, 2 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/media/platform/via-camera.c b/drivers/media/platform/via-camera.c
-index a794cd6..3ea3fac 100644
---- a/drivers/media/platform/via-camera.c
-+++ b/drivers/media/platform/via-camera.c
-@@ -1284,7 +1284,8 @@ static struct video_device viacam_v4l_template = {
+diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+index 3e72425..662dfdf 100644
+--- a/arch/x86/pci/acpi.c
++++ b/arch/x86/pci/acpi.c
+@@ -324,14 +324,11 @@ setup_resource(struct acpi_resource *acpi_res, void *data)
+ 	res->start = start;
+ 	res->end = end;
+ 	info->res_offset[info->res_num] = addr.translation_offset;
++	info->res_num++;
  
- static bool viacam_serial_is_enabled(void)
- {
--	struct pci_bus *pbus = pci_find_bus(0, 0);
-+	struct pci_bus *pbus = pci_get_bus(0, 0);
-+	bool ret = false;
- 	u8 cbyte;
+-	if (!pci_use_crs) {
++	if (!pci_use_crs)
+ 		dev_printk(KERN_DEBUG, &info->bridge->dev,
+ 			   "host bridge window %pR (ignored)\n", res);
+-		return AE_OK;
+-	}
+-
+-	info->res_num++;
  
- 	if (!pbus)
-@@ -1292,18 +1293,21 @@ static bool viacam_serial_is_enabled(void)
- 	pci_bus_read_config_byte(pbus, VIACAM_SERIAL_DEVFN,
- 			VIACAM_SERIAL_CREG, &cbyte);
- 	if ((cbyte & VIACAM_SERIAL_BIT) == 0)
--		return false; /* Not enabled */
-+		goto out; /* Not enabled */
- 	if (override_serial == 0) {
- 		printk(KERN_NOTICE "Via camera: serial port is enabled, " \
- 				"refusing to load.\n");
- 		printk(KERN_NOTICE "Specify override_serial=1 to force " \
- 				"module loading.\n");
--		return true;
-+		ret = true;
-+		goto out;
- 	}
- 	printk(KERN_NOTICE "Via camera: overriding serial port\n");
- 	pci_bus_write_config_byte(pbus, VIACAM_SERIAL_DEVFN,
- 			VIACAM_SERIAL_CREG, cbyte & ~VIACAM_SERIAL_BIT);
--	return false;
-+out:
-+	pci_bus_put(pbus);
-+	return ret;
+ 	return AE_OK;
  }
- 
- static struct ov7670_config sensor_cfg = {
 -- 
-1.8.1.2
+1.7.1
+
 
