@@ -1,207 +1,132 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:49192 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752506Ab3EQJ5N (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 May 2013 05:57:13 -0400
+Received: from szxga01-in.huawei.com ([119.145.14.64]:36833 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933246Ab3E1H7V (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 May 2013 03:59:21 -0400
+Message-ID: <51A463D2.7000400@huawei.com>
+Date: Tue, 28 May 2013 15:59:14 +0800
 From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, Hanjun Guo <guohanjun@huawei.com>,
-	<jiang.liu@huawei.com>, Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	Fenghua Yu <fenghua.yu@intel.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	<linux-ia64@vger.kernel.org>
-Subject: [PATCH -v2 5/7] PCI/IA64: fix memleak for create pci root bus fail
-Date: Fri, 17 May 2013 17:55:48 +0800
-Message-ID: <1368784550-18332-6-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1368784550-18332-1-git-send-email-wangyijing@huawei.com>
-References: <1368784550-18332-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Stefan Frings <stefan@stefanfrings.de>
+CC: <linux-pci@vger.kernel.org>, <1178131@bugs.launchpad.net>
+Subject: Re: 14e4:16bc SD card slot not working on Acer Aspire One 756
+References: <da540280c592e7bbe5ab96cbe5e47ddc-EhVcX11DRwJZRxoEDQMJVjBXdh9XVlpBXkJHHFtcNkhYS1oKWUF0BUtdMl5cR0wFXlJcQVw=-webmailer2@server03.webmailer.hosteurope.de>
+In-Reply-To: <da540280c592e7bbe5ab96cbe5e47ddc-EhVcX11DRwJZRxoEDQMJVjBXdh9XVlpBXkJHHFtcNkhYS1oKWUF0BUtdMl5cR0wFXlJcQVw=-webmailer2@server03.webmailer.hosteurope.de>
+Content-Type: multipart/mixed;
+	boundary="------------090708050904040607070806"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <jiang.liu@huawei.com>
+--------------090708050904040607070806
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 
-If pci_create_root_bus() return fail, we should release
-pci root info, pci controller etc.
+According to boot dmesg.
+We found "ACPI FADT declares the system doesn't support PCIe ASPM, so disable it", so FADT dictate no aspm support in this platform.
+Matthew pcie_clear_aspm() to acpi_pci_root_add() when acpi_pci_osc_control_set() return success.
+Unfortunately in your machine, acpi_pci_osc_control_set() return failed, so system missing the pcie_clear_aspm();
+So we should move pci_clear_aspm() out of ACPI_SUCCESS() check.
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Stefan, can you help test the attached patch in 3.10-rcx?
+
+Thanks!
+Yijing.
+
+On 2013/5/28 13:21, Stefan Frings wrote:
+> 14e4:16bc SD card slot not working on Acer Aspire One 756
+> 
+> The memory card read (Broadcaom BCM57765) does not work on Aver Aspire One 756 because Linux enabled ASPM L1 on the PCIe channel since a related change in Kernel 3.0.20. Please change the code so that only APSN L0s is enabled on that machine on the PCIe channel 00:1c.2.
+> 
+> Until a solution is available, I use the following command as a workaround: sudo setpci -s 00:1c.2 0x50.B=0x41
+> 
+> Description of the change that introduced the problem: https://git.kernel.org/cgit/linux/kernel/git/stable/linux-stable.git/commit/?id=6cac12dfab9c57a4f76821412224b226a9b08dff
+> 
+> The full problem description with log files and result of my bisecting can be found in the Ubuntu Bug L#1178131.
+> 
+> Link to the Ubuntu Bug report: https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1178131
+> 
+> The problem is still present in Kernel 3.10-rc1, rc2 and rc3.
+> Kernels before 3.0.20 are NOT affected by the problem.
+> The first problematic Linux version is 3.0.20.
+> 
+> Steps to reproduce:
+> 
+> - Boot Linux with any Kernel after 3.0.19 (Using Gnome 3 Desktop)
+> - Insert any memory card into the card reader
+> - Problem: nothing happens
+> - Problem: In dmesg, the mmc driver reports communication timeouts for the card reader
+> - Remove the memory card
+> - Enter sudo setpci -s 00:1c.2 0x50.B=0x41 (This disables ASPM L1)
+> - Insert the memory card
+> - Result: It gets detected immediately. Gnome pop-ups a related notification window.
+> - Remove the memory card
+> - Enter sudo setpci -s 00:1c.2 0x50.B=0x43 (this is the value that the Linux Kernel sets during boot)
+> - Insert the memory card
+> - Problem: The card is not detected
+> 
+
+
+-- 
+Thanks!
+Yijing
+
+--------------090708050904040607070806
+Content-Type: text/x-patch;
+	name="0001-PCI-move-pcie_clear_aspm-out-of-ACPI_SUCCESS-checkin.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename*0="0001-PCI-move-pcie_clear_aspm-out-of-ACPI_SUCCESS-checkin.pa";
+	filename*1="tch"
+
+>From deec1ca8eb80cea58beadb1404abb163426956f3 Mon Sep 17 00:00:00 2001
+From: Yijing Wang <wangyijing@huawei.com>
+Date: Tue, 28 May 2013 16:02:55 +0800
+Subject: [PATCH] PCI: move pcie_clear_aspm() out of ACPI_SUCCESS() checking
+
+We should move pcie_clear_aspm() out of ACPI_SUCCESS() checking
+in acpi_pci_root_add(), because if FADT dictate no aspm support,
+and acpi_pci_osc_control_set() get _OSC control fail. We will
+miss aspm clear here.
+
 Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Fenghua Yu <fenghua.yu@intel.com>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-ia64@vger.kernel.org
 ---
- arch/ia64/include/asm/pci.h |    6 +++
- arch/ia64/pci/pci.c         |   74 ++++++++++++++++++++++++++++++++++---------
- 2 files changed, 65 insertions(+), 15 deletions(-)
+ drivers/acpi/pci_root.c |   14 +++++++-------
+ 1 files changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/arch/ia64/include/asm/pci.h b/arch/ia64/include/asm/pci.h
-index 82a236c..fe813c2 100644
---- a/arch/ia64/include/asm/pci.h
-+++ b/arch/ia64/include/asm/pci.h
-@@ -89,6 +89,11 @@ extern int pci_mmap_legacy_page_range(struct pci_bus *bus,
- #define pci_legacy_read platform_pci_legacy_read
- #define pci_legacy_write platform_pci_legacy_write
- 
-+struct iospace_resource {
-+	struct list_head list;
-+	struct resource res;
-+};
-+
- struct pci_controller {
- 	void *acpi_handle;
- 	void *iommu;
-@@ -105,6 +110,7 @@ struct pci_root_info {
- 	struct resource *res;
- 	resource_size_t *res_offset;
- 	unsigned int res_num;
-+	struct list_head io_resources;
- 	char *name;
- };
- 
-diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
-index 1f2779d..658030f 100644
---- a/arch/ia64/pci/pci.c
-+++ b/arch/ia64/pci/pci.c
-@@ -162,25 +162,21 @@ new_space (u64 phys_base, int sparse)
- static u64 add_io_space(struct pci_root_info *info,
- 			struct acpi_resource_address64 *addr)
- {
-+	struct iospace_resource *iospace;
- 	struct resource *resource;
- 	char *name;
- 	unsigned long base, min, max, base_port;
- 	unsigned int sparse = 0, space_nr, len;
- 
--	resource = kzalloc(sizeof(*resource), GFP_KERNEL);
--	if (!resource) {
-+	len = strlen(info->name) + 32;
-+	iospace = kzalloc(sizeof(*iospace) + len, GFP_KERNEL);
-+	if (!iospace) {
- 		printk(KERN_ERR "PCI: No memory for %s I/O port space\n",
- 			info->name);
- 		goto out;
- 	}
- 
--	len = strlen(info->name) + 32;
--	name = kzalloc(len, GFP_KERNEL);
--	if (!name) {
--		printk(KERN_ERR "PCI: No memory for %s I/O port space name\n",
--			info->name);
--		goto free_resource;
--	}
-+	name = (char *)(iospace + 1);
- 
- 	min = addr->minimum;
- 	max = min + addr->address_length - 1;
-@@ -189,7 +185,7 @@ static u64 add_io_space(struct pci_root_info *info,
- 
- 	space_nr = new_space(addr->translation_offset, sparse);
- 	if (space_nr == ~0)
--		goto free_name;
-+		goto free_resource;
- 
- 	base = __pa(io_space[space_nr].mmio_base);
- 	base_port = IO_SPACE_BASE(space_nr);
-@@ -204,18 +200,23 @@ static u64 add_io_space(struct pci_root_info *info,
- 	if (space_nr == 0)
- 		sparse = 1;
- 
-+	resource = &iospace->res;
- 	resource->name  = name;
- 	resource->flags = IORESOURCE_MEM;
- 	resource->start = base + (sparse ? IO_SPACE_SPARSE_ENCODING(min) : min);
- 	resource->end   = base + (sparse ? IO_SPACE_SPARSE_ENCODING(max) : max);
--	insert_resource(&iomem_resource, resource);
-+	if (insert_resource(&iomem_resource, resource)) {
-+		dev_err(&info->bridge->dev,
-+				"can't allocate host bridge io space resource  %pR\n",
-+				resource);
-+		goto free_resource;
-+	}
- 
-+	list_add_tail(&iospace->list, &info->io_resources);
- 	return base_port;
- 
--free_name:
--	kfree(name);
- free_resource:
--	kfree(resource);
-+	kfree(iospace);
- out:
- 	return ~0;
- }
-@@ -316,6 +317,47 @@ static acpi_status add_window(struct acpi_resource *res, void *data)
- 	return AE_OK;
- }
- 
-+static void free_pci_root_info_res(struct pci_root_info *info)
-+{
-+	struct iospace_resource *iospace, *tmp;
-+
-+	list_for_each_entry_safe(iospace, tmp, &info->io_resources, list)
-+		kfree(iospace);
-+
-+	kfree(info->res);
-+	info->res = NULL;
-+	kfree(info->res_offset);
-+	info->res_offset = NULL;
-+	info->res_num = 0;
-+	kfree(info->controller);
-+	info->controller = NULL;
-+}
-+
-+static void __release_pci_root_info(struct pci_root_info *info)
-+{
-+	int i;
-+	struct resource *res;
-+	struct iospace_resource *iospace;
-+
-+	list_for_each_entry(iospace, &info->io_resources, list)
-+		release_resource(&iospace->res);
-+
-+	for (i = 0; i < info->res_num; i++) {
-+		res = &info->res[i];
-+
-+		if (!res->parent)
-+			continue;
-+
-+		if (!(res->flags & (IORESOURCE_MEM | IORESOURCE_IO)))
-+			continue;
-+
-+		release_resource(res);
-+	}
-+
-+	free_pci_root_info_res(info);
-+	kfree(info);
-+}
-+
- struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- {
- 	struct acpi_device *device = root->device;
-@@ -346,7 +388,8 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 				"ignored (out of memory)\n", root->segment, busnum);
- 		goto out2;
- 	}
--
-+
-+	INIT_LIST_HEAD(&info->io_resources);
- 	INIT_LIST_HEAD(&info->resources);
- 	/* insert busn resource at first */
- 	pci_add_resource(&info->resources, &root->secondary);
-@@ -387,6 +430,7 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 				   &info->resources);
- 	if (!pbus) {
- 		pci_free_resource_list(&info->resources);
-+		__release_pci_root_info(info);
- 		return NULL;
- 	}
- 
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index f6c0998..632c6e3 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -506,13 +506,6 @@ static int acpi_pci_root_add(struct acpi_device *device,
+ 		if (ACPI_SUCCESS(status)) {
+ 			dev_info(&device->dev,
+ 				"ACPI _OSC control (0x%02x) granted\n", flags);
+-			if (acpi_gbl_FADT.boot_flags & ACPI_FADT_NO_ASPM) {
+-				/*
+-				 * We have ASPM control, but the FADT indicates
+-				 * that it's unsupported. Clear it.
+-				 */
+-				pcie_clear_aspm(root->bus);
+-			}
+ 		} else {
+ 			dev_info(&device->dev,
+ 				"ACPI _OSC request failed (%s), "
+@@ -522,6 +515,13 @@ static int acpi_pci_root_add(struct acpi_device *device,
+ 				"disabling ASPM\n");
+ 			pcie_no_aspm();
+ 		}
++		if (acpi_gbl_FADT.boot_flags & ACPI_FADT_NO_ASPM) {
++			/*
++			 * We have ASPM control, but the FADT indicates
++			 * that it's unsupported. Clear it.
++			 */
++			pcie_clear_aspm(root->bus);
++		}
+ 	} else {
+ 		dev_info(&device->dev,
+ 			 "Unable to request _OSC control "
 -- 
 1.7.1
 
 
+--------------090708050904040607070806--
