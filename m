@@ -1,64 +1,51 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: aik@ozlabs.ru
-To: linuxppc-dev@lists.ozlabs.org
-Cc: Alexey Kardashevskiy <aik@ozlabs.ru>,
-	David Gibson <david@gibson.dropbear.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Paul Mackerras <paulus@samba.org>,
-	Alexander Graf <agraf@suse.de>, kvm@vger.kernel.org,
-	linux-kernel@vger.kernel.org, kvm-ppc@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH 2/5] KVM: PPC: iommu: Add missing kvm_iommu_map_pages/kvm_iommu_unmap_pages
-Date: Mon,  6 May 2013 17:21:58 +1000
-Message-Id: <51875a36.25ac440a.50d9.ffffe90d@mx.google.com>
-In-Reply-To: <1367824921-27151-1-git-send-email-y>
-References: <1367824921-27151-1-git-send-email-y>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-oa0-f44.google.com ([209.85.219.44]:42227 "EHLO
+	mail-oa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964784Ab3E1R3O (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 May 2013 13:29:14 -0400
+Received: by mail-oa0-f44.google.com with SMTP id n12so10443986oag.31
+        for <linux-pci@vger.kernel.org>; Tue, 28 May 2013 10:29:14 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20130528164801.GA2345@srcf.ucam.org>
+References: <1369215782-32697-1-git-send-email-matt@console-pimps.org>
+ <CAErSpo4id0RFARD6zCxeMo-uasPBnL7KpUFPqhW4zLgCxrF5fw@mail.gmail.com>
+ <20130528113617.GR14575@console-pimps.org> <CAErSpo5DG61wvQEw_9z8vm6Lp=E0urq6LG5SOuWSawkNeDkF+A@mail.gmail.com>
+ <20130528164801.GA2345@srcf.ucam.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 28 May 2013 11:28:54 -0600
+Message-ID: <CAErSpo5kxE=KgCV+H9=paaRXS1tOxhSD8qRf+nsn8PBMRiGRsA@mail.gmail.com>
+Subject: Re: [PATCH] x86/PCI: setup data may be in highmem
+To: Matthew Garrett <mjg59@srcf.ucam.org>
+Cc: Matt Fleming <matt@console-pimps.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"x86@kernel.org" <x86@kernel.org>,
+	Matt Fleming <matt.fleming@intel.com>,
+	Seth Forshee <seth.forshee@canonical.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>, stable@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
+On Tue, May 28, 2013 at 10:48 AM, Matthew Garrett <mjg59@srcf.ucam.org> wrote:
+> On Tue, May 28, 2013 at 10:31:51AM -0600, Bjorn Helgaas wrote:
+>> On Tue, May 28, 2013 at 5:36 AM, Matt Fleming <matt@console-pimps.org> wrote:
+>> > On Fri, 24 May, at 08:38:10AM, Bjorn Helgaas wrote:
+>> >> pcibios_add_device() is mostly called at boot-time, when
+>> >> early_ioremap() probably works well.  But it's also called when we
+>> >> hot-add devices later, and it looks like early_ioremap() will then
+>> >> generate warnings because "system_state != SYSTEM_BOOTING".
+>> >
+>> > Oops. Good point. Is there any reason we can't use ioremap()?
+>>
+>> I assume Matthew had some reason for avoiding that in the first place,
+>> so I hope he'll chime in.
+>
+> I have no recollection of why I did it that way. If this is all
+> happening late enough for ioremap() to work then that sounds fine.
 
-The IOMMU API implements groups creating/deletion, device binding
-and IOMMU map/unmap operations.
+OK, hopefully somebody will do the analysis to verify that ioremap()
+is appropriate in both cases.  It seems likely, but I haven't looked
+in detail.
 
-The PowerPC implementation uses most of the API except map/unmap
-operations, which are implemented on POWER using hypercalls.
-
-However, in order to link a kernel with the CONFIG_IOMMU_API enabled,
-the empty kvm_iommu_map_pages/kvm_iommu_unmap_pages have to be
-defined, so this defines them.
-
-Signed-off-by: Alexey Kardashevskiy <aik@ozlabs.ru>
-Cc: David Gibson <david@gibson.dropbear.id.au>
-Signed-off-by: Paul Mackerras <paulus@samba.org>
----
- arch/powerpc/include/asm/kvm_host.h |   14 ++++++++++++++
- 1 file changed, 14 insertions(+)
-
-diff --git a/arch/powerpc/include/asm/kvm_host.h b/arch/powerpc/include/asm/kvm_host.h
-index b6a047e..c025d91 100644
---- a/arch/powerpc/include/asm/kvm_host.h
-+++ b/arch/powerpc/include/asm/kvm_host.h
-@@ -603,4 +603,18 @@ struct kvm_vcpu_arch {
- 
- #define __KVM_HAVE_ARCH_WQP
- 
-+#ifdef CONFIG_IOMMU_API
-+/* POWERPC does not use IOMMU API for mapping/unmapping */
-+static inline int kvm_iommu_map_pages(struct kvm *kvm,
-+		struct kvm_memory_slot *slot)
-+{
-+	return 0;
-+}
-+
-+static inline void kvm_iommu_unmap_pages(struct kvm *kvm,
-+		struct kvm_memory_slot *slot)
-+{
-+}
-+#endif /* CONFIG_IOMMU_API */
-+
- #endif /* __POWERPC_KVM_HOST_H__ */
--- 
-1.7.10.4
-
+Bjorn
