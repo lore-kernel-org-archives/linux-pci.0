@@ -1,55 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:38993 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753389Ab3EVUoG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 22 May 2013 16:44:06 -0400
-Message-ID: <1369255424.3870.18.camel@pasglop>
-Subject: Re: Resource assignment oddities
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Date: Thu, 23 May 2013 06:43:44 +1000
-In-Reply-To: <CAE9FiQWsZXfkSSVFzee4-J4bUDP8DdG=y9-k2du+ek90StDvNA@mail.gmail.com>
-References: <1367712653.11982.19.camel@pasglop>
-	 <1367712932.11982.20.camel@pasglop>
-	 <CAE9FiQX=h4H1gcbW=EfQo_ZtAgHGOZ2GxVxLG59C1iMH+qgH2g@mail.gmail.com>
-	 <1367732090.11982.38.camel@pasglop>
-	 <CAE9FiQUN3qqVmdw_EdOC-JZGc219M3tu=roOX98xns+77LJhMw@mail.gmail.com>
-	 <1367740336.11982.41.camel@pasglop>
-	 <51871088.4594420a.0ccc.7300SMTPIN_ADDED_BROKEN@mx.google.com>
-	 <CAE9FiQXGUOM_h_X5tdGbkiuZGZkiFigSLbbftx3YXybFBg6trg@mail.gmail.com>
-	 <518786a7.64bbec0a.58a0.1f6bSMTPIN_ADDED_BROKEN@mx.google.com>
-	 <CAErSpo5MJCoaof=heFM4vLxuWz8pFqsyXAC356jZ7rbRvSOt9g@mail.gmail.com>
-	 <CAE9FiQWsZXfkSSVFzee4-J4bUDP8DdG=y9-k2du+ek90StDvNA@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-oa0-f54.google.com ([209.85.219.54]:60430 "EHLO
+	mail-oa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934735Ab3E1RYx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 May 2013 13:24:53 -0400
+Received: by mail-oa0-f54.google.com with SMTP id o17so10219380oag.41
+        for <linux-pci@vger.kernel.org>; Tue, 28 May 2013 10:24:52 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1369709709-14504-1-git-send-email-wangyijing@huawei.com>
+References: <1369709709-14504-1-git-send-email-wangyijing@huawei.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 28 May 2013 11:24:32 -0600
+Message-ID: <CAErSpo5+K41XE8yMOaf6RJN=1oyv=z_Fi-vaXJLDaDxvgdq+QA@mail.gmail.com>
+Subject: Re: [PATCH] PCI/X86: increase info->res_num before checking
+ pci_use_crs return
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Hanjun Guo <guohanjun@huawei.com>,
+	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Feng Tang <feng.tang@intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2013-05-22 at 09:59 -0700, Yinghai Lu wrote:
-> On Wed, May 22, 2013 at 7:54 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> > What exactly is the problem here?  Is it just that you don't want to
-> > see the "can't assign" messages?  Or is there a device with a BAR that
-> > *should* be assigned, but isn't?  If so, which device is it?
-> 
-> We try must+optional as first, then if there is any ioport or mmio fail
-> we will stick to must only then extend must to meet optional.
-> but mmio range and mmio-pref could be connected each other,
-> so extend will fail...
-> 
-> problem here, some root bus will not have ioport range, so it will always have
-> ioport allocation fail.
-> 
-> looks like right fix for v3.9 should be as attached patch.
-> it will keep must+optional for mmio, if only ioport fails....
+On Mon, May 27, 2013 at 8:55 PM, Yijing Wang <wangyijing@huawei.com> wrote:
+> I separate this patch from patchset "Add hostbridge resource release to
+> support root bus hotplug in IA64", because it's a Separate issue.
+>
+> We should increase info->res_num before we checking pci_use_crs return
+> when pci=nocrs set.
+>
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> Cc: Yinghai Lu <yinghai@kernel.org>
+> Cc: Jiang Liu <liuj97@gmail.com>
+> Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+> Cc: Feng Tang <feng.tang@intel.com>
+> ---
+>  arch/x86/pci/acpi.c |    7 ++-----
+>  1 files changed, 2 insertions(+), 5 deletions(-)
 
-The simpler thing to do would have been to do the entire thing in two
-separate passes, one for MMIO and one for IO, and skip the second one
-entirely if there's no IO at the host bridge level :-)
+Applied to pci/misc for v3.11, thanks!
 
-Cheers,
-Ben.
-
-
+> diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+> index 3e72425..662dfdf 100644
+> --- a/arch/x86/pci/acpi.c
+> +++ b/arch/x86/pci/acpi.c
+> @@ -324,14 +324,11 @@ setup_resource(struct acpi_resource *acpi_res, void *data)
+>         res->start = start;
+>         res->end = end;
+>         info->res_offset[info->res_num] = addr.translation_offset;
+> +       info->res_num++;
+>
+> -       if (!pci_use_crs) {
+> +       if (!pci_use_crs)
+>                 dev_printk(KERN_DEBUG, &info->bridge->dev,
+>                            "host bridge window %pR (ignored)\n", res);
+> -               return AE_OK;
+> -       }
+> -
+> -       info->res_num++;
+>
+>         return AE_OK;
+>  }
+> --
+> 1.7.1
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
