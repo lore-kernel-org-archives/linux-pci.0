@@ -1,48 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f169.google.com ([209.85.223.169]:35468 "EHLO
-	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S966734Ab3E2Utf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 May 2013 16:49:35 -0400
-Received: by mail-ie0-f169.google.com with SMTP id u16so26760397iet.28
-        for <linux-pci@vger.kernel.org>; Wed, 29 May 2013 13:49:35 -0700 (PDT)
-Date: Wed, 29 May 2013 14:49:31 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: linux-pci@vger.kernel.org, Hanjun Guo <guohanjun@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>
-Subject: Re: [PATCH] PCI: fix trivial typo for PCI_EXP_LNKCAP_CLKPM
-Message-ID: <20130529204931.GA26388@google.com>
-References: <1369818112-33136-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1369818112-33136-1-git-send-email-wangyijing@huawei.com>
+Received: from mx1.redhat.com ([209.132.183.28]:57533 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755546Ab3E1UPx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 28 May 2013 16:15:53 -0400
+Message-ID: <1369772124.2646.288.camel@ul30vt.home>
+Subject: Re: [PATCH v2 1/2] iommu: Quirked PCIe bridge test and search
+ function
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Stephen Hemminger <stephen@networkplumber.org>
+Cc: iommu@lists.linux-foundation.org, dwmw2@infradead.org,
+	joro@8bytes.org, linux-pci@vger.kernel.org, ddutile@redhat.com
+Date: Tue, 28 May 2013 14:15:24 -0600
+In-Reply-To: <20130528125650.5ca5b419@nehalam.linuxnetplumber.net>
+References: <20130528183527.3318.5365.stgit@bling.home>
+	 <20130528184020.3318.7800.stgit@bling.home>
+	 <20130528123827.2507c34e@nehalam.linuxnetplumber.net>
+	 <1369770790.2646.272.camel@ul30vt.home>
+	 <20130528125650.5ca5b419@nehalam.linuxnetplumber.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 29, 2013 at 05:01:52PM +0800, Yijing Wang wrote:
-> Fix trivial typo for PCI_EXP_LNKCAP_CLKPM comment.
+On Tue, 2013-05-28 at 12:56 -0700, Stephen Hemminger wrote:
+> On Tue, 28 May 2013 13:53:10 -0600
+> Alex Williamson <alex.williamson@redhat.com> wrote:
 > 
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> ---
->  include/uapi/linux/pci_regs.h |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
+> > On Tue, 2013-05-28 at 12:38 -0700, Stephen Hemminger wrote:
+> > > On Tue, 28 May 2013 12:40:20 -0600
+> > > Alex Williamson <alex.williamson@redhat.com> wrote:
+> > > 
+> > > > Some PCIe-to-PCI bridges are not fully compliant with the PCIe spec
+> > > > and do not include a PCIe capability.  pci_is_pcie() is not useful on
+> > > > these devices, making it difficult to determine where we transition
+> > > > from a legacy PCI bus to a PCIe link.  PCI-core doesn't want a quirked
+> > > > bridge test for fear of confusion that a PCIe capability would be
+> > > > expected, so implement it in IOMMU code.
+> > > > 
+> > > > Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+> > > 
+> > > This won't work for me because I run without IOMMU.
+> > > The overhead of IOMMU setup per-packet significantly impacts network performance.
+> > 
+> > You were one of the reporters of this issue:
+> > 
+> > http://www.spinics.net/lists/linux-pci/msg19579.html
+> > 
+> > Does this not work for you or are you saying this is not relevant to you
+> > because you no longer attempt to enable the IOMMU?  Thanks,
+> > 
+> 
+> For most usage, I gave up on using IOMMU/SR-IOV.
 
-Applied to pci/misc for v3.11, thanks!
+Ok, let's call that a "don't care" rather than "won't work" for the
+purposes of these patches.  I'll take you off the CC if there's another
+version.  Thanks,
 
-> diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-> index 864e324..c3cc01d 100644
-> --- a/include/uapi/linux/pci_regs.h
-> +++ b/include/uapi/linux/pci_regs.h
-> @@ -468,7 +468,7 @@
->  #define  PCI_EXP_LNKCAP_ASPMS	0x00000c00 /* ASPM Support */
->  #define  PCI_EXP_LNKCAP_L0SEL	0x00007000 /* L0s Exit Latency */
->  #define  PCI_EXP_LNKCAP_L1EL	0x00038000 /* L1 Exit Latency */
-> -#define  PCI_EXP_LNKCAP_CLKPM	0x00040000 /* L1 Clock Power Management */
-> +#define  PCI_EXP_LNKCAP_CLKPM	0x00040000 /* Clock Power Management */
->  #define  PCI_EXP_LNKCAP_SDERC	0x00080000 /* Surprise Down Error Reporting Capable */
->  #define  PCI_EXP_LNKCAP_DLLLARC	0x00100000 /* Data Link Layer Link Active Reporting Capable */
->  #define  PCI_EXP_LNKCAP_LBNC	0x00200000 /* Link Bandwidth Notification Capability */
-> -- 
-> 1.7.1
-> 
-> 
+Alex
+
