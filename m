@@ -1,56 +1,40 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 1wt.eu ([62.212.114.60]:34332 "EHLO 1wt.eu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751773Ab3EWGxi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 23 May 2013 02:53:38 -0400
-Date: Thu, 23 May 2013 08:52:59 +0200
-From: Willy Tarreau <w@1wt.eu>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Maen Suleiman <maen@marvell.com>, linux-pci@vger.kernel.org,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH 0/4] Marvell PCIe driver improvements
-Message-ID: <20130523065259.GK31625@1wt.eu>
-References: <1369228358-32580-1-git-send-email-thomas.petazzoni@free-electrons.com> <20130523001353.GH31625@1wt.eu> <20130523083509.79297513@skate>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130523083509.79297513@skate>
+Received: from mail-qc0-f173.google.com ([209.85.216.173]:49636 "EHLO
+	mail-qc0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758717Ab3E1DRl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 May 2013 23:17:41 -0400
+Received: by mail-qc0-f173.google.com with SMTP id c11so3778271qcv.18
+        for <linux-pci@vger.kernel.org>; Mon, 27 May 2013 20:17:41 -0700 (PDT)
+MIME-Version: 1.0
+Date: Tue, 28 May 2013 11:17:41 +0800
+Message-ID: <CAKXJSOEeeOemeFk4EHZmoVB2q1FLd_RO+EoTzyn_qR4fND1OMA@mail.gmail.com>
+Subject: [PATCH] PCI: fix a typo in the comment for pci.c/pci_swizzle_interrupt_pin
+From: Wang Sheng-Hui <shhuiw@gmail.com>
+To: Martin Mares <mj@ucw.cz>, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 23, 2013 at 08:35:09AM +0200, Thomas Petazzoni wrote:
-> > FWIW, these patches applied on top of your pcie-v10 tree have made
-> > my mini-pcie dual-nic appear for the first time on the mirabox. Till
-> > now I never knew if it was a hardware or software issue since the NIC
-> > does not appear in u-boot nor lspci, whatever the kernel versions,
-> > including the original Marvell one's. The NIC has two functions (one
-> > per controller) and no bridge, so it may be a side effect of your
-> > improvements (or maybe you fixed a bug).
-> 
-> Hum, interesting. Can you show the output of lspci -v and lspci -t
-> (which a pciutils version of lspci, not Busybox one) ? I'm interested
-> in seeing the layout of the PCIe bus with such a device, to get a
-> better understanding.
+The INTx pin should be INIT[ABCD]. Fix the type "3=INTC".
 
-(send privately in another thread).
+Signed-off-by: Wang Sheng-Hui <shhuiw@gmail.com>
+---
+ drivers/pci/pci.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> > Anyway for me it's a great improvement !
-> > 
-> > I've not tried it on the OpenBlocks AX3 yet (it was not detected
-> > there previously). But I have good hopes.
-> > 
-> > For reference, the NIC is Jetway's ADMPEIDLA (intel i350-AM2).
-> 
-> Should I be taking this as a formal Tested-by from you? :-)
-
-Yes, obviously, feel free to add this one :
-
-  Tested-by: Willy Tarreau <w@1wt.eu>
-
-Willy
-
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index a899d8b..e5f4e55 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2421,7 +2421,7 @@ bool pci_acs_path_enabled(struct pci_dev *start,
+ /**
+  * pci_swizzle_interrupt_pin - swizzle INTx for device behind bridge
+  * @dev: the PCI device
+- * @pin: the INTx pin (1=INTA, 2=INTB, 3=INTD, 4=INTD)
++ * @pin: the INTx pin (1=INTA, 2=INTB, 3=INTC, 4=INTD)
+  *
+  * Perform INTx swizzling for a device behind one level of bridge.  This is
+  * required by section 9.1 of the PCI-to-PCI bridge specification for devices
+-- 
+1.7.12.4
