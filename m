@@ -1,46 +1,143 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f179.google.com ([209.85.223.179]:48296 "EHLO
-	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754650Ab3E1Eyo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 May 2013 00:54:44 -0400
-Received: by mail-ie0-f179.google.com with SMTP id c13so19990283ieb.38
-        for <linux-pci@vger.kernel.org>; Mon, 27 May 2013 21:54:43 -0700 (PDT)
+Received: from mail-ob0-f175.google.com ([209.85.214.175]:59095 "EHLO
+	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756273Ab3E1WhY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 May 2013 18:37:24 -0400
+Received: by mail-ob0-f175.google.com with SMTP id xn12so6388203obc.6
+        for <linux-pci@vger.kernel.org>; Tue, 28 May 2013 15:37:23 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <51A437A8.7090104@huawei.com>
-References: <1369709709-14504-1-git-send-email-wangyijing@huawei.com>
-	<CAE9FiQXkwoRfFbcEn15MRGv6fVeOM5WC1Gh2NAhWj7yTda3G+g@mail.gmail.com>
-	<51A437A8.7090104@huawei.com>
-Date: Mon, 27 May 2013 21:54:43 -0700
-Message-ID: <CAE9FiQW8LMPu+o_PYiE26dRLg4iTpdnzOi7x8EwWwUxshPfUMQ@mail.gmail.com>
-Subject: Re: [PATCH] PCI/X86: increase info->res_num before checking
- pci_use_crs return
-From: Yinghai Lu <yinghai@kernel.org>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
+In-Reply-To: <1368536439-19421-1-git-send-email-jiang.liu@huawei.com>
+References: <1368536439-19421-1-git-send-email-jiang.liu@huawei.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 28 May 2013 16:37:03 -0600
+Message-ID: <CAErSpo6-xtrNgPYxu_4QRtZs76P9B6b4JXQPENhX6hyNPpKx+g@mail.gmail.com>
+Subject: Re: [PATCH v1 1/2] ACPI, PCI: remove unused global list
+ acpi_pci_roots in pci_root.c
+To: Jiang Liu <liuj97@gmail.com>
+Cc: "Rafael J . Wysocki" <rjw@sisk.pl>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Hanjun Guo <guohanjun@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Feng Tang <feng.tang@intel.com>
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Len Brown <lenb@kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, May 27, 2013 at 9:50 PM, Yijing Wang <wangyijing@huawei.com> wrote:
-> On 2013/5/28 12:35, Yinghai Lu wrote:
->> On Mon, May 27, 2013 at 7:55 PM, Yijing Wang <wangyijing@huawei.com> wrote:
->>> I separate this patch from patchset "Add hostbridge resource release to
->>> support root bus hotplug in IA64", because it's a Separate issue.
->>>
->>> We should increase info->res_num before we checking pci_use_crs return
->>> when pci=nocrs set.
->>
->> there is no function change or issue here.
+On Tue, May 14, 2013 at 7:00 AM, Jiang Liu <liuj97@gmail.com> wrote:
+> Now the global list acpi_pci_roots pci_root.c is useless, remove it.
 >
-> Hi Yinghai,
->    Thanks for review and comments!
-> Yes, this patch is no functional change. I just sent this patch for make code flow more clearly.
-> Because free_pci_root_info_res() will free all info->res and info->res_offset. So I think move info->res_num++
-> before pci_use_crs check is better, better readability.
+> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+> Cc: Len Brown <lenb@kernel.org>
+> Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
+> Cc: linux-acpi@vger.kernel.org
+> Cc: linux-kernel@vger.kernel.org
+> ---
+>  drivers/acpi/pci_root.c | 25 +++----------------------
+>  include/acpi/acpi_bus.h |  1 -
+>  2 files changed, 3 insertions(+), 23 deletions(-)
 
-sure.
+This and the "use acpi_handle_print()" patch look fine to me.
+
+Rafael, I can take them, or if you want to take them yourself, you can add
+
+  Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+
+Bjorn
+
+> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+> index b80e06e..91ddfd6 100644
+> --- a/drivers/acpi/pci_root.c
+> +++ b/drivers/acpi/pci_root.c
+> @@ -65,10 +65,6 @@ static struct acpi_scan_handler pci_root_handler = {
+>         .detach = acpi_pci_root_remove,
+>  };
+>
+> -/* Lock to protect both acpi_pci_roots lists */
+> -static DEFINE_MUTEX(acpi_pci_root_lock);
+> -static LIST_HEAD(acpi_pci_roots);
+> -
+>  static DEFINE_MUTEX(osc_lock);
+>
+>  /**
+> @@ -423,7 +419,6 @@ static int acpi_pci_root_add(struct acpi_device *device,
+>                 }
+>         }
+>
+> -       INIT_LIST_HEAD(&root->node);
+>         root->device = device;
+>         root->segment = segment & 0xFFFF;
+>         strcpy(acpi_device_name(device), ACPI_PCI_ROOT_DEVICE_NAME);
+> @@ -501,10 +496,6 @@ static int acpi_pci_root_add(struct acpi_device *device,
+>          * TBD: Need PCI interface for enumeration/configuration of roots.
+>          */
+>
+> -       mutex_lock(&acpi_pci_root_lock);
+> -       list_add_tail(&root->node, &acpi_pci_roots);
+> -       mutex_unlock(&acpi_pci_root_lock);
+> -
+>         /*
+>          * Scan the Root Bridge
+>          * --------------------
+> @@ -518,7 +509,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
+>                             "Bus %04x:%02x not present in PCI namespace\n",
+>                             root->segment, (unsigned int)root->secondary.start);
+>                 result = -ENODEV;
+> -               goto out_del_root;
+> +               goto end;
+>         }
+>
+>         /* ASPM setting */
+> @@ -538,20 +529,13 @@ static int acpi_pci_root_add(struct acpi_device *device,
+>         if (system_state != SYSTEM_BOOTING) {
+>                 pcibios_resource_survey_bus(root->bus);
+>                 pci_assign_unassigned_bus_resources(root->bus);
+> -       }
+> -
+> -       /* need to after hot-added ioapic is registered */
+> -       if (system_state != SYSTEM_BOOTING)
+> +               /* need to after hot-added ioapic is registered */
+>                 pci_enable_bridges(root->bus);
+> +       }
+>
+>         pci_bus_add_devices(root->bus);
+>         return 1;
+>
+> -out_del_root:
+> -       mutex_lock(&acpi_pci_root_lock);
+> -       list_del(&root->node);
+> -       mutex_unlock(&acpi_pci_root_lock);
+> -
+>  end:
+>         kfree(root);
+>         return result;
+> @@ -568,9 +552,6 @@ static void acpi_pci_root_remove(struct acpi_device *device)
+>
+>         pci_remove_root_bus(root->bus);
+>
+> -       mutex_lock(&acpi_pci_root_lock);
+> -       list_del(&root->node);
+> -       mutex_unlock(&acpi_pci_root_lock);
+>         kfree(root);
+>  }
+>
+> diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
+> index 22ba56e..4eb9a88 100644
+> --- a/include/acpi/acpi_bus.h
+> +++ b/include/acpi/acpi_bus.h
+> @@ -447,7 +447,6 @@ int register_acpi_bus_type(struct acpi_bus_type *);
+>  int unregister_acpi_bus_type(struct acpi_bus_type *);
+>
+>  struct acpi_pci_root {
+> -       struct list_head node;
+>         struct acpi_device * device;
+>         struct pci_bus *bus;
+>         u16 segment;
+> --
+> 1.8.1.2
+>
