@@ -1,72 +1,41 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f51.google.com ([209.85.219.51]:62303 "EHLO
-	mail-oa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750796Ab3EGWDS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 May 2013 18:03:18 -0400
-Received: by mail-oa0-f51.google.com with SMTP id f4so1316190oah.10
-        for <linux-pci@vger.kernel.org>; Tue, 07 May 2013 15:03:17 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAMeQTsZEpRE_bv6o9mBpqNrbf36SZVscxy+JS72=BOzA1ey-XQ@mail.gmail.com>
-References: <CAErSpo7qj2SNR7BfuBsfF-saZXvgcqqLtgoP5Hyb5u99qR4Ncg@mail.gmail.com>
- <Pine.LNX.4.44L0.1302191119270.2215-100000@iolanthe.rowland.org>
- <CAErSpo7NZoOQZyW76HEoOTVgdqL2CgbVScAeF6HGLAVaNCq0=w@mail.gmail.com>
- <337833384.57445.1361860509194.JavaMail.mail@webmail08> <CAErSpo6CbO5KYXiErv6J_Dnm1u694C5fQPP2_cZL8VKDEnZa9A@mail.gmail.com>
- <569718148.80620.1361906088301.JavaMail.mail@webmail13> <CAErSpo6UkVhSf+nFW4zwJLBQw_0RQ5H9Bv-UuQRb6zdwsFPw4g@mail.gmail.com>
- <CAErSpo4X+XXKvWDfqh2CKZAtJ9WMQk91OcsWwdxwYv2MfEM_zQ@mail.gmail.com>
- <771333906.75854.1367057440028.JavaMail.mail@webmail08> <CAErSpo4B4sRco-nuqgXiYtGQxBcbEB6ArQjHD0A9cj4TRE+qQw@mail.gmail.com>
- <518097B8.4020402@gmail.com> <CAErSpo7KWPRVEnw+n068pUZz+=WSTwno6m6t7N6dunuhnFC8EA@mail.gmail.com>
- <384171828.66802.1367942365492.JavaMail.mail@webmail05> <CADLC3L3bdTP8-X3ftMq1qxnL=LVDf7d5gbu2ZMH0pXg2AU8xjw@mail.gmail.com>
- <CAErSpo50iyEbCer+-K8uXUdnsG_EzFe_ZjKnrtfq5x0Zw3Yd6w@mail.gmail.com> <CAMeQTsZEpRE_bv6o9mBpqNrbf36SZVscxy+JS72=BOzA1ey-XQ@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 7 May 2013 15:02:57 -0700
-Message-ID: <CAErSpo75SETEe-OKhY2-NW3csaxt=f09JcheHx95bzkCcGO6yg@mail.gmail.com>
-Subject: Re: Abysmal HDD/USB write speed after sleep on a UEFI system
-To: Patrik Jakobsson <patrik.r.jakobsson@gmail.com>
-Cc: Robert Hancock <hancockrwd@gmail.com>,
-	"Artem S. Tashkinov" <t.artem@lycos.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 28 May 2013 17:48:01 +0100
+From: Matthew Garrett <mjg59@srcf.ucam.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Matt Fleming <matt@console-pimps.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, Phillip Susi <psusi@ubuntu.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"x86@kernel.org" <x86@kernel.org>,
+	Matt Fleming <matt.fleming@intel.com>,
+	Seth Forshee <seth.forshee@canonical.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>, stable@vger.kernel.org
+Subject: Re: [PATCH] x86/PCI: setup data may be in highmem
+Message-ID: <20130528164801.GA2345@srcf.ucam.org>
+References: <1369215782-32697-1-git-send-email-matt@console-pimps.org>
+ <CAErSpo4id0RFARD6zCxeMo-uasPBnL7KpUFPqhW4zLgCxrF5fw@mail.gmail.com>
+ <20130528113617.GR14575@console-pimps.org>
+ <CAErSpo5DG61wvQEw_9z8vm6Lp=E0urq6LG5SOuWSawkNeDkF+A@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo5DG61wvQEw_9z8vm6Lp=E0urq6LG5SOuWSawkNeDkF+A@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 7, 2013 at 2:48 PM, Patrik Jakobsson
-<patrik.r.jakobsson@gmail.com> wrote:
-> On Tue, May 7, 2013 at 10:20 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>> I'm not sure if reading /proc/mtrr actually reads the registers out of
->>> the CPU each time, or whether we just return the cached values we read
->>> out during initial boot-up. If the latter, then this output isn't
->>> really useful as there's no guarantee the values are still intact.
->>
->> Good point.  From what I can tell, on Artem's system with "CPU0:
->> Intel(R) Core(TM) i5-2500 CPU @ 3.30GHz," we would be using
->> generic_mtrr_ops, and generic_get_mtrr() appears to read from the
->> MSRs, so I think it should be useful.
->
-> FWIW, that motherboard suffers from a PCI to PCIE bridge problem. It might
-> have been fixed by bios upgrades by now but not sure.
->
-> It might also suffer (depending on the revision) from the Sandy bridge SATA
-> issue. So if affected, SATA controller is a ticking bomb.
->
-> I have a P8H67-V motherboard but I haven't seen any suspend related issues.
->
-> If this is totally unrelated I'm sorry for wasting your time. Just thought it
-> might be good to know.
+On Tue, May 28, 2013 at 10:31:51AM -0600, Bjorn Helgaas wrote:
+> On Tue, May 28, 2013 at 5:36 AM, Matt Fleming <matt@console-pimps.org> wrote:
+> > On Fri, 24 May, at 08:38:10AM, Bjorn Helgaas wrote:
+> >> pcibios_add_device() is mostly called at boot-time, when
+> >> early_ioremap() probably works well.  But it's also called when we
+> >> hot-add devices later, and it looks like early_ioremap() will then
+> >> generate warnings because "system_state != SYSTEM_BOOTING".
+> >
+> > Oops. Good point. Is there any reason we can't use ioremap()?
+> 
+> I assume Matthew had some reason for avoiding that in the first place,
+> so I hope he'll chime in.
 
-Thanks for chiming in.  I'm not familiar with either of the issues you
-mentioned.  Do you have any references where I could read up on them?
+I have no recollection of why I did it that way. If this is all 
+happening late enough for ioremap() to work then that sounds fine.
 
-Artem's system has a PCIe-to-PCI bridge (not a PCI-to-PCIe bridge) at
-05:00.0, but it leads to [bus 06] and there's nothing on bus 06, so I
-don't think that's the problem.
-
-And the issue affects both USB and a hard drive, so I suspect it's
-more than just SATA.  Artem, did you identify the PCI devices leading
-to your USB and hard drive?  I can't remember if I've actually seen
-that.
-
-Bjorn
+-- 
+Matthew Garrett | mjg59@srcf.ucam.org
