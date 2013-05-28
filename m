@@ -1,66 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:38810 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754348Ab3EVNMq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 May 2013 09:12:46 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>
-Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	linux-arm-kernel@lists.infradead.org
-Subject: [PATCH 3/4] pci: mvebu: emulate an empty capability list
-Date: Wed, 22 May 2013 15:12:37 +0200
-Message-Id: <1369228358-32580-4-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1369228358-32580-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1369228358-32580-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from mail-pa0-f54.google.com ([209.85.220.54]:48330 "EHLO
+	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755879Ab3E1U2X (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 May 2013 16:28:23 -0400
+Received: by mail-pa0-f54.google.com with SMTP id kx1so8410220pab.13
+        for <linux-pci@vger.kernel.org>; Tue, 28 May 2013 13:28:23 -0700 (PDT)
+Date: Tue, 28 May 2013 13:28:19 -0700
+From: Stephen Hemminger <stephen@networkplumber.org>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: iommu@lists.linux-foundation.org, dwmw2@infradead.org,
+	joro@8bytes.org, linux-pci@vger.kernel.org, ddutile@redhat.com
+Subject: Re: [PATCH v2 1/2] iommu: Quirked PCIe bridge test and search
+ function
+Message-ID: <20130528132819.2f1bc333@nehalam.linuxnetplumber.net>
+In-Reply-To: <1369772124.2646.288.camel@ul30vt.home>
+References: <20130528183527.3318.5365.stgit@bling.home>
+	<20130528184020.3318.7800.stgit@bling.home>
+	<20130528123827.2507c34e@nehalam.linuxnetplumber.net>
+	<1369770790.2646.272.camel@ul30vt.home>
+	<20130528125650.5ca5b419@nehalam.linuxnetplumber.net>
+	<1369772124.2646.288.camel@ul30vt.home>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently, our PCI-to-PCI bridge emulation doesn't emulate a proper
-capability list, which leads 'lspci -v' to show:
+On Tue, 28 May 2013 14:15:24 -0600
+Alex Williamson <alex.williamson@redhat.com> wrote:
 
-  Capabilities: [fc] <chain broken>
+> On Tue, 2013-05-28 at 12:56 -0700, Stephen Hemminger wrote:
+> > On Tue, 28 May 2013 13:53:10 -0600
+> > Alex Williamson <alex.williamson@redhat.com> wrote:
+> > 
+> > > On Tue, 2013-05-28 at 12:38 -0700, Stephen Hemminger wrote:
+> > > > On Tue, 28 May 2013 12:40:20 -0600
+> > > > Alex Williamson <alex.williamson@redhat.com> wrote:
+> > > > 
+> > > > > Some PCIe-to-PCI bridges are not fully compliant with the PCIe spec
+> > > > > and do not include a PCIe capability.  pci_is_pcie() is not useful on
+> > > > > these devices, making it difficult to determine where we transition
+> > > > > from a legacy PCI bus to a PCIe link.  PCI-core doesn't want a quirked
+> > > > > bridge test for fear of confusion that a PCIe capability would be
+> > > > > expected, so implement it in IOMMU code.
+> > > > > 
+> > > > > Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+> > > > 
+> > > > This won't work for me because I run without IOMMU.
+> > > > The overhead of IOMMU setup per-packet significantly impacts network performance.
+> > > 
+> > > You were one of the reporters of this issue:
+> > > 
+> > > http://www.spinics.net/lists/linux-pci/msg19579.html
+> > > 
+> > > Does this not work for you or are you saying this is not relevant to you
+> > > because you no longer attempt to enable the IOMMU?  Thanks,
+> > > 
+> > 
+> > For most usage, I gave up on using IOMMU/SR-IOV.
+> 
+> Ok, let's call that a "don't care" rather than "won't work" for the
+> purposes of these patches.  I'll take you off the CC if there's another
+> version.  Thanks,
+> 
+> Alex
+> 
 
-In order to fix this, this commit improve the PCI-to-PCI bridge
-emulation to emulate an empty capability list. It might be later
-extended to expose things like the PCI Express Capability header, but
-an empty capability list is sufficient for now.
-
-lspci -v now shows the much nicer:
-
-  Capabilities: [40] #00 [0000]
-
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
----
- drivers/pci/host/pci-mvebu.c |   10 ++++++++++
- 1 file changed, 10 insertions(+)
-
-diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-index c21ca84..c887598 100644
---- a/drivers/pci/host/pci-mvebu.c
-+++ b/drivers/pci/host/pci-mvebu.c
-@@ -440,6 +440,16 @@ static int mvebu_sw_pci_bridge_read(struct mvebu_pcie_port *port,
- 		*value = 0;
- 		break;
- 
-+	case PCI_CAPABILITY_LIST:
-+		/* Offset of the capability list */
-+		*value = 0x40;
-+		break;
-+
-+	case 0x40:
-+		/* We have no element in our capability list */
-+		*value = 0;
-+		break;
-+
- 	default:
- 		*value = 0xffffffff;
- 		return PCIBIOS_BAD_REGISTER_NUMBER;
--- 
-1.7.9.5
-
+Yes, it is a don't care. but leave me on cc, because I may still need it.
