@@ -1,72 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:33209 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751271Ab3E1Efr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 May 2013 00:35:47 -0400
-Received: by mail-ie0-f174.google.com with SMTP id 10so19453745ied.5
-        for <linux-pci@vger.kernel.org>; Mon, 27 May 2013 21:35:47 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1369709709-14504-1-git-send-email-wangyijing@huawei.com>
-References: <1369709709-14504-1-git-send-email-wangyijing@huawei.com>
-Date: Mon, 27 May 2013 21:35:47 -0700
-Message-ID: <CAE9FiQXkwoRfFbcEn15MRGv6fVeOM5WC1Gh2NAhWj7yTda3G+g@mail.gmail.com>
-Subject: Re: [PATCH] PCI/X86: increase info->res_num before checking
- pci_use_crs return
-From: Yinghai Lu <yinghai@kernel.org>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Hanjun Guo <guohanjun@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Feng Tang <feng.tang@intel.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail-pb0-f45.google.com ([209.85.160.45]:45757 "EHLO
+	mail-pb0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753856Ab3E1T4y (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 May 2013 15:56:54 -0400
+Received: by mail-pb0-f45.google.com with SMTP id mc17so8280916pbc.32
+        for <linux-pci@vger.kernel.org>; Tue, 28 May 2013 12:56:54 -0700 (PDT)
+Date: Tue, 28 May 2013 12:56:50 -0700
+From: Stephen Hemminger <stephen@networkplumber.org>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: iommu@lists.linux-foundation.org, dwmw2@infradead.org,
+	joro@8bytes.org, linux-pci@vger.kernel.org, ddutile@redhat.com
+Subject: Re: [PATCH v2 1/2] iommu: Quirked PCIe bridge test and search
+ function
+Message-ID: <20130528125650.5ca5b419@nehalam.linuxnetplumber.net>
+In-Reply-To: <1369770790.2646.272.camel@ul30vt.home>
+References: <20130528183527.3318.5365.stgit@bling.home>
+	<20130528184020.3318.7800.stgit@bling.home>
+	<20130528123827.2507c34e@nehalam.linuxnetplumber.net>
+	<1369770790.2646.272.camel@ul30vt.home>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, May 27, 2013 at 7:55 PM, Yijing Wang <wangyijing@huawei.com> wrote:
-> I separate this patch from patchset "Add hostbridge resource release to
-> support root bus hotplug in IA64", because it's a Separate issue.
->
-> We should increase info->res_num before we checking pci_use_crs return
-> when pci=nocrs set.
+On Tue, 28 May 2013 13:53:10 -0600
+Alex Williamson <alex.williamson@redhat.com> wrote:
 
-there is no function change or issue here.
+> On Tue, 2013-05-28 at 12:38 -0700, Stephen Hemminger wrote:
+> > On Tue, 28 May 2013 12:40:20 -0600
+> > Alex Williamson <alex.williamson@redhat.com> wrote:
+> > 
+> > > Some PCIe-to-PCI bridges are not fully compliant with the PCIe spec
+> > > and do not include a PCIe capability.  pci_is_pcie() is not useful on
+> > > these devices, making it difficult to determine where we transition
+> > > from a legacy PCI bus to a PCIe link.  PCI-core doesn't want a quirked
+> > > bridge test for fear of confusion that a PCIe capability would be
+> > > expected, so implement it in IOMMU code.
+> > > 
+> > > Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+> > 
+> > This won't work for me because I run without IOMMU.
+> > The overhead of IOMMU setup per-packet significantly impacts network performance.
+> 
+> You were one of the reporters of this issue:
+> 
+> http://www.spinics.net/lists/linux-pci/msg19579.html
+> 
+> Does this not work for you or are you saying this is not relevant to you
+> because you no longer attempt to enable the IOMMU?  Thanks,
+> 
+> Alex
+> 
 
->
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> Cc: Yinghai Lu <yinghai@kernel.org>
-> Cc: Jiang Liu <liuj97@gmail.com>
-> Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-> Cc: Feng Tang <feng.tang@intel.com>
-> ---
->  arch/x86/pci/acpi.c |    7 ++-----
->  1 files changed, 2 insertions(+), 5 deletions(-)
->
-> diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-> index 3e72425..662dfdf 100644
-> --- a/arch/x86/pci/acpi.c
-> +++ b/arch/x86/pci/acpi.c
-> @@ -324,14 +324,11 @@ setup_resource(struct acpi_resource *acpi_res, void *data)
->         res->start = start;
->         res->end = end;
->         info->res_offset[info->res_num] = addr.translation_offset;
-> +       info->res_num++;
->
-> -       if (!pci_use_crs) {
-> +       if (!pci_use_crs)
->                 dev_printk(KERN_DEBUG, &info->bridge->dev,
->                            "host bridge window %pR (ignored)\n", res);
-> -               return AE_OK;
-> -       }
-> -
-> -       info->res_num++;
->
->         return AE_OK;
->  }
-
-info->res_num is not used after probe_pci_root_info for pci_nocrs case.
-
-Thanks
-
-Yinghai
+For most usage, I gave up on using IOMMU/SR-IOV.
