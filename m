@@ -1,90 +1,47 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <51A8CDC7.2050508@gmail.com>
-References: <1368536439-19421-1-git-send-email-jiang.liu@huawei.com>
- <1368536439-19421-2-git-send-email-jiang.liu@huawei.com> <20130530173356.GA26075@google.com>
- <3828716.JNCrg8I1Kf@vostro.rjw.lan> <51A8CDC7.2050508@gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 31 May 2013 13:18:26 -0600
-Message-ID: <CAErSpo5mtYxWkVn+DTT4Sswp0RkWBM=prhtViMJ+KoLpOMY1hw@mail.gmail.com>
-Subject: Re: [PATCH v1 2/2] ACPI, pci_root: use acpi_handle_print() and
- pr_xxx() to print messages
-To: Jiang Liu <liuj97@gmail.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Yinghai Lu <yinghai@kernel.org>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Len Brown <lenb@kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from g4t0016.houston.hp.com ([15.201.24.19]:19865 "EHLO
+	g4t0016.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753065Ab3E1Sxh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 May 2013 14:53:37 -0400
+From: Betty Dall <betty.dall@hp.com>
+To: rjw@sisk.pl, bhelgaas@google.com
+Cc: ying.huang@intel.com, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Betty Dall <betty.dall@hp.com>
+Subject: [PATCH 1/3] PCI/AER: Fix incorrect return from aer_hest_parse()
+Date: Tue, 28 May 2013 12:48:47 -0600
+Message-Id: <1369766929-4386-2-git-send-email-betty.dall@hp.com>
+In-Reply-To: <1369766929-4386-1-git-send-email-betty.dall@hp.com>
+References: <1369766929-4386-1-git-send-email-betty.dall@hp.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 31, 2013 at 10:20 AM, Jiang Liu <liuj97@gmail.com> wrote:
-> On Fri 31 May 2013 03:51:51 AM CST, Rafael J. Wysocki wrote:
->> On Thursday, May 30, 2013 11:33:56 AM Bjorn Helgaas wrote:
->>> On Tue, May 14, 2013 at 09:00:39PM +0800, Jiang Liu wrote:
->>>> Use acpi_handle_print() and pr_xxx() to print messages in pci_root.c.
->>>>
->>>> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
->>>> Cc: Len Brown <lenb@kernel.org>
->>>> Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
->>>> Cc: linux-acpi@vger.kernel.org
->>>> Cc: linux-kernel@vger.kernel.org
->>>> ---
->>>>  drivers/acpi/pci_root.c | 70 ++++++++++++++++++++++---------------------------
->>>>  1 file changed, 32 insertions(+), 38 deletions(-)
->>>>
->>>> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
->>>> index 91ddfd6..21dda5a 100644
->>>> --- a/drivers/acpi/pci_root.c
->>>> +++ b/drivers/acpi/pci_root.c
->>>> @@ -379,23 +379,24 @@ static int acpi_pci_root_add(struct acpi_device *device,
->>>>     struct acpi_pci_root *root;
->>>>     u32 flags, base_flags;
->>>>     bool is_osc_granted = false;
->>>> +   acpi_handle handle = device->handle;
->>>>
->>>>     root = kzalloc(sizeof(struct acpi_pci_root), GFP_KERNEL);
->>>>     if (!root)
->>>>             return -ENOMEM;
->>>>
->>>>     segment = 0;
->>>> -   status = acpi_evaluate_integer(device->handle, METHOD_NAME__SEG, NULL,
->>>> +   status = acpi_evaluate_integer(handle, METHOD_NAME__SEG, NULL,
->>>>                                    &segment);
->>>>     if (ACPI_FAILURE(status) && status != AE_NOT_FOUND) {
->>>> -           printk(KERN_ERR PREFIX "can't evaluate _SEG\n");
->>>> +           acpi_handle_err(handle, "can't evaluate _SEG\n");
->>>
->>> I previously acked this, but I noticed that we are making a mix of
->>> dev_printk() and acpi_handle_printk() here.  The difference is like this:
->>>
->>>   acpi PNP0A08:00: ACPI _OSC support notification failed, disabling PCIe ASPM
->>>   ACPI: \_SB_.PCI0: ACPI _OSC support notification failed, disabling PCIe ASPM
->>>
->>> I'm not sure which direction we should go here, but I think we should
->>> choose one or the other and use it consistently.  Personally, I think the
->>> internal DSDT names should be available *somewhere*, but not necessarily
->>> used in run-of-the-mill chit-chat.  For that reason, I prefer
->>> dev_printk(), though I have the feeling that Rafael is moving toward
->>> eliminating the struct acpi_device, so he might prefer
->>> acpi_handle_printk().
->>
->> I really don't care that much, but I agree that they should be used
->> consistently.
-> Hi Bjorn and Rafael,
->      I will work on this tomorrow. In some cases, only handle is
-> available, so we
-> could only use acpi_handle_printk(). So I think the directly may be:
-> use dev_printk()
-> if possible, otherwise use acpi_handle_printk() instead. Is that the
-> right way to go?
+The function aer_hest_parse() is called to determine if the given
+PCI device is firmware first or not. The code loops through each
+section of the HEST table to look for a match. The bug is that
+the function always returns whether the last HEST section is firmware
+first. The fix stops the iteration once the info.firmware_first
+variable is set.  This is similar to how the function aer_hest_parse_aff()
+stops the iteration.
 
-That sounds good to me.
+Signed-off-by: Betty Dall <betty.dall@hp.com>
+---
 
-Bjorn
+ drivers/pci/pcie/aer/aerdrv_acpi.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
+
+
+diff --git a/drivers/pci/pcie/aer/aerdrv_acpi.c b/drivers/pci/pcie/aer/aerdrv_acpi.c
+index 5194a7d..39b8671 100644
+--- a/drivers/pci/pcie/aer/aerdrv_acpi.c
++++ b/drivers/pci/pcie/aer/aerdrv_acpi.c
+@@ -42,6 +42,9 @@ static int aer_hest_parse(struct acpi_hest_header *hest_hdr, void *data)
+ 	u8 bridge = 0;
+ 	int ff = 0;
+ 
++	if (info->firmware_first)
++		return 0;
++
+ 	switch (hest_hdr->type) {
+ 	case ACPI_HEST_TYPE_AER_ROOT_PORT:
+ 		pcie_type = PCI_EXP_TYPE_ROOT_PORT;
