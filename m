@@ -1,60 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:59143 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752256Ab3EQJ4g (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 May 2013 05:56:36 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, Hanjun Guo <guohanjun@huawei.com>,
-	<jiang.liu@huawei.com>, Yijing Wang <wangyijing@huawei.com>,
-	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Feng Tang <feng.tang@intel.com>
-Subject: [PATCH -v2 1/7] PCI/X86: fix always use info->res[0] to store _CRS resource when pci=nocrs set
-Date: Fri, 17 May 2013 17:55:44 +0800
-Message-ID: <1368784550-18332-2-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1368784550-18332-1-git-send-email-wangyijing@huawei.com>
-References: <1368784550-18332-1-git-send-email-wangyijing@huawei.com>
+Received: from mail-pb0-f42.google.com ([209.85.160.42]:48736 "EHLO
+	mail-pb0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934327Ab3E1OtE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 May 2013 10:49:04 -0400
+Message-ID: <51A4C3D9.7070402@gmail.com>
+Date: Tue, 28 May 2013 22:48:57 +0800
+From: Liu Jiang <liuj97@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Yinghai Lu <yinghai@kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Donald Dutile <ddutile@redhat.com>,
+	Ram Pai <linuxram@us.ibm.com>
+Subject: Re: [PATCH v3, part1 09/10] PCI, IOV: simplify IOV implementation
+References: <1369489718-25869-1-git-send-email-jiang.liu@huawei.com> <1369489718-25869-10-git-send-email-jiang.liu@huawei.com> <CAE9FiQX-3=U7YpEnRsL46Kn0Dyvk_+A1NC7UYijHe91KWjrKDA@mail.gmail.com>
+In-Reply-To: <CAE9FiQX-3=U7YpEnRsL46Kn0Dyvk_+A1NC7UYijHe91KWjrKDA@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We should increase info->res_num before checking pci_use_crs return, otherwise
-only the res[0] of pci_root_info will be used during setup_resource() when
-pci=nocrs set. And the old resource value will be overwritten by new resource item.
+On Tue 28 May 2013 10:00:26 AM CST, Yinghai Lu wrote:
+> On Sat, May 25, 2013 at 6:48 AM, Jiang Liu <liuj97@gmail.com> wrote:
+>> Trivial changes to IOV:
+....
+>> @@ -136,7 +123,8 @@ failed1:
+>>         pci_dev_put(dev);
+>>         mutex_lock(&iov->dev->sriov->lock);
+>>         pci_stop_and_remove_bus_device(virtfn);
+>> -       virtfn_remove_bus(dev->bus, virtfn_bus(dev, id));
+>> +       virtfn_remove_bus(dev->bus, bus);
+>> +failed0:
+>
+> need to swap above two lines. otherwise virtual bus could not be removed.
+Hi Yinghai,
+      Good catch, will merge following patch in next version.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: Jiang Liu <liuj97@gmail.com>
-Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Feng Tang <feng.tang@intel.com>
----
- arch/x86/pci/acpi.c |    7 ++-----
- 1 files changed, 2 insertions(+), 5 deletions(-)
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index 3e33499..bf0a32e 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -123,8 +123,9 @@ failed1:
+        pci_dev_put(dev);
+        mutex_lock(&iov->dev->sriov->lock);
+        pci_stop_and_remove_bus_device(virtfn);
+-       virtfn_remove_bus(dev->bus, bus);
+ failed0:
++       if (bus)
++               virtfn_remove_bus(dev->bus, bus);
+        mutex_unlock(&iov->dev->sriov->lock);
 
-diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index 3e72425..662dfdf 100644
---- a/arch/x86/pci/acpi.c
-+++ b/arch/x86/pci/acpi.c
-@@ -324,14 +324,11 @@ setup_resource(struct acpi_resource *acpi_res, void *data)
- 	res->start = start;
- 	res->end = end;
- 	info->res_offset[info->res_num] = addr.translation_offset;
-+	info->res_num++;
- 
--	if (!pci_use_crs) {
-+	if (!pci_use_crs)
- 		dev_printk(KERN_DEBUG, &info->bridge->dev,
- 			   "host bridge window %pR (ignored)\n", res);
--		return AE_OK;
--	}
--
--	info->res_num++;
- 
- 	return AE_OK;
- }
--- 
-1.7.1
-
-
+        return rc;
