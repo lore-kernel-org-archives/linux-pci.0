@@ -1,78 +1,123 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:60396 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752926Ab3EPQKR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 May 2013 12:10:17 -0400
-Date: Thu, 16 May 2013 18:08:50 +0200
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Jason Cooper <jason@lakedaemon.net>
-Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Maen Suleiman <maen@marvell.com>, linux-pci@vger.kernel.org,
-	devicetree-discuss@lists.ozlabs.org,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Olof Johansson <olof@lixom.net>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
+Received: from iolanthe.rowland.org ([192.131.102.54]:38956 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S966303Ab3E2OvM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 May 2013 10:51:12 -0400
+Date: Wed, 29 May 2013 10:51:11 -0400 (EDT)
+From: Alan Stern <stern@rowland.harvard.edu>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+cc: Linux PM list <linux-pm@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Michael Opdenacker <michael.opdenacker@free-electrons.com>
-Subject: Re: [PATCHv9 7/9] pci: PCIe driver for Marvell Armada 370/XP
- systems
-Message-ID: <20130516180850.3622e1a8@skate>
-In-Reply-To: <20130516155617.GH6563@titan.lakedaemon.net>
-References: <1368624323-24311-1-git-send-email-thomas.petazzoni@free-electrons.com>
-	<1368624323-24311-8-git-send-email-thomas.petazzoni@free-electrons.com>
-	<20130516093312.GB2459@localhost>
-	<20130516154031.GF6563@titan.lakedaemon.net>
-	<20130516174903.3a7a07ef@skate>
-	<20130516155617.GH6563@titan.lakedaemon.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Kevin Hilman <khilman@linaro.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: Re: [PATCH RFC] PM / Runtime: Rework the "runtime idle" helper
+ routine
+In-Reply-To: <1463685.qFyr66vqF2@vostro.rjw.lan>
+Message-ID: <Pine.LNX.4.44L0.1305291023170.1473-100000@iolanthe.rowland.org>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Jason Cooper,
+On Wed, 29 May 2013, Rafael J. Wysocki wrote:
 
-On Thu, 16 May 2013 11:56:17 -0400, Jason Cooper wrote:
+> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> 
+> The "runtime idle" helper routine, rpm_idle(), currently ignores
+> return values from .runtime_idle() callbacks executed by it.
+> 
+> However, it turns out that many subsystems use the generic idle
+> callback routine pm_generic_runtime_idle() which checks the return
+> value of the driver's callback and executes pm_runtime_suspend() for
+> the device unless that value is different from 0.  If that logic is
+> moved to rpm_idle() instead, pm_generic_runtime_idle() can be dropped
+> and its users will not need any .runtime_idle() callbacks any more.
 
-> > > > Building this showed a warning here. It seems you forgot
-> > > > to mark this one as __init.
-> > > 
-> > > Thomas, I'll fix this up when I pull this in, no need to resend. :)
-> > 
-> > I'll resend, because beyond this function pointed by Ezequiel, there
-> > are two other functions that can be marked __init. The one pointed by
-> > Ezequiel is important because it causes a section mismatch
-> > when !CONFIG_MODULES, because in this case platform_driver_probe() is
-> > __init (and this explains what I wasn't seeing the warning, since I'm
-> > building CONFIG_MODULES=y). The two other functions are more cosmetic,
-> > but good to have as well.
-> > 
-> > It would already been sent if git hadn't decided to do a 'git gc' right
-> > after my rebase. It's been gc-ing for quite some time now...
-> 
-> Dear boss,
-> 
-> I am in desperate need of a 500GB SSD on which to do my kernel work.
-> 
-> Thanks,
-> 
-> Kranky Kernel Developer
-> 
-> hehehe...
+Since you're making this change, wouldn't it be a good idea to adopt
+Mika's original suggestion and turn on the RPM_AUTO bit in rpmflags
+when the use_autosuspend flag is set?
 
-Adding boss in the Cc list :-)
+> Moreover, the PCI subsystem's .runtime_idle() routine,
+> pci_pm_runtime_idle(), works in analogy with the generic one and if
+> rpm_idle() calls rpm_suspend() after 0 has been returned by the
+> .runtime_idle() callback executed by it, that routine will not be
+> necessary any more and may be dropped.
 
-Thanks!
+See below.
 
-Thomas
--- 
-Thomas Petazzoni, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
+What about cases where the runtime-idle callback does
+rpm_schedule_suspend or rpm_request_suspend?  You'd have to make sure
+that it returns -EBUSY in such cases.  Did you audit for this?
+
+> Index: linux-pm/Documentation/power/runtime_pm.txt
+> ===================================================================
+> --- linux-pm.orig/Documentation/power/runtime_pm.txt
+> +++ linux-pm/Documentation/power/runtime_pm.txt
+> @@ -660,11 +660,6 @@ Subsystems may wish to conserve code spa
+>  management callbacks provided by the PM core, defined in
+>  driver/base/power/generic_ops.c:
+>  
+> -  int pm_generic_runtime_idle(struct device *dev);
+> -    - invoke the ->runtime_idle() callback provided by the driver of this
+> -      device, if defined, and call pm_runtime_suspend() for this device if the
+> -      return value is 0 or the callback is not defined
+> -
+
+The documentation for the runtime-idle callback needs to be updated too.
+
+> Index: linux-pm/drivers/pci/pci-driver.c
+> ===================================================================
+> --- linux-pm.orig/drivers/pci/pci-driver.c
+> +++ linux-pm/drivers/pci/pci-driver.c
+> @@ -1046,32 +1046,6 @@ static int pci_pm_runtime_resume(struct
+>  	return rc;
+>  }
+>  
+> -static int pci_pm_runtime_idle(struct device *dev)
+> -{
+> -	struct pci_dev *pci_dev = to_pci_dev(dev);
+> -	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
+> -
+> -	/*
+> -	 * If pci_dev->driver is not set (unbound), the device should
+> -	 * always remain in D0 regardless of the runtime PM status
+> -	 */
+> -	if (!pci_dev->driver)
+> -		goto out;
+> -
+> -	if (!pm)
+> -		return -ENOSYS;
+> -
+> -	if (pm->runtime_idle) {
+> -		int ret = pm->runtime_idle(dev);
+> -		if (ret)
+> -			return ret;
+> -	}
+> -
+> -out:
+> -	pm_runtime_suspend(dev);
+> -	return 0;
+> -}
+
+This may not be a safe change, because now the behavior is different
+in the case where dev->driver is set but pci_dev->driver isn't.  The
+difference is that you will now call the driver's runtime-idle
+handler, whereas the existing code doesn't.
+
+In fact, this may turn out to be a more widespread problem.  
+dev->driver gets set before the probe routine is called, and it gets
+cleared after the remove routine is called.  A runtime PM callback to
+the driver during these windows isn't a good idea.  Erasing subsystems'
+runtime_idle handlers, as this patch does, makes it impossible for the
+subsystems to protect against this.
+
+The patch also needs to update
+drivers/usb/core/driver.c:usb_runtime_idle().  If you include Mika's
+suggestion, the routine can be removed entirely.
+
+Alan Stern
+
