@@ -1,116 +1,44 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f177.google.com ([209.85.223.177]:36724 "EHLO
-	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759719Ab3EWWQ7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 May 2013 18:16:59 -0400
-Received: by mail-ie0-f177.google.com with SMTP id 9so9756606iec.8
-        for <linux-pci@vger.kernel.org>; Thu, 23 May 2013 15:16:59 -0700 (PDT)
+Received: from mail-la0-f53.google.com ([209.85.215.53]:52017 "EHLO
+	mail-la0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754614Ab3E2RaO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 May 2013 13:30:14 -0400
+Received: by mail-la0-f53.google.com with SMTP id ea20so8871686lab.40
+        for <linux-pci@vger.kernel.org>; Wed, 29 May 2013 10:30:12 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1369344196.3870.35.camel@pasglop>
-References: <CAE9FiQX=h4H1gcbW=EfQo_ZtAgHGOZ2GxVxLG59C1iMH+qgH2g@mail.gmail.com>
-	<1367732090.11982.38.camel@pasglop>
-	<CAE9FiQUN3qqVmdw_EdOC-JZGc219M3tu=roOX98xns+77LJhMw@mail.gmail.com>
-	<1367740336.11982.41.camel@pasglop>
-	<51871088.4594420a.0ccc.7300SMTPIN_ADDED_BROKEN@mx.google.com>
-	<CAE9FiQXGUOM_h_X5tdGbkiuZGZkiFigSLbbftx3YXybFBg6trg@mail.gmail.com>
-	<518786a7.64bbec0a.58a0.1f6bSMTPIN_ADDED_BROKEN@mx.google.com>
-	<CAErSpo5MJCoaof=heFM4vLxuWz8pFqsyXAC356jZ7rbRvSOt9g@mail.gmail.com>
-	<CAE9FiQWsZXfkSSVFzee4-J4bUDP8DdG=y9-k2du+ek90StDvNA@mail.gmail.com>
-	<CAE9FiQXw=Q9hDWMS3kx8=G0eSqo2keKh-VP3=LWZ31PfXmrAmg@mail.gmail.com>
-	<519dcfbe.89e9420a.4934.488bSMTPIN_ADDED_BROKEN@mx.google.com>
-	<CAE9FiQW==Zvwv976-xjtRFj70JWoZW94yQyM0NMTvMpR-yDG9Q@mail.gmail.com>
-	<CAErSpo5ASyYvRJgA3TDt7A5xtxL0sqopfAxbnJwDL=z_2hDJag@mail.gmail.com>
-	<CAE9FiQX8o97RY-Bd9t1vj+gm_Uri0v_hAUwecaNoF2GwGGTNyA@mail.gmail.com>
-	<CAErSpo5vY-DY9_bLWbM5UNrSZdO5dyASx1hLGMQg-ypgZHXLLg@mail.gmail.com>
-	<CAE9FiQWyEhdQGjC+hiGxOHdHwZoajfwfcgp26wivqL0s62NPkA@mail.gmail.com>
-	<1369344196.3870.35.camel@pasglop>
-Date: Thu, 23 May 2013 15:16:59 -0700
-Message-ID: <CAE9FiQUS9rUfhH=J5pgynO6Xhrnn8Rx4pHeZ=p0dHm0fUoHd3A@mail.gmail.com>
-Subject: Re: Resource assignment oddities
-From: Yinghai Lu <yinghai@kernel.org>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Reply-To: pricardofc@ipfn.ist.utl.pt
+Date: Wed, 29 May 2013 18:30:12 +0100
+Message-ID: <CAH9N0t-DOC0iOMjtHUTznCzk=C7RpbdBOhYR=mK1zaAmeH-Rqw@mail.gmail.com>
+Subject: Re: Pcie Linux HotPlug Driver
+From: Paulo Fortuna Carvalho <pricardofc@ipfn.ist.utl.pt>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Cc: linux-pci@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 23, 2013 at 2:23 PM, Benjamin Herrenschmidt
-<benh@kernel.crashing.org> wrote:
-> On Thu, 2013-05-23 at 14:00 -0700, Yinghai Lu wrote:
->> Yes, that is what patch try to do. Keep the mmio allocation from first
->> try, and only retry with io port.
->
-> Can you describe more precisely what happens with the *current* code ?
->
-> Ie. The first pass allocates my device MMIO regions fine. The second
-> pass them spew some error messages about some mem allocation. I can
-> still observe *something* being assigned to devices and in the (limited)
-> setup I've been able to test with, so far, the devices seemed to still
-> work, so I don't have a good grasp of the extent of the risk here.
+Hello Yinghai and Bjorn,
+Issue solved.
+You were correct. The module fakephp.ko was not loaded.
+Now everything works ok and device driver need not to be changed.
+As you said is a normal PCI Device Driver.
 
-after bus_size_bridge, will have two list
-a. head that is for must-have resource
-b. realloc_head that is for optional size.
+Now I want that that when ATCA card is without energy ( 11:00.0 DPIO
+module: PLD APPLICATIONS Device 6014 (rev ff) )
 
-then __assign_resources_sorted:
-in the first try,
-clone head list to saved list,  then update head list with optional size
-from realloc_head list. and try to assign resources, fail resources
-will be added to local_fail_head.
+the command:
+echo 0 > /sys/bus/pci/slots/0000*/power is automatically executed.
 
-retry:
-if local_fail_head is empty, mean must+optional are all allocated, so done.
+At the moment i'm doing it manually and after that my atca card driver
+is removed.
 
-if local_fail_head is not empty, will restore head list from saved list.
-then try to assign resource, fail resources will be add to global resources.
-then try to extend (reassign) resources with optional size from realloc_size.
+And when i give energy to the ATCA card i have to manually perform pci
+bus re-enumeration
+with command:
+echo 1 > /sys/bus/pci/rescan
 
->
-> Is there a chance that this failed "second pass" actually prevents
-> proper allocation of resources ?
+and the ATCA card driver is automatically inserted. How can
+re-enumeration be done automatically?
 
-failed "second pass", should only fail to extend optional resources
-like resource
-for SRIOV, because fail to allocate resource compactly.
-
-in your case, "second pass" assign must-have, then extend optional way.
-
-pci 0001:00:00.0: BAR 8: assigned [mem 0x3d01080000000-0x3d01081ffffff]
-pci 0001:00:00.0: BAR 9: assigned [mem 0x3d01082000000-0x3d010837fffff pref]
-pci 0001:00:00.0: BAR 7: can't assign io (size 0x3000)  ==> cause first try fail
-pci 0001:00:00.0: BAR 8: assigned [mem 0x3d01080000000-0x3d010817fffff]
-pci 0001:00:00.0: BAR 9: assigned [mem 0x3d01081800000-0x3d010827fffff pref]
-===> go extend now
-pci 0001:00:00.0: BAR 8: reassigned [mem 0x3d01082800000-0x3d010847fffff]
-pci 0001:00:00.0: BAR 9: reassigned [mem 0x3d01080000000-0x3d010817fffff pref]
-==> luckly it will extend ok, but it will stay in the MIDDLE.
-
-then come the poor 0001:01:00.0
-
-pci 0001:01:00.0: BAR 8: assigned [mem 0x3d01082800000-0x3d01083ffffff]
-pci 0001:01:00.0: BAR 9: assigned [mem 0x3d01080000000-0x3d010817fffff pref]
-pci 0001:01:00.0: BAR 0: assigned [mem 0x3d01084000000-0x3d0108403ffff]
-pci 0001:01:00.0: BAR 7: can't assign io (size 0x3000) ===> cause first try fail
-pci 0001:01:00.0: BAR 8: assigned [mem 0x3d01082800000-0x3d010837fffff]
-pci 0001:01:00.0: BAR 9: assigned [mem 0x3d01080000000-0x3d01080ffffff pref]
-pci 0001:01:00.0: BAR 0: assigned [mem 0x3d01083800000-0x3d0108383ffff]
-===> go extend optional now
-pci 0001:01:00.0: BAR 8: can't assign mem (size 0x1000000)
-pci 0001:01:00.0: failed to add 800000 res[8]=[mem
-0x3d01082800000-0x3d010837fffff]
-pci 0001:01:00.0: BAR 9: reassigned [mem 0x3d01080000000-0x3d010817fffff pref]
-pci 0001:01:00.0: BAR 7: can't assign io (size 0x3000)
-===> so BAR8 can not extend now...because other lay on the middle...
-
-
-So we need to patch that will prevent us to fall into "allocate must
-and extend it"
-trap as it will not allocate resource efficiently.
-
-otherwise in your case, devices pci0001:01:00.0 will have problem to use SRIOV.
-
-Thanks.
-
-Yinghai
+Paulo.
