@@ -1,46 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:33250 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751238Ab3EQFg1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 17 May 2013 01:36:27 -0400
-Message-ID: <1368768974.20726.1.camel@pasglop>
-Subject: Re: Resource assignment oddities
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Gavin Shan <shangw@linux.vnet.ibm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 17 May 2013 15:36:14 +1000
-In-Reply-To: <CAE9FiQUc2q0GfVumVrp3_ba0q6N_a_WxjKhMWbyqbLfO=WGaFQ@mail.gmail.com>
-References: <1367712653.11982.19.camel@pasglop>
-	 <1367712932.11982.20.camel@pasglop>
-	 <CAE9FiQX=h4H1gcbW=EfQo_ZtAgHGOZ2GxVxLG59C1iMH+qgH2g@mail.gmail.com>
-	 <1367732090.11982.38.camel@pasglop>
-	 <CAE9FiQUN3qqVmdw_EdOC-JZGc219M3tu=roOX98xns+77LJhMw@mail.gmail.com>
-	 <1367740336.11982.41.camel@pasglop>
-	 <51871088.4594420a.0ccc.7300SMTPIN_ADDED_BROKEN@mx.google.com>
-	 <CAE9FiQXGUOM_h_X5tdGbkiuZGZkiFigSLbbftx3YXybFBg6trg@mail.gmail.com>
-	 <1367837311.15842.31.camel@pasglop>
-	 <CAE9FiQU=ZEfvVKeQgVOa0jeG5smJrKRaeLTOckR=v2vzTyTvLw@mail.gmail.com>
-	 <5188b791.a110420a.0bea.077eSMTPIN_ADDED_BROKEN@mx.google.com>
-	 <CAE9FiQUc2q0GfVumVrp3_ba0q6N_a_WxjKhMWbyqbLfO=WGaFQ@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from hqemgate16.nvidia.com ([216.228.121.65]:10336 "EHLO
+	hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965463Ab3E2KKW convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 May 2013 06:10:22 -0400
+From: Jay Agarwal <jagarwal@nvidia.com>
+To: 'Stephen Warren' <swarren@wwwdotorg.org>,
+	"'thierry.reding@avionic-design.de'"
+	<thierry.reding@avionic-design.de>
+CC: "'linux@arm.linux.org.uk'" <linux@arm.linux.org.uk>,
+	"'bhelgaas@google.com'" <bhelgaas@google.com>,
+	"'olof@lixom.net'" <olof@lixom.net>,
+	"'mturquette@linaro.org'" <mturquette@linaro.org>,
+	"'linux-arm-kernel@lists.infradead.org'"
+	<linux-arm-kernel@lists.infradead.org>,
+	"'linux-tegra@vger.kernel.org'" <linux-tegra@vger.kernel.org>,
+	"'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>,
+	"'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>
+Date: Wed, 29 May 2013 15:40:17 +0530
+Subject: RE: [PATCH 4/4] ARM: tegra: pcie: Enable PCIe controller on Cardhu
+Message-ID: <C79B248886DD134989C8FF6B096A91AB91B616BE9B@BGMAIL01.nvidia.com>
+References: <1368010660-31465-1-git-send-email-jagarwal@nvidia.com>
+ <1368010660-31465-4-git-send-email-jagarwal@nvidia.com>
+ <518A8596.7070702@wwwdotorg.org>
+ <C79B248886DD134989C8FF6B096A91AB91B4886B5D@BGMAIL01.nvidia.com>
+ <C79B248886DD134989C8FF6B096A91AB91B4886B6C@BGMAIL01.nvidia.com>
+In-Reply-To: <C79B248886DD134989C8FF6B096A91AB91B4886B6C@BGMAIL01.nvidia.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2013-05-07 at 15:21 -0700, Yinghai Lu wrote:
-> I just sent v3, please test that.
+> > > So, if I apply this series, I do see the PCIe bridge and Ethernet
+> > > device get enumerated, but I don't see the USB3 controller get
+> > > enumerated. I believe that is a PCIe device behind the same bridge
+> > > on the
+> > same Tegra PCIe port.
+> > > Shouldn't this device show up?
+> > I have also reproduced this problem. I see somehow no non-
+> > prefetchable memory is assigned to any of pcie devices.
+> > Probably that is the reason for USB3 (pci 0000:04:00.0) not getting
+> > enumerated since it uses only non-prefetchable memory.
 > 
-> That should be less invasive for v3.10. As it will skip adding failed
-> resource to failed list when the resource is IORESOURCE_IO, and bus
-> does not have IORESOURCE_IO.
+> 1. Bus4(on which usb3 device resides) always return 0xffffffff from it's
+> config space. which means device is not present?
+> 2. That's why it is not assigned any resources and hence no usb3 probe
+> happens.
+> 3. But same bus does return valid info like vendor/device id etc from it's
+> config space in downstream kernel and hence usb3 probe does happen.
+> 
+> Thierry, Stephen,
+> 4. Any idea why bus4 should return 0xffffffff values in upstream kernel?
+> Anything missing?
+> 5. Also, how config space of all pcie devices are mapped? I mean if I change
+> the config space offset in dts file, then also I find correct vendor/device id
+> etc for bus0/device0/fun0.
+>     So how this mapping happens that even after changing the config space
+> offset in PCIe address space, it always finds correct vendor/device id.
 
-Any news about merging this ?
-
-Thanks !
-
-Cheers,
-Ben.
-
-
+ Any idea on this?
