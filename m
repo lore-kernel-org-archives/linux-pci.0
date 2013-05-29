@@ -1,136 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:40403 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758717Ab3E1DPV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 May 2013 23:15:21 -0400
-Message-ID: <51A42137.9090908@huawei.com>
-Date: Tue, 28 May 2013 11:15:03 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from mms3.broadcom.com ([216.31.210.19]:2372 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932812Ab3E2XWm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 29 May 2013 19:22:42 -0400
+Subject: Re: [PATCH] tg3: remove redundant pm init code
+From: "Michael Chan" <mchan@broadcom.com>
+To: "Yijing Wang" <wangyijing@huawei.com>
+cc: "Nithin Nayak Sujir" <nsujir@broadcom.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	netdev@vger.kernel.org, "Hanjun Guo" <guohanjun@huawei.com>,
+	"Jiang Liu" <liuj97@gmail.com>
+In-Reply-To: <1369818032-36272-1-git-send-email-wangyijing@huawei.com>
+References: <1369818032-36272-1-git-send-email-wangyijing@huawei.com>
+Date: Wed, 29 May 2013 23:22:38 +0000
+Message-ID: <1369869759.8868.52.camel@LTIRV-MCHAN1.corp.ad.broadcom.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>, Jon Mason <jdmason@kudzu.us>
-CC: Yijing Wang <wangyijing@huawei.com>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	Yijing Wang <wangyijing0307@gmail.com>,
-	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>,
-	Joe Jin <joe.jin@oracle.com>
-Subject: Re: [PATCH] PCI: update device mps when doing pci hotplug
-References: <1360036520-31032-1-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1360036520-31032-1-git-send-email-wangyijing@huawei.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain;
+ charset=cp1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn and Jon,
-   I'm sorry to disturb you. This patch is sent so long, but nobody seems had comment about it.
-Do you have any comment with this patch?
-
-This patch try to update device mps in following case:
-1) target device under root port
-   Because root port can split TLP, so target device mps greatr than root port mps is ok.
-   But if root port mps greater than target device mps, it's bad, because target device cannot
-   receive TLP payload size greater than its MPS. So if a target device under a root port, I think
-   we should assign its mps greater than or equal root port mps.
-2) target device under non root port
-   We assume the target device both is a transmitter and receiver, so the safest way is to assign target
-   device mps equal to its parent device.
-
-Any comments about this patch is welcome!
-
-Thanks!
-Yijing.
-
-On 2013/2/5 11:55, Yijing Wang wrote:
-> Currently we dont't update device's mps vaule when doing
-> pci device hot-add. The hot-added device's mps will be set
-> to default value (128B). But the upstream port device's mps
-> may be larger than 128B which was set by firmware during
-> system bootup. In this case the new added device may not
-> work normally.
+On Wed, 2013-05-29 at 17:00 +0800, Yijing Wang wrote: 
+> Pci_enable_device() will set device pm state to D0, so
+> it's no need to do it again in tg3_init_one().
 > 
-> The reference discussion at
-> http://marc.info/?l=linux-pci&m=135420434508910&w=2
-> and
-> http://marc.info/?l=linux-pci&m=134815603407842&w=2
-> 
-> Reported-by: Joe Jin <joe.jin@oracle.com>
-> Reported-by: Yijing Wang <wangyijing@huawei.com>
 > Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> Cc: Jon Mason <jdmason@kudzu.us>
+
+Acked-by: Michael Chan <mchan@broadcom.com>
+
 > ---
->  drivers/pci/probe.c |   49 +++++++++++++++++++++++++++++++++++++++++++++++++
->  1 files changed, 49 insertions(+), 0 deletions(-)
+>  drivers/net/ethernet/broadcom/tg3.c |   20 +-------------------
+>  1 files changed, 1 insertions(+), 19 deletions(-)
 > 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index bbe4be7..57d9a5b 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1556,6 +1556,52 @@ static int pcie_bus_configure_set(struct pci_dev *dev, void *data)
->  	return 0;
->  }
+> diff --git a/drivers/net/ethernet/broadcom/tg3.c b/drivers/net/ethernet/broadcom/tg3.c
+> index 728d42a..1396ab3 100644
+> --- a/drivers/net/ethernet/broadcom/tg3.c
+> +++ b/drivers/net/ethernet/broadcom/tg3.c
+> @@ -17042,25 +17042,10 @@ static int tg3_init_one(struct pci_dev *pdev,
 >  
-> +static int pcie_bus_update_set(struct pci_dev *dev, void *data)
-> +{
-> +	int mps, p_mps;
-> +
-> +	if (!pci_is_pcie(dev) || !dev->bus->self)
-> +		return 0;
-> +
-> +	mps = pcie_get_mps(dev);
-> +	p_mps = pcie_get_mps(dev->bus->self);
-> +
-> +	if (pci_pcie_type(dev->bus->self) != PCI_EXP_TYPE_ROOT_PORT) {
-> +		/* update mps when current device mps is not equal to upstream mps */
-> +		if (mps != p_mps)
-> +			goto update;
-> +	} else {
-> +		/* update mps when current device mps is smaller than upstream mps */
-> +		if (mps < p_mps)
-> +			goto update;
-> +	}
-> +
-> +	return 0;
-> +
-> +update:
-> +	/* If current mpss is lager than upstream, use upstream mps to update
-> +	 * current mps, otherwise print warning info.
-> +	 */
-> +	if ((128 << dev->pcie_mpss) >= p_mps)
-> +		pcie_write_mps(dev, p_mps);
-> +	else
-> +		dev_warn(&dev->dev, "MPS %d MPSS %d both smaller than upstream MPS %d\n"
-> +				"If necessary, use \"pci=pcie_bus_peer2peer\" boot parameter to avoid this problem\n",
-> +				mps, 128 << dev->pcie_mpss, p_mps);
-> +	return 0;
-> +}
-> +
-> +static void pcie_bus_update_setting(struct pci_bus *bus)
-> +{
-> +
-> +	/*
-> +	 * After hot added a pci device, the device's mps will set to default
-> +	 * vaule(128 bytes). But the upstream port mps may be larger than 128B.
-> +	 * In this case, we should update this device's mps for better performance.
-> +	 */
-> +	pci_walk_bus(bus, pcie_bus_update_set, NULL);
-> +}
-> +
->  /* pcie_bus_configure_settings requires that pci_walk_bus work in a top-down,
->   * parents then children fashion.  If this changes, then this code will not
->   * work as designed.
-> @@ -1566,6 +1612,9 @@ void pcie_bus_configure_settings(struct pci_bus *bus, u8 mpss)
+>  	pci_set_master(pdev);
 >  
->  	if (!pci_is_pcie(bus->self))
->  		return;
-> +
-> +	/* update mps setting for newly hot added device */
-> +	pcie_bus_update_setting(bus);
+> -	/* Find power-management capability. */
+> -	pm_cap = pci_find_capability(pdev, PCI_CAP_ID_PM);
+> -	if (pm_cap == 0) {
+> -		dev_err(&pdev->dev,
+> -			"Cannot find Power Management capability, aborting\n");
+> -		err = -EIO;
+> -		goto err_out_free_res;
+> -	}
+> -
+> -	err = pci_set_power_state(pdev, PCI_D0);
+> -	if (err) {
+> -		dev_err(&pdev->dev, "Transition to D0 failed, aborting\n");
+> -		goto err_out_free_res;
+> -	}
+> -
+>  	dev = alloc_etherdev_mq(sizeof(*tp), TG3_IRQ_MAX_VECS);
+>  	if (!dev) {
+>  		err = -ENOMEM;
+> -		goto err_out_power_down;
+> +		goto err_out_free_res;
+>  	}
 >  
->  	if (pcie_bus_config == PCIE_BUS_TUNE_OFF)
->  		return;
-> 
+>  	SET_NETDEV_DEV(dev, &pdev->dev);
+> @@ -17406,9 +17391,6 @@ err_out_iounmap:
+>  err_out_free_dev:
+>  	free_netdev(dev);
+>  
+> -err_out_power_down:
+> -	pci_set_power_state(pdev, PCI_D3hot);
+> -
+>  err_out_free_res:
+>  	pci_release_regions(pdev);
+>  
 
 
--- 
-Thanks!
-Yijing
 
