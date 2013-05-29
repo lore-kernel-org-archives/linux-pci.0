@@ -1,95 +1,69 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Corentin Chary <corentin.chary@gmail.com>,
-	Matthew Garrett <matthew.garrett@nebula.com>,
-	acpi4asus-user@lists.sourceforge.net,
-	platform-driver-x86@vger.kernel.org
-Subject: [PATCH v3, part2 19/20] PCI, asus-wmi: use hotplug-safe iterators to walk PCI buses
-Date: Sun, 26 May 2013 23:53:16 +0800
-Message-Id: <1369583597-3801-20-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1369583597-3801-1-git-send-email-jiang.liu@huawei.com>
-References: <1369583597-3801-1-git-send-email-jiang.liu@huawei.com>
+From: Yijing Wang <wangyijing@huawei.com>
+To: Nithin Nayak Sujir <nsujir@broadcom.com>,
+	Michael Chan <mchan@broadcom.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<netdev@vger.kernel.org>, Hanjun Guo <guohanjun@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH] tg3: remove redundant pm init code
+Date: Wed, 29 May 2013 17:00:32 +0800
+Message-ID: <1369818032-36272-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Enhance asus-wmi drvier to use hotplug-safe iterators to walk PCI buses.
+Pci_enable_device() will set device pm state to D0, so
+it's no need to do it again in tg3_init_one().
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Cc: Corentin Chary <corentin.chary@gmail.com>
-Cc: Matthew Garrett <matthew.garrett@nebula.com>
-Cc: acpi4asus-user@lists.sourceforge.net
-Cc: platform-driver-x86@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 ---
- drivers/platform/x86/asus-wmi.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+ drivers/net/ethernet/broadcom/tg3.c |   20 +-------------------
+ 1 files changed, 1 insertions(+), 19 deletions(-)
 
-diff --git a/drivers/platform/x86/asus-wmi.c b/drivers/platform/x86/asus-wmi.c
-index c11b242..f92db4c 100644
---- a/drivers/platform/x86/asus-wmi.c
-+++ b/drivers/platform/x86/asus-wmi.c
-@@ -596,7 +596,7 @@ static bool asus_wlan_rfkill_blocked(struct asus_wmi *asus)
- static void asus_rfkill_hotplug(struct asus_wmi *asus)
- {
- 	struct pci_dev *dev;
--	struct pci_bus *bus;
-+	struct pci_bus *bus = NULL;
- 	bool blocked;
- 	bool absent;
- 	u32 l;
-@@ -611,7 +611,7 @@ static void asus_rfkill_hotplug(struct asus_wmi *asus)
- 		rfkill_set_sw_state(asus->wlan.rfkill, blocked);
+diff --git a/drivers/net/ethernet/broadcom/tg3.c b/drivers/net/ethernet/broadcom/tg3.c
+index 728d42a..1396ab3 100644
+--- a/drivers/net/ethernet/broadcom/tg3.c
++++ b/drivers/net/ethernet/broadcom/tg3.c
+@@ -17042,25 +17042,10 @@ static int tg3_init_one(struct pci_dev *pdev,
  
- 	if (asus->hotplug_slot) {
--		bus = pci_find_bus(0, 1);
-+		bus = pci_get_bus(0, 1);
- 		if (!bus) {
- 			pr_warn("Unable to find PCI bus 1?\n");
- 			goto out_unlock;
-@@ -657,6 +657,7 @@ static void asus_rfkill_hotplug(struct asus_wmi *asus)
+ 	pci_set_master(pdev);
  
- out_unlock:
- 	mutex_unlock(&asus->hotplug_lock);
-+	pci_bus_put(bus);
- }
- 
- static void asus_rfkill_notify(acpi_handle handle, u32 event, void *data)
-@@ -748,7 +749,7 @@ static void asus_hotplug_work(struct work_struct *work)
- static int asus_setup_pci_hotplug(struct asus_wmi *asus)
- {
- 	int ret = -ENOMEM;
--	struct pci_bus *bus = pci_find_bus(0, 1);
-+	struct pci_bus *bus = pci_get_bus(0, 1);
- 
- 	if (!bus) {
- 		pr_err("Unable to find wifi PCI bus\n");
-@@ -782,6 +783,7 @@ static int asus_setup_pci_hotplug(struct asus_wmi *asus)
- 		pr_err("Unable to register hotplug slot - %d\n", ret);
- 		goto error_register;
+-	/* Find power-management capability. */
+-	pm_cap = pci_find_capability(pdev, PCI_CAP_ID_PM);
+-	if (pm_cap == 0) {
+-		dev_err(&pdev->dev,
+-			"Cannot find Power Management capability, aborting\n");
+-		err = -EIO;
+-		goto err_out_free_res;
+-	}
+-
+-	err = pci_set_power_state(pdev, PCI_D0);
+-	if (err) {
+-		dev_err(&pdev->dev, "Transition to D0 failed, aborting\n");
+-		goto err_out_free_res;
+-	}
+-
+ 	dev = alloc_etherdev_mq(sizeof(*tp), TG3_IRQ_MAX_VECS);
+ 	if (!dev) {
+ 		err = -ENOMEM;
+-		goto err_out_power_down;
++		goto err_out_free_res;
  	}
-+	pci_bus_put(bus);
  
- 	return 0;
+ 	SET_NETDEV_DEV(dev, &pdev->dev);
+@@ -17406,9 +17391,6 @@ err_out_iounmap:
+ err_out_free_dev:
+ 	free_netdev(dev);
  
-@@ -793,6 +795,7 @@ error_info:
- error_slot:
- 	destroy_workqueue(asus->hotplug_workqueue);
- error_workqueue:
-+	pci_bus_put(bus);
- 	return ret;
- }
+-err_out_power_down:
+-	pci_set_power_state(pdev, PCI_D3hot);
+-
+ err_out_free_res:
+ 	pci_release_regions(pdev);
  
 -- 
-1.8.1.2
+1.7.1
+
 
