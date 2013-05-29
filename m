@@ -1,141 +1,112 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f45.google.com ([209.85.160.45]:42218 "EHLO
-	mail-pb0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751039Ab3EaB3R (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 May 2013 21:29:17 -0400
-Message-ID: <51A7FCE8.4030802@gmail.com>
-Date: Fri, 31 May 2013 09:29:12 +0800
-From: Jiang Liu <liuj97@gmail.com>
-MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Xudong Hao <xudong.hao@intel.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH] PCI: set correct value for iov device before device
-References: <1369892734-26244-1-git-send-email-xudong.hao@intel.com> <CAE9FiQUCOJ5FFwRWpVy59RqEwGC2KMNXvKe5HUAKLSES5fAR+Q@mail.gmail.com> <CAE9FiQWfSW7yT4cZrDoh==H=v_qmvR=9WF54jggSKGq8S_xqug@mail.gmail.com> <CAErSpo5o3KvkXnLsOuFZsP0M3Jq1VL9yweXgEusAu2=NmqjLiA@mail.gmail.com> <CAE9FiQXERyJ-rw8OX1X1XJC_9OMtoYxCCbZUR6N27Bp=tnqnrA@mail.gmail.com>
-In-Reply-To: <CAE9FiQXERyJ-rw8OX1X1XJC_9OMtoYxCCbZUR6N27Bp=tnqnrA@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <1369844192.12792.3.camel@ejdallLaptop>
+Subject: Re: [PATCH 3/3] PCI/AER: Provide reset_link for firmware first root
+ port
+From: Betty Dall <betty.dall@hp.com>
+To: "Pearson, Greg" <greg.pearson@hp.com>
+Cc: "rjw@sisk.pl" <rjw@sisk.pl>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"ying.huang@intel.com" <ying.huang@intel.com>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Date: Wed, 29 May 2013 10:16:32 -0600
+In-Reply-To: <51A621E2.2050202@hp.com>
+References: <1369766929-4386-1-git-send-email-betty.dall@hp.com>
+	 <1369766929-4386-4-git-send-email-betty.dall@hp.com>
+	 <51A621E2.2050202@hp.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri 31 May 2013 08:54:24 AM CST, Yinghai Lu wrote:
-> On Thu, May 30, 2013 at 4:22 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> On Thu, May 30, 2013 at 2:27 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->>> On Wed, May 29, 2013 at 11:04 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->>>> On Wed, May 29, 2013 at 10:45 PM, Xudong Hao <xudong.hao@intel.com> wrote:
->>>>> Since device registering is put into pci_device_add(), it must set value of
->>>>> Virtual Function device's member before the pci_dev is put to device tree. Or
->>>>> some relevant subsystem of driver model such as xen will report a incorrect
->>>>> IOV device to Xen hypervior.
->>>>>
->>>>> Signed-off-by: Xudong Hao <xudong.hao@intel.com>
->>>>> ---
->>>>>  drivers/pci/iov.c | 6 +++---
->>>>>  1 file changed, 3 insertions(+), 3 deletions(-)
->>>>>
->>>>> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
->>>>> index c93071d..43d3de9 100644
->>>>> --- a/drivers/pci/iov.c
->>>>> +++ b/drivers/pci/iov.c
->>>>> @@ -110,12 +110,12 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
->>>>>         if (reset)
->>>>>                 __pci_reset_function(virtfn);
->>>>>
->>>>> -       pci_device_add(virtfn, virtfn->bus);
->>>>> -       mutex_unlock(&iov->dev->sriov->lock);
->>>>> -
->>>>>         virtfn->physfn = pci_dev_get(dev);
->>>>>         virtfn->is_virtfn = 1;
->>>>>
->>>>> +       pci_device_add(virtfn, virtfn->bus);
->>>>> +       mutex_unlock(&iov->dev->sriov->lock);
->>>>> +
->>>>>         rc = pci_bus_add_device(virtfn);
->>>>>         sprintf(buf, "virtfn%u", id);
->>>>>         rc = sysfs_create_link(&dev->dev.kobj, &virtfn->dev.kobj, buf);
->>>>
->>>> I have similar patch at
->>>> https://patchwork.kernel.org/patch/2562551/
->>>>    [5/7] PCI, ACPI: Don't glue ACPI dev with pci VFs
->>>>
->>>> and Jiang has another one
->>>> https://patchwork.kernel.org/patch/2613481/
->>>>    [v3,part1,10/10] PCI, IOV: hide remove and rescan sysfs interfaces
->>>> for SR-IOV virtual functions
->>>
->>> Bjorn,
->>>
->>> I double check this one, we should split the patch from me or Jiang.
->>
->> I don't know what the sentence above means.
->
-> I mean half of patch
-> https://patchwork.kernel.org/patch/2562551/
-> or half of patch
-> https://patchwork.kernel.org/patch/2613481/
->
-> just like what Xudong extracted.
->
->>
->>> and the one about set virtfn=1 should be -stable material.
->>
->> I assume you mean that Jiang's "[v3,part1,10/10] PCI, IOV: hide remove
->> and rescan sysfs interfaces for SR-IOV virtual functions" patch does
->> not need to be in v3.10, but it should be marked for -stable.
->
-> no half of it, move set virtfn=1 two lines forward.
->
->>
->> How far back should it go?  v3.9+?
->
-> yes. v3.9+
->
->>
->>> That will address another problem that is caused by
->>> moving device_add from pci_bus_add_device to pci_device_add.
->>
->> I assume you're talking about a problem caused by 4f535093 ("PCI: Put
->> pci_dev in device tree as early as possible").  That commit appeared
->> in v3.9.
->
-> yes.
->
->>
->> If we're asking to add the "hide remove and rescan sysfs interfaces"
->> patch to the v3.9 stable series, we should have a description of
->> exactly what problem it fixes, and ideally, a bugzilla for it.  Can
->> you provide that?
->
-> No. that is not what i mean.
->
-> That problem have been there when sriov support was added.
->
->>
->> That patch appears to be the only one in the [v3,part1,0/10] series
->> that actually directly fixes an issue, so it would be nice to have
->> more specifics in that changelog to begin with.  The other patches in
->> that series appear to to be cleanups and preparation for the real
->> fixes that will come later.
->
-> yes. even should be separated from that patchset.
->
-> Yinghai
+On Wed, 2013-05-29 at 09:42 -0600, Pearson, Greg wrote:
+> On 05/28/2013 12:48 PM, Betty Dall wrote:
+> > The firmware first path does not install the aerdrv root port
+> > service driver, so the firmware first root port does not have
+> > a reset_link callback. When a firmware first root port does not have
+> > a reset_link callback, use a new default reset_link similar to what
+> > we already do for the default_downstream_reset_link(). The firmware
+> > first default reset_link brings the root port out of SBR if firmware
+> > left it in SBR.
+> >
+> > Signed-off-by: Betty Dall <betty.dall@hp.com>
+> > ---
+> >
+> >   drivers/pci/pcie/aer/aerdrv_core.c |   37 ++++++++++++++++++++++++++++++++++++
+> >   1 files changed, 37 insertions(+), 0 deletions(-)
+> >
+> >
+> > diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
+> > index 8ec8b4f..6862fe3 100644
+> > --- a/drivers/pci/pcie/aer/aerdrv_core.c
+> > +++ b/drivers/pci/pcie/aer/aerdrv_core.c
+> > @@ -413,6 +413,40 @@ static pci_ers_result_t default_downstream_reset_link(struct pci_dev *dev)
+> >   	return PCI_ERS_RESULT_RECOVERED;
+> >   }
+> >   
+> > +/**
+> > + * default_ff_root_port_reset_link - default reset function for firmware
+> > + *		first Root Port
+> > + * @dev: pointer to root port's pci_dev data structure
+> > + *
+> > + * Invoked when performing link reset at Root Port w/ no aer driver.
+> > + * This happens through the firmware first path. Firmware may leave
+> > + * the Root Port in SBR and it is the OS responsiblity to bring it out
+> > + * of SBR.
+> > + */
+> > +static pci_ers_result_t default_ff_root_port_reset_link(struct pci_dev *dev)
+> > +{
+> > +	u16 p2p_ctrl;
+> > +
+> > +	/* Read Secondary Bus Reset */
+> > +	pci_read_config_word(dev, PCI_BRIDGE_CONTROL, &p2p_ctrl);
+> > +	p2p_ctrl |= PCI_BRIDGE_CTL_BUS_RESET;
+> 
+> Remove "p2p_ctrl |= PCI_BRIDGE_CTL_BUS_RESET;" otherwise the following 
+> conditional is always taken.
+> 
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-Hi Bjorn and Yinghai,
-       I think it's ok to separate out the bugfix part.
-      We found this issue when implementing the mechanism to hide 
-"remove"
-sysfs entry for PCI virtual functions because it depends on "is_virtfn" 
-flag to
-hide "remove" sysfs entry. Actually I didn't realize it also fixes 
-other issues
-when making this change.
-      Sorry for the inconvenience!
-Gerry
+> Greg
+
+Agreed. That was a copy and paste mistake. I will fix and retest.
+
+-Betty
+
+> > +
+> > +	/* De-assert Secondary Bus Reset, if it is set */
+> > +	if (p2p_ctrl & PCI_BRIDGE_CTL_BUS_RESET) {
+> > +		p2p_ctrl &= ~PCI_BRIDGE_CTL_BUS_RESET;
+> > +		pci_write_config_word(dev, PCI_BRIDGE_CONTROL, p2p_ctrl);
+> > +
+> > +		/*
+> > +		 * System software must wait for at least 100ms from the end
+> > +		 * of a reset of one or more device before it is permitted
+> > +		 * to issue Configuration Requests to those devices.
+> > +		 */
+> > +		msleep(200);
+> > +		dev_dbg(&dev->dev, "Root Port link has been reset\n");
+> > +	}
+> > +	return PCI_ERS_RESULT_RECOVERED;
+> > +}
+> > +
+> >   static int find_aer_service_iter(struct device *device, void *data)
+> >   {
+> >   	struct pcie_port_service_driver *service_driver, **drv;
+> > @@ -460,6 +494,9 @@ static pci_ers_result_t reset_link(struct pci_dev *dev)
+> >   		status = driver->reset_link(udev);
+> >   	} else if (pci_pcie_type(udev) == PCI_EXP_TYPE_DOWNSTREAM) {
+> >   		status = default_downstream_reset_link(udev);
+> > +	} else if (pci_pcie_type(udev) == PCI_EXP_TYPE_ROOT_PORT &&
+> > +		pcie_aer_get_firmware_first(udev)) {
+> > +		status = default_ff_root_port_reset_link(udev);
+> >   	} else {
+> >   		dev_printk(KERN_DEBUG, &dev->dev,
+> >   			"no link-reset support at upstream device %s\n",
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >
+
 
