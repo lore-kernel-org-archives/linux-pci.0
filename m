@@ -1,255 +1,203 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hydra.sisk.pl ([212.160.235.94]:54394 "EHLO hydra.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754316Ab3E2WkA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 29 May 2013 18:40:00 -0400
 From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Jiang Liu <liuj97@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Len Brown <lenb@kernel.org>,
-	linux-acpi@vger.kernel.org
-Subject: Re: [PATCH v2, part 1 6/9] ACPI, pci_root: use acpi_handle_print() and pr_xxx() to print messages
-Date: Tue, 14 May 2013 01:27:26 +0200
-Message-ID: <5034672.tljvClO7po@vostro.rjw.lan>
-In-Reply-To: <1368461313-4371-7-git-send-email-jiang.liu@huawei.com>
-References: <1368461313-4371-1-git-send-email-jiang.liu@huawei.com> <1368461313-4371-7-git-send-email-jiang.liu@huawei.com>
+To: Lance Ortiz <lance.ortiz@hp.com>
+Cc: bhelgaas@google.com, lance_ortiz@hotmail.com, jiang.liu@huawei.com,
+	tony.luck@intel.com, bp@alien8.de, rostedt@goodmis.org,
+	mchehab@redhat.com, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3] aerdrv: Move cper_print_aer() call out of interrupt context
+Date: Thu, 30 May 2013 00:48:53 +0200
+Message-ID: <30463843.EmBn1xaq3I@vostro.rjw.lan>
+In-Reply-To: <20130529190326.24171.86905.stgit@grignak.americas.hpqcorp.net>
+References: <20130529190326.24171.86905.stgit@grignak.americas.hpqcorp.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, May 14, 2013 12:08:30 AM Jiang Liu wrote:
-> Use acpi_handle_print() and pr_xxx() to print messages in pci_root.c.
+On Wednesday, May 29, 2013 01:03:26 PM Lance Ortiz wrote:
+> The following warning was seen on 3.9 when a corrected PCIe error was being
+> handled by the AER subsystem.
 > 
-> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-> Cc: Len Brown <lenb@kernel.org>
-> Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
-> Cc: linux-acpi@vger.kernel.org
-> Cc: linux-kernel@vger.kernel.org
+> WARNING: at .../drivers/pci/search.c:214 pci_get_dev_by_id+0x8a/0x90()
+> 
+> This occurred because a call to pci_get_domain_bus_and_slot() was added to
+> cper_print_pcie() to setup for the call to cper_print_aer().  The warning
+> showed up because cper_print_pcie() is called in an interrupt context and
+> pci_get* functions are not supposed to be called in that context.
+> 
+> The solution is to move the cper_print_aer() call out of the interrupt
+> context and into aer_recover_work_func() to avoid any warnings when calling
+> pci_get* functions.
+> 
+> v2 - Re-worded header text.  Removed prefix arg from cper_print_aer().
+>      Added TODO message in cper_print_aer().
+> v3 - Changed type of u8* to struct aer_capability_regs* in the code
+>      to avoid too much casting based on comment from Bjorn Helgaas.
+> 
+> Signed-off-by: Lance Ortiz <lance.ortiz@hp.com>
+> Acked-by: Borislav Petkov <bp@suse.de>
+
+Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+
 > ---
->  drivers/acpi/pci_root.c | 71 ++++++++++++++++++++++---------------------------
->  1 file changed, 32 insertions(+), 39 deletions(-)
 > 
-> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-> index 91ddfd6..9ced5c3 100644
-> --- a/drivers/acpi/pci_root.c
-> +++ b/drivers/acpi/pci_root.c
-> @@ -379,23 +379,23 @@ static int acpi_pci_root_add(struct acpi_device *device,
->  	struct acpi_pci_root *root;
->  	u32 flags, base_flags;
->  	bool is_osc_granted = false;
-> +	acpi_handle hdl = device->handle;
-
-The usual way is to call it 'handle'.  Any reason why not to do it here too?
-
->  	root = kzalloc(sizeof(struct acpi_pci_root), GFP_KERNEL);
->  	if (!root)
->  		return -ENOMEM;
+>  drivers/acpi/apei/cper.c               |   18 ------------------
+>  drivers/acpi/apei/ghes.c               |    4 +++-
+>  drivers/pci/pcie/aer/aerdrv_core.c     |    5 ++++-
+>  drivers/pci/pcie/aer/aerdrv_errprint.c |   10 ++++++++--
+>  include/linux/aer.h                    |    5 +++--
+>  5 files changed, 18 insertions(+), 24 deletions(-)
+> 
+> diff --git a/drivers/acpi/apei/cper.c b/drivers/acpi/apei/cper.c
+> index 1e5d8a4..8713229 100644
+> --- a/drivers/acpi/apei/cper.c
+> +++ b/drivers/acpi/apei/cper.c
+> @@ -250,10 +250,6 @@ static const char *cper_pcie_port_type_strs[] = {
+>  static void cper_print_pcie(const char *pfx, const struct cper_sec_pcie *pcie,
+>  			    const struct acpi_hest_generic_data *gdata)
+>  {
+> -#ifdef CONFIG_ACPI_APEI_PCIEAER
+> -	struct pci_dev *dev;
+> -#endif
+> -
+>  	if (pcie->validation_bits & CPER_PCIE_VALID_PORT_TYPE)
+>  		printk("%s""port_type: %d, %s\n", pfx, pcie->port_type,
+>  		       pcie->port_type < ARRAY_SIZE(cper_pcie_port_type_strs) ?
+> @@ -285,20 +281,6 @@ static void cper_print_pcie(const char *pfx, const struct cper_sec_pcie *pcie,
+>  		printk(
+>  	"%s""bridge: secondary_status: 0x%04x, control: 0x%04x\n",
+>  	pfx, pcie->bridge.secondary_status, pcie->bridge.control);
+> -#ifdef CONFIG_ACPI_APEI_PCIEAER
+> -	dev = pci_get_domain_bus_and_slot(pcie->device_id.segment,
+> -			pcie->device_id.bus, pcie->device_id.function);
+> -	if (!dev) {
+> -		pr_err("PCI AER Cannot get PCI device %04x:%02x:%02x.%d\n",
+> -			pcie->device_id.segment, pcie->device_id.bus,
+> -			pcie->device_id.slot, pcie->device_id.function);
+> -		return;
+> -	}
+> -	if (pcie->validation_bits & CPER_PCIE_VALID_AER_INFO)
+> -		cper_print_aer(pfx, dev, gdata->error_severity,
+> -				(struct aer_capability_regs *) pcie->aer_info);
+> -	pci_dev_put(dev);
+> -#endif
+>  }
 >  
->  	segment = 0;
-> -	status = acpi_evaluate_integer(device->handle, METHOD_NAME__SEG, NULL,
-> -				       &segment);
-> +	status = acpi_evaluate_integer(hdl, METHOD_NAME__SEG, NULL, &segment);
->  	if (ACPI_FAILURE(status) && status != AE_NOT_FOUND) {
-> -		printk(KERN_ERR PREFIX "can't evaluate _SEG\n");
-> +		acpi_handle_err(hdl, "can't evaluate _SEG\n");
->  		result = -ENODEV;
->  		goto end;
->  	}
+>  static const char *apei_estatus_section_flag_strs[] = {
+> diff --git a/drivers/acpi/apei/ghes.c b/drivers/acpi/apei/ghes.c
+> index d668a8a..403baf4 100644
+> --- a/drivers/acpi/apei/ghes.c
+> +++ b/drivers/acpi/apei/ghes.c
+> @@ -454,7 +454,9 @@ static void ghes_do_proc(struct ghes *ghes,
+>  				aer_severity = cper_severity_to_aer(sev);
+>  				aer_recover_queue(pcie_err->device_id.segment,
+>  						  pcie_err->device_id.bus,
+> -						  devfn, aer_severity);
+> +						  devfn, aer_severity,
+> +						  (struct aer_capability_regs *)
+> +						  pcie_err->aer_info);
+>  			}
 >  
->  	/* Check _CRS first, then _BBN.  If no _BBN, default to zero. */
->  	root->secondary.flags = IORESOURCE_BUS;
-> -	status = try_get_root_bridge_busnr(device->handle, &root->secondary);
-> +	status = try_get_root_bridge_busnr(hdl, &root->secondary);
->  	if (ACPI_FAILURE(status)) {
->  		/*
->  		 * We need both the start and end of the downstream bus range
-> @@ -404,16 +404,16 @@ static int acpi_pci_root_add(struct acpi_device *device,
->  		 * can do is assume [_BBN-0xFF] or [0-0xFF].
->  		 */
->  		root->secondary.end = 0xFF;
-> -		printk(KERN_WARNING FW_BUG PREFIX
-> -		       "no secondary bus range in _CRS\n");
-> -		status = acpi_evaluate_integer(device->handle, METHOD_NAME__BBN,
-> +		acpi_handle_warn(hdl,
-> +				 FW_BUG "no secondary bus range in _CRS\n");
-> +		status = acpi_evaluate_integer(hdl, METHOD_NAME__BBN,
->  					       NULL, &bus);
->  		if (ACPI_SUCCESS(status))
->  			root->secondary.start = bus;
->  		else if (status == AE_NOT_FOUND)
->  			root->secondary.start = 0;
->  		else {
-> -			printk(KERN_ERR PREFIX "can't evaluate _BBN\n");
-> +			acpi_handle_err(hdl, "can't evaluate _BBN\n");
->  			result = -ENODEV;
->  			goto end;
 >  		}
-> @@ -425,11 +425,11 @@ static int acpi_pci_root_add(struct acpi_device *device,
->  	strcpy(acpi_device_class(device), ACPI_PCI_ROOT_CLASS);
->  	device->driver_data = root;
+> diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
+> index 564d97f..120549a 100644
+> --- a/drivers/pci/pcie/aer/aerdrv_core.c
+> +++ b/drivers/pci/pcie/aer/aerdrv_core.c
+> @@ -582,6 +582,7 @@ struct aer_recover_entry
+>  	u8	devfn;
+>  	u16	domain;
+>  	int	severity;
+> +	struct aer_capability_regs *regs;
+>  };
 >  
-> -	printk(KERN_INFO PREFIX "%s [%s] (domain %04x %pR)\n",
-> +	pr_info(PREFIX "%s [%s] (domain %04x %pR)\n",
->  	       acpi_device_name(device), acpi_device_bid(device),
->  	       root->segment, &root->secondary);
+>  static DEFINE_KFIFO(aer_recover_ring, struct aer_recover_entry,
+> @@ -595,7 +596,7 @@ static DEFINE_SPINLOCK(aer_recover_ring_lock);
+>  static DECLARE_WORK(aer_recover_work, aer_recover_work_func);
 >  
-> -	root->mcfg_addr = acpi_pci_root_get_mcfg_addr(device->handle);
-> +	root->mcfg_addr = acpi_pci_root_get_mcfg_addr(hdl);
->  
->  	/*
->  	 * All supported architectures that use ACPI have support for
-> @@ -473,7 +473,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
->  		dev_info(&device->dev,
->  			"Requesting ACPI _OSC control (0x%02x)\n", flags);
->  
-> -		status = acpi_pci_osc_control_set(device->handle, &flags,
-> +		status = acpi_pci_osc_control_set(hdl, &flags,
->  				       OSC_PCI_EXPRESS_CAP_STRUCTURE_CONTROL);
->  		if (ACPI_SUCCESS(status)) {
->  			is_osc_granted = true;
-> @@ -505,9 +505,9 @@ static int acpi_pci_root_add(struct acpi_device *device,
->  	 */
->  	root->bus = pci_acpi_scan_root(root);
->  	if (!root->bus) {
-> -		printk(KERN_ERR PREFIX
-> -			    "Bus %04x:%02x not present in PCI namespace\n",
-> -			    root->segment, (unsigned int)root->secondary.start);
-> +		acpi_handle_err(hdl,
-> +			"Bus %04x:%02x not present in PCI namespace\n",
-> +			root->segment, (unsigned int)root->secondary.start);
->  		result = -ENODEV;
->  		goto end;
->  	}
-> @@ -517,8 +517,8 @@ static int acpi_pci_root_add(struct acpi_device *device,
->  		if (acpi_gbl_FADT.boot_flags & ACPI_FADT_NO_ASPM)
->  			pcie_clear_aspm(root->bus);
->  	} else {
-> -		pr_info("ACPI _OSC control for PCIe not granted, "
-> -			"disabling ASPM\n");
-> +		acpi_handle_info(hdl,
-> +			"ACPI _OSC control for PCIe not granted, disabling ASPM\n");
->  		pcie_no_aspm();
->  	}
->  
-> @@ -571,12 +571,13 @@ static void handle_root_bridge_insertion(acpi_handle handle)
->  	struct acpi_device *device;
->  
->  	if (!acpi_bus_get_device(handle, &device)) {
-> -		printk(KERN_DEBUG "acpi device exists...\n");
-> +		acpi_handle_printk(KERN_DEBUG, handle,
-> +				   "acpi device exists...\n");
-
-Do we have acpi_handle_dbg()?  If so, why don't you use it here? (And below.)
-If not, why don't you add it and use it here (and below)?
-
->  		return;
->  	}
->  
->  	if (acpi_bus_scan(handle))
-> -		printk(KERN_ERR "cannot add bridge to acpi list\n");
-> +		acpi_handle_err(handle, "cannot add bridge to acpi list\n");
->  }
->  
->  static void handle_root_bridge_removal(struct acpi_device *device)
-> @@ -602,7 +603,6 @@ static void handle_root_bridge_removal(struct acpi_device *device)
->  static void _handle_hotplug_event_root(struct work_struct *work)
+>  void aer_recover_queue(int domain, unsigned int bus, unsigned int devfn,
+> -		       int severity)
+> +		       int severity, struct aer_capability_regs *aer_regs)
 >  {
->  	struct acpi_pci_root *root;
-> -	struct acpi_buffer buffer = { ACPI_ALLOCATE_BUFFER };
->  	struct acpi_hp_work *hp_work;
->  	acpi_handle handle;
->  	u32 type;
-> @@ -613,13 +613,11 @@ static void _handle_hotplug_event_root(struct work_struct *work)
+>  	unsigned long flags;
+>  	struct aer_recover_entry entry = {
+> @@ -603,6 +604,7 @@ void aer_recover_queue(int domain, unsigned int bus, unsigned int devfn,
+>  		.devfn		= devfn,
+>  		.domain		= domain,
+>  		.severity	= severity,
+> +		.regs		= aer_regs,
+>  	};
 >  
->  	root = acpi_pci_find_root(handle);
->  
-> -	acpi_get_name(handle, ACPI_FULL_PATHNAME, &buffer);
-> -
->  	switch (type) {
->  	case ACPI_NOTIFY_BUS_CHECK:
->  		/* bus enumerate */
-> -		printk(KERN_DEBUG "%s: Bus check notify on %s\n", __func__,
-> -				 (char *)buffer.pointer);
-> +		acpi_handle_printk(KERN_DEBUG, handle,
-> +				   "Bus check notify on %s\n", __func__);
->  		if (!root)
->  			handle_root_bridge_insertion(handle);
->  
-> @@ -627,27 +625,26 @@ static void _handle_hotplug_event_root(struct work_struct *work)
->  
->  	case ACPI_NOTIFY_DEVICE_CHECK:
->  		/* device check */
-> -		printk(KERN_DEBUG "%s: Device check notify on %s\n", __func__,
-> -				 (char *)buffer.pointer);
-> +		acpi_handle_printk(KERN_DEBUG, handle,
-> +				   "Device check notify on %s\n", __func__);
->  		if (!root)
->  			handle_root_bridge_insertion(handle);
->  		break;
->  
->  	case ACPI_NOTIFY_EJECT_REQUEST:
->  		/* request device eject */
-> -		printk(KERN_DEBUG "%s: Device eject notify on %s\n", __func__,
-> -				 (char *)buffer.pointer);
-> +		acpi_handle_printk(KERN_DEBUG, handle,
-> +				   "Device eject notify on %s\n", __func__);
->  		if (root)
->  			handle_root_bridge_removal(root->device);
->  		break;
->  	default:
-> -		printk(KERN_WARNING "notify_handler: unknown event type 0x%x for %s\n",
-> -				 type, (char *)buffer.pointer);
-> +		acpi_handle_warn(handle,
-> +			 "notify_handler: unknown event type 0x%xn", type);
->  		break;
+>  	spin_lock_irqsave(&aer_recover_ring_lock, flags);
+> @@ -629,6 +631,7 @@ static void aer_recover_work_func(struct work_struct *work)
+>  			       PCI_SLOT(entry.devfn), PCI_FUNC(entry.devfn));
+>  			continue;
+>  		}
+> +		cper_print_aer(pdev, entry.severity, entry.regs);
+>  		do_recovery(pdev, entry.severity);
+>  		pci_dev_put(pdev);
 >  	}
->  
->  	kfree(hp_work); /* allocated in handle_hotplug_event_bridge */
-> -	kfree(buffer.pointer);
+> diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c b/drivers/pci/pcie/aer/aerdrv_errprint.c
+> index 5ab1425..f277dc3 100644
+> --- a/drivers/pci/pcie/aer/aerdrv_errprint.c
+> +++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
+> @@ -220,13 +220,19 @@ int cper_severity_to_aer(int cper_severity)
 >  }
+>  EXPORT_SYMBOL_GPL(cper_severity_to_aer);
 >  
->  static void handle_hotplug_event_root(acpi_handle handle, u32 type,
-> @@ -661,9 +658,6 @@ static acpi_status __init
->  find_root_bridges(acpi_handle handle, u32 lvl, void *context, void **rv)
+> -void cper_print_aer(const char *prefix, struct pci_dev *dev, int cper_severity,
+> +void cper_print_aer(struct pci_dev *dev, int cper_severity,
+>  		    struct aer_capability_regs *aer)
 >  {
->  	acpi_status status;
-> -	char objname[64];
-> -	struct acpi_buffer buffer = { .length = sizeof(objname),
-> -				      .pointer = objname };
->  	int *count = (int *)context;
+>  	int aer_severity, layer, agent, status_strs_size, tlp_header_valid = 0;
+>  	u32 status, mask;
+>  	const char **status_strs;
 >  
->  	if (!acpi_is_root_bridge(handle))
-> @@ -671,16 +665,15 @@ find_root_bridges(acpi_handle handle, u32 lvl, void *context, void **rv)
->  
->  	(*count)++;
->  
-> -	acpi_get_name(handle, ACPI_FULL_PATHNAME, &buffer);
-> -
->  	status = acpi_install_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
->  					handle_hotplug_event_root, NULL);
->  	if (ACPI_FAILURE(status))
-> -		printk(KERN_DEBUG "acpi root: %s notify handler is not installed, exit status: %u\n",
-> -				  objname, (unsigned int)status);
-> +		acpi_handle_printk(KERN_DEBUG, handle,
-> +			"notify handler is not installed, exit status: %u\n",
-> +			 (unsigned int)status);
->  	else
-> -		printk(KERN_DEBUG "acpi root: %s notify handler is installed\n",
-> -				 objname);
-> +		acpi_handle_printk(KERN_DEBUG, handle,
-> +				   "notify handler is installed\n");
->  
->  	return AE_OK;
+> +	/*
+> +	 * TODO: This function needs to be re-written so that it's output
+> +	 * matches the output of aer_print_error().  Right now, the output
+> +	 * is formatted very differently.
+> +	 */
+> +
+>  	aer_severity = cper_severity_to_aer(cper_severity);
+>  	if (aer_severity == AER_CORRECTABLE) {
+>  		status = aer->cor_status;
+> @@ -244,7 +250,7 @@ void cper_print_aer(const char *prefix, struct pci_dev *dev, int cper_severity,
+>  	agent = AER_GET_AGENT(aer_severity, status);
+>  	dev_err(&dev->dev, "aer_status: 0x%08x, aer_mask: 0x%08x\n",
+>  	       status, mask);
+> -	cper_print_bits(prefix, status, status_strs, status_strs_size);
+> +	cper_print_bits("", status, status_strs, status_strs_size);
+>  	dev_err(&dev->dev, "aer_layer=%s, aer_agent=%s\n",
+>  	       aer_error_layer[layer], aer_agent_string[agent]);
+>  	if (aer_severity != AER_CORRECTABLE)
+> diff --git a/include/linux/aer.h b/include/linux/aer.h
+> index ec10e1b..737f90a 100644
+> --- a/include/linux/aer.h
+> +++ b/include/linux/aer.h
+> @@ -49,10 +49,11 @@ static inline int pci_cleanup_aer_uncorrect_error_status(struct pci_dev *dev)
 >  }
-
-Thanks,
-Rafael
-
-
+>  #endif
+>  
+> -extern void cper_print_aer(const char *prefix, struct pci_dev *dev,
+> +extern void cper_print_aer(struct pci_dev *dev,
+>  			   int cper_severity, struct aer_capability_regs *aer);
+>  extern int cper_severity_to_aer(int cper_severity);
+>  extern void aer_recover_queue(int domain, unsigned int bus, unsigned int devfn,
+> -			      int severity);
+> +			      int severity,
+> +			      struct aer_capability_regs *aer_regs);
+>  #endif //_AER_H_
+>  
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 -- 
 I speak only for myself.
 Rafael J. Wysocki, Intel Open Source Technology Center.
