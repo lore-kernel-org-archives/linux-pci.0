@@ -1,40 +1,36 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from am1ehsobe003.messaging.microsoft.com ([213.199.154.206]:11157
-	"EHLO am1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752650Ab3EaHeK convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 31 May 2013 03:34:10 -0400
-From: "Huang, Shane" <Shane.Huang@amd.com>
-To: Jean Delvare <khali@linux-fr.org>
-CC: Tejun Heo <tj@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Luck, Tony" <tony.luck@intel.com>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>, Lance Ortiz <lance.ortiz@hp.com>
+CC: "bhelgaas@google.com" <bhelgaas@google.com>,
+	"lance_ortiz@hotmail.com" <lance_ortiz@hotmail.com>,
+	"jiang.liu@huawei.com" <jiang.liu@huawei.com>,
+	"bp@alien8.de" <bp@alien8.de>,
+	"rostedt@goodmis.org" <rostedt@goodmis.org>,
+	"mchehab@redhat.com" <mchehab@redhat.com>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
-	"linux-i2c@vger.kernel.org" <linux-i2c@vger.kernel.org>,
-	"Huang, Shane" <Shane.Huang@amd.com>
-Subject: RE: [PATCH 3/3] i2c-piix4: add AMD CZ SMBus device ID
-Date: Fri, 31 May 2013 07:33:51 +0000
-Message-ID: <43EB3AB3EEFE8D43B525F4D2EAF507E1085B8D06@SCYBEXDAG04.amd.com>
-References: <1369999333-2073-1-git-send-email-shane.huang@amd.com>
-	<20130531080336.04481330@endymion.delvare>
-	<43EB3AB3EEFE8D43B525F4D2EAF507E1085B8CC5@SCYBEXDAG04.amd.com>
- <20130531092846.51f2e202@endymion.delvare>
-In-Reply-To: <20130531092846.51f2e202@endymion.delvare>
-Content-Type: text/plain; charset="us-ascii"
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH v3] aerdrv: Move cper_print_aer() call out of interrupt
+ context
+Date: Wed, 29 May 2013 23:07:47 +0000
+Message-ID: <3908561D78D1C84285E8C5FCA982C28F2DA70112@ORSMSX106.amr.corp.intel.com>
+References: <20130529190326.24171.86905.stgit@grignak.americas.hpqcorp.net>
+ <30463843.EmBn1xaq3I@vostro.rjw.lan>
+In-Reply-To: <30463843.EmBn1xaq3I@vostro.rjw.lan>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> Can you show the exact message? checkpatch doesn't complain here, and I
-> can't think of any reason why it would care about that.
-
-$ ./scripts/checkpatch.pl 0003-i2c-piix4-add-AMD-CZ-SMBus-device-ID.patch
-WARNING: Avoid CamelCase: <Hudson>
-#52: FILE: drivers/i2c/busses/i2c-piix4.c:25:
-+       AMD Hudson-2, CZ
-
-total: 0 errors, 1 warnings, 39 lines checked
-
-
-Thanks,
-Shane
-
+PiArCS8qDQo+ICsJICogVE9ETzogVGhpcyBmdW5jdGlvbiBuZWVkcyB0byBiZSByZS13cml0dGVu
+IHNvIHRoYXQgaXQncyBvdXRwdXQNCj4gKwkgKiBtYXRjaGVzIHRoZSBvdXRwdXQgb2YgYWVyX3By
+aW50X2Vycm9yKCkuICBSaWdodCBub3csIHRoZSBvdXRwdXQNCj4gKwkgKiBpcyBmb3JtYXR0ZWQg
+dmVyeSBkaWZmZXJlbnRseS4NCj4gKwkgKi8NCg0KU28gd2UgaGF2ZSB0aGlzIGJpZyAiVE9ETyIg
+Y29tbWVudCBzaXR0aW5nIHRoZXJlIHZlcnkgcHJvbWluZW50bHkgLi4uIHdoaWNoIExpbnVzDQpp
+cyBib3VuZCB0byBhc2sgYWJvdXQgaWYgSSBhc2sgaGltIHRvIHB1bGwgdGhpcyBpbnRvIDMuMTAt
+cmNYIC4uLiB3aGF0J3MgdGhlIGltcGFjdCBvZg0KdGhpcz8gIFdoYXQgc2hvdWxkIEkgc2F5IHdo
+ZW4gaGUgYXNrcyB3aHkgc2hvdWxkIGhlIHB1bGwgdGhpcyBmaXggaW50byAzLjEwIHdoZW4NCnRo
+ZXJlIGlzIHN0aWxsIHNvbWUgd29yayB0byBkbz8gIElzIG1hdGNoaW5nIHRoZSBvdXRwdXQgbm8g
+YmlnIGRlYWwgYW5kIGNhbiB3YWl0IGZvcg0Kc29tZSBmdXR1cmUsIHdoaWxlIG1vdmluZyB0aGUg
+cGNpIGJpdHMgdG8gdGhlIHdvcmsgZnVuY3Rpb24gbmVlZHMgdG8gZ28gaW4gbm93Pw0KDQotVG9u
+eQ0K
