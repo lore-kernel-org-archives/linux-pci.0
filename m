@@ -1,53 +1,42 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 1wt.eu ([62.212.114.60]:34322 "EHLO 1wt.eu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754052Ab3EWAOh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 22 May 2013 20:14:37 -0400
-Date: Thu, 23 May 2013 02:13:53 +0200
-From: Willy Tarreau <w@1wt.eu>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Subject: Re: [PATCH 0/4] Marvell PCIe driver improvements
-Message-ID: <20130523001353.GH31625@1wt.eu>
-References: <1369228358-32580-1-git-send-email-thomas.petazzoni@free-electrons.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1369228358-32580-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:45665 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965039Ab3E2JDI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 May 2013 05:03:08 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, Hanjun Guo <guohanjun@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH] PCI: fix trivial typo for PCI_EXP_LNKCAP_CLKPM
+Date: Wed, 29 May 2013 17:01:52 +0800
+Message-ID: <1369818112-33136-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Thomas,
+Fix trivial typo for PCI_EXP_LNKCAP_CLKPM comment.
 
-On Wed, May 22, 2013 at 03:12:34PM +0200, Thomas Petazzoni wrote:
-> Bjorn, Jason, Andrew, Gregory,
-> 
-> You'll find in this patch series 4 small patches that make various
-> improvements to the Marvell PCIe driver.
-(...)
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ include/uapi/linux/pci_regs.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-FWIW, these patches applied on top of your pcie-v10 tree have made
-my mini-pcie dual-nic appear for the first time on the mirabox. Till
-now I never knew if it was a hardware or software issue since the NIC
-does not appear in u-boot nor lspci, whatever the kernel versions,
-including the original Marvell one's. The NIC has two functions (one
-per controller) and no bridge, so it may be a side effect of your
-improvements (or maybe you fixed a bug).
+diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+index 864e324..c3cc01d 100644
+--- a/include/uapi/linux/pci_regs.h
++++ b/include/uapi/linux/pci_regs.h
+@@ -468,7 +468,7 @@
+ #define  PCI_EXP_LNKCAP_ASPMS	0x00000c00 /* ASPM Support */
+ #define  PCI_EXP_LNKCAP_L0SEL	0x00007000 /* L0s Exit Latency */
+ #define  PCI_EXP_LNKCAP_L1EL	0x00038000 /* L1 Exit Latency */
+-#define  PCI_EXP_LNKCAP_CLKPM	0x00040000 /* L1 Clock Power Management */
++#define  PCI_EXP_LNKCAP_CLKPM	0x00040000 /* Clock Power Management */
+ #define  PCI_EXP_LNKCAP_SDERC	0x00080000 /* Surprise Down Error Reporting Capable */
+ #define  PCI_EXP_LNKCAP_DLLLARC	0x00100000 /* Data Link Layer Link Active Reporting Capable */
+ #define  PCI_EXP_LNKCAP_LBNC	0x00200000 /* Link Bandwidth Notification Capability */
+-- 
+1.7.1
 
-Anyway for me it's a great improvement !
-
-I've not tried it on the OpenBlocks AX3 yet (it was not detected
-there previously). But I have good hopes.
-
-For reference, the NIC is Jetway's ADMPEIDLA (intel i350-AM2).
-
-Best regards,
-Willy
 
