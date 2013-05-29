@@ -1,49 +1,63 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Fri, 31 May 2013 09:41:01 +0200
-From: Borislav Petkov <bp@alien8.de>
-To: "Ortiz, Lance E" <lance.oritz@hp.com>
-Cc: Steven Rostedt <rostedt@goodmis.org>,
-	"Luck, Tony" <tony.luck@intel.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"lance_ortiz@hotmail.com" <lance_ortiz@hotmail.com>,
-	"jiang.liu@huawei.com" <jiang.liu@huawei.com>,
-	"mchehab@redhat.com" <mchehab@redhat.com>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v3] aerdrv: Move cper_print_aer() call out of interrupt
- context
-Message-ID: <20130531074101.GA3379@nazgul.tnic>
-References: <20130529190326.24171.86905.stgit@grignak.americas.hpqcorp.net>
- <30463843.EmBn1xaq3I@vostro.rjw.lan>
- <3908561D78D1C84285E8C5FCA982C28F2DA70112@ORSMSX106.amr.corp.intel.com>
- <A961433CDFF2F640A2866803152E61F95D13A6F2@G9W0715.americas.hpqcorp.net>
- <20130530072849.GA20793@pd.tnic>
- <1369921028.26799.4.camel@gandalf.local.home>
- <A961433CDFF2F640A2866803152E61F95D13A762@G9W0715.americas.hpqcorp.net>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f179.google.com ([209.85.223.179]:63672 "EHLO
+	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934589Ab3E2RrQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 May 2013 13:47:16 -0400
+Received: by mail-ie0-f179.google.com with SMTP id c13so25515648ieb.38
+        for <linux-pci@vger.kernel.org>; Wed, 29 May 2013 10:47:15 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <A961433CDFF2F640A2866803152E61F95D13A762@G9W0715.americas.hpqcorp.net>
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <CAH9N0t-DOC0iOMjtHUTznCzk=C7RpbdBOhYR=mK1zaAmeH-Rqw@mail.gmail.com>
+References: <CAH9N0t-DOC0iOMjtHUTznCzk=C7RpbdBOhYR=mK1zaAmeH-Rqw@mail.gmail.com>
+Date: Wed, 29 May 2013 10:47:15 -0700
+Message-ID: <CAE9FiQXCf-h84sXqGPKbdd66oNbzWOtfea+PcHFiJPLPBc6oGQ@mail.gmail.com>
+Subject: Re: Pcie Linux HotPlug Driver
+From: Yinghai Lu <yinghai@kernel.org>
+To: Paulo Ricardo Carvalho <pricardofc@ipfn.ist.utl.pt>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 30, 2013 at 02:04:42PM +0000, Ortiz, Lance E wrote:
-> Steve, you do have a good point here. I am wondering if that is why
-> we should consider changing the output to match aer_print_error().
-> The code path to aer_print_error() is the more common path where not
-> as many platforms support the cper_print_error() path (firmware first
-> AER). So it is more likely that any tools written would know how to
-> parse the output from aer_print_error(). It would be good for those
-> tools to support firmware first AER when it becomes more common. Of
-> course this is purely conjecture. I have no idea if there are any
-> tools that parse this text output.
+On Wed, May 29, 2013 at 10:30 AM, Paulo Fortuna Carvalho
+<pricardofc@ipfn.ist.utl.pt> wrote:
+> Hello Yinghai and Bjorn,
+> Issue solved.
+> You were correct. The module fakephp.ko was not loaded.
 
-Whatever you end up doing, just make sure you've hammered out the
-information going out to userspace to be clear, succinct and complete
-(as far as possible, of course). Because once you cast it in stone and
-tools start using it, changing its format is a huge PITA, if at all
-possible.
+No, you should not use fackephp.ko. As it was removed already
+in recent kernel.
+It is replaced by pci slot driver.
 
-And if the error formats are compatible, then sharing the format is
-obviously advantageous.
+In your case you should pciehp.ko
+
+Please post boot log with "debug ignore_loglevel"
+
+
+> Now everything works ok and device driver need not to be changed.
+> As you said is a normal PCI Device Driver.
+>
+> Now I want that that when ATCA card is without energy ( 11:00.0 DPIO
+> module: PLD APPLICATIONS Device 6014 (rev ff) )
+>
+> the command:
+> echo 0 > /sys/bus/pci/slots/0000*/power is automatically executed.
+>
+> At the moment i'm doing it manually and after that my atca card driver
+> is removed.
+>
+> And when i give energy to the ATCA card i have to manually perform pci
+> bus re-enumeration
+> with command:
+> echo 1 > /sys/bus/pci/rescan
+>
+> and the ATCA card driver is automatically inserted. How can
+> re-enumeration be done automatically?
+
+If you can enable pciehp.ko for 04:08.0, then you can use
+echo 0 > /sys/bus/pci/slots/48/power
+echo 1 > /sys/bus/pci/slots/48/power
+
+that should probe devices and load driver automatically.
+
+Yinghai
