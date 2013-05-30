@@ -1,64 +1,38 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:39416 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1757201Ab3EOOhB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 May 2013 10:37:01 -0400
-Date: Wed, 15 May 2013 10:37:00 -0400 (EDT)
-From: Alan Stern <stern@rowland.harvard.edu>
-To: Sarah Sharp <sarah.a.sharp@linux.intel.com>
-cc: Xenia Ragiadakou <burzalodowa@gmail.com>,
-	<linux-usb@vger.kernel.org>, <linux-pci@vger.kernel.org>
-Subject: Re: [OPW kernel] dma_set_coherent_mask
-In-Reply-To: <20130515053911.GD17398@xanatos>
-Message-ID: <Pine.LNX.4.44L0.1305151030100.1711-100000@iolanthe.rowland.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Ortiz, Lance E" <lance.oritz@hp.com>
+To: Borislav Petkov <bp@alien8.de>
+CC: "Luck, Tony" <tony.luck@intel.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"lance_ortiz@hotmail.com" <lance_ortiz@hotmail.com>,
+	"jiang.liu@huawei.com" <jiang.liu@huawei.com>,
+	"rostedt@goodmis.org" <rostedt@goodmis.org>,
+	"mchehab@redhat.com" <mchehab@redhat.com>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH v3] aerdrv: Move cper_print_aer() call out of interrupt
+ context
+Date: Thu, 30 May 2013 13:58:08 +0000
+Message-ID: <A961433CDFF2F640A2866803152E61F95D13A750@G9W0715.americas.hpqcorp.net>
+References: <20130529190326.24171.86905.stgit@grignak.americas.hpqcorp.net>
+ <30463843.EmBn1xaq3I@vostro.rjw.lan>
+ <3908561D78D1C84285E8C5FCA982C28F2DA70112@ORSMSX106.amr.corp.intel.com>
+ <A961433CDFF2F640A2866803152E61F95D13A6F2@G9W0715.americas.hpqcorp.net>
+ <20130530072849.GA20793@pd.tnic>
+In-Reply-To: <20130530072849.GA20793@pd.tnic>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 14 May 2013, Sarah Sharp wrote:
-
-> On Wed, May 15, 2013 at 05:41:12AM +0300, Xenia Ragiadakou wrote:
-> > Hi Sarah, (again)
-> > 
-> > Also I noticed that  dma_set_coherent_mask() is not called somewhere,
-> > which according to DMA-API-HOWTO.txt, means the even if the DMA mask
-> > is set to 64 bits by dma_set_mask, dma_alloc_coherent and
-> > dma_pool_alloc wont return 64 bit addresses (32 MSbits wont be
-> > addressed).
-> 
-> Another good question for Alan, and the USB and PCI list.
-
-This does sound like a bug.  The PCI core initializes all devices by
-default with 32-bit masks for DMA and coherent DMA.  (PCI-E, PCI-X, or
-other extensions may have more liberal policies.)  If a larger mask can
-work, the driver is responsible for setting it up.
-
-> (Alan, Ksenia is one of the applicants for the FOSS Outreach Program for
-> Women that I've been coordinating: http://kernelnewbies.org/OPWIntro)
-> 
-> We do allocate memory using DMA pools, and we do want 64-bit context
-> addresses if the xHCI host controller can handle it.
-> 
-> The xHCI driver calls dma_set_mask, but not dma_set_coherent_mask():
-> 
->                 temp = xhci_readl(xhci, &xhci->cap_regs->hcc_params);
->                 if (HCC_64BIT_ADDR(temp)) {
->                         xhci_dbg(xhci, "Enabling 64-bit DMA addresses.\n");
->                         dma_set_mask(hcd->self.controller, DMA_BIT_MASK(64));
->                 } else {
->                         dma_set_mask(hcd->self.controller, DMA_BIT_MASK(32));
->                 }
-> 
-> Alan, should it be calling dma_set_coherent_mask()?  I think I may have
-> noticed the context addresses were never 64-bit addresses, but I didn't
-> think to look whether the host supported 64-bit addresses.  I just
-> assumed it could only handle 32-bit addresses.
-
-If you're using 64-bit DMA then you almost certainly do want to call
-dma_set_coherent_mask().  On the plus side, it is guaranteed that if
-dma_set_mask() succeeds with a particular mask value then
-dma_set_coherent_mask() for the same mask value will also succeed.
-
-Ala Stern
-
+PiBPbiBUaHUsIE1heSAzMCwgMjAxMyBhdCAwNDo1NToyMEFNICswMDAwLCBPcnRpeiwgTGFuY2Ug
+RSB3cm90ZToNCj4gPiBUaGlzIFRPRE8gaXMgYSBub3RlIGZvciBmdXR1cmUgY2xlYW4tdXAgYW5k
+IGlzIG5vdCBkaXJlY3RseSByZWxhdGVkDQo+IHRvDQo+ID50aGUgYnVnIGJlaW5nIGZpeGVkIHdp
+dGggdGhpcyBwYXRjaC4gV2hpY2ggbGVuZHMgdG8gdGhlIGFyZ3VtZW50IG9mDQo+IHdoeQ0KPiA+
+cHV0IHRoZSBUT0RPIGluIHRoaXMgcGF0Y2g/IE9wcG9ydHVuaXN0aWMuIEkgZG9u4oCZdCB0aGlu
+ayB3ZSB3YW50IHRvDQo+ID5jcmVhdGUgYSBzZXBhcmF0ZSBwYXRjaCBqdXN0IGZvciBhIFRPRE8g
+bm90ZS4NCj4gDQo+IFNvdW5kcyB0byBtZSwgdGhpcyBUT0RPIGl0ZW0gc2hvdWxkIGJlIG9uIHlv
+dXIgVE9ETyBsaXN0IC0gbm90IGluDQo+IGtlcm5lbA0KPiBzb3VyY2VzIDotKQ0KPiAtLQ0KTWFr
+ZXMgc2Vuc2UuICBJIHdpbGwgeWFuayB0aGUgVE9ETyBhbmQgcmVzdWJtaXQgdGhlIHBhdGNoLiAg
+DQoNCkxhbmNlDQoNCg==
