@@ -1,67 +1,115 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cmexedge1.ext.emulex.com ([138.239.224.99]:50569 "EHLO
-	CMEXEDGE1.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752515Ab3EUPlq convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 May 2013 11:41:46 -0400
-From: "Liu, Joseph" <Joseph.Liu@Emulex.Com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"Zhang, LongX" <longx.zhang@intel.com>
-CC: "linasvepstas@gmail.com" <linasvepstas@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"yanmin_zhang@linux.intel.com" <yanmin_zhang@linux.intel.com>
-Subject: RE: Subject : [ PATCH ]
- pci-reset-error_state-to-pci_channel_io_normal-at-report_slot_reset
-Date: Tue, 21 May 2013 15:41:44 +0000
-Message-ID: <CF6E51640088844D9CADE5541A7C2FEB33EBE413@CMEXMB1.ad.emulex.com>
-References: <F7B8FD780A346D46A0042F5C63B06AE785E3B2@SHSMSX102.ccr.corp.intel.com>
- <20130520224824.GA31740@google.com>
-In-Reply-To: <20130520224824.GA31740@google.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Linux PM list <linux-pm@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Kevin Hilman <khilman@linaro.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: Re: [PATCH RFC] PM / Runtime: Rework the "runtime idle" helper routine
+Date: Thu, 30 May 2013 21:55:03 +0200
+Message-ID: <5291416.b4M4MTrzPC@vostro.rjw.lan>
+In-Reply-To: <Pine.LNX.4.44L0.1305301247370.1137-100000@iolanthe.rowland.org>
+References: <Pine.LNX.4.44L0.1305301247370.1137-100000@iolanthe.rowland.org>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Bjorn,
+On Thursday, May 30, 2013 01:08:08 PM Alan Stern wrote:
+> On Thu, 30 May 2013, Rafael J. Wysocki wrote:
+> 
+> > > Since you're making this change, wouldn't it be a good idea to adopt
+> > > Mika's original suggestion and turn on the RPM_AUTO bit in rpmflags
+> > > when the use_autosuspend flag is set?
+> > 
+> > I'm not actually sure.  It can be done, but I'd prefer to do that as a separate
+> > change in any case.
+> 
+> That makes sense.
+> 
+> > > What about cases where the runtime-idle callback does
+> > > rpm_schedule_suspend or rpm_request_suspend?  You'd have to make sure
+> > > that it returns -EBUSY in such cases.  Did you audit for this?
+> > 
+> > As far as I could.
+> > 
+> > I'm not worried about the subsystems modified by this patch, because the
+> > functionality there won't change (except for PCI, that is).
+> 
+> Right.  The subsystems that _aren't_ modified are the ones to worry 
+> about -- like the USB callback.  They are the ones where the behavior 
+> might change.
 
->> diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
->> index ed4d094..7abefd9 100644
->> --- a/drivers/pci/pcie/portdrv_pci.c
->> +++ b/drivers/pci/pcie/portdrv_pci.c
->> @@ -332,13 +332,11 @@ static pci_ers_result_t pcie_portdrv_slot_reset(struct pci_dev *dev)
->>  	pci_ers_result_t status = PCI_ERS_RESULT_RECOVERED;
->>  	int retval;
->>  
->> -	/* If fatal, restore cfg space for possible link reset at upstream */
->> -	if (dev->error_state == pci_channel_io_frozen) {
->> -		dev->state_saved = true;
->> -		pci_restore_state(dev);
->> -		pcie_portdrv_restore_config(dev);
->> -		pci_enable_pcie_error_reporting(dev);
->> -	}
->> +	/* restore cfg space for possible link reset at upstream */
->> +	dev->state_saved = true;
->> +	pci_restore_state(dev);
->> +	pcie_portdrv_restore_config(dev);
->> +	pci_enable_pcie_error_reporting(dev);
->>  
->>  	/* get true return value from &status */
->>  	retval = device_for_each_child(&dev->dev, &status, slot_reset_iter);
->
->I think this patch changes the behavior in the case of a non-fatal error
->where one of the .error_detected() methods returned
->PCI_ERS_RESULT_NEED_RESET.  In that case, pcie_portdrv_slot_reset()
->previously did not restore config space, but after your patch, it *will*
->restore it.  We need an explanation of why this is safe. 
+Right.
 
-Here is my understanding of this part of the patch:
+> > > > Index: linux-pm/Documentation/power/runtime_pm.txt
+> > > > ===================================================================
+> > > > --- linux-pm.orig/Documentation/power/runtime_pm.txt
+> > > > +++ linux-pm/Documentation/power/runtime_pm.txt
+> > > > @@ -660,11 +660,6 @@ Subsystems may wish to conserve code spa
+> > > >  management callbacks provided by the PM core, defined in
+> > > >  driver/base/power/generic_ops.c:
+> > > >  
+> > > > -  int pm_generic_runtime_idle(struct device *dev);
+> > > > -    - invoke the ->runtime_idle() callback provided by the driver of this
+> > > > -      device, if defined, and call pm_runtime_suspend() for this device if the
+> > > > -      return value is 0 or the callback is not defined
+> > > > -
+> > > 
+> > > The documentation for the runtime-idle callback needs to be updated too.
+> > 
+> > Well, I actually couldn't find the part of it that would need to be updated. :-)
+> 
+> How about this?
 
-I think your concern here should not be an issue. Whether it is a non-fatal error or a fatal error, as long as one of the .error_detected() method from the downstream drivers involved returns a PCI_ERS_RESULT_NEED_RESET, it should trump all others and a slot reset should be performed, even though it was originally due to a non-fatal error reported or only one of the downstream drivers requests it. In the case of AER driver, this should be implemented in the broadcast_error_message() with pci_walk_bus() by passing in the report_error_detected() function, and merging the results into the result_data->result...
+Looks good! :-)
 
-In any case, the fact that this pcie_portdrv_slot_reset() being invoked should be considered as a aftermath of a slot reset has been performed, thus the restore of config space should be performed after the reset. I suppose the restore should be to the same state as fresh power-on states, right?
+May I add your sign-off to it?
 
-Thanks,
-Joe Liu, Ph.D.
-Senior Principal Engineer
-Emulex Corporation
+Rafael
 
+
+> Index: usb-3.10/Documentation/power/runtime_pm.txt
+> ===================================================================
+> --- usb-3.10.orig/Documentation/power/runtime_pm.txt
+> +++ usb-3.10/Documentation/power/runtime_pm.txt
+> @@ -144,8 +144,12 @@ The action performed by the idle callbac
+>  (or driver) in question, but the expected and recommended action is to check
+>  if the device can be suspended (i.e. if all of the conditions necessary for
+>  suspending the device are satisfied) and to queue up a suspend request for the
+> -device in that case.  The value returned by this callback is ignored by the PM
+> -core.
+> +device in that case.  If there is no idle callback, or if the callback returns
+> +0, then the PM core will attempt to carry out a runtime suspend of the device;
+> +in essence, it will call pm_runtime_suspend() directly.  To prevent this (for
+> +example, if the callback routine has started a delayed suspend), the routine
+> +should return a non-zero value.  Negative error return codes are ignored by the
+> +PM core.
+>  
+>  The helper functions provided by the PM core, described in Section 4, guarantee
+>  that the following constraints are met with respect to runtime PM callbacks for
+> @@ -301,9 +305,10 @@ drivers/base/power/runtime.c and include
+>        removing the device from device hierarchy
+>  
+>    int pm_runtime_idle(struct device *dev);
+> -    - execute the subsystem-level idle callback for the device; returns 0 on
+> -      success or error code on failure, where -EINPROGRESS means that
+> -      ->runtime_idle() is already being executed
+> +    - execute the subsystem-level idle callback for the device; returns an
+> +      error code on failure, where -EINPROGRESS means that ->runtime_idle() is
+> +      already being executed; if there is no callback or the callback returns 0
+> +      then run pm_runtime_suspend(dev) and return its result
+>  
+>    int pm_runtime_suspend(struct device *dev);
+>      - execute the subsystem-level suspend callback for the device; returns 0 on
+> 
+> 
+> Alan Stern
+> 
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
