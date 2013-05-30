@@ -1,46 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f171.google.com ([209.85.223.171]:49324 "EHLO
-	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753024Ab3ETHDB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 20 May 2013 03:03:01 -0400
-Received: by mail-ie0-f171.google.com with SMTP id e11so13219419iej.30
-        for <linux-pci@vger.kernel.org>; Mon, 20 May 2013 00:03:01 -0700 (PDT)
+Received: from szxga01-in.huawei.com ([119.145.14.64]:6683 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751488Ab3E3GEg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 May 2013 02:04:36 -0400
+Message-ID: <51A6EBBE.6020805@huawei.com>
+Date: Thu, 30 May 2013 14:03:42 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <20130519203156.GO11137@titan.lakedaemon.net>
-References: <1368719725-21265-1-git-send-email-thomas.petazzoni@free-electrons.com>
-	<1368719725-21265-3-git-send-email-thomas.petazzoni@free-electrons.com>
-	<20130519203156.GO11137@titan.lakedaemon.net>
-Date: Mon, 20 May 2013 09:03:00 +0200
-Message-ID: <CACRpkdamm9vh_bXenJigwTYmN=n_SsEp+GQqAe9rdm8PRxPsqw@mail.gmail.com>
-Subject: Re: [PATCHv10 2/9] of/pci: Provide support for parsing PCI DT ranges property
-From: Linus Walleij <linus.walleij@linaro.org>
-To: Jason Cooper <jason@lakedaemon.net>, Arnd Bergmann <arnd@arndb.de>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Tawfik Bayouk <tawfik@marvell.com>, linux-pci@vger.kernel.org,
-	"devicetree-discuss@lists.ozlabs.org"
-	<devicetree-discuss@lists.ozlabs.org>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Andrew Murray <Andrew.Murray@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Xudong Hao <xudong.hao@intel.com>
+CC: <bhelgaas@google.com>, <yinghai@kernel.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Jiang Liu <liuj97@gmail.com>
+Subject: Re: [PATCH] PCI: set correct value for iov device before device
+References: <1369892734-26244-1-git-send-email-xudong.hao@intel.com>
+In-Reply-To: <1369892734-26244-1-git-send-email-xudong.hao@intel.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, May 19, 2013 at 10:31 PM, Jason Cooper <jason@lakedaemon.net> wrote:
+Hi Xudong,
+   This bug has been fixed by Jiang Liu in patch
+https://patchwork.kernel.org/patch/2613481/
 
-> patches 2, 3, and 4 applied to mvebu/of_pci to facilitate others
-> (LinusW) basing their work off of it.
 
-Thanks, is this going to be pulled into ARM SoC soon-ish?
+On 2013/5/30 13:45, Xudong Hao wrote:
+> Since device registering is put into pci_device_add(), it must set value of
+> Virtual Function device's member before the pci_dev is put to device tree. Or
+> some relevant subsystem of driver model such as xen will report a incorrect
+> IOV device to Xen hypervior.
+> 
+> Signed-off-by: Xudong Hao <xudong.hao@intel.com>
+> ---
+>  drivers/pci/iov.c | 6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+> index c93071d..43d3de9 100644
+> --- a/drivers/pci/iov.c
+> +++ b/drivers/pci/iov.c
+> @@ -110,12 +110,12 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
+>  	if (reset)
+>  		__pci_reset_function(virtfn);
+>  
+> -	pci_device_add(virtfn, virtfn->bus);
+> -	mutex_unlock(&iov->dev->sriov->lock);
+> -
+>  	virtfn->physfn = pci_dev_get(dev);
+>  	virtfn->is_virtfn = 1;
+>  
+> +	pci_device_add(virtfn, virtfn->bus);
+> +	mutex_unlock(&iov->dev->sriov->lock);
+> +
+>  	rc = pci_bus_add_device(virtfn);
+>  	sprintf(buf, "virtfn%u", id);
+>  	rc = sysfs_create_link(&dev->dev.kobj, &virtfn->dev.kobj, buf);
+> 
 
-I think Arnd may need this for some PCI work too.
 
-Yours,
-Linus Walleij
+-- 
+Thanks!
+Yijing
+
