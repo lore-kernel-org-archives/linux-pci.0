@@ -1,56 +1,50 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: aik@ozlabs.ru
-To: linuxppc-dev@lists.ozlabs.org
-Cc: Alexey Kardashevskiy <aik@ozlabs.ru>,
-	David Gibson <david@gibson.dropbear.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Paul Mackerras <paulus@samba.org>,
-	Alexander Graf <agraf@suse.de>, kvm@vger.kernel.org,
-	linux-kernel@vger.kernel.org, kvm-ppc@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH 1/5] iommu: Move initialization earlier
-Date: Mon,  6 May 2013 17:21:57 +1000
-Message-Id: <51875a31.25ac440a.50d9.ffffe8fd@mx.google.com>
-In-Reply-To: <1367824921-27151-1-git-send-email-y>
-References: <1367824921-27151-1-git-send-email-y>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pb0-f50.google.com ([209.85.160.50]:37449 "EHLO
+	mail-pb0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750717Ab3E3Ebo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 May 2013 00:31:44 -0400
+Received: by mail-pb0-f50.google.com with SMTP id wy17so10354262pbc.37
+        for <linux-pci@vger.kernel.org>; Wed, 29 May 2013 21:31:44 -0700 (PDT)
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Cc: Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org
+Subject: [PATCH] PCI, IOV: fix a resource leakage on error recovery path
+Date: Thu, 30 May 2013 12:31:33 +0800
+Message-Id: <1369888293-13387-1-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1369489718-25869-10-git-send-email-jiang.liu@huawei.com>
+References: <1369489718-25869-10-git-send-email-jiang.liu@huawei.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
-
-The iommu_init() call initializes IOMMU internal structures and data
-required for the API to function such as iommu_group_alloc().
-It is registered as a subsys_initcall.
-
-One of the IOMMU users is a PCI subsystem on POWER which discovers new
-IOMMU tables during the PCI scan so the most logical place to call
-iommu_group_alloc() is when a new group is just discovered. However
-PCI scan is done from subsys_initcall hook as well, which makes
-use of the IOMMU API impossible.
-
-This moves IOMMU subsystem initialization one step earlier.
-
-Signed-off-by: Alexey Kardashevskiy <aik@ozlabs.ru>
-Cc: David Gibson <david@gibson.dropbear.id.au>
-Signed-off-by: Paul Mackerras <paulus@samba.org>
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
 ---
- drivers/iommu/iommu.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Hi Bjorn,
+	Could you please help to apply this small patch onto the
+jiang-bus-lock-v3, which addresses a memory leakage issue pointed
+out by Yinghai? Or you may fold it into " PCI, IOV: simplify IOV 
+implementation".
+Thanks!
+Gerry
+---
+ drivers/pci/iov.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
-index 5514dfa..0de83eb 100644
---- a/drivers/iommu/iommu.c
-+++ b/drivers/iommu/iommu.c
-@@ -890,7 +890,7 @@ static int __init iommu_init(void)
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index 5eb8165..458fb39 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -122,8 +122,9 @@ failed1:
+ 	pci_dev_put(dev);
+ 	mutex_lock(&iov->dev->sriov->lock);
+ 	pci_stop_and_remove_bus_device(virtfn);
+-	virtfn_remove_bus(dev->bus, bus);
+ failed0:
++	if (bus)
++		virtfn_remove_bus(dev->bus, bus);
+ 	mutex_unlock(&iov->dev->sriov->lock);
  
- 	return 0;
- }
--subsys_initcall(iommu_init);
-+arch_initcall(iommu_init);
- 
- int iommu_domain_get_attr(struct iommu_domain *domain,
- 			  enum iommu_attr attr, void *data)
+ 	return rc;
 -- 
-1.7.10.4
+1.8.1.2
 
