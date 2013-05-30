@@ -1,182 +1,79 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Lance Ortiz <lance.ortiz@hp.com>
-Subject: [PATCH v2] aerdrv: Move cper_print_aer() call out of interrupt context
-To: bhelgaas@google.com, lance_ortiz@hotmail.com, jiang.liu@huawei.com,
-	tony.luck@intel.com, bp@alien8.de, rostedt@goodmis.org,
-	mchehab@redhat.com, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Thu, 09 May 2013 13:51:35 -0600
-Message-ID: <20130509195135.16108.70845.stgit@grignak.americas.hpqcorp.net>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ob0-f176.google.com ([209.85.214.176]:63803 "EHLO
+	mail-ob0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757498Ab3E3SOO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 May 2013 14:14:14 -0400
+Received: by mail-ob0-f176.google.com with SMTP id v19so1242335obq.21
+        for <linux-pci@vger.kernel.org>; Thu, 30 May 2013 11:14:14 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <20130530121518.GA20267@mithrandir>
+References: <1364316746-8702-1-git-send-email-thomas.petazzoni@free-electrons.com>
+ <1364316746-8702-10-git-send-email-thomas.petazzoni@free-electrons.com>
+ <CAErSpo7yC_97Vg-zuype-jyfqiY+77OE97cxYoEO9ZZnXjQ95A@mail.gmail.com> <20130530121518.GA20267@mithrandir>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 30 May 2013 12:13:53 -0600
+Message-ID: <CAErSpo7P-fs_C+Eoc1ppyWz=rGrw4idcziRf9s=h0OsxVqJhLg@mail.gmail.com>
+Subject: Re: [RFCv1 09/11] pci: mvebu: add MSI support
+To: Thierry Reding <thierry.reding@gmail.com>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Russell King <linux@arm.linux.org.uk>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	"devicetree-discuss@lists.ozlabs.org"
+	<devicetree-discuss@lists.ozlabs.org>,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Maen Suleiman <maen@marvell.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Olof Johansson <olof@lixom.net>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Mitch Bradley <wmb@firmworks.com>,
+	Andrew Murray <andrew.murray@arm.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The following warning was seen on 3.9 when a corrected PCIe error was being
-handled by the AER subsystem.
+On Thu, May 30, 2013 at 6:15 AM, Thierry Reding
+<thierry.reding@gmail.com> wrote:
+> On Mon, Apr 08, 2013 at 04:29:07PM -0600, Bjorn Helgaas wrote:
+>> On Tue, Mar 26, 2013 at 10:52 AM, Thomas Petazzoni <thomas.petazzoni@free-electrons.com> wrote:
+> [...]
+>> > +static int mvebu_pcie_setup_msi_irq(struct msi_chip *chip,
+>> > +                                   struct pci_dev *pdev,
+>> > +                                   struct msi_desc *desc)
+>> > +{
+>> > +       struct mvebu_pcie_msi *msi = to_mvebu_msi(chip);
+>>
+>> If this took only the pci_dev (not the msi_chip), I think you could do this:
+>>
+>>   struct mvebu_pcie_msi *msi = &pdev->bus->sysdata->msi;
+>
+> That would mean that the arch_setup_msi_irq() and friends could still be
+> architecture-agnostic because they only pass around pci_dev, and the
+> driver specific implementations would know how to lookup sysdata and
+> from there the MSI chip.
+>
+> So I was almost convinced that putting the struct msi_chip pointer into
+> sysdata is a good idea. However that also means that each PCI host
+> bridge driver becomes architecture-specific. If we ever get a driver
+> that can be used on multiple architectures (however unlikely), the only
+> way to make it work would be to #ifdef those parts. We could make that
+> easier to deal with by providing an accessor (pci_sysdata_set_msi_chip()
+> or similar), though.
+>
+> But maybe it's something we don't need to be concerned about because no
+> PCI host bridge driver will ever support two different architecture?
+>
+> One related point is compile coverage. If the drivers are completely
+> architecture-agnostic it makes it a lot easier to compile-test all
+> drivers, which might come in useful when doing core changes and such.
 
-WARNING: at .../drivers/pci/search.c:214 pci_get_dev_by_id+0x8a/0x90()
+Hmm, I've forgotten what I was thinking here.  (And I'm the *worst*
+about reviving ancient threads myself).  So I drop whatever objection
+I had :)
 
-This occurred because a call to pci_get_domain_bus_and_slot() was added to
-cper_print_pcie() to setup for the call to cper_print_aer().  The warning
-showed up because cper_print_pcie() is called in an interrupt context and
-pci_get* functions are not supposed to be called in that context.
-
-The solution is to move the cper_print_aer() call out of the interrupt
-context and into aer_recover_work_func() to avoid any warnings when calling
-pci_get* functions.
-
-v2 - Re-worded header text.  Removed prefix arg from cper_print_aer().
-     Added TODO message in cper_print_aer().
-
-Signed-off-by: Lance Ortiz <lance.ortiz@hp.com>
-Acked-by: Borislav Petkov <bp@suse.de>
----
-
- drivers/acpi/apei/cper.c               |   18 ------------------
- drivers/acpi/apei/ghes.c               |    3 ++-
- drivers/pci/pcie/aer/aerdrv_core.c     |    6 +++++-
- drivers/pci/pcie/aer/aerdrv_errprint.c |   10 ++++++++--
- include/linux/aer.h                    |    4 ++--
- 5 files changed, 17 insertions(+), 24 deletions(-)
-
-diff --git a/drivers/acpi/apei/cper.c b/drivers/acpi/apei/cper.c
-index 1e5d8a4..8713229 100644
---- a/drivers/acpi/apei/cper.c
-+++ b/drivers/acpi/apei/cper.c
-@@ -250,10 +250,6 @@ static const char *cper_pcie_port_type_strs[] = {
- static void cper_print_pcie(const char *pfx, const struct cper_sec_pcie *pcie,
- 			    const struct acpi_hest_generic_data *gdata)
- {
--#ifdef CONFIG_ACPI_APEI_PCIEAER
--	struct pci_dev *dev;
--#endif
--
- 	if (pcie->validation_bits & CPER_PCIE_VALID_PORT_TYPE)
- 		printk("%s""port_type: %d, %s\n", pfx, pcie->port_type,
- 		       pcie->port_type < ARRAY_SIZE(cper_pcie_port_type_strs) ?
-@@ -285,20 +281,6 @@ static void cper_print_pcie(const char *pfx, const struct cper_sec_pcie *pcie,
- 		printk(
- 	"%s""bridge: secondary_status: 0x%04x, control: 0x%04x\n",
- 	pfx, pcie->bridge.secondary_status, pcie->bridge.control);
--#ifdef CONFIG_ACPI_APEI_PCIEAER
--	dev = pci_get_domain_bus_and_slot(pcie->device_id.segment,
--			pcie->device_id.bus, pcie->device_id.function);
--	if (!dev) {
--		pr_err("PCI AER Cannot get PCI device %04x:%02x:%02x.%d\n",
--			pcie->device_id.segment, pcie->device_id.bus,
--			pcie->device_id.slot, pcie->device_id.function);
--		return;
--	}
--	if (pcie->validation_bits & CPER_PCIE_VALID_AER_INFO)
--		cper_print_aer(pfx, dev, gdata->error_severity,
--				(struct aer_capability_regs *) pcie->aer_info);
--	pci_dev_put(dev);
--#endif
- }
- 
- static const char *apei_estatus_section_flag_strs[] = {
-diff --git a/drivers/acpi/apei/ghes.c b/drivers/acpi/apei/ghes.c
-index d668a8a..f2084b5 100644
---- a/drivers/acpi/apei/ghes.c
-+++ b/drivers/acpi/apei/ghes.c
-@@ -454,7 +454,8 @@ static void ghes_do_proc(struct ghes *ghes,
- 				aer_severity = cper_severity_to_aer(sev);
- 				aer_recover_queue(pcie_err->device_id.segment,
- 						  pcie_err->device_id.bus,
--						  devfn, aer_severity);
-+						  devfn, aer_severity,
-+						  pcie_err->aer_info);
- 			}
- 
- 		}
-diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
-index 564d97f..ceba124 100644
---- a/drivers/pci/pcie/aer/aerdrv_core.c
-+++ b/drivers/pci/pcie/aer/aerdrv_core.c
-@@ -582,6 +582,7 @@ struct aer_recover_entry
- 	u8	devfn;
- 	u16	domain;
- 	int	severity;
-+	u8	*regs;
- };
- 
- static DEFINE_KFIFO(aer_recover_ring, struct aer_recover_entry,
-@@ -595,7 +596,7 @@ static DEFINE_SPINLOCK(aer_recover_ring_lock);
- static DECLARE_WORK(aer_recover_work, aer_recover_work_func);
- 
- void aer_recover_queue(int domain, unsigned int bus, unsigned int devfn,
--		       int severity)
-+		       int severity, u8 *aer_regs)
- {
- 	unsigned long flags;
- 	struct aer_recover_entry entry = {
-@@ -603,6 +604,7 @@ void aer_recover_queue(int domain, unsigned int bus, unsigned int devfn,
- 		.devfn		= devfn,
- 		.domain		= domain,
- 		.severity	= severity,
-+		.regs		= aer_regs,
- 	};
- 
- 	spin_lock_irqsave(&aer_recover_ring_lock, flags);
-@@ -629,6 +631,8 @@ static void aer_recover_work_func(struct work_struct *work)
- 			       PCI_SLOT(entry.devfn), PCI_FUNC(entry.devfn));
- 			continue;
- 		}
-+		cper_print_aer(pdev, entry.severity,
-+				(struct aer_capability_regs *)entry.regs);
- 		do_recovery(pdev, entry.severity);
- 		pci_dev_put(pdev);
- 	}
-diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c b/drivers/pci/pcie/aer/aerdrv_errprint.c
-index 5ab1425..f277dc3 100644
---- a/drivers/pci/pcie/aer/aerdrv_errprint.c
-+++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
-@@ -220,13 +220,19 @@ int cper_severity_to_aer(int cper_severity)
- }
- EXPORT_SYMBOL_GPL(cper_severity_to_aer);
- 
--void cper_print_aer(const char *prefix, struct pci_dev *dev, int cper_severity,
-+void cper_print_aer(struct pci_dev *dev, int cper_severity,
- 		    struct aer_capability_regs *aer)
- {
- 	int aer_severity, layer, agent, status_strs_size, tlp_header_valid = 0;
- 	u32 status, mask;
- 	const char **status_strs;
- 
-+	/*
-+	 * TODO: This function needs to be re-written so that it's output
-+	 * matches the output of aer_print_error().  Right now, the output
-+	 * is formatted very differently.
-+	 */
-+
- 	aer_severity = cper_severity_to_aer(cper_severity);
- 	if (aer_severity == AER_CORRECTABLE) {
- 		status = aer->cor_status;
-@@ -244,7 +250,7 @@ void cper_print_aer(const char *prefix, struct pci_dev *dev, int cper_severity,
- 	agent = AER_GET_AGENT(aer_severity, status);
- 	dev_err(&dev->dev, "aer_status: 0x%08x, aer_mask: 0x%08x\n",
- 	       status, mask);
--	cper_print_bits(prefix, status, status_strs, status_strs_size);
-+	cper_print_bits("", status, status_strs, status_strs_size);
- 	dev_err(&dev->dev, "aer_layer=%s, aer_agent=%s\n",
- 	       aer_error_layer[layer], aer_agent_string[agent]);
- 	if (aer_severity != AER_CORRECTABLE)
-diff --git a/include/linux/aer.h b/include/linux/aer.h
-index ec10e1b..d8cf12b 100644
---- a/include/linux/aer.h
-+++ b/include/linux/aer.h
-@@ -49,10 +49,10 @@ static inline int pci_cleanup_aer_uncorrect_error_status(struct pci_dev *dev)
- }
- #endif
- 
--extern void cper_print_aer(const char *prefix, struct pci_dev *dev,
-+extern void cper_print_aer(struct pci_dev *dev,
- 			   int cper_severity, struct aer_capability_regs *aer);
- extern int cper_severity_to_aer(int cper_severity);
- extern void aer_recover_queue(int domain, unsigned int bus, unsigned int devfn,
--			      int severity);
-+			      int severity,  u8 *aer_regs);
- #endif //_AER_H_
- 
-
+Bjorn
