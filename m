@@ -1,426 +1,200 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [RFC PATCH v2, part3 01/11] PCI: introduce bus lock and state machine to serialize PCI hotplug operations
-Date: Thu, 16 May 2013 23:50:49 +0800
-Message-Id: <1368719459-24800-2-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1368719459-24800-1-git-send-email-jiang.liu@huawei.com>
-References: <1368719459-24800-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f175.google.com ([209.85.223.175]:63044 "EHLO
+	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751187Ab3E3SYX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 May 2013 14:24:23 -0400
+Received: by mail-ie0-f175.google.com with SMTP id tp5so1390824ieb.6
+        for <linux-pci@vger.kernel.org>; Thu, 30 May 2013 11:24:23 -0700 (PDT)
+Date: Thu, 30 May 2013 12:24:20 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Jiang Liu <liuj97@gmail.com>
+Cc: Yinghai Lu <yinghai@kernel.org>, Jiang Liu <jiang.liu@huawei.com>,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI, IOV: fix a resource leakage on error recovery path
+Message-ID: <20130530182420.GA26805@google.com>
+References: <1369489718-25869-10-git-send-email-jiang.liu@huawei.com>
+ <1369888293-13387-1-git-send-email-jiang.liu@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1369888293-13387-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There are multiple ways to trigger concurrent PCI hotplug operations for
-a specific PCI bus, but we have no way to serialize those PCI hotplug
-operations yet and thus it may break the PCI hotplug logic. This patch
-introduces a lock mechanism and a state machine for PCI bus to serialize
-PCI hotplug operations.
+On Thu, May 30, 2013 at 12:31:33PM +0800, Jiang Liu wrote:
+> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+> ---
+> Hi Bjorn,
+> 	Could you please help to apply this small patch onto the
+> jiang-bus-lock-v3, which addresses a memory leakage issue pointed
+> out by Yinghai? Or you may fold it into " PCI, IOV: simplify IOV 
+> implementation".
+> Thanks!
+> Gerry
+> ---
+>  drivers/pci/iov.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+> index 5eb8165..458fb39 100644
+> --- a/drivers/pci/iov.c
+> +++ b/drivers/pci/iov.c
+> @@ -122,8 +122,9 @@ failed1:
+>  	pci_dev_put(dev);
+>  	mutex_lock(&iov->dev->sriov->lock);
+>  	pci_stop_and_remove_bus_device(virtfn);
+> -	virtfn_remove_bus(dev->bus, bus);
+>  failed0:
+> +	if (bus)
+> +		virtfn_remove_bus(dev->bus, bus);
+>  	mutex_unlock(&iov->dev->sriov->lock);
+>  
+>  	return rc;
 
-The state machine is as below:
-        _________________________________________________________________
-       |                                                                 v
-INITIALIZED->REGISTERED->STARTED->STOPPING->STOPPED->REMOVING->REMOVED->DESTOYED
-                  |_____________________________________^
+I fixed this slightly differently to keep the error checking
+more linear.  I think it's equivalent to what you did; let me
+know if otherwise.
 
- INITIALIZED:	the bus structure has just been allocated
- REGISTERED:	the device for the bus has been registered into the
-		device tree
- STARTED:	PCI devices under the bus has been started
- STOPPING:	start to stop devices on the bus
- STOPPED:	child PCI devices under the bus has been stopped
- REMOVING:	start to remove the PCI bus
- REMOVED:	the bus has been removed from the PCI tree
- DESTROYED:	memory for the bus has been freed, just for debug
 
-The interfaces to manage PCI bus state are:
-static inline int pci_bus_get_state(const struct pci_bus *bus);
-extern void pci_bus_change_state(struct pci_bus *bus, int new_state,
-				 int old_state, bool unlock);
+commit f5cfa3a1ccef2d0e9ca862c609cf185f87049177
+Author: Jiang Liu <liuj97@gmail.com>
+Date:   Sat May 25 21:48:37 2013 +0800
 
-And another three interfaces for PCI bus lock:
-extern int pci_bus_lock(struct pci_bus *bus, int states, bool recursive);
-extern int pci_bus_lock_timeout(struct pci_bus *bus, int states,
-				bool recursive, long timeout);
-extern void pci_bus_unlock(struct pci_bus *bus, bool recursive);
+    PCI: Simplify IOV implementation and fix reference count races
+    
+    Trivial changes to IOV:
+    
+      1) use new PCI interfaces to simplify IOV implementation
+      2) fix some reference count related race windows
+    
+    [bhelgaas: fix virtfn_add() add bus/alloc dev error paths]
+    Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+    Cc: Donald Dutile <ddutile@redhat.com>
+    Cc: Yinghai Lu <yinghai@kernel.org>
+    Cc: Ram Pai <linuxram@us.ibm.com>
 
-The locking rules are simple:
-1) The bus must be locked when changing state of child devices.
-2) The bus must be locked when changing state of itself.
-
-A typical usage looks like:
-if (pci_bus_lock(bus, PCI_BUS_STATE_STARTED, true) == 0) {
-	do_pci_hotplug();
-	pci_bus_unlock(bus, true);
-}
-
-Note:
-The PCI_BUS_LOCK config option is a temporary solution to avoid breaking
-bisects, it will be removed when all architectures have been enhanced to
-support the new PCI bus state and lock mechanism.
-
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
----
- drivers/pci/Kconfig |   3 +
- drivers/pci/bus.c   | 251 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/pci.h |  47 ++++++++++
- 3 files changed, 301 insertions(+)
-
-diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
-index 6d51aa6..92e69bd 100644
---- a/drivers/pci/Kconfig
-+++ b/drivers/pci/Kconfig
-@@ -119,3 +119,6 @@ config PCI_IOAPIC
- config PCI_LABEL
- 	def_bool y if (DMI || ACPI)
- 	select NLS
-+
-+config PCI_BUS_LOCK
-+	def_bool n
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index f7e1f76..b232775 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -15,9 +15,12 @@
- #include <linux/proc_fs.h>
- #include <linux/init.h>
- #include <linux/slab.h>
-+#include <linux/sched.h>
- 
- #include "pci.h"
- 
-+static DECLARE_WAIT_QUEUE_HEAD(pci_bus_state_wait_queue);
-+
- void pci_add_resource_offset(struct list_head *resources, struct resource *res,
- 			     resource_size_t offset)
- {
-@@ -297,6 +300,254 @@ void pci_bus_put(struct pci_bus *bus)
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index 8f1e117..5fffca9 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -51,24 +51,16 @@ static struct pci_bus *virtfn_add_bus(struct pci_bus *bus, int busnr)
+ 	return child;
  }
- EXPORT_SYMBOL(pci_bus_put);
  
-+/**
-+ * pci_bus_change_state - Change state of @bus from @old_state to @new_state
-+ * @bus: the PCI bus to change state
-+ * @old_state: old state of @bus
-+ * @new_state: new state for @bus
-+ * @unlock: unlock @bus if true
-+ *
-+ * Change state of @bus from @old_state to @new_state, and unlock @bus
-+ * if @unlock is true.
-+ * Note:
-+ * - @new_state must be bigger than @old_state
-+ * - must be called with @bus locked.
-+ */
-+void pci_bus_change_state(struct pci_bus *bus, int old_state, int new_state,
-+			  bool unlock)
-+{
-+	int t;
-+
-+	BUG_ON(!pci_bus_is_locked(bus));
-+	BUG_ON(new_state < old_state || pci_bus_get_state(bus) != old_state ||
-+	       (new_state & ~PCI_BUS_STATE_MASK));
-+
-+	old_state |= PCI_BUS_STATE_LOCK;
-+	if (!unlock)
-+		new_state |= PCI_BUS_STATE_LOCK;
-+
-+	do {
-+		t = atomic_read(&bus->state);
-+		t &= ~(PCI_BUS_STATE_MASK | PCI_BUS_STATE_LOCK);
-+	} while (atomic_cmpxchg(&bus->state, t | old_state, t | new_state)
-+		 != (t | old_state));
-+
-+	wake_up_all(&pci_bus_state_wait_queue);
-+}
-+
-+/* Wait for bus to reach one of the specified states. */
-+static bool pci_bus_wait_for_states(struct pci_bus *bus, int states)
-+{
-+	int t = atomic_read(&bus->state);
-+
-+	/* Bus state is bigger than any of the specified states. */
-+	if ((t & PCI_BUS_STATE_MASK) > states)
-+		return true;
-+
-+	/* Bus is in one of the specified states and unlocked. */
-+	if ((t & states) && !(t & PCI_BUS_STATE_LOCK))
-+		return true;
-+
-+	return false;
-+}
-+
-+static int pci_bus_lock_one(struct pci_bus *bus, int states, long *to)
-+{
-+	int t;
-+
-+	BUG_ON(states & ~PCI_BUS_STATE_MASK);
-+	do {
-+		do {
-+			if (*to <= 0)
-+				return -ETIMEDOUT;
-+			*to = wait_event_timeout(pci_bus_state_wait_queue,
-+				pci_bus_wait_for_states(bus, states), *to);
-+			t = atomic_read(&bus->state);
-+			if (((t & PCI_BUS_STATE_MASK) > states))
-+				return -EBUSY;
-+		} while (!(t & states));
-+
-+		t &= ~PCI_BUS_STATE_LOCK;
-+	} while (atomic_cmpxchg(&bus->state, t , t | PCI_BUS_STATE_LOCK) != t);
-+
-+	return 0;
-+}
-+
-+static int ___pci_bus_lock(struct pci_bus *bus, int states, bool recursive,
-+			   long *to, struct pci_bus **marker)
-+{
-+	int ret;
-+	struct pci_bus *child;
-+
-+	ret = pci_bus_lock_one(bus, states, to);
-+	if (ret < 0) {
-+		*marker = bus;
-+	} else if (recursive) {
-+		list_for_each_entry(child, &bus->children, node) {
-+			ret = ___pci_bus_lock(child, states, recursive,
-+					      to, marker);
-+			if (ret < 0)
-+				break;
-+		}
-+	}
-+
-+	return ret;
-+}
-+
-+static int __pci_bus_unlock(struct pci_bus *bus, bool recursive,
-+			    struct pci_bus *mark)
-+{
-+	int t, ret = 0;
-+	struct pci_bus *child;
-+
-+	if (unlikely(bus == mark))
-+		return 1;
-+
-+	if (recursive)
-+		list_for_each_entry(child, &bus->children, node) {
-+			ret = __pci_bus_unlock(child, recursive, mark);
-+			if (ret)
-+				break;
-+		}
-+
-+	BUG_ON(!pci_bus_is_locked(bus));
-+	do {
-+		t = atomic_read(&bus->state);
-+	} while (atomic_cmpxchg(&bus->state, t, t & ~PCI_BUS_STATE_LOCK) != t);
-+
-+	return ret;
-+}
-+
-+static int __pci_bus_lock(struct pci_bus *bus, int states, bool recursive,
-+			  long *to)
-+{
-+	int ret;
-+	struct pci_bus *mark = NULL;
-+
-+	ret = ___pci_bus_lock(bus, states, recursive, to, &mark);
-+	if (ret < 0) {
-+		__pci_bus_unlock(bus, recursive, mark);
-+		wake_up_all(&pci_bus_state_wait_queue);
-+	}
-+
-+	return ret;
-+}
-+
-+/**
-+ * pci_bus_lock - wait for @bus to reach one of the specified states
-+ *		  and then lock it.
-+ * @bus: the PCI bus to lock
-+ * @states: specified states to wait for
-+ * @recursive: lock all the subtree if true
-+ *
-+ * Wait for @bus to reach one of the states specified by @states and then
-+ * lock it. Resursively lock all the subtree if @recursive is true.
-+ *
-+ * Return values:
-+ * - 0 on success
-+ * - -EBUSY if failed to lock the bus
-+ */
-+int pci_bus_lock(struct pci_bus *bus, int states, bool recursive)
-+{
-+	int ret;
-+	long to;
-+
-+	/*
-+	 * When recursively locking the sub-tree starting from @bus,
-+	 * __pci_bus_lock() may return -EBUSY if some child buses are under
-+	 * hot-removing, so keep retrying until success or @bus is out of
-+	 * requested @states.
-+	 */
-+	do {
-+		to = HZ / 10;
-+		ret = __pci_bus_lock(bus, states, recursive, &to);
-+		if (ret == 0)
-+			return 0;
-+
-+		/*
-+		 * Prevent a deadlock scenario that thread A waits for
-+		 * all sysfs files to be released while holding PCI bus
-+		 * locks, and Thread B tries to acquire PCI bus locks
-+		 * in a sysfs handler. These checks break the deadlock
-+		 * condition.
-+		 */
-+		if (pci_bus_get_state(bus) > states)
-+			return -EBUSY;
-+		if (to > 0)
-+			schedule_timeout_interruptible(to);
-+	} while (true);
-+}
-+EXPORT_SYMBOL(pci_bus_lock);
-+
-+/**
-+ * pci_bus_lock_timeout - wait for @bus to reach one of the
-+ *			  specified states and then lock it.
-+ * @bus: the PCI bus to lock
-+ * @states: specified states to wait for
-+ * @recursive: lock all the subtree if true
-+ * @timeout: maximum number of jiffies to wait
-+ *
-+ * Wait for @bus to reach one of the states specified by @states and then
-+ * lock it. Resursively lock all the subtree if @recursive is true.
-+ *
-+ * Return values:
-+ * - 0 on success
-+ * - -ETIMEDOUT if timeouts
-+ * - -EBUSY if failed to lock the bus
-+ */
-+int pci_bus_lock_timeout(struct pci_bus *bus, int states, bool recursive,
-+			 long timeout)
-+{
-+	int ret;
-+	long to;
-+
-+	if (timeout <= 0)
-+		return -ETIMEDOUT;
-+
-+	/*
-+	 * When recursively locking the sub-tree starting from @bus,
-+	 * __pci_bus_lock() may return -EBUSY if some child buses are under
-+	 * hot-removing, so keep retrying until success or @bus is out of
-+	 * requested @states.
-+	 */
-+	do {
-+		to = (timeout > HZ / 10) ? (HZ / 10) : timeout;
-+		timeout -= to;
-+		ret = __pci_bus_lock(bus, states, recursive, &to);
-+		if (ret == 0)
-+			return 0;
-+
-+		/*
-+		 * Prevent a deadlock scenario that thread A waits for
-+		 * all sysfs files to be released while holding PCI bus
-+		 * locks, and Thread B tries to acquire PCI bus locks
-+		 * in a sysfs handler. These checks break the deadlock
-+		 * condition.
-+		 */
-+		if (pci_bus_get_state(bus) > states)
-+			return -EBUSY;
-+		if (to > 0)
-+			schedule_timeout_interruptible(to);
-+	} while (timeout > 0);
-+
-+	return -ETIMEDOUT;
-+}
-+EXPORT_SYMBOL(pci_bus_lock_timeout);
-+
-+/**
-+ * pci_bus_unlock - unlock @bus and wake up waiters
-+ * bus: PCI bus to unlock
-+ * recursive: unlock subtree if recursive is true
-+ *
-+ * Unlock PCI bus @bus and wake up waiters. Must be called with @bus locked.
-+ */
-+void pci_bus_unlock(struct pci_bus *bus, bool recursive)
-+{
-+	__pci_bus_unlock(bus, recursive, NULL);
-+	wake_up_all(&pci_bus_state_wait_queue);
-+}
-+EXPORT_SYMBOL(pci_bus_unlock);
-+
- EXPORT_SYMBOL(pci_bus_alloc_resource);
- EXPORT_SYMBOL_GPL(pci_bus_add_device);
- EXPORT_SYMBOL(pci_bus_add_devices);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index c88d4e6..cfe075c 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -450,8 +450,55 @@ struct pci_bus {
- 	struct bin_attribute	*legacy_io; /* legacy I/O for this bus */
- 	struct bin_attribute	*legacy_mem; /* legacy mem */
- 	unsigned int		is_added:1;
-+	atomic_t		state;
- };
+-static void virtfn_remove_bus(struct pci_bus *bus, int busnr)
++static void virtfn_remove_bus(struct pci_bus *physbus, struct pci_bus *virtbus)
+ {
+-	struct pci_bus *child;
+-
+-	if (bus->number == busnr)
+-		return;
+-
+-	child = pci_find_bus(pci_domain_nr(bus), busnr);
+-	BUG_ON(!child);
+-
+-	if (list_empty(&child->devices))
+-		pci_remove_bus(child);
++	if (physbus != virtbus && list_empty(&virtbus->devices))
++		pci_remove_bus(virtbus);
+ }
  
-+/*
-+ * PCI bus state machine:
-+ *         _________________________________________________________________
-+ *        |                                                                 v
-+ * INITIALIZED->REGISTERED->STARTED->STOPPING->STOPPED->REMOVING->REMOVED->DESTOYED
-+ *                   |_____________________________________^
-+ */
-+#define PCI_BUS_STATE_UNKNOWN		0x0	/* invalid state */
-+#define PCI_BUS_STATE_INITIALIZED	0x1	/* bus initialized */
-+#define PCI_BUS_STATE_REGISTERED	0x2	/* bus added into device tree */
-+#define PCI_BUS_STATE_STARTED		0x4	/* working state */
-+#define PCI_BUS_STATE_STOPPING		0x8	/* start to stop children */
-+#define PCI_BUS_STATE_STOPPED		0x10	/* child devices stopped */
-+#define PCI_BUS_STATE_REMOVING		0x20	/* start to remove PCI */
-+#define PCI_BUS_STATE_REMOVED		0x40	/* bus removed */
-+#define PCI_BUS_STATE_DESTROYED		0x80	/* used for debug only */
-+#define PCI_BUS_STATE_MASK		0xFF
+ static int virtfn_add(struct pci_dev *dev, int id, int reset)
+ {
+ 	int i;
+-	int rc;
++	int rc = -ENOMEM;
+ 	u64 size;
+ 	char buf[VIRTFN_ID_LEN];
+ 	struct pci_dev *virtfn;
+@@ -76,18 +68,15 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
+ 	struct pci_sriov *iov = dev->sriov;
+ 	struct pci_bus *bus;
+ 
+-	virtfn = pci_alloc_dev(NULL);
+-	if (!virtfn)
+-		return -ENOMEM;
+-
+ 	mutex_lock(&iov->dev->sriov->lock);
+ 	bus = virtfn_add_bus(dev->bus, virtfn_bus(dev, id));
+-	if (!bus) {
+-		kfree(virtfn);
+-		mutex_unlock(&iov->dev->sriov->lock);
+-		return -ENOMEM;
+-	}
+-	virtfn->bus = pci_bus_get(bus);
++	if (!bus)
++		goto failed;
 +
-+#ifdef	CONFIG_PCI_BUS_LOCK
-+#define	PCI_BUS_STATE_LOCK		0x10000	/* for pci core only */
++	virtfn = pci_alloc_dev(bus);
++	if (!virtfn)
++		goto failed0;
 +
-+static inline bool pci_bus_is_locked(const struct pci_bus *bus)
-+{
-+	return !!(atomic_read(&bus->state) & PCI_BUS_STATE_LOCK);
-+}
-+#else /* CONFIG_PCI_BUS_LOCK */
-+#define	PCI_BUS_STATE_LOCK		0x00000	/* for pci core only */
-+
-+static inline bool pci_bus_is_locked(const struct pci_bus *bus)
-+{
-+	return true;
-+}
-+#endif /* CONFIG_PCI_BUS_LOCK */
-+
-+static inline int pci_bus_get_state(const struct pci_bus *bus)
-+{
-+	return atomic_read(&bus->state) & PCI_BUS_STATE_MASK;
-+}
-+
-+void pci_bus_change_state(struct pci_bus *bus, int new_state,
-+			  int old_state, bool unlock);
-+int pci_bus_lock(struct pci_bus *bus, int states, bool recursive);
-+int pci_bus_lock_timeout(struct pci_bus *bus, int states,
-+			 bool recursive, long timeout);
-+void pci_bus_unlock(struct pci_bus *bus, bool recursive);
-+
- #define pci_bus_b(n)	list_entry(n, struct pci_bus, node)
- #define to_pci_bus(n)	container_of(n, struct pci_bus, dev)
- #define for_each_pci_bus(b)	for (b = NULL; (b = pci_get_next_bus(b)); )
--- 
-1.8.1.2
-
+ 	virtfn->devfn = virtfn_devfn(dev, id);
+ 	virtfn->vendor = dev->vendor;
+ 	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_DID, &virtfn->device);
+@@ -136,7 +125,9 @@ failed1:
+ 	pci_dev_put(dev);
+ 	mutex_lock(&iov->dev->sriov->lock);
+ 	pci_stop_and_remove_bus_device(virtfn);
+-	virtfn_remove_bus(dev->bus, virtfn_bus(dev, id));
++failed0:
++	virtfn_remove_bus(dev->bus, bus);
++failed:
+ 	mutex_unlock(&iov->dev->sriov->lock);
+ 
+ 	return rc;
+@@ -145,20 +136,15 @@ failed1:
+ static void virtfn_remove(struct pci_dev *dev, int id, int reset)
+ {
+ 	char buf[VIRTFN_ID_LEN];
+-	struct pci_bus *bus;
+ 	struct pci_dev *virtfn;
+ 	struct pci_sriov *iov = dev->sriov;
+ 
+-	bus = pci_find_bus(pci_domain_nr(dev->bus), virtfn_bus(dev, id));
+-	if (!bus)
+-		return;
+-
+-	virtfn = pci_get_slot(bus, virtfn_devfn(dev, id));
++	virtfn = pci_get_domain_bus_and_slot(pci_domain_nr(dev->bus),
++					     virtfn_bus(dev, id),
++					     virtfn_devfn(dev, id));
+ 	if (!virtfn)
+ 		return;
+ 
+-	pci_dev_put(virtfn);
+-
+ 	if (reset) {
+ 		device_release_driver(&virtfn->dev);
+ 		__pci_reset_function(virtfn);
+@@ -176,9 +162,11 @@ static void virtfn_remove(struct pci_dev *dev, int id, int reset)
+ 
+ 	mutex_lock(&iov->dev->sriov->lock);
+ 	pci_stop_and_remove_bus_device(virtfn);
+-	virtfn_remove_bus(dev->bus, virtfn_bus(dev, id));
++	virtfn_remove_bus(dev->bus, virtfn->bus);
+ 	mutex_unlock(&iov->dev->sriov->lock);
+ 
++	/* balance pci_get_domain_bus_and_slot() */
++	pci_dev_put(virtfn);
+ 	pci_dev_put(dev);
+ }
+ 
+@@ -335,13 +323,14 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+ 		if (!pdev)
+ 			return -ENODEV;
+ 
+-		pci_dev_put(pdev);
+-
+-		if (!pdev->is_physfn)
++		if (!pdev->is_physfn) {
++			pci_dev_put(pdev);
+ 			return -ENODEV;
++		}
+ 
+ 		rc = sysfs_create_link(&dev->dev.kobj,
+ 					&pdev->dev.kobj, "dep_link");
++		pci_dev_put(pdev);
+ 		if (rc)
+ 			return rc;
+ 	}
