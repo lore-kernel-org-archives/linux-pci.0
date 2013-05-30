@@ -1,60 +1,167 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate16.nvidia.com ([216.228.121.65]:10336 "EHLO
-	hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965463Ab3E2KKW convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 May 2013 06:10:22 -0400
-From: Jay Agarwal <jagarwal@nvidia.com>
-To: 'Stephen Warren' <swarren@wwwdotorg.org>,
-	"'thierry.reding@avionic-design.de'"
-	<thierry.reding@avionic-design.de>
-CC: "'linux@arm.linux.org.uk'" <linux@arm.linux.org.uk>,
-	"'bhelgaas@google.com'" <bhelgaas@google.com>,
-	"'olof@lixom.net'" <olof@lixom.net>,
-	"'mturquette@linaro.org'" <mturquette@linaro.org>,
-	"'linux-arm-kernel@lists.infradead.org'"
-	<linux-arm-kernel@lists.infradead.org>,
-	"'linux-tegra@vger.kernel.org'" <linux-tegra@vger.kernel.org>,
-	"'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>,
-	"'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>
-Date: Wed, 29 May 2013 15:40:17 +0530
-Subject: RE: [PATCH 4/4] ARM: tegra: pcie: Enable PCIe controller on Cardhu
-Message-ID: <C79B248886DD134989C8FF6B096A91AB91B616BE9B@BGMAIL01.nvidia.com>
-References: <1368010660-31465-1-git-send-email-jagarwal@nvidia.com>
- <1368010660-31465-4-git-send-email-jagarwal@nvidia.com>
- <518A8596.7070702@wwwdotorg.org>
- <C79B248886DD134989C8FF6B096A91AB91B4886B5D@BGMAIL01.nvidia.com>
- <C79B248886DD134989C8FF6B096A91AB91B4886B6C@BGMAIL01.nvidia.com>
-In-Reply-To: <C79B248886DD134989C8FF6B096A91AB91B4886B6C@BGMAIL01.nvidia.com>
+Received: from mail-la0-f48.google.com ([209.85.215.48]:54847 "EHLO
+	mail-la0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S967252Ab3E3Itk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 May 2013 04:49:40 -0400
+Received: by mail-la0-f48.google.com with SMTP id fs12so9432663lab.7
+        for <linux-pci@vger.kernel.org>; Thu, 30 May 2013 01:49:39 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Reply-To: pricardofc@ipfn.ist.utl.pt
+In-Reply-To: <CAE9FiQXCf-h84sXqGPKbdd66oNbzWOtfea+PcHFiJPLPBc6oGQ@mail.gmail.com>
+References: <CAH9N0t-DOC0iOMjtHUTznCzk=C7RpbdBOhYR=mK1zaAmeH-Rqw@mail.gmail.com>
+	<CAE9FiQXCf-h84sXqGPKbdd66oNbzWOtfea+PcHFiJPLPBc6oGQ@mail.gmail.com>
+Date: Thu, 30 May 2013 09:49:38 +0100
+Message-ID: <CAH9N0t_4uxJ21wasRSNKBt+5X-cQGwqStakRccfggm1TAbOAqQ@mail.gmail.com>
+Subject: Re: Pcie Linux HotPlug Driver
+From: Paulo Fortuna Carvalho <pricardofc@ipfn.ist.utl.pt>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: multipart/mixed; boundary=089e0160baae20d77004ddeb9421
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> > > So, if I apply this series, I do see the PCIe bridge and Ethernet
-> > > device get enumerated, but I don't see the USB3 controller get
-> > > enumerated. I believe that is a PCIe device behind the same bridge
-> > > on the
-> > same Tegra PCIe port.
-> > > Shouldn't this device show up?
-> > I have also reproduced this problem. I see somehow no non-
-> > prefetchable memory is assigned to any of pcie devices.
-> > Probably that is the reason for USB3 (pci 0000:04:00.0) not getting
-> > enumerated since it uses only non-prefetchable memory.
-> 
-> 1. Bus4(on which usb3 device resides) always return 0xffffffff from it's
-> config space. which means device is not present?
-> 2. That's why it is not assigned any resources and hence no usb3 probe
-> happens.
-> 3. But same bus does return valid info like vendor/device id etc from it's
-> config space in downstream kernel and hence usb3 probe does happen.
-> 
-> Thierry, Stephen,
-> 4. Any idea why bus4 should return 0xffffffff values in upstream kernel?
-> Anything missing?
-> 5. Also, how config space of all pcie devices are mapped? I mean if I change
-> the config space offset in dts file, then also I find correct vendor/device id
-> etc for bus0/device0/fun0.
->     So how this mapping happens that even after changing the config space
-> offset in PCIe address space, it always finds correct vendor/device id.
+--089e0160baae20d77004ddeb9421
+Content-Type: text/plain; charset=ISO-8859-1
 
- Any idea on this?
+Hello Yinghai,
+Im sending you the boot.log file in attach with the grub.conf changed
+to add debug ignore_loglevel.
+Also I could manage to load pciehp.ko (not fakephp.ko) module at boot time.
+Paulo.
+
+
+
+2013/5/29, Yinghai Lu <yinghai@kernel.org>:
+> On Wed, May 29, 2013 at 10:30 AM, Paulo Fortuna Carvalho
+> <pricardofc@ipfn.ist.utl.pt> wrote:
+>> Hello Yinghai and Bjorn,
+>> Issue solved.
+>> You were correct. The module fakephp.ko was not loaded.
+>
+> No, you should not use fackephp.ko. As it was removed already
+> in recent kernel.
+> It is replaced by pci slot driver.
+>
+> In your case you should pciehp.ko
+>
+> Please post boot log with "debug ignore_loglevel"
+>
+>
+>> Now everything works ok and device driver need not to be changed.
+>> As you said is a normal PCI Device Driver.
+>>
+>> Now I want that that when ATCA card is without energy ( 11:00.0 DPIO
+>> module: PLD APPLICATIONS Device 6014 (rev ff) )
+>>
+>> the command:
+>> echo 0 > /sys/bus/pci/slots/0000*/power is automatically executed.
+>>
+>> At the moment i'm doing it manually and after that my atca card driver
+>> is removed.
+>>
+>> And when i give energy to the ATCA card i have to manually perform pci
+>> bus re-enumeration
+>> with command:
+>> echo 1 > /sys/bus/pci/rescan
+>>
+>> and the ATCA card driver is automatically inserted. How can
+>> re-enumeration be done automatically?
+>
+> If you can enable pciehp.ko for 04:08.0, then you can use
+> echo 0 > /sys/bus/pci/slots/48/power
+> echo 1 > /sys/bus/pci/slots/48/power
+>
+> that should probe devices and load driver automatically.
+>
+> Yinghai
+>
+
+--089e0160baae20d77004ddeb9421
+Content-Type: application/octet-stream; name="boot.log"
+Content-Disposition: attachment; filename="boot.log"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: file0
+
+GyVHCQlXZWxjb21lIHRvIBtbMDszMW1SZWQgSGF0G1swOzM5bSBFbnRlcnByaXNlIExpbnV4IFNl
+cnZlcg0KU3RhcnRpbmcgdWRldjogGyVHG1s2MEdbG1swOzMybSAgT0sgIBtbMDszOW1dDQ0KU2V0
+dGluZyBob3N0bmFtZSBmcHNjLXBjZi10ZXN0OiAgG1s2MEdbG1swOzMybSAgT0sgIBtbMDszOW1d
+DQ0KU2V0dGluZyB1cCBMb2dpY2FsIFZvbHVtZSBNYW5hZ2VtZW50OiAgIDIgbG9naWNhbCB2b2x1
+bWUocykgaW4gdm9sdW1lIGdyb3VwICJyb290dmciIG5vdyBhY3RpdmUNChtbNjBHWxtbMDszMm0g
+IE9LICAbWzA7MzltXQ0NCkNoZWNraW5nIGZpbGVzeXN0ZW1zDQovZGV2L21hcHBlci9yb290dmct
+cm9vdHZvbDogY2xlYW4sIDI1NTQxOS82MDg5MTEzNiBmaWxlcywgNzY3MTg3Ni8yNDM1NjQ1NDQg
+YmxvY2tzDQovZGV2L3NkYTE6IGNsZWFuLCA0NS8xMDI0MDAgZmlsZXMsIDY5OTU2LzQwOTYwMCBi
+bG9ja3MNChtbNjBHWxtbMDszMm0gIE9LICAbWzA7MzltXQ0NClJlbW91bnRpbmcgcm9vdCBmaWxl
+c3lzdGVtIGluIHJlYWQtd3JpdGUgbW9kZTogIBtbNjBHWxtbMDszMm0gIE9LICAbWzA7MzltXQ0N
+Ck1vdW50aW5nIGxvY2FsIGZpbGVzeXN0ZW1zOiAgG1s2MEdbG1swOzMybSAgT0sgIBtbMDszOW1d
+DQ0KRW5hYmxpbmcgbG9jYWwgZmlsZXN5c3RlbSBxdW90YXM6ICAbWzYwR1sbWzA7MzJtICBPSyAg
+G1swOzM5bV0NDQpFbmFibGluZyAvZXRjL2ZzdGFiIHN3YXBzOiAgG1s2MEdbG1swOzMybSAgT0sg
+IBtbMDszOW1dDQ0KRW50ZXJpbmcgbm9uLWludGVyYWN0aXZlIHN0YXJ0dXANCkNhbGxpbmcgdGhl
+IHN5c3RlbSBhY3Rpdml0eSBkYXRhIGNvbGxlY3RvciAoc2FkYyk6IA0KU3RhcnRpbmcgbW9uaXRv
+cmluZyBmb3IgVkcgcm9vdHZnOiAgIDIgbG9naWNhbCB2b2x1bWUocykgaW4gdm9sdW1lIGdyb3Vw
+ICJyb290dmciIG1vbml0b3JlZA0KG1s2MEdbG1swOzMybSAgT0sgIBtbMDszOW1dDQ0KQnJpbmdp
+bmcgdXAgbG9vcGJhY2sgaW50ZXJmYWNlOiAgG1s2MEdbG1swOzMybSAgT0sgIBtbMDszOW1dDQ0K
+QnJpbmdpbmcgdXAgaW50ZXJmYWNlIGV0aDA6ICAbWzYwR1sbWzA7MzJtICBPSyAgG1swOzM5bV0N
+DQpTdGFydGluZyBwcHBvZS1zZXJ2ZXI6IBtbNjBHWxtbMDszMm0gIE9LICAbWzA7MzltXQ0NClN0
+YXJ0aW5nIGF1ZGl0ZDogG1s2MEdbG1swOzMybSAgT0sgIBtbMDszOW1dDQ0KU3RhcnRpbmcgcG9y
+dHJlc2VydmU6IBtbNjBHWxtbMDszMm0gIE9LICAbWzA7MzltXQ0NClN0YXJ0aW5nIHN5c3RlbSBs
+b2dnZXI6IBtbNjBHWxtbMDszMm0gIE9LICAbWzA7MzltXQ0NClN0YXJ0aW5nIHJwY2JpbmQ6IBtb
+NjBHWxtbMDszMm0gIE9LICAbWzA7MzltXQ0NClN0YXJ0aW5nIGtkdW1wOhtbNjBHWxtbMDszMW1G
+QUlMRUQbWzA7MzltXQ0NClN0YXJ0aW5nIHN5c3RlbSBtZXNzYWdlIGJ1czogG1s2MEdbG1swOzMy
+bSAgT0sgIBtbMDszOW1dDQ0KU2V0dGluZyBuZXR3b3JrIHBhcmFtZXRlcnMuLi4gG1s2MEdbG1sw
+OzMybSAgT0sgIBtbMDszOW1dDQ0KU3RhcnRpbmcgTmV0d29ya01hbmFnZXIgZGFlbW9uOiAbWzYw
+R1sbWzA7MzJtICBPSyAgG1swOzM5bV0NDQpTdGFydGluZyBBdmFoaSBkYWVtb24uLi4gG1s2MEdb
+G1swOzMybSAgT0sgIBtbMDszOW1dDQ0KU3RhcnRpbmcgTkZTIHN0YXRkOiAbWzYwR1sbWzA7MzJt
+ICBPSyAgG1swOzM5bV0NDQpTdGFydGluZyBSUEMgaWRtYXBkOiBycGMuaWRtYXBkOiBjb25mX3Bh
+cnNlOiBsYXN0IGxpbmUgbm9uLXRlcm1pbmF0ZWQsIGlnbm9yZWQuDQpycGMuaWRtYXBkOiBjb25m
+X3BhcnNlOiBsYXN0IGxpbmUgbm9uLXRlcm1pbmF0ZWQsIGlnbm9yZWQuDQobWzYwR1sbWzA7MzJt
+ICBPSyAgG1swOzM5bV0NDQpTdGFydGluZyBjdXBzOiAbWzYwR1sbWzA7MzJtICBPSyAgG1swOzM5
+bV0NDQpNb3VudGluZyBvdGhlciBmaWxlc3lzdGVtczogIBtbNjBHWxtbMDszMm0gIE9LICAbWzA7
+MzltXQ0NClN0YXJ0aW5nIGFjcGkgZGFlbW9uOiAbWzYwR1sbWzA7MzJtICBPSyAgG1swOzM5bV0N
+DQpTdGFydGluZyBIQUwgZGFlbW9uOiAbWzYwR1sbWzA7MzJtICBPSyAgG1swOzM5bV0NDQpSZXRy
+aWdnZXIgZmFpbGVkIHVkZXYgZXZlbnRzG1s2MEdbG1swOzMybSAgT0sgIBtbMDszOW1dDQ0KU3Rh
+cnRpbmcgUEMvU0Mgc21hcnQgY2FyZCBkYWVtb24gKHBjc2NkKTogG1s2MEdbG1swOzMybSAgT0sg
+IBtbMDszOW1dDQ0KU3RhcnRpbmcgc2xhcGQ6IBtbNjBHWxtbMDszMm0gIE9LICAbWzA7MzltXQ0N
+CkxvYWRpbmcgYXV0b2ZzNDogG1s2MEdbG1swOzMybSAgT0sgIBtbMDszOW1dDQ0KU3RhcnRpbmcg
+YXV0b21vdW50OiAbWzYwR1sbWzA7MzJtICBPSyAgG1swOzM5bV0NDQobWzA7MzNtTkkgU1lOQyBQ
+VFAgRGFlbW9uIGNhbm5vdCBiZSB1c2VkIGR1ZSB0byBhYnNlbmNlIG9mIGhhcmR3YXJlIG9yIGRy
+aXZlciEbWzBtDQpFbmFibGluZyBCbHVldG9vdGggZGV2aWNlczoNClN0YXJ0aW5nIG1jZWxvZyBk
+YWVtb24NChtbNjBHWxtbMDszMm0gIE9LICAbWzA7MzltXQ1TdGFydGluZyBzc2hkOiAbWzYwR1sb
+WzA7MzJtICBPSyAgG1swOzM5bV0NDQpTdGFydGluZyB4aW5ldGQ6IBtbNjBHWxtbMDszMm0gIE9L
+ICAbWzA7MzltXQ0NClN0YXJ0aW5nIG50cGQ6IBtbNjBHWxtbMDszMm0gIE9LICAbWzA7MzltXQ0N
+ClN0YXJ0aW5nIEVQSUNTIENBIFJlcGVhdGVyIBtbNjBHWxtbMDszMm0gIE9LICAbWzA7MzltXQ0N
+ClN0YXJ0aW5nIEVQSUNTIElPQyBMb2cgU2VydmVyIBtbNjBHWxtbMDszMm0gIE9LICAbWzA7Mzlt
+XQ0NClN0YXJ0aW5nIFRvbWNhdCAbWzYwR1sbWzA7MzJtICBPSyAgG1swOzM5bV0NDQpTdGFydGlu
+ZyBwb3N0Z3Jlc3FsLTkuMiBzZXJ2aWNlOiAbWzYwR1sbWzA7MzJtICBPSyAgG1swOzM5bV0NDQpT
+dGFydGluZyBzZW5kbWFpbDogG1s2MEdbG1swOzMybSAgT0sgIBtbMDszOW1dDQ0KU3RhcnRpbmcg
+c20tY2xpZW50OiAbWzYwR1sbWzA7MzJtICBPSyAgG1swOzM5bV0NDQpTdGFydGluZyBhYnJ0IGRh
+ZW1vbjogG1s2MEdbG1swOzMybSAgT0sgIBtbMDszOW1dDQ0KU3RhcnRpbmcgY29uc29sZSBtb3Vz
+ZSBzZXJ2aWNlczogG1s2MEdbG1swOzMybSAgT0sgIBtbMDszOW1dDQ0KU3RhcnRpbmcgY3JvbmQ6
+IBtbNjBHWxtbMDszMm0gIE9LICAbWzA7MzltXQ0NClN0YXJ0aW5nIEFwYWNoZSBBY3RpdmVNUSBm
+b3IgQ1NTIBtbNjBHWxtbMDszMm0gIE9LICAbWzA7MzltXQ0NClN0YXJ0aW5nIENTUyBBbGFybSBT
+ZXJ2ZXIgG1s2MEdbG1swOzMybSAgT0sgIBtbMDszOW1dDQ0KU3RhcnRpbmcgQ1NTIEFsYXJtIE5v
+dGlmaWVyIBtbNjBHWxtbMDszMm0gIE9LICAbWzA7MzltXQ0NClN0YXJ0aW5nIENTUyBBbGFybSBB
+bm51bmNpYXRvciAbWzYwR1sbWzA7MzJtICBPSyAgG1swOzM5bV0NDQpTdGFydGluZyBDU1MgQXJj
+aGl2ZSBFbmdpbmUgG1s2MEdbG1swOzMybSAgT0sgIBtbMDszOW1dDQ0KU3RhcnRpbmcgQ1NTIEpN
+UzJSREIgG1s2MEdbG1swOzMybSAgT0sgIBtbMDszOW1dDQ0KU3RhcnRpbmcgVk5DIHNlcnZlcjog
+MTpjb2RhYy1kZXYgDQpOZXcgJ2Zwc2MtcGNmLXRlc3Q6MSAoY29kYWMtZGV2KScgZGVza3RvcCBp
+cyBmcHNjLXBjZi10ZXN0OjENCg0KU3RhcnRpbmcgYXBwbGljYXRpb25zIHNwZWNpZmllZCBpbiAv
+aG9tZS9jb2RhYy1kZXYvLnZuYy94c3RhcnR1cA0KTG9nIGZpbGUgaXMgL2hvbWUvY29kYWMtZGV2
+Ly52bmMvZnBzYy1wY2YtdGVzdDoxLmxvZw0KDQoyOmJzYW50b3MgDQpOZXcgJ2Zwc2MtcGNmLXRl
+c3Q6MiAoYnNhbnRvcyknIGRlc2t0b3AgaXMgZnBzYy1wY2YtdGVzdDoyDQoNClN0YXJ0aW5nIGFw
+cGxpY2F0aW9ucyBzcGVjaWZpZWQgaW4gL2hvbWUvYnNhbnRvcy8udm5jL3hzdGFydHVwDQpMb2cg
+ZmlsZSBpcyAvaG9tZS9ic2FudG9zLy52bmMvZnBzYy1wY2YtdGVzdDoyLmxvZw0KDQozOnByaWNh
+cmRvZmMgDQpOZXcgJ2Zwc2MtcGNmLXRlc3Q6MyAocHJpY2FyZG9mYyknIGRlc2t0b3AgaXMgZnBz
+Yy1wY2YtdGVzdDozDQoNClN0YXJ0aW5nIGFwcGxpY2F0aW9ucyBzcGVjaWZpZWQgaW4gL2hvbWUv
+cHJpY2FyZG9mYy8udm5jL3hzdGFydHVwDQpMb2cgZmlsZSBpcyAvaG9tZS9wcmljYXJkb2ZjLy52
+bmMvZnBzYy1wY2YtdGVzdDozLmxvZw0KDQo0OmFuYW0gDQpOZXcgJ2Zwc2MtcGNmLXRlc3Q6NCAo
+YW5hbSknIGRlc2t0b3AgaXMgZnBzYy1wY2YtdGVzdDo0DQoNClN0YXJ0aW5nIGFwcGxpY2F0aW9u
+cyBzcGVjaWZpZWQgaW4gL2hvbWUvYW5hbS8udm5jL3hzdGFydHVwDQpMb2cgZmlsZSBpcyAvaG9t
+ZS9hbmFtLy52bmMvZnBzYy1wY2YtdGVzdDo0LmxvZw0KDQobWzYwR1sbWzA7MzJtICBPSyAgG1sw
+OzM5bV0NDQpTdGFydGluZyBDU1MgQXJjaGl2ZSBFbmdpbmUgZm9yIFBMQyBTYW1wbGUgG1s2MEdb
+G1swOzMybSAgT0sgIBtbMDszOW1dDQ0KU3RhcnRpbmcgYXRkOiAbWzYwR1sbWzA7MzJtICBPSyAg
+G1swOzM5bV0NDQpTdGFydGluZyBSZWQgSGF0IE5ldHdvcmsgRGFlbW9uOiAbWzYwR1sbWzA7MzJt
+ICBPSyAgG1swOzM5bV0NDQpTdGFydGluZyByaHNtY2VydGQgMjQwIDE0NDAbWzYwR1sbWzA7MzJt
+ICBPSyAgG1swOzM5bV0NDQpTZXR0aW5nIGtlcm5lbCB0aHJlYWQgcHJpb3JpdGllczogG1s2MEdb
+G1swOzMybSAgT0sgIBtbMDszOW1dDQ0K
+--089e0160baae20d77004ddeb9421--
