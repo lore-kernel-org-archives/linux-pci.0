@@ -1,63 +1,43 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 2 May 2013 19:00:39 -0700
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Yanmin Zhang <yanmin_zhang@linux.intel.com>
-Cc: linasvepstas@gmail.com, "Zhang, LongX" <longx.zhang@intel.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Joseph.Liu@Emulex.Com" <Joseph.Liu@emulex.com>
-Subject: Re: Subject : [ PATCH ]
- pci-reset-error_state-to-pci_channel_io_normal-at-report_slot_reset
-Message-ID: <20130503020039.GA29087@kroah.com>
-References: <F7B8FD780A346D46A0042F5C63B06AE785E3B2@SHSMSX102.ccr.corp.intel.com>
- <1367454625.2093.6.camel@ymzhang.sh.intel.com>
- <CAHrUA34H_B-ffebx6ueHgV1ax-PL_3hLZr1JGaP2NJZ7bYgvtw@mail.gmail.com>
- <1367541180.2093.10.camel@ymzhang.sh.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1367541180.2093.10.camel@ymzhang.sh.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Betty Dall <betty.dall@hp.com>
+To: rjw@sisk.pl, bhelgaas@google.com
+Cc: ying.huang@intel.com, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Betty Dall <betty.dall@hp.com>
+Subject: [PATCH v2 1/3] PCI/AER: Fix incorrect return from aer_hest_parse()
+Date: Thu, 30 May 2013 08:39:27 -0600
+Message-Id: <1369924769-17183-2-git-send-email-betty.dall@hp.com>
+In-Reply-To: <1369924769-17183-1-git-send-email-betty.dall@hp.com>
+References: <1369924769-17183-1-git-send-email-betty.dall@hp.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 03, 2013 at 08:33:00AM +0800, Yanmin Zhang wrote:
-> On Wed, 2013-05-01 at 20:20 -0500, Linas Vepstas wrote:
-> > Hi,
-> > 
-> > On 1 May 2013 19:30, Yanmin Zhang <yanmin_zhang@linux.intel.com>
-> > wrote:
-> >         On Fri, 2013-04-26 at 06:28 +0000, Zhang, LongX wrote:
-> >         > From: Zhang Long <longx.zhang@intel.com>
-> >         >
-> >         > Specific pci device drivers might have many functions to
-> >         call
-> >         > pci_channel_offline to check device states. When slot_reset
-> >         happens,
-> >         > drivers' slot_reset callback might call such functions and
-> >         eventually
-> >         > abort the reset.
-> >         >
-> >         > The patch resets pdev->error_state to pci_channel_io_normal
-> >         at
-> >         > the begining of report_slot_reset.
-> >         >
-> >         > Thank Liu Joseph for pointing it out.
-> >         
-> >         Linas, Bjorn,
-> >         
-> >         Would you like to merge the patch to your testing tree?
-> >         The patch resolves one issue pointed out by Joseph.
-> > 
-> > 
-> > I'm not maintaining a tree at this time, and am not able to test.
-> > Sorry.
-> Thanks Linas.
-> 
-> Greg,
-> 
-> Would you like to merge it into your testing tree? Joseph Liu tested
-> the patch and it does work.
+The function aer_hest_parse() is called to determine if the given
+PCI device is firmware first or not. The code loops through each
+section of the HEST table to look for a match. The bug is that
+the function always returns whether the last HEST section is firmware
+first. The fix stops the iteration once the info.firmware_first
+variable is set.  This is similar to how the function aer_hest_parse_aff()
+stops the iteration.
 
-You do know about the scripts/get_maintainer.pl script, right?
+Signed-off-by: Betty Dall <betty.dall@hp.com>
+---
 
-Hint, try it out :)
+ drivers/pci/pcie/aer/aerdrv_acpi.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
+
+
+diff --git a/drivers/pci/pcie/aer/aerdrv_acpi.c b/drivers/pci/pcie/aer/aerdrv_acpi.c
+index 5194a7d..39b8671 100644
+--- a/drivers/pci/pcie/aer/aerdrv_acpi.c
++++ b/drivers/pci/pcie/aer/aerdrv_acpi.c
+@@ -42,6 +42,9 @@ static int aer_hest_parse(struct acpi_hest_header *hest_hdr, void *data)
+ 	u8 bridge = 0;
+ 	int ff = 0;
+ 
++	if (info->firmware_first)
++		return 0;
++
+ 	switch (hest_hdr->type) {
+ 	case ACPI_HEST_TYPE_AER_ROOT_PORT:
+ 		pcie_type = PCI_EXP_TYPE_ROOT_PORT;
