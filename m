@@ -1,39 +1,36 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from terminus.zytor.com ([198.137.202.10]:58303 "EHLO mail.zytor.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759888Ab3EWWq7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 23 May 2013 18:46:59 -0400
-Message-ID: <519E9C4C.3080305@zytor.com>
-Date: Thu, 23 May 2013 15:46:36 -0700
-From: "H. Peter Anvin" <hpa@zytor.com>
+Received: from hqemgate14.nvidia.com ([216.228.121.143]:15220 "EHLO
+	hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S967549Ab3E3GRH convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 May 2013 02:17:07 -0400
+From: Jay Agarwal <jagarwal@nvidia.com>
+To: 'Stephen Warren' <swarren@wwwdotorg.org>
+CC: "thierry.reding@avionic-design.de" <thierry.reding@avionic-design.de>,
+	Laxman Dewangan <ldewangan@nvidia.com>,
+	Prashant Gaikwad <pgaikwad@nvidia.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Juha Tukkinen <jtukkinen@nvidia.com>,
+	Krishna Thota <kthota@nvidia.com>
+Date: Thu, 30 May 2013 11:47:02 +0530
+Subject: RE: [PATCH] Move PCIe node to correct place
+Message-ID: <C79B248886DD134989C8FF6B096A91AB91B616BE9E@BGMAIL01.nvidia.com>
+References: <1368626150-25395-1-git-send-email-jagarwal@nvidia.com>
+ <5193B622.9020503@wwwdotorg.org>
+In-Reply-To: <5193B622.9020503@wwwdotorg.org>
 MIME-Version: 1.0
-To: Matt Fleming <matt@console-pimps.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, x86@kernel.org,
-	Matt Fleming <matt.fleming@intel.com>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	Seth Forshee <seth.forshee@canonical.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>, stable@vger.kernel.org
-Subject: Re: [PATCH] x86/PCI: setup data may be in highmem
-References: <1369215782-32697-1-git-send-email-matt@console-pimps.org>
-In-Reply-To: <1369215782-32697-1-git-send-email-matt@console-pimps.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/22/2013 02:43 AM, Matt Fleming wrote:
-> From: Matt Fleming <matt.fleming@intel.com>
+> On 05/15/2013 07:55 AM, Jay Agarwal wrote:
+> > Moving PCIe controller node to correct place so that it is sorted by
+> > register address in .dtsi file
 > 
-> pcibios_add_device() assumes that the physical addresses stored in
-> setup_data are accessible via the direct kernel mapping, and that
-> calling phys_to_virt() is valid. This isn't guaranteed to be true on x86
-> where the direct mapping range is much smaller than on x86-64.
-> 
-> Calling phys_to_virt() on a highmem address results in the following,
-> 
-
-Bjorn: yours or mine?
-
-	-hpa
-
+> Reviewed-by: Stephen Warren <swarren@nvidia.com>
+Hi Thierry,
+If reviews are done, Can you please include this into your repository?
 
