@@ -1,54 +1,101 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f50.google.com ([209.85.219.50]:65459 "EHLO
-	mail-oa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934735Ab3E1RZw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 May 2013 13:25:52 -0400
-Received: by mail-oa0-f50.google.com with SMTP id l20so10317613oag.37
-        for <linux-pci@vger.kernel.org>; Tue, 28 May 2013 10:25:51 -0700 (PDT)
+Received: from mail-ob0-f181.google.com ([209.85.214.181]:34464 "EHLO
+	mail-ob0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750867Ab3E3XWh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 May 2013 19:22:37 -0400
+Received: by mail-ob0-f181.google.com with SMTP id 16so1797113obc.26
+        for <linux-pci@vger.kernel.org>; Thu, 30 May 2013 16:22:37 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1369728226-25936-1-git-send-email-wangyijing@huawei.com>
-References: <1369728226-25936-1-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <CAE9FiQWfSW7yT4cZrDoh==H=v_qmvR=9WF54jggSKGq8S_xqug@mail.gmail.com>
+References: <1369892734-26244-1-git-send-email-xudong.hao@intel.com>
+ <CAE9FiQUCOJ5FFwRWpVy59RqEwGC2KMNXvKe5HUAKLSES5fAR+Q@mail.gmail.com> <CAE9FiQWfSW7yT4cZrDoh==H=v_qmvR=9WF54jggSKGq8S_xqug@mail.gmail.com>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 28 May 2013 11:25:31 -0600
-Message-ID: <CAErSpo4VU2+vTLBQNtzfJD-GQ1uxJkL61Fanrn8+Bv6pHBminQ@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Replace printks with appropriate pr_*()
-To: Yijing Wang <wangyijing@huawei.com>
+Date: Thu, 30 May 2013 17:22:17 -0600
+Message-ID: <CAErSpo5o3KvkXnLsOuFZsP0M3Jq1VL9yweXgEusAu2=NmqjLiA@mail.gmail.com>
+Subject: Re: [PATCH] PCI: set correct value for iov device before device
+To: Yinghai Lu <yinghai@kernel.org>
 Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Hanjun Guo <guohanjun@huawei.com>, Jiang Liu <liuj97@gmail.com>
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Xudong Hao <xudong.hao@intel.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 28, 2013 at 2:03 AM, Yijing Wang <wangyijing@huawei.com> wrote:
-> Replace deprecated printk(KERN_ERR...) with pr_err() in pci-acpi.c
+On Thu, May 30, 2013 at 2:27 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Wed, May 29, 2013 at 11:04 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> On Wed, May 29, 2013 at 10:45 PM, Xudong Hao <xudong.hao@intel.com> wrote:
+>>> Since device registering is put into pci_device_add(), it must set value of
+>>> Virtual Function device's member before the pci_dev is put to device tree. Or
+>>> some relevant subsystem of driver model such as xen will report a incorrect
+>>> IOV device to Xen hypervior.
+>>>
+>>> Signed-off-by: Xudong Hao <xudong.hao@intel.com>
+>>> ---
+>>>  drivers/pci/iov.c | 6 +++---
+>>>  1 file changed, 3 insertions(+), 3 deletions(-)
+>>>
+>>> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+>>> index c93071d..43d3de9 100644
+>>> --- a/drivers/pci/iov.c
+>>> +++ b/drivers/pci/iov.c
+>>> @@ -110,12 +110,12 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
+>>>         if (reset)
+>>>                 __pci_reset_function(virtfn);
+>>>
+>>> -       pci_device_add(virtfn, virtfn->bus);
+>>> -       mutex_unlock(&iov->dev->sriov->lock);
+>>> -
+>>>         virtfn->physfn = pci_dev_get(dev);
+>>>         virtfn->is_virtfn = 1;
+>>>
+>>> +       pci_device_add(virtfn, virtfn->bus);
+>>> +       mutex_unlock(&iov->dev->sriov->lock);
+>>> +
+>>>         rc = pci_bus_add_device(virtfn);
+>>>         sprintf(buf, "virtfn%u", id);
+>>>         rc = sysfs_create_link(&dev->dev.kobj, &virtfn->dev.kobj, buf);
+>>
+>> I have similar patch at
+>> https://patchwork.kernel.org/patch/2562551/
+>>    [5/7] PCI, ACPI: Don't glue ACPI dev with pci VFs
+>>
+>> and Jiang has another one
+>> https://patchwork.kernel.org/patch/2613481/
+>>    [v3,part1,10/10] PCI, IOV: hide remove and rescan sysfs interfaces
+>> for SR-IOV virtual functions
 >
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> ---
->  drivers/pci/pci-acpi.c |    4 ++--
->  1 files changed, 2 insertions(+), 2 deletions(-)
+> Bjorn,
+>
+> I double check this one, we should split the patch from me or Jiang.
 
-Applied to pci/misc for v3.11, thanks.
+I don't know what the sentence above means.
 
-> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
-> index e4b1fb2..6c15d6a 100644
-> --- a/drivers/pci/pci-acpi.c
-> +++ b/drivers/pci/pci-acpi.c
-> @@ -376,12 +376,12 @@ static int __init acpi_pci_init(void)
->         int ret;
->
->         if (acpi_gbl_FADT.boot_flags & ACPI_FADT_NO_MSI) {
-> -               printk(KERN_INFO"ACPI FADT declares the system doesn't support MSI, so disable it\n");
-> +               pr_info("ACPI FADT declares the system doesn't support MSI, so disable it\n");
->                 pci_no_msi();
->         }
->
->         if (acpi_gbl_FADT.boot_flags & ACPI_FADT_NO_ASPM) {
-> -               printk(KERN_INFO"ACPI FADT declares the system doesn't support PCIe ASPM, so disable it\n");
-> +               pr_info("ACPI FADT declares the system doesn't support PCIe ASPM, so disable it\n");
->                 pcie_no_aspm();
->         }
->
-> --
-> 1.7.1
->
->
+> and the one about set virtfn=1 should be -stable material.
+
+I assume you mean that Jiang's "[v3,part1,10/10] PCI, IOV: hide remove
+and rescan sysfs interfaces for SR-IOV virtual functions" patch does
+not need to be in v3.10, but it should be marked for -stable.
+
+How far back should it go?  v3.9+?
+
+> That will address another problem that is caused by
+> moving device_add from pci_bus_add_device to pci_device_add.
+
+I assume you're talking about a problem caused by 4f535093 ("PCI: Put
+pci_dev in device tree as early as possible").  That commit appeared
+in v3.9.
+
+If we're asking to add the "hide remove and rescan sysfs interfaces"
+patch to the v3.9 stable series, we should have a description of
+exactly what problem it fixes, and ideally, a bugzilla for it.  Can
+you provide that?
+
+That patch appears to be the only one in the [v3,part1,0/10] series
+that actually directly fixes an issue, so it would be nice to have
+more specifics in that changelog to begin with.  The other patches in
+that series appear to to be cleanups and preparation for the real
+fixes that will come later.
+
+Bjorn
