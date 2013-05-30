@@ -1,72 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f54.google.com ([209.85.219.54]:60430 "EHLO
-	mail-oa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934735Ab3E1RYx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 May 2013 13:24:53 -0400
-Received: by mail-oa0-f54.google.com with SMTP id o17so10219380oag.41
-        for <linux-pci@vger.kernel.org>; Tue, 28 May 2013 10:24:52 -0700 (PDT)
+Received: from avon.wwwdotorg.org ([70.85.31.133]:52792 "EHLO
+	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756274Ab3E3SEZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 May 2013 14:04:25 -0400
+Message-ID: <51A794A4.1010502@wwwdotorg.org>
+Date: Thu, 30 May 2013 12:04:20 -0600
+From: Stephen Warren <swarren@wwwdotorg.org>
 MIME-Version: 1.0
-In-Reply-To: <1369709709-14504-1-git-send-email-wangyijing@huawei.com>
-References: <1369709709-14504-1-git-send-email-wangyijing@huawei.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 28 May 2013 11:24:32 -0600
-Message-ID: <CAErSpo5+K41XE8yMOaf6RJN=1oyv=z_Fi-vaXJLDaDxvgdq+QA@mail.gmail.com>
-Subject: Re: [PATCH] PCI/X86: increase info->res_num before checking
- pci_use_crs return
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Hanjun Guo <guohanjun@huawei.com>,
-	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Feng Tang <feng.tang@intel.com>
+To: Jay Agarwal <jagarwal@nvidia.com>
+CC: "'thierry.reding@avionic-design.de'"
+	<thierry.reding@avionic-design.de>,
+	"'linux@arm.linux.org.uk'" <linux@arm.linux.org.uk>,
+	"'bhelgaas@google.com'" <bhelgaas@google.com>,
+	"'olof@lixom.net'" <olof@lixom.net>,
+	"'mturquette@linaro.org'" <mturquette@linaro.org>,
+	"'linux-arm-kernel@lists.infradead.org'"
+	<linux-arm-kernel@lists.infradead.org>,
+	"'linux-tegra@vger.kernel.org'" <linux-tegra@vger.kernel.org>,
+	"'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>,
+	"'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH 4/4] ARM: tegra: pcie: Enable PCIe controller on Cardhu
+References: <1368010660-31465-1-git-send-email-jagarwal@nvidia.com> <1368010660-31465-4-git-send-email-jagarwal@nvidia.com> <518A8596.7070702@wwwdotorg.org> <C79B248886DD134989C8FF6B096A91AB91B4886B5D@BGMAIL01.nvidia.com> <C79B248886DD134989C8FF6B096A91AB91B4886B6C@BGMAIL01.nvidia.com> <C79B248886DD134989C8FF6B096A91AB91B616BE9B@BGMAIL01.nvidia.com> <51A62042.7070304@wwwdotorg.org> <C79B248886DD134989C8FF6B096A91AB91B616BEA6@BGMAIL01.nvidia.com>
+In-Reply-To: <C79B248886DD134989C8FF6B096A91AB91B616BEA6@BGMAIL01.nvidia.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, May 27, 2013 at 8:55 PM, Yijing Wang <wangyijing@huawei.com> wrote:
-> I separate this patch from patchset "Add hostbridge resource release to
-> support root bus hotplug in IA64", because it's a Separate issue.
->
-> We should increase info->res_num before we checking pci_use_crs return
-> when pci=nocrs set.
->
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> Cc: Yinghai Lu <yinghai@kernel.org>
-> Cc: Jiang Liu <liuj97@gmail.com>
-> Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-> Cc: Feng Tang <feng.tang@intel.com>
-> ---
->  arch/x86/pci/acpi.c |    7 ++-----
->  1 files changed, 2 insertions(+), 5 deletions(-)
+On 05/30/2013 11:37 AM, Jay Agarwal wrote:
+...
+> I have taken care of all your comments, but Ethernet device is not working for me neither on cardhu nor harmony. 
+> Could be related to my process or board, Currently debugging this.
 
-Applied to pci/misc for v3.11, thanks!
+Are you talking about a PCIe-based Ethernet device on Harmony, or the
+one that's built into the board?
 
-> diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-> index 3e72425..662dfdf 100644
-> --- a/arch/x86/pci/acpi.c
-> +++ b/arch/x86/pci/acpi.c
-> @@ -324,14 +324,11 @@ setup_resource(struct acpi_resource *acpi_res, void *data)
->         res->start = start;
->         res->end = end;
->         info->res_offset[info->res_num] = addr.translation_offset;
-> +       info->res_num++;
->
-> -       if (!pci_use_crs) {
-> +       if (!pci_use_crs)
->                 dev_printk(KERN_DEBUG, &info->bridge->dev,
->                            "host bridge window %pR (ignored)\n", res);
-> -               return AE_OK;
-> -       }
-> -
-> -       info->res_num++;
->
->         return AE_OK;
->  }
-> --
-> 1.7.1
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The on-board Ethernet device is USB, and should work fine already, and
+irrespective of any PCIe patches.
+
+I have only tried an XHCI USB controller in the PCIe slot on Harmony, so
+I can't say if Ethernet not working is a regression or not. Does the
+Ethernet device work with just Thierry's patches and not yours?
+
+> Parallely, should I push my patches for review so that it is clear from other aspects?
+
+Well, if the patches don't work, I suppose there's not much use posting
+them since they'll just need changes before they can be usefully applied
+anyway. IIRC, most of my comments last time were fairly minor, so there
+isn't much need for a separate review of them, right?
