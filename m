@@ -1,75 +1,38 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f51.google.com ([209.85.219.51]:57504 "EHLO
-	mail-oa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752034Ab3E0Pd2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 May 2013 11:33:28 -0400
-Received: by mail-oa0-f51.google.com with SMTP id f4so8791431oah.24
-        for <linux-pci@vger.kernel.org>; Mon, 27 May 2013 08:33:27 -0700 (PDT)
+Received: from ch1ehsobe005.messaging.microsoft.com ([216.32.181.185]:34447
+	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751161Ab3EaGnE convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 31 May 2013 02:43:04 -0400
+From: "Huang, Shane" <Shane.Huang@amd.com>
+To: Jean Delvare <khali@linux-fr.org>
+CC: Tejun Heo <tj@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
+	"linux-i2c@vger.kernel.org" <linux-i2c@vger.kernel.org>,
+	"Huang, Shane" <Shane.Huang@amd.com>
+Subject: RE: [PATCH 3/3] i2c-piix4: add AMD CZ SMBus device ID
+Date: Fri, 31 May 2013 06:42:54 +0000
+Message-ID: <43EB3AB3EEFE8D43B525F4D2EAF507E1085B8CC5@SCYBEXDAG04.amd.com>
+References: <1369999333-2073-1-git-send-email-shane.huang@amd.com>
+ <20130531080336.04481330@endymion.delvare>
+In-Reply-To: <20130531080336.04481330@endymion.delvare>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <CAH9N0t_dNJ+u+9BLFTsqRNnbRO4xMaGYqE6_du_u+joZfzBYyA@mail.gmail.com>
-References: <CAH9N0t_dNJ+u+9BLFTsqRNnbRO4xMaGYqE6_du_u+joZfzBYyA@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 27 May 2013 09:33:06 -0600
-Message-ID: <CAErSpo7TXMOake9=oXwa-JA9qd9FmwNtHqM6RSt12QO=WORshA@mail.gmail.com>
-Subject: Re: Pcie Linux HotPlug Driver
-To: pricardofc@ipfn.ist.utl.pt
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, May 27, 2013 at 4:43 AM, Paulo Fortuna Carvalho
-<pricardofc@ipfn.ist.utl.pt> wrote:
-> I have an PCI Express ATCA card with an FPGA.
-> I have a device driver to communicate with the board.
-> Now we are trying to implement hot-plug using the PCIe Port Bus Driver Model.
+Hi Jean,
 
-Why do you want to use the "Port Bus Driver Model"?  That is only
-intended for the ports in PCIe switches.  Does your card include a
-switch with non-standard services?
+> Please don't change the case. This makes your patch larger and
+> increases the risk of conflict with other patches, for no good reason.
+> 
+> Other than that, the patch looks OK.
 
-If your driver is specifically for some new switch functionality, you
-might want to make it a port service driver.  But if this is a PCIe
-endpoint device, then you should make it a plain old PCI driver with
-pci_register_driver().
+I didn't want to change it but checkpatch.pl warns due to
+"Hudson-2" in i2c-piix4.c
 
-Bjorn
+Thanks,
+Shane
 
-> Our driver has been modified in order to be compliant to a service
-> driver as described in the HowTo Documentation.
->
-> Using the file pcieport_if.h there were some structs that become
-> obsolete namely the pci_port_service_id.
->
-> 1) How can we provide the board ids with the pci_port_service_id
-> struct removed?
-> I'm using the old method struct pci_device_id
->
-> 2) How can we point to the old pci_dev pointer in our functions once
-> the arguments for probe(), remove() now are pcie_device struct? I'm using
-> the port item in the struct pcie_device.
->
-> 3) After changes at insmod time my board appears in the /proc/devices
-> but my devices and sub-devices never appear in the /dev directory
-> making me wonder that something is missing in my class_create() and
-> device_create() function...
->
-> 4) Are functions resume() and suspend() relevant for the hot-plug
-> process? At the moment these functions only return -ENOSYS
->
-> My Purpose: At the moment i'm only interest in modifying the Linux
-> Device Driver for the board using the PCIe HotPlug Port Bus Driver
-> Model (porting it to a Service Driver), detect the board and create
-> the devices and sub-devices in the /dev directory as it used to do.
-> I think there is only something missing but I dont know what.
->
-> NOTE: Some aditional information:
-> My _init() and _exit() functions are calling
-> pcie_port_service_register() and pcie_port_service_unregister(), respectively.
->
-> Thanks in Advance,
-> Paulo (University PhD Student)
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
