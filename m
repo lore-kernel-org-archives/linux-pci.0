@@ -1,256 +1,37 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f177.google.com ([209.85.192.177]:64212 "EHLO
-	mail-pd0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755916Ab3ETPxA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 20 May 2013 11:53:00 -0400
-Message-ID: <519A46D4.4010808@gmail.com>
-Date: Mon, 20 May 2013 23:52:52 +0800
-From: Liu Jiang <liuj97@gmail.com>
+Received: from mail-pb0-f54.google.com ([209.85.160.54]:33297 "EHLO
+	mail-pb0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751997Ab3EaIQ2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 31 May 2013 04:16:28 -0400
+Date: Fri, 31 May 2013 17:16:23 +0900
+From: Tejun Heo <tj@kernel.org>
+To: Shane Huang <shane.huang@amd.com>
+Cc: Jean Delvare <khali@linux-fr.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-i2c@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-ide@vger.kernel.org
+Subject: Re: [PATCH v2 3/3] i2c-piix4: add AMD CZ SMBus device ID
+Message-ID: <20130531081623.GB17241@mtj.dyndns.org>
+References: <1369987950-2894-1-git-send-email-shane.huang@amd.com>
 MIME-Version: 1.0
-To: Gu Zheng <guz.fnst@cn.fujitsu.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2, part 1 8/9] PCI: make PCI host bridge/bus creating
- and destroying logic symmetric
-References: <1368461313-4371-1-git-send-email-jiang.liu@huawei.com> <1368461313-4371-9-git-send-email-jiang.liu@huawei.com> <5199C433.5030902@cn.fujitsu.com>
-In-Reply-To: <5199C433.5030902@cn.fujitsu.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1369987950-2894-1-git-send-email-shane.huang@amd.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon 20 May 2013 02:35:31 PM CST, Gu Zheng wrote:
->
-> On 05/14/2013 12:08 AM, Jiang Liu wrote:
->
->> This patch makes PCI host bridge/bus creating and destroying logic
->> symmetric by using device_initialize()/device_add()/device_del()/put_device()
->> pairs as discussed in thread at:
->> http://comments.gmane.org/gmane.linux.kernel.pci/22073
->>
->> It also fixes a bug in error recovery path in pci_create_root_bus()
->> which may kfree() an in-use host bridge object.
->>
->> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
->> Cc: Yinghai Lu <yinghai@kernel.org>
->> ---
->>   drivers/pci/probe.c  | 84 +++++++++++++++++++++++-----------------------------
->>   drivers/pci/remove.c |  3 +-
->>   2 files changed, 39 insertions(+), 48 deletions(-)
->>
->> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
->> index bc075a3..a2617c2 100644
->> --- a/drivers/pci/probe.c
->> +++ b/drivers/pci/probe.c
->> @@ -451,7 +451,7 @@ void pci_read_bridge_bases(struct pci_bus *child)
->>   	}
->>   }
->>
->> -static struct pci_bus * pci_alloc_bus(void)
->> +static struct pci_bus *pci_alloc_bus(struct pci_ops *ops, void *sd, int bus)
->>   {
->>   	struct pci_bus *b;
->>
->> @@ -464,10 +464,32 @@ static struct pci_bus * pci_alloc_bus(void)
->>   		INIT_LIST_HEAD(&b->resources);
->>   		b->max_bus_speed = PCI_SPEED_UNKNOWN;
->>   		b->cur_bus_speed = PCI_SPEED_UNKNOWN;
->> +		b->sysdata = sd;
->> +		b->ops = ops;
->> +		b->number = bus;
->> +		b->busn_res.start = bus;
->> +		b->busn_res.end = 0xff;
->> +		b->busn_res.flags = IORESOURCE_BUS;
->> +		b->dev.class = &pcibus_class;
->> +		dev_set_name(&b->dev, "%04x:%02x", pci_domain_nr(b), bus);
->> +		device_initialize(&b->dev);
->>   	}
->> +
->>   	return b;
->>   }
->>
->> +static void pci_release_host_bridge_dev(struct device *dev)
->> +{
->> +	struct pci_host_bridge *bridge = to_pci_host_bridge(dev);
->> +
->> +	if (bridge->release_fn)
->> +		bridge->release_fn(bridge);
->> +
->> +	pci_free_resource_list(&bridge->windows);
->> +
->> +	kfree(bridge);
->> +}
->> +
->>   static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
->>   {
->>   	struct pci_host_bridge *bridge;
->> @@ -476,6 +498,10 @@ static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
->>   	if (bridge) {
->>   		INIT_LIST_HEAD(&bridge->windows);
->>   		bridge->bus = b;
->> +		bridge->dev.release = pci_release_host_bridge_dev;
->> +		dev_set_name(&bridge->dev, "pci%04x:%02x",
->> +			     pci_domain_nr(b), b->number);
->> +		device_initialize(&bridge->dev);
->>   	}
->>
->>   	return bridge;
->> @@ -628,28 +654,13 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
->>   	/*
->>   	 * Allocate a new bus, and inherit stuff from the parent..
->>   	 */
->> -	child = pci_alloc_bus();
->> +	child = pci_alloc_bus(parent->ops, parent->sysdata, busnr);
->>   	if (!child)
->>   		return NULL;
->>
->>   	child->parent = parent;
->> -	child->ops = parent->ops;
->> -	child->sysdata = parent->sysdata;
->>   	child->bus_flags = parent->bus_flags;
->> -
->> -	/* initialize some portions of the bus device, but don't register it
->> -	 * now as the parent is not properly set up yet.
->> -	 */
->> -	child->dev.class = &pcibus_class;
->> -	dev_set_name(&child->dev, "%04x:%02x", pci_domain_nr(child), busnr);
->> -
->> -	/*
->> -	 * Set up the primary, secondary and subordinate
->> -	 * bus numbers.
->> -	 */
->> -	child->number = child->busn_res.start = busnr;
->>   	child->primary = parent->busn_res.start;
->> -	child->busn_res.end = 0xff;
->>
->>   	if (!bridge) {
->>   		child->dev.parent = parent->bridge;
->> @@ -670,7 +681,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
->>   	bridge->subordinate = child;
->>
->>   add_dev:
->> -	ret = device_register(&child->dev);
->> +	ret = device_add(&child->dev);
->>   	WARN_ON(ret < 0);
->>
->>   	pcibios_add_bus(child);
->> @@ -1190,18 +1201,6 @@ int pci_cfg_space_size(struct pci_dev *dev)
->>   	return PCI_CFG_SPACE_SIZE;
->>   }
->>
->> -static void pci_release_bus_bridge_dev(struct device *dev)
->> -{
->> -	struct pci_host_bridge *bridge = to_pci_host_bridge(dev);
->> -
->> -	if (bridge->release_fn)
->> -		bridge->release_fn(bridge);
->> -
->> -	pci_free_resource_list(&bridge->windows);
->> -
->> -	kfree(bridge);
->> -}
->> -
->>   struct pci_dev *pci_alloc_dev(struct pci_bus *bus)
->>   {
->>   	struct pci_dev *dev;
->> @@ -1688,13 +1687,10 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
->>   	char bus_addr[64];
->>   	char *fmt;
->>
->> -	b = pci_alloc_bus();
->> +	b = pci_alloc_bus(ops, sysdata, bus);
->>   	if (!b)
->>   		return NULL;
->>
->> -	b->sysdata = sysdata;
->> -	b->ops = ops;
->> -	b->number = b->busn_res.start = bus;
->>   	b2 = pci_find_bus(pci_domain_nr(b), bus);
->>   	if (b2) {
->>   		/* If we already got to this bus through a different bridge, ignore it */
->> @@ -1706,27 +1702,22 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
->>   	if (!bridge)
->>   		goto err_out;
->>
->> -	bridge->dev.parent = parent;
->> -	bridge->dev.release = pci_release_bus_bridge_dev;
->> -	dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
->>   	error = pcibios_root_bridge_prepare(bridge);
->>   	if (error)
->>   		goto bridge_dev_reg_err;
->>
->> -	error = device_register(&bridge->dev);
->> +	bridge->dev.parent = parent;
->> +	error = device_add(&bridge->dev);
->>   	if (error)
->>   		goto bridge_dev_reg_err;
->> +
->>   	b->bridge = get_device(&bridge->dev);
->>   	device_enable_async_suspend(b->bridge);
->>   	pci_set_bus_of_node(b);
->> -
->>   	if (!parent)
->>   		set_dev_node(b->bridge, pcibus_to_node(b));
->> -
->> -	b->dev.class = &pcibus_class;
->>   	b->dev.parent = b->bridge;
->> -	dev_set_name(&b->dev, "%04x:%02x", pci_domain_nr(b), bus);
->> -	error = device_register(&b->dev);
->> +	error = device_add(&b->dev);
->>   	if (error)
->>   		goto class_dev_reg_err;
->>
->> @@ -1769,12 +1760,11 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
->>   	return b;
->>
->>   class_dev_reg_err:
->> -	put_device(&bridge->dev);
->> -	device_unregister(&bridge->dev);
->> +	device_del(&bridge->dev);
->>   bridge_dev_reg_err:
->> -	kfree(bridge);
->> +	put_device(&bridge->dev);
->>   err_out:
->> -	kfree(b);
->> +	put_device(&b->dev);
->>   	return NULL;
->>   }
->
-> Hi Jiang,
-> 	I think the changes here may lead to memleak, doesn't it?
->
-> Best regards,
-> Gu
-Hi Gu Zheng,
-     I have checked to code again and didn't find the memory leakage 
-issue.
-Could you please help to give more hints about the leakage?
-Thanks!
-Gerry
+On Fri, May 31, 2013 at 04:12:30PM +0800, Shane Huang wrote:
+> To add AMD CZ SMBus controller device ID.
+> 
+> Signed-off-by: Shane Huang <shane.huang@amd.com>
 
->
->>
->> diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
->> index 8fc54b7..b0ce875 100644
->> --- a/drivers/pci/remove.c
->> +++ b/drivers/pci/remove.c
->> @@ -52,7 +52,8 @@ void pci_remove_bus(struct pci_bus *bus)
->>   	up_write(&pci_bus_sem);
->>   	pci_remove_legacy_files(bus);
->>   	pcibios_remove_bus(bus);
->> -	device_unregister(&bus->dev);
->> +	device_del(&bus->dev);
->> +	put_device(&bus->dev);
->>   }
->>   EXPORT_SYMBOL(pci_remove_bus);
->>
->
->
+All three patches look good to me.
 
+ Reviewed-by: Tejun Heo <tj@kernel.org>
 
+Both 2 and 3 are dependent on the first patch, so it probably would be
+a good idea to route them together (probably w/ stable cc'd).  Who
+wants these?  Bjorn?
+
+Thanks.
+
+-- 
+tejun
