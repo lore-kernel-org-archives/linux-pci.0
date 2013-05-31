@@ -1,163 +1,126 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f173.google.com ([209.85.223.173]:61945 "EHLO
+	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750890Ab3EaAyZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 May 2013 20:54:25 -0400
+MIME-Version: 1.0
+In-Reply-To: <CAErSpo5o3KvkXnLsOuFZsP0M3Jq1VL9yweXgEusAu2=NmqjLiA@mail.gmail.com>
+References: <1369892734-26244-1-git-send-email-xudong.hao@intel.com>
+	<CAE9FiQUCOJ5FFwRWpVy59RqEwGC2KMNXvKe5HUAKLSES5fAR+Q@mail.gmail.com>
+	<CAE9FiQWfSW7yT4cZrDoh==H=v_qmvR=9WF54jggSKGq8S_xqug@mail.gmail.com>
+	<CAErSpo5o3KvkXnLsOuFZsP0M3Jq1VL9yweXgEusAu2=NmqjLiA@mail.gmail.com>
+Date: Thu, 30 May 2013 17:54:24 -0700
+Message-ID: <CAE9FiQXERyJ-rw8OX1X1XJC_9OMtoYxCCbZUR6N27Bp=tnqnrA@mail.gmail.com>
+Subject: Re: [PATCH] PCI: set correct value for iov device before device
 From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 2/2] PCI: Skip IORESOURCE_IO size and allocation for root bus without ioport range
-Date: Mon,  6 May 2013 16:15:30 -0700
-Message-Id: <1367882130-19452-2-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1367882130-19452-1-git-send-email-yinghai@kernel.org>
-References: <1367882130-19452-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Xudong Hao <xudong.hao@intel.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-BenH reported that there is some assign unassigned resource problem
-in powerpc.
+On Thu, May 30, 2013 at 4:22 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Thu, May 30, 2013 at 2:27 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> On Wed, May 29, 2013 at 11:04 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>>> On Wed, May 29, 2013 at 10:45 PM, Xudong Hao <xudong.hao@intel.com> wrote:
+>>>> Since device registering is put into pci_device_add(), it must set value of
+>>>> Virtual Function device's member before the pci_dev is put to device tree. Or
+>>>> some relevant subsystem of driver model such as xen will report a incorrect
+>>>> IOV device to Xen hypervior.
+>>>>
+>>>> Signed-off-by: Xudong Hao <xudong.hao@intel.com>
+>>>> ---
+>>>>  drivers/pci/iov.c | 6 +++---
+>>>>  1 file changed, 3 insertions(+), 3 deletions(-)
+>>>>
+>>>> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+>>>> index c93071d..43d3de9 100644
+>>>> --- a/drivers/pci/iov.c
+>>>> +++ b/drivers/pci/iov.c
+>>>> @@ -110,12 +110,12 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
+>>>>         if (reset)
+>>>>                 __pci_reset_function(virtfn);
+>>>>
+>>>> -       pci_device_add(virtfn, virtfn->bus);
+>>>> -       mutex_unlock(&iov->dev->sriov->lock);
+>>>> -
+>>>>         virtfn->physfn = pci_dev_get(dev);
+>>>>         virtfn->is_virtfn = 1;
+>>>>
+>>>> +       pci_device_add(virtfn, virtfn->bus);
+>>>> +       mutex_unlock(&iov->dev->sriov->lock);
+>>>> +
+>>>>         rc = pci_bus_add_device(virtfn);
+>>>>         sprintf(buf, "virtfn%u", id);
+>>>>         rc = sysfs_create_link(&dev->dev.kobj, &virtfn->dev.kobj, buf);
+>>>
+>>> I have similar patch at
+>>> https://patchwork.kernel.org/patch/2562551/
+>>>    [5/7] PCI, ACPI: Don't glue ACPI dev with pci VFs
+>>>
+>>> and Jiang has another one
+>>> https://patchwork.kernel.org/patch/2613481/
+>>>    [v3,part1,10/10] PCI, IOV: hide remove and rescan sysfs interfaces
+>>> for SR-IOV virtual functions
+>>
+>> Bjorn,
+>>
+>> I double check this one, we should split the patch from me or Jiang.
+>
+> I don't know what the sentence above means.
 
-It turns out after
-| commit 0c5be0cb0edfe3b5c4b62eac68aa2aa15ec681af
-| Date:   Thu Feb 23 19:23:29 2012 -0800
-|
-|    PCI: Retry on IORESOURCE_IO type allocations
+I mean half of patch
+https://patchwork.kernel.org/patch/2562551/
+or half of patch
+https://patchwork.kernel.org/patch/2613481/
 
-even the root bus does not have io port range, it will keep retrying
-to realloc with mmio.
+just like what Xudong extracted.
 
-Current retry logic is : try with must+optional at first, and if
-it fails will try must then try to extend must with optional.
-That will fail as mmio-non-pref and mmio-pref for bridge will
-be next to each other. So we have no chance to extend mmio-non-pref.
+>
+>> and the one about set virtfn=1 should be -stable material.
+>
+> I assume you mean that Jiang's "[v3,part1,10/10] PCI, IOV: hide remove
+> and rescan sysfs interfaces for SR-IOV virtual functions" patch does
+> not need to be in v3.10, but it should be marked for -stable.
 
-We should not fall into retry in this case, as root bus does
-not io port range.
+no half of it, move set virtfn=1 two lines forward.
 
-We check if the root bus has ioport range, and set bus_res_type_mask,
-and pass it to __bus_size_bridges and skip io port resources.
+>
+> How far back should it go?  v3.9+?
 
-For the retry failing, we could allocate mmio-non-pref bottom-up
-and mmio-pref will be top-down, but that could not be material for v3.10.
+yes. v3.9+
 
-Reported-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+>
+>> That will address another problem that is caused by
+>> moving device_add from pci_bus_add_device to pci_device_add.
+>
+> I assume you're talking about a problem caused by 4f535093 ("PCI: Put
+> pci_dev in device tree as early as possible").  That commit appeared
+> in v3.9.
 
----
- drivers/pci/setup-bus.c |   39 +++++++++++++++++++++++++++++++--------
- 1 file changed, 31 insertions(+), 8 deletions(-)
+yes.
 
-Index: linux-2.6/drivers/pci/setup-bus.c
-===================================================================
---- linux-2.6.orig/drivers/pci/setup-bus.c
-+++ linux-2.6/drivers/pci/setup-bus.c
-@@ -1045,7 +1045,8 @@ handle_done:
- }
- 
- static void __ref __pci_bus_size_bridges(struct pci_bus *bus,
--			struct list_head *realloc_head)
-+			struct list_head *realloc_head,
-+			unsigned long res_type_mask)
- {
- 	struct pci_dev *dev;
- 	unsigned long mask, prefmask;
-@@ -1063,7 +1064,7 @@ static void __ref __pci_bus_size_bridges
- 
- 		case PCI_CLASS_BRIDGE_PCI:
- 		default:
--			__pci_bus_size_bridges(b, realloc_head);
-+			__pci_bus_size_bridges(b, realloc_head, res_type_mask);
- 			break;
- 		}
- 	}
-@@ -1087,8 +1088,9 @@ static void __ref __pci_bus_size_bridges
- 		 * Follow thru
- 		 */
- 	default:
--		pbus_size_io(bus, realloc_head ? 0 : additional_io_size,
--			     additional_io_size, realloc_head);
-+		if (res_type_mask & IORESOURCE_IO)
-+			pbus_size_io(bus, realloc_head ? 0 : additional_io_size,
-+				     additional_io_size, realloc_head);
- 		/* If the bridge supports prefetchable range, size it
- 		   separately. If it doesn't, or its prefetchable window
- 		   has already been allocated by arch code, try
-@@ -1111,7 +1113,10 @@ static void __ref __pci_bus_size_bridges
- 
- void __ref pci_bus_size_bridges(struct pci_bus *bus)
- {
--	__pci_bus_size_bridges(bus, NULL);
-+	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
-+				  IORESOURCE_PREFETCH;
-+
-+	__pci_bus_size_bridges(bus, NULL, type_mask);
- }
- EXPORT_SYMBOL(pci_bus_size_bridges);
- 
-@@ -1376,6 +1381,21 @@ static enum enable_type __init pci_reall
- 	return enable_local;
- }
- 
-+static unsigned int __init pci_bus_res_type_mask(struct pci_bus *bus)
-+{
-+	int i;
-+	struct resource *r;
-+	unsigned long mask = 0;
-+	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
-+				  IORESOURCE_PREFETCH;
-+
-+	pci_bus_for_each_resource(bus, r, i)
-+		if (r)
-+			mask |= r->flags & type_mask;
-+
-+	return mask;
-+}
-+
- /*
-  * first try will not touch pci bridge res
-  * second  and later try will clear small leaf bridge res
-@@ -1395,6 +1415,7 @@ pci_assign_unassigned_root_bus_resources
- 				  IORESOURCE_PREFETCH;
- 	int pci_try_num = 1;
- 	enum enable_type enable_local;
-+	unsigned long bus_res_type_mask = pci_bus_res_type_mask(bus);
- 
- 	/* don't realloc if asked to do so */
- 	enable_local = pci_realloc_detect(bus, pci_realloc_enable);
-@@ -1416,7 +1437,7 @@ again:
- 		add_list = &realloc_head;
- 	/* Depth first, calculate sizes and alignments of all
- 	   subordinate buses. */
--	__pci_bus_size_bridges(bus, add_list);
-+	__pci_bus_size_bridges(bus, add_list, bus_res_type_mask);
- 
- 	/* Depth last, allocate resources and update the hardware. */
- 	__pci_bus_assign_resources(bus, add_list, &fail_head);
-@@ -1496,9 +1517,10 @@ void pci_assign_unassigned_bridge_resour
- 	int retval;
- 	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
- 				  IORESOURCE_PREFETCH;
-+	unsigned long bus_res_type_mask = pci_bus_res_type_mask(bridge->bus);
- 
- again:
--	__pci_bus_size_bridges(parent, &add_list);
-+	__pci_bus_size_bridges(parent, &add_list, bus_res_type_mask);
- 	__pci_bridge_assign_resources(bridge, &add_list, &fail_head);
- 	BUG_ON(!list_empty(&add_list));
- 	tried_times++;
-@@ -1554,6 +1576,7 @@ void pci_assign_unassigned_bus_resources
- 	struct pci_dev *dev;
- 	LIST_HEAD(add_list); /* list of resources that
- 					want additional resources */
-+	unsigned long bus_res_type_mask = pci_bus_res_type_mask(bus);
- 
- 	down_read(&pci_bus_sem);
- 	list_for_each_entry(dev, &bus->devices, bus_list)
-@@ -1561,7 +1584,7 @@ void pci_assign_unassigned_bus_resources
- 		    dev->hdr_type == PCI_HEADER_TYPE_CARDBUS)
- 			if (dev->subordinate)
- 				__pci_bus_size_bridges(dev->subordinate,
--							 &add_list);
-+						 &add_list, bus_res_type_mask);
- 	up_read(&pci_bus_sem);
- 	__pci_bus_assign_resources(bus, &add_list, NULL);
- 	BUG_ON(!list_empty(&add_list));
+>
+> If we're asking to add the "hide remove and rescan sysfs interfaces"
+> patch to the v3.9 stable series, we should have a description of
+> exactly what problem it fixes, and ideally, a bugzilla for it.  Can
+> you provide that?
+
+No. that is not what i mean.
+
+That problem have been there when sriov support was added.
+
+>
+> That patch appears to be the only one in the [v3,part1,0/10] series
+> that actually directly fixes an issue, so it would be nice to have
+> more specifics in that changelog to begin with.  The other patches in
+> that series appear to to be cleanups and preparation for the real
+> fixes that will come later.
+
+yes. even should be separated from that patchset.
+
+Yinghai
