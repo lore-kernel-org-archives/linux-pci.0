@@ -1,116 +1,45 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:45243 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758174Ab3EWOdL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 May 2013 10:33:11 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>
-Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Lior Amsalem <alior@marvell.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Maen Suleiman <maen@marvell.com>
-Subject: [PATCH v2 1/3] pci: mvebu: no longer fake the slot location of downstream devices
-Date: Thu, 23 May 2013 16:32:51 +0200
-Message-Id: <1369319573-19927-2-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1369319573-19927-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1369319573-19927-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:40335 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751195Ab3EaHig (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 31 May 2013 03:38:36 -0400
+Date: Fri, 31 May 2013 16:38:32 +0900
+From: Tejun Heo <tj@kernel.org>
+To: "Huang, Shane" <Shane.Huang@amd.com>
+Cc: Jean Delvare <khali@linux-fr.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
+	"linux-i2c@vger.kernel.org" <linux-i2c@vger.kernel.org>
+Subject: Re: [PATCH 3/3] i2c-piix4: add AMD CZ SMBus device ID
+Message-ID: <20130531073832.GB16809@mtj.dyndns.org>
+References: <1369999333-2073-1-git-send-email-shane.huang@amd.com>
+ <20130531080336.04481330@endymion.delvare>
+ <43EB3AB3EEFE8D43B525F4D2EAF507E1085B8CC5@SCYBEXDAG04.amd.com>
+ <20130531092846.51f2e202@endymion.delvare>
+ <43EB3AB3EEFE8D43B525F4D2EAF507E1085B8D06@SCYBEXDAG04.amd.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <43EB3AB3EEFE8D43B525F4D2EAF507E1085B8D06@SCYBEXDAG04.amd.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-By default, the Marvell hardware, for each PCIe interface, exhibits
-the following devices:
+On Fri, May 31, 2013 at 07:33:51AM +0000, Huang, Shane wrote:
+> > Can you show the exact message? checkpatch doesn't complain here, and I
+> > can't think of any reason why it would care about that.
+> 
+> $ ./scripts/checkpatch.pl 0003-i2c-piix4-add-AMD-CZ-SMBus-device-ID.patch
+> WARNING: Avoid CamelCase: <Hudson>
+> #52: FILE: drivers/i2c/busses/i2c-piix4.c:25:
+> +       AMD Hudson-2, CZ
+> 
+> total: 0 errors, 1 warnings, 39 lines checked
 
- * On slot 0, a "Marvell Memory controller", identical on all PCIe
-   interfaces, and which isn't useful when the Marvell SoC is the PCIe
-   root complex (i.e, the normal case when we run Linux on the Marvell
-   SoC).
+Even if checkpatch complains, there's no point in following it
+religiously.  If addressing the complaint doesn't make the code
+better, there's no point in doing so.
 
- * On slot 1, the real PCIe card connected into the PCIe slot of the
-   board.
+Thanks.
 
-So, what the Marvell PCIe driver was doing in its PCI-to-PCI bridge
-emulation is that when the Linux PCI core was trying to access the
-device in slot 0, we were in fact forwarding the configuration
-transaction to the device in slot 1. For all other slots, we were
-telling the Linux PCI core that there was no device connected.
-
-However, new versions of bootloaders from Marvell change the default
-PCIe configuration, and make the real device appear in slot 0, and the
-"Marvell Memory controller" in slot 1.
-
-Therefore, this commit modifies the Marvell PCIe driver to adjust the
-PCIe hardware configuration to make sure that this behavior (real
-device in slot 0, "Marvell Memory controller" in slot 1) is the one
-we'll see regardless of what the bootloader has done. It allows to
-remove the little hack that was forwarding configuration transactions
-on slot 0 to slot 1, which is nice.
-
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
----
- drivers/pci/host/pci-mvebu.c |   19 +++++++++++++++----
- 1 file changed, 15 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-index ad1c46b..0bc21b0 100644
---- a/drivers/pci/host/pci-mvebu.c
-+++ b/drivers/pci/host/pci-mvebu.c
-@@ -51,6 +51,7 @@
- #define  PCIE_CTRL_X1_MODE		0x0001
- #define PCIE_STAT_OFF		0x1a04
- #define  PCIE_STAT_BUS                  0xff00
-+#define  PCIE_STAT_DEV                  0x1f0000
- #define  PCIE_STAT_LINK_DOWN		BIT(0)
- #define PCIE_DEBUG_CTRL         0x1a60
- #define  PCIE_DEBUG_SOFT_RESET		BIT(20)
-@@ -148,6 +149,16 @@ static void mvebu_pcie_set_local_bus_nr(struct mvebu_pcie_port *port, int nr)
- 	writel(stat, port->base + PCIE_STAT_OFF);
- }
- 
-+static void mvebu_pcie_set_local_dev_nr(struct mvebu_pcie_port *port, int nr)
-+{
-+	u32 stat;
-+
-+	stat = readl(port->base + PCIE_STAT_OFF);
-+	stat &= ~PCIE_STAT_DEV;
-+	stat |= nr << 16;
-+	writel(stat, port->base + PCIE_STAT_OFF);
-+}
-+
- /*
-  * Setup PCIE BARs and Address Decode Wins:
-  * BAR[0,2] -> disabled, BAR[1] -> covers all DRAM banks
-@@ -572,8 +583,7 @@ static int mvebu_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
- 
- 	/* Access the real PCIe interface */
- 	spin_lock_irqsave(&port->conf_lock, flags);
--	ret = mvebu_pcie_hw_wr_conf(port, bus,
--				    PCI_DEVFN(1, PCI_FUNC(devfn)),
-+	ret = mvebu_pcie_hw_wr_conf(port, bus, devfn,
- 				    where, size, val);
- 	spin_unlock_irqrestore(&port->conf_lock, flags);
- 
-@@ -606,8 +616,7 @@ static int mvebu_pcie_rd_conf(struct pci_bus *bus, u32 devfn, int where,
- 
- 	/* Access the real PCIe interface */
- 	spin_lock_irqsave(&port->conf_lock, flags);
--	ret = mvebu_pcie_hw_rd_conf(port, bus,
--				    PCI_DEVFN(1, PCI_FUNC(devfn)),
-+	ret = mvebu_pcie_hw_rd_conf(port, bus, devfn,
- 				    where, size, val);
- 	spin_unlock_irqrestore(&port->conf_lock, flags);
- 
-@@ -817,6 +826,8 @@ static int __init mvebu_pcie_probe(struct platform_device *pdev)
- 			continue;
- 		}
- 
-+		mvebu_pcie_set_local_dev_nr(port, 1);
-+
- 		if (mvebu_pcie_link_up(port)) {
- 			port->haslink = 1;
- 			dev_info(&pdev->dev, "PCIe%d.%d: link up\n",
 -- 
-1.7.9.5
-
+tejun
