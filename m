@@ -1,62 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:41525 "EHLO hydra.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751761Ab3EITge (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 9 May 2013 15:36:34 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: Re: [PATCH] PCI/ACPI: Check acpi_resource_to_address64() return value
-Date: Thu, 09 May 2013 21:45 +0200
-Message-ID: <1880556.qeccPcvTkd@vostro.rjw.lan>
-In-Reply-To: <20130509192913.17473.94947.stgit@bhelgaas-glaptop>
-References: <20130509192913.17473.94947.stgit@bhelgaas-glaptop>
+Received: from mail-la0-f46.google.com ([209.85.215.46]:65421 "EHLO
+	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755471Ab3EaUY2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 31 May 2013 16:24:28 -0400
+Received: by mail-la0-f46.google.com with SMTP id er20so1742314lab.5
+        for <linux-pci@vger.kernel.org>; Fri, 31 May 2013 13:24:26 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Reply-To: pricardofc@ipfn.ist.utl.pt
+In-Reply-To: <CAE9FiQVZoybuq-ekQWUmXs8ggKmSdGo2zsLbxv7Shj3ZQAkiqw@mail.gmail.com>
+References: <CAH9N0t8ODdHOz-ajwUBUv34XOH=i65S=4D0=HnvDLjCV7N3n8g@mail.gmail.com>
+	<CAE9FiQVZoybuq-ekQWUmXs8ggKmSdGo2zsLbxv7Shj3ZQAkiqw@mail.gmail.com>
+Date: Fri, 31 May 2013 21:24:26 +0100
+Message-ID: <CAH9N0t-Bg8QNLG3m0tmHN9s1ORPxOX2C01WAEt9yi0pd=y8xbA@mail.gmail.com>
+Subject: Re: Pcie Linux HotPlug Driver Automatic Scripts
+From: Paulo Fortuna Carvalho <pricardofc@ipfn.ist.utl.pt>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, May 09, 2013 01:29:13 PM Bjorn Helgaas wrote:
-> We should check the acpi_resource_to_address64() return value, which
-> also removes the need to validate the resource type beforehand.
-> No functional change.
-> 
-> Found by Coverity (CID 113815).
-> 
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+I'll explain better.
+We have the following architecture.
+PC (Intel Root Port) downstream->Upstream OneStopSystems RootComplex
+8733 downstream->upstream PCIe Switch 8696 in a ATCA card downstream->
+another ATCA card.
+When another ATCA card is removed from the system all the process goes ok.
+When the first ATCA card that has the PCIe 8696 onboard is removed
+from system and inserted again all the PEX show rev (ff) and also the
+2 ATCA cards have rev (ff)
+The only thing in system with rev (ba) ok is the Root Complex 8733.
+The ATCA card with PCIE Switch 8696 onboard is plugged to the PC via a
+HotPlug cable and we dont actually remove the card only the cable (is
+the same thing I guess). So when we plug the cable back i think we
+have to send a reset signal to the pciexpress bus in order to
+initialize all the pci bus, detect and power on all the tree from Root
+Complex 8733 until PCIe Switch 8696 and at last ATCA cards in order to
+insert ATCA cards device drivers.
 
-Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+So I tryed echo 1 > /sys/bus/pci/rescan didnt work. Then I identify
+from which device the rev ff was and found that from device
+0000:04:08.0 rev was ff and so all the nodes below this one were also
+with rev ff. then I tryed
+echo 1 > /sys/bus/pci/devices/0000\:04\:08.0/power but also nothing happened.
+So is there a command that I can execute to activate all the pci bus
+from that node?
+My work colleague told me that after plug the pci express cable he
+always had to reboot the pc (because it needs a reset signal in that
+hw line) but I think that there should be a linux command that would
+be able to send this reset signal.
+I also tryed echo 1 > /sys/bus/pci/devices/0000\:04\:08.0/reset but
+this file doenst exist...
+Paulo.
 
-> ---
->  drivers/acpi/pci_root.c |    7 +++----
->  1 file changed, 3 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-> index ac8688b..c956434 100644
-> --- a/drivers/acpi/pci_root.c
-> +++ b/drivers/acpi/pci_root.c
-> @@ -100,13 +100,12 @@ get_root_bridge_busnr_callback(struct acpi_resource *resource, void *data)
->  {
->  	struct resource *res = data;
->  	struct acpi_resource_address64 address;
-> +	acpi_status status;
->  
-> -	if (resource->type != ACPI_RESOURCE_TYPE_ADDRESS16 &&
-> -	    resource->type != ACPI_RESOURCE_TYPE_ADDRESS32 &&
-> -	    resource->type != ACPI_RESOURCE_TYPE_ADDRESS64)
-> +	status = acpi_resource_to_address64(resource, &address);
-> +	if (ACPI_FAILURE(status))
->  		return AE_OK;
->  
-> -	acpi_resource_to_address64(resource, &address);
->  	if ((address.address_length > 0) &&
->  	    (address.resource_type == ACPI_BUS_NUMBER_RANGE)) {
->  		res->start = address.minimum;
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+2013/5/31, Yinghai Lu <yinghai@kernel.org>:
+> On Fri, May 31, 2013 at 10:35 AM, Paulo Fortuna Carvalho
+> <pricardofc@ipfn.ist.utl.pt> wrote:
+>
+>> Also, How can I perform an entire pcie express bus reset from linux
+>> terminal?
+>
+> disable_pcie_link and reenable the pcie link?
+>
