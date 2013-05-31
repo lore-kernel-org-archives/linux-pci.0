@@ -1,60 +1,40 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Betty Dall <betty.dall@hp.com>
-To: rjw@sisk.pl, bhelgaas@google.com
-Cc: ying.huang@intel.com, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Betty Dall <betty.dall@hp.com>
-Subject: [PATCH 2/3] ACPI/APEI: Force fatal AER severity when bus has been reset
-Date: Tue, 28 May 2013 12:48:48 -0600
-Message-Id: <1369766929-4386-3-git-send-email-betty.dall@hp.com>
-In-Reply-To: <1369766929-4386-1-git-send-email-betty.dall@hp.com>
-References: <1369766929-4386-1-git-send-email-betty.dall@hp.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from am1ehsobe003.messaging.microsoft.com ([213.199.154.206]:11157
+	"EHLO am1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752650Ab3EaHeK convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 31 May 2013 03:34:10 -0400
+From: "Huang, Shane" <Shane.Huang@amd.com>
+To: Jean Delvare <khali@linux-fr.org>
+CC: Tejun Heo <tj@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
+	"linux-i2c@vger.kernel.org" <linux-i2c@vger.kernel.org>,
+	"Huang, Shane" <Shane.Huang@amd.com>
+Subject: RE: [PATCH 3/3] i2c-piix4: add AMD CZ SMBus device ID
+Date: Fri, 31 May 2013 07:33:51 +0000
+Message-ID: <43EB3AB3EEFE8D43B525F4D2EAF507E1085B8D06@SCYBEXDAG04.amd.com>
+References: <1369999333-2073-1-git-send-email-shane.huang@amd.com>
+	<20130531080336.04481330@endymion.delvare>
+	<43EB3AB3EEFE8D43B525F4D2EAF507E1085B8CC5@SCYBEXDAG04.amd.com>
+ <20130531092846.51f2e202@endymion.delvare>
+In-Reply-To: <20130531092846.51f2e202@endymion.delvare>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The CPER error record has a reset bit that indicates that the platform
-has reset the bus. The reset bit can be set for any severity error
-including recoverable.  From the AER code path's perspective,
-any error is fatal if the bus has been reset. This patch upgrades the
-severity of the AER recovery to AER_FATAL whenever the CPER error record
-indicates that the bus has been reset.
+> Can you show the exact message? checkpatch doesn't complain here, and I
+> can't think of any reason why it would care about that.
 
-Signed-off-by: Betty Dall <betty.dall@hp.com>
----
+$ ./scripts/checkpatch.pl 0003-i2c-piix4-add-AMD-CZ-SMBus-device-ID.patch
+WARNING: Avoid CamelCase: <Hudson>
+#52: FILE: drivers/i2c/busses/i2c-piix4.c:25:
++       AMD Hudson-2, CZ
 
- drivers/acpi/apei/ghes.c |   21 ++++++++++++++++++++-
- 1 files changed, 20 insertions(+), 1 deletions(-)
+total: 0 errors, 1 warnings, 39 lines checked
 
 
-diff --git a/drivers/acpi/apei/ghes.c b/drivers/acpi/apei/ghes.c
-index d668a8a..4a42afc 100644
---- a/drivers/acpi/apei/ghes.c
-+++ b/drivers/acpi/apei/ghes.c
-@@ -451,7 +451,26 @@ static void ghes_do_proc(struct ghes *ghes,
- 				int aer_severity;
- 				devfn = PCI_DEVFN(pcie_err->device_id.device,
- 						  pcie_err->device_id.function);
--				aer_severity = cper_severity_to_aer(sev);
-+				/*
-+				 * Some Firmware First implementations
-+				 * put the device in SBR to contain
-+				 * the error. This is indicated by the
-+				 * CPER Section Decriptor Flags reset
-+				 * bit which means the component must
-+				 * be re-initialized or re-enabled
-+				 * prior to use. Promoting the AER
-+				 * serverity to FATAL will cause the
-+				 * AER code to link_reset and allow
-+				 * drivers to reprogram their cards.
-+				 */
-+				if (gdata->flags & CPER_SEC_RESET)
-+					aer_severity = cper_severity_to_aer(
-+							CPER_SEV_FATAL);
-+				else
-+					aer_severity =
-+						cper_severity_to_aer(sev);
-+
-+
- 				aer_recover_queue(pcie_err->device_id.segment,
- 						  pcie_err->device_id.bus,
- 						  devfn, aer_severity);
+Thanks,
+Shane
+
