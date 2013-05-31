@@ -1,69 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:27058 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753131Ab3ECAbP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 2 May 2013 20:31:15 -0400
-Message-ID: <1367541180.2093.10.camel@ymzhang.sh.intel.com>
-Subject: Re: Subject : [ PATCH ]
- pci-reset-error_state-to-pci_channel_io_normal-at-report_slot_reset
-From: Yanmin Zhang <yanmin_zhang@linux.intel.com>
-Reply-To: yanmin_zhang@linux.intel.com
-To: linasvepstas@gmail.com,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: "Zhang, LongX" <longx.zhang@intel.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Joseph.Liu@Emulex.Com" <Joseph.Liu@emulex.com>
-Date: Fri, 03 May 2013 08:33:00 +0800
-In-Reply-To: <CAHrUA34H_B-ffebx6ueHgV1ax-PL_3hLZr1JGaP2NJZ7bYgvtw@mail.gmail.com>
-References: <F7B8FD780A346D46A0042F5C63B06AE785E3B2@SHSMSX102.ccr.corp.intel.com>
-	 <1367454625.2093.6.camel@ymzhang.sh.intel.com>
-	 <CAHrUA34H_B-ffebx6ueHgV1ax-PL_3hLZr1JGaP2NJZ7bYgvtw@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from usmamail.tilera.com ([12.216.194.151]:58740 "EHLO
+	USMAMAIL.TILERA.COM" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751138Ab3EaUMe (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 31 May 2013 16:12:34 -0400
+Message-ID: <51A90430.8010609@tilera.com>
+Date: Fri, 31 May 2013 16:12:32 -0400
+From: Chris Metcalf <cmetcalf@tilera.com>
+MIME-Version: 1.0
+To: Jiang Liu <liuj97@gmail.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Thierry Reding <thierry.reding@avionic-design.de>
+Subject: Re: [PATCH v3, part1 04/10] PCI: mark pci_scan_bus_parented() as
+ __deprecated
+References: <1369489718-25869-1-git-send-email-jiang.liu@huawei.com> <1369489718-25869-5-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1369489718-25869-5-git-send-email-jiang.liu@huawei.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2013-05-01 at 20:20 -0500, Linas Vepstas wrote:
-> Hi,
-> 
-> On 1 May 2013 19:30, Yanmin Zhang <yanmin_zhang@linux.intel.com>
-> wrote:
->         On Fri, 2013-04-26 at 06:28 +0000, Zhang, LongX wrote:
->         > From: Zhang Long <longx.zhang@intel.com>
->         >
->         > Specific pci device drivers might have many functions to
->         call
->         > pci_channel_offline to check device states. When slot_reset
->         happens,
->         > drivers' slot_reset callback might call such functions and
->         eventually
->         > abort the reset.
->         >
->         > The patch resets pdev->error_state to pci_channel_io_normal
->         at
->         > the begining of report_slot_reset.
->         >
->         > Thank Liu Joseph for pointing it out.
->         
->         Linas, Bjorn,
->         
->         Would you like to merge the patch to your testing tree?
->         The patch resolves one issue pointed out by Joseph.
-> 
-> 
-> I'm not maintaining a tree at this time, and am not able to test.
-> Sorry.
-Thanks Linas.
+On 5/25/2013 9:48 AM, Jiang Liu wrote:
+> Mark pci_scan_bus_parented() as __deprecated and clean up outdated
+> comments.
+>
+> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+> Cc: Chris Metcalf <cmetcalf@tilera.com>
+> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> Cc: Thierry Reding <thierry.reding@avionic-design.de>
+> Cc: linux-kernel@vger.kernel.org
+> Cc: linux-pci@vger.kernel.org
 
-Greg,
+Acked-by: Chris Metcalf <cmetcalf@tilera.com> [for tile]
 
-Would you like to merge it into your testing tree? Joseph Liu tested
-the patch and it does work.
+Boy, that's one stale comment - it was put in internally in our tree back in 2008 when we were still on 2.6.18.
 
-Thanks,
-Yanmin
-
-
+-- 
+Chris Metcalf, Tilera Corp.
+http://www.tilera.com
 
