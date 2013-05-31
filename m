@@ -1,86 +1,44 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-la0-f54.google.com ([209.85.215.54]:44994 "EHLO
-	mail-la0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752566Ab3E0QqB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 May 2013 12:46:01 -0400
-Received: by mail-la0-f54.google.com with SMTP id eg20so6684891lab.13
-        for <linux-pci@vger.kernel.org>; Mon, 27 May 2013 09:45:56 -0700 (PDT)
-MIME-Version: 1.0
-Reply-To: pricardofc@ipfn.ist.utl.pt
-In-Reply-To: <CAErSpo7TXMOake9=oXwa-JA9qd9FmwNtHqM6RSt12QO=WORshA@mail.gmail.com>
-References: <CAH9N0t_dNJ+u+9BLFTsqRNnbRO4xMaGYqE6_du_u+joZfzBYyA@mail.gmail.com>
-	<CAErSpo7TXMOake9=oXwa-JA9qd9FmwNtHqM6RSt12QO=WORshA@mail.gmail.com>
-Date: Mon, 27 May 2013 17:45:56 +0100
-Message-ID: <CAH9N0t8-6CgmhQhiu7zy1r4UnYyjJqkmAnrDRhjt3t71F7SxNA@mail.gmail.com>
-Subject: Re: Pcie Linux HotPlug Driver
-From: Paulo Fortuna Carvalho <pricardofc@ipfn.ist.utl.pt>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from zoneX.GCU-Squad.org ([194.213.125.0]:10003 "EHLO
+	services.gcu-squad.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753567Ab3EaHq4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 31 May 2013 03:46:56 -0400
+Date: Fri, 31 May 2013 09:46:43 +0200
+From: Jean Delvare <khali@linux-fr.org>
+To: "Huang, Shane" <Shane.Huang@amd.com>
+Cc: Tejun Heo <tj@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org, linux-ide@vger.kernel.org,
+	linux-i2c@vger.kernel.org
+Subject: Re: [PATCH 3/3] i2c-piix4: add AMD CZ SMBus device ID
+Message-ID: <20130531094643.5b256d2d@endymion.delvare>
+In-Reply-To: <43EB3AB3EEFE8D43B525F4D2EAF507E1085B8D06@SCYBEXDAG04.amd.com>
+References: <1369999333-2073-1-git-send-email-shane.huang@amd.com>
+	<20130531080336.04481330@endymion.delvare>
+	<43EB3AB3EEFE8D43B525F4D2EAF507E1085B8CC5@SCYBEXDAG04.amd.com>
+	<20130531092846.51f2e202@endymion.delvare>
+	<43EB3AB3EEFE8D43B525F4D2EAF507E1085B8D06@SCYBEXDAG04.amd.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-My card includes a PCIe Switch.
-My coordinators told me that a solution for hotplug (remove/insert
-board without shutting down the system) could be the PCIe Port Bus
-Driver Model using also pciehp.ko already installed in Linux System.
+On Fri, 31 May 2013 07:33:51 +0000, Huang, Shane wrote:
+> > Can you show the exact message? checkpatch doesn't complain here, and I
+> > can't think of any reason why it would care about that.
+> 
+> $ ./scripts/checkpatch.pl 0003-i2c-piix4-add-AMD-CZ-SMBus-device-ID.patch
+> WARNING: Avoid CamelCase: <Hudson>
+> #52: FILE: drivers/i2c/busses/i2c-piix4.c:25:
+> +       AMD Hudson-2, CZ
+> 
+> total: 0 errors, 1 warnings, 39 lines checked
 
-Paulo.
+checkpatch is twice wrong here, firstly because there is no CamelCase
+and secondly because this is a comment and not code (ideally middle
+comment lines would start with "*" to avoid this false positive, but
+that style wasn't yet in use when the i2c-piix4 driver was written.)
 
+So, just ignore it.
 
-> Why do you want to use the "Port Bus Driver Model"?  That is only
-> intended for the ports in PCIe switches.  Does your card include a
-> switch with non-standard services?
-
-> If your driver is specifically for some new switch functionality, you
-> might want to make it a port service driver.  But if this is a PCIe
-> endpoint device, then you should make it a plain old PCI driver with
-> pci_register_driver().
-
-> Bjorn
-
-
-
-
-
-
->> Our driver has been modified in order to be compliant to a service
->> driver as described in the HowTo Documentation.
->>
->> Using the file pcieport_if.h there were some structs that become
->> obsolete namely the pci_port_service_id.
->>
->> 1) How can we provide the board ids with the pci_port_service_id
->> struct removed?
->> I'm using the old method struct pci_device_id
->>
->> 2) How can we point to the old pci_dev pointer in our functions once
->> the arguments for probe(), remove() now are pcie_device struct? I'm using
->> the port item in the struct pcie_device.
->>
->> 3) After changes at insmod time my board appears in the /proc/devices
->> but my devices and sub-devices never appear in the /dev directory
->> making me wonder that something is missing in my class_create() and
->> device_create() function...
->>
->> 4) Are functions resume() and suspend() relevant for the hot-plug
->> process? At the moment these functions only return -ENOSYS
->>
->> My Purpose: At the moment i'm only interest in modifying the Linux
->> Device Driver for the board using the PCIe HotPlug Port Bus Driver
->> Model (porting it to a Service Driver), detect the board and create
->> the devices and sub-devices in the /dev directory as it used to do.
->> I think there is only something missing but I dont know what.
->>
->> NOTE: Some aditional information:
->> My _init() and _exit() functions are calling
->> pcie_port_service_register() and pcie_port_service_unregister(),
->> respectively.
->>
->> Thanks in Advance,
->> Paulo (University PhD Student)
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+-- 
+Jean Delvare
