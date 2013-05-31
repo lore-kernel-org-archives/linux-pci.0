@@ -1,72 +1,66 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ob0-f179.google.com ([209.85.214.179]:57606 "EHLO
+	mail-ob0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754847Ab3EaWs6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 31 May 2013 18:48:58 -0400
+Received: by mail-ob0-f179.google.com with SMTP id xk17so4017842obc.24
+        for <linux-pci@vger.kernel.org>; Fri, 31 May 2013 15:48:57 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20130514221748.6180.30597.stgit@ahduyck-cp1.jf.intel.com>
-References: <20130514221748.6180.30597.stgit@ahduyck-cp1.jf.intel.com>
-Date: Tue, 14 May 2013 19:50:14 -0700
-Message-ID: <CAE9FiQVrtM2kcRd_z+mciq8HFnaTu73Jezef+wnnmsFP_q5=TQ@mail.gmail.com>
-Subject: Re: [PATCH] pci: Avoid reentrant calls to work_on_cpu
-From: Yinghai Lu <yinghai@kernel.org>
-To: Alexander Duyck <alexander.h.duyck@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	NetDev <netdev@vger.kernel.org>
+In-Reply-To: <51A920C5.40209@missinglinkelectronics.com>
+References: <51A920C5.40209@missinglinkelectronics.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 31 May 2013 16:48:37 -0600
+Message-ID: <CAErSpo7CrajY0__m91yRMi0oo0CjrGdqWPYWxQx+rx5zz4F-qg@mail.gmail.com>
+Subject: Re: MSI-X capability display of pciutils
+To: David Epping <david.epping@missinglinkelectronics.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 14, 2013 at 3:26 PM, Alexander Duyck
-<alexander.h.duyck@intel.com> wrote:
-> This change is meant to fix a deadlock seen when pci_enable_sriov was
-> called from within a driver's probe routine.  The issue was that
-> work_on_cpu calls flush_work which attempts to flush a work queue for a
-> cpu that we are currently working in.  In order to avoid the reentrant
-> path we just skip the call to work_on_cpu in the case that the device
-> node matches our current node.
+On Fri, May 31, 2013 at 4:14 PM, David Epping
+<david.epping@missinglinkelectronics.com> wrote:
+> Hello,
 >
-> Reported-by: Yinghai Lu <yinghai@kernel.org>
-> Signed-off-by: Alexander Duyck <alexander.h.duyck@intel.com>
-> ---
+> I am inspecting the MSI-X setup of some PCIe devices and have questions
+> about the output of lspci.
 >
-> This patch is meant to address the issue pointed out in an earlier patch
-> sent by Yinghai Lu titled:
->   [PATCH 6/7] PCI: Make sure VF's driver get attached after PF's
+> It looks something like this:
+> Capabilities: [50] MSI-X: Enable+ Count=32 Masked-
+>     Vector table: BAR=0 offset=00002000
+>     PBA: BAR=0 offset=00003000
+>
+> As far as I understand the PCI 3.0 specification MSI-X capabilities define a
+> 32 bit register for the upper address portion of the MSI target addresses
+> (at capability offset 4) and another 32 bit register pointing to the BAR and
+> inter-BAR offset for the table of lower address portions of the MSI target
+> addresses (at capability offset 8).
+> Why are there two lines in the lspci output indicating some BAR and offset?
+> What do they mean?
 
-Yes, that help. my v2 patch will not need to device schecdule and
-device_initicall to wait
-first work_on_cpu is done.
+My understanding is that there are three data structures here:
+  1) The MSI-X Capability (Figure 6-10) in config space
+  2) The "MSI-X Table" (Figure 6-11) in PCI memory space
+  3) The "MSI-X PBA" (Pending Bit Array, Figure 6-12) in PCI memory space
 
-Tested-by: Yinghai Lu <yinghai@kernel.org>
+The "Vector table" line tells you how to find the "MSI-X Table," and
+the "PBA" line tells you how to find the "MSI-X PBA" table.
 
->
->  drivers/pci/pci-driver.c |   14 +++++++++-----
->  1 files changed, 9 insertions(+), 5 deletions(-)
->
-> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-> index 79277fb..caeb1c0 100644
-> --- a/drivers/pci/pci-driver.c
-> +++ b/drivers/pci/pci-driver.c
-> @@ -277,12 +277,16 @@ static int pci_call_probe(struct pci_driver *drv, struct pci_dev *dev,
->         int error, node;
->         struct drv_dev_and_id ddi = { drv, dev, id };
->
-> -       /* Execute driver initialization on node where the device's
-> -          bus is attached to.  This way the driver likely allocates
-> -          its local memory on the right node without any need to
-> -          change it. */
-> +       /*
-> +        * Execute driver initialization on the node where the device's
-> +        * bus is attached.  This way the driver likely allocates
-> +        * its local memory on the right node without any need to
-> +        * change it.  If the node is the current node just call
-> +        * local_pci_probe and avoid the possibility of reentrant
-> +        * calls to work_on_cpu.
-> +        */
->         node = dev_to_node(&dev->dev);
-> -       if (node >= 0) {
-> +       if ((node >= 0) && (node != numa_node_id())) {
->                 int cpu;
->
->                 get_online_cpus();
->
+In MSI (not MSI-X), there is only one MSI target address, and it is in
+the MSI capability.
+
+In MSI-X, each MSI-X vector can have its own target address, and those
+addresses are not in the capability itself; they are stored in the
+memory decoded by a BAR.
+
+In your case, you would read the bus address from BAR 0, and the
+vector table should be at offsets 0x2000-0x21ff (32 16-byte entries)
+from that address.  The PBA should be at offsets 0x3000-0x30ff (32
+8-byte entries).
+
+lspci will show you the BAR values, but it doesn't dump PCI memory
+space, so you'd have to use /dev/mem or a tool like
+http://cmp.felk.cvut.cz/~pisa/linux/rdwrmem.c to actually look at the
+tables.
+
+Bjorn
