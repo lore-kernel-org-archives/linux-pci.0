@@ -1,89 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f44.google.com ([209.85.160.44]:45258 "EHLO
-	mail-pb0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758838Ab3EGD3A (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 6 May 2013 23:29:00 -0400
-Received: by mail-pb0-f44.google.com with SMTP id wz17so82206pbc.17
-        for <linux-pci@vger.kernel.org>; Mon, 06 May 2013 20:28:59 -0700 (PDT)
-Message-ID: <518874F3.50807@ozlabs.ru>
-Date: Tue, 07 May 2013 13:28:51 +1000
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
-MIME-Version: 1.0
-To: Alex Williamson <alex.williamson@redhat.com>
-CC: linuxppc-dev@lists.ozlabs.org,
-	David Gibson <david@gibson.dropbear.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Paul Mackerras <paulus@samba.org>,
-	Alexander Graf <agraf@suse.de>, kvm@vger.kernel.org,
-	linux-kernel@vger.kernel.org, kvm-ppc@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH 2/5] KVM: PPC: iommu: Add missing kvm_iommu_map_pages/kvm_iommu_unmap_pages
-References: <1367824921-27151-1-git-send-email-y>   <51875a36.25ac440a.50d9.ffffe90d@mx.google.com>  <1367874436.2868.90.camel@ul30vt.home> <51884FA8.6010400@ozlabs.ru> <1367890979.2868.93.camel@ul30vt.home>
-In-Reply-To: <1367890979.2868.93.camel@ul30vt.home>
-Content-Type: text/plain; charset=KOI8-R
+Received: from zoneX.GCU-Squad.org ([194.213.125.0]:40038 "EHLO
+	services.gcu-squad.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750791Ab3EaIaz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 31 May 2013 04:30:55 -0400
+Date: Fri, 31 May 2013 10:30:43 +0200
+From: Jean Delvare <khali@linux-fr.org>
+To: Shane Huang <shane.huang@amd.com>
+Cc: Tejun Heo <tj@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	<linux-i2c@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-ide@vger.kernel.org>
+Subject: Re: [PATCH v2 3/3] i2c-piix4: add AMD CZ SMBus device ID
+Message-ID: <20130531103043.253a0664@endymion.delvare>
+In-Reply-To: <1369987950-2894-1-git-send-email-shane.huang@amd.com>
+References: <1369987950-2894-1-git-send-email-shane.huang@amd.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/07/2013 11:42 AM, Alex Williamson wrote:
-> On Tue, 2013-05-07 at 10:49 +1000, Alexey Kardashevskiy wrote:
->> On 05/07/2013 07:07 AM, Alex Williamson wrote:
->>> On Mon, 2013-05-06 at 17:21 +1000, aik@ozlabs.ru wrote:
->>>> From: Alexey Kardashevskiy <aik@ozlabs.ru>
->>>>
->>>> The IOMMU API implements groups creating/deletion, device binding
->>>> and IOMMU map/unmap operations.
->>>>
->>>> The PowerPC implementation uses most of the API except map/unmap
->>>> operations, which are implemented on POWER using hypercalls.
->>>>
->>>> However, in order to link a kernel with the CONFIG_IOMMU_API enabled,
->>>> the empty kvm_iommu_map_pages/kvm_iommu_unmap_pages have to be
->>>> defined, so this defines them.
->>>>
->>>> Signed-off-by: Alexey Kardashevskiy <aik@ozlabs.ru>
->>>> Cc: David Gibson <david@gibson.dropbear.id.au>
->>>> Signed-off-by: Paul Mackerras <paulus@samba.org>
->>>> ---
->>>>  arch/powerpc/include/asm/kvm_host.h |   14 ++++++++++++++
->>>>  1 file changed, 14 insertions(+)
->>>>
->>>> diff --git a/arch/powerpc/include/asm/kvm_host.h b/arch/powerpc/include/asm/kvm_host.h
->>>> index b6a047e..c025d91 100644
->>>> --- a/arch/powerpc/include/asm/kvm_host.h
->>>> +++ b/arch/powerpc/include/asm/kvm_host.h
->>>> @@ -603,4 +603,18 @@ struct kvm_vcpu_arch {
->>>>  
->>>>  #define __KVM_HAVE_ARCH_WQP
->>>>  
->>>> +#ifdef CONFIG_IOMMU_API
->>>> +/* POWERPC does not use IOMMU API for mapping/unmapping */
->>>> +static inline int kvm_iommu_map_pages(struct kvm *kvm,
->>>> +		struct kvm_memory_slot *slot)
->>>> +{
->>>> +	return 0;
->>>> +}
->>>> +
->>>> +static inline void kvm_iommu_unmap_pages(struct kvm *kvm,
->>>> +		struct kvm_memory_slot *slot)
->>>> +{
->>>> +}
->>>> +#endif /* CONFIG_IOMMU_API */
->>>> +
->>>>  #endif /* __POWERPC_KVM_HOST_H__ */
->>>
->>> This is no longer needed, Gleb applied my patch for 3.10 that make all
->>> of KVM device assignment dependent on a build config option and the top
->>> level kvm_host.h now includes this when that is not set.  Thanks,
->>
->> Cannot find it, could you point me please where it is on github or
->> git.kernel.org? Thanks.
+On Fri, 31 May 2013 16:12:30 +0800, Shane Huang wrote:
+> To add AMD CZ SMBus controller device ID.
 > 
-> http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=2a5bab1004729f3302c776e53ee7c895b98bb1ce
+> Signed-off-by: Shane Huang <shane.huang@amd.com>
+> ---
+>  Documentation/i2c/busses/i2c-piix4 | 2 +-
+>  drivers/i2c/busses/Kconfig         | 1 +
+>  drivers/i2c/busses/i2c-piix4.c     | 3 ++-
+>  include/linux/pci_ids.h            | 1 +
+>  4 files changed, 5 insertions(+), 2 deletions(-)
+> 
+> diff --git a/Documentation/i2c/busses/i2c-piix4 b/Documentation/i2c/busses/i2c-piix4
+> index 1e6634f..a370b20 100644
+> --- a/Documentation/i2c/busses/i2c-piix4
+> +++ b/Documentation/i2c/busses/i2c-piix4
+> @@ -13,7 +13,7 @@ Supported adapters:
+>    * AMD SP5100 (SB700 derivative found on some server mainboards)
+>      Datasheet: Publicly available at the AMD website
+>      http://support.amd.com/us/Embedded_TechDocs/44413.pdf
+> -  * AMD Hudson-2
+> +  * AMD Hudson-2, CZ
+>      Datasheet: Not publicly available
+>    * Standard Microsystems (SMSC) SLC90E66 (Victory66) southbridge
+>      Datasheet: Publicly available at the SMSC website http://www.smsc.com
+> diff --git a/drivers/i2c/busses/Kconfig b/drivers/i2c/busses/Kconfig
+> index 631736e..4faf02b 100644
+> --- a/drivers/i2c/busses/Kconfig
+> +++ b/drivers/i2c/busses/Kconfig
+> @@ -150,6 +150,7 @@ config I2C_PIIX4
+>  	    ATI SB700/SP5100
+>  	    ATI SB800
+>  	    AMD Hudson-2
+> +	    AMD CZ
+>  	    Serverworks OSB4
+>  	    Serverworks CSB5
+>  	    Serverworks CSB6
+> diff --git a/drivers/i2c/busses/i2c-piix4.c b/drivers/i2c/busses/i2c-piix4.c
+> index 39ab78c..43c2e11 100644
+> --- a/drivers/i2c/busses/i2c-piix4.c
+> +++ b/drivers/i2c/busses/i2c-piix4.c
+> @@ -22,7 +22,7 @@
+>  	Intel PIIX4, 440MX
+>  	Serverworks OSB4, CSB5, CSB6, HT-1000, HT-1100
+>  	ATI IXP200, IXP300, IXP400, SB600, SB700/SP5100, SB800
+> -	AMD Hudson-2
+> +	AMD Hudson-2, CZ
+>  	SMSC Victory66
+>  
+>     Note: we assume there can only be one device, with one or more
+> @@ -522,6 +522,7 @@ static DEFINE_PCI_DEVICE_TABLE(piix4_ids) = {
+>  	{ PCI_DEVICE(PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_IXP400_SMBUS) },
+>  	{ PCI_DEVICE(PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_SBX00_SMBUS) },
+>  	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_HUDSON2_SMBUS) },
+> +	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_CZ_SMBUS) },
+>  	{ PCI_DEVICE(PCI_VENDOR_ID_SERVERWORKS,
+>  		     PCI_DEVICE_ID_SERVERWORKS_OSB4) },
+>  	{ PCI_DEVICE(PCI_VENDOR_ID_SERVERWORKS,
+> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+> index 22449c1..b10a5b4 100644
+> --- a/include/linux/pci_ids.h
+> +++ b/include/linux/pci_ids.h
+> @@ -571,6 +571,7 @@
+>  #define PCI_DEVICE_ID_AMD_HUDSON2_SATA_IDE	0x7800
+>  #define PCI_DEVICE_ID_AMD_HUDSON2_SMBUS		0x780b
+>  #define PCI_DEVICE_ID_AMD_CZ_SATA_IDE	0x7900
+> +#define PCI_DEVICE_ID_AMD_CZ_SMBUS	0x790b
+>  
+>  #define PCI_VENDOR_ID_TRIDENT		0x1023
+>  #define PCI_DEVICE_ID_TRIDENT_4DWAVE_DX	0x2000
 
-
-Yes, I confirm, this is patch is not need any more. Thanks!
-
-
+Reviewed-by: Jean Delvare <khali@linux-fr.org>
 
 -- 
-Alexey
+Jean Delvare
