@@ -1,72 +1,95 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f176.google.com ([209.85.214.176]:45575 "EHLO
-	mail-ob0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753495Ab3E1TGo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 May 2013 15:06:44 -0400
-Received: by mail-ob0-f176.google.com with SMTP id v19so2075836obq.7
-        for <linux-pci@vger.kernel.org>; Tue, 28 May 2013 12:06:43 -0700 (PDT)
+Received: from smtp.missinglinkelectronics.com ([5.9.45.205]:59102 "EHLO
+	smtp.missinglinkelectronics.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755013Ab3EaXdZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 31 May 2013 19:33:25 -0400
+Message-ID: <51A9333C.60902@missinglinkelectronics.com>
+Date: Sat, 01 Jun 2013 01:33:16 +0200
+From: David Epping <david.epping@missinglinkelectronics.com>
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQV_A4HoecfffV9Dur4g_3HNMUcgmOpLs-oy8dhz4TjKxw@mail.gmail.com>
-References: <CAH9N0t_dNJ+u+9BLFTsqRNnbRO4xMaGYqE6_du_u+joZfzBYyA@mail.gmail.com>
- <CAErSpo7TXMOake9=oXwa-JA9qd9FmwNtHqM6RSt12QO=WORshA@mail.gmail.com>
- <CAH9N0t8-6CgmhQhiu7zy1r4UnYyjJqkmAnrDRhjt3t71F7SxNA@mail.gmail.com>
- <CAE9FiQV4Okzz2jomvwzg7_jS5sKS9Br7LtjbMDy5=BHebTvyDA@mail.gmail.com>
- <CAH9N0t-cMzioGkLBLXSzcGzZwC0cMm-486_h52PFx286p9sWGg@mail.gmail.com>
- <CAErSpo7zKC4eSBDnefraov8Aj211k8uEqcgQVLG8tgYeCdocww@mail.gmail.com> <CAE9FiQV_A4HoecfffV9Dur4g_3HNMUcgmOpLs-oy8dhz4TjKxw@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 28 May 2013 13:06:23 -0600
-Message-ID: <CAErSpo5xXzE5rY64y30uHLgG_yp1A+rQ1pW3Hkfgaf0LWpi3oQ@mail.gmail.com>
-Subject: Re: Pcie Linux HotPlug Driver
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Paulo Ricardo Carvalho <pricardofc@ipfn.ist.utl.pt>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: MSI-X capability display of pciutils
+References: <51A920C5.40209@missinglinkelectronics.com> <CAErSpo7CrajY0__m91yRMi0oo0CjrGdqWPYWxQx+rx5zz4F-qg@mail.gmail.com>
+In-Reply-To: <CAErSpo7CrajY0__m91yRMi0oo0CjrGdqWPYWxQx+rx5zz4F-qg@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 28, 2013 at 12:14 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Tue, May 28, 2013 at 10:01 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> On Tue, May 28, 2013 at 6:05 AM, Paulo Fortuna Carvalho
->> <pricardofc@ipfn.ist.utl.pt> wrote:
->>> Hello Yinghai,
->>> Here goes, in attached .zip file the commands output that you suggested.
+On 01.06.2013 00:48, Bjorn Helgaas wrote:
+> On Fri, May 31, 2013 at 4:14 PM, David Epping
+> <david.epping@missinglinkelectronics.com>  wrote:
+>> Hello,
 >>
->> It looks like the part you're interested in is this:
+>> I am inspecting the MSI-X setup of some PCIe devices and have questions
+>> about the output of lspci.
 >>
->>     00:03.0 bridge to [bus 03-1a] (Intel root port)
->>     03:00.0 bridge to [bus 04-1a] (PLX 8733 upstream port)
->>     04:08.0 bridge to [bus 05-1a] (PLX 8733 downstream port)
->>     05:00.0 bridge to [bus 06-1a] (PLX 8696 upstream port)
->>     06:07.0 bridge to [bus 0a] (PLX 8696 downstream port)
->>     0a:00.0 endpoint (PLD Applications 6114)
->>     06:0e.0 bridge to [bus 11] (PLX 8696 downstream port)
->>     11:00.0 endpoint (PLD Applications 6014)
+>> It looks something like this:
+>> Capabilities: [50] MSI-X: Enable+ Count=32 Masked-
+>>      Vector table: BAR=0 offset=00002000
+>>      PBA: BAR=0 offset=00003000
 >>
->> I assume everything except the root port is on your ATCA card, and you
->> want to hotplug the card as a whole.
->>
->> This would be handled by the hotplug controller in the 00:03.0 root
->> port, using pciehp.
+>> As far as I understand the PCI 3.0 specification MSI-X capabilities define a
+>> 32 bit register for the upper address portion of the MSI target addresses
+>> (at capability offset 4) and another 32 bit register pointing to the BAR and
+>> inter-BAR offset for the table of lower address portions of the MSI target
+>> addresses (at capability offset 8).
+>> Why are there two lines in the lspci output indicating some BAR and offset?
+>> What do they mean?
+> My understanding is that there are three data structures here:
+>    1) The MSI-X Capability (Figure 6-10) in config space
+>    2) The "MSI-X Table" (Figure 6-11) in PCI memory space
+>    3) The "MSI-X PBA" (Pending Bit Array, Figure 6-12) in PCI memory space
 >
-> that should not work. as pciehp will not be loaded for 00:03.0 with
-> following slot cap
->         SltCap:    AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug- Surpise-
->             Slot #  2, PowerLimit 25.000000; Interlock- NoCompl-
-
-Yep, true.
-
-> but 04:08.0, 06:04.0, 06:0c.0, 06:08.0 and 06:10.0 do have
->         SltCap:    AttnBtn+ PwrCtrl+ MRL+ AttnInd+ PwrInd+ HotPlug+ Surpise-
->             Slot #  4, PowerLimit 25.000000; Interlock- NoCompl-
+> The "Vector table" line tells you how to find the "MSI-X Table," and
+> the "PBA" line tells you how to find the "MSI-X PBA" table.
 >
-> problem is
-> 1. pciehp is not loaded for them.
-> 2. fpga are on 06:07.0 and 06:0e.0.
+> In MSI (not MSI-X), there is only one MSI target address, and it is in
+> the MSI capability.
 >
-> If 04:08.0 pciehp could be loaded, the could use that hotplug to make
-> fpga working
+> In MSI-X, each MSI-X vector can have its own target address, and those
+> addresses are not in the capability itself; they are stored in the
+> memory decoded by a BAR.
+>
+> In your case, you would read the bus address from BAR 0, and the
+> vector table should be at offsets 0x2000-0x21ff (32 16-byte entries)
+> from that address.  The PBA should be at offsets 0x3000-0x30ff (32
+> 8-byte entries).
+>
+> lspci will show you the BAR values, but it doesn't dump PCI memory
+> space, so you'd have to use /dev/mem or a tool like
+> http://cmp.felk.cvut.cz/~pisa/linux/rdwrmem.c to actually look at the
+> tables.
+>
+> Bjorn
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Oh, maybe the devices on the ATCA card start at 05:00.0, not at
-03:00.0?  If that's the case, then yes, getting pciehp to claim the
-hotplug service on 04:08.0 would be the right thing.  Maybe you just
-don't have pciehp enabled, Paulo?
+Bjorn,
+
+thank you for your quick reply.
+
+So far the concepts of MSI and MSI-X are clear. I did not have the 
+meaning of the PBA acronym, but now I know what it stands for.
+I do however not see that reflected in the spec. As your figure 
+references are off by one and I do not have the PBA figure, we should 
+clarify the document used. I'm looking at PCI Local Bus Specification 
+Revision 3.0 from August 2002.
+
+According to this document (and in case I'm reading it correctly) the 
+pending bit is part of each MSI-X Vector Table entry (lowest bit in the 
+address portion - section 6.8.2.6). The lspci source code and its output 
+(and your explanation) however suggest that the pending bits are stored 
+in a separate table.
+In addition this specification document has the common upper address 
+portion of each MSI target address at capability offset 4 and the BAR 
+and intra-BAR offset at capability offset 8. The pciutils source code 
+defines the later to be at 4 and uses offset 8 to derive the PBA.
+
+I wonder where our disconnect is. What is the title and revision of the 
+document you are referring to?
+Thanks again,
+David
+
