@@ -1,110 +1,92 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Matt Fleming <matt@console-pimps.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	x86@kernel.org, Matt Fleming <matt.fleming@intel.com>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	Seth Forshee <seth.forshee@canonical.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	<stable@vger.kernel.org>
-Subject: [PATCH] x86/PCI: setup data may be in highmem
-Date: Wed, 22 May 2013 10:43:02 +0100
-Message-Id: <1369215782-32697-1-git-send-email-matt@console-pimps.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from va3ehsobe004.messaging.microsoft.com ([216.32.180.14]:43680
+	"EHLO va3outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752300Ab3EaDW1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 May 2013 23:22:27 -0400
+From: Shane Huang <shane.huang@amd.com>
+To: Jean Delvare <khali@linux-fr.org>
+CC: Tejun Heo <tj@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	<linux-pci@vger.kernel.org>, <linux-ide@vger.kernel.org>,
+	<linux-i2c@vger.kernel.org>, Shane Huang <shane.huang@amd.com>
+Subject: [PATCH 3/3] i2c-piix4: add AMD CZ SMBus device ID
+Date: Fri, 31 May 2013 19:22:13 +0800
+Message-ID: <1369999333-2073-1-git-send-email-shane.huang@amd.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Matt Fleming <matt.fleming@intel.com>
+To add AMD CZ SMBus controller device ID.
 
-pcibios_add_device() assumes that the physical addresses stored in
-setup_data are accessible via the direct kernel mapping, and that
-calling phys_to_virt() is valid. This isn't guaranteed to be true on x86
-where the direct mapping range is much smaller than on x86-64.
-
-Calling phys_to_virt() on a highmem address results in the following,
-
- BUG: unable to handle kernel paging request at 39a3c198
- IP: [<c262be0f>] pcibios_add_device+0x2f/0x90
- *pde = 00000000
- Oops: 0000 [#1] SMP
- Modules linked in:
- Pid: 1, comm: swapper/0 Tainted: G        W I  3.9.0-rc2+ #280
- EIP: 0060:[<c262be0f>] EFLAGS: 00010206 CPU: 1
- EIP is at pcibios_add_device+0x2f/0x90
- EAX: f6258800 EBX: f6258800 ECX: 79a3c190 EDX: 39a3c190
- ESI: f62d9814 EDI: f6258864 EBP: f60add38 ESP: f60add2c
-  DS: 007b ES: 007b FS: 00d8 GS: 00e0 SS: 0068
- CR0: 8005003b CR2: 39a3c198 CR3: 02b91000 CR4: 001007d0
- DR0: 00000000 DR1: 00000000 DR2: 00000000 DR3: 00000000
- DR6: ffff0ff0 DR7: 00000400
- Process swapper/0 (pid: 1, ti=f60ac000 task=f60b0000 task.ti=f60ac000)
- Stack:
-  f6258800 f62d9814 f6258864 f60add4c c2370c73 00000000 f62d9800 00000000
-  f60add6c c274640b 0000ea60 f6258800 0f008086 f62d9800 f62d9800 00000000
-  f60add84 c2370d08 00000000 00000008 f62d9800 00000000 f60adda4 c2371904
- Call Trace:
-  [<c2370c73>] pci_device_add+0xe3/0x130
-  [<c274640b>] pci_scan_single_device+0x8b/0xb0
-  [<c2370d08>] pci_scan_slot+0x48/0x100
-  [<c2371904>] pci_scan_child_bus+0x24/0xc0
-  [<c262a7b0>] pci_acpi_scan_root+0x2c0/0x490
-  [<c23b7203>] acpi_pci_root_add+0x312/0x42f
-  [<c23b29d7>] ? acpi_device_notify_fixed+0x1d/0x1d
-  [<c23b36a8>] acpi_bus_device_attach+0x77/0xdd
-  [<c23cb6be>] acpi_ns_walk_namespace+0xb1/0x163
-  [<c23b3631>] ? acpi_bus_type_and_status+0x82/0x82
-  [<c23cbd4e>] acpi_walk_namespace+0x7e/0xa8
-  [<c23b3631>] ? acpi_bus_type_and_status+0x82/0x82
-  [<c23b46e0>] acpi_bus_scan+0x9a/0xa6
-  [<c23b3631>] ? acpi_bus_type_and_status+0x82/0x82
-  [<c2b17ec9>] acpi_scan_init+0x51/0x144
-  [<c2b252a2>] ? pci_mmcfg_late_init+0x49/0x4b
-  [<c2b17cdc>] acpi_init+0x224/0x28c
-  [<c2001144>] do_one_initcall+0x34/0x170
-  [<c2b17ab8>] ? acpi_sleep_proc_init+0x2e/0x2e
-  [<c2aeeb83>] kernel_init_freeable+0x119/0x1b6
-  [<c2aee4da>] ? do_early_param+0x74/0x74
-  [<c2743f10>] kernel_init+0x10/0xd0
-  [<c2765697>] ret_from_kernel_thread+0x1b/0x28
-  [<c2743f00>] ? rest_init+0x60/0x60
-
-The most reliable way to trigger this crash seems to be booting a 32-bit
-kernel via the EFI boot stub.
-
-The solution is to use early_ioremap() instead of phys_to_virt() to map
-the setup data into the kernel address space.
-
-Tested-by: Jani Nikula <jani.nikula@intel.com>
-Cc: Matthew Garrett <mjg59@srcf.ucam.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Seth Forshee <seth.forshee@canonical.com>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: <stable@vger.kernel.org>
-Signed-off-by: Matt Fleming <matt.fleming@intel.com>
+Signed-off-by: Shane Huang <shane.huang@amd.com>
 ---
- arch/x86/pci/common.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ Documentation/i2c/busses/i2c-piix4 | 2 +-
+ drivers/i2c/busses/Kconfig         | 3 ++-
+ drivers/i2c/busses/i2c-piix4.c     | 3 ++-
+ include/linux/pci_ids.h            | 1 +
+ 4 files changed, 6 insertions(+), 3 deletions(-)
 
-diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-index 305c68b..7ae6671 100644
---- a/arch/x86/pci/common.c
-+++ b/arch/x86/pci/common.c
-@@ -628,7 +628,7 @@ int pcibios_add_device(struct pci_dev *dev)
+diff --git a/Documentation/i2c/busses/i2c-piix4 b/Documentation/i2c/busses/i2c-piix4
+index 1e6634f..c136148 100644
+--- a/Documentation/i2c/busses/i2c-piix4
++++ b/Documentation/i2c/busses/i2c-piix4
+@@ -13,7 +13,7 @@ Supported adapters:
+   * AMD SP5100 (SB700 derivative found on some server mainboards)
+     Datasheet: Publicly available at the AMD website
+     http://support.amd.com/us/Embedded_TechDocs/44413.pdf
+-  * AMD Hudson-2
++  * AMD HUDSON-2, CZ
+     Datasheet: Not publicly available
+   * Standard Microsystems (SMSC) SLC90E66 (Victory66) southbridge
+     Datasheet: Publicly available at the SMSC website http://www.smsc.com
+diff --git a/drivers/i2c/busses/Kconfig b/drivers/i2c/busses/Kconfig
+index 631736e..a43086d 100644
+--- a/drivers/i2c/busses/Kconfig
++++ b/drivers/i2c/busses/Kconfig
+@@ -149,7 +149,8 @@ config I2C_PIIX4
+ 	    ATI SB600
+ 	    ATI SB700/SP5100
+ 	    ATI SB800
+-	    AMD Hudson-2
++	    AMD HUDSON-2
++	    AMD CZ
+ 	    Serverworks OSB4
+ 	    Serverworks CSB5
+ 	    Serverworks CSB6
+diff --git a/drivers/i2c/busses/i2c-piix4.c b/drivers/i2c/busses/i2c-piix4.c
+index 39ab78c..16a4d89 100644
+--- a/drivers/i2c/busses/i2c-piix4.c
++++ b/drivers/i2c/busses/i2c-piix4.c
+@@ -22,7 +22,7 @@
+ 	Intel PIIX4, 440MX
+ 	Serverworks OSB4, CSB5, CSB6, HT-1000, HT-1100
+ 	ATI IXP200, IXP300, IXP400, SB600, SB700/SP5100, SB800
+-	AMD Hudson-2
++	AMD HUDSON-2, CZ
+ 	SMSC Victory66
  
- 	pa_data = boot_params.hdr.setup_data;
- 	while (pa_data) {
--		data = phys_to_virt(pa_data);
-+		data = early_ioremap(pa_data, sizeof(*rom));
+    Note: we assume there can only be one device, with one or more
+@@ -522,6 +522,7 @@ static DEFINE_PCI_DEVICE_TABLE(piix4_ids) = {
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_IXP400_SMBUS) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_SBX00_SMBUS) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_HUDSON2_SMBUS) },
++	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_CZ_SMBUS) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_SERVERWORKS,
+ 		     PCI_DEVICE_ID_SERVERWORKS_OSB4) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_SERVERWORKS,
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index 22449c1..b10a5b4 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -571,6 +571,7 @@
+ #define PCI_DEVICE_ID_AMD_HUDSON2_SATA_IDE	0x7800
+ #define PCI_DEVICE_ID_AMD_HUDSON2_SMBUS		0x780b
+ #define PCI_DEVICE_ID_AMD_CZ_SATA_IDE	0x7900
++#define PCI_DEVICE_ID_AMD_CZ_SMBUS	0x790b
  
- 		if (data->type == SETUP_PCI) {
- 			rom = (struct pci_setup_rom *)data;
-@@ -645,6 +645,7 @@ int pcibios_add_device(struct pci_dev *dev)
- 			}
- 		}
- 		pa_data = data->next;
-+		early_iounmap(data, sizeof(*rom));
- 	}
- 	return 0;
- }
+ #define PCI_VENDOR_ID_TRIDENT		0x1023
+ #define PCI_DEVICE_ID_TRIDENT_4DWAVE_DX	0x2000
 -- 
-1.8.1.4
+1.8.1.2
+
 
