@@ -1,105 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f171.google.com ([209.85.192.171]:42605 "EHLO
-	mail-pd0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754055Ab3EZP7O (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 26 May 2013 11:59:14 -0400
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Joerg Roedel <joro@8bytes.org>,
-	Ingo Molnar <mingo@kernel.org>,
-	Donald Dutile <ddutile@redhat.com>,
-	Hannes Reinecke <hare@suse.de>,
-	"Li, Zhen-Hua" <zhen-hual@hp.com>, iommu@lists.linux-foundation.org
-Subject: [PATCH v3, part2 17/20] PCI, iommu: use hotplug-safe iterators to walk PCI buses
-Date: Sun, 26 May 2013 23:53:14 +0800
-Message-Id: <1369583597-3801-18-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1369583597-3801-1-git-send-email-jiang.liu@huawei.com>
-References: <1369583597-3801-1-git-send-email-jiang.liu@huawei.com>
+Received: from co1ehsobe004.messaging.microsoft.com ([216.32.180.187]:4497
+	"EHLO co1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752300Ab3EaDUK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 May 2013 23:20:10 -0400
+From: Shane Huang <shane.huang@amd.com>
+To: Tejun Heo <tj@kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Jean Delvare <khali@linux-fr.org>, <linux-pci@vger.kernel.org>,
+	<linux-ide@vger.kernel.org>, <linux-i2c@vger.kernel.org>,
+	Shane Huang <shane.huang@amd.com>
+Subject: [PATCH 2/3] ahci: add AMD CZ SATA device ID
+Date: Fri, 31 May 2013 19:20:09 +0800
+Message-ID: <1369999209-2029-1-git-send-email-shane.huang@amd.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Enhance iommu drviers to use hotplug-safe iterators to walk
-PCI buses.
+To add AMD CZ SATA controller device ID of IDE mode.
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Ingo Molnar <mingo@kernel.org>
-Cc: Donald Dutile <ddutile@redhat.com>
-Cc: Hannes Reinecke <hare@suse.de>
-Cc: "Li, Zhen-Hua" <zhen-hual@hp.com>
-Cc: iommu@lists.linux-foundation.org
-Cc: linux-kernel@vger.kernel.org
+Signed-off-by: Shane Huang <shane.huang@amd.com>
 ---
- drivers/iommu/amd_iommu.c | 4 +++-
- drivers/iommu/dmar.c      | 6 ++++--
- 2 files changed, 7 insertions(+), 3 deletions(-)
+ drivers/ata/ahci.c      | 1 +
+ drivers/pci/quirks.c    | 2 ++
+ include/linux/pci_ids.h | 1 +
+ 3 files changed, 4 insertions(+)
 
-diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
-index 21d02b0..eef7a7e 100644
---- a/drivers/iommu/amd_iommu.c
-+++ b/drivers/iommu/amd_iommu.c
-@@ -352,6 +352,7 @@ static int init_iommu_group(struct device *dev)
- 	struct iommu_dev_data *dev_data;
- 	struct iommu_group *group;
- 	struct pci_dev *dma_pdev;
-+	struct pci_bus *b = NULL;
- 	int ret;
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 751f1ea..548f1c3 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -310,6 +310,7 @@ static const struct pci_device_id ahci_pci_tbl[] = {
  
- 	group = iommu_group_get(dev);
-@@ -388,7 +389,7 @@ static int init_iommu_group(struct device *dev)
- 		 * the alias.  Be careful to also test the parent device if
- 		 * we think the alias is the root of the group.
- 		 */
--		bus = pci_find_bus(0, alias >> 8);
-+		b = bus = pci_get_bus(0, alias >> 8);
- 		if (!bus)
- 			goto use_group;
+ 	/* AMD */
+ 	{ PCI_VDEVICE(AMD, 0x7800), board_ahci }, /* AMD Hudson-2 */
++	{ PCI_VDEVICE(AMD, 0x7900), board_ahci }, /* AMD CZ */
+ 	/* AMD is using RAID class only for ahci controllers */
+ 	{ PCI_VENDOR_ID_AMD, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
+ 	  PCI_CLASS_STORAGE_RAID << 8, 0xffffff, board_ahci },
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 7d68aee..5aced49 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -1022,6 +1022,8 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_IXP700_SATA, quirk
+ DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_IXP700_SATA, quirk_amd_ide_mode);
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_HUDSON2_SATA_IDE, quirk_amd_ide_mode);
+ DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_HUDSON2_SATA_IDE, quirk_amd_ide_mode);
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_CZ_SATA_IDE, quirk_amd_ide_mode);
++DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_CZ_SATA_IDE, quirk_amd_ide_mode);
  
-@@ -408,6 +409,7 @@ static int init_iommu_group(struct device *dev)
- 	dma_pdev = get_isolation_root(pci_dev_get(to_pci_dev(dev)));
- use_pdev:
- 	ret = use_pdev_iommu_group(dma_pdev, dev);
-+	pci_bus_put(b);
- 	pci_dev_put(dma_pdev);
- 	return ret;
- use_group:
-diff --git a/drivers/iommu/dmar.c b/drivers/iommu/dmar.c
-index a7967ce..7162787 100644
---- a/drivers/iommu/dmar.c
-+++ b/drivers/iommu/dmar.c
-@@ -67,12 +67,12 @@ static void __init dmar_register_drhd_unit(struct dmar_drhd_unit *drhd)
- static int __init dmar_parse_one_dev_scope(struct acpi_dmar_device_scope *scope,
- 					   struct pci_dev **dev, u16 segment)
- {
--	struct pci_bus *bus;
-+	struct pci_bus *b, *bus;
- 	struct pci_dev *pdev = NULL;
- 	struct acpi_dmar_pci_path *path;
- 	int count;
+ /*
+  *	Serverworks CSB5 IDE does not fully support native mode
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index e0b5623..22449c1 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -570,6 +570,7 @@
+ #define PCI_DEVICE_ID_AMD_HUDSON2_IDE		0x780c
+ #define PCI_DEVICE_ID_AMD_HUDSON2_SATA_IDE	0x7800
+ #define PCI_DEVICE_ID_AMD_HUDSON2_SMBUS		0x780b
++#define PCI_DEVICE_ID_AMD_CZ_SATA_IDE	0x7900
  
--	bus = pci_find_bus(segment, scope->bus);
-+	b = bus = pci_get_bus(segment, scope->bus);
- 	path = (struct acpi_dmar_pci_path *)(scope + 1);
- 	count = (scope->length - sizeof(struct acpi_dmar_device_scope))
- 		/ sizeof(struct acpi_dmar_pci_path);
-@@ -97,6 +97,8 @@ static int __init dmar_parse_one_dev_scope(struct acpi_dmar_device_scope *scope,
- 		count --;
- 		bus = pdev->subordinate;
- 	}
-+	pci_bus_put(b);
-+
- 	if (!pdev) {
- 		pr_warn("Device scope device [%04x:%02x:%02x.%02x] not found\n",
- 			segment, scope->bus, path->dev, path->fn);
+ #define PCI_VENDOR_ID_TRIDENT		0x1023
+ #define PCI_DEVICE_ID_TRIDENT_4DWAVE_DX	0x2000
 -- 
 1.8.1.2
+
 
