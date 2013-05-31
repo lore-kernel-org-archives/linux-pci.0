@@ -1,110 +1,141 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:15112 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753251Ab3EHTOm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 8 May 2013 15:14:42 -0400
-Message-ID: <518AA420.5020900@redhat.com>
-Date: Wed, 08 May 2013 15:14:40 -0400
-From: Don Dutile <ddutile@redhat.com>
+Received: from mail-pb0-f45.google.com ([209.85.160.45]:42218 "EHLO
+	mail-pb0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751039Ab3EaB3R (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 May 2013 21:29:17 -0400
+Message-ID: <51A7FCE8.4030802@gmail.com>
+Date: Fri, 31 May 2013 09:29:12 +0800
+From: Jiang Liu <liuj97@gmail.com>
 MIME-Version: 1.0
-To: Alex Williamson <alex.williamson@redhat.com>
-CC: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 1/8] pci: Create pci_reset_bridge_secondary_bus()
-References: <20130508025339.30771.61937.stgit@bling.home> <20130508025740.30771.50033.stgit@bling.home>
-In-Reply-To: <20130508025740.30771.50033.stgit@bling.home>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To: Yinghai Lu <yinghai@kernel.org>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Xudong Hao <xudong.hao@intel.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH] PCI: set correct value for iov device before device
+References: <1369892734-26244-1-git-send-email-xudong.hao@intel.com> <CAE9FiQUCOJ5FFwRWpVy59RqEwGC2KMNXvKe5HUAKLSES5fAR+Q@mail.gmail.com> <CAE9FiQWfSW7yT4cZrDoh==H=v_qmvR=9WF54jggSKGq8S_xqug@mail.gmail.com> <CAErSpo5o3KvkXnLsOuFZsP0M3Jq1VL9yweXgEusAu2=NmqjLiA@mail.gmail.com> <CAE9FiQXERyJ-rw8OX1X1XJC_9OMtoYxCCbZUR6N27Bp=tnqnrA@mail.gmail.com>
+In-Reply-To: <CAE9FiQXERyJ-rw8OX1X1XJC_9OMtoYxCCbZUR6N27Bp=tnqnrA@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/07/2013 10:57 PM, Alex Williamson wrote:
-> Move the secondary bus reset code from pci_parent_bus_reset() into its own
-> function.  Export it as we'll later be calling it from hotplug controllers.
+On Fri 31 May 2013 08:54:24 AM CST, Yinghai Lu wrote:
+> On Thu, May 30, 2013 at 4:22 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> On Thu, May 30, 2013 at 2:27 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>>> On Wed, May 29, 2013 at 11:04 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>>>> On Wed, May 29, 2013 at 10:45 PM, Xudong Hao <xudong.hao@intel.com> wrote:
+>>>>> Since device registering is put into pci_device_add(), it must set value of
+>>>>> Virtual Function device's member before the pci_dev is put to device tree. Or
+>>>>> some relevant subsystem of driver model such as xen will report a incorrect
+>>>>> IOV device to Xen hypervior.
+>>>>>
+>>>>> Signed-off-by: Xudong Hao <xudong.hao@intel.com>
+>>>>> ---
+>>>>>  drivers/pci/iov.c | 6 +++---
+>>>>>  1 file changed, 3 insertions(+), 3 deletions(-)
+>>>>>
+>>>>> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+>>>>> index c93071d..43d3de9 100644
+>>>>> --- a/drivers/pci/iov.c
+>>>>> +++ b/drivers/pci/iov.c
+>>>>> @@ -110,12 +110,12 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
+>>>>>         if (reset)
+>>>>>                 __pci_reset_function(virtfn);
+>>>>>
+>>>>> -       pci_device_add(virtfn, virtfn->bus);
+>>>>> -       mutex_unlock(&iov->dev->sriov->lock);
+>>>>> -
+>>>>>         virtfn->physfn = pci_dev_get(dev);
+>>>>>         virtfn->is_virtfn = 1;
+>>>>>
+>>>>> +       pci_device_add(virtfn, virtfn->bus);
+>>>>> +       mutex_unlock(&iov->dev->sriov->lock);
+>>>>> +
+>>>>>         rc = pci_bus_add_device(virtfn);
+>>>>>         sprintf(buf, "virtfn%u", id);
+>>>>>         rc = sysfs_create_link(&dev->dev.kobj, &virtfn->dev.kobj, buf);
+>>>>
+>>>> I have similar patch at
+>>>> https://patchwork.kernel.org/patch/2562551/
+>>>>    [5/7] PCI, ACPI: Don't glue ACPI dev with pci VFs
+>>>>
+>>>> and Jiang has another one
+>>>> https://patchwork.kernel.org/patch/2613481/
+>>>>    [v3,part1,10/10] PCI, IOV: hide remove and rescan sysfs interfaces
+>>>> for SR-IOV virtual functions
+>>>
+>>> Bjorn,
+>>>
+>>> I double check this one, we should split the patch from me or Jiang.
+>>
+>> I don't know what the sentence above means.
 >
-> Signed-off-by: Alex Williamson<alex.williamson@redhat.com>
-> ---
->   drivers/pci/pci.c   |   32 +++++++++++++++++++++++---------
->   include/linux/pci.h |    1 +
->   2 files changed, 24 insertions(+), 9 deletions(-)
+> I mean half of patch
+> https://patchwork.kernel.org/patch/2562551/
+> or half of patch
+> https://patchwork.kernel.org/patch/2613481/
 >
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index b099e00..d0f313f 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -3210,9 +3210,30 @@ static int pci_pm_reset(struct pci_dev *dev, int probe)
->   	return 0;
->   }
+> just like what Xudong extracted.
 >
-> -static int pci_parent_bus_reset(struct pci_dev *dev, int probe)
-> +/**
-> + * pci_reset_bridge_secondary_bus - Reset the secondary bus on a PCI bridge.
-> + * @dev: Bridge device
-> + *
-> + * Use the bridge control register to assert reset on the secondary bus.
-> + * Devices on the secondary bus are left in power-on state.
-> + */
-> +void pci_reset_bridge_secondary_bus(struct pci_dev *dev)
-see recommended api change below...
-
->   {
->   	u16 ctrl;
-> +
-> +	pci_read_config_word(dev, PCI_BRIDGE_CONTROL,&ctrl);
-> +	ctrl |= PCI_BRIDGE_CTL_BUS_RESET;
-> +	pci_write_config_word(dev, PCI_BRIDGE_CONTROL, ctrl);
-> +	msleep(100);
-> +
-> +	ctrl&= ~PCI_BRIDGE_CTL_BUS_RESET;
-> +	pci_write_config_word(dev, PCI_BRIDGE_CONTROL, ctrl);
-> +	msleep(100);
-> +}
-> +EXPORT_SYMBOL_GPL(pci_reset_bridge_secondary_bus);
-> +
-> +static int pci_parent_bus_reset(struct pci_dev *dev, int probe)
-> +{
->   	struct pci_dev *pdev;
+>>
+>>> and the one about set virtfn=1 should be -stable material.
+>>
+>> I assume you mean that Jiang's "[v3,part1,10/10] PCI, IOV: hide remove
+>> and rescan sysfs interfaces for SR-IOV virtual functions" patch does
+>> not need to be in v3.10, but it should be marked for -stable.
 >
->   	if (pci_is_root_bus(dev->bus) || dev->subordinate || !dev->bus->self)
-> @@ -3225,14 +3246,7 @@ static int pci_parent_bus_reset(struct pci_dev *dev, int probe)
->   	if (probe)
->   		return 0;
+> no half of it, move set virtfn=1 two lines forward.
 >
-> -	pci_read_config_word(dev->bus->self, PCI_BRIDGE_CONTROL,&ctrl);
-> -	ctrl |= PCI_BRIDGE_CTL_BUS_RESET;
-> -	pci_write_config_word(dev->bus->self, PCI_BRIDGE_CONTROL, ctrl);
-> -	msleep(100);
-> -
-> -	ctrl&= ~PCI_BRIDGE_CTL_BUS_RESET;
-> -	pci_write_config_word(dev->bus->self, PCI_BRIDGE_CONTROL, ctrl);
-> -	msleep(100);
-> +	pci_reset_bridge_secondary_bus(dev->bus->self);
+>>
+>> How far back should it go?  v3.9+?
 >
-It makes more sense to pass the pci-bus struct of the bus you want to reset,
-instead of the pdev of the bridge that bus is sourced by.
-i.e, dev->bus,  and above, extract the pdev from the bus-struct.
-That way, devices asking for bus-reset, don't have to know the bus-struct details
-to make the call right... just their own pdev->bus reference.
-(more object-like/clean).
-
->   	return 0;
->   }
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 710067f..695620c 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -905,6 +905,7 @@ int pcie_set_mps(struct pci_dev *dev, int mps);
->   int __pci_reset_function(struct pci_dev *dev);
->   int __pci_reset_function_locked(struct pci_dev *dev);
->   int pci_reset_function(struct pci_dev *dev);
-> +void pci_reset_bridge_secondary_bus(struct pci_dev *dev);
-and final tweak.
-
->   void pci_update_resource(struct pci_dev *dev, int resno);
->   int __must_check pci_assign_resource(struct pci_dev *dev, int i);
->   int __must_check pci_reassign_resource(struct pci_dev *dev, int i, resource_size_t add_size, resource_size_t align);
+> yes. v3.9+
 >
+>>
+>>> That will address another problem that is caused by
+>>> moving device_add from pci_bus_add_device to pci_device_add.
+>>
+>> I assume you're talking about a problem caused by 4f535093 ("PCI: Put
+>> pci_dev in device tree as early as possible").  That commit appeared
+>> in v3.9.
+>
+> yes.
+>
+>>
+>> If we're asking to add the "hide remove and rescan sysfs interfaces"
+>> patch to the v3.9 stable series, we should have a description of
+>> exactly what problem it fixes, and ideally, a bugzilla for it.  Can
+>> you provide that?
+>
+> No. that is not what i mean.
+>
+> That problem have been there when sriov support was added.
+>
+>>
+>> That patch appears to be the only one in the [v3,part1,0/10] series
+>> that actually directly fixes an issue, so it would be nice to have
+>> more specifics in that changelog to begin with.  The other patches in
+>> that series appear to to be cleanups and preparation for the real
+>> fixes that will come later.
+>
+> yes. even should be separated from that patchset.
+>
+> Yinghai
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Hi Bjorn and Yinghai,
+       I think it's ok to separate out the bugfix part.
+      We found this issue when implementing the mechanism to hide 
+"remove"
+sysfs entry for PCI virtual functions because it depends on "is_virtfn" 
+flag to
+hide "remove" sysfs entry. Actually I didn't realize it also fixes 
+other issues
+when making this change.
+      Sorry for the inconvenience!
+Gerry
 
