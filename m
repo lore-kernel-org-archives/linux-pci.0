@@ -1,95 +1,120 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <1372266904.8177.83.camel@envy.home>
-Subject: Re: [PATCH 7/8] pci: Add CircuitCo VENDOR ID and MinnowBoard DEVICE
- ID
-From: Darren Hart <dvhart@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout2.samsung.com ([203.254.224.25]:56123 "EHLO
+	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750839Ab3FAHZ1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 1 Jun 2013 03:25:27 -0400
+Received: from epcpsbgr4.samsung.com
+ (u144.gpu120.samsung.co.kr [203.254.230.144])
+ by mailout2.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+ (7.0.4.24.0) 64bit (built Nov 17 2011))
+ with ESMTP id <0MNP006ORDYEOXE0@mailout2.samsung.com> for
+ linux-pci@vger.kernel.org; Sat, 01 Jun 2013 16:25:26 +0900 (KST)
+From: Jingoo Han <jg1.han@samsung.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"H. Peter Anvin" <hpa@zytor.com>, peter.p.waskiewicz.jr@intel.com,
-	andriy.shevchenko@linux.intel.com, danders@circuitco.com,
-	vishal.l.verma@intel.com, linux-pci@vger.kernel.org
-Date: Wed, 26 Jun 2013 10:15:04 -0700
-In-Reply-To: <20130626163250.GA29299@google.com>
-References: <cover.1372211451.git.dvhart@linux.intel.com>
-	 <83879b07cd4ce95f086420d1faa926c1692d63b4.1372211451.git.dvhart@linux.intel.com>
-	 <20130626163250.GA29299@google.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Cc: linux-pci@vger.kernel.org, Jingoo Han <jg1.han@samsung.com>
+Subject: [PATCH] PCI: sysfs: replace strict_strtoul() with kstrtoul()
+Date: Sat, 01 Jun 2013 16:25:25 +0900
+Message-id: <001001ce5e99$2f6c7f90$8e457eb0$@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2013-06-26 at 10:32 -0600, Bjorn Helgaas wrote:
-> On Tue, Jun 25, 2013 at 06:53:27PM -0700, Darren Hart wrote:
-> > Add CircuitCo's newly created VENDOR ID and their first board subsystem
-> > ID for the MinnowBoard.
-> > 
-> > Signed-off-by: Darren Hart <dvhart@linux.intel.com>
-> > Cc: Bjorn Helgaas <bhelgaas@google.com>
-> > Cc: David Anders <danders@circuitco.com>
-> > Cc: "H. Peter Anvin" <hpa@zytor.com>
-> > Cc: Peter Waskiewicz <peter.p.waskiewicz.jr@intel.com>
-> > Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-> > Cc: linux-pci@vger.kernel.org
-> > ---
-> >  include/linux/pci_ids.h | 3 +++
-> >  1 file changed, 3 insertions(+)
-> > 
-> > diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-> > index c129162..b2879ce 100644
-> > --- a/include/linux/pci_ids.h
-> > +++ b/include/linux/pci_ids.h
-> > @@ -149,6 +149,9 @@
-> >  #define PCI_DEVICE_ID_BERKOM_A4T		0xffa4
-> >  #define PCI_DEVICE_ID_BERKOM_SCITEL_QUADRO	0xffa8
-> >  
-> > +#define PCI_VENDOR_ID_CIRCUITCO			0x1cc8
-> > +#define PCI_DEVICE_ID_CIRCUITCO_MINNOWBOARD	0x0001
-> > +
-> >  #define PCI_VENDOR_ID_COMPAQ		0x0e11
-> >  #define PCI_DEVICE_ID_COMPAQ_TOKENRING	0x0508
-> >  #define PCI_DEVICE_ID_COMPAQ_TACHYON	0xa0fc
-> > -- 
-> > 1.8.1.2
-> > 
-> 
-> Per conversation at [1], I merged the patch below to my pci/misc branch
-> for v3.11:
-> 
-> [1] https://lkml.kernel.org/r/6c27e79870ec93f7a8c6692d4bcfebaee589fa6b.1372211451.git.dvhart@linux.intel.com
+The usage of strict_strtoul() is not preferred, because
+strict_strtoul() is obsolete. Thus, kstrtoul() should be
+used.
 
-> 
-> commit 9f4de80a09667538e1162fdecff96ccb5bb354a8
-> Author: Darren Hart <dvhart@linux.intel.com>
-> Date:   Tue Jun 25 20:08:46 2013 -0600
-> 
->     PCI: Add CircuitCo vendor ID
->     
->     Add CircuitCo's newly created VENDOR ID
->     
->     [bhelgaas: sort, drop device ID (only used once)]
->     Signed-off-by: Darren Hart <dvhart@linux.intel.com>
->     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> 
-> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-> index c129162..8b1aa7f 100644
-> --- a/include/linux/pci_ids.h
-> +++ b/include/linux/pci_ids.h
-> @@ -2476,6 +2476,8 @@
->  
->  #define PCI_VENDOR_ID_ASMEDIA		0x1b21
->  
-> +#define PCI_VENDOR_ID_CIRCUITCO		0x1cc8
-> +
->  #define PCI_VENDOR_ID_TEKRAM		0x1de1
->  #define PCI_DEVICE_ID_TEKRAM_DC290	0xdc29
+Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+---
+ drivers/pci/pci-sysfs.c |   18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
 
-
-Thanks Bjorn. When I reuse this Subsystem ID and there is more than one
-usage, I should send a patch to pci_ids.h adding it and replace the hex
-value in all drivers with the new define. Is that right?
-
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index 5b4a9d9..0b56e08 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -66,7 +66,7 @@ static ssize_t broken_parity_status_store(struct device *dev,
+ 	struct pci_dev *pdev = to_pci_dev(dev);
+ 	unsigned long val;
+ 
+-	if (strict_strtoul(buf, 0, &val) < 0)
++	if (kstrtoul(buf, 0, &val) < 0)
+ 		return -EINVAL;
+ 
+ 	pdev->broken_parity_status = !!val;
+@@ -188,7 +188,7 @@ static ssize_t is_enabled_store(struct device *dev,
+ {
+ 	struct pci_dev *pdev = to_pci_dev(dev);
+ 	unsigned long val;
+-	ssize_t result = strict_strtoul(buf, 0, &val);
++	ssize_t result = kstrtoul(buf, 0, &val);
+ 
+ 	if (result < 0)
+ 		return result;
+@@ -259,7 +259,7 @@ msi_bus_store(struct device *dev, struct device_attribute *attr,
+ 	struct pci_dev *pdev = to_pci_dev(dev);
+ 	unsigned long val;
+ 
+-	if (strict_strtoul(buf, 0, &val) < 0)
++	if (kstrtoul(buf, 0, &val) < 0)
+ 		return -EINVAL;
+ 
+ 	/* bad things may happen if the no_msi flag is changed
+@@ -291,7 +291,7 @@ static ssize_t bus_rescan_store(struct bus_type *bus, const char *buf,
+ 	unsigned long val;
+ 	struct pci_bus *b = NULL;
+ 
+-	if (strict_strtoul(buf, 0, &val) < 0)
++	if (kstrtoul(buf, 0, &val) < 0)
+ 		return -EINVAL;
+ 
+ 	if (val) {
+@@ -315,7 +315,7 @@ dev_rescan_store(struct device *dev, struct device_attribute *attr,
+ 	unsigned long val;
+ 	struct pci_dev *pdev = to_pci_dev(dev);
+ 
+-	if (strict_strtoul(buf, 0, &val) < 0)
++	if (kstrtoul(buf, 0, &val) < 0)
+ 		return -EINVAL;
+ 
+ 	if (val) {
+@@ -342,7 +342,7 @@ remove_store(struct device *dev, struct device_attribute *dummy,
+ 	int ret = 0;
+ 	unsigned long val;
+ 
+-	if (strict_strtoul(buf, 0, &val) < 0)
++	if (kstrtoul(buf, 0, &val) < 0)
+ 		return -EINVAL;
+ 
+ 	/* An attribute cannot be unregistered by one of its own methods,
+@@ -362,7 +362,7 @@ dev_bus_rescan_store(struct device *dev, struct device_attribute *attr,
+ 	unsigned long val;
+ 	struct pci_bus *bus = to_pci_bus(dev);
+ 
+-	if (strict_strtoul(buf, 0, &val) < 0)
++	if (kstrtoul(buf, 0, &val) < 0)
+ 		return -EINVAL;
+ 
+ 	if (val) {
+@@ -384,7 +384,7 @@ static ssize_t d3cold_allowed_store(struct device *dev,
+ 	struct pci_dev *pdev = to_pci_dev(dev);
+ 	unsigned long val;
+ 
+-	if (strict_strtoul(buf, 0, &val) < 0)
++	if (kstrtoul(buf, 0, &val) < 0)
+ 		return -EINVAL;
+ 
+ 	pdev->d3cold_allowed = !!val;
+@@ -1236,7 +1236,7 @@ static ssize_t reset_store(struct device *dev,
+ {
+ 	struct pci_dev *pdev = to_pci_dev(dev);
+ 	unsigned long val;
+-	ssize_t result = strict_strtoul(buf, 0, &val);
++	ssize_t result = kstrtoul(buf, 0, &val);
+ 
+ 	if (result < 0)
+ 		return result;
 -- 
-Darren Hart
-Intel Open Source Technology Center
-Yocto Project - Technical Lead - Linux Kernel
+1.7.10.4
+
 
