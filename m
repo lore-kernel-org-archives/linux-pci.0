@@ -1,84 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f48.google.com ([209.85.160.48]:44800 "EHLO
-	mail-pb0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754298Ab3FGPSM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 7 Jun 2013 11:18:12 -0400
-Message-ID: <51B1F9A4.7090608@gmail.com>
-Date: Fri, 07 Jun 2013 23:17:56 +0800
-From: Jiang Liu <liuj97@gmail.com>
+Received: from mail-lb0-f182.google.com ([209.85.217.182]:34820 "EHLO
+	mail-lb0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751326Ab3FARzs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 1 Jun 2013 13:55:48 -0400
+Received: by mail-lb0-f182.google.com with SMTP id q15so384841lbi.13
+        for <linux-pci@vger.kernel.org>; Sat, 01 Jun 2013 10:55:46 -0700 (PDT)
 MIME-Version: 1.0
-To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Jeremy Fitzhardinge <jeremy@goop.org>,
-	xen-devel@lists.xensource.com,
-	virtualization@lists.linux-foundation.org
-Subject: Re: [RFC PATCH v2, part3 07/11] PCI, xen-pcifront: use new PCI interfaces
- to simplify implementation
-References: <1368719459-24800-1-git-send-email-jiang.liu@huawei.com> <1368719459-24800-8-git-send-email-jiang.liu@huawei.com> <20130607145024.GA16631@phenom.dumpdata.com>
-In-Reply-To: <20130607145024.GA16631@phenom.dumpdata.com>
-Content-Type: text/plain; charset=UTF-8
+Reply-To: pricardofc@ipfn.ist.utl.pt
+In-Reply-To: <CAH9N0t-Bg8QNLG3m0tmHN9s1ORPxOX2C01WAEt9yi0pd=y8xbA@mail.gmail.com>
+References: <CAH9N0t8ODdHOz-ajwUBUv34XOH=i65S=4D0=HnvDLjCV7N3n8g@mail.gmail.com>
+	<CAE9FiQVZoybuq-ekQWUmXs8ggKmSdGo2zsLbxv7Shj3ZQAkiqw@mail.gmail.com>
+	<CAH9N0t-Bg8QNLG3m0tmHN9s1ORPxOX2C01WAEt9yi0pd=y8xbA@mail.gmail.com>
+Date: Sat, 1 Jun 2013 18:55:46 +0100
+Message-ID: <CAH9N0t-pkU0XjzGD--9o9=GeRaoazxMm=GkraC5X_yBsZ4=sRg@mail.gmail.com>
+Subject: Re: Pcie Linux HotPlug Driver Automatic Scripts
+From: Paulo Fortuna Carvalho <pricardofc@ipfn.ist.utl.pt>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri 07 Jun 2013 10:50:24 PM CST, Konrad Rzeszutek Wilk wrote:
-> On Thu, May 16, 2013 at 11:50:55PM +0800, Jiang Liu wrote:
->> Use new PCI interfaces to simplify xen-pcifront implementation:
->> 1) Use pci_create_root_bus() instead of pci_scan_bus_parented()
->>    because pci_scan_bus_parented() is marked as __deprecated.This
->>    also gets rid of a duplicated call of pci_bus_start_devices().
->> 2) Use pci_stop_root_bus() and pci_remove_root_bus() instead of
->>    open-coded private implementation.
->> 3) Use pci_set_host_bridge_release() to release data structures
->>    associated with PCI root buses.
->> 4) Use pci_bus_get()/pci_bus_put() to manage PCI root bus reference
->>    count.
->>
->> This is also a preparation for coming PCI bus lock enhancement.
->>
->> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
->> Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
->> Cc: Jeremy Fitzhardinge <jeremy@goop.org>
->> Cc: xen-devel@lists.xensource.com
->> Cc: virtualization@lists.linux-foundation.org
->> Cc: linux-pci@vger.kernel.org
->> Cc: linux-kernel@vger.kernel.org
->> ---
->>  drivers/pci/xen-pcifront.c | 81 ++++++++++++++++++++++------------------------
->>  1 file changed, 39 insertions(+), 42 deletions(-)
->>
->> diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
->> index 816cf94..6aa2c0f 100644
->> --- a/drivers/pci/xen-pcifront.c
->> +++ b/drivers/pci/xen-pcifront.c
-......
->> @@ -480,12 +490,14 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
->>  		goto err_out;
->>  	}
->>
->> -	bus_entry->bus = b;
->> +	pci_set_host_bridge_release(to_pci_host_bridge(b->bridge),
->> +				    pcifront_release_sd, sd);
->>
->> -	list_add(&bus_entry->list, &pdev->root_buses);
->> -
->> -	/* pci_scan_bus_parented skips devices which do not have a have
->> -	* devfn==0. The pcifront_scan_bus enumerates all devfn. */
->> +	/*
->> +	 * Every PCI physical device should have function 0, but that's not
->> +	 * true for xen.
+Hello,
+Bjorn and Yinghai,
+
+Everything is working as expected now.
+Both boards are hotplugging.
+Im working in the udev configuration to run scripts automatically but
+i think its the easiest part.
+Thanks for your help,
+Paulo.
+
+
+2013/5/31, Paulo Fortuna Carvalho <pricardofc@ipfn.ist.utl.pt>:
+> I'll explain better.
+> We have the following architecture.
+> PC (Intel Root Port) downstream->Upstream OneStopSystems RootComplex
+> 8733 downstream->upstream PCIe Switch 8696 in a ATCA card downstream->
+> another ATCA card.
+> When another ATCA card is removed from the system all the process goes ok.
+> When the first ATCA card that has the PCIe 8696 onboard is removed
+> from system and inserted again all the PEX show rev (ff) and also the
+> 2 ATCA cards have rev (ff)
+> The only thing in system with rev (ba) ok is the Root Complex 8733.
+> The ATCA card with PCIE Switch 8696 onboard is plugged to the PC via a
+> HotPlug cable and we dont actually remove the card only the cable (is
+> the same thing I guess). So when we plug the cable back i think we
+> have to send a reset signal to the pciexpress bus in order to
+> initialize all the pci bus, detect and power on all the tree from Root
+> Complex 8733 until PCIe Switch 8696 and at last ATCA cards in order to
+> insert ATCA cards device drivers.
 >
-> That is incorrect. There are two types of backends - one of them will
-> start at zero, but the other might not.
-Hi Konrad,
-      Forgive my poor knowledge about Xen:(, so I will skip this change.
-Regards!
-Gerry
+> So I tryed echo 1 > /sys/bus/pci/rescan didnt work. Then I identify
+> from which device the rev ff was and found that from device
+> 0000:04:08.0 rev was ff and so all the nodes below this one were also
+> with rev ff. then I tryed
+> echo 1 > /sys/bus/pci/devices/0000\:04\:08.0/power but also nothing
+> happened.
+> So is there a command that I can execute to activate all the pci bus
+> from that node?
+> My work colleague told me that after plug the pci express cable he
+> always had to reboot the pc (because it needs a reset signal in that
+> hw line) but I think that there should be a linux command that would
+> be able to send this reset signal.
+> I also tryed echo 1 > /sys/bus/pci/devices/0000\:04\:08.0/reset but
+> this file doenst exist...
+> Paulo.
+>
+> 2013/5/31, Yinghai Lu <yinghai@kernel.org>:
+>> On Fri, May 31, 2013 at 10:35 AM, Paulo Fortuna Carvalho
+>> <pricardofc@ipfn.ist.utl.pt> wrote:
+>>
+>>> Also, How can I perform an entire pcie express bus reset from linux
+>>> terminal?
+>>
+>> disable_pcie_link and reenable the pcie link?
+>>
+>
