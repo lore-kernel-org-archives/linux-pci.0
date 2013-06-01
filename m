@@ -1,88 +1,112 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f177.google.com ([209.85.192.177]:36515 "EHLO
-	mail-pd0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752900Ab3FHBmz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 7 Jun 2013 21:42:55 -0400
-Received: by mail-pd0-f177.google.com with SMTP id u10so5391656pdi.8
-        for <linux-pci@vger.kernel.org>; Fri, 07 Jun 2013 18:42:55 -0700 (PDT)
-Date: Fri, 7 Jun 2013 19:42:51 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Jiang Liu <liuj97@gmail.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 1/2] PCI: fix a double free issue in
- pci_create_root_bus() error recovery path
-Message-ID: <20130608014251.GA5874@google.com>
-References: <CAErSpo4AFxSqUfxbw60B8XVk3XxtYfRcLyWDy=yPb0fURV=BQg@mail.gmail.com>
- <1370538609-28903-1-git-send-email-jiang.liu@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1370538609-28903-1-git-send-email-jiang.liu@huawei.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:25656 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758225Ab3FAGDe (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 1 Jun 2013 02:03:34 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Gavin Shan <shangw@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v5 4/7] PCI: Introduce enable_local to prepare per root bus handling
+Date: Fri, 31 May 2013 23:03:09 -0700
+Message-Id: <1370066593-22736-4-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1370066593-22736-1-git-send-email-yinghai@kernel.org>
+References: <1370066593-22736-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 07, 2013 at 01:10:08AM +0800, Jiang Liu wrote:
-> On pci_create_root_bus() error recovery path, device_unregister(&bridge->dev)
-> should have freed memory used by bridge, so we shouldn't call kfree(bridge)
-> again, it's a double free.
-> 
-> On the other hand, we should not use kfree() to free memory used by
-> device object once we have invoked device_register() because it's
-> reference-counted.
-> 
-> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-> Cc: stable@vger.kernel.org
-> ---
-> Hi Bjorn,
-> 	This is the patch to fix the kfree() issue, it may be a material
-> for stable trees.
-> Thanks!
-> Gerry
-> ---
->  drivers/pci/probe.c | 14 ++++++++------
->  1 file changed, 8 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 8882b5d..2f81a0a 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1729,12 +1729,16 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
->  	bridge->dev.release = pci_release_bus_bridge_dev;
->  	dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
->  	error = pcibios_root_bridge_prepare(bridge);
-> -	if (error)
-> -		goto bridge_dev_reg_err;
-> +	if (error) {
-> +		kfree(bridge);
-> +		goto err_out;
-> +	}
->  
->  	error = device_register(&bridge->dev);
-> -	if (error)
-> -		goto bridge_dev_reg_err;
-> +	if (error) {
-> +		kfree(bridge);
+Add enable_local to prepare assign unassigned resource
+for per root bus.
 
-Per device_register() comment, this should be a put_device().
-I added this patch with that change to my pci/jiang-bus-lock-v3 branch.
+Per Bjorn, separate it from big patch that handing assign_unssigned per root bus.
 
-I know a subsequent patch removes this anyway.  I might be a little
-obsessive.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 
-> +		goto err_out;
-> +	}
->  	b->bridge = get_device(&bridge->dev);
->  	device_enable_async_suspend(b->bridge);
->  	pci_set_bus_of_node(b);
-> @@ -1790,8 +1794,6 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
->  class_dev_reg_err:
->  	put_device(&bridge->dev);
->  	device_unregister(&bridge->dev);
-> -bridge_dev_reg_err:
-> -	kfree(bridge);
->  err_out:
->  	kfree(b);
->  	return NULL;
-> -- 
-> 1.8.1.2
-> 
+---
+ drivers/pci/setup-bus.c |   40 +++++++++++++++++++++-------------------
+ 1 file changed, 21 insertions(+), 19 deletions(-)
+
+Index: linux-2.6/drivers/pci/setup-bus.c
+===================================================================
+--- linux-2.6.orig/drivers/pci/setup-bus.c
++++ linux-2.6/drivers/pci/setup-bus.c
+@@ -1422,9 +1422,9 @@ void __init pci_realloc_get_opt(char *st
+ 	else if (!strncmp(str, "on", 2))
+ 		pci_realloc_enable = user_enabled;
+ }
+-static bool __init pci_realloc_enabled(void)
++static bool __init pci_realloc_enabled(enum enable_type enable)
+ {
+-	return pci_realloc_enable >= user_enabled;
++	return enable >= user_enabled;
+ }
+ 
+ #if defined(CONFIG_PCI_IOV) && defined(CONFIG_PCI_REALLOC_ENABLE_AUTO)
+@@ -1446,25 +1446,25 @@ static int __init check_unassigned_resou
+ 	return 0;
+ }
+ 
+-static void  __init pci_realloc_detect(void)
++static enum enable_type __init pci_realloc_detect(struct pci_bus *bus,
++			 enum enable_type enable_local)
+ {
+ 	int unassigned = 0;
+-	struct pci_bus *bus;
+ 
+-	if (pci_realloc_enable != undefined)
+-		return;
++	if (enable_local != undefined)
++		return enable_local;
+ 
+-	list_for_each_entry(bus, &pci_root_buses, node) {
+-		pci_walk_bus(bus, check_unassigned_resources, &unassigned);
+-		if (unassigned) {
+-			pci_realloc_enable = auto_enabled;
+-			return;
+-		}
+-	}
++	pci_walk_bus(bus, check_unassigned_resources, &unassigned);
++	if (unassigned)
++		return auto_enabled;
++
++	return enable_local;
+ }
+ #else
+-static void __init pci_realloc_detect(void)
++static enum enable_type __init pci_realloc_detect(struct pci_bus *bus,
++			 enum enable_type enable_local)
+ {
++	return enable_local;
+ }
+ #endif
+ 
+@@ -1487,10 +1487,12 @@ pci_assign_unassigned_resources(void)
+ 	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
+ 				  IORESOURCE_PREFETCH;
+ 	int pci_try_num = 1;
++	enum enable_type enable_local = pci_realloc_enable;
++
++	list_for_each_entry(bus, &pci_root_buses, node)
++		enable_local = pci_realloc_detect(bus, enable_local);
+ 
+-	/* don't realloc if asked to do so */
+-	pci_realloc_detect();
+-	if (pci_realloc_enabled()) {
++	if (pci_realloc_enabled(enable_local)) {
+ 		int max_depth = pci_get_max_depth();
+ 
+ 		pci_try_num = max_depth + 1;
+@@ -1522,9 +1524,9 @@ again:
+ 		goto enable_and_dump;
+ 
+ 	if (tried_times >= pci_try_num) {
+-		if (pci_realloc_enable == undefined)
++		if (enable_local == undefined)
+ 			printk(KERN_INFO "Some PCI device resources are unassigned, try booting with pci=realloc\n");
+-		else if (pci_realloc_enable == auto_enabled)
++		else if (enable_local == auto_enabled)
+ 			printk(KERN_INFO "Automatically enabled pci realloc, if you have problem, try booting with pci=realloc=off\n");
+ 
+ 		free_list(&fail_head);
