@@ -1,88 +1,156 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58296 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932229Ab3FFIbn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 6 Jun 2013 04:31:43 -0400
-Date: Thu, 6 Jun 2013 10:30:20 +0200
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-Cc: linux-kernel@vger.kernel.org, x86@kernel.org,
-	linux-pci@vger.kernel.org,
-	Suresh Siddha <suresh.b.siddha@intel.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	Jan Beulich <JBeulich@suse.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH v3 -tip x86/apic 1/2] PCI/MSI: Allocate as many
- multiple-MSIs as requested
-Message-ID: <20130606083019.GA28569@dhcp-26-207.brq.redhat.com>
-References: <cover.1368431413.git.agordeev@redhat.com>
- <8575dc590b819892f366852fe50835efaf579f4f.1368431413.git.agordeev@redhat.com>
- <20130605205638.GA5816@breakpoint.cc>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130605205638.GA5816@breakpoint.cc>
+Received: from userp1040.oracle.com ([156.151.31.81]:25790 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932083Ab3FAGEg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 1 Jun 2013 02:04:36 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Gavin Shan <shangw@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v5 5/7] PCI: Split pci_assign_unassigned_resources to per root bus
+Date: Fri, 31 May 2013 23:03:10 -0700
+Message-Id: <1370066593-22736-5-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1370066593-22736-1-git-send-email-yinghai@kernel.org>
+References: <1370066593-22736-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 05, 2013 at 10:56:38PM +0200, Sebastian Andrzej Siewior wrote:
-> On Mon, May 13, 2013 at 11:05:48AM +0200, Alexander Gordeev wrote:
-> > Note, although the existing 'msi_desc::multiple' field might seem
-> > redundant, in fact in does not. In general case the number of MSIs a
-> > PCI device is initialized with is not necessarily the closest power-
-> > of-two value of the number of MSIs the device will send. Thus, in
-> > theory it would not be always possible to derive the former from the
-> > latter and we need to keep them both, to stress this corner case.
-> > Besides, since 'msi_desc::multiple' is a bitfield, throwing it out
-> > would not save us any space.
-> 
-> The last paragraph makes me curious. The only place where 'multiple' is set is
-> in do_setup_msi_irqs() and this uses the next power of two for it. And since a
-> device is not enabled twice, it is not overridden.
-> So it should be possible to compute 'multiple' out of 'nvec' but it saves
-> cycles not do to so. I agree to keep 'multiple' but your argument does not
-> seem to make sense.
-> While nitpicking, 'nvec' might deserve a better comment than 'number of
-> messages' since it holds the number of allocated interrupts. :)
+We need to split pci_assign_unassiged_resource to every root bus, so can
+have different retry for assign_unassigned per root bus
 
-Sebastian,
+Also we need root bus hot add and booting path use same code.
 
-I re-read my comment few times and I admit it might be confusing. You are
-right - 'multiple' is set by rounding up only. The part '...not necessarily
-the closest power-of-two value...' implied an abstract PCI device rather than
-the described code, but the wording is less than perfect, indeed. 
+-v2: separate enable_local and pci_release_bridge_resources to
+     other patches requested by Bjorn.
 
-In fact, at the moment of writing I kept in mind a follow-up patch that could
-help with aforementioned devices. That would be a new interface:
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 
-	int pci_enable_msi_block_partial(struct pci_dev *dev,
-					 unsigned int nvec_use,
-					 unsigned int nvec_init);
+---
+ drivers/pci/setup-bus.c |   62 +++++++++++++++++++-----------------------------
+ 1 file changed, 25 insertions(+), 37 deletions(-)
 
-In this case 'nvec_use' would go to 'msi_desc::nvec_used' and 'nvec_init'
-would translate to 'msi_desc::multiple' in case 'nvec_init' is not zero.
-In case 'nvec_init' is zero, 'msi_desc::multiple' would be initialized
-with the maximum possible value for the device (the way it is done now for
-pci_enable_msi_block_auto() interface). So, for the AHCI device (Bjorn
-mentioned) such a call would conserve on 10 of 16 vectors:
-
-	pci_enable_msi_block_partial(pdev, 6, 0);
-
-What I am not sure is whether we need to read out the maximum possible
-number of vectors like pci_enable_msi_block_auto() does:
-
-	int pci_enable_msi_block_partial(struct pci_dev *dev,
-					 unsigned int nvec_use,
-					 unsigned int nvec_init,
-					 unsigned int *maxvec);
-
-I can not think of any use of 'maxvec' with this interface, but the second
-variant completes the whole picture about a device...
-
-> Sebastian
-
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+Index: linux-2.6/drivers/pci/setup-bus.c
+===================================================================
+--- linux-2.6.orig/drivers/pci/setup-bus.c
++++ linux-2.6/drivers/pci/setup-bus.c
+@@ -1383,21 +1383,6 @@ static int __init pci_bus_get_depth(stru
+ 
+ 	return depth;
+ }
+-static int __init pci_get_max_depth(void)
+-{
+-	int depth = 0;
+-	struct pci_bus *bus;
+-
+-	list_for_each_entry(bus, &pci_root_buses, node) {
+-		int ret;
+-
+-		ret = pci_bus_get_depth(bus);
+-		if (ret > depth)
+-			depth = ret;
+-	}
+-
+-	return depth;
+-}
+ 
+ /*
+  * -1: undefined, will auto detect later
+@@ -1473,10 +1458,9 @@ static enum enable_type __init pci_reall
+  * second  and later try will clear small leaf bridge res
+  * will stop till to the max  deepth if can not find good one
+  */
+-void __init
+-pci_assign_unassigned_resources(void)
++static void __init
++pci_assign_unassigned_root_bus_resources(struct pci_bus *bus)
+ {
+-	struct pci_bus *bus;
+ 	LIST_HEAD(realloc_head); /* list of resources that
+ 					want additional resources */
+ 	struct list_head *add_list = NULL;
+@@ -1487,17 +1471,17 @@ pci_assign_unassigned_resources(void)
+ 	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
+ 				  IORESOURCE_PREFETCH;
+ 	int pci_try_num = 1;
+-	enum enable_type enable_local = pci_realloc_enable;
+-
+-	list_for_each_entry(bus, &pci_root_buses, node)
+-		enable_local = pci_realloc_detect(bus, enable_local);
++	enum enable_type enable_local;
+ 
++	/* don't realloc if asked to do so */
++	enable_local = pci_realloc_detect(bus, pci_realloc_enable);
+ 	if (pci_realloc_enabled(enable_local)) {
+-		int max_depth = pci_get_max_depth();
++		int max_depth = pci_bus_get_depth(bus);
+ 
+ 		pci_try_num = max_depth + 1;
+-		printk(KERN_DEBUG "PCI: max bus depth: %d pci_try_num: %d\n",
+-			 max_depth, pci_try_num);
++		dev_printk(KERN_DEBUG, &bus->dev,
++			   "max bus depth: %d pci_try_num: %d\n",
++			   max_depth, pci_try_num);
+ 	}
+ 
+ again:
+@@ -1509,12 +1493,10 @@ again:
+ 		add_list = &realloc_head;
+ 	/* Depth first, calculate sizes and alignments of all
+ 	   subordinate buses. */
+-	list_for_each_entry(bus, &pci_root_buses, node)
+-		__pci_bus_size_bridges(bus, add_list);
++	__pci_bus_size_bridges(bus, add_list);
+ 
+ 	/* Depth last, allocate resources and update the hardware. */
+-	list_for_each_entry(bus, &pci_root_buses, node)
+-		__pci_bus_assign_resources(bus, add_list, &fail_head);
++	__pci_bus_assign_resources(bus, add_list, &fail_head);
+ 	if (add_list)
+ 		BUG_ON(!list_empty(add_list));
+ 	tried_times++;
+@@ -1525,16 +1507,16 @@ again:
+ 
+ 	if (tried_times >= pci_try_num) {
+ 		if (enable_local == undefined)
+-			printk(KERN_INFO "Some PCI device resources are unassigned, try booting with pci=realloc\n");
++			dev_info(&bus->dev, "Some PCI device resources are unassigned, try booting with pci=realloc\n");
+ 		else if (enable_local == auto_enabled)
+-			printk(KERN_INFO "Automatically enabled pci realloc, if you have problem, try booting with pci=realloc=off\n");
++			dev_info(&bus->dev, "Automatically enabled pci realloc, if you have problem, try booting with pci=realloc=off\n");
+ 
+ 		free_list(&fail_head);
+ 		goto enable_and_dump;
+ 	}
+ 
+-	printk(KERN_DEBUG "PCI: No. %d try to assign unassigned res\n",
+-			 tried_times + 1);
++	dev_printk(KERN_DEBUG, &bus->dev,
++		   "No. %d try to assign unassigned res\n", tried_times + 1);
+ 
+ 	/* third times and later will not check if it is leaf */
+ 	if ((tried_times + 1) > 2)
+@@ -1565,12 +1547,18 @@ again:
+ 
+ enable_and_dump:
+ 	/* Depth last, update the hardware. */
+-	list_for_each_entry(bus, &pci_root_buses, node)
+-		pci_enable_bridges(bus);
++	pci_enable_bridges(bus);
+ 
+ 	/* dump the resource on buses */
+-	list_for_each_entry(bus, &pci_root_buses, node)
+-		pci_bus_dump_resources(bus);
++	pci_bus_dump_resources(bus);
++}
++
++void __init pci_assign_unassigned_resources(void)
++{
++	struct pci_bus *root_bus;
++
++	list_for_each_entry(root_bus, &pci_root_buses, node)
++		pci_assign_unassigned_root_bus_resources(root_bus);
+ }
+ 
+ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
