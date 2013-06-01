@@ -1,75 +1,124 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <51BDF705.5090904@gmail.com>
-Date: Mon, 17 Jun 2013 01:33:57 +0800
-From: Jiang Liu <liuj97@gmail.com>
-MIME-Version: 1.0
-To: "Alexander E. Patrakov" <patrakov@gmail.com>
-CC: Jiang Liu <jiang.liu@huawei.com>, alexdeucher@gmail.com,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	linux-acpi@vger.kernel.org,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [BUGFIX v2 0/4] fix bug 56531, 59501 and 59581
-References: <1371238081-32260-1-git-send-email-jiang.liu@huawei.com> <CAN_LGv1itN=ADE-3LNCoBJFXmpWZffhQb6NQuoBzvONkX3brug@mail.gmail.com>
-In-Reply-To: <CAN_LGv1itN=ADE-3LNCoBJFXmpWZffhQb6NQuoBzvONkX3brug@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:49692 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758283Ab3FAGDh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 1 Jun 2013 02:03:37 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Gavin Shan <shangw@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v5 7/7] PCI: Retry assign unassigned resources for hotadd root bus
+Date: Fri, 31 May 2013 23:03:12 -0700
+Message-Id: <1370066593-22736-7-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1370066593-22736-1-git-send-email-yinghai@kernel.org>
+References: <1370066593-22736-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06/15/2013 02:42 PM, Alexander E. Patrakov wrote:
-> 2013/6/15 Jiang Liu <jiang.liu@huawei.com>:
->> Alexander E. Patrakov <patrakov@gmail.com> reports two bugs related to
->> dock station support on Sony VAIO VPCZ23A4R. Actually there are at least
->> four bugs related to Sony VAIO VPCZ23A4R dock support.
->> 1) can't correctly detect hotplug slot for dock state
->> 2) resource leak on undocking
->> 3) resource allocation failure for dock devices
->> 4) one bug in intel_snd_hda driver
-> 5) one or two bugs in radeon driver
-> 
-> As for the subject - only a hotplug-related part of bug 59581 is fixed.
-> 
->> Hi Alexander, could you please help to test the whole patchset?
->> Really get sleepy, it's already 3 oclock now, so please forgive me
->> if there any stupid mistakes.
-> 
-> I have tested this patchset on top of 3.10-rc5 using the following two
-> testcases.
-> 
-> 1. Boot docked with radeon blacklisted. Switch to text-based virtual
-> console, undock, dock, modprobe radeon, rmmod radeon, undock, dock,
-> modprobe radeon again. Tested in this sequence because Alex Deucher
-> told me in bug 59681 to rmmod radeon before undocking.
-> 
-> 2. Boot undocked, with radeon not blacklisted. Stay in X. Dock,
-> undock, dock, undock, dock.
-> 
-> Both cases work, and exhibit similar backtraces in dmesg. So I am
-> attaching a dmesg only from the first testcase. Please look for "INFO:
-> trying to register non-static key" and for "*ERROR* Memory manager not
-> clean. Delaying takedown". I understand that the second trace is
-> unrelated to this patchset, but would like you to fix the first.
-Hi Alexander,
-	Great thanks for your testing!
-	I have investigated the first issue but still have no idea about it.
-According to source code, everything should be OK.
-The r8169 driver has invoked INIT_WORK(&tp->wk.work, rtl_task) to
-initialize the work item, so it shouldn't trigger the warning.
-Have you found this issue in other test cases?
-Regards!
-Gerry
+Let root bus hotadd path use same code for booting path.
+As driver is not loaded yet, we could retry to make sure
+all pci devices get resources allocated.
+We need this as during hotadd, firmware could assign some bars before
+handle over.
 
-> 
-> Note that the snd_hda_intel bug somehow didn't manifest itself today,
-> probably because the TV that is connected to the HDMI output of the
-> radeon card was off and because Xorg never really tried to use the
-> card.
-> 
-> --
-> Alexander E. Patrakov
-> 
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 
+---
+ drivers/acpi/pci_root.c |    2 +-
+ drivers/pci/setup-bus.c |   15 +++++++--------
+ include/linux/pci.h     |    1 +
+ 3 files changed, 9 insertions(+), 9 deletions(-)
+
+Index: linux-2.6/drivers/pci/setup-bus.c
+===================================================================
+--- linux-2.6.orig/drivers/pci/setup-bus.c
++++ linux-2.6/drivers/pci/setup-bus.c
+@@ -1365,7 +1365,7 @@ static void pci_bus_dump_resources(struc
+ 	}
+ }
+ 
+-static int __init pci_bus_get_depth(struct pci_bus *bus)
++static int pci_bus_get_depth(struct pci_bus *bus)
+ {
+ 	int depth = 0;
+ 	struct pci_dev *dev;
+@@ -1399,7 +1399,7 @@ enum enable_type {
+ 	auto_enabled,
+ };
+ 
+-static enum enable_type pci_realloc_enable __initdata = undefined;
++static enum enable_type pci_realloc_enable = undefined;
+ void __init pci_realloc_get_opt(char *str)
+ {
+ 	if (!strncmp(str, "off", 3))
+@@ -1407,13 +1407,13 @@ void __init pci_realloc_get_opt(char *st
+ 	else if (!strncmp(str, "on", 2))
+ 		pci_realloc_enable = user_enabled;
+ }
+-static bool __init pci_realloc_enabled(enum enable_type enable)
++static bool pci_realloc_enabled(enum enable_type enable)
+ {
+ 	return enable >= user_enabled;
+ }
+ 
+ #if defined(CONFIG_PCI_IOV) && defined(CONFIG_PCI_REALLOC_ENABLE_AUTO)
+-static int __init check_unassigned_resources(struct pci_dev *dev, void *data)
++static int check_unassigned_resources(struct pci_dev *dev, void *data)
+ {
+ 	int i;
+ 	int *unassigned = data;
+@@ -1431,7 +1431,7 @@ static int __init check_unassigned_resou
+ 	return 0;
+ }
+ 
+-static enum enable_type __init pci_realloc_detect(struct pci_bus *bus,
++static enum enable_type pci_realloc_detect(struct pci_bus *bus,
+ 			 enum enable_type enable_local)
+ {
+ 	int unassigned = 0;
+@@ -1446,7 +1446,7 @@ static enum enable_type __init pci_reall
+ 	return enable_local;
+ }
+ #else
+-static enum enable_type __init pci_realloc_detect(struct pci_bus *bus,
++static enum enable_type pci_realloc_detect(struct pci_bus *bus,
+ 			 enum enable_type enable_local)
+ {
+ 	return enable_local;
+@@ -1458,8 +1458,7 @@ static enum enable_type __init pci_reall
+  * second  and later try will clear small leaf bridge res
+  * will stop till to the max  deepth if can not find good one
+  */
+-static void __init
+-pci_assign_unassigned_root_bus_resources(struct pci_bus *bus)
++void pci_assign_unassigned_root_bus_resources(struct pci_bus *bus)
+ {
+ 	LIST_HEAD(realloc_head); /* list of resources that
+ 					want additional resources */
+Index: linux-2.6/drivers/acpi/pci_root.c
+===================================================================
+--- linux-2.6.orig/drivers/acpi/pci_root.c
++++ linux-2.6/drivers/acpi/pci_root.c
+@@ -534,7 +534,7 @@ static int acpi_pci_root_add(struct acpi
+ 
+ 	if (system_state != SYSTEM_BOOTING) {
+ 		pcibios_resource_survey_bus(root->bus);
+-		pci_assign_unassigned_bus_resources(root->bus);
++		pci_assign_unassigned_root_bus_resources(root->bus);
+ 	}
+ 
+ 	pci_bus_add_devices(root->bus);
+Index: linux-2.6/include/linux/pci.h
+===================================================================
+--- linux-2.6.orig/include/linux/pci.h
++++ linux-2.6/include/linux/pci.h
+@@ -1003,6 +1003,7 @@ int pci_claim_resource(struct pci_dev *,
+ void pci_assign_unassigned_resources(void);
+ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge);
+ void pci_assign_unassigned_bus_resources(struct pci_bus *bus);
++void pci_assign_unassigned_root_bus_resources(struct pci_bus *bus);
+ void pdev_enable_device(struct pci_dev *);
+ int pci_enable_resources(struct pci_dev *, int mask);
+ void pci_fixup_irqs(u8 (*)(struct pci_dev *, u8 *),
