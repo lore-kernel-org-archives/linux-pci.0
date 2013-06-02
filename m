@@ -1,88 +1,73 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:31364 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751474Ab3FEGFv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Jun 2013 02:05:51 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Yinghai Lu <yinghai@kernel.org>, <linux-pci@vger.kernel.org>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	Fenghua Yu <fenghua.yu@intel.com>,
-	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH -v4 8/8] PCI: Replace printks with appropriate pr_*()
-Date: Wed, 5 Jun 2013 14:01:57 +0800
-Message-ID: <1370412117-12860-9-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1370412117-12860-1-git-send-email-wangyijing@huawei.com>
-References: <1370412117-12860-1-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1369924769-17183-2-git-send-email-betty.dall@hp.com>
+References: <1369924769-17183-1-git-send-email-betty.dall@hp.com> <1369924769-17183-2-git-send-email-betty.dall@hp.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Sat, 1 Jun 2013 18:38:05 -0600
+Message-ID: <CAErSpo6KV28p3QRoz-Xx=xMjsFaY7sCho8HN2W_M-DntrNk+Ag@mail.gmail.com>
+Subject: Re: [PATCH v2 1/3] PCI/AER: Fix incorrect return from aer_hest_parse()
+To: Betty Dall <betty.dall@hp.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Huang Ying <ying.huang@intel.com>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"Moore, Robert" <robert.moore@intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Replace deprecated printk(KERN_ERR...) with pr_err() in arch/ia64/pci/pci.c
+[+cc Bob for ACPI HEST spec questions]
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- arch/ia64/pci/pci.c |   16 +++++++++-------
- 1 files changed, 9 insertions(+), 7 deletions(-)
+On Thu, May 30, 2013 at 8:39 AM, Betty Dall <betty.dall@hp.com> wrote:
+> The function aer_hest_parse() is called to determine if the given
+> PCI device is firmware first or not. The code loops through each
+> section of the HEST table to look for a match. The bug is that
+> the function always returns whether the last HEST section is firmware
+> first. The fix stops the iteration once the info.firmware_first
+> variable is set.  This is similar to how the function aer_hest_parse_aff()
+> stops the iteration.
+>
+> Signed-off-by: Betty Dall <betty.dall@hp.com>
+> ---
+>
+>  drivers/pci/pcie/aer/aerdrv_acpi.c |    3 +++
+>  1 files changed, 3 insertions(+), 0 deletions(-)
+>
+>
+> diff --git a/drivers/pci/pcie/aer/aerdrv_acpi.c b/drivers/pci/pcie/aer/aerdrv_acpi.c
+> index 5194a7d..39b8671 100644
+> --- a/drivers/pci/pcie/aer/aerdrv_acpi.c
+> +++ b/drivers/pci/pcie/aer/aerdrv_acpi.c
+> @@ -42,6 +42,9 @@ static int aer_hest_parse(struct acpi_hest_header *hest_hdr, void *data)
+>         u8 bridge = 0;
+>         int ff = 0;
+>
+> +       if (info->firmware_first)
+> +               return 0;
+> +
+>         switch (hest_hdr->type) {
+>         case ACPI_HEST_TYPE_AER_ROOT_PORT:
+>                 pcie_type = PCI_EXP_TYPE_ROOT_PORT;
 
-diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
-index f2139b4..3d26db3 100644
---- a/arch/ia64/pci/pci.c
-+++ b/arch/ia64/pci/pci.c
-@@ -157,7 +157,7 @@ new_space (u64 phys_base, int sparse)
- 			return i;
- 
- 	if (num_io_spaces == MAX_IO_SPACES) {
--		printk(KERN_ERR "PCI: Too many IO port spaces "
-+		pr_err("PCI: Too many IO port spaces "
- 			"(MAX_IO_SPACES=%lu)\n", MAX_IO_SPACES);
- 		return ~0;
- 	}
-@@ -181,8 +181,9 @@ static u64 add_io_space(struct pci_root_info *info,
- 	len = strlen(info->name) + 32;
- 	iospace = kzalloc(sizeof(*iospace) + len, GFP_KERNEL);
- 	if (!iospace) {
--		printk(KERN_ERR "PCI: No memory for %s I/O port space\n",
--			info->name);
-+		dev_err(&info->bridge->dev,
-+				"PCI: No memory for %s I/O port space\n",
-+				info->name);
- 		goto out;
- 	}
- 
-@@ -444,8 +445,9 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 
- 	info = kzalloc(sizeof(*info), GFP_KERNEL);
- 	if (!info) {
--		printk(KERN_WARNING "pci_bus %04x:%02x: "
--				"ignored (out of memory)\n", domain, busnum);
-+		dev_err(&device->dev,
-+				"pci_bus %04x:%02x: ignored (out of memory)\n",
-+				domain, busnum);
- 		kfree(controller);
- 		return NULL;
- 	}
-@@ -779,7 +781,7 @@ static void __init set_pci_dfl_cacheline_size(void)
- 
- 	status = ia64_pal_cache_summary(&levels, &unique_caches);
- 	if (status != 0) {
--		printk(KERN_ERR "%s: ia64_pal_cache_summary() failed "
-+		pr_err("%s: ia64_pal_cache_summary() failed "
- 			"(status=%ld)\n", __func__, status);
- 		return;
- 	}
-@@ -787,7 +789,7 @@ static void __init set_pci_dfl_cacheline_size(void)
- 	status = ia64_pal_cache_config_info(levels - 1,
- 				/* cache_type (data_or_unified)= */ 2, &cci);
- 	if (status != 0) {
--		printk(KERN_ERR "%s: ia64_pal_cache_config_info() failed "
-+		pr_err("%s: ia64_pal_cache_config_info() failed "
- 			"(status=%ld)\n", __func__, status);
- 		return;
- 	}
--- 
-1.7.1
+Not related directly to your patch, Betty, but I can't figure out why
+the ACPI spec defines the HEST structures for PCIe as it does.  I'm
+looking at ACPI 5.0, sec 18.3.2.3 - 18.3.2.5.
 
+1) The PCIe Root Port, PCIe Device, and PCIe/PCI-X Bridge structures
+all include Bus, Device, and Function fields.  But there's no Segment.
+ The current Linux code (hest_match_pci()) assumes HEST records can
+only apply to PCI domain 0.  Is Linux missing something, or is the
+HEST really this limited?
 
+2) Doesn't the fact that the HEST structures include a bus number mean
+that the OS cannot reassign bus numbers?  I guess maybe we could still
+reassign them if we kept track of the mapping back to the original
+values.
+
+3) It's interesting that the only choices seem to be "global" or "list
+every device."  There's no "apply to this device and the subtree under
+it," so I guess if you want HEST to apply to hot-added devices,
+"global" is the only thing that makes sense?
+
+Bjorn
