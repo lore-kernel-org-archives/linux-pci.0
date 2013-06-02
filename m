@@ -1,77 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f172.google.com ([209.85.214.172]:38975 "EHLO
-	mail-ob0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751208Ab3FDVst (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Jun 2013 17:48:49 -0400
-Received: by mail-ob0-f172.google.com with SMTP id wo10so1374461obc.31
-        for <linux-pci@vger.kernel.org>; Tue, 04 Jun 2013 14:48:48 -0700 (PDT)
+Received: from hydra.sisk.pl ([212.160.235.94]:56961 "EHLO hydra.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753315Ab3FBVpl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 2 Jun 2013 17:45:41 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Linux PM list <linux-pm@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Kevin Hilman <khilman@linaro.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Ulf Hansson <ulf.hansson@linaro.org>
+Subject: [PATCH 2/2] PM / Runtime: Update .runtime_idle() callback documentation
+Date: Sun, 02 Jun 2013 23:53:27 +0200
+Message-ID: <5059437.HIXCbxAemz@vostro.rjw.lan>
+In-Reply-To: <2033252.LiVeuYIhnT@vostro.rjw.lan>
+References: <Pine.LNX.4.44L0.1305301247370.1137-100000@iolanthe.rowland.org> <2033252.LiVeuYIhnT@vostro.rjw.lan>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo70u7oM07jcGA+E1MUHA4OWiJ1gQ8SuS7YCRuvGMxeaqA@mail.gmail.com>
-References: <1369974092-11450-1-git-send-email-jiang.liu@huawei.com>
- <1369974092-11450-2-git-send-email-jiang.liu@huawei.com> <CAErSpo70u7oM07jcGA+E1MUHA4OWiJ1gQ8SuS7YCRuvGMxeaqA@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 4 Jun 2013 15:48:28 -0600
-Message-ID: <CAErSpo5YbhPtB9OtjkUrMo8OKkjFXzOxeR3Jc4dQU8eC9D45XQ@mail.gmail.com>
-Subject: Re: [PATCH 2/3] PCI, ACPI: Don't glue ACPI dev with pci VFs
-To: Jiang Liu <liuj97@gmail.com>, "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Yinghai Lu <yinghai@kernel.org>, Xudong Hao <xudong.hao@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Jiang Liu <jiang.liu@huawei.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 31, 2013 at 3:40 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> [+cc Rafael]
->
-> On Thu, May 30, 2013 at 10:21 PM, Jiang Liu <liuj97@gmail.com> wrote:
->> From: Yinghai Lu <yinghai@kernel.org>
->>
->> When sriov is enabled, VF could just start after PF in pci tree.
->> like c1:00.0 will be PF, and c1:00.1 and after will be VF.
->>
->> acpi do have dev with same ADR. that will make them get glued
->> wrongly.
->>
->> Skip that if it is virtfn.
->>
->> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
->> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
->> ---
->>  drivers/pci/pci-acpi.c | 4 ++++
->>  1 file changed, 4 insertions(+)
->>
->> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
->> index e4b1fb2..720f3a2 100644
->> --- a/drivers/pci/pci-acpi.c
->> +++ b/drivers/pci/pci-acpi.c
->> @@ -321,6 +321,10 @@ static int acpi_pci_find_device(struct device *dev, acpi_handle *handle)
->>         u64     addr;
->>
->>         pci_dev = to_pci_dev(dev);
->> +       /* don't mix vf with real pci device */
->> +       if (pci_dev->is_virtfn)
->> +               return -ENODEV;
->
-> Rafael, can you review this?  I don't understand the implications of
-> this change.
->
-> And I don't know exactly what problem this would fix, so I don't know
-> if it's stable material or not.  Yinghai did propose it as v3.10
-> material in https://lkml.kernel.org/r/1368498506-25857-1-git-send-email-yinghai@kernel.org,
-> but I don't know why.
+From: Alan Stern <stern@rowland.harvard.edu>
 
-Ping?
+Runtime PM documentation needs to be updated after the previous
+change of the rpm_idle() behavior, so modify it as appropriate.
 
-Jiang or Yinghai, what problem does this fix?
+[rjw: Subject and changelog]
+Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
 
-I'm guessing maybe all three of these should be marked for stable, but
-I'd like confirmation of that.
+Index: usb-3.10/Documentation/power/runtime_pm.txt
+===================================================================
+--- usb-3.10.orig/Documentation/power/runtime_pm.txt
++++ usb-3.10/Documentation/power/runtime_pm.txt
+@@ -144,8 +144,12 @@ The action performed by the idle callbac
+ (or driver) in question, but the expected and recommended action is to check
+ if the device can be suspended (i.e. if all of the conditions necessary for
+ suspending the device are satisfied) and to queue up a suspend request for the
+-device in that case.  The value returned by this callback is ignored by the PM
+-core.
++device in that case.  If there is no idle callback, or if the callback returns
++0, then the PM core will attempt to carry out a runtime suspend of the device;
++in essence, it will call pm_runtime_suspend() directly.  To prevent this (for
++example, if the callback routine has started a delayed suspend), the routine
++should return a non-zero value.  Negative error return codes are ignored by the
++PM core.
+ 
+ The helper functions provided by the PM core, described in Section 4, guarantee
+ that the following constraints are met with respect to runtime PM callbacks for
+@@ -301,9 +305,10 @@ drivers/base/power/runtime.c and include
+       removing the device from device hierarchy
+ 
+   int pm_runtime_idle(struct device *dev);
+-    - execute the subsystem-level idle callback for the device; returns 0 on
+-      success or error code on failure, where -EINPROGRESS means that
+-      ->runtime_idle() is already being executed
++    - execute the subsystem-level idle callback for the device; returns an
++      error code on failure, where -EINPROGRESS means that ->runtime_idle() is
++      already being executed; if there is no callback or the callback returns 0
++      then run pm_runtime_suspend(dev) and return its result
+ 
+   int pm_runtime_suspend(struct device *dev);
+     - execute the subsystem-level suspend callback for the device; returns 0 on
 
->>         /* Please ref to ACPI spec for the syntax of _ADR */
->>         addr = (PCI_SLOT(pci_dev->devfn) << 16) | PCI_FUNC(pci_dev->devfn);
->>         *handle = acpi_get_child(DEVICE_ACPI_HANDLE(dev->parent), addr);
->> --
->> 1.8.1.2
->>
