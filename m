@@ -1,110 +1,52 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Jiang Liu <liuj97@gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from zoneX.GCU-Squad.org ([194.213.125.0]:36651 "EHLO
+	services.gcu-squad.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751927Ab3FBIQ0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 2 Jun 2013 04:16:26 -0400
+Date: Sun, 2 Jun 2013 10:16:08 +0200
+From: Jean Delvare <khali@linux-fr.org>
+To: Tejun Heo <tj@kernel.org>
 Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"Alexander E . Patrakov" <patrakov@gmail.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Len Brown <lenb@kernel.org>,
-	stable@vger.kernel.org, Jiang Liu <jiang.liu@huawei.com>
-Subject: Re: [BUGFIX v2 2/4] ACPI, DOCK: resolve possible deadlock scenarios
-Date: Tue, 18 Jun 2013 23:12:28 +0200
-Message-ID: <9145850.ySkUWRjb02@vostro.rjw.lan>
-In-Reply-To: <51C07E92.6090309@gmail.com>
-References: <1371238081-32260-1-git-send-email-jiang.liu@huawei.com> <27452260.5ySAzSUIS7@vostro.rjw.lan> <51C07E92.6090309@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+	Shane Huang <shane.huang@amd.com>,
+	linux-i2c <linux-i2c@vger.kernel.org>, linux-pci@vger.kernel.org,
+	linux-ide@vger.kernel.org
+Subject: Re: [PATCH v2 3/3] i2c-piix4: add AMD CZ SMBus device ID
+Message-ID: <20130602101608.37cd1661@endymion.delvare>
+In-Reply-To: <20130602080232.GC8286@mtj.dyndns.org>
+References: <1369987950-2894-1-git-send-email-shane.huang@amd.com>
+	<20130531081623.GB17241@mtj.dyndns.org>
+	<CAErSpo4A_tuhsyErPOae5QgBdnUFK4f9kMitH0xUSnV6mYWYrA@mail.gmail.com>
+	<20130602080232.GC8286@mtj.dyndns.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, June 18, 2013 11:36:50 PM Jiang Liu wrote:
-> On 06/17/2013 07:39 PM, Rafael J. Wysocki wrote:
-> > On Monday, June 17, 2013 01:01:51 AM Jiang Liu wrote:
-> >> On 06/16/2013 05:20 AM, Rafael J. Wysocki wrote:
-> >>> On Saturday, June 15, 2013 10:17:42 PM Rafael J. Wysocki wrote:
-> >>>> On Saturday, June 15, 2013 09:44:28 AM Jiang Liu wrote:
-> >> [...]
-> >>>> When it returns from unregister_hotplug_dock_device(), nothing prevents it
-> >>>> from accessing whatever it wants, because ds->hp_lock is not used outside
-> >>>> of the add/del and hotplug_dock_devices().  So, the actual role of
-> >>>> ds->hp_lock (not the one that it is supposed to play, but the real one)
-> >>>> is to prevent addition/deletion from happening when hotplug_dock_devices()
-> >>>> is running.  [Yes, it does protect the list, but since the list is in fact
-> >>>> unnecessary, that doesn't matter.]
-> >>>>
-> >>>>> If we simply use a flag to mark presence of registered callback, we 
-> >>>>> can't achieve the second goal.
-> >>>>
-> >>>> I don't mean using the flag *alone*.
-> >>>>
-> >>>>> Take the sony laptop as an example. It has several PCI 
-> >>>>> hotplug
-> >>>>> slot associated with the dock station:
-> >>>>> [   28.829316] acpiphp_glue: _handle_hotplug_event_func: Bus check 
-> >>>>> notify on \_SB_.PCI0.RP07.LPMB
-> >>>>> [   30.174964] acpiphp_glue: _handle_hotplug_event_func: Bus check 
-> >>>>> notify on \_SB_.PCI0.RP07.LPMB.LPM0
-> >>>>> [   30.174973] acpiphp_glue: _handle_hotplug_event_func: Bus check 
-> >>>>> notify on \_SB_.PCI0.RP07.LPMB.LPM1
-> >>>>> [   30.174979] acpiphp_glue: _handle_hotplug_event_func: Bus check 
-> >>>>> notify on \_SB_.PCI0.RP07.LPMB.LPM2
-> >>>>> [   30.174985] acpiphp_glue: _handle_hotplug_event_func: Bus check 
-> >>>>> notify on \_SB_.PCI0.RP07.LPMB.LPM2.LPRI.LPR0.GFXA
-> >>>>> [   30.175020] acpiphp_glue: _handle_hotplug_event_func: Bus check 
-> >>>>> notify on \_SB_.PCI0.RP07.LPMB.LPM2.LPRI.LPR0.GHDA
-> >>>>> [   30.175040] acpiphp_glue: _handle_hotplug_event_func: Bus check 
-> >>>>> notify on \_SB_.PCI0.RP07.LPMB.LPM2.LPRI.LPR1.LPCI.LPC0.DLAN
-> >>>>> [   30.175050] acpiphp_glue: _handle_hotplug_event_func: Bus check 
-> >>>>> notify on \_SB_.PCI0.RP07.LPMB.LPM2.LPRI.LPR1.LPCI.LPC1.DODD
-> >>>>> [   30.175060] acpiphp_glue: _handle_hotplug_event_func: Bus check 
-> >>>>> notify on \_SB_.PCI0.RP07.LPMB.LPM2.LPRI.LPR1.LPCI.LPC2.DUSB
-> >>>>>
-> >>>>> So it still has some race windows if we undock the station while 
-> >>>>> repeatedly rescanning/removing
-> >>>>> the PCI bus for \_SB_.PCI0.RP07.LPMB.LPM0 through sysfs interfaces.
-> >>>
-> >>> Which sysfs interfaces do you mean, by the way?
-> >>>
-> >>> If you mean "eject", then it takes acpi_scan_lock and hotplug_dock_devices()
-> >>> should always be run under acpi_scan_lock too.  It isn't at the moment,t
-> >>> because write_undock() doesn't take acpi_scan_lock(), but this is an obvious
-> >>> bug (so I'm going to send a patch to fix it in a while).
-> >>>
-> >>> With that bug fixed, the possible race between acpi_eject_store() and
-> >>> hotplug_dock_devices() should be prevented from happening, so perhaps we're
-> >>> worrying about something that cannot happen?
-> >> Hi Rafael,
-> >> 	I mean the "remove" method of each PCI device, and the "power" method
-> >> of PCI hotplug slot here.
-> >> 	These methods may be used to remove P2P bridges with associated ACPIPHP
-> >> hotplug slots, which in turn will cause invoking of
-> >> unregister_hotplug_dock_device().
-> >> 	So theoretical we may trigger the bug by undocking while repeatedly
-> >> adding/removing P2P bridges with ACPIPHP hotplug slot through PCI
-> >> "rescan" and "remove" sysfs interface,
+On Sun, 2 Jun 2013 01:02:32 -0700, Tejun Heo wrote:
+> On Fri, May 31, 2013 at 01:24:57PM -0600, Bjorn Helgaas wrote:
+> > On Fri, May 31, 2013 at 2:16 AM, Tejun Heo <tj@kernel.org> wrote:
+> > > On Fri, May 31, 2013 at 04:12:30PM +0800, Shane Huang wrote:
+> > >> To add AMD CZ SMBus controller device ID.
+> > >>
+> > >> Signed-off-by: Shane Huang <shane.huang@amd.com>
+> > >
+> > > All three patches look good to me.
+> > >
+> > >  Reviewed-by: Tejun Heo <tj@kernel.org>
+> > >
+> > > Both 2 and 3 are dependent on the first patch, so it probably would be
+> > > a good idea to route them together (probably w/ stable cc'd).  Who
+> > > wants these?  Bjorn?
 > > 
-> > Why don't we make these things take acpi_scan_lock upfront, then?
-> Hi Rafael,
->     Seems we can't rely on acpi_scan_lock here, it may cause another
-> deadlock scenario:
-> 1) thread 1 acquired the acpi_scan_lock and tries to destroy all sysfs
-> interfaces for PCI devices.
-> 2) thread 2 opens a PCI sysfs which then tries to acquire the
-> acpi_scan_lock.
+> > The pci_ids.h change is fine with me.  I don't care how they're
+> > routed.  If you want me to pick them up, maybe Shane could collect up
+> > the acks & reviewed-bys and add the appropriate stable tags and resend
+> > the series to me.
+> 
+> Yeah, let's go through Bjorn's tree and preferably with stable cc'd
+> and targeted for for-3.10-rcX.  Shane?
 
-Well, maybe, but you didn't explain how this was going to happen.  What code
-paths are involved, etc.
-
-Quite frankly, I've already run out of patience, sorry about that.  It looks
-like I need to go through the code and understand all of these problems myself.
-Yes, it will take time.
-
-Thanks,
-Rafael
-
+Fine with me.
 
 -- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+Jean Delvare
