@@ -1,70 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f170.google.com ([209.85.214.170]:62459 "EHLO
-	mail-ob0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751557Ab3FZVAR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Jun 2013 17:00:17 -0400
-Received: by mail-ob0-f170.google.com with SMTP id ef5so14103116obb.29
-        for <linux-pci@vger.kernel.org>; Wed, 26 Jun 2013 14:00:16 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20130626121757.GP9294@intel.com>
-References: <1372177330-28013-1-git-send-email-mika.westerberg@linux.intel.com>
- <1372177330-28013-7-git-send-email-mika.westerberg@linux.intel.com>
- <20130625141556.2f9de7b1@jbarnes-desktop> <20130626121757.GP9294@intel.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 26 Jun 2013 14:59:56 -0600
-Message-ID: <CAErSpo6aQMtav89V8wyu+NZxro91o1MnB1ViG-4ExrCgLPKmjg@mail.gmail.com>
-Subject: Re: [PATCH 6/6] x86/PCI: quirk Thunderbolt PCI-to-PCI bridges
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
+Received: from hydra.sisk.pl ([212.160.235.94]:56974 "EHLO hydra.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753524Ab3FBVpm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 2 Jun 2013 17:45:42 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Alan Stern <stern@rowland.harvard.edu>,
+	Linux PM list <linux-pm@vger.kernel.org>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"Ronciak, John" <john.ronciak@intel.com>,
-	"Penner, Miles J" <miles.j.penner@intel.com>,
-	Bruce Allan <bruce.w.allan@intel.com>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"x86@kernel.org" <x86@kernel.org>,
-	"alex.williamson@redhat.com" <alex.williamson@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Kevin Hilman <khilman@linaro.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Ulf Hansson <ulf.hansson@linaro.org>
+Subject: [PATCH 0/2] PM / Runtime: Rework the "runtime idle" helper routine (was: Re: [PATCH RFC] PM / Runtime: Rework the "runtime idle" helper routine)
+Date: Sun, 02 Jun 2013 23:50:46 +0200
+Message-ID: <2033252.LiVeuYIhnT@vostro.rjw.lan>
+In-Reply-To: <Pine.LNX.4.44L0.1305301247370.1137-100000@iolanthe.rowland.org>
+References: <Pine.LNX.4.44L0.1305301247370.1137-100000@iolanthe.rowland.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Alex]
+On Thursday, May 30, 2013 01:08:08 PM Alan Stern wrote:
+> On Thu, 30 May 2013, Rafael J. Wysocki wrote:
+> 
+> > > Since you're making this change, wouldn't it be a good idea to adopt
+> > > Mika's original suggestion and turn on the RPM_AUTO bit in rpmflags
+> > > when the use_autosuspend flag is set?
+> > 
+> > I'm not actually sure.  It can be done, but I'd prefer to do that as a separate
+> > change in any case.
+> 
+> That makes sense.
+> 
+> > > What about cases where the runtime-idle callback does
+> > > rpm_schedule_suspend or rpm_request_suspend?  You'd have to make sure
+> > > that it returns -EBUSY in such cases.  Did you audit for this?
+> > 
+> > As far as I could.
+> > 
+> > I'm not worried about the subsystems modified by this patch, because the
+> > functionality there won't change (except for PCI, that is).
+> 
+> Right.  The subsystems that _aren't_ modified are the ones to worry 
+> about -- like the USB callback.  They are the ones where the behavior 
+> might change.
 
-On Wed, Jun 26, 2013 at 6:17 AM, Mika Westerberg
-<mika.westerberg@linux.intel.com> wrote:
-> On Tue, Jun 25, 2013 at 02:15:56PM -0700, Jesse Barnes wrote:
->> On Tue, 25 Jun 2013 19:22:10 +0300
->> Mika Westerberg <mika.westerberg@linux.intel.com> wrote:
->>
->> > +   if (!(pci_probe & PCI_NOASSIGN_ROMS)) {
->> > +           pr_info("Thunderbolt host router detected disabling ROMs\n");
->> > +           pci_probe |= PCI_NOASSIGN_ROMS;
->> > +   }
->>
->> I wonder if this should just be the default on x86?  Or do we allocate
->> ROM space to address some other platform where we need it and the BIOS
->> doesn't do it for the devices we care about?
->
-> Good question. In our case it definitely helps to have pci=norom the
-> default. Can't tell if it might break something that depends on the current
-> behaviour.
+OK, this time I think I've caught all of them. :-)
 
-I think the current default behavior is that if the BIOS has assigned
-the ROM BAR, we keep that assignment, and if it hasn't, we allocate
-MEM space for it.  And "pci=norom" means that we don't allocate MEM
-space for it, even if the BIOS hasn't assigned it.
+I've retained the ACKs and Reviewed-by tags in [1/2], because it only makes
+more changes in addition to the previously ACKed ones.  The PCI changeset
+has been updated and [2/2] is the documentation update.
 
-"pci=norom" is only implemented on x86.  I think most other arches
-allocate MEM space for ROMs, with no way to turn that off.  PA-RISC
-seems to ignore ROMs (dino_fixup_bus()), but that looks like the
-exception.
+Thanks,
+Rafael
 
-I'm slightly concerned that if we make the x86 default be "never
-assign space for ROMs unless the BIOS has done it," we might break
-virtualized guests that need access to ROMs.  Alex?
 
-Bjorn
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
