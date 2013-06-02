@@ -1,66 +1,122 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout3.samsung.com ([203.254.224.33]:52407 "EHLO
-	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S935296Ab3FTJdc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Jun 2013 05:33:32 -0400
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Kukjin Kim' <kgene.kim@samsung.com>,
-	'Bjorn Helgaas' <bhelgaas@google.com>
-Cc: linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org,
-	devicetree-discuss@lists.ozlabs.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	'Grant Likely' <grant.likely@secretlab.ca>,
-	'Andrew Murray' <andrew.murray@arm.com>,
-	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
-	'Thierry Reding' <thierry.reding@avionic-design.de>,
-	'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>,
-	'Arnd Bergmann' <arnd@arndb.de>,
-	'Surendranath Gurivireddy Balla' <suren.reddy@samsung.com>,
-	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
-	'Thomas Abraham' <thomas.abraham@linaro.org>,
-	Jingoo Han <jg1.han@samsung.com>
-Subject: [PATCH V7 2/4] ARM: EXYNOS: Enable PCIe support for Exynos5440
-Date: Thu, 20 Jun 2013 18:33:30 +0900
-Message-id: <00cc01ce6d99$39f0a860$add1f920$@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+Received: from mail-ob0-f171.google.com ([209.85.214.171]:60487 "EHLO
+	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751593Ab3FBAMk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 1 Jun 2013 20:12:40 -0400
+Received: by mail-ob0-f171.google.com with SMTP id dn14so5279598obc.16
+        for <linux-pci@vger.kernel.org>; Sat, 01 Jun 2013 17:12:40 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <001001ce5e99$2f6c7f90$8e457eb0$@samsung.com>
+References: <001001ce5e99$2f6c7f90$8e457eb0$@samsung.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Sat, 1 Jun 2013 18:12:19 -0600
+Message-ID: <CAErSpo4+9wFwWpMtN40fJ6rycA0qoc69ZZQ06oO+xnEfCnvC8w@mail.gmail.com>
+Subject: Re: [PATCH] PCI: sysfs: replace strict_strtoul() with kstrtoul()
+To: Jingoo Han <jg1.han@samsung.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Enable PCIe support for Exynos5440 which has two PCIe controllers.
+On Sat, Jun 1, 2013 at 1:25 AM, Jingoo Han <jg1.han@samsung.com> wrote:
+> The usage of strict_strtoul() is not preferred, because
+> strict_strtoul() is obsolete. Thus, kstrtoul() should be
+> used.
+>
+> Signed-off-by: Jingoo Han <jg1.han@samsung.com>
 
-Signed-off-by: Jingoo Han <jg1.han@samsung.com>
----
- arch/arm/Kconfig             |    1 +
- arch/arm/mach-exynos/Kconfig |    2 ++
- 2 files changed, 3 insertions(+)
+Applied to pci/misc for v3.11, thanks!
 
-diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
-index 804f41d..098eaef 100644
---- a/arch/arm/Kconfig
-+++ b/arch/arm/Kconfig
-@@ -1427,6 +1427,7 @@ config PCI_HOST_ITE8152
- 	select DMABOUNCE
- 
- source "drivers/pci/Kconfig"
-+source "drivers/pci/pcie/Kconfig"
- 
- source "drivers/pcmcia/Kconfig"
- 
-diff --git a/arch/arm/mach-exynos/Kconfig b/arch/arm/mach-exynos/Kconfig
-index 359af2c..f5f65b5 100644
---- a/arch/arm/mach-exynos/Kconfig
-+++ b/arch/arm/mach-exynos/Kconfig
-@@ -95,6 +95,8 @@ config SOC_EXYNOS5440
- 	select ARCH_HAS_OPP
- 	select HAVE_ARM_ARCH_TIMER
- 	select AUTO_ZRELADDR
-+	select MIGHT_HAVE_PCI
-+	select PCI_DOMAINS if PCI
- 	select PINCTRL_EXYNOS5440
- 	select PM_OPP
- 	help
--- 
-1.7.10.4
-
-
+> ---
+>  drivers/pci/pci-sysfs.c |   18 +++++++++---------
+>  1 file changed, 9 insertions(+), 9 deletions(-)
+>
+> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> index 5b4a9d9..0b56e08 100644
+> --- a/drivers/pci/pci-sysfs.c
+> +++ b/drivers/pci/pci-sysfs.c
+> @@ -66,7 +66,7 @@ static ssize_t broken_parity_status_store(struct device *dev,
+>         struct pci_dev *pdev = to_pci_dev(dev);
+>         unsigned long val;
+>
+> -       if (strict_strtoul(buf, 0, &val) < 0)
+> +       if (kstrtoul(buf, 0, &val) < 0)
+>                 return -EINVAL;
+>
+>         pdev->broken_parity_status = !!val;
+> @@ -188,7 +188,7 @@ static ssize_t is_enabled_store(struct device *dev,
+>  {
+>         struct pci_dev *pdev = to_pci_dev(dev);
+>         unsigned long val;
+> -       ssize_t result = strict_strtoul(buf, 0, &val);
+> +       ssize_t result = kstrtoul(buf, 0, &val);
+>
+>         if (result < 0)
+>                 return result;
+> @@ -259,7 +259,7 @@ msi_bus_store(struct device *dev, struct device_attribute *attr,
+>         struct pci_dev *pdev = to_pci_dev(dev);
+>         unsigned long val;
+>
+> -       if (strict_strtoul(buf, 0, &val) < 0)
+> +       if (kstrtoul(buf, 0, &val) < 0)
+>                 return -EINVAL;
+>
+>         /* bad things may happen if the no_msi flag is changed
+> @@ -291,7 +291,7 @@ static ssize_t bus_rescan_store(struct bus_type *bus, const char *buf,
+>         unsigned long val;
+>         struct pci_bus *b = NULL;
+>
+> -       if (strict_strtoul(buf, 0, &val) < 0)
+> +       if (kstrtoul(buf, 0, &val) < 0)
+>                 return -EINVAL;
+>
+>         if (val) {
+> @@ -315,7 +315,7 @@ dev_rescan_store(struct device *dev, struct device_attribute *attr,
+>         unsigned long val;
+>         struct pci_dev *pdev = to_pci_dev(dev);
+>
+> -       if (strict_strtoul(buf, 0, &val) < 0)
+> +       if (kstrtoul(buf, 0, &val) < 0)
+>                 return -EINVAL;
+>
+>         if (val) {
+> @@ -342,7 +342,7 @@ remove_store(struct device *dev, struct device_attribute *dummy,
+>         int ret = 0;
+>         unsigned long val;
+>
+> -       if (strict_strtoul(buf, 0, &val) < 0)
+> +       if (kstrtoul(buf, 0, &val) < 0)
+>                 return -EINVAL;
+>
+>         /* An attribute cannot be unregistered by one of its own methods,
+> @@ -362,7 +362,7 @@ dev_bus_rescan_store(struct device *dev, struct device_attribute *attr,
+>         unsigned long val;
+>         struct pci_bus *bus = to_pci_bus(dev);
+>
+> -       if (strict_strtoul(buf, 0, &val) < 0)
+> +       if (kstrtoul(buf, 0, &val) < 0)
+>                 return -EINVAL;
+>
+>         if (val) {
+> @@ -384,7 +384,7 @@ static ssize_t d3cold_allowed_store(struct device *dev,
+>         struct pci_dev *pdev = to_pci_dev(dev);
+>         unsigned long val;
+>
+> -       if (strict_strtoul(buf, 0, &val) < 0)
+> +       if (kstrtoul(buf, 0, &val) < 0)
+>                 return -EINVAL;
+>
+>         pdev->d3cold_allowed = !!val;
+> @@ -1236,7 +1236,7 @@ static ssize_t reset_store(struct device *dev,
+>  {
+>         struct pci_dev *pdev = to_pci_dev(dev);
+>         unsigned long val;
+> -       ssize_t result = strict_strtoul(buf, 0, &val);
+> +       ssize_t result = kstrtoul(buf, 0, &val);
+>
+>         if (result < 0)
+>                 return result;
+> --
+> 1.7.10.4
+>
+>
