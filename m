@@ -1,151 +1,51 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>, Pavel Machek <pavel@ucw.cz>,
-	Joerg Roedel <joro@8bytes.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-Subject: [PATCH v3 16/27] x86, irq: Add ioapic_gsi_to_irq
-Date: Fri,  7 Jun 2013 15:31:02 -0700
-Message-Id: <1370644273-10495-17-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1370644273-10495-1-git-send-email-yinghai@kernel.org>
-References: <1370644273-10495-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pd0-f169.google.com ([209.85.192.169]:58880 "EHLO
+	mail-pd0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750913Ab3FBICf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 2 Jun 2013 04:02:35 -0400
+Date: Sun, 2 Jun 2013 01:02:32 -0700
+From: Tejun Heo <tj@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Shane Huang <shane.huang@amd.com>,
+	Jean Delvare <khali@linux-fr.org>,
+	linux-i2c <linux-i2c@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux-ide@vger.kernel.org
+Subject: Re: [PATCH v2 3/3] i2c-piix4: add AMD CZ SMBus device ID
+Message-ID: <20130602080232.GC8286@mtj.dyndns.org>
+References: <1369987950-2894-1-git-send-email-shane.huang@amd.com>
+ <20130531081623.GB17241@mtj.dyndns.org>
+ <CAErSpo4A_tuhsyErPOae5QgBdnUFK4f9kMitH0xUSnV6mYWYrA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo4A_tuhsyErPOae5QgBdnUFK4f9kMitH0xUSnV6mYWYrA@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For hot add ioapic, irq_base is not equal to gsi_base.
-We need a way to do mapping between gsi and irq.
+On Fri, May 31, 2013 at 01:24:57PM -0600, Bjorn Helgaas wrote:
+> On Fri, May 31, 2013 at 2:16 AM, Tejun Heo <tj@kernel.org> wrote:
+> > On Fri, May 31, 2013 at 04:12:30PM +0800, Shane Huang wrote:
+> >> To add AMD CZ SMBus controller device ID.
+> >>
+> >> Signed-off-by: Shane Huang <shane.huang@amd.com>
+> >
+> > All three patches look good to me.
+> >
+> >  Reviewed-by: Tejun Heo <tj@kernel.org>
+> >
+> > Both 2 and 3 are dependent on the first patch, so it probably would be
+> > a good idea to route them together (probably w/ stable cc'd).  Who
+> > wants these?  Bjorn?
+> 
+> The pci_ids.h change is fine with me.  I don't care how they're
+> routed.  If you want me to pick them up, maybe Shane could collect up
+> the acks & reviewed-bys and add the appropriate stable tags and resend
+> the series to me.
 
-Also remove irq_to_gsi() that is confusing, just use that array
-directly as only caller already check input irq before.
+Yeah, let's go through Bjorn's tree and preferably with stable cc'd
+and targeted for for-3.10-rcX.  Shane?
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Pavel Machek <pavel@ucw.cz>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
----
- arch/x86/include/asm/io_apic.h |  1 +
- arch/x86/kernel/acpi/boot.c    | 22 +++++-----------------
- arch/x86/kernel/apic/io_apic.c | 29 ++++++++++++++++++++++++++++-
- 3 files changed, 34 insertions(+), 18 deletions(-)
+Thanks.
 
-diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
-index 8181fd8..02ac411 100644
---- a/arch/x86/include/asm/io_apic.h
-+++ b/arch/x86/include/asm/io_apic.h
-@@ -180,6 +180,7 @@ struct mp_ioapic_gsi{
- };
- extern struct mp_ioapic_gsi  mp_gsi_routing[];
- extern u32 gsi_top;
-+int ioapic_gsi_to_irq(u32 gsi);
- int mp_find_ioapic(u32 gsi);
- int mp_find_ioapic_pin(int ioapic, u32 gsi);
- void __init mp_register_ioapic(int id, u32 address, u32 gsi_base);
-diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
-index 230c8ea..7190d0d 100644
---- a/arch/x86/kernel/acpi/boot.c
-+++ b/arch/x86/kernel/acpi/boot.c
-@@ -111,6 +111,10 @@ static unsigned int gsi_to_irq(unsigned int gsi)
- 		}
- 	}
- 
-+#ifdef CONFIG_X86_IO_APIC
-+	if (acpi_irq_model == ACPI_IRQ_MODEL_IOAPIC)
-+		return ioapic_gsi_to_irq(gsi);
-+#endif
- 	/* Provide an identity mapping of gsi == irq
- 	 * except on truly weird platforms that have
- 	 * non isa irqs in the first 16 gsis.
-@@ -123,22 +127,6 @@ static unsigned int gsi_to_irq(unsigned int gsi)
- 	return irq;
- }
- 
--static u32 irq_to_gsi(int irq)
--{
--	unsigned int gsi;
--
--	if (irq < NR_IRQS_LEGACY)
--		gsi = isa_irq_to_gsi[irq];
--	else if (irq < gsi_top)
--		gsi = irq;
--	else if (irq < (gsi_top + NR_IRQS_LEGACY))
--		gsi = irq - gsi_top;
--	else
--		gsi = 0xffffffff;
--
--	return gsi;
--}
--
- /*
-  * Temporarily use the virtual area starting from FIX_IO_APIC_BASE_END,
-  * to map the target physical address. The problem is that set_fixmap()
-@@ -528,7 +516,7 @@ int acpi_isa_irq_to_gsi(unsigned isa_irq, u32 *gsi)
- {
- 	if (isa_irq >= 16)
- 		return -1;
--	*gsi = irq_to_gsi(isa_irq);
-+	*gsi = isa_irq_to_gsi[isa_irq];
- 	return 0;
- }
- 
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 65863bd..7f95bbe 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -1044,13 +1044,16 @@ static int pin_2_irq(int idx, int apic, int pin)
- 
- 	if (test_bit(bus, mp_bus_not_pci)) {
- 		irq = mp_irqs[idx].srcbusirq;
--	} else {
-+	} else if (gsi_cfg->gsi_base == gsi_cfg->irq_base) {
- 		u32 gsi = gsi_cfg->gsi_base + pin;
- 
- 		if (gsi >= NR_IRQS_LEGACY)
- 			irq = gsi;
- 		else
- 			irq = gsi_top + gsi;
-+	} else {
-+		/* hotadd ioapic */
-+		irq = gsi_cfg->irq_base + pin;
- 	}
- 
- #ifdef CONFIG_X86_32
-@@ -1476,6 +1479,30 @@ static void __init setup_IO_APIC_irqs(void)
- 		__io_apic_setup_irqs(ioapic_idx);
- }
- 
-+int ioapic_gsi_to_irq(u32 gsi)
-+{
-+	int ioapic_idx = 0, irq = gsi;
-+	struct mp_ioapic_gsi *gsi_cfg;
-+
-+	ioapic_idx = mp_find_ioapic(gsi);
-+	if (ioapic_idx < 0)
-+		return -1;
-+
-+	gsi_cfg = mp_ioapic_gsi_routing(ioapic_idx);
-+	if (gsi_cfg->gsi_base == gsi_cfg->irq_base) {
-+		if (gsi < NR_IRQS_LEGACY)
-+			irq = gsi_top + gsi;
-+	} else {
-+		int pin = mp_find_ioapic_pin(ioapic_idx, gsi);
-+
-+		if (pin < 0)
-+			return -1;
-+		/* hotadd ioapic */
-+		irq = gsi_cfg->irq_base + pin;
-+	}
-+
-+	return irq;
-+}
- /*
-  * for the gsit that is not in first ioapic
-  * but could not use acpi_register_gsi()
 -- 
-1.8.1.4
-
+tejun
