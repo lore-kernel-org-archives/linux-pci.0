@@ -1,67 +1,50 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <51B0B5EB.2070807@gmail.com>
-Date: Fri, 07 Jun 2013 00:16:43 +0800
-From: Jiang Liu <liuj97@gmail.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Yinghai Lu <yinghai@kernel.org>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Paul Mackerras <paulus@samba.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	David Airlie <airlied@linux.ie>,
-	Neela Syam Kolli <megaraidlinux@lsi.com>,
-	"James E.J. Bottomley" <jbottomley@parallels.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	sparclinux@vger.kernel.org,
-	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Subject: Re: [PATCH v3, part1 03/10] PCI: Convert alloc_pci_dev(void) to pci_alloc_dev(bus)
- instead
-References: <1369489718-25869-1-git-send-email-jiang.liu@huawei.com> <1369489718-25869-4-git-send-email-jiang.liu@huawei.com> <CAErSpo6C-QMFCbMMivBE5TN4sEOFR_EyPmtN=OUNo8eN-+t=GQ@mail.gmail.com>
-In-Reply-To: <CAErSpo6C-QMFCbMMivBE5TN4sEOFR_EyPmtN=OUNo8eN-+t=GQ@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:7795 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750927Ab3FBOMy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 2 Jun 2013 10:12:54 -0400
+Message-ID: <1370182302.30975.279.camel@ul30vt.home>
+Subject: Re: SR-IOV PF reset and QEMU VFs VFIO passthrough
+From: Alex Williamson <alex.williamson@redhat.com>
+To: =?ISO-8859-1?Q?Beno=EEt?= Canet <benoit.canet@irqsave.net>
+Cc: linux-pci@vger.kernel.org, qemu-devel@nongnu.org,
+	iommu@lists.linux-foundation.org
+Date: Sun, 02 Jun 2013 08:11:42 -0600
+In-Reply-To: <20130601121320.GC5157@irqsave.net>
+References: <20130601121320.GC5157@irqsave.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu 06 Jun 2013 04:07:18 AM CST, Bjorn Helgaas wrote:
-> On Sat, May 25, 2013 at 7:48 AM, Jiang Liu <liuj97@gmail.com> wrote:
->> From: Gu Zheng <guz.fnst@cn.fujitsu.com>
->>
->> Use the new pci_alloc_dev(bus) to replace the existing using of
->> alloc_pci_dev(void).
->> ...
->
->> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
->> index 26df9c8..d5d18a0 100644
->> --- a/drivers/pci/probe.c
->> +++ b/drivers/pci/probe.c
->> @@ -1130,6 +1130,7 @@ static void pci_release_dev(struct device *dev)
->>         struct pci_dev *pci_dev;
->>
->>         pci_dev = to_pci_dev(dev);
->> +       pci_bus_put(pci_dev->bus);
->>         pci_release_capabilities(pci_dev);
->>         pci_release_of_node(pci_dev);
->>         kfree(pci_dev);
->
-> I think we should drop the pci_bus reference *last* (before the
-> kfree).  Otherwise, we have to audit pci_release_capabilities() and
-> pci_release_of_node() to make sure they don't use pci_dev->bus.
->
-> I made this change on my branch already; just let me know if you object.
-Hi Bjorn,
-       You are right, thanks for fixing it.
+On Sat, 2013-06-01 at 14:13 +0200, Benoît Canet wrote:
+> Hello,
+> 
+> I may have soon the PF driver of an SR-IOV card to code and make work with
+> QEMU/KVM so I have the following questions.
+> 
+> In an AMD64 setup where QEMU use VFIO to passthrough the VFs of an SR-IOV card
+> to a guest will the consequences of a PF FLR be handled fine by QEMU and the
+> guest ?
+> 
+> I read that pci_reset_function would call pci_restore_state restoring the SR-IOV
+> configuration after the reset of the PF.
+> 
+> The ways the hardware work means that the VFs would disappear and reappear in a
+> short lapse of time.
+> 
+> Will these events be handled by the kernel pci hotplug code ?
+> 
+> Given that the PF driver restore the PF config space after the reset will /sys
+> files used by QEMU disappear and reappear messing the QEMU VFIO passthrough or
+> will it goes smoothly ?
 
->
-> Bjorn
+On an Intel 82576 SR-IOV NIC, a FLR of the PF does not cause the VFs to
+be removed.  It's not clear to me that they continue working across the
+reset, but there is no hotplug.  If there was a hotplug, vfio-pci won't
+release the device while it's in use, so the hotplug would be blocked
+until the devices becomes unused, such as from the VM being shutdown.
+Thanks,
 
+Alex
 
