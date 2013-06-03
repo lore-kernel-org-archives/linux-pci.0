@@ -1,65 +1,66 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jay Agarwal <jagarwal@nvidia.com>
-To: <linux@arm.linux.org.uk>, <swarren@wwwdotorg.org>,
-	<thierry.reding@avionic-design.de>, <bhelgaas@google.com>,
-	<ldewangan@nvidia.com>, <olof@lixom.net>, <hdoyu@nvidia.com>,
-	<pgaikwad@nvidia.com>, <mturquette@linaro.org>,
-	<pdeschrijver@nvidia.com>, <linux-arm-kernel@lists.infradead.org>,
-	<linux-tegra@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>
-CC: <jtukkinen@nvidia.com>, <kthota@nvidia.com>, <jagarwal@nvidia.com>
-Subject: [PATCH V1] ARM: dts: tegra: Modify pcie memory space size
-Date: Thu, 20 Jun 2013 12:44:51 +0530
-Message-ID: <1371712491-31070-1-git-send-email-jagarwal@nvidia.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-lb0-f180.google.com ([209.85.217.180]:49792 "EHLO
+	mail-lb0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756838Ab3FCKEK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Jun 2013 06:04:10 -0400
+Received: by mail-lb0-f180.google.com with SMTP id r10so3606453lbi.11
+        for <linux-pci@vger.kernel.org>; Mon, 03 Jun 2013 03:04:08 -0700 (PDT)
+Message-ID: <51AC6A14.2040908@cogentembedded.com>
+Date: Mon, 03 Jun 2013 14:04:04 +0400
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+To: Shane Huang <shane.huang@amd.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>, Tejun Heo <tj@kernel.org>,
+	Jean Delvare <khali@linux-fr.org>, linux-pci@vger.kernel.org,
+	linux-ide@vger.kernel.org, linux-i2c@vger.kernel.org,
+	stable@vger.kernel.org
+Subject: Re: [PATCH RESEND 2/3] ahci: add AMD CZ SATA device ID
+References: <1370255050-2358-1-git-send-email-shane.huang@amd.com>
+In-Reply-To: <1370255050-2358-1-git-send-email-shane.huang@amd.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-- decrease non-prefetch memory size to 128 MB
-- increase prefetch memory size to 384 MB
-- above change is done because most pcie devices
-  prefetch memory size requirement is quite higher
-  compared to non-prefetch memory space.
+Hello.
 
-Signed-off-by: Jay Agarwal <jagarwal@nvidia.com>
----
-Patch is based on remotes/gitorious_thierryreding_linux/tegra/next and should be applied on top of this
+On 03-06-2013 14:24, Shane Huang wrote:
 
- arch/arm/boot/dts/tegra20.dtsi |    4 ++--
- arch/arm/boot/dts/tegra30.dtsi |    4 ++--
- 2 files changed, 4 insertions(+), 4 deletions(-)
+> To add AMD CZ SATA controller device ID of IDE mode.
 
-diff --git a/arch/arm/boot/dts/tegra20.dtsi b/arch/arm/boot/dts/tegra20.dtsi
-index fd2a7e1..e09e97f 100644
---- a/arch/arm/boot/dts/tegra20.dtsi
-+++ b/arch/arm/boot/dts/tegra20.dtsi
-@@ -483,8 +483,8 @@
- 		ranges = <0x82000000 0 0x80000000 0x80000000 0 0x00001000   /* port 0 registers */
- 			  0x82000000 0 0x80001000 0x80001000 0 0x00001000   /* port 1 registers */
- 			  0x81000000 0 0          0x82000000 0 0x00010000   /* downstream I/O */
--			  0x82000000 0 0xa0000000 0xa0000000 0 0x10000000   /* non-prefetchable memory */
--			  0xc2000000 0 0xb0000000 0xb0000000 0 0x10000000>; /* prefetchable memory */
-+			  0x82000000 0 0xa0000000 0xa0000000 0 0x08000000   /* non-prefetchable memory */
-+			  0xc2000000 0 0xa8000000 0xa8000000 0 0x18000000>; /* prefetchable memory */
- 
- 		clocks = <&tegra_car 70>, <&tegra_car 72>, <&tegra_car 74>,
- 			 <&tegra_car 118>;
-diff --git a/arch/arm/boot/dts/tegra30.dtsi b/arch/arm/boot/dts/tegra30.dtsi
-index e0b96bd..b02bbb4 100644
---- a/arch/arm/boot/dts/tegra30.dtsi
-+++ b/arch/arm/boot/dts/tegra30.dtsi
-@@ -35,8 +35,8 @@
- 			  0x82000000 0 0x00001000 0x00001000 0 0x00001000   /* port 1 configuration space */
- 			  0x82000000 0 0x00004000 0x00004000 0 0x00001000   /* port 2 configuration space */
- 			  0x81000000 0 0          0x02000000 0 0x00010000   /* downstream I/O */
--			  0x82000000 0 0x20000000 0x20000000 0 0x10000000   /* non-prefetchable memory */
--			  0xc2000000 0 0x30000000 0x30000000 0 0x10000000>; /* prefetchable memory */
-+			  0x82000000 0 0x20000000 0x20000000 0 0x08000000   /* non-prefetchable memory */
-+			  0xc2000000 0 0x28000000 0x28000000 0 0x18000000>; /* prefetchable memory */
- 
- 		clocks = <&tegra_car 70>, <&tegra_car 72>, <&tegra_car 74>,
- 			 <&tegra_car 118>, <&tegra_car 215>;
--- 
-1.7.0.4
+> Signed-off-by: Shane Huang <shane.huang@amd.com>
+> Reviewed-by: Tejun Heo <tj@kernel.org>
+> Cc: stable@vger.kernel.org
+> ---
+>   drivers/ata/ahci.c      | 1 +
+>   drivers/pci/quirks.c    | 2 ++
+>   include/linux/pci_ids.h | 1 +
+>   3 files changed, 4 insertions(+)
+
+> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+> index 751f1ea..548f1c3 100644
+> --- a/drivers/ata/ahci.c
+> +++ b/drivers/ata/ahci.c
+> @@ -310,6 +310,7 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+>
+>   	/* AMD */
+>   	{ PCI_VDEVICE(AMD, 0x7800), board_ahci }, /* AMD Hudson-2 */
+> +	{ PCI_VDEVICE(AMD, 0x7900), board_ahci }, /* AMD CZ */
+>   	/* AMD is using RAID class only for ahci controllers */
+>   	{ PCI_VENDOR_ID_AMD, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
+>   	  PCI_CLASS_STORAGE_RAID << 8, 0xffffff, board_ahci },
+[...]
+> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+> index e0b5623..22449c1 100644
+> --- a/include/linux/pci_ids.h
+> +++ b/include/linux/pci_ids.h
+> @@ -570,6 +570,7 @@
+>   #define PCI_DEVICE_ID_AMD_HUDSON2_IDE		0x780c
+>   #define PCI_DEVICE_ID_AMD_HUDSON2_SATA_IDE	0x7800
+>   #define PCI_DEVICE_ID_AMD_HUDSON2_SMBUS		0x780b
+> +#define PCI_DEVICE_ID_AMD_CZ_SATA_IDE	0x7900
+
+    We don't add the device IDs to this file anymore. And if you added 
+it, why didn't you use it in ahci.c?
+
+MBR, Sergei
 
