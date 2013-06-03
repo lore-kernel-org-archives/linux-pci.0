@@ -1,60 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f175.google.com ([209.85.223.175]:55846 "EHLO
-	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752796Ab3FZWiv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Jun 2013 18:38:51 -0400
+Received: from nodalink.pck.nerim.net ([62.212.105.220]:52896 "EHLO
+	paradis.irqsave.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754816Ab3FCT2d (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Jun 2013 15:28:33 -0400
+Date: Mon, 3 Jun 2013 21:29:59 +0200
+From: =?iso-8859-1?Q?Beno=EEt?= Canet <benoit.canet@irqsave.net>
+To: Don Dutile <ddutile@redhat.com>
+Cc: =?iso-8859-1?Q?Beno=EEt?= Canet <benoit.canet@irqsave.net>,
+	linux-pci@vger.kernel.org, qemu-devel@nongnu.org,
+	iommu@lists.linux-foundation.org, alex.williamson@redhat.com
+Subject: Re: [Qemu-devel] SR-IOV PF reset and QEMU VFs VFIO passthrough
+Message-ID: <20130603192958.GB31044@irqsave.net>
+References: <20130601121320.GC5157@irqsave.net>
+ <51ACE340.1030406@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <1606295.H1unv8GDgk@vostro.rjw.lan>
-References: <1372177330-28013-1-git-send-email-mika.westerberg@linux.intel.com>
-	<CAE9FiQW9xuu6WjH59td6Jve10kokoxU4mNqj4DRyg7beqBzHDA@mail.gmail.com>
-	<CAE9FiQVCQKjPa1dVKhAubvD+d=rudOxLaRMYAr-GAC7eSSz09Q@mail.gmail.com>
-	<1606295.H1unv8GDgk@vostro.rjw.lan>
-Date: Wed, 26 Jun 2013 15:38:51 -0700
-Message-ID: <CAE9FiQXF0a7PQ=uPz8085GS75v7L1yesOFzdwbygTFFx6mi_DQ@mail.gmail.com>
-Subject: Re: [PATCH 6/6] x86/PCI: quirk Thunderbolt PCI-to-PCI bridges
-From: Yinghai Lu <yinghai@kernel.org>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	"Ronciak, John" <john.ronciak@intel.com>,
-	"Penner, Miles J" <miles.j.penner@intel.com>,
-	Bruce Allan <bruce.w.allan@intel.com>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"x86@kernel.org" <x86@kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <51ACE340.1030406@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 26, 2013 at 3:44 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> On Wednesday, June 26, 2013 03:31:18 PM Yinghai Lu wrote:
->> On Wed, Jun 26, 2013 at 3:26 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->> > On Wed, Jun 26, 2013 at 3:18 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> >> On Tue, Jun 25, 2013 at 10:22 AM, Mika Westerberg
->> >> <mika.westerberg@linux.intel.com> wrote:
->> >>> Thunderbolt PCI-to-PCI bridges typically use BIOS "assisted" enumeration.
->> >>> This means that the BIOS will allocate bridge resources based on some
->> >>> assumptions of a maximum Thunderbolt chain. It also disables native PCIe
->> >>> hotplug of the root port where the Thunderbolt host router is connected.
->> >
->> > We should not need tricks in this patch after
->> >
->> > https://patchwork.kernel.org/patch/2766521/
->> >
->> > [2/3] PCI / ACPI: Use boot-time resource allocation rules during hotplug
->> >
->>
->> BTW, Rafael, looks like that "boot-time" is not accurate here.
->>
->> During acpi hotplug, firmare could do extra help for us like assign
->> some resources to pci device bars, so it is NOT "boot-time".
->
-> Well, Linus has merged it already and besides "boot-time rules" need not
-> mean "boot-time resources", right?
+> >to a guest will the consequences of a PF FLR be handled fine by QEMU and the
+> >guest ?
+> >
+> the reset occurs long before the device is passed to the guest.
 
-ok.
+I was asking this because the PF driver should reset the PF while the VF are
+used by VFIO/QEMU when the PF doesn't respond anymore.
+
+> The PF driver doesn't do the config space restore -- it's done in PCI core code.
+> >files used by QEMU disappear and reappear messing the QEMU VFIO passthrough or
+> As stated above, the devices don't disappear from the device tree, so they don't
+> get removed/added to the /sys(/bus/pci/...) files.
+> 
+> >will it goes smoothly ?
+> >
+> it goes smoothly today.... :-/
+
+Happy to read that thanks for the answer.
+
+Best regards
+
+Benoît Canet
