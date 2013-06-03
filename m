@@ -1,147 +1,35 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:51833 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757294Ab3FGWdd (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 7 Jun 2013 18:33:33 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>,
-	Joerg Roedel <joro@8bytes.org>
-Subject: [PATCH v3 09/27] x86, irq: Convert irq_2_pin list to generic list
-Date: Fri,  7 Jun 2013 15:30:55 -0700
-Message-Id: <1370644273-10495-10-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1370644273-10495-1-git-send-email-yinghai@kernel.org>
-References: <1370644273-10495-1-git-send-email-yinghai@kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:60214 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755329Ab3FCS6y (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 3 Jun 2013 14:58:54 -0400
+Message-ID: <51ACE76B.1000307@redhat.com>
+Date: Mon, 03 Jun 2013 14:58:51 -0400
+From: Don Dutile <ddutile@redhat.com>
+MIME-Version: 1.0
+To: Bryce Lelbach <blelbach@cct.lsu.edu>
+CC: linux-pci@vger.kernel.org
+Subject: Re: Patch: Increase maximum bus memory window size (for Xeon Phi)
+References: <20130524165947.GA2487@pyxis.br.cox.net>
+In-Reply-To: <20130524165947.GA2487@pyxis.br.cox.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now irq_2_pin list is own grown list.
-We can use generic list to replace it so we could use generic helper
-functions to operate it.
+On 05/24/2013 12:59 PM, Bryce Lelbach wrote:
+> The attached patch affects pbus_size_mem() in drivers/pci/setup-bus.c. The patch
+> increases the maximum memory window size for a PCI bus from 2 Gb to 2^63 Gb.
+>
+> This change is necessary to support Intel Xeon Phi co-processors. These co-processors
+> are PCIe devices used for high-performance computing applications. The device requires
+> an 8Gb memory window to function (the co-processor has 8Gb of onboard memory).
+>
+> This patch is a modified version of a patch from Intel's MPSS framework
+> (specifically, from the "KNC_gold_update_1-2.1.4982-15-rhel-6.3" package), which
+> will apply to a 3.7.8 kernel (I am about to try it on a 3.8 kernel). To the best
+> of my knowledge, newer RHEL kernels are shipped with this patch.
+>
+This patch is not in (the latest) RHEL6(.4) or the internal staging tree for the next
+RHEL6(.5) release.
 
-Also make free_irq_cfg() free irq_2_pin list to support coming ioapic
-hotplug.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-Cc: Joerg Roedel <joro@8bytes.org>
----
- arch/x86/include/asm/hw_irq.h  |  2 +-
- arch/x86/kernel/apic/io_apic.c | 22 ++++++++++++----------
- 2 files changed, 13 insertions(+), 11 deletions(-)
-
-diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
-index 1da97ef..dc3942c 100644
---- a/arch/x86/include/asm/hw_irq.h
-+++ b/arch/x86/include/asm/hw_irq.h
-@@ -122,7 +122,7 @@ struct irq_2_irte {
-  * Most irqs are mapped 1:1 with pins.
-  */
- struct irq_cfg {
--	struct irq_pin_list	*irq_2_pin;
-+	struct list_head	irq_2_pin;
- 	cpumask_var_t		domain;
- 	cpumask_var_t		old_domain;
- 	u8			vector;
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 70b6617..670c538 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -66,7 +66,7 @@
- #define __apicdebuginit(type) static type __init
- 
- #define for_each_irq_pin(entry, head) \
--	for (entry = head; entry; entry = entry->next)
-+	list_for_each_entry(entry, &head, list)
- 
- /*
-  *      Is the SiS APIC rmw bug present ?
-@@ -176,8 +176,8 @@ void mp_save_irq(struct mpc_intsrc *m)
- }
- 
- struct irq_pin_list {
-+	struct list_head list;
- 	int apic, pin;
--	struct irq_pin_list *next;
- };
- 
- static struct irq_pin_list *alloc_irq_pin_list(int node)
-@@ -213,6 +213,7 @@ int __init arch_early_irq_init(void)
- 	irq_reserve_irqs(0, legacy_pic->nr_legacy_irqs);
- 
- 	for (i = 0; i < count; i++) {
-+		INIT_LIST_HEAD(&cfg[i].irq_2_pin);
- 		irq_set_chip_data(i, &cfg[i]);
- 		zalloc_cpumask_var_node(&cfg[i].domain, GFP_KERNEL, node);
- 		zalloc_cpumask_var_node(&cfg[i].old_domain, GFP_KERNEL, node);
-@@ -245,6 +246,7 @@ static struct irq_cfg *alloc_irq_cfg(unsigned int irq, int node)
- 		goto out_cfg;
- 	if (!zalloc_cpumask_var_node(&cfg->old_domain, GFP_KERNEL, node))
- 		goto out_domain;
-+	INIT_LIST_HEAD(&cfg->irq_2_pin);
- 	return cfg;
- out_domain:
- 	free_cpumask_var(cfg->domain);
-@@ -255,11 +257,15 @@ out_cfg:
- 
- static void free_irq_cfg(unsigned int at, struct irq_cfg *cfg)
- {
-+	struct irq_pin_list *entry, *tmp;
-+
- 	if (!cfg)
- 		return;
- 	irq_set_chip_data(at, NULL);
- 	free_cpumask_var(cfg->domain);
- 	free_cpumask_var(cfg->old_domain);
-+	list_for_each_entry_safe(entry, tmp, &cfg->irq_2_pin, list)
-+		kfree(entry);
- 	kfree(cfg);
- }
- 
-@@ -420,15 +426,12 @@ static void ioapic_mask_entry(int apic, int pin)
-  */
- static int __add_pin_to_irq_node(struct irq_cfg *cfg, int node, int apic, int pin)
- {
--	struct irq_pin_list **last, *entry;
-+	struct irq_pin_list *entry;
- 
- 	/* don't allow duplicates */
--	last = &cfg->irq_2_pin;
--	for_each_irq_pin(entry, cfg->irq_2_pin) {
-+	for_each_irq_pin(entry, cfg->irq_2_pin)
- 		if (entry->apic == apic && entry->pin == pin)
- 			return 0;
--		last = &entry->next;
--	}
- 
- 	entry = alloc_irq_pin_list(node);
- 	if (!entry) {
-@@ -439,7 +442,7 @@ static int __add_pin_to_irq_node(struct irq_cfg *cfg, int node, int apic, int pi
- 	entry->apic = apic;
- 	entry->pin = pin;
- 
--	*last = entry;
-+	list_add_tail(&entry->list, &cfg->irq_2_pin);
- 	return 0;
- }
- 
-@@ -1622,8 +1625,7 @@ __apicdebuginit(void) print_IO_APICs(void)
- 		cfg = irq_get_chip_data(irq);
- 		if (!cfg)
- 			continue;
--		entry = cfg->irq_2_pin;
--		if (!entry)
-+		if (list_empty(&cfg->irq_2_pin))
- 			continue;
- 		printk(KERN_DEBUG "IRQ%d ", irq);
- 		for_each_irq_pin(entry, cfg->irq_2_pin)
--- 
-1.8.1.4
 
