@@ -1,122 +1,134 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f171.google.com ([209.85.214.171]:60487 "EHLO
-	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751593Ab3FBAMk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 1 Jun 2013 20:12:40 -0400
-Received: by mail-ob0-f171.google.com with SMTP id dn14so5279598obc.16
-        for <linux-pci@vger.kernel.org>; Sat, 01 Jun 2013 17:12:40 -0700 (PDT)
+Received: from co1ehsobe002.messaging.microsoft.com ([216.32.180.185]:8523
+	"EHLO co1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750861Ab3FCH2x convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 3 Jun 2013 03:28:53 -0400
+From: Sethi Varun-B16395 <B16395@freescale.com>
+To: Alex Williamson <alex.williamson@redhat.com>,
+	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+	"dwmw2@infradead.org" <dwmw2@infradead.org>,
+	"joro@8bytes.org" <joro@8bytes.org>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH] iommu: amd/intel: Remove multifunction assumption
+ around	grouping
+Date: Mon, 3 Jun 2013 07:28:26 +0000
+Message-ID: <C5ECD7A89D1DC44195F34B25E172658D56A9F4@039-SN2MPN1-013.039d.mgd.msft.net>
+References: <20130530183855.14612.15585.stgit@bling.home>
+In-Reply-To: <20130530183855.14612.15585.stgit@bling.home>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <001001ce5e99$2f6c7f90$8e457eb0$@samsung.com>
-References: <001001ce5e99$2f6c7f90$8e457eb0$@samsung.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Sat, 1 Jun 2013 18:12:19 -0600
-Message-ID: <CAErSpo4+9wFwWpMtN40fJ6rycA0qoc69ZZQ06oO+xnEfCnvC8w@mail.gmail.com>
-Subject: Re: [PATCH] PCI: sysfs: replace strict_strtoul() with kstrtoul()
-To: Jingoo Han <jg1.han@samsung.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Jun 1, 2013 at 1:25 AM, Jingoo Han <jg1.han@samsung.com> wrote:
-> The usage of strict_strtoul() is not preferred, because
-> strict_strtoul() is obsolete. Thus, kstrtoul() should be
-> used.
->
-> Signed-off-by: Jingoo Han <jg1.han@samsung.com>
 
-Applied to pci/misc for v3.11, thanks!
-
+> -----Original Message-----
+> From: iommu-bounces@lists.linux-foundation.org [mailto:iommu-
+> bounces@lists.linux-foundation.org] On Behalf Of Alex Williamson
+> Sent: Friday, May 31, 2013 12:09 AM
+> To: iommu@lists.linux-foundation.org; dwmw2@infradead.org;
+> joro@8bytes.org
+> Cc: linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org
+> Subject: [PATCH] iommu: amd/intel: Remove multifunction assumption around
+> grouping
+> 
+> If a device is multifunction and does not have ACS enabled then we assume
+> that the entire package lacks ACS and use function 0 as the base of the
+> group.  The PCIe spec however states that components are permitted to
+> implement ACS on some, none, or all of their applicable functions.  It's
+> therefore conceivable that function 0 may be fully independent and
+> support ACS while other functions do not.  Instead use the lowest
+> function of the slot that does not have ACS enabled as the base of the
+> group.  This may be the current device, which is intentional.  So long as
+> we use a consistent algorithm, all the non-ACS functions will be grouped
+> together and ACS functions will get separate groups.
+> 
+> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
 > ---
->  drivers/pci/pci-sysfs.c |   18 +++++++++---------
->  1 file changed, 9 insertions(+), 9 deletions(-)
->
-> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-> index 5b4a9d9..0b56e08 100644
-> --- a/drivers/pci/pci-sysfs.c
-> +++ b/drivers/pci/pci-sysfs.c
-> @@ -66,7 +66,7 @@ static ssize_t broken_parity_status_store(struct device *dev,
->         struct pci_dev *pdev = to_pci_dev(dev);
->         unsigned long val;
->
-> -       if (strict_strtoul(buf, 0, &val) < 0)
-> +       if (kstrtoul(buf, 0, &val) < 0)
->                 return -EINVAL;
->
->         pdev->broken_parity_status = !!val;
-> @@ -188,7 +188,7 @@ static ssize_t is_enabled_store(struct device *dev,
->  {
->         struct pci_dev *pdev = to_pci_dev(dev);
->         unsigned long val;
-> -       ssize_t result = strict_strtoul(buf, 0, &val);
-> +       ssize_t result = kstrtoul(buf, 0, &val);
->
->         if (result < 0)
->                 return result;
-> @@ -259,7 +259,7 @@ msi_bus_store(struct device *dev, struct device_attribute *attr,
->         struct pci_dev *pdev = to_pci_dev(dev);
->         unsigned long val;
->
-> -       if (strict_strtoul(buf, 0, &val) < 0)
-> +       if (kstrtoul(buf, 0, &val) < 0)
->                 return -EINVAL;
->
->         /* bad things may happen if the no_msi flag is changed
-> @@ -291,7 +291,7 @@ static ssize_t bus_rescan_store(struct bus_type *bus, const char *buf,
->         unsigned long val;
->         struct pci_bus *b = NULL;
->
-> -       if (strict_strtoul(buf, 0, &val) < 0)
-> +       if (kstrtoul(buf, 0, &val) < 0)
->                 return -EINVAL;
->
->         if (val) {
-> @@ -315,7 +315,7 @@ dev_rescan_store(struct device *dev, struct device_attribute *attr,
->         unsigned long val;
->         struct pci_dev *pdev = to_pci_dev(dev);
->
-> -       if (strict_strtoul(buf, 0, &val) < 0)
-> +       if (kstrtoul(buf, 0, &val) < 0)
->                 return -EINVAL;
->
->         if (val) {
-> @@ -342,7 +342,7 @@ remove_store(struct device *dev, struct device_attribute *dummy,
->         int ret = 0;
->         unsigned long val;
->
-> -       if (strict_strtoul(buf, 0, &val) < 0)
-> +       if (kstrtoul(buf, 0, &val) < 0)
->                 return -EINVAL;
->
->         /* An attribute cannot be unregistered by one of its own methods,
-> @@ -362,7 +362,7 @@ dev_bus_rescan_store(struct device *dev, struct device_attribute *attr,
->         unsigned long val;
->         struct pci_bus *bus = to_pci_bus(dev);
->
-> -       if (strict_strtoul(buf, 0, &val) < 0)
-> +       if (kstrtoul(buf, 0, &val) < 0)
->                 return -EINVAL;
->
->         if (val) {
-> @@ -384,7 +384,7 @@ static ssize_t d3cold_allowed_store(struct device *dev,
->         struct pci_dev *pdev = to_pci_dev(dev);
->         unsigned long val;
->
-> -       if (strict_strtoul(buf, 0, &val) < 0)
-> +       if (kstrtoul(buf, 0, &val) < 0)
->                 return -EINVAL;
->
->         pdev->d3cold_allowed = !!val;
-> @@ -1236,7 +1236,7 @@ static ssize_t reset_store(struct device *dev,
->  {
->         struct pci_dev *pdev = to_pci_dev(dev);
->         unsigned long val;
-> -       ssize_t result = strict_strtoul(buf, 0, &val);
-> +       ssize_t result = kstrtoul(buf, 0, &val);
->
->         if (result < 0)
->                 return result;
-> --
-> 1.7.10.4
->
->
+>  drivers/iommu/amd_iommu.c   |   25 +++++++++++++++++++------
+>  drivers/iommu/intel-iommu.c |   25 +++++++++++++++++++------
+>  2 files changed, 38 insertions(+), 12 deletions(-)
+> 
+> diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c index
+> 1d84be1..565c745 100644
+> --- a/drivers/iommu/amd_iommu.c
+> +++ b/drivers/iommu/amd_iommu.c
+> @@ -287,14 +287,27 @@ static struct pci_dev *get_isolation_root(struct
+> pci_dev *pdev)
+> 
+>  	/*
+>  	 * If it's a multifunction device that does not support our
+> -	 * required ACS flags, add to the same group as function 0.
+> +	 * required ACS flags, add to the same group as lowest numbered
+> +	 * function that also does not suport the required ACS flags.
+>  	 */
+>  	if (dma_pdev->multifunction &&
+> -	    !pci_acs_enabled(dma_pdev, REQ_ACS_FLAGS))
+> -		swap_pci_ref(&dma_pdev,
+> -			     pci_get_slot(dma_pdev->bus,
+> -					  PCI_DEVFN(PCI_SLOT(dma_pdev->devfn),
+> -					  0)));
+> +	    !pci_acs_enabled(dma_pdev, REQ_ACS_FLAGS)) {
+> +		u8 i, slot = PCI_SLOT(dma_pdev->devfn);
+> +
+> +		for (i = 0; i < 8; i++) {
+> +			struct pci_dev *tmp;
+> +
+> +			tmp = pci_get_slot(dma_pdev->bus, PCI_DEVFN(slot, i));
+> +			if (!tmp)
+> +				continue;
+> +
+> +			if (!pci_acs_enabled(tmp, REQ_ACS_FLAGS)) {
+> +				swap_pci_ref(&dma_pdev, tmp);
+> +				break;
+> +			}
+> +			pci_dev_put(tmp);
+> +		}
+> +	}
+> 
+>  	/*
+>  	 * Devices on the root bus go through the iommu.  If that's not us,
+> diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+> index b4f0e28..eec0d3e 100644
+> --- a/drivers/iommu/intel-iommu.c
+> +++ b/drivers/iommu/intel-iommu.c
+> @@ -4182,14 +4182,27 @@ static int intel_iommu_add_device(struct device
+> *dev)
+> 
+>  	/*
+>  	 * If it's a multifunction device that does not support our
+> -	 * required ACS flags, add to the same group as function 0.
+> +	 * required ACS flags, add to the same group as lowest numbered
+> +	 * function that also does not suport the required ACS flags.
+>  	 */
+>  	if (dma_pdev->multifunction &&
+> -	    !pci_acs_enabled(dma_pdev, REQ_ACS_FLAGS))
+> -		swap_pci_ref(&dma_pdev,
+> -			     pci_get_slot(dma_pdev->bus,
+> -					  PCI_DEVFN(PCI_SLOT(dma_pdev->devfn),
+> -					  0)));
+> +	    !pci_acs_enabled(dma_pdev, REQ_ACS_FLAGS)) {
+> +		u8 i, slot = PCI_SLOT(dma_pdev->devfn);
+> +
+> +		for (i = 0; i < 8; i++) {
+[Sethi Varun-B16395] A macro like PCI_MAX_FUNCTIONS would improve code readability.
+
+> +			struct pci_dev *tmp;
+> +
+> +			tmp = pci_get_slot(dma_pdev->bus, PCI_DEVFN(slot, i));
+> +			if (!tmp)
+> +				continue;
+> +
+> +			if (!pci_acs_enabled(tmp, REQ_ACS_FLAGS)) {
+> +				swap_pci_ref(&dma_pdev, tmp);
+> +				break;
+> +			}
+> +			pci_dev_put(tmp);
+> +		}
+> +	}
+
+It would be nice if this code could be represented as a function in a common file like iommu/pci.c.
+
+-Varun
+
