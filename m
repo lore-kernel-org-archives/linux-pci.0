@@ -1,237 +1,106 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout3.samsung.com ([203.254.224.33]:55003 "EHLO
-	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754478Ab3FLC7Y (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Jun 2013 22:59:24 -0400
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Arnd Bergmann' <arnd@arndb.de>,
-	devicetree-discuss@lists.ozlabs.org
-Cc: 'Kukjin Kim' <kgene.kim@samsung.com>,
-	'Bjorn Helgaas' <bhelgaas@google.com>,
-	'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>,
-	linux-samsung-soc@vger.kernel.org,
-	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
-	linux-pci@vger.kernel.org,
-	'Thierry Reding' <thierry.reding@avionic-design.de>,
-	linux-kernel@vger.kernel.org,
-	'Surendranath Gurivireddy Balla' <suren.reddy@samsung.com>,
-	'Andrew Murray' <andrew.murray@arm.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Jingoo Han <jg1.han@samsung.com>
-References: <000d01ce6360$9504e7e0$bf0eb7a0$@samsung.com>
- <36071399.7aY6jgGn2d@wuerfel>
-In-reply-to: <36071399.7aY6jgGn2d@wuerfel>
-Subject: Re: [PATCH V3 1/3] Add PCIe driver for Samsung Exynos
-Date: Wed, 12 Jun 2013 11:59:21 +0900
-Message-id: <002401ce6718$d6bbc8f0$84335ad0$@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+Received: from mail-ob0-f169.google.com ([209.85.214.169]:33224 "EHLO
+	mail-ob0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755170Ab3FCVJu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Jun 2013 17:09:50 -0400
+Received: by mail-ob0-f169.google.com with SMTP id up14so8249586obb.14
+        for <linux-pci@vger.kernel.org>; Mon, 03 Jun 2013 14:09:49 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1370265391-18236-1-git-send-email-jiang.liu@huawei.com>
+References: <CAErSpo5mtYxWkVn+DTT4Sswp0RkWBM=prhtViMJ+KoLpOMY1hw@mail.gmail.com>
+ <1370265391-18236-1-git-send-email-jiang.liu@huawei.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 3 Jun 2013 15:09:29 -0600
+Message-ID: <CAErSpo7ZU4GY+3iZA=R7oGyzk8oCwVtpmYjODH6=Ts65tJC88Q@mail.gmail.com>
+Subject: Re: [PATCH] PCI, ACPI: use dev_printk() to keep messages consistent
+To: Jiang Liu <liuj97@gmail.com>
+Cc: "Rafael J . Wysocki" <rjw@sisk.pl>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, June 07, 2013 7:53 PM, Arnd Bergmann wrote:
-> On Friday 07 June 2013 18:22:50 Jingoo Han wrote:
-> 
-> > diff --git a/Documentation/devicetree/bindings/pci/exynos-pcie.txt
-> b/Documentation/devicetree/bindings/pci/exynos-pcie.txt
-> > new file mode 100644
-> > index 0000000..3eb4a2d
-> > --- /dev/null
-> > +++ b/Documentation/devicetree/bindings/pci/exynos-pcie.txt
-> > @@ -0,0 +1,56 @@
-> > +* Samsung Exynos PCIe interface
-> > +
-> > +Required properties:
-> > +-compatible: should be "samsung,exynos5440-pcie"
-> > +-reg: base addresses and lengths of the pcie conteroller,
-> > +	additional register for the pcie controller,
-> > +	the phy controller,
-> > +	additional register for the phy controller.
-> > +- interrupts: interrupt values for level interrupt,
-> > +	pulse interrupt, special interrupt.
-> > +- device_type, set to "pci"
-> > +- bus-range: PCI bus numbers covered
-> 
-> Why is it that only a subset of bus numbers are used? Can't you address
-> the entire range?
+On Mon, Jun 3, 2013 at 7:16 AM, Jiang Liu <liuj97@gmail.com> wrote:
+> As pointed out by Bjorn that acpi_handle_printk() generates messages
+> like "ACPI: \_SB_.PCI0: xxxxx" and dev_printk() generates messages
+> like "acpi PNP0A08:00: xxxx", so use dev_printk() to keep messages
+> consistent when possible.
+>
+> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+> ---
+> Hi Bjorn,
+>         Could you please help to fold this patch onto "PCI/ACPI: Use
+> acpi_handle_print() and pr_xxx() to print messages" of branch
+> "pci/jiang-remove-global-list"?
 
-I will remove 'bus-range' property from DT.
+Done.  I also changed one acpi_handle_print() in
+handle_root_bridge_insertion() where we do have a device.  This is in
+my "next" branch for v3.11.
 
-> 
-> > +- ranges: ranges for the PCI memory and I/O regions
-> > +- reset-gpio: gpio pin number of power good signal
-> 
-> The 'reset-gpio' property seems incorrect. I think this should either
-> use the gpio binding or the reset-controller binding. Specifying
-> bare numbers to use as gpio pins does not work, since the number
-> space for Linux internal gpio numbers is not necessarily the same
-> as used by the hardware.
+Thanks!
 
-As you mentioned, other Exynos SoCs such as Exynos5250 set
-GPIO properties in DT, as below:
-(./arch/arm/boot/dts/exynos5250-smdk5250.dts)
-	hdmi {
-		hpd-gpio = <&gpx3 7 0>;
-	};
-	usb@12110000 {
-		samsung,vbus-gpio = <&gpx2 6 0>;
-	};
-
-However, the situation of Exynos5440 GPIO is different.
-The following bare numbers of GPIO work properly on Exynos5440.
-(./arch/arm/boot/dts/exynos5440-ssdk5440.dts)
-	pcie0@40000000 {
-		reset-gpio = <5>;
-	}
-	pcie0@40000000 {
-		reset-gpio = <22>;
-	}
-
-Thomas Abraham is the author of pinctrl driver for EXYNOS5440.
-(./drivers/pinctrl/pinctrl-exynos5440.c)
-
-Thomas Abraham or Kukjin Kim, can you confirm this?
-If I am wrong, please let me know kindly. :)
-
-
-> 
-> I think you also need an interrupt-map property as mandated by
-> the PCI binding, in order to use legacy interrupts, as well as
-> #address-cells and #size-cells.
-> 
-> > +       pcie0@40000000 {
-> > +               compatible = "samsung,exynos5440-pcie";
-> > +               reg = <0x40000000 0x4000
-> > +                       0x290000 0x1000
-> > +                       0x270000 0x1000
-> > +                       0x271000 0x40>;
-> > +               interrupts = <0 20 0>, <0 21 0>, <0 22 0>;
-> > +               device_type = "pci";
-> > +               bus-range = <0x0 0xf>;
-> > +               ranges = <0x00000800 0 0x40000000 0x40000000 0 0x00200000   /* configuration space */
-> > +                         0x81000000 0 0          0x40200000 0 0x00004000   /* downstream I/O */
-> > +                         0x82000000 0 0          0x40204000 0 0x10000000>; /* non-prefetchable memory */
-> > +       };
-> > +
-> > +       pcie1@60000000 {
-> > +               compatible = "samsung,exynos5440-pcie";
-> > +               reg = <0x60000000 0x4000
-> > +                       0x2a0000 0x1000
-> > +                       0x272000 0x1000
-> > +                       0x271040 0x40>;
-> > +               interrupts = <0 23 0>, <0 24 0>, <0 25 0>;
-> > +               device_type = "pci";
-> > +               bus-range = <0x0 0xf>;
-> > +               ranges = <0x00000800 0 0x60000000 0x60000000 0 0x00200000   /* configuration space */
-> > +                         0x81000000 0 0          0x60200000 0 0x00004000   /* downstream I/O */
-> > +                         0x82000000 0 0          0x60204000 0 0x10000000>; /* non-prefetchable memory */
-> > +       };
-> 
-> Is it intentional that in this example you set up both buses to
-> have both memory and I/O space start at address 0 in bus space?
-
-No, it is not intentional.
-I will fix it.
-
-> 
-> I think it would be more logical to have non-overlapping addresses.
-> You can also choose to have an identity mapping for memory
-> space where a PCI bus address maps directly to the physical address
-> used to access it, although that will prevent you from using legacy
-> VGA cards that require the use of the low 16 MB.
-> 
-> Using a 16kb I/O space rather than a 64KB I/O space per port will
-> lead to pci_ioremap_io() map the start of your memory space into
-> PCI_IO_VIRT_BASE, which you probably didn't intend.
-> 
-> If your hardware cannot handle a full 64KB window, I would recommend
-> to at least leave a hole before the start of the memory window.
-
-OK, I see.
-I will fix both MEM space and I/O space.
-
-> 
-> > +struct pcie_port {
-> > +	struct device		*dev;
-> > +	u8			controller;
-> > +	u8			root_bus_nr;
-> > +	void __iomem		*dbi_base;
-> > +	void __iomem		*va_dbi_base;
-> > +	void __iomem		*elbi_base;
-> > +	void __iomem		*va_elbi_base;
-> > +	void __iomem		*base;
-> > +	void __iomem		*phy_base;
-> > +	void __iomem		*va_phy_base;
-> > +	void __iomem		*purple_base;
-> > +	void __iomem		*va_purple_base;
-> > +	void __iomem		*cfg0_base;
-> > +	void __iomem		*va_cfg0_base;
-> > +	void __iomem		*cfg1_base;
-> > +	void __iomem		*va_cfg1_base;
-> > +	void __iomem		*io_base;
-> > +	void __iomem		*mem_base;
-> > +	spinlock_t		conf_lock;
-> > +	struct resource		io;
-> > +	struct resource		mem;
-> > +	struct resource		busn;
-> 
-> A lot of the fields above appear to be duplicated. If you
-> pass a physical address, that needs to be a phys_addr_t,
-> not void __iomem*. I think most of the physical addresses
-> can be removed there, and you just keep the virtual addresses
-> but drop the va_ prefix.
-
-OK, I see.
-I will use the 'phys_addr_t' and remove redundant physical
-addresses.
-
-> 
-> > +static int add_pcie_port(struct pcie_port *pp, struct platform_device *pdev)
-> > +{
-> > +	struct resource *dbi_base;
-> > +	struct resource *elbi_base;
-> > +	struct resource *phy_base;
-> > +	struct resource *purple_base;
-> > +	int ret;
-> > +
-> > +	dbi_base = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-> > +	if (!dbi_base) {
-> > +		dev_err(&pdev->dev, "couldn't get dbi base resource\n");
-> > +		return -EINVAL;
-> > +	}
-> > +	if (!devm_request_mem_region(&pdev->dev, dbi_base->start,
-> > +				resource_size(dbi_base), pdev->name)) {
-> > +		dev_err(&pdev->dev, "dbi base resource is busy\n");
-> > +		return -EBUSY;
-> > +	}
-> > +	pp->dbi_base = (void __iomem *) (unsigned long)dbi_base->start;
-> 
-> That will also let you get rid of the casts here.
-
-Yes, I will remove unnecessary casts.
-
-> 
-> 
-> > +static int __exit exynos_pcie_remove(struct platform_device *pdev)
-> > +{
-> > +	return 0;
-> > +}
-> > +
-> 
-> an empty 'remove' function seems incorrect. I don't know what a
-> removable PCI should be doing here, but at least you need to undo
-> everything you set up in the probe function.
-
-I will remove the empty 'remove' function.
-
-Thank you for your comments. :)
-I will fix it and send v4 patch, soon.
-
-
-Best regards,
-Jingoo Han
-
-> 
-> 
-> 	Arnd
-
+>  drivers/acpi/pci_root.c | 18 +++++++++---------
+>  1 file changed, 9 insertions(+), 9 deletions(-)
+>
+> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+> index 73a934d..4a8f5b4 100644
+> --- a/drivers/acpi/pci_root.c
+> +++ b/drivers/acpi/pci_root.c
+> @@ -388,7 +388,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
+>         status = acpi_evaluate_integer(handle, METHOD_NAME__SEG, NULL,
+>                                        &segment);
+>         if (ACPI_FAILURE(status) && status != AE_NOT_FOUND) {
+> -               acpi_handle_err(handle, "can't evaluate _SEG\n");
+> +               dev_err(&device->dev,  "can't evaluate _SEG\n");
+>                 result = -ENODEV;
+>                 goto end;
+>         }
+> @@ -404,8 +404,8 @@ static int acpi_pci_root_add(struct acpi_device *device,
+>                  * can do is assume [_BBN-0xFF] or [0-0xFF].
+>                  */
+>                 root->secondary.end = 0xFF;
+> -               acpi_handle_warn(handle,
+> -                                FW_BUG "no secondary bus range in _CRS\n");
+> +               dev_warn(&device->dev,
+> +                        FW_BUG "no secondary bus range in _CRS\n");
+>                 status = acpi_evaluate_integer(handle, METHOD_NAME__BBN,
+>                                                NULL, &bus);
+>                 if (ACPI_SUCCESS(status))
+> @@ -413,7 +413,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
+>                 else if (status == AE_NOT_FOUND)
+>                         root->secondary.start = 0;
+>                 else {
+> -                       acpi_handle_err(handle, "can't evaluate _BBN\n");
+> +                       dev_err(&device->dev, "can't evaluate _BBN\n");
+>                         result = -ENODEV;
+>                         goto end;
+>                 }
+> @@ -451,9 +451,9 @@ static int acpi_pci_root_add(struct acpi_device *device,
+>          */
+>         root->bus = pci_acpi_scan_root(root);
+>         if (!root->bus) {
+> -               acpi_handle_err(handle,
+> -                           "Bus %04x:%02x not present in PCI namespace\n",
+> -                           root->segment, (unsigned int)root->secondary.start);
+> +               dev_err(&device->dev,
+> +                       "Bus %04x:%02x not present in PCI namespace\n",
+> +                       root->segment, (unsigned int)root->secondary.start);
+>                 result = -ENODEV;
+>                 goto end;
+>         }
+> @@ -511,8 +511,8 @@ static int acpi_pci_root_add(struct acpi_device *device,
+>                                 "ACPI _OSC request failed (%s), "
+>                                 "returned control mask: 0x%02x\n",
+>                                 acpi_format_exception(status), flags);
+> -                       acpi_handle_info(handle,
+> -                                        "ACPI _OSC control for PCIe not granted, disabling ASPM\n");
+> +                       dev_info(&device->dev,
+> +                                "ACPI _OSC control for PCIe not granted, disabling ASPM\n");
+>                         pcie_no_aspm();
+>                 }
+>         } else {
+> --
+> 1.8.1.2
+>
