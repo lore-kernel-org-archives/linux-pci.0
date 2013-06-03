@@ -1,112 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:25656 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758225Ab3FAGDe (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 1 Jun 2013 02:03:34 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v5 4/7] PCI: Introduce enable_local to prepare per root bus handling
-Date: Fri, 31 May 2013 23:03:09 -0700
-Message-Id: <1370066593-22736-4-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1370066593-22736-1-git-send-email-yinghai@kernel.org>
-References: <1370066593-22736-1-git-send-email-yinghai@kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:57481 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757315Ab3FCVmq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 3 Jun 2013 17:42:46 -0400
+Message-ID: <51AD0DB8.8090109@redhat.com>
+Date: Mon, 03 Jun 2013 17:42:16 -0400
+From: Don Dutile <ddutile@redhat.com>
+MIME-Version: 1.0
+To: =?ISO-8859-1?Q?Beno=EEt_Canet?= <benoit.canet@irqsave.net>
+CC: linux-pci@vger.kernel.org, qemu-devel@nongnu.org,
+	iommu@lists.linux-foundation.org, alex.williamson@redhat.com
+Subject: Re: [Qemu-devel] SR-IOV PF reset and QEMU VFs VFIO passthrough
+References: <20130601121320.GC5157@irqsave.net> <51ACE340.1030406@redhat.com> <20130603192958.GB31044@irqsave.net> <51AD02B1.8070503@redhat.com> <20130603212723.GG4094@irqsave.net>
+In-Reply-To: <20130603212723.GG4094@irqsave.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add enable_local to prepare assign unassigned resource
-for per root bus.
+On 06/03/2013 05:27 PM, Benoît Canet wrote:
+>>> I was asking this because the PF driver should reset the PF while the VF are
+>>> used by VFIO/QEMU when the PF doesn't respond anymore.
+>>>
+>> What your VF does while your PF is being reset is PF (&  VF) dependent.
+>> A 'good design' would not impact the VF operation, other than to stall it until
+>> the PF completed reset.  My experience, though, is that the PF has to be brought
+>> up to some level of functionality to share the physical resources with the VFs.
+>
+> When the PF does an FLR the hardware go back to its default state, the SR-IOV
+> configuration is gone and the VFs disappears from the bus.
+> Then the restore state function of the kernel reset code would bring the SR-IOV
+> PF configuration back.
+>
+Ok, now you're a bit mis-led here.
+The configuration header for SRIOV is _not_ put back.
+Only the std, PCI config header section is put back in place, along with
+msi(x), pm-caps.
+If the hw wipes out all VF state setup (which it should, IMO), all VF configuration
+will be lost in the hw...
+*but*, the PCI core will still think the VFs exist (not hot-unplugged, no more than PF was);
+trying to setup the VFs again, will fail (or worse).
 
-Per Bjorn, separate it from big patch that handing assign_unssigned per root bus.
+> The hardware also have a privately owned SR-IOV related configuration in the PF
+> configuration space. This configuration is used to configure the VFs resources.
+> (memory)
+>
+Per the SRIOV spec, yes, but that's in PCIe ext cfg space.
+That area of the PCI configuration is not saved or restored by dev-reset.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> Best regards
+>
+> Benoît Canet
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
----
- drivers/pci/setup-bus.c |   40 +++++++++++++++++++++-------------------
- 1 file changed, 21 insertions(+), 19 deletions(-)
-
-Index: linux-2.6/drivers/pci/setup-bus.c
-===================================================================
---- linux-2.6.orig/drivers/pci/setup-bus.c
-+++ linux-2.6/drivers/pci/setup-bus.c
-@@ -1422,9 +1422,9 @@ void __init pci_realloc_get_opt(char *st
- 	else if (!strncmp(str, "on", 2))
- 		pci_realloc_enable = user_enabled;
- }
--static bool __init pci_realloc_enabled(void)
-+static bool __init pci_realloc_enabled(enum enable_type enable)
- {
--	return pci_realloc_enable >= user_enabled;
-+	return enable >= user_enabled;
- }
- 
- #if defined(CONFIG_PCI_IOV) && defined(CONFIG_PCI_REALLOC_ENABLE_AUTO)
-@@ -1446,25 +1446,25 @@ static int __init check_unassigned_resou
- 	return 0;
- }
- 
--static void  __init pci_realloc_detect(void)
-+static enum enable_type __init pci_realloc_detect(struct pci_bus *bus,
-+			 enum enable_type enable_local)
- {
- 	int unassigned = 0;
--	struct pci_bus *bus;
- 
--	if (pci_realloc_enable != undefined)
--		return;
-+	if (enable_local != undefined)
-+		return enable_local;
- 
--	list_for_each_entry(bus, &pci_root_buses, node) {
--		pci_walk_bus(bus, check_unassigned_resources, &unassigned);
--		if (unassigned) {
--			pci_realloc_enable = auto_enabled;
--			return;
--		}
--	}
-+	pci_walk_bus(bus, check_unassigned_resources, &unassigned);
-+	if (unassigned)
-+		return auto_enabled;
-+
-+	return enable_local;
- }
- #else
--static void __init pci_realloc_detect(void)
-+static enum enable_type __init pci_realloc_detect(struct pci_bus *bus,
-+			 enum enable_type enable_local)
- {
-+	return enable_local;
- }
- #endif
- 
-@@ -1487,10 +1487,12 @@ pci_assign_unassigned_resources(void)
- 	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
- 				  IORESOURCE_PREFETCH;
- 	int pci_try_num = 1;
-+	enum enable_type enable_local = pci_realloc_enable;
-+
-+	list_for_each_entry(bus, &pci_root_buses, node)
-+		enable_local = pci_realloc_detect(bus, enable_local);
- 
--	/* don't realloc if asked to do so */
--	pci_realloc_detect();
--	if (pci_realloc_enabled()) {
-+	if (pci_realloc_enabled(enable_local)) {
- 		int max_depth = pci_get_max_depth();
- 
- 		pci_try_num = max_depth + 1;
-@@ -1522,9 +1524,9 @@ again:
- 		goto enable_and_dump;
- 
- 	if (tried_times >= pci_try_num) {
--		if (pci_realloc_enable == undefined)
-+		if (enable_local == undefined)
- 			printk(KERN_INFO "Some PCI device resources are unassigned, try booting with pci=realloc\n");
--		else if (pci_realloc_enable == auto_enabled)
-+		else if (enable_local == auto_enabled)
- 			printk(KERN_INFO "Automatically enabled pci realloc, if you have problem, try booting with pci=realloc=off\n");
- 
- 		free_list(&fail_head);
