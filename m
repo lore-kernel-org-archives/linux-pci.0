@@ -1,48 +1,94 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Matthew Garrett <matthew.garrett@nebula.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from co9ehsobe001.messaging.microsoft.com ([207.46.163.24]:23477
+	"EHLO co9outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756922Ab3FCCXQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 2 Jun 2013 22:23:16 -0400
+From: Shane Huang <shane.huang@amd.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Yinghai Lu <yinghai@kernel.org>, Jiang Liu <jiang.liu@huawei.com>,
-	"Roman Yepishev" <roman.yepishev@gmail.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Maxim Levitsky <maximlevitsky@gmail.com>,
-	Jussi Kivilinna <jussi.kivilinna@iki.fi>
-Subject: Re: [PATCH] PCI: Remove not needed check in disable aspm link
-Date: Fri, 14 Jun 2013 21:30:32 +0000
-Message-ID: <1371245432.2490.3.camel@x230>
-References: <CAE9FiQVu5QyxaKsYzzQoroQD=TvsziHzDOtoeg=FvhZ8HyN5yw@mail.gmail.com>
-	 <CAErSpo7ChfRiEn0eR1rf-mVheUS9Yf8f+j4n78PJcGYh+yMVgA@mail.gmail.com>
-	 <CAE9FiQXkDg7Y336S=DXoms44=5HLaiUx=sWviupz1fJmaDUEzQ@mail.gmail.com>
-	 <CAE9FiQU5c=ztzbskNnYFFKF9V5zO+jnRcMBCivLxA1F3fSfX5w@mail.gmail.com>
-	 <20130401235256.GA31966@google.com>
-	 <CAE9FiQV8cPh-s6=EQu_cZTtn86+NwZE5KuGMhf43aOhzkL=hwA@mail.gmail.com>
-	 <CAErSpo7Jni1ZSf_W=vB3kqsucPpoepa2Q5g=77a6D3FaPwe9LA@mail.gmail.com>
-	 <CAE9FiQWjQXwiTWju6cBc_o25jy_wmZ1u+Pifh1wdnxtV=i5ENw@mail.gmail.com>
-	 <CAErSpo7=a-wX6BLbm_O1nUMMrQHOgtSm3xZHKuRqaz8rnKSbRA@mail.gmail.com>
-	 <CAE9FiQUbw7OUhRB+gKMxkuE9+nm9097+mwZ2z4adO8Hv_NjF1Q@mail.gmail.com>
-	 <20130614141101.GA29452@google.com>
-	 <CAE9FiQVr-OWeqEHFXn0MjNiSD0WM=FNO_DFo6m9UbbG60uonpw@mail.gmail.com>
-	 <CAErSpo7grN-93zZfBJOHZH-pR1wDYrojTwt=B=++QqA0rPb3Rg@mail.gmail.com>
-	 <CAE9FiQUO350kqrXB5=yQ-OxOeSJj4+P6WPg4gGgXxFEvfoLyng@mail.gmail.com>
-	 <CAErSpo6vEOw10YV=Sou6wjjSc2GWr-oX=Dvbt7Xt=RJKi4RELw@mail.gmail.com>
-	 <CAE9FiQWevd6ZNDdqGkqbLrGujKYuTiwibPAT+30VPpC_H-rLJA@mail.gmail.com>
-	 <CAErSpo66qtgg8=BqX+4sm4h1vXD5gR6aiH7hHK7gvz1x3rEQZA@mail.gmail.com>
-In-Reply-To: <CAErSpo66qtgg8=BqX+4sm4h1vXD5gR6aiH7hHK7gvz1x3rEQZA@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+CC: Tejun Heo <tj@kernel.org>, Jean Delvare <khali@linux-fr.org>,
+	<linux-pci@vger.kernel.org>, <linux-ide@vger.kernel.org>,
+	<linux-i2c@vger.kernel.org>, Shane Huang <shane.huang@amd.com>,
+	<stable@vger.kernel.org>
+Subject: [PATCH RESEND v2 3/3] i2c-piix4: add AMD CZ SMBus device ID
+Date: Mon, 3 Jun 2013 18:24:55 +0800
+Message-ID: <1370255095-2525-1-git-send-email-shane.huang@amd.com>
 MIME-Version: 1.0
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-T24gRnJpLCAyMDEzLTA2LTE0IGF0IDE1OjI2IC0wNjAwLCBCam9ybiBIZWxnYWFzIHdyb3RlOg0K
-DQo+IEkgZGlkIGZpbmQgdGhlIEF0aGVyb3MgV2luZG93cyBkcml2ZXIgZm9yIHRoZSBBT0ExNTAg
-b24gdGhlIEFjZXINCj4gd2Vic2l0ZSBbM10sIGFuZCB0aGUgLklORiBmaWxlIGhhcyBzZXZlcmFs
-IGludGVyZXN0aW5nIG1lbnRpb25zIG9mDQo+IEFTUE0sIGJ1dCBJIGRvbid0IGtub3cgd2hhdCB0
-aGV5IG1lYW4uDQoNClRoZXkncmUgbm90IHRoZSBzdGFuZGFyZCBmdW5jdGlvbnMsIHNvIGl0J3Mg
-cG9zc2libGUgdGhhdCB0aGUgV2luZG93cw0KZHJpdmVyIGZvciB0aGlzIGhhcmR3YXJlIGRpc2Fi
-bGVzIEFTUE0gdmlhIGl0cyBvd24gcmVnaXN0ZXIgd3JpdGVzLg0KDQotLSANCk1hdHRoZXcgR2Fy
-cmV0dCB8IG1qZzU5QHNyY2YudWNhbS5vcmcNCg==
+To add AMD CZ SMBus controller device ID.
+
+Signed-off-by: Shane Huang <shane.huang@amd.com>
+Reviewed-by: Tejun Heo <tj@kernel.org>
+Reviewed-by: Jean Delvare <khali@linux-fr.org>
+Cc: stable@vger.kernel.org
+---
+ Documentation/i2c/busses/i2c-piix4 | 2 +-
+ drivers/i2c/busses/Kconfig         | 1 +
+ drivers/i2c/busses/i2c-piix4.c     | 3 ++-
+ include/linux/pci_ids.h            | 1 +
+ 4 files changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/Documentation/i2c/busses/i2c-piix4 b/Documentation/i2c/busses/i2c-piix4
+index 1e6634f..a370b20 100644
+--- a/Documentation/i2c/busses/i2c-piix4
++++ b/Documentation/i2c/busses/i2c-piix4
+@@ -13,7 +13,7 @@ Supported adapters:
+   * AMD SP5100 (SB700 derivative found on some server mainboards)
+     Datasheet: Publicly available at the AMD website
+     http://support.amd.com/us/Embedded_TechDocs/44413.pdf
+-  * AMD Hudson-2
++  * AMD Hudson-2, CZ
+     Datasheet: Not publicly available
+   * Standard Microsystems (SMSC) SLC90E66 (Victory66) southbridge
+     Datasheet: Publicly available at the SMSC website http://www.smsc.com
+diff --git a/drivers/i2c/busses/Kconfig b/drivers/i2c/busses/Kconfig
+index 631736e..4faf02b 100644
+--- a/drivers/i2c/busses/Kconfig
++++ b/drivers/i2c/busses/Kconfig
+@@ -150,6 +150,7 @@ config I2C_PIIX4
+ 	    ATI SB700/SP5100
+ 	    ATI SB800
+ 	    AMD Hudson-2
++	    AMD CZ
+ 	    Serverworks OSB4
+ 	    Serverworks CSB5
+ 	    Serverworks CSB6
+diff --git a/drivers/i2c/busses/i2c-piix4.c b/drivers/i2c/busses/i2c-piix4.c
+index 39ab78c..43c2e11 100644
+--- a/drivers/i2c/busses/i2c-piix4.c
++++ b/drivers/i2c/busses/i2c-piix4.c
+@@ -22,7 +22,7 @@
+ 	Intel PIIX4, 440MX
+ 	Serverworks OSB4, CSB5, CSB6, HT-1000, HT-1100
+ 	ATI IXP200, IXP300, IXP400, SB600, SB700/SP5100, SB800
+-	AMD Hudson-2
++	AMD Hudson-2, CZ
+ 	SMSC Victory66
+ 
+    Note: we assume there can only be one device, with one or more
+@@ -522,6 +522,7 @@ static DEFINE_PCI_DEVICE_TABLE(piix4_ids) = {
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_IXP400_SMBUS) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_SBX00_SMBUS) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_HUDSON2_SMBUS) },
++	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_CZ_SMBUS) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_SERVERWORKS,
+ 		     PCI_DEVICE_ID_SERVERWORKS_OSB4) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_SERVERWORKS,
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index 22449c1..b10a5b4 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -571,6 +571,7 @@
+ #define PCI_DEVICE_ID_AMD_HUDSON2_SATA_IDE	0x7800
+ #define PCI_DEVICE_ID_AMD_HUDSON2_SMBUS		0x780b
+ #define PCI_DEVICE_ID_AMD_CZ_SATA_IDE	0x7900
++#define PCI_DEVICE_ID_AMD_CZ_SMBUS	0x790b
+ 
+ #define PCI_VENDOR_ID_TRIDENT		0x1023
+ #define PCI_DEVICE_ID_TRIDENT_4DWAVE_DX	0x2000
+-- 
+1.8.1.2
+
+
