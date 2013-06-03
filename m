@@ -1,34 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from jabberwock.ucw.cz ([46.255.230.98]:47480 "EHLO
-	jabberwock.ucw.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751968Ab3FKHuZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Jun 2013 03:50:25 -0400
-Received: from albireo.burrow.ucw.cz (albireo.ucw.cz [89.239.2.32])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(Client CN "albireo.ucw.cz", Issuer "ucw.cz" (verified OK))
-	by jabberwock.ucw.cz (Postfix) with ESMTPS id 114D91C00AD
-	for <linux-pci@vger.kernel.org>; Tue, 11 Jun 2013 09:50:24 +0200 (CEST)
-Date: Tue, 11 Jun 2013 09:50:23 +0200
-From: Martin Mares <mj@ucw.cz>
-To: "David E. Box" <david.e.box@linux.intel.com>
-Cc: kristen.c.accardi@intel.com, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v3] lspci: Add L1 PM Substate capability reporting
-Message-ID: <mj+md-20130611.075009.6973.albireo@ucw.cz>
-References: <mj+md-20130610.130955.16386.albireo@ucw.cz>
- <1370912999-11261-1-git-send-email-david.e.box@linux.intel.com>
+Received: from ch1ehsobe006.messaging.microsoft.com ([216.32.181.186]:11025
+	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753713Ab3FCCVh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 2 Jun 2013 22:21:37 -0400
+From: Shane Huang <shane.huang@amd.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Tejun Heo <tj@kernel.org>, Jean Delvare <khali@linux-fr.org>,
+	<linux-pci@vger.kernel.org>, <linux-ide@vger.kernel.org>,
+	<linux-i2c@vger.kernel.org>, Shane Huang <shane.huang@amd.com>,
+	<stable@vger.kernel.org>
+Subject: [PATCH RESEND 1/3] pci_ids: put Hudson-2 device IDs together
+Date: Mon, 3 Jun 2013 18:22:28 +0800
+Message-ID: <1370254948-2284-1-git-send-email-shane.huang@amd.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1370912999-11261-1-git-send-email-david.e.box@linux.intel.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello!
+To put all AMD Hudson-2 device IDs together for better maintenance.
 
-> From: David Box <david.e.box@linux.intel.com>
-> 
-> Expose available L1 substate capabilities that can enable lower power
-> consumption when a PCIe Link is idle.
+Signed-off-by: Shane Huang <shane.huang@amd.com>
+Reviewed-by: Tejun Heo <tj@kernel.org>
+Acked-by: Jean Delvare <khali@linux-fr.org>
+Cc: stable@vger.kernel.org
+---
+ include/linux/pci_ids.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Thanks, applied.
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index c129162..e0b5623 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -556,7 +556,6 @@
+ #define PCI_DEVICE_ID_AMD_8131_BRIDGE	0x7450
+ #define PCI_DEVICE_ID_AMD_8131_APIC	0x7451
+ #define PCI_DEVICE_ID_AMD_8132_BRIDGE	0x7458
+-#define PCI_DEVICE_ID_AMD_HUDSON2_SMBUS	0x780b
+ #define PCI_DEVICE_ID_AMD_CS5535_IDE    0x208F
+ #define PCI_DEVICE_ID_AMD_CS5536_ISA    0x2090
+ #define PCI_DEVICE_ID_AMD_CS5536_FLASH  0x2091
+@@ -570,6 +569,7 @@
+ #define PCI_DEVICE_ID_AMD_LX_AES    0x2082
+ #define PCI_DEVICE_ID_AMD_HUDSON2_IDE		0x780c
+ #define PCI_DEVICE_ID_AMD_HUDSON2_SATA_IDE	0x7800
++#define PCI_DEVICE_ID_AMD_HUDSON2_SMBUS		0x780b
+ 
+ #define PCI_VENDOR_ID_TRIDENT		0x1023
+ #define PCI_DEVICE_ID_TRIDENT_4DWAVE_DX	0x2000
+-- 
+1.8.1.2
 
-				Martin
+
