@@ -1,106 +1,131 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f169.google.com ([209.85.214.169]:33224 "EHLO
-	mail-ob0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755170Ab3FCVJu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Jun 2013 17:09:50 -0400
-Received: by mail-ob0-f169.google.com with SMTP id up14so8249586obb.14
-        for <linux-pci@vger.kernel.org>; Mon, 03 Jun 2013 14:09:49 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1370265391-18236-1-git-send-email-jiang.liu@huawei.com>
-References: <CAErSpo5mtYxWkVn+DTT4Sswp0RkWBM=prhtViMJ+KoLpOMY1hw@mail.gmail.com>
- <1370265391-18236-1-git-send-email-jiang.liu@huawei.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Tue, 4 Jun 2013 11:54:34 -0600
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 3 Jun 2013 15:09:29 -0600
-Message-ID: <CAErSpo7ZU4GY+3iZA=R7oGyzk8oCwVtpmYjODH6=Ts65tJC88Q@mail.gmail.com>
-Subject: Re: [PATCH] PCI, ACPI: use dev_printk() to keep messages consistent
-To: Jiang Liu <liuj97@gmail.com>
-Cc: "Rafael J . Wysocki" <rjw@sisk.pl>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+To: Betty Dall <betty.dall@hp.com>, rjw@sisk.pl, ying.huang@intel.com,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 2/3] ACPI/APEI: Force fatal AER severity when bus has
+ been reset
+Message-ID: <20130604175434.GA6548@google.com>
+References: <1369924769-17183-1-git-send-email-betty.dall@hp.com>
+ <1369924769-17183-3-git-send-email-betty.dall@hp.com>
+ <20130604075336.GC20448@gchen.bj.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130604075336.GC20448@gchen.bj.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 3, 2013 at 7:16 AM, Jiang Liu <liuj97@gmail.com> wrote:
-> As pointed out by Bjorn that acpi_handle_printk() generates messages
-> like "ACPI: \_SB_.PCI0: xxxxx" and dev_printk() generates messages
-> like "acpi PNP0A08:00: xxxx", so use dev_printk() to keep messages
-> consistent when possible.
->
-> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-> ---
-> Hi Bjorn,
->         Could you please help to fold this patch onto "PCI/ACPI: Use
-> acpi_handle_print() and pr_xxx() to print messages" of branch
-> "pci/jiang-remove-global-list"?
+On Tue, Jun 04, 2013 at 03:53:36AM -0400, Chen Gong wrote:
+> On Thu, May 30, 2013 at 08:39:28AM -0600, Betty Dall wrote:
+> > Date:	Thu, 30 May 2013 08:39:28 -0600
+> > From: Betty Dall <betty.dall@hp.com>
+> > To: rjw@sisk.pl, bhelgaas@google.com
+> > Cc: ying.huang@intel.com, linux-acpi@vger.kernel.org,
+> >  linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, Betty Dall
+> >  <betty.dall@hp.com>
+> > Subject: [PATCH v2 2/3] ACPI/APEI: Force fatal AER severity when bus has
+> >  been reset
+> > X-Mailer: git-send-email 1.7.7.6
+> > 
+> > The CPER error record has a reset bit that indicates that the platform
+> > has reset the bus. The reset bit can be set for any severity error
+> > including recoverable.  From the AER code path's perspective,
+> > any error is fatal if the bus has been reset. This patch upgrades the
+> > severity of the AER recovery to AER_FATAL whenever the CPER error record
+> > indicates that the bus has been reset.
+> > 
+> > Changes since v1:
+> > Fixed a typo in comment.
+> > 
+> > Signed-off-by: Betty Dall <betty.dall@hp.com>
+> > ---
+> > 
+> >  drivers/acpi/apei/ghes.c |   21 ++++++++++++++++++++-
+> >  1 files changed, 20 insertions(+), 1 deletions(-)
+> > 
+> > 
+> > diff --git a/drivers/acpi/apei/ghes.c b/drivers/acpi/apei/ghes.c
+> > index d668a8a..1c67d5a 100644
+> > --- a/drivers/acpi/apei/ghes.c
+> > +++ b/drivers/acpi/apei/ghes.c
+> > @@ -451,7 +451,26 @@ static void ghes_do_proc(struct ghes *ghes,
+> >  				int aer_severity;
+> >  				devfn = PCI_DEVFN(pcie_err->device_id.device,
+> >  						  pcie_err->device_id.function);
+> > -				aer_severity = cper_severity_to_aer(sev);
+> > +				/*
+> > +				 * Some Firmware First implementations
+> > +				 * put the device in SBR to contain
+> > +				 * the error. This is indicated by the
+> > +				 * CPER Section Descriptor Flags reset
+> > +				 * bit which means the component must
+> > +				 * be re-initialized or re-enabled
+> > +				 * prior to use. Promoting the AER
+> > +				 * serverity to FATAL will cause the
+> > +				 * AER code to link_reset and allow
+> > +				 * drivers to reprogram their cards.
+> > +				 */
+> > +				if (gdata->flags & CPER_SEC_RESET)
+> > +					aer_severity = cper_severity_to_aer(
+> > +							CPER_SEV_FATAL);
+> > +				else
+> > +					aer_severity =
+> > +						cper_severity_to_aer(sev);
+> > +
+> > +
+> 
+> How about this?
+>                                 if (gdata->flags & CPER_SEC_RESET)
+>                                         sev = CPER_SEV_FATAL;
+>                                 cper_severity_to_aer(sev);
 
-Done.  I also changed one acpi_handle_print() in
-handle_root_bridge_insertion() where we do have a device.  This is in
-my "next" branch for v3.11.
+No.  If the object is to make the severity AER_FATAL, you should just
+do that.  You shouldn't fiddle around with the CPER severity, because
+then you depend on the mapping performed by cper_severity_to_aer().
 
-Thanks!
+> 
+> >  				aer_recover_queue(pcie_err->device_id.segment,
+> >  						  pcie_err->device_id.bus,
+> >  						  devfn, aer_severity);
 
->  drivers/acpi/pci_root.c | 18 +++++++++---------
->  1 file changed, 9 insertions(+), 9 deletions(-)
->
-> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-> index 73a934d..4a8f5b4 100644
-> --- a/drivers/acpi/pci_root.c
-> +++ b/drivers/acpi/pci_root.c
-> @@ -388,7 +388,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
->         status = acpi_evaluate_integer(handle, METHOD_NAME__SEG, NULL,
->                                        &segment);
->         if (ACPI_FAILURE(status) && status != AE_NOT_FOUND) {
-> -               acpi_handle_err(handle, "can't evaluate _SEG\n");
-> +               dev_err(&device->dev,  "can't evaluate _SEG\n");
->                 result = -ENODEV;
->                 goto end;
->         }
-> @@ -404,8 +404,8 @@ static int acpi_pci_root_add(struct acpi_device *device,
->                  * can do is assume [_BBN-0xFF] or [0-0xFF].
->                  */
->                 root->secondary.end = 0xFF;
-> -               acpi_handle_warn(handle,
-> -                                FW_BUG "no secondary bus range in _CRS\n");
-> +               dev_warn(&device->dev,
-> +                        FW_BUG "no secondary bus range in _CRS\n");
->                 status = acpi_evaluate_integer(handle, METHOD_NAME__BBN,
->                                                NULL, &bus);
->                 if (ACPI_SUCCESS(status))
-> @@ -413,7 +413,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
->                 else if (status == AE_NOT_FOUND)
->                         root->secondary.start = 0;
->                 else {
-> -                       acpi_handle_err(handle, "can't evaluate _BBN\n");
-> +                       dev_err(&device->dev, "can't evaluate _BBN\n");
->                         result = -ENODEV;
->                         goto end;
->                 }
-> @@ -451,9 +451,9 @@ static int acpi_pci_root_add(struct acpi_device *device,
->          */
->         root->bus = pci_acpi_scan_root(root);
->         if (!root->bus) {
-> -               acpi_handle_err(handle,
-> -                           "Bus %04x:%02x not present in PCI namespace\n",
-> -                           root->segment, (unsigned int)root->secondary.start);
-> +               dev_err(&device->dev,
-> +                       "Bus %04x:%02x not present in PCI namespace\n",
-> +                       root->segment, (unsigned int)root->secondary.start);
->                 result = -ENODEV;
->                 goto end;
->         }
-> @@ -511,8 +511,8 @@ static int acpi_pci_root_add(struct acpi_device *device,
->                                 "ACPI _OSC request failed (%s), "
->                                 "returned control mask: 0x%02x\n",
->                                 acpi_format_exception(status), flags);
-> -                       acpi_handle_info(handle,
-> -                                        "ACPI _OSC control for PCIe not granted, disabling ASPM\n");
-> +                       dev_info(&device->dev,
-> +                                "ACPI _OSC control for PCIe not granted, disabling ASPM\n");
->                         pcie_no_aspm();
->                 }
->         } else {
-> --
-> 1.8.1.2
->
+In other words, something like the patch below.  I don't really care
+if you use the original "if" above that only sets aer_severity once,
+or if you overwrite it as below.  I overwrote it because it doesn't
+wrap as many lines.  ghes_do_proc() really should just call helpers
+so the interesting code doesn't have to be indented three and four
+tab stops.
+
+
+ACPI/APEI: Force fatal AER severity when component has been reset
+    
+The CPER error record has a reset bit that indicates that the platform has
+reset the component.  The reset bit can be set for any severity error
+including recoverable.  From the AER code path's perspective, any error is
+fatal if the component has been reset. This patch upgrades the severity of
+the AER recovery to AER_FATAL in this case.
+    
+diff --git a/drivers/acpi/apei/ghes.c b/drivers/acpi/apei/ghes.c
+index d668a8a..ab31551 100644
+--- a/drivers/acpi/apei/ghes.c
++++ b/drivers/acpi/apei/ghes.c
+@@ -449,9 +449,19 @@ static void ghes_do_proc(struct ghes *ghes,
+ 			    pcie_err->validation_bits & CPER_PCIE_VALID_AER_INFO) {
+ 				unsigned int devfn;
+ 				int aer_severity;
++
+ 				devfn = PCI_DEVFN(pcie_err->device_id.device,
+ 						  pcie_err->device_id.function);
+ 				aer_severity = cper_severity_to_aer(sev);
++
++				/*
++				 * If firmware reset the component to contain
++				 * the error, we must reinitialize it before
++				 * use, so treat it as a fatal AER error.
++				 */
++				if (gdata->flags & CPER_SEC_RESET)
++					aer_severity = AER_FATAL;
++
+ 				aer_recover_queue(pcie_err->device_id.segment,
+ 						  pcie_err->device_id.bus,
+ 						  devfn, aer_severity);
