@@ -1,132 +1,88 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <51CB15B0.1050500@01019freenet.de>
-Date: Wed, 26 Jun 2013 18:24:16 +0200
-From: Andreas Hartmann <andihartmann@01019freenet.de>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ob0-f177.google.com ([209.85.214.177]:57920 "EHLO
+	mail-ob0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751422Ab3FDWAz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Jun 2013 18:00:55 -0400
+Received: by mail-ob0-f177.google.com with SMTP id ta17so1356044obb.8
+        for <linux-pci@vger.kernel.org>; Tue, 04 Jun 2013 15:00:55 -0700 (PDT)
 MIME-Version: 1.0
-To: Alex Williamson <alex.williamson@redhat.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
+In-Reply-To: <CAE9FiQW=WM5v+VExCS0Od6gow7j4tTEOunECwqHP_hZduOETJw@mail.gmail.com>
+References: <1369974092-11450-1-git-send-email-jiang.liu@huawei.com>
+ <1369974092-11450-2-git-send-email-jiang.liu@huawei.com> <CAErSpo70u7oM07jcGA+E1MUHA4OWiJ1gQ8SuS7YCRuvGMxeaqA@mail.gmail.com>
+ <CAErSpo5YbhPtB9OtjkUrMo8OKkjFXzOxeR3Jc4dQU8eC9D45XQ@mail.gmail.com> <CAE9FiQW=WM5v+VExCS0Od6gow7j4tTEOunECwqHP_hZduOETJw@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 4 Jun 2013 16:00:35 -0600
+Message-ID: <CAErSpo6GBw4C3mXRrd_f=6GFnEwhH7tHcAkp+ib=HMwVPpc0=w@mail.gmail.com>
+Subject: Re: [PATCH 2/3] PCI, ACPI: Don't glue ACPI dev with pci VFs
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Jiang Liu <liuj97@gmail.com>, "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Xudong Hao <xudong.hao@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Joerg Roedel <joro@8bytes.org>
-Subject: Re: [PATCH RFC] pci: ACS quirk for AMD southbridge
-References: <20120712050653.20439.11009.stgit@bling.home>  <CAErSpo7=p7HyUfw4AQ-oQpLvgMfBi5iPfB+Fvrb02FWVHd_FAg@mail.gmail.com>  <CAErSpo6Xf=eF3xv=9CLmDYVMpWT6FSv634s8V-YfreiN6icDUA@mail.gmail.com>  <20130626171428.33940803@dualc.maya.org> <1372261864.30572.553.camel@ul30vt.home>
-In-Reply-To: <1372261864.30572.553.camel@ul30vt.home>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+	Jiang Liu <jiang.liu@huawei.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Alex Williamson wrote:
-> On Wed, 2013-06-26 at 17:14 +0200, Andreas Hartmann wrote:
->> Bjorn Helgaas wrote:
->>> [fix Joerg's email address]
+On Tue, Jun 4, 2013 at 3:57 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Tue, Jun 4, 2013 at 2:48 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> On Fri, May 31, 2013 at 3:40 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>> [+cc Rafael]
 >>>
->>> On Tue, Jun 25, 2013 at 10:15 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>>> On Wed, Jul 11, 2012 at 11:18 PM, Alex Williamson
->>>> <alex.williamson@redhat.com> wrote:
->>>>> We've confirmed that peer-to-peer between these devices is
->>>>> not possible.  We can therefore claim that they support a
->>>>> subset of ACS.
->>>>>
->>>>> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
->>>>> Cc: Joerg Roedel <Joerg.Roedel@amd.com>
->>>>> ---
->>>>>
->>>>> Two things about this patch make me a little nervous.  The
->>>>> first is that I'd really like to have a pci_is_pcie() test
->>>>> in pci_mf_no_p2p_acs_enabled(), but these devices don't
->>>>> have a PCIe capability.  That means that if there was a
->>>>> topology where these devices sit on a legacy PCI bus,
->>>>> we incorrectly return that we're ACS safe here.  That leads
->>>>> to my second problem, pciids seems to suggest that some of
->>>>> these functions have been around for a while.  Is it just
->>>>> this package that's peer-to-peer safe, or is it safe to
->>>>> assume that any previous assembly of these functions is
->>>>> also p2p safe.  Maybe we need to factor in device revs if
->>>>> that uniquely identifies this package?
->>>>>
->>>>> Looks like another useful device to potentially quirk
->>>>> would be:
->>>>>
->>>>> 00:15.0 PCI bridge: Advanced Micro Devices [AMD] nee ATI SB700/SB800/SB900 PCI to PCI bridge (PCIE port 0)
->>>>> 00:15.1 PCI bridge: Advanced Micro Devices [AMD] nee ATI SB700/SB800/SB900 PCI to PCI bridge (PCIE port 1)
->>>>> 00:15.2 PCI bridge: Advanced Micro Devices [AMD] nee ATI SB900 PCI to PCI bridge (PCIE port 2)
->>>>> 00:15.3 PCI bridge: Advanced Micro Devices [AMD] nee ATI SB900 PCI to PCI bridge (PCIE port 3)
->>>>>
->>>>> 00:15.0 0604: 1002:43a0
->>>>> 00:15.1 0604: 1002:43a1
->>>>> 00:15.2 0604: 1002:43a2
->>>>> 00:15.3 0604: 1002:43a3
->>>>>
->>>>>  drivers/pci/quirks.c |   29 +++++++++++++++++++++++++++++
->>>>>  1 file changed, 29 insertions(+)
->>>>>
->>>>> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
->>>>> index 4ebc865..2c84961 100644
->>>>> --- a/drivers/pci/quirks.c
->>>>> +++ b/drivers/pci/quirks.c
->>>>> @@ -3271,11 +3271,40 @@ struct pci_dev *pci_get_dma_source(struct pci_dev *dev)
->>>>>         return pci_dev_get(dev);
->>>>>  }
->>>>>
->>>>> +/*
->>>>> + * Multifunction devices that do not support peer-to-peer between
->>>>> + * functions can claim to support a subset of ACS.  Such devices
->>>>> + * effectively enable request redirect (RR) and completion redirect (CR)
->>>>> + * since all transactions are redirected to the upstream root complex.
->>>>> + */
->>>>> +static int pci_mf_no_p2p_acs_enabled(struct pci_dev *dev, u16 acs_flags)
->>>>> +{
->>>>> +       if (!dev->multifunction)
->>>>> +               return -ENODEV;
->>>>> +
->>>>> +       /* Filter out flags not applicable to multifunction */
->>>>> +       acs_flags &= (PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_EC | PCI_ACS_DT);
->>>>> +
->>>>> +       return acs_flags & ~(PCI_ACS_RR | PCI_ACS_CR) ? 0 : 1;
->>>>> +}
->>>>> +
->>>>>  static const struct pci_dev_acs_enabled {
->>>>>         u16 vendor;
->>>>>         u16 device;
->>>>>         int (*acs_enabled)(struct pci_dev *dev, u16 acs_flags);
->>>>>  } pci_dev_acs_enabled[] = {
->>>>> +       /*
->>>>> +        * AMD/ATI multifunction southbridge devices.  AMD has confirmed
->>>>> +        * that peer-to-peer between these devices is not possible, so
->>>>> +        * they do support a subset of ACS even though the capability is
->>>>> +        * not exposed in config space.
->>>>> +        */
->>>>> +       { PCI_VENDOR_ID_ATI, 0x4385, pci_mf_no_p2p_acs_enabled },
->>>>> +       { PCI_VENDOR_ID_ATI, 0x439c, pci_mf_no_p2p_acs_enabled },
->>>>> +       { PCI_VENDOR_ID_ATI, 0x4383, pci_mf_no_p2p_acs_enabled },
->>>>> +       { PCI_VENDOR_ID_ATI, 0x439d, pci_mf_no_p2p_acs_enabled },
->>>>> +       { PCI_VENDOR_ID_ATI, 0x4384, pci_mf_no_p2p_acs_enabled },
->>>>> +       { PCI_VENDOR_ID_ATI, 0x4399, pci_mf_no_p2p_acs_enabled },
->>>>>         { 0 }
->>>>>  };
->>>>>
->>>>>
+>>> On Thu, May 30, 2013 at 10:21 PM, Jiang Liu <liuj97@gmail.com> wrote:
+>>>> From: Yinghai Lu <yinghai@kernel.org>
 >>>>
->>>> I was looking for something else and found this old email.  This patch
->>>> hasn't been applied and I haven't seen any discussion about it.  Is it
->>>> still of interest?  It seems relevant to the current ACS discussion
->>>> [1].
+>>>> When sriov is enabled, VF could just start after PF in pci tree.
+>>>> like c1:00.0 will be PF, and c1:00.1 and after will be VF.
+>>>>
+>>>> acpi do have dev with same ADR. that will make them get glued
+>>>> wrongly.
+>>>>
+>>>> Skip that if it is virtfn.
+>>>>
+>>>> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+>>>> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+>>>> ---
+>>>>  drivers/pci/pci-acpi.c | 4 ++++
+>>>>  1 file changed, 4 insertions(+)
+>>>>
+>>>> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+>>>> index e4b1fb2..720f3a2 100644
+>>>> --- a/drivers/pci/pci-acpi.c
+>>>> +++ b/drivers/pci/pci-acpi.c
+>>>> @@ -321,6 +321,10 @@ static int acpi_pci_find_device(struct device *dev, acpi_handle *handle)
+>>>>         u64     addr;
+>>>>
+>>>>         pci_dev = to_pci_dev(dev);
+>>>> +       /* don't mix vf with real pci device */
+>>>> +       if (pci_dev->is_virtfn)
+>>>> +               return -ENODEV;
+>>>
+>>> Rafael, can you review this?  I don't understand the implications of
+>>> this change.
+>>>
+>>> And I don't know exactly what problem this would fix, so I don't know
+>>> if it's stable material or not.  Yinghai did propose it as v3.10
+>>> material in https://lkml.kernel.org/r/1368498506-25857-1-git-send-email-yinghai@kernel.org,
+>>> but I don't know why.
 >>
->> It is absolutely relevant. I always have to patch my kernel to get it
->> working to put my pci device to VM. Meanwhile I'm doing it for
->> kernel 3.9. I would be very glad to get these patches to the kernel as
->> they don't do anything bad!
-> 
-> I'd still like to see this get in too.  IIRC, where we left off was that
-> Joerg had confirmed with the hardware folks that there is no
-> peer-to-peer between these devices, but we still had questions about
-> whether that was true for any instance of these vendor/device IDs.
-> These devices are re-used in several packages and I'm not sure if we
-> need to somehow figure out what package (ie. which chipset generation)
-> we're looking at to know if p2p is used. 
+>> Ping?
+>>
+>> Jiang or Yinghai, what problem does this fix?
+>
+> fix the wrong binding between acpi dev and VFs.
 
-Does this statement cover your question?
-http://article.gmane.org/gmane.comp.emulators.kvm.devel/99402
+Well, I read that in the changelog, but that doesn't tell me what bad
+things happen as a result.  Can you elaborate a little bit?  Does it
+mean PM doesn't work, hotplug doesn't work, drivers can't bind to the
+VFs correctly, the magic smoke comes out of the PF, or what?
 
-Andreas
+> Found that in my recent sriov test.
+>
+>>
+>> I'm guessing maybe all three of these should be marked for stable, but
+>> I'd like confirmation of that.
+>
+> Yes
+>
+> Yinghai
