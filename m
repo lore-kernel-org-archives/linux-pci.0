@@ -1,181 +1,104 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:60124 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755225Ab3FFHfl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Jun 2013 03:35:41 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Yinghai Lu <yinghai@kernel.org>, <linux-pci@vger.kernel.org>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	Fenghua Yu <fenghua.yu@intel.com>,
-	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH -v5 7/8] PCI/IA64: introduce probe_pci_root_info() to manage _CRS resource
-Date: Thu, 6 Jun 2013 15:34:52 +0800
-Message-ID: <1370504093-14908-8-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1370504093-14908-1-git-send-email-wangyijing@huawei.com>
-References: <1370504093-14908-1-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Tue, 4 Jun 2013 03:42:00 -0400
+From: Chen Gong <gong.chen@linux.intel.com>
+To: Betty Dall <betty.dall@hp.com>
+Cc: rjw@sisk.pl, bhelgaas@google.com, ying.huang@intel.com,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 1/3] PCI/AER: Fix incorrect return from
+ aer_hest_parse()
+Message-ID: <20130604074159.GB20448@gchen.bj.intel.com>
+References: <1369924769-17183-1-git-send-email-betty.dall@hp.com>
+ <1369924769-17183-2-git-send-email-betty.dall@hp.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="24zk1gE8NUlDmwG9"
+In-Reply-To: <1369924769-17183-2-git-send-email-betty.dall@hp.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently, initialize _CRS resource code in IA64 make pci_acpi_scan_root()
-some lengthiness. Introduce probe_pci_root_info() to manage it like in X86,
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Fenghua Yu <fenghua.yu@intel.com>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-ia64@vger.kernel.org
----
- arch/ia64/pci/pci.c |  100 +++++++++++++++++++++++++++++----------------------
- 1 files changed, 57 insertions(+), 43 deletions(-)
+--24zk1gE8NUlDmwG9
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
-index 72a1957..586cac1 100644
---- a/arch/ia64/pci/pci.c
-+++ b/arch/ia64/pci/pci.c
-@@ -376,6 +376,50 @@ static void release_pci_root_info(struct pci_host_bridge *bridge)
- 	__release_pci_root_info(info);
- }
- 
-+static int
-+probe_pci_root_info(struct pci_root_info *info, struct acpi_device *device,
-+		int busnum, int domain)
-+{
-+	char *name;
-+
-+	name = kmalloc(16, GFP_KERNEL);
-+	if (!name)
-+		return -ENOMEM;
-+
-+	sprintf(name, "PCI Bus %04x:%02x", domain, busnum);
-+	info->bridge = device;
-+	info->name = name;
-+
-+	acpi_walk_resources(device->handle, METHOD_NAME__CRS, count_window,
-+			&info->res_num);
-+	if (info->res_num) {
-+		info->res =
-+			kzalloc_node(sizeof(*info->res) * info->res_num,
-+				     GFP_KERNEL, info->controller->node);
-+		if (!info->res) {
-+			kfree(name);
-+			return -ENOMEM;
-+		}
-+
-+		info->res_offset =
-+			kzalloc_node(sizeof(*info->res_offset) * info->res_num,
-+					GFP_KERNEL, info->controller->node);
-+		if (!info->res_offset) {
-+			kfree(name);
-+			kfree(info->res);
-+			info->res = NULL;
-+			return -ENOMEM;
-+		}
-+
-+		info->res_num = 0;
-+		acpi_walk_resources(device->handle, METHOD_NAME__CRS,
-+			add_window, info);
-+	} else
-+		kfree(name);
-+
-+	return 0;
-+}
-+
- struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- {
- 	struct acpi_device *device = root->device;
-@@ -385,12 +429,11 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 	struct pci_root_info *info = NULL;
- 	int busnum = root->secondary.start;
- 	struct pci_bus *pbus;
--	char *name;
--	int pxm;
-+	int pxm, ret;
- 
- 	controller = alloc_pci_controller(domain);
- 	if (!controller)
--		goto out1;
-+		return NULL;
- 
- 	controller->acpi_handle = device->handle;
- 
-@@ -404,41 +447,23 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 	if (!info) {
- 		printk(KERN_WARNING
- 				"pci_bus %04x:%02x: ignored (out of memory)\n",
--				root->segment, busnum);
--		goto out2;
-+				domain, busnum);
-+		kfree(controller);
-+		return NULL;
- 	}
- 
-+	info->controller = controller;
- 	INIT_LIST_HEAD(&info->io_resources);
- 	INIT_LIST_HEAD(&info->resources);
--	/* insert busn resource at first */
--	pci_add_resource(&info->resources, &root->secondary);
--	acpi_walk_resources(device->handle, METHOD_NAME__CRS, count_window,
--			&info->res_num);
--	if (info->res_num) {
--		info->res =
--			kzalloc_node(sizeof(*info->res) * info->res_num,
--				     GFP_KERNEL, controller->node);
--		if (!info->res)
--			goto out3;
- 
--		info->res_offset =
--			kzalloc_node(sizeof(*info->res_offset) * info->res_num,
--				GFP_KERNEL, controller->node);
--		if (!info->res_offset)
--			goto out4;
--
--		name = kmalloc(16, GFP_KERNEL);
--		if (!name)
--			goto out5;
--
--		sprintf(name, "PCI Bus %04x:%02x", domain, bus);
--		info->bridge = device;
--		info->controller = controller;
--		info->name = name;
--		info->res_num = 0;
--		acpi_walk_resources(device->handle, METHOD_NAME__CRS,
--			add_window, info);
-+	ret = probe_pci_root_info(info, device, busnum, domain);
-+	if (ret) {
-+		kfree(info->controller);
-+		kfree(info);
-+		return NULL;
- 	}
-+	/* insert busn resource at first */
-+	pci_add_resource(&info->resources, &root->secondary);
- 	/*
- 	 * See arch/x86/pci/acpi.c.
- 	 * The desired pci bus might already be scanned in a quirk. We
-@@ -457,17 +482,6 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 			release_pci_root_info, info);
- 	pci_scan_child_bus(pbus);
- 	return pbus;
--
--out5:
--	kfree(info->res_offset);
--out4:
--	kfree(info->res);
--out3:
--	kfree(info);
--out2:
--	kfree(controller);
--out1:
--	return NULL;
- }
- 
- int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
--- 
-1.7.1
+On Thu, May 30, 2013 at 08:39:27AM -0600, Betty Dall wrote:
+> Date:	Thu, 30 May 2013 08:39:27 -0600
+> From: Betty Dall <betty.dall@hp.com>
+> To: rjw@sisk.pl, bhelgaas@google.com
+> Cc: ying.huang@intel.com, linux-acpi@vger.kernel.org,
+>  linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, Betty Dall
+>  <betty.dall@hp.com>
+> Subject: [PATCH v2 1/3] PCI/AER: Fix incorrect return from aer_hest_parse=
+()
+> X-Mailer: git-send-email 1.7.7.6
+>=20
+> The function aer_hest_parse() is called to determine if the given
+> PCI device is firmware first or not. The code loops through each
+> section of the HEST table to look for a match. The bug is that
+> the function always returns whether the last HEST section is firmware
+> first. The fix stops the iteration once the info.firmware_first
+> variable is set.  This is similar to how the function aer_hest_parse_aff()
+> stops the iteration.
+>=20
+> Signed-off-by: Betty Dall <betty.dall@hp.com>
 
+The patch is good. But I have further concern based on your patch.
+1) aer_hest_parse never checks the 2nd input parameter (void *data),
+which means once it is NULL, it will crash the kernel.
 
+2) both aer_hest_parse and aer_hest_parse_aff utilize some flag
+as shortcut, if so, why not adding similar logic in apei_hest_parse
+to stop meaningless loops once FFM is confirmed as enabled.
+
+> ---
+>=20
+>  drivers/pci/pcie/aer/aerdrv_acpi.c |    3 +++
+>  1 files changed, 3 insertions(+), 0 deletions(-)
+>=20
+>=20
+> diff --git a/drivers/pci/pcie/aer/aerdrv_acpi.c b/drivers/pci/pcie/aer/ae=
+rdrv_acpi.c
+> index 5194a7d..39b8671 100644
+> --- a/drivers/pci/pcie/aer/aerdrv_acpi.c
+> +++ b/drivers/pci/pcie/aer/aerdrv_acpi.c
+> @@ -42,6 +42,9 @@ static int aer_hest_parse(struct acpi_hest_header *hest=
+_hdr, void *data)
+>  	u8 bridge =3D 0;
+>  	int ff =3D 0;
+> =20
+> +	if (info->firmware_first)
+> +		return 0;
+> +
+>  	switch (hest_hdr->type) {
+>  	case ACPI_HEST_TYPE_AER_ROOT_PORT:
+>  		pcie_type =3D PCI_EXP_TYPE_ROOT_PORT;
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+--24zk1gE8NUlDmwG9
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQIcBAEBAgAGBQJRrZpHAAoJEI01n1+kOSLHfFwP/A4Sz65iCJQCdsdZNiGWC9Ow
+4OikR6hhGedkII4aZT1f3XCtibS5+m/O5VG827AhO/6OaWXas7v/HPJDqr9u/fGk
+tUFzR2n9yMIcNGBeYuUyp8oDjedov2xqksvbOglXIkcQxB+ZfPVms51HpvxkxE1o
+W7ZvHzM3RtFzsDJELnZ5jS0d2M2bt2i+kIsk1xNpNreCvkip5LJiyiJRVTlldTKq
+0SMKSvJCOgBAFHdScH5Xzf5fTyQib1W02Qn+sONPB+gbledZMFQJpEvG9ttMid1h
+CH/1cTXfePogoTUjSWe0JuMKwFuioy/dCDgH5PqAK+gdLJLoG7a/NQdUZ8xkMfok
+DDi8vf4FvPWZ3LRdm62gp0b/Wb3NpfbSIbVaEdBN7sDDlOD2IY5BplW6kuAqDVr1
+pIu7sunnyt/iwRCdenSlo4e7G8qz2+4p3jpOxKYAoOQvqV758MbHvaGB8yUNe7MN
+ff9yhw+guGKzLoEy/JN+q/iuLxJ1kBCWBYNODAIAb+P3xg6RA+x8HOX+l2xVppaf
+fs/K7eb9M8SpaHNVTm1SQHkcL3CSh3c3xEVef60roIgbohQXEKaeouo9lrfOC9Ui
+9obeZNab50SAg6MaHQSn5NwjSDxde2dtoTJ3QIo9AGr+Gh3+rbyoAzsPqSozlmxj
+HFrWL8cS09Pjpm4cMIBp
+=Q9b2
+-----END PGP SIGNATURE-----
+
+--24zk1gE8NUlDmwG9--
