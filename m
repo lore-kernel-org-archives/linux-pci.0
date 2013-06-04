@@ -1,166 +1,96 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:30326 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751267Ab3FZAyO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Jun 2013 20:54:14 -0400
-Message-ID: <51CA3B8F.4010909@huawei.com>
-Date: Wed, 26 Jun 2013 08:53:35 +0800
-From: Yijing Wang <wangyijing@huawei.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>
-Subject: Re: Changes for v3.11 merge window
-References: <20130625172608.GA11914@google.com>
-In-Reply-To: <20130625172608.GA11914@google.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <1370362854.20051.69.camel@ejdallLaptop>
+Subject: Re: [PATCH v2 2/3] ACPI/APEI: Force fatal AER severity when bus has
+ been reset
+From: Betty Dall <betty.dall@hp.com>
+To: Chen Gong <gong.chen@linux.intel.com>
+Cc: rjw@sisk.pl, bhelgaas@google.com, ying.huang@intel.com,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Date: Tue, 04 Jun 2013 10:20:54 -0600
+In-Reply-To: <20130604075336.GC20448@gchen.bj.intel.com>
+References: <1369924769-17183-1-git-send-email-betty.dall@hp.com>
+	 <1369924769-17183-3-git-send-email-betty.dall@hp.com>
+	 <20130604075336.GC20448@gchen.bj.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
-   It seems missing the patch in misc, https://patchwork.kernel.org/patch/2739861/
+On Tue, 2013-06-04 at 03:53 -0400, Chen Gong wrote:
+> On Thu, May 30, 2013 at 08:39:28AM -0600, Betty Dall wrote:
+> > Date:	Thu, 30 May 2013 08:39:28 -0600
+> > From: Betty Dall <betty.dall@hp.com>
+> > To: rjw@sisk.pl, bhelgaas@google.com
+> > Cc: ying.huang@intel.com, linux-acpi@vger.kernel.org,
+> >  linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, Betty Dall
+> >  <betty.dall@hp.com>
+> > Subject: [PATCH v2 2/3] ACPI/APEI: Force fatal AER severity when bus has
+> >  been reset
+> > X-Mailer: git-send-email 1.7.7.6
+> > 
+> > The CPER error record has a reset bit that indicates that the platform
+> > has reset the bus. The reset bit can be set for any severity error
+> > including recoverable.  From the AER code path's perspective,
+> > any error is fatal if the bus has been reset. This patch upgrades the
+> > severity of the AER recovery to AER_FATAL whenever the CPER error record
+> > indicates that the bus has been reset.
+> > 
+> > Changes since v1:
+> > Fixed a typo in comment.
+> > 
+> > Signed-off-by: Betty Dall <betty.dall@hp.com>
+> > ---
+> > 
+> >  drivers/acpi/apei/ghes.c |   21 ++++++++++++++++++++-
+> >  1 files changed, 20 insertions(+), 1 deletions(-)
+> > 
+> > 
+> > diff --git a/drivers/acpi/apei/ghes.c b/drivers/acpi/apei/ghes.c
+> > index d668a8a..1c67d5a 100644
+> > --- a/drivers/acpi/apei/ghes.c
+> > +++ b/drivers/acpi/apei/ghes.c
+> > @@ -451,7 +451,26 @@ static void ghes_do_proc(struct ghes *ghes,
+> >  				int aer_severity;
+> >  				devfn = PCI_DEVFN(pcie_err->device_id.device,
+> >  						  pcie_err->device_id.function);
+> > -				aer_severity = cper_severity_to_aer(sev);
+> > +				/*
+> > +				 * Some Firmware First implementations
+> > +				 * put the device in SBR to contain
+> > +				 * the error. This is indicated by the
+> > +				 * CPER Section Descriptor Flags reset
+> > +				 * bit which means the component must
+> > +				 * be re-initialized or re-enabled
+> > +				 * prior to use. Promoting the AER
+> > +				 * serverity to FATAL will cause the
+> > +				 * AER code to link_reset and allow
+> > +				 * drivers to reprogram their cards.
+> > +				 */
+> > +				if (gdata->flags & CPER_SEC_RESET)
+> > +					aer_severity = cper_severity_to_aer(
+> > +							CPER_SEV_FATAL);
+> > +				else
+> > +					aer_severity =
+> > +						cper_severity_to_aer(sev);
+> > +
+> > +
+> 
+> How about this?
+>                                 if (gdata->flags & CPER_SEC_RESET)
+>                                         sev = CPER_SEV_FATAL;
+>                                 cper_severity_to_aer(sev);
 
-Thanks!
-Yijing
+Thanks for the review. I will make that change.
 
-On 2013/6/26 1:26, Bjorn Helgaas wrote:
-> Below are the patches currently in my "next" branch, planned for
-> release in v3.11.  If I'm missing something important, let me know.
+-Betty
 > 
-> 
-> Alexander Gordeev (2):
->       PCI: Allocate only as many MSI vectors as requested by driver
->       x86/MSI: Conserve interrupt resources when using multiple-MSIs
-> 
-> Betty Dall (4):
->       PCI/AER: Move AER severity defines to aer.h
->       PCI/AER: Remove "extern" from function declarations
->       ACPI / APEI: Force fatal AER severity when component has been reset
->       PCI/AER: Reset link for devices below Root Port or Downstream Port
-> 
-> Bjorn Helgaas (18):
->       PCI/ACPI: Check acpi_resource_to_address64() return value
->       powerpc/PCI: Use PCI_UNKNOWN for unknown power state
->       sparc/PCI: Use PCI_UNKNOWN for unknown power state
->       PCI/ASPM: Warn when driver asks to disable ASPM, but we can't do it
->       Merge branch 'pci/misc' into next
->       Merge branch 'pci/kevin-bus-to-resource' into next
->       Merge branch 'pci/misc' into next
->       Merge branch 'pci/jiang-remove-global-list' into next
->       Merge branch 'pci/shane-amd-ahci-i2c' into next
->       Merge branch 'pci/alexander-msi' into next
->       Merge branch 'pci/jiang-iov-fixes' into next
->       PCI/AER: Don't parse HEST table for non-PCIe devices
->       PCI/AER: Factor out HEST device type matching
->       PCI/AER: Set dev->__aer_firmware_first only for matching devices
->       Merge branch 'pci/betty-aer-v3' into next
->       Merge branch 'pci/misc' into next
->       PCI: Return early on allocation failures to unindent mainline code
->       Merge branch 'pci/jiang-bus-lock-v3' into next
-> 
-> Gu Zheng (2):
->       PCI: Introduce pci_alloc_dev(struct pci_bus*) to replace alloc_pci_dev()
->       PCI: Convert alloc_pci_dev(void) to pci_alloc_dev(bus)
-> 
-> Jiang Liu (13):
->       PCI: Introduce pci_bus_{get|put}() to manage PCI bus reference count
->       PCI/ACPI: Combine duplicate adjacent "if" tests
->       PCI/ACPI: Introduce "handle" local for economy of expression
->       PCI/ACPI: Remove unused global list acpi_pci_roots
->       PCI/ACPI: Use dev_printk(), acpi_handle_print(), pr_xxx() when possible
->       PCI: Hide remove and rescan sysfs interfaces for SR-IOV virtual functions
->       ia64/PCI: Clean up pci_scan_root_bus() usage
->       PCI: Fix refcount issue in pci_create_root_bus() error recovery path
->       PCI: Rename pci_release_bus_bridge_dev() to pci_release_host_bridge_dev()
->       m68k/PCI: Remove redundant call of pci_bus_add_devices()
->       unicore32/PCI: Remove redundant call of pci_bus_add_devices()
->       PCI: Drop redundant setting of bus->is_added in virtfn_add_bus()
->       PCI: Simplify IOV implementation and fix reference count races
-> 
-> Jingoo Han (1):
->       PCI: Replace strict_strtoul() with kstrtoul()
-> 
-> Jon Mason (1):
->       PCI: Work around Ivytown NTB BAR size issue
-> 
-> Kevin Hao (3):
->       PCI: Add 0x prefix to BAR register position in __pci_read_base()
->       PCI: Consolidate calls to pcibios_bus_to_resource() in __pci_read_base()
->       PCI: Unset resource if initial BAR value is invalid
-> 
-> Libo Chen (1):
->       PCI: Convert ioapic.c to module_pci_driver
-> 
-> Rafael J. Wysocki (1):
->       PCI / ACPI / PM: Use correct power state strings in messages
-> 
-> Sebastian Ott (1):
->       PCI: Add pcibios_release_device()
-> 
-> Shane Huang (3):
->       PCI: Put Hudson-2 device IDs together
->       ahci: Add AMD CZ SATA device ID
->       i2c-piix4: Add AMD CZ SMBus device ID
-> 
-> Wang Sheng-Hui (1):
->       PCI: Fix INTC comment typo for pci_swizzle_interrupt_pin()
-> 
-> Xudong Hao (1):
->       PCI: Finish SR-IOV VF setup before adding the device
-> 
-> Yijing Wang (5):
->       x86/PCI: Increase info->res_num before checking pci_use_crs
->       PCI: Fix kerneldoc for pci_disable_link_state()
->       PCI: Replace printks with appropriate pr_*()
->       PCI: Fix comment typo for PCI_EXP_LNKCAP_CLKPM
->       PCI: Fix comment typo for pcie_pme_remove()
-> 
->  Documentation/i2c/busses/i2c-piix4 |   2 +-
->  arch/ia64/sn/kernel/io_init.c      |  11 +---
->  arch/m68k/platform/coldfire/pci.c  |   1 -
->  arch/powerpc/kernel/pci_of_scan.c  |   5 +-
->  arch/sparc/kernel/pci.c            |   5 +-
->  arch/unicore32/kernel/pci.c        |   5 --
->  arch/x86/pci/acpi.c                |   7 +--
->  drivers/acpi/apei/ghes.c           |  10 ++++
->  drivers/acpi/pci_root.c            | 101 +++++++++++++-------------------
->  drivers/ata/ahci.c                 |   1 +
->  drivers/char/agp/alpha-agp.c       |   2 +-
->  drivers/char/agp/parisc-agp.c      |   2 +-
->  drivers/i2c/busses/Kconfig         |   1 +
->  drivers/i2c/busses/i2c-piix4.c     |   3 +-
->  drivers/iommu/irq_remapping.c      |  12 ++--
->  drivers/pci/bus.c                  |  15 +++++
->  drivers/pci/ioapic.c               |  13 +----
->  drivers/pci/iov.c                  |  65 +++++++++------------
->  drivers/pci/msi.c                  |  10 +++-
->  drivers/pci/pci-acpi.c             |  10 ++--
->  drivers/pci/pci-sysfs.c            |  48 ++++++++++++----
->  drivers/pci/pci.c                  |  12 +++-
->  drivers/pci/pcie/aer/aerdrv.h      |   4 --
->  drivers/pci/pcie/aer/aerdrv_acpi.c |  47 +++++++--------
->  drivers/pci/pcie/aer/aerdrv_core.c |  17 +++---
->  drivers/pci/pcie/aspm.c            |  29 +++++++---
->  drivers/pci/pcie/pme.c             |   2 +-
->  drivers/pci/probe.c                | 115 +++++++++++++++++++++++--------------
->  drivers/pci/quirks.c               |  27 +++++++++
->  drivers/scsi/megaraid.c            |   2 +-
->  include/acpi/acpi_bus.h            |   1 -
->  include/linux/aer.h                |  20 ++++---
->  include/linux/msi.h                |   1 +
->  include/linux/pci.h                |   6 +-
->  include/linux/pci_ids.h            |   4 +-
->  include/uapi/linux/pci_regs.h      |   2 +-
->  36 files changed, 352 insertions(+), 266 deletions(-)
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> .
-> 
+> >  				aer_recover_queue(pcie_err->device_id.segment,
+> >  						  pcie_err->device_id.bus,
+> >  						  devfn, aer_severity);
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-
--- 
-Thanks!
-Yijing
 
