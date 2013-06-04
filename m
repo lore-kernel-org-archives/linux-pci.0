@@ -1,120 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:61066 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756469Ab3FGQen (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 7 Jun 2013 12:34:43 -0400
-Subject: [PATCH v2 1/2] pci: Fix flaw in pci_acs_enabled()
-To: bhelgaas@google.com
-From: Alex Williamson <alex.williamson@redhat.com>
-Cc: linux-pci@vger.kernel.org, ddutile@redhat.com,
-	linux-kernel@vger.kernel.org
-Date: Fri, 07 Jun 2013 10:34:41 -0600
-Message-ID: <20130607163441.7733.23221.stgit@bling.home>
-In-Reply-To: <20130607162732.7733.17758.stgit@bling.home>
-References: <20130607162732.7733.17758.stgit@bling.home>
+Received: from mail-ob0-f175.google.com ([209.85.214.175]:50892 "EHLO
+	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751005Ab3FDXaF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Jun 2013 19:30:05 -0400
+Received: by mail-ob0-f175.google.com with SMTP id xn12so1514191obc.34
+        for <linux-pci@vger.kernel.org>; Tue, 04 Jun 2013 16:30:04 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <alpine.LFD.2.03.1306041911170.1686@linux.vnet.ibm.com>
+References: <alpine.LFD.2.03.1306041911170.1686@linux.vnet.ibm.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 4 Jun 2013 17:29:44 -0600
+Message-ID: <CAErSpo41t6QDHJwoZcwp5pH7kzuLPb8xboHc3W6YixDad2BotA@mail.gmail.com>
+Subject: Re: [PATCH] pci: add pcibios_release_device
+To: Sebastian Ott <sebott@linux.vnet.ibm.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Downstream ports support for all ACS flags supercedes multifunction
-exclusion of some flags.  The PCIe spec also fully specifies which
-PCIe types are subject to the multifunction rules and excludes event
-collectors and PCIe-to-PCI bridges entirely.  Document each rule to
-the section of the PCIe spec.
+On Tue, Jun 4, 2013 at 11:18 AM, Sebastian Ott
+<sebott@linux.vnet.ibm.com> wrote:
+> Hello Bjorn,
+>
+> part of your feedback to the PCI support on s390 was to put some smarts in
+> the config space accessors and let the pci core do the scanning of pci
+> functions.
+> To get there I had to implement pcibios_add_device on s390 to do some arch
+> specific device initialization. During removal of the pci function I would
+> like to undo these steps. Would it be possible to have a couterpart of
+> pcibios_add_device - like the patch below:
+>
+>
+> pci: add pcibios_release_device
+>
+> Platforms may want to provide architecture-specific functionality when
+> a pci device is released. Add a pcibios_release_device() call that
+> architectures can override to do so.
+>
+> Signed-off-by: Sebastian Ott <sebott@linux.vnet.ibm.com>
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
----
- drivers/pci/pci.c |   59 ++++++++++++++++++++++++++++++++++++++++-------------
- 1 file changed, 45 insertions(+), 14 deletions(-)
+Applied to pci/misc for v3.11.  Thanks!
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index b099e00..457ae51 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -2354,6 +2354,19 @@ void pci_enable_acs(struct pci_dev *dev)
- 	pci_write_config_word(dev, pos + PCI_ACS_CTRL, ctrl);
- }
- 
-+static bool pci_acs_flags_enabled(struct pci_dev *pdev, u16 acs_flags)
-+{
-+	int pos;
-+	u16 ctrl;
-+
-+	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_ACS);
-+	if (!pos)
-+		return false;
-+
-+	pci_read_config_word(pdev, pos + PCI_ACS_CTRL, &ctrl);
-+	return (ctrl & acs_flags) == acs_flags;
-+}
-+
- /**
-  * pci_acs_enabled - test ACS against required flags for a given device
-  * @pdev: device to test
-@@ -2364,8 +2377,7 @@ void pci_enable_acs(struct pci_dev *dev)
-  */
- bool pci_acs_enabled(struct pci_dev *pdev, u16 acs_flags)
- {
--	int pos, ret;
--	u16 ctrl;
-+	int ret;
- 
- 	ret = pci_dev_specific_acs_enabled(pdev, acs_flags);
- 	if (ret >= 0)
-@@ -2374,23 +2386,42 @@ bool pci_acs_enabled(struct pci_dev *pdev, u16 acs_flags)
- 	if (!pci_is_pcie(pdev))
- 		return false;
- 
--	/* Filter out flags not applicable to multifunction */
--	if (pdev->multifunction)
-+	switch (pci_pcie_type(pdev)) {
-+	/*
-+	 * PCIe 3.0, 6.12.1 excludes ACS on these devices.  "Not applicable"
-+	 */
-+	case PCI_EXP_TYPE_PCI_BRIDGE:
-+	case PCI_EXP_TYPE_RC_EC:
-+		break;
-+	/*
-+	 * PCIe 3.0, 6.12.1.1 specifies full ACS capabilities on downstream
-+	 * ports, regardless of them being multifunction devices.
-+	 */
-+	case PCI_EXP_TYPE_DOWNSTREAM:
-+	case PCI_EXP_TYPE_ROOT_PORT:
-+		return pci_acs_flags_enabled(pdev, acs_flags);
-+	/*
-+	 * PCIe 3.0, 6.12.1.2 specifies unimplemented ACS capabilities on
-+	 * multifunction devices.  6.12 footnote identifies specifically
-+	 * which devices types this applies to.
-+	 */
-+	case PCI_EXP_TYPE_ENDPOINT:
-+	case PCI_EXP_TYPE_UPSTREAM:
-+	case PCI_EXP_TYPE_LEG_END:
-+	case PCI_EXP_TYPE_RC_END:
-+		if (!pdev->multifunction)
-+			break;
-+
- 		acs_flags &= (PCI_ACS_RR | PCI_ACS_CR |
- 			      PCI_ACS_EC | PCI_ACS_DT);
- 
--	if (pci_pcie_type(pdev) == PCI_EXP_TYPE_DOWNSTREAM ||
--	    pci_pcie_type(pdev) == PCI_EXP_TYPE_ROOT_PORT ||
--	    pdev->multifunction) {
--		pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_ACS);
--		if (!pos)
--			return false;
--
--		pci_read_config_word(pdev, pos + PCI_ACS_CTRL, &ctrl);
--		if ((ctrl & acs_flags) != acs_flags)
--			return false;
-+		return pci_acs_flags_enabled(pdev, acs_flags);
- 	}
- 
-+	/*
-+	 * PCIe 3.0, 6.12.1.3 specifies no ACS capabilties are applicable
-+	 * to single function devices with the exception of downstream ports.
-+	 */
- 	return true;
- }
- 
-
+> ---
+>  drivers/pci/pci.c   |   10 ++++++++++
+>  drivers/pci/probe.c |    1 +
+>  include/linux/pci.h |    1 +
+>  3 files changed, 12 insertions(+)
+>
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -1335,6 +1335,16 @@ int __weak pcibios_add_device (struct pc
+>  }
+>
+>  /**
+> + * pcibios_release_device - provide arch specific hooks when releasing device dev
+> + * @dev: the PCI device being released
+> + *
+> + * Permits the platform to provide architecture specific functionality when
+> + * devices are released. This is the default implementation. Architecture
+> + * implementations can override this.
+> + */
+> +void __weak pcibios_release_device(struct pci_dev *dev) {}
+> +
+> +/**
+>   * pcibios_disable_device - disable arch specific PCI resources for device dev
+>   * @dev: the PCI device to disable
+>   *
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1132,6 +1132,7 @@ static void pci_release_dev(struct devic
+>         pci_dev = to_pci_dev(dev);
+>         pci_release_capabilities(pci_dev);
+>         pci_release_of_node(pci_dev);
+> +       pcibios_release_device(pci_dev);
+>         kfree(pci_dev);
+>  }
+>
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -1643,6 +1643,7 @@ void pcibios_set_master(struct pci_dev *
+>  int pcibios_set_pcie_reset_state(struct pci_dev *dev,
+>                                  enum pcie_reset_state state);
+>  int pcibios_add_device(struct pci_dev *dev);
+> +void pcibios_release_device(struct pci_dev *dev);
+>
+>  #ifdef CONFIG_PCI_MMCONFIG
+>  void __init pci_mmcfg_early_init(void);
+>
