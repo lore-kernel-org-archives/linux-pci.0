@@ -1,51 +1,58 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 8bytes.org ([85.214.48.195]:35325 "EHLO mail.8bytes.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030221Ab3FTPWw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 20 Jun 2013 11:22:52 -0400
-Received: from localhost (localhost [127.0.0.1])
-	by mail.8bytes.org (Postfix) with SMTP id 8915912B0EE
-	for <linux-pci@vger.kernel.org>; Thu, 20 Jun 2013 17:22:50 +0200 (CEST)
-Date: Thu, 20 Jun 2013 17:22:48 +0200
-From: Joerg Roedel <joro@8bytes.org>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: iommu@lists.linux-foundation.org, dwmw2@infradead.org,
-	linux-pci@vger.kernel.org, ddutile@redhat.com,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] iommu: amd/intel: Remove multifunction assumption around
- grouping
-Message-ID: <20130620152248.GF3589@8bytes.org>
-References: <20130530183855.14612.15585.stgit@bling.home>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jay Agarwal <jagarwal@nvidia.com>
+To: <linux@arm.linux.org.uk>, <swarren@wwwdotorg.org>,
+	<thierry.reding@avionic-design.de>, <bhelgaas@google.com>,
+	<ldewangan@nvidia.com>, <olof@lixom.net>, <hdoyu@nvidia.com>,
+	<pgaikwad@nvidia.com>, <mturquette@linaro.org>,
+	<pdeschrijver@nvidia.com>, <linux-arm-kernel@lists.infradead.org>,
+	<linux-tegra@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>
+CC: <jtukkinen@nvidia.com>, <kthota@nvidia.com>, <jagarwal@nvidia.com>
+Subject: [PATCH V3 3/4] ARM: dts: tegra: Correct PCIe entry
+Date: Wed, 5 Jun 2013 00:27:31 +0530
+Message-ID: <1370372252-4332-3-git-send-email-jagarwal@nvidia.com>
+In-Reply-To: <1370372252-4332-1-git-send-email-jagarwal@nvidia.com>
+References: <1370372252-4332-1-git-send-email-jagarwal@nvidia.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130530183855.14612.15585.stgit@bling.home>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 30, 2013 at 12:39:18PM -0600, Alex Williamson wrote:
-> If a device is multifunction and does not have ACS enabled then we
-> assume that the entire package lacks ACS and use function 0 as the
-> base of the group.  The PCIe spec however states that components are
-> permitted to implement ACS on some, none, or all of their applicable
-> functions.  It's therefore conceivable that function 0 may be fully
-> independent and support ACS while other functions do not.  Instead
-> use the lowest function of the slot that does not have ACS enabled
-> as the base of the group.  This may be the current device, which is
-> intentional.  So long as we use a consistent algorithm, all the
-> non-ACS functions will be grouped together and ACS functions will
-> get separate groups.
-> 
-> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-> ---
->  drivers/iommu/amd_iommu.c   |   25 +++++++++++++++++++------
->  drivers/iommu/intel-iommu.c |   25 +++++++++++++++++++------
+- Add interrupt-names property
+- Correct downstream I/O size
 
-Didn't really fit into any of my existing branches. Applied it to
-x86/vt-d because it is probably not worth creating a new x86-specific
-branch just for this patch.
+Signed-off-by: Jay Agarwal <jagarwal@nvidia.com>
+---
+Patch is based on remotes/gitorious_thierryreding_linux/tegra/next and should be applied on top of this.
 
-Thanks,
+Changes in V3:
+- Avoided changes in cml clock as per review comment
 
-	Joerg
+ arch/arm/boot/dts/tegra30.dtsi |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
+diff --git a/arch/arm/boot/dts/tegra30.dtsi b/arch/arm/boot/dts/tegra30.dtsi
+index a242b2e..a301389 100644
+--- a/arch/arm/boot/dts/tegra30.dtsi
++++ b/arch/arm/boot/dts/tegra30.dtsi
+@@ -21,7 +21,7 @@
+ 		reg-names = "pads", "afi", "cs";
+ 		interrupts = <0 98 0x04   /* controller interrupt */
+ 		              0 99 0x04>; /* MSI interrupt */
+-
++		interrupt-names = "intr", "msi";
+ 		bus-range = <0x00 0xff>;
+ 		#address-cells = <3>;
+ 		#size-cells = <2>;
+@@ -29,7 +29,7 @@
+ 		ranges = <0x82000000 0 0x00000000 0x00000000 0 0x00001000   /* port 0 configuration space */
+ 			  0x82000000 0 0x00001000 0x00001000 0 0x00001000   /* port 1 configuration space */
+ 			  0x82000000 0 0x00004000 0x00004000 0 0x00001000   /* port 2 configuration space */
+-			  0x81000000 0 0          0x02000000 0 0x00010000   /* downstream I/O */
++			  0x81000000 0 0          0x02000000 0 0x00100000   /* downstream I/O */
+ 			  0x82000000 0 0x20000000 0x20000000 0 0x10000000   /* non-prefetchable memory */
+ 			  0xc2000000 0 0x30000000 0x30000000 0 0x10000000>; /* prefetchable memory */
+ 
+-- 
+1.7.0.4
 
