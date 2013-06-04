@@ -1,80 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate03.nvidia.com ([216.228.121.140]:8129 "EHLO
-	hqemgate03.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750773Ab3FDS45 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Jun 2013 14:56:57 -0400
-From: Jay Agarwal <jagarwal@nvidia.com>
-To: <linux@arm.linux.org.uk>, <swarren@wwwdotorg.org>,
-	<thierry.reding@avionic-design.de>, <bhelgaas@google.com>,
-	<ldewangan@nvidia.com>, <olof@lixom.net>, <hdoyu@nvidia.com>,
-	<pgaikwad@nvidia.com>, <mturquette@linaro.org>,
-	<pdeschrijver@nvidia.com>, <linux-arm-kernel@lists.infradead.org>,
-	<linux-tegra@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>
-CC: <jtukkinen@nvidia.com>, <kthota@nvidia.com>, <jagarwal@nvidia.com>
-Subject: [PATCH V3 1/4] ARM: tegra30: clocks: Fix pciex clock registration
-Date: Wed, 5 Jun 2013 00:27:29 +0530
-Message-ID: <1370372252-4332-1-git-send-email-jagarwal@nvidia.com>
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:59458 "EHLO
+	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753079Ab3FDW53 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Jun 2013 18:57:29 -0400
+Received: by mail-ie0-f174.google.com with SMTP id aq17so1842671iec.19
+        for <linux-pci@vger.kernel.org>; Tue, 04 Jun 2013 15:57:28 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <2947055.dGtK2eC6Fm@vostro.rjw.lan>
+References: <1369974092-11450-1-git-send-email-jiang.liu@huawei.com>
+	<1369974092-11450-2-git-send-email-jiang.liu@huawei.com>
+	<2049081.aBp0De0oje@vostro.rjw.lan>
+	<2947055.dGtK2eC6Fm@vostro.rjw.lan>
+Date: Tue, 4 Jun 2013 15:57:28 -0700
+Message-ID: <CAE9FiQW4UynXesgv58YajV73VZHQLzFiD3M6Dq=7bXmCXDbCiQ@mail.gmail.com>
+Subject: Re: [PATCH 2/3] PCI, ACPI: Don't glue ACPI dev with pci VFs
+From: Yinghai Lu <yinghai@kernel.org>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Jiang Liu <liuj97@gmail.com>, Bjorn Helgaas <bhelgaas@google.com>,
+	Xudong Hao <xudong.hao@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Jiang Liu <jiang.liu@huawei.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Registering pciex as peripheral clock instead of fixed clock
-as tegra_perih_reset_assert(deassert) api of this clock api
-gives warning and ultimately does not succeed to assert(deassert).
+On Tue, Jun 4, 2013 at 3:49 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+> On Wednesday, June 05, 2013 12:44:27 AM Rafael J. Wysocki wrote:
+>> On Friday, May 31, 2013 12:21:30 PM Jiang Liu wrote:
+>> > From: Yinghai Lu <yinghai@kernel.org>
+>> >
+>> > When sriov is enabled, VF could just start after PF in pci tree.
+>> > like c1:00.0 will be PF, and c1:00.1 and after will be VF.
+>> >
+>> > acpi do have dev with same ADR. that will make them get glued
+>> > wrongly.
+>>
+>> How exactly are they glued in that case?
+>>
+>> > Skip that if it is virtfn.
+>>
+>> That should be a bit more specific as far as I can say.  I don't see why a VF
+>> would not have a valid ACPI device object corresponding to it.  Is there any
+>> particular reason?
+>
+> To be precise, I don't quite see why it is impossible or invalid for a VF to
+> have a corresponding ACPI device object.  It may not be the case on this
+> particular system, but why not in general?
 
-Signed-off-by: Jay Agarwal <jagarwal@nvidia.com>
----
-Patch is based on remotes/gitorious_thierryreding_linux/tegra/next and should be applied on top of this.
+at least for ioapic routing GSI, we should not mix VF to use other PF's
+setting.
 
-Changes in V3:
-- Avoid removing pciex duplicate clock as per review comment
-- Corrected tegra pcie driver name for duplicate clocks
-
- drivers/clk/tegra/clk-tegra30.c |   15 ++++++++-------
- 1 files changed, 8 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/clk/tegra/clk-tegra30.c b/drivers/clk/tegra/clk-tegra30.c
-index c6921f5..edb2b9b 100644
---- a/drivers/clk/tegra/clk-tegra30.c
-+++ b/drivers/clk/tegra/clk-tegra30.c
-@@ -1598,6 +1598,12 @@ static void __init tegra30_periph_clk_init(void)
- 	clk_register_clkdev(clk, "afi", "tegra-pcie");
- 	clks[afi] = clk;
- 
-+	/* pciex */
-+	clk = tegra_clk_register_periph_gate("pciex", "pll_e", 0, clk_base, 0,
-+				    74, &periph_u_regs, periph_clk_enb_refcnt);
-+	clk_register_clkdev(clk, "pciex", "tegra-pcie");
-+	clks[pciex] = clk;
-+
- 	/* kfuse */
- 	clk = tegra_clk_register_periph_gate("kfuse", "clk_m",
- 				    TEGRA_PERIPH_ON_APB,
-@@ -1716,11 +1722,6 @@ static void __init tegra30_fixed_clk_init(void)
- 				1, 0, &cml_lock);
- 	clk_register_clkdev(clk, "cml1", NULL);
- 	clks[cml1] = clk;
--
--	/* pciex */
--	clk = clk_register_fixed_rate(NULL, "pciex", "pll_e", 0, 100000000);
--	clk_register_clkdev(clk, "pciex", NULL);
--	clks[pciex] = clk;
- }
- 
- static void __init tegra30_osc_clk_init(void)
-@@ -1942,8 +1943,8 @@ static struct tegra_clk_duplicate tegra_clk_duplicates[] = {
- 	TEGRA_CLK_DUPLICATE(bsea, "tegra-aes", "bsea"),
- 	TEGRA_CLK_DUPLICATE(bsea, "nvavp", "bsea"),
- 	TEGRA_CLK_DUPLICATE(cml1, "tegra_sata_cml", NULL),
--	TEGRA_CLK_DUPLICATE(cml0, "tegra_pcie", "cml"),
--	TEGRA_CLK_DUPLICATE(pciex, "tegra_pcie", "pciex"),
-+	TEGRA_CLK_DUPLICATE(cml0, "tegra-pcie", "cml"),
-+	TEGRA_CLK_DUPLICATE(pciex, "tegra-pcie", "pciex"),
- 	TEGRA_CLK_DUPLICATE(vcp, "nvavp", "vcp"),
- 	TEGRA_CLK_DUPLICATE(clk_max, NULL, NULL), /* MUST be the last entry */
- };
--- 
-1.7.0.4
-
+Yinghai
