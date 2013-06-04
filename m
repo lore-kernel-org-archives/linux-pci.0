@@ -1,77 +1,38 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 10 Jun 2013 21:50:29 +0200
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Stephen Warren <swarren@wwwdotorg.org>
-Cc: Jay Agarwal <jagarwal@nvidia.com>, linux@arm.linux.org.uk,
-	bhelgaas@google.com, ldewangan@nvidia.com, olof@lixom.net,
-	hdoyu@nvidia.com, pgaikwad@nvidia.com, mturquette@linaro.org,
-	pdeschrijver@nvidia.com, linux-arm-kernel@lists.infradead.org,
-	linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, jtukkinen@nvidia.com, kthota@nvidia.com
-Subject: Re: [PATCH V3 2/4] ARM: tegra: pcie: Add tegra3 support
-Message-ID: <20130610195028.GB25859@mithrandir>
-References: <1370372252-4332-1-git-send-email-jagarwal@nvidia.com>
- <1370372252-4332-2-git-send-email-jagarwal@nvidia.com>
- <51AE3D3B.6080102@wwwdotorg.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f171.google.com ([209.85.223.171]:41517 "EHLO
+	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750919Ab3FDWIK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Jun 2013 18:08:10 -0400
+Received: by mail-ie0-f171.google.com with SMTP id s9so1775915iec.30
+        for <linux-pci@vger.kernel.org>; Tue, 04 Jun 2013 15:08:09 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="H1spWtNR+x+ondvy"
-In-Reply-To: <51AE3D3B.6080102@wwwdotorg.org>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <CAErSpo6GBw4C3mXRrd_f=6GFnEwhH7tHcAkp+ib=HMwVPpc0=w@mail.gmail.com>
+References: <1369974092-11450-1-git-send-email-jiang.liu@huawei.com>
+	<1369974092-11450-2-git-send-email-jiang.liu@huawei.com>
+	<CAErSpo70u7oM07jcGA+E1MUHA4OWiJ1gQ8SuS7YCRuvGMxeaqA@mail.gmail.com>
+	<CAErSpo5YbhPtB9OtjkUrMo8OKkjFXzOxeR3Jc4dQU8eC9D45XQ@mail.gmail.com>
+	<CAE9FiQW=WM5v+VExCS0Od6gow7j4tTEOunECwqHP_hZduOETJw@mail.gmail.com>
+	<CAErSpo6GBw4C3mXRrd_f=6GFnEwhH7tHcAkp+ib=HMwVPpc0=w@mail.gmail.com>
+Date: Tue, 4 Jun 2013 15:08:09 -0700
+Message-ID: <CAE9FiQWBxm1bz2=gR_rho642qJVoWrxCSkc1YW-banwPBWXirg@mail.gmail.com>
+Subject: Re: [PATCH 2/3] PCI, ACPI: Don't glue ACPI dev with pci VFs
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jiang Liu <liuj97@gmail.com>, "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Xudong Hao <xudong.hao@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Jiang Liu <jiang.liu@huawei.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Tue, Jun 4, 2013 at 3:00 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Tue, Jun 4, 2013 at 3:57 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> Well, I read that in the changelog, but that doesn't tell me what bad
+> things happen as a result.  Can you elaborate a little bit?  Does it
+> mean PM doesn't work, hotplug doesn't work, drivers can't bind to the
+> VFs correctly, the magic smoke comes out of the PF, or what?
 
---H1spWtNR+x+ondvy
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-On Tue, Jun 04, 2013 at 01:17:15PM -0600, Stephen Warren wrote:
-> On 06/04/2013 12:57 PM, Jay Agarwal wrote:
-[...]
-> >  struct tegra_pcie_port {
-> > @@ -384,7 +408,7 @@ static int tegra_pcie_read_conf(struct pci_bus *bus=
-, unsigned int devfn,
-> >  		struct tegra_pcie_port *port;
-> > =20
-> >  		list_for_each_entry(port, &pcie->ports, list) {
-> > -			if (port->index + 1 =3D=3D slot) {
-> > +			if (port->index =3D=3D slot) {
->=20
-> This and the equivalent change in tegra_pcie_write_conf() seem like a
-> bug-fix unrelated to the addition of Tegra30 support. Hence, they should
-> be a separate patch.
-
-What exactly is this change supposed to fix? The description doesn't
-provide any details about why this is required. Furthermore this was
-done on purpose to model the Tegra PCIe controller according to what
-typical Linux systems provide.
-
-Device 0:00.0 is usually the root complex, and device 0:01.0, 0:02.0
-etc are the root ports. The change proposed above makes 0:00.0 the
-first root port, therefore breaking what systems usually expect.
-
-Thierry
-
---H1spWtNR+x+ondvy
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.20 (GNU/Linux)
-
-iQIcBAEBAgAGBQJRti4EAAoJEN0jrNd/PrOheKEP/2YMzqZVmy1qIqpFkajuHvxE
-pWNb91OOFiWW73fBrRtu5krgL9u8qG+K6qta55DqgwZCCldanEq0vESaQ/U1thVk
-vOtuzbV7jY1afQmdbeM/Cj5/+BdZcZ4Zrpj/pD5EDz9cBaW/OW5AHitUwMQj6r7x
-kHHGlT39Fg7TlU/b+CFOGqSQF0MMURPa2M0nRLvJ+pryahAg1NHrJeMvXSVwONX7
-QtSEljXjp2/iOMjb+INJoQjep7lJnBSrpk82RkNhzl4oCY0iaZXUNwoYjKRd0rwH
-fdVoJFaWtWAnfRdMcRl3Lkt06O1rIC4qOi5M17LXYrp1Y5RIskGb6RbmvxbPUTg5
-QFPjh4wltNyva6swErkMWYXmUw/GcSnjUktJLR6SYEH7tGAzxArkJWdp3c+T7vsE
-QhFgphWA160/6anrLSrSQqrFIE/JLxxd760kf6QF4DMXTeuulwXgda++y3KPJkVm
-3arbv0ZknrRqNLrhpKG1EdUoPpWMGUUFkxwa7UrOtV6QQeNJCkLHvFdrINRKbJtk
-eJY4qHnijlTbI8Xs7Hlt3SQAPkcPw4MHDh0a2+qcGas6MdO1wQzXvTtDVFNoXJUt
-poos8renfcJ1hpwmmLWHnl1ehO5yD/lexhrqMErdxP0BDThUzPiXxx7Dl9npvad2
-IZz8+5uClV99qR/Z92Fq
-=A5ws
------END PGP SIGNATURE-----
-
---H1spWtNR+x+ondvy--
+no, I did not notice anything unusual except the binding message.
+as my platform have those PM disabled.
