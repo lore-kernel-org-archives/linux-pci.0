@@ -1,83 +1,138 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:26573 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750887Ab3FJTlq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 10 Jun 2013 15:41:46 -0400
-Date: Mon, 10 Jun 2013 21:42:59 +0200
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v3 10/27] genirq: Split __irq_reserve_irqs from
- irq_alloc_descs
-Message-ID: <20130610194256.GA17507@dhcp-26-207.brq.redhat.com>
-References: <1370644273-10495-1-git-send-email-yinghai@kernel.org>
- <1370644273-10495-11-git-send-email-yinghai@kernel.org>
- <20130610135154.GA11905@dhcp-26-207.brq.redhat.com>
- <CAE9FiQUvmyUt048veb_kFr-9Ap2cza7ti28x-cm9AcoU8edhbw@mail.gmail.com>
+Received: from mail-oa0-f48.google.com ([209.85.219.48]:35363 "EHLO
+	mail-oa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750764Ab3FDScS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Jun 2013 14:32:18 -0400
+Received: by mail-oa0-f48.google.com with SMTP id i4so426967oah.35
+        for <linux-pci@vger.kernel.org>; Tue, 04 Jun 2013 11:32:18 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAE9FiQUvmyUt048veb_kFr-9Ap2cza7ti28x-cm9AcoU8edhbw@mail.gmail.com>
+In-Reply-To: <20130604083644.GD20448@gchen.bj.intel.com>
+References: <1369924769-17183-1-git-send-email-betty.dall@hp.com>
+ <1369924769-17183-4-git-send-email-betty.dall@hp.com> <20130604083644.GD20448@gchen.bj.intel.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 4 Jun 2013 12:31:58 -0600
+Message-ID: <CAErSpo6nsstQJZwZ_Rtaik_a0OvL840h5E4T99bFtYDMg3geMQ@mail.gmail.com>
+Subject: Re: [PATCH v2 3/3] PCI/AER: Provide reset_link for firmware first
+ root port
+To: Betty Dall <betty.dall@hp.com>, "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Huang Ying <ying.huang@intel.com>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 10, 2013 at 12:16:16PM -0700, Yinghai Lu wrote:
-> On Mon, Jun 10, 2013 at 6:51 AM, Alexander Gordeev <agordeev@redhat.com> wrote:
-> >> +/**
-> >> + * irq_alloc_descs - allocate and initialize a range of irq descriptors
-> >> + * @irq:     Allocate for specific irq number if irq >= 0
-> >> + * @from:    Start the search from this irq number
-> >> + * @cnt:     Number of consecutive irqs to allocate.
-> >> + * @node:    Preferred node on which the irq descriptor should be allocated
-> >> + * @owner:   Owning module (can be NULL)
-> >> + *
-> >> + * Returns the first irq number or error code
-> >> + */
-> >> +int __ref
-> >> +__irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
-> >> +               struct module *owner)
-> >> +{
-> >> +     int start;
-> >> +
-> >> +     start = __irq_reserve_irqs(irq, from, cnt);
-> >> +
-> >> +     if (start < 0)
-> >> +             return start;
-> >> +
-> >> +     return alloc_descs(start, cnt, node, owner);
-> >
-> > I think alloc_descs() fail path is needed before return.
-> 
-> __irq_reserve_irqs already return -EEXIST etc,
-> 
-> old kernel is like:
-> 
-> >> @@ -380,12 +377,36 @@ __irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
-> 
->        bitmap_set(allocated_irqs, start, cnt);
->        mutex_unlock(&sparse_irq_lock);
->      return alloc_descs(start, cnt, node, owner);
-> 
->  err:
->       mutex_unlock(&sparse_irq_lock);
->       return ret;
-> 
-> so i don't change the fail path handling.
+On Tue, Jun 4, 2013 at 2:36 AM, Chen Gong <gong.chen@linux.intel.com> wrote:
+> On Thu, May 30, 2013 at 08:39:29AM -0600, Betty Dall wrote:
+>> Date: Thu, 30 May 2013 08:39:29 -0600
+>> From: Betty Dall <betty.dall@hp.com>
+>> To: rjw@sisk.pl, bhelgaas@google.com
+>> Cc: ying.huang@intel.com, linux-acpi@vger.kernel.org,
+>>  linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, Betty Dall
+>>  <betty.dall@hp.com>
+>> Subject: [PATCH v2 3/3] PCI/AER: Provide reset_link for firmware first root
+>>  port
+>> X-Mailer: git-send-email 1.7.7.6
+>>
+>> The firmware first path does not install the aerdrv root port
+>> service driver, so the firmware first root port does not have
+>> a reset_link callback. When a firmware first root port does not have
+>> a reset_link callback, use a new default reset_link similar to what
+>> we already do for the default_downstream_reset_link(). The firmware
+>> first default reset_link brings the root port out of SBR if firmware
+>> left it in SBR.
+>>
+>> Changes since v1:
+>> Removed incorrect setting of p2p_ctrl after the read.
+>>
+>> Signed-off-by: Betty Dall <betty.dall@hp.com>
+>> ---
+>>
+>>  drivers/pci/pcie/aer/aerdrv_core.c |   36 ++++++++++++++++++++++++++++++++++++
+>>  1 files changed, 36 insertions(+), 0 deletions(-)
+>>
+>>
+>> diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
+>> index 8ec8b4f..72f76cd 100644
+>> --- a/drivers/pci/pcie/aer/aerdrv_core.c
+>> +++ b/drivers/pci/pcie/aer/aerdrv_core.c
+>> @@ -413,6 +413,39 @@ static pci_ers_result_t default_downstream_reset_link(struct pci_dev *dev)
+>>       return PCI_ERS_RESULT_RECOVERED;
+>>  }
+>>
+>> +/**
+>> + * default_ff_root_port_reset_link - default reset function for firmware
+>> + *           first Root Port
+>> + * @dev: pointer to root port's pci_dev data structure
+>> + *
+>> + * Invoked when performing link reset at Root Port w/ no aer driver.
+>> + * This happens through the firmware first path. Firmware may leave
+>> + * the Root Port in SBR and it is the OS responsiblity to bring it out
+>> + * of SBR.
+>> + */
+>> +static pci_ers_result_t default_ff_root_port_reset_link(struct pci_dev *dev)
+>> +{
+>> +     u16 p2p_ctrl;
+>> +
+>> +     /* Read Secondary Bus Reset */
+>> +     pci_read_config_word(dev, PCI_BRIDGE_CONTROL, &p2p_ctrl);
+>> +
+>> +     /* De-assert Secondary Bus Reset, if it is set */
+>> +     if (p2p_ctrl & PCI_BRIDGE_CTL_BUS_RESET) {
+>> +             p2p_ctrl &= ~PCI_BRIDGE_CTL_BUS_RESET;
+>> +             pci_write_config_word(dev, PCI_BRIDGE_CONTROL, p2p_ctrl);
+>> +
+>> +             /*
+>> +              * System software must wait for at least 100ms from the end
+>> +              * of a reset of one or more device before it is permitted
+>> +              * to issue Configuration Requests to those devices.
+>> +              */
+>> +             msleep(200);
+>> +             dev_dbg(&dev->dev, "Root Port link has been reset\n");
+>> +     }
+>> +     return PCI_ERS_RESULT_RECOVERED;
+>> +}
+>
+> I don't think this function is OK.
+> 1) You don't really reset the 2nd Bus but just checking its status.
+> I think you should have following steps to reset 2nd Bus:
+>
+> a. Assert 2nd Bus Reset
+> b. wait for some time until this message has been broadcasted well
+> c. De-assert 2nd Bus Reset
+> d. wait for Trst time
+>
+> IOW, since we have aer_do_secondary_bus_reset to perform secondary bus
+> reset, why you repeat it again?
+>
+> 2) msleep(200) is too long for kernel. You'd better yield the CPU when
+> sleep.
+>
+>> +
+>>  static int find_aer_service_iter(struct device *device, void *data)
+>>  {
+>>       struct pcie_port_service_driver *service_driver, **drv;
+>> @@ -460,6 +493,9 @@ static pci_ers_result_t reset_link(struct pci_dev *dev)
+>>               status = driver->reset_link(udev);
+>>       } else if (pci_pcie_type(udev) == PCI_EXP_TYPE_DOWNSTREAM) {
+>>               status = default_downstream_reset_link(udev);
+>> +     } else if (pci_pcie_type(udev) == PCI_EXP_TYPE_ROOT_PORT &&
+>> +             pcie_aer_get_firmware_first(udev)) {
+>> +             status = default_ff_root_port_reset_link(udev);
 
-I rather meant the bits should be unset in case alloc_descs() failed.
-But I failed to notice alloc_descs() does it. Therefore..
+Can we just handle Root Ports the same as Downstream Ports, e.g.,
 
-Reviewed-by: Alexander Gordeev <agordeev@redhat.com>
+    if (pci_pcie_type(udev) == PCI_EXP_TYPE_DOWNSTREAM ||
+        pci_pcie_type(udev) == PCI_EXP_TYPE_ROOT_PORT)
+            status = default_downstream_reset_link(udev);
 
-> Thanks
-> 
-> Yinghai
-
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+>>       } else {
+>>               dev_printk(KERN_DEBUG, &dev->dev,
+>>                       "no link-reset support at upstream device %s\n",
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> Please read the FAQ at  http://www.tux.org/lkml/
