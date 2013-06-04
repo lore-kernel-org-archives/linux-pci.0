@@ -1,143 +1,159 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:42328 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751682Ab3FEGEo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Jun 2013 02:04:44 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Yinghai Lu <yinghai@kernel.org>, <linux-pci@vger.kernel.org>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	Fenghua Yu <fenghua.yu@intel.com>,
-	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>, John Keller <jpk@sgi.com>,
-	Jay Lan <jlan@engr.sgi.com>, Jack Steiner <steiner@sgi.com>,
-	Mark Maule <maule@sgi.com>
-Subject: [PATCH -v4 1/8] PCI/IA64: SN: remove sn_pci_window_fixup()
-Date: Wed, 5 Jun 2013 14:01:50 +0800
-Message-ID: <1370412117-12860-2-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1370412117-12860-1-git-send-email-wangyijing@huawei.com>
-References: <1370412117-12860-1-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Tue, 4 Jun 2013 04:36:44 -0400
+From: Chen Gong <gong.chen@linux.intel.com>
+To: Betty Dall <betty.dall@hp.com>
+Cc: rjw@sisk.pl, bhelgaas@google.com, ying.huang@intel.com,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 3/3] PCI/AER: Provide reset_link for firmware first
+ root port
+Message-ID: <20130604083644.GD20448@gchen.bj.intel.com>
+References: <1369924769-17183-1-git-send-email-betty.dall@hp.com>
+ <1369924769-17183-4-git-send-email-betty.dall@hp.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="OaZoDhBhXzo6bW1J"
+In-Reply-To: <1369924769-17183-4-git-send-email-betty.dall@hp.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently, pcibios_bus_to_resource() and pcibios_resource_to_bus()
-functions use pci_host_bridge_window in pci_host_bridge to translate
-bus side to/from cpu side addresses. Pci_window in pci_controller
-under IA64 is no used again, so it's no need to use sn_pci_window_fixup()
-to setup pci_window again, remove it.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Cc: John Keller <jpk@sgi.com>
-Cc: Jay Lan <jlan@engr.sgi.com>
-Cc: Jack Steiner <steiner@sgi.com>
-Cc: Mark Maule <maule@sgi.com>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Fenghua Yu <fenghua.yu@intel.com>
-Cc: linux-ia64@vger.kernel.org
----
- arch/ia64/sn/kernel/io_init.c |   55 +----------------------------------------
- 1 files changed, 1 insertions(+), 54 deletions(-)
+--OaZoDhBhXzo6bW1J
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/arch/ia64/sn/kernel/io_init.c b/arch/ia64/sn/kernel/io_init.c
-index 238e2c5..b8ff9ea 100644
---- a/arch/ia64/sn/kernel/io_init.c
-+++ b/arch/ia64/sn/kernel/io_init.c
-@@ -149,48 +149,6 @@ sn_legacy_pci_window_fixup(struct pci_controller *controller,
- }
- 
- /*
-- * sn_pci_window_fixup() - Create a pci_window for each device resource.
-- *			   It will setup pci_windows for use by
-- *			   pcibios_bus_to_resource(), pcibios_resource_to_bus(),
-- *			   etc.
-- */
--static void
--sn_pci_window_fixup(struct pci_dev *dev, unsigned int count,
--		    s64 * pci_addrs)
--{
--	struct pci_controller *controller = PCI_CONTROLLER(dev->bus);
--	unsigned int i;
--	unsigned int idx;
--	unsigned int new_count;
--	struct pci_window *new_window;
--
--	if (count == 0)
--		return;
--	idx = controller->windows;
--	new_count = controller->windows + count;
--	new_window = kcalloc(new_count, sizeof(struct pci_window), GFP_KERNEL);
--	BUG_ON(new_window == NULL);
--	if (controller->window) {
--		memcpy(new_window, controller->window,
--		       sizeof(struct pci_window) * controller->windows);
--		kfree(controller->window);
--	}
--
--	/* Setup a pci_window for each device resource. */
--	for (i = 0; i <= PCI_ROM_RESOURCE; i++) {
--		if (pci_addrs[i] == -1)
--			continue;
--
--		new_window[idx].offset = dev->resource[i].start - pci_addrs[i];
--		new_window[idx].resource = dev->resource[i];
--		idx++;
--	}
--
--	controller->windows = new_count;
--	controller->window = new_window;
--}
--
--/*
-  * sn_io_slot_fixup() -   We are not running with an ACPI capable PROM,
-  *			  and need to convert the pci_dev->resource
-  *			  'start' and 'end' addresses to mapped addresses,
-@@ -199,9 +157,7 @@ sn_pci_window_fixup(struct pci_dev *dev, unsigned int count,
- void
- sn_io_slot_fixup(struct pci_dev *dev)
- {
--	unsigned int count = 0;
- 	int idx;
--	s64 pci_addrs[PCI_ROM_RESOURCE + 1];
- 	unsigned long addr, end, size, start;
- 	struct pcidev_info *pcidev_info;
- 	struct sn_irq_info *sn_irq_info;
-@@ -229,7 +185,6 @@ sn_io_slot_fixup(struct pci_dev *dev)
- 	for (idx = 0; idx <= PCI_ROM_RESOURCE; idx++) {
- 
- 		if (!pcidev_info->pdi_pio_mapped_addr[idx]) {
--			pci_addrs[idx] = -1;
- 			continue;
- 		}
- 
-@@ -237,11 +192,8 @@ sn_io_slot_fixup(struct pci_dev *dev)
- 		end = dev->resource[idx].end;
- 		size = end - start;
- 		if (size == 0) {
--			pci_addrs[idx] = -1;
- 			continue;
- 		}
--		pci_addrs[idx] = start;
--		count++;
- 		addr = pcidev_info->pdi_pio_mapped_addr[idx];
- 		addr = ((addr << 4) >> 4) | __IA64_UNCACHED_OFFSET;
- 		dev->resource[idx].start = addr;
-@@ -276,12 +228,7 @@ sn_io_slot_fixup(struct pci_dev *dev)
- 						 IORESOURCE_ROM_BIOS_COPY;
- 		}
- 	}
--	/* Create a pci_window in the pci_controller struct for
--	 * each device resource.
--	 */
--	if (count > 0)
--		sn_pci_window_fixup(dev, count, pci_addrs);
--
-+
- 	sn_pci_fixup_slot(dev, pcidev_info, sn_irq_info);
- }
- 
--- 
-1.7.1
+On Thu, May 30, 2013 at 08:39:29AM -0600, Betty Dall wrote:
+> Date:	Thu, 30 May 2013 08:39:29 -0600
+> From: Betty Dall <betty.dall@hp.com>
+> To: rjw@sisk.pl, bhelgaas@google.com
+> Cc: ying.huang@intel.com, linux-acpi@vger.kernel.org,
+>  linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, Betty Dall
+>  <betty.dall@hp.com>
+> Subject: [PATCH v2 3/3] PCI/AER: Provide reset_link for firmware first ro=
+ot
+>  port
+> X-Mailer: git-send-email 1.7.7.6
+>=20
+> The firmware first path does not install the aerdrv root port
+> service driver, so the firmware first root port does not have
+> a reset_link callback. When a firmware first root port does not have
+> a reset_link callback, use a new default reset_link similar to what
+> we already do for the default_downstream_reset_link(). The firmware
+> first default reset_link brings the root port out of SBR if firmware
+> left it in SBR.
+>=20
+> Changes since v1:
+> Removed incorrect setting of p2p_ctrl after the read.
+>=20
+> Signed-off-by: Betty Dall <betty.dall@hp.com>
+> ---
+>=20
+>  drivers/pci/pcie/aer/aerdrv_core.c |   36 ++++++++++++++++++++++++++++++=
+++++++
+>  1 files changed, 36 insertions(+), 0 deletions(-)
+>=20
+>=20
+> diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/ae=
+rdrv_core.c
+> index 8ec8b4f..72f76cd 100644
+> --- a/drivers/pci/pcie/aer/aerdrv_core.c
+> +++ b/drivers/pci/pcie/aer/aerdrv_core.c
+> @@ -413,6 +413,39 @@ static pci_ers_result_t default_downstream_reset_lin=
+k(struct pci_dev *dev)
+>  	return PCI_ERS_RESULT_RECOVERED;
+>  }
+> =20
+> +/**
+> + * default_ff_root_port_reset_link - default reset function for firmware
+> + *		first Root Port
+> + * @dev: pointer to root port's pci_dev data structure
+> + *
+> + * Invoked when performing link reset at Root Port w/ no aer driver.
+> + * This happens through the firmware first path. Firmware may leave
+> + * the Root Port in SBR and it is the OS responsiblity to bring it out
+> + * of SBR.
+> + */
+> +static pci_ers_result_t default_ff_root_port_reset_link(struct pci_dev *=
+dev)
+> +{
+> +	u16 p2p_ctrl;
+> +
+> +	/* Read Secondary Bus Reset */
+> +	pci_read_config_word(dev, PCI_BRIDGE_CONTROL, &p2p_ctrl);
+> +
+> +	/* De-assert Secondary Bus Reset, if it is set */
+> +	if (p2p_ctrl & PCI_BRIDGE_CTL_BUS_RESET) {
+> +		p2p_ctrl &=3D ~PCI_BRIDGE_CTL_BUS_RESET;
+> +		pci_write_config_word(dev, PCI_BRIDGE_CONTROL, p2p_ctrl);
+> +
+> +		/*
+> +		 * System software must wait for at least 100ms from the end
+> +		 * of a reset of one or more device before it is permitted
+> +		 * to issue Configuration Requests to those devices.
+> +		 */
+> +		msleep(200);
+> +		dev_dbg(&dev->dev, "Root Port link has been reset\n");
+> +	}
+> +	return PCI_ERS_RESULT_RECOVERED;
+> +}
 
+I don't think this function is OK.
+1) You don't really reset the 2nd Bus but just checking its status.
+I think you should have following steps to reset 2nd Bus:
 
+a. Assert 2nd Bus Reset
+b. wait for some time until this message has been broadcasted well
+c. De-assert 2nd Bus Reset
+d. wait for Trst time
+
+IOW, since we have aer_do_secondary_bus_reset to perform secondary bus
+reset, why you repeat it again?
+
+2) msleep(200) is too long for kernel. You'd better yield the CPU when
+sleep.
+
+> +
+>  static int find_aer_service_iter(struct device *device, void *data)
+>  {
+>  	struct pcie_port_service_driver *service_driver, **drv;
+> @@ -460,6 +493,9 @@ static pci_ers_result_t reset_link(struct pci_dev *de=
+v)
+>  		status =3D driver->reset_link(udev);
+>  	} else if (pci_pcie_type(udev) =3D=3D PCI_EXP_TYPE_DOWNSTREAM) {
+>  		status =3D default_downstream_reset_link(udev);
+> +	} else if (pci_pcie_type(udev) =3D=3D PCI_EXP_TYPE_ROOT_PORT &&
+> +		pcie_aer_get_firmware_first(udev)) {
+> +		status =3D default_ff_root_port_reset_link(udev);
+>  	} else {
+>  		dev_printk(KERN_DEBUG, &dev->dev,
+>  			"no link-reset support at upstream device %s\n",
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+
+--OaZoDhBhXzo6bW1J
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQIcBAEBAgAGBQJRraccAAoJEI01n1+kOSLHRTkP/0jhUh5xVIuY3/kD1aOlyxqe
+eHiMbAD+w4Dzm/Oq17znVp2SWrllri6A/1qxoV5sqCXYHxScfDAg5VwqzzR4WNZ5
+Gtsu64jFkvA1B4qw5K6hpPqNeeTCZfgMM2ahadAhTfMAFgnwD6D6UDOpcbWHvqi6
+qZcFNGQAfAP0j/7iSOYXD9LfqXl20hMkPgwXRvw96IKfnVpmmi6DOIS/TcA8uTgn
+e7lD6TfaMZsa4fWQrruLZ9hBrDRZFbXEy6WvIJdOJ9I//eMN/1j79yxYtslObZSi
+Al26EIMeOEF6MR5iMIc9+BjnYbXF/iZTPxrQ1mNyoqg2H872YdJ6J7Ca+WaWb3uF
++9gfR/Ai/Llt/j1BASgvFMHDFdm2SyXFMm0mBC97bVoIU0AIg/jgf8tD3Lm+fTs/
+U5V67MlCuQMr+S8aOtOVaSmTLnP5+Jux2xP2B6i5ECYRAnxF0mUivjFiLQvivPbn
+d1wRnS/kdGoIo2WREbuD6IamSj0z7DHIqRJa/9XDzz5mkJYuVYsjPDMkJcUo+8eK
+eu+PqTozJBJ+ZMBLJBfmKfozpw34Hu1A/go5FOD6+hYGaGkoHtQztE/bXbigAiRK
+A6og0C2yI9znnipKb/n8M5/GDbFgEKFBXPujvL6BM/b/tUg3GmV4uI5tEn+PL9y7
+1kEQWJ2rewiP9JtEWy3X
+=GpEw
+-----END PGP SIGNATURE-----
+
+--OaZoDhBhXzo6bW1J--
