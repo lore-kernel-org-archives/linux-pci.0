@@ -1,64 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:56974 "EHLO hydra.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753524Ab3FBVpm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 2 Jun 2013 17:45:42 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Alan Stern <stern@rowland.harvard.edu>,
-	Linux PM list <linux-pm@vger.kernel.org>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Kevin Hilman <khilman@linaro.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Ulf Hansson <ulf.hansson@linaro.org>
-Subject: [PATCH 0/2] PM / Runtime: Rework the "runtime idle" helper routine (was: Re: [PATCH RFC] PM / Runtime: Rework the "runtime idle" helper routine)
-Date: Sun, 02 Jun 2013 23:50:46 +0200
-Message-ID: <2033252.LiVeuYIhnT@vostro.rjw.lan>
-In-Reply-To: <Pine.LNX.4.44L0.1305301247370.1137-100000@iolanthe.rowland.org>
-References: <Pine.LNX.4.44L0.1305301247370.1137-100000@iolanthe.rowland.org>
+Received: from v094114.home.net.pl ([79.96.170.134]:58739 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754508Ab3FDWrR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Jun 2013 18:47:17 -0400
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Jiang Liu <liuj97@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Xudong Hao <xudong.hao@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
+	Jiang Liu <jiang.liu@huawei.com>
+Subject: Re: [PATCH 2/3] PCI, ACPI: Don't glue ACPI dev with pci VFs
+Date: Wed, 05 Jun 2013 00:49:38 +0200
+Message-ID: <2947055.dGtK2eC6Fm@vostro.rjw.lan>
+In-Reply-To: <2049081.aBp0De0oje@vostro.rjw.lan>
+References: <1369974092-11450-1-git-send-email-jiang.liu@huawei.com> <1369974092-11450-2-git-send-email-jiang.liu@huawei.com> <2049081.aBp0De0oje@vostro.rjw.lan>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, May 30, 2013 01:08:08 PM Alan Stern wrote:
-> On Thu, 30 May 2013, Rafael J. Wysocki wrote:
-> 
-> > > Since you're making this change, wouldn't it be a good idea to adopt
-> > > Mika's original suggestion and turn on the RPM_AUTO bit in rpmflags
-> > > when the use_autosuspend flag is set?
+On Wednesday, June 05, 2013 12:44:27 AM Rafael J. Wysocki wrote:
+> On Friday, May 31, 2013 12:21:30 PM Jiang Liu wrote:
+> > From: Yinghai Lu <yinghai@kernel.org>
 > > 
-> > I'm not actually sure.  It can be done, but I'd prefer to do that as a separate
-> > change in any case.
-> 
-> That makes sense.
-> 
-> > > What about cases where the runtime-idle callback does
-> > > rpm_schedule_suspend or rpm_request_suspend?  You'd have to make sure
-> > > that it returns -EBUSY in such cases.  Did you audit for this?
+> > When sriov is enabled, VF could just start after PF in pci tree.
+> > like c1:00.0 will be PF, and c1:00.1 and after will be VF.
 > > 
-> > As far as I could.
-> > 
-> > I'm not worried about the subsystems modified by this patch, because the
-> > functionality there won't change (except for PCI, that is).
+> > acpi do have dev with same ADR. that will make them get glued
+> > wrongly.
 > 
-> Right.  The subsystems that _aren't_ modified are the ones to worry 
-> about -- like the USB callback.  They are the ones where the behavior 
-> might change.
+> How exactly are they glued in that case?
+> 
+> > Skip that if it is virtfn.
+> 
+> That should be a bit more specific as far as I can say.  I don't see why a VF
+> would not have a valid ACPI device object corresponding to it.  Is there any
+> particular reason?
 
-OK, this time I think I've caught all of them. :-)
+To be precise, I don't quite see why it is impossible or invalid for a VF to
+have a corresponding ACPI device object.  It may not be the case on this
+particular system, but why not in general?
 
-I've retained the ACKs and Reviewed-by tags in [1/2], because it only makes
-more changes in addition to the previously ACKed ones.  The PCI changeset
-has been updated and [2/2] is the documentation update.
-
-Thanks,
 Rafael
 
 
+> > Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> > Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+> > ---
+> >  drivers/pci/pci-acpi.c | 4 ++++
+> >  1 file changed, 4 insertions(+)
+> > 
+> > diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+> > index e4b1fb2..720f3a2 100644
+> > --- a/drivers/pci/pci-acpi.c
+> > +++ b/drivers/pci/pci-acpi.c
+> > @@ -321,6 +321,10 @@ static int acpi_pci_find_device(struct device *dev, acpi_handle *handle)
+> >  	u64	addr;
+> >  
+> >  	pci_dev = to_pci_dev(dev);
+> > +	/* don't mix vf with real pci device */
+> > +	if (pci_dev->is_virtfn)
+> > +		return -ENODEV;
+> > +
+> >  	/* Please ref to ACPI spec for the syntax of _ADR */
+> >  	addr = (PCI_SLOT(pci_dev->devfn) << 16) | PCI_FUNC(pci_dev->devfn);
+> >  	*handle = acpi_get_child(DEVICE_ACPI_HANDLE(dev->parent), addr);
+> > 
+> 
 -- 
 I speak only for myself.
 Rafael J. Wysocki, Intel Open Source Technology Center.
