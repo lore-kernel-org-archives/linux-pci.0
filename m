@@ -1,321 +1,528 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout3.samsung.com ([203.254.224.33]:53340 "EHLO
-	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1422901Ab3FUDSb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Jun 2013 23:18:31 -0400
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Kukjin Kim' <kgene.kim@samsung.com>,
-	'Bjorn Helgaas' <bhelgaas@google.com>
-Cc: linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org,
-	devicetree-discuss@lists.ozlabs.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	'Grant Likely' <grant.likely@secretlab.ca>,
-	'Andrew Murray' <andrew.murray@arm.com>,
-	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
-	'Thierry Reding' <thierry.reding@avionic-design.de>,
-	'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	'Surendranath Gurivireddy Balla' <suren.reddy@samsung.com>,
-	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
-	'Thomas Abraham' <thomas.abraham@linaro.org>,
-	'Tomasz Figa' <t.figa@samsung.com>,
-	'Pratyush Anand' <pratyush.anand@st.com>,
-	'Mohit KUMAR' <Mohit.KUMAR@st.com>,
-	Jingoo Han <jg1.han@samsung.com>
-Subject: [PATCH V9 0/4] PCIe support for Samsung Exynos5440 SoC
-Date: Fri, 21 Jun 2013 12:18:27 +0900
-Message-id: <001f01ce6e2d$ff9bfe40$fed3fac0$@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+Received: from mail-pb0-f42.google.com ([209.85.160.42]:50356 "EHLO
+	mail-pb0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751026Ab3FDFOE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Jun 2013 01:14:04 -0400
+Message-ID: <51AD77AE.4050800@gmail.com>
+Date: Tue, 04 Jun 2013 13:14:22 +0800
+From: Aaron Lu <aaron.lwe@gmail.com>
+MIME-Version: 1.0
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+CC: Alan Stern <stern@rowland.harvard.edu>,
+	Linux PM list <linux-pm@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Kevin Hilman <khilman@linaro.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Ulf Hansson <ulf.hansson@linaro.org>, Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 1/2, v2] PM / Runtime: Rework the "runtime idle" helper
+ routine
+References: <Pine.LNX.4.44L0.1305301247370.1137-100000@iolanthe.rowland.org> <2033252.LiVeuYIhnT@vostro.rjw.lan> <29156715.ksdUTA6va9@vostro.rjw.lan>
+In-Reply-To: <29156715.ksdUTA6va9@vostro.rjw.lan>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+On 06/03/2013 05:52 AM, Rafael J. Wysocki wrote:
+> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> 
+> The "runtime idle" helper routine, rpm_idle(), currently ignores
+> return values from .runtime_idle() callbacks executed by it.
+> However, it turns out that many subsystems use
+> pm_generic_runtime_idle() which checks the return value of the
+> driver's callback and executes pm_runtime_suspend() for the device
+> unless that value is not 0.  If that logic is moved to rpm_idle()
+> instead, pm_generic_runtime_idle() can be dropped and its users
+> will not need any .runtime_idle() callbacks any more.
+> 
+> Moreover, the PCI, SCSI, and SATA subsystems' .runtime_idle()
+> routines, pci_pm_runtime_idle(), scsi_runtime_idle(), and
+> ata_port_runtime_idle(), respectively, as well as a few drivers'
+> ones may be simplified if rpm_idle() calls rpm_suspend() after 0 has
+> been returned by the .runtime_idle() callback executed by it.
 
-This series of patches introduces PCIe support for Samsung Exynos5440,
-and is based on the latest 'linux-next' tree (20130620).
-These patches was tested with Intel e1000e LAN card on Exynos5440.
+For ATA and SCSI part:
+Reviewed-by: Aaron Lu <aaron.lu@intel.com>
 
-This PATCH v9 follows:
- * PATCH v8, sent on June, 20th 2013
- * PATCH v7, sent on June, 20th 2013
- * PATCH v6, sent on June, 20th 2013
- * PATCH v5, sent on June, 13th 2013
- * PATCH v4, sent on June, 12th 2013
- * PATCH v3, sent on June, 6th 2013
- * PATCH v2, sent on March, 23rd 2013
- * PATCH v1, sent on March, 4th 2013
+Thanks,
+Aaron
 
-Changes between v8 and v9:
-  * Changed the file name from 'exynos-pcie.txt' to 'designware-pcie.txt'.
-  * Added 'snps,dw-pcie' string to compatible property.
-
-Changes between v7 and v8:
-  * Changed the file name from 'pci-exynos.c' to 'pci-designware.c',
-    and added a generic string for compatible property to exynos-pcie.txt
-  * Moved pci_add_resource_offset() for I/O space to the 'if' clause
-  * Added Arnd's Acked-by
-
-Changes between v6 and v7:
-  * Split ARM DT patch to two patches
-  * Fixed node naming
-  * Added Arnd's Acked-by
-
-Changes between v5 and v6:
-  * Replaced phys_addr_t with u64 for physical addresses of regions
-  * Removed unnecessary inbound functions
-  * Added handling of io_offset, mem_offset as Arnd Bergmann guided
-  * Fixed calculating 'io' resource
-  * Removed module_exit() in order not to allow module unload
-
-Changes between v4 and v5:
-  * Used gpio binding in DT
-  * Increased the size of MEM region to 512 MB including CFG and IO regions in DT
-  * Reduced the size of CFG region to 4096 byte in DT
-  * Used the size of MEM region instead of hard-coded in_mem_size
-  * Fixed exynos_pcie_prog_viewport_{mem/io}_{outbound/inbound} functions
-    to use both translated addresses and untranslated addresses
-  * Replaced pci_add_resource_offset() with pci_add_resource()
-  * Added values from the DT individually to io_base, mem_base
-
-Changes between v3 and v4:
-  * Added support for multi domains as reviewed by Jason Gunthorpe,
-    and Arnd Bergmann.
-  * Fixed both MEM space and I/O space in DT.
-  * Removed redundant physical addresses from struct pcie_port,
-    added devm_ioremap_resource() to make add_pcie_port() simpler.
-  * Added clock names and clock enable/disable.
-
-Changes between v2 and v3:
-  * Rebased on the top of 3.10-rc4
-  * Updated names of PCIe PHY registers
-
-Changes between v1 and v2:
-  * Moved Exynos PCIe driver from arch/arm to drivers/pci/host.
-  * Added DT properties of PCI DT standard.
-
-
-Here is the lspci -vv output.
-
-0000:00:00.0 PCI bridge: Samsung Electronics Co Ltd Device a549 (rev 01) (prog-if 00 [Normal decode])
-        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr+ Stepping- SERR+ FastB2B- DisINTx-
-        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-        Latency: 0, Cache Line Size: 64 bytes
-        Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
-        I/O behind bridge: 00001000-00001fff
-        Memory behind bridge: 40100000-401fffff
-        Prefetchable memory behind bridge: 40200000-402fffff
-        Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- <SERR- <PERR-
-        BridgeCtl: Parity+ SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
-                PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
-        Capabilities: [40] Power Management version 3
-                Flags: PMEClk- DSI- D1+ D2- AuxCurrent=375mA PME(D0+,D1+,D2-,D3hot+,D3cold-)
-                Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
-        Capabilities: [50] MSI: Enable- Count=1/1 Maskable- 64bit+
-                Address: 0000000000000000  Data: 0000
-        Capabilities: [70] Express (v2) Root Port (Slot-), MSI 00
-                DevCap: MaxPayload 512 bytes, PhantFunc 0, Latency L0s <64ns, L1 <1us
-                        ExtTag+ RBE+ FLReset-
-                DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
-                        RlxdOrd+ ExtTag+ PhantFunc- AuxPwr- NoSnoop-
-                        MaxPayload 128 bytes, MaxReadReq 512 bytes
-                DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr- TransPend-
-                LnkCap: Port #0, Speed 5GT/s, Width x4, ASPM L0s L1, Latency L0 <64ns, L1 <2us
-                        ClockPM- Surprise- LLActRep+ BwNot+
-                LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk-
-                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-                LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk- DLActive+ BWMgmt+ ABWMgmt-
-                RootCtl: ErrCorrectable- ErrNon-Fatal- ErrFatal- PMEIntEna- CRSVisible-
-                RootCap: CRSVisible-
-                RootSta: PME ReqID 0000, PMEStatus- PMEPending-
-                DevCap2: Completion Timeout: Range ABCD, TimeoutDis+ ARIFwd-
-                DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis- ARIFwd-
-                LnkCtl2: Target Link Speed: 5GT/s, EnterCompliance- SpeedDis-, Selectable De-emphasis: -6dB
-                         Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
-                         Compliance De-emphasis: -6dB
-                LnkSta2: Current De-emphasis Level: -3.5dB, EqualizationComplete-, EqualizationPhase1-
-                         EqualizationPhase2-, EqualizationPhase3-, LinkEqualizationRequest-
-        Capabilities: [100 v2] Advanced Error Reporting
-                UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-                UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-                UESvrt: DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
-                CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
-                CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
-                AERCap: First Error Pointer: 00, GenCap+ CGenEn- ChkCap+ ChkEn-
-        Capabilities: [148 v1] Virtual Channel
-                Caps:   LPEVC=0 RefClk=100ns PATEntryBits=1
-                Arb:    Fixed- WRR32- WRR64- WRR128-
-                Ctrl:   ArbSelect=Fixed
-                Status: InProgress-
-                VC0:    Caps:   PATOffset=00 MaxTimeSlots=1 RejSnoopTrans-
-                        Arb:    Fixed- WRR32- WRR64- WRR128- TWRR128- WRR256-
-                        Ctrl:   Enable+ ID=0 ArbSelect=Fixed TC/VC=ff
-                        Status: NegoPending- InProgress-
-        Kernel driver in use: pcieport
-
-0000:01:00.0 Ethernet controller: Intel Corporation 82574L Gigabit Network Connection
-        Subsystem: Intel Corporation Gigabit CT Desktop Adapter
-        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr+ Stepping- SERR+ FastB2B- DisINTx-
-        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-        Latency: 0, Cache Line Size: 64 bytes
-        Interrupt: pin A routed to IRQ 53
-        Region 0: Memory at 40180000 (32-bit, non-prefetchable) [size=128K]
-        Region 1: Memory at 40100000 (32-bit, non-prefetchable) [size=512K]
-        Region 2: I/O ports at 1000 [size=32]
-        Region 3: Memory at 401a0000 (32-bit, non-prefetchable) [size=16K]
-        [virtual] Expansion ROM at 40200000 [disabled] [size=256K]
-        Capabilities: [c8] Power Management version 2
-                Flags: PMEClk- DSI+ D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
-                Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=1 PME-
-        Capabilities: [d0] MSI: Enable- Count=1/1 Maskable- 64bit+
-                Address: 0000000000000000  Data: 0000
-        Capabilities: [e0] Express (v1) Endpoint, MSI 00
-                DevCap: MaxPayload 256 bytes, PhantFunc 0, Latency L0s <512ns, L1 <64us
-                        ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset-
-                DevCtl: Report errors: Correctable+ Non-Fatal+ Fatal+ Unsupported+
-                        RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+
-                        MaxPayload 128 bytes, MaxReadReq 512 bytes
-                DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr+ TransPend-
-                LnkCap: Port #4, Speed 2.5GT/s, Width x1, ASPM L0s L1, Latency L0 <128ns, L1 <64us
-                        ClockPM- Surprise- LLActRep- BwNot-
-                LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk-
-                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-                LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
-        Capabilities: [a0] MSI-X: Enable- Count=5 Masked-
-                Vector table: BAR=3 offset=00000000
-                PBA: BAR=3 offset=00002000
-        Capabilities: [100 v1] Advanced Error Reporting
-                UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-                UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-                UESvrt: DLP+ SDES- TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
-                CESta:  RxErr+ BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
-                CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
-                AERCap: First Error Pointer: 00, GenCap- CGenEn- ChkCap- ChkEn-
-        Capabilities: [140 v1] Device Serial Number 68-05-ca-ff-ff-11-5e-75
-        Kernel driver in use: e1000e
-
-0001:00:00.0 PCI bridge: Samsung Electronics Co Ltd Device a549 (rev 01) (prog-if 00 [Normal decode])
-        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr+ Stepping- SERR+ FastB2B- DisINTx-
-        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-        Latency: 0, Cache Line Size: 64 bytes
-        Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
-        I/O behind bridge: 00000000-00000fff
-        Memory behind bridge: 60100000-601fffff
-        Prefetchable memory behind bridge: 60200000-602fffff
-        Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- <SERR- <PERR-
-        BridgeCtl: Parity+ SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
-                PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
-        Capabilities: [40] Power Management version 3
-                Flags: PMEClk- DSI- D1+ D2- AuxCurrent=375mA PME(D0+,D1+,D2-,D3hot+,D3cold-)
-                Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
-        Capabilities: [50] MSI: Enable- Count=1/1 Maskable- 64bit+
-                Address: 0000000000000000  Data: 0000
-        Capabilities: [70] Express (v2) Root Port (Slot-), MSI 00
-                DevCap: MaxPayload 512 bytes, PhantFunc 0, Latency L0s <64ns, L1 <1us
-                        ExtTag+ RBE+ FLReset-
-                DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
-                        RlxdOrd+ ExtTag+ PhantFunc- AuxPwr- NoSnoop-
-                        MaxPayload 128 bytes, MaxReadReq 512 bytes
-                DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr- TransPend-
-                LnkCap: Port #0, Speed 5GT/s, Width x4, ASPM L0s L1, Latency L0 <64ns, L1 <2us
-                        ClockPM- Surprise- LLActRep+ BwNot+
-                LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk-
-                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-                LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk- DLActive+ BWMgmt+ ABWMgmt-
-                RootCtl: ErrCorrectable- ErrNon-Fatal- ErrFatal- PMEIntEna- CRSVisible-
-                RootCap: CRSVisible-
-                RootSta: PME ReqID 0000, PMEStatus- PMEPending-
-                DevCap2: Completion Timeout: Range ABCD, TimeoutDis+ ARIFwd-
-                DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis- ARIFwd-
-                LnkCtl2: Target Link Speed: 5GT/s, EnterCompliance- SpeedDis-, Selectable De-emphasis: -6dB
-                         Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
-                         Compliance De-emphasis: -6dB
-                LnkSta2: Current De-emphasis Level: -3.5dB, EqualizationComplete-, EqualizationPhase1-
-                         EqualizationPhase2-, EqualizationPhase3-, LinkEqualizationRequest-
-        Capabilities: [100 v2] Advanced Error Reporting
-                UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-                UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-                UESvrt: DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
-                CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
-                CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
-                AERCap: First Error Pointer: 00, GenCap+ CGenEn- ChkCap+ ChkEn-
-        Capabilities: [148 v1] Virtual Channel
-                Caps:   LPEVC=0 RefClk=100ns PATEntryBits=1
-                Arb:    Fixed- WRR32- WRR64- WRR128-
-                Ctrl:   ArbSelect=Fixed
-                Status: InProgress-
-                VC0:    Caps:   PATOffset=00 MaxTimeSlots=1 RejSnoopTrans-
-                        Arb:    Fixed- WRR32- WRR64- WRR128- TWRR128- WRR256-
-                        Ctrl:   Enable+ ID=0 ArbSelect=Fixed TC/VC=ff
-                        Status: NegoPending- InProgress-
-        Kernel driver in use: pcieport
-
-0001:01:00.0 Ethernet controller: Intel Corporation 82574L Gigabit Network Connection
-        Subsystem: Intel Corporation Gigabit CT Desktop Adapter
-        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr+ Stepping- SERR+ FastB2B- DisINTx-
-        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-        Latency: 0, Cache Line Size: 64 bytes
-        Interrupt: pin A routed to IRQ 56
-        Region 0: Memory at 60180000 (32-bit, non-prefetchable) [size=128K]
-        Region 1: Memory at 60100000 (32-bit, non-prefetchable) [size=512K]
-        Region 2: I/O ports at 10000 [size=32]
-        Region 3: Memory at 601a0000 (32-bit, non-prefetchable) [size=16K]
-        [virtual] Expansion ROM at 60200000 [disabled] [size=256K]
-        Capabilities: [c8] Power Management version 2
-                Flags: PMEClk- DSI+ D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
-                Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=1 PME-
-        Capabilities: [d0] MSI: Enable- Count=1/1 Maskable- 64bit+
-                Address: 0000000000000000  Data: 0000
-        Capabilities: [e0] Express (v1) Endpoint, MSI 00
-                DevCap: MaxPayload 256 bytes, PhantFunc 0, Latency L0s <512ns, L1 <64us
-                        ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset-
-                DevCtl: Report errors: Correctable+ Non-Fatal+ Fatal+ Unsupported+
-                        RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+
-                        MaxPayload 128 bytes, MaxReadReq 512 bytes
-                DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr+ TransPend-
-                LnkCap: Port #4, Speed 2.5GT/s, Width x1, ASPM L0s L1, Latency L0 <128ns, L1 <64us
-                        ClockPM- Surprise- LLActRep- BwNot-
-                LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk-
-                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-                LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
-        Capabilities: [a0] MSI-X: Enable- Count=5 Masked-
-                Vector table: BAR=3 offset=00000000
-                PBA: BAR=3 offset=00002000
-        Capabilities: [100 v1] Advanced Error Reporting
-                UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-                UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-                UESvrt: DLP+ SDES- TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
-                CESta:  RxErr+ BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
-                CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
-                AERCap: First Error Pointer: 00, GenCap- CGenEn- ChkCap- ChkEn-
-        Capabilities: [140 v1] Device Serial Number 68-05-ca-ff-ff-18-44-c5
-        Kernel driver in use: e1000e
-
-
-Thank you.
-
-Best regards,
-Jingoo Han
-
-
-Jingoo Han (4):
-  pci: Add PCIe driver for Samsung Exynos
-  ARM: EXYNOS: Enable PCIe support for Exynos5440
-  ARM: dts: Add pcie controller node for Samsung EXYNOS5440 SoC
-  ARM: dts: Add pcie controller node for exynos5440-ssdk5440
-
- arch/arm/boot/dts/exynos5440-ssdk5440.dts          |    8 ++++++
- arch/arm/boot/dts/exynos5440.dtsi                  |   40 ++++++++++++++++++++++++++++-
- arch/arm/Kconfig                                   |    1 +
- arch/arm/mach-exynos/Kconfig                       |    2 ++
- .../devicetree/bindings/pci/designware-pcie.txt    |   73 ++
- drivers/pci/host/Kconfig                           |    9 +
- drivers/pci/host/Makefile                          |    1 +
- drivers/pci/host/pci-designware.c                  | 1057 ++++++++++++++++++++
- 8 files changed, 1190 insertions(+), 1 deletion(-)
- create mode 100644 Documentation/devicetree/bindings/pci/designware-pcie.txt
- create mode 100644 drivers/pci/host/pci-designware.c
--- 
-1.7.10.4
-
+> 
+> To reduce overall code bloat, make the changes described above.
+> 
+> Tested-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> Tested-by: Kevin Hilman <khilman@linaro.org>
+> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> Acked-by: Kevin Hilman <khilman@linaro.org>
+> Reviewed-by: Ulf Hansson <ulf.hansson@linaro.org>
+> ---
+>  Documentation/power/runtime_pm.txt |    5 -----
+>  arch/arm/mach-omap2/omap_device.c  |    7 +------
+>  drivers/acpi/device_pm.c           |    1 -
+>  drivers/amba/bus.c                 |    2 +-
+>  drivers/ata/libata-core.c          |    2 +-
+>  drivers/base/platform.c            |    1 -
+>  drivers/base/power/domain.c        |    1 -
+>  drivers/base/power/generic_ops.c   |   23 -----------------------
+>  drivers/base/power/runtime.c       |   12 +++++-------
+>  drivers/dma/intel_mid_dma.c        |    2 +-
+>  drivers/gpio/gpio-langwell.c       |    6 +-----
+>  drivers/i2c/i2c-core.c             |    2 +-
+>  drivers/mfd/ab8500-gpadc.c         |    8 +-------
+>  drivers/mmc/core/bus.c             |    2 +-
+>  drivers/mmc/core/sdio_bus.c        |    2 +-
+>  drivers/pci/pci-driver.c           |   14 +++++---------
+>  drivers/scsi/scsi_pm.c             |   11 +++--------
+>  drivers/sh/pm_runtime.c            |    2 +-
+>  drivers/spi/spi.c                  |    2 +-
+>  drivers/tty/serial/mfd.c           |    9 ++-------
+>  drivers/usb/core/driver.c          |    3 ++-
+>  drivers/usb/core/port.c            |    1 -
+>  include/linux/pm_runtime.h         |    2 --
+>  23 files changed, 28 insertions(+), 92 deletions(-)
+> 
+> Index: linux-pm/drivers/base/power/runtime.c
+> ===================================================================
+> --- linux-pm.orig/drivers/base/power/runtime.c
+> +++ linux-pm/drivers/base/power/runtime.c
+> @@ -293,11 +293,8 @@ static int rpm_idle(struct device *dev,
+>  	/* Pending requests need to be canceled. */
+>  	dev->power.request = RPM_REQ_NONE;
+>  
+> -	if (dev->power.no_callbacks) {
+> -		/* Assume ->runtime_idle() callback would have suspended. */
+> -		retval = rpm_suspend(dev, rpmflags);
+> +	if (dev->power.no_callbacks)
+>  		goto out;
+> -	}
+>  
+>  	/* Carry out an asynchronous or a synchronous idle notification. */
+>  	if (rpmflags & RPM_ASYNC) {
+> @@ -306,7 +303,8 @@ static int rpm_idle(struct device *dev,
+>  			dev->power.request_pending = true;
+>  			queue_work(pm_wq, &dev->power.work);
+>  		}
+> -		goto out;
+> +		trace_rpm_return_int(dev, _THIS_IP_, 0);
+> +		return 0;
+>  	}
+>  
+>  	dev->power.idle_notification = true;
+> @@ -326,14 +324,14 @@ static int rpm_idle(struct device *dev,
+>  		callback = dev->driver->pm->runtime_idle;
+>  
+>  	if (callback)
+> -		__rpm_callback(callback, dev);
+> +		retval = __rpm_callback(callback, dev);
+>  
+>  	dev->power.idle_notification = false;
+>  	wake_up_all(&dev->power.wait_queue);
+>  
+>   out:
+>  	trace_rpm_return_int(dev, _THIS_IP_, retval);
+> -	return retval;
+> +	return retval ? retval : rpm_suspend(dev, rpmflags);
+>  }
+>  
+>  /**
+> Index: linux-pm/drivers/base/power/generic_ops.c
+> ===================================================================
+> --- linux-pm.orig/drivers/base/power/generic_ops.c
+> +++ linux-pm/drivers/base/power/generic_ops.c
+> @@ -12,29 +12,6 @@
+>  
+>  #ifdef CONFIG_PM_RUNTIME
+>  /**
+> - * pm_generic_runtime_idle - Generic runtime idle callback for subsystems.
+> - * @dev: Device to handle.
+> - *
+> - * If PM operations are defined for the @dev's driver and they include
+> - * ->runtime_idle(), execute it and return its error code, if nonzero.
+> - * Otherwise, execute pm_runtime_suspend() for the device and return 0.
+> - */
+> -int pm_generic_runtime_idle(struct device *dev)
+> -{
+> -	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
+> -
+> -	if (pm && pm->runtime_idle) {
+> -		int ret = pm->runtime_idle(dev);
+> -		if (ret)
+> -			return ret;
+> -	}
+> -
+> -	pm_runtime_suspend(dev);
+> -	return 0;
+> -}
+> -EXPORT_SYMBOL_GPL(pm_generic_runtime_idle);
+> -
+> -/**
+>   * pm_generic_runtime_suspend - Generic runtime suspend callback for subsystems.
+>   * @dev: Device to suspend.
+>   *
+> Index: linux-pm/include/linux/pm_runtime.h
+> ===================================================================
+> --- linux-pm.orig/include/linux/pm_runtime.h
+> +++ linux-pm/include/linux/pm_runtime.h
+> @@ -37,7 +37,6 @@ extern void pm_runtime_enable(struct dev
+>  extern void __pm_runtime_disable(struct device *dev, bool check_resume);
+>  extern void pm_runtime_allow(struct device *dev);
+>  extern void pm_runtime_forbid(struct device *dev);
+> -extern int pm_generic_runtime_idle(struct device *dev);
+>  extern int pm_generic_runtime_suspend(struct device *dev);
+>  extern int pm_generic_runtime_resume(struct device *dev);
+>  extern void pm_runtime_no_callbacks(struct device *dev);
+> @@ -143,7 +142,6 @@ static inline bool pm_runtime_active(str
+>  static inline bool pm_runtime_status_suspended(struct device *dev) { return false; }
+>  static inline bool pm_runtime_enabled(struct device *dev) { return false; }
+>  
+> -static inline int pm_generic_runtime_idle(struct device *dev) { return 0; }
+>  static inline int pm_generic_runtime_suspend(struct device *dev) { return 0; }
+>  static inline int pm_generic_runtime_resume(struct device *dev) { return 0; }
+>  static inline void pm_runtime_no_callbacks(struct device *dev) {}
+> Index: linux-pm/arch/arm/mach-omap2/omap_device.c
+> ===================================================================
+> --- linux-pm.orig/arch/arm/mach-omap2/omap_device.c
+> +++ linux-pm/arch/arm/mach-omap2/omap_device.c
+> @@ -591,11 +591,6 @@ static int _od_runtime_suspend(struct de
+>  	return ret;
+>  }
+>  
+> -static int _od_runtime_idle(struct device *dev)
+> -{
+> -	return pm_generic_runtime_idle(dev);
+> -}
+> -
+>  static int _od_runtime_resume(struct device *dev)
+>  {
+>  	struct platform_device *pdev = to_platform_device(dev);
+> @@ -653,7 +648,7 @@ static int _od_resume_noirq(struct devic
+>  struct dev_pm_domain omap_device_pm_domain = {
+>  	.ops = {
+>  		SET_RUNTIME_PM_OPS(_od_runtime_suspend, _od_runtime_resume,
+> -				   _od_runtime_idle)
+> +				   NULL)
+>  		USE_PLATFORM_PM_SLEEP_OPS
+>  		.suspend_noirq = _od_suspend_noirq,
+>  		.resume_noirq = _od_resume_noirq,
+> Index: linux-pm/drivers/acpi/device_pm.c
+> ===================================================================
+> --- linux-pm.orig/drivers/acpi/device_pm.c
+> +++ linux-pm/drivers/acpi/device_pm.c
+> @@ -886,7 +886,6 @@ static struct dev_pm_domain acpi_general
+>  #ifdef CONFIG_PM_RUNTIME
+>  		.runtime_suspend = acpi_subsys_runtime_suspend,
+>  		.runtime_resume = acpi_subsys_runtime_resume,
+> -		.runtime_idle = pm_generic_runtime_idle,
+>  #endif
+>  #ifdef CONFIG_PM_SLEEP
+>  		.prepare = acpi_subsys_prepare,
+> Index: linux-pm/drivers/amba/bus.c
+> ===================================================================
+> --- linux-pm.orig/drivers/amba/bus.c
+> +++ linux-pm/drivers/amba/bus.c
+> @@ -284,7 +284,7 @@ static const struct dev_pm_ops amba_pm =
+>  	SET_RUNTIME_PM_OPS(
+>  		amba_pm_runtime_suspend,
+>  		amba_pm_runtime_resume,
+> -		pm_generic_runtime_idle
+> +		NULL
+>  	)
+>  };
+>  
+> Index: linux-pm/drivers/base/power/domain.c
+> ===================================================================
+> --- linux-pm.orig/drivers/base/power/domain.c
+> +++ linux-pm/drivers/base/power/domain.c
+> @@ -2143,7 +2143,6 @@ void pm_genpd_init(struct generic_pm_dom
+>  	genpd->max_off_time_changed = true;
+>  	genpd->domain.ops.runtime_suspend = pm_genpd_runtime_suspend;
+>  	genpd->domain.ops.runtime_resume = pm_genpd_runtime_resume;
+> -	genpd->domain.ops.runtime_idle = pm_generic_runtime_idle;
+>  	genpd->domain.ops.prepare = pm_genpd_prepare;
+>  	genpd->domain.ops.suspend = pm_genpd_suspend;
+>  	genpd->domain.ops.suspend_late = pm_genpd_suspend_late;
+> Index: linux-pm/drivers/base/platform.c
+> ===================================================================
+> --- linux-pm.orig/drivers/base/platform.c
+> +++ linux-pm/drivers/base/platform.c
+> @@ -888,7 +888,6 @@ int platform_pm_restore(struct device *d
+>  static const struct dev_pm_ops platform_dev_pm_ops = {
+>  	.runtime_suspend = pm_generic_runtime_suspend,
+>  	.runtime_resume = pm_generic_runtime_resume,
+> -	.runtime_idle = pm_generic_runtime_idle,
+>  	USE_PLATFORM_PM_SLEEP_OPS
+>  };
+>  
+> Index: linux-pm/drivers/i2c/i2c-core.c
+> ===================================================================
+> --- linux-pm.orig/drivers/i2c/i2c-core.c
+> +++ linux-pm/drivers/i2c/i2c-core.c
+> @@ -435,7 +435,7 @@ static const struct dev_pm_ops i2c_devic
+>  	SET_RUNTIME_PM_OPS(
+>  		pm_generic_runtime_suspend,
+>  		pm_generic_runtime_resume,
+> -		pm_generic_runtime_idle
+> +		NULL
+>  	)
+>  };
+>  
+> Index: linux-pm/drivers/mmc/core/sdio_bus.c
+> ===================================================================
+> --- linux-pm.orig/drivers/mmc/core/sdio_bus.c
+> +++ linux-pm/drivers/mmc/core/sdio_bus.c
+> @@ -211,7 +211,7 @@ static const struct dev_pm_ops sdio_bus_
+>  	SET_RUNTIME_PM_OPS(
+>  		pm_generic_runtime_suspend,
+>  		pm_generic_runtime_resume,
+> -		pm_generic_runtime_idle
+> +		NULL
+>  	)
+>  };
+>  
+> Index: linux-pm/drivers/spi/spi.c
+> ===================================================================
+> --- linux-pm.orig/drivers/spi/spi.c
+> +++ linux-pm/drivers/spi/spi.c
+> @@ -223,7 +223,7 @@ static const struct dev_pm_ops spi_pm =
+>  	SET_RUNTIME_PM_OPS(
+>  		pm_generic_runtime_suspend,
+>  		pm_generic_runtime_resume,
+> -		pm_generic_runtime_idle
+> +		NULL
+>  	)
+>  };
+>  
+> Index: linux-pm/drivers/usb/core/port.c
+> ===================================================================
+> --- linux-pm.orig/drivers/usb/core/port.c
+> +++ linux-pm/drivers/usb/core/port.c
+> @@ -141,7 +141,6 @@ static const struct dev_pm_ops usb_port_
+>  #ifdef CONFIG_PM_RUNTIME
+>  	.runtime_suspend =	usb_port_runtime_suspend,
+>  	.runtime_resume =	usb_port_runtime_resume,
+> -	.runtime_idle =		pm_generic_runtime_idle,
+>  #endif
+>  };
+>  
+> Index: linux-pm/Documentation/power/runtime_pm.txt
+> ===================================================================
+> --- linux-pm.orig/Documentation/power/runtime_pm.txt
+> +++ linux-pm/Documentation/power/runtime_pm.txt
+> @@ -660,11 +660,6 @@ Subsystems may wish to conserve code spa
+>  management callbacks provided by the PM core, defined in
+>  driver/base/power/generic_ops.c:
+>  
+> -  int pm_generic_runtime_idle(struct device *dev);
+> -    - invoke the ->runtime_idle() callback provided by the driver of this
+> -      device, if defined, and call pm_runtime_suspend() for this device if the
+> -      return value is 0 or the callback is not defined
+> -
+>    int pm_generic_runtime_suspend(struct device *dev);
+>      - invoke the ->runtime_suspend() callback provided by the driver of this
+>        device and return its result, or return -EINVAL if not defined
+> Index: linux-pm/drivers/usb/core/driver.c
+> ===================================================================
+> --- linux-pm.orig/drivers/usb/core/driver.c
+> +++ linux-pm/drivers/usb/core/driver.c
+> @@ -1765,7 +1765,8 @@ int usb_runtime_idle(struct device *dev)
+>  	 */
+>  	if (autosuspend_check(udev) == 0)
+>  		pm_runtime_autosuspend(dev);
+> -	return 0;
+> +	/* Tell the core not to suspend it, though. */
+> +	return -EBUSY;
+>  }
+>  
+>  int usb_set_usb2_hardware_lpm(struct usb_device *udev, int enable)
+> Index: linux-pm/drivers/pci/pci-driver.c
+> ===================================================================
+> --- linux-pm.orig/drivers/pci/pci-driver.c
+> +++ linux-pm/drivers/pci/pci-driver.c
+> @@ -1050,26 +1050,22 @@ static int pci_pm_runtime_idle(struct de
+>  {
+>  	struct pci_dev *pci_dev = to_pci_dev(dev);
+>  	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
+> +	int ret = 0;
+>  
+>  	/*
+>  	 * If pci_dev->driver is not set (unbound), the device should
+>  	 * always remain in D0 regardless of the runtime PM status
+>  	 */
+>  	if (!pci_dev->driver)
+> -		goto out;
+> +		return 0;
+>  
+>  	if (!pm)
+>  		return -ENOSYS;
+>  
+> -	if (pm->runtime_idle) {
+> -		int ret = pm->runtime_idle(dev);
+> -		if (ret)
+> -			return ret;
+> -	}
+> +	if (pm->runtime_idle)
+> +		ret = pm->runtime_idle(dev);
+>  
+> -out:
+> -	pm_runtime_suspend(dev);
+> -	return 0;
+> +	return ret;
+>  }
+>  
+>  #else /* !CONFIG_PM_RUNTIME */
+> Index: linux-pm/drivers/ata/libata-core.c
+> ===================================================================
+> --- linux-pm.orig/drivers/ata/libata-core.c
+> +++ linux-pm/drivers/ata/libata-core.c
+> @@ -5430,7 +5430,7 @@ static int ata_port_runtime_idle(struct
+>  				return -EBUSY;
+>  	}
+>  
+> -	return pm_runtime_suspend(dev);
+> +	return 0;
+>  }
+>  
+>  static int ata_port_runtime_suspend(struct device *dev)
+> Index: linux-pm/drivers/dma/intel_mid_dma.c
+> ===================================================================
+> --- linux-pm.orig/drivers/dma/intel_mid_dma.c
+> +++ linux-pm/drivers/dma/intel_mid_dma.c
+> @@ -1405,7 +1405,7 @@ static int dma_runtime_idle(struct devic
+>  			return -EAGAIN;
+>  	}
+>  
+> -	return pm_schedule_suspend(dev, 0);
+> +	return 0;
+>  }
+>  
+>  /******************************************************************************
+> Index: linux-pm/drivers/gpio/gpio-langwell.c
+> ===================================================================
+> --- linux-pm.orig/drivers/gpio/gpio-langwell.c
+> +++ linux-pm/drivers/gpio/gpio-langwell.c
+> @@ -305,11 +305,7 @@ static const struct irq_domain_ops lnw_g
+>  
+>  static int lnw_gpio_runtime_idle(struct device *dev)
+>  {
+> -	int err = pm_schedule_suspend(dev, 500);
+> -
+> -	if (!err)
+> -		return 0;
+> -
+> +	pm_schedule_suspend(dev, 500);
+>  	return -EBUSY;
+>  }
+>  
+> Index: linux-pm/drivers/mfd/ab8500-gpadc.c
+> ===================================================================
+> --- linux-pm.orig/drivers/mfd/ab8500-gpadc.c
+> +++ linux-pm/drivers/mfd/ab8500-gpadc.c
+> @@ -886,12 +886,6 @@ static int ab8500_gpadc_runtime_resume(s
+>  	return ret;
+>  }
+>  
+> -static int ab8500_gpadc_runtime_idle(struct device *dev)
+> -{
+> -	pm_runtime_suspend(dev);
+> -	return 0;
+> -}
+> -
+>  static int ab8500_gpadc_suspend(struct device *dev)
+>  {
+>  	struct ab8500_gpadc *gpadc = dev_get_drvdata(dev);
+> @@ -1039,7 +1033,7 @@ static int ab8500_gpadc_remove(struct pl
+>  static const struct dev_pm_ops ab8500_gpadc_pm_ops = {
+>  	SET_RUNTIME_PM_OPS(ab8500_gpadc_runtime_suspend,
+>  			   ab8500_gpadc_runtime_resume,
+> -			   ab8500_gpadc_runtime_idle)
+> +			   NULL)
+>  	SET_SYSTEM_SLEEP_PM_OPS(ab8500_gpadc_suspend,
+>  				ab8500_gpadc_resume)
+>  
+> Index: linux-pm/drivers/mmc/core/bus.c
+> ===================================================================
+> --- linux-pm.orig/drivers/mmc/core/bus.c
+> +++ linux-pm/drivers/mmc/core/bus.c
+> @@ -164,7 +164,7 @@ static int mmc_runtime_resume(struct dev
+>  
+>  static int mmc_runtime_idle(struct device *dev)
+>  {
+> -	return pm_runtime_suspend(dev);
+> +	return 0;
+>  }
+>  
+>  #endif /* !CONFIG_PM_RUNTIME */
+> Index: linux-pm/drivers/scsi/scsi_pm.c
+> ===================================================================
+> --- linux-pm.orig/drivers/scsi/scsi_pm.c
+> +++ linux-pm/drivers/scsi/scsi_pm.c
+> @@ -229,8 +229,6 @@ static int scsi_runtime_resume(struct de
+>  
+>  static int scsi_runtime_idle(struct device *dev)
+>  {
+> -	int err;
+> -
+>  	dev_dbg(dev, "scsi_runtime_idle\n");
+>  
+>  	/* Insert hooks here for targets, hosts, and transport classes */
+> @@ -240,14 +238,11 @@ static int scsi_runtime_idle(struct devi
+>  
+>  		if (sdev->request_queue->dev) {
+>  			pm_runtime_mark_last_busy(dev);
+> -			err = pm_runtime_autosuspend(dev);
+> -		} else {
+> -			err = pm_runtime_suspend(dev);
+> +			pm_runtime_autosuspend(dev);
+> +			return -EBUSY;
+>  		}
+> -	} else {
+> -		err = pm_runtime_suspend(dev);
+>  	}
+> -	return err;
+> +	return 0;
+>  }
+>  
+>  int scsi_autopm_get_device(struct scsi_device *sdev)
+> Index: linux-pm/drivers/sh/pm_runtime.c
+> ===================================================================
+> --- linux-pm.orig/drivers/sh/pm_runtime.c
+> +++ linux-pm/drivers/sh/pm_runtime.c
+> @@ -25,7 +25,7 @@
+>  static int default_platform_runtime_idle(struct device *dev)
+>  {
+>  	/* suspend synchronously to disable clocks immediately */
+> -	return pm_runtime_suspend(dev);
+> +	return 0;
+>  }
+>  
+>  static struct dev_pm_domain default_pm_domain = {
+> Index: linux-pm/drivers/tty/serial/mfd.c
+> ===================================================================
+> --- linux-pm.orig/drivers/tty/serial/mfd.c
+> +++ linux-pm/drivers/tty/serial/mfd.c
+> @@ -1248,13 +1248,8 @@ static int serial_hsu_resume(struct pci_
+>  #ifdef CONFIG_PM_RUNTIME
+>  static int serial_hsu_runtime_idle(struct device *dev)
+>  {
+> -	int err;
+> -
+> -	err = pm_schedule_suspend(dev, 500);
+> -	if (err)
+> -		return -EBUSY;
+> -
+> -	return 0;
+> +	pm_schedule_suspend(dev, 500);
+> +	return -EBUSY;
+>  }
+>  
+>  static int serial_hsu_runtime_suspend(struct device *dev)
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pm" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
