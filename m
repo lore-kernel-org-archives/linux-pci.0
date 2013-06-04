@@ -1,54 +1,96 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f172.google.com ([209.85.214.172]:53341 "EHLO
-	mail-ob0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751690Ab3FJQ7e (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Jun 2013 12:59:34 -0400
-Received: by mail-ob0-f172.google.com with SMTP id wo10so10500285obc.31
-        for <linux-pci@vger.kernel.org>; Mon, 10 Jun 2013 09:59:34 -0700 (PDT)
+Received: from avon.wwwdotorg.org ([70.85.31.133]:33488 "EHLO
+	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750773Ab3FDTRV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Jun 2013 15:17:21 -0400
+Message-ID: <51AE3D3B.6080102@wwwdotorg.org>
+Date: Tue, 04 Jun 2013 13:17:15 -0600
+From: Stephen Warren <swarren@wwwdotorg.org>
 MIME-Version: 1.0
-In-Reply-To: <1370749669-20348-1-git-send-email-wangyijing@huawei.com>
-References: <1370749669-20348-1-git-send-email-wangyijing@huawei.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 10 Jun 2013 10:59:13 -0600
-Message-ID: <CAErSpo5RAC7eitUnw0-FFzq463DjwCEy---RHqEC912UJGa5SQ@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Fix comment typo for pcie_pme_remove()
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Hanjun Guo <guohanjun@huawei.com>,
-	Jiang Liu <jiang.liu@huawei.com>
+To: Jay Agarwal <jagarwal@nvidia.com>
+CC: linux@arm.linux.org.uk, thierry.reding@avionic-design.de,
+	bhelgaas@google.com, ldewangan@nvidia.com, olof@lixom.net,
+	hdoyu@nvidia.com, pgaikwad@nvidia.com, mturquette@linaro.org,
+	pdeschrijver@nvidia.com, linux-arm-kernel@lists.infradead.org,
+	linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, jtukkinen@nvidia.com, kthota@nvidia.com
+Subject: Re: [PATCH V3 2/4] ARM: tegra: pcie: Add tegra3 support
+References: <1370372252-4332-1-git-send-email-jagarwal@nvidia.com> <1370372252-4332-2-git-send-email-jagarwal@nvidia.com>
+In-Reply-To: <1370372252-4332-2-git-send-email-jagarwal@nvidia.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Jun 8, 2013 at 9:47 PM, Yijing Wang <wangyijing@huawei.com> wrote:
-> Fix trivial comment typo for pcie_pme_remove().
->
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+On 06/04/2013 12:57 PM, Jay Agarwal wrote:
+> - Enable PCIe root port 2 for Cardhu
+> - Make private data structure for each SoC
+> - Add required Tegra30 clocks and regulators
+> - Add Tegra30 specific code in enable controller
+> - Corrected logic in read/write config space to
+>   display right device number on bus 0
+> - Fixed unnecessary freeing of tegra_pcie_bus structure in tegra_pcie_remove
+> - Added Tegra30 specific properties in pci binding document
 
-Applied to pci/misc for v3.11, thanks.
+> diff --git a/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt b/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
 
-> ---
->  drivers/pci/pcie/pme.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
->
-> diff --git a/drivers/pci/pcie/pme.c b/drivers/pci/pcie/pme.c
-> index 795db1f..e56e594 100644
-> --- a/drivers/pci/pcie/pme.c
-> +++ b/drivers/pci/pcie/pme.c
-> @@ -408,7 +408,7 @@ static int pcie_pme_resume(struct pcie_device *srv)
->
->  /**
->   * pcie_pme_remove - Prepare PCIe PME service device for removal.
-> - * @srv - PCIe service device to resume.
-> + * @srv - PCIe service device to remove.
->   */
->  static void pcie_pme_remove(struct pcie_device *srv)
->  {
-> --
-> 1.7.1
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> +- avdd-supply: Power supply for controller (1.05V)
+
+> +  "cml": The Tegra clock of that name
+
+Both those changes need to mention that those additions are only
+required for Tegra30, not Tegra20. In other words,
+
++- avdd-supply: Power supply for controller (1.05V) (not required for
+Tegra20)
+
++  "cml": The Tegra clock of that name (not required for Tegra20)
+
+You probably also want to explicitly mention nvidia,tegra30-pcie as a
+legal compatible value.
+
+> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+
+> +/* used to differentiate tegra chips code */
+> +struct tegra_pcie_soc_data {
+> +	unsigned int num_max_ports;
+
+nit: "num max" seems redundant. max_ports or num_ports would be better.
+
+>  struct tegra_pcie_port {
+> @@ -384,7 +408,7 @@ static int tegra_pcie_read_conf(struct pci_bus *bus, unsigned int devfn,
+>  		struct tegra_pcie_port *port;
+>  
+>  		list_for_each_entry(port, &pcie->ports, list) {
+> -			if (port->index + 1 == slot) {
+> +			if (port->index == slot) {
+
+This and the equivalent change in tegra_pcie_write_conf() seem like a
+bug-fix unrelated to the addition of Tegra30 support. Hence, they should
+be a separate patch.
+
+
+> @@ -398,7 +422,6 @@ static int tegra_pcie_read_conf(struct pci_bus *bus, unsigned int devfn,
+>  			*value = 0xffffffff;
+>  			return PCIBIOS_DEVICE_NOT_FOUND;
+>  		}
+> -
+>  		addr += tegra_pcie_conf_offset(devfn, where);
+
+Unnecessary white-space change.
+
+> @@ -1549,10 +1660,9 @@ static int tegra_pcie_remove(struct platform_device *pdev)
+>  	struct tegra_pcie_bus *bus;
+>  	int err;
+>  
+> -	list_for_each_entry(bus, &pcie->busses, list) {
+> +	list_for_each_entry(bus, &pcie->busses, list)
+>  		vunmap(bus->area->addr);
+> -		kfree(bus);
+> -	}
+> +	kfree(bus);
+
+This doesn't look right. Can you please explain it further? This is
+looping over every bus in a dynamic list, so surely each entry needs to
+be freed? Did you do this to avoid a crash? If so, the issue is likely
+that the loop should use list_for_each_entry_safe() rather than
+list_for_each_entry().
