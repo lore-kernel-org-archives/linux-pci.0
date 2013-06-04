@@ -1,115 +1,83 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Jiang Liu <jiang.liu@huawei.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"Alexander E . Patrakov" <patrakov@gmail.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Shaohua Li <shaohua.li@intel.com>,
-	Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org
-Subject: Re: [BUGFIX 3/9] ACPI, DOCK: clean up unused module related code
-Date: Thu, 13 Jun 2013 20:26:10 +0200
-Message-ID: <1841512.D0ScSNfNgy@vostro.rjw.lan>
-In-Reply-To: <1371141152-9468-4-git-send-email-jiang.liu@huawei.com>
-References: <1371141152-9468-1-git-send-email-jiang.liu@huawei.com> <1371141152-9468-4-git-send-email-jiang.liu@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f172.google.com ([209.85.223.172]:64672 "EHLO
+	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750919Ab3FDV5q (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Jun 2013 17:57:46 -0400
+Received: by mail-ie0-f172.google.com with SMTP id 17so1734257iea.17
+        for <linux-pci@vger.kernel.org>; Tue, 04 Jun 2013 14:57:46 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <CAErSpo5YbhPtB9OtjkUrMo8OKkjFXzOxeR3Jc4dQU8eC9D45XQ@mail.gmail.com>
+References: <1369974092-11450-1-git-send-email-jiang.liu@huawei.com>
+	<1369974092-11450-2-git-send-email-jiang.liu@huawei.com>
+	<CAErSpo70u7oM07jcGA+E1MUHA4OWiJ1gQ8SuS7YCRuvGMxeaqA@mail.gmail.com>
+	<CAErSpo5YbhPtB9OtjkUrMo8OKkjFXzOxeR3Jc4dQU8eC9D45XQ@mail.gmail.com>
+Date: Tue, 4 Jun 2013 14:57:46 -0700
+Message-ID: <CAE9FiQW=WM5v+VExCS0Od6gow7j4tTEOunECwqHP_hZduOETJw@mail.gmail.com>
+Subject: Re: [PATCH 2/3] PCI, ACPI: Don't glue ACPI dev with pci VFs
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jiang Liu <liuj97@gmail.com>, "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Xudong Hao <xudong.hao@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Jiang Liu <jiang.liu@huawei.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, June 14, 2013 12:32:26 AM Jiang Liu wrote:
-> ACPI dock driver can't be built as a module any more, so clean up
-> module related code.
-> 
-> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-> Cc: Shaohua Li <shaohua.li@intel.com>
-> Cc: Len Brown <lenb@kernel.org>
-> Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
-> Cc: linux-acpi@vger.kernel.org
-> Cc: linux-kernel@vger.kernel.org
+On Tue, Jun 4, 2013 at 2:48 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Fri, May 31, 2013 at 3:40 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> [+cc Rafael]
+>>
+>> On Thu, May 30, 2013 at 10:21 PM, Jiang Liu <liuj97@gmail.com> wrote:
+>>> From: Yinghai Lu <yinghai@kernel.org>
+>>>
+>>> When sriov is enabled, VF could just start after PF in pci tree.
+>>> like c1:00.0 will be PF, and c1:00.1 and after will be VF.
+>>>
+>>> acpi do have dev with same ADR. that will make them get glued
+>>> wrongly.
+>>>
+>>> Skip that if it is virtfn.
+>>>
+>>> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+>>> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+>>> ---
+>>>  drivers/pci/pci-acpi.c | 4 ++++
+>>>  1 file changed, 4 insertions(+)
+>>>
+>>> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+>>> index e4b1fb2..720f3a2 100644
+>>> --- a/drivers/pci/pci-acpi.c
+>>> +++ b/drivers/pci/pci-acpi.c
+>>> @@ -321,6 +321,10 @@ static int acpi_pci_find_device(struct device *dev, acpi_handle *handle)
+>>>         u64     addr;
+>>>
+>>>         pci_dev = to_pci_dev(dev);
+>>> +       /* don't mix vf with real pci device */
+>>> +       if (pci_dev->is_virtfn)
+>>> +               return -ENODEV;
+>>
+>> Rafael, can you review this?  I don't understand the implications of
+>> this change.
+>>
+>> And I don't know exactly what problem this would fix, so I don't know
+>> if it's stable material or not.  Yinghai did propose it as v3.10
+>> material in https://lkml.kernel.org/r/1368498506-25857-1-git-send-email-yinghai@kernel.org,
+>> but I don't know why.
+>
+> Ping?
+>
+> Jiang or Yinghai, what problem does this fix?
 
-How exactly does this depend on [2/9]?  If it doesn't at all, it should go
-after [1/9].
+fix the wrong binding between acpi dev and VFs.
 
-> ---
->  drivers/acpi/dock.c | 41 -----------------------------------------
->  1 file changed, 41 deletions(-)
-> 
-> diff --git a/drivers/acpi/dock.c b/drivers/acpi/dock.c
-> index 79c8d9e..50e38b7 100644
-> --- a/drivers/acpi/dock.c
-> +++ b/drivers/acpi/dock.c
-> @@ -53,12 +53,6 @@ MODULE_PARM_DESC(immediate_undock, "1 (default) will cause the driver to "
->  
->  static struct atomic_notifier_head dock_notifier_list;
->  
-> -static const struct acpi_device_id dock_device_ids[] = {
-> -	{"LNXDOCK", 0},
-> -	{"", 0},
-> -};
-> -MODULE_DEVICE_TABLE(acpi, dock_device_ids);
-> -
+Found that in my recent sriov test.
 
-Don't we actually need the device IDs?
+>
+> I'm guessing maybe all three of these should be marked for stable, but
+> I'd like confirmation of that.
 
->  struct dock_station {
->  	acpi_handle handle;
->  	unsigned long last_dock_time;
-> @@ -1013,30 +1007,6 @@ err_unregister:
->  }
->  
->  /**
-> - * dock_remove - free up resources related to the dock station
-> - */
-> -static int dock_remove(struct dock_station *ds)
-> -{
-> -	struct dock_dependent_device *dd, *tmp;
-> -	struct platform_device *dock_device = ds->dock_device;
-> -
-> -	if (!dock_station_count)
-> -		return 0;
-> -
-> -	/* remove dependent devices */
-> -	list_for_each_entry_safe(dd, tmp, &ds->dependent_devices, list)
-> -		kfree(dd);
-> -
-> -	list_del(&ds->sibling);
-> -
-> -	/* cleanup sysfs */
-> -	sysfs_remove_group(&dock_device->dev.kobj, &dock_attribute_group);
-> -	platform_device_unregister(dock_device);
-> -
-> -	return 0;
-> -}
-> -
-> -/**
->   * find_dock_and_bay - look for dock stations and bays
->   * @handle: acpi handle of a device
->   * @lvl: unused
-> @@ -1073,14 +1043,3 @@ int __init acpi_dock_init(void)
->  		ACPI_DOCK_DRIVER_DESCRIPTION, dock_station_count);
->  	return 0;
->  }
-> -
-> -static void __exit dock_exit(void)
-> -{
-> -	struct dock_station *tmp, *dock_station;
-> -
-> -	unregister_acpi_bus_notifier(&dock_acpi_notifier);
-> -	list_for_each_entry_safe(dock_station, tmp, &dock_stations, sibling)
-> -		dock_remove(dock_station);
-> -}
-> -
-> -module_exit(dock_exit);
+Yes
 
-The other changes look OK to me.
-
-Thanks,
-Rafael
-
-
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+Yinghai
