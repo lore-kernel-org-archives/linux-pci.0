@@ -1,143 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f48.google.com ([209.85.214.48]:62704 "EHLO
-	mail-bk0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754675Ab3FTIE0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Jun 2013 04:04:26 -0400
-From: Tomasz Figa <tomasz.figa@gmail.com>
-To: Jingoo Han <jg1.han@samsung.com>
-Cc: 'Kukjin Kim' <kgene.kim@samsung.com>,
-	'Bjorn Helgaas' <bhelgaas@google.com>,
-	linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org,
-	devicetree-discuss@lists.ozlabs.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	'Grant Likely' <grant.likely@secretlab.ca>,
-	'Andrew Murray' <andrew.murray@arm.com>,
-	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
-	'Thierry Reding' <thierry.reding@avionic-design.de>,
-	'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>,
-	'Arnd Bergmann' <arnd@arndb.de>,
-	'Surendranath Gurivireddy Balla' <suren.reddy@samsung.com>,
-	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
-	'Thomas Abraham' <thomas.abraham@linaro.org>
-Subject: Re: [PATCH V6 3/3] ARM: dts: Add pcie controller node for Samsung EXYNOS5440 SoC
-Date: Thu, 20 Jun 2013 10:04:22 +0200
-Message-ID: <3250954.dVh4O1LchK@flatron>
-In-Reply-To: <00c201ce6d85$83b072a0$8b1157e0$@samsung.com>
-References: <00c201ce6d85$83b072a0$8b1157e0$@samsung.com>
+Received: from mail-ob0-f172.google.com ([209.85.214.172]:38975 "EHLO
+	mail-ob0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751208Ab3FDVst (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Jun 2013 17:48:49 -0400
+Received: by mail-ob0-f172.google.com with SMTP id wo10so1374461obc.31
+        for <linux-pci@vger.kernel.org>; Tue, 04 Jun 2013 14:48:48 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <CAErSpo70u7oM07jcGA+E1MUHA4OWiJ1gQ8SuS7YCRuvGMxeaqA@mail.gmail.com>
+References: <1369974092-11450-1-git-send-email-jiang.liu@huawei.com>
+ <1369974092-11450-2-git-send-email-jiang.liu@huawei.com> <CAErSpo70u7oM07jcGA+E1MUHA4OWiJ1gQ8SuS7YCRuvGMxeaqA@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 4 Jun 2013 15:48:28 -0600
+Message-ID: <CAErSpo5YbhPtB9OtjkUrMo8OKkjFXzOxeR3Jc4dQU8eC9D45XQ@mail.gmail.com>
+Subject: Re: [PATCH 2/3] PCI, ACPI: Don't glue ACPI dev with pci VFs
+To: Jiang Liu <liuj97@gmail.com>, "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Yinghai Lu <yinghai@kernel.org>, Xudong Hao <xudong.hao@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Jiang Liu <jiang.liu@huawei.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jingoo,
+On Fri, May 31, 2013 at 3:40 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> [+cc Rafael]
+>
+> On Thu, May 30, 2013 at 10:21 PM, Jiang Liu <liuj97@gmail.com> wrote:
+>> From: Yinghai Lu <yinghai@kernel.org>
+>>
+>> When sriov is enabled, VF could just start after PF in pci tree.
+>> like c1:00.0 will be PF, and c1:00.1 and after will be VF.
+>>
+>> acpi do have dev with same ADR. that will make them get glued
+>> wrongly.
+>>
+>> Skip that if it is virtfn.
+>>
+>> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+>> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+>> ---
+>>  drivers/pci/pci-acpi.c | 4 ++++
+>>  1 file changed, 4 insertions(+)
+>>
+>> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+>> index e4b1fb2..720f3a2 100644
+>> --- a/drivers/pci/pci-acpi.c
+>> +++ b/drivers/pci/pci-acpi.c
+>> @@ -321,6 +321,10 @@ static int acpi_pci_find_device(struct device *dev, acpi_handle *handle)
+>>         u64     addr;
+>>
+>>         pci_dev = to_pci_dev(dev);
+>> +       /* don't mix vf with real pci device */
+>> +       if (pci_dev->is_virtfn)
+>> +               return -ENODEV;
+>
+> Rafael, can you review this?  I don't understand the implications of
+> this change.
+>
+> And I don't know exactly what problem this would fix, so I don't know
+> if it's stable material or not.  Yinghai did propose it as v3.10
+> material in https://lkml.kernel.org/r/1368498506-25857-1-git-send-email-yinghai@kernel.org,
+> but I don't know why.
 
-On Thursday 20 of June 2013 16:12:24 Jingoo Han wrote:
-> Exynos5440 has two PCIe controllers which can be used as root complex
-> for PCIe interface.
-> 
-> Signed-off-by: Jingoo Han <jg1.han@samsung.com>
-> ---
->  arch/arm/boot/dts/exynos5440-ssdk5440.dts |    8 ++++++
->  arch/arm/boot/dts/exynos5440.dtsi         |   40
-> ++++++++++++++++++++++++++++- 2 files changed, 47 insertions(+), 1
-> deletion(-)
-> 
-> diff --git a/arch/arm/boot/dts/exynos5440-ssdk5440.dts
-> b/arch/arm/boot/dts/exynos5440-ssdk5440.dts index f32cd77..3d93804
-> 100644
-> --- a/arch/arm/boot/dts/exynos5440-ssdk5440.dts
-> +++ b/arch/arm/boot/dts/exynos5440-ssdk5440.dts
-> @@ -65,4 +65,12 @@
->  			clock-frequency = <50000000>;
->  		};
->  	};
-> +
-> +	pcie0@290000 {
-> +		reset-gpio = <&pin_ctrl 5 0>;
-> +	};
-> +
-> +	pcie1@2a0000 {
-> +		reset-gpio = <&pin_ctrl 22 0>;
-> +	};
->  };
-> diff --git a/arch/arm/boot/dts/exynos5440.dtsi
-> b/arch/arm/boot/dts/exynos5440.dtsi index 03d40c0..6295eda 100644
-> --- a/arch/arm/boot/dts/exynos5440.dtsi
-> +++ b/arch/arm/boot/dts/exynos5440.dtsi
-> @@ -126,7 +126,7 @@
->  		clock-names = "spi", "spi_busclk0";
->  	};
-> 
-> -	pinctrl {
-> +	pin_ctrl: pinctrl {
->  		compatible = "samsung,exynos5440-pinctrl";
->  		reg = <0xE0000 0x1000>;
->  		interrupts = <0 37 0>, <0 38 0>, <0 39 0>, <0 40 0>,
-> @@ -230,4 +230,42 @@
->  		clocks = <&clock 24>;
->  		clock-names = "usbhost";
->  	};
+Ping?
 
-I think this patch should be split into two:
- - patch adding just generlic PCIe nodes for Exynos5440,
- - patch adding label to the pinctrl node (which is a prerequisite) and 
-board-specific properties of PCIe nodes.
+Jiang or Yinghai, what problem does this fix?
 
-> +
-> +	pcie0@290000 {
+I'm guessing maybe all three of these should be marked for stable, but
+I'd like confirmation of that.
 
-Node naming looks incorrect here. The name should be as generic as 
-possible, without any hardware-specific IDs, e.g. pcie, not pcie0. The 
-@290000 suffix is enough to make the node unique.
-
-> +		compatible = "samsung,exynos5440-pcie";
-> +		reg = <0x290000 0x1000
-> +			0x270000 0x1000
-> +			0x271000 0x40>;
-> +		interrupts = <0 20 0>, <0 21 0>, <0 22 0>;
-> +		clocks = <&clock 28>, <&clock 27>;
-> +		clock-names = "pcie", "pcie_bus";
-> +		#address-cells = <3>;
-> +		#size-cells = <2>;
-> +		device_type = "pci";
-> +		ranges = <0x00000800 0 0x40000000 0x40000000 0 0x00001000   
-/*
-> configuration space */ +			  0x81000000 0 0	  
-0x40001000 0 0x00010000  
-> /* downstream I/O */ +			  0x82000000 0 0x40011000 
-0x40011000 0
-> 0x1ffef000>; /* non-prefetchable memory */ +		#interrupt-cells = 
-<1>;
-> +		interrupt-map-mask = <0 0 0 0>;
-> +		interrupt-map = <0x0 0 &gic 53>;
-> +	};
-> +
-> +	pcie1@2a0000 {
-
-Same here.
-
-Best regards,
-Tomasz
-
-> +		compatible = "samsung,exynos5440-pcie";
-> +		reg = <0x2a0000 0x1000
-> +			0x272000 0x1000
-> +			0x271040 0x40>;
-> +		interrupts = <0 23 0>, <0 24 0>, <0 25 0>;
-> +		clocks = <&clock 29>, <&clock 27>;
-> +		clock-names = "pcie", "pcie_bus";
-> +		#address-cells = <3>;
-> +		#size-cells = <2>;
-> +		device_type = "pci";
-> +		ranges = <0x00000800 0 0x60000000 0x60000000 0 0x00001000   
-/*
-> configuration space */ +			  0x81000000 0 0	  
-0x60001000 0 0x00010000  
-> /* downstream I/O */ +			  0x82000000 0 0x60011000 
-0x60011000 0
-> 0x1ffef000>; /* non-prefetchable memory */ +		#interrupt-cells = 
-<1>;
-> +		interrupt-map-mask = <0 0 0 0>;
-> +		interrupt-map = <0x0 0 &gic 56>;
-> +	};
->  };
+>>         /* Please ref to ACPI spec for the syntax of _ADR */
+>>         addr = (PCI_SLOT(pci_dev->devfn) << 16) | PCI_FUNC(pci_dev->devfn);
+>>         *handle = acpi_get_child(DEVICE_ACPI_HANDLE(dev->parent), addr);
+>> --
+>> 1.8.1.2
+>>
