@@ -1,49 +1,188 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f54.google.com ([209.85.220.54]:34444 "EHLO
-	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965198Ab3FTRO3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Jun 2013 13:14:29 -0400
-Message-ID: <51C3386F.5050009@gmail.com>
-Date: Fri, 21 Jun 2013 01:14:23 +0800
-From: Jiang Liu <liuj97@gmail.com>
+Received: from hqemgate04.nvidia.com ([216.228.121.35]:17427 "EHLO
+	hqemgate04.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756375Ab3FEOtD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Jun 2013 10:49:03 -0400
+From: Jay Agarwal <jagarwal@nvidia.com>
+To: <linux@arm.linux.org.uk>, <swarren@wwwdotorg.org>,
+	<thierry.reding@avionic-design.de>, <bhelgaas@google.com>,
+	<ldewangan@nvidia.com>, <olof@lixom.net>, <hdoyu@nvidia.com>,
+	<pgaikwad@nvidia.com>, <mturquette@linaro.org>,
+	<pdeschrijver@nvidia.com>, <linux-arm-kernel@lists.infradead.org>,
+	<linux-tegra@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>
+CC: <jtukkinen@nvidia.com>, <kthota@nvidia.com>, <jagarwal@nvidia.com>
+Subject: [PATCH V2] ARM: dts: tegra: Move PCIe node to correct place
+Date: Wed, 5 Jun 2013 20:20:02 +0530
+Message-ID: <1370443802-11189-1-git-send-email-jagarwal@nvidia.com>
 MIME-Version: 1.0
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Jeremy Fitzhardinge <jeremy@goop.org>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	xen-devel@lists.xensource.com,
-	virtualization@lists.linux-foundation.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Chris Metcalf <cmetcalf@tilera.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>
-Subject: Re: [PATCH 3/3] PCI: mark pci_scan_bus_parented() as __deprecated
-References: <1371747665-12768-1-git-send-email-liuj97@gmail.com> <1371747665-12768-4-git-send-email-liuj97@gmail.com> <20130620170855.GA21465@kroah.com>
-In-Reply-To: <20130620170855.GA21465@kroah.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06/21/2013 01:08 AM, Greg Kroah-Hartman wrote:
-> On Fri, Jun 21, 2013 at 01:01:05AM +0800, Jiang Liu wrote:
->> From: Jiang Liu <jiang.liu@huawei.com>
->>
->> Mark pci_scan_bus_parented() as __deprecated and clean up outdated
->> comments.
-> 
-> Why not just delete the function, if no in-kernel users are calling it,
-> it's no longer needed at all.
-Hi Greg,
-I thought that may break out of tree drivers, so give a warning first
-for smooth transitions. Any guidelines here? I have some other similar
-cases to keep some exported symbols just for out of tree drivers.
-Regards!
-Gerry
+Moving PCIe controller node to correct place so
+that it is sorted by register address in .dtsi file
 
-> 
-> thanks,
-> 
-> greg k-h
-> 
+Signed-off-by: Jay Agarwal <jagarwal@nvidia.com>
+---
+This patch is based on remotes/gitorious_thierryreding_linux/tegra/next and should be applied on top of this.
+
+changes in V2:
+Corrected patch synopsis
+
+ arch/arm/boot/dts/tegra30.dtsi |  132 ++++++++++++++++++++--------------------
+ 1 files changed, 66 insertions(+), 66 deletions(-)
+
+diff --git a/arch/arm/boot/dts/tegra30.dtsi b/arch/arm/boot/dts/tegra30.dtsi
+index 5c1f7c0..a242b2e 100644
+--- a/arch/arm/boot/dts/tegra30.dtsi
++++ b/arch/arm/boot/dts/tegra30.dtsi
+@@ -12,6 +12,72 @@
+ 		serial4 = &uarte;
+ 	};
+ 
++	pcie-controller {
++		compatible = "nvidia,tegra30-pcie";
++		device_type = "pci";
++		reg = <0x00003000 0x00000800   /* PADS registers */
++		       0x00003800 0x00000200   /* AFI registers */
++		       0x10000000 0x10000000>; /* configuration space */
++		reg-names = "pads", "afi", "cs";
++		interrupts = <0 98 0x04   /* controller interrupt */
++		              0 99 0x04>; /* MSI interrupt */
++
++		bus-range = <0x00 0xff>;
++		#address-cells = <3>;
++		#size-cells = <2>;
++
++		ranges = <0x82000000 0 0x00000000 0x00000000 0 0x00001000   /* port 0 configuration space */
++			  0x82000000 0 0x00001000 0x00001000 0 0x00001000   /* port 1 configuration space */
++			  0x82000000 0 0x00004000 0x00004000 0 0x00001000   /* port 2 configuration space */
++			  0x81000000 0 0          0x02000000 0 0x00010000   /* downstream I/O */
++			  0x82000000 0 0x20000000 0x20000000 0 0x10000000   /* non-prefetchable memory */
++			  0xc2000000 0 0x30000000 0x30000000 0 0x10000000>; /* prefetchable memory */
++
++		clocks = <&tegra_car 70>, <&tegra_car 72>, <&tegra_car 74>,
++			 <&tegra_car 118>, <&tegra_car 215>;
++		clock-names = "pex", "afi", "pcie_xclk", "pll_e", "cml";
++		status = "disabled";
++
++		pci@1,0 {
++			device_type = "pci";
++			assigned-addresses = <0x82000800 0 0x00000000 0 0x1000>;
++			reg = <0x000800 0 0 0 0>;
++			status = "disabled";
++
++			#address-cells = <3>;
++			#size-cells = <2>;
++			ranges;
++
++			nvidia,num-lanes = <2>;
++		};
++
++		pci@2,0 {
++			device_type = "pci";
++			assigned-addresses = <0x82001000 0 0x00001000 0 0x1000>;
++			reg = <0x001000 0 0 0 0>;
++			status = "disabled";
++
++			#address-cells = <3>;
++			#size-cells = <2>;
++			ranges;
++
++			nvidia,num-lanes = <2>;
++		};
++
++		pci@3,0 {
++			device_type = "pci";
++			assigned-addresses = <0x82001800 0 0x00004000 0 0x1000>;
++			reg = <0x001800 0 0 0 0>;
++			status = "disabled";
++
++			#address-cells = <3>;
++			#size-cells = <2>;
++			ranges;
++
++			nvidia,num-lanes = <2>;
++		};
++	};
++
+ 	host1x {
+ 		compatible = "nvidia,tegra30-host1x", "simple-bus";
+ 		reg = <0x50000000 0x00024000>;
+@@ -115,72 +181,6 @@
+ 		};
+ 	};
+ 
+-	pcie-controller {
+-		compatible = "nvidia,tegra30-pcie";
+-		device_type = "pci";
+-		reg = <0x00003000 0x00000800   /* PADS registers */
+-		       0x00003800 0x00000200   /* AFI registers */
+-		       0x10000000 0x10000000>; /* configuration space */
+-		reg-names = "pads", "afi", "cs";
+-		interrupts = <0 98 0x04   /* controller interrupt */
+-		              0 99 0x04>; /* MSI interrupt */
+-
+-		bus-range = <0x00 0xff>;
+-		#address-cells = <3>;
+-		#size-cells = <2>;
+-
+-		ranges = <0x82000000 0 0x00000000 0x00000000 0 0x00001000   /* port 0 configuration space */
+-			  0x82000000 0 0x00001000 0x00001000 0 0x00001000   /* port 1 configuration space */
+-			  0x82000000 0 0x00004000 0x00004000 0 0x00001000   /* port 2 configuration space */
+-			  0x81000000 0 0          0x02000000 0 0x00010000   /* downstream I/O */
+-			  0x82000000 0 0x20000000 0x20000000 0 0x10000000   /* non-prefetchable memory */
+-			  0xc2000000 0 0x30000000 0x30000000 0 0x10000000>; /* prefetchable memory */
+-
+-		clocks = <&tegra_car 70>, <&tegra_car 72>, <&tegra_car 74>,
+-			 <&tegra_car 118>, <&tegra_car 215>;
+-		clock-names = "pex", "afi", "pcie_xclk", "pll_e", "cml";
+-		status = "disabled";
+-
+-		pci@1,0 {
+-			device_type = "pci";
+-			assigned-addresses = <0x82000800 0 0x00000000 0 0x1000>;
+-			reg = <0x000800 0 0 0 0>;
+-			status = "disabled";
+-
+-			#address-cells = <3>;
+-			#size-cells = <2>;
+-			ranges;
+-
+-			nvidia,num-lanes = <2>;
+-		};
+-
+-		pci@2,0 {
+-			device_type = "pci";
+-			assigned-addresses = <0x82001000 0 0x00001000 0 0x1000>;
+-			reg = <0x001000 0 0 0 0>;
+-			status = "disabled";
+-
+-			#address-cells = <3>;
+-			#size-cells = <2>;
+-			ranges;
+-
+-			nvidia,num-lanes = <2>;
+-		};
+-
+-		pci@3,0 {
+-			device_type = "pci";
+-			assigned-addresses = <0x82001800 0 0x00004000 0 0x1000>;
+-			reg = <0x001800 0 0 0 0>;
+-			status = "disabled";
+-
+-			#address-cells = <3>;
+-			#size-cells = <2>;
+-			ranges;
+-
+-			nvidia,num-lanes = <2>;
+-		};
+-	};
+-
+ 	timer@50004600 {
+ 		compatible = "arm,cortex-a9-twd-timer";
+ 		reg = <0x50040600 0x20>;
+-- 
+1.7.0.4
 
