@@ -1,97 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f173.google.com ([209.85.192.173]:55213 "EHLO
-	mail-pd0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161182Ab3FTRBh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Jun 2013 13:01:37 -0400
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Jeremy Fitzhardinge <jeremy@goop.org>
-Cc: liuj97@gmail.com, Jiang Liu <jiang.liu@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	xen-devel@lists.xensource.com,
-	virtualization@lists.linux-foundation.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 1/3] PCI: export three functions to support modular host bridge driver
-Date: Fri, 21 Jun 2013 01:01:03 +0800
-Message-Id: <1371747665-12768-2-git-send-email-liuj97@gmail.com>
-In-Reply-To: <1371747665-12768-1-git-send-email-liuj97@gmail.com>
-References: <1371747665-12768-1-git-send-email-liuj97@gmail.com>
+Received: from Chamillionaire.breakpoint.cc ([80.244.247.6]:42597 "EHLO
+	Chamillionaire.breakpoint.cc" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755418Ab3FEV3c (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Jun 2013 17:29:32 -0400
+Date: Wed, 5 Jun 2013 23:28:41 +0200
+From: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"x86@kernel.org" <x86@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	Jan Beulich <JBeulich@suse.com>, Ingo Molnar <mingo@redhat.com>
+Subject: Re: [PATCH v3 -tip x86/apic 1/2] PCI/MSI: Allocate as many
+ multiple-MSIs as requested
+Message-ID: <20130605212841.GB5816@breakpoint.cc>
+References: <cover.1368431413.git.agordeev@redhat.com>
+ <8575dc590b819892f366852fe50835efaf579f4f.1368431413.git.agordeev@redhat.com>
+ <20130605205638.GA5816@breakpoint.cc>
+ <CAErSpo5hJYhWpBfN6GpyPv-ViaYNXyyLtw96xcN59CtQjfZi6w@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo5hJYhWpBfN6GpyPv-ViaYNXyyLtw96xcN59CtQjfZi6w@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <jiang.liu@huawei.com>
+-Suresh
 
-The xen-pcifront host bridge driver could be built as a module,
-so export pci_create_root_bus(), pci_stop_and_remove_root_bus() and
-pci_set_host_bridge_release() to support modular host bridge drivers.
-This patch is a preparation for coming xen-pcifront refinement.
+On Wed, Jun 05, 2013 at 03:09:34PM -0600, Bjorn Helgaas wrote:
+> 
+> Alexander had an example device that advertised 16 vectors, but the
+> driver knew that it could only generate 6.  That's a case where we
+> can't compute 'multiple' from 'nvec' (assuming the driver supplies
+> 'nvec == 6').  If we just rounded up to compute 'multiple', I think
+> we'd compute 8 instead of 16.
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Jeremy Fitzhardinge <jeremy@goop.org>
-Cc: xen-devel@lists.xensource.com
-Cc: virtualization@lists.linux-foundation.org
-Cc: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
----
- drivers/pci/host-bridge.c | 1 +
- drivers/pci/probe.c       | 1 +
- drivers/pci/remove.c      | 7 +++++++
- include/linux/pci.h       | 1 +
- 4 files changed, 10 insertions(+)
+Sure, but as I said: the only place where 'multiple' is computed / written
+it is doing the round-up thingy.
 
-diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-index a68dc61..6e390a6 100644
---- a/drivers/pci/host-bridge.c
-+++ b/drivers/pci/host-bridge.c
-@@ -34,6 +34,7 @@ void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
- 	bridge->release_fn = release_fn;
- 	bridge->release_data = release_data;
- }
-+EXPORT_SYMBOL(pci_set_host_bridge_release);
- 
- static bool resource_contains(struct resource *res1, struct resource *res2)
- {
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 46ada5c..ed768d8 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1801,6 +1801,7 @@ err_out:
- 	kfree(b);
- 	return NULL;
- }
-+EXPORT_SYMBOL(pci_create_root_bus);
- 
- int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int bus_max)
- {
-diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-index 8fc54b7..f328668 100644
---- a/drivers/pci/remove.c
-+++ b/drivers/pci/remove.c
-@@ -147,3 +147,10 @@ void pci_remove_root_bus(struct pci_bus *bus)
- 	/* remove the host bridge */
- 	put_device(&host_bridge->dev);
- }
-+
-+void pci_stop_and_remove_root_bus(struct pci_bus *bus)
-+{
-+	pci_stop_root_bus(bus);
-+	pci_remove_root_bus(bus);
-+}
-+EXPORT_SYMBOL(pci_stop_and_remove_root_bus);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 0fd1f15..f1229c7 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -757,6 +757,7 @@ void pci_remove_bus(struct pci_bus *b);
- void pci_stop_and_remove_bus_device(struct pci_dev *dev);
- void pci_stop_root_bus(struct pci_bus *bus);
- void pci_remove_root_bus(struct pci_bus *bus);
-+void pci_stop_and_remove_root_bus(struct pci_bus *bus);
- void pci_setup_cardbus(struct pci_bus *bus);
- void pci_sort_breadthfirst(void);
- #define dev_is_pci(d) ((d)->bus == &pci_bus_type)
--- 
-1.8.1.2
+> > While nitpicking, 'nvec' might deserve a better comment than 'number of
+> > messages' since it holds the number of allocated interrupts. :)
+> 
+> I did change the name 'nvec' to 'nvec_used', which should help a bit.
+> But I agree that it's still somewhat confusing.
+> 
+> BTW, the patches actually in my tree are at
+> http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/alexander-msi
+> (I tweaked this name and some comments slightly).
 
+'nvec_used' is better the comment next to it is still wrong I think.
+
+> Bjorn
+
+Sebastian
