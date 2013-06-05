@@ -1,77 +1,91 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56887 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751359Ab3FZSqa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 26 Jun 2013 14:46:30 -0400
-Message-ID: <1372272358.30572.560.camel@ul30vt.home>
-Subject: Re: [PATCH v2 1/2] iommu: Quirked PCIe bridge test and search
- function
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Joerg Roedel <joro@8bytes.org>,
-	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Stephen Hemminger <stephen@networkplumber.org>,
+Received: from mail-ob0-f171.google.com ([209.85.214.171]:42005 "EHLO
+	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757354Ab3FEUE7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Jun 2013 16:04:59 -0400
+Received: by mail-ob0-f171.google.com with SMTP id dn14so3359006obc.30
+        for <linux-pci@vger.kernel.org>; Wed, 05 Jun 2013 13:04:59 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1369489718-25869-5-git-send-email-jiang.liu@huawei.com>
+References: <1369489718-25869-1-git-send-email-jiang.liu@huawei.com> <1369489718-25869-5-git-send-email-jiang.liu@huawei.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 5 Jun 2013 14:04:36 -0600
+Message-ID: <CAErSpo5bysp-s-twUWgZEyJD01skjW=vXkcQBYkn_TALP83r1g@mail.gmail.com>
+Subject: Re: [PATCH v3, part1 04/10] PCI: mark pci_scan_bus_parented() as __deprecated
+To: Jiang Liu <liuj97@gmail.com>
+Cc: Yinghai Lu <yinghai@kernel.org>, Jiang Liu <jiang.liu@huawei.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Don Dutile <ddutile@redhat.com>
-Date: Wed, 26 Jun 2013 12:45:58 -0600
-In-Reply-To: <CAErSpo5_P9tPdmpq2XO-X-d5NUWFG8Nbm_byKOkd5d4b8UMcMQ@mail.gmail.com>
-References: <20130528183527.3318.5365.stgit@bling.home>
-	 <20130528184020.3318.7800.stgit@bling.home>
-	 <20130620135914.GS2575@8bytes.org> <1371743091.32709.52.camel@ul30vt.home>
-	 <20130620161538.GH3589@8bytes.org>
-	 <CAErSpo5_P9tPdmpq2XO-X-d5NUWFG8Nbm_byKOkd5d4b8UMcMQ@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Chris Metcalf <cmetcalf@tilera.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Jeremy Fitzhardinge <jeremy@goop.org>,
+	xen-devel <xen-devel@lists.xensource.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2013-06-25 at 22:20 -0600, Bjorn Helgaas wrote:
-> On Thu, Jun 20, 2013 at 10:15 AM, Joerg Roedel <joro@8bytes.org> wrote:
-> > On Thu, Jun 20, 2013 at 09:44:51AM -0600, Alex Williamson wrote:
-> >> On Thu, 2013-06-20 at 15:59 +0200, Joerg Roedel wrote:
-> >> > On Tue, May 28, 2013 at 12:40:20PM -0600, Alex Williamson wrote:
-> >> > > + if (!pci_is_root_bus(pdev->bus)) {
-> >> > > +         struct pci_dev *parent = pdev->bus->self;
-> >> > > +
-> >> > > +         if (pci_is_pcie(parent) &&
-> >> > > +             pci_pcie_type(parent) != PCI_EXP_TYPE_PCI_BRIDGE)
-> >> > > +                 return true;
-> >> > > + }
-> >> >
-> >> > Hmm, that looks a bit dangerous.
-> >>
-> >> How so?  The algorithm seems pretty simple and logical.
-> >
-> > It is simple, but it is still a heuristic that may fail at some point,
-> > no?
-> >
-> >> Actually, I believe Bjorn rejected the idea of a fixed list because this
-> >> problem is detectable.  He also doesn't want me messing with quirks to
-> >> pci_is_pcie() in PCI because he wants a 1:1 relation between that and
-> >> having a PCIe capability.  So, I'm stuck and this is where it's ended
-> >> up.  Thanks,
-> >
-> > I think implementing such a list is much safer.
-> >
-> > Bjorn, why didn't you like that idea?
-> 
-> Sorry, I can't remember, and I haven't been able to find the
-> discussion where I said that.  I think the current patches are all in
-> drivers/iommu, and if a list makes sense there, it's fine with me.
+[+cc Konrad, Jeremy, xen-devel (users of interface you're deprecating)]
 
-Here's the comment I remember
+On Sat, May 25, 2013 at 7:48 AM, Jiang Liu <liuj97@gmail.com> wrote:
+> Mark pci_scan_bus_parented() as __deprecated and clean up outdated
+> comments.
+>
+> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+> Cc: Chris Metcalf <cmetcalf@tilera.com>
+> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> Cc: Thierry Reding <thierry.reding@avionic-design.de>
+> Cc: linux-kernel@vger.kernel.org
+> Cc: linux-pci@vger.kernel.org
+> ---
+>  arch/tile/kernel/pci.c | 3 ---
+>  include/linux/pci.h    | 4 ++--
+>  2 files changed, 2 insertions(+), 5 deletions(-)
+>
+> diff --git a/arch/tile/kernel/pci.c b/arch/tile/kernel/pci.c
+> index 67237d3..936e087 100644
+> --- a/arch/tile/kernel/pci.c
+> +++ b/arch/tile/kernel/pci.c
+> @@ -309,9 +309,6 @@ int __init pcibios_init(void)
+>                          *
+>                          * It reads the PCI tree for this bus into the Linux
+>                          * data structures.
+> -                        *
+> -                        * This is inlined in linux/pci.h and calls into
+> -                        * pci_scan_bus_parented() in probe.c.
+>                          */
+>                         pci_add_resource(&resources, &ioport_resource);
+>                         pci_add_resource(&resources, &iomem_resource);
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index b0f4a82..7b23fa0 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -720,8 +720,8 @@ void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
+>  void pcibios_scan_specific_bus(int busn);
+>  struct pci_bus *pci_find_bus(int domain, int busnr);
+>  void pci_bus_add_devices(const struct pci_bus *bus);
+> -struct pci_bus *pci_scan_bus_parented(struct device *parent, int bus,
+> -                                     struct pci_ops *ops, void *sysdata);
+> +struct pci_bus * __deprecated pci_scan_bus_parented(struct device *parent,
+> +                       int bus, struct pci_ops *ops, void *sysdata);
+>  struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops, void *sysdata);
+>  struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+>                                     struct pci_ops *ops, void *sysdata,
 
-https://bugzilla.kernel.org/show_bug.cgi?id=44881#c7
+I think this patch is a good idea, but I think we need to change the
+only existing user of pci_scan_bus_parented() (pcifront_scan_root() in
+drivers/pci/xen-pcifront.c) at the same time, so xen doesn't start
+getting build warnings.  The deprecation warnings are really intended
+for out-of-tree users that we aren't able to fix ourselves.
 
-        Comment #7 From Bjorn Helgaas 2012-08-23 15:58:39
-        [snip]
-        I doubt the upstream device is at fault.  More likely the
-        downstream device is really a PCIe device (a PCIe-to-PCI bridge)
-        but just fails to report a PCIe capability.  I think this
-        situation is likely too common to deal with via quirks, so we'll
-        have to figure out a way to just make this work.
+I'm getting this series queued up in
+http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/jiang-bus-lock-v3,
+so if you want to send a patch just for xen, I can fold that in.
 
-Thanks,
-Alex
-
+Bjorn
