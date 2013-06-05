@@ -1,73 +1,43 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:43263 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965663Ab3FTVkr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 20 Jun 2013 17:40:47 -0400
-Message-ID: <1371764435.3944.30.camel@pasglop>
-Subject: Re: Masked MSIs expectations
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Joerg Roedel <joro@8bytes.org>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Linux Kernel list <linux-kernel@vger.kernel.org>
-Date: Fri, 21 Jun 2013 07:40:35 +1000
-In-Reply-To: <20130620133314.GR2575@8bytes.org>
-References: <1368086982.25488.165.camel@pasglop>
-	 <20130620133314.GR2575@8bytes.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 5 Jun 2013 22:56:38 +0200
+From: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: linux-kernel@vger.kernel.org, x86@kernel.org,
+	linux-pci@vger.kernel.org,
+	Suresh Siddha <suresh.b.siddha@intel.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	Jan Beulich <JBeulich@suse.com>,
+	Ingo Molnar <mingo@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH v3 -tip x86/apic 1/2] PCI/MSI: Allocate as many
+ multiple-MSIs as requested
+Message-ID: <20130605205638.GA5816@breakpoint.cc>
+References: <cover.1368431413.git.agordeev@redhat.com>
+ <8575dc590b819892f366852fe50835efaf579f4f.1368431413.git.agordeev@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <8575dc590b819892f366852fe50835efaf579f4f.1368431413.git.agordeev@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2013-06-20 at 15:33 +0200, Joerg Roedel wrote:
-> (In case this topic is still relevant)
-> 
-> On Thu, May 09, 2013 at 06:09:42PM +1000, Benjamin Herrenschmidt wrote:
-> > Do we provide drivers any guarantee to what happen if an MSI is shot
-> > while masked with disable_irq() or while not yet request_irq()'ed ?
-> > 
-> > Do we guarantee delivery (latched while masked), non-delivery, or
-> > undefined ?
-> 
-> I am not aware of any guarantees the kernel gives in this situation. I
-> think it would just drop the IRQ and print a "nobody cared" message.
+On Mon, May 13, 2013 at 11:05:48AM +0200, Alexander Gordeev wrote:
+> Note, although the existing 'msi_desc::multiple' field might seem
+> redundant, in fact in does not. In general case the number of MSIs a
+> PCI device is initialized with is not necessarily the closest power-
+> of-two value of the number of MSIs the device will send. Thus, in
+> theory it would not be always possible to derive the former from the
+> latter and we need to keep them both, to stress this corner case.
+> Besides, since 'msi_desc::multiple' is a bitfield, throwing it out
+> would not save us any space.
 
-Well, I was not necessarily talking about the kernel reaction here, my
-statement was high level, it could be that the interrupt controller
-latches it and "shoots" it as soon as enabled for example in some cases,
-or drops it in others.
+The last paragraph makes me curious. The only place where 'multiple' is set is
+in do_setup_msi_irqs() and this uses the next power of two for it. And since a
+device is not enabled twice, it is not overridden.
+So it should be possible to compute 'multiple' out of 'nvec' but it saves
+cycles not do to so. I agree to keep 'multiple' but your argument does not
+seem to make sense.
+While nitpicking, 'nvec' might deserve a better comment than 'number of
+messages' since it holds the number of allocated interrupts. :)
 
-Also we wouldn't print a message in the kernel, we "lazy disable" edge
-interrupts, so we would just drop it.
-
-> > I'm bringing up a piece of HW where if it happened, it won't be
-> > automatically sent to the CPU and can block further MSIs unless I
-> > explicitly either ditch it or force a resend when unmasking (at the PCI
-> > Express controller PIC level).
-> > 
-> > I'm tempted to just ditch anything that happened while masked, it would
-> > make everything easier on my side, but maybe drivers have different
-> > expectations (and of course an LSI would still shoot, that's not an
-> > issue, only MSIs are in question here).
-> > 
-> > I have cases of devices continuing to shoot one or two MSIs after kexec
-> > and before the new kernel takes over, causing a "loss" of any subsequent
-> > one unless I deal with that case one way or another.
-> 
-> I would also just ditch such IRQs that happen in that kexec case and
-> make sure that they will work again when the kexec-kernel device driver
-> wants to initialize them.
-
-Yes, in the kexec case it sounds obvious to just ditch anything, but I
-wanted to make sure of the general idea, ie, if the driver temporarily
-does disable_irq()/enable_irq() I can potentially ditch them all too,
-rather than "latch" them. 
-
-Anyway, I've done that, so far so good.
-
-Cheers,
-Ben.
-
-> 	Joerg
-> 
-
-
+Sebastian
