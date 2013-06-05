@@ -1,79 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f46.google.com ([209.85.219.46]:61970 "EHLO
-	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755354Ab3FESb6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Jun 2013 14:31:58 -0400
-Received: by mail-oa0-f46.google.com with SMTP id h2so1428027oag.19
-        for <linux-pci@vger.kernel.org>; Wed, 05 Jun 2013 11:31:57 -0700 (PDT)
+Received: from Chamillionaire.breakpoint.cc ([80.244.247.6]:42072 "EHLO
+	Chamillionaire.breakpoint.cc" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757286Ab3FEUJE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Jun 2013 16:09:04 -0400
+Date: Wed, 5 Jun 2013 22:08:07 +0200
+From: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: linux-kernel@vger.kernel.org, x86@kernel.org,
+	linux-pci@vger.kernel.org,
+	Suresh Siddha <suresh.b.siddha@intel.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	Jan Beulich <JBeulich@suse.com>,
+	Ingo Molnar <mingo@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH v3 -tip x86/apic 2/2] x86/MSI: Conserve interrupt
+ resources when using multiple-MSIs
+Message-ID: <20130605200807.GA5198@breakpoint.cc>
+References: <cover.1368431413.git.agordeev@redhat.com>
+ <924d05fe41fb93fdc2013680fb220d4b171de303.1368431413.git.agordeev@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <1369974092-11450-1-git-send-email-jiang.liu@huawei.com>
-References: <1369974092-11450-1-git-send-email-jiang.liu@huawei.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 5 Jun 2013 12:31:37 -0600
-Message-ID: <CAErSpo6VeT24CRZG=x2cpW+j9-R+ZRyDjceGNtXPnDTS8vrGGQ@mail.gmail.com>
-Subject: Re: [PATCH 1/3] PCI: set correct value for iov device before device
-To: Jiang Liu <liuj97@gmail.com>
-Cc: Yinghai Lu <yinghai@kernel.org>, Xudong Hao <xudong.hao@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Jiang Liu <jiang.liu@huawei.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <924d05fe41fb93fdc2013680fb220d4b171de303.1368431413.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 30, 2013 at 10:21 PM, Jiang Liu <liuj97@gmail.com> wrote:
-> From: Xudong Hao <xudong.hao@intel.com>
->
-> Commit 4f535093cf8f6da8 "PCI: Put pci_dev in device tree as early as
-> possible" moves device registering from pci_bus_add_devices() to
-> pci_device_add(). That change causes troubles to PCI virtual functions
-> because device_add(&virtfn->dev) is called before setting
-> virtfn->is_virtfn flag, which then causes Xen to report PCI virtual
-> functions as PCI physical functions.
->
-> So fix it by setting virtfn->is_virtfn before calling pci_device_add().
->
-> [Jiang Liu]:
-> move the setting of virtfn->is_virtfn ahead further for better readability
-> and modify changelog.
->
-> Signed-off-by: Xudong Hao <xudong.hao@intel.com>
-> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-> Cc: <stable@vger.kernel.org> # 3.9+
-> ---
-> Hi Bjorn and Yinghai,
->     How about this? I split out the bugfix patch as separate patch
-> so it could be easily back ported to stable branches.
+On Mon, May 13, 2013 at 11:06:17AM +0200, Alexander Gordeev wrote:
+> Current multiple-MSI implementation does not take into account
+> actual number of requested MSIs and always rounds that number
+> to a closest power-of-two value. Yet, a number of MSIs a PCI
+> device could send (and therefore a number of messages a device
+> driver could request) may be a lesser power-of-two. As result,
+> resources allocated for extra MSIs just wasted.
+> 
+> This update takes advantage of 'msi_desc::nvec' field introduced
+> with generic MSI code to track number of requested and used MSIs.
+> As result, resources associated with interrupts are conserved.
+> Of those resources most noticeable are x86 interrupt vectors.
+> 
+> The initial version of this fix also consumed on IRTEs, but Jan
+> noticed that a malfunctioning PCI device might send a message
+> number it did not claim and thus refer an IRTE it does not own.
+> To avoid this security hole the old-way approach preserved and
+> as many IRTEs are reserved as the device could possibly send.
+> 
+> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
 
-Applied to my -next branch for v3.11, thanks!
+This does not look all that bad.
 
-> ---
->  drivers/pci/iov.c | 5 ++---
->  1 file changed, 2 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-> index 5fffca9..de8ffac 100644
-> --- a/drivers/pci/iov.c
-> +++ b/drivers/pci/iov.c
-> @@ -82,6 +82,8 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
->         pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_DID, &virtfn->device);
->         pci_setup_device(virtfn);
->         virtfn->dev.parent = dev->dev.parent;
-> +       virtfn->physfn = pci_dev_get(dev);
-> +       virtfn->is_virtfn = 1;
->
->         for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
->                 res = dev->resource + PCI_IOV_RESOURCES + i;
-> @@ -103,9 +105,6 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
->         pci_device_add(virtfn, virtfn->bus);
->         mutex_unlock(&iov->dev->sriov->lock);
->
-> -       virtfn->physfn = pci_dev_get(dev);
-> -       virtfn->is_virtfn = 1;
-> -
->         rc = pci_bus_add_device(virtfn);
->         sprintf(buf, "virtfn%u", id);
->         rc = sysfs_create_link(&dev->dev.kobj, &virtfn->dev.kobj, buf);
-> --
-> 1.8.1.2
->
+Sebastian
