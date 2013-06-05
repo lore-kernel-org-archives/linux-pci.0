@@ -1,205 +1,206 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <1371219666.22681.0.camel@ul30vt.home>
-Subject: Re: [PATCH] pci: Enable overrides for missing ACS capabilities
-From: Alex Williamson <alex.williamson@redhat.com>
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, ddutile@redhat.com,
-	linux-kernel@vger.kernel.org, kvm@vger.kernel.org
-Date: Fri, 14 Jun 2013 08:21:06 -0600
-In-Reply-To: <20130530183955.14686.89444.stgit@bling.home>
-References: <20130530183955.14686.89444.stgit@bling.home>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:5297 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751474Ab3FEGFX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Jun 2013 02:05:23 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Yinghai Lu <yinghai@kernel.org>, <linux-pci@vger.kernel.org>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	Fenghua Yu <fenghua.yu@intel.com>,
+	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: [PATCH -v4 5/8] PCI/IA64: fix memleak for create pci root bus fail
+Date: Wed, 5 Jun 2013 14:01:54 +0800
+Message-ID: <1370412117-12860-6-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1370412117-12860-1-git-send-email-wangyijing@huawei.com>
+References: <1370412117-12860-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Bump.  Comments?
+From: Jiang Liu <jiang.liu@huawei.com>
 
-On Thu, 2013-05-30 at 12:40 -0600, Alex Williamson wrote:
-> PCIe ACS (Access Control Services) is the PCIe 2.0+ feature that
-> allows us to control whether transactions are allowed to be redirected
-> in various subnodes of a PCIe topology.  For instance, if two
-> endpoints are below a root port or downsteam switch port, the
-> downstream port may optionally redirect transactions between the
-> devices, bypassing upstream devices.  The same can happen internally
-> on multifunction devices.  The transaction may never be visible to the
-> upstream devices.
-> 
-> One upstream device that we particularly care about is the IOMMU.  If
-> a redirection occurs in the topology below the IOMMU, then the IOMMU
-> cannot provide isolation between devices.  This is why the PCIe spec
-> encourages topologies to include ACS support.  Without it, we have to
-> assume peer-to-peer DMA within a hierarchy can bypass IOMMU isolation.
-> 
-> Unfortunately, far too many topologies do not support ACS to make this
-> a steadfast requirement.  Even the latest chipsets from Intel are only
-> sporadically supporting ACS.  We have trouble getting interconnect
-> vendors to include the PCIe spec required PCIe capability, let alone
-> suggested features.
-> 
-> Therefore, we need to add some flexibility.  The pcie_acs_override=
-> boot option lets users opt-in specific devices or sets of devices to
-> assume ACS support.  The "downstream" option assumes full ACS support
-> on root ports and downstream switch ports.  The "multifunction"
-> option assumes the subset of ACS features available on multifunction
-> endpoints and upstream switch ports are supported.  The "id:nnnn:nnnn"
-> option enables ACS support on devices matching the provided vendor
-> and device IDs, allowing more strategic ACS overrides.  These options
-> may be combined in any order.  A maximum of 16 id specific overrides
-> are available.  It's suggested to use the most limited set of options
-> necessary to avoid completely disabling ACS across the topology.
-> 
-> Note to hardware vendors, we have facilities to permanently quirk
-> specific devices which enforce isolation but not provide an ACS
-> capability.  Please contact me to have your devices added and save
-> your customers the hassle of this boot option.
-> 
-> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-> ---
->  Documentation/kernel-parameters.txt |   10 +++
->  drivers/pci/quirks.c                |  102 +++++++++++++++++++++++++++++++++++
->  2 files changed, 112 insertions(+)
-> 
-> diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
-> index 47bb23c..a60e6ad 100644
-> --- a/Documentation/kernel-parameters.txt
-> +++ b/Documentation/kernel-parameters.txt
-> @@ -2349,6 +2349,16 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
->  		nomsi	Do not use MSI for native PCIe PME signaling (this makes
->  			all PCIe root ports use INTx for all services).
->  
-> +	pcie_acs_override =
-> +			[PCIE] Override missing PCIe ACS support for:
-> +		downstream
-> +			All downstream ports - full ACS capabilties
-> +		multifunction
-> +			All multifunction devices - multifunction ACS subset
-> +		id:nnnn:nnnn
-> +			Specfic device - full ACS capabilities
-> +			Specified as vid:did (vendor/device ID) in hex
-> +
->  	pcmv=		[HW,PCMCIA] BadgePAD 4
->  
->  	pd.		[PARIDE]
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 0369fb6..c7609f6 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -3292,11 +3292,113 @@ struct pci_dev *pci_get_dma_source(struct pci_dev *dev)
->  	return pci_dev_get(dev);
->  }
->  
-> +static bool acs_on_downstream;
-> +static bool acs_on_multifunction;
-> +
-> +#define NUM_ACS_IDS 16
-> +struct acs_on_id {
-> +	unsigned short vendor;
-> +	unsigned short device;
-> +};
-> +static struct acs_on_id acs_on_ids[NUM_ACS_IDS];
-> +static u8 max_acs_id;
-> +
-> +static __init int pcie_acs_override_setup(char *p)
-> +{
-> +	if (!p)
-> +		return -EINVAL;
-> +
-> +	while (*p) {
-> +		if (!strncmp(p, "downstream", 10))
-> +			acs_on_downstream = true;
-> +		if (!strncmp(p, "multifunction", 13))
-> +			acs_on_multifunction = true;
-> +		if (!strncmp(p, "id:", 3)) {
-> +			char opt[5];
-> +			int ret;
-> +			long val;
-> +
-> +			if (max_acs_id >= NUM_ACS_IDS - 1) {
-> +				pr_warn("Out of PCIe ACS override slots (%d)\n",
-> +					NUM_ACS_IDS);
-> +				goto next;
-> +			}
-> +
-> +			p += 3;
-> +			snprintf(opt, 5, "%s", p);
-> +			ret = kstrtol(opt, 16, &val);
-> +			if (ret) {
-> +				pr_warn("PCIe ACS ID parse error %d\n", ret);
-> +				goto next;
-> +			}
-> +			acs_on_ids[max_acs_id].vendor = val;
-> +
-> +			p += strcspn(p, ":");
-> +			if (*p != ':') {
-> +				pr_warn("PCIe ACS invalid ID\n");
-> +				goto next;
-> +			}
-> +
-> +			p++;
-> +			snprintf(opt, 5, "%s", p);
-> +			ret = kstrtol(opt, 16, &val);
-> +			if (ret) {
-> +				pr_warn("PCIe ACS ID parse error %d\n", ret);
-> +				goto next;
-> +			}
-> +			acs_on_ids[max_acs_id].device = val;
-> +			max_acs_id++;
-> +		}
-> +next:
-> +		p += strcspn(p, ",");
-> +		if (*p == ',')
-> +			p++;
-> +	}
-> +
-> +	if (acs_on_downstream || acs_on_multifunction || max_acs_id)
-> +		pr_warn("Warning: PCIe ACS overrides enabled; This may allow non-IOMMU protected peer-to-peer DMA\n");
-> +
-> +	return 0;
-> +}
-> +early_param("pcie_acs_override", pcie_acs_override_setup);
-> +
-> +static int pcie_acs_overrides(struct pci_dev *dev, u16 acs_flags)
-> +{
-> +	int i;
-> +
-> +	/* Never override ACS for legacy devices or devices with ACS caps */
-> +	if (!pci_is_pcie(dev) ||
-> +	    pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ACS))
-> +		return -ENOTTY;
-> +
-> +	for (i = 0; i < max_acs_id; i++)
-> +		if (acs_on_ids[i].vendor == dev->vendor &&
-> +		    acs_on_ids[i].device == dev->device)
-> +			return 1;
-> +
-> +	switch (pci_pcie_type(dev)) {
-> +	case PCI_EXP_TYPE_DOWNSTREAM:
-> +	case PCI_EXP_TYPE_ROOT_PORT:
-> +		if (acs_on_downstream)
-> +			return 1;
-> +		break;
-> +	case PCI_EXP_TYPE_ENDPOINT:
-> +	case PCI_EXP_TYPE_UPSTREAM:
-> +	case PCI_EXP_TYPE_LEG_END:
-> +	case PCI_EXP_TYPE_RC_END:
-> +		if (acs_on_multifunction && dev->multifunction)
-> +			return 1;
-> +	}
-> +
-> +	return -ENOTTY;
-> +}
-> +
->  static const struct pci_dev_acs_enabled {
->  	u16 vendor;
->  	u16 device;
->  	int (*acs_enabled)(struct pci_dev *dev, u16 acs_flags);
->  } pci_dev_acs_enabled[] = {
-> +	{ PCI_ANY_ID, PCI_ANY_ID, pcie_acs_overrides },
->  	{ 0 }
->  };
->  
-> 
+If pci_create_root_bus() return fail, we should release
+pci root info, pci controller etc.
 
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Cc: Tony Luck <tony.luck@intel.com>
+Cc: Fenghua Yu <fenghua.yu@intel.com>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linux-ia64@vger.kernel.org
+---
+ arch/ia64/include/asm/pci.h |    5 +++
+ arch/ia64/pci/pci.c         |   75 ++++++++++++++++++++++++++++++++++--------
+ 2 files changed, 65 insertions(+), 15 deletions(-)
+
+diff --git a/arch/ia64/include/asm/pci.h b/arch/ia64/include/asm/pci.h
+index a7ebe5f..00487b8 100644
+--- a/arch/ia64/include/asm/pci.h
++++ b/arch/ia64/include/asm/pci.h
+@@ -89,6 +89,11 @@ extern int pci_mmap_legacy_page_range(struct pci_bus *bus,
+ #define pci_legacy_read platform_pci_legacy_read
+ #define pci_legacy_write platform_pci_legacy_write
+ 
++struct iospace_resource {
++	struct list_head list;
++	struct resource res;
++};
++
+ struct pci_controller {
+ 	void *acpi_handle;
+ 	void *iommu;
+diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
+index 3a8b361..dfb6149 100644
+--- a/arch/ia64/pci/pci.c
++++ b/arch/ia64/pci/pci.c
+@@ -137,6 +137,7 @@ struct pci_root_info {
+ 	struct resource *res;
+ 	resource_size_t *res_offset;
+ 	unsigned int res_num;
++	struct list_head io_resources;
+ 	char *name;
+ };
+ 
+@@ -171,25 +172,21 @@ new_space (u64 phys_base, int sparse)
+ static u64 add_io_space(struct pci_root_info *info,
+ 			struct acpi_resource_address64 *addr)
+ {
++	struct iospace_resource *iospace;
+ 	struct resource *resource;
+ 	char *name;
+ 	unsigned long base, min, max, base_port;
+ 	unsigned int sparse = 0, space_nr, len;
+ 
+-	resource = kzalloc(sizeof(*resource), GFP_KERNEL);
+-	if (!resource) {
++	len = strlen(info->name) + 32;
++	iospace = kzalloc(sizeof(*iospace) + len, GFP_KERNEL);
++	if (!iospace) {
+ 		printk(KERN_ERR "PCI: No memory for %s I/O port space\n",
+ 			info->name);
+ 		goto out;
+ 	}
+ 
+-	len = strlen(info->name) + 32;
+-	name = kzalloc(len, GFP_KERNEL);
+-	if (!name) {
+-		printk(KERN_ERR "PCI: No memory for %s I/O port space name\n",
+-			info->name);
+-		goto free_resource;
+-	}
++	name = (char *)(iospace + 1);
+ 
+ 	min = addr->minimum;
+ 	max = min + addr->address_length - 1;
+@@ -198,7 +195,7 @@ static u64 add_io_space(struct pci_root_info *info,
+ 
+ 	space_nr = new_space(addr->translation_offset, sparse);
+ 	if (space_nr == ~0)
+-		goto free_name;
++		goto free_resource;
+ 
+ 	base = __pa(io_space[space_nr].mmio_base);
+ 	base_port = IO_SPACE_BASE(space_nr);
+@@ -213,18 +210,23 @@ static u64 add_io_space(struct pci_root_info *info,
+ 	if (space_nr == 0)
+ 		sparse = 1;
+ 
++	resource = &iospace->res;
+ 	resource->name  = name;
+ 	resource->flags = IORESOURCE_MEM;
+ 	resource->start = base + (sparse ? IO_SPACE_SPARSE_ENCODING(min) : min);
+ 	resource->end   = base + (sparse ? IO_SPACE_SPARSE_ENCODING(max) : max);
+-	insert_resource(&iomem_resource, resource);
++	if (insert_resource(&iomem_resource, resource)) {
++		dev_err(&info->bridge->dev,
++				"can't allocate host bridge io space resource  %pR\n",
++				resource);
++		goto free_resource;
++	}
+ 
++	list_add_tail(&iospace->list, &info->io_resources);
+ 	return base_port;
+ 
+-free_name:
+-	kfree(name);
+ free_resource:
+-	kfree(resource);
++	kfree(iospace);
+ out:
+ 	return ~0;
+ }
+@@ -325,6 +327,47 @@ static acpi_status add_window(struct acpi_resource *res, void *data)
+ 	return AE_OK;
+ }
+ 
++static void free_pci_root_info_res(struct pci_root_info *info)
++{
++	struct iospace_resource *iospace, *tmp;
++
++	list_for_each_entry_safe(iospace, tmp, &info->io_resources, list)
++		kfree(iospace);
++
++	kfree(info->res);
++	info->res = NULL;
++	kfree(info->res_offset);
++	info->res_offset = NULL;
++	info->res_num = 0;
++	kfree(info->controller);
++	info->controller = NULL;
++}
++
++static void __release_pci_root_info(struct pci_root_info *info)
++{
++	int i;
++	struct resource *res;
++	struct iospace_resource *iospace;
++
++	list_for_each_entry(iospace, &info->io_resources, list)
++		release_resource(&iospace->res);
++
++	for (i = 0; i < info->res_num; i++) {
++		res = &info->res[i];
++
++		if (!res->parent)
++			continue;
++
++		if (!(res->flags & (IORESOURCE_MEM | IORESOURCE_IO)))
++			continue;
++
++		release_resource(res);
++	}
++
++	free_pci_root_info_res(info);
++	kfree(info);
++}
++
+ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ {
+ 	struct acpi_device *device = root->device;
+@@ -355,7 +398,8 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 				"ignored (out of memory)\n", root->segment, busnum);
+ 		goto out2;
+ 	}
+-
++
++	INIT_LIST_HEAD(&info->io_resources);
+ 	INIT_LIST_HEAD(&info->resources);
+ 	/* insert busn resource at first */
+ 	pci_add_resource(&info->resources, &root->secondary);
+@@ -396,6 +440,7 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 				   &info->resources);
+ 	if (!pbus) {
+ 		pci_free_resource_list(&info->resources);
++		__release_pci_root_info(info);
+ 		return NULL;
+ 	}
+ 
+-- 
+1.7.1
 
 
