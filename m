@@ -1,62 +1,42 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Yinghai Lu <yinghai@kernel.org>, john.ronciak@intel.com,
-	miles.j.penner@intel.com, bruce.w.allan@intel.com,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	x86@kernel.org
-Subject: [PATCH 1/6] PCI: acpiphp: do not check for SLOT_ENABLED in enable_device()
-Date: Tue, 25 Jun 2013 19:22:05 +0300
-Message-Id: <1372177330-28013-2-git-send-email-mika.westerberg@linux.intel.com>
-In-Reply-To: <1372177330-28013-1-git-send-email-mika.westerberg@linux.intel.com>
-References: <1372177330-28013-1-git-send-email-mika.westerberg@linux.intel.com>
+MIME-Version: 1.0
+In-Reply-To: <20130604131451.GA24385@dhcp-26-207.brq.redhat.com>
+References: <CAErSpo7onNaU5mquJ_a7kwGPgzs3Q_7U89__HT9DbJFkUX4fsQ@mail.gmail.com>
+ <20130529083652.GA25971@dhcp-26-207.brq.redhat.com> <CAErSpo4EkXX-UoFLyni+ZpXaTmCRq5sJCqZ4FCt7fywpDyVWqw@mail.gmail.com>
+ <CAErSpo6bjBEK=Ta=pVzwCBMfrqfe3jB-sEfv1Kz9mt9iakdeaA@mail.gmail.com> <20130604131451.GA24385@dhcp-26-207.brq.redhat.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 5 Jun 2013 11:18:54 -0600
+Message-ID: <CAErSpo7DL0LeW_rZ0KL-AzBEM-crj+zaiG9n9f8SRn2Sd+6Atw@mail.gmail.com>
+Subject: Re: [PATCH v3 -tip x86/apic 1/2] PCI/MSI: Allocate as many
+ multiple-MSIs as requested
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"x86@kernel.org" <x86@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	Jan Beulich <JBeulich@suse.com>,
+	Ingo Molnar <mingo@redhat.com>,
+	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+On Tue, Jun 4, 2013 at 7:14 AM, Alexander Gordeev <agordeev@redhat.com> wrote:
+> On Mon, Jun 03, 2013 at 02:46:59PM -0600, Bjorn Helgaas wrote:
+>> On Wed, May 29, 2013 at 2:58 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> I pushed these with updates to
+>> http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/alexander-msi
+>>
+>> Anybody want to ack the iommu/irq_remapping.c patch?  If so, I can
+>> merge that branch into -next for v3.11.
+>
+> Konrad, Sebastian,
+>
+> Any chance to take a look and patch 2/2?
 
-With Thunderbolt you can chain devices: connect a new devices to plugged
-one. In this case the slot is already enabled, but we still want to look
-for new devices behind it.
+I went out on a limb and merged this into my -next branch for v3.11.
+If anybody objects, let me know and I'll drop or rework it.
 
-We're going to reuse enable_device() for rescan for new devices on the
-enabled slot. Let's push the check up by stack.
-
-Signed-off-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
----
- drivers/pci/hotplug/acpiphp_glue.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-index 59df857..b983e29 100644
---- a/drivers/pci/hotplug/acpiphp_glue.c
-+++ b/drivers/pci/hotplug/acpiphp_glue.c
-@@ -688,9 +688,6 @@ static int __ref enable_device(struct acpiphp_slot *slot)
- 	int num, max, pass;
- 	LIST_HEAD(add_list);
- 
--	if (slot->flags & SLOT_ENABLED)
--		goto err_exit;
--
- 	list_for_each_entry(func, &slot->funcs, sibling)
- 		acpiphp_bus_add(func);
- 
-@@ -1242,6 +1239,8 @@ int acpiphp_enable_slot(struct acpiphp_slot *slot)
- 		goto err_exit;
- 
- 	if (get_slot_status(slot) == ACPI_STA_ALL) {
-+		if (slot->flags & SLOT_ENABLED)
-+			goto err_exit;
- 		/* configure all functions */
- 		retval = enable_device(slot);
- 		if (retval)
--- 
-1.8.3.1
-
+Bjorn
