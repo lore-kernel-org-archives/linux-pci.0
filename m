@@ -1,44 +1,175 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from nodalink.pck.nerim.net ([62.212.105.220]:53510 "EHLO
-	paradis.irqsave.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751802Ab3FDPw5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Jun 2013 11:52:57 -0400
-Date: Tue, 4 Jun 2013 17:54:22 +0200
-From: =?iso-8859-1?Q?Beno=EEt?= Canet <benoit.canet@irqsave.net>
-To: Don Dutile <ddutile@redhat.com>
-Cc: =?iso-8859-1?Q?Beno=EEt?= Canet <benoit.canet@irqsave.net>,
-	linux-pci@vger.kernel.org, qemu-devel@nongnu.org,
-	iommu@lists.linux-foundation.org, alex.williamson@redhat.com
-Subject: Re: [Qemu-devel] SR-IOV PF reset and QEMU VFs VFIO passthrough
-Message-ID: <20130604155422.GB5991@irqsave.net>
-References: <20130601121320.GC5157@irqsave.net>
- <51ACE340.1030406@redhat.com>
- <20130603192958.GB31044@irqsave.net>
- <51AD02B1.8070503@redhat.com>
- <20130603212723.GG4094@irqsave.net>
- <51AD0DB8.8090109@redhat.com>
- <20130603215855.GC31044@irqsave.net>
- <51AD12AB.1000903@redhat.com>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:5437 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751474Ab3FEGFa (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Jun 2013 02:05:30 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Yinghai Lu <yinghai@kernel.org>, <linux-pci@vger.kernel.org>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	Fenghua Yu <fenghua.yu@intel.com>,
+	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH -v4 7/8] PCI/IA64: introduce probe_pci_root_info() to manage  _CRS resource
+Date: Wed, 5 Jun 2013 14:01:56 +0800
+Message-ID: <1370412117-12860-8-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1370412117-12860-1-git-send-email-wangyijing@huawei.com>
+References: <1370412117-12860-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <51AD12AB.1000903@redhat.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> >>Per the SRIOV spec, yes, but that's in PCIe ext cfg space.
-> >>That area of the PCI configuration is not saved or restored by dev-reset.
-> >
-> >Can a callback be added so PF driver can restore this state ?
-> >
-> As you pointed out, no need to, unless it's a device-specific,
-> PCIe cap structure.  the SRIOV caps are re-instated, as you showed above...
+Currently, initialize _CRS resource code in IA64 make pci_acpi_scan_root()
+some lengthiness. Introduce probe_pci_root_info() to manage it like in X86,
 
-I think this is a device specific structure.
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ arch/ia64/pci/pci.c |  100 +++++++++++++++++++++++++++++----------------------
+ 1 files changed, 57 insertions(+), 43 deletions(-)
 
-It would be annoying only in case of a PF FLR initiated via /sys or something
-external to the PF driver because the PF driver could restore this area after it
-initiate an FLR.
+diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
+index 4383b03..f2139b4 100644
+--- a/arch/ia64/pci/pci.c
++++ b/arch/ia64/pci/pci.c
+@@ -375,6 +375,50 @@ static void release_pci_root_info(struct pci_host_bridge *bridge)
+ 	__release_pci_root_info(info);
+ }
+ 
++static int
++probe_pci_root_info(struct pci_root_info *info, struct acpi_device *device,
++		int busnum, int domain)
++{
++	char *name;
++
++	name = kmalloc(16, GFP_KERNEL);
++	if (!name)
++		return -ENOMEM;
++
++	sprintf(name, "PCI Bus %04x:%02x", domain, busnum);
++	info->bridge = device;
++	info->name = name;
++
++	acpi_walk_resources(device->handle, METHOD_NAME__CRS, count_window,
++			&info->res_num);
++	if (info->res_num) {
++		info->res =
++			kzalloc_node(sizeof(*info->res) * info->res_num,
++				     GFP_KERNEL, info->controller->node);
++		if (!info->res) {
++			kfree(name);
++			return -ENOMEM;
++		}
++
++		info->res_offset =
++			kzalloc_node(sizeof(*info->res_offset) * info->res_num,
++					GFP_KERNEL, info->controller->node);
++		if (!info->res_offset) {
++			kfree(name);
++			kfree(info->res);
++			info->res = NULL;
++			return -ENOMEM;
++		}
++
++		info->res_num = 0;
++		acpi_walk_resources(device->handle, METHOD_NAME__CRS,
++			add_window, info);
++	} else
++		kfree(name);
++
++	return 0;
++}
++
+ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ {
+ 	struct acpi_device *device = root->device;
+@@ -384,12 +428,11 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 	struct pci_root_info *info = NULL;
+ 	int busnum = root->secondary.start;
+ 	struct pci_bus *pbus;
+-	char *name;
+-	int pxm;
++	int pxm, ret;
+ 
+ 	controller = alloc_pci_controller(domain);
+ 	if (!controller)
+-		goto out1;
++		return NULL;
+ 
+ 	controller->acpi_handle = device->handle;
+ 
+@@ -402,41 +445,23 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 	info = kzalloc(sizeof(*info), GFP_KERNEL);
+ 	if (!info) {
+ 		printk(KERN_WARNING "pci_bus %04x:%02x: "
+-				"ignored (out of memory)\n", root->segment, busnum);
+-		goto out2;
++				"ignored (out of memory)\n", domain, busnum);
++		kfree(controller);
++		return NULL;
+ 	}
+ 	
++	info->controller = controller;
+ 	INIT_LIST_HEAD(&info->io_resources);
+ 	INIT_LIST_HEAD(&info->resources);
++	ret = probe_pci_root_info(info, device, busnum, domain);
++	if (ret) {
++		kfree(info->controller);
++		kfree(info);
++		return NULL;
++	}
++
+ 	/* insert busn resource at first */
+ 	pci_add_resource(&info->resources, &root->secondary);
+-	acpi_walk_resources(device->handle, METHOD_NAME__CRS, count_window,
+-			&info->res_num);
+-	if (info->res_num) {
+-		info->res =
+-			kzalloc_node(sizeof(*info->res) * info->res_num,
+-				     GFP_KERNEL, controller->node);
+-		if (!info->res)
+-			goto out3;
+-		
+-		info->res_offset = 
+-			kzalloc_node(sizeof(*info->res_offset) * info->res_num, 
+-					GFP_KERNEL, controller->node);
+-		if (!info->res_offset)
+-			goto out4;
+-
+-		name = kmalloc(16, GFP_KERNEL);
+-		if (!name)
+-			goto out5;
+-
+-		sprintf(name, "PCI Bus %04x:%02x", domain, bus);
+-		info->bridge = device;
+-		info->controller = controller;
+-		info->name = name;
+-		info->res_num = 0;
+-		acpi_walk_resources(device->handle, METHOD_NAME__CRS,
+-			add_window, info);
+-	}
+ 	/*
+ 	 * See arch/x86/pci/acpi.c.
+ 	 * The desired pci bus might already be scanned in a quirk. We
+@@ -455,17 +480,6 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 			release_pci_root_info, info);
+ 	pci_scan_child_bus(pbus);
+ 	return pbus;
+-
+-out5:
+-	kfree(info->res_offset);
+-out4:
+-	kfree(info->res);
+-out3:
+-	kfree(info);
+-out2:
+-	kfree(controller);
+-out1:
+-	return NULL;
+ }
+ 
+ int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
+-- 
+1.7.1
 
-Best regards
 
-Benoît Canet
