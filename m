@@ -1,96 +1,61 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from avon.wwwdotorg.org ([70.85.31.133]:33488 "EHLO
-	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750773Ab3FDTRV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Jun 2013 15:17:21 -0400
-Message-ID: <51AE3D3B.6080102@wwwdotorg.org>
-Date: Tue, 04 Jun 2013 13:17:15 -0600
-From: Stephen Warren <swarren@wwwdotorg.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-To: Jay Agarwal <jagarwal@nvidia.com>
-CC: linux@arm.linux.org.uk, thierry.reding@avionic-design.de,
-	bhelgaas@google.com, ldewangan@nvidia.com, olof@lixom.net,
-	hdoyu@nvidia.com, pgaikwad@nvidia.com, mturquette@linaro.org,
-	pdeschrijver@nvidia.com, linux-arm-kernel@lists.infradead.org,
-	linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, jtukkinen@nvidia.com, kthota@nvidia.com
-Subject: Re: [PATCH V3 2/4] ARM: tegra: pcie: Add tegra3 support
-References: <1370372252-4332-1-git-send-email-jagarwal@nvidia.com> <1370372252-4332-2-git-send-email-jagarwal@nvidia.com>
-In-Reply-To: <1370372252-4332-2-git-send-email-jagarwal@nvidia.com>
+In-Reply-To: <1369489718-25869-4-git-send-email-jiang.liu@huawei.com>
+References: <1369489718-25869-1-git-send-email-jiang.liu@huawei.com> <1369489718-25869-4-git-send-email-jiang.liu@huawei.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 5 Jun 2013 14:07:18 -0600
+Message-ID: <CAErSpo6C-QMFCbMMivBE5TN4sEOFR_EyPmtN=OUNo8eN-+t=GQ@mail.gmail.com>
+Subject: Re: [PATCH v3, part1 03/10] PCI: Convert alloc_pci_dev(void) to
+ pci_alloc_dev(bus) instead
+To: Jiang Liu <liuj97@gmail.com>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Paul Mackerras <paulus@samba.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	David Airlie <airlied@linux.ie>,
+	Neela Syam Kolli <megaraidlinux@lsi.com>,
+	"James E.J. Bottomley" <JBottomley@parallels.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	sparclinux@vger.kernel.org,
+	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06/04/2013 12:57 PM, Jay Agarwal wrote:
-> - Enable PCIe root port 2 for Cardhu
-> - Make private data structure for each SoC
-> - Add required Tegra30 clocks and regulators
-> - Add Tegra30 specific code in enable controller
-> - Corrected logic in read/write config space to
->   display right device number on bus 0
-> - Fixed unnecessary freeing of tegra_pcie_bus structure in tegra_pcie_remove
-> - Added Tegra30 specific properties in pci binding document
+On Sat, May 25, 2013 at 7:48 AM, Jiang Liu <liuj97@gmail.com> wrote:
+> From: Gu Zheng <guz.fnst@cn.fujitsu.com>
+>
+> Use the new pci_alloc_dev(bus) to replace the existing using of
+> alloc_pci_dev(void).
+> ...
 
-> diff --git a/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt b/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 26df9c8..d5d18a0 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1130,6 +1130,7 @@ static void pci_release_dev(struct device *dev)
+>         struct pci_dev *pci_dev;
+>
+>         pci_dev = to_pci_dev(dev);
+> +       pci_bus_put(pci_dev->bus);
+>         pci_release_capabilities(pci_dev);
+>         pci_release_of_node(pci_dev);
+>         kfree(pci_dev);
 
-> +- avdd-supply: Power supply for controller (1.05V)
+I think we should drop the pci_bus reference *last* (before the
+kfree).  Otherwise, we have to audit pci_release_capabilities() and
+pci_release_of_node() to make sure they don't use pci_dev->bus.
 
-> +  "cml": The Tegra clock of that name
+I made this change on my branch already; just let me know if you object.
 
-Both those changes need to mention that those additions are only
-required for Tegra30, not Tegra20. In other words,
-
-+- avdd-supply: Power supply for controller (1.05V) (not required for
-Tegra20)
-
-+  "cml": The Tegra clock of that name (not required for Tegra20)
-
-You probably also want to explicitly mention nvidia,tegra30-pcie as a
-legal compatible value.
-
-> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-
-> +/* used to differentiate tegra chips code */
-> +struct tegra_pcie_soc_data {
-> +	unsigned int num_max_ports;
-
-nit: "num max" seems redundant. max_ports or num_ports would be better.
-
->  struct tegra_pcie_port {
-> @@ -384,7 +408,7 @@ static int tegra_pcie_read_conf(struct pci_bus *bus, unsigned int devfn,
->  		struct tegra_pcie_port *port;
->  
->  		list_for_each_entry(port, &pcie->ports, list) {
-> -			if (port->index + 1 == slot) {
-> +			if (port->index == slot) {
-
-This and the equivalent change in tegra_pcie_write_conf() seem like a
-bug-fix unrelated to the addition of Tegra30 support. Hence, they should
-be a separate patch.
-
-
-> @@ -398,7 +422,6 @@ static int tegra_pcie_read_conf(struct pci_bus *bus, unsigned int devfn,
->  			*value = 0xffffffff;
->  			return PCIBIOS_DEVICE_NOT_FOUND;
->  		}
-> -
->  		addr += tegra_pcie_conf_offset(devfn, where);
-
-Unnecessary white-space change.
-
-> @@ -1549,10 +1660,9 @@ static int tegra_pcie_remove(struct platform_device *pdev)
->  	struct tegra_pcie_bus *bus;
->  	int err;
->  
-> -	list_for_each_entry(bus, &pcie->busses, list) {
-> +	list_for_each_entry(bus, &pcie->busses, list)
->  		vunmap(bus->area->addr);
-> -		kfree(bus);
-> -	}
-> +	kfree(bus);
-
-This doesn't look right. Can you please explain it further? This is
-looping over every bus in a dynamic list, so surely each entry needs to
-be freed? Did you do this to avoid a crash? If so, the issue is likely
-that the loop should use list_for_each_entry_safe() rather than
-list_for_each_entry().
+Bjorn
