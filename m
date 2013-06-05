@@ -1,139 +1,54 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <1371238081-32260-5-git-send-email-jiang.liu@huawei.com>
-References: <1371238081-32260-1-git-send-email-jiang.liu@huawei.com>
-	<1371238081-32260-5-git-send-email-jiang.liu@huawei.com>
-Date: Fri, 14 Jun 2013 14:03:59 -0700
-Message-ID: <CAE9FiQWd8QCpSYp-d7SvXvu=GdSEV7SoTSnfC+VBkz=g5sxR8w@mail.gmail.com>
-Subject: Re: [BUGFIX v2 4/4] ACPIPHP: fix bug 56531 Sony VAIO VPCZ23A4R: can't
- assign mem/io after docking
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jiang Liu <jiang.liu@huawei.com>
-Cc: "Rafael J . Wysocki" <rjw@sisk.pl>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Alexander E . Patrakov" <patrakov@gmail.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Jiang Liu <liuj97@gmail.com>,
+In-Reply-To: <20130605183318.GE12812@phenom.dumpdata.com>
+References: <CAErSpo7onNaU5mquJ_a7kwGPgzs3Q_7U89__HT9DbJFkUX4fsQ@mail.gmail.com>
+ <20130529083652.GA25971@dhcp-26-207.brq.redhat.com> <CAErSpo4EkXX-UoFLyni+ZpXaTmCRq5sJCqZ4FCt7fywpDyVWqw@mail.gmail.com>
+ <CAErSpo6bjBEK=Ta=pVzwCBMfrqfe3jB-sEfv1Kz9mt9iakdeaA@mail.gmail.com>
+ <20130604131451.GA24385@dhcp-26-207.brq.redhat.com> <CAErSpo7DL0LeW_rZ0KL-AzBEM-crj+zaiG9n9f8SRn2Sd+6Atw@mail.gmail.com>
+ <20130605183318.GE12812@phenom.dumpdata.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 5 Jun 2013 12:35:31 -0600
+Message-ID: <CAErSpo5pZupF3qq-w=EuJXswUOqZTXQmSnMioqtVSvSDmo2fjg@mail.gmail.com>
+Subject: Re: [PATCH v3 -tip x86/apic 1/2] PCI/MSI: Allocate as many
+ multiple-MSIs as requested
+To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"x86@kernel.org" <x86@kernel.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"stable@vger.kernel.org" <stable@vger.kernel.org>
+	Yinghai Lu <yinghai@kernel.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	Jan Beulich <JBeulich@suse.com>,
+	Ingo Molnar <mingo@redhat.com>,
+	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 14, 2013 at 12:28 PM, Jiang Liu <jiang.liu@huawei.com> wrote:
-> Please refer to https://bugzilla.kernel.org/show_bug.cgi?id=56531 for
-> more information.
+On Wed, Jun 5, 2013 at 12:33 PM, Konrad Rzeszutek Wilk
+<konrad.wilk@oracle.com> wrote:
+> On Wed, Jun 05, 2013 at 11:18:54AM -0600, Bjorn Helgaas wrote:
+>> On Tue, Jun 4, 2013 at 7:14 AM, Alexander Gordeev <agordeev@redhat.com> wrote:
+>> > On Mon, Jun 03, 2013 at 02:46:59PM -0600, Bjorn Helgaas wrote:
+>> >> On Wed, May 29, 2013 at 2:58 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> >> I pushed these with updates to
+>> >> http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/alexander-msi
+>> >>
+>> >> Anybody want to ack the iommu/irq_remapping.c patch?  If so, I can
+>> >> merge that branch into -next for v3.11.
+>> >
+>> > Konrad, Sebastian,
+>> >
+>> > Any chance to take a look and patch 2/2?
 >
-> This issue is caused by differences in PCI resource assignment between
-> boot time and runtime hotplug. On x86 platforms, OS respects PCI
-> resource assignment from BIOS and only reassign resources for unassigned
-> BARs at boot time. But with acpiphp, it ignores BIOS resource assignment
-> and reassign all resources by itself.
+> I presume you mean:
+> x86/MSI: Conserve interrupt resources when using multiple-MSI
 >
-> If we have enough resources, reassigning all PCI resources should work
-> too, but it may fail if we are under resource constraints. On the other
-> handle, current PCI MMIO alignment algorithm may waste huge MMIO address
-> space if we have some PCI devices with huge MMIO BARs.
+> ? Looks good
+> This one:
+> PCI: Allocate only as many MSI vectors as requested by driver
 >
-> On this Sony laptop, BIOS allocates limited MMIO resources for the dock
-> station and the dock station has a gfx which has a 256MB MMIO BAR.
-> So current acpiphp driver fails to allocate resources for most devices
-> on the dock station.
 >
-> So change acpiphp driver to follow boot time behavior to respect BIOS
-> resource assignment.
->
-> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-> Reported-by: Alexander E. Patrakov <patrakov@gmail.com>
-> Tested-by: Alexander E. Patrakov <patrakov@gmail.com>
-> Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
-> Cc: linux-acpi@vger.kernel.org
-> Cc: linux-kernel@vger.kernel.org
-> Cc: <stable@vger.kernel.org>
+> looks OK as well.
 
-Acked-by: Yinghai Lu <yinghai@kernel.org>
-
-> ---
->  drivers/pci/hotplug/acpiphp_glue.c | 7 +++++--
->  drivers/pci/pci.h                  | 5 +++++
->  drivers/pci/setup-bus.c            | 8 ++++----
->  3 files changed, 14 insertions(+), 6 deletions(-)
->
-> diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-> index a65203b..f4a53e9 100644
-> --- a/drivers/pci/hotplug/acpiphp_glue.c
-> +++ b/drivers/pci/hotplug/acpiphp_glue.c
-> @@ -687,6 +687,7 @@ static int __ref enable_device(struct acpiphp_slot *slot)
->         struct pci_bus *bus = slot->bridge->pci_bus;
->         struct acpiphp_func *func;
->         int num, max, pass;
-> +       LIST_HEAD(add_list);
->
->         if (slot->flags & SLOT_ENABLED)
->                 goto err_exit;
-> @@ -711,13 +712,15 @@ static int __ref enable_device(struct acpiphp_slot *slot)
->                                 max = pci_scan_bridge(bus, dev, max, pass);
->                                 if (pass && dev->subordinate) {
->                                         check_hotplug_bridge(slot, dev);
-> -                                       pci_bus_size_bridges(dev->subordinate);
-> +                                       pcibios_resource_survey_bus(dev->subordinate);
-> +                                       __pci_bus_size_bridges(dev->subordinate,
-> +                                                              &add_list);
->                                 }
->                         }
->                 }
->         }
->
-> -       pci_bus_assign_resources(bus);
-> +       __pci_bus_assign_resources(bus, &add_list, NULL);
->         acpiphp_sanitize_bus(bus);
->         acpiphp_set_hpp_values(bus);
->         acpiphp_set_acpi_region(slot);
-> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-> index 68678ed..d1182c4 100644
-> --- a/drivers/pci/pci.h
-> +++ b/drivers/pci/pci.h
-> @@ -202,6 +202,11 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
->                     struct resource *res, unsigned int reg);
->  int pci_resource_bar(struct pci_dev *dev, int resno, enum pci_bar_type *type);
->  void pci_configure_ari(struct pci_dev *dev);
-> +void __ref __pci_bus_size_bridges(struct pci_bus *bus,
-> +                       struct list_head *realloc_head);
-> +void __ref __pci_bus_assign_resources(const struct pci_bus *bus,
-> +                                     struct list_head *realloc_head,
-> +                                     struct list_head *fail_head);
->
->  /**
->   * pci_ari_enabled - query ARI forwarding status
-> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-> index 16abaaa..d254e23 100644
-> --- a/drivers/pci/setup-bus.c
-> +++ b/drivers/pci/setup-bus.c
-> @@ -1044,7 +1044,7 @@ handle_done:
->         ;
->  }
->
-> -static void __ref __pci_bus_size_bridges(struct pci_bus *bus,
-> +void __ref __pci_bus_size_bridges(struct pci_bus *bus,
->                         struct list_head *realloc_head)
->  {
->         struct pci_dev *dev;
-> @@ -1115,9 +1115,9 @@ void __ref pci_bus_size_bridges(struct pci_bus *bus)
->  }
->  EXPORT_SYMBOL(pci_bus_size_bridges);
->
-> -static void __ref __pci_bus_assign_resources(const struct pci_bus *bus,
-> -                                        struct list_head *realloc_head,
-> -                                        struct list_head *fail_head)
-> +void __ref __pci_bus_assign_resources(const struct pci_bus *bus,
-> +                                     struct list_head *realloc_head,
-> +                                     struct list_head *fail_head)
->  {
->         struct pci_bus *b;
->         struct pci_dev *dev;
-> --
-> 1.8.1.2
->
+Great, thanks, Konrad!
