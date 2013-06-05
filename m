@@ -1,65 +1,145 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Jiang Liu <jiang.liu@huawei.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"Alexander E . Patrakov" <patrakov@gmail.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Shaohua Li <shaohua.li@intel.com>,
-	Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org
-Subject: Re: [BUGFIX 4/9] ACPI, DOCK: avoid initializing acpi_dock_notifier_list multiple times
-Date: Thu, 13 Jun 2013 20:27:48 +0200
-Message-ID: <5386268.Rav0V0b5qK@vostro.rjw.lan>
-In-Reply-To: <1371141152-9468-5-git-send-email-jiang.liu@huawei.com>
-References: <1371141152-9468-1-git-send-email-jiang.liu@huawei.com> <1371141152-9468-5-git-send-email-jiang.liu@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-oa0-f51.google.com ([209.85.219.51]:41790 "EHLO
+	mail-oa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756432Ab3FERKr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Jun 2013 13:10:47 -0400
+Received: by mail-oa0-f51.google.com with SMTP id f4so1343341oah.38
+        for <linux-pci@vger.kernel.org>; Wed, 05 Jun 2013 10:10:46 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <20130605141541.GB30420@console-pimps.org>
+References: <1369215782-32697-1-git-send-email-matt@console-pimps.org>
+ <CAErSpo4id0RFARD6zCxeMo-uasPBnL7KpUFPqhW4zLgCxrF5fw@mail.gmail.com>
+ <20130528113617.GR14575@console-pimps.org> <CAErSpo5DG61wvQEw_9z8vm6Lp=E0urq6LG5SOuWSawkNeDkF+A@mail.gmail.com>
+ <20130528164801.GA2345@srcf.ucam.org> <CAErSpo5kxE=KgCV+H9=paaRXS1tOxhSD8qRf+nsn8PBMRiGRsA@mail.gmail.com>
+ <20130605141541.GB30420@console-pimps.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 5 Jun 2013 11:10:26 -0600
+Message-ID: <CAErSpo67VuZhfP3Qzvia4xQDQXLpCg25Nn4f2CnArSvZwsk2Pg@mail.gmail.com>
+Subject: Re: [PATCH] x86/PCI: setup data may be in highmem
+To: Matt Fleming <matt@console-pimps.org>
+Cc: Matthew Garrett <mjg59@srcf.ucam.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"x86@kernel.org" <x86@kernel.org>,
+	Matt Fleming <matt.fleming@intel.com>,
+	Seth Forshee <seth.forshee@canonical.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>, stable@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, June 14, 2013 12:32:27 AM Jiang Liu wrote:
-> Initialize acpi_dock_notifier_list from function acpi_dock_init()
-> instead of dock_add() to avoid initializing it multiple times.
+On Wed, Jun 5, 2013 at 8:15 AM, Matt Fleming <matt@console-pimps.org> wrote:
+> On Tue, 28 May, at 11:28:54AM, Bjorn Helgaas wrote:
+>> OK, hopefully somebody will do the analysis to verify that ioremap()
+>> is appropriate in both cases.  It seems likely, but I haven't looked
+>> in detail.
+>
+> Switching from early_ioremap() to ioremap() seems to work fine from the
+> testing I've seen. I've included the new patch below. Would you prefer a
+> proper submission?
 
-Well, makes sense.
+This is fine, thanks.  I applied this to my for-linus branch and will
+ask Linus to pull it for v3.10.
 
-Thanks,
-Rafael
-
-
-> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-> Cc: Shaohua Li <shaohua.li@intel.com>
-> Cc: Len Brown <lenb@kernel.org>
-> Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
-> Cc: linux-acpi@vger.kernel.org
-> Cc: linux-kernel@vger.kernel.org
+> From 7a82fbe1d0c74533162487fa1e4bc23877a8a502 Mon Sep 17 00:00:00 2001
+> From: Matt Fleming <matt.fleming@intel.com>
+> Date: Wed, 22 May 2013 09:56:23 +0100
+> Subject: [PATCH] x86/PCI: setup data may be in highmem
+>
+> pcibios_add_device() assumes that the physical addresses stored in
+> setup_data are accessible via the direct kernel mapping, and that
+> calling phys_to_virt() is valid. This isn't guaranteed to be true on x86
+> where the direct mapping range is much smaller than on x86-64.
+>
+> Calling phys_to_virt() on a highmem address results in the following,
+>
+>  BUG: unable to handle kernel paging request at 39a3c198
+>  IP: [<c262be0f>] pcibios_add_device+0x2f/0x90
+>  *pde = 00000000
+>  Oops: 0000 [#1] SMP
+>  Modules linked in:
+>  Pid: 1, comm: swapper/0 Tainted: G        W I  3.9.0-rc2+ #280
+>  EIP: 0060:[<c262be0f>] EFLAGS: 00010206 CPU: 1
+>  EIP is at pcibios_add_device+0x2f/0x90
+>  EAX: f6258800 EBX: f6258800 ECX: 79a3c190 EDX: 39a3c190
+>  ESI: f62d9814 EDI: f6258864 EBP: f60add38 ESP: f60add2c
+>   DS: 007b ES: 007b FS: 00d8 GS: 00e0 SS: 0068
+>  CR0: 8005003b CR2: 39a3c198 CR3: 02b91000 CR4: 001007d0
+>  DR0: 00000000 DR1: 00000000 DR2: 00000000 DR3: 00000000
+>  DR6: ffff0ff0 DR7: 00000400
+>  Process swapper/0 (pid: 1, ti=f60ac000 task=f60b0000 task.ti=f60ac000)
+>  Stack:
+>   f6258800 f62d9814 f6258864 f60add4c c2370c73 00000000 f62d9800 00000000
+>   f60add6c c274640b 0000ea60 f6258800 0f008086 f62d9800 f62d9800 00000000
+>   f60add84 c2370d08 00000000 00000008 f62d9800 00000000 f60adda4 c2371904
+>  Call Trace:
+>   [<c2370c73>] pci_device_add+0xe3/0x130
+>   [<c274640b>] pci_scan_single_device+0x8b/0xb0
+>   [<c2370d08>] pci_scan_slot+0x48/0x100
+>   [<c2371904>] pci_scan_child_bus+0x24/0xc0
+>   [<c262a7b0>] pci_acpi_scan_root+0x2c0/0x490
+>   [<c23b7203>] acpi_pci_root_add+0x312/0x42f
+>   [<c23b29d7>] ? acpi_device_notify_fixed+0x1d/0x1d
+>   [<c23b36a8>] acpi_bus_device_attach+0x77/0xdd
+>   [<c23cb6be>] acpi_ns_walk_namespace+0xb1/0x163
+>   [<c23b3631>] ? acpi_bus_type_and_status+0x82/0x82
+>   [<c23cbd4e>] acpi_walk_namespace+0x7e/0xa8
+>   [<c23b3631>] ? acpi_bus_type_and_status+0x82/0x82
+>   [<c23b46e0>] acpi_bus_scan+0x9a/0xa6
+>   [<c23b3631>] ? acpi_bus_type_and_status+0x82/0x82
+>   [<c2b17ec9>] acpi_scan_init+0x51/0x144
+>   [<c2b252a2>] ? pci_mmcfg_late_init+0x49/0x4b
+>   [<c2b17cdc>] acpi_init+0x224/0x28c
+>   [<c2001144>] do_one_initcall+0x34/0x170
+>   [<c2b17ab8>] ? acpi_sleep_proc_init+0x2e/0x2e
+>   [<c2aeeb83>] kernel_init_freeable+0x119/0x1b6
+>   [<c2aee4da>] ? do_early_param+0x74/0x74
+>   [<c2743f10>] kernel_init+0x10/0xd0
+>   [<c2765697>] ret_from_kernel_thread+0x1b/0x28
+>   [<c2743f00>] ? rest_init+0x60/0x60
+>
+> The most reliable way to trigger this crash seems to be booting a 32-bit
+> kernel via the EFI boot stub.
+>
+> The solution is to use ioremap() instead of phys_to_virt() to map the
+> setup data into the kernel address space.
+>
+> Tested-by: Jani Nikula <jani.nikula@intel.com>
+> Cc: Matthew Garrett <mjg59@srcf.ucam.org>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Seth Forshee <seth.forshee@canonical.com>
+> Cc: Jesse Barnes <jbarnes@virtuousgeek.org>
+> Cc: <stable@vger.kernel.org>
+> Signed-off-by: Matt Fleming <matt.fleming@intel.com>
 > ---
->  drivers/acpi/dock.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/acpi/dock.c b/drivers/acpi/dock.c
-> index 50e38b7..8e578aa 100644
-> --- a/drivers/acpi/dock.c
-> +++ b/drivers/acpi/dock.c
-> @@ -967,7 +967,6 @@ static int __init dock_add(acpi_handle handle)
->  	spin_lock_init(&dock_station->dd_lock);
->  	INIT_LIST_HEAD(&dock_station->sibling);
->  	INIT_LIST_HEAD(&dock_station->hotplug_devices);
-> -	ATOMIC_INIT_NOTIFIER_HEAD(&dock_notifier_list);
->  	INIT_LIST_HEAD(&dock_station->dependent_devices);
->  
->  	/* we want the dock device to send uevents */
-> @@ -1038,6 +1037,7 @@ int __init acpi_dock_init(void)
->  		return 0;
->  	}
->  
-> +	ATOMIC_INIT_NOTIFIER_HEAD(&dock_notifier_list);
->  	register_acpi_bus_notifier(&dock_acpi_notifier);
->  	pr_info(PREFIX "%s: %d docks/bays found\n",
->  		ACPI_DOCK_DRIVER_DESCRIPTION, dock_station_count);
-> 
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+>  arch/x86/pci/common.c | 5 ++++-
+>  1 file changed, 4 insertions(+), 1 deletion(-)
+>
+> diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+> index 305c68b..981c2db 100644
+> --- a/arch/x86/pci/common.c
+> +++ b/arch/x86/pci/common.c
+> @@ -628,7 +628,9 @@ int pcibios_add_device(struct pci_dev *dev)
+>
+>         pa_data = boot_params.hdr.setup_data;
+>         while (pa_data) {
+> -               data = phys_to_virt(pa_data);
+> +               data = ioremap(pa_data, sizeof(*rom));
+> +               if (!data)
+> +                       return -ENOMEM;
+>
+>                 if (data->type == SETUP_PCI) {
+>                         rom = (struct pci_setup_rom *)data;
+> @@ -645,6 +647,7 @@ int pcibios_add_device(struct pci_dev *dev)
+>                         }
+>                 }
+>                 pa_data = data->next;
+> +               iounmap(data);
+>         }
+>         return 0;
+>  }
+> --
+> 1.8.1.4
+>
+> --
+> Matt Fleming, Intel Open Source Technology Center
