@@ -1,80 +1,99 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:52929 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752165Ab3FZR0M (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Jun 2013 13:26:12 -0400
-Date: Wed, 26 Jun 2013 10:26:10 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Neil Horman <nhorman@tuxdriver.com>
-Cc: stable@vger.kernel.org, Prarit Bhargava <prarit@redhat.com>,
-	Don Zickus <dzickus@redhat.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Asit Mallick <asit.k.mallick@intel.com>,
-	David Woodhouse <dwmw2@infradead.org>,
-	linux-pci@vger.kernel.org, Joerg Roedel <joro@8bytes.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Arkadiusz Miskiewicz <arekm@maven.pl>
-Subject: Re: [3.9 stable PATCH] iommu/vt-d: add quirk for broken interrupt
- remapping on 55XX chipsets
-Message-ID: <20130626172610.GA6842@kroah.com>
-References: <1372253195-17053-1-git-send-email-nhorman@tuxdriver.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jay Agarwal <jagarwal@nvidia.com>
+To: 'Stephen Warren' <swarren@wwwdotorg.org>
+CC: "linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
+	"thierry.reding@avionic-design.de" <thierry.reding@avionic-design.de>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	Laxman Dewangan <ldewangan@nvidia.com>,
+	"olof@lixom.net" <olof@lixom.net>, Hiroshi Doyu <hdoyu@nvidia.com>,
+	Prashant Gaikwad <pgaikwad@nvidia.com>,
+	"mturquette@linaro.org" <mturquette@linaro.org>,
+	Peter De Schrijver <pdeschrijver@nvidia.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Juha Tukkinen <jtukkinen@nvidia.com>,
+	Krishna Thota <kthota@nvidia.com>
+Date: Wed, 5 Jun 2013 20:27:44 +0530
+Subject: RE: [PATCH V3 2/4] ARM: tegra: pcie: Add tegra3 support
+Message-ID: <C79B248886DD134989C8FF6B096A91AB91B616BECE@BGMAIL01.nvidia.com>
+References: <1370372252-4332-1-git-send-email-jagarwal@nvidia.com>
+ <1370372252-4332-2-git-send-email-jagarwal@nvidia.com>
+ <51AE3D3B.6080102@wwwdotorg.org>
+In-Reply-To: <51AE3D3B.6080102@wwwdotorg.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1372253195-17053-1-git-send-email-nhorman@tuxdriver.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 26, 2013 at 09:26:35AM -0400, Neil Horman wrote:
-> A few years back intel published a spec update:
-> http://www.intel.com/content/dam/doc/specification-update/5520-and-5500-chipset-ioh-specification-update.pdf
+> > diff --git
+> > a/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
+> > b/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
 > 
-> For the 5520 and 5500 chipsets which contained an errata (specificially errata
-> 53), which noted that these chipsets can't properly do interrupt remapping, and
-> as a result the recommend that interrupt remapping be disabled in bios.  While
-> many vendors have a bios update to do exactly that, not all do, and of course
-> not all users update their bios to a level that corrects the problem.  As a
-> result, occasionally interrupts can arrive at a cpu even after affinity for that
-> interrupt has be moved, leading to lost or spurrious interrupts (usually
-> characterized by the message:
-> kernel: do_IRQ: 7.71 No irq handler for vector (irq -1)
+> > +- avdd-supply: Power supply for controller (1.05V)
 > 
-> There have been several incidents recently of people seeing this error, and
-> investigation has shown that they have system for which their BIOS level is such
-> that this feature was not properly turned off.  As such, it would be good to
-> give them a reminder that their systems are vulnurable to this problem.  For
-> details of those that reported the problem, please see:
-> https://bugzilla.redhat.com/show_bug.cgi?id=887006
+> > +  "cml": The Tegra clock of that name
 > 
-> [ Joerg: Removed CONFIG_IRQ_REMAP ifdef from early-quirks.c ]
+> Both those changes need to mention that those additions are only required
+> for Tegra30, not Tegra20. In other words,
 > 
-> Signed-off-by: Neil Horman <nhorman@tuxdriver.com>
-> CC: Prarit Bhargava <prarit@redhat.com>
-> CC: Don Zickus <dzickus@redhat.com>
-> CC: Don Dutile <ddutile@redhat.com>
-> CC: Bjorn Helgaas <bhelgaas@google.com>
-> CC: Asit Mallick <asit.k.mallick@intel.com>
-> CC: David Woodhouse <dwmw2@infradead.org>
-> CC: linux-pci@vger.kernel.org
-> CC: Joerg Roedel <joro@8bytes.org>
-> CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-> CC: Arkadiusz Miskiewicz <arekm@maven.pl>
-> CC: Greg KH <gregkh@linuxfoundation.org>
-> Signed-off-by: Joerg Roedel <joro@8bytes.org>
-> ---
->  arch/x86/include/asm/irq_remapping.h |  3 +++
->  arch/x86/kernel/early-quirks.c       | 20 ++++++++++++++++++++
->  drivers/iommu/intel_irq_remapping.c  | 10 ++++++++++
->  drivers/iommu/irq_remapping.c        |  6 ++++++
->  drivers/iommu/irq_remapping.h        |  2 ++
->  5 files changed, 41 insertions(+)
-
-Please let me know what the git commit id of the patch you are asking to
-be applied is, in Linus's tree.  Otherwise I'll just assume you are
-trying to get a patch into a stable branch that isn't in Linus's tree,
-which isn't allowed, and I know you know better than to try to do that
-:)
-
-thanks,
-
-greg k-h
+> +- avdd-supply: Power supply for controller (1.05V) (not required for
+> Tegra20)
+> 
+> +  "cml": The Tegra clock of that name (not required for Tegra20)
+> 
+> You probably also want to explicitly mention nvidia,tegra30-pcie as a legal
+> compatible value.
+> 
+> > diff --git a/drivers/pci/host/pci-tegra.c
+> > b/drivers/pci/host/pci-tegra.c
+> 
+> > +/* used to differentiate tegra chips code */ struct
+> > +tegra_pcie_soc_data {
+> > +	unsigned int num_max_ports;
+> 
+> nit: "num max" seems redundant. max_ports or num_ports would be better.
+> 
+> >  struct tegra_pcie_port {
+> > @@ -384,7 +408,7 @@ static int tegra_pcie_read_conf(struct pci_bus *bus,
+> unsigned int devfn,
+> >  		struct tegra_pcie_port *port;
+> >
+> >  		list_for_each_entry(port, &pcie->ports, list) {
+> > -			if (port->index + 1 == slot) {
+> > +			if (port->index == slot) {
+> 
+> This and the equivalent change in tegra_pcie_write_conf() seem like a bug-
+> fix unrelated to the addition of Tegra30 support. Hence, they should be a
+> separate patch.
+> 
+> 
+> > @@ -398,7 +422,6 @@ static int tegra_pcie_read_conf(struct pci_bus *bus,
+> unsigned int devfn,
+> >  			*value = 0xffffffff;
+> >  			return PCIBIOS_DEVICE_NOT_FOUND;
+> >  		}
+> > -
+> >  		addr += tegra_pcie_conf_offset(devfn, where);
+> 
+> Unnecessary white-space change.
+> 
+> > @@ -1549,10 +1660,9 @@ static int tegra_pcie_remove(struct
+> platform_device *pdev)
+> >  	struct tegra_pcie_bus *bus;
+> >  	int err;
+> >
+> > -	list_for_each_entry(bus, &pcie->busses, list) {
+> > +	list_for_each_entry(bus, &pcie->busses, list)
+> >  		vunmap(bus->area->addr);
+> > -		kfree(bus);
+> > -	}
+> > +	kfree(bus);
+> 
+> This doesn't look right. Can you please explain it further? This is looping
+> over every bus in a dynamic list, so surely each entry needs to be freed? Did
+> you do this to avoid a crash? If so, the issue is likely that the loop should use
+> list_for_each_entry_safe() rather than list_for_each_entry().
+Yes you are right, it is not required. I will revert it along with taking care of other comments.
