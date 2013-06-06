@@ -1,118 +1,115 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Jiang Liu <jiang.liu@huawei.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"Alexander E . Patrakov" <patrakov@gmail.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Shaohua Li <shaohua.li@intel.com>,
-	Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org
-Subject: Re: [BUGFIX 3/9] ACPI, DOCK: clean up unused module related code
-Date: Thu, 13 Jun 2013 20:39:51 +0200
-Message-ID: <2136440.CPpNzdaTXG@vostro.rjw.lan>
-In-Reply-To: <1841512.D0ScSNfNgy@vostro.rjw.lan>
-References: <1371141152-9468-1-git-send-email-jiang.liu@huawei.com> <1371141152-9468-4-git-send-email-jiang.liu@huawei.com> <1841512.D0ScSNfNgy@vostro.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga09.intel.com ([134.134.136.24]:33145 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751466Ab3FFVTs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 6 Jun 2013 17:19:48 -0400
+From: "David E. Box" <david.e.box@linux.intel.com>
+To: kristen.c.accardi@intel.com, mj@ucw.cz, linux-pci@vger.kernel.org
+Cc: David Box <david.e.box@linux.intel.com>
+Subject: [PATCH v2] lspci: Add L1 PM Substate capability reporting
+Date: Thu,  6 Jun 2013 14:17:00 -0700
+Message-Id: <1370553420-3437-1-git-send-email-david.e.box@linux.intel.com>
+In-Reply-To: <y>
+References: <y>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, June 13, 2013 08:26:10 PM Rafael J. Wysocki wrote:
-> On Friday, June 14, 2013 12:32:26 AM Jiang Liu wrote:
-> > ACPI dock driver can't be built as a module any more, so clean up
-> > module related code.
-> > 
-> > Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-> > Cc: Shaohua Li <shaohua.li@intel.com>
-> > Cc: Len Brown <lenb@kernel.org>
-> > Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
-> > Cc: linux-acpi@vger.kernel.org
-> > Cc: linux-kernel@vger.kernel.org
-> 
-> How exactly does this depend on [2/9]?  If it doesn't at all, it should go
-> after [1/9].
+From: David Box <david.e.box@linux.intel.com>
 
-However, this isn't even 3.10 material, so please stop sending it for now.
+The capabilities are several L1 substates that can enable lower power
+consumption when a PCIe Link is idle.
 
-Thanks,
-Rafael
+v2: fixed white space issues
 
+Signed-off-by: David Box <david.e.box@linux.intel.com>
+---
+ lib/header.h |    1 +
+ ls-ecaps.c   |   53 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 54 insertions(+)
 
-> > ---
-> >  drivers/acpi/dock.c | 41 -----------------------------------------
-> >  1 file changed, 41 deletions(-)
-> > 
-> > diff --git a/drivers/acpi/dock.c b/drivers/acpi/dock.c
-> > index 79c8d9e..50e38b7 100644
-> > --- a/drivers/acpi/dock.c
-> > +++ b/drivers/acpi/dock.c
-> > @@ -53,12 +53,6 @@ MODULE_PARM_DESC(immediate_undock, "1 (default) will cause the driver to "
-> >  
-> >  static struct atomic_notifier_head dock_notifier_list;
-> >  
-> > -static const struct acpi_device_id dock_device_ids[] = {
-> > -	{"LNXDOCK", 0},
-> > -	{"", 0},
-> > -};
-> > -MODULE_DEVICE_TABLE(acpi, dock_device_ids);
-> > -
-> 
-> Don't we actually need the device IDs?
-> 
-> >  struct dock_station {
-> >  	acpi_handle handle;
-> >  	unsigned long last_dock_time;
-> > @@ -1013,30 +1007,6 @@ err_unregister:
-> >  }
-> >  
-> >  /**
-> > - * dock_remove - free up resources related to the dock station
-> > - */
-> > -static int dock_remove(struct dock_station *ds)
-> > -{
-> > -	struct dock_dependent_device *dd, *tmp;
-> > -	struct platform_device *dock_device = ds->dock_device;
-> > -
-> > -	if (!dock_station_count)
-> > -		return 0;
-> > -
-> > -	/* remove dependent devices */
-> > -	list_for_each_entry_safe(dd, tmp, &ds->dependent_devices, list)
-> > -		kfree(dd);
-> > -
-> > -	list_del(&ds->sibling);
-> > -
-> > -	/* cleanup sysfs */
-> > -	sysfs_remove_group(&dock_device->dev.kobj, &dock_attribute_group);
-> > -	platform_device_unregister(dock_device);
-> > -
-> > -	return 0;
-> > -}
-> > -
-> > -/**
-> >   * find_dock_and_bay - look for dock stations and bays
-> >   * @handle: acpi handle of a device
-> >   * @lvl: unused
-> > @@ -1073,14 +1043,3 @@ int __init acpi_dock_init(void)
-> >  		ACPI_DOCK_DRIVER_DESCRIPTION, dock_station_count);
-> >  	return 0;
-> >  }
-> > -
-> > -static void __exit dock_exit(void)
-> > -{
-> > -	struct dock_station *tmp, *dock_station;
-> > -
-> > -	unregister_acpi_bus_notifier(&dock_acpi_notifier);
-> > -	list_for_each_entry_safe(dock_station, tmp, &dock_stations, sibling)
-> > -		dock_remove(dock_station);
-> > -}
-> > -
-> > -module_exit(dock_exit);
-> 
-> The other changes look OK to me.
-
+diff --git a/lib/header.h b/lib/header.h
+index 69518fd..6608003 100644
+--- a/lib/header.h
++++ b/lib/header.h
+@@ -226,6 +226,7 @@
+ #define PCI_EXT_CAP_ID_SRIOV	0x10	/* Single Root I/O Virtualization */
+ #define PCI_EXT_CAP_ID_TPH	0x17	/* Transaction processing hints */
+ #define PCI_EXT_CAP_ID_LTR	0x18	/* Latency Tolerance Reporting */
++#define PCI_EXT_CAP_ID_L1PM	0x1e	/* L1 PM Substates */
+ 
+ /*** Definitions of capabilities ***/
+ 
+diff --git a/ls-ecaps.c b/ls-ecaps.c
+index 161c275..9f06ffe 100644
+--- a/ls-ecaps.c
++++ b/ls-ecaps.c
+@@ -448,6 +448,56 @@ cap_evendor(struct device *d, int where)
+     BITS(hdr, 20, 12));
+ }
+ 
++static void
++cap_l1pm(struct device *d, int where)
++{
++  u32 l1_cap;
++  int power_on_scale;
++
++  printf("L1 PM Substates\n");
++
++  if (verbose < 2)
++     return;
++
++  if (!config_fetch(d, where + 4, 4)) {
++     printf("\t\t<unreadable>\n");
++     return;
++  }
++
++  l1_cap = get_conf_long(d, where + 4);
++
++  printf("\t\tL1SubCap: ");
++  printf("PCI-PM_L1.2%c, PCI-PM_L1.1%c, ASPM_L1.2%c, ASPM_L1.1%c, L1_PM_Substates%c\n",
++     FLAG(l1_cap, 1),
++     FLAG(l1_cap, 2),
++     FLAG(l1_cap, 4),
++     FLAG(l1_cap, 8),
++     FLAG(l1_cap, 16));
++
++  if (BITS(l1_cap, 0, 1) || BITS(l1_cap, 2, 1)) {
++     printf("\t\t\t  PortCommonModeRestoreTime=%dus, ",
++        BITS(l1_cap, 8,8));
++
++     power_on_scale = BITS(l1_cap, 16, 2);
++
++     printf("PortTPowerOnTime=");
++     switch (power_on_scale) {
++     case 0:
++        printf("%dus\n", BITS(l1_cap, 19, 5) * 2);
++        break;
++     case 1:
++        printf("%dus\n", BITS(l1_cap, 19, 5) * 10);
++        break;
++     case 2:
++        printf("%dus\n", BITS(l1_cap, 19, 5) * 100);
++        break;
++     default:
++        printf("<error>\n");
++        break;
++     }
++  }
++}
++
+ void
+ show_ext_caps(struct device *d)
+ {
+@@ -526,6 +576,9 @@ show_ext_caps(struct device *d)
+ 	  case PCI_EXT_CAP_ID_LTR:
+ 	    cap_ltr(d, where);
+ 	    break;
++	  case PCI_EXT_CAP_ID_L1PM:
++	    cap_l1pm(d, where);
++	    break;
+ 	  default:
+ 	    printf("#%02x\n", id);
+ 	    break;
 -- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+1.7.10.4
+
