@@ -1,73 +1,67 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <51B0B5EB.2070807@gmail.com>
+Date: Fri, 07 Jun 2013 00:16:43 +0800
+From: Jiang Liu <liuj97@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1369924769-17183-2-git-send-email-betty.dall@hp.com>
-References: <1369924769-17183-1-git-send-email-betty.dall@hp.com> <1369924769-17183-2-git-send-email-betty.dall@hp.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Sat, 1 Jun 2013 18:38:05 -0600
-Message-ID: <CAErSpo6KV28p3QRoz-Xx=xMjsFaY7sCho8HN2W_M-DntrNk+Ag@mail.gmail.com>
-Subject: Re: [PATCH v2 1/3] PCI/AER: Fix incorrect return from aer_hest_parse()
-To: Betty Dall <betty.dall@hp.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Huang Ying <ying.huang@intel.com>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Yinghai Lu <yinghai@kernel.org>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Moore, Robert" <robert.moore@intel.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-acpi-owner@vger.kernel.org
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Paul Mackerras <paulus@samba.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	David Airlie <airlied@linux.ie>,
+	Neela Syam Kolli <megaraidlinux@lsi.com>,
+	"James E.J. Bottomley" <jbottomley@parallels.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	sparclinux@vger.kernel.org,
+	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Subject: Re: [PATCH v3, part1 03/10] PCI: Convert alloc_pci_dev(void) to pci_alloc_dev(bus)
+ instead
+References: <1369489718-25869-1-git-send-email-jiang.liu@huawei.com> <1369489718-25869-4-git-send-email-jiang.liu@huawei.com> <CAErSpo6C-QMFCbMMivBE5TN4sEOFR_EyPmtN=OUNo8eN-+t=GQ@mail.gmail.com>
+In-Reply-To: <CAErSpo6C-QMFCbMMivBE5TN4sEOFR_EyPmtN=OUNo8eN-+t=GQ@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Bob for ACPI HEST spec questions]
-
-On Thu, May 30, 2013 at 8:39 AM, Betty Dall <betty.dall@hp.com> wrote:
-> The function aer_hest_parse() is called to determine if the given
-> PCI device is firmware first or not. The code loops through each
-> section of the HEST table to look for a match. The bug is that
-> the function always returns whether the last HEST section is firmware
-> first. The fix stops the iteration once the info.firmware_first
-> variable is set.  This is similar to how the function aer_hest_parse_aff()
-> stops the iteration.
+On Thu 06 Jun 2013 04:07:18 AM CST, Bjorn Helgaas wrote:
+> On Sat, May 25, 2013 at 7:48 AM, Jiang Liu <liuj97@gmail.com> wrote:
+>> From: Gu Zheng <guz.fnst@cn.fujitsu.com>
+>>
+>> Use the new pci_alloc_dev(bus) to replace the existing using of
+>> alloc_pci_dev(void).
+>> ...
 >
-> Signed-off-by: Betty Dall <betty.dall@hp.com>
-> ---
+>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+>> index 26df9c8..d5d18a0 100644
+>> --- a/drivers/pci/probe.c
+>> +++ b/drivers/pci/probe.c
+>> @@ -1130,6 +1130,7 @@ static void pci_release_dev(struct device *dev)
+>>         struct pci_dev *pci_dev;
+>>
+>>         pci_dev = to_pci_dev(dev);
+>> +       pci_bus_put(pci_dev->bus);
+>>         pci_release_capabilities(pci_dev);
+>>         pci_release_of_node(pci_dev);
+>>         kfree(pci_dev);
 >
->  drivers/pci/pcie/aer/aerdrv_acpi.c |    3 +++
->  1 files changed, 3 insertions(+), 0 deletions(-)
+> I think we should drop the pci_bus reference *last* (before the
+> kfree).  Otherwise, we have to audit pci_release_capabilities() and
+> pci_release_of_node() to make sure they don't use pci_dev->bus.
 >
+> I made this change on my branch already; just let me know if you object.
+Hi Bjorn,
+       You are right, thanks for fixing it.
+
 >
-> diff --git a/drivers/pci/pcie/aer/aerdrv_acpi.c b/drivers/pci/pcie/aer/aerdrv_acpi.c
-> index 5194a7d..39b8671 100644
-> --- a/drivers/pci/pcie/aer/aerdrv_acpi.c
-> +++ b/drivers/pci/pcie/aer/aerdrv_acpi.c
-> @@ -42,6 +42,9 @@ static int aer_hest_parse(struct acpi_hest_header *hest_hdr, void *data)
->         u8 bridge = 0;
->         int ff = 0;
->
-> +       if (info->firmware_first)
-> +               return 0;
-> +
->         switch (hest_hdr->type) {
->         case ACPI_HEST_TYPE_AER_ROOT_PORT:
->                 pcie_type = PCI_EXP_TYPE_ROOT_PORT;
+> Bjorn
 
-Not related directly to your patch, Betty, but I can't figure out why
-the ACPI spec defines the HEST structures for PCIe as it does.  I'm
-looking at ACPI 5.0, sec 18.3.2.3 - 18.3.2.5.
 
-1) The PCIe Root Port, PCIe Device, and PCIe/PCI-X Bridge structures
-all include Bus, Device, and Function fields.  But there's no Segment.
- The current Linux code (hest_match_pci()) assumes HEST records can
-only apply to PCI domain 0.  Is Linux missing something, or is the
-HEST really this limited?
-
-2) Doesn't the fact that the HEST structures include a bus number mean
-that the OS cannot reassign bus numbers?  I guess maybe we could still
-reassign them if we kept track of the mapping back to the original
-values.
-
-3) It's interesting that the only choices seem to be "global" or "list
-every device."  There's no "apply to this device and the subtree under
-it," so I guess if you want HEST to apply to hot-added devices,
-"global" is the only thing that makes sense?
-
-Bjorn
