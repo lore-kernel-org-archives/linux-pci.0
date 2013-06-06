@@ -1,133 +1,147 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:37343 "EHLO hydra.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751363Ab3FNODF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 14 Jun 2013 10:03:05 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Jiang Liu <liuj97@gmail.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"Alexander E . Patrakov" <patrakov@gmail.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	stable@vger.kernel.org
-Subject: Re: [BUGFIX 2/9] ACPIPHP: fix device destroying order issue when handling dock notification
-Date: Fri, 14 Jun 2013 16:12:19 +0200
-Message-ID: <9088362.uF3gIllFWp@vostro.rjw.lan>
-In-Reply-To: <51BB213B.7010807@gmail.com>
-References: <1371141152-9468-1-git-send-email-jiang.liu@huawei.com> <2301639.HY0nSRLtah@vostro.rjw.lan> <51BB213B.7010807@gmail.com>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:60762 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757624Ab3FFHgX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Jun 2013 03:36:23 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Yinghai Lu <yinghai@kernel.org>, <linux-pci@vger.kernel.org>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	Fenghua Yu <fenghua.yu@intel.com>,
+	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>, John Keller <jpk@sgi.com>,
+	Jay Lan <jlan@engr.sgi.com>, Jack Steiner <steiner@sgi.com>,
+	Mark Maule <maule@sgi.com>
+Subject: [PATCH -v5 2/8] PCI/IA64: SN: use normal resource instead of pci_window
+Date: Thu, 6 Jun 2013 15:34:47 +0800
+Message-ID: <1370504093-14908-3-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1370504093-14908-1-git-send-email-wangyijing@huawei.com>
+References: <1370504093-14908-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, June 14, 2013 09:57:15 PM Jiang Liu wrote:
-> On 06/14/2013 08:23 PM, Rafael J. Wysocki wrote:
-> > On Thursday, June 13, 2013 09:59:44 PM Rafael J. Wysocki wrote:
-> >> On Friday, June 14, 2013 12:32:25 AM Jiang Liu wrote:
-> >>> Current ACPI glue logic expects that physical devices are destroyed
-> >>> before destroying companion ACPI devices, otherwise it will break the
-> >>> ACPI unbind logic and cause following warning messages:
-> >>> [  185.026073] usb usb5: Oops, 'acpi_handle' corrupt
-> >>> [  185.035150] pci 0000:1b:00.0: Oops, 'acpi_handle' corrupt
-> >>> [  185.035515] pci 0000:18:02.0: Oops, 'acpi_handle' corrupt
-> >>> [  180.013656]  port1: Oops, 'acpi_handle' corrupt
-> >>> Please refer to https://bugzilla.kernel.org/attachment.cgi?id=104321
-> >>> for full log message.
-> >>
-> >> So my question is, did we have this problem before commit 3b63aaa70e1?
-> >>
-> >> If we did, then when did it start?  Or was it present forever?
-> >>
-> >>> Above warning messages are caused by following scenario:
-> >>> 1) acpi_dock_notifier_call() queues a task (T1) onto kacpi_hotplug_wq
-> >>> 2) kacpi_hotplug_wq handles T1, which invokes acpi_dock_deferred_cb()
-> >>>    ->dock_notify()-> handle_eject_request()->hotplug_dock_devices()
-> >>> 3) hotplug_dock_devices() first invokes registered hotplug callbacks to
-> >>>    destroy physical devices, then destroys all affected ACPI devices.
-> >>>    Everything seems perfect until now. But the acpiphp dock notification
-> >>>    handler will queue another task (T2) onto kacpi_hotplug_wq to really
-> >>>    destroy affected physical devices.
-> >>
-> >> Would not the solution be to modify it so that it didn't spawn the other
-> >> task (T2), but removed the affected physical devices synchronously?
-> >>
-> >>> 4) kacpi_hotplug_wq finishes T1, and all affected ACPI devices have
-> >>>    been destroyed.
-> >>> 5) kacpi_hotplug_wq handles T2, which destroys all affected physical
-> >>>    devices.
-> >>>
-> >>> So it breaks ACPI glue logic's expection because ACPI devices are destroyed
-> >>> in step 3 and physical devices are destroyed in step 5.
-> >>>
-> >>> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-> >>> Reported-by: Alexander E. Patrakov <patrakov@gmail.com>
-> >>> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> >>> Cc: Yinghai Lu <yinghai@kernel.org>
-> >>> Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-> >>> Cc: linux-pci@vger.kernel.org
-> >>> Cc: linux-kernel@vger.kernel.org
-> >>> Cc: stable@vger.kernel.org
-> >>> ---
-> >>> Hi Bjorn and Rafael,
-> >>>      The recursive lock changes haven't been tested yet, need help
-> >>> from Alexander for testing.
-> >>
-> >> Well, let's just say I'm not a fan of recursive locks.  Is that unavoidable
-> >> here?
-> > 
-> > What about the appended patch (on top of [1/9], untested)?
-> > 
-> > Rafael
-> It should have similar effect as patch 2/9, and it will encounter the
-> same deadlock scenario as 2/9 too.
+Pci_window in pci_controller will not be used again,
+use normal resource instead of pci_window in
+sn_legacy_pci_window_fixup(), this patch is to prepare
+remove pci_window in IA64.
 
-And why exactly?
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Cc: John Keller <jpk@sgi.com>
+Cc: Jay Lan <jlan@engr.sgi.com>
+Cc: Jack Steiner <steiner@sgi.com>
+Cc: Mark Maule <maule@sgi.com>
+Cc: Tony Luck <tony.luck@intel.com>
+Cc: Fenghua Yu <fenghua.yu@intel.com>
+Cc: linux-ia64@vger.kernel.org
+---
+ arch/ia64/sn/kernel/io_init.c |   56 +++++++++++++++++++----------------------
+ 1 files changed, 26 insertions(+), 30 deletions(-)
 
-I'm looking at acpiphp_disable_slot() and I'm not seeing where the
-problematic lock is taken.  Similarly for power_off_slot().
-
-It should take the ACPI scan lock, but that's a different matter.
-
-Thanks,
-Rafael
-
-
-> > ---
-> >  drivers/pci/hotplug/acpiphp_glue.c |   13 ++++++++++++-
-> >  1 file changed, 12 insertions(+), 1 deletion(-)
-> > 
-> > Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-> > ===================================================================
-> > --- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-> > +++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-> > @@ -145,9 +145,20 @@ static int post_dock_fixups(struct notif
-> >  	return NOTIFY_OK;
-> >  }
-> >  
-> > +static void handle_dock_event_func(acpi_handle handle, u32 event, void *context)
-> > +{
-> > +	if (event == ACPI_NOTIFY_EJECT_REQUEST) {
-> > +		struct acpiphp_func *func = context;
-> > +
-> > +		if (!acpiphp_disable_slot(func->slot))
-> > +			acpiphp_eject_slot(func->slot);
-> > +	} else {
-> > +		handle_hotplug_event_func(handle, event, context);
-> > +	}
-> > +}
-> >  
-> >  static const struct acpi_dock_ops acpiphp_dock_ops = {
-> > -	.handler = handle_hotplug_event_func,
-> > +	.handler = handle_dock_event_func,
-> >  };
-> >  
-> >  /* Check whether the PCI device is managed by native PCIe hotplug driver */
-> > 
-> 
+diff --git a/arch/ia64/sn/kernel/io_init.c b/arch/ia64/sn/kernel/io_init.c
+index 06a172c..2b00ade 100644
+--- a/arch/ia64/sn/kernel/io_init.c
++++ b/arch/ia64/sn/kernel/io_init.c
+@@ -118,34 +118,26 @@ static void __init sn_fixup_ionodes(void)
+ }
+ 
+ /*
+- * sn_pci_legacy_window_fixup - Create PCI controller windows for
++ * sn_pci_legacy_window_fixup - Setup PCI resources for
+  *				legacy IO and MEM space. This needs to
+  *				be done here, as the PROM does not have
+  *				ACPI support defining the root buses
+  *				and their resources (_CRS),
+  */
+ static void
+-sn_legacy_pci_window_fixup(struct pci_controller *controller,
+-			   u64 legacy_io, u64 legacy_mem)
++sn_legacy_pci_window_fixup(struct resource *res,
++		u64 legacy_io, u64 legacy_mem)
+ {
+-		controller->window = kcalloc(2, sizeof(struct pci_window),
+-					     GFP_KERNEL);
+-		BUG_ON(controller->window == NULL);
+-		controller->window[0].offset = legacy_io;
+-		controller->window[0].resource.name = "legacy_io";
+-		controller->window[0].resource.flags = IORESOURCE_IO;
+-		controller->window[0].resource.start = legacy_io;
+-		controller->window[0].resource.end =
+-	    			controller->window[0].resource.start + 0xffff;
+-		controller->window[0].resource.parent = &ioport_resource;
+-		controller->window[1].offset = legacy_mem;
+-		controller->window[1].resource.name = "legacy_mem";
+-		controller->window[1].resource.flags = IORESOURCE_MEM;
+-		controller->window[1].resource.start = legacy_mem;
+-		controller->window[1].resource.end =
+-	    	       controller->window[1].resource.start + (1024 * 1024) - 1;
+-		controller->window[1].resource.parent = &iomem_resource;
+-		controller->windows = 2;
++		res[0].name = "legacy_io";
++		res[0].flags = IORESOURCE_IO;
++		res[0].start = legacy_io;
++		res[0].end = res[0].start + 0xffff;
++		res[0].parent = &ioport_resource;
++		res[1].name = "legacy_mem";
++		res[1].flags = IORESOURCE_MEM;
++		res[1].start = legacy_mem;
++		res[1].end = res[1].start + (1024 * 1024) - 1;
++		res[1].parent = &iomem_resource;
+ }
+ 
+ /*
+@@ -244,8 +236,8 @@ sn_pci_controller_fixup(int segment, int busnum, struct pci_bus *bus)
+ 	s64 status = 0;
+ 	struct pci_controller *controller;
+ 	struct pcibus_bussoft *prom_bussoft_ptr;
++	struct resource *res;
+ 	LIST_HEAD(resources);
+-	int i;
+ 
+  	status = sal_get_pcibus_info((u64) segment, (u64) busnum,
+  				     (u64) ia64_tpa(&prom_bussoft_ptr));
+@@ -257,19 +249,23 @@ sn_pci_controller_fixup(int segment, int busnum, struct pci_bus *bus)
+ 	BUG_ON(!controller);
+ 	controller->segment = segment;
+ 
++	res = kcalloc(2, sizeof(struct resource), GFP_KERNEL);
++	BUG_ON(!res);
++
+ 	/*
+ 	 * Temporarily save the prom_bussoft_ptr for use by sn_bus_fixup().
+ 	 * (platform_data will be overwritten later in sn_common_bus_fixup())
+ 	 */
+ 	controller->platform_data = prom_bussoft_ptr;
+ 
+-	sn_legacy_pci_window_fixup(controller,
+-				   prom_bussoft_ptr->bs_legacy_io,
+-				   prom_bussoft_ptr->bs_legacy_mem);
+-	for (i = 0; i < controller->windows; i++)
+-		pci_add_resource_offset(&resources,
+-					&controller->window[i].resource,
+-					controller->window[i].offset);
++	sn_legacy_pci_window_fixup(res,
++			prom_bussoft_ptr->bs_legacy_io,
++			prom_bussoft_ptr->bs_legacy_mem);
++	pci_add_resource_offset(&resources,	&res[0],
++			prom_bussoft_ptr->bs_legacy_io);
++	pci_add_resource_offset(&resources,	&res[1],
++			prom_bussoft_ptr->bs_legacy_mem);
++
+ 	bus = pci_scan_root_bus(NULL, busnum, &pci_root_ops, controller,
+ 				&resources);
+  	if (bus == NULL)
+@@ -280,7 +276,7 @@ sn_pci_controller_fixup(int segment, int busnum, struct pci_bus *bus)
+ 	return;
+ 
+ error_return:
+-
++	kfree(res);
+ 	kfree(controller);
+ 	return;
+ }
 -- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+1.7.1
+
+
