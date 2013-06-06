@@ -1,62 +1,142 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f41.google.com ([209.85.219.41]:39958 "EHLO
-	mail-oa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756198Ab3FLVy5 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Jun 2013 17:54:57 -0400
-Received: by mail-oa0-f41.google.com with SMTP id n10so3355506oag.28
-        for <linux-pci@vger.kernel.org>; Wed, 12 Jun 2013 14:54:57 -0700 (PDT)
+Received: from szxga01-in.huawei.com ([119.145.14.64]:60425 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755225Ab3FFHgE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Jun 2013 03:36:04 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Yinghai Lu <yinghai@kernel.org>, <linux-pci@vger.kernel.org>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	Fenghua Yu <fenghua.yu@intel.com>,
+	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: [PATCH -v5 4/8] PCI/IA64: Allocate pci_root_info instead of using stack
+Date: Thu, 6 Jun 2013 15:34:49 +0800
+Message-ID: <1370504093-14908-5-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1370504093-14908-1-git-send-email-wangyijing@huawei.com>
+References: <1370504093-14908-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <20130612172132.GG27284@hpx.cz>
-References: <20130612172132.GG27284@hpx.cz>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 12 Jun 2013 15:54:36 -0600
-Message-ID: <CAErSpo5XvTHFf+ZO0GAxKm0xk+fo9Hm_G6Ebz1UmMkLUi8CPyw@mail.gmail.com>
-Subject: Re: pcie aspm link setup, grandparent instead of parent?
-To: =?UTF-8?B?UmFkaW0gS3LEjW3DocWZ?= <rkrcmar@redhat.com>
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Joe Lawrence <Joe.Lawrence@stratus.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc linux-pci, Myron, Joe]
+We need to pass around info for release function.
 
-On Wed, Jun 12, 2013 at 11:21 AM, Radim Krčmář <rkrcmar@redhat.com> wrote:
-> Hello,
->
-> as a consequence of hitting a NULL dereference bug[1] while downstream
-> aspm is setting up link_state, I started to wonder why is the code
-> skipping its parent bus in favour of grandparent's link_state.[2]
->
-> Is this right? (I have no device to test on ...)
->
-> Thanks.
->
-> ---
-> 1: https://bugzilla.redhat.com/show_bug.cgi?id=972381
->    The bug is hit because "pdev->bus->parent" has NULL "->parent" and thus
->    NULL "->self".
-> 2: "pdev = bus->self", so "pdev->bus->parent == bus->parent->parent"
->
->
-> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-> index 403a443..d58e282 100644
-> --- a/drivers/pci/pcie/aspm.c
-> +++ b/drivers/pci/pcie/aspm.c
-> @@ -527,7 +527,7 @@ static struct pcie_link_state *alloc_pcie_link_state(struct pci_dev *pdev)
->         link->pdev = pdev;
->         if (pci_pcie_type(pdev) == PCI_EXP_TYPE_DOWNSTREAM) {
->                 struct pcie_link_state *parent;
-> -               parent = pdev->bus->parent->self->link_state;
-> +               parent = pdev->bus->self->link_state;
->                 if (!parent) {
->                         kfree(link);
->                         return NULL;
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Cc: Tony Luck <tony.luck@intel.com>
+Cc: Fenghua Yu <fenghua.yu@intel.com>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linux-ia64@vger.kernel.org
+---
+ arch/ia64/pci/pci.c |   58 ++++++++++++++++++++++++++++++--------------------
+ 1 files changed, 35 insertions(+), 23 deletions(-)
+
+diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
+index 82eb8b2..6da469a 100644
+--- a/arch/ia64/pci/pci.c
++++ b/arch/ia64/pci/pci.c
+@@ -331,7 +331,8 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 	int domain = root->segment;
+ 	int bus = root->secondary.start;
+ 	struct pci_controller *controller;
+-	struct pci_root_info info;
++	struct pci_root_info *info = NULL;
++	int busnum = root->secondary.start;
+ 	struct pci_bus *pbus;
+ 	char *name;
+ 	int pxm;
+@@ -348,35 +349,43 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 		controller->node = pxm_to_node(pxm);
+ #endif
+ 
+-	INIT_LIST_HEAD(&info.resources);
++	info = kzalloc(sizeof(*info), GFP_KERNEL);
++	if (!info) {
++		printk(KERN_WARNING
++				"pci_bus %04x:%02x: ignored (out of memory)\n",
++				root->segment, busnum);
++		goto out2;
++	}
++
++	INIT_LIST_HEAD(&info->resources);
+ 	/* insert busn resource at first */
+-	pci_add_resource(&info.resources, &root->secondary);
++	pci_add_resource(&info->resources, &root->secondary);
+ 	acpi_walk_resources(device->handle, METHOD_NAME__CRS, count_window,
+-			&info.res_num);
+-	if (info.res_num) {
+-		info.res =
+-			kzalloc_node(sizeof(*info.res) * info.res_num,
++			&info->res_num);
++	if (info->res_num) {
++		info->res =
++			kzalloc_node(sizeof(*info->res) * info->res_num,
+ 				     GFP_KERNEL, controller->node);
+-		if (!info.res)
+-			goto out2;
++		if (!info->res)
++			goto out3;
+ 
+-		info.res_offset =
+-			kzalloc_node(sizeof(*info.res_offset) * info.res_num,
++		info->res_offset =
++			kzalloc_node(sizeof(*info->res_offset) * info->res_num,
+ 				GFP_KERNEL, controller->node);
+-		if (!info.res_offset)
+-			goto out3;
++		if (!info->res_offset)
++			goto out4;
+ 
+ 		name = kmalloc(16, GFP_KERNEL);
+ 		if (!name)
+-			goto out4;
++			goto out5;
+ 
+ 		sprintf(name, "PCI Bus %04x:%02x", domain, bus);
+-		info.bridge = device;
+-		info.controller = controller;
+-		info.name = name;
+-		info.res_num = 0;
++		info->bridge = device;
++		info->controller = controller;
++		info->name = name;
++		info->res_num = 0;
+ 		acpi_walk_resources(device->handle, METHOD_NAME__CRS,
+-			add_window, &info);
++			add_window, info);
+ 	}
+ 	/*
+ 	 * See arch/x86/pci/acpi.c.
+@@ -385,18 +394,21 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 	 * such quirk. So we just ignore the case now.
+ 	 */
+ 	pbus = pci_create_root_bus(NULL, bus, &pci_root_ops, controller,
+-				   &info.resources);
++				   &info->resources);
+ 	if (!pbus) {
+-		pci_free_resource_list(&info.resources);
++		pci_free_resource_list(&info->resources);
+ 		return NULL;
+ 	}
+ 
+ 	pci_scan_child_bus(pbus);
+ 	return pbus;
++
++out5:
++	kfree(info->res_offset);
+ out4:
+-	kfree(info.res_offset);
++	kfree(info->res);
+ out3:
+-	kfree(info.res);
++	kfree(info);
+ out2:
+ 	kfree(controller);
+ out1:
+-- 
+1.7.1
+
+
