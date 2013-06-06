@@ -1,51 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f180.google.com ([209.85.214.180]:54009 "EHLO
-	mail-ob0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750790Ab3FNDXA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Jun 2013 23:23:00 -0400
+Received: from mail-ob0-f179.google.com ([209.85.214.179]:47727 "EHLO
+	mail-ob0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751686Ab3FFRiY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Jun 2013 13:38:24 -0400
+Received: by mail-ob0-f179.google.com with SMTP id xk17so5080261obc.24
+        for <linux-pci@vger.kernel.org>; Thu, 06 Jun 2013 10:38:23 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAN_LGv2HxTB_8Oo8CB2mgKKL2n-P7b7a3NySTL7zhGpDE9-PkQ@mail.gmail.com>
-References: <1371141152-9468-1-git-send-email-jiang.liu@huawei.com>
-	<CAE9FiQX1xVJA3MZc4LndWU7kx0mxC-YPE1R8JD4W2-Gg9zq3Zw@mail.gmail.com>
-	<CAN_LGv2HxTB_8Oo8CB2mgKKL2n-P7b7a3NySTL7zhGpDE9-PkQ@mail.gmail.com>
-Date: Thu, 13 Jun 2013 20:22:58 -0700
-Message-ID: <CAE9FiQW1VJr7g+FAW0fr1Pxd2ut-nA=_O=3BQtRNYcTtzgezfw@mail.gmail.com>
-Subject: Re: [BUGFIX 0/9] Fix bug 59501 and code improvement for dock driver
-From: Yinghai Lu <yinghai@kernel.org>
-To: "Alexander E. Patrakov" <patrakov@gmail.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>,
+In-Reply-To: <20130606173419.GA8186@google.com>
+References: <20130606173419.GA8186@google.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 6 Jun 2013 11:38:03 -0600
+Message-ID: <CAErSpo7fvMDFHP2BcDGeOrjFaqRYf+d_0YwHyX3ccgrkpXaTyA@mail.gmail.com>
+Subject: Re: [GIT PULL] PCI updates for v3.10
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Matt Fleming <matt.fleming@intel.com>,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 13, 2013 at 7:06 PM, Alexander E. Patrakov
-<patrakov@gmail.com> wrote:
-> 2013/6/14 Yinghai Lu <yinghai@kernel.org>:
->> the 3) is about pci resource allocation?
->> because pcibios_add_bus is called too early?
->
-> (3) is https://bugzilla.kernel.org/show_bug.cgi?id=56531
->
->> If that is case, we should have something like attached patch for it.
->
-> It does not even compile because the argument of pci_bus_add_devices()
-> points to a const struct. You can't increment a member of it. And even
-> if you remove the const from both the declaration and the definition
-> of that function, the patch doesn't help at all.
->
-> Here is /proc/ioports with the fixed-up patch:
+[+cc linux-pci, linux-kernel]
 
-dmesg with the fixed-up patch on v3.10-rc?
-
-After look at the your dmesg v3.10-rc5, we really should move
-pcibios_add_bus down.
-as we do have children slots under ....
-
-Yinghai
+On Thu, Jun 6, 2013 at 11:34 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> Hi Linus,
+>
+> Here's another fix for v3.10.  This fixes a crash when booting a 32-bit
+> kernel via the EFI boot stub.
+>
+> Bjorn
+>
+>
+> The following changes since commit f3f011750a18abc389ef1b0d504fbeeacf641919:
+>
+>   Revert "x86/pci/mrst: Use configuration mechanism 1 for 00:00.0, 00:02.0, 00:03.0" (2013-05-20 10:20:21 -0600)
+>
+> are available in the git repository at:
+>
+>   git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/pci-v3.10-fixes-3
+>
+> for you to fetch changes up to 65694c5aaddfedd9da082e4e150cafc6b3fc8a6a:
+>
+>   x86/PCI: Map PCI setup data with ioremap() so it can be in highmem (2013-06-05 10:50:04 -0600)
+>
+> ----------------------------------------------------------------
+> PCI update for v3.10:
+>
+>   PCI ROM from EFI
+>       x86/PCI: Map PCI setup data with ioremap() so it can be in highmem
+>
+> ----------------------------------------------------------------
+> Matt Fleming (1):
+>       x86/PCI: Map PCI setup data with ioremap() so it can be in highmem
+>
+>  arch/x86/pci/common.c | 5 ++++-
+>  1 file changed, 4 insertions(+), 1 deletion(-)
