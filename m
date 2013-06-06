@@ -1,86 +1,88 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:58296 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932229Ab3FFIbn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 6 Jun 2013 04:31:43 -0400
+Date: Thu, 6 Jun 2013 10:30:20 +0200
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Cc: linux-kernel@vger.kernel.org, x86@kernel.org,
+	linux-pci@vger.kernel.org,
+	Suresh Siddha <suresh.b.siddha@intel.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	Jan Beulich <JBeulich@suse.com>,
+	Ingo Molnar <mingo@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH v3 -tip x86/apic 1/2] PCI/MSI: Allocate as many
+ multiple-MSIs as requested
+Message-ID: <20130606083019.GA28569@dhcp-26-207.brq.redhat.com>
+References: <cover.1368431413.git.agordeev@redhat.com>
+ <8575dc590b819892f366852fe50835efaf579f4f.1368431413.git.agordeev@redhat.com>
+ <20130605205638.GA5816@breakpoint.cc>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo7Jni1ZSf_W=vB3kqsucPpoepa2Q5g=77a6D3FaPwe9LA@mail.gmail.com>
-References: <CAErSpo6v0mj9=Q13d=G4hho0mb9XTcsmefzke9fROYmZ7oBWxQ@mail.gmail.com>
-	<CAE9FiQU7cDzJdHxmqhJNgc9UCsRLgvCFQpv8+fLxD79pLEUC5A@mail.gmail.com>
-	<CAErSpo4ncW8rkcpDiccORZedj30m7jRmpXK+amfDGn_wjwt7EA@mail.gmail.com>
-	<CAE9FiQVqKag2TGah7x_1MAJ+c0UWgywgM_jKUoOnh+rq3bwBhg@mail.gmail.com>
-	<CAE9FiQVMgdj5edbR4qZny29fV9-bW_We_G4Wpn_yruDLQZiQiQ@mail.gmail.com>
-	<20130329032200.GA11990@google.com>
-	<CAE9FiQVu5QyxaKsYzzQoroQD=TvsziHzDOtoeg=FvhZ8HyN5yw@mail.gmail.com>
-	<CAErSpo7ChfRiEn0eR1rf-mVheUS9Yf8f+j4n78PJcGYh+yMVgA@mail.gmail.com>
-	<CAE9FiQXkDg7Y336S=DXoms44=5HLaiUx=sWviupz1fJmaDUEzQ@mail.gmail.com>
-	<CAE9FiQU5c=ztzbskNnYFFKF9V5zO+jnRcMBCivLxA1F3fSfX5w@mail.gmail.com>
-	<20130401235256.GA31966@google.com>
-	<CAE9FiQV8cPh-s6=EQu_cZTtn86+NwZE5KuGMhf43aOhzkL=hwA@mail.gmail.com>
-	<CAErSpo7Jni1ZSf_W=vB3kqsucPpoepa2Q5g=77a6D3FaPwe9LA@mail.gmail.com>
-Date: Tue, 11 Jun 2013 23:20:18 -0700
-Message-ID: <CAE9FiQWjQXwiTWju6cBc_o25jy_wmZ1u+Pifh1wdnxtV=i5ENw@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Remove not needed check in disable aspm link
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Jiang Liu <jiang.liu@huawei.com>
-Cc: Roman Yepishev <roman.yepishev@gmail.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Matthew Garrett <matthew.garrett@nebula.com>,
-	"e1000-devel@lists.sourceforge.net"
-	<e1000-devel@lists.sourceforge.net>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130605205638.GA5816@breakpoint.cc>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 2, 2013 at 1:10 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Mon, Apr 1, 2013 at 6:03 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->>> commit 96e5d01cd536458435ef0678d9fa3dc542afb41f
->>> Author: Bjorn Helgaas <bhelgaas@google.com>
->>> Date:   Mon Apr 1 15:47:39 2013 -0600
->>>
->>>     Revert "PCI/ACPI: Request _OSC control before scanning PCI root bus"
->>>
->>>     This reverts commit 8c33f51df406e1a1f7fa4e9b244845b7ebd61fa6.
->>>
->>>     Conflicts:
->>>         drivers/acpi/pci_root.c
->>>
->>>     Reference: https://bugzilla.kernel.org/show_bug.cgi?id=55211
->>>     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->>
->> Acked-by: Yinghai Lu <yinghai@kernel.org>
->>
->> stable need this reverting too.
->
-> I updated the changelog and added this to my for-linus branch, headed for v3.9.
+On Wed, Jun 05, 2013 at 10:56:38PM +0200, Sebastian Andrzej Siewior wrote:
+> On Mon, May 13, 2013 at 11:05:48AM +0200, Alexander Gordeev wrote:
+> > Note, although the existing 'msi_desc::multiple' field might seem
+> > redundant, in fact in does not. In general case the number of MSIs a
+> > PCI device is initialized with is not necessarily the closest power-
+> > of-two value of the number of MSIs the device will send. Thus, in
+> > theory it would not be always possible to derive the former from the
+> > latter and we need to keep them both, to stress this corner case.
+> > Besides, since 'msi_desc::multiple' is a bitfield, throwing it out
+> > would not save us any space.
+> 
+> The last paragraph makes me curious. The only place where 'multiple' is set is
+> in do_setup_msi_irqs() and this uses the next power of two for it. And since a
+> device is not enabled twice, it is not overridden.
+> So it should be possible to compute 'multiple' out of 'nvec' but it saves
+> cycles not do to so. I agree to keep 'multiple' but your argument does not
+> seem to make sense.
+> While nitpicking, 'nvec' might deserve a better comment than 'number of
+> messages' since it holds the number of allocated interrupts. :)
 
-We may need to revert this reverting for 3.10.
+Sebastian,
 
-Today noticed that acpiphp jump in before pciehp on one setup.
+I re-read my comment few times and I admit it might be confusing. You are
+right - 'multiple' is set by rounding up only. The part '...not necessarily
+the closest power-of-two value...' implied an abstract PCI device rather than
+the described code, but the wording is less than perfect, indeed. 
 
-current code from acpi_pci_root_add we have
-  1. pci_acpi_scan_root
-         ==> pci devices enumeration and bus scanning.
-             ==> pci_alloc_child_bus
-                 ==> pcibios_add_bus
-                     ==> acpi_pci_add_bus
-                         ==> acpiphp_enumerate_slots
-                             ==> ...==> register_slot
-                                  ==> device_is_managed_by_native_pciehp
-                                        ==> check osc_set with
-OSC_PCI_EXPRESS_NATIVE_HP_CONTROL
-   2. _OSC set request
+In fact, at the moment of writing I kept in mind a follow-up patch that could
+help with aforementioned devices. That would be a new interface:
 
-so we always have acpiphp hotplug slot registered at first.
+	int pci_enable_msi_block_partial(struct pci_dev *dev,
+					 unsigned int nvec_use,
+					 unsigned int nvec_init);
 
-so either we need to
-A. revert reverting about _OSC
-B. move pcibios_add_bus down to pci_bus_add_devices()
-    as acpiphp and apci pci slot driver are some kind of drivers for pci_bus
-C. A+B
+In this case 'nvec_use' would go to 'msi_desc::nvec_used' and 'nvec_init'
+would translate to 'msi_desc::multiple' in case 'nvec_init' is not zero.
+In case 'nvec_init' is zero, 'msi_desc::multiple' would be initialized
+with the maximum possible value for the device (the way it is done now for
+pci_enable_msi_block_auto() interface). So, for the AHCI device (Bjorn
+mentioned) such a call would conserve on 10 of 16 vectors:
 
-Thanks
+	pci_enable_msi_block_partial(pdev, 6, 0);
 
-Yinghai
+What I am not sure is whether we need to read out the maximum possible
+number of vectors like pci_enable_msi_block_auto() does:
+
+	int pci_enable_msi_block_partial(struct pci_dev *dev,
+					 unsigned int nvec_use,
+					 unsigned int nvec_init,
+					 unsigned int *maxvec);
+
+I can not think of any use of 'maxvec' with this interface, but the second
+variant completes the whole picture about a device...
+
+> Sebastian
+
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
