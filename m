@@ -1,30 +1,57 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f173.google.com ([209.85.214.173]:64709 "EHLO
-	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1945950Ab3FUUTu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Jun 2013 16:19:50 -0400
-Received: by mail-ob0-f173.google.com with SMTP id wc20so8785110obb.4
-        for <linux-pci@vger.kernel.org>; Fri, 21 Jun 2013 13:19:49 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAH9N0t_gPz_MBiBSbLpATD3j-+LgS=7jqNbtv3qqg6v8K76dzg@mail.gmail.com>
-References: <CAH9N0t_qrzLqeR6tZ8ykbFEzx0dZtCREjz9wCwCDTDDFwic6-Q@mail.gmail.com>
-	<CAE9FiQWJV=NPn9yBX2nQ9z8hFc4_9tNHm5BWwsY4dG_h7yYmvA@mail.gmail.com>
-	<CAH9N0t_gPz_MBiBSbLpATD3j-+LgS=7jqNbtv3qqg6v8K76dzg@mail.gmail.com>
-Date: Fri, 21 Jun 2013 13:19:49 -0700
-Message-ID: <CAE9FiQWXKJvhmmPHWX+v7EZdTkNWZAWgTtjibgsBVhWRYadoWg@mail.gmail.com>
-Subject: Re: PCIe Hotplug Script Automatization.
-From: Yinghai Lu <yinghai@kernel.org>
-To: Paulo Fortuna Carvalho <pricardofc@ipfn.ist.utl.pt>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Betty Dall <betty.dall@hp.com>
+To: rjw@sisk.pl, bhelgaas@google.com, gong.chen@linux.intel.com,
+	greg.pearson@hp.com
+Cc: ying.huang@intel.com, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Betty Dall <betty.dall@hp.com>
+Subject: [PATCH v3 0/6] PCI/ACPI: Fix firmware first error recovery with root port in reset
+Date: Thu,  6 Jun 2013 12:10:45 -0600
+Message-Id: <1370542251-27387-1-git-send-email-betty.dall@hp.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 21, 2013 at 1:02 PM, Paulo Fortuna Carvalho
-<pricardofc@ipfn.ist.utl.pt> wrote:
-> Kernel version is 3.0.9-rt26.46.el6rt.x86_64.
-> Also at the moment im not loading acpiphp.ko module.
+This patch set fixes a bug on platforms that use firmware first AER.
+Firmware can leave the root port in Secondary Bus Reset (SBR) and
+communicate this to the OS through the "reset" bit in the flags field
+of the HEST table and associated CPER records. Firmware wants to do this
+so that the error is contained and the hardware is in a known state.
 
-can you post boot log with "debug ignore_loglevel"?
+Without these patches, the root port stays in SBR and the device drivers
+cannot recover. These patches recognize when the firmware first root port
+is in SBR and bring the root port out of SBR so the devices under the root
+port can recover.
 
-Yinghai
+The changes have been tested on systems with firmware first that set the
+"reset" bit by injecting various hardware errors. The errors successfully
+recover.
+
+Changes since v1:
+Fixed a typo in the comment of patch 2.
+Removed incorrect setting of reset bit in patch 3.
+
+Changes since v2: 
+The v2 patch 1/3 was re-written by Bjorn Helgaas and is now patches 1/6
+through 3/6.
+The v2 patch 2/3 is now 5/6 and changed to directly use the AER_FATAL define
+and introduced patch 4/6 to move the defines to a public header file.
+The v2 patch 3/3 is now 6/6 and uses the same default reset link function for
+both Downstream Ports and Root Ports.
+
+Signed-off-by: Betty Dall <betty.dall@hp.com>
+---
+Betty Dall (6):
+  PCI/AER: Don't parse HEST table for non-PCIe devices
+  PCI/AER: Factor out HEST device type matching
+  PCI/AER: Set dev->__aer_firmware_first only for matching devices
+  PCI/ACPI: Move AER severity defines to aer.h
+  ACPI/APEI: Force fatal AER severity when bus has been reset
+  PCI/AER: Provide reset_link for firmware first root port
+---
+ drivers/acpi/apei/ghes.c           |   10 +++++++
+ drivers/pci/pcie/aer/aerdrv.h      |    4 ---
+ drivers/pci/pcie/aer/aerdrv_acpi.c |   47 ++++++++++++++++++-----------------
+ drivers/pci/pcie/aer/aerdrv_core.c |   17 +++++++------
+ include/linux/aer.h                |   16 +++++++----
+ 5 files changed, 53 insertions(+), 41 deletions(-)
+
