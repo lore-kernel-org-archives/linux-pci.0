@@ -1,159 +1,264 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-Subject: [PATCH v3 11/27] x86, irq: Add realloc_irq_and_cfg_at()
-Date: Fri,  7 Jun 2013 15:30:57 -0700
-Message-Id: <1370644273-10495-12-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1370644273-10495-1-git-send-email-yinghai@kernel.org>
-References: <1370644273-10495-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.free-electrons.com ([94.23.35.102]:44303 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752304Ab3FFQln (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Jun 2013 12:41:43 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Arnd Bergmann <arnd@arndb.de>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>
+Cc: linux-arm-kernel@lists.infradead.org,
+	Jason Cooper <jason@lakedaemon.net>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Maen Suleiman <maen@marvell.com>
+Subject: [PATCH v2 4/8] irqchip: armada-370-xp: implement MSI support
+Date: Thu,  6 Jun 2013 18:41:24 +0200
+Message-Id: <1370536888-8871-5-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1370536888-8871-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1370536888-8871-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For ioapic hot-add support, it would be easy if we put all irqs
-for that ioapic controller together.
+This commit introduces the support for the MSI interrupts in the
+armada-370-xp interrupt controller driver. It registers an MSI chip to
+the MSI chip registry, which will be used by the Marvell PCIe host
+controller driver.
 
-We can reserve irq range at first, then reallocate those
-pre-reserved one when it is needed.
+The MSI interrupts use the 16 high doorbells, and are therefore
+notified using IRQ1 of the main interrupt controller.
 
-Add realloc_irq_and_cfg_at() to really allocate irq_desc and cfg,
-because pre-reserved only mark bits in allocate_irqs bit maps.
-
-The reasons for not allocating them during reserving:
-1. only several pins in ioapic are used, allocate for all pins, will
-   waste memory for not used pins.
-2. relocate later could make sure irq_desc is allocated on local node ram.
-   as dev->node is set at that point.
-
--v2: update changelog by adding reasons, requested by Konrad.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
 ---
- arch/x86/kernel/apic/io_apic.c | 32 +++++++++++++++++++++++++++++++-
- include/linux/irq.h            |  5 +++++
- kernel/irq/irqdesc.c           | 26 ++++++++++++++++++++++++++
- 3 files changed, 62 insertions(+), 1 deletion(-)
+ drivers/irqchip/irq-armada-370-xp.c | 166 +++++++++++++++++++++++++++++++++++-
+ 1 file changed, 165 insertions(+), 1 deletion(-)
 
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 670c538..a157a56 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -301,6 +301,36 @@ static void free_irq_at(unsigned int at, struct irq_cfg *cfg)
- 	irq_free_desc(at);
+diff --git a/drivers/irqchip/irq-armada-370-xp.c b/drivers/irqchip/irq-armada-370-xp.c
+index 26adc74..c7c904d 100644
+--- a/drivers/irqchip/irq-armada-370-xp.c
++++ b/drivers/irqchip/irq-armada-370-xp.c
+@@ -22,6 +22,8 @@
+ #include <linux/of_address.h>
+ #include <linux/of_irq.h>
+ #include <linux/irqdomain.h>
++#include <linux/slab.h>
++#include <linux/msi.h>
+ #include <asm/mach/arch.h>
+ #include <asm/exception.h>
+ #include <asm/smp_plat.h>
+@@ -51,12 +53,22 @@
+ #define IPI_DOORBELL_START                      (0)
+ #define IPI_DOORBELL_END                        (8)
+ #define IPI_DOORBELL_MASK                       0xFF
++#define PCI_MSI_DOORBELL_START                  (16)
++#define PCI_MSI_DOORBELL_NR                     (16)
++#define PCI_MSI_DOORBELL_END                    (32)
++#define PCI_MSI_DOORBELL_MASK                   0xFFFF0000
+ 
+ static DEFINE_RAW_SPINLOCK(irq_controller_lock);
+ 
+ static void __iomem *per_cpu_int_base;
+ static void __iomem *main_int_base;
+ static struct irq_domain *armada_370_xp_mpic_domain;
++#ifdef CONFIG_PCI_MSI
++static struct irq_domain *armada_370_xp_msi_domain;
++static DECLARE_BITMAP(msi_used, PCI_MSI_DOORBELL_NR);
++static DEFINE_MUTEX(msi_used_lock);
++static phys_addr_t msi_doorbell_addr;
++#endif
+ 
+ /*
+  * In SMP mode:
+@@ -87,6 +99,126 @@ static void armada_370_xp_irq_unmask(struct irq_data *d)
+ 				ARMADA_370_XP_INT_CLEAR_MASK_OFFS);
  }
  
-+static struct irq_cfg *realloc_irq_and_cfg_at(unsigned int at, int node)
++#ifdef CONFIG_PCI_MSI
++static int armada_370_xp_alloc_msi(void)
 +{
-+	struct irq_desc *desc = irq_to_desc(at);
-+	struct irq_cfg *cfg;
-+	int res;
++	int hwirq;
 +
-+	if (desc) {
-+		if (irq_desc_get_irq_data(desc)->node == node)
-+			return alloc_irq_and_cfg_at(at, node);
++	mutex_lock(&msi_used_lock);
++	hwirq = find_first_zero_bit(&msi_used, PCI_MSI_DOORBELL_NR);
++	if (hwirq >= PCI_MSI_DOORBELL_NR)
++		hwirq = -ENOSPC;
++	else
++		set_bit(hwirq, msi_used);
++	mutex_unlock(&msi_used_lock);
 +
-+		cfg = irq_desc_get_chip_data(desc);
-+		if (cfg) {
-+			/* shared irq */
-+			if (!list_empty(&cfg->irq_2_pin))
-+				return cfg;
-+			free_irq_cfg(at, cfg);
-+		}
-+	}
-+
-+	res = irq_realloc_desc_at(at, node);
-+	if (res >= 0) {
-+		cfg = alloc_irq_cfg(at, node);
-+		if (cfg) {
-+			irq_set_chip_data(at, cfg);
-+			return cfg;
-+		}
-+	}
-+
-+	return alloc_irq_and_cfg_at(at, node);
-+}
- 
- struct io_apic {
- 	unsigned int index;
-@@ -3352,7 +3382,7 @@ int arch_setup_ht_irq(unsigned int irq, struct pci_dev *dev)
- static int
- io_apic_setup_irq_pin(unsigned int irq, int node, struct io_apic_irq_attr *attr)
- {
--	struct irq_cfg *cfg = alloc_irq_and_cfg_at(irq, node);
-+	struct irq_cfg *cfg = realloc_irq_and_cfg_at(irq, node);
- 	int ret;
- 
- 	if (!cfg)
-diff --git a/include/linux/irq.h b/include/linux/irq.h
-index 4e0fcbb..9c6c047 100644
---- a/include/linux/irq.h
-+++ b/include/linux/irq.h
-@@ -602,6 +602,11 @@ void irq_free_descs(unsigned int irq, unsigned int cnt);
- int irq_reserve_irqs(unsigned int from, unsigned int cnt);
- int __irq_reserve_irqs(int irq, unsigned int from, unsigned int cnt);
- 
-+int __irq_realloc_desc(int at, int node, struct module *owner);
-+/* use macros to avoid needing export.h for THIS_MODULE */
-+#define irq_realloc_desc_at(at, node)	\
-+	__irq_realloc_desc(at, node, THIS_MODULE)
-+
- static inline void irq_free_desc(unsigned int irq)
- {
- 	irq_free_descs(irq, 1);
-diff --git a/kernel/irq/irqdesc.c b/kernel/irq/irqdesc.c
-index 3b9fb92..b48f65b 100644
---- a/kernel/irq/irqdesc.c
-+++ b/kernel/irq/irqdesc.c
-@@ -99,6 +99,11 @@ EXPORT_SYMBOL_GPL(nr_irqs);
- static DEFINE_MUTEX(sparse_irq_lock);
- static DECLARE_BITMAP(allocated_irqs, IRQ_BITMAP_BITS);
- 
-+static bool __irq_is_reserved(int irq)
-+{
-+	return !!test_bit(irq, allocated_irqs);
++	return hwirq;
 +}
 +
- #ifdef CONFIG_SPARSE_IRQ
- 
- static RADIX_TREE(irq_desc_tree, GFP_KERNEL);
-@@ -410,6 +415,27 @@ __irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
- EXPORT_SYMBOL_GPL(__irq_alloc_descs);
- 
- /**
-+ * irq_realloc_desc - allocate irq descriptor for irq that is already reserved
-+ * @irq:	Allocate for specific irq number if irq >= 0
-+ * @node:	Preferred node on which the irq descriptor should be allocated
-+ * @owner:	Owning module (can be NULL)
-+ *
-+ * Returns the irq number or error code
-+ */
-+int __ref
-+__irq_realloc_desc(int irq, int node, struct module *owner)
++static void armada_370_xp_free_msi(int hwirq)
 +{
-+	if (!__irq_is_reserved(irq))
++	mutex_lock(&msi_used_lock);
++	if (!test_bit(hwirq, msi_used))
++		pr_err("trying to free unused MSI#%d\n", hwirq);
++	else
++		clear_bit(hwirq, msi_used);
++       mutex_unlock(&msi_used_lock);
++}
++
++static int armada_370_xp_setup_msi_irq(struct msi_chip *chip,
++				       struct pci_dev *pdev,
++				       struct msi_desc *desc)
++{
++	struct msi_msg msg;
++	int hwirq, irq;
++
++	hwirq = armada_370_xp_alloc_msi();
++	if (hwirq < 0)
++		return hwirq;
++
++	irq = irq_create_mapping(armada_370_xp_msi_domain, hwirq);
++	if (!irq) {
++		armada_370_xp_free_msi(hwirq);
 +		return -EINVAL;
++	}
 +
-+	if (irq_to_desc(irq))
-+		free_desc(irq);
++	irq_set_msi_desc(irq, desc);
 +
-+	return alloc_descs(irq, 1, node, owner);
++	msg.address_lo = msi_doorbell_addr;
++	msg.address_hi = 0;
++	msg.data = 0xf00 | (hwirq + 16);
++
++	write_msi_msg(irq, &msg);
++	return 0;
 +}
-+EXPORT_SYMBOL_GPL(__irq_realloc_desc);
 +
-+/**
-  * irq_reserve_irqs - mark irqs allocated
-  * @from:	mark from irq number
-  * @cnt:	number of irqs to mark
++static void armada_370_xp_teardown_msi_irq(struct msi_chip *chip,
++					   unsigned int irq)
++{
++	struct irq_data *d = irq_get_irq_data(irq);
++	armada_370_xp_free_msi(d->hwirq);
++}
++
++static struct irq_chip armada_370_xp_msi_irq_chip = {
++	.name = "armada_370_xp_msi_irq",
++	.irq_enable = unmask_msi_irq,
++	.irq_disable = mask_msi_irq,
++	.irq_mask = mask_msi_irq,
++	.irq_unmask = unmask_msi_irq,
++};
++
++static int armada_370_xp_msi_map(struct irq_domain *domain, unsigned int virq,
++				 irq_hw_number_t hw)
++{
++	irq_set_chip_and_handler(virq, &armada_370_xp_msi_irq_chip,
++				 handle_simple_irq);
++	set_irq_flags(virq, IRQF_VALID);
++
++	return 0;
++}
++
++static const struct irq_domain_ops armada_370_xp_msi_irq_ops = {
++	.map = armada_370_xp_msi_map,
++};
++
++static int armada_370_xp_msi_init(struct device_node *node)
++{
++	struct msi_chip *msi_chip;
++	u32 reg;
++
++	msi_chip = kzalloc(sizeof(*msi_chip), GFP_KERNEL);
++	if (!msi_chip)
++		return -ENOMEM;
++
++	armada_370_xp_msi_domain =
++		irq_domain_add_linear(NULL, PCI_MSI_DOORBELL_NR,
++				      &armada_370_xp_msi_irq_ops, NULL);
++	if (!armada_370_xp_msi_domain) {
++		kfree(msi_chip);
++		return -ENOMEM;
++	}
++
++	msi_chip->of_node = node;
++	msi_chip->setup_irq = armada_370_xp_setup_msi_irq;
++	msi_chip->teardown_irq = armada_370_xp_teardown_msi_irq;
++
++	msi_chip_add(msi_chip);
++
++	reg = readl(per_cpu_int_base + ARMADA_370_XP_IN_DRBEL_MSK_OFFS)
++		| PCI_MSI_DOORBELL_MASK;
++
++	writel(reg, per_cpu_int_base +
++	       ARMADA_370_XP_IN_DRBEL_MSK_OFFS);
++
++	/* Unmask IPI interrupt */
++	writel(1, per_cpu_int_base + ARMADA_370_XP_INT_CLEAR_MASK_OFFS);
++
++	return 0;
++}
++#else
++static inline int armada_370_xp_msi_init(struct device_node *node) { return 0; }
++#endif
++
+ #ifdef CONFIG_SMP
+ static int armada_xp_set_affinity(struct irq_data *d,
+ 				  const struct cpumask *mask_val, bool force)
+@@ -214,12 +346,39 @@ armada_370_xp_handle_irq(struct pt_regs *regs)
+ 		if (irqnr > 1022)
+ 			break;
+ 
+-		if (irqnr > 0) {
++		if (irqnr > 1) {
+ 			irqnr =	irq_find_mapping(armada_370_xp_mpic_domain,
+ 					irqnr);
+ 			handle_IRQ(irqnr, regs);
+ 			continue;
+ 		}
++
++#ifdef CONFIG_PCI_MSI
++		/* MSI handling */
++		if (irqnr == 1) {
++			u32 msimask, msinr;
++
++			msimask = readl_relaxed(per_cpu_int_base +
++						ARMADA_370_XP_IN_DRBEL_CAUSE_OFFS)
++				& PCI_MSI_DOORBELL_MASK;
++
++			writel(~PCI_MSI_DOORBELL_MASK, per_cpu_int_base +
++			       ARMADA_370_XP_IN_DRBEL_CAUSE_OFFS);
++
++			for (msinr = PCI_MSI_DOORBELL_START;
++			     msinr < PCI_MSI_DOORBELL_END; msinr++) {
++				int irq;
++
++				if (!(msimask & BIT(msinr)))
++					continue;
++
++				irq = irq_find_mapping(armada_370_xp_msi_domain,
++						       msinr - 16);
++				handle_IRQ(irq, regs);
++			}
++		}
++#endif
++
+ #ifdef CONFIG_SMP
+ 		/* IPI Handling */
+ 		if (irqnr == 0) {
+@@ -269,6 +428,9 @@ static int __init armada_370_xp_mpic_of_init(struct device_node *node,
+ 				   resource_size(&per_cpu_int_res));
+ 	BUG_ON(!per_cpu_int_base);
+ 
++	msi_doorbell_addr = main_int_res.start +
++		ARMADA_370_XP_SW_TRIG_INT_OFFS;
++
+ 	control = readl(main_int_base + ARMADA_370_XP_INT_CONTROL);
+ 
+ 	armada_370_xp_mpic_domain =
+@@ -292,6 +454,8 @@ static int __init armada_370_xp_mpic_of_init(struct device_node *node,
+ 
+ #endif
+ 
++	armada_370_xp_msi_init(node);
++
+ 	set_handle_irq(armada_370_xp_handle_irq);
+ 
+ 	return 0;
 -- 
-1.8.1.4
+1.8.1.2
 
