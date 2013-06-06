@@ -1,71 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41000 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754513Ab3F0WkB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 27 Jun 2013 18:40:01 -0400
-Subject: [PATCH v2 2/3] pci: Differentiate ACS controllable from enabled
-To: bhelgaas@google.com
-From: Alex Williamson <alex.williamson@redhat.com>
-Cc: linux-pci@vger.kernel.org, joro@8bytes.org,
-	andihartmann@01019freenet.de, linux-kernel@vger.kernel.org
-Date: Thu, 27 Jun 2013 16:39:54 -0600
-Message-ID: <20130627223954.16564.78400.stgit@bling.home>
-In-Reply-To: <20130627222159.16564.38166.stgit@bling.home>
-References: <20130627222159.16564.38166.stgit@bling.home>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mail.free-electrons.com ([94.23.35.102]:44294 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752756Ab3FFQll (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Jun 2013 12:41:41 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Arnd Bergmann <arnd@arndb.de>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>
+Cc: linux-arm-kernel@lists.infradead.org,
+	Jason Cooper <jason@lakedaemon.net>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Maen Suleiman <maen@marvell.com>
+Subject: [PATCH v2 3/8] irqchip: armada-370-xp: properly request resources
+Date: Thu,  6 Jun 2013 18:41:23 +0200
+Message-Id: <1370536888-8871-4-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1370536888-8871-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1370536888-8871-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We currently misinterpret that in order for an ACS feature to be
-enabled it must be set in the control field.  In reality, this means
-that the feature is not only enabled, but controllable.  Many of the
-ACS capability bits are not required if the device behaves by default
-in the way specified when both the capability and control bit are set
-and does not support or allow the alternate mode.  We therefore need
-to check the capabilities and mask out flags that are enabled but not
-controllable.  Egress control seems to be the only flag which is
-purely optional.
+Instead of using of_iomap(), we now use of_address_to_resource(),
+request_mem_region() and ioremap(). This allows the corresponding I/O
+regions to be properly requested and visible in /proc/iomem.
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+The main motivation for this change is that the introduction of the
+MSI support requires us to get the physical address of the main
+interrupt controller registers, so we will need the corresponding
+'struct resource' anyway.
+
+We also take this opportunity to change a panic() to BUG_ON(), in
+order to be consistent with the rest of the driver.
+
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
 ---
- drivers/pci/pci.c |   13 +++++++++----
- 1 file changed, 9 insertions(+), 4 deletions(-)
+ drivers/irqchip/irq-armada-370-xp.c | 20 ++++++++++++++++----
+ 1 file changed, 16 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index d0c2b35..ae372ca 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -2352,12 +2352,20 @@ void pci_enable_acs(struct pci_dev *dev)
- static bool pci_acs_flags_enabled(struct pci_dev *pdev, u16 acs_flags)
+diff --git a/drivers/irqchip/irq-armada-370-xp.c b/drivers/irqchip/irq-armada-370-xp.c
+index bb328a3..26adc74 100644
+--- a/drivers/irqchip/irq-armada-370-xp.c
++++ b/drivers/irqchip/irq-armada-370-xp.c
+@@ -248,12 +248,25 @@ armada_370_xp_handle_irq(struct pt_regs *regs)
+ static int __init armada_370_xp_mpic_of_init(struct device_node *node,
+ 					     struct device_node *parent)
  {
- 	int pos;
--	u16 ctrl;
-+	u16 cap, ctrl;
++	struct resource main_int_res, per_cpu_int_res;
+ 	u32 control;
  
- 	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_ACS);
- 	if (!pos)
- 		return false;
+-	main_int_base = of_iomap(node, 0);
+-	per_cpu_int_base = of_iomap(node, 1);
++	BUG_ON(of_address_to_resource(node, 0, &main_int_res));
++	BUG_ON(of_address_to_resource(node, 1, &per_cpu_int_res));
  
-+	/*
-+	 * Except for egress control, capabilities are either required
-+	 * or only required if controllable.  Features missing from the
-+	 * capability field can therefore be assumed as hard-wired enabled.
-+	 */
-+	pci_read_config_word(pdev, pos + PCI_ACS_CAP, &cap);
-+	acs_flags &= (cap | PCI_ACS_EC);
++	BUG_ON(!request_mem_region(main_int_res.start,
++				   resource_size(&main_int_res),
++				   node->full_name));
++	BUG_ON(!request_mem_region(per_cpu_int_res.start,
++				   resource_size(&per_cpu_int_res),
++				   node->full_name));
 +
- 	pci_read_config_word(pdev, pos + PCI_ACS_CTRL, &ctrl);
- 	return (ctrl & acs_flags) == acs_flags;
- }
-@@ -2432,9 +2440,6 @@ bool pci_acs_enabled(struct pci_dev *pdev, u16 acs_flags)
- 		if (!pdev->multifunction)
- 			break;
++	main_int_base = ioremap(main_int_res.start,
++				resource_size(&main_int_res));
+ 	BUG_ON(!main_int_base);
++
++	per_cpu_int_base = ioremap(per_cpu_int_res.start,
++				   resource_size(&per_cpu_int_res));
+ 	BUG_ON(!per_cpu_int_base);
  
--		acs_flags &= (PCI_ACS_RR | PCI_ACS_CR |
--			      PCI_ACS_EC | PCI_ACS_DT);
--
- 		return pci_acs_flags_enabled(pdev, acs_flags);
- 	}
+ 	control = readl(main_int_base + ARMADA_370_XP_INT_CONTROL);
+@@ -262,8 +275,7 @@ static int __init armada_370_xp_mpic_of_init(struct device_node *node,
+ 		irq_domain_add_linear(node, (control >> 2) & 0x3ff,
+ 				&armada_370_xp_mpic_irq_ops, NULL);
  
+-	if (!armada_370_xp_mpic_domain)
+-		panic("Unable to add Armada_370_Xp MPIC irq domain (DT)\n");
++	BUG_ON(!armada_370_xp_mpic_domain);
+ 
+ 	irq_set_default_host(armada_370_xp_mpic_domain);
+ 
+-- 
+1.8.1.2
 
