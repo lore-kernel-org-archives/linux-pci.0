@@ -1,76 +1,83 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <51C08BEA.1030804@gmail.com>
-Date: Wed, 19 Jun 2013 00:33:46 +0800
-From: Jiang Liu <liuj97@gmail.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Yinghai Lu <yinghai@kernel.org>, Jiang Liu <jiang.liu@huawei.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Mauro Carvalho Chehab <mchehab@redhat.com>,
-	Doug Thompson <dougthompson@xmission.com>,
-	linux-edac@vger.kernel.org
-Subject: Re: [PATCH v3, part2 15/20] PCI, EDAC: use hotplug-safe PCI bus iterators
- to walk PCI buses
-References: <1369583597-3801-1-git-send-email-jiang.liu@huawei.com> <1369583597-3801-16-git-send-email-jiang.liu@huawei.com> <20130617201802.GB7877@google.com>
-In-Reply-To: <20130617201802.GB7877@google.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Betty Dall <betty.dall@hp.com>
+To: rjw@sisk.pl, bhelgaas@google.com, gong.chen@linux.intel.com,
+	greg.pearson@hp.com
+Cc: ying.huang@intel.com, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Betty Dall <betty.dall@hp.com>
+Subject: [PATCH v3 2/6] PCI/AER: Factor out HEST device type matching
+Date: Thu,  6 Jun 2013 12:10:47 -0600
+Message-Id: <1370542251-27387-3-git-send-email-betty.dall@hp.com>
+In-Reply-To: <1370542251-27387-1-git-send-email-betty.dall@hp.com>
+References: <1370542251-27387-1-git-send-email-betty.dall@hp.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06/18/2013 04:18 AM, Bjorn Helgaas wrote:
-> On Sun, May 26, 2013 at 11:53:12PM +0800, Jiang Liu wrote:
->> Enhance EDAC drviers to use hotplug-safe iterators to walk PCI buses.
->>
->> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
->> Cc: Mauro Carvalho Chehab <mchehab@redhat.com>
->> Cc: Doug Thompson <dougthompson@xmission.com> r
->> Cc: linux-edac@vger.kernel.org
->> Cc: linux-kernel@vger.kernel.org
->> ---
->>  drivers/edac/i7core_edac.c | 2 +-
->>  1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/drivers/edac/i7core_edac.c b/drivers/edac/i7core_edac.c
->> index 0ec3e95..7146e10 100644
->> --- a/drivers/edac/i7core_edac.c
->> +++ b/drivers/edac/i7core_edac.c
->> @@ -1296,7 +1296,7 @@ static unsigned i7core_pci_lastbus(void)
->>  	int last_bus = 0, bus;
->>  	struct pci_bus *b = NULL;
->>  
->> -	while ((b = pci_find_next_bus(b)) != NULL) {
->> +	for_each_pci_root_bus(b) {
-> 
-> This doesn't look equivalent.  Previously, we iterated over all PCI
-> buses, so we returned the highest bus number seen anywhere.  Now we
-> only look at root buses, so we return the highest bus number of any
-> root bus.  But if that root bus has a bridge on it, obviously the
-> bus on the other side has a higher number.
-Hi Bjorn,
-	I think the name pci_find_next_bus() is misleading, it should be named
-pci_find_next_root_bus() actually because it returns next root bus indeed.
+This factors out the matching of HEST structure type and PCIe device type
+to improve readability.  No functional change.
+    
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Tested-by: Betty Dall <betty.dall@hp.com>
+---
 
-> 
-> Even with that fix, a hot-add at the same time i7core_probe() runs
-> could mean an incorrect result.  This is all very i7 topology-dependent,
-> so I don't think the PCI core can do anything more than avoid oopses
-> from traversing lists incorrectly.
-Yeah, it's very architecture specific. I think i7core_edac assume no PCI
-root bus hotplug on i7 platforms because it's desktop or mobile processors.
+ drivers/pci/pcie/aer/aerdrv_acpi.c |   35 +++++++++++++++++------------------
+ 1 files changed, 17 insertions(+), 18 deletions(-)
 
-> 
-> Bjorn
-> 
->>  		bus = b->number;
->>  		edac_dbg(0, "Found bus %d\n", bus);
->>  		if (bus > last_bus)
->> -- 
->> 1.8.1.2
->>
 
+diff --git a/drivers/pci/pcie/aer/aerdrv_acpi.c b/drivers/pci/pcie/aer/aerdrv_acpi.c
+index 4f798ab..e7ea573 100644
+--- a/drivers/pci/pcie/aer/aerdrv_acpi.c
++++ b/drivers/pci/pcie/aer/aerdrv_acpi.c
+@@ -29,6 +29,22 @@ static inline int hest_match_pci(struct acpi_hest_aer_common *p,
+ 		 p->function == PCI_FUNC(pci->devfn));
+ }
+ 
++static inline bool hest_match_type(struct acpi_hest_header *hest_hdr,
++				struct pci_dev *dev)
++{
++	u16 hest_type = hest_hdr->type;
++	u8 pcie_type = pci_pcie_type(dev);
++
++	if ((hest_type == ACPI_HEST_TYPE_AER_ROOT_PORT &&
++		pcie_type == PCI_EXP_TYPE_ROOT_PORT) ||
++	    (hest_type == ACPI_HEST_TYPE_AER_ENDPOINT &&
++		pcie_type == PCI_EXP_TYPE_ENDPOINT) ||
++	    (hest_type == ACPI_HEST_TYPE_AER_BRIDGE &&
++		(dev->class >> 16) == PCI_BASE_CLASS_BRIDGE))
++		return true;
++	return false;
++}
++
+ struct aer_hest_parse_info {
+ 	struct pci_dev *pci_dev;
+ 	int firmware_first;
+@@ -38,28 +54,11 @@ static int aer_hest_parse(struct acpi_hest_header *hest_hdr, void *data)
+ {
+ 	struct aer_hest_parse_info *info = data;
+ 	struct acpi_hest_aer_common *p;
+-	u8 pcie_type = 0;
+-	u8 bridge = 0;
+ 	int ff = 0;
+ 
+-	switch (hest_hdr->type) {
+-	case ACPI_HEST_TYPE_AER_ROOT_PORT:
+-		pcie_type = PCI_EXP_TYPE_ROOT_PORT;
+-		break;
+-	case ACPI_HEST_TYPE_AER_ENDPOINT:
+-		pcie_type = PCI_EXP_TYPE_ENDPOINT;
+-		break;
+-	case ACPI_HEST_TYPE_AER_BRIDGE:
+-		if ((info->pci_dev->class >> 16) == PCI_BASE_CLASS_BRIDGE)
+-			bridge = 1;
+-		break;
+-	default:
+-		return 0;
+-	}
+-
+ 	p = (struct acpi_hest_aer_common *)(hest_hdr + 1);
+ 	if (p->flags & ACPI_HEST_GLOBAL) {
+-		if ((pci_pcie_type(info->pci_dev) == pcie_type) || bridge)
++		if (hest_match_type(hest_hdr, info->pci_dev))
+ 			ff = !!(p->flags & ACPI_HEST_FIRMWARE_FIRST);
+ 	} else
+ 		if (hest_match_pci(p, info->pci_dev))
