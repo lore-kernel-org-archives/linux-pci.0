@@ -1,51 +1,205 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f176.google.com ([209.85.214.176]:52570 "EHLO
-	mail-ob0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753181Ab3FGUhg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 7 Jun 2013 16:37:36 -0400
-Received: by mail-ob0-f176.google.com with SMTP id v19so7048604obq.7
-        for <linux-pci@vger.kernel.org>; Fri, 07 Jun 2013 13:37:36 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <51B1FC83.7090402@gmail.com>
-References: <1369489718-25869-1-git-send-email-jiang.liu@huawei.com>
- <1369489718-25869-5-git-send-email-jiang.liu@huawei.com> <CAErSpo5bysp-s-twUWgZEyJD01skjW=vXkcQBYkn_TALP83r1g@mail.gmail.com>
- <51B0B99C.4020009@gmail.com> <20130607143758.GA13427@phenom.dumpdata.com> <51B1FC83.7090402@gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 7 Jun 2013 14:37:15 -0600
-Message-ID: <CAErSpo4nTW1U2HVv4fM2snF4yPPOwdCE+6eiDnTEpQ+51514pQ@mail.gmail.com>
-Subject: Re: [PATCH v3, part1 04/10] PCI: mark pci_scan_bus_parented() as __deprecated
-To: Jiang Liu <liuj97@gmail.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
+Received: from szxga01-in.huawei.com ([119.145.14.64]:60089 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755676Ab3FFHfl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Jun 2013 03:35:41 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Yinghai Lu <yinghai@kernel.org>, <linux-pci@vger.kernel.org>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	Fenghua Yu <fenghua.yu@intel.com>,
+	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>,
 	Yijing Wang <wangyijing@huawei.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Chris Metcalf <cmetcalf@tilera.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Jeremy Fitzhardinge <jeremy@goop.org>,
-	xen-devel <xen-devel@lists.xensource.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: [PATCH -v5 5/8] PCI/IA64: fix memleak for create pci root bus fail
+Date: Thu, 6 Jun 2013 15:34:50 +0800
+Message-ID: <1370504093-14908-6-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1370504093-14908-1-git-send-email-wangyijing@huawei.com>
+References: <1370504093-14908-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 7, 2013 at 9:30 AM, Jiang Liu <liuj97@gmail.com> wrote:
-> On 06/07/2013 10:37 PM, Konrad Rzeszutek Wilk wrote:
->> On Fri, Jun 07, 2013 at 12:32:28AM +0800, Jiang Liu wrote:
->>> On Thu 06 Jun 2013 04:04:36 AM CST, Bjorn Helgaas wrote:
->>>> [+cc Konrad, Jeremy, xen-devel (users of interface you're deprecating)]
->>>>
->>>> On Sat, May 25, 2013 at 7:48 AM, Jiang Liu <liuj97@gmail.com> wrote:
->>>>> Mark pci_scan_bus_parented() as __deprecated and clean up outdated
->>>>> comments.
+From: Jiang Liu <jiang.liu@huawei.com>
 
-I dropped this patch (marking pci_scan_bus_parented() as __deprecated)
-from the series for now.  When the xen-pcifront stuff gets resolved,
-we can deprecate the interface at the same time.
+If pci_create_root_bus() return fail, we should release
+pci root info, pci controller etc.
 
-Bjorn
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Cc: Tony Luck <tony.luck@intel.com>
+Cc: Fenghua Yu <fenghua.yu@intel.com>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linux-ia64@vger.kernel.org
+---
+ arch/ia64/include/asm/pci.h |    5 +++
+ arch/ia64/pci/pci.c         |   74 ++++++++++++++++++++++++++++++++++--------
+ 2 files changed, 65 insertions(+), 14 deletions(-)
+
+diff --git a/arch/ia64/include/asm/pci.h b/arch/ia64/include/asm/pci.h
+index a7ebe5f..80775f5 100644
+--- a/arch/ia64/include/asm/pci.h
++++ b/arch/ia64/include/asm/pci.h
+@@ -89,6 +89,11 @@ extern int pci_mmap_legacy_page_range(struct pci_bus *bus,
+ #define pci_legacy_read platform_pci_legacy_read
+ #define pci_legacy_write platform_pci_legacy_write
+ 
++struct iospace_resource {
++	struct list_head list;
++	struct resource res;
++};
++
+ struct pci_controller {
+ 	void *acpi_handle;
+ 	void *iommu;
+diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
+index 6da469a..99a9f67 100644
+--- a/arch/ia64/pci/pci.c
++++ b/arch/ia64/pci/pci.c
+@@ -137,6 +137,7 @@ struct pci_root_info {
+ 	struct resource *res;
+ 	resource_size_t *res_offset;
+ 	unsigned int res_num;
++	struct list_head io_resources;
+ 	char *name;
+ };
+ 
+@@ -171,25 +172,21 @@ new_space (u64 phys_base, int sparse)
+ static u64 add_io_space(struct pci_root_info *info,
+ 			struct acpi_resource_address64 *addr)
+ {
++	struct iospace_resource *iospace;
+ 	struct resource *resource;
+ 	char *name;
+ 	unsigned long base, min, max, base_port;
+ 	unsigned int sparse = 0, space_nr, len;
+ 
+-	resource = kzalloc(sizeof(*resource), GFP_KERNEL);
+-	if (!resource) {
++	len = strlen(info->name) + 32;
++	iospace = kzalloc(sizeof(*iospace) + len, GFP_KERNEL);
++	if (!iospace) {
+ 		printk(KERN_ERR "PCI: No memory for %s I/O port space\n",
+ 			info->name);
+ 		goto out;
+ 	}
+ 
+-	len = strlen(info->name) + 32;
+-	name = kzalloc(len, GFP_KERNEL);
+-	if (!name) {
+-		printk(KERN_ERR "PCI: No memory for %s I/O port space name\n",
+-			info->name);
+-		goto free_resource;
+-	}
++	name = (char *)(iospace + 1);
+ 
+ 	min = addr->minimum;
+ 	max = min + addr->address_length - 1;
+@@ -198,7 +195,7 @@ static u64 add_io_space(struct pci_root_info *info,
+ 
+ 	space_nr = new_space(addr->translation_offset, sparse);
+ 	if (space_nr == ~0)
+-		goto free_name;
++		goto free_resource;
+ 
+ 	base = __pa(io_space[space_nr].mmio_base);
+ 	base_port = IO_SPACE_BASE(space_nr);
+@@ -213,18 +210,23 @@ static u64 add_io_space(struct pci_root_info *info,
+ 	if (space_nr == 0)
+ 		sparse = 1;
+ 
++	resource = &iospace->res;
+ 	resource->name  = name;
+ 	resource->flags = IORESOURCE_MEM;
+ 	resource->start = base + (sparse ? IO_SPACE_SPARSE_ENCODING(min) : min);
+ 	resource->end   = base + (sparse ? IO_SPACE_SPARSE_ENCODING(max) : max);
+-	insert_resource(&iomem_resource, resource);
++	if (insert_resource(&iomem_resource, resource)) {
++		dev_err(&info->bridge->dev,
++				"can't allocate host bridge io space resource  %pR\n",
++				resource);
++		goto free_resource;
++	}
+ 
++	list_add_tail(&iospace->list, &info->io_resources);
+ 	return base_port;
+ 
+-free_name:
+-	kfree(name);
+ free_resource:
+-	kfree(resource);
++	kfree(iospace);
+ out:
+ 	return ~0;
+ }
+@@ -325,6 +327,48 @@ static acpi_status add_window(struct acpi_resource *res, void *data)
+ 	return AE_OK;
+ }
+ 
++static void free_pci_root_info_res(struct pci_root_info *info)
++{
++	struct iospace_resource *iospace, *tmp;
++
++	list_for_each_entry_safe(iospace, tmp, &info->io_resources, list)
++		kfree(iospace);
++
++	kfree(info->name);
++	kfree(info->res);
++	info->res = NULL;
++	kfree(info->res_offset);
++	info->res_offset = NULL;
++	info->res_num = 0;
++	kfree(info->controller);
++	info->controller = NULL;
++}
++
++static void __release_pci_root_info(struct pci_root_info *info)
++{
++	int i;
++	struct resource *res;
++	struct iospace_resource *iospace;
++
++	list_for_each_entry(iospace, &info->io_resources, list)
++		release_resource(&iospace->res);
++
++	for (i = 0; i < info->res_num; i++) {
++		res = &info->res[i];
++
++		if (!res->parent)
++			continue;
++
++		if (!(res->flags & (IORESOURCE_MEM | IORESOURCE_IO)))
++			continue;
++
++		release_resource(res);
++	}
++
++	free_pci_root_info_res(info);
++	kfree(info);
++}
++
+ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ {
+ 	struct acpi_device *device = root->device;
+@@ -357,6 +401,7 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 		goto out2;
+ 	}
+ 
++	INIT_LIST_HEAD(&info->io_resources);
+ 	INIT_LIST_HEAD(&info->resources);
+ 	/* insert busn resource at first */
+ 	pci_add_resource(&info->resources, &root->secondary);
+@@ -397,6 +442,7 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 				   &info->resources);
+ 	if (!pbus) {
+ 		pci_free_resource_list(&info->resources);
++		__release_pci_root_info(info);
+ 		return NULL;
+ 	}
+ 
+-- 
+1.7.1
+
+
