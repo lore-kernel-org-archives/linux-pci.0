@@ -1,61 +1,212 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:20061 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752687Ab3FKQIf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Jun 2013 12:08:35 -0400
-Message-ID: <51B74B77.1000806@oracle.com>
-Date: Tue, 11 Jun 2013 12:08:23 -0400
-From: konrad wilk <konrad.wilk@oracle.com>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:60498 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753880Ab3FFHgM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Jun 2013 03:36:12 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Yinghai Lu <yinghai@kernel.org>, <linux-pci@vger.kernel.org>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	Fenghua Yu <fenghua.yu@intel.com>,
+	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Thierry Reding <thierry.reding@avionic-design.de>
+Subject: [PATCH -v5 3/8] PCI/IA64: embed pci hostbridge resources into pci_root_info
+Date: Thu, 6 Jun 2013 15:34:48 +0800
+Message-ID: <1370504093-14908-4-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1370504093-14908-1-git-send-email-wangyijing@huawei.com>
+References: <1370504093-14908-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-To: George Dunlap <george.dunlap@eu.citrix.com>
-CC: xen-devel@lists.xensource.com, linux-kernel@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	stable@vger.kernel.org
-Subject: Re: [PATCH] xen/pci: Deal with toolstack missing an 'XenbusStateClosing'.
-References: <20130610202456.GA17822@phenom.dumpdata.com> <1370898399-20968-1-git-send-email-konrad.wilk@oracle.com> <1370898399-20968-2-git-send-email-konrad.wilk@oracle.com> <51B743EA.5020800@eu.citrix.com>
-In-Reply-To: <51B743EA.5020800@eu.citrix.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Currently, pcibios_resource_to_bus() and pcibios_bus_to_resource()
+functions use pci_host_bridge to translate bus side address from/to
+cpu side address. The pci_window in pci_controller never be used again.
+So we remove pci_window in pci_controller and embed hostbridge resource
+into pci_root_info. Bjorn suggested to implement hostbridge resources
+release in IA64 like in X86, this patch is to prepare for that.
 
-On 6/11/2013 11:36 AM, George Dunlap wrote:
-> On 06/10/2013 10:06 PM, Konrad Rzeszutek Wilk wrote:
->> There are two tool-stack that can instruct the Xen PCI frontend
->> and backend to change states: 'xm' (Python code with a daemon),
->> and 'xl' (C library - does not keep state changes).
->>
->> With the 'xm', the path to disconnect a PCI device (xm pci-detach
->> <guest> <BDF>)is:
->>
->> 4(Connected)->7(Reconfiguring*)-> 8(Reconfigured)-> 
->> 4(Connected)->5(Closing*).
->>
->> The * is for states that the tool-stack sets. For 'xl', it is similar:
->>
->> 4(Connected)->7(Reconfiguring*)-> 8(Reconfigured)-> 4(Connected)
->>
->> Both of them also tear down the XenBus structure, so the backend
->> state ends up going in the 3(Initialised) and calls 
->> pcifront_xenbus_remove.
->
-> So I looked a little bit into this; there are actually two different 
-> states that happen as part of this handshake.  In order to disonnect a 
-> *device*, xl signals using the *bus* state, like this:
-> * Wait for the *bus* to be in state 4(Connected)
-> * Set the *device* state to 5(Closing)
-> * Set the *bus* state to 7(Reconfiguring)
-> * Wait for the *bus* state to return to 4(Connected)
->
-> So are all of these states you see the *bus* state?  And why would you 
-> disconnect the whole pci bus if you're only removing one device?
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Cc: Tony Luck <tony.luck@intel.com>
+Cc: Fenghua Yu <fenghua.yu@intel.com>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Thierry Reding <thierry.reding@avionic-design.de>
+Cc: linux-ia64@vger.kernel.org
+---
+ arch/ia64/include/asm/pci.h |    9 +-----
+ arch/ia64/pci/pci.c         |   65 ++++++++++++++++++++++++------------------
+ 2 files changed, 38 insertions(+), 36 deletions(-)
 
-Correct. The stats I enumerated are *bus* states. Not per-device states.
-I presume (and I hadn't checked xm) that Xend has some logic to only 
-disconnect the bus if all of the PCI devices have been disconnected. In 
-'xl' it does not do that.
+diff --git a/arch/ia64/include/asm/pci.h b/arch/ia64/include/asm/pci.h
+index 5e04b59..a7ebe5f 100644
+--- a/arch/ia64/include/asm/pci.h
++++ b/arch/ia64/include/asm/pci.h
+@@ -89,23 +89,16 @@ extern int pci_mmap_legacy_page_range(struct pci_bus *bus,
+ #define pci_legacy_read platform_pci_legacy_read
+ #define pci_legacy_write platform_pci_legacy_write
+ 
+-struct pci_window {
+-	struct resource resource;
+-	u64 offset;
+-};
+-
+ struct pci_controller {
+ 	void *acpi_handle;
+ 	void *iommu;
+ 	int segment;
+ 	int node;		/* nearest node with memory or -1 for global allocation */
+ 
+-	unsigned int windows;
+-	struct pci_window *window;
+-
+ 	void *platform_data;
+ };
+ 
++
+ #define PCI_CONTROLLER(busdev) ((struct pci_controller *) busdev->sysdata)
+ #define pci_domain_nr(busdev)    (PCI_CONTROLLER(busdev)->segment)
+ 
+diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
+index de1474f..82eb8b2 100644
+--- a/arch/ia64/pci/pci.c
++++ b/arch/ia64/pci/pci.c
+@@ -134,6 +134,9 @@ struct pci_root_info {
+ 	struct acpi_device *bridge;
+ 	struct pci_controller *controller;
+ 	struct list_head resources;
++	struct resource *res;
++	resource_size_t *res_offset;
++	unsigned int res_num;
+ 	char *name;
+ };
+ 
+@@ -265,7 +268,7 @@ static acpi_status count_window(struct acpi_resource *resource, void *data)
+ static acpi_status add_window(struct acpi_resource *res, void *data)
+ {
+ 	struct pci_root_info *info = data;
+-	struct pci_window *window;
++	struct resource *resource;
+ 	struct acpi_resource_address64 addr;
+ 	acpi_status status;
+ 	unsigned long flags, offset = 0;
+@@ -289,37 +292,36 @@ static acpi_status add_window(struct acpi_resource *res, void *data)
+ 	} else
+ 		return AE_OK;
+ 
+-	window = &info->controller->window[info->controller->windows++];
+-	window->resource.name = info->name;
+-	window->resource.flags = flags;
+-	window->resource.start = addr.minimum + offset;
+-	window->resource.end = window->resource.start + addr.address_length - 1;
+-	window->offset = offset;
++	resource = &info->res[info->res_num];
++	resource->name = info->name;
++	resource->flags = flags;
++	resource->start = addr.minimum + offset;
++	resource->end = resource->start + addr.address_length - 1;
++	info->res_offset[info->res_num] = offset;
+ 
+-	if (insert_resource(root, &window->resource)) {
++	if (insert_resource(root, resource)) {
+ 		dev_err(&info->bridge->dev,
+ 			"can't allocate host bridge window %pR\n",
+-			&window->resource);
++			resource);
+ 	} else {
+ 		if (offset)
+ 			dev_info(&info->bridge->dev, "host bridge window %pR "
+ 				 "(PCI address [%#llx-%#llx])\n",
+-				 &window->resource,
+-				 window->resource.start - offset,
+-				 window->resource.end - offset);
++				 resource,
++				 resource->start - offset,
++				 resource->end - offset);
+ 		else
+ 			dev_info(&info->bridge->dev,
+-				 "host bridge window %pR\n",
+-				 &window->resource);
++				 "host bridge window %pR\n", resource);
+ 	}
+-
+ 	/* HP's firmware has a hack to work around a Windows bug.
+ 	 * Ignore these tiny memory ranges */
+-	if (!((window->resource.flags & IORESOURCE_MEM) &&
+-	      (window->resource.end - window->resource.start < 16)))
+-		pci_add_resource_offset(&info->resources, &window->resource,
+-					window->offset);
++	if (!((resource->flags & IORESOURCE_MEM) &&
++	      (resource->end - resource->start < 16)))
++		pci_add_resource_offset(&info->resources, resource,
++					info->res_offset[info->res_num]);
+ 
++	info->res_num++;
+ 	return AE_OK;
+ }
+ 
+@@ -329,7 +331,6 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 	int domain = root->segment;
+ 	int bus = root->secondary.start;
+ 	struct pci_controller *controller;
+-	unsigned int windows = 0;
+ 	struct pci_root_info info;
+ 	struct pci_bus *pbus;
+ 	char *name;
+@@ -351,22 +352,29 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 	/* insert busn resource at first */
+ 	pci_add_resource(&info.resources, &root->secondary);
+ 	acpi_walk_resources(device->handle, METHOD_NAME__CRS, count_window,
+-			&windows);
+-	if (windows) {
+-		controller->window =
+-			kzalloc_node(sizeof(*controller->window) * windows,
++			&info.res_num);
++	if (info.res_num) {
++		info.res =
++			kzalloc_node(sizeof(*info.res) * info.res_num,
+ 				     GFP_KERNEL, controller->node);
+-		if (!controller->window)
++		if (!info.res)
+ 			goto out2;
+ 
++		info.res_offset =
++			kzalloc_node(sizeof(*info.res_offset) * info.res_num,
++				GFP_KERNEL, controller->node);
++		if (!info.res_offset)
++			goto out3;
++
+ 		name = kmalloc(16, GFP_KERNEL);
+ 		if (!name)
+-			goto out3;
++			goto out4;
+ 
+ 		sprintf(name, "PCI Bus %04x:%02x", domain, bus);
+ 		info.bridge = device;
+ 		info.controller = controller;
+ 		info.name = name;
++		info.res_num = 0;
+ 		acpi_walk_resources(device->handle, METHOD_NAME__CRS,
+ 			add_window, &info);
+ 	}
+@@ -385,9 +393,10 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 
+ 	pci_scan_child_bus(pbus);
+ 	return pbus;
+-
++out4:
++	kfree(info.res_offset);
+ out3:
+-	kfree(controller->window);
++	kfree(info.res);
+ out2:
+ 	kfree(controller);
+ out1:
+-- 
+1.7.1
 
-The testing I did was just with one PCI device.
->
->  -George
 
