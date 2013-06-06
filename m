@@ -1,75 +1,40 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.187]:65484 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754688Ab3FLO5y (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Jun 2013 10:57:54 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Jingoo Han <jg1.han@samsung.com>
-Subject: Re: [PATCH V3 1/3] Add PCIe driver for Samsung Exynos
-Date: Wed, 12 Jun 2013 16:57:26 +0200
-Cc: devicetree-discuss@lists.ozlabs.org,
-	"'Kukjin Kim'" <kgene.kim@samsung.com>,
-	"'Bjorn Helgaas'" <bhelgaas@google.com>,
-	"'Jason Gunthorpe'" <jgunthorpe@obsidianresearch.com>,
-	linux-samsung-soc@vger.kernel.org,
-	"'Siva Reddy Kallam'" <siva.kallam@samsung.com>,
-	linux-pci@vger.kernel.org,
-	"'Thierry Reding'" <thierry.reding@avionic-design.de>,
-	linux-kernel@vger.kernel.org,
-	"'Surendranath Gurivireddy Balla'" <suren.reddy@samsung.com>,
-	"'Andrew Murray'" <andrew.murray@arm.com>,
-	linux-arm-kernel@lists.infradead.org
-References: <000d01ce6360$9504e7e0$bf0eb7a0$@samsung.com> <36071399.7aY6jgGn2d@wuerfel> <002401ce6718$d6bbc8f0$84335ad0$@samsung.com>
-In-Reply-To: <002401ce6718$d6bbc8f0$84335ad0$@samsung.com>
+Received: from mho-03-ewr.mailhop.org ([204.13.248.66]:25237 "EHLO
+	mho-01-ewr.mailhop.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751818Ab3FFRSY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Jun 2013 13:18:24 -0400
+Date: Thu, 6 Jun 2013 13:17:47 -0400
+From: Jason Cooper <jason@lakedaemon.net>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Arnd Bergmann <arnd@arndb.de>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	linux-arm-kernel@lists.infradead.org,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Maen Suleiman <maen@marvell.com>
+Subject: Re: [PATCH v2 0/8] MSI support for Marvell EBU PCIe driver
+Message-ID: <20130606171747.GK23859@titan.lakedaemon.net>
+References: <1370536888-8871-1-git-send-email-thomas.petazzoni@free-electrons.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201306121657.26441.arnd@arndb.de>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1370536888-8871-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday 12 June 2013, Jingoo Han wrote:
-> On Friday, June 07, 2013 7:53 PM, Arnd Bergmann wrote:
-> > On Friday 07 June 2013 18:22:50 Jingoo Han wrote:
-> > 
-> > > +- ranges: ranges for the PCI memory and I/O regions
-> > > +- reset-gpio: gpio pin number of power good signal
-> > 
-> > The 'reset-gpio' property seems incorrect. I think this should either
-> > use the gpio binding or the reset-controller binding. Specifying
-> > bare numbers to use as gpio pins does not work, since the number
-> > space for Linux internal gpio numbers is not necessarily the same
-> > as used by the hardware.
-> 
-> As you mentioned, other Exynos SoCs such as Exynos5250 set
-> GPIO properties in DT, as below:
-> (./arch/arm/boot/dts/exynos5250-smdk5250.dts)
-> 	hdmi {
-> 		hpd-gpio = <&gpx3 7 0>;
-> 	};
-> 	usb@12110000 {
-> 		samsung,vbus-gpio = <&gpx2 6 0>;
-> 	};
-> 
-> However, the situation of Exynos5440 GPIO is different.
-> The following bare numbers of GPIO work properly on Exynos5440.
-> (./arch/arm/boot/dts/exynos5440-ssdk5440.dts)
-> 	pcie0@40000000 {
-> 		reset-gpio = <5>;
-> 	}
-> 	pcie0@40000000 {
-> 		reset-gpio = <22>;
-> 	}
-> 
-> Thomas Abraham is the author of pinctrl driver for EXYNOS5440.
-> (./drivers/pinctrl/pinctrl-exynos5440.c)
-> 
-> Thomas Abraham or Kukjin Kim, can you confirm this?
-> If I am wrong, please let me know kindly. :)
+On Thu, Jun 06, 2013 at 06:41:20PM +0200, Thomas Petazzoni wrote:
+> This set of patches currently applies on top of the current "for-next"
+> branch of Jason Cooper's repository.
 
-This is not about the code working at the moment, it is about
-it being correct. The current method you are using would stop
-working if something changes in the pinctrl code, and would
-not be portable to other SoCs.
+Please be aware that for-next is *not* stable.  I rebuild it every time
+I pull new stuff in.  It's much more helpful to list only the branches
+you need to build/test.
 
-	Arnd
+In this case I imagine it's mvebu/pcie...
+
+thx,
+
+Jason.
