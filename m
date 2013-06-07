@@ -1,46 +1,63 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f180.google.com ([209.85.214.180]:37461 "EHLO
-	mail-ob0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751242Ab3FYTaJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Jun 2013 15:30:09 -0400
-MIME-Version: 1.0
-In-Reply-To: <20130625185111.GL9294@intel.com>
-References: <1372177330-28013-1-git-send-email-mika.westerberg@linux.intel.com>
-	<1372177330-28013-6-git-send-email-mika.westerberg@linux.intel.com>
-	<CAHp75Vd2Torku6zy2awLHRTed9mx94a6RAu+oHJYb+rVgZKBDQ@mail.gmail.com>
-	<20130625183123.GJ9294@intel.com>
-	<CAHp75Vc8BauuBJcfqBzu_+6nUwEC-uD3z_RF5gT-3YhV0fjTqw@mail.gmail.com>
-	<20130625185111.GL9294@intel.com>
-Date: Tue, 25 Jun 2013 22:30:08 +0300
-Message-ID: <CAHp75VeX5ejA9ghaiAgEUVZ9ffpuRQc+VQCsJqXWWSW1Sm1cUQ@mail.gmail.com>
-Subject: Re: [PATCH 5/6] PCI: acpiphp: look _RMV method a bit deeper in the hierarhcy
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Yinghai Lu <yinghai@kernel.org>, john.ronciak@intel.com,
-	miles.j.penner@intel.com, bruce.w.allan@intel.com,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-pci@vger.kernel.org, x86@kernel.org
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Subject: [PATCH v3 08/27] x86, irq: kill create_irq()
+Date: Fri,  7 Jun 2013 15:30:54 -0700
+Message-Id: <1370644273-10495-9-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1370644273-10495-1-git-send-email-yinghai@kernel.org>
+References: <1370644273-10495-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 25, 2013 at 9:51 PM, Mika Westerberg
-<mika.westerberg@linux.intel.com> wrote:
-> On Tue, Jun 25, 2013 at 09:31:52PM +0300, Andy Shevchenko wrote:
+create_irq() will return -1 when failing to allocate.
+create_irq_nr() will return 0 when failing to allocate.
 
-> I think it is better to remove the first value check from the
-> pcihp_evaluate_rmv() and keep the check here.
->
-> I'll fix that in the next revision as well.
+It only causes confusion.
 
-In that case you may remove the removable assignment as well.
+Now we have no user for create_irq(), so remove create_irq() for x86.
 
---
-With Best Regards,
-Andy Shevchenko
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+---
+ arch/x86/kernel/apic/io_apic.c | 15 ---------------
+ 1 file changed, 15 deletions(-)
+
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 436fb38..70b6617 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -2968,21 +2968,6 @@ unsigned int create_irq_nr(unsigned int from, int node)
+ 	return __create_irqs(from, 1, node);
+ }
+ 
+-int create_irq(void)
+-{
+-	int node = cpu_to_node(0);
+-	unsigned int irq_want;
+-	int irq;
+-
+-	irq_want = nr_irqs_gsi;
+-	irq = create_irq_nr(irq_want, node);
+-
+-	if (irq == 0)
+-		irq = -1;
+-
+-	return irq;
+-}
+-
+ void destroy_irq(unsigned int irq)
+ {
+ 	struct irq_cfg *cfg = irq_get_chip_data(irq);
+-- 
+1.8.1.4
+
