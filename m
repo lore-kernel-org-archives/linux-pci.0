@@ -1,140 +1,244 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f177.google.com ([209.85.216.177]:49952 "EHLO
-	mail-qc0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750772Ab3FNEHe (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Jun 2013 00:07:34 -0400
-MIME-Version: 1.0
-In-Reply-To: <51BA8524.9050507@huawei.com>
-References: <1371141152-9468-1-git-send-email-jiang.liu@huawei.com>
-	<CAE9FiQX1xVJA3MZc4LndWU7kx0mxC-YPE1R8JD4W2-Gg9zq3Zw@mail.gmail.com>
-	<51BA7B3D.1020402@huawei.com>
-	<CAE9FiQX-jCZYPyxeHCp2h-6qx1GMyQYuaTk5JwZR6H1t4jRg9g@mail.gmail.com>
-	<51BA8524.9050507@huawei.com>
-Date: Fri, 14 Jun 2013 10:07:34 +0600
-Message-ID: <CAN_LGv0AYvBpwQMcAkSqQVZHBA3Yfz=42_OGPxF032FQ-Ec36A@mail.gmail.com>
-Subject: Re: [BUGFIX 0/9] Fix bug 59501 and code improvement for dock driver
-From: "Alexander E. Patrakov" <patrakov@gmail.com>
-To: "Jiang Liu (Gerry)" <jiang.liu@huawei.com>
-Cc: Yinghai Lu <yinghai@kernel.org>,
+Received: from userp1040.oracle.com ([156.151.31.81]:28867 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753911Ab3FGOux (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 7 Jun 2013 10:50:53 -0400
+Date: Fri, 7 Jun 2013 10:50:24 -0400
+From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+To: Jiang Liu <liuj97@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Jiang Liu <jiang.liu@huawei.com>,
 	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Bjorn Helgaas <bhelgaas@google.com>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Jeremy Fitzhardinge <jeremy@goop.org>,
+	xen-devel@lists.xensource.com,
+	virtualization@lists.linux-foundation.org
+Subject: Re: [RFC PATCH v2, part3 07/11] PCI, xen-pcifront: use new PCI
+ interfaces to simplify implementation
+Message-ID: <20130607145024.GA16631@phenom.dumpdata.com>
+References: <1368719459-24800-1-git-send-email-jiang.liu@huawei.com>
+ <1368719459-24800-8-git-send-email-jiang.liu@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1368719459-24800-8-git-send-email-jiang.liu@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-2013/6/14 Jiang Liu (Gerry) <jiang.liu@huawei.com>:
-> On 2013/6/14 10:30, Yinghai Lu wrote:
->>
->> On Thu, Jun 13, 2013 at 7:09 PM, Jiang Liu (Gerry) <jiang.liu@huawei.com>
->> wrote:
->>>
->>> On 2013/6/14 2:42, Yinghai Lu wrote:
->>>>
->>>>
->>>> On Thu, Jun 13, 2013 at 9:32 AM, Jiang Liu <jiang.liu@huawei.com> wrote:
->>>>>
->>>>>
->>>>> Alexander E. Patrakov <patrakov@gmail.com> reports two bugs related to
->>>>> dock station support on Sony VAIO VPCZ23A4R. Actually there are at
->>>>> least
->>>>> four bugs related to Sony VAIO VPCZ23A4R dock support.
->>>>> 1) can't correctly detect hotplug slot for dock state
->>>>> 2) resource leak on undocking
->>>>> 3) resource allocation failure for dock devices
->>>>> 4) one bug in intel_snd_hda driver
->>>>>
->>>>> The first patch fixes issue 1, and the second patch fixes issue 2.
->>>>> These two patches, if accepted, should be material for stable branches
->>>>> too.
->>>>> Patch 3-9 are code improvement for ACPI and dock driver.
->>>>>
->>>>> I have found the root cause for issue three, but still working on
->>>>> solutions, and seems can't be solve in short time. So please help
->>>>> to review and test patches for issue 1) and 2) first.
->>>>
->>>>
->>>>
->>>> the 3) is about pci resource allocation?
->>>> because pcibios_add_bus is called too early?
->>>>
->>>> If that is case, we should have something like attached patch for it.
->>>>
->>>> With that, we will not need to worry about _OSC set for 3.10 etc.
->>>>
->>> Hi Yinghai,
->>>     Seems not related to pcibios_add_bus(). According to my
->>> investigation, the issue is caused by difference in PCI resource
->>> assignment between boot time and runtime hotplug. On x86 platforms,
->>> it respects PCI resource assignment from BIOS and only reassign
->>> resources for unassigned BARs. But with acpiphp, it ignores BIOS
->>> resource assignment and reassign all resources by OS.
->>>     If we have enough resources, reassigning all PCI resources should
->>> work too, but may fail if we are under resource constraints. On the
->>> other handle, current PCI IOMM align algorithm may waste huge MMIO
->>> address space if we have some PCI devices with huge IOMM BAR.
->>>     On this Sony laptop, BIOS allocates limited IOMM resources for
->>> the dock station and the dock station has a gfx which has a 256MB
->>> IOMM BAR. So current acpiphp driver fails to allocate resources
->>> for most devices on the dock station.
->>
->>
->> Is it a regression?
->
-> Not sure. But a little concern about check_hotplug_bridge(), it treats
-> dock station and devices on dock station with _EJD as hot-plug-gable
-> PCI bus and reserve extra resources for possible hot-adding. But I
-> think we should only reserve extra resource for dock station, and should
-> not reserve resource for devices on station with _EJD method.
->
->
->>
->>>      Currently I'm trying to change acpiphp to respect BIOS resource
->>> assignment by calling pcibios_survey_resource_bus(), as in pci_root.c.
->>> The other way is to change the IOMM resource allocation algorithm,
->>> but obviously it's much more risky of regressions if changing the
->>> algorithm.
->>
->>
->> that is not going to help, need to increase bridge resource.
->>
->> please check if BIOS have setup option about hotplug MMIO pad size.
->
-> For the first step, I'm trying to make hotplug case work in the same way as
-> boot time. Do you think this patch help?
->
-> diff --git a/drivers/pci/hotplug/acpiphp_glue.c
-> b/drivers/pci/hotplug/acpiphp_gl
-> index 270fdba..12e3f6e 100644
-> --- a/drivers/pci/hotplug/acpiphp_glue.c
-> +++ b/drivers/pci/hotplug/acpiphp_glue.c
-> @@ -837,13 +837,13 @@ static int __ref enable_device(struct acpiphp_slot
-> *slot)
->                                 max = pci_scan_bridge(bus, dev, max, pass);
->                                 if (pass && dev->subordinate) {
->                                         check_hotplug_bridge(slot, dev);
-> - pci_bus_size_bridges(dev->subordinate);
-> + pcibios_resource_survey_bus(dev->subordi
->                                 }
->                         }
->                 }
->         }
->
-> -       pci_bus_assign_resources(bus);
-> +       pci_assign_unassigned_bus_resources(bus);
->         acpiphp_sanitize_bus(bus);
->         acpiphp_set_hpp_values(bus);
->         acpiphp_set_acpi_region(slot);
+On Thu, May 16, 2013 at 11:50:55PM +0800, Jiang Liu wrote:
+> Use new PCI interfaces to simplify xen-pcifront implementation:
+> 1) Use pci_create_root_bus() instead of pci_scan_bus_parented()
+>    because pci_scan_bus_parented() is marked as __deprecated.This
+>    also gets rid of a duplicated call of pci_bus_start_devices().
+> 2) Use pci_stop_root_bus() and pci_remove_root_bus() instead of
+>    open-coded private implementation.
+> 3) Use pci_set_host_bridge_release() to release data structures
+>    associated with PCI root buses.
+> 4) Use pci_bus_get()/pci_bus_put() to manage PCI root bus reference
+>    count.
+> 
+> This is also a preparation for coming PCI bus lock enhancement.
+> 
+> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+> Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+> Cc: Jeremy Fitzhardinge <jeremy@goop.org>
+> Cc: xen-devel@lists.xensource.com
+> Cc: virtualization@lists.linux-foundation.org
+> Cc: linux-pci@vger.kernel.org
+> Cc: linux-kernel@vger.kernel.org
 > ---
+>  drivers/pci/xen-pcifront.c | 81 ++++++++++++++++++++++------------------------
+>  1 file changed, 39 insertions(+), 42 deletions(-)
+> 
+> diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
+> index 816cf94..6aa2c0f 100644
+> --- a/drivers/pci/xen-pcifront.c
+> +++ b/drivers/pci/xen-pcifront.c
+> @@ -25,11 +25,6 @@
+>  #define INVALID_GRANT_REF (0)
+>  #define INVALID_EVTCHN    (-1)
+>  
+> -struct pci_bus_entry {
+> -	struct list_head list;
+> -	struct pci_bus *bus;
+> -};
+> -
+>  #define _PDEVB_op_active		(0)
+>  #define PDEVB_op_active			(1 << (_PDEVB_op_active))
+>  
+> @@ -47,12 +42,12 @@ struct pcifront_device {
+>  	struct xen_pci_sharedinfo *sh_info;
+>  	struct work_struct op_work;
+>  	unsigned long flags;
+> -
+>  };
+>  
+>  struct pcifront_sd {
+>  	int domain;
+>  	struct pcifront_device *pdev;
+> +	struct resource busn_res;
+>  };
+>  
+>  static inline struct pcifront_device *
+> @@ -67,6 +62,12 @@ static inline void pcifront_init_sd(struct pcifront_sd *sd,
+>  {
+>  	sd->domain = domain;
+>  	sd->pdev = pdev;
+> +
+> +	/* Xen pci-backend doesn't export P2P bridges */
+> +	sd->busn_res.start = bus;
+> +	sd->busn_res.end = bus;
+> +	sd->busn_res.flags = IORESOURCE_BUS;
+> +	sd->busn_res.name = "PCI busn";
+>  }
+>  
+>  static DEFINE_SPINLOCK(pcifront_dev_lock);
+> @@ -441,12 +442,19 @@ static int pcifront_scan_bus(struct pcifront_device *pdev,
+>  	return 0;
+>  }
+>  
+> +static void pcifront_release_sd(struct pci_host_bridge *bridge)
+> +{
+> +	struct pcifront_sd *sd = bridge->release_data;
+> +
+> +	kfree(sd);
+> +}
+> +
+>  static int pcifront_scan_root(struct pcifront_device *pdev,
+>  				 unsigned int domain, unsigned int bus)
+>  {
+>  	struct pci_bus *b;
+>  	struct pcifront_sd *sd = NULL;
+> -	struct pci_bus_entry *bus_entry = NULL;
+> +	LIST_HEAD(resources);
+>  	int err = 0;
+>  
+>  #ifndef CONFIG_PCI_DOMAINS
+> @@ -463,16 +471,18 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
+>  	dev_info(&pdev->xdev->dev, "Creating PCI Frontend Bus %04x:%02x\n",
+>  		 domain, bus);
+>  
+> -	bus_entry = kmalloc(sizeof(*bus_entry), GFP_KERNEL);
+> -	sd = kmalloc(sizeof(*sd), GFP_KERNEL);
+> -	if (!bus_entry || !sd) {
+> +	sd = kzalloc(sizeof(*sd), GFP_KERNEL);
+> +	if (!sd) {
+>  		err = -ENOMEM;
+>  		goto err_out;
+>  	}
+>  	pcifront_init_sd(sd, domain, bus, pdev);
+>  
+> -	b = pci_scan_bus_parented(&pdev->xdev->dev, bus,
+> -				  &pcifront_bus_ops, sd);
+> +	pci_add_resource(&resources, &ioport_resource);
+> +	pci_add_resource(&resources, &iomem_resource);
+> +	pci_add_resource(&resources, &sd->busn_res);
+> +	b = pci_create_root_bus(&pdev->xdev->dev, bus, &pcifront_bus_ops,
+> +				sd, &resources);
+>  	if (!b) {
+>  		dev_err(&pdev->xdev->dev,
+>  			"Error creating PCI Frontend Bus!\n");
+> @@ -480,12 +490,14 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
+>  		goto err_out;
+>  	}
+>  
+> -	bus_entry->bus = b;
+> +	pci_set_host_bridge_release(to_pci_host_bridge(b->bridge),
+> +				    pcifront_release_sd, sd);
+>  
+> -	list_add(&bus_entry->list, &pdev->root_buses);
+> -
+> -	/* pci_scan_bus_parented skips devices which do not have a have
+> -	* devfn==0. The pcifront_scan_bus enumerates all devfn. */
+> +	/*
+> +	 * Every PCI physical device should have function 0, but that's not
+> +	 * true for xen.
 
+That is incorrect. There are two types of backends - one of them will
+start at zero, but the other might not.
 
-The patch helped, thanks. Note: I have tested it together with
-pci_move_pcibios_add_bus_down.patch, I don't know yet if
-pci_move_pcibios_add_bus_down.patch is needed.
+> +	 * So use pcifront_scan_bus() instead of pci_scan_child_bus().
+> +	 */
+>  	err = pcifront_scan_bus(pdev, domain, bus, b);
+>  
+>  	/* Claim resources before going "live" with our devices */
+> @@ -497,7 +509,6 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
+>  	return err;
+>  
+>  err_out:
+> -	kfree(bus_entry);
+>  	kfree(sd);
+>  
+>  	return err;
+> @@ -539,35 +550,19 @@ static int pcifront_rescan_root(struct pcifront_device *pdev,
+>  	return err;
+>  }
+>  
+> -static void free_root_bus_devs(struct pci_bus *bus)
+> -{
+> -	struct pci_dev *dev;
+> -
+> -	while (!list_empty(&bus->devices)) {
+> -		dev = container_of(bus->devices.next, struct pci_dev,
+> -				   bus_list);
+> -		dev_dbg(&dev->dev, "removing device\n");
+> -		pci_stop_and_remove_bus_device(dev);
+> -	}
+> -}
+> -
+>  static void pcifront_free_roots(struct pcifront_device *pdev)
+>  {
+> -	struct pci_bus_entry *bus_entry, *t;
+> +	struct pcifront_sd *sd;
+> +	struct pci_bus *bus;
+>  
+>  	dev_dbg(&pdev->xdev->dev, "cleaning up root buses\n");
+>  
+> -	list_for_each_entry_safe(bus_entry, t, &pdev->root_buses, list) {
+> -		list_del(&bus_entry->list);
+> -
+> -		free_root_bus_devs(bus_entry->bus);
+> -
+> -		kfree(bus_entry->bus->sysdata);
+> -
+> -		device_unregister(bus_entry->bus->bridge);
+> -		pci_remove_bus(bus_entry->bus);
+> -
+> -		kfree(bus_entry);
+> +	for_each_pci_root_bus(bus) {
+> +		sd = bus->sysdata;
+> +		if (sd->pdev == pdev) {
+> +			pci_stop_root_bus(bus);
+> +			pci_remove_root_bus(bus);
+> +		}
+>  	}
+>  }
+>  
+> @@ -670,6 +665,7 @@ static irqreturn_t pcifront_handler_aer(int irq, void *dev)
+>  	schedule_pcifront_aer_op(pdev);
+>  	return IRQ_HANDLED;
+>  }
+> +
 
---
-Alexander E. Patrakov
+Stray
+>  static int pcifront_connect_and_init_dma(struct pcifront_device *pdev)
+>  {
+>  	int err = 0;
+> @@ -705,6 +701,7 @@ static void pcifront_disconnect(struct pcifront_device *pdev)
+>  
+>  	spin_unlock(&pcifront_dev_lock);
+>  }
+> +
+
+Stray
+>  static struct pcifront_device *alloc_pdev(struct xenbus_device *xdev)
+>  {
+>  	struct pcifront_device *pdev;
+> -- 
+> 1.8.1.2
+> 
