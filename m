@@ -1,87 +1,67 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Betty Dall <betty.dall@hp.com>
-To: rjw@sisk.pl, bhelgaas@google.com, gong.chen@linux.intel.com,
-	greg.pearson@hp.com
-Cc: ying.huang@intel.com, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Betty Dall <betty.dall@hp.com>
-Subject: [PATCH v2 4/6] PCI/ACPI: Move AER severity defines to aer.h
-Date: Thu,  6 Jun 2013 12:10:49 -0600
-Message-Id: <1370542251-27387-5-git-send-email-betty.dall@hp.com>
-In-Reply-To: <1370542251-27387-1-git-send-email-betty.dall@hp.com>
-References: <1370542251-27387-1-git-send-email-betty.dall@hp.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:39436 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753453Ab3FGRJX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 7 Jun 2013 13:09:23 -0400
+MIME-Version: 1.0
+Message-ID: <20130607170706.GB3730@phenom.dumpdata.com>
+Date: Fri, 7 Jun 2013 10:07:06 -0700 (PDT)
+From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+To: Jiang Liu <liuj97@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Jeremy Fitzhardinge <jeremy@goop.org>,
+	xen-devel@lists.xensource.com,
+	virtualization@lists.linux-foundation.org
+Subject: Re: [RFC PATCH v2, part3 07/11] PCI, xen-pcifront: use new PCI
+ interfaces to simplify implementation
+References: <1368719459-24800-1-git-send-email-jiang.liu@huawei.com>
+ <1368719459-24800-8-git-send-email-jiang.liu@huawei.com>
+ <20130607145024.GA16631@phenom.dumpdata.com>
+ <20130607153822.GA24882@phenom.dumpdata.com> <51B20F57.7050100@gmail.com>
+In-Reply-To: <51B20F57.7050100@gmail.com>
+Content-Type: text/plain; charset=us-ascii
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The function aer_recover_queue() is a public interface and the
-severity argument uses #defines that are in the private header
-pci/pcie/aer/aerdrv.h.
+On Sat, Jun 08, 2013 at 12:50:31AM +0800, Jiang Liu wrote:
+> On 06/07/2013 11:38 PM, Konrad Rzeszutek Wilk wrote:
+> > On Fri, Jun 07, 2013 at 10:50:24AM -0400, Konrad Rzeszutek Wilk wrote:
+> >> On Thu, May 16, 2013 at 11:50:55PM +0800, Jiang Liu wrote:
+> >>> Use new PCI interfaces to simplify xen-pcifront implementation:
+> >>> 1) Use pci_create_root_bus() instead of pci_scan_bus_parented()
+> >>>    because pci_scan_bus_parented() is marked as __deprecated.This
+> >>>    also gets rid of a duplicated call of pci_bus_start_devices().
+> >>> 2) Use pci_stop_root_bus() and pci_remove_root_bus() instead of
+> >>>    open-coded private implementation.
+> >>> 3) Use pci_set_host_bridge_release() to release data structures
+> >>>    associated with PCI root buses.
+> >>> 4) Use pci_bus_get()/pci_bus_put() to manage PCI root bus reference
+> >>>    count.
+> >>>
+> >>> This is also a preparation for coming PCI bus lock enhancement.
+> > 
+> > With this patch from :
+> > 
+> >  Merge branch 'pci_lock_v3' of https://github.com/jiangliu/linux into testing
+> > 
+> > 
+> > it blows up when detaching the device.
+> Hi Konrad,
+>    Thanks for testing! According to the log messages, this issue should
+> be related to pci bus reference counter management. Seems we have done
+> an extra(unbalanced) release of pci bus device.
+>    Will investigate it tomorrow!
 
-This patch moves the #defines from pci/pcie/aer/aerdrv.h to 
-include/linux/aer.h.
-
-Signed-off-by: Betty Dall <betty.dall@hp.com>
----
-
- drivers/pci/pcie/aer/aerdrv.h |    4 ----
- include/linux/aer.h           |   16 ++++++++++------
- 2 files changed, 10 insertions(+), 10 deletions(-)
-
-
-diff --git a/drivers/pci/pcie/aer/aerdrv.h b/drivers/pci/pcie/aer/aerdrv.h
-index d12c77c..90ea3e8 100644
---- a/drivers/pci/pcie/aer/aerdrv.h
-+++ b/drivers/pci/pcie/aer/aerdrv.h
-@@ -13,10 +13,6 @@
- #include <linux/aer.h>
- #include <linux/interrupt.h>
- 
--#define AER_NONFATAL			0
--#define AER_FATAL			1
--#define AER_CORRECTABLE			2
--
- #define SYSTEM_ERROR_INTR_ON_MESG_MASK	(PCI_EXP_RTCTL_SECEE|	\
- 					PCI_EXP_RTCTL_SENFEE|	\
- 					PCI_EXP_RTCTL_SEFEE)
-diff --git a/include/linux/aer.h b/include/linux/aer.h
-index ec10e1b..0f6a9e2 100644
---- a/include/linux/aer.h
-+++ b/include/linux/aer.h
-@@ -7,6 +7,10 @@
- #ifndef _AER_H_
- #define _AER_H_
- 
-+#define AER_NONFATAL			0
-+#define AER_FATAL			1
-+#define AER_CORRECTABLE			2
-+
- struct aer_header_log_regs {
- 	unsigned int dw0;
- 	unsigned int dw1;
-@@ -31,9 +35,9 @@ struct aer_capability_regs {
- 
- #if defined(CONFIG_PCIEAER)
- /* pci-e port driver needs this function to enable aer */
--extern int pci_enable_pcie_error_reporting(struct pci_dev *dev);
--extern int pci_disable_pcie_error_reporting(struct pci_dev *dev);
--extern int pci_cleanup_aer_uncorrect_error_status(struct pci_dev *dev);
-+int pci_enable_pcie_error_reporting(struct pci_dev *dev);
-+int pci_disable_pcie_error_reporting(struct pci_dev *dev);
-+int pci_cleanup_aer_uncorrect_error_status(struct pci_dev *dev);
- #else
- static inline int pci_enable_pcie_error_reporting(struct pci_dev *dev)
- {
-@@ -49,10 +53,10 @@ static inline int pci_cleanup_aer_uncorrect_error_status(struct pci_dev *dev)
- }
- #endif
- 
--extern void cper_print_aer(const char *prefix, struct pci_dev *dev,
-+void cper_print_aer(const char *prefix, struct pci_dev *dev,
- 			   int cper_severity, struct aer_capability_regs *aer);
--extern int cper_severity_to_aer(int cper_severity);
--extern void aer_recover_queue(int domain, unsigned int bus, unsigned int devfn,
-+int cper_severity_to_aer(int cper_severity);
-+void aer_recover_queue(int domain, unsigned int bus, unsigned int devfn,
- 			      int severity);
- #endif //_AER_H_
- 
+That is quite commendable that you are willing to look over this on
+the weekend but I am not going to be able to rerun this test until
+some time in the week. You could enjoy the weekend and just look at
+this during the week.
