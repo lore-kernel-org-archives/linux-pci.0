@@ -1,65 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:63278 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751474Ab3FDXmE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Jun 2013 19:42:04 -0400
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Jiang Liu <liuj97@gmail.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	Xudong Hao <xudong.hao@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Jiang Liu <jiang.liu@huawei.com>
-Subject: Re: [PATCH 2/3] PCI, ACPI: Don't glue ACPI dev with pci VFs
-Date: Wed, 05 Jun 2013 01:51:06 +0200
-Message-ID: <1565177.fVUsxhqHvk@vostro.rjw.lan>
-In-Reply-To: <CAE9FiQW4UynXesgv58YajV73VZHQLzFiD3M6Dq=7bXmCXDbCiQ@mail.gmail.com>
-References: <1369974092-11450-1-git-send-email-jiang.liu@huawei.com> <2947055.dGtK2eC6Fm@vostro.rjw.lan> <CAE9FiQW4UynXesgv58YajV73VZHQLzFiD3M6Dq=7bXmCXDbCiQ@mail.gmail.com>
+Received: from fold.natur.cuni.cz ([195.113.57.32]:55295 "EHLO
+	fold.natur.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754761Ab3FGL1w (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 7 Jun 2013 07:27:52 -0400
+Message-ID: <51B1C3B6.30809@fold.natur.cuni.cz>
+Date: Fri, 07 Jun 2013 13:27:50 +0200
+From: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Yinghai Lu <yinghai@kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
+	Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: 3.8.2: stale pci device info for a previously inserted express
+ card
+References: <513E002C.40805@fold.natur.cuni.cz> <CAErSpo5594KNtZz9Gpdw_j5NZX_sGpzKB9CT2-SCB2bCASfrSQ@mail.gmail.com> <51B1C1F3.3070804@fold.natur.cuni.cz>
+In-Reply-To: <51B1C1F3.3070804@fold.natur.cuni.cz>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, June 04, 2013 03:57:28 PM Yinghai Lu wrote:
-> On Tue, Jun 4, 2013 at 3:49 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> > On Wednesday, June 05, 2013 12:44:27 AM Rafael J. Wysocki wrote:
-> >> On Friday, May 31, 2013 12:21:30 PM Jiang Liu wrote:
-> >> > From: Yinghai Lu <yinghai@kernel.org>
-> >> >
-> >> > When sriov is enabled, VF could just start after PF in pci tree.
-> >> > like c1:00.0 will be PF, and c1:00.1 and after will be VF.
-> >> >
-> >> > acpi do have dev with same ADR. that will make them get glued
-> >> > wrongly.
-> >>
-> >> How exactly are they glued in that case?
-> >>
-> >> > Skip that if it is virtfn.
-> >>
-> >> That should be a bit more specific as far as I can say.  I don't see why a VF
-> >> would not have a valid ACPI device object corresponding to it.  Is there any
-> >> particular reason?
-> >
-> > To be precise, I don't quite see why it is impossible or invalid for a VF to
-> > have a corresponding ACPI device object.  It may not be the case on this
-> > particular system, but why not in general?
+Martin Mokrejs wrote:
+> Hi everybody,
 > 
-> at least for ioapic routing GSI, we should not mix VF to use other PF's
-> setting.
+> Bjorn Helgaas wrote:
+>> [+cc linux-pci, Sarah, Alan]
+>>
+>> On Mon, Mar 11, 2013 at 10:02 AM, Martin Mokrejs
+>> <mmokrejs@fold.natur.cuni.cz> wrote:
+>>> [re-sending to you all three directly, looks the original email did not make it into linux-pci
+>>> through some filters]
+>>>
+>>>   I use for my daily work acpiphp to manage express cards in Dell Vostro 3550.
+>>> I have never seen something like this before and believe this is some new regression
+>>> in 3.8 series. I had in teh a USB3 card and ejected it. Then I inserted a
+>>> SATA Sil3132 card but it is not detected and dmesg still ends with last lines
+>>> added when the USB card was being removed. The funny thing is that lspci reports
+>>> a mixture of USB-card properties with NEC chips along with Silicon Image eSATA card.
+>>
+>> I don't know anything about the kmemleaks mentioned elsewhere in this
+>> thread, but the idea of "stale PCI device info" seems possibly related
+>> to some acpiphp issues we've been working on recently.
+>>
+>> Starting with v3.9, we don't handle ACPI Bus Check notifications to
+>> host bridges correctly, and the result is that when we're using
+>> acpiphp, we don't notice when PCI devices are added or removed. There
+>> are more details in https://bugzilla.kernel.org/show_bug.cgi?id=57961
+> 
+> Looks to me it is already in 3.10-rc4 which I tested now. No, I still do see
+> same problem like before: a hotremoval of NEC-based xHCI express card is detected
+> on every second eject. But, sometimes it seems it is only delayed by some 25-30
+> seconds. Would have to do more testing. However, there are some *new* kmemleaks
+> reported by kernel related to acpiphpp bu xhci_hcd. That could a hint why
+> the hotremoval sometimes proceeds delayed but sometimes maybe not at all or at
+> least not *immediately* like for any other device?
+> 
+> However, the stale sysfs entries for partially removed device SiI3132 (sata_sil24
+> driver) are NOT appearing anymore, good. That used to be associated with
+> 'sata_sil24: IRQ status == 0xffffffff, PCI fault or device removal?' line.
+> Now, I see under 3.10-rc4 the extra message about 'ACPI: Device does not support D3cold'.
+> would be nice if it said what device is it talking about? About upstream root port
+> or about my end device (express card)? Is it related by pcie_aspm= kernel
+> commandline option? If yes, please include the relevant info the message text.
+> referring to this being affected by the particular value. At the moment I used:
+> pcie_aspm=off
+> 
+> --- dmesg_initial__inserted_eSATA__ejected__inserted__ejected__inserted.txt     2013-06-07 02:53:56.000000000 +0200
+> +++ dmesg_initial__inserted_eSATA__ejected__inserted__ejected__inserted__ejected.txt    2013-06-07 02:54:09.000000000 +0200
+> @@ -1439,3 +1439,5 @@
+>  [  254.317365] ata12: SATA max UDMA/100 host m128@0xf6c04000 port 0xf6c02000 irq 19
+>  [  256.400454] ata11: SATA link down (SStatus 0 SControl 0)
+>  [  258.493027] ata12: SATA link down (SStatus 0 SControl 0)
+> +[  267.116723] sata_sil24: IRQ status == 0xffffffff, PCI fault or device removal?
+> +[  267.117779] ACPI: Device does not support D3cold
+> 
+> 
+> So, in my eyes the "stale pci info" issue is fixed in 3.10-rc4 at least under acpiphp and pcie_aspm=off.
 
-I can agree with that, but your patch is far more general than this.  It won't
-allow any VF on any system to be "glued" to any ACPI device object and I'm
-thinking that that may just go too far.
+And to be even more exact, I had CONFIG_HOTPLUG_PCI_ACPI=y as I see now an updated
+v2 patch from Yinghai:
+[PATCH v3.9 stable] PCI: acpiphp: Re-enumerate devices when host bridge receives Bus Check
 
-May that be addressed in a more specific way?
+Please make sure that whatever I tested in plain 3.10-rc4 is what you had in those bugzilla patches
+under https://bugzilla.kernel.org/show_bug.cgi?id=57961 or what Yinghai posted as an update.
+Just in case are tested a different version.
 
-Also, I don't quite understand what the problem *exactly* is, because you
-haven't given any details so far.  Can you possibly attach the specific piece
-of AML causing the problem to happen on your system?
-
-Rafael
-
-
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+Martin
