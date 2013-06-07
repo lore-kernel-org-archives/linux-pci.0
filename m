@@ -1,60 +1,146 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Betty Dall <betty.dall@hp.com>
-To: rjw@sisk.pl, bhelgaas@google.com, gong.chen@linux.intel.com,
-	greg.pearson@hp.com
-Cc: ying.huang@intel.com, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Betty Dall <betty.dall@hp.com>
-Subject: [PATCH v3 5/6] ACPI/APEI: Force fatal AER severity when bus has been reset
-Date: Thu,  6 Jun 2013 12:10:50 -0600
-Message-Id: <1370542251-27387-6-git-send-email-betty.dall@hp.com>
-In-Reply-To: <1370542251-27387-1-git-send-email-betty.dall@hp.com>
-References: <1370542251-27387-1-git-send-email-betty.dall@hp.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:51600 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753181Ab3FGWco (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 7 Jun 2013 18:32:44 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Subject: [PATCH v3 12/27] x86, irq: Move down arch_early_irq_init()
+Date: Fri,  7 Jun 2013 15:30:58 -0700
+Message-Id: <1370644273-10495-13-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1370644273-10495-1-git-send-email-yinghai@kernel.org>
+References: <1370644273-10495-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The CPER error record has a reset bit that indicates that the platform
-has reset the bus. The reset bit can be set for any severity error
-including recoverable.  From the AER code path's perspective,
-any error is fatal if the bus has been reset. This patch upgrades the
-severity of the AER recovery to AER_FATAL whenever the CPER error record
-indicates that the bus has been reset.
+Change position only.
 
-Changes since v1:
-Fixed a typo in comment.
+Prepare to update arch_early_irq_init(), it needs to call some static
+functions.
 
-Changes since v2:
-Set the aer_severity to AER_FATAL rather than using cper_severity_to_aer().
-Simplified the comment.
-
-Signed-off-by: Betty Dall <betty.dall@hp.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
 ---
+ arch/x86/kernel/apic/io_apic.c | 89 +++++++++++++++++++++---------------------
+ 1 file changed, 44 insertions(+), 45 deletions(-)
 
- drivers/acpi/apei/ghes.c |   10 ++++++++++
- 1 files changed, 10 insertions(+), 0 deletions(-)
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index a157a56..2fcf813 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -185,51 +185,6 @@ static struct irq_pin_list *alloc_irq_pin_list(int node)
+ 	return kzalloc_node(sizeof(struct irq_pin_list), GFP_KERNEL, node);
+ }
+ 
+-
+-/* irq_cfg is indexed by the sum of all RTEs in all I/O APICs. */
+-static struct irq_cfg irq_cfgx[NR_IRQS_LEGACY];
+-
+-int __init arch_early_irq_init(void)
+-{
+-	struct irq_cfg *cfg;
+-	int count, node, i;
+-
+-	if (!legacy_pic->nr_legacy_irqs)
+-		io_apic_irqs = ~0UL;
+-
+-	for (i = 0; i < nr_ioapics; i++) {
+-		ioapics[i].saved_registers =
+-			kzalloc(sizeof(struct IO_APIC_route_entry) *
+-				ioapics[i].nr_registers, GFP_KERNEL);
+-		if (!ioapics[i].saved_registers)
+-			pr_err("IOAPIC %d: suspend/resume impossible!\n", i);
+-	}
+-
+-	cfg = irq_cfgx;
+-	count = ARRAY_SIZE(irq_cfgx);
+-	node = cpu_to_node(0);
+-
+-	/* Make sure the legacy interrupts are marked in the bitmap */
+-	irq_reserve_irqs(0, legacy_pic->nr_legacy_irqs);
+-
+-	for (i = 0; i < count; i++) {
+-		INIT_LIST_HEAD(&cfg[i].irq_2_pin);
+-		irq_set_chip_data(i, &cfg[i]);
+-		zalloc_cpumask_var_node(&cfg[i].domain, GFP_KERNEL, node);
+-		zalloc_cpumask_var_node(&cfg[i].old_domain, GFP_KERNEL, node);
+-		/*
+-		 * For legacy IRQ's, start with assigning irq0 to irq15 to
+-		 * IRQ0_VECTOR to IRQ15_VECTOR for all cpu's.
+-		 */
+-		if (i < legacy_pic->nr_legacy_irqs) {
+-			cfg[i].vector = IRQ0_VECTOR + i;
+-			cpumask_setall(cfg[i].domain);
+-		}
+-	}
+-
+-	return 0;
+-}
+-
+ static struct irq_cfg *irq_cfg(unsigned int irq)
+ {
+ 	return irq_get_chip_data(irq);
+@@ -332,6 +287,50 @@ static struct irq_cfg *realloc_irq_and_cfg_at(unsigned int at, int node)
+ 	return alloc_irq_and_cfg_at(at, node);
+ }
+ 
++/* irq_cfg is indexed by the sum of all RTEs in all I/O APICs. */
++static struct irq_cfg irq_cfgx[NR_IRQS_LEGACY];
++
++int __init arch_early_irq_init(void)
++{
++	struct irq_cfg *cfg;
++	int count, node, i;
++
++	if (!legacy_pic->nr_legacy_irqs)
++		io_apic_irqs = ~0UL;
++
++	for (i = 0; i < nr_ioapics; i++) {
++		ioapics[i].saved_registers =
++			kzalloc(sizeof(struct IO_APIC_route_entry) *
++				ioapics[i].nr_registers, GFP_KERNEL);
++		if (!ioapics[i].saved_registers)
++			pr_err("IOAPIC %d: suspend/resume impossible!\n", i);
++	}
++
++	cfg = irq_cfgx;
++	count = ARRAY_SIZE(irq_cfgx);
++	node = cpu_to_node(0);
++
++	/* Make sure the legacy interrupts are marked in the bitmap */
++	irq_reserve_irqs(0, legacy_pic->nr_legacy_irqs);
++
++	for (i = 0; i < count; i++) {
++		INIT_LIST_HEAD(&cfg[i].irq_2_pin);
++		irq_set_chip_data(i, &cfg[i]);
++		zalloc_cpumask_var_node(&cfg[i].domain, GFP_KERNEL, node);
++		zalloc_cpumask_var_node(&cfg[i].old_domain, GFP_KERNEL, node);
++		/*
++		 * For legacy IRQ's, start with assigning irq0 to irq15 to
++		 * IRQ0_VECTOR to IRQ15_VECTOR for all cpu's.
++		 */
++		if (i < legacy_pic->nr_legacy_irqs) {
++			cfg[i].vector = IRQ0_VECTOR + i;
++			cpumask_setall(cfg[i].domain);
++		}
++	}
++
++	return 0;
++}
++
+ struct io_apic {
+ 	unsigned int index;
+ 	unsigned int unused[3];
+-- 
+1.8.1.4
 
-
-diff --git a/drivers/acpi/apei/ghes.c b/drivers/acpi/apei/ghes.c
-index d668a8a..ab31551 100644
---- a/drivers/acpi/apei/ghes.c
-+++ b/drivers/acpi/apei/ghes.c
-@@ -449,9 +449,19 @@ static void ghes_do_proc(struct ghes *ghes,
- 			    pcie_err->validation_bits & CPER_PCIE_VALID_AER_INFO) {
- 				unsigned int devfn;
- 				int aer_severity;
-+
- 				devfn = PCI_DEVFN(pcie_err->device_id.device,
- 						  pcie_err->device_id.function);
- 				aer_severity = cper_severity_to_aer(sev);
-+
-+				/*
-+				 * If firmware reset the component to contain
-+				 * the error, we must reinitialize it before
-+				 * use, so treat it as a fatal AER error.
-+				 */
-+				if (gdata->flags & CPER_SEC_RESET)
-+					aer_severity = AER_FATAL;
-+
- 				aer_recover_queue(pcie_err->device_id.segment,
- 						  pcie_err->device_id.bus,
- 						  devfn, aer_severity);
