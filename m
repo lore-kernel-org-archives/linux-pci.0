@@ -1,41 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:47400 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752870Ab3FNQ2m (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Jun 2013 12:28:42 -0400
-Date: Fri, 14 Jun 2013 12:28:31 -0400
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: George Dunlap <george.dunlap@eu.citrix.com>,
-	xen-devel <xen-devel@lists.xensource.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"stable@vger.kernel.org" <stable@vger.kernel.org>
-Subject: Re: [PATCH] xen/pci: Deal with toolstack missing an
- 'XenbusStateClosing'.
-Message-ID: <20130614162831.GA16636@phenom.dumpdata.com>
-References: <20130610202456.GA17822@phenom.dumpdata.com>
- <1370898399-20968-1-git-send-email-konrad.wilk@oracle.com>
- <1370898399-20968-2-git-send-email-konrad.wilk@oracle.com>
- <51B743EA.5020800@eu.citrix.com>
- <51B74B77.1000806@oracle.com>
- <51B74DA9.7060509@eu.citrix.com>
- <20130612134504.GG2918@phenom.dumpdata.com>
- <CAErSpo7zw3MSNzdjRcZuy44uOGT_GZ8T4vaqgkd1fvWG4fadTA@mail.gmail.com>
+Received: from mho-02-ewr.mailhop.org ([204.13.248.72]:17182 "EHLO
+	mho-02-ewr.mailhop.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752395Ab3FGOrs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 7 Jun 2013 10:47:48 -0400
+Date: Fri, 7 Jun 2013 10:47:12 -0400
+From: Jason Cooper <jason@lakedaemon.net>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Arnd Bergmann <arnd@arndb.de>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	linux-arm-kernel@lists.infradead.org,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Maen Suleiman <maen@marvell.com>
+Subject: Re: [PATCH v2 0/8] MSI support for Marvell EBU PCIe driver
+Message-ID: <20130607144712.GT23859@titan.lakedaemon.net>
+References: <1370536888-8871-1-git-send-email-thomas.petazzoni@free-electrons.com>
+ <20130606171747.GK23859@titan.lakedaemon.net>
+ <20130607101429.10277e02@skate>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo7zw3MSNzdjRcZuy44uOGT_GZ8T4vaqgkd1fvWG4fadTA@mail.gmail.com>
+In-Reply-To: <20130607101429.10277e02@skate>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> >> So at least part of the problem *is* a bug in Linux.
-> >
-> > Good! Bjorn, would you be OK Ack-ing the patch I sent (attached here
-> > for reference) or putting it in your queue for Linus?
-> >
-> > My plan would be to send it to Linus in the 3.11 merge window.
+On Fri, Jun 07, 2013 at 10:14:29AM +0200, Thomas Petazzoni wrote:
+> Dear Jason Cooper,
 > 
-> Sure; this is your baby :)  Why don't you handle it via your tree,
-> since it's more related to xen than any PCI core stuff.
+> On Thu, 6 Jun 2013 13:17:47 -0400, Jason Cooper wrote:
+> 
+> > Please be aware that for-next is *not* stable.  I rebuild it every time
+> > I pull new stuff in.  It's much more helpful to list only the branches
+> > you need to build/test.
+> 
+> Yes, I'm aware that for-next is not stable. Since the previous
+> iteration of this patch series generated a lot of discussion, I was
+> assuming there would be additional discussions on this new iteration,
+> and that it would certainly not be the final version. So for ease of
+> work, I've just based it on the branch that 'contains everything'.
 
-OK. Thanks!
+Ahh, ok, I've done the same.  Thanks for the clarification.
+
+thx,
+
+Jason.
