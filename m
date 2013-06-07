@@ -1,37 +1,141 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <1370690146.2938.64.camel@sauron.fi.intel.com>
-Subject: Re: [PATCH] x86/PCI: setup data may be in highmem
-From: Artem Bityutskiy <dedekind1@gmail.com>
-Reply-To: dedekind1@gmail.com
-To: Matt Fleming <matt@console-pimps.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, x86@kernel.org,
-	Matt Fleming <matt.fleming@intel.com>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	Seth Forshee <seth.forshee@canonical.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>, stable@vger.kernel.org
-Date: Sat, 08 Jun 2013 14:15:46 +0300
-In-Reply-To: <1369215782-32697-1-git-send-email-matt@console-pimps.org>
-References: <1369215782-32697-1-git-send-email-matt@console-pimps.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+From: Yinghai Lu <yinghai@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>,
+	Alexander Gordeev <agordeev@redhat.com>
+Subject: [PATCH v3 10/27] genirq: Split __irq_reserve_irqs from irq_alloc_descs
+Date: Fri,  7 Jun 2013 15:30:56 -0700
+Message-Id: <1370644273-10495-11-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1370644273-10495-1-git-send-email-yinghai@kernel.org>
+References: <1370644273-10495-1-git-send-email-yinghai@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2013-05-22 at 10:43 +0100, Matt Fleming wrote:
-> From: Matt Fleming <matt.fleming@intel.com>
-> 
-> pcibios_add_device() assumes that the physical addresses stored in
-> setup_data are accessible via the direct kernel mapping, and that
-> calling phys_to_virt() is valid. This isn't guaranteed to be true on x86
-> where the direct mapping range is much smaller than on x86-64.
-> 
-> Calling phys_to_virt() on a highmem address results in the following,
+irq_alloc_descs and irq_reserve_irqs are almost the same.
+Separate code out to __irq_reserved_irqs, and other two reuse
+__irq_reserve_irqs.
 
-Fixes paging request oops for me as well, thanks! Would you please add a
--stable tag to this patch?
+We will use __irq_reserve_irqs for coming ioapic hotplug support.
 
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Alexander Gordeev <agordeev@redhat.com>
+---
+ include/linux/irq.h  |  1 +
+ kernel/irq/irqdesc.c | 54 ++++++++++++++++++++++++++++++----------------------
+ 2 files changed, 32 insertions(+), 23 deletions(-)
+
+diff --git a/include/linux/irq.h b/include/linux/irq.h
+index bc4e066..4e0fcbb 100644
+--- a/include/linux/irq.h
++++ b/include/linux/irq.h
+@@ -600,6 +600,7 @@ int __irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
+ 
+ void irq_free_descs(unsigned int irq, unsigned int cnt);
+ int irq_reserve_irqs(unsigned int from, unsigned int cnt);
++int __irq_reserve_irqs(int irq, unsigned int from, unsigned int cnt);
+ 
+ static inline void irq_free_desc(unsigned int irq)
+ {
+diff --git a/kernel/irq/irqdesc.c b/kernel/irq/irqdesc.c
+index 192a302..3b9fb92 100644
+--- a/kernel/irq/irqdesc.c
++++ b/kernel/irq/irqdesc.c
+@@ -340,18 +340,15 @@ void irq_free_descs(unsigned int from, unsigned int cnt)
+ EXPORT_SYMBOL_GPL(irq_free_descs);
+ 
+ /**
+- * irq_alloc_descs - allocate and initialize a range of irq descriptors
+- * @irq:	Allocate for specific irq number if irq >= 0
++ * __irq_reserve_descs - reserve and initialize a range of irq descriptors
++ * @irq:	Reserve for specific irq number if irq >= 0
+  * @from:	Start the search from this irq number
+- * @cnt:	Number of consecutive irqs to allocate.
+- * @node:	Preferred node on which the irq descriptor should be allocated
+- * @owner:	Owning module (can be NULL)
++ * @cnt:	Number of consecutive irqs to reserve.
+  *
+  * Returns the first irq number or error code
+  */
+ int __ref
+-__irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
+-		  struct module *owner)
++__irq_reserve_irqs(int irq, unsigned int from, unsigned int cnt)
+ {
+ 	int start, ret;
+ 
+@@ -369,7 +366,7 @@ __irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
+ 	start = bitmap_find_next_zero_area(allocated_irqs, IRQ_BITMAP_BITS,
+ 					   from, cnt, 0);
+ 	ret = -EEXIST;
+-	if (irq >=0 && start != irq)
++	if (irq >= 0 && start != irq)
+ 		goto err;
+ 
+ 	if (start + cnt > nr_irqs) {
+@@ -380,12 +377,36 @@ __irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
+ 
+ 	bitmap_set(allocated_irqs, start, cnt);
+ 	mutex_unlock(&sparse_irq_lock);
+-	return alloc_descs(start, cnt, node, owner);
++	return start;
+ 
+ err:
+ 	mutex_unlock(&sparse_irq_lock);
+ 	return ret;
+ }
++
++/**
++ * irq_alloc_descs - allocate and initialize a range of irq descriptors
++ * @irq:	Allocate for specific irq number if irq >= 0
++ * @from:	Start the search from this irq number
++ * @cnt:	Number of consecutive irqs to allocate.
++ * @node:	Preferred node on which the irq descriptor should be allocated
++ * @owner:	Owning module (can be NULL)
++ *
++ * Returns the first irq number or error code
++ */
++int __ref
++__irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
++		  struct module *owner)
++{
++	int start;
++
++	start = __irq_reserve_irqs(irq, from, cnt);
++
++	if (start < 0)
++		return start;
++
++	return alloc_descs(start, cnt, node, owner);
++}
+ EXPORT_SYMBOL_GPL(__irq_alloc_descs);
+ 
+ /**
+@@ -397,20 +418,7 @@ EXPORT_SYMBOL_GPL(__irq_alloc_descs);
+  */
+ int irq_reserve_irqs(unsigned int from, unsigned int cnt)
+ {
+-	unsigned int start;
+-	int ret = 0;
+-
+-	if (!cnt || (from + cnt) > nr_irqs)
+-		return -EINVAL;
+-
+-	mutex_lock(&sparse_irq_lock);
+-	start = bitmap_find_next_zero_area(allocated_irqs, nr_irqs, from, cnt, 0);
+-	if (start == from)
+-		bitmap_set(allocated_irqs, start, cnt);
+-	else
+-		ret = -EEXIST;
+-	mutex_unlock(&sparse_irq_lock);
+-	return ret;
++	return __irq_reserve_irqs(from, from, cnt);
+ }
+ 
+ /**
 -- 
-Best Regards,
-Artem Bityutskiy
+1.8.1.4
 
