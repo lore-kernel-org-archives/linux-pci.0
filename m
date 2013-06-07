@@ -1,65 +1,112 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:53474 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755138Ab3F1Jar (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 28 Jun 2013 05:30:47 -0400
-From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+Received: from aserp1040.oracle.com ([141.146.126.69]:21936 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756072Ab3FGWbg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 7 Jun 2013 18:31:36 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	John Ronciak <john.ronciak@intel.com>,
-	Miles J Penner <miles.j.penner@intel.com>,
-	Bruce Allan <bruce.w.allan@intel.com>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	the arch/x86 maintainers <x86@kernel.org>
-In-Reply-To: <CAE9FiQVt4gCiz20SmJVP6d7tXOior5Ehg+-c_fG7wFsDUj7H4Q@mail.gmail.com>
-References: <1372177330-28013-1-git-send-email-mika.westerberg@linux.intel.com>
- <1372177330-28013-5-git-send-email-mika.westerberg@linux.intel.com>
- <CAE9FiQVt4gCiz20SmJVP6d7tXOior5Ehg+-c_fG7wFsDUj7H4Q@mail.gmail.com>
-Subject: Re: [PATCH 4/6] PCI: acpiphp: check for new devices on enabled host
-Message-Id: <20130628093319.D4DE6E0090@blue.fi.intel.com>
-Date: Fri, 28 Jun 2013 12:33:19 +0300 (EEST)
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v3 00/27] x86, irq: support ioapic device hotplug
+Date: Fri,  7 Jun 2013 15:30:46 -0700
+Message-Id: <1370644273-10495-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Yinghai Lu wrote:
-> On Tue, Jun 25, 2013 at 9:22 AM, Mika Westerberg
-> <mika.westerberg@linux.intel.com> wrote:
-> > From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-> >
-> > Current acpiphp_check_bridge() implementation is pretty dumb:
-> >  - it enables the slot if it's not enabled and the slot status is
-> >    ACPI_STA_ALL;
-> >  - it disables the slot if it's enabled and slot is not in ACPI_STA_ALL
-> >    state.
-> >
-> > This behavior is not enough to handle Thunderbolt chaining case
-> > properly. We need to actually rescan for new devices even if a device
-> > has already in the slot.
-> >
-> > The new implementation disables and stops the slot if it's not in
-> > ACPI_STA_ALL state.
-> >
-> > For ACPI_STA_ALL state we first trim devices which don't respond and
-> > look for the ones after that. We do that even if slot already enabled
-> > (SLOT_ENABLED).
-> 
-> that is not right, some time BUS_CHECK is even sent root bus.
-> in that case, stop all devices in slots and load driver again.
-> 
-> like you put one card in one slots, but all devices in other slots get stop
-> and enable again.
+Hi,
 
-We don't stop enabled devices, we only stop and remove devices which don't
-respond.  See patch 3/6.
+Intel cpu (from IVB) include cpu, mem controller, and IIO.
+When hotadd cpu physically, it will involve cpu hotplug, mem hotplug,
+and pci root hotplug.
 
-I don't see how it's harmful. Do you?
+IIO includes pci host bridge, ioapic controller and iommu.
+pci devices will need to use ioapic and iommu.
+So to make pci root bus hotplug working, we need to add ioapic hotplug support.
+
+Now ioapics are with ACPI MADT table. During booting, kernel will parse
+MADT and put info into ioapic arrays.
+Also Bjorn added one pci device based driver, but it is not wired in yet,
+as it need to call acpi_register_ioapic, and that is TBD.
+
+This patchset will
+1. extend genirq to support reserve/realloc method.
+   because we want irqs for one ioapic controller to be linear mapping
+   to the gsi range.
+2. change ioapic array operation code so we could insert new ioapic and
+   remove one leave the blank slot.
+3. record irq_base in gsi_config in ioapic struct, and use it to convert gsi
+   to irq for pci device using that ioapic controller
+4. make static ioapic path (from MADT) use same code as hot-add path,
+   with reserve/realloc.
+5. change ioapic add/removing to use acpi way, as that is only needed when
+   pci root bus hotplug. Also make it support the case that ioapic
+   controller is hiding in pci config space or ioapic address is not
+   managed by pci reallocation subsys.
+
+Also include some cleanups
+1. print MSI-X clearly in /proc/interrupts and dmesg.
+2. convert irq_2_pin to be generic list.
+
+It is based on linus's tree of 2013/06/07 aka v3.10-rc3+.
+
+could get them from:
+        git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-x86-irq
+
+-v3: split last patch to 4 patches per request from Bjorn.
+     drop one patch that will put pci device name in proc/interrupts
+     update changelog.
+
+Yinghai Lu (27):
+  x86, irq: Change irq_remap_modify_chip_defaults to static
+  x86, irq: Modify irq chip once for irq remapping
+  x86, irq: Print out MSI/MSI-X clearly
+  x86, irq: Show MSI-X in /proc/interrupt
+  x86, irq: Make dmar_msi/hpet_msi irq_chip name consistent
+  ia64, irq: Add dummy create_irq_nr()
+  iommu, irq: Allocate irq_desc for dmar_msi with local node
+  x86, irq: kill create_irq()
+  x86, irq: Convert irq_2_pin list to generic list
+  genirq: Split __irq_reserve_irqs from irq_alloc_descs
+  x86, irq: Add realloc_irq_and_cfg_at()
+  x86, irq: Move down arch_early_irq_init()
+  x86, irq: Split out alloc_ioapic_save_registers()
+  xen, irq: call irq_realloc_desc_at() at first
+  x86, irq: pre-reserve irq range/realloc for booting path
+  x86, irq: Add ioapic_gsi_to_irq
+  genirq: Bail out early in free_desc()
+  x86, irq: More strict checking about registering ioapic
+  x86, irq: Make mp_register_ioapic handle hot-added ioapic
+  x86, irq: Add mp_unregister_ioapic to handle hot-remove ioapic
+  x86, irq: Make ioapics loop skip blank slots
+  x86, ioapic: Find usable ioapic id for 64bit.
+  x86: Move declaration for mp_register_ioapic()
+  PCI, x86: Make ioapic hotplug support built-in
+  PCI, x86, ACPI: Link acpi ioapic register to ioapic
+  PCI, x86, ACPI: Enable ioapic hotplug support with acpi host bridge.
+  PCI, x86, ACPI: get ioapic address from acpi device
+
+ arch/ia64/kernel/irq_ia64.c          |  10 +
+ arch/x86/include/asm/hw_irq.h        |   2 +-
+ arch/x86/include/asm/io_apic.h       |   7 +
+ arch/x86/include/asm/irq_remapping.h |   6 -
+ arch/x86/include/asm/mpspec.h        |  21 +-
+ arch/x86/kernel/acpi/boot.c          |  32 +--
+ arch/x86/kernel/apic/apic.c          |   9 +-
+ arch/x86/kernel/apic/io_apic.c       | 441 ++++++++++++++++++++++++++---------
+ drivers/acpi/pci_root.c              |   4 +
+ drivers/iommu/dmar.c                 |   2 +-
+ drivers/iommu/irq_remapping.c        |  16 +-
+ drivers/pci/Kconfig                  |   3 +-
+ drivers/pci/ioapic.c                 | 232 ++++++++++++------
+ drivers/xen/events.c                 |   8 +-
+ include/linux/irq.h                  |   6 +
+ include/linux/pci-acpi.h             |   8 +
+ kernel/irq/irqdesc.c                 |  83 +++++--
+ 17 files changed, 650 insertions(+), 240 deletions(-)
 
 -- 
- Kirill A. Shutemov
+1.8.1.4
+
