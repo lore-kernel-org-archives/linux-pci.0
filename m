@@ -1,186 +1,111 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f52.google.com ([209.85.219.52]:61270 "EHLO
-	mail-oa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751826Ab3FKCVL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Jun 2013 22:21:11 -0400
-Received: by mail-oa0-f52.google.com with SMTP id g12so2081030oah.39
-        for <linux-pci@vger.kernel.org>; Mon, 10 Jun 2013 19:21:10 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <51B19DF3.2070009@jp.fujitsu.com>
-References: <1368509365-2260-1-git-send-email-indou.takao@jp.fujitsu.com>
- <CAErSpo4t_2Xw76p3Z9FVzyyK-MBovavDu9D=pYoPMjESSxgT=w@mail.gmail.com> <51B19DF3.2070009@jp.fujitsu.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 10 Jun 2013 20:20:50 -0600
-Message-ID: <CAErSpo6dfEnzriHD_aWZB_3E-kSzauhNRHPd+VuFX5HONVKgqw@mail.gmail.com>
-Subject: Re: [PATCH v2] PCI: Reset PCIe devices to stop ongoing DMA
-To: Takao Indoh <indou.takao@jp.fujitsu.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
-	kexec@lists.infradead.org, ishii.hironobu@jp.fujitsu.com,
-	Don Dutile <ddutile@redhat.com>, bill.sumner@hp.com,
-	"alex.williamson@redhat.com" <alex.williamson@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from userp1040.oracle.com ([156.151.31.81]:51936 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964791Ab3FGWdz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 7 Jun 2013 18:33:55 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Subject: [PATCH v3 22/27] x86, ioapic: Find usable ioapic id for 64bit.
+Date: Fri,  7 Jun 2013 15:31:08 -0700
+Message-Id: <1370644273-10495-23-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1370644273-10495-1-git-send-email-yinghai@kernel.org>
+References: <1370644273-10495-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 7, 2013 at 2:46 AM, Takao Indoh <indou.takao@jp.fujitsu.com> wrote:
-> (2013/06/07 13:14), Bjorn Helgaas wrote:
+Checking the id in register, if that is duplicated, will pick one and
+update id register.
 
->> One thing I'm not sure about is that you are only resetting PCIe
->> devices, but I don't think the problem is actually specific to PCIe,
->> is it?  I think the same issue could occur on any system with an
->> IOMMU.  In the x86 PC world, most IOMMUs are connected with PCIe, but
->> there are systems with IOMMUs for plain old PCI devices, e.g.,
->> PA-RISC.
->
-> Right, this is not specific to PCIe. The reasons why the target is only
-> PCIe is just to make algorithm to reset simple. It is possible to reset
-> legacy PCI devices in my patch, but code becomes somewhat complicated. I
-> thought recently most systems used PCIe and there was little demand for
-> resetting legacy PCI. Therefore I decided not to reset legacy PCI
-> devices, but I'll do if there are requests :-)
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+---
+ arch/x86/kernel/apic/io_apic.c | 41 ++++++++++++++++++++++++++++++++++-------
+ 1 file changed, 34 insertions(+), 7 deletions(-)
 
-I'm not sure you need to reset legacy devices (or non-PCI devices)
-yet, but the current hook isn't anchored anywhere -- it's just an
-fs_initcall() that doesn't give the reader any clue about the
-connection between the reset and the problem it's solving.
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 970c4fd..8eb4cd3 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -3660,27 +3660,54 @@ static int __init io_apic_get_unique_id(int ioapic, int apic_id)
+ 	return apic_id;
+ }
+ 
+-static u8 __init io_apic_unique_id(u8 id)
++static u8 __init io_apic_unique_id(int idx, u8 id)
+ {
+ 	if ((boot_cpu_data.x86_vendor == X86_VENDOR_INTEL) &&
+ 	    !APIC_XAPIC(apic_version[boot_cpu_physical_apicid]))
+-		return io_apic_get_unique_id(nr_ioapics, id);
++		return io_apic_get_unique_id(idx, id);
+ 	else
+ 		return id;
+ }
+ #else
+-static u8 __init io_apic_unique_id(u8 id)
++static u8 io_apic_unique_id(int idx, u8 id)
+ {
+ 	int i;
++	u8 new_id;
++	unsigned long flags;
+ 	DECLARE_BITMAP(used, 256);
++	union IO_APIC_reg_00 reg_00;
+ 
+ 	bitmap_zero(used, 256);
+-	for (i = 0; i < nr_ioapics; i++) {
++	for (i = 0; i < nr_ioapics; i++)
+ 		__set_bit(mpc_ioapic_id(i), used);
+-	}
+ 	if (!test_bit(id, used))
+ 		return id;
+-	return find_first_zero_bit(used, 256);
++
++	/* check register at first */
++	raw_spin_lock_irqsave(&ioapic_lock, flags);
++	reg_00.raw = io_apic_read(idx, 0);
++	raw_spin_unlock_irqrestore(&ioapic_lock, flags);
++	new_id = reg_00.bits.ID;
++	if (!test_bit(new_id, used)) {
++		apic_printk(APIC_VERBOSE, KERN_INFO
++			"IOAPIC[%d]: Using reg apic_id %d instead of %d\n",
++			 idx, new_id, id);
++		return new_id;
++	}
++
++	new_id = find_first_zero_bit(used, 256);
++	reg_00.bits.ID = new_id;
++	raw_spin_lock_irqsave(&ioapic_lock, flags);
++	io_apic_write(idx, 0, reg_00.raw);
++	reg_00.raw = io_apic_read(idx, 0);
++	raw_spin_unlock_irqrestore(&ioapic_lock, flags);
++
++	/* Sanity check */
++	if (reg_00.bits.ID != new_id)
++		pr_warn("IOAPIC[%d]: Unable to change apic_id to %d!\n",
++			idx, new_id);
++
++	return new_id;
+ }
+ #endif
+ 
+@@ -3961,7 +3988,7 @@ int __mp_register_ioapic(int id, u32 address, u32 gsi_base, bool hotadd)
+ 	if (bad_ioapic_register(idx))
+ 		goto failed;
+ 
+-	ioapics[idx].mp_config.apicid = io_apic_unique_id(id);
++	ioapics[idx].mp_config.apicid = io_apic_unique_id(idx, id);
+ 	ioapics[idx].mp_config.apicver = io_apic_get_version(idx);
+ 
+ 	/*
+-- 
+1.8.1.4
 
-If we do something like this patch, I think it needs to be done at the
-point where we enable or disable the IOMMU.  That way, it's connected
-to the important event, and there's a clue about how to make
-corresponding fixes for other IOMMUs.
-
-We already have a "reset_devices" boot option.  This is for the same
-purpose, as far as I can tell, and I'm not sure there's value in
-having both "reset_devices" and "pci=pcie_reset_endpoint_devices".  In
-fact, there's nothing specific even to PCI here.  The Intel VT-d docs
-seem carefully written so they could apply to either PCIe or non-PCI
-devices.
-
->> I tried to make a list of the interesting scenarios and the events
->> that are relevant to this problem:
->>
->>      Case 1: IOMMU off in system, off in kdump kernel
->>        system kernel leaves IOMMU off
->>          DMA targets system-kernel memory
->>        kexec to kdump kernel (IOMMU off, devices untouched)
->>          DMA targets system-kernel memory (harmless)
->>        kdump kernel re-inits device
->>          DMA targets kdump-kernel memory
->>
->>      Case 2: IOMMU off in system kernel, on in kdump kernel
->>        system kernel leaves IOMMU off
->>          DMA targets system-kernel memory
->>        kexec to kdump kernel (IOMMU off, devices untouched)
->>          DMA targets system-kernel memory (harmless)
->>        kdump kernel enables IOMMU with no valid mappings
->>          DMA causes IOMMU errors (annoying but harmless)
->>        kdump kernel re-inits device
->>          DMA targets IOMMU-mapped kdump-kernel memory
->>
->>      Case 3a: IOMMU on in system kernel, kdump kernel doesn't touch IOMMU
->>        system kernel enables IOMMU
->>          DMA targets IOMMU-mapped system-kernel memory
->>        kexec to kdump kernel (IOMMU on, devices untouched)
->>          DMA targets IOMMU-mapped system-kernel memory
->>        kdump kernel doesn't know about IOMMU or doesn't touch it
->>          DMA targets IOMMU-mapped system-kernel memory
->>        kdump kernel re-inits device
->>          kernel assumes no IOMMU, so all new DMA mappings are invalid
->> because DMAs actually do go through the IOMMU
->>          (** corruption or other non-recoverable error likely **)
->>
->>      Case 3b: IOMMU on in system kernel, kdump kernel disables IOMMU
->>        system kernel enables IOMMU
->>          DMA targets IOMMU-mapped system-kernel memory
->>        kexec to kdump kernel (IOMMU on, devices untouched)
->>          DMA targets IOMMU-mapped system-kernel memory
->>        kdump kernel disables IOMMU
->>          DMA targets IOMMU-mapped system-kernel memory, but IOMMU is disabled
->>          (** corruption or other non-recoverable error likely **)
->>        kdump kernel re-inits device
->>          DMA targets kdump-kernel memory
->>
->>      Case 4: IOMMU on in system kernel, on in kdump kernel
->>        system kernel enables IOMMU
->>          DMA targets IOMMU-mapped system-kernel memory
->>        kexec to kdump kernel (IOMMU on, devices untouched)
->>          DMA targets IOMMU-mapped system-kernel memory
->>        kdump kernel enables IOMMU with no valid mappings
->>          DMA causes IOMMU errors (annoying but harmless)
->>        kdump kernel re-inits device
->>          DMA targets IOMMU-mapped kdump-kernel memory
->
-> This is not harmless. Errors like PCI SERR are detected here, and it
-> makes driver or system unstable, and kdump fails. I also got report that
-> system hangs up due to this.
-
-OK, let's take this slowly.  Does an IOMMU error in the system kernel
-also cause SERR or make the system unstable?  Is that the expected
-behavior on IOMMU errors, or is there something special about the
-kdump scenario that causes SERRs?  I see lots of DMAR errors, e.g.,
-those in https://bugzilla.redhat.com/show_bug.cgi?id=743790, that are
-reported with printk and don't seem to cause an SERR.  Maybe the SERR
-is system-specific behavior?
-
-https://bugzilla.redhat.com/show_bug.cgi?id=568153 is another (public)
-report of IOMMU errors related to a driver bug where we just get
-printks, not SERR.
-
-https://bugzilla.redhat.com/show_bug.cgi?id=743495 looks like a hang
-when the kdump kernel reboots (after successfully saving a crashdump).
- But it is using "iommu=pt", which I don't believe makes sense.  The
-scenario is basically case 4 above, but instead of the kdump kernel
-starting with no valid IOMMU mappings, it identity-maps bus addresses
-to physical memory addresses.  That's completely bogus because it's
-certainly not what the system kernel did, so it's entirely likely to
-make the system unstable or hang.  This is not an argument for doing a
-reset; it's an argument for doing something smarter than "iommu=pt" in
-the kdump kernel.
-
-We might still want to reset PCIe devices, but I want to make sure
-that we're not papering over other issues when we do.  Therefore, I'd
-like to understand why IOMMU errors seem harmless in some cases but
-not in others.
-
-> Case 1:  Harmless
-> Case 2:  Not tested
-> Case 3a: Not tested
-> Case 3b: Cause problem, fixed by my patch
-> Case 4:  Cause problem, fixed by my patch
->
-> I have never tested case 2 and 3a, but I think it also causes problem.
-
-I do not believe we need to support case 3b (IOMMU on in system kernel
-but disabled in kdump kernel).  There is no way to make that reliable
-unless every single device that may perform DMA is reset, and since
-you don't reset legacy PCI or VGA devices, you're not even proposing
-to do that.
-
-I think we need to support case 1 (for systems with no IOMMU at all)
-and case 4 (IOMMU enabled in both system kernel and kdump kernel).  If
-the kdump kernel can detect whether the IOMMU is enabled, that should
-be enough -- it could figure out automatically whether we're in case 1
-or 4.
-
->> Do you have any bugzilla references or problem report URLs you could
->> include here?
->
-> I know three Red Hat bugzilla, but I think these are private article and
-> you cannot see. I'll add you Cc list in bz so that you can see.
->
-> BZ#743790: Kdump fails with intel_iommu=on
-> https://bugzilla.redhat.com/show_bug.cgi?id=743790
->
-> BZ#743495: Hardware error is detected with intel_iommu=on
-> https://bugzilla.redhat.com/show_bug.cgi?id=743495
->
-> BZ#833299: megaraid_sas doesn't work well with intel_iommu=on and iommu=pt
-> https://bugzilla.redhat.com/show_bug.cgi?id=833299
-
-Thanks for adding me to the CC lists.  I looked all three and I'm not
-sure there's anything sensitive in them.  It'd be nice if they could
-be made public if there's not.
-
-Bjorn
