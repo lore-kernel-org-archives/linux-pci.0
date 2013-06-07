@@ -1,512 +1,497 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:56967 "EHLO hydra.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753486Ab3FBVpm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 2 Jun 2013 17:45:42 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Linux PM list <linux-pm@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Kevin Hilman <khilman@linaro.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Ulf Hansson <ulf.hansson@linaro.org>, Tejun Heo <tj@kernel.org>
-Subject: [PATCH 1/2, v2] PM / Runtime: Rework the "runtime idle" helper routine
-Date: Sun, 02 Jun 2013 23:52:31 +0200
-Message-ID: <29156715.ksdUTA6va9@vostro.rjw.lan>
-In-Reply-To: <2033252.LiVeuYIhnT@vostro.rjw.lan>
-References: <Pine.LNX.4.44L0.1305301247370.1137-100000@iolanthe.rowland.org> <2033252.LiVeuYIhnT@vostro.rjw.lan>
+Received: from fold.natur.cuni.cz ([195.113.57.32]:46849 "EHLO
+	fold.natur.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754584Ab3FGPfO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 7 Jun 2013 11:35:14 -0400
+Message-ID: <51B1FDAF.7050100@fold.natur.cuni.cz>
+Date: Fri, 07 Jun 2013 17:35:11 +0200
+From: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: 3.10-rc4: is acpiphp or in general pcieport or xhci_hcd ignoring
+ my pcie_aspm=off?
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Hi,
+  I know there are other who reported problems with ASPM. While still looking for
+an answer what is the different between the three express cards I have, I see
+that their use results in different pattern of changes to the upstream root port 1c.7.
+Isn't the problem that pcieport of acpiphp-based kernel ignores my pcie_aspm=off ?
 
-The "runtime idle" helper routine, rpm_idle(), currently ignores
-return values from .runtime_idle() callbacks executed by it.
-However, it turns out that many subsystems use
-pm_generic_runtime_idle() which checks the return value of the
-driver's callback and executes pm_runtime_suspend() for the device
-unless that value is not 0.  If that logic is moved to rpm_idle()
-instead, pm_generic_runtime_idle() can be dropped and its users
-will not need any .runtime_idle() callbacks any more.
 
-Moreover, the PCI, SCSI, and SATA subsystems' .runtime_idle()
-routines, pci_pm_runtime_idle(), scsi_runtime_idle(), and
-ata_port_runtime_idle(), respectively, as well as a few drivers'
-ones may be simplified if rpm_idle() calls rpm_suspend() after 0 has
-been returned by the .runtime_idle() callback executed by it.
+After coldboot with an empty express card slot I have:
 
-To reduce overall code bloat, make the changes described above.
+00:1c.0 PCI bridge: Intel Corporation 6 Series/C200 Series Chipset Family PCI Express Root Port 1 (rev b5) (prog-if 00 [Normal decode])
+               LnkCtl: ASPM L1 Enabled; RCB 64 bytes Disabled- Retrain- CommClk-
+                       ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+00:1c.1 PCI bridge: Intel Corporation 6 Series/C200 Series Chipset Family PCI Express Root Port 2 (rev b5) (prog-if 00 [Normal decode])
+               LnkCtl: ASPM L1 Enabled; RCB 64 bytes Disabled- Retrain- CommClk+
+                       ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+00:1c.3 PCI bridge: Intel Corporation 6 Series/C200 Series Chipset Family PCI Express Root Port 4 (rev b5) (prog-if 00 [Normal decode])
+               LnkCtl: ASPM L1 Enabled; RCB 64 bytes Disabled- Retrain- CommClk+
+                       ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+00:1c.4 PCI bridge: Intel Corporation 6 Series/C200 Series Chipset Family PCI Express Root Port 5 (rev b5) (prog-if 00 [Normal decode])
+               LnkCtl: ASPM L1 Enabled; RCB 64 bytes Disabled- Retrain- CommClk+
+                       ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+00:1c.7 PCI bridge: Intel Corporation 6 Series/C200 Series Chipset Family PCI Express Root Port 8 (rev b5) (prog-if 00 [Normal decode])
+               LnkCtl: ASPM L1 Enabled; RCB 64 bytes Disabled- Retrain- CommClk-
+                       ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+05:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd. RTL8111/8168 PCI Express Gigabit Ethernet controller (rev 06)
+               LnkCtl: ASPM L1 Enabled; RCB 64 bytes Disabled- Retrain- CommClk+
+                       ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+09:00.0 Network controller: Intel Corporation Centrino Wireless-N 1030 [Rainbow Peak] (rev 34)
+               LnkCtl: ASPM L1 Enabled; RCB 64 bytes Disabled- Retrain- CommClk+
+                       ExtSynch- ClockPM+ AutWidDis- BWInt- AutBWInt-
+0b:00.0 USB controller: Texas Instruments TUSB73x0 SuperSpeed USB 3.0 xHCI Host Controller (rev 02) (prog-if 30 [XHCI])
+               LnkCtl: ASPM L1 Enabled; RCB 64 bytes Disabled- Retrain- CommClk+
+                       ExtSynch- ClockPM+ AutWidDis- BWInt- AutBWInt-
+11:00 - not shown yet here, the express card slot was empty during coldboot.
 
-Tested-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-Tested-by: Kevin Hilman <khilman@linaro.org>
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Acked-by: Kevin Hilman <khilman@linaro.org>
-Reviewed-by: Ulf Hansson <ulf.hansson@linaro.org>
----
- Documentation/power/runtime_pm.txt |    5 -----
- arch/arm/mach-omap2/omap_device.c  |    7 +------
- drivers/acpi/device_pm.c           |    1 -
- drivers/amba/bus.c                 |    2 +-
- drivers/ata/libata-core.c          |    2 +-
- drivers/base/platform.c            |    1 -
- drivers/base/power/domain.c        |    1 -
- drivers/base/power/generic_ops.c   |   23 -----------------------
- drivers/base/power/runtime.c       |   12 +++++-------
- drivers/dma/intel_mid_dma.c        |    2 +-
- drivers/gpio/gpio-langwell.c       |    6 +-----
- drivers/i2c/i2c-core.c             |    2 +-
- drivers/mfd/ab8500-gpadc.c         |    8 +-------
- drivers/mmc/core/bus.c             |    2 +-
- drivers/mmc/core/sdio_bus.c        |    2 +-
- drivers/pci/pci-driver.c           |   14 +++++---------
- drivers/scsi/scsi_pm.c             |   11 +++--------
- drivers/sh/pm_runtime.c            |    2 +-
- drivers/spi/spi.c                  |    2 +-
- drivers/tty/serial/mfd.c           |    9 ++-------
- drivers/usb/core/driver.c          |    3 ++-
- drivers/usb/core/port.c            |    1 -
- include/linux/pm_runtime.h         |    2 --
- 23 files changed, 28 insertions(+), 92 deletions(-)
 
-Index: linux-pm/drivers/base/power/runtime.c
-===================================================================
---- linux-pm.orig/drivers/base/power/runtime.c
-+++ linux-pm/drivers/base/power/runtime.c
-@@ -293,11 +293,8 @@ static int rpm_idle(struct device *dev,
- 	/* Pending requests need to be canceled. */
- 	dev->power.request = RPM_REQ_NONE;
- 
--	if (dev->power.no_callbacks) {
--		/* Assume ->runtime_idle() callback would have suspended. */
--		retval = rpm_suspend(dev, rpmflags);
-+	if (dev->power.no_callbacks)
- 		goto out;
--	}
- 
- 	/* Carry out an asynchronous or a synchronous idle notification. */
- 	if (rpmflags & RPM_ASYNC) {
-@@ -306,7 +303,8 @@ static int rpm_idle(struct device *dev,
- 			dev->power.request_pending = true;
- 			queue_work(pm_wq, &dev->power.work);
- 		}
--		goto out;
-+		trace_rpm_return_int(dev, _THIS_IP_, 0);
-+		return 0;
- 	}
- 
- 	dev->power.idle_notification = true;
-@@ -326,14 +324,14 @@ static int rpm_idle(struct device *dev,
- 		callback = dev->driver->pm->runtime_idle;
- 
- 	if (callback)
--		__rpm_callback(callback, dev);
-+		retval = __rpm_callback(callback, dev);
- 
- 	dev->power.idle_notification = false;
- 	wake_up_all(&dev->power.wait_queue);
- 
-  out:
- 	trace_rpm_return_int(dev, _THIS_IP_, retval);
--	return retval;
-+	return retval ? retval : rpm_suspend(dev, rpmflags);
- }
- 
- /**
-Index: linux-pm/drivers/base/power/generic_ops.c
-===================================================================
---- linux-pm.orig/drivers/base/power/generic_ops.c
-+++ linux-pm/drivers/base/power/generic_ops.c
-@@ -12,29 +12,6 @@
- 
- #ifdef CONFIG_PM_RUNTIME
- /**
-- * pm_generic_runtime_idle - Generic runtime idle callback for subsystems.
-- * @dev: Device to handle.
-- *
-- * If PM operations are defined for the @dev's driver and they include
-- * ->runtime_idle(), execute it and return its error code, if nonzero.
-- * Otherwise, execute pm_runtime_suspend() for the device and return 0.
-- */
--int pm_generic_runtime_idle(struct device *dev)
--{
--	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
--
--	if (pm && pm->runtime_idle) {
--		int ret = pm->runtime_idle(dev);
--		if (ret)
--			return ret;
--	}
--
--	pm_runtime_suspend(dev);
--	return 0;
--}
--EXPORT_SYMBOL_GPL(pm_generic_runtime_idle);
--
--/**
-  * pm_generic_runtime_suspend - Generic runtime suspend callback for subsystems.
-  * @dev: Device to suspend.
-  *
-Index: linux-pm/include/linux/pm_runtime.h
-===================================================================
---- linux-pm.orig/include/linux/pm_runtime.h
-+++ linux-pm/include/linux/pm_runtime.h
-@@ -37,7 +37,6 @@ extern void pm_runtime_enable(struct dev
- extern void __pm_runtime_disable(struct device *dev, bool check_resume);
- extern void pm_runtime_allow(struct device *dev);
- extern void pm_runtime_forbid(struct device *dev);
--extern int pm_generic_runtime_idle(struct device *dev);
- extern int pm_generic_runtime_suspend(struct device *dev);
- extern int pm_generic_runtime_resume(struct device *dev);
- extern void pm_runtime_no_callbacks(struct device *dev);
-@@ -143,7 +142,6 @@ static inline bool pm_runtime_active(str
- static inline bool pm_runtime_status_suspended(struct device *dev) { return false; }
- static inline bool pm_runtime_enabled(struct device *dev) { return false; }
- 
--static inline int pm_generic_runtime_idle(struct device *dev) { return 0; }
- static inline int pm_generic_runtime_suspend(struct device *dev) { return 0; }
- static inline int pm_generic_runtime_resume(struct device *dev) { return 0; }
- static inline void pm_runtime_no_callbacks(struct device *dev) {}
-Index: linux-pm/arch/arm/mach-omap2/omap_device.c
-===================================================================
---- linux-pm.orig/arch/arm/mach-omap2/omap_device.c
-+++ linux-pm/arch/arm/mach-omap2/omap_device.c
-@@ -591,11 +591,6 @@ static int _od_runtime_suspend(struct de
- 	return ret;
- }
- 
--static int _od_runtime_idle(struct device *dev)
--{
--	return pm_generic_runtime_idle(dev);
--}
--
- static int _od_runtime_resume(struct device *dev)
- {
- 	struct platform_device *pdev = to_platform_device(dev);
-@@ -653,7 +648,7 @@ static int _od_resume_noirq(struct devic
- struct dev_pm_domain omap_device_pm_domain = {
- 	.ops = {
- 		SET_RUNTIME_PM_OPS(_od_runtime_suspend, _od_runtime_resume,
--				   _od_runtime_idle)
-+				   NULL)
- 		USE_PLATFORM_PM_SLEEP_OPS
- 		.suspend_noirq = _od_suspend_noirq,
- 		.resume_noirq = _od_resume_noirq,
-Index: linux-pm/drivers/acpi/device_pm.c
-===================================================================
---- linux-pm.orig/drivers/acpi/device_pm.c
-+++ linux-pm/drivers/acpi/device_pm.c
-@@ -886,7 +886,6 @@ static struct dev_pm_domain acpi_general
- #ifdef CONFIG_PM_RUNTIME
- 		.runtime_suspend = acpi_subsys_runtime_suspend,
- 		.runtime_resume = acpi_subsys_runtime_resume,
--		.runtime_idle = pm_generic_runtime_idle,
- #endif
- #ifdef CONFIG_PM_SLEEP
- 		.prepare = acpi_subsys_prepare,
-Index: linux-pm/drivers/amba/bus.c
-===================================================================
---- linux-pm.orig/drivers/amba/bus.c
-+++ linux-pm/drivers/amba/bus.c
-@@ -284,7 +284,7 @@ static const struct dev_pm_ops amba_pm =
- 	SET_RUNTIME_PM_OPS(
- 		amba_pm_runtime_suspend,
- 		amba_pm_runtime_resume,
--		pm_generic_runtime_idle
-+		NULL
- 	)
- };
- 
-Index: linux-pm/drivers/base/power/domain.c
-===================================================================
---- linux-pm.orig/drivers/base/power/domain.c
-+++ linux-pm/drivers/base/power/domain.c
-@@ -2143,7 +2143,6 @@ void pm_genpd_init(struct generic_pm_dom
- 	genpd->max_off_time_changed = true;
- 	genpd->domain.ops.runtime_suspend = pm_genpd_runtime_suspend;
- 	genpd->domain.ops.runtime_resume = pm_genpd_runtime_resume;
--	genpd->domain.ops.runtime_idle = pm_generic_runtime_idle;
- 	genpd->domain.ops.prepare = pm_genpd_prepare;
- 	genpd->domain.ops.suspend = pm_genpd_suspend;
- 	genpd->domain.ops.suspend_late = pm_genpd_suspend_late;
-Index: linux-pm/drivers/base/platform.c
-===================================================================
---- linux-pm.orig/drivers/base/platform.c
-+++ linux-pm/drivers/base/platform.c
-@@ -888,7 +888,6 @@ int platform_pm_restore(struct device *d
- static const struct dev_pm_ops platform_dev_pm_ops = {
- 	.runtime_suspend = pm_generic_runtime_suspend,
- 	.runtime_resume = pm_generic_runtime_resume,
--	.runtime_idle = pm_generic_runtime_idle,
- 	USE_PLATFORM_PM_SLEEP_OPS
- };
- 
-Index: linux-pm/drivers/i2c/i2c-core.c
-===================================================================
---- linux-pm.orig/drivers/i2c/i2c-core.c
-+++ linux-pm/drivers/i2c/i2c-core.c
-@@ -435,7 +435,7 @@ static const struct dev_pm_ops i2c_devic
- 	SET_RUNTIME_PM_OPS(
- 		pm_generic_runtime_suspend,
- 		pm_generic_runtime_resume,
--		pm_generic_runtime_idle
-+		NULL
- 	)
- };
- 
-Index: linux-pm/drivers/mmc/core/sdio_bus.c
-===================================================================
---- linux-pm.orig/drivers/mmc/core/sdio_bus.c
-+++ linux-pm/drivers/mmc/core/sdio_bus.c
-@@ -211,7 +211,7 @@ static const struct dev_pm_ops sdio_bus_
- 	SET_RUNTIME_PM_OPS(
- 		pm_generic_runtime_suspend,
- 		pm_generic_runtime_resume,
--		pm_generic_runtime_idle
-+		NULL
- 	)
- };
- 
-Index: linux-pm/drivers/spi/spi.c
-===================================================================
---- linux-pm.orig/drivers/spi/spi.c
-+++ linux-pm/drivers/spi/spi.c
-@@ -223,7 +223,7 @@ static const struct dev_pm_ops spi_pm =
- 	SET_RUNTIME_PM_OPS(
- 		pm_generic_runtime_suspend,
- 		pm_generic_runtime_resume,
--		pm_generic_runtime_idle
-+		NULL
- 	)
- };
- 
-Index: linux-pm/drivers/usb/core/port.c
-===================================================================
---- linux-pm.orig/drivers/usb/core/port.c
-+++ linux-pm/drivers/usb/core/port.c
-@@ -141,7 +141,6 @@ static const struct dev_pm_ops usb_port_
- #ifdef CONFIG_PM_RUNTIME
- 	.runtime_suspend =	usb_port_runtime_suspend,
- 	.runtime_resume =	usb_port_runtime_resume,
--	.runtime_idle =		pm_generic_runtime_idle,
- #endif
- };
- 
-Index: linux-pm/Documentation/power/runtime_pm.txt
-===================================================================
---- linux-pm.orig/Documentation/power/runtime_pm.txt
-+++ linux-pm/Documentation/power/runtime_pm.txt
-@@ -660,11 +660,6 @@ Subsystems may wish to conserve code spa
- management callbacks provided by the PM core, defined in
- driver/base/power/generic_ops.c:
- 
--  int pm_generic_runtime_idle(struct device *dev);
--    - invoke the ->runtime_idle() callback provided by the driver of this
--      device, if defined, and call pm_runtime_suspend() for this device if the
--      return value is 0 or the callback is not defined
--
-   int pm_generic_runtime_suspend(struct device *dev);
-     - invoke the ->runtime_suspend() callback provided by the driver of this
-       device and return its result, or return -EINVAL if not defined
-Index: linux-pm/drivers/usb/core/driver.c
-===================================================================
---- linux-pm.orig/drivers/usb/core/driver.c
-+++ linux-pm/drivers/usb/core/driver.c
-@@ -1765,7 +1765,8 @@ int usb_runtime_idle(struct device *dev)
- 	 */
- 	if (autosuspend_check(udev) == 0)
- 		pm_runtime_autosuspend(dev);
--	return 0;
-+	/* Tell the core not to suspend it, though. */
-+	return -EBUSY;
- }
- 
- int usb_set_usb2_hardware_lpm(struct usb_device *udev, int enable)
-Index: linux-pm/drivers/pci/pci-driver.c
-===================================================================
---- linux-pm.orig/drivers/pci/pci-driver.c
-+++ linux-pm/drivers/pci/pci-driver.c
-@@ -1050,26 +1050,22 @@ static int pci_pm_runtime_idle(struct de
- {
- 	struct pci_dev *pci_dev = to_pci_dev(dev);
- 	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
-+	int ret = 0;
- 
- 	/*
- 	 * If pci_dev->driver is not set (unbound), the device should
- 	 * always remain in D0 regardless of the runtime PM status
- 	 */
- 	if (!pci_dev->driver)
--		goto out;
-+		return 0;
- 
- 	if (!pm)
- 		return -ENOSYS;
- 
--	if (pm->runtime_idle) {
--		int ret = pm->runtime_idle(dev);
--		if (ret)
--			return ret;
--	}
-+	if (pm->runtime_idle)
-+		ret = pm->runtime_idle(dev);
- 
--out:
--	pm_runtime_suspend(dev);
--	return 0;
-+	return ret;
- }
- 
- #else /* !CONFIG_PM_RUNTIME */
-Index: linux-pm/drivers/ata/libata-core.c
-===================================================================
---- linux-pm.orig/drivers/ata/libata-core.c
-+++ linux-pm/drivers/ata/libata-core.c
-@@ -5430,7 +5430,7 @@ static int ata_port_runtime_idle(struct
- 				return -EBUSY;
- 	}
- 
--	return pm_runtime_suspend(dev);
-+	return 0;
- }
- 
- static int ata_port_runtime_suspend(struct device *dev)
-Index: linux-pm/drivers/dma/intel_mid_dma.c
-===================================================================
---- linux-pm.orig/drivers/dma/intel_mid_dma.c
-+++ linux-pm/drivers/dma/intel_mid_dma.c
-@@ -1405,7 +1405,7 @@ static int dma_runtime_idle(struct devic
- 			return -EAGAIN;
- 	}
- 
--	return pm_schedule_suspend(dev, 0);
-+	return 0;
- }
- 
- /******************************************************************************
-Index: linux-pm/drivers/gpio/gpio-langwell.c
-===================================================================
---- linux-pm.orig/drivers/gpio/gpio-langwell.c
-+++ linux-pm/drivers/gpio/gpio-langwell.c
-@@ -305,11 +305,7 @@ static const struct irq_domain_ops lnw_g
- 
- static int lnw_gpio_runtime_idle(struct device *dev)
- {
--	int err = pm_schedule_suspend(dev, 500);
--
--	if (!err)
--		return 0;
--
-+	pm_schedule_suspend(dev, 500);
- 	return -EBUSY;
- }
- 
-Index: linux-pm/drivers/mfd/ab8500-gpadc.c
-===================================================================
---- linux-pm.orig/drivers/mfd/ab8500-gpadc.c
-+++ linux-pm/drivers/mfd/ab8500-gpadc.c
-@@ -886,12 +886,6 @@ static int ab8500_gpadc_runtime_resume(s
- 	return ret;
- }
- 
--static int ab8500_gpadc_runtime_idle(struct device *dev)
--{
--	pm_runtime_suspend(dev);
--	return 0;
--}
--
- static int ab8500_gpadc_suspend(struct device *dev)
- {
- 	struct ab8500_gpadc *gpadc = dev_get_drvdata(dev);
-@@ -1039,7 +1033,7 @@ static int ab8500_gpadc_remove(struct pl
- static const struct dev_pm_ops ab8500_gpadc_pm_ops = {
- 	SET_RUNTIME_PM_OPS(ab8500_gpadc_runtime_suspend,
- 			   ab8500_gpadc_runtime_resume,
--			   ab8500_gpadc_runtime_idle)
-+			   NULL)
- 	SET_SYSTEM_SLEEP_PM_OPS(ab8500_gpadc_suspend,
- 				ab8500_gpadc_resume)
- 
-Index: linux-pm/drivers/mmc/core/bus.c
-===================================================================
---- linux-pm.orig/drivers/mmc/core/bus.c
-+++ linux-pm/drivers/mmc/core/bus.c
-@@ -164,7 +164,7 @@ static int mmc_runtime_resume(struct dev
- 
- static int mmc_runtime_idle(struct device *dev)
- {
--	return pm_runtime_suspend(dev);
-+	return 0;
- }
- 
- #endif /* !CONFIG_PM_RUNTIME */
-Index: linux-pm/drivers/scsi/scsi_pm.c
-===================================================================
---- linux-pm.orig/drivers/scsi/scsi_pm.c
-+++ linux-pm/drivers/scsi/scsi_pm.c
-@@ -229,8 +229,6 @@ static int scsi_runtime_resume(struct de
- 
- static int scsi_runtime_idle(struct device *dev)
- {
--	int err;
--
- 	dev_dbg(dev, "scsi_runtime_idle\n");
- 
- 	/* Insert hooks here for targets, hosts, and transport classes */
-@@ -240,14 +238,11 @@ static int scsi_runtime_idle(struct devi
- 
- 		if (sdev->request_queue->dev) {
- 			pm_runtime_mark_last_busy(dev);
--			err = pm_runtime_autosuspend(dev);
--		} else {
--			err = pm_runtime_suspend(dev);
-+			pm_runtime_autosuspend(dev);
-+			return -EBUSY;
- 		}
--	} else {
--		err = pm_runtime_suspend(dev);
- 	}
--	return err;
-+	return 0;
- }
- 
- int scsi_autopm_get_device(struct scsi_device *sdev)
-Index: linux-pm/drivers/sh/pm_runtime.c
-===================================================================
---- linux-pm.orig/drivers/sh/pm_runtime.c
-+++ linux-pm/drivers/sh/pm_runtime.c
-@@ -25,7 +25,7 @@
- static int default_platform_runtime_idle(struct device *dev)
- {
- 	/* suspend synchronously to disable clocks immediately */
--	return pm_runtime_suspend(dev);
-+	return 0;
- }
- 
- static struct dev_pm_domain default_pm_domain = {
-Index: linux-pm/drivers/tty/serial/mfd.c
-===================================================================
---- linux-pm.orig/drivers/tty/serial/mfd.c
-+++ linux-pm/drivers/tty/serial/mfd.c
-@@ -1248,13 +1248,8 @@ static int serial_hsu_resume(struct pci_
- #ifdef CONFIG_PM_RUNTIME
- static int serial_hsu_runtime_idle(struct device *dev)
- {
--	int err;
--
--	err = pm_schedule_suspend(dev, 500);
--	if (err)
--		return -EBUSY;
--
--	return 0;
-+	pm_schedule_suspend(dev, 500);
-+	return -EBUSY;
- }
- 
- static int serial_hsu_runtime_suspend(struct device *dev)
+Upon very first hotinsert, of VIA-based firewire card I get:
 
+ 00:1c.7 PCI bridge: Intel Corporation 6 Series/C200 Series Chipset Family PCI Express Root Port 8 (rev b5) (prog-if 00 [Normal decode])
+        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+        Latency: 0, Cache Line Size: 64 bytes
+        Bus: primary=00, secondary=11, subordinate=16, sec-latency=0
+        I/O behind bridge: 0000c000-0000dfff
+        Memory behind bridge: f6c00000-f7cfffff
+        Prefetchable memory behind bridge: 00000000f0000000-00000000f10fffff
+-       Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- <SERR- <PERR-
++       Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort+ <SERR- <PERR-
+        BridgeCtl: Parity- SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
+                PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
+        Capabilities: [40] Express (v2) Root Port (Slot+), MSI 00
+                DevCap: MaxPayload 128 bytes, PhantFunc 0, Latency L0s <64ns, L1 <1us
+                        ExtTag- RBE+ FLReset-
+                DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
+                        RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
+                        MaxPayload 128 bytes, MaxReadReq 128 bytes
+                DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr+ TransPend-
+                LnkCap: Port #8, Speed 5GT/s, Width x1, ASPM L0s L1, Latency L0 <1us, L1 <16us
+                        ClockPM- Surprise- LLActRep+ BwNot-
+-               LnkCtl: ASPM L1 Enabled; RCB 64 bytes Disabled- Retrain- CommClk-
++               LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk-
+                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+-               LnkSta: Speed 2.5GT/s, Width x0, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
++               LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive+ BWMgmt- ABWMgmt-
+                SltCap: AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug+ Surprise+
+                        Slot #7, PowerLimit 10.000W; Interlock- NoCompl+
+                SltCtl: Enable: AttnBtn- PwrFlt- MRL- PresDet- CmdCplt- HPIrq- LinkChg-
+                        Control: AttnInd Unknown, PwrInd Unknown, Power- Interlock-
+-               SltSta: Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet- Interlock-
+-                       Changed: MRL- PresDet- LinkState-
++               SltSta: Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet+ Interlock-
++                       Changed: MRL- PresDet- LinkState+
+                RootCtl: ErrCorrectable- ErrNon-Fatal- ErrFatal- PMEIntEna- CRSVisible-
+                RootCap: CRSVisible-
+                RootSta: PME ReqID 0000, PMEStatus- PMEPending-
+                DevCap2: Completion Timeout: Range BC, TimeoutDis+, LTR-, OBFF Not Supported ARIFwd-
+                DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-, LTR-, OBFF Disabled ARIFwd-
+                LnkCtl2: Target Link Speed: 2.5GT/s, EnterCompliance- SpeedDis-
+                         Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
+                         Compliance De-emphasis: -6dB
+                LnkSta2: Current De-emphasis Level: -3.5dB, EqualizationComplete-, EqualizationPhase1-
+                         EqualizationPhase2-, EqualizationPhase3-, LinkEqualizationRequest-
+        Capabilities: [80] MSI: Enable- Count=1/1 Maskable- 64bit-
+                Address: 00000000  Data: 0000
+        Capabilities: [90] Subsystem: Dell Device 04b3
+        Capabilities: [a0] Power Management version 2
+                Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
+                Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
+        Kernel driver in use: pcieport
+
+...
+
++11:00.0 FireWire (IEEE 1394): VIA Technologies, Inc. VT6315 Series Firewire Controller (rev 01) (prog-if 10 [OHCI])
++       Subsystem: VIA Technologies, Inc. VT6315 Series Firewire Controller
++       Physical Slot: 1
++       Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx-
++       Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
++       Latency: 0, Cache Line Size: 32 bytes
++       Interrupt: pin A routed to IRQ 19
++       Region 0: Memory at f6c00000 (64-bit, non-prefetchable) [size=2K]
++       Region 2: I/O ports at c000 [size=256]
++       Capabilities: [50] Power Management version 3
++               Flags: PMEClk- DSI- D1- D2+ AuxCurrent=0mA PME(D0-,D1-,D2+,D3hot+,D3cold+)
++               Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
++       Capabilities: [80] MSI: Enable- Count=1/1 Maskable+ 64bit+
++               Address: 0000000000000000  Data: 0000
++               Masking: 00000000  Pending: 00000000
++       Capabilities: [98] Express (v1) Endpoint, MSI 00
++               DevCap: MaxPayload 128 bytes, PhantFunc 0, Latency L0s <64ns, L1 <1us
++                       ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset-
++               DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
++                       RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
++                       MaxPayload 128 bytes, MaxReadReq 512 bytes
++               DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr+ TransPend-
++               LnkCap: Port #0, Speed 2.5GT/s, Width x1, ASPM L0s L1, Latency L0 <1us, L1 <64us
++                       ClockPM+ Surprise- LLActRep- BwNot-
++               LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk-
++                       ExtSynch- ClockPM+ AutWidDis- BWInt- AutBWInt-
++               LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk- DLActive- BWMgmt- ABWMgmt-
++       Capabilities: [100 v1] Advanced Error Reporting
++               UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
++               UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
++               UESvrt: DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
++               CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
++               CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
++               AERCap: First Error Pointer: 14, GenCap+ CGenEn- ChkCap+ ChkEn-
++       Capabilities: [130 v1] Device Serial Number 00-11-06-ff-ff-00-00-03
++       Kernel driver in use: firewire_ohci
+
+
+In contrast, upon eject 'LnkCtl: ASPM Disabled' isn't changed back (see below lspci diff).
+Well, thats good, but wasn't it already supposed to be 'Disabled' during bootup? Is pcieport or acpiphp
+ignoring pcie_aspm=off?
+
+
+ 00:1c.7 PCI bridge: Intel Corporation 6 Series/C200 Series Chipset Family PCI Express Root Port 8 (rev b5) (prog-if 00 [Normal decode])
+        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+        Latency: 0, Cache Line Size: 64 bytes
+        Bus: primary=00, secondary=11, subordinate=16, sec-latency=0
+        I/O behind bridge: 0000c000-0000dfff
+        Memory behind bridge: f6c00000-f7cfffff
+        Prefetchable memory behind bridge: 00000000f0000000-00000000f10fffff
+        Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort+ <SERR- <PERR-
+        BridgeCtl: Parity- SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
+                PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
+        Capabilities: [40] Express (v2) Root Port (Slot+), MSI 00
+                DevCap: MaxPayload 128 bytes, PhantFunc 0, Latency L0s <64ns, L1 <1us
+                        ExtTag- RBE+ FLReset-
+                DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
+                        RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
+                        MaxPayload 128 bytes, MaxReadReq 128 bytes
+-               DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr+ TransPend-
++               DevSta: CorrErr+ UncorrErr- FatalErr- UnsuppReq- AuxPwr+ TransPend-
+                LnkCap: Port #8, Speed 5GT/s, Width x1, ASPM L0s L1, Latency L0 <1us, L1 <16us
+                        ClockPM- Surprise- LLActRep+ BwNot-
+                LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk-
+                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+-               LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive+ BWMgmt- ABWMgmt-
++               LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
+                SltCap: AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug+ Surprise+
+                        Slot #7, PowerLimit 10.000W; Interlock- NoCompl+
+                SltCtl: Enable: AttnBtn- PwrFlt- MRL- PresDet- CmdCplt- HPIrq- LinkChg-
+                        Control: AttnInd Unknown, PwrInd Unknown, Power- Interlock-
+-               SltSta: Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet+ Interlock-
++               SltSta: Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet- Interlock-
+                        Changed: MRL- PresDet- LinkState+
+                RootCtl: ErrCorrectable- ErrNon-Fatal- ErrFatal- PMEIntEna- CRSVisible-
+                RootCap: CRSVisible-
+                RootSta: PME ReqID 0000, PMEStatus- PMEPending-
+                DevCap2: Completion Timeout: Range BC, TimeoutDis+, LTR-, OBFF Not Supported ARIFwd-
+                DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-, LTR-, OBFF Disabled ARIFwd-
+                LnkCtl2: Target Link Speed: 2.5GT/s, EnterCompliance- SpeedDis-
+                         Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
+                         Compliance De-emphasis: -6dB
+                LnkSta2: Current De-emphasis Level: -3.5dB, EqualizationComplete-, EqualizationPhase1-
+                         EqualizationPhase2-, EqualizationPhase3-, LinkEqualizationRequest-
+        Capabilities: [80] MSI: Enable- Count=1/1 Maskable- 64bit-
+                Address: 00000000  Data: 0000
+        Capabilities: [90] Subsystem: Dell Device 04b3
+        Capabilities: [a0] Power Management version 2
+                Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
+                Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
+        Kernel driver in use: pcieport
+
+
+Subsequent FireWire express card inserts&removals do not fidlle with 'LnkCtl: ASPM Disabled' of upstream
+00:1c.7. Also the express card itself says 'LnkCtl: ASPM Disabled'. Now the system does what it was
+asked to do during coldboot - to disable aspm. Good. ;)
+
+
+If I exchange the express card and insert the eSATA card the upstream port 00:1c.7 touches 'BWMgmt':
+
+-               LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk-
++               LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk+
+                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+-               LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
++               LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive+ BWMgmt+ ABWMgmt-
+
+The end device 11:00 itself reports 'LnkCtl: ASPM Disabled'.
+
+
+Upon eject 1c.7 it does not restore to BWMgmt- (don't know what that really is):
+
+-               LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive+ BWMgmt+ ABWMgmt-
++               LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt+ ABWMgmt-
+
+
+Once I insert back the initially used FireWire card it lives with 'BWMgmt+' of the root port 1c.7.
+Nobody cares it used to be initially 'BWMgmt-'.
+
+
+
+
+
+
+Now, once I take into my hands the NEC-based express card, it fiddles more with upstream 1c.7 port,
+or linux kernel does the job ;) :
+
+-               LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk+
++               LnkCtl: ASPM L0s L1 Enabled; RCB 64 bytes Disabled- Retrain- CommClk+
+                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+-               LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt+ ABWMgmt-
++               LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive+ BWMgmt+ ABWMgmt-
+
+Moreover, the end device 11:00 says 'LnkCtl: ASPM L0s L1 Enabled'. Hmm.
+
+Here is the full lspci at this step showing hotinsert-related changes):
+
+ 00:1c.7 PCI bridge: Intel Corporation 6 Series/C200 Series Chipset Family PCI Express Root Port 8 (rev b5) (prog-if 00 [Normal decode])
+        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+        Latency: 0, Cache Line Size: 64 bytes
+        Bus: primary=00, secondary=11, subordinate=16, sec-latency=0
+        I/O behind bridge: 0000c000-0000dfff
+        Memory behind bridge: f6c00000-f7cfffff
+        Prefetchable memory behind bridge: 00000000f0000000-00000000f10fffff
+        Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort+ <SERR- <PERR-
+        BridgeCtl: Parity- SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
+                PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
+        Capabilities: [40] Express (v2) Root Port (Slot+), MSI 00
+                DevCap: MaxPayload 128 bytes, PhantFunc 0, Latency L0s <64ns, L1 <1us
+                        ExtTag- RBE+ FLReset-
+                DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
+                        RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
+                        MaxPayload 128 bytes, MaxReadReq 128 bytes
+                DevSta: CorrErr+ UncorrErr- FatalErr- UnsuppReq- AuxPwr+ TransPend-
+                LnkCap: Port #8, Speed 5GT/s, Width x1, ASPM L0s L1, Latency L0 <512ns, L1 <16us
+                        ClockPM- Surprise- LLActRep+ BwNot-
+-               LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk+
++               LnkCtl: ASPM L0s L1 Enabled; RCB 64 bytes Disabled- Retrain- CommClk+
+                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+-               LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt+ ABWMgmt-
++               LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive+ BWMgmt+ ABWMgmt-
+                SltCap: AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug+ Surprise+
+                        Slot #7, PowerLimit 10.000W; Interlock- NoCompl+
+                SltCtl: Enable: AttnBtn- PwrFlt- MRL- PresDet- CmdCplt- HPIrq- LinkChg-
+                        Control: AttnInd Unknown, PwrInd Unknown, Power- Interlock-
+-               SltSta: Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet- Interlock-
++               SltSta: Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet+ Interlock-
+                        Changed: MRL- PresDet- LinkState+
+                RootCtl: ErrCorrectable- ErrNon-Fatal- ErrFatal- PMEIntEna- CRSVisible-
+                RootCap: CRSVisible-
+                RootSta: PME ReqID 0000, PMEStatus- PMEPending-
+                DevCap2: Completion Timeout: Range BC, TimeoutDis+, LTR-, OBFF Not Supported ARIFwd-
+                DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-, LTR-, OBFF Disabled ARIFwd-
+                LnkCtl2: Target Link Speed: 2.5GT/s, EnterCompliance- SpeedDis-
+                         Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
+                         Compliance De-emphasis: -6dB
+                LnkSta2: Current De-emphasis Level: -3.5dB, EqualizationComplete-, EqualizationPhase1-
+                         EqualizationPhase2-, EqualizationPhase3-, LinkEqualizationRequest-
+        Capabilities: [80] MSI: Enable- Count=1/1 Maskable- 64bit-
+                Address: 00000000  Data: 0000
+        Capabilities: [90] Subsystem: Dell Device 04b3
+        Capabilities: [a0] Power Management version 2
+                Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
+                Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
+        Kernel driver in use: pcieport
+ 
+
++11:00.0 USB controller: NEC Corporation uPD720200 USB 3.0 Host Controller (rev 03) (prog-if 30 [XHCI])
++       Subsystem: NEC Corporation uPD720200 USB 3.0 Host Controller
++       Physical Slot: 1
++       Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx+
++       Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
++       Latency: 0, Cache Line Size: 64 bytes
++       Interrupt: pin A routed to IRQ 19
++       Region 0: Memory at f6c00000 (64-bit, non-prefetchable) [size=8K]
++       Capabilities: [50] Power Management version 3
++               Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold-)
++               Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
++       Capabilities: [70] MSI: Enable- Count=1/8 Maskable- 64bit+
++               Address: 0000000000000000  Data: 0000
++       Capabilities: [90] MSI-X: Enable+ Count=8 Masked-
++               Vector table: BAR=0 offset=00001000
++               PBA: BAR=0 offset=00001080
++       Capabilities: [a0] Express (v2) Endpoint, MSI 00
++               DevCap: MaxPayload 128 bytes, PhantFunc 0, Latency L0s unlimited, L1 unlimited
++                       ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset-
++               DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
++                       RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop+
++                       MaxPayload 128 bytes, MaxReadReq 512 bytes
++               DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr- TransPend-
++               LnkCap: Port #0, Speed 5GT/s, Width x1, ASPM L0s L1, Latency L0 <4us, L1 unlimited
++                       ClockPM+ Surprise- LLActRep- BwNot-
++               LnkCtl: ASPM L0s L1 Enabled; RCB 64 bytes Disabled- Retrain- CommClk+
++                       ExtSynch- ClockPM+ AutWidDis- BWInt- AutBWInt-
++               LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
++               DevCap2: Completion Timeout: Not Supported, TimeoutDis+, LTR+, OBFF Not Supported
++               DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-, LTR-, OBFF Disabled
++               LnkCtl2: Target Link Speed: 5GT/s, EnterCompliance- SpeedDis-
++                        Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
++                        Compliance De-emphasis: -6dB
++               LnkSta2: Current De-emphasis Level: -3.5dB, EqualizationComplete-, EqualizationPhase1-
++                        EqualizationPhase2-, EqualizationPhase3-, LinkEqualizationRequest-
++       Capabilities: [100 v1] Advanced Error Reporting
++               UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
++               UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
++               UESvrt: DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
++               CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
++               CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
++               AERCap: First Error Pointer: 00, GenCap- CGenEn- ChkCap- ChkEn-
++       Capabilities: [140 v1] Device Serial Number ff-ff-ff-ff-ff-ff-ff-ff
++       Capabilities: [150 v1] Latency Tolerance Reporting
++               Max snoop latency: 0ns
++               Max no snoop latency: 0ns
++       Kernel driver in use: xhci_hcd
++
+
+
+Then, once I eject the NEC-based card it leaves my root port 1c.7 with ASPM enabled.
+At least in this moment I would have thought it should be restored into original
+state, that is into 'Disabled':
+
++++ lspci_vvv_inserted_NEC_card__ejected_but_unnoticed.txt      2013-06-07 03:09:36.000000000 +0200
+@@ -290,48 +290,48 @@
+ 00:1c.7 PCI bridge: Intel Corporation 6 Series/C200 Series Chipset Family PCI Express Root Port 8 (rev b5) (prog-if 00 [Normal decode])
+        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+        Latency: 0, Cache Line Size: 64 bytes
+        Bus: primary=00, secondary=11, subordinate=16, sec-latency=0
+        I/O behind bridge: 0000c000-0000dfff
+        Memory behind bridge: f6c00000-f7cfffff
+        Prefetchable memory behind bridge: 00000000f0000000-00000000f10fffff
+        Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort+ <SERR- <PERR-
+        BridgeCtl: Parity- SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
+                PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
+        Capabilities: [40] Express (v2) Root Port (Slot+), MSI 00
+                DevCap: MaxPayload 128 bytes, PhantFunc 0, Latency L0s <64ns, L1 <1us
+                        ExtTag- RBE+ FLReset-
+                DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
+                        RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
+                        MaxPayload 128 bytes, MaxReadReq 128 bytes
+                DevSta: CorrErr+ UncorrErr- FatalErr- UnsuppReq- AuxPwr+ TransPend-
+                LnkCap: Port #8, Speed 5GT/s, Width x1, ASPM L0s L1, Latency L0 <512ns, L1 <16us
+                        ClockPM- Surprise- LLActRep+ BwNot-
+-               LnkCtl: ASPM L0s L1 Enabled; RCB 64 bytes Disabled- Retrain- CommClk+
++               LnkCtl: ASPM L1 Enabled; RCB 64 bytes Disabled- Retrain- CommClk+
+                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+-               LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive+ BWMgmt+ ABWMgmt-
++               LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt+ ABWMgmt-
+                SltCap: AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug+ Surprise+
+                        Slot #7, PowerLimit 10.000W; Interlock- NoCompl+
+                SltCtl: Enable: AttnBtn- PwrFlt- MRL- PresDet- CmdCplt- HPIrq- LinkChg-
+                        Control: AttnInd Unknown, PwrInd Unknown, Power- Interlock-
+-               SltSta: Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet+ Interlock-
++               SltSta: Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet- Interlock-
+                        Changed: MRL- PresDet- LinkState+
+                RootCtl: ErrCorrectable- ErrNon-Fatal- ErrFatal- PMEIntEna- CRSVisible-
+                RootCap: CRSVisible-
+                RootSta: PME ReqID 0000, PMEStatus- PMEPending-
+                DevCap2: Completion Timeout: Range BC, TimeoutDis+, LTR-, OBFF Not Supported ARIFwd-
+                DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-, LTR-, OBFF Disabled ARIFwd-
+                LnkCtl2: Target Link Speed: 2.5GT/s, EnterCompliance- SpeedDis-
+                         Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
+                         Compliance De-emphasis: -6dB
+                LnkSta2: Current De-emphasis Level: -3.5dB, EqualizationComplete-, EqualizationPhase1-
+                         EqualizationPhase2-, EqualizationPhase3-, LinkEqualizationRequest-
+        Capabilities: [80] MSI: Enable- Count=1/1 Maskable- 64bit-
+                Address: 00000000  Data: 0000
+        Capabilities: [90] Subsystem: Dell Device 04b3
+        Capabilities: [a0] Power Management version 2
+                Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
+                Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
+        Kernel driver in use: pcieport
+
+
+
+During repeated subsequent inserts of the NEC-based card it plays with again with the ASPM
+(that's not new here) and does not bother with 'BWMgmt+', whatever that was good for for the
+eSATA card earlier above:
+
+-               LnkCtl: ASPM L1 Enabled; RCB 64 bytes Disabled- Retrain- CommClk+
++               LnkCtl: ASPM L0s L1 Enabled; RCB 64 bytes Disabled- Retrain- CommClk+
+                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+-               LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt+ ABWMgmt-
++               LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive+ BWMgmt+ ABWMgmt-
+                SltCap: AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug+ Surprise+
+                        Slot #7, PowerLimit 10.000W; Interlock- NoCompl+
+                SltCtl: Enable: AttnBtn- PwrFlt- MRL- PresDet- CmdCplt- HPIrq- LinkChg-
+                        Control: AttnInd Unknown, PwrInd Unknown, Power- Interlock-
+-               SltSta: Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet- Interlock-
++               SltSta: Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet+ Interlock-
+                        Changed: MRL- PresDet- LinkState+
+
+
+Likewise, the end device 11:00 has again 'LnkCtl: ASPM L0s L1 Enabled'.
+
+When I am too quick in grabbing snapshot of files upon hotremoval of the xHCI NEC-based card
+I eventually trip over this intermediate step (which maybe helps you to see what is delaying
+removal of the xhci_hcd device?):
+
+--- lspci_vvv_inserted_NEC_card__ejected_but_unnoticed__inserted.txt    2013-06-07 03:10:33.000000000 +0200
++++ lspci_vvv_inserted_NEC_card__ejected_but_unnoticed__inserted__ejected_but_unnoticed.txt     2013-06-07 03:12:59.000000000 +0200
+@@ -292,47 +292,47 @@
+        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+        Latency: 0, Cache Line Size: 64 bytes
+        Bus: primary=00, secondary=11, subordinate=16, sec-latency=0
+        I/O behind bridge: 0000c000-0000dfff
+        Memory behind bridge: f6c00000-f7cfffff
+        Prefetchable memory behind bridge: 00000000f0000000-00000000f10fffff
+        Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort+ <SERR- <PERR-
+        BridgeCtl: Parity- SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
+                PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
+        Capabilities: [40] Express (v2) Root Port (Slot+), MSI 00
+                DevCap: MaxPayload 128 bytes, PhantFunc 0, Latency L0s <64ns, L1 <1us
+                        ExtTag- RBE+ FLReset-
+                DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
+                        RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
+                        MaxPayload 128 bytes, MaxReadReq 128 bytes
+                DevSta: CorrErr+ UncorrErr- FatalErr- UnsuppReq- AuxPwr+ TransPend-
+                LnkCap: Port #8, Speed 5GT/s, Width x1, ASPM L0s L1, Latency L0 <512ns, L1 <16us
+                        ClockPM- Surprise- LLActRep+ BwNot-
+                LnkCtl: ASPM L0s L1 Enabled; RCB 64 bytes Disabled- Retrain- CommClk+
+                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+-               LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive+ BWMgmt+ ABWMgmt-
++               LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt+ ABWMgmt-
+                SltCap: AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug+ Surprise+
+                        Slot #7, PowerLimit 10.000W; Interlock- NoCompl+
+                SltCtl: Enable: AttnBtn- PwrFlt- MRL- PresDet- CmdCplt- HPIrq- LinkChg-
+                        Control: AttnInd Unknown, PwrInd Unknown, Power- Interlock-
+-               SltSta: Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet+ Interlock-
+-                       Changed: MRL- PresDet- LinkState+
++               SltSta: Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet- Interlock-
++                       Changed: MRL- PresDet+ LinkState+
+                RootCtl: ErrCorrectable- ErrNon-Fatal- ErrFatal- PMEIntEna- CRSVisible-
+                RootCap: CRSVisible-
+                RootSta: PME ReqID 0000, PMEStatus- PMEPending-
+                DevCap2: Completion Timeout: Range BC, TimeoutDis+, LTR-, OBFF Not Supported ARIFwd-
+                DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-, LTR-, OBFF Disabled ARIFwd-
+                LnkCtl2: Target Link Speed: 2.5GT/s, EnterCompliance- SpeedDis-
+                         Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
+                         Compliance De-emphasis: -6dB
+                LnkSta2: Current De-emphasis Level: -3.5dB, EqualizationComplete-, EqualizationPhase1-
+                         EqualizationPhase2-, EqualizationPhase3-, LinkEqualizationRequest-
+        Capabilities: [80] MSI: Enable- Count=1/1 Maskable- 64bit-
+                Address: 00000000  Data: 0000
+        Capabilities: [90] Subsystem: Dell Device 04b3
+        Capabilities: [a0] Power Management version 2
+                Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
+                Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
+        Kernel driver in use: pcieport
+
+
+After a while, the 'LnkCtl: ASPM L0s L1 Enabled' will be changed to 'LnkCtl: ASPM L1 Enabled'.
+Is this maybe slow in my case because this 11:00 governed by xhci_hcd has 3 MSI-X interrupts
+while the "onboard" TI xHCI host (0b:00 always saying 'LnkCtl: ASPM L1 Enabled') has different
+3 MSI-X interrupts? Could there be an interference somewhere in the kernel? Is this related
+to the ASPM mis-behavior? Well, in the past I already did test kernels with the USB3 TI host
+controller disabled in BIOS so maybe hotremoval of a USB controller will just always be slower,
+in the range of 15-25s. In the end, the sysfs entries are released as I said in another thread
+already (Re: 3.8.2: stale pci device info for a previously inserted express card).
+
+
+Thank you,
+Martin
