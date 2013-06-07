@@ -1,54 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f180.google.com ([209.85.214.180]:39469 "EHLO
-	mail-ob0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753098Ab3FFT2t (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Jun 2013 15:28:49 -0400
-Received: by mail-ob0-f180.google.com with SMTP id eh20so5172498obb.25
-        for <linux-pci@vger.kernel.org>; Thu, 06 Jun 2013 12:28:49 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1370542987.2209.18.camel@joe-AO722>
-References: <1370542251-27387-1-git-send-email-betty.dall@hp.com>
- <1370542251-27387-5-git-send-email-betty.dall@hp.com> <1370542987.2209.18.camel@joe-AO722>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 6 Jun 2013 13:28:28 -0600
-Message-ID: <CAErSpo56-AtgJzkJqK+8ggdPiPPvX_AVWhsirZRdNLhdAn8qVw@mail.gmail.com>
-Subject: Re: [PATCH v2 4/6] PCI/ACPI: Move AER severity defines to aer.h
-To: Joe Perches <joe@perches.com>
-Cc: Betty Dall <betty.dall@hp.com>, "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Chen Gong <gong.chen@linux.intel.com>,
-	"Pearson, Greg" <greg.pearson@hp.com>,
-	Huang Ying <ying.huang@intel.com>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from aserp1040.oracle.com ([141.146.126.69]:21983 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756072Ab3FGWbq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 7 Jun 2013 18:31:46 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v3 25/27] PCI, x86, ACPI: Link acpi ioapic register to ioapic
+Date: Fri,  7 Jun 2013 15:31:11 -0700
+Message-Id: <1370644273-10495-26-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1370644273-10495-1-git-send-email-yinghai@kernel.org>
+References: <1370644273-10495-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 6, 2013 at 12:23 PM, Joe Perches <joe@perches.com> wrote:
-> On Thu, 2013-06-06 at 12:10 -0600, Betty Dall wrote:
->> The function aer_recover_queue() is a public interface and the
->> severity argument uses #defines that are in the private header
->> pci/pcie/aer/aerdrv.h.
->>
->> This patch moves the #defines from pci/pcie/aer/aerdrv.h to
->> include/linux/aer.h.
-> []
->> diff --git a/include/linux/aer.h b/include/linux/aer.h
-> []
->> -extern void cper_print_aer(const char *prefix, struct pci_dev *dev,
->> +void cper_print_aer(const char *prefix, struct pci_dev *dev,
->>                          int cper_severity, struct aer_capability_regs *aer);
->
-> Can you please also realign the arguments on subsequent
-> lines to the open parenthesis of the first line and reflow
-> then to 80 cols when appropriate?
+During ioapic hotplug, acpi_register_ioapic will be called.
+Now for x86, that function is blank.
+Fill that will update __mp_register_ioapic to use those ioapic.
 
-I can do this when I apply them, so don't bother reposting unless you
-have more substantive changes to make.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ arch/x86/kernel/acpi/boot.c | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
 
->> -extern void aer_recover_queue(int domain, unsigned int bus, unsigned int devfn,
->> +void aer_recover_queue(int domain, unsigned int bus, unsigned int devfn,
->>                             int severity);
->
->
+diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
+index 7190d0d..5dca557 100644
+--- a/arch/x86/kernel/acpi/boot.c
++++ b/arch/x86/kernel/acpi/boot.c
+@@ -700,16 +700,18 @@ EXPORT_SYMBOL(acpi_unmap_lsapic);
+ 
+ int acpi_register_ioapic(acpi_handle handle, u64 phys_addr, u32 gsi_base)
+ {
+-	/* TBD */
+-	return -EINVAL;
++	unsigned long long id = 0;
++
++	acpi_evaluate_integer(handle, "_UID", NULL, &id);
++
++	return	__mp_register_ioapic(id, phys_addr, gsi_base, true);
+ }
+ 
+ EXPORT_SYMBOL(acpi_register_ioapic);
+ 
+ int acpi_unregister_ioapic(acpi_handle handle, u32 gsi_base)
+ {
+-	/* TBD */
+-	return -EINVAL;
++	return mp_unregister_ioapic(gsi_base);
+ }
+ 
+ EXPORT_SYMBOL(acpi_unregister_ioapic);
+-- 
+1.8.1.4
+
