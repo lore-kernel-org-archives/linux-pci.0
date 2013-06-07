@@ -1,50 +1,153 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:53003 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754405Ab3FUHTo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Jun 2013 03:19:44 -0400
-Date: Fri, 21 Jun 2013 09:19:40 +0200
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Grant Likely <grant.likely@secretlab.ca>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Russell King <linux@arm.linux.org.uk>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	linux-arm-kernel@lists.infradead.org,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>
-Subject: Re: [PATCHv3 01/11] irqdomain: add irq_alloc_mapping() function
-Message-ID: <20130621091940.03229521@skate>
-In-Reply-To: <1371660979-21588-2-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1371660979-21588-1-git-send-email-thomas.petazzoni@free-electrons.com>
-	<1371660979-21588-2-git-send-email-thomas.petazzoni@free-electrons.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v3 27/27] PCI, x86, ACPI: get ioapic address from acpi device
+Date: Fri,  7 Jun 2013 15:31:13 -0700
+Message-Id: <1370644273-10495-28-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1370644273-10495-1-git-send-email-yinghai@kernel.org>
+References: <1370644273-10495-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Grant,
+Some ioapic controllers do not show up on pci config space,
+or pci device is there but no bar is used and is set by firmware in
+other non standard registers.
 
-On Wed, 19 Jun 2013 18:56:09 +0200, Thomas Petazzoni wrote:
-> This commit extends the irqdomain subsystem with an
-> irq_alloc_mapping() function which allows to let the irqdomain code
-> find an available hwirq number in the range [ 0 ; domain size ] for
-> the given domain, and create a virq mapping for it.
-> 
-> Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+We can get ioapic address from ACPI0009's _CRS.
 
-Any comments? Any chance that you could take this for 3.11?
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/ioapic.c | 86 +++++++++++++++++++++++++++++++++++++++++++---------
+ 1 file changed, 71 insertions(+), 15 deletions(-)
 
-Thanks!
-
-Thomas
+diff --git a/drivers/pci/ioapic.c b/drivers/pci/ioapic.c
+index 60351b2..41f7c69 100644
+--- a/drivers/pci/ioapic.c
++++ b/drivers/pci/ioapic.c
+@@ -32,6 +32,36 @@ struct acpi_pci_ioapic {
+ static LIST_HEAD(ioapic_list);
+ static DEFINE_MUTEX(ioapic_list_lock);
+ 
++static acpi_status setup_res(struct acpi_resource *acpi_res, void *data)
++{
++	struct resource *res;
++	struct acpi_resource_address64 addr;
++	acpi_status status;
++	unsigned long flags;
++	u64 start, end;
++
++	status = acpi_resource_to_address64(acpi_res, &addr);
++	if (!ACPI_SUCCESS(status))
++		return AE_OK;
++
++	if (addr.resource_type == ACPI_MEMORY_RANGE) {
++		if (addr.info.mem.caching == ACPI_PREFETCHABLE_MEMORY)
++			return AE_OK;
++		flags = IORESOURCE_MEM;
++	} else
++		return AE_OK;
++
++	start = addr.minimum + addr.translation_offset;
++	end = addr.maximum + addr.translation_offset;
++
++	res = data;
++	res->flags = flags;
++	res->start = start;
++	res->end = end;
++
++	return AE_OK;
++}
++
+ static void handle_ioapic_add(acpi_handle handle, struct pci_dev **pdev,
+ 				 u32 *pgsi_base)
+ {
+@@ -54,33 +84,56 @@ static void handle_ioapic_add(acpi_handle handle, struct pci_dev **pdev,
+ 		return;
+ 
+ 	dev = acpi_get_pci_dev(handle);
+-	if (!dev)
+-		return;
++	if (!dev || !pci_resource_len(dev, 0)) {
++		struct acpi_device_info *info;
++		char *hid = NULL;
++
++		status = acpi_get_object_info(handle, &info);
++		if (ACPI_FAILURE(status))
++			goto exit_put;
++		if (info->valid & ACPI_VALID_HID)
++			hid = info->hardware_id.string;
++		if (!hid || strcmp(hid, "ACPI0009")) {
++			kfree(info);
++			goto exit_put;
++		}
++		kfree(info);
++		memset(res, 0, sizeof(*res));
++		acpi_walk_resources(handle, METHOD_NAME__CRS, setup_res, res);
++		if (!res->flags)
++			goto exit_put;
++	}
+ 
+ 	acpi_get_name(handle, ACPI_FULL_PATHNAME, &buffer);
+ 
+ 	gsi_base = gsb;
+ 	type = "IOxAPIC";
++	if (dev) {
++		ret = pci_enable_device(dev);
++		if (ret < 0)
++			goto exit_put;
+ 
+-	ret = pci_enable_device(dev);
+-	if (ret < 0)
+-		goto exit_put;
+-
+-	pci_set_master(dev);
++		pci_set_master(dev);
+ 
+-	if (dev->class == PCI_CLASS_SYSTEM_PIC_IOAPIC)
+-		type = "IOAPIC";
++		if (dev->class == PCI_CLASS_SYSTEM_PIC_IOAPIC)
++			type = "IOAPIC";
+ 
+-	if (pci_request_region(dev, 0, type))
+-		goto exit_disable;
++		if (pci_resource_len(dev, 0)) {
++			if (pci_request_region(dev, 0, type))
++				goto exit_disable;
+ 
+-	res = &dev->resource[0];
++			res = &dev->resource[0];
++		}
++	}
+ 
+-	if (acpi_register_ioapic(handle, res->start, gsi_base))
+-		goto exit_release;
++	if (acpi_register_ioapic(handle, res->start, gsi_base)) {
++		if (dev)
++			goto exit_release;
++		return;
++	}
+ 
+ 	pr_info("%s %s %s at %pR, GSI %u\n",
+-		dev_name(&dev->dev), objname, type,
++		dev ? dev_name(&dev->dev) : "", objname, type,
+ 		res, gsi_base);
+ 
+ 	*pdev = dev;
+@@ -100,6 +153,9 @@ static void handle_ioapic_remove(acpi_handle handle, struct pci_dev *dev,
+ {
+ 	acpi_unregister_ioapic(handle, gsi_base);
+ 
++	if (!dev)
++		return;
++
+ 	pci_release_region(dev, 0);
+ 	pci_disable_device(dev);
+ 	pci_dev_put(dev);
 -- 
-Thomas Petazzoni, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
+1.8.1.4
+
