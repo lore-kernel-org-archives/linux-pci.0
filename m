@@ -1,129 +1,249 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: stable@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, Jiang Liu <jiang.liu@huawei.com>
-Cc: Gavin Guo <tuffkidtt@gmail.com>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v3.9 stable] PCI: acpiphp: Re-enumerate devices when host bridge receives Bus Check
-Date: Wed, 26 Jun 2013 14:34:29 -0700
-Message-Id: <1372282469-7364-1-git-send-email-yinghai@kernel.org>
-In-Reply-To: <20130605223852.GA16729@kroah.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout3.samsung.com ([203.254.224.33]:59812 "EHLO
+	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751527Ab3FGJbM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 7 Jun 2013 05:31:12 -0400
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Kukjin Kim' <kgene.kim@samsung.com>,
+	'Bjorn Helgaas' <bhelgaas@google.com>
+Cc: linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org,
+	devicetree-discuss@lists.ozlabs.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	'Grant Likely' <grant.likely@secretlab.ca>,
+	'Andrew Murray' <andrew.murray@arm.com>,
+	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
+	'Thierry Reding' <thierry.reding@avionic-design.de>,
+	'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>,
+	'Surendranath Gurivireddy Balla' <suren.reddy@samsung.com>,
+	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
+	'Thomas Abraham' <thomas.abraham@linaro.org>,
+	Jingoo Han <jg1.han@samsung.com>
+References: <000d01ce6360$9504e7e0$bf0eb7a0$@samsung.com>
+In-reply-to: <000d01ce6360$9504e7e0$bf0eb7a0$@samsung.com>
+Subject: Re: [PATCH V3 1/3] Add PCIe driver for Samsung Exynos
+Date: Fri, 07 Jun 2013 18:31:10 +0900
+Message-id: <001001ce6361$bec608b0$3c521a10$@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Backporting for v3.9 for 3f327e39b4 (PCI: acpiphp: Re-enumerate devices when host bridge receives Bus Check).
+On Friday, June 07, 2013 6:23 PM, Jingoo Han wrote:
+> 
+> Exynos5440 has a PCIe controller which can be used as Root Complex.
+> This driver supports a PCIe controller as Root Complex mode.
+> 
+> Signed-off-by: Surendranath Gurivireddy Balla <suren.reddy@samsung.com>
+> Signed-off-by: Siva Reddy Kallam <siva.kallam@samsung.com>
+> Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+> ---
+>  .../devicetree/bindings/pci/exynos-pcie.txt        |   56 +
+>  drivers/pci/host/Kconfig                           |    5 +
+>  drivers/pci/host/Makefile                          |    1 +
+>  drivers/pci/host/pci-exynos.c                      | 1124 ++++++++++++++++++++
+>  4 files changed, 1186 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/pci/exynos-pcie.txt
+>  create mode 100644 drivers/pci/host/pci-exynos.c
+> 
 
-When a PCI host bridge device receives a Bus Check notification, we
-must re-enumerate starting with the bridge to discover changes (devices
-that have been added or removed).
+Hi all,
 
-Prior to 668192b678 ("PCI: acpiphp: Move host bridge hotplug to
-pci_root.c"), this happened in _handle_hotplug_event_bridge().  After that
-commit, _handle_hotplug_event_bridge() is not installed for host bridges,
-and the host bridge notify handler, _handle_hotplug_event_root() did not
-re-enumerate.
+Here is the lspci -vv output.
+I tested Exynos PCIe with two e1000e LAN cards.
 
-This patch adds re-enumeration to _handle_hotplug_event_root().
+00:00.0 PCI bridge: Samsung Electronics Co Ltd Device a549 (rev 01) (prog-if 00 [Normal decode])
+        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr+ Stepping- SERR+ FastB2B- DisINTx-
+        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+        Latency: 0, Cache Line Size: 64 bytes
+        Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
+        I/O behind bridge: 00000000-00000fff
+        Memory behind bridge: 40300000-403fffff
+        Prefetchable memory behind bridge: 40400000-404fffff
+        Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- <SERR- <PERR-
+        BridgeCtl: Parity+ SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
+                PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
+        Capabilities: [40] Power Management version 3
+                Flags: PMEClk- DSI- D1+ D2- AuxCurrent=375mA PME(D0+,D1+,D2-,D3hot+,D3cold-)
+                Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
+        Capabilities: [50] MSI: Enable- Count=1/1 Maskable- 64bit+
+                Address: 0000000000000000  Data: 0000
+        Capabilities: [70] Express (v2) Root Port (Slot-), MSI 00
+                DevCap: MaxPayload 512 bytes, PhantFunc 0, Latency L0s <64ns, L1 <1us
+                        ExtTag+ RBE+ FLReset-
+                DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
+                        RlxdOrd+ ExtTag+ PhantFunc- AuxPwr- NoSnoop-
+                        MaxPayload 128 bytes, MaxReadReq 512 bytes
+                DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr- TransPend-
+                LnkCap: Port #0, Speed 5GT/s, Width x4, ASPM L0s L1, Latency L0 <64ns, L1 <2us
+                        ClockPM- Surprise- LLActRep+ BwNot+
+                LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk-
+                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+                LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk- DLActive+ BWMgmt+ ABWMgmt-
+                RootCtl: ErrCorrectable- ErrNon-Fatal- ErrFatal- PMEIntEna- CRSVisible-
+                RootCap: CRSVisible-
+                RootSta: PME ReqID 0000, PMEStatus- PMEPending-
+                DevCap2: Completion Timeout: Range ABCD, TimeoutDis+ ARIFwd-
+                DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis- ARIFwd-
+                LnkCtl2: Target Link Speed: 5GT/s, EnterCompliance- SpeedDis-, Selectable De-emphasis: -6dB
+                         Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
+                         Compliance De-emphasis: -6dB
+                LnkSta2: Current De-emphasis Level: -3.5dB, EqualizationComplete-, EqualizationPhase1-
+                         EqualizationPhase2-, EqualizationPhase3-, LinkEqualizationRequest-
+        Capabilities: [100 v2] Advanced Error Reporting
+                UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+                UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+                UESvrt: DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
+                CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
+                CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
+                AERCap: First Error Pointer: 00, GenCap+ CGenEn- ChkCap+ ChkEn-
+        Capabilities: [148 v1] Virtual Channel
+                Caps:   LPEVC=0 RefClk=100ns PATEntryBits=1
+                Arb:    Fixed- WRR32- WRR64- WRR128-
+                Ctrl:   ArbSelect=Fixed
+                Status: InProgress-
+                VC0:    Caps:   PATOffset=00 MaxTimeSlots=1 RejSnoopTrans-
+                        Arb:    Fixed- WRR32- WRR64- WRR128- TWRR128- WRR256-
+                        Ctrl:   Enable+ ID=0 ArbSelect=Fixed TC/VC=ff
+                        Status: NegoPending- InProgress-
+        Kernel driver in use: pcieport
 
-This fixes cases where we don't notice the addition or removal of
-PCI devices, e.g., the PCI-to-USB ExpressCard in the bugzilla below.
+01:00.0 Ethernet controller: Intel Corporation 82574L Gigabit Network Connection
+        Subsystem: Intel Corporation Gigabit CT Desktop Adapter
+        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr+ Stepping- SERR+ FastB2B- DisINTx-
+        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+        Latency: 0, Cache Line Size: 64 bytes
+        Interrupt: pin A routed to IRQ 53
+        Region 0: Memory at 40380000 (32-bit, non-prefetchable) [size=128K]
+        Region 1: Memory at 40300000 (32-bit, non-prefetchable) [size=512K]
+        Region 2: I/O ports at 40200000 [size=32]
+        Region 3: Memory at 403a0000 (32-bit, non-prefetchable) [size=16K]
+        [virtual] Expansion ROM at 40400000 [disabled] [size=256K]
+        Capabilities: [c8] Power Management version 2
+                Flags: PMEClk- DSI+ D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
+                Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=1 PME-
+        Capabilities: [d0] MSI: Enable- Count=1/1 Maskable- 64bit+
+                Address: 0000000000000000  Data: 0000
+        Capabilities: [e0] Express (v1) Endpoint, MSI 00
+                DevCap: MaxPayload 256 bytes, PhantFunc 0, Latency L0s <512ns, L1 <64us
+                        ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset-
+                DevCtl: Report errors: Correctable+ Non-Fatal+ Fatal+ Unsupported+
+                        RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+
+                        MaxPayload 128 bytes, MaxReadReq 512 bytes
+                DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr+ TransPend-
+                LnkCap: Port #4, Speed 2.5GT/s, Width x1, ASPM L0s L1, Latency L0 <128ns, L1 <64us
+                        ClockPM- Surprise- LLActRep- BwNot-
+                LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk-
+                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+                LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
+        Capabilities: [a0] MSI-X: Enable- Count=5 Masked-
+                Vector table: BAR=3 offset=00000000
+                PBA: BAR=3 offset=00002000
+        Capabilities: [100 v1] Advanced Error Reporting
+                UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+                UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+                UESvrt: DLP+ SDES- TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
+                CESta:  RxErr+ BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
+                CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
+                AERCap: First Error Pointer: 00, GenCap- CGenEn- ChkCap- ChkEn-
+        Capabilities: [140 v1] Device Serial Number 68-05-ca-ff-ff-11-5e-75
+        Kernel driver in use: e1000e
 
--v1: Backport of 3f327e39b4 to v3.9 by Bjorn Helgaas <bhelgaas@google.com>
--v2: use request_module("acpiphp") for acpiphp as module instead of built-in.
+10:00.0 PCI bridge: Samsung Electronics Co Ltd Device a549 (rev 01) (prog-if 00 [Normal decode])
+        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr+ Stepping- SERR+ FastB2B- DisINTx-
+        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+        Latency: 0, Cache Line Size: 64 bytes
+        Bus: primary=10, secondary=11, subordinate=11, sec-latency=0
+        I/O behind bridge: 00000000-00000fff
+        Memory behind bridge: 60300000-603fffff
+        Prefetchable memory behind bridge: 60400000-604fffff
+        Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- <SERR- <PERR-
+        BridgeCtl: Parity+ SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
+                PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
+        Capabilities: [40] Power Management version 3
+                Flags: PMEClk- DSI- D1+ D2- AuxCurrent=375mA PME(D0+,D1+,D2-,D3hot+,D3cold-)
+                Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
+        Capabilities: [50] MSI: Enable- Count=1/1 Maskable- 64bit+
+                Address: 0000000000000000  Data: 0000
+        Capabilities: [70] Express (v2) Root Port (Slot-), MSI 00
+                DevCap: MaxPayload 512 bytes, PhantFunc 0, Latency L0s <64ns, L1 <1us
+                        ExtTag+ RBE+ FLReset-
+                DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
+                        RlxdOrd+ ExtTag+ PhantFunc- AuxPwr- NoSnoop-
+                        MaxPayload 128 bytes, MaxReadReq 512 bytes
+                DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr- TransPend-
+                LnkCap: Port #0, Speed 5GT/s, Width x4, ASPM L0s L1, Latency L0 <64ns, L1 <2us
+                        ClockPM- Surprise- LLActRep+ BwNot+
+                LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk-
+                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+                LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk- DLActive+ BWMgmt+ ABWMgmt-
+                RootCtl: ErrCorrectable- ErrNon-Fatal- ErrFatal- PMEIntEna- CRSVisible-
+                RootCap: CRSVisible-
+                RootSta: PME ReqID 0000, PMEStatus- PMEPending-
+                DevCap2: Completion Timeout: Range ABCD, TimeoutDis+ ARIFwd-
+                DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis- ARIFwd-
+                LnkCtl2: Target Link Speed: 5GT/s, EnterCompliance- SpeedDis-, Selectable De-emphasis: -6dB
+                         Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
+                         Compliance De-emphasis: -6dB
+                LnkSta2: Current De-emphasis Level: -3.5dB, EqualizationComplete-, EqualizationPhase1-
+                         EqualizationPhase2-, EqualizationPhase3-, LinkEqualizationRequest-
+        Capabilities: [100 v2] Advanced Error Reporting
+                UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+                UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+                UESvrt: DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
+                CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
+                CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
+                AERCap: First Error Pointer: 00, GenCap+ CGenEn- ChkCap+ ChkEn-
+        Capabilities: [148 v1] Virtual Channel
+                Caps:   LPEVC=0 RefClk=100ns PATEntryBits=1
+                Arb:    Fixed- WRR32- WRR64- WRR128-
+                Ctrl:   ArbSelect=Fixed
+                Status: InProgress-
+                VC0:    Caps:   PATOffset=00 MaxTimeSlots=1 RejSnoopTrans-
+                        Arb:    Fixed- WRR32- WRR64- WRR128- TWRR128- WRR256-
+                        Ctrl:   Enable+ ID=0 ArbSelect=Fixed TC/VC=ff
+                        Status: NegoPending- InProgress-
+        Kernel driver in use: pcieport
 
-[bhelgaas: changelog, references]
-Reference: https://lkml.kernel.org/r/CAAh6nkmbKR3HTqm5ommevsBwhL_u0N8Rk7Wsms_LfP=nBgKNew@mail.gmail.com
-Reference: https://bugzilla.kernel.org/show_bug.cgi?id=57961
-Reported-by: Gavin Guo <tuffkidtt@gmail.com>
-Tested-by: Gavin Guo <tuffkidtt@gmail.com>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+11:00.0 Ethernet controller: Intel Corporation 82574L Gigabit Network Connection
+        Subsystem: Intel Corporation Gigabit CT Desktop Adapter
+        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr+ Stepping- SERR+ FastB2B- DisINTx-
+        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+        Latency: 0, Cache Line Size: 64 bytes
+        Interrupt: pin A routed to IRQ 56
+        Region 0: Memory at 60380000 (32-bit, non-prefetchable) [size=128K]
+        Region 1: Memory at 60300000 (32-bit, non-prefetchable) [size=512K]
+        Region 2: I/O ports at 60200000 [size=32]
+        Region 3: Memory at 603a0000 (32-bit, non-prefetchable) [size=16K]
+        [virtual] Expansion ROM at 60400000 [disabled] [size=256K]
+        Capabilities: [c8] Power Management version 2
+                Flags: PMEClk- DSI+ D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
+                Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=1 PME-
+        Capabilities: [d0] MSI: Enable- Count=1/1 Maskable- 64bit+
+                Address: 0000000000000000  Data: 0000
+        Capabilities: [e0] Express (v1) Endpoint, MSI 00
+                DevCap: MaxPayload 256 bytes, PhantFunc 0, Latency L0s <512ns, L1 <64us
+                        ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset-
+                DevCtl: Report errors: Correctable+ Non-Fatal+ Fatal+ Unsupported+
+                        RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+
+                        MaxPayload 128 bytes, MaxReadReq 512 bytes
+                DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr+ TransPend-
+                LnkCap: Port #4, Speed 2.5GT/s, Width x1, ASPM L0s L1, Latency L0 <128ns, L1 <64us
+                        ClockPM- Surprise- LLActRep- BwNot-
+                LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk-
+                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+                LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
+        Capabilities: [a0] MSI-X: Enable- Count=5 Masked-
+                Vector table: BAR=3 offset=00000000
+                PBA: BAR=3 offset=00002000
+        Capabilities: [100 v1] Advanced Error Reporting
+                UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+                UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+                UESvrt: DLP+ SDES- TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
+                CESta:  RxErr+ BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
+                CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
+                AERCap: First Error Pointer: 00, GenCap- CGenEn- ChkCap- ChkEn-
+        Capabilities: [140 v1] Device Serial Number 68-05-ca-ff-ff-18-44-c5
+        Kernel driver in use: e1000e
 
----
- drivers/acpi/pci_root.c            |    7 ++++++-
- drivers/pci/hotplug/acpiphp_glue.c |   14 ++++++++++++++
- include/linux/pci-acpi.h           |    2 ++
- 3 files changed, 22 insertions(+), 1 deletion(-)
 
-Index: linux-3.9.4/drivers/acpi/pci_root.c
-===================================================================
---- linux-3.9.4.orig/drivers/acpi/pci_root.c
-+++ linux-3.9.4/drivers/acpi/pci_root.c
-@@ -665,6 +665,7 @@ static void handle_root_bridge_removal(s
- 		kfree(ej_event);
- }
- 
-+void (*acpiphp_check_host_bridge)(acpi_handle handle);
- static void _handle_hotplug_event_root(struct work_struct *work)
- {
- 	struct acpi_pci_root *root;
-@@ -687,7 +688,11 @@ static void _handle_hotplug_event_root(s
- 		/* bus enumerate */
- 		printk(KERN_DEBUG "%s: Bus check notify on %s\n", __func__,
- 				 (char *)buffer.pointer);
--		if (!root)
-+		if (root) {
-+			request_module("acpiphp");
-+			if (acpiphp_check_host_bridge)
-+				acpiphp_check_host_bridge(handle);
-+		} else
- 			handle_root_bridge_insertion(handle);
- 
- 		break;
-Index: linux-3.9.4/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-3.9.4.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-3.9.4/drivers/pci/hotplug/acpiphp_glue.c
-@@ -1122,6 +1122,18 @@ check_sub_bridges(acpi_handle handle, u3
- 	return AE_OK ;
- }
- 
-+static void __acpiphp_check_host_bridge(acpi_handle handle)
-+{
-+	struct acpiphp_bridge *bridge;
-+
-+	bridge = acpiphp_handle_to_bridge(handle);
-+	if (bridge)
-+		acpiphp_check_bridge(bridge);
-+
-+	acpi_walk_namespace(ACPI_TYPE_DEVICE, handle,
-+		ACPI_UINT32_MAX, check_sub_bridges, NULL, NULL, NULL);
-+}
-+
- static void _handle_hotplug_event_bridge(struct work_struct *work)
- {
- 	struct acpiphp_bridge *bridge;
-@@ -1305,6 +1317,7 @@ static struct acpi_pci_driver acpi_pci_h
- int __init acpiphp_glue_init(void)
- {
- 	acpi_pci_register_driver(&acpi_pci_hp_driver);
-+	acpiphp_check_host_bridge = __acpiphp_check_host_bridge;
- 
- 	return 0;
- }
-@@ -1317,6 +1330,7 @@ int __init acpiphp_glue_init(void)
-  */
- void  acpiphp_glue_exit(void)
- {
-+	acpiphp_check_host_bridge = NULL;
- 	acpi_pci_unregister_driver(&acpi_pci_hp_driver);
- }
- 
-Index: linux-3.9.4/include/linux/pci-acpi.h
-===================================================================
---- linux-3.9.4.orig/include/linux/pci-acpi.h
-+++ linux-3.9.4/include/linux/pci-acpi.h
-@@ -43,6 +43,8 @@ static inline acpi_handle acpi_pci_get_b
- }
- #endif
- 
-+extern void (*acpiphp_check_host_bridge)(acpi_handle handle);
-+
- #ifdef CONFIG_ACPI_APEI
- extern bool aer_acpi_firmware_first(void);
- #else
 
