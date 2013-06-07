@@ -1,95 +1,151 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from www.linutronix.de ([62.245.132.108]:58393 "EHLO
-	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751991Ab3FJUnw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Jun 2013 16:43:52 -0400
-Date: Mon, 10 Jun 2013 22:43:41 +0200 (CEST)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Yinghai Lu <yinghai@kernel.org>
-cc: Ingo Molnar <mingo@elte.hu>, "H. Peter Anvin" <hpa@zytor.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3 17/27] genirq: Bail out early in free_desc()
-In-Reply-To: <1370644273-10495-18-git-send-email-yinghai@kernel.org>
-Message-ID: <alpine.LFD.2.02.1306102216290.22970@ionos>
-References: <1370644273-10495-1-git-send-email-yinghai@kernel.org> <1370644273-10495-18-git-send-email-yinghai@kernel.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <51B1FC83.7090402@gmail.com>
+Date: Fri, 07 Jun 2013 23:30:11 +0800
+From: Jiang Liu <liuj97@gmail.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Chris Metcalf <cmetcalf@tilera.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Jeremy Fitzhardinge <jeremy@goop.org>,
+	xen-devel <xen-devel@lists.xensource.com>
+Subject: Re: [PATCH v3, part1 04/10] PCI: mark pci_scan_bus_parented() as
+ __deprecated
+References: <1369489718-25869-1-git-send-email-jiang.liu@huawei.com> <1369489718-25869-5-git-send-email-jiang.liu@huawei.com> <CAErSpo5bysp-s-twUWgZEyJD01skjW=vXkcQBYkn_TALP83r1g@mail.gmail.com> <51B0B99C.4020009@gmail.com> <20130607143758.GA13427@phenom.dumpdata.com>
+In-Reply-To: <20130607143758.GA13427@phenom.dumpdata.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 7 Jun 2013, Yinghai Lu wrote:
-
-> We pre-reserve irq range for hot-added ioapic, and later only
-> some are used via realloc.
-> So during hot-remove, we need to clear bits in allocated_irqs
-> for both case.
+On 06/07/2013 10:37 PM, Konrad Rzeszutek Wilk wrote:
+> On Fri, Jun 07, 2013 at 12:32:28AM +0800, Jiang Liu wrote:
+>> On Thu 06 Jun 2013 04:04:36 AM CST, Bjorn Helgaas wrote:
+>>> [+cc Konrad, Jeremy, xen-devel (users of interface you're deprecating)]
+>>>
+>>> On Sat, May 25, 2013 at 7:48 AM, Jiang Liu <liuj97@gmail.com> wrote:
+>>>> Mark pci_scan_bus_parented() as __deprecated and clean up outdated
+>>>> comments.
+>>>>
+>>>> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+>>>> Cc: Chris Metcalf <cmetcalf@tilera.com>
+>>>> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+>>>> Cc: Thierry Reding <thierry.reding@avionic-design.de>
+>>>> Cc: linux-kernel@vger.kernel.org
+>>>> Cc: linux-pci@vger.kernel.org
+>>>> ---
+>>>>  arch/tile/kernel/pci.c | 3 ---
+>>>>  include/linux/pci.h    | 4 ++--
+>>>>  2 files changed, 2 insertions(+), 5 deletions(-)
+>>>>
+>>>> diff --git a/arch/tile/kernel/pci.c b/arch/tile/kernel/pci.c
+>>>> index 67237d3..936e087 100644
+>>>> --- a/arch/tile/kernel/pci.c
+>>>> +++ b/arch/tile/kernel/pci.c
+>>>> @@ -309,9 +309,6 @@ int __init pcibios_init(void)
+>>>>                          *
+>>>>                          * It reads the PCI tree for this bus into the Linux
+>>>>                          * data structures.
+>>>> -                        *
+>>>> -                        * This is inlined in linux/pci.h and calls into
+>>>> -                        * pci_scan_bus_parented() in probe.c.
+>>>>                          */
+>>>>                         pci_add_resource(&resources, &ioport_resource);
+>>>>                         pci_add_resource(&resources, &iomem_resource);
+>>>> diff --git a/include/linux/pci.h b/include/linux/pci.h
+>>>> index b0f4a82..7b23fa0 100644
+>>>> --- a/include/linux/pci.h
+>>>> +++ b/include/linux/pci.h
+>>>> @@ -720,8 +720,8 @@ void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
+>>>>  void pcibios_scan_specific_bus(int busn);
+>>>>  struct pci_bus *pci_find_bus(int domain, int busnr);
+>>>>  void pci_bus_add_devices(const struct pci_bus *bus);
+>>>> -struct pci_bus *pci_scan_bus_parented(struct device *parent, int bus,
+>>>> -                                     struct pci_ops *ops, void *sysdata);
+>>>> +struct pci_bus * __deprecated pci_scan_bus_parented(struct device *parent,
+>>>> +                       int bus, struct pci_ops *ops, void *sysdata);
+>>>>  struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops, void *sysdata);
+>>>>  struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+>>>>                                     struct pci_ops *ops, void *sysdata,
+>>>
+>>> I think this patch is a good idea, but I think we need to change the
+>>> only existing user of pci_scan_bus_parented() (pcifront_scan_root() in
+>>> drivers/pci/xen-pcifront.c) at the same time, so xen doesn't start
+>>> getting build warnings.  The deprecation warnings are really intended
+>>> for out-of-tree users that we aren't able to fix ourselves.
+>>>
+>>> I'm getting this series queued up in
+>>> http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/jiang-bus-lock-v3,
+>>> so if you want to send a patch just for xen, I can fold that in.
+>>>
+>>> Bjorn
+>> Hi Bjorn,
+>>         I have posted a big patch for that, but still need help from 
+>> Xen experts to review it.
+>> Please refer to https://patchwork.kernel.org/patch/2578551/
 > 
-> Check if the irq_desc is there at first, and bail out early if
-> irq_desc is not allocated yet.
-> We can use irq_free_descs to clear allocated_irqs bits for
-> preserved irqs only.
-
-This changelog is a nightmare as usual. 
-
-It has nothing to do with pre reservation and hot-added ioapics. This
-is generic code and does not care at all about x86 specific crappola.
-
-Your change is adding a generic sanity check into free_desc().
-
-So first of all the patch subject is bogus:
-
-   genirq: Bail out early in free_desc()
-
-That's missing _WHY_ it bails out early.
-
-And then the changelog itself drivels about completely irrelevant
-nonsense instead of explaining the change itself.
-
-So what I want to see here is something like this:
-
-"genirq: Do not free unallocated irq descriptors
-
- Hot-added interrupt controllers can reserve a range of interrupt
- numbers, but only allocate some of them. To simplify the release on
- hot-remove allow them to iterate over the reserved range and let the
- free_desc() code return early when the descriptor does not exist."
-
-Can you see the difference?
-
-I told you more than once, that I'm not accepting your sloppy crap
-anymore. I'm simply not buying your claim that you think "chinese"
-when writing "english". You are simply too lazy to give a rats ass
-about it. That applies to your code and to your changelogs in the same
-way.
- 
-I'm really tired of dealing with shit like this.
-
-No thanks
-
-   tglx
-
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> ---
->  kernel/irq/irqdesc.c | 3 +++
->  1 file changed, 3 insertions(+)
+> Hm, I seem to get:
 > 
-> diff --git a/kernel/irq/irqdesc.c b/kernel/irq/irqdesc.c
-> index b48f65b..32f099e 100644
-> --- a/kernel/irq/irqdesc.c
-> +++ b/kernel/irq/irqdesc.c
-> @@ -170,6 +170,9 @@ static void free_desc(unsigned int irq)
->  {
->  	struct irq_desc *desc = irq_to_desc(irq);
->  
-> +	if (!desc)
-> +		return;
-> +
->  	unregister_irq_proc(irq, desc);
->  
->  	mutex_lock(&sparse_irq_lock);
-> -- 
-> 1.8.1.4
+> /home/konrad/linux/drivers/pci/xen-pcifront.c: In function ‘pcifront_free_roots’:
+> /home/konrad/linux/drivers/pci/xen-pcifront.c:559: error: implicit declaration of function ‘for_each_pci_root_bus’
+> /home/konrad/linux/drivers/pci/xen-pcifront.c:559: error: expected ‘;’ before ‘{’ token
+> /home/konrad/linux/drivers/pci/xen-pcifront.c:554: warning: unused variable ‘sd’
 > 
+> with it? Is there an up-to-date patch?
+> I have these in my tree:
 > 
+> 311db40 PCI, xen-pcifront: use new PCI interfaces to simplify implementation
+> 4079fee Merge remote-tracking branch 'bjorn/pci/jiang-bus-lock-v3' into testing
+> ddb7c6b PCI: Hide remove and rescan sysfs interfaces for SR-IOV virtual functions
+> f5cfa3a PCI: Simplify IOV implementation and fix reference count races
+> 28b4f07 PCI: Drop redundant setting of bus->is_added in virtfn_add_bus()
+> 442655a unicore32/PCI: Remove redundant call of pci_bus_add_devices()
+> defd601 m68k/PCI: Remove redundant call of pci_bus_add_devices()
+> 340e3fb PCI: Make PCI host bridge/bus creating and destroying logic symmetric
+> c7025f7 ia64/PCI: Clean up pci_scan_root_bus() usage
+> c1f41ce PCI: Mark pci_scan_bus_parented() as __deprecated
+> 13e5057 PCI: Convert alloc_pci_dev(void) to pci_alloc_dev(bus)
+> 007042a PCI: Introduce pci_alloc_dev(struct pci_bus*) to replace alloc_pci_dev()
+> fe830ef PCI: Introduce pci_bus_{get|put}() to manage PCI bus reference count
+Hi Konrad,
+   Could you please help to apply this simple patch onto to your tree?
+It should fix the build failure issue.
+
+diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
+index 79ad229..b5e0e66 100644
+--- a/drivers/pci/xen-pcifront.c
++++ b/drivers/pci/xen-pcifront.c
+@@ -556,7 +556,7 @@ static void pcifront_free_roots(struct
+pcifront_device *pdev)
+
+        dev_dbg(&pdev->xdev->dev, "cleaning up root buses\n");
+
+-       for_each_pci_root_bus(bus) {
++       list_for_each_entry(bus, &pci_root_buses, node) {
+                sd = bus->sysdata;
+                if (sd->pdev == pdev) {
+                        pci_stop_root_bus(bus);
+
+
+
+> 
+> Also oddly enough your SoB does not match your Author. Here is
+> what git shows:
+> 
+> === > Author: Jiang Liu <liuj97@gmail.com>  2013-05-25 09:48:38
+>     
+> === > Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+> 
+> You can add in the gmail an new 'email alias' so that the emails will
+> look as they come from your huawei address.
+> 
+
