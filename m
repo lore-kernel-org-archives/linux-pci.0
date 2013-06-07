@@ -1,54 +1,52 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from terminus.zytor.com ([198.137.202.10]:40568 "EHLO mail.zytor.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753005Ab3FZVbB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 26 Jun 2013 17:31:01 -0400
-Message-ID: <51CB5D84.4080709@zytor.com>
-Date: Wed, 26 Jun 2013 14:30:44 -0700
-From: "H. Peter Anvin" <hpa@zytor.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Darren Hart <dvhart@linux.intel.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Peter P Waskiewicz Jr <peter.p.waskiewicz.jr@intel.com>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	danders@circuitco.com, vishal.l.verma@intel.com,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 7/8] pci: Add CircuitCo VENDOR ID and MinnowBoard DEVICE
- ID
-References: <cover.1372211451.git.dvhart@linux.intel.com> <83879b07cd4ce95f086420d1faa926c1692d63b4.1372211451.git.dvhart@linux.intel.com> <20130626163250.GA29299@google.com> <1372266904.8177.83.camel@envy.home> <CAErSpo6=1i76RRmJSUi+BpD9D0WrXaML4HkGLn0C=+6=ohB0uQ@mail.gmail.com>
-In-Reply-To: <CAErSpo6=1i76RRmJSUi+BpD9D0WrXaML4HkGLn0C=+6=ohB0uQ@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	xen-devel@lists.xensource.com
+Subject: [PATCH v3 14/27] xen, irq: call irq_realloc_desc_at() at first
+Date: Fri,  7 Jun 2013 15:31:00 -0700
+Message-Id: <1370644273-10495-15-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1370644273-10495-1-git-send-email-yinghai@kernel.org>
+References: <1370644273-10495-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06/26/2013 12:37 PM, Bjorn Helgaas wrote:
-> 
-> Yeah, that's what I was thinking.
-> 
-> But Peter's comment makes more sense to me now.  The spec refers to
-> that config register as "Subsystem ID," not "Subsystem Device ID," but
-> I was confused because most existing usage treats it as a device ID.
-> For example, the field in struct pci_device_id is named "subdevice,"
-> and all the existing #defines in pci_ids.h are of the form
-> PCI_SUBDEVICE_ID_*.
-> 
-> Device IDs are pretty specific identifiers, so I was thinking that a
-> "sub-device ID" would be even more specific.  Then it would make no
-> sense to have a "sub-device ID" that was as generic as "MINNOWBOARD."
-> But the register is actually *not* a "sub-device ID," and I can see
-> that using the same Subsystem ID for all the devices on a board might
-> make sense.
-> 
+To make x86 irq allocation to be same with booting path and ioapic
+hot add path, We will pre-reserve irq for all gsi at first.
+We have to use realloc here, otherwise irq_alloc_desc_at will fail
+because bit is already get marked for pre-reserved in irq bitmaps.
 
-Subsystem IDs is basically a board ID in the traditional PC view, but
-they didn't call it that because it would have been confusing in other,
-nontraditional configurations.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: xen-devel@lists.xensource.com
+---
+ drivers/xen/events.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-Microsoft has a "best practices" document, which may end up becoming
-basis for a future PCI-SIG document clarifying the standard:
-
-http://msdn.microsoft.com/en-us/library/windows/hardware/gg463287.aspx
-
-	-hpa
+diff --git a/drivers/xen/events.c b/drivers/xen/events.c
+index 6a6bbe4..b0caa4e 100644
+--- a/drivers/xen/events.c
++++ b/drivers/xen/events.c
+@@ -505,8 +505,12 @@ static int __must_check xen_allocate_irq_gsi(unsigned gsi)
+ 	/* Legacy IRQ descriptors are already allocated by the arch. */
+ 	if (gsi < NR_IRQS_LEGACY)
+ 		irq = gsi;
+-	else
+-		irq = irq_alloc_desc_at(gsi, -1);
++	else {
++		/* for x86, irq already get reserved for gsi */
++		irq = irq_realloc_desc_at(gsi, -1);
++		if (irq < 0)
++			irq = irq_alloc_desc_at(gsi, -1);
++	}
+ 
+ 	xen_irq_init(irq);
+ 
+-- 
+1.8.1.4
 
