@@ -1,117 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f172.google.com ([209.85.223.172]:54636 "EHLO
-	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755725Ab3FRW5O (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Jun 2013 18:57:14 -0400
-Received: by mail-ie0-f172.google.com with SMTP id 16so11828178iea.3
-        for <linux-pci@vger.kernel.org>; Tue, 18 Jun 2013 15:57:14 -0700 (PDT)
-Date: Tue, 18 Jun 2013 16:57:11 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: linux-pci@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	linux-arm-kernel@lists.infradead.org,
-	Jason Cooper <jason@lakedaemon.net>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Maen Suleiman <maen@marvell.com>
-Subject: Re: [PATCH v2 6/8] pci: mvebu: add support for MSI
-Message-ID: <20130618225711.GD16134@google.com>
-References: <1370536888-8871-1-git-send-email-thomas.petazzoni@free-electrons.com>
- <1370536888-8871-7-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from quartz.orcorp.ca ([184.70.90.242]:38052 "EHLO quartz.orcorp.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753453Ab3FGQVM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 7 Jun 2013 12:21:12 -0400
+Date: Fri, 7 Jun 2013 10:20:50 -0600
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: linux-arm-kernel@lists.infradead.org,
+	Jingoo Han <jg1.han@samsung.com>,
+	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
+	linux-samsung-soc@vger.kernel.org,
+	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
+	'Surendranath Gurivireddy Balla' <suren.reddy@samsung.com>,
+	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
+	'Thierry Reding' <thierry.reding@avionic-design.de>,
+	linux-kernel@vger.kernel.org,
+	'Grant Likely' <grant.likely@secretlab.ca>,
+	'Kukjin Kim' <kgene.kim@samsung.com>,
+	'Thomas Abraham' <thomas.abraham@linaro.org>,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
+	'Andrew Murray' <andrew.murray@arm.com>
+Subject: Re: [PATCH 6/6] ARM: dts: Add pcie controller node for Samsung
+ EXYNOS5440 SoC
+Message-ID: <20130607162050.GA31895@obsidianresearch.com>
+References: <00c001ce277b$92b26ab0$b8174010$%han@samsung.com>
+ <20130408165626.GA30824@obsidianresearch.com>
+ <000c01ce6360$237a7040$6a6f50c0$@samsung.com>
+ <1880458.2ksb8qtzHh@wuerfel>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1370536888-8871-7-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1880458.2ksb8qtzHh@wuerfel>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 06, 2013 at 06:41:26PM +0200, Thomas Petazzoni wrote:
-> This commit adds support for Message Signaled Interrupts in the
-> Marvell PCIe host controller. The work is very simple: it simply gets
-> a reference to the msi_chip associated to the PCIe controller thanks
-> to the msi-parent DT property, and stores this reference in the
-> pci_bus structure. This is enough to let the Linux PCI core use the
-> functions of msi_chip to setup and teardown MSIs.
+On Fri, Jun 07, 2013 at 01:59:43PM +0200, Arnd Bergmann wrote:
+> On Friday 07 June 2013 18:19:40 Jingoo Han wrote:
+> > Hi Jason Gunthorpe,
+> > 
+> > I implemented 'Single domain' with Exynos PCIe for last two months;
+> > however, it cannot work properly due to the hardware restriction.
+> > Each MEM region is hard-wired.
+> > 
+> > Thus, I will send Exynos PCIe V3 patch as 'Separate domains'.
 > 
-> Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-> ---
->  drivers/pci/host/pci-mvebu.c | 21 +++++++++++++++++++++
->  1 file changed, 21 insertions(+)
-> 
-> diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-> index 13a633b..0dc30bd 100644
-> --- a/drivers/pci/host/pci-mvebu.c
-> +++ b/drivers/pci/host/pci-mvebu.c
-> @@ -11,6 +11,7 @@
->  #include <linux/clk.h>
->  #include <linux/module.h>
->  #include <linux/mbus.h>
-> +#include <linux/msi.h>
->  #include <linux/slab.h>
->  #include <linux/platform_device.h>
->  #include <linux/of_address.h>
-> @@ -107,6 +108,7 @@ struct mvebu_pcie_port;
->  struct mvebu_pcie {
->  	struct platform_device *pdev;
->  	struct mvebu_pcie_port *ports;
-> +	struct msi_chip *msi;
->  	struct resource io;
->  	struct resource realio;
->  	struct resource mem;
-> @@ -690,6 +692,8 @@ static struct pci_bus *mvebu_pcie_scan_bus(int nr, struct pci_sys_data *sys)
->  	if (!bus)
->  		return NULL;
->  
-> +	bus->msi = pcie->msi;
+> Yes, I think that is best, if the hardware is clearly designed as
+> separate domains, this is what we should do by default in the
+> driver. For the Marvell case with its 10 separate ports, much
+> more address space would be wasted by having one domain per
+> port and that hardware let us work around it by remapping the
+> physical address space windows. For Exynos there is much less to
+> lose and I too cannot see how it would be done in the first
+> place.
 
-Ideally, arches could use pci_scan_root_bus(), which does the
-pci_scan_child_bus() itself, so I never like to add arch-specific code
-between pci_create_root_bus() and pci_scan_child_bus().
+Sounds fair to me.
 
-But you should be able to accomplish this by setting bus->msi in a
-pcibios_add_bus() hook.  There is a corresponding pcibios_remove_bus() hook
-that might be useful for deallocating the msi_chip.  I'm not too clear on
-how you manage the msi_chip lifetime -- I see the alloc in
-armada_370_xp_msi_init(), but I'm not sure whether you ever deallocate it
-or how you know when it would be safe to do so.
+But when we talk about multiple domains we don't mean a disjoint range
+bus bus numbers, as your other email shows:
 
->  	pci_scan_child_bus(bus);
->  
->  	return bus;
-> @@ -755,6 +759,21 @@ mvebu_pcie_map_registers(struct platform_device *pdev,
->  	return devm_request_and_ioremap(&pdev->dev, &regs);
->  }
->  
-> +static void __init mvebu_pcie_msi_enable(struct mvebu_pcie *pcie)
-> +{
-> +	struct device_node *msi_node;
-> +
-> +	msi_node = of_parse_phandle(pcie->pdev->dev.of_node,
-> +				    "msi-parent", 0);
-> +	if (!msi_node)
-> +		return;
-> +
-> +	pcie->msi = msi_chip_find_by_of_node(msi_node);
-> +
-> +	if (pcie->msi)
-> +		pcie->msi->dev = &pcie->pdev->dev;
-> +}
-> +
->  static int __init mvebu_pcie_probe(struct platform_device *pdev)
->  {
->  	struct mvebu_pcie *pcie;
-> @@ -879,6 +898,8 @@ static int __init mvebu_pcie_probe(struct platform_device *pdev)
->  		i++;
->  	}
->  
-> +	mvebu_pcie_msi_enable(pcie);
-> +
->  	mvebu_pcie_enable(pcie);
->  
->  	return 0;
-> -- 
-> 1.8.1.2
-> 
+00:00.0 PCI bridge: Samsung Electronics Co Ltd Device a549 (rev 01) (prog-if 00 [Normal decode])
+10:00.0 PCI bridge: Samsung Electronics Co Ltd Device a549 (rev 01) (prog-if 00 [Normal decode])
+
+We mean multiple domains, it should look like this:
+
+0000:00:00.0 PCI bridge: Samsung Electronics Co Ltd Device a549 (rev 01) (prog-if 00 [Normal decode])
+0001:00:00.0 PCI bridge: Samsung Electronics Co Ltd Device a549 (rev 01) (prog-if 00 [Normal decode])
+
+ie lspci -D.
+
+Each domain gets a unique bus number range, config space, io range,
+etc. This is much clearer to everyone than trying to pretend there is
+only one domain when the HW is actually multi-domain.
+
+Jason
