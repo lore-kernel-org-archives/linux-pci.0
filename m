@@ -1,114 +1,140 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f176.google.com ([209.85.223.176]:62844 "EHLO
-	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751383Ab3F0BUZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Jun 2013 21:20:25 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:26220 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756784Ab3FGQXu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 7 Jun 2013 12:23:50 -0400
+From: Myron Stowe <myron.stowe@redhat.com>
+Subject: [PATCH 3/3] [SCSI] megaraid: Remove 64-bit DMA related dead code
+To: megaraidlinux@lsi.com, JBottomley@parallels.com
+Cc: linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Date: Fri, 07 Jun 2013 10:23:47 -0600
+Message-ID: <20130607162347.11205.68121.stgit@amt.stowe>
+In-Reply-To: <20130607162329.11205.95093.stgit@amt.stowe>
+References: <20130607162329.11205.95093.stgit@amt.stowe>
 MIME-Version: 1.0
-In-Reply-To: <1372177330-28013-3-git-send-email-mika.westerberg@linux.intel.com>
-References: <1372177330-28013-1-git-send-email-mika.westerberg@linux.intel.com>
-	<1372177330-28013-3-git-send-email-mika.westerberg@linux.intel.com>
-Date: Wed, 26 Jun 2013 18:20:24 -0700
-Message-ID: <CAE9FiQWy9E_s34DKOtoYcZoYTdgLCfwjiuSVPSk1ncpHYAWG0g@mail.gmail.com>
-Subject: Re: [PATCH 2/6] PCI: acpiphp: enable_device(): rescan even if no new
- devices on slot
-From: Yinghai Lu <yinghai@kernel.org>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	John Ronciak <john.ronciak@intel.com>,
-	Miles J Penner <miles.j.penner@intel.com>,
-	Bruce Allan <bruce.w.allan@intel.com>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"the arch/x86 maintainers" <x86@kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 25, 2013 at 9:22 AM, Mika Westerberg
-<mika.westerberg@linux.intel.com> wrote:
-> From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
->
-> pci_scan_slot() returns number of new devices connected *directly*
-> connected to the slot. Current enable_device() checks the return value
-> and stops if it doesn't see a new device.
->
-> In Thunderbolt chaining case the new device can be deeper in hierarchy, so
-> do the rescan anyway.
->
-> Because of that we must make sure that pcibios_resource_survey_bus() and
-> check_hotplug_bridge() get called only for a just found bus and not the
-> ones already added to the system. Failure to do so will lead to resource
-> conflicts.
->
-> Signed-off-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
-> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> ---
->  drivers/pci/hotplug/acpiphp_glue.c | 18 +++++++-----------
->  1 file changed, 7 insertions(+), 11 deletions(-)
->
-> diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-> index b983e29..80a6ea1 100644
-> --- a/drivers/pci/hotplug/acpiphp_glue.c
-> +++ b/drivers/pci/hotplug/acpiphp_glue.c
-> @@ -685,18 +685,13 @@ static int __ref enable_device(struct acpiphp_slot *slot)
->         struct pci_dev *dev;
->         struct pci_bus *bus = slot->bridge->pci_bus;
->         struct acpiphp_func *func;
-> -       int num, max, pass;
-> +       int max, pass;
->         LIST_HEAD(add_list);
->
->         list_for_each_entry(func, &slot->funcs, sibling)
->                 acpiphp_bus_add(func);
->
-> -       num = pci_scan_slot(bus, PCI_DEVFN(slot->device, 0));
-> -       if (num == 0) {
-> -               /* Maybe only part of funcs are added. */
-> -               dbg("No new device found\n");
-> -               goto err_exit;
-> -       }
-> +       pci_scan_slot(bus, PCI_DEVFN(slot->device, 0));
->
->         max = acpiphp_max_busnr(bus);
->         for (pass = 0; pass < 2; pass++) {
-> @@ -707,8 +702,11 @@ static int __ref enable_device(struct acpiphp_slot *slot)
->                             dev->hdr_type == PCI_HEADER_TYPE_CARDBUS) {
->                                 max = pci_scan_bridge(bus, dev, max, pass);
->                                 if (pass && dev->subordinate) {
-> -                                       check_hotplug_bridge(slot, dev);
-> -                                       pcibios_resource_survey_bus(dev->subordinate);
-> +                                       if (!dev->subordinate->is_added) {
-> +                                               check_hotplug_bridge(slot, dev);
-> +                                               pcibios_resource_survey_bus(
-> +                                                       dev->subordinate);
-> +                                       }
+With the driver now setup for default 32-bit DMA capabilities, remove the
+64-bit DMA related dead code.
 
-No,
-this change will totally disable calling
-check_hotplug_bridge/pcibios_resource_survey_bus()
+Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+---
 
-as pci_scan_bridge/pci_scan_child_bus will set dev->subordinate->is_added...
+ drivers/scsi/megaraid.c |   45 +++++++++------------------------------------
+ drivers/scsi/megaraid.h |    1 -
+ 2 files changed, 9 insertions(+), 37 deletions(-)
 
-Please note: recently is_added setting is moved early before
-pci_bus_add_devices...
+diff --git a/drivers/scsi/megaraid.c b/drivers/scsi/megaraid.c
+index 316924c..58953ab 100644
+--- a/drivers/scsi/megaraid.c
++++ b/drivers/scsi/megaraid.c
+@@ -713,12 +713,7 @@ mega_build_cmd(adapter_t *adapter, Scsi_Cmnd *cmd, int *busy)
+ 			pthru->cdblen = cmd->cmd_len;
+ 			memcpy(pthru->cdb, cmd->cmnd, cmd->cmd_len);
+ 
+-			if( adapter->has_64bit_addr ) {
+-				mbox->m_out.cmd = MEGA_MBOXCMD_PASSTHRU64;
+-			}
+-			else {
+-				mbox->m_out.cmd = MEGA_MBOXCMD_PASSTHRU;
+-			}
++			mbox->m_out.cmd = MEGA_MBOXCMD_PASSTHRU;
+ 
+ 			scb->dma_direction = PCI_DMA_FROMDEVICE;
+ 
+@@ -750,16 +745,9 @@ mega_build_cmd(adapter_t *adapter, Scsi_Cmnd *cmd, int *busy)
+ 			 * A little hack: 2nd bit is zero for all scsi read
+ 			 * commands and is set for all scsi write commands
+ 			 */
+-			if( adapter->has_64bit_addr ) {
+-				mbox->m_out.cmd = (*cmd->cmnd & 0x02) ?
+-					MEGA_MBOXCMD_LWRITE64:
+-					MEGA_MBOXCMD_LREAD64 ;
+-			}
+-			else {
+-				mbox->m_out.cmd = (*cmd->cmnd & 0x02) ?
+-					MEGA_MBOXCMD_LWRITE:
+-					MEGA_MBOXCMD_LREAD ;
+-			}
++			mbox->m_out.cmd = (*cmd->cmnd & 0x02) ?
++				MEGA_MBOXCMD_LWRITE:
++				MEGA_MBOXCMD_LREAD ;
+ 
+ 			/*
+ 			 * 6-byte READ(0x08) or WRITE(0x0A) cdb
+@@ -929,13 +917,7 @@ mega_build_cmd(adapter_t *adapter, Scsi_Cmnd *cmd, int *busy)
+ 					channel, target);
+ 
+ 			/* Initialize mailbox */
+-			if( adapter->has_64bit_addr ) {
+-				mbox->m_out.cmd = MEGA_MBOXCMD_PASSTHRU64;
+-			}
+-			else {
+-				mbox->m_out.cmd = MEGA_MBOXCMD_PASSTHRU;
+-			}
+-
++			mbox->m_out.cmd = MEGA_MBOXCMD_PASSTHRU;
+ 			mbox->m_out.xferaddr = scb->pthru_dma_addr;
+ 
+ 		}
+@@ -1763,7 +1745,7 @@ mega_build_sglist(adapter_t *adapter, scb_t *scb, u32 *buf, u32 *len)
+ 
+ 	*len = 0;
+ 
+-	if (scsi_sg_count(cmd) == 1 && !adapter->has_64bit_addr) {
++	if (scsi_sg_count(cmd) == 1) {
+ 		sg = scsi_sglist(cmd);
+ 		scb->dma_h_bulkdata = sg_dma_address(sg);
+ 		*buf = (u32)scb->dma_h_bulkdata;
+@@ -1772,13 +1754,8 @@ mega_build_sglist(adapter_t *adapter, scb_t *scb, u32 *buf, u32 *len)
+ 	}
+ 
+ 	scsi_for_each_sg(cmd, sg, sgcnt, idx) {
+-		if (adapter->has_64bit_addr) {
+-			scb->sgl64[idx].address = sg_dma_address(sg);
+-			*len += scb->sgl64[idx].length = sg_dma_len(sg);
+-		} else {
+-			scb->sgl[idx].address = sg_dma_address(sg);
+-			*len += scb->sgl[idx].length = sg_dma_len(sg);
+-		}
++		scb->sgl[idx].address = sg_dma_address(sg);
++		*len += scb->sgl[idx].length = sg_dma_len(sg);
+ 	}
+ 
+ 	/* Reset pointer and length fields */
+@@ -2076,10 +2053,7 @@ proc_show_config(struct seq_file *m, void *v)
+ 
+ 	if(adapter->flag & BOARD_64BIT)
+ 		seq_puts(m, "Controller capable of 64-bit memory addressing\n");
+-	if( adapter->has_64bit_addr )
+-		seq_puts(m, "Controller using 64-bit memory addressing\n");
+-	else
+-		seq_puts(m, "Controller is not using 64-bit memory addressing\n");
++	seq_puts(m, "Controller is not using 64-bit memory addressing\n");
+ 
+ 	seq_printf(m, "Base = %08lx, Irq = %d, ",
+ 		   adapter->base, adapter->host->irq);
+@@ -4471,7 +4445,6 @@ megaraid_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 
+ 	/* Set the Mode of addressing to 32 bit */
+ 	pci_set_dma_mask(pdev, DMA_BIT_MASK(32));
+-	adapter->has_64bit_addr = 0;
+ 		
+ 	mutex_init(&adapter->int_mtx);
+ 	init_completion(&adapter->int_waitq);
+diff --git a/drivers/scsi/megaraid.h b/drivers/scsi/megaraid.h
+index 4d0ce4e..17e449b 100644
+--- a/drivers/scsi/megaraid.h
++++ b/drivers/scsi/megaraid.h
+@@ -827,7 +827,6 @@ typedef struct {
+ 
+ #endif
+ 
+-	int	has_64bit_addr;		/* are we using 64-bit addressing */
+ 	int	support_ext_cdb;
+ 	int	boot_ldrv_enabled;
+ 	int	boot_ldrv;
 
->                                         __pci_bus_size_bridges(dev->subordinate,
->                                                                &add_list);
->                                 }
-> @@ -742,8 +740,6 @@ static int __ref enable_device(struct acpiphp_slot *slot)
->                 }
->         }
->
-> -
-> - err_exit:
->         return 0;
->  }
->
-> --
-> 1.8.3.1
->
