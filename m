@@ -1,96 +1,85 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <CAE9FiQWjQXwiTWju6cBc_o25jy_wmZ1u+Pifh1wdnxtV=i5ENw@mail.gmail.com>
-References: <CAErSpo6v0mj9=Q13d=G4hho0mb9XTcsmefzke9fROYmZ7oBWxQ@mail.gmail.com>
- <CAE9FiQU7cDzJdHxmqhJNgc9UCsRLgvCFQpv8+fLxD79pLEUC5A@mail.gmail.com>
- <CAErSpo4ncW8rkcpDiccORZedj30m7jRmpXK+amfDGn_wjwt7EA@mail.gmail.com>
- <CAE9FiQVqKag2TGah7x_1MAJ+c0UWgywgM_jKUoOnh+rq3bwBhg@mail.gmail.com>
- <CAE9FiQVMgdj5edbR4qZny29fV9-bW_We_G4Wpn_yruDLQZiQiQ@mail.gmail.com>
- <20130329032200.GA11990@google.com> <CAE9FiQVu5QyxaKsYzzQoroQD=TvsziHzDOtoeg=FvhZ8HyN5yw@mail.gmail.com>
- <CAErSpo7ChfRiEn0eR1rf-mVheUS9Yf8f+j4n78PJcGYh+yMVgA@mail.gmail.com>
- <CAE9FiQXkDg7Y336S=DXoms44=5HLaiUx=sWviupz1fJmaDUEzQ@mail.gmail.com>
- <CAE9FiQU5c=ztzbskNnYFFKF9V5zO+jnRcMBCivLxA1F3fSfX5w@mail.gmail.com>
- <20130401235256.GA31966@google.com> <CAE9FiQV8cPh-s6=EQu_cZTtn86+NwZE5KuGMhf43aOhzkL=hwA@mail.gmail.com>
- <CAErSpo7Jni1ZSf_W=vB3kqsucPpoepa2Q5g=77a6D3FaPwe9LA@mail.gmail.com> <CAE9FiQWjQXwiTWju6cBc_o25jy_wmZ1u+Pifh1wdnxtV=i5ENw@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 12 Jun 2013 11:05:04 -0600
-Message-ID: <CAErSpo7=a-wX6BLbm_O1nUMMrQHOgtSm3xZHKuRqaz8rnKSbRA@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Remove not needed check in disable aspm link
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	Roman Yepishev <roman.yepishev@gmail.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Matthew Garrett <matthew.garrett@nebula.com>,
-	"e1000-devel@lists.sourceforge.net"
-	<e1000-devel@lists.sourceforge.net>
-Content-Type: text/plain; charset=ISO-8859-1
+From: Yinghai Lu <yinghai@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Subject: [PATCH v3 04/27] x86, irq: Show MSI-X in /proc/interrupt
+Date: Fri,  7 Jun 2013 15:30:50 -0700
+Message-Id: <1370644273-10495-5-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1370644273-10495-1-git-send-email-yinghai@kernel.org>
+References: <1370644273-10495-1-git-send-email-yinghai@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 12, 2013 at 12:20 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Tue, Apr 2, 2013 at 1:10 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> On Mon, Apr 1, 2013 at 6:03 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->>>> commit 96e5d01cd536458435ef0678d9fa3dc542afb41f
->>>> Author: Bjorn Helgaas <bhelgaas@google.com>
->>>> Date:   Mon Apr 1 15:47:39 2013 -0600
->>>>
->>>>     Revert "PCI/ACPI: Request _OSC control before scanning PCI root bus"
->>>>
->>>>     This reverts commit 8c33f51df406e1a1f7fa4e9b244845b7ebd61fa6.
->>>>
->>>>     Conflicts:
->>>>         drivers/acpi/pci_root.c
->>>>
->>>>     Reference: https://bugzilla.kernel.org/show_bug.cgi?id=55211
->>>>     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->>>
->>> Acked-by: Yinghai Lu <yinghai@kernel.org>
->>>
->>> stable need this reverting too.
->>
->> I updated the changelog and added this to my for-linus branch, headed for v3.9.
->
-> We may need to revert this reverting for 3.10.
->
-> Today noticed that acpiphp jump in before pciehp on one setup.
->
-> current code from acpi_pci_root_add we have
->   1. pci_acpi_scan_root
->          ==> pci devices enumeration and bus scanning.
->              ==> pci_alloc_child_bus
->                  ==> pcibios_add_bus
->                      ==> acpi_pci_add_bus
->                          ==> acpiphp_enumerate_slots
->                              ==> ...==> register_slot
->                                   ==> device_is_managed_by_native_pciehp
->                                         ==> check osc_set with
-> OSC_PCI_EXPRESS_NATIVE_HP_CONTROL
->    2. _OSC set request
->
-> so we always have acpiphp hotplug slot registered at first.
->
-> so either we need to
-> A. revert reverting about _OSC
-> B. move pcibios_add_bus down to pci_bus_add_devices()
->     as acpiphp and apci pci slot driver are some kind of drivers for pci_bus
-> C. A+B
+Now MSI-X is shown as MSI in /proc/interrupt.
 
-It doesn't surprise me at all that there are problems in the _OSC code
-and the acpiphp/pciehp interaction.  That whole area is a complete
-disaster.  It'd really be nice if somebody stepped up and reworked it
-so it makes sense.
+We could use new added irq_print_chip() interface to append -X for MSI-X.
 
-But this report is useless to me.  I don't have time to work out what
-the problem is and how it affects users and come up with a fix.
+After this patch, we will have
+        PCI-MSI-edge
+        PCI-MSI-X-edge
+        IR-PCI-MSI-edge
+        IR-PCI-MSI-X-edge
+in the /proc/interrupt
 
-My advice is to simplify the path first, and worry about fixing the
-bug afterwards.  We've already done several iterations of fiddling
-with things, and I think all we're doing is playing "whack-a-mole" and
-pushing the bugs around from one place to another.
+-v2: do not need to check if msi_desc is null in msi_irq_print_chip().
 
-Bjorn
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+---
+ arch/x86/kernel/apic/io_apic.c | 7 +++++++
+ drivers/iommu/irq_remapping.c  | 5 ++++-
+ 2 files changed, 11 insertions(+), 1 deletion(-)
+
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 059589f..f8d4d8d 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -3087,6 +3087,12 @@ msi_set_affinity(struct irq_data *data, const struct cpumask *mask, bool force)
+ 	return IRQ_SET_MASK_OK_NOCOPY;
+ }
+ 
++static void msi_irq_print_chip(struct irq_data *data, struct seq_file *p)
++{
++	seq_printf(p, " %s%s", data->chip->name,
++			data->msi_desc->msi_attrib.is_msix ? "-X" : "");
++}
++
+ /*
+  * IRQ Chip for MSI PCI/PCI-X/PCI-Express Devices,
+  * which implement the MSI or MSI-X Capability Structure.
+@@ -3098,6 +3104,7 @@ struct irq_chip msi_chip = {
+ 	.irq_ack		= ack_apic_edge,
+ 	.irq_set_affinity	= msi_set_affinity,
+ 	.irq_retrigger		= ioapic_retrigger_irq,
++	.irq_print_chip		= msi_irq_print_chip,
+ };
+ 
+ int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
+diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
+index 21ef344..05496bd 100644
+--- a/drivers/iommu/irq_remapping.c
++++ b/drivers/iommu/irq_remapping.c
+@@ -370,7 +370,10 @@ static void ir_ack_apic_level(struct irq_data *data)
+ 
+ static void ir_print_prefix(struct irq_data *data, struct seq_file *p)
+ {
+-	seq_printf(p, " IR-%s", data->chip->name);
++	seq_printf(p, " IR-%s%s", data->chip->name,
++			data->msi_desc ?
++			 (data->msi_desc->msi_attrib.is_msix ? "-X" : "")
++			 : "");
+ }
+ 
+ static void __init irq_remap_modify_chip_defaults(struct irq_chip *chip)
+-- 
+1.8.1.4
+
