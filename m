@@ -1,71 +1,60 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:36303 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751101Ab3FYRxi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 25 Jun 2013 13:53:38 -0400
-From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-To: Andy Shevchenko <andy.shevchenko@gmail.com>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Yinghai Lu <yinghai@kernel.org>, john.ronciak@intel.com,
-	miles.j.penner@intel.com, bruce.w.allan@intel.com,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-pci@vger.kernel.org, x86@kernel.org
-In-Reply-To: <CAHp75Vfw5WO+6+_NB1mbgma7KVo-b7pyr6XA=LM1ozg580kbrg@mail.gmail.com>
-References: <1372177330-28013-1-git-send-email-mika.westerberg@linux.intel.com>
- <1372177330-28013-4-git-send-email-mika.westerberg@linux.intel.com>
- <CAHp75Vfw5WO+6+_NB1mbgma7KVo-b7pyr6XA=LM1ozg580kbrg@mail.gmail.com>
-Subject: Re: [PATCH 3/6] PCI: introduce pci_trim_stale_devices()
-Message-Id: <20130625175625.3F434E0090@blue.fi.intel.com>
-Date: Tue, 25 Jun 2013 20:56:25 +0300 (EEST)
-Sender: linux-pci-owner@vger.kernel.org
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v3 23/27] x86: Move declaration for mp_register_ioapic()
+Date: Fri,  7 Jun 2013 15:31:09 -0700
+Message-Id: <1370644273-10495-24-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1370644273-10495-1-git-send-email-yinghai@kernel.org>
+References: <1370644273-10495-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Andy Shevchenko wrote:
-> On Tue, Jun 25, 2013 at 7:22 PM, Mika Westerberg
-> <mika.westerberg@linux.intel.com> wrote:
-> 
-> > The new function stops and removes the device if it doesn't respond.
-> > If the device responds and it's a bus we apply the function to all
-> > subdevices recursively.
-> >
-> > It's useful for hotplug bus check case, when you need drop all unplugged
-> > devices before looking for new ones.
-> 
-> One comment below.
-> 
-> > +void pci_trim_stale_devices(struct pci_dev *dev)
-> > +{
-> > +       struct pci_bus *bus = dev->subordinate;
-> > +       struct pci_dev *child, *tmp;
-> > +       bool alive;
-> > +       u32 l;
-> > +
-> > +       /* check if the device responds */
-> > +       alive = pci_bus_read_dev_vendor_id(dev->bus, dev->devfn, &l, 0);
-> > +       if (!alive)
-> > +               pci_stop_and_remove_bus_device(dev);
-> > +
-> > +       if (alive && bus)
-> > +               list_for_each_entry_safe(child, tmp, &bus->devices, bus_list)
-> > +                       pci_trim_stale_devices(child);
-> 
-> It's not a tail call anyway, so, what about
-> 
->    if (!pci_bus_read_dev_vendor_id(dev->bus, dev->devfn, &l, 0)) {
->              pci_stop_and_remove_bus_device(dev);
->    } else if (bus) {
->              list_for_each_entry_safe(child, tmp, &bus->devices, bus_list)
->                      pci_trim_stale_devices(child);
->    }
+Address compiling problem that Fengguang report.
 
-Why? It looks uglier.
+Reported-by: Fengguang Wu <wfg@linux.intel.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ arch/x86/include/asm/mpspec.h | 19 ++++++++++++++++++-
+ 1 file changed, 18 insertions(+), 1 deletion(-)
 
-
+diff --git a/arch/x86/include/asm/mpspec.h b/arch/x86/include/asm/mpspec.h
+index e70b7e5..13439c5 100644
+--- a/arch/x86/include/asm/mpspec.h
++++ b/arch/x86/include/asm/mpspec.h
+@@ -95,10 +95,27 @@ static inline void early_reserve_e820_mpc_new(void) { }
+ #endif
+ 
+ void __cpuinit generic_processor_info(int apicid, int version);
+-#ifdef CONFIG_ACPI
++
++#ifdef CONFIG_X86_IO_APIC
+ int __mp_register_ioapic(int id, u32 address, u32 gsi_base, bool hot);
+ int mp_unregister_ioapic(u32 gsi_base);
+ extern void mp_register_ioapic(int id, u32 address, u32 gsi_base);
++#else
++static inline int __mp_register_ioapic(int id, u32 address, u32 gsi_base,
++					 bool hot)
++{
++	return 0;
++}
++static inline int mp_unregister_ioapic(u32 gsi_base)
++{
++	return 0;
++}
++static inline void mp_register_ioapic(int id, u32 address, u32 gsi_base)
++{
++}
++#endif
++
++#ifdef CONFIG_ACPI
+ extern void mp_override_legacy_irq(u8 bus_irq, u8 polarity, u8 trigger,
+ 				   u32 gsi);
+ extern void mp_config_acpi_legacy_irqs(void);
 -- 
- Kirill A. Shutemov
+1.8.1.4
+
