@@ -1,70 +1,119 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:54756 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752360Ab3FZUTb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Jun 2013 16:19:31 -0400
-Date: Wed, 26 Jun 2013 13:19:30 -0700
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: Current open PCI defects
-Message-ID: <20130626201930.GA25309@kroah.com>
-References: <20130626025001.GA25384@google.com>
- <CAE9FiQXmP54PLSOYq17hi54ziDRM0fe+i0sRymz4+yeAxhT3-w@mail.gmail.com>
- <CAErSpo7MELuvuR9stzrLydn78wxsKwMPE1+sCDVbFextd06j7Q@mail.gmail.com>
- <CAE9FiQUWB5vFJ+m+UhQAc=q_BeH9U--o7r6_6Deq-KV1ycBC2w@mail.gmail.com>
- <CAErSpo4FNEVTkArbWKQnDxhMpR+sMEdQHjV=iYQZbD9j7e-pkw@mail.gmail.com>
- <CAE9FiQXHGt06bmb1QcJsW9g18Cn=wbQpbCZZkqmcTUUcpgtN-w@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAE9FiQXHGt06bmb1QcJsW9g18Cn=wbQpbCZZkqmcTUUcpgtN-w@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Subject: [PATCH v3 20/27] x86, irq: Add mp_unregister_ioapic to handle hot-remove ioapic
+Date: Fri,  7 Jun 2013 15:31:06 -0700
+Message-Id: <1370644273-10495-21-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1370644273-10495-1-git-send-email-yinghai@kernel.org>
+References: <1370644273-10495-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 26, 2013 at 12:47:41PM -0700, Yinghai Lu wrote:
-> On Wed, Jun 26, 2013 at 12:34 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> > On Wed, Jun 26, 2013 at 10:43 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> >> On Wed, Jun 26, 2013 at 9:36 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> >>> On Tue, Jun 25, 2013 at 11:51 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> >>>> On Tue, Jun 25, 2013 at 7:50 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> >>>>> Here's a list of the current PCI defects open in https://bugzilla.kernel.org
-> >>>>>
-> >>>>> Hint: maintainers really like it when people take the initiative to
-> >>>>> resolve open issues.
-> >>>>>
-> >>>>> Regressions (8 total):
-> >>>>
-> >>>>>   57961 ExpressCard hot-remove and hot-add not recognized by acpiphp
-> >>>>
-> >>>> for 3.9 stable:
-> >>>> https://patchwork.kernel.org/patch/2676821/
-> >>>>
-> >>>> Greg, can you pick that for 3.9.8?
-> >>>
-> >>> That patch is already in Linus' tree and is marked correctly (AFAICS)
-> >>> for 3.9 stable:
-> >>
-> >> Yes, but the one can not be applied to v3.9 cleanly.
-> >> so at same time you have backporting for 3.9.
-> >>
-> >> Greg applied that for 3.9.5 but it has compile error, as v3.9 acpiphp is still
-> >> able to be complied as module.
-> >>
-> >> Per your request, I respin that patch
-> >>   https://patchwork.kernel.org/patch/2676821/
-> >> that will call request_module("acpiphp") at first.
-> >
-> > Oh, right, I forgot that.  Then I'll just let you take care of sending
-> > that to Greg in the correct format.
-> 
-> I sent that before.
-> 
-> https://patchwork.kernel.org/patch/2676821/
+It will free ioapic related irq_desc and also clear allocated_irqs bits.
 
-To stable@vger.kernel.org?  Did I comment on it, I can't seem to see it
-anywhere here.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+---
+ arch/x86/include/asm/mpspec.h  |  1 +
+ arch/x86/kernel/apic/io_apic.c | 42 ++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 43 insertions(+)
 
-totally confused,
+diff --git a/arch/x86/include/asm/mpspec.h b/arch/x86/include/asm/mpspec.h
+index 11bb6ea..e70b7e5 100644
+--- a/arch/x86/include/asm/mpspec.h
++++ b/arch/x86/include/asm/mpspec.h
+@@ -97,6 +97,7 @@ static inline void early_reserve_e820_mpc_new(void) { }
+ void __cpuinit generic_processor_info(int apicid, int version);
+ #ifdef CONFIG_ACPI
+ int __mp_register_ioapic(int id, u32 address, u32 gsi_base, bool hot);
++int mp_unregister_ioapic(u32 gsi_base);
+ extern void mp_register_ioapic(int id, u32 address, u32 gsi_base);
+ extern void mp_override_legacy_irq(u8 bus_irq, u8 polarity, u8 trigger,
+ 				   u32 gsi);
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index c581c4c..8a3fedf 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -256,6 +256,14 @@ static void free_irq_at(unsigned int at, struct irq_cfg *cfg)
+ 	irq_free_desc(at);
+ }
+ 
++static void free_irqs(unsigned int from, int cnt)
++{
++	int i;
++
++	for (i = from; i < from + cnt; i++)
++		free_irq_at(i, irq_get_chip_data(i));
++}
++
+ static struct irq_cfg *realloc_irq_and_cfg_at(unsigned int at, int node)
+ {
+ 	struct irq_desc *desc = irq_to_desc(at);
+@@ -329,6 +337,16 @@ static void __init reserve_ioapic_gsi_irq_extra(void)
+ 	}
+ }
+ 
++static void free_ioapic_gsi_irq_base(int idx)
++{
++	struct mp_ioapic_gsi *gsi_cfg = mp_ioapic_gsi_routing(idx);
++	int irq_base = gsi_cfg->irq_base;
++	int irq_cnt = gsi_cfg->gsi_end - gsi_cfg->gsi_base + 1;
++
++	if (irq_base > 0)
++		free_irqs(irq_base, irq_cnt);
++}
++
+ static void alloc_ioapic_saved_registers(int idx)
+ {
+ 	if (ioapics[idx].saved_registers)
+@@ -342,6 +360,11 @@ static void alloc_ioapic_saved_registers(int idx)
+ 		pr_err("IOAPIC %d: suspend/resume impossible!\n", idx);
+ }
+ 
++static void free_ioapic_saved_registers(int idx)
++{
++	kfree(ioapics[idx].saved_registers);
++}
++
+ int __init arch_early_irq_init(void)
+ {
+ 	int node = cpu_to_node(0);
+@@ -3980,6 +4003,25 @@ void mp_register_ioapic(int id, u32 address, u32 gsi_base)
+ 	__mp_register_ioapic(id, address, gsi_base, false);
+ }
+ 
++int mp_unregister_ioapic(u32 gsi_base)
++{
++	int idx;
++
++	idx = mp_find_ioapic(gsi_base);
++	if (idx < 0)
++		return -EINVAL;
++
++	free_ioapic_saved_registers(idx);
++
++	free_ioapic_gsi_irq_base(idx);
++
++	clear_fixmap(FIX_IO_APIC_BASE_0 + idx);
++	memset(&ioapics[idx], 0, sizeof(struct ioapic));
++	ioapics[idx].mp_config.apicid = 0xff;
++
++	return 0;
++}
++
+ /* Enable IOAPIC early just for system timer */
+ void __init pre_init_apic_IRQ0(void)
+ {
+-- 
+1.8.1.4
 
-greg k-h
