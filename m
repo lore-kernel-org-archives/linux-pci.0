@@ -1,164 +1,120 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:17002 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:61066 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757555Ab3FTVn5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 20 Jun 2013 17:43:57 -0400
-Message-ID: <1371764634.30572.47.camel@ul30vt.home>
-Subject: Re: [PATCH v2 1/2] pci: Fix flaw in pci_acs_enabled()
+	id S1756469Ab3FGQen (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 7 Jun 2013 12:34:43 -0400
+Subject: [PATCH v2 1/2] pci: Fix flaw in pci_acs_enabled()
+To: bhelgaas@google.com
 From: Alex Williamson <alex.williamson@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Don Dutile <ddutile@redhat.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Date: Thu, 20 Jun 2013 15:43:54 -0600
-In-Reply-To: <CAErSpo7Z9v1QPQZLpfNAUPiq3w4ZfmzS1PStJW+SgJ_DmjjFvg@mail.gmail.com>
+Cc: linux-pci@vger.kernel.org, ddutile@redhat.com,
+	linux-kernel@vger.kernel.org
+Date: Fri, 07 Jun 2013 10:34:41 -0600
+Message-ID: <20130607163441.7733.23221.stgit@bling.home>
+In-Reply-To: <20130607162732.7733.17758.stgit@bling.home>
 References: <20130607162732.7733.17758.stgit@bling.home>
-	 <20130607163441.7733.23221.stgit@bling.home>
-	 <20130618170926.GA9203@google.com> <1371580735.22681.216.camel@ul30vt.home>
-	 <CAErSpo75R26gqO=muqrR28igNkMay4NNRW-VJWPt3xQCqp1YBQ@mail.gmail.com>
-	 <1371595667.22659.53.camel@ul30vt.home>
-	 <CAErSpo7Z9v1QPQZLpfNAUPiq3w4ZfmzS1PStJW+SgJ_DmjjFvg@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2013-06-18 at 20:30 -0600, Bjorn Helgaas wrote:
-> On Tue, Jun 18, 2013 at 4:47 PM, Alex Williamson
-> <alex.williamson@redhat.com> wrote:
-> > On Tue, 2013-06-18 at 16:10 -0600, Bjorn Helgaas wrote:
-> >> On Tue, Jun 18, 2013 at 12:38 PM, Alex Williamson
-> >> <alex.williamson@redhat.com> wrote:
-> >> > On Tue, 2013-06-18 at 11:09 -0600, Bjorn Helgaas wrote:
-> >> >> On Fri, Jun 07, 2013 at 10:34:41AM -0600, Alex Williamson wrote:
-> > ...
-> >> >> >   * pci_acs_enabled - test ACS against required flags for a given device
-> >> >> >   * @pdev: device to test
-> >> >> > @@ -2364,8 +2377,7 @@ void pci_enable_acs(struct pci_dev *dev)
-> >> >> >   */
-> >> >> >  bool pci_acs_enabled(struct pci_dev *pdev, u16 acs_flags)
-> >> >>
-> >> >> I know you didn't change the *name* of this function, but I think it
-> >> >> would be easier to follow if you did change the name to something more
-> >> >> descriptive, e.g., something to do with the actual property you're
-> >> >> interested in, which has to do with routing peer-to-peer DMA.
-> >> >>
-> >> >> That property makes sense even for the excluded devices, while the
-> >> >> idea of an ACS capability that doesn't even exist is implicitly
-> >> >> enabled, really doesn't.
-> >> >
-> >> > I think we also don't want to put the complexity at the caller for
-> >> > understanding what capabilities are applicable to a given device.  It's
-> >> > also convenient to use the set of ACS flags.  Given that, the current
-> >> > naming came about.  It's a little awkward, but it's easy to use.
-> >> > Suggestions for a better name?
-> >>
-> >> 100% agreed the caller shouldn't have to worry about different device
-> >> types.  I was thinking something like "pci_enforces_peer_isolation()"
-> >> or "pci_peer_dma_routed_upstream()".  Or maybe it should be
-> >> "pci_dev_...()".
-> >
-> > Ok, I'll play with those.  I'm worried that there are nuances to each
-> > flag bit that don't all fit under such a broad description.
-> 
-> It's true that they might be overly broad.  On the other hand, the set
-> of flags we look for is always the same: PCI_ACS_SV | PCI_ACS_RR |
-> PCI_ACS_CR | PCI_ACS_UF, so what's the point in making a completely
-> general-purpose interface?  I'm not sure it's even worth passing the
-> flags around if the code would be clearer without that.
-> 
-> > Do you want
-> > to gate this series on a rename of an existing function?
-> 
-> You put me in a bit of a tight spot :)  My #1 concern is correctness
-> and maintainability.  Naming things so they're consistent with other
-> code and make sense to other readers is a huge part of that.
-> Unfortunately I don't have time to do any work myself, and my only
-> tool is to apply patches or not.  But no, I don't want to gate a
-> simple bug fix on other "cleanup" rework.
-> 
-> > ...
-> >> >> Maybe something like (pidgin C):
-> >> >>
-> >> >>     if (PCI_EXP_TYPE_DOWNSTREAM || PCI_EXP_TYPE_ROOT_PORT)
-> >> >>       return pci_acs_flags_enabled(pdev, acs_flags);
-> >> >>
-> >> >>     if (!pdev->multifunction)
-> >> >>       return true;
-> >> >>
-> >> >>     acs_flags &= (PCI_ACS_RR | PCI_ACS_CR | ...);
-> >> >>     return pci_acs_flags_enabled(pdev, acs_flags);
-> >> >
-> >> > ...  Note that
-> >> > the above simplification incorrectly handles multifunction bridges or EC
-> >> > devices.
-> >>
-> >> Hmm...  What *is* the correct behavior for a bridge?  You return
-> >> "true," i.e., you're saying that a PCIe-to-PCI bridge will always
-> >> route peer-to-peer transactions from PCI devices upstream to its PCIe
-> >> link.  But that seems wrong: a PCI DMA transaction can target a peer
-> >> on the same PCI bus, and it's not even possible for the bridge to
-> >> validate the transaction or forward it upstream.
-> >>
-> >> I suspect the "ACS is never applicable to a PCI Express to PCI Bridge
-> >> Function" statement in 6.12.1 just means "it's impossible for ACS to
-> >> isolate the devices below the bridge from each other, so it would be
-> >> misleading to implement the capability."
-> >
-> > Note that we never consider ACS to be enabled for a conventional PCI
-> > device.  I suppose we could have cases where it's the only device on a
-> > bus, but for the most part, it's not worth the trouble (it may be the
-> > only device now, then a hotplug occurs).  So really saying the bridge
-> > does or doesn't support ACS doesn't matter to the devices behind it.
-> 
-> > What does matter is the fan-out of that isolation group of the
-> > conventional devices beyond the bridge.  If the spec is indicating that
-> > a bridge cannot do peer-to-peer with other devices  then all of the
-> > conventional devices behind it are in an isolation domain so long as the
-> > path between the bridge and the RC supports ACS.  If the bridge can do
-> > peer-to-peer and it is a multifunction device, then the isolation domain
-> > grows to include the other functions and subordinates of the other
-> > functions.  I took the assumption that a bridge probably needs to
-> > forward transaction upstream.  Do you have an alternate opinion?
-> 
-> I think you're talking about a multi-function device with several
-> PCIe-to-PCI bridges (e.g., Option A of Figure 1-4, p. 29, of the PCIe
-> bridge spec 1.0), and the question is whether the bridge can forward a
-> transaction between bus X and bus Y without forwarding it upstream.
+Downstream ports support for all ACS flags supercedes multifunction
+exclusion of some flags.  The PCIe spec also fully specifies which
+PCIe types are subject to the multifunction rules and excludes event
+collectors and PCIe-to-PCI bridges entirely.  Document each rule to
+the section of the PCIe spec.
 
-Right, or the second function may not be a bridge, it could be anything
-that could accept a p2p DMA.
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+---
+ drivers/pci/pci.c |   59 ++++++++++++++++++++++++++++++++++++++++-------------
+ 1 file changed, 45 insertions(+), 14 deletions(-)
 
-> I don't see any mention of forwarding transactions between functions
-> of a multi-ported bridge, so the conservative assumption would be that
-> a bridge is allowed to do that.  I would expect a conventional
-> multi-port PCI-PCI bridge to forward between functions, because in
-> conventional PCI there would be no reason to forward it upstream, so
-> I'd think PCIe-PCI bridges, at least those designed pre-ACS, would be
-> similar.  And I don't think the ACS capability is expressive enough to
-> say "peer-to-peer transactions between functions must be forwarded
-> upstream, but peer-to-peer transactions below a single function may
-> not be."
-
-The best I can find is the statement that the bridge must forward
-transactions from the secondary interface to the primary interface.  We
-could infer that that means upstream, but we can't rule out some switch
-logic in a multifunction package that could do a re-route from that
-statement.  However then why would the PCIe spec forbid a PCIe-to-PCI
-bridge from implementing ACS?
-
-ACS doesn't need to be expressive enough for what you're describing.  We
-know that there's no protection against p2p on conventional PCI.  The
-PCIe bridge spec even indicates that transactions within the bridge
-apertures should not be forwarded to the primary interface (which should
-really be a big red flag that we shouldn't even attempt to support
-assignment of such devices).  The question is whether a transaction
-going out the primary interface is necessarily headed upstream or if it
-can go directly to a peer device.  In that case, I can't figure out why
-ACS is precluded from PCIe-to-PCI bridges.  If anything this is an
-example of why we need a user override, then we could it to the more
-conservative value pending further information and let the user change
-it.  Thanks,
-
-Alex
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index b099e00..457ae51 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2354,6 +2354,19 @@ void pci_enable_acs(struct pci_dev *dev)
+ 	pci_write_config_word(dev, pos + PCI_ACS_CTRL, ctrl);
+ }
+ 
++static bool pci_acs_flags_enabled(struct pci_dev *pdev, u16 acs_flags)
++{
++	int pos;
++	u16 ctrl;
++
++	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_ACS);
++	if (!pos)
++		return false;
++
++	pci_read_config_word(pdev, pos + PCI_ACS_CTRL, &ctrl);
++	return (ctrl & acs_flags) == acs_flags;
++}
++
+ /**
+  * pci_acs_enabled - test ACS against required flags for a given device
+  * @pdev: device to test
+@@ -2364,8 +2377,7 @@ void pci_enable_acs(struct pci_dev *dev)
+  */
+ bool pci_acs_enabled(struct pci_dev *pdev, u16 acs_flags)
+ {
+-	int pos, ret;
+-	u16 ctrl;
++	int ret;
+ 
+ 	ret = pci_dev_specific_acs_enabled(pdev, acs_flags);
+ 	if (ret >= 0)
+@@ -2374,23 +2386,42 @@ bool pci_acs_enabled(struct pci_dev *pdev, u16 acs_flags)
+ 	if (!pci_is_pcie(pdev))
+ 		return false;
+ 
+-	/* Filter out flags not applicable to multifunction */
+-	if (pdev->multifunction)
++	switch (pci_pcie_type(pdev)) {
++	/*
++	 * PCIe 3.0, 6.12.1 excludes ACS on these devices.  "Not applicable"
++	 */
++	case PCI_EXP_TYPE_PCI_BRIDGE:
++	case PCI_EXP_TYPE_RC_EC:
++		break;
++	/*
++	 * PCIe 3.0, 6.12.1.1 specifies full ACS capabilities on downstream
++	 * ports, regardless of them being multifunction devices.
++	 */
++	case PCI_EXP_TYPE_DOWNSTREAM:
++	case PCI_EXP_TYPE_ROOT_PORT:
++		return pci_acs_flags_enabled(pdev, acs_flags);
++	/*
++	 * PCIe 3.0, 6.12.1.2 specifies unimplemented ACS capabilities on
++	 * multifunction devices.  6.12 footnote identifies specifically
++	 * which devices types this applies to.
++	 */
++	case PCI_EXP_TYPE_ENDPOINT:
++	case PCI_EXP_TYPE_UPSTREAM:
++	case PCI_EXP_TYPE_LEG_END:
++	case PCI_EXP_TYPE_RC_END:
++		if (!pdev->multifunction)
++			break;
++
+ 		acs_flags &= (PCI_ACS_RR | PCI_ACS_CR |
+ 			      PCI_ACS_EC | PCI_ACS_DT);
+ 
+-	if (pci_pcie_type(pdev) == PCI_EXP_TYPE_DOWNSTREAM ||
+-	    pci_pcie_type(pdev) == PCI_EXP_TYPE_ROOT_PORT ||
+-	    pdev->multifunction) {
+-		pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_ACS);
+-		if (!pos)
+-			return false;
+-
+-		pci_read_config_word(pdev, pos + PCI_ACS_CTRL, &ctrl);
+-		if ((ctrl & acs_flags) != acs_flags)
+-			return false;
++		return pci_acs_flags_enabled(pdev, acs_flags);
+ 	}
+ 
++	/*
++	 * PCIe 3.0, 6.12.1.3 specifies no ACS capabilties are applicable
++	 * to single function devices with the exception of downstream ports.
++	 */
+ 	return true;
+ }
+ 
 
