@@ -1,60 +1,56 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from moutng.kundenserver.de ([212.227.126.186]:58146 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754981Ab3FGRn5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 7 Jun 2013 13:43:57 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Subject: Re: [PATCH 6/6] ARM: dts: Add pcie controller node for Samsung EXYNOS5440 SoC
+Date: Fri, 7 Jun 2013 19:43:18 +0200
+Cc: linux-arm-kernel@lists.infradead.org,
+	Jingoo Han <jg1.han@samsung.com>,
+	"'Thomas Petazzoni'" <thomas.petazzoni@free-electrons.com>,
+	linux-samsung-soc@vger.kernel.org,
+	"'Siva Reddy Kallam'" <siva.kallam@samsung.com>,
+	"'Surendranath Gurivireddy Balla'" <suren.reddy@samsung.com>,
+	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
+	"'Thierry Reding'" <thierry.reding@avionic-design.de>,
+	linux-kernel@vger.kernel.org,
+	"'Grant Likely'" <grant.likely@secretlab.ca>,
+	"'Kukjin Kim'" <kgene.kim@samsung.com>,
+	"'Thomas Abraham'" <thomas.abraham@linaro.org>,
+	"'Bjorn Helgaas'" <bhelgaas@google.com>,
+	"'Andrew Murray'" <andrew.murray@arm.com>
+References: <00c001ce277b$92b26ab0$b8174010$%han@samsung.com> <1880458.2ksb8qtzHh@wuerfel> <20130607162050.GA31895@obsidianresearch.com>
+In-Reply-To: <20130607162050.GA31895@obsidianresearch.com>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo68p7_0zsnBjD=sb14vs0QyCZuN+RTvib2-ZOYUiZn6pw@mail.gmail.com>
-References: <1372177330-28013-1-git-send-email-mika.westerberg@linux.intel.com>
-	<1372177330-28013-7-git-send-email-mika.westerberg@linux.intel.com>
-	<CAErSpo58bCG4=hwC73VY+nXPk9-dZUb5eWERZ_wTtAfrXtBVmg@mail.gmail.com>
-	<CAE9FiQW9xuu6WjH59td6Jve10kokoxU4mNqj4DRyg7beqBzHDA@mail.gmail.com>
-	<CAE9FiQVCQKjPa1dVKhAubvD+d=rudOxLaRMYAr-GAC7eSSz09Q@mail.gmail.com>
-	<CAErSpo68p7_0zsnBjD=sb14vs0QyCZuN+RTvib2-ZOYUiZn6pw@mail.gmail.com>
-Date: Wed, 26 Jun 2013 16:56:03 -0700
-Message-ID: <CAE9FiQVm-gABPsh1-A8H+a0Prug7JMoQpwvKC2EKHpQVXOhzcA@mail.gmail.com>
-Subject: Re: [PATCH 6/6] x86/PCI: quirk Thunderbolt PCI-to-PCI bridges
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	"Ronciak, John" <john.ronciak@intel.com>,
-	"Penner, Miles J" <miles.j.penner@intel.com>,
-	Bruce Allan <bruce.w.allan@intel.com>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"x86@kernel.org" <x86@kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201306071943.18407.arnd@arndb.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 26, 2013 at 3:55 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Wed, Jun 26, 2013 at 4:31 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->> On Wed, Jun 26, 2013 at 3:26 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->>> On Wed, Jun 26, 2013 at 3:18 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>>> On Tue, Jun 25, 2013 at 10:22 AM, Mika Westerberg
->>>> <mika.westerberg@linux.intel.com> wrote:
->>>>> Thunderbolt PCI-to-PCI bridges typically use BIOS "assisted" enumeration.
->>>>> This means that the BIOS will allocate bridge resources based on some
->>>>> assumptions of a maximum Thunderbolt chain. It also disables native PCIe
->>>>> hotplug of the root port where the Thunderbolt host router is connected.
->> ...
->> During acpi hotplug, firmare could do extra help for us like assign
->> some resources to pci device bars, so it is NOT "boot-time".
->
-> Really?  How can firmware assign BARs at hotplug-time?  I mean,
-> obviously firmware *can* write things to the BARs before giving the
-> device to the OS, but how would it know what to write?
+On Friday 07 June 2013, Jason Gunthorpe wrote:
+> Sounds fair to me.
+> 
+> But when we talk about multiple domains we don't mean a disjoint range
+> bus bus numbers, as your other email shows:
+> 
+> 00:00.0 PCI bridge: Samsung Electronics Co Ltd Device a549 (rev 01) (prog-if 00 [Normal decode])
+> 10:00.0 PCI bridge: Samsung Electronics Co Ltd Device a549 (rev 01) (prog-if 00 [Normal decode])
+> 
+> We mean multiple domains, it should look like this:
+> 
+> 0000:00:00.0 PCI bridge: Samsung Electronics Co Ltd Device a549 (rev 01) (prog-if 00 [Normal decode])
+> 0001:00:00.0 PCI bridge: Samsung Electronics Co Ltd Device a549 (rev 01) (prog-if 00 [Normal decode])
+> 
+> ie lspci -D.
+> 
+> Each domain gets a unique bus number range, config space, io range,
+> etc. This is much clearer to everyone than trying to pretend there is
+> only one domain when the HW is actually multi-domain.
 
-should be acpi code, or SMI code or even BMC firmware via sideband.
+Yes, absolutely. This means we also don't need a bus-range property in DT, since each
+domain will allow all 255 buses.
 
->  I assume the
-> OS owns the address space, and it can change the upstream bridge
-> windows or the BARs of another device on the bus at any time, subject
-> to the OS's own issues as far as quiescing or unbinding drivers, etc.,
-> but without coordinating with the BIOS.
-
-for thunderbolt or dock with acpiphp, then all children devices/bridges should
-not have drivers loaded yet.
-
-Yinghai
+	Arnd
