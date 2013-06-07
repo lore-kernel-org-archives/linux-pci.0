@@ -1,96 +1,95 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f42.google.com ([209.85.214.42]:47551 "EHLO
-	mail-bk0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752290Ab3FNKxQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Jun 2013 06:53:16 -0400
-Date: Fri, 14 Jun 2013 12:53:11 +0200
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Jingoo Han <jg1.han@samsung.com>
-Cc: 'Arnd Bergmann' <arnd@arndb.de>,
-	'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>,
-	linux-samsung-soc@vger.kernel.org,
-	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
-	'Surendranath Gurivireddy Balla' <suren.reddy@samsung.com>,
-	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
-	linux-kernel@vger.kernel.org, 'Kukjin Kim' <kgene.kim@samsung.com>,
-	'Bjorn Helgaas' <bhelgaas@google.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Kukjin Kim' <kgene.kim@samsung.com>,
+	'Bjorn Helgaas' <bhelgaas@google.com>
+Cc: linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org,
+	devicetree-discuss@lists.ozlabs.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	'Grant Likely' <grant.likely@secretlab.ca>,
 	'Andrew Murray' <andrew.murray@arm.com>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH V5 1/3] pci: Add PCIe driver for Samsung Exynos
-Message-ID: <20130614105310.GA19060@manwe>
-References: <000b01ce6839$0f0455d0$2d0d0170$@samsung.com>
- <13685067.uPzcc2y1CU@wuerfel>
- <000001ce68d7$ca762200$5f626600$@samsung.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="Nq2Wo0NMKNjxTN9z"
-In-Reply-To: <000001ce68d7$ca762200$5f626600$@samsung.com>
-Sender: linux-pci-owner@vger.kernel.org
+	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
+	'Thierry Reding' <thierry.reding@avionic-design.de>,
+	'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>,
+	'Surendranath Gurivireddy Balla' <suren.reddy@samsung.com>,
+	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
+	'Thomas Abraham' <thomas.abraham@linaro.org>,
+	Jingoo Han <jg1.han@samsung.com>
+Subject: [PATCH V3 3/3] ARM: dts: Add pcie controller node for Samsung
+ EXYNOS5440 SoC
+Date: Fri, 07 Jun 2013 18:24:07 +0900
+Message-id: <000f01ce6360$c29c3370$47d49a50$@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Exynos5440 has two PCIe controllers which can be used as root complex
+for PCIe interface.
 
---Nq2Wo0NMKNjxTN9z
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+---
+ arch/arm/boot/dts/exynos5440-ssdk5440.dts |    8 ++++++++
+ arch/arm/boot/dts/exynos5440.dtsi         |   32 +++++++++++++++++++++++++++++
+ 2 files changed, 40 insertions(+)
 
-On Fri, Jun 14, 2013 at 05:18:46PM +0900, Jingoo Han wrote:
-> On Thursday, June 13, 2013 11:14 PM, Arnd Bergmann wrote:
-> > On Thursday 13 June 2013 22:22:31 Jingoo Han wrote:
-[...]
-> > > +static int __exit exynos_pcie_remove(struct platform_device *pdev)
-> > > +{
-> > > +	struct pcie_port *pp =3D platform_get_drvdata(pdev);
-> > > +
-> > > +	clk_disable_unprepare(pp->bus_clk);
-> > > +	clk_disable_unprepare(pp->clk);
-> > > +
-> > > +	return 0;
-> > > +}
-> >=20
-> > You also don't remove the PCI devices here, as mentioned in an earlier
-> > review.
->=20
-> I reviewed Marvell PCIe driver and Tegra PCIe driver; however,
-> I cannot know what you mean.
->=20
-> Could let me know which additional functions are needed?
+diff --git a/arch/arm/boot/dts/exynos5440-ssdk5440.dts b/arch/arm/boot/dts/exynos5440-ssdk5440.dts
+index d55042b..efe7d39 100644
+--- a/arch/arm/boot/dts/exynos5440-ssdk5440.dts
++++ b/arch/arm/boot/dts/exynos5440-ssdk5440.dts
+@@ -30,4 +30,12 @@
+ 			clock-frequency = <50000000>;
+ 		};
+ 	};
++
++	pcie0@40000000 {
++		reset-gpio = <5>;
++	};
++
++	pcie1@60000000 {
++		reset-gpio = <22>;
++	};
+ };
+diff --git a/arch/arm/boot/dts/exynos5440.dtsi b/arch/arm/boot/dts/exynos5440.dtsi
+index f6b1c89..ea37e94 100644
+--- a/arch/arm/boot/dts/exynos5440.dtsi
++++ b/arch/arm/boot/dts/exynos5440.dtsi
+@@ -216,4 +216,36 @@
+ 		clock-names = "rtc";
+ 		status = "disabled";
+ 	};
++
++	pcie0@40000000 {
++		compatible = "samsung,exynos5440-pcie";
++		reg = <0x40000000 0x4000
++			0x290000 0x1000
++			0x270000 0x1000
++			0x271000 0x40>;
++		interrupts = <0 20 0>, <0 21 0>, <0 22 0>;
++		#address-cells = <3>;
++		#size-cells = <2>;
++		device_type = "pci";
++		bus-range = <0x0 0xf>;
++		ranges = <0x00000800 0 0x40000000 0x40000000 0 0x00200000   /* configuration space */
++			  0x81000000 0 0	  0x40200000 0 0x00004000   /* downstream I/O */
++			  0x82000000 0 0	  0x40204000 0 0x10000000>; /* non-prefetchable memory */
++	};
++
++	pcie1@60000000 {
++		compatible = "samsung,exynos5440-pcie";
++		reg = <0x60000000 0x4000
++			0x2a0000 0x1000
++			0x272000 0x1000
++			0x271040 0x40>;
++		interrupts = <0 23 0>, <0 24 0>, <0 25 0>;
++		#address-cells = <3>;
++		#size-cells = <2>;
++		device_type = "pci";
++		bus-range = <0x0 0xf>;
++		ranges = <0x00000800 0 0x60000000 0x60000000 0 0x00200000   /* configuration space */
++			  0x81000000 0 0	  0x60200000 0 0x00004000   /* downstream I/O */
++			  0x82000000 0 0	  0x60204000 0 0x10000000>; /* non-prefetchable memory */
++	};
+ };
+-- 
+1.7.10.4
 
-We don't currently do that on Tegra either. pci-mvebu doesn't do that
-either, but they don't implement the driver's .remove() in the first
-place.
-
-I think the biggest missing piece is pci_common_exit(), the counterpart
-of pci_common_init(), to cleanup a host bridge on ARM. I haven't looked
-in detail at the other architectures, but I suspect there must be some
-code to call when a host bridge is removed.
-
-Looking at drivers/pci/remove.c, it seems like pci_remove_root_bus()
-might be what we're looking at. It isn't exported so it can't be used by
-modules, but that can be changed. Is that how a host bridge is typically
-removed from the system?
-
-Thierry
-
---Nq2Wo0NMKNjxTN9z
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQIcBAEBAgAGBQJRuvYWAAoJEN0jrNd/PrOhkAgQAJTtOn0GJ8ho/oFuRmDVC/bk
-sc2guYC3/M2NK6JHpZFjb5Etylru0j6dC+8ivPH7uQlYg6AOZuOpSGk1bwmE8geM
-rzy0nRQw3JiPwtCY9rNT1NC9d4pVlfTRjzJJ6b4kfazE9ia0SyHFodbdbZER0dU0
-WuL+F2cWHYYDtYibEHRlBxG7fGPSrXnETE68kvMUCErBwMnyzsv+DXVhz1aN+F4c
-ZugaoEx3FFREGByxrS8msFjaoLca38ZRqA7mVRiaz+3ArghRwTGo+KTO2ArGsb5e
-J3gGqgJTUEWB3sDj3XLxaUQvCYHcd0dgHRDiAKE1iGZ3s3M8eQ/EaqemL9Utxx/w
-75LFWUhOaMjFFfQZJ2L+KA2FS/XQyUC4G4CVh0CtLoOaJMw2HbgqMy6fSUd9Cm5s
-jVDaxbtYGULrYpywxhgxQi1UwkjsGgA3Yq0hWowlKTqBtE3elZ8l2BqbMzMf+Yko
-DUKBVRahRl+PB7Wc5OZsoWrnQ64LeErhzDW15018+Cdrq6QOr5QzQUqvl6yMBl08
-C/Rk45vLkTpwmzUkVw8ZafybmKH4qCG6XUFkLnMON1BgxE1lvkcbTDqsOW0IREQs
-gpFKyCpkbJV1xzRzf7w+Fg53ezNXtE1Xu8Gq2WWV052boBCvMq/bIb4juINceBpI
-QbE9icw15Vwu5aW7b/Eb
-=MlcV
------END PGP SIGNATURE-----
-
---Nq2Wo0NMKNjxTN9z--
