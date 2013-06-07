@@ -1,109 +1,122 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:21748 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751380Ab3FYC6o (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 24 Jun 2013 22:58:44 -0400
-Message-ID: <1372129109.30572.335.camel@ul30vt.home>
-Subject: Re: [PATCH] PCI: avoid NULL deref in alloc_pcie_link_state
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Radim =?UTF-8?Q?Kr=C4=8Dm=C3=A1=C5=99?= <rkrcmar@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Joe Lawrence <Joe.Lawrence@stratus.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	Isaku Yamahata <yamahata@valinux.co.jp>
-Date: Mon, 24 Jun 2013 20:58:29 -0600
-In-Reply-To: <CAErSpo7O2YUUq-Ninu+BdmnrDGcU_h5=h=v1MBCoLorSDZW=Ow@mail.gmail.com>
-References: <1371668174-32115-1-git-send-email-rkrcmar@redhat.com>
-	 <CAErSpo7O2YUUq-Ninu+BdmnrDGcU_h5=h=v1MBCoLorSDZW=Ow@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from userp1040.oracle.com ([156.151.31.81]:51685 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757352Ab3FGWdG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 7 Jun 2013 18:33:06 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Subject: [PATCH v3 21/27] x86, irq: Make ioapics loop skip blank slots
+Date: Fri,  7 Jun 2013 15:31:07 -0700
+Message-Id: <1370644273-10495-22-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1370644273-10495-1-git-send-email-yinghai@kernel.org>
+References: <1370644273-10495-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 2013-06-24 at 19:38 -0600, Bjorn Helgaas wrote:
-> [+cc Michael, Alex, Isaku]
-> 
-> On Wed, Jun 19, 2013 at 12:56 PM, Radim Krčmář <rkrcmar@redhat.com> wrote:
-> > PCIe switch upstream port can be connected directly to the PCIe root bus
-> > in QEMU; ASPM does not expect this topology and dereferences NULL pointer
-> > when initializing.
-> >
-> > I have not confirmed this can happen on real hardware, but it is presented
-> > as a feature in QEMU, so there is no reason to panic if we can recover.
-> 
-> This doesn't seem like a valid hardware topology to me.  If this *can*
-> occur on real hardware, we should fix it in Linux.  If not, maybe QEMU
-> should be changed to disallow it.
+When multiple ioapics get added and removed, we could have blank slots
+in middle of ioapics array.
 
-I think a quad-port 82576 plugged into an express slot is likely the
-same topology.
+Add skip code for this case by checking nr_registers.
 
-> > The dereference happens with topology defined by
-> >   -M q35 -device x3130-upstream,bus=pcie.0,id=upstream \
-> >   -device xio3130-downstream,bus=upstream,id=downstream,chassis=1
-> > where on line drivers/pci/pcie/aspm.c:530 (alloc_pcie_link_state+13):
-> >                 parent = pdev->bus->parent->self->link_state;
-> > "pdev->bus->parent->self == NULL", because "pdev->bus->parent" has no
-> > "->parent", hence no "->self".
-> >
-> > Even though discouraged by QEMU documentation, one can set up even
-> > topology without the upstream port
-> >   -M q35 -device xio3130-downstream,bus=pcie.0,id=downstream,chassis=1
-> > so "pdev->bus->parent == NULL", because "pdev->bus" is the root bus.
-> > The patch checks for this too, because I do not like *NULL.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Paul Gortmaker <paul.gortmaker@windriver.com>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+---
+ arch/x86/kernel/apic/io_apic.c | 29 +++++++++++++++++++++++------
+ 1 file changed, 23 insertions(+), 6 deletions(-)
 
-I don't think this is legal on real hardware.
-
-> > Right now, PCIe switch has to connect to the root port
-> >   -M q35 -device ioh3420,bus=pcie.0,id=root.0 \
-> >   -device x3130-upstream,bus=root.0,id=upstream \
-> >   -device xio3130-downstream,bus=upstream,id=downstream,chassis=1
-> >
-> > Signed-off-by: Radim Krčmář <rkrcmar@redhat.com>
-> > ---
-> >  drivers/pci/pcie/aspm.c | 4 ++--
-> >  1 file changed, 2 insertions(+), 2 deletions(-)
-> >
-> > diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-> > index 403a443..1ad1514 100644
-> > --- a/drivers/pci/pcie/aspm.c
-> > +++ b/drivers/pci/pcie/aspm.c
-> > @@ -527,8 +527,8 @@ static struct pcie_link_state *alloc_pcie_link_state(struct pci_dev *pdev)
-> >         link->pdev = pdev;
-> >         if (pci_pcie_type(pdev) == PCI_EXP_TYPE_DOWNSTREAM) {
-> >                 struct pcie_link_state *parent;
-> > -               parent = pdev->bus->parent->self->link_state;
-> > -               if (!parent) {
-> > +               if (!pdev->bus->parent || !pdev->bus->parent->self ||
-
-I think there's an extra test in here.  Elsewhere we seem to assume that
-if parent exists, then so does parent->self.  So this could be
-simplified to just add:
-
-if (pci_is_root_bus(pdev->bus) {
-	kfree(link);
-	return NULL;
-}
-
-> > +                   !(parent = pdev->bus->parent->self->link_state)) {
-> >                         kfree(link);
-> >                         return NULL;
-> >                 }
-> > --
-> > 1.8.1.4
-> 
-> I don't really want to further complicate the "if" statement you're
-> changing.  The link state allocation is pretty obtuse already, and if
-> this situation only occurs in QEMU, we're likely to break it again
-> when somebody refactors this code.
-
-Maybe the above plus a common exit to avoid duplicate free/return.
-Thanks,
-
-Alex
-
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 8a3fedf..970c4fd 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -793,7 +793,8 @@ int save_ioapic_entries(void)
+ 	int err = 0;
+ 
+ 	for (apic = 0; apic < nr_ioapics; apic++) {
+-		if (!ioapics[apic].saved_registers) {
++		if (!ioapics[apic].saved_registers &&
++		    ioapics[apic].nr_registers) {
+ 			err = -ENOMEM;
+ 			continue;
+ 		}
+@@ -899,9 +900,12 @@ static int __init find_isa_irq_apic(int irq, int type)
+ 	if (i < mp_irq_entries) {
+ 		int ioapic_idx;
+ 
+-		for (ioapic_idx = 0; ioapic_idx < nr_ioapics; ioapic_idx++)
++		for (ioapic_idx = 0; ioapic_idx < nr_ioapics; ioapic_idx++) {
++			if (!ioapics[ioapic_idx].nr_registers)
++				continue;
+ 			if (mpc_ioapic_id(ioapic_idx) == mp_irqs[i].dstapic)
+ 				return ioapic_idx;
++		}
+ 	}
+ 
+ 	return -1;
+@@ -1121,10 +1125,13 @@ int IO_APIC_get_PCI_irq_vector(int bus, int slot, int pin,
+ 	for (i = 0; i < mp_irq_entries; i++) {
+ 		int lbus = mp_irqs[i].srcbus;
+ 
+-		for (ioapic_idx = 0; ioapic_idx < nr_ioapics; ioapic_idx++)
++		for (ioapic_idx = 0; ioapic_idx < nr_ioapics; ioapic_idx++) {
++			if (!ioapics[ioapic_idx].nr_registers)
++				continue;
+ 			if (mpc_ioapic_id(ioapic_idx) == mp_irqs[i].dstapic ||
+ 			    mp_irqs[i].dstapic == MP_APIC_ALL)
+ 				break;
++		}
+ 
+ 		if (!test_bit(lbus, mp_bus_not_pci) &&
+ 		    !mp_irqs[i].irqtype &&
+@@ -2084,6 +2091,9 @@ void __init setup_ioapic_ids_from_mpc_nocheck(void)
+ 	 * Set the IOAPIC ID to the value stored in the MPC table.
+ 	 */
+ 	for (ioapic_idx = 0; ioapic_idx < nr_ioapics; ioapic_idx++) {
++		if (!ioapics[ioapic_idx].nr_registers)
++			continue;
++
+ 		/* Read the register 0 value */
+ 		raw_spin_lock_irqsave(&ioapic_lock, flags);
+ 		reg_00.raw = io_apic_read(ioapic_idx, 0);
+@@ -3013,8 +3023,12 @@ static void ioapic_resume(void)
+ {
+ 	int ioapic_idx;
+ 
+-	for (ioapic_idx = nr_ioapics - 1; ioapic_idx >= 0; ioapic_idx--)
++	for (ioapic_idx = nr_ioapics - 1; ioapic_idx >= 0; ioapic_idx--) {
++		if (!ioapics[ioapic_idx].nr_registers)
++			continue;
++
+ 		resume_ioapic_id(ioapic_idx);
++	}
+ 
+ 	restore_ioapic_entries();
+ }
+@@ -3851,8 +3865,11 @@ static int __mp_find_ioapic(u32 gsi, bool quiet)
+ 	/* Find the IOAPIC that manages this GSI. */
+ 	for (i = 0; i < nr_ioapics; i++) {
+ 		struct mp_ioapic_gsi *gsi_cfg = mp_ioapic_gsi_routing(i);
+-		if ((gsi >= gsi_cfg->gsi_base)
+-		    && (gsi <= gsi_cfg->gsi_end))
++
++		if (!ioapics[i].nr_registers)
++			continue;
++
++		if ((gsi >= gsi_cfg->gsi_base) && (gsi <= gsi_cfg->gsi_end))
+ 			return i;
+ 	}
+ 
+-- 
+1.8.1.4
 
