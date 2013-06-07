@@ -1,57 +1,151 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Betty Dall <betty.dall@hp.com>
-To: rjw@sisk.pl, bhelgaas@google.com, gong.chen@linux.intel.com,
-	greg.pearson@hp.com
-Cc: ying.huang@intel.com, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Betty Dall <betty.dall@hp.com>
-Subject: [PATCH v3 0/6] PCI/ACPI: Fix firmware first error recovery with root port in reset
-Date: Thu,  6 Jun 2013 12:10:45 -0600
-Message-Id: <1370542251-27387-1-git-send-email-betty.dall@hp.com>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>, Pavel Machek <pavel@ucw.cz>,
+	Joerg Roedel <joro@8bytes.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Subject: [PATCH v3 16/27] x86, irq: Add ioapic_gsi_to_irq
+Date: Fri,  7 Jun 2013 15:31:02 -0700
+Message-Id: <1370644273-10495-17-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1370644273-10495-1-git-send-email-yinghai@kernel.org>
+References: <1370644273-10495-1-git-send-email-yinghai@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch set fixes a bug on platforms that use firmware first AER.
-Firmware can leave the root port in Secondary Bus Reset (SBR) and
-communicate this to the OS through the "reset" bit in the flags field
-of the HEST table and associated CPER records. Firmware wants to do this
-so that the error is contained and the hardware is in a known state.
+For hot add ioapic, irq_base is not equal to gsi_base.
+We need a way to do mapping between gsi and irq.
 
-Without these patches, the root port stays in SBR and the device drivers
-cannot recover. These patches recognize when the firmware first root port
-is in SBR and bring the root port out of SBR so the devices under the root
-port can recover.
+Also remove irq_to_gsi() that is confusing, just use that array
+directly as only caller already check input irq before.
 
-The changes have been tested on systems with firmware first that set the
-"reset" bit by injecting various hardware errors. The errors successfully
-recover.
-
-Changes since v1:
-Fixed a typo in the comment of patch 2.
-Removed incorrect setting of reset bit in patch 3.
-
-Changes since v2: 
-The v2 patch 1/3 was re-written by Bjorn Helgaas and is now patches 1/6
-through 3/6.
-The v2 patch 2/3 is now 5/6 and changed to directly use the AER_FATAL define
-and introduced patch 4/6 to move the defines to a public header file.
-The v2 patch 3/3 is now 6/6 and uses the same default reset link function for
-both Downstream Ports and Root Ports.
-
-Signed-off-by: Betty Dall <betty.dall@hp.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Pavel Machek <pavel@ucw.cz>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
 ---
-Betty Dall (6):
-  PCI/AER: Don't parse HEST table for non-PCIe devices
-  PCI/AER: Factor out HEST device type matching
-  PCI/AER: Set dev->__aer_firmware_first only for matching devices
-  PCI/ACPI: Move AER severity defines to aer.h
-  ACPI/APEI: Force fatal AER severity when bus has been reset
-  PCI/AER: Provide reset_link for firmware first root port
----
- drivers/acpi/apei/ghes.c           |   10 +++++++
- drivers/pci/pcie/aer/aerdrv.h      |    4 ---
- drivers/pci/pcie/aer/aerdrv_acpi.c |   47 ++++++++++++++++++-----------------
- drivers/pci/pcie/aer/aerdrv_core.c |   17 +++++++------
- include/linux/aer.h                |   16 +++++++----
- 5 files changed, 53 insertions(+), 41 deletions(-)
+ arch/x86/include/asm/io_apic.h |  1 +
+ arch/x86/kernel/acpi/boot.c    | 22 +++++-----------------
+ arch/x86/kernel/apic/io_apic.c | 29 ++++++++++++++++++++++++++++-
+ 3 files changed, 34 insertions(+), 18 deletions(-)
+
+diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
+index 8181fd8..02ac411 100644
+--- a/arch/x86/include/asm/io_apic.h
++++ b/arch/x86/include/asm/io_apic.h
+@@ -180,6 +180,7 @@ struct mp_ioapic_gsi{
+ };
+ extern struct mp_ioapic_gsi  mp_gsi_routing[];
+ extern u32 gsi_top;
++int ioapic_gsi_to_irq(u32 gsi);
+ int mp_find_ioapic(u32 gsi);
+ int mp_find_ioapic_pin(int ioapic, u32 gsi);
+ void __init mp_register_ioapic(int id, u32 address, u32 gsi_base);
+diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
+index 230c8ea..7190d0d 100644
+--- a/arch/x86/kernel/acpi/boot.c
++++ b/arch/x86/kernel/acpi/boot.c
+@@ -111,6 +111,10 @@ static unsigned int gsi_to_irq(unsigned int gsi)
+ 		}
+ 	}
+ 
++#ifdef CONFIG_X86_IO_APIC
++	if (acpi_irq_model == ACPI_IRQ_MODEL_IOAPIC)
++		return ioapic_gsi_to_irq(gsi);
++#endif
+ 	/* Provide an identity mapping of gsi == irq
+ 	 * except on truly weird platforms that have
+ 	 * non isa irqs in the first 16 gsis.
+@@ -123,22 +127,6 @@ static unsigned int gsi_to_irq(unsigned int gsi)
+ 	return irq;
+ }
+ 
+-static u32 irq_to_gsi(int irq)
+-{
+-	unsigned int gsi;
+-
+-	if (irq < NR_IRQS_LEGACY)
+-		gsi = isa_irq_to_gsi[irq];
+-	else if (irq < gsi_top)
+-		gsi = irq;
+-	else if (irq < (gsi_top + NR_IRQS_LEGACY))
+-		gsi = irq - gsi_top;
+-	else
+-		gsi = 0xffffffff;
+-
+-	return gsi;
+-}
+-
+ /*
+  * Temporarily use the virtual area starting from FIX_IO_APIC_BASE_END,
+  * to map the target physical address. The problem is that set_fixmap()
+@@ -528,7 +516,7 @@ int acpi_isa_irq_to_gsi(unsigned isa_irq, u32 *gsi)
+ {
+ 	if (isa_irq >= 16)
+ 		return -1;
+-	*gsi = irq_to_gsi(isa_irq);
++	*gsi = isa_irq_to_gsi[isa_irq];
+ 	return 0;
+ }
+ 
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 65863bd..7f95bbe 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -1044,13 +1044,16 @@ static int pin_2_irq(int idx, int apic, int pin)
+ 
+ 	if (test_bit(bus, mp_bus_not_pci)) {
+ 		irq = mp_irqs[idx].srcbusirq;
+-	} else {
++	} else if (gsi_cfg->gsi_base == gsi_cfg->irq_base) {
+ 		u32 gsi = gsi_cfg->gsi_base + pin;
+ 
+ 		if (gsi >= NR_IRQS_LEGACY)
+ 			irq = gsi;
+ 		else
+ 			irq = gsi_top + gsi;
++	} else {
++		/* hotadd ioapic */
++		irq = gsi_cfg->irq_base + pin;
+ 	}
+ 
+ #ifdef CONFIG_X86_32
+@@ -1476,6 +1479,30 @@ static void __init setup_IO_APIC_irqs(void)
+ 		__io_apic_setup_irqs(ioapic_idx);
+ }
+ 
++int ioapic_gsi_to_irq(u32 gsi)
++{
++	int ioapic_idx = 0, irq = gsi;
++	struct mp_ioapic_gsi *gsi_cfg;
++
++	ioapic_idx = mp_find_ioapic(gsi);
++	if (ioapic_idx < 0)
++		return -1;
++
++	gsi_cfg = mp_ioapic_gsi_routing(ioapic_idx);
++	if (gsi_cfg->gsi_base == gsi_cfg->irq_base) {
++		if (gsi < NR_IRQS_LEGACY)
++			irq = gsi_top + gsi;
++	} else {
++		int pin = mp_find_ioapic_pin(ioapic_idx, gsi);
++
++		if (pin < 0)
++			return -1;
++		/* hotadd ioapic */
++		irq = gsi_cfg->irq_base + pin;
++	}
++
++	return irq;
++}
+ /*
+  * for the gsit that is not in first ioapic
+  * but could not use acpi_register_gsi()
+-- 
+1.8.1.4
 
