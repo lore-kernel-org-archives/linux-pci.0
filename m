@@ -1,78 +1,309 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:29400 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755200Ab3FKQYr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Jun 2013 12:24:47 -0400
-Message-ID: <51B74F44.1040405@oracle.com>
-Date: Tue, 11 Jun 2013 12:24:36 -0400
-From: konrad wilk <konrad.wilk@oracle.com>
+Received: from mx1.redhat.com ([209.132.183.28]:18009 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756214Ab3FGQXp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 7 Jun 2013 12:23:45 -0400
+From: Myron Stowe <myron.stowe@redhat.com>
+Subject: [PATCH 2/3] [SCSI] megaraid: Remove local (struct pci_dev) pdev's
+To: megaraidlinux@lsi.com, JBottomley@parallels.com
+Cc: linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Date: Fri, 07 Jun 2013 10:23:41 -0600
+Message-ID: <20130607162341.11205.76720.stgit@amt.stowe>
+In-Reply-To: <20130607162329.11205.95093.stgit@amt.stowe>
+References: <20130607162329.11205.95093.stgit@amt.stowe>
 MIME-Version: 1.0
-To: George Dunlap <george.dunlap@eu.citrix.com>
-CC: xen-devel@lists.xensource.com, linux-kernel@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	stable@vger.kernel.org
-Subject: Re: [PATCH] xen/pci: Deal with toolstack missing an 'XenbusStateClosing'.
-References: <20130610202456.GA17822@phenom.dumpdata.com> <1370898399-20968-1-git-send-email-konrad.wilk@oracle.com> <1370898399-20968-2-git-send-email-konrad.wilk@oracle.com> <51B743EA.5020800@eu.citrix.com> <51B74B77.1000806@oracle.com> <51B74DA9.7060509@eu.citrix.com>
-In-Reply-To: <51B74DA9.7060509@eu.citrix.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+With the driver now setup for default 32-bit DMA capabilities, remove the
+broken make_local_pdev() implementation and usages.
 
-On 6/11/2013 12:17 PM, George Dunlap wrote:
-> On 06/11/2013 05:08 PM, konrad wilk wrote:
->>
->> On 6/11/2013 11:36 AM, George Dunlap wrote:
->>> On 06/10/2013 10:06 PM, Konrad Rzeszutek Wilk wrote:
->>>> There are two tool-stack that can instruct the Xen PCI frontend
->>>> and backend to change states: 'xm' (Python code with a daemon),
->>>> and 'xl' (C library - does not keep state changes).
->>>>
->>>> With the 'xm', the path to disconnect a PCI device (xm pci-detach
->>>> <guest> <BDF>)is:
->>>>
->>>> 4(Connected)->7(Reconfiguring*)-> 8(Reconfigured)->
->>>> 4(Connected)->5(Closing*).
->>>>
->>>> The * is for states that the tool-stack sets. For 'xl', it is similar:
->>>>
->>>> 4(Connected)->7(Reconfiguring*)-> 8(Reconfigured)-> 4(Connected)
->>>>
->>>> Both of them also tear down the XenBus structure, so the backend
->>>> state ends up going in the 3(Initialised) and calls
->>>> pcifront_xenbus_remove.
->>>
->>> So I looked a little bit into this; there are actually two different
->>> states that happen as part of this handshake.  In order to disonnect a
->>> *device*, xl signals using the *bus* state, like this:
->>> * Wait for the *bus* to be in state 4(Connected)
->>> * Set the *device* state to 5(Closing)
->>> * Set the *bus* state to 7(Reconfiguring)
->>> * Wait for the *bus* state to return to 4(Connected)
->>>
->>> So are all of these states you see the *bus* state?  And why would you
->>> disconnect the whole pci bus if you're only removing one device?
->>
->> Correct. The stats I enumerated are *bus* states. Not per-device states.
->> I presume (and I hadn't checked xm) that Xend has some logic to only
->> disconnect the bus if all of the PCI devices have been disconnected. In
->> 'xl' it does not do that.
->>
->> The testing I did was just with one PCI device.
->
-> Ah, OK -- I see now.  The problem is that the code in the Linux side 
-> didn't know about the whole "4->7->8->4" thing to unplug a device.  In 
-> all likelihood, if you had used xm with two devices (so that the bus 
-> didn't get disconnected), then you would have run across the same error.
->
-> So at least part of the problem *is* a bug in Linux.
+Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+---
 
-Right.
->
-> That doesn't explain why I have problems doing this on Debian's 
-> version of 3.2 -- unless the "fix" you mentoned above was backported 
-> to the stable kernel, perhaps?
-No. It was a feature.
->
->  -George
+ drivers/scsi/megaraid.c |   98 ++++++++---------------------------------------
+ 1 files changed, 16 insertions(+), 82 deletions(-)
+
+diff --git a/drivers/scsi/megaraid.c b/drivers/scsi/megaraid.c
+index 32cca61..316924c 100644
+--- a/drivers/scsi/megaraid.c
++++ b/drivers/scsi/megaraid.c
+@@ -2023,29 +2023,6 @@ megaraid_abort_and_reset(adapter_t *adapter, Scsi_Cmnd *cmd, int aor)
+ 	return FALSE;
+ }
+ 
+-static inline int
+-make_local_pdev(adapter_t *adapter, struct pci_dev **pdev)
+-{
+-	*pdev = alloc_pci_dev();
+-
+-	if( *pdev == NULL ) return -1;
+-
+-	memcpy(*pdev, adapter->dev, sizeof(struct pci_dev));
+-
+-	if( pci_set_dma_mask(*pdev, DMA_BIT_MASK(32)) != 0 ) {
+-		kfree(*pdev);
+-		return -1;
+-	}
+-
+-	return 0;
+-}
+-
+-static inline void
+-free_local_pdev(struct pci_dev *pdev)
+-{
+-	kfree(pdev);
+-}
+-
+ /**
+  * mega_allocate_inquiry()
+  * @dma_handle - handle returned for dma address
+@@ -2209,13 +2186,10 @@ proc_show_rebuild_rate(struct seq_file *m, void *v)
+ 	adapter_t	*adapter = m->private;
+ 	dma_addr_t	dma_handle;
+ 	caddr_t		inquiry;
+-	struct pci_dev	*pdev;
+-
+-	if( make_local_pdev(adapter, &pdev) != 0 )
+-		return 0;
++	struct pci_dev	*pdev = adapter->dev;
+ 
+ 	if( (inquiry = mega_allocate_inquiry(&dma_handle, pdev)) == NULL )
+-		goto free_pdev;
++		return 0;
+ 
+ 	if( mega_adapinq(adapter, dma_handle) != 0 ) {
+ 		seq_puts(m, "Adapter inquiry failed.\n");
+@@ -2233,8 +2207,6 @@ proc_show_rebuild_rate(struct seq_file *m, void *v)
+ 
+ free_inquiry:
+ 	mega_free_inquiry(inquiry, dma_handle, pdev);
+-free_pdev:
+-	free_local_pdev(pdev);
+ 	return 0;
+ }
+ 
+@@ -2252,14 +2224,11 @@ proc_show_battery(struct seq_file *m, void *v)
+ 	adapter_t	*adapter = m->private;
+ 	dma_addr_t	dma_handle;
+ 	caddr_t		inquiry;
+-	struct pci_dev	*pdev;
++	struct pci_dev	*pdev = adapter->dev;
+ 	u8	battery_status;
+ 
+-	if( make_local_pdev(adapter, &pdev) != 0 )
+-		return 0;
+-
+ 	if( (inquiry = mega_allocate_inquiry(&dma_handle, pdev)) == NULL )
+-		goto free_pdev;
++		return 0;
+ 
+ 	if( mega_adapinq(adapter, dma_handle) != 0 ) {
+ 		seq_printf(m, "Adapter inquiry failed.\n");
+@@ -2308,8 +2277,6 @@ proc_show_battery(struct seq_file *m, void *v)
+ 
+ free_inquiry:
+ 	mega_free_inquiry(inquiry, dma_handle, pdev);
+-free_pdev:
+-	free_local_pdev(pdev);
+ 	return 0;
+ }
+ 
+@@ -2357,18 +2324,15 @@ proc_show_pdrv(struct seq_file *m, adapter_t *adapter, int channel)
+ 	char		*scsi_inq;
+ 	dma_addr_t	scsi_inq_dma_handle;
+ 	caddr_t		inquiry;
+-	struct pci_dev	*pdev;
++	struct pci_dev	*pdev = adapter->dev;
+ 	u8	*pdrv_state;
+ 	u8	state;
+ 	int	tgt;
+ 	int	max_channels;
+ 	int	i;
+ 
+-	if( make_local_pdev(adapter, &pdev) != 0 )
+-		return 0;
+-
+ 	if( (inquiry = mega_allocate_inquiry(&dma_handle, pdev)) == NULL )
+-		goto free_pdev;
++		return 0;
+ 
+ 	if( mega_adapinq(adapter, dma_handle) != 0 ) {
+ 		seq_puts(m, "Adapter inquiry failed.\n");
+@@ -2453,8 +2417,6 @@ free_pci:
+ 	pci_free_consistent(pdev, 256, scsi_inq, scsi_inq_dma_handle);
+ free_inquiry:
+ 	mega_free_inquiry(inquiry, dma_handle, pdev);
+-free_pdev:
+-	free_local_pdev(pdev);
+ 	return 0;
+ }
+ 
+@@ -2533,17 +2495,14 @@ proc_show_rdrv(struct seq_file *m, adapter_t *adapter, int start, int end )
+ 	char		*disk_array;
+ 	dma_addr_t	disk_array_dma_handle;
+ 	caddr_t		inquiry;
+-	struct pci_dev	*pdev;
++	struct pci_dev	*pdev = adapter->dev;
+ 	u8	*rdrv_state;
+ 	int	num_ldrv;
+ 	u32	array_sz;
+ 	int	i;
+ 
+-	if( make_local_pdev(adapter, &pdev) != 0 )
+-		return 0;
+-
+ 	if( (inquiry = mega_allocate_inquiry(&dma_handle, pdev)) == NULL )
+-		goto free_pdev;
++		return 0;
+ 
+ 	if( mega_adapinq(adapter, dma_handle) != 0 ) {
+ 		seq_puts(m, "Adapter inquiry failed.\n");
+@@ -2694,8 +2653,6 @@ free_pci:
+ 			disk_array_dma_handle);
+ free_inquiry:
+ 	mega_free_inquiry(inquiry, dma_handle, pdev);
+-free_pdev:
+-	free_local_pdev(pdev);
+ 	return 0;
+ }
+ 
+@@ -3164,6 +3121,7 @@ megadev_ioctl(struct file *filep, unsigned int cmd, unsigned long arg)
+ 			return (-ENODEV);
+ 
+ 		adapter = hba_soft_state[adapno];
++		pdev = adapter->dev;
+ 
+ 		/*
+ 		 * Deletion of logical drive is a special case. The adapter
+@@ -3208,12 +3166,10 @@ megadev_ioctl(struct file *filep, unsigned int cmd, unsigned long arg)
+ 
+ 		/*
+ 		 * For all internal commands, the buffer must be allocated in
+-		 * <4GB address range
++		 * <4GB address range.
++		 *
++		 * Is it a passthru command or a DCMD
+ 		 */
+-		if( make_local_pdev(adapter, &pdev) != 0 )
+-			return -EIO;
+-
+-		/* Is it a passthru command or a DCMD */
+ 		if( uioc.uioc_rmbox[0] == MEGA_MBOXCMD_PASSTHRU ) {
+ 			/* Passthru commands */
+ 
+@@ -3221,10 +3177,8 @@ megadev_ioctl(struct file *filep, unsigned int cmd, unsigned long arg)
+ 					sizeof(mega_passthru),
+ 					&pthru_dma_hndl);
+ 
+-			if( pthru == NULL ) {
+-				free_local_pdev(pdev);
++			if( pthru == NULL )
+ 				return (-ENOMEM);
+-			}
+ 
+ 			/*
+ 			 * The user passthru structure
+@@ -3241,8 +3195,6 @@ megadev_ioctl(struct file *filep, unsigned int cmd, unsigned long arg)
+ 						sizeof(mega_passthru), pthru,
+ 						pthru_dma_hndl);
+ 
+-				free_local_pdev(pdev);
+-
+ 				return (-EFAULT);
+ 			}
+ 
+@@ -3260,8 +3212,6 @@ megadev_ioctl(struct file *filep, unsigned int cmd, unsigned long arg)
+ 							pthru,
+ 							pthru_dma_hndl);
+ 
+-					free_local_pdev(pdev);
+-
+ 					return (-ENOMEM);
+ 				}
+ 
+@@ -3331,8 +3281,6 @@ freemem_and_return:
+ 			pci_free_consistent(pdev, sizeof(mega_passthru),
+ 					pthru, pthru_dma_hndl);
+ 
+-			free_local_pdev(pdev);
+-
+ 			return rval;
+ 		}
+ 		else {
+@@ -3345,10 +3293,8 @@ freemem_and_return:
+ 				data = pci_alloc_consistent(pdev,
+ 						uioc.xferlen, &data_dma_hndl);
+ 
+-				if( data == NULL ) {
+-					free_local_pdev(pdev);
++				if( data == NULL )
+ 					return (-ENOMEM);
+-				}
+ 
+ 				uxferaddr = MBOX(uioc)->xferaddr;
+ 			}
+@@ -3367,8 +3313,6 @@ freemem_and_return:
+ 							uioc.xferlen,
+ 							data, data_dma_hndl);
+ 
+-					free_local_pdev(pdev);
+-
+ 					return (-EFAULT);
+ 				}
+ 			}
+@@ -3391,8 +3335,6 @@ freemem_and_return:
+ 							data_dma_hndl);
+ 				}
+ 
+-				free_local_pdev(pdev);
+-
+ 				return rval;
+ 			}
+ 
+@@ -3413,8 +3355,6 @@ freemem_and_return:
+ 						data_dma_hndl);
+ 			}
+ 
+-			free_local_pdev(pdev);
+-
+ 			return rval;
+ 		}
+ 
+@@ -4068,22 +4008,18 @@ mega_internal_dev_inquiry(adapter_t *adapter, u8 ch, u8 tgt,
+ 	dma_addr_t	pthru_dma_handle;
+ 	megacmd_t	mc;
+ 	int		rval;
+-	struct pci_dev	*pdev;
++	struct pci_dev	*pdev = adapter->dev;
+ 
+ 
+ 	/*
+ 	 * For all internal commands, the buffer must be allocated in <4GB
+ 	 * address range
+ 	 */
+-	if( make_local_pdev(adapter, &pdev) != 0 ) return -1;
+-
+ 	pthru = pci_alloc_consistent(pdev, sizeof(mega_passthru),
+ 			&pthru_dma_handle);
+ 
+-	if( pthru == NULL ) {
+-		free_local_pdev(pdev);
++	if( pthru == NULL )
+ 		return -1;
+-	}
+ 
+ 	pthru->timeout = 2;
+ 	pthru->ars = 1;
+@@ -4117,8 +4053,6 @@ mega_internal_dev_inquiry(adapter_t *adapter, u8 ch, u8 tgt,
+ 	pci_free_consistent(pdev, sizeof(mega_passthru), pthru,
+ 			pthru_dma_handle);
+ 
+-	free_local_pdev(pdev);
+-
+ 	return rval;
+ }
+ #endif
 
