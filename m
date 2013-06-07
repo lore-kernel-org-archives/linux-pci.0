@@ -1,91 +1,147 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Myron Stowe <myron.stowe@redhat.com>
-Subject: [PATCH 0/3] [SCSI] megaraid: Remove local (struct pci_dev) pdev's
-To: megaraidlinux@lsi.com, JBottomley@parallels.com
-Cc: linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Date: Fri, 07 Jun 2013 10:23:29 -0600
-Message-ID: <20130607162329.11205.95093.stgit@amt.stowe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:51833 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757294Ab3FGWdd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 7 Jun 2013 18:33:33 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>,
+	Joerg Roedel <joro@8bytes.org>
+Subject: [PATCH v3 09/27] x86, irq: Convert irq_2_pin list to generic list
+Date: Fri,  7 Jun 2013 15:30:55 -0700
+Message-Id: <1370644273-10495-10-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1370644273-10495-1-git-send-email-yinghai@kernel.org>
+References: <1370644273-10495-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-While the megaraid device itself may be 64-bit DMA capable, 32-bit address
-restricted DMA buffers are apparently required for "internal commands" as
-is denoted by a couple of comments - "For all internal commands, the
-buffer must be allocated in <4GB address range" - within the driver.
+Now irq_2_pin list is own grown list.
+We can use generic list to replace it so we could use generic helper
+functions to operate it.
 
-If the device is 64-bit DMA capable then, once it is setup, any subsequent
-DMA allocations for "internal commands" would not be properly restricted
-due to megaraid_probe_one() having called pci_set_dma_mask() on pdev with
-DMA_BIT_MASK(64).  The driver attempts to solve this by using
-make_local_pdev() to dynamically create local pci_dev structures which are
-then set and used for allocating 32-bit address space restricted DMA
-buffers[1] but I don't believe that the implementation works as intended.
+Also make free_irq_cfg() free irq_2_pin list to support coming ioapic
+hotplug.
 
-
-Assume that the megaraid device is 64-bit DMA capable.  While probing the
-device and attaching the megaraid driver, pci_set_dma_mask() is called
-with the "originating pdev" and a DMA_BIT_MASK of 64.  As a result, any
-subsequent dynamic DMA related allocations associated with the
-"originating pdev" will acquire 64-bit based buffers, which do not meet
-the addressing restrictions for internal commands.
-
-  megaraid_probe_one(struct pci_dev *pdev, ...)
-      ...
-      pci_set_dma_mask(pdev, DMA_BIT_MASK(64));
-
-As mentioned, the driver attempts to solve this by using make_local_pdev()
-to dynamically create local pci_dev structures - "local pdev's" - which
-are set with a DMA_BIT_MASK of 32.
-
-  make_local_pdev
-      alloc_pci_dev
-      memcpy
-      pci_set_dma_mask
-          dma_set_mask
-              *dev->dma_mask = mask;
-
-The "local pdev" is then used in allocating a DMA buffer in an attempt to
-meet the < 4 GB restriction.
-
-For a 64-bit DMA capable device, the "originating pdev" will have its
-'dma_mask' set to 0xffffffffffffffff after the driver attaches.
-Subsequently, when an internal command is initiated, make_local_pdev() is
-called.  make_local_pdev() uses the PCI's core to allocate a "local pdev"
-and then copies the "originating pdev" content into the newly allocated
-"local pdev".  As a result of copying the "originating pdev" content into
-the "local pdev", pdev->dev.dma_mask will be pointing back to the
-"originating pdev's" 'dma_mask' member, not the "local pdev's" as
-intended.  Thus, when make_local_pdev() calls pci_set_dma_mask() in an
-attempt to set the "local pdev's" DMA mask to 32 it will instead overwrite
-the "originating pdev's" DMA mask.  Thus, after any user initiated
-commands are issued, all subsequent DMA allocations will be 32-bit
-restricted from that point onward regardless of whether they are internal
-commands or otherwise.
-
-
-This patch fixes the issue by removing the setup of DMA_BIT_MASK to 64 in
-megaraid_probe_one(), leaving the driver with default 32-bit DMA
-capabilities, as it currently ends up in such a state anyway after any
-internal commands are initiated.
-
-
-[1] It seems strange that both mega_buffer/buf_dma_handle and
-    make_local_pdev() both exist for internal commands but this has been
-    the case for a long time - at least since 2.6.12-rc2.  Perhaps there
-    is some coalescing that could be done.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Cc: Joerg Roedel <joro@8bytes.org>
 ---
+ arch/x86/include/asm/hw_irq.h  |  2 +-
+ arch/x86/kernel/apic/io_apic.c | 22 ++++++++++++----------
+ 2 files changed, 13 insertions(+), 11 deletions(-)
 
-Myron Stowe (3):
-      [SCSI] megaraid: Remove 64-bit DMA related dead code
-      [SCSI] megaraid: Remove local (struct pci_dev) pdev's
-      [SCSI] megaraid: Remove 64-bit DMA_BIT_MASK capability
-
-
- drivers/scsi/megaraid.c |  152 ++++++++---------------------------------------
- drivers/scsi/megaraid.h |    1 
- 2 files changed, 27 insertions(+), 126 deletions(-)
-
+diff --git a/arch/x86/include/asm/hw_irq.h b/arch/x86/include/asm/hw_irq.h
+index 1da97ef..dc3942c 100644
+--- a/arch/x86/include/asm/hw_irq.h
++++ b/arch/x86/include/asm/hw_irq.h
+@@ -122,7 +122,7 @@ struct irq_2_irte {
+  * Most irqs are mapped 1:1 with pins.
+  */
+ struct irq_cfg {
+-	struct irq_pin_list	*irq_2_pin;
++	struct list_head	irq_2_pin;
+ 	cpumask_var_t		domain;
+ 	cpumask_var_t		old_domain;
+ 	u8			vector;
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 70b6617..670c538 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -66,7 +66,7 @@
+ #define __apicdebuginit(type) static type __init
+ 
+ #define for_each_irq_pin(entry, head) \
+-	for (entry = head; entry; entry = entry->next)
++	list_for_each_entry(entry, &head, list)
+ 
+ /*
+  *      Is the SiS APIC rmw bug present ?
+@@ -176,8 +176,8 @@ void mp_save_irq(struct mpc_intsrc *m)
+ }
+ 
+ struct irq_pin_list {
++	struct list_head list;
+ 	int apic, pin;
+-	struct irq_pin_list *next;
+ };
+ 
+ static struct irq_pin_list *alloc_irq_pin_list(int node)
+@@ -213,6 +213,7 @@ int __init arch_early_irq_init(void)
+ 	irq_reserve_irqs(0, legacy_pic->nr_legacy_irqs);
+ 
+ 	for (i = 0; i < count; i++) {
++		INIT_LIST_HEAD(&cfg[i].irq_2_pin);
+ 		irq_set_chip_data(i, &cfg[i]);
+ 		zalloc_cpumask_var_node(&cfg[i].domain, GFP_KERNEL, node);
+ 		zalloc_cpumask_var_node(&cfg[i].old_domain, GFP_KERNEL, node);
+@@ -245,6 +246,7 @@ static struct irq_cfg *alloc_irq_cfg(unsigned int irq, int node)
+ 		goto out_cfg;
+ 	if (!zalloc_cpumask_var_node(&cfg->old_domain, GFP_KERNEL, node))
+ 		goto out_domain;
++	INIT_LIST_HEAD(&cfg->irq_2_pin);
+ 	return cfg;
+ out_domain:
+ 	free_cpumask_var(cfg->domain);
+@@ -255,11 +257,15 @@ out_cfg:
+ 
+ static void free_irq_cfg(unsigned int at, struct irq_cfg *cfg)
+ {
++	struct irq_pin_list *entry, *tmp;
++
+ 	if (!cfg)
+ 		return;
+ 	irq_set_chip_data(at, NULL);
+ 	free_cpumask_var(cfg->domain);
+ 	free_cpumask_var(cfg->old_domain);
++	list_for_each_entry_safe(entry, tmp, &cfg->irq_2_pin, list)
++		kfree(entry);
+ 	kfree(cfg);
+ }
+ 
+@@ -420,15 +426,12 @@ static void ioapic_mask_entry(int apic, int pin)
+  */
+ static int __add_pin_to_irq_node(struct irq_cfg *cfg, int node, int apic, int pin)
+ {
+-	struct irq_pin_list **last, *entry;
++	struct irq_pin_list *entry;
+ 
+ 	/* don't allow duplicates */
+-	last = &cfg->irq_2_pin;
+-	for_each_irq_pin(entry, cfg->irq_2_pin) {
++	for_each_irq_pin(entry, cfg->irq_2_pin)
+ 		if (entry->apic == apic && entry->pin == pin)
+ 			return 0;
+-		last = &entry->next;
+-	}
+ 
+ 	entry = alloc_irq_pin_list(node);
+ 	if (!entry) {
+@@ -439,7 +442,7 @@ static int __add_pin_to_irq_node(struct irq_cfg *cfg, int node, int apic, int pi
+ 	entry->apic = apic;
+ 	entry->pin = pin;
+ 
+-	*last = entry;
++	list_add_tail(&entry->list, &cfg->irq_2_pin);
+ 	return 0;
+ }
+ 
+@@ -1622,8 +1625,7 @@ __apicdebuginit(void) print_IO_APICs(void)
+ 		cfg = irq_get_chip_data(irq);
+ 		if (!cfg)
+ 			continue;
+-		entry = cfg->irq_2_pin;
+-		if (!entry)
++		if (list_empty(&cfg->irq_2_pin))
+ 			continue;
+ 		printk(KERN_DEBUG "IRQ%d ", irq);
+ 		for_each_irq_pin(entry, cfg->irq_2_pin)
 -- 
+1.8.1.4
+
