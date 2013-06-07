@@ -1,112 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:21936 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756072Ab3FGWbg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 7 Jun 2013 18:31:36 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v3 00/27] x86, irq: support ioapic device hotplug
-Date: Fri,  7 Jun 2013 15:30:46 -0700
-Message-Id: <1370644273-10495-1-git-send-email-yinghai@kernel.org>
+Received: from mail.free-electrons.com ([94.23.35.102]:50895 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754981Ab3FGRBI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 7 Jun 2013 13:01:08 -0400
+Date: Fri, 7 Jun 2013 19:00:58 +0200
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Jason Cooper <jason@lakedaemon.net>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Arnd Bergmann <arnd@arndb.de>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	linux-arm-kernel@lists.infradead.org,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Maen Suleiman <maen@marvell.com>
+Subject: Re: [PATCH v2 0/8] MSI support for Marvell EBU PCIe driver
+Message-ID: <20130607190058.112d8d4a@skate>
+In-Reply-To: <20130607150814.GU23859@titan.lakedaemon.net>
+References: <1370536888-8871-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	<20130606185110.GP23859@titan.lakedaemon.net>
+	<20130607102304.3c42773b@skate>
+	<20130607150814.GU23859@titan.lakedaemon.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+Dear Jason Cooper,
 
-Intel cpu (from IVB) include cpu, mem controller, and IIO.
-When hotadd cpu physically, it will involve cpu hotplug, mem hotplug,
-and pci root hotplug.
+On Fri, 7 Jun 2013 11:08:14 -0400, Jason Cooper wrote:
 
-IIO includes pci host bridge, ioapic controller and iommu.
-pci devices will need to use ioapic and iommu.
-So to make pci root bus hotplug working, we need to add ioapic hotplug support.
+> > 1-3 through Bjorn, 4-5 through tglx, 6-8 through you.
+> > 
+> > The only problem that I see is that 'irqchip: armada-370-xp: implement
+> > MSI support' (which goes through tglx) has a build dependency on 'PCI:
+> > Add registry of MSI chips' (which goes through Bjorn). This is due to
+> > the IRQ controller using the msi_chip_add() function that is introduced
+> > earlier in the PCI core.
+> 
+> Yeah, that's what I was afraid of...
+> 
+> > How would you solve that?
+> 
+> Let me take a closer look at it later today or this weekend.  I just
+> wanted to make sure that we always defer to the appropriate maintainers
+> first, and merge all through arm-soc as a last resort.
 
-Now ioapics are with ACPI MADT table. During booting, kernel will parse
-MADT and put info into ioapic arrays.
-Also Bjorn added one pci device based driver, but it is not wired in yet,
-as it need to call acpi_register_ioapic, and that is TBD.
+Now that I think of it, there is no problem in fact. Until you apply the
+patch 'arm: mvebu: indicate that this platform supports MSI', which
+modifies Kconfig to say that mvebu supports MSI, there is no way for
+the user to enable CONFIG_PCI_MSI.
 
-This patchset will
-1. extend genirq to support reserve/realloc method.
-   because we want irqs for one ioapic controller to be linear mapping
-   to the gsi range.
-2. change ioapic array operation code so we could insert new ioapic and
-   remove one leave the blank slot.
-3. record irq_base in gsi_config in ioapic struct, and use it to convert gsi
-   to irq for pci device using that ioapic controller
-4. make static ioapic path (from MADT) use same code as hot-add path,
-   with reserve/realloc.
-5. change ioapic add/removing to use acpi way, as that is only needed when
-   pci root bus hotplug. Also make it support the case that ioapic
-   controller is hiding in pci config space or ioapic address is not
-   managed by pci reallocation subsys.
+And since in the IRQ controller driver the MSI code is inside a #ifdef
+CONFIG_PCI_MSI, this driver will build perfectly fine, as long as 'arm:
+mvebu: indicate that this platform supports MSI' is not merged before
+'PCI: Add registry of MSI chips'.
 
-Also include some cleanups
-1. print MSI-X clearly in /proc/interrupts and dmesg.
-2. convert irq_2_pin to be generic list.
+So we can perfectly let Bjorn take the three PCI patches, tglx take the
+two IRQ controller patches, and you take the ARM stuff. The only thing
+is that the ARM stuff should not surface until both the PCI patches and
+the IRQ controller patches have landed in mainline.
 
-It is based on linus's tree of 2013/06/07 aka v3.10-rc3+.
+But well, before even thinking of merging all this, I'd like to hear
+from Bjorn about what he thinks of those patches.
 
-could get them from:
-        git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-x86-irq
+Thanks!
 
--v3: split last patch to 4 patches per request from Bjorn.
-     drop one patch that will put pci device name in proc/interrupts
-     update changelog.
-
-Yinghai Lu (27):
-  x86, irq: Change irq_remap_modify_chip_defaults to static
-  x86, irq: Modify irq chip once for irq remapping
-  x86, irq: Print out MSI/MSI-X clearly
-  x86, irq: Show MSI-X in /proc/interrupt
-  x86, irq: Make dmar_msi/hpet_msi irq_chip name consistent
-  ia64, irq: Add dummy create_irq_nr()
-  iommu, irq: Allocate irq_desc for dmar_msi with local node
-  x86, irq: kill create_irq()
-  x86, irq: Convert irq_2_pin list to generic list
-  genirq: Split __irq_reserve_irqs from irq_alloc_descs
-  x86, irq: Add realloc_irq_and_cfg_at()
-  x86, irq: Move down arch_early_irq_init()
-  x86, irq: Split out alloc_ioapic_save_registers()
-  xen, irq: call irq_realloc_desc_at() at first
-  x86, irq: pre-reserve irq range/realloc for booting path
-  x86, irq: Add ioapic_gsi_to_irq
-  genirq: Bail out early in free_desc()
-  x86, irq: More strict checking about registering ioapic
-  x86, irq: Make mp_register_ioapic handle hot-added ioapic
-  x86, irq: Add mp_unregister_ioapic to handle hot-remove ioapic
-  x86, irq: Make ioapics loop skip blank slots
-  x86, ioapic: Find usable ioapic id for 64bit.
-  x86: Move declaration for mp_register_ioapic()
-  PCI, x86: Make ioapic hotplug support built-in
-  PCI, x86, ACPI: Link acpi ioapic register to ioapic
-  PCI, x86, ACPI: Enable ioapic hotplug support with acpi host bridge.
-  PCI, x86, ACPI: get ioapic address from acpi device
-
- arch/ia64/kernel/irq_ia64.c          |  10 +
- arch/x86/include/asm/hw_irq.h        |   2 +-
- arch/x86/include/asm/io_apic.h       |   7 +
- arch/x86/include/asm/irq_remapping.h |   6 -
- arch/x86/include/asm/mpspec.h        |  21 +-
- arch/x86/kernel/acpi/boot.c          |  32 +--
- arch/x86/kernel/apic/apic.c          |   9 +-
- arch/x86/kernel/apic/io_apic.c       | 441 ++++++++++++++++++++++++++---------
- drivers/acpi/pci_root.c              |   4 +
- drivers/iommu/dmar.c                 |   2 +-
- drivers/iommu/irq_remapping.c        |  16 +-
- drivers/pci/Kconfig                  |   3 +-
- drivers/pci/ioapic.c                 | 232 ++++++++++++------
- drivers/xen/events.c                 |   8 +-
- include/linux/irq.h                  |   6 +
- include/linux/pci-acpi.h             |   8 +
- kernel/irq/irqdesc.c                 |  83 +++++--
- 17 files changed, 650 insertions(+), 240 deletions(-)
-
+Thomas
 -- 
-1.8.1.4
-
+Thomas Petazzoni, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
