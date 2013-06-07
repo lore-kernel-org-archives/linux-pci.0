@@ -1,188 +1,177 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate04.nvidia.com ([216.228.121.35]:17427 "EHLO
-	hqemgate04.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756375Ab3FEOtD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Jun 2013 10:49:03 -0400
-From: Jay Agarwal <jagarwal@nvidia.com>
-To: <linux@arm.linux.org.uk>, <swarren@wwwdotorg.org>,
-	<thierry.reding@avionic-design.de>, <bhelgaas@google.com>,
-	<ldewangan@nvidia.com>, <olof@lixom.net>, <hdoyu@nvidia.com>,
-	<pgaikwad@nvidia.com>, <mturquette@linaro.org>,
-	<pdeschrijver@nvidia.com>, <linux-arm-kernel@lists.infradead.org>,
-	<linux-tegra@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>
-CC: <jtukkinen@nvidia.com>, <kthota@nvidia.com>, <jagarwal@nvidia.com>
-Subject: [PATCH V2] ARM: dts: tegra: Move PCIe node to correct place
-Date: Wed, 5 Jun 2013 20:20:02 +0530
-Message-ID: <1370443802-11189-1-git-send-email-jagarwal@nvidia.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>,
+	Joerg Roedel <joro@8bytes.org>
+Subject: [PATCH v3 02/27] x86, irq: Modify irq chip once for irq remapping
+Date: Fri,  7 Jun 2013 15:30:48 -0700
+Message-Id: <1370644273-10495-3-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1370644273-10495-1-git-send-email-yinghai@kernel.org>
+References: <1370644273-10495-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Moving PCIe controller node to correct place so
-that it is sorted by register address in .dtsi file
+Current code: after irq remapping is enabled, irq_chip fields are modified
+during every irq setup.
+	mp_register_gsi
+		io_apic_set_pci_routing
+			io_apic_setup_irq_pin
+				setup_ioapic_irq
+					ioapic_register_intr
+						setup_remapped_irq
+	native_setup_msi_irqs
+		setup_msi_irq
+			setup_remapped_irq
+	default_setup_hpet_msi
+		setup_remapped_irq
+that is not efficient.
 
-Signed-off-by: Jay Agarwal <jagarwal@nvidia.com>
+We only need to modify those irq chip one time just after we enable
+irq mapping.
+
+Change irq_remap_modify_chip_defaults() to __init as it only gets
+called during booting stage, via irq_remap_modify_chips().
+
+Affected irq_chip: ioapic_chip, msi_chip, hpet_msi_type.
+We don't need to use #ifdef in irq_remap_modify_chips():
+IRQ_REMAP only support x86_64 and X86_IO_APIC and PCI_MSI.
+HPET_TIMER is set when x86_64 is set.
+When we have IRQ_REMAP enabled, al three chips are defined and
+used.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Cc: Joerg Roedel <joro@8bytes.org>
 ---
-This patch is based on remotes/gitorious_thierryreding_linux/tegra/next and should be applied on top of this.
+ arch/x86/include/asm/io_apic.h |  5 +++++
+ arch/x86/kernel/apic/apic.c    |  9 ++++++++-
+ arch/x86/kernel/apic/io_apic.c |  8 +++-----
+ drivers/iommu/irq_remapping.c  | 11 +++++++++--
+ 4 files changed, 25 insertions(+), 8 deletions(-)
 
-changes in V2:
-Corrected patch synopsis
-
- arch/arm/boot/dts/tegra30.dtsi |  132 ++++++++++++++++++++--------------------
- 1 files changed, 66 insertions(+), 66 deletions(-)
-
-diff --git a/arch/arm/boot/dts/tegra30.dtsi b/arch/arm/boot/dts/tegra30.dtsi
-index 5c1f7c0..a242b2e 100644
---- a/arch/arm/boot/dts/tegra30.dtsi
-+++ b/arch/arm/boot/dts/tegra30.dtsi
-@@ -12,6 +12,72 @@
- 		serial4 = &uarte;
- 	};
+diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
+index 459e50a..eaff3ad 100644
+--- a/arch/x86/include/asm/io_apic.h
++++ b/arch/x86/include/asm/io_apic.h
+@@ -215,6 +215,11 @@ static inline void io_apic_modify(unsigned int apic, unsigned int reg, unsigned
  
-+	pcie-controller {
-+		compatible = "nvidia,tegra30-pcie";
-+		device_type = "pci";
-+		reg = <0x00003000 0x00000800   /* PADS registers */
-+		       0x00003800 0x00000200   /* AFI registers */
-+		       0x10000000 0x10000000>; /* configuration space */
-+		reg-names = "pads", "afi", "cs";
-+		interrupts = <0 98 0x04   /* controller interrupt */
-+		              0 99 0x04>; /* MSI interrupt */
-+
-+		bus-range = <0x00 0xff>;
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+
-+		ranges = <0x82000000 0 0x00000000 0x00000000 0 0x00001000   /* port 0 configuration space */
-+			  0x82000000 0 0x00001000 0x00001000 0 0x00001000   /* port 1 configuration space */
-+			  0x82000000 0 0x00004000 0x00004000 0 0x00001000   /* port 2 configuration space */
-+			  0x81000000 0 0          0x02000000 0 0x00010000   /* downstream I/O */
-+			  0x82000000 0 0x20000000 0x20000000 0 0x10000000   /* non-prefetchable memory */
-+			  0xc2000000 0 0x30000000 0x30000000 0 0x10000000>; /* prefetchable memory */
-+
-+		clocks = <&tegra_car 70>, <&tegra_car 72>, <&tegra_car 74>,
-+			 <&tegra_car 118>, <&tegra_car 215>;
-+		clock-names = "pex", "afi", "pcie_xclk", "pll_e", "cml";
-+		status = "disabled";
-+
-+		pci@1,0 {
-+			device_type = "pci";
-+			assigned-addresses = <0x82000800 0 0x00000000 0 0x1000>;
-+			reg = <0x000800 0 0 0 0>;
-+			status = "disabled";
-+
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			ranges;
-+
-+			nvidia,num-lanes = <2>;
-+		};
-+
-+		pci@2,0 {
-+			device_type = "pci";
-+			assigned-addresses = <0x82001000 0 0x00001000 0 0x1000>;
-+			reg = <0x001000 0 0 0 0>;
-+			status = "disabled";
-+
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			ranges;
-+
-+			nvidia,num-lanes = <2>;
-+		};
-+
-+		pci@3,0 {
-+			device_type = "pci";
-+			assigned-addresses = <0x82001800 0 0x00004000 0 0x1000>;
-+			reg = <0x001800 0 0 0 0>;
-+			status = "disabled";
-+
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			ranges;
-+
-+			nvidia,num-lanes = <2>;
-+		};
-+	};
-+
- 	host1x {
- 		compatible = "nvidia,tegra30-host1x", "simple-bus";
- 		reg = <0x50000000 0x00024000>;
-@@ -115,72 +181,6 @@
- 		};
- 	};
+ extern void io_apic_eoi(unsigned int apic, unsigned int vector);
  
--	pcie-controller {
--		compatible = "nvidia,tegra30-pcie";
--		device_type = "pci";
--		reg = <0x00003000 0x00000800   /* PADS registers */
--		       0x00003800 0x00000200   /* AFI registers */
--		       0x10000000 0x10000000>; /* configuration space */
--		reg-names = "pads", "afi", "cs";
--		interrupts = <0 98 0x04   /* controller interrupt */
--		              0 99 0x04>; /* MSI interrupt */
++extern struct irq_chip ioapic_chip;
++extern struct irq_chip msi_chip;
++extern struct irq_chip hpet_msi_type;
++void irq_remap_modify_chips(void);
++
+ #else  /* !CONFIG_X86_IO_APIC */
+ 
+ #define io_apic_assign_pci_irqs 0
+diff --git a/arch/x86/kernel/apic/apic.c b/arch/x86/kernel/apic/apic.c
+index 904611b..ff50b90 100644
+--- a/arch/x86/kernel/apic/apic.c
++++ b/arch/x86/kernel/apic/apic.c
+@@ -1552,6 +1552,8 @@ void enable_x2apic(void)
+ int __init enable_IR(void)
+ {
+ #ifdef CONFIG_IRQ_REMAP
++	int ret;
++
+ 	if (!irq_remapping_supported()) {
+ 		pr_debug("intr-remapping not supported\n");
+ 		return -1;
+@@ -1563,7 +1565,12 @@ int __init enable_IR(void)
+ 		return -1;
+ 	}
+ 
+-	return irq_remapping_enable();
++	ret = irq_remapping_enable();
++
++	if (ret >= 0)
++		irq_remap_modify_chips();
++
++	return ret;
+ #endif
+ 	return -1;
+ }
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 9ed796c..f78f7f6 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -1238,8 +1238,6 @@ void __setup_vector_irq(int cpu)
+ 	raw_spin_unlock(&vector_lock);
+ }
+ 
+-static struct irq_chip ioapic_chip;
 -
--		bus-range = <0x00 0xff>;
--		#address-cells = <3>;
--		#size-cells = <2>;
--
--		ranges = <0x82000000 0 0x00000000 0x00000000 0 0x00001000   /* port 0 configuration space */
--			  0x82000000 0 0x00001000 0x00001000 0 0x00001000   /* port 1 configuration space */
--			  0x82000000 0 0x00004000 0x00004000 0 0x00001000   /* port 2 configuration space */
--			  0x81000000 0 0          0x02000000 0 0x00010000   /* downstream I/O */
--			  0x82000000 0 0x20000000 0x20000000 0 0x10000000   /* non-prefetchable memory */
--			  0xc2000000 0 0x30000000 0x30000000 0 0x10000000>; /* prefetchable memory */
--
--		clocks = <&tegra_car 70>, <&tegra_car 72>, <&tegra_car 74>,
--			 <&tegra_car 118>, <&tegra_car 215>;
--		clock-names = "pex", "afi", "pcie_xclk", "pll_e", "cml";
--		status = "disabled";
--
--		pci@1,0 {
--			device_type = "pci";
--			assigned-addresses = <0x82000800 0 0x00000000 0 0x1000>;
--			reg = <0x000800 0 0 0 0>;
--			status = "disabled";
--
--			#address-cells = <3>;
--			#size-cells = <2>;
--			ranges;
--
--			nvidia,num-lanes = <2>;
--		};
--
--		pci@2,0 {
--			device_type = "pci";
--			assigned-addresses = <0x82001000 0 0x00001000 0 0x1000>;
--			reg = <0x001000 0 0 0 0>;
--			status = "disabled";
--
--			#address-cells = <3>;
--			#size-cells = <2>;
--			ranges;
--
--			nvidia,num-lanes = <2>;
--		};
--
--		pci@3,0 {
--			device_type = "pci";
--			assigned-addresses = <0x82001800 0 0x00004000 0 0x1000>;
--			reg = <0x001800 0 0 0 0>;
--			status = "disabled";
--
--			#address-cells = <3>;
--			#size-cells = <2>;
--			ranges;
--
--			nvidia,num-lanes = <2>;
--		};
--	};
--
- 	timer@50004600 {
- 		compatible = "arm,cortex-a9-twd-timer";
- 		reg = <0x50040600 0x20>;
+ #ifdef CONFIG_X86_32
+ static inline int IO_APIC_irq_trigger(int irq)
+ {
+@@ -2511,7 +2509,7 @@ static void ack_apic_level(struct irq_data *data)
+ 	ioapic_irqd_unmask(data, cfg, masked);
+ }
+ 
+-static struct irq_chip ioapic_chip __read_mostly = {
++struct irq_chip ioapic_chip __read_mostly = {
+ 	.name			= "IO-APIC",
+ 	.irq_startup		= startup_ioapic_irq,
+ 	.irq_mask		= mask_ioapic_irq,
+@@ -3093,7 +3091,7 @@ msi_set_affinity(struct irq_data *data, const struct cpumask *mask, bool force)
+  * IRQ Chip for MSI PCI/PCI-X/PCI-Express Devices,
+  * which implement the MSI or MSI-X Capability Structure.
+  */
+-static struct irq_chip msi_chip = {
++struct irq_chip msi_chip = {
+ 	.name			= "PCI-MSI",
+ 	.irq_unmask		= unmask_msi_irq,
+ 	.irq_mask		= mask_msi_irq,
+@@ -3240,7 +3238,7 @@ static int hpet_msi_set_affinity(struct irq_data *data,
+ 	return IRQ_SET_MASK_OK_NOCOPY;
+ }
+ 
+-static struct irq_chip hpet_msi_type = {
++struct irq_chip hpet_msi_type = {
+ 	.name = "HPET_MSI",
+ 	.irq_unmask = hpet_msi_unmask,
+ 	.irq_mask = hpet_msi_mask,
+diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
+index 07ce86a..21ef344 100644
+--- a/drivers/iommu/irq_remapping.c
++++ b/drivers/iommu/irq_remapping.c
+@@ -373,19 +373,26 @@ static void ir_print_prefix(struct irq_data *data, struct seq_file *p)
+ 	seq_printf(p, " IR-%s", data->chip->name);
+ }
+ 
+-static void irq_remap_modify_chip_defaults(struct irq_chip *chip)
++static void __init irq_remap_modify_chip_defaults(struct irq_chip *chip)
+ {
++	printk(KERN_DEBUG "irq_chip: %s ==> IR-%s", chip->name, chip->name);
+ 	chip->irq_print_chip = ir_print_prefix;
+ 	chip->irq_ack = ir_ack_apic_edge;
+ 	chip->irq_eoi = ir_ack_apic_level;
+ 	chip->irq_set_affinity = x86_io_apic_ops.set_affinity;
+ }
+ 
++void __init irq_remap_modify_chips(void)
++{
++	irq_remap_modify_chip_defaults(&ioapic_chip);
++	irq_remap_modify_chip_defaults(&msi_chip);
++	irq_remap_modify_chip_defaults(&hpet_msi_type);
++}
++
+ bool setup_remapped_irq(int irq, struct irq_cfg *cfg, struct irq_chip *chip)
+ {
+ 	if (!irq_remapped(cfg))
+ 		return false;
+ 	irq_set_status_flags(irq, IRQ_MOVE_PCNTXT);
+-	irq_remap_modify_chip_defaults(chip);
+ 	return true;
+ }
 -- 
-1.7.0.4
+1.8.1.4
 
