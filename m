@@ -1,141 +1,91 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:44274 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752160Ab3FFQlk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Jun 2013 12:41:40 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Arnd Bergmann <arnd@arndb.de>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>
-Cc: linux-arm-kernel@lists.infradead.org,
-	Jason Cooper <jason@lakedaemon.net>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Maen Suleiman <maen@marvell.com>
-Subject: [PATCH v2 1/8] PCI: Introduce new MSI chip infrastructure
-Date: Thu,  6 Jun 2013 18:41:21 +0200
-Message-Id: <1370536888-8871-2-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1370536888-8871-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1370536888-8871-1-git-send-email-thomas.petazzoni@free-electrons.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Myron Stowe <myron.stowe@redhat.com>
+Subject: [PATCH 0/3] [SCSI] megaraid: Remove local (struct pci_dev) pdev's
+To: megaraidlinux@lsi.com, JBottomley@parallels.com
+Cc: linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Date: Fri, 07 Jun 2013 10:23:29 -0600
+Message-ID: <20130607162329.11205.95093.stgit@amt.stowe>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Thierry Reding <thierry.reding@avionic-design.de>
+While the megaraid device itself may be 64-bit DMA capable, 32-bit address
+restricted DMA buffers are apparently required for "internal commands" as
+is denoted by a couple of comments - "For all internal commands, the
+buffer must be allocated in <4GB address range" - within the driver.
 
-The new struct msi_chip is used to associated an MSI controller with a
-PCI bus. It is automatically handed down from the root to its children
-during bus enumeration.
+If the device is 64-bit DMA capable then, once it is setup, any subsequent
+DMA allocations for "internal commands" would not be properly restricted
+due to megaraid_probe_one() having called pci_set_dma_mask() on pdev with
+DMA_BIT_MASK(64).  The driver attempts to solve this by using
+make_local_pdev() to dynamically create local pci_dev structures which are
+then set and used for allocating 32-bit address space restricted DMA
+buffers[1] but I don't believe that the implementation works as intended.
 
-This patch provides default (weak) implementations for the architecture-
-specific MSI functions (arch_setup_msi_irq(), arch_teardown_msi_irq()
-and arch_msi_check_device()) which check if a PCI device's bus has an
-attached MSI chip and forward the call appropriately.
 
-Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Assume that the megaraid device is 64-bit DMA capable.  While probing the
+device and attaching the megaraid driver, pci_set_dma_mask() is called
+with the "originating pdev" and a DMA_BIT_MASK of 64.  As a result, any
+subsequent dynamic DMA related allocations associated with the
+"originating pdev" will acquire 64-bit based buffers, which do not meet
+the addressing restrictions for internal commands.
+
+  megaraid_probe_one(struct pci_dev *pdev, ...)
+      ...
+      pci_set_dma_mask(pdev, DMA_BIT_MASK(64));
+
+As mentioned, the driver attempts to solve this by using make_local_pdev()
+to dynamically create local pci_dev structures - "local pdev's" - which
+are set with a DMA_BIT_MASK of 32.
+
+  make_local_pdev
+      alloc_pci_dev
+      memcpy
+      pci_set_dma_mask
+          dma_set_mask
+              *dev->dma_mask = mask;
+
+The "local pdev" is then used in allocating a DMA buffer in an attempt to
+meet the < 4 GB restriction.
+
+For a 64-bit DMA capable device, the "originating pdev" will have its
+'dma_mask' set to 0xffffffffffffffff after the driver attaches.
+Subsequently, when an internal command is initiated, make_local_pdev() is
+called.  make_local_pdev() uses the PCI's core to allocate a "local pdev"
+and then copies the "originating pdev" content into the newly allocated
+"local pdev".  As a result of copying the "originating pdev" content into
+the "local pdev", pdev->dev.dma_mask will be pointing back to the
+"originating pdev's" 'dma_mask' member, not the "local pdev's" as
+intended.  Thus, when make_local_pdev() calls pci_set_dma_mask() in an
+attempt to set the "local pdev's" DMA mask to 32 it will instead overwrite
+the "originating pdev's" DMA mask.  Thus, after any user initiated
+commands are issued, all subsequent DMA allocations will be 32-bit
+restricted from that point onward regardless of whether they are internal
+commands or otherwise.
+
+
+This patch fixes the issue by removing the setup of DMA_BIT_MASK to 64 in
+megaraid_probe_one(), leaving the driver with default 32-bit DMA
+capabilities, as it currently ends up in such a state anyway after any
+internal commands are initiated.
+
+
+[1] It seems strange that both mega_buffer/buf_dma_handle and
+    make_local_pdev() both exist for internal commands but this has been
+    the case for a long time - at least since 2.6.12-rc2.  Perhaps there
+    is some coalescing that could be done.
 ---
- drivers/pci/msi.c   | 34 +++++++++++++++++++++++++++++++---
- drivers/pci/probe.c |  1 +
- include/linux/msi.h | 11 +++++++++++
- include/linux/pci.h |  1 +
- 4 files changed, 44 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 2c10752..4dafac6 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -29,13 +29,41 @@ static int pci_msi_enable = 1;
- 
- 
- /* Arch hooks */
-+int __weak arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
-+{
-+	struct msi_chip *chip = dev->bus->msi;
-+
-+	if (chip && chip->setup_irq) {
-+		int err;
-+
-+		err = chip->setup_irq(chip, dev, desc);
-+		if (err < 0)
-+			return err;
-+
-+		irq_set_chip_data(desc->irq, chip);
-+		return err;
-+	}
-+
-+	return -EINVAL;
-+}
- 
--#ifndef arch_msi_check_device
--int arch_msi_check_device(struct pci_dev *dev, int nvec, int type)
-+void __weak arch_teardown_msi_irq(unsigned int irq)
- {
-+	struct msi_chip *chip = irq_get_chip_data(irq);
-+
-+	if (chip && chip->teardown_irq)
-+		chip->teardown_irq(chip, irq);
-+}
-+
-+int __weak arch_msi_check_device(struct pci_dev *dev, int nvec, int type)
-+{
-+	struct msi_chip *chip = dev->bus->msi;
-+
-+	if (chip && chip->check_device)
-+		return chip->check_device(chip, dev, nvec, type);
-+
- 	return 0;
- }
--#endif
- 
- #ifndef arch_setup_msi_irqs
- # define arch_setup_msi_irqs default_setup_msi_irqs
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 70f10fa..c8591e4 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -634,6 +634,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
- 
- 	child->parent = parent;
- 	child->ops = parent->ops;
-+	child->msi = parent->msi;
- 	child->sysdata = parent->sysdata;
- 	child->bus_flags = parent->bus_flags;
- 
-diff --git a/include/linux/msi.h b/include/linux/msi.h
-index 20c2d6d..4633529 100644
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -58,4 +58,15 @@ int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type);
- void arch_teardown_msi_irqs(struct pci_dev *dev);
- int arch_msi_check_device(struct pci_dev* dev, int nvec, int type);
- 
-+struct msi_chip {
-+	struct module *owner;
-+	struct device *dev;
-+
-+	int (*setup_irq)(struct msi_chip *chip, struct pci_dev *dev,
-+			 struct msi_desc *desc);
-+	void (*teardown_irq)(struct msi_chip *chip, unsigned int irq);
-+	int (*check_device)(struct msi_chip *chip, struct pci_dev *dev,
-+			    int nvec, int type);
-+};
-+
- #endif /* LINUX_MSI_H */
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 3a24e4f..7ffc012 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -432,6 +432,7 @@ struct pci_bus {
- 	struct resource busn_res;	/* bus numbers routed to this bus */
- 
- 	struct pci_ops	*ops;		/* configuration access functions */
-+	struct msi_chip	*msi;		/* MSI controller */
- 	void		*sysdata;	/* hook for sys-specific extension */
- 	struct proc_dir_entry *procdir;	/* directory entry in /proc/bus/pci */
- 
+Myron Stowe (3):
+      [SCSI] megaraid: Remove 64-bit DMA related dead code
+      [SCSI] megaraid: Remove local (struct pci_dev) pdev's
+      [SCSI] megaraid: Remove 64-bit DMA_BIT_MASK capability
+
+
+ drivers/scsi/megaraid.c |  152 ++++++++---------------------------------------
+ drivers/scsi/megaraid.h |    1 
+ 2 files changed, 27 insertions(+), 126 deletions(-)
+
 -- 
-1.8.1.2
-
