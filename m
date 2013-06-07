@@ -1,58 +1,130 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jay Agarwal <jagarwal@nvidia.com>
-To: <linux@arm.linux.org.uk>, <swarren@wwwdotorg.org>,
-	<thierry.reding@avionic-design.de>, <bhelgaas@google.com>,
-	<ldewangan@nvidia.com>, <olof@lixom.net>, <hdoyu@nvidia.com>,
-	<pgaikwad@nvidia.com>, <mturquette@linaro.org>,
-	<pdeschrijver@nvidia.com>, <linux-arm-kernel@lists.infradead.org>,
-	<linux-tegra@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>
-CC: <jtukkinen@nvidia.com>, <kthota@nvidia.com>, <jagarwal@nvidia.com>
-Subject: [PATCH V3 3/4] ARM: dts: tegra: Correct PCIe entry
-Date: Wed, 5 Jun 2013 00:27:31 +0530
-Message-ID: <1370372252-4332-3-git-send-email-jagarwal@nvidia.com>
-In-Reply-To: <1370372252-4332-1-git-send-email-jagarwal@nvidia.com>
-References: <1370372252-4332-1-git-send-email-jagarwal@nvidia.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout3.samsung.com ([203.254.224.33]:58247 "EHLO
+	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751471Ab3FGJUC (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 7 Jun 2013 05:20:02 -0400
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>
+Cc: 'Kukjin Kim' <kgene.kim@samsung.com>,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
+	linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org,
+	devicetree-discuss@lists.ozlabs.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	'Grant Likely' <grant.likely@secretlab.ca>,
+	'Andrew Murray' <andrew.murray@arm.com>,
+	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
+	'Thierry Reding' <thierry.reding@avionic-design.de>,
+	'Surendranath Gurivireddy Balla' <suren.reddy@samsung.com>,
+	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
+	'Thomas Abraham' <thomas.abraham@linaro.org>,
+	Jingoo Han <jg1.han@samsung.com>
+References: <00c001ce277b$92b26ab0$b8174010$%han@samsung.com>
+ <00c501ce277c$30e49dc0$92add940$%han@samsung.com>
+ <000001ce3438$b136e1e0$13a4a5a0$%han@samsung.com>
+ <20130408165626.GA30824@obsidianresearch.com>
+In-reply-to: <20130408165626.GA30824@obsidianresearch.com>
+Subject: Re: [PATCH 6/6] ARM: dts: Add pcie controller node for Samsung
+ EXYNOS5440 SoC
+Date: Fri, 07 Jun 2013 18:19:40 +0900
+Message-id: <000c01ce6360$237a7040$6a6f50c0$@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-- Add interrupt-names property
-- Correct downstream I/O size
+On Tuesday, April 09, 2013 1:56 AM, Jason Gunthorpe wrote:
+> On Mon, Apr 08, 2013 at 06:08:53PM +0900, Jingoo Han wrote:
+> 
+> > I have a question.  Now, I am reviewing the Tegra PCIe, Marvell PCIe
+> > patchset.  However, in the case of Exynos PCIe, 'downstream I/O' and
+> > 'non-prefetchable memory' are different between PCIe0 and PCIe1.
+> > These regions are not shared.
+> >
+> > PCIe0:
+> > 	ranges = <0x00000800 0 0x40000000 0x40000000 0 0x00200000   /* configuration space */
+> > 		  0x81000000 0 0	  0x40200000 0 0x00004000   /* downstream I/O */
+> > 		  0x82000000 0 0	  0x40204000 0 0x10000000>; /* non-prefetchable memory */
+> >
+> > PCIe1:
+> > 	ranges = <0x00000800 0 0x40000000 0x40000000 0 0x00200000   /* configuration space */
+> > 		  0x81000000 0 0	  0x40200000 0 0x00004000   /* downstream I/O */
+> > 		  0x82000000 0 0	  0x40204000 0 0x10000000>; /* non-prefetchable memory */
+> >
+> > PCIe0 uses 0x40000000~0x5fffffff, PCI1 uses 0x60000000~0x7fffffff.
+> >
+> > How can I handle this? :)
+> 
+> You need to dig into where this range restriction comes from, and how
+> it interacts with the PCI-E root bridge's window registers. Is there
+> another set of registers that control this? Is it hardwired into the
+> silicon? Do the root port window registers control this?
+> 
+> I'm looking at functions like exynos_pcie_prog_viewport_mem_outbound
+> and wondering if the driver already controls this window.. But it
+> looks like there may be some restrictions.
+> 
+> Marvell also has unshared regions, but the driver arranges for those
+> ranges to be setup dynamically based on writes to the bridge's window
+> registers from the Linux PCI core, so the region is always in sync
+> with what the Linux PCI core is trying to do.
+> 
+> The desired perfect outcome is to have a single logical 'shared'
+> region for memory and I/O - give that region to the PCI core via
+> struct resources, then the PCI core tells the driver and HW what
+> portion of that region belongs to each root port via a write to the
+> root port bridge's window registers. The net result is still
+> non-overlapping regions, but the allocation of space between port 0
+> and port 1 is performed at run time.
+> 
+> I don't really know enough about your hardware to give you better
+> advice, sorry. The general guidance to try and follow the PCI-E spec
+> for a root complex is good, but if the HW can't do it, or it would
+> make the driver too complex, then one PCI domain per port will always
+> work (this is similar to your original driver, but with domains).
+> 
+> The main advantage to following the PCI-E specs and allowing for
+> dynamic allocation of address space is that it lets you reserve less
+> address space for PCI-E, and this in turn gives you more low mem
+> address space to use for DRAM.
 
-Signed-off-by: Jay Agarwal <jagarwal@nvidia.com>
----
-Patch is based on remotes/gitorious_thierryreding_linux/tegra/next and should be applied on top of this.
+Hi Jason Gunthorpe,
 
-Changes in V3:
-- Avoided changes in cml clock as per review comment
+I implemented 'Single domain' with Exynos PCIe for last two months;
+however, it cannot work properly due to the hardware restriction.
+Each MEM region is hard-wired.
 
- arch/arm/boot/dts/tegra30.dtsi |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+Thus, I will send Exynos PCIe V3 patch as 'Separate domains'.
 
-diff --git a/arch/arm/boot/dts/tegra30.dtsi b/arch/arm/boot/dts/tegra30.dtsi
-index a242b2e..a301389 100644
---- a/arch/arm/boot/dts/tegra30.dtsi
-+++ b/arch/arm/boot/dts/tegra30.dtsi
-@@ -21,7 +21,7 @@
- 		reg-names = "pads", "afi", "cs";
- 		interrupts = <0 98 0x04   /* controller interrupt */
- 		              0 99 0x04>; /* MSI interrupt */
--
-+		interrupt-names = "intr", "msi";
- 		bus-range = <0x00 0xff>;
- 		#address-cells = <3>;
- 		#size-cells = <2>;
-@@ -29,7 +29,7 @@
- 		ranges = <0x82000000 0 0x00000000 0x00000000 0 0x00001000   /* port 0 configuration space */
- 			  0x82000000 0 0x00001000 0x00001000 0 0x00001000   /* port 1 configuration space */
- 			  0x82000000 0 0x00004000 0x00004000 0 0x00001000   /* port 2 configuration space */
--			  0x81000000 0 0          0x02000000 0 0x00010000   /* downstream I/O */
-+			  0x81000000 0 0          0x02000000 0 0x00100000   /* downstream I/O */
- 			  0x82000000 0 0x20000000 0x20000000 0 0x10000000   /* non-prefetchable memory */
- 			  0xc2000000 0 0x30000000 0x30000000 0 0x10000000>; /* prefetchable memory */
- 
--- 
-1.7.0.4
+Best regards,
+Jingoo Han
+
+> 
+> > The following is right?
+> 
+> > +       pcie-controller {
+> > 		.....
+> > +               ranges = <0x82000000 0 0x40000000 0x40000000 0 0x00200000   /* port 0 registers */
+> > +                         0x82000000 0 0x60000000 0x60000000 0 0x00200000   /* port 1 registers */
+> > +                         0x81000000 0 0          0x40200000 0 0x00004000   /* port 0 downstream I/O */
+> > +                         0x81000000 0 0          0x60200000 0 0x00004000   /* port 1 downstream I/O */
+> > +                         0x82000000 0 0x40204000 0x40204000 0 0x10000000>; /* port 0 non-prefetchable
+> memory */
+> > +                         0x82000000 0 0x40204000 0x60204000 0 0x10000000>; /* port 1 non-prefetchable
+> memory */
+> 
+> 
+> > +
+> > +               pci@1,0 {
+> > +                       device_type = "pci";
+> > +                       assigned-addresses = <0x82000800 0 0x40000000 0 0x00200000
+> > +                                                 0x81000800 0 0x40200000 0 0x00004000
+> > +                                                 0x81000800 0 0x40204000 0 0x10000000>;
+> 
+> Would be:
+> 
+>                        ranges = <0x81000800 0 0x40200000  0x81000800 0 0x40200000  0 0x00004000
+>                                  0x81000800 0 0x40204000  0x81000800 0 0x40204000  0 0x10000000>;
+>                        assigned-addresses = <0x82000800 0 0x40000000  0 0x00200000>;
+> 
+> Jason
 
