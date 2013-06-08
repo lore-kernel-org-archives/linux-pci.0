@@ -1,97 +1,46 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:42319 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934462Ab3FSQ4Y (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Jun 2013 12:56:24 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Russell King <linux@arm.linux.org.uk>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>
-Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>
-Subject: [PATCHv3 01/11] irqdomain: add irq_alloc_mapping() function
-Date: Wed, 19 Jun 2013 18:56:09 +0200
-Message-Id: <1371660979-21588-2-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1371660979-21588-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1371660979-21588-1-git-send-email-thomas.petazzoni@free-electrons.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Bityutskiy, Artem" <artem.bityutskiy@intel.com>
+To: Matt Fleming <matt@console-pimps.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"x86@kernel.org" <x86@kernel.org>,
+	"Fleming, Matt" <matt.fleming@intel.com>,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	"Seth Forshee" <seth.forshee@canonical.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	"stable@vger.kernel.org" <stable@vger.kernel.org>
+Subject: Re: [PATCH] x86/PCI: setup data may be in highmem
+Date: Sat, 8 Jun 2013 11:14:08 +0000
+Message-ID: <1370690248.2938.65.camel@sauron.fi.intel.com>
+References: <1369215782-32697-1-git-send-email-matt@console-pimps.org>
+	 <1370690146.2938.64.camel@sauron.fi.intel.com>
+In-Reply-To: <1370690146.2938.64.camel@sauron.fi.intel.com>
+Reply-To: "Bityutskiy, Artem" <artem.bityutskiy@intel.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This commit extends the irqdomain subsystem with an
-irq_alloc_mapping() function which allows to let the irqdomain code
-find an available hwirq number in the range [ 0 ; domain size ] for
-the given domain, and create a virq mapping for it.
-
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
----
- include/linux/irqdomain.h |  2 ++
- kernel/irq/irqdomain.c    | 32 ++++++++++++++++++++++++++++++++
- 2 files changed, 34 insertions(+)
-
-diff --git a/include/linux/irqdomain.h b/include/linux/irqdomain.h
-index 02f7658..5f9c3ff 100644
---- a/include/linux/irqdomain.h
-+++ b/include/linux/irqdomain.h
-@@ -195,6 +195,8 @@ static inline unsigned int irq_linear_revmap(struct irq_domain *domain,
- extern unsigned int irq_find_mapping(struct irq_domain *host,
- 				     irq_hw_number_t hwirq);
- extern unsigned int irq_create_direct_mapping(struct irq_domain *host);
-+extern unsigned int irq_alloc_mapping(struct irq_domain *host,
-+				      irq_hw_number_t *hwirq);
- extern int irq_create_strict_mappings(struct irq_domain *domain,
- 				      unsigned int irq_base,
- 				      irq_hw_number_t hwirq_base, int count);
-diff --git a/kernel/irq/irqdomain.c b/kernel/irq/irqdomain.c
-index 836a0f7..be82d2e 100644
---- a/kernel/irq/irqdomain.c
-+++ b/kernel/irq/irqdomain.c
-@@ -375,6 +375,38 @@ unsigned int irq_create_direct_mapping(struct irq_domain *domain)
- EXPORT_SYMBOL_GPL(irq_create_direct_mapping);
- 
- /**
-+ * irq_alloc_mapping() - Allocate an irq for mapping
-+ * @domain: domain to allocate the irq for or NULL for default domain
-+ * @hwirq:  reference to the returned hwirq
-+ *
-+ * This routine are used for irq controllers which can choose the
-+ * hardware interrupt number from a range [ 0 ; domain size ], such as
-+ * is often the case with PCI MSI controllers. The function will
-+ * returned the allocated hwirq number in the hwirq pointer, and the
-+ * corresponding virq number as the return value.
-+ */
-+unsigned int irq_alloc_mapping(struct irq_domain *domain,
-+			       irq_hw_number_t *out_hwirq)
-+{
-+	irq_hw_number_t hwirq;
-+
-+	pr_debug("irq_alloc_mapping(0x%p)\n", domain);
-+
-+	for (hwirq = 0; hwirq < domain->hwirq_max; hwirq++)
-+		if (!irq_find_mapping(domain, hwirq))
-+			break;
-+
-+	if (hwirq == domain->hwirq_max) {
-+		pr_debug("-> no available hwirq found\n");
-+		return 0;
-+	}
-+
-+	*out_hwirq = hwirq;
-+	return irq_create_mapping(domain, hwirq);
-+}
-+EXPORT_SYMBOL_GPL(irq_alloc_mapping);
-+
-+/**
-  * irq_create_mapping() - Map a hardware interrupt into linux irq space
-  * @domain: domain owning this hardware interrupt or NULL for default domain
-  * @hwirq: hardware irq number in that domain space
--- 
-1.8.1.2
+T24gU2F0LCAyMDEzLTA2LTA4IGF0IDE0OjE1ICswMzAwLCBBcnRlbSBCaXR5dXRza2l5IHdyb3Rl
+Og0KPiBPbiBXZWQsIDIwMTMtMDUtMjIgYXQgMTA6NDMgKzAxMDAsIE1hdHQgRmxlbWluZyB3cm90
+ZToNCj4gPiBGcm9tOiBNYXR0IEZsZW1pbmcgPG1hdHQuZmxlbWluZ0BpbnRlbC5jb20+DQo+ID4g
+DQo+ID4gcGNpYmlvc19hZGRfZGV2aWNlKCkgYXNzdW1lcyB0aGF0IHRoZSBwaHlzaWNhbCBhZGRy
+ZXNzZXMgc3RvcmVkIGluDQo+ID4gc2V0dXBfZGF0YSBhcmUgYWNjZXNzaWJsZSB2aWEgdGhlIGRp
+cmVjdCBrZXJuZWwgbWFwcGluZywgYW5kIHRoYXQNCj4gPiBjYWxsaW5nIHBoeXNfdG9fdmlydCgp
+IGlzIHZhbGlkLiBUaGlzIGlzbid0IGd1YXJhbnRlZWQgdG8gYmUgdHJ1ZSBvbiB4ODYNCj4gPiB3
+aGVyZSB0aGUgZGlyZWN0IG1hcHBpbmcgcmFuZ2UgaXMgbXVjaCBzbWFsbGVyIHRoYW4gb24geDg2
+LTY0Lg0KPiA+IA0KPiA+IENhbGxpbmcgcGh5c190b192aXJ0KCkgb24gYSBoaWdobWVtIGFkZHJl
+c3MgcmVzdWx0cyBpbiB0aGUgZm9sbG93aW5nLA0KPiANCj4gRml4ZXMgcGFnaW5nIHJlcXVlc3Qg
+b29wcyBmb3IgbWUgYXMgd2VsbCwgdGhhbmtzISBXb3VsZCB5b3UgcGxlYXNlIGFkZCBhDQo+IC1z
+dGFibGUgdGFnIHRvIHRoaXMgcGF0Y2g/DQoNCk9oLCBwYXJkb24sIHlvdSBkaWQgQ0MgLXN0YWJs
+ZS4NCg0KLS0gDQpCZXN0IFJlZ2FyZHMsDQpBcnRlbSBCaXR5dXRza2l5DQotLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0K
+SW50ZWwgRmlubGFuZCBPeQpSZWdpc3RlcmVkIEFkZHJlc3M6IFBMIDI4MSwgMDAxODEgSGVsc2lu
+a2kgCkJ1c2luZXNzIElkZW50aXR5IENvZGU6IDAzNTc2MDYgLSA0IApEb21pY2lsZWQgaW4gSGVs
+c2lua2kgCgpUaGlzIGUtbWFpbCBhbmQgYW55IGF0dGFjaG1lbnRzIG1heSBjb250YWluIGNvbmZp
+ZGVudGlhbCBtYXRlcmlhbCBmb3IKdGhlIHNvbGUgdXNlIG9mIHRoZSBpbnRlbmRlZCByZWNpcGll
+bnQocykuIEFueSByZXZpZXcgb3IgZGlzdHJpYnV0aW9uCmJ5IG90aGVycyBpcyBzdHJpY3RseSBw
+cm9oaWJpdGVkLiBJZiB5b3UgYXJlIG5vdCB0aGUgaW50ZW5kZWQKcmVjaXBpZW50LCBwbGVhc2Ug
+Y29udGFjdCB0aGUgc2VuZGVyIGFuZCBkZWxldGUgYWxsIGNvcGllcy4K
 
