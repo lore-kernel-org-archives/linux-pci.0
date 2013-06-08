@@ -1,124 +1,101 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mho-02-ewr.mailhop.org ([204.13.248.72]:13409 "EHLO
-	mho-02-ewr.mailhop.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755102Ab3FGPIu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 7 Jun 2013 11:08:50 -0400
-Date: Fri, 7 Jun 2013 11:08:14 -0400
-From: Jason Cooper <jason@lakedaemon.net>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Arnd Bergmann <arnd@arndb.de>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	linux-arm-kernel@lists.infradead.org,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Maen Suleiman <maen@marvell.com>
-Subject: Re: [PATCH v2 0/8] MSI support for Marvell EBU PCIe driver
-Message-ID: <20130607150814.GU23859@titan.lakedaemon.net>
-References: <1370536888-8871-1-git-send-email-thomas.petazzoni@free-electrons.com>
- <20130606185110.GP23859@titan.lakedaemon.net>
- <20130607102304.3c42773b@skate>
+Received: from mail-ie0-f176.google.com ([209.85.223.176]:57376 "EHLO
+	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751212Ab3FHHB1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 8 Jun 2013 03:01:27 -0400
+Received: by mail-ie0-f176.google.com with SMTP id ar20so9707622iec.7
+        for <linux-pci@vger.kernel.org>; Sat, 08 Jun 2013 00:01:27 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130607102304.3c42773b@skate>
+In-Reply-To: <20130608015133.GB5874@google.com>
+References: <CAErSpo4AFxSqUfxbw60B8XVk3XxtYfRcLyWDy=yPb0fURV=BQg@mail.gmail.com>
+	<1370538609-28903-1-git-send-email-jiang.liu@huawei.com>
+	<1370538609-28903-2-git-send-email-jiang.liu@huawei.com>
+	<CAE9FiQUDnU_DaXDKKnRh=VYQ6Y+FeWHsKB7rnN2Gn3d0EoGLPg@mail.gmail.com>
+	<20130608015133.GB5874@google.com>
+Date: Sat, 8 Jun 2013 00:01:26 -0700
+Message-ID: <CAE9FiQUCR0cSH1u59qyZo8KM9J6P0+AG79vodGYPDVohg6UOfQ@mail.gmail.com>
+Subject: Re: [PATCH 2/2] PCI: make PCI host bridge/bus creating and destroying
+ logic symmetric
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jiang Liu <liuj97@gmail.com>, Jiang Liu <jiang.liu@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 07, 2013 at 10:23:04AM +0200, Thomas Petazzoni wrote:
-> Dear Jason Cooper,
-> 
-> On Thu, 6 Jun 2013 14:51:10 -0400, Jason Cooper wrote:
-> > > Thierry Reding (1):
-> > >   PCI: Introduce new MSI chip infrastructure
-> > > 
-> > > Thomas Petazzoni (7):
-> > >   PCI: Add registry of MSI chips
-> > >   irqchip: armada-370-xp: properly request resources
-> > >   irqchip: armada-370-xp: implement MSI support
-> > >   arm: mvebu: the MPIC now provides MSI controller features
-> > >   pci: mvebu: add support for MSI
-> > >   arm: mvebu: indicate that this platform supports MSI
-> > >   arm: mvebu: link PCIe controllers to the MSI controller
-> > > 
-> > 
-> > Is there a reason why the following breakdown wouldn't work?
-> 
-> No, it should work. And it's actually possible with how the patches are
-> organized currently.
+On Fri, Jun 7, 2013 at 6:51 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>
+>> should split pci_release_host_bridge_dev renaming and moving to another patch.
+>
+> I split the rename/move to another patch and added both to my
+> pci/jiang-bus-lock-v3 branch.
 
-Ok.  good.
+good.
 
-> > >  arch/arm/boot/dts/armada-370-xp.dtsi     |   1 +
-> > >  arch/arm/boot/dts/armada-370.dtsi        |   1 +
-> > >  arch/arm/boot/dts/armada-xp-mv78230.dtsi |   1 +
-> > >  arch/arm/boot/dts/armada-xp-mv78260.dtsi |   1 +
-> > >  arch/arm/boot/dts/armada-xp-mv78460.dtsi |   1 +
-> > 
-> > through mvebu/arm-soc
-> 
-> Patches 5 and 8.
-> 
-> > 
-> > >  arch/arm/mach-mvebu/Kconfig              |   1 +
-> > 
-> > through mvebu/arm-soc after the other three have landed (v3.11-rc1)
-> 
-> Patch 7.
-> 
-> > >  drivers/irqchip/irq-armada-370-xp.c      | 186 ++++++++++++++++++++++++++++++-
-> > 
-> > through tglx
-> 
-> Patches 3 and 4.
-> 
-> > 
-> > >  drivers/pci/host/pci-mvebu.c             |  21 ++++
-> > >  drivers/pci/msi.c                        |  59 +++++++++-
-> > >  drivers/pci/probe.c                      |   1 +
-> > >  include/linux/msi.h                      |  22 ++++
-> > >  include/linux/pci.h                      |   1 +
-> > 
-> > through Bjorn
-> 
-> Patches 1, 2 and 6.
-> 
-> So as you can see, the patches are already broken down in a way that
-> allows each maintainer to pick its part. But I admit I could probably
-> reorder them in the following way:
-> 
->  1. PCI: Introduce new MSI chip infrastructure
->  2. PCI: Add registry of MSI chips
->  3. pci: mvebu: add support for MSI
->  4. irqchip: armada-370-xp: properly request resources
->  5. irqchip: armada-370-xp: implement MSI support
->  6. arm: mvebu: the MPIC now provides MSI controller features
->  7. arm: mvebu: link PCIe controllers to the MSI controller
->  8. arm: mvebu: indicate that this platform supports MSI
-> 
-> 1-3 through Bjorn, 4-5 through tglx, 6-8 through you.
-> 
-> The only problem that I see is that 'irqchip: armada-370-xp: implement
-> MSI support' (which goes through tglx) has a build dependency on 'PCI:
-> Add registry of MSI chips' (which goes through Bjorn). This is due to
-> the IRQ controller using the msi_chip_add() function that is introduced
-> earlier in the PCI core.
+>
+>> > @@ -1726,30 +1722,21 @@ struct pci_bus *pci_create_root_bus(struct ..
+...
+>
+> I think this function would be better if we created the host bridge
+> first, then the bus.  But your patch is an improvement, so we can look
+> at doing that later.
 
-Yeah, that's what I was afraid of...
+Yes, that will more straightforward, create hostbidge before root bus,
+like we have pci bridge before subordinate bus under it.
 
-> How would you solve that?
+current logic is
 
-Let me take a closer look at it later today or this weekend.  I just
-wanted to make sure that we always defer to the appropriate maintainers
-first, and merge all through arm-soc as a last resort.
+        b = pci_alloc_bus();
+        if (!b)
+                return NULL;
 
-> In any case, at this point I'd like first to have the ACK from Bjorn
-> Helgaas and Arnd Bergmann on the general approach.
+        b->sysdata = sysdata;
+        b->ops = ops;
+        b->number = b->busn_res.start = bus;
+        b2 = pci_find_bus(pci_domain_nr(b), bus);
+        if (b2) {
+                /* If we already got to this bus through a different
+bridge, ignore it */
+                dev_dbg(&b2->dev, "bus already known\n");
+                goto err_out;
+        }
 
-Of course.
+        bridge = pci_alloc_host_bridge(b);
 
-thx,
+We need to find the duplicated hostbridge or racing.
 
-Jason.
+If we need call pci_alloc_host_bridge at first, we will need my
+for_each_host_bridge patchset, and use it to check if there is
+existing hostbridge.
+
+>
+>> looks like we don't need to split device_register to device_del and put_device.
+>>
+>> we can make root bus removal to use device_unregister too, in the patches,
+>
+> If we can use device_register()/device_unregister() directly instead of
+> splitting them into initialize/add/del/put, that would be awesome.
+>
+> Anyway, http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/jiang-bus-lock-v3
+> is the current state of what I've got.  If you want to iterate on this some
+> more and improve things, that's great.  But please start with what's on my
+> branch and post your updates as a complete v4 because I did tweak some
+> changelogs and code formatting, and I don't want to lose that work.
+
+ok, please consider drop
+commit d751727a1792262cb464d8d9608500facb763301
+    PCI: Make host bridge/bus creating and destroying logic symmetric
+from pci/jiang-bus-lock-v3, and apply my three patches at
+
+  https://patchwork.kernel.org/patch/2562431/
+    [1/7] PCI: move back pci_proc_attach_devices calling
+  https://patchwork.kernel.org/patch/2562461/
+    [2/7] PCI: move resources and bus_list releasing to pci_release_dev
+  https://patchwork.kernel.org/patch/2562451/
+    [3/7] PCI: Detach driver in pci_stop_device
+
+Thanks
+
+Yinghai
