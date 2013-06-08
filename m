@@ -1,96 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:25660 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758238Ab3FAGDe (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 1 Jun 2013 02:03:34 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v5 3/7] PCI: Use pci_walk_bus to detect unassigned resources
-Date: Fri, 31 May 2013 23:03:08 -0700
-Message-Id: <1370066593-22736-3-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1370066593-22736-1-git-send-email-yinghai@kernel.org>
-References: <1370066593-22736-1-git-send-email-yinghai@kernel.org>
+Received: from mail-oa0-f44.google.com ([209.85.219.44]:50931 "EHLO
+	mail-oa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752241Ab3FHSBT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 8 Jun 2013 14:01:19 -0400
+Received: by mail-oa0-f44.google.com with SMTP id n12so4486472oag.31
+        for <linux-pci@vger.kernel.org>; Sat, 08 Jun 2013 11:01:18 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <201306081343.23776.gianogli@tiscali.it>
+References: <201306081343.23776.gianogli@tiscali.it>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Sat, 8 Jun 2013 12:00:55 -0600
+Message-ID: <CAErSpo4=wdtdOk3L_mFeXVZp-A6PiNqy7mtzhrJhfjYash4tpA@mail.gmail.com>
+Subject: Re: Reconfigure the Intel 5520 I/O hub
+To: Gianluca Oglietti <gianogli@tiscali.it>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Per Bjorn, use pci_walk_bus instead of for_each_pci_dev or
-calling pci_realloc_detect() recursively, that will make code more readable.
+On Sat, Jun 8, 2013 at 5:43 AM, Gianluca Oglietti <gianogli@tiscali.it> wrote:
+> I've a Supermicro server with a X8DTU-6TF+ matherboard. (You can find the
+> system block diagram at http://goo.gl/ibWhb).
+> It is a NUMA system with 2 processors and only one Intel 5520 I/O hub.
+> In the last weeks I've made some studies about the optimization of the
+> TCP/IP packets realtime analysis but I've encountered a problem.
+> All the PCIe interfaces, where are used the NICs, are interconnected,
+> through the Intel 5520 I/O hub, only to the NUMA node 0:
+> ...
 
-Per Bjorn, separate it from big patch that handing assign_unssigned per root bus.
+> Is there a way to reconfigure the Intel 5520 I/O hub (via software,
+> without a new BIOS) to connect one NIC to NUMA node 0 and the other one
+> to NUMA node 1?
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+There's no standard way to do this via the PCI core, because it's too
+system-specific.
 
----
- drivers/pci/setup-bus.c |   46 +++++++++++++++++++++++++++++++---------------
- 1 file changed, 31 insertions(+), 15 deletions(-)
+You might be able to learn something by reading the 5520 spec:
+http://www.intel.com/content/www/us/en/chipsets/5520-5500-chipset-ioh-datasheet.html
 
-Index: linux-2.6/drivers/pci/setup-bus.c
-===================================================================
---- linux-2.6.orig/drivers/pci/setup-bus.c
-+++ linux-2.6/drivers/pci/setup-bus.c
-@@ -1427,30 +1427,46 @@ static bool __init pci_realloc_enabled(v
- 	return pci_realloc_enable >= user_enabled;
- }
- 
--static void __init pci_realloc_detect(void)
--{
- #if defined(CONFIG_PCI_IOV) && defined(CONFIG_PCI_REALLOC_ENABLE_AUTO)
--	struct pci_dev *dev = NULL;
-+static int __init check_unassigned_resources(struct pci_dev *dev, void *data)
-+{
-+	int i;
-+	int *unassigned = data;
- 
--	if (pci_realloc_enable != undefined)
--		return;
-+	for (i = PCI_IOV_RESOURCES; i <= PCI_IOV_RESOURCE_END; i++) {
-+		struct resource *r = &dev->resource[i];
- 
--	for_each_pci_dev(dev) {
--		int i;
-+		/* Not assigned, or rejected by kernel ? */
-+		if (r->flags && !r->start) {
-+			(*unassigned)++;
-+			return 1; /* return early from pci_walk_bus */
-+		}
-+	}
- 
--		for (i = PCI_IOV_RESOURCES; i <= PCI_IOV_RESOURCE_END; i++) {
--			struct resource *r = &dev->resource[i];
-+	return 0;
-+}
- 
--			/* Not assigned, or rejected by kernel ? */
--			if (r->flags && !r->start) {
--				pci_realloc_enable = auto_enabled;
-+static void  __init pci_realloc_detect(void)
-+{
-+	int unassigned = 0;
-+	struct pci_bus *bus;
- 
--				return;
--			}
-+	if (pci_realloc_enable != undefined)
-+		return;
-+
-+	list_for_each_entry(bus, &pci_root_buses, node) {
-+		pci_walk_bus(bus, check_unassigned_resources, &unassigned);
-+		if (unassigned) {
-+			pci_realloc_enable = auto_enabled;
-+			return;
- 		}
- 	}
--#endif
- }
-+#else
-+static void __init pci_realloc_detect(void)
-+{
-+}
-+#endif
- 
- /*
-  * first try will not touch pci bridge res
+It sounds like your system is similar to Figure 1-1 in that doc, which
+looks pretty symmetric.  I don't know anything about the 5520
+internals, or why there might be preferential routing to NUMA node 0
+over node 1.
+
+Have you measured a difference in NIC performance between NUMA node 0
+and 1?  Maybe the I/O connections actually are symmetric, and the BIOS
+just uses the same distance tables, i.e., whatever determines the
+local_cpulist contents, for both a single-node and a two-node system?
+
+Bjorn
