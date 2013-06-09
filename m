@@ -1,157 +1,41 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:19515 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751308Ab3FJNvC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 10 Jun 2013 09:51:02 -0400
-Date: Mon, 10 Jun 2013 15:51:56 +0200
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3 10/27] genirq: Split __irq_reserve_irqs from
- irq_alloc_descs
-Message-ID: <20130610135154.GA11905@dhcp-26-207.brq.redhat.com>
-References: <1370644273-10495-1-git-send-email-yinghai@kernel.org>
- <1370644273-10495-11-git-send-email-yinghai@kernel.org>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:34310 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751573Ab3FIDsI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 8 Jun 2013 23:48:08 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, Hanjun Guo <guohanjun@huawei.com>,
+	<jiang.liu@huawei.com>, Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH] PCI: Fix comment typo for pcie_pme_remove()
+Date: Sun, 9 Jun 2013 11:47:49 +0800
+Message-ID: <1370749669-20348-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1370644273-10495-11-git-send-email-yinghai@kernel.org>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 07, 2013 at 03:30:56PM -0700, Yinghai Lu wrote:
-> irq_alloc_descs and irq_reserve_irqs are almost the same.
-> Separate code out to __irq_reserved_irqs, and other two reuse
-> __irq_reserve_irqs.
-> 
-> We will use __irq_reserve_irqs for coming ioapic hotplug support.
-> 
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> Cc: Alexander Gordeev <agordeev@redhat.com>
-> ---
->  include/linux/irq.h  |  1 +
->  kernel/irq/irqdesc.c | 54 ++++++++++++++++++++++++++++++----------------------
->  2 files changed, 32 insertions(+), 23 deletions(-)
-> 
-> diff --git a/include/linux/irq.h b/include/linux/irq.h
-> index bc4e066..4e0fcbb 100644
-> --- a/include/linux/irq.h
-> +++ b/include/linux/irq.h
-> @@ -600,6 +600,7 @@ int __irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
->  
->  void irq_free_descs(unsigned int irq, unsigned int cnt);
->  int irq_reserve_irqs(unsigned int from, unsigned int cnt);
-> +int __irq_reserve_irqs(int irq, unsigned int from, unsigned int cnt);
->  
->  static inline void irq_free_desc(unsigned int irq)
->  {
-> diff --git a/kernel/irq/irqdesc.c b/kernel/irq/irqdesc.c
-> index 192a302..3b9fb92 100644
-> --- a/kernel/irq/irqdesc.c
-> +++ b/kernel/irq/irqdesc.c
-> @@ -340,18 +340,15 @@ void irq_free_descs(unsigned int from, unsigned int cnt)
->  EXPORT_SYMBOL_GPL(irq_free_descs);
->  
->  /**
-> - * irq_alloc_descs - allocate and initialize a range of irq descriptors
-> - * @irq:	Allocate for specific irq number if irq >= 0
-> + * __irq_reserve_descs - reserve and initialize a range of irq descriptors
-> + * @irq:	Reserve for specific irq number if irq >= 0
->   * @from:	Start the search from this irq number
-> - * @cnt:	Number of consecutive irqs to allocate.
-> - * @node:	Preferred node on which the irq descriptor should be allocated
-> - * @owner:	Owning module (can be NULL)
-> + * @cnt:	Number of consecutive irqs to reserve.
->   *
->   * Returns the first irq number or error code
->   */
->  int __ref
-> -__irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
-> -		  struct module *owner)
-> +__irq_reserve_irqs(int irq, unsigned int from, unsigned int cnt)
->  {
->  	int start, ret;
->  
-> @@ -369,7 +366,7 @@ __irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
->  	start = bitmap_find_next_zero_area(allocated_irqs, IRQ_BITMAP_BITS,
->  					   from, cnt, 0);
->  	ret = -EEXIST;
-> -	if (irq >=0 && start != irq)
-> +	if (irq >= 0 && start != irq)
->  		goto err;
->  
->  	if (start + cnt > nr_irqs) {
-> @@ -380,12 +377,36 @@ __irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
->  
->  	bitmap_set(allocated_irqs, start, cnt);
->  	mutex_unlock(&sparse_irq_lock);
-> -	return alloc_descs(start, cnt, node, owner);
-> +	return start;
->  
->  err:
->  	mutex_unlock(&sparse_irq_lock);
->  	return ret;
->  }
-> +
-> +/**
-> + * irq_alloc_descs - allocate and initialize a range of irq descriptors
-> + * @irq:	Allocate for specific irq number if irq >= 0
-> + * @from:	Start the search from this irq number
-> + * @cnt:	Number of consecutive irqs to allocate.
-> + * @node:	Preferred node on which the irq descriptor should be allocated
-> + * @owner:	Owning module (can be NULL)
-> + *
-> + * Returns the first irq number or error code
-> + */
-> +int __ref
-> +__irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
-> +		  struct module *owner)
-> +{
-> +	int start;
-> +
-> +	start = __irq_reserve_irqs(irq, from, cnt);
-> +
-> +	if (start < 0)
-> +		return start;
-> +
-> +	return alloc_descs(start, cnt, node, owner);
+Fix trivial comment typo for pcie_pme_remove().
 
-I think alloc_descs() fail path is needed before return.
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/pci/pcie/pme.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-> +}
->  EXPORT_SYMBOL_GPL(__irq_alloc_descs);
->  
->  /**
-> @@ -397,20 +418,7 @@ EXPORT_SYMBOL_GPL(__irq_alloc_descs);
->   */
->  int irq_reserve_irqs(unsigned int from, unsigned int cnt)
->  {
-> -	unsigned int start;
-> -	int ret = 0;
-> -
-> -	if (!cnt || (from + cnt) > nr_irqs)
-> -		return -EINVAL;
-> -
-> -	mutex_lock(&sparse_irq_lock);
-> -	start = bitmap_find_next_zero_area(allocated_irqs, nr_irqs, from, cnt, 0);
-> -	if (start == from)
-> -		bitmap_set(allocated_irqs, start, cnt);
-> -	else
-> -		ret = -EEXIST;
-> -	mutex_unlock(&sparse_irq_lock);
-> -	return ret;
-> +	return __irq_reserve_irqs(from, from, cnt);
->  }
->  
->  /**
-> -- 
-> 1.8.1.4
-> 
-
+diff --git a/drivers/pci/pcie/pme.c b/drivers/pci/pcie/pme.c
+index 795db1f..e56e594 100644
+--- a/drivers/pci/pcie/pme.c
++++ b/drivers/pci/pcie/pme.c
+@@ -408,7 +408,7 @@ static int pcie_pme_resume(struct pcie_device *srv)
+ 
+ /**
+  * pcie_pme_remove - Prepare PCIe PME service device for removal.
+- * @srv - PCIe service device to resume.
++ * @srv - PCIe service device to remove.
+  */
+ static void pcie_pme_remove(struct pcie_device *srv)
+ {
 -- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+1.7.1
+
+
