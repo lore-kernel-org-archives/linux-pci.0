@@ -1,88 +1,107 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f180.google.com ([209.85.192.180]:38073 "EHLO
-	mail-pd0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751354Ab3FWP5y (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 23 Jun 2013 11:57:54 -0400
-Message-ID: <51C71AFA.4090102@gmail.com>
-Date: Sun, 23 Jun 2013 23:57:46 +0800
+Received: from mail-pb0-f45.google.com ([209.85.160.45]:44553 "EHLO
+	mail-pb0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750861Ab3FIQu5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 9 Jun 2013 12:50:57 -0400
+Message-ID: <51B4B266.5010100@gmail.com>
+Date: Mon, 10 Jun 2013 00:50:46 +0800
 From: Jiang Liu <liuj97@gmail.com>
 MIME-Version: 1.0
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-CC: "Alexander E. Patrakov" <patrakov@gmail.com>,
-	Jiang Liu <jiang.liu@huawei.com>, alexdeucher@gmail.com,
-	Bjorn Helgaas <bhelgaas@google.com>,
+To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
 	Yinghai Lu <yinghai@kernel.org>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	linux-acpi@vger.kernel.org,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [BUGFIX v2 0/4] fix bug 56531, 59501 and 59581
-References: <1371238081-32260-1-git-send-email-jiang.liu@huawei.com> <2686036.58bcYhGNts@vostro.rjw.lan> <51C5103C.4030802@gmail.com> <4437606.laqX8rCptb@vostro.rjw.lan>
-In-Reply-To: <4437606.laqX8rCptb@vostro.rjw.lan>
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Jeremy Fitzhardinge <jeremy@goop.org>,
+	xen-devel@lists.xensource.com,
+	virtualization@lists.linux-foundation.org
+Subject: Re: [RFC PATCH v2, part3 07/11] PCI, xen-pcifront: use new PCI interfaces
+ to simplify implementation
+References: <1368719459-24800-1-git-send-email-jiang.liu@huawei.com> <1368719459-24800-8-git-send-email-jiang.liu@huawei.com> <20130607145024.GA16631@phenom.dumpdata.com> <20130607153822.GA24882@phenom.dumpdata.com> <51B20F57.7050100@gmail.com> <20130607170706.GB3730@phenom.dumpdata.com>
+In-Reply-To: <20130607170706.GB3730@phenom.dumpdata.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06/23/2013 03:59 AM, Rafael J. Wysocki wrote:
-> On Saturday, June 22, 2013 10:47:24 AM Jiang Liu wrote:
->> On 06/22/2013 08:13 AM, Rafael J. Wysocki wrote:
->>> On Saturday, June 22, 2013 12:54:21 AM Jiang Liu wrote:
->>>> On 06/21/2013 03:06 AM, Rafael J. Wysocki wrote:
->>>>> On Wednesday, June 19, 2013 11:18:41 AM Alexander E. Patrakov wrote:
->>>>>> 2013/6/19 Rafael J. Wysocki <rjw@sisk.pl>:
->>>>>>> OK, let's try to untangle this a bit.
->>>>>>>
->>>>>>> If you applyt patches [1/4] and [4/4] from the $subject series only, what
->>>>>>> does remain unfixed?
->>>>>>
->>>>>> [not tested, can do so in 12 hours if needed]
->>>>>>
->>>>>> I think there will be problems on undocking and/or on the second
->>>>>> docking, as described in comments #6 - #8 of
->>>>>> https://bugzilla.kernel.org/show_bug.cgi?id=59501
+On Sat 08 Jun 2013 01:07:06 AM CST, Konrad Rzeszutek Wilk wrote:
+> On Sat, Jun 08, 2013 at 12:50:31AM +0800, Jiang Liu wrote:
+>> On 06/07/2013 11:38 PM, Konrad Rzeszutek Wilk wrote:
+>>> On Fri, Jun 07, 2013 at 10:50:24AM -0400, Konrad Rzeszutek Wilk wrote:
+>>>> On Thu, May 16, 2013 at 11:50:55PM +0800, Jiang Liu wrote:
+>>>>> Use new PCI interfaces to simplify xen-pcifront implementation:
+>>>>> 1) Use pci_create_root_bus() instead of pci_scan_bus_parented()
+>>>>>    because pci_scan_bus_parented() is marked as __deprecated.This
+>>>>>    also gets rid of a duplicated call of pci_bus_start_devices().
+>>>>> 2) Use pci_stop_root_bus() and pci_remove_root_bus() instead of
+>>>>>    open-coded private implementation.
+>>>>> 3) Use pci_set_host_bridge_release() to release data structures
+>>>>>    associated with PCI root buses.
+>>>>> 4) Use pci_bus_get()/pci_bus_put() to manage PCI root bus reference
+>>>>>    count.
 >>>>>
->>>>> OK, I think I have something that might work.  It may not solve all problems,
->>>>> but maybe it helps a bit.  Unfortunately, I can't really test it, so please do
->>>>> if you can.
->>>>>
->>>>> Please apply [1/4] and [4/4] and the one below and see what happens.
->>>>>
->>>>> Thanks,
->>>>> Rafael
->>>>>
->>>>>
->>>>> ---
->>>>> Rationale:
->>>>> 	acpiphp_glue.c:disable_device() trims the underlying ACPI device objects
->>>>> 	after removing the companion PCI devices, so the dock station code
->>>>> 	doesn't need to trim them separately for the dependent devices handled
->>>>> 	by acpiphp.
->>>>>
->>>>> 	Moreover, acpiphp_glue.c is the only user of
->>>>> 	[un]register_hotplug_dock_device(), so *all* devices on the
->>>>> 	ds->hotplug_devices list are handled by acpiphp and ops is set for all
->>>>> 	of them.
->>>> Hi Rafael,
->>>>     There's an ongoing patch to fix a disk bay hotplug regression, which
->>>> may add a second caller of register_hotplug_device(). Please refer to
->>>> bug 59871, and the proposed patch is at:
->>>> https://bugzilla.kernel.org/attachment.cgi?id=105581
->> Hi Rafael,
->>     You can find the proposed patch for ATA Bay hotplug at
->> https://bugzilla.kernel.org/attachment.cgi?id=105581
-> 
-> Well, maybe it'll have to be reworked slightly.
-> 
-> Which BZ entry is that?
-Hi Rafael,
-	It's bug 59871, please refer to:
-https://bugzilla.kernel.org/show_bug.cgi?id=59871
+>>>>> This is also a preparation for coming PCI bus lock enhancement.
+>>>
+>>> With this patch from :
+>>>
+>>>  Merge branch 'pci_lock_v3' of https://github.com/jiangliu/linux into testing
+>>>
+>>>
+>>> it blows up when detaching the device.
+>> Hi Konrad,
+>>    Thanks for testing! According to the log messages, this issue should
+>> be related to pci bus reference counter management. Seems we have done
+>> an extra(unbalanced) release of pci bus device.
+>>    Will investigate it tomorrow!
+>
+> That is quite commendable that you are willing to look over this on
+> the weekend but I am not going to be able to rerun this test until
+> some time in the week. You could enjoy the weekend and just look at
+> this during the week.
+
+Hi Konrad,
+     We should have root-caused this bug, which is caused by 
+for_each_pci_root_bus().
+Current implementation doesn't support root bus deletion when walking 
+PCI root
+buses by for_each_pci_root_bus(). The reference counter 
+(pci_bus->dev.knode_class.n_ref)
+becomes zero after returning from pci_remove_root_bus(), so it triggers 
+kref warnings
+and double-free of klist_node object when we call 
+pci_get_next_root_bus() to get the
+next PCI root bus.
+     So we will first revert to  list_for_each_entry_safe(bus, temp, 
+&pci_root_buses, node)
+and solve this issue in next version of for_each_pci_root_bus().
+
 Regards!
 Gerry
 
-> 
-> Rafael
-> 
-> 
+---
+diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
+index 6aa2c0f..6e577db 100644
+--- a/drivers/pci/xen-pcifront.c
++++ b/drivers/pci/xen-pcifront.c
+@@ -553,11 +553,11 @@ static int pcifront_rescan_root(struct 
+pcifront_device *pdev,
+ static void pcifront_free_roots(struct pcifront_device *pdev)
+ {
+        struct pcifront_sd *sd;
+-       struct pci_bus *bus;
++       struct pci_bus *bus, *temp;
+
+        dev_dbg(&pdev->xdev->dev, "cleaning up root buses\n");
+
+-       for_each_pci_root_bus(bus) {
++       list_for_each_entry_safe(bus, temp, &pci_root_buses, node) {
+                sd = bus->sysdata;
+                if (sd->pdev == pdev) {
+                        pci_stop_root_bus(bus);
+---
 
