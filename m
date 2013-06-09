@@ -1,56 +1,38 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qa0-f45.google.com ([209.85.216.45]:40794 "EHLO
-	mail-qa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750799Ab3FNEnk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Jun 2013 00:43:40 -0400
-MIME-Version: 1.0
-In-Reply-To: <51BA98BF.5070403@huawei.com>
-References: <1371141152-9468-1-git-send-email-jiang.liu@huawei.com>
-	<CAE9FiQX1xVJA3MZc4LndWU7kx0mxC-YPE1R8JD4W2-Gg9zq3Zw@mail.gmail.com>
-	<51BA7B3D.1020402@huawei.com>
-	<CAE9FiQX-jCZYPyxeHCp2h-6qx1GMyQYuaTk5JwZR6H1t4jRg9g@mail.gmail.com>
-	<51BA8524.9050507@huawei.com>
-	<CAN_LGv0AYvBpwQMcAkSqQVZHBA3Yfz=42_OGPxF032FQ-Ec36A@mail.gmail.com>
-	<51BA98BF.5070403@huawei.com>
-Date: Fri, 14 Jun 2013 10:43:39 +0600
-Message-ID: <CAN_LGv1FNj-38=tpOg6itCJ3DQLw2TQaJJdGqRwtx9A9eVcxKw@mail.gmail.com>
-Subject: Re: [BUGFIX 0/9] Fix bug 59501 and code improvement for dock driver
-From: "Alexander E. Patrakov" <patrakov@gmail.com>
-To: "Jiang Liu (Gerry)" <jiang.liu@huawei.com>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
+Received: from Chamillionaire.breakpoint.cc ([80.244.247.6]:54074 "EHLO
+	Chamillionaire.breakpoint.cc" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750931Ab3FIPQS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 9 Jun 2013 11:16:18 -0400
+Date: Sun, 9 Jun 2013 17:16:01 +0200
+From: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Joerg Roedel <joro@8bytes.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Subject: Re: [PATCH v3 05/27] x86, irq: Make dmar_msi/hpet_msi irq_chip name
+ consistent
+Message-ID: <20130609151601.GB2245@breakpoint.cc>
+References: <1370644273-10495-1-git-send-email-yinghai@kernel.org>
+ <1370644273-10495-6-git-send-email-yinghai@kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1370644273-10495-6-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-2013/6/14 Jiang Liu (Gerry) <jiang.liu@huawei.com>:
+On Fri, Jun 07, 2013 at 03:30:51PM -0700, Yinghai Lu wrote:
+> All others are using "-" instead of "_".
 
-> What's the situation now? Could you please send out dmesgs\ioports\iomem?
-> Thanks!
+Who are "all others"? According to my grep it is 121 vs 44. So even without
+your two here we still 42 doing it the other way around so it is not all.
 
-The requested information has been added to
-https://bugzilla.kernel.org/show_bug.cgi?id=56531
+However it might make sense to use _ instead of " " within a chip's name and
+- as a delimiter for modes like edge or level. However that is way beyond the
+scope of this patch and I am not sure if anyone finds this usefull at all.
 
-The changes in pci_move_pcibios_add_bus_down.patch are not needed.
+Saying this, I am fine with this patch :)
 
-The radeon card in the dock station works after docking and restarting
-the X server, and its HD audio device works, too. Just for
-completeness, I have tested the CD-ROM drive, the USB adapters and the
-Ethernet card - they all work. IOW, everything works after docking.
-
-I did not test undocking, as that would surely hit
-https://bugzilla.kernel.org/show_bug.cgi?id=59681 and the hda_intel
-bug you mentioned in the first mail in this thread.
-
-Note that, for the initial series of patches, I still don't have any
-response to the lockdep warnings in
-https://lkml.org/lkml/2013/6/13/398
-
--- 
-Alexander E. Patrakov
+Sebastian
