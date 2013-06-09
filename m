@@ -1,66 +1,34 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f42.google.com ([209.85.219.42]:43096 "EHLO
-	mail-oa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752349Ab3FZTh7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Jun 2013 15:37:59 -0400
-Received: by mail-oa0-f42.google.com with SMTP id j6so5918229oag.29
-        for <linux-pci@vger.kernel.org>; Wed, 26 Jun 2013 12:37:59 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1372266904.8177.83.camel@envy.home>
-References: <cover.1372211451.git.dvhart@linux.intel.com> <83879b07cd4ce95f086420d1faa926c1692d63b4.1372211451.git.dvhart@linux.intel.com>
- <20130626163250.GA29299@google.com> <1372266904.8177.83.camel@envy.home>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 26 Jun 2013 13:37:39 -0600
-Message-ID: <CAErSpo6=1i76RRmJSUi+BpD9D0WrXaML4HkGLn0C=+6=ohB0uQ@mail.gmail.com>
-Subject: Re: [PATCH 7/8] pci: Add CircuitCo VENDOR ID and MinnowBoard DEVICE ID
-To: Darren Hart <dvhart@linux.intel.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+Received: from Chamillionaire.breakpoint.cc ([80.244.247.6]:54159 "EHLO
+	Chamillionaire.breakpoint.cc" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751364Ab3FIPxH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 9 Jun 2013 11:53:07 -0400
+Date: Sun, 9 Jun 2013 17:52:51 +0200
+From: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
 	"H. Peter Anvin" <hpa@zytor.com>,
-	Peter P Waskiewicz Jr <peter.p.waskiewicz.jr@intel.com>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	danders@circuitco.com, vishal.l.verma@intel.com,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>,
+	Joerg Roedel <joro@8bytes.org>
+Subject: Re: [PATCH v3 09/27] x86, irq: Convert irq_2_pin list to generic list
+Message-ID: <20130609155251.GF2245@breakpoint.cc>
+References: <1370644273-10495-1-git-send-email-yinghai@kernel.org>
+ <1370644273-10495-10-git-send-email-yinghai@kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1370644273-10495-10-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 26, 2013 at 11:15 AM, Darren Hart <dvhart@linux.intel.com> wrote:
-> On Wed, 2013-06-26 at 10:32 -0600, Bjorn Helgaas wrote:
+On Fri, Jun 07, 2013 at 03:30:55PM -0700, Yinghai Lu wrote:
+> Now irq_2_pin list is own grown list.
+> We can use generic list to replace it so we could use generic helper
+> functions to operate it.
 
->> +#define PCI_VENDOR_ID_CIRCUITCO              0x1cc8
->> +
->>  #define PCI_VENDOR_ID_TEKRAM         0x1de1
->>  #define PCI_DEVICE_ID_TEKRAM_DC290   0xdc29
->
->
-> Thanks Bjorn. When I reuse this Subsystem ID and there is more than one
-> usage, I should send a patch to pci_ids.h adding it and replace the hex
-> value in all drivers with the new define. Is that right?
+Nice.
 
-Yeah, that's what I was thinking.
-
-But Peter's comment makes more sense to me now.  The spec refers to
-that config register as "Subsystem ID," not "Subsystem Device ID," but
-I was confused because most existing usage treats it as a device ID.
-For example, the field in struct pci_device_id is named "subdevice,"
-and all the existing #defines in pci_ids.h are of the form
-PCI_SUBDEVICE_ID_*.
-
-Device IDs are pretty specific identifiers, so I was thinking that a
-"sub-device ID" would be even more specific.  Then it would make no
-sense to have a "sub-device ID" that was as generic as "MINNOWBOARD."
-But the register is actually *not* a "sub-device ID," and I can see
-that using the same Subsystem ID for all the devices on a board might
-make sense.
-
-So I think the name PCI_DEVICE_ID_CIRCUITCO_MINNOWBOARD is a bit of a
-misnomer, and something like PCI_SUBSYSTEM_CIRCUITCO_MINNOWBOARD would
-make it more clear that it really isn't sharing the device ID space
-assigned to CircuitCo.  It would make perfect sense to have a Device
-ID, e.g., "PCI_DEVICE_ID_CIRCUIT_CO_xxx 0x0001," that has nothing to
-do with the Subsystem ID 0x0001.
-
-If you want to do something like that (or even keep your original
-patch), I can put that in my -next branch.  Just let me know.
-
-Bjorn
+Sebastian
