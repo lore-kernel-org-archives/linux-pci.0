@@ -1,205 +1,36 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:60089 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755676Ab3FFHfl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Jun 2013 03:35:41 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Yinghai Lu <yinghai@kernel.org>, <linux-pci@vger.kernel.org>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	Fenghua Yu <fenghua.yu@intel.com>,
-	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH -v5 5/8] PCI/IA64: fix memleak for create pci root bus fail
-Date: Thu, 6 Jun 2013 15:34:50 +0800
-Message-ID: <1370504093-14908-6-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1370504093-14908-1-git-send-email-wangyijing@huawei.com>
-References: <1370504093-14908-1-git-send-email-wangyijing@huawei.com>
+Received: from Chamillionaire.breakpoint.cc ([80.244.247.6]:54129 "EHLO
+	Chamillionaire.breakpoint.cc" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751364Ab3FIPfo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 9 Jun 2013 11:35:44 -0400
+Date: Sun, 9 Jun 2013 17:35:30 +0200
+From: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Joerg Roedel <joro@8bytes.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Subject: Re: [PATCH v3 08/27] x86, irq: kill create_irq()
+Message-ID: <20130609153530.GE2245@breakpoint.cc>
+References: <1370644273-10495-1-git-send-email-yinghai@kernel.org>
+ <1370644273-10495-9-git-send-email-yinghai@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1370644273-10495-9-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <jiang.liu@huawei.com>
+On Fri, Jun 07, 2013 at 03:30:54PM -0700, Yinghai Lu wrote:
+> create_irq() will return -1 when failing to allocate.
+> create_irq_nr() will return 0 when failing to allocate.
+> 
+> It only causes confusion.
+> 
+> Now we have no user for create_irq(), so remove create_irq() for x86.
 
-If pci_create_root_bus() return fail, we should release
-pci root info, pci controller etc.
+Oh thank you so much. That is what I just asked for :)
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Fenghua Yu <fenghua.yu@intel.com>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-ia64@vger.kernel.org
----
- arch/ia64/include/asm/pci.h |    5 +++
- arch/ia64/pci/pci.c         |   74 ++++++++++++++++++++++++++++++++++--------
- 2 files changed, 65 insertions(+), 14 deletions(-)
-
-diff --git a/arch/ia64/include/asm/pci.h b/arch/ia64/include/asm/pci.h
-index a7ebe5f..80775f5 100644
---- a/arch/ia64/include/asm/pci.h
-+++ b/arch/ia64/include/asm/pci.h
-@@ -89,6 +89,11 @@ extern int pci_mmap_legacy_page_range(struct pci_bus *bus,
- #define pci_legacy_read platform_pci_legacy_read
- #define pci_legacy_write platform_pci_legacy_write
- 
-+struct iospace_resource {
-+	struct list_head list;
-+	struct resource res;
-+};
-+
- struct pci_controller {
- 	void *acpi_handle;
- 	void *iommu;
-diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
-index 6da469a..99a9f67 100644
---- a/arch/ia64/pci/pci.c
-+++ b/arch/ia64/pci/pci.c
-@@ -137,6 +137,7 @@ struct pci_root_info {
- 	struct resource *res;
- 	resource_size_t *res_offset;
- 	unsigned int res_num;
-+	struct list_head io_resources;
- 	char *name;
- };
- 
-@@ -171,25 +172,21 @@ new_space (u64 phys_base, int sparse)
- static u64 add_io_space(struct pci_root_info *info,
- 			struct acpi_resource_address64 *addr)
- {
-+	struct iospace_resource *iospace;
- 	struct resource *resource;
- 	char *name;
- 	unsigned long base, min, max, base_port;
- 	unsigned int sparse = 0, space_nr, len;
- 
--	resource = kzalloc(sizeof(*resource), GFP_KERNEL);
--	if (!resource) {
-+	len = strlen(info->name) + 32;
-+	iospace = kzalloc(sizeof(*iospace) + len, GFP_KERNEL);
-+	if (!iospace) {
- 		printk(KERN_ERR "PCI: No memory for %s I/O port space\n",
- 			info->name);
- 		goto out;
- 	}
- 
--	len = strlen(info->name) + 32;
--	name = kzalloc(len, GFP_KERNEL);
--	if (!name) {
--		printk(KERN_ERR "PCI: No memory for %s I/O port space name\n",
--			info->name);
--		goto free_resource;
--	}
-+	name = (char *)(iospace + 1);
- 
- 	min = addr->minimum;
- 	max = min + addr->address_length - 1;
-@@ -198,7 +195,7 @@ static u64 add_io_space(struct pci_root_info *info,
- 
- 	space_nr = new_space(addr->translation_offset, sparse);
- 	if (space_nr == ~0)
--		goto free_name;
-+		goto free_resource;
- 
- 	base = __pa(io_space[space_nr].mmio_base);
- 	base_port = IO_SPACE_BASE(space_nr);
-@@ -213,18 +210,23 @@ static u64 add_io_space(struct pci_root_info *info,
- 	if (space_nr == 0)
- 		sparse = 1;
- 
-+	resource = &iospace->res;
- 	resource->name  = name;
- 	resource->flags = IORESOURCE_MEM;
- 	resource->start = base + (sparse ? IO_SPACE_SPARSE_ENCODING(min) : min);
- 	resource->end   = base + (sparse ? IO_SPACE_SPARSE_ENCODING(max) : max);
--	insert_resource(&iomem_resource, resource);
-+	if (insert_resource(&iomem_resource, resource)) {
-+		dev_err(&info->bridge->dev,
-+				"can't allocate host bridge io space resource  %pR\n",
-+				resource);
-+		goto free_resource;
-+	}
- 
-+	list_add_tail(&iospace->list, &info->io_resources);
- 	return base_port;
- 
--free_name:
--	kfree(name);
- free_resource:
--	kfree(resource);
-+	kfree(iospace);
- out:
- 	return ~0;
- }
-@@ -325,6 +327,48 @@ static acpi_status add_window(struct acpi_resource *res, void *data)
- 	return AE_OK;
- }
- 
-+static void free_pci_root_info_res(struct pci_root_info *info)
-+{
-+	struct iospace_resource *iospace, *tmp;
-+
-+	list_for_each_entry_safe(iospace, tmp, &info->io_resources, list)
-+		kfree(iospace);
-+
-+	kfree(info->name);
-+	kfree(info->res);
-+	info->res = NULL;
-+	kfree(info->res_offset);
-+	info->res_offset = NULL;
-+	info->res_num = 0;
-+	kfree(info->controller);
-+	info->controller = NULL;
-+}
-+
-+static void __release_pci_root_info(struct pci_root_info *info)
-+{
-+	int i;
-+	struct resource *res;
-+	struct iospace_resource *iospace;
-+
-+	list_for_each_entry(iospace, &info->io_resources, list)
-+		release_resource(&iospace->res);
-+
-+	for (i = 0; i < info->res_num; i++) {
-+		res = &info->res[i];
-+
-+		if (!res->parent)
-+			continue;
-+
-+		if (!(res->flags & (IORESOURCE_MEM | IORESOURCE_IO)))
-+			continue;
-+
-+		release_resource(res);
-+	}
-+
-+	free_pci_root_info_res(info);
-+	kfree(info);
-+}
-+
- struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- {
- 	struct acpi_device *device = root->device;
-@@ -357,6 +401,7 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 		goto out2;
- 	}
- 
-+	INIT_LIST_HEAD(&info->io_resources);
- 	INIT_LIST_HEAD(&info->resources);
- 	/* insert busn resource at first */
- 	pci_add_resource(&info->resources, &root->secondary);
-@@ -397,6 +442,7 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 				   &info->resources);
- 	if (!pbus) {
- 		pci_free_resource_list(&info->resources);
-+		__release_pci_root_info(info);
- 		return NULL;
- 	}
- 
--- 
-1.7.1
-
-
+Sebastian
