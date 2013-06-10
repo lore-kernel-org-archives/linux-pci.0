@@ -1,38 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f172.google.com ([209.85.223.172]:58363 "EHLO
-	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752691Ab3FYS5E (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Jun 2013 14:57:04 -0400
-Received: by mail-ie0-f172.google.com with SMTP id 16so29069382iea.31
-        for <linux-pci@vger.kernel.org>; Tue, 25 Jun 2013 11:57:03 -0700 (PDT)
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:47346 "EHLO
+	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752960Ab3FJXkF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Jun 2013 19:40:05 -0400
 MIME-Version: 1.0
-In-Reply-To: <20130625172608.GA11914@google.com>
-References: <20130625172608.GA11914@google.com>
-Date: Tue, 25 Jun 2013 11:57:03 -0700
-Message-ID: <CAE9FiQVN+iLTV0u0vsJMQyeeRg=oSudcn5EnKWAFSzD+-Uohfw@mail.gmail.com>
-Subject: Re: Changes for v3.11 merge window
+In-Reply-To: <20130609151601.GB2245@breakpoint.cc>
+References: <1370644273-10495-1-git-send-email-yinghai@kernel.org>
+	<1370644273-10495-6-git-send-email-yinghai@kernel.org>
+	<20130609151601.GB2245@breakpoint.cc>
+Date: Mon, 10 Jun 2013 16:40:04 -0700
+Message-ID: <CAE9FiQV6Qqhky0TDjc6gcW1=_1wCiAckAkCpc=E70iC=Nge2og@mail.gmail.com>
+Subject: Re: [PATCH v3 05/27] x86, irq: Make dmar_msi/hpet_msi irq_chip name consistent
 From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+To: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Cc: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 25, 2013 at 10:26 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> Below are the patches currently in my "next" branch, planned for
-> release in v3.11.  If I'm missing something important, let me know.
+On Sun, Jun 9, 2013 at 8:16 AM, Sebastian Andrzej Siewior
+<sebastian@breakpoint.cc> wrote:
+> On Fri, Jun 07, 2013 at 03:30:51PM -0700, Yinghai Lu wrote:
+>> All others are using "-" instead of "_".
+>
+> Who are "all others"? According to my grep it is 121 vs 44. So even without
+> your two here we still 42 doing it the other way around so it is not all.
 
-can you put this one in ?
-https://patchwork.kernel.org/patch/2647131/
+I mean in arch/x86
 
-[v5,1/7] PCI: Don't let mmio fallback to must-only, if ioport fails
-with must+optional
+arch/x86/kernel/apic/io_apic.c:struct irq_chip ioapic_chip __read_mostly = {
+arch/x86/kernel/apic/io_apic.c- .name                   = "IO-APIC",
+--
+arch/x86/kernel/apic/io_apic.c:static struct irq_chip lapic_chip
+__read_mostly = {
+arch/x86/kernel/apic/io_apic.c- .name           = "local-APIC",
+--
+arch/x86/kernel/apic/io_apic.c:struct irq_chip msi_chip = {
+arch/x86/kernel/apic/io_apic.c- .name                   = "PCI-MSI",
+--
+arch/x86/kernel/apic/io_apic.c:static struct irq_chip dmar_msi_type = {
+arch/x86/kernel/apic/io_apic.c- .name                   = "DMAR_MSI",
+--
+arch/x86/kernel/apic/io_apic.c:struct irq_chip hpet_msi_type = {
+arch/x86/kernel/apic/io_apic.c- .name = "HPET_MSI",
+--
+arch/x86/kernel/apic/io_apic.c:static struct irq_chip ht_irq_chip = {
+arch/x86/kernel/apic/io_apic.c- .name                   = "PCI-HT",
+--
+arch/x86/kernel/i8259.c:struct irq_chip i8259A_chip = {
+arch/x86/kernel/i8259.c-        .name           = "XT-PIC",
+--
+arch/x86/lguest/boot.c:static struct irq_chip lguest_irq_controller = {
+arch/x86/lguest/boot.c- .name           = "lguest",
+--
+arch/x86/platform/uv/uv_irq.c:static struct irq_chip uv_irq_chip = {
+arch/x86/platform/uv/uv_irq.c-  .name                   = "UV-CORE",
+--
+arch/x86/platform/visws/visws_quirks.c:static struct irq_chip
+cobalt_irq_type = {
+arch/x86/platform/visws/visws_quirks.c- .name           = "Cobalt-APIC",
+--
+arch/x86/platform/visws/visws_quirks.c:static struct irq_chip
+piix4_master_irq_type = {
+arch/x86/platform/visws/visws_quirks.c- .name           = "PIIX4-master",
+--
+arch/x86/platform/visws/visws_quirks.c:static struct irq_chip
+piix4_virtual_irq_type = {
+arch/x86/platform/visws/visws_quirks.c- .name           = "PIIX4-virtual",
+--
 
 
-it will not just help powerpc case.
-also found that it is needed for one of 8 socket system that support pciehp
-but some root bus does not have ioport range allocated.
-in that case sriov does not work.
+>
+> However it might make sense to use _ instead of " " within a chip's name and
+> - as a delimiter for modes like edge or level. However that is way beyond the
+> scope of this patch and I am not sure if anyone finds this usefull at all.
+>
+> Saying this, I am fine with this patch :)
+
+ok.
 
 Thanks
 
