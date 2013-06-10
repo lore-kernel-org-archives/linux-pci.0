@@ -1,104 +1,98 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Tue, 4 Jun 2013 03:42:00 -0400
-From: Chen Gong <gong.chen@linux.intel.com>
-To: Betty Dall <betty.dall@hp.com>
-Cc: rjw@sisk.pl, bhelgaas@google.com, ying.huang@intel.com,
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 1/3] PCI/AER: Fix incorrect return from
- aer_hest_parse()
-Message-ID: <20130604074159.GB20448@gchen.bj.intel.com>
-References: <1369924769-17183-1-git-send-email-betty.dall@hp.com>
- <1369924769-17183-2-git-send-email-betty.dall@hp.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="24zk1gE8NUlDmwG9"
-In-Reply-To: <1369924769-17183-2-git-send-email-betty.dall@hp.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:40283 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752867Ab3FJVIV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Jun 2013 17:08:21 -0400
+From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+To: george.dunlap@eu.citrix.com, xen-devel@lists.xensource.com,
+	linux-kernel@vger.kernel.org
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	stable@vger.kernel.org
+Subject: [PATCH] xen/pci: Deal with toolstack missing an 'XenbusStateClosing'.
+Date: Mon, 10 Jun 2013 17:06:39 -0400
+Message-Id: <1370898399-20968-2-git-send-email-konrad.wilk@oracle.com>
+In-Reply-To: <1370898399-20968-1-git-send-email-konrad.wilk@oracle.com>
+References: <20130610202456.GA17822@phenom.dumpdata.com>
+ <1370898399-20968-1-git-send-email-konrad.wilk@oracle.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+There are two tool-stack that can instruct the Xen PCI frontend
+and backend to change states: 'xm' (Python code with a daemon),
+and 'xl' (C library - does not keep state changes).
 
---24zk1gE8NUlDmwG9
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+With the 'xm', the path to disconnect a PCI device (xm pci-detach
+<guest> <BDF>)is:
 
-On Thu, May 30, 2013 at 08:39:27AM -0600, Betty Dall wrote:
-> Date:	Thu, 30 May 2013 08:39:27 -0600
-> From: Betty Dall <betty.dall@hp.com>
-> To: rjw@sisk.pl, bhelgaas@google.com
-> Cc: ying.huang@intel.com, linux-acpi@vger.kernel.org,
->  linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, Betty Dall
->  <betty.dall@hp.com>
-> Subject: [PATCH v2 1/3] PCI/AER: Fix incorrect return from aer_hest_parse=
-()
-> X-Mailer: git-send-email 1.7.7.6
->=20
-> The function aer_hest_parse() is called to determine if the given
-> PCI device is firmware first or not. The code loops through each
-> section of the HEST table to look for a match. The bug is that
-> the function always returns whether the last HEST section is firmware
-> first. The fix stops the iteration once the info.firmware_first
-> variable is set.  This is similar to how the function aer_hest_parse_aff()
-> stops the iteration.
->=20
-> Signed-off-by: Betty Dall <betty.dall@hp.com>
+4(Connected)->7(Reconfiguring*)-> 8(Reconfigured)-> 4(Connected)->5(Closing*).
 
-The patch is good. But I have further concern based on your patch.
-1) aer_hest_parse never checks the 2nd input parameter (void *data),
-which means once it is NULL, it will crash the kernel.
+The * is for states that the tool-stack sets. For 'xl', it is similar:
 
-2) both aer_hest_parse and aer_hest_parse_aff utilize some flag
-as shortcut, if so, why not adding similar logic in apei_hest_parse
-to stop meaningless loops once FFM is confirmed as enabled.
+4(Connected)->7(Reconfiguring*)-> 8(Reconfigured)-> 4(Connected)
 
-> ---
->=20
->  drivers/pci/pcie/aer/aerdrv_acpi.c |    3 +++
->  1 files changed, 3 insertions(+), 0 deletions(-)
->=20
->=20
-> diff --git a/drivers/pci/pcie/aer/aerdrv_acpi.c b/drivers/pci/pcie/aer/ae=
-rdrv_acpi.c
-> index 5194a7d..39b8671 100644
-> --- a/drivers/pci/pcie/aer/aerdrv_acpi.c
-> +++ b/drivers/pci/pcie/aer/aerdrv_acpi.c
-> @@ -42,6 +42,9 @@ static int aer_hest_parse(struct acpi_hest_header *hest=
-_hdr, void *data)
->  	u8 bridge =3D 0;
->  	int ff =3D 0;
-> =20
-> +	if (info->firmware_first)
-> +		return 0;
-> +
->  	switch (hest_hdr->type) {
->  	case ACPI_HEST_TYPE_AER_ROOT_PORT:
->  		pcie_type =3D PCI_EXP_TYPE_ROOT_PORT;
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Both of them also tear down the XenBus structure, so the backend
+state ends up going in the 3(Initialised) and calls pcifront_xenbus_remove.
 
---24zk1gE8NUlDmwG9
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
+When a PCI device is plugged in (xm pci-attach <guest> <BDF>)
+both of them follow the same pattern:
+2(InitWait*), 3(Initialized*), 4(Connected*)->4(Connected).
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
+[xen-pcifront ignores the 2,3 state changes and only acts when
+4 (Connected) has been reached]
 
-iQIcBAEBAgAGBQJRrZpHAAoJEI01n1+kOSLHfFwP/A4Sz65iCJQCdsdZNiGWC9Ow
-4OikR6hhGedkII4aZT1f3XCtibS5+m/O5VG827AhO/6OaWXas7v/HPJDqr9u/fGk
-tUFzR2n9yMIcNGBeYuUyp8oDjedov2xqksvbOglXIkcQxB+ZfPVms51HpvxkxE1o
-W7ZvHzM3RtFzsDJELnZ5jS0d2M2bt2i+kIsk1xNpNreCvkip5LJiyiJRVTlldTKq
-0SMKSvJCOgBAFHdScH5Xzf5fTyQib1W02Qn+sONPB+gbledZMFQJpEvG9ttMid1h
-CH/1cTXfePogoTUjSWe0JuMKwFuioy/dCDgH5PqAK+gdLJLoG7a/NQdUZ8xkMfok
-DDi8vf4FvPWZ3LRdm62gp0b/Wb3NpfbSIbVaEdBN7sDDlOD2IY5BplW6kuAqDVr1
-pIu7sunnyt/iwRCdenSlo4e7G8qz2+4p3jpOxKYAoOQvqV758MbHvaGB8yUNe7MN
-ff9yhw+guGKzLoEy/JN+q/iuLxJ1kBCWBYNODAIAb+P3xg6RA+x8HOX+l2xVppaf
-fs/K7eb9M8SpaHNVTm1SQHkcL3CSh3c3xEVef60roIgbohQXEKaeouo9lrfOC9Ui
-9obeZNab50SAg6MaHQSn5NwjSDxde2dtoTJ3QIo9AGr+Gh3+rbyoAzsPqSozlmxj
-HFrWL8cS09Pjpm4cMIBp
-=Q9b2
------END PGP SIGNATURE-----
+The problem is that git commit 3d925320e9e2de162bd138bf97816bda8c3f71be
+("xen/pcifront: Use Xen-SWIOTLB when initting if required") introduced
+a mechanism to initialize the SWIOTLB when the Xen PCI front moves to
+Connected state. It also had some aggressive seatbelt code check that
+would warn the user if one tried to change to Connected state without
+hitting first the Closing state:
 
---24zk1gE8NUlDmwG9--
+ pcifront pci-0: PCI frontend already installed!
+
+However, that code can be relaxed and we can continue on working
+even if the frontend is instructed to be the 'Connected' state with
+no devices and then gets tickled to be in 'Connected' state again.
+
+In other words, this 4(Connected)->5(Closing)->4(Connected) state
+was expected, while 4(Connected)->.... anything but 5(Closing)->4(Connected)
+was not. This patch removes that aggressive check and allows
+Xen pcifront to work with the 'xl' toolstack.
+
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Cc: stable@vger.kernel.org
+Signed-off-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+---
+ drivers/pci/xen-pcifront.c | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
+index ac99515..cc46e253 100644
+--- a/drivers/pci/xen-pcifront.c
++++ b/drivers/pci/xen-pcifront.c
+@@ -675,10 +675,9 @@ static int pcifront_connect_and_init_dma(struct pcifront_device *pdev)
+ 	if (!pcifront_dev) {
+ 		dev_info(&pdev->xdev->dev, "Installing PCI frontend\n");
+ 		pcifront_dev = pdev;
+-	} else {
+-		dev_err(&pdev->xdev->dev, "PCI frontend already installed!\n");
++	} else
+ 		err = -EEXIST;
+-	}
++
+ 	spin_unlock(&pcifront_dev_lock);
+ 
+ 	if (!err && !swiotlb_nr_tbl()) {
+@@ -846,7 +845,7 @@ static int pcifront_try_connect(struct pcifront_device *pdev)
+ 		goto out;
+ 
+ 	err = pcifront_connect_and_init_dma(pdev);
+-	if (err) {
++	if (err && err != -EEXIST) {
+ 		xenbus_dev_fatal(pdev->xdev, err,
+ 				 "Error setting up PCI Frontend");
+ 		goto out;
+-- 
+1.8.1.4
+
