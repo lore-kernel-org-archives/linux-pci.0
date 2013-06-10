@@ -1,68 +1,79 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Jiang Liu <liuj97@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"Alexander E . Patrakov" <patrakov@gmail.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Len Brown <lenb@kernel.org>,
-	stable@vger.kernel.org, Jiang Liu <jiang.liu@huawei.com>
-Subject: Re: [BUGFIX v2 2/4] ACPI, DOCK: resolve possible deadlock scenarios
-Date: Mon, 17 Jun 2013 13:40:32 +0200
-Message-ID: <2972274.Y9Nv7DUfsQ@vostro.rjw.lan>
-In-Reply-To: <51BDF1E0.5070201@gmail.com>
-References: <1371238081-32260-1-git-send-email-jiang.liu@huawei.com> <2139297.LeMhgEjsya@vostro.rjw.lan> <51BDF1E0.5070201@gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ob0-f180.google.com ([209.85.214.180]:45698 "EHLO
+	mail-ob0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750822Ab3FJO33 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Jun 2013 10:29:29 -0400
+Received: by mail-ob0-f180.google.com with SMTP id eh20so9917220obb.39
+        for <linux-pci@vger.kernel.org>; Mon, 10 Jun 2013 07:29:28 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <1370864113-17895-14-git-send-email-tushar.behera@linaro.org>
+References: <1370864113-17895-1-git-send-email-tushar.behera@linaro.org>
+	<1370864113-17895-14-git-send-email-tushar.behera@linaro.org>
+Date: Mon, 10 Jun 2013 19:59:28 +0530
+Message-ID: <CAK9yfHzcw071CfssSdFjmN1qXOp732NOaud2G0Dcd_8KZBFbgQ@mail.gmail.com>
+Subject: Re: [PATCH 13/15] pci: mvebu: Convert to use devm_ioremap_resource
+From: Sachin Kamat <sachin.kamat@linaro.org>
+To: Tushar Behera <tushar.behera@linaro.org>
+Cc: linux-kernel@vger.kernel.org, thierry.reding@gmail.com,
+	patches@linaro.org, linux-pci@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, June 17, 2013 01:12:00 AM Jiang Liu wrote:
-> On 06/16/2013 06:54 AM, Rafael J. Wysocki wrote:
-> > On Saturday, June 15, 2013 11:20:40 PM Rafael J. Wysocki wrote:
-> >> On Saturday, June 15, 2013 10:17:42 PM Rafael J. Wysocki wrote:
-> > 
-> > [...]
-> > 
-> >>
-> >> Which sysfs interfaces do you mean, by the way?
-> >>
-> >> If you mean "eject", then it takes acpi_scan_lock and hotplug_dock_devices()
-> >> should always be run under acpi_scan_lock too.  It isn't at the moment,
-> >> because write_undock() doesn't take acpi_scan_lock(), but this is an obvious
-> >> bug (so I'm going to send a patch to fix it in a while).
-> >>
-> >> With that bug fixed, the possible race between acpi_eject_store() and
-> >> hotplug_dock_devices() should be prevented from happening, so perhaps we're
-> >> worrying about something that cannot happen?
-> > 
-> > So here's a question: What particular races are possible if we remove
-> > ds->hp_lock entirely without doing anything else just yet?  I mean, how to
-> > *trigger* them from the start to the end and not how they can possibly happen
-> > but never do, because there's no way they can be actually triggered?
-> Hi Rafael,
->     I have no really platform which triggers this bug, but I may imagine
-> a possible platform if it's valid for explanation.
->     Let's think about a laptop dock station with a thunderbolt
-> controller built-in. The dock station is managed by dock driver and
-> acpiphp driver. And the PCIe hierarchy managed by the thunderbolt
-> controller may be managed by dock driver and ACPIPHP driver too.
-> So it may trigger the issue by pressing the dock button and unplugging
-> thunderbolt cable concurrently.
->     But after all, this is all by imagination:). We may need to find a
-> simple and quick solution for 3.10 and the stable trees and enhance the
-> solution later to avoid introducing new bugs while fixing a bug.
+On 10 June 2013 17:05, Tushar Behera <tushar.behera@linaro.org> wrote:
+> Commit 75096579c3ac ("lib: devres: Introduce devm_ioremap_resource()")
+> introduced devm_ioremap_resource() and deprecated the use of
+> devm_request_and_ioremap().
+>
+> Signed-off-by: Tushar Behera <tushar.behera@linaro.org>
+> CC: linux-pci@vger.kernel.org
+> CC: Bjorn Helgaas <bhelgaas@google.com>
+> ---
+>  drivers/pci/host/pci-mvebu.c |    5 +++--
+>  1 file changed, 3 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+> index 13a633b..e714876 100644
+> --- a/drivers/pci/host/pci-mvebu.c
+> +++ b/drivers/pci/host/pci-mvebu.c
+> @@ -752,7 +752,7 @@ mvebu_pcie_map_registers(struct platform_device *pdev,
+>         if (ret)
+>                 return NULL;
+>
+> -       return devm_request_and_ioremap(&pdev->dev, &regs);
+> +       return devm_ioremap_resource(&pdev->dev, &regs);
+>  }
+>
+>  static int __init mvebu_pcie_probe(struct platform_device *pdev)
+> @@ -842,9 +842,10 @@ static int __init mvebu_pcie_probe(struct platform_device *pdev)
+>                         continue;
+>
+>                 port->base = mvebu_pcie_map_registers(pdev, child, port);
+> -               if (!port->base) {
+> +               if (IS_ERR(port->base)) {
+>                         dev_err(&pdev->dev, "PCIe%d.%d: cannot map registers\n",
+>                                 port->port, port->lane);
 
-Well, if that particular bug is not fixed in 3,10, it won't be a tragedy,
-and I *really* don't want that code to get substantially more complex than
-it is now.
+This error message is redundant.
 
-Thanks,
-Rafael
+> +                       port->base = NULL;
+Probably this is also not needed.
+
+>                         continue;
+>                 }
+>
+> --
+> 1.7.9.5
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+
 
 
 -- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+With warm regards,
+Sachin
