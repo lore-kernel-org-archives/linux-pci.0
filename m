@@ -1,153 +1,43 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v3 27/27] PCI, x86, ACPI: get ioapic address from acpi device
-Date: Fri,  7 Jun 2013 15:31:13 -0700
-Message-Id: <1370644273-10495-28-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1370644273-10495-1-git-send-email-yinghai@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f169.google.com ([209.85.223.169]:46779 "EHLO
+	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753437Ab3FJXzj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Jun 2013 19:55:39 -0400
+MIME-Version: 1.0
+In-Reply-To: <alpine.LFD.2.02.1306102125410.22970@ionos>
 References: <1370644273-10495-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+	<1370644273-10495-11-git-send-email-yinghai@kernel.org>
+	<alpine.LFD.2.02.1306102125410.22970@ionos>
+Date: Mon, 10 Jun 2013 16:55:38 -0700
+Message-ID: <CAE9FiQXVPUVWpUU+c5p__-bbgOrVk9+K-EPnCrCBRe2Q0Hi_mg@mail.gmail.com>
+Subject: Re: [PATCH v3 10/27] genirq: Split __irq_reserve_irqs from irq_alloc_descs
+From: Yinghai Lu <yinghai@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: Ingo Molnar <mingo@elte.hu>, "H. Peter Anvin" <hpa@zytor.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Alexander Gordeev <agordeev@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Some ioapic controllers do not show up on pci config space,
-or pci device is there but no bar is used and is set by firmware in
-other non standard registers.
+On Mon, Jun 10, 2013 at 12:39 PM, Thomas Gleixner <tglx@linutronix.de> wrote:
+> On Fri, 7 Jun 2013, Yinghai Lu wrote:
+>>  /**
+>> - * irq_alloc_descs - allocate and initialize a range of irq descriptors
+>> - * @irq:     Allocate for specific irq number if irq >= 0
+>> + * __irq_reserve_descs - reserve and initialize a range of irq descriptors
+>
+> Did you even bother to run docbook ?
+>
+> No you didn't. Otherwise you'd have noticed that documentation for
+> __irq_reserve_descs is not the right thing for a function named
+> __irq_reserve_irqs.
 
-We can get ioapic address from ACPI0009's _CRS.
+sorry, will them consistent.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/ioapic.c | 86 +++++++++++++++++++++++++++++++++++++++++++---------
- 1 file changed, 71 insertions(+), 15 deletions(-)
+Thanks
 
-diff --git a/drivers/pci/ioapic.c b/drivers/pci/ioapic.c
-index 60351b2..41f7c69 100644
---- a/drivers/pci/ioapic.c
-+++ b/drivers/pci/ioapic.c
-@@ -32,6 +32,36 @@ struct acpi_pci_ioapic {
- static LIST_HEAD(ioapic_list);
- static DEFINE_MUTEX(ioapic_list_lock);
- 
-+static acpi_status setup_res(struct acpi_resource *acpi_res, void *data)
-+{
-+	struct resource *res;
-+	struct acpi_resource_address64 addr;
-+	acpi_status status;
-+	unsigned long flags;
-+	u64 start, end;
-+
-+	status = acpi_resource_to_address64(acpi_res, &addr);
-+	if (!ACPI_SUCCESS(status))
-+		return AE_OK;
-+
-+	if (addr.resource_type == ACPI_MEMORY_RANGE) {
-+		if (addr.info.mem.caching == ACPI_PREFETCHABLE_MEMORY)
-+			return AE_OK;
-+		flags = IORESOURCE_MEM;
-+	} else
-+		return AE_OK;
-+
-+	start = addr.minimum + addr.translation_offset;
-+	end = addr.maximum + addr.translation_offset;
-+
-+	res = data;
-+	res->flags = flags;
-+	res->start = start;
-+	res->end = end;
-+
-+	return AE_OK;
-+}
-+
- static void handle_ioapic_add(acpi_handle handle, struct pci_dev **pdev,
- 				 u32 *pgsi_base)
- {
-@@ -54,33 +84,56 @@ static void handle_ioapic_add(acpi_handle handle, struct pci_dev **pdev,
- 		return;
- 
- 	dev = acpi_get_pci_dev(handle);
--	if (!dev)
--		return;
-+	if (!dev || !pci_resource_len(dev, 0)) {
-+		struct acpi_device_info *info;
-+		char *hid = NULL;
-+
-+		status = acpi_get_object_info(handle, &info);
-+		if (ACPI_FAILURE(status))
-+			goto exit_put;
-+		if (info->valid & ACPI_VALID_HID)
-+			hid = info->hardware_id.string;
-+		if (!hid || strcmp(hid, "ACPI0009")) {
-+			kfree(info);
-+			goto exit_put;
-+		}
-+		kfree(info);
-+		memset(res, 0, sizeof(*res));
-+		acpi_walk_resources(handle, METHOD_NAME__CRS, setup_res, res);
-+		if (!res->flags)
-+			goto exit_put;
-+	}
- 
- 	acpi_get_name(handle, ACPI_FULL_PATHNAME, &buffer);
- 
- 	gsi_base = gsb;
- 	type = "IOxAPIC";
-+	if (dev) {
-+		ret = pci_enable_device(dev);
-+		if (ret < 0)
-+			goto exit_put;
- 
--	ret = pci_enable_device(dev);
--	if (ret < 0)
--		goto exit_put;
--
--	pci_set_master(dev);
-+		pci_set_master(dev);
- 
--	if (dev->class == PCI_CLASS_SYSTEM_PIC_IOAPIC)
--		type = "IOAPIC";
-+		if (dev->class == PCI_CLASS_SYSTEM_PIC_IOAPIC)
-+			type = "IOAPIC";
- 
--	if (pci_request_region(dev, 0, type))
--		goto exit_disable;
-+		if (pci_resource_len(dev, 0)) {
-+			if (pci_request_region(dev, 0, type))
-+				goto exit_disable;
- 
--	res = &dev->resource[0];
-+			res = &dev->resource[0];
-+		}
-+	}
- 
--	if (acpi_register_ioapic(handle, res->start, gsi_base))
--		goto exit_release;
-+	if (acpi_register_ioapic(handle, res->start, gsi_base)) {
-+		if (dev)
-+			goto exit_release;
-+		return;
-+	}
- 
- 	pr_info("%s %s %s at %pR, GSI %u\n",
--		dev_name(&dev->dev), objname, type,
-+		dev ? dev_name(&dev->dev) : "", objname, type,
- 		res, gsi_base);
- 
- 	*pdev = dev;
-@@ -100,6 +153,9 @@ static void handle_ioapic_remove(acpi_handle handle, struct pci_dev *dev,
- {
- 	acpi_unregister_ioapic(handle, gsi_base);
- 
-+	if (!dev)
-+		return;
-+
- 	pci_release_region(dev, 0);
- 	pci_disable_device(dev);
- 	pci_dev_put(dev);
--- 
-1.8.1.4
-
+Yinghai
