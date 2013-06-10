@@ -1,121 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:34038 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754036Ab3FCTDZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 3 Jun 2013 15:03:25 -0400
-Message-ID: <57863.10.23.232.54.1370286149.squirrel@linux.intel.com>
-Date: Mon, 3 Jun 2013 12:02:29 -0700 (PDT)
-Subject: [PATCH] pciutils lspci: Add reporting of L1 PM Substate capability
-From: "David Box" <david.e.box@linux.intel.com>
-To: linux-pci@vger.kernel.org
-Cc: kristen.c.accardi@intel.com
-Reply-To: david.e.box@linux.intel.com
+Received: from moutng.kundenserver.de ([212.227.17.8]:50642 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751764Ab3FJPWv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Jun 2013 11:22:51 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Jingoo Han <jg1.han@samsung.com>
+Subject: Re: [PATCH 6/6] ARM: dts: Add pcie controller node for Samsung EXYNOS5440 SoC
+Date: Mon, 10 Jun 2013 17:22:09 +0200
+Cc: "'Jason Gunthorpe'" <jgunthorpe@obsidianresearch.com>,
+	linux-arm-kernel@lists.infradead.org,
+	"'Thomas Petazzoni'" <thomas.petazzoni@free-electrons.com>,
+	linux-samsung-soc@vger.kernel.org,
+	"'Siva Reddy Kallam'" <siva.kallam@samsung.com>,
+	"'Surendranath Gurivireddy Balla'" <suren.reddy@samsung.com>,
+	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
+	"'Thierry Reding'" <thierry.reding@avionic-design.de>,
+	linux-kernel@vger.kernel.org,
+	"'Grant Likely'" <grant.likely@secretlab.ca>,
+	"'Kukjin Kim'" <kgene.kim@samsung.com>,
+	"'Thomas Abraham'" <thomas.abraham@linaro.org>,
+	"'Bjorn Helgaas'" <bhelgaas@google.com>,
+	"'Andrew Murray'" <andrew.murray@arm.com>
+References: <00c001ce277b$92b26ab0$b8174010$%han@samsung.com> <201306071943.18407.arnd@arndb.de> <000001ce65b5$e45477f0$acfd67d0$@samsung.com>
+In-Reply-To: <000001ce65b5$e45477f0$acfd67d0$@samsung.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-References: 
-In-Reply-To: 
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201306101722.10146.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-L1 PM Substates is a new PCI power management feature that can enable
-lower power consumption when a PCIe Link is idle. This change to the PCI
-Base Specification is reflected in the PCI-SIG ECN titled
-"L1 PM Substates with CLKREQ".
+On Monday 10 June 2013, Jingoo Han wrote:
+> On Saturday, June 08, 2013 2:43 AM, Arnd Bergmann wrote:
+> For multiple domains, how can I fix the DT properties?
 
-Signed-off-by: David E. Box <david.e.box@linux.intel.com>
----
- lib/header.h |  1 +
- ls-ecaps.c   | 54 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
-2 files changed, 55 insertions(+)
+Domains are a Linux concept, you have to pick a new domain number for each
+struct hw_pci you register.
+ 
+> Current DT properties are as below:
+> 
+> +	pcie0@40000000 {
+> +		compatible = "samsung,exynos5440-pcie";
+> +		reg = <0x40000000 0x4000
+> +			0x290000 0x1000
+> +			0x270000 0x1000
+> +			0x271000 0x40>;
+> +		interrupts = <0 20 0>, <0 21 0>, <0 22 0>;
+> +		#address-cells = <3>;
+> +		#size-cells = <2>;
+> +		device_type = "pci";
+> +		ranges = <0x00000800 0 0x40000000 0x40000000 0 0x00200000   /* configuration space */
+> +			  0x81000000 0 0	  0x40200000 0 0x00004000   /* downstream I/O */
+> +			  0x82000000 0 0	  0x40204000 0 0x10000000>; /* non-prefetchable memory */
+> +	};
 
-diff --git a/lib/header.h b/lib/header.h
-index 69518fd..6608003 100644
---- a/lib/header.h
-+++ b/lib/header.h
-@@ -226,6 +226,7 @@
- #define PCI_EXT_CAP_ID_SRIOV	0x10	/* Single Root I/O Virtualization */
-#define PCI_EXT_CAP_ID_TPH	0x17	/* Transaction processing hints */ #define
-PCI_EXT_CAP_ID_LTR	0x18	/* Latency Tolerance Reporting */
-+#define PCI_EXT_CAP_ID_L1PM	0x1e	/* L1 PM Substates */
+An unrelated comment: your first "reg" field seems to overlap with part
+of your configuration space. Is that intentional?
 
- /*** Definitions of capabilities ***/
+Also, shouldn't your memory space end on a 256MB boundary, rather than
+extend up to 0x50203fff?
 
-diff --git a/ls-ecaps.c b/ls-ecaps.c
-index 161c275..7b28ce5 100644
---- a/ls-ecaps.c
-+++ b/ls-ecaps.c
-@@ -448,6 +448,57 @@ cap_evendor(struct device *d, int where)
-     BITS(hdr, 20, 12));
- }
-
-+static void
-+cap_l1pm(struct device *d, int where)
-+{
-+  u32 l1_cap;
-+  int power_on_scale;
-+
-+  printf("L1 PM Substates\n");
-+
-+  if (verbose < 2)
-+    return;
-+
-+  if (!config_fetch(d, where + 4, 4)) {
-+      printf("\t\t<unreadable>\n");
-+      return;
-+  }
-+
-+  l1_cap = get_conf_long(d, where + 4);
-+
-+  printf("\t\tL1SubCap: ");
-+  printf("PCI-PM_L1.2%c, PCI-PM_L1.1%c, ASPM_L1.2%c, ASPM_L1.1%c," +    "
-L1_PM_Substates%c\n",
-+    FLAG(l1_cap, 1),
-+    FLAG(l1_cap, 2),
-+    FLAG(l1_cap, 4),
-+    FLAG(l1_cap, 8),
-+    FLAG(l1_cap, 16));
-+
-+  if (BITS(l1_cap, 0, 1) || BITS(l1_cap, 2, 1)) {
-+    printf("\t\t\t  PortCommonModeRestoreTime=%dus, ",
-+    	BITS(l1_cap, 8,8));
-+
-+    power_on_scale = BITS(l1_cap, 16, 2);
-+
-+    printf("PortTPowerOnTime=");
-+    switch (power_on_scale) {
-+      case 0:
-+      	printf("%dus\n", BITS(l1_cap, 19, 5) * 2);
-+      	break;
-+      case 1:
-+      	printf("%dus\n", BITS(l1_cap, 19, 5) * 10);
-+      	break;
-+      case 2:
-+      	printf("%dus\n", BITS(l1_cap, 19, 5) * 100);
-+      	break;
-+      default:
-+      	printf("<error>\n");
-+      	break;
-+    }
-+  }
-+}
-+
- void
- show_ext_caps(struct device *d)
- {
-@@ -526,6 +577,9 @@ show_ext_caps(struct device *d)
- 	  case PCI_EXT_CAP_ID_LTR:
- 	    cap_ltr(d, where);
- 	    break;
-+	  case PCI_EXT_CAP_ID_L1PM:
-+	    cap_l1pm(d, where);
-+	    break;
- 	  default:
- 	    printf("#%02x\n", id);
- 	    break;
--- 
-1.8.0
-
-
-
-
-
+	Arnd
