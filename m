@@ -1,107 +1,54 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Illya Klymov <xanf@xanf.me>
-Cc: linux-acpi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"Alexander E . Patrakov" <patrakov@gmail.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 0/3] ACPI / dock / PCI: Fix problems with dock and PCI hotplug
-Date: Sun, 23 Jun 2013 01:26:06 +0200
-Message-ID: <13614446.CdHJ9aCn7p@vostro.rjw.lan>
-In-Reply-To: <CALSWrKhdDAEPJE7xXcWx4ZqqJe-B+okyJfAwx=viR+saR0ZYkw@mail.gmail.com>
-References: <2737587.I0nULev1kj@vostro.rjw.lan> <CALSWrKhdDAEPJE7xXcWx4ZqqJe-B+okyJfAwx=viR+saR0ZYkw@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ob0-f172.google.com ([209.85.214.172]:53341 "EHLO
+	mail-ob0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751690Ab3FJQ7e (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Jun 2013 12:59:34 -0400
+Received: by mail-ob0-f172.google.com with SMTP id wo10so10500285obc.31
+        for <linux-pci@vger.kernel.org>; Mon, 10 Jun 2013 09:59:34 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <1370749669-20348-1-git-send-email-wangyijing@huawei.com>
+References: <1370749669-20348-1-git-send-email-wangyijing@huawei.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 10 Jun 2013 10:59:13 -0600
+Message-ID: <CAErSpo5RAC7eitUnw0-FFzq463DjwCEy---RHqEC912UJGa5SQ@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Fix comment typo for pcie_pme_remove()
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Hanjun Guo <guohanjun@huawei.com>,
+	Jiang Liu <jiang.liu@huawei.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sunday, June 23, 2013 12:43:08 AM Illya Klymov wrote:
-> Hi, guys. Sorry for entering your talk
+On Sat, Jun 8, 2013 at 9:47 PM, Yijing Wang <wangyijing@huawei.com> wrote:
+> Fix trivial comment typo for pcie_pme_remove().
+>
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 
-Hi,
+Applied to pci/misc for v3.11, thanks.
 
-No problem at all. :-)
-
-> I have a Sony Vaio SVZ1311Z9RXI and just tested your patched against
-> 3.10-rc7 and they work like a charm
-> scenarios tested:
-> - boot with dock
-> - boot without dock, hotplug dock
-> - dock / undock / redock
-> 
-> All devices tested to be working in all 3 cases:
-> - video card
-> - ethernet controller
-> - blue ray drive
-> - USB controller
-> 
-> Thank you a lot!
-
-I'm glad that the patches work for you, thanks a lot for letting us know!
-
-Rafael
-
-
-> On Sun, Jun 23, 2013 at 12:19 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> > Hi All,
-> >
-> > Unfortunately, the Alexander's docking station for Sony VAIO VPCZ23A4R is
-> > basically unusable with v3.10-rc6 and, as it turns out, there are multiple
-> > problems with it.
-> >
-> > First, the acpiphp initialization ordering has changed recently,
-> > acpiphp_enumerate_slots() is now always run for the first time during the
-> > initial ACPI namespace scan in acpi_scan_init() which has broken support
-> > for PCI devices on ACPI-based docking stations, because the ACPI dock
-> > subsystem has to be initialized *before* acpiphp_enumerate_slots() is first
-> > run.
-> >
-> > Fix that, and it turns out that undocking actually doesn't work correctly
-> > because of some synchronization problems between the dock driver, acpiphp
-> > and the PCI core.  [That part was actually the most difficult to fix.]
-> >
-> > Fix that, and you'll find that PCI resources are not allocated correctly
-> > after undocking and re-docking (when initially docked).
-> >
-> > The three patches in this series make the Alexander's docking station kind
-> > of usable, so if no one has objections, I'd like to put them on a fast track
-> > to Linus.
-> >
-> > [1/3] Initialize ACPI dock subsystem before enumerating the PCI hierarchy
-> >       (that also makes the dock driver non-modular).
-> >
-> > [2/3] Make acpiphp use the same rules for allocating PCI resources that are
-> >       used at boot time.
-> >
-> > [3/3] Make acpiphp handle dock events synchronously (instead of spawning
-> >       separate work items to handle them).  [The changelog of this patch
-> >       is likely one of the longest I've ever written and it sort of looks
-> >       like a crime story.]
-> >
-> > This series is mostly based on the work of Jiang Liu (thanks Gerry!) and
-> > the Alexander's testing that we wouldn't have done much progress without
-> > (thanks Alexander!).
-> >
-> > Alexander, I've modified patch [3/3] a bit since you have tested it.
-> > The modifications shouldn't affect the behavior, but if you could re-test it,
-> > that would be great.
-> >
-> > Thanks,
-> > Rafael
-> >
-> >
-> > --
-> > I speak only for myself.
-> > Rafael J. Wysocki, Intel Open Source Technology Center.
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+> ---
+>  drivers/pci/pcie/pme.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+>
+> diff --git a/drivers/pci/pcie/pme.c b/drivers/pci/pcie/pme.c
+> index 795db1f..e56e594 100644
+> --- a/drivers/pci/pcie/pme.c
+> +++ b/drivers/pci/pcie/pme.c
+> @@ -408,7 +408,7 @@ static int pcie_pme_resume(struct pcie_device *srv)
+>
+>  /**
+>   * pcie_pme_remove - Prepare PCIe PME service device for removal.
+> - * @srv - PCIe service device to resume.
+> + * @srv - PCIe service device to remove.
+>   */
+>  static void pcie_pme_remove(struct pcie_device *srv)
+>  {
+> --
+> 1.7.1
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
