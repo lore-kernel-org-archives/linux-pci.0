@@ -1,87 +1,144 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:44294 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752756Ab3FFQll (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Jun 2013 12:41:41 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Arnd Bergmann <arnd@arndb.de>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>
-Cc: linux-arm-kernel@lists.infradead.org,
-	Jason Cooper <jason@lakedaemon.net>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Maen Suleiman <maen@marvell.com>
-Subject: [PATCH v2 3/8] irqchip: armada-370-xp: properly request resources
-Date: Thu,  6 Jun 2013 18:41:23 +0200
-Message-Id: <1370536888-8871-4-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1370536888-8871-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1370536888-8871-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from mail-ie0-f178.google.com ([209.85.223.178]:37386 "EHLO
+	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753032Ab3FJTQT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Jun 2013 15:16:19 -0400
+MIME-Version: 1.0
+In-Reply-To: <20130610135154.GA11905@dhcp-26-207.brq.redhat.com>
+References: <1370644273-10495-1-git-send-email-yinghai@kernel.org>
+	<1370644273-10495-11-git-send-email-yinghai@kernel.org>
+	<20130610135154.GA11905@dhcp-26-207.brq.redhat.com>
+Date: Mon, 10 Jun 2013 12:16:16 -0700
+Message-ID: <CAE9FiQUvmyUt048veb_kFr-9Ap2cza7ti28x-cm9AcoU8edhbw@mail.gmail.com>
+Subject: Re: [PATCH v3 10/27] genirq: Split __irq_reserve_irqs from irq_alloc_descs
+From: Yinghai Lu <yinghai@kernel.org>
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Instead of using of_iomap(), we now use of_address_to_resource(),
-request_mem_region() and ioremap(). This allows the corresponding I/O
-regions to be properly requested and visible in /proc/iomem.
+On Mon, Jun 10, 2013 at 6:51 AM, Alexander Gordeev <agordeev@redhat.com> wrote:
+> On Fri, Jun 07, 2013 at 03:30:56PM -0700, Yinghai Lu wrote:
+>> irq_alloc_descs and irq_reserve_irqs are almost the same.
+>> Separate code out to __irq_reserved_irqs, and other two reuse
+>> __irq_reserve_irqs.
+>>
+>> We will use __irq_reserve_irqs for coming ioapic hotplug support.
+>>
+>> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+>> Cc: Alexander Gordeev <agordeev@redhat.com>
+>> ---
+>>  include/linux/irq.h  |  1 +
+>>  kernel/irq/irqdesc.c | 54 ++++++++++++++++++++++++++++++----------------------
+>>  2 files changed, 32 insertions(+), 23 deletions(-)
+>>
+>> diff --git a/include/linux/irq.h b/include/linux/irq.h
+>> index bc4e066..4e0fcbb 100644
+>> --- a/include/linux/irq.h
+>> +++ b/include/linux/irq.h
+>> @@ -600,6 +600,7 @@ int __irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
+>>
+>>  void irq_free_descs(unsigned int irq, unsigned int cnt);
+>>  int irq_reserve_irqs(unsigned int from, unsigned int cnt);
+>> +int __irq_reserve_irqs(int irq, unsigned int from, unsigned int cnt);
+>>
+>>  static inline void irq_free_desc(unsigned int irq)
+>>  {
+>> diff --git a/kernel/irq/irqdesc.c b/kernel/irq/irqdesc.c
+>> index 192a302..3b9fb92 100644
+>> --- a/kernel/irq/irqdesc.c
+>> +++ b/kernel/irq/irqdesc.c
+>> @@ -340,18 +340,15 @@ void irq_free_descs(unsigned int from, unsigned int cnt)
+>>  EXPORT_SYMBOL_GPL(irq_free_descs);
+>>
+>>  /**
+>> - * irq_alloc_descs - allocate and initialize a range of irq descriptors
+>> - * @irq:     Allocate for specific irq number if irq >= 0
+>> + * __irq_reserve_descs - reserve and initialize a range of irq descriptors
+>> + * @irq:     Reserve for specific irq number if irq >= 0
+>>   * @from:    Start the search from this irq number
+>> - * @cnt:     Number of consecutive irqs to allocate.
+>> - * @node:    Preferred node on which the irq descriptor should be allocated
+>> - * @owner:   Owning module (can be NULL)
+>> + * @cnt:     Number of consecutive irqs to reserve.
+>>   *
+>>   * Returns the first irq number or error code
+>>   */
+>>  int __ref
+>> -__irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
+>> -               struct module *owner)
+>> +__irq_reserve_irqs(int irq, unsigned int from, unsigned int cnt)
+>>  {
+>>       int start, ret;
+>>
+>> @@ -369,7 +366,7 @@ __irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
+>>       start = bitmap_find_next_zero_area(allocated_irqs, IRQ_BITMAP_BITS,
+>>                                          from, cnt, 0);
+>>       ret = -EEXIST;
+>> -     if (irq >=0 && start != irq)
+>> +     if (irq >= 0 && start != irq)
+>>               goto err;
+>>
+>>       if (start + cnt > nr_irqs) {
+>> @@ -380,12 +377,36 @@ __irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
+>>
+>>       bitmap_set(allocated_irqs, start, cnt);
+>>       mutex_unlock(&sparse_irq_lock);
+>> -     return alloc_descs(start, cnt, node, owner);
+>> +     return start;
+>>
+>>  err:
+>>       mutex_unlock(&sparse_irq_lock);
+>>       return ret;
+>>  }
+>> +
+>> +/**
+>> + * irq_alloc_descs - allocate and initialize a range of irq descriptors
+>> + * @irq:     Allocate for specific irq number if irq >= 0
+>> + * @from:    Start the search from this irq number
+>> + * @cnt:     Number of consecutive irqs to allocate.
+>> + * @node:    Preferred node on which the irq descriptor should be allocated
+>> + * @owner:   Owning module (can be NULL)
+>> + *
+>> + * Returns the first irq number or error code
+>> + */
+>> +int __ref
+>> +__irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
+>> +               struct module *owner)
+>> +{
+>> +     int start;
+>> +
+>> +     start = __irq_reserve_irqs(irq, from, cnt);
+>> +
+>> +     if (start < 0)
+>> +             return start;
+>> +
+>> +     return alloc_descs(start, cnt, node, owner);
+>
+> I think alloc_descs() fail path is needed before return.
 
-The main motivation for this change is that the introduction of the
-MSI support requires us to get the physical address of the main
-interrupt controller registers, so we will need the corresponding
-'struct resource' anyway.
+__irq_reserve_irqs already return -EEXIST etc,
 
-We also take this opportunity to change a panic() to BUG_ON(), in
-order to be consistent with the rest of the driver.
+old kernel is like:
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
----
- drivers/irqchip/irq-armada-370-xp.c | 20 ++++++++++++++++----
- 1 file changed, 16 insertions(+), 4 deletions(-)
+>> @@ -380,12 +377,36 @@ __irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
 
-diff --git a/drivers/irqchip/irq-armada-370-xp.c b/drivers/irqchip/irq-armada-370-xp.c
-index bb328a3..26adc74 100644
---- a/drivers/irqchip/irq-armada-370-xp.c
-+++ b/drivers/irqchip/irq-armada-370-xp.c
-@@ -248,12 +248,25 @@ armada_370_xp_handle_irq(struct pt_regs *regs)
- static int __init armada_370_xp_mpic_of_init(struct device_node *node,
- 					     struct device_node *parent)
- {
-+	struct resource main_int_res, per_cpu_int_res;
- 	u32 control;
- 
--	main_int_base = of_iomap(node, 0);
--	per_cpu_int_base = of_iomap(node, 1);
-+	BUG_ON(of_address_to_resource(node, 0, &main_int_res));
-+	BUG_ON(of_address_to_resource(node, 1, &per_cpu_int_res));
- 
-+	BUG_ON(!request_mem_region(main_int_res.start,
-+				   resource_size(&main_int_res),
-+				   node->full_name));
-+	BUG_ON(!request_mem_region(per_cpu_int_res.start,
-+				   resource_size(&per_cpu_int_res),
-+				   node->full_name));
-+
-+	main_int_base = ioremap(main_int_res.start,
-+				resource_size(&main_int_res));
- 	BUG_ON(!main_int_base);
-+
-+	per_cpu_int_base = ioremap(per_cpu_int_res.start,
-+				   resource_size(&per_cpu_int_res));
- 	BUG_ON(!per_cpu_int_base);
- 
- 	control = readl(main_int_base + ARMADA_370_XP_INT_CONTROL);
-@@ -262,8 +275,7 @@ static int __init armada_370_xp_mpic_of_init(struct device_node *node,
- 		irq_domain_add_linear(node, (control >> 2) & 0x3ff,
- 				&armada_370_xp_mpic_irq_ops, NULL);
- 
--	if (!armada_370_xp_mpic_domain)
--		panic("Unable to add Armada_370_Xp MPIC irq domain (DT)\n");
-+	BUG_ON(!armada_370_xp_mpic_domain);
- 
- 	irq_set_default_host(armada_370_xp_mpic_domain);
- 
--- 
-1.8.1.2
+       bitmap_set(allocated_irqs, start, cnt);
+       mutex_unlock(&sparse_irq_lock);
+     return alloc_descs(start, cnt, node, owner);
 
+ err:
+      mutex_unlock(&sparse_irq_lock);
+      return ret;
+
+so i don't change the fail path handling.
+
+Thanks
+
+Yinghai
