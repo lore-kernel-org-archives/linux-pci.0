@@ -1,53 +1,51 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Betty Dall <betty.dall@hp.com>
-To: rjw@sisk.pl, bhelgaas@google.com, gong.chen@linux.intel.com,
-	greg.pearson@hp.com
-Cc: ying.huang@intel.com, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Betty Dall <betty.dall@hp.com>
-Subject: [PATCH v3 3/6] PCI/AER: Set dev->__aer_firmware_first only for matching devices
-Date: Thu,  6 Jun 2013 12:10:48 -0600
-Message-Id: <1370542251-27387-4-git-send-email-betty.dall@hp.com>
-In-Reply-To: <1370542251-27387-1-git-send-email-betty.dall@hp.com>
-References: <1370542251-27387-1-git-send-email-betty.dall@hp.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f178.google.com ([209.85.223.178]:45039 "EHLO
+	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753437Ab3FJXnL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Jun 2013 19:43:11 -0400
+MIME-Version: 1.0
+In-Reply-To: <20130609153123.GD2245@breakpoint.cc>
+References: <1370644273-10495-1-git-send-email-yinghai@kernel.org>
+	<1370644273-10495-8-git-send-email-yinghai@kernel.org>
+	<20130609153123.GD2245@breakpoint.cc>
+Date: Mon, 10 Jun 2013 16:43:10 -0700
+Message-ID: <CAE9FiQU3FcuVUx5ZaOJWM+2cCakLThAXWzGopDKm88HFGW2i+Q@mail.gmail.com>
+Subject: Re: [PATCH v3 07/27] iommu, irq: Allocate irq_desc for dmar_msi with
+ local node
+From: Yinghai Lu <yinghai@kernel.org>
+To: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Cc: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	Donald Dutile <ddutile@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Previously, we always updated info->firmware_first, even for HEST entries
-that didn't match the device.  Therefore, if the last HEST descriptor was
-a PCIe structure that didn't match the device, we always cleared
-dev->__aer_firmware_first.
-    
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Tested-by: Betty Dall <betty.dall@hp.com>
----
+On Sun, Jun 9, 2013 at 8:31 AM, Sebastian Andrzej Siewior
+<sebastian@breakpoint.cc> wrote:
+> On Fri, Jun 07, 2013 at 03:30:53PM -0700, Yinghai Lu wrote:
+>> diff --git a/drivers/iommu/dmar.c b/drivers/iommu/dmar.c
+>> index a7967ce..c09e60d 100644
+>> --- a/drivers/iommu/dmar.c
+>> +++ b/drivers/iommu/dmar.c
+>> @@ -1273,7 +1273,7 @@ int dmar_set_interrupt(struct intel_iommu *iommu)
+>>       if (iommu->irq)
+>>               return 0;
+>>
+>> -     irq = create_irq();
+>> +     irq = create_irq_nr(0, iommu->node);
+>>       if (!irq) {
+>
+> This is okay. However you fix a bug here so you might want first fix the bug
+> with a Cc: stable tag and then do this.
 
- drivers/pci/pcie/aer/aerdrv_acpi.c |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
+ok, will add cc to stable to two related patches.
 
+Thanks
 
-diff --git a/drivers/pci/pcie/aer/aerdrv_acpi.c b/drivers/pci/pcie/aer/aerdrv_acpi.c
-index e7ea573..cf611ab 100644
---- a/drivers/pci/pcie/aer/aerdrv_acpi.c
-+++ b/drivers/pci/pcie/aer/aerdrv_acpi.c
-@@ -54,16 +54,16 @@ static int aer_hest_parse(struct acpi_hest_header *hest_hdr, void *data)
- {
- 	struct aer_hest_parse_info *info = data;
- 	struct acpi_hest_aer_common *p;
--	int ff = 0;
-+	int ff;
- 
- 	p = (struct acpi_hest_aer_common *)(hest_hdr + 1);
-+	ff = !!(p->flags & ACPI_HEST_FIRMWARE_FIRST);
- 	if (p->flags & ACPI_HEST_GLOBAL) {
- 		if (hest_match_type(hest_hdr, info->pci_dev))
--			ff = !!(p->flags & ACPI_HEST_FIRMWARE_FIRST);
-+			info->firmware_first = ff;
- 	} else
- 		if (hest_match_pci(p, info->pci_dev))
--			ff = !!(p->flags & ACPI_HEST_FIRMWARE_FIRST);
--	info->firmware_first = ff;
-+			info->firmware_first = ff;
- 
- 	return 0;
- }
+Yinghai
