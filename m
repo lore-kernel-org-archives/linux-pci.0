@@ -1,91 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f171.google.com ([209.85.214.171]:42005 "EHLO
-	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757354Ab3FEUE7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Jun 2013 16:04:59 -0400
-Received: by mail-ob0-f171.google.com with SMTP id dn14so3359006obc.30
-        for <linux-pci@vger.kernel.org>; Wed, 05 Jun 2013 13:04:59 -0700 (PDT)
+Received: from mail-bk0-f48.google.com ([209.85.214.48]:63440 "EHLO
+	mail-bk0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751034Ab3FJTzQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Jun 2013 15:55:16 -0400
+Date: Mon, 10 Jun 2013 21:55:12 +0200
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Jay Agarwal <jagarwal@nvidia.com>
+Cc: linux@arm.linux.org.uk, swarren@wwwdotorg.org,
+	thierry.reding@avionic-design.de, bhelgaas@google.com,
+	ldewangan@nvidia.com, olof@lixom.net, hdoyu@nvidia.com,
+	pgaikwad@nvidia.com, mturquette@linaro.org,
+	pdeschrijver@nvidia.com, linux-arm-kernel@lists.infradead.org,
+	linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, jtukkinen@nvidia.com, kthota@nvidia.com
+Subject: Re: [PATCH V3 3/4] ARM: dts: tegra: Correct PCIe entry
+Message-ID: <20130610195511.GC25859@mithrandir>
+References: <1370372252-4332-1-git-send-email-jagarwal@nvidia.com>
+ <1370372252-4332-3-git-send-email-jagarwal@nvidia.com>
 MIME-Version: 1.0
-In-Reply-To: <1369489718-25869-5-git-send-email-jiang.liu@huawei.com>
-References: <1369489718-25869-1-git-send-email-jiang.liu@huawei.com> <1369489718-25869-5-git-send-email-jiang.liu@huawei.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 5 Jun 2013 14:04:36 -0600
-Message-ID: <CAErSpo5bysp-s-twUWgZEyJD01skjW=vXkcQBYkn_TALP83r1g@mail.gmail.com>
-Subject: Re: [PATCH v3, part1 04/10] PCI: mark pci_scan_bus_parented() as __deprecated
-To: Jiang Liu <liuj97@gmail.com>
-Cc: Yinghai Lu <yinghai@kernel.org>, Jiang Liu <jiang.liu@huawei.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Chris Metcalf <cmetcalf@tilera.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Jeremy Fitzhardinge <jeremy@goop.org>,
-	xen-devel <xen-devel@lists.xensource.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="/Uq4LBwYP4y1W6pO"
+In-Reply-To: <1370372252-4332-3-git-send-email-jagarwal@nvidia.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Konrad, Jeremy, xen-devel (users of interface you're deprecating)]
 
-On Sat, May 25, 2013 at 7:48 AM, Jiang Liu <liuj97@gmail.com> wrote:
-> Mark pci_scan_bus_parented() as __deprecated and clean up outdated
-> comments.
->
-> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-> Cc: Chris Metcalf <cmetcalf@tilera.com>
-> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> Cc: Thierry Reding <thierry.reding@avionic-design.de>
-> Cc: linux-kernel@vger.kernel.org
-> Cc: linux-pci@vger.kernel.org
-> ---
->  arch/tile/kernel/pci.c | 3 ---
->  include/linux/pci.h    | 4 ++--
->  2 files changed, 2 insertions(+), 5 deletions(-)
->
-> diff --git a/arch/tile/kernel/pci.c b/arch/tile/kernel/pci.c
-> index 67237d3..936e087 100644
-> --- a/arch/tile/kernel/pci.c
-> +++ b/arch/tile/kernel/pci.c
-> @@ -309,9 +309,6 @@ int __init pcibios_init(void)
->                          *
->                          * It reads the PCI tree for this bus into the Linux
->                          * data structures.
-> -                        *
-> -                        * This is inlined in linux/pci.h and calls into
-> -                        * pci_scan_bus_parented() in probe.c.
->                          */
->                         pci_add_resource(&resources, &ioport_resource);
->                         pci_add_resource(&resources, &iomem_resource);
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index b0f4a82..7b23fa0 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -720,8 +720,8 @@ void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
->  void pcibios_scan_specific_bus(int busn);
->  struct pci_bus *pci_find_bus(int domain, int busnr);
->  void pci_bus_add_devices(const struct pci_bus *bus);
-> -struct pci_bus *pci_scan_bus_parented(struct device *parent, int bus,
-> -                                     struct pci_ops *ops, void *sysdata);
-> +struct pci_bus * __deprecated pci_scan_bus_parented(struct device *parent,
-> +                       int bus, struct pci_ops *ops, void *sysdata);
->  struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops, void *sysdata);
->  struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
->                                     struct pci_ops *ops, void *sysdata,
+--/Uq4LBwYP4y1W6pO
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-I think this patch is a good idea, but I think we need to change the
-only existing user of pci_scan_bus_parented() (pcifront_scan_root() in
-drivers/pci/xen-pcifront.c) at the same time, so xen doesn't start
-getting build warnings.  The deprecation warnings are really intended
-for out-of-tree users that we aren't able to fix ourselves.
+On Wed, Jun 05, 2013 at 12:27:31AM +0530, Jay Agarwal wrote:
+[...]
+> @@ -29,7 +29,7 @@
+>  		ranges = <0x82000000 0 0x00000000 0x00000000 0 0x00001000   /* port 0 configuration space */
+>  			  0x82000000 0 0x00001000 0x00001000 0 0x00001000   /* port 1 configuration space */
+>  			  0x82000000 0 0x00004000 0x00004000 0 0x00001000   /* port 2 configuration space */
+> -			  0x81000000 0 0          0x02000000 0 0x00010000   /* downstream I/O */
+> +			  0x81000000 0 0          0x02000000 0 0x00100000   /* downstream I/O */
+>  			  0x82000000 0 0x20000000 0x20000000 0 0x10000000   /* non-prefetchable memory */
+>  			  0xc2000000 0 0x30000000 0x30000000 0 0x10000000>; /* prefetchable memory */
 
-I'm getting this series queued up in
-http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/jiang-bus-lock-v3,
-so if you want to send a patch just for xen, I can fold that in.
+That increases the I/O region size from 64 KiB to 1 MiB. Why is that
+necessary? I/O operations can only address 64 KiB, so I don't think
+adding more makes any sense.
 
-Bjorn
+Thierry
+
+--/Uq4LBwYP4y1W6pO
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.20 (GNU/Linux)
+
+iQIcBAEBAgAGBQJRti8fAAoJEN0jrNd/PrOhxjgQAK+1wN9vDfIequNMrEXlvb6d
+Js6PT0otdyJqyYIOkyLDQWX0QxL14v/OKgI0zrcWoxD/IyYNAbEfLbPK9Eu0vTEv
+6rRGBzNLml1vg3DLctY07pkJ6reJGszQraqTSyRID98Hf/AfcHMAnjTU54jtvQ4j
+sS6Guay5XtYa+dR/3EhTIuVjv4lTPWX36DYKh2fiZeNQfKEZosnPoIVKZtWfTWHU
+ozdi8X24PK+5lLVeJpMgAD0/TzIOzzAFgvSqW/SdfLesIPUQk7oqk2WlHlZx75ni
+H9o0gujde9Fij2q3ySRNEvRiJAOMxNInGAmo9QyUPxJ928bP2x5FkFN7dcFseFZI
+UgPM42ZfZw+nluGQ+ILH153g/YyaSkhwY5tf01mWNe/BIgOqTQ0r0W67HuLCHm92
+PPqXwL1xrXpw2QUePolgdR7gHXDGRANlq8Q9yQ2xCiS/p2bSEhZxPlZ+0q7VMWdv
+TtM0RJHrL6N3C0O6Wwig004mjqR8/EidoVlB54rfI9Ig74RBr2i6oMx98H9AGmkG
+WLgCRHyEXLmF875NOz8Bz38MsFzXhQAlAfqV0Ufxuwvti4bWb14GjOyy5wOLfxpL
+vV16A/f3DDkIuLnkqmi/H9FdOii3xYyF8iyfQqGl7qvkayHEebHUaodiAYc/NDBy
++f0h+yfoazYuRKpjrOU3
+=xmA8
+-----END PGP SIGNATURE-----
+
+--/Uq4LBwYP4y1W6pO--
