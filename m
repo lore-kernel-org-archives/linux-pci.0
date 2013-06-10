@@ -1,54 +1,47 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Betty Dall <betty.dall@hp.com>
-To: rjw@sisk.pl, bhelgaas@google.com, gong.chen@linux.intel.com,
-	greg.pearson@hp.com
-Cc: ying.huang@intel.com, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Betty Dall <betty.dall@hp.com>
-Subject: [PATCH v3 1/6] PCI/AER: Don't parse HEST table for non-PCIe devices
-Date: Thu,  6 Jun 2013 12:10:46 -0600
-Message-Id: <1370542251-27387-2-git-send-email-betty.dall@hp.com>
-In-Reply-To: <1370542251-27387-1-git-send-email-betty.dall@hp.com>
-References: <1370542251-27387-1-git-send-email-betty.dall@hp.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f172.google.com ([209.85.223.172]:61153 "EHLO
+	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752862Ab3FJXlk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Jun 2013 19:41:40 -0400
+MIME-Version: 1.0
+In-Reply-To: <20130609152259.GC2245@breakpoint.cc>
+References: <1370644273-10495-1-git-send-email-yinghai@kernel.org>
+	<1370644273-10495-7-git-send-email-yinghai@kernel.org>
+	<20130609152259.GC2245@breakpoint.cc>
+Date: Mon, 10 Jun 2013 16:41:40 -0700
+Message-ID: <CAE9FiQWBrUX40Rzn_4hg7whr7B18TLxzBiJPKOZkL+JEk8-Vhw@mail.gmail.com>
+Subject: Re: [PATCH v3 06/27] ia64, irq: Add dummy create_irq_nr()
+From: Yinghai Lu <yinghai@kernel.org>
+To: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Cc: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Fenghua Yu <fenghua.yu@intel.com>,
+	"linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-AER is a PCIe-only capability, so there's no point in trying to match
-a HEST PCIe structure with a non-PCIe device.
+On Sun, Jun 9, 2013 at 8:22 AM, Sebastian Andrzej Siewior
+<sebastian@breakpoint.cc> wrote:
+> On Fri, Jun 07, 2013 at 03:30:52PM -0700, Yinghai Lu wrote:
+>> create_irq() will return -1 when fail to allocate.
+> The ia64 code here will return -ENOSPC.
+>
+>> create_irq_nr() will return 0 when fail to allocate.
+>>
+>> Will use it to fix one return value checking for dmar_msi irq.
+>
+> What about to unify the interface? Using -1 is kinda bad.
 
-Previously, a HEST global AER bridge entry (type 8) could incorrectly
-match *any* bridge, even a legacy PCI-PCI bridge, and a non-global
-HEST entry could match a legacy PCI device.
+after some following patch, create_irq() in x86 get killed.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Tested-by: Betty Dall <betty.dall@hp.com>
----
+Still need ia64 guys to kill create_irq() in arch/ia64.
 
- drivers/pci/pcie/aer/aerdrv_acpi.c |    6 ++++--
- 1 files changed, 4 insertions(+), 2 deletions(-)
+Thanks
 
-
-diff --git a/drivers/pci/pcie/aer/aerdrv_acpi.c b/drivers/pci/pcie/aer/aerdrv_acpi.c
-index 5194a7d..4f798ab 100644
---- a/drivers/pci/pcie/aer/aerdrv_acpi.c
-+++ b/drivers/pci/pcie/aer/aerdrv_acpi.c
-@@ -59,8 +59,7 @@ static int aer_hest_parse(struct acpi_hest_header *hest_hdr, void *data)
- 
- 	p = (struct acpi_hest_aer_common *)(hest_hdr + 1);
- 	if (p->flags & ACPI_HEST_GLOBAL) {
--		if ((pci_is_pcie(info->pci_dev) &&
--		     pci_pcie_type(info->pci_dev) == pcie_type) || bridge)
-+		if ((pci_pcie_type(info->pci_dev) == pcie_type) || bridge)
- 			ff = !!(p->flags & ACPI_HEST_FIRMWARE_FIRST);
- 	} else
- 		if (hest_match_pci(p, info->pci_dev))
-@@ -89,6 +88,9 @@ static void aer_set_firmware_first(struct pci_dev *pci_dev)
- 
- int pcie_aer_get_firmware_first(struct pci_dev *dev)
- {
-+	if (!pci_is_pcie(dev))
-+		return 0;
-+
- 	if (!dev->__aer_firmware_first_valid)
- 		aer_set_firmware_first(dev);
- 	return dev->__aer_firmware_first;
+Yinghai
