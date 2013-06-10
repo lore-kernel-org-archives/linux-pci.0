@@ -1,55 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate04.nvidia.com ([216.228.121.35]:18123 "EHLO
-	hqemgate04.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754159Ab3FUFau convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Jun 2013 01:30:50 -0400
-From: Jay Agarwal <jagarwal@nvidia.com>
-To: 'Stephen Warren' <swarren@wwwdotorg.org>
-CC: "linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
-	"thierry.reding@avionic-design.de" <thierry.reding@avionic-design.de>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	Laxman Dewangan <ldewangan@nvidia.com>,
-	"olof@lixom.net" <olof@lixom.net>, Hiroshi Doyu <hdoyu@nvidia.com>,
-	Prashant Gaikwad <pgaikwad@nvidia.com>,
-	"mturquette@linaro.org" <mturquette@linaro.org>,
-	Peter De Schrijver <pdeschrijver@nvidia.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Juha Tukkinen <jtukkinen@nvidia.com>,
-	Krishna Thota <kthota@nvidia.com>
-Date: Fri, 21 Jun 2013 11:00:20 +0530
-Subject: RE: [PATCH V1] ARM: dts: tegra: Modify pcie memory space size
-Message-ID: <C79B248886DD134989C8FF6B096A91AB91CF1615EC@BGMAIL01.nvidia.com>
-References: <1371712491-31070-1-git-send-email-jagarwal@nvidia.com>
- <51C32CC7.5010109@wwwdotorg.org>
-In-Reply-To: <51C32CC7.5010109@wwwdotorg.org>
+Received: from www.linutronix.de ([62.245.132.108]:58158 "EHLO
+	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751838Ab3FJTkV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Jun 2013 15:40:21 -0400
+Date: Mon, 10 Jun 2013 21:39:58 +0200 (CEST)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Yinghai Lu <yinghai@kernel.org>
+cc: Ingo Molnar <mingo@elte.hu>, "H. Peter Anvin" <hpa@zytor.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Alexander Gordeev <agordeev@redhat.com>
+Subject: Re: [PATCH v3 10/27] genirq: Split __irq_reserve_irqs from
+ irq_alloc_descs
+In-Reply-To: <1370644273-10495-11-git-send-email-yinghai@kernel.org>
+Message-ID: <alpine.LFD.2.02.1306102125410.22970@ionos>
+References: <1370644273-10495-1-git-send-email-yinghai@kernel.org> <1370644273-10495-11-git-send-email-yinghai@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> On 06/20/2013 01:14 AM, Jay Agarwal wrote:
-> > - decrease non-prefetch memory size to 128 MB
-> > - increase prefetch memory size to 384 MB
-> > - above change is done because most pcie devices
-> >   prefetch memory size requirement is quite higher
-> >   compared to non-prefetch memory space.
-> 
-> It's possible this change won't be suitable for all applications. People may
-> simply need to adjust their DT based on what they want to connect.
-> Still, this patch probably biases things in the correct way for now.
-> Longer term, we might want to investigate dynamically sizing the windows
-> in order to support arbitrary attached devices, in much the same way as the
-> Marvell code does/will in order to conserve physical/bus address space for
-> their multiple controllers.
-> 
-> However, this change allows me to correctly enumerate a particular GPU I
-> have plugged into my Harmony board, and assign all the BARs, so:
-> 
-> Tested-by: Stephen Warren <swarren@nvidia.com>
-> 
-Thierry,
-Could you please integrate this change also to your branch if review is done. Please let me know once it is done.
+On Fri, 7 Jun 2013, Yinghai Lu wrote:
+>  /**
+> - * irq_alloc_descs - allocate and initialize a range of irq descriptors
+> - * @irq:	Allocate for specific irq number if irq >= 0
+> + * __irq_reserve_descs - reserve and initialize a range of irq descriptors
+
+Did you even bother to run docbook ?
+
+No you didn't. Otherwise you'd have noticed that documentation for
+__irq_reserve_descs is not the right thing for a function named
+__irq_reserve_irqs.
+
+> + * __irq_reserve_descs - reserve and initialize a range of irq descriptors
+
+The function only reserves a range of irq descriptors and does not
+initialize them.
+
+> +
+> +/**
+> + * irq_alloc_descs - allocate and initialize a range of irq descriptors
+
+Again you document non matching function names.
+
+> +int __ref
+> +__irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
+> +		  struct module *owner)
+
+Sloppy as usual along with a sucky changelog as usual.....
+
+Thanks,
+
+	tglx
