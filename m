@@ -1,130 +1,157 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@huawei.com>
-To: "Rafael J . Wysocki" <rjw@sisk.pl>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:19515 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751308Ab3FJNvC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 10 Jun 2013 09:51:02 -0400
+Date: Mon, 10 Jun 2013 15:51:56 +0200
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"Alexander E . Patrakov" <patrakov@gmail.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	linux-acpi@vger.kernel.org, Jiang Liu <liuj97@gmail.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	<stable@vger.kernel.org>
-Subject: [BUGFIX v2 4/4] ACPIPHP: fix bug 56531 Sony VAIO VPCZ23A4R: can't assign mem/io after docking
-Date: Sat, 15 Jun 2013 03:28:01 +0800
-Message-Id: <1371238081-32260-5-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1371238081-32260-1-git-send-email-jiang.liu@huawei.com>
-References: <1371238081-32260-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3 10/27] genirq: Split __irq_reserve_irqs from
+ irq_alloc_descs
+Message-ID: <20130610135154.GA11905@dhcp-26-207.brq.redhat.com>
+References: <1370644273-10495-1-git-send-email-yinghai@kernel.org>
+ <1370644273-10495-11-git-send-email-yinghai@kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1370644273-10495-11-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Please refer to https://bugzilla.kernel.org/show_bug.cgi?id=56531 for
-more information.
+On Fri, Jun 07, 2013 at 03:30:56PM -0700, Yinghai Lu wrote:
+> irq_alloc_descs and irq_reserve_irqs are almost the same.
+> Separate code out to __irq_reserved_irqs, and other two reuse
+> __irq_reserve_irqs.
+> 
+> We will use __irq_reserve_irqs for coming ioapic hotplug support.
+> 
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> Cc: Alexander Gordeev <agordeev@redhat.com>
+> ---
+>  include/linux/irq.h  |  1 +
+>  kernel/irq/irqdesc.c | 54 ++++++++++++++++++++++++++++++----------------------
+>  2 files changed, 32 insertions(+), 23 deletions(-)
+> 
+> diff --git a/include/linux/irq.h b/include/linux/irq.h
+> index bc4e066..4e0fcbb 100644
+> --- a/include/linux/irq.h
+> +++ b/include/linux/irq.h
+> @@ -600,6 +600,7 @@ int __irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
+>  
+>  void irq_free_descs(unsigned int irq, unsigned int cnt);
+>  int irq_reserve_irqs(unsigned int from, unsigned int cnt);
+> +int __irq_reserve_irqs(int irq, unsigned int from, unsigned int cnt);
+>  
+>  static inline void irq_free_desc(unsigned int irq)
+>  {
+> diff --git a/kernel/irq/irqdesc.c b/kernel/irq/irqdesc.c
+> index 192a302..3b9fb92 100644
+> --- a/kernel/irq/irqdesc.c
+> +++ b/kernel/irq/irqdesc.c
+> @@ -340,18 +340,15 @@ void irq_free_descs(unsigned int from, unsigned int cnt)
+>  EXPORT_SYMBOL_GPL(irq_free_descs);
+>  
+>  /**
+> - * irq_alloc_descs - allocate and initialize a range of irq descriptors
+> - * @irq:	Allocate for specific irq number if irq >= 0
+> + * __irq_reserve_descs - reserve and initialize a range of irq descriptors
+> + * @irq:	Reserve for specific irq number if irq >= 0
+>   * @from:	Start the search from this irq number
+> - * @cnt:	Number of consecutive irqs to allocate.
+> - * @node:	Preferred node on which the irq descriptor should be allocated
+> - * @owner:	Owning module (can be NULL)
+> + * @cnt:	Number of consecutive irqs to reserve.
+>   *
+>   * Returns the first irq number or error code
+>   */
+>  int __ref
+> -__irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
+> -		  struct module *owner)
+> +__irq_reserve_irqs(int irq, unsigned int from, unsigned int cnt)
+>  {
+>  	int start, ret;
+>  
+> @@ -369,7 +366,7 @@ __irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
+>  	start = bitmap_find_next_zero_area(allocated_irqs, IRQ_BITMAP_BITS,
+>  					   from, cnt, 0);
+>  	ret = -EEXIST;
+> -	if (irq >=0 && start != irq)
+> +	if (irq >= 0 && start != irq)
+>  		goto err;
+>  
+>  	if (start + cnt > nr_irqs) {
+> @@ -380,12 +377,36 @@ __irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
+>  
+>  	bitmap_set(allocated_irqs, start, cnt);
+>  	mutex_unlock(&sparse_irq_lock);
+> -	return alloc_descs(start, cnt, node, owner);
+> +	return start;
+>  
+>  err:
+>  	mutex_unlock(&sparse_irq_lock);
+>  	return ret;
+>  }
+> +
+> +/**
+> + * irq_alloc_descs - allocate and initialize a range of irq descriptors
+> + * @irq:	Allocate for specific irq number if irq >= 0
+> + * @from:	Start the search from this irq number
+> + * @cnt:	Number of consecutive irqs to allocate.
+> + * @node:	Preferred node on which the irq descriptor should be allocated
+> + * @owner:	Owning module (can be NULL)
+> + *
+> + * Returns the first irq number or error code
+> + */
+> +int __ref
+> +__irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
+> +		  struct module *owner)
+> +{
+> +	int start;
+> +
+> +	start = __irq_reserve_irqs(irq, from, cnt);
+> +
+> +	if (start < 0)
+> +		return start;
+> +
+> +	return alloc_descs(start, cnt, node, owner);
 
-This issue is caused by differences in PCI resource assignment between
-boot time and runtime hotplug. On x86 platforms, OS respects PCI
-resource assignment from BIOS and only reassign resources for unassigned
-BARs at boot time. But with acpiphp, it ignores BIOS resource assignment
-and reassign all resources by itself.
+I think alloc_descs() fail path is needed before return.
 
-If we have enough resources, reassigning all PCI resources should work
-too, but it may fail if we are under resource constraints. On the other
-handle, current PCI MMIO alignment algorithm may waste huge MMIO address
-space if we have some PCI devices with huge MMIO BARs.
+> +}
+>  EXPORT_SYMBOL_GPL(__irq_alloc_descs);
+>  
+>  /**
+> @@ -397,20 +418,7 @@ EXPORT_SYMBOL_GPL(__irq_alloc_descs);
+>   */
+>  int irq_reserve_irqs(unsigned int from, unsigned int cnt)
+>  {
+> -	unsigned int start;
+> -	int ret = 0;
+> -
+> -	if (!cnt || (from + cnt) > nr_irqs)
+> -		return -EINVAL;
+> -
+> -	mutex_lock(&sparse_irq_lock);
+> -	start = bitmap_find_next_zero_area(allocated_irqs, nr_irqs, from, cnt, 0);
+> -	if (start == from)
+> -		bitmap_set(allocated_irqs, start, cnt);
+> -	else
+> -		ret = -EEXIST;
+> -	mutex_unlock(&sparse_irq_lock);
+> -	return ret;
+> +	return __irq_reserve_irqs(from, from, cnt);
+>  }
+>  
+>  /**
+> -- 
+> 1.8.1.4
+> 
 
-On this Sony laptop, BIOS allocates limited MMIO resources for the dock
-station and the dock station has a gfx which has a 256MB MMIO BAR.
-So current acpiphp driver fails to allocate resources for most devices
-on the dock station.
-
-So change acpiphp driver to follow boot time behavior to respect BIOS
-resource assignment.
-
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Reported-by: Alexander E. Patrakov <patrakov@gmail.com>
-Tested-by: Alexander E. Patrakov <patrakov@gmail.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: linux-acpi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Cc: <stable@vger.kernel.org>
----
- drivers/pci/hotplug/acpiphp_glue.c | 7 +++++--
- drivers/pci/pci.h                  | 5 +++++
- drivers/pci/setup-bus.c            | 8 ++++----
- 3 files changed, 14 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-index a65203b..f4a53e9 100644
---- a/drivers/pci/hotplug/acpiphp_glue.c
-+++ b/drivers/pci/hotplug/acpiphp_glue.c
-@@ -687,6 +687,7 @@ static int __ref enable_device(struct acpiphp_slot *slot)
- 	struct pci_bus *bus = slot->bridge->pci_bus;
- 	struct acpiphp_func *func;
- 	int num, max, pass;
-+	LIST_HEAD(add_list);
- 
- 	if (slot->flags & SLOT_ENABLED)
- 		goto err_exit;
-@@ -711,13 +712,15 @@ static int __ref enable_device(struct acpiphp_slot *slot)
- 				max = pci_scan_bridge(bus, dev, max, pass);
- 				if (pass && dev->subordinate) {
- 					check_hotplug_bridge(slot, dev);
--					pci_bus_size_bridges(dev->subordinate);
-+					pcibios_resource_survey_bus(dev->subordinate);
-+					__pci_bus_size_bridges(dev->subordinate,
-+							       &add_list);
- 				}
- 			}
- 		}
- 	}
- 
--	pci_bus_assign_resources(bus);
-+	__pci_bus_assign_resources(bus, &add_list, NULL);
- 	acpiphp_sanitize_bus(bus);
- 	acpiphp_set_hpp_values(bus);
- 	acpiphp_set_acpi_region(slot);
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 68678ed..d1182c4 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -202,6 +202,11 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
- 		    struct resource *res, unsigned int reg);
- int pci_resource_bar(struct pci_dev *dev, int resno, enum pci_bar_type *type);
- void pci_configure_ari(struct pci_dev *dev);
-+void __ref __pci_bus_size_bridges(struct pci_bus *bus,
-+			struct list_head *realloc_head);
-+void __ref __pci_bus_assign_resources(const struct pci_bus *bus,
-+				      struct list_head *realloc_head,
-+				      struct list_head *fail_head);
- 
- /**
-  * pci_ari_enabled - query ARI forwarding status
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 16abaaa..d254e23 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1044,7 +1044,7 @@ handle_done:
- 	;
- }
- 
--static void __ref __pci_bus_size_bridges(struct pci_bus *bus,
-+void __ref __pci_bus_size_bridges(struct pci_bus *bus,
- 			struct list_head *realloc_head)
- {
- 	struct pci_dev *dev;
-@@ -1115,9 +1115,9 @@ void __ref pci_bus_size_bridges(struct pci_bus *bus)
- }
- EXPORT_SYMBOL(pci_bus_size_bridges);
- 
--static void __ref __pci_bus_assign_resources(const struct pci_bus *bus,
--					 struct list_head *realloc_head,
--					 struct list_head *fail_head)
-+void __ref __pci_bus_assign_resources(const struct pci_bus *bus,
-+				      struct list_head *realloc_head,
-+				      struct list_head *fail_head)
- {
- 	struct pci_bus *b;
- 	struct pci_dev *dev;
 -- 
-1.8.1.2
-
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
