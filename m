@@ -1,134 +1,148 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mho-03-ewr.mailhop.org ([204.13.248.66]:15994 "EHLO
-	mho-01-ewr.mailhop.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752756Ab3FFSvq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Jun 2013 14:51:46 -0400
-Date: Thu, 6 Jun 2013 14:51:10 -0400
-From: Jason Cooper <jason@lakedaemon.net>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Arnd Bergmann <arnd@arndb.de>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	linux-arm-kernel@lists.infradead.org,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Maen Suleiman <maen@marvell.com>
-Subject: Re: [PATCH v2 0/8] MSI support for Marvell EBU PCIe driver
-Message-ID: <20130606185110.GP23859@titan.lakedaemon.net>
-References: <1370536888-8871-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from www.linutronix.de ([62.245.132.108]:58291 "EHLO
+	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751991Ab3FJUNw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Jun 2013 16:13:52 -0400
+Date: Mon, 10 Jun 2013 22:13:44 +0200 (CEST)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Yinghai Lu <yinghai@kernel.org>
+cc: Ingo Molnar <mingo@elte.hu>, "H. Peter Anvin" <hpa@zytor.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Joerg Roedel <joro@8bytes.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Subject: Re: [PATCH v3 11/27] x86, irq: Add realloc_irq_and_cfg_at()
+In-Reply-To: <1370644273-10495-12-git-send-email-yinghai@kernel.org>
+Message-ID: <alpine.LFD.2.02.1306102144300.22970@ionos>
+References: <1370644273-10495-1-git-send-email-yinghai@kernel.org> <1370644273-10495-12-git-send-email-yinghai@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1370536888-8871-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Thomas,
+On Fri, 7 Jun 2013, Yinghai Lu wrote:
 
-On Thu, Jun 06, 2013 at 06:41:20PM +0200, Thomas Petazzoni wrote:
-> Hello,
+> For ioapic hot-add support, it would be easy if we put all irqs
+> for that ioapic controller together.
 > 
-> This set of patches introduces Message Signaled Interrupt support in
-> the Marvell EBU PCIe driver. It has been successfully tested on the
-> Armada XP GP platform with an Intel e1000e PCIe network card that
-> supports MSI.
-> 
-> This version 2 follows the RFC version sent on March, 26th 2013. This
-> is based on work done by Lior Amsalem <alior@marvell.com>.
-> 
-> The patches do the following:
-> 
->  * Patch 1 comes from Thierry Redding, and adds a minimal msi_chip
->    infrastructure.
-> 
->    This needs to be reviewed/acked by Bjorn Helgaas.
-> 
->  * Patch 2 extends the msi_chip infrastructure with a small registry,
->    so that one driver can register an msi_chip, and another driver can
->    find the msi_chip associated to a particular Device Tree node.
-> 
->    This needs to be reviewed/acked by Bjorn Helgaas.
-> 
->  * Patch 3 makes some not very interesting preparation in the Armada
->    370/XP IRQ controller driver.
-> 
->  * Patch 4 implements the MSI support in the Armada 370/XP IRQ
->    controller driver. It registers an msi_chip using the
->    msi_chip_add() function added in PATCH 2.
-> 
->  * Patch 5 adjust the Armada 370/XP Device Tree to indicate that the
->    MPIC is not only an interrupt-controller, but also an
->    msi-controller.
-> 
->  * Patch 6 adds MSI support in the Marvell PCIe host controller
->    driver. The work to do here is minimal: get a reference to the
->    msi-parent controller thanks to msi_chip_find_by_of_node(), and
->    link it to the pci_bus structure before the bus gets enumerated.
-> 
->    This needs to be reviewed/acked by Bjorn Helgaas.
-> 
->  * Patch 7 tunes Kconfig to indicate that Armada 370/XP supports MSI.
-> 
->  * Patch 8 adjusts the Armada 370/XP Device Tree to add the msi-parent
->    properties in the PCIe controller nodes.
-> 
-> This set of patches currently applies on top of the current "for-next"
-> branch of Jason Cooper's repository.
-> 
-> The Device Tree binding documentation updates will be added once the
-> general approach is agreed on.
-> 
-> Thanks,
-> 
-> Thomas
-> 
-> Thierry Reding (1):
->   PCI: Introduce new MSI chip infrastructure
-> 
-> Thomas Petazzoni (7):
->   PCI: Add registry of MSI chips
->   irqchip: armada-370-xp: properly request resources
->   irqchip: armada-370-xp: implement MSI support
->   arm: mvebu: the MPIC now provides MSI controller features
->   pci: mvebu: add support for MSI
->   arm: mvebu: indicate that this platform supports MSI
->   arm: mvebu: link PCIe controllers to the MSI controller
-> 
+> We can reserve irq range at first, then reallocate those
 
-Is there a reason why the following breakdown wouldn't work?
+No. We do not reallocate something which does not exist in the first
+place.
 
->  arch/arm/boot/dts/armada-370-xp.dtsi     |   1 +
->  arch/arm/boot/dts/armada-370.dtsi        |   1 +
->  arch/arm/boot/dts/armada-xp-mv78230.dtsi |   1 +
->  arch/arm/boot/dts/armada-xp-mv78260.dtsi |   1 +
->  arch/arm/boot/dts/armada-xp-mv78460.dtsi |   1 +
+> pre-reserved one when it is needed.
+> 
+> Add realloc_irq_and_cfg_at() to really allocate irq_desc and cfg,
+> because pre-reserved only mark bits in allocate_irqs bit maps.
+> 
+> The reasons for not allocating them during reserving:
+> 1. only several pins in ioapic are used, allocate for all pins, will
+>    waste memory for not used pins.
+> 2. relocate later could make sure irq_desc is allocated on local node ram.
+>    as dev->node is set at that point.
 
-through mvebu/arm-soc
+This is not relocating. Your changelog sucks as much as your code.
+ 
+> -v2: update changelog by adding reasons, requested by Konrad.
+> 
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> Cc: Joerg Roedel <joro@8bytes.org>
+> Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+> Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+> ---
+>  arch/x86/kernel/apic/io_apic.c | 32 +++++++++++++++++++++++++++++++-
+>  include/linux/irq.h            |  5 +++++
+>  kernel/irq/irqdesc.c           | 26 ++++++++++++++++++++++++++
 
->  arch/arm/mach-mvebu/Kconfig              |   1 +
+No, we do not add new code to the core and use it in the same patch at
+some random other place. The core code change wants to be separate and
+have a separate changelog.
 
-through mvebu/arm-soc after the other three have landed (v3.11-rc1)
+> --- a/include/linux/irq.h
+> +++ b/include/linux/irq.h
+> @@ -602,6 +602,11 @@ void irq_free_descs(unsigned int irq, unsigned int cnt);
+>  int irq_reserve_irqs(unsigned int from, unsigned int cnt);
+>  int __irq_reserve_irqs(int irq, unsigned int from, unsigned int cnt);
+>  
+> +int __irq_realloc_desc(int at, int node, struct module *owner);
+> +/* use macros to avoid needing export.h for THIS_MODULE */
 
->  drivers/irqchip/irq-armada-370-xp.c      | 186 ++++++++++++++++++++++++++++++-
+You must be kidding. export.h has been split out from module.h exactly
+to avoid horrible comments like the above and nonsense like this:
 
-through tglx
+> +#define irq_realloc_desc_at(at, node)	\
+> +	__irq_realloc_desc(at, node, THIS_MODULE)
+> +
 
->  drivers/pci/host/pci-mvebu.c             |  21 ++++
->  drivers/pci/msi.c                        |  59 +++++++++-
->  drivers/pci/probe.c                      |   1 +
->  include/linux/msi.h                      |  22 ++++
->  include/linux/pci.h                      |   1 +
+> diff --git a/kernel/irq/irqdesc.c b/kernel/irq/irqdesc.c
+> index 3b9fb92..b48f65b 100644
+> --- a/kernel/irq/irqdesc.c
+> +++ b/kernel/irq/irqdesc.c
+> @@ -99,6 +99,11 @@ EXPORT_SYMBOL_GPL(nr_irqs);
+>  static DEFINE_MUTEX(sparse_irq_lock);
+>  static DECLARE_BITMAP(allocated_irqs, IRQ_BITMAP_BITS);
+>  
+> +static bool __irq_is_reserved(int irq)
+> +{
+> +	return !!test_bit(irq, allocated_irqs);
 
-through Bjorn
+What's the point of this? Why not use test_bit() directly in the code?
 
-I think we should view the manner in which we brought in the initial
-mvebu-pcie series (all through arm-soc) as the exception, not the rule.
-I have no problem, and in fact, prefer to have them reviewed as a
-series, but if at *all* possible, the series should be structured so
-relevant maintainers can pick up the relevant patches into their trees.
+If we really want this to be a function, then it should be inline and
+it could do without the pointless and !! nonsense.
 
-thx,
+>  static RADIX_TREE(irq_desc_tree, GFP_KERNEL);
+> @@ -410,6 +415,27 @@ __irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
+>  EXPORT_SYMBOL_GPL(__irq_alloc_descs);
+>  
+>  /**
+> + * irq_realloc_desc - allocate irq descriptor for irq that is already reserved
 
-Jason.
+And of course you are documenting crap again.
+
+> + * @irq:	Allocate for specific irq number if irq >= 0
+> + * @node:	Preferred node on which the irq descriptor should be allocated
+> + * @owner:	Owning module (can be NULL)
+> + *
+> + * Returns the irq number or error code
+> + */
+> +int __ref
+> +__irq_realloc_desc(int irq, int node, struct module *owner)
+
+What's the point of this line split ?
+
+> +{
+> +	if (!__irq_is_reserved(irq))
+> +		return -EINVAL;
+
+So this function can operate safely w/o holding sparse_irq_lock?
+
+> +	if (irq_to_desc(irq))
+> +		free_desc(irq);
+
+You unconditionally throw away an existing irq descriptor? No, you
+should bail out here. The function name is a misnomer as it does not
+match the funciton description:
+
+irq_realloc_desc - allocate irq descriptor for irq that is already reserved
+
+You want to allocate an irq descriptor for a reserved irq. That's what
+the function is about, not about reallocating an existing irq
+descriptor. 
+
+So what you want is:
+
+irq_alloc_reserved_desc - allocate irq descriptor for irq that is already reserved
+
+and then bail out if the irq descriptor already exists.
+
+> +	return alloc_descs(irq, 1, node, owner);
+
+> +EXPORT_SYMBOL_GPL(__irq_realloc_desc);
+
+What's the point of exporting this?
+
+Thanks,
+
+	tglx
