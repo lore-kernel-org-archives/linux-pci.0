@@ -1,52 +1,107 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Joe Perches <joe@perches.com>, Betty Dall <betty.dall@hp.com>,
-	Chen Gong <gong.chen@linux.intel.com>,
-	"Pearson, Greg" <greg.pearson@hp.com>,
-	Huang Ying <ying.huang@intel.com>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v2 4/6] PCI/ACPI: Move AER severity defines to aer.h
-Date: Thu, 06 Jun 2013 22:19:24 +0200
-Message-ID: <6437308.8LYcFHpCne@vostro.rjw.lan>
-In-Reply-To: <CAErSpo56-AtgJzkJqK+8ggdPiPPvX_AVWhsirZRdNLhdAn8qVw@mail.gmail.com>
-References: <1370542251-27387-1-git-send-email-betty.dall@hp.com> <1370542987.2209.18.camel@joe-AO722> <CAErSpo56-AtgJzkJqK+8ggdPiPPvX_AVWhsirZRdNLhdAn8qVw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pa0-f53.google.com ([209.85.220.53]:63029 "EHLO
+	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752511Ab3FJLtt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Jun 2013 07:49:49 -0400
+Received: by mail-pa0-f53.google.com with SMTP id tj12so2562455pac.40
+        for <linux-pci@vger.kernel.org>; Mon, 10 Jun 2013 04:49:48 -0700 (PDT)
+From: Tushar Behera <tushar.behera@linaro.org>
+To: linux-kernel@vger.kernel.org
+Cc: thierry.reding@gmail.com, patches@linaro.org,
+	alsa-devel@alsa-project.org, devel@driverdev.osuosl.org,
+	linux-can@vger.kernel.org, linux-doc@vger.kernel.org,
+	linux-gpio@vger.kernel.org, linux-mmc@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-usb@vger.kernel.org,
+	netdev@vger.kernel.org, sparclinux@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Chris Ball <cjb@laptop.org>, Dan Williams <djbw@fb.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Felipe Balbi <balbi@ti.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Liam Girdwood <lgirdwood@gmail.com>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Marc Kleine-Budde <mkl@pengutronix.de>,
+	Mark Brown <broonie@kernel.org>,
+	Michal Simek <michal.simek@xilinx.com>,
+	Rob Landley <rob@landley.net>,
+	Vinod Koul <vinod.koul@intel.com>,
+	Wolfgang Grandegger <wg@grandegger.com>
+Subject: [PATCH 00/15] Convert to use devm_ioremap_resource
+Date: Mon, 10 Jun 2013 17:04:58 +0530
+Message-Id: <1370864113-17895-1-git-send-email-tushar.behera@linaro.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, June 06, 2013 01:28:28 PM Bjorn Helgaas wrote:
-> On Thu, Jun 6, 2013 at 12:23 PM, Joe Perches <joe@perches.com> wrote:
-> > On Thu, 2013-06-06 at 12:10 -0600, Betty Dall wrote:
-> >> The function aer_recover_queue() is a public interface and the
-> >> severity argument uses #defines that are in the private header
-> >> pci/pcie/aer/aerdrv.h.
-> >>
-> >> This patch moves the #defines from pci/pcie/aer/aerdrv.h to
-> >> include/linux/aer.h.
-> > []
-> >> diff --git a/include/linux/aer.h b/include/linux/aer.h
-> > []
-> >> -extern void cper_print_aer(const char *prefix, struct pci_dev *dev,
-> >> +void cper_print_aer(const char *prefix, struct pci_dev *dev,
-> >>                          int cper_severity, struct aer_capability_regs *aer);
-> >
-> > Can you please also realign the arguments on subsequent
-> > lines to the open parenthesis of the first line and reflow
-> > then to 80 cols when appropriate?
-> 
-> I can do this when I apply them, so don't bother reposting unless you
-> have more substantive changes to make.
+These are the remaining instances of devm_request_and_ioremap. Convert
+them to use devm_ioremap_resource as introduced by commit
+75096579c3ac ("lib: devres: Introduce devm_ioremap_resource()).
+Patches 1 to 13 remove occurrences of devm_request_and_ioremap.
+Patch 14 modifies one comment that speaks about devm_request_and_ioremap.
+Patch 15 removes the definition of devm_request_and_ioremap which
+should only be applied if all other pathces are merged.
 
-For the record, I have no objections against this patchset.
+Tushar Behera (15):
+  sparc,leon: Convert to use devm_ioremap_resource
+  sudmac: Convert to use devm_ioremap_resource
+  mmc: mvsdio: Convert to use devm_ioremap_resource
+  gpio_msm: Convert to use devm_ioremap_resource
+  gpio-sta2x11: Convert to use devm_ioremap_resource
+  net: bcm63xx_enet: Convert to use devm_ioremap_resource
+  net: fec: Convert to use devm_ioremap_resource
+  net: emaclite: Convert to use devm_ioremap_resource
+  net: can: Convert to use devm_ioremap_resource
+  Staging: netlogic: Convert to use devm_ioremap_resource
+  regulator: ti-abb: Convert to use devm_ioremap_resource
+  ASoC: spear: Convert to use devm_ioremap_resource
+  pci: mvebu: Convert to use devm_ioremap_resource
+  usb: phy: rcar-usb: Fix comment w.r.t. devm_ioremap_resource
+  lib: devres: Remove deprecated devm_request_and_ioremap
 
-Thanks,
-Rafael
+ Documentation/driver-model/devres.txt         |    1 -
+ arch/sparc/kernel/leon_pci_grpci1.c           |    6 +++---
+ drivers/dma/sh/sudmac.c                       |    6 +++---
+ drivers/gpio/gpio-msm-v1.c                    |   12 +++++------
+ drivers/gpio/gpio-sta2x11.c                   |    4 +++-
+ drivers/mmc/host/mvsdio.c                     |    6 +++---
+ drivers/net/can/c_can/c_can_platform.c        |    4 ++--
+ drivers/net/ethernet/broadcom/bcm63xx_enet.c  |   12 +++++------
+ drivers/net/ethernet/freescale/fec_main.c     |   12 +++++------
+ drivers/net/ethernet/xilinx/xilinx_emaclite.c |    6 ++++--
+ drivers/pci/host/pci-mvebu.c                  |    5 +++--
+ drivers/regulator/ti-abb-regulator.c          |   12 +++++------
+ drivers/staging/netlogic/xlr_net.c            |    8 +++----
+ drivers/usb/phy/phy-rcar-usb.c                |    2 +-
+ include/linux/device.h                        |    2 --
+ lib/devres.c                                  |   28 -------------------------
+ sound/soc/spear/spdif_out.c                   |   20 +++++-------------
+ 17 files changed, 55 insertions(+), 91 deletions(-)
 
-
+CC: alsa-devel@alsa-project.org
+CC: devel@driverdev.osuosl.org
+CC: linux-can@vger.kernel.org
+CC: linux-doc@vger.kernel.org
+CC: linux-gpio@vger.kernel.org
+CC: linux-mmc@vger.kernel.org
+CC: linux-pci@vger.kernel.org
+CC: linux-usb@vger.kernel.org
+CC: netdev@vger.kernel.org
+CC: sparclinux@vger.kernel.org
+CC: Bjorn Helgaas <bhelgaas@google.com>
+CC: Chris Ball <cjb@laptop.org>
+CC: Dan Williams <djbw@fb.com>
+CC: "David S. Miller" <davem@davemloft.net>
+CC: Felipe Balbi <balbi@ti.com>
+CC: Grant Likely <grant.likely@linaro.org>
+CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+CC: Liam Girdwood <lgirdwood@gmail.com>
+CC: Linus Walleij <linus.walleij@linaro.org>
+CC: Marc Kleine-Budde <mkl@pengutronix.de>
+CC: Mark Brown <broonie@kernel.org>
+CC: Michal Simek <michal.simek@xilinx.com>
+CC: Rob Landley <rob@landley.net>
+CC: Vinod Koul <vinod.koul@intel.com>
+CC: Wolfgang Grandegger <wg@grandegger.com>
 -- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+1.7.9.5
+
