@@ -1,86 +1,100 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <51B89D26.9070605@wwwdotorg.org>
-Date: Wed, 12 Jun 2013 10:09:10 -0600
-From: Stephen Warren <swarren@wwwdotorg.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pd0-f176.google.com ([209.85.192.176]:36681 "EHLO
+	mail-pd0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751743Ab3FJRIX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Jun 2013 13:08:23 -0400
+Message-ID: <51B607FE.3020108@gmail.com>
+Date: Tue, 11 Jun 2013 01:08:14 +0800
+From: Jiang Liu <liuj97@gmail.com>
 MIME-Version: 1.0
-To: Thierry Reding <thierry.reding@gmail.com>
-CC: Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Andrew Murray <andrew.murray@arm.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-tegra@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v3 07/12] PCI: tegra: Move PCIe driver to drivers/pci/host
-References: <1365000318-28256-1-git-send-email-thierry.reding@avionic-design.de> <1365000318-28256-8-git-send-email-thierry.reding@avionic-design.de> <516C46BC.2040707@wwwdotorg.org> <20130612122959.GA32444@manwe>
-In-Reply-To: <20130612122959.GA32444@manwe>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Jeremy Fitzhardinge <jeremy@goop.org>,
+	xen-devel@lists.xensource.com,
+	virtualization@lists.linux-foundation.org
+Subject: Re: [RFC PATCH v2, part3 07/11] PCI, xen-pcifront: use new PCI interfaces
+ to simplify implementation
+References: <1368719459-24800-1-git-send-email-jiang.liu@huawei.com> <1368719459-24800-8-git-send-email-jiang.liu@huawei.com> <20130607145024.GA16631@phenom.dumpdata.com> <20130607153822.GA24882@phenom.dumpdata.com> <51B20F57.7050100@gmail.com> <20130607170706.GB3730@phenom.dumpdata.com> <51B4B266.5010100@gmail.com> <20130610165801.GA24823@phenom.dumpdata.com>
+In-Reply-To: <20130610165801.GA24823@phenom.dumpdata.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06/12/2013 06:30 AM, Thierry Reding wrote:
-> On Mon, Apr 15, 2013 at 12:28:12PM -0600, Stephen Warren wrote:
->> On 04/03/2013 08:45 AM, Thierry Reding wrote:
->>> Move the PCIe driver from arch/arm/mach-tegra into the
->>> drivers/pci/host directory. The motivation is to collect
->>> various host controller drivers in the same location in order
->>> to facilitate refactoring.
->>> 
->>> The Tegra PCIe driver has been largely rewritten, both in order
->>> to turn it into a proper platform driver and to add MSI (based
->>> on code by Krishna Kishore <kthota@nvidia.com>) as well as
->>> device tree support.
-...
->>> +static irqreturn_t tegra_pcie_msi_irq(int irq, void *data)
->> ...
->>> +	return IRQ_HANDLED;
->> 
->> Shouldn't this function return IRQ_NONE if no MSI status bits
->> were found set?
-> 
-> The IRQ isn't marked IRQF_SHARED, so I don't think this is needed.
-
-Isn't it still useful to detect unexpected/stuck interrupts?
-
->>> +static int tegra_pcie_enable(struct tegra_pcie *pcie)
-...
->> 
->> Why is that needed; when would a port get enabled if it was
->> already enabled, and if it was already enabled, wouldn't you want
->> this function to be a no-op rather than destroying everything and
->> starting again?
-> 
-> I'm not sure I understand what you're saying. The intent of this 
-> function is to enable a port, check that there's a link and disable
-> the port otherwise. That way we don't keep ports around where
-> nothing is connected.
-
-Hmm. I have no idea either now:-( The body of tegra_pcie_enable()
-looks fine.
-
->>> +static int tegra_pcie_probe(struct platform_device *pdev)
->> ...
->>> +	pcibios_min_mem = 0;
->> 
->> What does that mean/do? I wonder if that should be set to
->> 0x80000000 by the Tegra30 patches?
-> 
-> ARM defines PCIBIOS_MIN_MEM to that variable. That macro in turn is
-> only used by pci_bus_alloc_resource() AFAICT, which uses it to
-> override the start of a resource when allocating if res->start ==
-> 0. As such it designates a lower-bound of valid PCI memory
-> addresses, so 0 on Tegra20 and 0x80000000 on Tegra30 don't seem
-> like good values. Maybe we need to set them to the lowest of the
-> prefetchable and non-prefetchable memory areas as defined in the
-> DT?
-> 
-> It doesn't currently seem to matter at all, though, since we never
-> pass in a range that's 0, so the start address of resources can
-> never be 0 and therefore PCIBIOS_MIN_MEM is never used.
-
-Hmmm. I guess ignore it then. If the value won't ever be used, 0 is as
-good a value as any?
+On Tue 11 Jun 2013 12:58:01 AM CST, Konrad Rzeszutek Wilk wrote:
+> On Mon, Jun 10, 2013 at 12:50:46AM +0800, Jiang Liu wrote:
+>> On Sat 08 Jun 2013 01:07:06 AM CST, Konrad Rzeszutek Wilk wrote:
+>>> On Sat, Jun 08, 2013 at 12:50:31AM +0800, Jiang Liu wrote:
+>>>> On 06/07/2013 11:38 PM, Konrad Rzeszutek Wilk wrote:
+>>>>> On Fri, Jun 07, 2013 at 10:50:24AM -0400, Konrad Rzeszutek Wilk wrote:
+>>>>>> On Thu, May 16, 2013 at 11:50:55PM +0800, Jiang Liu wrote:
+>>>>>>> Use new PCI interfaces to simplify xen-pcifront implementation:
+>>>>>>> 1) Use pci_create_root_bus() instead of pci_scan_bus_parented()
+>>>>>>>    because pci_scan_bus_parented() is marked as __deprecated.This
+>>>>>>>    also gets rid of a duplicated call of pci_bus_start_devices().
+>>>>>>> 2) Use pci_stop_root_bus() and pci_remove_root_bus() instead of
+>>>>>>>    open-coded private implementation.
+>>>>>>> 3) Use pci_set_host_bridge_release() to release data structures
+>>>>>>>    associated with PCI root buses.
+>>>>>>> 4) Use pci_bus_get()/pci_bus_put() to manage PCI root bus reference
+>>>>>>>    count.
+>>>>>>>
+>>>>>>> This is also a preparation for coming PCI bus lock enhancement.
+>>>>>
+>>>>> With this patch from :
+>>>>>
+>>>>>  Merge branch 'pci_lock_v3' of https://github.com/jiangliu/linux into testing
+>>>>>
+>>>>>
+>>>>> it blows up when detaching the device.
+>>>> Hi Konrad,
+>>>>    Thanks for testing! According to the log messages, this issue should
+>>>> be related to pci bus reference counter management. Seems we have done
+>>>> an extra(unbalanced) release of pci bus device.
+>>>>    Will investigate it tomorrow!
+>>>
+>>> That is quite commendable that you are willing to look over this on
+>>> the weekend but I am not going to be able to rerun this test until
+>>> some time in the week. You could enjoy the weekend and just look at
+>>> this during the week.
+>>
+>> Hi Konrad,
+>>      We should have root-caused this bug, which is caused by
+>> for_each_pci_root_bus().
+>> Current implementation doesn't support root bus deletion when walking
+>> PCI root
+>> buses by for_each_pci_root_bus(). The reference counter
+>> (pci_bus->dev.knode_class.n_ref)
+>> becomes zero after returning from pci_remove_root_bus(), so it triggers
+>> kref warnings
+>> and double-free of klist_node object when we call
+>> pci_get_next_root_bus() to get the
+>> next PCI root bus.
+>>      So we will first revert to  list_for_each_entry_safe(bus, temp,
+>> &pci_root_buses, node)
+>> and solve this issue in next version of for_each_pci_root_bus().
+>
+> That definitly solves the issue. Thanks!
+>
+> I used pci_lock_v3 of https://github.com/jiangliu/linux and the fix
+> below.
+>
+> Is there a new patchset you are going to be posting or a git branch
+> that I can look over?
+>
+> Thanks.
+Hi Konrad,
+     Really appreciate your support! I will try to post a new version 
+tomorrow,
+but I think there won't be big changes except addressing some review
+comments from you.
+    Thanks!
+    Gerry
