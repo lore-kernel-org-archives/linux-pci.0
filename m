@@ -1,128 +1,72 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, Jiang Liu <jiang.liu@huawei.com>
-Cc: Gavin Guo <tuffkidtt@gmail.com>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v3.9 stable] PCI: acpiphp: Re-enumerate devices when host bridge receives Bus Check
-Date: Thu, 27 Jun 2013 16:24:20 -0700
-Message-Id: <1372375460-13350-1-git-send-email-yinghai@kernel.org>
-In-Reply-To: <20130605223852.GA16729@kroah.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp02.citrix.com ([66.165.176.63]:5369 "EHLO SMTP02.CITRIX.COM"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754824Ab3FKQR7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 11 Jun 2013 12:17:59 -0400
+Message-ID: <51B74DA9.7060509@eu.citrix.com>
+Date: Tue, 11 Jun 2013 17:17:45 +0100
+From: George Dunlap <george.dunlap@eu.citrix.com>
+MIME-Version: 1.0
+To: konrad wilk <konrad.wilk@oracle.com>
+CC: <xen-devel@lists.xensource.com>, <linux-kernel@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	<linux-pci@vger.kernel.org>, <stable@vger.kernel.org>
+Subject: Re: [PATCH] xen/pci: Deal with toolstack missing an 'XenbusStateClosing'.
+References: <20130610202456.GA17822@phenom.dumpdata.com> <1370898399-20968-1-git-send-email-konrad.wilk@oracle.com> <1370898399-20968-2-git-send-email-konrad.wilk@oracle.com> <51B743EA.5020800@eu.citrix.com> <51B74B77.1000806@oracle.com>
+In-Reply-To: <51B74B77.1000806@oracle.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Backporting for v3.9 for 3f327e39b4 (PCI: acpiphp: Re-enumerate devices when host bridge receives Bus Check).
+On 06/11/2013 05:08 PM, konrad wilk wrote:
+>
+> On 6/11/2013 11:36 AM, George Dunlap wrote:
+>> On 06/10/2013 10:06 PM, Konrad Rzeszutek Wilk wrote:
+>>> There are two tool-stack that can instruct the Xen PCI frontend
+>>> and backend to change states: 'xm' (Python code with a daemon),
+>>> and 'xl' (C library - does not keep state changes).
+>>>
+>>> With the 'xm', the path to disconnect a PCI device (xm pci-detach
+>>> <guest> <BDF>)is:
+>>>
+>>> 4(Connected)->7(Reconfiguring*)-> 8(Reconfigured)->
+>>> 4(Connected)->5(Closing*).
+>>>
+>>> The * is for states that the tool-stack sets. For 'xl', it is similar:
+>>>
+>>> 4(Connected)->7(Reconfiguring*)-> 8(Reconfigured)-> 4(Connected)
+>>>
+>>> Both of them also tear down the XenBus structure, so the backend
+>>> state ends up going in the 3(Initialised) and calls
+>>> pcifront_xenbus_remove.
+>>
+>> So I looked a little bit into this; there are actually two different
+>> states that happen as part of this handshake.  In order to disonnect a
+>> *device*, xl signals using the *bus* state, like this:
+>> * Wait for the *bus* to be in state 4(Connected)
+>> * Set the *device* state to 5(Closing)
+>> * Set the *bus* state to 7(Reconfiguring)
+>> * Wait for the *bus* state to return to 4(Connected)
+>>
+>> So are all of these states you see the *bus* state?  And why would you
+>> disconnect the whole pci bus if you're only removing one device?
+>
+> Correct. The stats I enumerated are *bus* states. Not per-device states.
+> I presume (and I hadn't checked xm) that Xend has some logic to only
+> disconnect the bus if all of the PCI devices have been disconnected. In
+> 'xl' it does not do that.
+>
+> The testing I did was just with one PCI device.
 
-When a PCI host bridge device receives a Bus Check notification, we
-must re-enumerate starting with the bridge to discover changes (devices
-that have been added or removed).
+Ah, OK -- I see now.  The problem is that the code in the Linux side 
+didn't know about the whole "4->7->8->4" thing to unplug a device.  In 
+all likelihood, if you had used xm with two devices (so that the bus 
+didn't get disconnected), then you would have run across the same error.
 
-Prior to 668192b678 ("PCI: acpiphp: Move host bridge hotplug to
-pci_root.c"), this happened in _handle_hotplug_event_bridge().  After that
-commit, _handle_hotplug_event_bridge() is not installed for host bridges,
-and the host bridge notify handler, _handle_hotplug_event_root() did not
-re-enumerate.
+So at least part of the problem *is* a bug in Linux.
 
-This patch adds re-enumeration to _handle_hotplug_event_root().
+That doesn't explain why I have problems doing this on Debian's version 
+of 3.2 -- unless the "fix" you mentoned above was backported to the 
+stable kernel, perhaps?
 
-This fixes cases where we don't notice the addition or removal of
-PCI devices, e.g., the PCI-to-USB ExpressCard in the bugzilla below.
-
--v1: Backport of 3f327e39b4 to v3.9 by Bjorn Helgaas <bhelgaas@google.com>
--v2: use request_module("acpiphp") for acpiphp as module instead of built-in.
--v3: Add missing EXPORT_SYMBOL found by Greg.
-
-[bhelgaas: changelog, references]
-Reference: https://lkml.kernel.org/r/CAAh6nkmbKR3HTqm5ommevsBwhL_u0N8Rk7Wsms_LfP=nBgKNew@mail.gmail.com
-Reference: https://bugzilla.kernel.org/show_bug.cgi?id=57961
-Reported-by: Gavin Guo <tuffkidtt@gmail.com>
-Tested-by: Gavin Guo <tuffkidtt@gmail.com>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-
----
- drivers/acpi/pci_root.c            |    7 ++++++-
- drivers/pci/hotplug/acpiphp_glue.c |   14 ++++++++++++++
- include/linux/pci-acpi.h           |    2 ++
- 3 files changed, 22 insertions(+), 1 deletion(-)
-
-Index: linux-3.9.4/drivers/acpi/pci_root.c
-===================================================================
---- linux-3.9.4.orig/drivers/acpi/pci_root.c
-+++ linux-3.9.4/drivers/acpi/pci_root.c
-@@ -665,6 +665,7 @@ static void handle_root_bridge_removal(s
- 		kfree(ej_event);
- }
- 
-+void (*acpiphp_check_host_bridge)(acpi_handle handle);
- static void _handle_hotplug_event_root(struct work_struct *work)
- {
- 	struct acpi_pci_root *root;
-@@ -687,7 +688,11 @@ static void _handle_hotplug_event_root(s
- 		/* bus enumerate */
- 		printk(KERN_DEBUG "%s: Bus check notify on %s\n", __func__,
- 				 (char *)buffer.pointer);
--		if (!root)
-+		if (root) {
-+			request_module("acpiphp");
-+			if (acpiphp_check_host_bridge)
-+				acpiphp_check_host_bridge(handle);
-+		} else
- 			handle_root_bridge_insertion(handle);
- 
- 		break;
-Index: linux-3.9.4/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-3.9.4.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-3.9.4/drivers/pci/hotplug/acpiphp_glue.c
-@@ -1122,6 +1122,18 @@ check_sub_bridges(acpi_handle handle, u3
- 	return AE_OK ;
- }
- 
-+static void __acpiphp_check_host_bridge(acpi_handle handle)
-+{
-+	struct acpiphp_bridge *bridge;
-+
-+	bridge = acpiphp_handle_to_bridge(handle);
-+	if (bridge)
-+		acpiphp_check_bridge(bridge);
-+
-+	acpi_walk_namespace(ACPI_TYPE_DEVICE, handle,
-+		ACPI_UINT32_MAX, check_sub_bridges, NULL, NULL, NULL);
-+}
-+
- static void _handle_hotplug_event_bridge(struct work_struct *work)
- {
- 	struct acpiphp_bridge *bridge;
-@@ -1305,6 +1317,7 @@ static struct acpi_pci_driver acpi_pci_h
- int __init acpiphp_glue_init(void)
- {
- 	acpi_pci_register_driver(&acpi_pci_hp_driver);
-+	acpiphp_check_host_bridge = __acpiphp_check_host_bridge;
- 
- 	return 0;
- }
-@@ -1317,6 +1330,7 @@ int __init acpiphp_glue_init(void)
-  */
- void  acpiphp_glue_exit(void)
- {
-+	acpiphp_check_host_bridge = NULL;
- 	acpi_pci_unregister_driver(&acpi_pci_hp_driver);
- }
- 
-Index: linux-3.9.4/include/linux/pci-acpi.h
-===================================================================
---- linux-3.9.4.orig/include/linux/pci-acpi.h
-+++ linux-3.9.4/include/linux/pci-acpi.h
-@@ -43,6 +43,8 @@ static inline acpi_handle acpi_pci_get_b
- }
- #endif
- 
-+extern void (*acpiphp_check_host_bridge)(acpi_handle handle);
-+
- #ifdef CONFIG_ACPI_APEI
- extern bool aer_acpi_firmware_first(void);
- #else
-
+  -George
