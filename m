@@ -1,144 +1,134 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f178.google.com ([209.85.223.178]:37386 "EHLO
-	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753032Ab3FJTQT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Jun 2013 15:16:19 -0400
-MIME-Version: 1.0
-In-Reply-To: <20130610135154.GA11905@dhcp-26-207.brq.redhat.com>
-References: <1370644273-10495-1-git-send-email-yinghai@kernel.org>
-	<1370644273-10495-11-git-send-email-yinghai@kernel.org>
-	<20130610135154.GA11905@dhcp-26-207.brq.redhat.com>
-Date: Mon, 10 Jun 2013 12:16:16 -0700
-Message-ID: <CAE9FiQUvmyUt048veb_kFr-9Ap2cza7ti28x-cm9AcoU8edhbw@mail.gmail.com>
-Subject: Re: [PATCH v3 10/27] genirq: Split __irq_reserve_irqs from irq_alloc_descs
-From: Yinghai Lu <yinghai@kernel.org>
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
-	"H. Peter Anvin" <hpa@zytor.com>,
+Received: from mail-pd0-f179.google.com ([209.85.192.179]:54347 "EHLO
+	mail-pd0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752307Ab3FKLyx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Jun 2013 07:54:53 -0400
+From: Jiang Liu <liuj97@gmail.com>
+To: "Alexander E . Patrakov" <patrakov@gmail.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Yinghai Lu <yinghai@kernel.org>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] ACPIPHP: fix device destroying order issue in handling dock notification
+Date: Tue, 11 Jun 2013 19:52:23 +0800
+Message-Id: <1370951543-15841-1-git-send-email-jiang.liu@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 10, 2013 at 6:51 AM, Alexander Gordeev <agordeev@redhat.com> wrote:
-> On Fri, Jun 07, 2013 at 03:30:56PM -0700, Yinghai Lu wrote:
->> irq_alloc_descs and irq_reserve_irqs are almost the same.
->> Separate code out to __irq_reserved_irqs, and other two reuse
->> __irq_reserve_irqs.
->>
->> We will use __irq_reserve_irqs for coming ioapic hotplug support.
->>
->> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
->> Cc: Alexander Gordeev <agordeev@redhat.com>
->> ---
->>  include/linux/irq.h  |  1 +
->>  kernel/irq/irqdesc.c | 54 ++++++++++++++++++++++++++++++----------------------
->>  2 files changed, 32 insertions(+), 23 deletions(-)
->>
->> diff --git a/include/linux/irq.h b/include/linux/irq.h
->> index bc4e066..4e0fcbb 100644
->> --- a/include/linux/irq.h
->> +++ b/include/linux/irq.h
->> @@ -600,6 +600,7 @@ int __irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
->>
->>  void irq_free_descs(unsigned int irq, unsigned int cnt);
->>  int irq_reserve_irqs(unsigned int from, unsigned int cnt);
->> +int __irq_reserve_irqs(int irq, unsigned int from, unsigned int cnt);
->>
->>  static inline void irq_free_desc(unsigned int irq)
->>  {
->> diff --git a/kernel/irq/irqdesc.c b/kernel/irq/irqdesc.c
->> index 192a302..3b9fb92 100644
->> --- a/kernel/irq/irqdesc.c
->> +++ b/kernel/irq/irqdesc.c
->> @@ -340,18 +340,15 @@ void irq_free_descs(unsigned int from, unsigned int cnt)
->>  EXPORT_SYMBOL_GPL(irq_free_descs);
->>
->>  /**
->> - * irq_alloc_descs - allocate and initialize a range of irq descriptors
->> - * @irq:     Allocate for specific irq number if irq >= 0
->> + * __irq_reserve_descs - reserve and initialize a range of irq descriptors
->> + * @irq:     Reserve for specific irq number if irq >= 0
->>   * @from:    Start the search from this irq number
->> - * @cnt:     Number of consecutive irqs to allocate.
->> - * @node:    Preferred node on which the irq descriptor should be allocated
->> - * @owner:   Owning module (can be NULL)
->> + * @cnt:     Number of consecutive irqs to reserve.
->>   *
->>   * Returns the first irq number or error code
->>   */
->>  int __ref
->> -__irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
->> -               struct module *owner)
->> +__irq_reserve_irqs(int irq, unsigned int from, unsigned int cnt)
->>  {
->>       int start, ret;
->>
->> @@ -369,7 +366,7 @@ __irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
->>       start = bitmap_find_next_zero_area(allocated_irqs, IRQ_BITMAP_BITS,
->>                                          from, cnt, 0);
->>       ret = -EEXIST;
->> -     if (irq >=0 && start != irq)
->> +     if (irq >= 0 && start != irq)
->>               goto err;
->>
->>       if (start + cnt > nr_irqs) {
->> @@ -380,12 +377,36 @@ __irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
->>
->>       bitmap_set(allocated_irqs, start, cnt);
->>       mutex_unlock(&sparse_irq_lock);
->> -     return alloc_descs(start, cnt, node, owner);
->> +     return start;
->>
->>  err:
->>       mutex_unlock(&sparse_irq_lock);
->>       return ret;
->>  }
->> +
->> +/**
->> + * irq_alloc_descs - allocate and initialize a range of irq descriptors
->> + * @irq:     Allocate for specific irq number if irq >= 0
->> + * @from:    Start the search from this irq number
->> + * @cnt:     Number of consecutive irqs to allocate.
->> + * @node:    Preferred node on which the irq descriptor should be allocated
->> + * @owner:   Owning module (can be NULL)
->> + *
->> + * Returns the first irq number or error code
->> + */
->> +int __ref
->> +__irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
->> +               struct module *owner)
->> +{
->> +     int start;
->> +
->> +     start = __irq_reserve_irqs(irq, from, cnt);
->> +
->> +     if (start < 0)
->> +             return start;
->> +
->> +     return alloc_descs(start, cnt, node, owner);
->
-> I think alloc_descs() fail path is needed before return.
+Current ACPI glue logic expects that physical devices are destroyed
+before destroying companion ACPI devices, otherwise it will break the
+ACPI unbind logic and cause following warning messages:
+[  185.026073] usb usb5: Oops, 'acpi_handle' corrupt
+[  185.035150] pci 0000:1b:00.0: Oops, 'acpi_handle' corrupt
+[  185.035515] pci 0000:18:02.0: Oops, 'acpi_handle' corrupt
+[  180.013656]  port1: Oops, 'acpi_handle' corrupt
+Please refer to https://bugzilla.kernel.org/attachment.cgi?id=104321
+for full log message.
 
-__irq_reserve_irqs already return -EEXIST etc,
+Above warning messages are caused by following scenario:
+1) acpi_dock_notifier_call() queues a task (T1) onto kacpi_hotplug_wq
+2) kacpi_hotplug_wq handles T1, which invokes acpi_dock_deferred_cb()
+   ->dock_notify()-> handle_eject_request()->hotplug_dock_devices()
+3) hotplug_dock_devices() first invokes registered hotplug callbacks to
+   destroy physical devices, then destroys all affected ACPI devices.
+   Everything seems perfect until now. But the acpiphp dock notification
+   handler will queue another task (T2) onto kacpi_hotplug_wq to really
+   destroy affected physical devices.
+4) kacpi_hotplug_wq finishes T1, and all affected ACPI devices have
+   been destroyed.
+5) kacpi_hotplug_wq handles T2, which destroys all affected physical
+   devices.
 
-old kernel is like:
+So it breaks the ACPI glue expection because ACPI devices are destroyed
+in step 3 and physical devices are destroyed in step 5.
 
->> @@ -380,12 +377,36 @@ __irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Cc: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+---
+Hi all,
+   We are trying to solve bug https://bugzilla.kernel.org/show_bug.cgi?id=59501
+And seems there are multiple bugs behind bug 59501. This draft patch tries to
+fix one of those issues. I will send out form patchset once all issue have been
+resolved.
 
-       bitmap_set(allocated_irqs, start, cnt);
-       mutex_unlock(&sparse_irq_lock);
-     return alloc_descs(start, cnt, node, owner);
+Regards!
+Gerry
+---
+ drivers/pci/hotplug/acpiphp_glue.c | 31 +++++++++++++++++++------------
+ 1 file changed, 19 insertions(+), 12 deletions(-)
 
- err:
-      mutex_unlock(&sparse_irq_lock);
-      return ret;
+diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+index 716aa93..b132aca 100644
+--- a/drivers/pci/hotplug/acpiphp_glue.c
++++ b/drivers/pci/hotplug/acpiphp_glue.c
+@@ -61,7 +61,10 @@ static DEFINE_MUTEX(bridge_mutex);
+ static void handle_hotplug_event_bridge (acpi_handle, u32, void *);
+ static void acpiphp_sanitize_bus(struct pci_bus *bus);
+ static void acpiphp_set_hpp_values(struct pci_bus *bus);
+-static void handle_hotplug_event_func(acpi_handle handle, u32 type, void *context);
++static void __handle_hotplug_event_func(acpi_handle handle, u32 type,
++					void *context);
++static void handle_hotplug_event_func(acpi_handle handle, u32 type,
++				      void *context);
+ static void free_bridge(struct kref *kref);
+ 
+ /* callback routine to check for the existence of a pci dock device */
+@@ -147,7 +150,7 @@ static int post_dock_fixups(struct notifier_block *nb, unsigned long val,
+ 
+ 
+ static const struct acpi_dock_ops acpiphp_dock_ops = {
+-	.handler = handle_hotplug_event_func,
++	.handler = __handle_hotplug_event_func,
+ };
+ 
+ /* Check whether the PCI device is managed by native PCIe hotplug driver */
+@@ -1065,20 +1068,13 @@ static void handle_hotplug_event_bridge(acpi_handle handle, u32 type,
+ 	alloc_acpi_hp_work(handle, type, context, _handle_hotplug_event_bridge);
+ }
+ 
+-static void _handle_hotplug_event_func(struct work_struct *work)
++static void __handle_hotplug_event_func(acpi_handle handle, u32 type,
++					void *context)
+ {
+-	struct acpiphp_func *func;
++	struct acpiphp_func *func = context;
+ 	char objname[64];
+ 	struct acpi_buffer buffer = { .length = sizeof(objname),
+ 				      .pointer = objname };
+-	struct acpi_hp_work *hp_work;
+-	acpi_handle handle;
+-	u32 type;
+-
+-	hp_work = container_of(work, struct acpi_hp_work, work);
+-	handle = hp_work->handle;
+-	type = hp_work->type;
+-	func = (struct acpiphp_func *)hp_work->context;
+ 
+ 	acpi_scan_lock_acquire();
+ 
+@@ -1115,6 +1111,17 @@ static void _handle_hotplug_event_func(struct work_struct *work)
+ 	}
+ 
+ 	acpi_scan_lock_release();
++}
++
++static void _handle_hotplug_event_func(struct work_struct *work)
++{
++	struct acpiphp_func *func;
++	struct acpi_hp_work *hp_work;
++
++	hp_work = container_of(work, struct acpi_hp_work, work);
++	func = (struct acpiphp_func *)hp_work->context;
++	__handle_hotplug_event_func(hp_work->handle, hp_work->type,
++				    hp_work->context);
+ 	kfree(hp_work); /* allocated in handle_hotplug_event_func */
+ 	put_bridge(func->slot->bridge);
+ }
+-- 
+1.8.1.2
 
-so i don't change the fail path handling.
-
-Thanks
-
-Yinghai
