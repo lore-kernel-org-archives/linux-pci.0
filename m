@@ -1,50 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f181.google.com ([209.85.223.181]:45332 "EHLO
-	mail-ie0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752497Ab3FOAW2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Jun 2013 20:22:28 -0400
-Received: by mail-ie0-f181.google.com with SMTP id x12so2590174ief.26
-        for <linux-pci@vger.kernel.org>; Fri, 14 Jun 2013 17:22:27 -0700 (PDT)
-Date: Fri, 14 Jun 2013 18:22:24 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>
-Cc: Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org,
-	linux-ia64@vger.kernel.org, Fenghua Yu <fenghua.yu@intel.com>,
-	Hanjun Guo <guohanjun@huawei.com>, jiang.liu@huawei.com
-Subject: Re: [PATCH -v5 0/8] Add hostbridge resource release to support root
- bus hotplug in IA64
-Message-ID: <20130615002224.GA21643@google.com>
-References: <1370504093-14908-1-git-send-email-wangyijing@huawei.com>
+Received: from mail-pa0-f47.google.com ([209.85.220.47]:59566 "EHLO
+	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751787Ab3FKEwD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Jun 2013 00:52:03 -0400
+Received: by mail-pa0-f47.google.com with SMTP id kl14so1784127pab.6
+        for <linux-pci@vger.kernel.org>; Mon, 10 Jun 2013 21:52:03 -0700 (PDT)
+Message-ID: <51B6ACEA.2040408@linaro.org>
+Date: Tue, 11 Jun 2013 10:21:54 +0530
+From: Tushar Behera <tushar.behera@linaro.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1370504093-14908-1-git-send-email-wangyijing@huawei.com>
+To: Sachin Kamat <sachin.kamat@linaro.org>
+CC: linux-kernel@vger.kernel.org, thierry.reding@gmail.com,
+	patches@linaro.org, linux-pci@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH 13/15] pci: mvebu: Convert to use devm_ioremap_resource
+References: <1370864113-17895-1-git-send-email-tushar.behera@linaro.org> <1370864113-17895-14-git-send-email-tushar.behera@linaro.org> <CAK9yfHzcw071CfssSdFjmN1qXOp732NOaud2G0Dcd_8KZBFbgQ@mail.gmail.com>
+In-Reply-To: <CAK9yfHzcw071CfssSdFjmN1qXOp732NOaud2G0Dcd_8KZBFbgQ@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 06, 2013 at 03:34:45PM +0800, Yijing Wang wrote:
-> ...
-> Jiang Liu (1):
->   PCI/IA64: fix memleak for create pci root bus fail
+On 06/10/2013 07:59 PM, Sachin Kamat wrote:
+> On 10 June 2013 17:05, Tushar Behera <tushar.behera@linaro.org> wrote:
+>> Commit 75096579c3ac ("lib: devres: Introduce devm_ioremap_resource()")
+>> introduced devm_ioremap_resource() and deprecated the use of
+>> devm_request_and_ioremap().
+>>
+>> Signed-off-by: Tushar Behera <tushar.behera@linaro.org>
+>> CC: linux-pci@vger.kernel.org
+>> CC: Bjorn Helgaas <bhelgaas@google.com>
+>> ---
+>>  drivers/pci/host/pci-mvebu.c |    5 +++--
+>>  1 file changed, 3 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+>> index 13a633b..e714876 100644
+>> --- a/drivers/pci/host/pci-mvebu.c
+>> +++ b/drivers/pci/host/pci-mvebu.c
+>> @@ -752,7 +752,7 @@ mvebu_pcie_map_registers(struct platform_device *pdev,
+>>         if (ret)
+>>                 return NULL;
+>>
+>> -       return devm_request_and_ioremap(&pdev->dev, &regs);
+>> +       return devm_ioremap_resource(&pdev->dev, &regs);
+>>  }
+>>
+>>  static int __init mvebu_pcie_probe(struct platform_device *pdev)
+>> @@ -842,9 +842,10 @@ static int __init mvebu_pcie_probe(struct platform_device *pdev)
+>>                         continue;
+>>
+>>                 port->base = mvebu_pcie_map_registers(pdev, child, port);
+>> -               if (!port->base) {
+>> +               if (IS_ERR(port->base)) {
+>>                         dev_err(&pdev->dev, "PCIe%d.%d: cannot map registers\n",
+>>                                 port->port, port->lane);
 > 
-> Yijing Wang (7):
->   PCI/IA64: SN: remove sn_pci_window_fixup()
->   PCI/IA64: SN: use normal resource instead of pci_window
->   PCI/IA64: embed pci hostbridge resources into pci_root_info
->   PCI/IA64: Allocate pci_root_info instead of using stack
->   PCI/IA64: add host bridge resource release for _CRS path
->   PCI/IA64: introduce probe_pci_root_info() to manage  _CRS resource
->   PCI: Replace printks with appropriate pr_*()
+> This error message is redundant.
 > 
->  arch/ia64/include/asm/pci.h   |   10 +-
->  arch/ia64/pci/pci.c           |  236 ++++++++++++++++++++++++++++-------------
->  arch/ia64/sn/kernel/io_init.c |  109 +++++--------------
->  3 files changed, 192 insertions(+), 163 deletions(-)
 
-Tony, what do you think about this?  It only touches ia64, and I
-have no way to build or test it.  So maybe you should handle this?
+It provides a little more information regarding the port and lane number
+which might be useful in debugging.
 
-I haven't reviewed it, but I think it's the right general direction,
-at least.
+>> +                       port->base = NULL;
+> Probably this is also not needed.
+> 
 
-Bjorn
+I was not sure about the default error value for port->base, hence I
+replicated the old behaviour.
+
+Thanks.
+-- 
+Tushar Behera
