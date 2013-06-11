@@ -1,101 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f176.google.com ([209.85.223.176]:57376 "EHLO
-	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751212Ab3FHHB1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 8 Jun 2013 03:01:27 -0400
-Received: by mail-ie0-f176.google.com with SMTP id ar20so9707622iec.7
-        for <linux-pci@vger.kernel.org>; Sat, 08 Jun 2013 00:01:27 -0700 (PDT)
+Received: from smtp.citrix.com ([66.165.176.89]:1414 "EHLO SMTP.CITRIX.COM"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752031Ab3FKPmw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 11 Jun 2013 11:42:52 -0400
+Message-ID: <51B743EA.5020800@eu.citrix.com>
+Date: Tue, 11 Jun 2013 16:36:10 +0100
+From: George Dunlap <george.dunlap@eu.citrix.com>
 MIME-Version: 1.0
-In-Reply-To: <20130608015133.GB5874@google.com>
-References: <CAErSpo4AFxSqUfxbw60B8XVk3XxtYfRcLyWDy=yPb0fURV=BQg@mail.gmail.com>
-	<1370538609-28903-1-git-send-email-jiang.liu@huawei.com>
-	<1370538609-28903-2-git-send-email-jiang.liu@huawei.com>
-	<CAE9FiQUDnU_DaXDKKnRh=VYQ6Y+FeWHsKB7rnN2Gn3d0EoGLPg@mail.gmail.com>
-	<20130608015133.GB5874@google.com>
-Date: Sat, 8 Jun 2013 00:01:26 -0700
-Message-ID: <CAE9FiQUCR0cSH1u59qyZo8KM9J6P0+AG79vodGYPDVohg6UOfQ@mail.gmail.com>
-Subject: Re: [PATCH 2/2] PCI: make PCI host bridge/bus creating and destroying
- logic symmetric
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jiang Liu <liuj97@gmail.com>, Jiang Liu <jiang.liu@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+CC: <xen-devel@lists.xensource.com>, <linux-kernel@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	<linux-pci@vger.kernel.org>, <stable@vger.kernel.org>
+Subject: Re: [PATCH] xen/pci: Deal with toolstack missing an 'XenbusStateClosing'.
+References: <20130610202456.GA17822@phenom.dumpdata.com> <1370898399-20968-1-git-send-email-konrad.wilk@oracle.com> <1370898399-20968-2-git-send-email-konrad.wilk@oracle.com>
+In-Reply-To: <1370898399-20968-2-git-send-email-konrad.wilk@oracle.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 7, 2013 at 6:51 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>
->> should split pci_release_host_bridge_dev renaming and moving to another patch.
+On 06/10/2013 10:06 PM, Konrad Rzeszutek Wilk wrote:
+> There are two tool-stack that can instruct the Xen PCI frontend
+> and backend to change states: 'xm' (Python code with a daemon),
+> and 'xl' (C library - does not keep state changes).
 >
-> I split the rename/move to another patch and added both to my
-> pci/jiang-bus-lock-v3 branch.
-
-good.
-
+> With the 'xm', the path to disconnect a PCI device (xm pci-detach
+> <guest> <BDF>)is:
 >
->> > @@ -1726,30 +1722,21 @@ struct pci_bus *pci_create_root_bus(struct ..
-...
+> 4(Connected)->7(Reconfiguring*)-> 8(Reconfigured)-> 4(Connected)->5(Closing*).
 >
-> I think this function would be better if we created the host bridge
-> first, then the bus.  But your patch is an improvement, so we can look
-> at doing that later.
-
-Yes, that will more straightforward, create hostbidge before root bus,
-like we have pci bridge before subordinate bus under it.
-
-current logic is
-
-        b = pci_alloc_bus();
-        if (!b)
-                return NULL;
-
-        b->sysdata = sysdata;
-        b->ops = ops;
-        b->number = b->busn_res.start = bus;
-        b2 = pci_find_bus(pci_domain_nr(b), bus);
-        if (b2) {
-                /* If we already got to this bus through a different
-bridge, ignore it */
-                dev_dbg(&b2->dev, "bus already known\n");
-                goto err_out;
-        }
-
-        bridge = pci_alloc_host_bridge(b);
-
-We need to find the duplicated hostbridge or racing.
-
-If we need call pci_alloc_host_bridge at first, we will need my
-for_each_host_bridge patchset, and use it to check if there is
-existing hostbridge.
-
+> The * is for states that the tool-stack sets. For 'xl', it is similar:
 >
->> looks like we don't need to split device_register to device_del and put_device.
->>
->> we can make root bus removal to use device_unregister too, in the patches,
+> 4(Connected)->7(Reconfiguring*)-> 8(Reconfigured)-> 4(Connected)
 >
-> If we can use device_register()/device_unregister() directly instead of
-> splitting them into initialize/add/del/put, that would be awesome.
->
-> Anyway, http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/jiang-bus-lock-v3
-> is the current state of what I've got.  If you want to iterate on this some
-> more and improve things, that's great.  But please start with what's on my
-> branch and post your updates as a complete v4 because I did tweak some
-> changelogs and code formatting, and I don't want to lose that work.
+> Both of them also tear down the XenBus structure, so the backend
+> state ends up going in the 3(Initialised) and calls pcifront_xenbus_remove.
 
-ok, please consider drop
-commit d751727a1792262cb464d8d9608500facb763301
-    PCI: Make host bridge/bus creating and destroying logic symmetric
-from pci/jiang-bus-lock-v3, and apply my three patches at
+So I looked a little bit into this; there are actually two different 
+states that happen as part of this handshake.  In order to disonnect a 
+*device*, xl signals using the *bus* state, like this:
+* Wait for the *bus* to be in state 4(Connected)
+* Set the *device* state to 5(Closing)
+* Set the *bus* state to 7(Reconfiguring)
+* Wait for the *bus* state to return to 4(Connected)
 
-  https://patchwork.kernel.org/patch/2562431/
-    [1/7] PCI: move back pci_proc_attach_devices calling
-  https://patchwork.kernel.org/patch/2562461/
-    [2/7] PCI: move resources and bus_list releasing to pci_release_dev
-  https://patchwork.kernel.org/patch/2562451/
-    [3/7] PCI: Detach driver in pci_stop_device
+So are all of these states you see the *bus* state?  And why would you 
+disconnect the whole pci bus if you're only removing one device?
 
-Thanks
-
-Yinghai
+  -George
