@@ -1,58 +1,34 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from jabberwock.ucw.cz ([46.255.230.98]:47480 "EHLO
+	jabberwock.ucw.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751968Ab3FKHuZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Jun 2013 03:50:25 -0400
+Received: from albireo.burrow.ucw.cz (albireo.ucw.cz [89.239.2.32])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(Client CN "albireo.ucw.cz", Issuer "ucw.cz" (verified OK))
+	by jabberwock.ucw.cz (Postfix) with ESMTPS id 114D91C00AD
+	for <linux-pci@vger.kernel.org>; Tue, 11 Jun 2013 09:50:24 +0200 (CEST)
+Date: Tue, 11 Jun 2013 09:50:23 +0200
+From: Martin Mares <mj@ucw.cz>
+To: "David E. Box" <david.e.box@linux.intel.com>
+Cc: kristen.c.accardi@intel.com, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v3] lspci: Add L1 PM Substate capability reporting
+Message-ID: <mj+md-20130611.075009.6973.albireo@ucw.cz>
+References: <mj+md-20130610.130955.16386.albireo@ucw.cz>
+ <1370912999-11261-1-git-send-email-david.e.box@linux.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQWTD8RpRodPGgZv_ikfVgBnS6GRn2KUJg+5+siFy40Xrg@mail.gmail.com>
-References: <1371141152-9468-1-git-send-email-jiang.liu@huawei.com>
-	<CAE9FiQX1xVJA3MZc4LndWU7kx0mxC-YPE1R8JD4W2-Gg9zq3Zw@mail.gmail.com>
-	<51BA7B3D.1020402@huawei.com>
-	<CAE9FiQX-jCZYPyxeHCp2h-6qx1GMyQYuaTk5JwZR6H1t4jRg9g@mail.gmail.com>
-	<51BA8524.9050507@huawei.com>
-	<CAE9FiQWTD8RpRodPGgZv_ikfVgBnS6GRn2KUJg+5+siFy40Xrg@mail.gmail.com>
-Date: Thu, 13 Jun 2013 20:43:50 -0700
-Message-ID: <CAE9FiQUByRY74HxvJo6T=PmksK1+ekKSv7_e81+M+hP31p9a9A@mail.gmail.com>
-Subject: Re: [BUGFIX 0/9] Fix bug 59501 and code improvement for dock driver
-From: Yinghai Lu <yinghai@kernel.org>
-To: "Jiang Liu (Gerry)" <jiang.liu@huawei.com>
-Cc: "Rafael J . Wysocki" <rjw@sisk.pl>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Alexander E . Patrakov" <patrakov@gmail.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1370912999-11261-1-git-send-email-david.e.box@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 13, 2013 at 8:30 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Thu, Jun 13, 2013 at 7:51 PM, Jiang Liu (Gerry) <jiang.liu@huawei.com> wrote:
+Hello!
 
->> For the first step, I'm trying to make hotplug case work in the same way as
->> boot time. Do you think this patch help?
->>
->> diff --git a/drivers/pci/hotplug/acpiphp_glue.c
->> b/drivers/pci/hotplug/acpiphp_gl
->> index 270fdba..12e3f6e 100644
->> --- a/drivers/pci/hotplug/acpiphp_glue.c
->> +++ b/drivers/pci/hotplug/acpiphp_glue.c
->> @@ -837,13 +837,13 @@ static int __ref enable_device(struct acpiphp_slot
->> *slot)
->>                                 max = pci_scan_bridge(bus, dev, max, pass);
->>                                 if (pass && dev->subordinate) {
->>                                         check_hotplug_bridge(slot, dev);
->> - pci_bus_size_bridges(dev->subordinate);
->> + pcibios_resource_survey_bus(dev->subordi
->>                                 }
->>                         }
->>                 }
->>         }
->>
->> -       pci_bus_assign_resources(bus);
->> +       pci_assign_unassigned_bus_resources(bus);
+> From: David Box <david.e.box@linux.intel.com>
+> 
+> Expose available L1 substate capabilities that can enable lower power
+> consumption when a PCIe Link is idle.
 
-can not use use pci_assign_unassigned_bus_resources directly. as bus
-could have devices that is there already
-before this enable_device and could have driver loaded before.
+Thanks, applied.
 
-that is why we have checking
-    if (PCI_SLOT(dev->devfn) != slot->device)
+				Martin
