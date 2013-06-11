@@ -1,83 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout4.samsung.com ([203.254.224.34]:11716 "EHLO
-	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751454Ab3FLKSF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Jun 2013 06:18:05 -0400
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Kukjin Kim' <kgene.kim@samsung.com>,
-	'Bjorn Helgaas' <bhelgaas@google.com>
-Cc: linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org,
-	devicetree-discuss@lists.ozlabs.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	'Grant Likely' <grant.likely@secretlab.ca>,
-	'Andrew Murray' <andrew.murray@arm.com>,
-	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
-	'Thierry Reding' <thierry.reding@avionic-design.de>,
-	'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	'Surendranath Gurivireddy Balla' <suren.reddy@samsung.com>,
-	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
-	'Thomas Abraham' <thomas.abraham@linaro.org>,
-	'Jingoo Han' <jg1.han@samsung.com>
-Subject: [PATCH V4 0/3] PCIe support for Samsung Exynos5440 SoC
-Date: Wed, 12 Jun 2013 19:18:02 +0900
-Message-id: <003001ce6756$1ef00d60$5cd02820$@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+Received: from userp1040.oracle.com ([156.151.31.81]:29400 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755200Ab3FKQYr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Jun 2013 12:24:47 -0400
+Message-ID: <51B74F44.1040405@oracle.com>
+Date: Tue, 11 Jun 2013 12:24:36 -0400
+From: konrad wilk <konrad.wilk@oracle.com>
+MIME-Version: 1.0
+To: George Dunlap <george.dunlap@eu.citrix.com>
+CC: xen-devel@lists.xensource.com, linux-kernel@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	stable@vger.kernel.org
+Subject: Re: [PATCH] xen/pci: Deal with toolstack missing an 'XenbusStateClosing'.
+References: <20130610202456.GA17822@phenom.dumpdata.com> <1370898399-20968-1-git-send-email-konrad.wilk@oracle.com> <1370898399-20968-2-git-send-email-konrad.wilk@oracle.com> <51B743EA.5020800@eu.citrix.com> <51B74B77.1000806@oracle.com> <51B74DA9.7060509@eu.citrix.com>
+In-Reply-To: <51B74DA9.7060509@eu.citrix.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
 
-This series of patches introduces PCIe support for Samsung Exynos5440,
-and is based on the latest 'linux-next' tree (20130607).
-These patches was tested with Intel e1000e LAN card on Exynos5440.
+On 6/11/2013 12:17 PM, George Dunlap wrote:
+> On 06/11/2013 05:08 PM, konrad wilk wrote:
+>>
+>> On 6/11/2013 11:36 AM, George Dunlap wrote:
+>>> On 06/10/2013 10:06 PM, Konrad Rzeszutek Wilk wrote:
+>>>> There are two tool-stack that can instruct the Xen PCI frontend
+>>>> and backend to change states: 'xm' (Python code with a daemon),
+>>>> and 'xl' (C library - does not keep state changes).
+>>>>
+>>>> With the 'xm', the path to disconnect a PCI device (xm pci-detach
+>>>> <guest> <BDF>)is:
+>>>>
+>>>> 4(Connected)->7(Reconfiguring*)-> 8(Reconfigured)->
+>>>> 4(Connected)->5(Closing*).
+>>>>
+>>>> The * is for states that the tool-stack sets. For 'xl', it is similar:
+>>>>
+>>>> 4(Connected)->7(Reconfiguring*)-> 8(Reconfigured)-> 4(Connected)
+>>>>
+>>>> Both of them also tear down the XenBus structure, so the backend
+>>>> state ends up going in the 3(Initialised) and calls
+>>>> pcifront_xenbus_remove.
+>>>
+>>> So I looked a little bit into this; there are actually two different
+>>> states that happen as part of this handshake.  In order to disonnect a
+>>> *device*, xl signals using the *bus* state, like this:
+>>> * Wait for the *bus* to be in state 4(Connected)
+>>> * Set the *device* state to 5(Closing)
+>>> * Set the *bus* state to 7(Reconfiguring)
+>>> * Wait for the *bus* state to return to 4(Connected)
+>>>
+>>> So are all of these states you see the *bus* state?  And why would you
+>>> disconnect the whole pci bus if you're only removing one device?
+>>
+>> Correct. The stats I enumerated are *bus* states. Not per-device states.
+>> I presume (and I hadn't checked xm) that Xend has some logic to only
+>> disconnect the bus if all of the PCI devices have been disconnected. In
+>> 'xl' it does not do that.
+>>
+>> The testing I did was just with one PCI device.
+>
+> Ah, OK -- I see now.  The problem is that the code in the Linux side 
+> didn't know about the whole "4->7->8->4" thing to unplug a device.  In 
+> all likelihood, if you had used xm with two devices (so that the bus 
+> didn't get disconnected), then you would have run across the same error.
+>
+> So at least part of the problem *is* a bug in Linux.
 
-This PATCH v4 follows:
- * PATCH v3, sent on June, 6th 2013
- * PATCH v2, sent on March, 23rd 2013
- * PATCH v1, sent on March, 4th 2013
- 
-Changes between v3 and v4:
-  * Added support for multi domains as reviewed by Jason Gunthorpe,
-    and Arnd Bergmann.
-  * Fixed both MEM space and I/O space in DT.
-  * Removed redundant physical addresses from struct pcie_port,
-    added devm_ioremap_resource() to make add_pcie_port() simpler.
-  * Added clock names and clock enable/disable.
-	
-Changes between v2 and v3:
-  * Rebased on the top of 3.10-rc4
-  * Updated names of PCIe PHY registers
- 
-Changes between v1 and v2:
-  * Moved Exynos PCIe driver from arch/arm to drivers/pci/host.
-  * Added DT properties of PCI DT standard.
-
-Thank you.
-
-Best regards,
-Jingoo Han
-
-
-Jingoo Han (3):
-  pci: Add PCIe driver for Samsung Exynos
-  ARM: EXYNOS: Enable PCIe support for Exynos5440
-  ARM: dts: Add pcie controller node for Samsung EXYNOS5440 SoC
-
- arch/arm/boot/dts/exynos5440-ssdk5440.dts |    8 ++++++
- arch/arm/boot/dts/exynos5440.dtsi         |   38 +++++++++++++++++++++++++++++
- arch/arm/Kconfig             |    1 +
- arch/arm/mach-exynos/Kconfig |    2 ++
- .../devicetree/bindings/pci/exynos-pcie.txt        |   71 ++
- drivers/pci/host/Kconfig                           |    5 +
- drivers/pci/host/Makefile                          |    1 +
- drivers/pci/host/pci-exynos.c                      | 1074 ++++++++++++++++++++
- 8 files changed, 1200 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/exynos-pcie.txt
- create mode 100644 drivers/pci/host/pci-exynos.c
-
--- 
-1.7.10.4
-
+Right.
+>
+> That doesn't explain why I have problems doing this on Debian's 
+> version of 3.2 -- unless the "fix" you mentoned above was backported 
+> to the stable kernel, perhaps?
+No. It was a feature.
+>
+>  -George
 
