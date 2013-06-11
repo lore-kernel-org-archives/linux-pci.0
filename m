@@ -1,74 +1,121 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:38052 "EHLO quartz.orcorp.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753453Ab3FGQVM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 7 Jun 2013 12:21:12 -0400
-Date: Fri, 7 Jun 2013 10:20:50 -0600
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-arm-kernel@lists.infradead.org,
-	Jingoo Han <jg1.han@samsung.com>,
-	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
-	linux-samsung-soc@vger.kernel.org,
-	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
-	'Surendranath Gurivireddy Balla' <suren.reddy@samsung.com>,
-	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
-	'Thierry Reding' <thierry.reding@avionic-design.de>,
-	linux-kernel@vger.kernel.org,
-	'Grant Likely' <grant.likely@secretlab.ca>,
-	'Kukjin Kim' <kgene.kim@samsung.com>,
-	'Thomas Abraham' <thomas.abraham@linaro.org>,
-	'Bjorn Helgaas' <bhelgaas@google.com>,
-	'Andrew Murray' <andrew.murray@arm.com>
-Subject: Re: [PATCH 6/6] ARM: dts: Add pcie controller node for Samsung
- EXYNOS5440 SoC
-Message-ID: <20130607162050.GA31895@obsidianresearch.com>
-References: <00c001ce277b$92b26ab0$b8174010$%han@samsung.com>
- <20130408165626.GA30824@obsidianresearch.com>
- <000c01ce6360$237a7040$6a6f50c0$@samsung.com>
- <1880458.2ksb8qtzHh@wuerfel>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1880458.2ksb8qtzHh@wuerfel>
+Received: from nat28.tlf.novell.com ([130.57.49.28]:52295 "EHLO
+	nat28.tlf.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751877Ab3FKH3I convert rfc822-to-8bit (ORCPT
+	<rfc822;groupwise-linux-pci@vger.kernel.org:5:2>);
+	Tue, 11 Jun 2013 03:29:08 -0400
+Message-Id: <51B6EDDF02000078000DCFB7@nat28.tlf.novell.com>
+Date: Tue, 11 Jun 2013 08:29:03 +0100
+From: "Jan Beulich" <JBeulich@suse.com>
+To: "Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>
+Cc: <george.dunlap@eu.citrix.com>,
+	"Bjorn Helgaas" <bhelgaas@google.com>,
+	"xen-devel" <xen-devel@lists.xen.org>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<stable@vger.kernel.org>
+Subject: Re: [Xen-devel] [PATCH] xen/pci: Deal with toolstack missing
+ an 'XenbusStateClosing'.
+References: <20130610202456.GA17822@phenom.dumpdata.com>
+ <1370898399-20968-1-git-send-email-konrad.wilk@oracle.com>
+ <1370898399-20968-2-git-send-email-konrad.wilk@oracle.com>
+In-Reply-To: <1370898399-20968-2-git-send-email-konrad.wilk@oracle.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 07, 2013 at 01:59:43PM +0200, Arnd Bergmann wrote:
-> On Friday 07 June 2013 18:19:40 Jingoo Han wrote:
-> > Hi Jason Gunthorpe,
-> > 
-> > I implemented 'Single domain' with Exynos PCIe for last two months;
-> > however, it cannot work properly due to the hardware restriction.
-> > Each MEM region is hard-wired.
-> > 
-> > Thus, I will send Exynos PCIe V3 patch as 'Separate domains'.
+>>> On 10.06.13 at 23:06, Konrad Rzeszutek Wilk <konrad.wilk@oracle.com> wrote:
+> There are two tool-stack that can instruct the Xen PCI frontend
+> and backend to change states: 'xm' (Python code with a daemon),
+> and 'xl' (C library - does not keep state changes).
 > 
-> Yes, I think that is best, if the hardware is clearly designed as
-> separate domains, this is what we should do by default in the
-> driver. For the Marvell case with its 10 separate ports, much
-> more address space would be wasted by having one domain per
-> port and that hardware let us work around it by remapping the
-> physical address space windows. For Exynos there is much less to
-> lose and I too cannot see how it would be done in the first
-> place.
+> With the 'xm', the path to disconnect a PCI device (xm pci-detach
+> <guest> <BDF>)is:
+> 
+> 4(Connected)->7(Reconfiguring*)-> 8(Reconfigured)-> 4(Connected)->5(Closing*).
+> 
+> The * is for states that the tool-stack sets. For 'xl', it is similar:
+> 
+> 4(Connected)->7(Reconfiguring*)-> 8(Reconfigured)-> 4(Connected)
+> 
+> Both of them also tear down the XenBus structure, so the backend
+> state ends up going in the 3(Initialised) and calls pcifront_xenbus_remove.
+> 
+> When a PCI device is plugged in (xm pci-attach <guest> <BDF>)
+> both of them follow the same pattern:
+> 2(InitWait*), 3(Initialized*), 4(Connected*)->4(Connected).
+> 
+> [xen-pcifront ignores the 2,3 state changes and only acts when
+> 4 (Connected) has been reached]
+> 
+> The problem is that git commit 3d925320e9e2de162bd138bf97816bda8c3f71be
+> ("xen/pcifront: Use Xen-SWIOTLB when initting if required") introduced
+> a mechanism to initialize the SWIOTLB when the Xen PCI front moves to
+> Connected state. It also had some aggressive seatbelt code check that
+> would warn the user if one tried to change to Connected state without
+> hitting first the Closing state:
+> 
+>  pcifront pci-0: PCI frontend already installed!
+> 
+> However, that code can be relaxed and we can continue on working
+> even if the frontend is instructed to be the 'Connected' state with
+> no devices and then gets tickled to be in 'Connected' state again.
+> 
+> In other words, this 4(Connected)->5(Closing)->4(Connected) state
+> was expected, while 4(Connected)->.... anything but 5(Closing)->4(Connected)
+> was not. This patch removes that aggressive check and allows
+> Xen pcifront to work with the 'xl' toolstack.
 
-Sounds fair to me.
+I actually think this shouldn't be worked around here, but fixed in
+xl. Any device removed from a guest should be driven towards
+the "Closed" state.
 
-But when we talk about multiple domains we don't mean a disjoint range
-bus bus numbers, as your other email shows:
+Jan
 
-00:00.0 PCI bridge: Samsung Electronics Co Ltd Device a549 (rev 01) (prog-if 00 [Normal decode])
-10:00.0 PCI bridge: Samsung Electronics Co Ltd Device a549 (rev 01) (prog-if 00 [Normal decode])
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: linux-pci@vger.kernel.org 
+> Cc: stable@vger.kernel.org 
+> Signed-off-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+> ---
+>  drivers/pci/xen-pcifront.c | 7 +++----
+>  1 file changed, 3 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
+> index ac99515..cc46e253 100644
+> --- a/drivers/pci/xen-pcifront.c
+> +++ b/drivers/pci/xen-pcifront.c
+> @@ -675,10 +675,9 @@ static int pcifront_connect_and_init_dma(struct 
+> pcifront_device *pdev)
+>  	if (!pcifront_dev) {
+>  		dev_info(&pdev->xdev->dev, "Installing PCI frontend\n");
+>  		pcifront_dev = pdev;
+> -	} else {
+> -		dev_err(&pdev->xdev->dev, "PCI frontend already installed!\n");
+> +	} else
+>  		err = -EEXIST;
+> -	}
+> +
+>  	spin_unlock(&pcifront_dev_lock);
+>  
+>  	if (!err && !swiotlb_nr_tbl()) {
+> @@ -846,7 +845,7 @@ static int pcifront_try_connect(struct pcifront_device 
+> *pdev)
+>  		goto out;
+>  
+>  	err = pcifront_connect_and_init_dma(pdev);
+> -	if (err) {
+> +	if (err && err != -EEXIST) {
+>  		xenbus_dev_fatal(pdev->xdev, err,
+>  				 "Error setting up PCI Frontend");
+>  		goto out;
+> -- 
+> 1.8.1.4
+> 
+> 
+> _______________________________________________
+> Xen-devel mailing list
+> Xen-devel@lists.xen.org 
+> http://lists.xen.org/xen-devel 
 
-We mean multiple domains, it should look like this:
 
-0000:00:00.0 PCI bridge: Samsung Electronics Co Ltd Device a549 (rev 01) (prog-if 00 [Normal decode])
-0001:00:00.0 PCI bridge: Samsung Electronics Co Ltd Device a549 (rev 01) (prog-if 00 [Normal decode])
 
-ie lspci -D.
-
-Each domain gets a unique bus number range, config space, io range,
-etc. This is much clearer to everyone than trying to pretend there is
-only one domain when the HW is actually multi-domain.
-
-Jason
