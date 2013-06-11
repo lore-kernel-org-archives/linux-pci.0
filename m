@@ -1,55 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f45.google.com ([209.85.219.45]:56741 "EHLO
-	mail-oa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752538Ab3FYVUo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Jun 2013 17:20:44 -0400
-Received: by mail-oa0-f45.google.com with SMTP id j1so13819873oag.4
-        for <linux-pci@vger.kernel.org>; Tue, 25 Jun 2013 14:20:43 -0700 (PDT)
+Received: from mail-pd0-f176.google.com ([209.85.192.176]:62986 "EHLO
+	mail-pd0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752582Ab3FKWRN convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Jun 2013 18:17:13 -0400
+Received: by mail-pd0-f176.google.com with SMTP id t12so4353451pdi.7
+        for <linux-pci@vger.kernel.org>; Tue, 11 Jun 2013 15:17:13 -0700 (PDT)
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <20130621102526.GG12441@manwe>
-References: <1371660979-21588-1-git-send-email-thomas.petazzoni@free-electrons.com>
- <1371660979-21588-10-git-send-email-thomas.petazzoni@free-electrons.com> <20130621102526.GG12441@manwe>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 25 Jun 2013 15:20:23 -0600
-Message-ID: <CAErSpo69OCYMA8ub8rZ8FfPimmpjHzE3WZ5RFt=HrototyHRSA@mail.gmail.com>
-Subject: Re: [PATCHv3 09/11] pci: mvebu: add support for MSI
-To: Thierry Reding <thierry.reding@gmail.com>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Stephen Warren <swarren@wwwdotorg.org>,
+	Jay Agarwal <jagarwal@nvidia.com>
+From: Mike Turquette <mturquette@linaro.org>
+In-Reply-To: <51AE3B18.9010604@wwwdotorg.org>
+Cc: linux@arm.linux.org.uk, thierry.reding@avionic-design.de,
+	bhelgaas@google.com, ldewangan@nvidia.com, olof@lixom.net,
+	hdoyu@nvidia.com, pgaikwad@nvidia.com, pdeschrijver@nvidia.com,
+	linux-arm-kernel@lists.infradead.org, linux-tegra@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	jtukkinen@nvidia.com, kthota@nvidia.com
+References: <1370372252-4332-1-git-send-email-jagarwal@nvidia.com>
+ <51AE3B18.9010604@wwwdotorg.org>
+Message-ID: <20130611221709.8816.15602@quantum>
+Subject: Re: [PATCH V3 1/4] ARM: tegra30: clocks: Fix pciex clock registration
+Date: Tue, 11 Jun 2013 15:17:09 -0700
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 21, 2013 at 4:25 AM, Thierry Reding
-<thierry.reding@gmail.com> wrote:
-> On Wed, Jun 19, 2013 at 06:56:17PM +0200, Thomas Petazzoni wrote:
->> This commit adds support for Message Signaled Interrupts in the
->> Marvell PCIe host controller. The work is very simple: it simply gets
->> a reference to the msi_chip associated to the PCIe controller thanks
->> to the msi-parent DT property, and stores this reference in the
->> pci_bus structure. This is enough to let the Linux PCI core use the
->> functions of msi_chip to setup and teardown MSIs.
->>
->> Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
->> ---
->>  drivers/pci/host/pci-mvebu.c | 26 ++++++++++++++++++++++++++
->>  1 file changed, 26 insertions(+)
->
-> Reviewed-by: Thierry Reding <thierry.reding@gmail.com>
+Quoting Stephen Warren (2013-06-04 12:08:08)
+> On 06/04/2013 12:57 PM, Jay Agarwal wrote:
+> > Registering pciex as peripheral clock instead of fixed clock
+> > as tegra_perih_reset_assert(deassert) api of this clock api
+> > gives warning and ultimately does not succeed to assert(deassert).
+> > 
+> > Signed-off-by: Jay Agarwal <jagarwal@nvidia.com>
+> > ---
+> > Patch is based on remotes/gitorious_thierryreding_linux/tegra/next and should be applied on top of this.
+> 
+> For this change, Mike may as well apply it directly to the clock tree.
+> Thierry can then pick it up when he rebases his tegra/next tree.
+> 
+> That said, I don't think you should need any of the
+> TEGRA_CLK_DUPLICATE() entries; the PCIe driver should get its clocks
+> from device tree now, and hence the driver name in the clock
+> registration shouldn't be necessary. All of these TEGRA_CLK_DUPLICATE()
+> entries should be removed en mass sometime soon with luck. So, can you
+> simply leave the two TEGRA_CLK_DUPLICATE() entries untouched, rather
+> than changing them?
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Ping on this patch.  I can take it through my tree, but is there going
+to be rework based on Stephen's comments?
 
-I assume you'll merge this through arm-soc or some other non-PCI tree.
-
-Bjorn
+Regards,
+Mike
