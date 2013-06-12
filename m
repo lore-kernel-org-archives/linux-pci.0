@@ -1,41 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:31313 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754584Ab3FGQeh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 7 Jun 2013 12:34:37 -0400
-Subject: [PATCH v2 0/2] pci: ACS check fixes
-To: bhelgaas@google.com
-From: Alex Williamson <alex.williamson@redhat.com>
-Cc: linux-pci@vger.kernel.org, ddutile@redhat.com,
-	linux-kernel@vger.kernel.org
-Date: Fri, 07 Jun 2013 10:34:35 -0600
-Message-ID: <20130607162732.7733.17758.stgit@bling.home>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mailout3.samsung.com ([203.254.224.33]:16795 "EHLO
+	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756359Ab3FLKTj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Jun 2013 06:19:39 -0400
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Kukjin Kim' <kgene.kim@samsung.com>,
+	'Bjorn Helgaas' <bhelgaas@google.com>
+Cc: linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org,
+	devicetree-discuss@lists.ozlabs.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	'Grant Likely' <grant.likely@secretlab.ca>,
+	'Andrew Murray' <andrew.murray@arm.com>,
+	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
+	'Thierry Reding' <thierry.reding@avionic-design.de>,
+	'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>,
+	'Arnd Bergmann' <arnd@arndb.de>,
+	'Surendranath Gurivireddy Balla' <suren.reddy@samsung.com>,
+	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
+	'Thomas Abraham' <thomas.abraham@linaro.org>,
+	Jingoo Han <jg1.han@samsung.com>
+Subject: [PATCH V4 2/3] ARM: EXYNOS: Enable PCIe support for Exynos5440
+Date: Wed, 12 Jun 2013 19:19:33 +0900
+Message-id: <003701ce6756$551c4ed0$ff54ec70$@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-After some further discussion, Don has come around to agreeing that
-we cannot assume anything about devices which do not include an ACS
-capability.  Patch 1 of this series is therefore the same as sent
-before.  We have figured out though that some vendors are indicating
-that they don't support peer-to-peer by providing an ACS capability
-that is zero'd (ie. no capabilities).  This makes sense as ACS is
-largely for allowing control of peer-to-peer features and almost all
-of the individual capabilities are optional for multifunction
-devices that do not support peer-to-peer.  This also simplifies our
-flags filtering.  I'm hoping we'll soon have some quirks for devices
-that do not support peer-to-peer, but also do not provide an ACS
-capability.  Thanks,
+Enable PCIe support for Exynos5440 which has two PCIe controllers.
 
-Alex
-
+Signed-off-by: Jingoo Han <jg1.han@samsung.com>
 ---
+Tested on Exynos5440.
 
-Alex Williamson (2):
-      pci: Fix flaw in pci_acs_enabled()
-      pci: Differentiate ACS controllable from enabled
+Changes since v3:
+- Selected PCI_DOMAINS
+
+ arch/arm/Kconfig             |    1 +
+ arch/arm/mach-exynos/Kconfig |    2 ++
+ 2 files changed, 3 insertions(+)
+
+diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
+index 42d6ea2..53b3b2d 100644
+--- a/arch/arm/Kconfig
++++ b/arch/arm/Kconfig
+@@ -1395,6 +1395,7 @@ config PCI_HOST_ITE8152
+ 	select DMABOUNCE
+ 
+ source "drivers/pci/Kconfig"
++source "drivers/pci/pcie/Kconfig"
+ 
+ source "drivers/pcmcia/Kconfig"
+ 
+diff --git a/arch/arm/mach-exynos/Kconfig b/arch/arm/mach-exynos/Kconfig
+index 6aa228d..773b5ee 100644
+--- a/arch/arm/mach-exynos/Kconfig
++++ b/arch/arm/mach-exynos/Kconfig
+@@ -78,6 +78,8 @@ config SOC_EXYNOS5440
+ 	select ARCH_HAS_OPP
+ 	select ARM_ARCH_TIMER
+ 	select AUTO_ZRELADDR
++	select MIGHT_HAVE_PCI
++	select PCI_DOMAINS if PCI
+ 	select PINCTRL
+ 	select PINCTRL_EXYNOS5440
+ 	select PM_OPP
+-- 
+1.7.10.4
 
 
- drivers/pci/pci.c |   68 +++++++++++++++++++++++++++++++++++++++++------------
- 1 file changed, 52 insertions(+), 16 deletions(-)
