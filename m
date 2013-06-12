@@ -1,202 +1,132 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Jeremy Fitzhardinge <jeremy@goop.org>
-Cc: liuj97@gmail.com, Jiang Liu <jiang.liu@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	xen-devel@lists.xensource.com,
-	virtualization@lists.linux-foundation.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v2 2/3] PCI, xen-pcifront: use new PCI interfaces to simplify implementation
-Date: Sat, 22 Jun 2013 00:12:47 +0800
-Message-Id: <1371831169-17291-3-git-send-email-liuj97@gmail.com>
-In-Reply-To: <1371831169-17291-1-git-send-email-liuj97@gmail.com>
-References: <1371831169-17291-1-git-send-email-liuj97@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qc0-f174.google.com ([209.85.216.174]:37394 "EHLO
+	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750994Ab3FLDo5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Jun 2013 23:44:57 -0400
+MIME-Version: 1.0
+In-Reply-To: <51B7E1C7.9030004@gmail.com>
+References: <1370951543-15841-1-git-send-email-jiang.liu@huawei.com>
+	<CAN_LGv1hrLnYkPHycyyd35ZipWWznXM_0cdj8Rnh1WxiTZL=4A@mail.gmail.com>
+	<51B7170E.2060608@gmail.com>
+	<CAN_LGv26adLa5RBhwhCfvALFx78j4HdvzVH1PaAuhvWXSeqyMw@mail.gmail.com>
+	<51B73BAB.3030406@gmail.com>
+	<CAN_LGv3iwgp_8dkt1ouCD-FFGau3h7L25ORUW2J-rz30_4ZYTA@mail.gmail.com>
+	<51B7E1C7.9030004@gmail.com>
+Date: Wed, 12 Jun 2013 09:44:56 +0600
+Message-ID: <CAN_LGv0-gGMhJr8U8=sc-93e_MKVpy9TxG1MRAugtBVJP+CTrg@mail.gmail.com>
+Subject: Re: [PATCH] ACPIPHP: fix device destroying order issue in handling
+ dock notification
+From: "Alexander E. Patrakov" <patrakov@gmail.com>
+To: Jiang Liu <liuj97@gmail.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	linux-pci@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <jiang.liu@huawei.com>
+2013/6/12 Jiang Liu <liuj97@gmail.com>:
+> On Wed 12 Jun 2013 12:51:59 AM CST, Alexander E. Patrakov wrote:
+>> 2013/6/11 Jiang Liu <liuj97@gmail.com>:
+>>> Hi Alexander,
+>>>     This is much more harder issue to resolve.  Let's first work around
+>>> this
+>>> issue and check whether other things are OK. The patch below is just a
+>>> prove of concept, could you please help to try it?
+>>
+>> In the initially-undocked case it passes the "dock and undock three
+>> times, verify lspci output at each step" test.
+>>
+>> In the initially-docked case, it exhibits the following problem: when
+>> I press the undock button, only one PCI device disappears, and the
+>> "docked" LED does not turn off. Additionally, there is a hung task.
+> Hi Alexander,
+>      In the initially-docked case, the failure is caused by an issue in
+> the intel sound card driver. Seems something is wrong with reference
+> count management and it never returns to zero on driver detach.
+> Could you please help to disable the Intel sound card driver and try
+> again?
+>
+> I'm not familiar with Intel HDA driver,  so please help to fire another
+> bug for it.
 
-Use new PCI interfaces to simplify xen-pcifront implementation:
-1) Use pci_create_root_bus() instead of pci_scan_bus_parented()
-   because pci_scan_bus_parented() is marked as __deprecated.This
-   also gets rid of a duplicated call of pci_bus_start_devices().
-2) Use pci_stop_and_remove_root_bus() instead of open-coded private
-   implementation.
-3) Use pci_set_host_bridge_release() to release data structures
-   associated with PCI root buses.
-4) Use pci_bus_get()/pci_bus_put() to manage PCI root bus reference
-   count.
+Thanks for pointing the finger to snd-hda-intel. With that driver
+blacklisted, the lspci output matches the expectations even after
+undocking the initially-docked laptop. Redocking re-adds the devices,
+too. So the situation is almost as good as in the initially-undocked
+case, you only have to deal with this:
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Jeremy Fitzhardinge <jeremy@goop.org>
-Cc: xen-devel@lists.xensource.com
-Cc: virtualization@lists.linux-foundation.org
-Cc: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
----
- drivers/pci/xen-pcifront.c | 76 +++++++++++++++++++++-------------------------
- 1 file changed, 34 insertions(+), 42 deletions(-)
+[   64.312253] ata8.00: disabled
+[   64.318462] cdrom: issuing MRW background format suspend
+[   64.320288] INFO: trying to register non-static key.
+[   64.320292] the code is fine but needs lockdep annotation.
+[   64.320294] turning off the locking correctness validator.
+[   64.320298] CPU: 0 PID: 40 Comm: kworker/0:1 Tainted: G         C
+3.10.0-rc4 #7
+[   64.320301] Hardware name: Sony Corporation VPCZ23A4R/VAIO, BIOS
+R1013H5 05/21/2012
+[   64.320306] Workqueue: kacpi_hotplug acpi_os_execute_deferred
+[   64.320309]  ffff880253db0000 ffff880253db9688 ffffffff8165aab8
+ffff880253db9778
+[   64.320314]  ffffffff810a018e ffff880253db07c0 0000000000000000
+ffff880200000000
+[   64.320319]  0000000000000000 ffff880200000000 ffff880253db07e0
+000000000000005a
+[   64.320324] Call Trace:
+[   64.320330]  [<ffffffff8165aab8>] dump_stack+0x19/0x1b
+[   64.320335]  [<ffffffff810a018e>] __lock_acquire+0x181e/0x1ee0
+[   64.320338]  [<ffffffff810a1751>] ? mark_held_locks+0x61/0x150
+[   64.320341]  [<ffffffff810a1aae>] ? debug_check_no_locks_freed+0x8e/0x160
+[   64.320347]  [<ffffffff8105b940>] ? queue_delayed_work_on+0xa0/0xa0
+[   64.320350]  [<ffffffff810a0e77>] lock_acquire+0x87/0x150
+[   64.320354]  [<ffffffff8105b940>] ? queue_delayed_work_on+0xa0/0xa0
+[   64.320357]  [<ffffffff8109c430>] ? lockdep_init_map+0xb0/0x530
+[   64.320361]  [<ffffffff8105b978>] flush_work+0x38/0x270
+[   64.320365]  [<ffffffff8105b940>] ? queue_delayed_work_on+0xa0/0xa0
+[   64.320368]  [<ffffffff810a1751>] ? mark_held_locks+0x61/0x150
+[   64.320371]  [<ffffffff8105d645>] ? __cancel_work_timer+0xa5/0x110
+[   64.320375]  [<ffffffff810a1945>] ? trace_hardirqs_on_caller+0x105/0x1d0
+[   64.320378]  [<ffffffff8105d61a>] __cancel_work_timer+0x7a/0x110
+[   64.320381]  [<ffffffff8105d6cb>] cancel_work_sync+0xb/0x10
+[   64.320389]  [<ffffffffa00773ae>] rtl_remove_one+0x5e/0x140 [r8169]
+[   64.320394]  [<ffffffff81385631>] pci_device_remove+0x41/0xc0
+[   64.320399]  [<ffffffff8143bd47>] __device_release_driver+0x77/0xe0
+[   64.320403]  [<ffffffff8143bdd9>] device_release_driver+0x29/0x40
+[   64.320407]  [<ffffffff8143b7e1>] bus_remove_device+0xf1/0x140
+[   64.320411]  [<ffffffff81438ecd>] device_del+0x11d/0x1b0
+[   64.320416]  [<ffffffff8138062c>] pci_stop_bus_device+0x9c/0xb0
+[   64.320420]  [<ffffffff813805cb>] pci_stop_bus_device+0x3b/0xb0
+[   64.320423]  [<ffffffff813805cb>] pci_stop_bus_device+0x3b/0xb0
+[   64.320427]  [<ffffffff813805cb>] pci_stop_bus_device+0x3b/0xb0
+[   64.320431]  [<ffffffff813a0fe5>] ? acpiphp_disable_slot+0x35/0x140
+[   64.320435]  [<ffffffff813805cb>] pci_stop_bus_device+0x3b/0xb0
+[   64.320437]  [<ffffffff813805cb>] pci_stop_bus_device+0x3b/0xb0
+[   64.320440]  [<ffffffff813805cb>] pci_stop_bus_device+0x3b/0xb0
+[   64.320443]  [<ffffffff81380791>] pci_stop_and_remove_bus_device+0x11/0x20
+[   64.320446]  [<ffffffff813a1036>] acpiphp_disable_slot+0x86/0x140
+[   64.320450]  [<ffffffff813a13da>] __handle_hotplug_event_func+0xba/0x1a0
+[   64.320454]  [<ffffffff813c729b>] hotplug_dock_devices+0x57/0xda
+[   64.320458]  [<ffffffff813c79a1>] handle_eject_request+0xaf/0xdf
+[   64.320461]  [<ffffffff813c7b6f>] acpi_dock_deferred_cb+0x163/0x1c8
+[   64.320465]  [<ffffffff813bfba9>] acpi_os_execute_deferred+0x20/0x2d
+[   64.320468]  [<ffffffff8105c212>] process_one_work+0x1c2/0x560
+[   64.320472]  [<ffffffff8105c1a7>] ? process_one_work+0x157/0x560
+[   64.320475]  [<ffffffff8105d126>] worker_thread+0x116/0x370
+[   64.320479]  [<ffffffff8105d010>] ? manage_workers.isra.20+0x2d0/0x2d0
+[   64.320483]  [<ffffffff81063986>] kthread+0xd6/0xe0
+[   64.320487]  [<ffffffff810638b0>] ? __init_kthread_worker+0x70/0x70
+[   64.320492]  [<ffffffff8166806c>] ret_from_fork+0x7c/0xb0
+[   64.320496]  [<ffffffff810638b0>] ? __init_kthread_worker+0x70/0x70
+[   64.334782] vgaarb: device changed decodes:
+PCI:0000:00:02.0,olddecodes=none,decodes=io+mem:owns=none
+[   64.337187] pci_bus 0000:0b: busn_res: [bus 0b] is released
+[   64.337410] pci_bus 0000:0c: busn_res: [bus 0c] is released
+[   64.337472] pci_bus 0000:16: busn_res: [bus 16] is released
 
-diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
-index 966abc6..a323287 100644
---- a/drivers/pci/xen-pcifront.c
-+++ b/drivers/pci/xen-pcifront.c
-@@ -25,11 +25,6 @@
- #define INVALID_GRANT_REF (0)
- #define INVALID_EVTCHN    (-1)
- 
--struct pci_bus_entry {
--	struct list_head list;
--	struct pci_bus *bus;
--};
--
- #define _PDEVB_op_active		(0)
- #define PDEVB_op_active			(1 << (_PDEVB_op_active))
- 
-@@ -47,12 +42,12 @@ struct pcifront_device {
- 	struct xen_pci_sharedinfo *sh_info;
- 	struct work_struct op_work;
- 	unsigned long flags;
--
- };
- 
- struct pcifront_sd {
- 	int domain;
- 	struct pcifront_device *pdev;
-+	struct resource busn_res;
- };
- 
- static inline struct pcifront_device *
-@@ -67,6 +62,12 @@ static inline void pcifront_init_sd(struct pcifront_sd *sd,
- {
- 	sd->domain = domain;
- 	sd->pdev = pdev;
-+
-+	/* Xen pci-backend doesn't export P2P bridges */
-+	sd->busn_res.start = bus;
-+	sd->busn_res.end = bus;
-+	sd->busn_res.flags = IORESOURCE_BUS;
-+	sd->busn_res.name = "PCI busn";
- }
- 
- static DEFINE_SPINLOCK(pcifront_dev_lock);
-@@ -441,12 +442,19 @@ static int pcifront_scan_bus(struct pcifront_device *pdev,
- 	return 0;
- }
- 
-+static void pcifront_release_sd(struct pci_host_bridge *bridge)
-+{
-+	struct pcifront_sd *sd = bridge->release_data;
-+
-+	kfree(sd);
-+}
-+
- static int pcifront_scan_root(struct pcifront_device *pdev,
- 				 unsigned int domain, unsigned int bus)
- {
- 	struct pci_bus *b;
- 	struct pcifront_sd *sd = NULL;
--	struct pci_bus_entry *bus_entry = NULL;
-+	LIST_HEAD(resources);
- 	int err = 0;
- 
- #ifndef CONFIG_PCI_DOMAINS
-@@ -463,16 +471,18 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
- 	dev_info(&pdev->xdev->dev, "Creating PCI Frontend Bus %04x:%02x\n",
- 		 domain, bus);
- 
--	bus_entry = kmalloc(sizeof(*bus_entry), GFP_KERNEL);
--	sd = kmalloc(sizeof(*sd), GFP_KERNEL);
--	if (!bus_entry || !sd) {
-+	sd = kzalloc(sizeof(*sd), GFP_KERNEL);
-+	if (!sd) {
- 		err = -ENOMEM;
- 		goto err_out;
- 	}
- 	pcifront_init_sd(sd, domain, bus, pdev);
- 
--	b = pci_scan_bus_parented(&pdev->xdev->dev, bus,
--				  &pcifront_bus_ops, sd);
-+	pci_add_resource(&resources, &ioport_resource);
-+	pci_add_resource(&resources, &iomem_resource);
-+	pci_add_resource(&resources, &sd->busn_res);
-+	b = pci_create_root_bus(&pdev->xdev->dev, bus, &pcifront_bus_ops,
-+				sd, &resources);
- 	if (!b) {
- 		dev_err(&pdev->xdev->dev,
- 			"Error creating PCI Frontend Bus!\n");
-@@ -480,12 +490,13 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
- 		goto err_out;
- 	}
- 
--	bus_entry->bus = b;
-+	pci_set_host_bridge_release(to_pci_host_bridge(b->bridge),
-+				    pcifront_release_sd, sd);
- 
--	list_add(&bus_entry->list, &pdev->root_buses);
--
--	/* pci_scan_bus_parented skips devices which do not have a have
--	* devfn==0. The pcifront_scan_bus enumerates all devfn. */
-+	/*
-+	 * The pcifront_scan_bus enumerates all devfn, no matter function 0
-+	 * exists or not.
-+	 */
- 	err = pcifront_scan_bus(pdev, domain, bus, b);
- 
- 	/* Claim resources before going "live" with our devices */
-@@ -497,7 +508,6 @@ static int pcifront_scan_root(struct pcifront_device *pdev,
- 	return err;
- 
- err_out:
--	kfree(bus_entry);
- 	kfree(sd);
- 
- 	return err;
-@@ -538,35 +548,17 @@ static int pcifront_rescan_root(struct pcifront_device *pdev,
- 	return err;
- }
- 
--static void free_root_bus_devs(struct pci_bus *bus)
--{
--	struct pci_dev *dev;
--
--	while (!list_empty(&bus->devices)) {
--		dev = container_of(bus->devices.next, struct pci_dev,
--				   bus_list);
--		dev_dbg(&dev->dev, "removing device\n");
--		pci_stop_and_remove_bus_device(dev);
--	}
--}
--
- static void pcifront_free_roots(struct pcifront_device *pdev)
- {
--	struct pci_bus_entry *bus_entry, *t;
-+	struct pcifront_sd *sd;
-+	struct pci_bus *bus, *temp;
- 
- 	dev_dbg(&pdev->xdev->dev, "cleaning up root buses\n");
- 
--	list_for_each_entry_safe(bus_entry, t, &pdev->root_buses, list) {
--		list_del(&bus_entry->list);
--
--		free_root_bus_devs(bus_entry->bus);
--
--		kfree(bus_entry->bus->sysdata);
--
--		device_unregister(bus_entry->bus->bridge);
--		pci_remove_bus(bus_entry->bus);
--
--		kfree(bus_entry);
-+	list_for_each_entry_safe(bus, temp, &pci_root_buses, node) {
-+		sd = bus->sysdata;
-+		if (sd->pdev == pdev)
-+			pci_stop_and_remove_root_bus(bus);
- 	}
- }
- 
+As for snd-hda-intel bug, I will file it later today and let you know.
+
 -- 
-1.8.1.2
-
+Alexander E. Patrakov
