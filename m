@@ -1,86 +1,174 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f180.google.com ([209.85.214.180]:53088 "EHLO
-	mail-ob0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750973Ab3FYBxG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 24 Jun 2013 21:53:06 -0400
-Received: by mail-ob0-f180.google.com with SMTP id eh20so11226136obb.25
-        for <linux-pci@vger.kernel.org>; Mon, 24 Jun 2013 18:53:05 -0700 (PDT)
+Received: from userp1040.oracle.com ([156.151.31.81]:43740 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750887Ab3FLNpS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Jun 2013 09:45:18 -0400
+Date: Wed, 12 Jun 2013 09:45:04 -0400
+From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+To: George Dunlap <george.dunlap@eu.citrix.com>
+Cc: xen-devel@lists.xensource.com, linux-kernel@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	stable@vger.kernel.org
+Subject: Re: [PATCH] xen/pci: Deal with toolstack missing an
+ 'XenbusStateClosing'.
+Message-ID: <20130612134504.GG2918@phenom.dumpdata.com>
+References: <20130610202456.GA17822@phenom.dumpdata.com>
+ <1370898399-20968-1-git-send-email-konrad.wilk@oracle.com>
+ <1370898399-20968-2-git-send-email-konrad.wilk@oracle.com>
+ <51B743EA.5020800@eu.citrix.com>
+ <51B74B77.1000806@oracle.com>
+ <51B74DA9.7060509@eu.citrix.com>
 MIME-Version: 1.0
-In-Reply-To: <20130620185707.GA8888@mithrandir>
-References: <1371660979-21588-1-git-send-email-thomas.petazzoni@free-electrons.com>
- <1371660979-21588-3-git-send-email-thomas.petazzoni@free-electrons.com> <20130620185707.GA8888@mithrandir>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 24 Jun 2013 19:52:45 -0600
-Message-ID: <CAErSpo6Mm6kYZKN_n-fMRD2T1-F0sf9GStmOTA8tT0wVLedCgw@mail.gmail.com>
-Subject: Re: [PATCHv3 02/11] pci: use weak functions for MSI arch-specific functions
-To: Thierry Reding <thierry.reding@gmail.com>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/mixed; boundary="jI8keyz6grp/JLjh"
+In-Reply-To: <51B74DA9.7060509@eu.citrix.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 20, 2013 at 12:57 PM, Thierry Reding
-<thierry.reding@gmail.com> wrote:
-> On Wed, Jun 19, 2013 at 06:56:10PM +0200, Thomas Petazzoni wrote:
-> [...]
->> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
->> index 2c10752..4bc0c8f 100644
->> --- a/drivers/pci/msi.c
->> +++ b/drivers/pci/msi.c
->> @@ -30,19 +30,35 @@ static int pci_msi_enable = 1;
->>
->>  /* Arch hooks */
->>
->> -#ifndef arch_msi_check_device
->> -int arch_msi_check_device(struct pci_dev *dev, int nvec, int type)
->> +int default_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
->> +{
->> +     return -EINVAL;
->> +}
->> +
->> +int __weak arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
->> +{
->> +     return default_setup_msi_irq(dev, desc);
->> +}
->> +
->> +void default_teardown_msi_irq(unsigned int irq)
->> +{
->> +}
->> +
->> +void __weak arch_teardown_msi_irq(unsigned int irq)
->> +{
->> +     return default_teardown_msi_irq(irq);
->> +}
->> +
->> +int default_msi_check_device(struct pci_dev *dev, int nvec, int type)
->>  {
->>       return 0;
->>  }
->> -#endif
->
-> I don't think keeping the default_*() for these three is necessary,
-> given that they don't do anything and therefore no architecture is
-> likely to call them when overriding.
 
-I agree; the whole point of __weak is to provide a "default"
-implementation, so I hope you can just remove any empty default_*()
-functions and fold the others into the arch_*() functions directly.
+--jI8keyz6grp/JLjh
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-If there actually are callbacks from arch-specific strong functions
-back to the stuff in the default_*() functions, that suggests that we
-should refactor and rename that bit of functionality.
+On Tue, Jun 11, 2013 at 05:17:45PM +0100, George Dunlap wrote:
+> On 06/11/2013 05:08 PM, konrad wilk wrote:
+> >
+> >On 6/11/2013 11:36 AM, George Dunlap wrote:
+> >>On 06/10/2013 10:06 PM, Konrad Rzeszutek Wilk wrote:
+> >>>There are two tool-stack that can instruct the Xen PCI frontend
+> >>>and backend to change states: 'xm' (Python code with a daemon),
+> >>>and 'xl' (C library - does not keep state changes).
+> >>>
+> >>>With the 'xm', the path to disconnect a PCI device (xm pci-detach
+> >>><guest> <BDF>)is:
+> >>>
+> >>>4(Connected)->7(Reconfiguring*)-> 8(Reconfigured)->
+> >>>4(Connected)->5(Closing*).
+> >>>
+> >>>The * is for states that the tool-stack sets. For 'xl', it is similar:
+> >>>
+> >>>4(Connected)->7(Reconfiguring*)-> 8(Reconfigured)-> 4(Connected)
+> >>>
+> >>>Both of them also tear down the XenBus structure, so the backend
+> >>>state ends up going in the 3(Initialised) and calls
+> >>>pcifront_xenbus_remove.
+> >>
+> >>So I looked a little bit into this; there are actually two different
+> >>states that happen as part of this handshake.  In order to disonnect a
+> >>*device*, xl signals using the *bus* state, like this:
+> >>* Wait for the *bus* to be in state 4(Connected)
+> >>* Set the *device* state to 5(Closing)
+> >>* Set the *bus* state to 7(Reconfiguring)
+> >>* Wait for the *bus* state to return to 4(Connected)
+> >>
+> >>So are all of these states you see the *bus* state?  And why would you
+> >>disconnect the whole pci bus if you're only removing one device?
+> >
+> >Correct. The stats I enumerated are *bus* states. Not per-device states.
+> >I presume (and I hadn't checked xm) that Xend has some logic to only
+> >disconnect the bus if all of the PCI devices have been disconnected. In
+> >'xl' it does not do that.
+> >
+> >The testing I did was just with one PCI device.
+> 
+> Ah, OK -- I see now.  The problem is that the code in the Linux side
+> didn't know about the whole "4->7->8->4" thing to unplug a device.
+> In all likelihood, if you had used xm with two devices (so that the
+> bus didn't get disconnected), then you would have run across the
+> same error.
+> 
+> So at least part of the problem *is* a bug in Linux.
 
-Bjorn
+Good! Bjorn, would you be OK Ack-ing the patch I sent (attached here
+for reference) or putting it in your queue for Linus?
+
+My plan would be to send it to Linus in the 3.11 merge window.
+
+--jI8keyz6grp/JLjh
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename="0001-xen-pci-Deal-with-toolstack-missing-an-XenbusStateCl.patch"
+
+>From efdfbd66b4f0ff6f005f9d30891adb8bd3f3eefa Mon Sep 17 00:00:00 2001
+From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Date: Mon, 10 Jun 2013 16:48:09 -0400
+Subject: [PATCH] xen/pci: Deal with toolstack missing an 'XenbusStateClosing'.
+
+There are two tool-stack that can instruct the Xen PCI frontend
+and backend to change states: 'xm' (Python code with a daemon),
+and 'xl' (C library - does not keep state changes).
+
+With the 'xm', the path to disconnect a PCI device (xm pci-detach
+<guest> <BDF>)is:
+
+4(Connected)->7(Reconfiguring*)-> 8(Reconfigured)-> 4(Connected)->5(Closing*).
+
+The * is for states that the tool-stack sets. For 'xl', it is similar:
+
+4(Connected)->7(Reconfiguring*)-> 8(Reconfigured)-> 4(Connected)
+
+Both of them also tear down the XenBus structure, so the backend
+state ends up going in the 3(Initialised) and calls pcifront_xenbus_remove.
+
+When a PCI device is plugged in (xm pci-attach <guest> <BDF>)
+both of them follow the same pattern:
+2(InitWait*), 3(Initialized*), 4(Connected*)->4(Connected).
+
+[xen-pcifront ignores the 2,3 state changes and only acts when
+4 (Connected) has been reached]
+
+The problem is that git commit 3d925320e9e2de162bd138bf97816bda8c3f71be
+("xen/pcifront: Use Xen-SWIOTLB when initting if required") introduced
+a mechanism to initialize the SWIOTLB when the Xen PCI front moves to
+Connected state. It also had some aggressive seatbelt code check that
+would warn the user if one tried to change to Connected state without
+hitting first the Closing state:
+
+ pcifront pci-0: PCI frontend already installed!
+
+However, that code can be relaxed and we can continue on working
+even if the frontend is instructed to be the 'Connected' state with
+no devices and then gets tickled to be in 'Connected' state again.
+
+In other words, this 4(Connected)->5(Closing)->4(Connected) state
+was expected, while 4(Connected)->.... anything but 5(Closing)->4(Connected)
+was not. This patch removes that aggressive check and allows
+Xen pcifront to work with the 'xl' toolstack.
+
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Cc: stable@vger.kernel.org
+Signed-off-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+---
+ drivers/pci/xen-pcifront.c | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
+index ac99515..cc46e253 100644
+--- a/drivers/pci/xen-pcifront.c
++++ b/drivers/pci/xen-pcifront.c
+@@ -675,10 +675,9 @@ static int pcifront_connect_and_init_dma(struct pcifront_device *pdev)
+ 	if (!pcifront_dev) {
+ 		dev_info(&pdev->xdev->dev, "Installing PCI frontend\n");
+ 		pcifront_dev = pdev;
+-	} else {
+-		dev_err(&pdev->xdev->dev, "PCI frontend already installed!\n");
++	} else
+ 		err = -EEXIST;
+-	}
++
+ 	spin_unlock(&pcifront_dev_lock);
+ 
+ 	if (!err && !swiotlb_nr_tbl()) {
+@@ -846,7 +845,7 @@ static int pcifront_try_connect(struct pcifront_device *pdev)
+ 		goto out;
+ 
+ 	err = pcifront_connect_and_init_dma(pdev);
+-	if (err) {
++	if (err && err != -EEXIST) {
+ 		xenbus_dev_fatal(pdev->xdev, err,
+ 				 "Error setting up PCI Frontend");
+ 		goto out;
+-- 
+1.8.1.4
+
+
+--jI8keyz6grp/JLjh--
