@@ -1,46 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:59876 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756748Ab3FEPzT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Jun 2013 11:55:19 -0400
-Received: by mail-ie0-f174.google.com with SMTP id aq17so4113314iec.33
-        for <linux-pci@vger.kernel.org>; Wed, 05 Jun 2013 08:55:18 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1565177.fVUsxhqHvk@vostro.rjw.lan>
-References: <1369974092-11450-1-git-send-email-jiang.liu@huawei.com>
-	<2947055.dGtK2eC6Fm@vostro.rjw.lan>
-	<CAE9FiQW4UynXesgv58YajV73VZHQLzFiD3M6Dq=7bXmCXDbCiQ@mail.gmail.com>
-	<1565177.fVUsxhqHvk@vostro.rjw.lan>
-Date: Wed, 5 Jun 2013 08:55:18 -0700
-Message-ID: <CAE9FiQXSQkZxy7OHgEUVQ_UYrTAa2zEjo3TPhecxaUbu5J6ToQ@mail.gmail.com>
-Subject: Re: [PATCH 2/3] PCI, ACPI: Don't glue ACPI dev with pci VFs
-From: Yinghai Lu <yinghai@kernel.org>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Jiang Liu <liuj97@gmail.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	Xudong Hao <xudong.hao@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Jiang Liu <jiang.liu@huawei.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mailout4.samsung.com ([203.254.224.34]:11716 "EHLO
+	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751454Ab3FLKSF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Jun 2013 06:18:05 -0400
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Kukjin Kim' <kgene.kim@samsung.com>,
+	'Bjorn Helgaas' <bhelgaas@google.com>
+Cc: linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org,
+	devicetree-discuss@lists.ozlabs.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	'Grant Likely' <grant.likely@secretlab.ca>,
+	'Andrew Murray' <andrew.murray@arm.com>,
+	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
+	'Thierry Reding' <thierry.reding@avionic-design.de>,
+	'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	'Surendranath Gurivireddy Balla' <suren.reddy@samsung.com>,
+	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
+	'Thomas Abraham' <thomas.abraham@linaro.org>,
+	'Jingoo Han' <jg1.han@samsung.com>
+Subject: [PATCH V4 0/3] PCIe support for Samsung Exynos5440 SoC
+Date: Wed, 12 Jun 2013 19:18:02 +0900
+Message-id: <003001ce6756$1ef00d60$5cd02820$@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 4, 2013 at 4:51 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> On Tuesday, June 04, 2013 03:57:28 PM Yinghai Lu wrote:
->> >
->> > To be precise, I don't quite see why it is impossible or invalid for a VF to
->> > have a corresponding ACPI device object.  It may not be the case on this
->> > particular system, but why not in general?
->>
->> at least for ioapic routing GSI, we should not mix VF to use other PF's
->> setting.
->
-> I can agree with that, but your patch is far more general than this.  It won't
-> allow any VF on any system to be "glued" to any ACPI device object and I'm
-> thinking that that may just go too far.
+Hi,
 
-I think that we should look reversely:
-Is there any reason or use case that we need to bind PCI VF to acpi device?
-PCI vf is only showing up after PF driver call pci_enable_siov.
+This series of patches introduces PCIe support for Samsung Exynos5440,
+and is based on the latest 'linux-next' tree (20130607).
+These patches was tested with Intel e1000e LAN card on Exynos5440.
 
-Yinghai
+This PATCH v4 follows:
+ * PATCH v3, sent on June, 6th 2013
+ * PATCH v2, sent on March, 23rd 2013
+ * PATCH v1, sent on March, 4th 2013
+ 
+Changes between v3 and v4:
+  * Added support for multi domains as reviewed by Jason Gunthorpe,
+    and Arnd Bergmann.
+  * Fixed both MEM space and I/O space in DT.
+  * Removed redundant physical addresses from struct pcie_port,
+    added devm_ioremap_resource() to make add_pcie_port() simpler.
+  * Added clock names and clock enable/disable.
+	
+Changes between v2 and v3:
+  * Rebased on the top of 3.10-rc4
+  * Updated names of PCIe PHY registers
+ 
+Changes between v1 and v2:
+  * Moved Exynos PCIe driver from arch/arm to drivers/pci/host.
+  * Added DT properties of PCI DT standard.
+
+Thank you.
+
+Best regards,
+Jingoo Han
+
+
+Jingoo Han (3):
+  pci: Add PCIe driver for Samsung Exynos
+  ARM: EXYNOS: Enable PCIe support for Exynos5440
+  ARM: dts: Add pcie controller node for Samsung EXYNOS5440 SoC
+
+ arch/arm/boot/dts/exynos5440-ssdk5440.dts |    8 ++++++
+ arch/arm/boot/dts/exynos5440.dtsi         |   38 +++++++++++++++++++++++++++++
+ arch/arm/Kconfig             |    1 +
+ arch/arm/mach-exynos/Kconfig |    2 ++
+ .../devicetree/bindings/pci/exynos-pcie.txt        |   71 ++
+ drivers/pci/host/Kconfig                           |    5 +
+ drivers/pci/host/Makefile                          |    1 +
+ drivers/pci/host/pci-exynos.c                      | 1074 ++++++++++++++++++++
+ 8 files changed, 1200 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/exynos-pcie.txt
+ create mode 100644 drivers/pci/host/pci-exynos.c
+
+-- 
+1.7.10.4
+
+
