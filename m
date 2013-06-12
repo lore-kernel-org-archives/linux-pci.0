@@ -1,60 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f177.google.com ([209.85.192.177]:51038 "EHLO
-	mail-pd0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758658Ab3FMQfg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Jun 2013 12:35:36 -0400
-From: Jiang Liu <jiang.liu@huawei.com>
-To: "Rafael J . Wysocki" <rjw@sisk.pl>,
+Received: from mail-pd0-f174.google.com ([209.85.192.174]:63576 "EHLO
+	mail-pd0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753097Ab3FLCts (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Jun 2013 22:49:48 -0400
+Message-ID: <51B7E1C7.9030004@gmail.com>
+Date: Wed, 12 Jun 2013 10:49:43 +0800
+From: Jiang Liu <liuj97@gmail.com>
+MIME-Version: 1.0
+To: "Alexander E. Patrakov" <patrakov@gmail.com>
+CC: Jiang Liu <jiang.liu@huawei.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
 	Yinghai Lu <yinghai@kernel.org>,
-	"Alexander E . Patrakov" <patrakov@gmail.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Shaohua Li <shaohua.li@intel.com>,
-	Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org
-Subject: [BUGFIX 4/9] ACPI, DOCK: avoid initializing acpi_dock_notifier_list multiple times
-Date: Fri, 14 Jun 2013 00:32:27 +0800
-Message-Id: <1371141152-9468-5-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1371141152-9468-1-git-send-email-jiang.liu@huawei.com>
-References: <1371141152-9468-1-git-send-email-jiang.liu@huawei.com>
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	linux-pci@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] ACPIPHP: fix device destroying order issue in handling
+ dock notification
+References: <1370951543-15841-1-git-send-email-jiang.liu@huawei.com> <CAN_LGv1hrLnYkPHycyyd35ZipWWznXM_0cdj8Rnh1WxiTZL=4A@mail.gmail.com> <51B7170E.2060608@gmail.com> <CAN_LGv26adLa5RBhwhCfvALFx78j4HdvzVH1PaAuhvWXSeqyMw@mail.gmail.com> <51B73BAB.3030406@gmail.com> <CAN_LGv3iwgp_8dkt1ouCD-FFGau3h7L25ORUW2J-rz30_4ZYTA@mail.gmail.com>
+In-Reply-To: <CAN_LGv3iwgp_8dkt1ouCD-FFGau3h7L25ORUW2J-rz30_4ZYTA@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Initialize acpi_dock_notifier_list from function acpi_dock_init()
-instead of dock_add() to avoid initializing it multiple times.
+On Wed 12 Jun 2013 12:51:59 AM CST, Alexander E. Patrakov wrote:
+> 2013/6/11 Jiang Liu <liuj97@gmail.com>:
+>> Hi Alexander,
+>>     This is much more harder issue to resolve.  Let's first work around
+>> this
+>> issue and check whether other things are OK. The patch below is just a
+>> prove of concept, could you please help to try it?
+>
+> In the initially-undocked case it passes the "dock and undock three
+> times, verify lspci output at each step" test.
+>
+> In the initially-docked case, it exhibits the following problem: when
+> I press the undock button, only one PCI device disappears, and the
+> "docked" LED does not turn off. Additionally, there is a hung task.
+Hi Alexander,
+     In the initially-docked case, the failure is caused by an issue in
+the intel sound card driver. Seems something is wrong with reference
+count management and it never returns to zero on driver detach.
+Could you please help to disable the Intel sound card driver and try
+again?
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Cc: Shaohua Li <shaohua.li@intel.com>
-Cc: Len Brown <lenb@kernel.org>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: linux-acpi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
----
- drivers/acpi/dock.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+I'm not familiar with Intel HDA driver,  so please help to fire another
+bug for it.
 
-diff --git a/drivers/acpi/dock.c b/drivers/acpi/dock.c
-index 50e38b7..8e578aa 100644
---- a/drivers/acpi/dock.c
-+++ b/drivers/acpi/dock.c
-@@ -967,7 +967,6 @@ static int __init dock_add(acpi_handle handle)
- 	spin_lock_init(&dock_station->dd_lock);
- 	INIT_LIST_HEAD(&dock_station->sibling);
- 	INIT_LIST_HEAD(&dock_station->hotplug_devices);
--	ATOMIC_INIT_NOTIFIER_HEAD(&dock_notifier_list);
- 	INIT_LIST_HEAD(&dock_station->dependent_devices);
- 
- 	/* we want the dock device to send uevents */
-@@ -1038,6 +1037,7 @@ int __init acpi_dock_init(void)
- 		return 0;
- 	}
- 
-+	ATOMIC_INIT_NOTIFIER_HEAD(&dock_notifier_list);
- 	register_acpi_bus_notifier(&dock_acpi_notifier);
- 	pr_info(PREFIX "%s: %d docks/bays found\n",
- 		ACPI_DOCK_DRIVER_DESCRIPTION, dock_station_count);
--- 
-1.8.1.2
+Regards!
+Gerry
+
+>
+> Both dmesgs are attached.
+>
+
 
