@@ -1,161 +1,112 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f52.google.com ([209.85.214.52]:44090 "EHLO
-	mail-bk0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932206Ab3FUKQp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Jun 2013 06:16:45 -0400
-Received: by mail-bk0-f52.google.com with SMTP id d7so3298240bkh.11
-        for <linux-pci@vger.kernel.org>; Fri, 21 Jun 2013 03:16:44 -0700 (PDT)
-Date: Fri, 21 Jun 2013 12:16:41 +0200
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 12 Jun 2013 23:23:10 +0200
 From: Thierry Reding <thierry.reding@gmail.com>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Russell King <linux@arm.linux.org.uk>,
-	Grant Likely <grant.likely@secretlab.ca>,
+To: Stephen Warren <swarren@wwwdotorg.org>
+Cc: Grant Likely <grant.likely@secretlab.ca>,
 	Rob Herring <rob.herring@calxeda.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>
-Subject: Re: [PATCHv3 04/11] of: pci: add registry of MSI chips
-Message-ID: <20130621101640.GD12441@manwe>
-References: <1371660979-21588-1-git-send-email-thomas.petazzoni@free-electrons.com>
- <1371660979-21588-5-git-send-email-thomas.petazzoni@free-electrons.com>
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Andrew Murray <andrew.murray@arm.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-tegra@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v3 07/12] PCI: tegra: Move PCIe driver to drivers/pci/host
+Message-ID: <20130612212308.GA27681@manwe>
+References: <1365000318-28256-1-git-send-email-thierry.reding@avionic-design.de>
+ <1365000318-28256-8-git-send-email-thierry.reding@avionic-design.de>
+ <516C46BC.2040707@wwwdotorg.org>
+ <20130612122959.GA32444@manwe>
+ <51B89D26.9070605@wwwdotorg.org>
 MIME-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="ylS2wUBXLOxYXZFQ"
-In-Reply-To: <1371660979-21588-5-git-send-email-thomas.petazzoni@free-electrons.com>
-Sender: linux-pci-owner@vger.kernel.org
+	protocol="application/pgp-signature"; boundary="k+w/mQv8wyuph6w0"
+In-Reply-To: <51B89D26.9070605@wwwdotorg.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
 
---ylS2wUBXLOxYXZFQ
+--k+w/mQv8wyuph6w0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, Jun 19, 2013 at 06:56:12PM +0200, Thomas Petazzoni wrote:
-> This commit adds a very basic registry of msi_chip structures, so that
-> an IRQ controller driver can register an msi_chip, and a PCIe host
-> controller can find it, based on a 'struct device_node'.
+On Wed, Jun 12, 2013 at 10:09:10AM -0600, Stephen Warren wrote:
+> On 06/12/2013 06:30 AM, Thierry Reding wrote:
+> > On Mon, Apr 15, 2013 at 12:28:12PM -0600, Stephen Warren wrote:
+> >> On 04/03/2013 08:45 AM, Thierry Reding wrote:
+> >>> Move the PCIe driver from arch/arm/mach-tegra into the
+> >>> drivers/pci/host directory. The motivation is to collect
+> >>> various host controller drivers in the same location in order
+> >>> to facilitate refactoring.
+> >>>=20
+> >>> The Tegra PCIe driver has been largely rewritten, both in order
+> >>> to turn it into a proper platform driver and to add MSI (based
+> >>> on code by Krishna Kishore <kthota@nvidia.com>) as well as
+> >>> device tree support.
+> ...
+> >>> +static irqreturn_t tegra_pcie_msi_irq(int irq, void *data)
+> >> ...
+> >>> +	return IRQ_HANDLED;
+> >>=20
+> >> Shouldn't this function return IRQ_NONE if no MSI status bits
+> >> were found set?
+> >=20
+> > The IRQ isn't marked IRQF_SHARED, so I don't think this is needed.
 >=20
-> Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-> ---
->  drivers/of/of_pci.c    | 22 ++++++++++++++++++++++
->  include/linux/msi.h    |  2 ++
->  include/linux/of_pci.h |  4 ++++
->  3 files changed, 28 insertions(+)
+> Isn't it still useful to detect unexpected/stuck interrupts?
+
+Yes, you're right. I can't think of a nicer way to do it, though, so
+I'll go with a processed IRQ counter or a flag.
+
+> >>> +static int tegra_pcie_probe(struct platform_device *pdev)
+> >> ...
+> >>> +	pcibios_min_mem =3D 0;
+> >>=20
+> >> What does that mean/do? I wonder if that should be set to
+> >> 0x80000000 by the Tegra30 patches?
+> >=20
+> > ARM defines PCIBIOS_MIN_MEM to that variable. That macro in turn is
+> > only used by pci_bus_alloc_resource() AFAICT, which uses it to
+> > override the start of a resource when allocating if res->start =3D=3D
+> > 0. As such it designates a lower-bound of valid PCI memory
+> > addresses, so 0 on Tegra20 and 0x80000000 on Tegra30 don't seem
+> > like good values. Maybe we need to set them to the lowest of the
+> > prefetchable and non-prefetchable memory areas as defined in the
+> > DT?
+> >=20
+> > It doesn't currently seem to matter at all, though, since we never
+> > pass in a range that's 0, so the start address of resources can
+> > never be 0 and therefore PCIBIOS_MIN_MEM is never used.
 >=20
-> diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
-> index 42c687a..ca12db8 100644
-> --- a/drivers/of/of_pci.c
-> +++ b/drivers/of/of_pci.c
-> @@ -89,3 +89,25 @@ int of_pci_parse_bus_range(struct device_node *node, s=
-truct resource *res)
->  	return 0;
->  }
->  EXPORT_SYMBOL_GPL(of_pci_parse_bus_range);
-> +
-> +static LIST_HEAD(msi_chip_list);
-> +static DEFINE_MUTEX(msi_chip_mutex);
+> Hmmm. I guess ignore it then. If the value won't ever be used, 0 is as
+> good a value as any?
 
-Should all of this code perhaps be conditionalized by an #ifdef PCI_MSI?
-
-> +
-> +void of_msi_chip_add(struct msi_chip *chip)
-> +{
-> +	mutex_lock(&msi_chip_mutex);
-> +	list_add(&chip->link, &msi_chip_list);
-> +	mutex_unlock(&msi_chip_mutex);
-> +}
-
-Since eventually we may want to use these functions from modules, maybe
-they should be exported?
-
-Also isn't this missing an of_msi_chip_remove() counterpart?
-
-> +struct msi_chip *of_msi_chip_find_by_node(struct device_node *of_node)
-
-Most other functions of this type are named of_find_*_by_node(), so for
-consistency it'd be better to call this of_find_msi_chip_by_node().
-
-> +{
-> +	struct msi_chip *c;
-> +	list_for_each_entry(c, &msi_chip_list, link) {
-> +		if (c->of_node =3D=3D of_node &&
-> +		    of_property_read_bool(c->of_node, "msi-controller"))
-
-Perhaps it would be more efficient to put this check within the
-of_msi_chip_add() function?
-
-> diff --git a/include/linux/msi.h b/include/linux/msi.h
-> index e3a137d..8b930c3 100644
-> --- a/include/linux/msi.h
-> +++ b/include/linux/msi.h
-> @@ -74,6 +74,8 @@ void default_restore_msi_irqs(struct pci_dev *dev, int =
-irq);
->  struct msi_chip {
->  	struct module *owner;
->  	struct device *dev;
-> +	struct device_node *of_node;
-
-I know there's no easier way to do this, but I think we need to find a
-way to clean this up at some point. There's no point in storing the OF
-node in two places.
-
-> +	struct list_head link;
-
-I'd prefer this to be named "list" for consistency.
-
-> diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
-> index 7a04826..6e88189 100644
-> --- a/include/linux/of_pci.h
-> +++ b/include/linux/of_pci.h
-> @@ -2,6 +2,7 @@
->  #define __OF_PCI_H
-> =20
->  #include <linux/pci.h>
-> +#include <linux/msi.h>
-> =20
->  struct pci_dev;
->  struct of_irq;
-> @@ -13,4 +14,7 @@ struct device_node *of_pci_find_child_device(struct dev=
-ice_node *parent,
->  int of_pci_get_devfn(struct device_node *np);
->  int of_pci_parse_bus_range(struct device_node *node, struct resource *re=
-s);
-> =20
-> +void of_msi_chip_add(struct msi_chip *chip);
-> +struct msi_chip *of_msi_chip_find_by_node(struct device_node *of_node);
-
-Since these will be exported and conditionalized on PCI_MSI as suggested
-above, maybe they should get a dummy implementation if (!OF || !PCI_MSI)
-so that drivers don't have to conditionally call them?
+Alright, I'll do that then.
 
 Thierry
 
---ylS2wUBXLOxYXZFQ
+--k+w/mQv8wyuph6w0
 Content-Type: application/pgp-signature
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.20 (GNU/Linux)
+Version: GnuPG v2.0.19 (GNU/Linux)
 
-iQIcBAEBAgAGBQJRxCgIAAoJEN0jrNd/PrOh+IIQALmSCXRmIp4gadA6ZOK6PGGF
-LE4+rJdpHe6lYjd0aTwhckXe1e2Ww9/BiTpAJM3OzQJXZeV8zzWzm9VuSIjOb0tg
-mYG63oXEAJR9B7/0FU5UkqtVMH3CeL9c9Z//DGbzNl/uaIRmwzoaxZL9lICv4L9N
-giUmAwnRxF2ocWvrJtr5znAmSkn7yd18sYyIAbdqDoMJgv5VxJHBE9YK+pGEyV/o
-eWc5utXxVvT7Z+0BovqIRMsL9xe6YYgJJSZ5bGzsrlDBvJAZX8K576k1TqgbNWc3
-hAx/9zOzCktTNL3qXYH+xVY5gITAYoUzXTacpuu4cwGmRDjMAuwklgiZEgEBx61o
-oeWT4JQrXAVRi0D5rDAqll1TMxdnZ/fd9vzhrsJdZLr/k99chu4EoVjChsefSZIs
-IpQQbHwqQTLj49GNal4MA9P392dDYdqK6TGkhtYPviVVt6NXUwqZEgzy90FBrLdd
-0LmrBG7y/nrzz6rea4UJCM2IcdRTQwQzv/BCiDr6qK012YFsk+5HvQC7yXfBsmi9
-WiG98zGfVP8S5VsQDmH8lx20i7iiO9Aek2hVNdrfNZCdkUZYsrh5hflitXPDsdVx
-OfR9bFFIVMCHWU70lfsQ1Htv7bWyCQGbloUIBXSTogCQfT0ycov6k3C3KbWLqdzz
-UZqZMHj7c3obdWV//lxn
-=Z+V0
+iQIcBAEBAgAGBQJRuOa8AAoJEN0jrNd/PrOh+bkP/jn3lGBiGbjNi027XeevREsp
+DkwcxH4QnBbAUP+pGCm319oquZuLiptR865uEx60r02QC2N+HpWBVtd/zcjfGs+x
+drQZ4SrEO53ZqSuWHxu1hZvWE2U1cmr6FfchKOD6KXhaURr8g4rlMQClu7fuGsgL
+22TD9m40R/0LasWk54/oYuFH+H1A/06dTiHYABgQGCK2YpXK/iyo4gAWqPgmuufU
+4VdTZLnmi50lGQqjOrMG4rdwI0FbKqut0c2eejXm5PgPEkUfG/OkryvIjmfR7IKw
+EKBolfOC1g6Uk0kRKSF4bOGhrHKN7sPyZRVzaMisAXpddlhb/ehsprrfM+J9BDfk
+sluOcOJsrCXinuSudHsTHlKbc5hP+cjkgOKqI1mmkGIKl34BBSvycThoi+kVj8rw
+LK3MyWK3xo3nG9Jinmdc3UaWLnZ+gCSbOOh1mSNtx9kx+u3ALAENJS0XwN71njoK
+BZB6JuM/jBn4nQ7+avMMB1D3BFx4KPy4vQvs0Usd1v+eqNjMkSOvXzCCMso8Idv3
+mheOhkI1PFhhZvHSfZ2SkG+pClA84vBqd+CJ5nXMfz4z5EYslV6//BgoWCKyXklN
+4cOI+1Ef05egOfYAAcNy4MvOmtedtuQih1I7NnqttTwYcxSePh4P/gXBrlEtBLcj
+mpF1VcqVjw32JldQNaCt
+=lrtv
 -----END PGP SIGNATURE-----
 
---ylS2wUBXLOxYXZFQ--
+--k+w/mQv8wyuph6w0--
