@@ -1,99 +1,82 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@huawei.com>
-To: "Rafael J . Wysocki" <rjw@sisk.pl>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"Alexander E . Patrakov" <patrakov@gmail.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Shaohua Li <shaohua.li@intel.com>,
-	Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org
-Subject: [BUGFIX 3/9] ACPI, DOCK: clean up unused module related code
-Date: Fri, 14 Jun 2013 00:32:26 +0800
-Message-Id: <1371141152-9468-4-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1371141152-9468-1-git-send-email-jiang.liu@huawei.com>
-References: <1371141152-9468-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 12 Jun 2013 10:27:21 -0400
+From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+To: George Dunlap <george.dunlap@eu.citrix.com>
+Cc: xen-devel@lists.xensource.com, linux-kernel@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	stable@vger.kernel.org
+Subject: Re: [PATCH] xen/pci: Deal with toolstack missing an
+ 'XenbusStateClosing'.
+Message-ID: <20130612142721.GD7974@phenom.dumpdata.com>
+References: <20130610202456.GA17822@phenom.dumpdata.com>
+ <1370898399-20968-1-git-send-email-konrad.wilk@oracle.com>
+ <1370898399-20968-2-git-send-email-konrad.wilk@oracle.com>
+ <51B743EA.5020800@eu.citrix.com>
+ <51B74B77.1000806@oracle.com>
+ <51B74DA9.7060509@eu.citrix.com>
+ <20130612134504.GG2918@phenom.dumpdata.com>
+ <51B87BDF.1080101@eu.citrix.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <51B87BDF.1080101@eu.citrix.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-ACPI dock driver can't be built as a module any more, so clean up
-module related code.
+On Wed, Jun 12, 2013 at 02:47:11PM +0100, George Dunlap wrote:
+> On 12/06/13 14:45, Konrad Rzeszutek Wilk wrote:
+> >On Tue, Jun 11, 2013 at 05:17:45PM +0100, George Dunlap wrote:
+> >>On 06/11/2013 05:08 PM, konrad wilk wrote:
+> >>>On 6/11/2013 11:36 AM, George Dunlap wrote:
+> >>>>On 06/10/2013 10:06 PM, Konrad Rzeszutek Wilk wrote:
+> >>>>>There are two tool-stack that can instruct the Xen PCI frontend
+> >>>>>and backend to change states: 'xm' (Python code with a daemon),
+> >>>>>and 'xl' (C library - does not keep state changes).
+> >>>>>
+> >>>>>With the 'xm', the path to disconnect a PCI device (xm pci-detach
+> >>>>><guest> <BDF>)is:
+> >>>>>
+> >>>>>4(Connected)->7(Reconfiguring*)-> 8(Reconfigured)->
+> >>>>>4(Connected)->5(Closing*).
+> >>>>>
+> >>>>>The * is for states that the tool-stack sets. For 'xl', it is similar:
+> >>>>>
+> >>>>>4(Connected)->7(Reconfiguring*)-> 8(Reconfigured)-> 4(Connected)
+> >>>>>
+> >>>>>Both of them also tear down the XenBus structure, so the backend
+> >>>>>state ends up going in the 3(Initialised) and calls
+> >>>>>pcifront_xenbus_remove.
+> >>>>So I looked a little bit into this; there are actually two different
+> >>>>states that happen as part of this handshake.  In order to disonnect a
+> >>>>*device*, xl signals using the *bus* state, like this:
+> >>>>* Wait for the *bus* to be in state 4(Connected)
+> >>>>* Set the *device* state to 5(Closing)
+> >>>>* Set the *bus* state to 7(Reconfiguring)
+> >>>>* Wait for the *bus* state to return to 4(Connected)
+> >>>>
+> >>>>So are all of these states you see the *bus* state?  And why would you
+> >>>>disconnect the whole pci bus if you're only removing one device?
+> >>>Correct. The stats I enumerated are *bus* states. Not per-device states.
+> >>>I presume (and I hadn't checked xm) that Xend has some logic to only
+> >>>disconnect the bus if all of the PCI devices have been disconnected. In
+> >>>'xl' it does not do that.
+> >>>
+> >>>The testing I did was just with one PCI device.
+> >>Ah, OK -- I see now.  The problem is that the code in the Linux side
+> >>didn't know about the whole "4->7->8->4" thing to unplug a device.
+> >>In all likelihood, if you had used xm with two devices (so that the
+> >>bus didn't get disconnected), then you would have run across the
+> >>same error.
+> >>
+> >>So at least part of the problem *is* a bug in Linux.
+> >Good! Bjorn, would you be OK Ack-ing the patch I sent (attached here
+> >for reference) or putting it in your queue for Linus?
+> >
+> >My plan would be to send it to Linus in the 3.11 merge window.
+> 
+> One nit -- "to work with the 'xl' toolstack" -- didn't we theorize
+> this would also be broken with xm if you had two devices passed
+> through?
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Cc: Shaohua Li <shaohua.li@intel.com>
-Cc: Len Brown <lenb@kernel.org>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: linux-acpi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
----
- drivers/acpi/dock.c | 41 -----------------------------------------
- 1 file changed, 41 deletions(-)
+Yes. I will fix up the title to reflect that shortly (say Friday?)
 
-diff --git a/drivers/acpi/dock.c b/drivers/acpi/dock.c
-index 79c8d9e..50e38b7 100644
---- a/drivers/acpi/dock.c
-+++ b/drivers/acpi/dock.c
-@@ -53,12 +53,6 @@ MODULE_PARM_DESC(immediate_undock, "1 (default) will cause the driver to "
- 
- static struct atomic_notifier_head dock_notifier_list;
- 
--static const struct acpi_device_id dock_device_ids[] = {
--	{"LNXDOCK", 0},
--	{"", 0},
--};
--MODULE_DEVICE_TABLE(acpi, dock_device_ids);
--
- struct dock_station {
- 	acpi_handle handle;
- 	unsigned long last_dock_time;
-@@ -1013,30 +1007,6 @@ err_unregister:
- }
- 
- /**
-- * dock_remove - free up resources related to the dock station
-- */
--static int dock_remove(struct dock_station *ds)
--{
--	struct dock_dependent_device *dd, *tmp;
--	struct platform_device *dock_device = ds->dock_device;
--
--	if (!dock_station_count)
--		return 0;
--
--	/* remove dependent devices */
--	list_for_each_entry_safe(dd, tmp, &ds->dependent_devices, list)
--		kfree(dd);
--
--	list_del(&ds->sibling);
--
--	/* cleanup sysfs */
--	sysfs_remove_group(&dock_device->dev.kobj, &dock_attribute_group);
--	platform_device_unregister(dock_device);
--
--	return 0;
--}
--
--/**
-  * find_dock_and_bay - look for dock stations and bays
-  * @handle: acpi handle of a device
-  * @lvl: unused
-@@ -1073,14 +1043,3 @@ int __init acpi_dock_init(void)
- 		ACPI_DOCK_DRIVER_DESCRIPTION, dock_station_count);
- 	return 0;
- }
--
--static void __exit dock_exit(void)
--{
--	struct dock_station *tmp, *dock_station;
--
--	unregister_acpi_bus_notifier(&dock_acpi_notifier);
--	list_for_each_entry_safe(dock_station, tmp, &dock_stations, sibling)
--		dock_remove(dock_station);
--}
--
--module_exit(dock_exit);
--- 
-1.8.1.2
-
+Thanks for your sharp eyes.
