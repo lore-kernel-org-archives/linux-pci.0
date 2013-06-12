@@ -1,38 +1,86 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qa0-f47.google.com ([209.85.216.47]:47049 "EHLO
-	mail-qa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752653Ab3FMReZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Jun 2013 13:34:25 -0400
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <51B89D26.9070605@wwwdotorg.org>
+Date: Wed, 12 Jun 2013 10:09:10 -0600
+From: Stephen Warren <swarren@wwwdotorg.org>
 MIME-Version: 1.0
-In-Reply-To: <1371141152-9468-10-git-send-email-jiang.liu@huawei.com>
-References: <1371141152-9468-1-git-send-email-jiang.liu@huawei.com>
-	<1371141152-9468-10-git-send-email-jiang.liu@huawei.com>
-Date: Thu, 13 Jun 2013 23:34:24 +0600
-Message-ID: <CAN_LGv0H82nGmmz0wtLp6bUebyo0o_O9ye9n-1YXqfohv_qpOQ@mail.gmail.com>
-Subject: Re: [BUGFIX 9/9] ACPI: use new helper functions to simpilify code
-From: "Alexander E. Patrakov" <patrakov@gmail.com>
-To: Jiang Liu <jiang.liu@huawei.com>
-Cc: "Rafael J . Wysocki" <rjw@sisk.pl>,
+To: Thierry Reding <thierry.reding@gmail.com>
+CC: Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+	Russell King <linux@arm.linux.org.uk>,
+	Andrew Murray <andrew.murray@arm.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-tegra@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v3 07/12] PCI: tegra: Move PCIe driver to drivers/pci/host
+References: <1365000318-28256-1-git-send-email-thierry.reding@avionic-design.de> <1365000318-28256-8-git-send-email-thierry.reding@avionic-design.de> <516C46BC.2040707@wwwdotorg.org> <20130612122959.GA32444@manwe>
+In-Reply-To: <20130612122959.GA32444@manwe>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-2013/6/13 Jiang Liu <jiang.liu@huawei.com>:
-> Use new helper functions to simpilify ACPI dock, acpiphp code.
+On 06/12/2013 06:30 AM, Thierry Reding wrote:
+> On Mon, Apr 15, 2013 at 12:28:12PM -0600, Stephen Warren wrote:
+>> On 04/03/2013 08:45 AM, Thierry Reding wrote:
+>>> Move the PCIe driver from arch/arm/mach-tegra into the
+>>> drivers/pci/host directory. The motivation is to collect
+>>> various host controller drivers in the same location in order
+>>> to facilitate refactoring.
+>>> 
+>>> The Tegra PCIe driver has been largely rewritten, both in order
+>>> to turn it into a proper platform driver and to add MSI (based
+>>> on code by Krishna Kishore <kthota@nvidia.com>) as well as
+>>> device tree support.
+...
+>>> +static irqreturn_t tegra_pcie_msi_irq(int irq, void *data)
+>> ...
+>>> +	return IRQ_HANDLED;
+>> 
+>> Shouldn't this function return IRQ_NONE if no MSI status bits
+>> were found set?
+> 
+> The IRQ isn't marked IRQF_SHARED, so I don't think this is needed.
 
-Not tested yet, just looking at the code
+Isn't it still useful to detect unexpected/stuck interrupts?
 
-> -       /*
-> -        * TBD: _EJD support.
-> -        */
+>>> +static int tegra_pcie_enable(struct tegra_pcie *pcie)
+...
+>> 
+>> Why is that needed; when would a port get enabled if it was
+>> already enabled, and if it was already enabled, wouldn't you want
+>> this function to be a no-op rather than destroying everything and
+>> starting again?
+> 
+> I'm not sure I understand what you're saying. The intent of this 
+> function is to enable a port, check that there's a link and disable
+> the port otherwise. That way we don't keep ports around where
+> nothing is connected.
 
-You have removed this comment. Did it become invalid since it has been written?
+Hmm. I have no idea either now:-( The body of tegra_pcie_enable()
+looks fine.
 
--- 
-Alexander E. Patrakov
+>>> +static int tegra_pcie_probe(struct platform_device *pdev)
+>> ...
+>>> +	pcibios_min_mem = 0;
+>> 
+>> What does that mean/do? I wonder if that should be set to
+>> 0x80000000 by the Tegra30 patches?
+> 
+> ARM defines PCIBIOS_MIN_MEM to that variable. That macro in turn is
+> only used by pci_bus_alloc_resource() AFAICT, which uses it to
+> override the start of a resource when allocating if res->start ==
+> 0. As such it designates a lower-bound of valid PCI memory
+> addresses, so 0 on Tegra20 and 0x80000000 on Tegra30 don't seem
+> like good values. Maybe we need to set them to the lowest of the
+> prefetchable and non-prefetchable memory areas as defined in the
+> DT?
+> 
+> It doesn't currently seem to matter at all, though, since we never
+> pass in a range that's 0, so the start address of resources can
+> never be 0 and therefore PCIBIOS_MIN_MEM is never used.
+
+Hmmm. I guess ignore it then. If the value won't ever be used, 0 is as
+good a value as any?
