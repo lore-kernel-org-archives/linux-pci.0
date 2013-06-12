@@ -1,59 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:28411 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751534Ab3FRBDT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Jun 2013 21:03:19 -0400
-Message-ID: <51BFB1C9.8030900@huawei.com>
-Date: Tue, 18 Jun 2013 09:03:05 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from mail-qc0-f178.google.com ([209.85.216.178]:45432 "EHLO
+	mail-qc0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755021Ab3FLRGA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Jun 2013 13:06:00 -0400
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Tony Luck <tony.luck@gmail.com>, Yinghai Lu <yinghai@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>,
-	Fenghua Yu <fenghua.yu@intel.com>,
-	Hanjun Guo <guohanjun@huawei.com>,
-	Liu Jiang <jiang.liu@huawei.com>
-Subject: Re: [PATCH -v5 0/8] Add hostbridge resource release to support root
- bus hotplug in IA64
-References: <1370504093-14908-1-git-send-email-wangyijing@huawei.com> <20130615002224.GA21643@google.com> <51BE7AD5.5010300@huawei.com> <CA+8MBb+BSNnLtR8jZinTh9h01f3=Zeu+kX6xke1Ei08HYzRQvg@mail.gmail.com> <CAErSpo4PhY5gzdxK6NSRxOquuQMojnBX9wRm6Pb-uxq6t3i=-Q@mail.gmail.com>
-In-Reply-To: <CAErSpo4PhY5gzdxK6NSRxOquuQMojnBX9wRm6Pb-uxq6t3i=-Q@mail.gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+In-Reply-To: <CAN_LGv0-gGMhJr8U8=sc-93e_MKVpy9TxG1MRAugtBVJP+CTrg@mail.gmail.com>
+References: <1370951543-15841-1-git-send-email-jiang.liu@huawei.com>
+	<CAN_LGv1hrLnYkPHycyyd35ZipWWznXM_0cdj8Rnh1WxiTZL=4A@mail.gmail.com>
+	<51B7170E.2060608@gmail.com>
+	<CAN_LGv26adLa5RBhwhCfvALFx78j4HdvzVH1PaAuhvWXSeqyMw@mail.gmail.com>
+	<51B73BAB.3030406@gmail.com>
+	<CAN_LGv3iwgp_8dkt1ouCD-FFGau3h7L25ORUW2J-rz30_4ZYTA@mail.gmail.com>
+	<51B7E1C7.9030004@gmail.com>
+	<CAN_LGv0-gGMhJr8U8=sc-93e_MKVpy9TxG1MRAugtBVJP+CTrg@mail.gmail.com>
+Date: Wed, 12 Jun 2013 23:05:59 +0600
+Message-ID: <CAN_LGv3YnBUBA2OCWmZNEBJNtP4ziQH44h0LWbnio0cj=Xm_fQ@mail.gmail.com>
+Subject: Re: [PATCH] ACPIPHP: fix device destroying order issue in handling
+ dock notification
+From: "Alexander E. Patrakov" <patrakov@gmail.com>
+To: Jiang Liu <liuj97@gmail.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	linux-pci@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2013/6/18 7:10, Bjorn Helgaas wrote:
-> On Mon, Jun 17, 2013 at 4:57 PM, Tony Luck <tony.luck@gmail.com> wrote:
->> On Sun, Jun 16, 2013 at 7:56 PM, Yijing Wang <wangyijing@huawei.com> wrote:
->>>> Tony, what do you think about this?  It only touches ia64, and I
->>>> have no way to build or test it.  So maybe you should handle this?
->>>>
->>>> I haven't reviewed it, but I think it's the right general direction,
->>>> at least.
->>>>
->>> Bjorn, thanks for your comments!
->>>
->>> Hi Tony, this series mainly to make pci root bus hotplug happy in IA64.
->>> I cannot test the first two patch(SGI related) in my IA64 machine.
->>> But the rest patches has been tested in my ia64 machine, and result is ok.
+2013/6/12 Alexander E. Patrakov <patrakov@gmail.com>:
+> 2013/6/12 Jiang Liu <liuj97@gmail.com>:
+>> On Wed 12 Jun 2013 12:51:59 AM CST, Alexander E. Patrakov wrote:
+>>> In the initially-docked case, it exhibits the following problem: when
+>>> I press the undock button, only one PCI device disappears, and the
+>>> "docked" LED does not turn off. Additionally, there is a hung task.
+>> Hi Alexander,
+>>      In the initially-docked case, the failure is caused by an issue in
+>> the intel sound card driver. Seems something is wrong with reference
+>> count management and it never returns to zero on driver detach.
+>> Could you please help to disable the Intel sound card driver and try
+>> again?
 >>
->> I'd like to understand the dependencies on Bjorn's pci-next tree.  If
->> this series
->> actually only depends on Linus' v3.10-rc6 I'd rather start from there (because
->> then I don't need to coordinate "please-pull" messages when sending things
->> to Linus).  If we really do need things from the pci-next tree, well that's OK
->> too, but I'd still like to know what they are.
-> 
-> I don't think it depends on anything in my pci-next tree.  I just
-> applied Yijing's v5 series to v3.10-rc1 with no issues.
+>> I'm not familiar with Intel HDA driver,  so please help to fire another
+>> bug for it.
+>
+> Thanks for pointing the finger to snd-hda-intel. With that driver
+> blacklisted, the lspci output matches the expectations even after
+> undocking the initially-docked laptop. Redocking re-adds the devices,
+> too.
 
-Yes, that's right, thanks.
+> As for snd-hda-intel bug, I will file it later today and let you know.
 
-> 
-> 
+Actually, I debugged it further and want some input from you before
+filing. Here is the new information: the incomplete undocking and hung
+task does not appear if I test from a virtual console, not from an
+XFCE session. The obvious difference is that in the XFCE session some
+processes (the mixer applet and pulseaudio) keep the mixer device
+always open.
 
+I am not qualified enough to say what should happen if the user
+presses the undock button while a program has a to-be-undocked device
+open. Or, for that matter and for an analogy, if the user unplugs a
+USB sound card while it is playing.
 
--- 
-Thanks!
-Yijing
+And in my case, this is going to be an issue not only because of the
+snd-hda-intel driver. Xorg would sometimes keep the DRM node of the
+Radeon card (that is in the dock station) open in addition to the
+onboard Intel card.
 
+--
+Alexander E. Patrakov
