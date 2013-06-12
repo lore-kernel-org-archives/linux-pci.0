@@ -1,76 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f41.google.com ([209.85.160.41]:40214 "EHLO
-	mail-pb0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751693Ab3FFRMd (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Jun 2013 13:12:33 -0400
-Received: by mail-pb0-f41.google.com with SMTP id rp16so1310pbb.0
-        for <linux-pci@vger.kernel.org>; Thu, 06 Jun 2013 10:12:33 -0700 (PDT)
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org
-Subject: [PATCH 1/2] PCI: fix a double free issue in pci_create_root_bus() error recovery path
-Date: Fri,  7 Jun 2013 01:10:08 +0800
-Message-Id: <1370538609-28903-1-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <CAErSpo4AFxSqUfxbw60B8XVk3XxtYfRcLyWDy=yPb0fURV=BQg@mail.gmail.com>
-References: <CAErSpo4AFxSqUfxbw60B8XVk3XxtYfRcLyWDy=yPb0fURV=BQg@mail.gmail.com>
+Received: from mail-oa0-f41.google.com ([209.85.219.41]:39958 "EHLO
+	mail-oa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756198Ab3FLVy5 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Jun 2013 17:54:57 -0400
+Received: by mail-oa0-f41.google.com with SMTP id n10so3355506oag.28
+        for <linux-pci@vger.kernel.org>; Wed, 12 Jun 2013 14:54:57 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20130612172132.GG27284@hpx.cz>
+References: <20130612172132.GG27284@hpx.cz>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 12 Jun 2013 15:54:36 -0600
+Message-ID: <CAErSpo5XvTHFf+ZO0GAxKm0xk+fo9Hm_G6Ebz1UmMkLUi8CPyw@mail.gmail.com>
+Subject: Re: pcie aspm link setup, grandparent instead of parent?
+To: =?UTF-8?B?UmFkaW0gS3LEjW3DocWZ?= <rkrcmar@redhat.com>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Joe Lawrence <Joe.Lawrence@stratus.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On pci_create_root_bus() error recovery path, device_unregister(&bridge->dev)
-should have freed memory used by bridge, so we shouldn't call kfree(bridge)
-again, it's a double free.
+[+cc linux-pci, Myron, Joe]
 
-On the other hand, we should not use kfree() to free memory used by
-device object once we have invoked device_register() because it's
-reference-counted.
-
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Cc: stable@vger.kernel.org
----
-Hi Bjorn,
-	This is the patch to fix the kfree() issue, it may be a material
-for stable trees.
-Thanks!
-Gerry
----
- drivers/pci/probe.c | 14 ++++++++------
- 1 file changed, 8 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 8882b5d..2f81a0a 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1729,12 +1729,16 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 	bridge->dev.release = pci_release_bus_bridge_dev;
- 	dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
- 	error = pcibios_root_bridge_prepare(bridge);
--	if (error)
--		goto bridge_dev_reg_err;
-+	if (error) {
-+		kfree(bridge);
-+		goto err_out;
-+	}
- 
- 	error = device_register(&bridge->dev);
--	if (error)
--		goto bridge_dev_reg_err;
-+	if (error) {
-+		kfree(bridge);
-+		goto err_out;
-+	}
- 	b->bridge = get_device(&bridge->dev);
- 	device_enable_async_suspend(b->bridge);
- 	pci_set_bus_of_node(b);
-@@ -1790,8 +1794,6 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- class_dev_reg_err:
- 	put_device(&bridge->dev);
- 	device_unregister(&bridge->dev);
--bridge_dev_reg_err:
--	kfree(bridge);
- err_out:
- 	kfree(b);
- 	return NULL;
--- 
-1.8.1.2
-
+On Wed, Jun 12, 2013 at 11:21 AM, Radim Krčmář <rkrcmar@redhat.com> wrote:
+> Hello,
+>
+> as a consequence of hitting a NULL dereference bug[1] while downstream
+> aspm is setting up link_state, I started to wonder why is the code
+> skipping its parent bus in favour of grandparent's link_state.[2]
+>
+> Is this right? (I have no device to test on ...)
+>
+> Thanks.
+>
+> ---
+> 1: https://bugzilla.redhat.com/show_bug.cgi?id=972381
+>    The bug is hit because "pdev->bus->parent" has NULL "->parent" and thus
+>    NULL "->self".
+> 2: "pdev = bus->self", so "pdev->bus->parent == bus->parent->parent"
+>
+>
+> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+> index 403a443..d58e282 100644
+> --- a/drivers/pci/pcie/aspm.c
+> +++ b/drivers/pci/pcie/aspm.c
+> @@ -527,7 +527,7 @@ static struct pcie_link_state *alloc_pcie_link_state(struct pci_dev *pdev)
+>         link->pdev = pdev;
+>         if (pci_pcie_type(pdev) == PCI_EXP_TYPE_DOWNSTREAM) {
+>                 struct pcie_link_state *parent;
+> -               parent = pdev->bus->parent->self->link_state;
+> +               parent = pdev->bus->self->link_state;
+>                 if (!parent) {
+>                         kfree(link);
+>                         return NULL;
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
