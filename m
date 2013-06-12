@@ -1,158 +1,86 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f171.google.com ([209.85.223.171]:50513 "EHLO
-	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750924Ab3FVVji (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 22 Jun 2013 17:39:38 -0400
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <1409252.T5jEfLdPAg@vostro.rjw.lan>
-References: <2737587.I0nULev1kj@vostro.rjw.lan>
-	<1409252.T5jEfLdPAg@vostro.rjw.lan>
-Date: Sat, 22 Jun 2013 14:39:37 -0700
-Message-ID: <CAE9FiQUCovi1mMJrkbFBfr0em1B_gQKxYQSYha0d6-CpvMTAng@mail.gmail.com>
-Subject: Re: [PATCH 1/3] ACPI / dock: Initialize ACPI dock subsystem upfront
+In-Reply-To: <CAErSpo7Jni1ZSf_W=vB3kqsucPpoepa2Q5g=77a6D3FaPwe9LA@mail.gmail.com>
+References: <CAErSpo6v0mj9=Q13d=G4hho0mb9XTcsmefzke9fROYmZ7oBWxQ@mail.gmail.com>
+	<CAE9FiQU7cDzJdHxmqhJNgc9UCsRLgvCFQpv8+fLxD79pLEUC5A@mail.gmail.com>
+	<CAErSpo4ncW8rkcpDiccORZedj30m7jRmpXK+amfDGn_wjwt7EA@mail.gmail.com>
+	<CAE9FiQVqKag2TGah7x_1MAJ+c0UWgywgM_jKUoOnh+rq3bwBhg@mail.gmail.com>
+	<CAE9FiQVMgdj5edbR4qZny29fV9-bW_We_G4Wpn_yruDLQZiQiQ@mail.gmail.com>
+	<20130329032200.GA11990@google.com>
+	<CAE9FiQVu5QyxaKsYzzQoroQD=TvsziHzDOtoeg=FvhZ8HyN5yw@mail.gmail.com>
+	<CAErSpo7ChfRiEn0eR1rf-mVheUS9Yf8f+j4n78PJcGYh+yMVgA@mail.gmail.com>
+	<CAE9FiQXkDg7Y336S=DXoms44=5HLaiUx=sWviupz1fJmaDUEzQ@mail.gmail.com>
+	<CAE9FiQU5c=ztzbskNnYFFKF9V5zO+jnRcMBCivLxA1F3fSfX5w@mail.gmail.com>
+	<20130401235256.GA31966@google.com>
+	<CAE9FiQV8cPh-s6=EQu_cZTtn86+NwZE5KuGMhf43aOhzkL=hwA@mail.gmail.com>
+	<CAErSpo7Jni1ZSf_W=vB3kqsucPpoepa2Q5g=77a6D3FaPwe9LA@mail.gmail.com>
+Date: Tue, 11 Jun 2013 23:20:18 -0700
+Message-ID: <CAE9FiQWjQXwiTWju6cBc_o25jy_wmZ1u+Pifh1wdnxtV=i5ENw@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Remove not needed check in disable aspm link
 From: Yinghai Lu <yinghai@kernel.org>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Alexander E . Patrakov" <patrakov@gmail.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>,
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Jiang Liu <jiang.liu@huawei.com>
+Cc: Roman Yepishev <roman.yepishev@gmail.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Matthew Garrett <matthew.garrett@nebula.com>,
+	"e1000-devel@lists.sourceforge.net"
+	<e1000-devel@lists.sourceforge.net>
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Jun 22, 2013 at 2:21 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> From: Jiang Liu <jiang.liu@huawei.com>
+On Tue, Apr 2, 2013 at 1:10 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Mon, Apr 1, 2013 at 6:03 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>>> commit 96e5d01cd536458435ef0678d9fa3dc542afb41f
+>>> Author: Bjorn Helgaas <bhelgaas@google.com>
+>>> Date:   Mon Apr 1 15:47:39 2013 -0600
+>>>
+>>>     Revert "PCI/ACPI: Request _OSC control before scanning PCI root bus"
+>>>
+>>>     This reverts commit 8c33f51df406e1a1f7fa4e9b244845b7ebd61fa6.
+>>>
+>>>     Conflicts:
+>>>         drivers/acpi/pci_root.c
+>>>
+>>>     Reference: https://bugzilla.kernel.org/show_bug.cgi?id=55211
+>>>     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>>
+>> Acked-by: Yinghai Lu <yinghai@kernel.org>
+>>
+>> stable need this reverting too.
 >
-> Commit 3b63aaa70e1 (PCI: acpiphp: Do not use ACPI PCI subdriver
-> mechanism) introduced an ACPI dock support regression, because it
-> changed the relative initialization order of the ACPI dock subsystem
-> and the ACPI-based PCI hotplug (acpiphp).
->
-> Namely, the ACPI dock subsystem has to be initialized before
-> acpiphp_enumerate_slots() is first run, which after commit
-> 3b63aaa70e1 happens during the initial enumeration of the PCI
-> hierarchy triggered by the initial ACPI namespace scan in
-> acpi_scan_init().  For this reason, the dock subsystem has to be
-> initialized before the initial ACPI namespace scan in
-> acpi_scan_init().
->
-> To make that happen, modify the ACPI dock subsystem to be
-> non-modular and add the invocation of its initialization routine,
-> acpi_dock_init(), to acpi_scan_init() directly before the initial
-> namespace scan.
->
-> [rjw: Changelog, removal of dock_exit().]
-> References: https://bugzilla.kernel.org/show_bug.cgi?id=59501
-> Reported-and-tested-by: Alexander E. Patrakov <patrakov@gmail.com>
-> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-> Cc: 3.9+ <stable@vger.kernel.org>
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> ---
->  drivers/acpi/dock.c     |   42 +-----------------------------------------
->  drivers/acpi/internal.h |    5 +++++
->  drivers/acpi/scan.c     |    1 +
->  3 files changed, 7 insertions(+), 41 deletions(-)
->
-> Index: linux-pm/drivers/acpi/dock.c
-> ===================================================================
-> --- linux-pm.orig/drivers/acpi/dock.c
-> +++ linux-pm/drivers/acpi/dock.c
-> @@ -994,30 +994,6 @@ err_unregister:
->  }
->
->  /**
-> - * dock_remove - free up resources related to the dock station
-> - */
-> -static int dock_remove(struct dock_station *ds)
-> -{
-> -       struct dock_dependent_device *dd, *tmp;
-> -       struct platform_device *dock_device = ds->dock_device;
-> -
-> -       if (!dock_station_count)
-> -               return 0;
-> -
-> -       /* remove dependent devices */
-> -       list_for_each_entry_safe(dd, tmp, &ds->dependent_devices, list)
-> -               kfree(dd);
-> -
-> -       list_del(&ds->sibling);
-> -
-> -       /* cleanup sysfs */
-> -       sysfs_remove_group(&dock_device->dev.kobj, &dock_attribute_group);
-> -       platform_device_unregister(dock_device);
-> -
-> -       return 0;
-> -}
-> -
-> -/**
->   * find_dock_and_bay - look for dock stations and bays
->   * @handle: acpi handle of a device
->   * @lvl: unused
-> @@ -1035,7 +1011,7 @@ find_dock_and_bay(acpi_handle handle, u3
->         return AE_OK;
->  }
->
-> -static int __init dock_init(void)
-> +int __init acpi_dock_init(void)
->  {
->         if (acpi_disabled)
->                 return 0;
-> @@ -1054,19 +1030,3 @@ static int __init dock_init(void)
->                 ACPI_DOCK_DRIVER_DESCRIPTION, dock_station_count);
->         return 0;
->  }
-> -
-> -static void __exit dock_exit(void)
-> -{
-> -       struct dock_station *tmp, *dock_station;
-> -
-> -       unregister_acpi_bus_notifier(&dock_acpi_notifier);
-> -       list_for_each_entry_safe(dock_station, tmp, &dock_stations, sibling)
-> -               dock_remove(dock_station);
-> -}
-> -
-> -/*
-> - * Must be called before drivers of devices in dock, otherwise we can't know
-> - * which devices are in a dock
-> - */
-> -subsys_initcall(dock_init);
-> -module_exit(dock_exit);
+> I updated the changelog and added this to my for-linus branch, headed for v3.9.
 
-Finally that weird pair is gone.
+We may need to revert this reverting for 3.10.
 
-Acked-by: Yinghai Lu <yinghai@kernel.org>
+Today noticed that acpiphp jump in before pciehp on one setup.
 
-> Index: linux-pm/drivers/acpi/internal.h
-> ===================================================================
-> --- linux-pm.orig/drivers/acpi/internal.h
-> +++ linux-pm/drivers/acpi/internal.h
-> @@ -41,6 +41,11 @@ void acpi_container_init(void);
->  #else
->  static inline void acpi_container_init(void) {}
->  #endif
-> +#ifdef CONFIG_ACPI_DOCK
-> +void acpi_dock_init(void);
-> +#else
-> +static inline void acpi_dock_init(void) {}
-> +#endif
->  #ifdef CONFIG_ACPI_HOTPLUG_MEMORY
->  void acpi_memory_hotplug_init(void);
->  #else
-> Index: linux-pm/drivers/acpi/scan.c
-> ===================================================================
-> --- linux-pm.orig/drivers/acpi/scan.c
-> +++ linux-pm/drivers/acpi/scan.c
-> @@ -2134,6 +2134,7 @@ int __init acpi_scan_init(void)
->         acpi_cmos_rtc_init();
->         acpi_container_init();
->         acpi_memory_hotplug_init();
-> +       acpi_dock_init();
->
->         mutex_lock(&acpi_scan_lock);
->         /*
->
+current code from acpi_pci_root_add we have
+  1. pci_acpi_scan_root
+         ==> pci devices enumeration and bus scanning.
+             ==> pci_alloc_child_bus
+                 ==> pcibios_add_bus
+                     ==> acpi_pci_add_bus
+                         ==> acpiphp_enumerate_slots
+                             ==> ...==> register_slot
+                                  ==> device_is_managed_by_native_pciehp
+                                        ==> check osc_set with
+OSC_PCI_EXPRESS_NATIVE_HP_CONTROL
+   2. _OSC set request
+
+so we always have acpiphp hotplug slot registered at first.
+
+so either we need to
+A. revert reverting about _OSC
+B. move pcibios_add_bus down to pci_bus_add_devices()
+    as acpiphp and apci pci slot driver are some kind of drivers for pci_bus
+C. A+B
+
+Thanks
+
+Yinghai
