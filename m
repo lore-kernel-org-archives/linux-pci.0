@@ -1,63 +1,96 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f176.google.com ([209.85.214.176]:52096 "EHLO
-	mail-ob0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751907Ab3FZVqZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Jun 2013 17:46:25 -0400
-Received: by mail-ob0-f176.google.com with SMTP id v19so13935055obq.35
-        for <linux-pci@vger.kernel.org>; Wed, 26 Jun 2013 14:46:24 -0700 (PDT)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <51CB5D84.4080709@zytor.com>
-References: <cover.1372211451.git.dvhart@linux.intel.com> <83879b07cd4ce95f086420d1faa926c1692d63b4.1372211451.git.dvhart@linux.intel.com>
- <20130626163250.GA29299@google.com> <1372266904.8177.83.camel@envy.home>
- <CAErSpo6=1i76RRmJSUi+BpD9D0WrXaML4HkGLn0C=+6=ohB0uQ@mail.gmail.com> <51CB5D84.4080709@zytor.com>
+In-Reply-To: <CAE9FiQWjQXwiTWju6cBc_o25jy_wmZ1u+Pifh1wdnxtV=i5ENw@mail.gmail.com>
+References: <CAErSpo6v0mj9=Q13d=G4hho0mb9XTcsmefzke9fROYmZ7oBWxQ@mail.gmail.com>
+ <CAE9FiQU7cDzJdHxmqhJNgc9UCsRLgvCFQpv8+fLxD79pLEUC5A@mail.gmail.com>
+ <CAErSpo4ncW8rkcpDiccORZedj30m7jRmpXK+amfDGn_wjwt7EA@mail.gmail.com>
+ <CAE9FiQVqKag2TGah7x_1MAJ+c0UWgywgM_jKUoOnh+rq3bwBhg@mail.gmail.com>
+ <CAE9FiQVMgdj5edbR4qZny29fV9-bW_We_G4Wpn_yruDLQZiQiQ@mail.gmail.com>
+ <20130329032200.GA11990@google.com> <CAE9FiQVu5QyxaKsYzzQoroQD=TvsziHzDOtoeg=FvhZ8HyN5yw@mail.gmail.com>
+ <CAErSpo7ChfRiEn0eR1rf-mVheUS9Yf8f+j4n78PJcGYh+yMVgA@mail.gmail.com>
+ <CAE9FiQXkDg7Y336S=DXoms44=5HLaiUx=sWviupz1fJmaDUEzQ@mail.gmail.com>
+ <CAE9FiQU5c=ztzbskNnYFFKF9V5zO+jnRcMBCivLxA1F3fSfX5w@mail.gmail.com>
+ <20130401235256.GA31966@google.com> <CAE9FiQV8cPh-s6=EQu_cZTtn86+NwZE5KuGMhf43aOhzkL=hwA@mail.gmail.com>
+ <CAErSpo7Jni1ZSf_W=vB3kqsucPpoepa2Q5g=77a6D3FaPwe9LA@mail.gmail.com> <CAE9FiQWjQXwiTWju6cBc_o25jy_wmZ1u+Pifh1wdnxtV=i5ENw@mail.gmail.com>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 26 Jun 2013 15:46:04 -0600
-Message-ID: <CAErSpo6Dss9hj33QRP-Leob05WT-uN-MWUAZBfh+VDtUvCWNkA@mail.gmail.com>
-Subject: Re: [PATCH 7/8] pci: Add CircuitCo VENDOR ID and MinnowBoard DEVICE ID
-To: "H. Peter Anvin" <hpa@zytor.com>
-Cc: Darren Hart <dvhart@linux.intel.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Peter P Waskiewicz Jr <peter.p.waskiewicz.jr@intel.com>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	danders@circuitco.com, vishal.l.verma@intel.com,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Date: Wed, 12 Jun 2013 11:05:04 -0600
+Message-ID: <CAErSpo7=a-wX6BLbm_O1nUMMrQHOgtSm3xZHKuRqaz8rnKSbRA@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Remove not needed check in disable aspm link
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	Roman Yepishev <roman.yepishev@gmail.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Matthew Garrett <matthew.garrett@nebula.com>,
+	"e1000-devel@lists.sourceforge.net"
+	<e1000-devel@lists.sourceforge.net>
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 26, 2013 at 3:30 PM, H. Peter Anvin <hpa@zytor.com> wrote:
-> On 06/26/2013 12:37 PM, Bjorn Helgaas wrote:
+On Wed, Jun 12, 2013 at 12:20 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Tue, Apr 2, 2013 at 1:10 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> On Mon, Apr 1, 2013 at 6:03 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>>>> commit 96e5d01cd536458435ef0678d9fa3dc542afb41f
+>>>> Author: Bjorn Helgaas <bhelgaas@google.com>
+>>>> Date:   Mon Apr 1 15:47:39 2013 -0600
+>>>>
+>>>>     Revert "PCI/ACPI: Request _OSC control before scanning PCI root bus"
+>>>>
+>>>>     This reverts commit 8c33f51df406e1a1f7fa4e9b244845b7ebd61fa6.
+>>>>
+>>>>     Conflicts:
+>>>>         drivers/acpi/pci_root.c
+>>>>
+>>>>     Reference: https://bugzilla.kernel.org/show_bug.cgi?id=55211
+>>>>     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>>>
+>>> Acked-by: Yinghai Lu <yinghai@kernel.org>
+>>>
+>>> stable need this reverting too.
 >>
->> Yeah, that's what I was thinking.
->>
->> But Peter's comment makes more sense to me now.  The spec refers to
->> that config register as "Subsystem ID," not "Subsystem Device ID," but
->> I was confused because most existing usage treats it as a device ID.
->> For example, the field in struct pci_device_id is named "subdevice,"
->> and all the existing #defines in pci_ids.h are of the form
->> PCI_SUBDEVICE_ID_*.
->>
->> Device IDs are pretty specific identifiers, so I was thinking that a
->> "sub-device ID" would be even more specific.  Then it would make no
->> sense to have a "sub-device ID" that was as generic as "MINNOWBOARD."
->> But the register is actually *not* a "sub-device ID," and I can see
->> that using the same Subsystem ID for all the devices on a board might
->> make sense.
->>
+>> I updated the changelog and added this to my for-linus branch, headed for v3.9.
 >
-> Subsystem IDs is basically a board ID in the traditional PC view, but
-> they didn't call it that because it would have been confusing in other,
-> nontraditional configurations.
+> We may need to revert this reverting for 3.10.
 >
-> Microsoft has a "best practices" document, which may end up becoming
-> basis for a future PCI-SIG document clarifying the standard:
+> Today noticed that acpiphp jump in before pciehp on one setup.
 >
-> http://msdn.microsoft.com/en-us/library/windows/hardware/gg463287.aspx
+> current code from acpi_pci_root_add we have
+>   1. pci_acpi_scan_root
+>          ==> pci devices enumeration and bus scanning.
+>              ==> pci_alloc_child_bus
+>                  ==> pcibios_add_bus
+>                      ==> acpi_pci_add_bus
+>                          ==> acpiphp_enumerate_slots
+>                              ==> ...==> register_slot
+>                                   ==> device_is_managed_by_native_pciehp
+>                                         ==> check osc_set with
+> OSC_PCI_EXPRESS_NATIVE_HP_CONTROL
+>    2. _OSC set request
+>
+> so we always have acpiphp hotplug slot registered at first.
+>
+> so either we need to
+> A. revert reverting about _OSC
+> B. move pcibios_add_bus down to pci_bus_add_devices()
+>     as acpiphp and apci pci slot driver are some kind of drivers for pci_bus
+> C. A+B
 
-Interesting, thanks for the link.  If I read that correctly, the
-MinnowBoard is basically a motherboard, and any board layout change or
-component value change will require a new Subsystem ID, which will in
-turn require a pch_gbe update.  That doesn't sound optimal, but maybe
-people don't actually interpret it that strictly.
+It doesn't surprise me at all that there are problems in the _OSC code
+and the acpiphp/pciehp interaction.  That whole area is a complete
+disaster.  It'd really be nice if somebody stepped up and reworked it
+so it makes sense.
+
+But this report is useless to me.  I don't have time to work out what
+the problem is and how it affects users and come up with a fix.
+
+My advice is to simplify the path first, and worry about fixing the
+bug afterwards.  We've already done several iterations of fiddling
+with things, and I think all we're doing is playing "whack-a-mole" and
+pushing the bugs around from one place to another.
 
 Bjorn
