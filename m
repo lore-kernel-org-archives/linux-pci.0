@@ -1,134 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f179.google.com ([209.85.192.179]:54347 "EHLO
-	mail-pd0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752307Ab3FKLyx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Jun 2013 07:54:53 -0400
-From: Jiang Liu <liuj97@gmail.com>
-To: "Alexander E . Patrakov" <patrakov@gmail.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] ACPIPHP: fix device destroying order issue in handling dock notification
-Date: Tue, 11 Jun 2013 19:52:23 +0800
-Message-Id: <1370951543-15841-1-git-send-email-jiang.liu@huawei.com>
+Received: from hqemgate03.nvidia.com ([216.228.121.140]:8544 "EHLO
+	hqemgate03.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750851Ab3FLHMI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Jun 2013 03:12:08 -0400
+From: Jay Agarwal <jagarwal@nvidia.com>
+To: 'Mike Turquette' <mturquette@linaro.org>,
+	Stephen Warren <swarren@wwwdotorg.org>
+CC: "linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
+	"thierry.reding@avionic-design.de" <thierry.reding@avionic-design.de>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	Laxman Dewangan <ldewangan@nvidia.com>,
+	"olof@lixom.net" <olof@lixom.net>, Hiroshi Doyu <hdoyu@nvidia.com>,
+	Prashant Gaikwad <pgaikwad@nvidia.com>,
+	Peter De Schrijver <pdeschrijver@nvidia.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Juha Tukkinen <jtukkinen@nvidia.com>,
+	Krishna Thota <kthota@nvidia.com>
+Date: Wed, 12 Jun 2013 12:41:38 +0530
+Subject: RE: [PATCH V3 1/4] ARM: tegra30: clocks: Fix pciex clock
+ registration
+Message-ID: <C79B248886DD134989C8FF6B096A91AB91CF1615C6@BGMAIL01.nvidia.com>
+References: <1370372252-4332-1-git-send-email-jagarwal@nvidia.com>
+ <51AE3B18.9010604@wwwdotorg.org> <20130611221709.8816.15602@quantum>
+In-Reply-To: <20130611221709.8816.15602@quantum>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Current ACPI glue logic expects that physical devices are destroyed
-before destroying companion ACPI devices, otherwise it will break the
-ACPI unbind logic and cause following warning messages:
-[  185.026073] usb usb5: Oops, 'acpi_handle' corrupt
-[  185.035150] pci 0000:1b:00.0: Oops, 'acpi_handle' corrupt
-[  185.035515] pci 0000:18:02.0: Oops, 'acpi_handle' corrupt
-[  180.013656]  port1: Oops, 'acpi_handle' corrupt
-Please refer to https://bugzilla.kernel.org/attachment.cgi?id=104321
-for full log message.
-
-Above warning messages are caused by following scenario:
-1) acpi_dock_notifier_call() queues a task (T1) onto kacpi_hotplug_wq
-2) kacpi_hotplug_wq handles T1, which invokes acpi_dock_deferred_cb()
-   ->dock_notify()-> handle_eject_request()->hotplug_dock_devices()
-3) hotplug_dock_devices() first invokes registered hotplug callbacks to
-   destroy physical devices, then destroys all affected ACPI devices.
-   Everything seems perfect until now. But the acpiphp dock notification
-   handler will queue another task (T2) onto kacpi_hotplug_wq to really
-   destroy affected physical devices.
-4) kacpi_hotplug_wq finishes T1, and all affected ACPI devices have
-   been destroyed.
-5) kacpi_hotplug_wq handles T2, which destroys all affected physical
-   devices.
-
-So it breaks the ACPI glue expection because ACPI devices are destroyed
-in step 3 and physical devices are destroyed in step 5.
-
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Cc: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
----
-Hi all,
-   We are trying to solve bug https://bugzilla.kernel.org/show_bug.cgi?id=59501
-And seems there are multiple bugs behind bug 59501. This draft patch tries to
-fix one of those issues. I will send out form patchset once all issue have been
-resolved.
-
-Regards!
-Gerry
----
- drivers/pci/hotplug/acpiphp_glue.c | 31 +++++++++++++++++++------------
- 1 file changed, 19 insertions(+), 12 deletions(-)
-
-diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-index 716aa93..b132aca 100644
---- a/drivers/pci/hotplug/acpiphp_glue.c
-+++ b/drivers/pci/hotplug/acpiphp_glue.c
-@@ -61,7 +61,10 @@ static DEFINE_MUTEX(bridge_mutex);
- static void handle_hotplug_event_bridge (acpi_handle, u32, void *);
- static void acpiphp_sanitize_bus(struct pci_bus *bus);
- static void acpiphp_set_hpp_values(struct pci_bus *bus);
--static void handle_hotplug_event_func(acpi_handle handle, u32 type, void *context);
-+static void __handle_hotplug_event_func(acpi_handle handle, u32 type,
-+					void *context);
-+static void handle_hotplug_event_func(acpi_handle handle, u32 type,
-+				      void *context);
- static void free_bridge(struct kref *kref);
- 
- /* callback routine to check for the existence of a pci dock device */
-@@ -147,7 +150,7 @@ static int post_dock_fixups(struct notifier_block *nb, unsigned long val,
- 
- 
- static const struct acpi_dock_ops acpiphp_dock_ops = {
--	.handler = handle_hotplug_event_func,
-+	.handler = __handle_hotplug_event_func,
- };
- 
- /* Check whether the PCI device is managed by native PCIe hotplug driver */
-@@ -1065,20 +1068,13 @@ static void handle_hotplug_event_bridge(acpi_handle handle, u32 type,
- 	alloc_acpi_hp_work(handle, type, context, _handle_hotplug_event_bridge);
- }
- 
--static void _handle_hotplug_event_func(struct work_struct *work)
-+static void __handle_hotplug_event_func(acpi_handle handle, u32 type,
-+					void *context)
- {
--	struct acpiphp_func *func;
-+	struct acpiphp_func *func = context;
- 	char objname[64];
- 	struct acpi_buffer buffer = { .length = sizeof(objname),
- 				      .pointer = objname };
--	struct acpi_hp_work *hp_work;
--	acpi_handle handle;
--	u32 type;
--
--	hp_work = container_of(work, struct acpi_hp_work, work);
--	handle = hp_work->handle;
--	type = hp_work->type;
--	func = (struct acpiphp_func *)hp_work->context;
- 
- 	acpi_scan_lock_acquire();
- 
-@@ -1115,6 +1111,17 @@ static void _handle_hotplug_event_func(struct work_struct *work)
- 	}
- 
- 	acpi_scan_lock_release();
-+}
-+
-+static void _handle_hotplug_event_func(struct work_struct *work)
-+{
-+	struct acpiphp_func *func;
-+	struct acpi_hp_work *hp_work;
-+
-+	hp_work = container_of(work, struct acpi_hp_work, work);
-+	func = (struct acpiphp_func *)hp_work->context;
-+	__handle_hotplug_event_func(hp_work->handle, hp_work->type,
-+				    hp_work->context);
- 	kfree(hp_work); /* allocated in handle_hotplug_event_func */
- 	put_bridge(func->slot->bridge);
- }
--- 
-1.8.1.2
-
+PiBRdW90aW5nIFN0ZXBoZW4gV2FycmVuICgyMDEzLTA2LTA0IDEyOjA4OjA4KQ0KPiA+IE9uIDA2
+LzA0LzIwMTMgMTI6NTcgUE0sIEpheSBBZ2Fyd2FsIHdyb3RlOg0KPiA+ID4gUmVnaXN0ZXJpbmcg
+cGNpZXggYXMgcGVyaXBoZXJhbCBjbG9jayBpbnN0ZWFkIG9mIGZpeGVkIGNsb2NrIGFzDQo+ID4g
+PiB0ZWdyYV9wZXJpaF9yZXNldF9hc3NlcnQoZGVhc3NlcnQpIGFwaSBvZiB0aGlzIGNsb2NrIGFw
+aSBnaXZlcw0KPiA+ID4gd2FybmluZyBhbmQgdWx0aW1hdGVseSBkb2VzIG5vdCBzdWNjZWVkIHRv
+IGFzc2VydChkZWFzc2VydCkuDQo+ID4gPg0KPiA+ID4gU2lnbmVkLW9mZi1ieTogSmF5IEFnYXJ3
+YWwgPGphZ2Fyd2FsQG52aWRpYS5jb20+DQo+ID4gPiAtLS0NCj4gPiA+IFBhdGNoIGlzIGJhc2Vk
+IG9uIHJlbW90ZXMvZ2l0b3Jpb3VzX3RoaWVycnlyZWRpbmdfbGludXgvdGVncmEvbmV4dCBhbmQN
+Cj4gc2hvdWxkIGJlIGFwcGxpZWQgb24gdG9wIG9mIHRoaXMuDQo+ID4NCj4gPiBGb3IgdGhpcyBj
+aGFuZ2UsIE1pa2UgbWF5IGFzIHdlbGwgYXBwbHkgaXQgZGlyZWN0bHkgdG8gdGhlIGNsb2NrIHRy
+ZWUuDQo+ID4gVGhpZXJyeSBjYW4gdGhlbiBwaWNrIGl0IHVwIHdoZW4gaGUgcmViYXNlcyBoaXMg
+dGVncmEvbmV4dCB0cmVlLg0KPiA+DQo+ID4gVGhhdCBzYWlkLCBJIGRvbid0IHRoaW5rIHlvdSBz
+aG91bGQgbmVlZCBhbnkgb2YgdGhlDQo+ID4gVEVHUkFfQ0xLX0RVUExJQ0FURSgpIGVudHJpZXM7
+IHRoZSBQQ0llIGRyaXZlciBzaG91bGQgZ2V0IGl0cyBjbG9ja3MNCj4gPiBmcm9tIGRldmljZSB0
+cmVlIG5vdywgYW5kIGhlbmNlIHRoZSBkcml2ZXIgbmFtZSBpbiB0aGUgY2xvY2sNCj4gPiByZWdp
+c3RyYXRpb24gc2hvdWxkbid0IGJlIG5lY2Vzc2FyeS4gQWxsIG9mIHRoZXNlDQo+ID4gVEVHUkFf
+Q0xLX0RVUExJQ0FURSgpIGVudHJpZXMgc2hvdWxkIGJlIHJlbW92ZWQgZW4gbWFzcyBzb21ldGlt
+ZQ0KPiBzb29uDQo+ID4gd2l0aCBsdWNrLiBTbywgY2FuIHlvdSBzaW1wbHkgbGVhdmUgdGhlIHR3
+byBURUdSQV9DTEtfRFVQTElDQVRFKCkNCj4gPiBlbnRyaWVzIHVudG91Y2hlZCwgcmF0aGVyIHRo
+YW4gY2hhbmdpbmcgdGhlbT8NCj4gDQo+IFBpbmcgb24gdGhpcyBwYXRjaC4gIEkgY2FuIHRha2Ug
+aXQgdGhyb3VnaCBteSB0cmVlLCBidXQgaXMgdGhlcmUgZ29pbmcgdG8gYmUNCj4gcmV3b3JrIGJh
+c2VkIG9uIFN0ZXBoZW4ncyBjb21tZW50cz8NCg0KSGkgTWlrZSwNCkkgaGF2ZSB1cGxvYWRlZCBu
+ZXh0IHZlcnNpb24gVjQgb2YgdGhpcyBwYXRjaCBhZnRlciB0YWtpbmcgY2FyZSBvZiB0aGlzIGNv
+bW1lbnQuDQo=
