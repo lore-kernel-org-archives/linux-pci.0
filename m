@@ -1,196 +1,116 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from Chamillionaire.breakpoint.cc ([80.244.247.6]:54416 "EHLO
-	Chamillionaire.breakpoint.cc" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751562Ab3FITN5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 9 Jun 2013 15:13:57 -0400
-Date: Sun, 9 Jun 2013 21:13:40 +0200
-From: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Joerg Roedel <joro@8bytes.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-Subject: Re: [PATCH v3 11/27] x86, irq: Add realloc_irq_and_cfg_at()
-Message-ID: <20130609191339.GG2245@breakpoint.cc>
-References: <1370644273-10495-1-git-send-email-yinghai@kernel.org>
- <1370644273-10495-12-git-send-email-yinghai@kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1370644273-10495-12-git-send-email-yinghai@kernel.org>
+Received: from mailout1.samsung.com ([203.254.224.24]:30959 "EHLO
+	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756322Ab3FLKUD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Jun 2013 06:20:03 -0400
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Kukjin Kim' <kgene.kim@samsung.com>,
+	'Bjorn Helgaas' <bhelgaas@google.com>
+Cc: linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org,
+	devicetree-discuss@lists.ozlabs.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	'Grant Likely' <grant.likely@secretlab.ca>,
+	'Andrew Murray' <andrew.murray@arm.com>,
+	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
+	'Thierry Reding' <thierry.reding@avionic-design.de>,
+	'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>,
+	'Arnd Bergmann' <arnd@arndb.de>,
+	'Surendranath Gurivireddy Balla' <suren.reddy@samsung.com>,
+	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
+	'Thomas Abraham' <thomas.abraham@linaro.org>,
+	Jingoo Han <jg1.han@samsung.com>
+Subject: [PATCH V4 3/3] ARM: dts: Add pcie controller node for Samsung
+ EXYNOS5440 SoC
+Date: Wed, 12 Jun 2013 19:20:00 +0900
+Message-id: <003801ce6756$6578ff80$306afe80$@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 07, 2013 at 03:30:57PM -0700, Yinghai Lu wrote:
-> For ioapic hot-add support, it would be easy if we put all irqs
-> for that ioapic controller together.
-> 
-> We can reserve irq range at first, then reallocate those
-> pre-reserved one when it is needed.
-> 
-> Add realloc_irq_and_cfg_at() to really allocate irq_desc and cfg,
-> because pre-reserved only mark bits in allocate_irqs bit maps.
-> 
-> The reasons for not allocating them during reserving:
-> 1. only several pins in ioapic are used, allocate for all pins, will
->    waste memory for not used pins.
-> 2. relocate later could make sure irq_desc is allocated on local node ram.
->    as dev->node is set at that point.
-> 
-> -v2: update changelog by adding reasons, requested by Konrad.
+Exynos5440 has two PCIe controllers which can be used as root complex
+for PCIe interface.
 
-I think it will be better to split out the gen irq changes out of x86 / apic
-specific code. 
+Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+---
+Tested on Exynos5440.
 
-I don't what to say. You are worried about the extra unused memory in case
-of irq_desc right? The OF code has more or less the same problem. They use
-irq_of_parse_and_map() / irq_create_mapping() to create a mapping between
-virq (the linux number) and hw-irq (pin on the irq chip). This mapping is
-created once the irq chip is detected. They don't care about virqs (aka 
-linux numbers) to be in a row and they allocate all of irqdesc at once.
+Changes since v3:
+- Removed 'bus-range' property from DT
+- Added 'interrupt-map-mask', 'interrupt-map' properties to DT
+- Fixed the start address of MEM space in DT
+- Increased the size of I/O space to 64kB in DT
+- Added 'clocks', 'clock-names' properties to DT
 
-Once you get irqdomain to be used within ioapic, then your "linux irq
-number" vs "hw irq number" should disapper. Plus you can remove the whole
-gsi_number thingy. And then you start working on getting irqdesc allocated
-later, say at request_irq() time and free at free_irq().
+ arch/arm/boot/dts/exynos5440-ssdk5440.dts |    8 ++++++
+ arch/arm/boot/dts/exynos5440.dtsi         |   38 +++++++++++++++++++++++++++++
+ 2 files changed, 46 insertions(+)
 
-However I am not sure if this is worth it. The advantage would be that you
-would once one infrastcuture for linux-number vs hw-number mapping and the
-delayed irqdesc allocate + numa node rellocating.
+diff --git a/arch/arm/boot/dts/exynos5440-ssdk5440.dts b/arch/arm/boot/dts/exynos5440-ssdk5440.dts
+index d55042b..efe7d39 100644
+--- a/arch/arm/boot/dts/exynos5440-ssdk5440.dts
++++ b/arch/arm/boot/dts/exynos5440-ssdk5440.dts
+@@ -30,4 +30,12 @@
+ 			clock-frequency = <50000000>;
+ 		};
+ 	};
++
++	pcie0@40000000 {
++		reset-gpio = <5>;
++	};
++
++	pcie1@60000000 {
++		reset-gpio = <22>;
++	};
+ };
+diff --git a/arch/arm/boot/dts/exynos5440.dtsi b/arch/arm/boot/dts/exynos5440.dtsi
+index f6b1c89..2c15f9d 100644
+--- a/arch/arm/boot/dts/exynos5440.dtsi
++++ b/arch/arm/boot/dts/exynos5440.dtsi
+@@ -216,4 +216,42 @@
+ 		clock-names = "rtc";
+ 		status = "disabled";
+ 	};
++
++	pcie0@0x290000 {
++		compatible = "samsung,exynos5440-pcie";
++		reg = <0x290000 0x1000
++			0x270000 0x1000
++			0x271000 0x40>;
++		interrupts = <0 20 0>, <0 21 0>, <0 22 0>;
++		clocks = <&clock 28>, <&clock 27>;
++		clock-names = "pcie", "pcie_bus";
++		#address-cells = <3>;
++		#size-cells = <2>;
++		device_type = "pci";
++		ranges = <0x00000800 0 0x40000000 0x40000000 0 0x00200000   /* configuration space */
++			  0x81000000 0 0	  0x40200000 0 0x00010000   /* downstream I/O */
++			  0x82000000 0 0x40210000 0x40210000 0 0x10000000>; /* non-prefetchable memory */
++		#interrupt-cells = <1>;
++		interrupt-map-mask = <0 0 0 0>;
++		interrupt-map = <0x0 0 &gic 53>;
++	};
++
++	pcie1@2a0000 {
++		compatible = "samsung,exynos5440-pcie";
++		reg = <0x2a0000 0x1000
++			0x272000 0x1000
++			0x271040 0x40>;
++		interrupts = <0 23 0>, <0 24 0>, <0 25 0>;
++		clocks = <&clock 29>, <&clock 27>;
++		clock-names = "pcie", "pcie_bus";
++		#address-cells = <3>;
++		#size-cells = <2>;
++		device_type = "pci";
++		ranges = <0x00000800 0 0x60000000 0x60000000 0 0x00200000   /* configuration space */
++			  0x81000000 0 0	  0x60200000 0 0x00010000   /* downstream I/O */
++			  0x82000000 0 0x60210000 0x60210000 0 0x10000000>; /* non-prefetchable memory */
++		#interrupt-cells = <1>;
++		interrupt-map-mask = <0 0 0 0>;
++		interrupt-map = <0x0 0 &gic 56>;
++	};
+ };
+-- 
+1.7.10.4
 
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> Cc: Joerg Roedel <joro@8bytes.org>
-> Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-> Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-> ---
->  arch/x86/kernel/apic/io_apic.c | 32 +++++++++++++++++++++++++++++++-
->  include/linux/irq.h            |  5 +++++
->  kernel/irq/irqdesc.c           | 26 ++++++++++++++++++++++++++
->  3 files changed, 62 insertions(+), 1 deletion(-)
-> 
-> diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-> index 670c538..a157a56 100644
-> --- a/arch/x86/kernel/apic/io_apic.c
-> +++ b/arch/x86/kernel/apic/io_apic.c
-> @@ -301,6 +301,36 @@ static void free_irq_at(unsigned int at, struct irq_cfg *cfg)
->  	irq_free_desc(at);
->  }
->  
-> +static struct irq_cfg *realloc_irq_and_cfg_at(unsigned int at, int node)
-> +{
-> +	struct irq_desc *desc = irq_to_desc(at);
-> +	struct irq_cfg *cfg;
-> +	int res;
-> +
-> +	if (desc) {
-> +		if (irq_desc_get_irq_data(desc)->node == node)
-> +			return alloc_irq_and_cfg_at(at, node);
-> +
-> +		cfg = irq_desc_get_chip_data(desc);
-> +		if (cfg) {
-> +			/* shared irq */
-> +			if (!list_empty(&cfg->irq_2_pin))
-> +				return cfg;
-> +			free_irq_cfg(at, cfg);
-> +		}
-> +	}
-> +
-> +	res = irq_realloc_desc_at(at, node);
-> +	if (res >= 0) {
-> +		cfg = alloc_irq_cfg(at, node);
-> +		if (cfg) {
-> +			irq_set_chip_data(at, cfg);
-> +			return cfg;
-> +		}
-> +	}
 
-This looks somehow hackish. If irqdesc exists on another node then it
-looks here like you overwrite it with a new one but __irq_realloc_desc()
-deallocates the old one. As I said, this looks very hackish.
-
-> +
-> +	return alloc_irq_and_cfg_at(at, node);
-> +}
->  
->  struct io_apic {
->  	unsigned int index;
-> @@ -3352,7 +3382,7 @@ int arch_setup_ht_irq(unsigned int irq, struct pci_dev *dev)
->  static int
->  io_apic_setup_irq_pin(unsigned int irq, int node, struct io_apic_irq_attr *attr)
->  {
-> -	struct irq_cfg *cfg = alloc_irq_and_cfg_at(irq, node);
-> +	struct irq_cfg *cfg = realloc_irq_and_cfg_at(irq, node);
->  	int ret;
->  
->  	if (!cfg)
-> diff --git a/include/linux/irq.h b/include/linux/irq.h
-> index 4e0fcbb..9c6c047 100644
-> --- a/include/linux/irq.h
-> +++ b/include/linux/irq.h
-> @@ -602,6 +602,11 @@ void irq_free_descs(unsigned int irq, unsigned int cnt);
->  int irq_reserve_irqs(unsigned int from, unsigned int cnt);
->  int __irq_reserve_irqs(int irq, unsigned int from, unsigned int cnt);
->  
-> +int __irq_realloc_desc(int at, int node, struct module *owner);
-> +/* use macros to avoid needing export.h for THIS_MODULE */
-If you put this in line with the other functions, you wouldn't need to
-copy the comment.
-
-> +#define irq_realloc_desc_at(at, node)	\
-> +	__irq_realloc_desc(at, node, THIS_MODULE)
-> +
->  static inline void irq_free_desc(unsigned int irq)
->  {
->  	irq_free_descs(irq, 1);
-> diff --git a/kernel/irq/irqdesc.c b/kernel/irq/irqdesc.c
-> index 3b9fb92..b48f65b 100644
-> --- a/kernel/irq/irqdesc.c
-> +++ b/kernel/irq/irqdesc.c
-> @@ -99,6 +99,11 @@ EXPORT_SYMBOL_GPL(nr_irqs);
->  static DEFINE_MUTEX(sparse_irq_lock);
->  static DECLARE_BITMAP(allocated_irqs, IRQ_BITMAP_BITS);
->  
-> +static bool __irq_is_reserved(int irq)
-> +{
-> +	return !!test_bit(irq, allocated_irqs);
-
-This is not reserved, this is allocated.
-
-> +}
-> +
->  #ifdef CONFIG_SPARSE_IRQ
->  
->  static RADIX_TREE(irq_desc_tree, GFP_KERNEL);
-> @@ -410,6 +415,27 @@ __irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
->  EXPORT_SYMBOL_GPL(__irq_alloc_descs);
->  
->  /**
-> + * irq_realloc_desc - allocate irq descriptor for irq that is already reserved
-> + * @irq:	Allocate for specific irq number if irq >= 0
-> + * @node:	Preferred node on which the irq descriptor should be allocated
-> + * @owner:	Owning module (can be NULL)
-> + *
-> + * Returns the irq number or error code
-> + */
-> +int __ref
-> +__irq_realloc_desc(int irq, int node, struct module *owner)
-> +{
-> +	if (!__irq_is_reserved(irq))
-> +		return -EINVAL;
-
-I don't like the part where it is named reserved but means allocated
-
-> +
-> +	if (irq_to_desc(irq))
-> +		free_desc(irq);
-
-and free if it is already avaiable because it should not be allocated.
-
-> +
-> +	return alloc_descs(irq, 1, node, owner);
-> +}
-> +EXPORT_SYMBOL_GPL(__irq_realloc_desc);
-
-Sebastian
