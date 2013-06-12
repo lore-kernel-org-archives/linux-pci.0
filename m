@@ -1,76 +1,79 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Betty Dall <betty.dall@hp.com>
-To: rjw@sisk.pl, bhelgaas@google.com, gong.chen@linux.intel.com,
-	greg.pearson@hp.com
-Cc: ying.huang@intel.com, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Betty Dall <betty.dall@hp.com>
-Subject: [PATCH v3 6/6] PCI/AER: Provide reset_link for firmware first root port
-Date: Thu,  6 Jun 2013 12:10:51 -0600
-Message-Id: <1370542251-27387-7-git-send-email-betty.dall@hp.com>
-In-Reply-To: <1370542251-27387-1-git-send-email-betty.dall@hp.com>
-References: <1370542251-27387-1-git-send-email-betty.dall@hp.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bk0-f52.google.com ([209.85.214.52]:45692 "EHLO
+	mail-bk0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751382Ab3FLKmo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Jun 2013 06:42:44 -0400
+Received: by mail-bk0-f52.google.com with SMTP id d7so4035034bkh.39
+        for <linux-pci@vger.kernel.org>; Wed, 12 Jun 2013 03:42:43 -0700 (PDT)
+Date: Wed, 12 Jun 2013 12:42:40 +0200
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Arnd Bergmann <arnd@arndb.de>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Maen Suleiman <maen@marvell.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH v2 4/8] irqchip: armada-370-xp: implement MSI support
+Message-ID: <20130612104207.GE30841@mithrandir>
+References: <1370536888-8871-1-git-send-email-thomas.petazzoni@free-electrons.com>
+ <1370536888-8871-5-git-send-email-thomas.petazzoni@free-electrons.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="6Vw0j8UKbyX0bfpA"
+In-Reply-To: <1370536888-8871-5-git-send-email-thomas.petazzoni@free-electrons.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The firmware first path does not install the aerdrv root port
-service driver, so the firmware first root port does not have
-a reset_link callback. When a firmware first root port does not have
-a reset_link callback, use a new default reset_link similar to what
-we already do for the default_downstream_reset_link(). The firmware
-first default reset_link brings the root port out of SBR if firmware
-left it in SBR.
 
-Changes since v1:
-Removed incorrect setting of p2p_ctrl after the read.
+--6Vw0j8UKbyX0bfpA
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Changes since v2:
-Treat the default case for a Root Port the same as the existing
-default case for a Downstream Link.
+On Thu, Jun 06, 2013 at 06:41:24PM +0200, Thomas Petazzoni wrote:
+[...]
+> @@ -292,6 +454,8 @@ static int __init armada_370_xp_mpic_of_init(struct d=
+evice_node *node,
+> =20
+>  #endif
+> =20
+> +	armada_370_xp_msi_init(node);
+> +
 
-Signed-off-by: Betty Dall <betty.dall@hp.com>
----
+So I see that you don't have access to the original platform device
+here, but you could use of_find_device_by_node() to obtain it and pass
+that into armada_370_xp_msi_init() in order to set the msi_chip.dev
+field. Or you could do the lookup in armada_370_xp_msi_init() if you
+don't need it for anything else in armada_370_xp_mpic_of_init().
 
- drivers/pci/pcie/aer/aerdrv_core.c |   17 +++++++++--------
- 1 files changed, 9 insertions(+), 8 deletions(-)
+Doing the above will also allow you to use devm_kzalloc() as Grant
+suggested in his reply.
 
+Thierry
 
-diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
-index 8ec8b4f..cb29c04 100644
---- a/drivers/pci/pcie/aer/aerdrv_core.c
-+++ b/drivers/pci/pcie/aer/aerdrv_core.c
-@@ -400,16 +400,16 @@ void aer_do_secondary_bus_reset(struct pci_dev *dev)
- }
- 
- /**
-- * default_downstream_reset_link - default reset function for Downstream Port
-- * @dev: pointer to downstream port's pci_dev data structure
-+ * default_reset_link - default reset function
-+ * @dev: pointer to pci_dev data structure
-  *
-- * Invoked when performing link reset at Downstream Port w/ no aer driver.
-+ * Invoked when performing link reset on a Downstream Port or a
-+ * Root Port with no aer driver.
-  */
--static pci_ers_result_t default_downstream_reset_link(struct pci_dev *dev)
-+static pci_ers_result_t default_reset_link(struct pci_dev *dev)
- {
- 	aer_do_secondary_bus_reset(dev);
--	dev_printk(KERN_DEBUG, &dev->dev,
--		"Downstream Port link has been reset\n");
-+	dev_dbg(&dev->dev, "Link has been reset\n");
- 	return PCI_ERS_RESULT_RECOVERED;
- }
- 
-@@ -458,8 +458,9 @@ static pci_ers_result_t reset_link(struct pci_dev *dev)
- 
- 	if (driver && driver->reset_link) {
- 		status = driver->reset_link(udev);
--	} else if (pci_pcie_type(udev) == PCI_EXP_TYPE_DOWNSTREAM) {
--		status = default_downstream_reset_link(udev);
-+	} else if (pci_pcie_type(udev) == PCI_EXP_TYPE_DOWNSTREAM ||
-+		pci_pcie_type(udev) == PCI_EXP_TYPE_ROOT_PORT) {
-+		status = default_reset_link(udev);
- 	} else {
- 		dev_printk(KERN_DEBUG, &dev->dev,
- 			"no link-reset support at upstream device %s\n",
+--6Vw0j8UKbyX0bfpA
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.20 (GNU/Linux)
+
+iQIcBAEBAgAGBQJRuFB/AAoJEN0jrNd/PrOhpz0P/0oc1AYHytXH3HOCEjJwxSZa
+oqAL4SrUQu/OlGkj96Pd4vbF5daqjKu0CeuHq+tdXWM4itLQo3otaHT+xOqrGbuX
+7gMagqwrnv0avpYdTm8Vn9Sswp1r6MFsQ+/FMEEriBr7LjZITeP1nJWEti16anNJ
+JuXkNaquwrDlJRgbwMcJn8HJTxFxgvnFonMssQXSyiRWJr8PqObba0oGn3by+fI0
+Ypm8RoHr6JqnRrkIdVM6fYk3eBSazpL6FXCqWh5VYp1Z0aKoi6HabTMfDXInLeh3
+BSi3IvKaY2Gy9NpMXbjfY5bbJX0Ww3GY1M2HLElKHEyBzHEZnJ6GunfJPytK6KqT
+1aKQXU8rc85jZHIGPXIwmr/SfzcLin/+UY4IrtIMCYvbqElogF6aNsi3q9Ab9ajp
+dTSqPT9W5QrIl3+nKQx1Ysy3/qOCvynsH1sr9O3AGxfEaFiWY/SAKTh9pr18by+5
+1yrvWLubE5PSbvi3UaVVzd8Lukruw2DQNczaGGzRHcWtYP/eBZYVIwRxUHhx3VHK
+F4tFBZ3p1KLg0RECtypjre5eH+W7ndl9+OoLVnZCyLjsrk+rBxaB5bW0V66hFdz0
+Ep1DpMwkKWmxje7uX8mwzepcy3ISa2XzdD+EOJJw1G4MwGv4CP+liF55lmOnTmh+
+6GJofWd2RRqc/yhmK7/E
+=tEyE
+-----END PGP SIGNATURE-----
+
+--6Vw0j8UKbyX0bfpA--
