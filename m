@@ -1,256 +1,288 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-we0-f175.google.com ([74.125.82.175]:35212 "EHLO
-	mail-we0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752588Ab3FKNhu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Jun 2013 09:37:50 -0400
-Received: by mail-we0-f175.google.com with SMTP id t59so5969474wes.34
-        for <linux-pci@vger.kernel.org>; Tue, 11 Jun 2013 06:37:48 -0700 (PDT)
-From: Grant Likely <grant.likely@secretlab.ca>
-Subject: Re: [PATCH v2 4/8] irqchip: armada-370-xp: implement MSI support
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Arnd Bergmann <arnd@arndb.de>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>
-Cc: Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Maen Suleiman <maen@marvell.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	linux-arm-kernel@lists.infradead.org
-In-Reply-To: <1370536888-8871-5-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1370536888-8871-1-git-send-email-thomas.petazzoni@free-electrons.com> <1370536888-8871-5-git-send-email-thomas.petazzoni@free-electrons.com>
-Date: Tue, 11 Jun 2013 14:37:45 +0100
-Message-Id: <20130611133745.514CA3E0A90@localhost>
+Received: from mailout3.samsung.com ([203.254.224.33]:17657 "EHLO
+	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756149Ab3FLK0H (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Jun 2013 06:26:07 -0400
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Kukjin Kim' <kgene.kim@samsung.com>,
+	'Bjorn Helgaas' <bhelgaas@google.com>
+Cc: linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org,
+	devicetree-discuss@lists.ozlabs.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	'Grant Likely' <grant.likely@secretlab.ca>,
+	'Andrew Murray' <andrew.murray@arm.com>,
+	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
+	'Thierry Reding' <thierry.reding@avionic-design.de>,
+	'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>,
+	'Arnd Bergmann' <arnd@arndb.de>,
+	'Surendranath Gurivireddy Balla' <suren.reddy@samsung.com>,
+	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
+	'Thomas Abraham' <thomas.abraham@linaro.org>,
+	Jingoo Han <jg1.han@samsung.com>
+References: <003001ce6756$1ef00d60$5cd02820$@samsung.com>
+In-reply-to: <003001ce6756$1ef00d60$5cd02820$@samsung.com>
+Subject: Re: [PATCH V4 0/3] PCIe support for Samsung Exynos5440 SoC
+Date: Wed, 12 Jun 2013 19:26:05 +0900
+Message-id: <003901ce6757$3f09b6e0$bd1d24a0$@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu,  6 Jun 2013 18:41:24 +0200, Thomas Petazzoni <thomas.petazzoni@free-electrons.com> wrote:
-> This commit introduces the support for the MSI interrupts in the
-> armada-370-xp interrupt controller driver. It registers an MSI chip to
-> the MSI chip registry, which will be used by the Marvell PCIe host
-> controller driver.
+On Wednesday, June 12, 2013 7:18 PM, Jingoo Han wrote:
 > 
-> The MSI interrupts use the 16 high doorbells, and are therefore
-> notified using IRQ1 of the main interrupt controller.
+> Hi,
 > 
-> Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-> ---
->  drivers/irqchip/irq-armada-370-xp.c | 166 +++++++++++++++++++++++++++++++++++-
->  1 file changed, 165 insertions(+), 1 deletion(-)
+> This series of patches introduces PCIe support for Samsung Exynos5440,
+> and is based on the latest 'linux-next' tree (20130607).
+> These patches was tested with Intel e1000e LAN card on Exynos5440.
 > 
-> diff --git a/drivers/irqchip/irq-armada-370-xp.c b/drivers/irqchip/irq-armada-370-xp.c
-> index 26adc74..c7c904d 100644
-> --- a/drivers/irqchip/irq-armada-370-xp.c
-> +++ b/drivers/irqchip/irq-armada-370-xp.c
-> @@ -22,6 +22,8 @@
->  #include <linux/of_address.h>
->  #include <linux/of_irq.h>
->  #include <linux/irqdomain.h>
-> +#include <linux/slab.h>
-> +#include <linux/msi.h>
->  #include <asm/mach/arch.h>
->  #include <asm/exception.h>
->  #include <asm/smp_plat.h>
-> @@ -51,12 +53,22 @@
->  #define IPI_DOORBELL_START                      (0)
->  #define IPI_DOORBELL_END                        (8)
->  #define IPI_DOORBELL_MASK                       0xFF
-> +#define PCI_MSI_DOORBELL_START                  (16)
-> +#define PCI_MSI_DOORBELL_NR                     (16)
-> +#define PCI_MSI_DOORBELL_END                    (32)
-> +#define PCI_MSI_DOORBELL_MASK                   0xFFFF0000
->  
->  static DEFINE_RAW_SPINLOCK(irq_controller_lock);
->  
->  static void __iomem *per_cpu_int_base;
->  static void __iomem *main_int_base;
->  static struct irq_domain *armada_370_xp_mpic_domain;
-> +#ifdef CONFIG_PCI_MSI
-> +static struct irq_domain *armada_370_xp_msi_domain;
-> +static DECLARE_BITMAP(msi_used, PCI_MSI_DOORBELL_NR);
-> +static DEFINE_MUTEX(msi_used_lock);
-> +static phys_addr_t msi_doorbell_addr;
-> +#endif
->  
->  /*
->   * In SMP mode:
-> @@ -87,6 +99,126 @@ static void armada_370_xp_irq_unmask(struct irq_data *d)
->  				ARMADA_370_XP_INT_CLEAR_MASK_OFFS);
->  }
->  
-> +#ifdef CONFIG_PCI_MSI
-> +static int armada_370_xp_alloc_msi(void)
-> +{
-> +	int hwirq;
-> +
-> +	mutex_lock(&msi_used_lock);
-> +	hwirq = find_first_zero_bit(&msi_used, PCI_MSI_DOORBELL_NR);
-> +	if (hwirq >= PCI_MSI_DOORBELL_NR)
-> +		hwirq = -ENOSPC;
-> +	else
-> +		set_bit(hwirq, msi_used);
-> +	mutex_unlock(&msi_used_lock);
-> +
-> +	return hwirq;
-> +}
-> +
-> +static void armada_370_xp_free_msi(int hwirq)
-> +{
-> +	mutex_lock(&msi_used_lock);
-> +	if (!test_bit(hwirq, msi_used))
-> +		pr_err("trying to free unused MSI#%d\n", hwirq);
-> +	else
-> +		clear_bit(hwirq, msi_used);
-> +       mutex_unlock(&msi_used_lock);
-> +}
-> +
-> +static int armada_370_xp_setup_msi_irq(struct msi_chip *chip,
-> +				       struct pci_dev *pdev,
-> +				       struct msi_desc *desc)
-> +{
-> +	struct msi_msg msg;
-> +	int hwirq, irq;
-> +
-> +	hwirq = armada_370_xp_alloc_msi();
-> +	if (hwirq < 0)
-> +		return hwirq;
-> +
-> +	irq = irq_create_mapping(armada_370_xp_msi_domain, hwirq);
-> +	if (!irq) {
-> +		armada_370_xp_free_msi(hwirq);
-> +		return -EINVAL;
-> +	}
-
-This looks like something that the irq_domain should handle for you.
-It would be good to have a variant of irq_create_mapping() that keeps
-track of available hwirqs, allocates a free one, and maps it all with
-one function call. I can see that being useful by other MSI interrupt
-controllers and would eliminate needing to open-code it above.
-
-take a look at the irqdomain/test branch on git://git.secretlab.ca/git/linux
-
-I'm hoping to push that series into v3.11 and it simplifies the
-irq_domain code quite a bit. It would be easy to build an
-irq_create_mapping() variant on top of that. Take a look at
-irq_create_direct_mapping() for inspiration (although that function does
-it the other way around. It allocates a virq and uses that number for
-the hwirq number)
-
-> +static int armada_370_xp_msi_init(struct device_node *node)
-> +{
-> +	struct msi_chip *msi_chip;
-> +	u32 reg;
-> +
-> +	msi_chip = kzalloc(sizeof(*msi_chip), GFP_KERNEL);
-
-devm_kzalloc() so it gets freed on failure or unbind; although for this
-device you may not care.
-
-> +	if (!msi_chip)
-> +		return -ENOMEM;
-> +
-> +	armada_370_xp_msi_domain =
-> +		irq_domain_add_linear(NULL, PCI_MSI_DOORBELL_NR,
-> +				      &armada_370_xp_msi_irq_ops, NULL);
-> +	if (!armada_370_xp_msi_domain) {
-> +		kfree(msi_chip);
-> +		return -ENOMEM;
-> +	}
-> +
-> +	msi_chip->of_node = node;
-> +	msi_chip->setup_irq = armada_370_xp_setup_msi_irq;
-> +	msi_chip->teardown_irq = armada_370_xp_teardown_msi_irq;
-> +
-> +	msi_chip_add(msi_chip);
-> +
-> +	reg = readl(per_cpu_int_base + ARMADA_370_XP_IN_DRBEL_MSK_OFFS)
-> +		| PCI_MSI_DOORBELL_MASK;
-> +
-> +	writel(reg, per_cpu_int_base +
-> +	       ARMADA_370_XP_IN_DRBEL_MSK_OFFS);
-> +
-> +	/* Unmask IPI interrupt */
-> +	writel(1, per_cpu_int_base + ARMADA_370_XP_INT_CLEAR_MASK_OFFS);
-> +
-> +	return 0;
-> +}
-> +#else
-> +static inline int armada_370_xp_msi_init(struct device_node *node) { return 0; }
-> +#endif
-> +
->  #ifdef CONFIG_SMP
->  static int armada_xp_set_affinity(struct irq_data *d,
->  				  const struct cpumask *mask_val, bool force)
-> @@ -214,12 +346,39 @@ armada_370_xp_handle_irq(struct pt_regs *regs)
->  		if (irqnr > 1022)
->  			break;
->  
-> -		if (irqnr > 0) {
-> +		if (irqnr > 1) {
->  			irqnr =	irq_find_mapping(armada_370_xp_mpic_domain,
->  					irqnr);
->  			handle_IRQ(irqnr, regs);
->  			continue;
->  		}
-> +
-> +#ifdef CONFIG_PCI_MSI
-> +		/* MSI handling */
-> +		if (irqnr == 1) {
-> +			u32 msimask, msinr;
-> +
-> +			msimask = readl_relaxed(per_cpu_int_base +
-> +						ARMADA_370_XP_IN_DRBEL_CAUSE_OFFS)
-> +				& PCI_MSI_DOORBELL_MASK;
-> +
-> +			writel(~PCI_MSI_DOORBELL_MASK, per_cpu_int_base +
-> +			       ARMADA_370_XP_IN_DRBEL_CAUSE_OFFS);
-> +
-> +			for (msinr = PCI_MSI_DOORBELL_START;
-> +			     msinr < PCI_MSI_DOORBELL_END; msinr++) {
-> +				int irq;
-> +
-> +				if (!(msimask & BIT(msinr)))
-> +					continue;
-> +
-> +				irq = irq_find_mapping(armada_370_xp_msi_domain,
-> +						       msinr - 16);
-> +				handle_IRQ(irq, regs);
-> +			}
-> +		}
-> +#endif
-> +
->  #ifdef CONFIG_SMP
->  		/* IPI Handling */
->  		if (irqnr == 0) {
-> @@ -269,6 +428,9 @@ static int __init armada_370_xp_mpic_of_init(struct device_node *node,
->  				   resource_size(&per_cpu_int_res));
->  	BUG_ON(!per_cpu_int_base);
->  
-> +	msi_doorbell_addr = main_int_res.start +
-> +		ARMADA_370_XP_SW_TRIG_INT_OFFS;
-> +
->  	control = readl(main_int_base + ARMADA_370_XP_INT_CONTROL);
->  
->  	armada_370_xp_mpic_domain =
-> @@ -292,6 +454,8 @@ static int __init armada_370_xp_mpic_of_init(struct device_node *node,
->  
->  #endif
->  
-> +	armada_370_xp_msi_init(node);
-> +
->  	set_handle_irq(armada_370_xp_handle_irq);
->  
->  	return 0;
-> -- 
-> 1.8.1.2
+> This PATCH v4 follows:
+>  * PATCH v3, sent on June, 6th 2013
+>  * PATCH v2, sent on March, 23rd 2013
+>  * PATCH v1, sent on March, 4th 2013
+> 
+> Changes between v3 and v4:
+>   * Added support for multi domains as reviewed by Jason Gunthorpe,
+>     and Arnd Bergmann.
+>   * Fixed both MEM space and I/O space in DT.
+>   * Removed redundant physical addresses from struct pcie_port,
+>     added devm_ioremap_resource() to make add_pcie_port() simpler.
+>   * Added clock names and clock enable/disable.
+> 
+> Changes between v2 and v3:
+>   * Rebased on the top of 3.10-rc4
+>   * Updated names of PCIe PHY registers
+> 
+> Changes between v1 and v2:
+>   * Moved Exynos PCIe driver from arch/arm to drivers/pci/host.
+>   * Added DT properties of PCI DT standard.
+> 
+> Thank you.
+> 
+> Best regards,
+> Jingoo Han
 > 
 > 
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> Jingoo Han (3):
+>   pci: Add PCIe driver for Samsung Exynos
+>   ARM: EXYNOS: Enable PCIe support for Exynos5440
+>   ARM: dts: Add pcie controller node for Samsung EXYNOS5440 SoC
+> 
+>  arch/arm/boot/dts/exynos5440-ssdk5440.dts |    8 ++++++
+>  arch/arm/boot/dts/exynos5440.dtsi         |   38 +++++++++++++++++++++++++++++
+>  arch/arm/Kconfig             |    1 +
+>  arch/arm/mach-exynos/Kconfig |    2 ++
+>  .../devicetree/bindings/pci/exynos-pcie.txt        |   71 ++
+>  drivers/pci/host/Kconfig                           |    5 +
+>  drivers/pci/host/Makefile                          |    1 +
+>  drivers/pci/host/pci-exynos.c                      | 1074 ++++++++++++++++++++
+>  8 files changed, 1200 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/pci/exynos-pcie.txt
+>  create mode 100644 drivers/pci/host/pci-exynos.c
 
--- 
-Grant Likely, B.Sc, P.Eng.
-Secret Lab Technologies, Ltd.
+
+Hi all,
+
+Here is the lspci -vv output.
+
+0000:00:00.0 PCI bridge: Samsung Electronics Co Ltd Device a549 (rev 01) (prog-if 00 [Normal decode])
+        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr+ Stepping- SERR+ FastB2B- DisINTx-
+        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+        Latency: 0, Cache Line Size: 64 bytes
+        Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
+        I/O behind bridge: 00000000-00000fff
+        Memory behind bridge: 40300000-403fffff
+        Prefetchable memory behind bridge: 40400000-404fffff
+        Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- <SERR- <PERR-
+        BridgeCtl: Parity+ SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
+                PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
+        Capabilities: [40] Power Management version 3
+                Flags: PMEClk- DSI- D1+ D2- AuxCurrent=375mA PME(D0+,D1+,D2-,D3hot+,D3cold-)
+                Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
+        Capabilities: [50] MSI: Enable- Count=1/1 Maskable- 64bit+
+                Address: 0000000000000000  Data: 0000
+        Capabilities: [70] Express (v2) Root Port (Slot-), MSI 00
+                DevCap: MaxPayload 512 bytes, PhantFunc 0, Latency L0s <64ns, L1 <1us
+                        ExtTag+ RBE+ FLReset-
+                DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
+                        RlxdOrd+ ExtTag+ PhantFunc- AuxPwr- NoSnoop-
+                        MaxPayload 128 bytes, MaxReadReq 512 bytes
+                DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr- TransPend-
+                LnkCap: Port #0, Speed 5GT/s, Width x4, ASPM L0s L1, Latency L0 <64ns, L1 <2us
+                        ClockPM- Surprise- LLActRep+ BwNot+
+                LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk-
+                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+                LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk- DLActive+ BWMgmt+ ABWMgmt-
+                RootCtl: ErrCorrectable- ErrNon-Fatal- ErrFatal- PMEIntEna- CRSVisible-
+                RootCap: CRSVisible-
+                RootSta: PME ReqID 0000, PMEStatus- PMEPending-
+                DevCap2: Completion Timeout: Range ABCD, TimeoutDis+ ARIFwd-
+                DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis- ARIFwd-
+                LnkCtl2: Target Link Speed: 5GT/s, EnterCompliance- SpeedDis-, Selectable De-emphasis: -6dB
+                         Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
+                         Compliance De-emphasis: -6dB
+                LnkSta2: Current De-emphasis Level: -3.5dB, EqualizationComplete-, EqualizationPhase1-
+                         EqualizationPhase2-, EqualizationPhase3-, LinkEqualizationRequest-
+        Capabilities: [100 v2] Advanced Error Reporting
+                UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+                UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+                UESvrt: DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
+                CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
+                CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
+                AERCap: First Error Pointer: 00, GenCap+ CGenEn- ChkCap+ ChkEn-
+        Capabilities: [148 v1] Virtual Channel
+                Caps:   LPEVC=0 RefClk=100ns PATEntryBits=1
+                Arb:    Fixed- WRR32- WRR64- WRR128-
+                Ctrl:   ArbSelect=Fixed
+                Status: InProgress-
+                VC0:    Caps:   PATOffset=00 MaxTimeSlots=1 RejSnoopTrans-
+                        Arb:    Fixed- WRR32- WRR64- WRR128- TWRR128- WRR256-
+                        Ctrl:   Enable+ ID=0 ArbSelect=Fixed TC/VC=ff
+                        Status: NegoPending- InProgress-
+        Kernel driver in use: pcieport
+
+0000:01:00.0 Ethernet controller: Intel Corporation 82574L Gigabit Network Connection
+        Subsystem: Intel Corporation Gigabit CT Desktop Adapter
+        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr+ Stepping- SERR+ FastB2B- DisINTx-
+        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+        Latency: 0, Cache Line Size: 64 bytes
+        Interrupt: pin A routed to IRQ 53
+        Region 0: Memory at 40380000 (32-bit, non-prefetchable) [size=128K]
+        Region 1: Memory at 40300000 (32-bit, non-prefetchable) [size=512K]
+        Region 2: I/O ports at 40200000 [size=32]
+        Region 3: Memory at 403a0000 (32-bit, non-prefetchable) [size=16K]
+        [virtual] Expansion ROM at 40400000 [disabled] [size=256K]
+        Capabilities: [c8] Power Management version 2
+                Flags: PMEClk- DSI+ D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
+                Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=1 PME-
+        Capabilities: [d0] MSI: Enable- Count=1/1 Maskable- 64bit+
+                Address: 0000000000000000  Data: 0000
+        Capabilities: [e0] Express (v1) Endpoint, MSI 00
+                DevCap: MaxPayload 256 bytes, PhantFunc 0, Latency L0s <512ns, L1 <64us
+                        ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset-
+                DevCtl: Report errors: Correctable+ Non-Fatal+ Fatal+ Unsupported+
+                        RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+
+                        MaxPayload 128 bytes, MaxReadReq 512 bytes
+                DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr+ TransPend-
+                LnkCap: Port #4, Speed 2.5GT/s, Width x1, ASPM L0s L1, Latency L0 <128ns, L1 <64us
+                        ClockPM- Surprise- LLActRep- BwNot-
+                LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk-
+                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+                LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
+        Capabilities: [a0] MSI-X: Enable- Count=5 Masked-
+                Vector table: BAR=3 offset=00000000
+                PBA: BAR=3 offset=00002000
+        Capabilities: [100 v1] Advanced Error Reporting
+                UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+                UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+                UESvrt: DLP+ SDES- TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
+                CESta:  RxErr+ BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
+                CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
+                AERCap: First Error Pointer: 00, GenCap- CGenEn- ChkCap- ChkEn-
+        Capabilities: [140 v1] Device Serial Number 68-05-ca-ff-ff-11-5e-75
+        Kernel driver in use: e1000e
+
+0001:00:00.0 PCI bridge: Samsung Electronics Co Ltd Device a549 (rev 01) (prog-if 00 [Normal decode])
+        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr+ Stepping- SERR+ FastB2B- DisINTx-
+        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+        Latency: 0, Cache Line Size: 64 bytes
+        Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
+        I/O behind bridge: 00000000-00000fff
+        Memory behind bridge: 60300000-603fffff
+        Prefetchable memory behind bridge: 60400000-604fffff
+        Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- <SERR- <PERR-
+        BridgeCtl: Parity+ SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
+                PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
+        Capabilities: [40] Power Management version 3
+                Flags: PMEClk- DSI- D1+ D2- AuxCurrent=375mA PME(D0+,D1+,D2-,D3hot+,D3cold-)
+                Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
+        Capabilities: [50] MSI: Enable- Count=1/1 Maskable- 64bit+
+                Address: 0000000000000000  Data: 0000
+        Capabilities: [70] Express (v2) Root Port (Slot-), MSI 00
+                DevCap: MaxPayload 512 bytes, PhantFunc 0, Latency L0s <64ns, L1 <1us
+                        ExtTag+ RBE+ FLReset-
+                DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
+                        RlxdOrd+ ExtTag+ PhantFunc- AuxPwr- NoSnoop-
+                        MaxPayload 128 bytes, MaxReadReq 512 bytes
+                DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr- TransPend-
+                LnkCap: Port #0, Speed 5GT/s, Width x4, ASPM L0s L1, Latency L0 <64ns, L1 <2us
+                        ClockPM- Surprise- LLActRep+ BwNot+
+                LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk-
+                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+                LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk- DLActive+ BWMgmt+ ABWMgmt-
+                RootCtl: ErrCorrectable- ErrNon-Fatal- ErrFatal- PMEIntEna- CRSVisible-
+                RootCap: CRSVisible-
+                RootSta: PME ReqID 0000, PMEStatus- PMEPending-
+                DevCap2: Completion Timeout: Range ABCD, TimeoutDis+ ARIFwd-
+                DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis- ARIFwd-
+                LnkCtl2: Target Link Speed: 5GT/s, EnterCompliance- SpeedDis-, Selectable De-emphasis: -6dB
+                         Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
+                         Compliance De-emphasis: -6dB
+                LnkSta2: Current De-emphasis Level: -3.5dB, EqualizationComplete-, EqualizationPhase1-
+                         EqualizationPhase2-, EqualizationPhase3-, LinkEqualizationRequest-
+        Capabilities: [100 v2] Advanced Error Reporting
+                UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+                UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+                UESvrt: DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
+                CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
+                CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
+                AERCap: First Error Pointer: 00, GenCap+ CGenEn- ChkCap+ ChkEn-
+        Capabilities: [148 v1] Virtual Channel
+                Caps:   LPEVC=0 RefClk=100ns PATEntryBits=1
+                Arb:    Fixed- WRR32- WRR64- WRR128-
+                Ctrl:   ArbSelect=Fixed
+                Status: InProgress-
+                VC0:    Caps:   PATOffset=00 MaxTimeSlots=1 RejSnoopTrans-
+                        Arb:    Fixed- WRR32- WRR64- WRR128- TWRR128- WRR256-
+                        Ctrl:   Enable+ ID=0 ArbSelect=Fixed TC/VC=ff
+                        Status: NegoPending- InProgress-
+        Kernel driver in use: pcieport
+
+0001:01:00.0 Ethernet controller: Intel Corporation 82574L Gigabit Network Connection
+        Subsystem: Intel Corporation Gigabit CT Desktop Adapter
+        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr+ Stepping- SERR+ FastB2B- DisINTx-
+        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+        Latency: 0, Cache Line Size: 64 bytes
+        Interrupt: pin A routed to IRQ 56
+        Region 0: Memory at 60380000 (32-bit, non-prefetchable) [size=128K]
+        Region 1: Memory at 60300000 (32-bit, non-prefetchable) [size=512K]
+        Region 2: I/O ports at 60200000 [size=32]
+        Region 3: Memory at 603a0000 (32-bit, non-prefetchable) [size=16K]
+        [virtual] Expansion ROM at 60400000 [disabled] [size=256K]
+        Capabilities: [c8] Power Management version 2
+                Flags: PMEClk- DSI+ D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
+                Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=1 PME-
+        Capabilities: [d0] MSI: Enable- Count=1/1 Maskable- 64bit+
+                Address: 0000000000000000  Data: 0000
+        Capabilities: [e0] Express (v1) Endpoint, MSI 00
+                DevCap: MaxPayload 256 bytes, PhantFunc 0, Latency L0s <512ns, L1 <64us
+                        ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset-
+                DevCtl: Report errors: Correctable+ Non-Fatal+ Fatal+ Unsupported+
+                        RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+
+                        MaxPayload 128 bytes, MaxReadReq 512 bytes
+                DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr+ TransPend-
+                LnkCap: Port #4, Speed 2.5GT/s, Width x1, ASPM L0s L1, Latency L0 <128ns, L1 <64us
+                        ClockPM- Surprise- LLActRep- BwNot-
+                LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk-
+                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+                LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
+        Capabilities: [a0] MSI-X: Enable- Count=5 Masked-
+                Vector table: BAR=3 offset=00000000
+                PBA: BAR=3 offset=00002000
+        Capabilities: [100 v1] Advanced Error Reporting
+                UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+                UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+                UESvrt: DLP+ SDES- TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
+                CESta:  RxErr+ BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
+                CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
+                AERCap: First Error Pointer: 00, GenCap- CGenEn- ChkCap- ChkEn-
+        Capabilities: [140 v1] Device Serial Number 68-05-ca-ff-ff-18-44-c5
+        Kernel driver in use: e1000e
+
+
+> 
+> --
+> 1.7.10.4
+
+
