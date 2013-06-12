@@ -1,84 +1,90 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:54419 "EHLO hydra.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751064Ab3F1TzV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 28 Jun 2013 15:55:21 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	John Ronciak <john.ronciak@intel.com>,
-	Miles J Penner <miles.j.penner@intel.com>,
-	Bruce Allan <bruce.w.allan@intel.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	the arch/x86 maintainers <x86@kernel.org>
-Subject: Re: [PATCH 4/6] PCI: acpiphp: check for new devices on enabled host
-Date: Fri, 28 Jun 2013 22:04:53 +0200
-Message-ID: <2663158.JAQPAXHTm9@vostro.rjw.lan>
-In-Reply-To: <CAE9FiQUQvVbcbWoBnSiNmtF6P_SHTqWYONzfa-WeQUDYPmvHYw@mail.gmail.com>
-References: <1372177330-28013-1-git-send-email-mika.westerberg@linux.intel.com> <20130628093319.D4DE6E0090@blue.fi.intel.com> <CAE9FiQUQvVbcbWoBnSiNmtF6P_SHTqWYONzfa-WeQUDYPmvHYw@mail.gmail.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Jingoo Han <jg1.han@samsung.com>,
+	'Kukjin Kim' <kgene.kim@samsung.com>,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
+	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
+	'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>,
+	linux-samsung-soc@vger.kernel.org,
+	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
+	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
+	'Thierry Reding' <thierry.reding@avionic-design.de>,
+	linux-kernel@vger.kernel.org,
+	'Grant Likely' <grant.likely@secretlab.ca>,
+	'Surendranath Gurivireddy Balla' <suren.reddy@samsung.com>,
+	'Thomas Abraham' <thomas.abraham@linaro.org>,
+	'Andrew Murray' <andrew.murray@arm.com>
+Subject: Re: [PATCH V4 3/3] ARM: dts: Add pcie controller node for Samsung EXYNOS5440 SoC
+Date: Wed, 12 Jun 2013 12:55:36 +0200
+Message-ID: <3532163.SqzZzxO4BR@wuerfel>
+In-Reply-To: <003801ce6756$6578ff80$306afe80$@samsung.com>
+References: <003801ce6756$6578ff80$306afe80$@samsung.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, June 28, 2013 09:22:32 AM Yinghai Lu wrote:
-> On Fri, Jun 28, 2013 at 2:33 AM, Kirill A. Shutemov
-> <kirill.shutemov@linux.intel.com> wrote:
-> > Yinghai Lu wrote:
-> >> On Tue, Jun 25, 2013 at 9:22 AM, Mika Westerberg
-> >> <mika.westerberg@linux.intel.com> wrote:
-> >> > From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-> >> >
-> >> > Current acpiphp_check_bridge() implementation is pretty dumb:
-> >> >  - it enables the slot if it's not enabled and the slot status is
-> >> >    ACPI_STA_ALL;
-> >> >  - it disables the slot if it's enabled and slot is not in ACPI_STA_ALL
-> >> >    state.
-> >> >
-> >> > This behavior is not enough to handle Thunderbolt chaining case
-> >> > properly. We need to actually rescan for new devices even if a device
-> >> > has already in the slot.
-> >> >
-> >> > The new implementation disables and stops the slot if it's not in
-> >> > ACPI_STA_ALL state.
-> >> >
-> >> > For ACPI_STA_ALL state we first trim devices which don't respond and
-> >> > look for the ones after that. We do that even if slot already enabled
-> >> > (SLOT_ENABLED).
-> >>
-> >> that is not right, some time BUS_CHECK is even sent root bus.
-> >> in that case, stop all devices in slots and load driver again.
-> >>
-> >> like you put one card in one slots, but all devices in other slots get stop
-> >> and enable again.
-> >
-> > We don't stop enabled devices, we only stop and remove devices which don't
-> > respond.  See patch 3/6.
-> >
-> > I don't see how it's harmful. Do you?
+Thanks for the update! A few comments again:
+
+On Wednesday 12 June 2013 19:20:00 Jingoo Han wrote:
 > 
-> then please check with disable_device to put back pci_dev ref,
-> also may need to trim corresponding acpi devices.
+> diff --git a/arch/arm/boot/dts/exynos5440-ssdk5440.dts b/arch/arm/boot/dts/exynos5440-ssdk5440.dts
+> index d55042b..efe7d39 100644
+> --- a/arch/arm/boot/dts/exynos5440-ssdk5440.dts
+> +++ b/arch/arm/boot/dts/exynos5440-ssdk5440.dts
+> @@ -30,4 +30,12 @@
+>                         clock-frequency = <50000000>;
+>                 };
+>         };
+> +
+> +       pcie0@40000000 {
+> +               reset-gpio = <5>;
+> +       };
+> +
+> +       pcie1@60000000 {
+> +               reset-gpio = <22>;
+> +       };
+>  };
 
-That's correct.  Thunderbolt may not need that, but ACPI device objects need
-to be trimmed too in general.
+As mentioned before, please use the gpio binding to pass gpio numbers.
 
-> so this patch is helping: multiple plug-in and remove?
+> diff --git a/arch/arm/boot/dts/exynos5440.dtsi b/arch/arm/boot/dts/exynos5440.dtsi
+> index f6b1c89..2c15f9d 100644
+> --- a/arch/arm/boot/dts/exynos5440.dtsi
+> +++ b/arch/arm/boot/dts/exynos5440.dtsi
+> @@ -216,4 +216,42 @@
+>                 clock-names = "rtc";
+>                 status = "disabled";
+>         };
+> +
+> +       pcie0@0x290000 {
+> +               compatible = "samsung,exynos5440-pcie";
+> +               reg = <0x290000 0x1000
+> +                       0x270000 0x1000
+> +                       0x271000 0x40>;
+> +               interrupts = <0 20 0>, <0 21 0>, <0 22 0>;
+> +               clocks = <&clock 28>, <&clock 27>;
+> +               clock-names = "pcie", "pcie_bus";
+> +               #address-cells = >;
+> +               #size-cells = <2>;
+> +               device_type = "pci";
+> +               ranges = <0x00000800 0 0x40000000 0x40000000 0 0x00200000   /* configuration space */
+> +                         0x81000000 0 0          0x40200000 0 0x00010000   /* downstream I/O */
+> +                         0x82000000 0 0x40210000 0x40210000 0 0x10000000>; /* non-prefetchable memory */
 
-I think it helps the case when a Thunderbolt device is removed and we only
-get a bus check notify for the controller after the fact.
+I think you did not reply to my question regarding the size of the
+memory space. Does it extend from 0x40210000 to 0x50210000,
+or from 0x40210000 to 0x50000000. You probably meant the latter
+but wrote the former. If not, please add a comment for clarification.
 
-Thanks,
-Rafael
+> +               #interrupt-cells = <1>;
+> +               interrupt-map-mask = <0 0 0 0>;
+> +               interrupt-map = <0x0 0 &gic 53>;
+> +       };
 
+So all PCI IntA interrupts are mapped to a single gic interrupt? That
+sounds like a bottleneck when you have a lot of devices on the bus.
+Do you have MSI support?
 
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+	Arnd
