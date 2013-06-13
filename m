@@ -1,74 +1,60 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Subject: Re: [PATCH] PCI / ACPI / PM: Use correct power state strings in messages
-Date: Sat, 15 Jun 2013 00:28:12 +0200
-Message-ID: <1701924.fhYB0ilm4Z@vostro.rjw.lan>
-In-Reply-To: <CAErSpo7Q8H5wmMUPKqquerp_zbFwnac95Gbezd2=STBjtUrnvw@mail.gmail.com>
-References: <2491625.TQ1FFQeR38@vostro.rjw.lan> <CAErSpo7Q8H5wmMUPKqquerp_zbFwnac95Gbezd2=STBjtUrnvw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pd0-f177.google.com ([209.85.192.177]:51038 "EHLO
+	mail-pd0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758658Ab3FMQfg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Jun 2013 12:35:36 -0400
+From: Jiang Liu <jiang.liu@huawei.com>
+To: "Rafael J . Wysocki" <rjw@sisk.pl>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"Alexander E . Patrakov" <patrakov@gmail.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Shaohua Li <shaohua.li@intel.com>,
+	Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org
+Subject: [BUGFIX 4/9] ACPI, DOCK: avoid initializing acpi_dock_notifier_list multiple times
+Date: Fri, 14 Jun 2013 00:32:27 +0800
+Message-Id: <1371141152-9468-5-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1371141152-9468-1-git-send-email-jiang.liu@huawei.com>
+References: <1371141152-9468-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, June 14, 2013 11:08:44 AM Bjorn Helgaas wrote:
-> On Thu, Jun 13, 2013 at 4:29 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> >
-> > Make acpi_pci_set_power_state() print the name of the ACPI device
-> > power state the device has been actually put into instead of printing
-> > the name of the requested PCI device power state, which need not be
-> > the same.
-> >
-> > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > ---
-> >
-> > For 3.11.
-> >
-> > Thanks,
-> > Rafael
-> >
-> > ---
-> >  drivers/pci/pci-acpi.c |    2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> >
-> > Index: linux-pm/drivers/pci/pci-acpi.c
-> > ===================================================================
-> > --- linux-pm.orig/drivers/pci/pci-acpi.c
-> > +++ linux-pm/drivers/pci/pci-acpi.c
-> > @@ -211,7 +211,7 @@ static int acpi_pci_set_power_state(stru
-> >
-> >         if (!error)
-> >                 dev_info(&dev->dev, "power state changed by ACPI to %s\n",
-> > -                        pci_power_name(state));
-> > +                        acpi_power_state_string(state_conv[state]));
-> >
-> >         return error;
-> >  }
-> >
-> 
-> Just to double-check this, it *looks* like the effective change is
-> that for PCI_D3hot and PCI_D3cold, we'll print "(unknown)" instead of
-> "D3hot" and "D3cold" because state_conv[] folds both PCI_D3hot and
-> PCI_D3cold into ACPI_STATE_D3, and acpi_power_state_string() doesn't
-> have a case for ACPI_STATE_D3.
+Initialize acpi_dock_notifier_list from function acpi_dock_init()
+instead of dock_add() to avoid initializing it multiple times.
 
-No, it won't work like this, because ACPI_STATE_D3 == ACPI_STATE_D3_COLD. :-)
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Cc: Shaohua Li <shaohua.li@intel.com>
+Cc: Len Brown <lenb@kernel.org>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-acpi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+---
+ drivers/acpi/dock.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-So, actually, "D3cold" will be printed for both PCI_D3hot and PCI_D3cold
-(and I have tested this).
-
-Well, I think it's better to actually replace ACPI_STATE_D3 everywhere in
-pci-acpi.c with ACPI_STATE_D3_COLD to avoid that confusion.  Do you want me
-to prepare a patch?
-
-Rafael
-
-
+diff --git a/drivers/acpi/dock.c b/drivers/acpi/dock.c
+index 50e38b7..8e578aa 100644
+--- a/drivers/acpi/dock.c
++++ b/drivers/acpi/dock.c
+@@ -967,7 +967,6 @@ static int __init dock_add(acpi_handle handle)
+ 	spin_lock_init(&dock_station->dd_lock);
+ 	INIT_LIST_HEAD(&dock_station->sibling);
+ 	INIT_LIST_HEAD(&dock_station->hotplug_devices);
+-	ATOMIC_INIT_NOTIFIER_HEAD(&dock_notifier_list);
+ 	INIT_LIST_HEAD(&dock_station->dependent_devices);
+ 
+ 	/* we want the dock device to send uevents */
+@@ -1038,6 +1037,7 @@ int __init acpi_dock_init(void)
+ 		return 0;
+ 	}
+ 
++	ATOMIC_INIT_NOTIFIER_HEAD(&dock_notifier_list);
+ 	register_acpi_bus_notifier(&dock_acpi_notifier);
+ 	pr_info(PREFIX "%s: %d docks/bays found\n",
+ 		ACPI_DOCK_DRIVER_DESCRIPTION, dock_station_count);
 -- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+1.8.1.2
+
