@@ -1,91 +1,109 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f171.google.com ([209.85.214.171]:41944 "EHLO
-	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755578Ab3FDRjV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Jun 2013 13:39:21 -0400
-Received: by mail-ob0-f171.google.com with SMTP id dn14so903300obc.16
-        for <linux-pci@vger.kernel.org>; Tue, 04 Jun 2013 10:39:20 -0700 (PDT)
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Jiang Liu <jiang.liu@huawei.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"Alexander E . Patrakov" <patrakov@gmail.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	stable@vger.kernel.org
+Subject: Re: [BUGFIX 1/9] ACPI, DOCK: initialize dock subsystem before scanning PCI root buses
+Date: Thu, 13 Jun 2013 20:24:02 +0200
+Message-ID: <1498259.Hek0QddKX5@vostro.rjw.lan>
+In-Reply-To: <1371141152-9468-2-git-send-email-jiang.liu@huawei.com>
+References: <1371141152-9468-1-git-send-email-jiang.liu@huawei.com> <1371141152-9468-2-git-send-email-jiang.liu@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <1370294292.20051.41.camel@ejdallLaptop>
-References: <1369924769-17183-1-git-send-email-betty.dall@hp.com>
- <1369924769-17183-2-git-send-email-betty.dall@hp.com> <CAErSpo6KV28p3QRoz-Xx=xMjsFaY7sCho8HN2W_M-DntrNk+Ag@mail.gmail.com>
- <1370294292.20051.41.camel@ejdallLaptop>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 4 Jun 2013 11:39:00 -0600
-Message-ID: <CAErSpo6e_3Xy3F0z2L0LCdQoShc=VkLTsS6+icYkhsexiqgQMQ@mail.gmail.com>
-Subject: Re: [PATCH v2 1/3] PCI/AER: Fix incorrect return from aer_hest_parse()
-To: Betty Dall <betty.dall@hp.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Huang Ying <ying.huang@intel.com>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Moore, Robert" <robert.moore@intel.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 3, 2013 at 3:18 PM, Betty Dall <betty.dall@hp.com> wrote:
-> On Sat, 2013-06-01 at 18:38 -0600, Bjorn Helgaas wrote:
->> [+cc Bob for ACPI HEST spec questions]
->>
->> On Thu, May 30, 2013 at 8:39 AM, Betty Dall <betty.dall@hp.com> wrote:
->> > The function aer_hest_parse() is called to determine if the given
->> > PCI device is firmware first or not. The code loops through each
->> > section of the HEST table to look for a match. The bug is that
->> > the function always returns whether the last HEST section is firmware
->> > first. The fix stops the iteration once the info.firmware_first
->> > variable is set.  This is similar to how the function aer_hest_parse_aff()
->> > stops the iteration.
->> >
->> > Signed-off-by: Betty Dall <betty.dall@hp.com>
->> > ---
->> >
->> >  drivers/pci/pcie/aer/aerdrv_acpi.c |    3 +++
->> >  1 files changed, 3 insertions(+), 0 deletions(-)
->> >
->> >
->> > diff --git a/drivers/pci/pcie/aer/aerdrv_acpi.c b/drivers/pci/pcie/aer/aerdrv_acpi.c
->> > index 5194a7d..39b8671 100644
->> > --- a/drivers/pci/pcie/aer/aerdrv_acpi.c
->> > +++ b/drivers/pci/pcie/aer/aerdrv_acpi.c
->> > @@ -42,6 +42,9 @@ static int aer_hest_parse(struct acpi_hest_header *hest_hdr, void *data)
->> >         u8 bridge = 0;
->> >         int ff = 0;
->> >
->> > +       if (info->firmware_first)
->> > +               return 0;
->> > +
->> >         switch (hest_hdr->type) {
->> >         case ACPI_HEST_TYPE_AER_ROOT_PORT:
->> >                 pcie_type = PCI_EXP_TYPE_ROOT_PORT;
->>
->> Not related directly to your patch, Betty, but I can't figure out why
->> the ACPI spec defines the HEST structures for PCIe as it does.  I'm
->> looking at ACPI 5.0, sec 18.3.2.3 - 18.3.2.5.
->
->> 1) The PCIe Root Port, PCIe Device, and PCIe/PCI-X Bridge structures
->> all include Bus, Device, and Function fields.  But there's no Segment.
->>  The current Linux code (hest_match_pci()) assumes HEST records can
->> only apply to PCI domain 0.  Is Linux missing something, or is the
->> HEST really this limited?
-> You are right that the HEST table does not have the Segment for the PCIe
-> sources. The Linux code uses the Generic Source type that points to a
-> UEFI CPER record. Those do have the Segment. The code in
-> acpi/apei/ghes.c that parses the HEST and invokes the
-> aer_recover_queue() is using the segment from the CPER record.
+On Friday, June 14, 2013 12:32:24 AM Jiang Liu wrote:
+> Changeset "3b63aaa70e1 PCI: acpiphp: Do not use ACPI PCI subdriver
+> mechanism" causes a regression which breaks ACPI dock support,
+> please refer to https://bugzilla.kernel.org/show_bug.cgi?id=59501
+> 
+> The root cause is that changeset 3b63aaa70e1 changed the relative
+> initialization order of ACPI dock subsystem and acpiphp driver,
+> and acpiphp driver has dependency on ACPI dock subsystem's
+> initialization result, so that acpiphp can't correctly detect ACPI
+> dock stations now.
+> 
+> On the other hand, ACPI dock is a built-in driver, so we could
+> explicitly initialize it before the acpiphp driver is used.
 
-My question has nothing to do with CPER.  Drivers can enable error
-reporting for their devices with pci_enable_pcie_error_reporting().
-If the device is marked "firmware-first" in the HEST, this call fails
-without enabling reporting.  The HEST can only mark devices in domain
-0 as "firmware-first."  Therefore pci_enable_pcie_error_reporting()
-will enable reporting for:
+This change makes sense to me.
 
-  - domain 0 devices not marked "firmware-first" and
-  - all devices in other domains.
+Thanks,
+Rafael
 
-This inconsistency seems like a hole in the spec, but maybe I'm
-missing something.
 
-Bjorn
+> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+> Reported-by: Alexander E. Patrakov <patrakov@gmail.com>
+> Tested-by: Alexander E. Patrakov <patrakov@gmail.com>
+> Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
+> Cc: linux-acpi@vger.kernel.org
+> Cc: linux-kernel@vger.kernel.org
+> Cc: <stable@vger.kernel.org> # 3.9+
+> ---
+>  drivers/acpi/dock.c     | 7 +------
+>  drivers/acpi/internal.h | 5 +++++
+>  drivers/acpi/scan.c     | 1 +
+>  3 files changed, 7 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/acpi/dock.c b/drivers/acpi/dock.c
+> index 4fdea38..02b0563 100644
+> --- a/drivers/acpi/dock.c
+> +++ b/drivers/acpi/dock.c
+> @@ -1033,7 +1033,7 @@ find_dock_and_bay(acpi_handle handle, u32 lvl, void *context, void **rv)
+>  	return AE_OK;
+>  }
+>  
+> -static int __init dock_init(void)
+> +int __init acpi_dock_init(void)
+>  {
+>  	if (acpi_disabled)
+>  		return 0;
+> @@ -1062,9 +1062,4 @@ static void __exit dock_exit(void)
+>  		dock_remove(dock_station);
+>  }
+>  
+> -/*
+> - * Must be called before drivers of devices in dock, otherwise we can't know
+> - * which devices are in a dock
+> - */
+> -subsys_initcall(dock_init);
+>  module_exit(dock_exit);
+> diff --git a/drivers/acpi/internal.h b/drivers/acpi/internal.h
+> index 297cbf4..c610a76 100644
+> --- a/drivers/acpi/internal.h
+> +++ b/drivers/acpi/internal.h
+> @@ -40,6 +40,11 @@ void acpi_container_init(void);
+>  #else
+>  static inline void acpi_container_init(void) {}
+>  #endif
+> +#ifdef CONFIG_ACPI_DOCK
+> +void acpi_dock_init(void);
+> +#else
+> +static inline void acpi_dock_init(void) {}
+> +#endif
+>  #ifdef CONFIG_ACPI_HOTPLUG_MEMORY
+>  void acpi_memory_hotplug_init(void);
+>  #else
+> diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
+> index 44225cb..4148163 100644
+> --- a/drivers/acpi/scan.c
+> +++ b/drivers/acpi/scan.c
+> @@ -2045,6 +2045,7 @@ int __init acpi_scan_init(void)
+>  	acpi_lpss_init();
+>  	acpi_container_init();
+>  	acpi_memory_hotplug_init();
+> +	acpi_dock_init();
+>  
+>  	mutex_lock(&acpi_scan_lock);
+>  	/*
+> 
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
