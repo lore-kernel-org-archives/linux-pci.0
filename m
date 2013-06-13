@@ -1,287 +1,156 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: "Alexander E. Patrakov" <patrakov@gmail.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>, alexdeucher@gmail.com,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	linux-acpi@vger.kernel.org, Jiang Liu <liuj97@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [BUGFIX v2 0/4] fix bug 56531, 59501 and 59581
-Date: Thu, 20 Jun 2013 21:06:30 +0200
-Message-ID: <1436701.V8egnZxOqz@vostro.rjw.lan>
-In-Reply-To: <CAN_LGv0DUH3o6=iCBcQDEOLQ3n=O=GR5BSQU5dLs306YeLVL7w@mail.gmail.com>
-References: <1371238081-32260-1-git-send-email-jiang.liu@huawei.com> <1880810.6jIKdDRiJm@vostro.rjw.lan> <CAN_LGv0DUH3o6=iCBcQDEOLQ3n=O=GR5BSQU5dLs306YeLVL7w@mail.gmail.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Arnd Bergmann <arnd@arndb.de>
+To: Jingoo Han <jg1.han@samsung.com>
+Cc: 'Kukjin Kim' <kgene.kim@samsung.com>,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
+	linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org,
+	devicetree-discuss@lists.ozlabs.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	'Grant Likely' <grant.likely@secretlab.ca>,
+	'Andrew Murray' <andrew.murray@arm.com>,
+	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
+	'Thierry Reding' <thierry.reding@avionic-design.de>,
+	'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>,
+	'Surendranath Gurivireddy Balla' <suren.reddy@samsung.com>,
+	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
+	'Thomas Abraham' <thomas.abraham@linaro.org>
+Subject: Re: [PATCH V4 1/3] pci: Add PCIe driver for Samsung Exynos
+Date: Thu, 13 Jun 2013 16:18:47 +0200
+Message-ID: <28355406.ThqqvnG0Yj@wuerfel>
+In-Reply-To: <000901ce6838$8b514720$a1f3d560$@samsung.com>
+References: <003601ce6756$444e8cd0$cceba670$@samsung.com> <2061566.hRLrhtBK6z@wuerfel> <000901ce6838$8b514720$a1f3d560$@samsung.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, June 19, 2013 11:18:41 AM Alexander E. Patrakov wrote:
-> 2013/6/19 Rafael J. Wysocki <rjw@sisk.pl>:
-> > OK, let's try to untangle this a bit.
-> >
-> > If you applyt patches [1/4] and [4/4] from the $subject series only, what
-> > does remain unfixed?
+On Thursday 13 June 2013 22:18:50 Jingoo Han wrote:
+> On Wednesday, June 12, 2013 8:23 PM, Arnd Bergmann wrote:
+> > On Wednesday 12 June 2013 19:19:05 Jingoo Han wrote:
+
+> > > +
+> > > +/* synopsis specific PCIE configuration registers*/
+> > > +#define PCIE_PORT_LINK_CONTROL		0x710
+> > > +#define PORT_LINK_MODE_MASK		(0x3f << 16)
+> > > +#define PORT_LINK_MODE_4_LANES		(0x7 << 16)
+> > 
+> > Do you mean this is a "Synopsys" designware part? In that case it
+> > should really not be called "exynos-pcie" but "designware-pcie"
+> > and you should make sure that the driver makes no assumptions about
+> > the platform. A lot of other platforms also use designware
+> > parts and should be able to reuse this driver.
 > 
-> [not tested, can do so in 12 hours if needed]
+> Sorry, I don't think so.
+> Only core block is a "Synopsys" designware part IP block,
+> other parts are Exynos-specific.
+> So, it is hard to share with other PCIe IPs using synopsis core.
+
+Just call it synopsys anyway and put a comment in to explain this.
+That should be enough for the next person with a synopsys PCI core
+to reuse your code and split out the exynos specific parts into a
+separate file.
+
+> > I think you should not assume that the physical base address is a 32
+> > bit value. The hardware clearly supports "lower" and "upper" halves
+> > for the address window, so when resource_size_t is 64 bit, you should
+> > set the upper half accordingly. Since the hardware is always 64 bit,
+> > you can use a "u64" type rather than resource_size_t to simplify the
+> > code here.
 > 
-> I think there will be problems on undocking and/or on the second
-> docking, as described in comments #6 - #8 of
-> https://bugzilla.kernel.org/show_bug.cgi?id=59501
+> OK, I will replace "u32" with "u64".
 
-OK, I think I have something that might work.  It may not solve all problems,
-but maybe it helps a bit.  Unfortunately, I can't really test it, so please do
-if you can.
+Not what I meant, please read it again.
 
-Please apply [1/4] and [4/4] and the one below and see what happens.
+> > > +static void exynos_pcie_prog_viewport_io_outbound(struct pcie_port *pp)
+> > > +{
+> > > +	u32 val;
+> > > +	void __iomem *dbi_base = pp->dbi_base;
+> > > +
+> > > +	/* Program viewport 1 : OUTBOUND : IO */
+> > > +	val = PCIE_ATU_REGION_OUTBOUND | PCIE_ATU_REGION_INDEX1;
+> > > +	writel_rc(pp, val, dbi_base + PCIE_ATU_VIEWPORT);
+> > > +	writel_rc(pp, PCIE_ATU_TYPE_IO, dbi_base + PCIE_ATU_CR1);
+> > > +	val = PCIE_ATU_ENABLE;
+> > > +	writel_rc(pp, val, dbi_base + PCIE_ATU_CR2);
+> > > +	writel_rc(pp, (u32)pp->io_base, dbi_base + PCIE_ATU_LOWER_BASE);
+> > > +	writel_rc(pp, 0, dbi_base + PCIE_ATU_UPPER_BASE);
+> > > +	writel_rc(pp, (u32)(pp->io_base + pp->config.io_size - 1),
+> > > +			dbi_base + PCIE_ATU_LIMIT);
+> > > +	writel_rc(pp, (u32)pp->io_base, dbi_base + PCIE_ATU_LOWER_TARGET);
+> > > +	writel_rc(pp, 0, dbi_base + PCIE_ATU_UPPER_TARGET);
+> > > +}
+> > 
+> > You don't actually map the I/O space anywhere into virtual memory.
+> > I think you need to call pci_ioremap_io with the pp->io_base at
+> > boot time.
+> 
+> Sorry, when pci_ioremap_io() is used, Exynos5440 hangs.
+> I don't know how to deal this.
 
-Thanks,
-Rafael
+You have to call it, there is no way around that. You will have to debug
+this yourself, I'm sure there is an easy solution.
 
+> > 
+> > You hardcode the in_mem_size to 256 MB. Does that mean you only allow
+> > PCI bus master DMA on the first part of RAM? Shouldn't it get
+> > computed from the actual location and size of RAM?
+> 
+> I will remove the hard-coded in_mem_size, instead use the size of MEM region.
 
----
-Rationale:
-	acpiphp_glue.c:disable_device() trims the underlying ACPI device objects
-	after removing the companion PCI devices, so the dock station code
-	doesn't need to trim them separately for the dependent devices handled
-	by acpiphp.
+This should be system RAM, not the PCI memory space. What good would
+it be to have an inbound window that only redirects back to the bus?
 
-	Moreover, acpiphp_glue.c is the only user of
-	[un]register_hotplug_dock_device(), so *all* devices on the
-	ds->hotplug_devices list are handled by acpiphp and ops is set for all
-	of them.
+> > > +static void exynos_pcie_prog_viewport_io_inbound(struct pcie_port *pp)
+> > > +{
+> > > +	u32 val;
+> > > +	void __iomem *dbi_base = pp->dbi_base;
+> > > +	struct pcie_port_info *config = &pp->config;
+> > > +
+> > > +	/* Program viewport 1 : INBOUND : IO */
+> > > +	val = PCIE_ATU_REGION_INBOUND | PCIE_ATU_REGION_INDEX1;
+> > > +	writel_rc(pp, val, dbi_base + PCIE_ATU_VIEWPORT);
+> > > +	writel_rc(pp, PCIE_ATU_TYPE_IO, dbi_base + PCIE_ATU_CR1);
+> > > +	val = PCIE_ATU_ENABLE | PCIE_ATU_BAR_MODE_ENABLE;
+> > > +	writel_rc(pp, val, dbi_base + PCIE_ATU_CR2);
+> > > +	writel_rc(pp, 0, dbi_base + PCIE_ATU_LOWER_BASE);
+> > > +	writel_rc(pp, 0, dbi_base + PCIE_ATU_UPPER_BASE);
+> > > +	writel_rc(pp, config->in_mem_size - 1, dbi_base + PCIE_ATU_LIMIT);
+> > > +	writel_rc(pp, 0, dbi_base + PCIE_ATU_LOWER_TARGET);
+> > > +	writel_rc(pp, 0, dbi_base + PCIE_ATU_UPPER_TARGET);
+> > > +}
+> > 
+> > I don't understand what in inbound I/O access actually means. What
+> > does this do, is it for PCI target emulation?
+> 
+> I reviewed the manual, and I will fix it.
+> I will add bus addresses and host physical addresses to
+> PCIE_ATU_LOWER_BASE/ PCIE_ATU_LOWER_TARGET.
+ 
+You have not answered my question.
 
-	This means that (1) the ds->hotplug_devices list is not necessary (we
-	can always walk ds->dependent_devices instead and look for those that
-	have dd->ops set) and (2) we don't need to call
-	dock_remove_acpi_device(dd->handle) on eject for any of those devices,
-	because dd->ops->handler() is going to take care of the ACPI device
-	objects trimming for them anyway.
+> > > +static int exynos_pcie_setup(int nr, struct pci_sys_data *sys)
+> > > +{
+> > > +	struct pcie_port *pp;
+> > > +
+> > > +	pp = sys_to_pcie(sys);
+> > > +
+> > > +	if (!pp)
+> > > +		return 0;
+> > > +
+> > > +	pci_add_resource_offset(&sys->resources, &pp->io, sys->io_offset);
+> > > +	pci_add_resource_offset(&sys->resources, &pp->mem, sys->mem_offset);
+> > > +
+> > > +	return 1;
+> > > +}
+> > 
+> > You don't actually set up io_offset and mem_offset, right?
+> 
+> OK, I will replace pci_add_resource_offset() with pci_add_resource().
 
-	Taking the above into account make the following changes:
-	(1) Drop hotplug_devices from struct dock_station.
-	(2) Drop dock_{add|del}_hotplug_device()
-	(3) Make [un]register_hotplug_dock_device() [un]set 'ops' and
-	    'context' for the given device under ds->hp_lock.
-	(4) Add hot_remove_dock_devices() that walks ds->dependent_devices and
-	    either calls dd->ops->handler(), if present, or trims the underlying
-	    ACPI device object, otherwise.
-	(5) Replace hotplug_dock_devices(ds, ACPI_NOTIFY_EJECT_REQUEST) calls
-	    with hot_remove_dock_devices(ds).
-	(6) Rename hotplug_dock_devices() to hot_add_dock_devices() and make
-	    it only handle bus check and device check requests.  Make it walk
-	    ds->dependent_devices instead of ds->hotplug devices.
-	(7) Make dock_event() walk ds->dependent_devices (instead of
-	    ds->hotplug devices) under ds->hp_lock.
----
- drivers/acpi/dock.c |  111 ++++++++++++++++++++++++----------------------------
- 1 file changed, 53 insertions(+), 58 deletions(-)
+No, you have to set up the offsets.
 
-Index: linux-pm/drivers/acpi/dock.c
-===================================================================
---- linux-pm.orig/drivers/acpi/dock.c
-+++ linux-pm/drivers/acpi/dock.c
-@@ -66,7 +66,6 @@ struct dock_station {
- 	spinlock_t dd_lock;
- 	struct mutex hp_lock;
- 	struct list_head dependent_devices;
--	struct list_head hotplug_devices;
- 
- 	struct list_head sibling;
- 	struct platform_device *dock_device;
-@@ -121,38 +120,6 @@ add_dock_dependent_device(struct dock_st
- }
- 
- /**
-- * dock_add_hotplug_device - associate a hotplug handler with the dock station
-- * @ds: The dock station
-- * @dd: The dependent device struct
-- *
-- * Add the dependent device to the dock's hotplug device list
-- */
--static void
--dock_add_hotplug_device(struct dock_station *ds,
--			struct dock_dependent_device *dd)
--{
--	mutex_lock(&ds->hp_lock);
--	list_add_tail(&dd->hotplug_list, &ds->hotplug_devices);
--	mutex_unlock(&ds->hp_lock);
--}
--
--/**
-- * dock_del_hotplug_device - remove a hotplug handler from the dock station
-- * @ds: The dock station
-- * @dd: the dependent device struct
-- *
-- * Delete the dependent device from the dock's hotplug device list
-- */
--static void
--dock_del_hotplug_device(struct dock_station *ds,
--			struct dock_dependent_device *dd)
--{
--	mutex_lock(&ds->hp_lock);
--	list_del(&dd->hotplug_list);
--	mutex_unlock(&ds->hp_lock);
--}
--
--/**
-  * find_dock_dependent_device - get a device dependent on this dock
-  * @ds: the dock station
-  * @handle: the acpi_handle of the device we want
-@@ -342,40 +309,60 @@ static void dock_remove_acpi_device(acpi
- }
- 
- /**
-- * hotplug_dock_devices - insert or remove devices on the dock station
-- * @ds: the dock station
-- * @event: either bus check or eject request
-+ * hot_remove_dock_devices - Remove devices on a dock station.
-+ * @ds: Dock station to remove devices for.
-+ *
-+ * For each device depending on @ds, if a dock event handler is registered,
-+ * call it for the device, or trim the underlying ACPI device object otherwise.
-+ *
-+ * Dock event handlers are responsible for trimming the underlying ACPI device
-+ * objects if present.
-+ */
-+static void hot_remove_dock_devices(struct dock_station *ds)
-+{
-+	struct dock_dependent_device *dd;
-+
-+	mutex_lock(&ds->hp_lock);
-+
-+	list_for_each_entry(dd, &ds->dependent_devices, list) {
-+		if (dd->ops && dd->ops->handler)
-+			dd->ops->handler(dd->handle, ACPI_NOTIFY_EJECT_REQUEST,
-+					 dd->context);
-+		else
-+			dock_remove_acpi_device(dd->handle);
-+	}
-+
-+	mutex_unlock(&ds->hp_lock);
-+}
-+
-+/**
-+ * hot_add_dock_devices - Insert devices on a dock station.
-+ * @ds: Dock station to insert devices for.
-  *
-  * Some devices on the dock station need to have drivers called
-  * to perform hotplug operations after a dock event has occurred.
-  * Traverse the list of dock devices that have registered a
-  * hotplug handler, and call the handler.
-  */
--static void hotplug_dock_devices(struct dock_station *ds, u32 event)
-+static void hot_add_dock_devices(struct dock_station *ds, u32 event)
- {
- 	struct dock_dependent_device *dd;
- 
- 	mutex_lock(&ds->hp_lock);
- 
--	/*
--	 * First call driver specific hotplug functions
--	 */
--	list_for_each_entry(dd, &ds->hotplug_devices, hotplug_list)
-+	/* First call driver specific hotplug event handlers. */
-+	list_for_each_entry(dd, &ds->dependent_devices, list)
- 		if (dd->ops && dd->ops->handler)
- 			dd->ops->handler(dd->handle, event, dd->context);
- 
- 	/*
--	 * Now make sure that an acpi_device is created for each
--	 * dependent device, or removed if this is an eject request.
--	 * This will cause acpi_drivers to be stopped/started if they
--	 * exist
-+	 * Now make sure that an acpi_device is created for each dependent
-+	 * device.  That will cause scan handlers to attach to devices objects
-+	 * or  acpi_drivers to be started if they exist.
- 	 */
--	list_for_each_entry(dd, &ds->dependent_devices, list) {
--		if (event == ACPI_NOTIFY_EJECT_REQUEST)
--			dock_remove_acpi_device(dd->handle);
--		else
--			dock_create_acpi_device(dd->handle);
--	}
-+	list_for_each_entry(dd, &ds->dependent_devices, list)
-+		dock_create_acpi_device(dd->handle);
-+
- 	mutex_unlock(&ds->hp_lock);
- }
- 
-@@ -398,10 +385,14 @@ static void dock_event(struct dock_stati
- 	if (num == DOCK_EVENT)
- 		kobject_uevent_env(&dev->kobj, KOBJ_CHANGE, envp);
- 
--	list_for_each_entry(dd, &ds->hotplug_devices, hotplug_list)
-+	mutex_lock(&ds->hp_lock);
-+
-+	list_for_each_entry(dd, &ds->dependent_devices, list)
- 		if (dd->ops && dd->ops->uevent)
- 			dd->ops->uevent(dd->handle, event, dd->context);
- 
-+	mutex_unlock(&ds->hp_lock);
-+
- 	if (num != DOCK_EVENT)
- 		kobject_uevent_env(&dev->kobj, KOBJ_CHANGE, envp);
- }
-@@ -598,9 +589,10 @@ register_hotplug_dock_device(acpi_handle
- 		 */
- 		dd = find_dock_dependent_device(dock_station, handle);
- 		if (dd) {
-+			mutex_lock(&dock_station->hp_lock);
- 			dd->ops = ops;
- 			dd->context = context;
--			dock_add_hotplug_device(dock_station, dd);
-+			mutex_unlock(&dock_station->hp_lock);
- 			ret = 0;
- 		}
- 	}
-@@ -623,8 +615,12 @@ void unregister_hotplug_dock_device(acpi
- 
- 	list_for_each_entry(dock_station, &dock_stations, sibling) {
- 		dd = find_dock_dependent_device(dock_station, handle);
--		if (dd)
--			dock_del_hotplug_device(dock_station, dd);
-+		if (dd) {
-+			mutex_lock(&dock_station->hp_lock);
-+			dd->ops = NULL;
-+			dd->context = NULL;
-+			mutex_unlock(&dock_station->hp_lock);
-+		}
- 	}
- }
- EXPORT_SYMBOL_GPL(unregister_hotplug_dock_device);
-@@ -649,7 +645,7 @@ static int handle_eject_request(struct d
- 	 */
- 	dock_event(ds, event, UNDOCK_EVENT);
- 
--	hotplug_dock_devices(ds, ACPI_NOTIFY_EJECT_REQUEST);
-+	hot_remove_dock_devices(ds);
- 	undock(ds);
- 	dock_lock(ds, 0);
- 	eject_dock(ds);
-@@ -708,7 +704,7 @@ static void dock_notify(acpi_handle hand
- 			}
- 			atomic_notifier_call_chain(&dock_notifier_list,
- 						   event, NULL);
--			hotplug_dock_devices(ds, event);
-+			hot_add_dock_devices(ds, event);
- 			complete_dock(ds);
- 			dock_event(ds, event, DOCK_EVENT);
- 			dock_lock(ds, 1);
-@@ -953,7 +949,6 @@ static int __init dock_add(acpi_handle h
- 	mutex_init(&dock_station->hp_lock);
- 	spin_lock_init(&dock_station->dd_lock);
- 	INIT_LIST_HEAD(&dock_station->sibling);
--	INIT_LIST_HEAD(&dock_station->hotplug_devices);
- 	ATOMIC_INIT_NOTIFIER_HEAD(&dock_notifier_list);
- 	INIT_LIST_HEAD(&dock_station->dependent_devices);
- 
+Please don't post another version until you actually understand what
+you need to do. If you don't understand the comments, ask back rather
+than picking a random interpretation.
 
-
-
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+	Arnd
