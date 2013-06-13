@@ -1,85 +1,104 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f42.google.com ([209.85.219.42]:64254 "EHLO
-	mail-oa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753414Ab3FNRpE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Jun 2013 13:45:04 -0400
-Received: by mail-oa0-f42.google.com with SMTP id n12so1045632oag.1
-        for <linux-pci@vger.kernel.org>; Fri, 14 Jun 2013 10:45:02 -0700 (PDT)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQUO350kqrXB5=yQ-OxOeSJj4+P6WPg4gGgXxFEvfoLyng@mail.gmail.com>
-References: <CAE9FiQVu5QyxaKsYzzQoroQD=TvsziHzDOtoeg=FvhZ8HyN5yw@mail.gmail.com>
- <CAErSpo7ChfRiEn0eR1rf-mVheUS9Yf8f+j4n78PJcGYh+yMVgA@mail.gmail.com>
- <CAE9FiQXkDg7Y336S=DXoms44=5HLaiUx=sWviupz1fJmaDUEzQ@mail.gmail.com>
- <CAE9FiQU5c=ztzbskNnYFFKF9V5zO+jnRcMBCivLxA1F3fSfX5w@mail.gmail.com>
- <20130401235256.GA31966@google.com> <CAE9FiQV8cPh-s6=EQu_cZTtn86+NwZE5KuGMhf43aOhzkL=hwA@mail.gmail.com>
- <CAErSpo7Jni1ZSf_W=vB3kqsucPpoepa2Q5g=77a6D3FaPwe9LA@mail.gmail.com>
- <CAE9FiQWjQXwiTWju6cBc_o25jy_wmZ1u+Pifh1wdnxtV=i5ENw@mail.gmail.com>
- <CAErSpo7=a-wX6BLbm_O1nUMMrQHOgtSm3xZHKuRqaz8rnKSbRA@mail.gmail.com>
- <CAE9FiQUbw7OUhRB+gKMxkuE9+nm9097+mwZ2z4adO8Hv_NjF1Q@mail.gmail.com>
- <20130614141101.GA29452@google.com> <CAE9FiQVr-OWeqEHFXn0MjNiSD0WM=FNO_DFo6m9UbbG60uonpw@mail.gmail.com>
- <CAErSpo7grN-93zZfBJOHZH-pR1wDYrojTwt=B=++QqA0rPb3Rg@mail.gmail.com> <CAE9FiQUO350kqrXB5=yQ-OxOeSJj4+P6WPg4gGgXxFEvfoLyng@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 14 Jun 2013 11:44:42 -0600
-Message-ID: <CAErSpo6vEOw10YV=Sou6wjjSc2GWr-oX=Dvbt7Xt=RJKi4RELw@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Remove not needed check in disable aspm link
-To: Yinghai Lu <yinghai@kernel.org>
+In-Reply-To: <9686208.vxkaqkMmr5@vostro.rjw.lan>
+References: <1371141152-9468-1-git-send-email-jiang.liu@huawei.com>
+	<CAE9FiQX1xVJA3MZc4LndWU7kx0mxC-YPE1R8JD4W2-Gg9zq3Zw@mail.gmail.com>
+	<9686208.vxkaqkMmr5@vostro.rjw.lan>
+Date: Thu, 13 Jun 2013 12:08:42 -0700
+Message-ID: <CAE9FiQVOvA8HB6QNBO5XxGGyO0bsfnHA6e-3yYFC0nXesKfkUg@mail.gmail.com>
+Subject: Re: [BUGFIX 0/9] Fix bug 59501 and code improvement for dock driver
+From: Yinghai Lu <yinghai@kernel.org>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
 Cc: Jiang Liu <jiang.liu@huawei.com>,
-	Roman Yepishev <roman.yepishev@gmail.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Alexander E . Patrakov" <patrakov@gmail.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 14, 2013 at 10:57 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Fri, Jun 14, 2013 at 9:33 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> On Fri, Jun 14, 2013 at 10:17 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+On Thu, Jun 13, 2013 at 12:02 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> On Thursday, June 13, 2013 11:42:16 AM Yinghai Lu wrote:
+>> On Thu, Jun 13, 2013 at 9:32 AM, Jiang Liu <jiang.liu@huawei.com> wrote:
+>> > Alexander E. Patrakov <patrakov@gmail.com> reports two bugs related to
+>> > dock station support on Sony VAIO VPCZ23A4R. Actually there are at least
+>> > four bugs related to Sony VAIO VPCZ23A4R dock support.
+>> > 1) can't correctly detect hotplug slot for dock state
+>> > 2) resource leak on undocking
+>> > 3) resource allocation failure for dock devices
+>> > 4) one bug in intel_snd_hda driver
+>> >
+>> > The first patch fixes issue 1, and the second patch fixes issue 2.
+>> > These two patches, if accepted, should be material for stable branches
+>> > too.
+>> > Patch 3-9 are code improvement for ACPI and dock driver.
+>> >
+>> > I have found the root cause for issue three, but still working on
+>> > solutions, and seems can't be solve in short time. So please help
+>> > to review and test patches for issue 1) and 2) first.
 >>
->> Can you please refer to specific function names?  I can't read your mind.
+>> the 3) is about pci resource allocation?
+>> because pcibios_add_bus is called too early?
 >>
->> You might be referring to quirk_disable_aspm_l0s().  This is a
->> pci_fixup_final quirk that calls pci_disable_link_state().  In the
->> current tree, we enumerate devices before requesting _OSC control.
->> However, pci_fixup_final quirks are not run until the
->> pci_apply_final_quirks() fs_initcall, which is after we request _OSC
->> control.
->>
->> As far as I can tell, we never call pci_disable_link_state() before
->> calling pcie_no_aspm().
+>> If that is case, we should have something like attached patch for it.
 >
-> ok, you are right, that is not pci_disable_link_state.
+> I'm including the patch below to make it easier to comment.
 >
-> It is pcie_aspm_init_link_state ==> pcie_aspm_sanity_check in booting path
-> that disable aspm.  It has  "if (aspm_disabled)" in it, and it cause
-> the difference.
+>> With that, we will not need to worry about _OSC set for 3.10 etc.
+>
+>> diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+>> index b1ff02a..68ed5d8 100644
+>> --- a/drivers/pci/bus.c
+>> +++ b/drivers/pci/bus.c
+>> @@ -186,6 +186,14 @@ int pci_bus_add_device(struct pci_dev *dev)
+>>       return 0;
+>>  }
+>>
+>> +void __weak pcibios_add_bus(struct pci_bus *bus)
+>> +{
+>> +}
+>> +
+>> +void __weak pcibios_remove_bus(struct pci_bus *bus)
+>> +{
+>> +}
+>> +
+>>  /**
+>>   * pci_bus_add_devices - start driver for PCI devices
+>>   * @bus: bus to check for new devices
+>> @@ -198,6 +206,11 @@ void pci_bus_add_devices(const struct pci_bus *bus)
+>>       struct pci_bus *child;
+>>       int retval;
+>>
+>> +     if (bus->is_added == 1) {
+>> +             pcibios_add_bus(bus);
+>> +             bus->is_added++;
+>> +     }
+>
+> Do we need that in all of the places pci_bus_add_devices() is called?
 
-Yes, I agree, the pcie_aspm_init_link_state() path uses aspm_disabled
-before we set it:
+Yes.
 
-    acpi_pci_root_add
-      pci_acpi_scan_root
-        pci_scan_child_bus
-          pci_scan_slot
-            pcie_aspm_init_link_state
-              pcie_aspm_sanity_check
-                if (aspm_disabled)              # used before set
-                  ...
-      acpi_pci_osc_control_set
-      pcie_no_aspm
-        aspm_disabled = 1                       # set
+>
+> It looks like pci_scan_child_bus() might be a better place for adding this,
+> or am I overlooking something?
 
-That might mean we do some ASPM configuration during enumeration (in
-pci_scan_slot()) even though the BIOS hasn't given us permission.  It
-looks like we did that even in v3.7, since we did the enumeration
-before the _OSC there as well.  That looks like a bug to me.
+acpiphp and acpi_pci_slot used to get attached when pci devices
+get enumerated and pci resources get assigned unallocated...
 
-I don't think the fact that we have been doing ASPM config during
-enumeration before _OSC is an argument for dropping the check in
-pci_disable_link_state().
+they some kind of pci drivers to pci bus  (comparing with real pci diver to
+pci devices).
 
-Bjorn
+in dock case, could be, we just got bus, and do not scan pci devices under it.
+then we try to scan dock pci devices too early...
+
+>
+> [Hint: the bus->is_added++ hack is <explicit content> ugly.]
+
+Yeah,  if we could move pcibios_fixup_bus to right place, we can move
+bus->is_added setting to same place like we set pci_dev->is_added.
+
+Yinghai
