@@ -1,134 +1,61 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: linux-acpi@vger.kernel.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qe0-f52.google.com ([209.85.128.52]:62484 "EHLO
+	mail-qe0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759056Ab3FMS0J (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Jun 2013 14:26:09 -0400
+MIME-Version: 1.0
+In-Reply-To: <CAN_LGv2ayCkO0rndkc5ahaW0S9ZH5SW5p=KcBL4o6TjFoZLmLQ@mail.gmail.com>
+References: <1371141152-9468-1-git-send-email-jiang.liu@huawei.com>
+	<CAN_LGv2ayCkO0rndkc5ahaW0S9ZH5SW5p=KcBL4o6TjFoZLmLQ@mail.gmail.com>
+Date: Fri, 14 Jun 2013 00:26:07 +0600
+Message-ID: <CAN_LGv25Z13QuXvB5EhLVm0jDG9pKCZ-di747-uhp81wZUpbPw@mail.gmail.com>
+Subject: Re: [BUGFIX 0/9] Fix bug 59501 and code improvement for dock driver
+From: "Alexander E. Patrakov" <patrakov@gmail.com>
+To: Jiang Liu <jiang.liu@huawei.com>
+Cc: "Rafael J . Wysocki" <rjw@sisk.pl>,
+	Bjorn Helgaas <bhelgaas@google.com>,
 	Yinghai Lu <yinghai@kernel.org>,
-	"Alexander E . Patrakov" <patrakov@gmail.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	Yijing Wang <wangyijing@huawei.com>,
 	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 2/3] PCI / ACPI: Use boot-time resource allocation rules during hotplug
-Date: Sat, 22 Jun 2013 23:22:53 +0200
-Message-ID: <3239217.ynmdcqJzI5@vostro.rjw.lan>
-In-Reply-To: <2737587.I0nULev1kj@vostro.rjw.lan>
-References: <2737587.I0nULev1kj@vostro.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <jiang.liu@huawei.com>
+2013/6/13 Alexander E. Patrakov <patrakov@gmail.com>:
+> 2013/6/13 Jiang Liu <jiang.liu@huawei.com>:
+>> Alexander E. Patrakov <patrakov@gmail.com> reports two bugs related to
+>> dock station support on Sony VAIO VPCZ23A4R. Actually there are at least
+>> four bugs related to Sony VAIO VPCZ23A4R dock support.
+>> 1) can't correctly detect hotplug slot for dock state
+>> 2) resource leak on undocking
+>> 3) resource allocation failure for dock devices
+>> 4) one bug in intel_snd_hda driver
+>>
+>> The first patch fixes issue 1, and the second patch fixes issue 2.
+>> These two patches, if accepted, should be material for stable branches
+>> too.
+>> Patch 3-9 are code improvement for ACPI and dock driver.
+>>
+>> I have found the root cause for issue three, but still working on
+>> solutions, and seems can't be solve in short time. So please help
+>> to review and test patches for issue 1) and 2) first.
+>>
+>> Hi Alexander, could you please help to test the whole patchset?
+>
+> Tested on top of 3.10-rc5, with no other patches applied.
+> Unfortunately, lockdep complains on the second docking attempt in the
+> initially-undocked case. Please see the attached dmesg output.
+>
+> I have not tested the initially-docked case yet, will do that in 10 minutes.
 
-On x86 platforms, the kernel respects PCI resource assignments from
-the BIOS and only reassigns resources for unassigned BARs at boot
-time.  However, with the ACPI-based hotplug (acpiphp), it ignores the
-BIOS' PCI resource assignments completely and reassigns all resources
-by itself.  This causes differences in PCI resource allocation
-between boot time and runtime hotplug to occur, which is generally
-undesirable and sometimes actively breaks things.
+Tested. The device list is updated as expected if the radeon driver is
+blacklisted and there are no open fds to the audio card.
 
-Namely, if there are enough resources, reassigning all PCI resources
-during runtime hotplug should work, but it may fail if the resources
-are constrained.  This may happen, for instance, when some PCI
-devices with huge MMIO BARs are involved in the runtime hotplug
-operations, because the current PCI MMIO alignment algorithm may
-waste huge chunks of MMIO address space in those cases.
+If radeon is not blacklisted, I hit
+https://bugzilla.kernel.org/show_bug.cgi?id=59681 , but it is not a
+regression.
 
-On the Alexander's Sony VAIO VPCZ23A4R the BIOS allocates limited
-MMIO resources for the dock station which contains a device
-(graphics adapter) with a 256MB MMIO BAR.  An attempt to reassign
-that during runtime hotplug causes the dock station MMIO window to be
-exhausted and acpiphp fails to allocate resources for the majority
-of devices on the dock station as a result.
-
-To prevent that from happening, modify acpiphp to follow the boot
-time resources allocation behavior so that the BIOS' resource
-assignments are respected during runtime hotplug too.
-
-[rjw: Changelog]
-References: https://bugzilla.kernel.org/show_bug.cgi?id=56531
-Reported-and-tested-by: Alexander E. Patrakov <patrakov@gmail.com>
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Acked-by: Yinghai Lu <yinghai@kernel.org>
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
-drivers/pci/hotplug/acpiphp_glue.c | 7 +++++--
- drivers/pci/hotplug/acpiphp_glue.c |    7 +++++--
- drivers/pci/pci.h                  |    5 +++++
- drivers/pci/setup-bus.c            |    8 ++++----
- 3 files changed, 14 insertions(+), 6 deletions(-)
-
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -670,6 +670,7 @@ static int __ref enable_device(struct ac
- 	struct pci_bus *bus = slot->bridge->pci_bus;
- 	struct acpiphp_func *func;
- 	int num, max, pass;
-+	LIST_HEAD(add_list);
- 
- 	if (slot->flags & SLOT_ENABLED)
- 		goto err_exit;
-@@ -694,13 +695,15 @@ static int __ref enable_device(struct ac
- 				max = pci_scan_bridge(bus, dev, max, pass);
- 				if (pass && dev->subordinate) {
- 					check_hotplug_bridge(slot, dev);
--					pci_bus_size_bridges(dev->subordinate);
-+					pcibios_resource_survey_bus(dev->subordinate);
-+					__pci_bus_size_bridges(dev->subordinate,
-+							       &add_list);
- 				}
- 			}
- 		}
- 	}
- 
--	pci_bus_assign_resources(bus);
-+	__pci_bus_assign_resources(bus, &add_list, NULL);
- 	acpiphp_sanitize_bus(bus);
- 	acpiphp_set_hpp_values(bus);
- 	acpiphp_set_acpi_region(slot);
-Index: linux-pm/drivers/pci/pci.h
-===================================================================
---- linux-pm.orig/drivers/pci/pci.h
-+++ linux-pm/drivers/pci/pci.h
-@@ -202,6 +202,11 @@ int __pci_read_base(struct pci_dev *dev,
- 		    struct resource *res, unsigned int reg);
- int pci_resource_bar(struct pci_dev *dev, int resno, enum pci_bar_type *type);
- void pci_configure_ari(struct pci_dev *dev);
-+void __ref __pci_bus_size_bridges(struct pci_bus *bus,
-+			struct list_head *realloc_head);
-+void __ref __pci_bus_assign_resources(const struct pci_bus *bus,
-+				      struct list_head *realloc_head,
-+				      struct list_head *fail_head);
- 
- /**
-  * pci_ari_enabled - query ARI forwarding status
-Index: linux-pm/drivers/pci/setup-bus.c
-===================================================================
---- linux-pm.orig/drivers/pci/setup-bus.c
-+++ linux-pm/drivers/pci/setup-bus.c
-@@ -1044,7 +1044,7 @@ handle_done:
- 	;
- }
- 
--static void __ref __pci_bus_size_bridges(struct pci_bus *bus,
-+void __ref __pci_bus_size_bridges(struct pci_bus *bus,
- 			struct list_head *realloc_head)
- {
- 	struct pci_dev *dev;
-@@ -1115,9 +1115,9 @@ void __ref pci_bus_size_bridges(struct p
- }
- EXPORT_SYMBOL(pci_bus_size_bridges);
- 
--static void __ref __pci_bus_assign_resources(const struct pci_bus *bus,
--					 struct list_head *realloc_head,
--					 struct list_head *fail_head)
-+void __ref __pci_bus_assign_resources(const struct pci_bus *bus,
-+				      struct list_head *realloc_head,
-+				      struct list_head *fail_head)
- {
- 	struct pci_bus *b;
- 	struct pci_dev *dev;
+--
+Alexander E. Patrakov
