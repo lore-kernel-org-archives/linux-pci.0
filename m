@@ -1,68 +1,217 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f170.google.com ([209.85.223.170]:33455 "EHLO
-	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753583Ab3FQSIo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Jun 2013 14:08:44 -0400
-Received: by mail-ie0-f170.google.com with SMTP id e11so7740381iej.15
-        for <linux-pci@vger.kernel.org>; Mon, 17 Jun 2013 11:08:43 -0700 (PDT)
-Date: Mon, 17 Jun 2013 12:08:40 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Jiang Liu <liuj97@gmail.com>
-Cc: Yinghai Lu <yinghai@kernel.org>, Jiang Liu <jiang.liu@huawei.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@huawei.com>
+To: "Rafael J . Wysocki" <rjw@sisk.pl>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"Alexander E . Patrakov" <patrakov@gmail.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, David Airlie <airlied@linux.ie>,
-	dri-devel@lists.freedesktop.org
-Subject: Re: [PATCH v3, part2 14/20] PCI, DRM: use hotplug-safe iterators to
- walk PCI buses
-Message-ID: <20130617180840.GA4233@google.com>
-References: <1369583597-3801-1-git-send-email-jiang.liu@huawei.com>
- <1369583597-3801-15-git-send-email-jiang.liu@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1369583597-3801-15-git-send-email-jiang.liu@huawei.com>
-Sender: linux-pci-owner@vger.kernel.org
+	Yijing Wang <wangyijing@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	stable@vger.kernel.org
+Subject: [BUGFIX 2/9] ACPIPHP: fix device destroying order issue when handling dock notification
+Date: Fri, 14 Jun 2013 00:32:25 +0800
+Message-Id: <1371141152-9468-3-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1371141152-9468-1-git-send-email-jiang.liu@huawei.com>
+References: <1371141152-9468-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, May 26, 2013 at 11:53:11PM +0800, Jiang Liu wrote:
-> Enhance DRM drvier to use hotplug-safe iterators to walk PCI buses.
-> 
-> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-> Cc: David Airlie <airlied@linux.ie>
-> Cc: dri-devel@lists.freedesktop.org
-> Cc: linux-kernel@vger.kernel.org
-> ---
->  drivers/gpu/drm/drm_fops.c | 6 ++++--
->  1 file changed, 4 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/gpu/drm/drm_fops.c b/drivers/gpu/drm/drm_fops.c
-> index 429e07d..dc8c40b 100644
-> --- a/drivers/gpu/drm/drm_fops.c
-> +++ b/drivers/gpu/drm/drm_fops.c
-> @@ -359,9 +359,11 @@ static int drm_open_helper(struct inode *inode, struct file *filp,
->  			pci_dev_put(pci_dev);
->  		}
->  		if (!dev->hose) {
-> -			struct pci_bus *b = pci_bus_b(pci_root_buses.next);
-> -			if (b)
-> +			struct pci_bus *b = pci_get_next_root_bus(NULL);
-> +			if (b) {
->  				dev->hose = b->sysdata;
-> +				pci_bus_put(b);
-> +			}
+Current ACPI glue logic expects that physical devices are destroyed
+before destroying companion ACPI devices, otherwise it will break the
+ACPI unbind logic and cause following warning messages:
+[  185.026073] usb usb5: Oops, 'acpi_handle' corrupt
+[  185.035150] pci 0000:1b:00.0: Oops, 'acpi_handle' corrupt
+[  185.035515] pci 0000:18:02.0: Oops, 'acpi_handle' corrupt
+[  180.013656]  port1: Oops, 'acpi_handle' corrupt
+Please refer to https://bugzilla.kernel.org/attachment.cgi?id=104321
+for full log message.
 
-This is a gross hack to begin with, and it would be far better to get
-rid of the whole "#ifdef __alpha__" block that contains this code.
-I can't believe alpha is so special that it needs to do something
-that no other arch needs.
+Above warning messages are caused by following scenario:
+1) acpi_dock_notifier_call() queues a task (T1) onto kacpi_hotplug_wq
+2) kacpi_hotplug_wq handles T1, which invokes acpi_dock_deferred_cb()
+   ->dock_notify()-> handle_eject_request()->hotplug_dock_devices()
+3) hotplug_dock_devices() first invokes registered hotplug callbacks to
+   destroy physical devices, then destroys all affected ACPI devices.
+   Everything seems perfect until now. But the acpiphp dock notification
+   handler will queue another task (T2) onto kacpi_hotplug_wq to really
+   destroy affected physical devices.
+4) kacpi_hotplug_wq finishes T1, and all affected ACPI devices have
+   been destroyed.
+5) kacpi_hotplug_wq handles T2, which destroys all affected physical
+   devices.
 
->  		}
->  	}
->  #endif
-> -- 
-> 1.8.1.2
-> 
+So it breaks ACPI glue logic's expection because ACPI devices are destroyed
+in step 3 and physical devices are destroyed in step 5.
+
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Reported-by: Alexander E. Patrakov <patrakov@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Cc: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Cc: stable@vger.kernel.org
+---
+Hi Bjorn and Rafael,
+     The recursive lock changes haven't been tested yet, need help
+from Alexander for testing.
+---
+ drivers/acpi/dock.c                | 33 +++++++++++++++++++++++++++------
+ drivers/pci/hotplug/acpiphp_glue.c | 32 ++++++++++++++++++--------------
+ 2 files changed, 45 insertions(+), 20 deletions(-)
+
+diff --git a/drivers/acpi/dock.c b/drivers/acpi/dock.c
+index 02b0563..79c8d9e 100644
+--- a/drivers/acpi/dock.c
++++ b/drivers/acpi/dock.c
+@@ -65,6 +65,7 @@ struct dock_station {
+ 	u32 flags;
+ 	spinlock_t dd_lock;
+ 	struct mutex hp_lock;
++	struct task_struct *owner;
+ 	struct list_head dependent_devices;
+ 	struct list_head hotplug_devices;
+ 
+@@ -131,9 +132,13 @@ static void
+ dock_add_hotplug_device(struct dock_station *ds,
+ 			struct dock_dependent_device *dd)
+ {
+-	mutex_lock(&ds->hp_lock);
+-	list_add_tail(&dd->hotplug_list, &ds->hotplug_devices);
+-	mutex_unlock(&ds->hp_lock);
++	if (mutex_is_locked(&ds->hp_lock) && ds->owner == current) {
++		list_add_tail(&dd->hotplug_list, &ds->hotplug_devices);
++	} else {
++		mutex_lock(&ds->hp_lock);
++		list_add_tail(&dd->hotplug_list, &ds->hotplug_devices);
++		mutex_unlock(&ds->hp_lock);
++	}
+ }
+ 
+ /**
+@@ -147,9 +152,13 @@ static void
+ dock_del_hotplug_device(struct dock_station *ds,
+ 			struct dock_dependent_device *dd)
+ {
+-	mutex_lock(&ds->hp_lock);
+-	list_del(&dd->hotplug_list);
+-	mutex_unlock(&ds->hp_lock);
++	if (mutex_is_locked(&ds->hp_lock) && ds->owner == current) {
++		list_del_init(&dd->hotplug_list);
++	} else {
++		mutex_lock(&ds->hp_lock);
++		list_del_init(&dd->hotplug_list);
++		mutex_unlock(&ds->hp_lock);
++	}
+ }
+ 
+ /**
+@@ -355,7 +364,17 @@ static void hotplug_dock_devices(struct dock_station *ds, u32 event)
+ {
+ 	struct dock_dependent_device *dd;
+ 
++	/*
++	 * There is a deadlock scenario as below:
++	 *	hotplug_dock_devices()
++	 *	    mutex_lock(&ds->hp_lock)
++	 *		dd->ops->handler()
++	 *		    register_hotplug_dock_device()
++	 *			mutex_lock(&ds->hp_lock)
++	 * So we need recursive lock scematics here, do it by ourselves.
++	 */
+ 	mutex_lock(&ds->hp_lock);
++	ds->owner = current;
+ 
+ 	/*
+ 	 * First call driver specific hotplug functions
+@@ -376,6 +395,8 @@ static void hotplug_dock_devices(struct dock_station *ds, u32 event)
+ 		else
+ 			dock_create_acpi_device(dd->handle);
+ 	}
++
++	ds->owner = NULL;
+ 	mutex_unlock(&ds->hp_lock);
+ }
+ 
+diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+index 716aa93..699b8ca 100644
+--- a/drivers/pci/hotplug/acpiphp_glue.c
++++ b/drivers/pci/hotplug/acpiphp_glue.c
+@@ -61,6 +61,8 @@ static DEFINE_MUTEX(bridge_mutex);
+ static void handle_hotplug_event_bridge (acpi_handle, u32, void *);
+ static void acpiphp_sanitize_bus(struct pci_bus *bus);
+ static void acpiphp_set_hpp_values(struct pci_bus *bus);
++static void _handle_hotplug_event_func(acpi_handle handle, u32 type,
++				       void *context);
+ static void handle_hotplug_event_func(acpi_handle handle, u32 type, void *context);
+ static void free_bridge(struct kref *kref);
+ 
+@@ -147,7 +149,7 @@ static int post_dock_fixups(struct notifier_block *nb, unsigned long val,
+ 
+ 
+ static const struct acpi_dock_ops acpiphp_dock_ops = {
+-	.handler = handle_hotplug_event_func,
++	.handler = _handle_hotplug_event_func,
+ };
+ 
+ /* Check whether the PCI device is managed by native PCIe hotplug driver */
+@@ -1065,22 +1067,13 @@ static void handle_hotplug_event_bridge(acpi_handle handle, u32 type,
+ 	alloc_acpi_hp_work(handle, type, context, _handle_hotplug_event_bridge);
+ }
+ 
+-static void _handle_hotplug_event_func(struct work_struct *work)
++static void _handle_hotplug_event_func(acpi_handle handle, u32 type,
++				       void *context)
+ {
+-	struct acpiphp_func *func;
++	struct acpiphp_func *func = context;
+ 	char objname[64];
+ 	struct acpi_buffer buffer = { .length = sizeof(objname),
+ 				      .pointer = objname };
+-	struct acpi_hp_work *hp_work;
+-	acpi_handle handle;
+-	u32 type;
+-
+-	hp_work = container_of(work, struct acpi_hp_work, work);
+-	handle = hp_work->handle;
+-	type = hp_work->type;
+-	func = (struct acpiphp_func *)hp_work->context;
+-
+-	acpi_scan_lock_acquire();
+ 
+ 	acpi_get_name(handle, ACPI_FULL_PATHNAME, &buffer);
+ 
+@@ -1113,7 +1106,18 @@ static void _handle_hotplug_event_func(struct work_struct *work)
+ 		warn("notify_handler: unknown event type 0x%x for %s\n", type, objname);
+ 		break;
+ 	}
++}
++
++static void _handle_hotplug_event_cb(struct work_struct *work)
++{
++	struct acpiphp_func *func;
++	struct acpi_hp_work *hp_work;
+ 
++	hp_work = container_of(work, struct acpi_hp_work, work);
++	func = (struct acpiphp_func *)hp_work->context;
++	acpi_scan_lock_acquire();
++	_handle_hotplug_event_func(hp_work->handle, hp_work->type,
++				    hp_work->context);
+ 	acpi_scan_lock_release();
+ 	kfree(hp_work); /* allocated in handle_hotplug_event_func */
+ 	put_bridge(func->slot->bridge);
+@@ -1141,7 +1145,7 @@ static void handle_hotplug_event_func(acpi_handle handle, u32 type,
+ 	 * don't deadlock on hotplug actions.
+ 	 */
+ 	get_bridge(func->slot->bridge);
+-	alloc_acpi_hp_work(handle, type, context, _handle_hotplug_event_func);
++	alloc_acpi_hp_work(handle, type, context, _handle_hotplug_event_cb);
+ }
+ 
+ /*
+-- 
+1.8.1.2
+
