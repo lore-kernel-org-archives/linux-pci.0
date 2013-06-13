@@ -1,47 +1,128 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vb0-f54.google.com ([209.85.212.54]:54333 "EHLO
-	mail-vb0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751361Ab3FQW53 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Jun 2013 18:57:29 -0400
-MIME-Version: 1.0
-In-Reply-To: <51BE7AD5.5010300@huawei.com>
-References: <1370504093-14908-1-git-send-email-wangyijing@huawei.com>
-	<20130615002224.GA21643@google.com>
-	<51BE7AD5.5010300@huawei.com>
-Date: Mon, 17 Jun 2013 15:57:28 -0700
-Message-ID: <CA+8MBb+BSNnLtR8jZinTh9h01f3=Zeu+kX6xke1Ei08HYzRQvg@mail.gmail.com>
-Subject: Re: [PATCH -v5 0/8] Add hostbridge resource release to support root
- bus hotplug in IA64
-From: Tony Luck <tony.luck@gmail.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org,
-	"linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>,
-	Fenghua Yu <fenghua.yu@intel.com>,
-	Hanjun Guo <guohanjun@huawei.com>,
-	Liu Jiang <jiang.liu@huawei.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@huawei.com>
+To: "Rafael J . Wysocki" <rjw@sisk.pl>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"Alexander E . Patrakov" <patrakov@gmail.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [BUGFIX 8/9] ACPI: introduce several helper functions
+Date: Fri, 14 Jun 2013 00:32:31 +0800
+Message-Id: <1371141152-9468-9-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1371141152-9468-1-git-send-email-jiang.liu@huawei.com>
+References: <1371141152-9468-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Jun 16, 2013 at 7:56 PM, Yijing Wang <wangyijing@huawei.com> wrote:
->> Tony, what do you think about this?  It only touches ia64, and I
->> have no way to build or test it.  So maybe you should handle this?
->>
->> I haven't reviewed it, but I think it's the right general direction,
->> at least.
->>
-> Bjorn, thanks for your comments!
->
-> Hi Tony, this series mainly to make pci root bus hotplug happy in IA64.
-> I cannot test the first two patch(SGI related) in my IA64 machine.
-> But the rest patches has been tested in my ia64 machine, and result is ok.
+Introduce several helper functions, which will be used to simplify code.
 
-I'd like to understand the dependencies on Bjorn's pci-next tree.  If
-this series
-actually only depends on Linus' v3.10-rc6 I'd rather start from there (because
-then I don't need to coordinate "please-pull" messages when sending things
-to Linus).  If we really do need things from the pci-next tree, well that's OK
-too, but I'd still like to know what they are.
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+---
+ drivers/acpi/utils.c    | 74 +++++++++++++++++++++++++++++++++++++++++++++++++
+ include/acpi/acpi_bus.h |  5 ++++
+ 2 files changed, 79 insertions(+)
 
--Tony
+diff --git a/drivers/acpi/utils.c b/drivers/acpi/utils.c
+index 74437130..cb66fce 100644
+--- a/drivers/acpi/utils.c
++++ b/drivers/acpi/utils.c
+@@ -495,3 +495,77 @@ acpi_handle_printk(const char *level, acpi_handle handle, const char *fmt, ...)
+ 	kfree(buffer.pointer);
+ }
+ EXPORT_SYMBOL(acpi_handle_printk);
++
++/**
++ * acpi_evaluate_ej0: Evaluate _EJ0 method for hotplug operations
++ * @handle: ACPI device handle
++ *
++ * Evaluate device's _EJ0 method for hotplug operations.
++ */
++acpi_status acpi_evaluate_ej0(acpi_handle handle)
++{
++	acpi_status status;
++	union acpi_object arg;
++	struct acpi_object_list arg_list;
++
++	arg.type = ACPI_TYPE_INTEGER;
++	arg.integer.value = 1;
++	arg_list.count = 1;
++	arg_list.pointer = &arg;
++	status = acpi_evaluate_object(handle, "_EJ0", &arg_list, NULL);
++	if (status == AE_NOT_FOUND) {
++		acpi_handle_warn(handle, "No _EJ0 support for device\n");
++	} else if (ACPI_FAILURE(status)) {
++		acpi_handle_warn(handle, "Eject failed (0x%x)\n", status);
++	}
++
++	return status;
++}
++
++/**
++ * acpi_evaluate_lck: Evaluate _LCK method to lock/unlock device
++ * @handle: ACPI device handle
++ * @lock: lock device if non-zero, otherwise unlock device
++ *
++ * Evaluate device's _LCK method if present to lock/unlock device
++ */
++acpi_status acpi_evaluate_lck(acpi_handle handle, int lock)
++{
++	acpi_status status;
++	union acpi_object arg;
++	struct acpi_object_list arg_list;
++
++	arg_list.count = 1;
++	arg_list.pointer = &arg;
++	arg.type = ACPI_TYPE_INTEGER;
++	arg.integer.value = !!lock;
++	status = acpi_evaluate_object(handle, "_LCK", &arg_list, NULL);
++	if (ACPI_FAILURE(status) && status != AE_NOT_FOUND) {
++		if (lock)
++			acpi_handle_warn(handle,
++				"Locking device failed (0x%x)\n", status);
++		else
++			acpi_handle_warn(handle,
++				"Unlocking device failed (0x%x)\n", status);
++	}
++
++	return status;
++}
++
++/**
++ * acpi_has_method: Check whether @handle has a method named @name
++ * @handle: ACPI device handle
++ * @name: name of object or method
++ *
++ * Check whether @handle has a method named @name.
++ */
++int acpi_has_method(acpi_handle handle, char *name)
++{
++	acpi_status status;
++	acpi_handle tmp;
++
++	status = acpi_get_handle(handle, name, &tmp);
++
++	return ACPI_FAILURE(status) ? 0 : 1;
++}
++EXPORT_SYMBOL(acpi_has_method);
+diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
+index 636c59f..5df5f89 100644
+--- a/include/acpi/acpi_bus.h
++++ b/include/acpi/acpi_bus.h
+@@ -56,6 +56,11 @@ acpi_evaluate_hotplug_ost(acpi_handle handle, u32 source_event,
+ 
+ acpi_status
+ acpi_get_physical_device_location(acpi_handle handle, struct acpi_pld_info **pld);
++
++acpi_status acpi_evaluate_ej0(acpi_handle handle);
++acpi_status acpi_evaluate_lck(acpi_handle handle, int lock);
++int acpi_has_method(acpi_handle handle, char *name);
++
+ #ifdef CONFIG_ACPI
+ 
+ #include <linux/proc_fs.h>
+-- 
+1.8.1.2
+
