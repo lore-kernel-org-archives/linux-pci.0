@@ -1,141 +1,93 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:22483 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753880Ab3FFHgQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Jun 2013 03:36:16 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Yinghai Lu <yinghai@kernel.org>, <linux-pci@vger.kernel.org>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	Fenghua Yu <fenghua.yu@intel.com>,
-	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>, John Keller <jpk@sgi.com>,
-	Jay Lan <jlan@engr.sgi.com>, Jack Steiner <steiner@sgi.com>,
-	Mark Maule <maule@sgi.com>
-Subject: [PATCH -v5 1/8] PCI/IA64: SN: remove sn_pci_window_fixup()
-Date: Thu, 6 Jun 2013 15:34:46 +0800
-Message-ID: <1370504093-14908-2-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1370504093-14908-1-git-send-email-wangyijing@huawei.com>
-References: <1370504093-14908-1-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Jiang Liu <jiang.liu@huawei.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"Alexander E . Patrakov" <patrakov@gmail.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Shaohua Li <shaohua.li@intel.com>,
+	Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org
+Subject: Re: [BUGFIX 5/9] ACPI, DOCK: kill redundant spin lock in dock device object
+Date: Thu, 13 Jun 2013 20:28:40 +0200
+Message-ID: <1490442.eFer0nddaj@vostro.rjw.lan>
+In-Reply-To: <1371141152-9468-6-git-send-email-jiang.liu@huawei.com>
+References: <1371141152-9468-1-git-send-email-jiang.liu@huawei.com> <1371141152-9468-6-git-send-email-jiang.liu@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently, pcibios_bus_to_resource() and pcibios_resource_to_bus()
-functions use pci_host_bridge_window in pci_host_bridge to translate
-bus side to/from cpu side addresses. Pci_window in pci_controller
-under IA64 is no used again, so it's no need to use sn_pci_window_fixup()
-to setup pci_window again, remove it.
+On Friday, June 14, 2013 12:32:28 AM Jiang Liu wrote:
+> All dock device related data structures are created during driver
+> initialization, so kill the redundant spin lock in dock device object.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Cc: John Keller <jpk@sgi.com>
-Cc: Jay Lan <jlan@engr.sgi.com>
-Cc: Jack Steiner <steiner@sgi.com>
-Cc: Mark Maule <maule@sgi.com>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Fenghua Yu <fenghua.yu@intel.com>
-Cc: linux-ia64@vger.kernel.org
----
- arch/ia64/sn/kernel/io_init.c |   53 -----------------------------------------
- 1 files changed, 0 insertions(+), 53 deletions(-)
+As a cleanup, it definitely makes sense, but does it fix anything?
 
-diff --git a/arch/ia64/sn/kernel/io_init.c b/arch/ia64/sn/kernel/io_init.c
-index 238e2c5..06a172c 100644
---- a/arch/ia64/sn/kernel/io_init.c
-+++ b/arch/ia64/sn/kernel/io_init.c
-@@ -149,48 +149,6 @@ sn_legacy_pci_window_fixup(struct pci_controller *controller,
- }
- 
- /*
-- * sn_pci_window_fixup() - Create a pci_window for each device resource.
-- *			   It will setup pci_windows for use by
-- *			   pcibios_bus_to_resource(), pcibios_resource_to_bus(),
-- *			   etc.
-- */
--static void
--sn_pci_window_fixup(struct pci_dev *dev, unsigned int count,
--		    s64 * pci_addrs)
--{
--	struct pci_controller *controller = PCI_CONTROLLER(dev->bus);
--	unsigned int i;
--	unsigned int idx;
--	unsigned int new_count;
--	struct pci_window *new_window;
--
--	if (count == 0)
--		return;
--	idx = controller->windows;
--	new_count = controller->windows + count;
--	new_window = kcalloc(new_count, sizeof(struct pci_window), GFP_KERNEL);
--	BUG_ON(new_window == NULL);
--	if (controller->window) {
--		memcpy(new_window, controller->window,
--		       sizeof(struct pci_window) * controller->windows);
--		kfree(controller->window);
--	}
--
--	/* Setup a pci_window for each device resource. */
--	for (i = 0; i <= PCI_ROM_RESOURCE; i++) {
--		if (pci_addrs[i] == -1)
--			continue;
--
--		new_window[idx].offset = dev->resource[i].start - pci_addrs[i];
--		new_window[idx].resource = dev->resource[i];
--		idx++;
--	}
--
--	controller->windows = new_count;
--	controller->window = new_window;
--}
--
--/*
-  * sn_io_slot_fixup() -   We are not running with an ACPI capable PROM,
-  *			  and need to convert the pci_dev->resource
-  *			  'start' and 'end' addresses to mapped addresses,
-@@ -199,9 +157,7 @@ sn_pci_window_fixup(struct pci_dev *dev, unsigned int count,
- void
- sn_io_slot_fixup(struct pci_dev *dev)
- {
--	unsigned int count = 0;
- 	int idx;
--	s64 pci_addrs[PCI_ROM_RESOURCE + 1];
- 	unsigned long addr, end, size, start;
- 	struct pcidev_info *pcidev_info;
- 	struct sn_irq_info *sn_irq_info;
-@@ -229,7 +185,6 @@ sn_io_slot_fixup(struct pci_dev *dev)
- 	for (idx = 0; idx <= PCI_ROM_RESOURCE; idx++) {
- 
- 		if (!pcidev_info->pdi_pio_mapped_addr[idx]) {
--			pci_addrs[idx] = -1;
- 			continue;
- 		}
- 
-@@ -237,11 +192,8 @@ sn_io_slot_fixup(struct pci_dev *dev)
- 		end = dev->resource[idx].end;
- 		size = end - start;
- 		if (size == 0) {
--			pci_addrs[idx] = -1;
- 			continue;
- 		}
--		pci_addrs[idx] = start;
--		count++;
- 		addr = pcidev_info->pdi_pio_mapped_addr[idx];
- 		addr = ((addr << 4) >> 4) | __IA64_UNCACHED_OFFSET;
- 		dev->resource[idx].start = addr;
-@@ -276,11 +228,6 @@ sn_io_slot_fixup(struct pci_dev *dev)
- 						 IORESOURCE_ROM_BIOS_COPY;
- 		}
- 	}
--	/* Create a pci_window in the pci_controller struct for
--	 * each device resource.
--	 */
--	if (count > 0)
--		sn_pci_window_fixup(dev, count, pci_addrs);
- 
- 	sn_pci_fixup_slot(dev, pcidev_info, sn_irq_info);
- }
+Rafael
+
+
+> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+> Cc: Shaohua Li <shaohua.li@intel.com>
+> Cc: Len Brown <lenb@kernel.org>
+> Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
+> Cc: linux-acpi@vger.kernel.org
+> Cc: linux-kernel@vger.kernel.org
+> ---
+>  drivers/acpi/dock.c | 15 +++------------
+>  1 file changed, 3 insertions(+), 12 deletions(-)
+> 
+> diff --git a/drivers/acpi/dock.c b/drivers/acpi/dock.c
+> index 8e578aa..cd2d5df 100644
+> --- a/drivers/acpi/dock.c
+> +++ b/drivers/acpi/dock.c
+> @@ -57,7 +57,6 @@ struct dock_station {
+>  	acpi_handle handle;
+>  	unsigned long last_dock_time;
+>  	u32 flags;
+> -	spinlock_t dd_lock;
+>  	struct mutex hp_lock;
+>  	struct task_struct *owner;
+>  	struct list_head dependent_devices;
+> @@ -107,10 +106,7 @@ add_dock_dependent_device(struct dock_station *ds, acpi_handle handle)
+>  	dd->handle = handle;
+>  	INIT_LIST_HEAD(&dd->list);
+>  	INIT_LIST_HEAD(&dd->hotplug_list);
+> -
+> -	spin_lock(&ds->dd_lock);
+>  	list_add_tail(&dd->list, &ds->dependent_devices);
+> -	spin_unlock(&ds->dd_lock);
+>  
+>  	return 0;
+>  }
+> @@ -168,14 +164,10 @@ find_dock_dependent_device(struct dock_station *ds, acpi_handle handle)
+>  {
+>  	struct dock_dependent_device *dd;
+>  
+> -	spin_lock(&ds->dd_lock);
+> -	list_for_each_entry(dd, &ds->dependent_devices, list) {
+> -		if (handle == dd->handle) {
+> -			spin_unlock(&ds->dd_lock);
+> +	list_for_each_entry(dd, &ds->dependent_devices, list)
+> +		if (handle == dd->handle)
+>  			return dd;
+> -		}
+> -	}
+> -	spin_unlock(&ds->dd_lock);
+> +
+>  	return NULL;
+>  }
+>  
+> @@ -964,7 +956,6 @@ static int __init dock_add(acpi_handle handle)
+>  	dock_station->last_dock_time = jiffies - HZ;
+>  
+>  	mutex_init(&dock_station->hp_lock);
+> -	spin_lock_init(&dock_station->dd_lock);
+>  	INIT_LIST_HEAD(&dock_station->sibling);
+>  	INIT_LIST_HEAD(&dock_station->hotplug_devices);
+>  	INIT_LIST_HEAD(&dock_station->dependent_devices);
+> 
 -- 
-1.7.1
-
-
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
