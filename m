@@ -1,174 +1,99 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:43740 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750887Ab3FLNpS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Jun 2013 09:45:18 -0400
-Date: Wed, 12 Jun 2013 09:45:04 -0400
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-To: George Dunlap <george.dunlap@eu.citrix.com>
-Cc: xen-devel@lists.xensource.com, linux-kernel@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	stable@vger.kernel.org
-Subject: Re: [PATCH] xen/pci: Deal with toolstack missing an
- 'XenbusStateClosing'.
-Message-ID: <20130612134504.GG2918@phenom.dumpdata.com>
-References: <20130610202456.GA17822@phenom.dumpdata.com>
- <1370898399-20968-1-git-send-email-konrad.wilk@oracle.com>
- <1370898399-20968-2-git-send-email-konrad.wilk@oracle.com>
- <51B743EA.5020800@eu.citrix.com>
- <51B74B77.1000806@oracle.com>
- <51B74DA9.7060509@eu.citrix.com>
-MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="jI8keyz6grp/JLjh"
-In-Reply-To: <51B74DA9.7060509@eu.citrix.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@huawei.com>
+To: "Rafael J . Wysocki" <rjw@sisk.pl>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"Alexander E . Patrakov" <patrakov@gmail.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Shaohua Li <shaohua.li@intel.com>,
+	Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org
+Subject: [BUGFIX 3/9] ACPI, DOCK: clean up unused module related code
+Date: Fri, 14 Jun 2013 00:32:26 +0800
+Message-Id: <1371141152-9468-4-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1371141152-9468-1-git-send-email-jiang.liu@huawei.com>
+References: <1371141152-9468-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+ACPI dock driver can't be built as a module any more, so clean up
+module related code.
 
---jI8keyz6grp/JLjh
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-
-On Tue, Jun 11, 2013 at 05:17:45PM +0100, George Dunlap wrote:
-> On 06/11/2013 05:08 PM, konrad wilk wrote:
-> >
-> >On 6/11/2013 11:36 AM, George Dunlap wrote:
-> >>On 06/10/2013 10:06 PM, Konrad Rzeszutek Wilk wrote:
-> >>>There are two tool-stack that can instruct the Xen PCI frontend
-> >>>and backend to change states: 'xm' (Python code with a daemon),
-> >>>and 'xl' (C library - does not keep state changes).
-> >>>
-> >>>With the 'xm', the path to disconnect a PCI device (xm pci-detach
-> >>><guest> <BDF>)is:
-> >>>
-> >>>4(Connected)->7(Reconfiguring*)-> 8(Reconfigured)->
-> >>>4(Connected)->5(Closing*).
-> >>>
-> >>>The * is for states that the tool-stack sets. For 'xl', it is similar:
-> >>>
-> >>>4(Connected)->7(Reconfiguring*)-> 8(Reconfigured)-> 4(Connected)
-> >>>
-> >>>Both of them also tear down the XenBus structure, so the backend
-> >>>state ends up going in the 3(Initialised) and calls
-> >>>pcifront_xenbus_remove.
-> >>
-> >>So I looked a little bit into this; there are actually two different
-> >>states that happen as part of this handshake.  In order to disonnect a
-> >>*device*, xl signals using the *bus* state, like this:
-> >>* Wait for the *bus* to be in state 4(Connected)
-> >>* Set the *device* state to 5(Closing)
-> >>* Set the *bus* state to 7(Reconfiguring)
-> >>* Wait for the *bus* state to return to 4(Connected)
-> >>
-> >>So are all of these states you see the *bus* state?  And why would you
-> >>disconnect the whole pci bus if you're only removing one device?
-> >
-> >Correct. The stats I enumerated are *bus* states. Not per-device states.
-> >I presume (and I hadn't checked xm) that Xend has some logic to only
-> >disconnect the bus if all of the PCI devices have been disconnected. In
-> >'xl' it does not do that.
-> >
-> >The testing I did was just with one PCI device.
-> 
-> Ah, OK -- I see now.  The problem is that the code in the Linux side
-> didn't know about the whole "4->7->8->4" thing to unplug a device.
-> In all likelihood, if you had used xm with two devices (so that the
-> bus didn't get disconnected), then you would have run across the
-> same error.
-> 
-> So at least part of the problem *is* a bug in Linux.
-
-Good! Bjorn, would you be OK Ack-ing the patch I sent (attached here
-for reference) or putting it in your queue for Linus?
-
-My plan would be to send it to Linus in the 3.11 merge window.
-
---jI8keyz6grp/JLjh
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment; filename="0001-xen-pci-Deal-with-toolstack-missing-an-XenbusStateCl.patch"
-
->From efdfbd66b4f0ff6f005f9d30891adb8bd3f3eefa Mon Sep 17 00:00:00 2001
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Date: Mon, 10 Jun 2013 16:48:09 -0400
-Subject: [PATCH] xen/pci: Deal with toolstack missing an 'XenbusStateClosing'.
-
-There are two tool-stack that can instruct the Xen PCI frontend
-and backend to change states: 'xm' (Python code with a daemon),
-and 'xl' (C library - does not keep state changes).
-
-With the 'xm', the path to disconnect a PCI device (xm pci-detach
-<guest> <BDF>)is:
-
-4(Connected)->7(Reconfiguring*)-> 8(Reconfigured)-> 4(Connected)->5(Closing*).
-
-The * is for states that the tool-stack sets. For 'xl', it is similar:
-
-4(Connected)->7(Reconfiguring*)-> 8(Reconfigured)-> 4(Connected)
-
-Both of them also tear down the XenBus structure, so the backend
-state ends up going in the 3(Initialised) and calls pcifront_xenbus_remove.
-
-When a PCI device is plugged in (xm pci-attach <guest> <BDF>)
-both of them follow the same pattern:
-2(InitWait*), 3(Initialized*), 4(Connected*)->4(Connected).
-
-[xen-pcifront ignores the 2,3 state changes and only acts when
-4 (Connected) has been reached]
-
-The problem is that git commit 3d925320e9e2de162bd138bf97816bda8c3f71be
-("xen/pcifront: Use Xen-SWIOTLB when initting if required") introduced
-a mechanism to initialize the SWIOTLB when the Xen PCI front moves to
-Connected state. It also had some aggressive seatbelt code check that
-would warn the user if one tried to change to Connected state without
-hitting first the Closing state:
-
- pcifront pci-0: PCI frontend already installed!
-
-However, that code can be relaxed and we can continue on working
-even if the frontend is instructed to be the 'Connected' state with
-no devices and then gets tickled to be in 'Connected' state again.
-
-In other words, this 4(Connected)->5(Closing)->4(Connected) state
-was expected, while 4(Connected)->.... anything but 5(Closing)->4(Connected)
-was not. This patch removes that aggressive check and allows
-Xen pcifront to work with the 'xl' toolstack.
-
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Cc: stable@vger.kernel.org
-Signed-off-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Cc: Shaohua Li <shaohua.li@intel.com>
+Cc: Len Brown <lenb@kernel.org>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-acpi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 ---
- drivers/pci/xen-pcifront.c | 7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
+ drivers/acpi/dock.c | 41 -----------------------------------------
+ 1 file changed, 41 deletions(-)
 
-diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
-index ac99515..cc46e253 100644
---- a/drivers/pci/xen-pcifront.c
-+++ b/drivers/pci/xen-pcifront.c
-@@ -675,10 +675,9 @@ static int pcifront_connect_and_init_dma(struct pcifront_device *pdev)
- 	if (!pcifront_dev) {
- 		dev_info(&pdev->xdev->dev, "Installing PCI frontend\n");
- 		pcifront_dev = pdev;
--	} else {
--		dev_err(&pdev->xdev->dev, "PCI frontend already installed!\n");
-+	} else
- 		err = -EEXIST;
--	}
-+
- 	spin_unlock(&pcifront_dev_lock);
+diff --git a/drivers/acpi/dock.c b/drivers/acpi/dock.c
+index 79c8d9e..50e38b7 100644
+--- a/drivers/acpi/dock.c
++++ b/drivers/acpi/dock.c
+@@ -53,12 +53,6 @@ MODULE_PARM_DESC(immediate_undock, "1 (default) will cause the driver to "
  
- 	if (!err && !swiotlb_nr_tbl()) {
-@@ -846,7 +845,7 @@ static int pcifront_try_connect(struct pcifront_device *pdev)
- 		goto out;
+ static struct atomic_notifier_head dock_notifier_list;
  
- 	err = pcifront_connect_and_init_dma(pdev);
--	if (err) {
-+	if (err && err != -EEXIST) {
- 		xenbus_dev_fatal(pdev->xdev, err,
- 				 "Error setting up PCI Frontend");
- 		goto out;
+-static const struct acpi_device_id dock_device_ids[] = {
+-	{"LNXDOCK", 0},
+-	{"", 0},
+-};
+-MODULE_DEVICE_TABLE(acpi, dock_device_ids);
+-
+ struct dock_station {
+ 	acpi_handle handle;
+ 	unsigned long last_dock_time;
+@@ -1013,30 +1007,6 @@ err_unregister:
+ }
+ 
+ /**
+- * dock_remove - free up resources related to the dock station
+- */
+-static int dock_remove(struct dock_station *ds)
+-{
+-	struct dock_dependent_device *dd, *tmp;
+-	struct platform_device *dock_device = ds->dock_device;
+-
+-	if (!dock_station_count)
+-		return 0;
+-
+-	/* remove dependent devices */
+-	list_for_each_entry_safe(dd, tmp, &ds->dependent_devices, list)
+-		kfree(dd);
+-
+-	list_del(&ds->sibling);
+-
+-	/* cleanup sysfs */
+-	sysfs_remove_group(&dock_device->dev.kobj, &dock_attribute_group);
+-	platform_device_unregister(dock_device);
+-
+-	return 0;
+-}
+-
+-/**
+  * find_dock_and_bay - look for dock stations and bays
+  * @handle: acpi handle of a device
+  * @lvl: unused
+@@ -1073,14 +1043,3 @@ int __init acpi_dock_init(void)
+ 		ACPI_DOCK_DRIVER_DESCRIPTION, dock_station_count);
+ 	return 0;
+ }
+-
+-static void __exit dock_exit(void)
+-{
+-	struct dock_station *tmp, *dock_station;
+-
+-	unregister_acpi_bus_notifier(&dock_acpi_notifier);
+-	list_for_each_entry_safe(dock_station, tmp, &dock_stations, sibling)
+-		dock_remove(dock_station);
+-}
+-
+-module_exit(dock_exit);
 -- 
-1.8.1.4
+1.8.1.2
 
-
---jI8keyz6grp/JLjh--
