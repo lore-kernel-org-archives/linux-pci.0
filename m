@@ -1,71 +1,97 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f169.google.com ([209.85.223.169]:38313 "EHLO
-	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751963Ab3FZCuF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Jun 2013 22:50:05 -0400
-Received: by mail-ie0-f169.google.com with SMTP id 10so30468961ied.0
-        for <linux-pci@vger.kernel.org>; Tue, 25 Jun 2013 19:50:04 -0700 (PDT)
-Received: from google.com ([172.29.124.56])
-        by mx.google.com with ESMTPSA id l9sm6352895igt.5.2013.06.25.19.50.03
-        for <linux-pci@vger.kernel.org>
-        (version=TLSv1.2 cipher=RC4-SHA bits=128/128);
-        Tue, 25 Jun 2013 19:50:03 -0700 (PDT)
-Date: Tue, 25 Jun 2013 20:50:01 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: linux-pci@vger.kernel.org
-Subject: Current open PCI defects
-Message-ID: <20130626025001.GA25384@google.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <51B9467B.7080902@huawei.com>
+Date: Thu, 13 Jun 2013 12:11:39 +0800
+From: "Jiang Liu (Gerry)" <jiang.liu@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Sender: linux-pci-owner@vger.kernel.org
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Yinghai Lu <yinghai@kernel.org>,
+	Roman Yepishev <roman.yepishev@gmail.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH] PCI: Remove not needed check in disable aspm link
+References: <CAErSpo6v0mj9=Q13d=G4hho0mb9XTcsmefzke9fROYmZ7oBWxQ@mail.gmail.com> <CAE9FiQVqKag2TGah7x_1MAJ+c0UWgywgM_jKUoOnh+rq3bwBhg@mail.gmail.com> <CAE9FiQVMgdj5edbR4qZny29fV9-bW_We_G4Wpn_yruDLQZiQiQ@mail.gmail.com> <20130329032200.GA11990@google.com> <CAE9FiQVu5QyxaKsYzzQoroQD=TvsziHzDOtoeg=FvhZ8HyN5yw@mail.gmail.com> <CAErSpo7ChfRiEn0eR1rf-mVheUS9Yf8f+j4n78PJcGYh+yMVgA@mail.gmail.com> <CAE9FiQXkDg7Y336S=DXoms44=5HLaiUx=sWviupz1fJmaDUEzQ@mail.gmail.com> <CAE9FiQU5c=ztzbskNnYFFKF9V5zO+jnRcMBCivLxA1F3fSfX5w@mail.gmail.com> <20130401235256.GA31966@google.com> <CAE9FiQV8cPh-s6=EQu_cZTtn86+NwZE5KuGMhf43aOhzkL=hwA@mail.gmail.com> <CAErSpo7Jni1ZSf_W=vB3kqsucPpoepa2Q5g=77a6D3FaPwe9LA@mail.gmail.com> <CAE9FiQWjQXwiTWju6cBc_o25jy_wmZ1u+Pifh1wdnxtV=i5ENw@mail.gmail.com> <CAErSpo7=a-wX6BLbm_O1nUMMrQHOgtSm3xZHKuRqaz8rnKSbRA@mail.gmail.com> <CAE9FiQUbw7OUhRB+gKMxkuE9+nm9097+mwZ2z4adO8Hv_NjF1Q@mail.gmail.com> <CAErSpo7gL3Ds9oq8ZZ4zdt1uHy9xbkWJE+Ja=-0QXFQECjr40A@mail.gmail.com>
+In-Reply-To: <CAErSpo7gL3Ds9oq8ZZ4zdt1uHy9xbkWJE+Ja=-0QXFQECjr40A@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Here's a list of the current PCI defects open in https://bugzilla.kernel.org
+Hi Bjorn,
+     I'm working on several acpiphp related bugfixes, and feel some
+are materials for 3.10 too. Actually we have identified four bugs
+related to dock station support on Sony VAIO VPCZ23A4R laptop.
+I will try to send out patchset to address these bugs tonight.
+Seems we really need to rethink about acpiphp and pciehp now.
+Regards!
+Gerry
+On 2013/6/13 11:50, Bjorn Helgaas wrote:
+> On Wed, Jun 12, 2013 at 1:41 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> On Wed, Jun 12, 2013 at 10:05 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>>> current code from acpi_pci_root_add we have
+>>>>    1. pci_acpi_scan_root
+>>>>           ==> pci devices enumeration and bus scanning.
+>>>>               ==> pci_alloc_child_bus
+>>>>                   ==> pcibios_add_bus
+>>>>                       ==> acpi_pci_add_bus
+>>>>                           ==> acpiphp_enumerate_slots
+>>>>                               ==> ...==> register_slot
+>>>>                                    ==> device_is_managed_by_native_pciehp
+>>>>                                          ==> check osc_set with
+>>>> OSC_PCI_EXPRESS_NATIVE_HP_CONTROL
+>>>>     2. _OSC set request
+>>>>
+>>>> so we always have acpiphp hotplug slot registered at first.
+>>>>
+>>>> so either we need to
+>>>> A. revert reverting about _OSC
+>>>> B. move pcibios_add_bus down to pci_bus_add_devices()
+>>>>      as acpiphp and apci pci slot driver are some kind of drivers for pci_bus
+>>>> C. A+B
+>>>
+>>> It doesn't surprise me at all that there are problems in the _OSC code
+>>> and the acpiphp/pciehp interaction.  That whole area is a complete
+>>> disaster.  It'd really be nice if somebody stepped up and reworked it
+>>> so it makes sense.
+>>>
+>>> But this report is useless to me.  I don't have time to work out what
+>>> the problem is and how it affects users and come up with a fix.
+>>
+>> effects: without fix the problem, user can not use pcie native hotplug
+>> if their system's firmware support acpihp and pciehp.
+>> And make it worse, that acpiphp have to be built-in, so they have no
+>> way to blacklist acpiphp in config.
+>>
+>>>
+>>> My advice is to simplify the path first, and worry about fixing the
+>>> bug afterwards.  We've already done several iterations of fiddling
+>>> with things, and I think all we're doing is playing "whack-a-mole" and
+>>> pushing the bugs around from one place to another.
+>>
+>> We need to address regression at first.
+>> my suggestion is : revert the reverting and apply my -v3 version that will fix
+>> regression that Roman Yepishev met.
+>>
+>> please check attached two patches, hope it could save your some time.
+>
+> OK, you're right.  It's not reasonable to do anything more than a
+> minimal fix when we're at -rc5.
+>
+> Sigh.  I'll spend tomorrow trying to understand your patches and write
+> changelogs for you.
+>
+> I think you're saying that in systems that support both acpiphp and
+> pciehp, we should be using pciehp, but we currently use acpiphp.  If
+> so, that's certainly a bug.  How serious is it?  Is it a disaster if
+> we use acpiphp until we can resolve this cleanly?  Are there a lot of
+> systems that claim to support acpiphp but it doesn't actually work?
+>
+> Bjorn
+>
+> .
+>
 
-Hint: maintainers really like it when people take the initiative to
-resolve open issues.
 
-Regressions (8 total):
-
-  15388	After suspend to ram, laptop doesn't connect to the wired network. Sky2 error. Marvell 88E8036
-  41622	[REGRESSION][BISECTED] Notebook crashes upon detecting the PCI subsystem with kernels >= 2.6.24-rc7
-  42606	PCI I/O range not assigned under newer kernels
-  44881	pci_find_upstream_pcie_bridge() warning
-  57331	pci_disable_link_state() doesn't disable L1
-  57961	ExpressCard hot-remove and hot-add not recognized by acpiphp
-  59311	14e4:16bc SD card slot not working on Acer Aspire One 756
-  59411	Several new kmemleaks related to acpiphp
-
-Others (31 total):
-
-  10461	PCI resource assignments fail due to poor allocation strategy
-  15508	pciehp failing to recognise expresscards after a suspend/resume cycle
-  16119	jmb38x recognized and works only if a card is plugged in during boot
-  16470	pci_raw_set_power_state does not return an error if power state fails to change.
-  24712	pciehp: resume problem: PCMCIA card insert not detected after resume
-  29922	irqpoll crash
-  29982	PCI Device conflicts with GART
-  35452	Devices not available after resume from suspend to RAM
-  40802	Kernel does not detect JMicron card reader unless a card is inserted when the PCI bus is scanned
-  42552	PCI BAR Conflicts with E820 Area
-  43041	Internal SD card reader is not working on Dell XPS L501x
-  43192	various ExpressCards are not recognized
-  43331	error updating BAR
-  44021	Internal SD card reader is not working on Dell XPS 17 L502X
-  47381	Screaming IRQ with Radeon HD4670 AGP / HDMI audio
-  48451	error reserving uninitialized BAR
-  50161	Dell Precision T5400 Workstation has incorrect CRS for PCI host bridge window
-  50671	bnx2: No interrupt was generated using MSI, switching to INTx mode
-  52211	"pci=nocrs" required to get BAR address assignment for SR-IOV capable card on IBM M4 x3650
-  52531	Unify pcibios_resource_survey(), etc
-  52591	xhci module fails when booting in UEFI mode
-  54411	kernel panic when parallel remove pci device triggered by sysfs/pci interface
-  54801	ExpressCard hotplug with acpiphp doesn't work unless pcie_aspm=force used
-  54921	pciehp/xhci ExpressCard failure on Dell Vostro 3550
-  54981	ExpressCard hotplug fails except with pcie_ports=native
-  57311	Unexpected return value of pci_dma_mapping_error() when process is killed by signal
-  57321	Using pci_reset_function() when doing unbind in parallel is problematic
-  59191	host bridge apertures not really enforced on PA-RISC ?
-  59391	pcie_aspm=off breaks pciehp on Dell Vostro 3550 (unlike pcie_aspm=compat)
-  59531	Error recovery slot_reset() callback called while device is frozen
-  60111	NULL pointer deref in ASPM alloc_pcie_link_state() on non-compliant topology
