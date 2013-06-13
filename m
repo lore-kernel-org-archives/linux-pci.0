@@ -1,54 +1,62 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:37568 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751106Ab3FNFMM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Jun 2013 01:12:12 -0400
-Message-ID: <51BAA60D.1060604@huawei.com>
-Date: Fri, 14 Jun 2013 13:11:41 +0800
-From: "Jiang Liu (Gerry)" <jiang.liu@huawei.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <51B93221.2040505@jp.fujitsu.com>
+Date: Thu, 13 Jun 2013 11:44:49 +0900
+From: Takao Indoh <indou.takao@jp.fujitsu.com>
 MIME-Version: 1.0
-To: "Alexander E. Patrakov" <patrakov@gmail.com>
-CC: Yinghai Lu <yinghai@kernel.org>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: [BUGFIX 0/9] Fix bug 59501 and code improvement for dock driver
-References: <1371141152-9468-1-git-send-email-jiang.liu@huawei.com> <CAE9FiQX1xVJA3MZc4LndWU7kx0mxC-YPE1R8JD4W2-Gg9zq3Zw@mail.gmail.com> <51BA7B3D.1020402@huawei.com> <CAE9FiQX-jCZYPyxeHCp2h-6qx1GMyQYuaTk5JwZR6H1t4jRg9g@mail.gmail.com> <51BA8524.9050507@huawei.com> <CAN_LGv0AYvBpwQMcAkSqQVZHBA3Yfz=42_OGPxF032FQ-Ec36A@mail.gmail.com> <51BA98BF.5070403@huawei.com> <CAN_LGv1FNj-38=tpOg6itCJ3DQLw2TQaJJdGqRwtx9A9eVcxKw@mail.gmail.com>
-In-Reply-To: <CAN_LGv1FNj-38=tpOg6itCJ3DQLw2TQaJJdGqRwtx9A9eVcxKw@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+To: bhelgaas@google.com
+CC: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	iommu@lists.linux-foundation.org, kexec@lists.infradead.org,
+	ishii.hironobu@jp.fujitsu.com, ddutile@redhat.com,
+	bill.sumner@hp.com, alex.williamson@redhat.com, vgoyal@redhat.com,
+	hbabu@us.ibm.com
+Subject: Re: [PATCH v2] PCI: Reset PCIe devices to stop ongoing DMA
+References: <1368509365-2260-1-git-send-email-indou.takao@jp.fujitsu.com> <CAErSpo4t_2Xw76p3Z9FVzyyK-MBovavDu9D=pYoPMjESSxgT=w@mail.gmail.com> <51B19DF3.2070009@jp.fujitsu.com> <CAErSpo6dfEnzriHD_aWZB_3E-kSzauhNRHPd+VuFX5HONVKgqw@mail.gmail.com> <51B6BEDB.3000509@jp.fujitsu.com> <CAErSpo5u8qGALt6C+tuPYXdd2YgyMH6fnPnA+afUteEZ7kY0iw@mail.gmail.com>
+In-Reply-To: <CAErSpo5u8qGALt6C+tuPYXdd2YgyMH6fnPnA+afUteEZ7kY0iw@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-2022-JP
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2013/6/14 12:43, Alexander E. Patrakov wrote:
-> 2013/6/14 Jiang Liu (Gerry) <jiang.liu@huawei.com>:
->
->> What's the situation now? Could you please send out dmesgs\ioports\iomem?
->> Thanks!
->
-> The requested information has been added to
-> https://bugzilla.kernel.org/show_bug.cgi?id=56531
->
-> The changes in pci_move_pcibios_add_bus_down.patch are not needed.
->
-> The radeon card in the dock station works after docking and restarting
-> the X server, and its HD audio device works, too. Just for
-> completeness, I have tested the CD-ROM drive, the USB adapters and the
-> Ethernet card - they all work. IOW, everything works after docking.
->
-> I did not test undocking, as that would surely hit
-> https://bugzilla.kernel.org/show_bug.cgi?id=59681 and the hda_intel
-> bug you mentioned in the first mail in this thread.
->
-> Note that, for the initial series of patches, I still don't have any
-> response to the lockdep warnings in
-> https://lkml.org/lkml/2013/6/13/398
-Sounds great, I will rework the lockdep related patch tonight.
-Thanks for testing.
+(2013/06/12 13:45), Bjorn Helgaas wrote:
+> [+cc Vivek, Haren; sorry I didn't think to add you earlier]
+> 
+> On Tue, Jun 11, 2013 at 12:08 AM, Takao Indoh
+> <indou.takao@jp.fujitsu.com> wrote:
+>> (2013/06/11 11:20), Bjorn Helgaas wrote:
+> 
+>>> I'm not sure you need to reset legacy devices (or non-PCI devices)
+>>> yet, but the current hook isn't anchored anywhere -- it's just an
+>>> fs_initcall() that doesn't give the reader any clue about the
+>>> connection between the reset and the problem it's solving.
+>>>
+>>> If we do something like this patch, I think it needs to be done at the
+>>> point where we enable or disable the IOMMU.  That way, it's connected
+>>> to the important event, and there's a clue about how to make
+>>> corresponding fixes for other IOMMUs.
+>>
+>> Ok. pci_iommu_init() is appropriate place to add this hook?
+> 
+> I looked at various IOMMU init places today, and it's far more
+> complicated and varied than I had hoped.
+> 
+> This reset scheme depends on enumerating PCI devices before we
+> initialize the IOMMU used by those devices.  x86 works that way today,
+> but not all architectures do (see the sparc pci_fire_pbm_init(), for
 
->
+Sorry, could you tell me which part depends on architecture?
 
+> example).  And I think conceptually, the IOMMU should be enumerated
+> and initialized *before* the devices that use it.
+> 
+> So I'm uncomfortable with that aspect of this scheme.
+> 
+> It would be at least conceivable to reset the devices in the system
+> kernel, before the kexec.  I know we want to do as little as possible
+> in the crashing kernel, but it's at least a possibility, and it might
+> be cleaner.
+
+I bet this will be not accepted by kdump maintainer. Everything in panic
+kernel is unreliable.
+
+Thanks,
+Takao Indoh
 
