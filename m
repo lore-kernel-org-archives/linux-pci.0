@@ -1,74 +1,93 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f52.google.com ([209.85.214.52]:39327 "EHLO
-	mail-bk0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751350Ab3FUKYu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Jun 2013 06:24:50 -0400
-Received: by mail-bk0-f52.google.com with SMTP id d7so3267097bkh.39
-        for <linux-pci@vger.kernel.org>; Fri, 21 Jun 2013 03:24:49 -0700 (PDT)
-Date: Fri, 21 Jun 2013 12:24:46 +0200
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Russell King <linux@arm.linux.org.uk>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>
-Subject: Re: [PATCHv3 08/11] arm: mvebu: the MPIC now provides MSI controller
- features
-Message-ID: <20130621102445.GF12441@manwe>
-References: <1371660979-21588-1-git-send-email-thomas.petazzoni@free-electrons.com>
- <1371660979-21588-9-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from mail-oa0-f52.google.com ([209.85.219.52]:60764 "EHLO
+	mail-oa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756538Ab3FMDlv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Jun 2013 23:41:51 -0400
+Received: by mail-oa0-f52.google.com with SMTP id g12so5339904oah.39
+        for <linux-pci@vger.kernel.org>; Wed, 12 Jun 2013 20:41:51 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="lIrNkN/7tmsD/ALM"
-In-Reply-To: <1371660979-21588-9-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <51B93221.2040505@jp.fujitsu.com>
+References: <1368509365-2260-1-git-send-email-indou.takao@jp.fujitsu.com>
+ <CAErSpo4t_2Xw76p3Z9FVzyyK-MBovavDu9D=pYoPMjESSxgT=w@mail.gmail.com>
+ <51B19DF3.2070009@jp.fujitsu.com> <CAErSpo6dfEnzriHD_aWZB_3E-kSzauhNRHPd+VuFX5HONVKgqw@mail.gmail.com>
+ <51B6BEDB.3000509@jp.fujitsu.com> <CAErSpo5u8qGALt6C+tuPYXdd2YgyMH6fnPnA+afUteEZ7kY0iw@mail.gmail.com>
+ <51B93221.2040505@jp.fujitsu.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 12 Jun 2013 21:41:30 -0600
+Message-ID: <CAErSpo5tVK-Z3aOdMTzab-S8o5zLVtDOFQ8-LSYpUgbrJSsxuw@mail.gmail.com>
+Subject: Re: [PATCH v2] PCI: Reset PCIe devices to stop ongoing DMA
+To: Takao Indoh <indou.takao@jp.fujitsu.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
+	kexec@lists.infradead.org, ishii.hironobu@jp.fujitsu.com,
+	Don Dutile <ddutile@redhat.com>, bill.sumner@hp.com,
+	"alex.williamson@redhat.com" <alex.williamson@redhat.com>,
+	Vivek Goyal <vgoyal@redhat.com>, hbabu@us.ibm.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Wed, Jun 12, 2013 at 8:44 PM, Takao Indoh <indou.takao@jp.fujitsu.com> wrote:
+> (2013/06/12 13:45), Bjorn Helgaas wrote:
+>> [+cc Vivek, Haren; sorry I didn't think to add you earlier]
+>>
+>> On Tue, Jun 11, 2013 at 12:08 AM, Takao Indoh
+>> <indou.takao@jp.fujitsu.com> wrote:
+>>> (2013/06/11 11:20), Bjorn Helgaas wrote:
+>>
+>>>> I'm not sure you need to reset legacy devices (or non-PCI devices)
+>>>> yet, but the current hook isn't anchored anywhere -- it's just an
+>>>> fs_initcall() that doesn't give the reader any clue about the
+>>>> connection between the reset and the problem it's solving.
+>>>>
+>>>> If we do something like this patch, I think it needs to be done at the
+>>>> point where we enable or disable the IOMMU.  That way, it's connected
+>>>> to the important event, and there's a clue about how to make
+>>>> corresponding fixes for other IOMMUs.
+>>>
+>>> Ok. pci_iommu_init() is appropriate place to add this hook?
+>>
+>> I looked at various IOMMU init places today, and it's far more
+>> complicated and varied than I had hoped.
+>>
+>> This reset scheme depends on enumerating PCI devices before we
+>> initialize the IOMMU used by those devices.  x86 works that way today,
+>> but not all architectures do (see the sparc pci_fire_pbm_init(), for
+>
+> Sorry, could you tell me which part depends on architecture?
 
---lIrNkN/7tmsD/ALM
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Your patch works if PCIe devices are reset before the kdump kernel
+enables the IOMMU.  On x86, this is possible because PCI enumeration
+happens before the IOMMU initialization.  On sparc, the IOMMU is
+initialized before PCI devices are enumerated, so there would still be
+a window where ongoing DMA could cause an IOMMU error.
 
-On Wed, Jun 19, 2013 at 06:56:16PM +0200, Thomas Petazzoni wrote:
-> Adds the 'msi-controller' property to the main interrupt controller
-> Device Tree node, to indicate that it can now behave as a MSI
-> controller.
->=20
-> Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-> ---
->  arch/arm/boot/dts/armada-370-xp.dtsi | 1 +
->  1 file changed, 1 insertion(+)
+Of course, it might be possible to reorganize the sparc code to to the
+IOMMU init *after* it enumerates PCI devices.  But I think that change
+would be hard to justify.
 
-Reviewed-by: Thierry Reding <thierry.reding@gmail.com>
+And I think even on x86, it would be better if we did the IOMMU init
+before PCI enumeration -- the PCI devices depend on the IOMMU, so
+logically the IOMMU should be initialized first so the PCI devices can
+be associated with it as they are enumerated.
 
---lIrNkN/7tmsD/ALM
-Content-Type: application/pgp-signature
+>> example).  And I think conceptually, the IOMMU should be enumerated
+>> and initialized *before* the devices that use it.
+>>
+>> So I'm uncomfortable with that aspect of this scheme.
+>>
+>> It would be at least conceivable to reset the devices in the system
+>> kernel, before the kexec.  I know we want to do as little as possible
+>> in the crashing kernel, but it's at least a possibility, and it might
+>> be cleaner.
+>
+> I bet this will be not accepted by kdump maintainer. Everything in panic
+> kernel is unreliable.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.20 (GNU/Linux)
+kdump is inherently unreliable.  The kdump kernel doesn't start from
+an arbitrary machine state.  We don't expect it to tolerate all CPUs
+running, for example.  Maybe it should be expected to tolerate PCI
+devices running, either.
 
-iQIcBAEBAgAGBQJRxCntAAoJEN0jrNd/PrOhRrQP/0vmPJoVefkWfpwqqW6tycXp
-juZmzKh64n4HteohJpvy0ML2jP81SCsm+HhGhz+Plxo9lyr/tSNnVVl6Lj9pUvjD
-uNAzB1ESBh+K179AqjtAQl3zgSoUU91q+xInKNmccLiv+yYXVJMSN0oGvh1zrO20
-ztfNQwc7wOo+iAcl8BExqWrGF8JIVA+Ocsbyzj9pD3PVie/hX19HQ5/rgh+JS6rz
-cyX4n5Ypj5Zcn7dcmOMPIMCRHrvMnxTa5UvTyNlwR2sjIfBUlq3qE4pSO4wmJmm5
-MOPrdVTMzO6lCiwJdBf987JAGnRT+6XIZIEs+xRC3DO8ZKLqsKvmkMjqDxikmgyg
-UI+bzIU3KfM1YVA+ZqwqaRfq9ncEgY5sp0LqZzTcfznA/Thu/sW33wk+tX8R/MP0
-CXQoNfmKGxRZR1o/sU7Ua1Oxe2Pt06B2sfqZswAVvQiXz5wyKbrJ3wEJuzpATjyO
-Ce2vpoolGh3G1FnuMeZgi2SMx3GWztH0JQtAmltWtb5h3qkQXHe3z8oIV/Bp9V7U
-S30oQxgWJZaEdvMXHnK37RqJhoIRe5qBj/ad+jvT+Iz/tOV9ujLOzw0Y0po751Id
-myHkYp7KHxD9dpKM1ywRRCkAFGdVatkn8B06qzVRHxHlpiyGJ43/aiGvZ7KDR77/
-f5jmI1yNAXZ9NYeZHulf
-=0Daz
------END PGP SIGNATURE-----
-
---lIrNkN/7tmsD/ALM--
+Bjorn
