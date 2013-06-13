@@ -1,54 +1,85 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 26 Jun 2013 08:04:07 -0700
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
+From: Jiang Liu <jiang.liu@huawei.com>
+To: "Rafael J . Wysocki" <rjw@sisk.pl>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Yinghai Lu <yinghai@kernel.org>, john.ronciak@intel.com,
-	miles.j.penner@intel.com, bruce.w.allan@intel.com,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	x86@kernel.org
-Subject: Re: [PATCH 6/6] x86/PCI: quirk Thunderbolt PCI-to-PCI bridges
-Message-ID: <20130626150407.GB14117@kroah.com>
-References: <1372177330-28013-1-git-send-email-mika.westerberg@linux.intel.com>
- <1372177330-28013-7-git-send-email-mika.westerberg@linux.intel.com>
- <20130625141556.2f9de7b1@jbarnes-desktop>
- <20130626121757.GP9294@intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130626121757.GP9294@intel.com>
+	Yinghai Lu <yinghai@kernel.org>,
+	"Alexander E . Patrakov" <patrakov@gmail.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Shaohua Li <shaohua.li@intel.com>,
+	Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org
+Subject: [BUGFIX 5/9] ACPI, DOCK: kill redundant spin lock in dock device object
+Date: Fri, 14 Jun 2013 00:32:28 +0800
+Message-Id: <1371141152-9468-6-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1371141152-9468-1-git-send-email-jiang.liu@huawei.com>
+References: <1371141152-9468-1-git-send-email-jiang.liu@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 26, 2013 at 03:17:57PM +0300, Mika Westerberg wrote:
-> On Tue, Jun 25, 2013 at 02:15:56PM -0700, Jesse Barnes wrote:
-> > On Tue, 25 Jun 2013 19:22:10 +0300
-> > Mika Westerberg <mika.westerberg@linux.intel.com> wrote:
-> > 
-> > > +	if (!(pci_probe & PCI_NOASSIGN_ROMS)) {
-> > > +		pr_info("Thunderbolt host router detected disabling ROMs\n");
-> > > +		pci_probe |= PCI_NOASSIGN_ROMS;
-> > > +	}
-> > 
-> > I wonder if this should just be the default on x86?  Or do we allocate
-> > ROM space to address some other platform where we need it and the BIOS
-> > doesn't do it for the devices we care about?
-> 
-> Good question. In our case it definitely helps to have pci=norom the
-> default. Can't tell if it might break something that depends on the current
-> behaviour.
-> 
-> Bjorn, Greg, Rafael,
-> 
-> What do you think?
+All dock device related data structures are created during driver
+initialization, so kill the redundant spin lock in dock device object.
 
-I can't recall any specific reason to not do this, so no objection from
-me, but make it a nice and small patch that can easily be reverted if
-problems show up in the wild :)
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Cc: Shaohua Li <shaohua.li@intel.com>
+Cc: Len Brown <lenb@kernel.org>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-acpi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+---
+ drivers/acpi/dock.c | 15 +++------------
+ 1 file changed, 3 insertions(+), 12 deletions(-)
 
-thanks,
+diff --git a/drivers/acpi/dock.c b/drivers/acpi/dock.c
+index 8e578aa..cd2d5df 100644
+--- a/drivers/acpi/dock.c
++++ b/drivers/acpi/dock.c
+@@ -57,7 +57,6 @@ struct dock_station {
+ 	acpi_handle handle;
+ 	unsigned long last_dock_time;
+ 	u32 flags;
+-	spinlock_t dd_lock;
+ 	struct mutex hp_lock;
+ 	struct task_struct *owner;
+ 	struct list_head dependent_devices;
+@@ -107,10 +106,7 @@ add_dock_dependent_device(struct dock_station *ds, acpi_handle handle)
+ 	dd->handle = handle;
+ 	INIT_LIST_HEAD(&dd->list);
+ 	INIT_LIST_HEAD(&dd->hotplug_list);
+-
+-	spin_lock(&ds->dd_lock);
+ 	list_add_tail(&dd->list, &ds->dependent_devices);
+-	spin_unlock(&ds->dd_lock);
+ 
+ 	return 0;
+ }
+@@ -168,14 +164,10 @@ find_dock_dependent_device(struct dock_station *ds, acpi_handle handle)
+ {
+ 	struct dock_dependent_device *dd;
+ 
+-	spin_lock(&ds->dd_lock);
+-	list_for_each_entry(dd, &ds->dependent_devices, list) {
+-		if (handle == dd->handle) {
+-			spin_unlock(&ds->dd_lock);
++	list_for_each_entry(dd, &ds->dependent_devices, list)
++		if (handle == dd->handle)
+ 			return dd;
+-		}
+-	}
+-	spin_unlock(&ds->dd_lock);
++
+ 	return NULL;
+ }
+ 
+@@ -964,7 +956,6 @@ static int __init dock_add(acpi_handle handle)
+ 	dock_station->last_dock_time = jiffies - HZ;
+ 
+ 	mutex_init(&dock_station->hp_lock);
+-	spin_lock_init(&dock_station->dd_lock);
+ 	INIT_LIST_HEAD(&dock_station->sibling);
+ 	INIT_LIST_HEAD(&dock_station->hotplug_devices);
+ 	INIT_LIST_HEAD(&dock_station->dependent_devices);
+-- 
+1.8.1.2
 
-greg k-h
