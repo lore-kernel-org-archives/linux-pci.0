@@ -1,16 +1,14 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f181.google.com ([209.85.223.181]:44134 "EHLO
+Received: from mail-ie0-f181.google.com ([209.85.223.181]:46766 "EHLO
 	mail-ie0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752528Ab3FOGvi (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 15 Jun 2013 02:51:38 -0400
+	with ESMTP id S1759150Ab3FMSmR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Jun 2013 14:42:17 -0400
 MIME-Version: 1.0
-In-Reply-To: <1371238081-32260-2-git-send-email-jiang.liu@huawei.com>
-References: <1371238081-32260-1-git-send-email-jiang.liu@huawei.com>
-	<1371238081-32260-2-git-send-email-jiang.liu@huawei.com>
-Date: Fri, 14 Jun 2013 23:51:38 -0700
-Message-ID: <CAE9FiQWOMF4HWdQRfxF68BBYC4ONcr8wOHWvVGt6Jvb_-p6S8w@mail.gmail.com>
-Subject: Re: [BUGFIX v2 1/4] ACPI, DOCK: initialize dock subsystem before
- scanning PCI root buses
+In-Reply-To: <1371141152-9468-1-git-send-email-jiang.liu@huawei.com>
+References: <1371141152-9468-1-git-send-email-jiang.liu@huawei.com>
+Date: Thu, 13 Jun 2013 11:42:16 -0700
+Message-ID: <CAE9FiQX1xVJA3MZc4LndWU7kx0mxC-YPE1R8JD4W2-Gg9zq3Zw@mail.gmail.com>
+Subject: Re: [BUGFIX 0/9] Fix bug 59501 and code improvement for dock driver
 From: Yinghai Lu <yinghai@kernel.org>
 To: Jiang Liu <jiang.liu@huawei.com>
 Cc: "Rafael J . Wysocki" <rjw@sisk.pl>,
@@ -18,96 +16,77 @@ Cc: "Rafael J . Wysocki" <rjw@sisk.pl>,
 	"Alexander E . Patrakov" <patrakov@gmail.com>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	Yijing Wang <wangyijing@huawei.com>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
 	Jiang Liu <liuj97@gmail.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"stable@vger.kernel.org" <stable@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: multipart/mixed; boundary=089e0111b7464d12cd04df0d7d91
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 14, 2013 at 12:27 PM, Jiang Liu <jiang.liu@huawei.com> wrote:
-> Changeset "3b63aaa70e1 PCI: acpiphp: Do not use ACPI PCI subdriver
-> mechanism" causes a regression which breaks ACPI dock support,
-> please refer to https://bugzilla.kernel.org/show_bug.cgi?id=59501
->
-> The root cause is that changeset 3b63aaa70e1 changed the relative
-> initialization order of ACPI dock subsystem and acpiphp driver,
-> and acpiphp driver has dependency on ACPI dock subsystem's
-> initialization result, so that acpiphp can't correctly detect ACPI
-> dock stations now.
->
-> On the other hand, ACPI dock is a built-in driver, so we could
-> explicitly initialize it before the acpiphp driver is used.
->
-> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-> Reported-by: Alexander E. Patrakov <patrakov@gmail.com>
-> Tested-by: Alexander E. Patrakov <patrakov@gmail.com>
-> Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
-> Cc: linux-acpi@vger.kernel.org
-> Cc: linux-kernel@vger.kernel.org
-> Cc: <stable@vger.kernel.org> # 3.9+
-> ---
->  drivers/acpi/dock.c     | 7 +------
->  drivers/acpi/internal.h | 5 +++++
->  drivers/acpi/scan.c     | 1 +
->  3 files changed, 7 insertions(+), 6 deletions(-)
->
-> diff --git a/drivers/acpi/dock.c b/drivers/acpi/dock.c
-> index 4fdea38..02b0563 100644
-> --- a/drivers/acpi/dock.c
-> +++ b/drivers/acpi/dock.c
-> @@ -1033,7 +1033,7 @@ find_dock_and_bay(acpi_handle handle, u32 lvl, void *context, void **rv)
->         return AE_OK;
->  }
->
-> -static int __init dock_init(void)
-> +int __init acpi_dock_init(void)
->  {
->         if (acpi_disabled)
->                 return 0;
-> @@ -1062,9 +1062,4 @@ static void __exit dock_exit(void)
->                 dock_remove(dock_station);
->  }
->
-> -/*
-> - * Must be called before drivers of devices in dock, otherwise we can't know
-> - * which devices are in a dock
-> - */
-> -subsys_initcall(dock_init);
->  module_exit(dock_exit);
+--089e0111b7464d12cd04df0d7d91
+Content-Type: text/plain; charset=ISO-8859-1
 
-why not remove dock_exit?
+On Thu, Jun 13, 2013 at 9:32 AM, Jiang Liu <jiang.liu@huawei.com> wrote:
+> Alexander E. Patrakov <patrakov@gmail.com> reports two bugs related to
+> dock station support on Sony VAIO VPCZ23A4R. Actually there are at least
+> four bugs related to Sony VAIO VPCZ23A4R dock support.
+> 1) can't correctly detect hotplug slot for dock state
+> 2) resource leak on undocking
+> 3) resource allocation failure for dock devices
+> 4) one bug in intel_snd_hda driver
+>
+> The first patch fixes issue 1, and the second patch fixes issue 2.
+> These two patches, if accepted, should be material for stable branches
+> too.
+> Patch 3-9 are code improvement for ACPI and dock driver.
+>
+> I have found the root cause for issue three, but still working on
+> solutions, and seems can't be solve in short time. So please help
+> to review and test patches for issue 1) and 2) first.
 
-> diff --git a/drivers/acpi/internal.h b/drivers/acpi/internal.h
-> index 297cbf4..c610a76 100644
-> --- a/drivers/acpi/internal.h
-> +++ b/drivers/acpi/internal.h
-> @@ -40,6 +40,11 @@ void acpi_container_init(void);
->  #else
->  static inline void acpi_container_init(void) {}
->  #endif
-> +#ifdef CONFIG_ACPI_DOCK
-> +void acpi_dock_init(void);
-> +#else
-> +static inline void acpi_dock_init(void) {}
-> +#endif
->  #ifdef CONFIG_ACPI_HOTPLUG_MEMORY
->  void acpi_memory_hotplug_init(void);
->  #else
-> diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
-> index 44225cb..4148163 100644
-> --- a/drivers/acpi/scan.c
-> +++ b/drivers/acpi/scan.c
-> @@ -2045,6 +2045,7 @@ int __init acpi_scan_init(void)
->         acpi_lpss_init();
->         acpi_container_init();
->         acpi_memory_hotplug_init();
-> +       acpi_dock_init();
->
->         mutex_lock(&acpi_scan_lock);
->         /*
-> --
-> 1.8.1.2
->
+the 3) is about pci resource allocation?
+because pcibios_add_bus is called too early?
+
+If that is case, we should have something like attached patch for it.
+
+With that, we will not need to worry about _OSC set for 3.10 etc.
+
+--089e0111b7464d12cd04df0d7d91
+Content-Type: application/octet-stream;
+	name="pci_move_pcibios_add_bus_down.patch"
+Content-Disposition: attachment;
+	filename="pci_move_pcibios_add_bus_down.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_hhwalzsu0
+
+ZGlmZiAtLWdpdCBhL2RyaXZlcnMvcGNpL2J1cy5jIGIvZHJpdmVycy9wY2kvYnVzLmMKaW5kZXgg
+YjFmZjAyYS4uNjhlZDVkOCAxMDA2NDQKLS0tIGEvZHJpdmVycy9wY2kvYnVzLmMKKysrIGIvZHJp
+dmVycy9wY2kvYnVzLmMKQEAgLTE4Niw2ICsxODYsMTQgQEAgaW50IHBjaV9idXNfYWRkX2Rldmlj
+ZShzdHJ1Y3QgcGNpX2RldiAqZGV2KQogCXJldHVybiAwOwogfQogCit2b2lkIF9fd2VhayBwY2li
+aW9zX2FkZF9idXMoc3RydWN0IHBjaV9idXMgKmJ1cykKK3sKK30KKwordm9pZCBfX3dlYWsgcGNp
+Ymlvc19yZW1vdmVfYnVzKHN0cnVjdCBwY2lfYnVzICpidXMpCit7Cit9CisKIC8qKgogICogcGNp
+X2J1c19hZGRfZGV2aWNlcyAtIHN0YXJ0IGRyaXZlciBmb3IgUENJIGRldmljZXMKICAqIEBidXM6
+IGJ1cyB0byBjaGVjayBmb3IgbmV3IGRldmljZXMKQEAgLTE5OCw2ICsyMDYsMTEgQEAgdm9pZCBw
+Y2lfYnVzX2FkZF9kZXZpY2VzKGNvbnN0IHN0cnVjdCBwY2lfYnVzICpidXMpCiAJc3RydWN0IHBj
+aV9idXMgKmNoaWxkOwogCWludCByZXR2YWw7CiAKKwlpZiAoYnVzLT5pc19hZGRlZCA9PSAxKSB7
+CisJCXBjaWJpb3NfYWRkX2J1cyhidXMpOworCQlidXMtPmlzX2FkZGVkKys7CisJfQorCiAJbGlz
+dF9mb3JfZWFjaF9lbnRyeShkZXYsICZidXMtPmRldmljZXMsIGJ1c19saXN0KSB7CiAJCS8qIFNr
+aXAgYWxyZWFkeS1hZGRlZCBkZXZpY2VzICovCiAJCWlmIChkZXYtPmlzX2FkZGVkKQpkaWZmIC0t
+Z2l0IGEvZHJpdmVycy9wY2kvcHJvYmUuYyBiL2RyaXZlcnMvcGNpL3Byb2JlLmMKaW5kZXggM2Rm
+YzkwNy4uNTE0MDRlNiAxMDA2NDQKLS0tIGEvZHJpdmVycy9wY2kvcHJvYmUuYworKysgYi9kcml2
+ZXJzL3BjaS9wcm9iZS5jCkBAIC03MDQsOCArNzA0LDYgQEAgYWRkX2RldjoKIAlyZXQgPSBkZXZp
+Y2VfYWRkKCZjaGlsZC0+ZGV2KTsKIAlXQVJOX09OKHJldCA8IDApOwogCi0JcGNpYmlvc19hZGRf
+YnVzKGNoaWxkKTsKLQogCS8qIENyZWF0ZSBsZWdhY3lfaW8gYW5kIGxlZ2FjeV9tZW0gZmlsZXMg
+Zm9yIHRoaXMgYnVzICovCiAJcGNpX2NyZWF0ZV9sZWdhY3lfZmlsZXMoY2hpbGQpOwogCkBAIC0x
+Njg4LDE0ICsxNjg2LDYgQEAgaW50IF9fd2VhayBwY2liaW9zX3Jvb3RfYnJpZGdlX3ByZXBhcmUo
+c3RydWN0IHBjaV9ob3N0X2JyaWRnZSAqYnJpZGdlKQogCXJldHVybiAwOwogfQogCi12b2lkIF9f
+d2VhayBwY2liaW9zX2FkZF9idXMoc3RydWN0IHBjaV9idXMgKmJ1cykKLXsKLX0KLQotdm9pZCBf
+X3dlYWsgcGNpYmlvc19yZW1vdmVfYnVzKHN0cnVjdCBwY2lfYnVzICpidXMpCi17Ci19Ci0KIHN0
+cnVjdCBwY2lfYnVzICpwY2lfY3JlYXRlX3Jvb3RfYnVzKHN0cnVjdCBkZXZpY2UgKnBhcmVudCwg
+aW50IGJ1cywKIAkJc3RydWN0IHBjaV9vcHMgKm9wcywgdm9pZCAqc3lzZGF0YSwgc3RydWN0IGxp
+c3RfaGVhZCAqcmVzb3VyY2VzKQogewpAQCAtMTc0Miw4ICsxNzMyLDYgQEAgc3RydWN0IHBjaV9i
+dXMgKnBjaV9jcmVhdGVfcm9vdF9idXMoc3RydWN0IGRldmljZSAqcGFyZW50LCBpbnQgYnVzLAog
+CWlmIChlcnJvcikKIAkJZ290byBjbGFzc19kZXZfcmVnX2VycjsKIAotCXBjaWJpb3NfYWRkX2J1
+cyhiKTsKLQogCS8qIENyZWF0ZSBsZWdhY3lfaW8gYW5kIGxlZ2FjeV9tZW0gZmlsZXMgZm9yIHRo
+aXMgYnVzICovCiAJcGNpX2NyZWF0ZV9sZWdhY3lfZmlsZXMoYik7CiAK
+--089e0111b7464d12cd04df0d7d91--
