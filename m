@@ -1,98 +1,56 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:19068 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752539Ab3FJQ6r (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Jun 2013 12:58:47 -0400
-Date: Mon, 10 Jun 2013 12:58:01 -0400
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-To: Jiang Liu <liuj97@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: "Alexander E. Patrakov" <patrakov@gmail.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
 	Yinghai Lu <yinghai@kernel.org>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Jeremy Fitzhardinge <jeremy@goop.org>,
-	xen-devel@lists.xensource.com,
-	virtualization@lists.linux-foundation.org
-Subject: Re: [RFC PATCH v2, part3 07/11] PCI, xen-pcifront: use new PCI
- interfaces to simplify implementation
-Message-ID: <20130610165801.GA24823@phenom.dumpdata.com>
-References: <1368719459-24800-1-git-send-email-jiang.liu@huawei.com>
- <1368719459-24800-8-git-send-email-jiang.liu@huawei.com>
- <20130607145024.GA16631@phenom.dumpdata.com>
- <20130607153822.GA24882@phenom.dumpdata.com>
- <51B20F57.7050100@gmail.com>
- <20130607170706.GB3730@phenom.dumpdata.com>
- <51B4B266.5010100@gmail.com>
+	Yijing Wang <wangyijing@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	stable@vger.kernel.org
+Subject: Re: [BUGFIX 2/9] ACPIPHP: fix device destroying order issue when handling dock notification
+Date: Fri, 14 Jun 2013 14:53:26 +0200
+Message-ID: <6382542.YexNMucoL5@vostro.rjw.lan>
+In-Reply-To: <CAN_LGv1_b16XDAS-hrP2w=ERBgJ+V+P3kgKrksR0qO3navXiOg@mail.gmail.com>
+References: <1371141152-9468-1-git-send-email-jiang.liu@huawei.com> <2301639.HY0nSRLtah@vostro.rjw.lan> <CAN_LGv1_b16XDAS-hrP2w=ERBgJ+V+P3kgKrksR0qO3navXiOg@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <51B4B266.5010100@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 10, 2013 at 12:50:46AM +0800, Jiang Liu wrote:
-> On Sat 08 Jun 2013 01:07:06 AM CST, Konrad Rzeszutek Wilk wrote:
-> > On Sat, Jun 08, 2013 at 12:50:31AM +0800, Jiang Liu wrote:
-> >> On 06/07/2013 11:38 PM, Konrad Rzeszutek Wilk wrote:
-> >>> On Fri, Jun 07, 2013 at 10:50:24AM -0400, Konrad Rzeszutek Wilk wrote:
-> >>>> On Thu, May 16, 2013 at 11:50:55PM +0800, Jiang Liu wrote:
-> >>>>> Use new PCI interfaces to simplify xen-pcifront implementation:
-> >>>>> 1) Use pci_create_root_bus() instead of pci_scan_bus_parented()
-> >>>>>    because pci_scan_bus_parented() is marked as __deprecated.This
-> >>>>>    also gets rid of a duplicated call of pci_bus_start_devices().
-> >>>>> 2) Use pci_stop_root_bus() and pci_remove_root_bus() instead of
-> >>>>>    open-coded private implementation.
-> >>>>> 3) Use pci_set_host_bridge_release() to release data structures
-> >>>>>    associated with PCI root buses.
-> >>>>> 4) Use pci_bus_get()/pci_bus_put() to manage PCI root bus reference
-> >>>>>    count.
-> >>>>>
-> >>>>> This is also a preparation for coming PCI bus lock enhancement.
-> >>>
-> >>> With this patch from :
-> >>>
-> >>>  Merge branch 'pci_lock_v3' of https://github.com/jiangliu/linux into testing
-> >>>
-> >>>
-> >>> it blows up when detaching the device.
-> >> Hi Konrad,
-> >>    Thanks for testing! According to the log messages, this issue should
-> >> be related to pci bus reference counter management. Seems we have done
-> >> an extra(unbalanced) release of pci bus device.
-> >>    Will investigate it tomorrow!
-> >
-> > That is quite commendable that you are willing to look over this on
-> > the weekend but I am not going to be able to rerun this test until
-> > some time in the week. You could enjoy the weekend and just look at
-> > this during the week.
+On Friday, June 14, 2013 06:30:58 PM Alexander E. Patrakov wrote:
+> 2013/6/14 Rafael J. Wysocki <rjw@sisk.pl>:
 > 
-> Hi Konrad,
->      We should have root-caused this bug, which is caused by 
-> for_each_pci_root_bus().
-> Current implementation doesn't support root bus deletion when walking 
-> PCI root
-> buses by for_each_pci_root_bus(). The reference counter 
-> (pci_bus->dev.knode_class.n_ref)
-> becomes zero after returning from pci_remove_root_bus(), so it triggers 
-> kref warnings
-> and double-free of klist_node object when we call 
-> pci_get_next_root_bus() to get the
-> next PCI root bus.
->      So we will first revert to  list_for_each_entry_safe(bus, temp, 
-> &pci_root_buses, node)
-> and solve this issue in next version of for_each_pci_root_bus().
+> > What about the appended patch (on top of [1/9], untested)?
+> >
+> > Rafael
+> 
+> Sorry, I have lost the track of which patches, on top of 3.10-rc5, I
+> should include in my testing and which I shouldn't. Could you please
+> restore my understanding? I.e., please provide a full list of LKML or
+> Bugzilla links to patches which I should test during the next boot of
+> the laptop.
+> 
+> Thanks in advance.
 
-That definitly solves the issue. Thanks!
+As far as I'm concerned, please test these two for now:
 
-I used pci_lock_v3 of https://github.com/jiangliu/linux and the fix
-below.
+https://patchwork.kernel.org/patch/2717851/
+https://patchwork.kernel.org/patch/2721271/
 
-Is there a new patchset you are going to be posting or a git branch
-that I can look over?
+They are targeted at the ordering problems only, however, so they won't address
+the resource allocation issues you're seeing.
 
-Thanks.
+There are some other patches Jiang Liu and Yinghai are working on as far as
+I can say, but I'm not sure what their status is at the moment.
+
+Thanks,
+Rafael
+
+
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
