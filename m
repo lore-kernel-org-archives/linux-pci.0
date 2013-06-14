@@ -1,114 +1,124 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Jiang Liu <jiang.liu@huawei.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"Alexander E . Patrakov" <patrakov@gmail.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	stable@vger.kernel.org
-Subject: Re: [BUGFIX 1/9] ACPI, DOCK: initialize dock subsystem before scanning PCI root buses
-Date: Thu, 13 Jun 2013 20:22:05 +0200
-Message-ID: <1371177946.Su9xBvOtAM@vostro.rjw.lan>
-In-Reply-To: <1371141152-9468-2-git-send-email-jiang.liu@huawei.com>
-References: <1371141152-9468-1-git-send-email-jiang.liu@huawei.com> <1371141152-9468-2-git-send-email-jiang.liu@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <20130614141101.GA29452@google.com>
+References: <CAE9FiQVu5QyxaKsYzzQoroQD=TvsziHzDOtoeg=FvhZ8HyN5yw@mail.gmail.com>
+	<CAErSpo7ChfRiEn0eR1rf-mVheUS9Yf8f+j4n78PJcGYh+yMVgA@mail.gmail.com>
+	<CAE9FiQXkDg7Y336S=DXoms44=5HLaiUx=sWviupz1fJmaDUEzQ@mail.gmail.com>
+	<CAE9FiQU5c=ztzbskNnYFFKF9V5zO+jnRcMBCivLxA1F3fSfX5w@mail.gmail.com>
+	<20130401235256.GA31966@google.com>
+	<CAE9FiQV8cPh-s6=EQu_cZTtn86+NwZE5KuGMhf43aOhzkL=hwA@mail.gmail.com>
+	<CAErSpo7Jni1ZSf_W=vB3kqsucPpoepa2Q5g=77a6D3FaPwe9LA@mail.gmail.com>
+	<CAE9FiQWjQXwiTWju6cBc_o25jy_wmZ1u+Pifh1wdnxtV=i5ENw@mail.gmail.com>
+	<CAErSpo7=a-wX6BLbm_O1nUMMrQHOgtSm3xZHKuRqaz8rnKSbRA@mail.gmail.com>
+	<CAE9FiQUbw7OUhRB+gKMxkuE9+nm9097+mwZ2z4adO8Hv_NjF1Q@mail.gmail.com>
+	<20130614141101.GA29452@google.com>
+Date: Fri, 14 Jun 2013 09:17:58 -0700
+Message-ID: <CAE9FiQVr-OWeqEHFXn0MjNiSD0WM=FNO_DFo6m9UbbG60uonpw@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Remove not needed check in disable aspm link
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	Roman Yepishev <roman.yepishev@gmail.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, June 14, 2013 12:32:24 AM Jiang Liu wrote:
-> Changeset "3b63aaa70e1 PCI: acpiphp: Do not use ACPI PCI subdriver
-> mechanism" causes a regression which breaks ACPI dock support,
-> please refer to https://bugzilla.kernel.org/show_bug.cgi?id=59501
-> 
-> The root cause is that changeset 3b63aaa70e1 changed the relative
-> initialization order of ACPI dock subsystem and acpiphp driver,
-> and acpiphp driver has dependency on ACPI dock subsystem's
-> initialization result, so that acpiphp can't correctly detect ACPI
-> dock stations now.
-> 
-> On the other hand, ACPI dock is a built-in driver, so we could
-> explicitly initialize it before the acpiphp driver is used.
-> 
-> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-> Reported-by: Alexander E. Patrakov <patrakov@gmail.com>
-> Tested-by: Alexander E. Patrakov <patrakov@gmail.com>
-> Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
-> Cc: linux-acpi@vger.kernel.org
-> Cc: linux-kernel@vger.kernel.org
-> Cc: <stable@vger.kernel.org> # 3.9+
+On Fri, Jun 14, 2013 at 7:11 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> Here are some of my notes from trying to sort this out, in chronological
+> order:
+>
+>     29594404 v3.7
+>       Bus scanned before requesting _OSC control
+>       pre-1.1 ath5k has ASPM disabled (works fine)
+>
+>     8c33f51d "request _OSC control before scanning bus"
+>
+>     19f949f5 v3.8
+>       _OSC control requested before scanning bus
+>       Now pre-1.1 ath5k has ASPM enabled and doesn't work
+>       https://bugzilla.kernel.org/show_bug.cgi?id=55211 opened
+>
+>     b8178f13 "revert 'request _OSC control before scanning bus' (8c33f51d)"
+>       Bus now scanned before requesting _OSC control (as in v3.7)
+>
+>     c1be5a5b v3.9
+>       pciehp claims slots first, even when both pciehp & acpiphp are
+>       built-in, because pciehp module_init precedes acpiphp module_init
+>       in link order
+>
+>     6037a803 "Convert acpiphp to be builtin only"
+>       This also adds "acpiphp.disable" boot option
+>
+>     3b63aaa7 "Do not use ACPI PCI subdriver mechanism"
+>       Now acpiphp claims slots first because we call
+>       acpiphp_enumerate_slots() from pcibios_add_bus() during PCI device
+>       enumeration.  This happens before pciehp, which still uses
+>       module_init.
+>
+>     f722406f v3.10-rc1
+>
+>     ........ "Revert reverting of 'request _OSC control before scanning bus' (b8178f13)"
+>       _OSC control requested before scanning bus (as in v3.8)
+>       pre-1.1 ath5k probably has ASPM enabled and doesn't work
+>
+>     ........ "Remove not needed check in disable aspm link"
+>       Now pci_disable_link_state() unconditionally disables ASPM,
+>       even when BIOS hasn't given us ASPM control
+>
+>
+> 1) The problem you're trying to fix is that when both acpiphp and
+> pciehp are supported for the same slot, acpiphp claims the slot first
+> and pciehp will not claim it.  I think this problem was introduced by
+> 3b63aaa7, which was merged after v3.9.  Therefore, v3.9 should work
+> correctly, and this regression appeared in v3.10-rc1.
+>
+> 2) As you say, acpiphp cannot be a module, so the user would have to
+> rebuild the kernel to remove it.  However, 6037a803 *did* add a
+> "acpiphp.disable" boot option, so that should be a workaround that
+> allows pciehp to claim the slot.
 
-Can you please send the whole series to linux-acpi next time?
+How about the same system that some slots need to be handled by acpiphp
+and some others need to be handled by pciehp ?
 
-First, because I believe it should go in through the ACPI tree.  Second,
-because it is kind of useful to have all of the patches in context.
+for example: laptop that have dock that will need acpiphp, and also have
+pci express card that need pciehp.
 
+>
+> 3) I think your "revert reverting" patch gets us back to the same
+> situation we had after 8c33f51d, i.e., Roman's pre-1.1 ath5k device
+> will have ASPM enabled and won't work.  I don't want to leave the tree
+> in this broken state, even though you intend to fix it in the next
+> patch.  If you can reorder your patches so the ASPM fix is first, that
+> would be better.
 
-Thanks,
-Rafael
+yes.
 
+We could apply your patch in [1] at first, and revert the reverting.
+and do not touch pcie_clear_aspm now.
 
-> ---
->  drivers/acpi/dock.c     | 7 +------
->  drivers/acpi/internal.h | 5 +++++
->  drivers/acpi/scan.c     | 1 +
->  3 files changed, 7 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/acpi/dock.c b/drivers/acpi/dock.c
-> index 4fdea38..02b0563 100644
-> --- a/drivers/acpi/dock.c
-> +++ b/drivers/acpi/dock.c
-> @@ -1033,7 +1033,7 @@ find_dock_and_bay(acpi_handle handle, u32 lvl, void *context, void **rv)
->  	return AE_OK;
->  }
->  
-> -static int __init dock_init(void)
-> +int __init acpi_dock_init(void)
->  {
->  	if (acpi_disabled)
->  		return 0;
-> @@ -1062,9 +1062,4 @@ static void __exit dock_exit(void)
->  		dock_remove(dock_station);
->  }
->  
-> -/*
-> - * Must be called before drivers of devices in dock, otherwise we can't know
-> - * which devices are in a dock
-> - */
-> -subsys_initcall(dock_init);
->  module_exit(dock_exit);
-> diff --git a/drivers/acpi/internal.h b/drivers/acpi/internal.h
-> index 297cbf4..c610a76 100644
-> --- a/drivers/acpi/internal.h
-> +++ b/drivers/acpi/internal.h
-> @@ -40,6 +40,11 @@ void acpi_container_init(void);
->  #else
->  static inline void acpi_container_init(void) {}
->  #endif
-> +#ifdef CONFIG_ACPI_DOCK
-> +void acpi_dock_init(void);
-> +#else
-> +static inline void acpi_dock_init(void) {}
-> +#endif
->  #ifdef CONFIG_ACPI_HOTPLUG_MEMORY
->  void acpi_memory_hotplug_init(void);
->  #else
-> diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
-> index 44225cb..4148163 100644
-> --- a/drivers/acpi/scan.c
-> +++ b/drivers/acpi/scan.c
-> @@ -2045,6 +2045,7 @@ int __init acpi_scan_init(void)
->  	acpi_lpss_init();
->  	acpi_container_init();
->  	acpi_memory_hotplug_init();
-> +	acpi_dock_init();
->  
->  	mutex_lock(&acpi_scan_lock);
->  	/*
-> 
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+>
+> 4) Your "Remove not needed check in disable aspm link" patch makes
+> pci_disable_link_state() disable ASPM even when the OS doesn't have
+> permission to control ASPM.  I think this is a mistake.  I proposed a
+> similar change in [1], but Rafael and Matthew thought it was too
+> risky, and I agree.
+
+before all those changes, and in current state:
+quirk disable aspm is before _osc support and control are set.
+aka in pci_acpi_scan_root will allocate all link state struct, and quirk
+call pci_disable_link_state, and later will _osc support or control can
+not be set, pcie_no_aspm is called, can will block all aspm operation.
+
+That is risky too?, why booting path quirk could do that, but driver
+and hot-add quirk path can not do that ?
+
+or we can have another pci_disable_link_state always work on quirk path only?
+
+Yinghai
