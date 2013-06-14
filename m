@@ -1,51 +1,49 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f44.google.com ([209.85.219.44]:50931 "EHLO
-	mail-oa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752241Ab3FHSBT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 8 Jun 2013 14:01:19 -0400
-Received: by mail-oa0-f44.google.com with SMTP id n12so4486472oag.31
-        for <linux-pci@vger.kernel.org>; Sat, 08 Jun 2013 11:01:18 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <201306081343.23776.gianogli@tiscali.it>
-References: <201306081343.23776.gianogli@tiscali.it>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Sat, 8 Jun 2013 12:00:55 -0600
-Message-ID: <CAErSpo4=wdtdOk3L_mFeXVZp-A6PiNqy7mtzhrJhfjYash4tpA@mail.gmail.com>
-Subject: Re: Reconfigure the Intel 5520 I/O hub
-To: Gianluca Oglietti <gianogli@tiscali.it>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@huawei.com>
+To: "Rafael J . Wysocki" <rjw@sisk.pl>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"Alexander E . Patrakov" <patrakov@gmail.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-acpi@vger.kernel.org, Jiang Liu <liuj97@gmail.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [BUGFIX v2 0/4] fix bug 56531, 59501 and 59581
+Date: Sat, 15 Jun 2013 03:27:57 +0800
+Message-Id: <1371238081-32260-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Jun 8, 2013 at 5:43 AM, Gianluca Oglietti <gianogli@tiscali.it> wrote:
-> I've a Supermicro server with a X8DTU-6TF+ matherboard. (You can find the
-> system block diagram at http://goo.gl/ibWhb).
-> It is a NUMA system with 2 processors and only one Intel 5520 I/O hub.
-> In the last weeks I've made some studies about the optimization of the
-> TCP/IP packets realtime analysis but I've encountered a problem.
-> All the PCIe interfaces, where are used the NICs, are interconnected,
-> through the Intel 5520 I/O hub, only to the NUMA node 0:
-> ...
+Alexander E. Patrakov <patrakov@gmail.com> reports two bugs related to
+dock station support on Sony VAIO VPCZ23A4R. Actually there are at least
+four bugs related to Sony VAIO VPCZ23A4R dock support.
+1) can't correctly detect hotplug slot for dock state
+2) resource leak on undocking
+3) resource allocation failure for dock devices
+4) one bug in intel_snd_hda driver
 
-> Is there a way to reconfigure the Intel 5520 I/O hub (via software,
-> without a new BIOS) to connect one NIC to NUMA node 0 and the other one
-> to NUMA node 1?
+Hi Alexander, could you please help to test the whole patchset?
+Really get sleepy, it's already 3 oclock now, so please forgive me
+if there any stupid mistakes.
 
-There's no standard way to do this via the PCI core, because it's too
-system-specific.
+Jiang Liu (4):
+  ACPI, DOCK: initialize dock subsystem before scanning PCI root buses
+  ACPI, DOCK: resolve possible deadlock scenarios
+  PCI, ACPI: fix device destroying order issue when handling dock
+    notification
+  ACPIPHP: fix bug 56531 Sony VAIO VPCZ23A4R: can't assign mem/io
+    after docking
 
-You might be able to learn something by reading the 5520 spec:
-http://www.intel.com/content/www/us/en/chipsets/5520-5500-chipset-ioh-datasheet.html
+ drivers/acpi/dock.c                | 116 +++++++++++++++++++++----------------
+ drivers/acpi/internal.h            |   5 ++
+ drivers/acpi/scan.c                |   1 +
+ drivers/pci/hotplug/acpiphp_glue.c |  54 ++++++++++++-----
+ drivers/pci/pci.h                  |   5 ++
+ drivers/pci/setup-bus.c            |   8 +--
+ include/acpi/acpi_drivers.h        |   2 +
+ 7 files changed, 121 insertions(+), 70 deletions(-)
 
-It sounds like your system is similar to Figure 1-1 in that doc, which
-looks pretty symmetric.  I don't know anything about the 5520
-internals, or why there might be preferential routing to NUMA node 0
-over node 1.
+-- 
+1.8.1.2
 
-Have you measured a difference in NIC performance between NUMA node 0
-and 1?  Maybe the I/O connections actually are symmetric, and the BIOS
-just uses the same distance tables, i.e., whatever determines the
-local_cpulist contents, for both a single-node and a two-node system?
-
-Bjorn
