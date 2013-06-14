@@ -1,62 +1,74 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <51B93221.2040505@jp.fujitsu.com>
-Date: Thu, 13 Jun 2013 11:44:49 +0900
-From: Takao Indoh <indou.takao@jp.fujitsu.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Linux PM list <linux-pm@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Subject: Re: [PATCH] PCI / ACPI / PM: Use correct power state strings in messages
+Date: Sat, 15 Jun 2013 00:28:12 +0200
+Message-ID: <1701924.fhYB0ilm4Z@vostro.rjw.lan>
+In-Reply-To: <CAErSpo7Q8H5wmMUPKqquerp_zbFwnac95Gbezd2=STBjtUrnvw@mail.gmail.com>
+References: <2491625.TQ1FFQeR38@vostro.rjw.lan> <CAErSpo7Q8H5wmMUPKqquerp_zbFwnac95Gbezd2=STBjtUrnvw@mail.gmail.com>
 MIME-Version: 1.0
-To: bhelgaas@google.com
-CC: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	iommu@lists.linux-foundation.org, kexec@lists.infradead.org,
-	ishii.hironobu@jp.fujitsu.com, ddutile@redhat.com,
-	bill.sumner@hp.com, alex.williamson@redhat.com, vgoyal@redhat.com,
-	hbabu@us.ibm.com
-Subject: Re: [PATCH v2] PCI: Reset PCIe devices to stop ongoing DMA
-References: <1368509365-2260-1-git-send-email-indou.takao@jp.fujitsu.com> <CAErSpo4t_2Xw76p3Z9FVzyyK-MBovavDu9D=pYoPMjESSxgT=w@mail.gmail.com> <51B19DF3.2070009@jp.fujitsu.com> <CAErSpo6dfEnzriHD_aWZB_3E-kSzauhNRHPd+VuFX5HONVKgqw@mail.gmail.com> <51B6BEDB.3000509@jp.fujitsu.com> <CAErSpo5u8qGALt6C+tuPYXdd2YgyMH6fnPnA+afUteEZ7kY0iw@mail.gmail.com>
-In-Reply-To: <CAErSpo5u8qGALt6C+tuPYXdd2YgyMH6fnPnA+afUteEZ7kY0iw@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-2022-JP
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-(2013/06/12 13:45), Bjorn Helgaas wrote:
-> [+cc Vivek, Haren; sorry I didn't think to add you earlier]
+On Friday, June 14, 2013 11:08:44 AM Bjorn Helgaas wrote:
+> On Thu, Jun 13, 2013 at 4:29 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> >
+> > Make acpi_pci_set_power_state() print the name of the ACPI device
+> > power state the device has been actually put into instead of printing
+> > the name of the requested PCI device power state, which need not be
+> > the same.
+> >
+> > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > ---
+> >
+> > For 3.11.
+> >
+> > Thanks,
+> > Rafael
+> >
+> > ---
+> >  drivers/pci/pci-acpi.c |    2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> >
+> > Index: linux-pm/drivers/pci/pci-acpi.c
+> > ===================================================================
+> > --- linux-pm.orig/drivers/pci/pci-acpi.c
+> > +++ linux-pm/drivers/pci/pci-acpi.c
+> > @@ -211,7 +211,7 @@ static int acpi_pci_set_power_state(stru
+> >
+> >         if (!error)
+> >                 dev_info(&dev->dev, "power state changed by ACPI to %s\n",
+> > -                        pci_power_name(state));
+> > +                        acpi_power_state_string(state_conv[state]));
+> >
+> >         return error;
+> >  }
+> >
 > 
-> On Tue, Jun 11, 2013 at 12:08 AM, Takao Indoh
-> <indou.takao@jp.fujitsu.com> wrote:
->> (2013/06/11 11:20), Bjorn Helgaas wrote:
-> 
->>> I'm not sure you need to reset legacy devices (or non-PCI devices)
->>> yet, but the current hook isn't anchored anywhere -- it's just an
->>> fs_initcall() that doesn't give the reader any clue about the
->>> connection between the reset and the problem it's solving.
->>>
->>> If we do something like this patch, I think it needs to be done at the
->>> point where we enable or disable the IOMMU.  That way, it's connected
->>> to the important event, and there's a clue about how to make
->>> corresponding fixes for other IOMMUs.
->>
->> Ok. pci_iommu_init() is appropriate place to add this hook?
-> 
-> I looked at various IOMMU init places today, and it's far more
-> complicated and varied than I had hoped.
-> 
-> This reset scheme depends on enumerating PCI devices before we
-> initialize the IOMMU used by those devices.  x86 works that way today,
-> but not all architectures do (see the sparc pci_fire_pbm_init(), for
+> Just to double-check this, it *looks* like the effective change is
+> that for PCI_D3hot and PCI_D3cold, we'll print "(unknown)" instead of
+> "D3hot" and "D3cold" because state_conv[] folds both PCI_D3hot and
+> PCI_D3cold into ACPI_STATE_D3, and acpi_power_state_string() doesn't
+> have a case for ACPI_STATE_D3.
 
-Sorry, could you tell me which part depends on architecture?
+No, it won't work like this, because ACPI_STATE_D3 == ACPI_STATE_D3_COLD. :-)
 
-> example).  And I think conceptually, the IOMMU should be enumerated
-> and initialized *before* the devices that use it.
-> 
-> So I'm uncomfortable with that aspect of this scheme.
-> 
-> It would be at least conceivable to reset the devices in the system
-> kernel, before the kexec.  I know we want to do as little as possible
-> in the crashing kernel, but it's at least a possibility, and it might
-> be cleaner.
+So, actually, "D3cold" will be printed for both PCI_D3hot and PCI_D3cold
+(and I have tested this).
 
-I bet this will be not accepted by kdump maintainer. Everything in panic
-kernel is unreliable.
+Well, I think it's better to actually replace ACPI_STATE_D3 everywhere in
+pci-acpi.c with ACPI_STATE_D3_COLD to avoid that confusion.  Do you want me
+to prepare a patch?
 
-Thanks,
-Takao Indoh
+Rafael
 
+
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
