@@ -1,156 +1,154 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:25790 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932083Ab3FAGEg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 1 Jun 2013 02:04:36 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v5 5/7] PCI: Split pci_assign_unassigned_resources to per root bus
-Date: Fri, 31 May 2013 23:03:10 -0700
-Message-Id: <1370066593-22736-5-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1370066593-22736-1-git-send-email-yinghai@kernel.org>
-References: <1370066593-22736-1-git-send-email-yinghai@kernel.org>
+Received: from mail-ie0-f182.google.com ([209.85.223.182]:65294 "EHLO
+	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752130Ab3FNOLF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Jun 2013 10:11:05 -0400
+Received: by mail-ie0-f182.google.com with SMTP id s9so1534388iec.41
+        for <linux-pci@vger.kernel.org>; Fri, 14 Jun 2013 07:11:04 -0700 (PDT)
+Date: Fri, 14 Jun 2013 08:11:01 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	Roman Yepishev <roman.yepishev@gmail.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH] PCI: Remove not needed check in disable aspm link
+Message-ID: <20130614141101.GA29452@google.com>
+References: <CAE9FiQVu5QyxaKsYzzQoroQD=TvsziHzDOtoeg=FvhZ8HyN5yw@mail.gmail.com>
+ <CAErSpo7ChfRiEn0eR1rf-mVheUS9Yf8f+j4n78PJcGYh+yMVgA@mail.gmail.com>
+ <CAE9FiQXkDg7Y336S=DXoms44=5HLaiUx=sWviupz1fJmaDUEzQ@mail.gmail.com>
+ <CAE9FiQU5c=ztzbskNnYFFKF9V5zO+jnRcMBCivLxA1F3fSfX5w@mail.gmail.com>
+ <20130401235256.GA31966@google.com>
+ <CAE9FiQV8cPh-s6=EQu_cZTtn86+NwZE5KuGMhf43aOhzkL=hwA@mail.gmail.com>
+ <CAErSpo7Jni1ZSf_W=vB3kqsucPpoepa2Q5g=77a6D3FaPwe9LA@mail.gmail.com>
+ <CAE9FiQWjQXwiTWju6cBc_o25jy_wmZ1u+Pifh1wdnxtV=i5ENw@mail.gmail.com>
+ <CAErSpo7=a-wX6BLbm_O1nUMMrQHOgtSm3xZHKuRqaz8rnKSbRA@mail.gmail.com>
+ <CAE9FiQUbw7OUhRB+gKMxkuE9+nm9097+mwZ2z4adO8Hv_NjF1Q@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAE9FiQUbw7OUhRB+gKMxkuE9+nm9097+mwZ2z4adO8Hv_NjF1Q@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We need to split pci_assign_unassiged_resource to every root bus, so can
-have different retry for assign_unassigned per root bus
+On Wed, Jun 12, 2013 at 12:41:42PM -0700, Yinghai Lu wrote:
+> On Wed, Jun 12, 2013 at 10:05 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> >> current code from acpi_pci_root_add we have
+> >>   1. pci_acpi_scan_root
+> >>          ==> pci devices enumeration and bus scanning.
+> >>              ==> pci_alloc_child_bus
+> >>                  ==> pcibios_add_bus
+> >>                      ==> acpi_pci_add_bus
+> >>                          ==> acpiphp_enumerate_slots
+> >>                              ==> ...==> register_slot
+> >>                                   ==> device_is_managed_by_native_pciehp
+> >>                                         ==> check osc_set with
+> >> OSC_PCI_EXPRESS_NATIVE_HP_CONTROL
+> >>    2. _OSC set request
+> >>
+> >> so we always have acpiphp hotplug slot registered at first.
+> >>
+> >> so either we need to
+> >> A. revert reverting about _OSC
+> >> B. move pcibios_add_bus down to pci_bus_add_devices()
+> >>     as acpiphp and apci pci slot driver are some kind of drivers for pci_bus
+> >> C. A+B
+> >
+> > It doesn't surprise me at all that there are problems in the _OSC code
+> > and the acpiphp/pciehp interaction.  That whole area is a complete
+> > disaster.  It'd really be nice if somebody stepped up and reworked it
+> > so it makes sense.
+> >
+> > But this report is useless to me.  I don't have time to work out what
+> > the problem is and how it affects users and come up with a fix.
+> 
+> effects: without fix the problem, user can not use pcie native hotplug
+> if their system's firmware support acpihp and pciehp.
+> And make it worse, that acpiphp have to be built-in, so they have no
+> way to blacklist acpiphp in config.
+> 
+> >
+> > My advice is to simplify the path first, and worry about fixing the
+> > bug afterwards.  We've already done several iterations of fiddling
+> > with things, and I think all we're doing is playing "whack-a-mole" and
+> > pushing the bugs around from one place to another.
+> 
+> We need to address regression at first.
+> my suggestion is : revert the reverting and apply my -v3 version that will fix
+> regression that Roman Yepishev met.
+> 
+> please check attached two patches, hope it could save your some time.
 
-Also we need root bus hot add and booting path use same code.
+Here are some of my notes from trying to sort this out, in chronological
+order:
 
--v2: separate enable_local and pci_release_bridge_resources to
-     other patches requested by Bjorn.
+    29594404 v3.7
+      Bus scanned before requesting _OSC control
+      pre-1.1 ath5k has ASPM disabled (works fine)
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+    8c33f51d "request _OSC control before scanning bus"
 
----
- drivers/pci/setup-bus.c |   62 +++++++++++++++++++-----------------------------
- 1 file changed, 25 insertions(+), 37 deletions(-)
+    19f949f5 v3.8
+      _OSC control requested before scanning bus
+      Now pre-1.1 ath5k has ASPM enabled and doesn't work
+      https://bugzilla.kernel.org/show_bug.cgi?id=55211 opened
 
-Index: linux-2.6/drivers/pci/setup-bus.c
-===================================================================
---- linux-2.6.orig/drivers/pci/setup-bus.c
-+++ linux-2.6/drivers/pci/setup-bus.c
-@@ -1383,21 +1383,6 @@ static int __init pci_bus_get_depth(stru
- 
- 	return depth;
- }
--static int __init pci_get_max_depth(void)
--{
--	int depth = 0;
--	struct pci_bus *bus;
--
--	list_for_each_entry(bus, &pci_root_buses, node) {
--		int ret;
--
--		ret = pci_bus_get_depth(bus);
--		if (ret > depth)
--			depth = ret;
--	}
--
--	return depth;
--}
- 
- /*
-  * -1: undefined, will auto detect later
-@@ -1473,10 +1458,9 @@ static enum enable_type __init pci_reall
-  * second  and later try will clear small leaf bridge res
-  * will stop till to the max  deepth if can not find good one
-  */
--void __init
--pci_assign_unassigned_resources(void)
-+static void __init
-+pci_assign_unassigned_root_bus_resources(struct pci_bus *bus)
- {
--	struct pci_bus *bus;
- 	LIST_HEAD(realloc_head); /* list of resources that
- 					want additional resources */
- 	struct list_head *add_list = NULL;
-@@ -1487,17 +1471,17 @@ pci_assign_unassigned_resources(void)
- 	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
- 				  IORESOURCE_PREFETCH;
- 	int pci_try_num = 1;
--	enum enable_type enable_local = pci_realloc_enable;
--
--	list_for_each_entry(bus, &pci_root_buses, node)
--		enable_local = pci_realloc_detect(bus, enable_local);
-+	enum enable_type enable_local;
- 
-+	/* don't realloc if asked to do so */
-+	enable_local = pci_realloc_detect(bus, pci_realloc_enable);
- 	if (pci_realloc_enabled(enable_local)) {
--		int max_depth = pci_get_max_depth();
-+		int max_depth = pci_bus_get_depth(bus);
- 
- 		pci_try_num = max_depth + 1;
--		printk(KERN_DEBUG "PCI: max bus depth: %d pci_try_num: %d\n",
--			 max_depth, pci_try_num);
-+		dev_printk(KERN_DEBUG, &bus->dev,
-+			   "max bus depth: %d pci_try_num: %d\n",
-+			   max_depth, pci_try_num);
- 	}
- 
- again:
-@@ -1509,12 +1493,10 @@ again:
- 		add_list = &realloc_head;
- 	/* Depth first, calculate sizes and alignments of all
- 	   subordinate buses. */
--	list_for_each_entry(bus, &pci_root_buses, node)
--		__pci_bus_size_bridges(bus, add_list);
-+	__pci_bus_size_bridges(bus, add_list);
- 
- 	/* Depth last, allocate resources and update the hardware. */
--	list_for_each_entry(bus, &pci_root_buses, node)
--		__pci_bus_assign_resources(bus, add_list, &fail_head);
-+	__pci_bus_assign_resources(bus, add_list, &fail_head);
- 	if (add_list)
- 		BUG_ON(!list_empty(add_list));
- 	tried_times++;
-@@ -1525,16 +1507,16 @@ again:
- 
- 	if (tried_times >= pci_try_num) {
- 		if (enable_local == undefined)
--			printk(KERN_INFO "Some PCI device resources are unassigned, try booting with pci=realloc\n");
-+			dev_info(&bus->dev, "Some PCI device resources are unassigned, try booting with pci=realloc\n");
- 		else if (enable_local == auto_enabled)
--			printk(KERN_INFO "Automatically enabled pci realloc, if you have problem, try booting with pci=realloc=off\n");
-+			dev_info(&bus->dev, "Automatically enabled pci realloc, if you have problem, try booting with pci=realloc=off\n");
- 
- 		free_list(&fail_head);
- 		goto enable_and_dump;
- 	}
- 
--	printk(KERN_DEBUG "PCI: No. %d try to assign unassigned res\n",
--			 tried_times + 1);
-+	dev_printk(KERN_DEBUG, &bus->dev,
-+		   "No. %d try to assign unassigned res\n", tried_times + 1);
- 
- 	/* third times and later will not check if it is leaf */
- 	if ((tried_times + 1) > 2)
-@@ -1565,12 +1547,18 @@ again:
- 
- enable_and_dump:
- 	/* Depth last, update the hardware. */
--	list_for_each_entry(bus, &pci_root_buses, node)
--		pci_enable_bridges(bus);
-+	pci_enable_bridges(bus);
- 
- 	/* dump the resource on buses */
--	list_for_each_entry(bus, &pci_root_buses, node)
--		pci_bus_dump_resources(bus);
-+	pci_bus_dump_resources(bus);
-+}
-+
-+void __init pci_assign_unassigned_resources(void)
-+{
-+	struct pci_bus *root_bus;
-+
-+	list_for_each_entry(root_bus, &pci_root_buses, node)
-+		pci_assign_unassigned_root_bus_resources(root_bus);
- }
- 
- void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
+    b8178f13 "revert 'request _OSC control before scanning bus' (8c33f51d)"
+      Bus now scanned before requesting _OSC control (as in v3.7)
+
+    c1be5a5b v3.9
+      pciehp claims slots first, even when both pciehp & acpiphp are
+      built-in, because pciehp module_init precedes acpiphp module_init
+      in link order
+
+    6037a803 "Convert acpiphp to be builtin only"
+      This also adds "acpiphp.disable" boot option
+
+    3b63aaa7 "Do not use ACPI PCI subdriver mechanism"
+      Now acpiphp claims slots first because we call
+      acpiphp_enumerate_slots() from pcibios_add_bus() during PCI device
+      enumeration.  This happens before pciehp, which still uses
+      module_init.
+
+    f722406f v3.10-rc1
+
+    ........ "Revert reverting of 'request _OSC control before scanning bus' (b8178f13)"
+      _OSC control requested before scanning bus (as in v3.8)
+      pre-1.1 ath5k probably has ASPM enabled and doesn't work
+
+    ........ "Remove not needed check in disable aspm link"
+      Now pci_disable_link_state() unconditionally disables ASPM,
+      even when BIOS hasn't given us ASPM control
+
+
+1) The problem you're trying to fix is that when both acpiphp and
+pciehp are supported for the same slot, acpiphp claims the slot first
+and pciehp will not claim it.  I think this problem was introduced by
+3b63aaa7, which was merged after v3.9.  Therefore, v3.9 should work
+correctly, and this regression appeared in v3.10-rc1.
+
+2) As you say, acpiphp cannot be a module, so the user would have to
+rebuild the kernel to remove it.  However, 6037a803 *did* add a
+"acpiphp.disable" boot option, so that should be a workaround that
+allows pciehp to claim the slot.
+
+3) I think your "revert reverting" patch gets us back to the same
+situation we had after 8c33f51d, i.e., Roman's pre-1.1 ath5k device
+will have ASPM enabled and won't work.  I don't want to leave the tree
+in this broken state, even though you intend to fix it in the next
+patch.  If you can reorder your patches so the ASPM fix is first, that
+would be better.
+
+4) Your "Remove not needed check in disable aspm link" patch makes
+pci_disable_link_state() disable ASPM even when the OS doesn't have
+permission to control ASPM.  I think this is a mistake.  I proposed a
+similar change in [1], but Rafael and Matthew thought it was too
+risky, and I agree.
+
+Bjorn
+
+[1] https://lkml.kernel.org/r/20130510225257.GA10847@google.com
