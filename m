@@ -1,77 +1,106 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.citrix.com ([66.165.176.89]:59813 "EHLO SMTP.CITRIX.COM"
+Received: from hydra.sisk.pl ([212.160.235.94]:37359 "EHLO hydra.sisk.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753211Ab3FKJAE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 11 Jun 2013 05:00:04 -0400
-Message-ID: <51B6E711.2000001@eu.citrix.com>
-Date: Tue, 11 Jun 2013 10:00:01 +0100
-From: George Dunlap <george.dunlap@eu.citrix.com>
-MIME-Version: 1.0
-To: Jan Beulich <JBeulich@suse.com>
-CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	id S1752883Ab3FNOHV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 14 Jun 2013 10:07:21 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Jiang Liu <liuj97@gmail.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	xen-devel <xen-devel@lists.xen.org>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<stable@vger.kernel.org>
-Subject: Re: [Xen-devel] [PATCH] xen/pci: Deal with toolstack missing an 'XenbusStateClosing'.
-References: <20130610202456.GA17822@phenom.dumpdata.com> <1370898399-20968-1-git-send-email-konrad.wilk@oracle.com> <1370898399-20968-2-git-send-email-konrad.wilk@oracle.com> <51B6EDDF02000078000DCFB7@nat28.tlf.novell.com>
-In-Reply-To: <51B6EDDF02000078000DCFB7@nat28.tlf.novell.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+	Yinghai Lu <yinghai@kernel.org>,
+	"Alexander E . Patrakov" <patrakov@gmail.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Shaohua Li <shaohua.li@intel.com>,
+	Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org
+Subject: Re: [BUGFIX 5/9] ACPI, DOCK: kill redundant spin lock in dock device object
+Date: Fri, 14 Jun 2013 16:16:35 +0200
+Message-ID: <2066328.eBboj8Iu4P@vostro.rjw.lan>
+In-Reply-To: <51BB233B.3040009@gmail.com>
+References: <1371141152-9468-1-git-send-email-jiang.liu@huawei.com> <1490442.eFer0nddaj@vostro.rjw.lan> <51BB233B.3040009@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06/11/2013 08:29 AM, Jan Beulich wrote:
->>>> On 10.06.13 at 23:06, Konrad Rzeszutek Wilk <konrad.wilk@oracle.com> wrote:
->> There are two tool-stack that can instruct the Xen PCI frontend
->> and backend to change states: 'xm' (Python code with a daemon),
->> and 'xl' (C library - does not keep state changes).
->>
->> With the 'xm', the path to disconnect a PCI device (xm pci-detach
->> <guest> <BDF>)is:
->>
->> 4(Connected)->7(Reconfiguring*)-> 8(Reconfigured)-> 4(Connected)->5(Closing*).
->>
->> The * is for states that the tool-stack sets. For 'xl', it is similar:
->>
->> 4(Connected)->7(Reconfiguring*)-> 8(Reconfigured)-> 4(Connected)
->>
->> Both of them also tear down the XenBus structure, so the backend
->> state ends up going in the 3(Initialised) and calls pcifront_xenbus_remove.
->>
->> When a PCI device is plugged in (xm pci-attach <guest> <BDF>)
->> both of them follow the same pattern:
->> 2(InitWait*), 3(Initialized*), 4(Connected*)->4(Connected).
->>
->> [xen-pcifront ignores the 2,3 state changes and only acts when
->> 4 (Connected) has been reached]
->>
->> The problem is that git commit 3d925320e9e2de162bd138bf97816bda8c3f71be
->> ("xen/pcifront: Use Xen-SWIOTLB when initting if required") introduced
->> a mechanism to initialize the SWIOTLB when the Xen PCI front moves to
->> Connected state. It also had some aggressive seatbelt code check that
->> would warn the user if one tried to change to Connected state without
->> hitting first the Closing state:
->>
->>   pcifront pci-0: PCI frontend already installed!
->>
->> However, that code can be relaxed and we can continue on working
->> even if the frontend is instructed to be the 'Connected' state with
->> no devices and then gets tickled to be in 'Connected' state again.
->>
->> In other words, this 4(Connected)->5(Closing)->4(Connected) state
->> was expected, while 4(Connected)->.... anything but 5(Closing)->4(Connected)
->> was not. This patch removes that aggressive check and allows
->> Xen pcifront to work with the 'xl' toolstack.
->
-> I actually think this shouldn't be worked around here, but fixed in
-> xl. Any device removed from a guest should be driven towards
-> the "Closed" state.
+On Friday, June 14, 2013 10:05:47 PM Jiang Liu wrote:
+> On 06/14/2013 02:28 AM, Rafael J. Wysocki wrote:
+> > On Friday, June 14, 2013 12:32:28 AM Jiang Liu wrote:
+> >> All dock device related data structures are created during driver
+> >> initialization, so kill the redundant spin lock in dock device object.
+> > 
+> > As a cleanup, it definitely makes sense, but does it fix anything?
+> > 
+> > Rafael
+> Patch 3-9 are code cleanup only, I will resend them as separate patchset
+> later.
 
-Yeah, that seems pretty obvious to me.  The weird thing is that this 
-wasn't noticed before -- does this work in 4.2?  Have you been doing 
-this test all along, or has it only broken recently?
+Cool, thanks!
 
-I've reproduced it on one of my test boxes; let me see if I can sort it out.
+Rafael
 
-  -George
 
+> >> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+> >> Cc: Shaohua Li <shaohua.li@intel.com>
+> >> Cc: Len Brown <lenb@kernel.org>
+> >> Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
+> >> Cc: linux-acpi@vger.kernel.org
+> >> Cc: linux-kernel@vger.kernel.org
+> >> ---
+> >>  drivers/acpi/dock.c | 15 +++------------
+> >>  1 file changed, 3 insertions(+), 12 deletions(-)
+> >>
+> >> diff --git a/drivers/acpi/dock.c b/drivers/acpi/dock.c
+> >> index 8e578aa..cd2d5df 100644
+> >> --- a/drivers/acpi/dock.c
+> >> +++ b/drivers/acpi/dock.c
+> >> @@ -57,7 +57,6 @@ struct dock_station {
+> >>  	acpi_handle handle;
+> >>  	unsigned long last_dock_time;
+> >>  	u32 flags;
+> >> -	spinlock_t dd_lock;
+> >>  	struct mutex hp_lock;
+> >>  	struct task_struct *owner;
+> >>  	struct list_head dependent_devices;
+> >> @@ -107,10 +106,7 @@ add_dock_dependent_device(struct dock_station *ds, acpi_handle handle)
+> >>  	dd->handle = handle;
+> >>  	INIT_LIST_HEAD(&dd->list);
+> >>  	INIT_LIST_HEAD(&dd->hotplug_list);
+> >> -
+> >> -	spin_lock(&ds->dd_lock);
+> >>  	list_add_tail(&dd->list, &ds->dependent_devices);
+> >> -	spin_unlock(&ds->dd_lock);
+> >>  
+> >>  	return 0;
+> >>  }
+> >> @@ -168,14 +164,10 @@ find_dock_dependent_device(struct dock_station *ds, acpi_handle handle)
+> >>  {
+> >>  	struct dock_dependent_device *dd;
+> >>  
+> >> -	spin_lock(&ds->dd_lock);
+> >> -	list_for_each_entry(dd, &ds->dependent_devices, list) {
+> >> -		if (handle == dd->handle) {
+> >> -			spin_unlock(&ds->dd_lock);
+> >> +	list_for_each_entry(dd, &ds->dependent_devices, list)
+> >> +		if (handle == dd->handle)
+> >>  			return dd;
+> >> -		}
+> >> -	}
+> >> -	spin_unlock(&ds->dd_lock);
+> >> +
+> >>  	return NULL;
+> >>  }
+> >>  
+> >> @@ -964,7 +956,6 @@ static int __init dock_add(acpi_handle handle)
+> >>  	dock_station->last_dock_time = jiffies - HZ;
+> >>  
+> >>  	mutex_init(&dock_station->hp_lock);
+> >> -	spin_lock_init(&dock_station->dd_lock);
+> >>  	INIT_LIST_HEAD(&dock_station->sibling);
+> >>  	INIT_LIST_HEAD(&dock_station->hotplug_devices);
+> >>  	INIT_LIST_HEAD(&dock_station->dependent_devices);
+> >>
+> 
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
