@@ -1,134 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:21322 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753212Ab3FGOip convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 7 Jun 2013 10:38:45 -0400
-Date: Fri, 7 Jun 2013 10:37:58 -0400
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-To: Jiang Liu <liuj97@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Chris Metcalf <cmetcalf@tilera.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Jeremy Fitzhardinge <jeremy@goop.org>,
-	xen-devel <xen-devel@lists.xensource.com>
-Subject: Re: [PATCH v3, part1 04/10] PCI: mark pci_scan_bus_parented() as
- __deprecated
-Message-ID: <20130607143758.GA13427@phenom.dumpdata.com>
-References: <1369489718-25869-1-git-send-email-jiang.liu@huawei.com>
- <1369489718-25869-5-git-send-email-jiang.liu@huawei.com>
- <CAErSpo5bysp-s-twUWgZEyJD01skjW=vXkcQBYkn_TALP83r1g@mail.gmail.com>
- <51B0B99C.4020009@gmail.com>
+Received: from mail-oa0-f45.google.com ([209.85.219.45]:61145 "EHLO
+	mail-oa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750876Ab3FNDaE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Jun 2013 23:30:04 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <51B0B99C.4020009@gmail.com>
+In-Reply-To: <51BA8524.9050507@huawei.com>
+References: <1371141152-9468-1-git-send-email-jiang.liu@huawei.com>
+	<CAE9FiQX1xVJA3MZc4LndWU7kx0mxC-YPE1R8JD4W2-Gg9zq3Zw@mail.gmail.com>
+	<51BA7B3D.1020402@huawei.com>
+	<CAE9FiQX-jCZYPyxeHCp2h-6qx1GMyQYuaTk5JwZR6H1t4jRg9g@mail.gmail.com>
+	<51BA8524.9050507@huawei.com>
+Date: Thu, 13 Jun 2013 20:30:03 -0700
+Message-ID: <CAE9FiQWTD8RpRodPGgZv_ikfVgBnS6GRn2KUJg+5+siFy40Xrg@mail.gmail.com>
+Subject: Re: [BUGFIX 0/9] Fix bug 59501 and code improvement for dock driver
+From: Yinghai Lu <yinghai@kernel.org>
+To: "Jiang Liu (Gerry)" <jiang.liu@huawei.com>
+Cc: "Rafael J . Wysocki" <rjw@sisk.pl>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Alexander E . Patrakov" <patrakov@gmail.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 07, 2013 at 12:32:28AM +0800, Jiang Liu wrote:
-> On Thu 06 Jun 2013 04:04:36 AM CST, Bjorn Helgaas wrote:
-> > [+cc Konrad, Jeremy, xen-devel (users of interface you're deprecating)]
-> >
-> > On Sat, May 25, 2013 at 7:48 AM, Jiang Liu <liuj97@gmail.com> wrote:
-> >> Mark pci_scan_bus_parented() as __deprecated and clean up outdated
-> >> comments.
-> >>
-> >> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-> >> Cc: Chris Metcalf <cmetcalf@tilera.com>
-> >> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> >> Cc: Thierry Reding <thierry.reding@avionic-design.de>
-> >> Cc: linux-kernel@vger.kernel.org
-> >> Cc: linux-pci@vger.kernel.org
-> >> ---
-> >>  arch/tile/kernel/pci.c | 3 ---
-> >>  include/linux/pci.h    | 4 ++--
-> >>  2 files changed, 2 insertions(+), 5 deletions(-)
-> >>
-> >> diff --git a/arch/tile/kernel/pci.c b/arch/tile/kernel/pci.c
-> >> index 67237d3..936e087 100644
-> >> --- a/arch/tile/kernel/pci.c
-> >> +++ b/arch/tile/kernel/pci.c
-> >> @@ -309,9 +309,6 @@ int __init pcibios_init(void)
-> >>                          *
-> >>                          * It reads the PCI tree for this bus into the Linux
-> >>                          * data structures.
-> >> -                        *
-> >> -                        * This is inlined in linux/pci.h and calls into
-> >> -                        * pci_scan_bus_parented() in probe.c.
-> >>                          */
-> >>                         pci_add_resource(&resources, &ioport_resource);
-> >>                         pci_add_resource(&resources, &iomem_resource);
-> >> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> >> index b0f4a82..7b23fa0 100644
-> >> --- a/include/linux/pci.h
-> >> +++ b/include/linux/pci.h
-> >> @@ -720,8 +720,8 @@ void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
-> >>  void pcibios_scan_specific_bus(int busn);
-> >>  struct pci_bus *pci_find_bus(int domain, int busnr);
-> >>  void pci_bus_add_devices(const struct pci_bus *bus);
-> >> -struct pci_bus *pci_scan_bus_parented(struct device *parent, int bus,
-> >> -                                     struct pci_ops *ops, void *sysdata);
-> >> +struct pci_bus * __deprecated pci_scan_bus_parented(struct device *parent,
-> >> +                       int bus, struct pci_ops *ops, void *sysdata);
-> >>  struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops, void *sysdata);
-> >>  struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
-> >>                                     struct pci_ops *ops, void *sysdata,
-> >
-> > I think this patch is a good idea, but I think we need to change the
-> > only existing user of pci_scan_bus_parented() (pcifront_scan_root() in
-> > drivers/pci/xen-pcifront.c) at the same time, so xen doesn't start
-> > getting build warnings.  The deprecation warnings are really intended
-> > for out-of-tree users that we aren't able to fix ourselves.
-> >
-> > I'm getting this series queued up in
-> > http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/jiang-bus-lock-v3,
-> > so if you want to send a patch just for xen, I can fold that in.
-> >
-> > Bjorn
-> Hi Bjorn,
->         I have posted a big patch for that, but still need help from 
-> Xen experts to review it.
-> Please refer to https://patchwork.kernel.org/patch/2578551/
+On Thu, Jun 13, 2013 at 7:51 PM, Jiang Liu (Gerry) <jiang.liu@huawei.com> wrote:
+> On 2013/6/14 10:30, Yinghai Lu wrote:
+>>
+>> On Thu, Jun 13, 2013 at 7:09 PM, Jiang Liu (Gerry) <jiang.liu@huawei.com>
+>> wrote:
+>
+> Not sure. But a little concern about check_hotplug_bridge(), it treats
+> dock station and devices on dock station with _EJD as hot-plug-gable
+> PCI bus and reserve extra resources for possible hot-adding. But I
+> think we should only reserve extra resource for dock station, and should
+> not reserve resource for devices on station with _EJD method.
 
-Hm, I seem to get:
+That is should be...
+if there is children hotplug slots, we should add extra...
 
-/home/konrad/linux/drivers/pci/xen-pcifront.c: In function ‘pcifront_free_roots’:
-/home/konrad/linux/drivers/pci/xen-pcifront.c:559: error: implicit declaration of function ‘for_each_pci_root_bus’
-/home/konrad/linux/drivers/pci/xen-pcifront.c:559: error: expected ‘;’ before ‘{’ token
-/home/konrad/linux/drivers/pci/xen-pcifront.c:554: warning: unused variable ‘sd’
+>
+>
+>>
+>>>      Currently I'm trying to change acpiphp to respect BIOS resource
+>>> assignment by calling pcibios_survey_resource_bus(), as in pci_root.c.
+>>> The other way is to change the IOMM resource allocation algorithm,
+>>> but obviously it's much more risky of regressions if changing the
+>>> algorithm.
+>>
+>>
+>> that is not going to help, need to increase bridge resource.
+>>
+>> please check if BIOS have setup option about hotplug MMIO pad size.
+>
+> For the first step, I'm trying to make hotplug case work in the same way as
+> boot time. Do you think this patch help?
+>
+> diff --git a/drivers/pci/hotplug/acpiphp_glue.c
+> b/drivers/pci/hotplug/acpiphp_gl
+> index 270fdba..12e3f6e 100644
+> --- a/drivers/pci/hotplug/acpiphp_glue.c
+> +++ b/drivers/pci/hotplug/acpiphp_glue.c
+> @@ -837,13 +837,13 @@ static int __ref enable_device(struct acpiphp_slot
+> *slot)
+>                                 max = pci_scan_bridge(bus, dev, max, pass);
+>                                 if (pass && dev->subordinate) {
+>                                         check_hotplug_bridge(slot, dev);
+> - pci_bus_size_bridges(dev->subordinate);
+> + pcibios_resource_survey_bus(dev->subordi
+>                                 }
+>                         }
+>                 }
+>         }
+>
+> -       pci_bus_assign_resources(bus);
+> +       pci_assign_unassigned_bus_resources(bus);
+>         acpiphp_sanitize_bus(bus);
+>         acpiphp_set_hpp_values(bus);
+>         acpiphp_set_acpi_region(slot);
+> ---
 
-with it? Is there an up-to-date patch?
-I have these in my tree:
+Yes, it should help. but may need to after pcibios_add_bus move down patch.
 
-311db40 PCI, xen-pcifront: use new PCI interfaces to simplify implementation
-4079fee Merge remote-tracking branch 'bjorn/pci/jiang-bus-lock-v3' into testing
-ddb7c6b PCI: Hide remove and rescan sysfs interfaces for SR-IOV virtual functions
-f5cfa3a PCI: Simplify IOV implementation and fix reference count races
-28b4f07 PCI: Drop redundant setting of bus->is_added in virtfn_add_bus()
-442655a unicore32/PCI: Remove redundant call of pci_bus_add_devices()
-defd601 m68k/PCI: Remove redundant call of pci_bus_add_devices()
-340e3fb PCI: Make PCI host bridge/bus creating and destroying logic symmetric
-c7025f7 ia64/PCI: Clean up pci_scan_root_bus() usage
-c1f41ce PCI: Mark pci_scan_bus_parented() as __deprecated
-13e5057 PCI: Convert alloc_pci_dev(void) to pci_alloc_dev(bus)
-007042a PCI: Introduce pci_alloc_dev(struct pci_bus*) to replace alloc_pci_dev()
-fe830ef PCI: Introduce pci_bus_{get|put}() to manage PCI bus reference count
+otherwise, we could enable children slot and survery them and assign
+unassigned for them at first
+and then go to parent slots.
+that will make children slots survey fails, that is too early and
+should be done after parent slots.
 
-Also oddly enough your SoB does not match your Author. Here is
-what git shows:
-
-=== > Author: Jiang Liu <liuj97@gmail.com>  2013-05-25 09:48:38
-    
-=== > Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-
-You can add in the gmail an new 'email alias' so that the emails will
-look as they come from your huawei address.
+Yinghai
