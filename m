@@ -1,81 +1,100 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:23443 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751005Ab3FYS1q (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 25 Jun 2013 14:27:46 -0400
-Date: Tue, 25 Jun 2013 21:31:23 +0300
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Andy Shevchenko <andy.shevchenko@gmail.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Yinghai Lu <yinghai@kernel.org>, john.ronciak@intel.com,
-	miles.j.penner@intel.com, bruce.w.allan@intel.com,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-pci@vger.kernel.org, x86@kernel.org
-Subject: Re: [PATCH 5/6] PCI: acpiphp: look _RMV method a bit deeper in the
- hierarhcy
-Message-ID: <20130625183123.GJ9294@intel.com>
-References: <1372177330-28013-1-git-send-email-mika.westerberg@linux.intel.com>
- <1372177330-28013-6-git-send-email-mika.westerberg@linux.intel.com>
- <CAHp75Vd2Torku6zy2awLHRTed9mx94a6RAu+oHJYb+rVgZKBDQ@mail.gmail.com>
+Received: from mail-pd0-f171.google.com ([209.85.192.171]:45581 "EHLO
+	mail-pd0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751259Ab3FNOF5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Jun 2013 10:05:57 -0400
+Message-ID: <51BB233B.3040009@gmail.com>
+Date: Fri, 14 Jun 2013 22:05:47 +0800
+From: Jiang Liu <liuj97@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAHp75Vd2Torku6zy2awLHRTed9mx94a6RAu+oHJYb+rVgZKBDQ@mail.gmail.com>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+CC: Jiang Liu <jiang.liu@huawei.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"Alexander E . Patrakov" <patrakov@gmail.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Shaohua Li <shaohua.li@intel.com>,
+	Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org
+Subject: Re: [BUGFIX 5/9] ACPI, DOCK: kill redundant spin lock in dock device
+ object
+References: <1371141152-9468-1-git-send-email-jiang.liu@huawei.com> <1371141152-9468-6-git-send-email-jiang.liu@huawei.com> <1490442.eFer0nddaj@vostro.rjw.lan>
+In-Reply-To: <1490442.eFer0nddaj@vostro.rjw.lan>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 25, 2013 at 09:15:47PM +0300, Andy Shevchenko wrote:
-> On Tue, Jun 25, 2013 at 7:22 PM, Mika Westerberg
-> <mika.westerberg@linux.intel.com> wrote:
+On 06/14/2013 02:28 AM, Rafael J. Wysocki wrote:
+> On Friday, June 14, 2013 12:32:28 AM Jiang Liu wrote:
+>> All dock device related data structures are created during driver
+>> initialization, so kill the redundant spin lock in dock device object.
 > 
-> > The acpiphp driver finds out whether the device is hotpluggable by checking
-> > whether it has _RMV method behind it (and if it returns 1). However, at
-> > least Acer Aspire S5 with Thunderbolt host router has this method placed
-> > behind device called EPUP (endpoint upstream port?) and not directly behind
-> > the root port as can be seen from the ASL code below:
+> As a cleanup, it definitely makes sense, but does it fix anything?
 > 
-> []
-> 
-> 
-> > +static acpi_status pcihp_evaluate_rmv(acpi_handle handle, u32 lvl,
-> > +                                     void *context, void **return_not_used)
-> > +{
-> > +       unsigned long long *removable = context;
-> > +       unsigned long long value;
-> > +       acpi_status status;
-> > +
-> > +       status = acpi_evaluate_integer(handle, "_RMV", NULL, &value);
-> > +       if (ACPI_SUCCESS(status) && value) {
-> 
-> So, there is a chance the caller gets back uninitialized *context.
-> Let's assume that is by design.
-> 
-> > +               *removable = value;
-> > +               return AE_CTRL_TERMINATE;
-> > +       }
-> > +       return AE_OK;
-> > +}
-> 
-> 
-> > +static bool pcihp_is_removable(acpi_handle handle, size_t depth)
-> > +{
-> > +       unsigned long long removable = 0;
-> > +       acpi_status status;
-> > +
-> > +       status = pcihp_evaluate_rmv(handle, 0, &removable, NULL);
-> > +       if ((status == AE_CTRL_TERMINATE) && removable)
-> 
-> Here you already have removable not equal zero.
+> Rafael
+Patch 3-9 are code cleanup only, I will resend them as separate patchset
+later.
 
-Hmm, removable is initialized to zero just few lines above... Did I miss
-something obvious?
+> 
+> 
+>> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+>> Cc: Shaohua Li <shaohua.li@intel.com>
+>> Cc: Len Brown <lenb@kernel.org>
+>> Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
+>> Cc: linux-acpi@vger.kernel.org
+>> Cc: linux-kernel@vger.kernel.org
+>> ---
+>>  drivers/acpi/dock.c | 15 +++------------
+>>  1 file changed, 3 insertions(+), 12 deletions(-)
+>>
+>> diff --git a/drivers/acpi/dock.c b/drivers/acpi/dock.c
+>> index 8e578aa..cd2d5df 100644
+>> --- a/drivers/acpi/dock.c
+>> +++ b/drivers/acpi/dock.c
+>> @@ -57,7 +57,6 @@ struct dock_station {
+>>  	acpi_handle handle;
+>>  	unsigned long last_dock_time;
+>>  	u32 flags;
+>> -	spinlock_t dd_lock;
+>>  	struct mutex hp_lock;
+>>  	struct task_struct *owner;
+>>  	struct list_head dependent_devices;
+>> @@ -107,10 +106,7 @@ add_dock_dependent_device(struct dock_station *ds, acpi_handle handle)
+>>  	dd->handle = handle;
+>>  	INIT_LIST_HEAD(&dd->list);
+>>  	INIT_LIST_HEAD(&dd->hotplug_list);
+>> -
+>> -	spin_lock(&ds->dd_lock);
+>>  	list_add_tail(&dd->list, &ds->dependent_devices);
+>> -	spin_unlock(&ds->dd_lock);
+>>  
+>>  	return 0;
+>>  }
+>> @@ -168,14 +164,10 @@ find_dock_dependent_device(struct dock_station *ds, acpi_handle handle)
+>>  {
+>>  	struct dock_dependent_device *dd;
+>>  
+>> -	spin_lock(&ds->dd_lock);
+>> -	list_for_each_entry(dd, &ds->dependent_devices, list) {
+>> -		if (handle == dd->handle) {
+>> -			spin_unlock(&ds->dd_lock);
+>> +	list_for_each_entry(dd, &ds->dependent_devices, list)
+>> +		if (handle == dd->handle)
+>>  			return dd;
+>> -		}
+>> -	}
+>> -	spin_unlock(&ds->dd_lock);
+>> +
+>>  	return NULL;
+>>  }
+>>  
+>> @@ -964,7 +956,6 @@ static int __init dock_add(acpi_handle handle)
+>>  	dock_station->last_dock_time = jiffies - HZ;
+>>  
+>>  	mutex_init(&dock_station->hp_lock);
+>> -	spin_lock_init(&dock_station->dd_lock);
+>>  	INIT_LIST_HEAD(&dock_station->sibling);
+>>  	INIT_LIST_HEAD(&dock_station->hotplug_devices);
+>>  	INIT_LIST_HEAD(&dock_station->dependent_devices);
+>>
 
-> Internal braces could be removed, but it's up top you.
-
-I'll remove them in the next revision.
-
-Thanks.
