@@ -1,108 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:44262 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752131Ab3FFQla (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Jun 2013 12:41:30 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Arnd Bergmann <arnd@arndb.de>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>
-Cc: linux-arm-kernel@lists.infradead.org,
-	Jason Cooper <jason@lakedaemon.net>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Maen Suleiman <maen@marvell.com>
-Subject: [PATCH v2 0/8] MSI support for Marvell EBU PCIe driver
-Date: Thu,  6 Jun 2013 18:41:20 +0200
-Message-Id: <1370536888-8871-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from mail-ie0-f182.google.com ([209.85.223.182]:35934 "EHLO
+	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751294Ab3FNXA3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Jun 2013 19:00:29 -0400
+MIME-Version: 1.0
+In-Reply-To: <1371250092.2490.7.camel@x230>
+References: <CAE9FiQVu5QyxaKsYzzQoroQD=TvsziHzDOtoeg=FvhZ8HyN5yw@mail.gmail.com>
+	<CAErSpo7ChfRiEn0eR1rf-mVheUS9Yf8f+j4n78PJcGYh+yMVgA@mail.gmail.com>
+	<CAE9FiQXkDg7Y336S=DXoms44=5HLaiUx=sWviupz1fJmaDUEzQ@mail.gmail.com>
+	<CAE9FiQU5c=ztzbskNnYFFKF9V5zO+jnRcMBCivLxA1F3fSfX5w@mail.gmail.com>
+	<20130401235256.GA31966@google.com>
+	<CAE9FiQV8cPh-s6=EQu_cZTtn86+NwZE5KuGMhf43aOhzkL=hwA@mail.gmail.com>
+	<CAErSpo7Jni1ZSf_W=vB3kqsucPpoepa2Q5g=77a6D3FaPwe9LA@mail.gmail.com>
+	<CAE9FiQWjQXwiTWju6cBc_o25jy_wmZ1u+Pifh1wdnxtV=i5ENw@mail.gmail.com>
+	<CAErSpo7=a-wX6BLbm_O1nUMMrQHOgtSm3xZHKuRqaz8rnKSbRA@mail.gmail.com>
+	<CAE9FiQUbw7OUhRB+gKMxkuE9+nm9097+mwZ2z4adO8Hv_NjF1Q@mail.gmail.com>
+	<20130614141101.GA29452@google.com>
+	<CAE9FiQVr-OWeqEHFXn0MjNiSD0WM=FNO_DFo6m9UbbG60uonpw@mail.gmail.com>
+	<CAErSpo7grN-93zZfBJOHZH-pR1wDYrojTwt=B=++QqA0rPb3Rg@mail.gmail.com>
+	<CAE9FiQUO350kqrXB5=yQ-OxOeSJj4+P6WPg4gGgXxFEvfoLyng@mail.gmail.com>
+	<CAErSpo6vEOw10YV=Sou6wjjSc2GWr-oX=Dvbt7Xt=RJKi4RELw@mail.gmail.com>
+	<CAE9FiQWevd6ZNDdqGkqbLrGujKYuTiwibPAT+30VPpC_H-rLJA@mail.gmail.com>
+	<CAErSpo66qtgg8=BqX+4sm4h1vXD5gR6aiH7hHK7gvz1x3rEQZA@mail.gmail.com>
+	<CAE9FiQWxDhagFNAYc2eNDe_1jYtVTa5Azg0zifiprND5m3CmMw@mail.gmail.com>
+	<1371248853.2490.5.camel@x230>
+	<CAE9FiQWPvOYK2W0VSRuMyfj9Edbw1BSp-W91HjPyszPK0ZBcjg@mail.gmail.com>
+	<1371250092.2490.7.camel@x230>
+Date: Fri, 14 Jun 2013 16:00:28 -0700
+Message-ID: <CAE9FiQVRAkuDau9JWW97SBpw6F8qUcxDFa_Mg_XAnjf+mzttWg@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Remove not needed check in disable aspm link
+From: Yinghai Lu <yinghai@kernel.org>
+To: Matthew Garrett <matthew.garrett@nebula.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Roman Yepishev <roman.yepishev@gmail.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Maxim Levitsky <maximlevitsky@gmail.com>,
+	Jussi Kivilinna <jussi.kivilinna@iki.fi>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
+On Fri, Jun 14, 2013 at 3:48 PM, Matthew Garrett
+<matthew.garrett@nebula.com> wrote:
+> On Fri, 2013-06-14 at 15:40 -0700, Yinghai Lu wrote:
+>> On Fri, Jun 14, 2013 at 3:27 PM, Matthew Garrett
+>> <matthew.garrett@nebula.com> wrote:
+>> > On Fri, 2013-06-14 at 15:17 -0700, Yinghai Lu wrote:
+>> >
+>> >> after those two patches, it aspm_disabled is set, via _osc early,
+>> >> pre-1.1 devices aspm register will be touched even aspm_force is not specified.
+>> >
+>> > I don't follow. We were previously automatically disabling ASPM on
+>> > pre-1.1 devices even if _OSC didn't give us control.
+>>
+>> I don't think so, we just moved _OSC support/control setting before pci scan
+>> in 3.8 and revert that in v3.9.
+>
+> Right, sorry, I don't mean _OSC, I mean the FADT flag. We were
+> previously automatically disabling ASPM on pre-1.1 devices even if the
+> FADT flag was set.
 
-This set of patches introduces Message Signaled Interrupt support in
-the Marvell EBU PCIe driver. It has been successfully tested on the
-Armada XP GP platform with an Intel e1000e PCIe network card that
-supports MSI.
+so in that case aspm_disabled, never get set.
+booting path: pcie_aspm_init_link_state will not touch aspm on pre-1.1 devices.
 
-This version 2 follows the RFC version sent on March, 26th 2013. This
-is based on work done by Lior Amsalem <alior@marvell.com>.
+late, FADT checking will cause pcie_clear_aspm() get called, it will
+call __pci_disable_link_state, and because following line in
+pcie_aspm_link()
+        /* Nothing to do if the link is already in the requested state */
+        state &= (link->aspm_capable & ~link->aspm_disable);
+        if (link->aspm_enabled == state)
+                return;
+aspm in pre-1.1 devices still does not get touched.
 
-The patches do the following:
+Maybe I miss something.
 
- * Patch 1 comes from Thierry Redding, and adds a minimal msi_chip
-   infrastructure.
+Thanks
 
-   This needs to be reviewed/acked by Bjorn Helgaas.
-
- * Patch 2 extends the msi_chip infrastructure with a small registry,
-   so that one driver can register an msi_chip, and another driver can
-   find the msi_chip associated to a particular Device Tree node.
-
-   This needs to be reviewed/acked by Bjorn Helgaas.
-
- * Patch 3 makes some not very interesting preparation in the Armada
-   370/XP IRQ controller driver.
-
- * Patch 4 implements the MSI support in the Armada 370/XP IRQ
-   controller driver. It registers an msi_chip using the
-   msi_chip_add() function added in PATCH 2.
-
- * Patch 5 adjust the Armada 370/XP Device Tree to indicate that the
-   MPIC is not only an interrupt-controller, but also an
-   msi-controller.
-
- * Patch 6 adds MSI support in the Marvell PCIe host controller
-   driver. The work to do here is minimal: get a reference to the
-   msi-parent controller thanks to msi_chip_find_by_of_node(), and
-   link it to the pci_bus structure before the bus gets enumerated.
-
-   This needs to be reviewed/acked by Bjorn Helgaas.
-
- * Patch 7 tunes Kconfig to indicate that Armada 370/XP supports MSI.
-
- * Patch 8 adjusts the Armada 370/XP Device Tree to add the msi-parent
-   properties in the PCIe controller nodes.
-
-This set of patches currently applies on top of the current "for-next"
-branch of Jason Cooper's repository.
-
-The Device Tree binding documentation updates will be added once the
-general approach is agreed on.
-
-Thanks,
-
-Thomas
-
-Thierry Reding (1):
-  PCI: Introduce new MSI chip infrastructure
-
-Thomas Petazzoni (7):
-  PCI: Add registry of MSI chips
-  irqchip: armada-370-xp: properly request resources
-  irqchip: armada-370-xp: implement MSI support
-  arm: mvebu: the MPIC now provides MSI controller features
-  pci: mvebu: add support for MSI
-  arm: mvebu: indicate that this platform supports MSI
-  arm: mvebu: link PCIe controllers to the MSI controller
-
- arch/arm/boot/dts/armada-370-xp.dtsi     |   1 +
- arch/arm/boot/dts/armada-370.dtsi        |   1 +
- arch/arm/boot/dts/armada-xp-mv78230.dtsi |   1 +
- arch/arm/boot/dts/armada-xp-mv78260.dtsi |   1 +
- arch/arm/boot/dts/armada-xp-mv78460.dtsi |   1 +
- arch/arm/mach-mvebu/Kconfig              |   1 +
- drivers/irqchip/irq-armada-370-xp.c      | 186 ++++++++++++++++++++++++++++++-
- drivers/pci/host/pci-mvebu.c             |  21 ++++
- drivers/pci/msi.c                        |  59 +++++++++-
- drivers/pci/probe.c                      |   1 +
- include/linux/msi.h                      |  22 ++++
- include/linux/pci.h                      |   1 +
- 12 files changed, 288 insertions(+), 8 deletions(-)
-
--- 
-1.8.1.2
-
+Yinghai
