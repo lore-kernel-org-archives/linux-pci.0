@@ -1,99 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:54411 "EHLO hydra.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751017Ab3F1Tt4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 28 Jun 2013 15:49:56 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Yinghai Lu <yinghai@kernel.org>, john.ronciak@intel.com,
-	miles.j.penner@intel.com, bruce.w.allan@intel.com,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	x86@kernel.org
-Subject: Re: [PATCH 3/6] PCI: introduce pci_trim_stale_devices()
-Date: Fri, 28 Jun 2013 21:59:26 +0200
-Message-ID: <2795933.HtOzpJWrsk@vostro.rjw.lan>
-In-Reply-To: <1372177330-28013-4-git-send-email-mika.westerberg@linux.intel.com>
-References: <1372177330-28013-1-git-send-email-mika.westerberg@linux.intel.com> <1372177330-28013-4-git-send-email-mika.westerberg@linux.intel.com>
+Received: from moutng.kundenserver.de ([212.227.17.8]:55898 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752471Ab3FNMi2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Jun 2013 08:38:28 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Thierry Reding <thierry.reding@gmail.com>
+Cc: Jingoo Han <jg1.han@samsung.com>,
+	'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>,
+	linux-samsung-soc@vger.kernel.org,
+	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
+	'Surendranath Gurivireddy Balla' <suren.reddy@samsung.com>,
+	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
+	linux-kernel@vger.kernel.org, 'Kukjin Kim' <kgene.kim@samsung.com>,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
+	'Andrew Murray' <andrew.murray@arm.com>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH V5 1/3] pci: Add PCIe driver for Samsung Exynos
+Date: Fri, 14 Jun 2013 14:38:49 +0200
+Message-ID: <3309315.fJN6KWK0oA@wuerfel>
+In-Reply-To: <20130614105310.GA19060@manwe>
+References: <000b01ce6839$0f0455d0$2d0d0170$@samsung.com> <000001ce68d7$ca762200$5f626600$@samsung.com> <20130614105310.GA19060@manwe>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, June 25, 2013 07:22:07 PM Mika Westerberg wrote:
-> From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+On Friday 14 June 2013 12:53:11 Thierry Reding wrote:
 > 
-> The new function stops and removes the device if it doesn't respond.
-> If the device responds and it's a bus we apply the function to all
-> subdevices recursively.
+> I think the biggest missing piece is pci_common_exit(), the counterpart
+> of pci_common_init(), to cleanup a host bridge on ARM. I haven't looked
+> in detail at the other architectures, but I suspect there must be some
+> code to call when a host bridge is removed.
 > 
-> It's useful for hotplug bus check case, when you need drop all unplugged
-> devices before looking for new ones.
-> 
-> Signed-off-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
-> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> Looking at drivers/pci/remove.c, it seems like pci_remove_root_bus()
+> might be what we're looking at. It isn't exported so it can't be used by
+> modules, but that can be changed. Is that how a host bridge is typically
+> removed from the system?
 
-I think it'd be better to fold this into [4/6].  This way it would be clearer
-what that patch did.
+It's fairly new to have host bridges in loadable modules, so I'm pretty
+sure it's not supported by the core yet, but it also doesn't seem hard
+to do. I think you are right with regard to pci_remove_root_bus,
+and Bjorn might be able to provide more information.
 
-Thanks,
-Rafael
+Ideally we should be able to load and unload the pci host driver
+in a loop indefinitely without crashing or exposing any races
+or leaks, but I would not bet on that working without bugs in the
+core, since that goes beyond the normal pci (device) hotplug case.
 
-
-> ---
->  drivers/pci/remove.c | 20 ++++++++++++++++++++
->  include/linux/pci.h  |  1 +
->  2 files changed, 21 insertions(+)
-> 
-> diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-> index 8fc54b7..77b7a64 100644
-> --- a/drivers/pci/remove.c
-> +++ b/drivers/pci/remove.c
-> @@ -112,6 +112,26 @@ void pci_stop_and_remove_bus_device(struct pci_dev *dev)
->  }
->  EXPORT_SYMBOL(pci_stop_and_remove_bus_device);
->  
-> +/**
-> + * pci_trim_stale_devices - remove stale device or any stale child
-> + */
-> +void pci_trim_stale_devices(struct pci_dev *dev)
-> +{
-> +	struct pci_bus *bus = dev->subordinate;
-> +	struct pci_dev *child, *tmp;
-> +	bool alive;
-> +	u32 l;
-> +
-> +	/* check if the device responds */
-> +	alive = pci_bus_read_dev_vendor_id(dev->bus, dev->devfn, &l, 0);
-> +	if (!alive)
-> +		pci_stop_and_remove_bus_device(dev);
-> +
-> +	if (alive && bus)
-> +		list_for_each_entry_safe(child, tmp, &bus->devices, bus_list)
-> +			pci_trim_stale_devices(child);
-> +}
-> +
->  void pci_stop_root_bus(struct pci_bus *bus)
->  {
->  	struct pci_dev *child, *tmp;
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 3a24e4f..8f6e7a0 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -754,6 +754,7 @@ struct pci_dev *pci_dev_get(struct pci_dev *dev);
->  void pci_dev_put(struct pci_dev *dev);
->  void pci_remove_bus(struct pci_bus *b);
->  void pci_stop_and_remove_bus_device(struct pci_dev *dev);
-> +void pci_trim_stale_devices(struct pci_dev *dev);
->  void pci_stop_root_bus(struct pci_bus *bus);
->  void pci_remove_root_bus(struct pci_bus *bus);
->  void pci_setup_cardbus(struct pci_bus *bus);
-> 
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+	Arnd
