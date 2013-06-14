@@ -1,73 +1,100 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f171.google.com ([209.85.192.171]:47311 "EHLO
-	mail-pd0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161213Ab3FTRBp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Jun 2013 13:01:45 -0400
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Jeremy Fitzhardinge <jeremy@goop.org>
-Cc: liuj97@gmail.com, Jiang Liu <jiang.liu@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	xen-devel@lists.xensource.com,
-	virtualization@lists.linux-foundation.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Chris Metcalf <cmetcalf@tilera.com>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@huawei.com>
+To: "Rafael J . Wysocki" <rjw@sisk.pl>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"Alexander E . Patrakov" <patrakov@gmail.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Thierry Reding <thierry.reding@avionic-design.de>
-Subject: [PATCH 3/3] PCI: mark pci_scan_bus_parented() as __deprecated
-Date: Fri, 21 Jun 2013 01:01:05 +0800
-Message-Id: <1371747665-12768-4-git-send-email-liuj97@gmail.com>
-In-Reply-To: <1371747665-12768-1-git-send-email-liuj97@gmail.com>
-References: <1371747665-12768-1-git-send-email-liuj97@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-acpi@vger.kernel.org, Jiang Liu <liuj97@gmail.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	<stable@vger.kernel.org>
+Subject: [BUGFIX v2 1/4] ACPI, DOCK: initialize dock subsystem before scanning PCI root buses
+Date: Sat, 15 Jun 2013 03:27:58 +0800
+Message-Id: <1371238081-32260-2-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1371238081-32260-1-git-send-email-jiang.liu@huawei.com>
+References: <1371238081-32260-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <jiang.liu@huawei.com>
+Changeset "3b63aaa70e1 PCI: acpiphp: Do not use ACPI PCI subdriver
+mechanism" causes a regression which breaks ACPI dock support,
+please refer to https://bugzilla.kernel.org/show_bug.cgi?id=59501
 
-Mark pci_scan_bus_parented() as __deprecated and clean up outdated
-comments.
+The root cause is that changeset 3b63aaa70e1 changed the relative
+initialization order of ACPI dock subsystem and acpiphp driver,
+and acpiphp driver has dependency on ACPI dock subsystem's
+initialization result, so that acpiphp can't correctly detect ACPI
+dock stations now.
+
+On the other hand, ACPI dock is a built-in driver, so we could
+explicitly initialize it before the acpiphp driver is used.
 
 Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Cc: Chris Metcalf <cmetcalf@tilera.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Thierry Reding <thierry.reding@avionic-design.de>
+Reported-by: Alexander E. Patrakov <patrakov@gmail.com>
+Tested-by: Alexander E. Patrakov <patrakov@gmail.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-acpi@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
+Cc: <stable@vger.kernel.org> # 3.9+
 ---
- arch/tile/kernel/pci.c | 3 ---
- include/linux/pci.h    | 4 ++--
- 2 files changed, 2 insertions(+), 5 deletions(-)
+ drivers/acpi/dock.c     | 7 +------
+ drivers/acpi/internal.h | 5 +++++
+ drivers/acpi/scan.c     | 1 +
+ 3 files changed, 7 insertions(+), 6 deletions(-)
 
-diff --git a/arch/tile/kernel/pci.c b/arch/tile/kernel/pci.c
-index 67237d3..936e087 100644
---- a/arch/tile/kernel/pci.c
-+++ b/arch/tile/kernel/pci.c
-@@ -309,9 +309,6 @@ int __init pcibios_init(void)
- 			 *
- 			 * It reads the PCI tree for this bus into the Linux
- 			 * data structures.
--			 *
--			 * This is inlined in linux/pci.h and calls into
--			 * pci_scan_bus_parented() in probe.c.
- 			 */
- 			pci_add_resource(&resources, &ioport_resource);
- 			pci_add_resource(&resources, &iomem_resource);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index f1229c7..b72d275 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -720,8 +720,8 @@ void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
- void pcibios_scan_specific_bus(int busn);
- struct pci_bus *pci_find_bus(int domain, int busnr);
- void pci_bus_add_devices(const struct pci_bus *bus);
--struct pci_bus *pci_scan_bus_parented(struct device *parent, int bus,
--				      struct pci_ops *ops, void *sysdata);
-+struct pci_bus * __deprecated pci_scan_bus_parented(struct device *parent,
-+			int bus, struct pci_ops *ops, void *sysdata);
- struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops, void *sysdata);
- struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 				    struct pci_ops *ops, void *sysdata,
+diff --git a/drivers/acpi/dock.c b/drivers/acpi/dock.c
+index 4fdea38..02b0563 100644
+--- a/drivers/acpi/dock.c
++++ b/drivers/acpi/dock.c
+@@ -1033,7 +1033,7 @@ find_dock_and_bay(acpi_handle handle, u32 lvl, void *context, void **rv)
+ 	return AE_OK;
+ }
+ 
+-static int __init dock_init(void)
++int __init acpi_dock_init(void)
+ {
+ 	if (acpi_disabled)
+ 		return 0;
+@@ -1062,9 +1062,4 @@ static void __exit dock_exit(void)
+ 		dock_remove(dock_station);
+ }
+ 
+-/*
+- * Must be called before drivers of devices in dock, otherwise we can't know
+- * which devices are in a dock
+- */
+-subsys_initcall(dock_init);
+ module_exit(dock_exit);
+diff --git a/drivers/acpi/internal.h b/drivers/acpi/internal.h
+index 297cbf4..c610a76 100644
+--- a/drivers/acpi/internal.h
++++ b/drivers/acpi/internal.h
+@@ -40,6 +40,11 @@ void acpi_container_init(void);
+ #else
+ static inline void acpi_container_init(void) {}
+ #endif
++#ifdef CONFIG_ACPI_DOCK
++void acpi_dock_init(void);
++#else
++static inline void acpi_dock_init(void) {}
++#endif
+ #ifdef CONFIG_ACPI_HOTPLUG_MEMORY
+ void acpi_memory_hotplug_init(void);
+ #else
+diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
+index 44225cb..4148163 100644
+--- a/drivers/acpi/scan.c
++++ b/drivers/acpi/scan.c
+@@ -2045,6 +2045,7 @@ int __init acpi_scan_init(void)
+ 	acpi_lpss_init();
+ 	acpi_container_init();
+ 	acpi_memory_hotplug_init();
++	acpi_dock_init();
+ 
+ 	mutex_lock(&acpi_scan_lock);
+ 	/*
 -- 
 1.8.1.2
 
