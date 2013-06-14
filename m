@@ -1,65 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout4.samsung.com ([203.254.224.34]:12991 "EHLO
-	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751863Ab3FTH5e (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Jun 2013 03:57:34 -0400
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>
-Cc: 'Kukjin Kim' <kgene.kim@samsung.com>,
-	'Bjorn Helgaas' <bhelgaas@google.com>,
-	linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org,
-	devicetree-discuss@lists.ozlabs.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	'Grant Likely' <grant.likely@secretlab.ca>,
-	'Andrew Murray' <andrew.murray@arm.com>,
-	'Thierry Reding' <thierry.reding@avionic-design.de>,
-	'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>,
-	'Arnd Bergmann' <arnd@arndb.de>,
-	'Surendranath Gurivireddy Balla' <suren.reddy@samsung.com>,
-	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
-	'Thomas Abraham' <thomas.abraham@linaro.org>,
-	Jingoo Han <jg1.han@samsung.com>
-References: <00c201ce6d85$83b072a0$8b1157e0$@samsung.com>
- <20130620094835.3f1f34c2@skate>
-In-reply-to: <20130620094835.3f1f34c2@skate>
-Subject: Re: [PATCH V6 3/3] ARM: dts: Add pcie controller node for Samsung
- EXYNOS5440 SoC
-Date: Thu, 20 Jun 2013 16:57:32 +0900
-Message-id: <00c301ce6d8b$d198b210$74ca1630$@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+Received: from szxga01-in.huawei.com ([119.145.14.64]:57574 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751563Ab3FNCJh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Jun 2013 22:09:37 -0400
+Message-ID: <51BA7B3D.1020402@huawei.com>
+Date: Fri, 14 Jun 2013 10:09:01 +0800
+From: "Jiang Liu (Gerry)" <jiang.liu@huawei.com>
+MIME-Version: 1.0
+To: Yinghai Lu <yinghai@kernel.org>
+CC: "Rafael J . Wysocki" <rjw@sisk.pl>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Alexander E . Patrakov" <patrakov@gmail.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [BUGFIX 0/9] Fix bug 59501 and code improvement for dock driver
+References: <1371141152-9468-1-git-send-email-jiang.liu@huawei.com> <CAE9FiQX1xVJA3MZc4LndWU7kx0mxC-YPE1R8JD4W2-Gg9zq3Zw@mail.gmail.com>
+In-Reply-To: <CAE9FiQX1xVJA3MZc4LndWU7kx0mxC-YPE1R8JD4W2-Gg9zq3Zw@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, June 20, 2013 4:49 PM, Thomas Petazzoni wrote:
-> 
-> Dear Jingoo Han,
-> 
-> On Thu, 20 Jun 2013 16:12:24 +0900, Jingoo Han wrote:
-> 
-> > -	pinctrl {
-> > +	pin_ctrl: pinctrl {
-> >  		compatible = "samsung,exynos5440-pinctrl";
-> 
-> I know I'm nitpicking, but isn't this change completely unrelated to
-> PCIe support?
-
-This change is related to PCIe support.
-Without this, I cannot use gpio binding.
-
-This change was guided by Thomas Abraham (Author of Samsung pinctrl).
-Also, it was confirmed by Kukjin Kim (Maintainer of Samsung SoC).
-
-Thank you for your caring. :)
-
-Best regards,
-Jingoo Han
-
-> 
-> Thomas
-> --
-> Thomas Petazzoni, Free Electrons
-> Kernel, drivers, real-time and embedded Linux
-> development, consulting, training and support.
-> http://free-electrons.com
+On 2013/6/14 2:42, Yinghai Lu wrote:
+> On Thu, Jun 13, 2013 at 9:32 AM, Jiang Liu <jiang.liu@huawei.com> wrote:
+>> Alexander E. Patrakov <patrakov@gmail.com> reports two bugs related to
+>> dock station support on Sony VAIO VPCZ23A4R. Actually there are at least
+>> four bugs related to Sony VAIO VPCZ23A4R dock support.
+>> 1) can't correctly detect hotplug slot for dock state
+>> 2) resource leak on undocking
+>> 3) resource allocation failure for dock devices
+>> 4) one bug in intel_snd_hda driver
+>>
+>> The first patch fixes issue 1, and the second patch fixes issue 2.
+>> These two patches, if accepted, should be material for stable branches
+>> too.
+>> Patch 3-9 are code improvement for ACPI and dock driver.
+>>
+>> I have found the root cause for issue three, but still working on
+>> solutions, and seems can't be solve in short time. So please help
+>> to review and test patches for issue 1) and 2) first.
+>
+> the 3) is about pci resource allocation?
+> because pcibios_add_bus is called too early?
+>
+> If that is case, we should have something like attached patch for it.
+>
+> With that, we will not need to worry about _OSC set for 3.10 etc.
+>
+Hi Yinghai,
+    Seems not related to pcibios_add_bus(). According to my
+investigation, the issue is caused by difference in PCI resource
+assignment between boot time and runtime hotplug. On x86 platforms,
+it respects PCI resource assignment from BIOS and only reassign
+resources for unassigned BARs. But with acpiphp, it ignores BIOS
+resource assignment and reassign all resources by OS.
+    If we have enough resources, reassigning all PCI resources should
+work too, but may fail if we are under resource constraints. On the
+other handle, current PCI IOMM align algorithm may waste huge MMIO
+address space if we have some PCI devices with huge IOMM BAR.
+    On this Sony laptop, BIOS allocates limited IOMM resources for
+the dock station and the dock station has a gfx which has a 256MB
+IOMM BAR. So current acpiphp driver fails to allocate resources
+for most devices on the dock station.
+     Currently I'm trying to change acpiphp to respect BIOS resource 
+assignment by calling pcibios_survey_resource_bus(), as in pci_root.c.
+The other way is to change the IOMM resource allocation algorithm,
+but obviously it's much more risky of regressions if changing the
+algorithm.
+Regards!
+Gerry
 
