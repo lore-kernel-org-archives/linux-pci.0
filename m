@@ -1,121 +1,135 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f179.google.com ([209.85.223.179]:47372 "EHLO
-	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753830Ab3FNWtw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Jun 2013 18:49:52 -0400
-Received: by mail-ie0-f179.google.com with SMTP id c10so2632858ieb.38
-        for <linux-pci@vger.kernel.org>; Fri, 14 Jun 2013 15:49:52 -0700 (PDT)
-Date: Fri, 14 Jun 2013 16:49:49 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Subject: Re: [PATCH] PCI / ACPI / PM: Use correct power state strings in
- messages
-Message-ID: <20130614224949.GA29105@google.com>
-References: <2491625.TQ1FFQeR38@vostro.rjw.lan>
- <CAErSpo7Q8H5wmMUPKqquerp_zbFwnac95Gbezd2=STBjtUrnvw@mail.gmail.com>
- <1701924.fhYB0ilm4Z@vostro.rjw.lan>
+Received: from hydra.sisk.pl ([212.160.235.94]:37355 "EHLO hydra.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751259Ab3FNOGu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 14 Jun 2013 10:06:50 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Jiang Liu <liuj97@gmail.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"Alexander E . Patrakov" <patrakov@gmail.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Shaohua Li <shaohua.li@intel.com>,
+	Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org
+Subject: Re: [BUGFIX 3/9] ACPI, DOCK: clean up unused module related code
+Date: Fri, 14 Jun 2013 16:16:04 +0200
+Message-ID: <3188924.9xuW7um1Oj@vostro.rjw.lan>
+In-Reply-To: <51BB22D1.9070204@gmail.com>
+References: <1371141152-9468-1-git-send-email-jiang.liu@huawei.com> <1841512.D0ScSNfNgy@vostro.rjw.lan> <51BB22D1.9070204@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1701924.fhYB0ilm4Z@vostro.rjw.lan>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Jun 15, 2013 at 12:28:12AM +0200, Rafael J. Wysocki wrote:
-> On Friday, June 14, 2013 11:08:44 AM Bjorn Helgaas wrote:
-> > On Thu, Jun 13, 2013 at 4:29 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> > > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > >
-> > > Make acpi_pci_set_power_state() print the name of the ACPI device
-> > > power state the device has been actually put into instead of printing
-> > > the name of the requested PCI device power state, which need not be
-> > > the same.
-> > >
-> > > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > > ---
-> > >
-> > > For 3.11.
-> > >
-> > > Thanks,
-> > > Rafael
-> > >
-> > > ---
-> > >  drivers/pci/pci-acpi.c |    2 +-
-> > >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > >
-> > > Index: linux-pm/drivers/pci/pci-acpi.c
-> > > ===================================================================
-> > > --- linux-pm.orig/drivers/pci/pci-acpi.c
-> > > +++ linux-pm/drivers/pci/pci-acpi.c
-> > > @@ -211,7 +211,7 @@ static int acpi_pci_set_power_state(stru
-> > >
-> > >         if (!error)
-> > >                 dev_info(&dev->dev, "power state changed by ACPI to %s\n",
-> > > -                        pci_power_name(state));
-> > > +                        acpi_power_state_string(state_conv[state]));
-> > >
-> > >         return error;
-> > >  }
-> > >
+On Friday, June 14, 2013 10:04:01 PM Jiang Liu wrote:
+> On 06/14/2013 02:26 AM, Rafael J. Wysocki wrote:
+> > On Friday, June 14, 2013 12:32:26 AM Jiang Liu wrote:
+> >> ACPI dock driver can't be built as a module any more, so clean up
+> >> module related code.
+> >>
+> >> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+> >> Cc: Shaohua Li <shaohua.li@intel.com>
+> >> Cc: Len Brown <lenb@kernel.org>
+> >> Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
+> >> Cc: linux-acpi@vger.kernel.org
+> >> Cc: linux-kernel@vger.kernel.org
 > > 
-> > Just to double-check this, it *looks* like the effective change is
-> > that for PCI_D3hot and PCI_D3cold, we'll print "(unknown)" instead of
-> > "D3hot" and "D3cold" because state_conv[] folds both PCI_D3hot and
-> > PCI_D3cold into ACPI_STATE_D3, and acpi_power_state_string() doesn't
-> > have a case for ACPI_STATE_D3.
+> > How exactly does this depend on [2/9]?  If it doesn't at all, it should go
+> > after [1/9].
+> > 
+> >> ---
+> >>  drivers/acpi/dock.c | 41 -----------------------------------------
+> >>  1 file changed, 41 deletions(-)
+> >>
+> >> diff --git a/drivers/acpi/dock.c b/drivers/acpi/dock.c
+> >> index 79c8d9e..50e38b7 100644
+> >> --- a/drivers/acpi/dock.c
+> >> +++ b/drivers/acpi/dock.c
+> >> @@ -53,12 +53,6 @@ MODULE_PARM_DESC(immediate_undock, "1 (default) will cause the driver to "
+> >>  
+> >>  static struct atomic_notifier_head dock_notifier_list;
+> >>  
+> >> -static const struct acpi_device_id dock_device_ids[] = {
+> >> -	{"LNXDOCK", 0},
+> >> -	{"", 0},
+> >> -};
+> >> -MODULE_DEVICE_TABLE(acpi, dock_device_ids);
+> >> -
+> > 
+> > Don't we actually need the device IDs?
+> Now dock driver could only be built as built-in, and it doesn't really
+> bind to ACPI dock devices, so I think the device ids are not used any
+> more. Not sure whether any userspace tool has dependency on the device
+> IDs.
+
+I see.  OK
+
+Thanks,
+Rafael
+
+
+> > 
+> >>  struct dock_station {
+> >>  	acpi_handle handle;
+> >>  	unsigned long last_dock_time;
+> >> @@ -1013,30 +1007,6 @@ err_unregister:
+> >>  }
+> >>  
+> >>  /**
+> >> - * dock_remove - free up resources related to the dock station
+> >> - */
+> >> -static int dock_remove(struct dock_station *ds)
+> >> -{
+> >> -	struct dock_dependent_device *dd, *tmp;
+> >> -	struct platform_device *dock_device = ds->dock_device;
+> >> -
+> >> -	if (!dock_station_count)
+> >> -		return 0;
+> >> -
+> >> -	/* remove dependent devices */
+> >> -	list_for_each_entry_safe(dd, tmp, &ds->dependent_devices, list)
+> >> -		kfree(dd);
+> >> -
+> >> -	list_del(&ds->sibling);
+> >> -
+> >> -	/* cleanup sysfs */
+> >> -	sysfs_remove_group(&dock_device->dev.kobj, &dock_attribute_group);
+> >> -	platform_device_unregister(dock_device);
+> >> -
+> >> -	return 0;
+> >> -}
+> >> -
+> >> -/**
+> >>   * find_dock_and_bay - look for dock stations and bays
+> >>   * @handle: acpi handle of a device
+> >>   * @lvl: unused
+> >> @@ -1073,14 +1043,3 @@ int __init acpi_dock_init(void)
+> >>  		ACPI_DOCK_DRIVER_DESCRIPTION, dock_station_count);
+> >>  	return 0;
+> >>  }
+> >> -
+> >> -static void __exit dock_exit(void)
+> >> -{
+> >> -	struct dock_station *tmp, *dock_station;
+> >> -
+> >> -	unregister_acpi_bus_notifier(&dock_acpi_notifier);
+> >> -	list_for_each_entry_safe(dock_station, tmp, &dock_stations, sibling)
+> >> -		dock_remove(dock_station);
+> >> -}
+> >> -
+> >> -module_exit(dock_exit);
+> > 
+> > The other changes look OK to me.
+> Thanks for review.
 > 
-> No, it won't work like this, because ACPI_STATE_D3 == ACPI_STATE_D3_COLD. :-)
+> > 
+> > Thanks,
+> > Rafael
+> > 
+> > 
 > 
-> So, actually, "D3cold" will be printed for both PCI_D3hot and PCI_D3cold
-> (and I have tested this).
-
-Ah, right, I should have noticed that.
-
-> Well, I think it's better to actually replace ACPI_STATE_D3 everywhere in
-> pci-acpi.c with ACPI_STATE_D3_COLD to avoid that confusion.  Do you want me
-> to prepare a patch?
-
-If the following is OK, I'll just put it in my pci/misc branch:
-
-commit fc6504b3a4dc9beae782a11e6f7c3c4a9f077fb8
-Author: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Date:   Fri Jun 14 00:29:50 2013 +0200
-
-    PCI / ACPI / PM: Use correct power state strings in messages
-    
-    Make acpi_pci_set_power_state() print the name of the ACPI device
-    power state the device has been actually put into instead of printing
-    the name of the requested PCI device power state, which need not be
-    the same.
-    
-    [bhelgaas: use ACPI_STATE_D3_COLD (ACPI_STATE_D3 == ACPI_STATE_D3_COLD)]
-    Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-
-diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
-index 6c15d6a..dbdc5f7 100644
---- a/drivers/pci/pci-acpi.c
-+++ b/drivers/pci/pci-acpi.c
-@@ -186,8 +186,8 @@ static int acpi_pci_set_power_state(struct pci_dev *dev, pci_power_t state)
- 		[PCI_D0] = ACPI_STATE_D0,
- 		[PCI_D1] = ACPI_STATE_D1,
- 		[PCI_D2] = ACPI_STATE_D2,
--		[PCI_D3hot] = ACPI_STATE_D3,
--		[PCI_D3cold] = ACPI_STATE_D3
-+		[PCI_D3hot] = ACPI_STATE_D3_COLD,
-+		[PCI_D3cold] = ACPI_STATE_D3_COLD,
- 	};
- 	int error = -EINVAL;
- 
-@@ -211,7 +211,7 @@ static int acpi_pci_set_power_state(struct pci_dev *dev, pci_power_t state)
- 
- 	if (!error)
- 		dev_info(&dev->dev, "power state changed by ACPI to %s\n",
--			 pci_power_name(state));
-+			 acpi_power_state_string(state_conv[state]));
- 
- 	return error;
- }
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
