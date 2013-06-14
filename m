@@ -1,89 +1,121 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f182.google.com ([209.85.214.182]:33585 "EHLO
-	mail-ob0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756012Ab3FEVbc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Jun 2013 17:31:32 -0400
-Received: by mail-ob0-f182.google.com with SMTP id va7so3451424obc.41
-        for <linux-pci@vger.kernel.org>; Wed, 05 Jun 2013 14:31:31 -0700 (PDT)
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Linux PM list <linux-pm@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Subject: Re: [PATCH] PCI / ACPI / PM: Use correct power state strings in messages
+Date: Sat, 15 Jun 2013 01:13:22 +0200
+Message-ID: <1560214.24OrRSoYgv@vostro.rjw.lan>
+In-Reply-To: <20130614224949.GA29105@google.com>
+References: <2491625.TQ1FFQeR38@vostro.rjw.lan> <1701924.fhYB0ilm4Z@vostro.rjw.lan> <20130614224949.GA29105@google.com>
 MIME-Version: 1.0
-In-Reply-To: <1369489718-25869-8-git-send-email-jiang.liu@huawei.com>
-References: <1369489718-25869-1-git-send-email-jiang.liu@huawei.com> <1369489718-25869-8-git-send-email-jiang.liu@huawei.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 5 Jun 2013 15:31:11 -0600
-Message-ID: <CAErSpo7Lbu_MuxYGa6sghu7xuDJ9ZFN8pK0=xM0QMOwr=P2Y_Q@mail.gmail.com>
-Subject: Re: [PATCH v3, part1 07/10] PCI, unicore, m68k: remove redundant call
- of pci_bus_add_devices()
-To: Jiang Liu <liuj97@gmail.com>
-Cc: Yinghai Lu <yinghai@kernel.org>, Jiang Liu <jiang.liu@huawei.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Greg Ungerer <gerg@uclinux.org>,
-	linux-m68k@lists.linux-m68k.org, Guan Xuetao <gxt@mprc.pku.edu.cn>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc m68k and unicore32 maintainers]
+On Friday, June 14, 2013 04:49:49 PM Bjorn Helgaas wrote:
+> On Sat, Jun 15, 2013 at 12:28:12AM +0200, Rafael J. Wysocki wrote:
+> > On Friday, June 14, 2013 11:08:44 AM Bjorn Helgaas wrote:
+> > > On Thu, Jun 13, 2013 at 4:29 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> > > > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > > >
+> > > > Make acpi_pci_set_power_state() print the name of the ACPI device
+> > > > power state the device has been actually put into instead of printing
+> > > > the name of the requested PCI device power state, which need not be
+> > > > the same.
+> > > >
+> > > > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > > > ---
+> > > >
+> > > > For 3.11.
+> > > >
+> > > > Thanks,
+> > > > Rafael
+> > > >
+> > > > ---
+> > > >  drivers/pci/pci-acpi.c |    2 +-
+> > > >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > > >
+> > > > Index: linux-pm/drivers/pci/pci-acpi.c
+> > > > ===================================================================
+> > > > --- linux-pm.orig/drivers/pci/pci-acpi.c
+> > > > +++ linux-pm/drivers/pci/pci-acpi.c
+> > > > @@ -211,7 +211,7 @@ static int acpi_pci_set_power_state(stru
+> > > >
+> > > >         if (!error)
+> > > >                 dev_info(&dev->dev, "power state changed by ACPI to %s\n",
+> > > > -                        pci_power_name(state));
+> > > > +                        acpi_power_state_string(state_conv[state]));
+> > > >
+> > > >         return error;
+> > > >  }
+> > > >
+> > > 
+> > > Just to double-check this, it *looks* like the effective change is
+> > > that for PCI_D3hot and PCI_D3cold, we'll print "(unknown)" instead of
+> > > "D3hot" and "D3cold" because state_conv[] folds both PCI_D3hot and
+> > > PCI_D3cold into ACPI_STATE_D3, and acpi_power_state_string() doesn't
+> > > have a case for ACPI_STATE_D3.
+> > 
+> > No, it won't work like this, because ACPI_STATE_D3 == ACPI_STATE_D3_COLD. :-)
+> > 
+> > So, actually, "D3cold" will be printed for both PCI_D3hot and PCI_D3cold
+> > (and I have tested this).
+> 
+> Ah, right, I should have noticed that.
+> 
+> > Well, I think it's better to actually replace ACPI_STATE_D3 everywhere in
+> > pci-acpi.c with ACPI_STATE_D3_COLD to avoid that confusion.  Do you want me
+> > to prepare a patch?
+> 
+> If the following is OK, I'll just put it in my pci/misc branch:
 
-On Sat, May 25, 2013 at 7:48 AM, Jiang Liu <liuj97@gmail.com> wrote:
-> pci_scan_bus() and pci_scan_root_bus() has called pci_bus_add_devices()
-> once, so remove the redundant call of pci_bus_add_devices().
-> On the other handle, subsys_init() callbacks will be invoked before
-> device_init() callbacks, so it should be safe to remove the redundant
-> calls.
->
-> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-> ---
->  arch/m68k/platform/coldfire/pci.c | 2 +-
->  arch/unicore32/kernel/pci.c       | 5 -----
->  2 files changed, 1 insertion(+), 6 deletions(-)
+Yes, it is, thanks!
 
-m68k and unicore32 guys:
+Rafael
 
-I plan to apply the patch below.  I actually split it into two, one
-for m68k and another for unicore32.  If you object or would rather
-push it through your trees, let me know.  I don't think the rest of
-the series has any actual dependency on this, so there shouldn't be
-any problem if you want to take it yourselves.
 
-Bjorn
-
-> diff --git a/arch/m68k/platform/coldfire/pci.c b/arch/m68k/platform/coldfire/pci.c
-> index 8572246..2345972 100644
-> --- a/arch/m68k/platform/coldfire/pci.c
-> +++ b/arch/m68k/platform/coldfire/pci.c
-> @@ -320,7 +320,7 @@ static int __init mcf_pci_init(void)
->         pci_bus_size_bridges(rootbus);
->         pci_bus_assign_resources(rootbus);
->         pci_enable_bridges(rootbus);
-> -       pci_bus_add_devices(rootbus);
-> +
->         return 0;
+> commit fc6504b3a4dc9beae782a11e6f7c3c4a9f077fb8
+> Author: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> Date:   Fri Jun 14 00:29:50 2013 +0200
+> 
+>     PCI / ACPI / PM: Use correct power state strings in messages
+>     
+>     Make acpi_pci_set_power_state() print the name of the ACPI device
+>     power state the device has been actually put into instead of printing
+>     the name of the requested PCI device power state, which need not be
+>     the same.
+>     
+>     [bhelgaas: use ACPI_STATE_D3_COLD (ACPI_STATE_D3 == ACPI_STATE_D3_COLD)]
+>     Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+>     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> 
+> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+> index 6c15d6a..dbdc5f7 100644
+> --- a/drivers/pci/pci-acpi.c
+> +++ b/drivers/pci/pci-acpi.c
+> @@ -186,8 +186,8 @@ static int acpi_pci_set_power_state(struct pci_dev *dev, pci_power_t state)
+>  		[PCI_D0] = ACPI_STATE_D0,
+>  		[PCI_D1] = ACPI_STATE_D1,
+>  		[PCI_D2] = ACPI_STATE_D2,
+> -		[PCI_D3hot] = ACPI_STATE_D3,
+> -		[PCI_D3cold] = ACPI_STATE_D3
+> +		[PCI_D3hot] = ACPI_STATE_D3_COLD,
+> +		[PCI_D3cold] = ACPI_STATE_D3_COLD,
+>  	};
+>  	int error = -EINVAL;
+>  
+> @@ -211,7 +211,7 @@ static int acpi_pci_set_power_state(struct pci_dev *dev, pci_power_t state)
+>  
+>  	if (!error)
+>  		dev_info(&dev->dev, "power state changed by ACPI to %s\n",
+> -			 pci_power_name(state));
+> +			 acpi_power_state_string(state_conv[state]));
+>  
+>  	return error;
 >  }
->
-> diff --git a/arch/unicore32/kernel/pci.c b/arch/unicore32/kernel/pci.c
-> index ef69c0c..374a055 100644
-> --- a/arch/unicore32/kernel/pci.c
-> +++ b/arch/unicore32/kernel/pci.c
-> @@ -277,11 +277,6 @@ static int __init pci_common_init(void)
->                 pci_bus_assign_resources(puv3_bus);
->         }
->
-> -       /*
-> -        * Tell drivers about devices found.
-> -        */
-> -       pci_bus_add_devices(puv3_bus);
-> -
->         return 0;
->  }
->  subsys_initcall(pci_common_init);
-> --
-> 1.8.1.2
->
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
