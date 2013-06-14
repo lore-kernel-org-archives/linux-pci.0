@@ -1,115 +1,125 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:33145 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751466Ab3FFVTs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 6 Jun 2013 17:19:48 -0400
-From: "David E. Box" <david.e.box@linux.intel.com>
-To: kristen.c.accardi@intel.com, mj@ucw.cz, linux-pci@vger.kernel.org
-Cc: David Box <david.e.box@linux.intel.com>
-Subject: [PATCH v2] lspci: Add L1 PM Substate capability reporting
-Date: Thu,  6 Jun 2013 14:17:00 -0700
-Message-Id: <1370553420-3437-1-git-send-email-david.e.box@linux.intel.com>
-In-Reply-To: <y>
-References: <y>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:56072 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752009Ab3FNCwS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Jun 2013 22:52:18 -0400
+Message-ID: <51BA8524.9050507@huawei.com>
+Date: Fri, 14 Jun 2013 10:51:16 +0800
+From: "Jiang Liu (Gerry)" <jiang.liu@huawei.com>
+MIME-Version: 1.0
+To: Yinghai Lu <yinghai@kernel.org>
+CC: "Rafael J . Wysocki" <rjw@sisk.pl>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Alexander E . Patrakov" <patrakov@gmail.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [BUGFIX 0/9] Fix bug 59501 and code improvement for dock driver
+References: <1371141152-9468-1-git-send-email-jiang.liu@huawei.com> <CAE9FiQX1xVJA3MZc4LndWU7kx0mxC-YPE1R8JD4W2-Gg9zq3Zw@mail.gmail.com> <51BA7B3D.1020402@huawei.com> <CAE9FiQX-jCZYPyxeHCp2h-6qx1GMyQYuaTk5JwZR6H1t4jRg9g@mail.gmail.com>
+In-Reply-To: <CAE9FiQX-jCZYPyxeHCp2h-6qx1GMyQYuaTk5JwZR6H1t4jRg9g@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: David Box <david.e.box@linux.intel.com>
+On 2013/6/14 10:30, Yinghai Lu wrote:
+> On Thu, Jun 13, 2013 at 7:09 PM, Jiang Liu (Gerry) <jiang.liu@huawei.com> wrote:
+>> On 2013/6/14 2:42, Yinghai Lu wrote:
+>>>
+>>> On Thu, Jun 13, 2013 at 9:32 AM, Jiang Liu <jiang.liu@huawei.com> wrote:
+>>>>
+>>>> Alexander E. Patrakov <patrakov@gmail.com> reports two bugs related to
+>>>> dock station support on Sony VAIO VPCZ23A4R. Actually there are at least
+>>>> four bugs related to Sony VAIO VPCZ23A4R dock support.
+>>>> 1) can't correctly detect hotplug slot for dock state
+>>>> 2) resource leak on undocking
+>>>> 3) resource allocation failure for dock devices
+>>>> 4) one bug in intel_snd_hda driver
+>>>>
+>>>> The first patch fixes issue 1, and the second patch fixes issue 2.
+>>>> These two patches, if accepted, should be material for stable branches
+>>>> too.
+>>>> Patch 3-9 are code improvement for ACPI and dock driver.
+>>>>
+>>>> I have found the root cause for issue three, but still working on
+>>>> solutions, and seems can't be solve in short time. So please help
+>>>> to review and test patches for issue 1) and 2) first.
+>>>
+>>>
+>>> the 3) is about pci resource allocation?
+>>> because pcibios_add_bus is called too early?
+>>>
+>>> If that is case, we should have something like attached patch for it.
+>>>
+>>> With that, we will not need to worry about _OSC set for 3.10 etc.
+>>>
+>> Hi Yinghai,
+>>     Seems not related to pcibios_add_bus(). According to my
+>> investigation, the issue is caused by difference in PCI resource
+>> assignment between boot time and runtime hotplug. On x86 platforms,
+>> it respects PCI resource assignment from BIOS and only reassign
+>> resources for unassigned BARs. But with acpiphp, it ignores BIOS
+>> resource assignment and reassign all resources by OS.
+>>     If we have enough resources, reassigning all PCI resources should
+>> work too, but may fail if we are under resource constraints. On the
+>> other handle, current PCI IOMM align algorithm may waste huge MMIO
+>> address space if we have some PCI devices with huge IOMM BAR.
+>>     On this Sony laptop, BIOS allocates limited IOMM resources for
+>> the dock station and the dock station has a gfx which has a 256MB
+>> IOMM BAR. So current acpiphp driver fails to allocate resources
+>> for most devices on the dock station.
+>
+> Is it a regression?
+Not sure. But a little concern about check_hotplug_bridge(), it treats
+dock station and devices on dock station with _EJD as hot-plug-gable
+PCI bus and reserve extra resources for possible hot-adding. But I
+think we should only reserve extra resource for dock station, and should
+not reserve resource for devices on station with _EJD method.
 
-The capabilities are several L1 substates that can enable lower power
-consumption when a PCIe Link is idle.
+>
+>>      Currently I'm trying to change acpiphp to respect BIOS resource
+>> assignment by calling pcibios_survey_resource_bus(), as in pci_root.c.
+>> The other way is to change the IOMM resource allocation algorithm,
+>> but obviously it's much more risky of regressions if changing the
+>> algorithm.
+>
+> that is not going to help, need to increase bridge resource.
+>
+> please check if BIOS have setup option about hotplug MMIO pad size.
+For the first step, I'm trying to make hotplug case work in the same way 
+as boot time. Do you think this patch help?
 
-v2: fixed white space issues
+diff --git a/drivers/pci/hotplug/acpiphp_glue.c 
+b/drivers/pci/hotplug/acpiphp_gl
+index 270fdba..12e3f6e 100644
+--- a/drivers/pci/hotplug/acpiphp_glue.c
++++ b/drivers/pci/hotplug/acpiphp_glue.c
+@@ -837,13 +837,13 @@ static int __ref enable_device(struct acpiphp_slot 
+*slot)
+                                 max = pci_scan_bridge(bus, dev, max, pass);
+                                 if (pass && dev->subordinate) {
+                                         check_hotplug_bridge(slot, dev);
+- 
+pci_bus_size_bridges(dev->subordinate);
++ 
+pcibios_resource_survey_bus(dev->subordi
+                                 }
+                         }
+                 }
+         }
 
-Signed-off-by: David Box <david.e.box@linux.intel.com>
+-       pci_bus_assign_resources(bus);
++       pci_assign_unassigned_bus_resources(bus);
+         acpiphp_sanitize_bus(bus);
+         acpiphp_set_hpp_values(bus);
+         acpiphp_set_acpi_region(slot);
 ---
- lib/header.h |    1 +
- ls-ecaps.c   |   53 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 54 insertions(+)
 
-diff --git a/lib/header.h b/lib/header.h
-index 69518fd..6608003 100644
---- a/lib/header.h
-+++ b/lib/header.h
-@@ -226,6 +226,7 @@
- #define PCI_EXT_CAP_ID_SRIOV	0x10	/* Single Root I/O Virtualization */
- #define PCI_EXT_CAP_ID_TPH	0x17	/* Transaction processing hints */
- #define PCI_EXT_CAP_ID_LTR	0x18	/* Latency Tolerance Reporting */
-+#define PCI_EXT_CAP_ID_L1PM	0x1e	/* L1 PM Substates */
- 
- /*** Definitions of capabilities ***/
- 
-diff --git a/ls-ecaps.c b/ls-ecaps.c
-index 161c275..9f06ffe 100644
---- a/ls-ecaps.c
-+++ b/ls-ecaps.c
-@@ -448,6 +448,56 @@ cap_evendor(struct device *d, int where)
-     BITS(hdr, 20, 12));
- }
- 
-+static void
-+cap_l1pm(struct device *d, int where)
-+{
-+  u32 l1_cap;
-+  int power_on_scale;
-+
-+  printf("L1 PM Substates\n");
-+
-+  if (verbose < 2)
-+     return;
-+
-+  if (!config_fetch(d, where + 4, 4)) {
-+     printf("\t\t<unreadable>\n");
-+     return;
-+  }
-+
-+  l1_cap = get_conf_long(d, where + 4);
-+
-+  printf("\t\tL1SubCap: ");
-+  printf("PCI-PM_L1.2%c, PCI-PM_L1.1%c, ASPM_L1.2%c, ASPM_L1.1%c, L1_PM_Substates%c\n",
-+     FLAG(l1_cap, 1),
-+     FLAG(l1_cap, 2),
-+     FLAG(l1_cap, 4),
-+     FLAG(l1_cap, 8),
-+     FLAG(l1_cap, 16));
-+
-+  if (BITS(l1_cap, 0, 1) || BITS(l1_cap, 2, 1)) {
-+     printf("\t\t\t  PortCommonModeRestoreTime=%dus, ",
-+        BITS(l1_cap, 8,8));
-+
-+     power_on_scale = BITS(l1_cap, 16, 2);
-+
-+     printf("PortTPowerOnTime=");
-+     switch (power_on_scale) {
-+     case 0:
-+        printf("%dus\n", BITS(l1_cap, 19, 5) * 2);
-+        break;
-+     case 1:
-+        printf("%dus\n", BITS(l1_cap, 19, 5) * 10);
-+        break;
-+     case 2:
-+        printf("%dus\n", BITS(l1_cap, 19, 5) * 100);
-+        break;
-+     default:
-+        printf("<error>\n");
-+        break;
-+     }
-+  }
-+}
-+
- void
- show_ext_caps(struct device *d)
- {
-@@ -526,6 +576,9 @@ show_ext_caps(struct device *d)
- 	  case PCI_EXT_CAP_ID_LTR:
- 	    cap_ltr(d, where);
- 	    break;
-+	  case PCI_EXT_CAP_ID_L1PM:
-+	    cap_l1pm(d, where);
-+	    break;
- 	  default:
- 	    printf("#%02x\n", id);
- 	    break;
--- 
-1.7.10.4
+>
+> Yinghai
+>
+> .
+>
+
 
