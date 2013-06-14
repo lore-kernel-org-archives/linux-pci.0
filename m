@@ -1,179 +1,138 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f177.google.com ([209.85.223.177]:37366 "EHLO
-	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752148Ab3FJXRe (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Jun 2013 19:17:34 -0400
-MIME-Version: 1.0
-In-Reply-To: <20130609145457.GA2245@breakpoint.cc>
-References: <1370644273-10495-1-git-send-email-yinghai@kernel.org>
-	<1370644273-10495-3-git-send-email-yinghai@kernel.org>
-	<20130609145457.GA2245@breakpoint.cc>
-Date: Mon, 10 Jun 2013 16:17:33 -0700
-Message-ID: <CAE9FiQUd7P4Az3Nq_K3JARbi-RH_27SF9iQJCq6SPG76WsSYGg@mail.gmail.com>
-Subject: Re: [PATCH v3 02/27] x86, irq: Modify irq chip once for irq remapping
-From: Yinghai Lu <yinghai@kernel.org>
-To: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-Cc: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
-	"H. Peter Anvin" <hpa@zytor.com>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@huawei.com>
+To: "Rafael J . Wysocki" <rjw@sisk.pl>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Joerg Roedel <joro@8bytes.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+	Yinghai Lu <yinghai@kernel.org>,
+	"Alexander E . Patrakov" <patrakov@gmail.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-acpi@vger.kernel.org, Jiang Liu <liuj97@gmail.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Subject: [BUGFIX v2 3/4] PCI, ACPI: fix device destroying order issue when handling dock notification
+Date: Sat, 15 Jun 2013 03:28:00 +0800
+Message-Id: <1371238081-32260-4-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1371238081-32260-1-git-send-email-jiang.liu@huawei.com>
+References: <1371238081-32260-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Jun 9, 2013 at 7:54 AM, Sebastian Andrzej Siewior
-<sebastian@breakpoint.cc> wrote:
-> On Fri, Jun 07, 2013 at 03:30:48PM -0700, Yinghai Lu wrote:
->> Current code: after irq remapping is enabled, irq_chip fields are modified
->> during every irq setup.
->>       mp_register_gsi
->>               io_apic_set_pci_routing
->>                       io_apic_setup_irq_pin
->>                               setup_ioapic_irq
->>                                       ioapic_register_intr
->>                                               setup_remapped_irq
->>       native_setup_msi_irqs
->>               setup_msi_irq
->>                       setup_remapped_irq
->>       default_setup_hpet_msi
->>               setup_remapped_irq
->> that is not efficient.
->>
->> We only need to modify those irq chip one time just after we enable
->> irq mapping.
->
-> The overhead you talk about is calling setup_remapped_irq() for every
-> interrupt from the mp_register_gsi() call chain? MSI & HPET should happen only
-> once, or do I miss something?
+Current ACPI glue logic expects that physical devices are destroyed
+before destroying companion ACPI devices, otherwise it will break the
+ACPI unbind logic and cause following warning messages:
+[  185.026073] usb usb5: Oops, 'acpi_handle' corrupt
+[  185.035150] pci 0000:1b:00.0: Oops, 'acpi_handle' corrupt
+[  185.035515] pci 0000:18:02.0: Oops, 'acpi_handle' corrupt
+[  180.013656]  port1: Oops, 'acpi_handle' corrupt
+Please refer to https://bugzilla.kernel.org/attachment.cgi?id=104321
+for full log message.
 
-yes, and for every pci_enable_msi per pci device.
+Above warning messages are caused by following scenario:
+1) acpi_dock_notifier_call() queues a task (T1) onto kacpi_hotplug_wq
+2) kacpi_hotplug_wq handles T1, which invokes acpi_dock_deferred_cb()
+   ->dock_notify()-> handle_eject_request()->hotplug_dock_devices()
+3) hotplug_dock_devices() first invokes registered hotplug callbacks to
+   destroy physical devices, then destroys all affected ACPI devices.
+   Everything seems perfect until now. But the acpiphp dock notification
+   handler will queue another task (T2) onto kacpi_hotplug_wq to really
+   destroy affected physical devices.
+4) kacpi_hotplug_wq finishes T1, and all affected ACPI devices have
+   been destroyed.
+5) kacpi_hotplug_wq handles T2, which destroys all affected physical
+   devices.
 
->
->> Change irq_remap_modify_chip_defaults() to __init as it only gets
->> called during booting stage, via irq_remap_modify_chips().
->>
->> Affected irq_chip: ioapic_chip, msi_chip, hpet_msi_type.
->> We don't need to use #ifdef in irq_remap_modify_chips():
->> IRQ_REMAP only support x86_64 and X86_IO_APIC and PCI_MSI.
->> HPET_TIMER is set when x86_64 is set.
->> When we have IRQ_REMAP enabled, al three chips are defined and
->> used.
->
-> all, not al
->
-> Still, the user could disable hpet or apic from the commandline but this
-> should cause any harm as the irq chips shouldn't be used then.
+So it breaks ACPI glue logic's expection because ACPI devices are destroyed
+in step 3 and physical devices are destroyed in step 5.
 
-should "not" ?
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Reported-by: Alexander E. Patrakov <patrakov@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Cc: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Cc: stable@vger.kernel.org # 3.8+
+---
+ drivers/pci/hotplug/acpiphp_glue.c | 32 ++++++++++++++++++--------------
+ 1 file changed, 18 insertions(+), 14 deletions(-)
 
->
->> diff --git a/arch/x86/kernel/apic/apic.c b/arch/x86/kernel/apic/apic.c
->> index 904611b..ff50b90 100644
->> --- a/arch/x86/kernel/apic/apic.c
->> +++ b/arch/x86/kernel/apic/apic.c
->> @@ -1552,6 +1552,8 @@ void enable_x2apic(void)
->>  int __init enable_IR(void)
->>  {
->>  #ifdef CONFIG_IRQ_REMAP
->> +     int ret;
->> +
->>       if (!irq_remapping_supported()) {
->>               pr_debug("intr-remapping not supported\n");
->>               return -1;
->> @@ -1563,7 +1565,12 @@ int __init enable_IR(void)
->>               return -1;
->>       }
->>
->> -     return irq_remapping_enable();
->> +     ret = irq_remapping_enable();
->> +
->> +     if (ret >= 0)
->> +             irq_remap_modify_chips();
->
-> This looks like ehm, well not well.
-> Could you please change this to:
->         ret = irq_remapping_enable();
->         if (ret)
->                 return ret;
->
->         irq_remap_modify_chips();
->
->> +
->> +     return ret;
+diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+index 5d696f5..a65203b 100644
+--- a/drivers/pci/hotplug/acpiphp_glue.c
++++ b/drivers/pci/hotplug/acpiphp_glue.c
+@@ -61,6 +61,8 @@ static DEFINE_MUTEX(bridge_mutex);
+ static void handle_hotplug_event_bridge (acpi_handle, u32, void *);
+ static void acpiphp_sanitize_bus(struct pci_bus *bus);
+ static void acpiphp_set_hpp_values(struct pci_bus *bus);
++static void _handle_hotplug_event_func(acpi_handle handle, u32 type,
++				       void *context);
+ static void handle_hotplug_event_func(acpi_handle handle, u32 type, void *context);
+ static void free_bridge(struct kref *kref);
+ 
+@@ -160,7 +162,7 @@ static void acpiphp_dock_put(void *data)
+ }
+ 
+ static const struct acpi_dock_ops acpiphp_dock_ops = {
+-	.handler = handle_hotplug_event_func,
++	.handler = _handle_hotplug_event_func,
+ 	.get = acpiphp_dock_get,
+ 	.put = acpiphp_dock_put,
+ };
+@@ -1080,22 +1082,13 @@ static void handle_hotplug_event_bridge(acpi_handle handle, u32 type,
+ 	alloc_acpi_hp_work(handle, type, context, _handle_hotplug_event_bridge);
+ }
+ 
+-static void _handle_hotplug_event_func(struct work_struct *work)
++static void _handle_hotplug_event_func(acpi_handle handle, u32 type,
++				       void *context)
+ {
+-	struct acpiphp_func *func;
++	struct acpiphp_func *func = context;
+ 	char objname[64];
+ 	struct acpi_buffer buffer = { .length = sizeof(objname),
+ 				      .pointer = objname };
+-	struct acpi_hp_work *hp_work;
+-	acpi_handle handle;
+-	u32 type;
+-
+-	hp_work = container_of(work, struct acpi_hp_work, work);
+-	handle = hp_work->handle;
+-	type = hp_work->type;
+-	func = (struct acpiphp_func *)hp_work->context;
+-
+-	acpi_scan_lock_acquire();
+ 
+ 	acpi_get_name(handle, ACPI_FULL_PATHNAME, &buffer);
+ 
+@@ -1128,7 +1121,18 @@ static void _handle_hotplug_event_func(struct work_struct *work)
+ 		warn("notify_handler: unknown event type 0x%x for %s\n", type, objname);
+ 		break;
+ 	}
++}
++
++static void _handle_hotplug_event_cb(struct work_struct *work)
++{
++	struct acpiphp_func *func;
++	struct acpi_hp_work *hp_work;
+ 
++	hp_work = container_of(work, struct acpi_hp_work, work);
++	func = (struct acpiphp_func *)hp_work->context;
++	acpi_scan_lock_acquire();
++	_handle_hotplug_event_func(hp_work->handle, hp_work->type,
++				    hp_work->context);
+ 	acpi_scan_lock_release();
+ 	kfree(hp_work); /* allocated in handle_hotplug_event_func */
+ 	put_bridge(func->slot->bridge);
+@@ -1156,7 +1160,7 @@ static void handle_hotplug_event_func(acpi_handle handle, u32 type,
+ 	 * don't deadlock on hotplug actions.
+ 	 */
+ 	get_bridge(func->slot->bridge);
+-	alloc_acpi_hp_work(handle, type, context, _handle_hotplug_event_func);
++	alloc_acpi_hp_work(handle, type, context, _handle_hotplug_event_cb);
+ }
+ 
+ /*
+-- 
+1.8.1.2
 
-So you want to use
-
-        ret = irq_remapping_enable();
-        if (ret < 0)
-                return ret;
-
-         irq_remap_modify_chips();
-
-         return ret;
-
-instead of:
-
-        ret = irq_remapping_enable();
-        if (ret >= 0)
-            irq_remap_modify_chips();
-
-         return ret;
-
-
->>  #endif
-
->>       return -1;
->>  }
->> diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
->> index 07ce86a..21ef344 100644
->> --- a/drivers/iommu/irq_remapping.c
->> +++ b/drivers/iommu/irq_remapping.c
->> @@ -373,19 +373,26 @@ static void ir_print_prefix(struct irq_data *data, struct seq_file *p)
->>       seq_printf(p, " IR-%s", data->chip->name);
->>  }
->>
->> -static void irq_remap_modify_chip_defaults(struct irq_chip *chip)
->> +static void __init irq_remap_modify_chip_defaults(struct irq_chip *chip)
->>  {
->> +     printk(KERN_DEBUG "irq_chip: %s ==> IR-%s", chip->name, chip->name);
->
-> If you need this please use pr_debug and add a \n at the end.
-
-No, I hate pr_debug, as it is useless unless have DEBUG defined.
-later even ask user to append "debug ignore_loglevel", we still get nothing
-unless user recompile the kernel.
-
-will add "\n", not sure how that get dropped.
-
->
->>       chip->irq_print_chip = ir_print_prefix;
->>       chip->irq_ack = ir_ack_apic_edge;
->>       chip->irq_eoi = ir_ack_apic_level;
->>       chip->irq_set_affinity = x86_io_apic_ops.set_affinity;
->>  }
->>
->> +void __init irq_remap_modify_chips(void)
->> +{
->> +     irq_remap_modify_chip_defaults(&ioapic_chip);
->> +     irq_remap_modify_chip_defaults(&msi_chip);
->> +     irq_remap_modify_chip_defaults(&hpet_msi_type);
->> +}
->> +
->>  bool setup_remapped_irq(int irq, struct irq_cfg *cfg, struct irq_chip *chip)
->>  {
->>       if (!irq_remapped(cfg))
->>               return false;
->>       irq_set_status_flags(irq, IRQ_MOVE_PCNTXT);
->> -     irq_remap_modify_chip_defaults(chip);
->
-> chip is not required, and can be removed.
-
-yes.
-
-Thanks
-
-Yinghai
