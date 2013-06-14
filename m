@@ -1,81 +1,139 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:33644 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756039Ab3FRMLy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Jun 2013 08:11:54 -0400
-Date: Tue, 18 Jun 2013 14:11:41 +0200
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Thierry Reding <thierry.reding@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Arnd Bergmann <arnd@arndb.de>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Maen Suleiman <maen@marvell.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH v2 4/8] irqchip: armada-370-xp: implement MSI support
-Message-ID: <20130618141141.614d08b7@skate>
-In-Reply-To: <20130618112604.GD6322@mithrandir>
-References: <1370536888-8871-1-git-send-email-thomas.petazzoni@free-electrons.com>
-	<1370536888-8871-5-git-send-email-thomas.petazzoni@free-electrons.com>
-	<20130612104207.GE30841@mithrandir>
-	<20130618104338.584098e1@skate>
-	<20130618112604.GD6322@mithrandir>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <1371238081-32260-5-git-send-email-jiang.liu@huawei.com>
+References: <1371238081-32260-1-git-send-email-jiang.liu@huawei.com>
+	<1371238081-32260-5-git-send-email-jiang.liu@huawei.com>
+Date: Fri, 14 Jun 2013 14:03:59 -0700
+Message-ID: <CAE9FiQWd8QCpSYp-d7SvXvu=GdSEV7SoTSnfC+VBkz=g5sxR8w@mail.gmail.com>
+Subject: Re: [BUGFIX v2 4/4] ACPIPHP: fix bug 56531 Sony VAIO VPCZ23A4R: can't
+ assign mem/io after docking
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jiang Liu <jiang.liu@huawei.com>
+Cc: "Rafael J . Wysocki" <rjw@sisk.pl>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Alexander E . Patrakov" <patrakov@gmail.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Jiang Liu <liuj97@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"stable@vger.kernel.org" <stable@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Thierry Reding,
+On Fri, Jun 14, 2013 at 12:28 PM, Jiang Liu <jiang.liu@huawei.com> wrote:
+> Please refer to https://bugzilla.kernel.org/show_bug.cgi?id=56531 for
+> more information.
+>
+> This issue is caused by differences in PCI resource assignment between
+> boot time and runtime hotplug. On x86 platforms, OS respects PCI
+> resource assignment from BIOS and only reassign resources for unassigned
+> BARs at boot time. But with acpiphp, it ignores BIOS resource assignment
+> and reassign all resources by itself.
+>
+> If we have enough resources, reassigning all PCI resources should work
+> too, but it may fail if we are under resource constraints. On the other
+> handle, current PCI MMIO alignment algorithm may waste huge MMIO address
+> space if we have some PCI devices with huge MMIO BARs.
+>
+> On this Sony laptop, BIOS allocates limited MMIO resources for the dock
+> station and the dock station has a gfx which has a 256MB MMIO BAR.
+> So current acpiphp driver fails to allocate resources for most devices
+> on the dock station.
+>
+> So change acpiphp driver to follow boot time behavior to respect BIOS
+> resource assignment.
+>
+> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+> Reported-by: Alexander E. Patrakov <patrakov@gmail.com>
+> Tested-by: Alexander E. Patrakov <patrakov@gmail.com>
+> Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
+> Cc: linux-acpi@vger.kernel.org
+> Cc: linux-kernel@vger.kernel.org
+> Cc: <stable@vger.kernel.org>
 
-On Tue, 18 Jun 2013 13:26:04 +0200, Thierry Reding wrote:
+Acked-by: Yinghai Lu <yinghai@kernel.org>
 
-> > As I replied to Grant, of_find_device_by_node() returns NULL, I believe
-> > because the all IRQ controller driver initialization is done pretty
-> > early, before the of_platform_populate() call is made, so there is no
-> > platform_device associated with the IRQ controller node at the time the
-> > armada_370_xp_mpic_of_init() function is called.
-> > 
-> > Do you see another approach, especially in relation to your comment on
-> > PATCH 2/8 ?
-> 
-> Hmmm, that's too bad. The only other possibility that I see is that you
-> could associate the struct device at a later point when it becomes
-> available, but looking at the irqchip driver it doesn't look like you
-> get notification of that either. I suppose you could add a
-> platform_driver to it and hook things up in its .probe() callback, but
-> I'm not sure if that's in line with how the irqchip was designed. Adding
-> Grant Likely and Thomas Gleixner on Cc, maybe they have better advice.
-
-If we do hook the MSI stuff in a ->probe() callback, then we'd have a
-dependency between the ->probe() of the PCIe driver and the ->probe()
-of the IRQ controller driver. In order for the PCIe ->probe() to
-succeed, it needs the MSI controller to be registered, which wouldn't
-appear until the ->probe() of the IRQ controller driver gets called. A
-typical case of platform device dependency where the two platform
-devices don't have a bus -> child dependency. Could be handled by a
--EPROBE_DEFER trick, though.
-
-> Looking at other irqchip drivers I find it a bit odd to see how they're
-> structured, though. We've been preaching for years that drivers should
-> be well-encapsulated and told everybody it was bad to use globals and
-> they should be associating driver-specific data with each instance of a
-> device. Then comes along irqchip and all of a sudden it's okay to use
-> globals again. It feels a bit fragile.
-
-Yes, I've seen this as well, and I'm thinking of doing some
-improvements in this area if there's some interest. But I believe this
-is fairly separate from the specific discussion of this patch set.
-
-Best regards,
-
-Thomas
--- 
-Thomas Petazzoni, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
+> ---
+>  drivers/pci/hotplug/acpiphp_glue.c | 7 +++++--
+>  drivers/pci/pci.h                  | 5 +++++
+>  drivers/pci/setup-bus.c            | 8 ++++----
+>  3 files changed, 14 insertions(+), 6 deletions(-)
+>
+> diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+> index a65203b..f4a53e9 100644
+> --- a/drivers/pci/hotplug/acpiphp_glue.c
+> +++ b/drivers/pci/hotplug/acpiphp_glue.c
+> @@ -687,6 +687,7 @@ static int __ref enable_device(struct acpiphp_slot *slot)
+>         struct pci_bus *bus = slot->bridge->pci_bus;
+>         struct acpiphp_func *func;
+>         int num, max, pass;
+> +       LIST_HEAD(add_list);
+>
+>         if (slot->flags & SLOT_ENABLED)
+>                 goto err_exit;
+> @@ -711,13 +712,15 @@ static int __ref enable_device(struct acpiphp_slot *slot)
+>                                 max = pci_scan_bridge(bus, dev, max, pass);
+>                                 if (pass && dev->subordinate) {
+>                                         check_hotplug_bridge(slot, dev);
+> -                                       pci_bus_size_bridges(dev->subordinate);
+> +                                       pcibios_resource_survey_bus(dev->subordinate);
+> +                                       __pci_bus_size_bridges(dev->subordinate,
+> +                                                              &add_list);
+>                                 }
+>                         }
+>                 }
+>         }
+>
+> -       pci_bus_assign_resources(bus);
+> +       __pci_bus_assign_resources(bus, &add_list, NULL);
+>         acpiphp_sanitize_bus(bus);
+>         acpiphp_set_hpp_values(bus);
+>         acpiphp_set_acpi_region(slot);
+> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+> index 68678ed..d1182c4 100644
+> --- a/drivers/pci/pci.h
+> +++ b/drivers/pci/pci.h
+> @@ -202,6 +202,11 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
+>                     struct resource *res, unsigned int reg);
+>  int pci_resource_bar(struct pci_dev *dev, int resno, enum pci_bar_type *type);
+>  void pci_configure_ari(struct pci_dev *dev);
+> +void __ref __pci_bus_size_bridges(struct pci_bus *bus,
+> +                       struct list_head *realloc_head);
+> +void __ref __pci_bus_assign_resources(const struct pci_bus *bus,
+> +                                     struct list_head *realloc_head,
+> +                                     struct list_head *fail_head);
+>
+>  /**
+>   * pci_ari_enabled - query ARI forwarding status
+> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+> index 16abaaa..d254e23 100644
+> --- a/drivers/pci/setup-bus.c
+> +++ b/drivers/pci/setup-bus.c
+> @@ -1044,7 +1044,7 @@ handle_done:
+>         ;
+>  }
+>
+> -static void __ref __pci_bus_size_bridges(struct pci_bus *bus,
+> +void __ref __pci_bus_size_bridges(struct pci_bus *bus,
+>                         struct list_head *realloc_head)
+>  {
+>         struct pci_dev *dev;
+> @@ -1115,9 +1115,9 @@ void __ref pci_bus_size_bridges(struct pci_bus *bus)
+>  }
+>  EXPORT_SYMBOL(pci_bus_size_bridges);
+>
+> -static void __ref __pci_bus_assign_resources(const struct pci_bus *bus,
+> -                                        struct list_head *realloc_head,
+> -                                        struct list_head *fail_head)
+> +void __ref __pci_bus_assign_resources(const struct pci_bus *bus,
+> +                                     struct list_head *realloc_head,
+> +                                     struct list_head *fail_head)
+>  {
+>         struct pci_bus *b;
+>         struct pci_dev *dev;
+> --
+> 1.8.1.2
+>
