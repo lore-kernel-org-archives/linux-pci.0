@@ -1,114 +1,133 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout3.samsung.com ([203.254.224.33]:63244 "EHLO
-	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753883Ab3FUEWN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Jun 2013 00:22:13 -0400
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Sachin Kamat' <sachin.kamat@linaro.org>
-Cc: 'Kukjin Kim' <kgene.kim@samsung.com>,
-	'Bjorn Helgaas' <bhelgaas@google.com>,
-	linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org,
-	devicetree-discuss@lists.ozlabs.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	'Grant Likely' <grant.likely@secretlab.ca>,
-	'Andrew Murray' <andrew.murray@arm.com>,
-	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
-	'Thierry Reding' <thierry.reding@avionic-design.de>,
-	'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>,
-	'Arnd Bergmann' <arnd@arndb.de>,
-	'Surendranath Gurivireddy Balla' <suren.reddy@samsung.com>,
-	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
-	'Thomas Abraham' <thomas.abraham@linaro.org>,
-	'Tomasz Figa' <t.figa@samsung.com>,
-	'Pratyush Anand' <pratyush.anand@st.com>,
-	'Mohit KUMAR' <Mohit.KUMAR@st.com>,
-	Jingoo Han <jg1.han@samsung.com>
-References: <002001ce6e2e$623d7970$26b86c50$@samsung.com>
- <CAK9yfHxCy0JcvsFHo8gERefdiZhxi1J8MNALe5-g6ooTGR-QjA@mail.gmail.com>
-In-reply-to: <CAK9yfHxCy0JcvsFHo8gERefdiZhxi1J8MNALe5-g6ooTGR-QjA@mail.gmail.com>
-Subject: Re: [PATCH V9 1/4] pci: Add PCIe driver for Samsung Exynos
-Date: Fri, 21 Jun 2013 13:22:10 +0900
-Message-id: <002f01ce6e36$e61cf5b0$b256e110$@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+Received: from hydra.sisk.pl ([212.160.235.94]:37343 "EHLO hydra.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751363Ab3FNODF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 14 Jun 2013 10:03:05 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Jiang Liu <liuj97@gmail.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"Alexander E . Patrakov" <patrakov@gmail.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	stable@vger.kernel.org
+Subject: Re: [BUGFIX 2/9] ACPIPHP: fix device destroying order issue when handling dock notification
+Date: Fri, 14 Jun 2013 16:12:19 +0200
+Message-ID: <9088362.uF3gIllFWp@vostro.rjw.lan>
+In-Reply-To: <51BB213B.7010807@gmail.com>
+References: <1371141152-9468-1-git-send-email-jiang.liu@huawei.com> <2301639.HY0nSRLtah@vostro.rjw.lan> <51BB213B.7010807@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, June 21, 2013 1:11 PM, Sachin Kamat wrote:
-> 
-> Hi Jingoo,
-> 
-> Some small corrections inline.
-> 
-> On 21 June 2013 08:51, Jingoo Han <jg1.han@samsung.com> wrote:
-> > Exynos5440 has a PCIe controller which can be used as Root Complex.
-> > This driver supports a PCIe controller as Root Complex mode.
-> >
-> > Signed-off-by: Surendranath Gurivireddy Balla <suren.reddy@samsung.com>
-> > Signed-off-by: Siva Reddy Kallam <siva.kallam@samsung.com>
-> > Signed-off-by: Jingoo Han <jg1.han@samsung.com>
-> > Acked-by: Arnd Bergmann <arnd@arndb.de>
+On Friday, June 14, 2013 09:57:15 PM Jiang Liu wrote:
+> On 06/14/2013 08:23 PM, Rafael J. Wysocki wrote:
+> > On Thursday, June 13, 2013 09:59:44 PM Rafael J. Wysocki wrote:
+> >> On Friday, June 14, 2013 12:32:25 AM Jiang Liu wrote:
+> >>> Current ACPI glue logic expects that physical devices are destroyed
+> >>> before destroying companion ACPI devices, otherwise it will break the
+> >>> ACPI unbind logic and cause following warning messages:
+> >>> [  185.026073] usb usb5: Oops, 'acpi_handle' corrupt
+> >>> [  185.035150] pci 0000:1b:00.0: Oops, 'acpi_handle' corrupt
+> >>> [  185.035515] pci 0000:18:02.0: Oops, 'acpi_handle' corrupt
+> >>> [  180.013656]  port1: Oops, 'acpi_handle' corrupt
+> >>> Please refer to https://bugzilla.kernel.org/attachment.cgi?id=104321
+> >>> for full log message.
+> >>
+> >> So my question is, did we have this problem before commit 3b63aaa70e1?
+> >>
+> >> If we did, then when did it start?  Or was it present forever?
+> >>
+> >>> Above warning messages are caused by following scenario:
+> >>> 1) acpi_dock_notifier_call() queues a task (T1) onto kacpi_hotplug_wq
+> >>> 2) kacpi_hotplug_wq handles T1, which invokes acpi_dock_deferred_cb()
+> >>>    ->dock_notify()-> handle_eject_request()->hotplug_dock_devices()
+> >>> 3) hotplug_dock_devices() first invokes registered hotplug callbacks to
+> >>>    destroy physical devices, then destroys all affected ACPI devices.
+> >>>    Everything seems perfect until now. But the acpiphp dock notification
+> >>>    handler will queue another task (T2) onto kacpi_hotplug_wq to really
+> >>>    destroy affected physical devices.
+> >>
+> >> Would not the solution be to modify it so that it didn't spawn the other
+> >> task (T2), but removed the affected physical devices synchronously?
+> >>
+> >>> 4) kacpi_hotplug_wq finishes T1, and all affected ACPI devices have
+> >>>    been destroyed.
+> >>> 5) kacpi_hotplug_wq handles T2, which destroys all affected physical
+> >>>    devices.
+> >>>
+> >>> So it breaks ACPI glue logic's expection because ACPI devices are destroyed
+> >>> in step 3 and physical devices are destroyed in step 5.
+> >>>
+> >>> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+> >>> Reported-by: Alexander E. Patrakov <patrakov@gmail.com>
+> >>> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> >>> Cc: Yinghai Lu <yinghai@kernel.org>
+> >>> Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+> >>> Cc: linux-pci@vger.kernel.org
+> >>> Cc: linux-kernel@vger.kernel.org
+> >>> Cc: stable@vger.kernel.org
+> >>> ---
+> >>> Hi Bjorn and Rafael,
+> >>>      The recursive lock changes haven't been tested yet, need help
+> >>> from Alexander for testing.
+> >>
+> >> Well, let's just say I'm not a fan of recursive locks.  Is that unavoidable
+> >> here?
+> > 
+> > What about the appended patch (on top of [1/9], untested)?
+> > 
+> > Rafael
+> It should have similar effect as patch 2/9, and it will encounter the
+> same deadlock scenario as 2/9 too.
+
+And why exactly?
+
+I'm looking at acpiphp_disable_slot() and I'm not seeing where the
+problematic lock is taken.  Similarly for power_off_slot().
+
+It should take the ACPI scan lock, but that's a different matter.
+
+Thanks,
+Rafael
+
+
 > > ---
-> >  .../devicetree/bindings/pci/designware-pcie.txt    |   73 ++
-> >  drivers/pci/host/Kconfig                           |    9 +
-> >  drivers/pci/host/Makefile                          |    1 +
-> >  drivers/pci/host/pci-designware.c                  | 1057 ++++++++++++++++++++
-> >  4 files changed, 1140 insertions(+)
-> >  create mode 100644 Documentation/devicetree/bindings/pci/designware-pcie.txt
-> >  create mode 100644 drivers/pci/host/pci-designware.c
-> >
-> > diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt
-> b/Documentation/devicetree/bindings/pci/designware-pcie.txt
-> > new file mode 100644
-> > index 0000000..e4681e6
-> > --- /dev/null
-> > +++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
-> > @@ -0,0 +1,73 @@
-> > +* Synopsis Designware PCIe interface
+> >  drivers/pci/hotplug/acpiphp_glue.c |   13 ++++++++++++-
+> >  1 file changed, 12 insertions(+), 1 deletion(-)
+> > 
+> > Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+> > ===================================================================
+> > --- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
+> > +++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+> > @@ -145,9 +145,20 @@ static int post_dock_fixups(struct notif
+> >  	return NOTIFY_OK;
+> >  }
+> >  
+> > +static void handle_dock_event_func(acpi_handle handle, u32 event, void *context)
+> > +{
+> > +	if (event == ACPI_NOTIFY_EJECT_REQUEST) {
+> > +		struct acpiphp_func *func = context;
 > > +
-> > +Required properties:
-> > +-compatible: should contain "snps,dw-pcie" to identify the
-> > +       core, plus an identifier for the specific instance, such
-> > +       as "samsung,exynos5440-pcie".
-> > +-reg: base addresses and lengths of the pcie conteroller,
+> > +		if (!acpiphp_disable_slot(func->slot))
+> > +			acpiphp_eject_slot(func->slot);
+> > +	} else {
+> > +		handle_hotplug_event_func(handle, event, context);
+> > +	}
+> > +}
+> >  
+> >  static const struct acpi_dock_ops acpiphp_dock_ops = {
+> > -	.handler = handle_hotplug_event_func,
+> > +	.handler = handle_dock_event_func,
+> >  };
+> >  
+> >  /* Check whether the PCI device is managed by native PCIe hotplug driver */
+> > 
 > 
-> s/conteroller/controller
-
-OK, I will fix it.
-
-> 
-> > +       the phy controller, additional register for the phy controller.
-> > +- interrupts: interrupt values for level interrupt,
-> > +       pulse interrupt, special interrupt.
-> > +- clocks: from common clock binding: handle to pci clock.
-> > +- clock-names: from common clock binding: Shall be "pcie", "pcie_bus".
-> 
-> s/Shall be .../should be "pcie" and "pcie_bus".
-
-OK, I will fix it.
-
-> 
-> [snip]
-> 
-> > +
-> > +MODULE_AUTHOR("Jingoo Han <jg1.han@samsung.com>");
-> > +MODULE_DESCRIPTION("Samsung PCIe host controller driver");
-> > +MODULE_LICENSE("GPLv2");
-> 
-> I think this should be "GPL v2"  (with a space between GPL and v2).
-
-OK, I will fix it.
-
-Thank you for your caring and comment. :)
-I will fix the typo and send PATCH v10 soon.
-
-
-Best regards,
-Jingoo Han
-
-> 
-> 
-> --
-> With warm regards,
-> Sachin
-
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
