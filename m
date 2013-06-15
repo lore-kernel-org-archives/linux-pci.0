@@ -1,97 +1,205 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f52.google.com ([209.85.160.52]:42125 "EHLO
-	mail-pb0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757521Ab3FCNSs (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Jun 2013 09:18:48 -0400
-Received: by mail-pb0-f52.google.com with SMTP id xa12so5646574pbc.25
-        for <linux-pci@vger.kernel.org>; Mon, 03 Jun 2013 06:18:47 -0700 (PDT)
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org
-Subject: [PATCH] PCI, ACPI: use dev_printk() to keep messages consistent
-Date: Mon,  3 Jun 2013 21:16:31 +0800
-Message-Id: <1370265391-18236-1-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <CAErSpo5mtYxWkVn+DTT4Sswp0RkWBM=prhtViMJ+KoLpOMY1hw@mail.gmail.com>-s>
-References: <CAErSpo5mtYxWkVn+DTT4Sswp0RkWBM=prhtViMJ+KoLpOMY1hw@mail.gmail.com>-s>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Jiang Liu <liuj97@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"Alexander E . Patrakov" <patrakov@gmail.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Len Brown <lenb@kernel.org>,
+	stable@vger.kernel.org, Jiang Liu <jiang.liu@huawei.com>
+Subject: Re: [BUGFIX v2 2/4] ACPI, DOCK: resolve possible deadlock scenarios
+Date: Sat, 15 Jun 2013 23:20:40 +0200
+Message-ID: <18797091.iPZsNWFGi1@vostro.rjw.lan>
+In-Reply-To: <8974656.5GmDyxHW7F@vostro.rjw.lan>
+References: <1371238081-32260-1-git-send-email-jiang.liu@huawei.com> <51BBC6FC.2020002@gmail.com> <8974656.5GmDyxHW7F@vostro.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As pointed out by Bjorn that acpi_handle_printk() generates messages
-like "ACPI: \_SB_.PCI0: xxxxx" and dev_printk() generates messages
-like "acpi PNP0A08:00: xxxx", so use dev_printk() to keep messages
-consistent when possible.
+On Saturday, June 15, 2013 10:17:42 PM Rafael J. Wysocki wrote:
+> On Saturday, June 15, 2013 09:44:28 AM Jiang Liu wrote:
+> > On Sat 15 Jun 2013 06:21:02 AM CST, Rafael J. Wysocki wrote:
+> > > On Saturday, June 15, 2013 03:27:59 AM Jiang Liu wrote:
+> > >> This is a preparation for next patch to avoid breaking bisecting.
+> > >> If next patch is applied without this one, it will cause deadlock
+> > >> as below:
+> > >>
+> > >> Case 1:
+> > >> [   31.015593]  Possible unsafe locking scenario:
+> > >>
+> > >> [   31.018350]        CPU0                    CPU1
+> > >> [   31.019691]        ----                    ----
+> > >> [   31.021002]   lock(&dock_station->hp_lock);
+> > >> [   31.022327]                                lock(&slot->crit_sect);
+> > >> [   31.023650]                                lock(&dock_station->hp_lock);
+> > >> [   31.025010]   lock(&slot->crit_sect);
+> > >> [   31.026342]
+> > >>
+> > >> Case 2:
+> > >>         hotplug_dock_devices()
+> > >>                 mutex_lock(&ds->hp_lock)
+> > >>                         dd->ops->handler()
+> > >>                                 register_hotplug_dock_device()
+> > >>                                         mutex_lock(&ds->hp_lock)
+> > >> [   34.316570] [ INFO: possible recursive locking detected ]
+> > >> [   34.316573] 3.10.0-rc4 #6 Tainted: G         C
+> > >> [   34.316575] ---------------------------------------------
+> > >> [   34.316577] kworker/0:0/4 is trying to acquire lock:
+> > >> [   34.316579]  (&dock_station->hp_lock){+.+.+.}, at:
+> > >> [<ffffffff813c766b>] register_hotplug_dock_device+0x6a/0xbf
+> > >> [   34.316588]
+> > >> but task is already holding lock:
+> > >> [   34.316590]  (&dock_station->hp_lock){+.+.+.}, at:
+> > >> [<ffffffff813c7270>] hotplug_dock_devices+0x2c/0xda
+> > >> [   34.316595]
+> > >> other info that might help us debug this:
+> > >> [   34.316597]  Possible unsafe locking scenario:
+> > >>
+> > >> [   34.316599]        CPU0
+> > >> [   34.316601]        ----
+> > >> [   34.316602]   lock(&dock_station->hp_lock);
+> > >> [   34.316605]   lock(&dock_station->hp_lock);
+> > >> [   34.316608]
+> > >>  *** DEADLOCK ***
+> > >>
+> > >> So fix this deadlock by not taking ds->hp_lock in function
+> > >> register_hotplug_dock_device(). This patch also fixes a possible
+> > >> race conditions in function dock_event() because previously it
+> > >> accesses ds->hotplug_devices list without holding ds->hp_lock.
+> > >>
+> > >> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+> > >> Cc: Len Brown <lenb@kernel.org>
+> > >> Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
+> > >> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> > >> Cc: Yinghai Lu <yinghai@kernel.org>
+> > >> Cc: Yijing Wang <wangyijing@huawei.com>
+> > >> Cc: linux-acpi@vger.kernel.org
+> > >> Cc: linux-kernel@vger.kernel.org
+> > >> Cc: linux-pci@vger.kernel.org
+> > >> Cc: <stable@vger.kernel.org> # 3.8+
+> > >> ---
+> > >>  drivers/acpi/dock.c                | 109 ++++++++++++++++++++++---------------
+> > >>  drivers/pci/hotplug/acpiphp_glue.c |  15 +++++
+> > >>  include/acpi/acpi_drivers.h        |   2 +
+> > >>  3 files changed, 82 insertions(+), 44 deletions(-)
+> > >>
+> > >> diff --git a/drivers/acpi/dock.c b/drivers/acpi/dock.c
+> > >> index 02b0563..602bce5 100644
+> > >> --- a/drivers/acpi/dock.c
+> > >> +++ b/drivers/acpi/dock.c
+> > >> @@ -66,7 +66,7 @@ struct dock_station {
+> > >>  	spinlock_t dd_lock;
+> > >>  	struct mutex hp_lock;
+> > >>  	struct list_head dependent_devices;
+> > >> -	struct list_head hotplug_devices;
+> > >> +	struct klist hotplug_devices;
+> > >>
+> > >>  	struct list_head sibling;
+> > >>  	struct platform_device *dock_device;
+> > >> @@ -76,12 +76,18 @@ static int dock_station_count;
+> > >>
+> > >>  struct dock_dependent_device {
+> > >>  	struct list_head list;
+> > >> -	struct list_head hotplug_list;
+> > >> +	acpi_handle handle;
+> > >> +};
+> > >> +
+> > >> +struct dock_hotplug_info {
+> > >> +	struct klist_node node;
+> > >>  	acpi_handle handle;
+> > >>  	const struct acpi_dock_ops *ops;
+> > >>  	void *context;
+> > >>  };
+> > >
+> > > Can we please relax a bit and possibly take a step back?
+> > >
+> > > So since your last reply to me wasn't particularly helpful, I went through the
+> > > code in dock.c and acpiphp_glue.c and I simply think that the whole
+> > > hotplug_list thing is simply redundant.
+> > >
+> > > It looks like instead of using it (or the klist in this patch), we can add a
+> > > "hotlpug_device" flag to dock_dependent_device and set that flag instead of
+> > > adding dd to hotplug_devices or clear it instead of removing dd from that list.
+> > >
+> > > That would allow us to avoid the deadlock, because we wouldn't need the hp_lock
+> > > any more and perhaps we could make the code simpler instead of making it more
+> > > complex.
+> > >
+> > > How does that sound?
+> > >
+> > > Rafael
+> > Hi Rafael,
+> >        Thanks for comments! It would be great if we could kill the 
+> > hotplug_devices
+> > list so thing gets simple. But there are still some special cases:(
+> > 
+> > As you have mentioned,  ds->hp_lock is used to make both addition and 
+> > removal
+> > of hotplug devices wait for us to complete walking ds->hotplug_devices.
+> > So it acts as two roles:
+> > 1) protect the hotplug_devices list,
+> > 2) serialize unregister_hotplug_dock_device() and 
+> > hotplug_dock_devices() so
+> > the dock driver doesn't access registered handler and associated data 
+> > structure
+> > once returing from unregister_hotplug_dock_device().
+> 
+> When it returns from unregister_hotplug_dock_device(), nothing prevents it
+> from accessing whatever it wants, because ds->hp_lock is not used outside
+> of the add/del and hotplug_dock_devices().  So, the actual role of
+> ds->hp_lock (not the one that it is supposed to play, but the real one)
+> is to prevent addition/deletion from happening when hotplug_dock_devices()
+> is running.  [Yes, it does protect the list, but since the list is in fact
+> unnecessary, that doesn't matter.]
+> 
+> > If we simply use a flag to mark presence of registered callback, we 
+> > can't achieve the second goal.
+> 
+> I don't mean using the flag *alone*.
+> 
+> > Take the sony laptop as an example. It has several PCI 
+> > hotplug
+> > slot associated with the dock station:
+> > [   28.829316] acpiphp_glue: _handle_hotplug_event_func: Bus check 
+> > notify on \_SB_.PCI0.RP07.LPMB
+> > [   30.174964] acpiphp_glue: _handle_hotplug_event_func: Bus check 
+> > notify on \_SB_.PCI0.RP07.LPMB.LPM0
+> > [   30.174973] acpiphp_glue: _handle_hotplug_event_func: Bus check 
+> > notify on \_SB_.PCI0.RP07.LPMB.LPM1
+> > [   30.174979] acpiphp_glue: _handle_hotplug_event_func: Bus check 
+> > notify on \_SB_.PCI0.RP07.LPMB.LPM2
+> > [   30.174985] acpiphp_glue: _handle_hotplug_event_func: Bus check 
+> > notify on \_SB_.PCI0.RP07.LPMB.LPM2.LPRI.LPR0.GFXA
+> > [   30.175020] acpiphp_glue: _handle_hotplug_event_func: Bus check 
+> > notify on \_SB_.PCI0.RP07.LPMB.LPM2.LPRI.LPR0.GHDA
+> > [   30.175040] acpiphp_glue: _handle_hotplug_event_func: Bus check 
+> > notify on \_SB_.PCI0.RP07.LPMB.LPM2.LPRI.LPR1.LPCI.LPC0.DLAN
+> > [   30.175050] acpiphp_glue: _handle_hotplug_event_func: Bus check 
+> > notify on \_SB_.PCI0.RP07.LPMB.LPM2.LPRI.LPR1.LPCI.LPC1.DODD
+> > [   30.175060] acpiphp_glue: _handle_hotplug_event_func: Bus check 
+> > notify on \_SB_.PCI0.RP07.LPMB.LPM2.LPRI.LPR1.LPCI.LPC2.DUSB
+> > 
+> > So it still has some race windows if we undock the station while 
+> > repeatedly rescanning/removing
+> > the PCI bus for \_SB_.PCI0.RP07.LPMB.LPM0 through sysfs interfaces.
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
----
-Hi Bjorn,
-	Could you please help to fold this patch onto "PCI/ACPI: Use
-acpi_handle_print() and pr_xxx() to print messages" of branch
-"pci/jiang-remove-global-list"?
-Thanks!
-Gerry
----
- drivers/acpi/pci_root.c | 18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
+Which sysfs interfaces do you mean, by the way?
 
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index 73a934d..4a8f5b4 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -388,7 +388,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
- 	status = acpi_evaluate_integer(handle, METHOD_NAME__SEG, NULL,
- 				       &segment);
- 	if (ACPI_FAILURE(status) && status != AE_NOT_FOUND) {
--		acpi_handle_err(handle, "can't evaluate _SEG\n");
-+		dev_err(&device->dev,  "can't evaluate _SEG\n");
- 		result = -ENODEV;
- 		goto end;
- 	}
-@@ -404,8 +404,8 @@ static int acpi_pci_root_add(struct acpi_device *device,
- 		 * can do is assume [_BBN-0xFF] or [0-0xFF].
- 		 */
- 		root->secondary.end = 0xFF;
--		acpi_handle_warn(handle,
--				 FW_BUG "no secondary bus range in _CRS\n");
-+		dev_warn(&device->dev,
-+			 FW_BUG "no secondary bus range in _CRS\n");
- 		status = acpi_evaluate_integer(handle, METHOD_NAME__BBN,
- 					       NULL, &bus);
- 		if (ACPI_SUCCESS(status))
-@@ -413,7 +413,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
- 		else if (status == AE_NOT_FOUND)
- 			root->secondary.start = 0;
- 		else {
--			acpi_handle_err(handle, "can't evaluate _BBN\n");
-+			dev_err(&device->dev, "can't evaluate _BBN\n");
- 			result = -ENODEV;
- 			goto end;
- 		}
-@@ -451,9 +451,9 @@ static int acpi_pci_root_add(struct acpi_device *device,
- 	 */
- 	root->bus = pci_acpi_scan_root(root);
- 	if (!root->bus) {
--		acpi_handle_err(handle,
--			    "Bus %04x:%02x not present in PCI namespace\n",
--			    root->segment, (unsigned int)root->secondary.start);
-+		dev_err(&device->dev,
-+			"Bus %04x:%02x not present in PCI namespace\n",
-+			root->segment, (unsigned int)root->secondary.start);
- 		result = -ENODEV;
- 		goto end;
- 	}
-@@ -511,8 +511,8 @@ static int acpi_pci_root_add(struct acpi_device *device,
- 				"ACPI _OSC request failed (%s), "
- 				"returned control mask: 0x%02x\n",
- 				acpi_format_exception(status), flags);
--			acpi_handle_info(handle,
--					 "ACPI _OSC control for PCIe not granted, disabling ASPM\n");
-+			dev_info(&device->dev,
-+				 "ACPI _OSC control for PCIe not granted, disabling ASPM\n");
- 			pcie_no_aspm();
- 		}
- 	} else {
+If you mean "eject", then it takes acpi_scan_lock and hotplug_dock_devices()
+should always be run under acpi_scan_lock too.  It isn't at the moment,
+because write_undock() doesn't take acpi_scan_lock(), but this is an obvious
+bug (so I'm going to send a patch to fix it in a while).
+
+With that bug fixed, the possible race between acpi_eject_store() and
+hotplug_dock_devices() should be prevented from happening, so perhaps we're
+worrying about something that cannot happen?
+
+Rafael
+
+
 -- 
-1.8.1.2
-
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
