@@ -1,150 +1,117 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:30098 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754458Ab3F0Wj5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 27 Jun 2013 18:39:57 -0400
-Subject: [PATCH v2 1/3] pci: Fix flaw in pci_acs_enabled()
-To: bhelgaas@google.com
-From: Alex Williamson <alex.williamson@redhat.com>
-Cc: linux-pci@vger.kernel.org, joro@8bytes.org,
-	andihartmann@01019freenet.de, linux-kernel@vger.kernel.org
-Date: Thu, 27 Jun 2013 16:39:48 -0600
-Message-ID: <20130627223948.16564.6654.stgit@bling.home>
-In-Reply-To: <20130627222159.16564.38166.stgit@bling.home>
-References: <20130627222159.16564.38166.stgit@bling.home>
+Received: from mail-pb0-f42.google.com ([209.85.160.42]:60188 "EHLO
+	mail-pb0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753548Ab3FOKFi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 15 Jun 2013 06:05:38 -0400
+Message-ID: <51BC3C6B.9010908@gmail.com>
+Date: Sat, 15 Jun 2013 18:05:31 +0800
+From: Jiang Liu <liuj97@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Yinghai Lu <yinghai@kernel.org>
+CC: Jiang Liu <jiang.liu@huawei.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Alexander E . Patrakov" <patrakov@gmail.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"stable@vger.kernel.org" <stable@vger.kernel.org>
+Subject: Re: [BUGFIX v2 1/4] ACPI, DOCK: initialize dock subsystem before
+ scanning PCI root buses
+References: <1371238081-32260-1-git-send-email-jiang.liu@huawei.com> <1371238081-32260-2-git-send-email-jiang.liu@huawei.com> <CAE9FiQWOMF4HWdQRfxF68BBYC4ONcr8wOHWvVGt6Jvb_-p6S8w@mail.gmail.com>
+In-Reply-To: <CAE9FiQWOMF4HWdQRfxF68BBYC4ONcr8wOHWvVGt6Jvb_-p6S8w@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The multifunction ACS rules do not apply to downstream ports.  Those
-should be tested regardless of whether they are single function or
-multifunciton.  The PCIe spec also fully specifies which PCIe types
-are subject to the multifunction rules and excludes event collectors
-and PCIe-to-PCI bridges entirely.  Document each rule to the section
-of the PCIe spec and provide overall documentation of the function.
+On 06/15/2013 02:51 PM, Yinghai Lu wrote:
+> On Fri, Jun 14, 2013 at 12:27 PM, Jiang Liu <jiang.liu@huawei.com> wrote:
+>> Changeset "3b63aaa70e1 PCI: acpiphp: Do not use ACPI PCI subdriver
+>> mechanism" causes a regression which breaks ACPI dock support,
+>> please refer to https://bugzilla.kernel.org/show_bug.cgi?id=59501
+>>
+>> The root cause is that changeset 3b63aaa70e1 changed the relative
+>> initialization order of ACPI dock subsystem and acpiphp driver,
+>> and acpiphp driver has dependency on ACPI dock subsystem's
+>> initialization result, so that acpiphp can't correctly detect ACPI
+>> dock stations now.
+>>
+>> On the other hand, ACPI dock is a built-in driver, so we could
+>> explicitly initialize it before the acpiphp driver is used.
+>>
+>> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+>> Reported-by: Alexander E. Patrakov <patrakov@gmail.com>
+>> Tested-by: Alexander E. Patrakov <patrakov@gmail.com>
+>> Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
+>> Cc: linux-acpi@vger.kernel.org
+>> Cc: linux-kernel@vger.kernel.org
+>> Cc: <stable@vger.kernel.org> # 3.9+
+>> ---
+>>  drivers/acpi/dock.c     | 7 +------
+>>  drivers/acpi/internal.h | 5 +++++
+>>  drivers/acpi/scan.c     | 1 +
+>>  3 files changed, 7 insertions(+), 6 deletions(-)
+>>
+>> diff --git a/drivers/acpi/dock.c b/drivers/acpi/dock.c
+>> index 4fdea38..02b0563 100644
+>> --- a/drivers/acpi/dock.c
+>> +++ b/drivers/acpi/dock.c
+>> @@ -1033,7 +1033,7 @@ find_dock_and_bay(acpi_handle handle, u32 lvl, void *context, void **rv)
+>>         return AE_OK;
+>>  }
+>>
+>> -static int __init dock_init(void)
+>> +int __init acpi_dock_init(void)
+>>  {
+>>         if (acpi_disabled)
+>>                 return 0;
+>> @@ -1062,9 +1062,4 @@ static void __exit dock_exit(void)
+>>                 dock_remove(dock_station);
+>>  }
+>>
+>> -/*
+>> - * Must be called before drivers of devices in dock, otherwise we can't know
+>> - * which devices are in a dock
+>> - */
+>> -subsys_initcall(dock_init);
+>>  module_exit(dock_exit);
+> 
+> why not remove dock_exit?
+I have a pending patchset to clean up dock driver, Rafael suggested to
+focus on bugfix first, so I will send out the clean up patchset later.
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
----
- drivers/pci/pci.c |   84 ++++++++++++++++++++++++++++++++++++++++++++---------
- 1 file changed, 70 insertions(+), 14 deletions(-)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index a899d8b..d0c2b35 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -2349,6 +2349,19 @@ void pci_enable_acs(struct pci_dev *dev)
- 	pci_write_config_word(dev, pos + PCI_ACS_CTRL, ctrl);
- }
- 
-+static bool pci_acs_flags_enabled(struct pci_dev *pdev, u16 acs_flags)
-+{
-+	int pos;
-+	u16 ctrl;
-+
-+	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_ACS);
-+	if (!pos)
-+		return false;
-+
-+	pci_read_config_word(pdev, pos + PCI_ACS_CTRL, &ctrl);
-+	return (ctrl & acs_flags) == acs_flags;
-+}
-+
- /**
-  * pci_acs_enabled - test ACS against required flags for a given device
-  * @pdev: device to test
-@@ -2356,36 +2369,79 @@ void pci_enable_acs(struct pci_dev *dev)
-  *
-  * Return true if the device supports the provided flags.  Automatically
-  * filters out flags that are not implemented on multifunction devices.
-+ *
-+ * Note that this interface checks the effective ACS capabilities of the
-+ * device rather than the actual capabilities.  For instance, most single
-+ * function endpoints are not required to support ACS because they have no
-+ * opportunity for peer-to-peer access.  We therefore return 'true'
-+ * regardless of whether the device exposes an ACS capability.  This makes
-+ * it much easier for callers of this function to ignore the actual type
-+ * or topology of the device when testing ACS support.
-  */
- bool pci_acs_enabled(struct pci_dev *pdev, u16 acs_flags)
- {
--	int pos, ret;
--	u16 ctrl;
-+	int ret;
- 
- 	ret = pci_dev_specific_acs_enabled(pdev, acs_flags);
- 	if (ret >= 0)
- 		return ret > 0;
- 
-+	/*
-+	 * Conventional PCI and PCI-X devices never support ACS, either
-+	 * effectively or actually.  The shared bus topology implies that
-+	 * any device on the bus can receive or snoop DMA.
-+	 */
- 	if (!pci_is_pcie(pdev))
- 		return false;
- 
--	/* Filter out flags not applicable to multifunction */
--	if (pdev->multifunction)
-+	switch (pci_pcie_type(pdev)) {
-+	/*
-+	 * PCI/X-to-PCIe bridges are not specifically mentioned by the spec,
-+	 * but since their primary inteface is PCI/X, we conservatively
-+	 * handle them as we would a non-PCIe device.
-+	 */
-+	case PCI_EXP_TYPE_PCIE_BRIDGE:
-+	/*
-+	 * PCIe 3.0, 6.12.1 excludes ACS on these devices.  "ACS is never
-+	 * applicable... must never implement an ACS Extended Capability...".
-+	 * This seems arbitrary, but we take a conservative interpretation
-+	 * of this statement.
-+	 */
-+	case PCI_EXP_TYPE_PCI_BRIDGE:
-+	case PCI_EXP_TYPE_RC_EC:
-+		return false;
-+	/*
-+	 * PCIe 3.0, 6.12.1.1 specifies that downstream and root ports should
-+	 * implement ACS in order to indicate their peer-to-peer capabilities,
-+	 * regardless of whether they are single- or multi-function devices.
-+	 */
-+	case PCI_EXP_TYPE_DOWNSTREAM:
-+	case PCI_EXP_TYPE_ROOT_PORT:
-+		return pci_acs_flags_enabled(pdev, acs_flags);
-+	/*
-+	 * PCIe 3.0, 6.12.1.2 specifies ACS capabilities that should be
-+	 * implemented by the remaining PCIe types to indicate peer-to-peer
-+	 * capabilities, but only when they are part of a multifunciton
-+	 * device.  The footnote for section 6.12 indicates the specific
-+	 * PCIe types included here.
-+	 */
-+	case PCI_EXP_TYPE_ENDPOINT:
-+	case PCI_EXP_TYPE_UPSTREAM:
-+	case PCI_EXP_TYPE_LEG_END:
-+	case PCI_EXP_TYPE_RC_END:
-+		if (!pdev->multifunction)
-+			break;
-+
- 		acs_flags &= (PCI_ACS_RR | PCI_ACS_CR |
- 			      PCI_ACS_EC | PCI_ACS_DT);
- 
--	if (pci_pcie_type(pdev) == PCI_EXP_TYPE_DOWNSTREAM ||
--	    pci_pcie_type(pdev) == PCI_EXP_TYPE_ROOT_PORT ||
--	    pdev->multifunction) {
--		pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_ACS);
--		if (!pos)
--			return false;
--
--		pci_read_config_word(pdev, pos + PCI_ACS_CTRL, &ctrl);
--		if ((ctrl & acs_flags) != acs_flags)
--			return false;
-+		return pci_acs_flags_enabled(pdev, acs_flags);
- 	}
- 
-+	/*
-+	 * PCIe 3.0, 6.12.1.3 specifies no ACS capabilties are applicable
-+	 * to single function devices with the exception of downstream ports.
-+	 */
- 	return true;
- }
- 
+> 
+>> diff --git a/drivers/acpi/internal.h b/drivers/acpi/internal.h
+>> index 297cbf4..c610a76 100644
+>> --- a/drivers/acpi/internal.h
+>> +++ b/drivers/acpi/internal.h
+>> @@ -40,6 +40,11 @@ void acpi_container_init(void);
+>>  #else
+>>  static inline void acpi_container_init(void) {}
+>>  #endif
+>> +#ifdef CONFIG_ACPI_DOCK
+>> +void acpi_dock_init(void);
+>> +#else
+>> +static inline void acpi_dock_init(void) {}
+>> +#endif
+>>  #ifdef CONFIG_ACPI_HOTPLUG_MEMORY
+>>  void acpi_memory_hotplug_init(void);
+>>  #else
+>> diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
+>> index 44225cb..4148163 100644
+>> --- a/drivers/acpi/scan.c
+>> +++ b/drivers/acpi/scan.c
+>> @@ -2045,6 +2045,7 @@ int __init acpi_scan_init(void)
+>>         acpi_lpss_init();
+>>         acpi_container_init();
+>>         acpi_memory_hotplug_init();
+>> +       acpi_dock_init();
+>>
+>>         mutex_lock(&acpi_scan_lock);
+>>         /*
+>> --
+>> 1.8.1.2
+>>
 
