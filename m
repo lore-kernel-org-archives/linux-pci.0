@@ -1,405 +1,424 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <51B93BAB.6080406@jp.fujitsu.com>
-Date: Thu, 13 Jun 2013 12:25:31 +0900
-From: Takao Indoh <indou.takao@jp.fujitsu.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <51BBC6FC.2020002@gmail.com>
+Date: Sat, 15 Jun 2013 09:44:28 +0800
+From: Jiang Liu <liuj97@gmail.com>
 MIME-Version: 1.0
-To: ddutile@redhat.com
-CC: bill.sumner@hp.com, bhelgaas@google.com,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	iommu@lists.linux-foundation.org, kexec@lists.infradead.org,
-	ishii.hironobu@jp.fujitsu.com, alex.williamson@redhat.com
-Subject: Re: [PATCH v2] PCI: Reset PCIe devices to stop ongoing DMA
-References: <1368509365-2260-1-git-send-email-indou.takao@jp.fujitsu.com> <CAErSpo4t_2Xw76p3Z9FVzyyK-MBovavDu9D=pYoPMjESSxgT=w@mail.gmail.com> <51B19DF3.2070009@jp.fujitsu.com> <CAErSpo6dfEnzriHD_aWZB_3E-kSzauhNRHPd+VuFX5HONVKgqw@mail.gmail.com> <51B6BEDB.3000509@jp.fujitsu.com> <875D89B79D1D86448A583A7302C022A054E844AA@G9W0337.americas.hpqcorp.net> <51B8754C.6040300@redhat.com>
-In-Reply-To: <51B8754C.6040300@redhat.com>
-Content-Type: text/plain; charset=ISO-2022-JP
-Sender: linux-kernel-owner@vger.kernel.org
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"Alexander E . Patrakov" <patrakov@gmail.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Len Brown <lenb@kernel.org>,
+	stable@vger.kernel.org, Jiang Liu <jiang.liu@huawei.com>
+Subject: Re: [BUGFIX v2 2/4] ACPI, DOCK: resolve possible deadlock scenarios
+References: <1371238081-32260-1-git-send-email-jiang.liu@huawei.com> <1371238081-32260-3-git-send-email-jiang.liu@huawei.com> <8220093.o4hXWiX0st@vostro.rjw.lan>
+In-Reply-To: <8220093.o4hXWiX0st@vostro.rjw.lan>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-(2013/06/12 22:19), Don Dutile wrote:
-> On 06/11/2013 07:19 PM, Sumner, William wrote:
+On Sat 15 Jun 2013 06:21:02 AM CST, Rafael J. Wysocki wrote:
+> On Saturday, June 15, 2013 03:27:59 AM Jiang Liu wrote:
+>> This is a preparation for next patch to avoid breaking bisecting.
+>> If next patch is applied without this one, it will cause deadlock
+>> as below:
 >>
->>> (2013/06/11 11:20), Bjorn Helgaas wrote:
->>>> On Fri, Jun 7, 2013 at 2:46 AM, Takao Indoh<indou.takao@jp.fujitsu.com>  wrote:
->>>>> (2013/06/07 13:14), Bjorn Helgaas wrote:
->>>>
->>>>>> One thing I'm not sure about is that you are only resetting PCIe
->>>>>> devices, but I don't think the problem is actually specific to PCIe,
->>>>>> is it?  I think the same issue could occur on any system with an
->>>>>> IOMMU.  In the x86 PC world, most IOMMUs are connected with PCIe, but
->>>>>> there are systems with IOMMUs for plain old PCI devices, e.g.,
->>>>>> PA-RISC.
->>>>>
->>>>> Right, this is not specific to PCIe. The reasons why the target is only
->>>>> PCIe is just to make algorithm to reset simple. It is possible to reset
->>>>> legacy PCI devices in my patch, but code becomes somewhat complicated. I
->>>>> thought recently most systems used PCIe and there was little demand for
->>>>> resetting legacy PCI. Therefore I decided not to reset legacy PCI
->>>>> devices, but I'll do if there are requests :-)
->>>>
->>>> I'm not sure you need to reset legacy devices (or non-PCI devices)
->>>> yet, but the current hook isn't anchored anywhere -- it's just an
->>>> fs_initcall() that doesn't give the reader any clue about the
->>>> connection between the reset and the problem it's solving.
->>>>
->>>> If we do something like this patch, I think it needs to be done at the
->>>> point where we enable or disable the IOMMU.  That way, it's connected
->>>> to the important event, and there's a clue about how to make
->>>> corresponding fixes for other IOMMUs.
->>>
->>> Ok. pci_iommu_init() is appropriate place to add this hook?
->>>
->>>> We already have a "reset_devices" boot option.  This is for the same
->>>> purpose, as far as I can tell, and I'm not sure there's value in
->>>> having both "reset_devices" and "pci=pcie_reset_endpoint_devices".  In
->>>> fact, there's nothing specific even to PCI here.  The Intel VT-d docs
->>>> seem carefully written so they could apply to either PCIe or non-PCI
->>>> devices.
->>>
->>> Yeah, I can integrate this option into reset_devices. The reason why
->>> I separate them is to avoid regression.
->>>
->>> I have tested my patch on many machines and basically it worked, but I
->>> found two machines where this reset patch caused problem. The first one
->>> was caused by bug of raid card firmware. After updating firmware, this
->>> patch worked. The second one was due to bug of PCIe switch chip. I
->>> reported this bug to the vendor but it is not fixed yet.
->>>
->>> Anyway, this patch may cause problems on such a buggy machine, so I
->>> introduced new boot parameter so that user can enable or disable this
->>> function aside from reset_devices.
->>>
->>> Actually Vivek Goyal, kdump maintainer said same thing. He proposed using
->>> reset_devices instead of adding new one, and using quirk or something to
->>> avoid such a buggy devices.
+>> Case 1:
+>> [   31.015593]  Possible unsafe locking scenario:
 >>
->> With respect to "and using quirk or something to avoid such buggy devices",
->> I believe that it will be necessary to provide a mechanism for devices that
->> need special handling to do the reset -- perhaps something like a list
->> of tuples: (device_type, function_to_call) with a default function_to_call
->> when the device_type is not found in the list.  These functions would
->> need to be physically separate from the device driver because if the device
->> is present it needs to be reset even if the crash kernel chooses not to load
->> the driver for that device.
+>> [   31.018350]        CPU0                    CPU1
+>> [   31.019691]        ----                    ----
+>> [   31.021002]   lock(&dock_station->hp_lock);
+>> [   31.022327]                                lock(&slot->crit_sect);
+>> [   31.023650]                                lock(&dock_station->hp_lock);
+>> [   31.025010]   lock(&slot->crit_sect);
+>> [   31.026342]
 >>
->>>
->>> So, basically I agree with using reset_devices, but I want to prepare
->>> workaround in case this reset causes something wrong.
->>>
->> I like the ability to specify the original "reset_devices" separately from
->> invoking this new mechanism.  With so many different uses for Linux in
->> so many different environments and with so many different device drivers
->> it seems reasonable to keep the ability to tell the device drivers to
->> reset their devices -- instead of pulling the reset line on all devices.
+>> Case 2:
+>>         hotplug_dock_devices()
+>>                 mutex_lock(&ds->hp_lock)
+>>                         dd->ops->handler()
+>>                                 register_hotplug_dock_device()
+>>                                         mutex_lock(&ds->hp_lock)
+>> [   34.316570] [ INFO: possible recursive locking detected ]
+>> [   34.316573] 3.10.0-rc4 #6 Tainted: G         C
+>> [   34.316575] ---------------------------------------------
+>> [   34.316577] kworker/0:0/4 is trying to acquire lock:
+>> [   34.316579]  (&dock_station->hp_lock){+.+.+.}, at:
+>> [<ffffffff813c766b>] register_hotplug_dock_device+0x6a/0xbf
+>> [   34.316588]
+>> but task is already holding lock:
+>> [   34.316590]  (&dock_station->hp_lock){+.+.+.}, at:
+>> [<ffffffff813c7270>] hotplug_dock_devices+0x2c/0xda
+>> [   34.316595]
+>> other info that might help us debug this:
+>> [   34.316597]  Possible unsafe locking scenario:
 >>
->> I also like the ability to invoke the new reset feature separately from
->> telling the device drivers to do it.
+>> [   34.316599]        CPU0
+>> [   34.316601]        ----
+>> [   34.316602]   lock(&dock_station->hp_lock);
+>> [   34.316605]   lock(&dock_station->hp_lock);
+>> [   34.316608]
+>>  *** DEADLOCK ***
 >>
->>>
->>>>
->>>>>> I tried to make a list of the interesting scenarios and the events
->>>>>> that are relevant to this problem:
->>>>>>
->>>>>>        Case 1: IOMMU off in system, off in kdump kernel
->>>>>>          system kernel leaves IOMMU off
->>>>>>            DMA targets system-kernel memory
->>>>>>          kexec to kdump kernel (IOMMU off, devices untouched)
->>>>>>            DMA targets system-kernel memory (harmless)
->>>>>>          kdump kernel re-inits device
->>>>>>            DMA targets kdump-kernel memory
->>>>>>
->>>>>>        Case 2: IOMMU off in system kernel, on in kdump kernel
->>>>>>          system kernel leaves IOMMU off
->>>>>>            DMA targets system-kernel memory
->>>>>>          kexec to kdump kernel (IOMMU off, devices untouched)
->>>>>>            DMA targets system-kernel memory (harmless)
->>>>>>          kdump kernel enables IOMMU with no valid mappings
->>>>>>            DMA causes IOMMU errors (annoying but harmless)
->>>>>>          kdump kernel re-inits device
->>>>>>            DMA targets IOMMU-mapped kdump-kernel memory
->>>>>>
->>>>>>        Case 3a: IOMMU on in system kernel, kdump kernel doesn't touch IOMMU
->>>>>>          system kernel enables IOMMU
->>>>>>            DMA targets IOMMU-mapped system-kernel memory
->>>>>>          kexec to kdump kernel (IOMMU on, devices untouched)
->>>>>>            DMA targets IOMMU-mapped system-kernel memory
->>>>>>          kdump kernel doesn't know about IOMMU or doesn't touch it
->>>>>>            DMA targets IOMMU-mapped system-kernel memory
->>>>>>          kdump kernel re-inits device
->>>>>>            kernel assumes no IOMMU, so all new DMA mappings are invalid
->>>>>> because DMAs actually do go through the IOMMU
->>>>>>            (** corruption or other non-recoverable error likely **)
->>>>>>
->>>>>>
->>>>>>        Case 3b: IOMMU on in system kernel, kdump kernel disables IOMMU
->>>>>>          system kernel enables IOMMU
->>>>>>            DMA targets IOMMU-mapped system-kernel memory
->>>>>>          kexec to kdump kernel (IOMMU on, devices untouched)
->>>>>>            DMA targets IOMMU-mapped system-kernel memory
->>>>>>          kdump kernel disables IOMMU
->>>>>>            DMA targets IOMMU-mapped system-kernel memory, but IOMMU is disabled
->>>>>>            (** corruption or other non-recoverable error likely **)
->>>>>>          kdump kernel re-inits device
->>>>>>            DMA targets kdump-kernel memory
->>>>>>
->>>>>>        Case 4: IOMMU on in system kernel, on in kdump kernel
->>>>>>          system kernel enables IOMMU
->>>>>>            DMA targets IOMMU-mapped system-kernel memory
->>>>>>          kexec to kdump kernel (IOMMU on, devices untouched)
->>>>>>            DMA targets IOMMU-mapped system-kernel memory
->>>>>>          kdump kernel enables IOMMU with no valid mappings
->>>>>>            DMA causes IOMMU errors (annoying but harmless)
->>>>>>          kdump kernel re-inits device
->>>>>>            DMA targets IOMMU-mapped kdump-kernel memory
->>>>>
->>>>> This is not harmless. Errors like PCI SERR are detected here, and it
->>>>> makes driver or system unstable, and kdump fails. I also got report that
->>>>> system hangs up due to this.
->>>>
->>>> OK, let's take this slowly.  Does an IOMMU error in the system kernel
->>>> also cause SERR or make the system unstable?  Is that the expected
->>>> behavior on IOMMU errors, or is there something special about the
->>>> kdump scenario that causes SERRs?  I see lots of DMAR errors, e.g.,
->>>> those in https://bugzilla.redhat.com/show_bug.cgi?id=743790, that are
->>>> reported with printk and don't seem to cause an SERR.  Maybe the SERR
->>>> is system-specific behavior?
->>>>
->>>> https://bugzilla.redhat.com/show_bug.cgi?id=568153 is another (public)
->>>> report of IOMMU errors related to a driver bug where we just get
->>>> printks, not SERR.
->>>
->>> Yes, it depends on platform or devices. At least PCI SERR is detected on
->>> Fujitsu PRIMERGY BX920S2 and TX300S6.
->>>
->>> Intel VT-d documents[1] says:
->>>
->>>     3.5.1 Hardware Handling of Faulting DMA Requests
->>>     DMA requests that result in remapping faults must be blocked by
->>>     hardware. The exact method of DMA blocking is
->>>     implementation-specific.  For example:
->>>
->>>     - Faulting DMA write requests may be handled in much the same way as
->>>       hardware handles write requests to non-existent memory. For
->>>       example, the DMA request is discarded in a manner convenient for
->>>       implementations (such as by dropping the cycle, completing the
->>>       write request to memory with all byte enables masked off,
->>>       re-directed to a dummy memory location, etc.).
->>>
->>>     - Faulting DMA read requests may be handled in much the same way as
->>>       hardware handles read requests to non-existent memory. For
->>>       example, the request may be redirected to a dummy memory location,
->>>       returned as all 0<92>s or 1<92>s in a manner convenient to the
->>>       implementation, or the request may be completed with an explicit
->>>       error indication (preferred). For faulting DMA read requests from
->>>       PCI Express devices, hardware must indicate "Unsupported Request"
->>>       (UR) in the completion status field of the PCI Express read
->>>       completion.
->>>
->>> So, after IOMMU error, its behavior is implementation-specific.
->>>
->>> [1]
->>> Intel Virtualization Technology for Directed I/O Architecture
->>> Specification Rev1.3
->>>
->>>>
->>>> https://bugzilla.redhat.com/show_bug.cgi?id=743495 looks like a hang
->>>> when the kdump kernel reboots (after successfully saving a crashdump).
->>>>    But it is using "iommu=pt", which I don't believe makes sense.  The
->>>> scenario is basically case 4 above, but instead of the kdump kernel
->>>> starting with no valid IOMMU mappings, it identity-maps bus addresses
->>>> to physical memory addresses.  That's completely bogus because it's
->>>> certainly not what the system kernel did, so it's entirely likely to
->>>> make the system unstable or hang.  This is not an argument for doing a
->>>> reset; it's an argument for doing something smarter than "iommu=pt" in
->>>> the kdump kernel.
+>> So fix this deadlock by not taking ds->hp_lock in function
+>> register_hotplug_dock_device(). This patch also fixes a possible
+>> race conditions in function dock_event() because previously it
+>> accesses ds->hotplug_devices list without holding ds->hp_lock.
 >>
->>>> We might still want to reset PCIe devices, but I want to make sure
->>>> that we're not papering over other issues when we do.  Therefore, I'd
->>>> like to understand why IOMMU errors seem harmless in some cases but
->>>> not in others.
->>>
->>> As I wrote above, IOMMU behavior on error is up to platform/devcies. I
->>> think it also depends on the value of Uncorrectable Error Mask Register
->>> in AER registers of each device.
->>>
->>>>> Case 1:  Harmless
->>>>> Case 2:  Not tested
->>>>> Case 3a: Not tested
->>>>> Case 3b: Cause problem, fixed by my patch
->>>>> Case 4:  Cause problem, fixed by my patch
->>>>>
->>>>> I have never tested case 2 and 3a, but I think it also causes problem.
->>>>
->>>> I do not believe we need to support case 3b (IOMMU on in system kernel
->>>> but disabled in kdump kernel).  There is no way to make that reliable
->>>> unless every single device that may perform DMA is reset, and since
->>>> you don't reset legacy PCI or VGA devices, you're not even proposing
->>>> to do that.
->>>>
->>>> I think we need to support case 1 (for systems with no IOMMU at all)
->>>> and case 4 (IOMMU enabled in both system kernel and kdump kernel).  If
->>>> the kdump kernel can detect whether the IOMMU is enabled, that should
->>>> be enough -- it could figure out automatically whether we're in case 1
->>>> or 4.
->>>
->>> Ok, I completely agree.
->>>
->>>
->>>>>> Do you have any bugzilla references or problem report URLs you could
->>>>>> include here?
->>>>>
->>>>> I know three Red Hat bugzilla, but I think these are private article and
->>>>> you cannot see. I'll add you Cc list in bz so that you can see.
->>>>>
->>>>> BZ#743790: Kdump fails with intel_iommu=on
->>>>> https://bugzilla.redhat.com/show_bug.cgi?id=743790
->>>>>
->>>>> BZ#743495: Hardware error is detected with intel_iommu=on
->>>>> https://bugzilla.redhat.com/show_bug.cgi?id=743495
->>>>>
->>>>> BZ#833299: megaraid_sas doesn't work well with intel_iommu=on and iommu=pt
->>>>> https://bugzilla.redhat.com/show_bug.cgi?id=833299
->>>>
->>>> Thanks for adding me to the CC lists.  I looked all three and I'm not
->>>> sure there's anything sensitive in them.  It'd be nice if they could
->>>> be made public if there's not.
->>>
->>> I really appreciate your comments! I'll confirm I can make it public.
+>> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+>> Cc: Len Brown <lenb@kernel.org>
+>> Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
+>> Cc: Bjorn Helgaas <bhelgaas@google.com>
+>> Cc: Yinghai Lu <yinghai@kernel.org>
+>> Cc: Yijing Wang <wangyijing@huawei.com>
+>> Cc: linux-acpi@vger.kernel.org
+>> Cc: linux-kernel@vger.kernel.org
+>> Cc: linux-pci@vger.kernel.org
+>> Cc: <stable@vger.kernel.org> # 3.8+
+>> ---
+>>  drivers/acpi/dock.c                | 109 ++++++++++++++++++++++---------------
+>>  drivers/pci/hotplug/acpiphp_glue.c |  15 +++++
+>>  include/acpi/acpi_drivers.h        |   2 +
+>>  3 files changed, 82 insertions(+), 44 deletions(-)
 >>
->> I would greatly appreciate being able to see the bugzillas relating to
->> this patch.
->>>
->>> Thanks,
->>> Takao Indoh
+>> diff --git a/drivers/acpi/dock.c b/drivers/acpi/dock.c
+>> index 02b0563..602bce5 100644
+>> --- a/drivers/acpi/dock.c
+>> +++ b/drivers/acpi/dock.c
+>> @@ -66,7 +66,7 @@ struct dock_station {
+>>  	spinlock_t dd_lock;
+>>  	struct mutex hp_lock;
+>>  	struct list_head dependent_devices;
+>> -	struct list_head hotplug_devices;
+>> +	struct klist hotplug_devices;
 >>
->> Thinking out of the box:
->> Much of the discussion about dealing with the ongoing DMA leftover
->> from the system kernel has assumed that the crash kernel will reset
->> the IOMMU -- which causes various problems if done while there is any DMA
->> still active -- which leads to the idea of stopping all of the DMA.
+>>  	struct list_head sibling;
+>>  	struct platform_device *dock_device;
+>> @@ -76,12 +76,18 @@ static int dock_station_count;
 >>
->> Suppose the crash kernel does not reset the hardware IOMMU, but simply
->> detects that it is active, resets only the devices that are necessary
->> for the crash kernel to operate, and re-programs only the translations
-> 
-> This suggestion brings up this one:
-> Only reset the devices that are generating IOMMU faults, i.e., add a kdump kernel
-> hook to the IOMMU fault handler.  While kdump kernel re-initing, IOMMU faults are grabbed
-> by the kexec'd kernel and the device is reset. IOW, directed, kdump device reset.
-> If no faults, then device is idle, or re-init'd and using new maps, and
-> all is well.  Once kdump kernel fully init'd, then just return from
-> kdump kernel callout, and let system do its fault handling.
-> It can be made mostly common (reset code in kexec mod under drivers/iommu),
-> with simple calls out from each IOMMU fault handler.
+>>  struct dock_dependent_device {
+>>  	struct list_head list;
+>> -	struct list_head hotplug_list;
+>> +	acpi_handle handle;
+>> +};
+>> +
+>> +struct dock_hotplug_info {
+>> +	struct klist_node node;
+>>  	acpi_handle handle;
+>>  	const struct acpi_dock_ops *ops;
+>>  	void *context;
+>>  };
+>
+> Can we please relax a bit and possibly take a step back?
+>
+> So since your last reply to me wasn't particularly helpful, I went through the
+> code in dock.c and acpiphp_glue.c and I simply think that the whole
+> hotplug_list thing is simply redundant.
+>
+> It looks like instead of using it (or the klist in this patch), we can add a
+> "hotlpug_device" flag to dock_dependent_device and set that flag instead of
+> adding dd to hotplug_devices or clear it instead of removing dd from that list.
+>
+> That would allow us to avoid the deadlock, because we wouldn't need the hp_lock
+> any more and perhaps we could make the code simpler instead of making it more
+> complex.
+>
+> How does that sound?
+>
+> Rafael
+Hi Rafael,
+       Thanks for comments! It would be great if we could kill the 
+hotplug_devices
+list so thing gets simple. But there are still some special cases:(
 
-What I tried before is:
-1) Prepare work queue handler
-2) In IOMMU fault handler, wake up the work queue handler
-3) In the work queue handler, reset devices against the error
-   source.
+As you have mentioned,  ds->hp_lock is used to make both addition and 
+removal
+of hotplug devices wait for us to complete walking ds->hotplug_devices.
+So it acts as two roles:
+1) protect the hotplug_devices list,
+2) serialize unregister_hotplug_dock_device() and 
+hotplug_dock_devices() so
+the dock driver doesn't access registered handler and associated data 
+structure
+once returing from unregister_hotplug_dock_device().
 
-As a result, this method did not work. The device are reset during its
-initialization. Please take a look at the message below.  This is a
-message when megaraid_sas driver is loaded in second kernel.
+If we simply use a flag to mark presence of registered callback, we 
+can't achieve
+the second goal. Take the sony laptop as an example. It has several PCI 
+hotplug
+slot associated with the dock station:
+[   28.829316] acpiphp_glue: _handle_hotplug_event_func: Bus check 
+notify on \_SB_.PCI0.RP07.LPMB
+[   30.174964] acpiphp_glue: _handle_hotplug_event_func: Bus check 
+notify on \_SB_.PCI0.RP07.LPMB.LPM0
+[   30.174973] acpiphp_glue: _handle_hotplug_event_func: Bus check 
+notify on \_SB_.PCI0.RP07.LPMB.LPM1
+[   30.174979] acpiphp_glue: _handle_hotplug_event_func: Bus check 
+notify on \_SB_.PCI0.RP07.LPMB.LPM2
+[   30.174985] acpiphp_glue: _handle_hotplug_event_func: Bus check 
+notify on \_SB_.PCI0.RP07.LPMB.LPM2.LPRI.LPR0.GFXA
+[   30.175020] acpiphp_glue: _handle_hotplug_event_func: Bus check 
+notify on \_SB_.PCI0.RP07.LPMB.LPM2.LPRI.LPR0.GHDA
+[   30.175040] acpiphp_glue: _handle_hotplug_event_func: Bus check 
+notify on \_SB_.PCI0.RP07.LPMB.LPM2.LPRI.LPR1.LPCI.LPC0.DLAN
+[   30.175050] acpiphp_glue: _handle_hotplug_event_func: Bus check 
+notify on \_SB_.PCI0.RP07.LPMB.LPM2.LPRI.LPR1.LPCI.LPC1.DODD
+[   30.175060] acpiphp_glue: _handle_hotplug_event_func: Bus check 
+notify on \_SB_.PCI0.RP07.LPMB.LPM2.LPRI.LPR1.LPCI.LPC2.DUSB
 
-megasas: 00.00.05.40-rh2 Thu. Aug. 4 17:00:00 PDT 2011
-megaraid_sas 0000:01:00.0: resetting MSI-X
-megasas: 0x1000:0x0073:0x1734:0x1177: bus 1:slot 0:func 0
-megaraid_sas 0000:01:00.0: PCI INT A -> GSI 28 (level, low) -> IRQ 28
-megaraid_sas 0000:01:00.0: setting latency timer to 64
-megasas: Waiting for FW to come to ready state
-DRHD: handling fault status reg 702
-DMAR:[DMA Write] Request device [01:00.0] fault addr ffff9000
-DMAR:[fault reason 05] PTE Write access is not set
-megasas: FW now in Ready state
-  alloc irq_desc for 51 on node -1
-  alloc kstat_irqs on node -1
-megaraid_sas 0000:01:00.0: irq 51 for MSI/MSI-X
-megasas_init_mfi: fw_support_ieee=67108864
+So it still has some race windows if we undock the station while 
+repeatedly rescanning/removing
+the PCI bus for \_SB_.PCI0.RP07.LPMB.LPM0 through sysfs interfaces. For 
+example, thread 1 is
+handling undocking event, walking the dependent device list and 
+invoking registered callback
+handler with associated data. While that, thread 2 may step in to 
+unregister the callback for
+ \_SB_.PCI0.RP07.LPMB.LPM0. Then thread 1 may cause access-after-free 
+issue.
 
+The klist patch solves this issue by adding a "put" callback method to 
+explicitly notify
+dock client that the dock core has done with previously registered 
+handler and associated
+data.
 
-Note that DMAR error is detected during driver initialization. So when I
-added reset method which I mentioned above, the device is reset here,
-and after that, megasas could not find its disks and kdump failed.
+>
+>
+>> +#define node_to_info(n)	container_of((n), struct dock_hotplug_info, node)
+>> +
+>>  #define DOCK_DOCKING	0x00000001
+>>  #define DOCK_UNDOCKING  0x00000002
+>>  #define DOCK_IS_DOCK	0x00000010
+>> @@ -111,7 +117,6 @@ add_dock_dependent_device(struct dock_station *ds, acpi_handle handle)
+>>
+>>  	dd->handle = handle;
+>>  	INIT_LIST_HEAD(&dd->list);
+>> -	INIT_LIST_HEAD(&dd->hotplug_list);
+>>
+>>  	spin_lock(&ds->dd_lock);
+>>  	list_add_tail(&dd->list, &ds->dependent_devices);
+>> @@ -120,36 +125,19 @@ add_dock_dependent_device(struct dock_station *ds, acpi_handle handle)
+>>  	return 0;
+>>  }
+>>
+>> -/**
+>> - * dock_add_hotplug_device - associate a hotplug handler with the dock station
+>> - * @ds: The dock station
+>> - * @dd: The dependent device struct
+>> - *
+>> - * Add the dependent device to the dock's hotplug device list
+>> - */
+>> -static void
+>> -dock_add_hotplug_device(struct dock_station *ds,
+>> -			struct dock_dependent_device *dd)
+>> +static void hotplug_info_get(struct klist_node *node)
+>>  {
+>> -	mutex_lock(&ds->hp_lock);
+>> -	list_add_tail(&dd->hotplug_list, &ds->hotplug_devices);
+>> -	mutex_unlock(&ds->hp_lock);
+>> +	struct dock_hotplug_info *info = node_to_info(node);
+>> +
+>> +	info->ops->get(info->context);
+>>  }
+>>
+>> -/**
+>> - * dock_del_hotplug_device - remove a hotplug handler from the dock station
+>> - * @ds: The dock station
+>> - * @dd: the dependent device struct
+>> - *
+>> - * Delete the dependent device from the dock's hotplug device list
+>> - */
+>> -static void
+>> -dock_del_hotplug_device(struct dock_station *ds,
+>> -			struct dock_dependent_device *dd)
+>> +static void hotplug_info_put(struct klist_node *node)
+>>  {
+>> -	mutex_lock(&ds->hp_lock);
+>> -	list_del(&dd->hotplug_list);
+>> -	mutex_unlock(&ds->hp_lock);
+>> +	struct dock_hotplug_info *info = node_to_info(node);
+>> +
+>> +	info->ops->put(info->context);
+>> +	kfree(info);
+>>  }
+>>
+>>  /**
+>> @@ -354,15 +342,22 @@ static void dock_remove_acpi_device(acpi_handle handle)
+>>  static void hotplug_dock_devices(struct dock_station *ds, u32 event)
+>>  {
+>>  	struct dock_dependent_device *dd;
+>> +	struct klist_iter iter;
+>> +	struct klist_node *node;
+>> +	struct dock_hotplug_info *info;
+>>
+>>  	mutex_lock(&ds->hp_lock);
+>>
+>>  	/*
+>>  	 * First call driver specific hotplug functions
+>>  	 */
+>> -	list_for_each_entry(dd, &ds->hotplug_devices, hotplug_list)
+>> -		if (dd->ops && dd->ops->handler)
+>> -			dd->ops->handler(dd->handle, event, dd->context);
+>> +	klist_iter_init(&ds->hotplug_devices, &iter);
+>> +	while ((node = klist_next(&iter))) {
+>> +		info = node_to_info(node);
+>> +		if (info->ops && info->ops->handler)
+>> +			info->ops->handler(info->handle, event, info->context);
+>> +	}
+>> +	klist_iter_exit(&iter);
+>>
+>>  	/*
+>>  	 * Now make sure that an acpi_device is created for each
+>> @@ -384,7 +379,9 @@ static void dock_event(struct dock_station *ds, u32 event, int num)
+>>  	struct device *dev = &ds->dock_device->dev;
+>>  	char event_string[13];
+>>  	char *envp[] = { event_string, NULL };
+>> -	struct dock_dependent_device *dd;
+>> +	struct klist_iter iter;
+>> +	struct klist_node *node;
+>> +	struct dock_hotplug_info *info;
+>>
+>>  	if (num == UNDOCK_EVENT)
+>>  		sprintf(event_string, "EVENT=undock");
+>> @@ -398,9 +395,13 @@ static void dock_event(struct dock_station *ds, u32 event, int num)
+>>  	if (num == DOCK_EVENT)
+>>  		kobject_uevent_env(&dev->kobj, KOBJ_CHANGE, envp);
+>>
+>> -	list_for_each_entry(dd, &ds->hotplug_devices, hotplug_list)
+>> -		if (dd->ops && dd->ops->uevent)
+>> -			dd->ops->uevent(dd->handle, event, dd->context);
+>> +	klist_iter_init(&ds->hotplug_devices, &iter);
+>> +	while ((node = klist_next(&iter))) {
+>> +		info = node_to_info(node);
+>> +		if (info->ops && info->ops->handler)
+>> +			info->ops->handler(info->handle, event, info->context);
+>> +	}
+>> +	klist_iter_exit(&iter);
+>>
+>>  	if (num != DOCK_EVENT)
+>>  		kobject_uevent_env(&dev->kobj, KOBJ_CHANGE, envp);
+>> @@ -580,12 +581,16 @@ register_hotplug_dock_device(acpi_handle handle, const struct acpi_dock_ops *ops
+>>  			     void *context)
+>>  {
+>>  	struct dock_dependent_device *dd;
+>> +	struct dock_hotplug_info *info;
+>>  	struct dock_station *dock_station;
+>>  	int ret = -EINVAL;
+>>
+>>  	if (!dock_station_count)
+>>  		return -ENODEV;
+>>
+>> +	if (ops == NULL || ops->get == NULL || ops->put == NULL)
+>> +		return -EINVAL;
+>> +
+>>  	/*
+>>  	 * make sure this handle is for a device dependent on the dock,
+>>  	 * this would include the dock station itself
+>> @@ -598,9 +603,18 @@ register_hotplug_dock_device(acpi_handle handle, const struct acpi_dock_ops *ops
+>>  		 */
+>>  		dd = find_dock_dependent_device(dock_station, handle);
+>>  		if (dd) {
+>> -			dd->ops = ops;
+>> -			dd->context = context;
+>> -			dock_add_hotplug_device(dock_station, dd);
+>> +			info = kzalloc(sizeof(*info), GFP_KERNEL);
+>> +			if (!info) {
+>> +				unregister_hotplug_dock_device(handle);
+>> +				ret = -ENOMEM;
+>> +				break;
+>> +			}
+>> +
+>> +			info->ops = ops;
+>> +			info->context = context;
+>> +			info->handle = dd->handle;
+>> +			klist_add_tail(&info->node,
+>> +				       &dock_station->hotplug_devices);
+>>  			ret = 0;
+>>  		}
+>>  	}
+>> @@ -615,16 +629,22 @@ EXPORT_SYMBOL_GPL(register_hotplug_dock_device);
+>>   */
+>>  void unregister_hotplug_dock_device(acpi_handle handle)
+>>  {
+>> -	struct dock_dependent_device *dd;
+>>  	struct dock_station *dock_station;
+>> +	struct klist_iter iter;
+>> +	struct klist_node *node;
+>> +	struct dock_hotplug_info *info;
+>>
+>>  	if (!dock_station_count)
+>>  		return;
+>>
+>>  	list_for_each_entry(dock_station, &dock_stations, sibling) {
+>> -		dd = find_dock_dependent_device(dock_station, handle);
+>> -		if (dd)
+>> -			dock_del_hotplug_device(dock_station, dd);
+>> +		klist_iter_init(&dock_station->hotplug_devices, &iter);
+>> +		while ((node = klist_next(&iter))) {
+>> +			info = node_to_info(node);
+>> +			if (info->handle == handle)
+>> +				klist_del(&info->node);
+>> +		}
+>> +		klist_iter_exit(&iter);
+>>  	}
+>>  }
+>>  EXPORT_SYMBOL_GPL(unregister_hotplug_dock_device);
+>> @@ -951,7 +971,8 @@ static int __init dock_add(acpi_handle handle)
+>>  	mutex_init(&dock_station->hp_lock);
+>>  	spin_lock_init(&dock_station->dd_lock);
+>>  	INIT_LIST_HEAD(&dock_station->sibling);
+>> -	INIT_LIST_HEAD(&dock_station->hotplug_devices);
+>> +	klist_init(&dock_station->hotplug_devices,
+>> +		   hotplug_info_get, hotplug_info_put);
+>>  	ATOMIC_INIT_NOTIFIER_HEAD(&dock_notifier_list);
+>>  	INIT_LIST_HEAD(&dock_station->dependent_devices);
+>>
+>> diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+>> index 716aa93..5d696f5 100644
+>> --- a/drivers/pci/hotplug/acpiphp_glue.c
+>> +++ b/drivers/pci/hotplug/acpiphp_glue.c
+>> @@ -145,9 +145,24 @@ static int post_dock_fixups(struct notifier_block *nb, unsigned long val,
+>>  	return NOTIFY_OK;
+>>  }
+>>
+>> +static void acpiphp_dock_get(void *data)
+>> +{
+>> +	struct acpiphp_func *func = data;
+>> +
+>> +	get_bridge(func->slot->bridge);
+>> +}
+>> +
+>> +static void acpiphp_dock_put(void *data)
+>> +{
+>> +	struct acpiphp_func *func = data;
+>> +
+>> +	put_bridge(func->slot->bridge);
+>> +}
+>>
+>>  static const struct acpi_dock_ops acpiphp_dock_ops = {
+>>  	.handler = handle_hotplug_event_func,
+>> +	.get = acpiphp_dock_get,
+>> +	.put = acpiphp_dock_put,
+>>  };
+>>
+>>  /* Check whether the PCI device is managed by native PCIe hotplug driver */
+>> diff --git a/include/acpi/acpi_drivers.h b/include/acpi/acpi_drivers.h
+>> index e6168a2..8fcc9ac 100644
+>> --- a/include/acpi/acpi_drivers.h
+>> +++ b/include/acpi/acpi_drivers.h
+>> @@ -115,6 +115,8 @@ void pci_acpi_crs_quirks(void);
+>>  struct acpi_dock_ops {
+>>  	acpi_notify_handler handler;
+>>  	acpi_notify_handler uevent;
+>> +	void (*get)(void *data);
+>> +	void (*put)(void *data);
+>>  };
+>>
+>>  #if defined(CONFIG_ACPI_DOCK) || defined(CONFIG_ACPI_DOCK_MODULE)
+>>
 
-Thanks,
-Takao Indoh
-
-
-> 
-> Of course, this assumes that systems don't turn IOMMU faults into system SERRs,
-> and crash the system.  IMO, as I've stated to a number of system developers,
-> IOMMU (mapping) faults should not crash the system -- they already isolate, and
-> prevent corruption, so worse case, some part of the system will stop doing I/O,
-> and that will either get retried, or aborted and a cleaner panic (and kdump
-> kernel switch) will ensue.
-> 
->> for those devices.  All other translations remain the same (and remain valid)
->> so all leftover DMA continues into its buffer in the system kernel area
->> where it is harmless.  New translations needed by the kdump kernel are
->> added to the existing tables.
->>
-> A crashed system shouldn't assume that ongoing DMA is sane.... it should be stopped.
-> I would expect the kdump kernel to reset devices & acquire new dma mappings
-> upon reboot.   Thus, the only issue is how to 'throttle' IOMMU faults, and
-> not allow them to crash systems while the system is recovering/resetting itself,
-> but it's not one big (power) reset to cause it.
-> 
->> I have not yet tried this, so I am not ready to propose it as anything more
->> than a discussion topic at this time.
->>
->> It might work this way: (A small modification to case 3a above)
->>
->> IOMMU on in system kernel, kdump kernel accepts active IOMMU
->>     system kernel enables IOMMU
->>        DMA targets IOMMU-mapped system-kernel memory
->>     kexec to kdump kernel (IOMMU on, devices untouched)
->>        DMA targets IOMMU-mapped system-kernel memory
-> it may not, it may be bad/bogus device I/O causing the crash...
-> 
->>     kdump kernel detects active IOMMU and doesn't touch it
->>        DMA targets IOMMU-mapped system-kernel memory
->>     kdump kernel does not re-initialize IOMMU hardware
->>     kdump kernel initializes IOMMU in-memory management structures
->>     kdump kernel calls device drivers' standard initialization functions
->>        Drivers initialize their own devices -- DMA from that device stops
->>        When drivers request new DMA mappings, the kdump IOMMU driver:
->>        1. Updates its in-memory mgt structures for that device&  range
->>        2. Updates IOMMU translate tables for that device&  range
->>           . Translations for all other devices&  ranges are unchanged
->>        3. Flushes IOMMU TLB to force IOMMU hardware update
->>
->>     Notes:
->>        A. This seems very similar to case 1
->>
->>        B. Only touch devices with drivers loaded into kdump kernel.
->>           . No need to touch devices that kdump is not going to use.
->>
->>        C. This assumes that all DMA device drivers used by kdump will
->>           initialize the device before requesting DMA mappings.
->>           . Seems reasonable, but need to confirm how many do (or don't)
->>           . Only device drivers that might be included in the kdump
->>             kernel need to observe this initialization ordering.
->>
->>        D. Could copy system kernel's translate tables into kdump kernel
->>           and adjust pointers if this feels more trustworthy than using
->>           the original structures where they are in the system kernel.
->>
->>        E. Handle IRQ remappings in a similar manner.
-> An even more serious attack vector: flood system w/interrupts (by assigned device in a guest),
-> effectively creating a DoS, b/c intrs caused raised (hw) ipl, while bogus DMA does
-> not cause system ipl elevation(blockage of other system progress), except when it
-> generates IOMMU faults which become intrs.
-> hmmm, wondering if another solution is to flip IOMMU fault handling into a poll-mode
-> at kdump init time, and then flip it to intr-driven, once I/O has been completely init'd ?
-> Per-device fault throttling would be a nice hw feature! (wishful thinking)
-> 
-> 
->>
->> Thanks,
->> Bill Sumner
->>
->>
-> 
-> 
-> 
 
