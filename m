@@ -1,134 +1,62 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from co1ehsobe002.messaging.microsoft.com ([216.32.180.185]:8523
-	"EHLO co1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750861Ab3FCH2x convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 3 Jun 2013 03:28:53 -0400
-From: Sethi Varun-B16395 <B16395@freescale.com>
-To: Alex Williamson <alex.williamson@redhat.com>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-	"dwmw2@infradead.org" <dwmw2@infradead.org>,
-	"joro@8bytes.org" <joro@8bytes.org>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH] iommu: amd/intel: Remove multifunction assumption
- around	grouping
-Date: Mon, 3 Jun 2013 07:28:26 +0000
-Message-ID: <C5ECD7A89D1DC44195F34B25E172658D56A9F4@039-SN2MPN1-013.039d.mgd.msft.net>
-References: <20130530183855.14612.15585.stgit@bling.home>
-In-Reply-To: <20130530183855.14612.15585.stgit@bling.home>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <51BDF1E0.5070201@gmail.com>
+Date: Mon, 17 Jun 2013 01:12:00 +0800
+From: Jiang Liu <liuj97@gmail.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"Alexander E . Patrakov" <patrakov@gmail.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Len Brown <lenb@kernel.org>,
+	stable@vger.kernel.org, Jiang Liu <jiang.liu@huawei.com>
+Subject: Re: [BUGFIX v2 2/4] ACPI, DOCK: resolve possible deadlock scenarios
+References: <1371238081-32260-1-git-send-email-jiang.liu@huawei.com> <8974656.5GmDyxHW7F@vostro.rjw.lan> <18797091.iPZsNWFGi1@vostro.rjw.lan> <2139297.LeMhgEjsya@vostro.rjw.lan>
+In-Reply-To: <2139297.LeMhgEjsya@vostro.rjw.lan>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-> -----Original Message-----
-> From: iommu-bounces@lists.linux-foundation.org [mailto:iommu-
-> bounces@lists.linux-foundation.org] On Behalf Of Alex Williamson
-> Sent: Friday, May 31, 2013 12:09 AM
-> To: iommu@lists.linux-foundation.org; dwmw2@infradead.org;
-> joro@8bytes.org
-> Cc: linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org
-> Subject: [PATCH] iommu: amd/intel: Remove multifunction assumption around
-> grouping
+On 06/16/2013 06:54 AM, Rafael J. Wysocki wrote:
+> On Saturday, June 15, 2013 11:20:40 PM Rafael J. Wysocki wrote:
+>> On Saturday, June 15, 2013 10:17:42 PM Rafael J. Wysocki wrote:
 > 
-> If a device is multifunction and does not have ACS enabled then we assume
-> that the entire package lacks ACS and use function 0 as the base of the
-> group.  The PCIe spec however states that components are permitted to
-> implement ACS on some, none, or all of their applicable functions.  It's
-> therefore conceivable that function 0 may be fully independent and
-> support ACS while other functions do not.  Instead use the lowest
-> function of the slot that does not have ACS enabled as the base of the
-> group.  This may be the current device, which is intentional.  So long as
-> we use a consistent algorithm, all the non-ACS functions will be grouped
-> together and ACS functions will get separate groups.
+> [...]
 > 
-> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-> ---
->  drivers/iommu/amd_iommu.c   |   25 +++++++++++++++++++------
->  drivers/iommu/intel-iommu.c |   25 +++++++++++++++++++------
->  2 files changed, 38 insertions(+), 12 deletions(-)
+>>
+>> Which sysfs interfaces do you mean, by the way?
+>>
+>> If you mean "eject", then it takes acpi_scan_lock and hotplug_dock_devices()
+>> should always be run under acpi_scan_lock too.  It isn't at the moment,
+>> because write_undock() doesn't take acpi_scan_lock(), but this is an obvious
+>> bug (so I'm going to send a patch to fix it in a while).
+>>
+>> With that bug fixed, the possible race between acpi_eject_store() and
+>> hotplug_dock_devices() should be prevented from happening, so perhaps we're
+>> worrying about something that cannot happen?
 > 
-> diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c index
-> 1d84be1..565c745 100644
-> --- a/drivers/iommu/amd_iommu.c
-> +++ b/drivers/iommu/amd_iommu.c
-> @@ -287,14 +287,27 @@ static struct pci_dev *get_isolation_root(struct
-> pci_dev *pdev)
+> So here's a question: What particular races are possible if we remove
+> ds->hp_lock entirely without doing anything else just yet?  I mean, how to
+> *trigger* them from the start to the end and not how they can possibly happen
+> but never do, because there's no way they can be actually triggered?
+Hi Rafael,
+    I have no really platform which triggers this bug, but I may imagine
+a possible platform if it's valid for explanation.
+    Let's think about a laptop dock station with a thunderbolt
+controller built-in. The dock station is managed by dock driver and
+acpiphp driver. And the PCIe hierarchy managed by the thunderbolt
+controller may be managed by dock driver and ACPIPHP driver too.
+So it may trigger the issue by pressing the dock button and unplugging
+thunderbolt cable concurrently.
+    But after all, this is all by imagination:). We may need to find a
+simple and quick solution for 3.10 and the stable trees and enhance the
+solution later to avoid introducing new bugs while fixing a bug.
+Regards!
+Gerry
 > 
->  	/*
->  	 * If it's a multifunction device that does not support our
-> -	 * required ACS flags, add to the same group as function 0.
-> +	 * required ACS flags, add to the same group as lowest numbered
-> +	 * function that also does not suport the required ACS flags.
->  	 */
->  	if (dma_pdev->multifunction &&
-> -	    !pci_acs_enabled(dma_pdev, REQ_ACS_FLAGS))
-> -		swap_pci_ref(&dma_pdev,
-> -			     pci_get_slot(dma_pdev->bus,
-> -					  PCI_DEVFN(PCI_SLOT(dma_pdev->devfn),
-> -					  0)));
-> +	    !pci_acs_enabled(dma_pdev, REQ_ACS_FLAGS)) {
-> +		u8 i, slot = PCI_SLOT(dma_pdev->devfn);
-> +
-> +		for (i = 0; i < 8; i++) {
-> +			struct pci_dev *tmp;
-> +
-> +			tmp = pci_get_slot(dma_pdev->bus, PCI_DEVFN(slot, i));
-> +			if (!tmp)
-> +				continue;
-> +
-> +			if (!pci_acs_enabled(tmp, REQ_ACS_FLAGS)) {
-> +				swap_pci_ref(&dma_pdev, tmp);
-> +				break;
-> +			}
-> +			pci_dev_put(tmp);
-> +		}
-> +	}
+> Rafael
 > 
->  	/*
->  	 * Devices on the root bus go through the iommu.  If that's not us,
-> diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-> index b4f0e28..eec0d3e 100644
-> --- a/drivers/iommu/intel-iommu.c
-> +++ b/drivers/iommu/intel-iommu.c
-> @@ -4182,14 +4182,27 @@ static int intel_iommu_add_device(struct device
-> *dev)
 > 
->  	/*
->  	 * If it's a multifunction device that does not support our
-> -	 * required ACS flags, add to the same group as function 0.
-> +	 * required ACS flags, add to the same group as lowest numbered
-> +	 * function that also does not suport the required ACS flags.
->  	 */
->  	if (dma_pdev->multifunction &&
-> -	    !pci_acs_enabled(dma_pdev, REQ_ACS_FLAGS))
-> -		swap_pci_ref(&dma_pdev,
-> -			     pci_get_slot(dma_pdev->bus,
-> -					  PCI_DEVFN(PCI_SLOT(dma_pdev->devfn),
-> -					  0)));
-> +	    !pci_acs_enabled(dma_pdev, REQ_ACS_FLAGS)) {
-> +		u8 i, slot = PCI_SLOT(dma_pdev->devfn);
-> +
-> +		for (i = 0; i < 8; i++) {
-[Sethi Varun-B16395] A macro like PCI_MAX_FUNCTIONS would improve code readability.
-
-> +			struct pci_dev *tmp;
-> +
-> +			tmp = pci_get_slot(dma_pdev->bus, PCI_DEVFN(slot, i));
-> +			if (!tmp)
-> +				continue;
-> +
-> +			if (!pci_acs_enabled(tmp, REQ_ACS_FLAGS)) {
-> +				swap_pci_ref(&dma_pdev, tmp);
-> +				break;
-> +			}
-> +			pci_dev_put(tmp);
-> +		}
-> +	}
-
-It would be nice if this code could be represented as a function in a common file like iommu/pci.c.
-
--Varun
 
