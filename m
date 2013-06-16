@@ -1,314 +1,90 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Jiang Liu <jiang.liu@huawei.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <51BDEF7F.1070107@gmail.com>
+Date: Mon, 17 Jun 2013 01:01:51 +0800
+From: Jiang Liu <liuj97@gmail.com>
+MIME-Version: 1.0
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
 	Yinghai Lu <yinghai@kernel.org>,
 	"Alexander E . Patrakov" <patrakov@gmail.com>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	Yijing Wang <wangyijing@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [BUGFIX 9/9] ACPI: use new helper functions to simpilify code
-Date: Thu, 13 Jun 2013 20:38:58 +0200
-Message-ID: <5263613.rGnxl0WA0s@vostro.rjw.lan>
-In-Reply-To: <1371141152-9468-10-git-send-email-jiang.liu@huawei.com>
-References: <1371141152-9468-1-git-send-email-jiang.liu@huawei.com> <1371141152-9468-10-git-send-email-jiang.liu@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Len Brown <lenb@kernel.org>,
+	stable@vger.kernel.org, Jiang Liu <jiang.liu@huawei.com>
+Subject: Re: [BUGFIX v2 2/4] ACPI, DOCK: resolve possible deadlock scenarios
+References: <1371238081-32260-1-git-send-email-jiang.liu@huawei.com> <51BBC6FC.2020002@gmail.com> <8974656.5GmDyxHW7F@vostro.rjw.lan> <18797091.iPZsNWFGi1@vostro.rjw.lan>
+In-Reply-To: <18797091.iPZsNWFGi1@vostro.rjw.lan>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, June 14, 2013 12:32:32 AM Jiang Liu wrote:
-> Use new helper functions to simpilify ACPI dock, acpiphp code.
+On 06/16/2013 05:20 AM, Rafael J. Wysocki wrote:
+> On Saturday, June 15, 2013 10:17:42 PM Rafael J. Wysocki wrote:
+>> On Saturday, June 15, 2013 09:44:28 AM Jiang Liu wrote:
+[...]
+>> When it returns from unregister_hotplug_dock_device(), nothing prevents it
+>> from accessing whatever it wants, because ds->hp_lock is not used outside
+>> of the add/del and hotplug_dock_devices().  So, the actual role of
+>> ds->hp_lock (not the one that it is supposed to play, but the real one)
+>> is to prevent addition/deletion from happening when hotplug_dock_devices()
+>> is running.  [Yes, it does protect the list, but since the list is in fact
+>> unnecessary, that doesn't matter.]
+>>
+>>> If we simply use a flag to mark presence of registered callback, we 
+>>> can't achieve the second goal.
+>>
+>> I don't mean using the flag *alone*.
+>>
+>>> Take the sony laptop as an example. It has several PCI 
+>>> hotplug
+>>> slot associated with the dock station:
+>>> [   28.829316] acpiphp_glue: _handle_hotplug_event_func: Bus check 
+>>> notify on \_SB_.PCI0.RP07.LPMB
+>>> [   30.174964] acpiphp_glue: _handle_hotplug_event_func: Bus check 
+>>> notify on \_SB_.PCI0.RP07.LPMB.LPM0
+>>> [   30.174973] acpiphp_glue: _handle_hotplug_event_func: Bus check 
+>>> notify on \_SB_.PCI0.RP07.LPMB.LPM1
+>>> [   30.174979] acpiphp_glue: _handle_hotplug_event_func: Bus check 
+>>> notify on \_SB_.PCI0.RP07.LPMB.LPM2
+>>> [   30.174985] acpiphp_glue: _handle_hotplug_event_func: Bus check 
+>>> notify on \_SB_.PCI0.RP07.LPMB.LPM2.LPRI.LPR0.GFXA
+>>> [   30.175020] acpiphp_glue: _handle_hotplug_event_func: Bus check 
+>>> notify on \_SB_.PCI0.RP07.LPMB.LPM2.LPRI.LPR0.GHDA
+>>> [   30.175040] acpiphp_glue: _handle_hotplug_event_func: Bus check 
+>>> notify on \_SB_.PCI0.RP07.LPMB.LPM2.LPRI.LPR1.LPCI.LPC0.DLAN
+>>> [   30.175050] acpiphp_glue: _handle_hotplug_event_func: Bus check 
+>>> notify on \_SB_.PCI0.RP07.LPMB.LPM2.LPRI.LPR1.LPCI.LPC1.DODD
+>>> [   30.175060] acpiphp_glue: _handle_hotplug_event_func: Bus check 
+>>> notify on \_SB_.PCI0.RP07.LPMB.LPM2.LPRI.LPR1.LPCI.LPC2.DUSB
+>>>
+>>> So it still has some race windows if we undock the station while 
+>>> repeatedly rescanning/removing
+>>> the PCI bus for \_SB_.PCI0.RP07.LPMB.LPM0 through sysfs interfaces.
 > 
-> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-
-Not 3.10 material.
-
-For now, please *only* send the patches from this series that are *necessary*
-to fix the regression.  All of the other related stuff should be sent in a
-separate series for 3.11, ideally later (hint: when the essential changes have
-been tested and approved).
-
-So it looks like we need to focus on [1-2/9] from this series for now.
-
-Thanks,
-Rafael
-
-
-> ---
->  drivers/acpi/dock.c                | 78 ++++----------------------------------
->  drivers/acpi/scan.c                | 53 ++++++--------------------
->  drivers/pci/hotplug/acpiphp_glue.c | 15 ++------
->  3 files changed, 21 insertions(+), 125 deletions(-)
+> Which sysfs interfaces do you mean, by the way?
 > 
-> diff --git a/drivers/acpi/dock.c b/drivers/acpi/dock.c
-> index 72cf97e..1811f4f 100644
-> --- a/drivers/acpi/dock.c
-> +++ b/drivers/acpi/dock.c
-> @@ -181,26 +181,14 @@ find_dock_dependent_device(struct dock_station *ds, acpi_handle handle)
->   * If an acpi object has a _DCK method, then it is by definition a dock
->   * station, so return true.
->   */
-> -static int is_dock(acpi_handle handle)
-> +static inline int is_dock(acpi_handle handle)
->  {
-> -	acpi_status status;
-> -	acpi_handle tmp;
-> -
-> -	status = acpi_get_handle(handle, "_DCK", &tmp);
-> -	if (ACPI_FAILURE(status))
-> -		return 0;
-> -	return 1;
-> +	return acpi_has_method(handle, "_DCK");
->  }
->  
-> -static int __init is_ejectable(acpi_handle handle)
-> +static inline int is_ejectable(acpi_handle handle)
->  {
-> -	acpi_status status;
-> -	acpi_handle tmp;
-> -
-> -	status = acpi_get_handle(handle, "_EJ0", &tmp);
-> -	if (ACPI_FAILURE(status))
-> -		return 0;
-> -	return 1;
-> +	return acpi_has_method(handle, "_EJ0");
->  }
->  
->  static int __init is_ata(acpi_handle handle)
-> @@ -409,37 +397,6 @@ static void dock_event(struct dock_station *ds, u32 event, int num)
->  }
->  
->  /**
-> - * eject_dock - respond to a dock eject request
-> - * @ds: the dock station
-> - *
-> - * This is called after _DCK is called, to execute the dock station's
-> - * _EJ0 method.
-> - */
-> -static void eject_dock(struct dock_station *ds)
-> -{
-> -	struct acpi_object_list arg_list;
-> -	union acpi_object arg;
-> -	acpi_status status;
-> -	acpi_handle tmp;
-> -
-> -	/* all dock devices should have _EJ0, but check anyway */
-> -	status = acpi_get_handle(ds->handle, "_EJ0", &tmp);
-> -	if (ACPI_FAILURE(status)) {
-> -		pr_debug("No _EJ0 support for dock device\n");
-> -		return;
-> -	}
-> -
-> -	arg_list.count = 1;
-> -	arg_list.pointer = &arg;
-> -	arg.type = ACPI_TYPE_INTEGER;
-> -	arg.integer.value = 1;
-> -
-> -	status = acpi_evaluate_object(ds->handle, "_EJ0", &arg_list, NULL);
-> -	if (ACPI_FAILURE(status))
-> -		pr_debug("Failed to evaluate _EJ0!\n");
-> -}
-> -
-> -/**
->   * handle_dock - handle a dock event
->   * @ds: the dock station
->   * @dock: to dock, or undock - that is the question
-> @@ -499,27 +456,6 @@ static inline void complete_undock(struct dock_station *ds)
->  	ds->flags &= ~(DOCK_UNDOCKING);
->  }
->  
-> -static void dock_lock(struct dock_station *ds, int lock)
-> -{
-> -	struct acpi_object_list arg_list;
-> -	union acpi_object arg;
-> -	acpi_status status;
-> -
-> -	arg_list.count = 1;
-> -	arg_list.pointer = &arg;
-> -	arg.type = ACPI_TYPE_INTEGER;
-> -	arg.integer.value = !!lock;
-> -	status = acpi_evaluate_object(ds->handle, "_LCK", &arg_list, NULL);
-> -	if (ACPI_FAILURE(status) && status != AE_NOT_FOUND) {
-> -		if (lock)
-> -			acpi_handle_warn(ds->handle,
-> -				"Locking device failed (0x%x)\n", status);
-> -		else
-> -			acpi_handle_warn(ds->handle,
-> -				"Unlocking device failed (0x%x)\n", status);
-> -	}
-> -}
-> -
->  /**
->   * dock_in_progress - see if we are in the middle of handling a dock event
->   * @ds: the dock station
-> @@ -653,8 +589,8 @@ static int handle_eject_request(struct dock_station *ds, u32 event)
->  
->  	hotplug_dock_devices(ds, ACPI_NOTIFY_EJECT_REQUEST);
->  	undock(ds);
-> -	dock_lock(ds, 0);
-> -	eject_dock(ds);
-> +	acpi_evaluate_lck(ds->handle, 0);
-> +	acpi_evaluate_ej0(ds->handle);
->  	if (dock_present(ds)) {
->  		acpi_handle_err(ds->handle, "Unable to undock!\n");
->  		return -EBUSY;
-> @@ -713,7 +649,7 @@ static void dock_notify(acpi_handle handle, u32 event, void *data)
->  			hotplug_dock_devices(ds, event);
->  			complete_dock(ds);
->  			dock_event(ds, event, DOCK_EVENT);
-> -			dock_lock(ds, 1);
-> +			acpi_evaluate_lck(ds->handle, 1);
->  			acpi_update_all_gpes();
->  			break;
->  		}
-> diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
-> index 4148163..3372505 100644
-> --- a/drivers/acpi/scan.c
-> +++ b/drivers/acpi/scan.c
-> @@ -123,9 +123,6 @@ static DEVICE_ATTR(modalias, 0444, acpi_device_modalias_show, NULL);
->  static int acpi_scan_hot_remove(struct acpi_device *device)
->  {
->  	acpi_handle handle = device->handle;
-> -	acpi_handle not_used;
-> -	struct acpi_object_list arg_list;
-> -	union acpi_object arg;
->  	acpi_status status;
->  	unsigned long long sta;
->  
-> @@ -144,31 +141,12 @@ static int acpi_scan_hot_remove(struct acpi_device *device)
->  	put_device(&device->dev);
->  	device = NULL;
->  
-> -	if (ACPI_SUCCESS(acpi_get_handle(handle, "_LCK", &not_used))) {
-> -		arg_list.count = 1;
-> -		arg_list.pointer = &arg;
-> -		arg.type = ACPI_TYPE_INTEGER;
-> -		arg.integer.value = 0;
-> -		acpi_evaluate_object(handle, "_LCK", &arg_list, NULL);
-> -	}
-> -
-> -	arg_list.count = 1;
-> -	arg_list.pointer = &arg;
-> -	arg.type = ACPI_TYPE_INTEGER;
-> -	arg.integer.value = 1;
-> -
-> -	/*
-> -	 * TBD: _EJD support.
-> -	 */
-> -	status = acpi_evaluate_object(handle, "_EJ0", &arg_list, NULL);
-> -	if (ACPI_FAILURE(status)) {
-> -		if (status == AE_NOT_FOUND) {
-> -			return -ENODEV;
-> -		} else {
-> -			acpi_handle_warn(handle, "Eject failed (0x%x)\n",
-> -								status);
-> -			return -EIO;
-> -		}
-> +	acpi_evaluate_lck(handle, 0);
-> +	status = acpi_evaluate_ej0(handle);
-> +	if (status == AE_NOT_FOUND) {
-> +		return -ENODEV;
-> +	} else if (ACPI_FAILURE(status)) {
-> +		return -EIO;
->  	}
->  
->  	/*
-> @@ -536,7 +514,6 @@ static int acpi_device_setup_files(struct acpi_device *dev)
->  {
->  	struct acpi_buffer buffer = {ACPI_ALLOCATE_BUFFER, NULL};
->  	acpi_status status;
-> -	acpi_handle temp;
->  	unsigned long long sun;
->  	int result = 0;
->  
-> @@ -562,8 +539,7 @@ static int acpi_device_setup_files(struct acpi_device *dev)
->  	/*
->  	 * If device has _STR, 'description' file is created
->  	 */
-> -	status = acpi_get_handle(dev->handle, "_STR", &temp);
-> -	if (ACPI_SUCCESS(status)) {
-> +	if (acpi_has_method(dev->handle, "_STR")) {
->  		status = acpi_evaluate_object(dev->handle, "_STR",
->  					NULL, &buffer);
->  		if (ACPI_FAILURE(status))
-> @@ -593,8 +569,7 @@ static int acpi_device_setup_files(struct acpi_device *dev)
->           * If device has _EJ0, 'eject' file is created that is used to trigger
->           * hot-removal function from userland.
->           */
-> -	status = acpi_get_handle(dev->handle, "_EJ0", &temp);
-> -	if (ACPI_SUCCESS(status)) {
-> +	if (acpi_has_method(dev->handle, "_EJ0")) {
->  		result = device_create_file(&dev->dev, &dev_attr_eject);
->  		if (result)
->  			return result;
-> @@ -616,9 +591,6 @@ end:
->  
->  static void acpi_device_remove_files(struct acpi_device *dev)
->  {
-> -	acpi_status status;
-> -	acpi_handle temp;
-> -
->  	if (dev->flags.power_manageable) {
->  		device_remove_file(&dev->dev, &dev_attr_power_state);
->  		if (dev->power.flags.power_resources)
-> @@ -629,20 +601,17 @@ static void acpi_device_remove_files(struct acpi_device *dev)
->  	/*
->  	 * If device has _STR, remove 'description' file
->  	 */
-> -	status = acpi_get_handle(dev->handle, "_STR", &temp);
-> -	if (ACPI_SUCCESS(status)) {
-> +	if (acpi_has_method(dev->handle, "_STR")) {
->  		kfree(dev->pnp.str_obj);
->  		device_remove_file(&dev->dev, &dev_attr_description);
->  	}
->  	/*
->  	 * If device has _EJ0, remove 'eject' file.
->  	 */
-> -	status = acpi_get_handle(dev->handle, "_EJ0", &temp);
-> -	if (ACPI_SUCCESS(status))
-> +	if (acpi_has_method(dev->handle, "_EJ0"))
->  		device_remove_file(&dev->dev, &dev_attr_eject);
->  
-> -	status = acpi_get_handle(dev->handle, "_SUN", &temp);
-> -	if (ACPI_SUCCESS(status))
-> +	if (acpi_has_method(dev->handle, "_SUN"))
->  		device_remove_file(&dev->dev, &dev_attr_sun);
->  
->  	if (dev->pnp.unique_id)
-> diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-> index 699b8ca..d0699ed 100644
-> --- a/drivers/pci/hotplug/acpiphp_glue.c
-> +++ b/drivers/pci/hotplug/acpiphp_glue.c
-> @@ -828,23 +828,14 @@ int acpiphp_eject_slot(struct acpiphp_slot *slot)
->  {
->  	acpi_status status;
->  	struct acpiphp_func *func;
-> -	struct acpi_object_list arg_list;
-> -	union acpi_object arg;
->  
->  	list_for_each_entry(func, &slot->funcs, sibling) {
->  		/* We don't want to call _EJ0 on non-existing functions. */
->  		if ((func->flags & FUNC_HAS_EJ0)) {
-> -			/* _EJ0 method take one argument */
-> -			arg_list.count = 1;
-> -			arg_list.pointer = &arg;
-> -			arg.type = ACPI_TYPE_INTEGER;
-> -			arg.integer.value = 1;
-> -
-> -			status = acpi_evaluate_object(func->handle, "_EJ0", &arg_list, NULL);
-> -			if (ACPI_FAILURE(status)) {
-> -				warn("%s: _EJ0 failed\n", __func__);
-> +			status = acpi_evaluate_ej0(func->handle);
-> +			if (ACPI_FAILURE(status))
->  				return -1;
-> -			} else
-> +			else
->  				break;
->  		}
->  	}
+> If you mean "eject", then it takes acpi_scan_lock and hotplug_dock_devices()
+> should always be run under acpi_scan_lock too.  It isn't at the moment,
+> because write_undock() doesn't take acpi_scan_lock(), but this is an obvious
+> bug (so I'm going to send a patch to fix it in a while).
 > 
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+> With that bug fixed, the possible race between acpi_eject_store() and
+> hotplug_dock_devices() should be prevented from happening, so perhaps we're
+> worrying about something that cannot happen?
+Hi Rafael,
+	I mean the "remove" method of each PCI device, and the "power" method
+of PCI hotplug slot here.
+	These methods may be used to remove P2P bridges with associated ACPIPHP
+hotplug slots, which in turn will cause invoking of
+unregister_hotplug_dock_device().
+	So theoretical we may trigger the bug by undocking while repeatedly
+adding/removing P2P bridges with ACPIPHP hotplug slot through PCI
+"rescan" and "remove" sysfs interface,
+Regards!
+Gerry
+> 
+> Rafael
+> 
+> 
+
