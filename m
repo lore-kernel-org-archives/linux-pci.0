@@ -1,100 +1,68 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@huawei.com>
-To: "Rafael J . Wysocki" <rjw@sisk.pl>,
-	Bjorn Helgaas <bhelgaas@google.com>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Jiang Liu <liuj97@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	Yinghai Lu <yinghai@kernel.org>,
-	"Alexander E . Patrakov" <patrakov@gmail.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
+	"Alexander E . Patrakov" <patrakov@gmail.com>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	Yijing Wang <wangyijing@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	<stable@vger.kernel.org>
-Subject: [BUGFIX 1/9] ACPI, DOCK: initialize dock subsystem before scanning PCI root buses
-Date: Fri, 14 Jun 2013 00:32:24 +0800
-Message-Id: <1371141152-9468-2-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1371141152-9468-1-git-send-email-jiang.liu@huawei.com>
-References: <1371141152-9468-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Len Brown <lenb@kernel.org>,
+	stable@vger.kernel.org, Jiang Liu <jiang.liu@huawei.com>
+Subject: Re: [BUGFIX v2 2/4] ACPI, DOCK: resolve possible deadlock scenarios
+Date: Mon, 17 Jun 2013 13:40:32 +0200
+Message-ID: <2972274.Y9Nv7DUfsQ@vostro.rjw.lan>
+In-Reply-To: <51BDF1E0.5070201@gmail.com>
+References: <1371238081-32260-1-git-send-email-jiang.liu@huawei.com> <2139297.LeMhgEjsya@vostro.rjw.lan> <51BDF1E0.5070201@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Changeset "3b63aaa70e1 PCI: acpiphp: Do not use ACPI PCI subdriver
-mechanism" causes a regression which breaks ACPI dock support,
-please refer to https://bugzilla.kernel.org/show_bug.cgi?id=59501
+On Monday, June 17, 2013 01:12:00 AM Jiang Liu wrote:
+> On 06/16/2013 06:54 AM, Rafael J. Wysocki wrote:
+> > On Saturday, June 15, 2013 11:20:40 PM Rafael J. Wysocki wrote:
+> >> On Saturday, June 15, 2013 10:17:42 PM Rafael J. Wysocki wrote:
+> > 
+> > [...]
+> > 
+> >>
+> >> Which sysfs interfaces do you mean, by the way?
+> >>
+> >> If you mean "eject", then it takes acpi_scan_lock and hotplug_dock_devices()
+> >> should always be run under acpi_scan_lock too.  It isn't at the moment,
+> >> because write_undock() doesn't take acpi_scan_lock(), but this is an obvious
+> >> bug (so I'm going to send a patch to fix it in a while).
+> >>
+> >> With that bug fixed, the possible race between acpi_eject_store() and
+> >> hotplug_dock_devices() should be prevented from happening, so perhaps we're
+> >> worrying about something that cannot happen?
+> > 
+> > So here's a question: What particular races are possible if we remove
+> > ds->hp_lock entirely without doing anything else just yet?  I mean, how to
+> > *trigger* them from the start to the end and not how they can possibly happen
+> > but never do, because there's no way they can be actually triggered?
+> Hi Rafael,
+>     I have no really platform which triggers this bug, but I may imagine
+> a possible platform if it's valid for explanation.
+>     Let's think about a laptop dock station with a thunderbolt
+> controller built-in. The dock station is managed by dock driver and
+> acpiphp driver. And the PCIe hierarchy managed by the thunderbolt
+> controller may be managed by dock driver and ACPIPHP driver too.
+> So it may trigger the issue by pressing the dock button and unplugging
+> thunderbolt cable concurrently.
+>     But after all, this is all by imagination:). We may need to find a
+> simple and quick solution for 3.10 and the stable trees and enhance the
+> solution later to avoid introducing new bugs while fixing a bug.
 
-The root cause is that changeset 3b63aaa70e1 changed the relative
-initialization order of ACPI dock subsystem and acpiphp driver,
-and acpiphp driver has dependency on ACPI dock subsystem's
-initialization result, so that acpiphp can't correctly detect ACPI
-dock stations now.
+Well, if that particular bug is not fixed in 3,10, it won't be a tragedy,
+and I *really* don't want that code to get substantially more complex than
+it is now.
 
-On the other hand, ACPI dock is a built-in driver, so we could
-explicitly initialize it before the acpiphp driver is used.
+Thanks,
+Rafael
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Reported-by: Alexander E. Patrakov <patrakov@gmail.com>
-Tested-by: Alexander E. Patrakov <patrakov@gmail.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: linux-acpi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Cc: <stable@vger.kernel.org> # 3.9+
----
- drivers/acpi/dock.c     | 7 +------
- drivers/acpi/internal.h | 5 +++++
- drivers/acpi/scan.c     | 1 +
- 3 files changed, 7 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/acpi/dock.c b/drivers/acpi/dock.c
-index 4fdea38..02b0563 100644
---- a/drivers/acpi/dock.c
-+++ b/drivers/acpi/dock.c
-@@ -1033,7 +1033,7 @@ find_dock_and_bay(acpi_handle handle, u32 lvl, void *context, void **rv)
- 	return AE_OK;
- }
- 
--static int __init dock_init(void)
-+int __init acpi_dock_init(void)
- {
- 	if (acpi_disabled)
- 		return 0;
-@@ -1062,9 +1062,4 @@ static void __exit dock_exit(void)
- 		dock_remove(dock_station);
- }
- 
--/*
-- * Must be called before drivers of devices in dock, otherwise we can't know
-- * which devices are in a dock
-- */
--subsys_initcall(dock_init);
- module_exit(dock_exit);
-diff --git a/drivers/acpi/internal.h b/drivers/acpi/internal.h
-index 297cbf4..c610a76 100644
---- a/drivers/acpi/internal.h
-+++ b/drivers/acpi/internal.h
-@@ -40,6 +40,11 @@ void acpi_container_init(void);
- #else
- static inline void acpi_container_init(void) {}
- #endif
-+#ifdef CONFIG_ACPI_DOCK
-+void acpi_dock_init(void);
-+#else
-+static inline void acpi_dock_init(void) {}
-+#endif
- #ifdef CONFIG_ACPI_HOTPLUG_MEMORY
- void acpi_memory_hotplug_init(void);
- #else
-diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
-index 44225cb..4148163 100644
---- a/drivers/acpi/scan.c
-+++ b/drivers/acpi/scan.c
-@@ -2045,6 +2045,7 @@ int __init acpi_scan_init(void)
- 	acpi_lpss_init();
- 	acpi_container_init();
- 	acpi_memory_hotplug_init();
-+	acpi_dock_init();
- 
- 	mutex_lock(&acpi_scan_lock);
- 	/*
 -- 
-1.8.1.2
-
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
