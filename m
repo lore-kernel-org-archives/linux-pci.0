@@ -1,122 +1,114 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:22452 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757660Ab3FGWdc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 7 Jun 2013 18:33:32 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-Subject: [PATCH v3 18/27] x86, irq: More strict checking about registering ioapic
-Date: Fri,  7 Jun 2013 15:31:04 -0700
-Message-Id: <1370644273-10495-19-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1370644273-10495-1-git-send-email-yinghai@kernel.org>
-References: <1370644273-10495-1-git-send-email-yinghai@kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:49921 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752587Ab3FQUfC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 17 Jun 2013 16:35:02 -0400
+Message-ID: <51BF72DA.3050106@redhat.com>
+Date: Mon, 17 Jun 2013 16:34:34 -0400
+From: Don Dutile <ddutile@redhat.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <liuj97@gmail.com>, Yinghai Lu <yinghai@kernel.org>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Joerg Roedel <joro@8bytes.org>,
+	Ingo Molnar <mingo@kernel.org>, Hannes Reinecke <hare@suse.de>,
+	"Li, Zhen-Hua" <zhen-hual@hp.com>, iommu@lists.linux-foundation.org
+Subject: Re: [PATCH v3, part2 17/20] PCI, iommu: use hotplug-safe iterators
+ to walk PCI buses
+References: <1369583597-3801-1-git-send-email-jiang.liu@huawei.com> <1369583597-3801-18-git-send-email-jiang.liu@huawei.com> <20130617202010.GC7877@google.com>
+In-Reply-To: <20130617202010.GC7877@google.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-1. check overlaping gsi range
-for hot-add ioapic case, BIOS may have some entries in MADT
-and also have setting in pci root bus with _GSB of DSDT.
+On 06/17/2013 04:20 PM, Bjorn Helgaas wrote:
+> On Sun, May 26, 2013 at 11:53:14PM +0800, Jiang Liu wrote:
+>> Enhance iommu drviers to use hotplug-safe iterators to walk
+>> PCI buses.
+>>
+>> Signed-off-by: Jiang Liu<jiang.liu@huawei.com>
+>> Cc: Joerg Roedel<joro@8bytes.org>
+>> Cc: Ingo Molnar<mingo@kernel.org>
+>> Cc: Donald Dutile<ddutile@redhat.com>
+>> Cc: Hannes Reinecke<hare@suse.de>
+>> Cc: "Li, Zhen-Hua"<zhen-hual@hp.com>
+>> Cc: iommu@lists.linux-foundation.org
+>> Cc: linux-kernel@vger.kernel.org
+>> ---
+>>   drivers/iommu/amd_iommu.c | 4 +++-
+>>   drivers/iommu/dmar.c      | 6 ++++--
+>
+> The AMD and Intel IOMMU drivers are very different, and I would
+> split this into a patch for each.
+>
++1
 
-2. make bad_ioapics check idx instead of nr_ioapics.
-for hotadd ioapic could find spare slot in the middle later.
-
-3. check if entries is in right range.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
----
- arch/x86/kernel/apic/io_apic.c | 29 ++++++++++++++++++++++-------
- 1 file changed, 22 insertions(+), 7 deletions(-)
-
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 7f95bbe..850d8e99 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -3818,7 +3818,7 @@ void __init ioapic_insert_resources(void)
- 	}
- }
- 
--int mp_find_ioapic(u32 gsi)
-+static int __mp_find_ioapic(u32 gsi, bool quiet)
- {
- 	int i = 0;
- 
-@@ -3833,10 +3833,16 @@ int mp_find_ioapic(u32 gsi)
- 			return i;
- 	}
- 
--	printk(KERN_ERR "ERROR: Unable to locate IOAPIC for GSI %d\n", gsi);
-+	if (!quiet)
-+		pr_err("ERROR: Unable to locate IOAPIC for GSI %d\n", gsi);
- 	return -1;
- }
- 
-+int mp_find_ioapic(u32 gsi)
-+{
-+	return __mp_find_ioapic(gsi, false);
-+}
-+
- int mp_find_ioapic_pin(int ioapic, u32 gsi)
- {
- 	struct mp_ioapic_gsi *gsi_cfg;
-@@ -3851,11 +3857,11 @@ int mp_find_ioapic_pin(int ioapic, u32 gsi)
- 	return gsi - gsi_cfg->gsi_base;
- }
- 
--static __init int bad_ioapic(unsigned long address)
-+static __init int bad_ioapic(int idx, unsigned long address)
- {
--	if (nr_ioapics >= MAX_IO_APICS) {
-+	if (idx >= MAX_IO_APICS) {
- 		pr_warn("WARNING: Max # of I/O APICs (%d) exceeded (found %d), skipping\n",
--			MAX_IO_APICS, nr_ioapics);
-+			MAX_IO_APICS, idx);
- 		return 1;
- 	}
- 	if (!address) {
-@@ -3886,14 +3892,17 @@ static __init int bad_ioapic_register(int idx)
- 
- void __init mp_register_ioapic(int id, u32 address, u32 gsi_base)
- {
--	int idx = 0;
-+	int idx;
- 	int entries;
- 	struct mp_ioapic_gsi *gsi_cfg;
- 
--	if (bad_ioapic(address))
-+	idx = __mp_find_ioapic(gsi_base, true);
-+	if (idx >= 0)
- 		return;
- 
- 	idx = nr_ioapics;
-+	if (bad_ioapic(idx, address))
-+		return;
- 
- 	ioapics[idx].mp_config.type = MP_IOAPIC;
- 	ioapics[idx].mp_config.flags = MPC_APIC_USABLE;
-@@ -3914,6 +3923,12 @@ void __init mp_register_ioapic(int id, u32 address, u32 gsi_base)
- 	 * and to prevent reprogramming of IOAPIC pins (PCI GSIs).
- 	 */
- 	entries = io_apic_get_redir_entries(idx);
-+
-+	if (!entries || entries > MP_MAX_IOAPIC_PIN) {
-+		clear_fixmap(FIX_IO_APIC_BASE_0 + idx);
-+		return;
-+	}
-+
- 	gsi_cfg = mp_ioapic_gsi_routing(idx);
- 	gsi_cfg->gsi_base = gsi_base;
- 	gsi_cfg->gsi_end = gsi_base + entries - 1;
--- 
-1.8.1.4
+>>   2 files changed, 7 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
+>> index 21d02b0..eef7a7e 100644
+>> --- a/drivers/iommu/amd_iommu.c
+>> +++ b/drivers/iommu/amd_iommu.c
+>> @@ -352,6 +352,7 @@ static int init_iommu_group(struct device *dev)
+>>   	struct iommu_dev_data *dev_data;
+>>   	struct iommu_group *group;
+>>   	struct pci_dev *dma_pdev;
+>> +	struct pci_bus *b = NULL;
+>>   	int ret;
+>>
+>>   	group = iommu_group_get(dev);
+>> @@ -388,7 +389,7 @@ static int init_iommu_group(struct device *dev)
+>>   		 * the alias.  Be careful to also test the parent device if
+>>   		 * we think the alias is the root of the group.
+>>   		 */
+>> -		bus = pci_find_bus(0, alias>>  8);
+>> +		b = bus = pci_get_bus(0, alias>>  8);
+>>   		if (!bus)
+>>   			goto use_group;
+>>
+>> @@ -408,6 +409,7 @@ static int init_iommu_group(struct device *dev)
+>>   	dma_pdev = get_isolation_root(pci_dev_get(to_pci_dev(dev)));
+>>   use_pdev:
+>>   	ret = use_pdev_iommu_group(dma_pdev, dev);
+>> +	pci_bus_put(b);
+>>   	pci_dev_put(dma_pdev);
+>>   	return ret;
+>>   use_group:
+>> diff --git a/drivers/iommu/dmar.c b/drivers/iommu/dmar.c
+>> index a7967ce..7162787 100644
+>> --- a/drivers/iommu/dmar.c
+>> +++ b/drivers/iommu/dmar.c
+>> @@ -67,12 +67,12 @@ static void __init dmar_register_drhd_unit(struct dmar_drhd_unit *drhd)
+>>   static int __init dmar_parse_one_dev_scope(struct acpi_dmar_device_scope *scope,
+>>   					   struct pci_dev **dev, u16 segment)
+>>   {
+>> -	struct pci_bus *bus;
+>> +	struct pci_bus *b, *bus;
+>>   	struct pci_dev *pdev = NULL;
+>>   	struct acpi_dmar_pci_path *path;
+>>   	int count;
+>>
+>> -	bus = pci_find_bus(segment, scope->bus);
+>> +	b = bus = pci_get_bus(segment, scope->bus);
+>>   	path = (struct acpi_dmar_pci_path *)(scope + 1);
+>>   	count = (scope->length - sizeof(struct acpi_dmar_device_scope))
+>>   		/ sizeof(struct acpi_dmar_pci_path);
+>> @@ -97,6 +97,8 @@ static int __init dmar_parse_one_dev_scope(struct acpi_dmar_device_scope *scope,
+>>   		count --;
+>>   		bus = pdev->subordinate;
+>>   	}
+>> +	pci_bus_put(b);
+>> +
+>>   	if (!pdev) {
+>>   		pr_warn("Device scope device [%04x:%02x:%02x.%02x] not found\n",
+>>   			segment, scope->bus, path->dev, path->fn);
+>> --
+>> 1.8.1.2
+>>
 
