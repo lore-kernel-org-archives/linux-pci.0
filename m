@@ -1,101 +1,114 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f47.google.com ([209.85.220.47]:55232 "EHLO
-	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1423279Ab3FUQNP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Jun 2013 12:13:15 -0400
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Jeremy Fitzhardinge <jeremy@goop.org>
-Cc: liuj97@gmail.com, Jiang Liu <jiang.liu@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	xen-devel@lists.xensource.com,
-	virtualization@lists.linux-foundation.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Chris Metcalf <cmetcalf@tilera.com>,
+Received: from mail-ie0-f179.google.com ([209.85.223.179]:54595 "EHLO
+	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751320Ab3FQUUO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Jun 2013 16:20:14 -0400
+Received: by mail-ie0-f179.google.com with SMTP id c10so7954187ieb.38
+        for <linux-pci@vger.kernel.org>; Mon, 17 Jun 2013 13:20:14 -0700 (PDT)
+Date: Mon, 17 Jun 2013 14:20:10 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Jiang Liu <liuj97@gmail.com>
+Cc: Yinghai Lu <yinghai@kernel.org>, Jiang Liu <jiang.liu@huawei.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Thierry Reding <thierry.reding@avionic-design.de>
-Subject: [PATCH v2 3/3] PCI: kill pci_scan_bus_parented()
-Date: Sat, 22 Jun 2013 00:12:48 +0800
-Message-Id: <1371831169-17291-4-git-send-email-liuj97@gmail.com>
-In-Reply-To: <1371831169-17291-1-git-send-email-liuj97@gmail.com>
-References: <1371831169-17291-1-git-send-email-liuj97@gmail.com>
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Joerg Roedel <joro@8bytes.org>,
+	Ingo Molnar <mingo@kernel.org>,
+	Donald Dutile <ddutile@redhat.com>,
+	Hannes Reinecke <hare@suse.de>,
+	"Li, Zhen-Hua" <zhen-hual@hp.com>, iommu@lists.linux-foundation.org
+Subject: Re: [PATCH v3, part2 17/20] PCI, iommu: use hotplug-safe iterators
+ to walk PCI buses
+Message-ID: <20130617202010.GC7877@google.com>
+References: <1369583597-3801-1-git-send-email-jiang.liu@huawei.com>
+ <1369583597-3801-18-git-send-email-jiang.liu@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1369583597-3801-18-git-send-email-jiang.liu@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <jiang.liu@huawei.com>
+On Sun, May 26, 2013 at 11:53:14PM +0800, Jiang Liu wrote:
+> Enhance iommu drviers to use hotplug-safe iterators to walk
+> PCI buses.
+> 
+> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+> Cc: Joerg Roedel <joro@8bytes.org>
+> Cc: Ingo Molnar <mingo@kernel.org>
+> Cc: Donald Dutile <ddutile@redhat.com>
+> Cc: Hannes Reinecke <hare@suse.de>
+> Cc: "Li, Zhen-Hua" <zhen-hual@hp.com>
+> Cc: iommu@lists.linux-foundation.org
+> Cc: linux-kernel@vger.kernel.org
+> ---
+>  drivers/iommu/amd_iommu.c | 4 +++-
+>  drivers/iommu/dmar.c      | 6 ++++--
 
-Now there's no caller of pci_scan_bus_parented(), so kill it.
+The AMD and Intel IOMMU drivers are very different, and I would
+split this into a patch for each.
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Cc: Chris Metcalf <cmetcalf@tilera.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Thierry Reding <thierry.reding@avionic-design.de>
-Cc: linux-kernel@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
----
- arch/tile/kernel/pci.c |  3 ---
- drivers/pci/probe.c    | 19 -------------------
- include/linux/pci.h    |  2 --
- 3 files changed, 24 deletions(-)
-
-diff --git a/arch/tile/kernel/pci.c b/arch/tile/kernel/pci.c
-index 67237d3..936e087 100644
---- a/arch/tile/kernel/pci.c
-+++ b/arch/tile/kernel/pci.c
-@@ -309,9 +309,6 @@ int __init pcibios_init(void)
- 			 *
- 			 * It reads the PCI tree for this bus into the Linux
- 			 * data structures.
--			 *
--			 * This is inlined in linux/pci.h and calls into
--			 * pci_scan_bus_parented() in probe.c.
- 			 */
- 			pci_add_resource(&resources, &ioport_resource);
- 			pci_add_resource(&resources, &iomem_resource);
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index ed768d8..af30772 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1901,25 +1901,6 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
- }
- EXPORT_SYMBOL(pci_scan_root_bus);
- 
--/* Deprecated; use pci_scan_root_bus() instead */
--struct pci_bus *pci_scan_bus_parented(struct device *parent,
--		int bus, struct pci_ops *ops, void *sysdata)
--{
--	LIST_HEAD(resources);
--	struct pci_bus *b;
--
--	pci_add_resource(&resources, &ioport_resource);
--	pci_add_resource(&resources, &iomem_resource);
--	pci_add_resource(&resources, &busn_resource);
--	b = pci_create_root_bus(parent, bus, ops, sysdata, &resources);
--	if (b)
--		pci_scan_child_bus(b);
--	else
--		pci_free_resource_list(&resources);
--	return b;
--}
--EXPORT_SYMBOL(pci_scan_bus_parented);
--
- struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops,
- 					void *sysdata)
- {
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index f1229c7..41ec0a5 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -720,8 +720,6 @@ void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
- void pcibios_scan_specific_bus(int busn);
- struct pci_bus *pci_find_bus(int domain, int busnr);
- void pci_bus_add_devices(const struct pci_bus *bus);
--struct pci_bus *pci_scan_bus_parented(struct device *parent, int bus,
--				      struct pci_ops *ops, void *sysdata);
- struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops, void *sysdata);
- struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 				    struct pci_ops *ops, void *sysdata,
--- 
-1.8.1.2
-
+>  2 files changed, 7 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
+> index 21d02b0..eef7a7e 100644
+> --- a/drivers/iommu/amd_iommu.c
+> +++ b/drivers/iommu/amd_iommu.c
+> @@ -352,6 +352,7 @@ static int init_iommu_group(struct device *dev)
+>  	struct iommu_dev_data *dev_data;
+>  	struct iommu_group *group;
+>  	struct pci_dev *dma_pdev;
+> +	struct pci_bus *b = NULL;
+>  	int ret;
+>  
+>  	group = iommu_group_get(dev);
+> @@ -388,7 +389,7 @@ static int init_iommu_group(struct device *dev)
+>  		 * the alias.  Be careful to also test the parent device if
+>  		 * we think the alias is the root of the group.
+>  		 */
+> -		bus = pci_find_bus(0, alias >> 8);
+> +		b = bus = pci_get_bus(0, alias >> 8);
+>  		if (!bus)
+>  			goto use_group;
+>  
+> @@ -408,6 +409,7 @@ static int init_iommu_group(struct device *dev)
+>  	dma_pdev = get_isolation_root(pci_dev_get(to_pci_dev(dev)));
+>  use_pdev:
+>  	ret = use_pdev_iommu_group(dma_pdev, dev);
+> +	pci_bus_put(b);
+>  	pci_dev_put(dma_pdev);
+>  	return ret;
+>  use_group:
+> diff --git a/drivers/iommu/dmar.c b/drivers/iommu/dmar.c
+> index a7967ce..7162787 100644
+> --- a/drivers/iommu/dmar.c
+> +++ b/drivers/iommu/dmar.c
+> @@ -67,12 +67,12 @@ static void __init dmar_register_drhd_unit(struct dmar_drhd_unit *drhd)
+>  static int __init dmar_parse_one_dev_scope(struct acpi_dmar_device_scope *scope,
+>  					   struct pci_dev **dev, u16 segment)
+>  {
+> -	struct pci_bus *bus;
+> +	struct pci_bus *b, *bus;
+>  	struct pci_dev *pdev = NULL;
+>  	struct acpi_dmar_pci_path *path;
+>  	int count;
+>  
+> -	bus = pci_find_bus(segment, scope->bus);
+> +	b = bus = pci_get_bus(segment, scope->bus);
+>  	path = (struct acpi_dmar_pci_path *)(scope + 1);
+>  	count = (scope->length - sizeof(struct acpi_dmar_device_scope))
+>  		/ sizeof(struct acpi_dmar_pci_path);
+> @@ -97,6 +97,8 @@ static int __init dmar_parse_one_dev_scope(struct acpi_dmar_device_scope *scope,
+>  		count --;
+>  		bus = pdev->subordinate;
+>  	}
+> +	pci_bus_put(b);
+> +
+>  	if (!pdev) {
+>  		pr_warn("Device scope device [%04x:%02x:%02x.%02x] not found\n",
+>  			segment, scope->bus, path->dev, path->fn);
+> -- 
+> 1.8.1.2
+> 
