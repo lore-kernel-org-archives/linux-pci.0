@@ -1,43 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from nodalink.pck.nerim.net ([62.212.105.220]:52896 "EHLO
-	paradis.irqsave.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754816Ab3FCT2d (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Jun 2013 15:28:33 -0400
-Date: Mon, 3 Jun 2013 21:29:59 +0200
-From: =?iso-8859-1?Q?Beno=EEt?= Canet <benoit.canet@irqsave.net>
-To: Don Dutile <ddutile@redhat.com>
-Cc: =?iso-8859-1?Q?Beno=EEt?= Canet <benoit.canet@irqsave.net>,
-	linux-pci@vger.kernel.org, qemu-devel@nongnu.org,
-	iommu@lists.linux-foundation.org, alex.williamson@redhat.com
-Subject: Re: [Qemu-devel] SR-IOV PF reset and QEMU VFs VFIO passthrough
-Message-ID: <20130603192958.GB31044@irqsave.net>
-References: <20130601121320.GC5157@irqsave.net>
- <51ACE340.1030406@redhat.com>
+Received: from mail-vb0-f54.google.com ([209.85.212.54]:54333 "EHLO
+	mail-vb0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751361Ab3FQW53 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Jun 2013 18:57:29 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <51ACE340.1030406@redhat.com>
+In-Reply-To: <51BE7AD5.5010300@huawei.com>
+References: <1370504093-14908-1-git-send-email-wangyijing@huawei.com>
+	<20130615002224.GA21643@google.com>
+	<51BE7AD5.5010300@huawei.com>
+Date: Mon, 17 Jun 2013 15:57:28 -0700
+Message-ID: <CA+8MBb+BSNnLtR8jZinTh9h01f3=Zeu+kX6xke1Ei08HYzRQvg@mail.gmail.com>
+Subject: Re: [PATCH -v5 0/8] Add hostbridge resource release to support root
+ bus hotplug in IA64
+From: Tony Luck <tony.luck@gmail.com>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org,
+	"linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>,
+	Fenghua Yu <fenghua.yu@intel.com>,
+	Hanjun Guo <guohanjun@huawei.com>,
+	Liu Jiang <jiang.liu@huawei.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> >to a guest will the consequences of a PF FLR be handled fine by QEMU and the
-> >guest ?
-> >
-> the reset occurs long before the device is passed to the guest.
+On Sun, Jun 16, 2013 at 7:56 PM, Yijing Wang <wangyijing@huawei.com> wrote:
+>> Tony, what do you think about this?  It only touches ia64, and I
+>> have no way to build or test it.  So maybe you should handle this?
+>>
+>> I haven't reviewed it, but I think it's the right general direction,
+>> at least.
+>>
+> Bjorn, thanks for your comments!
+>
+> Hi Tony, this series mainly to make pci root bus hotplug happy in IA64.
+> I cannot test the first two patch(SGI related) in my IA64 machine.
+> But the rest patches has been tested in my ia64 machine, and result is ok.
 
-I was asking this because the PF driver should reset the PF while the VF are
-used by VFIO/QEMU when the PF doesn't respond anymore.
+I'd like to understand the dependencies on Bjorn's pci-next tree.  If
+this series
+actually only depends on Linus' v3.10-rc6 I'd rather start from there (because
+then I don't need to coordinate "please-pull" messages when sending things
+to Linus).  If we really do need things from the pci-next tree, well that's OK
+too, but I'd still like to know what they are.
 
-> The PF driver doesn't do the config space restore -- it's done in PCI core code.
-> >files used by QEMU disappear and reappear messing the QEMU VFIO passthrough or
-> As stated above, the devices don't disappear from the device tree, so they don't
-> get removed/added to the /sys(/bus/pci/...) files.
-> 
-> >will it goes smoothly ?
-> >
-> it goes smoothly today.... :-/
-
-Happy to read that thanks for the answer.
-
-Best regards
-
-Benoît Canet
+-Tony
