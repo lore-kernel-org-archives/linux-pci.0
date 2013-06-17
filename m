@@ -1,70 +1,53 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>
-Cc: 'Kukjin Kim' <kgene.kim@samsung.com>,
-	'Bjorn Helgaas' <bhelgaas@google.com>,
-	linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org,
-	devicetree-discuss@lists.ozlabs.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	'Grant Likely' <grant.likely@secretlab.ca>,
-	'Andrew Murray' <andrew.murray@arm.com>,
-	'Thierry Reding' <thierry.reding@avionic-design.de>,
-	'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>,
-	'Arnd Bergmann' <arnd@arndb.de>,
-	'Surendranath Gurivireddy Balla' <suren.reddy@samsung.com>,
-	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
-	'Thomas Abraham' <thomas.abraham@linaro.org>,
-	'Tomasz Figa' <tomasz.figa@gmail.com>,
-	Jingoo Han <jg1.han@samsung.com>
-References: <00c201ce6d85$83b072a0$8b1157e0$@samsung.com>
- <20130620094835.3f1f34c2@skate> <00c301ce6d8b$d198b210$74ca1630$@samsung.com>
- <20130620100013.6000458f@skate>
-In-reply-to: <20130620100013.6000458f@skate>
-Subject: Re: [PATCH V6 3/3] ARM: dts: Add pcie controller node for Samsung
- EXYNOS5440 SoC
-Date: Thu, 20 Jun 2013 17:40:13 +0900
-Message-id: <00c901ce6d91$c8382010$58a86030$@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-oa0-f46.google.com ([209.85.219.46]:60766 "EHLO
+	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752233Ab3FQXLH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Jun 2013 19:11:07 -0400
+Received: by mail-oa0-f46.google.com with SMTP id h1so4192222oag.5
+        for <linux-pci@vger.kernel.org>; Mon, 17 Jun 2013 16:11:07 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CA+8MBb+BSNnLtR8jZinTh9h01f3=Zeu+kX6xke1Ei08HYzRQvg@mail.gmail.com>
+References: <1370504093-14908-1-git-send-email-wangyijing@huawei.com>
+ <20130615002224.GA21643@google.com> <51BE7AD5.5010300@huawei.com> <CA+8MBb+BSNnLtR8jZinTh9h01f3=Zeu+kX6xke1Ei08HYzRQvg@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 17 Jun 2013 17:10:47 -0600
+Message-ID: <CAErSpo4PhY5gzdxK6NSRxOquuQMojnBX9wRm6Pb-uxq6t3i=-Q@mail.gmail.com>
+Subject: Re: [PATCH -v5 0/8] Add hostbridge resource release to support root
+ bus hotplug in IA64
+To: Tony Luck <tony.luck@gmail.com>
+Cc: Yijing Wang <wangyijing@huawei.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>,
+	Fenghua Yu <fenghua.yu@intel.com>,
+	Hanjun Guo <guohanjun@huawei.com>,
+	Liu Jiang <jiang.liu@huawei.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, June 20, 2013 5:00 PM, Thomas Petazzoni wrote:
-> 
-> Dear Jingoo Han,
-> 
-> On Thu, 20 Jun 2013 16:57:32 +0900, Jingoo Han wrote:
-> 
-> > > > -	pinctrl {
-> > > > +	pin_ctrl: pinctrl {
-> > > >  		compatible = "samsung,exynos5440-pinctrl";
-> > >
-> > > I know I'm nitpicking, but isn't this change completely unrelated to
-> > > PCIe support?
-> >
-> > This change is related to PCIe support.
-> > Without this, I cannot use gpio binding.
-> >
-> > This change was guided by Thomas Abraham (Author of Samsung pinctrl).
-> > Also, it was confirmed by Kukjin Kim (Maintainer of Samsung SoC).
-> >
-> > Thank you for your caring. :)
-> 
-> I mean, the change is fine for sure, but it should maybe part of a
-> separate patch as it is more a fix than really the introduction of the
-> PCIe controller node, as the patch title suggests. This would also for
-> example allow this fix to be merged right now (for 3.11), regardless of
-> what happens for the rest of your PCIe patches.
-> 
-CC'ed Tomasz Figa
+On Mon, Jun 17, 2013 at 4:57 PM, Tony Luck <tony.luck@gmail.com> wrote:
+> On Sun, Jun 16, 2013 at 7:56 PM, Yijing Wang <wangyijing@huawei.com> wrote:
+>>> Tony, what do you think about this?  It only touches ia64, and I
+>>> have no way to build or test it.  So maybe you should handle this?
+>>>
+>>> I haven't reviewed it, but I think it's the right general direction,
+>>> at least.
+>>>
+>> Bjorn, thanks for your comments!
+>>
+>> Hi Tony, this series mainly to make pci root bus hotplug happy in IA64.
+>> I cannot test the first two patch(SGI related) in my IA64 machine.
+>> But the rest patches has been tested in my ia64 machine, and result is ok.
+>
+> I'd like to understand the dependencies on Bjorn's pci-next tree.  If
+> this series
+> actually only depends on Linus' v3.10-rc6 I'd rather start from there (because
+> then I don't need to coordinate "please-pull" messages when sending things
+> to Linus).  If we really do need things from the pci-next tree, well that's OK
+> too, but I'd still like to know what they are.
 
+I don't think it depends on anything in my pci-next tree.  I just
+applied Yijing's v5 series to v3.10-rc1 with no issues.
 
-OK, I see.
-I will separate this patch to two patches, as Tomasz Figa mentioned.
-(http://www.spinics.net/lists/linux-samsung-soc/msg19639.html)
-Thank you.
-
-
-Best regards,
-Jingoo Han
-
+Bjorn
