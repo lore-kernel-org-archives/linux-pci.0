@@ -1,60 +1,126 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f179.google.com ([209.85.223.179]:56294 "EHLO
-	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752708Ab3F0TFD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 27 Jun 2013 15:05:03 -0400
+Received: from mail-ie0-f169.google.com ([209.85.223.169]:64450 "EHLO
+	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751073Ab3FQSYP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Jun 2013 14:24:15 -0400
+Received: by mail-ie0-f169.google.com with SMTP id 10so7898296ied.28
+        for <linux-pci@vger.kernel.org>; Mon, 17 Jun 2013 11:24:15 -0700 (PDT)
+Date: Mon, 17 Jun 2013 12:24:12 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Jiang Liu <liuj97@gmail.com>
+Cc: Yinghai Lu <yinghai@kernel.org>, Jiang Liu <jiang.liu@huawei.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Russell King <linux@arm.linux.org.uk>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Rob Herring <rob.herring@calxeda.com>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH v3, part2 20/20] PCI, ARM: use hotplug-safe PCI bus
+ iterators to walk PCI buses
+Message-ID: <20130617182412.GB4233@google.com>
+References: <1369583597-3801-1-git-send-email-jiang.liu@huawei.com>
+ <1369583597-3801-21-git-send-email-jiang.liu@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <1372177330-28013-5-git-send-email-mika.westerberg@linux.intel.com>
-References: <1372177330-28013-1-git-send-email-mika.westerberg@linux.intel.com>
-	<1372177330-28013-5-git-send-email-mika.westerberg@linux.intel.com>
-Date: Thu, 27 Jun 2013 12:05:02 -0700
-Message-ID: <CAE9FiQVt4gCiz20SmJVP6d7tXOior5Ehg+-c_fG7wFsDUj7H4Q@mail.gmail.com>
-Subject: Re: [PATCH 4/6] PCI: acpiphp: check for new devices on enabled host
-From: Yinghai Lu <yinghai@kernel.org>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	John Ronciak <john.ronciak@intel.com>,
-	Miles J Penner <miles.j.penner@intel.com>,
-	Bruce Allan <bruce.w.allan@intel.com>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"the arch/x86 maintainers" <x86@kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1369583597-3801-21-git-send-email-jiang.liu@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 25, 2013 at 9:22 AM, Mika Westerberg
-<mika.westerberg@linux.intel.com> wrote:
-> From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
->
-> Current acpiphp_check_bridge() implementation is pretty dumb:
->  - it enables the slot if it's not enabled and the slot status is
->    ACPI_STA_ALL;
->  - it disables the slot if it's enabled and slot is not in ACPI_STA_ALL
->    state.
->
-> This behavior is not enough to handle Thunderbolt chaining case
-> properly. We need to actually rescan for new devices even if a device
-> has already in the slot.
->
-> The new implementation disables and stops the slot if it's not in
-> ACPI_STA_ALL state.
->
-> For ACPI_STA_ALL state we first trim devices which don't respond and
-> look for the ones after that. We do that even if slot already enabled
-> (SLOT_ENABLED).
+On Sun, May 26, 2013 at 11:53:17PM +0800, Jiang Liu wrote:
+> Enhance ARM architecture specific code to use new hotplug-safe PCI
+> bus iterators to walk PCI buses.
+> 
+> Change pcibios_report_status implementation so that it doesn't access
+> pci_root_buses global list. The pci_root_buses list will be scheduled
+> to be removed.
+> 
+> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+> Cc: Russell King <linux@arm.linux.org.uk>
+> Cc: Thierry Reding <thierry.reding@avionic-design.de>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> Cc: Rob Herring <rob.herring@calxeda.com>
+> Cc: linux-arm-kernel@lists.infradead.org
+> Cc: linux-kernel@vger.kernel.org
+> ---
+>  arch/arm/kernel/bios32.c           | 13 +------------
+>  arch/arm/mach-footbridge/dc21285.c | 12 +++++++++++-
+>  2 files changed, 12 insertions(+), 13 deletions(-)
+> 
+> diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
+> index b2ed73c..50ebbe8 100644
+> --- a/arch/arm/kernel/bios32.c
+> +++ b/arch/arm/kernel/bios32.c
+> @@ -22,7 +22,7 @@ static int debug_pci;
+>   * We can't use pci_find_device() here since we are
+>   * called from interrupt context.
+>   */
+> -static void pcibios_bus_report_status(struct pci_bus *bus, u_int status_mask, int warn)
+> +void pcibios_bus_report_status(struct pci_bus *bus, u_int status_mask, int warn)
+>  {
+>  	struct pci_dev *dev;
+>  
+> @@ -55,17 +55,6 @@ static void pcibios_bus_report_status(struct pci_bus *bus, u_int status_mask, in
+>  			pcibios_bus_report_status(dev->subordinate, status_mask, warn);
+>  }
+>  
+> -void pcibios_report_status(u_int status_mask, int warn)
+> -{
+> -	struct list_head *l;
+> -
+> -	list_for_each(l, &pci_root_buses) {
+> -		struct pci_bus *bus = pci_bus_b(l);
+> -
+> -		pcibios_bus_report_status(bus, status_mask, warn);
+> -	}
+> -}
+> -
+>  /*
+>   * We don't use this to fix the device, but initialisation of it.
+>   * It's not the correct use for this, but it works.
+> diff --git a/arch/arm/mach-footbridge/dc21285.c b/arch/arm/mach-footbridge/dc21285.c
+> index a7cd2cf..a0f1d01 100644
+> --- a/arch/arm/mach-footbridge/dc21285.c
+> +++ b/arch/arm/mach-footbridge/dc21285.c
+> @@ -35,7 +35,16 @@
+>  				  PCI_STATUS_PARITY) << 16)
+>  
+>  extern int setup_arm_irq(int, struct irqaction *);
+> -extern void pcibios_report_status(u_int status_mask, int warn);
+> +extern void pcibios_report_bus_status(struct pci_bus *bus, u_int status_mask,
+> +				      int warn);
+> +
+> +static struct pci_bus *dc21285_root_bus;
+> +
+> +static void pcibios_report_status(u_int status_mask, int warn)
+> +{
+> +	if (dc21285_root_bus)
+> +		pcibios_report_bus_status(dc21285_root_bus, status_mask, warn);
+> +}
+>  
+>  static unsigned long
+>  dc21285_base_address(struct pci_bus *bus, unsigned int devfn)
+> @@ -376,5 +385,6 @@ void __init dc21285_preinit(void)
+>  
+>  void __init dc21285_postinit(void)
+>  {
+> +	dc21285_root_bus = pci_get_next_root_bus(NULL);
 
-that is not right, some time BUS_CHECK is even sent root bus.
-in that case, stop all devices in slots and load driver again.
+It seems sort of ugly to scan the bus in pcibios_init_hw(), which
+*returns* the struct pci_bus, then search for it here.  Why can't
+we just remember the bus we scanned?
 
-like you put one card in one slots, but all devices in other slots get stop
-and enable again.
+It's also a little dubious that we only do pcibios_report_status()
+for footbridge.  That makes it look like it's debug code that might
+not be necessary at all.
 
-Thanks
-
-Yinghai
+>  	register_isa_ports(DC21285_PCI_MEM, DC21285_PCI_IO, 0);
+>  }
+> -- 
+> 1.8.1.2
+> 
