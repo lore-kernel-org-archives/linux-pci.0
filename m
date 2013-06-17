@@ -1,158 +1,188 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:53679 "EHLO hydra.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759267Ab3E1Xjy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 28 May 2013 19:39:54 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jiang Liu <liuj97@gmail.com>, Yinghai Lu <yinghai@kernel.org>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Len Brown <lenb@kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
-Subject: Re: [PATCH v1 1/2] ACPI, PCI: remove unused global list acpi_pci_roots in pci_root.c
-Date: Wed, 29 May 2013 01:48:46 +0200
-Message-ID: <2988573.Onrd73VTTU@vostro.rjw.lan>
-In-Reply-To: <3502693.GdBGlhPugI@vostro.rjw.lan>
-References: <1368536439-19421-1-git-send-email-jiang.liu@huawei.com> <CAErSpo6-xtrNgPYxu_4QRtZs76P9B6b4JXQPENhX6hyNPpKx+g@mail.gmail.com> <3502693.GdBGlhPugI@vostro.rjw.lan>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:59687 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755584Ab3FQDBi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 16 Jun 2013 23:01:38 -0400
+Message-ID: <51BE7C01.802@huawei.com>
+Date: Mon, 17 Jun 2013 11:01:21 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Yinghai Lu <yinghai@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	Fenghua Yu <fenghua.yu@intel.com>,
+	Hanjun Guo <guohanjun@huawei.com>,
+	Jiang Liu <jiang.liu@huawei.com>, John Keller <jpk@sgi.com>,
+	Jay Lan <jlan@engr.sgi.com>, Jack Steiner <steiner@sgi.com>,
+	Mark Maule <maule@sgi.com>
+Subject: Re: [PATCH -v5 1/8] PCI/IA64: SN: remove sn_pci_window_fixup()
+References: <1370504093-14908-1-git-send-email-wangyijing@huawei.com> <1370504093-14908-2-git-send-email-wangyijing@huawei.com> <51BAD77D.5030007@huawei.com> <CAErSpo7A9rtww6rg58LVPigTM=jAPrgDLE0m1RqbtbGH=cf27w@mail.gmail.com>
+In-Reply-To: <CAErSpo7A9rtww6rg58LVPigTM=jAPrgDLE0m1RqbtbGH=cf27w@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, May 29, 2013 01:21:08 AM Rafael J. Wysocki wrote:
-> On Tuesday, May 28, 2013 04:37:03 PM Bjorn Helgaas wrote:
-> > On Tue, May 14, 2013 at 7:00 AM, Jiang Liu <liuj97@gmail.com> wrote:
-> > > Now the global list acpi_pci_roots pci_root.c is useless, remove it.
-> > >
-> > > Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-> > > Cc: Len Brown <lenb@kernel.org>
-> > > Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
-> > > Cc: linux-acpi@vger.kernel.org
-> > > Cc: linux-kernel@vger.kernel.org
-> > > ---
-> > >  drivers/acpi/pci_root.c | 25 +++----------------------
-> > >  include/acpi/acpi_bus.h |  1 -
-> > >  2 files changed, 3 insertions(+), 23 deletions(-)
-> > 
-> > This and the "use acpi_handle_print()" patch look fine to me.
-> > 
-> > Rafael, I can take them, or if you want to take them yourself, you can add
-> > 
-> >   Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+On 2013/6/15 8:48, Bjorn Helgaas wrote:
+> On Fri, Jun 14, 2013 at 2:42 AM, Yijing Wang <wangyijing@huawei.com> wrote:
+>> Hi Bjorn,
+>>    Do you know some body who still maintains SGI related code? I found some email delivery failures
+>> to John Keller <jpk@sgi.com>, Jack Steiner <steiner@sgi.com>, Mark Maule <maule@sgi.com>.
+>>
+>> Some messages like this:
+>>    ----- The following addresses had permanent delivery errors -----
+>> jpk@sgi.com
+>> steiner@sgi.com
+>> maule@sgi.com
+>>
+>> So these email address does not exist anymore ?
 > 
-> OK, I'll take them.
-
-Well, if I do that, there will be conflicts between our trees, so I think it's
-better if you handle them.
-
-Please add
-
-	Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-
-to both.
-
-Thanks,
-Rafael
-
-
-> > > diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-> > > index b80e06e..91ddfd6 100644
-> > > --- a/drivers/acpi/pci_root.c
-> > > +++ b/drivers/acpi/pci_root.c
-> > > @@ -65,10 +65,6 @@ static struct acpi_scan_handler pci_root_handler = {
-> > >         .detach = acpi_pci_root_remove,
-> > >  };
-> > >
-> > > -/* Lock to protect both acpi_pci_roots lists */
-> > > -static DEFINE_MUTEX(acpi_pci_root_lock);
-> > > -static LIST_HEAD(acpi_pci_roots);
-> > > -
-> > >  static DEFINE_MUTEX(osc_lock);
-> > >
-> > >  /**
-> > > @@ -423,7 +419,6 @@ static int acpi_pci_root_add(struct acpi_device *device,
-> > >                 }
-> > >         }
-> > >
-> > > -       INIT_LIST_HEAD(&root->node);
-> > >         root->device = device;
-> > >         root->segment = segment & 0xFFFF;
-> > >         strcpy(acpi_device_name(device), ACPI_PCI_ROOT_DEVICE_NAME);
-> > > @@ -501,10 +496,6 @@ static int acpi_pci_root_add(struct acpi_device *device,
-> > >          * TBD: Need PCI interface for enumeration/configuration of roots.
-> > >          */
-> > >
-> > > -       mutex_lock(&acpi_pci_root_lock);
-> > > -       list_add_tail(&root->node, &acpi_pci_roots);
-> > > -       mutex_unlock(&acpi_pci_root_lock);
-> > > -
-> > >         /*
-> > >          * Scan the Root Bridge
-> > >          * --------------------
-> > > @@ -518,7 +509,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
-> > >                             "Bus %04x:%02x not present in PCI namespace\n",
-> > >                             root->segment, (unsigned int)root->secondary.start);
-> > >                 result = -ENODEV;
-> > > -               goto out_del_root;
-> > > +               goto end;
-> > >         }
-> > >
-> > >         /* ASPM setting */
-> > > @@ -538,20 +529,13 @@ static int acpi_pci_root_add(struct acpi_device *device,
-> > >         if (system_state != SYSTEM_BOOTING) {
-> > >                 pcibios_resource_survey_bus(root->bus);
-> > >                 pci_assign_unassigned_bus_resources(root->bus);
-> > > -       }
-> > > -
-> > > -       /* need to after hot-added ioapic is registered */
-> > > -       if (system_state != SYSTEM_BOOTING)
-> > > +               /* need to after hot-added ioapic is registered */
-> > >                 pci_enable_bridges(root->bus);
-> > > +       }
-> > >
-> > >         pci_bus_add_devices(root->bus);
-> > >         return 1;
-> > >
-> > > -out_del_root:
-> > > -       mutex_lock(&acpi_pci_root_lock);
-> > > -       list_del(&root->node);
-> > > -       mutex_unlock(&acpi_pci_root_lock);
-> > > -
-> > >  end:
-> > >         kfree(root);
-> > >         return result;
-> > > @@ -568,9 +552,6 @@ static void acpi_pci_root_remove(struct acpi_device *device)
-> > >
-> > >         pci_remove_root_bus(root->bus);
-> > >
-> > > -       mutex_lock(&acpi_pci_root_lock);
-> > > -       list_del(&root->node);
-> > > -       mutex_unlock(&acpi_pci_root_lock);
-> > >         kfree(root);
-> > >  }
-> > >
-> > > diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
-> > > index 22ba56e..4eb9a88 100644
-> > > --- a/include/acpi/acpi_bus.h
-> > > +++ b/include/acpi/acpi_bus.h
-> > > @@ -447,7 +447,6 @@ int register_acpi_bus_type(struct acpi_bus_type *);
-> > >  int unregister_acpi_bus_type(struct acpi_bus_type *);
-> > >
-> > >  struct acpi_pci_root {
-> > > -       struct list_head node;
-> > >         struct acpi_device * device;
-> > >         struct pci_bus *bus;
-> > >         u16 segment;
-> > > --
-> > > 1.8.1.2
-> > >
+> There are still some @sgi.com email addresses in MAINTAINERS, though I
+> don't think there's an explicit Altix maintainer anymore.
 > 
+>> BTW, any chance to merge this series into 3.11? If there are still some problems, I
+>> will try my best to fix them.
+> 
+> I'm not opposed to merging it for v3.11, but I poked Tony since it
+> only touches ia64, and I don't think it actually depends on any
+> changes in the PCI core.
+
+Hi Bjorn,
+   Thanks for your help! I will try to explain this series to Tony, Hope he will like this series.
+
+Thanks!
+Yijing.
+
+> 
+> Bjorn
+> 
+>> On 2013/6/6 15:34, Yijing Wang wrote:
+>>> Currently, pcibios_bus_to_resource() and pcibios_resource_to_bus()
+>>> functions use pci_host_bridge_window in pci_host_bridge to translate
+>>> bus side to/from cpu side addresses. Pci_window in pci_controller
+>>> under IA64 is no used again, so it's no need to use sn_pci_window_fixup()
+>>> to setup pci_window again, remove it.
+>>>
+>>> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+>>> Cc: John Keller <jpk@sgi.com>
+>>> Cc: Jay Lan <jlan@engr.sgi.com>
+>>> Cc: Jack Steiner <steiner@sgi.com>
+>>> Cc: Mark Maule <maule@sgi.com>
+>>> Cc: Tony Luck <tony.luck@intel.com>
+>>> Cc: Fenghua Yu <fenghua.yu@intel.com>
+>>> Cc: linux-ia64@vger.kernel.org
+>>> ---
+>>>  arch/ia64/sn/kernel/io_init.c |   53 -----------------------------------------
+>>>  1 files changed, 0 insertions(+), 53 deletions(-)
+>>>
+>>> diff --git a/arch/ia64/sn/kernel/io_init.c b/arch/ia64/sn/kernel/io_init.c
+>>> index 238e2c5..06a172c 100644
+>>> --- a/arch/ia64/sn/kernel/io_init.c
+>>> +++ b/arch/ia64/sn/kernel/io_init.c
+>>> @@ -149,48 +149,6 @@ sn_legacy_pci_window_fixup(struct pci_controller *controller,
+>>>  }
+>>>
+>>>  /*
+>>> - * sn_pci_window_fixup() - Create a pci_window for each device resource.
+>>> - *                      It will setup pci_windows for use by
+>>> - *                      pcibios_bus_to_resource(), pcibios_resource_to_bus(),
+>>> - *                      etc.
+>>> - */
+>>> -static void
+>>> -sn_pci_window_fixup(struct pci_dev *dev, unsigned int count,
+>>> -                 s64 * pci_addrs)
+>>> -{
+>>> -     struct pci_controller *controller = PCI_CONTROLLER(dev->bus);
+>>> -     unsigned int i;
+>>> -     unsigned int idx;
+>>> -     unsigned int new_count;
+>>> -     struct pci_window *new_window;
+>>> -
+>>> -     if (count == 0)
+>>> -             return;
+>>> -     idx = controller->windows;
+>>> -     new_count = controller->windows + count;
+>>> -     new_window = kcalloc(new_count, sizeof(struct pci_window), GFP_KERNEL);
+>>> -     BUG_ON(new_window == NULL);
+>>> -     if (controller->window) {
+>>> -             memcpy(new_window, controller->window,
+>>> -                    sizeof(struct pci_window) * controller->windows);
+>>> -             kfree(controller->window);
+>>> -     }
+>>> -
+>>> -     /* Setup a pci_window for each device resource. */
+>>> -     for (i = 0; i <= PCI_ROM_RESOURCE; i++) {
+>>> -             if (pci_addrs[i] == -1)
+>>> -                     continue;
+>>> -
+>>> -             new_window[idx].offset = dev->resource[i].start - pci_addrs[i];
+>>> -             new_window[idx].resource = dev->resource[i];
+>>> -             idx++;
+>>> -     }
+>>> -
+>>> -     controller->windows = new_count;
+>>> -     controller->window = new_window;
+>>> -}
+>>> -
+>>> -/*
+>>>   * sn_io_slot_fixup() -   We are not running with an ACPI capable PROM,
+>>>   *                     and need to convert the pci_dev->resource
+>>>   *                     'start' and 'end' addresses to mapped addresses,
+>>> @@ -199,9 +157,7 @@ sn_pci_window_fixup(struct pci_dev *dev, unsigned int count,
+>>>  void
+>>>  sn_io_slot_fixup(struct pci_dev *dev)
+>>>  {
+>>> -     unsigned int count = 0;
+>>>       int idx;
+>>> -     s64 pci_addrs[PCI_ROM_RESOURCE + 1];
+>>>       unsigned long addr, end, size, start;
+>>>       struct pcidev_info *pcidev_info;
+>>>       struct sn_irq_info *sn_irq_info;
+>>> @@ -229,7 +185,6 @@ sn_io_slot_fixup(struct pci_dev *dev)
+>>>       for (idx = 0; idx <= PCI_ROM_RESOURCE; idx++) {
+>>>
+>>>               if (!pcidev_info->pdi_pio_mapped_addr[idx]) {
+>>> -                     pci_addrs[idx] = -1;
+>>>                       continue;
+>>>               }
+>>>
+>>> @@ -237,11 +192,8 @@ sn_io_slot_fixup(struct pci_dev *dev)
+>>>               end = dev->resource[idx].end;
+>>>               size = end - start;
+>>>               if (size == 0) {
+>>> -                     pci_addrs[idx] = -1;
+>>>                       continue;
+>>>               }
+>>> -             pci_addrs[idx] = start;
+>>> -             count++;
+>>>               addr = pcidev_info->pdi_pio_mapped_addr[idx];
+>>>               addr = ((addr << 4) >> 4) | __IA64_UNCACHED_OFFSET;
+>>>               dev->resource[idx].start = addr;
+>>> @@ -276,11 +228,6 @@ sn_io_slot_fixup(struct pci_dev *dev)
+>>>                                                IORESOURCE_ROM_BIOS_COPY;
+>>>               }
+>>>       }
+>>> -     /* Create a pci_window in the pci_controller struct for
+>>> -      * each device resource.
+>>> -      */
+>>> -     if (count > 0)
+>>> -             sn_pci_window_fixup(dev, count, pci_addrs);
+>>>
+>>>       sn_pci_fixup_slot(dev, pcidev_info, sn_irq_info);
+>>>  }
+>>>
+>>
+>>
+>> --
+>> Thanks!
+>> Yijing
+>>
+> 
+> .
+> 
+
+
 -- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+Thanks!
+Yijing
+
