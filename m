@@ -1,83 +1,119 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <1371668174-32115-1-git-send-email-rkrcmar@redhat.com>
-References: <1371668174-32115-1-git-send-email-rkrcmar@redhat.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f173.google.com ([209.85.223.173]:60330 "EHLO
+	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933069Ab3FRWss (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Jun 2013 18:48:48 -0400
+Received: by mail-ie0-f173.google.com with SMTP id k13so11695366iea.18
+        for <linux-pci@vger.kernel.org>; Tue, 18 Jun 2013 15:48:47 -0700 (PDT)
+Date: Tue, 18 Jun 2013 16:48:44 -0600
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 24 Jun 2013 19:38:45 -0600
-Message-ID: <CAErSpo7O2YUUq-Ninu+BdmnrDGcU_h5=h=v1MBCoLorSDZW=Ow@mail.gmail.com>
-Subject: Re: [PATCH] PCI: avoid NULL deref in alloc_pcie_link_state
-To: =?UTF-8?B?UmFkaW0gS3LEjW3DocWZ?= <rkrcmar@redhat.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Joe Lawrence <Joe.Lawrence@stratus.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	Isaku Yamahata <yamahata@valinux.co.jp>,
-	Alex Williamson <alex.williamson@redhat.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: linux-pci@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	linux-arm-kernel@lists.infradead.org,
+	Jason Cooper <jason@lakedaemon.net>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Maen Suleiman <maen@marvell.com>
+Subject: Re: [PATCH v2 2/8] PCI: Add registry of MSI chips
+Message-ID: <20130618224844.GC16134@google.com>
+References: <1370536888-8871-1-git-send-email-thomas.petazzoni@free-electrons.com>
+ <1370536888-8871-3-git-send-email-thomas.petazzoni@free-electrons.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1370536888-8871-3-git-send-email-thomas.petazzoni@free-electrons.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Michael, Alex, Isaku]
-
-On Wed, Jun 19, 2013 at 12:56 PM, Radim Krčmář <rkrcmar@redhat.com> wrote:
-> PCIe switch upstream port can be connected directly to the PCIe root bus
-> in QEMU; ASPM does not expect this topology and dereferences NULL pointer
-> when initializing.
->
-> I have not confirmed this can happen on real hardware, but it is presented
-> as a feature in QEMU, so there is no reason to panic if we can recover.
-
-This doesn't seem like a valid hardware topology to me.  If this *can*
-occur on real hardware, we should fix it in Linux.  If not, maybe QEMU
-should be changed to disallow it.
-
-> The dereference happens with topology defined by
->   -M q35 -device x3130-upstream,bus=pcie.0,id=upstream \
->   -device xio3130-downstream,bus=upstream,id=downstream,chassis=1
-> where on line drivers/pci/pcie/aspm.c:530 (alloc_pcie_link_state+13):
->                 parent = pdev->bus->parent->self->link_state;
-> "pdev->bus->parent->self == NULL", because "pdev->bus->parent" has no
-> "->parent", hence no "->self".
->
-> Even though discouraged by QEMU documentation, one can set up even
-> topology without the upstream port
->   -M q35 -device xio3130-downstream,bus=pcie.0,id=downstream,chassis=1
-> so "pdev->bus->parent == NULL", because "pdev->bus" is the root bus.
-> The patch checks for this too, because I do not like *NULL.
->
-> Right now, PCIe switch has to connect to the root port
->   -M q35 -device ioh3420,bus=pcie.0,id=root.0 \
->   -device x3130-upstream,bus=root.0,id=upstream \
->   -device xio3130-downstream,bus=upstream,id=downstream,chassis=1
->
-> Signed-off-by: Radim Krčmář <rkrcmar@redhat.com>
+On Thu, Jun 06, 2013 at 06:41:22PM +0200, Thomas Petazzoni wrote:
+> This commit adds a very basic registry of msi_chip structures, so that
+> an IRQ controller driver can register an msi_chip, and a PCIe host
+> controller can find it, based on a 'struct device_node'.
+> 
+> Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
 > ---
->  drivers/pci/pcie/aspm.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-> index 403a443..1ad1514 100644
-> --- a/drivers/pci/pcie/aspm.c
-> +++ b/drivers/pci/pcie/aspm.c
-> @@ -527,8 +527,8 @@ static struct pcie_link_state *alloc_pcie_link_state(struct pci_dev *pdev)
->         link->pdev = pdev;
->         if (pci_pcie_type(pdev) == PCI_EXP_TYPE_DOWNSTREAM) {
->                 struct pcie_link_state *parent;
-> -               parent = pdev->bus->parent->self->link_state;
-> -               if (!parent) {
-> +               if (!pdev->bus->parent || !pdev->bus->parent->self ||
-> +                   !(parent = pdev->bus->parent->self->link_state)) {
->                         kfree(link);
->                         return NULL;
->                 }
-> --
-> 1.8.1.4
+>  drivers/pci/msi.c   | 25 +++++++++++++++++++++++++
+>  include/linux/msi.h | 11 +++++++++++
+>  2 files changed, 36 insertions(+)
+> 
+> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> index 4dafac6..0f177ee 100644
+> --- a/drivers/pci/msi.c
+> +++ b/drivers/pci/msi.c
+> @@ -20,6 +20,7 @@
+>  #include <linux/errno.h>
+>  #include <linux/io.h>
+>  #include <linux/slab.h>
+> +#include <linux/of.h>
+>  
+>  #include "pci.h"
+>  
+> @@ -70,6 +71,30 @@ int __weak arch_msi_check_device(struct pci_dev *dev, int nvec, int type)
+>  # define HAVE_DEFAULT_MSI_SETUP_IRQS
+>  #endif
+>  
+> +#ifdef CONFIG_OF
+> +static LIST_HEAD(msi_chip_list);
+> +static DEFINE_MUTEX(msi_chip_mutex);
+> +
+> +void msi_chip_add(struct msi_chip *chip)
+> +{
+> +	mutex_lock(&msi_chip_mutex);
+> +	list_add(&chip->link, &msi_chip_list);
+> +	mutex_unlock(&msi_chip_mutex);
+> +}
+> +
+> +struct msi_chip *msi_chip_find_by_of_node(struct device_node *of_node)
+> +{
+> +	struct msi_chip *c;
+> +	list_for_each_entry(c, &msi_chip_list, link) {
+> +		if (c->of_node == of_node &&
+> +		    of_property_read_bool(c->of_node, "msi-controller"))
+> +			return c;
+> +	}
+> +
+> +	return NULL;
+> +}
+> +#endif
 
-I don't really want to further complicate the "if" statement you're
-changing.  The link state allocation is pretty obtuse already, and if
-this situation only occurs in QEMU, we're likely to break it again
-when somebody refactors this code.
+I don't really understand why the msi_chip_list lives here, since
+nothing in drivers/pci/msi.c uses it.  Seems like maybe something
+that could be in the OF code somewhere?
 
-Bjorn
+> +
+>  #ifdef HAVE_DEFAULT_MSI_SETUP_IRQS
+>  int default_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+>  {
+> diff --git a/include/linux/msi.h b/include/linux/msi.h
+> index 4633529..a1a6084 100644
+> --- a/include/linux/msi.h
+> +++ b/include/linux/msi.h
+> @@ -61,6 +61,8 @@ int arch_msi_check_device(struct pci_dev* dev, int nvec, int type);
+>  struct msi_chip {
+>  	struct module *owner;
+>  	struct device *dev;
+> +	struct device_node *of_node;
+> +	struct list_head link;
+>  
+>  	int (*setup_irq)(struct msi_chip *chip, struct pci_dev *dev,
+>  			 struct msi_desc *desc);
+> @@ -69,4 +71,13 @@ struct msi_chip {
+>  			    int nvec, int type);
+>  };
+>  
+> +#if defined(CONFIG_PCI_MSI) && defined(CONFIG_OF)
+> +void msi_chip_add(struct msi_chip *chip);
+> +struct msi_chip *msi_chip_find_by_of_node(struct device_node *of_node);
+> +#else
+> +static inline void msi_chip_add(struct msi_chip *chip) {}
+> +static inline struct msi_chip *
+> +msi_chip_find_by_of_node(struct device_node *of_node) { return NULL; }
+> +#endif
+> +
+>  #endif /* LINUX_MSI_H */
+> -- 
+> 1.8.1.2
+> 
