@@ -1,118 +1,117 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f172.google.com ([209.85.223.172]:54636 "EHLO
+	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755725Ab3FRW5O (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Jun 2013 18:57:14 -0400
+Received: by mail-ie0-f172.google.com with SMTP id 16so11828178iea.3
+        for <linux-pci@vger.kernel.org>; Tue, 18 Jun 2013 15:57:14 -0700 (PDT)
+Date: Tue, 18 Jun 2013 16:57:11 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: linux-pci@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	linux-arm-kernel@lists.infradead.org,
+	Jason Cooper <jason@lakedaemon.net>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Maen Suleiman <maen@marvell.com>
+Subject: Re: [PATCH v2 6/8] pci: mvebu: add support for MSI
+Message-ID: <20130618225711.GD16134@google.com>
+References: <1370536888-8871-1-git-send-email-thomas.petazzoni@free-electrons.com>
+ <1370536888-8871-7-git-send-email-thomas.petazzoni@free-electrons.com>
 MIME-Version: 1.0
-In-Reply-To: <1410772.iYNzcAkY0L@vostro.rjw.lan>
-References: <2737587.I0nULev1kj@vostro.rjw.lan>
-	<15269989.ojxutYs2L1@vostro.rjw.lan>
-	<CAE9FiQV7R5mQKEFx+JhE7E1MjWSSxe2+WeK0aN_hVh6sZJ2GdQ@mail.gmail.com>
-	<1410772.iYNzcAkY0L@vostro.rjw.lan>
-Date: Sun, 23 Jun 2013 12:49:22 -0700
-Message-ID: <CAE9FiQWt94D+gwOv3dDOX7m4Wm-tsJyHaLonPmyfU4JLWG6Dzw@mail.gmail.com>
-Subject: Re: [PATCH 3/3] ACPI / dock / PCI: Synchronous handling of dock
- events for PCI devices
-From: Yinghai Lu <yinghai@kernel.org>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Alexander E . Patrakov" <patrakov@gmail.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1370536888-8871-7-git-send-email-thomas.petazzoni@free-electrons.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Jun 23, 2013 at 2:59 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> On Saturday, June 22, 2013 05:22:20 PM Yinghai Lu wrote:
->> On Sat, Jun 22, 2013 at 2:25 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
->> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->> >
->> > To resolve that deadlock use the observation that
->> > unregister_hotplug_dock_device() won't need to acquire hp_lock
->> > if PCI bridges the devices on the dock station depend on are
->> > prevented from being removed prematurely while the first loop in
->> > hotplug_dock_devices() is in progress.
->> >
->> > To make that possible, introduce a mechanism by which the callers of
->> > register_hotplug_dock_device() can provide "init" and "release"
->> > routines that will be executed, respectively, after the addition
->> > and removal of the physical device object associated with the
->> > given ACPI device handle.  Make acpiphp use two new functions,
->> > acpiphp_dock_init() and acpiphp_dock_release(), respectively,
->> > calling get_bridge() and put_bridge() on the PCI bridge holding the
->> > given device, respectively, for this purpose.
->> >
->> > In addition to that, remove the dock station's list of
->> > "hotplug devices" and make the dock code always walk the whole list
->> > of "dependent devices" instead in such a way that the loops in
->> > hotplug_dock_devices() and dock_event() (replacing the loops over
->> > "hotplug devices") will take references to the list entries that
->> > register_hotplug_dock_device() has been called for.  That prevents
->> > the "release" routines associated with those entries from being
->> > called while the given entry is being processed and for PCI
->> > devices this means that their bridges won't be removed (by a
->> > concurrent thread) while hotplug_event_func() handling them is
->> > being executed.
->> ..
->> > -static void
->> > -dock_del_hotplug_device(struct dock_station *ds,
->> > -                       struct dock_dependent_device *dd)
->> > +static void dock_release_hotplug(struct dock_dependent_device *dd)
->> >  {
->> > -       mutex_lock(&ds->hp_lock);
->> > -       list_del(&dd->hotplug_list);
->> > -       mutex_unlock(&ds->hp_lock);
->> > +       void (*release)(void *) = NULL;
->> > +       void *context = NULL;
->> > +
->> > +       mutex_lock(&hotplug_lock);
->> > +
->> > +       if (dd->hp_context && !--dd->hp_refcount) {
->> > +               dd->hp_ops = NULL;
->> > +               context = dd->hp_context;
->> > +               dd->hp_context = NULL;
->> > +               release = dd->hp_release;
->> > +               dd->hp_release = NULL;
->> > +       }
->> > +
->> > +       if (release && context)
->> > +               release(context);
->> > +
->> > +       mutex_unlock(&hotplug_lock);
->> > +}
->> > +
->> > +static void dock_hotplug_event(struct dock_dependent_device *dd, u32 event,
->> > +                              bool uevent)
->> > +{
->> > +       acpi_notify_handler cb = NULL;
->> > +       bool run = false;
->> > +
->> > +       mutex_lock(&hotplug_lock);
->> > +
->> > +       if (dd->hp_context) {
->> > +               run = true;
->> > +               dd->hp_refcount++;
->> > +               if (dd->hp_ops)
->> > +                       cb = uevent ? dd->hp_ops->uevent : dd->hp_ops->handler;
->> > +       }
->> > +
->> > +       mutex_unlock(&hotplug_lock);
->> > +
->> > +       if (!run)
->> > +               return;
->> > +
->> > +       if (cb)
->> > +               cb(dd->handle, event, dd->hp_context);
->> > +
->> > +       dock_release_hotplug(dd);
->>
->> during DOCKING, dock_release_hotplug get called too?
->
-> Yes, we need to drop down the refcount we've just bumped up.
->
+On Thu, Jun 06, 2013 at 06:41:26PM +0200, Thomas Petazzoni wrote:
+> This commit adds support for Message Signaled Interrupts in the
+> Marvell PCIe host controller. The work is very simple: it simply gets
+> a reference to the msi_chip associated to the PCIe controller thanks
+> to the msi-parent DT property, and stores this reference in the
+> pci_bus structure. This is enough to let the Linux PCI core use the
+> functions of msi_chip to setup and teardown MSIs.
+> 
+> Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+> ---
+>  drivers/pci/host/pci-mvebu.c | 21 +++++++++++++++++++++
+>  1 file changed, 21 insertions(+)
+> 
+> diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+> index 13a633b..0dc30bd 100644
+> --- a/drivers/pci/host/pci-mvebu.c
+> +++ b/drivers/pci/host/pci-mvebu.c
+> @@ -11,6 +11,7 @@
+>  #include <linux/clk.h>
+>  #include <linux/module.h>
+>  #include <linux/mbus.h>
+> +#include <linux/msi.h>
+>  #include <linux/slab.h>
+>  #include <linux/platform_device.h>
+>  #include <linux/of_address.h>
+> @@ -107,6 +108,7 @@ struct mvebu_pcie_port;
+>  struct mvebu_pcie {
+>  	struct platform_device *pdev;
+>  	struct mvebu_pcie_port *ports;
+> +	struct msi_chip *msi;
+>  	struct resource io;
+>  	struct resource realio;
+>  	struct resource mem;
+> @@ -690,6 +692,8 @@ static struct pci_bus *mvebu_pcie_scan_bus(int nr, struct pci_sys_data *sys)
+>  	if (!bus)
+>  		return NULL;
+>  
+> +	bus->msi = pcie->msi;
 
-ok, I see.
+Ideally, arches could use pci_scan_root_bus(), which does the
+pci_scan_child_bus() itself, so I never like to add arch-specific code
+between pci_create_root_bus() and pci_scan_child_bus().
 
-Acked-by: Yinghai Lu <yinghai@kernel.org>
+But you should be able to accomplish this by setting bus->msi in a
+pcibios_add_bus() hook.  There is a corresponding pcibios_remove_bus() hook
+that might be useful for deallocating the msi_chip.  I'm not too clear on
+how you manage the msi_chip lifetime -- I see the alloc in
+armada_370_xp_msi_init(), but I'm not sure whether you ever deallocate it
+or how you know when it would be safe to do so.
+
+>  	pci_scan_child_bus(bus);
+>  
+>  	return bus;
+> @@ -755,6 +759,21 @@ mvebu_pcie_map_registers(struct platform_device *pdev,
+>  	return devm_request_and_ioremap(&pdev->dev, &regs);
+>  }
+>  
+> +static void __init mvebu_pcie_msi_enable(struct mvebu_pcie *pcie)
+> +{
+> +	struct device_node *msi_node;
+> +
+> +	msi_node = of_parse_phandle(pcie->pdev->dev.of_node,
+> +				    "msi-parent", 0);
+> +	if (!msi_node)
+> +		return;
+> +
+> +	pcie->msi = msi_chip_find_by_of_node(msi_node);
+> +
+> +	if (pcie->msi)
+> +		pcie->msi->dev = &pcie->pdev->dev;
+> +}
+> +
+>  static int __init mvebu_pcie_probe(struct platform_device *pdev)
+>  {
+>  	struct mvebu_pcie *pcie;
+> @@ -879,6 +898,8 @@ static int __init mvebu_pcie_probe(struct platform_device *pdev)
+>  		i++;
+>  	}
+>  
+> +	mvebu_pcie_msi_enable(pcie);
+> +
+>  	mvebu_pcie_enable(pcie);
+>  
+>  	return 0;
+> -- 
+> 1.8.1.2
+> 
