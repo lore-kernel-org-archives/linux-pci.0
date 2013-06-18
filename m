@@ -1,72 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:53741 "EHLO mga09.intel.com"
+Received: from hydra.sisk.pl ([212.160.235.94]:41460 "EHLO hydra.sisk.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752268Ab3FYQTY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 25 Jun 2013 12:19:24 -0400
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Yinghai Lu <yinghai@kernel.org>, john.ronciak@intel.com,
-	miles.j.penner@intel.com, bruce.w.allan@intel.com,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	x86@kernel.org
-Subject: [PATCH 0/6] Thunderbolt workarounds take 2
-Date: Tue, 25 Jun 2013 19:22:04 +0300
-Message-Id: <1372177330-28013-1-git-send-email-mika.westerberg@linux.intel.com>
+	id S932206Ab3FRNek (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 18 Jun 2013 09:34:40 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Hanjun Guo <guohanjun@huawei.com>,
+	jiang.liu@huawei.com
+Subject: Re: [PATCH 7/9] PCI: use pdev->pm_cap instead of pci_find_capability(..,PCI_CAP_ID_PM)
+Date: Tue, 18 Jun 2013 15:44 +0200
+Message-ID: <1678257.RBpxK26BQQ@vostro.rjw.lan>
+In-Reply-To: <1371543734-14148-1-git-send-email-wangyijing@huawei.com>
+References: <1371543734-14148-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi all,
+On Tuesday, June 18, 2013 04:22:14 PM Yijing Wang wrote:
+> Pci pm cap register offset has been saved in pci_pm_init(),
+> so we can use pdev->pm_cap instead of using pci_find_capability(..)
+> here.
+> 
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> Cc: linux-pci@vger.kernel.org
+> Cc: linux-kernel@vger.kernel.org
 
-This is the second iteration of the patches first posted here quite a while
-ago:
+Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-	https://lkml.org/lkml/2012/12/13/589
-
-With Thunderbolt devices we might see pretty complex PCIe hierarchies that
-the current ACPI hotplug code was not able to handle properly but instead
-failed to scan the whole hierarchy. This series tries to address these
-problems. In addition to that there's a possibility that only part of the
-chain is disconnected so we don't want to leave behind stale PCI devices.
-
-We have tested this on Acer Aspire S5 with the largest chain looking like
-this:
-
-  PC +--+ eSata Hub #0 +--+ eSata Hub #1 +--+ Apple Thunderbolt display +--+ Apple ethernet dongle
-
-There are still problems with different device drivers because of the
-surprise hotplug nature of Thunderbolt, causing occasional hangs and
-failures that should be fixed per-driver later on (not addressed in this
-series).
-
-Currently Thunderbolt on Apple hardware like Macbooks is not yet supported
-as they use some different mechanism than ACPI events to trigger hotplug
-events.
-
-The series is based on linux-pm.git/linux-next.
-
-Kirill A. Shutemov (4):
-  PCI: acpiphp: do not check for SLOT_ENABLED in enable_device()
-  PCI: acpiphp: enable_device(): rescan even if no new devices on slot
-  PCI: introduce pci_trim_stale_devices()
-  PCI: acpiphp: check for new devices on enabled host
-
-Mika Westerberg (2):
-  PCI: acpiphp: look _RMV method a bit deeper in the hierarhcy
-  x86/PCI: quirk Thunderbolt PCI-to-PCI bridges
-
- arch/x86/pci/fixup.c               | 51 ++++++++++++++++++++++++
- drivers/pci/hotplug/acpi_pcihp.c   | 53 ++++++++++++++++++++++---
- drivers/pci/hotplug/acpiphp_glue.c | 79 +++++++++++++++++---------------------
- drivers/pci/remove.c               | 20 ++++++++++
- include/linux/pci.h                |  1 +
- 5 files changed, 156 insertions(+), 48 deletions(-)
-
+> ---
+>  drivers/pci/pci.c    |    2 +-
+>  drivers/pci/quirks.c |    6 ++----
+>  2 files changed, 3 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index a899d8b..1117f2c 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -805,7 +805,7 @@ pci_power_t pci_choose_state(struct pci_dev *dev, pm_message_t state)
+>  {
+>  	pci_power_t ret;
+>  
+> -	if (!pci_find_capability(dev, PCI_CAP_ID_PM))
+> +	if (!dev->pm_cap)
+>  		return PCI_D0;
+>  
+>  	ret = platform_pci_choose_state(dev);
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index 7d68aee..422812b 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -1832,7 +1832,6 @@ static void quirk_e100_interrupt(struct pci_dev *dev)
+>  	u16 command, pmcsr;
+>  	u8 __iomem *csr;
+>  	u8 cmd_hi;
+> -	int pm;
+>  
+>  	switch (dev->device) {
+>  	/* PCI IDs taken from drivers/net/e100.c */
+> @@ -1870,9 +1869,8 @@ static void quirk_e100_interrupt(struct pci_dev *dev)
+>  	 * Check that the device is in the D0 power state. If it's not,
+>  	 * there is no point to look any further.
+>  	 */
+> -	pm = pci_find_capability(dev, PCI_CAP_ID_PM);
+> -	if (pm) {
+> -		pci_read_config_word(dev, pm + PCI_PM_CTRL, &pmcsr);
+> +	if (dev->pm_cap) {
+> +		pci_read_config_word(dev, dev->pm_cap + PCI_PM_CTRL, &pmcsr);
+>  		if ((pmcsr & PCI_PM_CTRL_STATE_MASK) != PCI_D0)
+>  			return;
+>  	}
+> 
 -- 
-1.8.3.1
-
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
