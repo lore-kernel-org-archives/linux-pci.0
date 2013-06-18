@@ -1,126 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f170.google.com ([209.85.214.170]:55661 "EHLO
-	mail-ob0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754657Ab3FLAxx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Jun 2013 20:53:53 -0400
-Received: by mail-ob0-f170.google.com with SMTP id ef5so12688709obb.1
-        for <linux-pci@vger.kernel.org>; Tue, 11 Jun 2013 17:53:52 -0700 (PDT)
+Received: from mail-ob0-f180.google.com ([209.85.214.180]:49016 "EHLO
+	mail-ob0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933093Ab3FRSHf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Jun 2013 14:07:35 -0400
+Received: by mail-ob0-f180.google.com with SMTP id eh20so5021649obb.11
+        for <linux-pci@vger.kernel.org>; Tue, 18 Jun 2013 11:07:35 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <875D89B79D1D86448A583A7302C022A054E844AA@G9W0337.americas.hpqcorp.net>
-References: <1368509365-2260-1-git-send-email-indou.takao@jp.fujitsu.com>
- <CAErSpo4t_2Xw76p3Z9FVzyyK-MBovavDu9D=pYoPMjESSxgT=w@mail.gmail.com>
- <51B19DF3.2070009@jp.fujitsu.com> <CAErSpo6dfEnzriHD_aWZB_3E-kSzauhNRHPd+VuFX5HONVKgqw@mail.gmail.com>
- <51B6BEDB.3000509@jp.fujitsu.com> <875D89B79D1D86448A583A7302C022A054E844AA@G9W0337.americas.hpqcorp.net>
+In-Reply-To: <1678257.RBpxK26BQQ@vostro.rjw.lan>
+References: <1371543734-14148-1-git-send-email-wangyijing@huawei.com> <1678257.RBpxK26BQQ@vostro.rjw.lan>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 11 Jun 2013 18:53:32 -0600
-Message-ID: <CAErSpo6wDNfeHE+5pVo1nCNVGEyU18PxPk_xnCjy0Pe0jx1tyw@mail.gmail.com>
-Subject: Re: [PATCH v2] PCI: Reset PCIe devices to stop ongoing DMA
-To: "Sumner, William" <bill.sumner@hp.com>
-Cc: Takao Indoh <indou.takao@jp.fujitsu.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+Date: Tue, 18 Jun 2013 12:07:14 -0600
+Message-ID: <CAErSpo6KX8971qYX65f95RBeZMrMCUbixtiLLZU8w3rxO7tZ9Q@mail.gmail.com>
+Subject: Re: [PATCH 7/9] PCI: use pdev->pm_cap instead of pci_find_capability(..,PCI_CAP_ID_PM)
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Yijing Wang <wangyijing@huawei.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-	"kexec@lists.infradead.org" <kexec@lists.infradead.org>,
-	"ishii.hironobu@jp.fujitsu.com" <ishii.hironobu@jp.fujitsu.com>,
-	"ddutile@redhat.com" <ddutile@redhat.com>,
-	"alex.williamson@redhat.com" <alex.williamson@redhat.com>
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Hanjun Guo <guohanjun@huawei.com>,
+	Jiang Liu <jiang.liu@huawei.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[Your quoting is messed up below]
->> This is Takao's text
-> This is Bill's text
-
-On Tue, Jun 11, 2013 at 5:19 PM, Sumner, William <bill.sumner@hp.com> wrote:
->>(2013/06/11 11:20), Bjorn Helgaas wrote:
->>> On Fri, Jun 7, 2013 at 2:46 AM, Takao Indoh <indou.takao@jp.fujitsu.com> wrote:
-
->>Actually Vivek Goyal, kdump maintainer said same thing. He proposed using
->>reset_devices instead of adding new one, and using quirk or something to
->>avoid such a buggy devices.
->
-> With respect to "and using quirk or something to avoid such buggy devices",
-> I believe that it will be necessary to provide a mechanism for devices that
-> need special handling to do the reset ...
-
-You mean something like pci_dev_specific_reset()?
-
->>So, basically I agree with using reset_devices, but I want to prepare
->>workaround in case this reset causes something wrong.
+On Tue, Jun 18, 2013 at 7:44 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> On Tuesday, June 18, 2013 04:22:14 PM Yijing Wang wrote:
+>> Pci pm cap register offset has been saved in pci_pm_init(),
+>> so we can use pdev->pm_cap instead of using pci_find_capability(..)
+>> here.
 >>
-> I like the ability to specify the original "reset_devices" separately from
-> invoking this new mechanism.  With so many different uses for Linux in
-> so many different environments and with so many different device drivers
-> it seems reasonable to keep the ability to tell the device drivers to
-> reset their devices -- instead of pulling the reset line on all devices.
-
-The problem with adding new options for this and that is it confuses
-users and fragments testing.  Users already randomly try options and
-publish combinations that happen to work as "solutions."  Then we
-don't get problem reports and don't get a chance to fix things
-properly.  The ideal OS would have zero options and be able to figure
-everything out by itself.  So that's my bias about giving users
-flexibility by adding new options -- I don't like it, and I think we
-have to accept some lack of flexibility to keep the system complexity
-tractable  :)
-
-> ...
-> Thinking out of the box:
-> Much of the discussion about dealing with the ongoing DMA leftover
-> from the system kernel has assumed that the crash kernel will reset
-> the IOMMU -- which causes various problems if done while there is any DMA
-> still active -- which leads to the idea of stopping all of the DMA.
+>> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+>> Cc: linux-pci@vger.kernel.org
+>> Cc: linux-kernel@vger.kernel.org
 >
-> Suppose the crash kernel does not reset the hardware IOMMU, but simply
-> detects that it is active, resets only the devices that are necessary
-> for the crash kernel to operate, and re-programs only the translations
-> for those devices.  All other translations remain the same (and remain valid)
-> so all leftover DMA continues into its buffer in the system kernel area
-> where it is harmless.  New translations needed by the kdump kernel are
-> added to the existing tables.
->
-> I have not yet tried this, so I am not ready to propose it as anything more
-> than a discussion topic at this time.
->
-> It might work this way: (A small modification to case 3a above)
->
-> IOMMU on in system kernel, kdump kernel accepts active IOMMU
->    system kernel enables IOMMU
->       DMA targets IOMMU-mapped system-kernel memory
->    kexec to kdump kernel (IOMMU on, devices untouched)
->       DMA targets IOMMU-mapped system-kernel memory
->    kdump kernel detects active IOMMU and doesn't touch it
->       DMA targets IOMMU-mapped system-kernel memory
->    kdump kernel does not re-initialize IOMMU hardware
->    kdump kernel initializes IOMMU in-memory management structures
->    kdump kernel calls device drivers' standard initialization functions
->       Drivers initialize their own devices -- DMA from that device stops
->       When drivers request new DMA mappings, the kdump IOMMU driver:
->       1. Updates its in-memory mgt structures for that device & range
->       2. Updates IOMMU translate tables for that device & range
->          . Translations for all other devices & ranges are unchanged
->       3. Flushes IOMMU TLB to force IOMMU hardware update
+> Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-This is certainly an interesting idea.
+Applied to my pci/misc branch for v3.11, thanks!
 
-It would require some additional smarts in the IOMMU driver to take
-over existing page tables.  Those data structures from the system
-kernel are outside the memory map known to the kdump kernel, so
-there'd likely be VM issues there.  The IOMMU driver would also have
-to be able to reconstruct the state for the bus address space
-allocator, e.g., use the I/O page tables to rebuild a bitmap of
-allocated space.
-
-We'll end up with a bunch of dma_map() calls from the system kernel
-that don't have corresponding dma_unmap()s.  I guess when a driver
-initializes its device, there might have to be a new interface to
-"unmap any existing mappings for this device, even though I don't know
-what they are."
-
-I think it's possible, but it sounds like quite a lot of work and I'm
-not sure it's worth it for this relatively limited use case.  And it's
-more IOMMU-specific than a "reset devices" strategy, so most of it
-would have to be done in each IOMMU driver.
-
-Bjorn
+>> ---
+>>  drivers/pci/pci.c    |    2 +-
+>>  drivers/pci/quirks.c |    6 ++----
+>>  2 files changed, 3 insertions(+), 5 deletions(-)
+>>
+>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>> index a899d8b..1117f2c 100644
+>> --- a/drivers/pci/pci.c
+>> +++ b/drivers/pci/pci.c
+>> @@ -805,7 +805,7 @@ pci_power_t pci_choose_state(struct pci_dev *dev, pm_message_t state)
+>>  {
+>>       pci_power_t ret;
+>>
+>> -     if (!pci_find_capability(dev, PCI_CAP_ID_PM))
+>> +     if (!dev->pm_cap)
+>>               return PCI_D0;
+>>
+>>       ret = platform_pci_choose_state(dev);
+>> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+>> index 7d68aee..422812b 100644
+>> --- a/drivers/pci/quirks.c
+>> +++ b/drivers/pci/quirks.c
+>> @@ -1832,7 +1832,6 @@ static void quirk_e100_interrupt(struct pci_dev *dev)
+>>       u16 command, pmcsr;
+>>       u8 __iomem *csr;
+>>       u8 cmd_hi;
+>> -     int pm;
+>>
+>>       switch (dev->device) {
+>>       /* PCI IDs taken from drivers/net/e100.c */
+>> @@ -1870,9 +1869,8 @@ static void quirk_e100_interrupt(struct pci_dev *dev)
+>>        * Check that the device is in the D0 power state. If it's not,
+>>        * there is no point to look any further.
+>>        */
+>> -     pm = pci_find_capability(dev, PCI_CAP_ID_PM);
+>> -     if (pm) {
+>> -             pci_read_config_word(dev, pm + PCI_PM_CTRL, &pmcsr);
+>> +     if (dev->pm_cap) {
+>> +             pci_read_config_word(dev, dev->pm_cap + PCI_PM_CTRL, &pmcsr);
+>>               if ((pmcsr & PCI_PM_CTRL_STATE_MASK) != PCI_D0)
+>>                       return;
+>>       }
+>>
+> --
+> I speak only for myself.
+> Rafael J. Wysocki, Intel Open Source Technology Center.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
