@@ -1,65 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f43.google.com ([209.85.219.43]:62378 "EHLO
-	mail-oa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932256Ab3FEVJz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Jun 2013 17:09:55 -0400
-Received: by mail-oa0-f43.google.com with SMTP id i7so16290oag.16
-        for <linux-pci@vger.kernel.org>; Wed, 05 Jun 2013 14:09:54 -0700 (PDT)
+Received: from szxga01-in.huawei.com ([119.145.14.64]:28411 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751534Ab3FRBDT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Jun 2013 21:03:19 -0400
+Message-ID: <51BFB1C9.8030900@huawei.com>
+Date: Tue, 18 Jun 2013 09:03:05 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <20130605205638.GA5816@breakpoint.cc>
-References: <cover.1368431413.git.agordeev@redhat.com> <8575dc590b819892f366852fe50835efaf579f4f.1368431413.git.agordeev@redhat.com>
- <20130605205638.GA5816@breakpoint.cc>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 5 Jun 2013 15:09:34 -0600
-Message-ID: <CAErSpo5hJYhWpBfN6GpyPv-ViaYNXyyLtw96xcN59CtQjfZi6w@mail.gmail.com>
-Subject: Re: [PATCH v3 -tip x86/apic 1/2] PCI/MSI: Allocate as many
- multiple-MSIs as requested
-To: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"x86@kernel.org" <x86@kernel.org>,
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Tony Luck <tony.luck@gmail.com>, Yinghai Lu <yinghai@kernel.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Suresh Siddha <suresh.b.siddha@intel.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	Jan Beulich <JBeulich@suse.com>, Ingo Molnar <mingo@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	"linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>,
+	Fenghua Yu <fenghua.yu@intel.com>,
+	Hanjun Guo <guohanjun@huawei.com>,
+	Liu Jiang <jiang.liu@huawei.com>
+Subject: Re: [PATCH -v5 0/8] Add hostbridge resource release to support root
+ bus hotplug in IA64
+References: <1370504093-14908-1-git-send-email-wangyijing@huawei.com> <20130615002224.GA21643@google.com> <51BE7AD5.5010300@huawei.com> <CA+8MBb+BSNnLtR8jZinTh9h01f3=Zeu+kX6xke1Ei08HYzRQvg@mail.gmail.com> <CAErSpo4PhY5gzdxK6NSRxOquuQMojnBX9wRm6Pb-uxq6t3i=-Q@mail.gmail.com>
+In-Reply-To: <CAErSpo4PhY5gzdxK6NSRxOquuQMojnBX9wRm6Pb-uxq6t3i=-Q@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 5, 2013 at 2:56 PM, Sebastian Andrzej Siewior
-<sebastian@breakpoint.cc> wrote:
-> On Mon, May 13, 2013 at 11:05:48AM +0200, Alexander Gordeev wrote:
->> Note, although the existing 'msi_desc::multiple' field might seem
->> redundant, in fact in does not. In general case the number of MSIs a
->> PCI device is initialized with is not necessarily the closest power-
->> of-two value of the number of MSIs the device will send. Thus, in
->> theory it would not be always possible to derive the former from the
->> latter and we need to keep them both, to stress this corner case.
->> Besides, since 'msi_desc::multiple' is a bitfield, throwing it out
->> would not save us any space.
->
-> The last paragraph makes me curious. The only place where 'multiple' is set is
-> in do_setup_msi_irqs() and this uses the next power of two for it. And since a
-> device is not enabled twice, it is not overridden.
-> So it should be possible to compute 'multiple' out of 'nvec' but it saves
-> cycles not do to so. I agree to keep 'multiple' but your argument does not
-> seem to make sense.
+On 2013/6/18 7:10, Bjorn Helgaas wrote:
+> On Mon, Jun 17, 2013 at 4:57 PM, Tony Luck <tony.luck@gmail.com> wrote:
+>> On Sun, Jun 16, 2013 at 7:56 PM, Yijing Wang <wangyijing@huawei.com> wrote:
+>>>> Tony, what do you think about this?  It only touches ia64, and I
+>>>> have no way to build or test it.  So maybe you should handle this?
+>>>>
+>>>> I haven't reviewed it, but I think it's the right general direction,
+>>>> at least.
+>>>>
+>>> Bjorn, thanks for your comments!
+>>>
+>>> Hi Tony, this series mainly to make pci root bus hotplug happy in IA64.
+>>> I cannot test the first two patch(SGI related) in my IA64 machine.
+>>> But the rest patches has been tested in my ia64 machine, and result is ok.
+>>
+>> I'd like to understand the dependencies on Bjorn's pci-next tree.  If
+>> this series
+>> actually only depends on Linus' v3.10-rc6 I'd rather start from there (because
+>> then I don't need to coordinate "please-pull" messages when sending things
+>> to Linus).  If we really do need things from the pci-next tree, well that's OK
+>> too, but I'd still like to know what they are.
+> 
+> I don't think it depends on anything in my pci-next tree.  I just
+> applied Yijing's v5 series to v3.10-rc1 with no issues.
 
-Alexander had an example device that advertised 16 vectors, but the
-driver knew that it could only generate 6.  That's a case where we
-can't compute 'multiple' from 'nvec' (assuming the driver supplies
-'nvec == 6').  If we just rounded up to compute 'multiple', I think
-we'd compute 8 instead of 16.
+Yes, that's right, thanks.
 
-> While nitpicking, 'nvec' might deserve a better comment than 'number of
-> messages' since it holds the number of allocated interrupts. :)
+> 
+> 
 
-I did change the name 'nvec' to 'nvec_used', which should help a bit.
-But I agree that it's still somewhat confusing.
 
-BTW, the patches actually in my tree are at
-http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/alexander-msi
-(I tweaked this name and some comments slightly).
+-- 
+Thanks!
+Yijing
 
-Bjorn
