@@ -1,236 +1,100 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:42380 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934462Ab3FSQ4g (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Jun 2013 12:56:36 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Russell King <linux@arm.linux.org.uk>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>
-Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>
-Subject: [PATCHv3 06/11] irqchip: armada-370-xp: implement MSI support
-Date: Wed, 19 Jun 2013 18:56:14 +0200
-Message-Id: <1371660979-21588-7-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1371660979-21588-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1371660979-21588-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from moutng.kundenserver.de ([212.227.17.10]:51695 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932701Ab3FRN5Z (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Jun 2013 09:57:25 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Jingoo Han <jg1.han@samsung.com>
+Subject: Re: [PATCH V5 1/3] pci: Add PCIe driver for Samsung Exynos
+Date: Tue, 18 Jun 2013 15:56:47 +0200
+Cc: linux-arm-kernel@lists.infradead.org,
+	"'Thomas Petazzoni'" <thomas.petazzoni@free-electrons.com>,
+	"'Jason Gunthorpe'" <jgunthorpe@obsidianresearch.com>,
+	linux-samsung-soc@vger.kernel.org,
+	"'Siva Reddy Kallam'" <siva.kallam@samsung.com>,
+	"'Surendranath Gurivireddy Balla'" <suren.reddy@samsung.com>,
+	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
+	"'Thierry Reding'" <thierry.reding@avionic-design.de>,
+	linux-kernel@vger.kernel.org,
+	"'Grant Likely'" <grant.likely@secretlab.ca>,
+	"'Kukjin Kim'" <kgene.kim@samsung.com>,
+	"'Thomas Abraham'" <thomas.abraham@linaro.org>,
+	"'Bjorn Helgaas'" <bhelgaas@google.com>,
+	"'Andrew Murray'" <andrew.murray@arm.com>
+References: <000b01ce6839$0f0455d0$2d0d0170$@samsung.com> <7174350.I5qK0sQfHM@wuerfel> <000001ce6bd7$50146e60$f03d4b20$@samsung.com>
+In-Reply-To: <000001ce6bd7$50146e60$f03d4b20$@samsung.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201306181556.47656.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This commit introduces the support for the MSI interrupts in the
-armada-370-xp interrupt controller driver. It registers an MSI chip to
-the MSI chip registry, which will be used by the Marvell PCIe host
-controller driver.
+On Tuesday 18 June 2013, Jingoo Han wrote:
+> On Monday, June 17, 2013 9:45 PM, Arnd Bergmann wrote:
+> > On Monday 17 June 2013 18:45:52 Jingoo Han wrote:
+> > > On Friday, June 14, 2013 9:54 PM, Arnd Bergmann wrote:
+> > > >
+> > > > Please look up the documentation about inbound viewport and describe
+> > > > in a code comment what it does. I /assume/ that this is how DMA accesses
+> > > > from the bus get translated into AXI bus transactions. If so, you have
+> > > > to let the window translate addresses from RAM. If it's something else,
+> > > > then you should document what it is and how it needs to be set up.
+> > >
+> > > One of our hardware engineer confirmed it.
+> > > He said that these inbound functions are unnecessary.
+> > > Also, I checked that PCIe works properly without these functions.
+> > > So, I will remove these inbound functions.
+> > 
+> > Ok, good. So DMA just gets translated 1:1 independent of the
+> > inbound viewport? Have you tested this with PCI device using
+> > DMA?
+> 
+> According to our hardware engineer,
+> He said that
+> "That's correct. We tested it by doing a memory write from the device.
+> A device DMA is a series of memory r/w so I expect it to work same way."
+> 
+> Also, he thought that I already tested too, since it works after removing
+> the functions.
 
-The MSI interrupts use the 16 high doorbells, and are therefore
-notified using IRQ1 of the main interrupt controller.
+It could be that the default setting just creates a 1:1 map so that would
+work, but if you tested it, that should be good enough.
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
----
- drivers/irqchip/irq-armada-370-xp.c | 135 +++++++++++++++++++++++++++++++++++-
- 1 file changed, 134 insertions(+), 1 deletion(-)
+> I looked at the pci-mvebu driver,
+> Then I fixed it as the pci-mvebu driver did.
+> Also, I added 'global_io_offset'.
+> 
+> @@ -909,6 +909,12 @@ static int __init exynos_pcie_probe(struct platform_device *pdev)
+>                 if (restype == IORESOURCE_IO) {
+>                         of_pci_range_to_resource(&range, np, &pp->io);
+>                         pp->io.name = "I/O";
+> +                       pp->io.start = max_t(resource_size_t,
+> +                                               PCIBIOS_MIN_IO,
+> +                                               range.pci_addr + global_io_offset);
+> +                       pp->io.end = min_t(resource_size_t,
+> +                                               IO_SPACE_LIMIT,
+> +                                               range.pci_addr + range.size + global_io_offset);
+>                         pp->config.io_size = resource_size(&pp->io);
+>                         pp->config.io_bus_addr = range.pci_addr;
+> 
+> In this case, boot message is as below:
+> 
+> PCI host bridge to bus 0000:00
+> pci_bus 0000:00: root bus resource [io  0x1000-0x10000]
+> pci_bus 0000:00: root bus resource [mem 0x40011000-0x5fffffff]
+> [.....]
+> PCI host bridge to bus 0001:00
+> pci_bus 0001:00: root bus resource [io  0x10000-0x20000] (bus address [0x0000-0x10000])
+> pci_bus 0001:00: root bus resource [mem 0x60011000-0x7fffffff]
 
-diff --git a/drivers/irqchip/irq-armada-370-xp.c b/drivers/irqchip/irq-armada-370-xp.c
-index 26adc74..9e73547 100644
---- a/drivers/irqchip/irq-armada-370-xp.c
-+++ b/drivers/irqchip/irq-armada-370-xp.c
-@@ -21,7 +21,10 @@
- #include <linux/io.h>
- #include <linux/of_address.h>
- #include <linux/of_irq.h>
-+#include <linux/of_pci.h>
- #include <linux/irqdomain.h>
-+#include <linux/slab.h>
-+#include <linux/msi.h>
- #include <asm/mach/arch.h>
- #include <asm/exception.h>
- #include <asm/smp_plat.h>
-@@ -51,12 +54,20 @@
- #define IPI_DOORBELL_START                      (0)
- #define IPI_DOORBELL_END                        (8)
- #define IPI_DOORBELL_MASK                       0xFF
-+#define PCI_MSI_DOORBELL_START                  (16)
-+#define PCI_MSI_DOORBELL_NR                     (16)
-+#define PCI_MSI_DOORBELL_END                    (32)
-+#define PCI_MSI_DOORBELL_MASK                   0xFFFF0000
- 
- static DEFINE_RAW_SPINLOCK(irq_controller_lock);
- 
- static void __iomem *per_cpu_int_base;
- static void __iomem *main_int_base;
- static struct irq_domain *armada_370_xp_mpic_domain;
-+#ifdef CONFIG_PCI_MSI
-+static struct irq_domain *armada_370_xp_msi_domain;
-+static phys_addr_t msi_doorbell_addr;
-+#endif
- 
- /*
-  * In SMP mode:
-@@ -87,6 +98,96 @@ static void armada_370_xp_irq_unmask(struct irq_data *d)
- 				ARMADA_370_XP_INT_CLEAR_MASK_OFFS);
- }
- 
-+#ifdef CONFIG_PCI_MSI
-+
-+static int armada_370_xp_setup_msi_irq(struct msi_chip *chip,
-+				       struct pci_dev *pdev,
-+				       struct msi_desc *desc)
-+{
-+	struct msi_msg msg;
-+	irq_hw_number_t hwirq;
-+	int virq;
-+
-+	virq = irq_alloc_mapping(armada_370_xp_msi_domain, &hwirq);
-+	if (!virq)
-+		return -EINVAL;
-+
-+	irq_set_msi_desc(virq, desc);
-+
-+	msg.address_lo = msi_doorbell_addr;
-+	msg.address_hi = 0;
-+	msg.data = 0xf00 | (hwirq + 16);
-+
-+	write_msi_msg(virq, &msg);
-+	return 0;
-+}
-+
-+static void armada_370_xp_teardown_msi_irq(struct msi_chip *chip,
-+					   unsigned int irq)
-+{
-+	irq_dispose_mapping(irq);
-+}
-+
-+static struct irq_chip armada_370_xp_msi_irq_chip = {
-+	.name = "armada_370_xp_msi_irq",
-+	.irq_enable = unmask_msi_irq,
-+	.irq_disable = mask_msi_irq,
-+	.irq_mask = mask_msi_irq,
-+	.irq_unmask = unmask_msi_irq,
-+};
-+
-+static int armada_370_xp_msi_map(struct irq_domain *domain, unsigned int virq,
-+				 irq_hw_number_t hw)
-+{
-+	irq_set_chip_and_handler(virq, &armada_370_xp_msi_irq_chip,
-+				 handle_simple_irq);
-+	set_irq_flags(virq, IRQF_VALID);
-+
-+	return 0;
-+}
-+
-+static const struct irq_domain_ops armada_370_xp_msi_irq_ops = {
-+	.map = armada_370_xp_msi_map,
-+};
-+
-+static int armada_370_xp_msi_init(struct device_node *node)
-+{
-+	struct msi_chip *msi_chip;
-+	u32 reg;
-+
-+	msi_chip = kzalloc(sizeof(*msi_chip), GFP_KERNEL);
-+	if (!msi_chip)
-+		return -ENOMEM;
-+
-+	armada_370_xp_msi_domain =
-+		irq_domain_add_linear(NULL, PCI_MSI_DOORBELL_NR,
-+				      &armada_370_xp_msi_irq_ops, NULL);
-+	if (!armada_370_xp_msi_domain) {
-+		kfree(msi_chip);
-+		return -ENOMEM;
-+	}
-+
-+	msi_chip->of_node = node;
-+	msi_chip->setup_irq = armada_370_xp_setup_msi_irq;
-+	msi_chip->teardown_irq = armada_370_xp_teardown_msi_irq;
-+
-+	of_msi_chip_add(msi_chip);
-+
-+	reg = readl(per_cpu_int_base + ARMADA_370_XP_IN_DRBEL_MSK_OFFS)
-+		| PCI_MSI_DOORBELL_MASK;
-+
-+	writel(reg, per_cpu_int_base +
-+	       ARMADA_370_XP_IN_DRBEL_MSK_OFFS);
-+
-+	/* Unmask IPI interrupt */
-+	writel(1, per_cpu_int_base + ARMADA_370_XP_INT_CLEAR_MASK_OFFS);
-+
-+	return 0;
-+}
-+#else
-+static inline int armada_370_xp_msi_init(struct device_node *node) { return 0; }
-+#endif
-+
- #ifdef CONFIG_SMP
- static int armada_xp_set_affinity(struct irq_data *d,
- 				  const struct cpumask *mask_val, bool force)
-@@ -214,12 +315,39 @@ armada_370_xp_handle_irq(struct pt_regs *regs)
- 		if (irqnr > 1022)
- 			break;
- 
--		if (irqnr > 0) {
-+		if (irqnr > 1) {
- 			irqnr =	irq_find_mapping(armada_370_xp_mpic_domain,
- 					irqnr);
- 			handle_IRQ(irqnr, regs);
- 			continue;
- 		}
-+
-+#ifdef CONFIG_PCI_MSI
-+		/* MSI handling */
-+		if (irqnr == 1) {
-+			u32 msimask, msinr;
-+
-+			msimask = readl_relaxed(per_cpu_int_base +
-+						ARMADA_370_XP_IN_DRBEL_CAUSE_OFFS)
-+				& PCI_MSI_DOORBELL_MASK;
-+
-+			writel(~PCI_MSI_DOORBELL_MASK, per_cpu_int_base +
-+			       ARMADA_370_XP_IN_DRBEL_CAUSE_OFFS);
-+
-+			for (msinr = PCI_MSI_DOORBELL_START;
-+			     msinr < PCI_MSI_DOORBELL_END; msinr++) {
-+				int irq;
-+
-+				if (!(msimask & BIT(msinr)))
-+					continue;
-+
-+				irq = irq_find_mapping(armada_370_xp_msi_domain,
-+						       msinr - 16);
-+				handle_IRQ(irq, regs);
-+			}
-+		}
-+#endif
-+
- #ifdef CONFIG_SMP
- 		/* IPI Handling */
- 		if (irqnr == 0) {
-@@ -269,6 +397,9 @@ static int __init armada_370_xp_mpic_of_init(struct device_node *node,
- 				   resource_size(&per_cpu_int_res));
- 	BUG_ON(!per_cpu_int_base);
- 
-+	msi_doorbell_addr = main_int_res.start +
-+		ARMADA_370_XP_SW_TRIG_INT_OFFS;
-+
- 	control = readl(main_int_base + ARMADA_370_XP_INT_CONTROL);
- 
- 	armada_370_xp_mpic_domain =
-@@ -292,6 +423,8 @@ static int __init armada_370_xp_mpic_of_init(struct device_node *node,
- 
- #endif
- 
-+	armada_370_xp_msi_init(node);
-+
- 	set_handle_irq(armada_370_xp_handle_irq);
- 
- 	return 0;
--- 
-1.8.1.2
+Ok, very good.
+> 
+> I will remove a 'remove' callback. Is it OK?
+> Or what should I do?
 
+I think you should keep the remove function, but add a comment explaining that
+you don't allow module unload and that in order to allow it, the remove function
+will have to remove all pci buses and devices under the host bridge.
+
+	Arnd
