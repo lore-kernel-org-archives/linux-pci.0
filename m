@@ -1,72 +1,76 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp02.citrix.com ([66.165.176.63]:5369 "EHLO SMTP02.CITRIX.COM"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754824Ab3FKQR7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 11 Jun 2013 12:17:59 -0400
-Message-ID: <51B74DA9.7060509@eu.citrix.com>
-Date: Tue, 11 Jun 2013 17:17:45 +0100
-From: George Dunlap <george.dunlap@eu.citrix.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <51C08BEA.1030804@gmail.com>
+Date: Wed, 19 Jun 2013 00:33:46 +0800
+From: Jiang Liu <liuj97@gmail.com>
 MIME-Version: 1.0
-To: konrad wilk <konrad.wilk@oracle.com>
-CC: <xen-devel@lists.xensource.com>, <linux-kernel@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>, <stable@vger.kernel.org>
-Subject: Re: [PATCH] xen/pci: Deal with toolstack missing an 'XenbusStateClosing'.
-References: <20130610202456.GA17822@phenom.dumpdata.com> <1370898399-20968-1-git-send-email-konrad.wilk@oracle.com> <1370898399-20968-2-git-send-email-konrad.wilk@oracle.com> <51B743EA.5020800@eu.citrix.com> <51B74B77.1000806@oracle.com>
-In-Reply-To: <51B74B77.1000806@oracle.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Yinghai Lu <yinghai@kernel.org>, Jiang Liu <jiang.liu@huawei.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Mauro Carvalho Chehab <mchehab@redhat.com>,
+	Doug Thompson <dougthompson@xmission.com>,
+	linux-edac@vger.kernel.org
+Subject: Re: [PATCH v3, part2 15/20] PCI, EDAC: use hotplug-safe PCI bus iterators
+ to walk PCI buses
+References: <1369583597-3801-1-git-send-email-jiang.liu@huawei.com> <1369583597-3801-16-git-send-email-jiang.liu@huawei.com> <20130617201802.GB7877@google.com>
+In-Reply-To: <20130617201802.GB7877@google.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06/11/2013 05:08 PM, konrad wilk wrote:
->
-> On 6/11/2013 11:36 AM, George Dunlap wrote:
->> On 06/10/2013 10:06 PM, Konrad Rzeszutek Wilk wrote:
->>> There are two tool-stack that can instruct the Xen PCI frontend
->>> and backend to change states: 'xm' (Python code with a daemon),
->>> and 'xl' (C library - does not keep state changes).
->>>
->>> With the 'xm', the path to disconnect a PCI device (xm pci-detach
->>> <guest> <BDF>)is:
->>>
->>> 4(Connected)->7(Reconfiguring*)-> 8(Reconfigured)->
->>> 4(Connected)->5(Closing*).
->>>
->>> The * is for states that the tool-stack sets. For 'xl', it is similar:
->>>
->>> 4(Connected)->7(Reconfiguring*)-> 8(Reconfigured)-> 4(Connected)
->>>
->>> Both of them also tear down the XenBus structure, so the backend
->>> state ends up going in the 3(Initialised) and calls
->>> pcifront_xenbus_remove.
+On 06/18/2013 04:18 AM, Bjorn Helgaas wrote:
+> On Sun, May 26, 2013 at 11:53:12PM +0800, Jiang Liu wrote:
+>> Enhance EDAC drviers to use hotplug-safe iterators to walk PCI buses.
 >>
->> So I looked a little bit into this; there are actually two different
->> states that happen as part of this handshake.  In order to disonnect a
->> *device*, xl signals using the *bus* state, like this:
->> * Wait for the *bus* to be in state 4(Connected)
->> * Set the *device* state to 5(Closing)
->> * Set the *bus* state to 7(Reconfiguring)
->> * Wait for the *bus* state to return to 4(Connected)
+>> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+>> Cc: Mauro Carvalho Chehab <mchehab@redhat.com>
+>> Cc: Doug Thompson <dougthompson@xmission.com> r
+>> Cc: linux-edac@vger.kernel.org
+>> Cc: linux-kernel@vger.kernel.org
+>> ---
+>>  drivers/edac/i7core_edac.c | 2 +-
+>>  1 file changed, 1 insertion(+), 1 deletion(-)
 >>
->> So are all of these states you see the *bus* state?  And why would you
->> disconnect the whole pci bus if you're only removing one device?
->
-> Correct. The stats I enumerated are *bus* states. Not per-device states.
-> I presume (and I hadn't checked xm) that Xend has some logic to only
-> disconnect the bus if all of the PCI devices have been disconnected. In
-> 'xl' it does not do that.
->
-> The testing I did was just with one PCI device.
+>> diff --git a/drivers/edac/i7core_edac.c b/drivers/edac/i7core_edac.c
+>> index 0ec3e95..7146e10 100644
+>> --- a/drivers/edac/i7core_edac.c
+>> +++ b/drivers/edac/i7core_edac.c
+>> @@ -1296,7 +1296,7 @@ static unsigned i7core_pci_lastbus(void)
+>>  	int last_bus = 0, bus;
+>>  	struct pci_bus *b = NULL;
+>>  
+>> -	while ((b = pci_find_next_bus(b)) != NULL) {
+>> +	for_each_pci_root_bus(b) {
+> 
+> This doesn't look equivalent.  Previously, we iterated over all PCI
+> buses, so we returned the highest bus number seen anywhere.  Now we
+> only look at root buses, so we return the highest bus number of any
+> root bus.  But if that root bus has a bridge on it, obviously the
+> bus on the other side has a higher number.
+Hi Bjorn,
+	I think the name pci_find_next_bus() is misleading, it should be named
+pci_find_next_root_bus() actually because it returns next root bus indeed.
 
-Ah, OK -- I see now.  The problem is that the code in the Linux side 
-didn't know about the whole "4->7->8->4" thing to unplug a device.  In 
-all likelihood, if you had used xm with two devices (so that the bus 
-didn't get disconnected), then you would have run across the same error.
+> 
+> Even with that fix, a hot-add at the same time i7core_probe() runs
+> could mean an incorrect result.  This is all very i7 topology-dependent,
+> so I don't think the PCI core can do anything more than avoid oopses
+> from traversing lists incorrectly.
+Yeah, it's very architecture specific. I think i7core_edac assume no PCI
+root bus hotplug on i7 platforms because it's desktop or mobile processors.
 
-So at least part of the problem *is* a bug in Linux.
+> 
+> Bjorn
+> 
+>>  		bus = b->number;
+>>  		edac_dbg(0, "Found bus %d\n", bus);
+>>  		if (bus > last_bus)
+>> -- 
+>> 1.8.1.2
+>>
 
-That doesn't explain why I have problems doing this on Debian's version 
-of 3.2 -- unless the "fix" you mentoned above was backported to the 
-stable kernel, perhaps?
-
-  -George
