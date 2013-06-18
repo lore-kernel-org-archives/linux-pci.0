@@ -1,87 +1,108 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f175.google.com ([209.85.223.175]:63920 "EHLO
-	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751353Ab3F0R17 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 27 Jun 2013 13:27:59 -0400
+Received: from mail-bk0-f49.google.com ([209.85.214.49]:64108 "EHLO
+	mail-bk0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752106Ab3FRL0L (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Jun 2013 07:26:11 -0400
+Received: by mail-bk0-f49.google.com with SMTP id mz10so1697146bkb.8
+        for <linux-pci@vger.kernel.org>; Tue, 18 Jun 2013 04:26:09 -0700 (PDT)
+Date: Tue, 18 Jun 2013 13:26:04 +0200
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Arnd Bergmann <arnd@arndb.de>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Maen Suleiman <maen@marvell.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH v2 4/8] irqchip: armada-370-xp: implement MSI support
+Message-ID: <20130618112604.GD6322@mithrandir>
+References: <1370536888-8871-1-git-send-email-thomas.petazzoni@free-electrons.com>
+ <1370536888-8871-5-git-send-email-thomas.petazzoni@free-electrons.com>
+ <20130612104207.GE30841@mithrandir>
+ <20130618104338.584098e1@skate>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo4BCdgnUs8RzjugVWE4P7cTNGFOCdijjmUUb5suqw_-6A@mail.gmail.com>
-References: <1372177330-28013-1-git-send-email-mika.westerberg@linux.intel.com>
-	<1372177330-28013-7-git-send-email-mika.westerberg@linux.intel.com>
-	<CAErSpo58bCG4=hwC73VY+nXPk9-dZUb5eWERZ_wTtAfrXtBVmg@mail.gmail.com>
-	<CAE9FiQW9xuu6WjH59td6Jve10kokoxU4mNqj4DRyg7beqBzHDA@mail.gmail.com>
-	<CAE9FiQVCQKjPa1dVKhAubvD+d=rudOxLaRMYAr-GAC7eSSz09Q@mail.gmail.com>
-	<CAErSpo68p7_0zsnBjD=sb14vs0QyCZuN+RTvib2-ZOYUiZn6pw@mail.gmail.com>
-	<CAE9FiQVm-gABPsh1-A8H+a0Prug7JMoQpwvKC2EKHpQVXOhzcA@mail.gmail.com>
-	<CAErSpo4BCdgnUs8RzjugVWE4P7cTNGFOCdijjmUUb5suqw_-6A@mail.gmail.com>
-Date: Thu, 27 Jun 2013 10:27:59 -0700
-Message-ID: <CAE9FiQXBtWESyVREYL67r9F5wK6xLBzHG30aAaif-SscdXi9yQ@mail.gmail.com>
-Subject: Re: [PATCH 6/6] x86/PCI: quirk Thunderbolt PCI-to-PCI bridges
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	"Ronciak, John" <john.ronciak@intel.com>,
-	"Penner, Miles J" <miles.j.penner@intel.com>,
-	Bruce Allan <bruce.w.allan@intel.com>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"x86@kernel.org" <x86@kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="ZJcv+A0YCCLh2VIg"
+In-Reply-To: <20130618104338.584098e1@skate>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 27, 2013 at 9:00 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Wed, Jun 26, 2013 at 5:56 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->> On Wed, Jun 26, 2013 at 3:55 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>> On Wed, Jun 26, 2013 at 4:31 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->>>> On Wed, Jun 26, 2013 at 3:26 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->>>>> On Wed, Jun 26, 2013 at 3:18 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>>>>> On Tue, Jun 25, 2013 at 10:22 AM, Mika Westerberg
->>>>>> <mika.westerberg@linux.intel.com> wrote:
->>>>>>> Thunderbolt PCI-to-PCI bridges typically use BIOS "assisted" enumeration.
->>>>>>> This means that the BIOS will allocate bridge resources based on some
->>>>>>> assumptions of a maximum Thunderbolt chain. It also disables native PCIe
->>>>>>> hotplug of the root port where the Thunderbolt host router is connected.
->>>> ...
->>>> During acpi hotplug, firmare could do extra help for us like assign
->>>> some resources to pci device bars, so it is NOT "boot-time".
->>>
->>> Really?  How can firmware assign BARs at hotplug-time?  I mean,
->>> obviously firmware *can* write things to the BARs before giving the
->>> device to the OS, but how would it know what to write?
->>
->> should be acpi code, or SMI code or even BMC firmware via sideband.
->
-> How would that code (ACPI code (by which I assume you mean AML), SMI
-> code, BMC firmware) know what values to write to BARs?  Is it reading
-> the windows of upstream bridges from config space?  Is it assuming the
-> OS never changes the windows of bridges upstream from the Thunderbolt
-> controller?
 
-Kernel only try to change upstream bridge for pciehp during hot-add.
+--ZJcv+A0YCCLh2VIg
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-for acpiphp, because could have other devices already there before hot-add,
-kernel does not try to expand the upstream bridge. size and assign only
-to the new added devices.
+On Tue, Jun 18, 2013 at 10:43:38AM +0200, Thomas Petazzoni wrote:
+> Dear Thierry Reding,
+>=20
+> On Wed, 12 Jun 2013 12:42:40 +0200, Thierry Reding wrote:
+> > On Thu, Jun 06, 2013 at 06:41:24PM +0200, Thomas Petazzoni wrote:
+> > [...]
+> > > @@ -292,6 +454,8 @@ static int __init armada_370_xp_mpic_of_init(stru=
+ct device_node *node,
+> > > =20
+> > >  #endif
+> > > =20
+> > > +	armada_370_xp_msi_init(node);
+> > > +
+> >=20
+> > So I see that you don't have access to the original platform device
+> > here, but you could use of_find_device_by_node() to obtain it and pass
+> > that into armada_370_xp_msi_init() in order to set the msi_chip.dev
+> > field. Or you could do the lookup in armada_370_xp_msi_init() if you
+> > don't need it for anything else in armada_370_xp_mpic_of_init().
+>=20
+> As I replied to Grant, of_find_device_by_node() returns NULL, I believe
+> because the all IRQ controller driver initialization is done pretty
+> early, before the of_platform_populate() call is made, so there is no
+> platform_device associated with the IRQ controller node at the time the
+> armada_370_xp_mpic_of_init() function is called.
+>=20
+> Do you see another approach, especially in relation to your comment on
+> PATCH 2/8 ?
 
->
->>>  I assume the
->>> OS owns the address space, and it can change the upstream bridge
->>> windows or the BARs of another device on the bus at any time, subject
->>> to the OS's own issues as far as quiescing or unbinding drivers, etc.,
->>> but without coordinating with the BIOS.
->>
->> for thunderbolt or dock with acpiphp, then all children devices/bridges should
->> not have drivers loaded yet.
->
-> I said "upstream bridge windows or ... another device on the bus,"
-> i.e., I'm referring to devices other than the Thunderbolt controller.
-> I assume the OS is free to change resource assignments for those
-> non-Thunderbolt devices, and obviously those assignments affect what
-> is available for Thunderbolt.
+Hmmm, that's too bad. The only other possibility that I see is that you
+could associate the struct device at a later point when it becomes
+available, but looking at the irqchip driver it doesn't look like you
+get notification of that either. I suppose you could add a
+platform_driver to it and hook things up in its .probe() callback, but
+I'm not sure if that's in line with how the irqchip was designed. Adding
+Grant Likely and Thomas Gleixner on Cc, maybe they have better advice.
 
-ok. that upstream one can not be touched from firmware.
+Looking at other irqchip drivers I find it a bit odd to see how they're
+structured, though. We've been preaching for years that drivers should
+be well-encapsulated and told everybody it was bad to use globals and
+they should be associating driver-specific data with each instance of a
+device. Then comes along irqchip and all of a sudden it's okay to use
+globals again. It feels a bit fragile.
+
+Thierry
+
+--ZJcv+A0YCCLh2VIg
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.20 (GNU/Linux)
+
+iQIcBAEBAgAGBQJRwEPMAAoJEN0jrNd/PrOhs28P/1H/gW7o+TkJeFeiI+LyoOHC
+AvFVaEEbFv2iVRVZoASw3sUHolG3cxXHF0ZeUY995F7WfUtwDzY9JWDsP1nTEaLB
+HMaCl1kI9ZGdYHZy8sHTXFcqJhUs+iQlsGAaeiKf2KdZ8Nb/hJVGcMdHXToi0UHl
+JAP4dRwGjJU9AqqqvDSdb7fk+MLLHaY+X3bUc4ifneVLvO5/FlYIdzx8O0w+xPr6
+uh3uV7k+DgEkVNGqvv0YaNSo0IG6lee8X01PwtbS8tIiGpl9p1PAYD2hhSSh6EQc
+cQnDk8Ahmcz+gMtcpULrK17cpcxrJpL30iBgvpaVo4afccIhAuGauhzG+gWUgNR0
+BbviokSzDWDvhxFGeDPuyb9hGrQTUatxRYn/Wpp45r6SlWdiV6KjhJ02SWXq7tnB
+Cj1FuWv6MK+D2jAQrKecsycq0YK+SckX+UWOyYmrByao347LtHaswhgcFLu5kOZm
+dnNY2XTKjWx9maX8VgxyaysJaJQQYCt7fXmH6U4gqQr9HxEsVK8VkHuuond7YvTX
+L+5HH5T4ggOzqp5rMPDrWWKuMCjdOcKCz74+w7XTDiJfgkQoE++9R1ofMaDw7AHm
+DIqkOoQKyPG08rCc6Uz3uLDQ5EJguJaTEhkFAb+zAtsSkkWNuv1LtUdLfuIzXFbj
+73CREXN9TV2tBMRNQ/kK
+=ZSoE
+-----END PGP SIGNATURE-----
+
+--ZJcv+A0YCCLh2VIg--
