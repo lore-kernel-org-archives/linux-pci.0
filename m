@@ -1,77 +1,110 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout4.samsung.com ([203.254.224.34]:57560 "EHLO
-	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757748Ab3FTMp7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Jun 2013 08:45:59 -0400
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Kukjin Kim' <kgene.kim@samsung.com>,
-	'Bjorn Helgaas' <bhelgaas@google.com>
-Cc: linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org,
-	devicetree-discuss@lists.ozlabs.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	'Grant Likely' <grant.likely@secretlab.ca>,
-	'Andrew Murray' <andrew.murray@arm.com>,
-	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
-	'Thierry Reding' <thierry.reding@avionic-design.de>,
-	'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>,
-	'Arnd Bergmann' <arnd@arndb.de>,
-	'Surendranath Gurivireddy Balla' <suren.reddy@samsung.com>,
-	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
-	'Thomas Abraham' <thomas.abraham@linaro.org>,
-	'Tomasz Figa' <t.figa@samsung.com>,
-	'Pratyush Anand' <pratyush.anand@st.com>,
-	'Mohit KUMAR' <Mohit.KUMAR@st.com>,
-	Jingoo Han <jg1.han@samsung.com>
-Subject: [PATCH V8 4/4] ARM: dts: Add pcie controller node for
- exynos5440-ssdk5440
-Date: Thu, 20 Jun 2013 21:45:57 +0900
-Message-id: <00de01ce6db4$1c2b8c80$5482a580$@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Jiang Liu <liuj97@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"Alexander E . Patrakov" <patrakov@gmail.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Len Brown <lenb@kernel.org>,
+	stable@vger.kernel.org, Jiang Liu <jiang.liu@huawei.com>
+Subject: Re: [BUGFIX v2 2/4] ACPI, DOCK: resolve possible deadlock scenarios
+Date: Tue, 18 Jun 2013 23:12:28 +0200
+Message-ID: <9145850.ySkUWRjb02@vostro.rjw.lan>
+In-Reply-To: <51C07E92.6090309@gmail.com>
+References: <1371238081-32260-1-git-send-email-jiang.liu@huawei.com> <27452260.5ySAzSUIS7@vostro.rjw.lan> <51C07E92.6090309@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds pcie controller node for exynos5440-ssdk5440,
-and also adds a phandle for pin controller node.
+On Tuesday, June 18, 2013 11:36:50 PM Jiang Liu wrote:
+> On 06/17/2013 07:39 PM, Rafael J. Wysocki wrote:
+> > On Monday, June 17, 2013 01:01:51 AM Jiang Liu wrote:
+> >> On 06/16/2013 05:20 AM, Rafael J. Wysocki wrote:
+> >>> On Saturday, June 15, 2013 10:17:42 PM Rafael J. Wysocki wrote:
+> >>>> On Saturday, June 15, 2013 09:44:28 AM Jiang Liu wrote:
+> >> [...]
+> >>>> When it returns from unregister_hotplug_dock_device(), nothing prevents it
+> >>>> from accessing whatever it wants, because ds->hp_lock is not used outside
+> >>>> of the add/del and hotplug_dock_devices().  So, the actual role of
+> >>>> ds->hp_lock (not the one that it is supposed to play, but the real one)
+> >>>> is to prevent addition/deletion from happening when hotplug_dock_devices()
+> >>>> is running.  [Yes, it does protect the list, but since the list is in fact
+> >>>> unnecessary, that doesn't matter.]
+> >>>>
+> >>>>> If we simply use a flag to mark presence of registered callback, we 
+> >>>>> can't achieve the second goal.
+> >>>>
+> >>>> I don't mean using the flag *alone*.
+> >>>>
+> >>>>> Take the sony laptop as an example. It has several PCI 
+> >>>>> hotplug
+> >>>>> slot associated with the dock station:
+> >>>>> [   28.829316] acpiphp_glue: _handle_hotplug_event_func: Bus check 
+> >>>>> notify on \_SB_.PCI0.RP07.LPMB
+> >>>>> [   30.174964] acpiphp_glue: _handle_hotplug_event_func: Bus check 
+> >>>>> notify on \_SB_.PCI0.RP07.LPMB.LPM0
+> >>>>> [   30.174973] acpiphp_glue: _handle_hotplug_event_func: Bus check 
+> >>>>> notify on \_SB_.PCI0.RP07.LPMB.LPM1
+> >>>>> [   30.174979] acpiphp_glue: _handle_hotplug_event_func: Bus check 
+> >>>>> notify on \_SB_.PCI0.RP07.LPMB.LPM2
+> >>>>> [   30.174985] acpiphp_glue: _handle_hotplug_event_func: Bus check 
+> >>>>> notify on \_SB_.PCI0.RP07.LPMB.LPM2.LPRI.LPR0.GFXA
+> >>>>> [   30.175020] acpiphp_glue: _handle_hotplug_event_func: Bus check 
+> >>>>> notify on \_SB_.PCI0.RP07.LPMB.LPM2.LPRI.LPR0.GHDA
+> >>>>> [   30.175040] acpiphp_glue: _handle_hotplug_event_func: Bus check 
+> >>>>> notify on \_SB_.PCI0.RP07.LPMB.LPM2.LPRI.LPR1.LPCI.LPC0.DLAN
+> >>>>> [   30.175050] acpiphp_glue: _handle_hotplug_event_func: Bus check 
+> >>>>> notify on \_SB_.PCI0.RP07.LPMB.LPM2.LPRI.LPR1.LPCI.LPC1.DODD
+> >>>>> [   30.175060] acpiphp_glue: _handle_hotplug_event_func: Bus check 
+> >>>>> notify on \_SB_.PCI0.RP07.LPMB.LPM2.LPRI.LPR1.LPCI.LPC2.DUSB
+> >>>>>
+> >>>>> So it still has some race windows if we undock the station while 
+> >>>>> repeatedly rescanning/removing
+> >>>>> the PCI bus for \_SB_.PCI0.RP07.LPMB.LPM0 through sysfs interfaces.
+> >>>
+> >>> Which sysfs interfaces do you mean, by the way?
+> >>>
+> >>> If you mean "eject", then it takes acpi_scan_lock and hotplug_dock_devices()
+> >>> should always be run under acpi_scan_lock too.  It isn't at the moment,t
+> >>> because write_undock() doesn't take acpi_scan_lock(), but this is an obvious
+> >>> bug (so I'm going to send a patch to fix it in a while).
+> >>>
+> >>> With that bug fixed, the possible race between acpi_eject_store() and
+> >>> hotplug_dock_devices() should be prevented from happening, so perhaps we're
+> >>> worrying about something that cannot happen?
+> >> Hi Rafael,
+> >> 	I mean the "remove" method of each PCI device, and the "power" method
+> >> of PCI hotplug slot here.
+> >> 	These methods may be used to remove P2P bridges with associated ACPIPHP
+> >> hotplug slots, which in turn will cause invoking of
+> >> unregister_hotplug_dock_device().
+> >> 	So theoretical we may trigger the bug by undocking while repeatedly
+> >> adding/removing P2P bridges with ACPIPHP hotplug slot through PCI
+> >> "rescan" and "remove" sysfs interface,
+> > 
+> > Why don't we make these things take acpi_scan_lock upfront, then?
+> Hi Rafael,
+>     Seems we can't rely on acpi_scan_lock here, it may cause another
+> deadlock scenario:
+> 1) thread 1 acquired the acpi_scan_lock and tries to destroy all sysfs
+> interfaces for PCI devices.
+> 2) thread 2 opens a PCI sysfs which then tries to acquire the
+> acpi_scan_lock.
 
-Signed-off-by: Jingoo Han <jg1.han@samsung.com>
-Acked-by: Arnd Bergmann <arnd@arndb.de>
----
- arch/arm/boot/dts/exynos5440-ssdk5440.dts |    8 ++++++++
- arch/arm/boot/dts/exynos5440.dtsi         |    2 +-
- 2 files changed, 9 insertions(+), 1 deletion(-)
+Well, maybe, but you didn't explain how this was going to happen.  What code
+paths are involved, etc.
 
-diff --git a/arch/arm/boot/dts/exynos5440-ssdk5440.dts b/arch/arm/boot/dts/exynos5440-ssdk5440.dts
-index f32cd77..ede7727 100644
---- a/arch/arm/boot/dts/exynos5440-ssdk5440.dts
-+++ b/arch/arm/boot/dts/exynos5440-ssdk5440.dts
-@@ -65,4 +65,12 @@
- 			clock-frequency = <50000000>;
- 		};
- 	};
-+
-+	pcie@290000 {
-+		reset-gpio = <&pin_ctrl 5 0>;
-+	};
-+
-+	pcie@2a0000 {
-+		reset-gpio = <&pin_ctrl 22 0>;
-+	};
- };
-diff --git a/arch/arm/boot/dts/exynos5440.dtsi b/arch/arm/boot/dts/exynos5440.dtsi
-index 68d05e9..de31f0c 100644
---- a/arch/arm/boot/dts/exynos5440.dtsi
-+++ b/arch/arm/boot/dts/exynos5440.dtsi
-@@ -126,7 +126,7 @@
- 		clock-names = "spi", "spi_busclk0";
- 	};
- 
--	pinctrl {
-+	pin_ctrl: pinctrl {
- 		compatible = "samsung,exynos5440-pinctrl";
- 		reg = <0xE0000 0x1000>;
- 		interrupts = <0 37 0>, <0 38 0>, <0 39 0>, <0 40 0>,
+Quite frankly, I've already run out of patience, sorry about that.  It looks
+like I need to go through the code and understand all of these problems myself.
+Yes, it will take time.
+
+Thanks,
+Rafael
+
+
 -- 
-1.7.10.4
-
-
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
