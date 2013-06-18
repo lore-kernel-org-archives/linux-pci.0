@@ -1,282 +1,166 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout3.samsung.com ([203.254.224.33]:12652 "EHLO
-	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932188Ab3FQJpz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Jun 2013 05:45:55 -0400
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Arnd Bergmann' <arnd@arndb.de>
-Cc: 'Kukjin Kim' <kgene.kim@samsung.com>,
-	'Bjorn Helgaas' <bhelgaas@google.com>,
-	linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org,
-	devicetree-discuss@lists.ozlabs.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	'Grant Likely' <grant.likely@secretlab.ca>,
-	'Andrew Murray' <andrew.murray@arm.com>,
-	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
-	'Thierry Reding' <thierry.reding@avionic-design.de>,
-	'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>,
-	'Surendranath Gurivireddy Balla' <suren.reddy@samsung.com>,
-	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
-	'Thomas Abraham' <thomas.abraham@linaro.org>,
-	Jingoo Han <jg1.han@samsung.com>
-References: <000b01ce6839$0f0455d0$2d0d0170$@samsung.com>
- <13685067.uPzcc2y1CU@wuerfel> <000001ce68d7$ca762200$5f626600$@samsung.com>
- <3539874.V7zkhbMg0b@wuerfel>
-In-reply-to: <3539874.V7zkhbMg0b@wuerfel>
-Subject: Re: [PATCH V5 1/3] pci: Add PCIe driver for Samsung Exynos
-Date: Mon, 17 Jun 2013 18:45:52 +0900
-Message-id: <005e01ce6b3f$74e3c940$5eab5bc0$@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=US-ASCII
+Received: from mail-ie0-f169.google.com ([209.85.223.169]:46630 "EHLO
+	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932756Ab3FRRJa (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Jun 2013 13:09:30 -0400
+Received: by mail-ie0-f169.google.com with SMTP id 10so10758147ied.14
+        for <linux-pci@vger.kernel.org>; Tue, 18 Jun 2013 10:09:30 -0700 (PDT)
+Date: Tue, 18 Jun 2013 11:09:26 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: linux-pci@vger.kernel.org, ddutile@redhat.com,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 1/2] pci: Fix flaw in pci_acs_enabled()
+Message-ID: <20130618170926.GA9203@google.com>
+References: <20130607162732.7733.17758.stgit@bling.home>
+ <20130607163441.7733.23221.stgit@bling.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130607163441.7733.23221.stgit@bling.home>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, June 14, 2013 9:54 PM, Arnd Bergmann wrote:
-> On Friday 14 June 2013 17:18:46 Jingoo Han wrote:
-> > On Thursday, June 13, 2013 11:14 PM, Arnd Bergmann wrote:
-> > > On Thursday 13 June 2013 22:22:31 Jingoo Han wrote:
+On Fri, Jun 07, 2013 at 10:34:41AM -0600, Alex Williamson wrote:
+> Downstream ports support for all ACS flags supercedes multifunction
+> exclusion of some flags.  The PCIe spec also fully specifies which
+> PCIe types are subject to the multifunction rules and excludes event
+> collectors and PCIe-to-PCI bridges entirely.  Document each rule to
+> the section of the PCIe spec.
+
+What's the flaw, exactly?  Does this fix a user-visible issue?  Should
+it be backported to any stable releases?  It'd be nice to have an
+example or two of devices where we return the wrong thing today.
+
+Oh, I think I see: the original code filters out flags for
+multi-function downstream ports, and your new code does not.
+
+> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+> ---
+>  drivers/pci/pci.c |   59 ++++++++++++++++++++++++++++++++++++++++-------------
+>  1 file changed, 45 insertions(+), 14 deletions(-)
 > 
-> > > > +struct pcie_port {
-> > > > +	struct device		*dev;
-> > > > +	u8			controller;
-> > > > +	u8			root_bus_nr;
-> > > > +	void __iomem		*dbi_base;
-> > > > +	void __iomem		*elbi_base;
-> > > > +	void __iomem		*phy_base;
-> > > > +	void __iomem		*purple_base;
-> > > > +	phys_addr_t		cfg0_base;
-> > > > +	void __iomem		*va_cfg0_base;
-> > > > +	phys_addr_t		cfg1_base;
-> > > > +	void __iomem		*va_cfg1_base;
-> > > > +	phys_addr_t		io_base;
-> > > > +	phys_addr_t		mem_base;
-> > > > +	spinlock_t		conf_lock;
-> > > > +	struct resource		cfg;
-> > > > +	struct resource		io;
-> > > > +	struct resource		mem;
-> > > > +	struct pcie_port_info	config;
-> > > > +	struct clk		*clk;
-> > > > +	struct clk		*bus_clk;
-> > > > +	int			irq;
-> > > > +	int			reset_gpio;
-> > > > +};
-> > >
-> > > You mentioned that you'd use u64 for the resources here but did not.
-> >
-> > Do you mean the following?
-> >
-> > +	u64		cfg0_base;
-> > +	u64		cfg1_base;
-> > +	u64		io_base;
-> > +	u64		mem_base;
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index b099e00..457ae51 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -2354,6 +2354,19 @@ void pci_enable_acs(struct pci_dev *dev)
+>  	pci_write_config_word(dev, pos + PCI_ACS_CTRL, ctrl);
+>  }
+>  
+> +static bool pci_acs_flags_enabled(struct pci_dev *pdev, u16 acs_flags)
+> +{
+> +	int pos;
+> +	u16 ctrl;
+> +
+> +	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_ACS);
+> +	if (!pos)
+> +		return false;
+> +
+> +	pci_read_config_word(pdev, pos + PCI_ACS_CTRL, &ctrl);
+> +	return (ctrl & acs_flags) == acs_flags;
+> +}
+> +
+>  /**
+>   * pci_acs_enabled - test ACS against required flags for a given device
+>   * @pdev: device to test
+> @@ -2364,8 +2377,7 @@ void pci_enable_acs(struct pci_dev *dev)
+>   */
+>  bool pci_acs_enabled(struct pci_dev *pdev, u16 acs_flags)
+
+I know you didn't change the *name* of this function, but I think it
+would be easier to follow if you did change the name to something more
+descriptive, e.g., something to do with the actual property you're
+interested in, which has to do with routing peer-to-peer DMA.
+
+That property makes sense even for the excluded devices, while the
+idea of an ACS capability that doesn't even exist is implicitly
+enabled, really doesn't.
+
+>  {
+> -	int pos, ret;
+> -	u16 ctrl;
+> +	int ret;
+>  
+>  	ret = pci_dev_specific_acs_enabled(pdev, acs_flags);
+>  	if (ret >= 0)
+> @@ -2374,23 +2386,42 @@ bool pci_acs_enabled(struct pci_dev *pdev, u16 acs_flags)
+>  	if (!pci_is_pcie(pdev))
+>  		return false;
+>  
+> -	/* Filter out flags not applicable to multifunction */
+> -	if (pdev->multifunction)
+> +	switch (pci_pcie_type(pdev)) {
+> +	/*
+> +	 * PCIe 3.0, 6.12.1 excludes ACS on these devices.  "Not applicable"
+> +	 */
+> +	case PCI_EXP_TYPE_PCI_BRIDGE:
+> +	case PCI_EXP_TYPE_RC_EC:
+> +		break;
+
+Why not just return "true" immediately here, or even better, just omit
+the case altogether, since it doesn't change the behavior at all?
+
+> +	/*
+> +	 * PCIe 3.0, 6.12.1.1 specifies full ACS capabilities on downstream
+> +	 * ports, regardless of them being multifunction devices.
+> +	 */
+> +	case PCI_EXP_TYPE_DOWNSTREAM:
+> +	case PCI_EXP_TYPE_ROOT_PORT:
+> +		return pci_acs_flags_enabled(pdev, acs_flags);
+> +	/*
+> +	 * PCIe 3.0, 6.12.1.2 specifies unimplemented ACS capabilities on
+> +	 * multifunction devices.  6.12 footnote identifies specifically
+> +	 * which devices types this applies to.
+> +	 */
+> +	case PCI_EXP_TYPE_ENDPOINT:
+> +	case PCI_EXP_TYPE_UPSTREAM:
+> +	case PCI_EXP_TYPE_LEG_END:
+> +	case PCI_EXP_TYPE_RC_END:
+> +		if (!pdev->multifunction)
+> +			break;
+
+And here.
+
+> +
+>  		acs_flags &= (PCI_ACS_RR | PCI_ACS_CR |
+>  			      PCI_ACS_EC | PCI_ACS_DT);
+>  
+> -	if (pci_pcie_type(pdev) == PCI_EXP_TYPE_DOWNSTREAM ||
+> -	    pci_pcie_type(pdev) == PCI_EXP_TYPE_ROOT_PORT ||
+> -	    pdev->multifunction) {
+> -		pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_ACS);
+> -		if (!pos)
+> -			return false;
+> -
+> -		pci_read_config_word(pdev, pos + PCI_ACS_CTRL, &ctrl);
+> -		if ((ctrl & acs_flags) != acs_flags)
+> -			return false;
+> +		return pci_acs_flags_enabled(pdev, acs_flags);
+>  	}
+>  
+> +	/*
+> +	 * PCIe 3.0, 6.12.1.3 specifies no ACS capabilties are applicable
+> +	 * to single function devices with the exception of downstream ports.
+> +	 */
+>  	return true;
+>  }
+>  
 > 
-> Yes, anything you need to program into a 64 bit hardware register.
 
-OK,
+I actually liked the original code organization, because it's closer
+to expressing the idea of "here are the control points where hardware
+can make choices about routing peer-to-peer DMA and here's the knob
+(ACS) that constrains those choices."
 
-> 
-> > > > +static void exynos_pcie_prog_viewport_cfg1(struct pcie_port *pp, u32 busdev)
-> > > > +{
-> > > > +	u32 val;
-> > > > +	void __iomem *dbi_base = pp->dbi_base;
-> > > > +
-> > > > +	/* Program viewport 1 : OUTBOUND : CFG1 */
-> > > > +	val = PCIE_ATU_REGION_OUTBOUND | PCIE_ATU_REGION_INDEX1;
-> > > > +	writel_rc(pp, val, dbi_base + PCIE_ATU_VIEWPORT);
-> > > > +	writel_rc(pp, PCIE_ATU_TYPE_CFG1, dbi_base + PCIE_ATU_CR1);
-> > > > +	val = PCIE_ATU_ENABLE;
-> > > > +	writel_rc(pp, val, dbi_base + PCIE_ATU_CR2);
-> > > > +	writel_rc(pp, (u64)pp->cfg1_base, dbi_base + PCIE_ATU_LOWER_BASE);
-> > > > +	writel_rc(pp, 0, dbi_base + PCIE_ATU_UPPER_BASE);
-> > > > +	writel_rc(pp, (u64)pp->cfg1_base + pp->config.cfg1_size - 1,
-> > > > +			dbi_base + PCIE_ATU_LIMIT);
-> > > > +	writel_rc(pp, busdev, dbi_base + PCIE_ATU_LOWER_TARGET);
-> > > > +	writel_rc(pp, 0, dbi_base + PCIE_ATU_UPPER_TARGET);
-> > > > +}
-> > >
-> > > And you still don't set up the UPPER halves, which was really the point
-> > > of my comment. Same thing for all the other ones.
-> >
-> > Do you mean the following?
-> >
-> > +	writel_rc(pp, pp->cfg1_base, dbi_base + PCIE_ATU_LOWER_BASE);
-> > +	writel_rc(pp, (pp->cfg1_base >> 32), dbi_base + PCIE_ATU_UPPER_BASE);
-> 
-> Right. Note that you could achieve the same using phys_addr_t instead of
-> u64, but it's more complicated to get that to work for both 32 and 64 bit
-> phys_addr_t types, since you cannot shift a 32 bit value by 32 bits in C.
+Maybe something like (pidgin C):
 
-OK,
+    if (PCI_EXP_TYPE_DOWNSTREAM || PCI_EXP_TYPE_ROOT_PORT)
+	return pci_acs_flags_enabled(pdev, acs_flags);
 
-> 
-> > > > +static void exynos_pcie_prog_viewport_mem_inbound(struct pcie_port *pp)
-> > > > +{
-> > > > +	u32 val;
-> > > > +	void __iomem *dbi_base = pp->dbi_base;
-> > > > +
-> > > > +	/* Program viewport 0 : INBOUND : MEM */
-> > > > +	val = PCIE_ATU_REGION_INBOUND | PCIE_ATU_REGION_INDEX0;
-> > > > +	writel_rc(pp, val, dbi_base + PCIE_ATU_VIEWPORT);
-> > > > +	writel_rc(pp, PCIE_ATU_TYPE_MEM, dbi_base + PCIE_ATU_CR1);
-> > > > +	val = PCIE_ATU_ENABLE | PCIE_ATU_BAR_MODE_ENABLE;
-> > > > +	writel_rc(pp, val, dbi_base + PCIE_ATU_CR2);
-> > > > +	writel_rc(pp, (u64)pp->config.mem_bus_addr,
-> > > > +			dbi_base + PCIE_ATU_LOWER_BASE);
-> > > > +	writel_rc(pp, 0, dbi_base + PCIE_ATU_UPPER_BASE);
-> > > > +	writel_rc(pp, (u64)pp->config.mem_bus_addr + pp->config.mem_size - 1,
-> > > > +			dbi_base + PCIE_ATU_LIMIT);
-> > > > +	writel_rc(pp, (u64)pp->mem_base, dbi_base + PCIE_ATU_LOWER_TARGET);
-> > > > +	writel_rc(pp, 0, dbi_base + PCIE_ATU_UPPER_TARGET);
-> > > > +}
-> > >
-> > > This makes even less sense than before, it seems like now you only
-> > > allow DMA between PCI devices but not to main memory.
-> >
-> > Sorry, I cannot understand it.
-> > Could you give me more details?
-> > Also, pseudo-code will be very helpful.
-> 
-> Please look up the documentation about inbound viewport and describe
-> in a code comment what it does. I /assume/ that this is how DMA accesses
-> from the bus get translated into AXI bus transactions. If so, you have
-> to let the window translate addresses from RAM. If it's something else,
-> then you should document what it is and how it needs to be set up.
+    if (!pdev->multifunction)
+	return true;
 
-One of our hardware engineer confirmed it.
-He said that these inbound functions are unnecessary.
-Also, I checked that PCIe works properly without these functions.
-So, I will remove these inbound functions.
+    acs_flags &= (PCI_ACS_RR | PCI_ACS_CR | ...);
+    return pci_acs_flags_enabled(pdev, acs_flags);
 
-
-> 
-> > > > +static int exynos_pcie_setup(int nr, struct pci_sys_data *sys)
-> > > > +{
-> > > > +	struct pcie_port *pp;
-> > > > +
-> > > > +	pp = sys_to_pcie(sys);
-> > > > +
-> > > > +	if (!pp)
-> > > > +		return 0;
-> > > > +
-> > > > +	pci_add_resource(&sys->resources, &pp->io);
-> > > > +	pci_add_resource(&sys->resources, &pp->mem);
-> > >
-> > > Now you are missing the offsets. You have to at least pass an offset for one
-> > > of the I/O spaces, since they are using the same bus address. The offset must
-> > > match the value you pass to pci_ioremap_io.
-> > >
-> > > For the memory space, you should pass the difference between the physical
-> > > base address and the bus address. That address happens to be zero with
-> > > you DT setup, but I would advise to also try out some other values in DT,
-> > > just to ensure it still works.
-> >
-> > Um, I cannot understand it, too.
-> > Could you give me Psuedo-code?
-> > Or, let me know which pcie driver can be the good reference.
-> 
-> I think most hardware is not as flexible as yours, so they can just hardcode
-> a lot of this.
-> 
-> What you need here is
-> 
-> static unsigned long global_io_offset = 0;
-> if (global_io_offset < SZ_1M && pp->config.io_size > 0) {
-> 	sys->io_offset = global_io_offset - pp->config.io_bus_addr; /* normally 0 */
-> 	pci_ioremap_io(sys->io_offset, pp->io.start);
-> 	global_io_offset += SZ_64K;
-> }
-> sys->mem_offset = pp->mem.start - pp->config.mem_bus_addr; /* normally 0 */
-> 
-> sys->io_offset normally increases by 64K for each bus but should always
-> be between 0 and 1MB, it is the index into the registers mapped at
-> (void __iomem*)PCI_IO_VIRT_BASE.
-> 
-> It is best practice to map 64KB of I/O space at bus address 0 for each
-> domain into PCI_IO_VIRT_BASE, and set up a 1:1 translation between
-> memory space bus addresses and CPU physical addresses, as you do
-> in your 'ranges' property.
-> 
-> However, you should be able to use any other bus addresses with the code
-> above, except for broken device drivers.
-
-Then, do you mean the following?
-
-
-static unsigned long global_io_offset = 0;
-
-static int exynos_pcie_setup(int nr, struct pci_sys_data *sys)
-{
-	struct pcie_port *pp;
-
-	pp = sys_to_pcie(sys);
-
-	if (!pp)
-		return 0;
-
-	if (global_io_offset < SZ_1M && pp->config.io_size > 0) {
-		sys->io_offset = global_io_offset - pp->config.io_bus_addr; /* normally 0 */
-		pci_ioremap_io(sys->io_offset, pp->io.start);
-		global_io_offset += SZ_64K;
-	}
-
-	sys->mem_offset = pp->mem.start - pp->config.mem_bus_addr; /* normally 0 */
-
-	pci_add_resource_offset(&sys->resources, &pp->io, sys->io_offset);
-	pci_add_resource_offset(&sys->resources, &pp->mem, sys->mem_offset);
-
-        return 1;
-}
-
-In this case, boot message is as below:
-
-PCI host bridge to bus 0000:00
-pci_bus 0000:00: root bus resource [io  0x40001000-0x40010fff]
-pci_bus 0000:00: root bus resource [mem 0x40011000-0x5fffffff]
-pci_bus 0000:00: No busn resource found for root bus, will use [bus 00-ff]
-pci 0000:00:00.0: [144d:a549] type 01 class 0x060400
-[.....]
-PCI host bridge to bus 0001:00
-pci_bus 0001:00: root bus resource [io  0x60001000-0x60010fff] (bus address [0x5fff1000-0x6000
-0fff])
-pci_bus 0001:00: root bus resource [mem 0x60011000-0x7fffffff]
-pci_bus 0001:00: No busn resource found for root bus, will use [bus 00-ff]
-pci 0001:00:00.0: [144d:a549] type 01 class 0x060400
-
-> 
-> > > > +static int __exit exynos_pcie_remove(struct platform_device *pdev)
-> > > > +{
-> > > > +	struct pcie_port *pp = platform_get_drvdata(pdev);
-> > > > +
-> > > > +	clk_disable_unprepare(pp->bus_clk);
-> > > > +	clk_disable_unprepare(pp->clk);
-> > > > +
-> > > > +	return 0;
-> > > > +}
-> > >
-> > > You also don't remove the PCI devices here, as mentioned in an earlier
-> > > review.
-> >
-> > I reviewed Marvell PCIe driver and Tegra PCIe driver; however,
-> > I cannot know what you mean.
-> >
-> > Could let me know which additional functions are needed?
-> 
-> The mvebu driver does not allow module unload. I haven't looked at the
-> tegra driver. If you allow unloading the driver and provide a 'remove'
-> callback, that callback needs to clean up the entire bus and remove
-> all child devices that were added as well as undo everything the
-> probe function did. I think it would be great if you can do that, although
-> it might not be easy. The simplest solution would be to not support
-> unloading though.
-
-As the mvebu driver uses platform_driver_probe(), the Exynos driver uses
-platform_driver_probe(). Thus, I will not provide a 'remove' callback.
-
-Thank you.
-
-Best regards,
-Jingoo Han
-
-> 
-> 	Arnd
-
+Bjorn
