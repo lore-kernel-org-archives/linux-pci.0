@@ -1,93 +1,239 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f52.google.com ([209.85.219.52]:60764 "EHLO
-	mail-oa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756538Ab3FMDlv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Jun 2013 23:41:51 -0400
-Received: by mail-oa0-f52.google.com with SMTP id g12so5339904oah.39
-        for <linux-pci@vger.kernel.org>; Wed, 12 Jun 2013 20:41:51 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <51B93221.2040505@jp.fujitsu.com>
-References: <1368509365-2260-1-git-send-email-indou.takao@jp.fujitsu.com>
- <CAErSpo4t_2Xw76p3Z9FVzyyK-MBovavDu9D=pYoPMjESSxgT=w@mail.gmail.com>
- <51B19DF3.2070009@jp.fujitsu.com> <CAErSpo6dfEnzriHD_aWZB_3E-kSzauhNRHPd+VuFX5HONVKgqw@mail.gmail.com>
- <51B6BEDB.3000509@jp.fujitsu.com> <CAErSpo5u8qGALt6C+tuPYXdd2YgyMH6fnPnA+afUteEZ7kY0iw@mail.gmail.com>
- <51B93221.2040505@jp.fujitsu.com>
+Received: from mail-ie0-f176.google.com ([209.85.223.176]:63532 "EHLO
+	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933050Ab3FRR2X (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Jun 2013 13:28:23 -0400
+Received: by mail-ie0-f176.google.com with SMTP id ar20so10808897iec.21
+        for <linux-pci@vger.kernel.org>; Tue, 18 Jun 2013 10:28:22 -0700 (PDT)
+Date: Tue, 18 Jun 2013 11:28:19 -0600
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 12 Jun 2013 21:41:30 -0600
-Message-ID: <CAErSpo5tVK-Z3aOdMTzab-S8o5zLVtDOFQ8-LSYpUgbrJSsxuw@mail.gmail.com>
-Subject: Re: [PATCH v2] PCI: Reset PCIe devices to stop ongoing DMA
-To: Takao Indoh <indou.takao@jp.fujitsu.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
-	kexec@lists.infradead.org, ishii.hironobu@jp.fujitsu.com,
-	Don Dutile <ddutile@redhat.com>, bill.sumner@hp.com,
-	"alex.williamson@redhat.com" <alex.williamson@redhat.com>,
-	Vivek Goyal <vgoyal@redhat.com>, hbabu@us.ibm.com
-Content-Type: text/plain; charset=ISO-8859-1
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: linux-pci@vger.kernel.org, ddutile@redhat.com,
+	linux-kernel@vger.kernel.org, kvm@vger.kernel.org
+Subject: Re: [PATCH] pci: Enable overrides for missing ACS capabilities
+Message-ID: <20130618172819.GA16134@google.com>
+References: <20130530183955.14686.89444.stgit@bling.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130530183955.14686.89444.stgit@bling.home>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 12, 2013 at 8:44 PM, Takao Indoh <indou.takao@jp.fujitsu.com> wrote:
-> (2013/06/12 13:45), Bjorn Helgaas wrote:
->> [+cc Vivek, Haren; sorry I didn't think to add you earlier]
->>
->> On Tue, Jun 11, 2013 at 12:08 AM, Takao Indoh
->> <indou.takao@jp.fujitsu.com> wrote:
->>> (2013/06/11 11:20), Bjorn Helgaas wrote:
->>
->>>> I'm not sure you need to reset legacy devices (or non-PCI devices)
->>>> yet, but the current hook isn't anchored anywhere -- it's just an
->>>> fs_initcall() that doesn't give the reader any clue about the
->>>> connection between the reset and the problem it's solving.
->>>>
->>>> If we do something like this patch, I think it needs to be done at the
->>>> point where we enable or disable the IOMMU.  That way, it's connected
->>>> to the important event, and there's a clue about how to make
->>>> corresponding fixes for other IOMMUs.
->>>
->>> Ok. pci_iommu_init() is appropriate place to add this hook?
->>
->> I looked at various IOMMU init places today, and it's far more
->> complicated and varied than I had hoped.
->>
->> This reset scheme depends on enumerating PCI devices before we
->> initialize the IOMMU used by those devices.  x86 works that way today,
->> but not all architectures do (see the sparc pci_fire_pbm_init(), for
->
-> Sorry, could you tell me which part depends on architecture?
+On Thu, May 30, 2013 at 12:40:19PM -0600, Alex Williamson wrote:
+> PCIe ACS (Access Control Services) is the PCIe 2.0+ feature that
+> allows us to control whether transactions are allowed to be redirected
+> in various subnodes of a PCIe topology.  For instance, if two
+> endpoints are below a root port or downsteam switch port, the
+> downstream port may optionally redirect transactions between the
+> devices, bypassing upstream devices.  The same can happen internally
+> on multifunction devices.  The transaction may never be visible to the
+> upstream devices.
+> 
+> One upstream device that we particularly care about is the IOMMU.  If
+> a redirection occurs in the topology below the IOMMU, then the IOMMU
+> cannot provide isolation between devices.  This is why the PCIe spec
+> encourages topologies to include ACS support.  Without it, we have to
+> assume peer-to-peer DMA within a hierarchy can bypass IOMMU isolation.
+> 
+> Unfortunately, far too many topologies do not support ACS to make this
+> a steadfast requirement.  Even the latest chipsets from Intel are only
+> sporadically supporting ACS.  We have trouble getting interconnect
+> vendors to include the PCIe spec required PCIe capability, let alone
+> suggested features.
+> 
+> Therefore, we need to add some flexibility.  The pcie_acs_override=
+> boot option lets users opt-in specific devices or sets of devices to
+> assume ACS support.  
 
-Your patch works if PCIe devices are reset before the kdump kernel
-enables the IOMMU.  On x86, this is possible because PCI enumeration
-happens before the IOMMU initialization.  On sparc, the IOMMU is
-initialized before PCI devices are enumerated, so there would still be
-a window where ongoing DMA could cause an IOMMU error.
+"ACS support" means the device provides an ACS capability and we
+can change bits in the ACS Control Register to control how things
+work.
 
-Of course, it might be possible to reorganize the sparc code to to the
-IOMMU init *after* it enumerates PCI devices.  But I think that change
-would be hard to justify.
+You are really adding a way to "assume this device always routes
+peer-to-peer DMA upstream," which ultimately translates into "assume
+this device can be isolated from others via the IOMMU."  I think.
 
-And I think even on x86, it would be better if we did the IOMMU init
-before PCI enumeration -- the PCI devices depend on the IOMMU, so
-logically the IOMMU should be initialized first so the PCI devices can
-be associated with it as they are enumerated.
+> The "downstream" option assumes full ACS support
+> on root ports and downstream switch ports.  The "multifunction"
+> option assumes the subset of ACS features available on multifunction
+> endpoints and upstream switch ports are supported.  The "id:nnnn:nnnn"
+> option enables ACS support on devices matching the provided vendor
+> and device IDs, allowing more strategic ACS overrides.  These options
+> may be combined in any order.  A maximum of 16 id specific overrides
+> are available.  It's suggested to use the most limited set of options
+> necessary to avoid completely disabling ACS across the topology.
 
->> example).  And I think conceptually, the IOMMU should be enumerated
->> and initialized *before* the devices that use it.
->>
->> So I'm uncomfortable with that aspect of this scheme.
->>
->> It would be at least conceivable to reset the devices in the system
->> kernel, before the kexec.  I know we want to do as little as possible
->> in the crashing kernel, but it's at least a possibility, and it might
->> be cleaner.
->
-> I bet this will be not accepted by kdump maintainer. Everything in panic
-> kernel is unreliable.
+Probably I'm confused by your use of "assume full ACS support," but I
+don't understand the bit about "completely disabling ACS."  If we use
+more options than necessary, it seems like we'd assume more isolation
+than really exists.  That sounds like pretending ACS is *enabled* in
+more places than it really is.
 
-kdump is inherently unreliable.  The kdump kernel doesn't start from
-an arbitrary machine state.  We don't expect it to tolerate all CPUs
-running, for example.  Maybe it should be expected to tolerate PCI
-devices running, either.
+> Note to hardware vendors, we have facilities to permanently quirk
+> specific devices which enforce isolation but not provide an ACS
+> capability.  Please contact me to have your devices added and save
+> your customers the hassle of this boot option.
+
+Who do you expect to decide whether to use this option?  I think it
+requires intimate knowledge of how the device works.
+
+I think the benefit of using the option is that it makes assignment of
+devices to guests more flexible, which will make it attractive to users.
+But most users have no way of knowing whether it's actually *safe* to
+use this.  So I worry that you're adding an easy way to pretend isolation
+exists when there's no good way of being confident that it actually does.
+
+I see the warning you added for this case; I just don't feel good about
+it.  Maybe the idea is that, e.g., Red Hat will research certain devices
+and recommend the option for those cases, and sign up to support that
+config.  I assume you would not be willing to support its use unless
+Red Hat specifically recommended it.
 
 Bjorn
+
+> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+> ---
+>  Documentation/kernel-parameters.txt |   10 +++
+>  drivers/pci/quirks.c                |  102 +++++++++++++++++++++++++++++++++++
+>  2 files changed, 112 insertions(+)
+> 
+> diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
+> index 47bb23c..a60e6ad 100644
+> --- a/Documentation/kernel-parameters.txt
+> +++ b/Documentation/kernel-parameters.txt
+> @@ -2349,6 +2349,16 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
+>  		nomsi	Do not use MSI for native PCIe PME signaling (this makes
+>  			all PCIe root ports use INTx for all services).
+>  
+> +	pcie_acs_override =
+> +			[PCIE] Override missing PCIe ACS support for:
+> +		downstream
+> +			All downstream ports - full ACS capabilties
+> +		multifunction
+> +			All multifunction devices - multifunction ACS subset
+> +		id:nnnn:nnnn
+> +			Specfic device - full ACS capabilities
+> +			Specified as vid:did (vendor/device ID) in hex
+> +
+>  	pcmv=		[HW,PCMCIA] BadgePAD 4
+>  
+>  	pd.		[PARIDE]
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index 0369fb6..c7609f6 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -3292,11 +3292,113 @@ struct pci_dev *pci_get_dma_source(struct pci_dev *dev)
+>  	return pci_dev_get(dev);
+>  }
+>  
+> +static bool acs_on_downstream;
+> +static bool acs_on_multifunction;
+> +
+> +#define NUM_ACS_IDS 16
+> +struct acs_on_id {
+> +	unsigned short vendor;
+> +	unsigned short device;
+> +};
+> +static struct acs_on_id acs_on_ids[NUM_ACS_IDS];
+> +static u8 max_acs_id;
+> +
+> +static __init int pcie_acs_override_setup(char *p)
+> +{
+> +	if (!p)
+> +		return -EINVAL;
+> +
+> +	while (*p) {
+> +		if (!strncmp(p, "downstream", 10))
+> +			acs_on_downstream = true;
+> +		if (!strncmp(p, "multifunction", 13))
+> +			acs_on_multifunction = true;
+> +		if (!strncmp(p, "id:", 3)) {
+> +			char opt[5];
+> +			int ret;
+> +			long val;
+> +
+> +			if (max_acs_id >= NUM_ACS_IDS - 1) {
+> +				pr_warn("Out of PCIe ACS override slots (%d)\n",
+> +					NUM_ACS_IDS);
+> +				goto next;
+> +			}
+> +
+> +			p += 3;
+> +			snprintf(opt, 5, "%s", p);
+> +			ret = kstrtol(opt, 16, &val);
+> +			if (ret) {
+> +				pr_warn("PCIe ACS ID parse error %d\n", ret);
+> +				goto next;
+> +			}
+> +			acs_on_ids[max_acs_id].vendor = val;
+> +
+> +			p += strcspn(p, ":");
+> +			if (*p != ':') {
+> +				pr_warn("PCIe ACS invalid ID\n");
+> +				goto next;
+> +			}
+> +
+> +			p++;
+> +			snprintf(opt, 5, "%s", p);
+> +			ret = kstrtol(opt, 16, &val);
+> +			if (ret) {
+> +				pr_warn("PCIe ACS ID parse error %d\n", ret);
+> +				goto next;
+> +			}
+> +			acs_on_ids[max_acs_id].device = val;
+> +			max_acs_id++;
+> +		}
+> +next:
+> +		p += strcspn(p, ",");
+> +		if (*p == ',')
+> +			p++;
+> +	}
+> +
+> +	if (acs_on_downstream || acs_on_multifunction || max_acs_id)
+> +		pr_warn("Warning: PCIe ACS overrides enabled; This may allow non-IOMMU protected peer-to-peer DMA\n");
+> +
+> +	return 0;
+> +}
+> +early_param("pcie_acs_override", pcie_acs_override_setup);
+> +
+> +static int pcie_acs_overrides(struct pci_dev *dev, u16 acs_flags)
+> +{
+> +	int i;
+> +
+> +	/* Never override ACS for legacy devices or devices with ACS caps */
+> +	if (!pci_is_pcie(dev) ||
+> +	    pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ACS))
+> +		return -ENOTTY;
+> +
+> +	for (i = 0; i < max_acs_id; i++)
+> +		if (acs_on_ids[i].vendor == dev->vendor &&
+> +		    acs_on_ids[i].device == dev->device)
+> +			return 1;
+> +
+> +	switch (pci_pcie_type(dev)) {
+> +	case PCI_EXP_TYPE_DOWNSTREAM:
+> +	case PCI_EXP_TYPE_ROOT_PORT:
+> +		if (acs_on_downstream)
+> +			return 1;
+> +		break;
+> +	case PCI_EXP_TYPE_ENDPOINT:
+> +	case PCI_EXP_TYPE_UPSTREAM:
+> +	case PCI_EXP_TYPE_LEG_END:
+> +	case PCI_EXP_TYPE_RC_END:
+> +		if (acs_on_multifunction && dev->multifunction)
+> +			return 1;
+> +	}
+> +
+> +	return -ENOTTY;
+> +}
+> +
+>  static const struct pci_dev_acs_enabled {
+>  	u16 vendor;
+>  	u16 device;
+>  	int (*acs_enabled)(struct pci_dev *dev, u16 acs_flags);
+>  } pci_dev_acs_enabled[] = {
+> +	{ PCI_ANY_ID, PCI_ANY_ID, pcie_acs_overrides },
+>  	{ 0 }
+>  };
+>  
+> 
