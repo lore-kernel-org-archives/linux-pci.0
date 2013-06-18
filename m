@@ -1,163 +1,392 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <51C084D9.50008@gmail.com>
+Date: Wed, 19 Jun 2013 00:03:37 +0800
+From: Jiang Liu <liuj97@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1372177330-28013-7-git-send-email-mika.westerberg@linux.intel.com>
-References: <1372177330-28013-1-git-send-email-mika.westerberg@linux.intel.com>
- <1372177330-28013-7-git-send-email-mika.westerberg@linux.intel.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 26 Jun 2013 16:18:53 -0600
-Message-ID: <CAErSpo58bCG4=hwC73VY+nXPk9-dZUb5eWERZ_wTtAfrXtBVmg@mail.gmail.com>
-Subject: Re: [PATCH 6/6] x86/PCI: quirk Thunderbolt PCI-to-PCI bridges
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
 	Yinghai Lu <yinghai@kernel.org>,
-	"Ronciak, John" <john.ronciak@intel.com>,
-	"Penner, Miles J" <miles.j.penner@intel.com>,
-	Bruce Allan <bruce.w.allan@intel.com>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"x86@kernel.org" <x86@kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+	"Alexander E . Patrakov" <patrakov@gmail.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Len Brown <lenb@kernel.org>,
+	stable@vger.kernel.org, Jiang Liu <jiang.liu@huawei.com>
+Subject: Re: [BUGFIX v2 2/4] ACPI, DOCK: resolve possible deadlock scenarios
+References: <1371238081-32260-1-git-send-email-jiang.liu@huawei.com> <2139297.LeMhgEjsya@vostro.rjw.lan> <51BDF1E0.5070201@gmail.com> <2972274.Y9Nv7DUfsQ@vostro.rjw.lan>
+In-Reply-To: <2972274.Y9Nv7DUfsQ@vostro.rjw.lan>
+Content-Type: multipart/mixed;
+ boundary="------------000700010704030103000407"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 25, 2013 at 10:22 AM, Mika Westerberg
-<mika.westerberg@linux.intel.com> wrote:
-> Thunderbolt PCI-to-PCI bridges typically use BIOS "assisted" enumeration.
-> This means that the BIOS will allocate bridge resources based on some
-> assumptions of a maximum Thunderbolt chain. It also disables native PCIe
-> hotplug of the root port where the Thunderbolt host router is connected.
+This is a multi-part message in MIME format.
+--------------000700010704030103000407
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-The BIOS often assigns PCI bridge windows, e.g., for root ports
-leading to ExpressCard slots.  I assume BIOSes make similar
-assumptions there about what ExpressCards are likely to be plugged in.
- Is your BIOS assistance the same sort of thing, or is there something
-additional happening at hot-add time?  (I think there might be AML
-that does Thunderbolt-specific stuff at hotplug-time, but I assume
-that's not related to resource assignment, because the OS owns those
-resources.)
+On 06/17/2013 07:40 PM, Rafael J. Wysocki wrote:
+> On Monday, June 17, 2013 01:12:00 AM Jiang Liu wrote:
+>> On 06/16/2013 06:54 AM, Rafael J. Wysocki wrote:
+>>> On Saturday, June 15, 2013 11:20:40 PM Rafael J. Wysocki wrote:
+>>>> On Saturday, June 15, 2013 10:17:42 PM Rafael J. Wysocki wrote:
+>>>
+>>> [...]
+>>>
+>>>>
+>>>> Which sysfs interfaces do you mean, by the way?
+>>>>
+>>>> If you mean "eject", then it takes acpi_scan_lock and hotplug_dock_devices()
+>>>> should always be run under acpi_scan_lock too.  It isn't at the moment,
+>>>> because write_undock() doesn't take acpi_scan_lock(), but this is an obvious
+>>>> bug (so I'm going to send a patch to fix it in a while).
+>>>>
+>>>> With that bug fixed, the possible race between acpi_eject_store() and
+>>>> hotplug_dock_devices() should be prevented from happening, so perhaps we're
+>>>> worrying about something that cannot happen?
+>>>
+>>> So here's a question: What particular races are possible if we remove
+>>> ds->hp_lock entirely without doing anything else just yet?  I mean, how to
+>>> *trigger* them from the start to the end and not how they can possibly happen
+>>> but never do, because there's no way they can be actually triggered?
+>> Hi Rafael,
+>>     I have no really platform which triggers this bug, but I may imagine
+>> a possible platform if it's valid for explanation.
+>>     Let's think about a laptop dock station with a thunderbolt
+>> controller built-in. The dock station is managed by dock driver and
+>> acpiphp driver. And the PCIe hierarchy managed by the thunderbolt
+>> controller may be managed by dock driver and ACPIPHP driver too.
+>> So it may trigger the issue by pressing the dock button and unplugging
+>> thunderbolt cable concurrently.
+>>     But after all, this is all by imagination:). We may need to find a
+>> simple and quick solution for 3.10 and the stable trees and enhance the
+>> solution later to avoid introducing new bugs while fixing a bug.
+> 
+> Well, if that particular bug is not fixed in 3,10, it won't be a tragedy,
+> and I *really* don't want that code to get substantially more complex than
+> it is now.
+Hi Rafael,
+    I hope I could help to simplify the implementation too, but failed
+until now:(. The PCI hotplug core has the same re-entrance issue too,
+and I have struggled with that issue about one year now:(
+    I have tried another solution by removing ds->hp_lock and
+hotplug_devices list, please refer to the attachment. It could be used
+to solve the deadlock issue in acpiphp, but may not be used to support
+the coming fix for an ATA driver
+regression(https://bugzilla.kernel.org/show_bug.cgi?id=59871).
+    The time window for 3.10 is closing, it would be great if we could
+reach a quick solution here.
+Regards!
+Gerry
 
-> In order to support this we must make sure that the kernel does not try to
-> be too smart and resize / open the bridge windows during PCI enumeration.
-> For example by default the kernel will add certain amount of space to the
-> bridge memory/io windows (this is configurable via pci=hp[mem|io]size=xxx
-> command line option). Eventually we run out of space that the BIOS has
-> allocated.
+> 
+> Thanks,
+> Rafael
+> 
+> 
 
-ROMs usually aren't very big compared to regular memory BARs.  Is the
-problem just that adding space the BIOS didn't plan for causes the OS
-to increase the window size and bump into space assigned to a peer of
-the Thunderbolt controller?
 
-> Also address space for expansion ROMs should not be allocated (BIOS does
-> not execute them for Thunderbolt endpoints). If we don't prevent this the
-> kernel might find expansion ROM associated with some endpoint and reopen
-> the bridge window which the BIOS already closed leading again resource
-> exhaustion.
+--------------000700010704030103000407
+Content-Type: text/x-patch;
+ name="0001-.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="0001-.patch"
 
-I assume the only reason we should not allocate expansion ROM space is
-to avoid resource exhaustion.  If we had enough resources, allocating
-ROM space wouldn't cause anything bad to happen, would it?
+>From d1a3f472ea81c780c370a98b553cf83f82d3e961 Mon Sep 17 00:00:00 2001
+From: Jiang Liu <jiang.liu@huawei.com>
+Date: Tue, 18 Jun 2013 22:22:23 +0800
+Subject: [PATCH]
 
-> Fix this by adding a quirk that matches known Thunderbolt PCI-to-PCI
-> bridges and in that case prevents allocation of expansion ROM resources and
-> makes sure that the PCI core does not increase size of bridge windows.
->
-> Signed-off-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
-> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> ---
->  arch/x86/pci/fixup.c | 51 +++++++++++++++++++++++++++++++++++++++++++++++++++
->  1 file changed, 51 insertions(+)
->
-> diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
-> index f5809fa..924822b 100644
-> --- a/arch/x86/pci/fixup.c
-> +++ b/arch/x86/pci/fixup.c
-> @@ -7,6 +7,8 @@
->  #include <linux/pci.h>
->  #include <linux/init.h>
->  #include <linux/vgaarb.h>
-> +#include <linux/acpi.h>
-> +#include <linux/pci-acpi.h>
->  #include <asm/pci_x86.h>
->
->  static void pci_fixup_i450nx(struct pci_dev *d)
-> @@ -539,3 +541,52 @@ static void twinhead_reserve_killing_zone(struct pci_dev *dev)
->          }
->  }
->  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x27B9, twinhead_reserve_killing_zone);
-> +
-> +#ifdef CONFIG_ACPI
-> +/*
-> + * BIOS assisted Thunderbolt PCI enumeration should handle all resource
-> + * allocation on behalf of OS.
-> + */
-> +static void quirk_thunderbolt(struct pci_dev *dev)
-> +{
-> +       struct acpi_pci_root *root;
-> +       acpi_handle handle;
-> +
-> +       handle = acpi_find_root_bridge_handle(dev);
-> +       if (!handle)
-> +               return;
-> +
-> +       root = acpi_pci_find_root(handle);
-> +       if (!root)
-> +               return;
-> +
-> +       /*
-> +        * Native PCIe hotplug should be disabled when BIOS assisted
-> +        * hotplug is in use.
-> +        */
-> +       if (root->osc_control_set & OSC_PCI_EXPRESS_NATIVE_HP_CONTROL)
-> +               return;
+---
+ drivers/acpi/dock.c                | 108 +++++++++++++++----------------------
+ drivers/pci/hotplug/acpiphp_glue.c |  32 ++++++-----
+ 2 files changed, 62 insertions(+), 78 deletions(-)
 
-I'm not really sure why this test is here.  I dimly recall hearing
-that Thunderbolt hotplug requires some work at hotplug-time, and this
-is not all public, and hence is done by AML.  But that in itself
-doesn't seem related to the question of allocating ROM space.
+diff --git a/drivers/acpi/dock.c b/drivers/acpi/dock.c
+index 469ef56..fd8830a 100644
+--- a/drivers/acpi/dock.c
++++ b/drivers/acpi/dock.c
+@@ -58,10 +58,7 @@ struct dock_station {
+ 	unsigned long last_dock_time;
+ 	u32 flags;
+ 	spinlock_t dd_lock;
+-	struct mutex hp_lock;
+ 	struct list_head dependent_devices;
+-	struct list_head hotplug_devices;
+-
+ 	struct list_head sibling;
+ 	struct platform_device *dock_device;
+ };
+@@ -70,7 +67,6 @@ static int dock_station_count;
+ 
+ struct dock_dependent_device {
+ 	struct list_head list;
+-	struct list_head hotplug_list;
+ 	acpi_handle handle;
+ 	const struct acpi_dock_ops *ops;
+ 	void *context;
+@@ -105,7 +101,6 @@ add_dock_dependent_device(struct dock_station *ds, acpi_handle handle)
+ 
+ 	dd->handle = handle;
+ 	INIT_LIST_HEAD(&dd->list);
+-	INIT_LIST_HEAD(&dd->hotplug_list);
+ 
+ 	spin_lock(&ds->dd_lock);
+ 	list_add_tail(&dd->list, &ds->dependent_devices);
+@@ -115,38 +110,6 @@ add_dock_dependent_device(struct dock_station *ds, acpi_handle handle)
+ }
+ 
+ /**
+- * dock_add_hotplug_device - associate a hotplug handler with the dock station
+- * @ds: The dock station
+- * @dd: The dependent device struct
+- *
+- * Add the dependent device to the dock's hotplug device list
+- */
+-static void
+-dock_add_hotplug_device(struct dock_station *ds,
+-			struct dock_dependent_device *dd)
+-{
+-	mutex_lock(&ds->hp_lock);
+-	list_add_tail(&dd->hotplug_list, &ds->hotplug_devices);
+-	mutex_unlock(&ds->hp_lock);
+-}
+-
+-/**
+- * dock_del_hotplug_device - remove a hotplug handler from the dock station
+- * @ds: The dock station
+- * @dd: the dependent device struct
+- *
+- * Delete the dependent device from the dock's hotplug device list
+- */
+-static void
+-dock_del_hotplug_device(struct dock_station *ds,
+-			struct dock_dependent_device *dd)
+-{
+-	mutex_lock(&ds->hp_lock);
+-	list_del(&dd->hotplug_list);
+-	mutex_unlock(&ds->hp_lock);
+-}
+-
+-/**
+  * find_dock_dependent_device - get a device dependent on this dock
+  * @ds: the dock station
+  * @handle: the acpi_handle of the device we want
+@@ -349,12 +312,10 @@ static void hotplug_dock_devices(struct dock_station *ds, u32 event)
+ {
+ 	struct dock_dependent_device *dd;
+ 
+-	mutex_lock(&ds->hp_lock);
+-
+ 	/*
+ 	 * First call driver specific hotplug functions
+ 	 */
+-	list_for_each_entry(dd, &ds->hotplug_devices, hotplug_list)
++	list_for_each_entry(dd, &ds->dependent_devices, list)
+ 		if (dd->ops && dd->ops->handler)
+ 			dd->ops->handler(dd->handle, event, dd->context);
+ 
+@@ -370,7 +331,6 @@ static void hotplug_dock_devices(struct dock_station *ds, u32 event)
+ 		else
+ 			dock_create_acpi_device(dd->handle);
+ 	}
+-	mutex_unlock(&ds->hp_lock);
+ }
+ 
+ static void dock_event(struct dock_station *ds, u32 event, int num)
+@@ -392,7 +352,7 @@ static void dock_event(struct dock_station *ds, u32 event, int num)
+ 	if (num == DOCK_EVENT)
+ 		kobject_uevent_env(&dev->kobj, KOBJ_CHANGE, envp);
+ 
+-	list_for_each_entry(dd, &ds->hotplug_devices, hotplug_list)
++	list_for_each_entry(dd, &ds->dependent_devices, list)
+ 		if (dd->ops && dd->ops->uevent)
+ 			dd->ops->uevent(dd->handle, event, dd->context);
+ 
+@@ -559,19 +519,9 @@ void unregister_dock_notifier(struct notifier_block *nb)
+ }
+ EXPORT_SYMBOL_GPL(unregister_dock_notifier);
+ 
+-/**
+- * register_hotplug_dock_device - register a hotplug function
+- * @handle: the handle of the device
+- * @ops: handlers to call after docking
+- * @context: device specific data
+- *
+- * If a driver would like to perform a hotplug operation after a dock
+- * event, they can register an acpi_notifiy_handler to be called by
+- * the dock driver after _DCK is executed.
+- */
+-int
+-register_hotplug_dock_device(acpi_handle handle, const struct acpi_dock_ops *ops,
+-			     void *context)
++/* must be called with ACPI scan lock held */
++int __register_hotplug_dock_device(acpi_handle handle,
++	       const struct acpi_dock_ops *ops, void *context)
+ {
+ 	struct dock_dependent_device *dd;
+ 	struct dock_station *dock_station;
+@@ -594,20 +544,39 @@ register_hotplug_dock_device(acpi_handle handle, const struct acpi_dock_ops *ops
+ 		if (dd) {
+ 			dd->ops = ops;
+ 			dd->context = context;
+-			dock_add_hotplug_device(dock_station, dd);
+ 			ret = 0;
+ 		}
+ 	}
+ 
+ 	return ret;
+ }
+-EXPORT_SYMBOL_GPL(register_hotplug_dock_device);
+ 
+ /**
+- * unregister_hotplug_dock_device - remove yourself from the hotplug list
+- * @handle: the acpi handle of the device
++ * register_hotplug_dock_device - register a hotplug function
++ * @handle: the handle of the device
++ * @ops: handlers to call after docking
++ * @context: device specific data
++ *
++ * If a driver would like to perform a hotplug operation after a dock
++ * event, they can register an acpi_notifiy_handler to be called by
++ * the dock driver after _DCK is executed.
+  */
+-void unregister_hotplug_dock_device(acpi_handle handle)
++int
++register_hotplug_dock_device(acpi_handle handle,
++			     const struct acpi_dock_ops *ops, void *context)
++{
++	int ret;
++
++	acpi_scan_lock_acquire();
++	ret = __register_hotplug_dock_device(handle, ops, context);
++	acpi_scan_lock_release();
++
++	return ret;
++}
++EXPORT_SYMBOL_GPL(register_hotplug_dock_device);
++
++/* must be called with ACPI scan lock held */
++void __unregister_hotplug_dock_device(acpi_handle handle)
+ {
+ 	struct dock_dependent_device *dd;
+ 	struct dock_station *dock_station;
+@@ -617,10 +586,23 @@ void unregister_hotplug_dock_device(acpi_handle handle)
+ 
+ 	list_for_each_entry(dock_station, &dock_stations, sibling) {
+ 		dd = find_dock_dependent_device(dock_station, handle);
+-		if (dd)
+-			dock_del_hotplug_device(dock_station, dd);
++		if (dd) {
++			dd->ops = NULL;
++			dd->context = NULL;
++		}
+ 	}
+ }
++
++/**
++ * unregister_hotplug_dock_device - remove yourself from the hotplug list
++ * @handle: the acpi handle of the device
++ */
++void unregister_hotplug_dock_device(acpi_handle handle)
++{
++	acpi_scan_lock_acquire();
++	__unregister_hotplug_dock_device(handle);
++	acpi_scan_lock_release();
++}
+ EXPORT_SYMBOL_GPL(unregister_hotplug_dock_device);
+ 
+ /**
+@@ -945,10 +927,8 @@ static int __init dock_add(acpi_handle handle)
+ 	dock_station->dock_device = dd;
+ 	dock_station->last_dock_time = jiffies - HZ;
+ 
+-	mutex_init(&dock_station->hp_lock);
+ 	spin_lock_init(&dock_station->dd_lock);
+ 	INIT_LIST_HEAD(&dock_station->sibling);
+-	INIT_LIST_HEAD(&dock_station->hotplug_devices);
+ 	ATOMIC_INIT_NOTIFIER_HEAD(&dock_notifier_list);
+ 	INIT_LIST_HEAD(&dock_station->dependent_devices);
+ 
+diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+index 716aa93..699b8ca 100644
+--- a/drivers/pci/hotplug/acpiphp_glue.c
++++ b/drivers/pci/hotplug/acpiphp_glue.c
+@@ -61,6 +61,8 @@ static DEFINE_MUTEX(bridge_mutex);
+ static void handle_hotplug_event_bridge (acpi_handle, u32, void *);
+ static void acpiphp_sanitize_bus(struct pci_bus *bus);
+ static void acpiphp_set_hpp_values(struct pci_bus *bus);
++static void _handle_hotplug_event_func(acpi_handle handle, u32 type,
++				       void *context);
+ static void handle_hotplug_event_func(acpi_handle handle, u32 type, void *context);
+ static void free_bridge(struct kref *kref);
+ 
+@@ -147,7 +149,7 @@ static int post_dock_fixups(struct notifier_block *nb, unsigned long val,
+ 
+ 
+ static const struct acpi_dock_ops acpiphp_dock_ops = {
+-	.handler = handle_hotplug_event_func,
++	.handler = _handle_hotplug_event_func,
+ };
+ 
+ /* Check whether the PCI device is managed by native PCIe hotplug driver */
+@@ -1065,22 +1067,13 @@ static void handle_hotplug_event_bridge(acpi_handle handle, u32 type,
+ 	alloc_acpi_hp_work(handle, type, context, _handle_hotplug_event_bridge);
+ }
+ 
+-static void _handle_hotplug_event_func(struct work_struct *work)
++static void _handle_hotplug_event_func(acpi_handle handle, u32 type,
++				       void *context)
+ {
+-	struct acpiphp_func *func;
++	struct acpiphp_func *func = context;
+ 	char objname[64];
+ 	struct acpi_buffer buffer = { .length = sizeof(objname),
+ 				      .pointer = objname };
+-	struct acpi_hp_work *hp_work;
+-	acpi_handle handle;
+-	u32 type;
+-
+-	hp_work = container_of(work, struct acpi_hp_work, work);
+-	handle = hp_work->handle;
+-	type = hp_work->type;
+-	func = (struct acpiphp_func *)hp_work->context;
+-
+-	acpi_scan_lock_acquire();
+ 
+ 	acpi_get_name(handle, ACPI_FULL_PATHNAME, &buffer);
+ 
+@@ -1113,7 +1106,18 @@ static void _handle_hotplug_event_func(struct work_struct *work)
+ 		warn("notify_handler: unknown event type 0x%x for %s\n", type, objname);
+ 		break;
+ 	}
++}
++
++static void _handle_hotplug_event_cb(struct work_struct *work)
++{
++	struct acpiphp_func *func;
++	struct acpi_hp_work *hp_work;
+ 
++	hp_work = container_of(work, struct acpi_hp_work, work);
++	func = (struct acpiphp_func *)hp_work->context;
++	acpi_scan_lock_acquire();
++	_handle_hotplug_event_func(hp_work->handle, hp_work->type,
++				    hp_work->context);
+ 	acpi_scan_lock_release();
+ 	kfree(hp_work); /* allocated in handle_hotplug_event_func */
+ 	put_bridge(func->slot->bridge);
+@@ -1141,7 +1145,7 @@ static void handle_hotplug_event_func(acpi_handle handle, u32 type,
+ 	 * don't deadlock on hotplug actions.
+ 	 */
+ 	get_bridge(func->slot->bridge);
+-	alloc_acpi_hp_work(handle, type, context, _handle_hotplug_event_func);
++	alloc_acpi_hp_work(handle, type, context, _handle_hotplug_event_cb);
+ }
+ 
+ /*
+-- 
+1.8.1.2
 
-> +       /*
-> +        * Make sure that we don't allocate resources for expansion ROMs.
-> +        * This may accidentally increase the size of the bridge window
-> +        * causing us to run out of resources.
-> +        */
-> +       if (!(pci_probe & PCI_NOASSIGN_ROMS)) {
-> +               pr_info("Thunderbolt host router detected disabling ROMs\n");
 
-We have a pci_dev, so this should use dev_info().
-
-> +               pci_probe |= PCI_NOASSIGN_ROMS;
-
-I think you really only care about the space for ROMs on devices
-connected via Thunderbolt, so it's kind of a shame that the switch is
-global and affects ROMs on *all* devices.  I guess there's nothing
-simple to be done about that, though.
-
-> +       }
-> +
-> +       /*
-> +        * Don't add anything to the BIOS allocated bridge window size for
-> +        * the same reason.
-> +        */
-> +       dev->is_hotplug_bridge = 0;
-
-"is_hotplug_bridge" is also used in MPS management
-(pcie_find_smpss()).  Did you investigate that and make sure this is
-safe?  I think the Thunderbolt controller supports hotplug, and I'm
-not sure what will happen if the MPS code assumes it doesn't.
-
-> +}
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1513, quirk_thunderbolt);
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x151a, quirk_thunderbolt);
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x151b, quirk_thunderbolt);
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1547, quirk_thunderbolt);
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1548, quirk_thunderbolt);
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1549, quirk_thunderbolt);
-> +#endif
-> --
-> 1.8.3.1
->
+--------------000700010704030103000407--
