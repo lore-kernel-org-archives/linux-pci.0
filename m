@@ -1,64 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:16848 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751534Ab3FRBCP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Jun 2013 21:02:15 -0400
-Message-ID: <51BFB177.7060008@huawei.com>
-Date: Tue, 18 Jun 2013 09:01:43 +0800
-From: Yijing Wang <wangyijing@huawei.com>
-MIME-Version: 1.0
-To: Tony Luck <tony.luck@gmail.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>, <linux-pci@vger.kernel.org>,
-	"linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>,
-	Fenghua Yu <fenghua.yu@intel.com>,
-	Hanjun Guo <guohanjun@huawei.com>,
-	Liu Jiang <jiang.liu@huawei.com>
-Subject: Re: [PATCH -v5 0/8] Add hostbridge resource release to support root
- bus hotplug in IA64
-References: <1370504093-14908-1-git-send-email-wangyijing@huawei.com> <20130615002224.GA21643@google.com> <51BE7AD5.5010300@huawei.com> <CA+8MBb+BSNnLtR8jZinTh9h01f3=Zeu+kX6xke1Ei08HYzRQvg@mail.gmail.com>
-In-Reply-To: <CA+8MBb+BSNnLtR8jZinTh9h01f3=Zeu+kX6xke1Ei08HYzRQvg@mail.gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Received: from mail.free-electrons.com ([94.23.35.102]:42367 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934462Ab3FSQ4e (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Jun 2013 12:56:34 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Russell King <linux@arm.linux.org.uk>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>
+Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>
+Subject: [PATCHv3 05/11] irqchip: armada-370-xp: properly request resources
+Date: Wed, 19 Jun 2013 18:56:13 +0200
+Message-Id: <1371660979-21588-6-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1371660979-21588-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1371660979-21588-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2013/6/18 6:57, Tony Luck wrote:
-> On Sun, Jun 16, 2013 at 7:56 PM, Yijing Wang <wangyijing@huawei.com> wrote:
->>> Tony, what do you think about this?  It only touches ia64, and I
->>> have no way to build or test it.  So maybe you should handle this?
->>>
->>> I haven't reviewed it, but I think it's the right general direction,
->>> at least.
->>>
->> Bjorn, thanks for your comments!
->>
->> Hi Tony, this series mainly to make pci root bus hotplug happy in IA64.
->> I cannot test the first two patch(SGI related) in my IA64 machine.
->> But the rest patches has been tested in my ia64 machine, and result is ok.
-> 
-> I'd like to understand the dependencies on Bjorn's pci-next tree.  If
-> this series
-> actually only depends on Linus' v3.10-rc6 I'd rather start from there (because
-> then I don't need to coordinate "please-pull" messages when sending things
-> to Linus).  If we really do need things from the pci-next tree, well that's OK
-> too, but I'd still like to know what they are.
+Instead of using of_iomap(), we now use of_address_to_resource(),
+request_mem_region() and ioremap(). This allows the corresponding I/O
+regions to be properly requested and visible in /proc/iomem.
 
-Hi Tony,
-   This series don't depend pci-next tree, they can be applied to 3.10-rc6, although
-I format this series base pci-next tree.
+The main motivation for this change is that the introduction of the
+MSI support requires us to get the physical address of the main
+interrupt controller registers, so we will need the corresponding
+'struct resource' anyway.
 
+We also take this opportunity to change a panic() to BUG_ON(), in
+order to be consistent with the rest of the driver.
 
-Thanks!
-Yijing.
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+---
+ drivers/irqchip/irq-armada-370-xp.c | 20 ++++++++++++++++----
+ 1 file changed, 16 insertions(+), 4 deletions(-)
 
-> 
-> -Tony
-> 
-> .
-> 
-
-
+diff --git a/drivers/irqchip/irq-armada-370-xp.c b/drivers/irqchip/irq-armada-370-xp.c
+index bb328a3..26adc74 100644
+--- a/drivers/irqchip/irq-armada-370-xp.c
++++ b/drivers/irqchip/irq-armada-370-xp.c
+@@ -248,12 +248,25 @@ armada_370_xp_handle_irq(struct pt_regs *regs)
+ static int __init armada_370_xp_mpic_of_init(struct device_node *node,
+ 					     struct device_node *parent)
+ {
++	struct resource main_int_res, per_cpu_int_res;
+ 	u32 control;
+ 
+-	main_int_base = of_iomap(node, 0);
+-	per_cpu_int_base = of_iomap(node, 1);
++	BUG_ON(of_address_to_resource(node, 0, &main_int_res));
++	BUG_ON(of_address_to_resource(node, 1, &per_cpu_int_res));
+ 
++	BUG_ON(!request_mem_region(main_int_res.start,
++				   resource_size(&main_int_res),
++				   node->full_name));
++	BUG_ON(!request_mem_region(per_cpu_int_res.start,
++				   resource_size(&per_cpu_int_res),
++				   node->full_name));
++
++	main_int_base = ioremap(main_int_res.start,
++				resource_size(&main_int_res));
+ 	BUG_ON(!main_int_base);
++
++	per_cpu_int_base = ioremap(per_cpu_int_res.start,
++				   resource_size(&per_cpu_int_res));
+ 	BUG_ON(!per_cpu_int_base);
+ 
+ 	control = readl(main_int_base + ARMADA_370_XP_INT_CONTROL);
+@@ -262,8 +275,7 @@ static int __init armada_370_xp_mpic_of_init(struct device_node *node,
+ 		irq_domain_add_linear(node, (control >> 2) & 0x3ff,
+ 				&armada_370_xp_mpic_irq_ops, NULL);
+ 
+-	if (!armada_370_xp_mpic_domain)
+-		panic("Unable to add Armada_370_Xp MPIC irq domain (DT)\n");
++	BUG_ON(!armada_370_xp_mpic_domain);
+ 
+ 	irq_set_default_host(armada_370_xp_mpic_domain);
+ 
 -- 
-Thanks!
-Yijing
+1.8.1.2
 
