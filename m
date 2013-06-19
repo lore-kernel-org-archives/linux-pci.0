@@ -1,50 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:7795 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750927Ab3FBOMy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 2 Jun 2013 10:12:54 -0400
-Message-ID: <1370182302.30975.279.camel@ul30vt.home>
-Subject: Re: SR-IOV PF reset and QEMU VFs VFIO passthrough
-From: Alex Williamson <alex.williamson@redhat.com>
-To: =?ISO-8859-1?Q?Beno=EEt?= Canet <benoit.canet@irqsave.net>
-Cc: linux-pci@vger.kernel.org, qemu-devel@nongnu.org,
-	iommu@lists.linux-foundation.org
-Date: Sun, 02 Jun 2013 08:11:42 -0600
-In-Reply-To: <20130601121320.GC5157@irqsave.net>
-References: <20130601121320.GC5157@irqsave.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from moutng.kundenserver.de ([212.227.126.186]:58276 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934022Ab3FSMnS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Jun 2013 08:43:18 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Jingoo Han <jg1.han@samsung.com>
+Subject: Re: [PATCH V5 1/3] pci: Add PCIe driver for Samsung Exynos
+Date: Wed, 19 Jun 2013 14:43:09 +0200
+Cc: linux-arm-kernel@lists.infradead.org,
+	"'Thomas Petazzoni'" <thomas.petazzoni@free-electrons.com>,
+	"'Jason Gunthorpe'" <jgunthorpe@obsidianresearch.com>,
+	linux-samsung-soc@vger.kernel.org,
+	"'Siva Reddy Kallam'" <siva.kallam@samsung.com>,
+	"'Surendranath Gurivireddy Balla'" <suren.reddy@samsung.com>,
+	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
+	"'Thierry Reding'" <thierry.reding@avionic-design.de>,
+	linux-kernel@vger.kernel.org,
+	"'Grant Likely'" <grant.likely@secretlab.ca>,
+	"'Kukjin Kim'" <kgene.kim@samsung.com>,
+	"'Thomas Abraham'" <thomas.abraham@linaro.org>,
+	"'Bjorn Helgaas'" <bhelgaas@google.com>,
+	"'Andrew Murray'" <andrew.murray@arm.com>
+References: <000b01ce6839$0f0455d0$2d0d0170$@samsung.com> <201306181556.47656.arnd@arndb.de> <002401ce6c8a$2dd1e4a0$8975ade0$@samsung.com>
+In-Reply-To: <002401ce6c8a$2dd1e4a0$8975ade0$@samsung.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201306191443.09598.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, 2013-06-01 at 14:13 +0200, Benoît Canet wrote:
-> Hello,
+On Wednesday 19 June 2013, Jingoo Han wrote:
+> Then, do you mean the following?
 > 
-> I may have soon the PF driver of an SR-IOV card to code and make work with
-> QEMU/KVM so I have the following questions.
+> static int __exit exynos_pcie_remove(struct platform_device *pdev)
+> {
+>         struct pcie_port *pp = platform_get_drvdata(pdev);
 > 
-> In an AMD64 setup where QEMU use VFIO to passthrough the VFs of an SR-IOV card
-> to a guest will the consequences of a PF FLR be handled fine by QEMU and the
-> guest ?
+>         clk_disable_unprepare(pp->bus_clk);
+>         clk_disable_unprepare(pp->clk);
 > 
-> I read that pci_reset_function would call pci_restore_state restoring the SR-IOV
-> configuration after the reset of the PF.
+>         return 0;
+> }
 > 
-> The ways the hardware work means that the VFs would disappear and reappear in a
-> short lapse of time.
+> static struct platform_driver exynos_pcie_driver = {
+>         .remove = __exit_p(exynos_pcie_remove),
 > 
-> Will these events be handled by the kernel pci hotplug code ?
+> [.....]
 > 
-> Given that the PF driver restore the PF config space after the reset will /sys
-> files used by QEMU disappear and reappear messing the QEMU VFIO passthrough or
-> will it goes smoothly ?
+> /* Exynos PCIe driver does not allow module unload */
+> 
+> static int __init pcie_init(void)
+> {
+>         hook_fault_code(16 + 6, exynos_pcie_abort, SIGBUS, 0,
+>                         "imprecise external abort");
+> 
+>         platform_driver_probe(&exynos_pcie_driver, exynos_pcie_probe);
+> 
+>         return 0;
+> }
+> subsys_initcall(pcie_init);
+> 
+> MODULE_AUTHOR("Jingoo Han <jg1.han@samsung.com>");
+> MODULE_DESCRIPTION("Samsung PCIe host controller driver");
+> MODULE_LICENSE("GPLv2");
+> 
 
-On an Intel 82576 SR-IOV NIC, a FLR of the PF does not cause the VFs to
-be removed.  It's not clear to me that they continue working across the
-reset, but there is no hotplug.  If there was a hotplug, vfio-pci won't
-release the device while it's in use, so the hotplug would be blocked
-until the devices becomes unused, such as from the VM being shutdown.
-Thanks,
+Yes, this looks good. I would probably use platform_driver_register
+rather than platform_driver_probe, but that is your choice. using
+platform_driver_probe() mean you cannot deal with deferred probing.
 
-Alex
-
+	Arnd
